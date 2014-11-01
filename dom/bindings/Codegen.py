@@ -12183,7 +12183,10 @@ class CGBindingRoot(CGThing):
     declare or define to generate header or cpp code (respectively).
     """
     def __init__(self, config, prefix, webIDLFile):
-        bindingHeaders = {}
+        bindingHeaders = dict.fromkeys((
+            'mozilla/dom/NonRefcountedDOMObject.h',
+            ),
+            True)
         bindingDeclareHeaders = dict.fromkeys((
             'mozilla/dom/BindingDeclarations.h',
             'mozilla/dom/Nullable.h',
@@ -12225,8 +12228,6 @@ class CGBindingRoot(CGThing):
 
         bindingHeaders["mozilla/Preferences.h"] = any(
             descriptorRequiresPreferences(d) for d in descriptors)
-        bindingHeaders["mozilla/dom/NonRefcountedDOMObject.h"] = any(
-            d.nativeOwnership == 'owned' for d in descriptors)
         bindingHeaders["mozilla/dom/DOMJSProxyHandler.h"] = any(
             d.concrete and d.proxy for d in descriptors)
 
@@ -13036,40 +13037,30 @@ class CGExampleClass(CGBindingImplClass):
                                     CGExampleMethod, CGExampleGetter, CGExampleSetter,
                                     wantGetParent=descriptor.wrapperCache)
 
-        self.refcounted = descriptor.nativeOwnership == "refcounted"
-
         self.parentIface = descriptor.interface.parent
         if self.parentIface:
             self.parentDesc = descriptor.getDescriptor(
                 self.parentIface.identifier.name)
             bases = [ClassBase(self.nativeLeafName(self.parentDesc))]
         else:
-            bases = []
-            if self.refcounted:
-                bases.append(ClassBase("nsISupports /* Change nativeOwnership in the binding configuration if you don't want this */"))
-                if descriptor.wrapperCache:
-                    bases.append(ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */"))
-            else:
-                bases.append(ClassBase("NonRefcountedDOMObject"))
+            bases = [ ClassBase("nsISupports /* or NonRefcountedDOMObject if this is a non-refcounted object */") ]
+            if descriptor.wrapperCache:
+                bases.append(ClassBase("nsWrapperCache /* Change wrapperCache in the binding configuration if you don't want this */"))
 
-        if self.refcounted:
-            destructorVisibility = "protected"
-            if self.parentIface:
-                extradeclarations = (
-                    "public:\n"
-                    "  NS_DECL_ISUPPORTS_INHERITED\n"
-                    "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(%s, %s)\n"
-                    "\n" % (self.nativeLeafName(descriptor),
-                            self.nativeLeafName(self.parentDesc)))
-            else:
-                extradeclarations = (
-                    "public:\n"
-                    "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
-                    "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
-                    "\n" % self.nativeLeafName(descriptor))
+        destructorVisibility = "protected"
+        if self.parentIface:
+            extradeclarations = (
+                "public:\n"
+                "  NS_DECL_ISUPPORTS_INHERITED\n"
+                "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(%s, %s)\n"
+                "\n" % (self.nativeLeafName(descriptor),
+                        self.nativeLeafName(self.parentDesc)))
         else:
-            destructorVisibility = "public"
-            extradeclarations = ""
+            extradeclarations = (
+                "public:\n"
+                "  NS_DECL_CYCLE_COLLECTING_ISUPPORTS\n"
+                "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
+                "\n" % self.nativeLeafName(descriptor))
 
         if descriptor.interface.hasChildInterfaces():
             decorators = ""
@@ -13087,54 +13078,42 @@ class CGExampleClass(CGBindingImplClass):
 
     def define(self):
         # Just override CGClass and do our own thing
-        if self.refcounted:
-            ctordtor = dedent("""
-                ${nativeType}::${nativeType}()
-                {
-                }
+        ctordtor = dedent("""
+            ${nativeType}::${nativeType}()
+            {
+                // Add |MOZ_COUNT_CTOR(${nativeType});| for a non-refcounted object.
+            }
 
-                ${nativeType}::~${nativeType}()
-                {
-                }
+            ${nativeType}::~${nativeType}()
+            {
+                // Add |MOZ_COUNT_DTOR(${nativeType});| for a non-refcounted object.
+            }
+            """)
+
+        if self.parentIface:
+            ccImpl = dedent("""
+
+                // Only needed for refcounted objects.
+                NS_IMPL_CYCLE_COLLECTION_INHERITED_0(${nativeType}, ${parentType})
+                NS_IMPL_ADDREF_INHERITED(${nativeType}, ${parentType})
+                NS_IMPL_RELEASE_INHERITED(${nativeType}, ${parentType})
+                NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
+                NS_INTERFACE_MAP_END_INHERITING(${parentType})
+
                 """)
         else:
-            ctordtor = dedent("""
-                ${nativeType}::${nativeType}()
-                {
-                  MOZ_COUNT_CTOR(${nativeType});
-                }
+            ccImpl = dedent("""
 
-                ${nativeType}::~${nativeType}()
-                {
-                  MOZ_COUNT_DTOR(${nativeType});
-                }
+                // Only needed for refcounted objects.
+                NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${nativeType})
+                NS_IMPL_CYCLE_COLLECTING_ADDREF(${nativeType})
+                NS_IMPL_CYCLE_COLLECTING_RELEASE(${nativeType})
+                NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
+                  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+                  NS_INTERFACE_MAP_ENTRY(nsISupports)
+                NS_INTERFACE_MAP_END
+
                 """)
-
-        if self.refcounted:
-            if self.parentIface:
-                ccImpl = dedent("""
-
-                    NS_IMPL_CYCLE_COLLECTION_INHERITED_0(${nativeType}, ${parentType})
-                    NS_IMPL_ADDREF_INHERITED(${nativeType}, ${parentType})
-                    NS_IMPL_RELEASE_INHERITED(${nativeType}, ${parentType})
-                    NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
-                    NS_INTERFACE_MAP_END_INHERITING(${parentType})
-
-                    """)
-            else:
-                ccImpl = dedent("""
-
-                    NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(${nativeType})
-                    NS_IMPL_CYCLE_COLLECTING_ADDREF(${nativeType})
-                    NS_IMPL_CYCLE_COLLECTING_RELEASE(${nativeType})
-                    NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(${nativeType})
-                      NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-                      NS_INTERFACE_MAP_ENTRY(nsISupports)
-                    NS_INTERFACE_MAP_END
-
-                    """)
-        else:
-            ccImpl = ""
 
         classImpl = ccImpl + ctordtor + "\n" + dedent("""
             JSObject*
