@@ -6071,11 +6071,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
         conversion = None
-        if descriptorProvider.getDescriptor(
-                returnType.unroll().inner.identifier.name).nativeOwnership == 'owned':
-            result = CGTemplatedType("nsAutoPtr", result)
-        elif isMember:
-            result = CGTemplatedType("nsRefPtr", result)
+        if isMember:
+            result = CGGeneric("StrongPtrForMember<%s>::Type" % result.define())
         else:
             conversion = CGGeneric("StrongOrRawPtr<%s>" % result.define())
             result = CGGeneric("auto")
@@ -6666,8 +6663,7 @@ class CGPerSignatureCall(CGThing):
 
         returnsNewObject = memberReturnsNewObject(self.idlNode)
         if (returnsNewObject and
-            self.returnType.isGeckoInterface() and
-            not self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned'):
+            self.returnType.isGeckoInterface()):
             wrapCode += dedent(
                 """
                 static_assert(!IsPointer<decltype(result)>::value,

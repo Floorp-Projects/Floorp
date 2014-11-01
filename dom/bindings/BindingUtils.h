@@ -3214,16 +3214,25 @@ StrongOrRawPtr(already_AddRefed<S>&& aPtr)
   return aPtr.template downcast<T>();
 }
 
-template<class T>
-inline T*
+template<class T,
+         class ReturnType=typename Conditional<IsRefcounted<T>::value, T*,
+                                               nsAutoPtr<T>>::Type>
+inline ReturnType
 StrongOrRawPtr(T* aPtr)
 {
-  return aPtr;
+  return ReturnType(aPtr);
 }
 
 template<class T, template<typename> class SmartPtr, class S>
 inline void
 StrongOrRawPtr(SmartPtr<S>&& aPtr) = delete;
+
+template<class T>
+struct StrongPtrForMember
+{
+  typedef typename Conditional<IsRefcounted<T>::value,
+                               nsRefPtr<T>, nsAutoPtr<T>>::Type Type;
+};
 
 inline
 JSObject*
