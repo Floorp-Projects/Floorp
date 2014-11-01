@@ -495,6 +495,11 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   // before the main event-loop pool is in place
   nsAutoreleasePool pool;
 
+  mDisclosureButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  [mDisclosureButtonCell setBezelStyle:NSRoundedDisclosureBezelStyle];
+  [mDisclosureButtonCell setButtonType:NSPushOnPushOffButton];
+  [mDisclosureButtonCell setHighlightsBy:NSPushInCellMask];
+  
   mHelpButtonCell = [[NSButtonCell alloc] initTextCell:nil];
   [mHelpButtonCell setBezelStyle:NSHelpButtonBezelStyle];
   [mHelpButtonCell setButtonType:NSMomentaryPushInButton];
@@ -544,6 +549,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 
   [mMeterBarCell release];
   [mProgressBarCell release];
+  [mDisclosureButtonCell release];
   [mHelpButtonCell release];
   [mPushButtonCell release];
   [mRadioButtonCell release];
@@ -1123,6 +1129,7 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
 }
 
 static const NSSize kHelpButtonSize = NSMakeSize(20, 20);
+static const NSSize kDisclosureButtonSize = NSMakeSize(21, 21);
 
 static const CellRenderSettings pushButtonSettings = {
   {
@@ -1159,15 +1166,24 @@ nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRe
   BOOL isActive = FrameIsInActiveWindow(aFrame);
   BOOL isDisabled = IsDisabled(aFrame, inState);
 
-  NSButtonCell* cell = (aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON) ? mHelpButtonCell : mPushButtonCell;
+  NSButtonCell* cell = (aWidgetType == NS_THEME_BUTTON) ? mPushButtonCell :
+    (aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON) ? mHelpButtonCell : mDisclosureButtonCell;
   [cell setEnabled:!isDisabled];
   [cell setHighlighted:isActive &&
                        inState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER)];
   [cell setShowsFirstResponder:inState.HasState(NS_EVENT_STATE_FOCUS) && !isDisabled && isActive];
 
-  if (aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON) {
+  if (aWidgetType != NS_THEME_BUTTON) { // Help button or disclosure button.
+    NSSize buttonSize = NSMakeSize(0, 0);
+    if (aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON) {
+      buttonSize = kHelpButtonSize;
+    } else { // Disclosure button.
+      buttonSize = kDisclosureButtonSize;
+      [cell setState:(aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED) ? NSOffState : NSOnState];
+    }
+
     DrawCellWithScaling(cell, cgContext, inBoxRect, NSRegularControlSize,
-                        NSZeroSize, kHelpButtonSize, NULL, mCellDrawView,
+                        NSZeroSize, buttonSize, NULL, mCellDrawView,
                         false); // Don't mirror icon in RTL.
   } else {
     // If the button is tall enough, draw the square button style so that
@@ -2485,6 +2501,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       break;
 
     case NS_THEME_MOZ_MAC_HELP_BUTTON:
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
       DrawPushButton(cgContext, macRect, eventState, aWidgetType, aFrame);
       break;
 
@@ -3158,9 +3176,17 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
       break;
     }
 
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
+    {
+      aResult->SizeTo(kDisclosureButtonSize.width, kDisclosureButtonSize.height);
+      *aIsOverridable = false;
+      break;
+    }
+
     case NS_THEME_MOZ_MAC_HELP_BUTTON:
     {
-      aResult->SizeTo(kHelpButtonSize.width, kHelpButtonSize.height);
+      aResult->SizeTo(kDisclosureButtonSize.width, kDisclosureButtonSize.height);
       *aIsOverridable = false;
       break;
     }
@@ -3551,6 +3577,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_RADIO_CONTAINER:
     case NS_THEME_GROUPBOX:
     case NS_THEME_MOZ_MAC_HELP_BUTTON:
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
+    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
     case NS_THEME_BUTTON:
     case NS_THEME_BUTTON_ARROW_UP:
     case NS_THEME_BUTTON_ARROW_DOWN:
@@ -3653,6 +3681,8 @@ nsNativeThemeCocoa::WidgetIsContainer(uint8_t aWidgetType)
    case NS_THEME_METERBAR:
    case NS_THEME_RANGE:
    case NS_THEME_MOZ_MAC_HELP_BUTTON:
+   case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
+   case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
     return false;
     break;
   }
@@ -3666,6 +3696,8 @@ nsNativeThemeCocoa::ThemeDrawsFocusForWidget(uint8_t aWidgetType)
       aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
       aWidgetType == NS_THEME_BUTTON ||
       aWidgetType == NS_THEME_MOZ_MAC_HELP_BUTTON ||
+      aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN ||
+      aWidgetType == NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED ||
       aWidgetType == NS_THEME_RADIO ||
       aWidgetType == NS_THEME_RANGE ||
       aWidgetType == NS_THEME_CHECKBOX)
