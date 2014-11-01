@@ -3,3 +3,61 @@
 % file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 %include ../shared/devedition.inc.css
+
+.tab-close-button[selected]:not(:hover) {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
+}
+
+/* The menubar should match the dark theme */
+#toolbar-menubar {
+  -moz-appearance: none;
+}
+#main-menubar {
+  color: var(--chrome-color);
+}
+#main-menubar > menu:not([open]) {
+  color: inherit;
+}
+
+/* Allow buttons with -moz-appearance set to look normal on hover and open states */
+#navigator-toolbox .toolbarbutton-1:not(.subviewbutton):-moz-any(:hover, [open="true"]),
+toolbarbutton.bookmark-item:not(.subviewbutton):-moz-any(:hover, [open="true"]) {
+  color: initial;
+}
+
+/* Square back and forward buttons */
+#back-button:not(:-moz-lwtheme) > .toolbarbutton-icon,
+#forward-button:not(:-moz-lwtheme) > .toolbarbutton-icon {
+  margin: 0;
+  border: none;
+  padding: 2px 6px;
+  background: #252C33;
+  box-shadow: none !important;
+}
+
+/* Override a box shadow for disabled back button */
+#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
+  box-shadow: none !important;
+}
+
+#back-button:hover:not([disabled="true"]) > .toolbarbutton-icon,
+#forward-button:hover:not([disabled="true"]) > .toolbarbutton-icon {
+  background: #1B2127 !important;
+}
+
+#back-button > .toolbarbutton-icon {
+  border-radius: 2px 0 0 2px !important;
+}
+
+.urlbar-history-dropmarker {
+  -moz-appearance: none;
+  padding: 0 3px;
+  list-style-image: var(--urlbar-dropmarker-url);
+  -moz-image-region: var(--urlbar-dropmarker-region);
+}
+
+/* Add the proper background for tab overflow */
+#alltabs-button,
+#new-tab-button {
+  background: var(--chrome-background-color);
+}
