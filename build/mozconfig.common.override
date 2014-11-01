@@ -10,5 +10,4 @@
 #
 # The common expected usage is for try builds with nondefault options.
 
-# XXX: REMOVE THESE LINES BEFORE MERGING TO MOZILLA-CENTRAL
-ac_add_options --enable-update-channel=aurora
+ac_add_options --enable-update-channel=nightly-gum
