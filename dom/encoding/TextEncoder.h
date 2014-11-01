@@ -42,9 +42,9 @@ public:
   ~TextEncoder()
   {}
 
-  JSObject* WrapObject(JSContext* aCx, bool* aTookOwnership)
+  JSObject* WrapObject(JSContext* aCx)
   {
-    return TextEncoderBinding::Wrap(aCx, this, aTookOwnership);
+    return TextEncoderBinding::Wrap(aCx, this);
   }
 
 protected:
