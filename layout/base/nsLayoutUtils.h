@@ -1491,7 +1491,7 @@ public:
    *   @param aDirty            Pixels outside this area may be skipped.
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    */
-  static nsresult DrawBackgroundImage(nsRenderingContext* aRenderingContext,
+  static nsresult DrawBackgroundImage(gfxContext&         aContext,
                                       nsPresContext*      aPresContext,
                                       imgIContainer*      aImage,
                                       const nsIntSize&    aImageSize,
@@ -1517,7 +1517,7 @@ public:
    *   @param aDirty            Pixels outside this area may be skipped.
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    */
-  static nsresult DrawImage(nsRenderingContext* aRenderingContext,
+  static nsresult DrawImage(gfxContext&         aContext,
                             nsPresContext*      aPresContext,
                             imgIContainer*      aImage,
                             GraphicsFilter      aGraphicsFilter,
@@ -1571,7 +1571,7 @@ public:
    *                            in appunits. For best results it should
    *                            be aligned with image pixels.
    */
-  static nsresult DrawSingleUnscaledImage(nsRenderingContext* aRenderingContext,
+  static nsresult DrawSingleUnscaledImage(gfxContext&          aContext,
                                           nsPresContext*       aPresContext,
                                           imgIContainer*       aImage,
                                           GraphicsFilter       aGraphicsFilter,
@@ -1600,7 +1600,7 @@ public:
    *                            in appunits. For best results it should
    *                            be aligned with image pixels.
    */
-  static nsresult DrawSingleImage(nsRenderingContext* aRenderingContext,
+  static nsresult DrawSingleImage(gfxContext&         aContext,
                                   nsPresContext*      aPresContext,
                                   imgIContainer*      aImage,
                                   GraphicsFilter      aGraphicsFilter,

@@ -4915,7 +4915,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     {
       nsIntSize imageSize(nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
                           nsPresContext::AppUnitsToIntCSSPixels(mSize.height));
-      nsLayoutUtils::DrawBackgroundImage(&aRenderingContext, aPresContext,
+      nsLayoutUtils::DrawBackgroundImage(*aRenderingContext.ThebesContext(),
+                                         aPresContext,
                                          mImageContainer, imageSize, filter,
                                          aDest, aFill, aAnchor, aDirtyRect,
                                          ConvertImageRendererToDrawFlags(mFlags));
@@ -4945,7 +4946,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
       }
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
-      nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+      nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
+                               aPresContext, image,
                                filter, aDest, aFill, aAnchor, aDirtyRect,
                                ConvertImageRendererToDrawFlags(mFlags));
 
@@ -5139,7 +5141,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
-      nsLayoutUtils::DrawSingleImage(&aRenderingContext,
+      nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
                                      aPresContext,
                                      subImage,
                                      graphicsFilter,
@@ -5150,7 +5152,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     }
 
     nsRect tile = ComputeTile(aFill, aHFill, aVFill, aUnitSize);
-    nsLayoutUtils::DrawImage(&aRenderingContext,
+    nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
                              aPresContext,
                              subImage,
                              graphicsFilter,
