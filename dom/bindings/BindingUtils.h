@@ -667,46 +667,49 @@ DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
                                          JS::Handle<JSObject*> obj,
                                          const NativeProperties* properties);
 
+#define HAS_MEMBER_TYPEDEFS                                               \
+private:                                                                  \
+  typedef char yes[1];                                                    \
+  typedef char no[2]
+
 #ifdef _MSC_VER
 #define HAS_MEMBER_CHECK(_name)                                           \
-  template<typename V> static yes& Check(char (*)[(&V::_name == 0) + 1])
+  template<typename V> static yes& Check##_name(char (*)[(&V::_name == 0) + 1])
 #else
 #define HAS_MEMBER_CHECK(_name)                                           \
-  template<typename V> static yes& Check(char (*)[sizeof(&V::_name) + 1])
+  template<typename V> static yes& Check##_name(char (*)[sizeof(&V::_name) + 1])
 #endif
 
-#define HAS_MEMBER(_name)                                                 \
-template<typename T>                                                      \
-class Has##_name##Member {                                                \
-  typedef char yes[1];                                                    \
-  typedef char no[2];                                                     \
-  HAS_MEMBER_CHECK(_name);                                                \
-  template<typename V> static no& Check(...);                             \
+#define HAS_MEMBER(_memberName, _valueName)                               \
+private:                                                                  \
+  HAS_MEMBER_CHECK(_memberName);                                          \
+  template<typename V> static no& Check##_memberName(...);                \
                                                                           \
 public:                                                                   \
-  static bool const Value = sizeof(Check<T>(nullptr)) == sizeof(yes);     \
-};
+  static bool const _valueName =                                          \
+    sizeof(Check##_memberName<T>(nullptr)) == sizeof(yes)
 
-HAS_MEMBER(WrapObject)
-
-// HasWrapObject<T>::Value will be true if T has a WrapObject member but it's
-// not nsWrapperCache::WrapObject.
-template<typename T>
-struct HasWrapObject
+template<class T>
+struct NativeHasMember
 {
-private:
-  typedef char yes[1];
-  typedef char no[2];
-  typedef JSObject* (nsWrapperCache::*WrapObject)(JSContext*,
-                                                  JS::Handle<JSObject*>);
-  template<typename U, U> struct SFINAE;
-  template <typename V> static no& Check(SFINAE<WrapObject, &V::WrapObject>*);
-  template <typename V> static yes& Check(...);
+  HAS_MEMBER_TYPEDEFS;
 
-public:
-  static bool const Value = HasWrapObjectMember<T>::Value &&
-                            sizeof(Check<T>(nullptr)) == sizeof(yes);
+  HAS_MEMBER(GetParentObject, GetParentObject);
+  HAS_MEMBER(JSBindingFinalized, JSBindingFinalized);
+  HAS_MEMBER(WrapObject, WrapObject);
 };
+
+template<class T>
+struct IsSmartPtr
+{
+  HAS_MEMBER_TYPEDEFS;
+
+  HAS_MEMBER(get, value);
+};
+
+#undef HAS_MEMBER
+#undef HAS_MEMBER_CHECK
+#undef HAS_MEMBER_TYPEDEFS
 
 #ifdef DEBUG
 template <class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
@@ -1100,9 +1103,8 @@ HandleNewBindingWrappingFailure(JSContext* cx, JS::Handle<JSObject*> scope,
 
 // Helper for calling HandleNewBindingWrappingFailure with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
-HAS_MEMBER(get)
 
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct HandleNewBindingWrappingFailureHelper
 {
   static inline bool Wrap(JSContext* cx, JS::Handle<JSObject*> scope,
@@ -1467,7 +1469,7 @@ struct WrapNativeParentFallback<T, true >
 
 // Wrapping of our native parent, for cases when it's a WebIDL object (though
 // possibly preffed off).
-template<typename T, bool hasWrapObject=HasWrapObject<T>::Value >
+template<typename T, bool hasWrapObject=NativeHasMember<T>::WrapObject>
 struct WrapNativeParentHelper
 {
   static inline JSObject* Wrap(JSContext* cx, T* parent, nsWrapperCache* cache)
@@ -1493,7 +1495,7 @@ struct WrapNativeParentHelper
 // Wrapping of our native parent, for cases when it's not a WebIDL object.  In
 // this case it must be nsISupports.
 template<typename T>
-struct WrapNativeParentHelper<T, false >
+struct WrapNativeParentHelper<T, false>
 {
   static inline JSObject* Wrap(JSContext* cx, T* parent, nsWrapperCache* cache)
   {
@@ -1551,9 +1553,7 @@ WrapNativeParent(JSContext* cx, const T& p)
   return WrapNativeParent(cx, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
 }
 
-HAS_MEMBER(GetParentObject)
-
-template<typename T, bool WrapperCached=HasGetParentObjectMember<T>::Value>
+template<typename T, bool WrapperCached=NativeHasMember<T>::GetParentObject>
 struct GetParentObject
 {
   static JSObject* Get(JSContext* cx, JS::Handle<JSObject*> obj)
@@ -1632,7 +1632,7 @@ WrapCallThisObject<JS::Rooted<JSObject*>>(JSContext* cx,
 
 // Helper for calling GetOrCreateDOMReflector with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetOrCreateDOMReflectorHelper
 {
   static inline bool GetOrCreate(JSContext* cx, const T& value,
@@ -1673,7 +1673,7 @@ GetOrCreateDOMReflector(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
 
 // Helper for calling GetOrCreateDOMReflectorNoWrap with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetOrCreateDOMReflectorNoWrapHelper
 {
   static inline bool GetOrCreate(JSContext* cx, const T& value,
@@ -1712,7 +1712,7 @@ GetCallbackFromCallbackObject(T* aObj)
 // Helper for getting the callback JSObject* of a smart ptr around a
 // CallbackObject or a reference to a CallbackObject or something like
 // that.
-template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+template <class T, bool isSmartPtr=IsSmartPtr<T>::value>
 struct GetCallbackFromCallbackObjectHelper
 {
   static inline JSObject* Get(const T& aObj)
@@ -2524,9 +2524,7 @@ MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 {
 }
 
-HAS_MEMBER(JSBindingFinalized)
-
-template<class T, bool hasCallback=HasJSBindingFinalizedMember<T>::Value>
+template<class T, bool hasCallback=NativeHasMember<T>::JSBindingFinalized>
 struct JSBindingFinalized
 {
   static void Finalized(T* self)
