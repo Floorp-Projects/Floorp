@@ -2370,7 +2370,7 @@ FindPendingDir()
 static bool
 GetPendingDir(nsIFile** dir)
 {
-  MOZ_ASSERT(OOPInitialized());
+  // MOZ_ASSERT(OOPInitialized());
   if (!pendingDirectory) {
     return false;
   }
