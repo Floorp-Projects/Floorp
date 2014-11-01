@@ -92,7 +92,7 @@ class MochitestRunner(MozbuildObject):
         appname = 'webapprt-stub' + mozinfo.info.get('bin_suffix', '')
         if sys.platform.startswith('darwin'):
             appname = os.path.join(self.distdir, self.substs['MOZ_MACBUNDLE_NAME'],
-            'Contents', 'Resources', appname)
+            'Contents', 'MacOS', appname)
         else:
             appname = os.path.join(self.distdir, 'bin', appname)
         return appname
