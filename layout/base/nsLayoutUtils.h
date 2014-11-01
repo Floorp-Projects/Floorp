@@ -74,6 +74,9 @@ class HTMLImageElement;
 class HTMLCanvasElement;
 class HTMLVideoElement;
 } // namespace dom
+namespace gfx {
+struct RectCornerRadii;
+} // namespace gfx
 namespace layers {
 class Layer;
 class ClientLayerManager;
@@ -126,6 +129,7 @@ class nsLayoutUtils
   typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::Matrix4x4 Matrix4x4;
+  typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::StrokeOptions StrokeOptions;
 
 public:
@@ -870,7 +874,7 @@ public:
                                            const nscoord aRadii[8],
                                            const nsRect& aContainedRect);
   static nsIntRegion RoundedRectIntersectIntRect(const nsIntRect& aRoundedRect,
-                                                 const gfxCornerSizes& aCorners,
+                                                 const RectCornerRadii& aCornerRadii,
                                                  const nsIntRect& aContainedRect);
 
   /**
