@@ -5746,15 +5746,11 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
 
         if not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
-                assert descriptor.nativeOwnership != 'owned'
                 wrapMethod = "GetOrCreateDOMReflector"
             else:
                 if not returnsNewObject:
                     raise MethodNotNewObjectError(descriptor.interface.identifier.name)
-                if descriptor.nativeOwnership == 'owned':
-                    wrapMethod = "WrapNewBindingNonWrapperCachedOwnedObject"
-                else:
-                    wrapMethod = "WrapNewBindingNonWrapperCachedObject"
+                wrapMethod = "WrapNewBindingNonWrapperCachedObject"
             wrap = "%s(cx, ${obj}, %s, ${jsvalHandle})" % (wrapMethod, result)
             if not descriptor.hasXPConnectImpls:
                 # Can only fail to wrap as a new-binding object
