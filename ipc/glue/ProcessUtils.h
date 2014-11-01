@@ -21,7 +21,7 @@ void SetThisProcessName(const char *aName);
 #ifdef MOZ_B2G_LOADER
 // see ProcessUtils_linux.cpp for explaination.
 void ProcLoaderClientGeckoInit();
-
+bool ProcLoaderIsInitialized();
 bool ProcLoaderLoad(const char *aArgv[],
                     const char *aEnvp[],
                     const base::file_handle_mapping_vector &aFdsRemap,
