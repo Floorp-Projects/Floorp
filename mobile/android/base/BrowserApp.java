@@ -2761,6 +2761,10 @@ public class BrowserApp extends GeckoApp
         // the frequency of use for various actions.
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, getResources().getResourceEntryName(itemId));
 
+        if (NewTabletUI.isEnabled(this)) {
+            mBrowserToolbar.cancelEdit();
+        }
+
         if (itemId == R.id.bookmark) {
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
