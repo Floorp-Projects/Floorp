@@ -468,11 +468,6 @@ class Descriptor(DescriptorProvider):
                     iface.setUserData('hasProxyDescendant', True)
                     iface = iface.parent
 
-        self.nativeOwnership = desc.get('nativeOwnership', 'refcounted')
-        if not self.nativeOwnership in ('owned', 'refcounted'):
-            raise TypeError("Descriptor for %s has unrecognized value (%s) "
-                            "for nativeOwnership" %
-                            (self.interface.identifier.name, self.nativeOwnership))
         if desc.get('wantsQI', None) != None:
             self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
