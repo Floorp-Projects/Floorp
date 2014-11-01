@@ -3057,17 +3057,16 @@ class CGConstructorEnabled(CGAbstractMethod):
 
 
 def CreateBindingJSObject(descriptor, properties):
+    objDecl = "BindingJSObjectCreator<%s> creator(aCx);\n" % descriptor.nativeType
+
     # We don't always need to root obj, but there are a variety
     # of cases where we do, so for simplicity, just always root it.
-    objDecl = "JS::Rooted<JSObject*> obj(aCx);\n"
     if descriptor.proxy:
         create = dedent(
             """
-            JS::Rooted<JS::Value> proxyPrivateVal(aCx, JS::PrivateValue(aObject));
-            js::ProxyOptions options;
-            options.setClass(&Class.mBase);
-            obj = NewProxyObject(aCx, DOMProxyHandler::getInstance(),
-                                 proxyPrivateVal, proto, global, options);
+            const JS::Rooted<JSObject*>& obj =
+              creator.CreateProxyObject(aCx, &Class.mBase, DOMProxyHandler::getInstance(),
+                                        proto, global, aObject);
             if (!obj) {
               return nullptr;
             }
@@ -3082,25 +3081,13 @@ def CreateBindingJSObject(descriptor, properties):
     else:
         create = dedent(
             """
-            obj = JS_NewObject(aCx, Class.ToJSClass(), proto, global);
+            const JS::Rooted<JSObject*>& obj =
+              creator.CreateObject(aCx, Class.ToJSClass(), proto, global, aObject);
             if (!obj) {
               return nullptr;
             }
-
-            js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
             """)
-    create = objDecl + create
-
-    if descriptor.nativeOwnership == 'refcounted':
-        create += "NS_ADDREF(aObject);\n"
-    else:
-        create += dedent("""
-            // Make sure the native objects inherit from NonRefcountedDOMObject so that we
-            // log their ctor and dtor.
-            MustInheritFromNonRefcountedDOMObject(aObject);
-            *aTookOwnership = true;
-            """)
-    return create
+    return objDecl + create
 
 
 def InitUnforgeablePropertiesOnObject(descriptor, obj, properties, failureReturnValue=""):
@@ -3267,7 +3254,7 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
 
             aCache->SetWrapper(obj);
             $*{slots}
-            return obj;
+            return creator.ForgetObject();
             """,
             assertion=AssertInheritanceChain(self.descriptor),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
@@ -3300,8 +3287,6 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
                 Argument(descriptor.nativeType + '*', 'aObject')]
-        if descriptor.nativeOwnership == 'owned':
-            args.append(Argument('bool*', 'aTookOwnership'))
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
         self.properties = properties
 
@@ -3321,7 +3306,7 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
             $*{unforgeable}
 
             $*{slots}
-            return obj;
+            return creator.ForgetObject();
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             createObject=CreateBindingJSObject(self.descriptor, self.properties),
