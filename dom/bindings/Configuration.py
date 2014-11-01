@@ -476,8 +476,7 @@ class Descriptor(DescriptorProvider):
         if desc.get('wantsQI', None) != None:
             self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
-                             (self.nativeOwnership != 'owned' and
-                              desc.get('wrapperCache', True)))
+                             desc.get('wrapperCache', True))
 
         def make_name(name):
             return name + "_workers" if self.workers else name
