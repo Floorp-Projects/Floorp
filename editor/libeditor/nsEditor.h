@@ -212,8 +212,9 @@ public:
                                       bool aSuppressIME = false);
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction,
                                  EStripWrappers aStripWrappers);
-  NS_IMETHOD DeleteSelectionAndCreateNode(const nsAString& aTag,
-                                           nsIDOMNode ** aNewNode);
+
+  already_AddRefed<mozilla::dom::Element>
+  DeleteSelectionAndCreateElement(nsIAtom& aTag);
 
   /* helper routines for node/parent manipulations */
   nsresult DeleteNode(nsINode* aNode);
