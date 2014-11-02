@@ -14,6 +14,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
+const kDeleteTempFileOnExit = "browser.helperApps.deleteTempFileOnExit";
+
 /**
  * Creates and starts a new download, using either DownloadCopySaver or
  * DownloadLegacySaver based on the current test run.
@@ -170,21 +172,55 @@ add_task(function test_basic_tryToKeepPartialData()
 /**
  * Tests the permissions of the final target file once the download finished.
  */
-add_task(function test_basic_unix_permissions()
+add_task(function test_unix_permissions()
 {
   // This test is only executed on Linux and Mac.
   if (Services.appinfo.OS != "Darwin" && Services.appinfo.OS != "Linux") {
-    do_print("Skipping test_basic_unix_permissions");
+    do_print("Skipping test.");
     return;
   }
 
-  let download = yield promiseStartDownload(httpUrl("source.txt"));
-  yield promiseDownloadStopped(download);
+  let launcherPath = getTempFile("app-launcher").path;
 
-  // The file should readable and writable by everyone, but the restrictions
-  // from the umask of the process should still apply.
-  do_check_eq((yield OS.File.stat(download.target.path)).unixMode,
-              0o666 & ~OS.Constants.Sys.umask);
+  for (let autoDelete of [false, true]) {
+    for (let isPrivate of [false, true]) {
+      for (let launchWhenSucceeded of [false, true]) {
+        do_print("Checking " + JSON.stringify({ autoDelete,
+                                                isPrivate,
+                                                launchWhenSucceeded }));
+
+        Services.prefs.setBoolPref(kDeleteTempFileOnExit, autoDelete);
+
+        let download;
+        if (!gUseLegacySaver) {
+          download = yield Downloads.createDownload({
+            source: { url: httpUrl("source.txt"), isPrivate },
+            target: getTempFile(TEST_TARGET_FILE_NAME).path,
+            launchWhenSucceeded,
+            launcherPath,
+          });
+          yield download.start();
+        } else {
+          download = yield promiseStartLegacyDownload(httpUrl("source.txt"), {
+            isPrivate,
+            launchWhenSucceeded,
+            launcherPath: launchWhenSucceeded && launcherPath,
+          });
+          yield promiseDownloadStopped(download);
+        }
+
+        // Temporary downloads should be read-only and not accessible to other
+        // users, while permanently downloaded files should be readable and
+        // writable as specified by the system umask.
+        let isTemporary = launchWhenSucceeded && (autoDelete || isPrivate);
+        do_check_eq((yield OS.File.stat(download.target.path)).unixMode,
+                    isTemporary ? 0o400 : (0o666 & ~OS.Constants.Sys.umask));
+      }
+    }
+  }
+
+  // Clean up the changes to the preference.
+  Services.prefs.clearUserPref(kDeleteTempFileOnExit);
 });
 
 /**
@@ -773,6 +809,13 @@ add_task(function test_cancel_midway_restart_tryToKeepPartialData_false()
   // While the download is in progress, we should still have a ".part" file.
   do_check_false(download.hasPartialData);
   do_check_true(yield OS.File.exists(download.target.partFilePath));
+
+  // On Unix, verify that the file with the partially downloaded data is not
+  // accessible by other users on the system.
+  if (Services.appinfo.OS == "Darwin" || Services.appinfo.OS == "Linux") {
+    do_check_eq((yield OS.File.stat(download.target.partFilePath)).unixMode,
+                0o600);
+  }
 
   yield download.cancel();
 
