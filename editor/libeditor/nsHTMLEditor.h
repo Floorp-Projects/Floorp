@@ -284,7 +284,8 @@ public:
   NS_IMETHOD EndOperation();
 
   /** returns true if aParentTag can contain a child of type aChildTag */
-  virtual bool TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag);
+  virtual bool TagCanContainTag(nsIAtom& aParentTag, nsIAtom& aChildTag)
+    MOZ_OVERRIDE;
   
   /** returns true if aNode is a container */
   virtual bool IsContainer(nsINode* aNode) MOZ_OVERRIDE;
