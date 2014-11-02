@@ -45,6 +45,7 @@ public:
   static bool IsBlockquote(nsIDOMNode *aNode);
   static bool IsPre(nsIDOMNode *aNode);
   static bool IsAnchor(nsIDOMNode *aNode);
+  static bool IsImage(nsINode* aNode);
   static bool IsImage(nsIDOMNode *aNode);
   static bool IsLink(nsIDOMNode *aNode);
   static bool IsLink(nsINode* aNode);

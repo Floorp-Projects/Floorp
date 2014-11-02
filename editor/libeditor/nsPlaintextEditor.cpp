@@ -776,8 +776,8 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
     NS_ENSURE_STATE(selNode);
 
     // don't put text in places that can't have it
-    if (!IsTextNode(selNode) && !CanContainTag(GetAsDOMNode(selNode),
-                                               nsGkAtoms::textTagName)) {
+    if (!IsTextNode(selNode) && !CanContainTag(*selNode,
+                                               *nsGkAtoms::textTagName)) {
       return NS_ERROR_FAILURE;
     }
 
