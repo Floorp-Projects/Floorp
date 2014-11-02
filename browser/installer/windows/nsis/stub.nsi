@@ -1915,12 +1915,14 @@ Function ExecSetAsDefaultAppUser
 FunctionEnd
 
 Function LaunchApp
+!ifndef DEV_EDITION
   FindWindow $0 "${WindowClass}"
   ${If} $0 <> 0 ; integer comparison
     StrCpy $FirefoxLaunchCode "1"
     MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
     Return
   ${EndIf}
+!endif
 
   StrCpy $FirefoxLaunchCode "2"
 

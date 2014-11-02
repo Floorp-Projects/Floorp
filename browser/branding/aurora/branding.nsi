@@ -8,7 +8,7 @@
 
 # BrandFullNameInternal is used for some registry and file system values
 # instead of BrandFullName and typically should not be modified.
-!define BrandFullNameInternal "Aurora"
+!define BrandFullNameInternal "Firefox Developer Edition"
 !define CompanyName           "mozilla.org"
 !define URLInfoAbout          "https://www.mozilla.org"
 !define HelpLink              "https://support.mozilla.org"
@@ -25,8 +25,8 @@
 # settings.
 # The dialog units for the bitmap's dimensions should match exactly with the
 # bitmap's width and height in pixels.
-!define APPNAME_BMP_WIDTH_DU 158u
-!define APPNAME_BMP_HEIGHT_DU 21u
+!define APPNAME_BMP_WIDTH_DU 93u
+!define APPNAME_BMP_HEIGHT_DU 44u
 !define INTRO_BLURB_WIDTH_DU "232u"
 !define INTRO_BLURB_EDGE_DU "196u"
 !define INTRO_BLURB_LTR_TOP_DU "16u"
@@ -42,3 +42,6 @@
 !define COMMON_TEXT_COLOR_NORMAL 0xFFFFFF
 !define COMMON_TEXT_COLOR_FADED 0xA1AAB3
 !define COMMON_BKGRD_COLOR 0x0F1B26
+
+# Enable DeveloperEdition-specific behavior
+!define DEV_EDITION
