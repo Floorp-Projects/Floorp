@@ -2233,12 +2233,12 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       if (bDeletedBR)
       {
         // put selection at edge of block and we are done.
-        nsCOMPtr<nsIDOMNode> newSelNode;
-        int32_t newSelOffset;
-        res = GetGoodSelPointForNode(leafNode, aAction, address_of(newSelNode), &newSelOffset);
-        NS_ENSURE_SUCCESS(res, res);
-        aSelection->Collapse(newSelNode, newSelOffset);
-        return res;
+        nsCOMPtr<nsINode> leafNode_ = do_QueryInterface(leafNode);
+        NS_ENSURE_STATE(leafNode_ || !leafNode);
+        ::DOMPoint newSel = GetGoodSelPointForNode(*leafNode_, aAction);
+        NS_ENSURE_STATE(newSel.node);
+        aSelection->Collapse(newSel.node, newSel.offset);
+        return NS_OK;
       }
       
       // else we are joining content to block
@@ -2602,51 +2602,32 @@ nsHTMLEditRules::InsertBRIfNeeded(Selection* aSelection)
   return NS_OK;
 }
 
-/*****************************************************************************************************
-*    GetGoodSelPointForNode: Finds where at a node you would want to set the selection if you were
-*    trying to have a caret next to it.
-*         nsIDOMNode *aNode                  the node 
-*         nsIEditor::EDirection aAction      which edge to find: eNext indicates beginning, ePrevious ending
-*         nsCOMPtr<nsIDOMNode> *outSelNode   desired sel node
-*         int32_t *outSelOffset              desired sel offset
-*/
-nsresult
-nsHTMLEditRules::GetGoodSelPointForNode(nsIDOMNode *aNode, nsIEditor::EDirection aAction, 
-                                        nsCOMPtr<nsIDOMNode> *outSelNode, int32_t *outSelOffset)
+/**
+ *  GetGoodSelPointForNode: Finds where at a node you would want to set the
+ *  selection if you were trying to have a caret next to it.
+ *       nsINode& aNode                   the node
+ *       nsIEditor::EDirection aAction    which edge to find: eNext indicates
+ *                                        beginning, ePrevious ending
+ */
+::DOMPoint
+nsHTMLEditRules::GetGoodSelPointForNode(nsINode& aNode,
+                                        nsIEditor::EDirection aAction)
 {
-  NS_ENSURE_TRUE(aNode && outSelNode && outSelOffset, NS_ERROR_NULL_POINTER);
-  
-  nsresult res = NS_OK;
-  
-  // default values
-  *outSelNode = aNode;
-  *outSelOffset = 0;
-  
-  NS_ENSURE_STATE(mHTMLEditor);
-  if (mHTMLEditor->IsTextNode(aNode) ||
-      !mHTMLEditor || mHTMLEditor->IsContainer(aNode))
-  {
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (aAction == nsIEditor::ePrevious)
-    {
-      uint32_t len;
-      res = mHTMLEditor->GetLengthOfDOMNode(aNode, len);
-      *outSelOffset = int32_t(len);
-      NS_ENSURE_SUCCESS(res, res);
-    }
+  NS_ENSURE_TRUE(mHTMLEditor, ::DOMPoint());
+  if (aNode.GetAsText() || mHTMLEditor->IsContainer(&aNode)) {
+    return ::DOMPoint(&aNode,
+                      aAction == nsIEditor::ePrevious ? aNode.Length() : 0);
   }
-  else 
-  {
-    *outSelNode = nsEditor::GetNodeLocation(aNode, outSelOffset);
-    if (!nsTextEditUtils::IsBreak(aNode) ||
-        !mHTMLEditor || mHTMLEditor->IsVisBreak(aNode))
-    {
-      NS_ENSURE_STATE(mHTMLEditor);
-      if (aAction == nsIEditor::ePrevious)
-        (*outSelOffset)++;
-    }
+
+  ::DOMPoint ret;
+  ret.node = aNode.GetParentNode();
+  ret.offset = ret.node ? ret.node->IndexOf(&aNode) : -1;
+  NS_ENSURE_TRUE(mHTMLEditor, ::DOMPoint());
+  if ((aNode.Tag() != nsGkAtoms::br || mHTMLEditor->IsVisBreak(&aNode)) &&
+      aAction == nsIEditor::ePrevious) {
+    ret.offset++;
   }
-  return res;
+  return ret;
 }
 
 

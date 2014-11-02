@@ -210,7 +210,8 @@ struct MOZ_STACK_CLASS DOMPoint
 {
   nsCOMPtr<nsINode> node;
   int32_t offset;
-  
+
+  DOMPoint() : node(nullptr), offset(-1) {}
   DOMPoint(nsINode* aNode, int32_t aOffset)
     : node(aNode)
     , offset(aOffset)

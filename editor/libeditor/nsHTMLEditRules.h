@@ -150,8 +150,8 @@ protected:
                               nsIEditor::EDirection aDir, 
                               nsresult aResult);
   nsresult InsertBRIfNeeded(mozilla::dom::Selection* aSelection);
-  nsresult GetGoodSelPointForNode(nsIDOMNode *aNode, nsIEditor::EDirection aAction, 
-                                  nsCOMPtr<nsIDOMNode> *outSelNode, int32_t *outSelOffset);
+  ::DOMPoint GetGoodSelPointForNode(nsINode& aNode,
+                                    nsIEditor::EDirection aAction);
   nsresult JoinBlocks(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, bool *aCanceled);
   nsresult MoveBlock(nsIDOMNode *aLeft, nsIDOMNode *aRight, int32_t aLeftOffset, int32_t aRightOffset);
   nsresult MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, int32_t *aOffset);
