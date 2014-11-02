@@ -31,7 +31,6 @@ class AddStyleSheetTxn;
 class DeleteNodeTxn;
 class EditAggregateTxn;
 class RemoveStyleSheetTxn;
-class SplitElementTxn;
 class nsIAtom;
 class nsIContent;
 class nsIDOMCharacterData;
@@ -76,6 +75,7 @@ class InsertTextTxn;
 class InsertNodeTxn;
 class JoinNodeTxn;
 class Selection;
+class SplitNodeTxn;
 class Text;
 }  // namespace dom
 }  // namespace mozilla
@@ -234,6 +234,8 @@ public:
                                 nsIAtom* aNodeType,
                                 nsIAtom* aAttribute = nullptr,
                                 const nsAString* aValue = nullptr);
+  nsIContent* SplitNode(nsIContent& aNode, int32_t aOffset,
+                        mozilla::ErrorResult& aResult);
   nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
@@ -337,9 +339,8 @@ protected:
   CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData, uint32_t aOffset,
                               EDirection aDirection);
 	
-  NS_IMETHOD CreateTxnForSplitNode(nsIDOMNode *aNode,
-                                   uint32_t    aOffset,
-                                   SplitElementTxn **aTxn);
+  already_AddRefed<mozilla::dom::SplitNodeTxn>
+  CreateTxnForSplitNode(nsIContent& aNode, uint32_t aOffset);
 
   already_AddRefed<mozilla::dom::JoinNodeTxn>
   CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
