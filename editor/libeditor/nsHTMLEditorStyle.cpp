@@ -446,7 +446,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
     res = MoveNode(aNode, previousSibling, -1);
     NS_ENSURE_SUCCESS(res, res);
     if (IsSimpleModifiableNode(nextSibling, aProperty, aAttribute, aValue)) {
-      res = JoinNodes(previousSibling, nextSibling);
+      res = JoinNodes(*previousSibling, *nextSibling);
       NS_ENSURE_SUCCESS(res, res);
     }
     return NS_OK;
