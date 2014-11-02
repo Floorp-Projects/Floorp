@@ -20,7 +20,7 @@
 #include "InsertTextTxn.h"              // for InsertTextTxn
 #include "JoinNodeTxn.h"                // for JoinNodeTxn
 #include "PlaceholderTxn.h"             // for PlaceholderTxn
-#include "SplitElementTxn.h"            // for SplitElementTxn
+#include "SplitNodeTxn.h"               // for SplitNodeTxn
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozISpellCheckingEngine.h"
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
@@ -1421,38 +1421,44 @@ nsEditor::InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition)
 }
 
 
-NS_IMETHODIMP 
-nsEditor::SplitNode(nsIDOMNode * aNode,
-                    int32_t      aOffset,
-                    nsIDOMNode **aNewLeftNode)
+NS_IMETHODIMP
+nsEditor::SplitNode(nsIDOMNode* aNode,
+                    int32_t aOffset,
+                    nsIDOMNode** aNewLeftNode)
 {
-  int32_t i;
-  nsAutoRules beginRulesSniffing(this, EditAction::splitNode, nsIEditor::eNext);
+  nsCOMPtr<nsIContent> node = do_QueryInterface(aNode);
+  NS_ENSURE_STATE(node);
+  ErrorResult rv;
+  nsCOMPtr<nsIContent> newNode = SplitNode(*node, aOffset, rv);
+  *aNewLeftNode = GetAsDOMNode(newNode.forget().take());
+  return rv.ErrorCode();
+}
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->WillSplitNode(aNode, aOffset);
+nsIContent*
+nsEditor::SplitNode(nsIContent& aNode, int32_t aOffset, ErrorResult& aResult)
+{
+  nsAutoRules beginRulesSniffing(this, EditAction::splitNode,
+                                 nsIEditor::eNext);
 
-  nsRefPtr<SplitElementTxn> txn;
-  nsresult result = CreateTxnForSplitNode(aNode, aOffset, getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))
-  {
-    result = DoTransaction(txn);
-    if (NS_SUCCEEDED(result))
-    {
-      result = txn->GetNewNode(aNewLeftNode);
-      NS_ASSERTION((NS_SUCCEEDED(result)), "result must succeeded for GetNewNode");
-    }
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->WillSplitNode(aNode.AsDOMNode(), aOffset);
   }
 
-  mRangeUpdater.SelAdjSplitNode(aNode, aOffset, *aNewLeftNode);
+  nsRefPtr<SplitNodeTxn> txn = CreateTxnForSplitNode(aNode, aOffset);
+  aResult = DoTransaction(txn);
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-  {
-    nsIDOMNode *ptr = *aNewLeftNode;
-    mActionListeners[i]->DidSplitNode(aNode, aOffset, ptr, result);
+  nsCOMPtr<nsIContent> newNode = aResult.Failed() ? nullptr
+                                                  : txn->GetNewNode();
+
+  mRangeUpdater.SelAdjSplitNode(aNode, aOffset, newNode);
+
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->DidSplitNode(aNode.AsDOMNode(), aOffset,
+                                      GetAsDOMNode(newNode),
+                                      aResult.ErrorCode());
   }
 
-  return result;
+  return newNode;
 }
 
 
@@ -2577,24 +2583,11 @@ nsEditor::CreateTxnForDeleteText(nsGenericDOMDataNode& aCharData,
   return txn.forget();
 }
 
-
-
-
-NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
-                                         uint32_t    aOffset,
-                                         SplitElementTxn **aTxn)
+already_AddRefed<SplitNodeTxn>
+nsEditor::CreateTxnForSplitNode(nsIContent& aNode, uint32_t aOffset)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-
-  nsRefPtr<SplitElementTxn> txn = new SplitElementTxn();
-
-  nsresult rv = txn->Init(this, aNode, aOffset);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
-
-  return rv;
+  nsRefPtr<SplitNodeTxn> txn = new SplitNodeTxn(*this, aNode, aOffset);
+  return txn.forget();
 }
 
 already_AddRefed<JoinNodeTxn>
