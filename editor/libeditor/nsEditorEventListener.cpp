@@ -10,6 +10,7 @@
 #include "mozilla/TextEvents.h"         // for WidgetCompositionEvent
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/EventTarget.h"    // for EventTarget
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCaret.h"                    // for nsCaret
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
@@ -31,7 +32,6 @@
 #include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
-#include "nsIDOMRange.h"                // for nsIDOMRange
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditor.h"                  // for nsEditor::GetSelection, etc
 #include "nsIEditorIMESupport.h"
@@ -42,14 +42,13 @@
 #include "nsINode.h"                    // for nsINode, ::NODE_IS_EDITABLE, etc
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
 #include "nsIPresShell.h"               // for nsIPresShell
-#include "nsISelection.h"               // for nsISelection
 #include "nsISelectionController.h"     // for nsISelectionController, etc
-#include "nsISelectionPrivate.h"        // for nsISelectionPrivate
 #include "nsITransferable.h"            // for kFileMime, kHTMLMime, etc
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsPIWindowRoot.h"             // for nsPIWindowRoot
 #include "nsPrintfCString.h"            // for nsPrintfCString
+#include "nsRange.h"
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsAutoString
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
@@ -713,8 +712,8 @@ nsEditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsISelection> selection;
-  if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection)))) {
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
+  if (selection) {
     selection->Collapse(parent, offset);
   }
 
@@ -983,9 +982,8 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     return true;
   }
 
-  nsCOMPtr<nsISelection> selection;
-  rv = mEditor->GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv) || !selection) {
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
+  if (!selection) {
     return false;
   }
 
@@ -1009,9 +1007,8 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, false);
 
   for (int32_t i = 0; i < rangeCount; i++) {
-    nsCOMPtr<nsIDOMRange> range;
-    rv = selection->GetRangeAt(i, getter_AddRefs(range));
-    if (NS_FAILED(rv) || !range) {
+    nsRefPtr<nsRange> range = selection->GetRangeAt(i);
+    if (!range) {
       // Don't bail yet, iterate through them all
       continue;
     }

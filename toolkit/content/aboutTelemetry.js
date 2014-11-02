@@ -830,6 +830,26 @@ let KeyValueTable = {
   }
 };
 
+let KeyedHistogram = {
+  render: function(parent, id, keyedHistogram) {
+    let outerDiv = document.createElement("div");
+    outerDiv.className = "keyed-histogram";
+    outerDiv.id = id;
+
+    let divTitle = document.createElement("div");
+    divTitle.className = "keyed-histogram-title";
+    divTitle.appendChild(document.createTextNode(id));
+    outerDiv.appendChild(divTitle);
+
+    for (let [name, hgram] of Iterator(keyedHistogram)) {
+      Histogram.render(outerDiv, name, hgram);
+    }
+
+    parent.appendChild(outerDiv);
+    return outerDiv;
+  },
+};
+
 let AddonDetails = {
   tableIDTitle: bundle.GetStringFromName("addonTableID"),
   tableDetailsTitle: bundle.GetStringFromName("addonTableDetails"),
@@ -995,6 +1015,17 @@ function onLoad() {
     }
 
     setHasData("histograms-section", true);
+  }
+
+  // Show keyed histogram data
+  let keyedHistograms = Telemetry.keyedHistogramSnapshots;
+  if (Object.keys(keyedHistograms).length) {
+    let keyedDiv = document.getElementById("keyed-histograms");
+    for (let [id, keyed] of Iterator(keyedHistograms)) {
+      KeyedHistogram.render(keyedDiv, id, keyed);
+    }
+
+    setHasData("keyed-histograms-section", true);
   }
 
   // Show addon histogram data

@@ -2352,7 +2352,6 @@ DumpHeap(JSContext *cx, unsigned argc, jsval *vp)
         thingToIgnore = args[4];
     }
 
-
     FILE *dumpFile = stdout;
     if (fileName.length()) {
         dumpFile = fopen(fileName.ptr(), "w");
@@ -2914,7 +2913,6 @@ static const JSClass resolver_class = {
     JS_ConvertStub
 };
 
-
 static bool
 Resolver(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -3244,6 +3242,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+#ifdef DEBUG
 static bool
 StackDump(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3264,7 +3263,7 @@ StackDump(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setUndefined();
     return true;
 }
-
+#endif
 
 static bool
 Elapsed(JSContext *cx, unsigned argc, jsval *vp)

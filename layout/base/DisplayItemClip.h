@@ -6,6 +6,7 @@
 #ifndef DISPLAYITEMCLIP_H_
 #define DISPLAYITEMCLIP_H_
 
+#include "mozilla/RefPtr.h"
 #include "nsRect.h"
 #include "nsTArray.h"
 #include "nsStyleConsts.h"
@@ -16,6 +17,13 @@ class nsPresContext;
 class nsRegion;
 
 namespace mozilla {
+namespace gfx {
+class DrawTarget;
+class Path;
+}
+}
+
+namespace mozilla {
 
 /**
  * An DisplayItemClip represents the intersection of an optional rectangle
@@ -24,6 +32,9 @@ namespace mozilla {
  * SVG clip-path), including no clipping at all.
  */
 class DisplayItemClip {
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Path Path;
+
 public:
   struct RoundedRect {
     nsRect mRect;
@@ -70,15 +81,16 @@ public:
   // Applies the rounded rects in this Clip to aContext
   // Will only apply rounded rects from aBegin (inclusive) to aEnd
   // (exclusive) or the number of rounded rects, whichever is smaller.
-  void ApplyRoundedRectsTo(gfxContext* aContext, int32_t A2DPRInt32,
-                           uint32_t aBegin, uint32_t aEnd) const;
+  void ApplyRoundedRectClipsTo(gfxContext* aContext, int32_t A2DPRInt32,
+                               uint32_t aBegin, uint32_t aEnd) const;
 
   // Draw (fill) the rounded rects in this clip to aContext
   void DrawRoundedRectsTo(gfxContext* aContext, int32_t A2D,
                           uint32_t aBegin, uint32_t aEnd) const;
   // 'Draw' (create as a path, does not stroke or fill) aRoundRect to aContext
-  void AddRoundedRectPathTo(gfxContext* aContext, int32_t A2D,
-                            const RoundedRect &aRoundRect) const;
+  mozilla::TemporaryRef<Path> MakeRoundedRectPath(DrawTarget& aDrawTarget,
+                                                  int32_t A2D,
+                                                  const RoundedRect &aRoundRect) const;
 
   // Returns true if the intersection of aRect and this clip region is
   // non-empty. This is precise for DisplayItemClips with at most one

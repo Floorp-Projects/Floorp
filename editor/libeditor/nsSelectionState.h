@@ -14,8 +14,6 @@
 
 class nsCycleCollectionTraversalCallback;
 class nsIDOMCharacterData;
-class nsIDOMRange;
-class nsISelection;
 class nsRange;
 namespace mozilla {
 namespace dom {
@@ -62,7 +60,7 @@ class nsSelectionState
     void DoUnlink() { MakeEmpty(); }
   
     void     SaveSelection(mozilla::dom::Selection *aSel);
-    nsresult RestoreSelection(nsISelection *aSel);
+    nsresult RestoreSelection(mozilla::dom::Selection* aSel);
     bool     IsCollapsed();
     bool     IsEqual(nsSelectionState *aSelState);
     void     MakeEmpty();
@@ -96,17 +94,11 @@ class nsRangeUpdater
     nsresult SelAdjInsertNode(nsIDOMNode *aParent, int32_t aPosition);
     void     SelAdjDeleteNode(nsINode* aNode);
     void     SelAdjDeleteNode(nsIDOMNode *aNode);
-    nsresult SelAdjSplitNode(nsINode* aOldRightNode, int32_t aOffset,
-                             nsINode* aNewLeftNode);
-    nsresult SelAdjSplitNode(nsIDOMNode *aOldRightNode, int32_t aOffset, nsIDOMNode *aNewLeftNode);
-    nsresult SelAdjJoinNodes(nsINode* aLeftNode,
-                             nsINode* aRightNode,
-                             nsINode* aParent,
-                             int32_t aOffset,
-                             int32_t aOldLeftNodeLength);
-    nsresult SelAdjJoinNodes(nsIDOMNode *aLeftNode, 
-                             nsIDOMNode *aRightNode, 
-                             nsIDOMNode *aParent, 
+    nsresult SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
+                             nsIContent* aNewLeftNode);
+    nsresult SelAdjJoinNodes(nsINode& aLeftNode,
+                             nsINode& aRightNode,
+                             nsINode& aParent,
                              int32_t aOffset,
                              int32_t aOldLeftNodeLength);
     void     SelAdjInsertText(mozilla::dom::Text& aTextNode, int32_t aOffset,

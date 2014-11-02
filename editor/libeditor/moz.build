@@ -23,7 +23,7 @@ UNIFIED_SOURCES += [
     'IMETextTxn.cpp',
     'InsertNodeTxn.cpp',
     'InsertTextTxn.cpp',
-    'JoinElementTxn.cpp',
+    'JoinNodeTxn.cpp',
     'nsEditor.cpp',
     'nsEditorCommands.cpp',
     'nsEditorController.cpp',
@@ -53,7 +53,7 @@ UNIFIED_SOURCES += [
     'nsWSRunObject.cpp',
     'PlaceholderTxn.cpp',
     'SetDocTitleTxn.cpp',
-    'SplitElementTxn.cpp',
+    'SplitNodeTxn.cpp',
     'TextEditorTest.cpp',
     'TypeInState.cpp',
 ]

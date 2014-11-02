@@ -458,6 +458,11 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSu
 #define EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE 0x3208
 #endif /* EGL_ANGLE_platform_angle_opengl */
 
+#ifndef EGL_ANGLE_keyed_mutex
+#define EGL_ANGLE_keyed_mutex 1
+#define EGL_DXGI_KEYED_MUTEX_ANGLE 0x3209
+#endif /* EGL_ANGLE_keyed_mutex */
+
 #ifndef EGL_ARM_pixmap_multisample_discard
 #define EGL_ARM_pixmap_multisample_discard 1
 #define EGL_DISCARD_SAMPLES_ARM           0x3286

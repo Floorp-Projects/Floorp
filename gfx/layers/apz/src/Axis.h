@@ -85,12 +85,37 @@ public:
 
   /**
    * Return the amount of overscroll on this axis, in Screen pixels.
+   *
+   * If this amount is nonzero, the relevant component of
+   * mAsyncPanZoomController->mFrameMetrics.mScrollOffset must be at its
+   * extreme allowed value in the relevant direction (that is, it must be at
+   * its maximum value if we are overscrolled at our composition length, and
+   * at its minimum value if we are overscrolled at the origin).
+   * Note that if |mInUnderscroll| is true, the interpretation of this field
+   * changes slightly (see below).
    */
   ScreenCoord GetOverscroll() const;
 
   /**
-   * Return whether the axis is in underscroll. See |mInUnderscroll|
-   * for a detailed description.
+   * Return whether the axis is in underscroll.
+   *
+   * This flag is set when an overscroll animation is in a state where the
+   * spring physics caused a snap-back movement to "overshoot" its target and
+   * as a result the spring is stretched in a direction opposite to the one
+   * when we were in overscroll. We call this situation "underscroll". When in
+   * underscroll, GetOverscroll() can be nonzero, but rather than being
+   * interpreted as overscroll (stretch) at the other end of the composition
+   * bounds, it's interpeted as an "underscroll" (compression) at the same end.
+   * This table summarizes what the possible combinations of GetOverscroll()
+   * and IsInUnderscroll() mean:
+   *
+   *   GetOverscroll() | IsInUnderscroll() |    Description
+   *-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------
+   *       negative    |      false        | The axis is overscrolled at its origin. A stretch is applied with the content fixed in place at the origin.
+   *       positive    |      false        | The axis is overscrolled at its composition end. A stretch is applied with the content fixed in place at the composition end.
+   *       positive    |      true         | The axis is underscrolled at its origin. A compression is applied with the content fixed in place at the origin.
+   *       negative    |      true         | The axis is underscrolled at its composition end. A compression is applied with the content fixed in place at the composition end.
+   *---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
    */
   bool IsInUnderscroll() const;
 
@@ -220,48 +245,8 @@ protected:
   float mVelocity;      // Units: ScreenCoords per millisecond
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
-  // The amount by which this axis is in overscroll, in Screen coordinates.
-  // If this amount is nonzero, the relevant component of
-  // mAsyncPanZoomController->mFrameMetrics.mScrollOffset must be at its
-  // extreme allowed value in the relevant direction (that is, it must be at
-  // its maximum value if we are overscrolled at our composition length, and
-  // at its minimum value if we are overscrolled at the origin).
-  // Note that if |mInUnderscroll| is true, the interpretation of this field
-  // changes slightly (see below).
-  ScreenCoord mOverscroll;
-  // This flag is set when an overscroll animation is in a state where the
-  // spring physics caused a snap-back movement to "overshoot" its target and
-  // as a result the spring is stretched in a direction opposite to the one
-  // when we were in overscroll. We call this situation "underscroll". When in
-  // underscroll, mOverscroll can be nonzero, but rather than being
-  // interpreted as overscroll (stretch) at the other end of the composition
-  // bounds, it's interpeted as an "underscroll" (compression) at the same end.
-  // This table summarizes what the possible combinations of mOverscroll and
-  // mInUnderscroll mean:
-  //
-  //      mOverscroll  |  mInUnderscroll  |    Description
-  //---------------------------------------------------------------------------
-  //       negative    |      false       | The axis is overscrolled at
-  //                   |                  | its origin. A stretch is applied
-  //                   |                  | with the content fixed in place
-  //                   |                  | at the origin.
-  //---------------------------------------------------------------------------
-  //       positive    |      false       | The axis is overscrolled at its
-  //                   |                  | composition end. A stretch is
-  //                   |                  | applied with the content fixed in
-  //                   |                  | place at the composition end.
-  //---------------------------------------------------------------------------
-  //       positive    |      true        | The axis is underscrolled at its
-  //                   |                  | origin. A compression is applied
-  //                   |                  | with the content fixed in place
-  //                   |                  | at the origin.
-  //---------------------------------------------------------------------------
-  //       negative    |      true        | The axis is underscrolled at its
-  //                   |                  | composition end. A compression is
-  //                   |                  | applied with the content fixed in
-  //                   |                  | place at the composition end.
-  //---------------------------------------------------------------------------
-  bool mInUnderscroll;
+  ScreenCoord mOverscroll;  // See GetOverscroll().
+  bool mInUnderscroll;      // See IsInUnderscroll().
   // A queue of (timestamp, velocity) pairs; these are the historical
   // velocities at the given timestamps. Timestamps are in milliseconds,
   // velocities are in screen pixels per ms. This member can only be

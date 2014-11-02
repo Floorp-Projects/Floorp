@@ -13,7 +13,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsINode.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsUtils.h"
@@ -86,14 +85,11 @@ nsFilteredContentIterator::Init(nsIDOMRange* aRange)
   mDirection       = eForward;
   mCurrentIterator = mPreIterator;
 
-  nsCOMPtr<nsIDOMRange> domRange;
-  nsresult rv = aRange->CloneRange(getter_AddRefs(domRange));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mRange = do_QueryInterface(domRange);
+  mRange = static_cast<nsRange*>(aRange)->CloneRange();
 
-  rv = mPreIterator->Init(domRange);
+  nsresult rv = mPreIterator->Init(mRange);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mIterator->Init(domRange);
+  return mIterator->Init(mRange);
 }
 
 //------------------------------------------------------------
@@ -237,7 +233,7 @@ ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
 }
 
 static bool
-ContentIsInTraversalRange(nsIDOMRange *aRange, nsIDOMNode* aNextNode, bool aIsPreMode)
+ContentIsInTraversalRange(nsRange* aRange, nsIDOMNode* aNextNode, bool aIsPreMode)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNextNode));
   NS_ENSURE_TRUE(content && aRange, false);

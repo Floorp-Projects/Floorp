@@ -7,6 +7,7 @@
 #include <stddef.h>
 
 #include "TypeInState.h"
+#include "mozilla/dom/Selection.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsDebug.h"
@@ -14,7 +15,6 @@
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMNode.h"
-#include "nsISelection.h"
 #include "nsISupportsBase.h"
 #include "nsISupportsImpl.h"
 #include "nsReadableUtils.h"
@@ -22,6 +22,9 @@
 
 class nsIAtom;
 class nsIDOMDocument;
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 /********************************************************************
  *                     XPCOM cruft 
@@ -56,7 +59,8 @@ TypeInState::~TypeInState()
   Reset();
 }
 
-nsresult TypeInState::UpdateSelState(nsISelection *aSelection)
+nsresult
+TypeInState::UpdateSelState(Selection* aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   
@@ -79,17 +83,18 @@ NS_IMETHODIMP TypeInState::NotifySelectionChanged(nsIDOMDocument *, nsISelection
   // XXX:
   // XXX: This code temporarily fixes the problem where clicking the mouse in
   // XXX: the same location clears the type-in-state.
+  nsRefPtr<Selection> selection = static_cast<Selection*>(aSelection);
 
   if (aSelection) {
-    int32_t rangeCount = 0;
-    nsresult result = aSelection->GetRangeCount(&rangeCount);
-    NS_ENSURE_SUCCESS(result, result);
+    int32_t rangeCount = selection->GetRangeCount();
 
-    if (aSelection->Collapsed() && rangeCount) {
+    if (selection->Collapsed() && rangeCount) {
       nsCOMPtr<nsIDOMNode> selNode;
       int32_t selOffset = 0;
 
-      result = nsEditor::GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
+      nsresult result =
+        nsEditor::GetStartNodeAndOffset(selection, getter_AddRefs(selNode),
+                                        &selOffset);
 
       NS_ENSURE_SUCCESS(result, result);
 

@@ -12,6 +12,7 @@
 #include "jsweakmap.h"
 
 #include "gc/Barrier.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/ProxyObject.h"
 
 namespace js {
@@ -301,7 +302,7 @@ class CallObject : public ScopeObject
      * CallObject to access.
      */
     const Value &aliasedVarFromArguments(const Value &argsValue) {
-        return getSlot(argsValue.magicUint32());
+        return getSlot(ArgumentsObject::SlotFromMagicScopeSlotValue(argsValue));
     }
     inline void setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, jsid id,
                                            const Value &v);

@@ -3319,8 +3319,6 @@
     ['OS=="win"', {
       'target_defaults': {
         'defines': [
-          '_WIN32_WINNT=0x0602',
-          'WINVER=0x0602',
           'WIN32',
           '_WINDOWS',
           'NOMINMAX',
@@ -3331,6 +3329,12 @@
           '_ATL_NO_OPENGL',
         ],
         'conditions': [
+          ['build_with_mozilla==0', {
+              'defines': [
+                '_WIN32_WINNT=0x0602',
+                'WINVER=0x0602',
+              ],
+          }],
           ['buildtype=="Official"', {
               # In official builds, targets can self-select an optimization
               # level by defining a variable named 'optimize', and setting it
