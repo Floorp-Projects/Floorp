@@ -4992,19 +4992,15 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node && alignType, NS_ERROR_NULL_POINTER);
   nsresult res;
-  nsCOMPtr <Element> firstChild, lastChild, divNode;
-  nsCOMPtr<nsIDOMNode> tmp;
+  nsCOMPtr<nsIContent> firstChild, lastChild;
+  nsCOMPtr<Element> divNode;
   
   bool useCSS = mHTMLEditor->IsCSSEnabled();
 
   NS_ENSURE_STATE(mHTMLEditor);
-  res = mHTMLEditor->GetFirstEditableChild(aNode, address_of(tmp));
-  NS_ENSURE_SUCCESS(res, res);
-  firstChild = do_QueryInterface(tmp);
+  firstChild = mHTMLEditor->GetFirstEditableChild(*node);
   NS_ENSURE_STATE(mHTMLEditor);
-  res = mHTMLEditor->GetLastEditableChild(aNode, address_of(tmp));
-  NS_ENSURE_SUCCESS(res, res);
-  lastChild = do_QueryInterface(tmp);
+  lastChild = mHTMLEditor->GetLastEditableChild(*node);
   NS_NAMED_LITERAL_STRING(attr, "align");
   if (!firstChild)
   {
@@ -5047,9 +5043,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
       res = mHTMLEditor->MoveNode(lastChild, divNode, 0);
       NS_ENSURE_SUCCESS(res, res);
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->GetLastEditableChild(aNode, address_of(tmp));
-      NS_ENSURE_SUCCESS(res, res);
-      lastChild = do_QueryInterface(tmp);
+      lastChild = mHTMLEditor->GetLastEditableChild(*node);
     }
   }
   return res;
@@ -5204,11 +5198,12 @@ nsresult
 nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsCOMArray<nsIDOMNode> &outArrayOfNodes, 
                                  int32_t *aIndex, bool aList, bool aTbl)
 {
-  NS_ENSURE_TRUE(aNode && aIndex, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> aNode_ = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(aNode_ && aIndex, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMNode> node;
-  
-  nsresult res = mHTMLEditor->GetFirstEditableChild(aNode, address_of(node));
+  nsCOMPtr<nsIDOMNode> node =
+    GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*aNode_));
+  nsresult res = NS_OK;
   while (NS_SUCCEEDED(res) && node)
   {
     if (  ( aList && (nsHTMLEditUtils::IsList(node)     || 
@@ -7492,10 +7487,9 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
     // remember the last left child, and firt right child
     nsCOMPtr<nsIDOMNode> lastLeft, firstRight;
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->GetLastEditableChild(aNodeLeft, address_of(lastLeft));
-    NS_ENSURE_SUCCESS(res, res);
+    lastLeft = GetAsDOMNode(mHTMLEditor->GetLastEditableChild(*nodeLeft));
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->GetFirstEditableChild(aNodeRight, address_of(firstRight));
+    firstRight = GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*nodeRight));
     NS_ENSURE_SUCCESS(res, res);
 
     // for list items, divs, etc, merge smart
@@ -7734,7 +7728,7 @@ nsHTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     // selection is after block.  put at end of block.
     nsCOMPtr<nsIDOMNode> tmp = mNewBlock;
     NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->GetLastEditableChild(mNewBlock, address_of(tmp));
+    tmp = GetAsDOMNode(mHTMLEditor->GetLastEditableChild(*block));
     uint32_t endPoint;
     NS_ENSURE_STATE(mHTMLEditor);
     if (mHTMLEditor->IsTextNode(tmp) || !mHTMLEditor ||
@@ -7756,7 +7750,7 @@ nsHTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     // selection is before block.  put at start of block.
     nsCOMPtr<nsIDOMNode> tmp = mNewBlock;
     NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->GetFirstEditableChild(mNewBlock, address_of(tmp));
+    tmp = GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*block));
     int32_t offset;
     if (!(mHTMLEditor->IsTextNode(tmp) || !mHTMLEditor ||
           mHTMLEditor->IsContainer(tmp)))
@@ -8889,21 +8883,21 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
 nsresult
 nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, bool aStarts)
 {
-  NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsIDOMNode> child;
   nsresult res;
   if (aStarts)
   {
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->GetFirstEditableChild(aNode, address_of(child));
+    child = GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*node));
   }
   else
   {
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->GetLastEditableChild(aNode, address_of(child));
+    child = GetAsDOMNode(mHTMLEditor->GetLastEditableChild(*node));
   }
-  NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(child, NS_OK);
   bool isChildBlock;
   NS_ENSURE_STATE(mHTMLEditor);
