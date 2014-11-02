@@ -4627,6 +4627,13 @@ mozilla::BrowserTabsRemoteAutostart()
   }
 #endif
 
+  bool tpEnabled = Preferences::GetBool("privacy.trackingprotection.enabled",
+                                        false);
+  if (tpEnabled) {
+    gBrowserTabsRemoteAutostart = false;
+    LogE10sBlockedReason("Tracking protection is enabled");
+  }
+
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
   if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STILL_ACCEPTED_FROM_PROMPT,
