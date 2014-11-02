@@ -11,6 +11,7 @@
 #include "gfxRect.h"
 #include "nsAutoPtr.h"
 
+class gfxContext;
 class gfxDrawable;
 class nsDisplayList;
 class nsDisplayListBuilder;
@@ -129,7 +130,7 @@ public:
    * Paint non-SVG frame with SVG effects.
    */
   static void
-  PaintFramesWithEffects(nsRenderingContext* aCtx,
+  PaintFramesWithEffects(gfxContext& aCtx,
                          nsIFrame* aFrame, const nsRect& aDirtyRect,
                          nsDisplayListBuilder* aBuilder,
                          mozilla::layers::LayerManager* aManager);

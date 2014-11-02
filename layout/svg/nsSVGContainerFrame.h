@@ -15,10 +15,10 @@
 #include "nsRect.h"
 #include "nsSVGUtils.h"
 
+class gfxContext;
 class nsFrameList;
 class nsIContent;
 class nsIPresShell;
-class nsRenderingContext;
 class nsStyleContext;
 
 struct nsPoint;
@@ -144,7 +144,7 @@ public:
                                 Matrix *aFromParentTransform = nullptr) const MOZ_OVERRIDE;
 
   // nsISVGChildFrame interface:
-  virtual nsresult PaintSVG(nsRenderingContext* aContext,
+  virtual nsresult PaintSVG(gfxContext& aContext,
                             const gfxMatrix& aTransform,
                             const nsIntRect *aDirtyRect = nullptr) MOZ_OVERRIDE;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;

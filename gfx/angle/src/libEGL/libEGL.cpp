@@ -495,6 +495,12 @@ EGLBoolean __stdcall eglQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surf
             *value = (void*) (swapchain ? swapchain->getShareHandle() : NULL);
         }
         break;
+      case EGL_DXGI_KEYED_MUTEX_ANGLE:
+        {
+            rx::SwapChain *swapchain = eglSurface->getSwapChain();
+            *value = (void*) (swapchain ? swapchain->getKeyedMutex() : NULL);
+        }
+        break;
       default:
         return egl::error(EGL_BAD_ATTRIBUTE, EGL_FALSE);
     }

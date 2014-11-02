@@ -10,10 +10,14 @@
 { 0x3836386d, 0x806a, 0x488d, \
   { 0x8b, 0xab, 0xaf, 0x42, 0xbb, 0x4c, 0x90, 0x66 } }
 
-#include "nsEditor.h"
+#include "nsEditor.h" // for EditAction enum
 
 class nsPlaintextEditor;
-class nsISelection;
+namespace mozilla {
+namespace dom {
+class Selection;
+}
+}
 
 /***************************************************************************
  * base for an object to encapsulate any additional info needed to be passed
@@ -50,7 +54,8 @@ public:
                        nsIEditor::EDirection aDirection) = 0;
   NS_IMETHOD WillDoAction(mozilla::dom::Selection* aSelection, nsRulesInfo* aInfo,
                           bool* aCancel, bool* aHandled) = 0;
-  NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
+  NS_IMETHOD DidDoAction(mozilla::dom::Selection* aSelection,
+                         nsRulesInfo* aInfo, nsresult aResult) = 0;
   NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty)=0;
   NS_IMETHOD DocumentModified()=0;
 };

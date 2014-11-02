@@ -144,6 +144,16 @@ Pickle::Pickle(const Pickle& other)
   memcpy(header_, other.header_, payload_size);
 }
 
+Pickle::Pickle(Pickle&& other)
+  : header_(other.header_),
+    header_size_(other.header_size_),
+    capacity_(other.capacity_),
+    variable_buffer_offset_(other.variable_buffer_offset_) {
+  other.header_ = NULL;
+  other.capacity_ = 0;
+  other.variable_buffer_offset_ = 0;
+}
+
 Pickle::~Pickle() {
   if (capacity_ != kCapacityReadOnly)
     free(header_);
@@ -161,6 +171,14 @@ Pickle& Pickle::operator=(const Pickle& other) {
   }
   memcpy(header_, other.header_, header_size_ + other.header_->payload_size);
   variable_buffer_offset_ = other.variable_buffer_offset_;
+  return *this;
+}
+
+Pickle& Pickle::operator=(Pickle&& other) {
+  std::swap(header_, other.header_);
+  std::swap(header_size_, other.header_size_);
+  std::swap(capacity_, other.capacity_);
+  std::swap(variable_buffer_offset_, other.variable_buffer_offset_);
   return *this;
 }
 

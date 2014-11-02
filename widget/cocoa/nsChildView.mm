@@ -124,7 +124,7 @@ extern "C" {
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
-bool gChildViewMethodsSwizzled = false;
+static bool gChildViewMethodsSwizzled = false;
 
 extern nsISupportsArray *gDraggedTransferables;
 
@@ -4752,7 +4752,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mUsingOMTCompositor = aUseOMTC;
 }
 
-
 // Returning NO from this method only disallows ordering on mousedown - in order
 // to prevent it for mouseup too, we need to call [NSApp preventWindowOrdering]
 // when handling the mousedown event.
@@ -5544,13 +5543,17 @@ static int32_t RoundUp(double aDouble)
     case NSOtherMouseDragged:
       if ([aMouseEvent subtype] == NSTabletPointEventSubtype) {
         mouseEvent->pressure = [aMouseEvent pressure];
+        MOZ_ASSERT(mouseEvent->pressure >= 0.0 && mouseEvent->pressure <= 1.0);
       }
+      break;
+
+    default:
+      // Don't check other NSEvents for pressure.
       break;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
-
 
 #pragma mark -
 // NSTextInput implementation
