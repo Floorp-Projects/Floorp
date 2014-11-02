@@ -10,8 +10,6 @@
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsSVGUtils.h"
 
-class nsRenderingContext;
-
 using namespace mozilla::gfx;
 
 typedef nsSVGGFrame nsSVGSwitchFrameBase;
@@ -52,7 +50,7 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   // nsISVGChildFrame interface:
-  virtual nsresult PaintSVG(nsRenderingContext* aContext,
+  virtual nsresult PaintSVG(gfxContext& aContext,
                             const gfxMatrix& aTransform,
                             const nsIntRect* aDirtyRect = nullptr) MOZ_OVERRIDE;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
@@ -107,7 +105,7 @@ nsSVGSwitchFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 nsresult
-nsSVGSwitchFrame::PaintSVG(nsRenderingContext* aContext,
+nsSVGSwitchFrame::PaintSVG(gfxContext& aContext,
                            const gfxMatrix& aTransform,
                            const nsIntRect* aDirtyRect)
 {

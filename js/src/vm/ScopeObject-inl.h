@@ -48,7 +48,7 @@ CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *nam
 inline void
 CallObject::setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, jsid id, const Value &v)
 {
-    setSlot(argsValue.magicUint32(), v);
+    setSlot(ArgumentsObject::SlotFromMagicScopeSlotValue(argsValue), v);
     if (hasSingletonType())
         types::AddTypePropertyId(cx, this, id, v);
 }

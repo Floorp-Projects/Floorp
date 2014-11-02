@@ -11,7 +11,6 @@
 #include "nsContainerFrame.h"
 #include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
-#include "nsRenderingContext.h"
 #include "imgINotificationObserver.h"
 #include "nsSVGEffects.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -62,7 +61,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsISVGChildFrame interface:
-  virtual nsresult PaintSVG(nsRenderingContext *aContext,
+  virtual nsresult PaintSVG(gfxContext& aContext,
                             const gfxMatrix& aTransform,
                             const nsIntRect* aDirtyRect = nullptr) MOZ_OVERRIDE;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
@@ -291,7 +290,7 @@ nsSVGImageFrame::TransformContextForPainting(gfxContext* aGfxContext,
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods:
 nsresult
-nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
+nsSVGImageFrame::PaintSVG(gfxContext& aContext,
                           const gfxMatrix& aTransform,
                           const nsIntRect *aDirtyRect)
 {
@@ -318,16 +317,15 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
   }
 
   if (mImageContainer) {
-    gfxContext* ctx = aContext->ThebesContext();
-    gfxContextAutoSaveRestore autoRestorer(ctx);
+    gfxContextAutoSaveRestore autoRestorer(&aContext);
 
     if (StyleDisplay()->IsScrollableOverflow()) {
       gfxRect clipRect = nsSVGUtils::GetClipRectForFrame(this, x, y,
                                                          width, height);
-      nsSVGUtils::SetClipRect(ctx, aTransform, clipRect);
+      nsSVGUtils::SetClipRect(&aContext, aTransform, clipRect);
     }
 
-    if (!TransformContextForPainting(ctx, aTransform)) {
+    if (!TransformContextForPainting(&aContext, aTransform)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -340,7 +338,7 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
     }
 
     if (opacity != 1.0f || StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-      ctx->PushGroup(gfxContentType::COLOR_ALPHA);
+      aContext.PushGroup(gfxContentType::COLOR_ALPHA);
     }
 
     nscoord appUnitsPerDevPx = PresContext()->AppUnitsPerDevPixel();
@@ -397,9 +395,9 @@ nsSVGImageFrame::PaintSVG(nsRenderingContext *aContext,
     }
 
     if (opacity != 1.0f || StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-      ctx->PopGroupToSource();
-      ctx->SetOperator(gfxContext::OPERATOR_OVER);
-      ctx->Paint(opacity);
+      aContext.PopGroupToSource();
+      aContext.SetOperator(gfxContext::OPERATOR_OVER);
+      aContext.Paint(opacity);
     }
     // gfxContextAutoSaveRestore goes out of scope & cleans up our gfxContext
   }

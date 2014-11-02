@@ -16,7 +16,6 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsISVGChildFrame.h"
-#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsSVGEffects.h"
 #include "nsSVGPathGeometryFrame.h"
@@ -378,9 +377,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
     return nullptr;
   }
 
-  nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
-  context->Init(dt);
-  gfxContext* gfx = context->ThebesContext();
+  nsRefPtr<gfxContext> gfx = new gfxContext(dt);
 
   // Fill with transparent black
   gfx->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -417,7 +414,7 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
         tm = static_cast<nsSVGElement*>(kid->GetContent())->
               PrependLocalTransformsTo(tm, nsSVGElement::eUserSpaceToParent);
       }
-      nsSVGUtils::PaintFrameWithEffects(kid, context, tm);
+      nsSVGUtils::PaintFrameWithEffects(kid, *gfx, tm);
     }
     patternWithChildren->RemoveStateBits(NS_FRAME_DRAWING_AS_PAINTSERVER);
   }

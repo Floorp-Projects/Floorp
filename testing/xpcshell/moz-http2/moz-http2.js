@@ -8,7 +8,7 @@ var url = require('url');
 var crypto = require('crypto');
 
 // Hook into the decompression code to log the decompressed name-value pairs
-var http2_compression = require('../node-http2/node_modules/http2-protocol/lib/compressor');
+var http2_compression = require('../node-http2/lib/protocol/compressor');
 var HeaderSetDecompressor = http2_compression.HeaderSetDecompressor;
 var originalRead = HeaderSetDecompressor.prototype.read;
 var lastDecompressor;

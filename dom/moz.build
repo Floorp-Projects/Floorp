@@ -102,6 +102,7 @@ DIRS += [
     'xslt',
     'xul',
     'resourcestats',
+    'manifest',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

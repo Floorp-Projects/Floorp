@@ -15,7 +15,6 @@
 #include "nsSVGUtils.h"
 
 class gfxContext;
-class nsRenderingContext;
 
 typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 

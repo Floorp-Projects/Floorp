@@ -9,7 +9,6 @@ import sys, os
 import subprocess
 import runxpcshelltests as xpcshell
 import tempfile
-from automationutils import replaceBackSlashes
 from zipfile import ZipFile
 from mozlog import structured
 from mozlog.structured import commandline
@@ -39,7 +38,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         else:
             remoteName = remoteJoin(remoteDir, os.path.basename(name))
         return ['-e', 'const _TEST_FILE = ["%s"];' %
-                 replaceBackSlashes(remoteName)]
+                 remoteName.replace('\\', '/')]
 
     def remoteForLocal(self, local):
         for mapping in self.pathMapping:
