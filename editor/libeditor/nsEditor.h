@@ -30,7 +30,6 @@
 class AddStyleSheetTxn;
 class DeleteNodeTxn;
 class EditAggregateTxn;
-class JoinElementTxn;
 class RemoveStyleSheetTxn;
 class SplitElementTxn;
 class nsIAtom;
@@ -75,6 +74,7 @@ class EventTarget;
 class IMETextTxn;
 class InsertTextTxn;
 class InsertNodeTxn;
+class JoinNodeTxn;
 class Selection;
 class Text;
 }  // namespace dom
@@ -234,7 +234,7 @@ public:
                                 nsIAtom* aNodeType,
                                 nsIAtom* aAttribute = nullptr,
                                 const nsAString* aValue = nullptr);
-  nsresult JoinNodes(nsINode* aNodeToKeep, nsIContent* aNodeToMove);
+  nsresult JoinNodes(nsINode& aLeftNode, nsINode& aRightNode);
   nsresult MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset);
 
   /* Method to replace certain CreateElementNS() calls. 
@@ -341,9 +341,8 @@ protected:
                                    uint32_t    aOffset,
                                    SplitElementTxn **aTxn);
 
-  NS_IMETHOD CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
-                                  nsIDOMNode  *aRightNode,
-                                  JoinElementTxn **aTxn);
+  already_AddRefed<mozilla::dom::JoinNodeTxn>
+  CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if

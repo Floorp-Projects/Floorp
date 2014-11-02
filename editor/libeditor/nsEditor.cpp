@@ -18,7 +18,7 @@
 #include "IMETextTxn.h"                 // for IMETextTxn
 #include "InsertNodeTxn.h"              // for InsertNodeTxn
 #include "InsertTextTxn.h"              // for InsertTextTxn
-#include "JoinElementTxn.h"             // for JoinElementTxn
+#include "JoinNodeTxn.h"                // for JoinNodeTxn
 #include "PlaceholderTxn.h"             // for PlaceholderTxn
 #include "SplitElementTxn.h"            // for SplitElementTxn
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
@@ -1456,49 +1456,52 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
 }
 
 
-nsresult
-nsEditor::JoinNodes(nsINode* aNodeToKeep, nsIContent* aNodeToMove)
+NS_IMETHODIMP
+nsEditor::JoinNodes(nsIDOMNode* aLeftNode,
+                    nsIDOMNode* aRightNode,
+                    nsIDOMNode*)
 {
-  // We don't really need aNodeToMove's parent to be non-null -- we could just
-  // skip adjusting any ranges in aNodeToMove's parent if there is none.  But
-  // the current implementation requires it.
-  MOZ_ASSERT(aNodeToKeep && aNodeToMove && aNodeToMove->GetParentNode());
-  nsresult res = JoinNodes(aNodeToKeep->AsDOMNode(), aNodeToMove->AsDOMNode(),
-                           aNodeToMove->GetParentNode()->AsDOMNode());
-  NS_ASSERTION(NS_SUCCEEDED(res), "JoinNodes failed");
-  NS_ENSURE_SUCCESS(res, res);
-  return NS_OK;
+  nsCOMPtr<nsINode> leftNode = do_QueryInterface(aLeftNode);
+  nsCOMPtr<nsINode> rightNode = do_QueryInterface(aRightNode);
+  NS_ENSURE_STATE(leftNode && rightNode && leftNode->GetParentNode());
+  return JoinNodes(*leftNode, *rightNode);
 }
 
-NS_IMETHODIMP
-nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
-                    nsIDOMNode * aRightNode,
-                    nsIDOMNode * aParent)
+nsresult
+nsEditor::JoinNodes(nsINode& aLeftNode, nsINode& aRightNode)
 {
-  int32_t i;
-  nsAutoRules beginRulesSniffing(this, EditAction::joinNode, nsIEditor::ePrevious);
+  nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
+  MOZ_ASSERT(parent);
 
-  // remember some values; later used for saved selection updating.
-  // find the offset between the nodes to be joined.
-  int32_t offset = GetChildOffset(aRightNode, aParent);
-  // find the number of children of the lefthand node
-  uint32_t oldLeftNodeLen;
-  nsresult result = GetLengthOfDOMNode(aLeftNode, oldLeftNodeLen);
-  NS_ENSURE_SUCCESS(result, result);
+  nsAutoRules beginRulesSniffing(this, EditAction::joinNode,
+                                 nsIEditor::ePrevious);
 
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->WillJoinNodes(aLeftNode, aRightNode, aParent);
+  // Remember some values; later used for saved selection updating.
+  // Find the offset between the nodes to be joined.
+  int32_t offset = parent->IndexOf(&aRightNode);
+  // Find the number of children of the lefthand node
+  uint32_t oldLeftNodeLen = aLeftNode.Length();
 
-  nsRefPtr<JoinElementTxn> txn;
-  result = CreateTxnForJoinNode(aLeftNode, aRightNode, getter_AddRefs(txn));
-  if (NS_SUCCEEDED(result))  {
-    result = DoTransaction(txn);  
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->WillJoinNodes(aLeftNode.AsDOMNode(),
+                                       aRightNode.AsDOMNode(),
+                                       parent->AsDOMNode());
   }
 
-  mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, aParent, offset, (int32_t)oldLeftNodeLen);
-  
-  for (i = 0; i < mActionListeners.Count(); i++)
-    mActionListeners[i]->DidJoinNodes(aLeftNode, aRightNode, aParent, result);
+  nsresult result;
+  nsRefPtr<JoinNodeTxn> txn = CreateTxnForJoinNode(aLeftNode, aRightNode);
+  if (txn)  {
+    result = DoTransaction(txn);
+  }
+
+  mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, *parent, offset,
+                                (int32_t)oldLeftNodeLen);
+
+  for (int32_t i = 0; i < mActionListeners.Count(); i++) {
+    mActionListeners[i]->DidJoinNodes(aLeftNode.AsDOMNode(),
+                                      aRightNode.AsDOMNode(),
+                                      parent->AsDOMNode(), result);
+  }
 
   return result;
 }
@@ -2594,21 +2597,14 @@ NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
   return rv;
 }
 
-NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
-                                             nsIDOMNode  *aRightNode,
-                                             JoinElementTxn **aTxn)
+already_AddRefed<JoinNodeTxn>
+nsEditor::CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode)
 {
-  NS_ENSURE_TRUE(aLeftNode && aRightNode, NS_ERROR_NULL_POINTER);
+  nsRefPtr<JoinNodeTxn> txn = new JoinNodeTxn(*this, aLeftNode, aRightNode);
 
-  nsRefPtr<JoinElementTxn> txn = new JoinElementTxn();
+  NS_ENSURE_SUCCESS(txn->CheckValidity(), nullptr);
 
-  nsresult rv = txn->Init(this, aLeftNode, aRightNode);
-  if (NS_SUCCEEDED(rv))
-  {
-    txn.forget(aTxn);
-  }
-
-  return rv;
+  return txn.forget();
 }
 
 
