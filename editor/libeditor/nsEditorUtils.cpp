@@ -20,8 +20,8 @@
 #include "nsINode.h"
 #include "nsISimpleEnumerator.h"
 
-class nsIDOMRange;
 class nsISupports;
+class nsRange;
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -75,7 +75,7 @@ nsDOMIterator::~nsDOMIterator()
 }
     
 nsresult
-nsDOMIterator::Init(nsIDOMRange* aRange)
+nsDOMIterator::Init(nsRange* aRange)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
@@ -125,7 +125,7 @@ nsDOMSubtreeIterator::~nsDOMSubtreeIterator()
 }
     
 nsresult
-nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
+nsDOMSubtreeIterator::Init(nsRange* aRange)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);

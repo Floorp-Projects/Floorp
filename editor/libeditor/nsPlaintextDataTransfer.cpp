@@ -22,7 +22,6 @@
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIDocument.h"
 #include "nsIDragService.h"
@@ -39,6 +38,7 @@
 #include "nsIVariant.h"
 #include "nsLiteralString.h"
 #include "nsPlaintextEditor.h"
+#include "nsRange.h"
 #include "nsSelectionState.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
@@ -256,10 +256,11 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
     for (int32_t j = 0; j < rangeCount; j++)
     {
-      nsCOMPtr<nsIDOMRange> range;
-      rv = selection->GetRangeAt(j, getter_AddRefs(range));
-      if (NS_FAILED(rv) || !range) 
-        continue;  // don't bail yet, iterate through them all
+      nsRefPtr<nsRange> range = selection->GetRangeAt(j);
+      if (!range) {
+        // don't bail yet, iterate through them all
+        continue;
+      }
 
       rv = range->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
       if (cursorIsInSelection)

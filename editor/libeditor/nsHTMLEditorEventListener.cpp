@@ -16,13 +16,13 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
+#include "nsRange.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -123,10 +123,8 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
       NS_ENSURE_SUCCESS(rv, rv);
 
       for (int32_t i = 0; i < rangeCount; i++) {
-        nsCOMPtr<nsIDOMRange> range;
-
-        rv = selection->GetRangeAt(i, getter_AddRefs(range));
-        if (NS_FAILED(rv) || !range) {
+        nsRefPtr<nsRange> range = selection->GetRangeAt(i);
+        if (!range) {
           // Don't bail yet, iterate through them all
           continue;
         }

@@ -83,7 +83,7 @@ private:
   int32_t                         mSelEndIndex;
   int32_t                         mSelEndOffset;
 
-  nsCOMPtr<nsIDOMRange>           mExtent;
+  nsRefPtr<nsRange>               mExtent;
 
   nsCOMPtr<nsITextServicesFilter> mTxtSvcFilter;
 
@@ -160,17 +160,25 @@ public:
   NS_IMETHOD DidDeleteSelection(nsISelection *aSelection);
 
   /* Helper functions */
-  static nsresult GetRangeEndPoints(nsIDOMRange *aRange, nsIDOMNode **aParent1, int32_t *aOffset1, nsIDOMNode **aParent2, int32_t *aOffset2);
-  static nsresult CreateRange(nsIDOMNode *aStartParent, int32_t aStartOffset, nsIDOMNode *aEndParent, int32_t aEndOffset, nsIDOMRange **aRange);
+  static nsresult GetRangeEndPoints(nsRange* aRange, nsIDOMNode** aParent1,
+                                    int32_t* aOffset1, nsIDOMNode** aParent2,
+                                    int32_t* aOffset2);
+  static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
+                              nsIDOMNode* aEndParent, int32_t aEndOffset,
+                              nsRange** aRange);
 
 private:
   /* nsTextServicesDocument private methods. */
 
-  nsresult CreateContentIterator(nsIDOMRange *aRange, nsIContentIterator **aIterator);
+  nsresult CreateContentIterator(nsRange* aRange,
+                                 nsIContentIterator** aIterator);
 
   nsresult GetDocumentContentRootNode(nsIDOMNode **aNode);
-  nsresult CreateDocumentContentRange(nsIDOMRange **aRange);
-  nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *aParent, int32_t aOffset, bool aToStart, nsIDOMRange **aRange);
+  nsresult CreateDocumentContentRange(nsRange** aRange);
+  nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode* aParent,
+                                                      int32_t aOffset,
+                                                      bool aToStart,
+                                                      nsRange** aRange);
   nsresult CreateDocumentContentIterator(nsIContentIterator **aIterator);
 
   nsresult AdjustContentIterator();
@@ -205,8 +213,7 @@ private:
   static nsresult CreateOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable,
                              nsIContentIterator *aIterator,
                              TSDIteratorStatus *aIteratorStatus,
-                             nsIDOMRange *aIterRange,
-                             nsString *aStr);
+                             nsRange* aIterRange, nsString* aStr);
   static nsresult ClearOffsetTable(nsTArray<OffsetEntry*> *aOffsetTable);
 
   static nsresult NodeHasOffsetEntry(nsTArray<OffsetEntry*> *aOffsetTable,

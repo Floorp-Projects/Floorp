@@ -66,7 +66,6 @@
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode, etc
 #include "nsIDOMNodeList.h"             // for nsIDOMNodeList
-#include "nsIDOMRange.h"                // for nsIDOMRange
 #include "nsIDOMText.h"                 // for nsIDOMText
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIDocumentStateListener.h"   // for nsIDocumentStateListener
@@ -4393,7 +4392,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsRange*          aRange,
 nsresult 
 nsEditor::CreateRange(nsIDOMNode *aStartParent, int32_t aStartOffset,
                       nsIDOMNode *aEndParent, int32_t aEndOffset,
-                      nsIDOMRange **aRange)
+                      nsRange** aRange)
 {
   return nsRange::CreateRange(aStartParent, aStartOffset, aEndParent,
                               aEndOffset, aRange);
@@ -4413,7 +4412,7 @@ nsEditor::AppendNodeToSelectionAsRange(nsIDOMNode *aNode)
   
   int32_t offset = GetChildOffset(aNode, parentNode);
   
-  nsCOMPtr<nsIDOMRange> range;
+  nsRefPtr<nsRange> range;
   res = CreateRange(parentNode, offset, parentNode, offset+1, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
