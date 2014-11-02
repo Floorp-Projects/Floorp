@@ -94,6 +94,7 @@ leak:processInternalEntity
 ###
 
 leak:libcairo.so
+leak:libdl.so
 leak:libdricore.so
 leak:libGL.so
 leak:libglib-2.0.so
