@@ -629,8 +629,9 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       // but don't cross tables
       if (!nsHTMLEditUtils::IsTable(lastInsertNode))
       {
-        rv = GetLastEditableLeaf(lastInsertNode, address_of(selNode));
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsINode> lastInsertNode_ = do_QueryInterface(lastInsertNode);
+        NS_ENSURE_STATE(lastInsertNode_ || !lastInsertNode);
+        selNode = GetAsDOMNode(GetLastEditableLeaf(*lastInsertNode_));
         tmp = selNode;
         while (tmp && (tmp != lastInsertNode))
         {
