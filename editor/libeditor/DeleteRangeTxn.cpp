@@ -19,8 +19,6 @@
 #include "nsINode.h"
 #include "nsAString.h"
 
-class nsIDOMRange;
-
 using namespace mozilla;
 using namespace mozilla::dom;
 

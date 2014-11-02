@@ -25,7 +25,6 @@ class nsIDOMCharacterData;
 class nsIDOMDocument;
 class nsIDOMElement;
 class nsIDOMNode;
-class nsIDOMRange;
 class nsIEditor;
 class nsINode;
 class nsPlaintextEditor;
@@ -266,11 +265,10 @@ protected:
                         int32_t aOffset, EditAction actionID,
                         nsCOMPtr<nsIDOMNode>* outNode, int32_t* outOffset);
   nsresult GetPromotedRanges(mozilla::dom::Selection* aSelection, 
-                             nsCOMArray<nsIDOMRange> &outArrayOfRanges, 
+                             nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges,
                              EditAction inOperationType);
-  nsresult PromoteRange(nsIDOMRange *inRange,
-                        EditAction inOperationType);
-  nsresult GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges, 
+  nsresult PromoteRange(nsRange* inRange, EditAction inOperationType);
+  nsresult GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRanges, 
                                 nsCOMArray<nsIDOMNode>& outArrayOfNodes, 
                                 EditAction inOperationType,
                                 bool aDontTouchContent=false);
@@ -331,7 +329,7 @@ protected:
   bool     InDifferentTableElements(nsINode* aNode1, nsINode* aNode2);
   nsresult RemoveEmptyNodes();
   nsresult SelectionEndpointInNode(nsINode *aNode, bool *aResult);
-  nsresult UpdateDocChangeRange(nsIDOMRange *aRange);
+  nsresult UpdateDocChangeRange(nsRange* aRange);
   nsresult ConfirmSelectionInBody();
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
   bool     IsEmptyInline(nsIDOMNode *aNode);

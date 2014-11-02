@@ -36,7 +36,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsIDOMText.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLDocument.h"
@@ -833,7 +832,7 @@ nsHTMLEditRules::GetAlignment(bool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
   }
   else
   {
-    nsCOMArray<nsIDOMRange> arrayOfRanges;
+    nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
     res = GetPromotedRanges(selection, arrayOfRanges, EditAction::align);
     NS_ENSURE_SUCCESS(res, res);
 
@@ -2020,26 +2019,16 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       }
       else
       {
-        nsCOMPtr<nsIDOMRange> range;
-        res = aSelection->GetRangeAt(0, getter_AddRefs(range));
-        NS_ENSURE_SUCCESS(res, res);
+        nsRefPtr<nsRange> range = aSelection->GetRangeAt(0);
+        NS_ENSURE_STATE(range);
 
-#ifdef DEBUG
-        nsIDOMNode *container;
+        NS_ASSERTION(GetAsDOMNode(range->GetStartParent()) == visNode,
+                     "selection start not in visNode");
+        NS_ASSERTION(GetAsDOMNode(range->GetEndParent()) == visNode,
+                     "selection end not in visNode");
 
-        res = range->GetStartContainer(&container);
-        NS_ENSURE_SUCCESS(res, res);
-        NS_ASSERTION(container == visNode, "selection start not in visNode");
-
-        res = range->GetEndContainer(&container);
-        NS_ENSURE_SUCCESS(res, res);
-        NS_ASSERTION(container == visNode, "selection end not in visNode");
-#endif
-
-        res = range->GetStartOffset(&so);
-        NS_ENSURE_SUCCESS(res, res);
-        res = range->GetEndOffset(&eo);
-        NS_ENSURE_SUCCESS(res, res);
+        so = range->StartOffset();
+        eo = range->EndOffset();
       }
       NS_ENSURE_STATE(mHTMLEditor);
       res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
@@ -3451,7 +3440,7 @@ nsHTMLEditRules::WillRemoveList(Selection* aSelection,
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
   
-  nsCOMArray<nsIDOMRange> arrayOfRanges;
+  nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
   res = GetPromotedRanges(aSelection, arrayOfRanges, EditAction::makeList);
   NS_ENSURE_SUCCESS(res, res);
   
@@ -3725,7 +3714,7 @@ nsHTMLEditRules::WillCSSIndent(Selection* aSelection,
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_STATE(mHTMLEditor);
   nsAutoSelectionReset selectionResetter(aSelection, mHTMLEditor);
-  nsCOMArray<nsIDOMRange>  arrayOfRanges;
+  nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
   nsCOMArray<nsIDOMNode> arrayOfNodes;
   
   // short circuit: detect case of collapsed selection inside an <li>.
@@ -3937,7 +3926,7 @@ nsHTMLEditRules::WillHTMLIndent(Selection* aSelection,
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
   
-  nsCOMArray<nsIDOMRange> arrayOfRanges;
+  nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
   res = GetPromotedRanges(aSelection, arrayOfRanges, EditAction::indent);
   NS_ENSURE_SUCCESS(res, res);
   
@@ -5292,9 +5281,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(Selection* aSelection)
   if (rangeCount != 1) return NS_OK;
   
   // find current sel start and end
-  nsCOMPtr<nsIDOMRange> range;
-  res = aSelection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsRange> range = aSelection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> selStartNode, selEndNode, selCommon;
   int32_t selStartOffset, selEndOffset;
@@ -5473,9 +5460,7 @@ nsHTMLEditRules::NormalizeSelection(Selection* inSelection)
   // we don't need to mess with cell selections, and we assume multirange selections are those.
   if (rangeCount != 1) return NS_OK;
   
-  nsCOMPtr<nsIDOMRange> range;
-  res = inSelection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsRange> range = inSelection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   int32_t startOffset, endOffset;
@@ -5800,7 +5785,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode* aNode,
 //                       
 nsresult 
 nsHTMLEditRules::GetPromotedRanges(Selection* inSelection, 
-                                   nsCOMArray<nsIDOMRange> &outArrayOfRanges, 
+                                   nsTArray<nsRefPtr<nsRange>>& outArrayOfRanges, 
                                    EditAction inOperationType)
 {
   NS_ENSURE_TRUE(inSelection, NS_ERROR_NULL_POINTER);
@@ -5810,17 +5795,16 @@ nsHTMLEditRules::GetPromotedRanges(Selection* inSelection,
   NS_ENSURE_SUCCESS(res, res);
   
   int32_t i;
-  nsCOMPtr<nsIDOMRange> selectionRange;
-  nsCOMPtr<nsIDOMRange> opRange;
+  nsRefPtr<nsRange> selectionRange;
+  nsRefPtr<nsRange> opRange;
 
   for (i = 0; i < rangeCount; i++)
   {
-    res = inSelection->GetRangeAt(i, getter_AddRefs(selectionRange));
-    NS_ENSURE_SUCCESS(res, res);
+    selectionRange = inSelection->GetRangeAt(i);
+    NS_ENSURE_STATE(selectionRange);
 
     // clone range so we don't muck with actual selection ranges
-    res = selectionRange->CloneRange(getter_AddRefs(opRange));
-    NS_ENSURE_SUCCESS(res, res);
+    opRange = selectionRange->CloneRange();
 
     // make a new adjusted range to represent the appropriate block content.
     // The basic idea is to push out the range endpoints
@@ -5830,7 +5814,7 @@ nsHTMLEditRules::GetPromotedRanges(Selection* inSelection,
     NS_ENSURE_SUCCESS(res, res);
       
     // stuff new opRange into array
-    outArrayOfRanges.AppendObject(opRange);
+    outArrayOfRanges.AppendElement(opRange);
   }
   return res;
 }
@@ -5841,8 +5825,7 @@ nsHTMLEditRules::GetPromotedRanges(Selection* inSelection,
 //               editable children are already in range. 
 //                       
 nsresult 
-nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange, 
-                              EditAction inOperationType)
+nsHTMLEditRules::PromoteRange(nsRange* inRange, EditAction inOperationType)
 {
   NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
   nsresult res;
@@ -5905,7 +5888,7 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
   nsCOMPtr<nsIDOMNode> opStartNode;
   nsCOMPtr<nsIDOMNode> opEndNode;
   int32_t opStartOffset, opEndOffset;
-  nsCOMPtr<nsIDOMRange> opRange;
+  nsRefPtr<nsRange> opRange;
   
   GetPromotedPoint(kStart, startNode, startOffset, inOperationType,
                    address_of(opStartNode), &opStartOffset);
@@ -5947,15 +5930,15 @@ private:
 //                       a new array of nodes to be acted on.
 //                       
 nsresult 
-nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges, 
+nsHTMLEditRules::GetNodesForOperation(nsTArray<nsRefPtr<nsRange>>& inArrayOfRanges, 
                                       nsCOMArray<nsIDOMNode>& outArrayOfNodes, 
                                       EditAction inOperationType,
                                       bool aDontTouchContent)
 {
-  int32_t rangeCount = inArrayOfRanges.Count();
+  int32_t rangeCount = inArrayOfRanges.Length();
   
   int32_t i;
-  nsCOMPtr<nsIDOMRange> opRange;
+  nsRefPtr<nsRange> opRange;
 
   nsresult res = NS_OK;
   
@@ -5964,10 +5947,8 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
   
   if (!aDontTouchContent)
   {
-    nsTArray<nsRefPtr<nsRangeStore> > rangeItemArray;
-    if (!rangeItemArray.AppendElements(rangeCount)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsTArray<nsRefPtr<nsRangeStore>> rangeItemArray;
+    rangeItemArray.AppendElements(rangeCount);
 
     NS_ASSERTION(static_cast<uint32_t>(rangeCount) == rangeItemArray.Length(),
                  "How did that happen?");
@@ -5977,10 +5958,10 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     {
       opRange = inArrayOfRanges[0];
       rangeItemArray[i] = new nsRangeStore();
-      rangeItemArray[i]->StoreRange(static_cast<nsRange*>(opRange.get()));
+      rangeItemArray[i]->StoreRange(opRange);
       NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mRangeUpdater.RegisterRangeItem(rangeItemArray[i]);
-      inArrayOfRanges.RemoveObjectAt(0);
+      inArrayOfRanges.RemoveElementAt(0);
     }    
     // now bust up inlines.  Safe to start at rangeCount-1, since we
     // asserted we have enough items above.
@@ -5995,7 +5976,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
       NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mRangeUpdater.DropRangeItem(item);
       opRange = item->GetRange();
-      inArrayOfRanges.AppendObject(opRange);
+      inArrayOfRanges.AppendElement(opRange);
     }
     NS_ENSURE_SUCCESS(res, res);
   }
@@ -6510,10 +6491,10 @@ nsHTMLEditRules::GetNodesFromPoint(::DOMPoint point,
   NS_ENSURE_SUCCESS(res, res);
       
   // make array of ranges
-  nsCOMArray<nsIDOMRange> arrayOfRanges;
+  nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
   
   // stuff new opRange into array
-  arrayOfRanges.AppendObject(range);
+  arrayOfRanges.AppendElement(range);
   
   // use these ranges to contruct a list of nodes to act on.
   res = GetNodesForOperation(arrayOfRanges, arrayOfNodes, operation, dontTouchContent); 
@@ -6535,7 +6516,7 @@ nsHTMLEditRules::GetNodesFromSelection(Selection* selection,
   nsresult res;
   
   // promote selection ranges
-  nsCOMArray<nsIDOMRange> arrayOfRanges;
+  nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
   res = GetPromotedRanges(selection, arrayOfRanges, operation);
   NS_ENSURE_SUCCESS(res, res);
   
@@ -8556,7 +8537,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
 
 
 nsresult 
-nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
+nsHTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
 {
   nsresult res = NS_OK;
 
@@ -8576,9 +8557,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   if (!mDocChangeRange)
   {
     // clone aRange.
-    nsCOMPtr<nsIDOMRange> range;
-    res = aRange->CloneRange(getter_AddRefs(range));
-    mDocChangeRange = static_cast<nsRange*>(range.get());
+    mDocChangeRange = aRange->CloneRange();
   }
   else
   {
@@ -9184,7 +9163,7 @@ nsHTMLEditRules::WillAbsolutePosition(Selection* aSelection,
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
   
-  nsCOMArray<nsIDOMRange> arrayOfRanges;
+  nsTArray<nsRefPtr<nsRange>> arrayOfRanges;
   res = GetPromotedRanges(aSelection, arrayOfRanges,
                           EditAction::setAbsolutePosition);
   NS_ENSURE_SUCCESS(res, res);

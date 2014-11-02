@@ -32,7 +32,6 @@
 #include "nsIDOMKeyEvent.h"             // for nsIDOMKeyEvent
 #include "nsIDOMMouseEvent.h"           // for nsIDOMMouseEvent
 #include "nsIDOMNode.h"                 // for nsIDOMNode
-#include "nsIDOMRange.h"                // for nsIDOMRange
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIEditor.h"                  // for nsEditor::GetSelection, etc
 #include "nsIEditorIMESupport.h"
@@ -49,6 +48,7 @@
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsPIWindowRoot.h"             // for nsPIWindowRoot
 #include "nsPrintfCString.h"            // for nsPrintfCString
+#include "nsRange.h"
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsAutoString
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
@@ -1007,9 +1007,8 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, false);
 
   for (int32_t i = 0; i < rangeCount; i++) {
-    nsCOMPtr<nsIDOMRange> range;
-    rv = selection->GetRangeAt(i, getter_AddRefs(range));
-    if (NS_FAILED(rv) || !range) {
+    nsRefPtr<nsRange> range = selection->GetRangeAt(i);
+    if (!range) {
       // Don't bail yet, iterate through them all
       continue;
     }
