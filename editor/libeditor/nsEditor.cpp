@@ -2882,25 +2882,6 @@ nsEditor::GetLengthOfDOMNode(nsIDOMNode *aNode, uint32_t &aCount)
 }
 
 
-nsresult 
-nsEditor::GetPriorNode(nsIDOMNode  *aParentNode, 
-                       int32_t      aOffset, 
-                       bool         aEditableNode, 
-                       nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing)
-{
-  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
-  *aResultNode = nullptr;
-
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aParentNode);
-  NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
-
-  *aResultNode = do_QueryInterface(GetPriorNode(parentNode, aOffset,
-                                                aEditableNode,
-                                                bNoBlockCrossing));
-  return NS_OK;
-}
-
 nsIContent*
 nsEditor::GetPriorNode(nsINode* aParentNode,
                        int32_t aOffset,
@@ -2935,25 +2916,6 @@ nsEditor::GetPriorNode(nsINode* aParentNode,
   return GetPriorNode(resultNode, aEditableNode, aNoBlockCrossing);
 }
 
-
-nsresult 
-nsEditor::GetNextNode(nsIDOMNode   *aParentNode, 
-                      int32_t      aOffset, 
-                      bool         aEditableNode, 
-                      nsCOMPtr<nsIDOMNode> *aResultNode,
-                      bool         bNoBlockCrossing)
-{
-  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
-  *aResultNode = nullptr;
-
-  nsCOMPtr<nsINode> parentNode = do_QueryInterface(aParentNode);
-  NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
-
-  *aResultNode = do_QueryInterface(GetNextNode(parentNode, aOffset,
-                                               aEditableNode,
-                                               bNoBlockCrossing));
-  return NS_OK;
-}
 
 nsIContent*
 nsEditor::GetNextNode(nsINode* aParentNode,
@@ -3005,22 +2967,6 @@ nsEditor::GetNextNode(nsINode* aParentNode,
   return GetNextNode(aParentNode, aEditableNode, aNoBlockCrossing);
 }
 
-
-nsresult 
-nsEditor::GetPriorNode(nsIDOMNode  *aCurrentNode, 
-                       bool         aEditableNode, 
-                       nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing)
-{
-  NS_ENSURE_TRUE(aResultNode, NS_ERROR_NULL_POINTER);
-
-  nsCOMPtr<nsINode> currentNode = do_QueryInterface(aCurrentNode);
-  NS_ENSURE_TRUE(currentNode, NS_ERROR_NULL_POINTER);
-
-  *aResultNode = do_QueryInterface(GetPriorNode(currentNode, aEditableNode,
-                                                bNoBlockCrossing));
-  return NS_OK;
-}
 
 nsIContent*
 nsEditor::GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
@@ -3085,22 +3031,6 @@ nsEditor::FindNextLeafNode(nsINode  *aCurrentNode,
 
   NS_NOTREACHED("What part of for(;;) do you not understand?");
   return nullptr;
-}
-
-nsresult
-nsEditor::GetNextNode(nsIDOMNode* aCurrentNode,
-                      bool aEditableNode,
-                      nsCOMPtr<nsIDOMNode> *aResultNode,
-                      bool bNoBlockCrossing)
-{
-  nsCOMPtr<nsINode> currentNode = do_QueryInterface(aCurrentNode);
-  if (!currentNode || !aResultNode) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aResultNode = do_QueryInterface(GetNextNode(currentNode, aEditableNode,
-                                               bNoBlockCrossing));
-  return NS_OK;
 }
 
 nsIContent*
