@@ -320,21 +320,21 @@ nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
 
 
 nsresult
-nsRangeUpdater::SelAdjSplitNode(nsINode* aOldRightNode, int32_t aOffset,
-                                nsINode* aNewLeftNode)
+nsRangeUpdater::SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
+                                nsIContent* aNewLeftNode)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
     return NS_OK;
   }
-  NS_ENSURE_TRUE(aOldRightNode && aNewLeftNode, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_TRUE(aNewLeftNode, NS_ERROR_NULL_POINTER);
   uint32_t count = mArray.Length();
   if (!count) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINode> parent = aOldRightNode->GetParentNode();
-  int32_t offset = parent ? parent->IndexOf(aOldRightNode) : -1;
+  nsCOMPtr<nsINode> parent = aOldRightNode.GetParentNode();
+  int32_t offset = parent ? parent->IndexOf(&aOldRightNode) : -1;
 
   // first part is same as inserting aNewLeftnode
   nsresult result = SelAdjInsertNode(parent, offset - 1);
@@ -345,14 +345,14 @@ nsRangeUpdater::SelAdjSplitNode(nsINode* aOldRightNode, int32_t aOffset,
     nsRangeStore* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
 
-    if (item->startNode == aOldRightNode) {
+    if (item->startNode == &aOldRightNode) {
       if (item->startOffset > aOffset) {
         item->startOffset -= aOffset;
       } else {
         item->startNode = aNewLeftNode;
       }
     }
-    if (item->endNode == aOldRightNode) {
+    if (item->endNode == &aOldRightNode) {
       if (item->endOffset > aOffset) {
         item->endOffset -= aOffset;
       } else {
@@ -362,16 +362,6 @@ nsRangeUpdater::SelAdjSplitNode(nsINode* aOldRightNode, int32_t aOffset,
   }
   return NS_OK;
 }
-
-nsresult
-nsRangeUpdater::SelAdjSplitNode(nsIDOMNode* aOldRightNode, int32_t aOffset,
-                                nsIDOMNode* aNewLeftNode)
-{
-  nsCOMPtr<nsINode> oldRightNode = do_QueryInterface(aOldRightNode);
-  nsCOMPtr<nsINode> newLeftNode = do_QueryInterface(aNewLeftNode);
-  return SelAdjSplitNode(oldRightNode, aOffset, newLeftNode);
-}
-
 
 nsresult
 nsRangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode,

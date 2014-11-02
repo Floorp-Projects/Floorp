@@ -53,7 +53,7 @@ UNIFIED_SOURCES += [
     'nsWSRunObject.cpp',
     'PlaceholderTxn.cpp',
     'SetDocTitleTxn.cpp',
-    'SplitElementTxn.cpp',
+    'SplitNodeTxn.cpp',
     'TextEditorTest.cpp',
     'TypeInState.cpp',
 ]
