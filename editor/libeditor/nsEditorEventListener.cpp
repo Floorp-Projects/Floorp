@@ -10,6 +10,7 @@
 #include "mozilla/TextEvents.h"         // for WidgetCompositionEvent
 #include "mozilla/dom/Element.h"        // for Element
 #include "mozilla/dom/EventTarget.h"    // for EventTarget
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCaret.h"                    // for nsCaret
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
@@ -42,9 +43,7 @@
 #include "nsINode.h"                    // for nsINode, ::NODE_IS_EDITABLE, etc
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
 #include "nsIPresShell.h"               // for nsIPresShell
-#include "nsISelection.h"               // for nsISelection
 #include "nsISelectionController.h"     // for nsISelectionController, etc
-#include "nsISelectionPrivate.h"        // for nsISelectionPrivate
 #include "nsITransferable.h"            // for kFileMime, kHTMLMime, etc
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
@@ -713,8 +712,8 @@ nsEditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsISelection> selection;
-  if (NS_SUCCEEDED(mEditor->GetSelection(getter_AddRefs(selection)))) {
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
+  if (selection) {
     selection->Collapse(parent, offset);
   }
 
@@ -983,9 +982,8 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     return true;
   }
 
-  nsCOMPtr<nsISelection> selection;
-  rv = mEditor->GetSelection(getter_AddRefs(selection));
-  if (NS_FAILED(rv) || !selection) {
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
+  if (!selection) {
     return false;
   }
 

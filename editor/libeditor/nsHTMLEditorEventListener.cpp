@@ -2,6 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "mozilla/dom/Selection.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -20,9 +21,11 @@
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
 #include "nsIHTMLObjectResizer.h"
-#include "nsISelection.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
+
+using namespace mozilla;
+using namespace mozilla::dom;
 
 /*
  * nsHTMLEditorEventListener implementation
@@ -99,8 +102,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   if (isContextClick || (buttonNumber == 0 && clickCount == 2)) {
-    nsCOMPtr<nsISelection> selection;
-    mEditor->GetSelection(getter_AddRefs(selection));
+    nsRefPtr<Selection> selection = mEditor->GetSelection();
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node

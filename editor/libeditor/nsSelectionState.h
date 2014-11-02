@@ -15,7 +15,6 @@
 class nsCycleCollectionTraversalCallback;
 class nsIDOMCharacterData;
 class nsIDOMRange;
-class nsISelection;
 class nsRange;
 namespace mozilla {
 namespace dom {
@@ -62,7 +61,7 @@ class nsSelectionState
     void DoUnlink() { MakeEmpty(); }
   
     void     SaveSelection(mozilla::dom::Selection *aSel);
-    nsresult RestoreSelection(nsISelection *aSel);
+    nsresult RestoreSelection(mozilla::dom::Selection* aSel);
     bool     IsCollapsed();
     bool     IsEqual(nsSelectionState *aSelState);
     void     MakeEmpty();

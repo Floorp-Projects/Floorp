@@ -81,10 +81,8 @@
 #include "nsIObserverService.h"         // for nsIObserverService
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
 #include "nsIPresShell.h"               // for nsIPresShell
-#include "nsISelection.h"               // for nsISelection, etc
 #include "nsISelectionController.h"     // for nsISelectionController, etc
 #include "nsISelectionDisplay.h"        // for nsISelectionDisplay, etc
-#include "nsISelectionPrivate.h"        // for nsISelectionPrivate, etc
 #include "nsISupportsBase.h"            // for nsISupports
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_IF_ADDREF
 #include "nsITransaction.h"             // for nsITransaction
@@ -914,10 +912,7 @@ nsEditor::EndPlaceHolderTransaction()
   NS_PRECONDITION(mPlaceHolderBatch > 0, "zero or negative placeholder batch count when ending batch!");
   if (mPlaceHolderBatch == 1)
   {
-    nsCOMPtr<nsISelection>selection;
-    GetSelection(getter_AddRefs(selection));
-
-    nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
+    nsRefPtr<Selection> selection = GetSelection();
 
     // By making the assumption that no reflow happens during the calls
     // to EndUpdateViewBatch and ScrollSelectionIntoView, we are able to
@@ -925,8 +920,8 @@ nsEditor::EndPlaceHolderTransaction()
     // caret drawing code. We only enable this cache here; at other times,
     // we have no way to know whether reflow invalidates it
     // See bugs 35296 and 199412.
-    if (selPrivate) {
-      selPrivate->SetCanCacheFrameOffset(true);
+    if (selection) {
+      selection->SetCanCacheFrameOffset(true);
     }
 
     {
@@ -948,8 +943,8 @@ nsEditor::EndPlaceHolderTransaction()
     }
 
     // cached for frame offset are Not available now
-    if (selPrivate) {
-      selPrivate->SetCanCacheFrameOffset(false);
+    if (selection) {
+      selection->SetCanCacheFrameOffset(false);
     }
 
     if (mSelState)
@@ -1020,16 +1015,9 @@ NS_IMETHODIMP nsEditor::SelectAll()
   if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
 
-  nsCOMPtr<nsISelectionController> selCon;
-  GetSelectionController(getter_AddRefs(selCon));
-  NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsISelection> selection;
-  nsresult result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_SUCCEEDED(result) && selection)
-  {
-    result = SelectEntireDocument(selection);
-  }
-  return result;
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
+  return SelectEntireDocument(selection);
 }
 
 NS_IMETHODIMP nsEditor::BeginningOfDocument()
@@ -1037,9 +1025,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; }
 
   // get the selection
-  nsCOMPtr<nsISelection> selection;
-  nsresult result = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(result, result);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
     
   // get the root element 
@@ -1074,9 +1060,7 @@ nsEditor::EndOfDocument()
   NS_ENSURE_TRUE(mDocWeak, NS_ERROR_NOT_INITIALIZED);
 
   // get selection 
-  nsCOMPtr<nsISelection> selection; 
-  nsresult rv = GetSelection(getter_AddRefs(selection)); 
-  NS_ENSURE_SUCCESS(rv, rv); 
+  nsRefPtr<Selection> selection = GetSelection(); 
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER); 
   
   // get the root element 
@@ -1991,7 +1975,7 @@ nsEditor::PreserveSelectionAcrossActions(Selection* aSel)
 }
 
 nsresult 
-nsEditor::RestorePreservedSelection(nsISelection *aSel)
+nsEditor::RestorePreservedSelection(Selection* aSel)
 {
   if (mSavedSel.IsEmpty()) return NS_ERROR_FAILURE;
   mSavedSel.RestoreSelection(aSel);
@@ -2441,7 +2425,8 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
 }
 
 
-NS_IMETHODIMP nsEditor::SelectEntireDocument(nsISelection *aSelection)
+nsresult
+nsEditor::SelectEntireDocument(Selection* aSelection)
 {
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
 
@@ -3540,15 +3525,14 @@ nsEditor::GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, int32_t aOffset)
 // GetStartNodeAndOffset: returns whatever the start parent & offset is of 
 //                        the first range in the selection.
 nsresult 
-nsEditor::GetStartNodeAndOffset(nsISelection *aSelection,
+nsEditor::GetStartNodeAndOffset(Selection* aSelection,
                                        nsIDOMNode **outStartNode,
                                        int32_t *outStartOffset)
 {
   NS_ENSURE_TRUE(outStartNode && outStartOffset && aSelection, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsINode> startNode;
-  nsresult rv = GetStartNodeAndOffset(static_cast<Selection*>(aSelection),
-                                      getter_AddRefs(startNode),
+  nsresult rv = GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode),
                                       outStartOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3588,15 +3572,14 @@ nsEditor::GetStartNodeAndOffset(Selection* aSelection, nsINode** aStartNode,
 // GetEndNodeAndOffset: returns whatever the end parent & offset is of 
 //                        the first range in the selection.
 nsresult 
-nsEditor::GetEndNodeAndOffset(nsISelection *aSelection,
+nsEditor::GetEndNodeAndOffset(Selection* aSelection,
                                        nsIDOMNode **outEndNode,
                                        int32_t *outEndOffset)
 {
   NS_ENSURE_TRUE(outEndNode && outEndOffset && aSelection, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsINode> endNode;
-  nsresult rv = GetEndNodeAndOffset(static_cast<Selection*>(aSelection),
-                                    getter_AddRefs(endNode),
+  nsresult rv = GetEndNodeAndOffset(aSelection, getter_AddRefs(endNode),
                                     outEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3836,13 +3819,10 @@ nsEditor::BeginUpdateViewBatch()
   {
     // Turn off selection updates and notifications.
 
-    nsCOMPtr<nsISelection> selection;
-    GetSelection(getter_AddRefs(selection));
+    nsRefPtr<Selection> selection = GetSelection();
 
-    if (selection) 
-    {
-      nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(selection));
-      selPrivate->StartBatchChanges();
+    if (selection) {
+      selection->StartBatchChanges();
     }
   }
 
@@ -3866,12 +3846,9 @@ nsresult nsEditor::EndUpdateViewBatch()
   {
     // Turn selection updating and notifications back on.
 
-    nsCOMPtr<nsISelection>selection;
-    GetSelection(getter_AddRefs(selection));
-
+    nsRefPtr<Selection> selection = GetSelection();
     if (selection) {
-      nsCOMPtr<nsISelectionPrivate>selPrivate(do_QueryInterface(selection));
-      selPrivate->EndBatchChanges();
+      selection->EndBatchChanges();
     }
   }
 
@@ -3891,15 +3868,15 @@ nsEditor::DeleteSelectionImpl(EDirection aAction,
 {
   MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
 
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_STATE(selection);
   nsRefPtr<EditAggregateTxn> txn;
   nsCOMPtr<nsINode> deleteNode;
   int32_t deleteCharOffset = 0, deleteCharLength = 0;
-  res = CreateTxnForDeleteSelection(aAction, getter_AddRefs(txn),
-                                    getter_AddRefs(deleteNode),
-                                    &deleteCharOffset, &deleteCharLength);
+  nsresult res = CreateTxnForDeleteSelection(aAction, getter_AddRefs(txn),
+                                             getter_AddRefs(deleteNode),
+                                             &deleteCharOffset,
+                                             &deleteCharLength);
   nsCOMPtr<nsIDOMCharacterData> deleteCharData(do_QueryInterface(deleteNode));
 
   if (NS_SUCCEEDED(res))  
@@ -4426,13 +4403,11 @@ nsresult
 nsEditor::AppendNodeToSelectionAsRange(nsIDOMNode *aNode)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
-  if(!selection) return NS_ERROR_FAILURE;
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMNode> parentNode;
-  res = aNode->GetParentNode(getter_AddRefs(parentNode));
+  nsresult res = aNode->GetParentNode(getter_AddRefs(parentNode));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(parentNode, NS_ERROR_NULL_POINTER);
   
@@ -4448,9 +4423,7 @@ nsEditor::AppendNodeToSelectionAsRange(nsIDOMNode *aNode)
 
 nsresult nsEditor::ClearSelection()
 {
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
   return selection->RemoveAllRanges();  
 }
@@ -4557,7 +4530,7 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 
 nsresult
 nsEditor::HandleInlineSpellCheck(EditAction action,
-                                   nsISelection *aSelection,
+                                   Selection* aSelection,
                                    nsIDOMNode *previousSelectedNode,
                                    int32_t previousSelectedOffset,
                                    nsIDOMNode *aStartNode,
@@ -4595,20 +4568,15 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
     targetNode->NodeType() == nsIDOMNode::DOCUMENT_NODE &&
     targetNode->HasFlag(NODE_IS_EDITABLE);
 
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_STATE(selection);
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_INITIALIZED);
 
   nsCOMPtr<nsISelectionController> selCon;
-  rv = GetSelectionController(getter_AddRefs(selCon));
+  nsresult rv = GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISelectionPrivate> selectionPrivate =
-    do_QueryInterface(selection);
-  NS_ENSURE_TRUE(selectionPrivate, NS_ERROR_UNEXPECTED);
 
   // Init the caret
   nsRefPtr<nsCaret> caret = presShell->GetCaret();
@@ -4628,9 +4596,9 @@ nsEditor::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   // NOTE: If we set a root element to the ancestor limit, some selection
   // methods don't work fine.
   if (selectionRootContent->GetParent()) {
-    selectionPrivate->SetAncestorLimiter(selectionRootContent);
+    selection->SetAncestorLimiter(selectionRootContent);
   } else {
-    selectionPrivate->SetAncestorLimiter(nullptr);
+    selection->SetAncestorLimiter(nullptr);
   }
 
   // XXX What case needs this?
@@ -4652,15 +4620,10 @@ nsEditor::FinalizeSelection()
   nsresult rv = GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISelection> selection;
-  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                            getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_STATE(selection);
 
-  nsCOMPtr<nsISelectionPrivate> selectionPrivate = do_QueryInterface(selection);
-  NS_ENSURE_TRUE(selectionPrivate, rv);
-
-  selectionPrivate->SetAncestorLimiter(nullptr);
+  selection->SetAncestorLimiter(nullptr);
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_NOT_INITIALIZED);

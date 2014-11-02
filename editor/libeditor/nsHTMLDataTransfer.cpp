@@ -60,7 +60,6 @@
 #include "nsINode.h"
 #include "nsIParserUtils.h"
 #include "nsIPlaintextEditor.h"
-#include "nsISelection.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsUtils.h"

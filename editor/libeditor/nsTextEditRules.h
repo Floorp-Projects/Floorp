@@ -19,7 +19,6 @@
 
 class nsIDOMElement;
 class nsIDOMNode;
-class nsISelection;
 namespace mozilla {
 namespace dom {
 class Selection;
@@ -56,7 +55,8 @@ public:
                        nsIEditor::EDirection aDirection);
   NS_IMETHOD WillDoAction(mozilla::dom::Selection* aSelection,
                           nsRulesInfo* aInfo, bool* aCancel, bool* aHandled);
-  NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
+  NS_IMETHOD DidDoAction(mozilla::dom::Selection* aSelection,
+                         nsRulesInfo* aInfo, nsresult aResult);
   NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty);
   NS_IMETHOD DocumentModified();
 
@@ -114,35 +114,43 @@ protected:
                             const nsAString *inString,
                             nsAString       *outString,
                             int32_t          aMaxLength);
-  nsresult DidInsertText(nsISelection *aSelection, nsresult aResult);
+  nsresult DidInsertText(mozilla::dom::Selection* aSelection,
+                         nsresult aResult);
   nsresult GetTopEnclosingPre(nsIDOMNode *aNode, nsIDOMNode** aOutPreNode);
 
   nsresult WillInsertBreak(mozilla::dom::Selection* aSelection, bool* aCancel,
                            bool *aHandled, int32_t aMaxLength);
-  nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
+  nsresult DidInsertBreak(mozilla::dom::Selection* aSelection,
+                          nsresult aResult);
 
-  nsresult WillInsert(nsISelection *aSelection, bool *aCancel);
-  nsresult DidInsert(nsISelection *aSelection, nsresult aResult);
+  nsresult WillInsert(mozilla::dom::Selection* aSelection, bool* aCancel);
+  nsresult DidInsert(mozilla::dom::Selection* aSelection, nsresult aResult);
 
   nsresult WillDeleteSelection(mozilla::dom::Selection* aSelection,
                                nsIEditor::EDirection aCollapsedAction, 
                                bool *aCancel,
                                bool *aHandled);
-  nsresult DidDeleteSelection(nsISelection *aSelection, 
+  nsresult DidDeleteSelection(mozilla::dom::Selection* aSelection,
                               nsIEditor::EDirection aCollapsedAction, 
                               nsresult aResult);
 
-  nsresult WillSetTextProperty(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult DidSetTextProperty(nsISelection *aSelection, nsresult aResult);
+  nsresult WillSetTextProperty(mozilla::dom::Selection* aSelection,
+                               bool* aCancel, bool* aHandled);
+  nsresult DidSetTextProperty(mozilla::dom::Selection* aSelection,
+                              nsresult aResult);
 
-  nsresult WillRemoveTextProperty(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult DidRemoveTextProperty(nsISelection *aSelection, nsresult aResult);
+  nsresult WillRemoveTextProperty(mozilla::dom::Selection* aSelection,
+                                  bool* aCancel, bool* aHandled);
+  nsresult DidRemoveTextProperty(mozilla::dom::Selection* aSelection,
+                                 nsresult aResult);
 
-  nsresult WillUndo(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult DidUndo(nsISelection *aSelection, nsresult aResult);
+  nsresult WillUndo(mozilla::dom::Selection* aSelection, bool* aCancel,
+                    bool* aHandled);
+  nsresult DidUndo(mozilla::dom::Selection* aSelection, nsresult aResult);
 
-  nsresult WillRedo(nsISelection *aSelection, bool *aCancel, bool *aHandled);
-  nsresult DidRedo(nsISelection *aSelection, nsresult aResult);
+  nsresult WillRedo(mozilla::dom::Selection* aSelection, bool* aCancel,
+                    bool* aHandled);
+  nsresult DidRedo(mozilla::dom::Selection* aSelection, nsresult aResult);
 
   /** called prior to nsIEditor::OutputToString
     * @param aSelection
@@ -151,13 +159,13 @@ protected:
     * @param aOutCancel if set to true, the caller should cancel the operation
     *                   and use aOutText as the result.
     */
-  nsresult WillOutputText(nsISelection *aSelection,
+  nsresult WillOutputText(mozilla::dom::Selection* aSelection,
                           const nsAString  *aInFormat,
                           nsAString *aOutText, 
                           bool     *aOutCancel, 
                           bool *aHandled);
 
-  nsresult DidOutputText(nsISelection *aSelection, nsresult aResult);
+  nsresult DidOutputText(mozilla::dom::Selection* aSelection, nsresult aResult);
 
 
   // helper functions
@@ -169,7 +177,7 @@ protected:
   nsresult CreateTrailingBRIfNeeded();
   
  /** creates a bogus text node if the document has no editable content */
-  nsresult CreateBogusNodeIfNeeded(nsISelection *aSelection);
+  nsresult CreateBogusNodeIfNeeded(mozilla::dom::Selection* aSelection);
 
   /** returns a truncated insertion string if insertion would place us
       over aMaxLength */
@@ -185,7 +193,7 @@ protected:
   nsresult CreateMozBR(nsIDOMNode* inParent, int32_t inOffset,
                        nsIDOMNode** outBRNode = nullptr);
 
-  nsresult CheckBidiLevelForDeletion(nsISelection         *aSelection,
+  nsresult CheckBidiLevelForDeletion(mozilla::dom::Selection* aSelection,
                                      nsIDOMNode           *aSelNode, 
                                      int32_t               aSelOffset, 
                                      nsIEditor::EDirection aAction,
@@ -193,7 +201,7 @@ protected:
 
   nsresult HideLastPWInput();
 
-  nsresult CollapseSelectionToTrailingBRIfNeeded(nsISelection *aSelection);
+  nsresult CollapseSelectionToTrailingBRIfNeeded(mozilla::dom::Selection* aSelection);
 
   bool IsPasswordEditor() const
   {
