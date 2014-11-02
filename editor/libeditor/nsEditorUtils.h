@@ -168,6 +168,10 @@ class nsBoolDomIterFunctor
 {
   public:
     virtual bool operator()(nsIDOMNode* aNode)=0;
+    bool operator()(nsINode* aNode)
+    {
+      return operator()(GetAsDOMNode(aNode));
+    }
 };
 
 class MOZ_STACK_CLASS nsDOMIterator
@@ -178,6 +182,8 @@ class MOZ_STACK_CLASS nsDOMIterator
     
     nsresult Init(nsRange* aRange);
     nsresult Init(nsIDOMNode* aNode);
+    nsresult AppendList(nsBoolDomIterFunctor& functor,
+                        nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
     nsresult AppendList(nsBoolDomIterFunctor& functor,
                         nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
