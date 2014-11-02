@@ -1049,7 +1049,8 @@ nsHTMLEditor::PromoteInlineRange(nsRange* inRange)
 
 bool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset)
 {
-  NS_ENSURE_TRUE(aNode, false);  // oops
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, false);
   if (!aOffset) {
     return true;
   }
@@ -1060,10 +1061,9 @@ bool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset)
   }
   else
   {
-    nsCOMPtr<nsIDOMNode> firstNode;
-    GetFirstEditableChild(aNode, address_of(firstNode));
+    nsCOMPtr<nsIContent> firstNode = GetFirstEditableChild(*node);
     NS_ENSURE_TRUE(firstNode, true); 
-    int32_t offset = GetChildOffset(firstNode, aNode);
+    int32_t offset = node->IndexOf(firstNode);
     if (offset < aOffset) return false;
     return true;
   }
@@ -1071,9 +1071,9 @@ bool nsHTMLEditor::IsAtFrontOfNode(nsIDOMNode *aNode, int32_t aOffset)
 
 bool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset)
 {
-  NS_ENSURE_TRUE(aNode, false);  // oops
-  uint32_t len;
-  GetLengthOfDOMNode(aNode, len);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(node, false);
+  uint32_t len = node->Length();
   if (aOffset == (int32_t)len) return true;
   
   if (IsTextNode(aNode))
@@ -1082,10 +1082,9 @@ bool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, int32_t aOffset)
   }
   else
   {
-    nsCOMPtr<nsIDOMNode> lastNode;
-    GetLastEditableChild(aNode, address_of(lastNode));
+    nsCOMPtr<nsIContent> lastNode = GetLastEditableChild(*node);
     NS_ENSURE_TRUE(lastNode, true); 
-    int32_t offset = GetChildOffset(lastNode, aNode);
+    int32_t offset = node->IndexOf(lastNode);
     if (offset < aOffset) return true;
     return false;
   }

@@ -3788,7 +3788,8 @@ nsHTMLEditor::SetSelectionAtDocumentStart(Selection* aSelection)
 nsresult
 nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
 {
-  NS_ENSURE_TRUE(inNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIContent> node = do_QueryInterface(inNode);
+  NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
   nsresult res;
   nsCOMPtr<nsIDOMNode> sibling, child, unused;
   
@@ -3800,8 +3801,7 @@ nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
   // and compare following sibling and last child to determine if we need a
   // trailing br.
   
-  res = GetFirstEditableChild(inNode, address_of(child));
-  NS_ENSURE_SUCCESS(res, res);
+  child = GetAsDOMNode(GetFirstEditableChild(*node));
   
   if (child)  // the case of inNode not being empty
   {
@@ -3815,10 +3815,7 @@ nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
     NS_ENSURE_SUCCESS(res, res);
     if (sibling && !IsBlockNode(sibling) && !nsTextEditUtils::IsBreak(sibling))
     {
-      res = GetFirstEditableChild(inNode, address_of(child));
-      NS_ENSURE_SUCCESS(res, res);
-      if (child && !IsBlockNode(child))
-      {
+      if (!IsBlockNode(child)) {
         // insert br node
         res = CreateBR(inNode, 0, address_of(unused));
         NS_ENSURE_SUCCESS(res, res);
@@ -3835,8 +3832,7 @@ nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
     NS_ENSURE_SUCCESS(res, res);
     if (sibling && !IsBlockNode(sibling))
     {
-      res = GetLastEditableChild(inNode, address_of(child));
-      NS_ENSURE_SUCCESS(res, res);
+      child = GetAsDOMNode(GetLastEditableChild(*node));
       if (child && !IsBlockNode(child) && !nsTextEditUtils::IsBreak(child))
       {
         // insert br node
@@ -3872,8 +3868,6 @@ nsHTMLEditor::RemoveBlockContainer(nsIDOMNode *inNode)
   }
     
   // now remove container
-  nsCOMPtr<nsIContent> node = do_QueryInterface(inNode);
-  NS_ENSURE_STATE(node);
   return RemoveContainer(node);
 }
 
@@ -4136,100 +4130,62 @@ nsHTMLEditor::GetNextHTMLNode(nsIDOMNode* aNode, int32_t aOffset,
 nsresult 
 nsHTMLEditor::IsFirstEditableChild( nsIDOMNode *aNode, bool *aOutIsFirst)
 {
-  // check parms
-  NS_ENSURE_TRUE(aOutIsFirst && aNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(aOutIsFirst && node, NS_ERROR_NULL_POINTER);
   
   // init out parms
   *aOutIsFirst = false;
   
   // find first editable child and compare it to aNode
-  nsCOMPtr<nsIDOMNode> parent, firstChild;
-  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsINode> parent = node->GetParentNode();
   NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
-  res = GetFirstEditableChild(parent, address_of(firstChild));
-  NS_ENSURE_SUCCESS(res, res);
   
-  *aOutIsFirst = (firstChild.get() == aNode);
-  return res;
+  *aOutIsFirst = (GetFirstEditableChild(*parent) == node);
+  return NS_OK;
 }
 
 
 nsresult 
 nsHTMLEditor::IsLastEditableChild( nsIDOMNode *aNode, bool *aOutIsLast)
 {
-  // check parms
-  NS_ENSURE_TRUE(aOutIsLast && aNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  NS_ENSURE_TRUE(aOutIsLast && node, NS_ERROR_NULL_POINTER);
   
   // init out parms
   *aOutIsLast = false;
   
   // find last editable child and compare it to aNode
-  nsCOMPtr<nsIDOMNode> parent, lastChild;
-  nsresult res = aNode->GetParentNode(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsINode> parent = node->GetParentNode();
   NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
-  res = GetLastEditableChild(parent, address_of(lastChild));
-  NS_ENSURE_SUCCESS(res, res);
   
-  *aOutIsLast = (lastChild.get() == aNode);
-  return res;
+  *aOutIsLast = (GetLastEditableChild(*parent) == node);
+  return NS_OK;
 }
 
 
-nsresult 
-nsHTMLEditor::GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild)
+nsIContent*
+nsHTMLEditor::GetFirstEditableChild(nsINode& aNode)
 {
-  // check parms
-  NS_ENSURE_TRUE(aOutFirstChild && aNode, NS_ERROR_NULL_POINTER);
-  
-  // init out parms
-  *aOutFirstChild = nullptr;
-  
-  // find first editable child
-  nsCOMPtr<nsIDOMNode> child;
-  nsresult res = aNode->GetFirstChild(getter_AddRefs(child));
-  NS_ENSURE_SUCCESS(res, res);
-  
-  while (child && !IsEditable(child))
-  {
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = child->GetNextSibling(getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-    child = tmp;
+  nsCOMPtr<nsIContent> child = aNode.GetFirstChild();
+
+  while (child && !IsEditable(child)) {
+    child = child->GetNextSibling();
   }
-  
-  *aOutFirstChild = child;
-  return res;
+
+  return child;
 }
 
 
-nsresult 
-nsHTMLEditor::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild)
+nsIContent*
+nsHTMLEditor::GetLastEditableChild(nsINode& aNode)
 {
-  // check parms
-  NS_ENSURE_TRUE(aOutLastChild && aNode, NS_ERROR_NULL_POINTER);
-  
-  // init out parms
-  *aOutLastChild = aNode;
-  
-  // find last editable child
-  nsCOMPtr<nsIDOMNode> child;
-  nsresult res = aNode->GetLastChild(getter_AddRefs(child));
-  NS_ENSURE_SUCCESS(res, res);
-  
-  while (child && !IsEditable(child))
-  {
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = child->GetPreviousSibling(getter_AddRefs(tmp));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-    child = tmp;
+  nsCOMPtr<nsIContent> child = aNode.GetLastChild();
+
+  while (child && !IsEditable(child)) {
+    child = child->GetPreviousSibling();
   }
-  
-  *aOutLastChild = child;
-  return res;
+
+  return child;
 }
 
 nsresult 
@@ -4865,8 +4821,9 @@ nsHTMLEditor::CopyLastEditableChildStyles(nsIDOMNode * aPreviousBlock, nsIDOMNod
   tmp = aPreviousBlock;
   while (tmp) {
     child = tmp;
-    res = GetLastEditableChild(child, address_of(tmp));
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<nsINode> child_ = do_QueryInterface(child);
+    NS_ENSURE_STATE(child_ || !child);
+    tmp = GetAsDOMNode(GetLastEditableChild(*child_));
   }
   while (child && nsTextEditUtils::IsBreak(child)) {
     nsCOMPtr<nsIDOMNode> priorNode;
