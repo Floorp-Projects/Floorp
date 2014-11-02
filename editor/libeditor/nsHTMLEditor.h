@@ -712,8 +712,8 @@ protected:
 
   nsresult IsFirstEditableChild( nsIDOMNode *aNode, bool *aOutIsFirst);
   nsresult IsLastEditableChild( nsIDOMNode *aNode, bool *aOutIsLast);
-  nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
-  nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
+  nsIContent* GetFirstEditableChild(nsINode& aNode);
+  nsIContent* GetLastEditableChild(nsINode& aNode);
 
   nsresult GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf);
   nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
