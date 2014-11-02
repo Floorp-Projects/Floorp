@@ -251,10 +251,10 @@ protected:
                         bool *outIsEmptyBlock, 
                         bool aMozBRDoesntCount = false,
                         bool aListItemsNotEmpty = false);
-  nsresult CheckForEmptyBlock(nsIDOMNode *aStartNode, 
-                              nsIDOMNode *aBodyNode,
+  nsresult CheckForEmptyBlock(nsINode* aStartNode,
+                              mozilla::dom::Element* aBodyNode,
                               mozilla::dom::Selection* aSelection,
-                              bool *aHandled);
+                              bool* aHandled);
   nsresult CheckForInvisibleBR(nsIDOMNode *aBlock, nsHTMLEditRules::BRLocation aWhere, 
                                nsCOMPtr<nsIDOMNode> *outBRNode, int32_t aOffset=0);
   nsresult ExpandSelectionForDeletion(mozilla::dom::Selection* aSelection);
