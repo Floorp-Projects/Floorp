@@ -1,0 +1,35 @@
+<html>
+<script>
+function start() {
+o3=document.createElement('input');
+tmp = o3.ownerDocument.createElement('iframe');
+document.body.appendChild(tmp);
+o4=tmp.contentDocument;
+cb_3=function() { var f = callback_3; callback_3 = null; return f(arguments); }
+o3.addEventListener('change', cb_3, false);
+o51=document.createElement('img');
+o94=document.createElement('input');
+o94.type='checkbox';
+o3.appendChild(o94);
+o192=document.createElement('input');
+o192.type='button';
+o94.appendChild(o192);
+o263=document.createEvent('MouseEvents');
+o263.initMouseEvent('click', true, true, window,0, 0, 0, 0, 0, false, false, false, false, 0, null);
+o192.dispatchEvent(o263)
+}
+function callback_3() {
+o192.addEventListener('DOMNodeRemoved', callback_21, true);
+o51.appendChild(o192);
+}
+function callback_21() {
+o4.documentElement.appendChild(o192);
+location.reload();
+}
+</script>
+<body>
+<script>
+window.setTimeout("start();", 10);
+</script>
+</body>
+</html>
