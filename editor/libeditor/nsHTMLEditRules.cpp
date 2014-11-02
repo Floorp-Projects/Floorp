@@ -2203,16 +2203,14 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       if (aAction == nsIEditor::ePrevious) 
       {
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->GetLastEditableLeaf( visNode, address_of(leafNode));
-        NS_ENSURE_SUCCESS(res, res);
+        leafNode = GetAsDOMNode(mHTMLEditor->GetLastEditableLeaf(*visNode_));
         leftNode = leafNode;
         rightNode = startNode;
       }
       else
       {
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->GetFirstEditableLeaf( visNode, address_of(leafNode));
-        NS_ENSURE_SUCCESS(res, res);
+        leafNode = GetAsDOMNode(mHTMLEditor->GetFirstEditableLeaf(*visNode_));
         leftNode = startNode;
         rightNode = leafNode;
       }
