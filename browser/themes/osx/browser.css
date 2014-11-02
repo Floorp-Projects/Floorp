@@ -26,7 +26,6 @@
                                    0 1px 0 hsla(0,0%,100%,.5) inset;
 
   --toolbarbutton-active-background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), transparent) border-box;
-  --toolbarbutton-active-bordercolor: hsla(0,0%,0%,.3);
   --toolbarbutton-active-boxshadow: 0 1px 0 hsla(0,0%,100%,.5),
                                     0 1px 0 hsla(0,0%,0%,.05) inset,
                                     0 1px 1px hsla(0,0%,0%,.2) inset;
@@ -607,7 +606,7 @@ toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[b
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover:active > .toolbarbutton-menubutton-dropmarker,
 toolbar .toolbarbutton-1[type="menu-button"][open]:not([disabled]) > .toolbarbutton-menubutton-dropmarker {
   background: var(--toolbarbutton-active-background);
-  border-color: var(--toolbarbutton-active-bordercolor);
+  border-color: hsla(0,0%,0%,.3);
   box-shadow: var(--toolbarbutton-active-boxshadow);
   transition-duration: 10ms;
 }
