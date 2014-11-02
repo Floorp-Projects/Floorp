@@ -55,6 +55,7 @@ class nsIWidget;
 class nsRange;
 class nsString;
 class nsTransactionManager;
+struct DOMPoint;
 
 namespace mozilla {
 class CSSStyleSheet;
@@ -640,7 +641,7 @@ public:
                          bool    aNoEmptyContainers = false,
                          nsCOMPtr<nsIDOMNode> *outLeftNode = 0,
                          nsCOMPtr<nsIDOMNode> *outRightNode = 0);
-  nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsCOMPtr<nsIDOMNode> *aOutJoinNode, int32_t *outOffset); 
+  ::DOMPoint JoinNodeDeep(nsIContent& aLeftNode, nsIContent& aRightNode);
 
   nsresult GetString(const nsAString& name, nsAString& value);
 
