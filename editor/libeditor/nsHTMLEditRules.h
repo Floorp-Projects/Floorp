@@ -140,8 +140,7 @@ protected:
                              mozilla::dom::Selection* aSelection);
   nsresult DidInsertBreak(mozilla::dom::Selection* aSelection,
                           nsresult aResult);
-  nsresult SplitMailCites(mozilla::dom::Selection* aSelection, bool aPlaintext,
-                          bool* aHandled);
+  nsresult SplitMailCites(mozilla::dom::Selection* aSelection, bool* aHandled);
   nsresult WillDeleteSelection(mozilla::dom::Selection* aSelection,
                                nsIEditor::EDirection aAction,
                                nsIEditor::EStripWrappers aStripWrappers,
@@ -302,7 +301,7 @@ protected:
                            nsIDOMNode *aNodeRight, 
                            nsCOMPtr<nsIDOMNode> *aOutMergeParent, 
                            int32_t *aOutMergeOffset);
-  nsresult GetTopEnclosingMailCite(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutCiteNode, bool aPlaintext);
+  mozilla::dom::Element* GetTopEnclosingMailCite(nsINode& aNode);
   nsresult PopListItem(nsIDOMNode *aListItem, bool *aOutOfList);
   nsresult RemoveListStructure(nsIDOMNode *aList);
   nsresult CacheInlineStyles(nsIDOMNode *aNode);
