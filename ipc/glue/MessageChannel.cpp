@@ -719,7 +719,7 @@ MessageChannel::SendAndWait(Message* aMsg, Message* aReply)
             for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
                 Message &msg = *it;
                 if (!ShouldDeferMessage(msg)) {
-                    toProcess.append(msg);
+                    toProcess.append(Move(msg));
                     it = mPending.erase(it);
                     continue;
                 }
@@ -997,7 +997,7 @@ MessageChannel::DequeueOne(Message *recvd)
     if (mPending.empty())
         return false;
 
-    *recvd = mPending.front();
+    *recvd = Move(mPending.front());
     mPending.pop_front();
     return true;
 }

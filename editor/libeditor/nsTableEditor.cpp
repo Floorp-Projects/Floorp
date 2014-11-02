@@ -22,7 +22,6 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsIFrame.h"
 #include "nsIHTMLEditor.h"
@@ -33,6 +32,7 @@
 #include "nsITableEditor.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
+#include "nsRange.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTableCellFrame.h"
@@ -79,12 +79,11 @@ class MOZ_STACK_CLASS nsSetSelectionAfterTableEdit
 class MOZ_STACK_CLASS nsSelectionBatcherForTable
 {
 private:
-  nsCOMPtr<nsISelectionPrivate> mSelection;
+  nsRefPtr<mozilla::dom::Selection> mSelection;
 public:
-  explicit nsSelectionBatcherForTable(nsISelection *aSelection)
+  explicit nsSelectionBatcherForTable(Selection* aSelection)
   {
-    nsCOMPtr<nsISelection> sel(aSelection);
-    mSelection = do_QueryInterface(sel);
+    mSelection = aSelection;
     if (mSelection)  mSelection->StartBatchChanges();
   }
   virtual ~nsSelectionBatcherForTable() 
@@ -394,7 +393,7 @@ nsHTMLEditor::GetLastCellInRow(nsIDOMNode* aRowNode, nsIDOMNode** aCellNode)
 NS_IMETHODIMP
 nsHTMLEditor::InsertTableColumn(int32_t aNumber, bool aAfter)
 {
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> curCell;
   int32_t startRowIndex, startColIndex;
@@ -521,7 +520,7 @@ nsHTMLEditor::InsertTableColumn(int32_t aNumber, bool aAfter)
 NS_IMETHODIMP
 nsHTMLEditor::InsertTableRow(int32_t aNumber, bool aAfter)
 {
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> curCell;
   
@@ -702,8 +701,8 @@ nsHTMLEditor::InsertTableRow(int32_t aNumber, bool aAfter)
 // Editor helper only
 // XXX Code changed for bug 217717 and now we don't need aSelection param
 //     TODO: Remove aSelection param
-NS_IMETHODIMP
-nsHTMLEditor::DeleteTable2(nsIDOMElement *aTable, nsISelection *aSelection)
+nsresult
+nsHTMLEditor::DeleteTable2(nsIDOMElement* aTable, Selection* aSelection)
 {
   NS_ENSURE_TRUE(aTable, NS_ERROR_NULL_POINTER);
 
@@ -719,7 +718,7 @@ nsHTMLEditor::DeleteTable2(nsIDOMElement *aTable, nsISelection *aSelection)
 NS_IMETHODIMP
 nsHTMLEditor::DeleteTable()
 {
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsresult res = GetCellContext(getter_AddRefs(selection),
                                 getter_AddRefs(table), 
@@ -734,7 +733,7 @@ nsHTMLEditor::DeleteTable()
 NS_IMETHODIMP
 nsHTMLEditor::DeleteTableCell(int32_t aNumber)
 {
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> cell;
   int32_t startRowIndex, startColIndex;
@@ -928,7 +927,7 @@ nsHTMLEditor::DeleteTableCell(int32_t aNumber)
 NS_IMETHODIMP
 nsHTMLEditor::DeleteTableCellContents()
 {
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> cell;
   int32_t startRowIndex, startColIndex;
@@ -1005,7 +1004,7 @@ nsHTMLEditor::DeleteCellContents(nsIDOMElement *aCell)
 NS_IMETHODIMP
 nsHTMLEditor::DeleteTableColumn(int32_t aNumber)
 {
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> cell;
   int32_t startRowIndex, startColIndex, rowCount, colCount;
@@ -1148,9 +1147,7 @@ nsHTMLEditor::DeleteColumn(nsIDOMElement *aTable, int32_t aColIndex)
 
           if (rowCount == 1)
           {
-            nsCOMPtr<nsISelection> selection;
-            res = GetSelection(getter_AddRefs(selection));
-            NS_ENSURE_SUCCESS(res, res);
+            nsRefPtr<Selection> selection = GetSelection();
             NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
             return DeleteTable2(aTable, selection);
           }
@@ -1183,7 +1180,7 @@ nsHTMLEditor::DeleteColumn(nsIDOMElement *aTable, int32_t aColIndex)
 NS_IMETHODIMP
 nsHTMLEditor::DeleteTableRow(int32_t aNumber)
 {
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   nsCOMPtr<nsIDOMElement> cell;
   int32_t startRowIndex, startColIndex;
@@ -1421,14 +1418,13 @@ nsHTMLEditor::SelectBlockOfCells(nsIDOMElement *aStartCell, nsIDOMElement *aEndC
 {
   NS_ENSURE_TRUE(aStartCell && aEndCell, NS_ERROR_NULL_POINTER);
   
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   NS_NAMED_LITERAL_STRING(tableStr, "table");
   nsCOMPtr<nsIDOMElement> table;
-  res = GetElementOrParentByTagName(tableStr, aStartCell, getter_AddRefs(table));
+  nsresult res = GetElementOrParentByTagName(tableStr, aStartCell,
+                                             getter_AddRefs(table));
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
@@ -1528,9 +1524,7 @@ nsHTMLEditor::SelectAllTableCells()
   res = GetTableSize(table, &rowCount, &colCount);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsCOMPtr<nsISelection> selection;
-  res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   // Suppress nsISelectionListener notification
@@ -1583,7 +1577,7 @@ nsHTMLEditor::SelectTableRow()
   nsCOMPtr<nsIDOMElement> startCell = cell;
 
   // Get table and location of cell:
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   int32_t startRowIndex, startColIndex;
 
@@ -1650,7 +1644,7 @@ nsHTMLEditor::SelectTableColumn()
   nsCOMPtr<nsIDOMElement> startCell = cell;
   
   // Get location of cell:
-  nsCOMPtr<nsISelection> selection;
+  nsRefPtr<Selection> selection;
   nsCOMPtr<nsIDOMElement> table;
   int32_t startRowIndex, startColIndex;
 
@@ -2213,21 +2207,18 @@ nsHTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
       }
     }
     // Cleanup selection: remove ranges where cells were deleted
-    nsCOMPtr<nsISelection> selection;
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
     int32_t rangeCount;
     res = selection->GetRangeCount(&rangeCount);
     NS_ENSURE_SUCCESS(res, res);
 
-    nsCOMPtr<nsIDOMRange> range;
+    nsRefPtr<nsRange> range;
     int32_t i;
     for (i = 0; i < rangeCount; i++)
     {
-      res = selection->GetRangeAt(i, getter_AddRefs(range));
-      NS_ENSURE_SUCCESS(res, res);
+      range = selection->GetRangeAt(i);
       NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIDOMElement> deletedCell;
@@ -2777,8 +2768,8 @@ nsHTMLEditor::GetCellSpansAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t a
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLEditor::GetCellContext(nsISelection **aSelection,
+nsresult
+nsHTMLEditor::GetCellContext(Selection** aSelection,
                              nsIDOMElement   **aTable,
                              nsIDOMElement   **aCell,
                              nsIDOMNode      **aCellParent, int32_t *aCellOffset,
@@ -2793,9 +2784,7 @@ nsHTMLEditor::GetCellContext(nsISelection **aSelection,
   if (aRowIndex) *aRowIndex = 0;
   if (aColIndex) *aColIndex = 0;
 
-  nsCOMPtr <nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   if (aSelection)
@@ -2813,6 +2802,7 @@ nsHTMLEditor::GetCellContext(nsISelection **aSelection,
   // ...but if not supplied,
   //    get cell if it's the child of selection anchor node,
   //    or get the enclosing by a cell
+  nsresult res;
   if (!cell)
   {
     // Find a selected or enclosing table element
@@ -2886,7 +2876,7 @@ nsHTMLEditor::GetCellContext(nsISelection **aSelection,
 }
 
 nsresult 
-nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
+nsHTMLEditor::GetCellFromRange(nsRange* aRange, nsIDOMElement** aCell)
 {
   // Note: this might return a node that is outside of the range.
   // Use carefully.
@@ -2942,19 +2932,15 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)
   *aCell = nullptr;
   if (aRange) *aRange = nullptr;
 
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
   mSelectedCellIndex = 0;
 
-  res = GetCellFromRange(range, aCell);
+  nsresult res = GetCellFromRange(range, aCell);
   // Failure here probably means selection is in a text node,
   //  so there's no selected cell
   if (NS_FAILED(res)) {
@@ -2984,25 +2970,21 @@ nsHTMLEditor::GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)
   *aCell = nullptr;
   if (aRange) *aRange = nullptr;
 
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  int32_t rangeCount;
-  res = selection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(res, res);
+  int32_t rangeCount = selection->GetRangeCount();
 
   // Don't even try if index exceeds range count
   if (mSelectedCellIndex >= rangeCount) 
     return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // Scan through ranges to find next valid selected cell
-  nsCOMPtr<nsIDOMRange> range;
+  nsRefPtr<nsRange> range;
+  nsresult res;
   for (; mSelectedCellIndex < rangeCount; mSelectedCellIndex++)
   {
-    res = selection->GetRangeAt(mSelectedCellIndex, getter_AddRefs(range));
-    NS_ENSURE_SUCCESS(res, res);
+    range = selection->GetRangeAt(mSelectedCellIndex);
     NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
     res = GetCellFromRange(range, aCell);
@@ -3165,14 +3147,13 @@ nsHTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
   aTagName.Truncate();
   *aSelectedCount = 0;
 
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   // Try to get the first selected cell
   nsCOMPtr<nsIDOMElement> tableOrCellElement;
-  res = GetFirstSelectedCell(nullptr, getter_AddRefs(tableOrCellElement));
+  nsresult res = GetFirstSelectedCell(nullptr,
+                                      getter_AddRefs(tableOrCellElement));
   NS_ENSURE_SUCCESS(res, res);
 
   NS_NAMED_LITERAL_STRING(tdName, "td");

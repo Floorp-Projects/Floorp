@@ -600,7 +600,7 @@ public:
    * be rendered to, but is suitable for measuring text and performing
    * other non-rendering operations. Guaranteed to return non-null.
    */
-  virtual already_AddRefed<nsRenderingContext> CreateReferenceRenderingContext() = 0;
+  virtual already_AddRefed<gfxContext> CreateReferenceRenderingContext() = 0;
 
   /**
    * Informs the pres shell that the document is now at the anchor with

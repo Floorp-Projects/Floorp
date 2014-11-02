@@ -125,7 +125,7 @@ public:
   virtual void CancelReflowCallback(nsIReflowCallback* aCallback) MOZ_OVERRIDE;
 
   virtual void ClearFrameRefs(nsIFrame* aFrame) MOZ_OVERRIDE;
-  virtual already_AddRefed<nsRenderingContext> CreateReferenceRenderingContext();
+  virtual already_AddRefed<gfxContext> CreateReferenceRenderingContext();
   virtual nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
                               uint32_t aAdditionalScrollFlags = 0) MOZ_OVERRIDE;
   virtual nsresult ScrollToAnchor() MOZ_OVERRIDE;
