@@ -1934,10 +1934,11 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
   {
     // if we are inside an empty block, delete it.
     NS_ENSURE_STATE(mHTMLEditor);
-    nsCOMPtr<nsIContent> hostContent = mHTMLEditor->GetActiveEditingHost();
-    nsCOMPtr<nsIDOMNode> hostNode = do_QueryInterface(hostContent);
-    NS_ENSURE_TRUE(hostNode, NS_ERROR_FAILURE);
-    res = CheckForEmptyBlock(startNode, hostNode, aSelection, aHandled);
+    nsCOMPtr<Element> host = mHTMLEditor->GetActiveEditingHost();
+    NS_ENSURE_TRUE(host, NS_ERROR_FAILURE);
+    nsCOMPtr<nsINode> startNode_ = do_QueryInterface(startNode);
+    NS_ENSURE_STATE(startNode_ || !startNode);
+    res = CheckForEmptyBlock(startNode_, host, aSelection, aHandled);
     NS_ENSURE_SUCCESS(res, res);
     if (*aHandled) return NS_OK;
 
@@ -5083,28 +5084,30 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
 ///////////////////////////////////////////////////////////////////////////
 // CheckForEmptyBlock: Called by WillDeleteSelection to detect and handle
 //                     case of deleting from inside an empty block.
-//                  
+//
 nsresult
-nsHTMLEditRules::CheckForEmptyBlock(nsIDOMNode *aStartNode, 
-                                    nsIDOMNode *aBodyNode,
+nsHTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
+                                    Element* aBodyNode,
                                     Selection* aSelection,
-                                    bool *aHandled)
+                                    bool* aHandled)
 {
   // If the editing host is an inline element, bail out early.
-  if (IsInlineNode(aBodyNode)) {
+  if (IsInlineNode(GetAsDOMNode(aBodyNode))) {
     return NS_OK;
   }
-  // if we are inside an empty block, delete it.
-  // Note: do NOT delete table elements this way.
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> block, emptyBlock;
-  if (IsBlockNode(aStartNode)) 
-    block = aStartNode;
-  else
+  // If we are inside an empty block, delete it.  Note: do NOT delete table
+  // elements this way.
+  nsCOMPtr<Element> block;
+  if (IsBlockNode(GetAsDOMNode(aStartNode))) {
+    block = aStartNode->AsElement();
+  } else {
     block = mHTMLEditor->GetBlockNodeParent(aStartNode);
+  }
   bool bIsEmptyNode;
+  nsCOMPtr<Element> emptyBlock;
+  nsresult res;
   if (block && block != aBodyNode) {
-    // efficiency hack. avoiding IsEmptyNode() call when in body
+    // Efficiency hack, avoiding IsEmptyNode() call when in body
     NS_ENSURE_STATE(mHTMLEditor);
     res = mHTMLEditor->IsEmptyNode(block, &bIsEmptyNode, true, false);
     NS_ENSURE_SUCCESS(res, res);
@@ -5120,52 +5123,47 @@ nsHTMLEditRules::CheckForEmptyBlock(nsIDOMNode *aStartNode,
     }
   }
 
-  nsCOMPtr<nsIContent> emptyContent = do_QueryInterface(emptyBlock);
-  if (emptyBlock && emptyContent->IsEditable())
-  {
-    int32_t offset;
-    nsCOMPtr<nsIDOMNode> blockParent = nsEditor::GetNodeLocation(emptyBlock, &offset);
-    NS_ENSURE_TRUE(blockParent && offset >= 0, NS_ERROR_FAILURE);
+  if (emptyBlock && emptyBlock->IsEditable()) {
+    nsCOMPtr<nsINode> blockParent = emptyBlock->GetParentNode();
+    NS_ENSURE_TRUE(blockParent, NS_ERROR_FAILURE);
+    int32_t offset = blockParent->IndexOf(emptyBlock);
 
-    if (nsHTMLEditUtils::IsListItem(emptyBlock))
-    {
-      // are we the first list item in the list?
+    if (nsHTMLEditUtils::IsListItem(emptyBlock)) {
+      // Are we the first list item in the list?
       bool bIsFirst;
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->IsFirstEditableChild(emptyBlock, &bIsFirst);
+      res = mHTMLEditor->IsFirstEditableChild(GetAsDOMNode(emptyBlock),
+                                              &bIsFirst);
       NS_ENSURE_SUCCESS(res, res);
-      if (bIsFirst)
-      {
-        int32_t listOffset;
-        nsCOMPtr<nsIDOMNode> listParent = nsEditor::GetNodeLocation(blockParent,
-                                                                    &listOffset);
-        NS_ENSURE_TRUE(listParent && listOffset >= 0, NS_ERROR_FAILURE);
-        // if we are a sublist, skip the br creation
-        if (!nsHTMLEditUtils::IsList(listParent))
-        {
-          // create a br before list
-          nsCOMPtr<nsIDOMNode> brNode;
+      if (bIsFirst) {
+        nsCOMPtr<nsINode> listParent = blockParent->GetParentNode();
+        NS_ENSURE_TRUE(listParent, NS_ERROR_FAILURE);
+        int32_t listOffset = listParent->IndexOf(blockParent);
+        // If we are a sublist, skip the br creation
+        if (!nsHTMLEditUtils::IsList(listParent)) {
+          // Create a br before list
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->CreateBR(listParent, listOffset, address_of(brNode));
-          NS_ENSURE_SUCCESS(res, res);
-          // adjust selection to be right before it
+          nsCOMPtr<Element> br =
+            mHTMLEditor->CreateBR(listParent, listOffset);
+          NS_ENSURE_STATE(br);
+          // Adjust selection to be right before it
           res = aSelection->Collapse(listParent, listOffset);
           NS_ENSURE_SUCCESS(res, res);
         }
-        // else just let selection perculate up.  We'll adjust it in AfterEdit()
+        // Else just let selection percolate up.  We'll adjust it in
+        // AfterEdit()
       }
-    }
-    else
-    {
-      // adjust selection to be right after it
-      res = aSelection->Collapse(blockParent, offset+1);
+    } else {
+      // Adjust selection to be right after it
+      res = aSelection->Collapse(blockParent, offset + 1);
       NS_ENSURE_SUCCESS(res, res);
     }
     NS_ENSURE_STATE(mHTMLEditor);
     res = mHTMLEditor->DeleteNode(emptyBlock);
     *aHandled = true;
+    NS_ENSURE_SUCCESS(res, res);
   }
-  return res;
+  return NS_OK;
 }
 
 nsresult
