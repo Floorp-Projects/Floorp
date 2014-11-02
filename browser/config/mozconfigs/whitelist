@@ -48,7 +48,9 @@ whitelist['nightly']['linux64'] += [
 ]
 
 whitelist['nightly']['macosx-universal'] += [
+    'if test "${MOZ_UPDATE_CHANNEL}" = "nightly" -o "${MOZ_UPDATE_CHANNEL}" = "aurora"; then',
     'ac_add_options --with-macbundlename-prefix=Firefox',
+    'fi',
     'mk_add_options MOZ_MAKE_FLAGS="-j12"',
     'ac_add_options --with-ccache',
     '. "$topsrcdir/build/mozconfig.cache"',
