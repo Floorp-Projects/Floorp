@@ -1,0 +1,44 @@
+<html><script>
+function start() {
+o0=tmp = document.createElement('iframe');
+tmp.id = 'id1';
+document.getElementById('store_div').appendChild(tmp);
+o3=tmp = document.createElement('iframe');
+document.getElementById('store_div').appendChild(tmp);
+o5=tmp = document.createElement('iframe');
+tmp.src='898871.jpg';
+document.getElementById('store_div').appendChild(tmp);
+o7=tmp = document.createElement('iframe');
+tmp.src='898871-iframe.xhtml';
+document.getElementById('store_div').appendChild(tmp);
+window.setTimeout('startrly()', 20);
+}
+function startrly() {
+o17=document.getElementById('fuzz_div');
+o22=document.createElement('input');
+o43=o5.contentDocument;
+o44=o43.documentElement;
+o50=document.createElement('div');
+o60=o7.contentDocument.getElementById('element1');
+o3.contentWindow.onresize=cb_frameresize_35_1;
+o43.dir = 'rtl'
+o43.documentElement.appendChild(o22);
+o17.appendChild(o50);
+o50.appendChild(o60);
+o22.contentEditable=true;
+o164=document.body;
+o164.removeChild(o17);
+}
+function cb_frameresize_35_1() {
+o44.innerHTML=unescape('<noframes> </noframes><plainText> </u></u></big></plainText></bdo></fieldset>');
+o135=o43.createElement('style');
+o43.head.appendChild(o135);
+o135.contentEditable=true;
+o5.contentWindow.onresize=cb_frameresize_103_1;
+}
+function cb_frameresize_103_1() {
+o257=document.documentElement;
+o257.removeChild(o164);
+}
+window.setTimeout("start()",10);
+</script><body><div id="store_div"></div><div id="fuzz_div"></div></body></html>
