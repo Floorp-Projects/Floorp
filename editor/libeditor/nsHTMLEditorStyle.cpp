@@ -686,7 +686,10 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
     }
   }
   if (rightNode) {
-    nsCOMPtr<nsIDOMNode> secondSplitParent = GetLeftmostChild(rightNode);
+    nsCOMPtr<nsINode> rightNode_ = do_QueryInterface(rightNode);
+    NS_ENSURE_STATE(rightNode_);
+    nsCOMPtr<nsIDOMNode> secondSplitParent =
+      GetAsDOMNode(GetLeftmostChild(rightNode_));
     // don't try to split non-containers (br's, images, hr's, etc)
     if (!secondSplitParent) {
       secondSplitParent = rightNode;
@@ -707,9 +710,9 @@ nsHTMLEditor::ClearStyle(nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset,
                                address_of(leftNode), address_of(rightNode));
     NS_ENSURE_SUCCESS(res, res);
     // should be impossible to not get a new leftnode here
-    NS_ENSURE_TRUE(leftNode, NS_ERROR_FAILURE);
-    nsCOMPtr<nsINode> newSelParent =
-      do_QueryInterface(GetLeftmostChild(leftNode));
+    nsCOMPtr<nsINode> leftNode_ = do_QueryInterface(leftNode);
+    NS_ENSURE_TRUE(leftNode_, NS_ERROR_FAILURE);
+    nsCOMPtr<nsINode> newSelParent = GetLeftmostChild(leftNode_);
     if (!newSelParent) {
       newSelParent = do_QueryInterface(leftNode);
       NS_ENSURE_STATE(newSelParent);

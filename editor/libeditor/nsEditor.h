@@ -533,8 +533,6 @@ public:
    * Get the rightmost child of aCurrentNode;
    * return nullptr if aCurrentNode has no children.
    */
-  nsIDOMNode* GetRightmostChild(nsIDOMNode* aCurrentNode,
-                                bool bNoBlockCrossing = false);
   nsIContent* GetRightmostChild(nsINode *aCurrentNode,
                                 bool     bNoBlockCrossing = false);
 
@@ -542,8 +540,6 @@ public:
    * Get the leftmost child of aCurrentNode;
    * return nullptr if aCurrentNode has no children.
    */
-  nsIDOMNode* GetLeftmostChild(nsIDOMNode* aCurrentNode,
-                               bool bNoBlockCrossing = false);
   nsIContent* GetLeftmostChild(nsINode *aCurrentNode,
                                bool     bNoBlockCrossing = false);
 

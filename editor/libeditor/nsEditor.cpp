@@ -3075,15 +3075,6 @@ nsEditor::FindNode(nsINode *aCurrentNode,
   return FindNode(candidate, aGoForward, aEditableNode, bNoBlockCrossing);
 }
 
-nsIDOMNode*
-nsEditor::GetRightmostChild(nsIDOMNode* aCurrentNode,
-                            bool bNoBlockCrossing)
-{
-  nsCOMPtr<nsINode> currentNode = do_QueryInterface(aCurrentNode);
-  nsIContent* result = GetRightmostChild(currentNode, bNoBlockCrossing);
-  return result ? result->AsDOMNode() : nullptr;
-}
-
 nsIContent*
 nsEditor::GetRightmostChild(nsINode *aCurrentNode,
                             bool     bNoBlockCrossing)
@@ -3130,15 +3121,6 @@ nsEditor::GetLeftmostChild(nsINode *aCurrentNode,
 
   NS_NOTREACHED("What part of for(;;) do you not understand?");
   return nullptr;
-}
-
-nsIDOMNode*
-nsEditor::GetLeftmostChild(nsIDOMNode* aCurrentNode,
-                           bool bNoBlockCrossing)
-{
-  nsCOMPtr<nsINode> currentNode = do_QueryInterface(aCurrentNode);
-  nsIContent* result = GetLeftmostChild(currentNode, bNoBlockCrossing);
-  return result ? result->AsDOMNode() : nullptr;
 }
 
 bool
