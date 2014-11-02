@@ -27,7 +27,8 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsISizeOfEventTarget.h"
-
+#include "nsIXPConnect.h"
+#include "nsIInputStream.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MemoryReporting.h"
@@ -463,6 +464,11 @@ public:
   void Send(nsIInputStream* aStream, ErrorResult& aRv)
   {
     NS_ASSERTION(aStream, "Null should go to string version");
+    nsCOMPtr<nsIXPConnectWrappedJS> wjs = do_QueryInterface(aStream);
+    if (wjs) {
+      aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+      return;
+    }
     aRv = Send(RequestBody(aStream));
   }
   void SendAsBinary(const nsAString& aBody, ErrorResult& aRv);
