@@ -121,22 +121,19 @@ nsHTMLEditor::~nsHTMLEditor()
 
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
-  nsCOMPtr<nsISelection>selection;
-  nsresult result = GetSelection(getter_AddRefs(selection));
+  nsRefPtr<Selection> selection = GetSelection();
   // if we don't get the selection, just skip this
-  if (NS_SUCCEEDED(result) && selection) 
-  {
-    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+  if (selection) {
     nsCOMPtr<nsISelectionListener>listener;
     listener = do_QueryInterface(mTypeInState);
     if (listener)
     {
-      selPriv->RemoveSelectionListener(listener); 
+      selection->RemoveSelectionListener(listener); 
     }
     listener = do_QueryInterface(mSelectionListenerP);
     if (listener)
     {
-      selPriv->RemoveSelectionListener(listener); 
+      selection->RemoveSelectionListener(listener); 
     }
   }
 
@@ -286,20 +283,17 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
       AddOverrideStyleSheet(NS_LITERAL_STRING("resource://gre/res/EditorOverride.css"));
     }
 
-    nsCOMPtr<nsISelection>selection;
-    result = GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(result)) { return result; }
+    nsRefPtr<Selection> selection = GetSelection();
     if (selection) 
     {
-      nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
       nsCOMPtr<nsISelectionListener>listener;
       listener = do_QueryInterface(mTypeInState);
       if (listener) {
-        selPriv->AddSelectionListener(listener); 
+        selection->AddSelectionListener(listener); 
       }
       listener = do_QueryInterface(mSelectionListenerP);
       if (listener) {
-        selPriv->AddSelectionListener(listener); 
+        selection->AddSelectionListener(listener); 
       }
     }
   }
@@ -1100,7 +1094,7 @@ nsHTMLEditor::TabInTable(bool inIsShift, bool* outHandled)
     *outHandled = true;
     // Put selection in right place.  Use table code to get selection and index
     // to new row...
-    nsCOMPtr<nsISelection> selection;
+    nsRefPtr<Selection> selection;
     nsCOMPtr<nsIDOMElement> tblElement, cell;
     int32_t row;
     res = GetCellContext(getter_AddRefs(selection), 
@@ -1650,9 +1644,7 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
 
   // Must be sure that element is contained in the document body
   if (IsDescendantOfEditorRoot(aElement)) {
-    nsCOMPtr<nsISelection> selection;
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMNode>parent;
     res = aElement->GetParentNode(getter_AddRefs(parent));
@@ -1678,9 +1670,7 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
 
   // Be sure the element is contained in the document body
   if (aElement && IsDescendantOfEditorRoot(aElement)) {
-    nsCOMPtr<nsISelection> selection;
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     nsCOMPtr<nsIDOMNode>parent;
     res = aElement->GetParentNode(getter_AddRefs(parent));
@@ -1754,14 +1744,14 @@ nsHTMLEditor::GetCSSBackgroundColorState(bool *aMixed, nsAString &aOutColor, boo
   aOutColor.AssignLiteral("transparent");
   
   // get selection
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_STATE(selection);
 
   // get selection location
   nsCOMPtr<nsIDOMNode> parent;
   int32_t offset;
-  res = GetStartNodeAndOffset(selection, getter_AddRefs(parent), &offset);
+  nsresult res = GetStartNodeAndOffset(selection, getter_AddRefs(parent),
+                                       &offset);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
 
@@ -2355,11 +2345,8 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
   *aReturn = nullptr;
   
   // First look for a single element in selection
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  Selection* sel = static_cast<Selection*>(selection.get());
 
   bool bNodeFound = false;
   bool isCollapsed = selection->Collapsed();
@@ -2374,7 +2361,7 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
   
   nsCOMPtr<nsIDOMElement> selectedElement;
   nsCOMPtr<nsIDOMRange> range;
-  res = selection->GetRangeAt(0, getter_AddRefs(range));
+  nsresult res = selection->GetRangeAt(0, getter_AddRefs(range));
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIDOMNode> startParent;
@@ -2476,7 +2463,7 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
 
     if (!isCollapsed)   // Don't bother to examine selection if it is collapsed
     {
-      nsRefPtr<nsRange> currange = sel->GetRangeAt(0);
+      nsRefPtr<nsRange> currange = selection->GetRangeAt(0);
       if (currange) {
         nsCOMPtr<nsIContentIterator> iter =
           do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
@@ -2621,13 +2608,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   NS_ENSURE_TRUE(aAnchorElement, NS_ERROR_NULL_POINTER);
 
   // We must have a real selection
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  if (!selection)
-  {
-    res = NS_ERROR_NULL_POINTER;
-  }
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   if (selection->Collapsed()) {
@@ -2642,7 +2623,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   }
 
   nsAutoString href;
-  res = anchor->GetHref(href);
+  nsresult res = anchor->GetHref(href);
   NS_ENSURE_SUCCESS(res, res);
   if (href.IsEmpty()) {
     return NS_OK;
@@ -3327,7 +3308,7 @@ nsHTMLEditor::GetIsSelectionEditable(bool* aIsSelectionEditable)
 }
 
 static nsresult
-SetSelectionAroundHeadChildren(nsISelection* aSelection,
+SetSelectionAroundHeadChildren(Selection* aSelection,
                                nsIWeakReference* aDocWeak)
 {
   // Set selection around <head> node
@@ -3521,8 +3502,8 @@ nsHTMLEditor::IsContainer(nsIDOMNode *aNode)
 }
 
 
-NS_IMETHODIMP 
-nsHTMLEditor::SelectEntireDocument(nsISelection *aSelection)
+nsresult
+nsHTMLEditor::SelectEntireDocument(Selection* aSelection)
 {
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
   
@@ -3551,18 +3532,11 @@ nsHTMLEditor::SelectAll()
 {
   ForceCompositionEnd();
 
-  nsresult rv;
-  nsCOMPtr<nsISelectionController> selCon;
-  rv = GetSelectionController(getter_AddRefs(selCon));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISelection> selection;
-  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                            getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_STATE(selection);
 
   nsCOMPtr<nsIDOMNode> anchorNode;
-  rv = selection->GetAnchorNode(getter_AddRefs(anchorNode));
+  nsresult rv = selection->GetAnchorNode(getter_AddRefs(anchorNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode, &rv);
@@ -3571,9 +3545,7 @@ nsHTMLEditor::SelectAll()
   // If the anchor content has independent selection, we never need to explicitly
   // select its children.
   if (anchorContent->HasIndependentSelection()) {
-    nsCOMPtr<nsISelectionPrivate> selPriv = do_QueryInterface(selection);
-    NS_ENSURE_TRUE(selPriv, NS_ERROR_UNEXPECTED);
-    rv = selPriv->SetAncestorLimiter(nullptr);
+    rv = selection->SetAncestorLimiter(nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDOMNode> rootElement = do_QueryInterface(mRootElement, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3697,9 +3669,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
   }
 
   // Set selection at beginning of the found node
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, false);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, false);
 
   return NS_SUCCEEDED(selection->CollapseNative(node, 0));
@@ -3802,8 +3772,8 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
   return result;
 }
 
-NS_IMETHODIMP 
-nsHTMLEditor::SetSelectionAtDocumentStart(nsISelection *aSelection)
+nsresult
+nsHTMLEditor::SetSelectionAtDocumentStart(Selection* aSelection)
 {
   dom::Element* rootElement = GetRoot();
   NS_ENSURE_TRUE(rootElement, NS_ERROR_NULL_POINTER);
@@ -4971,9 +4941,7 @@ nsHTMLEditor::EndUpdateViewBatch()
   // to listen too (in particular when an ancestor of the selection is
   // changed but the selection itself is not changed).
   if (mUpdateCount == 0) {
-    nsCOMPtr<nsISelection> selection;
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
     res = CheckSelectionStateForAnonymousButtons(selection);
   }
@@ -4983,13 +4951,15 @@ nsHTMLEditor::EndUpdateViewBatch()
 NS_IMETHODIMP
 nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
 {
-  nsCOMPtr<nsISelection>selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
+  nsRefPtr<Selection> selection = GetSelection();
   // if we don't get the selection, just skip this
-  if (NS_FAILED(res) || !selection) return res;
+  if (!selection) {
+    return NS_ERROR_FAILURE;
+  }
 
   nsCOMPtr<nsIDOMNode> focusNode;
 
+  nsresult res;
   if (selection->Collapsed()) {
     res = selection->GetFocusNode(getter_AddRefs(focusNode));
     NS_ENSURE_SUCCESS(res, res);
@@ -5195,11 +5165,10 @@ nsHTMLEditor::GetActiveEditingHost()
   }
 
   // We're HTML editor for contenteditable
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_TRUE(selection, nullptr);
   nsCOMPtr<nsIDOMNode> focusNode;
-  rv = selection->GetFocusNode(getter_AddRefs(focusNode));
+  nsresult rv = selection->GetFocusNode(getter_AddRefs(focusNode));
   NS_ENSURE_SUCCESS(rv, nullptr);
   nsCOMPtr<nsIContent> content = do_QueryInterface(focusNode);
   if (!content) {

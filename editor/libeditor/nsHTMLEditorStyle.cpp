@@ -34,8 +34,6 @@
 #include "nsIEditorIMESupport.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
-#include "nsISelection.h"
-#include "nsISelectionPrivate.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
@@ -1110,15 +1108,12 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   *aFirst = false;
   bool first = true;
 
-  nsCOMPtr<nsISelection> selection;
-  result = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(result, result);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  Selection* sel = static_cast<Selection*>(selection.get());
 
   bool isCollapsed = selection->Collapsed();
   nsCOMPtr<nsIDOMNode> collapsedNode;
-  nsRefPtr<nsRange> range = sel->GetRangeAt(0);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
   // XXX: should be a while loop, to get each separate range
   // XXX: ERROR_HANDLING can currentItem be null?
   if (range) {

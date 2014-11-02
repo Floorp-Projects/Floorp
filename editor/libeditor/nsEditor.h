@@ -50,7 +50,6 @@ class nsIEditorObserver;
 class nsIInlineSpellChecker;
 class nsINode;
 class nsIPresShell;
-class nsISelection;
 class nsISupports;
 class nsITransaction;
 class nsIWidget;
@@ -373,7 +372,7 @@ protected:
   NS_IMETHOD NotifyDocumentListeners(TDocumentListenerNotification aNotificationType);
   
   /** make the given selection span the entire document */
-  NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
+  virtual nsresult SelectEntireDocument(mozilla::dom::Selection* aSelection);
 
   /** helper method for scrolling the selection into view after
    *  an edit operation. aScrollToAnchor should be true if you
@@ -438,7 +437,7 @@ public:
    *  various editor actions */
   bool     ArePreservingSelection();
   void     PreserveSelectionAcrossActions(mozilla::dom::Selection* aSel);
-  nsresult RestorePreservedSelection(nsISelection *aSel);
+  nsresult RestorePreservedSelection(mozilla::dom::Selection* aSel);
   void     StopPreservingSelection();
 
   /** 
@@ -605,11 +604,15 @@ public:
   static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, int32_t aOffset);
   static nsCOMPtr<nsIDOMNode> GetNodeAtRangeOffsetPoint(nsIDOMNode* aParentOrNode, int32_t aOffset);
 
-  static nsresult GetStartNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outStartNode, int32_t *outStartOffset);
+  static nsresult GetStartNodeAndOffset(mozilla::dom::Selection* aSelection,
+                                        nsIDOMNode** outStartNode,
+                                        int32_t* outStartOffset);
   static nsresult GetStartNodeAndOffset(mozilla::dom::Selection* aSelection,
                                         nsINode** aStartNode,
                                         int32_t* aStartOffset);
-  static nsresult GetEndNodeAndOffset(nsISelection *aSelection, nsIDOMNode **outEndNode, int32_t *outEndOffset);
+  static nsresult GetEndNodeAndOffset(mozilla::dom::Selection* aSelection,
+                                      nsIDOMNode** outEndNode,
+                                      int32_t* outEndOffset);
   static nsresult GetEndNodeAndOffset(mozilla::dom::Selection* aSelection,
                                       nsINode** aEndNode,
                                       int32_t* aEndOffset);
@@ -650,7 +653,7 @@ public:
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
   nsresult HandleInlineSpellCheck(EditAction action,
-                                    nsISelection *aSelection,
+                                  mozilla::dom::Selection* aSelection,
                                     nsIDOMNode *previousSelectedNode,
                                     int32_t previousSelectedOffset,
                                     nsIDOMNode *aStartNode,

@@ -75,9 +75,7 @@ NS_IMETHODIMP PlaceholderTxn::UndoTransaction(void)
   NS_ENSURE_TRUE(mStartSel, NS_ERROR_NULL_POINTER);
 
   // now restore selection
-  nsCOMPtr<nsISelection> selection;
-  res = mEditor->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mStartSel->RestoreSelection(selection);
 }
@@ -90,9 +88,7 @@ NS_IMETHODIMP PlaceholderTxn::RedoTransaction(void)
   NS_ENSURE_SUCCESS(res, res);
   
   // now restore selection
-  nsCOMPtr<nsISelection> selection;
-  res = mEditor->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = mEditor->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
   return mEndSel.RestoreSelection(selection);
 }
