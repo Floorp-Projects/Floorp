@@ -313,10 +313,10 @@ public:
   NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
   nsresult DeleteText(nsGenericDOMDataNode& aTextNode, uint32_t aOffset,
                       uint32_t aLength);
-  NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
-                            nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                            int32_t *aInOutOffset,
-                            nsIDOMDocument *aDoc);
+  virtual nsresult InsertTextImpl(const nsAString& aStringToInsert,
+                                  nsCOMPtr<nsINode>* aInOutNode,
+                                  int32_t* aInOutOffset,
+                                  nsIDocument* aDoc) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsModifiableNode(nsIDOMNode *aNode);
   virtual bool IsModifiableNode(nsINode *aNode);
 

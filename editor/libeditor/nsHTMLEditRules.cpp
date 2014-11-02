@@ -1325,9 +1325,6 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
   *aCancel = false;
   *aHandled = true;
   nsresult res;
-  nsCOMPtr<nsIDOMNode> selNode;
-  int32_t selOffset;
-
   // If the selection isn't collapsed, delete it.  Don't delete existing inline
   // tags, because we're hopefully going to insert text (bug 787432).
   if (!aSelection->Collapsed()) {
@@ -1344,24 +1341,26 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
 
   // we need to get the doc
   NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIDOMDocument> doc = mHTMLEditor->GetDOMDocument();
-  nsCOMPtr<nsIDocument> doc_ = mHTMLEditor->GetDocument();
-  NS_ENSURE_TRUE(doc && doc_, NS_ERROR_NOT_INITIALIZED);
+  nsCOMPtr<nsIDocument> doc = mHTMLEditor->GetDocument();
+  nsCOMPtr<nsIDOMDocument> domDoc = mHTMLEditor->GetDOMDocument();
+  NS_ENSURE_TRUE(doc && domDoc, NS_ERROR_NOT_INITIALIZED);
 
   // for every property that is set, insert a new inline style node
-  res = CreateStyleForInsertText(aSelection, doc);
+  res = CreateStyleForInsertText(aSelection, domDoc);
   NS_ENSURE_SUCCESS(res, res);
   
   // get the (collapsed) selection location
   NS_ENSURE_STATE(mHTMLEditor);
-  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_STATE(aSelection->GetRangeAt(0));
+  nsCOMPtr<nsINode> selNode = aSelection->GetRangeAt(0)->GetStartParent();
+  int32_t selOffset = aSelection->GetRangeAt(0)->StartOffset();
+  NS_ENSURE_STATE(selNode);
 
   // dont put text in places that can't have it
   NS_ENSURE_STATE(mHTMLEditor);
   if (!mHTMLEditor->IsTextNode(selNode) &&
-      (!mHTMLEditor ||
-       !mHTMLEditor->CanContainTag(selNode, nsGkAtoms::textTagName))) {
+      (!mHTMLEditor || !mHTMLEditor->CanContainTag(GetAsDOMNode(selNode),
+                                                   nsGkAtoms::textTagName))) {
     return NS_ERROR_FAILURE;
   }
     
@@ -1371,29 +1370,28 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
     if (inString->IsEmpty())
     {
       NS_ENSURE_STATE(mHTMLEditor);
-      res = mHTMLEditor->InsertTextImpl(*inString, address_of(selNode), &selOffset, doc);
+      res = mHTMLEditor->InsertTextImpl(*inString, address_of(selNode),
+                                        &selOffset, doc);
     }
     else
     {
       NS_ENSURE_STATE(mHTMLEditor);
-      nsCOMPtr<nsINode> selNode_(do_QueryInterface(selNode));
-      nsWSRunObject wsObj(mHTMLEditor, selNode_, selOffset);
-      res = wsObj.InsertText(*inString, address_of(selNode_), &selOffset, doc_);
-      selNode = GetAsDOMNode(selNode_);
+      nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+      res = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
     }
     NS_ENSURE_SUCCESS(res, res);
   }
   else // aAction == kInsertText
   {
     // find where we are
-    nsCOMPtr<nsIDOMNode> curNode = selNode;
+    nsCOMPtr<nsINode> curNode = selNode;
     int32_t curOffset = selOffset;
     
     // is our text going to be PREformatted?  
     // We remember this so that we know how to handle tabs.
     bool isPRE;
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->IsPreformatted(selNode, &isPRE);
+    res = mHTMLEditor->IsPreformatted(GetAsDOMNode(selNode), &isPRE);
     NS_ENSURE_SUCCESS(res, res);    
     
     // turn off the edit listener: we know how to
@@ -1407,7 +1405,6 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString tString(*inString);
     const char16_t *unicodeBuf = tString.get();
-    nsCOMPtr<nsIDOMNode> unused;
     int32_t pos = 0;
     NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
         
@@ -1441,15 +1438,19 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
         if (subStr.Equals(newlineStr))
         {
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
+          nsCOMPtr<Element> br =
+            mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset,
+                                      nsIEditor::eNone);
+          NS_ENSURE_STATE(br);
           pos++;
         }
         else
         {
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode), &curOffset, doc);
+          res = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode),
+                                            &curOffset, doc);
+          NS_ENSURE_SUCCESS(res, res);
         }
-        NS_ENSURE_SUCCESS(res, res);
       }
     }
     else
@@ -1483,27 +1484,23 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
         // is it a tab?
         if (subStr.Equals(tabStr))
         {
-          nsCOMPtr<nsINode> curNode_(do_QueryInterface(curNode));
-          res = wsObj.InsertText(spacesStr, address_of(curNode_), &curOffset, doc_);
-          curNode = GetAsDOMNode(curNode_);
+          res =
+            wsObj.InsertText(spacesStr, address_of(curNode), &curOffset, doc);
           NS_ENSURE_SUCCESS(res, res);
           pos++;
         }
         // is it a return?
         else if (subStr.Equals(newlineStr))
         {
-          nsCOMPtr<nsINode> node(do_QueryInterface(curNode));
-          nsCOMPtr<Element> br =
-            wsObj.InsertBreak(address_of(node), &curOffset, nsIEditor::eNone);
+          nsCOMPtr<Element> br = wsObj.InsertBreak(address_of(curNode),
+                                                   &curOffset,
+                                                   nsIEditor::eNone);
           NS_ENSURE_TRUE(br, NS_ERROR_FAILURE);
-          curNode = GetAsDOMNode(node);
           pos++;
         }
         else
         {
-          nsCOMPtr<nsINode> curNode_(do_QueryInterface(curNode));
-          res = wsObj.InsertText(subStr, address_of(curNode_), &curOffset, doc_);
-          curNode = GetAsDOMNode(curNode_);
+          res = wsObj.InsertText(subStr, address_of(curNode), &curOffset, doc);
           NS_ENSURE_SUCCESS(res, res);
         }
         NS_ENSURE_SUCCESS(res, res);
@@ -1517,9 +1514,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
     // the correct portion of the document.
     if (!mDocChangeRange)
     {
-      nsCOMPtr<nsINode> node = do_QueryInterface(selNode);
-      NS_ENSURE_STATE(node);
-      mDocChangeRange = new nsRange(node);
+      mDocChangeRange = new nsRange(selNode);
     }
     res = mDocChangeRange->SetStart(selNode, selOffset);
     NS_ENSURE_SUCCESS(res, res);
