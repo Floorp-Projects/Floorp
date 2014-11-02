@@ -5197,7 +5197,8 @@ nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock,
                                      nsCOMPtr<nsIDOMNode> *outBRNode,
                                      int32_t aOffset)
 {
-  NS_ENSURE_TRUE(aBlock && outBRNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsINode> block = do_QueryInterface(aBlock);
+  NS_ENSURE_TRUE(block && outBRNode, NS_ERROR_NULL_POINTER);
   *outBRNode = nullptr;
 
   nsCOMPtr<nsIDOMNode> testNode;
@@ -5207,7 +5208,8 @@ nsHTMLEditRules::CheckForInvisibleBR(nsIDOMNode *aBlock,
   if (aWhere == kBlockEnd)
   {
     nsCOMPtr<nsIDOMNode> rightmostNode =
-      mHTMLEditor->GetRightmostChild(aBlock, true); // no block crossing
+      // no block crossing
+      GetAsDOMNode(mHTMLEditor->GetRightmostChild(block, true));
 
     if (rightmostNode)
     {
@@ -5524,7 +5526,9 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
     // of going "down" into a block and "up" out of a block.
     if (wsEndObj.mStartReason == WSType::otherBlock) {
       // endpoint is just after the close of a block.
-      nsCOMPtr<nsIDOMNode> child = mHTMLEditor->GetRightmostChild(GetAsDOMNode(wsEndObj.mStartReasonNode), true);
+      nsCOMPtr<nsIDOMNode> child =
+        GetAsDOMNode(mHTMLEditor->GetRightmostChild(wsEndObj.mStartReasonNode,
+                                                    true));
       if (child)
       {
         newEndNode = nsEditor::GetNodeLocation(child, &newEndOffset);
@@ -5562,7 +5566,9 @@ nsHTMLEditRules::NormalizeSelection(nsISelection *inSelection)
     // of going "down" into a block and "up" out of a block.
     if (wsStartObj.mEndReason == WSType::otherBlock) {
       // startpoint is just before the start of a block.
-      nsCOMPtr<nsIDOMNode> child = mHTMLEditor->GetLeftmostChild(GetAsDOMNode(wsStartObj.mEndReasonNode), true);
+      nsCOMPtr<nsIDOMNode> child =
+        GetAsDOMNode(mHTMLEditor->GetLeftmostChild(wsStartObj.mEndReasonNode,
+                                                   true));
       if (child)
       {
         newStartNode = nsEditor::GetNodeLocation(child, &newStartOffset);
@@ -6883,8 +6889,10 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
 
   // selection to beginning of right hand para;
   // look inside any containers that are up front.
-  NS_ENSURE_STATE(mHTMLEditor);
-  nsCOMPtr<nsIDOMNode> child = mHTMLEditor->GetLeftmostChild(rightPara, true);
+  nsCOMPtr<nsINode> rightParaNode = do_QueryInterface(rightPara);
+  NS_ENSURE_STATE(mHTMLEditor && rightParaNode);
+  nsCOMPtr<nsIDOMNode> child =
+    GetAsDOMNode(mHTMLEditor->GetLeftmostChild(rightParaNode, true));
   NS_ENSURE_STATE(mHTMLEditor);
   if (mHTMLEditor->IsTextNode(child) || !mHTMLEditor ||
       mHTMLEditor->IsContainer(child))
