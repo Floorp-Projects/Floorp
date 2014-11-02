@@ -3194,17 +3194,18 @@ nsHTMLEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
   return nsEditor::DeleteText(aCharData, aOffset, aLength);
 }
 
-NS_IMETHODIMP nsHTMLEditor::InsertTextImpl(const nsAString& aStringToInsert, 
-                                           nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                                           int32_t *aInOutOffset,
-                                           nsIDOMDocument *aDoc)
+nsresult
+nsHTMLEditor::InsertTextImpl(const nsAString& aStringToInsert,
+                             nsCOMPtr<nsINode>* aInOutNode,
+                             int32_t* aInOutOffset, nsIDocument* aDoc)
 {
-  // do nothing if the node is read-only
+  // Do nothing if the node is read-only
   if (!IsModifiableNode(*aInOutNode)) {
     return NS_ERROR_FAILURE;
   }
 
-  return nsEditor::InsertTextImpl(aStringToInsert, aInOutNode, aInOutOffset, aDoc);
+  return nsEditor::InsertTextImpl(aStringToInsert, aInOutNode, aInOutOffset,
+                                  aDoc);
 }
 
 void

@@ -202,10 +202,10 @@ public:
 
   virtual bool IsModifiableNode(nsINode *aNode);
 
-  NS_IMETHOD InsertTextImpl(const nsAString& aStringToInsert, 
-                               nsCOMPtr<nsIDOMNode> *aInOutNode, 
-                               int32_t *aInOutOffset,
-                               nsIDOMDocument *aDoc);
+  virtual nsresult InsertTextImpl(const nsAString& aStringToInsert,
+                                  nsCOMPtr<nsINode>* aInOutNode,
+                                  int32_t* aInOutOffset,
+                                  nsIDocument* aDoc);
   nsresult InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
                                       mozilla::dom::Text& aTextNode,
                                       int32_t aOffset,
