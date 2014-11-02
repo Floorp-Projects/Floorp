@@ -21,6 +21,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
+import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
@@ -313,6 +314,13 @@ public class BrowserApp extends GeckoApp
                 showBookmarkRemovedToast();
                 break;
         }
+
+        if (NewTabletUI.isEnabled(this) && msg == TabEvents.SELECTED) {
+            // Note: this is a duplicate call if maybeSwitchToTab
+            // is called, though the call is idempotent.
+            mBrowserToolbar.cancelEdit();
+        }
+
         super.onTabChanged(tab, msg, data);
     }
 
@@ -2043,8 +2051,16 @@ public class BrowserApp extends GeckoApp
      * A background tab may be selected while editing mode is active (e.g. popups), causing the
      * new url to load in the newly selected tab. Call this method on editing mode exit to
      * mitigate this.
+     *
+     * Note that this method is disabled for new tablets because we can see the selected tab in the
+     * tab strip and, when the selected tab changes during editing mode as in this hack, the
+     * temporarily selected tab is visible to users.
      */
     private void selectTargetTabForEditingMode() {
+        if (NewTabletUI.isEnabled(this)) {
+            return;
+        }
+
         if (mTargetTabForEditingMode != null) {
             Tabs.getInstance().selectTab(mTargetTabForEditingMode);
         }
@@ -2760,6 +2776,10 @@ public class BrowserApp extends GeckoApp
         // Track the menu action. We don't know much about the context, but we can use this to determine
         // the frequency of use for various actions.
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, getResources().getResourceEntryName(itemId));
+
+        if (NewTabletUI.isEnabled(this)) {
+            mBrowserToolbar.cancelEdit();
+        }
 
         if (itemId == R.id.bookmark) {
             tab = Tabs.getInstance().getSelectedTab();

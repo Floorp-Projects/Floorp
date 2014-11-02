@@ -1789,15 +1789,15 @@ RadioInterface.prototype = {
         return this.rilContext;
       case "RIL:GetCardLockState":
         this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockState",
-                                                "RIL:CardLockResult");
+                                                "RIL:GetCardLockResult");
         break;
       case "RIL:UnlockCardLock":
         this.workerMessenger.sendWithIPCMessage(msg, "iccUnlockCardLock",
-                                                "RIL:CardLockResult");
+                                                "RIL:SetUnlockCardLockResult");
         break;
       case "RIL:SetCardLock":
         this.workerMessenger.sendWithIPCMessage(msg, "iccSetCardLock",
-                                                "RIL:CardLockResult");
+                                                "RIL:SetUnlockCardLockResult");
         break;
       case "RIL:GetCardLockRetryCount":
         this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockRetryCount",

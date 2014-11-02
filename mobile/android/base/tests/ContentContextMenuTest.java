@@ -10,7 +10,7 @@ import android.util.DisplayMetrics;
  * This class covers interactions with the context menu opened from web content
  */
 abstract class ContentContextMenuTest extends PixelTest {
-    private static final int MAX_TEST_TIMEOUT = 10000;
+    private static final int MAX_TEST_TIMEOUT = 30000; // 30 seconds (worst case)
 
     // This method opens the context menu of any web content. It assumes that the page is already loaded
     protected void openWebContentContextMenu(String waitText) {
