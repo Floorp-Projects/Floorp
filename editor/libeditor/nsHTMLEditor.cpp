@@ -4188,71 +4188,37 @@ nsHTMLEditor::GetLastEditableChild(nsINode& aNode)
   return child;
 }
 
-nsresult 
-nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf)
+nsIContent*
+nsHTMLEditor::GetFirstEditableLeaf(nsINode& aNode)
 {
-  // check parms
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node && aOutFirstLeaf, NS_ERROR_NULL_POINTER);
-  
-  // init out parms
-  *aOutFirstLeaf = aNode;
-  
-  // find leftmost leaf
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> child = GetAsDOMNode(GetLeftmostChild(node));
-  while (child && (!IsEditable(child) || !nsEditorUtils::IsLeafNode(child)))
-  {
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = GetNextHTMLNode(child, address_of(tmp));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-    
-    // only accept nodes that are descendants of aNode
-    if (nsEditorUtils::IsDescendantOf(tmp, aNode))
-      child = tmp;
-    else
-    {
-      child = nullptr;  // this will abort the loop
+  nsCOMPtr<nsIContent> child = GetLeftmostChild(&aNode);
+  while (child && (!IsEditable(child) || child->HasChildren())) {
+    child = GetNextHTMLNode(child);
+
+    // Only accept nodes that are descendants of aNode
+    if (!aNode.Contains(child)) {
+      return nullptr;
     }
   }
-  
-  *aOutFirstLeaf = child;
-  return res;
+
+  return child;
 }
 
 
-nsresult 
-nsHTMLEditor::GetLastEditableLeaf(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf)
+nsIContent*
+nsHTMLEditor::GetLastEditableLeaf(nsINode& aNode)
 {
-  // check parms
-  nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
-  NS_ENSURE_TRUE(node && aOutLastLeaf, NS_ERROR_NULL_POINTER);
-  
-  // init out parms
-  *aOutLastLeaf = nullptr;
-  
-  // find rightmost leaf
-  nsCOMPtr<nsIDOMNode> child = GetAsDOMNode(GetRightmostChild(node, false));
-  nsresult res = NS_OK;
-  while (child && (!IsEditable(child) || !nsEditorUtils::IsLeafNode(child)))
-  {
-    nsCOMPtr<nsIDOMNode> tmp;
-    res = GetPriorHTMLNode(child, address_of(tmp));
-    NS_ENSURE_SUCCESS(res, res);
-    NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
-    
-    // only accept nodes that are descendants of aNode
-    if (nsEditorUtils::IsDescendantOf(tmp, aNode))
-      child = tmp;
-    else
-    {
-      child = nullptr;
+  nsCOMPtr<nsIContent> child = GetRightmostChild(&aNode, false);
+  while (child && (!IsEditable(child) || child->HasChildren())) {
+    child = GetPriorHTMLNode(child);
+
+    // Only accept nodes that are descendants of aNode
+    if (!aNode.Contains(child)) {
+      return nullptr;
     }
   }
-  
-  *aOutLastLeaf = child;
-  return res;
+
+  return child;
 }
 
 
