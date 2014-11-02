@@ -1,0 +1,7 @@
+<triple xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" style="display: block;">
+<box style="display: block; position: relative; -moz-binding: url(data:text/xml;charset=utf-8,%3Cbindings%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%3E%0A%3Cbinding%20id%3D%22a%22%3E%0A%3Cimplementation%3E%0A%3Cfield%20name%3D%22_field%22%3Ethis.ownerDocument.getBoxObjectFor%28this.ownerDocument.documentElement%29%3B%3C/field%3E%0A%3C/implementation%3E%0A%3Ccontent%3E%0A%3C/binding%3E%0A%3C/bindings%3E);">
+<box style="position: fixed; -moz-binding: url(data:text/xml;charset=utf-8,%3Cbindings%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22%3E%0A%3Cbinding%20id%3D%22a%22%3E%0A%3Ccontent%3E%0A%3Cchildren%20xmlns%3D%22http%3A//www.mozilla.org/xbl%22/%3E%3C/content%3E%3C/binding%3E%3C/bindings%3E);"/>
+<iframe/>
+</box>
+<scrollbox onoverflow="document.documentElement.removeAttribute('style')"/>
+</triple>
