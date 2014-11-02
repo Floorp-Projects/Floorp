@@ -20,15 +20,6 @@
 
 %include ../browser.inc
 
-:root {
-  --panel-ui-button-background-image: linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent),
-                    linear-gradient(to bottom, transparent, hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, transparent),
-                    linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent);
-  --panel-ui-button-background-size: 1px calc(100% - 1px), 1px calc(100% - 1px), 1px  calc(100% - 1px) !important;
-  --panel-ui-button-background-position: 0px 0px, 1px 0px, 2px 0px;
-  --panel-ui-button-background-repeat: no-repeat;
-}
-
 #PanelUI-popup #PanelUI-contents:empty {
   height: 128px;
 }
@@ -96,10 +87,12 @@
 }
 
 #PanelUI-button {
-  background-image: var(--panel-ui-button-background-image);
-  background-size: var(--panel-ui-button-background-size);
-  background-position: var(--panel-ui-button-background-position);
-  background-repeat: var(--panel-ui-button-background-repeat);
+  background-image: linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent),
+                    linear-gradient(to bottom, transparent, hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, transparent),
+                    linear-gradient(to bottom, transparent, hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, transparent);
+  background-size: 1px calc(100% - 1px), 1px calc(100% - 1px), 1px  calc(100% - 1px) !important;
+  background-position: 0px 0px, 1px 0px, 2px 0px;
+  background-repeat: no-repeat;
 }
 
 #PanelUI-button:-moz-locale-dir(rtl) {
