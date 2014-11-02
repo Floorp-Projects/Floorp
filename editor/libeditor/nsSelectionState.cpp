@@ -15,7 +15,6 @@
 #include "nsIContent.h"                 // for nsIContent
 #include "nsIDOMCharacterData.h"        // for nsIDOMCharacterData
 #include "nsIDOMNode.h"                 // for nsIDOMNode
-#include "nsIDOMRange.h"                // for nsIDOMRange, etc
 #include "nsISupportsImpl.h"            // for nsRange::Release
 #include "nsRange.h"                    // for nsRange
 #include "nsSelectionState.h"
@@ -149,7 +148,7 @@ nsSelectionState::IsEmpty()
 }
 
 /***************************************************************************
- * nsRangeUpdater:  class for updating nsIDOMRanges in response to editor actions.
+ * nsRangeUpdater:  class for updating nsRanges in response to editor actions.
  */
 
 nsRangeUpdater::nsRangeUpdater() : mArray(), mLock(false) {}

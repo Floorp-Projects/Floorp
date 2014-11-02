@@ -22,7 +22,6 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsIFrame.h"
 #include "nsIHTMLEditor.h"
@@ -33,6 +32,7 @@
 #include "nsITableEditor.h"
 #include "nsLiteralString.h"
 #include "nsQueryFrame.h"
+#include "nsRange.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTableCellFrame.h"
@@ -2214,12 +2214,11 @@ nsHTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     res = selection->GetRangeCount(&rangeCount);
     NS_ENSURE_SUCCESS(res, res);
 
-    nsCOMPtr<nsIDOMRange> range;
+    nsRefPtr<nsRange> range;
     int32_t i;
     for (i = 0; i < rangeCount; i++)
     {
-      res = selection->GetRangeAt(i, getter_AddRefs(range));
-      NS_ENSURE_SUCCESS(res, res);
+      range = selection->GetRangeAt(i);
       NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIDOMElement> deletedCell;
@@ -2877,7 +2876,7 @@ nsHTMLEditor::GetCellContext(Selection** aSelection,
 }
 
 nsresult 
-nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
+nsHTMLEditor::GetCellFromRange(nsRange* aRange, nsIDOMElement** aCell)
 {
   // Note: this might return a node that is outside of the range.
   // Use carefully.
@@ -2936,14 +2935,12 @@ nsHTMLEditor::GetFirstSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)
   nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMRange> range;
-  nsresult res = selection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
   mSelectedCellIndex = 0;
 
-  res = GetCellFromRange(range, aCell);
+  nsresult res = GetCellFromRange(range, aCell);
   // Failure here probably means selection is in a text node,
   //  so there's no selected cell
   if (NS_FAILED(res)) {
@@ -2983,12 +2980,11 @@ nsHTMLEditor::GetNextSelectedCell(nsIDOMRange **aRange, nsIDOMElement **aCell)
     return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // Scan through ranges to find next valid selected cell
-  nsCOMPtr<nsIDOMRange> range;
+  nsRefPtr<nsRange> range;
   nsresult res;
   for (; mSelectedCellIndex < rangeCount; mSelectedCellIndex++)
   {
-    res = selection->GetRangeAt(mSelectedCellIndex, getter_AddRefs(range));
-    NS_ENSURE_SUCCESS(res, res);
+    range = selection->GetRangeAt(mSelectedCellIndex);
     NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
     res = GetCellFromRange(range, aCell);

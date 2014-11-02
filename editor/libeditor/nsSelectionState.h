@@ -14,7 +14,6 @@
 
 class nsCycleCollectionTraversalCallback;
 class nsIDOMCharacterData;
-class nsIDOMRange;
 class nsRange;
 namespace mozilla {
 namespace dom {

@@ -18,7 +18,7 @@
 class nsIAtom;
 class nsIContentIterator;
 class nsIDOMDocument;
-class nsIDOMRange;
+class nsRange;
 template <class E> class nsCOMArray;
 namespace mozilla {
 namespace dom {
@@ -176,7 +176,7 @@ class MOZ_STACK_CLASS nsDOMIterator
     nsDOMIterator();
     virtual ~nsDOMIterator();
     
-    nsresult Init(nsIDOMRange* aRange);
+    nsresult Init(nsRange* aRange);
     nsresult Init(nsIDOMNode* aNode);
     nsresult AppendList(nsBoolDomIterFunctor& functor,
                         nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
@@ -190,7 +190,7 @@ class MOZ_STACK_CLASS nsDOMSubtreeIterator : public nsDOMIterator
     nsDOMSubtreeIterator();
     virtual ~nsDOMSubtreeIterator();
 
-    nsresult Init(nsIDOMRange* aRange);
+    nsresult Init(nsRange* aRange);
 };
 
 class nsTrivialFunctor : public nsBoolDomIterFunctor

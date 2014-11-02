@@ -50,6 +50,8 @@ class nsIContentFilter;
 class nsIURL;
 class nsILinkHandler;
 class nsTableOuterFrame;
+class nsIDOMRange;
+class nsRange;
 struct PropItem;
 
 namespace mozilla {
@@ -205,7 +207,7 @@ public:
                                              nsIDOMElement** aTableElement);
   NS_IMETHOD GetSelectedCellsType(nsIDOMElement *aElement, uint32_t *aSelectionType);
 
-  nsresult GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell);
+  nsresult GetCellFromRange(nsRange* aRange, nsIDOMElement** aCell);
 
   // Finds the first selected cell in first range of selection
   // This is in the *order of selection*, not order in the table
@@ -303,7 +305,7 @@ public:
                                          bool aSuppressTransaction);
 
   /** join together any adjacent editable text nodes in the range */
-  NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);
+  nsresult CollapseAdjacentTextNodes(nsRange* aRange);
 
   virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2)
     MOZ_OVERRIDE;
@@ -659,9 +661,9 @@ protected:
                                    const nsAString* aAttribute,
                                    const nsAString* aValue);
 
-  nsresult PromoteInlineRange(nsIDOMRange *inRange);
-  nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsIDOMRange *inRange);
-  nsresult SplitStyleAboveRange(nsIDOMRange *aRange, 
+  nsresult PromoteInlineRange(nsRange* aRange);
+  nsresult PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* aRange);
+  nsresult SplitStyleAboveRange(nsRange* aRange,
                                 nsIAtom *aProperty, 
                                 const nsAString *aAttribute);
   nsresult SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,

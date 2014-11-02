@@ -29,13 +29,13 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsISupportsImpl.h"
 #include "nsLiteralString.h"
+#include "nsRange.h"
 #include "nsReadableUtils.h"
 #include "nsSelectionState.h"
 #include "nsString.h"
@@ -578,9 +578,9 @@ nsHTMLEditor::SetInlinePropertyOnNode(nsIContent* aNode,
 }
 
 
-nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange, 
-                                            nsIAtom *aProperty, 
-                                            const nsAString *aAttribute)
+nsresult
+nsHTMLEditor::SplitStyleAboveRange(nsRange* inRange, nsIAtom* aProperty,
+                                   const nsAString* aAttribute)
 {
   NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
   nsresult res;
@@ -948,7 +948,8 @@ bool nsHTMLEditor::HasAttr(nsIDOMNode* aNode,
 }
 
 
-nsresult nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsIDOMRange *inRange)
+nsresult
+nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsRange* inRange)
 {
   NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
   nsresult res;
@@ -1002,7 +1003,8 @@ nsresult nsHTMLEditor::PromoteRangeIfStartsOrEndsInNamedAnchor(nsIDOMRange *inRa
   return res;
 }
 
-nsresult nsHTMLEditor::PromoteInlineRange(nsIDOMRange *inRange)
+nsresult
+nsHTMLEditor::PromoteInlineRange(nsRange* inRange)
 {
   NS_ENSURE_TRUE(inRange, NS_ERROR_NULL_POINTER);
   nsresult res;

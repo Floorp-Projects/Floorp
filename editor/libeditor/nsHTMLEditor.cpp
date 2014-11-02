@@ -42,7 +42,6 @@
 
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMRange.h"
 #include "nsISupportsArray.h"
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
@@ -2360,13 +2359,12 @@ nsHTMLEditor::GetSelectedElement(const nsAString& aTagName, nsIDOMElement** aRet
   bool isNamedAnchorTag = IsNamedAnchorTag(TagName);
   
   nsCOMPtr<nsIDOMElement> selectedElement;
-  nsCOMPtr<nsIDOMRange> range;
-  nsresult res = selection->GetRangeAt(0, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(0);
+  NS_ENSURE_STATE(range);
 
   nsCOMPtr<nsIDOMNode> startParent;
   int32_t startOffset, endOffset;
-  res = range->GetStartContainer(getter_AddRefs(startParent));
+  nsresult res = range->GetStartContainer(getter_AddRefs(startParent));
   NS_ENSURE_SUCCESS(res, res);
   res = range->GetStartOffset(&startOffset);
   NS_ENSURE_SUCCESS(res, res);
@@ -3711,8 +3709,8 @@ nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
  * Uses nsEditor::JoinNodes so action is undoable. 
  * Should be called within the context of a batch transaction.
  */
-NS_IMETHODIMP
-nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMRange *aInRange)
+nsresult
+nsHTMLEditor::CollapseAdjacentTextNodes(nsRange* aInRange)
 {
   NS_ENSURE_TRUE(aInRange, NS_ERROR_NULL_POINTER);
   nsAutoTxnsConserveSelection dontSpazMySelection(this);
@@ -4971,9 +4969,7 @@ nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
 
     if (rangeCount == 1) {
 
-      nsCOMPtr<nsIDOMRange> range;
-      res = selection->GetRangeAt(0, getter_AddRefs(range));
-      NS_ENSURE_SUCCESS(res, res);
+      nsRefPtr<nsRange> range = selection->GetRangeAt(0);
       NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
       nsCOMPtr<nsIDOMNode> startContainer, endContainer;
@@ -5001,11 +4997,11 @@ nsHTMLEditor::GetSelectionContainer(nsIDOMElement ** aReturn)
     }
     else {
       int32_t i;
-      nsCOMPtr<nsIDOMRange> range;
+      nsRefPtr<nsRange> range;
       for (i = 0; i < rangeCount; i++)
       {
-        res = selection->GetRangeAt(i, getter_AddRefs(range));
-        NS_ENSURE_SUCCESS(res, res);
+        range = selection->GetRangeAt(i);
+        NS_ENSURE_STATE(range);
         nsCOMPtr<nsIDOMNode> startContainer;
         res = range->GetStartContainer(getter_AddRefs(startContainer));
         if (NS_FAILED(res)) continue;

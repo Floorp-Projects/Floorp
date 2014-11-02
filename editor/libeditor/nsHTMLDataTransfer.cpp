@@ -48,7 +48,6 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMRange.h"
 #include "nsIDocument.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
@@ -168,9 +167,7 @@ NS_IMETHODIMP nsHTMLEditor::LoadHTML(const nsAString & aInputString)
     }
 
     // Get the first range in the selection, for context:
-    nsCOMPtr<nsIDOMRange> range;
-    rv = selection->GetRangeAt(0, getter_AddRefs(range));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsRange> range = selection->GetRangeAt(0);
     NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
 
     // create fragment for pasted html
