@@ -297,10 +297,7 @@ protected:
   nsresult SplitAsNeeded(nsIAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
                          int32_t& inOutOffset);
   nsresult AddTerminatingBR(nsIDOMNode *aBlock);
-  nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
-                           nsIDOMNode *aNodeRight, 
-                           nsCOMPtr<nsIDOMNode> *aOutMergeParent, 
-                           int32_t *aOutMergeOffset);
+  ::DOMPoint JoinNodesSmart(nsIContent& aNodeLeft, nsIContent& aNodeRight);
   mozilla::dom::Element* GetTopEnclosingMailCite(nsINode& aNode);
   nsresult PopListItem(nsIDOMNode *aListItem, bool *aOutOfList);
   nsresult RemoveListStructure(nsIDOMNode *aList);
