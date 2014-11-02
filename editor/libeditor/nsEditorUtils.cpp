@@ -97,6 +97,23 @@ nsDOMIterator::Init(nsIDOMNode* aNode)
 
 nsresult
 nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
+                          nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const
+{
+  // Iterate through dom and build list
+  while (!mIter->IsDone()) {
+    nsCOMPtr<nsINode> node = mIter->GetCurrentNode();
+    NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+
+    if (functor(node)) {
+      arrayOfNodes.AppendElement(node);
+    }
+    mIter->Next();
+  }
+  return NS_OK;
+}
+
+nsresult
+nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
                           nsCOMArray<nsIDOMNode>& arrayOfNodes) const
 {
   nsCOMPtr<nsIDOMNode> node;

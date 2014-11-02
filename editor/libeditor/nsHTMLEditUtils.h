@@ -23,6 +23,7 @@ public:
   static bool IsFormatNode(nsINode* aNode);
   static bool IsFormatNode(nsIDOMNode *aNode);
   static bool IsNodeThatCanOutdent(nsIDOMNode *aNode);
+  static bool IsHeader(nsINode& aNode);
   static bool IsHeader(nsIDOMNode *aNode);
   static bool IsParagraph(nsIDOMNode *aNode);
   static bool IsHR(nsIDOMNode *aNode);
