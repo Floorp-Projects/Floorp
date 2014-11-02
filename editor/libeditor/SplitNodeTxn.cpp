@@ -58,8 +58,7 @@ SplitNodeTxn::DoTransaction()
   NS_ENSURE_TRUE(mParent, NS_ERROR_NULL_POINTER);
 
   // Insert the new node
-  rv = mEditor.SplitNodeImpl(mExistingRightNode->AsDOMNode(), mOffset,
-                             mNewLeftNode->AsDOMNode(), mParent->AsDOMNode());
+  rv = mEditor.SplitNodeImpl(*mExistingRightNode, mOffset, *mNewLeftNode);
   if (mEditor.GetShouldTxnSetSelection()) {
     nsRefPtr<Selection> selection = mEditor.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
