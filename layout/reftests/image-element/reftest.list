@@ -13,11 +13,11 @@ skip-if(B2G) fails-if(azureSkia) fails-if(cocoaWidget) == canvas-outside-documen
 skip-if(B2G) HTTP(..) == element-paint-continuation.html element-paint-continuation-ref.html
 == element-paint-transform-01.html element-paint-transform-01-ref.html
 random-if(d2d) == element-paint-transform-02.html element-paint-transform-02-ref.html # bug 587133
-== element-paint-background-size-01.html element-paint-background-size-01-ref.html
+fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-background-size-01.html element-paint-background-size-01-ref.html
 == element-paint-background-size-02.html element-paint-background-size-02-ref.html
 == element-paint-transform-repeated.html element-paint-transform-repeated-ref.html
 fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03-ref.html
-fuzzy-if(B2G,1,5) fuzzy-if(gtk2Widget,1,32) fuzzy-if(cocoaWidget,1,106) == element-paint-native-widget.html element-paint-native-widget-ref.html
+fuzzy-if(B2G,1,15) fuzzy-if(gtk2Widget,1,32) fuzzy-if(cocoaWidget,1,106) == element-paint-native-widget.html element-paint-native-widget-ref.html
 == element-paint-subimage-sampling-restriction.html about:blank
 == element-paint-clippath.html element-paint-clippath-ref.html
 == element-paint-sharpness-01a.html element-paint-sharpness-01b.html
