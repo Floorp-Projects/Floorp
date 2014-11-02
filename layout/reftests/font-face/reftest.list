@@ -7,9 +7,9 @@ HTTP(..) == download-2.html download-2-ref.html
 HTTP(..) != download-2.html about:blank
 random-if(winWidget) HTTP(..) == download-2-big.html download-2-big-otf.html # bug 470713
 HTTP(..) != download-2-big-otf.html about:blank
-asserts-if(Android,2) skip-if(Android&&AndroidVersion==17) HTTP(..) != download-3-notref.html download-3.html # bug 1019192, bug 936226
-HTTP(..) == download-3-ref.html download-3.html
-HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html
+asserts-if(Android,4-8) skip-if(Android&&AndroidVersion==17) HTTP(..) != download-3-notref.html download-3.html # bug 1019192, bug 936226
+asserts-if(Android,0-8) HTTP(..) == download-3-ref.html download-3.html # same bugs as above
+asserts-if(Android,0-8) HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html # just delayed assertions from above tests
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
 HTTP(..) != name-override-simple-1.html download-1-notref.html
 fails HTTP(..) == name-override-1.html name-override-1-ref.html
