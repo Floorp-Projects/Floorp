@@ -497,19 +497,10 @@ public:
     *                       If there is no prior node, aResultNode will be nullptr.
     * @param bNoBlockCrossing If true, don't move across "block" nodes, whatever that means.
     */
-  nsresult GetPriorNode(nsIDOMNode  *aCurrentNode, 
-                        bool         aEditableNode,
-                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                        bool         bNoBlockCrossing = false);
   nsIContent* GetPriorNode(nsINode* aCurrentNode, bool aEditableNode,
                            bool aNoBlockCrossing = false);
 
   // and another version that takes a {parent,offset} pair rather than a node
-  nsresult GetPriorNode(nsIDOMNode  *aParentNode, 
-                        int32_t      aOffset, 
-                        bool         aEditableNode, 
-                        nsCOMPtr<nsIDOMNode> *aResultNode,
-                        bool         bNoBlockCrossing = false);
   nsIContent* GetPriorNode(nsINode* aParentNode,
                            int32_t aOffset,
                            bool aEditableNode,
@@ -523,20 +514,11 @@ public:
     *                       skipping non-editable nodes if aEditableNode is true.
     *                       If there is no prior node, aResultNode will be nullptr.
     */
-  nsresult GetNextNode(nsIDOMNode  *aCurrentNode, 
-                       bool         aEditableNode,
-                       nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing = false);
   nsIContent* GetNextNode(nsINode* aCurrentNode,
                           bool aEditableNode,
                           bool bNoBlockCrossing = false);
 
   // and another version that takes a {parent,offset} pair rather than a node
-  nsresult GetNextNode(nsIDOMNode  *aParentNode, 
-                       int32_t      aOffset, 
-                       bool         aEditableNode, 
-                       nsCOMPtr<nsIDOMNode> *aResultNode,
-                       bool         bNoBlockCrossing = false);
   nsIContent* GetNextNode(nsINode* aParentNode,
                           int32_t aOffset,
                           bool aEditableNode,
