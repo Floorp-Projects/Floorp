@@ -331,12 +331,11 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
                                             const nsAString *aValue)
 {
   MOZ_ASSERT(aValue);
-  NS_ENSURE_TRUE(aTextNode, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> parent;
-  nsresult res = aTextNode->GetParentNode(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsIContent> textNode = do_QueryInterface(aTextNode);
+  NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
 
-  if (!CanContainTag(parent, aProperty)) {
+  if (!textNode->GetParentNode() ||
+      !CanContainTag(*textNode->GetParentNode(), *aProperty)) {
     return NS_OK;
   }
   
@@ -364,6 +363,7 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
   uint32_t textLen;
   aTextNode->GetLength(&textLen);
 
+  nsresult res;
   if (uint32_t(aEndOffset) != textLen) {
     // we need to split off back of text node
     nsCOMPtr<nsIDOMNode> tmp;
@@ -414,7 +414,7 @@ nsHTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent* aNode,
 
   // If this is an element that can't be contained in a span, we have to
   // recurse to its children.
-  if (!TagCanContain(nsGkAtoms::span, aNode->AsDOMNode())) {
+  if (!TagCanContain(*nsGkAtoms::span, *aNode)) {
     if (aNode->HasChildren()) {
       nsCOMArray<nsIContent> arrayOfNodes;
 
@@ -1524,16 +1524,13 @@ nsHTMLEditor::RelativeFontChange( int32_t aSizeChange)
 
     // Let's see in what kind of element the selection is
     int32_t offset;
-    nsCOMPtr<nsIDOMNode> selectedNode;
+    nsCOMPtr<nsINode> selectedNode;
     GetStartNodeAndOffset(selection, getter_AddRefs(selectedNode), &offset);
     NS_ENSURE_TRUE(selectedNode, NS_OK);
     if (IsTextNode(selectedNode)) {
-      nsCOMPtr<nsIDOMNode> parent;
-      nsresult res = selectedNode->GetParentNode(getter_AddRefs(parent));
-      NS_ENSURE_SUCCESS(res, res);
-      selectedNode = parent;
+      selectedNode = selectedNode->GetParentNode();
     }
-    if (!CanContainTag(selectedNode, atom)) {
+    if (!CanContainTag(*selectedNode, *atom)) {
       return NS_OK;
     }
 
@@ -1650,16 +1647,14 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
   // Can only change font size by + or - 1
   if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
     return NS_ERROR_ILLEGAL_VALUE;
-  NS_ENSURE_TRUE(aTextNode, NS_ERROR_NULL_POINTER);
+  nsCOMPtr<nsIContent> textNode = do_QueryInterface(aTextNode);
+  NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
   
   // don't need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) return NS_OK;
   
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> parent;
-  res = aTextNode->GetParentNode(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(res, res);
-  if (!CanContainTag(parent, nsGkAtoms::big)) {
+  if (!textNode->GetParentNode() ||
+      !CanContainTag(*textNode->GetParentNode(), *nsGkAtoms::big)) {
     return NS_OK;
   }
 
@@ -1674,6 +1669,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( int32_t aSizeChange,
   // -1 is a magic value meaning to the end of node
   if (aEndOffset == -1) aEndOffset = textLen;
   
+  nsresult res = NS_OK;
   if ( (uint32_t)aEndOffset != textLen )
   {
     // we need to split off back of text node
@@ -1780,7 +1776,7 @@ nsHTMLEditor::RelativeFontChangeOnNode(int32_t aSizeChange, nsIContent* aNode)
   }
 
   // can it be put inside a "big" or "small"?
-  if (TagCanContain(atom, aNode->AsDOMNode())) {
+  if (TagCanContain(*atom, *aNode)) {
     // first populate any nested font tags that have the size attr set
     nsresult rv = RelativeFontChangeHelper(aSizeChange, aNode);
     NS_ENSURE_SUCCESS(rv, rv);

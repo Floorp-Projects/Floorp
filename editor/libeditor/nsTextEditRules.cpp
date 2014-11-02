@@ -708,7 +708,7 @@ nsTextEditRules::WillInsertText(EditAction aAction,
   // don't put text in places that can't have it
   NS_ENSURE_STATE(mEditor);
   if (!mEditor->IsTextNode(selNode) &&
-      !mEditor->CanContainTag(GetAsDOMNode(selNode), nsGkAtoms::textTagName)) {
+      !mEditor->CanContainTag(*selNode, *nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
 

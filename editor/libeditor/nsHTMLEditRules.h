@@ -147,7 +147,7 @@ protected:
   nsresult DidDeleteSelection(nsISelection *aSelection, 
                               nsIEditor::EDirection aDir, 
                               nsresult aResult);
-  nsresult InsertBRIfNeeded(nsISelection *aSelection);
+  nsresult InsertBRIfNeeded(mozilla::dom::Selection* aSelection);
   nsresult GetGoodSelPointForNode(nsIDOMNode *aNode, nsIEditor::EDirection aAction, 
                                   nsCOMPtr<nsIDOMNode> *outSelNode, int32_t *outSelOffset);
   nsresult JoinBlocks(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, bool *aCanceled);
@@ -303,7 +303,8 @@ protected:
   nsresult AdjustWhitespace(nsISelection *aSelection);
   nsresult PinSelectionToNewBlock(nsISelection *aSelection);
   nsresult CheckInterlinePosition(nsISelection *aSelection);
-  nsresult AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection aAction);
+  nsresult AdjustSelection(mozilla::dom::Selection* aSelection,
+                           nsIEditor::EDirection aAction);
   nsresult FindNearSelectableNode(nsIDOMNode *aSelNode, 
                                   int32_t aSelOffset, 
                                   nsIEditor::EDirection &aDirection,

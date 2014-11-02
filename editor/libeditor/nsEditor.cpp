@@ -3141,50 +3141,41 @@ nsEditor::IsBlockNode(nsINode* aNode)
 }
 
 bool
-nsEditor::CanContain(nsIDOMNode* aParent, nsIDOMNode* aChild)
+nsEditor::CanContain(nsINode& aParent, nsIContent& aChild)
 {
-  nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
-  NS_ENSURE_TRUE(parent, false);
-
-  switch (parent->NodeType()) {
+  switch (aParent.NodeType()) {
   case nsIDOMNode::ELEMENT_NODE:
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    return TagCanContain(parent->Tag(), aChild);
+    return TagCanContain(*aParent.Tag(), aChild);
   }
   return false;
 }
 
 bool
-nsEditor::CanContainTag(nsIDOMNode* aParent, nsIAtom* aChildTag)
+nsEditor::CanContainTag(nsINode& aParent, nsIAtom& aChildTag)
 {
-  nsCOMPtr<nsIContent> parent = do_QueryInterface(aParent);
-  NS_ENSURE_TRUE(parent, false);
-
-  switch (parent->NodeType()) {
+  switch (aParent.NodeType()) {
   case nsIDOMNode::ELEMENT_NODE:
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    return TagCanContainTag(parent->Tag(), aChildTag);
+    return TagCanContainTag(*aParent.Tag(), aChildTag);
   }
   return false;
 }
 
 bool 
-nsEditor::TagCanContain(nsIAtom* aParentTag, nsIDOMNode* aChild)
+nsEditor::TagCanContain(nsIAtom& aParentTag, nsIContent& aChild)
 {
-  nsCOMPtr<nsIContent> child = do_QueryInterface(aChild);
-  NS_ENSURE_TRUE(child, false);
-
-  switch (child->NodeType()) {
+  switch (aChild.NodeType()) {
   case nsIDOMNode::TEXT_NODE:
   case nsIDOMNode::ELEMENT_NODE:
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
-    return TagCanContainTag(aParentTag, child->Tag());
+    return TagCanContainTag(aParentTag, *aChild.Tag());
   }
   return false;
 }
 
 bool 
-nsEditor::TagCanContainTag(nsIAtom* aParentTag, nsIAtom* aChildTag)
+nsEditor::TagCanContainTag(nsIAtom& aParentTag, nsIAtom& aChildTag)
 {
   return true;
 }
