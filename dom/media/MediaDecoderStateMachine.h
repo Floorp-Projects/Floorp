@@ -450,6 +450,11 @@ protected:
   // ResetPlayback() to discard all enqueued data.
   void FlushDecoding();
 
+  // Called when AudioSink reaches the end. |mPlayStartTime| and
+  // |mPlayDuration| are updated to provide a good base for calculating video
+  // stream time.
+  void ResyncAudioClock();
+
   // Returns the audio clock, if we have audio, or -1 if we don't.
   // Called on the state machine thread.
   int64_t GetAudioClock();
