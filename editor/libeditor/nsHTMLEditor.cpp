@@ -510,79 +510,73 @@ nsHTMLEditor::InitRules()
 NS_IMETHODIMP
 nsHTMLEditor::BeginningOfDocument()
 {
-  if (!mDocWeak) { return NS_ERROR_NOT_INITIALIZED; }
+  if (!mDocWeak) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
-  // get the selection
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  // Get the selection
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   // Get the root element.
-  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(GetRoot());
+  nsCOMPtr<Element> rootElement = GetRoot();
   if (!rootElement) {
     NS_WARNING("GetRoot() returned a null pointer (mRootElement is null)");
     return NS_OK;
   }
 
-  // find first editable thingy
+  // Find first editable thingy
   bool done = false;
-  nsCOMPtr<nsIDOMNode> curNode(rootElement), selNode;
+  nsCOMPtr<nsINode> curNode = rootElement.get(), selNode;
   int32_t curOffset = 0, selOffset;
-  while (!done)
-  {
+  while (!done) {
     nsWSRunObject wsObj(this, curNode, curOffset);
-    int32_t visOffset=0;
+    int32_t visOffset = 0;
     WSType visType;
-    nsCOMPtr<nsINode> visNode, curNode_(do_QueryInterface(curNode));
-    wsObj.NextVisibleNode(curNode_, curOffset, address_of(visNode), &visOffset, &visType);
+    nsCOMPtr<nsINode> visNode;
+    wsObj.NextVisibleNode(curNode, curOffset, address_of(visNode), &visOffset,
+                          &visType);
     if (visType == WSType::normalWS || visType == WSType::text) {
-      selNode = GetAsDOMNode(visNode);
+      selNode = visNode;
       selOffset = visOffset;
       done = true;
     } else if (visType == WSType::br || visType == WSType::special) {
-      selNode = GetNodeLocation(GetAsDOMNode(visNode), &selOffset);
+      selNode = visNode->GetParentNode();
+      selOffset = selNode ? selNode->IndexOf(visNode) : -1;
       done = true;
     } else if (visType == WSType::otherBlock) {
-      // By definition of nsWSRunObject, a block element terminates 
-      // a whitespace run. That is, although we are calling a method 
-      // that is named "NextVisibleNode", the node returned
-      // might not be visible/editable!
-      // If the given block does not contain any visible/editable items,
-      // we want to skip it and continue our search.
+      // By definition of nsWSRunObject, a block element terminates a
+      // whitespace run. That is, although we are calling a method that is
+      // named "NextVisibleNode", the node returned might not be
+      // visible/editable!
+      //
+      // If the given block does not contain any visible/editable items, we
+      // want to skip it and continue our search.
 
-      if (!IsContainer(visNode))
-      {
-        // However, we were given a block that is not a container.
-        // Since the block can not contain anything that's visible,
-        // such a block only makes sense if it is visible by itself,
-        // like a <hr>
-        // We want to place the caret in front of that block.
-
-        selNode = GetNodeLocation(GetAsDOMNode(visNode), &selOffset);
+      if (!IsContainer(visNode)) {
+        // However, we were given a block that is not a container.  Since the
+        // block can not contain anything that's visible, such a block only
+        // makes sense if it is visible by itself, like a <hr>.  We want to
+        // place the caret in front of that block.
+        selNode = visNode->GetParentNode();
+        selOffset = selNode ? selNode->IndexOf(visNode) : -1;
         done = true;
-      }
-      else
-      {
+      } else {
         bool isEmptyBlock;
-        if (NS_SUCCEEDED(IsEmptyNode(GetAsDOMNode(visNode), &isEmptyBlock)) &&
-            isEmptyBlock)
-        {
-          // skip the empty block
-          curNode = GetNodeLocation(GetAsDOMNode(visNode), &curOffset);
-          ++curOffset;
-        }
-        else
-        {
-          curNode = GetAsDOMNode(visNode);
+        if (NS_SUCCEEDED(IsEmptyNode(visNode, &isEmptyBlock)) &&
+            isEmptyBlock) {
+          // Skip the empty block
+          curNode = visNode->GetParentNode();
+          curOffset = curNode ? curNode->IndexOf(visNode) : -1;
+          curOffset++;
+        } else {
+          curNode = visNode;
           curOffset = 0;
         }
-        // keep looping
+        // Keep looping
       }
-    }
-    else
-    {
-      // else we found nothing useful
+    } else {
+      // Else we found nothing useful
       selNode = curNode;
       selOffset = curOffset;
       done = true;
