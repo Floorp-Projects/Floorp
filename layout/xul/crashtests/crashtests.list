@@ -43,6 +43,7 @@ load 382899-1.xul
 load 383236-1.xul
 load 384037-1.xhtml
 load 384105-1.html
+asserts(0-12) load 384373.html # bug 623436
 load 384491-1.xhtml
 load 384871-1.html
 load 387033-1.xhtml
