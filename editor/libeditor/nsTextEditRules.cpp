@@ -700,22 +700,21 @@ nsTextEditRules::WillInsertText(EditAction aAction,
   }
 
   // get the (collapsed) selection location
-  nsCOMPtr<nsIDOMNode> selNode;
-  int32_t selOffset;
-  NS_ENSURE_STATE(mEditor);
-  res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(res, res);
+  NS_ENSURE_STATE(aSelection->GetRangeAt(0));
+  nsCOMPtr<nsINode> selNode = aSelection->GetRangeAt(0)->GetStartParent();
+  int32_t selOffset = aSelection->GetRangeAt(0)->StartOffset();
+  NS_ENSURE_STATE(selNode);
 
   // don't put text in places that can't have it
   NS_ENSURE_STATE(mEditor);
   if (!mEditor->IsTextNode(selNode) &&
-      !mEditor->CanContainTag(selNode, nsGkAtoms::textTagName)) {
+      !mEditor->CanContainTag(GetAsDOMNode(selNode), nsGkAtoms::textTagName)) {
     return NS_ERROR_FAILURE;
   }
 
   // we need to get the doc
   NS_ENSURE_STATE(mEditor);
-  nsCOMPtr<nsIDOMDocument> doc = mEditor->GetDOMDocument();
+  nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
     
   if (aAction == EditAction::insertIMEText) {
@@ -724,7 +723,7 @@ nsTextEditRules::WillInsertText(EditAction aAction,
     NS_ENSURE_SUCCESS(res, res);
   } else {
     // aAction == EditAction::insertText; find where we are
-    nsCOMPtr<nsIDOMNode> curNode = selNode;
+    nsCOMPtr<nsINode> curNode = selNode;
     int32_t curOffset = selOffset;
 
     // don't spaz my selection in subtransactions

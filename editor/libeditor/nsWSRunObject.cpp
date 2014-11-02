@@ -382,11 +382,8 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
   }
 
   // Ready, aim, fire!
-  nsCOMPtr<nsIDOMNode> parent(GetAsDOMNode(*aInOutParent));
-  nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(aDoc));
-  res = mHTMLEditor->InsertTextImpl(theString, address_of(parent),
-                                    aInOutOffset, doc);
-  *aInOutParent = do_QueryInterface(parent);
+  res = mHTMLEditor->InsertTextImpl(theString, aInOutParent, aInOutOffset,
+                                    aDoc);
   return NS_OK;
 }
 
