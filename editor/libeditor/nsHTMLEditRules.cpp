@@ -7544,7 +7544,7 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
   {
     // for list's, merge shallow (wouldn't want to combine list items)
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->JoinNodes(nodeLeft, nodeRight);
+    res = mHTMLEditor->JoinNodes(*nodeLeft, *nodeRight);
     NS_ENSURE_SUCCESS(res, res);
     return res;
   }
@@ -7561,7 +7561,7 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
 
     // for list items, divs, etc, merge smart
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->JoinNodes(nodeLeft, nodeRight);
+    res = mHTMLEditor->JoinNodes(*nodeLeft, *nodeRight);
     NS_ENSURE_SUCCESS(res, res);
 
     if (lastLeft && firstRight && mHTMLEditor &&

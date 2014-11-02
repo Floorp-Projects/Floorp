@@ -99,14 +99,9 @@ class nsRangeUpdater
     nsresult SelAdjSplitNode(nsINode* aOldRightNode, int32_t aOffset,
                              nsINode* aNewLeftNode);
     nsresult SelAdjSplitNode(nsIDOMNode *aOldRightNode, int32_t aOffset, nsIDOMNode *aNewLeftNode);
-    nsresult SelAdjJoinNodes(nsINode* aLeftNode,
-                             nsINode* aRightNode,
-                             nsINode* aParent,
-                             int32_t aOffset,
-                             int32_t aOldLeftNodeLength);
-    nsresult SelAdjJoinNodes(nsIDOMNode *aLeftNode, 
-                             nsIDOMNode *aRightNode, 
-                             nsIDOMNode *aParent, 
+    nsresult SelAdjJoinNodes(nsINode& aLeftNode,
+                             nsINode& aRightNode,
+                             nsINode& aParent,
                              int32_t aOffset,
                              int32_t aOldLeftNodeLength);
     void     SelAdjInsertText(mozilla::dom::Text& aTextNode, int32_t aOffset,
