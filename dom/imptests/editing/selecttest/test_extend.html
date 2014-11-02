@@ -9,6 +9,10 @@
 <script>
 "use strict";
 
+if (W3CTest.runner) {
+  W3CTest.runner.requestLongerTimeout(2);
+}
+
 // Also test a selection with no ranges
 testRanges.unshift("[]");
 
