@@ -1565,7 +1565,7 @@ nsHTMLEditRules::WillInsertBreak(Selection* aSelection,
   // split any mailcites in the way.
   // should we abort this if we encounter table cell boundaries?
   if (IsMailEditor()) {
-    res = SplitMailCites(aSelection, IsPlaintextEditor(), aHandled);
+    res = SplitMailCites(aSelection, aHandled);
     NS_ENSURE_SUCCESS(res, res);
     if (*aHandled) {
       return NS_OK;
@@ -1765,15 +1765,17 @@ nsHTMLEditRules::DidInsertBreak(Selection* aSelection, nsresult aResult)
 
 
 nsresult
-nsHTMLEditRules::SplitMailCites(Selection* aSelection, bool aPlaintext, bool *aHandled)
+nsHTMLEditRules::SplitMailCites(Selection* aSelection, bool* aHandled)
 {
   NS_ENSURE_TRUE(aSelection && aHandled, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> citeNode, selNode, leftCite, rightCite;
+  nsCOMPtr<nsIDOMNode> leftCite, rightCite;
+  nsCOMPtr<nsINode> selNode;
+  nsCOMPtr<Element> citeNode;
   int32_t selOffset, newOffset;
   NS_ENSURE_STATE(mHTMLEditor);
   nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(res, res);
-  res = GetTopEnclosingMailCite(selNode, address_of(citeNode), aPlaintext);
+  citeNode = GetTopEnclosingMailCite(*selNode);
   NS_ENSURE_SUCCESS(res, res);
   if (citeNode)
   {
@@ -1790,31 +1792,28 @@ nsHTMLEditRules::SplitMailCites(Selection* aSelection, bool aPlaintext, bool *aH
     nsCOMPtr<nsINode> visNode;
     int32_t visOffset=0;
     WSType wsType;
-    nsCOMPtr<nsINode> selNode_(do_QueryInterface(selNode));
-    wsObj.NextVisibleNode(selNode_, selOffset, address_of(visNode),
+    wsObj.NextVisibleNode(selNode, selOffset, address_of(visNode),
                           &visOffset, &wsType);
     if (wsType == WSType::br) {
       // ok, we are just before a break.  is it inside the mailquote?
-      int32_t unused;
-      if (nsEditorUtils::IsDescendantOf(GetAsDOMNode(visNode), citeNode, &unused))
-      {
+      if (visNode != citeNode && citeNode->Contains(visNode)) {
         // it is.  so lets reset our selection to be just after it.
         NS_ENSURE_STATE(mHTMLEditor);
-        selNode = mHTMLEditor->GetNodeLocation(GetAsDOMNode(visNode), &selOffset);
+        selNode = mHTMLEditor->GetNodeLocation(visNode, &selOffset);
         ++selOffset;
       }
     }
      
-    nsCOMPtr<nsIDOMNode> brNode;
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->SplitNodeDeep(citeNode, selNode, selOffset, &newOffset, 
-                       true, address_of(leftCite), address_of(rightCite));
+    res = mHTMLEditor->SplitNodeDeep(GetAsDOMNode(citeNode),
+                                     GetAsDOMNode(selNode), selOffset,
+                                     &newOffset, true, address_of(leftCite),
+                                     address_of(rightCite));
     NS_ENSURE_SUCCESS(res, res);
-    res = citeNode->GetParentNode(getter_AddRefs(selNode));
-    NS_ENSURE_SUCCESS(res, res);
+    selNode = citeNode->GetParentNode();
     NS_ENSURE_STATE(mHTMLEditor);
-    res = mHTMLEditor->CreateBR(selNode, newOffset, address_of(brNode));
-    NS_ENSURE_SUCCESS(res, res);
+    nsCOMPtr<Element> brNode = mHTMLEditor->CreateBR(selNode, newOffset);
+    NS_ENSURE_STATE(brNode);
     // want selection before the break, and on same line
     aSelection->SetInterlinePosition(true);
     res = aSelection->Collapse(selNode, newOffset);
@@ -1823,27 +1822,25 @@ nsHTMLEditRules::SplitMailCites(Selection* aSelection, bool aPlaintext, bool *aH
     // We need to examine the content both before the br we just added and also
     // just after it.  If we don't have another br or block boundary adjacent,
     // then we will need a 2nd br added to achieve blank line that user expects.
-    if (IsInlineNode(citeNode))
-    {
+    if (IsInlineNode(GetAsDOMNode(citeNode))) {
       NS_ENSURE_STATE(mHTMLEditor);
       nsWSRunObject wsObj(mHTMLEditor, selNode, newOffset);
       nsCOMPtr<nsINode> visNode;
       int32_t visOffset=0;
       WSType wsType;
-      nsCOMPtr<nsINode> selNode_(do_QueryInterface(selNode));
-      wsObj.PriorVisibleNode(selNode_, newOffset, address_of(visNode),
+      wsObj.PriorVisibleNode(selNode, newOffset, address_of(visNode),
                              &visOffset, &wsType);
       if (wsType == WSType::normalWS || wsType == WSType::text ||
           wsType == WSType::special) {
         NS_ENSURE_STATE(mHTMLEditor);
         nsWSRunObject wsObjAfterBR(mHTMLEditor, selNode, newOffset+1);
-        wsObjAfterBR.NextVisibleNode(selNode_, newOffset+1, address_of(visNode),
-                                     &visOffset, &wsType);
+        wsObjAfterBR.NextVisibleNode(selNode, newOffset + 1,
+                                     address_of(visNode), &visOffset, &wsType);
         if (wsType == WSType::normalWS || wsType == WSType::text ||
             wsType == WSType::special) {
           NS_ENSURE_STATE(mHTMLEditor);
-          res = mHTMLEditor->CreateBR(selNode, newOffset, address_of(brNode));
-          NS_ENSURE_SUCCESS(res, res);
+          brNode = mHTMLEditor->CreateBR(selNode, newOffset);
+          NS_ENSURE_STATE(brNode);
         }
       }
     }
@@ -2365,13 +2362,13 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
     else
     {
       // figure out mailcite ancestors
+      nsCOMPtr<nsINode> startNode_ = do_QueryInterface(startNode);
+      NS_ENSURE_STATE(startNode_ || !startNode);
+      nsCOMPtr<nsINode> endNode_ = do_QueryInterface(endNode);
+      NS_ENSURE_STATE(endNode_ || !endNode);
       nsCOMPtr<nsIDOMNode> endCiteNode, startCiteNode;
-      res = GetTopEnclosingMailCite(startNode, address_of(startCiteNode), 
-                                    IsPlaintextEditor());
-      NS_ENSURE_SUCCESS(res, res); 
-      res = GetTopEnclosingMailCite(endNode, address_of(endCiteNode), 
-                                    IsPlaintextEditor());
-      NS_ENSURE_SUCCESS(res, res); 
+      startCiteNode = GetAsDOMNode(GetTopEnclosingMailCite(*startNode_));
+      endCiteNode = GetAsDOMNode(GetTopEnclosingMailCite(*endNode_));
       
       // if we only have a mailcite at one of the two endpoints, set the directionality
       // of the deletion so that the selection will end up outside the mailcite.
@@ -3057,35 +3054,31 @@ nsHTMLEditRules::DidDeleteSelection(Selection* aSelection,
   if (!aSelection) { return NS_ERROR_NULL_POINTER; }
   
   // find where we are
-  nsCOMPtr<nsIDOMNode> startNode;
+  nsCOMPtr<nsINode> startNode;
   int32_t startOffset;
   nsresult res = mEditor->GetStartNodeAndOffset(aSelection, getter_AddRefs(startNode), &startOffset);
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
   
   // find any enclosing mailcite
-  nsCOMPtr<nsIDOMNode> citeNode;
-  res = GetTopEnclosingMailCite(startNode, address_of(citeNode), 
-                                IsPlaintextEditor());
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<Element> citeNode = GetTopEnclosingMailCite(*startNode);
   if (citeNode) {
-    nsCOMPtr<nsINode> cite = do_QueryInterface(citeNode);
     bool isEmpty = true, seenBR = false;
     NS_ENSURE_STATE(mHTMLEditor);
-    mHTMLEditor->IsEmptyNodeImpl(cite, &isEmpty, true, true, false, &seenBR);
+    mHTMLEditor->IsEmptyNodeImpl(citeNode, &isEmpty, true, true, false,
+                                 &seenBR);
     if (isEmpty)
     {
-      nsCOMPtr<nsIDOMNode> brNode;
       int32_t offset;
-      nsCOMPtr<nsIDOMNode> parent = nsEditor::GetNodeLocation(citeNode, &offset);
+      nsCOMPtr<nsINode> parent = nsEditor::GetNodeLocation(citeNode, &offset);
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteNode(citeNode);
       NS_ENSURE_SUCCESS(res, res);
       if (parent && seenBR)
       {
         NS_ENSURE_STATE(mHTMLEditor);
-        res = mHTMLEditor->CreateBR(parent, offset, address_of(brNode));
-        NS_ENSURE_SUCCESS(res, res);
+        nsCOMPtr<Element> brNode = mHTMLEditor->CreateBR(parent, offset);
+        NS_ENSURE_STATE(brNode);
         aSelection->Collapse(parent, offset);
       }
     }
@@ -7523,31 +7516,22 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
 }
 
 
-nsresult 
-nsHTMLEditRules::GetTopEnclosingMailCite(nsIDOMNode *aNode, 
-                                         nsCOMPtr<nsIDOMNode> *aOutCiteNode,
-                                         bool aPlainText)
+Element*
+nsHTMLEditRules::GetTopEnclosingMailCite(nsINode& aNode)
 {
-  // check parms
-  NS_ENSURE_TRUE(aNode && aOutCiteNode, NS_ERROR_NULL_POINTER);
-  
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMNode> node, parentNode;
-  node = do_QueryInterface(aNode);
-  
-  while (node)
-  {
-    if ( (aPlainText && nsHTMLEditUtils::IsPre(node)) ||
-         nsHTMLEditUtils::IsMailCite(node) )
-      *aOutCiteNode = node;
-    if (nsTextEditUtils::IsBody(node)) break;
-    
-    res = node->GetParentNode(getter_AddRefs(parentNode));
-    NS_ENSURE_SUCCESS(res, res);
-    node = parentNode;
+  nsCOMPtr<Element> ret;
+
+  for (nsCOMPtr<nsINode> node = &aNode; node; node = node->GetParentNode()) {
+    if ((IsPlaintextEditor() && node->Tag() == nsGkAtoms::pre) ||
+        nsHTMLEditUtils::IsMailCite(node)) {
+      ret = node->AsElement();
+    }
+    if (node->Tag() == nsGkAtoms::body) {
+      break;
+    }
   }
 
-  return res;
+  return ret;
 }
 
 
