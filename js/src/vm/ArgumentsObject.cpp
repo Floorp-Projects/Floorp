@@ -41,7 +41,7 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, ArgumentsObjec
     if (frame.fun()->isHeavyweight() && script->argsObjAliasesFormals()) {
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
         for (AliasedFormalIter fi(script); fi; fi++)
-            data->args[fi.frameIndex()] = JS::MagicValueUint32(fi.scopeSlot());
+            data->args[fi.frameIndex()] = MagicScopeSlotValue(fi.scopeSlot());
     }
 }
 
@@ -55,7 +55,7 @@ ArgumentsObject::MaybeForwardToCallObject(jit::IonJSFrameLayout *frame, HandleOb
         MOZ_ASSERT(callObj && callObj->is<CallObject>());
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));
         for (AliasedFormalIter fi(script); fi; fi++)
-            data->args[fi.frameIndex()] = JS::MagicValueUint32(fi.scopeSlot());
+            data->args[fi.frameIndex()] = MagicScopeSlotValue(fi.scopeSlot());
     }
 }
 

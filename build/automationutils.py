@@ -23,7 +23,6 @@ __all__ = [
   "dumpLeakLog",
   "isURL",
   "processLeakLog",
-  "replaceBackSlashes",
   'KeyValueParseError',
   'parseKeyValue',
   'systemMemory',
@@ -378,9 +377,6 @@ def processLeakLog(leakLogFile, options):
       leakThreshold = leakThresholds.get(processType, 0)
       processSingleLeakFile(thisFile, processType, leakThreshold,
                             processType in ignoreMissingLeaks)
-
-def replaceBackSlashes(input):
-  return input.replace('\\', '/')
 
 class KeyValueParseError(Exception):
   """error when parsing strings of serialized key-values"""

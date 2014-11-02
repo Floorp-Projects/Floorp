@@ -8,7 +8,7 @@
 
 #include "gfxContext.h"
 #include "mozilla/Attributes.h"
-#include "nsISupportsImpl.h"
+#include "nsCOMPtr.h"
 #include "nsRefPtr.h"
 
 namespace mozilla {
@@ -17,12 +17,24 @@ class DrawTarget;
 }
 }
 
-class nsRenderingContext MOZ_FINAL
+class MOZ_STACK_CLASS nsRenderingContext MOZ_FINAL
 {
     typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:
-    NS_INLINE_DECL_REFCOUNTING(nsRenderingContext)
+    nsRenderingContext() {}
+
+    nsRenderingContext(gfxContext* aThebesContext)
+      : mThebes(aThebesContext)
+    {}
+
+    nsRenderingContext(already_AddRefed<gfxContext>&& aThebesContext)
+      : mThebes(aThebesContext)
+    {}
+
+    nsRenderingContext(DrawTarget* aDrawTarget) {
+      Init(aDrawTarget);
+    }
 
     void Init(gfxContext* aThebesContext);
     void Init(DrawTarget* aDrawTarget);
@@ -32,9 +44,6 @@ public:
     DrawTarget *GetDrawTarget() { return mThebes->GetDrawTarget(); }
 
 private:
-    // Private destructor, to discourage deletion outside of Release():
-    ~nsRenderingContext() {}
-
     nsRefPtr<gfxContext> mThebes;
 };
 

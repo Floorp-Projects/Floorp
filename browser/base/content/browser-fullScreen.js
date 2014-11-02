@@ -67,10 +67,6 @@ var FullScreen = {
     this.showXULChrome("toolbar", !enterFS);
 
     if (enterFS) {
-      if (gPrefService.getBoolPref("browser.fullscreen.autohide"))
-        gBrowser.mPanelContainer.addEventListener("mousemove",
-                                                  this._collapseCallback, false);
-
       document.addEventListener("keypress", this._keyToggleCallback, false);
       document.addEventListener("popupshown", this._setPopupOpen, false);
       document.addEventListener("popuphidden", this._setPopupOpen, false);
@@ -79,9 +75,6 @@ var FullScreen = {
       // mozfullscreenchange event fired, which could confuse content script.
       this._shouldAnimate = !document.mozFullScreen;
       this.mouseoverToggle(false);
-
-      // Autohide prefs
-      gPrefService.addObserver("browser.fullscreen", this, false);
     }
     else {
       // The user may quit fullscreen during an animation
@@ -185,12 +178,10 @@ var FullScreen = {
 
   cleanup: function () {
     if (window.fullScreen) {
-      gBrowser.mPanelContainer.removeEventListener("mousemove",
-                                                   this._collapseCallback, false);
+      MousePosTracker.removeListener(this);
       document.removeEventListener("keypress", this._keyToggleCallback, false);
       document.removeEventListener("popupshown", this._setPopupOpen, false);
       document.removeEventListener("popuphidden", this._setPopupOpen, false);
-      gPrefService.removeObserver("browser.fullscreen", this);
 
       this.cancelWarning();
       gBrowser.tabContainer.removeEventListener("TabOpen", this.exitDomFullScreen);
@@ -204,18 +195,9 @@ var FullScreen = {
     }
   },
 
-  observe: function(aSubject, aTopic, aData)
+  getMouseTargetRect: function()
   {
-    if (aData == "browser.fullscreen.autohide") {
-      if (gPrefService.getBoolPref("browser.fullscreen.autohide")) {
-        gBrowser.mPanelContainer.addEventListener("mousemove",
-                                                  this._collapseCallback, false);
-      }
-      else {
-        gBrowser.mPanelContainer.removeEventListener("mousemove",
-                                                     this._collapseCallback, false);
-      }
-    }
+    return this._mouseTargetRect;
   },
 
   // Event callbacks
@@ -223,7 +205,7 @@ var FullScreen = {
   {
     FullScreen.mouseoverToggle(true);
   },
-  _collapseCallback: function()
+  onMouseEnter: function()
   {
     FullScreen.mouseoverToggle(false);
   },
@@ -512,22 +494,26 @@ var FullScreen = {
       return;
     }
 
-    // The chrome is collapsed so don't spam needless mousemove events
-    if (aShow) {
-      gBrowser.mPanelContainer.addEventListener("mousemove",
-                                                this._collapseCallback, false);
-    }
-    else {
-      gBrowser.mPanelContainer.removeEventListener("mousemove",
-                                                   this._collapseCallback, false);
-    }
-
     // Hiding/collapsing the toolbox interferes with the tab bar's scrollbox,
     // so we just move it off-screen instead. See bug 430687.
     gNavToolbox.style.marginTop =
       aShow ? "" : -gNavToolbox.getBoundingClientRect().height + "px";
 
     this._fullScrToggler.hidden = aShow || document.mozFullScreen;
+
+    if (aShow) {
+      let rect = gBrowser.mPanelContainer.getBoundingClientRect();
+      this._mouseTargetRect = {
+        top: rect.top + 50,
+        bottom: rect.bottom,
+        left: rect.left,
+        right: rect.right
+      };
+      MousePosTracker.addListener(this);
+    } else {
+      MousePosTracker.removeListener(this);
+    }
+
     this._isChromeCollapsed = !aShow;
     if (gPrefService.getIntPref("browser.fullscreen.animateUp") == 2)
       this._shouldAnimate = true;

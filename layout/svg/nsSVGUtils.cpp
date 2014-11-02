@@ -30,7 +30,6 @@
 #include "nsISVGChildFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
 #include "nsSVGClipPathFrame.h"
@@ -441,7 +440,7 @@ nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame *aFrame, uint32_t aFlags)
 class SVGPaintCallback : public nsSVGFilterPaintCallback
 {
 public:
-  virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
+  virtual void Paint(gfxContext& aContext, nsIFrame *aTarget,
                      const gfxMatrix& aTransform,
                      const nsIntRect* aDirtyRect) MOZ_OVERRIDE
   {
@@ -472,7 +471,7 @@ public:
 
 void
 nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
-                                  nsRenderingContext *aContext,
+                                  gfxContext& aContext,
                                   const gfxMatrix& aTransform,
                                   const nsIntRect *aDirtyRect)
 {
@@ -557,8 +556,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (opacity != 1.0f && CanOptimizeOpacity(aFrame))
     opacity = 1.0f;
 
-  DrawTarget* drawTarget = aContext->GetDrawTarget();
-  gfxContext *gfx = aContext->ThebesContext();
+  DrawTarget* drawTarget = aContext.GetDrawTarget();
   bool complexEffects = false;
 
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
@@ -576,12 +574,12 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   if (opacity != 1.0f || maskFrame || (clipPathFrame && !isTrivialClip)
       || aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
     complexEffects = true;
-    gfx->Save();
+    aContext.Save();
     if (!(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
       // aFrame has a valid visual overflow rect, so clip to it before calling
       // PushGroup() to minimize the size of the surfaces we'll composite:
-      gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(gfx);
-      gfx->Multiply(aTransform);
+      gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(&aContext);
+      aContext.Multiply(aTransform);
       nsRect overflowRect = aFrame->GetVisualOverflowRectRelativeToSelf();
       if (aFrame->IsFrameOfType(nsIFrame::eSVGGeometry) ||
           aFrame->IsSVGText()) {
@@ -589,18 +587,18 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
         // GetCanvasTM().
         overflowRect = overflowRect + aFrame->GetPosition();
       }
-      gfx->Clip(NSRectToSnappedRect(overflowRect,
-                                    aFrame->PresContext()->AppUnitsPerDevPixel(),
-                                    *drawTarget));
+      aContext.Clip(NSRectToSnappedRect(overflowRect,
+                                        aFrame->PresContext()->AppUnitsPerDevPixel(),
+                                        *drawTarget));
     }
-    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
+    aContext.PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
   /* If this frame has only a trivial clipPath, set up cairo's clipping now so
    * we can just do normal painting and get it clipped appropriately.
    */
   if (clipPathFrame && isTrivialClip) {
-    gfx->Save();
+    aContext.Save();
     clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, aTransform);
   }
 
@@ -634,48 +632,48 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
   }
 
   if (clipPathFrame && isTrivialClip) {
-    gfx->Restore();
+    aContext.Restore();
   }
 
   /* No more effects, we're done. */
   if (!complexEffects)
     return;
 
-  gfx->PopGroupToSource();
+  aContext.PopGroupToSource();
 
   Matrix maskTransform;
   RefPtr<SourceSurface> maskSurface =
-    maskFrame ? maskFrame->GetMaskForMaskedFrame(aContext->ThebesContext(),
+    maskFrame ? maskFrame->GetMaskForMaskedFrame(&aContext,
                                                  aFrame, aTransform, opacity, &maskTransform)
               : nullptr;
 
   if (clipPathFrame && !isTrivialClip) {
-    gfx->PushGroup(gfxContentType::COLOR_ALPHA);
+    aContext.PushGroup(gfxContentType::COLOR_ALPHA);
 
     nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, aTransform);
     Matrix clippedMaskTransform;
-    RefPtr<SourceSurface> clipMaskSurface = gfx->PopGroupToSurface(&clippedMaskTransform);
+    RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&clippedMaskTransform);
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface
       if (maskSurface || opacity != 1.0f) {
-        gfx->PushGroup(gfxContentType::COLOR_ALPHA);
-        gfx->Mask(clipMaskSurface, clippedMaskTransform);
-        gfx->PopGroupToSource();
+        aContext.PushGroup(gfxContentType::COLOR_ALPHA);
+        aContext.Mask(clipMaskSurface, clippedMaskTransform);
+        aContext.PopGroupToSource();
       } else {
-        gfx->Mask(clipMaskSurface, clippedMaskTransform);
+        aContext.Mask(clipMaskSurface, clippedMaskTransform);
       }
     }
   }
 
   if (maskSurface) {
-    gfx->Mask(maskSurface, maskTransform);
+    aContext.Mask(maskSurface, maskTransform);
   } else if (opacity != 1.0f ||
              aFrame->StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
-    gfx->Paint(opacity);
+    aContext.Paint(opacity);
   }
 
-  gfx->Restore();
+  aContext.Restore();
 }
 
 bool
@@ -1165,19 +1163,27 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           nsSVGPathGeometryFrame* aFrame,
                                           const gfxMatrix& aMatrix)
 {
-  double styleExpansionFactor = 0.5;
+  const nsIAtom* tag = aFrame->GetContent()->Tag();
 
-  if (static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
+  bool strokeMayHaveCorners = (tag != nsGkAtoms::circle &&
+                               tag != nsGkAtoms::ellipse);
+
+  // For a shape without corners the stroke can only extend half the stroke
+  // width from the path in the x/y-axis directions. For shapes with corners
+  // the stroke can extend by sqrt(1/2) (think 45 degree rotated rect, or line
+  // with stroke-linecaps="square").
+  double styleExpansionFactor = strokeMayHaveCorners ? M_SQRT1_2 : 0.5;
+
+  // The stroke can extend even further for paths that can be affected by
+  // stroke-miterlimit.
+  bool affectedByMiterlimit = (tag == nsGkAtoms::path ||
+                               tag == nsGkAtoms::polyline ||
+                               tag == nsGkAtoms::polygon);
+  if (affectedByMiterlimit) {
     const nsStyleSVG* style = aFrame->StyleSVG();
-
-    if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
-      styleExpansionFactor = M_SQRT1_2;
-    }
-
     if (style->mStrokeLinejoin == NS_STYLE_STROKE_LINEJOIN_MITER &&
-        styleExpansionFactor < style->mStrokeMiterlimit &&
-        aFrame->GetContent()->Tag() != nsGkAtoms::line) {
-      styleExpansionFactor = style->mStrokeMiterlimit;
+        styleExpansionFactor < style->mStrokeMiterlimit / 2.0) {
+      styleExpansionFactor = style->mStrokeMiterlimit / 2.0;
     }
   }
 
@@ -1589,9 +1595,6 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
   }
   aContext->GetDrawTarget()->AddUserData(&gfxTextContextPaint::sUserDataKey,
                                          aContextPaint, nullptr);
-  nsRefPtr<nsRenderingContext> context(new nsRenderingContext());
-  context->Init(aContext);
-  svgFrame->NotifySVGChanged(nsISVGChildFrame::TRANSFORM_CHANGED);
   gfxMatrix m;
   if (frame->GetContent()->IsSVG()) {
     // PaintSVG() expects the passed transform to be the transform to its own
@@ -1599,7 +1602,7 @@ nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
     m = static_cast<nsSVGElement*>(frame->GetContent())->
           PrependLocalTransformsTo(gfxMatrix(), nsSVGElement::eUserSpaceToParent);
   }
-  nsresult rv = svgFrame->PaintSVG(context, m);
+  nsresult rv = svgFrame->PaintSVG(*aContext, m);
   return NS_SUCCEEDED(rv);
 }
 

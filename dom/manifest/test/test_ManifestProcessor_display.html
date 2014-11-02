@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1079453
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1079453</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="common.js"></script>
+  <script>
+/**
+ * display member
+ * https://w3c.github.io/manifest/#display-member
+ **/
+'use strict';
+//Type checks
+typeTests.forEach((type) => {
+  var expected = `Expect non - string display to default to "browser".`;
+  data.jsonText = JSON.stringify({
+    display: type
+  });
+  var result = processor.process(data);
+  ise(result.display, 'browser', expected);
+});
+
+/*Test valid modes*/
+var validModes = ['fullscreen', 'standalone', 'minimal-ui', 'browser']
+validModes.forEach((mode) => {
+  var expected = `Expect display mode to be ${mode}.`;
+  data.jsonText = JSON.stringify({
+    display: mode
+  });
+  var result = processor.process(data);
+  ise(result.display, mode, expected);
+});
+
+//trim tests
+validModes.forEach((display) => {
+  var expected = `Expect trimmed display mode to be returned.`;
+  var expandedDisplay =  seperators + lineTerminators + display + lineTerminators + seperators;
+  data.jsonText = JSON.stringify({
+    display: expandedDisplay
+  });
+  var result = processor.process(data);
+  ise(result.display, display, expected);
+});
+
+//Unknown modes
+var invalidModes = ['foo', `fooo${whiteSpace}`, '', 'fullscreen,standalone', 'standalone fullscreen', 'FULLSCreEN'];
+invalidModes.forEach((invalidMode) => {
+  var expected = `Expect default display mode "browser" to be returned: '${invalidMode}'`;
+  data.jsonText = JSON.stringify({
+    display: invalidMode
+  });
+  var result = processor.process(data);
+  ise(result.display, 'browser', expected);
+});
+  </script>
+</head>

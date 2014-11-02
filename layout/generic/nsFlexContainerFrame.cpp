@@ -1328,10 +1328,10 @@ nsFlexContainerFrame::
   // Measure content, if needed (w/ intrinsic-width method or a reflow)
   if (minSizeNeedsToMeasureContent || flexBasisNeedsToMeasureContent) {
     if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
-      nsRefPtr<nsRenderingContext> rctx =
-        aPresContext->PresShell()->CreateReferenceRenderingContext();
+      nsRenderingContext rctx(
+        aPresContext->PresShell()->CreateReferenceRenderingContext());
       if (minSizeNeedsToMeasureContent) {
-        resolvedMinSize = std::min(resolvedMinSize, aFlexItem.Frame()->GetMinISize(rctx));
+        resolvedMinSize = std::min(resolvedMinSize, aFlexItem.Frame()->GetMinISize(&rctx));
       }
       NS_ASSERTION(!flexBasisNeedsToMeasureContent,
                    "flex-basis:auto should have been resolved in the "

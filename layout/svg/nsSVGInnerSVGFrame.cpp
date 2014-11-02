@@ -11,7 +11,6 @@
 #include "gfxContext.h"
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
-#include "nsRenderingContext.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
 #include "nsSVGIntegrationUtils.h"
@@ -60,7 +59,7 @@ nsSVGInnerSVGFrame::GetType() const
 // nsISVGChildFrame methods
 
 nsresult
-nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
+nsSVGInnerSVGFrame::PaintSVG(gfxContext& aContext,
                              const gfxMatrix& aTransform,
                              const nsIntRect *aDirtyRect)
 {
@@ -80,11 +79,10 @@ nsSVGInnerSVGFrame::PaintSVG(nsRenderingContext *aContext,
       return NS_OK;
     }
 
-    gfxContext *gfx = aContext->ThebesContext();
-    autoSR.SetContext(gfx);
+    autoSR.SetContext(&aContext);
     gfxRect clipRect =
       nsSVGUtils::GetClipRectForFrame(this, x, y, width, height);
-    nsSVGUtils::SetClipRect(gfx, aTransform, clipRect);
+    nsSVGUtils::SetClipRect(&aContext, aTransform, clipRect);
   }
 
   return nsSVGInnerSVGFrameBase::PaintSVG(aContext, aTransform, aDirtyRect);

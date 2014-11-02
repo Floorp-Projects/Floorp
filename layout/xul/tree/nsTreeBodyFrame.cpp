@@ -248,15 +248,15 @@ nsTreeBodyFrame::CalcMaxRowWidth()
   nscoord rowWidth;
   nsTreeColumn* col;
 
-  nsRefPtr<nsRenderingContext> rc =
-    PresContext()->PresShell()->CreateReferenceRenderingContext();
+  nsRenderingContext rc(
+    PresContext()->PresShell()->CreateReferenceRenderingContext());
 
   for (int32_t row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
 
     for (col = mColumns->GetFirstColumn(); col; col = col->GetNext()) {
       nscoord desiredWidth, currentWidth;
-      nsresult rv = GetCellWidth(row, col, rc, desiredWidth, currentWidth);
+      nsresult rv = GetCellWidth(row, col, &rc, desiredWidth, currentWidth);
       if (NS_FAILED(rv)) {
         NS_NOTREACHED("invalid column");
         continue;
@@ -1166,8 +1166,8 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
     // interfere with our computations.
     AdjustForBorderPadding(cellContext, cellRect);
 
-    nsRefPtr<nsRenderingContext> rc =
-      presContext->PresShell()->CreateReferenceRenderingContext();
+    nsRenderingContext rc(
+      presContext->PresShell()->CreateReferenceRenderingContext());
 
     // Now we'll start making our way across the cell, starting at the edge of 
     // the cell and proceeding until we hit the right edge. |cellX| is the 
@@ -1191,7 +1191,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
       nsRect twistyRect(cellRect);
       nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
       GetTwistyRect(aRow, currCol, imageRect, twistyRect, presContext,
-                    *rc, twistyContext);
+                    rc, twistyContext);
 
       if (NS_LITERAL_CSTRING("twisty").Equals(aElement)) {
         // If we're looking for the twisty Rect, just return the size
@@ -1269,7 +1269,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
     GetBorderPadding(textContext, bp);
     textRect.height += bp.top + bp.bottom;
 
-    AdjustForCellText(cellText, aRow, currCol, *rc, *fm, textRect);
+    AdjustForCellText(cellText, aRow, currCol, rc, *fm, textRect);
 
     theRect = textRect;
   }
@@ -1515,8 +1515,8 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   bool isRTL = StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 
   nsPresContext* presContext = PresContext();
-  nsRefPtr<nsRenderingContext> rc =
-    presContext->PresShell()->CreateReferenceRenderingContext();
+  nsRenderingContext rc(
+    presContext->PresShell()->CreateReferenceRenderingContext());
 
   if (aColumn->IsPrimary()) {
     // If we're the primary column, we have indentation and a twisty.
@@ -1550,7 +1550,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
 
     nsRect imageSize;
     GetTwistyRect(aRowIndex, aColumn, imageSize, twistyRect, presContext,
-                  *rc, twistyContext);
+                  rc, twistyContext);
 
     // We will treat a click as hitting the twisty if it happens on the margins, borders, padding,
     // or content of the twisty object.  By allowing a "slop" into the margin, we make it a little
@@ -1618,7 +1618,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
                                                getter_AddRefs(fm));
-  AdjustForCellText(cellText, aRowIndex, aColumn, *rc, *fm, textRect);
+  AdjustForCellText(cellText, aRowIndex, aColumn, rc, *fm, textRect);
 
   if (aX >= textRect.x && aX < textRect.x + textRect.width)
     return nsCSSAnonBoxes::moztreecelltext;
@@ -1764,10 +1764,10 @@ nsTreeBodyFrame::IsCellCropped(int32_t aRow, nsITreeColumn* aCol, bool *_retval)
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
-  nsRefPtr<nsRenderingContext> rc =
-    PresContext()->PresShell()->CreateReferenceRenderingContext();
+  nsRenderingContext rc(
+    PresContext()->PresShell()->CreateReferenceRenderingContext());
 
-  rv = GetCellWidth(aRow, col, rc, desiredSize, currentSize);
+  rv = GetCellWidth(aRow, col, &rc, desiredSize, currentSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_retval = desiredSize > currentSize;
@@ -3390,7 +3390,7 @@ nsTreeBodyFrame::PaintTwisty(int32_t              aRowIndex,
         }
           
         // Paint the image.
-        nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext,
+        nsLayoutUtils::DrawSingleUnscaledImage(*aRenderingContext.ThebesContext(),
             aPresContext, image,
             GraphicsFilter::FILTER_NEAREST, pt, &aDirtyRect,
             imgIContainer::FLAG_NONE, &imageSize);
@@ -3530,7 +3530,7 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
       ctx->PushGroup(gfxContentType::COLOR_ALPHA);
     }
 
-    nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+    nsLayoutUtils::DrawImage(*ctx, aPresContext, image,
         nsLayoutUtils::GetGraphicsFilterForFrame(this),
         wholeImageDest, destRect, destRect.TopLeft(), aDirtyRect,
         imgIContainer::FLAG_NONE);
@@ -3728,7 +3728,8 @@ nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,
     }
 
     // Paint the image.
-    nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, aPresContext,
+    nsLayoutUtils::DrawSingleUnscaledImage(*aRenderingContext.ThebesContext(),
+        aPresContext,
         image, GraphicsFilter::FILTER_NEAREST, pt, &aDirtyRect,
         imgIContainer::FLAG_NONE, &imageSize);
   }
@@ -3790,7 +3791,8 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
       image->GetHeight(&height);
       nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsDeviceContext::AppUnitsPerCSSPixel());
-      nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+      nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
+          aPresContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
           aDirtyRect, imgIContainer::FLAG_NONE);
@@ -3816,7 +3818,8 @@ nsTreeBodyFrame::PaintProgressMeter(int32_t              aRowIndex,
       image->GetHeight(&height);
       nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
                   height*nsDeviceContext::AppUnitsPerCSSPixel());
-      nsLayoutUtils::DrawImage(&aRenderingContext, aPresContext, image,
+      nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
+          aPresContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
           aDirtyRect, imgIContainer::FLAG_NONE);

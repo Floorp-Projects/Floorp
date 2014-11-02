@@ -16,12 +16,12 @@
 class gfxContext;
 struct gfxRect;
 struct gfxRGBA;
-struct gfxCornerSizes;
 class gfxMatrix;
 
 namespace mozilla {
   namespace gfx {
     class AlphaBoxBlur;
+    struct RectCornerRadii;
     class SourceSurface;
     class DrawTarget;
   }
@@ -48,6 +48,8 @@ namespace mozilla {
  */
 class gfxAlphaBoxBlur
 {
+    typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
+
 public:
     gfxAlphaBoxBlur();
 
@@ -126,7 +128,7 @@ public:
      */
     static void BlurRectangle(gfxContext *aDestinationCtx,
                               const gfxRect& aRect,
-                              gfxCornerSizes* aCornerRadii,
+                              RectCornerRadii* aCornerRadii,
                               const gfxPoint& aBlurStdDev,
                               const gfxRGBA& aShadowColor,
                               const gfxRect& aDirtyRect,

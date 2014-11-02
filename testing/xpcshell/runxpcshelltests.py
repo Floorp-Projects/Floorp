@@ -39,7 +39,7 @@ except ImportError:
     HAVE_PSUTIL = False
 
 from automation import Automation
-from automationutils import replaceBackSlashes, addCommonOptions
+from automationutils import addCommonOptions
 
 HARNESS_TIMEOUT = 5 * 60
 
@@ -311,7 +311,7 @@ class XPCShellTestThread(Thread):
           On a remote system, this may be overloaded to use a remote path structure.
         """
         return ['-e', 'const _TEST_FILE = ["%s"];' %
-                  replaceBackSlashes(name)]
+                  name.replace('\\', '/')]
 
     def setupTempDir(self):
         tempDir = mkdtemp()
@@ -363,9 +363,9 @@ class XPCShellTestThread(Thread):
 
           On a remote system, this is overloaded to resolve quoting issues over a secondary command line.
         """
-        cmdH = ", ".join(['"' + replaceBackSlashes(f) + '"'
+        cmdH = ", ".join(['"' + f.replace('\\', '/') + '"'
                        for f in headfiles])
-        cmdT = ", ".join(['"' + replaceBackSlashes(f) + '"'
+        cmdT = ", ".join(['"' + f.replace('\\', '/') + '"'
                        for f in tailfiles])
         return xpcscmd + \
                 ['-e', 'const _SERVER_ADDR = "localhost"',
@@ -801,10 +801,10 @@ class XPCShellTests(object):
 
         # we assume that httpd.js lives in components/ relative to xpcshell
         self.httpdJSPath = os.path.join(os.path.dirname(self.xpcshell), 'components', 'httpd.js')
-        self.httpdJSPath = replaceBackSlashes(self.httpdJSPath)
+        self.httpdJSPath = self.httpdJSPath.replace('\\', '/')
 
         self.httpdManifest = os.path.join(os.path.dirname(self.xpcshell), 'components', 'httpd.manifest')
-        self.httpdManifest = replaceBackSlashes(self.httpdManifest)
+        self.httpdManifest = self.httpdManifest.replace('\\', '/')
 
         if self.xrePath is None:
             self.xrePath = os.path.dirname(self.xpcshell)
@@ -992,7 +992,7 @@ class XPCShellTests(object):
     def makeTestId(self, test_object):
         """Calculate an identifier for a test based on its path or a combination of
         its path and the source manifest."""
-        path = replaceBackSlashes(test_object['path']);
+        path = test_object['path'].replace('\\', '/');
         if 'dupe-manifest' in test_object and 'ancestor-manifest' in test_object:
             return '%s:%s' % (os.path.basename(test_object['ancestor-manifest']), path)
         return path

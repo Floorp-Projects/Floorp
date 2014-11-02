@@ -10,7 +10,7 @@
 #include "nsSVGContainerFrame.h"
 #include "nsISVGSVGFrame.h"
 
-class nsRenderingContext;
+class gfxContext;
 
 typedef nsSVGDisplayContainerFrame nsSVGInnerSVGFrameBase;
 
@@ -53,7 +53,7 @@ public:
                                      int32_t         aModType) MOZ_OVERRIDE;
 
   // nsISVGChildFrame interface:
-  virtual nsresult PaintSVG(nsRenderingContext *aContext,
+  virtual nsresult PaintSVG(gfxContext& aContext,
                             const gfxMatrix& aTransform,
                             const nsIntRect *aDirtyRect = nullptr) MOZ_OVERRIDE;
   virtual nsRect GetCoveredRegion() MOZ_OVERRIDE;
