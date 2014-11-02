@@ -292,7 +292,7 @@ public:
   virtual bool IsContainer(nsIDOMNode* aNode) MOZ_OVERRIDE;
 
   /** make the given selection span the entire document */
-  NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
+  virtual nsresult SelectEntireDocument(mozilla::dom::Selection* aSelection);
 
   NS_IMETHOD SetAttributeOrEquivalent(nsIDOMElement * aElement,
                                       const nsAString & aAttribute,
@@ -444,7 +444,8 @@ protected:
   // Move all contents from aCellToMerge into aTargetCell (append at end)
   NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, bool aDeleteCellToMerge);
 
-  NS_IMETHOD DeleteTable2(nsIDOMElement *aTable, nsISelection *aSelection);
+  nsresult DeleteTable2(nsIDOMElement* aTable,
+                        mozilla::dom::Selection* aSelection);
   NS_IMETHOD SetColSpan(nsIDOMElement *aCell, int32_t aColSpan);
   NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, int32_t aRowSpan);
 
@@ -464,11 +465,10 @@ protected:
   // Input: *aCell is a known cell,
   //        if null, cell is obtained from the anchor node of the selection
   // Returns NS_EDITOR_ELEMENT_NOT_FOUND if cell is not found even if aCell is null
-  NS_IMETHOD GetCellContext(nsISelection **aSelection,
-                            nsIDOMElement   **aTable,
-                            nsIDOMElement   **aCell,
-                            nsIDOMNode      **aCellParent, int32_t *aCellOffset,
-                            int32_t *aRowIndex, int32_t *aColIndex);
+  nsresult GetCellContext(mozilla::dom::Selection** aSelection,
+                          nsIDOMElement** aTable, nsIDOMElement** aCell,
+                          nsIDOMNode** aCellParent, int32_t* aCellOffset,
+                          int32_t* aRowIndex, int32_t* aColIndex);
 
   NS_IMETHOD GetCellSpansAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex, 
                             int32_t& aActualRowSpan, int32_t& aActualColSpan);
@@ -487,7 +487,7 @@ protected:
 
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document
-  NS_IMETHOD SetSelectionAtDocumentStart(nsISelection *aSelection);
+  nsresult SetSelectionAtDocumentStart(mozilla::dom::Selection* aSelection);
 
 // End of Table Editing utilities
   

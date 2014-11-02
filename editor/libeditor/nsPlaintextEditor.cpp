@@ -40,9 +40,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
-#include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsISelectionPrivate.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
 #include "nsIWeakReferenceUtils.h"
@@ -509,20 +507,18 @@ nsPlaintextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
     int32_t offset;
     nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(*outBRNode, &offset);
 
-    nsCOMPtr<nsISelection> selection;
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
-    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+    nsRefPtr<Selection> selection = GetSelection();
+    NS_ENSURE_STATE(selection);
     if (aSelect == eNext)
     {
       // position selection after br
-      selPriv->SetInterlinePosition(true);
+      selection->SetInterlinePosition(true);
       res = selection->Collapse(parent, offset+1);
     }
     else if (aSelect == ePrevious)
     {
       // position selection before br
-      selPriv->SetInterlinePosition(true);
+      selection->SetInterlinePosition(true);
       res = selection->Collapse(parent, offset);
     }
   }
@@ -546,10 +542,10 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   // calling it text insertion to trigger moz br treatment by rules
   nsAutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
-  nsCOMPtr<nsISelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(res, res);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_STATE(selection);
 
+  nsresult res;
   if (!selection->Collapsed()) {
     res = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(res, res);
@@ -565,13 +561,12 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
     
   // position selection after br
   selNode = GetNodeLocation(*outBRNode, &selOffset);
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
-  selPriv->SetInterlinePosition(true);
+  selection->SetInterlinePosition(true);
   return selection->Collapse(selNode, selOffset+1);
 }
 
 nsresult
-nsPlaintextEditor::ExtendSelectionForDelete(nsISelection *aSelection,
+nsPlaintextEditor::ExtendSelectionForDelete(Selection* aSelection,
                                             nsIEditor::EDirection *aAction)
 {
   nsresult result = NS_OK;
@@ -858,9 +853,8 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<Selection> selection = GetSelection();
+  NS_ENSURE_STATE(selection);
 
   // NOTE: TextComposition should receive selection change notification before
   //       CompositionChangeEventHandlingMarker notifies TextComposition of the
@@ -879,6 +873,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 
   nsRefPtr<nsCaret> caretP = ps->GetCaret();
 
+  nsresult rv;
   {
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
@@ -1160,9 +1155,10 @@ nsPlaintextEditor::Redo(uint32_t aCount)
 bool
 nsPlaintextEditor::CanCutOrCopy()
 {
-  nsCOMPtr<nsISelection> selection;
-  if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
+  nsRefPtr<Selection> selection = GetSelection();
+  if (!selection) {
     return false;
+  }
 
   if (IsPasswordEditor())
     return false;
@@ -1179,9 +1175,10 @@ nsPlaintextEditor::FireClipboardEvent(int32_t aType, int32_t aSelectionType)
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, false);
 
-  nsCOMPtr<nsISelection> selection;
-  if (NS_FAILED(GetSelection(getter_AddRefs(selection))))
+  nsRefPtr<Selection> selection = GetSelection();
+  if (!selection) {
     return false;
+  }
 
   if (!nsCopySupport::FireClipboardEvent(aType, aSelectionType, presShell, selection))
     return false;
@@ -1252,13 +1249,10 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   // in which case we use our existing selection ...
   if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
   {
-    nsCOMPtr<nsISelection> selection;
-    rv = GetSelection(getter_AddRefs(selection));
+    nsRefPtr<Selection> selection = GetSelection();
+    NS_ENSURE_STATE(selection);
+    rv = docEncoder->SetSelection(selection);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (selection) {
-      rv = docEncoder->SetSelection(selection);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
   // ... or if the root element is not a body,
   // in which case we set the selection to encompass the root.
@@ -1459,9 +1453,7 @@ nsPlaintextEditor::SharedOutputString(uint32_t aFlags,
                                       bool* aIsCollapsed,
                                       nsAString& aResult)
 {
-  nsCOMPtr<nsISelection> selection;
-  nsresult rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   *aIsCollapsed = selection->Collapsed();
@@ -1564,8 +1556,8 @@ nsPlaintextEditor::EndOperation()
 }  
 
 
-NS_IMETHODIMP 
-nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
+nsresult
+nsPlaintextEditor::SelectEntireDocument(Selection* aSelection)
 {
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
 

@@ -5,6 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -33,7 +34,6 @@
 #include "nsIPrincipal.h"
 #include "nsIFormControl.h"
 #include "nsIPlaintextEditor.h"
-#include "nsISelection.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
 #include "nsIVariant.h"
@@ -77,9 +77,8 @@ nsresult nsPlaintextEditor::InsertTextAt(const nsAString &aStringToInsert,
   if (aDestinationNode)
   {
     nsresult res;
-    nsCOMPtr<nsISelection>selection;
-    res = GetSelection(getter_AddRefs(selection));
-    NS_ENSURE_SUCCESS(res, res);
+    nsRefPtr<Selection> selection = GetSelection();
+    NS_ENSURE_STATE(selection);
 
     nsCOMPtr<nsIDOMNode> targetNode = aDestinationNode;
     int32_t targetOffset = aDestOffset;
@@ -220,9 +219,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   rv = uiEvent->GetRangeOffset(&newSelectionOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISelection> selection;
-  rv = GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
   bool isCollapsed = selection->Collapsed();
