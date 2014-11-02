@@ -8,7 +8,7 @@ import os
 import re
 import subprocess
 
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 def get_hg_version(hg):
     """Obtain the version of the Mercurial client."""
@@ -21,4 +21,4 @@ def get_hg_version(hg):
     if not match:
         raise Exception('Unable to identify Mercurial version.')
 
-    return StrictVersion(match.group(1))
+    return LooseVersion(match.group(1))

@@ -22,7 +22,7 @@ ArgumentsObject::element(uint32_t i) const
 {
     MOZ_ASSERT(!isElementDeleted(i));
     const Value &v = data()->args[i];
-    if (v.isMagic()) {
+    if (IsMagicScopeSlotValue(v)) {
         CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
         return callobj.aliasedVarFromArguments(v);
     }
@@ -34,8 +34,8 @@ ArgumentsObject::setElement(JSContext *cx, uint32_t i, const Value &v)
 {
     MOZ_ASSERT(!isElementDeleted(i));
     HeapValue &lhs = data()->args[i];
-    if (lhs.isMagic()) {
-        uint32_t slot = lhs.magicUint32();
+    if (IsMagicScopeSlotValue(lhs)) {
+        uint32_t slot = SlotFromMagicScopeSlotValue(lhs);
         CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
         for (Shape::Range<NoGC> r(callobj.lastProperty()); !r.empty(); r.popFront()) {
             if (r.front().slot() == slot) {

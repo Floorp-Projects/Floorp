@@ -16,8 +16,8 @@
 #include "nsStubMutationObserver.h"
 #include "nsSVGPaintServerFrame.h"
 
+class gfxContext;
 class nsDisplaySVGText;
-class nsRenderingContext;
 class SVGTextFrame;
 class nsTextFrame;
 
@@ -324,7 +324,7 @@ public:
 
   // nsISVGChildFrame interface:
   virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
-  virtual nsresult PaintSVG(nsRenderingContext* aContext,
+  virtual nsresult PaintSVG(gfxContext& aContext,
                             const gfxMatrix& aTransform,
                             const nsIntRect* aDirtyRect = nullptr) MOZ_OVERRIDE;
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
@@ -592,8 +592,7 @@ private:
    * @param aShouldPaintSVGGlyphs (out) Whether SVG glyphs in the text
    *   should be painted.
    */
-  bool ShouldRenderAsPath(nsRenderingContext* aContext, nsTextFrame* aFrame,
-                          bool& aShouldPaintSVGGlyphs);
+  bool ShouldRenderAsPath(nsTextFrame* aFrame, bool& aShouldPaintSVGGlyphs);
 
   // Methods to get information for a <textPath> frame.
   nsIFrame* GetTextPathPathFrame(nsIFrame* aTextPathFrame);

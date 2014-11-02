@@ -52,34 +52,21 @@
   padding: 0;
   margin-top: 6px;
   margin-bottom: 6px;
-  -moz-margin-start: -2px;
-  -moz-margin-end: 0;
 }
 
 .expander-up,
 .expander-down {
-  -moz-appearance: none;
-  min-width: 0;
   padding: 0;
   margin: 0;
 }
 
 .expander-up {
-  list-style-image: url("chrome://browser/skin/places/expander-open.png");
-}
-
-.expander-up:hover:active {
-  list-style-image: url("chrome://browser/skin/places/expander-open-active.png");
+  -moz-appearance: -moz-mac-disclosure-button-open;
 }
 
 .expander-down {
-  list-style-image: url("chrome://browser/skin/places/expander-closed.png");
+  -moz-appearance: -moz-mac-disclosure-button-closed;
 }
-
-.expander-down:hover:active {
-  list-style-image: url("chrome://browser/skin/places/expander-closed-active.png");
-}
-
 
 /* Make the item list the same width as the warning box */
 #itemList {

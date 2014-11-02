@@ -18,9 +18,13 @@
 class nsIAtom;
 class nsIContentIterator;
 class nsIDOMDocument;
-class nsIDOMRange;
-class nsISelection;
+class nsRange;
 template <class E> class nsCOMArray;
+namespace mozilla {
+namespace dom {
+class Selection;
+}
+}
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns inside a 
@@ -164,6 +168,10 @@ class nsBoolDomIterFunctor
 {
   public:
     virtual bool operator()(nsIDOMNode* aNode)=0;
+    bool operator()(nsINode* aNode)
+    {
+      return operator()(GetAsDOMNode(aNode));
+    }
 };
 
 class MOZ_STACK_CLASS nsDOMIterator
@@ -172,8 +180,10 @@ class MOZ_STACK_CLASS nsDOMIterator
     nsDOMIterator();
     virtual ~nsDOMIterator();
     
-    nsresult Init(nsIDOMRange* aRange);
+    nsresult Init(nsRange* aRange);
     nsresult Init(nsIDOMNode* aNode);
+    nsresult AppendList(nsBoolDomIterFunctor& functor,
+                        nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const;
     nsresult AppendList(nsBoolDomIterFunctor& functor,
                         nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:
@@ -186,7 +196,7 @@ class MOZ_STACK_CLASS nsDOMSubtreeIterator : public nsDOMIterator
     nsDOMSubtreeIterator();
     virtual ~nsDOMSubtreeIterator();
 
-    nsresult Init(nsIDOMRange* aRange);
+    nsresult Init(nsRange* aRange);
 };
 
 class nsTrivialFunctor : public nsBoolDomIterFunctor
@@ -206,7 +216,8 @@ struct MOZ_STACK_CLASS DOMPoint
 {
   nsCOMPtr<nsINode> node;
   int32_t offset;
-  
+
+  DOMPoint() : node(nullptr), offset(-1) {}
   DOMPoint(nsINode* aNode, int32_t aOffset)
     : node(aNode)
     , offset(aOffset)

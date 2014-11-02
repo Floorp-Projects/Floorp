@@ -24,11 +24,13 @@ if (process.env.HTTP2_LOG) {
     });
   };
   exports.log = exports.createLogger('test');
+  exports.clientLog = exports.createLogger('client');
+  exports.serverLog = exports.createLogger('server');
 } else {
   exports.createLogger = function() {
     return exports.log;
   };
-  exports.log = {
+  exports.log = exports.clientLog = exports.serverLog = {
     fatal: noop,
     error: noop,
     warn : noop,

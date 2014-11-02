@@ -20,8 +20,8 @@
 #include "nsINode.h"
 #include "nsISimpleEnumerator.h"
 
-class nsIDOMRange;
 class nsISupports;
+class nsRange;
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -75,7 +75,7 @@ nsDOMIterator::~nsDOMIterator()
 }
     
 nsresult
-nsDOMIterator::Init(nsIDOMRange* aRange)
+nsDOMIterator::Init(nsRange* aRange)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &res);
@@ -93,6 +93,23 @@ nsDOMIterator::Init(nsIDOMNode* aNode)
   NS_ENSURE_TRUE(mIter, NS_ERROR_FAILURE);
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
   return mIter->Init(content);
+}
+
+nsresult
+nsDOMIterator::AppendList(nsBoolDomIterFunctor& functor,
+                          nsTArray<nsCOMPtr<nsINode>>& arrayOfNodes) const
+{
+  // Iterate through dom and build list
+  while (!mIter->IsDone()) {
+    nsCOMPtr<nsINode> node = mIter->GetCurrentNode();
+    NS_ENSURE_TRUE(node, NS_ERROR_NULL_POINTER);
+
+    if (functor(node)) {
+      arrayOfNodes.AppendElement(node);
+    }
+    mIter->Next();
+  }
+  return NS_OK;
 }
 
 nsresult
@@ -125,7 +142,7 @@ nsDOMSubtreeIterator::~nsDOMSubtreeIterator()
 }
     
 nsresult
-nsDOMSubtreeIterator::Init(nsIDOMRange* aRange)
+nsDOMSubtreeIterator::Init(nsRange* aRange)
 {
   nsresult res;
   mIter = do_CreateInstance("@mozilla.org/content/subtree-content-iterator;1", &res);
