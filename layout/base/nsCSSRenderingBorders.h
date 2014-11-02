@@ -16,7 +16,6 @@
 #include "nsStyleConsts.h"
 
 class gfxContext;
-struct gfxRGBA;
 struct nsBorderColors;
 
 namespace mozilla {
@@ -77,7 +76,9 @@ typedef enum {
 } BorderColorStyle;
 
 struct nsCSSBorderRenderer {
+  typedef mozilla::gfx::ColorPattern ColorPattern;
   typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
   nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
@@ -162,12 +163,12 @@ struct nsCSSBorderRenderer {
   //
   // Calling code is expected to only set up a clip as necessary; no
   // clip is needed if we can render the entire border in 1 or 2 passes.
-  void FillSolidBorder(const gfxRect& aOuterRect,
-                       const gfxRect& aInnerRect,
+  void FillSolidBorder(const Rect& aOuterRect,
+                       const Rect& aInnerRect,
                        const RectCornerRadii& aBorderRadii,
-                       const Float *aBorderSizes,
+                       const Float* aBorderSizes,
                        int aSides,
-                       const gfxRGBA& aColor);
+                       const ColorPattern& aColor);
 
   //
   // core rendering
@@ -196,8 +197,8 @@ struct nsCSSBorderRenderer {
 
   // Azure variant of CreateCornerGradient.
   mozilla::TemporaryRef<mozilla::gfx::GradientStops>
-  CreateCornerGradient(mozilla::css::Corner aCorner, const gfxRGBA &aFirstColor,
-                       const gfxRGBA &aSecondColor, mozilla::gfx::DrawTarget *aDT,
+  CreateCornerGradient(mozilla::css::Corner aCorner, nscolor aFirstColor,
+                       nscolor aSecondColor, mozilla::gfx::DrawTarget *aDT,
                        mozilla::gfx::Point &aPoint1, mozilla::gfx::Point &aPoint2);
 
   // Draw a solid color border that is uniformly the same width.
