@@ -1527,6 +1527,12 @@ RestyleManager::ProcessPendingRestyles()
   NS_PRECONDITION(!nsContentUtils::IsSafeToRunScript(),
                   "Missing a script blocker!");
 
+  if (mRebuildAllStyleData) {
+    RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
+    MOZ_ASSERT(mPendingRestyles.Count() == 0);
+    return;
+  }
+
   // First do any queued-up frame creation.  (We should really
   // merge this into the rest of the process, though; see bug 827239.)
   mPresContext->FrameConstructor()->CreateNeededFrames();
