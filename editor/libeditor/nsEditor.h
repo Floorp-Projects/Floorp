@@ -442,16 +442,18 @@ public:
   void     StopPreservingSelection();
 
   /** 
-   * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
-   * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
-   * @param aOffset              the offset of aExistingRightNode's content|children to do the split at
-   * @param aNewLeftNode         [OUT] the new node resulting from the split, becomes aExistingRightNode's previous sibling.
-   * @param aParent              the parent of aExistingRightNode
+   * SplitNode() creates a new node identical to an existing node, and split
+   * the contents between the two nodes
+   * @param aExistingRightNode  The node to split.  It will become the new
+   *                            node's next sibling.
+   * @param aOffset             The offset of aExistingRightNode's
+   *                            content|children to do the split at
+   * @param aNewLeftNode        The new node resulting from the split, becomes
+   *                            aExistingRightNode's previous sibling.
    */
-  nsresult SplitNodeImpl(nsIDOMNode *aExistingRightNode,
-                         int32_t     aOffset,
-                         nsIDOMNode *aNewLeftNode,
-                         nsIDOMNode *aParent);
+  nsresult SplitNodeImpl(nsIContent& aExistingRightNode,
+                         int32_t aOffset,
+                         nsIContent& aNewLeftNode);
 
   /** 
    * JoinNodes() takes 2 nodes and merge their content|children.
