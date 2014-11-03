@@ -3527,6 +3527,9 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 
   if (PR_GetEnv("MOZ_RUN_GTEST")) {
     int result;
+#ifdef XP_WIN
+    UseParentConsole();
+#endif
     // RunGTest will only be set if we're in xul-unit
     if (mozilla::RunGTest) {
       result = mozilla::RunGTest();
