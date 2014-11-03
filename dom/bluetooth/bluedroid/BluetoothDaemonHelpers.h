@@ -83,6 +83,10 @@ struct BluetoothRemoteName {
   uint8_t mName[249];
 };
 
+struct BluetoothServiceName {
+  uint8_t mName[256];
+};
+
 //
 // Conversion
 //
@@ -98,6 +102,9 @@ Convert(bool aIn, uint8_t& aOut);
 
 nsresult
 Convert(bool aIn, BluetoothScanMode& aOut);
+
+nsresult
+Convert(int aIn, int16_t& aOut);
 
 nsresult
 Convert(uint8_t aIn, bool& aOut);
@@ -139,6 +146,9 @@ nsresult
 Convert(const nsAString& aIn, BluetoothPropertyType& aOut);
 
 nsresult
+Convert(const nsAString& aIn, BluetoothServiceName& aOut);
+
+nsresult
 Convert(const nsAString& aIn, BluetoothSspPairingVariant& aOut);
 
 nsresult
@@ -155,6 +165,9 @@ Convert(const BluetoothRemoteName& aIn, nsAString& aOut);
 
 nsresult
 Convert(BluetoothScanMode aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothSocketType aIn, uint8_t& aOut);
 
 nsresult
 Convert(BluetoothSspPairingVariant aIn, uint8_t& aOut);
@@ -210,6 +223,12 @@ PackPDU(const BluetoothPinCode& aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(BluetoothPropertyType aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothServiceName& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothSocketType aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(BluetoothSspPairingVariant aIn, BluetoothDaemonPDU& aPDU);
@@ -328,6 +347,32 @@ PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3, const T4& aIn4,
     return rv;
   }
   return PackPDU(aIn4, aPDU);
+}
+
+template <typename T1, typename T2, typename T3,
+          typename T4, typename T5>
+inline nsresult
+PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3,
+        const T4& aIn4, const T5& aIn5,
+        BluetoothDaemonPDU& aPDU)
+{
+  nsresult rv = PackPDU(aIn1, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn2, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn3, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = PackPDU(aIn4, aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return PackPDU(aIn5, aPDU);
 }
 
 //
@@ -526,6 +571,21 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1)
 {
   return UnpackPDU(aPDU, aArg1);
 }
+
+template<>
+inline nsresult
+UnpackPDU<int, 0x02, 0x01>(
+  BluetoothDaemonPDU& aPDU, int& aArg1)
+{
+  aArg1 = aPDU.AcquireFd();
+
+  if (NS_WARN_IF(aArg1 < 0)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  return NS_OK;
+}
+
 
 template<typename T1, typename T2, uint8_t Service, uint8_t Opcode>
 inline nsresult

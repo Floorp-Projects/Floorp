@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonHelpers.h"
+#include <limits>
 
 #define MAX_UUID_SIZE 16
 
@@ -41,6 +42,18 @@ Convert(bool aIn, BluetoothScanMode& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sScanMode[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(int aIn, int16_t& aOut)
+{
+  if (NS_WARN_IF(aIn < std::numeric_limits<int16_t>::min()) ||
+      NS_WARN_IF(aIn > std::numeric_limits<int16_t>::max())) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = static_cast<int16_t>(aIn);
   return NS_OK;
 }
 
@@ -133,6 +146,26 @@ Convert(uint8_t aIn, BluetoothPropertyType& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sPropertyType[aIn];
+  return NS_OK;
+}
+
+nsresult
+Convert(BluetoothSocketType aIn, uint8_t& aOut)
+{
+  static const uint8_t sSocketType[] = {
+    CONVERT(0, 0), // silences compiler warning
+    CONVERT(BluetoothSocketType::RFCOMM, 0x01),
+    CONVERT(BluetoothSocketType::SCO, 0x02),
+    CONVERT(BluetoothSocketType::L2CAP, 0x03)
+    // EL2CAP not supported
+  };
+  if (NS_WARN_IF(aIn == BluetoothSocketType::EL2CAP) ||
+      NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sSocketType)) ||
+      NS_WARN_IF(!sSocketType[aIn])) {
+    aOut = 0; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sSocketType[aIn];
   return NS_OK;
 }
 
@@ -264,6 +297,23 @@ Convert(const nsAString& aIn, BluetoothPropertyType& aOut)
     aOut = static_cast<BluetoothPropertyType>(0); // silences compiler warning
     return NS_ERROR_ILLEGAL_VALUE;
   }
+  return NS_OK;
+}
+
+nsresult
+Convert(const nsAString& aIn, BluetoothServiceName& aOut)
+{
+  NS_ConvertUTF16toUTF8 serviceNameUTF8(aIn);
+  const char* str = serviceNameUTF8.get();
+  size_t len = strlen(str);
+
+  if (NS_WARN_IF(len > sizeof(aOut.mName))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  memcpy(aOut.mName, str, len);
+  memset(aOut.mName + len, 0, sizeof(aOut.mName) - len);
+
   return NS_OK;
 }
 
@@ -533,6 +583,18 @@ nsresult
 PackPDU(BluetoothScanMode aIn, BluetoothDaemonPDU& aPDU)
 {
   return PackPDU(PackConversion<BluetoothScanMode, int32_t>(aIn), aPDU);
+}
+
+nsresult
+PackPDU(const BluetoothServiceName& aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(PackArray<uint8_t>(aIn.mName, sizeof(aIn.mName)), aPDU);
+}
+
+nsresult
+PackPDU(BluetoothSocketType aIn, BluetoothDaemonPDU& aPDU)
+{
+  return PackPDU(PackConversion<BluetoothSocketType, uint8_t>(aIn), aPDU);
 }
 
 //

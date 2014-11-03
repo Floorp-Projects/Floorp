@@ -7,6 +7,7 @@
 #include "BluetoothDaemonInterface.h"
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
+#include "BluetoothDaemonSocketInterface.h"
 #include "mozilla/unused.h"
 
 using namespace mozilla::ipc;
@@ -1018,6 +1019,7 @@ class BluetoothDaemonProtocol MOZ_FINAL
   : public BluetoothDaemonPDUConsumer
   , public BluetoothDaemonSetupModule
   , public BluetoothDaemonCoreModule
+  , public BluetoothDaemonSocketModule
 {
 public:
   BluetoothDaemonProtocol(BluetoothDaemonConnection* aConnection);
@@ -1041,6 +1043,8 @@ private:
                       BluetoothDaemonPDU& aPDU, void* aUserData);
   void HandleCoreSvc(const BluetoothDaemonPDUHeader& aHeader,
                      BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleSocketSvc(const BluetoothDaemonPDUHeader& aHeader,
+                       BluetoothDaemonPDU& aPDU, void* aUserData);
 
   BluetoothDaemonConnection* mConnection;
   nsTArray<void*> mUserDataQ;
@@ -1080,12 +1084,21 @@ BluetoothDaemonProtocol::HandleCoreSvc(
 }
 
 void
+BluetoothDaemonProtocol::HandleSocketSvc(
+  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  void* aUserData)
+{
+  BluetoothDaemonSocketModule::HandleSvc(aHeader, aPDU, aUserData);
+}
+
+void
 BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
     const BluetoothDaemonPDUHeader&, BluetoothDaemonPDU&, void*) = {
     INIT_ARRAY_AT(0x00, &BluetoothDaemonProtocol::HandleSetupSvc),
-    INIT_ARRAY_AT(0x01, &BluetoothDaemonProtocol::HandleCoreSvc)
+    INIT_ARRAY_AT(0x01, &BluetoothDaemonProtocol::HandleCoreSvc),
+    INIT_ARRAY_AT(0x02, &BluetoothDaemonProtocol::HandleSocketSvc)
   };
 
   BluetoothDaemonPDUHeader header;
@@ -1634,10 +1647,19 @@ BluetoothDaemonInterface::DispatchError(BluetoothResultHandler* aRes,
     aRes, &BluetoothResultHandler::OnError, aStatus);
 }
 
+// Profile Interfaces
+//
+
 BluetoothSocketInterface*
 BluetoothDaemonInterface::GetBluetoothSocketInterface()
 {
-  return nullptr;
+  if (mSocketInterface) {
+    return mSocketInterface;
+  }
+
+  mSocketInterface = new BluetoothDaemonSocketInterface(mProtocol);
+
+  return mSocketInterface;
 }
 
 BluetoothHandsfreeInterface*
