@@ -142,16 +142,17 @@
   #define APPCOMMAND_BROWSER_FAVORITES      6
   #define APPCOMMAND_BROWSER_HOME           7
 
+  #define APPCOMMAND_MEDIA_NEXTTRACK        11
+  #define APPCOMMAND_MEDIA_PREVIOUSTRACK    12
+  #define APPCOMMAND_MEDIA_STOP             13
+  #define APPCOMMAND_MEDIA_PLAY_PAUSE       14
+
   /* 
    * Additional commands currently not in use.
    *
    *#define APPCOMMAND_VOLUME_MUTE            8
    *#define APPCOMMAND_VOLUME_DOWN            9
    *#define APPCOMMAND_VOLUME_UP              10
-   *#define APPCOMMAND_MEDIA_NEXTTRACK        11
-   *#define APPCOMMAND_MEDIA_PREVIOUSTRACK    12
-   *#define APPCOMMAND_MEDIA_STOP             13
-   *#define APPCOMMAND_MEDIA_PLAY_PAUSE       14
    *#define APPCOMMAND_LAUNCH_MAIL            15
    *#define APPCOMMAND_LAUNCH_MEDIA_SELECT    16
    *#define APPCOMMAND_LAUNCH_APP1            17

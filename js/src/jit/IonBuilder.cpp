@@ -7385,13 +7385,17 @@ IonBuilder::pushDerivedTypedObject(bool *emitted,
     current->add(derivedTypedObj);
     current->push(derivedTypedObj);
 
-    // Determine (if possible) the class/proto that `derivedTypedObj`
-    // will have. For derived typed objects, the class (transparent vs
-    // opaque) will be the same as the incoming object from which the
-    // derived typed object is, well, derived. The prototype will be
-    // determined based on the type descriptor (and is immutable).
+    // Determine (if possible) the class/proto that `derivedTypedObj` will
+    // have. For derived typed objects, the opacity will be the same as the
+    // incoming object from which the derived typed object is, well, derived.
+    // The prototype will be determined based on the type descriptor (and is
+    // immutable).
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    const Class *expectedClass = objTypes ? objTypes->getKnownClass() : nullptr;
+    const Class *expectedClass = nullptr;
+    if (const Class *objClass = objTypes ? objTypes->getKnownClass() : nullptr) {
+        MOZ_ASSERT(IsTypedObjectClass(objClass));
+        expectedClass = GetOutlineTypedObjectClass(IsOpaqueTypedObjectClass(objClass));
+    }
     const TypedProto *expectedProto = derivedPrediction.getKnownPrototype();
     MOZ_ASSERT_IF(expectedClass, IsTypedObjectClass(expectedClass));
 

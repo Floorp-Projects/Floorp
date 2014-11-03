@@ -36,7 +36,9 @@ loop.store.LocalRoomStore = (function() {
     }
     this.mozLoop = options.mozLoop;
 
-    this.dispatcher.register(this, ["setupEmptyRoom"]);
+    this.dispatcher.register(this, [
+      "setupWindowData"
+    ]);
   }
 
   LocalRoomStore.prototype = _.extend({
@@ -69,24 +71,8 @@ loop.store.LocalRoomStore = (function() {
     },
 
     /**
-     * Proxy to mozLoop.rooms.getRoomData for setupEmptyRoom action.
-     *
-     * XXXremoveMe Can probably be removed when bug 1074664 lands.
-     *
-     * @param {sharedActions.setupEmptyRoom} actionData
-     * @param {Function} cb Callback(error, roomData)
-     */
-    _fetchRoomData: function(actionData, cb) {
-      if (this.mozLoop.rooms && this.mozLoop.rooms.getRoomData) {
-        this.mozLoop.rooms.getRoomData(actionData.localRoomId, cb);
-      } else {
-        cb(null, {roomName: "Donkeys"});
-      }
-    },
-
-    /**
-     * Execute setupEmptyRoom event action from the dispatcher.  This primes
-     * the store with the localRoomId, and calls MozLoop.getRoomData on that
+     * Execute setupWindowData event action from the dispatcher.  This primes
+     * the store with the roomToken, and calls MozLoop.getRoomData on that
      * ID.  This will return either a reflection of state on the server, or,
      * if the createRoom call hasn't yet returned, it will have at least the
      * roomName as specified to the createRoom method.
@@ -94,16 +80,22 @@ loop.store.LocalRoomStore = (function() {
      * When the room name gets set, that will trigger the view to display
      * that name.
      *
-     * @param {sharedActions.setupEmptyRoom} actionData
+     * @param {sharedActions.SetupWindowData} actionData
      */
-    setupEmptyRoom: function(actionData) {
-      this._fetchRoomData(actionData, function(error, roomData) {
-        this.setStoreState({
-          error: error,
-          localRoomId: actionData.localRoomId,
-          serverData: roomData
-        });
-      }.bind(this));
+    setupWindowData: function(actionData) {
+      if (actionData.type !== "room") {
+        // Nothing for us to do here, leave it to other stores.
+        return;
+      }
+
+      this.mozLoop.rooms.get(actionData.roomToken,
+        function(error, roomData) {
+          this.setStoreState({
+            error: error,
+            roomToken: actionData.roomToken,
+            serverData: roomData
+          });
+        }.bind(this));
     }
 
   }, Backbone.Events);

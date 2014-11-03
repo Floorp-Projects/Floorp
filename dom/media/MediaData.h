@@ -25,8 +25,8 @@ class MediaData {
 public:
 
   enum Type {
-    AUDIO_SAMPLES = 0,
-    VIDEO_FRAME = 1
+    AUDIO_DATA = 0,
+    VIDEO_DATA
   };
 
   MediaData(Type aType,
@@ -73,7 +73,7 @@ public:
             AudioDataValue* aData,
             uint32_t aChannels,
             uint32_t aRate)
-    : MediaData(AUDIO_SAMPLES, aOffset, aTime, aDuration)
+    : MediaData(AUDIO_DATA, aOffset, aTime, aDuration)
     , mFrames(aFrames)
     , mChannels(aChannels)
     , mRate(aRate)

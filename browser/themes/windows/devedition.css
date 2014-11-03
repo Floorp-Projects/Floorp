@@ -3,3 +3,98 @@
 % file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 %include ../shared/devedition.inc.css
+
+#TabsToolbar::after {
+  display: none;
+}
+
+#back-button > .toolbarbutton-icon,
+#forward-button > .toolbarbutton-icon {
+  background: #252C33 !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 2px 6px !important;
+  margin: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#back-button > .toolbarbutton-icon {
+  border-radius: 2px 0 0 2px !important;
+}
+
+#nav-bar .toolbarbutton-1:not([type=menu-button]),
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+#browser-panel,
+#titlebar-content {
+  background: transparent;
+}
+
+/* Ensure that the entire background is styled when maximized */
+#main-window[sizemode="maximized"] #browser-panel {
+  background: var(--chrome-background-color) !important;
+}
+
+/* The menu items need to be visible when the entire background is styled */
+#main-window[sizemode="maximized"] #main-menubar {
+  color: var(--chrome-color);
+  background-color: transparent;
+}
+
+#main-window[sizemode="maximized"] #main-menubar > menu:not(:-moz-window-inactive) {
+  color: inherit;
+}
+
+/* Restore draggable space on the sides of tabs when maximized */
+#main-window[sizemode="maximized"] .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+@media (-moz-windows-classic) {
+  #main-window[sizemode="maximized"] #TabsToolbar {
+    background: transparent;
+  }
+}
+
+#toolbar-menubar {
+  text-shadow: none !important;
+}
+
+#main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen])[chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
+#main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
+  margin-top: 22px;
+}
+
+
+/* Enough space so that the dark background doesn't begin until after the
+ * window resize controls end on Aero Basic, which has different positioning for the
+ * window caption buttons, and therefore needs to be special-cased.
+ */
+@media (-moz-windows-default-theme) {
+  @media not all and (-moz-windows-compositor) {
+    #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen])[chromehidden~="menubar"] #toolbar-menubar ~ #TabsToolbar,
+    #main-window[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #toolbar-menubar[autohide="true"][inactive] ~ #TabsToolbar {
+      margin-top: 28px;
+    }
+  }
+}
+
+.searchbar-dropmarker-image {
+  /* Reset image-region from the windows theme */
+  -moz-image-region: auto !important;
+  /* Add margin otherwise it looks weird */
+  -moz-margin-start: 2px;
+}
+
+/* Tab styling - make sure to use an inverted icon for the selected tab
+   (brighttext only covers the unselected tabs) */
+.tab-close-button[selected=true]:not(:hover) {
+  -moz-image-region: rect(0, 64px, 16px, 48px);
+}

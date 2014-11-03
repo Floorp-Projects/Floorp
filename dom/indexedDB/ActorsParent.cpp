@@ -5,6 +5,7 @@
 #include "ActorsParent.h"
 
 #include <algorithm>
+#include "CheckQuotaHelper.h"
 #include "FileInfo.h"
 #include "FileManager.h"
 #include "IDBObjectStore.h"
@@ -3891,7 +3892,6 @@ protected:
   nsCString mOrigin;
   nsCString mDatabaseId;
   State mState;
-  bool mHasUnlimStoragePerm;
   bool mEnforcingQuota;
   const bool mDeleting;
   bool mBlockedQuotaManager;
@@ -5934,12 +5934,6 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
 
   const PrincipalInfo& principalInfo = commonParams->principalInfo();
   if (NS_WARN_IF(principalInfo.type() == PrincipalInfo::TNullPrincipalInfo)) {
-    ASSERT_UNLESS_FUZZING();
-    return nullptr;
-  }
-
-  if (NS_WARN_IF(principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
-                 metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
@@ -10448,7 +10442,6 @@ FactoryOp::FactoryOp(Factory* aFactory,
   , mContentParent(Move(aContentParent))
   , mCommonParams(aCommonParams)
   , mState(State_Initial)
-  , mHasUnlimStoragePerm(false)
   , mEnforcingQuota(true)
   , mDeleting(aDeleting)
   , mBlockedQuotaManager(false)
@@ -10694,14 +10687,11 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
     return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
   }
 
-  PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
-
   const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
   MOZ_ASSERT(principalInfo.type() != PrincipalInfo::TNullPrincipalInfo);
 
   if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
     MOZ_ASSERT(mState == State_Initial);
-    MOZ_ASSERT(persistenceType == PERSISTENCE_TYPE_PERSISTENT);
 
     if (aContentParent) {
       // Check to make sure that the child process has access to the database it
@@ -10750,12 +10740,8 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
     }
 
     if (State_Initial == mState) {
-      QuotaManager::GetInfoForChrome(&mGroup, &mOrigin, nullptr,
-                                     &mHasUnlimStoragePerm);
-
-      mEnforcingQuota =
-        QuotaManager::IsQuotaEnforced(persistenceType, mOrigin,
-                                      mHasUnlimStoragePerm);
+      QuotaManager::GetInfoForChrome(&mGroup, &mOrigin, nullptr, nullptr);
+      mEnforcingQuota = false;
     }
 
     *aPermission = PermissionRequestBase::kPermissionAllowed;
@@ -10773,11 +10759,13 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
 
   PermissionRequestBase::PermissionValue permission;
 
-  if (persistenceType == PERSISTENCE_TYPE_TEMPORARY) {
+  if (mCommonParams.metadata().persistenceType() ==
+        PERSISTENCE_TYPE_TEMPORARY) {
     // Temporary storage doesn't need to check the permission.
     permission = PermissionRequestBase::kPermissionAllowed;
   } else {
-    MOZ_ASSERT(persistenceType == PERSISTENCE_TYPE_PERSISTENT);
+    MOZ_ASSERT(mCommonParams.metadata().persistenceType() ==
+                 PERSISTENCE_TYPE_PERSISTENT);
 
 #ifdef MOZ_CHILD_PERMISSIONS
     if (aContentParent) {
@@ -10803,15 +10791,22 @@ FactoryOp::CheckPermission(ContentParent* aContentParent,
 
   if (permission != PermissionRequestBase::kPermissionDenied &&
       State_Initial == mState) {
-    rv = QuotaManager::GetInfoFromPrincipal(principal, persistenceType, &mGroup,
-                                            &mOrigin, nullptr,
-                                            &mHasUnlimStoragePerm);
+    rv = QuotaManager::GetInfoFromPrincipal(principal, &mGroup, &mOrigin,
+                                            nullptr, nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+  }
 
-    mEnforcingQuota = QuotaManager::IsQuotaEnforced(persistenceType, mOrigin,
-                                                    mHasUnlimStoragePerm);
+  if (permission == PermissionRequestBase::kPermissionAllowed &&
+      mEnforcingQuota)
+  {
+    // If we're running from a window then we should check the quota permission
+    // as well.
+    uint32_t quotaPermission = CheckQuotaHelper::GetQuotaPermission(principal);
+    if (quotaPermission == nsIPermissionManager::ALLOW_ACTION) {
+      mEnforcingQuota = false;
+    }
   }
 
   *aPermission = permission;
@@ -11216,7 +11211,7 @@ OpenDatabaseOp::DoDatabaseWork()
     quotaManager->EnsureOriginIsInitialized(persistenceType,
                                             mGroup,
                                             mOrigin,
-                                            mHasUnlimStoragePerm,
+                                            mEnforcingQuota,
                                             getter_AddRefs(dbDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

@@ -324,7 +324,7 @@ class HighResNowSingleton {
  private:
   // Synchronize the QPC clock with GetSystemTimeAsFileTime.
   void InitializeClock() {
-    LARGE_INTEGER ticks_per_sec = {0};
+    LARGE_INTEGER ticks_per_sec = {{0}};
     if (!QueryPerformanceFrequency(&ticks_per_sec))
       return;  // Broken, we don't guarantee this function works.
     ticks_per_microsecond_ = static_cast<float>(ticks_per_sec.QuadPart) /

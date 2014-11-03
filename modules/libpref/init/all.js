@@ -2037,7 +2037,7 @@ pref("layout.css.masking.enabled", true);
 pref("layout.css.mix-blend-mode.enabled", true);
 
 // Is support for isolation enabled?
-pref("layout.css.isolation.enabled", false);
+pref("layout.css.isolation.enabled", true);
 
 // Is support for CSS Filters enabled?
 pref("layout.css.filters.enabled", true);
