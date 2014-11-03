@@ -225,7 +225,7 @@ InterpreterFrame::callObj() const
 inline void
 InterpreterStack::purge(JSRuntime *rt)
 {
-    rt->freeLifoAlloc.transferUnusedFrom(&allocator_);
+    rt->gc.freeUnusedLifoBlocksAfterSweeping(&allocator_);
 }
 
 uint8_t *

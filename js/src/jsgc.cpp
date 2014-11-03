@@ -1202,6 +1202,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     sweepOnBackgroundThread(false),
     foundBlackGrayEdges(false),
     sweepingZones(nullptr),
+    freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     zoneGroupIndex(0),
     zoneGroups(nullptr),
     currentZoneGroup(nullptr),
@@ -2504,10 +2505,10 @@ GCRuntime::updatePointersToRelocatedCells()
     }
 
     // Type inference may put more blocks here to free.
-    rt->freeLifoAlloc.freeAll();
+    freeLifoAlloc.freeAll();
 
     // Clear runtime caches that can contain cell pointers.
-    // TODO: Should possibly just call PurgeRuntime() here.
+    // TODO: Should possibly just call purgeRuntime() here.
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
 
@@ -3487,7 +3488,7 @@ GCHelperState::doSweep(const AutoLockGC &lock)
 
         rt->gc.sweepBackgroundThings();
 
-        rt->freeLifoAlloc.freeAll();
+        rt->gc.freeLifoAlloc.freeAll();
     }
 
     bool shrinking = shrinkFlag;
@@ -3607,15 +3608,30 @@ GCRuntime::sweepZones(FreeOp *fop, bool lastGC)
     zones.resize(write - zones.begin());
 }
 
-static void
-PurgeRuntime(JSRuntime *rt)
+void
+GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc *lifo)
+{
+    MOZ_ASSERT(isHeapBusy());
+    freeLifoAlloc.transferUnusedFrom(lifo);
+}
+
+void
+GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc *lifo)
+{
+    MOZ_ASSERT(isHeapBusy());
+    freeLifoAlloc.transferFrom(lifo);
+}
+
+void
+GCRuntime::purgeRuntime()
 {
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
         comp->purge();
 
-    rt->freeLifoAlloc.transferUnusedFrom(&rt->tempLifoAlloc);
-    rt->interpreterStack().purge(rt);
 
+    freeUnusedLifoBlocksAfterSweeping(&rt->tempLifoAlloc);
+
+    rt->interpreterStack().purge(rt);
     rt->gsnCache.purge();
     rt->scopeCoordinateNameCache.purge();
     rt->newObjectCache.purge();
@@ -3857,7 +3873,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
      */
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_PURGE);
-        PurgeRuntime(rt);
+        purgeRuntime();
     }
 
     /*
@@ -5310,7 +5326,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 
         sweepBackgroundThings();
 
-        rt->freeLifoAlloc.freeAll();
+        freeLifoAlloc.freeAll();
 
         /* Ensure the compartments get swept if it's the last GC. */
         if (lastGC)

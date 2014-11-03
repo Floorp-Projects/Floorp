@@ -816,12 +816,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
     js::LifoAlloc tempLifoAlloc;
 
-    /*
-     * Free LIFO blocks are transferred to this allocator before being freed on
-     * the background GC thread.
-     */
-    js::LifoAlloc freeLifoAlloc;
-
   private:
     /*
      * Both of these allocators are used for regular expression code which is shared at the
