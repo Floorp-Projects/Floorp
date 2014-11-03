@@ -1072,6 +1072,19 @@ IsTypedObjectClass(const Class *class_)
 }
 
 inline bool
+IsOpaqueTypedObjectClass(const Class *class_)
+{
+    return class_ == &OutlineOpaqueTypedObject::class_ ||
+           class_ == &InlineOpaqueTypedObject::class_;
+}
+
+inline const Class *
+GetOutlineTypedObjectClass(bool opaque)
+{
+    return opaque ? &OutlineOpaqueTypedObject::class_ : &OutlineTransparentTypedObject::class_;
+}
+
+inline bool
 IsSimpleTypeDescrClass(const Class* clasp)
 {
     return clasp == &ScalarTypeDescr::class_ ||
@@ -1103,7 +1116,7 @@ IsTypeDescrClass(const Class* clasp)
 inline bool
 TypedObject::opaque() const
 {
-    return is<OutlineOpaqueTypedObject>() || is<InlineOpaqueTypedObject>();
+    return IsOpaqueTypedObjectClass(getClass());
 }
 
 // Inline transparent typed objects do not initially have an array buffer, but
