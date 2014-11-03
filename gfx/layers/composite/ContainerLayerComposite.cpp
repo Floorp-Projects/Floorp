@@ -188,7 +188,10 @@ ContainerPrepare(ContainerT* aContainer,
       aContainer->mPrepared->mTmpTarget = surface;
     } else {
       aContainer->mPrepared->mNeedsSurfaceCopy = true;
+      aContainer->mLastIntermediateSurface = nullptr;
     }
+  } else {
+    aContainer->mLastIntermediateSurface = nullptr;
   }
 }
 
@@ -279,7 +282,19 @@ CreateTemporaryTarget(ContainerT* aContainer,
   {
     mode = INIT_MODE_NONE;
   }
-  return compositor->CreateRenderTarget(surfaceRect, mode);
+
+  RefPtr<CompositingRenderTarget>& lastSurf = aContainer->mLastIntermediateSurface;
+  if (lastSurf && lastSurf->GetRect().IsEqualEdges(surfaceRect)) {
+    if (mode == INIT_MODE_CLEAR) {
+      lastSurf->ClearOnBind();
+    }
+
+    return lastSurf;
+  } else {
+    lastSurf = compositor->CreateRenderTarget(surfaceRect, mode);
+
+    return lastSurf;
+  }
 }
 
 template<class ContainerT> RefPtr<CompositingRenderTarget>
@@ -462,6 +477,8 @@ ContainerLayerComposite::Prepare(const RenderTargetIntRect& aClipRect)
 void
 ContainerLayerComposite::CleanupResources()
 {
+  mLastIntermediateSurface = nullptr;
+
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
     LayerComposite* layerToCleanup = static_cast<LayerComposite*>(l->ImplData());
     layerToCleanup->CleanupResources();
@@ -512,6 +529,7 @@ RefLayerComposite::Prepare(const RenderTargetIntRect& aClipRect)
 void
 RefLayerComposite::CleanupResources()
 {
+  mLastIntermediateSurface = nullptr;
 }
 
 } /* layers */
