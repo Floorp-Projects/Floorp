@@ -77,7 +77,9 @@ typedef enum {
 
 struct nsCSSBorderRenderer {
   typedef mozilla::gfx::ColorPattern ColorPattern;
+  typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Float Float;
+  typedef mozilla::gfx::Path Path;
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
@@ -93,6 +95,7 @@ struct nsCSSBorderRenderer {
   RectCornerRadii mBorderCornerDimensions;
 
   // destination context
+  DrawTarget* mDrawTarget;
   gfxContext* mContext;
 
   // the rectangle of the outside and the inside of the border
@@ -130,10 +133,10 @@ struct nsCSSBorderRenderer {
   // Path generation functions
   //
 
-  // add the path for drawing the given corner to the context
-  void DoCornerSubPath(mozilla::css::Corner aCorner);
+  // Get the Rect for drawing the given corner
+  Rect GetCornerRect(mozilla::css::Corner aCorner);
   // add the path for drawing the given side without any adjacent corners to the context
-  void DoSideClipWithoutCornersSubPath(mozilla::css::Side aSide);
+  Rect GetSideClipWithoutCornersRect(mozilla::css::Side aSide);
 
   // Create a clip path for the wedge that this side of
   // the border should take up.  This is only called
@@ -143,7 +146,7 @@ struct nsCSSBorderRenderer {
   // This code needs to make sure that the individual pieces
   // don't ever (mathematically) overlap; the pixel overlap
   // is taken care of by the ADD compositing.
-  void DoSideClipSubPath(mozilla::css::Side aSide);
+  mozilla::TemporaryRef<Path> GetSideClipSubPath(mozilla::css::Side aSide);
 
   // Given a set of sides to fill and a color, do so in the fastest way.
   //
