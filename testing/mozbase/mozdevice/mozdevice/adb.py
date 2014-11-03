@@ -114,7 +114,7 @@ class ADBCommand(object):
        from mozdevice import ADBCommand
 
        try:
-           adbcommand = ADBCommand(...)
+           adbcommand = ADBCommand()
        except NotImplementedError:
            print "ADBCommand can not be instantiated."
 
@@ -280,7 +280,7 @@ class ADBHost(ADBCommand):
 
        from mozdevice import ADBHost
 
-       adbhost = ADBHost(...)
+       adbhost = ADBHost()
        adbhost.start_server()
 
     """
@@ -442,7 +442,7 @@ class ADBDevice(ADBCommand):
 
        from mozdevice import ADBDevice
 
-       adbdevice = ADBDevice(...)
+       adbdevice = ADBDevice()
        print adbdevice.list_files("/mnt/sdcard")
        if adbdevice.process_exist("org.mozilla.fennec"):
            print "Fennec is running"
