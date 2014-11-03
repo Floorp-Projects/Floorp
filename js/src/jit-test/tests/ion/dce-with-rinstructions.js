@@ -945,6 +945,28 @@ function rtypeof(i) {
     return i;
 }
 
+var uceFault_todouble_value = eval(uneval(uceFault).replace('uceFault', 'uceFault_todouble_value'))
+function rtodouble_value(i) {
+    var a = 1;
+    if (i == 1000) a = "1";
+
+    var x = a < 8.1;
+
+    if (uceFault_todouble_value(i) || uceFault_todouble_value(i)) {
+        assertEq(x, true);
+    }
+
+    return i;
+}
+
+var uceFault_todouble_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_todouble_number'));
+function rtodouble_number(i) {
+    var x = Math.fround(Math.fround(i) + Math.fround(i)) + 1;
+    if (uceFault_todouble_number(i) || uceFault_todouble_number(i))
+        assertEq(2 * i + 1, x);
+    return i;
+}
+
 var uceFault_tofloat32_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_tofloat32_number'));
 function rtofloat32_number(i) {
     var x = Math.fround(i + 0.1111111111);
@@ -1055,6 +1077,8 @@ for (i = 0; i < 100; i++) {
     rregexp_m_replace(i);
     rregexp_m_literal_replace(i);
     rtypeof(i);
+    rtodouble_value(i);
+    rtodouble_number(i);
     rtofloat32_number(i);
     rtofloat32_object(i);
 }
