@@ -9542,6 +9542,14 @@ CodeGenerator::visitIsObject(LIsObject *ins)
     return true;
 }
 
+bool
+CodeGenerator::visitIsObjectAndBranch(LIsObjectAndBranch *ins)
+{
+    ValueOperand value = ToValue(ins, LIsObjectAndBranch::Input);
+    testObjectEmitBranch(Assembler::Equal, value, ins->ifTrue(), ins->ifFalse());
+    return true;
+}
+
 void
 CodeGenerator::loadOutermostJSScript(Register reg)
 {
