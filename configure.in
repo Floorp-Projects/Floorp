@@ -258,6 +258,9 @@ if test -n "$gonkdir" ; then
         elif test -d "$gonkdir/external/bluetooth/bluedroid"; then
             MOZ_B2G_BT=1
             MOZ_B2G_BT_BLUEDROID=1
+            if test -d "$gonkdir/system/bluetoothd"; then
+                MOZ_B2G_BT_DAEMON=1
+            fi
         fi
 
         MOZ_RTSP=1
@@ -275,6 +278,9 @@ if test -n "$gonkdir" ; then
         MOZ_B2G_CAMERA=1
         MOZ_B2G_BT=1
         MOZ_B2G_BT_BLUEDROID=1
+        if test -d "$gonkdir/system/bluetoothd"; then
+            MOZ_B2G_BT_DAEMON=1
+        fi
         MOZ_NFC=1
         MOZ_RTSP=1
         MOZ_OMX_DECODER=1
