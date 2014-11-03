@@ -294,6 +294,22 @@ struct GradientStop
 #endif
 
 namespace mozilla {
+
+// We can't use MOZ_BEGIN_ENUM_CLASS here because that prevents the enum
+// values from being used for indexing. Wrapping the enum in a struct does at
+// least gives us name scoping.
+struct RectCorner {
+  enum {
+    // This order is important since Rect::AtCorner, AppendRoundedRectToPath
+    // and other code depends on it!
+    TopLeft = 0,
+    TopRight = 1,
+    BottomRight = 2,
+    BottomLeft = 3,
+    Count = 4
+  };
+};
+
 // Side constants for use in various places.
 enum Side { eSideTop, eSideRight, eSideBottom, eSideLeft };
 
