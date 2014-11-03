@@ -15,16 +15,6 @@ Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
 
 let kLongestReturnedString = 128;
 
-// Event whitelisted for bubbling.
-let whitelistedEvents = [
-  Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE,   // Back button.
-  Ci.nsIDOMKeyEvent.DOM_VK_SLEEP,    // Power button.
-  Ci.nsIDOMKeyEvent.DOM_VK_CONTEXT_MENU,
-  Ci.nsIDOMKeyEvent.DOM_VK_F5,       // Search button.
-  Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP,  // Volume up.
-  Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN // Volume down.
-];
-
 function debug(msg) {
   //dump("BrowserElementChildPreload - " + msg + "\n");
 }
@@ -240,15 +230,6 @@ BrowserElementChild.prototype = {
 
     // We are using the system group for those events so if something in the
     // content called .stopPropagation() this will still be called.
-    els.addSystemEventListener(global, 'keydown',
-                               this._keyEventHandler.bind(this),
-                               /* useCapture = */ true);
-    els.addSystemEventListener(global, 'keypress',
-                               this._keyEventHandler.bind(this),
-                               /* useCapture = */ true);
-    els.addSystemEventListener(global, 'keyup',
-                               this._keyEventHandler.bind(this),
-                               /* useCapture = */ true);
     els.addSystemEventListener(global, 'DOMWindowClose',
                                this._windowCloseHandler.bind(this),
                                /* useCapture = */ false);
@@ -1142,16 +1123,6 @@ BrowserElementChild.prototype = {
       msgData.errorMsg = 'Cannot access mozInputMethod.';
     }
     sendAsyncMsg('got-set-input-method-active', msgData);
-  },
-
-  _keyEventHandler: function(e) {
-    if (whitelistedEvents.indexOf(e.keyCode) != -1 && !e.defaultPrevented) {
-      sendAsyncMsg('keyevent', {
-        type: e.type,
-        keyCode: e.keyCode,
-        charCode: e.charCode,
-      });
-    }
   },
 
   // The docShell keeps a weak reference to the progress listener, so we need

@@ -27,7 +27,8 @@
     "network-events":{},
     "embed-apps":{},
     "audio-channel-content":{},
-    "audio-channel-alarm":{}
+    "audio-channel-alarm":{},
+    "before-after-keyboard-event":{}
   },
   "locales": {
     "en-US": {

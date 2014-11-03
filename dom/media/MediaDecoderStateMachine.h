@@ -308,7 +308,7 @@ public:
   // call this while we're not playing (while the MediaStream is blocked). Can
   // be called on any thread with the decoder monitor held.
   void SetSyncPointForMediaStream();
-  int64_t GetCurrentTimeViaMediaStreamSync();
+  int64_t GetCurrentTimeViaMediaStreamSync() const;
 
   // Copy queued audio/video data in the reader to any output MediaStreams that
   // need it.
@@ -325,7 +325,7 @@ public:
 
   // Returns true if we're currently playing. The decoder monitor must
   // be held.
-  bool IsPlaying();
+  bool IsPlaying() const;
 
   // Dispatch DoNotifyWaitingForResourcesStatusChanged task to mDecodeTaskQueue.
   // Called when the reader may have acquired the hardware resources required
@@ -450,19 +450,24 @@ protected:
   // ResetPlayback() to discard all enqueued data.
   void FlushDecoding();
 
+  // Called when AudioSink reaches the end. |mPlayStartTime| and
+  // |mPlayDuration| are updated to provide a good base for calculating video
+  // stream time.
+  void ResyncAudioClock();
+
   // Returns the audio clock, if we have audio, or -1 if we don't.
   // Called on the state machine thread.
-  int64_t GetAudioClock();
+  int64_t GetAudioClock() const;
 
   // Get the video stream position, taking the |playbackRate| change into
   // account. This is a position in the media, not the duration of the playback
   // so far.
-  int64_t GetVideoStreamPosition();
+  int64_t GetVideoStreamPosition() const;
 
   // Return the current time, either the audio clock if available (if the media
   // has audio, and the playback is possible), or a clock for the video.
   // Called on the state machine thread.
-  int64_t GetClock();
+  int64_t GetClock() const;
 
   nsresult DropAudioUpToSeekTarget(AudioData* aSample);
   nsresult DropVideoUpToSeekTarget(VideoData* aSample);

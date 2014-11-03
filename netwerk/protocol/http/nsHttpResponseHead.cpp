@@ -372,6 +372,11 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
 
     *result = 0;
 
+    if (requestTime > now) {
+        // for calculation purposes lets not allow the request to happen in the future
+        requestTime = now;
+    }
+
     if (NS_FAILED(GetDateValue(&dateValue))) {
         LOG(("nsHttpResponseHead::ComputeCurrentAge [this=%p] "
              "Date response header not set!\n", this));
@@ -387,8 +392,6 @@ nsHttpResponseHead::ComputeCurrentAge(uint32_t now,
     // Compute corrected received age
     if (NS_SUCCEEDED(GetAgeValue(&ageValue)))
         *result = std::max(*result, ageValue);
-
-    MOZ_ASSERT(now >= requestTime, "bogus request time");
 
     // Compute current age
     *result += (now - requestTime);
