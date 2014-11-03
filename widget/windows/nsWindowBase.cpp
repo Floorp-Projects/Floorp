@@ -250,6 +250,18 @@ nsWindowBase::DispatchCommandEvent(uint32_t aEventCommand)
     case APPCOMMAND_SEND_MAIL:
       command = nsGkAtoms::SendMail;
       break;
+    case APPCOMMAND_MEDIA_NEXTTRACK:
+      command = nsGkAtoms::NextTrack;
+      break;
+    case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+      command = nsGkAtoms::PreviousTrack;
+      break;
+    case APPCOMMAND_MEDIA_STOP:
+      command = nsGkAtoms::MediaStop;
+      break;
+    case APPCOMMAND_MEDIA_PLAY_PAUSE:
+      command = nsGkAtoms::PlayPause;
+      break;
     default:
       return false;
   }
@@ -287,6 +299,10 @@ nsWindowBase::HandleAppCommandMsg(WPARAM aWParam,
     case APPCOMMAND_FORWARD_MAIL:
     case APPCOMMAND_REPLY_TO_MAIL:
     case APPCOMMAND_SEND_MAIL:
+    case APPCOMMAND_MEDIA_NEXTTRACK:
+    case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+    case APPCOMMAND_MEDIA_STOP:
+    case APPCOMMAND_MEDIA_PLAY_PAUSE:
       // We shouldn't consume the message always because if we don't handle
       // the message, the sender (typically, utility of keyboard or mouse)
       // may send other key messages which indicate well known shortcut key.
