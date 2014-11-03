@@ -327,11 +327,13 @@ bool HTTPUpload::GetFileContents(const wstring &filename,
   // wchar_t* filename, so use _wfopen directly in that case.  For VC8 and
   // later, _wfopen has been deprecated in favor of _wfopen_s, which does
   // not exist in earlier versions, so let the ifstream open the file itself.
-#if _MSC_VER >= 1400  // MSVC 2005/8
+  // GCC doesn't support wide file name and opening on FILE* requires ugly
+  // hacks, so fallback to multi byte file.
+#ifdef _MSC_VER
   ifstream file;
   file.open(filename.c_str(), ios::binary);
-#else  // _MSC_VER >= 1400
-  ifstream file(_wfopen(filename.c_str(), L"rb"));
+#else // GCC
+  ifstream file(WideToMBCP(filename, CP_ACP).c_str(), ios::binary);
 #endif  // _MSC_VER >= 1400
   if (file.is_open()) {
     file.seekg(0, ios::end);
@@ -369,13 +371,13 @@ wstring HTTPUpload::UTF8ToWide(const string &utf8) {
 }
 
 // static
-string HTTPUpload::WideToUTF8(const wstring &wide) {
+string HTTPUpload::WideToMBCP(const wstring &wide, unsigned int cp) {
   if (wide.length() == 0) {
     return string();
   }
 
   // compute the length of the buffer we'll need
-  int charcount = WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1,
+  int charcount = WideCharToMultiByte(cp, 0, wide.c_str(), -1,
                                       NULL, 0, NULL, NULL);
   if (charcount == 0) {
     return string();
@@ -383,7 +385,7 @@ string HTTPUpload::WideToUTF8(const wstring &wide) {
 
   // convert
   char *buf = new char[charcount];
-  WideCharToMultiByte(CP_UTF8, 0, wide.c_str(), -1, buf, charcount,
+  WideCharToMultiByte(cp, 0, wide.c_str(), -1, buf, charcount,
                       NULL, NULL);
 
   string result(buf);

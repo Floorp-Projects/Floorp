@@ -175,9 +175,14 @@ bool HandleTraceData::CollectHandleData(
   stream_data->Reserved = 0;
   std::copy(operations_.begin(),
             operations_.end(),
+#ifdef _MSC_VER
             stdext::checked_array_iterator<AVRF_HANDLE_OPERATION*>(
                 reinterpret_cast<AVRF_HANDLE_OPERATION*>(stream_data + 1),
-                operations_.size()));
+                operations_.size())
+#else
+            reinterpret_cast<AVRF_HANDLE_OPERATION*>(stream_data + 1)
+#endif
+            );
 
   return true;
 }
@@ -380,7 +385,7 @@ bool MinidumpGenerator::WriteMinidump(HANDLE process_handle,
   user_streams.UserStreamArray = user_stream_array;
 
   MDRawAssertionInfo* actual_assert_info = assert_info;
-  MDRawAssertionInfo client_assert_info = {0};
+  MDRawAssertionInfo client_assert_info = {{0}};
 
   if (assert_info) {
     // If the assertion info object lives in the client process,
