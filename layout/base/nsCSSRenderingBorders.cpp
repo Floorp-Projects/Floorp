@@ -944,7 +944,7 @@ nsCSSBorderRenderer::DrawDashedSide(mozilla::css::Side aSide)
     dash[0] = dashWidth;
     dash[1] = dashWidth;
 
-    mContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
+    mContext->SetLineCap(CapStyle::BUTT);
   } else if (style == NS_STYLE_BORDER_STYLE_DOTTED) {
     dashWidth = gfxFloat(borderWidth * DOT_LENGTH);
 
@@ -952,7 +952,7 @@ nsCSSBorderRenderer::DrawDashedSide(mozilla::css::Side aSide)
       dash[0] = 0.0;
       dash[1] = dashWidth * 2.0;
 
-      mContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
+      mContext->SetLineCap(CapStyle::ROUND);
     } else {
       dash[0] = dashWidth;
       dash[1] = dashWidth;

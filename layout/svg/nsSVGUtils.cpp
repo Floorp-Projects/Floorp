@@ -1493,13 +1493,13 @@ nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
   
   switch (style->mStrokeLinecap) {
   case NS_STYLE_STROKE_LINECAP_BUTT:
-    aContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
+    aContext->SetLineCap(CapStyle::BUTT);
     break;
   case NS_STYLE_STROKE_LINECAP_ROUND:
-    aContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
+    aContext->SetLineCap(CapStyle::ROUND);
     break;
   case NS_STYLE_STROKE_LINECAP_SQUARE:
-    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
+    aContext->SetLineCap(CapStyle::SQUARE);
     break;
   }
 
@@ -1507,13 +1507,13 @@ nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
 
   switch (style->mStrokeLinejoin) {
   case NS_STYLE_STROKE_LINEJOIN_MITER:
-    aContext->SetLineJoin(gfxContext::LINE_JOIN_MITER);
+    aContext->SetLineJoin(JoinStyle::MITER);
     break;
   case NS_STYLE_STROKE_LINEJOIN_ROUND:
-    aContext->SetLineJoin(gfxContext::LINE_JOIN_ROUND);
+    aContext->SetLineJoin(JoinStyle::ROUND);
     break;
   case NS_STYLE_STROKE_LINEJOIN_BEVEL:
-    aContext->SetLineJoin(gfxContext::LINE_JOIN_BEVEL);
+    aContext->SetLineJoin(JoinStyle::BEVEL);
     break;
   }
 

@@ -43,6 +43,8 @@ struct RectCornerRadii;
  * as opposed to app units.
  */
 class gfxContext MOZ_FINAL {
+    typedef mozilla::gfx::CapStyle CapStyle;
+    typedef mozilla::gfx::JoinStyle JoinStyle;
     typedef mozilla::gfx::FillRule FillRule;
     typedef mozilla::gfx::Path Path;
     typedef mozilla::gfx::Pattern Pattern;
@@ -393,28 +395,18 @@ public:
      */
     gfxFloat CurrentLineWidth() const;
 
-    enum GraphicsLineCap {
-        LINE_CAP_BUTT,
-        LINE_CAP_ROUND,
-        LINE_CAP_SQUARE
-    };
     /**
      * Sets the line caps, i.e. how line endings are drawn.
      */
-    void SetLineCap(GraphicsLineCap cap);
-    GraphicsLineCap CurrentLineCap() const;
+    void SetLineCap(CapStyle cap);
+    CapStyle CurrentLineCap() const;
 
-    enum GraphicsLineJoin {
-        LINE_JOIN_MITER,
-        LINE_JOIN_ROUND,
-        LINE_JOIN_BEVEL
-    };
     /**
      * Sets the line join, i.e. how the connection between two lines is
      * drawn.
      */
-    void SetLineJoin(GraphicsLineJoin join);
-    GraphicsLineJoin CurrentLineJoin() const;
+    void SetLineJoin(JoinStyle join);
+    JoinStyle CurrentLineJoin() const;
 
     void SetMiterLimit(gfxFloat limit);
     gfxFloat CurrentMiterLimit() const;
