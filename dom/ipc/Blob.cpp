@@ -3874,7 +3874,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
   // Make sure we can't overflow.
   if (NS_WARN_IF(UINT64_MAX - aLength < aStart)) {
     ASSERT_UNLESS_FUZZING();
-    return nullptr;
+    return false;
   }
 
   ErrorResult errorResult;
@@ -3883,7 +3883,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
 
   if (NS_WARN_IF(aStart + aLength > blobLength)) {
     ASSERT_UNLESS_FUZZING();
-    return nullptr;
+    return false;
   }
 
   nsRefPtr<FileImpl> blobImpl;
