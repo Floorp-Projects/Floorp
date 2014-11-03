@@ -38,8 +38,8 @@
 // Disable exception handler warnings.
 #pragma warning( disable : 4530 ) 
 
-#include <Windows.h>
-#include <WinInet.h>
+#include <windows.h>
+#include <wininet.h>
 
 #include <map>
 #include <string>
@@ -79,7 +79,7 @@ class HTTPUpload {
   // this merely checks (via the return value) that we were successfully
   // able to retrieve exactly as many bytes of content in the response as
   // were specified in the Content-Length header.
-  static bool HTTPUpload::ReadResponse(HINTERNET request, wstring* response);
+  static bool ReadResponse(HINTERNET request, wstring* response);
 
   // Generates a new multipart boundary for a POST request
   static wstring GenerateMultipartBoundary();
@@ -102,7 +102,12 @@ class HTTPUpload {
   static wstring UTF8ToWide(const string &utf8);
 
   // Converts a UTF16 string to UTF8.
-  static string WideToUTF8(const wstring &wide);
+  static string WideToUTF8(const wstring &wide) {
+      return WideToMBCP(wide, CP_UTF8);
+  }
+
+  // Converts a UTF16 string to specified code page.
+  static string WideToMBCP(const wstring &wide, unsigned int cp);
 
   // Checks that the given list of parameters has only printable
   // ASCII characters in the parameter name, and does not contain
