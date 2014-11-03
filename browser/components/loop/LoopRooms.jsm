@@ -42,6 +42,61 @@ const extend = function(target, source) {
 };
 
 /**
+ * Checks whether a participant is already part of a room.
+ *
+ * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#User_Identification_in_a_Room
+ *
+ * @param {Object} room        A room object that contains a list of current participants
+ * @param {Object} participant Participant to check if it's already there
+ * @returns {Boolean} TRUE when the participant is already a member of the room,
+ *                    FALSE when it's not.
+ */
+const containsParticipant = function(room, participant) {
+  for (let user of room.participants) {
+    if (user.roomConnectionId == participant.roomConnectionId) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
+ * Compares the list of participants of the room currently in the cache and an
+ * updated version of that room. When a new participant is found, the 'joined'
+ * event is emitted. When a participant is not found in the update, it emits a
+ * 'left' event.
+ *
+ * @param {Object} room        A room object to compare the participants list
+ *                             against
+ * @param {Object} updatedRoom A room object that contains the most up-to-date
+ *                             list of participants
+ */
+const checkForParticipantsUpdate = function(room, updatedRoom) {
+  // Partially fetched rooms don't contain the participants list yet. Skip the
+  // check for now.
+  if (!("participants" in room)) {
+    return;
+  }
+
+  let participant;
+  // Check for participants that joined.
+  for (participant of updatedRoom.participants) {
+    if (!containsParticipant(room, participant)) {
+      eventEmitter.emit("joined", room.roomToken, participant);
+      eventEmitter.emit("joined:" + room.roomToken, participant);
+    }
+  }
+
+  // Check for participants that left.
+  for (participant of room.participants) {
+    if (!containsParticipant(updatedRoom, participant)) {
+      eventEmitter.emit("left", room.roomToken, participant);
+      eventEmitter.emit("left:" + room.roomToken, participant);
+    }
+  }
+};
+
+/**
  * The Rooms class.
  *
  * Each method that is a member of this class requires the last argument to be a
@@ -85,11 +140,23 @@ let LoopRoomsInternal = {
         throw new Error("Missing array of rooms in response.");
       }
 
-      // Next, request the detailed information for each room. If the request
-      // fails the room data will not be added to the map.
       for (let room of roomsList) {
+        // See if we already have this room in our cache.
+        let orig = this.rooms.get(room.roomToken);
+        if (orig) {
+          checkForParticipantsUpdate(orig, room);
+        }
         this.rooms.set(room.roomToken, room);
-        yield LoopRooms.promise("get", room.roomToken);
+        // When a version is specified, all the data is already provided by this
+        // request.
+        if (version) {
+          eventEmitter.emit("update", room);
+          eventEmitter.emit("update" + ":" + room.roomToken, room);
+        } else {
+          // Next, request the detailed information for each room. If the request
+          // fails the room data will not be added to the map.
+          yield LoopRooms.promise("get", room.roomToken);
+        }
       }
 
       // Set the 'dirty' flag back to FALSE, since the list is as fresh as can be now.
@@ -113,25 +180,35 @@ let LoopRoomsInternal = {
   get: function(roomToken, callback) {
     let room = this.rooms.has(roomToken) ? this.rooms.get(roomToken) : {};
     // Check if we need to make a request to the server to collect more room data.
-    if (!room || gDirty || !("participants" in room)) {
-      let sessionType = MozLoopService.userProfile ? LOOP_SESSION_TYPE.FXA :
-                        LOOP_SESSION_TYPE.GUEST;
-      MozLoopService.hawkRequest(sessionType, "/rooms/" + encodeURIComponent(roomToken), "GET")
-        .then(response => {
-          let eventName = ("roomToken" in room) ? "add" : "update";
-          extend(room, JSON.parse(response.body));
-          // Remove the `currSize` for posterity.
-          if ("currSize" in room) {
-            delete room.currSize;
-          }
-          this.rooms.set(roomToken, room);
-
-          eventEmitter.emit(eventName, room);
-          callback(null, room);
-        }, err => callback(err)).catch(err => callback(err));
-    } else {
+    let needsUpdate = !("participants" in room);
+    if (!gDirty && !needsUpdate) {
+      // Dirty flag is not set AND the necessary data is available, so we can
+      // simply return the room.
       callback(null, room);
+      return;
     }
+
+    let sessionType = MozLoopService.userProfile ? LOOP_SESSION_TYPE.FXA :
+                      LOOP_SESSION_TYPE.GUEST;
+    MozLoopService.hawkRequest(sessionType, "/rooms/" + encodeURIComponent(roomToken), "GET")
+      .then(response => {
+        let data = JSON.parse(response.body);
+
+        room.roomToken = roomToken;
+        checkForParticipantsUpdate(room, data);
+        extend(room, data);
+
+        // Remove the `currSize` for posterity.
+        if ("currSize" in room) {
+          delete room.currSize;
+        }
+        this.rooms.set(roomToken, room);
+
+        let eventName = !needsUpdate ? "update" : "add";
+        eventEmitter.emit(eventName, room);
+        eventEmitter.emit(eventName + ":" + roomToken, room);
+        callback(null, room);
+      }, err => callback(err)).catch(err => callback(err));
   },
 
   /**
@@ -194,10 +271,13 @@ Object.freeze(LoopRoomsInternal);
  * LoopRooms implements the EventEmitter interface by exposing three methods -
  * `on`, `once` and `off` - to subscribe to events.
  * At this point the following events may be subscribed to:
- *  - 'add':       A new room object was successfully added to the data store.
- *  - 'remove':    A room was successfully removed from the data store.
- *  - 'update':    A room object was successfully updated with changed
- *                 properties in the data store.
+ *  - 'add[:{room-id}]':    A new room object was successfully added to the data
+ *                          store.
+ *  - 'remove[:{room-id}]': A room was successfully removed from the data store.
+ *  - 'update[:{room-id}]': A room object was successfully updated with changed
+ *                          properties in the data store.
+ *  - 'joined[:{room-id}]': A participant joined a room.
+ *  - 'left[:{room-id}]':   A participant left a room.
  *
  * See the internal code for the API documentation.
  */
