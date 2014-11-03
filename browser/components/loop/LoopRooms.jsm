@@ -166,6 +166,15 @@ let LoopRoomsInternal = {
       }, error => callback(error)).catch(error => callback(error));
   },
 
+  open: function(roomToken) {
+    let windowData = {
+      roomToken: roomToken,
+      type: "room"
+    };
+
+    MozLoopService.openChatWindow(windowData);
+  },
+
   /**
    * Callback used to indicate changes to rooms data on the LoopServer.
    *
@@ -203,6 +212,10 @@ this.LoopRooms = {
 
   create: function(options, callback) {
     return LoopRoomsInternal.create(options, callback);
+  },
+
+  open: function(roomToken) {
+    return LoopRoomsInternal.open(roomToken);
   },
 
   promise: function(method, ...params) {
