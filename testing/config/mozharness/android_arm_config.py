@@ -33,6 +33,7 @@ config = {
                 "--apk=%(installer_path)s", "--no-logfiles",
                 "--symbols-path=%(symbols_path)s",
                 "--manifest=tests/xpcshell.ini",
+                "--log-raw=%(raw_log_file)s",
             ],
         },
     }, # end suite_definitions

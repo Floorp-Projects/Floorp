@@ -61,7 +61,8 @@ config = {
         "--local-lib-dir=../fennec",
         "--apk=../%(apk_name)s",
         "--no-logfiles",
-        "--symbols-path=%(symbols_path)s"
+        "--symbols-path=%(symbols_path)s",
+        "--log-raw=%(raw_log_file)s",
     ],
     "jittest_options": [
         "bin/js",
