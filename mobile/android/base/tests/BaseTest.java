@@ -199,6 +199,7 @@ abstract class BaseTest extends BaseRobocopTest {
      */
     protected final void focusUrlBar() {
         // Click on the browser toolbar to enter editing mode
+        mSolo.waitForView(R.id.browser_toolbar);
         final View toolbarView = mSolo.getView(R.id.browser_toolbar);
         mSolo.clickOnView(toolbarView);
 
@@ -218,9 +219,9 @@ abstract class BaseTest extends BaseRobocopTest {
     }
 
     protected final void enterUrl(String url) {
-        final EditText urlEditView = (EditText) mSolo.getView(R.id.url_edit_text);
-
         focusUrlBar();
+
+        final EditText urlEditView = (EditText) mSolo.getView(R.id.url_edit_text);
 
         // Send the keys for the URL we want to enter
         mSolo.clearEditText(urlEditView);
