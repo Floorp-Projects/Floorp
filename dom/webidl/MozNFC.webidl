@@ -4,6 +4,28 @@
 
  /* Copyright © 2013 Deutsche Telekom, Inc. */
 
+enum NfcErrorMessage {
+  "",
+  "IOError",
+  "Timeout",
+  "Busy",
+  "ErrorConnect",
+  "ErrorDisconnect",
+  "ErrorRead",
+  "ErrorWrite",
+  "InvalidParameter",
+  "InsufficientResource",
+  "ErrorSocketCreation",
+  "FailEnableDiscovery",
+  "FailDisableDiscovery",
+  "NotInitialize",
+  "InitializeFail",
+  "DeinitializeFail",
+  "NotSupport",
+  "FailEnableLowPowerMode",
+  "FailDisableLowPowerMode"
+};
+
 [NoInterfaceObject]
 interface MozNFCManager {
   /**
