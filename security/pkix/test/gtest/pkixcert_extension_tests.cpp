@@ -23,6 +23,7 @@
  */
 
 #include "pkix/pkix.h"
+#include "pkixder.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
 
@@ -107,7 +108,145 @@ private:
   }
 };
 
-class pkixcert_extension : public ::testing::Test
+// python DottedOIDToCode.py --tlv unknownExtensionOID \
+//   1.3.6.1.4.1.13769.666.666.666.1.500.9.3
+static const uint8_t tlv_unknownExtensionOID[] = {
+  0x06, 0x12, 0x2b, 0x06, 0x01, 0x04, 0x01, 0xeb, 0x49, 0x85, 0x1a, 0x85, 0x1a,
+  0x85, 0x1a, 0x01, 0x83, 0x74, 0x09, 0x03
+};
+
+// python DottedOIDToCode.py --tlv id-pe-authorityInformationAccess 1.3.6.1.5.5.7.1.1
+static const uint8_t tlv_id_pe_authorityInformationAccess[] = {
+  0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01
+};
+
+// python DottedOIDToCode.py --tlv wrongExtensionOID 1.3.6.6.1.5.5.7.1.1
+// (there is an extra "6" that shouldn't be in this OID)
+static const uint8_t tlv_wrongExtensionOID[] = {
+  0x06, 0x09, 0x2b, 0x06, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01
+};
+
+// python DottedOIDToCode.py --tlv id-ce-unknown 2.5.29.55
+// (this is a made-up OID for testing "id-ce"-prefixed OIDs that mozilla::pkix
+// doesn't handle)
+static const uint8_t tlv_id_ce_unknown[] = {
+  0x06, 0x03, 0x55, 0x1d, 0x37
+};
+
+// python DottedOIDToCode.py --tlv id-ce-inhibitAnyPolicy 2.5.29.54
+static const uint8_t tlv_id_ce_inhibitAnyPolicy[] = {
+  0x06, 0x03, 0x55, 0x1d, 0x36
+};
+
+// python DottedOIDToCode.py --tlv id-pkix-ocsp-nocheck 1.3.6.1.5.5.7.48.1.5
+static const uint8_t tlv_id_pkix_ocsp_nocheck[] = {
+  0x06, 0x09, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x05
+};
+
+template <size_t L>
+inline ByteString
+BytesToByteString(const uint8_t (&bytes)[L])
+{
+  return ByteString(bytes, L);
+}
+
+struct ExtensionTestcase
+{
+  ByteString extension;
+  Result expectedResult;
+};
+
+static const ExtensionTestcase EXTENSION_TESTCASES[] =
+{
+  // Tests that a non-critical extension not in the id-ce or id-pe arcs (which
+  // is thus unknown to us) verifies successfully even if empty (extensions we
+  // know about aren't normally allowed to be empty).
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_unknownExtensionOID) +
+        TLV(der::OCTET_STRING, ByteString())),
+    Success
+  },
+
+  // Tests that a critical extension not in the id-ce or id-pe arcs (which is
+  // thus unknown to us) is detected and that verification fails with the
+  // appropriate error.
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_unknownExtensionOID) +
+        Boolean(true) +
+        TLV(der::OCTET_STRING, ByteString())),
+    Result::ERROR_UNKNOWN_CRITICAL_EXTENSION
+  },
+
+  // Tests that a id-pe-authorityInformationAccess critical extension
+  // is detected and that verification succeeds.
+  // XXX: According to RFC 5280 an AIA that consists of an empty sequence is
+  // not legal, but we accept it and that is not what we're testing here.
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_id_pe_authorityInformationAccess) +
+        Boolean(true) +
+        TLV(der::OCTET_STRING, TLV(der::SEQUENCE, ByteString()))),
+    Success
+  },
+
+  // Tests that an incorrect OID for id-pe-authorityInformationAccess
+  // (when marked critical) is detected and that verification fails.
+  // (Until bug 1020993 was fixed, this wrong value was used for
+  // id-pe-authorityInformationAccess.)
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_wrongExtensionOID) +
+        Boolean(true) +
+        TLV(der::OCTET_STRING, ByteString())),
+    Result::ERROR_UNKNOWN_CRITICAL_EXTENSION
+  },
+
+  // We know about some id-ce extensions (OID arc 2.5.29), but not all of them.
+  // Tests that an unknown id-ce extension is detected and that verification
+  // fails.
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_id_ce_unknown) +
+        Boolean(true) +
+        TLV(der::OCTET_STRING, ByteString())),
+    Result::ERROR_UNKNOWN_CRITICAL_EXTENSION
+  },
+
+  // Tests that a certificate with a known critical id-ce extension (in this
+  // case, OID 2.5.29.54, which is id-ce-inhibitAnyPolicy), verifies
+  // successfully.
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_id_ce_inhibitAnyPolicy) +
+        Boolean(true) +
+        TLV(der::OCTET_STRING, Integer(0))),
+    Success
+  },
+
+  // Tests that a certificate with the id-pkix-ocsp-nocheck extension (marked
+  // critical) verifies successfully.
+  // RFC 6960:
+  //   ext-ocsp-nocheck EXTENSION ::= { SYNTAX NULL IDENTIFIED
+  //                                    BY id-pkix-ocsp-nocheck }
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_id_pkix_ocsp_nocheck) +
+        Boolean(true) +
+        TLV(der::OCTET_STRING, TLV(der::NULLTag, ByteString()))),
+    Success
+  },
+
+  // Tests that a certificate with another representation of the
+  // id-pkix-ocsp-nocheck extension (marked critical) verifies successfully.
+  // According to http://comments.gmane.org/gmane.ietf.x509/30947,
+  // some code creates certificates where value of the extension is
+  // an empty OCTET STRING.
+  { TLV(der::SEQUENCE,
+        BytesToByteString(tlv_id_pkix_ocsp_nocheck) +
+        Boolean(true) +
+        TLV(der::OCTET_STRING, ByteString())),
+    Success
+  },
+};
+
+class pkixcert_extension
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<ExtensionTestcase>
 {
 protected:
   static TrustEverythingTrustDomain trustDomain;
@@ -115,29 +254,15 @@ protected:
 
 /*static*/ TrustEverythingTrustDomain pkixcert_extension::trustDomain;
 
-// Tests that a critical extension not in the id-ce or id-pe arcs (which is
-// thus unknown to us) is detected and that verification fails with the
-// appropriate error.
-TEST_F(pkixcert_extension, UnknownCriticalExtension)
+TEST_P(pkixcert_extension, ExtensionHandledProperly)
 {
-  static const uint8_t unknownCriticalExtensionBytes[] = {
-    0x30, 0x19, // SEQUENCE (length = 25)
-      0x06, 0x12, // OID (length = 18)
-        // 1.3.6.1.4.1.13769.666.666.666.1.500.9.3
-        0x2b, 0x06, 0x01, 0x04, 0x01, 0xeb, 0x49, 0x85, 0x1a,
-        0x85, 0x1a, 0x85, 0x1a, 0x01, 0x83, 0x74, 0x09, 0x03,
-      0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x00 // OCTET STRING (length = 0)
-  };
-  static const ByteString
-    unknownCriticalExtension(unknownCriticalExtensionBytes,
-                             sizeof(unknownCriticalExtensionBytes));
-  const char* certCN = "Cert With Unknown Critical Extension";
-  ByteString cert(CreateCertWithOneExtension(certCN, unknownCriticalExtension));
+  const ExtensionTestcase& testcase(GetParam());
+  const char* cn = "Cert Extension Test";
+  ByteString cert(CreateCertWithOneExtension(cn, testcase.extension));
   ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
-  ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
+  ASSERT_EQ(testcase.expectedResult,
             BuildCertChain(trustDomain, certInput, Now(),
                            EndEntityOrCA::MustBeEndEntity,
                            KeyUsage::noParticularKeyUsageRequired,
@@ -146,172 +271,24 @@ TEST_F(pkixcert_extension, UnknownCriticalExtension)
                            nullptr/*stapledOCSPResponse*/));
 }
 
-// Tests that a non-critical extension not in the id-ce or id-pe arcs (which is
-// thus unknown to us) verifies successfully.
-TEST_F(pkixcert_extension, UnknownNonCriticalExtension)
-{
-  static const uint8_t unknownNonCriticalExtensionBytes[] = {
-    0x30, 0x16, // SEQUENCE (length = 22)
-      0x06, 0x12, // OID (length = 18)
-        // 1.3.6.1.4.1.13769.666.666.666.1.500.9.3
-        0x2b, 0x06, 0x01, 0x04, 0x01, 0xeb, 0x49, 0x85, 0x1a,
-        0x85, 0x1a, 0x85, 0x1a, 0x01, 0x83, 0x74, 0x09, 0x03,
-      0x04, 0x00 // OCTET STRING (length = 0)
-  };
-  static const ByteString
-    unknownNonCriticalExtension(unknownNonCriticalExtensionBytes,
-                                sizeof(unknownNonCriticalExtensionBytes));
-  const char* certCN = "Cert With Unknown NonCritical Extension";
-  ByteString cert(CreateCertWithOneExtension(certCN,
-                                             unknownNonCriticalExtension));
-  ASSERT_FALSE(ENCODING_FAILED(cert));
-  Input certInput;
-  ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
-  ASSERT_EQ(Success,
-            BuildCertChain(trustDomain, certInput, Now(),
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
-}
-
-// Tests that an incorrect OID for id-pe-authorityInformationAccess
-// (when marked critical) is detected and that verification fails.
-// (Until bug 1020993 was fixed, the code checked for this OID.)
-TEST_F(pkixcert_extension, WrongOIDCriticalExtension)
-{
-  static const uint8_t wrongOIDCriticalExtensionBytes[] = {
-    0x30, 0x10, // SEQUENCE (length = 16)
-      0x06, 0x09, // OID (length = 9)
-        // 1.3.6.6.1.5.5.7.1.1 (there is an extra "6" that shouldn't be there)
-        0x2b, 0x06, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01,
-      0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x00 // OCTET STRING (length = 0)
-  };
-  static const ByteString
-    wrongOIDCriticalExtension(wrongOIDCriticalExtensionBytes,
-                              sizeof(wrongOIDCriticalExtensionBytes));
-  const char* certCN = "Cert With Critical Wrong OID Extension";
-  ByteString cert(CreateCertWithOneExtension(certCN,
-                                             wrongOIDCriticalExtension));
-  ASSERT_FALSE(ENCODING_FAILED(cert));
-  Input certInput;
-  ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
-  ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
-            BuildCertChain(trustDomain, certInput, Now(),
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
-}
-
-// Tests that a id-pe-authorityInformationAccess critical extension
-// is detected and that verification succeeds.
-TEST_F(pkixcert_extension, CriticalAIAExtension)
-{
-  // XXX: According to RFC 5280 an AIA that consists of an empty sequence is
-  // not legal, but  we accept it and that is not what we're testing here.
-  static const uint8_t criticalAIAExtensionBytes[] = {
-    0x30, 0x11, // SEQUENCE (length = 17)
-      0x06, 0x08, // OID (length = 8)
-        // 1.3.6.1.5.5.7.1.1
-        0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01,
-      0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x02, // OCTET STRING (length = 2)
-        0x30, 0x00, // SEQUENCE (length = 0)
-  };
-  static const ByteString
-    criticalAIAExtension(criticalAIAExtensionBytes,
-                         sizeof(criticalAIAExtensionBytes));
-  const char* certCN = "Cert With Critical AIA Extension";
-  ByteString cert(CreateCertWithOneExtension(certCN, criticalAIAExtension));
-  ASSERT_FALSE(ENCODING_FAILED(cert));
-  Input certInput;
-  ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
-  ASSERT_EQ(Success,
-            BuildCertChain(trustDomain, certInput, Now(),
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
-}
-
-// We know about some id-ce extensions (OID arc 2.5.29), but not all of them.
-// Tests that an unknown id-ce extension is detected and that verification
-// fails.
-TEST_F(pkixcert_extension, UnknownCriticalCEExtension)
-{
-  static const uint8_t unknownCriticalCEExtensionBytes[] = {
-    0x30, 0x0a, // SEQUENCE (length = 10)
-      0x06, 0x03, // OID (length = 3)
-        0x55, 0x1d, 0x37, // 2.5.29.55
-      0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x00 // OCTET STRING (length = 0)
-  };
-  static const ByteString
-    unknownCriticalCEExtension(unknownCriticalCEExtensionBytes,
-                               sizeof(unknownCriticalCEExtensionBytes));
-  const char* certCN = "Cert With Unknown Critical id-ce Extension";
-  ByteString cert(CreateCertWithOneExtension(certCN,
-                                             unknownCriticalCEExtension));
-  ASSERT_FALSE(ENCODING_FAILED(cert));
-  Input certInput;
-  ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
-  ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
-            BuildCertChain(trustDomain, certInput, Now(),
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
-}
-
-// Tests that a certificate with a known critical id-ce extension (in this case,
-// OID 2.5.29.54, which is id-ce-inhibitAnyPolicy), verifies successfully.
-TEST_F(pkixcert_extension, KnownCriticalCEExtension)
-{
-  static const uint8_t criticalCEExtensionBytes[] = {
-    0x30, 0x0d, // SEQUENCE (length = 13)
-      0x06, 0x03, // OID (length = 3)
-        0x55, 0x1d, 0x36, // 2.5.29.54 (id-ce-inhibitAnyPolicy)
-      0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x03, // OCTET STRING (length = 3)
-        0x02, 0x01, 0x00, // INTEGER (length = 1, value = 0)
-  };
-  static const ByteString
-    criticalCEExtension(criticalCEExtensionBytes,
-                        sizeof(criticalCEExtensionBytes));
-  const char* certCN = "Cert With Known Critical id-ce Extension";
-  ByteString cert(CreateCertWithOneExtension(certCN, criticalCEExtension));
-  ASSERT_FALSE(ENCODING_FAILED(cert));
-  Input certInput;
-  ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
-  ASSERT_EQ(Success,
-            BuildCertChain(trustDomain, certInput, Now(),
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
-}
+INSTANTIATE_TEST_CASE_P(pkixcert_extension,
+                        pkixcert_extension,
+                        testing::ValuesIn(EXTENSION_TESTCASES));
 
 // Two subjectAltNames must result in an error.
 TEST_F(pkixcert_extension, DuplicateSubjectAltName)
 {
-  static const uint8_t DER_BYTES[] = {
-    0x30, 22, // SEQUENCE (length = 22)
-      0x06, 3, // OID (length = 3)
-        0x55, 0x1d, 0x11, // 2.5.29.17
-      0x04, 15, // OCTET STRING (length = 15)
-        0x30, 13, // GeneralNames (SEQUENCE) (length = 13)
-          0x82, 11, // [2] (dNSName) (length = 11)
-            'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'
+  // python DottedOIDToCode.py --tlv id-ce-subjectAltName 2.5.29.17
+  static const uint8_t tlv_id_ce_subjectAltName[] = {
+    0x06, 0x03, 0x55, 0x1d, 0x11
   };
-  static const ByteString DER(DER_BYTES, sizeof(DER_BYTES));
-  static const ByteString extensions[] = { DER, DER, ByteString() };
+
+  ByteString subjectAltName(
+    TLV(der::SEQUENCE,
+        BytesToByteString(tlv_id_ce_subjectAltName) +
+        TLV(der::OCTET_STRING, TLV(der::SEQUENCE, DNSName("example.com")))));
+  static const ByteString extensions[] = { subjectAltName, subjectAltName,
+                                           ByteString() };
   static const char* certCN = "Cert With Duplicate subjectAltName";
   ByteString cert(CreateCertWithExtensions(certCN, extensions));
   ASSERT_FALSE(ENCODING_FAILED(cert));
