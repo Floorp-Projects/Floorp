@@ -104,10 +104,21 @@ const injectObjectAPI = function(api, targetWindow) {
   // through the priv => unpriv barrier with `Cu.cloneInto()`.
   Object.keys(api).forEach(func => {
     injectedAPI[func] = function(...params) {
-      let callback = params.pop();
-      api[func](...params, function(...results) {
-        callback(...[cloneValueInto(r, targetWindow) for (r of results)]);
-      });
+      let lastParam = params.pop();
+
+      // If the last parameter is a function, assume its a callback
+      // and wrap it differently.
+      if (lastParam && typeof lastParam === "function") {
+        api[func](...params, function(...results) {
+          lastParam(...[cloneValueInto(r, targetWindow) for (r of results)]);
+        });
+      } else {
+        try {
+          return cloneValueInto(api[func](...params, lastParam), targetWindow);
+        } catch (ex) {
+          return cloneValueInto(ex, targetWindow);
+        }
+      }
     };
   });
 
@@ -135,6 +146,7 @@ function injectLoopAPI(targetWindow) {
   let appVersionInfo;
   let contactsAPI;
   let roomsAPI;
+  let callsAPI;
 
   let api = {
     /**
@@ -206,34 +218,20 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
-     * Returns the callData for a specific conversation window id.
+     * Returns the window data for a specific conversation window id.
      *
-     * The data was retrieved from the LoopServer via a GET/calls/<version> request
-     * triggered by an incoming message from the LoopPushServer.
+     * This data will be relevant to the type of window, e.g. rooms or calls.
+     * See LoopRooms or LoopCalls for more information.
      *
-     * @param {Number} conversationWindowId
-     * @returns {callData} The callData or undefined if error.
+     * @param {String} conversationWindowId
+     * @returns {Object} The window data or null if error.
      */
-    getCallData: {
+    getConversationWindowData: {
       enumerable: true,
       writable: true,
       value: function(conversationWindowId) {
-        return Cu.cloneInto(LoopCalls.getCallData(conversationWindowId), targetWindow);
-      }
-    },
-
-    /**
-     * Releases the callData for a specific conversation window id.
-     *
-     * The result of this call will be a free call session slot.
-     *
-     * @param {Number} conversationWindowId
-     */
-    releaseCallData: {
-      enumerable: true,
-      writable: true,
-      value: function(conversationWindowId) {
-        LoopCalls.releaseCallData(conversationWindowId);
+        return Cu.cloneInto(MozLoopService.getConversationWindowData(conversationWindowId),
+          targetWindow);
       }
     },
 
@@ -270,6 +268,22 @@ function injectLoopAPI(targetWindow) {
           return roomsAPI;
         }
         return roomsAPI = injectObjectAPI(LoopRooms, targetWindow);
+      }
+    },
+
+    /**
+     * Returns the calls API.
+     *
+     * @returns {Object} The rooms API object
+     */
+    calls: {
+      enumerable: true,
+      get: function() {
+        if (callsAPI) {
+          return callsAPI;
+        }
+
+        return callsAPI = injectObjectAPI(LoopCalls, targetWindow);
       }
     },
 
@@ -668,21 +682,6 @@ function injectLoopAPI(targetWindow) {
       writable: true,
       value: function() {
         return MozLoopService.generateUUID();
-      }
-    },
-
-    /**
-     * Starts a direct call to the contact addresses.
-     *
-     * @param {Object} contact The contact to call
-     * @param {String} callType The type of call, e.g. "audio-video" or "audio-only"
-     * @return true if the call is opened, false if it is not opened (i.e. busy)
-     */
-    startDirectCall: {
-      enumerable: true,
-      writable: true,
-      value: function(contact, callType) {
-        LoopCalls.startDirectCall(contact, callType);
       }
     },
   };

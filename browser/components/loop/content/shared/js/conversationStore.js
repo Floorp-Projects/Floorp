@@ -189,8 +189,7 @@ loop.store.ConversationStore = (function() {
     },
 
     setupWindowData: function(actionData) {
-      var windowData = actionData.windowData;
-      var windowType = windowData.type;
+      var windowType = actionData.type;
       if (windowType !== "outgoing" &&
           windowType !== "incoming") {
         // Not for this store, don't do anything.
@@ -198,12 +197,12 @@ loop.store.ConversationStore = (function() {
       }
 
       this.set({
-        contact: windowData.contact,
+        contact: actionData.contact,
         outgoing: windowType === "outgoing",
-        windowId: windowData.windowId,
-        callType: windowData.callType,
+        windowId: actionData.windowId,
+        callType: actionData.callType,
         callState: CALL_STATES.GATHER,
-        videoMuted: windowData.callType === CALL_TYPES.AUDIO_ONLY
+        videoMuted: actionData.callType === CALL_TYPES.AUDIO_ONLY
       });
 
       if (this.get("outgoing")) {
@@ -317,6 +316,8 @@ loop.store.ConversationStore = (function() {
       var contactAddresses = [];
       var contact = this.get("contact");
 
+      navigator.mozLoop.calls.setCallInProgress(this.get("windowId"));
+
       function appendContactValues(property, strip) {
         if (contact.hasOwnProperty(property)) {
           contact[property].forEach(function(item) {
@@ -396,7 +397,7 @@ loop.store.ConversationStore = (function() {
         delete this._websocket;
       }
 
-      navigator.mozLoop.releaseCallData(this.get("windowId"));
+      navigator.mozLoop.calls.clearCallInProgress(this.get("windowId"));
     },
 
     /**

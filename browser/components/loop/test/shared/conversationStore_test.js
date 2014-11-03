@@ -38,7 +38,10 @@ describe("loop.store.ConversationStore", function () {
 
     navigator.mozLoop = {
       getLoopBoolPref: sandbox.stub(),
-      releaseCallData: sandbox.stub()
+      calls: {
+        setCallInProgress: sandbox.stub(),
+        clearCallInProgress: sandbox.stub()
+      }
     };
 
     dispatcher = new loop.Dispatcher();
@@ -156,8 +159,9 @@ describe("loop.store.ConversationStore", function () {
       dispatcher.dispatch(
         new sharedActions.ConnectionFailure({reason: "fake"}));
 
-      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
-      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
+      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(
+        navigator.mozLoop.calls.clearCallInProgress, "42");
     });
   });
 
@@ -227,12 +231,10 @@ describe("loop.store.ConversationStore", function () {
     beforeEach(function() {
       store.set({callState: CALL_STATES.INIT});
       fakeSetupWindowData = {
-        windowData: {
-          type: "outgoing",
-          contact: contact,
-          windowId: "123456",
-          callType: sharedUtils.CALL_TYPES.AUDIO_VIDEO
-        }
+        windowId: "123456",
+        type: "outgoing",
+        contact: contact,
+        callType: sharedUtils.CALL_TYPES.AUDIO_VIDEO
       };
     });
 
@@ -270,7 +272,7 @@ describe("loop.store.ConversationStore", function () {
       });
 
       it("should include all email addresses in the call data", function() {
-        fakeSetupWindowData.windowData.contact = {
+        fakeSetupWindowData.contact = {
           name: [ "Mr Smith" ],
           email: [{
             type: "home",
@@ -293,7 +295,7 @@ describe("loop.store.ConversationStore", function () {
       });
 
       it("should include trim phone numbers for the call data", function() {
-        fakeSetupWindowData.windowData.contact = {
+        fakeSetupWindowData.contact = {
           name: [ "Mr Smith" ],
           tel: [{
             type: "home",
@@ -311,7 +313,7 @@ describe("loop.store.ConversationStore", function () {
       });
 
       it("should include all email and telephone values in the call data", function() {
-        fakeSetupWindowData.windowData.contact = {
+        fakeSetupWindowData.contact = {
           name: [ "Mr Smith" ],
           email: [{
             type: "home",
@@ -504,8 +506,9 @@ describe("loop.store.ConversationStore", function () {
     it("should release mozLoop callsData", function() {
       dispatcher.dispatch(new sharedActions.HangupCall());
 
-      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
-      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
+      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(
+        navigator.mozLoop.calls.clearCallInProgress, "42");
     });
   });
 
@@ -544,8 +547,9 @@ describe("loop.store.ConversationStore", function () {
     it("should release mozLoop callsData", function() {
       dispatcher.dispatch(new sharedActions.PeerHungupCall());
 
-      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
-      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
+      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(
+        navigator.mozLoop.calls.clearCallInProgress, "42");
     });
   });
 
@@ -592,8 +596,9 @@ describe("loop.store.ConversationStore", function () {
     it("should release mozLoop callsData", function() {
       dispatcher.dispatch(new sharedActions.CancelCall());
 
-      sinon.assert.calledOnce(navigator.mozLoop.releaseCallData);
-      sinon.assert.calledWithExactly(navigator.mozLoop.releaseCallData, "42");
+      sinon.assert.calledOnce(navigator.mozLoop.calls.clearCallInProgress);
+      sinon.assert.calledWithExactly(
+        navigator.mozLoop.calls.clearCallInProgress, "42");
     });
   });
 
