@@ -565,14 +565,14 @@ TimeStamp::ComputeProcessUptime()
     return 0;
   }
 
-  ULARGE_INTEGER startUsec = {
-    start.dwLowDateTime,
-    start.dwHighDateTime
-  };
-  ULARGE_INTEGER nowUsec = {
+  ULARGE_INTEGER startUsec = {{
+     start.dwLowDateTime,
+     start.dwHighDateTime
+  }};
+  ULARGE_INTEGER nowUsec = {{
     now.dwLowDateTime,
     now.dwHighDateTime
-  };
+  }};
 
   return (nowUsec.QuadPart - startUsec.QuadPart) / 10ULL;
 }

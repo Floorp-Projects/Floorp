@@ -29,7 +29,7 @@ struct GuidToName {
 #pragma push_macro("OUR_GUID_ENTRY")
 #undef OUR_GUID_ENTRY
 #define OUR_GUID_ENTRY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-{ #name, {l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8} },
+  { #name, {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}} },
 
 static const GuidToName GuidToNameTable[] = {
 #include <uuids.h>
