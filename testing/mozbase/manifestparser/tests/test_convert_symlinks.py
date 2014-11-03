@@ -9,16 +9,12 @@ import shutil
 import tempfile
 import unittest
 
-from manifestparser import convert
+from manifestparser import convert, ManifestParser
 
 class TestSymlinkConversion(unittest.TestCase):
     """
     test conversion of a directory tree with symlinks to a manifest structure
     """
-
-    # Currently broken: see
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=902610
-    # https://bugzilla.mozilla.org/show_bug.cgi?id=920938
 
     def create_stub(self, directory=None):
         """stub out a directory with files in it"""
@@ -52,15 +48,13 @@ class TestSymlinkConversion(unittest.TestCase):
             shutil.rmtree(stub)
             os.chdir(oldcwd)
 
+    @unittest.skipIf(not hasattr(os, 'symlink'),
+                     "symlinks unavailable on this platform")
     def test_relpath_symlink(self):
         """
         Ensure `relative_to` works in a symlink.
         Not available on windows.
         """
-
-        symlink = getattr(os, 'symlink', None)
-        if symlink is None:
-            return # symlinks unavailable on this platform
 
         oldcwd = os.getcwd()
         workspace = tempfile.mkdtemp()
@@ -68,7 +62,7 @@ class TestSymlinkConversion(unittest.TestCase):
             tmpdir = os.path.join(workspace, 'directory')
             os.makedirs(tmpdir)
             linkdir = os.path.join(workspace, 'link')
-            symlink(tmpdir, linkdir)
+            os.symlink(tmpdir, linkdir)
             self.create_stub(tmpdir)
 
             # subdir with in-memory manifest
@@ -90,7 +84,7 @@ class TestSymlinkConversion(unittest.TestCase):
             tmpdir = os.path.join(workspace, 'directory')
             os.makedirs(tmpdir)
             linkdir = os.path.join(workspace, 'link')
-            symlink(tmpdir, linkdir)
+            os.symlink(tmpdir, linkdir)
             self.create_stub(tmpdir)
             files = ['../bar', '../fleem', '../foo', 'subfile']
             subdir = os.path.join(linkdir, 'subdir')
@@ -98,8 +92,8 @@ class TestSymlinkConversion(unittest.TestCase):
             os.makedirs(subsubdir)
             linksubdir = os.path.join(linkdir, 'linky')
             linksubsubdir = os.path.join(subsubdir, 'linky')
-            symlink(subdir, linksubdir)
-            symlink(subdir, linksubsubdir)
+            os.symlink(subdir, linksubdir)
+            os.symlink(subdir, linksubsubdir)
             for dest in (subdir,):
                 os.chdir(dest)
                 for directory in (tmpdir, linkdir):
@@ -109,6 +103,34 @@ class TestSymlinkConversion(unittest.TestCase):
         finally:
             shutil.rmtree(workspace)
             os.chdir(oldcwd)
+
+    @unittest.skipIf(not hasattr(os, 'symlink'),
+                     "symlinks unavailable on this platform")
+    def test_recursion_symlinks(self):
+        workspace = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, workspace)
+
+        # create two dirs
+        os.makedirs(os.path.join(workspace, 'dir1'))
+        os.makedirs(os.path.join(workspace, 'dir2'))
+
+        # create cyclical symlinks
+        os.symlink(os.path.join('..', 'dir1'),
+                   os.path.join(workspace, 'dir2', 'ldir1'))
+        os.symlink(os.path.join('..', 'dir2'),
+                   os.path.join(workspace, 'dir1', 'ldir2'))
+
+        # create one file in each dir
+        open(os.path.join(workspace, 'dir1', 'f1.txt'), 'a').close()
+        open(os.path.join(workspace, 'dir1', 'ldir2', 'f2.txt'), 'a').close()
+
+        data = []
+        def callback(rootdirectory, directory, subdirs, files):
+            for f in files:
+                data.append(f)
+
+        ManifestParser._walk_directories([workspace], callback)
+        self.assertEqual(sorted(data), ['f1.txt', 'f2.txt'])
 
 
 if __name__ == '__main__':
