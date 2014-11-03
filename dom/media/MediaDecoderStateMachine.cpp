@@ -836,6 +836,24 @@ MediaDecoderStateMachine::Push(VideoData* aSample)
 }
 
 void
+MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
+                                       RequestSampleCallback::NotDecodedReason aReason)
+{
+  if (aReason == RequestSampleCallback::DECODE_ERROR) {
+    OnDecodeError();
+    return;
+  }
+
+  MOZ_ASSERT(aReason == RequestSampleCallback::END_OF_STREAM);
+  if (aType == MediaData::AUDIO_DATA) {
+    OnAudioEOS();
+  } else {
+    MOZ_ASSERT(aType == MediaData::VIDEO_DATA);
+    OnVideoEOS();
+  }
+}
+
+void
 MediaDecoderStateMachine::OnDecodeError()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
