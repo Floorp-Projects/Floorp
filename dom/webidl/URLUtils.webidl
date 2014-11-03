@@ -40,12 +40,16 @@ interface URLUtils {
   [Throws]
            attribute ScalarValueString search;
 
-           attribute URLSearchParams searchParams;
-
   [Throws]
            attribute ScalarValueString hash;
 
   // Bug 824857 should remove this.
   [Throws]
   stringifier;
+};
+
+[NoInterfaceObject,
+ Exposed=(Window, Worker)]
+interface URLUtilsSearchParams {
+           attribute URLSearchParams searchParams;
 };
