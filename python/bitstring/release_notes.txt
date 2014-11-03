@@ -1,0 +1,1523 @@
+--------------------------------
+bitstring module version history
+--------------------------------
+
+---------------------------------------
+March 4th 2014: version 3.1.3 released
+---------------------------------------
+This is another bug fix release.
+
+* Fix for problem with prepend for bitstrings with byte offsets in their data store.
+
+---------------------------------------
+April 18th 2013: version 3.1.2 released
+---------------------------------------
+This is another bug fix release.
+
+* Fix for problem where unpacking bytes would by eight times too long
+
+---------------------------------------
+March 21st 2013: version 3.1.1 released
+---------------------------------------
+This is a bug fix release.
+
+* Fix for problem where concatenating bitstrings sometimes modified method's arguments
+
+------------------------------------------
+February 26th 2013: version 3.1.0 released
+------------------------------------------
+This is a minor release with a couple of new features and some bug fixes.
+
+New 'pad' token
+---------------
+
+This token can be used in reads and when packing/unpacking to indicate that
+you don't care about the contents of these bits. Any padding bits will just
+be skipped over when reading/unpacking or zero-filled when packing.
+
+    >>> a, b = s.readlist('pad:5, uint:3, pad:1, uint:3')
+
+Here only two items are returned in the list - the padding bits are ignored.
+
+New clear and copy convenience methods
+--------------------------------------
+
+These methods have been introduced in Python 3.3 for lists and bytearrays,
+as more obvious ways of clearing and copying, and we mirror that change here.
+
+t = s.copy() is equivalent to t = s[:], and s.clear() is equivalent to del s[:].
+
+Other changes
+-------------
+
+* Some bug fixes.
+
+-----------------------------------------
+February 7th 2012: version 3.0.2 released
+-----------------------------------------
+This is a minor update that fixes a few bugs.
+
+* Fix for subclasses of bitstring classes behaving strangely (Issue 121).
+* Fix for excessive memory usage in rare cases (Issue 120).
+* Fixes for slicing edge cases.
+
+There has also been a reorganisation of the code to return it to a single
+'bitstring.py' file rather than the package that has been used for the past
+several releases. This change shouldn't affect users directly.
+
+------------------------------------------
+November 21st 2011: version 3.0.1 released
+------------------------------------------
+This release fixed a small but very visible bug in bitstring printing.
+
+------------------------------------------
+November 21st 2011: version 3.0.0 released
+------------------------------------------
+This is a major release which breaks backward compatibility in a few places.
+
+Backwardly incompatible changes
+===============================
+
+Hex, oct and bin properties don't have leading 0x, 0o and 0b
+------------------------------------------------------------
+
+If you ask for the hex, octal or binary representations of a bitstring then
+they will no longer be prefixed with '0x', 0o' or '0b'. This was done as it
+was noticed that the first thing a lot of user code does after getting these
+representations was to cut off the first two characters before further
+processing.
+
+    >>> a = BitArray('0x123')
+    >>> a.hex, a.oct, a.bin
+    ('123', '0443', '000100100011')
+
+Previously this would have returned ('0x123', '0o0443', '0b000100100011')
+
+This change might require some recoding, but it should all be simplifications.
+
+ConstBitArray renamed to Bits
+-----------------------------
+
+Previously Bits was an alias for ConstBitStream (for backward compatibility).
+This has now changed so that Bits and BitArray loosely correspond to the
+built-in types bytes and bytearray.
+
+If you were using streaming/reading methods on a Bits object then you will
+have to change it to a ConstBitStream.
+
+The ConstBitArray name is kept as an alias for Bits.
+
+Stepping in slices has conventional meaning
+-------------------------------------------
+
+The step parameter in __getitem__, __setitem__ and __delitem__ used to act
+as a multiplier for the start and stop parameters. No one seemed to use it
+though and so it has now reverted to the convential meaning for containers.
+
+If you are using step then recoding is simple: s[a:b:c] becomes s[a*c:b*c].
+
+Some examples of the new usage:
+
+    >>> s = BitArray('0x0000')
+    s[::4] = [1, 1, 1, 1]
+    >>> s.hex
+    '8888'
+    >>> del s[8::2]
+    >>> s.hex
+    '880'
+
+
+New features
+============
+
+New readto method
+-----------------
+
+This method is a mix between a find and a read - it searches for a bitstring
+and then reads up to and including it. For example:
+
+    >>> s = ConstBitStream('0x47000102034704050647')
+    >>> s.readto('0x47', bytealigned=True)
+    BitStream('0x47')
+    >>> s.readto('0x47', bytealigned=True)
+    BitStream('0x0001020347')
+    >>> s.readto('0x47', bytealigned=True)
+    BitStream('0x04050647')
+
+pack function accepts an iterable as its format
+-----------------------------------------------
+
+Previously only a string was accepted as the format in the pack function.
+This was an oversight as it broke the symmetry between pack and unpack.
+Now you can use formats like this:
+
+    fmt = ['hex:8', 'bin:3']
+    a = pack(fmt, '47', '001')
+    a.unpack(fmt)
+
+
+--------------------------------------
+June 18th 2011: version 2.2.0 released
+--------------------------------------
+This is a minor upgrade with a couple of new features.
+
+New interleaved exponential-Golomb interpretations
+--------------------------------------------------
+
+New bit interpretations for interleaved exponential-Golomb (as used in the
+Dirac video codec) are supplied via 'uie' and 'sie':
+
+    >>> s = BitArray(uie=41)
+    >>> s.uie
+    41
+    >>> s.bin
+    '0b00010001001'
+
+These are pretty similar to the non-interleaved versions - see the manual
+for more details. Credit goes to Paul Sargent for the patch.
+
+New package-level bytealigned variable
+--------------------------------------
+
+A number of methods take a 'bytealigned' parameter to indicate that they
+should only work on byte boundaries (e.g. find, replace, split). Previously
+this parameter defaulted to 'False'. Instead it now defaults to
+'bitstring.bytealigned', which itself defaults to 'False', but can be changed
+to modify the default behaviour of the methods. For example:
+
+    >>> a = BitArray('0x00 ff 0f ff')
+    >>> a.find('0x0f')
+    (4,)    # found first not on a byte boundary
+    >>> a.find('0x0f', bytealigned=True)
+    (16,)   # forced looking only on byte boundaries
+    >>> bitstring.bytealigned = True  # Change default behaviour
+    >>> a.find('0x0f')
+    (16,)
+    >>> a.find('0x0f', bytealigned=False)
+    (4,)
+
+If you're only working with bytes then this can help avoid some errors and
+save some typing!
+
+Other changes
+-------------
+
+* Fix for Python 3.2, correcting for a change to the binascii module.
+* Fix for bool initialisation from 0 or 1.
+* Efficiency improvements, including interning strategy.
+
+------------------------------------------
+February 23rd 2011: version 2.1.1 released
+------------------------------------------
+This is a release to fix a couple of bugs that were introduced in 2.1.0.
+
+* Bug fix: Reading using the 'bytes' token had been broken (Issue 102).
+* Fixed problem using some methods on ConstBitArrays.
+* Better exception handling for tokens missing values.
+* Some performance improvements.
+
+-----------------------------------------
+January 23rd 2011: version 2.1.0 released
+-----------------------------------------
+
+New class hierarchy introduced with simpler classes
+---------------------------------------------------
+Previously there were just two classes, the immutable Bits which was the base
+class for the mutable BitString class. Both of these classes have the concept
+of a bit position, from which reads etc. take place so that the bitstring could
+be treated as if it were a file or stream.
+
+Two simpler classes have now been added which are purely bit containers and 
+don't have a bit position. These are called ConstBitArray and BitArray. As you
+can guess the former is an immutable version of the latter.
+
+The other classes have also been renamed to better reflect their capabilities.
+Instead of BitString you can use BitStream, and instead of Bits you can use
+ConstBitStream. The old names are kept as aliases for backward compatibility.
+
+The classes hierarchy is:
+
+        ConstBitArray
+           /    \
+          /      \
+    BitArray   ConstBitStream (formerly Bits)
+          \      /
+           \    /
+          BitStream (formerly BitString)
+
+
+Other changes
+-------------
+A lot of internal reorganisation has taken place since the previous version,
+most of which won't be noticed by the end user. Some things you might see are:
+
+* New package structure. Previous versions have been a single file for the
+  module and another for the unit tests. The module is now split into many
+  more files so it can't be used just by copying bitstring.py any more.
+* To run the unit tests there is now a script called runtests.py in the test
+  directory.
+* File based bitstring are now implemented in terms of an mmap. This should
+  be just an implementation detail, but unfortunately for 32-bit versions of
+  Python this creates a limit of 4GB on the files that can be used. The work
+  around is either to get a 64-bit Python, or just stick with version 2.0.
+* The ConstBitArray and ConstBitStream classes no longer copy byte data when
+  a slice or a read takes place, they just take a reference. This is mostly
+  a very nice optimisation, but there are occassions where it could have an
+  adverse effect. For example if a very large bitstring is created, a small
+  slice taken and the original deleted. The byte data from the large
+  bitstring would still be retained in memory.
+* Optimisations. Once again this version should be faster than the last.
+  The module is still pure Python but some of the reorganisation was to make
+  it more feasible to put some of the code into Cython or similar, so
+  hopefully more speed will be on the way.
+
+--------------------------------------
+July 26th 2010: version 2.0.3 released
+--------------------------------------
+* Bug fix: Using peek and read for a single bit now returns a new bitstring
+           as was intended, rather than the old behaviour of returning a bool.
+* Removed HTML docs from source archive - better to use the online version.
+
+--------------------------------------
+July 25th 2010: version 2.0.2 released
+--------------------------------------
+This is a major release, with a number of backwardly incompatible changes.
+The main change is the removal of many methods, all of which have simple
+alternatives. Other changes are quite minor but may need some recoding.
+
+There are a few new features, most of which have been made to help the
+stream-lining of the API. As always there are performance improvements and
+some API changes were made purely with future performance in mind.
+
+The backwardly incompatible changes are:
+-----------------------------------------
+* Methods removed.
+
+About half of the class methods have been removed from the API. They all have
+simple alternatives, so what remains is more powerful and easier to remember.
+The removed methods are listed here on the left, with their equivalent
+replacements on the right:
+
+s.advancebit()              ->   s.pos += 1
+s.advancebits(bits)         ->   s.pos += bits
+s.advancebyte()             ->   s.pos += 8
+s.advancebytes(bytes)       ->   s.pos += 8*bytes
+s.allunset([a, b])          ->   s.all(False, [a, b])
+s.anyunset([a, b])          ->   s.any(False, [a, b])
+s.delete(bits, pos)         ->   del s[pos:pos+bits]
+s.peekbit()                 ->   s.peek(1)
+s.peekbitlist(a, b)         ->   s.peeklist([a, b])
+s.peekbits(bits)            ->   s.peek(bits)
+s.peekbyte()                ->   s.peek(8)
+s.peekbytelist(a, b)        ->   s.peeklist([8*a, 8*b])
+s.peekbytes(bytes)          ->   s.peek(8*bytes)
+s.readbit()                 ->   s.read(1)
+s.readbitlist(a, b)         ->   s.readlist([a, b])
+s.readbits(bits)            ->   s.read(bits)
+s.readbyte()                ->   s.read(8)
+s.readbytelist(a, b)        ->   s.readlist([8*a, 8*b])
+s.readbytes(bytes)          ->   s.read(8*bytes)
+s.retreatbit()              ->   s.pos -= 1
+s.retreatbits(bits)         ->   s.pos -= bits
+s.retreatbyte()             ->   s.pos -= 8
+s.retreatbytes(bytes)       ->   s.pos -= 8*bytes
+s.reversebytes(start, end)  ->   s.byteswap(0, start, end)
+s.seek(pos)                 ->   s.pos = pos
+s.seekbyte(bytepos)         ->   s.bytepos = bytepos
+s.slice(start, end, step)   ->   s[start:end:step]
+s.tell()                    ->   s.pos
+s.tellbyte()                ->   s.bytepos
+s.truncateend(bits)         ->   del s[-bits:]
+s.truncatestart(bits)       ->   del s[:bits]
+s.unset([a, b])             ->   s.set(False, [a, b])
+
+Many of these methods have been deprecated for the last few releases, but
+there are some new removals too. Any recoding needed should be quite
+straightforward, so while I apologise for the hassle, I had to take the
+opportunity to streamline and rationalise what was becoming a bit of an
+overblown API.
+
+* set / unset methods combined.
+
+The set/unset methods have been combined in a single method, which now
+takes a boolean as its first argument:
+
+s.set([a, b])               ->   s.set(1, [a, b])
+s.unset([a, b])             ->   s.set(0, [a, b])
+s.allset([a, b])            ->   s.all(1, [a, b])
+s.allunset([a, b])          ->   s.all(0, [a, b])
+s.anyset([a, b])            ->   s.any(1, [a, b])
+s.anyunset([a, b])          ->   s.any(0, [a, b])
+
+* all / any only accept iterables.
+
+The all and any methods (previously called allset, allunset, anyset and
+anyunset) no longer accept a single bit position. The recommended way of
+testing a single bit is just to index it, for example instead of:
+
+>>> if s.all(True, i):
+
+just use
+
+>>> if s[i]:
+
+If you really want to you can of course use an iterable with a single
+element, such as 's.any(False, [i])', but it's clearer just to write
+'not s[i]'.
+
+* Exception raised on reading off end of bitstring.
+
+If a read or peek goes beyond the end of the bitstring then a ReadError
+will be raised. The previous behaviour was that the rest of the bitstring
+would be returned and no exception raised.
+
+* BitStringError renamed to Error.
+
+The base class for errors in the bitstring module is now just Error, so
+it will likely appears in your code as bitstring.Error instead of
+the rather repetitive bitstring.BitStringError.
+
+* Single bit slices and reads return a bool.
+
+A single index slice (such as s[5]) will now return a bool (i.e. True or
+False) rather than a single bit bitstring. This is partly to reflect the
+style of the bytearray type, which returns an integer for single items, but
+mostly to avoid common errors like:
+
+>>> if s[0]:
+...     do_something()
+
+While the intent of this code snippet is quite clear (i.e. do_something if
+the first bit of s is set) under the old rules s[0] would be true as long
+as s wasn't empty. That's because any one-bit bitstring was true as it was a
+non-empty container. Under the new rule s[0] is True if s starts with a '1'
+bit and False if s starts with a '0' bit.
+
+The change does not affect reads and peeks, so s.peek(1) will still return
+a single bit bitstring, which leads on to the next item...
+
+* Empty bitstrings or bitstrings with only zero bits are considered False.
+
+Previously a bitstring was False if it had no elements, otherwise it was True.
+This is standard behaviour for containers, but wasn't very useful for a container
+of just 0s and 1s. The new behaviour means that the bitstring is False if it
+has no 1 bits. This means that code like this:
+
+>>> if s.peek(1):
+...     do_something()
+
+should work as you'd expect. It also means that Bits(1000), Bits(0x00) and
+Bits('uint:12=0') are all also False. If you need to check for the emptiness of
+a bitstring then instead check the len property:
+
+if s                ->   if s.len
+if not s            ->   if not s.len
+
+* Length and offset disallowed for some initialisers.
+
+Previously you could create bitstring using expressions like:
+
+>>> s = Bits(hex='0xabcde', offset=4, length=13)
+
+This has now been disallowed, and the offset and length parameters may only
+be used when initialising with bytes or a file. To replace the old behaviour
+you could instead use
+
+>>> s = Bits(hex='0xabcde')[4:17]
+
+* Renamed 'format' parameter 'fmt'.
+
+Methods with a 'format' parameter have had it renamed to 'fmt', to prevent
+hiding the built-in 'format'. Affects methods unpack, read, peek, readlist,
+peeklist and byteswap and the pack function. 
+
+* Iterables instead of *format accepted for some methods.
+
+This means that for the affected methods (unpack, readlist and peeklist) you
+will need to use an iterable to specify multiple items. This is easier to
+show than to describe, so instead of
+
+>>> a, b, c, d = s.readlist('uint:12', 'hex:4', 'bin:7')
+
+you would instead write
+
+>>> a, b, c, d = s.readlist(['uint:12', 'hex:4', 'bin:7'])
+
+Note that you could still use the single string 'uint:12, hex:4, bin:7' if
+you preferred.
+
+* Bool auto-initialisation removed.
+
+You can no longer use True and False to initialise single bit bitstrings.
+The reasoning behind this is that as bool is a subclass of int, it really is
+bad practice to have Bits(False) be different to Bits(0) and to have Bits(True)
+different to Bits(1).
+
+If you have used bool auto-initialisation then you will have to be careful to
+replace it as the bools will now be interpreted as ints, so Bits(False) will
+be empty (a bitstring of length 0), and Bits(True) will be a single zero bit
+(a bitstring of length 1). Sorry for the confusion, but I think this will
+prevent bigger problems in the future.
+
+There are a few alternatives for creating a single bit bitstring. My favourite
+it to use a list with a single item:
+
+Bits(False)            ->   Bits([0])
+Bits(True)             ->   Bits([1])
+
+* New creation from file strategy
+
+Previously if you created a bitstring from a file, either by auto-initialising
+with a file object or using the filename parameter, the file would not be read
+into memory unless you tried to modify it, at which point the whole file would
+be read.
+
+The new behaviour depends on whether you create a Bits or a BitString from the
+file. If you create a Bits (which is immutable) then the file will never be
+read into memory. This allows very large files to be opened for examination
+even if they could never fit in memory.
+
+If however you create a BitString, the whole of the referenced file will be read
+to store in memory. If the file is very big this could take a long time, or fail,
+but the idea is that in saying you want the mutable BitString you are implicitly
+saying that you want to make changes and so (for now) we need to load it into
+memory.
+
+The new strategy is a bit more predictable in terms of performance than the old.
+The main point to remember is that if you want to open a file and don't plan to
+alter the bitstring then use the Bits class rather than BitString.
+
+Just to be clear, in neither case will the contents of the file ever be changed -
+if you want to output the modified BitString then use the tofile method, for
+example.
+
+* find and rfind return a tuple instead of a bool.
+
+If a find is unsuccessful then an empty tuple is returned (which is False in a
+boolean sense) otherwise a single item tuple with the bit position is returned
+(which is True in a boolean sense). You shouldn't need to recode unless you
+explicitly compared the result of a find to True or False, for example this
+snippet doesn't need to be altered:
+
+>>> if s.find('0x23'):
+...     print(s.bitpos)
+        
+but you could now instead use
+
+>>> found = s.find('0x23')
+>>> if found:
+...     print(found[0])
+
+The reason for returning the bit position in a tuple is so that finding at
+position zero can still be True - it's the tuple (0,) - whereas not found can
+be False - the empty tuple ().
+
+The new features in this release are:
+-------------------------------------
+* New count method.
+
+This method just counts the number of 1 or 0 bits in the bitstring.
+
+>>> s = Bits('0x31fff4')
+>>> s.count(1)
+16
+
+* read and peek methods accept integers.
+
+The read, readlist, peek and peeklist methods now accept integers as parameters
+to mean "read this many bits and return a bitstring". This has allowed a number
+of methods to be removed from this release, so for example instead of:
+
+>>> a, b, c = s.readbits(5, 6, 7)
+>>> if s.peekbit():
+...     do_something()
+
+you should write:
+
+>>> a, b, c = s.readlist([5, 6, 7])
+>>> if s.peek(1):
+...     do_something()
+
+* byteswap used to reverse all bytes.
+
+The byteswap method now allows a format specifier of 0 (the default) to signify
+that all of the whole bytes should be reversed. This means that calling just
+byteswap() is almost equivalent to the now removed bytereverse() method (a small
+difference is that byteswap won't raise an exception if the bitstring isn't a
+whole number of bytes long).
+
+* Auto initialise with bytearray or (for Python 3 only) bytes.
+
+So rather than writing:
+
+>>> a = Bits(bytes=some_bytearray)
+
+you can just write
+
+>>> a = Bits(some_bytearray)
+
+This also works for the bytes type, but only if you're using Python 3.
+For Python 2 it's not possible to distinguish between a bytes object and a
+str. For this reason this method should be used with some caution as it will
+make you code behave differently with the different major Python versions.
+
+>>> b = Bits(b'abcd\x23\x00') # Only Python 3! 
+  
+* set, invert, all and any default to whole bitstring.
+
+This means that you can for example write:
+
+>>> a = BitString(100)       # 100 zero bits
+>>> a.set(1)                 # set all bits to 1
+>>> a.all(1)                 # are all bits set to 1?
+True
+>>> a.any(0)                 # are any set to 0?
+False
+>>> a.invert()               # invert every bit
+  
+* New exception types.
+
+As well as renaming BitStringError to just Error 
+there are also new exceptions which use Error as a base class.
+
+These can be caught in preference to Error if you need finer control.
+The new exceptions sometimes also derive from built-in exceptions:
+
+ByteAlignError(Error) - whole byte position or length needed.
+
+ReadError(Error, IndexError) - reading or peeking off the end of
+the bitstring.
+
+CreationError(Error, ValueError) - inappropriate argument during
+bitstring creation.
+
+InterpretError(Error, ValueError) - inappropriate interpretation of
+binary data.
+
+
+--------------------------------------------------------------
+March 18th 2010: version 1.3.0 for Python 2.6 and 3.x released
+--------------------------------------------------------------
+New features:
+
+* byteswap method for changing endianness.
+
+Changes the endianness in-place according to a format string or
+integer(s) giving the byte pattern. See the manual for details.
+
+>>> s = BitString('0x00112233445566')
+>>> s.byteswap(2)
+3
+>>> s
+BitString('0x11003322554466')
+>>> s.byteswap('h')
+3
+>>> s
+BitString('0x00112233445566')
+>>> s.byteswap([2, 5])
+1
+>>> s
+BitString('0x11006655443322')
+
+* Multiplicative factors in bitstring creation and reading.
+
+For example:
+
+>>> s = Bits('100*0x123')
+
+* Token grouping using parenthesis.
+
+For example:
+
+>>> s = Bits('3*(uint:6=3, 0b1)')
+
+* Negative slice indices allowed.
+
+The start and end parameters of many methods may now be negative, with the
+same meaning as for negative slice indices. Affects all methods with these
+parameters.
+
+* Sequence ABCs used.
+
+The Bits class now derives from collections.Sequence, while the BitString
+class derives from collections.MutableSequence.
+
+* Keywords allowed in readlist, peeklist and unpack.
+
+Keywords for token lengths are now permitted when reading. So for example,
+you can write
+
+>>> s = bitstring.pack('4*(uint:n)', 2, 3, 4, 5, n=7)
+>>> s.unpack('4*(uint:n)', n=7)
+[2, 3, 4, 5]
+
+* start and end parameters added to rol and ror.
+
+* join function accepts other iterables.
+
+Also its parameter has changed from 'bitstringlist' to 'sequence'. This is
+technically a backward incompatibility in the unlikely event that you are
+referring to the parameter by name.
+
+* __init__ method accepts keywords.
+
+Rather than a long list of initialisers the __init__ methods now use a
+**kwargs dictionary for all initialisers except 'auto'. This should have no
+effect, except that this is a small backward incompatibility if you use
+positional arguments when initialising with anything other than auto
+(which would be rather unusual).
+
+* More optimisations.
+
+* Bug fixed in replace method (it could fail if start != 0).
+
+----------------------------------------------------------------
+January 19th 2010: version 1.2.0 for Python 2.6 and 3.x released
+----------------------------------------------------------------
+
+* New 'Bits' class.
+
+Introducing a brand new class, Bits, representing an immutable sequence of
+bits.
+
+The Bits class is the base class for the mutable BitString. The differences
+between Bits and BitStrings are:
+
+1) Bits are immutable, so once they have been created their value cannot change.
+This of course means that mutating methods (append, replace, del etc.) are not
+available for Bits.
+
+2) Bits are hashable, so they can be used in sets and as keys in dictionaries.
+
+3) Bits are potentially more efficient than BitStrings, both in terms of
+computation and memory. The current implementation is only marginally
+more efficient though - this should improve in future versions.
+
+You can switch from Bits to a BitString or vice versa by constructing a new
+object from the old.
+
+>>> s = Bits('0xabcd')
+>>> t = BitString(s)
+>>> t.append('0xe')
+>>> u = Bits(t)
+
+The relationship between Bits and BitString is supposed to loosely mirror that
+between bytes and bytearray in Python 3.
+
+* Deprecation messages turned on.
+
+A number of methods have been flagged for removal in version 2. Deprecation
+warnings will now be given, which include an alternative way to do the same
+thing. All of the deprecated methods have simpler equivalent alternatives.
+
+>>> t = s.slice(0, 2)
+__main__:1: DeprecationWarning: Call to deprecated function slice.
+Instead of 's.slice(a, b, c)' use 's[a:b:c]'.
+
+The deprecated methods are: advancebit, advancebits, advancebyte, advancebytes,
+retreatbit, retreatbits, retreatbyte, retreatbytes, tell, seek, slice, delete,
+tellbyte, seekbyte, truncatestart and truncateend.
+
+* Initialise from bool.
+
+Booleans have been added to the list of types that can 'auto'
+initialise a bitstring.
+
+>>> zerobit = BitString(False)
+>>> onebit = BitString(True)
+
+* Improved efficiency.
+
+More methods have been speeded up, in particular some deletions and insertions.
+
+* Bug fixes.
+
+A rare problem with truncating the start of bitstrings was fixed.
+
+A possible problem outputting the final byte in tofile() was fixed.
+
+-----------------------------------------------------------------
+December 22nd 2009: version 1.1.3 for Python 2.6 and 3.x released
+-----------------------------------------------------------------
+
+This version hopefully fixes an installation problem for platforms with
+case-sensitive file systems. There are no new features or other bug fixes.
+
+-----------------------------------------------------------------
+December 18th 2009: version 1.1.2 for Python 2.6 and 3.x released
+-----------------------------------------------------------------
+
+This is a minor update with (almost) no new features.
+
+* Improved efficiency.
+
+The speed of many typical operations has been increased, some substantially.
+
+* Initialise from integer.
+
+A BitString of '0' bits can be created using just an integer to give the length
+in bits. So instead of
+
+>>> s = BitString(length=100)
+
+you can write just
+
+>>> s = BitString(100)
+
+This matches the behaviour of bytearrays and (in Python 3) bytes.
+
+* A defect related to using the set / unset functions on BitStrings initialised
+from a file has been fixed.
+
+-----------------------------------------------------------------
+November 24th 2009: version 1.1.0 for Python 2.6 and 3.x released
+-----------------------------------------------------------------
+Note that this version will not work for Python 2.4 or 2.5. There may be an
+update for these Python versions some time next year, but it's not a priorty
+quite yet. Also note that only one version is now provided, which works for
+Python 2.6 and 3.x (done with the minimum of hackery!)
+
+* Improved efficiency.
+
+A fair number of functions have improved efficiency, some quite dramatically.
+
+* New bit setting and checking functions.
+
+Although these functions don't do anything that couldn't be done before, they
+do make some common use cases much more efficient. If you need to set or check
+single bits then these are the functions you need.
+
+set / unset : Set bit(s) to 1 or 0 respectively.
+allset / allunset : Check if all bits are 1 or all 0.
+anyset / anyunset : Check if any bits are 1 or any 0.
+
+>>> s = BitString(length=1000)
+>>> s.set((10, 100, 44, 12, 1))
+>>> s.allunset((2, 22, 222))
+True
+>>> s.anyset(range(7, 77))
+True
+
+* New rotate functions.
+
+ror / rol : Rotate bits to the right or left respectively.
+
+>>> s = BitString('0b100000000')
+>>> s.ror(2)
+>>> s.bin
+'0b001000000'
+>>> s.rol(5)
+>>> s.bin
+'0b000000100'
+
+* Floating point interpretations.
+
+New float initialisations and interpretations are available. These only work
+for BitStrings of length 32 or 64 bits.
+
+>>> s = BitString(float=0.2, length=64)
+>>> s.float
+0.200000000000000001
+>>> t = bitstring.pack('<3f', -0.4, 1e34, 17.0)
+>>> t.hex
+'0xcdccccbedf84f67700008841'
+
+* 'bytes' token reintroduced.
+
+This token returns a bytes object (equivalent to a str in Python 2.6).
+
+>>> s = BitString('0x010203')
+>>> s.unpack('bytes:2, bytes:1')
+['\x01\x02', '\x03']
+
+* 'uint' is now the default token type.
+
+So for example these are equivalent:
+
+a, b = s.readlist('uint:12, uint:12')
+a, b = s.readlist('12, 12')
+
+--------------------------------------------------------
+October 10th 2009: version 1.0.1 for Python 3.x released
+--------------------------------------------------------
+This is a straight port of version 1.0.0 to Python 3.
+
+For changes since the last Python 3 release read all the way down in this
+document to version 0.4.3.
+
+This version will also work for Python 2.6, but there's no advantage to using
+it over the 1.0.0 release. It won't work for anything before 2.6.
+
+-------------------------------------------------------
+October 9th 2009: version 1.0.0 for Python 2.x released
+-------------------------------------------------------
+Version 1 is here!
+
+This is the first release not to carry the 'beta' tag. It contains a couple of
+minor new features but is principally a release to fix the API. If you've been
+using an older version then you almost certainly will have to recode a bit. If
+you're not ready to do that then you may wish to delay updating.
+
+So the bad news is that there are lots of small changes to the API. The good
+news is that all the changes are pretty trivial, the new API is cleaner and
+more 'Pythonic', and that by making it version 1.0 I'm promising not to
+tweak it again for some time.
+
+** API Changes **
+
+* New read / peek functions for returning multiple items.
+
+The functions read, readbits, readbytes, peek, peekbits and peekbytes now only
+ever return a single item, never a list.
+
+The new functions readlist, readbitlist, readbytelist, peeklist, peekbitlist
+and peekbytelist can be used to read multiple items and will always return a
+list.
+
+So a line like:
+
+>>> a, b = s.read('uint:12, hex:32')
+
+becomes
+
+>>> a, b = s.readlist('uint:12, hex:32')
+
+* Renaming / removing functions.
+
+Functions have been renamed as follows:
+
+seekbit -> seek
+tellbit -> tell
+reversebits -> reverse
+deletebits -> delete
+tostring -> tobytes
+
+and a couple have been removed altogether:
+
+deletebytes - use delete instead.
+empty - use 'not s' rather than 's.empty()'.
+
+* Renaming parameters.
+
+The parameters 'startbit' and 'endbit' have been renamed 'start' and 'end'.
+This affects the functions slice, find, findall, rfind, reverse, cut and split.
+
+The parameter 'bitpos' has been renamed to 'pos'. The affects the functions
+seek, tell, insert, overwrite and delete.
+
+* Mutating methods return None rather than self.
+
+This means that you can't chain functions together so
+
+>>> s.append('0x00').prepend('0xff')
+>>> t = s.reverse()
+
+Needs to be rewritten
+
+>>> s.append('0x00')
+>>> s.prepend('0xff)
+>>> s.reverse()
+>>> t = s
+
+Affects truncatestart, truncateend, insert, overwrite, delete, append,
+prepend, reverse and reversebytes.
+
+* Properties renamed.
+
+The 'data' property has been renamed to 'bytes'. Also if the BitString is not a
+whole number of bytes then a ValueError exception will be raised when using
+'bytes' as a 'getter'.
+
+Properties 'len' and 'pos' have been added to replace 'length' and 'bitpos',
+although the longer names have not been removed so you can continue to use them
+if you prefer.
+
+* Other changes.
+
+The unpack function now always returns a list, never a single item.
+
+BitStrings are now 'unhashable', so calling hash on one or making a set will
+fail.
+
+The colon separating the token name from its length is now mandatory. So for
+example BitString('uint12=100') becomes BitString('uint:12=100').
+
+Removed support for the 'bytes' token in format strings. Instead of
+s.read('bytes:4') use s.read('bits:32').
+
+** New features **
+
+* Added endswith and startswith functions.
+
+These do much as you'd expect; they return True or False depending on whether
+the BitString starts or ends with the parameter.
+
+>>> BitString('0xef342').startswith('0b11101')
+True
+
+----------------------------------------------------------
+September 11th 2009: version 0.5.2 for Python 2.x released
+----------------------------------------------------------
+Finally some tools for dealing with endianness!
+
+* New interpretations are now available for whole-byte BitStrings that treat
+them as big, little, or native-endian.
+
+>>> big = BitString(intbe=1, length=16) # or BitString('intbe:16=1') if you prefer.
+>>> little = BitString(intle=1, length=16)
+>>> print big.hex, little.hex
+0x0001 0x0100
+>>> print big.intbe, little.intle
+1 1
+
+* 'Struct'-like compact format codes
+
+To save some typing when using pack, unpack, read and peek, compact format
+codes based on those used in the struct and array modules have been added.
+These must start with a character indicating the endianness (>, < or @ for
+big, little and native-endian), followed by characters giving the format:
+
+b 	1-byte signed int
+B 	1-byte unsigned int
+h 	2-byte signed int
+H 	2-byte unsigned int
+l 	4-byte signed int
+L 	4-byte unsigned int
+q 	8-byte signed int
+Q 	8-byte unsigned int
+
+For example:
+
+>>> s = bitstring.pack('<4h', 0, 1, 2, 3)
+
+creates a BitString with four little-endian 2-byte integers. While
+
+>>> x, y, z = s.read('>hhl')
+
+reads them back as two big-endian two-byte integers and one four-byte big
+endian integer.
+
+Of course you can combine this new format with the old ones however you like:
+
+>>> s.unpack('<h, intle:24, uint:5, bin')
+[0, 131073, 0, '0b0000000001100000000']
+
+-------------------------------------------------------
+August 26th 2009: version 0.5.1 for Python 2.x released
+-------------------------------------------------------
+
+This update introduces pack and unpack functions for creating and dissembling
+BitStrings.
+
+* New pack() and unpack() functions.
+
+The module level pack function provides a flexible new method for creating
+BitStrings. Tokens for BitString 'literals' can be used in the same way as in
+the constructor.
+
+>>> from bitstring import BitString, pack
+>>> a = pack('0b11, 0xff, 0o77, int:5=-1, se=33')
+
+You can also leave placeholders in the format, which will be filled in by
+the values provided.
+
+>>> b = pack('uint:10, hex:4', 33, 'f')
+
+Finally you can use a dictionary or keywords.
+
+>>> c = pack('bin=a, hex=b, bin=a', a='010', b='ef')
+
+The unpack function is similar to the read function except that it always
+unpacks from the start of the BitString.
+
+>>> x, y = b.unpack('uint:10, hex')
+
+If a token is given without a length (as above) then it will expand to fill the
+remaining bits in the BitString. This also now works with read() and peek().
+
+* New tostring() and tofile() functions.
+
+The tostring() function just returns the data as a string, with up to seven
+zero bits appended to byte align. The tofile() function does the same except
+writes to a file object.
+
+>>> f = open('myfile', 'wb')
+>>> BitString('0x1234ff').tofile(f)
+
+* Other changes.
+
+The use of '=' is now mandatory in 'auto' initialisers. Tokens like 'uint12 100' will
+no longer work. Also the use of a ':' before the length is encouraged, but not yet
+mandated. So the previous example should be written as 'uint:12=100'.
+
+The 'auto' initialiser will now take a file object.
+
+>>> f = open('myfile', 'rb')
+>>> s = BitString(f)
+
+-----------------------------------------------------
+July 19th 2009: version 0.5.0 for Python 2.x released
+-----------------------------------------------------
+
+This update breaks backward compatibility in a couple of areas. The only one
+you probably need to be concerned about is the change to the default for
+bytealigned in find, replace, split, etc.
+
+See the user manual for more details on each of these items.
+
+* Expanded abilities of 'auto' initialiser.
+
+More types can be initialised through the 'auto' initialiser. For example
+instead of
+
+>>> a = BitString(uint=44, length=16)
+
+you can write
+
+>>> a = BitString('uint16=44')
+
+Also, different comma-separated tokens will be joined together, e.g.
+
+>>> b = BitString('0xff') + 'int8=-5'
+
+can be written
+
+>>> b = BitString('0xff, int8=-5')
+
+* New formatted read() and peek() functions.
+
+These takes a format string similar to that used in the auto initialiser.
+If only one token is provided then a single value is returned, otherwise a
+list of values is returned.
+
+>>> start_code, width, height = s.read('hex32, uint12, uint12')
+
+is equivalent to
+
+>>> start_code = s.readbits(32).hex
+>>> width = s.readbits(12).uint
+>>> height = s.readbits(12).uint
+
+The tokens are:
+
+  int n   : n bits as an unsigned integer.
+  uint n  : n bits as a signed integer.
+  hex n   : n bits as a hexadecimal string.
+  oct n   : n bits as an octal string.
+  bin n   : n bits as a binary string.
+  ue      : next bits as an unsigned exp-Golomb.
+  se      : next bits as a signed exp-Golomb.
+  bits n  : n bits as a new BitString.
+  bytes n : n bytes as a new BitString.
+
+See the user manual for more details.
+
+* hex() and oct() functions removed.
+
+The special functions for hex() and oct() have been removed. Please use the
+hex and oct properties instead.
+
+>>> hex(s)
+
+becomes
+
+>>> s.hex
+
+* join made a member function.
+
+The join function must now be called on a BitString object, which will be
+used to join the list together. You may need to recode slightly:
+
+>>> s = bitstring.join('0x34', '0b1001', '0b1')
+
+becomes
+
+>>> s = BitString().join('0x34', '0b1001', '0b1')
+
+* More than one value allowed in readbits, readbytes, peekbits and peekbytes
+
+If you specify more than one bit or byte length then a list of BitStrings will
+be returned.
+
+>>> a, b, c = s.readbits(10, 5, 5)
+
+is equivalent to
+
+>>> a = readbits(10)
+>>> b = readbits(5)
+>>> c = readbits(5)
+
+* bytealigned defaults to False, and is at the end of the parameter list
+
+Functions that have a bytealigned paramater have changed so that it now
+defaults to False rather than True. Also its position in the parameter list
+has changed to be at the end. You may need to recode slightly (sorry!)
+
+* readue and readse functions have been removed
+
+Instead you should use the new read function with a 'ue' or 'se' token:
+
+>>> i = s.readue()
+
+becomes
+
+>>> i = s.read('ue')
+
+This is more flexible as you can read multiple items in one go, plus you can
+now also use the peek function with ue and se.
+
+* Minor bugs fixed.
+
+See the issue tracker for more details.
+
+-----------------------------------------------------
+June 15th 2009: version 0.4.3 for Python 2.x released
+-----------------------------------------------------
+
+This is a minor update. This release is the first to bundle the bitstring
+manual. This is a PDF and you can find it in the docs directory.
+
+Changes in version 0.4.3
+
+* New 'cut' function
+
+This function returns a generator for constant sized chunks of a BitString.
+
+>>> for byte in s.cut(8):
+...     do_something_with(byte)
+
+You can also specify a startbit and endbit, as well as a count, which limits
+the number of items generated:
+
+>>> first100TSPackets = list(s.cut(188*8, count=100))
+
+* 'slice' function now equivalent to __getitem__.
+
+This means that a step can also be given to the slice function so that the
+following are now the same thing, and it's just a personal preference which
+to use:
+
+>>> s1 = s[a:b:c]
+>>> s2 = s.slice(a, b, c)
+
+* findall gets a 'count' parameter.
+
+So now
+
+>>> list(a.findall(s, count=n))
+
+is equivalent to
+
+>>> list(a.findall(s))[:n]
+
+except that it won't need to generate the whole list and so is much more
+efficient.
+
+* Changes to 'split'.
+
+The split function now has a 'count' parameter rather than 'maxsplit'. This
+makes the interface closer to that for cut, replace and findall. The final item
+generated is now no longer the whole of the rest of the BitString.
+
+* A couple of minor bugs were fixed. See the issue tracker for details.
+
+----------------------------------------------------
+May 25th 2009: version 0.4.2 for Python 2.x released
+----------------------------------------------------
+
+This is a minor update, and almost doesn't break compatibility with version
+0.4.0, but with the slight exception of findall() returning a generator,
+detailed below.
+
+Changes in version 0.4.2
+
+* Stepping in slices
+
+The use of the step parameter (also known as the stride) in slices has been
+added. Its use is a little non-standard as it effectively gives a multiplicative
+factor to apply to the start and stop parameters, rather than skipping over
+bits.
+
+For example this makes it much more convenient if you want to give slices in
+terms of bytes instead of bits. Instead of writing s[a*8:b*8] you can use
+s[a:b:8].
+
+When using a step the BitString is effectively truncated to a multiple of the
+step, so s[::8] is equal to s if s is an integer number of bytes, otherwise it
+is truncated by up to 7 bits. So the final seven complete 16-bit words could be
+written as s[-7::16]
+
+Negative slices are also allowed, and should do what you'd expect. So for
+example s[::-1] returns a bit-reversed copy of s (which is similar to
+s.reversebits(), which does the same operation on s in-place). As another
+example, to get the first 10 bytes in reverse byte order you could use
+s_bytereversed = s[0:10:-8].
+
+* Removed restrictions on offset
+
+You can now specify an offset of greater than 7 bits when creating a BitString,
+and the use of offset is also now permitted when using the filename initialiser.
+This is useful when you want to create a BitString from the middle of a file
+without having to read the file into memory.
+
+>>> f = BitString(filename='reallybigfile', offset=8000000, length=32)
+
+* Integers can be assigned to slices
+
+You can now assign an integer to a slice of a BitString. If the integer doesn't
+fit in the size of slice given then a ValueError exception is raised. So this
+is now allowed and works as expected:
+
+>>> s[8:16] = 106
+
+and is equivalent to
+
+>>> s[8:16] = BitString(uint=106, length=8)
+
+* Less exceptions raised
+
+Some changes have been made to slicing so that less exceptions are raised,
+bringing the interface closer to that for lists. So for example trying to delete
+past the end of the BitString will now just delete to the end, rather than
+raising a ValueError.
+
+* Initialisation from lists and tuples
+
+A new option for the auto initialiser is to pass it a list or tuple. The items
+in the list or tuple are evaluated as booleans and the bits in the BitString are
+set to 1 for True items and 0 for False items. This can be used anywhere the
+auto initialiser can currently be used. For example:
+
+>>> a = BitString([True, 7, False, 0, ()])     # 0b11000
+>>> b = a + ['Yes', '']                        # Adds '0b10'
+>>> (True, True, False) in a
+True
+
+* Miscellany
+
+reversebits() now has optional startbit and endbit parameters.
+
+As an optimisation findall() will return a generator, rather than a list. If you
+still want the whole list then of course you can just call list() on the
+generator.
+
+Improved efficiency of rfind().
+
+A couple of minor bugs were fixed. See the issue tracker for details.
+
+-----------------------------------------------------
+April 23rd 2009: Python 3 only version 0.4.1 released
+-----------------------------------------------------
+
+This version is just a port of version 0.4.0 to Python 3. All the unit tests
+pass, but beyond that only limited ad hoc testing has been done and so it
+should be considered an experimental release. That said, the unit test
+coverage is very good - I'm just not sure if anyone even wants a Python 3
+version!
+
+---------------------------------------
+April 11th 2009: version 0.4.0 released
+---------------------------------------
+Changes in version 0.4.0
+
+* New functions
+
+Added rfind(), findall(), replace(). These do pretty much what you'd expect -
+see the docstrings or the wiki for more information.
+
+* More special functions
+
+Some missing functions were added: __repr__, __contains__, __rand__,
+__ror__, _rxor__ and __delitem__.
+
+* Miscellany
+
+A couple of small bugs were fixed (see the issue tracker).
+
+----
+
+There are some small backward incompatibilities relative to version 0.3.2:
+
+* Combined find() and findbytealigned()
+
+findbytealigned() has been removed, and becomes part of find(). The default
+start position has changed on both find() and split() to be the start of the
+BitString. You may need to recode:
+
+>>> s1.find(bs)
+>>> s2.findbytealigned(bs)
+>>> s2.split(bs)
+
+becomes
+
+>>> s1.find(bs, bytealigned=False, startbit=s1.bitpos)
+>>> s2.find(bs, startbit=s1.bitpos)  # bytealigned defaults to True
+>>> s2.split(bs, startbit=s2.bitpos)
+
+* Reading off end of BitString no longer raises exception.
+
+Previously a read or peek function that encountered the end of the BitString
+would raise a ValueError. It will now instead return the remainder of the
+BitString, which could be an empty BitString. This is closer to the file
+object interface.
+
+* Removed visibility of offset.
+
+The offset property was previously read-only, and has now been removed from
+public view altogether. As it is used internally for efficiency reasons you
+shouldn't really have needed to use it. If you do then use the _offset parameter
+instead (with caution).
+
+---------------------------------------
+March 11th 2009: version 0.3.2 released
+---------------------------------------
+Changes in version 0.3.2
+
+* Better performance
+
+A number of functions (especially find() and findbytealigned()) have been sped
+up considerably.
+
+* Bit-wise operations
+
+Added support for bit-wise AND (&), OR (|) and XOR (^). For example:
+
+>>> a = BitString('0b00111')
+>>> print a & '0b10101'
+0b00101
+
+* Miscellany
+
+Added seekbit() and seekbyte() functions. These complement the 'advance' and
+'retreat' functions, although you can still just use bitpos and bytepos
+properties directly.
+
+>>> a.seekbit(100)                   # Equivalent to a.bitpos = 100
+
+Allowed comparisons between BitString objects and strings. For example this
+will now work:
+
+>>> a = BitString('0b00001111')
+>>> a == '0x0f'
+True
+
+------------------------------------------
+February 26th 2009: version 0.3.1 released
+------------------------------------------
+Changes in version 0.3.1
+
+This version only adds features and fixes bugs relative to 0.3.0, and doesn't
+break backwards compatibility.
+
+* Octal interpretation and initialisation
+
+The oct property now joins bin and hex. Just prefix octal numbers with '0o'.
+
+>>> a = BitString('0o755')
+>>> print a.bin
+0b111101101
+
+* Simpler copying
+
+Rather than using b = copy.copy(a) to create a copy of a BitString, now you
+can just use b = BitString(a).
+
+* More special methods
+
+Lots of new special methods added, for example bit-shifting via << and >>,
+equality testing via == and !=, bit inversion (~) and concatenation using *.
+
+Also __setitem__ is now supported so BitString objects can be modified using
+standard index notation.
+
+* Proper installer
+
+Finally got round to writing the distutils script. To install just
+python setup.py install.
+
+------------------------------------------
+February 15th 2009: version 0.3.0 released
+------------------------------------------
+Changes in version 0.3.0
+
+* Simpler initialisation from binary and hexadecimal
+
+The first argument in the BitString constructor is now called auto and will
+attempt to interpret the type of a string. Prefix binary numbers with '0b'
+and hexadecimals with '0x'.
+
+>>> a = BitString('0b0')         # single zero bit
+>>> b = BitString('0xffff')      # two bytes
+
+Previously the first argument was data, so if you relied on this then you
+will need to recode:
+
+>>> a = BitString('\x00\x00\x01\xb3')   # Don't do this any more!
+
+becomes
+
+>>> a = BitString(data='\x00\x00\x01\xb3')
+
+or just
+
+>>> a = BitString('0x000001b3')
+
+This new notation can also be used in functions that take a BitString as an
+argument. For example:
+
+>>> a = BitString('0x0011') + '0xff'
+>>> a.insert('0b001', 6)
+>>> a.find('0b1111')
+
+* BitString made more mutable
+
+The functions append, deletebits, insert, overwrite, truncatestart and
+truncateend now modify the BitString that they act upon. This allows for
+cleaner and more efficient code, but you may need to rewrite slightly if you
+depended upon the old behaviour:
+
+>>> a = BitString(hex='0xffff')
+>>> a = a.append(BitString(hex='0x00'))
+>>> b = a.deletebits(10, 10)
+
+becomes:
+
+>>> a = BitString('0xffff')
+>>> a.append('0x00')
+>>> b = copy.copy(a)
+>>> b.deletebits(10, 10)
+
+Thanks to Frank Aune for suggestions in this and other areas.
+
+* Changes to printing
+
+The binary interpretation of a BitString is now prepended with '0b'. This is
+in keeping with the Python 2.6 (and 3.0) bin function. The prefix is optional
+when initialising using 'bin='.
+
+Also, if you just print a BitString with no interpretation it will pick
+something appropriate - hex if it is an integer number of bytes, otherwise
+binary. If the BitString representation is very long it will be truncated
+by '...' so it is only an approximate interpretation.
+
+>>> a = BitString('0b0011111')
+>>> print a
+0b0011111
+>>> a += '0b0'
+>>> print a
+0x3e
+
+* More convenience functions
+
+Some missing functions such as advancebit and deletebytes have been added. Also
+a number of peek functions make an appearance as have prepend and reversebits.
+See the Tutorial for more details.
+
+-----------------------------------------
+January 13th 2009: version 0.2.0 released
+-----------------------------------------
+Some fairly minor updates, not really deserving of a whole version point update.
+------------------------------------------
+December 29th 2008: version 0.1.0 released
+------------------------------------------
+First release!
