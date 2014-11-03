@@ -22,58 +22,20 @@ this.DEBUG_ALL = false;
 this.DEBUG_CONTENT_HELPER = false || DEBUG_ALL;
 this.DEBUG_NFC = false || DEBUG_ALL;
 
-// nfcd error codes
-this.NFC_SUCCESS = 0;
-this.NFC_ERROR_IO = -1;
-this.NFC_ERROR_TIMEOUT = -2;
-this.NFC_ERROR_BUSY = -3;
-this.NFC_ERROR_CONNECT = -4;
-this.NFC_ERROR_DISCONNECT = -5;
-this.NFC_ERROR_READ = -6;
-this.NFC_ERROR_WRITE = -7;
-this.NFC_ERROR_INVALID_PARAM = -8;
-this.NFC_ERROR_INSUFFICIENT_RESOURCES = -9;
-this.NFC_ERROR_SOCKET_CREATION = -10;
-this.NFC_ERROR_FAIL_ENABLE_DISCOVERY = -11;
-this.NFC_ERROR_FAIL_DISABLE_DISCOVERY = -12;
-this.NFC_ERROR_NOT_INITIALIZED = -13;
-this.NFC_ERROR_INITIALIZE_FAIL = -14;
-this.NFC_ERROR_DEINITIALIZE_FAIL = -15;
-this.NFC_ERROR_NOT_SUPPORTED = -16;
-this.NFC_ERROR_BAD_SESSION_ID = -17,
-this.NFC_ERROR_FAIL_ENABLE_LOW_POWER_MODE = -18;
-this.NFC_ERROR_FAIL_DISABLE_LOW_POWER_MODE = -19;
-
 // Gecko specific error codes
+this.NFC_GECKO_SUCCESS = 0;
 this.NFC_GECKO_ERROR_GENERIC_FAILURE = 1;
 this.NFC_GECKO_ERROR_P2P_REG_INVALID = 2;
 this.NFC_GECKO_ERROR_NOT_ENABLED = 3;
 this.NFC_GECKO_ERROR_SEND_FILE_FAILED = 4;
+this.NFC_GECKO_ERROR_BAD_SESSION_ID = 5;
 
 this.NFC_ERROR_MSG = {};
-this.NFC_ERROR_MSG[this.NFC_ERROR_IO] = "NfcIoError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_TIMEOUT] = "NfcTimeoutError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_BUSY] = "NfcBusyError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_CONNECT] = "NfcConnectError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_DISCONNECT] = "NfcDisconnectError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_READ] = "NfcReadError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_WRITE] = "NfcWriteError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_INVALID_PARAM] = "NfcInvalidParamError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_INSUFFICIENT_RESOURCES] = "NfcInsufficentResourcesError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_SOCKET_CREATION] = "NfcSocketCreationError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_FAIL_ENABLE_DISCOVERY] = "NfcFailEnableDiscoveryError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_FAIL_DISABLE_DISCOVERY] = "NfcFailDisableDiscoveryError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_NOT_INITIALIZED] = "NfcNotInitializedError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_INITIALIZE_FAIL] = "NfcInitializeFailError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_DEINITIALIZE_FAIL] = "NfcDeinitializeFailError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_NOT_SUPPORTED] = "NfcNotSupportedError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_BAD_SESSION_ID] = "NfcBadSessionIdError";
-this.NFC_ERROR_MSG[this.NFC_ERROR_FAIL_ENABLE_LOW_POWER_MODE] = "EnableLowPowerModeFail";
-this.NFC_ERROR_MSG[this.NFC_ERROR_FAIL_DISABLE_LOW_POWER_MODE] = "DisableLowPowerModeFail";
 this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_GENERIC_FAILURE] = "NfcGenericFailureError";
 this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_P2P_REG_INVALID] = "NfcP2PRegistrationInvalid";
 this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_NOT_ENABLED] = "NfcNotEnabledError";
 this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_SEND_FILE_FAILED] = "NfcSendFileFailed";
+this.NFC_ERROR_MSG[this.NFC_GECKO_ERROR_BAD_SESSION_ID] = "NfcBadSessionID";
 
 // NFC powerlevels must match config PDUs.
 this.NFC_POWER_LEVEL_UNKNOWN        = -1;

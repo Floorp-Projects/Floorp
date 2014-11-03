@@ -85,13 +85,14 @@ struct CommandOptions
 struct EventOptions
 {
   EventOptions()
-    : mType(EmptyString()), mStatus(-1), mSessionId(-1), mRequestId(EmptyString()), mMajorVersion(-1), mMinorVersion(-1),
-      mIsReadOnly(-1), mCanBeMadeReadOnly(-1), mMaxSupportedLength(-1), mPowerLevel(-1),
-      mOriginType(-1), mOriginIndex(-1)
+    : mType(EmptyString()), mStatus(-1), mErrorCode(-1), mSessionId(-1), mRequestId(EmptyString()),
+      mMajorVersion(-1), mMinorVersion(-1), mIsReadOnly(-1), mCanBeMadeReadOnly(-1),
+      mMaxSupportedLength(-1), mPowerLevel(-1), mOriginType(-1), mOriginIndex(-1)
   {}
 
   nsString mType;
   int32_t mStatus;
+  int32_t mErrorCode;
   int32_t mSessionId;
   nsString mRequestId;
   int32_t mMajorVersion;
