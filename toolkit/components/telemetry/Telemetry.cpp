@@ -1996,10 +1996,32 @@ AddonHistogramName(const nsACString &id, const nsACString &name,
 NS_IMETHODIMP
 TelemetryImpl::RegisterAddonHistogram(const nsACString &id,
                                       const nsACString &name,
+                                      uint32_t histogramType,
                                       uint32_t min, uint32_t max,
                                       uint32_t bucketCount,
-                                      uint32_t histogramType)
+                                      uint8_t optArgCount)
 {
+  if (histogramType == HISTOGRAM_EXPONENTIAL ||
+      histogramType == HISTOGRAM_LINEAR) {
+    if (optArgCount != 3) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // Sanity checks for histogram parameters.
+    if (min >= max)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    if (bucketCount <= 2)
+      return NS_ERROR_ILLEGAL_VALUE;
+
+    if (min < 1)
+      return NS_ERROR_ILLEGAL_VALUE;
+  } else {
+    min = 1;
+    max = 2;
+    bucketCount = 3;
+  }
+
   AddonEntryType *addonEntry = mAddonMap.GetEntry(id);
   if (!addonEntry) {
     addonEntry = mAddonMap.PutEntry(id);

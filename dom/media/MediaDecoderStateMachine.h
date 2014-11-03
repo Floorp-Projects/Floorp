@@ -340,10 +340,11 @@ public:
   void SetMinimizePrerollUntilPlaybackStarts();
 
   void OnAudioDecoded(AudioData* aSample);
-  void OnAudioEOS();
   void OnVideoDecoded(VideoData* aSample);
-  void OnVideoEOS();
-  void OnDecodeError();
+  void OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason);
+
+private:
+  void AcquireMonitorAndInvokeDecodeError();
 
 protected:
   virtual ~MediaDecoderStateMachine();

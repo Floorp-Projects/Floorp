@@ -190,7 +190,7 @@ LayerManagerD3D10::Initialize(bool force, HRESULT* aHresultPtr)
 
     attachments->mInputLayout = mInputLayout;
   
-    Vertex vertices[] = { {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} };
+    Vertex vertices[] = { {{0.0, 0.0}}, {{1.0, 0.0}}, {{0.0, 1.0}}, {{1.0, 1.0}} };
     CD3D10_BUFFER_DESC bufferDesc(sizeof(vertices), D3D10_BIND_VERTEX_BUFFER);
     D3D10_SUBRESOURCE_DATA data;
     data.pSysMem = (void*)vertices;

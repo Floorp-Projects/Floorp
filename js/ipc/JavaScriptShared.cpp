@@ -517,6 +517,12 @@ JavaScriptShared::findObjectById(JSContext *cx, const ObjectId &objId)
     // wrappers.
     JSAutoCompartment ac(cx, scopeForTargetObjects());
     if (objId.hasXrayWaiver()) {
+        {
+            JSAutoCompartment ac2(cx, obj);
+            obj = JS_ObjectToOuterObject(cx, obj);
+            if (!obj)
+                return nullptr;
+        }
         if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &obj))
             return nullptr;
     } else {

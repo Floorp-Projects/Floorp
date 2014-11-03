@@ -50,15 +50,11 @@ public:
 
   void OnAudioDecoded(AudioData* aSample);
 
-  void OnAudioEOS();
-
   void RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) MOZ_OVERRIDE;
 
   void OnVideoDecoded(VideoData* aSample);
 
-  void OnVideoEOS();
-
-  void OnDecodeError();
+  void OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason);
 
   bool HasVideo() MOZ_OVERRIDE
   {

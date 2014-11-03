@@ -2418,8 +2418,6 @@ WorkerPrivateParent<Derived>::Suspend(JSContext* aCx, nsPIDOMWindow* aWindow)
     }
   }
 
-//  MOZ_ASSERT(!mParentSuspended, "Suspended more than once!");
-
   mParentSuspended = true;
 
   {
@@ -2551,7 +2549,13 @@ WorkerPrivateParent<Derived>::SynchronizeAndResume(
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(!GetParent());
-  MOZ_ASSERT_IF(IsDedicatedWorker(), mParentSuspended);
+
+  if (IsDedicatedWorker() && !mParentSuspended) {
+    // If we are in here, it means that this worker has been created when the
+    // parent was actually suspended (maybe during a sync XHR), and in this case
+    // don't need to dispatch a SynchronizeAndResumeRunnable.
+    return true;
+  }
 
   // NB: There may be pending unqueued messages.  If we resume here we will
   // execute those messages out of order.  Instead we post an event to the

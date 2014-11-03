@@ -690,45 +690,6 @@ MediaDecoderStateMachine::IsVideoSeekComplete()
 }
 
 void
-MediaDecoderStateMachine::OnAudioEOS()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  SAMPLE_LOG("OnAudioEOS");
-  mAudioRequestPending = false;
-  AudioQueue().Finish();
-  switch (mState) {
-    case DECODER_STATE_DECODING_METADATA: {
-      MaybeFinishDecodeMetadata();
-      return;
-    }
-    case DECODER_STATE_BUFFERING:
-    case DECODER_STATE_DECODING: {
-      CheckIfDecodeComplete();
-      SendStreamData();
-      // The ready state can change when we've decoded data, so update the
-      // ready state, so that DOM events can fire.
-      UpdateReadyState();
-      mDecoder->GetReentrantMonitor().NotifyAll();
-      return;
-    }
-
-    case DECODER_STATE_SEEKING: {
-      if (!mCurrentSeekTarget.IsValid()) {
-        // We've received an EOS from a previous decode. Discard it.
-        return;
-      }
-      mDropAudioUntilNextDiscontinuity = false;
-      CheckIfSeekComplete();
-      return;
-    }
-    default: {
-      // Ignore other cases.
-      return;
-    }
-  }
-}
-
-void
 MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -836,7 +797,84 @@ MediaDecoderStateMachine::Push(VideoData* aSample)
 }
 
 void
-MediaDecoderStateMachine::OnDecodeError()
+MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
+                                       RequestSampleCallback::NotDecodedReason aReason)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  SAMPLE_LOG("OnNotDecoded (aType=%u, aReason=%u)", aType, aReason);
+  bool isAudio = aType == MediaData::AUDIO_DATA;
+  MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
+
+  // This callback means that the pending request is dead.
+  if (isAudio) {
+    mAudioRequestPending = false;
+  } else {
+    mVideoRequestPending = false;
+  }
+
+  // If this is a decode error, delegate to the generic error path.
+  if (aReason == RequestSampleCallback::DECODE_ERROR) {
+    DecodeError();
+    return;
+  }
+
+  // If the decoder is waiting for data, there's nothing more to do after
+  // clearing the pending request.
+  if (aReason == RequestSampleCallback::WAITING_FOR_DATA) {
+    return;
+  }
+
+  // This is an EOS. Finish off the queue, and then handle things based on our
+  // state.
+  MOZ_ASSERT(aReason == RequestSampleCallback::END_OF_STREAM);
+  if (!isAudio && mState == DECODER_STATE_SEEKING &&
+      mCurrentSeekTarget.IsValid() && mFirstVideoFrameAfterSeek) {
+    // Null sample. Hit end of stream. If we have decoded a frame,
+    // insert it into the queue so that we have something to display.
+    // We make sure to do this before invoking VideoQueue().Finish()
+    // below.
+    VideoQueue().Push(mFirstVideoFrameAfterSeek.forget());
+  }
+  isAudio ? AudioQueue().Finish() : VideoQueue().Finish();
+  switch (mState) {
+    case DECODER_STATE_DECODING_METADATA: {
+      MaybeFinishDecodeMetadata();
+      return;
+    }
+
+    case DECODER_STATE_BUFFERING:
+    case DECODER_STATE_DECODING: {
+      CheckIfDecodeComplete();
+      SendStreamData();
+      // The ready state can change when we've decoded data, so update the
+      // ready state, so that DOM events can fire.
+      UpdateReadyState();
+      mDecoder->GetReentrantMonitor().NotifyAll();
+      return;
+    }
+    case DECODER_STATE_SEEKING: {
+      if (!mCurrentSeekTarget.IsValid()) {
+        // We've received a sample from a previous decode. Discard it.
+        return;
+      }
+
+      if (isAudio) {
+        mDropAudioUntilNextDiscontinuity = false;
+      } else {
+        mDropVideoUntilNextDiscontinuity = false;
+      }
+
+      CheckIfSeekComplete();
+      return;
+    }
+    default: {
+      return;
+    }
+  }
+}
+
+void
+MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   DecodeError();
@@ -852,52 +890,6 @@ MediaDecoderStateMachine::MaybeFinishDecodeMetadata()
   }
   if (NS_FAILED(FinishDecodeMetadata())) {
     DecodeError();
-  }
-}
-
-void
-MediaDecoderStateMachine::OnVideoEOS()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  SAMPLE_LOG("OnVideoEOS");
-  mVideoRequestPending = false;
-  switch (mState) {
-    case DECODER_STATE_DECODING_METADATA: {
-      VideoQueue().Finish();
-      MaybeFinishDecodeMetadata();
-      return;
-    }
-
-    case DECODER_STATE_BUFFERING:
-    case DECODER_STATE_DECODING: {
-      VideoQueue().Finish();
-      CheckIfDecodeComplete();
-      SendStreamData();
-      // The ready state can change when we've decoded data, so update the
-      // ready state, so that DOM events can fire.
-      UpdateReadyState();
-      mDecoder->GetReentrantMonitor().NotifyAll();
-      return;
-    }
-    case DECODER_STATE_SEEKING: {
-      if (!mCurrentSeekTarget.IsValid()) {
-        // We've received a sample from a previous decode. Discard it.
-        return;
-      }
-      // Null sample. Hit end of stream. If we have decoded a frame,
-      // insert it into the queue so that we have something to display.
-      if (mFirstVideoFrameAfterSeek) {
-        VideoQueue().Push(mFirstVideoFrameAfterSeek.forget());
-      }
-      VideoQueue().Finish();
-      mDropVideoUntilNextDiscontinuity = false;
-      CheckIfSeekComplete();
-      return;
-    }
-    default: {
-      // Ignore other cases.
-      return;
-    }
   }
 }
 
@@ -3167,10 +3159,10 @@ void MediaDecoderStateMachine::OnAudioSinkError()
   // Otherwise notify media decoder/element about this error for it makes
   // no sense to play an audio-only file without sound output.
   RefPtr<nsIRunnable> task(
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnDecodeError));
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError));
   nsresult rv = mDecodeTaskQueue->Dispatch(task);
   if (NS_FAILED(rv)) {
-    DECODER_WARN("Failed to dispatch OnDecodeError");
+    DECODER_WARN("Failed to dispatch AcquireMonitorAndInvokeDecodeError");
   }
 }
 

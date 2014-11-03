@@ -1,3 +1,227 @@
 % This Source Code Form is subject to the terms of the Mozilla Public
 % License, v. 2.0. If a copy of the MPL was not distributed with this
 % file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+/* devedition.css is loaded in browser.xul after browser.css when it is
+   preffed on.  The bulk of the styling is here in the shared file, but
+   there are overrides for each platform in their devedition.css files. */
+
+:root {
+  /* Chrome */
+  --space-above-tabbar: 1px;
+  --chrome-background-color: #1C2126;
+  --chrome-color: #F5F7FA;
+  --chrome-secondary-background-color: #39424D;
+  --chrome-navigator-toolbox-separator-color: rgba(0,0,0,.2);
+
+  /* Tabs */
+  --tabs-toolbar-color: #F5F7FA;
+  --tab-background-color: #1C2126;
+  --tab-color: #ced3d9;
+  --tab-hover-background-color: hsla(206,37%,4%,.5);
+  --tab-separator-color: #464C50;
+  --tab-selection-color: #f5f7fa;
+  --tab-selection-background-color: #1a4666;
+  --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
+                                     0 8px 3px -5px #2b82bf inset,
+                                     0 -2px 0 rgba(0,0,0,.2) inset;
+
+  /* Toolbar buttons */
+  --toolbarbutton-hover-background: rgba(25,33, 38,.6) linear-gradient(rgba(25,33,38,.6), rgba(25,33,38,.6)) padding-box;
+  --toolbarbutton-hover-boxshadow: none;
+  --toolbarbutton-hover-bordercolor: rgba(25,33,38,.6);
+  --toolbarbutton-active-background: rgba(25,33,38,1) linear-gradient(rgba(25,33,38,1), rgba(25,33,38,1)) border-box;
+  --toolbarbutton-active-boxshadow: none;
+  --toolbarbutton-active-bordercolor: rgba(25,33,38,.8);
+  --toolbarbutton-checkedhover-backgroundcolor: #1D4F73;
+  --toolbarbutton-combined-boxshadow: none;
+  --toolbarbutton-combined-backgroundimage: linear-gradient(#5F6670 0, #5F6670 18px);
+  --toolbarbutton-text-shadow: none;
+
+  /* Identity box */
+  --identity-box-chrome-color: #46afe3;
+  --identity-box-chrome-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
+  --identity-box-verified-background-image: linear-gradient(#5F6670 0, #5F6670 100%);
+  --verified-identity-box-backgroundcolor: transparent;
+
+  /* Url and search bars */
+  --url-and-searchbar-background-color: #171B1F;
+  --url-and-searchbar-color: #fff;
+  --urlbar-dropmarker-url: url("chrome://browser/skin/devedition/urlbar-history-dropmarker.svg");
+  --urlbar-dropmarker-region: rect(0px, 11px, 14px, 0px);
+  --urlbar-dropmarker-active-region: rect(0px, 22px, 14px, 11px);
+  --urlbar-dropmarker-2x-url: url("chrome://browser/skin/devedition/urlbar-history-dropmarker.svg");
+  --urlbar-dropmarker-2x-region: rect(0px, 11px, 14px, 0px);
+  --urlbar-dropmarker-active-2x-region: rect(0px, 22px, 14px, 11px);
+
+  /* Menu button separator */
+  --panel-ui-button-background-image: linear-gradient(to bottom, #5E6670, #5E6670);
+  --panel-ui-button-background-size: 1px calc(100% - 1px);
+  --panel-ui-button-background-position: 1px 0px;
+}
+
+.searchbar-dropmarker-image {
+  --searchbar-dropmarker-url: url("chrome://browser/skin/devtools/dropmarker.svg");
+  --searchbar-dropmarker-2x-url: url("chrome://browser/skin/devtools/dropmarker.svg");
+}
+
+/* Give some space to drag the window around while customizing
+   (normal space to left and right of tabs doesn't work in this case) */
+#main-window[tabsintitlebar][customizing] {
+  --space-above-tabbar: 9px;
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+#navigator-toolbox ::-moz-selection {
+  background-color: #074D75;
+  color: #fff;
+}
+
+/* Change the base colors for the browser chrome */
+
+#tabbrowser-tabs,
+#TabsToolbar,
+#browser-panel {
+  background: var(--chrome-background-color);
+  color: var(--chrome-color);
+}
+
+#navigator-toolbox::after {
+  background: var(--chrome-navigator-toolbox-separator-color)
+}
+
+#navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
+#browser-bottombox {
+  background: var(--chrome-secondary-background-color) !important;
+  color: var(--chrome-color);
+}
+
+#navigator-toolbox .toolbarbutton-1:not(.subviewbutton):not(:hover):not([open]),
+toolbarbutton.bookmark-item:not(.subviewbutton):not(:hover):not([open]) {
+  color: var(--chrome-color);
+  text-shadow: var(--toolbarbutton-text-shadow);
+}
+
+/* Using toolbar[brighttext] instead of important to override linux */
+toolbar[brighttext] #downloads-indicator-counter {
+  text-shadow: var(--toolbarbutton-text-shadow);
+  color: var(--chrome-color);
+}
+
+#TabsToolbar {
+  text-shadow: none !important;
+  color: var(--chrome-color) !important; /* Make sure that the brighttext attribute is added */
+}
+
+/* URL bar and search bar*/
+.searchbar-textbox,
+#urlbar {
+  background-color: var(--url-and-searchbar-background-color) !important;
+  background-image: none !important;
+  color: var(--url-and-searchbar-color);
+  border: none !important;
+  box-shadow: none !important;
+}
+
+window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
+  overflow: -moz-hidden-unscrollable;
+  clip-path: none;
+  -moz-margin-start: 0;
+}
+
+/* Make the white notication box stick out less. */
+#notification-popup-box {
+  border-radius: 0;
+  border: none;
+  background: transparent;
+}
+
+/* Nav bar specific stuff */
+#nav-bar {
+  margin-top: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: 0 -1px var(--chrome-navigator-toolbox-separator-color) !important;
+  background-image: none !important;
+}
+
+/* No extra vertical padding for nav bar */
+#nav-bar-customization-target,
+#nav-bar {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Use smaller back button icon */
+#back-button {
+  -moz-image-region: rect(0, 54px, 18px, 36px);
+}
+
+.search-go-button {
+   /* !important is needed because searchbar.css is loaded after this */
+  -moz-image-region: auto !important;
+  list-style-image: url("chrome://browser/skin/devedition/search.svg#search-icon-inverted");
+}
+
+.tab-background {
+  visibility: hidden;
+}
+
+#tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
+.tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
+#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
+  background-image: linear-gradient(to top, #474C50, #474C50);
+  background-position: 1px 0;
+  background-repeat: no-repeat;
+  background-size: 1px 100%;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down,
+.tabbrowser-arrowscrollbox > .scrollbutton-up {
+  background-color: var(--tab-background-color);
+  border-color: transparent;
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]),
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
+  margin-bottom: 0;
+}
+
+.tabbrowser-tab {
+  /* We normally rely on other tab elements for pointer events, but this
+     theme hides those so we need it set here instead */
+  pointer-events: auto;
+  color: var(--tab-color);
+  background-color: var(--tab-background-color);
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover,
+.tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
+.tabbrowser-tab:hover {
+  background-color: var(--tab-hover-background-color);
+  color: var(--tab-hover-color);
+}
+
+.tabbrowser-tab[selected] {
+  color: var(--tab-selection-color);
+  background-color: var(--tab-selection-background-color);
+  box-shadow: var(--tab-selection-box-shadow);
+}
+
+/* New tab buttons */
+#TabsToolbar > #new-tab-button,
+.tabs-newtab-button {
+  background-image: none !important;
+  margin: 0 !important;
+  width: 35px !important;
+}
+
+#TabsToolbar > #new-tab-button:hover,
+.tabs-newtab-button:hover {
+  /* Important needed because !important is used in browser.css */
+  background-color: var(--tab-hover-background-color) !important;
+}

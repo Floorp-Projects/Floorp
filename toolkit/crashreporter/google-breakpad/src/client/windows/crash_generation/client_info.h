@@ -30,8 +30,8 @@
 #ifndef CLIENT_WINDOWS_CRASH_GENERATION_CLIENT_INFO_H__
 #define CLIENT_WINDOWS_CRASH_GENERATION_CLIENT_INFO_H__
 
-#include <Windows.h>
-#include <DbgHelp.h>
+#include <windows.h>
+#include <dbghelp.h>
 #include "client/windows/common/ipc_protocol.h"
 #include "common/scoped_ptr.h"
 #include "google_breakpad/common/minidump_format.h"

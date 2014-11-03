@@ -75,7 +75,7 @@ QuotaObject::UpdateSize(int64_t aSize)
 
   GroupInfo* groupInfo = mOriginInfo->mGroupInfo;
 
-  if (mOriginInfo->IsTreatedAsTemporary()) {
+  if (groupInfo->IsForTemporaryStorage()) {
     quotaManager->mTemporaryStorageUsage -= mSize;
   }
   groupInfo->mUsage -= mSize;
@@ -85,7 +85,7 @@ QuotaObject::UpdateSize(int64_t aSize)
 
   mOriginInfo->mUsage += mSize;
   groupInfo->mUsage += mSize;
-  if (mOriginInfo->IsTreatedAsTemporary()) {
+  if (groupInfo->IsForTemporaryStorage()) {
     quotaManager->mTemporaryStorageUsage += mSize;
   }
 }
@@ -106,7 +106,7 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
 
   GroupInfo* groupInfo = mOriginInfo->mGroupInfo;
 
-  if (mOriginInfo->IsTreatedAsPersistent()) {
+  if (groupInfo->IsForPersistentStorage()) {
     uint64_t newUsage = mOriginInfo->mUsage - mSize + end;
 
     if (newUsage > mOriginInfo->mLimit) {
@@ -135,7 +135,7 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
       NS_ASSERTION(!mOriginInfo,
                    "Should have cleared in LockedClearOriginInfos!");
 
-      quotaManager->LockedRemoveQuotaForOrigin(groupInfo->mPersistenceType,
+      quotaManager->LockedRemoveQuotaForOrigin(PERSISTENCE_TYPE_PERSISTENT,
                                                group, origin);
 
       // Some other thread could increase the size without blocking (increasing
@@ -156,9 +156,8 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
     return true;
   }
 
-  nsRefPtr<GroupInfo> complementaryGroupInfo =
-    groupInfo->mGroupInfoPair->LockedGetGroupInfo(
-      ComplementaryPersistenceType(groupInfo->mPersistenceType));
+  NS_ASSERTION(groupInfo->mPersistenceType == PERSISTENCE_TYPE_TEMPORARY,
+               "Huh?");
 
   uint64_t delta = end - mSize;
 
@@ -169,14 +168,9 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
 
   uint64_t newGroupUsage = groupInfo->mUsage + delta;
 
-  uint64_t groupUsage = groupInfo->LockedGetTemporaryUsage();
-  if (complementaryGroupInfo) {
-    groupUsage += complementaryGroupInfo->LockedGetTemporaryUsage();
-  }
-
   // Temporary storage has a hard limit for group usage (20 % of the global
   // limit).
-  if (groupUsage + delta > quotaManager->GetGroupLimit()) {
+  if (newGroupUsage > quotaManager->GetGroupLimit()) {
     return false;
   }
 
@@ -200,11 +194,7 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
       MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
       for (uint32_t i = 0; i < originInfos.Length(); i++) {
-        OriginInfo* originInfo = originInfos[i];
-
-        quotaManager->DeleteFilesForOrigin(
-                                       originInfo->mGroupInfo->mPersistenceType,
-                                       originInfo->mOrigin);
+        quotaManager->DeleteTemporaryFilesForOrigin(originInfos[i]->mOrigin);
       }
     }
 
@@ -212,23 +202,22 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
 
     NS_ASSERTION(mOriginInfo, "How come?!");
 
-    nsTArray<OriginParams> origins;
+    nsTArray<nsCString> origins;
     for (uint32_t i = 0; i < originInfos.Length(); i++) {
       OriginInfo* originInfo = originInfos[i];
 
       NS_ASSERTION(originInfo != mOriginInfo, "Deleted itself!");
 
-      PersistenceType persistenceType =
-        originInfo->mGroupInfo->mPersistenceType;
       nsCString group = originInfo->mGroupInfo->mGroup;
       nsCString origin = originInfo->mOrigin;
-      quotaManager->LockedRemoveQuotaForOrigin(persistenceType, group, origin);
+      quotaManager->LockedRemoveQuotaForOrigin(PERSISTENCE_TYPE_TEMPORARY,
+                                               group, origin);
 
 #ifdef DEBUG
       originInfos[i] = nullptr;
 #endif
 
-      origins.AppendElement(OriginParams(persistenceType, origin));
+      origins.AppendElement(origin);
     }
 
     // We unlocked and relocked several times so we need to recompute all the
@@ -240,12 +229,7 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
 
     newGroupUsage = groupInfo->mUsage + delta;
 
-    groupUsage = groupInfo->LockedGetTemporaryUsage();
-    if (complementaryGroupInfo) {
-      groupUsage += complementaryGroupInfo->LockedGetTemporaryUsage();
-    }
-
-    if (groupUsage + delta > quotaManager->GetGroupLimit()) {
+    if (newGroupUsage > quotaManager->GetGroupLimit()) {
       // Unfortunately some other thread increased the group usage in the
       // meantime and we are not below the group limit anymore.
 
@@ -292,20 +276,6 @@ QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
   return true;
 }
 
-bool
-OriginInfo::IsTreatedAsPersistent() const
-{
-  return QuotaManager::IsTreatedAsPersistent(mGroupInfo->mPersistenceType,
-                                             mOrigin);
-}
-
-bool
-OriginInfo::IsTreatedAsTemporary() const
-{
-  return QuotaManager::IsTreatedAsTemporary(mGroupInfo->mPersistenceType,
-                                            mOrigin);
-}
-
 void
 OriginInfo::LockedDecreaseUsage(int64_t aSize)
 {
@@ -315,7 +285,7 @@ OriginInfo::LockedDecreaseUsage(int64_t aSize)
 
   mGroupInfo->mUsage -= aSize;
 
-  if (IsTreatedAsTemporary()) {
+  if (mGroupInfo->IsForTemporaryStorage()) {
     QuotaManager* quotaManager = QuotaManager::Get();
     NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
@@ -365,7 +335,7 @@ GroupInfo::LockedAddOriginInfo(OriginInfo* aOriginInfo)
 
   mUsage += aOriginInfo->mUsage;
 
-  if (aOriginInfo->IsTreatedAsTemporary()) {
+  if (IsForTemporaryStorage()) {
     QuotaManager* quotaManager = QuotaManager::Get();
     NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
@@ -382,7 +352,7 @@ GroupInfo::LockedRemoveOriginInfo(const nsACString& aOrigin)
     if (mOriginInfos[index]->mOrigin == aOrigin) {
       mUsage -= mOriginInfos[index]->mUsage;
 
-      if (mOriginInfos[index]->IsTreatedAsTemporary()) {
+      if (IsForTemporaryStorage()) {
         QuotaManager* quotaManager = QuotaManager::Get();
         NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
@@ -402,15 +372,13 @@ GroupInfo::LockedRemoveOriginInfos()
   AssertCurrentThreadOwnsQuotaMutex();
 
   for (uint32_t index = mOriginInfos.Length(); index > 0; index--) {
-    OriginInfo* originInfo = mOriginInfos[index - 1];
+    mUsage -= mOriginInfos[index - 1]->mUsage;
 
-    mUsage -= originInfo->mUsage;
-
-    if (originInfo->IsTreatedAsTemporary()) {
+    if (IsForTemporaryStorage()) {
       QuotaManager* quotaManager = QuotaManager::Get();
       NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
-      quotaManager->mTemporaryStorageUsage -= originInfo->mUsage;
+      quotaManager->mTemporaryStorageUsage -= mOriginInfos[index - 1]->mUsage;
     }
 
     mOriginInfos.RemoveElementAt(index - 1);
@@ -426,68 +394,12 @@ GroupInfo::LockedRemoveOriginInfosForPattern(const nsACString& aPattern)
     if (PatternMatchesOrigin(aPattern, mOriginInfos[index - 1]->mOrigin)) {
       mUsage -= mOriginInfos[index - 1]->mUsage;
 
-      if (mOriginInfos[index - 1]->IsTreatedAsTemporary()) {
+      if (IsForTemporaryStorage()) {
         QuotaManager* quotaManager = QuotaManager::Get();
         NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
         quotaManager->mTemporaryStorageUsage -= mOriginInfos[index - 1]->mUsage;
       }
-
-      mOriginInfos.RemoveElementAt(index - 1);
-    }
-  }
-}
-
-uint64_t
-GroupInfo::LockedGetTemporaryUsage()
-{
-  uint64_t usage = 0;
-
-  for (uint32_t count = mOriginInfos.Length(), index = 0;
-       index < count;
-       index++) {
-    nsRefPtr<OriginInfo>& originInfo = mOriginInfos[index];
-
-    if (originInfo->IsTreatedAsTemporary()) {
-      usage += originInfo->mUsage;
-    }
-  }
-
-  return usage;
-}
-
-void
-GroupInfo::LockedGetTemporaryOriginInfos(nsTArray<OriginInfo*>* aOriginInfos)
-{
-  AssertCurrentThreadOwnsQuotaMutex();
-
-  for (uint32_t count = mOriginInfos.Length(), index = 0;
-       index < count;
-       index++) {
-    nsRefPtr<OriginInfo>& originInfo = mOriginInfos[index];
-
-    if (originInfo->IsTreatedAsTemporary()) {
-      aOriginInfos->AppendElement(originInfo);
-    }
-  }
-}
-
-void
-GroupInfo::LockedRemoveTemporaryOriginInfos()
-{
-  AssertCurrentThreadOwnsQuotaMutex();
-
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  for (uint32_t index = mOriginInfos.Length(); index > 0; index--) {
-    OriginInfo* originInfo = mOriginInfos[index - 1];
-    if (originInfo->IsTreatedAsTemporary()) {
-      MOZ_ASSERT(mUsage >= originInfo->mUsage);
-      mUsage -= originInfo->mUsage;
-
-      MOZ_ASSERT(quotaManager->mTemporaryStorageUsage >= originInfo->mUsage);
-      quotaManager->mTemporaryStorageUsage -= originInfo->mUsage;
 
       mOriginInfos.RemoveElementAt(index - 1);
     }

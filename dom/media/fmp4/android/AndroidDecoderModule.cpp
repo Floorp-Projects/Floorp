@@ -49,7 +49,7 @@ public:
   VideoDataDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
                    MediaFormat* aFormat, MediaDataDecoderCallback* aCallback,
                    layers::ImageContainer* aImageContainer)
-    : MediaCodecDataDecoder(MediaData::Type::VIDEO_FRAME, aConfig.mime_type, aFormat, aCallback)
+    : MediaCodecDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mime_type, aFormat, aCallback)
     , mImageContainer(aImageContainer)
     , mConfig(aConfig)
   {
@@ -109,7 +109,7 @@ protected:
 class AudioDataDecoder : public MediaCodecDataDecoder {
 public:
   AudioDataDecoder(const char* aMimeType, MediaFormat* aFormat, MediaDataDecoderCallback* aCallback)
-  : MediaCodecDataDecoder(MediaData::Type::AUDIO_SAMPLES, aMimeType, aFormat, aCallback)
+  : MediaCodecDataDecoder(MediaData::Type::AUDIO_DATA, aMimeType, aFormat, aCallback)
   {
   }
 

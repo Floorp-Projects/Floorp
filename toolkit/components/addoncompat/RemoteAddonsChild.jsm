@@ -143,15 +143,18 @@ let ContentPolicyChild = {
     }
   },
 
-  shouldLoad: function(contentType, contentLocation, requestOrigin, node, mimeTypeGuess, extra) {
+  shouldLoad: function(contentType, contentLocation, requestOrigin,
+                       node, mimeTypeGuess, extra, requestPrincipal) {
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                .getService(Ci.nsISyncMessageSender);
-    let rval = cpmm.sendRpcMessage("Addons:ContentPolicy:Run", {}, {
+    let rval = cpmm.sendRpcMessage("Addons:ContentPolicy:Run", {
       contentType: contentType,
+      contentLocation: contentLocation.spec,
+      requestOrigin: requestOrigin ? requestOrigin.spec : null,
       mimeTypeGuess: mimeTypeGuess,
-      contentLocation: contentLocation,
-      requestOrigin: requestOrigin,
-      node: node
+      requestPrincipal: requestPrincipal,
+    }, {
+      node: node, // Sent as a CPOW.
     });
     if (rval.length != 1) {
       return Ci.nsIContentPolicy.ACCEPT;
