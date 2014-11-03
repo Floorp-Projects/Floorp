@@ -684,7 +684,7 @@ function BuildConditionSandbox(aURL) {
     // and set a sandox prop accordingly
     var navigator = gContainingWindow.navigator;
     var testPlugin = navigator.plugins["Test Plug-in"];
-    sandbox.haveTestPlugin = !!testPlugin && !gBrowserIsRemote;
+    sandbox.haveTestPlugin = !!testPlugin;
 
     // Set a flag on sandbox if the windows default theme is active
     sandbox.windowsDefaultTheme = gContainingWindow.matchMedia("(-moz-windows-default-theme)").matches;
