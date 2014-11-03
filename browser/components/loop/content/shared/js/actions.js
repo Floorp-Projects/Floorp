@@ -179,6 +179,14 @@ loop.shared.actions = (function() {
      */
     UpdateRoomList: Action.define("updateRoomList", {
       roomList: Array
+    }),
+
+    /**
+     * Opens a room.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    OpenRoom: Action.define("openRoom", {
+      roomToken: String
     })
   };
 })();
