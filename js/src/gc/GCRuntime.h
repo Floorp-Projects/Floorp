@@ -571,29 +571,29 @@ class GCRuntime
     void callWeakPointerCallbacks() const;
 
   public:
-    JSRuntime             *rt;
+    JSRuntime *rt;
 
     /* Embedders can use this zone however they wish. */
-    JS::Zone              *systemZone;
+    JS::Zone *systemZone;
 
     /* List of compartments and zones (protected by the GC lock). */
-    js::gc::ZoneVector    zones;
+    js::gc::ZoneVector zones;
 
 #ifdef JSGC_GENERATIONAL
-    js::Nursery           nursery;
-    js::gc::StoreBuffer   storeBuffer;
+    js::Nursery nursery;
+    js::gc::StoreBuffer storeBuffer;
 #endif
 
     js::gcstats::Statistics stats;
 
-    js::GCMarker          marker;
+    js::GCMarker marker;
 
     /* Track heap usage for this runtime. */
     HeapUsage usage;
 
     /* GC scheduling state and parameters. */
-    GCSchedulingTunables  tunables;
-    GCSchedulingState     schedulingState;
+    GCSchedulingTunables tunables;
+    GCSchedulingState schedulingState;
 
   private:
     /*
@@ -601,7 +601,7 @@ class GCRuntime
      * conservative GC uses it to quickly check if a possible GC thing points
      * into an allocated chunk.
      */
-    js::GCChunkSet        chunkSet;
+    js::GCChunkSet chunkSet;
 
     /*
      * Doubly-linked lists of chunks from user and system compartments. The GC
@@ -610,65 +610,65 @@ class GCRuntime
      * During the GC when all arenas in a chunk become free, that chunk is
      * removed from the list and scheduled for release.
      */
-    js::gc::Chunk         *systemAvailableChunkListHead;
-    js::gc::Chunk         *userAvailableChunkListHead;
-    js::gc::ChunkPool     emptyChunks_;
+    js::gc::Chunk *systemAvailableChunkListHead;
+    js::gc::Chunk *userAvailableChunkListHead;
+    js::gc::ChunkPool emptyChunks_;
 
-    js::RootedValueMap    rootsHash;
+    js::RootedValueMap rootsHash;
 
-    size_t                maxMallocBytes;
+    size_t maxMallocBytes;
 
     /*
      * Number of the committed arenas in all GC chunks including empty chunks.
      */
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire>   numArenasFreeCommitted;
-    void                  *verifyPreData;
-    void                  *verifyPostData;
-    bool                  chunkAllocationSinceLastGC;
-    int64_t               nextFullGCTime;
-    int64_t               lastGCTime;
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> numArenasFreeCommitted;
+    void *verifyPreData;
+    void *verifyPostData;
+    bool chunkAllocationSinceLastGC;
+    int64_t nextFullGCTime;
+    int64_t lastGCTime;
 
-    JSGCMode              mode;
+    JSGCMode mode;
 
-    uint64_t              decommitThreshold;
+    uint64_t decommitThreshold;
 
     /* During shutdown, the GC needs to clean up every possible object. */
-    bool                  cleanUpEverything;
+    bool cleanUpEverything;
 
     /*
      * The gray bits can become invalid if UnmarkGray overflows the stack. A
      * full GC will reset this bit, since it fills in all the gray bits.
      */
-    bool                  grayBitsValid;
+    bool grayBitsValid;
 
-    volatile uintptr_t    majorGCRequested;
-    JS::gcreason::Reason  majorGCTriggerReason;
+    volatile uintptr_t majorGCRequested;
+    JS::gcreason::Reason majorGCTriggerReason;
 
 #ifdef JSGC_GENERATIONAL
-    bool                  minorGCRequested;
-    JS::gcreason::Reason  minorGCTriggerReason;
+    bool minorGCRequested;
+    JS::gcreason::Reason minorGCTriggerReason;
 #endif
 
     /* Incremented at the start of every major GC. */
-    uint64_t              majorGCNumber;
+    uint64_t majorGCNumber;
 
     /* The major GC number at which to release observed type information. */
-    uint64_t              jitReleaseNumber;
+    uint64_t jitReleaseNumber;
 
     /* Incremented on every GC slice. */
-    uint64_t              number;
+    uint64_t number;
 
     /* The number at the time of the most recent GC's first slice. */
-    uint64_t              startNumber;
+    uint64_t startNumber;
 
     /* Whether the currently running GC can finish in multiple slices. */
-    bool                  isIncremental;
+    bool isIncremental;
 
     /* Whether all compartments are being collected in first GC slice. */
-    bool                  isFull;
+    bool isFull;
 
     /* The invocation kind of the current GC, taken from the first slice. */
-    JSGCInvocationKind    invocationKind;
+    JSGCInvocationKind invocationKind;
 
     /*
      * If this is 0, all cross-compartment proxies must be registered in the
@@ -676,42 +676,42 @@ class GCRuntime
      * new wrappers. When non-zero, this records the recursion depth of wrapper
      * creation.
      */
-    mozilla::DebugOnly<uintptr_t>  disableStrictProxyCheckingCount;
+    mozilla::DebugOnly<uintptr_t> disableStrictProxyCheckingCount;
 
     /*
      * The current incremental GC phase. This is also used internally in
      * non-incremental GC.
      */
-    js::gc::State         incrementalState;
+    js::gc::State incrementalState;
 
     /* Indicates that the last incremental slice exhausted the mark stack. */
-    bool                  lastMarkSlice;
+    bool lastMarkSlice;
 
     /* Whether any sweeping will take place in the separate GC helper thread. */
-    bool                  sweepOnBackgroundThread;
+    bool sweepOnBackgroundThread;
 
     /* Whether observed type information is being released in the current GC. */
-    bool                  releaseObservedTypes;
+    bool releaseObservedTypes;
 
     /* Whether any black->gray edges were found during marking. */
-    bool                  foundBlackGrayEdges;
+    bool foundBlackGrayEdges;
 
     /* List head of zones to be swept in the background. */
-    JS::Zone              *sweepingZones;
+    JS::Zone *sweepingZones;
 
     /* Index of current zone group (for stats). */
-    unsigned              zoneGroupIndex;
+    unsigned zoneGroupIndex;
 
     /*
      * Incremental sweep state.
      */
-    JS::Zone              *zoneGroups;
-    JS::Zone              *currentZoneGroup;
-    bool                  sweepingTypes;
-    unsigned              finalizePhase;
-    JS::Zone              *sweepZone;
-    unsigned              sweepKindIndex;
-    bool                  abortSweepAfterCurrentGroup;
+    JS::Zone *zoneGroups;
+    JS::Zone *currentZoneGroup;
+    bool sweepingTypes;
+    unsigned finalizePhase;
+    JS::Zone *sweepZone;
+    unsigned sweepKindIndex;
+    bool abortSweepAfterCurrentGroup;
 
     /*
      * Concurrent sweep infrastructure.
@@ -722,7 +722,7 @@ class GCRuntime
     /*
      * List head of arenas allocated during the sweep phase.
      */
-    js::gc::ArenaHeader   *arenasAllocatedDuringSweep;
+    js::gc::ArenaHeader *arenasAllocatedDuringSweep;
 
 #ifdef JS_GC_MARKING_VALIDATION
     js::gc::MarkingValidator *markingValidator;
@@ -733,21 +733,21 @@ class GCRuntime
      * frame, rather than at the beginning. In this case, the next slice will be
      * delayed so that we don't get back-to-back slices.
      */
-    volatile uintptr_t    interFrameGC;
+    volatile uintptr_t interFrameGC;
 
     /* Default budget for incremental GC slice. See SliceBudget in jsgc.h. */
-    int64_t               sliceBudget;
+    int64_t sliceBudget;
 
     /*
      * We disable incremental GC if we encounter a js::Class with a trace hook
      * that does not implement write barriers.
      */
-    bool                  incrementalAllowed;
+    bool incrementalAllowed;
 
     /*
      * GGC can be enabled from the command line while testing.
      */
-    unsigned              generationalDisabled;
+    unsigned generationalDisabled;
 
 #ifdef JSGC_COMPACTING
     /*
@@ -763,7 +763,7 @@ class GCRuntime
      * JS_TransplantObject) or some other operation that can manipulate
      * dead zones.
      */
-    bool                  manipulatingDeadZones;
+    bool manipulatingDeadZones;
 
     /*
      * This field is incremented each time we mark an object inside a
@@ -773,9 +773,9 @@ class GCRuntime
      * run an immediate, non-incremental GC to clean up the dead
      * zones. This should happen very rarely.
      */
-    unsigned              objectsMarkedInDeadZones;
+    unsigned objectsMarkedInDeadZones;
 
-    bool                  poked;
+    bool poked;
 
     volatile js::HeapState heapState;
 
@@ -816,19 +816,19 @@ class GCRuntime
      * zeal_ value 14 performs periodic shrinking collections.
      */
 #ifdef JS_GC_ZEAL
-    int                   zealMode;
-    int                   zealFrequency;
-    int                   nextScheduled;
-    bool                  deterministicOnly;
-    int                   incrementalLimit;
+    int zealMode;
+    int zealFrequency;
+    int nextScheduled;
+    bool deterministicOnly;
+    int incrementalLimit;
 
-    js::Vector<JSObject *, 0, js::SystemAllocPolicy>   selectedForMarking;
+    js::Vector<JSObject *, 0, js::SystemAllocPolicy> selectedForMarking;
 #endif
 
-    bool                  validate;
-    bool                  fullCompartmentChecks;
+    bool validate;
+    bool fullCompartmentChecks;
 
-    Callback<JSGCCallback>  gcCallback;
+    Callback<JSGCCallback> gcCallback;
     CallbackVector<JSFinalizeCallback> finalizeCallbacks;
     CallbackVector<JSWeakPointerCallback> updateWeakPointerCallbacks;
 
@@ -836,13 +836,13 @@ class GCRuntime
      * Malloc counter to measure memory pressure for GC scheduling. It runs
      * from   maxMallocBytes down to zero.
      */
-    mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire>   mallocBytes;
+    mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire> mallocBytes;
 
     /*
      * Whether a GC has been triggered as a result of mallocBytes falling
      * below zero.
      */
-    mozilla::Atomic<bool, mozilla::ReleaseAcquire>   mallocGCTriggered;
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> mallocGCTriggered;
 
     /*
      * The trace operations to trace embedding-specific GC roots. One is for
@@ -854,7 +854,7 @@ class GCRuntime
     Callback<JSTraceDataOp> grayRootTracer;
 
     /* Always preserve JIT code during GCs, for testing. */
-    bool                  alwaysPreserveCode;
+    bool alwaysPreserveCode;
 
 #ifdef DEBUG
     /*
@@ -874,8 +874,8 @@ class GCRuntime
 #endif
 
     /* Synchronize GC heap access between main thread and GCHelperState. */
-    PRLock                *lock;
-    mozilla::DebugOnly<PRThread *>   lockOwner;
+    PRLock *lock;
+    mozilla::DebugOnly<PRThread *> lockOwner;
 
     BackgroundAllocTask allocTask;
     GCHelperState helperState;
