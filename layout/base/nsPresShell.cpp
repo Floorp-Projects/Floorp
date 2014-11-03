@@ -7001,23 +7001,16 @@ BuildTargetChainForBeforeAfterKeyboardEvent(nsINode* aTarget,
                                             bool& aTargetIsIframe)
 {
   nsCOMPtr<nsIContent> content(do_QueryInterface(aTarget));
-  nsCOMPtr<nsPIDOMWindow> window;
-  Element* frameElement;
+  aTargetIsIframe = content && content->IsHTML(nsGkAtoms::iframe);
 
-  // Initialize frameElement.
-  if (content && content->IsHTML(nsGkAtoms::iframe)) {
-    aTargetIsIframe = true;
+  Element* frameElement;
+  // If event target is not an iframe, skip the event target and get its
+  // parent frame.
+  if (aTargetIsIframe) {
     frameElement = aTarget->AsElement();
   } else {
-    // If event target is not an iframe, dispatch keydown/keyup event to its
-    // window after dispatching before events to its ancestors.
-    aTargetIsIframe = false;
-
-    // And skip the event target and get its parent frame.
-    window = aTarget->OwnerDoc()->GetWindow();
-    if (window) {
-      frameElement = window->GetFrameElementInternal();
-    }
+    nsPIDOMWindow* window = aTarget->OwnerDoc()->GetWindow();
+    frameElement = window ? window->GetFrameElementInternal() : nullptr;
   }
 
   // Check permission for all ancestors and add them into the target chain.
@@ -7025,7 +7018,7 @@ BuildTargetChainForBeforeAfterKeyboardEvent(nsINode* aTarget,
     if (CheckPermissionForBeforeAfterKeyboardEvent(frameElement)) {
       aChain.AppendElement(frameElement);
     }
-    window = frameElement->OwnerDoc()->GetWindow();
+    nsPIDOMWindow* window = frameElement->OwnerDoc()->GetWindow();
     frameElement = window ? window->GetFrameElementInternal() : nullptr;
   }
 }
