@@ -492,10 +492,7 @@ public:
     mWriteParams(aWriteParams),
     mNeedAllowNextSynchronizedOp(false),
     mPersistence(quota::PERSISTENCE_TYPE_INVALID),
-    mState(eInitial),
-    mIsApp(false),
-    mHasUnlimStoragePerm(false),
-    mEnforcingQuota(true)
+    mState(eInitial)
   {
     MOZ_ASSERT(IsMainProcess());
   }
@@ -596,9 +593,6 @@ protected:
   }
 
 private:
-  void
-  InitPersistenceType();
-
   nsresult
   InitOnMainThread();
 
@@ -665,57 +659,7 @@ private:
     eFinished, // Terminal state
   };
   State mState;
-
-  bool mIsApp;
-  bool mHasUnlimStoragePerm;
-  bool mEnforcingQuota;
 };
-
-void
-MainProcessRunnable::InitPersistenceType()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mState == eInitial);
-
-  if (mOpenMode == eOpenForWrite) {
-    MOZ_ASSERT(mPersistence == quota::PERSISTENCE_TYPE_INVALID);
-
-    // If we are performing install-time caching of an app, we'd like to store
-    // the cache entry in persistent storage so the entry is never evicted,
-    // but we need to check that quota is not enforced for the app.
-    // That justifies us in skipping all quota checks when storing the cache
-    // entry and avoids all the issues around the persistent quota prompt.
-    // If quota is enforced for the app, then we can still cache in temporary
-    // for a likely good first-run experience.
-
-    MOZ_ASSERT_IF(mWriteParams.mInstalled, mIsApp);
-
-    if (mWriteParams.mInstalled &&
-        !QuotaManager::IsQuotaEnforced(quota::PERSISTENCE_TYPE_PERSISTENT,
-                                       mOrigin, mHasUnlimStoragePerm)) {
-      mPersistence = quota::PERSISTENCE_TYPE_PERSISTENT;
-    } else {
-      mPersistence = quota::PERSISTENCE_TYPE_TEMPORARY;
-    }
-
-    return;
-  }
-
-  // For the reasons described above, apps may have cache entries in both
-  // persistent and temporary storage. At lookup time we don't know how and
-  // where the given script was cached, so start the search in persistent
-  // storage and, if that fails, search in temporary storage. (Non-apps can
-  // only be stored in temporary storage.)
-
-  MOZ_ASSERT_IF(mPersistence != quota::PERSISTENCE_TYPE_INVALID,
-                mIsApp && mPersistence == quota::PERSISTENCE_TYPE_PERSISTENT);
-
-  if (mPersistence == quota::PERSISTENCE_TYPE_INVALID && mIsApp) {
-    mPersistence = quota::PERSISTENCE_TYPE_PERSISTENT;
-  } else {
-    mPersistence = quota::PERSISTENCE_TYPE_TEMPORARY;
-  }
-}
 
 nsresult
 MainProcessRunnable::InitOnMainThread()
@@ -726,28 +670,57 @@ MainProcessRunnable::InitOnMainThread()
   QuotaManager* qm = QuotaManager::GetOrCreate();
   NS_ENSURE_STATE(qm);
 
-  nsresult rv =
-    QuotaManager::GetInfoFromPrincipal(mPrincipal,
-                                       quota::PERSISTENCE_TYPE_INVALID,
-                                       &mGroup, &mOrigin, &mIsApp,
-                                       &mHasUnlimStoragePerm);
+  nsresult rv = QuotaManager::GetInfoFromPrincipal(mPrincipal, &mGroup,
+                                                   &mOrigin, nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX Don't use mGroup yet! We might need to update it right after we
-  //     initialize persistence type.
+  bool isApp = mPrincipal->GetAppStatus() !=
+               nsIPrincipal::APP_STATUS_NOT_INSTALLED;
 
-  InitPersistenceType();
+  if (mOpenMode == eOpenForWrite) {
+    MOZ_ASSERT(mPersistence == quota::PERSISTENCE_TYPE_INVALID);
+    if (mWriteParams.mInstalled) {
+      // If we are performing install-time caching of an app, we'd like to store
+      // the cache entry in persistent storage so the entry is never evicted,
+      // but we need to verify that the app has unlimited storage permissions
+      // first. Unlimited storage permissions justify us in skipping all quota
+      // checks when storing the cache entry and avoids all the issues around
+      // the persistent quota prompt.
+      MOZ_ASSERT(isApp);
 
-  // XXX Since we couldn't pass persistence type to GetInfoFromPrincipal(),
-  //     we need to do this manually.
-  //     This hack is only temporary, it will go away once we have regular
-  //     metadata files for persistent storge.
-  if (mPersistence == quota::PERSISTENCE_TYPE_PERSISTENT) {
-    mGroup = mOrigin;
+      nsCOMPtr<nsIPermissionManager> pm =
+        services::GetPermissionManager();
+      NS_ENSURE_TRUE(pm, NS_ERROR_UNEXPECTED);
+
+      uint32_t permission;
+      rv = pm->TestPermissionFromPrincipal(mPrincipal,
+                                           PERMISSION_STORAGE_UNLIMITED,
+                                           &permission);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+
+      // If app doens't have the unlimited storage permission, we can still
+      // cache in temporary for a likely good first-run experience.
+      mPersistence = permission == nsIPermissionManager::ALLOW_ACTION
+                     ? quota::PERSISTENCE_TYPE_PERSISTENT
+                     : quota::PERSISTENCE_TYPE_TEMPORARY;
+    } else {
+      mPersistence = quota::PERSISTENCE_TYPE_TEMPORARY;
+    }
+  } else {
+    // For the reasons described above, apps may have cache entries in both
+    // persistent and temporary storage. At lookup time we don't know how and
+    // where the given script was cached, so start the search in persistent
+    // storage and, if that fails, search in temporary storage. (Non-apps can
+    // only be stored in temporary storage.)
+    if (mPersistence == quota::PERSISTENCE_TYPE_INVALID) {
+      mPersistence = isApp ? quota::PERSISTENCE_TYPE_PERSISTENT
+                           : quota::PERSISTENCE_TYPE_TEMPORARY;
+    } else {
+      MOZ_ASSERT(isApp);
+      MOZ_ASSERT(mPersistence == quota::PERSISTENCE_TYPE_PERSISTENT);
+      mPersistence = quota::PERSISTENCE_TYPE_TEMPORARY;
+    }
   }
-
-  mEnforcingQuota =
-    QuotaManager::IsQuotaEnforced(mPersistence, mOrigin, mHasUnlimStoragePerm);
 
   QuotaManager::GetStorageId(mPersistence, mOrigin, quota::Client::ASMJS,
                              NS_LITERAL_STRING("asmjs"), mStorageId);
@@ -764,10 +737,13 @@ MainProcessRunnable::ReadMetadata()
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  nsresult rv =
-    qm->EnsureOriginIsInitialized(mPersistence, mGroup, mOrigin,
-                                  mHasUnlimStoragePerm,
-                                  getter_AddRefs(mDirectory));
+  // Only track quota for temporary storage. For persistent storage, we've
+  // already checked that we have unlimited-storage permissions.
+  bool trackQuota = mPersistence == quota::PERSISTENCE_TYPE_TEMPORARY;
+
+  nsresult rv = qm->EnsureOriginIsInitialized(mPersistence, mGroup, mOrigin,
+                                              trackQuota,
+                                              getter_AddRefs(mDirectory));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDirectory->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
@@ -835,7 +811,11 @@ MainProcessRunnable::OpenCacheFileForWrite()
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  if (mEnforcingQuota) {
+  // If we are allocating in temporary storage, ask the QuotaManager if we're
+  // within the quota. If we are allocating in persistent storage, we've already
+  // checked that we have the unlimited-storage permission, so there is nothing
+  // to check.
+  if (mPersistence == quota::PERSISTENCE_TYPE_TEMPORARY) {
     // Create the QuotaObject before all file IO and keep it alive until caching
     // completes to get maximum assertion coverage in QuotaManager against
     // concurrent removal, etc.
@@ -886,7 +866,7 @@ MainProcessRunnable::OpenCacheFileForRead()
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  if (mEnforcingQuota) {
+  if (mPersistence == quota::PERSISTENCE_TYPE_TEMPORARY) {
     // Even though it's not strictly necessary, create the QuotaObject before
     // all file IO and keep it alive until caching completes to get maximum
     // assertion coverage in QuotaManager against concurrent removal, etc.
