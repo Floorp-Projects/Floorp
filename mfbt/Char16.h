@@ -105,6 +105,30 @@ public:
   {
     return const_cast<wchar_t*>(static_cast<const wchar_t*>(*this));
   }
+  explicit operator int() const
+  {
+    return reinterpret_cast<intptr_t>(mPtr);
+  }
+  explicit operator unsigned int() const
+  {
+    return reinterpret_cast<uintptr_t>(mPtr);
+  }
+  explicit operator long() const
+  {
+    return reinterpret_cast<intptr_t>(mPtr);
+  }
+  explicit operator unsigned long() const
+  {
+    return reinterpret_cast<uintptr_t>(mPtr);
+  }
+  explicit operator long long() const
+  {
+    return reinterpret_cast<intptr_t>(mPtr);
+  }
+  explicit operator unsigned long long() const
+  {
+    return reinterpret_cast<uintptr_t>(mPtr);
+  }
 
   /**
    * Some Windows API calls accept BYTE* but require that data actually be
@@ -150,7 +174,27 @@ public:
   {
     return mPtr != nullptr;
   }
-  char16ptr_t operator+(size_t aValue) const
+  char16ptr_t operator+(int aValue) const
+  {
+    return char16ptr_t(mPtr + aValue);
+  }
+  char16ptr_t operator+(unsigned int aValue) const
+  {
+    return char16ptr_t(mPtr + aValue);
+  }
+  char16ptr_t operator+(long aValue) const
+  {
+    return char16ptr_t(mPtr + aValue);
+  }
+  char16ptr_t operator+(unsigned long aValue) const
+  {
+    return char16ptr_t(mPtr + aValue);
+  }
+  char16ptr_t operator+(long long aValue) const
+  {
+    return char16ptr_t(mPtr + aValue);
+  }
+  char16ptr_t operator+(unsigned long long aValue) const
   {
     return char16ptr_t(mPtr + aValue);
   }
