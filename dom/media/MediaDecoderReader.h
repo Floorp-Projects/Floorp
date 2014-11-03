@@ -180,6 +180,14 @@ public:
   // ReadMetada should be called before calling this method.
   virtual bool IsMediaSeekable() = 0;
 
+  MediaTaskQueue* GetTaskQueue() {
+    return mTaskQueue;
+  }
+
+  void ClearDecoder() {
+    mDecoder = nullptr;
+  }
+
 protected:
   virtual ~MediaDecoderReader();
 
@@ -204,10 +212,6 @@ protected:
   RequestSampleCallback* GetCallback() {
     MOZ_ASSERT(mSampleDecodedCallback);
     return mSampleDecodedCallback;
-  }
-
-  virtual MediaTaskQueue* GetTaskQueue() {
-    return mTaskQueue;
   }
 
   // Queue of audio frames. This queue is threadsafe, and is accessed from
