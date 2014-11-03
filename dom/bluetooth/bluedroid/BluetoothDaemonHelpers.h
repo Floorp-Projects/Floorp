@@ -9,22 +9,46 @@
 
 #include "BluetoothCommon.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/BluetoothDaemonConnection.h"
 #include "nsThreadUtils.h"
 
 #if MOZ_IS_GCC && MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
 /* use designated array initializers if supported */
-#define CONVERT(in_, out_) \
+#define INIT_ARRAY_AT(in_, out_) \
   [in_] = out_
 #else
 /* otherwise init array element by position */
-#define CONVERT(in_, out_) \
+#define INIT_ARRAY_AT(in_, out_) \
   out_
 #endif
+
+#define CONVERT(in_, out_) \
+  INIT_ARRAY_AT(in_, out_)
 
 using namespace mozilla::ipc;
 
 BEGIN_BLUETOOTH_NAMESPACE
+
+//
+// Helper structures
+//
+
+enum BluetoothAclState {
+  ACL_STATE_CONNECTED,
+  ACL_STATE_DISCONNECTED
+};
+
+enum BluetoothSspPairingVariant {
+  SSP_VARIANT_PASSKEY_CONFIRMATION,
+  SSP_VARIANT_PASSKEY_ENTRY,
+  SSP_VARIANT_CONSENT,
+  SSP_VARIANT_PASSKEY_NOTIFICATION
+};
+
+struct BluetoothAddress {
+  uint8_t mAddr[6];
+};
 
 struct BluetoothConfigurationParameter {
   uint8_t mType;
@@ -50,6 +74,15 @@ struct BluetoothDaemonPDUHeader {
   uint16_t mLength;
 };
 
+struct BluetoothPinCode {
+  uint8_t mPinCode[16];
+  uint8_t mLength;
+};
+
+struct BluetoothRemoteName {
+  uint8_t mName[249];
+};
+
 //
 // Conversion
 //
@@ -61,11 +94,80 @@ struct BluetoothDaemonPDUHeader {
 //
 
 nsresult
+Convert(bool aIn, uint8_t& aOut);
+
+nsresult
+Convert(bool aIn, BluetoothScanMode& aOut);
+
+nsresult
+Convert(uint8_t aIn, bool& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothAclState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothBondState& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothDeviceType& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothPropertyType& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothScanMode& aOut);
+
+nsresult
+Convert(uint8_t aIn, BluetoothSspPairingVariant& aOut);
+
+nsresult
 Convert(uint8_t aIn, BluetoothStatus& aOut);
+
+nsresult
+Convert(uint32_t aIn, int& aOut);
+
+nsresult
+Convert(size_t aIn, uint16_t& aOut);
+
+nsresult
+Convert(const nsAString& aIn, BluetoothAddress& aOut);
+
+nsresult
+Convert(const nsAString& aIn, BluetoothPinCode& aOut);
+
+nsresult
+Convert(const nsAString& aIn, BluetoothPropertyType& aOut);
+
+nsresult
+Convert(const nsAString& aIn, BluetoothSspPairingVariant& aOut);
+
+nsresult
+Convert(BluetoothAclState aIn, bool& aOut);
+
+nsresult
+Convert(const BluetoothAddress& aIn, nsAString& aOut);
+
+nsresult
+Convert(BluetoothPropertyType aIn, uint8_t& aOut);
+
+nsresult
+Convert(const BluetoothRemoteName& aIn, nsAString& aOut);
+
+nsresult
+Convert(BluetoothScanMode aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothSspPairingVariant aIn, uint8_t& aOut);
+
+nsresult
+Convert(BluetoothSspPairingVariant aIn, nsAString& aOut);
 
 //
 // Packing
 //
+
+nsresult
+PackPDU(bool aIn, BluetoothDaemonPDU& aPDU);
 
 inline nsresult
 PackPDU(uint8_t aIn, BluetoothDaemonPDU& aPDU)
@@ -79,11 +181,67 @@ PackPDU(uint16_t aIn, BluetoothDaemonPDU& aPDU)
   return aPDU.Write(aIn);
 }
 
+inline nsresult
+PackPDU(int32_t aIn, BluetoothDaemonPDU& aPDU)
+{
+  return aPDU.Write(aIn);
+}
+
+inline nsresult
+PackPDU(uint32_t aIn, BluetoothDaemonPDU& aPDU)
+{
+  return aPDU.Write(aIn);
+}
+
+nsresult
+PackPDU(const BluetoothAddress& aIn, BluetoothDaemonPDU& aPDU);
+
 nsresult
 PackPDU(const BluetoothConfigurationParameter& aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothDaemonPDUHeader& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothNamedValue& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(const BluetoothPinCode& aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothPropertyType aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothSspPairingVariant aIn, BluetoothDaemonPDU& aPDU);
+
+nsresult
+PackPDU(BluetoothScanMode aIn, BluetoothDaemonPDU& aPDU);
+
+/* |PackConversion| is a helper for packing converted values. Pass
+ * an instance of this structure to |PackPDU| to convert a value from
+ * the input type to the output type and and write it to the PDU.
+ */
+template<typename Tin, typename Tout>
+struct PackConversion {
+  PackConversion(const Tin& aIn)
+  : mIn(aIn)
+  { }
+
+  const Tin& mIn;
+};
+
+template<typename Tin, typename Tout>
+inline nsresult
+PackPDU(const PackConversion<Tin, Tout>& aIn, BluetoothDaemonPDU& aPDU)
+{
+  Tout out;
+
+  nsresult rv = Convert(aIn.mIn, out);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return PackPDU(out, aPDU);
+}
 
 /* |PackArray| is a helper for packing arrays. Pass an instance
  * of this structure as the first argument to |PackPDU| to pack
@@ -115,6 +273,14 @@ PackPDU(const PackArray<T>& aIn, BluetoothDaemonPDU& aPDU)
     }
   }
   return NS_OK;
+}
+
+template<>
+inline nsresult
+PackPDU<uint8_t>(const PackArray<uint8_t>& aIn, BluetoothDaemonPDU& aPDU)
+{
+  /* Write raw bytes in one pass */
+  return aPDU.Write(aIn.mData, aIn.mLength);
 }
 
 template <typename T1, typename T2>
@@ -169,6 +335,12 @@ PackPDU(const T1& aIn1, const T2& aIn2, const T3& aIn3, const T4& aIn4,
 //
 
 inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, int8_t& aOut)
+{
+  return aPDU.Read(aOut);
+}
+
+inline nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, uint8_t& aOut)
 {
   return aPDU.Read(aOut);
@@ -179,6 +351,33 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, uint16_t& aOut)
 {
   return aPDU.Read(aOut);
 }
+
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, int32_t& aOut)
+{
+  return aPDU.Read(aOut);
+}
+
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, uint32_t& aOut)
+{
+  return aPDU.Read(aOut);
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, bool& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAclState& aOut);
+
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothAddress& aOut)
+{
+  return aPDU.Read(aOut.mAddr, sizeof(aOut.mAddr));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothBondState& aOut);
 
 inline nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDaemonPDUHeader& aOut)
@@ -195,7 +394,40 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDaemonPDUHeader& aOut)
 }
 
 nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDeviceType& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothRemoteInfo& aOut);
+
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothRemoteName& aOut)
+{
+  return aPDU.Read(aOut.mName, sizeof(aOut.mName));
+}
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothProperty& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothPropertyType& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothScanMode& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothServiceRecord& aOut);
+
+nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothSspPairingVariant& aOut);
+
+nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothStatus& aOut);
+
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothUuid& aOut)
+{
+  return aPDU.Read(aOut.mUuid, sizeof(aOut.mUuid));
+}
 
 /* |UnpackConversion| is a helper for convering unpacked values. Pass
  * an instance of this structure to |UnpackPDU| to read a value from
@@ -222,6 +454,72 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, const UnpackConversion<Tin, Tout>& aOut)
   return Convert(in, aOut.mOut);
 }
 
+/* |UnpackArray| is a helper for unpacking arrays. Pass an instance
+ * of this structure as the second argument to |UnpackPDU| to unpack
+ * an array.
+ */
+template <typename T>
+struct UnpackArray
+{
+  UnpackArray(T* aData, size_t aLength)
+  : mData(aData)
+  , mLength(aLength)
+  { }
+
+  UnpackArray(nsAutoArrayPtr<T>& aData, size_t aLength)
+  : mData(nullptr)
+  , mLength(aLength)
+  {
+    aData = new T[mLength];
+    mData = aData.get();
+  }
+
+  UnpackArray(nsAutoArrayPtr<T>& aData, size_t aSize, size_t aElemSize)
+  : mData(nullptr)
+  , mLength(aSize / aElemSize)
+  {
+    aData = new T[mLength];
+    mData = aData.get();
+  }
+
+  T* mData;
+  size_t mLength;
+};
+
+template<typename T>
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, const UnpackArray<T>& aOut)
+{
+  for (size_t i = 0; i < aOut.mLength; ++i) {
+    nsresult rv = UnpackPDU(aPDU, aOut.mData[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
+template<>
+inline nsresult
+UnpackPDU<uint8_t>(BluetoothDaemonPDU& aPDU, const UnpackArray<uint8_t>& aOut)
+{
+  /* Read raw bytes in one pass */
+  return aPDU.Read(aOut.mData, aOut.mLength);
+}
+
+template<typename T>
+inline nsresult
+UnpackPDU(BluetoothDaemonPDU& aPDU, nsTArray<T>& aOut)
+{
+  for (typename nsTArray<T>::size_type i = 0; i < aOut.Length(); ++i) {
+    nsresult rv = UnpackPDU(aPDU, aOut[i]);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
 template<typename T1, uint8_t Service, uint8_t Opcode>
 inline nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1)
@@ -240,6 +538,25 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1, T2& aArg2)
   return UnpackPDU(aPDU, aArg2);
 }
 
+template<>
+inline nsresult
+UnpackPDU<int, nsAutoArrayPtr<BluetoothProperty>, 0x01, 0x84>(
+  BluetoothDaemonPDU& aPDU,
+  int& aArg1, nsAutoArrayPtr<BluetoothProperty>& aArg2)
+{
+  /* Read number of properties */
+  uint8_t numProperties;
+  nsresult rv = UnpackPDU(aPDU, numProperties);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  aArg1 = numProperties;
+
+  /* Read properties array */
+  UnpackArray<BluetoothProperty> properties(aArg2, aArg1);
+  return UnpackPDU(aPDU, properties);
+}
+
 template<typename T1, typename T2, typename T3,
          uint8_t Service, uint8_t Opcode>
 inline nsresult
@@ -254,6 +571,120 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1, T2& aArg2, T3& aArg3)
     return rv;
   }
   return UnpackPDU(aPDU, aArg3);
+}
+
+template<>
+inline nsresult
+UnpackPDU<BluetoothStatus, int, nsAutoArrayPtr<BluetoothProperty>, 0x01, 0x82>(
+  BluetoothDaemonPDU& aPDU,
+  BluetoothStatus& aArg1, int& aArg2, nsAutoArrayPtr<BluetoothProperty>& aArg3)
+{
+  /* Read status */
+  nsresult rv = UnpackPDU(aPDU, aArg1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read number of properties */
+  uint8_t numProperties;
+  rv = UnpackPDU(aPDU, numProperties);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  aArg2 = numProperties;
+
+  /* Read properties array */
+  UnpackArray<BluetoothProperty> properties(aArg3, aArg2);
+  return UnpackPDU(aPDU, properties);
+}
+
+template<>
+inline nsresult
+UnpackPDU<nsString, nsString, uint32_t, 0x01, 0x86>(
+  BluetoothDaemonPDU& aPDU,
+  nsString& aArg1, nsString& aArg2, uint32_t& aArg3)
+{
+  /* Read remote address */
+  nsresult rv = UnpackPDU(
+    aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read remote name */
+  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read CoD */
+  return UnpackPDU(aPDU, aArg3);
+}
+
+template<>
+inline nsresult
+UnpackPDU<BluetoothStatus, nsString, BluetoothBondState, 0x01, 0x88>(
+  BluetoothDaemonPDU& aPDU,
+  BluetoothStatus& aArg1, nsString& aArg2, BluetoothBondState& aArg3)
+{
+  /* Read status */
+  nsresult rv = UnpackPDU(aPDU, aArg1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read remote address */
+  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read bond state */
+  return UnpackPDU(aPDU, aArg3);
+}
+
+template<>
+inline nsresult
+UnpackPDU<BluetoothStatus, nsString, bool, 0x01, 0x89>(
+  BluetoothDaemonPDU& aPDU,
+  BluetoothStatus& aArg1, nsString& aArg2, bool& aArg3)
+{
+  /* Read status */
+  nsresult rv = UnpackPDU(aPDU, aArg1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read remote address */
+  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read ACL state */
+  return UnpackPDU(aPDU, UnpackConversion<BluetoothAclState, bool>(aArg3));
+}
+
+template<>
+inline nsresult
+UnpackPDU<uint16_t, nsAutoArrayPtr<uint8_t>, uint8_t, 0x01, 0x8a>(
+  BluetoothDaemonPDU& aPDU,
+  uint16_t& aArg1, nsAutoArrayPtr<uint8_t>& aArg2, uint8_t& aArg3)
+{
+  /* Read opcode */
+  nsresult rv = UnpackPDU(aPDU, aArg1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read length */
+  rv = UnpackPDU(aPDU, aArg3);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read data */
+  return UnpackPDU(aPDU, UnpackArray<uint8_t>(aArg2, aArg3));
 }
 
 template<typename T1, typename T2, typename T3, typename T4,
@@ -274,6 +705,39 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4)
     return rv;
   }
   return UnpackPDU(aPDU, aArg4);
+}
+
+template<>
+inline nsresult
+UnpackPDU<BluetoothStatus, nsString, int, nsAutoArrayPtr<BluetoothProperty>,
+          0x01, 0x83>(
+  BluetoothDaemonPDU& aPDU,
+  BluetoothStatus& aArg1, nsString& aArg2, int& aArg3,
+  nsAutoArrayPtr<BluetoothProperty>& aArg4)
+{
+  /* Read status */
+  nsresult rv = UnpackPDU(aPDU, aArg1);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read address */
+  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read number of properties */
+  uint8_t numProperties;
+  rv = UnpackPDU(aPDU, numProperties);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  aArg3 = numProperties;
+
+  /* Read properties array */
+  UnpackArray<BluetoothProperty> properties(aArg4, aArg3);
+  return UnpackPDU(aPDU, properties);
 }
 
 template<typename T1, typename T2, typename T3, typename T4, typename T5,
@@ -298,6 +762,43 @@ UnpackPDU(BluetoothDaemonPDU& aPDU,
   if (NS_FAILED(rv)) {
     return rv;
   }
+  return UnpackPDU(aPDU, aArg5);
+}
+
+template<>
+inline nsresult
+UnpackPDU<nsString, nsString, uint32_t, nsString, uint32_t, 0x01, 0x87>(
+  BluetoothDaemonPDU& aPDU,
+  nsString& aArg1, nsString& aArg2, uint32_t& aArg3,
+  nsString& aArg4, uint32_t& aArg5)
+{
+  /* Read remote address */
+  nsresult rv = UnpackPDU(
+    aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read remote name */
+  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read CoD */
+  rv = UnpackPDU(aPDU, aArg3);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read pairing variant */
+  rv = UnpackPDU(
+    aPDU, UnpackConversion<BluetoothSspPairingVariant, nsAString>(aArg4));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  /* Read passkey */
   return UnpackPDU(aPDU, aArg5);
 }
 
