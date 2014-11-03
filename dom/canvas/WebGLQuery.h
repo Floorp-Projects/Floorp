@@ -73,7 +73,7 @@ private:
 
     // -------------------------------------------------------------------------
     // FRIENDSHIPS
-    friend class WebGLContext;
+    friend class WebGL2Context;
 };
 
 } // namespace mozilla
