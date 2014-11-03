@@ -740,7 +740,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   }
 
   #webide-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(18px, 342px, 36px, 324px);
+    -moz-image-region: rect(18px, 738px, 36px, 720px);
   }
 
   #new-tab-button@toolbarButtonPressed@ {
