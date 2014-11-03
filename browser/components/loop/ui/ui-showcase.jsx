@@ -101,6 +101,41 @@
     detailsButtonLabel: "Retry",
   });
 
+  var SVGIcon = React.createClass({
+    render: function() {
+      return (
+        <span className="svg-icon" style={{
+          "background-image": "url(/content/shared/img/icons-16x16.svg#" + this.props.shapeId + ")"
+        }} />
+      );
+    }
+  });
+
+  var SVGIcons = React.createClass({
+    shapes: [
+      "audio", "audio-hover", "audio-active", "block",
+      "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
+      "contacts-active", "copy", "checkmark", "google", "google-hover",
+      "google-active", "history", "history-hover", "history-active",
+      "precall", "precall-hover", "precall-active", "settings", "settings-hover",
+      "settings-active", "tag", "tag-hover", "tag-active", "trash", "unblock",
+      "unblock-hover", "unblock-active", "video", "video-hover", "video-active"
+    ],
+
+    render: function() {
+      return (
+        <div className="svg-icon-list">{
+          this.shapes.map(function(shapeId, i) {
+            return <div className="svg-icon-entry">
+              <p><SVGIcon key={i} shapeId={shapeId} /></p>
+              <p>{shapeId}</p>
+            </div>;
+          }, this)
+        }</div>
+      );
+    }
+  });
+
   var Example = React.createClass({
     makeId: function(prefix) {
       return (prefix || "") + this.props.summary.toLowerCase().replace(/\s/g, "-");
@@ -489,6 +524,12 @@
               <div className="standalone">
                 <UnsupportedDeviceView />
               </div>
+            </Example>
+          </Section>
+
+          <Section name="SVG icons preview">
+            <Example summary="16x16">
+              <SVGIcons />
             </Example>
           </Section>
 

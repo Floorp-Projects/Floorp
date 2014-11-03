@@ -162,3 +162,24 @@
   /* Removes the fake video image for ended conversations */
   background: none;
 }
+
+/* SVG icons showcase */
+
+.svg-icon-entry {
+  width: 180px;
+  float: left;
+}
+
+.svg-icon-entry > p {
+  float: left;
+  margin-right: .5rem;
+}
+
+.svg-icon {
+  display: inline-block;
+  width:  16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  background-position: center;
+}

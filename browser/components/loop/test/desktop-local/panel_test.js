@@ -639,7 +639,7 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.RoomEntry", function() {
-    var buttonNode, roomData, roomEntry, roomStore, dispatcher;
+    var dispatcher, roomData;
 
     beforeEach(function() {
       dispatcher = new loop.Dispatcher();
@@ -656,52 +656,104 @@ describe("loop.panel", function() {
         ],
         ctime: 1405517418
       };
-      roomStore = new loop.store.Room(roomData);
-      roomEntry = mountRoomEntry();
-      buttonNode = roomEntry.getDOMNode().querySelector("button.copy-link");
     });
 
-    function mountRoomEntry() {
-      return TestUtils.renderIntoDocument(loop.panel.RoomEntry({
-        openRoom: sandbox.stub(),
-        room: roomStore
-      }));
+    function mountRoomEntry(props) {
+      return TestUtils.renderIntoDocument(loop.panel.RoomEntry(props));
     }
 
-    it("should not display copy-link button by default", function() {
-      expect(buttonNode).to.not.equal(null);
-    });
+    describe("Copy button", function() {
+      var roomEntry, copyButton;
 
-    it("should copy the URL when the click event fires", function() {
-      TestUtils.Simulate.click(buttonNode);
-
-      sinon.assert.calledOnce(navigator.mozLoop.copyString);
-      sinon.assert.calledWithExactly(navigator.mozLoop.copyString,
-        roomData.roomUrl);
-    });
-
-    it("should set state.urlCopied when the click event fires", function() {
-      TestUtils.Simulate.click(buttonNode);
-
-      expect(roomEntry.state.urlCopied).to.equal(true);
-    });
-
-    it("should switch to displaying a check icon when the URL has been copied",
-      function() {
-        TestUtils.Simulate.click(buttonNode);
-
-        expect(buttonNode.classList.contains("checked")).eql(true);
+      beforeEach(function() {
+        roomEntry = mountRoomEntry({
+          dispatcher: dispatcher,
+          deleteRoom: sandbox.stub(),
+          room: new loop.store.Room(roomData)
+        });
+        copyButton = roomEntry.getDOMNode().querySelector("button.copy-link");
       });
 
-    it("should not display a check icon after mouse leaves the entry",
-      function() {
-        var roomNode = roomEntry.getDOMNode();
-        TestUtils.Simulate.click(buttonNode);
-
-        TestUtils.SimulateNative.mouseOut(roomNode);
-
-        expect(buttonNode.classList.contains("checked")).eql(false);
+      it("should not display a copy button by default", function() {
+        expect(copyButton).to.not.equal(null);
       });
+
+      it("should copy the URL when the click event fires", function() {
+        TestUtils.Simulate.click(copyButton);
+
+        sinon.assert.calledOnce(navigator.mozLoop.copyString);
+        sinon.assert.calledWithExactly(navigator.mozLoop.copyString,
+          roomData.roomUrl);
+      });
+
+      it("should set state.urlCopied when the click event fires", function() {
+        TestUtils.Simulate.click(copyButton);
+
+        expect(roomEntry.state.urlCopied).to.equal(true);
+      });
+
+      it("should switch to displaying a check icon when the URL has been copied",
+        function() {
+          TestUtils.Simulate.click(copyButton);
+
+          expect(copyButton.classList.contains("checked")).eql(true);
+        });
+
+      it("should not display a check icon after mouse leaves the entry",
+        function() {
+          var roomNode = roomEntry.getDOMNode();
+          TestUtils.Simulate.click(copyButton);
+
+          TestUtils.SimulateNative.mouseOut(roomNode);
+
+          expect(copyButton.classList.contains("checked")).eql(false);
+        });
+    });
+
+    describe("Delete button click", function() {
+      var roomEntry, deleteButton;
+
+      beforeEach(function() {
+        roomEntry = mountRoomEntry({
+          dispatcher: dispatcher,
+          room: new loop.store.Room(roomData)
+        });
+        deleteButton = roomEntry.getDOMNode().querySelector("button.delete-link");
+      });
+
+      it("should not display a delete button by default", function() {
+        expect(deleteButton).to.not.equal(null);
+      });
+
+      it("should call the delete function when clicked", function() {
+        sandbox.stub(dispatcher, "dispatch");
+
+        TestUtils.Simulate.click(deleteButton);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.DeleteRoom({roomToken: roomData.roomToken}));
+      });
+    });
+
+    describe("Room URL click", function() {
+      var roomEntry;
+
+      it("should dispatch an OpenRoom action", function() {
+        sandbox.stub(dispatcher, "dispatch");
+        roomEntry = mountRoomEntry({
+          dispatcher: dispatcher,
+          room: new loop.store.Room(roomData)
+        });
+        var urlLink = roomEntry.getDOMNode().querySelector("p > a");
+
+        TestUtils.Simulate.click(urlLink);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.OpenRoom({roomToken: roomData.roomToken}));
+      });
+    });
   });
 
   describe("loop.panel.RoomList", function() {
@@ -775,20 +827,6 @@ describe("loop.panel", function() {
         var buttonNode = view.getDOMNode().querySelector("button[disabled]");
         expect(buttonNode).to.not.equal(null);
       });
-
-    describe("#openRoom", function() {
-      it("should dispatch an OpenRoom action", function() {
-        var view = createTestComponent();
-        var dispatch = sandbox.stub(dispatcher, "dispatch");
-
-        view.openRoom({roomToken: "42cba"});
-
-        sinon.assert.calledOnce(dispatch);
-        sinon.assert.calledWithExactly(dispatch, new sharedActions.OpenRoom({
-          roomToken: "42cba"
-        }));
-      });
-    });
   });
 
   describe('loop.panel.ToSView', function() {
