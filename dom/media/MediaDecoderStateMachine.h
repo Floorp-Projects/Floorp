@@ -344,11 +344,7 @@ public:
   void OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason);
 
 private:
-  // XXXbholley - We leave these as helper functions to keep this patch small.
-  // They go away in the next patch.
-  void OnAudioEOS();
-  void OnVideoEOS();
-  void OnDecodeError();
+  void AcquireMonitorAndInvokeDecodeError();
 
 protected:
   virtual ~MediaDecoderStateMachine();
