@@ -135,9 +135,9 @@ describe("loop.store.RoomListStore", function () {
         });
       });
 
-      describe("remove", function() {
-        it("should remove a room from the list", function() {
-          fakeMozLoop.rooms.trigger("remove", "remove", {
+      describe("delete", function() {
+        it("should delete a room from the list", function() {
+          fakeMozLoop.rooms.trigger("delete", "delete", {
             roomToken: "_nxD4V4FflQ"
           });
 

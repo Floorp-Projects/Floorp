@@ -49,8 +49,6 @@ browser.jar:
   content/browser/loop/shared/img/svg/glyph-account-16x16.svg   (content/shared/img/svg/glyph-account-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signin-16x16.svg    (content/shared/img/svg/glyph-signin-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signout-16x16.svg   (content/shared/img/svg/glyph-signout-16x16.svg)
-  content/browser/loop/shared/img/svg/copy-16x16.svg            (content/shared/img/svg/copy-16x16.svg)
-  content/browser/loop/shared/img/svg/checkmark-16x16.svg       (content/shared/img/svg/checkmark-16x16.svg)
   content/browser/loop/shared/img/audio-call-avatar.svg         (content/shared/img/audio-call-avatar.svg)
   content/browser/loop/shared/img/beta-ribbon.svg               (content/shared/img/beta-ribbon.svg)
   content/browser/loop/shared/img/icons-10x10.svg               (content/shared/img/icons-10x10.svg)
