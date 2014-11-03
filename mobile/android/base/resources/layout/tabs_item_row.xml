@@ -24,8 +24,7 @@
 
         <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
                                                 android:layout_width="@dimen/tab_thumbnail_width"
-                                                android:layout_height="@dimen/tab_thumbnail_height"
-                                                android:src="@drawable/tab_thumbnail_default"/>
+                                                android:layout_height="@dimen/tab_thumbnail_height"/>
 
     </org.mozilla.gecko.widget.TabThumbnailWrapper>
 

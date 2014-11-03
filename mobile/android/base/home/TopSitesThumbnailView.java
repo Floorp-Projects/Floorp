@@ -5,14 +5,18 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
@@ -35,11 +39,16 @@ public class TopSitesThumbnailView extends ImageView {
     // Paint for drawing the border.
     private final Paint mBorderPaint;
 
+    private boolean mResize = false;
+    private int mWidth;
+    private int mHeight;
+
     public TopSitesThumbnailView(Context context) {
         this(context, null);
 
         // A border will be drawn if needed.
         setWillNotDraw(false);
+
     }
 
     public TopSitesThumbnailView(Context context, AttributeSet attrs) {
@@ -56,6 +65,35 @@ public class TopSitesThumbnailView extends ImageView {
         mBorderPaint.setStyle(Paint.Style.STROKE);
     }
 
+    public void setImageBitmap(Bitmap bm, boolean resize) {
+        super.setImageBitmap(bm);
+        mResize = resize;
+    }
+
+    @Override
+    public void setImageResource(int resId) {
+        super.setImageResource(resId);
+        mResize = false;
+    }
+
+    @Override
+    public void setImageDrawable(Drawable drawable) {
+        super.setImageDrawable(drawable);
+        mResize = false;
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        if(NewTabletUI.isEnabled(getContext()) && mResize) {
+            setScaleType(ScaleType.MATRIX);
+            RectF rect = new RectF(0, 0, mWidth, mHeight);
+            Matrix matrix = new Matrix();
+            matrix.setRectToRect(rect, rect, Matrix.ScaleToFit.CENTER);
+            setImageMatrix(matrix);
+        }
+    }
+
     /**
      * Measure the view to determine the measured width and height.
      * The height is constrained by the measured width.
@@ -69,9 +107,9 @@ public class TopSitesThumbnailView extends ImageView {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
         // Force the height based on the aspect ratio.
-        final int width = getMeasuredWidth();
-        final int height = (int) (width * ThumbnailHelper.THUMBNAIL_ASPECT_RATIO);
-        setMeasuredDimension(width, height);
+        mWidth = getMeasuredWidth();
+        mHeight = (int) (mWidth * ThumbnailHelper.THUMBNAIL_ASPECT_RATIO);
+        setMeasuredDimension(mWidth, mHeight);
     }
 
     /**
