@@ -20,6 +20,8 @@ class MediaData;
 template<class Target>
 class MediaDataDecodedListener : public RequestSampleCallback {
 public:
+  using RequestSampleCallback::NotDecodedReason;
+
   MediaDataDecodedListener(Target* aTarget,
                            MediaTaskQueue* aTaskQueue)
     : mMonitor("MediaDataDecodedListener")
@@ -41,18 +43,6 @@ public:
     mTaskQueue->Dispatch(task);
   }
 
-  virtual void OnAudioEOS() MOZ_OVERRIDE {
-    MonitorAutoLock lock(mMonitor);
-    if (!mTarget || !mTaskQueue) {
-      // We've been shutdown, abort.
-      return;
-    }
-    RefPtr<nsIRunnable> task(NS_NewRunnableMethod(mTarget, &Target::OnAudioEOS));
-    if (NS_FAILED(mTaskQueue->Dispatch(task))) {
-      NS_WARNING("Failed to dispatch OnAudioEOS task");
-    }
-  }
-
   virtual void OnVideoDecoded(VideoData* aSample) MOZ_OVERRIDE {
     MonitorAutoLock lock(mMonitor);
     nsAutoPtr<VideoData> sample(aSample);
@@ -64,28 +54,14 @@ public:
     mTaskQueue->Dispatch(task);
   }
 
-  virtual void OnVideoEOS() MOZ_OVERRIDE {
+  virtual void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason) MOZ_OVERRIDE {
     MonitorAutoLock lock(mMonitor);
     if (!mTarget || !mTaskQueue) {
       // We've been shutdown, abort.
       return;
     }
-    RefPtr<nsIRunnable> task(NS_NewRunnableMethod(mTarget, &Target::OnVideoEOS));
-    if (NS_FAILED(mTaskQueue->Dispatch(task))) {
-      NS_WARNING("Failed to dispatch OnVideoEOS task");
-    }
-  }
-
-  virtual void OnDecodeError() MOZ_OVERRIDE {
-    MonitorAutoLock lock(mMonitor);
-    if (!mTarget || !mTaskQueue) {
-      // We've been shutdown, abort.
-      return;
-    }
-    RefPtr<nsIRunnable> task(NS_NewRunnableMethod(mTarget, &Target::OnDecodeError));
-    if (NS_FAILED(mTaskQueue->Dispatch(task))) {
-      NS_WARNING("Failed to dispatch OnAudioDecoded task");
-    }
+    RefPtr<nsIRunnable> task(new DeliverNotDecodedTask(aType, aReason, mTarget));
+    mTaskQueue->Dispatch(task);
   }
 
   void BreakCycles() {
@@ -142,11 +118,38 @@ private:
     RefPtr<Target> mTarget;
   };
 
+  class DeliverNotDecodedTask : public nsRunnable {
+  public:
+    DeliverNotDecodedTask(MediaData::Type aType,
+                          RequestSampleCallback::NotDecodedReason aReason,
+                          Target* aTarget)
+      : mType(aType)
+      , mReason(aReason)
+      , mTarget(aTarget)
+    {
+      MOZ_COUNT_CTOR(DeliverNotDecodedTask);
+    }
+  protected:
+    ~DeliverNotDecodedTask()
+    {
+      MOZ_COUNT_DTOR(DeliverNotDecodedTask);
+    }
+  public:
+    NS_METHOD Run() {
+      mTarget->OnNotDecoded(mType, mReason);
+      return NS_OK;
+    }
+  private:
+    MediaData::Type mType;
+    RequestSampleCallback::NotDecodedReason mReason;
+    RefPtr<Target> mTarget;
+  };
+
   Monitor mMonitor;
   RefPtr<MediaTaskQueue> mTaskQueue;
   RefPtr<Target> mTarget;
 };
 
-}
+} /* namespace mozilla */
 
 #endif // MediaDataDecodedListener_h_

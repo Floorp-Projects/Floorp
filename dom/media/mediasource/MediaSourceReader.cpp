@@ -80,7 +80,7 @@ MediaSourceReader::RequestAudioData()
   MSE_DEBUGV("MediaSourceReader(%p)::RequestAudioData", this);
   if (!mAudioReader) {
     MSE_DEBUG("MediaSourceReader(%p)::RequestAudioData called with no audio reader", this);
-    GetCallback()->OnDecodeError();
+    GetCallback()->OnNotDecoded(MediaData::AUDIO_DATA, RequestSampleCallback::DECODE_ERROR);
     return;
   }
   mAudioIsSeeking = false;
@@ -114,29 +114,13 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
 }
 
 void
-MediaSourceReader::OnAudioEOS()
-{
-  MSE_DEBUG("MediaSourceReader(%p)::OnAudioEOS reader=%p (decoders=%u)",
-            this, mAudioReader.get(), mAudioTrack->Decoders().Length());
-  if (SwitchAudioReader(mLastAudioTime)) {
-    // Success! Resume decoding with next audio decoder.
-    RequestAudioData();
-  } else if (IsEnded()) {
-    // End of stream.
-    MSE_DEBUG("MediaSourceReader(%p)::OnAudioEOS reader=%p EOS (decoders=%u)",
-              this, mAudioReader.get(), mAudioTrack->Decoders().Length());
-    GetCallback()->OnAudioEOS();
-  }
-}
-
-void
 MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold)
 {
   MSE_DEBUGV("MediaSourceReader(%p)::RequestVideoData(%d, %lld)",
              this, aSkipToNextKeyframe, aTimeThreshold);
   if (!mVideoReader) {
     MSE_DEBUG("MediaSourceReader(%p)::RequestVideoData called with no video reader", this);
-    GetCallback()->OnDecodeError();
+    GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA, RequestSampleCallback::DECODE_ERROR);
     return;
   }
   if (aSkipToNextKeyframe) {
@@ -175,27 +159,29 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
 }
 
 void
-MediaSourceReader::OnVideoEOS()
+MediaSourceReader::OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason)
 {
-  // End of stream. See if we can switch to another video decoder.
-  MSE_DEBUG("MediaSourceReader(%p)::OnVideoEOS reader=%p (decoders=%u)",
-            this, mVideoReader.get(), mVideoTrack->Decoders().Length());
-  if (SwitchVideoReader(mLastVideoTime)) {
-    // Success! Resume decoding with next video decoder.
-    RequestVideoData(false, 0);
-  } else if (IsEnded()) {
-    // End of stream.
-    MSE_DEBUG("MediaSourceReader(%p)::OnVideoEOS reader=%p EOS (decoders=%u)",
-              this, mVideoReader.get(), mVideoTrack->Decoders().Length());
-    GetCallback()->OnVideoEOS();
+  MSE_DEBUG("MediaSourceReader(%p)::OnNotDecoded aType=%u aReason=%u IsEnded: %d", this, aType, aReason, IsEnded());
+  if (aReason == RequestSampleCallback::DECODE_ERROR) {
+    GetCallback()->OnNotDecoded(aType, aReason);
+    return;
   }
-}
 
-void
-MediaSourceReader::OnDecodeError()
-{
-  MSE_DEBUG("MediaSourceReader(%p)::OnDecodeError", this);
-  GetCallback()->OnDecodeError();
+  MOZ_ASSERT(aReason == RequestSampleCallback::END_OF_STREAM);
+  if (aType == MediaData::AUDIO_DATA && SwitchAudioReader(mLastAudioTime)) {
+    RequestAudioData();
+    return;
+  }
+  if (aType == MediaData::VIDEO_DATA && SwitchVideoReader(mLastVideoTime)) {
+    RequestVideoData(false, 0);
+    return;
+  }
+
+  if (IsEnded()) {
+    GetCallback()->OnNotDecoded(aType, aReason);
+  }
+
+  // Drop anything else on the floor. This gets fixed in the next patch.
 }
 
 void
