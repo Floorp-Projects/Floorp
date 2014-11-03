@@ -489,6 +489,8 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
     modifiedCall->UpdateEmergency(aIsEmergency);
     modifiedCall->UpdateSwitchable(aIsSwitchable);
     modifiedCall->UpdateMergeable(aIsMergeable);
+    nsRefPtr<TelephonyCallId> id = modifiedCall->Id();
+    id->UpdateNumber(aNumber);
 
     if (modifiedCall->CallState() != aCallState) {
       if (aCallState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
