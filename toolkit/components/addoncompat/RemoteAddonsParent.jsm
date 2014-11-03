@@ -138,12 +138,16 @@ let ContentPolicyParent = {
     for (let policyCID of this._policies) {
       let policy = Cc[policyCID].getService(Ci.nsIContentPolicy);
       try {
-        let result = policy.shouldLoad(aObjects.contentType,
-                                       aObjects.contentLocation,
-                                       aObjects.requestOrigin,
+        let contentLocation = BrowserUtils.makeURI(aData.contentLocation);
+        let requestOrigin = aData.requestOrigin ? BrowserUtils.makeURI(aData.requestOrigin) : null;
+
+        let result = policy.shouldLoad(aData.contentType,
+                                       contentLocation,
+                                       requestOrigin,
                                        aObjects.node,
-                                       aObjects.mimeTypeGuess,
-                                       null);
+                                       aData.mimeTypeGuess,
+                                       null,
+                                       aData.requestPrincipal);
         if (result != Ci.nsIContentPolicy.ACCEPT && result != 0)
           return result;
       } catch (e) {
