@@ -237,7 +237,7 @@ let AboutProtocolParent = {
     let contractID = msg.data.contractID;
     let module = Cc[contractID].getService(Ci.nsIAboutModule);
     try {
-      let channel = module.newChannel(uri);
+      let channel = module.newChannel(uri, null);
       channel.notificationCallbacks = msg.objects.notificationCallbacks;
       channel.loadGroup = {notificationCallbacks: msg.objects.loadGroupNotificationCallbacks};
       let stream = channel.open();
