@@ -5,6 +5,7 @@
 
 #include "gmp-test-decryptor.h"
 #include "gmp-test-storage.h"
+#include "gmp-test-output-protection.h"
 
 #include <string>
 #include <vector>
@@ -325,6 +326,8 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
     }
   } else if (task == "retrieve-shutdown-token") {
     ReadRecord("shutdown-token", new ReportReadRecordContinuation("shutdown-token"));
+  } else if (task == "test-op-apis") {
+    mozilla::gmptest::TestOuputProtectionAPIs();
   }
 }
 
