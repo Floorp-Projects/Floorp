@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 384373</title>
+<script>
+function reload() {
+  this.location.reload();
+}
+// Run the test for 1 second
+setTimeout(function() {
+    document.body.getBoundingClientRect();
+    document.documentElement.removeChild(document.body);
+    document.documentElement.className = "";
+  }, 2000);
+</script>
+</head>
+<body onload="document.body.getBoundingClientRect()">
+
+<iframe src="384373-1.xul"></iframe>
+<iframe onload="this.contentWindow.setTimeout(reload,500)" src="384373-2.xul"></iframe>
+
+</body>
+</html>

@@ -45,7 +45,7 @@ template <>
 struct ParamTraits<GMPVideoFrameType>
 : public ContiguousEnumSerializer<GMPVideoFrameType,
                                   kGMPKeyFrame,
-                                  kGMPSkipFrame>
+                                  kGMPVideoFrameInvalid>
 {};
 
 template<>
@@ -57,7 +57,7 @@ template <>
 struct ParamTraits<GMPSessionType>
 : public ContiguousEnumSerializer<GMPSessionType,
                                   kGMPTemporySession,
-                                  kGMPPersistentSession>
+                                  kGMPSessionInvalid>
 {};
 
 template <>

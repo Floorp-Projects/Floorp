@@ -48,8 +48,8 @@ static const unsigned long kKeyMapping[] = {
     NS_VK_LEFT,
     NS_VK_RIGHT,
     NS_VK_SELECT,
-    NS_VK_PAGE_UP,   // VOLUME_UP
-    NS_VK_PAGE_DOWN, // VOLUME_DOWN
+    NS_VK_VOLUME_UP,
+    NS_VK_VOLUME_DOWN,
     NS_VK_SLEEP,     // POWER
     NS_VK_PRINTSCREEN, // CAMERA
     NS_VK_CLEAR,

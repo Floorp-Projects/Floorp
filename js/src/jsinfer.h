@@ -1566,7 +1566,7 @@ class HeapTypeSetKey
     jit::MIRType knownMIRType(CompilerConstraintList *constraints);
     bool nonData(CompilerConstraintList *constraints);
     bool nonWritable(CompilerConstraintList *constraints);
-    bool isOwnProperty(CompilerConstraintList *constraints);
+    bool isOwnProperty(CompilerConstraintList *constraints, bool allowEmptyTypesForGlobal = false);
     bool knownSubset(CompilerConstraintList *constraints, const HeapTypeSetKey &other);
     JSObject *singleton(CompilerConstraintList *constraints);
     bool needsBarrier(CompilerConstraintList *constraints);

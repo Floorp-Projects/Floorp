@@ -182,6 +182,7 @@ load 399407-1.xhtml
 load 399412-1.html
 load 399843-1.html
 load 400078-1.html
+load 400190.html
 load 400223-1.html
 load 400232-1.html
 load 400244-1.html
@@ -535,6 +536,7 @@ asserts-if(Android,0-4) asserts-if(!Android,1-4) load 876074-1.html # bug 876749
 load 885009-1.html
 load 893496-1.html
 load 893523.html
+asserts(0-3) load 898871.html # bug 479160
 test-pref(layout.css.sticky.enabled,true) load 914891.html
 test-pref(layout.css.sticky.enabled,true) load 915475.xhtml
 load 927558.html
