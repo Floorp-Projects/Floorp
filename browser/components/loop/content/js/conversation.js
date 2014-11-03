@@ -179,12 +179,12 @@ loop.conversation = (function(mozL10n) {
   });
 
   /**
-   * Incoming Call failed view. Displayed when a call fails.
+   * Something went wrong view. Displayed when there's a big problem.
    *
    * XXX Based on CallFailedView, but built specially until we flux-ify the
    * incoming call views (bug 1088672).
    */
-  var IncomingCallFailedView = React.createClass({displayName: 'IncomingCallFailedView',
+  var GenericFailureView = React.createClass({displayName: 'GenericFailureView',
     propTypes: {
       cancelCall: React.PropTypes.func.isRequired
     },
@@ -283,7 +283,7 @@ loop.conversation = (function(mozL10n) {
         case "end": {
           // XXX To be handled with the "failed" view state when bug 1047410 lands
           if (this.state.callFailed) {
-            return IncomingCallFailedView({
+            return GenericFailureView({
               cancelCall: this.closeWindow.bind(this)}
             )
           }
@@ -525,6 +525,8 @@ loop.conversation = (function(mozL10n) {
    * in progress, and hence, which view to display.
    */
   var AppControllerView = React.createClass({displayName: 'AppControllerView',
+    mixins: [Backbone.Events],
+
     propTypes: {
       // XXX Old types required for incoming call view.
       client: React.PropTypes.instanceOf(loop.Client).isRequired,
@@ -532,51 +534,65 @@ loop.conversation = (function(mozL10n) {
                          .isRequired,
       sdk: React.PropTypes.object.isRequired,
 
-      // XXX New types for OutgoingConversationView
-      store: React.PropTypes.instanceOf(loop.store.ConversationStore).isRequired,
+      // XXX New types for flux style
+      conversationAppStore: React.PropTypes.instanceOf(
+        loop.store.ConversationAppStore).isRequired,
+      conversationStore: React.PropTypes.instanceOf(loop.store.ConversationStore)
+                              .isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-
-      // if not passed, this is not a room view
       localRoomStore: React.PropTypes.instanceOf(loop.store.LocalRoomStore)
     },
 
     getInitialState: function() {
-      return this.props.store.attributes;
+      return this.props.conversationAppStore.getStoreState();
     },
 
     componentWillMount: function() {
-      this.props.store.on("change:outgoing", function() {
-        this.setState(this.props.store.attributes);
+      this.listenTo(this.props.conversationAppStore, "change", function() {
+        this.setState(this.props.conversationAppStore.getStoreState());
       }, this);
     },
 
+    componentWillUnmount: function() {
+      this.stopListening(this.props.conversationAppStore);
+    },
+
+    closeWindow: function() {
+      window.close();
+    },
+
     render: function() {
-      if (this.props.localRoomStore) {
-        return (
-          EmptyRoomView({
+      switch(this.state.windowType) {
+        case "incoming": {
+          return (IncomingConversationView({
+            client: this.props.client, 
+            conversation: this.props.conversation, 
+            sdk: this.props.sdk}
+          ));
+        }
+        case "outgoing": {
+          return (OutgoingConversationView({
+            store: this.props.conversationStore, 
+            dispatcher: this.props.dispatcher}
+          ));
+        }
+        case "room": {
+          return (EmptyRoomView({
             mozLoop: navigator.mozLoop, 
             localRoomStore: this.props.localRoomStore}
-          )
-        );
+          ));
+        }
+        case "failed": {
+          return (GenericFailureView({
+            cancelCall: this.closeWindow.bind(this)}
+          ));
+        }
+        default: {
+          // If we don't have a windowType, we don't know what we are yet,
+          // so don't display anything.
+          return null;
+        }
       }
-
-      // Don't display anything, until we know what type of call we are.
-      if (this.state.outgoing === undefined) {
-        return null;
-      }
-
-      if (this.state.outgoing) {
-        return (OutgoingConversationView({
-          store: this.props.store, 
-          dispatcher: this.props.dispatcher}
-        ));
-      }
-
-      return (IncomingConversationView({
-        client: this.props.client, 
-        conversation: this.props.conversation, 
-        sdk: this.props.sdk}
-      ));
     }
   });
 
@@ -607,11 +623,20 @@ loop.conversation = (function(mozL10n) {
       sdk: OT
     });
 
+    // Create the stores.
+    var conversationAppStore = new loop.store.ConversationAppStore({
+      dispatcher: dispatcher,
+      mozLoop: navigator.mozLoop
+    });
     var conversationStore = new loop.store.ConversationStore({}, {
       client: client,
       dispatcher: dispatcher,
       sdkDriver: sdkDriver
     });
+    var localRoomStore = new loop.store.LocalRoomStore({
+      dispatcher: dispatcher,
+      mozLoop: navigator.mozLoop
+    });;
 
     // XXX Old class creation for the incoming conversation view, whilst
     // we transition across (bug 1072323).
@@ -624,30 +649,10 @@ loop.conversation = (function(mozL10n) {
     var helper = new loop.shared.utils.Helper();
     var locationHash = helper.locationData().hash;
     var windowId;
-    var outgoing;
-    var localRoomStore;
 
-    // XXX removeMe, along with noisy comment at the beginning of
-    // conversation_test.js "when locationHash begins with #room".
-    if (navigator.mozLoop.getLoopBoolPref("test.alwaysUseRooms")) {
-      locationHash = "#room/32";
-    }
-
-    var hash = locationHash.match(/#incoming\/(.*)/);
+    var hash = locationHash.match(/#(.*)/);
     if (hash) {
       windowId = hash[1];
-      outgoing = false;
-    } else if (hash = locationHash.match(/#room\/(.*)/)) {
-      localRoomStore = new loop.store.LocalRoomStore({
-        dispatcher: dispatcher,
-        mozLoop: navigator.mozLoop
-      });
-    } else {
-      hash = locationHash.match(/#outgoing\/(.*)/);
-      if (hash) {
-        windowId = hash[1];
-        outgoing = true;
-      }
     }
 
     conversation.set({windowId: windowId});
@@ -658,23 +663,17 @@ loop.conversation = (function(mozL10n) {
     });
 
     React.renderComponent(AppControllerView({
+      conversationAppStore: conversationAppStore, 
       localRoomStore: localRoomStore, 
-      store: conversationStore, 
+      conversationStore: conversationStore, 
       client: client, 
       conversation: conversation, 
       dispatcher: dispatcher, 
       sdk: window.OT}
     ), document.querySelector('#main'));
 
-   if (localRoomStore) {
-      dispatcher.dispatch(
-        new sharedActions.SetupEmptyRoom({localRoomId: hash[1]}));
-      return;
-    }
-
-    dispatcher.dispatch(new loop.shared.actions.GatherCallData({
-      windowId: windowId,
-      outgoing: outgoing
+    dispatcher.dispatch(new sharedActions.GetWindowData({
+      windowId: windowId
     }));
   }
 
@@ -682,7 +681,7 @@ loop.conversation = (function(mozL10n) {
     AppControllerView: AppControllerView,
     IncomingConversationView: IncomingConversationView,
     IncomingCallView: IncomingCallView,
-    IncomingCallFailedView: IncomingCallFailedView,
+    GenericFailureView: GenericFailureView,
     init: init
   };
 })(document.mozL10n);

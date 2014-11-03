@@ -26,7 +26,7 @@ add_task(function test_startDirectCall_opens_window() {
   do_check_true(!!openedUrl, "should open a chat window");
 
   // Stop the busy kicking in for following tests.
-  let callId = openedUrl.match(/about:loopconversation\#outgoing\/(.*)/)[1];
+  let callId = openedUrl.match(/about:loopconversation\#(\d+)$/)[1];
   LoopCalls.releaseCallData(callId);
 });
 
@@ -38,7 +38,7 @@ add_task(function test_startDirectCall_getCallData() {
 
   LoopCalls.startDirectCall(contact, "audio-video");
 
-  let callId = openedUrl.match(/about:loopconversation\#outgoing\/(.*)/)[1];
+  let callId = openedUrl.match(/about:loopconversation\#(\d+)$/)[1];
 
   let callData = LoopCalls.getCallData(callId);
 

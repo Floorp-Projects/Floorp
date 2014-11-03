@@ -31,14 +31,15 @@ describe("loop.store.LocalRoomStore", function () {
     });
   });
 
-  describe("#setupEmptyRoom", function() {
+  describe("#setupWindowData", function() {
     var store, fakeMozLoop, fakeRoomId, fakeRoomName;
 
     beforeEach(function() {
       fakeRoomId = "337-ff-54";
       fakeRoomName = "Monkeys";
       fakeMozLoop = {
-        rooms: { getRoomData: sandbox.stub() }
+        rooms: { getRoomData: sandbox.stub() },
+        getLoopBoolPref: function () { return false; }
       };
 
       store = new loop.store.LocalRoomStore(
@@ -57,8 +58,12 @@ describe("loop.store.LocalRoomStore", function () {
         done();
       });
 
-      dispatcher.dispatch(new sharedActions.SetupEmptyRoom(
-        {localRoomId: fakeRoomId}));
+      dispatcher.dispatch(new sharedActions.SetupWindowData({
+        windowData: {
+          type: "room",
+          localRoomId: fakeRoomId
+        }
+      }));
     });
 
     it("should set localRoomId on the store from the action data",
@@ -70,9 +75,13 @@ describe("loop.store.LocalRoomStore", function () {
           done();
         });
 
-        dispatcher.dispatch(
-          new sharedActions.SetupEmptyRoom({localRoomId: fakeRoomId}));
-    });
+        dispatcher.dispatch(new sharedActions.SetupWindowData({
+          windowData: {
+            type: "room",
+            localRoomId: fakeRoomId
+          }
+        }));
+      });
 
     it("should set serverData.roomName from the getRoomData callback",
       function(done) {
@@ -83,8 +92,12 @@ describe("loop.store.LocalRoomStore", function () {
           done();
         });
 
-        dispatcher.dispatch(
-          new sharedActions.SetupEmptyRoom({localRoomId: fakeRoomId}));
+        dispatcher.dispatch(new sharedActions.SetupWindowData({
+          windowData: {
+            type: "room",
+            localRoomId: fakeRoomId
+          }
+        }));
       });
 
     it("should set error on the store when getRoomData calls back an error",
@@ -102,8 +115,12 @@ describe("loop.store.LocalRoomStore", function () {
           done();
         });
 
-        dispatcher.dispatch(
-          new sharedActions.SetupEmptyRoom({localRoomId: fakeRoomId}));
+        dispatcher.dispatch(new sharedActions.SetupWindowData({
+          windowData: {
+            type: "room",
+            localRoomId: fakeRoomId
+          }
+        }));
       });
 
   });

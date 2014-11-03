@@ -121,7 +121,7 @@ loop.store.ConversationStore = (function() {
       this.dispatcher.register(this, [
         "connectionFailure",
         "connectionProgress",
-        "gatherCallData",
+        "setupWindowData",
         "connectCall",
         "hangupCall",
         "peerHungupCall",
@@ -188,36 +188,23 @@ loop.store.ConversationStore = (function() {
       }
     },
 
-    /**
-     * Handles the gather call data action, setting the state
-     * and starting to get the appropriate data for the type of call.
-     *
-     * @param {sharedActions.GatherCallData} actionData The action data.
-     */
-    gatherCallData: function(actionData) {
-      if (!actionData.outgoing) {
-        // XXX Other types aren't supported yet, but set the state for the
-        // view selection.
-        this.set({outgoing: false});
-        return;
-      }
-
-      var callData = navigator.mozLoop.getCallData(actionData.windowId);
-      if (!callData) {
-        console.error("Failed to get the call data");
-        this.set({callState: CALL_STATES.TERMINATED});
+    setupWindowData: function(actionData) {
+      var windowData = actionData.windowData;
+      var windowType = windowData.type;
+      if (windowType !== "outgoing" &&
+          windowType !== "incoming") {
+        // Not for this store, don't do anything.
         return;
       }
 
       this.set({
-        contact: callData.contact,
-        outgoing: actionData.outgoing,
-        windowId: actionData.windowId,
-        callType: callData.callType,
-        callState: CALL_STATES.GATHER
+        contact: windowData.contact,
+        outgoing: windowType === "outgoing",
+        windowId: windowData.windowId,
+        callType: windowData.callType,
+        callState: CALL_STATES.GATHER,
+        videoMuted: windowData.callType === CALL_TYPES.AUDIO_ONLY
       });
-
-      this.set({videoMuted: this.get("callType") === CALL_TYPES.AUDIO_ONLY});
 
       if (this.get("outgoing")) {
         this._setupOutgoingCall();
