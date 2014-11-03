@@ -18,6 +18,10 @@
 #include "mozilla/Atomics.h"
 #include "nsNSSComponent.h"
 
+#if defined(XP_WIN)
+#include "mozilla/WindowsVersion.h"
+#endif
+
 using namespace std;
 
 using namespace mozilla;
@@ -553,6 +557,20 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     Update(NS_LITERAL_CSTRING("retrieve-shutdown-token"));
   }
 
+#if defined(XP_WIN)
+  void TestOutputProtection() {
+    Shutdown();
+
+    CreateDecryptor(NS_LITERAL_STRING("example15.com"),
+                    NS_LITERAL_STRING("example16.com"),
+                    false);
+
+    Expect(NS_LITERAL_CSTRING("OP tests completed"),
+           NS_NewRunnableMethod(this, &GMPStorageTest::SetFinished));
+    Update(NS_LITERAL_CSTRING("test-op-apis"));
+  }
+#endif
+
   void Expect(const nsCString& aMessage, nsIRunnable* aContinuation) {
     mExpected.AppendElement(ExpectedMessage(aMessage, aContinuation));
   }
@@ -602,7 +620,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
     nsCString msg((const char*)aMessage.Elements(), aMessage.Length());
     EXPECT_TRUE(mExpected.Length() > 0);
     bool matches = mExpected[0].mMessage.Equals(msg);
-    EXPECT_TRUE(matches);
+    EXPECT_STREQ(mExpected[0].mMessage.get(), msg.get());
     if (mExpected.Length() > 0 && matches) {
       nsRefPtr<nsIRunnable> continuation = mExpected[0].mContinuation;
       mExpected.RemoveElementAt(0);
@@ -707,3 +725,15 @@ TEST(GeckoMediaPlugins, GMPStorageAsyncShutdownStorage) {
   nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestAsyncShutdownStorage);
 }
+
+#if defined(XP_WIN)
+TEST(GeckoMediaPlugins, GMPOutputProtection) {
+  // Output Protection is not available pre-Vista.
+  if (!IsVistaOrLater()) {
+    return;
+  }
+
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestOutputProtection);
+}
+#endif
