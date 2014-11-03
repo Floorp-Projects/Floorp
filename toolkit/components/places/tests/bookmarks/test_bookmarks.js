@@ -348,10 +348,6 @@ add_task(function test_bookmarks() {
   let k = bs.getKeywordForBookmark(kwTestItemId);
   do_check_eq("bar", k);
 
-  // test getKeywordForURI
-  k = bs.getKeywordForURI(uri("http://keywordtest.com/"));
-  do_check_eq("bar", k);
-
   // test getURIForKeyword
   let u = bs.getURIForKeyword("bar");
   do_check_eq("http://keywordtest.com/", u.spec);
