@@ -81,11 +81,10 @@ struct nsCSSBorderRenderer {
   typedef mozilla::gfx::Rect Rect;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
-  nsCSSBorderRenderer(int32_t aAppUnitsPerPixel,
-                      gfxContext* aDestContext,
-                      gfxRect& aOuterRect,
+  nsCSSBorderRenderer(gfxContext* aDestContext,
+                      Rect& aOuterRect,
                       const uint8_t* aBorderStyles,
-                      const gfxFloat* aBorderWidths,
+                      const Float* aBorderWidths,
                       RectCornerRadii& aBorderRadii,
                       const nscolor* aBorderColors,
                       nsBorderColors* const* aCompositeColors,
@@ -97,22 +96,17 @@ struct nsCSSBorderRenderer {
   gfxContext* mContext;
 
   // the rectangle of the outside and the inside of the border
-  gfxRect mOuterRect;
-  gfxRect mInnerRect;
+  Rect mOuterRect;
+  Rect mInnerRect;
 
   // the style and size of the border
   const uint8_t* mBorderStyles;
-  const gfxFloat* mBorderWidths;
-  uint8_t* mSanitizedStyles;
-  gfxFloat* mSanitizedWidths;
+  const Float* mBorderWidths;
   RectCornerRadii mBorderRadii;
 
   // colors
   const nscolor* mBorderColors;
   nsBorderColors* const* mCompositeColors;
-
-  // core app units per pixel
-  int32_t mAUPP;
 
   // the background color
   nscolor mBackgroundColor;
@@ -233,19 +227,19 @@ namespace mozilla {
 #ifdef DEBUG_NEW_BORDERS
 #include <stdarg.h>
 
-static inline void PrintAsString(const gfxPoint& p) {
+static inline void PrintAsString(const mozilla::gfx::Point& p) {
   fprintf (stderr, "[%f,%f]", p.x, p.y);
 }
 
-static inline void PrintAsString(const gfxSize& s) {
+static inline void PrintAsString(const mozilla::gfx::Size& s) {
   fprintf (stderr, "[%f %f]", s.width, s.height);
 }
 
-static inline void PrintAsString(const gfxRect& r) {
+static inline void PrintAsString(const mozilla::gfx::Rect& r) {
   fprintf (stderr, "[%f %f %f %f]", r.X(), r.Y(), r.Width(), r.Height());
 }
 
-static inline void PrintAsString(const gfxFloat f) {
+static inline void PrintAsString(const mozilla::gfx::Float f) {
   fprintf (stderr, "%f", f);
 }
 
@@ -268,20 +262,20 @@ static inline void PrintAsFormatString(const char *fmt, ...) {
 }
 
 static inline void PrintGfxContext(gfxContext *ctx) {
-  gfxPoint p = ctx->CurrentPoint();
+  mozilla::gfx::Point p = ctx->CurrentPoint();
   fprintf (stderr, "p: %f %f\n", p.x, p.y);
   return;
-  ctx->MoveTo(p + gfxPoint(-2, -2)); ctx->LineTo(p + gfxPoint(2, 2));
-  ctx->MoveTo(p + gfxPoint(-2, 2)); ctx->LineTo(p + gfxPoint(2, -2));
+  ctx->MoveTo(p + Point(-2, -2)); ctx->LineTo(p + Point(2, 2));
+  ctx->MoveTo(p + Point(-2, 2)); ctx->LineTo(p + Point(2, -2));
   ctx->MoveTo(p);
 }
 
 
 #else
-static inline void PrintAsString(const gfxPoint& p) {}
-static inline void PrintAsString(const gfxSize& s) {}
-static inline void PrintAsString(const gfxRect& r) {}
-static inline void PrintAsString(const gfxFloat f) {}
+static inline void PrintAsString(const mozilla::gfx::Point& p) {}
+static inline void PrintAsString(const mozilla::gfx::Size& s) {}
+static inline void PrintAsString(const mozilla::gfx::Rect& r) {}
+static inline void PrintAsString(const mozilla::gfx::Float f) {}
 static inline void PrintAsString(const char *s) {}
 static inline void PrintAsStringNewline(const char *s = nullptr) {}
 static inline void PrintAsFormatString(const char *fmt, ...) {}
