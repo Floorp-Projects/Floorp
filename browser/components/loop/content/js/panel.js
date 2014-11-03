@@ -582,7 +582,9 @@ loop.panel = (function(_, mozL10n) {
     },
 
     openRoom: function(room) {
-      // XXX implement me; see bug 1074678
+      this.props.dispatcher.dispatch(new sharedActions.OpenRoom({
+        roomToken: room.roomToken
+      }));
     },
 
     render: function() {

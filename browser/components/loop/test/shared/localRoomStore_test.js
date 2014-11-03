@@ -32,20 +32,19 @@ describe("loop.store.LocalRoomStore", function () {
   });
 
   describe("#setupWindowData", function() {
-    var store, fakeMozLoop, fakeRoomId, fakeRoomName;
+    var store, fakeMozLoop, fakeToken, fakeRoomName;
 
     beforeEach(function() {
-      fakeRoomId = "337-ff-54";
+      fakeToken = "337-ff-54";
       fakeRoomName = "Monkeys";
       fakeMozLoop = {
-        rooms: { getRoomData: sandbox.stub() },
-        getLoopBoolPref: function () { return false; }
+        rooms: { get: sandbox.stub() }
       };
 
       store = new loop.store.LocalRoomStore(
         {mozLoop: fakeMozLoop, dispatcher: dispatcher});
-      fakeMozLoop.rooms.getRoomData.
-        withArgs(fakeRoomId).
+      fakeMozLoop.rooms.get.
+        withArgs(fakeToken).
         callsArgOnWith(1, // index of callback argument
         store, // |this| to call it on
         null, // args to call the callback with...
@@ -61,7 +60,7 @@ describe("loop.store.LocalRoomStore", function () {
       dispatcher.dispatch(new sharedActions.SetupWindowData({
         windowId: "42",
         type: "room",
-        localRoomId: fakeRoomId
+        roomToken: fakeToken
       }));
     });
 
@@ -70,14 +69,14 @@ describe("loop.store.LocalRoomStore", function () {
 
         store.once("change", function () {
           expect(store.getStoreState()).
-            to.have.property('localRoomId', fakeRoomId);
+            to.have.property('roomToken', fakeToken);
           done();
         });
 
         dispatcher.dispatch(new sharedActions.SetupWindowData({
           windowId: "42",
           type: "room",
-          localRoomId: fakeRoomId
+          roomToken: fakeToken
         }));
       });
 
@@ -93,7 +92,7 @@ describe("loop.store.LocalRoomStore", function () {
         dispatcher.dispatch(new sharedActions.SetupWindowData({
           windowId: "42",
           type: "room",
-          localRoomId: fakeRoomId
+          roomToken: fakeToken
         }));
       });
 
@@ -101,8 +100,8 @@ describe("loop.store.LocalRoomStore", function () {
       function(done) {
 
         var fakeError = new Error("fake error");
-        fakeMozLoop.rooms.getRoomData.
-          withArgs(fakeRoomId).
+        fakeMozLoop.rooms.get.
+          withArgs(fakeToken).
           callsArgOnWith(1, // index of callback argument
           store, // |this| to call it on
           fakeError); // args to call the callback with...
@@ -115,7 +114,7 @@ describe("loop.store.LocalRoomStore", function () {
         dispatcher.dispatch(new sharedActions.SetupWindowData({
           windowId: "42",
           type: "room",
-          localRoomId: fakeRoomId
+          roomToken: fakeToken
         }));
       });
 

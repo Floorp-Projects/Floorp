@@ -4,6 +4,9 @@
 
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
+Cu.import("resource:///modules/Chat.jsm");
+
+let openChatOrig = Chat.open;
 
 const kRooms = new Map([
   ["_nxD4V4FflQ", {
@@ -168,7 +171,30 @@ add_task(function* test_createRoom() {
   Assert.ok(eventCalled, "Event should have fired");
 });
 
+add_task(function* test_openRoom() {
+  let openedUrl;
+  Chat.open = function(contentWindow, origin, title, url) {
+    openedUrl = url;
+  };
+
+  LoopRooms.open("fakeToken");
+
+  Assert.ok(openedUrl, "should open a chat window");
+
+  // Stop the busy kicking in for following tests.
+  let windowId = openedUrl.match(/about:loopconversation\#(\d+)$/)[1];
+  let windowData = MozLoopService.getConversationWindowData(windowId);
+
+  Assert.equal(windowData.type, "room", "window data should contain room as the type");
+  Assert.equal(windowData.roomToken, "fakeToken", "window data should have the roomToken");
+});
+
 function run_test() {
+  do_register_cleanup(function() {
+    // Revert original Chat.open implementation
+    Chat.open = openChatOrig;
+  });
+
   setupFakeLoopServer();
 
   run_next_test();
