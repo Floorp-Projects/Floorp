@@ -763,7 +763,7 @@ describe("loop.panel", function() {
 
         var buttonNode = view.getDOMNode().querySelector("button[disabled]");
         expect(buttonNode).to.not.equal(null);
-    });
+      });
 
     it("should disable the create button when a list retrieval operation is pending",
       function() {
@@ -774,6 +774,20 @@ describe("loop.panel", function() {
 
         var buttonNode = view.getDOMNode().querySelector("button[disabled]");
         expect(buttonNode).to.not.equal(null);
+      });
+
+    describe("#openRoom", function() {
+      it("should dispatch an OpenRoom action", function() {
+        var view = createTestComponent();
+        var dispatch = sandbox.stub(dispatcher, "dispatch");
+
+        view.openRoom({roomToken: "42cba"});
+
+        sinon.assert.calledOnce(dispatch);
+        sinon.assert.calledWithExactly(dispatch, new sharedActions.OpenRoom({
+          roomToken: "42cba"
+        }));
+      });
     });
   });
 

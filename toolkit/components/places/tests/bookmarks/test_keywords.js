@@ -11,8 +11,16 @@ function check_bookmark_keyword(aItemId, aKeyword)
 function check_uri_keyword(aURI, aKeyword)
 {
   let keyword = aKeyword ? aKeyword.toLowerCase() : null;
-  do_check_eq(PlacesUtils.bookmarks.getKeywordForURI(aURI),
-              keyword);
+
+  for (let bm of PlacesUtils.getBookmarksForURI(aURI)) {
+    let kid = PlacesUtils.bookmarks.getKeywordForBookmark(bm);
+    if (kid && !keyword) {
+      Assert.ok(false, `${aURI.spec} should not have a keyword`);
+    } else if (keyword && kid == keyword) {
+      Assert.equal(kid, keyword, "Found the keyword");
+      break;
+    }
+  }
 
   if (aKeyword) {
     // This API can't tell which uri the user wants, so it returns a random one.

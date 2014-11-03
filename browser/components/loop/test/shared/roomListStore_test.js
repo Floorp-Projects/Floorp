@@ -326,4 +326,27 @@ describe("loop.store.RoomListStore", function () {
       });
     });
   });
+
+  describe("#openRoom", function() {
+    var store, fakeMozLoop;
+
+    beforeEach(function() {
+      fakeMozLoop = {
+        rooms: {
+          open: sinon.spy()
+        }
+      };
+      store = new loop.store.RoomListStore({
+        dispatcher: dispatcher,
+        mozLoop: fakeMozLoop
+      });
+    });
+
+    it("should open the room via mozLoop", function() {
+      dispatcher.dispatch(new sharedActions.OpenRoom({roomToken: "42abc"}));
+
+      sinon.assert.calledOnce(fakeMozLoop.rooms.open);
+      sinon.assert.calledWithExactly(fakeMozLoop.rooms.open, "42abc");
+    });
+  });
 });
