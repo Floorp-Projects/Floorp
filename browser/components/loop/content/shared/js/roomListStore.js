@@ -328,6 +328,15 @@ loop.store = loop.store || {};
         rooms: this._processRoomList(actionData.roomList)
       });
     },
+
+    /**
+     * Opens a room
+     *
+     * @param {sharedActions.OpenRoom} actionData The action data.
+     */
+    openRoom: function(actionData) {
+      this._mozLoop.rooms.open(actionData.roomToken);
+    }
   }, Backbone.Events);
 
   loop.store.RoomListStore = RoomListStore;

@@ -71,25 +71,8 @@ loop.store.LocalRoomStore = (function() {
     },
 
     /**
-     * Proxy to mozLoop.rooms.getRoomData for setupEmptyRoom action.
-     *
-     * XXXremoveMe Can probably be removed when bug 1074664 lands.
-     *
-     * @param {Integer} roomId The id of the room.
-     * @param {Function} cb Callback(error, roomData)
-     */
-    _fetchRoomData: function(roomId, cb) {
-      // XXX Remove me in bug 1074678
-      if (!this.mozLoop.getLoopBoolPref("test.alwaysUseRooms")) {
-        this.mozLoop.rooms.getRoomData(roomId, cb);
-      } else {
-        cb(null, {roomName: "Donkeys"});
-      }
-    },
-
-    /**
-     * Execute setupEmptyRoom event action from the dispatcher.  This primes
-     * the store with the localRoomId, and calls MozLoop.getRoomData on that
+     * Execute setupWindowData event action from the dispatcher.  This primes
+     * the store with the roomToken, and calls MozLoop.getRoomData on that
      * ID.  This will return either a reflection of state on the server, or,
      * if the createRoom call hasn't yet returned, it will have at least the
      * roomName as specified to the createRoom method.
@@ -105,11 +88,11 @@ loop.store.LocalRoomStore = (function() {
         return;
       }
 
-      this._fetchRoomData(actionData.localRoomId,
+      this.mozLoop.rooms.get(actionData.roomToken,
         function(error, roomData) {
           this.setStoreState({
             error: error,
-            localRoomId: actionData.localRoomId,
+            roomToken: actionData.roomToken,
             serverData: roomData
           });
         }.bind(this));

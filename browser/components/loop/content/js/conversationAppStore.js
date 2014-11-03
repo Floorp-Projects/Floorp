@@ -61,13 +61,7 @@ loop.store.ConversationAppStore = (function() {
      * @param {sharedActions.GetWindowData} actionData The action data
      */
     getWindowData: function(actionData) {
-      var windowData;
-      // XXX Remove me in bug 1074678
-      if (this._mozLoop.getLoopBoolPref("test.alwaysUseRooms")) {
-        windowData = {type: "room", localRoomId: "42"};
-      } else {
-        windowData = this._mozLoop.getConversationWindowData(actionData.windowId);
-      }
+      var windowData = this._mozLoop.getConversationWindowData(actionData.windowId);
 
       if (!windowData) {
         console.error("Failed to get the window data");
