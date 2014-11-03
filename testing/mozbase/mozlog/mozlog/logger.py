@@ -120,14 +120,15 @@ class MozFormatter(Formatter):
     def __init__(self, include_timestamp=False):
         """
         Formatter.__init__ has fmt and datefmt parameters that won't have
-        any affect on a MozFormatter instance. Bypass it to avoid confusion.
+        any affect on a MozFormatter instance.
+
+        :param include_timestamp: if True, include formatted time at the
+                                  beginning of the message
         """
         self.include_timestamp = include_timestamp
-        self.datefmt = None
+        Formatter.__init__(self)
 
     def format(self, record):
-        record.message = record.getMessage()
-
         # Handles padding so record levels align nicely
         if len(record.levelname) > self.level_length:
             pad = 0
@@ -138,8 +139,11 @@ class MozFormatter(Formatter):
         sep = '|'.rjust(pad)
         fmt = '%(name)s %(levelname)s ' + sep + ' %(message)s'
         if self.include_timestamp:
-            fmt = self.formatTime(record, self.datefmt) + ' ' + fmt
-        return fmt % record.__dict__
+            fmt = '%(asctime)s ' + fmt
+        # this protected member is used to define the format
+        # used by the base Formatter's method
+        self._fmt = fmt
+        return Formatter.format(self, record)
 
 def getLogger(name, handler=None):
     """
