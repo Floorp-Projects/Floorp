@@ -1,0 +1,377 @@
+<html>
+<title>
+PyASN1 Constructed types
+</title>
+<head>
+</head>
+<body>
+<center>
+<table width=60%>
+<tr>
+<td>
+
+<h4>
+1.3 PyASN1 Constructed types
+</h4>
+
+<p>
+Besides scalar types, ASN.1 specifies so-called constructed ones - these
+are capable of holding one or more values of other types, both scalar
+and constructed.
+</p>
+
+<p>
+In pyasn1 implementation, constructed ASN.1 types behave like 
+Python sequences, and also support additional component addressing methods,
+specific to particular constructed type.
+</p>
+
+<a name="1.3.1"></a>
+<h4>
+1.3.1 Sequence and Set types
+</h4>
+
+<p>
+The Sequence and Set types have many similar properties:
+</p>
+<ul>
+<li>they can hold any number of inner components of different types
+<li>every component has a human-friendly identifier
+<li>any component can have a default value
+<li>some components can be absent.
+</ul>
+
+<p>
+However, Sequence type guarantees the ordering of Sequence value components
+to match their declaration order. By contrast, components of the
+Set type can be ordered to best suite application's needs.
+<p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Record ::= SEQUENCE {
+  id        INTEGER,
+  room  [0] INTEGER OPTIONAL,
+  house [1] INTEGER DEFAULT 0
+}
+</pre>
+</td></tr></table>
+
+<p>
+Up to this moment, the only method we used for creating new pyasn1 types
+is Python sub-classing. With this method, a new, named Python class is created
+what mimics type derivation in ASN.1 grammar. However, ASN.1 also allows for
+defining anonymous subtypes (room and house components in the example above).
+To support anonymous subtyping in pyasn1, a cloning operation on an existing
+pyasn1 type object can be invoked what creates a new instance of original
+object with possibly modified properties.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype, tag
+>>> class Record(univ.Sequence):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('id', univ.Integer()),
+...     namedtype.OptionalNamedType(
+...       'room',
+...       univ.Integer().subtype(
+...         implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 0)
+...       )
+...     ),
+...     namedtype.DefaultedNamedType(
+...       'house', 
+...       univ.Integer(0).subtype(
+...         implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 1)
+...       )
+...     )
+...   )
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+All pyasn1 constructed type classes have a class attribute <b>componentType</b>
+that represent default type specification. Its value is a NamedTypes object.
+</p>
+
+<p>
+The NamedTypes class instance holds a sequence of NameType, OptionalNamedType
+or DefaultedNamedType objects which, in turn, refer to pyasn1 type objects that
+represent inner SEQUENCE components specification.
+</p>
+
+<p>
+Finally, invocation of a subtype() method of pyasn1 type objects in the code
+above returns an implicitly tagged copy of original object.
+</p>
+
+<p>
+Once a SEQUENCE or SET type is decleared with pyasn1, it can be instantiated
+and initialized (continuing the above code):
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> record = Record()
+>>> record.setComponentByName('id', 123)
+>>> print(record.prettyPrint())
+Record:
+ id=123
+>>> 
+>>> record.setComponentByPosition(1, 321)
+>>> print(record.prettyPrint())
+Record:
+ id=123
+ room=321
+>>>
+>>> record.setDefaultComponents()
+>>> print(record.prettyPrint())
+Record:
+ id=123
+ room=321
+ house=0
+</pre>
+</td></tr></table>
+
+<p>
+Inner components of pyasn1 Sequence/Set objects could be accessed using the
+following methods:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> record.getComponentByName('id')
+Integer(123)
+>>> record.getComponentByPosition(1)
+Integer(321)
+>>> record[2]
+Integer(0)
+>>> for idx in range(len(record)):
+...   print(record.getNameByPosition(idx), record.getComponentByPosition(idx))
+id 123
+room 321
+house 0
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The Set type share all the properties of Sequence type, and additionally
+support by-tag component addressing (as all Set components have distinct
+types).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype, tag
+>>> class Gamer(univ.Set):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('score', univ.Integer()),
+...     namedtype.NamedType('player', univ.OctetString()),
+...     namedtype.NamedType('id', univ.ObjectIdentifier())
+...   )
+>>> gamer = Gamer()
+>>> gamer.setComponentByType(univ.Integer().getTagSet(), 121343)
+>>> gamer.setComponentByType(univ.OctetString().getTagSet(), 'Pascal')
+>>> gamer.setComponentByType(univ.ObjectIdentifier().getTagSet(), (1,3,7,2))
+>>> print(gamer.prettyPrint())
+Gamer:
+ score=121343
+ player=b'Pascal'
+ id=1.3.7.2
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.3.2"></a>
+<h4>
+1.3.2 SequenceOf and SetOf types
+</h4>
+
+<p>
+Both, SequenceOf and SetOf types resemble an unlimited size list of components.
+All the components must be of the same type.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Progression ::= SEQUENCE OF INTEGER
+
+arithmeticProgression Progression ::= { 1, 3, 5, 7 }
+</pre>
+</td></tr></table>
+
+<p>
+SequenceOf and SetOf types are expressed by the very similar pyasn1 type 
+objects. Their components can only be addressed by position and they
+both have a property of automatic resize.
+</p>
+
+<p>
+To specify inner component type, the <b>componentType</b> class attribute
+should refer to another pyasn1 type object.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> class Progression(univ.SequenceOf):
+...   componentType = univ.Integer()
+>>> arithmeticProgression = Progression()
+>>> arithmeticProgression.setComponentByPosition(1, 111)
+>>> print(arithmeticProgression.prettyPrint())
+Progression:
+-empty- 111
+>>> arithmeticProgression.setComponentByPosition(0, 100)
+>>> print(arithmeticProgression.prettyPrint())
+Progression:
+100 111
+>>>
+>>> for idx in range(len(arithmeticProgression)):
+...    arithmeticProgression.getComponentByPosition(idx)
+Integer(100)
+Integer(111)
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Any scalar or constructed pyasn1 type object can serve as an inner component.
+Missing components are prohibited in SequenceOf/SetOf value objects.
+</p>
+
+<a name="1.3.3"></a>
+<h4>
+1.3.3 Choice type
+</h4>
+
+<p>
+Values of ASN.1 CHOICE type can contain only a single value of a type from a 
+list of possible alternatives. Alternatives must be ASN.1 types with
+distinct tags for the whole structure to remain unambiguous. Unlike most
+other types, CHOICE is an untagged one, e.g. it has no base tag of its own.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+CodeOrMessage ::= CHOICE {
+  code    INTEGER,
+  message OCTET STRING
+}
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1 implementation, Choice object behaves like Set but accepts only
+a single inner component at a time. It also offers a few additional methods
+specific to its behaviour.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype
+>>> class CodeOrMessage(univ.Choice):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('code', univ.Integer()),
+...     namedtype.NamedType('message', univ.OctetString())
+...   )
+>>>
+>>> codeOrMessage = CodeOrMessage()
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+>>> codeOrMessage.setComponentByName('code', 123)
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ code=123
+>>> codeOrMessage.setComponentByName('message', 'my string value')
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ message=b'my string value'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Since there could be only a single inner component value in the pyasn1 Choice
+value object, either of the following methods could be used for fetching it
+(continuing previous code):
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> codeOrMessage.getName()
+'message'
+>>> codeOrMessage.getComponent()
+OctetString(b'my string value')
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.3.4"></a>
+<h4>
+1.3.4 Any type
+</h4>
+
+<p>
+The ASN.1 ANY type is a kind of wildcard or placeholder that matches
+any other type without knowing it in advance. Like CHOICE type, ANY
+has no base tag.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Error ::= SEQUENCE {
+  code      INTEGER,
+  parameter ANY DEFINED BY code
+}
+</pre>
+</td></tr></table>
+
+<p>
+The ANY type is frequently used in specifications, where exact type is not
+yet agreed upon between communicating parties or the number of possible
+alternatives of a type is infinite.
+Sometimes an auxiliary selector is kept around to help parties indicate
+the kind of ANY payload in effect ("code" in the example above).
+</p>
+
+<p>
+Values of the ANY type contain serialized ASN.1 value(s) in form of
+an octet string. Therefore pyasn1 Any value object share the properties of
+pyasn1 OctetString object.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> someValue = univ.Any(b'\x02\x01\x01')
+>>> someValue
+Any(b'\x02\x01\x01')
+>>> str(someValue)
+'\x02\x01\x01'
+>>> bytes(someValue)
+b'\x02\x01\x01'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Receiving application is supposed to explicitly deserialize the content of Any
+value object, possibly using auxiliary selector for figuring out its ASN.1
+type to pick appropriate decoder.
+</p>
+
+<p>
+There will be some more talk and code snippets covering Any type in the codecs
+chapters that follow.
+</p>
+
+<hr>
+
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>

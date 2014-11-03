@@ -1,0 +1,2405 @@
+<html>
+<title>
+PyASN1 programmer's manual
+</title>
+<head>
+</head>
+<body>
+<center>
+<table width=60%>
+<tr>
+<td>
+
+<h3>
+PyASN1 programmer's manual
+</h3>
+
+<p align=right>
+<i>written by <a href=mailto:ilya@glas.net>Ilya Etingof</a>, 2011-2012</i>
+</p>
+
+<p>
+Free and open-source pyasn1 library makes it easier for programmers and
+network engineers to develop, debug and experiment with ASN.1-based protocols
+using Python programming language as a tool.
+</p>
+
+<p>
+Abstract Syntax Notation One 
+(<a href=http://en.wikipedia.org/wiki/Abstract_Syntax_Notation_1x>ASN.1</a>)
+is a set of 
+<a href=http://www.itu.int/ITU-T/studygroups/com17/languages/X.680-X.693-0207w.zip>
+ITU standards</a> concered with provisioning instrumentation for developing
+data exchange protocols in a robust, clear and interoperabable way for
+various IT systems and applications. Most of the efforts are targeting the
+following areas:
+<ul>
+<li>Data structures: the standard introduces a collection of basic data types
+(similar to integers, bits, strings, arrays and records in a programming
+language) that can be used for defining complex, possibly nested data
+structures representing domain-specific data units.
+<li>Serialization protocols: domain-specific data units expressed in ASN.1
+types could be converted into a series of octets for storage or transmission
+over the wire and then recovered back into their structured form on the
+receiving end. This process is immune to various hardware and software
+related dependencies.
+<li>Data description language: could be used to describe particular set of
+domain-specific data structures and their relationships. Such a description
+could be passed to an ASN.1 compiler for automated generation of program
+code that represents ASN.1 data structures in language-native environment
+and handles data serialization issues.
+</ul>
+</p>
+
+<p>
+This tutorial and algorithms, implemented by pyasn1 library, are
+largely based on the information read in the book
+<a href="http://www.oss.com/asn1/dubuisson.html">
+ASN.1 - Communication between heterogeneous systems</a>
+by Olivier Dubuisson. Another relevant resource is
+<a href=ftp://ftp.rsasecurity.com/pub/pkcs/ascii/layman.asc>
+A Layman's Guide to a Subset of ASN.1, BER, and DER</a> by Burton S. Kaliski.
+It's advised to refer to these books for more in-depth knowledge on the
+subject of ASN.1.
+</p>
+
+<p>
+As of this writing, pyasn1 library implements most of standard ASN.1 data
+structures in a rather detailed and feature-rich manner. Another highly
+important capability of the library is its data serialization facilities.
+The last component of the standard - ASN.1 compiler is planned for
+implementation in the future.
+</p>
+
+</p>
+The pyasn1 library was designed to follow the pre-1995 ASN.1 specification
+(also known as X.208). Later, post 1995, revision (X.680) introduced
+significant changes most of which have not yet been supported by pyasn1.
+</p>
+
+<h3>
+Table of contents
+</h3>
+
+<p>
+<ul>
+<li><a href="#1">1. Data model for ASN.1 types</a>
+<li><a href="#1.1">1.1 Scalar types</a>
+<li><a href="#1.1.1">1.1.1 Boolean type</a>
+<li><a href="#1.1.2">1.1.2 Null type</a>
+<li><a href="#1.1.3">1.1.3 Integer type</a>
+<li><a href="#1.1.4">1.1.4 Enumerated type</a>
+<li><a href="#1.1.5">1.1.5 Real type</a>
+<li><a href="#1.1.6">1.1.6 Bit string type</a>
+<li><a href="#1.1.7">1.1.7 OctetString type</a>
+<li><a href="#1.1.8">1.1.8 ObjectIdentifier type</a>
+<li><a href="#1.1.9">1.1.9 Character string types</a>
+<li><a href="#1.1.10">1.1.10 Useful types</a>
+<li><a href="#1.2">1.2 Tagging</a>
+<li><a href="#1.3">1.3 Constructed types</a>
+<li><a href="#1.3.1">1.3.1 Sequence and Set types</a>
+<li><a href="#1.3.2">1.3.2 SequenceOf and SetOf types</a>
+<li><a href="#1.3.3">1.3.3 Choice type</a>
+<li><a href="#1.3.4">1.3.4 Any type</a>
+<li><a href="#1.4">1.4 Subtype constraints</a>
+<li><a href="#1.4.1">1.4.1 Single value constraint</a>
+<li><a href="#1.4.2">1.4.2 Value range constraint</a>
+<li><a href="#1.4.3">1.4.3 Size constraint</a>
+<li><a href="#1.4.4">1.4.4 Alphabet constraint</a>
+<li><a href="#1.4.5">1.4.5 Constraint combinations</a>
+<li><a href="#1.5">1.5 Types relationships</a>
+<li><a href="#2">2. Codecs</a>
+<li><a href="#2.1">2.1 Encoders</a>
+<li><a href="#2.2">2.2 Decoders</a>
+<li><a href="#2.2.1">2.2.1 Decoding untagged types</a>
+<li><a href="#2.2.2">2.2.2 Ignoring unknown types</a>
+<li><a href="#3">3. Feedback and getting help</a>
+</ul>
+
+
+<a name="1"></a>
+<h3>
+1. Data model for ASN.1 types
+</h3>
+
+<p>
+All ASN.1 types could be categorized into two groups: scalar (also called
+simple or primitive) and constructed. The first group is populated by
+well-known types like Integer or String. Members of constructed group
+hold other types (simple or constructed) as their inner components, thus
+they are semantically close to a programming language records or lists.
+</p>
+
+<p>
+In pyasn1, all ASN.1 types and values are implemented as Python objects.
+The same pyasn1 object can represent either ASN.1 type and/or value
+depending of the presense of value initializer on object instantiation.
+We will further refer to these as <i>pyasn1 type object</i> versus <i>pyasn1
+value object</i>.
+</p>
+
+<p>
+Primitive ASN.1 types are implemented as immutable scalar objects. There values
+could be used just like corresponding native Python values (integers,
+strings/bytes etc) and freely mixed with them in expressions.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> asn1IntegerValue = univ.Integer(12)
+>>> asn1IntegerValue - 2
+10
+>>> univ.OctetString('abc') == 'abc'
+True   # Python 2
+>>> univ.OctetString(b'abc') == b'abc'
+True   # Python 3
+</pre>
+</td></tr></table>
+
+<p>
+It would be an error to perform an operation on a pyasn1 type object
+as it holds no value to deal with:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> asn1IntegerType = univ.Integer()
+>>> asn1IntegerType - 2
+...
+pyasn1.error.PyAsn1Error: No value for __coerce__()
+</pre>
+</td></tr></table>
+
+<a name="1.1"></a>
+<h4>
+1.1 Scalar types
+</h4>
+
+<p>
+In the sub-sections that follow we will explain pyasn1 mapping to those
+primitive ASN.1 types. Both, ASN.1 notation and corresponding pyasn1
+syntax will be given in each case.
+</p>
+
+<a name="1.1.1"></a>
+<h4>
+1.1.1 Boolean type
+</h4>
+
+<p>
+This is the simplest type those values could be either True or False.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; type specification
+FunFactorPresent ::= BOOLEAN
+
+;; values declaration and assignment
+pythonFunFactor FunFactorPresent ::= TRUE
+cobolFunFactor FunFactorPresent :: FALSE
+</pre>
+</td></tr></table>
+
+<p>
+And here's pyasn1 version of it:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> class FunFactorPresent(univ.Boolean): pass
+... 
+>>> pythonFunFactor = FunFactorPresent(True)
+>>> cobolFunFactor = FunFactorPresent(False)
+>>> pythonFunFactor
+FunFactorPresent('True(1)')
+>>> cobolFunFactor
+FunFactorPresent('False(0)')
+>>> pythonFunFactor == cobolFunFactor
+False
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.1.2"></a>
+<h4>
+1.1.2 Null type
+</h4>
+
+<p>
+The NULL type is sometimes used to express the absense of any information.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; type specification
+Vote ::= CHOICE {
+  agreed BOOLEAN,
+  skip NULL
+}
+</td></tr></table>
+
+;; value declaration and assignment
+myVote Vote ::= skip:NULL
+</pre>
+
+<p>
+We will explain the CHOICE type later in this paper, meanwhile the NULL
+type:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> skip = univ.Null()
+>>> skip
+Null('')
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.1.3"></a>
+<h4>
+1.1.3 Integer type
+</h4>
+
+<p>
+ASN.1 defines the values of Integer type as negative or positive of whatever
+length. This definition plays nicely with Python as the latter places no
+limit on Integers. However, some ASN.1 implementations may impose certain
+limits of integer value ranges. Keep that in mind when designing new
+data structures.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; values specification
+age-of-universe INTEGER ::= 13750000000
+mean-martian-surface-temperature INTEGER ::= -63
+</pre>
+</td></tr></table>
+
+<p>
+A rather strigntforward mapping into pyasn1:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> ageOfUniverse = univ.Integer(13750000000)
+>>> ageOfUniverse
+Integer(13750000000)
+>>>
+>>> meanMartianSurfaceTemperature = univ.Integer(-63)
+>>> meanMartianSurfaceTemperature
+Integer(-63)
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+ASN.1 allows to assign human-friendly names to particular values of
+an INTEGER type.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Temperature ::= INTEGER {
+  freezing(0),
+  boiling(100) 
+}
+</pre>
+</td></tr></table>
+
+<p>
+The Temperature type expressed in pyasn1:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedval
+>>> class Temperature(univ.Integer):
+...   namedValues = namedval.NamedValues(('freezing', 0), ('boiling', 100))
+...
+>>> t = Temperature(0)
+>>> t
+Temperature('freezing(0)')
+>>> t + 1
+Temperature(1)
+>>> t + 100
+Temperature('boiling(100)')
+>>> t = Temperature('boiling')
+>>> t
+Temperature('boiling(100)')
+>>> Temperature('boiling') / 2
+Temperature(50)
+>>> -1 < Temperature('freezing')
+True
+>>> 47 > Temperature('boiling')
+False
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+These values labels have no effect on Integer type operations, any value
+still could be assigned to a type (information on value constraints will
+follow further in this paper).
+</p>
+
+<a name="1.1.4"></a>
+<h4>
+1.1.4 Enumerated type
+</h4>
+
+<p>
+ASN.1 Enumerated type differs from an Integer type in a number of ways.
+Most important is that its instance can only hold a value that belongs
+to a set of values specified on type declaration.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+error-status ::= ENUMERATED {
+  no-error(0),
+  authentication-error(10),
+  authorization-error(20),
+  general-failure(51)
+}
+</pre>
+</td></tr></table>
+
+<p>
+When constructing Enumerated type we will use two pyasn1 features: values
+labels (as mentioned above) and value constraint (will be described in
+more details later on).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedval, constraint
+>>> class ErrorStatus(univ.Enumerated):
+...   namedValues = namedval.NamedValues(
+...        ('no-error', 0),
+...        ('authentication-error', 10),
+...        ('authorization-error', 20),
+...        ('general-failure', 51)
+...   )
+...   subtypeSpec = univ.Enumerated.subtypeSpec + \
+...                    constraint.SingleValueConstraint(0, 10, 20, 51)
+...
+>>> errorStatus = univ.ErrorStatus('no-error')
+>>> errorStatus
+ErrorStatus('no-error(0)')
+>>> errorStatus == univ.ErrorStatus('general-failure')
+False
+>>> univ.ErrorStatus('non-existing-state')
+Traceback (most recent call last):
+...
+pyasn1.error.PyAsn1Error: Can't coerce non-existing-state into integer
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Particular integer values associated with Enumerated value states
+have no meaning. They should not be used as such or in any kind of
+math operation. Those integer values are only used by codecs to
+transfer state from one entity to another.
+</p>
+
+<a name="1.1.5"></a>
+<h4>
+1.1.5 Real type
+</h4>
+
+<p>
+Values of the Real type are a three-component tuple of mantissa, base and 
+exponent. All three are integers.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+pi ::= REAL { mantissa 314159, base 10, exponent -5 }
+</pre>
+</td></tr></table>
+
+<p>
+Corresponding pyasn1 objects can be initialized with either a three-component
+tuple or a Python float. Infinite values could be expressed in a way, 
+compatible with Python float type.
+
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> pi = univ.Real((314159, 10, -5))
+>>> pi
+Real((314159, 10,-5))
+>>> float(pi)
+3.14159
+>>> pi == univ.Real(3.14159)
+True
+>>> univ.Real('inf')
+Real('inf')
+>>> univ.Real('-inf') == float('-inf')
+True
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+If a Real object is initialized from a Python float or yielded by a math
+operation, the base is set to decimal 10 (what affects encoding).
+</p>
+
+<a name="1.1.6"></a>
+<h4>
+1.1.6 Bit string type
+</h4>
+
+<p>
+ASN.1 BIT STRING type holds opaque binary data of an arbitrarily length.
+A BIT STRING value could be initialized by either a binary (base 2) or 
+hex (base 16) value.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+public-key BIT STRING ::= '1010111011110001010110101101101
+                           1011000101010000010110101100010
+                           0110101010000111101010111111110'B
+
+signature  BIT STRING ::= 'AF01330CD932093392100B39FF00DE0'H
+</pre>
+</td></tr></table>
+
+<p>
+The pyasn1 BitString objects can initialize from native ASN.1 notation
+(base 2 or base 16 strings) or from a Python tuple of binary components.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> publicKey = univ.BitString(
+...          "'1010111011110001010110101101101"
+...          "1011000101010000010110101100010"
+...          "0110101010000111101010111111110'B"
+)
+>>> publicKey
+BitString("'10101110111100010101101011011011011000101010000010110101100010\
+0110101010000111101010111111110'B")
+>>> signature = univ.BitString(
+...          "'AF01330CD932093392100B39FF00DE0'H"
+... )
+>>> signature
+BitString("'101011110000000100110011000011001101100100110010000010010011001\
+1100100100001000000001011001110011111111100000000110111100000'B")
+>>> fingerprint = univ.BitString(
+...          (1, 0, 1, 1 ,0, 1, 1, 1, 0, 1, 0, 1)
+... )
+>>> fingerprint
+BitString("'101101110101'B")
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Another BIT STRING initialization method supported by ASN.1 notation
+is to specify only 1-th bits along with their human-friendly label
+and bit offset relative to the beginning of the bit string. With this 
+method, all not explicitly mentioned bits are doomed to be zeros.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+bit-mask  BIT STRING ::= {
+  read-flag(0),
+  write-flag(2),
+  run-flag(4)
+}
+</pre>
+</td></tr></table>
+
+<p>
+To express this in pyasn1, we will employ the named values feature (as with
+Enumeration type).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedval
+>>> class BitMask(univ.BitString):
+...   namedValues = namedval.NamedValues(
+...        ('read-flag', 0),
+...        ('write-flag', 2),
+...        ('run-flag', 4)
+... )
+>>> bitMask = BitMask('read-flag,run-flag')
+>>> bitMask
+BitMask("'10001'B")
+>>> tuple(bitMask)
+(1, 0, 0, 0, 1)
+>>> bitMask[4]
+1
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The BitString objects mimic the properties of Python tuple type in part
+of immutable sequence object protocol support.
+</p>
+
+<a name="1.1.7"></a>
+<h4>
+1.1.7 OctetString type
+</h4>
+
+<p>
+The OCTET STRING type is a confusing subject. According to ASN.1
+specification, this type is similar to BIT STRING, the major difference
+is that the former operates in 8-bit chunks of data. What is important
+to note, is that OCTET STRING was NOT designed to handle text strings - the
+standard provides many other types specialized for text content. For that
+reason, ASN.1 forbids to initialize OCTET STRING values with "quoted text
+strings", only binary or hex initializers, similar to BIT STRING ones,
+are allowed.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+thumbnail OCTET STRING ::= '1000010111101110101111000000111011'B
+thumbnail OCTET STRING ::= 'FA9823C43E43510DE3422'H
+</pre>
+</td></tr></table>
+
+<p>
+However, ASN.1 users (e.g. protocols designers) seem to ignore the original
+purpose of the OCTET STRING type - they used it for handling all kinds of
+data, including text strings.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+welcome-message OCTET STRING ::= "Welcome to ASN.1 wilderness!"
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1, we have taken a liberal approach and allowed both BIT STRING
+style and quoted text initializers for the OctetString objects. To avoid
+possible collisions, quoted text is the default initialization syntax.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> thumbnail = univ.OctetString(
+...    binValue='1000010111101110101111000000111011'
+... )
+>>> thumbnail
+OctetString(hexValue='85eebcec0')
+>>> thumbnail = univ.OctetString(
+...    hexValue='FA9823C43E43510DE3422'
+... )
+>>> thumbnail
+OctetString(hexValue='fa9823c43e4351de34220')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Most frequent usage of the OctetString class is to instantiate it with
+a text string.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> welcomeMessage = univ.OctetString('Welcome to ASN.1 wilderness!')
+>>> welcomeMessage
+OctetString(b'Welcome to ASN.1 wilderness!')
+>>> print('%s' % welcomeMessage)
+Welcome to ASN.1 wilderness!
+>>> welcomeMessage[11:16]
+OctetString(b'ASN.1')
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+OctetString objects support the immutable sequence object protocol.
+In other words, they behave like Python 3 bytes (or Python 2 strings).
+</p>
+
+<p>
+When running pyasn1 on Python 3, it's better to use the bytes objects for
+OctetString instantiation, as it's more reliable and efficient.
+</p>
+
+<p>
+Additionally, OctetString's can also be instantiated with a sequence of
+8-bit integers (ASCII codes).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> univ.OctetString((77, 101, 101, 103, 111))
+OctetString(b'Meego')
+</pre>
+</td></tr></table>
+
+<p>
+It is sometimes convenient to express OctetString instances as 8-bit
+characters (Python 3 bytes or Python 2 strings) or 8-bit integers.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> octetString = univ.OctetString('ABCDEF')
+>>> octetString.asNumbers()
+(65, 66, 67, 68, 69, 70)
+>>> octetString.asOctets()
+b'ABCDEF'
+</pre>
+</td></tr></table>
+
+<a name="1.1.8"></a>
+<h4>
+1.1.8 ObjectIdentifier type
+</h4>
+
+<p>
+Values of the OBJECT IDENTIFIER type are sequences of integers that could
+be used to identify virtually anything in the world. Various ASN.1-based
+protocols employ OBJECT IDENTIFIERs for their own identification needs.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+internet-id OBJECT IDENTIFIER ::= {
+  iso(1) identified-organization(3) dod(6) internet(1)
+}
+</pre>
+</td></tr></table>
+
+<p>
+One of the natural ways to map OBJECT IDENTIFIER type into a Python
+one is to use Python tuples of integers. So this approach is taken by
+pyasn1.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> internetId = univ.ObjectIdentifier((1, 3, 6, 1))
+>>> internetId
+ObjectIdentifier('1.3.6.1')
+>>> internetId[2]
+6
+>>> internetId[1:3]
+ObjectIdentifier('3.6')
+</pre>
+</td></tr></table>
+
+<p>
+A more human-friendly "dotted" notation is also supported.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> univ.ObjectIdentifier('1.3.6.1')
+ObjectIdentifier('1.3.6.1')
+</pre>
+</td></tr></table>
+
+<p>
+Symbolic names of the arcs of object identifier, sometimes present in
+ASN.1 specifications, are not preserved and used in pyasn1 objects.
+</p>
+
+<p>
+The ObjectIdentifier objects mimic the properties of Python tuple type in
+part of immutable sequence object protocol support.
+</p>
+
+<a name="1.1.9"></a>
+<h4>
+1.1.9 Character string types
+</h4>
+
+<p>
+ASN.1 standard introduces a diverse set of text-specific types. All of them
+were designed to handle various types of characters. Some of these types seem
+be obsolete nowdays, as their target technologies are gone. Another issue
+to be aware of is that raw OCTET STRING type is sometimes used in practice
+by ASN.1 users instead of specialized character string types, despite
+explicit prohibition imposed by ASN.1 specification.
+</p>
+
+<p>
+The two types are specific to ASN.1 are NumericString and PrintableString.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+welcome-message ::= PrintableString {
+  "Welcome to ASN.1 text types"
+}
+
+dial-pad-numbers ::= NumericString {
+  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+}
+</pre>
+</td></tr></table>
+
+<p>
+Their pyasn1 implementations are:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char
+>>> '%s' % char.PrintableString("Welcome to ASN.1 text types")
+'Welcome to ASN.1 text types'
+>>> dialPadNumbers = char.NumericString(
+      "0" "1" "2" "3" "4" "5" "6" "7" "8" "9"
+)
+>>> dialPadNumbers
+NumericString(b'0123456789')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The following types came to ASN.1 from ISO standards on character sets.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char
+>>> char.VisibleString("abc")
+VisibleString(b'abc')
+>>> char.IA5String('abc')
+IA5String(b'abc')
+>>> char.TeletexString('abc')
+TeletexString(b'abc')
+>>> char.VideotexString('abc')
+VideotexString(b'abc')
+>>> char.GraphicString('abc')
+GraphicString(b'abc')
+>>> char.GeneralString('abc')
+GeneralString(b'abc')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The last three types are relatively recent addition to the family of
+character string types: UniversalString, BMPString, UTF8String.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char
+>>> char.UniversalString("abc")
+UniversalString(b'abc')
+>>> char.BMPString('abc')
+BMPString(b'abc')
+>>> char.UTF8String('abc')
+UTF8String(b'abc')
+>>> utf8String = char.UTF8String('У попа была собака')
+>>> utf8String
+UTF8String(b'\xd0\xa3 \xd0\xbf\xd0\xbe\xd0\xbf\xd0\xb0 \xd0\xb1\xd1\x8b\xd0\xbb\xd0\xb0 \
+\xd1\x81\xd0\xbe\xd0\xb1\xd0\xb0\xd0\xba\xd0\xb0')
+>>> print(utf8String)
+У попа была собака
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1, all character type objects behave like Python strings. None of
+them is currently constrained in terms of valid alphabet so it's up to
+the data source to keep an eye on data validation for these types.
+</p>
+
+<a name="1.1.10"></a>
+<h4>
+1.1.10 Useful types
+</h4>
+
+<p>
+There are three so-called useful types defined in the standard:
+ObjectDescriptor, GeneralizedTime, UTCTime. They all are subtypes
+of GraphicString or VisibleString types therefore useful types are
+character string types.
+</p>
+
+<p>
+It's advised by the ASN.1 standard to have an instance of ObjectDescriptor
+type holding a human-readable description of corresponding instance of
+OBJECT IDENTIFIER type. There are no formal linkage between these instances
+and provision for ObjectDescriptor uniqueness in the standard.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import useful
+>>> descrBER = useful.ObjectDescriptor(
+      "Basic encoding of a single ASN.1 type"
+)
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+GeneralizedTime and UTCTime types are designed to hold a human-readable
+timestamp in a universal and unambiguous form. The former provides
+more flexibility in notation while the latter is more strict but has
+Y2K issues.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; Mar 8 2010 12:00:00 MSK
+moscow-time GeneralizedTime ::= "20110308120000.0"
+;; Mar 8 2010 12:00:00 UTC
+utc-time GeneralizedTime ::= "201103081200Z"
+;; Mar 8 1999 12:00:00 UTC
+utc-time UTCTime ::= "9803081200Z"
+</pre>
+</td></tr></table>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import useful
+>>> moscowTime = useful.GeneralizedTime("20110308120000.0")
+>>> utcTime = useful.UTCTime("9803081200Z")
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Despite their intended use, these types possess no special, time-related,
+handling in pyasn1. They are just printable strings.
+</p>
+
+<a name="1.2"></a>
+<h4>
+1.2 Tagging
+</h4>
+
+<p>
+In order to continue with the Constructed ASN.1 types, we will first have
+to introduce the concept of tagging (and its pyasn1 implementation), as
+some of the Constructed types rely upon the tagging feature.
+</p>
+
+<p>
+When a value is coming into an ASN.1-based system (received from a network
+or read from some storage), the receiving entity has to determine the
+type of the value to interpret and verify it accordingly.
+</p>
+
+<p>
+Historically, the first data serialization protocol introduced in
+ASN.1 was BER (Basic Encoding Rules). According to BER, any serialized
+value is packed into a triplet of (Type, Length, Value) where Type is a 
+code that identifies the value (which is called <i>tag</i> in ASN.1),
+length is the number of bytes occupied by the value in its serialized form
+and value is ASN.1 value in a form suitable for serial transmission or storage.
+</p>
+
+<p>
+For that reason almost every ASN.1 type has a tag (which is actually a
+BER type) associated with it by default.
+</p>
+
+<p>
+An ASN.1 tag could be viewed as a tuple of three numbers:
+(Class, Format, Number). While Number identifies a tag, Class component 
+is used to create scopes for Numbers. Four scopes are currently defined:
+UNIVERSAL, context-specific, APPLICATION and PRIVATE. The Format component
+is actually a one-bit flag - zero for tags associated with scalar types,
+and one for constructed types (will be discussed later on).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+MyIntegerType ::= [12] INTEGER
+MyOctetString ::= [APPLICATION 0] OCTET STRING
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1, tags are implemented as immutable, tuple-like objects:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import tag
+>>> myTag = tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10)
+>>> myTag
+Tag(tagClass=128, tagFormat=0, tagId=10)
+>>> tuple(myTag)
+(128, 0, 10)
+>>> myTag[2]
+10
+>>> myTag == tag.Tag(tag.tagClassApplication, tag.tagFormatSimple, 10)
+False
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Default tag, associated with any ASN.1 type, could be extended or replaced
+to make new type distinguishable from its ancestor. The standard provides
+two modes of tag mangling - IMPLICIT and EXPLICIT.
+</p>
+
+<p>
+EXPLICIT mode works by appending new tag to the existing ones thus creating
+an ordered set of tags. This set will be considered as a whole for type
+identification and encoding purposes. Important property of EXPLICIT tagging
+mode is that it preserves base type information in encoding what makes it
+possible to completely recover type information from encoding.
+</p>
+
+<p>
+When tagging in IMPLICIT mode, the outermost existing tag is dropped and
+replaced with a new one.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+MyIntegerType ::= [12] IMPLICIT INTEGER
+MyOctetString ::= [APPLICATION 0] EXPLICIT OCTET STRING
+</pre>
+</td></tr></table>
+
+<p>
+To model both modes of tagging, a specialized container TagSet object (holding
+zero, one or more Tag objects) is used in pyasn1.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import tag
+>>> tagSet = tag.TagSet(
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10), # base tag
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10)  # effective tag
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10))
+>>> tagSet.getBaseTag()
+Tag(tagClass=128, tagFormat=0, tagId=10)
+>>> tagSet = tagSet.tagExplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 20)
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10), 
+       Tag(tagClass=128, tagFormat=32, tagId=20))
+>>> tagSet = tagSet.tagExplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 30)
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10), 
+       Tag(tagClass=128, tagFormat=32, tagId=20), 
+       Tag(tagClass=128, tagFormat=32, tagId=30))
+>>> tagSet = tagSet.tagImplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 40)
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10),
+       Tag(tagClass=128, tagFormat=32, tagId=20),
+       Tag(tagClass=128, tagFormat=32, tagId=40))
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+As a side note: the "base tag" concept (accessible through the getBaseTag()
+method) is specific to pyasn1 -- the base tag is used to identify the original
+ASN.1 type of an object in question. Base tag is never occurs in encoding
+and is mostly used internally by pyasn1 for choosing type-specific data 
+processing algorithms. The "effective tag" is the one that always appears in
+encoding and is used on tagSets comparation.
+</p>
+
+<p>
+Any two TagSet objects could be compared to see if one is a derivative
+of the other. Figuring this out is also useful in cases when a type-specific
+data processing algorithms are to be chosen.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import tag
+>>> tagSet1 = tag.TagSet(
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10) # base tag
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10) # effective tag
+... )
+>>> tagSet2 = tagSet1.tagExplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 20)
+... )
+>>> tagSet1.isSuperTagSetOf(tagSet2)
+True
+>>> tagSet2.isSuperTagSetOf(tagSet1)
+False
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+We will complete this discussion on tagging with a real-world example. The
+following ASN.1 tagged type:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+MyIntegerType ::= [12] EXPLICIT INTEGER
+</pre>
+</td></tr></table>
+
+<p>
+could be expressed in pyasn1 like this:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, tag
+>>> class MyIntegerType(univ.Integer):
+...   tagSet = univ.Integer.tagSet.tagExplicitly(
+...        tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 12)
+...        )
+>>> myInteger = MyIntegerType(12345)
+>>> myInteger.getTagSet()
+TagSet(Tag(tagClass=0, tagFormat=0, tagId=2), 
+       Tag(tagClass=128, tagFormat=32, tagId=12))
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Referring to the above code, the tagSet class attribute is a property of any
+pyasn1 type object that assigns default tagSet to a pyasn1 value object. This
+default tagSet specification can be ignored and effectively replaced by some
+other tagSet value passed on object instantiation.
+</p>
+
+<p>
+It's important to understand that the tag set property of pyasn1 type/value
+object can never be modifed in place. In other words, a pyasn1 type/value
+object can never change its tags. The only way is to create a new pyasn1
+type/value object and associate different tag set with it.
+</p>
+
+
+<a name="1.3"></a>
+<h4>
+1.3 Constructed types
+</h4>
+
+<p>
+Besides scalar types, ASN.1 specifies so-called constructed ones - these
+are capable of holding one or more values of other types, both scalar
+and constructed.
+</p>
+
+<p>
+In pyasn1 implementation, constructed ASN.1 types behave like 
+Python sequences, and also support additional component addressing methods,
+specific to particular constructed type.
+</p>
+
+<a name="1.3.1"></a>
+<h4>
+1.3.1 Sequence and Set types
+</h4>
+
+<p>
+The Sequence and Set types have many similar properties:
+</p>
+<ul>
+<li>they can hold any number of inner components of different types
+<li>every component has a human-friendly identifier
+<li>any component can have a default value
+<li>some components can be absent.
+</ul>
+
+<p>
+However, Sequence type guarantees the ordering of Sequence value components
+to match their declaration order. By contrast, components of the
+Set type can be ordered to best suite application's needs.
+<p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Record ::= SEQUENCE {
+  id        INTEGER,
+  room  [0] INTEGER OPTIONAL,
+  house [1] INTEGER DEFAULT 0
+}
+</pre>
+</td></tr></table>
+
+<p>
+Up to this moment, the only method we used for creating new pyasn1 types
+is Python sub-classing. With this method, a new, named Python class is created
+what mimics type derivation in ASN.1 grammar. However, ASN.1 also allows for
+defining anonymous subtypes (room and house components in the example above).
+To support anonymous subtyping in pyasn1, a cloning operation on an existing
+pyasn1 type object can be invoked what creates a new instance of original
+object with possibly modified properties.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype, tag
+>>> class Record(univ.Sequence):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('id', univ.Integer()),
+...     namedtype.OptionalNamedType(
+...       'room',
+...       univ.Integer().subtype(implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 0))
+...     ),
+...     namedtype.DefaultedNamedType(
+...       'house', 
+...       univ.Integer(0).subtype(implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 1))
+...     )
+...   )
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+All pyasn1 constructed type classes have a class attribute <b>componentType</b>
+that represent default type specification. Its value is a NamedTypes object.
+</p>
+
+<p>
+The NamedTypes class instance holds a sequence of NameType, OptionalNamedType
+or DefaultedNamedType objects which, in turn, refer to pyasn1 type objects that
+represent inner SEQUENCE components specification.
+</p>
+
+<p>
+Finally, invocation of a subtype() method of pyasn1 type objects in the code
+above returns an implicitly tagged copy of original object.
+</p>
+
+<p>
+Once a SEQUENCE or SET type is decleared with pyasn1, it can be instantiated
+and initialized (continuing the above code):
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> record = Record()
+>>> record.setComponentByName('id', 123)
+>>> print(record.prettyPrint())
+Record:
+ id=123
+>>> 
+>>> record.setComponentByPosition(1, 321)
+>>> print(record.prettyPrint())
+Record:
+ id=123
+ room=321
+>>>
+>>> record.setDefaultComponents()
+>>> print(record.prettyPrint())
+Record:
+ id=123
+ room=321
+ house=0
+</pre>
+</td></tr></table>
+
+<p>
+Inner components of pyasn1 Sequence/Set objects could be accessed using the
+following methods:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> record.getComponentByName('id')
+Integer(123)
+>>> record.getComponentByPosition(1)
+Integer(321)
+>>> record[2]
+Integer(0)
+>>> for idx in range(len(record)):
+...   print(record.getNameByPosition(idx), record.getComponentByPosition(idx))
+id 123
+room 321
+house 0
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The Set type share all the properties of Sequence type, and additionally
+support by-tag component addressing (as all Set components have distinct
+types).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype, tag
+>>> class Gamer(univ.Set):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('score', univ.Integer()),
+...     namedtype.NamedType('player', univ.OctetString()),
+...     namedtype.NamedType('id', univ.ObjectIdentifier())
+...   )
+>>> gamer = Gamer()
+>>> gamer.setComponentByType(univ.Integer().getTagSet(), 121343)
+>>> gamer.setComponentByType(univ.OctetString().getTagSet(), 'Pascal')
+>>> gamer.setComponentByType(univ.ObjectIdentifier().getTagSet(), (1,3,7,2))
+>>> print(gamer.prettyPrint())
+Gamer:
+ score=121343
+ player=b'Pascal'
+ id=1.3.7.2
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.3.2"></a>
+<h4>
+1.3.2 SequenceOf and SetOf types
+</h4>
+
+<p>
+Both, SequenceOf and SetOf types resemble an unlimited size list of components.
+All the components must be of the same type.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Progression ::= SEQUENCE OF INTEGER
+
+arithmeticProgression Progression ::= { 1, 3, 5, 7 }
+</pre>
+</td></tr></table>
+
+<p>
+SequenceOf and SetOf types are expressed by the very similar pyasn1 type 
+objects. Their components can only be addressed by position and they
+both have a property of automatic resize.
+</p>
+
+<p>
+To specify inner component type, the <b>componentType</b> class attribute
+should refer to another pyasn1 type object.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> class Progression(univ.SequenceOf):
+...   componentType = univ.Integer()
+>>> arithmeticProgression = Progression()
+>>> arithmeticProgression.setComponentByPosition(1, 111)
+>>> print(arithmeticProgression.prettyPrint())
+Progression:
+-empty- 111
+>>> arithmeticProgression.setComponentByPosition(0, 100)
+>>> print(arithmeticProgression.prettyPrint())
+Progression:
+100 111
+>>>
+>>> for idx in range(len(arithmeticProgression)):
+...    arithmeticProgression.getComponentByPosition(idx)
+Integer(100)
+Integer(111)
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Any scalar or constructed pyasn1 type object can serve as an inner component.
+Missing components are prohibited in SequenceOf/SetOf value objects.
+</p>
+
+<a name="1.3.3"></a>
+<h4>
+1.3.3 Choice type
+</h4>
+
+<p>
+Values of ASN.1 CHOICE type can contain only a single value of a type from a 
+list of possible alternatives. Alternatives must be ASN.1 types with
+distinct tags for the whole structure to remain unambiguous. Unlike most
+other types, CHOICE is an untagged one, e.g. it has no base tag of its own.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+CodeOrMessage ::= CHOICE {
+  code    INTEGER,
+  message OCTET STRING
+}
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1 implementation, Choice object behaves like Set but accepts only
+a single inner component at a time. It also offers a few additional methods
+specific to its behaviour.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype
+>>> class CodeOrMessage(univ.Choice):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('code', univ.Integer()),
+...     namedtype.NamedType('message', univ.OctetString())
+...   )
+>>>
+>>> codeOrMessage = CodeOrMessage()
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+>>> codeOrMessage.setComponentByName('code', 123)
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ code=123
+>>> codeOrMessage.setComponentByName('message', 'my string value')
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ message=b'my string value'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Since there could be only a single inner component value in the pyasn1 Choice
+value object, either of the following methods could be used for fetching it
+(continuing previous code):
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> codeOrMessage.getName()
+'message'
+>>> codeOrMessage.getComponent()
+OctetString(b'my string value')
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.3.4"></a>
+<h4>
+1.3.4 Any type
+</h4>
+
+<p>
+The ASN.1 ANY type is a kind of wildcard or placeholder that matches
+any other type without knowing it in advance. Like CHOICE type, ANY
+has no base tag.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Error ::= SEQUENCE {
+  code      INTEGER,
+  parameter ANY DEFINED BY code
+}
+</pre>
+</td></tr></table>
+
+<p>
+The ANY type is frequently used in specifications, where exact type is not
+yet agreed upon between communicating parties or the number of possible
+alternatives of a type is infinite.
+Sometimes an auxiliary selector is kept around to help parties indicate
+the kind of ANY payload in effect ("code" in the example above).
+</p>
+
+<p>
+Values of the ANY type contain serialized ASN.1 value(s) in form of
+an octet string. Therefore pyasn1 Any value object share the properties of
+pyasn1 OctetString object.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> someValue = univ.Any(b'\x02\x01\x01')
+>>> someValue
+Any(b'\x02\x01\x01')
+>>> str(someValue)
+'\x02\x01\x01'
+>>> bytes(someValue)
+b'\x02\x01\x01'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Receiving application is supposed to explicitly deserialize the content of Any
+value object, possibly using auxiliary selector for figuring out its ASN.1
+type to pick appropriate decoder.
+</p>
+
+<p>
+There will be some more talk and code snippets covering Any type in the codecs
+chapters that follow.
+</p>
+
+<a name="1.4"></a>
+<h4>
+1.4 Subtype constraints
+</h4>
+
+<p>
+Most ASN.1 types can correspond to an infinite set of values. To adapt to
+particular application's data model and needs, ASN.1 provides a mechanism
+for limiting the infinite set to values, that make sense in particular case.
+</p>
+
+<p>
+Imposing value constraints on an ASN.1 type can also be seen as creating
+a subtype from its base type.
+</p>
+
+<p>
+In pyasn1, constraints take shape of immutable objects capable
+of evaluating given value against constraint-specific requirements.
+Constraint object is a property of pyasn1 type. Like TagSet property,
+associated with every pyasn1 type, constraints can never be modified
+in place. The only way to modify pyasn1 type constraint is to associate
+new constraint object to a new pyasn1 type object.
+</p>
+
+<p>
+A handful of different flavors of <i>constraints</i> are defined in ASN.1.
+We will discuss them one by one in the following chapters and also explain
+how to combine and apply them to types.
+</p>
+
+<a name="1.4.1"></a>
+<h4>
+1.4.1 Single value constraint
+</h4>
+
+<p>
+This kind of constraint allows for limiting type to a finite, specified set
+of values.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+DialButton ::= OCTET STRING (
+  "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+)
+</pre>
+</td></tr></table>
+
+<p>
+Its pyasn1 implementation would look like:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import constraint
+>>> c = constraint.SingleValueConstraint(
+  '0','1','2','3','4','5','6','7','8','9'
+)
+>>> c
+SingleValueConstraint(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+>>> c('0')
+>>> c('A')
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError: 
+  SingleValueConstraint(0, 1, 2, 3, 4, 5, 6, 7, 8, 9) failed at: A
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+As can be seen in the snippet above, if a value violates the constraint, an
+exception will be thrown. A constrainted pyasn1 type object holds a
+reference to a constraint object (or their combination, as will be explained
+later) and calls it for value verification.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, constraint
+>>> class DialButton(univ.OctetString):
+...   subtypeSpec = constraint.SingleValueConstraint(
+...       '0','1','2','3','4','5','6','7','8','9'
+...   )
+>>> DialButton('0')
+DialButton(b'0')
+>>> DialButton('A')
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  SingleValueConstraint(0, 1, 2, 3, 4, 5, 6, 7, 8, 9) failed at: A
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Constrained pyasn1 value object can never hold a violating value.
+</p>
+
+<a name="1.4.2"></a>
+<h4>
+1.4.2 Value range constraint
+</h4>
+
+<p>
+A pair of values, compliant to a type to be constrained, denote low and upper
+bounds of allowed range of values of a type.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Teenagers ::= INTEGER (13..19)
+</pre>
+</td></tr></table>
+
+<p>
+And in pyasn1 terms:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, constraint
+>>> class Teenagers(univ.Integer):
+...   subtypeSpec = constraint.ValueRangeConstraint(13, 19)
+>>> Teenagers(14)
+Teenagers(14)
+>>> Teenagers(20)
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ValueRangeConstraint(13, 19) failed at: 20
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Value range constraint usually applies numeric types.
+</p>
+
+<a name="1.4.3"></a>
+<h4>
+1.4.3 Size constraint
+</h4>
+
+<p>
+It is sometimes convenient to set or limit the allowed size of a data item
+to be sent from one application to another to manage bandwidth and memory
+consumption issues. Size constraint specifies the lower and upper bounds 
+of the size of a valid value.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+TwoBits ::= BIT STRING (SIZE (2))
+</pre>
+</td></tr></table>
+
+<p>
+Express the same grammar in pyasn1:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, constraint
+>>> class TwoBits(univ.BitString):
+...   subtypeSpec = constraint.ValueSizeConstraint(2, 2)
+>>> TwoBits((1,1))
+TwoBits("'11'B")
+>>> TwoBits((1,1,0))
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ValueSizeConstraint(2, 2) failed at: (1, 1, 0)
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Size constraint can be applied to potentially massive values - bit or octet
+strings, SEQUENCE OF/SET OF values.
+</p>
+
+<a name="1.4.4"></a>
+<h4>
+1.4.4 Alphabet constraint
+</h4>
+
+<p>
+The permitted alphabet constraint is similar to Single value constraint
+but constraint applies to individual characters of a value. 
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+MorseCode ::= PrintableString (FROM ("."|"-"|" "))
+</pre>
+</td></tr></table>
+
+<p>
+And in pyasn1:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char, constraint
+>>> class MorseCode(char.PrintableString):
+...   subtypeSpec = constraint.PermittedAlphabetConstraint(".", "-", " ")
+>>> MorseCode("...---...")
+MorseCode('...---...')
+>>> MorseCode("?")
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  PermittedAlphabetConstraint(".", "-", " ") failed at: "?"
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Current implementation does not handle ranges of characters in constraint
+(FROM "A".."Z" syntax), one has to list the whole set in a range.
+</p>
+
+<a name="1.4.5"></a>
+<h4>
+1.4.5 Constraint combinations
+</h4>
+
+<p>
+Up to this moment, we used a single constraint per ASN.1 type. The standard,
+however, allows for combining multiple individual constraints into
+intersections, unions and exclusions.
+</p>
+
+<p>
+In pyasn1 data model, all of these methods of constraint combinations are
+implemented as constraint-like objects holding individual constraint (or
+combination) objects. Like terminal constraint objects, combination objects
+are capable to perform value verification at its set of enclosed constraints
+according to the logic of particular combination.
+</p>
+
+<p>
+Constraints intersection verification succeeds only if a value is
+compliant to each constraint in a set. To begin with, the following
+specification will constitute a valid telephone number:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+PhoneNumber ::= NumericString (FROM ("0".."9")) (SIZE 11)
+</pre>
+</td></tr></table>
+
+<p>
+Constraint intersection object serves the logic above:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char, constraint
+>>> class PhoneNumber(char.NumericString):
+...   subtypeSpec = constraint.ConstraintsIntersection(
+...     constraint.PermittedAlphabetConstraint('0','1','2','3','4','5','6','7','8','9'),
+...     constraint.ValueSizeConstraint(11, 11)
+...   )
+>>> PhoneNumber('79039343212')
+PhoneNumber('79039343212')
+>>> PhoneNumber('?9039343212')
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ConstraintsIntersection(
+    PermittedAlphabetConstraint('0','1','2','3','4','5','6','7','8','9'),
+      ValueSizeConstraint(11, 11)) failed at: 
+   PermittedAlphabetConstraint('0','1','2','3','4','5','6','7','8','9') failed at: "?039343212"
+>>> PhoneNumber('9343212')
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ConstraintsIntersection(
+    PermittedAlphabetConstraint('0','1','2','3','4','5','6','7','8','9'),
+      ValueSizeConstraint(11, 11)) failed at:
+  ValueSizeConstraint(10, 10) failed at: "9343212"
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Union of constraints works by making sure that a value is compliant
+to any of the constraint in a set. For instance:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+CapitalOrSmall ::= IA5String (FROM ('A','B','C') | FROM ('a','b','c'))
+</pre>
+</td></tr></table>
+
+<p>
+It's important to note, that a value must fully comply to any single
+constraint in a set. In the specification above, a value of all small or
+all capital letters is compliant, but a mix of small&capitals is not. 
+Here's its pyasn1 analogue:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char, constraint
+>>> class CapitalOrSmall(char.IA5String):
+...   subtypeSpec = constraint.ConstraintsUnion(
+...     constraint.PermittedAlphabetConstraint('A','B','C'),
+...     constraint.PermittedAlphabetConstraint('a','b','c')
+...   )
+>>> CapitalOrSmall('ABBA')
+CapitalOrSmall('ABBA')
+>>> CapitalOrSmall('abba')
+CapitalOrSmall('abba')
+>>> CapitalOrSmall('Abba')
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ConstraintsUnion(PermittedAlphabetConstraint('A', 'B', 'C'),
+    PermittedAlphabetConstraint('a', 'b', 'c')) failed at: failed for "Abba"
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Finally, the exclusion constraint simply negates the logic of value 
+verification at a constraint. In the following example, any integer value
+is allowed in a type but not zero.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+NoZero ::= INTEGER (ALL EXCEPT 0)
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1 the above definition would read:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, constraint
+>>> class NoZero(univ.Integer):
+...   subtypeSpec = constraint.ConstraintsExclusion(
+...     constraint.SingleValueConstraint(0)
+...   )
+>>> NoZero(1)
+NoZero(1)
+>>> NoZero(0)
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ConstraintsExclusion(SingleValueConstraint(0)) failed at: 0
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The depth of such a constraints tree, built with constraint combination objects
+at its nodes, has not explicit limit. Value verification is performed in a
+recursive manner till a definite solution is found.
+</p>
+
+<a name="1.5"></a>
+<h4>
+1.5 Types relationships
+</h4>
+
+<p>
+In the course of data processing in an application, it is sometimes
+convenient to figure out the type relationships between pyasn1 type or
+value objects. Formally, two things influence pyasn1 types relationship:
+<i>tag set</i> and <i>subtype constraints</i>. One pyasn1 type is considered
+to be a derivative of another if their TagSet and Constraint objects are
+a derivation of one another.
+</p>
+
+<p>
+The following example illustrates the concept (we use the same tagset but
+different constraints for simplicity):
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, constraint
+>>> i1 = univ.Integer(subtypeSpec=constraint.ValueRangeConstraint(3,8))
+>>> i2 = univ.Integer(subtypeSpec=constraint.ConstraintsIntersection(
+...    constraint.ValueRangeConstraint(3,8),
+...    constraint.ValueRangeConstraint(4,7)
+... ) )
+>>> i1.isSameTypeWith(i2)
+False
+>>> i1.isSuperTypeOf(i2)
+True
+>>> i1.isSuperTypeOf(i1)
+True
+>>> i2.isSuperTypeOf(i1)
+False
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+As can be seen in the above code snippet, there are two methods of any pyasn1
+type/value object that test types for their relationship:
+<b>isSameTypeWith</b>() and <b>isSuperTypeOf</b>(). The former is 
+self-descriptive while the latter yields true if the argument appears
+to be a pyasn1 object which has tagset and constraints derived from those
+of the object being called.
+</p>
+
+<a name="2"></a>
+<h3>
+2. Codecs
+</h3>
+
+<p>
+In ASN.1 context, 
+<a href=http://en.wikipedia.org/wiki/Codec>codec</a>
+is a program that transforms between concrete data structures and a stream
+of octets, suitable for transmission over the wire. This serialized form of
+data is sometimes called <i>substrate</i> or <i>essence</i>.
+</p>
+
+<p>
+In pyasn1 implementation, substrate takes shape of Python 3 bytes or 
+Python 2 string objects.
+</p>
+
+<p>
+One of the properties of a codec is its ability to cope with incomplete
+data and/or substrate what implies codec to be stateful. In other words, 
+when decoder runs out of substrate and data item being recovered is still 
+incomplete, stateful codec would suspend and complete data item recovery 
+whenever the rest of substrate becomes available. Similarly, stateful encoder
+would encode data items in multiple steps waiting for source data to
+arrive. Codec restartability is especially important when application deals
+with large volumes of data and/or runs on low RAM. For an interesting
+discussion on codecs options and design choices, refer to
+<a href=http://directory.apache.org/subprojects/asn1/>Apache ASN.1 project</a>
+.
+</p>
+
+<p>
+As of this writing, codecs implemented in pyasn1 are all stateless, mostly
+to keep the code simple.
+</p>
+
+<p>
+The pyasn1 package currently supports 
+<a href=http://en.wikipedia.org/wiki/Basic_encoding_rules>BER</a> codec and
+its variations -- 
+<a href=http://en.wikipedia.org/wiki/Canonical_encoding_rules>CER</a> and
+<a href=http://en.wikipedia.org/wiki/Distinguished_encoding_rules>DER</a>.
+More ASN.1 codecs are planned for implementation in the future.
+</p>
+
+<a name="2.1"></a>
+<h4>
+2.1 Encoders
+</h4>
+
+<p>
+Encoder is used for transforming pyasn1 value objects into substrate. Only
+pyasn1 value objects could be serialized, attempts to process pyasn1 type
+objects will cause encoder failure.
+</p>
+
+<p>
+The following code will create a pyasn1 Integer object and serialize it with
+BER encoder:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder
+>>> encoder.encode(univ.Integer(123456))
+b'\x02\x03\x01\xe2@'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+BER standard also defines a so-called <i>indefinite length</i> encoding form
+which makes large data items processing more memory efficient. It is mostly
+useful when encoder does not have the whole value all at once and the
+length of the value can not be determined at the beginning of encoding.
+</p>
+
+<p>
+<i>Constructed encoding</i> is another feature of BER closely related to the
+indefinite length form. In essence, a large scalar value (such as ASN.1
+character BitString type) could be chopped into smaller chunks by encoder
+and transmitted incrementally to limit memory consumption. Unlike indefinite
+length case, the length of the whole value must be known in advance when
+using constructed, definite length encoding form.
+</p>
+
+<p>
+Since pyasn1 codecs are not restartable, pyasn1 encoder may only encode data
+item all at once. However, even in this case, generating indefinite length 
+encoding may help a low-memory receiver, running a restartable decoder,
+to process a large data item.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder
+>>> encoder.encode(
+...   univ.OctetString('The quick brown fox jumps over the lazy dog'),
+...   defMode=False,
+...   maxChunkSize=8
+... )
+b'$\x80\x04\x08The quic\x04\x08k brown \x04\x08fox jump\x04\x08s over \
+t\x04\x08he lazy \x04\x03dog\x00\x00'
+>>>
+>>> encoder.encode(
+...   univ.OctetString('The quick brown fox jumps over the lazy dog'),
+...   maxChunkSize=8
+... )
+b'$7\x04\x08The quic\x04\x08k brown \x04\x08fox jump\x04\x08s over \
+t\x04\x08he lazy \x04\x03dog'
+</pre>
+</td></tr></table>
+
+<p>
+The <b>defMode</b> encoder parameter disables definite length encoding mode,
+while the optional <b>maxChunkSize</b> parameter specifies desired
+substrate chunk size that influences memory requirements at the decoder's end.
+</p>
+
+<p>
+To use CER or DER encoders one needs to explicitly import and call them - the
+APIs are all compatible.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder as ber_encoder
+>>> from pyasn1.codec.cer import encoder as cer_encoder
+>>> from pyasn1.codec.der import encoder as der_encoder
+>>> ber_encoder.encode(univ.Boolean(True))
+b'\x01\x01\x01'
+>>> cer_encoder.encode(univ.Boolean(True))
+b'\x01\x01\xff'
+>>> der_encoder.encode(univ.Boolean(True))
+b'\x01\x01\xff'
+>>>
+</pre>
+</td></tr></table>
+
+<a name="2.2"></a>
+<h4>
+2.2 Decoders
+</h4>
+
+<p>
+In the process of decoding, pyasn1 value objects are created and linked to
+each other, based on the information containted in the substrate. Thus,
+the original pyasn1 value object(s) are recovered.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> substrate = encoder.encode(univ.Boolean(True))
+>>> decoder.decode(substrate)
+(Boolean('True(1)'), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Commenting on the code snippet above, pyasn1 decoder accepts substrate
+as an argument and returns a tuple of pyasn1 value object (possibly
+a top-level one in case of constructed object) and unprocessed part
+of input substrate.
+</p>
+
+<p>
+All pyasn1 decoders can handle both definite and indefinite length
+encoding modes automatically, explicit switching into one mode
+to another is not required.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> substrate = encoder.encode(
+...   univ.OctetString('The quick brown fox jumps over the lazy dog'),
+...   defMode=False,
+...   maxChunkSize=8
+... )
+>>> decoder.decode(substrate)
+(OctetString(b'The quick brown fox jumps over the lazy dog'), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Speaking of BER/CER/DER encoding, in many situations substrate may not contain
+all necessary information needed for complete and accurate ASN.1 values
+recovery. The most obvious cases include implicitly tagged ASN.1 types
+and constrained types.
+</p>
+
+<p>
+As discussed earlier in this handbook, when an ASN.1 type is implicitly
+tagged, previous outermost tag is lost and never appears in substrate.
+If it is the base tag that gets lost, decoder is unable to pick type-specific
+value decoder at its table of built-in types, and therefore recover
+the value part, based only on the information contained in substrate. The
+approach taken by pyasn1 decoder is to use a prototype pyasn1 type object (or
+a set of them) to <i>guide</i> the decoding process by matching [possibly
+incomplete] tags recovered from substrate with those found in prototype pyasn1
+type objects (also called pyasn1 specification object further in this paper).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.codec.ber import decoder
+>>> decoder.decode(b'\x02\x01\x0c', asn1Spec=univ.Integer())
+Integer(12), b''
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Decoder would neither modify pyasn1 specification object nor use
+its current values (if it's a pyasn1 value object), but rather use it as
+a hint for choosing proper decoder and as a pattern for creating new objects:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, tag
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> i = univ.Integer(12345).subtype(
+...   implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 40)
+... )
+>>> substrate = encoder.encode(i)
+>>> substrate
+b'\x9f(\x0209'
+>>> decoder.decode(substrate)
+Traceback (most recent call last):
+...
+pyasn1.error.PyAsn1Error: 
+   TagSet(Tag(tagClass=128, tagFormat=0, tagId=40)) not in asn1Spec
+>>> decoder.decode(substrate, asn1Spec=i)
+(Integer(12345), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Notice in the example above, that an attempt to run decoder without passing
+pyasn1 specification object fails because recovered tag does not belong
+to any of the built-in types.
+</p>
+
+<p>
+Another important feature of guided decoder operation is the use of
+values constraints possibly present in pyasn1 specification object.
+To explain this, we will decode a random integer object into generic Integer
+and the constrained one.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, constraint
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> class DialDigit(univ.Integer):
+...   subtypeSpec = constraint.ValueRangeConstraint(0,9)
+>>> substrate = encoder.encode(univ.Integer(13))
+>>> decoder.decode(substrate)
+(Integer(13), b'')
+>>> decoder.decode(substrate, asn1Spec=DialDigit())
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ValueRangeConstraint(0, 9) failed at: 13
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Similarily to encoders, to use CER or DER decoders application has to
+explicitly import and call them - all APIs are compatible.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder as ber_encoder
+>>> substrate = ber_encoder.encode(univ.OctetString('http://pyasn1.sf.net'))
+>>>
+>>> from pyasn1.codec.ber import decoder as ber_decoder
+>>> from pyasn1.codec.cer import decoder as cer_decoder
+>>> from pyasn1.codec.der import decoder as der_decoder
+>>> 
+>>> ber_decoder.decode(substrate)
+(OctetString(b'http://pyasn1.sf.net'), b'')
+>>> cer_decoder.decode(substrate)
+(OctetString(b'http://pyasn1.sf.net'), b'')
+>>> der_decoder.decode(substrate)
+(OctetString(b'http://pyasn1.sf.net'), b'')
+>>> 
+</pre>
+</td></tr></table>
+
+<a name="2.2.1"></a>
+<h4>
+2.2.1 Decoding untagged types
+</h4>
+
+<p>
+It has already been mentioned, that ASN.1 has two "special case" types:
+CHOICE and ANY. They are different from other types in part of 
+tagging - unless these two are additionally tagged, neither of them will
+have their own tag. Therefore these types become invisible in substrate
+and can not be recovered without passing pyasn1 specification object to
+decoder.
+</p>
+
+<p>
+To explain the issue, we will first prepare a Choice object to deal with:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype
+>>> class CodeOrMessage(univ.Choice):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('code', univ.Integer()),
+...     namedtype.NamedType('message', univ.OctetString())
+...   )
+>>>
+>>> codeOrMessage = CodeOrMessage()
+>>> codeOrMessage.setComponentByName('message', 'my string value')
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ message=b'my string value'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Let's now encode this Choice object and then decode its substrate
+with and without pyasn1 specification object:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> substrate = encoder.encode(codeOrMessage)
+>>> substrate
+b'\x04\x0fmy string value'
+>>> encoder.encode(univ.OctetString('my string value'))
+b'\x04\x0fmy string value'
+>>>
+>>> decoder.decode(substrate)
+(OctetString(b'my string value'), b'')
+>>> codeOrMessage, substrate = decoder.decode(substrate, asn1Spec=CodeOrMessage())
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ message=b'my string value'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+First thing to notice in the listing above is that the substrate produced
+for our Choice value object is equivalent to the substrate for an OctetString
+object initialized to the same value. In other words, any information about
+the Choice component is absent in encoding.
+</p>
+
+<p>
+Sure enough, that kind of substrate will decode into an OctetString object,
+unless original Choice type object is passed to decoder to guide the decoding
+process.
+</p>
+
+<p>
+Similarily untagged ANY type behaves differently on decoding phase - when
+decoder bumps into an Any object in pyasn1 specification, it stops decoding
+and puts all the substrate into a new Any value object in form of an octet
+string. Concerned application could then re-run decoder with an additional,
+more exact pyasn1 specification object to recover the contents of Any
+object.
+</p>
+
+<p>
+As it was mentioned elsewhere in this paper, Any type allows for incomplete
+or changing ASN.1 specification to be handled gracefully by decoder and
+applications.
+</p>
+
+<p>
+To illustrate the working of Any type, we'll have to make the stage
+by encoding a pyasn1 object and then putting its substrate into an any
+object.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> innerSubstrate = encoder.encode(univ.Integer(1234))
+>>> innerSubstrate
+b'\x02\x02\x04\xd2'
+>>> any = univ.Any(innerSubstrate)
+>>> any
+Any(b'\x02\x02\x04\xd2')
+>>> substrate = encoder.encode(any)
+>>> substrate
+b'\x02\x02\x04\xd2'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+As with Choice type encoding, there is no traces of Any type in substrate.
+Obviously, the substrate we are dealing with, will decode into the inner
+[Integer] component, unless pyasn1 specification is given to guide the 
+decoder. Continuing previous code:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+
+>>> decoder.decode(substrate)
+(Integer(1234), b'')
+>>> any, substrate = decoder.decode(substrate, asn1Spec=univ.Any())
+>>> any
+Any(b'\x02\x02\x04\xd2')
+>>> decoder.decode(str(any))
+(Integer(1234), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Both CHOICE and ANY types are widely used in practice. Reader is welcome to
+take a look at 
+<a href=http://www.cs.auckland.ac.nz/~pgut001/pubs/x509guide.txt>
+ASN.1 specifications of X.509 applications</a> for more information.
+</p>
+
+<a name="2.2.2"></a>
+<h4>
+2.2.2 Ignoring unknown types
+</h4>
+
+<p>
+When dealing with a loosely specified ASN.1 structure, the receiving
+end may not be aware of some types present in the substrate. It may be
+convenient then to turn decoder into a recovery mode. Whilst there, decoder
+will not bail out when hit an unknown tag but rather treat it as an Any
+type.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, tag
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> taggedInt = univ.Integer(12345).subtype(
+...   implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 40)
+... )
+>>> substrate = encoder.encode(taggedInt)
+>>> decoder.decode(substrate)
+Traceback (most recent call last):
+...
+pyasn1.error.PyAsn1Error: TagSet(Tag(tagClass=128, tagFormat=0, tagId=40)) not in asn1Spec
+>>>
+>>> decoder.decode.defaultErrorState = decoder.stDumpRawValue
+>>> decoder.decode(substrate)
+(Any(b'\x9f(\x0209'), '')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+It's also possible to configure a custom decoder, to handle unknown tags
+found in substrate. This can be done by means of <b>defaultRawDecoder</b>
+attribute holding a reference to type decoder object. Refer to the source
+for API details.
+</p>
+
+<a name="3"></a>
+<h3>
+3. Feedback and getting help
+</h3>
+
+<p>
+Although pyasn1 software is almost a decade old and used in many production
+environments, it still may have bugs and non-implemented pieces. Anyone
+who happens to run into such defect is welcome to complain to
+<a href=mailto:pyasn1-users@lists.sourceforge.net>pyasn1 mailing list</a>
+or better yet fix the issue and send
+<a href=mailto:ilya@glas.net>me</a> the patch.
+</p>
+
+<p>
+Typically, pyasn1 is used for building arbitrary protocol support into
+various applications. This involves manual translation of ASN.1 data
+structures into their pyasn1 implementations. To save time and effort,
+data structures for some of the popular protocols are pre-programmed
+and kept for further re-use in form of the
+<a href=http://sourceforge.net/projects/pyasn1/files/pyasn1-modules/>
+pyasn1-modules package</a>. For instance, many structures for PKI (X.509,
+PKCS#*, CRMF, OCSP), LDAP and SNMP are present.
+Applications authors are advised to import and use relevant modules 
+from that package whenever needed protocol structures are already 
+there. New protocol modules contributions are welcome.
+</p>
+
+<p>
+And finally, the latest pyasn1 package revision is available for free
+download from
+<a href=http://sourceforge.net/projects/pyasn1/>project home</a> and
+also from the 
+<a href=http://pypi.python.org/pypi>Python package repository</a>.
+</p>
+
+<hr>
+
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>

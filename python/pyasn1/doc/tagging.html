@@ -1,0 +1,233 @@
+<html>
+<title>
+Tagging in PyASN1
+</title>
+<head>
+</head>
+<body>
+<center>
+<table width=60%>
+<tr>
+<td>
+<a name="1.2"></a>
+<h4>
+1.2 Tagging in PyASN1
+</h4>
+
+<p>
+In order to continue with the Constructed ASN.1 types, we will first have
+to introduce the concept of tagging (and its pyasn1 implementation), as
+some of the Constructed types rely upon the tagging feature.
+</p>
+
+<p>
+When a value is coming into an ASN.1-based system (received from a network
+or read from some storage), the receiving entity has to determine the
+type of the value to interpret and verify it accordingly.
+</p>
+
+<p>
+Historically, the first data serialization protocol introduced in
+ASN.1 was BER (Basic Encoding Rules). According to BER, any serialized
+value is packed into a triplet of (Type, Length, Value) where Type is a 
+code that identifies the value (which is called <i>tag</i> in ASN.1),
+length is the number of bytes occupied by the value in its serialized form
+and value is ASN.1 value in a form suitable for serial transmission or storage.
+</p>
+
+<p>
+For that reason almost every ASN.1 type has a tag (which is actually a
+BER type) associated with it by default.
+</p>
+
+<p>
+An ASN.1 tag could be viewed as a tuple of three numbers:
+(Class, Format, Number). While Number identifies a tag, Class component 
+is used to create scopes for Numbers. Four scopes are currently defined:
+UNIVERSAL, context-specific, APPLICATION and PRIVATE. The Format component
+is actually a one-bit flag - zero for tags associated with scalar types,
+and one for constructed types (will be discussed later on).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+MyIntegerType ::= [12] INTEGER
+MyOctetString ::= [APPLICATION 0] OCTET STRING
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1, tags are implemented as immutable, tuple-like objects:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import tag
+>>> myTag = tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10)
+>>> myTag
+Tag(tagClass=128, tagFormat=0, tagId=10)
+>>> tuple(myTag)
+(128, 0, 10)
+>>> myTag[2]
+10
+>>> myTag == tag.Tag(tag.tagClassApplication, tag.tagFormatSimple, 10)
+False
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Default tag, associated with any ASN.1 type, could be extended or replaced
+to make new type distinguishable from its ancestor. The standard provides
+two modes of tag mangling - IMPLICIT and EXPLICIT.
+</p>
+
+<p>
+EXPLICIT mode works by appending new tag to the existing ones thus creating
+an ordered set of tags. This set will be considered as a whole for type
+identification and encoding purposes. Important property of EXPLICIT tagging
+mode is that it preserves base type information in encoding what makes it
+possible to completely recover type information from encoding.
+</p>
+
+<p>
+When tagging in IMPLICIT mode, the outermost existing tag is dropped and
+replaced with a new one.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+MyIntegerType ::= [12] IMPLICIT INTEGER
+MyOctetString ::= [APPLICATION 0] EXPLICIT OCTET STRING
+</pre>
+</td></tr></table>
+
+<p>
+To model both modes of tagging, a specialized container TagSet object (holding
+zero, one or more Tag objects) is used in pyasn1.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import tag
+>>> tagSet = tag.TagSet(
+...   # base tag
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10),
+...   # effective tag
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10)
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10))
+>>> tagSet.getBaseTag()
+Tag(tagClass=128, tagFormat=0, tagId=10)
+>>> tagSet = tagSet.tagExplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 20)
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10), 
+       Tag(tagClass=128, tagFormat=32, tagId=20))
+>>> tagSet = tagSet.tagExplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 30)
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10), 
+       Tag(tagClass=128, tagFormat=32, tagId=20), 
+       Tag(tagClass=128, tagFormat=32, tagId=30))
+>>> tagSet = tagSet.tagImplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 40)
+... )
+>>> tagSet
+TagSet(Tag(tagClass=128, tagFormat=0, tagId=10),
+       Tag(tagClass=128, tagFormat=32, tagId=20),
+       Tag(tagClass=128, tagFormat=32, tagId=40))
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+As a side note: the "base tag" concept (accessible through the getBaseTag()
+method) is specific to pyasn1 -- the base tag is used to identify the original
+ASN.1 type of an object in question. Base tag is never occurs in encoding
+and is mostly used internally by pyasn1 for choosing type-specific data 
+processing algorithms. The "effective tag" is the one that always appears in
+encoding and is used on tagSets comparation.
+</p>
+
+<p>
+Any two TagSet objects could be compared to see if one is a derivative
+of the other. Figuring this out is also useful in cases when a type-specific
+data processing algorithms are to be chosen.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import tag
+>>> tagSet1 = tag.TagSet(
+...   # base tag
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10)
+...   # effective tag
+...   tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 10)
+... )
+>>> tagSet2 = tagSet1.tagExplicitly(
+...    tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 20)
+... )
+>>> tagSet1.isSuperTagSetOf(tagSet2)
+True
+>>> tagSet2.isSuperTagSetOf(tagSet1)
+False
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+We will complete this discussion on tagging with a real-world example. The
+following ASN.1 tagged type:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+MyIntegerType ::= [12] EXPLICIT INTEGER
+</pre>
+</td></tr></table>
+
+<p>
+could be expressed in pyasn1 like this:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, tag
+>>> class MyIntegerType(univ.Integer):
+...   tagSet = univ.Integer.tagSet.tagExplicitly(
+...        tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 12)
+...        )
+>>> myInteger = MyIntegerType(12345)
+>>> myInteger.getTagSet()
+TagSet(Tag(tagClass=0, tagFormat=0, tagId=2), 
+       Tag(tagClass=128, tagFormat=32, tagId=12))
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Referring to the above code, the tagSet class attribute is a property of any
+pyasn1 type object that assigns default tagSet to a pyasn1 value object. This
+default tagSet specification can be ignored and effectively replaced by some
+other tagSet value passed on object instantiation.
+</p>
+
+<p>
+It's important to understand that the tag set property of pyasn1 type/value
+object can never be modifed in place. In other words, a pyasn1 type/value
+object can never change its tags. The only way is to create a new pyasn1
+type/value object and associate different tag set with it.
+</p>
+
+<hr>
+
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>
