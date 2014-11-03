@@ -1763,20 +1763,20 @@ RilObject.prototype = {
     if (call.state === CALL_STATE_HOLDING) {
       this.sendHangUpBackgroundRequest();
     } else {
-      this.sendHangUpRequest(call.callIndex);
+      this.sendHangUpRequest(options);
     }
   },
 
-  sendHangUpRequest: function(callIndex) {
+  sendHangUpRequest: function(options) {
     this.telephonyRequestQueue.push(REQUEST_HANGUP, this.sendRilRequestHangUp,
-                                    callIndex);
+                                    options);
   },
 
-  sendRilRequestHangUp: function(callIndex) {
+  sendRilRequestHangUp: function(options) {
     let Buf = this.context.Buf;
-    Buf.newParcel(REQUEST_HANGUP);
+    Buf.newParcel(REQUEST_HANGUP, options);
     Buf.writeInt32(1);
-    Buf.writeInt32(callIndex);
+    Buf.writeInt32(options.callIndex);
     Buf.sendParcel();
   },
 
@@ -3973,6 +3973,8 @@ RilObject.prototype = {
       }
 
       oldCall.state = newCall.state;
+      oldCall.number =
+        this._formatInternationalNumber(newCall.number, newCall.toa);
       changedCalls.add(oldCall);
     }
 
@@ -4049,13 +4051,17 @@ RilObject.prototype = {
     return AUDIO_STATE_IN_CALL;
   },
 
-  _addVoiceCall: function(newCall) {
-    // Format international numbers appropriately.
-    if (newCall.number && newCall.toa == TOA_INTERNATIONAL &&
-        newCall.number[0] != "+") {
-      newCall.number = "+" + newCall.number;
+  // Format international numbers appropriately.
+  _formatInternationalNumber: function(number, toa) {
+    if (number && toa == TOA_INTERNATIONAL && number[0] != "+") {
+      number = "+" + number;
     }
 
+    return number;
+  },
+
+  _addVoiceCall: function(newCall) {
+    newCall.number = this._formatInternationalNumber(newCall.number, newCall.toa);
     newCall.isOutgoing = !(newCall.state == CALL_STATE_INCOMING);
     newCall.isConference = false;
 
