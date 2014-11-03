@@ -1,0 +1,10 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+onerror="var x=document.getElementsByTagName('*');x[Math.floor(Math.random()*x.length)].focus()"
+onblur="event.originalTarget.parentNode.parentNode.removeChild(event.originalTarget.parentNode)">
+<script xmlns="http://www.w3.org/1999/xhtml">setTimeout(function() {window.location.reload()}, 200);</script>
+
+<broadcasterset style="display: block;">
+  <broadcaster style="display: block;"></broadcaster>
+</broadcasterset>
+<preferences></preferences>
+</window>

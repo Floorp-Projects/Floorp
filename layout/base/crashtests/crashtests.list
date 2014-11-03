@@ -206,6 +206,7 @@ load 401734-2.html
 needs-focus pref(accessibility.browsewithcaret,true) load 403048.html
 skip load 403175-1.html # times out occasionally, bug 473680
 load 403245-1.html
+load 403454.html
 load 403569-1.xhtml
 load 403569-2.xhtml
 load 403569-3.xhtml
@@ -229,6 +230,7 @@ load 413587-1.svg
 load 414058-1.html
 load 414175-1.xul
 load 415503.xhtml
+load 416107.xhtml
 load 420031-1.html
 load 420213-1.html
 load 420219-1.html
@@ -418,6 +420,7 @@ load 806056-1.html
 load 806056-2.html
 load 812665.html
 load 813372-1.html
+asserts(0-4) load 817219.html # bug 623436
 asserts-if(gtk2Widget,0-1) load 822865.html # bug 540078
 load 824862.html
 load 826163.html
@@ -432,6 +435,7 @@ pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
 load 866588.html
 load 876092.html
+load 876221.html
 load 897852.html
 asserts-if(Android,2) asserts-if(!Android,4-6) load 898913.html # bug 847368
 pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html

@@ -17,6 +17,10 @@
 #include "ipc/Nuwa.h"
 #endif
 
+#ifdef MOZ_B2G_LOADER
+#include "ProcessUtils.h"
+#endif
+
 // This number is fairly arbitrary ... the intention is to put off
 // launching another app process until the last one has finished
 // loading its content, to reduce CPU/memory/IO contention.
@@ -130,7 +134,14 @@ PreallocatedProcessManagerImpl::Init()
     os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
                     /* weakRef = */ false);
   }
-  RereadPrefs();
+#ifdef MOZ_B2G_LOADER
+  if (!mozilla::ipc::ProcLoaderIsInitialized()) {
+    Disable();
+  } else
+#endif
+  {
+    RereadPrefs();
+  }
 }
 
 NS_IMETHODIMP
