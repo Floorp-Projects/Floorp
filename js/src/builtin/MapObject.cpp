@@ -1250,7 +1250,8 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
             if (done)
                 break;
             if (!pairVal.isObject()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_MAP_ITERABLE);
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                                     JSMSG_INVALID_MAP_ITERABLE, "Map");
                 return false;
             }
 
