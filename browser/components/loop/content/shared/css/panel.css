@@ -222,37 +222,48 @@ body {
   text-decoration: underline;
 }
 
-.room-list > .room-entry > h2 > .copy-link {
+@keyframes drop-and-fade-in {
+  0%   {opacity: 0; top: -15px;}
+  25%  {opacity: 0; top: -15px;}
+  100% {opacity: 1; top: 0px;}
+}
+
+.room-list > .room-entry > h2 > button {
   display: inline-block;
+  position: relative;
   width: 24px;
   height: 24px;
   border: none;
-  margin: .1em .5em; /* relative to _this_ line's font, not the document's */
+  margin: .1em .1em .1em .5em; /* relative to _this_ line's font, not the document's */
   background-color: transparent;  /* override browser default for button tags */
+  top: -15px;
 }
 
-@keyframes drop-and-fade-in {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 100; transform: translateY(0); }
+.room-list > .room-entry:hover > h2 > button {
+  animation: drop-and-fade-in 0.250s;
+  animation-fill-mode: forwards;
+  cursor: pointer;
 }
 
 .room-list > .room-entry:hover > h2 > .copy-link {
-  background: transparent url(../img/svg/copy-16x16.svg);
-  cursor: pointer;
-  animation: drop-and-fade-in 0.4s;
-  animation-fill-mode: forwards;
+  background-image: url(../img/icons-16x16.svg#copy);
+}
+
+.room-list > .room-entry:hover > h2 > .delete-link {
+  background-image: url(../img/icons-16x16.svg#trash);
 }
 
 /* scale this up to 1.1x and then back to the original size */
 @keyframes pulse {
   0%, 100% { transform: scale(1.0); }
-  50% { transform: scale(1.1); }
+  50%      { transform: scale(1.1); }
 }
 
 .room-list > .room-entry > h2 > .copy-link.checked {
-  background: transparent url(../img/svg/checkmark-16x16.svg);
-  animation: pulse .250s;
+  background: transparent url(../img/icons-16x16.svg#checkmark);
+  animation: pulse .150s;
   animation-timing-function: ease-in-out;
+  top: 0px;
 }
 
 .room-list > .room-entry > h2 {
