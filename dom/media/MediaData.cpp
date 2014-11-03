@@ -83,7 +83,7 @@ IsInEmulator()
 #endif
 
 VideoData::VideoData(int64_t aOffset, int64_t aTime, int64_t aDuration, int64_t aTimecode)
-  : MediaData(VIDEO_FRAME, aOffset, aTime, aDuration),
+  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration),
     mTimecode(aTimecode),
     mDuplicate(true),
     mKeyframe(false)
@@ -98,7 +98,7 @@ VideoData::VideoData(int64_t aOffset,
                      bool aKeyframe,
                      int64_t aTimecode,
                      IntSize aDisplay)
-  : MediaData(VIDEO_FRAME, aOffset, aTime, aDuration),
+  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration),
     mDisplay(aDisplay),
     mTimecode(aTimecode),
     mDuplicate(false),
