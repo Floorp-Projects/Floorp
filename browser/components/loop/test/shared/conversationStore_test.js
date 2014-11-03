@@ -221,40 +221,31 @@ describe("loop.store.ConversationStore", function () {
     });
   });
 
-  describe("#gatherCallData", function() {
+  describe("#setupWindowData", function() {
+    var fakeSetupWindowData;
+
     beforeEach(function() {
       store.set({callState: CALL_STATES.INIT});
-
-      navigator.mozLoop = {
-        getCallData: function() {
-          return {
-            contact: contact,
-            callType: sharedUtils.CALL_TYPES.AUDIO_VIDEO
-          };
+      fakeSetupWindowData = {
+        windowData: {
+          type: "outgoing",
+          contact: contact,
+          windowId: "123456",
+          callType: sharedUtils.CALL_TYPES.AUDIO_VIDEO
         }
       };
     });
 
-    afterEach(function() {
-      delete navigator.mozLoop;
-    });
-
     it("should set the state to 'gather'", function() {
       dispatcher.dispatch(
-        new sharedActions.GatherCallData({
-          windowId: "76543218",
-          outgoing: true
-        }));
+        new sharedActions.SetupWindowData(fakeSetupWindowData));
 
       expect(store.get("callState")).eql(CALL_STATES.GATHER);
     });
 
     it("should save the basic call information", function() {
       dispatcher.dispatch(
-        new sharedActions.GatherCallData({
-          windowId: "123456",
-          outgoing: true
-        }));
+        new sharedActions.SetupWindowData(fakeSetupWindowData));
 
       expect(store.get("windowId")).eql("123456");
       expect(store.get("outgoing")).eql(true);
@@ -262,28 +253,16 @@ describe("loop.store.ConversationStore", function () {
 
     it("should save the basic information from the mozLoop api", function() {
       dispatcher.dispatch(
-        new sharedActions.GatherCallData({
-          windowId: "123456",
-          outgoing: true
-        }));
+        new sharedActions.SetupWindowData(fakeSetupWindowData));
 
       expect(store.get("contact")).eql(contact);
       expect(store.get("callType")).eql(sharedUtils.CALL_TYPES.AUDIO_VIDEO);
     });
 
     describe("outgoing calls", function() {
-      var outgoingCallData;
-
-      beforeEach(function() {
-        outgoingCallData = {
-          windowId: "123456",
-          outgoing: true
-        };
-      });
-
       it("should request the outgoing call data", function() {
         dispatcher.dispatch(
-          new sharedActions.GatherCallData(outgoingCallData));
+          new sharedActions.SetupWindowData(fakeSetupWindowData));
 
         sinon.assert.calledOnce(client.setupOutgoingCall);
         sinon.assert.calledWith(client.setupOutgoingCall,
@@ -291,7 +270,7 @@ describe("loop.store.ConversationStore", function () {
       });
 
       it("should include all email addresses in the call data", function() {
-        contact = {
+        fakeSetupWindowData.windowData.contact = {
           name: [ "Mr Smith" ],
           email: [{
             type: "home",
@@ -306,7 +285,7 @@ describe("loop.store.ConversationStore", function () {
         };
 
         dispatcher.dispatch(
-          new sharedActions.GatherCallData(outgoingCallData));
+          new sharedActions.SetupWindowData(fakeSetupWindowData));
 
         sinon.assert.calledOnce(client.setupOutgoingCall);
         sinon.assert.calledWith(client.setupOutgoingCall,
@@ -314,7 +293,7 @@ describe("loop.store.ConversationStore", function () {
       });
 
       it("should include trim phone numbers for the call data", function() {
-        contact = {
+        fakeSetupWindowData.windowData.contact = {
           name: [ "Mr Smith" ],
           tel: [{
             type: "home",
@@ -324,7 +303,7 @@ describe("loop.store.ConversationStore", function () {
         };
 
         dispatcher.dispatch(
-          new sharedActions.GatherCallData(outgoingCallData));
+          new sharedActions.SetupWindowData(fakeSetupWindowData));
 
         sinon.assert.calledOnce(client.setupOutgoingCall);
         sinon.assert.calledWith(client.setupOutgoingCall,
@@ -332,7 +311,7 @@ describe("loop.store.ConversationStore", function () {
       });
 
       it("should include all email and telephone values in the call data", function() {
-        contact = {
+        fakeSetupWindowData.windowData.contact = {
           name: [ "Mr Smith" ],
           email: [{
             type: "home",
@@ -355,7 +334,7 @@ describe("loop.store.ConversationStore", function () {
         };
 
         dispatcher.dispatch(
-          new sharedActions.GatherCallData(outgoingCallData));
+          new sharedActions.SetupWindowData(fakeSetupWindowData));
 
         sinon.assert.calledOnce(client.setupOutgoingCall);
         sinon.assert.calledWith(client.setupOutgoingCall,
@@ -375,8 +354,8 @@ describe("loop.store.ConversationStore", function () {
 
           client.setupOutgoingCall.callsArgWith(2, null, callData);
 
-          store.gatherCallData(
-            new sharedActions.GatherCallData(outgoingCallData));
+          store.setupWindowData(
+            new sharedActions.SetupWindowData(fakeSetupWindowData));
 
           sinon.assert.calledOnce(dispatcher.dispatch);
           // Can't use instanceof here, as that matches any action
@@ -389,8 +368,8 @@ describe("loop.store.ConversationStore", function () {
         it("should dispatch a connection failure action on failure", function() {
           client.setupOutgoingCall.callsArgWith(2, {});
 
-          store.gatherCallData(
-            new sharedActions.GatherCallData(outgoingCallData));
+          store.setupWindowData(
+            new sharedActions.SetupWindowData(fakeSetupWindowData));
 
           sinon.assert.calledOnce(dispatcher.dispatch);
           // Can't use instanceof here, as that matches any action
