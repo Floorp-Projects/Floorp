@@ -48,7 +48,6 @@
     _(NewArrayCopyOnWrite)          \
     _(ArraySplice)                  \
     _(NewObject)                    \
-    _(NewTypedObject)               \
     _(NewDeclEnvObject)             \
     _(NewCallObject)                \
     _(NewSingletonCallObject)       \
