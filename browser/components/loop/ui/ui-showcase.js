@@ -101,6 +101,41 @@
     detailsButtonLabel: "Retry",
   });
 
+  var SVGIcon = React.createClass({displayName: 'SVGIcon',
+    render: function() {
+      return (
+        React.DOM.span({className: "svg-icon", style: {
+          "background-image": "url(/content/shared/img/icons-16x16.svg#" + this.props.shapeId + ")"
+        }})
+      );
+    }
+  });
+
+  var SVGIcons = React.createClass({displayName: 'SVGIcons',
+    shapes: [
+      "audio", "audio-hover", "audio-active", "block",
+      "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
+      "contacts-active", "copy", "checkmark", "google", "google-hover",
+      "google-active", "history", "history-hover", "history-active",
+      "precall", "precall-hover", "precall-active", "settings", "settings-hover",
+      "settings-active", "tag", "tag-hover", "tag-active", "trash", "unblock",
+      "unblock-hover", "unblock-active", "video", "video-hover", "video-active"
+    ],
+
+    render: function() {
+      return (
+        React.DOM.div({className: "svg-icon-list"}, 
+          this.shapes.map(function(shapeId, i) {
+            return React.DOM.div({className: "svg-icon-entry"}, 
+              React.DOM.p(null, SVGIcon({key: i, shapeId: shapeId})), 
+              React.DOM.p(null, shapeId)
+            );
+          }, this)
+        )
+      );
+    }
+  });
+
   var Example = React.createClass({displayName: 'Example',
     makeId: function(prefix) {
       return (prefix || "") + this.props.summary.toLowerCase().replace(/\s/g, "-");
@@ -489,6 +524,12 @@
               React.DOM.div({className: "standalone"}, 
                 UnsupportedDeviceView(null)
               )
+            )
+          ), 
+
+          Section({name: "SVG icons preview"}, 
+            Example({summary: "16x16"}, 
+              SVGIcons(null)
             )
           )
 

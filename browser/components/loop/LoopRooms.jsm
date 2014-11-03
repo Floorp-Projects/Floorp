@@ -106,6 +106,11 @@ const checkForParticipantsUpdate = function(room, updatedRoom) {
 let LoopRoomsInternal = {
   rooms: new Map(),
 
+  get sessionType() {
+    return MozLoopService.userProfile ? LOOP_SESSION_TYPE.FXA :
+                                        LOOP_SESSION_TYPE.GUEST;
+  },
+
   /**
    * Fetch a list of rooms that the currently registered user is a member of.
    *
@@ -131,10 +136,8 @@ let LoopRoomsInternal = {
       }
 
       // Fetch the rooms from the server.
-      let sessionType = MozLoopService.userProfile ? LOOP_SESSION_TYPE.FXA :
-                        LOOP_SESSION_TYPE.GUEST;
       let url = "/rooms" + (version ? "?version=" + encodeURIComponent(version) : "");
-      let response = yield MozLoopService.hawkRequest(sessionType, url, "GET");
+      let response = yield MozLoopService.hawkRequest(this.sessionType, url, "GET");
       let roomsList = JSON.parse(response.body);
       if (!Array.isArray(roomsList)) {
         throw new Error("Missing array of rooms in response.");
@@ -188,9 +191,7 @@ let LoopRoomsInternal = {
       return;
     }
 
-    let sessionType = MozLoopService.userProfile ? LOOP_SESSION_TYPE.FXA :
-                      LOOP_SESSION_TYPE.GUEST;
-    MozLoopService.hawkRequest(sessionType, "/rooms/" + encodeURIComponent(roomToken), "GET")
+    MozLoopService.hawkRequest(this.sessionType, "/rooms/" + encodeURIComponent(roomToken), "GET")
       .then(response => {
         let data = JSON.parse(response.body);
 
@@ -227,10 +228,7 @@ let LoopRoomsInternal = {
       return;
     }
 
-    let sessionType = MozLoopService.userProfile ? LOOP_SESSION_TYPE.FXA :
-                      LOOP_SESSION_TYPE.GUEST;
-
-    MozLoopService.hawkRequest(sessionType, "/rooms", "POST", room)
+    MozLoopService.hawkRequest(this.sessionType, "/rooms", "POST", room)
       .then(response => {
         let data = JSON.parse(response.body);
         extend(room, data);
@@ -253,6 +251,28 @@ let LoopRoomsInternal = {
   },
 
   /**
+   * Deletes a room.
+   *
+   * @param {String}   roomToken The room token.
+   * @param {Function} callback  Function that will be invoked once the operation
+   *                             finished. The first argument passed will be an
+   *                             `Error` object or `null`.
+   */
+  delete: function(roomToken, callback) {
+    // XXX bug 1092954: Before deleting a room, the client should check room
+    //     membership and forceDisconnect() all current participants.
+    let room = this.rooms.get(roomToken);
+    let url = "/rooms/" + encodeURIComponent(roomToken);
+    MozLoopService.hawkRequest(this.sessionType, url, "DELETE")
+      .then(response => {
+        this.rooms.delete(roomToken);
+        eventEmitter.emit("delete", room);
+        callback(null, room);
+      }, error => callback(error)).catch(error => callback(error));
+  },
+
+
+  /**
    * Callback used to indicate changes to rooms data on the LoopServer.
    *
    * @param {String} version   Version number assigned to this change set.
@@ -273,7 +293,7 @@ Object.freeze(LoopRoomsInternal);
  * At this point the following events may be subscribed to:
  *  - 'add[:{room-id}]':    A new room object was successfully added to the data
  *                          store.
- *  - 'remove[:{room-id}]': A room was successfully removed from the data store.
+ *  - 'delete[:{room-id}]': A room was successfully removed from the data store.
  *  - 'update[:{room-id}]': A room object was successfully updated with changed
  *                          properties in the data store.
  *  - 'joined[:{room-id}]': A participant joined a room.
@@ -296,6 +316,10 @@ this.LoopRooms = {
 
   open: function(roomToken) {
     return LoopRoomsInternal.open(roomToken);
+  },
+
+  delete: function(roomToken, callback) {
+    return LoopRoomsInternal.delete(roomToken, callback);
   },
 
   promise: function(method, ...params) {
