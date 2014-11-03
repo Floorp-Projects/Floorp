@@ -818,6 +818,12 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     return;
   }
 
+  // If the decoder is waiting for data, there's nothing more to do after
+  // clearing the pending request.
+  if (aReason == RequestSampleCallback::WAITING_FOR_DATA) {
+    return;
+  }
+
   // This is an EOS. Finish off the queue, and then handle things based on our
   // state.
   MOZ_ASSERT(aReason == RequestSampleCallback::END_OF_STREAM);

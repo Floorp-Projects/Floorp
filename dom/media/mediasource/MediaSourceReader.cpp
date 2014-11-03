@@ -167,7 +167,7 @@ MediaSourceReader::OnNotDecoded(MediaData::Type aType, RequestSampleCallback::No
     return;
   }
 
-  MOZ_ASSERT(aReason == RequestSampleCallback::END_OF_STREAM);
+  // See if we can find a different reader that can pick up where we left off.
   if (aType == MediaData::AUDIO_DATA && SwitchAudioReader(mLastAudioTime)) {
     RequestAudioData();
     return;
@@ -177,11 +177,15 @@ MediaSourceReader::OnNotDecoded(MediaData::Type aType, RequestSampleCallback::No
     return;
   }
 
+  // If the entire MediaSource is done, generate an EndOfStream.
   if (IsEnded()) {
-    GetCallback()->OnNotDecoded(aType, aReason);
+    GetCallback()->OnNotDecoded(aType, RequestSampleCallback::END_OF_STREAM);
+    return;
   }
 
-  // Drop anything else on the floor. This gets fixed in the next patch.
+  // We don't have the data the caller wants. Tell that we're waiting for JS to
+  // give us more data.
+  GetCallback()->OnNotDecoded(aType, RequestSampleCallback::WAITING_FOR_DATA);
 }
 
 void
