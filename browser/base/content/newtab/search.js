@@ -21,10 +21,12 @@ let gSearch = {
   showPanel: function () {
     let panel = this._nodes.panel;
     let logo = this._nodes.logo;
+    panel.hidden = false;
     panel.openPopup(logo);
     logo.setAttribute("active", "true");
     panel.addEventListener("popuphidden", function onHidden() {
       panel.removeEventListener("popuphidden", onHidden);
+      panel.hidden = true;
       logo.removeAttribute("active");
     });
   },

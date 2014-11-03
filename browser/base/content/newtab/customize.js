@@ -43,10 +43,12 @@ let gCustomize = {
       return Promise.resolve(nodes);
     }
 
+    panel.hidden = false;
     panel.openPopup(button);
     button.setAttribute("active", true);
     panel.addEventListener("popuphidden", function onHidden() {
       panel.removeEventListener("popuphidden", onHidden);
+      panel.hidden = true;
       button.removeAttribute("active");
     });
 
