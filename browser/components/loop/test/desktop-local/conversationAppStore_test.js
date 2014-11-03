@@ -32,10 +32,10 @@ describe("loop.store.ConversationAppStore", function () {
   });
 
   describe("#getWindowData", function() {
-    var fakeCallData, fakeGetWindowData, fakeMozLoop, store;
+    var fakeWindowData, fakeGetWindowData, fakeMozLoop, store;
 
     beforeEach(function() {
-      fakeCallData = {
+      fakeWindowData = {
         type: "incoming",
         callId: "123456"
       };
@@ -47,9 +47,9 @@ describe("loop.store.ConversationAppStore", function () {
       fakeMozLoop = {
         // XXX Remove me in bug 1074678
         getLoopBoolPref: function() { return false; },
-        getCallData: function(windowId) {
+        getConversationWindowData: function(windowId) {
           if (windowId === "42") {
-            return fakeCallData;
+            return fakeWindowData;
           }
           return null;
         }
@@ -64,7 +64,10 @@ describe("loop.store.ConversationAppStore", function () {
     it("should fetch the window type from the mozLoop API", function() {
       dispatcher.dispatch(new sharedActions.GetWindowData(fakeGetWindowData));
 
-      expect(store.getStoreState()).eql({windowType: "incoming"});
+      expect(store.getStoreState()).eql({
+        windowType: "incoming",
+        windowData: fakeWindowData
+      });
     });
 
     it("should dispatch a SetupWindowData action with the data from the mozLoop API",
@@ -75,9 +78,9 @@ describe("loop.store.ConversationAppStore", function () {
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.SetupWindowData({
-            windowData: fakeCallData
-          }));
+          new sharedActions.SetupWindowData(_.extend({
+            windowId: fakeGetWindowData.windowId
+          }, fakeWindowData)));
       });
   });
 

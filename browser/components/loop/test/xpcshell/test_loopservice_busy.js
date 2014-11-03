@@ -26,8 +26,10 @@ add_test(function test_busy_2guest_calls() {
 
   MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
-    Chat.open = function() {
+    let windowId;
+    Chat.open = function(contentWindow, origin, title, url) {
       opened++;
+      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
     };
 
     mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
@@ -35,7 +37,7 @@ add_test(function test_busy_2guest_calls() {
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
       do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.releaseCallData(firstCallId);
+      LoopCalls.clearCallInProgress(windowId);
       run_next_test();
     }, () => {
       do_throw("should have opened a chat window for first call and rejected second call");
@@ -49,8 +51,10 @@ add_test(function test_busy_1fxa_1guest_calls() {
 
   MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
-    Chat.open = function() {
+    let windowId;
+    Chat.open = function(contentWindow, origin, title, url) {
       opened++;
+      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
     };
 
     mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
@@ -59,7 +63,7 @@ add_test(function test_busy_1fxa_1guest_calls() {
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
       do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.releaseCallData(firstCallId);
+      LoopCalls.clearCallInProgress(windowId);
       run_next_test();
     }, () => {
       do_throw("should have opened a chat window for first call and rejected second call");
@@ -73,8 +77,10 @@ add_test(function test_busy_2fxa_calls() {
 
   MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
-    Chat.open = function() {
+    let windowId;
+    Chat.open = function(contentWindow, origin, title, url) {
       opened++;
+      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
     };
 
     mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
@@ -82,7 +88,7 @@ add_test(function test_busy_2fxa_calls() {
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
       do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.releaseCallData(firstCallId);
+      LoopCalls.clearCallInProgress(windowId);
       run_next_test();
     }, () => {
       do_throw("should have opened a chat window for first call and rejected second call");
@@ -96,8 +102,10 @@ add_test(function test_busy_1guest_1fxa_calls() {
 
   MozLoopService.promiseRegisteredWithServers().then(() => {
     let opened = 0;
-    Chat.open = function() {
+    let windowId;
+    Chat.open = function(contentWindow, origin, title, url) {
       opened++;
+      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
     };
 
     mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
@@ -106,7 +114,7 @@ add_test(function test_busy_1guest_1fxa_calls() {
     waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
       do_check_true(opened === 1, "should open only one chat window");
       do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.releaseCallData(firstCallId);
+      LoopCalls.clearCallInProgress(windowId);
       run_next_test();
     }, () => {
       do_throw("should have opened a chat window for first call and rejected second call");

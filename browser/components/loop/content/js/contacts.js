@@ -392,12 +392,12 @@ loop.contacts = (function(_, mozL10n) {
           break;
         case "video-call":
           if (!contact.blocked) {
-            navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_VIDEO);
+            navigator.mozLoop.calls.startDirectCall(contact, CALL_TYPES.AUDIO_VIDEO);
           }
           break;
         case "audio-call":
           if (!contact.blocked) {
-            navigator.mozLoop.startDirectCall(contact, CALL_TYPES.AUDIO_ONLY);
+            navigator.mozLoop.calls.startDirectCall(contact, CALL_TYPES.AUDIO_ONLY);
           }
           break;
         default:

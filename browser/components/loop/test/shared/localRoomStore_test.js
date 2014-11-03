@@ -59,10 +59,9 @@ describe("loop.store.LocalRoomStore", function () {
       });
 
       dispatcher.dispatch(new sharedActions.SetupWindowData({
-        windowData: {
-          type: "room",
-          localRoomId: fakeRoomId
-        }
+        windowId: "42",
+        type: "room",
+        localRoomId: fakeRoomId
       }));
     });
 
@@ -76,10 +75,9 @@ describe("loop.store.LocalRoomStore", function () {
         });
 
         dispatcher.dispatch(new sharedActions.SetupWindowData({
-          windowData: {
-            type: "room",
-            localRoomId: fakeRoomId
-          }
+          windowId: "42",
+          type: "room",
+          localRoomId: fakeRoomId
         }));
       });
 
@@ -93,10 +91,9 @@ describe("loop.store.LocalRoomStore", function () {
         });
 
         dispatcher.dispatch(new sharedActions.SetupWindowData({
-          windowData: {
-            type: "room",
-            localRoomId: fakeRoomId
-          }
+          windowId: "42",
+          type: "room",
+          localRoomId: fakeRoomId
         }));
       });
 
@@ -116,10 +113,9 @@ describe("loop.store.LocalRoomStore", function () {
         });
 
         dispatcher.dispatch(new sharedActions.SetupWindowData({
-          windowData: {
-            type: "room",
-            localRoomId: fakeRoomId
-          }
+          windowId: "42",
+          type: "room",
+          localRoomId: fakeRoomId
         }));
       });
 

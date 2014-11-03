@@ -116,6 +116,8 @@ let gFxAEnabled = true;
 let gFxAOAuthClientPromise = null;
 let gFxAOAuthClient = null;
 let gErrors = new Map();
+let gLastWindowId = 0;
+let gConversationWindowData = new Map();
 
 /**
  * Internal helper methods and state
@@ -693,15 +695,20 @@ let MozLoopServiceInternal = {
   /**
    * Opens the chat window
    *
-   * @param {Object} contentWindow The window to open the chat window in, may
-   *                               be null.
-   * @param {String} title The title of the chat window.
-   * @param {String} url The page to load in the chat window.
+   * @param {Object} conversationWindowData The data to be obtained by the
+   *                                        window when it opens.
+   * @returns {Number} The id of the window.
    */
-  openChatWindow: function(contentWindow, title, url) {
+  openChatWindow: function(conversationWindowData) {
     // So I guess the origin is the loop server!?
     let origin = this.loopServerUri;
-    url = url.spec || url;
+    let windowId = gLastWindowId++;
+    // Store the id as a string, as that's what we use elsewhere.
+    windowId = windowId.toString();
+
+    gConversationWindowData.set(windowId, conversationWindowData);
+
+    let url = "about:loopconversation#" + windowId;
 
     let callback = chatbox => {
       // We need to use DOMContentLoaded as otherwise the injection will happen
@@ -749,7 +756,8 @@ let MozLoopServiceInternal = {
       }.bind(this), true);
     };
 
-    Chat.open(contentWindow, origin, title, url, undefined, undefined, callback);
+    Chat.open(null, origin, "", url, undefined, undefined, callback);
+    return windowId;
   },
 
   /**
@@ -999,13 +1007,12 @@ this.MozLoopService = {
   /**
    * Opens the chat window
    *
-   * @param {Object} contentWindow The window to open the chat window in, may
-   *                               be null.
-   * @param {String} title The title of the chat window.
-   * @param {String} url The page to load in the chat window.
+   * @param {Object} conversationWindowData The data to be obtained by the
+   *                                        window when it opens.
+   * @returns {Number} The id of the window.
    */
-  openChatWindow: function(contentWindow, title, url) {
-    MozLoopServiceInternal.openChatWindow(contentWindow, title, url);
+  openChatWindow: function(conversationWindowData) {
+    return MozLoopServiceInternal.openChatWindow(conversationWindowData);
   },
 
   /**
@@ -1415,4 +1422,24 @@ this.MozLoopService = {
     return MozLoopServiceInternal.hawkRequest(sessionType, path, method, payloadObj).catch(
       error => {MozLoopServiceInternal._hawkRequestError(error);});
   },
+
+  /**
+   * Returns the window data for a specific conversation window id.
+   *
+   * This data will be relevant to the type of window, e.g. rooms or calls.
+   * See LoopRooms or LoopCalls for more information.
+   *
+   * @param {String} conversationWindowId
+   * @returns {Object} The window data or null if error.
+   */
+  getConversationWindowData: function(conversationWindowId) {
+    if (gConversationWindowData.has(conversationWindowId)) {
+      var conversationData = gConversationWindowData.get(conversationWindowId);
+      gConversationWindowData.delete(conversationWindowId);
+      return conversationData;
+    }
+
+    log.error("Window data was already fetched before. Possible race condition!");
+    return null;
+  }
 };

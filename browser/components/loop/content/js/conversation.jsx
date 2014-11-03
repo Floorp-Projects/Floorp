@@ -218,7 +218,9 @@ loop.conversation = (function(mozL10n) {
       client: React.PropTypes.instanceOf(loop.Client).isRequired,
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
-      sdk: React.PropTypes.object.isRequired
+      sdk: React.PropTypes.object.isRequired,
+      conversationAppStore: React.PropTypes.instanceOf(
+        loop.store.ConversationAppStore).isRequired
     },
 
     getInitialState: function() {
@@ -352,13 +354,9 @@ loop.conversation = (function(mozL10n) {
     setupIncomingCall: function() {
       navigator.mozLoop.startAlerting();
 
-      var callData = navigator.mozLoop.getCallData(this.props.conversation.get("windowId"));
-      if (!callData) {
-        // XXX Not the ideal response, but bug 1047410 will be replacing
-        // this by better "call failed" UI.
-        console.error("Failed to get the call data");
-        return;
-      }
+      // XXX This is a hack until we rework for the flux model in bug 1088672.
+      var callData = this.props.conversationAppStore.getStoreState().windowData;
+
       this.props.conversation.setIncomingSessionData(callData);
       this._setupWebSocket();
     },
@@ -374,7 +372,8 @@ loop.conversation = (function(mozL10n) {
      * Moves the call to the end state
      */
     endCall: function() {
-      navigator.mozLoop.releaseCallData(this.props.conversation.get("windowId"));
+      navigator.mozLoop.calls.clearCallInProgress(
+        this.props.conversation.get("windowId"));
       this.setState({callStatus: "end"});
     },
 
@@ -475,7 +474,8 @@ loop.conversation = (function(mozL10n) {
      */
     _declineCall: function() {
       this._websocket.decline();
-      navigator.mozLoop.releaseCallData(this.props.conversation.get("windowId"));
+      navigator.mozLoop.calls.clearCallInProgress(
+        this.props.conversation.get("windowId"));
       this._websocket.close();
       // Having a timeout here lets the logging for the websocket complete and be
       // displayed on the console if both are on.
@@ -568,6 +568,7 @@ loop.conversation = (function(mozL10n) {
             client={this.props.client}
             conversation={this.props.conversation}
             sdk={this.props.sdk}
+            conversationAppStore={this.props.conversationAppStore}
           />);
         }
         case "outgoing": {
@@ -584,7 +585,7 @@ loop.conversation = (function(mozL10n) {
         }
         case "failed": {
           return (<GenericFailureView
-            cancelCall={this.closeWindow.bind(this)}
+            cancelCall={this.closeWindow}
           />);
         }
         default: {
@@ -659,7 +660,7 @@ loop.conversation = (function(mozL10n) {
 
     window.addEventListener("unload", function(event) {
       // Handle direct close of dialog box via [x] control.
-      navigator.mozLoop.releaseCallData(windowId);
+      navigator.mozLoop.calls.clearCallInProgress(windowId);
     });
 
     React.renderComponent(<AppControllerView

@@ -66,7 +66,7 @@ loop.store.ConversationAppStore = (function() {
       if (this._mozLoop.getLoopBoolPref("test.alwaysUseRooms")) {
         windowData = {type: "room", localRoomId: "42"};
       } else {
-        windowData = this._mozLoop.getCallData(actionData.windowId);
+        windowData = this._mozLoop.getConversationWindowData(actionData.windowId);
       }
 
       if (!windowData) {
@@ -75,11 +75,15 @@ loop.store.ConversationAppStore = (function() {
         return;
       }
 
-      this.setStoreState({windowType: windowData.type});
-
-      this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData({
+      // XXX windowData is a hack for the IncomingConversationView until
+      // we rework it for the flux model in bug 1088672.
+      this.setStoreState({
+        windowType: windowData.type,
         windowData: windowData
-      }));
+      });
+
+      this._dispatcher.dispatch(new loop.shared.actions.SetupWindowData(_.extend({
+        windowId: actionData.windowId}, windowData)));
     }
   }, Backbone.Events);
 
