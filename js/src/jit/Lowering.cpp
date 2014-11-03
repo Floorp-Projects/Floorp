@@ -176,6 +176,13 @@ LIRGenerator::visitNewObject(MNewObject *ins)
 }
 
 bool
+LIRGenerator::visitNewTypedObject(MNewTypedObject *ins)
+{
+    LNewTypedObject *lir = new(alloc()) LNewTypedObject(temp());
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject *ins)
 {
     LNewDeclEnvObject *lir = new(alloc()) LNewDeclEnvObject(temp());
