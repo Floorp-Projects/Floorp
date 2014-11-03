@@ -855,6 +855,16 @@ LIRGenerator::visitTest(MTest *test)
         }
     }
 
+    if (opd->isIsObject() && opd->isEmittedAtUses()) {
+        MDefinition *input = opd->toIsObject()->input();
+        MOZ_ASSERT(input->type() == MIRType_Value);
+
+        LIsObjectAndBranch *lir = new(alloc()) LIsObjectAndBranch(ifTrue, ifFalse);
+        if (!useBoxAtStart(lir, LIsObjectAndBranch::Input, input))
+            return false;
+        return add(lir, test);
+    }
+
     if (opd->isIsNoIter()) {
         MOZ_ASSERT(opd->isEmittedAtUses());
 
@@ -3555,9 +3565,33 @@ LIRGenerator::visitIsCallable(MIsCallable *ins)
     return define(new(alloc()) LIsCallable(useRegister(ins->object())), ins);
 }
 
+static bool
+CanEmitIsObjectAtUses(MInstruction *ins)
+{
+    if (!ins->canEmitAtUses())
+        return false;
+
+    MUseIterator iter(ins->usesBegin());
+    if (iter == ins->usesEnd())
+        return false;
+
+    MNode *node = iter->consumer();
+    if (!node->isDefinition())
+        return false;
+
+    if (!node->toDefinition()->isTest())
+        return false;
+
+    iter++;
+    return iter == ins->usesEnd();
+}
+
 bool
 LIRGenerator::visitIsObject(MIsObject *ins)
 {
+    if (CanEmitIsObjectAtUses(ins))
+        return emitAtUses(ins);
+
     MDefinition *opd = ins->input();
     MOZ_ASSERT(opd->type() == MIRType_Value);
     LIsObject *lir = new(alloc()) LIsObject();
