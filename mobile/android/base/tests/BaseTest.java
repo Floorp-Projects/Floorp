@@ -326,25 +326,27 @@ abstract class BaseTest extends BaseRobocopTest {
         return result;
     }
 
-    // TODO: With Robotium 4.2, we should use Condition and waitForCondition instead.
-    // Future boolean tests should not use this method.
-    protected final boolean waitForTest(BooleanTest t, int timeout) {
-        long end = SystemClock.uptimeMillis() + timeout;
-        while (SystemClock.uptimeMillis() < end) {
-            if (t.test()) {
-                return true;
+    /**
+     * @deprecated use {@link #waitForCondition(Condition, int)} instead
+     */
+    @Deprecated
+    protected final boolean waitForTest(final BooleanTest t, final int timeout) {
+        final boolean isSatisfied = mSolo.waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                return t.test();
             }
-            mSolo.sleep(100);
+        }, timeout);
+
+        if (!isSatisfied) {
+            // log out wait failure for diagnostic purposes only;
+            // a failed wait may be normal and does not necessarily
+            // warrant a test assertion/failure
+            mAsserter.dumpLog("waitForTest timeout after " + timeout + " ms");
         }
-        // log out wait failure for diagnostic purposes only;
-        // a failed wait may be normal and does not necessarily
-        // warrant a test assertion/failure
-        mAsserter.dumpLog("waitForTest timeout after "+timeout+" ms");
-        return false;
+        return isSatisfied;
     }
 
-    // TODO: With Robotium 4.2, we should use Condition and waitForCondition instead.
-    // Future boolean tests should not implement this interface.
     protected interface BooleanTest {
         public boolean test();
     }
