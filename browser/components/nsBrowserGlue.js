@@ -502,9 +502,6 @@ BrowserGlue.prototype = {
 #endif
     os.addObserver(this, "browser-search-engine-modified", false);
     os.addObserver(this, "browser-search-service", false);
-#ifdef NIGHTLY_BUILD
-    Services.prefs.addObserver(POLARIS_ENABLED, this, false);
-#endif
   },
 
   // cleanup (called on application shutdown)
@@ -600,6 +597,10 @@ BrowserGlue.prototype = {
     ContentPrefServiceParent.init();
 
     LoginManagerParent.init();
+
+#ifdef NIGHTLY_BUILD
+    Services.prefs.addObserver(POLARIS_ENABLED, this, false);
+#endif
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },
