@@ -4452,31 +4452,6 @@ CodeGenerator::visitOutOfLineNewObject(OutOfLineNewObject *ool)
     return true;
 }
 
-typedef InlineTypedObject *(*NewTypedObjectFn)(JSContext *, Handle<InlineTypedObject *>, gc::InitialHeap);
-static const VMFunction NewTypedObjectInfo =
-    FunctionInfo<NewTypedObjectFn>(InlineTypedObject::createCopy);
-
-bool
-CodeGenerator::visitNewTypedObject(LNewTypedObject *lir)
-{
-    Register object = ToRegister(lir->output());
-    Register temp = ToRegister(lir->temp());
-    InlineTypedObject *templateObject = lir->mir()->templateObject();
-    gc::InitialHeap initialHeap = lir->mir()->initialHeap();
-
-    OutOfLineCode *ool = oolCallVM(NewTypedObjectInfo, lir,
-                                   (ArgList(), ImmGCPtr(templateObject), Imm32(initialHeap)),
-                                   StoreRegisterTo(object));
-    if (!ool)
-        return false;
-
-    gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();
-    masm.createGCObject(object, temp, templateObject, initialHeap, ool->entry());
-
-    masm.bind(ool->rejoin());
-    return true;
-}
-
 typedef js::DeclEnvObject *(*NewDeclEnvObjectFn)(JSContext *, HandleFunction, gc::InitialHeap);
 static const VMFunction NewDeclEnvObjectInfo =
     FunctionInfo<NewDeclEnvObjectFn>(DeclEnvObject::createTemplateObject);

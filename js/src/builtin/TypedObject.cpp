@@ -535,7 +535,7 @@ const Class SizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    TypedObject::constructSized,
+    OutlineTypedObject::constructSized,
     nullptr
 };
 
@@ -641,7 +641,7 @@ ArrayMetaTypeDescr::create(JSContext *cx,
                            int32_t size)
 {
     Rooted<T*> obj(cx);
-    obj = NewObjectWithProto<T>(cx, arrayTypePrototype, nullptr, SingletonObject);
+    obj = NewObjectWithProto<T>(cx, arrayTypePrototype, nullptr, TenuredObject);
     if (!obj)
         return nullptr;
 
@@ -832,7 +832,7 @@ const Class StructTypeDescr::class_ = {
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
-    TypedObject::constructSized,
+    OutlineTypedObject::constructSized,
     nullptr  /* trace */
 };
 
@@ -1011,7 +1011,7 @@ StructMetaTypeDescr::create(JSContext *cx,
 
     Rooted<StructTypeDescr*> descr(cx);
     descr = NewObjectWithProto<StructTypeDescr>(cx, structTypePrototype, nullptr,
-                                                SingletonObject);
+                                                TenuredObject);
     if (!descr)
         return nullptr;
 
@@ -1251,7 +1251,7 @@ DefineSimpleTypeDescr(JSContext *cx,
         return false;
 
     Rooted<T*> descr(cx);
-    descr = NewObjectWithProto<T>(cx, funcProto, global, SingletonObject);
+    descr = NewObjectWithProto<T>(cx, funcProto, global, TenuredObject);
     if (!descr)
         return false;
 
@@ -1562,13 +1562,12 @@ TypedObject::GetByteOffset(JSContext *cx, unsigned argc, Value *vp)
 /*static*/ OutlineTypedObject *
 OutlineTypedObject::createUnattached(JSContext *cx,
                                      HandleTypeDescr descr,
-                                     int32_t length,
-                                     gc::InitialHeap heap)
+                                     int32_t length)
 {
     if (descr->opaque())
-        return createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, length, heap);
+        return createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, length);
     else
-        return createUnattachedWithClass(cx, &OutlineTransparentTypedObject::class_, descr, length, heap);
+        return createUnattachedWithClass(cx, &OutlineTransparentTypedObject::class_, descr, length);
 }
 
 static JSObject *
@@ -1607,8 +1606,7 @@ OutlineTypedObject::setOwnerAndData(JSObject *owner, uint8_t *data)
 OutlineTypedObject::createUnattachedWithClass(JSContext *cx,
                                               const Class *clasp,
                                               HandleTypeDescr type,
-                                              int32_t length,
-                                              gc::InitialHeap heap)
+                                              int32_t length)
 {
     MOZ_ASSERT(clasp == &OutlineTransparentTypedObject::class_ ||
                clasp == &OutlineOpaqueTypedObject::class_);
@@ -1618,8 +1616,7 @@ OutlineTypedObject::createUnattachedWithClass(JSContext *cx,
         return nullptr;
 
     gc::AllocKind allocKind = allocKindForTypeDescriptor(type);
-    NewObjectKind newKind = (heap == gc::TenuredHeap) ? MaybeSingletonObject : GenericObject;
-    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, nullptr, allocKind, newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, nullptr, allocKind);
     if (!obj)
         return nullptr;
 
@@ -1710,19 +1707,19 @@ OutlineTypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
 }
 
 /*static*/ TypedObject *
-TypedObject::createZeroed(JSContext *cx, HandleTypeDescr descr, int32_t length, gc::InitialHeap heap)
+TypedObject::createZeroed(JSContext *cx, HandleTypeDescr descr, int32_t length)
 {
     // If possible, create an object with inline data.
     if (descr->is<SizedTypeDescr>() &&
         (size_t) descr->as<SizedTypeDescr>().size() <= InlineTypedObject::MaximumSize)
     {
-        InlineTypedObject *obj = InlineTypedObject::create(cx, descr, heap);
+        InlineTypedObject *obj = InlineTypedObject::create(cx, descr);
         descr->as<SizedTypeDescr>().initInstances(cx->runtime(), obj->inlineTypedMem(), 1);
         return obj;
     }
 
     // Create unattached wrapper object.
-    Rooted<OutlineTypedObject*> obj(cx, OutlineTypedObject::createUnattached(cx, descr, length, heap));
+    Rooted<OutlineTypedObject*> obj(cx, OutlineTypedObject::createUnattached(cx, descr, length));
     if (!obj)
         return nullptr;
 
@@ -2376,7 +2373,7 @@ OutlineTypedObject::neuter(void *newData)
  */
 
 /* static */ InlineTypedObject *
-InlineTypedObject::create(JSContext *cx, HandleTypeDescr descr, gc::InitialHeap heap)
+InlineTypedObject::create(JSContext *cx, HandleTypeDescr descr)
 {
     gc::AllocKind allocKind = allocKindForTypeDescriptor(descr);
 
@@ -2388,25 +2385,11 @@ InlineTypedObject::create(JSContext *cx, HandleTypeDescr descr, gc::InitialHeap 
                          ? &InlineOpaqueTypedObject::class_
                          : &InlineTransparentTypedObject::class_;
 
-    NewObjectKind newKind = (heap == gc::TenuredHeap) ? MaybeSingletonObject : GenericObject;
-    RootedObject obj(cx, NewObjectWithClassProto(cx, clasp, proto, nullptr, allocKind, newKind));
+    RootedObject obj(cx, NewObjectWithClassProto(cx, clasp, proto, nullptr, allocKind));
     if (!obj)
         return nullptr;
 
     return &obj->as<InlineTypedObject>();
-}
-
-/* static */ InlineTypedObject *
-InlineTypedObject::createCopy(JSContext *cx, Handle<InlineTypedObject *> templateObject,
-                              gc::InitialHeap heap)
-{
-    Rooted<TypeDescr *> descr(cx, &templateObject->typeDescr());
-    InlineTypedObject *res = create(cx, descr, heap);
-    if (!res)
-        return nullptr;
-
-    memcpy(res->inlineTypedMem(), templateObject->inlineTypedMem(), templateObject->size());
-    return res;
 }
 
 /* static */ void

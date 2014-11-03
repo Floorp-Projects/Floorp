@@ -730,24 +730,6 @@ class LNewObject : public LInstructionHelper<1, 0, 1>
     }
 };
 
-class LNewTypedObject : public LInstructionHelper<1, 0, 1>
-{
-  public:
-    LIR_HEADER(NewTypedObject)
-
-    explicit LNewTypedObject(const LDefinition &temp) {
-        setTemp(0, temp);
-    }
-
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
-
-    MNewTypedObject *mir() const {
-        return mir_->toNewTypedObject();
-    }
-};
-
 class LNewPar : public LInstructionHelper<1, 1, 2>
 {
   public:

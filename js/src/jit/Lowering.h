@@ -73,7 +73,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitNewArray(MNewArray *ins);
     bool visitNewArrayCopyOnWrite(MNewArrayCopyOnWrite *ins);
     bool visitNewObject(MNewObject *ins);
-    bool visitNewTypedObject(MNewTypedObject *ins);
     bool visitNewDeclEnvObject(MNewDeclEnvObject *ins);
     bool visitNewCallObject(MNewCallObject *ins);
     bool visitNewRunOnceCallObject(MNewRunOnceCallObject *ins);
