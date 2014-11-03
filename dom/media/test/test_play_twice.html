@@ -14,51 +14,67 @@ var manager = new MediaTestManager;
 
 function startTest(test, token) {
   var v = document.createElement('video');
-  v.preload = "metadata";
   v.token = token;
   manager.started(token);
   v.src = test.name;
   v.name = test.name;
   v.playingCount = 0;
+  v._playedOnce = false;
+
   var check = function(test, v) { return function() {
     checkMetadata(test.name, v, test);
   }}(test, v);
+
   var noLoad = function(test, v) { return function() {
     ok(false, test.name + " should not fire 'load' event");
   }}(test, v);
+
+  function finish(v) {
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
+
+  function mayFinish(v) {
+    if (v.seenEnded && v.seenSuspend) {
+      finish(v);
+    }
+  }
+
   var checkEnded = function(test, v) { return function() {
     if (test.duration) {
       ok(Math.abs(v.currentTime - test.duration) < 0.1,
          test.name + " current time at end: " + v.currentTime);
     }
+
     is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
-    ok(v.readyState != v.NETWORK_LOADED, test.name + " shouldn't report NETWORK_LOADED");
     ok(v.ended, test.name + " checking playback has ended");
     ok(v.playingCount > 0, "Expect at least one playing event");
     v.playingCount = 0;
-    if (v._playedOnce && v.seenSuspend) {
-      v.parentNode.removeChild(v);
-      manager.finished(v.token);
+
+    if (v._playedOnce) {
+      v.seenEnded = true;
+      mayFinish(v);
     } else {
       v._playedOnce = true;
       v.play();
     }
   }}(test, v);
+
   var checkSuspended = function(test, v) { return function() {
-    if (v.seenSuspend)
+    if (v.seenSuspend) {
       return;
+    }
 
     v.seenSuspend = true;
     ok(true, test.name + " got suspend");
-    if (v._playedOnce && v.seenSuspend) {
-      v.parentNode.removeChild(v);
-      manager.finished(v.token);
-    }
+    mayFinish(v);
   }}(test, v);
+
   var checkPlaying = function(test, v) { return function() {
     is(test.name, v.name, "Should be testing file we think we're testing...");
     v.playingCount++;
   }}(test, v);
+
   v.addEventListener("load", noLoad, false);
   v.addEventListener("loadedmetadata", check, false);
   v.addEventListener("playing", checkPlaying, false);
@@ -66,7 +82,7 @@ function startTest(test, token) {
   // We should get "ended" and "suspend" events for every resource
   v.addEventListener("ended", checkEnded, false);
   v.addEventListener("suspend", checkSuspended, false);
-  
+
   document.body.appendChild(v);
   v.play();
 }
