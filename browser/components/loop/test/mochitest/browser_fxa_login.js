@@ -418,21 +418,21 @@ add_task(function* openFxASettings() {
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
-  let deferredTab = Promise.defer();
-  let progressListener = {
-    onLocationChange: function onLocationChange(aBrowser) {
-      gBrowser.removeTabsProgressListener(progressListener);
-      let contentURI = Services.io.newURI(params.content_uri, null, null);
-      is(aBrowser.currentURI.spec, Services.io.newURI("/settings", null, contentURI).spec,
-         "Check settings tab URL");
-      deferredTab.resolve();
-    },
-  };
-  gBrowser.addTabsProgressListener(progressListener);
+  yield new Promise((resolve, reject) => {
+    let progressListener = {
+      onLocationChange: function onLocationChange(aBrowser) {
+        gBrowser.removeTabsProgressListener(progressListener);
+        let contentURI = Services.io.newURI(params.content_uri, null, null);
+        is(aBrowser.currentURI.spec, Services.io.newURI("/settings", null, contentURI).spec,
+           "Check settings tab URL");
+        resolve();
+      },
+    };
+    gBrowser.addTabsProgressListener(progressListener);
 
-  MozLoopService.openFxASettings();
+    MozLoopService.openFxASettings();
+  });
 
-  yield deferredTab.promise;
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeTab(gBrowser.tabs[1]);
   }
