@@ -27,6 +27,8 @@ public:
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 
+  void BindRenderTarget();
+
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
   {
     return mDrawTarget ? mDrawTarget->GetFormat()
@@ -73,6 +75,7 @@ public:
   virtual void SetRenderTarget(CompositingRenderTarget *aSource) MOZ_OVERRIDE
   {
     mRenderTarget = static_cast<BasicCompositingRenderTarget*>(aSource);
+    mRenderTarget->BindRenderTarget();
   }
   virtual CompositingRenderTarget* GetCurrentRenderTarget() const MOZ_OVERRIDE
   {
