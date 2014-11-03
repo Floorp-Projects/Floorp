@@ -152,7 +152,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     futexAPI_(nullptr),
     ownerThread_(nullptr),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    freeLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(nullptr),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
