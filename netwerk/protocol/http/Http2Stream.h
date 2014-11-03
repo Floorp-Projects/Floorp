@@ -10,6 +10,8 @@
 #include "nsAHttpTransaction.h"
 #include "nsISupportsPriority.h"
 
+class nsStandardURL;
+
 namespace mozilla {
 namespace net {
 
@@ -132,6 +134,13 @@ public:
   virtual ~Http2Stream();
 
   Http2Session *Session() { return mSession; }
+
+  static nsresult MakeOriginURL(const nsACString &origin,
+                                nsRefPtr<nsStandardURL> &url);
+
+  static nsresult MakeOriginURL(const nsACString &scheme,
+                                const nsACString &origin,
+                                nsRefPtr<nsStandardURL> &url);
 
 protected:
   static void CreatePushHashKey(const nsCString &scheme,
