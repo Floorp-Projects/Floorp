@@ -305,6 +305,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIsCallable(LIsCallable *lir);
     bool visitOutOfLineIsCallable(OutOfLineIsCallable *ool);
     bool visitIsObject(LIsObject *lir);
+    bool visitIsObjectAndBranch(LIsObjectAndBranch *lir);
     bool visitHaveSameClass(LHaveSameClass *lir);
     bool visitHasClass(LHasClass *lir);
     bool visitAsmJSParameter(LAsmJSParameter *lir);
