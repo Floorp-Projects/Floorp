@@ -22,31 +22,30 @@ describe("loop.Dispatcher", function () {
     it("should register a store against an action name", function() {
       var object = { fake: true };
 
-      dispatcher.register(object, ["gatherCallData"]);
+      dispatcher.register(object, ["getWindowData"]);
 
-      expect(dispatcher._eventData["gatherCallData"][0]).eql(object);
+      expect(dispatcher._eventData["getWindowData"][0]).eql(object);
     });
 
     it("should register multiple store against an action name", function() {
       var object1 = { fake: true };
       var object2 = { fake2: true };
 
-      dispatcher.register(object1, ["gatherCallData"]);
-      dispatcher.register(object2, ["gatherCallData"]);
+      dispatcher.register(object1, ["getWindowData"]);
+      dispatcher.register(object2, ["getWindowData"]);
 
-      expect(dispatcher._eventData["gatherCallData"][0]).eql(object1);
-      expect(dispatcher._eventData["gatherCallData"][1]).eql(object2);
+      expect(dispatcher._eventData["getWindowData"][0]).eql(object1);
+      expect(dispatcher._eventData["getWindowData"][1]).eql(object2);
     });
   });
 
   describe("#dispatch", function() {
-    var gatherStore1, gatherStore2, cancelStore1, connectStore1;
-    var gatherAction, cancelAction, connectAction, resolveCancelStore1;
+    var getDataStore1, getDataStore2, cancelStore1, connectStore1;
+    var getDataAction, cancelAction, connectAction, resolveCancelStore1;
 
     beforeEach(function() {
-      gatherAction = new sharedActions.GatherCallData({
-        windowId: "42",
-        outgoing: false
+      getDataAction = new sharedActions.GetWindowData({
+        windowId: "42"
       });
 
       cancelAction = new sharedActions.CancelCall();
@@ -54,11 +53,11 @@ describe("loop.Dispatcher", function () {
         sessionData: {}
       });
 
-      gatherStore1 = {
-        gatherCallData: sinon.stub()
+      getDataStore1 = {
+        getWindowData: sinon.stub()
       };
-      gatherStore2 = {
-        gatherCallData: sinon.stub()
+      getDataStore2 = {
+        getWindowData: sinon.stub()
       };
       cancelStore1 = {
         cancelCall: sinon.stub()
@@ -67,8 +66,8 @@ describe("loop.Dispatcher", function () {
         connectCall: function() {}
       };
 
-      dispatcher.register(gatherStore1, ["gatherCallData"]);
-      dispatcher.register(gatherStore2, ["gatherCallData"]);
+      dispatcher.register(getDataStore1, ["getWindowData"]);
+      dispatcher.register(getDataStore2, ["getWindowData"]);
       dispatcher.register(cancelStore1, ["cancelCall"]);
       dispatcher.register(connectStore1, ["connectCall"]);
     });
@@ -76,33 +75,33 @@ describe("loop.Dispatcher", function () {
     it("should dispatch an action to the required object", function() {
       dispatcher.dispatch(cancelAction);
 
-      sinon.assert.notCalled(gatherStore1.gatherCallData);
+      sinon.assert.notCalled(getDataStore1.getWindowData);
 
       sinon.assert.calledOnce(cancelStore1.cancelCall);
       sinon.assert.calledWithExactly(cancelStore1.cancelCall, cancelAction);
 
-      sinon.assert.notCalled(gatherStore2.gatherCallData);
+      sinon.assert.notCalled(getDataStore2.getWindowData);
     });
 
     it("should dispatch actions to multiple objects", function() {
-      dispatcher.dispatch(gatherAction);
+      dispatcher.dispatch(getDataAction);
 
-      sinon.assert.calledOnce(gatherStore1.gatherCallData);
-      sinon.assert.calledWithExactly(gatherStore1.gatherCallData, gatherAction);
+      sinon.assert.calledOnce(getDataStore1.getWindowData);
+      sinon.assert.calledWithExactly(getDataStore1.getWindowData, getDataAction);
 
       sinon.assert.notCalled(cancelStore1.cancelCall);
 
-      sinon.assert.calledOnce(gatherStore2.gatherCallData);
-      sinon.assert.calledWithExactly(gatherStore2.gatherCallData, gatherAction);
+      sinon.assert.calledOnce(getDataStore2.getWindowData);
+      sinon.assert.calledWithExactly(getDataStore2.getWindowData, getDataAction);
     });
 
     it("should dispatch multiple actions", function() {
       dispatcher.dispatch(cancelAction);
-      dispatcher.dispatch(gatherAction);
+      dispatcher.dispatch(getDataAction);
 
       sinon.assert.calledOnce(cancelStore1.cancelCall);
-      sinon.assert.calledOnce(gatherStore1.gatherCallData);
-      sinon.assert.calledOnce(gatherStore2.gatherCallData);
+      sinon.assert.calledOnce(getDataStore1.getWindowData);
+      sinon.assert.calledOnce(getDataStore2.getWindowData);
     });
 
     describe("Queued actions", function() {
@@ -110,10 +109,10 @@ describe("loop.Dispatcher", function () {
         // Restore the stub, so that we can easily add a function to be
         // returned. Unfortunately, sinon doesn't make this easy.
         sandbox.stub(connectStore1, "connectCall", function() {
-          dispatcher.dispatch(gatherAction);
+          dispatcher.dispatch(getDataAction);
 
-          sinon.assert.notCalled(gatherStore1.gatherCallData);
-          sinon.assert.notCalled(gatherStore2.gatherCallData);
+          sinon.assert.notCalled(getDataStore1.getWindowData);
+          sinon.assert.notCalled(getDataStore2.getWindowData);
         });
       });
 
@@ -132,8 +131,8 @@ describe("loop.Dispatcher", function () {
 
         sinon.assert.calledOnce(connectStore1.connectCall);
         // These should be called, because the dispatcher synchronously queues actions.
-        sinon.assert.calledOnce(gatherStore1.gatherCallData);
-        sinon.assert.calledOnce(gatherStore2.gatherCallData);
+        sinon.assert.calledOnce(getDataStore1.getWindowData);
+        sinon.assert.calledOnce(getDataStore2.getWindowData);
       });
     });
   });

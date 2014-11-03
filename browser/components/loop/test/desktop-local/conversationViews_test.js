@@ -438,10 +438,10 @@ describe("loop.conversationViews", function () {
           loop.conversationViews.CallFailedView);
     });
 
-    it("should render the PendingConversationView when the call state is 'init'",
+    it("should render the PendingConversationView when the call state is 'gather'",
       function() {
         store.set({
-          callState: CALL_STATES.INIT,
+          callState: CALL_STATES.GATHER,
           contact: contact
         });
 
@@ -474,7 +474,7 @@ describe("loop.conversationViews", function () {
     it("should update the rendered views when the state is changed.",
       function() {
         store.set({
-          callState: CALL_STATES.INIT,
+          callState: CALL_STATES.GATHER,
           contact: contact
         });
 

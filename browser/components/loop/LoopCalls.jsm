@@ -252,7 +252,8 @@ let LoopCallsInternal = {
             callData.sessionType = sessionType;
             // XXX Bug 1090209 will transiton into a better window id.
             callData.windowId = callData.callId;
-            this._startCall(callData, "incoming");
+            callData.type = "incoming";
+            this._startCall(callData);
           } else {
             this._returnBusy(callData);
           }
@@ -269,17 +270,17 @@ let LoopCallsInternal = {
    * Starts a call, saves the call data, and opens a chat window.
    *
    * @param {Object} callData The data associated with the call including an id.
-   * @param {Boolean} conversationType Whether or not the call is "incoming"
-   *                                   or "outgoing"
+   *                          The data should include the type - "incoming" or
+   *                          "outgoing".
    */
-  _startCall: function(callData, conversationType) {
+  _startCall: function(callData) {
     this.callsData.inUse = true;
     this.callsData.data = callData;
     MozLoopService.openChatWindow(
       null,
       // No title, let the page set that, to avoid flickering.
       "",
-      "about:loopconversation#" + conversationType + "/" + callData.windowId);
+      "about:loopconversation#" + callData.windowId);
   },
 
   /**
@@ -296,10 +297,11 @@ let LoopCallsInternal = {
     var callData = {
       contact: contact,
       callType: callType,
+      type: "outgoing",
       windowId: Math.floor((Math.random() * 100000000))
     };
 
-    this._startCall(callData, "outgoing");
+    this._startCall(callData);
     return true;
   },
 

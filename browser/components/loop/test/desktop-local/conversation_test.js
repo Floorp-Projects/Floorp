@@ -80,7 +80,7 @@ describe("loop.conversation", function() {
 
       sandbox.stub(loop.shared.utils.Helper.prototype,
         "locationData").returns({
-          hash: "#incoming/42",
+          hash: "#42",
           pathname: "/"
         });
 
@@ -112,86 +112,30 @@ describe("loop.conversation", function() {
       }));
     });
 
-    describe("when locationHash begins with #room", function () {
-      // XXX must stay in sync with "test.alwaysUseRooms" pref check
-      // in conversation.jsx:init until we remove that code, which should
-      // happen in the second patch in bug 1074686, at which time this comment
-      // can go away as well.
-      var fakeRoomID = "32";
-
-      beforeEach(function() {
-        loop.shared.utils.Helper.prototype.locationData
-          .returns({
-            hash: "#room/" + fakeRoomID,
-            pathname: ""
-          });
-
-        sandbox.stub(loop.store, "LocalRoomStore");
-      });
-
-      it("should create a localRoomStore", function() {
-        loop.conversation.init();
-
-        sinon.assert.calledOnce(loop.store.LocalRoomStore);
-        sinon.assert.calledWithNew(loop.store.LocalRoomStore);
-        sinon.assert.calledWithExactly(loop.store.LocalRoomStore,
-          sinon.match({
-            dispatcher: sinon.match.instanceOf(loop.Dispatcher),
-            mozLoop: sinon.match.same(navigator.mozLoop)
-          }));
-      });
-
-      it("should dispatch SetupEmptyRoom with localRoomId from locationHash",
-        function() {
-
-          loop.conversation.init();
-
-          sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
-          sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
-            new loop.shared.actions.SetupEmptyRoom({localRoomId: fakeRoomID}));
-        });
-    });
-
-    it("should trigger a gatherCallData action", function() {
+    it("should trigger a getWindowData action", function() {
       loop.conversation.init();
 
       sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
       sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
-        new loop.shared.actions.GatherCallData({
-          windowId: "42",
-          outgoing: false
+        new loop.shared.actions.GetWindowData({
+          windowId: "42"
         }));
     });
-
-    it("should trigger an outgoing gatherCallData action for outgoing calls",
-      function() {
-        loop.shared.utils.Helper.prototype.locationData.returns({
-          hash: "#outgoing/24",
-          pathname: "/"
-        });
-
-        loop.conversation.init();
-
-        sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
-        sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
-          new loop.shared.actions.GatherCallData({
-            windowId: "24",
-            outgoing: true
-          }));
-      });
   });
 
-  describe("ConversationControllerView", function() {
-    var store, conversation, client, ccView, oldTitle, dispatcher;
+  describe("AppControllerView", function() {
+    var conversationStore, conversation, client, ccView, oldTitle, dispatcher;
+    var conversationAppStore, localRoomStore;
 
-    function mountTestComponent(localRoomStore) {
+    function mountTestComponent() {
       return TestUtils.renderIntoDocument(
         loop.conversation.AppControllerView({
           client: client,
           conversation: conversation,
           localRoomStore: localRoomStore,
           sdk: {},
-          store: store
+          conversationStore: conversationStore,
+          conversationAppStore: conversationAppStore
         }));
     }
 
@@ -202,7 +146,7 @@ describe("loop.conversation", function() {
         sdk: {}
       });
       dispatcher = new loop.Dispatcher();
-      store = new loop.store.ConversationStore({
+      conversationStore = new loop.store.ConversationStore({
         contact: {
           name: [ "Mr Smith" ],
           email: [{
@@ -216,6 +160,14 @@ describe("loop.conversation", function() {
         dispatcher: dispatcher,
         sdkDriver: {}
       });
+      localRoomStore = new loop.store.LocalRoomStore({
+        mozLoop: navigator.mozLoop,
+        dispatcher: dispatcher
+      });
+      conversationAppStore = new loop.store.ConversationAppStore({
+        dispatcher: dispatcher,
+        mozLoop: navigator.mozLoop
+      });
     });
 
     afterEach(function() {
@@ -224,7 +176,7 @@ describe("loop.conversation", function() {
     });
 
     it("should display the OutgoingConversationView for outgoing calls", function() {
-      store.set({outgoing: true});
+      conversationAppStore.setStoreState({windowType: "outgoing"});
 
       ccView = mountTestComponent();
 
@@ -233,7 +185,7 @@ describe("loop.conversation", function() {
     });
 
     it("should display the IncomingConversationView for incoming calls", function() {
-      store.set({outgoing: false});
+      conversationAppStore.setStoreState({windowType: "incoming"});
 
       ccView = mountTestComponent();
 
@@ -242,19 +194,21 @@ describe("loop.conversation", function() {
     });
 
     it("should display the EmptyRoomView for rooms", function() {
-      navigator.mozLoop.rooms = {
-        addCallback: function() {},
-        removeCallback: function() {}
-      };
-      var localRoomStore = new loop.store.LocalRoomStore({
-        mozLoop: navigator.mozLoop,
-        dispatcher: dispatcher
-      });
+      conversationAppStore.setStoreState({windowType: "room"});
 
-      ccView = mountTestComponent(localRoomStore);
+      ccView = mountTestComponent();
 
       TestUtils.findRenderedComponentWithType(ccView,
         loop.roomViews.EmptyRoomView);
+    });
+
+    it("should display the GenericFailureView for failures", function() {
+      conversationAppStore.setStoreState({windowType: "failed"});
+
+      ccView = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(ccView,
+        loop.conversation.GenericFailureView);
     });
   });
 
@@ -712,7 +666,7 @@ describe("loop.conversation", function() {
             conversation.trigger("session:network-disconnected");
 
               TestUtils.findRenderedComponentWithType(icView,
-                loop.conversation.IncomingCallFailedView);
+                loop.conversation.GenericFailureView);
           });
 
         it("should update the conversation window toolbar title",
