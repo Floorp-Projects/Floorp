@@ -212,17 +212,18 @@ LIRGeneratorShared::redefine(MDefinition *def, MDefinition *as)
           (def->type() == MIRType_Int32 || def->type() == MIRType_Boolean) &&
           (as->type() == MIRType_Int32 || as->type() == MIRType_Boolean))))
     {
-        MDefinition *replacement;
+        MInstruction *replacement;
         if (def->type() != as->type()) {
             Value v = as->toConstant()->value();
             if (as->type() == MIRType_Int32)
                 replacement = MConstant::New(alloc(), BooleanValue(v.toInt32()));
             else
                 replacement = MConstant::New(alloc(), Int32Value(v.toBoolean()));
+            def->block()->insertBefore(def->toInstruction(), replacement);
             if (!emitAtUses(replacement->toInstruction()))
                 return false;
         } else {
-            replacement = as;
+            replacement = as->toInstruction();
         }
         def->replaceAllUsesWith(replacement);
         return true;

@@ -6331,6 +6331,26 @@ class LIsObject : public LInstructionHelper<1, BOX_PIECES, 0>
     }
 };
 
+class LIsObjectAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(IsObjectAndBranch)
+
+    LIsObjectAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse) {
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    static const size_t Input = 0;
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
+    }
+};
+
 class LHaveSameClass : public LInstructionHelper<1, 2, 1>
 {
   public:

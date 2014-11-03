@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/TypeTraits.h"
+#include "Types.h"
 
 namespace mozilla {
 namespace gfx {
@@ -311,6 +312,33 @@ struct BaseRect {
   Point TopRight() const { return Point(XMost(), y); }
   Point BottomLeft() const { return Point(x, YMost()); }
   Point BottomRight() const { return Point(XMost(), YMost()); }
+  Point AtCorner(int aCorner) const {
+    switch (aCorner) {
+      case RectCorner::TopLeft: return TopLeft();
+      case RectCorner::TopRight: return TopRight();
+      case RectCorner::BottomRight: return BottomRight();
+      case RectCorner::BottomLeft: return BottomLeft();
+    }
+    MOZ_CRASH("Incomplete switch");
+  }
+  Point CCWCorner(mozilla::Side side) const {
+    switch (side) {
+      case NS_SIDE_TOP: return TopLeft();
+      case NS_SIDE_RIGHT: return TopRight();
+      case NS_SIDE_BOTTOM: return BottomRight();
+      case NS_SIDE_LEFT: return BottomLeft();
+    }
+    MOZ_CRASH("Incomplete switch");
+  }
+  Point CWCorner(mozilla::Side side) const {
+    switch (side) {
+      case NS_SIDE_TOP: return TopRight();
+      case NS_SIDE_RIGHT: return BottomRight();
+      case NS_SIDE_BOTTOM: return BottomLeft();
+      case NS_SIDE_LEFT: return TopLeft();
+    }
+    MOZ_CRASH("Incomplete switch");
+  }
   Point Center() const { return Point(x, y) + Point(width, height)/2; }
   SizeT Size() const { return SizeT(width, height); }
 

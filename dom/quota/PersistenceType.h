@@ -82,24 +82,14 @@ PersistenceTypeToStorage(PersistenceType aPersistenceType)
 }
 
 inline PersistenceType
-PersistenceTypeFromStorage(const Optional<mozilla::dom::StorageType>& aStorage)
+PersistenceTypeFromStorage(const Optional<mozilla::dom::StorageType>& aStorage,
+                           PersistenceType aDefaultPersistenceType)
 {
   if (aStorage.WasPassed()) {
     return PersistenceType(static_cast<int>(aStorage.Value()));
   }
 
-  return PERSISTENCE_TYPE_PERSISTENT;
-}
-
-inline PersistenceType
-ComplementaryPersistenceType(PersistenceType aPersistenceType)
-{
-  if (aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
-    return PERSISTENCE_TYPE_TEMPORARY;
-  }
-
-  MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_TEMPORARY);
-  return PERSISTENCE_TYPE_PERSISTENT;
+  return aDefaultPersistenceType;
 }
 
 END_QUOTA_NAMESPACE

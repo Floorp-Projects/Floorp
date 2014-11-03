@@ -169,7 +169,7 @@ CompositorD3D11::Initialize()
       return false;
     }
 
-    Vertex vertices[] = { {0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0} };
+    Vertex vertices[] = { {{0.0, 0.0}}, {{1.0, 0.0}}, {{0.0, 1.0}}, {{1.0, 1.0}} };
     CD3D11_BUFFER_DESC bufferDesc(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
     D3D11_SUBRESOURCE_DATA data;
     data.pSysMem = (void*)vertices;

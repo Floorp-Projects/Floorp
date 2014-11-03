@@ -224,7 +224,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         ImageLoader.with(getContext()).cancelRequest(mThumbnailView);
 
         mThumbnailView.setScaleType(SCALE_TYPE_THUMBNAIL);
-        mThumbnailView.setImageBitmap(thumbnail);
+        mThumbnailView.setImageBitmap(thumbnail, true);
         mThumbnailView.setBackgroundDrawable(null);
     }
 
@@ -279,7 +279,7 @@ public class TopSitesGridItemView extends RelativeLayout {
         }
 
         mThumbnailView.setScaleType(SCALE_TYPE_FAVICON);
-        mThumbnailView.setImageBitmap(favicon);
+        mThumbnailView.setImageBitmap(favicon, false);
 
         if (mFaviconURL != null) {
             final int bgColor = Favicons.getFaviconColor(mFaviconURL);

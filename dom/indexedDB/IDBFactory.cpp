@@ -483,7 +483,8 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
     persistenceType = PERSISTENCE_TYPE_PERSISTENT;
     persistenceTypeIsExplicit = false;
   } else {
-    persistenceType = PersistenceTypeFromStorage(aStorageType);
+    persistenceType =
+      PersistenceTypeFromStorage(aStorageType, PERSISTENCE_TYPE_PERSISTENT);
     persistenceTypeIsExplicit = aStorageType.WasPassed();
   }
 

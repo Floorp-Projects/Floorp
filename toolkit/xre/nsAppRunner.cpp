@@ -2357,15 +2357,25 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     // create a default profile
     nsCOMPtr<nsIToolkitProfile> profile;
     nsresult rv = aProfileSvc->CreateProfile(nullptr, // choose a default dir for us
+#ifdef MOZ_DEV_EDITION
+                                             NS_LITERAL_CSTRING("dev-edition-default"),
+#else
                                              NS_LITERAL_CSTRING("default"),
+#endif
                                              getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
+#ifndef MOZ_DEV_EDITION
       aProfileSvc->SetDefaultProfile(profile);
+#endif
       aProfileSvc->Flush();
       rv = profile->Lock(nullptr, aResult);
       if (NS_SUCCEEDED(rv)) {
         if (aProfileName)
+#ifdef MOZ_DEV_EDITION
+          aProfileName->AssignLiteral("dev-edition-default");
+#else
           aProfileName->AssignLiteral("default");
+#endif
         return NS_OK;
       }
     }
@@ -3527,6 +3537,9 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 
   if (PR_GetEnv("MOZ_RUN_GTEST")) {
     int result;
+#ifdef XP_WIN
+    UseParentConsole();
+#endif
     // RunGTest will only be set if we're in xul-unit
     if (mozilla::RunGTest) {
       result = mozilla::RunGTest();
@@ -4626,6 +4639,13 @@ mozilla::BrowserTabsRemoteAutostart()
     }
   }
 #endif
+
+  bool tpEnabled = Preferences::GetBool("privacy.trackingprotection.enabled",
+                                        false);
+  if (tpEnabled) {
+    gBrowserTabsRemoteAutostart = false;
+    LogE10sBlockedReason("Tracking protection is enabled");
+  }
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
   if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {

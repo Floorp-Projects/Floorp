@@ -52,7 +52,7 @@
         <org.mozilla.gecko.widget.ThumbnailView android:id="@+id/thumbnail"
                                                 android:layout_width="@dimen/new_tablet_tab_thumbnail_width"
                                                 android:layout_height="@dimen/new_tablet_tab_thumbnail_height"
-                                                android:src="@drawable/tab_thumbnail_default"/>
+                                                />
 
     </RelativeLayout>
 

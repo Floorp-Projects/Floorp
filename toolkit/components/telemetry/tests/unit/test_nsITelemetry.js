@@ -268,10 +268,10 @@ function test_addons() {
   var name1 = "testing-histogram1";
   var register = Telemetry.registerAddonHistogram;
   expect_success(function ()
-                 register(addon_id, name1, 1, 5, 6, Telemetry.HISTOGRAM_LINEAR));
+                 register(addon_id, name1, Telemetry.HISTOGRAM_LINEAR, 1, 5, 6));
   // Can't register the same histogram multiple times.
   expect_fail(function ()
-	      register(addon_id, name1, 1, 5, 6, Telemetry.HISTOGRAM_LINEAR));
+	      register(addon_id, name1, Telemetry.HISTOGRAM_LINEAR, 1, 5, 6));
   // Make sure we can't get at it with another name.
   expect_fail(function () Telemetry.getAddonHistogram(fake_addon_id, name1));
 
@@ -291,7 +291,7 @@ function test_addons() {
 
   var name2 = "testing-histogram2";
   expect_success(function ()
-                 register(addon_id, name2, 2, 4, 4, Telemetry.HISTOGRAM_LINEAR));
+                 register(addon_id, name2, Telemetry.HISTOGRAM_LINEAR, 2, 4, 4));
 
   var h2 = Telemetry.getAddonHistogram(addon_id, name2);
   h2.add(2);
@@ -307,15 +307,15 @@ function test_addons() {
   // identical names.
   var extra_addon = "testing-extra-addon";
   expect_success(function ()
-		 register(extra_addon, name1, 0, 1, 2, Telemetry.HISTOGRAM_BOOLEAN));
+		 register(extra_addon, name1, Telemetry.HISTOGRAM_BOOLEAN));
 
   // Check that we can register flag histograms.
   var flag_addon = "testing-flag-addon";
   var flag_histogram = "flag-histogram";
-  expect_success(function() 
-                 register(flag_addon, flag_histogram, 0, 1, 2, Telemetry.HISTOGRAM_FLAG))
   expect_success(function()
-		 register(flag_addon, name2, 2, 4, 4, Telemetry.HISTOGRAM_LINEAR));
+                 register(flag_addon, flag_histogram, Telemetry.HISTOGRAM_FLAG))
+  expect_success(function()
+		 register(flag_addon, name2, Telemetry.HISTOGRAM_LINEAR, 2, 4, 4));
 
   // Check that we reflect registered addons and histograms.
   snapshots = Telemetry.addonHistogramSnapshots;

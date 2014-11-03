@@ -98,7 +98,7 @@ ParseMP3Headers(MP3FrameParser *aParser, MediaResource *aResource)
 // Windows XP's MP3 decoder filter. This is available on XP only, on Vista
 // and later we can use the DMO Wrapper filter and MP3 decoder DMO.
 static const GUID CLSID_MPEG_LAYER_3_DECODER_FILTER =
-{ 0x38BE3000, 0xDBF4, 0x11D0, 0x86, 0x0E, 0x00, 0xA0, 0x24, 0xCF, 0xEF, 0x6D };
+{ 0x38BE3000, 0xDBF4, 0x11D0, {0x86, 0x0E, 0x00, 0xA0, 0x24, 0xCF, 0xEF, 0x6D} };
 
 nsresult
 DirectShowReader::ReadMetadata(MediaInfo* aInfo,
