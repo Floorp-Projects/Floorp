@@ -2329,7 +2329,7 @@ SetMemoryReportFile(nsIFile* aFile)
 #ifdef XP_WIN
   nsString path;
   aFile->GetPath(path);
-  memoryReportPath = ToNewUnicode(path);
+  memoryReportPath = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
 #else
   nsCString path;
   aFile->GetNativePath(path);

@@ -30,8 +30,8 @@
 #ifndef CLIENT_WINDOWS_COMMON_IPC_PROTOCOL_H__
 #define CLIENT_WINDOWS_COMMON_IPC_PROTOCOL_H__
 
-#include <Windows.h>
-#include <DbgHelp.h>
+#include <windows.h>
+#include <dbghelp.h>
 #include <string>
 #include <utility>
 #include "common/windows/string_utils-inl.h"

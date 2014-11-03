@@ -42,9 +42,9 @@
 //  cpu: the CPU that the module was built for, typically "x86".
 //  symbol_file: the contents of the breakpad-format symbol file
 
-#include <Windows.h>
-#include <DbgHelp.h>
-#include <WinInet.h>
+#include <windows.h>
+#include <dbghelp.h>
+#include <wininet.h>
 
 #include <cstdio>
 #include <map>
