@@ -13,6 +13,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothDaemonChannel;
 class BluetoothDaemonProtocol;
+class BluetoothDaemonSocketInterface;
 
 class BluetoothDaemonInterface MOZ_FINAL : public BluetoothInterface
 {
@@ -122,6 +123,8 @@ private:
   nsAutoPtr<BluetoothDaemonProtocol> mProtocol;
 
   nsTArray<nsRefPtr<BluetoothResultHandler> > mResultHandlerQ;
+
+  nsAutoPtr<BluetoothDaemonSocketInterface> mSocketInterface;
 };
 
 END_BLUETOOTH_NAMESPACE
