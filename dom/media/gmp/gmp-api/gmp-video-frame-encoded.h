@@ -45,7 +45,8 @@ enum GMPVideoFrameType
   kGMPDeltaFrame = 1,
   kGMPGoldenFrame = 2,
   kGMPAltRefFrame = 3,
-  kGMPSkipFrame = 4
+  kGMPSkipFrame = 4,
+  kGMPVideoFrameInvalid = 5 // Must always be last.
 };
 
 // The implementation backing this interface uses shared memory for the

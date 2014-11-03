@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var z = document.getElementById("z");
+  var c =  document.getElementById("c");
+  
+  z.removeChild(z.firstChild);
+  document.body.offsetHeight;
+  c.style.counterReset = "c";
+}
+
+</script>
+
+</head>
+
+<body onload="boom();" style="font-family: monospace; width: 7ch;">
+
+<span style="margin: 8px;"></span>
+
+<span style="position: relative;" id="z">OOO<span style="display: table-caption;">OOOOOO</span><span id="c" style="position: absolute;"></span></span>
+
+</body>
+</html>

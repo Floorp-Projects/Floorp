@@ -1,0 +1,31 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Bug 386642 Crash [@ IsCanvasFrame] while opening context menu or changing styles">
+<toolbarbutton type="menu" id="a">
+<menupopup id="b"/>
+</toolbarbutton>
+
+<style xmlns="http://www.w3.org/1999/xhtml">
+.one image {
+display: -moz-box;
+}
+image{
+display: none;
+}
+
+</style>
+<script><![CDATA[
+var gg=0;
+function doe() {
+  var a = document.getElementById('a');
+  if (!a.hasAttribute('class')) {
+    a.setAttribute('class', 'one');
+  } else {
+    a.removeAttribute('class');
+  }
+document.getElementById('b').hidePopup();
+}
+
+doe();
+setInterval(doe, 200);
+]]></script>
+</window>

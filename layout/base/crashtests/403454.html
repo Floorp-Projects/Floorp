@@ -1,0 +1,37 @@
+<html class="reftest-wait">
+<head>
+
+<style>
+
+.dddd:before {
+  content: "generated";
+}
+
+</style>
+
+<script>
+
+function b()
+{
+  document.getElementById("float").style.cssFloat = "";
+  setTimeout(b2, 30);
+}
+
+// This is just for visual effect, to make the timing clear.  
+// It's not needed for the crash.
+function b2()
+{
+  document.body.style.background = "#eee";
+  document.documentElement.removeAttribute("class");
+}
+
+</script>
+
+</head>
+
+<body onload="document.body.offsetHeight; setTimeout(b, 0);">
+
+<span class="dddd"><div></div><span id="float" style="float: left"></span></span>
+
+</body>
+</html>

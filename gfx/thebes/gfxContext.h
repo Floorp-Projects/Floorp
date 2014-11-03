@@ -191,18 +191,6 @@ public:
      */
     void Polygon(const gfxPoint *points, uint32_t numPoints);
 
-    /*
-     * Draw a rounded rectangle, with the given outer rect and
-     * corners.  The corners specify the radii of the two axes of an
-     * ellipse (the horizontal and vertical directions given by the
-     * width and height, respectively).  By default the ellipse is
-     * drawn in a clockwise direction; if draw_clockwise is false,
-     * then it's drawn counterclockwise.
-     */
-    void RoundedRectangle(const gfxRect& rect,
-                          const RectCornerRadii& corners,
-                          bool draw_clockwise = true);
-
     /**
      ** Transformation Matrix manipulation
      **/
