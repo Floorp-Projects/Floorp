@@ -243,7 +243,8 @@ ClipToFrame(nsIFrame* aRootFrame, nsIFrame* aFrame, nsRect& aRect)
 
 static nsRect
 GetTargetRect(nsIFrame* aRootFrame, const nsPoint& aPointRelativeToRootFrame,
-              nsIFrame* aRestrictToDescendants, const EventRadiusPrefs* aPrefs)
+              nsIFrame* aRestrictToDescendants, const EventRadiusPrefs* aPrefs,
+              uint32_t aFlags)
 {
   nsMargin m(AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[0], true),
              AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[1], false),
@@ -251,7 +252,13 @@ GetTargetRect(nsIFrame* aRootFrame, const nsPoint& aPointRelativeToRootFrame,
              AppUnitsFromMM(aRootFrame, aPrefs->mSideRadii[3], false));
   nsRect r(aPointRelativeToRootFrame, nsSize(0,0));
   r.Inflate(m);
-  return ClipToFrame(aRootFrame, aRestrictToDescendants, r);
+  if (!(aFlags & INPUT_IGNORE_ROOT_SCROLL_FRAME)) {
+    // Don't clip this rect to the root scroll frame if the flag to ignore the
+    // root scroll frame is set. Note that the GetClosest code will still enforce
+    // that the target found is a descendant of aRestrictToDescendants.
+    r = ClipToFrame(aRootFrame, aRestrictToDescendants, r);
+  }
+  return r;
 }
 
 static float
@@ -386,7 +393,7 @@ FindFrameTargetedByInputEvent(const WidgetGUIEvent* aEvent,
     target->PresContext()->PresShell()->GetRootFrame() : aRootFrame;
 
   nsRect targetRect = GetTargetRect(aRootFrame, aPointRelativeToRootFrame,
-                                    restrictToDescendants, prefs);
+                                    restrictToDescendants, prefs, aFlags);
   nsAutoTArray<nsIFrame*,8> candidates;
   nsresult rv = nsLayoutUtils::GetFramesForArea(aRootFrame, targetRect, candidates, flags);
   if (NS_FAILED(rv)) {
