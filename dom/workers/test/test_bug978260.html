@@ -1,0 +1,35 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for DOM Worker Threads</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    var worker = new Worker("bug978260_worker.js");
+    worker.onmessage = function(event) {
+      is(event.data, "loaded");
+      SimpleTest.finish();
+    }
+  }
+
+  xhr.open('GET', '/', false);
+  xhr.send();
+
+</script>
+</pre>
+</body>
+</html>
