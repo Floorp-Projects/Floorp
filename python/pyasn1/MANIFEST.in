@@ -1,0 +1,3 @@
+include CHANGES README LICENSE THANKS TODO
+recursive-include test *.py
+recursive-include doc *.html
