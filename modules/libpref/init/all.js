@@ -4381,6 +4381,9 @@ pref("camera.control.low_memory_thresholdMB", 404);
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
 
+// Disable before keyboard events and after keyboard events by default.
+pref("dom.beforeAfterKeyboardEvent.enabled", false);
+
 // Use raw ICU instead of CoreServices API in Unicode collation
 #ifdef XP_MACOSX
 pref("intl.collation.mac.use_icu", true);
