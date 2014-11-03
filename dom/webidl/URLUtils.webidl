@@ -49,3 +49,9 @@ interface URLUtils {
   [Throws]
   stringifier;
 };
+
+[NoInterfaceObject,
+ Exposed=(Window, Worker)]
+interface URLUtilsSearchParams {
+           attribute URLSearchParams searchParams;
+};
