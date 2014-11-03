@@ -102,8 +102,27 @@ const ByteString md2WithRSAEncryption(alg_md2WithRSAEncryption,
 mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
 
+ByteString TLV(uint8_t tag, const ByteString& value);
+ByteString Boolean(bool value);
+ByteString Integer(long value);
+
 ByteString CNToDERName(const char* cn);
 bool InputEqualsByteString(Input input, const ByteString& bs);
+
+inline ByteString
+DNSName(const ByteString& name)
+{
+  // (2 << 6) means "context-specific", 2 is the GeneralName tag.
+  return TLV((2 << 6) | 2, name);
+}
+
+template <size_t L>
+inline ByteString
+DNSName(const char (&bytes)[L])
+{
+  return DNSName(ByteString(reinterpret_cast<const uint8_t (&)[L]>(bytes),
+                            L - 1));
+}
 
 class TestKeyPair
 {

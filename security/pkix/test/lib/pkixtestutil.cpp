@@ -183,7 +183,7 @@ BitString(const ByteString& rawBytes, bool corrupt)
   return TLV(der::BIT_STRING, prefixed);
 }
 
-static ByteString
+ByteString
 Boolean(bool value)
 {
   ByteString encodedValue;
@@ -191,7 +191,7 @@ Boolean(bool value)
   return TLV(der::BOOLEAN, encodedValue);
 }
 
-static ByteString
+ByteString
 Integer(long value)
 {
   if (value < 0 || value > 127) {
