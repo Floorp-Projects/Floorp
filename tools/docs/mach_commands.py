@@ -28,7 +28,7 @@ class Documentation(MachCommandBase):
         help='Where to write output.')
     def build_docs(self, format=None, outdir=None):
         self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_package('mdn-sphinx-theme==0.4')
+        self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
 
         from moztreedocs import SphinxManager
 
@@ -43,8 +43,14 @@ class Documentation(MachCommandBase):
         def remove_gyp_dirs(context):
             context['GYP_DIRS'][:] = []
 
-        reader = BuildReader(self.config_environment,
-            sandbox_post_eval_cb=remove_gyp_dirs)
+        # Reading the Sphinx variables doesn't require a full build context.
+        # Only define the parts we need.
+        class fakeconfig(object):
+            def __init__(self, topsrcdir):
+                self.topsrcdir = topsrcdir
+
+        config = fakeconfig(self.topsrcdir)
+        reader = BuildReader(config)
 
         for path, name, key, value in reader.find_sphinx_variables():
             reldir = os.path.dirname(path)
