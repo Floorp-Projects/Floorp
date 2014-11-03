@@ -247,21 +247,23 @@ class HTMLReportingTestResultMixin(object):
 
     def gather_debug(self):
         debug = {}
-        try:
-            self.marionette.set_context(self.marionette.CONTEXT_CHROME)
-            debug['screenshot'] = self.marionette.screenshot()
-            self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-            debug['source'] = self.marionette.page_source
-            self.marionette.switch_to_frame()
-            debug['settings'] = json.dumps(self.marionette.execute_async_script("""
+        # In the event we're gathering debug without starting a session, skip marionette commands
+        if self.marionette.session is not None:
+            try:
+                self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+                debug['screenshot'] = self.marionette.screenshot()
+                self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
+                debug['source'] = self.marionette.page_source
+                self.marionette.switch_to_frame()
+                debug['settings'] = json.dumps(self.marionette.execute_async_script("""
 SpecialPowers.addPermission('settings-read', true, document);
 SpecialPowers.addPermission('settings-api-read', true, document);
 var req = window.navigator.mozSettings.createLock().get('*');
 req.onsuccess = function() {
   marionetteScriptFinished(req.result);
 }""", special_powers=True), sort_keys=True, indent=4, separators=(',', ': '))
-        except:
-            logger = get_default_logger()
-            logger.warning('Failed to gather test failure debug.', exc_info=True)
+            except:
+                logger = get_default_logger()
+                logger.warning('Failed to gather test failure debug.', exc_info=True)
         return debug
 
