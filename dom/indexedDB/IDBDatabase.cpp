@@ -973,10 +973,8 @@ IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
   MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  PersistenceType persistenceType = mSpec->metadata().persistenceType();
-
   if (aPersistenceType) {
-    *aPersistenceType = persistenceType;
+    *aPersistenceType = mSpec->metadata().persistenceType();
     MOZ_ASSERT(*aPersistenceType != PERSISTENCE_TYPE_INVALID);
   }
 
@@ -1000,7 +998,6 @@ IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       }
 
       rv = QuotaManager::GetInfoFromPrincipal(principal,
-                                              persistenceType,
                                               nullptr,
                                               &aOrigin,
                                               nullptr,
