@@ -6739,13 +6739,12 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
     ID3D11Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
     if (device &&
         device->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0 &&
-        !DoesD3D11DeviceSupportResourceSharing(device)) {
+        !DoesD3D11DeviceWork(device)) {
       // bug 1083071 - bad things - fall back to basic layers
       // This should not happen aside from driver bugs, and in particular
       // should not happen on our test machines, so let's NS_ERROR to ensure
       // that we would catch it as a test failure.
-      NS_ERROR("Can't use Direct3D 11 because of a driver bug "
-        "causing resource sharing to fail");
+      NS_ERROR("Can't use Direct3D 11 because of a driver bug");
     } else {
       if (!prefs.mPreferD3D9) {
         aHints.AppendElement(LayersBackend::LAYERS_D3D11);
