@@ -321,7 +321,6 @@ var shell = {
     // if they did, they would use keycodes that conform to DOM 3 Events.
     // See discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=762362
     chromeEventHandler.addEventListener('keydown', this, true);
-    chromeEventHandler.addEventListener('keypress', this, true);
     chromeEventHandler.addEventListener('keyup', this, true);
 
     window.addEventListener('MozApplicationManifest', this);
@@ -353,7 +352,6 @@ var shell = {
   stop: function shell_stop() {
     window.removeEventListener('unload', this);
     window.removeEventListener('keydown', this, true);
-    window.removeEventListener('keypress', this, true);
     window.removeEventListener('keyup', this, true);
     window.removeEventListener('MozApplicationManifest', this);
     window.removeEventListener('mozfullscreenchange', this);
@@ -368,9 +366,10 @@ var shell = {
     IndexedDBPromptHelper.uninit();
   },
 
-  // If this key event actually represents a hardware button, filter it here
-  // and send a mozChromeEvent with detail.type set to xxx-button-press or
-  // xxx-button-release instead.
+  // If this key event actually represents a hardware button, send a
+  // mozChromeEvent with detail.type set to 'xxx-button-press' or
+  // 'xxx-button-release' instead. Note that no more mozChromeEvent for hardware
+  // buttons needed after Bug 1014418 is landed.
   filterHardwareKeys: function shell_filterHardwareKeys(evt) {
     var type;
     switch (evt.keyCode) {
@@ -381,10 +380,10 @@ var shell = {
       case evt.DOM_VK_END:          // On desktop we don't have a sleep button
         type = 'sleep-button';
         break;
-      case evt.DOM_VK_PAGE_UP:      // Volume up button
+      case evt.DOM_VK_VOLUME_UP:      // Volume up button
         type = 'volume-up-button';
         break;
-      case evt.DOM_VK_PAGE_DOWN:    // Volume down button
+      case evt.DOM_VK_VOLUME_DOWN:    // Volume down button
         type = 'volume-down-button';
         break;
       case evt.DOM_VK_ESCAPE:       // Back button (should be disabled)
@@ -415,17 +414,11 @@ var shell = {
       type = mediaKeys[evt.key];
     }
 
+    // The key doesn't represent a hardware button, so no mozChromeEvent.
     if (!type) {
       return;
     }
 
-    // If we didn't return, then the key event represents a hardware key
-    // and we need to prevent it from propagating to Gaia
-    evt.stopImmediatePropagation();
-    evt.preventDefault(); // Prevent keypress events (when #501496 is fixed).
-
-    // If it is a key down or key up event, we send a chrome event to Gaia.
-    // If it is a keypress event we just ignore it.
     switch (evt.type) {
       case 'keydown':
         type = type + '-press';
@@ -433,8 +426,6 @@ var shell = {
       case 'keyup':
         type = type + '-release';
         break;
-      case 'keypress':
-        return;
     }
 
     // Let applications receive the headset button key press/release event.
@@ -471,7 +462,6 @@ var shell = {
     switch (evt.type) {
       case 'keydown':
       case 'keyup':
-      case 'keypress':
         this.filterHardwareKeys(evt);
         break;
       case 'mozfullscreenchange':
