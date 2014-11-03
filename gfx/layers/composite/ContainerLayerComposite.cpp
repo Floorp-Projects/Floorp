@@ -167,8 +167,9 @@ ContainerPrepare(ContainerT* aContainer,
       TransformRectToRenderTarget(LayerPixel::FromUntyped(
         layerToRender->GetLayer()->GetEffectiveVisibleRegion().GetBounds()));
 
+    Compositor* compositor = aManager->GetCompositor();
     if (!layerToRender->GetLayer()->AsContainerLayer() &&
-        !quad.Intersects(RenderTargetRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height)) &&
+        !quad.Intersects(compositor->ClipRectInLayersCoordinates(layerToRender->GetLayer(), clipRect)) &&
         !LayerHasCheckerboardingAPZC(layerToRender->GetLayer(), nullptr)) {
       CULLING_LOG("Sublayer %p is clipped entirely\n", layerToRender->GetLayer());
       continue;
@@ -327,7 +328,6 @@ RenderIntermediate(ContainerT* aContainer,
   if (!surface) {
     return;
   }
-
   compositor->SetRenderTarget(surface);
   // pre-render all of the layers into our temporary
   RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
