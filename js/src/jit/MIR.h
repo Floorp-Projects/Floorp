@@ -2736,45 +2736,6 @@ class MNewPar : public MUnaryInstruction
     }
 };
 
-class MNewTypedObject : public MNullaryInstruction
-{
-    AlwaysTenured<InlineTypedObject *> templateObject_;
-    gc::InitialHeap initialHeap_;
-
-    MNewTypedObject(types::CompilerConstraintList *constraints,
-                    InlineTypedObject *templateObject,
-                    gc::InitialHeap initialHeap)
-      : templateObject_(templateObject),
-        initialHeap_(initialHeap)
-    {
-        setResultType(MIRType_Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
-    }
-
-  public:
-    INSTRUCTION_HEADER(NewTypedObject)
-
-    static MNewTypedObject *New(TempAllocator &alloc,
-                                types::CompilerConstraintList *constraints,
-                                InlineTypedObject *templateObject,
-                                gc::InitialHeap initialHeap)
-    {
-        return new(alloc) MNewTypedObject(constraints, templateObject, initialHeap);
-    }
-
-    InlineTypedObject *templateObject() const {
-        return templateObject_;
-    }
-
-    gc::InitialHeap initialHeap() const {
-        return initialHeap_;
-    }
-
-    virtual AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-};
-
 class MTypedObjectProto
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data

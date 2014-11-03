@@ -155,7 +155,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewObjectVMCall(LNewObject *lir);
     bool visitNewObject(LNewObject *lir);
     bool visitOutOfLineNewObject(OutOfLineNewObject *ool);
-    bool visitNewTypedObject(LNewTypedObject *lir);
     bool visitNewDeclEnvObject(LNewDeclEnvObject *lir);
     bool visitNewCallObject(LNewCallObject *lir);
     bool visitNewSingletonCallObject(LNewSingletonCallObject *lir);

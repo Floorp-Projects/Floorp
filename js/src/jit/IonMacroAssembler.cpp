@@ -787,22 +787,18 @@ MacroAssembler::newGCThing(Register result, Register temp, NativeObject *templat
 }
 
 void
-MacroAssembler::createGCObject(Register obj, Register temp, JSObject *templateObj,
+MacroAssembler::createGCObject(Register obj, Register temp, NativeObject *templateObj,
                                gc::InitialHeap initialHeap, Label *fail, bool initFixedSlots)
 {
+    uint32_t nDynamicSlots = templateObj->numDynamicSlots();
     gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
     MOZ_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
 
-    uint32_t nDynamicSlots = 0;
-    if (templateObj->isNative()) {
-        nDynamicSlots = templateObj->as<NativeObject>().numDynamicSlots();
-
-        // Arrays with copy on write elements do not need fixed space for an
-        // elements header. The template object, which owns the original
-        // elements, might have another allocation kind.
-        if (templateObj->as<NativeObject>().denseElementsAreCopyOnWrite())
-            allocKind = gc::FINALIZE_OBJECT0_BACKGROUND;
-    }
+    // Arrays with copy on write elements do not need fixed space for an
+    // elements header. The template object, which owns the original elements,
+    // might have another allocation kind.
+    if (templateObj->denseElementsAreCopyOnWrite())
+        allocKind = gc::FINALIZE_OBJECT0_BACKGROUND;
 
     allocateObject(obj, temp, allocKind, nDynamicSlots, initialHeap, fail);
     initGCThing(obj, temp, templateObj, initFixedSlots);
@@ -1034,73 +1030,54 @@ MacroAssembler::initGCSlots(Register obj, Register slots, NativeObject *template
 }
 
 void
-MacroAssembler::initGCThing(Register obj, Register slots, JSObject *templateObj,
+MacroAssembler::initGCThing(Register obj, Register slots, NativeObject *templateObj,
                             bool initFixedSlots)
 {
     // Fast initialization of an empty object returned by allocateObject().
 
+    MOZ_ASSERT_IF(!templateObj->denseElementsAreCopyOnWrite(), !templateObj->hasDynamicElements());
+
     storePtr(ImmGCPtr(templateObj->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObj->type()), Address(obj, JSObject::offsetOfType()));
+    if (templateObj->hasDynamicSlots())
+        storePtr(slots, Address(obj, NativeObject::offsetOfSlots()));
+    else
+        storePtr(ImmPtr(nullptr), Address(obj, NativeObject::offsetOfSlots()));
 
-    if (templateObj->isNative()) {
-        NativeObject *ntemplate = &templateObj->as<NativeObject>();
-        MOZ_ASSERT_IF(!ntemplate->denseElementsAreCopyOnWrite(), !ntemplate->hasDynamicElements());
+    if (templateObj->denseElementsAreCopyOnWrite()) {
+        storePtr(ImmPtr((const Value *) templateObj->getDenseElements()),
+                 Address(obj, NativeObject::offsetOfElements()));
+    } else if (templateObj->is<ArrayObject>()) {
+        Register temp = slots;
+        MOZ_ASSERT(!templateObj->getDenseInitializedLength());
 
-        if (ntemplate->hasDynamicSlots())
-            storePtr(slots, Address(obj, NativeObject::offsetOfSlots()));
-        else
-            storePtr(ImmPtr(nullptr), Address(obj, NativeObject::offsetOfSlots()));
+        int elementsOffset = NativeObject::offsetOfFixedElements();
 
-        if (ntemplate->denseElementsAreCopyOnWrite()) {
-            storePtr(ImmPtr((const Value *) ntemplate->getDenseElements()),
-                     Address(obj, NativeObject::offsetOfElements()));
-        } else if (ntemplate->is<ArrayObject>()) {
-            Register temp = slots;
-            MOZ_ASSERT(!ntemplate->getDenseInitializedLength());
+        computeEffectiveAddress(Address(obj, elementsOffset), temp);
+        storePtr(temp, Address(obj, NativeObject::offsetOfElements()));
 
-            int elementsOffset = NativeObject::offsetOfFixedElements();
-
-            computeEffectiveAddress(Address(obj, elementsOffset), temp);
-            storePtr(temp, Address(obj, NativeObject::offsetOfElements()));
-
-            // Fill in the elements header.
-            store32(Imm32(ntemplate->getDenseCapacity()),
-                    Address(obj, elementsOffset + ObjectElements::offsetOfCapacity()));
-            store32(Imm32(ntemplate->getDenseInitializedLength()),
-                    Address(obj, elementsOffset + ObjectElements::offsetOfInitializedLength()));
-            store32(Imm32(ntemplate->as<ArrayObject>().length()),
-                    Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
-            store32(Imm32(ntemplate->shouldConvertDoubleElements()
-                          ? ObjectElements::CONVERT_DOUBLE_ELEMENTS
-                          : 0),
-                    Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
-            MOZ_ASSERT(!ntemplate->hasPrivate());
-        } else {
-            storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
-
-            initGCSlots(obj, slots, ntemplate, initFixedSlots);
-
-            if (ntemplate->hasPrivate()) {
-                uint32_t nfixed = ntemplate->numFixedSlots();
-                storePtr(ImmPtr(ntemplate->getPrivate()),
-                         Address(obj, NativeObject::getPrivateDataOffset(nfixed)));
-            }
-        }
-    } else if (templateObj->is<InlineTypedObject>()) {
-        InlineTypedObject *ntemplate = &templateObj->as<InlineTypedObject>();
-
-        // Memcpy the contents of the template object to the new object.
-        size_t nbytes = ntemplate->size();
-        size_t offset = 0;
-        while (nbytes) {
-            uintptr_t value = *(uintptr_t *)(ntemplate->inlineTypedMem() + offset);
-            storePtr(ImmWord(value),
-                     Address(obj, InlineTypedObject::offsetOfDataStart() + offset));
-            nbytes = (nbytes < sizeof(uintptr_t)) ? 0 : nbytes - sizeof(uintptr_t);
-            offset += sizeof(uintptr_t);
-        }
+        // Fill in the elements header.
+        store32(Imm32(templateObj->getDenseCapacity()),
+                Address(obj, elementsOffset + ObjectElements::offsetOfCapacity()));
+        store32(Imm32(templateObj->getDenseInitializedLength()),
+                Address(obj, elementsOffset + ObjectElements::offsetOfInitializedLength()));
+        store32(Imm32(templateObj->as<ArrayObject>().length()),
+                Address(obj, elementsOffset + ObjectElements::offsetOfLength()));
+        store32(Imm32(templateObj->shouldConvertDoubleElements()
+                      ? ObjectElements::CONVERT_DOUBLE_ELEMENTS
+                      : 0),
+                Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
+        MOZ_ASSERT(!templateObj->hasPrivate());
     } else {
-        MOZ_CRASH("Unknown object");
+        storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
+
+        initGCSlots(obj, slots, templateObj, initFixedSlots);
+
+        if (templateObj->hasPrivate()) {
+            uint32_t nfixed = templateObj->numFixedSlots();
+            storePtr(ImmPtr(templateObj->getPrivate()),
+                     Address(obj, NativeObject::getPrivateDataOffset(nfixed)));
+        }
     }
 
 #ifdef JS_GC_TRACE

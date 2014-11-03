@@ -111,7 +111,6 @@ class BaselineInspector
 
     NativeObject *getTemplateObject(jsbytecode *pc);
     NativeObject *getTemplateObjectForNative(jsbytecode *pc, Native native);
-    JSObject *getTemplateObjectForClassHook(jsbytecode *pc, const Class *clasp);
 
     DeclEnvObject *templateDeclEnvObject();
     CallObject *templateCallObject();
