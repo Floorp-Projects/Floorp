@@ -2344,7 +2344,7 @@ public:
                      mozilla::ErrorResult& rv);
   nsINode* CreateNSResolver(nsINode& aNodeResolver);
   already_AddRefed<mozilla::dom::XPathResult>
-    Evaluate(JSContext* aCx, const nsAString& aExpression, nsINode* aContextNode,
+    Evaluate(JSContext* aCx, const nsAString& aExpression, nsINode& aContextNode,
              mozilla::dom::XPathNSResolver* aResolver, uint16_t aType,
              JS::Handle<JSObject*> aResult, mozilla::ErrorResult& rv);
   // Touch event handlers already on nsINode

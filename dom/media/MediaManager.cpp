@@ -2487,4 +2487,66 @@ GetUserMediaNotificationEvent::Run()
   return MediaManager::NotifyRecordingStatusChange(window, msg, mIsAudio, mIsVideo);
 }
 
+NS_IMETHODIMP
+MediaManager::GetDecoderVersions(uint32_t* aCount, char*** aDecoders)
+{
+  nsTArray<nsCString> decorders;
+#ifdef MOZ_RAW
+  if (MediaDecoder::IsRawEnabled()) {
+    decorders.AppendElement()->AppendLiteral("Raw");
+  }
+#endif
+#ifdef MOZ_WAVE
+  if (MediaDecoder::IsWaveEnabled()) {
+    decorders.AppendElement()->AppendLiteral("Wave");
+  }
+#endif
+#if defined(MOZ_WEBM) && !defined(MOZ_OMX_WEBM_DECODER)
+#endif
+#if defined(MOZ_FMP4) && !defined(MOZ_OMX_DECODER)
+  if (Preferences::GetBool("media.fragmented-mp4.exposed", false)) {
+    decorders.AppendElement()->AppendLiteral("Fragmented MP4");
+  }
+#endif
+#ifdef MOZ_GSTREAMER
+  if (MediaDecoder::IsGStreamerEnabled()) {
+    guint major, minor, micro, nano;
+    gst_version(major, minor, micro, nano);
+    decorders.AppendElement()->AppendPrintf("Fragmented MP4 %i.%i.%i.%i", major, minor, micro, nano);
+  }
+#endif
+#ifdef MOZ_OMX_DECODER
+#endif
+#ifdef MOZ_OMX_WEBM_DECODER
+#endif
+#ifdef MOZ_DIRECTSHOW
+#endif
+#ifdef MOZ_WMF
+#endif
+#ifdef MOZ_APPLEMEDIA
+  if (MediaDecoder::IsAppleMP3Enabled()) {
+    decorders.AppendElement()->AppendLiteral("Apple MP3");
+  }
+#endif
+#ifdef MOZ_ANDROID_OMX
+#endif
+#ifdef NECKO_PROTOCOL_rtsp
+#endif
+
+  *aCount = decorders.Length();
+  char** ret =
+    static_cast<char**>(NS_Alloc(*aCount * sizeof(char*)));
+  if (!ret) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (uint32_t i = 0; i < *aCount; ++i) {
+    ret[i] = NS_strdup(decorders[i].get());
+  }
+
+  *aDecoders = ret;
+
+  return NS_OK;
+}
+
 } // namespace mozilla
