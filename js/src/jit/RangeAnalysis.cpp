@@ -609,12 +609,18 @@ Range::setDouble(double l, double h)
     if (l >= INT32_MIN && l <= INT32_MAX) {
         lower_ = int32_t(::floor(l));
         hasInt32LowerBound_ = true;
+    } else if (l >= INT32_MAX) {
+        lower_ = INT32_MAX;
+        hasInt32LowerBound_ = true;
     } else {
         lower_ = INT32_MIN;
         hasInt32LowerBound_ = false;
     }
     if (h >= INT32_MIN && h <= INT32_MAX) {
         upper_ = int32_t(::ceil(h));
+        hasInt32UpperBound_ = true;
+    } else if (h <= INT32_MIN) {
+        upper_ = INT32_MIN;
         hasInt32UpperBound_ = true;
     } else {
         upper_ = INT32_MAX;
