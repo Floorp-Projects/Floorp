@@ -973,8 +973,10 @@ IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
   MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
+  PersistenceType persistenceType = mSpec->metadata().persistenceType();
+
   if (aPersistenceType) {
-    *aPersistenceType = mSpec->metadata().persistenceType();
+    *aPersistenceType = persistenceType;
     MOZ_ASSERT(*aPersistenceType != PERSISTENCE_TYPE_INVALID);
   }
 
@@ -986,7 +988,8 @@ IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       MOZ_CRASH("Is this needed?!");
 
     case PrincipalInfo::TSystemPrincipalInfo:
-      QuotaManager::GetInfoForChrome(nullptr, &aOrigin, nullptr, nullptr);
+      QuotaManager::GetInfoForChrome(nullptr, &aOrigin, nullptr, nullptr,
+                                     nullptr);
       return NS_OK;
 
     case PrincipalInfo::TContentPrincipalInfo: {
@@ -998,8 +1001,10 @@ IDBDatabase::GetQuotaInfo(nsACString& aOrigin,
       }
 
       rv = QuotaManager::GetInfoFromPrincipal(principal,
+                                              persistenceType,
                                               nullptr,
                                               &aOrigin,
+                                              nullptr,
                                               nullptr,
                                               nullptr);
       if (NS_WARN_IF(NS_FAILED(rv))) {

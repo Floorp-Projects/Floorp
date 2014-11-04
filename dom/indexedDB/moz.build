@@ -94,7 +94,6 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/db/sqlite3/src',
     '/dom/base',
-    '/dom/quota',
     '/dom/storage',
     '/ipc/glue',
     '/xpcom/build',
