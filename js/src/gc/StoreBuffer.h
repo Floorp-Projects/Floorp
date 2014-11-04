@@ -22,6 +22,10 @@
 
 namespace js {
 
+namespace gcstats {
+struct Statistics;
+}
+
 MOZ_NORETURN void
 CrashAtUnhandlableOOM(const char *reason);
 
@@ -488,6 +492,8 @@ class StoreBuffer
     void putCallback(void (*callback)(JSTracer *trc, Key *key, void *data), Key *key, void *data) {
         putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
+
+    gcstats::Statistics& stats();
 
     /* Methods to mark the source of all edges in the store buffer. */
     void markAll(JSTracer *trc);
