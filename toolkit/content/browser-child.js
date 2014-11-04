@@ -166,7 +166,7 @@ let WebNavigation =  {
         this.gotoIndex(message.data.index);
         break;
       case "WebNavigation:LoadURI":
-        this.loadURI(message.data.uri, message.data.flags);
+        this.loadURI(message.data.uri, message.data.flags, message.data.referrer);
         break;
       case "WebNavigation:Reload":
         this.reload(message.data.flags);
@@ -192,12 +192,14 @@ let WebNavigation =  {
     this._webNavigation.gotoIndex(index);
   },
 
-  loadURI: function(uri, flags) {
+  loadURI: function(uri, flags, referrer) {
 #ifdef MOZ_CRASHREPORTER
     if (CrashReporter.enabled)
       CrashReporter.annotateCrashReport("URL", uri);
 #endif
-    this._webNavigation.loadURI(uri, flags, null, null, null);
+    if (referrer)
+      referrer = Services.io.newURI(referrer, null, null);
+    this._webNavigation.loadURI(uri, flags, referrer, null, null);
   },
 
   reload: function(flags) {
