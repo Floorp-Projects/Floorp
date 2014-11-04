@@ -2932,13 +2932,13 @@ GCRuntime::refillFreeListInGC(Zone *zone, AllocKind thingKind)
 
 SliceBudget::SliceBudget()
 {
-    reset();
+    makeUnlimited();
 }
 
 SliceBudget::SliceBudget(TimeBudget time)
 {
     if (time.budget < 0) {
-        reset();
+        makeUnlimited();
     } else {
         // Note: TimeBudget(0) is equivalent to WorkBudget(CounterReset).
         deadline = PRMJ_Now() + time.budget * PRMJ_USEC_PER_MSEC;
@@ -2949,7 +2949,7 @@ SliceBudget::SliceBudget(TimeBudget time)
 SliceBudget::SliceBudget(WorkBudget work)
 {
     if (work.budget < 0) {
-        reset();
+        makeUnlimited();
     } else {
         deadline = 0;
         counter = work.budget;
@@ -5666,7 +5666,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
          * Yields between slices occurs at predetermined points in these modes;
          * the budget is not used.
          */
-        budget.reset();
+        budget.makeUnlimited();
     }
 
     if (incrementalState == NO_INCREMENTAL) {
@@ -5698,7 +5698,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
       case MARK: {
         /* If we needed delayed marking for gray roots, then collect until done. */
         if (!marker.hasBufferedGrayRoots()) {
-            budget.reset();
+            budget.makeUnlimited();
             isIncremental = false;
         }
 
@@ -5785,27 +5785,27 @@ GCRuntime::budgetIncrementalGC(SliceBudget &budget)
     IncrementalSafety safe = IsIncrementalGCSafe(rt);
     if (!safe) {
         resetIncrementalGC(safe.reason());
-        budget.reset();
+        budget.makeUnlimited();
         stats.nonincremental(safe.reason());
         return;
     }
 
     if (mode != JSGC_MODE_INCREMENTAL) {
         resetIncrementalGC("GC mode change");
-        budget.reset();
+        budget.makeUnlimited();
         stats.nonincremental("GC mode");
         return;
     }
 
     if (isTooMuchMalloc()) {
-        budget.reset();
+        budget.makeUnlimited();
         stats.nonincremental("malloc bytes trigger");
     }
 
     bool reset = false;
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         if (zone->usage.gcBytes() >= zone->threshold.gcTriggerBytes()) {
-            budget.reset();
+            budget.makeUnlimited();
             stats.nonincremental("allocation trigger");
         }
 
@@ -5816,7 +5816,7 @@ GCRuntime::budgetIncrementalGC(SliceBudget &budget)
         }
 
         if (zone->isTooMuchMalloc()) {
-            budget.reset();
+            budget.makeUnlimited();
             stats.nonincremental("malloc bytes trigger");
         }
     }
@@ -5916,7 +5916,7 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
             resetIncrementalGC("requested");
 
         stats.nonincremental("requested");
-        budget.reset();
+        budget.makeUnlimited();
     } else {
         budgetIncrementalGC(budget);
     }
