@@ -180,7 +180,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
          export LDFLAGS="$HOST_LDFLAGS"
          ac_configure_args="$HOST_ICU_BUILD_OPTS"
          ac_configure_args="$ac_configure_args --enable-static --disable-shared --enable-extras=no --enable-icuio=no --enable-layout=no --enable-tests=no --enable-samples=no"
-         AC_OUTPUT_SUBDIRS(intl/icu/source:intl/icu/host)
+         AC_OUTPUT_SUBDIRS_NOW(intl/icu/source:intl/icu/host)
         ) || exit 1
     	# generate config/icucross.mk
     	$GMAKE -C $_objdir/intl/icu/host/ config/icucross.mk

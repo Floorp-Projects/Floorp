@@ -304,13 +304,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
             ],
-            'DELAYLOAD_LDFLAGS': [
-                'DELAYLOAD_LDFLAGS += -DELAYLOAD:foo.dll',
-                'DELAYLOAD_LDFLAGS += -DELAYLOAD:bar.dll',
-            ],
-            'USE_DELAYIMP': [
-                'USE_DELAYIMP := 1',
-            ],
             'RCFILE': [
                 'RCFILE := foo.rc',
             ],
@@ -337,6 +330,8 @@ class TestRecursiveMakeBackend(BackendTester):
             'MOZBUILD_LDFLAGS': [
                 'MOZBUILD_LDFLAGS += -framework Foo',
                 'MOZBUILD_LDFLAGS += -x',
+                'MOZBUILD_LDFLAGS += -DELAYLOAD:foo.dll',
+                'MOZBUILD_LDFLAGS += -DELAYLOAD:bar.dll',
             ],
             'WIN32_EXE_LDFLAGS': [
                 'WIN32_EXE_LDFLAGS += -subsystem:console',
