@@ -417,6 +417,14 @@ let dataProviders = {
     done(data);
   },
 
+  media: function media(done) {
+    let data = {};
+    let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"].getService(Ci.nsIMediaManagerService);
+    data.decoderVersions = mediaMgr.getDecoderVersions();
+dump("FOOOOOOO\n" + data.toSource() + "\n");
+    done(data);
+  },
+
   javaScript: function javaScript(done) {
     let data = {};
     let winEnumer = Services.ww.getWindowEnumerator();
