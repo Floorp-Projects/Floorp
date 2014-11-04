@@ -302,6 +302,14 @@ AsyncResource.prototype = {
         Observers.notify("weave:service:quota:remaining",
                          parseInt(headers["x-weave-quota-remaining"], 10));
       }
+
+      let contentLength = headers["content-length"];
+      if (success && contentLength && data &&
+          contentLength != data.length) {
+        this._log.warn("The response body's length of: " + data.length +
+                       " doesn't match the header's content-length of: " +
+                       contentLength + ".");
+      }
     } catch (ex) {
       this._log.debug("Caught exception " + CommonUtils.exceptionStr(ex) +
                       " visiting headers in _onComplete.");
