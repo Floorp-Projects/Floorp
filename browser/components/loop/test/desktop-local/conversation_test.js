@@ -201,13 +201,13 @@ describe("loop.conversation", function() {
         loop.conversation.IncomingConversationView);
     });
 
-    it("should display the EmptyRoomView for rooms", function() {
+    it("should display the RoomView for rooms", function() {
       conversationAppStore.setStoreState({windowType: "room"});
 
       ccView = mountTestComponent();
 
       TestUtils.findRenderedComponentWithType(ccView,
-        loop.roomViews.EmptyRoomView);
+        loop.roomViews.DesktopRoomView);
     });
 
     it("should display the GenericFailureView for failures", function() {
