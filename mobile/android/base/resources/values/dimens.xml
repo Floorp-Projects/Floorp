@@ -36,7 +36,6 @@
     <dimen name="new_tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
     <dimen name="new_tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_menu_item_padding_vertical">21dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_inset_vertical">5dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_inset_horizontal">3dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_corner_radius">5dp</dimen>
