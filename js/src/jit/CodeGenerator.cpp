@@ -9642,9 +9642,10 @@ CodeGenerator::emitAssertRangeI(const Range *r, Register input)
         masm.bind(&success);
     }
 
-    // For r->canHaveFractionalPart() and r->exponent(), there's nothing to check, because
-    // if we ended up in the integer range checking code, the value is already
-    // in an integer register in the integer range.
+    // For r->canHaveFractionalPart(), r->canBeNegativeZero(), and
+    // r->exponent(), there's nothing to check, because if we ended up in the
+    // integer range checking code, the value is already in an integer register
+    // in the integer range.
 
     return true;
 }
@@ -9675,6 +9676,24 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
 
     // This code does not yet check r->canHaveFractionalPart(). This would require new
     // assembler interfaces to make rounding instructions available.
+
+    if (!r->canBeNegativeZero()) {
+        Label success;
+
+        // First, test for being equal to 0.0, which also includes -0.0.
+        masm.loadConstantDouble(0.0, temp);
+        masm.branchDouble(Assembler::DoubleNotEqualOrUnordered, input, temp, &success);
+
+        // The easiest way to distinguish -0.0 from 0.0 is that 1.0/-0.0 is
+        // -Infinity instead of Infinity.
+        masm.loadConstantDouble(1.0, temp);
+        masm.divDouble(input, temp);
+        masm.branchDouble(Assembler::DoubleGreaterThan, temp, input, &success);
+
+        masm.assumeUnreachable("Input shouldn't be negative zero.");
+
+        masm.bind(&success);
+    }
 
     if (!r->hasInt32Bounds() && !r->canBeInfiniteOrNaN() &&
         r->exponent() < FloatingPoint<double>::kExponentBias)
