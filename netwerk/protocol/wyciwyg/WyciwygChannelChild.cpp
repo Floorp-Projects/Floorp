@@ -9,6 +9,7 @@
 #include "mozilla/net/ChannelEventQueue.h"
 #include "WyciwygChannelChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/ContentChild.h"
 
 #include "nsCharsetSource.h"
 #include "nsStringStream.h"
@@ -22,6 +23,7 @@
 #include "nsProxyRelease.h"
 
 using namespace mozilla::ipc;
+using namespace mozilla::dom;
 
 namespace mozilla {
 namespace net {
@@ -673,7 +675,11 @@ WyciwygChannelChild::WriteToCacheEntry(const nsAString & aData)
 
   if (!mSentAppData) {
     mozilla::dom::TabChild* tabChild = GetTabChild(this);
-    SendAppData(IPC::SerializedLoadContext(this), tabChild);
+
+    PBrowserOrId browser = static_cast<ContentChild*>(Manager()->Manager())
+                           ->GetBrowserOrId(tabChild);
+
+    SendAppData(IPC::SerializedLoadContext(this), browser);
     mSentAppData = true;
   }
 
