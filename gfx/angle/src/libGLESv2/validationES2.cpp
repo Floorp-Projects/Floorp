@@ -583,6 +583,7 @@ bool ValidateES2CopyTexImageParameters(gl::Context* context, GLenum target, GLin
             if (colorbufferFormat != GL_ALPHA8_EXT &&
                 colorbufferFormat != GL_RGBA4 &&
                 colorbufferFormat != GL_RGB5_A1 &&
+                colorbufferFormat != GL_BGRA8_EXT &&
                 colorbufferFormat != GL_RGBA8_OES)
             {
                 return gl::error(GL_INVALID_OPERATION, false);
@@ -595,6 +596,7 @@ bool ValidateES2CopyTexImageParameters(gl::Context* context, GLenum target, GLin
                   colorbufferFormat != GL_RGB8_OES &&
                   colorbufferFormat != GL_RGBA4 &&
                   colorbufferFormat != GL_RGB5_A1 &&
+                  colorbufferFormat != GL_BGRA8_EXT &&
                   colorbufferFormat != GL_RGBA8_OES)
               {
                   return gl::error(GL_INVALID_OPERATION, false);
@@ -607,6 +609,7 @@ bool ValidateES2CopyTexImageParameters(gl::Context* context, GLenum target, GLin
                   colorbufferFormat != GL_RGB8_OES &&
                   colorbufferFormat != GL_RGBA4 &&
                   colorbufferFormat != GL_RGB5_A1 &&
+                  colorbufferFormat != GL_BGRA8_EXT &&
                   colorbufferFormat != GL_RGBA8_OES)
               {
                   return gl::error(GL_INVALID_OPERATION, false);
@@ -618,6 +621,7 @@ bool ValidateES2CopyTexImageParameters(gl::Context* context, GLenum target, GLin
                   colorbufferFormat != GL_RGB8_OES &&
                   colorbufferFormat != GL_RGBA4 &&
                   colorbufferFormat != GL_RGB5_A1 &&
+                  colorbufferFormat != GL_BGRA8_EXT &&
                   colorbufferFormat != GL_RGBA8_OES)
               {
                   return gl::error(GL_INVALID_OPERATION, false);
@@ -628,6 +632,7 @@ bool ValidateES2CopyTexImageParameters(gl::Context* context, GLenum target, GLin
                 colorbufferFormat != GL_RGB8_OES &&
                 colorbufferFormat != GL_RGBA4 &&
                 colorbufferFormat != GL_RGB5_A1 &&
+                colorbufferFormat != GL_BGRA8_EXT &&
                 colorbufferFormat != GL_RGBA8_OES)
             {
                 return gl::error(GL_INVALID_OPERATION, false);
@@ -637,6 +642,7 @@ bool ValidateES2CopyTexImageParameters(gl::Context* context, GLenum target, GLin
           case GL_RGBA:
             if (colorbufferFormat != GL_RGBA4 &&
                 colorbufferFormat != GL_RGB5_A1 &&
+                colorbufferFormat != GL_BGRA8_EXT &&
                 colorbufferFormat != GL_RGBA8_OES)
             {
                 return gl::error(GL_INVALID_OPERATION, false);
