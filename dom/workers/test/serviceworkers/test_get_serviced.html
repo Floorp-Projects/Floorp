@@ -16,12 +16,25 @@
 <script class="testbody" type="text/javascript">
   // get_serviced_worker will call getServiced until the worker shuts down.
   // Test passes if the browser doesn't crash on leaked promise objects.
-  var controlled_window;
+  var registration;
+  var content;
+  var iframe;
+
   function simpleRegister() {
-    return navigator.serviceWorker.register("get_serviced_worker.js", { scope: "./sw_clients/" });
+    return navigator.serviceWorker.register("get_serviced_worker.js",
+                                            { scope: "./sw_clients/" })
+      .then((swr) => registration = swr);
   }
 
-  function openWindow() {
+  function closeAndUnregister() {
+    content.removeChild(iframe);
+
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function openClient() {
     var p = new Promise(function(resolve, reject) {
       window.onmessage = function(e) {
         if (e.data === "READY") {
@@ -30,18 +43,25 @@
       }
     });
 
-    controlled_window = window.open("sw_clients/simple.html");
+    content = document.getElementById("content");
+    ok(content, "Parent exists.");
+
+    iframe = document.createElement("iframe");
+    iframe.setAttribute('src', "sw_clients/simple.html");
+    content.appendChild(iframe);
+
     return p;
   }
 
   function runTest() {
     simpleRegister()
-      .then(openWindow).catch(function(e) {
+      .then(openClient)
+      .then(closeAndUnregister)
+      .catch(function(e) {
         ok(false, "Some test failed with error " + e);
       }).then(function() {
         ok(true, "Didn't crash on resolving getServiced promises while worker shuts down.");
         SimpleTest.finish();
-        controlled_window.close();
       });
   }
 
