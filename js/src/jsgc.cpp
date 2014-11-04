@@ -3437,7 +3437,7 @@ BackgroundAllocTask::run()
 }
 
 void
-GCHelperState::startBackgroundSweep(bool shouldShrink)
+GCHelperState::startBackgroundSweep()
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
@@ -3446,7 +3446,7 @@ GCHelperState::startBackgroundSweep(bool shouldShrink)
     MOZ_ASSERT(state() == IDLE);
     MOZ_ASSERT(!sweepFlag);
     sweepFlag = true;
-    shrinkFlag = shouldShrink;
+    shrinkFlag = false;
     startBackgroundThread(SWEEPING);
 }
 
@@ -5355,7 +5355,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 #endif
 
     if (sweepOnBackgroundThread)
-        helperState.startBackgroundSweep(invocationKind == GC_SHRINK);
+        helperState.startBackgroundSweep();
 }
 
 #ifdef JSGC_COMPACTING
