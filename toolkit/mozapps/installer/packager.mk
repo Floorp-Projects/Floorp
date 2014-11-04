@@ -380,14 +380,15 @@ DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so \
 endif
 
 SO_LIBRARIES := $(filter %.so,$(DIST_FILES))
-# These libraries are placed in the assets/ directory by packager.py.
-ASSET_SO_LIBRARIES := $(addprefix assets/,$(filter-out libmozglue.so $(MOZ_CHILD_PROCESS_NAME),$(SO_LIBRARIES)))
+# These libraries are placed in the assets/$(ANDROID_CPU_ARCH) directory by packager.py.
+ASSET_SO_LIBRARIES := $(addprefix assets/$(ANDROID_CPU_ARCH)/,$(filter-out libmozglue.so $(MOZ_CHILD_PROCESS_NAME),$(SO_LIBRARIES)))
 
 DIST_FILES := $(filter-out $(SO_LIBRARIES),$(DIST_FILES))
 NON_DIST_FILES += libmozglue.so $(MOZ_CHILD_PROCESS_NAME) $(ASSET_SO_LIBRARIES)
 
 ifdef MOZ_ENABLE_SZIP
-# These libraries are szipped in-place in the assets/ directory.
+# These libraries are szipped in-place in the
+# assets/$(ANDROID_CPU_ARCH) directory.
 SZIP_LIBRARIES := $(ASSET_SO_LIBRARIES)
 endif
 
