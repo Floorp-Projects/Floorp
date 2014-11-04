@@ -93,3 +93,6 @@ variant of aboutSupport.showDir.label. -->
 
 <!ENTITY aboutSupport.copyTextToClipboard.label "Copy text to clipboard">
 <!ENTITY aboutSupport.copyRawDataToClipboard.label "Copy raw data to clipboard">
+
+<!ENTITY aboutSupport.mediaTitle "Media">
+<!ENTITY aboutSupport.decoderVersions "Decoder versions">

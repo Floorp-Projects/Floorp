@@ -22,4 +22,7 @@ interface nsIMediaManagerService : nsISupports
   void mediaCaptureWindowState(in nsIDOMWindow aWindow, out boolean aVideo, out boolean aAudio,
                                [optional] out boolean aScreenShare, [optional] out boolean aWindowShare,
                                [optional] out boolean aAppShare);
+
+  void getDecoderVersions([optional] out unsigned long aCount,
+                          [retval, array, size_is(aCount)] out string aDecoders);
 };
