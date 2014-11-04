@@ -43,7 +43,7 @@ HCIEventTransactionSystemMessageConfigurator.prototype = {
 
     return new Promise((resolve, reject) => {
       appsService.getManifestFor(aManifestURL)
-      .then((aManifest) => this._checkAppManifest(aMessage.seName, aMessage.aid, aManifest))
+      .then((aManifest) => this._checkAppManifest(aMessage.origin, aMessage.aid, aManifest))
       .then(() => {
         // FIXME: Bug 884594: Access Control Enforcer
         // Here we will call ace.isAllowed function which will also return
@@ -62,13 +62,13 @@ HCIEventTransactionSystemMessageConfigurator.prototype = {
   // we might be doing some async hash computations here, returning
   // a resolved/rejected promise for now so we can easily fit the method
   // into a Promise chain
-  _checkAppManifest: function _checkAppManifest(aSeName, aAid, aManifest) {
+  _checkAppManifest: function _checkAppManifest(aOrigin, aAid, aManifest) {
     DEBUG && debug("aManifest " + JSON.stringify(aManifest));
 
     // convert AID and Secure Element name to uppercased string for comparison
     // with manifest secure_element_access rules
     let aid = this._byteAIDToHex(aAid);
-    let seName = aSeName.toUpperCase();
+    let seName = (aOrigin) ? aOrigin.toUpperCase() : "";
 
     let hciRules = aManifest["secure_element_access"] || [];
     let matchingRule = hciRules.find((rule) => {
