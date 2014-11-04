@@ -4449,8 +4449,34 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
             if (inliningDepth_ >= optimizationInfo().maxInlineDepth())
                 return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
 
-            if (targetScript->hasLoops())
-                return DontInline(targetScript, "Vetoed: big function that contains a loop");
+            if (targetScript->hasLoops()) {
+                // Currently, we are not inlining function which have loops because
+                // the cost inherent to inlining the function overcome the cost
+                // calling it. The reason is not yet clear to everybody, and we
+                // hope that we might be able to remove this restriction in the
+                // future.
+                //
+                // In the mean time, if we have opportunities to optimize the
+                // loop better, then we should try it. Such opportunity might be
+                // suggested by:
+                //
+                //  - Constant as argument. Inlining a function called with a
+                //    constant, might help GVN, as well as UCE, and potentially
+                //    improve bound check removal.
+                //
+                //  - Inner function as argument. Inlining a function called
+                //    with an inner function might help scalar replacement at
+                //    removing the scope chain, and thus using registers within
+                //    the loop instead of writting everything back to memory.
+                bool hasOpportunities = false;
+                for (size_t i = 0, e = callInfo.argv().length(); !hasOpportunities && i < e; i++) {
+                    MDefinition *arg = callInfo.argv()[i];
+                    hasOpportunities = arg->isLambda() || arg->isConstant();
+                }
+
+                if (!hasOpportunities)
+                    return DontInline(targetScript, "Vetoed: big function that contains a loop");
+            }
 
             // Caller must not be excessively large.
             if (script()->length() >= optimizationInfo().inliningMaxCallerBytecodeLength())
