@@ -455,6 +455,21 @@ BaselineInspector::getTemplateObjectForNative(jsbytecode *pc, Native native)
     return nullptr;
 }
 
+JSObject *
+BaselineInspector::getTemplateObjectForClassHook(jsbytecode *pc, const Class *clasp)
+{
+    if (!hasBaselineScript())
+        return nullptr;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+    for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
+        if (stub->isCall_ClassHook() && stub->toCall_ClassHook()->clasp() == clasp)
+            return stub->toCall_ClassHook()->templateObject();
+    }
+
+    return nullptr;
+}
+
 DeclEnvObject *
 BaselineInspector::templateDeclEnvObject()
 {
