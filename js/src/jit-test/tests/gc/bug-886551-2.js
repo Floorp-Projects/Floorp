@@ -1,5 +1,5 @@
 gc();
-gcslice(0);
+gcslice(1);
 function isClone(a, b) {
         var rmemory = new WeakMap();
             rmemory.set(a,b);
