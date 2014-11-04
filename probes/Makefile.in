@@ -7,7 +7,7 @@ export:: $(DIST)/include/mozilla-trace.h
 
 # Replace _DTRACE_VERSION with INCLUDE_MOZILLA_DTRACE
 $(DIST)/include/mozilla-trace.h: mozilla-trace.d Makefile
-	dtrace -h -s $(srcdir)/mozilla-trace.d -o mozilla-trace.h.tmp
+	dtrace -x nolibs -h -s $(srcdir)/mozilla-trace.d -o mozilla-trace.h.tmp
 	sed -e 's/if _DTRACE_VERSION/ifdef INCLUDE_MOZILLA_DTRACE/' \
 	    mozilla-trace.h.tmp > $(DIST)/include/mozilla-trace.h
 	rm mozilla-trace.h.tmp
