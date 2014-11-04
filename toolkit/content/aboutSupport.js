@@ -271,18 +271,6 @@ let snapshotFormatters = {
     $.append($("graphics-tbody"), trs);
   },
 
-
-  media: function media(data) {
-    // media-tbody tbody
-dump("BAAAAAR\n" + data.toSource() + "\n");
-    let trs = data["decoderVersions"].map(function (val) {
-      return $.new("tr", [
-        $.new("td", val),
-      ]);
-    });
-    $.append($("media-tbody"), trs);
-  },
-
   javaScript: function javaScript(data) {
     $("javascript-incremental-gc").textContent = data.incrementalGCEnabled;
   },

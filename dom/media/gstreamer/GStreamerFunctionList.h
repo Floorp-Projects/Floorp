@@ -73,7 +73,6 @@ GST_FUNC(LIBGSTREAMER, gst_structure_get_int)
 GST_FUNC(LIBGSTREAMER, gst_structure_get_value)
 GST_FUNC(LIBGSTREAMER, gst_structure_new)
 GST_FUNC(LIBGSTREAMER, gst_util_uint64_scale)
-GST_FUNC(LIBGSTREAMER, gst_version)
 
 #if GST_VERSION_MAJOR == 0
 GST_FUNC(LIBGSTAPP, gst_app_sink_pull_buffer)
