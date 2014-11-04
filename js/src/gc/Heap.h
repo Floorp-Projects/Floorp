@@ -941,7 +941,7 @@ struct Chunk
         return info.numArenasFree != 0;
     }
 
-    inline void addToAvailableList(JS::Zone *zone);
+    inline void addToAvailableList(JSRuntime *rt);
     inline void insertToAvailableList(Chunk **insertPoint);
     inline void removeFromAvailableList();
 
