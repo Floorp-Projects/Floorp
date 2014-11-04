@@ -6,9 +6,10 @@
 #include "nsISupports.idl"
 
 interface nsILoginInfo;
+interface nsIDOMElement;
 interface nsIDOMWindow;
 
-[scriptable, uuid(88b75787-a78c-43aa-bfe8-52c3248b8dfd)]
+[scriptable, uuid(425f73b9-b2db-4e8a-88c5-9ac2512934ce)]
 interface nsILoginManagerPrompter : nsISupports {
     /**
      * Initialize the prompter. Must be called before using other interfaces.
@@ -27,8 +28,9 @@ interface nsILoginManagerPrompter : nsISupports {
      * window passed to init.
      *
      * @param aBrowser the <browser> to use for this prompter.
+     * @param aOpener the opener to use for this prompter.
      */
-    void setE10sData(in jsval aData);
+    void setE10sData(in nsIDOMElement aBrowser, in nsIDOMWindow aOpener);
 
     /**
      * Ask the user if they want to save a login (Yes, Never, Not Now)
