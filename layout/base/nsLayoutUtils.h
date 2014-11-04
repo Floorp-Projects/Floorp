@@ -664,6 +664,18 @@ public:
                                        nsIWidget* aWidget, nsIntPoint aPt,
                                        nsView* aView);
 
+  /**
+   * Translate from view coordinates to the widget's coordinates.
+   * @param aPresContext the PresContext for the view
+   * @param aView the view
+   * @param aPt the point relative to the view
+   * @param aWidget the widget to which returned coordinates are relative
+   * @return the point in the view's coordinates
+   */
+  static nsIntPoint TranslateViewToWidget(nsPresContext* aPresContext,
+                                          nsView* aView, nsPoint aPt,
+                                          nsIWidget* aWidget);
+
   enum FrameForPointFlags {
     /**
      * When set, paint suppression is ignored, so we'll return non-root page

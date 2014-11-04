@@ -2608,6 +2608,18 @@ static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
   return offset;
 }
 
+static nsIntPoint WidgetToWidgetOffset(nsIWidget* aFrom, nsIWidget* aTo) {
+  nsIWidget* fromRoot;
+  nsIntPoint fromOffset = GetWidgetOffset(aFrom, fromRoot);
+  nsIWidget* toRoot;
+  nsIntPoint toOffset = GetWidgetOffset(aTo, toRoot);
+
+  if (fromRoot == toRoot) {
+    return fromOffset - toOffset;
+  }
+  return aFrom->WidgetToScreenOffset() - aTo->WidgetToScreenOffset();
+}
+
 nsPoint
 nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
                                      nsIWidget* aWidget, nsIntPoint aPt,
@@ -2619,22 +2631,26 @@ nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  nsIWidget* fromRoot;
-  nsIntPoint fromOffset = GetWidgetOffset(aWidget, fromRoot);
-  nsIWidget* toRoot;
-  nsIntPoint toOffset = GetWidgetOffset(viewWidget, toRoot);
-
-  nsIntPoint widgetPoint;
-  if (fromRoot == toRoot) {
-    widgetPoint = aPt + fromOffset - toOffset;
-  } else {
-    nsIntPoint screenPoint = aWidget->WidgetToScreenOffset();
-    widgetPoint = aPt + screenPoint - viewWidget->WidgetToScreenOffset();
-  }
-
+  nsIntPoint widgetPoint = aPt + WidgetToWidgetOffset(aWidget, viewWidget);
   nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
                          aPresContext->DevPixelsToAppUnits(widgetPoint.y));
   return widgetAppUnits - viewOffset;
+}
+
+nsIntPoint
+nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
+                                     nsView* aView, nsPoint aPt,
+                                     nsIWidget* aWidget)
+{
+  nsPoint viewOffset;
+  nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
+  if (!viewWidget) {
+    return nsIntPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+  }
+
+  nsIntPoint relativeToViewWidget(aPresContext->AppUnitsToDevPixels(aPt.x + viewOffset.x),
+                                  aPresContext->AppUnitsToDevPixels(aPt.y + viewOffset.y));
+  return relativeToViewWidget + WidgetToWidgetOffset(viewWidget, aWidget);
 }
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types
