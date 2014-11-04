@@ -159,6 +159,22 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Deletes a room.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    DeleteRoom: Action.define("deleteRoom", {
+      roomToken: String
+    }),
+
+    /**
+     * Room deletion error.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    DeleteRoomError: Action.define("deleteRoomError", {
+      error: Error
+    }),
+
+    /**
      * Retrieves room list.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
