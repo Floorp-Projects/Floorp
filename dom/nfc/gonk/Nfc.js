@@ -312,11 +312,10 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           this.addEventTarget(message.target);
           return null;
         case "NFC:CheckSessionToken":
-          if (!SessionHelper.isValidToken(message.data.sessionToken)) {
-            debug("Received invalid Session Token: " + message.data.sessionToken);
-            return NFC.NFC_GECKO_ERROR_BAD_SESSION_ID;
-          }
-          return NFC.NFC_GECKO_SUCCESS;
+          let sessionToken = message.data.sessionToken;
+          return SessionHelper.isValidToken(sessionToken, message.data.isP2P) ?
+                   NFC.NFC_GECKO_SUCCESS :
+                   NFC.NFC_GECKO_ERROR_BAD_SESSION_TOKEN;
         case "NFC:RegisterPeerReadyTarget":
           this.registerPeerReadyTarget(message.target, message.data.appId);
           return null;
@@ -415,9 +414,10 @@ let SessionHelper = {
     return (this.tokenMap[id] != null) && this.tokenMap[id].isP2P;
   },
 
-  isValidToken: function isValidToken(token) {
+  isValidToken: function isValidToken(token, isP2P) {
     for (let id in this.tokenMap) {
-      if (this.tokenMap[id].token == token) {
+      if ((this.tokenMap[id].token == token) &&
+          (this.tokenMap[id].isP2P == isP2P)) {
         return true;
       }
     }
@@ -606,13 +606,6 @@ Nfc.prototype = {
       if (this.powerLevel != NFC.NFC_POWER_LEVEL_ENABLED) {
         debug("NFC is not enabled. current powerLevel:" + this.powerLevel);
         this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_NOT_ENABLED);
-        return null;
-      }
-
-      // Sanity check on sessionToken.
-      if (!SessionHelper.isValidToken(message.data.sessionToken)) {
-        debug("Invalid Session Token: " + message.data.sessionToken);
-        this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_BAD_SESSION_ID);
         return null;
       }
 
