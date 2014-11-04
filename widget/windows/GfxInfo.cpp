@@ -1109,14 +1109,8 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
       os = DRIVER_OS_WINDOWS_XP;
 
     if (mHasDriverVersionMismatch) {
-      if (aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS ||
-          aFeature == nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS ||
-          aFeature == nsIGfxInfo::FEATURE_DIRECT2D ||
-          aFeature == nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS)
-      {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
-        return NS_OK;
-      }
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION;
+      return NS_OK;
     }
   }
 
