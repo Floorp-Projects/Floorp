@@ -305,6 +305,8 @@ public:
 
     virtual bool RecvGeolocationUpdate(const GeoPosition& somewhere) MOZ_OVERRIDE;
 
+    virtual bool RecvGeolocationError(const uint16_t& errorCode) MOZ_OVERRIDE;
+
     virtual bool RecvUpdateDictionaryList(const InfallibleTArray<nsString>& aDictionaries) MOZ_OVERRIDE;
 
     virtual bool RecvAddPermission(const IPC::Permission& permission) MOZ_OVERRIDE;

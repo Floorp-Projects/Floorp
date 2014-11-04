@@ -87,6 +87,37 @@ use[id$="-red"] {
   <path id="video-shape" fill-rule="evenodd" clip-rule="evenodd" d="M14.9,3.129l-3.476,3.073V3.873c0-0.877-0.663-1.587-1.482-1.587
     H1.482C0.663,2.286,0,2.996,0,3.873v8.254c0,0.877,0.663,1.587,1.482,1.587h8.461c0.818,0,1.482-0.711,1.482-1.587V9.762
     l3.476,3.073c0.3,0.321,0.714,0.416,1.1,0.331V2.798C15.614,2.713,15.2,2.808,14.9,3.129z"/>
+  <g id="copy-shape">
+    <circle fill-rule="evenodd" clip-rule="evenodd" fill="#0096DD" cx="8" cy="8" r="8"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="none"
+          stroke="#FFFFFF" stroke-width="0.75" stroke-miterlimit="10"
+          d="M10.815,6.286H7.556c-0.164,0-0.296,0.128-0.296,0.286v5.143C7.259,11.872,7.392,12,7.556,12h4.148
+             C11.867,12,12,11.872,12,11.714V7.429L10.815,6.286z
+             M8.741,6.275V5.143L7.556,4H7.528C6.509,4,4.593,4,4.593,4H4.296
+             C4.133,4,4,4.128,4,4.286v5.143c0,0.158,0.133,0.286,0.296,0.286H7.25V6.561c0-0.158,0.133-0.286,0.296-0.286H8.741z"/>
+    <polygon fill-rule="evenodd" clip-rule="evenodd"
+             fill="#FFFFFF" points="10.222,8 10.222,6.857 11.407,8"/>
+    <polygon fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF"
+             points="6.963,5.714 6.963,4.571 8.148,5.714"/>
+  </g>
+  <g id="checkmark-shape">
+    <circle fill-rule="evenodd" clip-rule="evenodd" fill="#0096DD" cx="8"
+            cy="8" r="8"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF"
+          d="M7.236,12L12,5.007L10.956,4L7.224,9.465l-2.14-2.326L4,8.146L7.236,12z"/>
+  </g>
+  <g id="trash-shape">
+    <circle fill-rule="evenodd" clip-rule="evenodd" fill="#D74345" cx="8" cy="8" r="8"/>
+    <path fill="#FFFFFF" d="M12,5.79c0-0.742-0.537-1.344-1.2-1.344h-0.583V4.121c0-0.713-0.516-1.29-1.152-1.29h-2.13
+      c-0.636,0-1.152,0.578-1.152,1.29v0.324H5.2C4.537,4.446,4,5.048,4,5.79v0.898h0.687l0.508,5.438
+      c0.054,0.585,0.543,1.044,1.114,1.044h3.38c0.57,0,1.06-0.458,1.114-1.043l0.509-5.439H12V5.79z M6.407,4.264V4.165
+      c0-0.375,0.271-0.678,0.606-0.678h1.974c0.334,0,0.606,0.304,0.606,0.678v0.099c0,0.063-0.01,0.123-0.025,0.181H6.432
+      C6.417,4.387,6.407,4.328,6.407,4.264z M10.057,12.056c-0.019,0.197-0.188,0.363-0.368,0.363h-3.38
+      c-0.182,0-0.35-0.166-0.368-0.363L5.44,6.687h5.12L10.057,12.056z"/>
+    <rect x="7.75" y="7.542" fill="#FFFFFF" width="0.5" height="4"/>
+    <polyline fill="#FFFFFF" points="9.25,7.542 8.75,7.542 8.75,11.542 9.25,11.542  "/>
+    <rect x="6.75" y="7.542" fill="#FFFFFF" width="0.5" height="4"/>
+  </g>
 </defs>
 <use id="audio"               xlink:href="#audio-shape"/>
 <use id="audio-hover"         xlink:href="#audio-shape"/>
@@ -98,6 +129,8 @@ use[id$="-red"] {
 <use id="contacts"            xlink:href="#contacts-shape"/>
 <use id="contacts-hover"      xlink:href="#contacts-shape"/>
 <use id="contacts-active"     xlink:href="#contacts-shape"/>
+<use id="copy"                xlink:href="#copy-shape"/>
+<use id="checkmark"           xlink:href="#checkmark-shape"/>
 <use id="google"              xlink:href="#google-shape"/>
 <use id="google-hover"        xlink:href="#google-shape"/>
 <use id="google-active"       xlink:href="#google-shape"/>
@@ -113,6 +146,7 @@ use[id$="-red"] {
 <use id="tag"                 xlink:href="#tag-shape"/>
 <use id="tag-hover"           xlink:href="#tag-shape"/>
 <use id="tag-active"          xlink:href="#tag-shape"/>
+<use id="trash"               xlink:href="#trash-shape"/>
 <use id="unblock"             xlink:href="#unblock-shape"/>
 <use id="unblock-hover"       xlink:href="#unblock-shape"/>
 <use id="unblock-active"      xlink:href="#unblock-shape"/>
