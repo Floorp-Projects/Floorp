@@ -1285,6 +1285,8 @@ var gBrowserInit = {
     // Add Devtools menuitems and listeners
     gDevToolsBrowser.registerBrowserWindow(window);
 
+    gMenuButtonUpdateBadge.init();
+
     window.addEventListener("mousemove", MousePosTracker, false);
     window.addEventListener("dragover", MousePosTracker, false);
 
@@ -1430,6 +1432,8 @@ var gBrowserInit = {
     BrowserOnClick.uninit();
 
     DevEdition.uninit();
+
+    gMenuButtonUpdateBadge.uninit();
 
     var enumerator = Services.wm.getEnumerator(null);
     enumerator.getNext();
@@ -2396,6 +2400,118 @@ function PageProxyClickHandler(aEvent)
   if (aEvent.button == 1 && gPrefService.getBoolPref("middlemouse.paste"))
     middleMousePaste(aEvent);
 }
+
+// Setup the hamburger button badges for updates, if enabled.
+let gMenuButtonUpdateBadge = {
+  enabled: false,
+
+  init: function () {
+    try {
+      this.enabled = Services.prefs.getBoolPref("app.update.badge");
+    } catch (e) {}
+    if (this.enabled) {
+      PanelUI.menuButton.classList.add("badged-button");
+      Services.obs.addObserver(this, "update-staged", false);
+    }
+  },
+
+  uninit: function () {
+    if (this.enabled) {
+      Services.obs.removeObserver(this, "update-staged");
+      PanelUI.panel.removeEventListener("popupshowing", this, true);
+      this.enabled = false;
+    }
+  },
+
+  onMenuPanelCommand: function(event) {
+    if (event.originalTarget.getAttribute("update-status") === "succeeded") {
+      // restart the app
+      let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+                       .createInstance(Ci.nsISupportsPRBool);
+      Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+
+      if (!cancelQuit.data) {
+        Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      }
+    } else {
+      // open the page for manual update
+      let url = Services.urlFormatter.formatURLPref("app.update.url.manual");
+      openUILinkIn(url, "tab");
+    }
+  },
+
+  observe: function (subject, topic, status) {
+    const STATE_DOWNLOADING     = "downloading";
+    const STATE_PENDING         = "pending";
+    const STATE_PENDING_SVC     = "pending-service";
+    const STATE_APPLIED         = "applied";
+    const STATE_APPLIED_SVC     = "applied-service";
+    const STATE_FAILED          = "failed";
+
+    let updateButton = document.getElementById("PanelUI-update-status");
+
+    let updateButtonText;
+    let stringId;
+
+    // Update the UI when the background updater is finished.
+    switch (status) {
+      case STATE_APPLIED:
+      case STATE_APPLIED_SVC:
+      case STATE_PENDING:
+      case STATE_PENDING_SVC:
+        // If the update is successfully applied, or if the updater has fallen back
+        // to non-staged updates, add a badge to the hamburger menu to indicate an
+        // update will be applied once the browser restarts.
+        let badge = document.getAnonymousElementByAttribute(PanelUI.menuButton,
+                                                            "class",
+                                                            "toolbarbutton-badge");
+        badge.style.backgroundColor = 'green';
+        PanelUI.menuButton.setAttribute("badge", "\u2605");
+
+        let brandBundle = document.getElementById("bundle_brand");
+        let brandShortName = brandBundle.getString("brandShortName");
+        stringId = "appmenu.restartNeeded.description";
+        updateButtonText = gNavigatorBundle.getFormattedString(stringId,
+                                                               [brandShortName]);
+
+        updateButton.label = updateButtonText;
+        updateButton.hidden = false;
+        updateButton.setAttribute("update-status", "succeeded");
+
+        PanelUI.panel.addEventListener("popupshowing", this, true);
+
+        break;
+      case STATE_FAILED:
+        // Background update has failed, let's show the UI responsible for
+        // prompting the user to update manually.
+        PanelUI.menuButton.setAttribute("badge", "!");
+
+        stringId = "appmenu.updateFailed.description";
+        updateButtonText = gNavigatorBundle.getString(stringId);
+
+        updateButton.label = updateButtonText;
+        updateButton.hidden = false;
+        updateButton.setAttribute("update-status", "failed");
+
+        PanelUI.panel.addEventListener("popupshowing", this, true);
+
+        break;
+      case STATE_DOWNLOADING:
+        // We've fallen back to downloading the full update because the partial
+        // update failed to get staged in the background. Therefore we need to keep
+        // our observer.
+        return;
+    }
+    this.uninit();
+  },
+
+  handleEvent: function(e) {
+    if (e.type === "popupshowing") {
+      PanelUI.menuButton.removeAttribute("badge");
+      PanelUI.panel.removeEventListener("popupshowing", this, true);
+    }
+  }
+};
 
 /**
  * Handle command events bubbling up from error page content

@@ -16,6 +16,10 @@
       </vbox>
 
       <footer id="PanelUI-footer">
+        <toolbarbutton id="PanelUI-update-status"
+                       oncommand="gMenuButtonUpdateBadge.onMenuPanelCommand(event);"
+                       wrap="true"
+                       hidden="true"/>
         <toolbarbutton id="PanelUI-fxa-status"
                        defaultlabel="&fxaSignIn.label;"
                        errorlabel="&fxaSignInError.label;"
