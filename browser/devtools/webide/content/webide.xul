@@ -68,6 +68,7 @@
         <menuitem command="cmd_removeProject" accesskey="&projectMenu_remove_accesskey;"/>
         <menuseparator/>
         <menuitem command="cmd_showPrefs" label="&projectMenu_showPrefs_label;" accesskey="&projectMenu_showPrefs_accesskey;"/>
+        <menuitem command="cmd_showAddons" label="&projectMenu_manageComponents_label;" accesskey="&projectMenu_manageComponents_accesskey;"/>
       </menupopup>
     </menu>
 
@@ -85,7 +86,6 @@
     <menu id="menu-view" label="&viewMenu_label;" accesskey="&viewMenu_accesskey;">
       <menupopup id="menu-ViewPopup">
         <menuitem command="cmd_toggleEditor" key="key_toggleEditor" accesskey="&viewMenu_toggleEditor_accesskey;"/>
-        <menuitem command="cmd_showAddons" label="&viewMenu_showAddons_label;" accesskey="&viewMenu_showAddons_accesskey;"/>
       </menupopup>
     </menu>
 

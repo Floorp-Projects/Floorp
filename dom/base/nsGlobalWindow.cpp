@@ -41,6 +41,7 @@
 #include "WindowNamedPropertiesHandler.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionListener.h"
+#include "nsCaret.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
@@ -9332,6 +9333,38 @@ CheckReason(int16_t aReason, SelectionChangeReason aReasonType)
   }
 }
 
+static nsRect
+GetSelectionBoundingRect(Selection* aSel, nsIPresShell* aShell)
+{
+  nsRect res;
+  // Bounding client rect may be empty after calling GetBoundingClientRect
+  // when range is collapsed. So we get caret's rect when range is
+  // collapsed.
+  if (aSel->IsCollapsed()) {
+    aShell->FlushPendingNotifications(Flush_Layout);
+    nsIFrame* frame = nsCaret::GetGeometry(aSel, &res);
+    if (frame) {
+      nsIFrame* relativeTo =
+        nsLayoutUtils::GetContainingBlockForClientRect(frame);
+      res = nsLayoutUtils::TransformFrameRectToAncestor(frame, res, relativeTo);
+    }
+  } else {
+    int32_t rangeCount = aSel->GetRangeCount();
+    nsLayoutUtils::RectAccumulator accumulator;
+    for (int32_t idx = 0; idx < rangeCount; ++idx) {
+      nsRange* range = aSel->GetRangeAt(idx);
+      nsRange::CollectClientRects(&accumulator, range,
+                                  range->GetStartParent(), range->StartOffset(),
+                                  range->GetEndParent(), range->EndOffset(),
+                                  true, false);
+    }
+    res = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect :
+      accumulator.mResultRect;
+  }
+
+  return res;
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason)
 {
@@ -9377,17 +9410,7 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, in
       }
 
       Selection* selection = static_cast<Selection*>(aSel);
-      int32_t rangeCount = selection->GetRangeCount();
-      nsLayoutUtils::RectAccumulator accumulator;
-      for (int32_t idx = 0; idx < rangeCount; ++idx) {
-        nsRange* range = selection->GetRangeAt(idx);
-        nsRange::CollectClientRects(&accumulator, range,
-                                    range->GetStartParent(), range->StartOffset(),
-                                    range->GetEndParent(), range->EndOffset(),
-                                    true, false);
-      }
-      nsRect rect = accumulator.mResultRect.IsEmpty() ? accumulator.mFirstRect :
-        accumulator.mResultRect;
+      nsRect rect = GetSelectionBoundingRect(selection, mDoc->GetShell());
       nsRefPtr<DOMRect> domRect = new DOMRect(ToSupports(this));
       domRect->SetLayoutRect(rect);
       init.mBoundingClientRect = domRect;

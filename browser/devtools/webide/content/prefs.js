@@ -19,7 +19,7 @@ window.addEventListener("load", function onLoad() {
   // Buttons
   document.querySelector("#close").onclick = CloseUI;
   document.querySelector("#restore").onclick = RestoreDefaults;
-  document.querySelector("#manageSimulators").onclick = ShowAddons;
+  document.querySelector("#manageComponents").onclick = ShowAddons;
 
   // Initialize the controls
   FillForm();

@@ -1413,6 +1413,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(0px, 192px, 32px, 160px);
   }
 
+  #PanelUI-update-status > .toolbarbutton-icon,
   #PanelUI-fxa-status > .toolbarbutton-icon,
   #PanelUI-quit > .toolbarbutton-icon,
   #PanelUI-customize > .toolbarbutton-icon,

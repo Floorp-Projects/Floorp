@@ -413,12 +413,50 @@ BrowserGlue.prototype = {
       case "nsPref:changed":
         if (data == POLARIS_ENABLED) {
           let enabled = Services.prefs.getBoolPref(POLARIS_ENABLED);
-          Services.prefs.setBoolPref("privacy.donottrackheader.enabled", enabled);
-          Services.prefs.setBoolPref("privacy.trackingprotection.enabled", enabled);
-          Services.prefs.setBoolPref("privacy.trackingprotection.ui.enabled", enabled);
+          if (enabled) {
+            let e10sEnabled = Services.appinfo.browserTabsRemoteAutostart;
+            let shouldRestart = e10sEnabled && this._promptForE10sRestart();
+            // Only set the related prefs if e10s is not enabled or the user
+            // saw a notification that e10s would be disabled on restart.
+            if (!e10sEnabled || shouldRestart) {
+              Services.prefs.setBoolPref("privacy.donottrackheader.enabled", enabled);
+              Services.prefs.setBoolPref("privacy.trackingprotection.enabled", enabled);
+              Services.prefs.setBoolPref("privacy.trackingprotection.ui.enabled", enabled);
+              if (shouldRestart) {
+                Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |
+                                      Ci.nsIAppStartup.eRestart);
+              }
+            } else {
+              // The user chose not to disable E10s which is temporarily
+              // incompatible with Polaris.
+              Services.prefs.clearUserPref(POLARIS_ENABLED);
+            }
+          } else {
+            // Don't reset DNT because its visible pref is independent of
+            // Polaris and may have been previously set.
+            Services.prefs.clearUserPref("privacy.trackingprotection.enabled");
+            Services.prefs.clearUserPref("privacy.trackingprotection.ui.enabled");
+          }
         }
 #endif
     }
+  },
+
+  _promptForE10sRestart: function () {
+    let win = this.getMostRecentBrowserWindow();
+    let brandBundle = win.document.getElementById("bundle_brand");
+    let brandName = brandBundle.getString("brandShortName");
+    let prefBundle = win.document.getElementById("bundle_preferences");
+    let msg = "Multiprocess Nightly (e10s) does not yet support tracking protection. Multiprocessing will be disabled if you restart Firefox. Would you like to continue?";
+    let title = prefBundle.getFormattedString("shouldRestartTitle", [brandName]);
+    let shouldRestart = Services.prompt.confirm(win, title, msg);
+    if (shouldRestart) {
+      let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+                       .createInstance(Ci.nsISupportsPRBool);
+      Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+      shouldRestart = !cancelQuit.data;
+    }
+    return shouldRestart;
   },
 
   _syncSearchEngines: function () {
