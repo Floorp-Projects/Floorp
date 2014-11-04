@@ -99,8 +99,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x5b27abd6, 0x9e53, 0x4a0a, \
-  { 0x86, 0xf, 0x77, 0x5c, 0xc5, 0x69, 0x35, 0xf } };
+{ 0xcfe7543b, 0x8c0e, 0x40c3, \
+  { 0x9a, 0x6d, 0x77, 0x6e, 0x84, 0x8a, 0x7c, 0xfc } };
 
 /*
  * Window shadow styles
@@ -1366,6 +1366,12 @@ class nsIWidget : public nsISupports {
      * in the titlebar. Only implemented on OS X.
      */
     virtual void SetDrawsTitle(bool aDrawTitle) {}
+
+    /**
+     * Indicates whether the widget should attempt to make titlebar controls
+     * easier to see on dark titlebar backgrounds.
+     */
+    virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) {}
 
     /** 
      * Hide window chrome (borders, buttons) for this widget.
