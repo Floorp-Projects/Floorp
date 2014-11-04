@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px" y="0px"
+     viewBox="0 0 16 16"
+     enable-background="new 0 0 16 16"
+     width="16"
+     height="16"
+     xml:space="preserve">
+<style>
+  use:not(:target) {
+    display: none;
+  }
+
+  use {
+    fill: #797C80;
+  }
+
+  use[id*="-inverted"] {
+    fill: #B6BABF;
+  }
+
+  use[id*="-mac"] {
+    transform: translate(16px) scaleX(-1);
+  }
+</style>
+<defs style="display: none;">
+  <path id="search" fill-rule="evenodd" clip-rule="evenodd" d="M9.356,1.178c-3.014,0-5.458,2.45-5.458,5.472c0,1.086,0.32,2.096,0.864,2.947
+    l-3.279,3.287c-0.396,0.397-0.396,1.041,0,1.438l0.202,0.202c0.396,0.397,1.039,0.397,1.435,0l3.275-3.283
+    c0.854,0.554,1.869,0.88,2.962,0.88c3.014,0,5.458-2.45,5.458-5.471C14.814,3.627,12.371,1.178,9.356,1.178z M9.356,10.001
+    c-1.847,0-3.344-1.501-3.344-3.352c0-1.851,1.497-3.352,3.344-3.352c1.846,0,3.344,1.501,3.344,3.352
+    C12.7,8.501,11.203,10.001,9.356,10.001z"/>
+</defs>
+<use id="search-icon"               xlink:href="#search"/>
+<use id="search-icon-inverted"      xlink:href="#search"/>
+<use id="search-icon-mac"           xlink:href="#search"/>
+<use id="search-icon-mac-inverted"  xlink:href="#search"/>
+</svg>
