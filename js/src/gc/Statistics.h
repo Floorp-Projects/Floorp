@@ -70,6 +70,9 @@ enum Phase {
     PHASE_COMPACT_UPDATE,
     PHASE_COMPACT_UPDATE_GRAY,
     PHASE_GC_END,
+    PHASE_MINOR_GC,
+    PHASE_COMPACT_STOREBUFFER_IN_MINOR_GC,
+    PHASE_COMPACT_STOREBUFFER_NO_PARENT,
 
     PHASE_LIMIT
 };
@@ -78,7 +81,13 @@ enum Stat {
     STAT_NEW_CHUNK,
     STAT_DESTROY_CHUNK,
     STAT_MINOR_GC,
+
+    // Number of times the storebuffers were compacted
     STAT_COMPACT_STOREBUFFER,
+
+    // Number of times a 'put' into a storebuffer overflowed, triggering a
+    // compaction
+    STAT_STOREBUFFER_OVERFLOW,
 
     STAT_LIMIT
 };
