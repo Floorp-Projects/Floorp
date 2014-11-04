@@ -385,6 +385,7 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.appendNumber("Total Zones", "%d", "", zoneStats.zoneCount);
     ss.appendNumber("Total Compartments", "%d", "", zoneStats.compartmentCount);
     ss.appendNumber("Minor GCs", "%d", "", counts[STAT_MINOR_GC]);
+    ss.appendNumber("Store Buffer Compactions", "%d", "", counts[STAT_COMPACT_STOREBUFFER]);
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     ss.appendDecimal("SCC Sweep Total", "ms", t(sccTotal));
@@ -476,6 +477,7 @@ Statistics::formatDescription()
   Zones Collected: %d of %d\n\
   Compartments Collected: %d of %d\n\
   MinorGCs since last GC: %d\n\
+  Store Buffer Compactions: %d\n\
   MMU 20ms:%.1f%%; 50ms:%.1f%%\n\
   SCC Sweep Total (MaxPause): %.3fms (%.3fms)\n\
   HeapSize: %.3f MiB\n\
@@ -491,6 +493,7 @@ Statistics::formatDescription()
                 zoneStats.collectedZoneCount, zoneStats.zoneCount,
                 zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
                 counts[STAT_MINOR_GC],
+                counts[STAT_COMPACT_STOREBUFFER],
                 mmu20 * 100., mmu50 * 100.,
                 t(sccTotal), t(sccLongest),
                 double(preBytes) / 1024. / 1024.,
