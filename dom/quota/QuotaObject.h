@@ -75,10 +75,10 @@ class OriginInfo MOZ_FINAL
   friend class QuotaObject;
 
 public:
-  OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin, uint64_t aLimit,
-             uint64_t aUsage, int64_t aAccessTime)
+  OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin, bool aIsApp,
+             uint64_t aLimit, uint64_t aUsage, int64_t aAccessTime)
   : mGroupInfo(aGroupInfo), mOrigin(aOrigin), mLimit(aLimit), mUsage(aUsage),
-    mAccessTime(aAccessTime)
+    mAccessTime(aAccessTime), mIsApp(aIsApp)
   {
     MOZ_COUNT_CTOR(OriginInfo);
   }
@@ -90,6 +90,12 @@ public:
   {
     return mAccessTime;
   }
+
+  bool
+  IsTreatedAsPersistent() const;
+
+  bool
+  IsTreatedAsTemporary() const;
 
 private:
   // Private destructor, to discourage deletion outside of Release():
@@ -124,10 +130,11 @@ private:
   nsDataHashtable<nsStringHashKey, QuotaObject*> mQuotaObjects;
 
   GroupInfo* mGroupInfo;
-  nsCString mOrigin;
-  uint64_t mLimit;
+  const nsCString mOrigin;
+  const uint64_t mLimit;
   uint64_t mUsage;
   int64_t mAccessTime;
+  const bool mIsApp;
 };
 
 class OriginInfoLRUComparator
@@ -155,25 +162,15 @@ class GroupInfo MOZ_FINAL
   friend class QuotaObject;
 
 public:
-  GroupInfo(PersistenceType aPersistenceType, const nsACString& aGroup)
-  : mPersistenceType(aPersistenceType), mGroup(aGroup), mUsage(0)
+  GroupInfo(GroupInfoPair* aGroupInfoPair, PersistenceType aPersistenceType,
+            const nsACString& aGroup)
+  : mGroupInfoPair(aGroupInfoPair), mPersistenceType(aPersistenceType),
+    mGroup(aGroup), mUsage(0)
   {
     MOZ_COUNT_CTOR(GroupInfo);
   }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GroupInfo)
-
-  bool
-  IsForPersistentStorage() const
-  {
-    return mPersistenceType == PERSISTENCE_TYPE_PERSISTENT;
-  }
-
-  bool
-  IsForTemporaryStorage() const
-  {
-    return mPersistenceType == PERSISTENCE_TYPE_TEMPORARY;
-  }
 
 private:
   // Private destructor, to discourage deletion outside of Release():
@@ -205,8 +202,18 @@ private:
     return !mOriginInfos.IsEmpty();
   }
 
+  uint64_t
+  LockedGetTemporaryUsage();
+
+  void
+  LockedGetTemporaryOriginInfos(nsTArray<OriginInfo*>* aOriginInfos);
+
+  void
+  LockedRemoveTemporaryOriginInfos();
+
   nsTArray<nsRefPtr<OriginInfo> > mOriginInfos;
 
+  GroupInfoPair* mGroupInfoPair;
   PersistenceType mPersistenceType;
   nsCString mGroup;
   uint64_t mUsage;
@@ -215,6 +222,7 @@ private:
 class GroupInfoPair
 {
   friend class QuotaManager;
+  friend class QuotaObject;
 
 public:
   GroupInfoPair()
