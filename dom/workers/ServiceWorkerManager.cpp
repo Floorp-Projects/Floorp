@@ -2185,7 +2185,12 @@ ServiceWorkerManager::GetServicedClients(const nsCString& aScope,
   nsRefPtr<ServiceWorkerDomainInfo> domainInfo = GetDomainInfo(aScope);
   nsRefPtr<ServiceWorkerRegistrationInfo> registration =
     domainInfo->GetRegistration(aScope);
-  MOZ_ASSERT(registration);
+
+  if (!registration) {
+    // The registration was removed, leave the array empty.
+    return;
+  }
+
   FilterRegistrationData data(aControlledDocuments, registration);
 
   domainInfo->mControlledDocuments.EnumerateRead(EnumControlledDocuments,
