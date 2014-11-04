@@ -18,7 +18,7 @@ describe("loop.roomViews", function () {
                              removeCallback: fakeRemoveCallback } };
 
     fakeWindow = { document: {} };
-    loop.roomViews.setRootObject(fakeWindow);
+    loop.shared.mixins.setRootObject(fakeWindow);
 
     store = new loop.store.LocalRoomStore({
       dispatcher: { register: function() {} },
@@ -29,53 +29,17 @@ describe("loop.roomViews", function () {
 
   afterEach(function() {
     sinon.sandbox.restore();
-    loop.roomViews.setRootObject(window);
+    loop.shared.mixins.setRootObject(window);
   });
 
-  describe("EmptyRoomView", function() {
+  describe("DesktopRoomView", function() {
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
-        new loop.roomViews.EmptyRoomView({
+        new loop.roomViews.DesktopRoomView({
           mozLoop: fakeMozLoop,
           localRoomStore: store
         }));
     }
-
-    describe("#componentDidMount", function() {
-       it("should add #onCreationError using mozLoop.rooms.addCallback",
-         function() {
-
-           var testComponent = mountTestComponent();
-
-           sinon.assert.calledOnce(fakeMozLoop.rooms.addCallback);
-           sinon.assert.calledWithExactly(fakeMozLoop.rooms.addCallback,
-             fakeRoomId, "RoomCreationError", testComponent.onCreationError);
-         });
-    });
-
-    describe("#componentWillUnmount", function () {
-      it("should remove #onCreationError using mozLoop.rooms.addCallback",
-        function () {
-          var testComponent = mountTestComponent();
-
-          testComponent.componentWillUnmount();
-
-          sinon.assert.calledOnce(fakeMozLoop.rooms.removeCallback);
-          sinon.assert.calledWithExactly(fakeMozLoop.rooms.removeCallback,
-            fakeRoomId, "RoomCreationError", testComponent.onCreationError);
-        });
-      });
-
-    describe("#onCreationError", function() {
-      it("should log an error using console.error", function() {
-        fakeWindow.console = { error: sandbox.stub() };
-        var testComponent = mountTestComponent();
-
-        testComponent.onCreationError(new Error("fake error"));
-
-        sinon.assert.calledOnce(fakeWindow.console.error);
-      });
-    });
 
     describe("#render", function() {
       it("should set document.title to store.serverData.roomName",
@@ -87,7 +51,7 @@ describe("loop.roomViews", function () {
           mountTestComponent();
 
           expect(fakeWindow.document.title).to.equal(fakeRoomName);
-        })
+        });
     });
 
   });

@@ -58,6 +58,17 @@ loop.shared.mixins = (function() {
   };
 
   /**
+   * Document title mixin.
+   *
+   * @type {Object}
+   */
+  var DocumentTitleMixin = {
+    setTitle: function(newTitle) {
+      rootObject.document.title = newTitle;
+    }
+  };
+
+  /**
    * Dropdown menu mixin.
    * @type {Object}
    */
@@ -184,6 +195,7 @@ loop.shared.mixins = (function() {
     DropdownMenuMixin: DropdownMenuMixin,
     DocumentVisibilityMixin: DocumentVisibilityMixin,
     DocumentLocationMixin: DocumentLocationMixin,
+    DocumentTitleMixin: DocumentTitleMixin,
     UrlHashChangeMixin: UrlHashChangeMixin
   };
 })();
