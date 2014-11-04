@@ -63,21 +63,10 @@ static const unsigned int MAX_SOURCE_BUFFERS = 16;
 namespace mozilla {
 
 static const char* const gMediaSourceTypes[6] = {
-// XXX: Disabled other temporarily on desktop to allow WebM testing.  For now,
-// set the developer-only media.mediasource.ignore_codecs pref to true to test
-// other codecs, and expect things to be broken.
-//
-// Disabled WebM in favour of MP4 on Firefox OS.
-#ifdef MOZ_GONK_MEDIACODEC
   "video/mp4",
   "audio/mp4",
-#else
   "video/webm",
   "audio/webm",
-#endif
-#if 0
-  "audio/mpeg",
-#endif
   nullptr
 };
 
@@ -87,10 +76,6 @@ IsTypeSupported(const nsAString& aType)
   if (aType.IsEmpty()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
-  if (Preferences::GetBool("media.mediasource.ignore_codecs", false)) {
-    return NS_OK;
-  }
-  // TODO: Further restrict this to formats in the spec.
   nsContentTypeParser parser(aType);
   nsAutoString mimeType;
   nsresult rv = parser.GetType(mimeType);
@@ -100,6 +85,16 @@ IsTypeSupported(const nsAString& aType)
   bool found = false;
   for (uint32_t i = 0; gMediaSourceTypes[i]; ++i) {
     if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
+      if ((mimeType.EqualsASCII("video/mp4") ||
+           mimeType.EqualsASCII("audio/mp4")) &&
+          !Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
+        break;
+      }
+      if ((mimeType.EqualsASCII("video/webm") ||
+           mimeType.EqualsASCII("audio/webm")) &&
+          !Preferences::GetBool("media.mediasource.webm.enabled", false)) {
+        break;
+      }
       found = true;
       break;
     }
