@@ -2363,6 +2363,18 @@ ContentChild::RecvOnAppThemeChanged()
     return true;
 }
 
+PBrowserOrId
+ContentChild::GetBrowserOrId(TabChild* aTabChild)
+{
+    if (!aTabChild ||
+        this == aTabChild->Manager()) {
+        return PBrowserOrId(aTabChild);
+    }
+    else {
+        return PBrowserOrId(aTabChild->GetTabId());
+    }
+}
+
 } // namespace dom
 } // namespace mozilla
 
