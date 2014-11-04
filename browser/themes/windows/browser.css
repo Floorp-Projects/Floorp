@@ -943,6 +943,8 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   position: relative !important;
   z-index: 1 !important;
   border-radius: 0 10000px 10000px 0 !important;
+  --toolbarbutton-hover-boxshadow: 0 1px 0 0 hsla(210,4%,10%,.25),
+                                   0 0 0 1px hsla(210,4%,10%,.25);
 }
 
 #back-button:-moz-locale-dir(rtl) {
