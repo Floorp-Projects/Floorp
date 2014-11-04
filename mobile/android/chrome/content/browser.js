@@ -4225,7 +4225,7 @@ Tab.prototype = {
           return;
 
         // Once document is fully loaded, parse it
-        Reader.parseDocumentFromTab(this.id, function (article) {
+        Reader.parseDocumentFromTab(this, function (article) {
           // The loaded page may have changed while we were parsing the document. 
           // Make sure we've got the current one.
           let uri = this.browser.currentURI;
