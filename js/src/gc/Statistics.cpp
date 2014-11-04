@@ -27,6 +27,7 @@ using namespace js::gc;
 using namespace js::gcstats;
 
 using mozilla::PodArrayZero;
+using mozilla::PodZero;
 
 /* Except for the first and last, slices of less than 10ms are not reported. */
 static const int64_t SLICE_MIN_REPORT_TIME = 10 * PRMJ_USEC_PER_MSEC;
@@ -283,6 +284,7 @@ struct PhaseInfo
 static const Phase PHASE_NO_PARENT = PHASE_LIMIT;
 
 static const PhaseInfo phases[] = {
+    { PHASE_MUTATOR, "Mutator Running", PHASE_NO_PARENT },
     { PHASE_GC_BEGIN, "Begin Callback", PHASE_NO_PARENT },
     { PHASE_WAIT_BACKGROUND_THREAD, "Wait Background Thread", PHASE_NO_PARENT },
     { PHASE_MARK_DISCARD_CODE, "Mark Discard Code", PHASE_NO_PARENT },
@@ -642,6 +644,8 @@ Statistics::Statistics(JSRuntime *rt)
     fullFormat(false),
     gcDepth(0),
     nonincrementalReason(nullptr),
+    timingMutator(false),
+    timedGCStart(0),
     preBytes(0),
     maxPauseInInterval(0),
     phaseNestingDepth(0),
@@ -778,8 +782,8 @@ Statistics::endGC()
 
     // Clear the timers at the end of a GC because we accumulate time for some
     // phases (eg storebuffer compaction) during the mutator's run.
-    PodArrayZero(phaseStartTimes);
-    PodArrayZero(phaseTimes);
+    PodZero(&phaseStartTimes[PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
+    PodZero(&phaseTimes[PHASE_GC_BEGIN], PHASE_LIMIT - PHASE_GC_BEGIN);
 }
 
 void
@@ -837,10 +841,48 @@ Statistics::endSlice()
 }
 
 void
+Statistics::startTimingMutator()
+{
+    MOZ_ASSERT(!timingMutator);
+
+    // Should only be called from outside of GC
+    MOZ_ASSERT(phaseNestingDepth == 0);
+
+    timingMutator = true;
+    timedGCTime = 0;
+    phaseStartTimes[PHASE_MUTATOR] = 0;
+    phaseTimes[PHASE_MUTATOR] = 0;
+    timedGCStart = 0;
+
+    beginPhase(PHASE_MUTATOR);
+}
+
+void
+Statistics::stopTimingMutator(double &mutator_ms, double &gc_ms)
+{
+    MOZ_ASSERT(timingMutator);
+
+    // Should only be called from outside of GC
+    MOZ_ASSERT(phaseNestingDepth == 1 && phaseNesting[0] == PHASE_MUTATOR);
+
+    endPhase(PHASE_MUTATOR);
+    mutator_ms = t(phaseTimes[PHASE_MUTATOR]);
+    gc_ms = t(timedGCTime);
+    timingMutator = false;
+}
+
+void
 Statistics::beginPhase(Phase phase)
 {
     /* Guard against re-entry */
     MOZ_ASSERT(!phaseStartTimes[phase]);
+
+    if (timingMutator) {
+        if (phaseNestingDepth == 1 && phaseNesting[0] == PHASE_MUTATOR) {
+            endPhase(PHASE_MUTATOR);
+            timedGCStart = PRMJ_Now();
+        }
+    }
 
 #ifdef DEBUG
     MOZ_ASSERT(phases[phase].index == phase);
@@ -868,6 +910,13 @@ Statistics::endPhase(Phase phase)
         slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
     phaseStartTimes[phase] = 0;
+
+    if (timingMutator) {
+        if (phaseNestingDepth == 0 && phase != PHASE_MUTATOR) {
+            timedGCTime += now - timedGCStart;
+            beginPhase(PHASE_MUTATOR);
+        }
+    }
 }
 
 void
