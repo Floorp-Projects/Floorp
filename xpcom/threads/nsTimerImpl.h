@@ -152,7 +152,7 @@ private:
   TimeStamp             mTimeout;
 
 #ifdef MOZ_TASK_TRACER
-  nsAutoPtr<mozilla::tasktracer::FakeTracedTask> mTracedTask;
+  nsRefPtr<mozilla::tasktracer::FakeTracedTask> mTracedTask;
 #endif
 
 #ifdef DEBUG_TIMERS
