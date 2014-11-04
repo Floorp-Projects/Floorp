@@ -245,13 +245,6 @@ endif
 #
 _ENABLE_PIC=1
 
-# PGO on MSVC is opt-in
-ifdef _MSC_VER
-ifndef MSVC_ENABLE_PGO
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-endif
-
 # No sense in profiling tools
 ifdef INTERNAL_TOOLS
 NO_PROFILE_GUIDED_OPTIMIZE = 1
