@@ -67,7 +67,8 @@ plugin-file-array = \
   $(NULL)
 
 ###########################################################################
-plugin_file    = $(firstword $(plugin-file-array))
+plugin_source_file = $(firstword $(plugin-file-array))
+plugin_file = overrides/list_$(AB_CD).txt
 plugin-file-ts = $(tgt-gendir)/$(subst $(topsrcdir)/,$(NULL),$(plugin_file)).ts
 
 GARBAGE += $(plugin-file-ts)
@@ -96,13 +97,39 @@ GARBAGE += $(search-jar) $(search-jar-ts) $(search-jar-common)
 # ---------------------------------------------------------------------------
 # search-jar contains a list of providers for the search plugin
 ###########################################################################
-SEARCH_PLUGINS = $(shell cat $(plugin_file))
-$(call errorIfEmpty,SEARCH_PLUGINS)
 
 search-jar-preqs = \
   $(plugin-file-ts) \
   $(if $(IS_LANGUAGE_REPACK),FORCE) \
+  $(GLOBAL_DEPS) \
   $(NULL)
+
+# These locales will have the additional search plugins listed in
+# extra_search_plugins merged into their set of search plugins.
+extra_search_plugin_locales := \
+  de \
+  en-GB \
+  en-US \
+  es-ES \
+  es-MX \
+  fr \
+  $(NULL)
+
+# These additional search plugins will be merged into the set of search plugins
+# for each locale listed in extra_search_plugin_locales.
+extra_search_plugins := \
+  duckduckgo \
+  $(NULL)
+
+# Take the set of locale specified search plugins, possible add extra search
+# plugins, sort, and then make unique.  The order of search plugins is not
+# important: we order the top plugins using region.properties and then sort the
+# remainder alphabetically.
+$(plugin_file): $(plugin_source_file) $(call mkdir_deps,$(dir $(plugin_file)))
+	(cat $(plugin_source_file);\
+		$(if $(filter $(AB_CD),$(extra_search_plugin_locales)),\
+			$(foreach plugin,$(extra_search_plugins),echo $(plugin);))\
+	) | sort -u > $@
 
 .PHONY: search-jar
 search-jar: $(search-jar)
@@ -110,8 +137,9 @@ $(search-jar): $(search-jar-preqs)
 	@echo '\nGenerating: search-jar'
 	printf '$(AB_CD).jar:' > $@
 	ln -fn $@ .
-	printf '$(foreach plugin,$(SEARCH_PLUGINS),$(subst __PLUGIN_SUBST__,$(plugin), \n locale/$(AB_CD)/browser/searchplugins/__PLUGIN_SUBST__.xml (__PLUGIN_SUBST__.xml)))' >>  $@
-	@echo   >> $@
+	$(foreach plugin,$(shell cat $(plugin_file)),\
+		echo " locale/$(AB_CD)/browser/searchplugins/$(plugin).xml ($(plugin).xml)" >> $@;)
+	echo " locale/$(AB_CD)/browser/searchplugins/list.txt ($(plugin_file))" >> $@
 
 ###################
 search-dir-deps = \
