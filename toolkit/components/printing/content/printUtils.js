@@ -19,6 +19,10 @@
  * the object that listens and responds to the messages that PrintUtils
  * sends.
  *
+ * This also means that <xul:browser>'s that hope to use PrintUtils must have
+ * their type attribute set to either "content", "content-targetable", or
+ * "content-primary".
+ *
  * PrintUtils sends messages at different points in its implementation, but
  * their documentation is consolidated here for ease-of-access.
  *
@@ -122,7 +126,9 @@ var PrintUtils = {
    *        The remote <xul:browser> that contains aWindow. This argument is
    *        not necessary if aWindow came from a non-remote browser, but is
    *        strictly required otherwise. This function will throw if aWindow
-   *        comes from a remote browser and aBrowser is not provided.
+   *        comes from a remote browser and aBrowser is not provided. This
+   *        browser must have its type attribute set to "content",
+   *        "content-targetable", or "content-primary".
    */
   print: function (aWindow, aBrowser)
   {
@@ -176,11 +182,14 @@ var PrintUtils = {
    *        An object that defines the following functions:
    *
    *        getPrintPreviewBrowser:
-   *          Returns the <xul:browser> to display the print preview in.
+   *          Returns the <xul:browser> to display the print preview in. This
+   *          <xul:browser> must have its type attribute set to "content",
+   *          "content-targetable", or "content-primary".
    *
    *        getSourceBrowser:
    *          Returns the <xul:browser> that contains the document being
-   *          printed.
+   *          printed. This <xul:browser> must have its type attribute set to
+   *          "content", "content-targetable", or "content-primary".
    *
    *        getNavToolbox:
    *          Returns the primary toolbox for this window.
