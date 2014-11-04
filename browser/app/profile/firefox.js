@@ -182,6 +182,9 @@ pref("app.update.metro.enabled", true);
 // If set to true, the Update Service will present no UI for any event.
 pref("app.update.silent", false);
 
+// If set to true, the hamburger button will show badges for update events.
+pref("app.update.badge", false);
+
 // If set to true, the Update Service will apply updates in the background
 // when it finishes downloading them.
 pref("app.update.staging.enabled", true);
