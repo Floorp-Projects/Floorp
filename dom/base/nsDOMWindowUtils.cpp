@@ -3480,7 +3480,7 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::LoadSheetFromURIString(const nsACString& aSheetURI, uint32_t aSheetType)
+nsDOMWindowUtils::LoadSheetUsingURIString(const nsACString& aSheetURI, uint32_t aSheetType)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
@@ -3530,6 +3530,18 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 
   doc->RemoveAdditionalStyleSheet(type, aSheetURI);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::RemoveSheetUsingURIString(const nsACString& aSheetURI, uint32_t aSheetType)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aSheetURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RemoveSheet(uri, aSheetType);
 }
 
 NS_IMETHODIMP
