@@ -22,6 +22,10 @@
                       linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
   }
 
+  #PanelUI-update-status {
+    list-style-image: url(chrome://branding/content/icon32.png);
+  }
+
   #PanelUI-fxa-status {
     list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
   }
