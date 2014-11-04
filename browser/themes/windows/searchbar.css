@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.searchbar-dropmarker-image {
+  --searchbar-dropmarker-url: url("chrome://browser/skin/searchbar-dropdown-arrow.png");
+}
+
 .autocomplete-textbox-container {
   -moz-box-align: stretch;
 }
@@ -38,7 +42,7 @@
 }
 
 .searchbar-dropmarker-image {
-  list-style-image: url("chrome://browser/skin/searchbar-dropdown-arrow.png");
+  list-style-image: var(--searchbar-dropmarker-url);
   -moz-image-region: rect(0, 13px, 11px, 0);
 }
 

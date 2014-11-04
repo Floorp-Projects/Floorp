@@ -4,6 +4,13 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* ::::: Variables ::::: */
+.panel-arrowcontent {
+  --panel-arrowcontent-background: -moz-field;
+  --panel-arrowcontent-color: -moz-FieldText;
+  --panel-arrowcontent-border: 1px solid ThreeDShadow;
+}
+
 /* ::::: menupopup ::::: */
 
 menupopup,
@@ -49,10 +56,10 @@ panel[type="arrow"][side="right"] {
 
 .panel-arrowcontent {
   padding: 10px;
-  color: -moz-FieldText;
-  background: -moz-field;
+  color: var(--panel-arrowcontent-color);
+  background: var(--panel-arrowcontent-background);
   background-clip: padding-box;
-  border: 1px solid ThreeDShadow;
+  border: var(--panel-arrowcontent-border);
   margin: 4px;
 }
 
@@ -105,7 +112,7 @@ panel[type="arrow"][side="right"] {
 %ifdef XP_WIN
 @media (-moz-windows-default-theme) {
   .panel-arrowcontent {
-    border-color: hsla(210,4%,10%,.2);
+    --panel-arrowcontent-border: 1px solid hsla(210,4%,10%,.2);
     box-shadow: 0 0 4px hsla(210,4%,10%,.2);
   }
 
