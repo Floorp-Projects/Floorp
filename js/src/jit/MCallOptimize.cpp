@@ -280,6 +280,18 @@ IonBuilder::inlineNativeGetter(CallInfo &callInfo, JSFunction *target)
     return InliningStatus_NotInlined;
 }
 
+IonBuilder::InliningStatus
+IonBuilder::inlineNonFunctionCall(CallInfo &callInfo, JSObject *target)
+{
+    // Inline a call to a non-function object, invoking the object's call or
+    // construct hook.
+
+    if (callInfo.constructing() && target->constructHook() == TypedObject::constructSized)
+        return inlineConstructTypedObject(callInfo, &target->as<SizedTypeDescr>());
+
+    return InliningStatus_NotInlined;
+}
+
 types::TemporaryTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
@@ -2503,6 +2515,34 @@ IonBuilder::inlineIsConstructing(CallInfo &callInfo)
 
     bool constructing = inlineCallInfo_->constructing();
     pushConstant(BooleanValue(constructing));
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineConstructTypedObject(CallInfo &callInfo, SizedTypeDescr *descr)
+{
+    // Only inline default constructors for now.
+    if (callInfo.argc() != 0)
+        return InliningStatus_NotInlined;
+
+    if (size_t(descr->size()) > InlineTypedObject::MaximumSize)
+        return InliningStatus_NotInlined;
+
+    JSObject *obj = inspector->getTemplateObjectForClassHook(pc, descr->getClass());
+    if (!obj || !obj->is<InlineTypedObject>())
+        return InliningStatus_NotInlined;
+
+    InlineTypedObject *templateObject = &obj->as<InlineTypedObject>();
+    if (&templateObject->typeDescr() != descr)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MNewTypedObject *ins = MNewTypedObject::New(alloc(), constraints(), templateObject,
+                                                templateObject->type()->initialHeap(constraints()));
+    current->add(ins);
+    current->push(ins);
+
     return InliningStatus_Inlined;
 }
 
