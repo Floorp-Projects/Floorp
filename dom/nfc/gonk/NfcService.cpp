@@ -106,6 +106,11 @@ public:
     COPY_OPT_FIELD(mMinorVersion, -1)
     COPY_OPT_FIELD(mPowerLevel, -1)
 
+    if (mEvent.mErrorCode != -1) {
+      event.mErrorMsg.Construct();
+      event.mErrorMsg.Value() = static_cast<NfcErrorMessage>(mEvent.mErrorCode);
+    }
+
     if (mEvent.mTechList.Length() > 0) {
       int length = mEvent.mTechList.Length();
       event.mTechList.Construct();

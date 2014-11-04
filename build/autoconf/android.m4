@@ -412,26 +412,6 @@ case "$target" in
     ;;
 esac
 
-MOZ_ARG_DISABLE_BOOL(android-include-fonts,
-[  --disable-android-include-fonts
-                          disable the inclusion of fonts into the final APK],
-    MOZ_ANDROID_EXCLUDE_FONTS=1)
-
-if test -n "$MOZ_ANDROID_EXCLUDE_FONTS"; then
-    AC_DEFINE(MOZ_ANDROID_EXCLUDE_FONTS, $MOZ_ANDROID_EXCLUDE_FONTS)
-    AC_SUBST(MOZ_ANDROID_EXCLUDE_FONTS)
-fi
-
-MOZ_ARG_ENABLE_BOOL(android-resource-constrained,
-[  --enable-android-resource-constrained
-                          exclude hi-res images and similar from the final APK],
-    MOZ_ANDROID_RESOURCE_CONSTRAINED=1)
-
-if test -n "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
-    AC_DEFINE(MOZ_ANDROID_RESOURCE_CONSTRAINED, $MOZ_ANDROID_RESOURCE_CONSTRAINED)
-    AC_SUBST(MOZ_ANDROID_RESOURCE_CONSTRAINED)
-fi
-
 MOZ_ARG_WITH_STRING(android-min-sdk,
 [  --with-android-min-sdk=[VER]     Impose a minimum Firefox for Android SDK version],
 [ MOZ_ANDROID_MIN_SDK_VERSION=$withval ])

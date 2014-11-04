@@ -96,6 +96,7 @@ this.ContentSearch = {
       addMessageListener(INBOUND_MESSAGE, this);
     Services.obs.addObserver(this, "browser-search-engine-modified", false);
     Services.obs.addObserver(this, "shutdown-leaks-before-check", false);
+    this._stringBundle = Services.strings.createBundle("chrome://global/locale/autocomplete.properties");
   },
 
   destroy: function () {
@@ -391,8 +392,11 @@ this.ContentSearch = {
     let favicon = engine.getIconURLBySize(16, 16);
     let uri1x = engine.getIconURLBySize(65, 26);
     let uri2x = engine.getIconURLBySize(130, 52);
+    let placeholder = this._stringBundle.formatStringFromName(
+      "searchWithEngine", [engine.name], 1);
     let obj = {
       name: engine.name,
+      placeholder: placeholder,
       iconBuffer: yield this._arrayBufferFromDataURI(favicon),
       logoBuffer: yield this._arrayBufferFromDataURI(uri1x),
       logo2xBuffer: yield this._arrayBufferFromDataURI(uri2x),

@@ -129,7 +129,7 @@ NfcMessageHandler::GeneralResponse(const Parcel& aParcel, EventOptions& aOptions
   }
 
   aOptions.mType = NS_ConvertUTF8toUTF16(type);
-  aOptions.mStatus = aParcel.readInt32();
+  aOptions.mErrorCode = aParcel.readInt32();
   aOptions.mSessionId = aParcel.readInt32();
 
   NS_ENSURE_TRUE(!mRequestIdQueue.IsEmpty(), false);
@@ -152,8 +152,7 @@ bool
 NfcMessageHandler::ConfigResponse(const Parcel& aParcel, EventOptions& aOptions)
 {
   aOptions.mType = NS_ConvertUTF8toUTF16(kConfigResponse);
-  aOptions.mStatus = aParcel.readInt32();
-
+  aOptions.mErrorCode = aParcel.readInt32();
   NS_ENSURE_TRUE(!mRequestIdQueue.IsEmpty(), false);
   aOptions.mRequestId = mRequestIdQueue[0];
   mRequestIdQueue.RemoveElementAt(0);
@@ -177,14 +176,14 @@ bool
 NfcMessageHandler::ReadNDEFResponse(const Parcel& aParcel, EventOptions& aOptions)
 {
   aOptions.mType = NS_ConvertUTF8toUTF16(kReadNDEFResponse);
-  aOptions.mStatus = aParcel.readInt32();
+  aOptions.mErrorCode = aParcel.readInt32();
   aOptions.mSessionId = aParcel.readInt32();
 
   NS_ENSURE_TRUE(!mRequestIdQueue.IsEmpty(), false);
   aOptions.mRequestId = mRequestIdQueue[0];
   mRequestIdQueue.RemoveElementAt(0);
 
-  if (aOptions.mStatus == NfcErrorCode::Success) {
+  if (aOptions.mErrorCode == NfcErrorCode::Success) {
     ReadNDEFMessage(aParcel, aOptions);
   }
 
