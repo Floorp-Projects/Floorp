@@ -111,6 +111,8 @@ mozilla::pkix::Time YMDHMS(int16_t year, int16_t month, int16_t day,
                            int16_t hour, int16_t minutes, int16_t seconds);
 
 ByteString TLV(uint8_t tag, const ByteString& value);
+ByteString Boolean(bool value);
+ByteString Integer(long value);
 
 ByteString CN(const ByteString&, uint8_t encodingTag = 0x0c /*UTF8String*/);
 
