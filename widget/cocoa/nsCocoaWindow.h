@@ -79,6 +79,7 @@ typedef struct _nsCocoaWindowList {
 
   BOOL mBeingShown;
   BOOL mDrawTitle;
+  BOOL mBrightTitlebarForeground;
 }
 
 - (void)importState:(NSDictionary*)aState;
@@ -108,6 +109,9 @@ typedef struct _nsCocoaWindowList {
 
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle;
 - (BOOL)wantsTitleDrawn;
+
+- (void)setUseBrightTitlebarForeground:(BOOL)aBrightForeground;
+- (BOOL)useBrightTitlebarForeground;
 
 - (void)disableSetNeedsDisplay;
 - (void)enableSetNeedsDisplay;
@@ -302,6 +306,7 @@ public:
     virtual void SetShowsFullScreenButton(bool aShow);
     virtual void SetWindowAnimationType(WindowAnimationType aType);
     virtual void SetDrawsTitle(bool aDrawTitle);
+    virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) MOZ_OVERRIDE;
     NS_IMETHOD SetNonClientMargins(nsIntMargin &margins);
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive);
     virtual void SetDrawsInTitlebar(bool aState);

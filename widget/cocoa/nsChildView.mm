@@ -2430,7 +2430,27 @@ nsChildView::UpdateTitlebarCGContext()
 
     [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[view isFlipped]]];
 
-    [cell drawWithFrame:[button bounds] inView:button];
+    if ([window useBrightTitlebarForeground] && !nsCocoaFeatures::OnYosemiteOrLater() &&
+        view == [window standardWindowButton:NSWindowFullScreenButton]) {
+      // Make the fullscreen button visible on dark titlebar backgrounds by
+      // drawing it into a new transparency layer and turning it white.
+      CGRect r = NSRectToCGRect([view bounds]);
+      CGContextBeginTransparencyLayerWithRect(ctx, r, nullptr);
+
+      // Draw twice for double opacity.
+      [cell drawWithFrame:[button bounds] inView:button];
+      [cell drawWithFrame:[button bounds] inView:button];
+
+      // Make it white.
+      CGContextSetBlendMode(ctx, kCGBlendModeSourceIn);
+      CGContextSetRGBFillColor(ctx, 1, 1, 1, 1);
+      CGContextFillRect(ctx, r);
+      CGContextSetBlendMode(ctx, kCGBlendModeNormal);
+
+      CGContextEndTransparencyLayer(ctx);
+    } else {
+      [cell drawWithFrame:[button bounds] inView:button];
+    }
 
     [NSGraphicsContext setCurrentContext:context];
     CGContextRestoreGState(ctx);
