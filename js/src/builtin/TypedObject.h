@@ -676,7 +676,8 @@ class TypedObject : public JSObject
     // Creates a new typed object whose memory is freshly allocated and
     // initialized with zeroes (or, in the case of references, an appropriate
     // default value).
-    static TypedObject *createZeroed(JSContext *cx, HandleTypeDescr typeObj, int32_t length);
+    static TypedObject *createZeroed(JSContext *cx, HandleTypeDescr typeObj, int32_t length,
+                                     gc::InitialHeap heap = gc::DefaultHeap);
 
     // User-accessible constructor (`new TypeDescriptor(...)`) used for sized
     // types. Note that the callee here is the type descriptor.
@@ -753,7 +754,8 @@ class OutlineTypedObject : public TypedObject
     static OutlineTypedObject *createUnattachedWithClass(JSContext *cx,
                                                          const Class *clasp,
                                                          HandleTypeDescr type,
-                                                         int32_t length);
+                                                         int32_t length,
+                                                         gc::InitialHeap heap = gc::DefaultHeap);
 
     // Creates an unattached typed object or handle (depending on the
     // type parameter T). Note that it is only legal for unattached
@@ -764,7 +766,7 @@ class OutlineTypedObject : public TypedObject
     // - type: type object for resulting object
     // - length: 0 unless this is an array, otherwise the length
     static OutlineTypedObject *createUnattached(JSContext *cx, HandleTypeDescr type,
-                                                int32_t length);
+                                                int32_t length, gc::InitialHeap heap = gc::DefaultHeap);
 
     // Creates a typedObj that aliases the memory pointed at by `owner`
     // at the given offset. The typedObj will be a handle iff type is a
@@ -810,7 +812,8 @@ class InlineTypedObject : public TypedObject
     uint8_t data_[1];
 
   public:
-    static const size_t MaximumSize = NativeObject::MAX_FIXED_SLOTS * sizeof(Value);
+    static const size_t MaximumSize =
+        sizeof(NativeObject) - sizeof(TypedObject) + NativeObject::MAX_FIXED_SLOTS * sizeof(Value);
 
     static gc::AllocKind allocKindForTypeDescriptor(TypeDescr *descr) {
         size_t nbytes = descr->as<SizedTypeDescr>().size();
@@ -833,7 +836,10 @@ class InlineTypedObject : public TypedObject
         return offsetof(InlineTypedObject, data_);
     }
 
-    static InlineTypedObject *create(JSContext *cx, HandleTypeDescr descr);
+    static InlineTypedObject *create(JSContext *cx, HandleTypeDescr descr,
+                                     gc::InitialHeap heap = gc::DefaultHeap);
+    static InlineTypedObject *createCopy(JSContext *cx, Handle<InlineTypedObject *> templateObject,
+                                         gc::InitialHeap heap);
 };
 
 // Class for a transparent typed object with inline data, which may have a
