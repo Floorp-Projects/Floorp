@@ -219,8 +219,8 @@ loadGeckoLibs(const char *apkName)
   
   RefPtr<Zip> zip = ZipCollection::GetZip(apkName);
 
-  char *file = new char[strlen(apkName) + sizeof("!/assets/libxul.so")];
-  sprintf(file, "%s!/assets/libxul.so", apkName);
+  char *file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libxul.so")];
+  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libxul.so", apkName);
   xul_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete[] file;
 
@@ -278,8 +278,8 @@ loadSQLiteLibs(const char *apkName)
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }
 
-  char *file = new char[strlen(apkName) + sizeof("!/assets/libmozsqlite3.so")];
-  sprintf(file, "%s!/assets/libmozsqlite3.so", apkName);
+  char *file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libmozsqlite3.so")];
+  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libmozsqlite3.so", apkName);
   sqlite_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete [] file;
 
@@ -306,19 +306,19 @@ loadNSSLibs(const char *apkName)
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }
 
-  char *file = new char[strlen(apkName) + sizeof("!/assets/libnss3.so")];
-  sprintf(file, "%s!/assets/libnss3.so", apkName);
+  char *file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libnss3.so")];
+  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libnss3.so", apkName);
   nss_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete [] file;
 
 #ifndef MOZ_FOLD_LIBS
-  file = new char[strlen(apkName) + sizeof("!/assets/libnspr4.so")];
-  sprintf(file, "%s!/assets/libnspr4.so", apkName);
+  file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libnspr4.so")];
+  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libnspr4.so", apkName);
   nspr_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete [] file;
 
-  file = new char[strlen(apkName) + sizeof("!/assets/libplc4.so")];
-  sprintf(file, "%s!/assets/libplc4.so", apkName);
+  file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libplc4.so")];
+  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libplc4.so", apkName);
   plc_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
   delete [] file;
 #endif

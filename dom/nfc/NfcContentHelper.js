@@ -133,7 +133,7 @@ NfcContentHelper.prototype = {
     let val = cpmm.sendSyncMessage("NFC:CheckSessionToken", {
       sessionToken: sessionToken
     });
-    return (val[0] === NFC.NFC_SUCCESS);
+    return (val[0] === NFC.NFC_GECKO_SUCCESS);
   },
 
   // NFCTag interface

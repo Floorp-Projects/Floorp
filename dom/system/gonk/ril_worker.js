@@ -3946,9 +3946,11 @@ RilObject.prototype = {
   _processClassifiedCalls: function(removedCalls, remainedCalls, addedCalls,
                                     failCause) {
     // Handle removed calls.
+    // Only remove it from the map here. Notify callDisconnected later.
     for (let call of removedCalls) {
-      this._removeVoiceCall(call, call.hangUpLocal ?
-                            GECKO_CALL_ERROR_NORMAL_CALL_CLEARING : failCause);
+      delete this.currentCalls[call.callIndex];
+      call.failCause = call.hangUpLocal ? GECKO_CALL_ERROR_NORMAL_CALL_CLEARING
+                                        : failCause;
     }
 
     let changedCalls = new Set();
@@ -3999,12 +4001,17 @@ RilObject.prototype = {
       }
     }
 
-    // Update audio state. We have to send the message before callstatechange
-    // to make sure that the audio state is ready first.
+    // Update audio state. We have to send this message before callStateChange
+    // and callDisconnected to make sure that the audio state is ready first.
     this.sendChromeMessage({
       rilMessageType: "audioStateChanged",
       state: this._detectAudioState()
     });
+
+    // Notify call disconnected.
+    for (let call of removedCalls) {
+      this._handleDisconnectedCall(call);
+    }
 
     // Notify call state change.
     for (let call of changedCalls) {
@@ -4066,12 +4073,6 @@ RilObject.prototype = {
     newCall.isConference = false;
 
     this.currentCalls[newCall.callIndex] = newCall;
-  },
-
-  _removeVoiceCall: function(call, failCause) {
-    delete this.currentCalls[call.callIndex];
-    call.failCause = failCause;
-    this._handleDisconnectedCall(call);
   },
 
   _handleChangedCallState: function(changedCall) {

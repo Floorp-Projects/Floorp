@@ -451,6 +451,8 @@ this.DOMApplicationRegistry = {
     if (supportUseCurrentProfile()) {
       this._readManifests([{ id: aId }]).then((aResult) => {
         let data = aResult[0];
+        this.webapps[aId].kind = this.webapps[aId].kind ||
+          this.appKind(this.webapps[aId], aResult[0].manifest);
         PermissionsInstaller.installPermissions({
           manifest: data.manifest,
           manifestURL: this.webapps[aId].manifestURL,
