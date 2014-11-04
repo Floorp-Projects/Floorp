@@ -332,7 +332,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         case "NFC:NotifySendFileStatus":
           // Upon receiving the status of sendFile operation, send the response
           // to appropriate content process.
-          message.data.type = "NotifySendFileStatus";
+          message.data.type = "NotifySendFileStatusResponse";
           if (message.data.status !== NFC.NFC_SUCCESS) {
             message.data.errorMsg =
               this.nfc.getErrorMessage(NFC.NFC_GECKO_ERROR_SEND_FILE_FAILED);
