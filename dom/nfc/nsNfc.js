@@ -201,7 +201,7 @@ MozNFCImpl.prototype = {
   },
 
   getNFCPeer: function getNFCPeer(sessionToken) {
-    if (!sessionToken || !this._nfcContentHelper.checkSessionToken(sessionToken)) {
+    if (!sessionToken || !this._nfcContentHelper.checkSessionToken(sessionToken, true)) {
       return null;
     }
 
