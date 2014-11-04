@@ -55,6 +55,7 @@ public:
   virtual Layer* AsLayer() { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
     mInvalidRegion.Or(mInvalidRegion, aRegion);
+    mInvalidRegion.SimplifyOutwardByArea(200*200);
     mInvalidRegion.SimplifyOutward(20);
     mValidRegion.Sub(mValidRegion, mInvalidRegion);
     mLowPrecisionValidRegion.Sub(mLowPrecisionValidRegion, mInvalidRegion);
