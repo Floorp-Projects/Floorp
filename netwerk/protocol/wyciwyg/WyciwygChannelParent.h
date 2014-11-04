@@ -42,7 +42,7 @@ protected:
   virtual bool RecvAsyncOpen(const URIParams& original,
                              const uint32_t& loadFlags,
                              const IPC::SerializedLoadContext& loadContext,
-                             PBrowserParent* parent) MOZ_OVERRIDE;
+                             const PBrowserOrId &parent) MOZ_OVERRIDE;
   virtual bool RecvWriteToCacheEntry(const nsString& data) MOZ_OVERRIDE;
   virtual bool RecvCloseCacheEntry(const nsresult& reason) MOZ_OVERRIDE;
   virtual bool RecvSetCharsetAndSource(const int32_t& source,
@@ -50,12 +50,12 @@ protected:
   virtual bool RecvSetSecurityInfo(const nsCString& securityInfo) MOZ_OVERRIDE;
   virtual bool RecvCancel(const nsresult& statusCode) MOZ_OVERRIDE;
   virtual bool RecvAppData(const IPC::SerializedLoadContext& loadContext,
-                           PBrowserParent* parent) MOZ_OVERRIDE;
+                           const PBrowserOrId &parent) MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   bool SetupAppData(const IPC::SerializedLoadContext& loadContext,
-                    PBrowserParent* aParent);
+                    const PBrowserOrId &aParent);
 
   nsCOMPtr<nsIWyciwygChannel> mChannel;
   bool mIPCClosed;
