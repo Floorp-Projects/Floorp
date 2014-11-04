@@ -580,7 +580,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     /*
      * Additional JS parsers.
      */
-    bool functionArguments(FunctionSyntaxKind kind, Node *list, Node funcpn, bool *hasRest);
+    bool functionArguments(FunctionSyntaxKind kind, FunctionType type, Node *list, Node funcpn,
+                           bool *hasRest);
 
     Node functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind,
                      GeneratorKind generatorKind);
