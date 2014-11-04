@@ -154,11 +154,11 @@ StoreBuffer::MonoTypeBuffer<T>::compact(StoreBuffer *owner)
 
 template <typename T>
 void
-StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner, gcstats::Phase phase)
+StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner, int phase)
 {
     MOZ_ASSERT(storage_);
     if (storage_->used() != usedAtLastCompact_) {
-        gcstats::AutoPhase ap(owner->stats(), phase);
+        gcstats::AutoPhase ap(owner->stats(), static_cast<gcstats::Phase>(phase));
         compact(owner);
     }
 }
