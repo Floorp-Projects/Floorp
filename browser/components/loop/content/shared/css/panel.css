@@ -167,7 +167,7 @@ body {
 
 .room-list {
   max-height: 335px; /* XXX better computation needed */
-  overflow: scroll;
+  overflow: auto;
 }
 
 .room-list > .room-entry {
