@@ -222,6 +222,10 @@ BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
   static const uint8_t id_pe_authorityInfoAccess[] = {
     0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01
   };
+  // python DottedOIDToCode.py id-pkix-ocsp-nocheck 1.3.6.1.5.5.7.48.1.5
+  static const uint8_t id_pkix_ocsp_nocheck[] = {
+    0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x05
+  };
   // python DottedOIDToCode.py Netscape-certificate-type 2.16.840.1.113730.1.1
   static const uint8_t Netscape_certificate_type[] = {
     0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x42, 0x01, 0x01
@@ -236,6 +240,17 @@ BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
   // policyConstraints extensions, but that's OK because (and only because) we
   // ignore the extension.
   Input dummyPolicyConstraints;
+
+  // We don't need to save the contents of this extension if it is present. We
+  // just need to handle its presence (it is essentially ignored right now).
+  Input dummyOCSPNocheck;
+
+  // For compatibility reasons, for some extensions we have to allow empty
+  // extension values. This would normally interfere with our duplicate
+  // extension checking code. However, as long as the extensions we allow to
+  // have empty values are also the ones we implicitly allow duplicates of,
+  // this will work fine.
+  bool emptyValueAllowed = false;
 
   // RFC says "Conforming CAs MUST mark this extension as non-critical" for
   // both authorityKeyIdentifier and subjectKeyIdentifier, and we do not use
@@ -259,6 +274,17 @@ BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
     out = &inhibitAnyPolicy;
   } else if (extnID.MatchRest(id_pe_authorityInfoAccess)) {
     out = &authorityInfoAccess;
+  } else if (extnID.MatchRest(id_pkix_ocsp_nocheck) && critical) {
+    // We need to make sure we don't reject delegated OCSP response signing
+    // certificates that contain the id-pkix-ocsp-nocheck extension marked as
+    // critical when validating OCSP responses. Without this, an application
+    // that implements soft-fail OCSP might ignore a valid Revoked or Unknown
+    // response, and an application that implements hard-fail OCSP might fail
+    // to connect to a server given a valid Good response.
+    out = &dummyOCSPNocheck;
+    // We allow this extension to have an empty value.
+    // See http://comments.gmane.org/gmane.ietf.x509/30947
+    emptyValueAllowed = true;
   } else if (extnID.MatchRest(Netscape_certificate_type) && critical) {
     out = &criticalNetscapeCertificateType;
   }
@@ -266,7 +292,7 @@ BackCert::RememberExtension(Reader& extnID, const Input& extnValue,
   if (out) {
     // Don't allow an empty value for any extension we understand. This way, we
     // can test out->GetLength() != 0 or out->Init() to check for duplicates.
-    if (extnValue.GetLength() == 0) {
+    if (extnValue.GetLength() == 0 && !emptyValueAllowed) {
       return Result::ERROR_EXTENSION_VALUE_INVALID;
     }
     if (out->Init(extnValue) != Success) {
