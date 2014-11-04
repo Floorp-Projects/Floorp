@@ -13,7 +13,7 @@ interface XPathEvaluator {
   [Pure]
   Node createNSResolver(Node nodeResolver);
   [Throws]
-  XPathResult evaluate(DOMString expression, Node contextNode,
+  XPathResult evaluate(DOMString expression, Node? contextNode,
                        XPathNSResolver? resolver, unsigned short type,
                        object? result);
 };
