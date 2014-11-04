@@ -541,6 +541,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
         break;
 #endif
       case LayersBackend::LAYERS_CLIENT:
+        gfxWindowsPlatform::GetPlatform()->UpdateRenderMode();
         result = listener->PaintWindow(this, region);
         break;
       default:
