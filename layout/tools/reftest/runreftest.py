@@ -8,7 +8,6 @@ Runs the reftest test harness.
 
 from optparse import OptionParser
 import collections
-import json
 import multiprocessing
 import os
 import re
@@ -16,7 +15,6 @@ import shutil
 import signal
 import subprocess
 import sys
-import tempfile
 import threading
 
 SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])))
@@ -35,7 +33,6 @@ import mozinfo
 import mozprocess
 import mozprofile
 import mozrunner
-from mozrunner.utils import findInPath as which
 
 here = os.path.abspath(os.path.dirname(__file__))
 

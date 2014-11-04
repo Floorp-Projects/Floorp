@@ -124,6 +124,10 @@ class B2GOptions(ReftestOptions):
                         dest="desktop",
                         help="Run the tests on a B2G desktop build")
         defaults["desktop"] = False
+        self.add_option("--mulet", action="store_true",
+                        dest="mulet",
+                        help="Run the tests on a B2G desktop build")
+        defaults["mulet"] = False
         self.add_option("--enable-oop", action="store_true",
                         dest="oop",
                         help="Run the tests out of process")
@@ -620,7 +624,7 @@ def main(args=sys.argv[1:]):
     parser = B2GOptions()
     options, args = parser.parse_args(args)
 
-    if options.desktop:
+    if options.desktop or options.mulet:
         return run_desktop_reftests(parser, options, args)
     return run_remote_reftests(parser, options, args)
 
