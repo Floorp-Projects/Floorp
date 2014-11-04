@@ -22,6 +22,7 @@ GeneratorObject::create(JSContext *cx, const InterpreterRegs &regs)
     InterpreterFrame *fp = regs.fp();
 
     MOZ_ASSERT(fp->script()->isGenerator());
+    MOZ_ASSERT(fp->script()->nfixed() == 0);
 
     Rooted<GlobalObject*> global(cx, &fp->global());
     RootedNativeObject obj(cx);
