@@ -6,7 +6,7 @@
 <org.mozilla.gecko.widget.ThemedTextView xmlns:android="http://schemas.android.com/apk/res/android"
                                          android:layout_width="24dip"
                                          android:layout_height="24dip"
-                                         android:paddingTop="2dip"
+                                         android:paddingTop="3dip"
                                          android:paddingLeft="4dip"
                                          android:background="@drawable/new_tablet_tabs_count_foreground"
                                          android:textAppearance="@style/TextAppearance.Micro"
