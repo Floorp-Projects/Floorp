@@ -29,8 +29,9 @@ public:
   AddPattern(const nsACString& aPattern)
   {
     MOZ_ASSERT(!mOrigins.Count());
-    MOZ_ASSERT(!ContainsPattern(aPattern));
-    mPatterns.AppendElement(aPattern);
+    if (!ContainsPattern(aPattern)) {
+      mPatterns.AppendElement(aPattern);
+    }
   }
 
   bool
@@ -48,8 +49,9 @@ public:
   void
   AddOrigin(const nsACString& aOrigin)
   {
-    MOZ_ASSERT(!ContainsOrigin(aOrigin));
-    mOrigins.PutEntry(aOrigin);
+    if (!ContainsOrigin(aOrigin)) {
+      mOrigins.PutEntry(aOrigin);
+    }
   }
 
 private:
