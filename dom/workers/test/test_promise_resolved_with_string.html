@@ -15,12 +15,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1027221
     SimpleTest.waitForExplicitFinish();
     var x = "x";
     // Trigger some incremental gc
-    SpecialPowers.Cu.getJSTestingFunctions().gcslice(0);
+    SpecialPowers.Cu.getJSTestingFunctions().gcslice(1);
 
     // Kick off a worker that uses this same atom
     var w = new Worker("data:text/plain,Promise.resolve('x').then(function() { postMessage(1); });");
     // Maybe trigger some more incremental gc
-    SpecialPowers.Cu.getJSTestingFunctions().gcslice(0);
+    SpecialPowers.Cu.getJSTestingFunctions().gcslice(1);
 
     w.onmessage = function() {
       ok(true, "Got here");
