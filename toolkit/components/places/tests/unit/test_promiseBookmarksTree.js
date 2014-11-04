@@ -210,17 +210,13 @@ function* test_promiseBookmarksTreeAgainstResult(aItemGuid = "",
 
 add_task(function* () {
   // Add some bookmarks to cover various use cases.
-  let toolbarGuid =
-    yield PlacesUtils.promiseItemGuid(PlacesUtils.toolbarFolderId);
-  let menuGuid =
-    yield PlacesUtils.promiseItemGuid(PlacesUtils.bookmarksMenuFolderId);
-  yield new_bookmark({ parentGuid: toolbarGuid });
-  yield new_folder({ parentGuid: menuGuid
+  yield new_bookmark({ parentGuid: PlacesUtils.bookmarks.toolbarGuid });
+  yield new_folder({ parentGuid: PlacesUtils.bookmarks.menuGuid
                    , annotations: [{ name: "TestAnnoA", value: "TestVal"
                                    , name: "TestAnnoB", value: 0 }]});
   yield PlacesTransactions.transact(
-    PlacesTransactions.NewSeparator({ parentGuid: menuGuid }));
-  let folderGuid = yield new_folder({ parentGuid: menuGuid });
+    PlacesTransactions.NewSeparator({ parentGuid: PlacesUtils.bookmarks.menuGuid }));
+  let folderGuid = yield new_folder({ parentGuid: PlacesUtils.bookmarks.menuGuid });
   yield new_bookmark({ title: null
                      , parentGuid: folderGuid
                      , keyword: "test_keyword"
@@ -234,8 +230,7 @@ add_task(function* () {
   yield test_promiseBookmarksTreeAgainstResult();
 
   // Do specify it
-  let rootGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.placesRootId);
-  yield test_promiseBookmarksTreeAgainstResult(rootGuid);
+  yield test_promiseBookmarksTreeAgainstResult(PlacesUtils.bookmarks.rootGuid);
 
   // Exclude the bookmarks menu.
   // The calllback should be four times - once for the toolbar, once for
@@ -246,13 +241,13 @@ add_task(function* () {
   // passed in.
   let guidsPassedToExcludeCallback = new Set();
   let placesRootWithoutTheMenu =
-  yield test_promiseBookmarksTreeAgainstResult(rootGuid, {
+  yield test_promiseBookmarksTreeAgainstResult(PlacesUtils.bookmarks.rootGuid, {
     excludeItemsCallback: aItem =>  {
       guidsPassedToExcludeCallback.add(aItem.guid);
       return aItem.root == "bookmarksMenuFolder";
     },
     includeItemIds: true
-  }, [menuGuid]);
+  }, [PlacesUtils.bookmarks.menuGuid]);
   do_check_eq(guidsPassedToExcludeCallback.size, 4);
   do_check_eq(placesRootWithoutTheMenu.children.length, 2);
 });
