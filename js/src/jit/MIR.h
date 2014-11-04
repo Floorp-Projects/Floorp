@@ -6854,6 +6854,47 @@ class MStringReplace
     }
 };
 
+class MSubstr
+  : public MTernaryInstruction,
+    public Mix3Policy<StringPolicy<0>, IntPolicy<1>, IntPolicy<2>>
+{
+  private:
+
+    MSubstr(MDefinition *string, MDefinition *begin, MDefinition *length)
+      : MTernaryInstruction(string, begin, length)
+    {
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(Substr);
+
+    static MSubstr *New(TempAllocator &alloc, MDefinition *string, MDefinition *begin,
+                        MDefinition *length)
+    {
+        return new(alloc) MSubstr(string, begin, length);
+    }
+
+    MDefinition *string() {
+        return getOperand(0);
+    }
+
+    MDefinition *begin() {
+        return getOperand(1);
+    }
+
+    MDefinition *length() {
+        return getOperand(2);
+    }
+
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 struct LambdaFunctionInfo
 {
     // The functions used in lambdas are the canonical original function in
