@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="33" height="14" viewBox="0 0 33 14" enable-background="new 0 0 33 14">
+  <defs style="display: none;">
+    <polygon points="0,0 5.5,7 11,0" id="dropmarker-shape"/>
+  </defs>
+  <style>
+    use {
+      fill: #B6BABF;
+    }
+    .hover {
+      fill: #61BDEB;
+    }
+    .active {
+      fill: #39ACE6;
+    }
+  </style>
+  <use xlink:href="#dropmarker-shape" style="transform: translate(0, 4px)"></use>
+  <use xlink:href="#dropmarker-shape" style="transform: translate(11px, 4px)" class="hover"></use>
+  <use xlink:href="#dropmarker-shape" style="transform: translate(22px, 4px)" class="active"></use>
+</svg>
