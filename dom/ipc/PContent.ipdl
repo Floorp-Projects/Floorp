@@ -449,6 +449,8 @@ child:
 
     GeolocationUpdate(GeoPosition somewhere);
 
+    GeolocationError(uint16_t errorCode);
+
     UpdateDictionaryList(nsString[] dictionaries);
 
     // nsIPermissionManager messages
