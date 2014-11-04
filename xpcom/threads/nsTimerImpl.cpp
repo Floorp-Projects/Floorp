@@ -560,6 +560,9 @@ nsTimerImpl::Fire()
                  js::ProfileEntry::Category::OTHER);
 
 #ifdef MOZ_TASK_TRACER
+  // mTracedTask is an instance of FakeTracedTask created by
+  // DispatchTracedTask(). AutoRunFakeTracedTask logs the begin/end time of the
+  // timer/FakeTracedTask instance in ctor/dtor.
   mozilla::tasktracer::AutoRunFakeTracedTask runTracedTask(mTracedTask);
 #endif
 
