@@ -94,7 +94,7 @@ let runTest = Task.async(function*() {
 
   let fakeInstallDir;
   if (MAC) {
-    fakeInstallDir = getFile(testAppInfo.installPath, "Contents", "MacOS");
+    fakeInstallDir = getFile(testAppInfo.installPath, "Contents", "Resources");
   } else {
     fakeInstallDir = getFile(OS.Constants.Path.profileDir, "fakeInstallDir");
     fakeInstallDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
