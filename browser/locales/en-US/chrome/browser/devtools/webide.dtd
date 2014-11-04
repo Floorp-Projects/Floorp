@@ -24,6 +24,8 @@
 <!ENTITY projectMenu_remove_accesskey "R">
 <!ENTITY projectMenu_showPrefs_label "Preferences">
 <!ENTITY projectMenu_showPrefs_accesskey "e">
+<!ENTITY projectMenu_manageComponents_label "Manage Extra Components">
+<!ENTITY projectMenu_manageComponents_accesskey "M">
 
 <!ENTITY runtimeMenu_label "Runtime">
 <!ENTITY runtimeMenu_accesskey "R">
@@ -42,8 +44,6 @@
 <!ENTITY viewMenu_accesskey "V">
 <!ENTITY viewMenu_toggleEditor_label "Toggle Editor">
 <!ENTITY viewMenu_toggleEditor_accesskey "E">
-<!ENTITY viewMenu_showAddons_label "Manage Simulators">
-<!ENTITY viewMenu_showAddons_accesskey "M">
 
 <!ENTITY projectButton_label "Open App">
 <!ENTITY runtimeButton_label "Select Runtime">
@@ -100,7 +100,7 @@
 <!ENTITY prefs_editor_title "Editor">
 <!ENTITY prefs_general_title "General">
 <!ENTITY prefs_restore "Restore Defaults">
-<!ENTITY prefs_simulators "Manage Simulators">
+<!ENTITY prefs_manage_components "Manage Extra Components">
 <!ENTITY prefs_options_rememberlastproject "Remember last project">
 <!ENTITY prefs_options_rememberlastproject_tooltip "Restore previous project when WebIDE starts">
 <!ENTITY prefs_options_templatesurl "Templates URL">

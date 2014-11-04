@@ -4094,6 +4094,30 @@ fi
 AC_SUBST(MOZ_BING_API_CLIENTID)
 AC_SUBST(MOZ_BING_API_KEY)
 
+# Whether to include optional-but-large font files in the final APK.
+# We want this in mobile/android/confvars.sh, so it goes early.
+MOZ_ARG_DISABLE_BOOL(android-include-fonts,
+[  --disable-android-include-fonts
+                          Disable the inclusion of fonts into the final APK],
+    MOZ_ANDROID_EXCLUDE_FONTS=1)
+
+if test -n "$MOZ_ANDROID_EXCLUDE_FONTS"; then
+    AC_DEFINE(MOZ_ANDROID_EXCLUDE_FONTS)
+fi
+AC_SUBST(MOZ_ANDROID_EXCLUDE_FONTS)
+
+# Whether this APK is destined for resource constrained devices.
+# We want this in mobile/android/confvars.sh, so it goes early.
+MOZ_ARG_ENABLE_BOOL(android-resource-constrained,
+[  --enable-android-resource-constrained
+                          Exclude hi-res images and similar from the final APK],
+    MOZ_ANDROID_RESOURCE_CONSTRAINED=1)
+
+if test -n "$MOZ_ANDROID_RESOURCE_CONSTRAINED"; then
+    AC_DEFINE(MOZ_ANDROID_RESOURCE_CONSTRAINED)
+fi
+AC_SUBST(MOZ_ANDROID_RESOURCE_CONSTRAINED)
+
 # Allow the application to influence configure with a confvars.sh script.
 AC_MSG_CHECKING([if app-specific confvars.sh exists])
 if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
@@ -9240,7 +9264,7 @@ if test -n "$_subconfigure_subdir"; then
   srcdir="$srcdir/.."
   _save_ac_configure_args="$ac_configure_args"
   ac_configure_args="$_subconfigure_config_args"
-  AC_OUTPUT_SUBDIRS("$_subconfigure_subdir",$cache_file)
+  AC_OUTPUT_SUBDIRS_NOW("$_subconfigure_subdir",$cache_file)
   ac_configure_args="$_save_ac_configure_args"
   srcdir="$_save_srcdir"
 fi

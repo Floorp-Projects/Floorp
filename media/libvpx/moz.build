@@ -45,13 +45,6 @@ if CONFIG['VPX_X86_ASM']:
     if CONFIG['OS_TARGET'] == 'Darwin' or (CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['GNU_CC']):
         SOURCES += files['AVX2']
 
-    # Expected support is hard-coded in the various vpx_config files but
-    # we need to propagate the config checks here to get the right flags.
-    if CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSSE3']:
-        CFLAGS += ['-mssse3']
-    if CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSE4_1']:
-        CFLAGS += ['-msse4.1']
-
     #postproc is only enabled on x86 with asm
     SOURCES += files['VP8_POSTPROC']
 
@@ -103,6 +96,8 @@ if not CONFIG['_MSC_VER']:
                 SOURCES[f].flags += CONFIG['SSE2_FLAGS']
             if 'ssse3' in f:
                 SOURCES[f].flags += ['-mssse3']
+            if 'sse4' in f:
+                SOURCES[f].flags += ['-msse4.1']
             if 'avx2' in f:
                 SOURCES[f].flags += ['-mavx2']
 
