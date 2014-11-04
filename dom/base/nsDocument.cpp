@@ -12401,7 +12401,7 @@ nsIDocument::CreateNSResolver(nsINode& aNodeResolver)
 
 already_AddRefed<XPathResult>
 nsIDocument::Evaluate(JSContext* aCx, const nsAString& aExpression,
-                      nsINode& aContextNode, XPathNSResolver* aResolver,
+                      nsINode* aContextNode, XPathNSResolver* aResolver,
                       uint16_t aType, JS::Handle<JSObject*> aResult,
                       ErrorResult& rv)
 {
