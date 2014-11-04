@@ -272,8 +272,9 @@ protected:
   // etc.  Just the size of our actual area for the text (and the scrollbars,
   // for <textarea>).
   nsresult CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
-                             nsSize&             aIntrinsicSize,
-                             float               aFontSizeInflation);
+                             mozilla::WritingMode aWM,
+                             mozilla::LogicalSize& aIntrinsicSize,
+                             float aFontSizeInflation);
 
   nsresult ScrollSelectionIntoView() MOZ_OVERRIDE;
 
