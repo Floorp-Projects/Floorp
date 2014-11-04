@@ -22,10 +22,6 @@
 
 namespace js {
 
-namespace gcstats {
-struct Statistics;
-}
-
 MOZ_NORETURN void
 CrashAtUnhandlableOOM(const char *reason);
 
@@ -144,7 +140,7 @@ class StoreBuffer
         virtual void compact(StoreBuffer *owner);
 
         /* Compacts if any entries have been added since the last compaction. */
-        void maybeCompact(StoreBuffer *owner, int phase);
+        void maybeCompact(StoreBuffer *owner);
 
         /* Add one item to the buffer. */
         void put(StoreBuffer *owner, const T &t) {
@@ -492,8 +488,6 @@ class StoreBuffer
     void putCallback(void (*callback)(JSTracer *trc, Key *key, void *data), Key *key, void *data) {
         putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
-
-    gcstats::Statistics& stats();
 
     /* Methods to mark the source of all edges in the store buffer. */
     void markAll(JSTracer *trc);
