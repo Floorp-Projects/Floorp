@@ -15,9 +15,14 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
-  window.onload = function() {
-    opener.postMessage("READY", "*");
+  if (!parent) {
+    info("sw_clients/simple.html shouldn't be launched directly!");
   }
+
+  navigator.serviceWorker.ready.then(function() {
+    parent.postMessage("READY", "*");
+  });
+
 </script>
 </pre>
 </body>
