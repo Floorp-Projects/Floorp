@@ -475,9 +475,6 @@ class JSString : public js::gc::TenuredCell
     }
 
     static size_t offsetOfNonInlineChars() {
-        static_assert(offsetof(JSString, d.s.u2.nonInlineCharsTwoByte) ==
-                      offsetof(JSString, d.s.u2.nonInlineCharsLatin1),
-                      "nonInlineCharsTwoByte and nonInlineCharsLatin1 must have same offset");
         return offsetof(JSString, d.s.u2.nonInlineCharsTwoByte);
     }
 

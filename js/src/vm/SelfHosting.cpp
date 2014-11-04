@@ -118,26 +118,6 @@ intrinsic_IsConstructor(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-bool
-js::intrinsic_SubstringKernel(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args[0].isString());
-    MOZ_ASSERT(args[1].isInt32());
-    MOZ_ASSERT(args[2].isInt32());
-
-    RootedString str(cx, args[0].toString());
-    int32_t begin = args[1].toInt32();
-    int32_t length = args[2].toInt32();
-
-    RootedString substr(cx);
-    if (!SubstringKernel(cx, str, begin, length, &substr))
-        return false;
-
-    args.rval().setString(substr);
-    return true;
-}
-
 static bool
 intrinsic_OwnPropertyKeys(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1035,6 +1015,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_String_replace",                  str_replace,                  2,0),
     JS_FN("std_String_split",                    str_split,                    2,0),
     JS_FN("std_String_startsWith",               str_startsWith,               1,0),
+    JS_FN("std_String_substring",                str_substring,                2,0),
     JS_FN("std_String_toLowerCase",              str_toLowerCase,              0,0),
     JS_FN("std_String_toUpperCase",              str_toUpperCase,              0,0),
 
@@ -1059,7 +1040,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("_IsConstructing",         intrinsic_IsConstructing,          0,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
-    JS_FN("SubstringKernel",         intrinsic_SubstringKernel,         3,0),
 
     JS_FN("UnsafePutElements",       intrinsic_UnsafePutElements,       3,0),
     JS_FN("_DefineDataProperty",     intrinsic_DefineDataProperty,      4,0),
