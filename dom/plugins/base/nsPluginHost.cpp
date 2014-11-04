@@ -2368,6 +2368,13 @@ nsPluginHost::FindPluginsForContent(uint32_t aPluginEpoch,
 
   for (size_t i = 0; i < plugins.Length(); i++) {
     nsRefPtr<nsPluginTag> tag = plugins[i];
+
+    if (!nsNPAPIPlugin::RunPluginOOP(tag)) {
+      // Don't expose non-OOP plugins to content processes since we have no way
+      // to bridge them over.
+      continue;
+    }
+
     aPlugins->AppendElement(PluginTag(tag->mId,
                                       tag->mName,
                                       tag->mDescription,

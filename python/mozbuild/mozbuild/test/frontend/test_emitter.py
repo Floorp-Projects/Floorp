@@ -56,6 +56,7 @@ class TestEmitterBasic(unittest.TestCase):
         config = MockConfig(mozpath.join(data_path, name), extra_substs=dict(
             ENABLE_TESTS='1',
             BIN_SUFFIX='.prog',
+            OS_TARGET='WINNT',
         ))
 
         return BuildReader(config)
@@ -148,32 +149,31 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 1)
         self.assertIsInstance(objs[0], VariablePassthru)
 
-        wanted = dict(
-            ASFILES=['fans.asm', 'tans.s'],
-            CMMSRCS=['fans.mm', 'tans.mm'],
-            CSRCS=['fans.c', 'tans.c'],
-            DISABLE_STL_WRAPPING=True,
-            EXTRA_COMPONENTS=['fans.js', 'tans.js'],
-            EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],
-            FAIL_ON_WARNINGS=True,
-            HOST_CPPSRCS=['fans.cpp', 'tans.cpp'],
-            HOST_CSRCS=['fans.c', 'tans.c'],
-            MSVC_ENABLE_PGO=True,
-            NO_DIST_INSTALL=True,
-            SSRCS=['bans.S', 'fans.S'],
-            VISIBILITY_FLAGS='',
-            DELAYLOAD_LDFLAGS=['-DELAYLOAD:foo.dll', '-DELAYLOAD:bar.dll'],
-            USE_DELAYIMP=True,
-            RCFILE='foo.rc',
-            RESFILE='bar.res',
-            RCINCLUDE='bar.rc',
-            DEFFILE='baz.def',
-            USE_STATIC_LIBS=True,
-            MOZBUILD_CFLAGS=['-fno-exceptions', '-w'],
-            MOZBUILD_CXXFLAGS=['-fcxx-exceptions', '-include foo.h'],
-            MOZBUILD_LDFLAGS=['-framework Foo', '-x'],
-            WIN32_EXE_LDFLAGS=['-subsystem:console'],
-        )
+        wanted = {
+            'ASFILES': ['fans.asm', 'tans.s'],
+            'CMMSRCS': ['fans.mm', 'tans.mm'],
+            'CSRCS': ['fans.c', 'tans.c'],
+            'DISABLE_STL_WRAPPING': True,
+            'EXTRA_COMPONENTS': ['fans.js', 'tans.js'],
+            'EXTRA_PP_COMPONENTS': ['fans.pp.js', 'tans.pp.js'],
+            'FAIL_ON_WARNINGS': True,
+            'HOST_CPPSRCS': ['fans.cpp', 'tans.cpp'],
+            'HOST_CSRCS': ['fans.c', 'tans.c'],
+            'MSVC_ENABLE_PGO': True,
+            'NO_DIST_INSTALL': True,
+            'SSRCS': ['bans.S', 'fans.S'],
+            'VISIBILITY_FLAGS': '',
+            'RCFILE': 'foo.rc',
+            'RESFILE': 'bar.res',
+            'RCINCLUDE': 'bar.rc',
+            'DEFFILE': 'baz.def',
+            'USE_STATIC_LIBS': True,
+            'MOZBUILD_CFLAGS': ['-fno-exceptions', '-w'],
+            'MOZBUILD_CXXFLAGS': ['-fcxx-exceptions', '-include foo.h'],
+            'MOZBUILD_LDFLAGS': ['-framework Foo', '-x', '-DELAYLOAD:foo.dll',
+                                 '-DELAYLOAD:bar.dll'],
+            'WIN32_EXE_LDFLAGS': ['-subsystem:console'],
+        }
 
         variables = objs[0].variables
         maxDiff = self.maxDiff

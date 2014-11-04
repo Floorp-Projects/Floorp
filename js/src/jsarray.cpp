@@ -51,7 +51,6 @@ using mozilla::ArrayLength;
 using mozilla::CeilingLog2;
 using mozilla::DebugOnly;
 using mozilla::IsNaN;
-using mozilla::PointerRangeSize;
 
 using JS::AutoCheckCannotGC;
 
