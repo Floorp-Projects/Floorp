@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <org.mozilla.gecko.tabs.TabsLayoutItemView xmlns:android="http://schemas.android.com/apk/res/android"
+                                           xmlns:gecko="http://schemas.android.com/apk/res-auto"
                                            style="@style/TabsItem"
                                            android:focusable="true"
                                            android:id="@+id/info"
@@ -21,15 +22,17 @@
                   android:paddingRight="@dimen/new_tablet_tab_highlight_stroke_width"
                   android:paddingBottom="@dimen/new_tablet_tab_highlight_stroke_width">
 
-        <TextView android:id="@+id/title"
-                  android:layout_width="0dip"
-                  android:layout_height="wrap_content"
-                  android:layout_weight="1.0"
-                  style="@style/TabLayoutItemTextAppearance"
-                  android:textSize="14sp"
-                  android:textColor="@color/new_tablet_tab_item_title"
-                  android:singleLine="true"
-                  android:duplicateParentState="true"/>
+        <org.mozilla.gecko.widget.FadedTextView android:id="@+id/title"
+                                                android:layout_width="0dip"
+                                                android:layout_height="wrap_content"
+                                                android:layout_weight="1.0"
+                                                style="@style/TabLayoutItemTextAppearance"
+                                                android:textSize="14sp"
+                                                android:textColor="@color/new_tablet_tab_item_title"
+                                                android:singleLine="true"
+                                                android:duplicateParentState="true"
+                                                gecko:fadeWidth="15dp"
+                                                android:paddingRight="5dp"/>
 
         <ImageButton android:id="@+id/close"
                      style="@style/TabsItemClose"
