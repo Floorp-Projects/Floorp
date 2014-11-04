@@ -51,7 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(f7e4d5da-4dd0-455a-b448-d0224c17fd10)]
+[scriptable, uuid(01e0c3ca-37e7-4ab4-bd22-3e99d8d23336)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -102,6 +102,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * or is 0, it is taken to be 1.
    */
   unsigned long redraw([optional] in unsigned long aCount);
+
+  /**
+   * Force a synchronous layer transaction for this window if necessary.
+   */
+  void updateLayerTree();
 
   /**
    * Set the CSS viewport to be |widthPx| x |heightPx| in units of CSS
