@@ -282,6 +282,23 @@ add_test(function testInstallOverrideSystem() {
       do_throw("Override of a non-removable app has been accepted.");
     }, function (e) {
       do_check_eq(e.message, "The application " + appId + " can't be overridden.");
+
+      // Then make it removable again...
+      DOMApplicationRegistry.webapps[appId].removable = true;
+      run_next_test();
+    });
+});
+
+add_test(function testInstallEngineeringMode() {
+  let appId = "actor-test"; // Match app.zip id
+
+  let packageFile = do_get_file("data/app-engineering.zip");
+  gActorFront.installPackaged(packageFile.path, appId)
+    .then(function ({ appId }) {
+      do_throw("App with engineering mode permission was accepted.");
+    }, function (e) {
+      do_check_eq(e.message, "Installing apps with any of these permissions is forbidden: " +
+                             Services.prefs.getCharPref("devtools.apps.forbidden-permissions"));
       run_next_test();
     });
 });
