@@ -784,13 +784,7 @@ function SynchronizeForSnapshot(flags)
         }
     }
 
-    var dummyCanvas = content.document.createElementNS(XHTML_NS, "canvas");
-    dummyCanvas.setAttribute("width", 1);
-    dummyCanvas.setAttribute("height", 1);
-
-    var ctx = dummyCanvas.getContext("2d");
-    var flags = ctx.DRAWWINDOW_DRAW_CARET | ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
-    ctx.drawWindow(content, 0, 0, 1, 1, "rgb(255,255,255)", flags);
+    windowUtils().updateLayerTree();
 
     // Setup async scroll offsets now, because any scrollable layers should
     // have had their AsyncPanZoomControllers created.
