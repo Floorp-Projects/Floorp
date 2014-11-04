@@ -82,11 +82,8 @@ template<typename T>
 static MOZ_ALWAYS_INLINE void
 PodAssign(T* aDst, const T* aSrc)
 {
-  MOZ_ASSERT(aDst != aSrc);
-  MOZ_ASSERT_IF(aSrc < aDst,
-                PointerRangeSize(aSrc, static_cast<const T*>(aDst)) >= 1);
-  MOZ_ASSERT_IF(aDst < aSrc,
-                PointerRangeSize(static_cast<const T*>(aDst), aSrc) >= 1);
+  MOZ_ASSERT(aDst + 1 <= aSrc || aSrc + 1 <= aDst,
+             "destination and source must not overlap");
   memcpy(reinterpret_cast<char*>(aDst), reinterpret_cast<const char*>(aSrc),
          sizeof(T));
 }
@@ -99,12 +96,8 @@ template<typename T>
 static MOZ_ALWAYS_INLINE void
 PodCopy(T* aDst, const T* aSrc, size_t aNElem)
 {
-  MOZ_ASSERT(aDst != aSrc);
-  MOZ_ASSERT_IF(aSrc < aDst,
-                PointerRangeSize(aSrc, static_cast<const T*>(aDst)) >= aNElem);
-  MOZ_ASSERT_IF(aDst < aSrc,
-                PointerRangeSize(static_cast<const T*>(aDst), aSrc) >= aNElem);
-
+  MOZ_ASSERT(aDst + aNElem <= aSrc || aSrc + aNElem <= aDst,
+             "destination and source must not overlap");
   if (aNElem < 128) {
     /*
      * Avoid using operator= in this loop, as it may have been
@@ -122,11 +115,8 @@ template<typename T>
 static MOZ_ALWAYS_INLINE void
 PodCopy(volatile T* aDst, const volatile T* aSrc, size_t aNElem)
 {
-  MOZ_ASSERT(aDst != aSrc);
-  MOZ_ASSERT_IF(aSrc < aDst,
-    PointerRangeSize(aSrc, static_cast<const volatile T*>(aDst)) >= aNElem);
-  MOZ_ASSERT_IF(aDst < aSrc,
-    PointerRangeSize(static_cast<const volatile T*>(aDst), aSrc) >= aNElem);
+  MOZ_ASSERT(aDst + aNElem <= aSrc || aSrc + aNElem <= aDst,
+             "destination and source must not overlap");
 
   /*
    * Volatile |aDst| requires extra work, because it's undefined behavior to

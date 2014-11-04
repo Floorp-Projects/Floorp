@@ -266,7 +266,6 @@ this.DebuggerClient = function (aTransport)
   this._activeRequests = new Map;
   this._eventsEnabled = true;
 
-  this.compat = new ProtocolCompatibility(this, []);
   this.traits = {};
 
   this.request = this.request.bind(this);
@@ -858,81 +857,73 @@ DebuggerClient.prototype = {
    *
    * @param aPacket object
    *        The incoming packet.
-   * @param aIgnoreCompatibility boolean
-   *        Set true to not pass the packet through the compatibility layer.
    */
-  onPacket: function (aPacket, aIgnoreCompatibility=false) {
-    let packet = aIgnoreCompatibility
-      ? aPacket
-      : this.compat.onPacket(aPacket);
+  onPacket: function (aPacket) {
+    if (!aPacket.from) {
+      DevToolsUtils.reportException(
+        "onPacket",
+        new Error("Server did not specify an actor, dropping packet: " +
+                  JSON.stringify(aPacket)));
+      return;
+    }
 
-    resolve(packet).then(aPacket => {
-      if (!aPacket.from) {
-        DevToolsUtils.reportException(
-          "onPacket",
-          new Error("Server did not specify an actor, dropping packet: " +
-                    JSON.stringify(aPacket)));
+    // If we have a registered Front for this actor, let it handle the packet
+    // and skip all the rest of this unpleasantness.
+    let front = this.getActor(aPacket.from);
+    if (front) {
+      front.onPacket(aPacket);
+      return;
+    }
+
+    if (this._clients.has(aPacket.from) && aPacket.type) {
+      let client = this._clients.get(aPacket.from);
+      let type = aPacket.type;
+      if (client.events.indexOf(type) != -1) {
+        client.emit(type, aPacket);
+        // we ignore the rest, as the client is expected to handle this packet.
         return;
       }
+    }
 
-      // If we have a registered Front for this actor, let it handle the packet
-      // and skip all the rest of this unpleasantness.
-      let front = this.getActor(aPacket.from);
-      if (front) {
-        front.onPacket(aPacket);
-        return;
-      }
+    let activeRequest;
+    // See if we have a handler function waiting for a reply from this
+    // actor. (Don't count unsolicited notifications or pauses as
+    // replies.)
+    if (this._activeRequests.has(aPacket.from) &&
+        !(aPacket.type in UnsolicitedNotifications) &&
+        !(aPacket.type == ThreadStateTypes.paused &&
+          aPacket.why.type in UnsolicitedPauses)) {
+      activeRequest = this._activeRequests.get(aPacket.from);
+      this._activeRequests.delete(aPacket.from);
+    }
 
-      if (this._clients.has(aPacket.from) && aPacket.type) {
-        let client = this._clients.get(aPacket.from);
-        let type = aPacket.type;
-        if (client.events.indexOf(type) != -1) {
-          client.emit(type, aPacket);
-          // we ignore the rest, as the client is expected to handle this packet.
-          return;
-        }
-      }
+    // Packets that indicate thread state changes get special treatment.
+    if (aPacket.type in ThreadStateTypes &&
+        this._clients.has(aPacket.from) &&
+        typeof this._clients.get(aPacket.from)._onThreadState == "function") {
+      this._clients.get(aPacket.from)._onThreadState(aPacket);
+    }
+    // On navigation the server resumes, so the client must resume as well.
+    // We achieve that by generating a fake resumption packet that triggers
+    // the client's thread state change listeners.
+    if (aPacket.type == UnsolicitedNotifications.tabNavigated &&
+        this._clients.has(aPacket.from) &&
+        this._clients.get(aPacket.from).thread) {
+      let thread = this._clients.get(aPacket.from).thread;
+      let resumption = { from: thread._actor, type: "resumed" };
+      thread._onThreadState(resumption);
+    }
+    // Only try to notify listeners on events, not responses to requests
+    // that lack a packet type.
+    if (aPacket.type) {
+      this.emit(aPacket.type, aPacket);
+    }
 
-      let activeRequest;
-      // See if we have a handler function waiting for a reply from this
-      // actor. (Don't count unsolicited notifications or pauses as
-      // replies.)
-      if (this._activeRequests.has(aPacket.from) &&
-          !(aPacket.type in UnsolicitedNotifications) &&
-          !(aPacket.type == ThreadStateTypes.paused &&
-            aPacket.why.type in UnsolicitedPauses)) {
-        activeRequest = this._activeRequests.get(aPacket.from);
-        this._activeRequests.delete(aPacket.from);
-      }
+    if (activeRequest) {
+      activeRequest.emit("json-reply", aPacket);
+    }
 
-      // Packets that indicate thread state changes get special treatment.
-      if (aPacket.type in ThreadStateTypes &&
-          this._clients.has(aPacket.from) &&
-          typeof this._clients.get(aPacket.from)._onThreadState == "function") {
-        this._clients.get(aPacket.from)._onThreadState(aPacket);
-      }
-      // On navigation the server resumes, so the client must resume as well.
-      // We achieve that by generating a fake resumption packet that triggers
-      // the client's thread state change listeners.
-      if (aPacket.type == UnsolicitedNotifications.tabNavigated &&
-          this._clients.has(aPacket.from) &&
-          this._clients.get(aPacket.from).thread) {
-        let thread = this._clients.get(aPacket.from).thread;
-        let resumption = { from: thread._actor, type: "resumed" };
-        thread._onThreadState(resumption);
-      }
-      // Only try to notify listeners on events, not responses to requests
-      // that lack a packet type.
-      if (aPacket.type) {
-        this.emit(aPacket.type, aPacket);
-      }
-
-      if (activeRequest) {
-        activeRequest.emit("json-reply", aPacket);
-      }
-
-      this._sendRequests();
-    }, ex => DevToolsUtils.reportException("onPacket handler", ex));
+    this._sendRequests();
   },
 
   /**
@@ -1094,156 +1085,6 @@ Request.prototype = {
 
   get actor() { return this.request.to || this.request.actor; }
 
-};
-
-// Constants returned by `FeatureCompatibilityShim.onPacketTest`.
-const SUPPORTED = 1;
-const NOT_SUPPORTED = 2;
-const SKIP = 3;
-
-/**
- * This object provides an abstraction layer over all of our backwards
- * compatibility, feature detection, and shimming with regards to the remote
- * debugging prototcol.
- *
- * @param aFeatures Array
- *        An array of FeatureCompatibilityShim objects
- */
-function ProtocolCompatibility(aClient, aFeatures) {
-  this._client = aClient;
-  this._featuresWithUnknownSupport = new Set(aFeatures);
-  this._featuresWithoutSupport = new Set();
-
-  this._featureDeferreds = Object.create(null)
-  for (let f of aFeatures) {
-    this._featureDeferreds[f.name] = defer();
-  }
-}
-
-ProtocolCompatibility.prototype = {
-  /**
-   * Returns a promise that resolves to true if the RDP supports the feature,
-   * and is rejected otherwise.
-   *
-   * @param aFeatureName String
-   *        The name of the feature we are testing.
-   */
-  supportsFeature: function (aFeatureName) {
-    return this._featureDeferreds[aFeatureName].promise;
-  },
-
-  /**
-   * Force a feature to be considered unsupported.
-   *
-   * @param aFeatureName String
-   *        The name of the feature we are testing.
-   */
-  rejectFeature: function (aFeatureName) {
-    this._featureDeferreds[aFeatureName].reject(false);
-  },
-
-  /**
-   * Called for each packet received over the RDP from the server. Tests for
-   * protocol features and shims packets to support needed features.
-   *
-   * @param aPacket Object
-   *        Packet received over the RDP from the server.
-   */
-  onPacket: function (aPacket) {
-    this._detectFeatures(aPacket);
-    return this._shimPacket(aPacket);
-  },
-
-  /**
-   * For each of the features we don't know whether the server supports or not,
-   * attempt to detect support based on the packet we just received.
-   */
-  _detectFeatures: function (aPacket) {
-    for (let feature of this._featuresWithUnknownSupport) {
-      try {
-        switch (feature.onPacketTest(aPacket)) {
-        case SKIP:
-          break;
-        case SUPPORTED:
-          this._featuresWithUnknownSupport.delete(feature);
-          this._featureDeferreds[feature.name].resolve(true);
-          break;
-        case NOT_SUPPORTED:
-          this._featuresWithUnknownSupport.delete(feature);
-          this._featuresWithoutSupport.add(feature);
-          this.rejectFeature(feature.name);
-          break;
-        default:
-          DevToolsUtils.reportException(
-            "PC__detectFeatures",
-            new Error("Bad return value from `onPacketTest` for feature '"
-                      + feature.name + "'"));
-        }
-      } catch (ex) {
-        DevToolsUtils.reportException("PC__detectFeatures", ex);
-      }
-    }
-  },
-
-  /**
-   * Go through each of the features that we know are unsupported by the current
-   * server and attempt to shim support.
-   */
-  _shimPacket: function (aPacket) {
-    let extraPackets = [];
-
-    let loop = (aFeatures, aPacket) => {
-      if (aFeatures.length === 0) {
-        for (let packet of extraPackets) {
-          this._client.onPacket(packet, true);
-        }
-        return aPacket;
-      } else {
-        let replacePacket = function (aNewPacket) {
-          return aNewPacket;
-        };
-        let extraPacket = function (aExtraPacket) {
-          extraPackets.push(aExtraPacket);
-          return aPacket;
-        };
-        let keepPacket = function () {
-          return aPacket;
-        };
-        let newPacket = aFeatures[0].translatePacket(aPacket,
-                                                     replacePacket,
-                                                     extraPacket,
-                                                     keepPacket);
-        return resolve(newPacket).then(loop.bind(null, aFeatures.slice(1)));
-      }
-    };
-
-    return loop([f for (f of this._featuresWithoutSupport)],
-                aPacket);
-  }
-};
-
-/**
- * Interface defining what methods a feature compatibility shim should have.
- */
-const FeatureCompatibilityShim = {
-  // The name of the feature
-  name: null,
-
-  /**
-   * Takes a packet and returns boolean (or promise of boolean) indicating
-   * whether the server supports the RDP feature we are possibly shimming.
-   */
-  onPacketTest: function (aPacket) {
-    throw new Error("Not yet implemented");
-  },
-
-  /**
-   * Takes a packet actually sent from the server and decides whether to replace
-   * it with a new packet, create an extra packet, or keep it.
-   */
-  translatePacket: function (aPacket, aReplacePacket, aExtraPacket, aKeepPacket) {
-    throw new Error("Not yet implemented");
-  }
 };
 
 /**
@@ -1503,7 +1344,6 @@ ThreadClient.prototype = {
   _actor: null,
   get actor() { return this._actor; },
 
-  get compat() { return this.client.compat; },
   get _transport() { return this.client._transport; },
 
   _assertPaused: function (aCommand) {

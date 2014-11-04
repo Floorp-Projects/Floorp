@@ -21,7 +21,9 @@ FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'mozglue'
 
-DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
+for var in ('ANDROID_PACKAGE_NAME',
+            'ANDROID_CPU_ARCH'):
+    DEFINES[var] = '"%s"' % CONFIG[var]
 
 if CONFIG['MOZ_FOLD_LIBS']:
     DEFINES['MOZ_FOLD_LIBS'] = True

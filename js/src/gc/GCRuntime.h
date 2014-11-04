@@ -455,7 +455,7 @@ class GCRuntime
     inline void updateOnArenaFree(const ChunkInfo &info);
 
     GCChunkSet::Range allChunks() { return chunkSet.all(); }
-    inline Chunk **getAvailableChunkList(Zone *zone);
+    Chunk **getAvailableChunkList();
     void moveChunkToFreePool(Chunk *chunk, const AutoLockGC &lock);
     bool hasChunk(Chunk *chunk) { return chunkSet.has(chunk); }
     ChunkPool &emptyChunks(const AutoLockGC &lock) { return emptyChunks_; }
@@ -479,7 +479,7 @@ class GCRuntime
   private:
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
-    Chunk *pickChunk(const AutoLockGC &lock, Zone *zone,
+    Chunk *pickChunk(const AutoLockGC &lock,
                      AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
     inline void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
 
@@ -610,8 +610,7 @@ class GCRuntime
      * During the GC when all arenas in a chunk become free, that chunk is
      * removed from the list and scheduled for release.
      */
-    js::gc::Chunk *systemAvailableChunkListHead;
-    js::gc::Chunk *userAvailableChunkListHead;
+    js::gc::Chunk *availableChunkListHead;
     js::gc::ChunkPool emptyChunks_;
 
     js::RootedValueMap rootsHash;
