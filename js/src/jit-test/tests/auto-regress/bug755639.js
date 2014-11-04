@@ -28,7 +28,7 @@ gcPreserveCode();
 try {
   mjitChunkLimit(1);
 } catch(exc1) {}
-gcslice(0);
+gcslice(1);
 m(1);
 gc();
 m(2);

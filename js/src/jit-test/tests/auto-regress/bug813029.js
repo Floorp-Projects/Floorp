@@ -5,8 +5,8 @@
 function printBugNumber (num) {
   BUGNUMBER = num;
 }
-gcslice(0)
+gcslice(1)
 schedulegc(this);
-gcslice(1);
+gcslice(2);
 var BUGNUMBER = ("one");
 printBugNumber();

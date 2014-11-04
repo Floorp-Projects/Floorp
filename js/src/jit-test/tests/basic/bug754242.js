@@ -1,6 +1,6 @@
 var g1 = newGlobal();
 schedulegc(g1);
-gcslice(0);
+gcslice(1);
 function testEq(b) {
     var a = deserialize(serialize(b));
 }
