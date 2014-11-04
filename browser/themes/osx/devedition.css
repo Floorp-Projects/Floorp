@@ -70,9 +70,9 @@
   list-style-image: url("chrome://browser/skin/devedition/search.svg#search-icon-mac-inverted");
 }
 
-/* Don't use default colors when in full screen */
-#main-window:not([customizing]) #navigator-toolbox[inFullscreen] > #TabsToolbar:not(:-moz-lwtheme) {
-  -moz-appearance: none;
+/* Don't use the default background for tabs toolbar */
+#TabsToolbar {
+  -moz-appearance: none !important;
 }
 
 /* Tab styling - make sure to use an inverted icon for the selected tab
