@@ -326,6 +326,9 @@ static const PhaseInfo phases[] = {
         { PHASE_COMPACT_UPDATE, "Compact Update", PHASE_COMPACT, },
             { PHASE_COMPACT_UPDATE_GRAY, "Compact Update Gray", PHASE_COMPACT_UPDATE, },
     { PHASE_GC_END, "End Callback", PHASE_NO_PARENT },
+    { PHASE_MINOR_GC, "Minor GC", PHASE_NO_PARENT },
+        { PHASE_COMPACT_STOREBUFFER_IN_MINOR_GC, "Compact Store Buffers", PHASE_MINOR_GC },
+    { PHASE_COMPACT_STOREBUFFER_NO_PARENT, "Compact Store Buffers (toplevel)", PHASE_NO_PARENT },
     { PHASE_LIMIT, nullptr, PHASE_NO_PARENT }
 };
 
@@ -386,6 +389,7 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.appendNumber("Total Compartments", "%d", "", zoneStats.compartmentCount);
     ss.appendNumber("Minor GCs", "%d", "", counts[STAT_MINOR_GC]);
     ss.appendNumber("Store Buffer Compactions", "%d", "", counts[STAT_COMPACT_STOREBUFFER]);
+    ss.appendNumber("Store Buffer Overflows", "%d", "", counts[STAT_STOREBUFFER_OVERFLOW]);
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     ss.appendDecimal("SCC Sweep Total", "ms", t(sccTotal));
@@ -478,6 +482,7 @@ Statistics::formatDescription()
   Compartments Collected: %d of %d\n\
   MinorGCs since last GC: %d\n\
   Store Buffer Compactions: %d\n\
+  Store Buffer Overflows: %d\n\
   MMU 20ms:%.1f%%; 50ms:%.1f%%\n\
   SCC Sweep Total (MaxPause): %.3fms (%.3fms)\n\
   HeapSize: %.3f MiB\n\
@@ -494,6 +499,7 @@ Statistics::formatDescription()
                 zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
                 counts[STAT_MINOR_GC],
                 counts[STAT_COMPACT_STOREBUFFER],
+                counts[STAT_STOREBUFFER_OVERFLOW],
                 mmu20 * 100., mmu50 * 100.,
                 t(sccTotal), t(sccLongest),
                 double(preBytes) / 1024. / 1024.,
@@ -643,6 +649,8 @@ Statistics::Statistics(JSRuntime *rt)
 {
     PodArrayZero(phaseTotals);
     PodArrayZero(counts);
+    PodArrayZero(phaseStartTimes);
+    PodArrayZero(phaseTimes);
 
     char *env = getenv("MOZ_GCTIMER");
     if (!env || strcmp(env, "none") == 0) {
@@ -726,9 +734,6 @@ Statistics::printStats()
 void
 Statistics::beginGC(JSGCInvocationKind kind)
 {
-    PodArrayZero(phaseStartTimes);
-    PodArrayZero(phaseTimes);
-
     slices.clearAndFree();
     sccTimes.clearAndFree();
     gckind = kind;
@@ -770,6 +775,11 @@ Statistics::endGC()
 
     if (fp)
         printStats();
+
+    // Clear the timers at the end of a GC because we accumulate time for some
+    // phases (eg storebuffer compaction) during the mutator's run.
+    PodArrayZero(phaseStartTimes);
+    PodArrayZero(phaseTimes);
 }
 
 void
@@ -837,6 +847,9 @@ Statistics::beginPhase(Phase phase)
     Phase parent = phaseNestingDepth ? phaseNesting[phaseNestingDepth - 1] : PHASE_NO_PARENT;
     MOZ_ASSERT(phaseNestingDepth < MAX_NESTING);
     MOZ_ASSERT_IF(gcDepth == 1, phases[phase].parent == parent);
+    MOZ_ASSERT_IF(phase == PHASE_COMPACT_STOREBUFFER_IN_MINOR_GC, parent == PHASE_MINOR_GC);
+    MOZ_ASSERT_IF(phase == PHASE_COMPACT_STOREBUFFER_NO_PARENT, parent == PHASE_NO_PARENT);
+
     phaseNesting[phaseNestingDepth] = phase;
     phaseNestingDepth++;
 #endif
@@ -849,8 +862,10 @@ Statistics::endPhase(Phase phase)
 {
     phaseNestingDepth--;
 
-    int64_t t = PRMJ_Now() - phaseStartTimes[phase];
-    slices.back().phaseTimes[phase] += t;
+    int64_t now = PRMJ_Now();
+    int64_t t = now - phaseStartTimes[phase];
+    if (!slices.empty())
+        slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
     phaseStartTimes[phase] = 0;
 }
