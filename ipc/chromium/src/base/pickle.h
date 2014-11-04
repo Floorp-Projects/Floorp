@@ -11,6 +11,8 @@
 #include "base/logging.h"
 #include "base/string16.h"
 
+#include "mozilla/Attributes.h"
+
 // This class provides facilities for basic binary value packing and unpacking.
 //
 // The Pickle class supports appending primitive values (ints, strings, etc.)
@@ -67,31 +69,31 @@ class Pickle {
   // the Pickle, initialize *iter to NULL.  If successful, these methods return
   // true.  Otherwise, false is returned to indicate that the result could not
   // be extracted.
-  bool ReadBool(void** iter, bool* result) const;
-  bool ReadInt16(void** iter, int16_t* result) const;
-  bool ReadUInt16(void** iter, uint16_t* result) const;
-  bool ReadShort(void** iter, short* result) const;
-  bool ReadInt(void** iter, int* result) const;
-  bool ReadLong(void** iter, long* result) const;
-  bool ReadULong(void** iter, unsigned long* result) const;
-  bool ReadSize(void** iter, size_t* result) const;
-  bool ReadInt32(void** iter, int32_t* result) const;
-  bool ReadUInt32(void** iter, uint32_t* result) const;
-  bool ReadInt64(void** iter, int64_t* result) const;
-  bool ReadUInt64(void** iter, uint64_t* result) const;
-  bool ReadDouble(void** iter, double* result) const;
-  bool ReadIntPtr(void** iter, intptr_t* result) const;
-  bool ReadUnsignedChar(void** iter, unsigned char* result) const;
-  bool ReadString(void** iter, std::string* result) const;
-  bool ReadWString(void** iter, std::wstring* result) const;
-  bool ReadString16(void** iter, string16* result) const;
-  bool ReadData(void** iter, const char** data, int* length) const;
-  bool ReadBytes(void** iter, const char** data, int length,
-                 uint32_t alignment = sizeof(memberAlignmentType)) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadBool(void** iter, bool* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadInt16(void** iter, int16_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadUInt16(void** iter, uint16_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadShort(void** iter, short* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadInt(void** iter, int* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadLong(void** iter, long* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadULong(void** iter, unsigned long* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadSize(void** iter, size_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadInt32(void** iter, int32_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadUInt32(void** iter, uint32_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadInt64(void** iter, int64_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadUInt64(void** iter, uint64_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadDouble(void** iter, double* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadIntPtr(void** iter, intptr_t* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadUnsignedChar(void** iter, unsigned char* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadString(void** iter, std::string* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadWString(void** iter, std::wstring* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadString16(void** iter, string16* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadData(void** iter, const char** data, int* length) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadBytes(void** iter, const char** data, int length,
+					uint32_t alignment = sizeof(memberAlignmentType)) const;
 
   // Safer version of ReadInt() checks for the result not being negative.
   // Use it for reading the object sizes.
-  bool ReadLength(void** iter, int* result) const;
+  MOZ_WARN_UNUSED_RESULT bool ReadLength(void** iter, int* result) const;
 
   // Methods for adding to the payload of the Pickle.  These values are
   // appended to the end of the Pickle's payload.  When reading values from a
