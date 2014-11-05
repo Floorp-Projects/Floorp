@@ -44,6 +44,10 @@ describe("loop.conversation", function() {
       calls: {
         clearCallInProgress: sinon.stub()
       },
+      LOOP_SESSION_TYPE: {
+        GUEST: 1,
+        FXA: 2
+      },
       startAlerting: sinon.stub(),
       stopAlerting: sinon.stub(),
       ensureRegistered: sinon.stub(),
