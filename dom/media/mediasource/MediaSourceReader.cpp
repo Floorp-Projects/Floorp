@@ -33,6 +33,8 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 #define MSE_API(...)
 #endif
 
+using mozilla::dom::TimeRanges;
+
 namespace mozilla {
 
 MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
@@ -449,7 +451,40 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
 nsresult
 MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered)
 {
-  static_cast<MediaSourceDecoder*>(mDecoder)->mMediaSource->GetBuffered(aBuffered);
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  MOZ_ASSERT(aBuffered->Length() == 0);
+  if (mTrackBuffers.IsEmpty()) {
+    return NS_OK;
+  }
+
+  double highestEndTime = 0;
+
+  nsTArray<nsRefPtr<TimeRanges>> activeRanges;
+  for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
+    nsRefPtr<TimeRanges> r = new TimeRanges();
+    mTrackBuffers[i]->Buffered(r);
+    activeRanges.AppendElement(r);
+    highestEndTime = std::max(highestEndTime, activeRanges.LastElement()->GetEndTime());
+  }
+
+  TimeRanges* intersectionRanges = aBuffered;
+  intersectionRanges->Add(0, highestEndTime);
+
+  for (uint32_t i = 0; i < activeRanges.Length(); ++i) {
+    TimeRanges* sourceRanges = activeRanges[i];
+
+    if (IsEnded()) {
+      // Set the end time on the last range to highestEndTime by adding a
+      // new range spanning the current end time to highestEndTime, which
+      // Normalize() will then merge with the old last range.
+      sourceRanges->Add(sourceRanges->GetEndTime(), highestEndTime);
+      sourceRanges->Normalize();
+    }
+
+    intersectionRanges->Intersection(sourceRanges);
+  }
+
+  MSE_DEBUG("MediaSourceReader(%p)::GetBuffered ranges=%s", this, DumpTimeRanges(intersectionRanges).get());
   return NS_OK;
 }
 
