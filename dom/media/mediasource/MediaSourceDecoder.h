@@ -52,7 +52,6 @@ public:
   void OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const MediaInfo& aInfo);
 
   void Ended();
-  bool IsExpectingMoreData() MOZ_OVERRIDE;
 
   void SetMediaSourceDuration(double aDuration);
 

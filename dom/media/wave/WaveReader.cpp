@@ -278,15 +278,14 @@ static double RoundToUsecs(double aSeconds) {
   return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
 }
 
-nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered)
+nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
   if (!mInfo.HasAudio()) {
     return NS_OK;
   }
-  AutoPinned<MediaResource> resource(mDecoder->GetResource());
-  int64_t startOffset = resource->GetNextCachedData(mWavePCMOffset);
+  int64_t startOffset = mDecoder->GetResource()->GetNextCachedData(mWavePCMOffset);
   while (startOffset >= 0) {
-    int64_t endOffset = resource->GetCachedDataEnd(startOffset);
+    int64_t endOffset = mDecoder->GetResource()->GetCachedDataEnd(startOffset);
     // Bytes [startOffset..endOffset] are cached.
     NS_ASSERTION(startOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
     NS_ASSERTION(endOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
@@ -296,7 +295,7 @@ nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered)
     // the media element.
     aBuffered->Add(RoundToUsecs(BytesToTime(startOffset - mWavePCMOffset)),
                    RoundToUsecs(BytesToTime(endOffset - mWavePCMOffset)));
-    startOffset = resource->GetNextCachedData(endOffset);
+    startOffset = mDecoder->GetResource()->GetNextCachedData(endOffset);
   }
   return NS_OK;
 }

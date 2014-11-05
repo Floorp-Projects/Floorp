@@ -191,6 +191,7 @@ double
 TrackBuffer::Buffered(dom::TimeRanges* aRanges)
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
+  MOZ_ASSERT(NS_IsMainThread());
 
   double highestEndTime = 0;
 
