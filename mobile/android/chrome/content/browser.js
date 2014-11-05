@@ -4270,6 +4270,15 @@ Tab.prototype = {
           let xhr = new XMLHttpRequest();
           xhr.open("POST", gTilesReportURL, true);
           xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.onload = function (e) {
+            // Broadcast reply if X-Robocop header is set. Used for testing only.
+            if (this.status == 200 && this.getResponseHeader("X-Robocop")) {
+              Messaging.sendRequest({
+                type: "Robocop:TilesResponse",
+                response: this.response
+              });
+            }
+          };
           xhr.send(this.tilesData);
           this.tilesData = null;
         }
