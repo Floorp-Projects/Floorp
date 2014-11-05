@@ -71,6 +71,12 @@ public:
   // as chrome/blink and assumes that we always start at t=0.
   virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio) MOZ_OVERRIDE { return 0; }
 
+  // Buffering waits (in which we decline to present decoded frames because we
+  // "don't have enough") don't really make sense for MSE. The delay is
+  // essentially a streaming heuristic, but JS is supposed to take care of that
+  // in the MSE world. Avoid injecting inexplicable delays.
+  virtual uint32_t GetBufferingWait() { return 0; }
+
   bool IsMediaSeekable() { return true; }
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
