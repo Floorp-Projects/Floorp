@@ -588,7 +588,7 @@
     <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
-        <item name="android:background">#fff5f7f9</item>
+        <item name="android:background">@color/background_light</item>
     </style>
 
     <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
