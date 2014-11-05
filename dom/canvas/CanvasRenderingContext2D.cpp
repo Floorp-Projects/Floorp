@@ -3957,7 +3957,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
   MOZ_ASSERT(optional_argc == 0 || optional_argc == 2 || optional_argc == 6);
 
   RefPtr<SourceSurface> srcSurf;
-  gfxIntSize imgSize;
+  gfx::IntSize imgSize;
 
   Element* element;
 
@@ -4008,7 +4008,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       return;
     }
 
-    imgSize = res.mSize;
+    imgSize = gfx::ToIntSize(res.mSize);
 
     // Scale sw/sh based on aspect ratio
     if (image.IsHTMLVideoElement()) {
@@ -4028,7 +4028,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     if (res.mSourceSurface) {
       if (res.mImageRequest) {
         CanvasImageCache::NotifyDrawImage(element, mCanvasElement, res.mImageRequest,
-                                          res.mSourceSurface, imgSize);
+                                          res.mSourceSurface, ThebesIntSize(imgSize));
       }
 
       srcSurf = res.mSourceSurface;
@@ -4113,7 +4113,7 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
                           mgfx::Rect* bounds,
                           mgfx::Rect dest,
                           mgfx::Rect src,
-                          gfxIntSize imgSize)
+                          gfx::IntSize imgSize)
 {
   MOZ_ASSERT(src.width > 0 && src.height > 0,
              "Need positive source width and height");

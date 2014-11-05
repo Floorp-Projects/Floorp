@@ -4497,7 +4497,7 @@
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
-    "description": "Record the search counts for search engines that have partner agreements with Mozilla"
+    "description": "Record the search counts for search engines"
   },
   "SEARCH_DEFAULT_ENGINE": {
     "expires_in_version": "never",
