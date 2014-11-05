@@ -43,8 +43,6 @@ EXTRA_JS_MODULES += [
     'distribution.js',
 ]
 
-DEFINES['E10S_TESTING_ONLY'] = CONFIG['E10S_TESTING_ONLY']
-
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini'
 ]
