@@ -1208,26 +1208,6 @@ misc:: $(call mkdir_deps,$(FINAL_TARGET))
 endif
 
 ################################################################################
-# Copy each element of EXTRA_JS_MODULES to
-# $(FINAL_TARGET)/modules.
-FINAL_JS_MODULES_PATH := $(FINAL_TARGET)/modules
-
-ifdef EXTRA_JS_MODULES
-ifndef NO_DIST_INSTALL
-EXTRA_JS_MODULES_FILES := $(EXTRA_JS_MODULES)
-EXTRA_JS_MODULES_DEST := $(FINAL_JS_MODULES_PATH)
-INSTALL_TARGETS += EXTRA_JS_MODULES
-endif
-endif
-
-ifdef EXTRA_PP_JS_MODULES
-ifndef NO_DIST_INSTALL
-EXTRA_PP_JS_MODULES_PATH := $(FINAL_JS_MODULES_PATH)
-PP_TARGETS += EXTRA_PP_JS_MODULES
-endif
-endif
-
-################################################################################
 # SDK
 
 ifneq (,$(SDK_LIBRARY))
