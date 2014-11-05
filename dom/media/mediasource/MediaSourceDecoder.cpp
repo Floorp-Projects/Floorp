@@ -82,7 +82,7 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
     // Return empty range.
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
     nsRefPtr<dom::TimeRanges> bufferedRanges = new dom::TimeRanges();
-    mReader->GetBuffered(bufferedRanges);
+    mMediaSource->GetBuffered(bufferedRanges);
     aSeekable->Add(bufferedRanges->GetStartTime(), bufferedRanges->GetEndTime());
   } else {
     aSeekable->Add(0, duration);
@@ -162,13 +162,6 @@ MediaSourceDecoder::Ended()
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mReader->Ended();
   mon.NotifyAll();
-}
-
-bool
-MediaSourceDecoder::IsExpectingMoreData()
-{
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  return !mReader->IsEnded();
 }
 
 void

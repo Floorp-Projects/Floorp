@@ -254,9 +254,7 @@ public:
     return mState == DECODER_STATE_SEEKING;
   }
 
-  nsresult GetBuffered(dom::TimeRanges* aBuffered) {
-    return mReader->GetBuffered(aBuffered);
-  }
+  nsresult GetBuffered(dom::TimeRanges* aBuffered);
 
   void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
@@ -427,7 +425,7 @@ protected:
   bool HasLowUndecodedData();
 
   // Returns true if we have less than aUsecs of undecoded data available.
-  bool HasLowUndecodedData(int64_t aUsecs);
+  bool HasLowUndecodedData(double aUsecs);
 
   // Returns the number of unplayed usecs of audio we've got decoded and/or
   // pushed to the hardware waiting to play. This is how much audio we can

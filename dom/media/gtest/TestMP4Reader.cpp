@@ -36,12 +36,6 @@ public:
     decoder->SetResource(resource);
 
     reader->Init(nullptr);
-    {
-      // This needs to be done before invoking GetBuffered. This is normally
-      // done by MediaDecoderStateMachine.
-      ReentrantMonitorAutoEnter mon(decoder->GetReentrantMonitor());
-      reader->SetStartTime(0);
-    }
   }
 
   void Init() {
@@ -78,7 +72,7 @@ TEST(MP4Reader, BufferedRange)
   b->resource->MockAddBufferedRange(248400, 327455);
 
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
+  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges, 0));
   EXPECT_EQ(1U, ranges->Length());
   double start = 0;
   EXPECT_EQ(NS_OK, ranges->Start(0, &start));
@@ -99,7 +93,7 @@ TEST(MP4Reader, BufferedRangeMissingLastByte)
   b->resource->MockAddBufferedRange(324913, 327455);
 
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
+  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges, 0));
   EXPECT_EQ(1U, ranges->Length());
   double start = 0;
   EXPECT_EQ(NS_OK, ranges->Start(0, &start));
@@ -120,7 +114,7 @@ TEST(MP4Reader, BufferedRangeSyncFrame)
   b->resource->MockAddBufferedRange(146336, 327455);
 
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
+  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges, 0));
   EXPECT_EQ(1U, ranges->Length());
   double start = 0;
   EXPECT_EQ(NS_OK, ranges->Start(0, &start));
@@ -178,7 +172,7 @@ TEST(MP4Reader, CompositionOrder)
   b->resource->MockAddBufferedRange(13220, 13901);
 
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
+  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges, 0));
   EXPECT_EQ(2U, ranges->Length());
 
   double start = 0;
@@ -228,7 +222,7 @@ TEST(MP4Reader, Normalised)
   b->resource->MockAddBufferedRange(48, 13901);
 
   nsRefPtr<TimeRanges> ranges = new TimeRanges();
-  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges));
+  EXPECT_EQ(NS_OK, b->reader->GetBuffered(ranges, 0));
   EXPECT_EQ(1U, ranges->Length());
 
   double start = 0;

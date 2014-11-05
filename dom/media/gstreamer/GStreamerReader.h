@@ -52,7 +52,7 @@ public:
                         int64_t aStartTime,
                         int64_t aEndTime,
                         int64_t aCurrentTime);
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered);
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
 
   virtual void NotifyDataArrived(const char *aBuffer,
                                  uint32_t aLength,
