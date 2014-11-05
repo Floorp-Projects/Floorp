@@ -87,6 +87,15 @@ function parent_test()
   addMessageListener("cpows:from_parent", (msg) => {
     let obj = msg.objects.obj;
     ok(obj.a == 1, "correct value from parent");
+
+    // Test that a CPOW reference to a function in the chrome process
+    // is callable from unprivileged content. Greasemonkey uses this
+    // functionality.
+    let func = msg.objects.func;
+    let sb = Cu.Sandbox('http://www.example.com', {});
+    sb.func = func;
+    ok(sb.eval('func()') == 101, "can call parent's function in child");
+
     done_count++;
     if (done_count == 2)
       sendSyncMessage("cpows:done", {});
