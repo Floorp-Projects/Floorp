@@ -3,6 +3,8 @@
 
 let cw;
 
+Components.utils.import("resource://gre/modules/Promise.jsm", this);
+
 function test() {
   requestLongerTimeout(2);
   waitForExplicitFinish();
