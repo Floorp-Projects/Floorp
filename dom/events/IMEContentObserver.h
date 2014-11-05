@@ -64,7 +64,7 @@ public:
                           WidgetMouseEvent* aMouseEvent);
 
   void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
-            nsIContent* aContent, nsIEditor* aEditor);
+            nsIContent* aContent);
   void Destroy();
   /**
    * IMEContentObserver is stored by EventStateManager during observing.
