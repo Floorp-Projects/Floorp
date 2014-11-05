@@ -503,6 +503,15 @@ var BrowserApp = {
       }
     }
 
+    try {
+      // Set the tiles click observer only if tiles reporting is enabled (that
+      // is, a report URL is set in prefs).
+      gTilesReportURL = Services.prefs.getCharPref("browser.tiles.reportURL");
+      Services.obs.addObserver(this, "Tiles:Click", false);
+    } catch (e) {
+      // Tiles reporting is disabled.
+    }
+
     // Notify Java that Gecko has loaded.
     Messaging.sendRequest({ type: "Gecko:Ready" });
   },
@@ -1872,6 +1881,13 @@ var BrowserApp = {
         this.computeAcceptLanguages(osLocale, aData);
         break;
 
+      case "Tiles:Click":
+        // Set the click data for the given tab to be handled on the next page load.
+        let data = JSON.parse(aData);
+        let tab = this.getTabForId(data.tabId);
+        tab.tilesData = data.payload;
+        break;
+
       default:
         dump('BrowserApp.observe: unexpected topic "' + aTopic + '"\n');
         break;
@@ -3189,6 +3205,9 @@ let gReflowPending = null;
 // into account said browser chrome.
 let gViewportMargins = { top: 0, right: 0, bottom: 0, left: 0};
 
+// The URL where suggested tile clicks are posted.
+let gTilesReportURL = null;
+
 function Tab(aURL, aParams) {
   this.browser = null;
   this.id = 0;
@@ -3217,6 +3236,7 @@ function Tab(aURL, aParams) {
   this.hasTouchListener = false;
   this.browserWidth = 0;
   this.browserHeight = 0;
+  this.tilesData = null;
 
   this.create(aURL, aParams);
 }
@@ -4242,6 +4262,18 @@ Tab.prototype = {
           }
         }
 
+        // Upload any pending tile click events.
+        // Tiles data will be non-null for this tab only if:
+        // 1) the user just clicked a suggested site with a tracking ID, and
+        // 2) tiles reporting is enabled (gTilesReportURL != null).
+        if (this.tilesData) {
+          let xhr = new XMLHttpRequest();
+          xhr.open("POST", gTilesReportURL, true);
+          xhr.setRequestHeader("Content-Type", "application/json");
+          xhr.send(this.tilesData);
+          this.tilesData = null;
+        }
+
         if (!Reader.isEnabledForParseOnLoad)
           return;
 
@@ -4318,6 +4350,14 @@ Tab.prototype = {
         // If the request does not handle the nsIHttpChannel interface, use nsIRequest's success
         // status. Used for local files. See bug 948849.
         success = aRequest.status == 0;
+      }
+
+      // At this point, either:
+      // 1) the page loaded, the pageshow event fired, and the tilesData XHR has been posted, or
+      // 2) the page did not load, and we're loading a new page.
+      // Either way, we're done with the tiles data, so clear it out.
+      if (this.tilesData && (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)) {
+        this.tilesData = null;
       }
 
       // Check to see if we restoring the content from a previous presentation (session)
