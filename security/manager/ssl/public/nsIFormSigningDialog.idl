@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInterfaceRequestor;
+
+/**
+ * nsIFormSigningDialog
+ * Provides UI for form signing.
+ */
+[scriptable, uuid(4fe04d6d-4b66-4023-a0bc-b43ce68b3e15)]
+interface nsIFormSigningDialog : nsISupports
+{
+  /**
+   *  confirmSignText
+   *    UI shown when a web site calls crypto.signText,
+   *    asking the user to confirm the confirm the signing request.
+   *
+   *  returns true if the user confirmed, false on cancel
+   */
+  boolean confirmSignText(in nsIInterfaceRequestor ctxt,
+                          in AString host,
+                          in AString signText,
+                          [array, size_is(count)] in wstring certNickList,
+                          [array, size_is(count)] in wstring certDetailsList,
+                          in uint32_t count,
+                          out int32_t selectedIndex,
+                          out AString password);
+};
+
+/**
+ * NS_FORMSIGNINGDIALOG_CONTRACTID - contract id to obtain an instance
+ *   that implements nsIFormSigningDialog.
+ */
+%{C++
+#define NS_FORMSIGNINGDIALOG_CONTRACTID "@mozilla.org/nsFormSigningDialog;1"
+%}
