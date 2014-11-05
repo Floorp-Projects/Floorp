@@ -41,14 +41,14 @@ public:
   // Returns with reasonable certainty whether or not we'll
   // be able to create and use a SurfaceTexture
   static bool Check();
-  
-  ~AndroidSurfaceTexture();
 
   // This attaches the updated data to the TEXTURE_EXTERNAL target
   void UpdateTexImage();
 
   bool GetTransformMatrix(mozilla::gfx::Matrix4x4& aMatrix);
   int ID() { return mID; }
+
+  void SetDefaultSize(mozilla::gfx::IntSize size);
 
   // The callback is guaranteed to be called on the main thread even
   // if the upstream callback is received on a different thread
@@ -59,8 +59,10 @@ public:
   void NotifyFrameAvailable();
 
   GLuint Texture() { return mTexture; }
+  jobject JavaSurface() { return mSurface; }
 private:
   AndroidSurfaceTexture();
+  ~AndroidSurfaceTexture();
 
   bool Init(GLuint aTexture);
 
