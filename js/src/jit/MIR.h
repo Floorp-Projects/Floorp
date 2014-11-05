@@ -268,10 +268,12 @@ class AliasSet {
     enum Flag {
         None_             = 0,
         ObjectFields      = 1 << 0, // shape, class, slots, length etc.
-        Element           = 1 << 1, // A member of obj->elements.
+        Element           = 1 << 1, // A member of obj->elements, or reference
+                                    // typed object field.
         DynamicSlot       = 1 << 2, // A member of obj->slots.
         FixedSlot         = 1 << 3, // A member of obj->fixedSlots().
-        TypedArrayElement = 1 << 4, // A typed array element.
+        TypedArrayElement = 1 << 4, // A typed array element, or scalar typed
+                                    // object field.
         DOMProperty       = 1 << 5, // A DOM property
         FrameArgument     = 1 << 6, // An argument kept on the stack frame
         AsmJSGlobalVar    = 1 << 7, // An asm.js global var
@@ -2736,6 +2738,45 @@ class MNewPar : public MUnaryInstruction
     }
 };
 
+class MNewTypedObject : public MNullaryInstruction
+{
+    AlwaysTenured<InlineTypedObject *> templateObject_;
+    gc::InitialHeap initialHeap_;
+
+    MNewTypedObject(types::CompilerConstraintList *constraints,
+                    InlineTypedObject *templateObject,
+                    gc::InitialHeap initialHeap)
+      : templateObject_(templateObject),
+        initialHeap_(initialHeap)
+    {
+        setResultType(MIRType_Object);
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewTypedObject)
+
+    static MNewTypedObject *New(TempAllocator &alloc,
+                                types::CompilerConstraintList *constraints,
+                                InlineTypedObject *templateObject,
+                                gc::InitialHeap initialHeap)
+    {
+        return new(alloc) MNewTypedObject(constraints, templateObject, initialHeap);
+    }
+
+    InlineTypedObject *templateObject() const {
+        return templateObject_;
+    }
+
+    gc::InitialHeap initialHeap() const {
+        return initialHeap_;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MTypedObjectProto
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
@@ -4601,6 +4642,36 @@ class MToString :
     }
 
     ALLOW_CLONE(MToString)
+};
+
+// Converts any type to an object or null value, throwing on undefined.
+class MToObjectOrNull :
+  public MUnaryInstruction,
+  public BoxInputsPolicy::Data
+{
+    explicit MToObjectOrNull(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_ObjectOrNull);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(ToObjectOrNull)
+    static MToObjectOrNull *New(TempAllocator &alloc, MDefinition *def)
+    {
+        return new(alloc) MToObjectOrNull(def);
+    }
+
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    ALLOW_CLONE(MToObjectOrNull)
 };
 
 class MBitNot
@@ -7884,6 +7955,82 @@ class MStoreElementHole
     }
 
     ALLOW_CLONE(MStoreElementHole)
+};
+
+// Store an unboxed object or null pointer to a vector.
+class MStoreUnboxedObjectOrNull
+  : public MAryInstruction<3>,
+    public ConvertToObjectOrNullPolicy<2>::Data
+{
+    MStoreUnboxedObjectOrNull(MDefinition *elements, MDefinition *index, MDefinition *value) {
+        initOperand(0, elements);
+        initOperand(1, index);
+        initOperand(2, value);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreUnboxedObjectOrNull)
+
+    static MStoreUnboxedObjectOrNull *New(TempAllocator &alloc,
+                                          MDefinition *elements, MDefinition *index,
+                                          MDefinition *value) {
+        return new(alloc) MStoreUnboxedObjectOrNull(elements, index, value);
+    }
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *value() const {
+        return getOperand(2);
+    }
+    AliasSet getAliasSet() const {
+        // Use AliasSet::Element for reference typed object fields.
+        return AliasSet::Store(AliasSet::Element);
+    }
+
+    ALLOW_CLONE(MStoreUnboxedObjectOrNull)
+};
+
+// Store an unboxed object or null pointer to a vector.
+class MStoreUnboxedString
+  : public MAryInstruction<3>,
+    public ConvertToStringPolicy<2>::Data
+{
+    MStoreUnboxedString(MDefinition *elements, MDefinition *index, MDefinition *value) {
+        initOperand(0, elements);
+        initOperand(1, index);
+        initOperand(2, value);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(StoreUnboxedString)
+
+    static MStoreUnboxedString *New(TempAllocator &alloc,
+                                    MDefinition *elements, MDefinition *index,
+                                    MDefinition *value) {
+        return new(alloc) MStoreUnboxedString(elements, index, value);
+    }
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    MDefinition *value() const {
+        return getOperand(2);
+    }
+    AliasSet getAliasSet() const {
+        // Use AliasSet::Element for reference typed object fields.
+        return AliasSet::Store(AliasSet::Element);
+    }
+
+    ALLOW_CLONE(MStoreUnboxedString)
 };
 
 // Array.prototype.pop or Array.prototype.shift on a dense array.

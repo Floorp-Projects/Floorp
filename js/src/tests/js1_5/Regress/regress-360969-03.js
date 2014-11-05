@@ -28,7 +28,7 @@ function test()
 
   for (var i = 0; i < limit; i++)
   {
-    eval('const pv' + i + ';');
+    eval('const pv' + i + ' = undefined;');
   }
 
   reportCompare(expect, actual, summary);

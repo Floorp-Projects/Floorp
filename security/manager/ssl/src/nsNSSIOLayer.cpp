@@ -1569,6 +1569,16 @@ PSMSend(PRFileDesc* fd, const void* buf, int32_t amount, int flags,
   return checkHandshake(bytesWritten, false, fd, socketInfo);
 }
 
+static PRStatus
+PSMBind(PRFileDesc* fd, const PRNetAddr *addr)
+{
+  nsNSSShutDownPreventionLock locker;
+  if (!getSocketInfoIfRunning(fd, not_reading_or_writing, locker))
+    return PR_FAILURE;
+
+  return fd->lower->methods->bind(fd->lower, addr);
+}
+
 static int32_t
 nsSSLIOLayerRead(PRFileDesc* fd, void* buf, int32_t amount)
 {
@@ -1715,7 +1725,6 @@ nsSSLIOLayerHelpers::Init()
     nsSSLIOLayerMethods.fileInfo64 = (PRFileInfo64FN) _PSM_InvalidStatus;
     nsSSLIOLayerMethods.writev = (PRWritevFN) _PSM_InvalidInt;
     nsSSLIOLayerMethods.accept = (PRAcceptFN) _PSM_InvalidDesc;
-    nsSSLIOLayerMethods.bind = (PRBindFN) _PSM_InvalidStatus;
     nsSSLIOLayerMethods.listen = (PRListenFN) _PSM_InvalidStatus;
     nsSSLIOLayerMethods.shutdown = (PRShutdownFN) _PSM_InvalidStatus;
     nsSSLIOLayerMethods.recvfrom = (PRRecvfromFN) _PSM_InvalidInt;
@@ -1731,6 +1740,7 @@ nsSSLIOLayerHelpers::Init()
     nsSSLIOLayerMethods.recv = PSMRecv;
     nsSSLIOLayerMethods.send = PSMSend;
     nsSSLIOLayerMethods.connectcontinue = PSMConnectcontinue;
+    nsSSLIOLayerMethods.bind = PSMBind;
 
     nsSSLIOLayerMethods.connect = nsSSLIOLayerConnect;
     nsSSLIOLayerMethods.close = nsSSLIOLayerClose;

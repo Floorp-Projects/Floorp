@@ -16,7 +16,7 @@ var manager = new MediaTestManager;
 function KeysChangeFunc(session, keys, token) {
   session.keyIdsReceived = [];
   for (var keyid in keys) {
-    info("Set " + keyid + " to false in session.keyIdsReceived");
+    Log(token, "Set " + keyid + " to false in session.keyIdsReceived");
     session.keyIdsReceived[keyid] = false;
   }
   return function(ev) {
@@ -25,7 +25,7 @@ function KeysChangeFunc(session, keys, token) {
     session.getUsableKeyIds().then(function(keyIds) {
       for (var k = 0; k < keyIds.length; k++) {
         var kid = Base64ToHex(window.btoa(ArrayBufferToString(keyIds[k])));
-        ok(kid in session.keyIdsReceived, token + " session.keyIdsReceived contained " + kid + " as expected.");
+        ok(kid in session.keyIdsReceived, TimeStamp(token) + " session.keyIdsReceived contained " + kid + " as expected.");
         session.keyIdsReceived[kid] = true;
       }
     }, bail("Failed to get keyIds"));
@@ -52,31 +52,31 @@ function startTest(test, token)
 
   v.addEventListener("encrypted", function(ev) {
     ok(MediaKeys.isTypeSupported(KEYSYSTEM_TYPE, ev.initDataType, test.type),
-       token + " MediaKeys should support this keysystem");
+       TimeStamp(token) + " MediaKeys should support this keysystem");
     gotEncrypted = true;
   });
 
   v.addEventListener("playing", function () { gotPlaying = true; });
 
   v.addEventListener("ended", function(ev) {
-    ok(true, token + " got ended event");
+    ok(true, TimeStamp(token) + " got ended event");
 
-    ok(gotEncrypted, token + " encrypted event should have fired");
-    ok(gotPlaying, token + " playing event should have fired");
+    ok(gotEncrypted, TimeStamp(token) + " encrypted event should have fired");
+    ok(gotPlaying, TimeStamp(token) + " playing event should have fired");
 
     ok(Math.abs(test.duration - v.duration) < 0.1,
-       token + " Duration of video should be corrrect");
+       TimeStamp(token) + " Duration of video should be corrrect");
     ok(Math.abs(test.duration - v.currentTime) < 0.1,
-       token + " Current time should be same as duration");
+       TimeStamp(token) + " Current time should be same as duration");
 
     // Verify all sessions had all keys went sent the to the CDM usable, and thus
     // that we received keyschange event(s).
-    is(sessions.length, 1, token + " should have 1 session");
+    is(sessions.length, 1, TimeStamp(token) + " should have 1 session");
     for (var i = 0; i < sessions.length; i++) {
       var session = sessions[i];
-      ok(session.gotKeysChanged, token + " should have received at least one keychange event");
+      ok(session.gotKeysChanged, TimeStamp(token) + " should have received at least one keychange event");
       for (var kid in session.keyIdsReceived) {
-        ok(session.keyIdsReceived[kid], token + " key with id " + kid + " was usable as expected");
+        ok(session.keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
       }
     }
 
@@ -85,7 +85,7 @@ function startTest(test, token)
 
   v.addEventListener("error", bail(token + " got error event"));
 
-  LoadTest(test, v).then(function(){v.play();}, bail(token + " failed to load"));
+  LoadTest(test, v, token).then(function(){v.play();}, bail(token + " failed to load"));
 }
 
 function testIsTypeSupported()

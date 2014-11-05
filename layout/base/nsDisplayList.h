@@ -1657,10 +1657,11 @@ public:
    * If PAINT_COMPRESSED is set, the FrameLayerBuilder should be set to compressed mode
    * to avoid short cut optimizations.
    *
-   * ComputeVisibility must be called before Paint.
-   * 
    * This must only be called on the root display list of the display list
    * tree.
+   *
+   * We return the layer manager used for painting --- mainly so that
+   * callers can dump its layer tree if necessary.
    */
   enum {
     PAINT_DEFAULT = 0,
@@ -1670,14 +1671,9 @@ public:
     PAINT_NO_COMPOSITE = 0x08,
     PAINT_COMPRESSED = 0x10
   };
-  void PaintRoot(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
-                 uint32_t aFlags);
-  /**
-   * Like PaintRoot, but used for internal display sublists.
-   * aForFrame is the frame that the list is associated with.
-   */
-  void PaintForFrame(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
-                     nsIFrame* aForFrame, uint32_t aFlags);
+  already_AddRefed<LayerManager> PaintRoot(nsDisplayListBuilder* aBuilder,
+                                           nsRenderingContext* aCtx,
+                                           uint32_t aFlags);
   /**
    * Get the bounds. Takes the union of the bounds of all children.
    * The result is not cached.
@@ -3180,7 +3176,6 @@ public:
 #endif
   
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,

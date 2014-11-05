@@ -1148,6 +1148,13 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
 }
 
 void
+AssertValidObjectOrNullPtr(JSContext *cx, JSObject *obj)
+{
+    if (obj)
+        AssertValidObjectPtr(cx, obj);
+}
+
+void
 AssertValidStringPtr(JSContext *cx, JSString *str)
 {
     // We can't closely inspect strings from another runtime.
@@ -1233,6 +1240,13 @@ MarkStringFromIon(JSRuntime *rt, JSString **stringp)
 {
     if (*stringp)
         gc::MarkStringUnbarriered(&rt->gc.marker, stringp, "write barrier");
+}
+
+void
+MarkObjectFromIon(JSRuntime *rt, JSObject **objp)
+{
+    if (*objp)
+        gc::MarkObjectUnbarriered(&rt->gc.marker, objp, "write barrier");
 }
 
 void
