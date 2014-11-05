@@ -745,6 +745,7 @@ bool SetDenseElement(JSContext *cx, HandleNativeObject obj, int32_t index, Handl
 
 #ifdef DEBUG
 void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
+void AssertValidObjectOrNullPtr(JSContext *cx, JSObject *obj);
 void AssertValidStringPtr(JSContext *cx, JSString *str);
 void AssertValidSymbolPtr(JSContext *cx, JS::Symbol *sym);
 void AssertValidValue(JSContext *cx, Value *v);
@@ -754,6 +755,7 @@ JSObject *TypedObjectProto(JSObject *obj);
 
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkStringFromIon(JSRuntime *rt, JSString **stringp);
+void MarkObjectFromIon(JSRuntime *rt, JSObject **objp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
 void MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep);
 
@@ -766,6 +768,8 @@ IonMarkFunction(MIRType type)
         return JS_FUNC_TO_DATA_PTR(void *, MarkValueFromIon);
       case MIRType_String:
         return JS_FUNC_TO_DATA_PTR(void *, MarkStringFromIon);
+      case MIRType_Object:
+        return JS_FUNC_TO_DATA_PTR(void *, MarkObjectFromIon);
       case MIRType_Shape:
         return JS_FUNC_TO_DATA_PTR(void *, MarkShapeFromIon);
       case MIRType_TypeObject:

@@ -2038,6 +2038,17 @@ LIRGenerator::visitToString(MToString *ins)
     }
 }
 
+bool
+LIRGenerator::visitToObjectOrNull(MToObjectOrNull *ins)
+{
+    MOZ_ASSERT(ins->input()->type() == MIRType_Value);
+
+    LValueToObjectOrNull *lir = new(alloc()) LValueToObjectOrNull();
+    if (!useBox(lir, LValueToString::Input, ins->input()))
+        return false;
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
 static bool
 MustCloneRegExpForCall(MCall *call, uint32_t useIndex)
 {
@@ -2772,6 +2783,38 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole *ins)
     }
 
     return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitStoreUnboxedObjectOrNull(MStoreUnboxedObjectOrNull *ins)
+{
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->value()->type() == MIRType_Object ||
+               ins->value()->type() == MIRType_Null ||
+               ins->value()->type() == MIRType_ObjectOrNull);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrNonDoubleConstant(ins->index());
+    const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
+
+    LInstruction *lir = new(alloc()) LStoreUnboxedPointer(elements, index, value);
+    return add(lir, ins);
+}
+
+bool
+LIRGenerator::visitStoreUnboxedString(MStoreUnboxedString *ins)
+{
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->value()->type() == MIRType_String);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+    const LAllocation value = useRegisterOrNonDoubleConstant(ins->value());
+
+    LInstruction *lir = new(alloc()) LStoreUnboxedPointer(elements, index, value);
+    return add(lir, ins);
 }
 
 bool

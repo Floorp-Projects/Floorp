@@ -8152,11 +8152,8 @@ IonBuilder::setElemTryTypedObject(bool *emitted, MDefinition *obj,
         return true;
 
       case type::Reference:
-      case type::Struct:
-      case type::SizedArray:
-      case type::UnsizedArray:
-        // For now, only optimize storing scalars.
-        return true;
+        return setElemTryReferenceElemOfTypedObject(emitted, obj, index,
+                                                    objPrediction, value, elemPrediction);
 
       case type::Scalar:
         return setElemTryScalarElemOfTypedObject(emitted,
@@ -8166,9 +8163,39 @@ IonBuilder::setElemTryTypedObject(bool *emitted, MDefinition *obj,
                                                  value,
                                                  elemPrediction,
                                                  elemSize);
+
+      case type::Struct:
+      case type::SizedArray:
+      case type::UnsizedArray:
+        // Not yet optimized.
+        return true;
     }
 
     MOZ_CRASH("Bad kind");
+}
+
+bool
+IonBuilder::setElemTryReferenceElemOfTypedObject(bool *emitted,
+                                                 MDefinition *obj,
+                                                 MDefinition *index,
+                                                 TypedObjectPrediction objPrediction,
+                                                 MDefinition *value,
+                                                 TypedObjectPrediction elemPrediction)
+{
+    ReferenceTypeDescr::Type elemType = elemPrediction.referenceType();
+    size_t elemSize = ReferenceTypeDescr::size(elemType);
+
+    MDefinition *indexAsByteOffset;
+    if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset))
+        return true;
+
+    if (!storeReferenceTypedObjectValue(obj, indexAsByteOffset, elemType, value))
+        return false;
+
+    current->push(value);
+
+    *emitted = true;
+    return true;
 }
 
 bool
@@ -10047,18 +10074,42 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
         return true;
 
       case type::Reference:
-      case type::Struct:
-      case type::SizedArray:
-      case type::UnsizedArray:
-        // For now, only optimize storing scalars.
-        return true;
+        return setPropTryReferencePropOfTypedObject(emitted, obj, fieldOffset,
+                                                    value, fieldPrediction);
 
       case type::Scalar:
         return setPropTryScalarPropOfTypedObject(emitted, obj, fieldOffset,
                                                  value, fieldPrediction);
+
+      case type::Struct:
+      case type::SizedArray:
+      case type::UnsizedArray:
+        return true;
     }
 
     MOZ_CRASH("Unknown kind");
+}
+
+bool
+IonBuilder::setPropTryReferencePropOfTypedObject(bool *emitted,
+                                                 MDefinition *obj,
+                                                 int32_t fieldOffset,
+                                                 MDefinition *value,
+                                                 TypedObjectPrediction fieldPrediction)
+{
+    ReferenceTypeDescr::Type fieldType = fieldPrediction.referenceType();
+
+    types::TypeObjectKey *globalType = types::TypeObjectKey::get(&script()->global());
+    if (globalType->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
+        return true;
+
+    if (!storeReferenceTypedObjectValue(obj, constantInt(fieldOffset), fieldType, value))
+        return false;
+
+    current->push(value);
+
+    *emitted = true;
+    return true;
 }
 
 bool
@@ -11194,6 +11245,37 @@ IonBuilder::storeScalarTypedObjectValue(MDefinition *typedObj,
         store->setRacy();
     current->add(store);
 
+    return true;
+}
+
+bool
+IonBuilder::storeReferenceTypedObjectValue(MDefinition *typedObj,
+                                           MDefinition *byteOffset,
+                                           ReferenceTypeDescr::Type type,
+                                           MDefinition *value)
+{
+    if (NeedsPostBarrier(info(), value))
+        current->add(MPostWriteBarrier::New(alloc(), typedObj, value));
+
+    // Find location within the owner object.
+    MDefinition *elements, *scaledOffset;
+    size_t alignment = ReferenceTypeDescr::alignment(type);
+    loadTypedObjectElements(typedObj, byteOffset, alignment, &elements, &scaledOffset);
+
+    MInstruction *store;
+    switch (type) {
+      case ReferenceTypeDescr::TYPE_ANY:
+        store = MStoreElement::New(alloc(), elements, scaledOffset, value, false);
+        break;
+      case ReferenceTypeDescr::TYPE_OBJECT:
+        store = MStoreUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, value);
+        break;
+      case ReferenceTypeDescr::TYPE_STRING:
+        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value);
+        break;
+    }
+
+    current->add(store);
     return true;
 }
 
