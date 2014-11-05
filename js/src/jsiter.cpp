@@ -666,11 +666,8 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
     bool keysOnly = (flags == JSITER_ENUMERATE);
 
     if (obj) {
-        if (JSIteratorOp op = obj->getClass()->ext.iteratorObject) {
-            JSObject *iterobj = op(cx, obj, !(flags & JSITER_FOREACH));
-            if (!iterobj)
-                return false;
-            vp.setObject(*iterobj);
+        if (obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()) {
+            vp.setObject(*obj);
             return true;
         }
 
@@ -891,12 +888,6 @@ static const JSFunctionSpec iterator_methods[] = {
     JS_FS_END
 };
 
-static JSObject *
-iterator_iteratorObject(JSContext *cx, HandleObject obj, bool keysonly)
-{
-    return obj;
-}
-
 size_t
 PropertyIteratorObject::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const
 {
@@ -935,12 +926,6 @@ const Class PropertyIteratorObject::class_ = {
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
     trace,
-    JS_NULL_CLASS_SPEC,
-    {
-        nullptr,             /* outerObject    */
-        nullptr,             /* innerObject    */
-        iterator_iteratorObject,
-    }
 };
 
 enum {
