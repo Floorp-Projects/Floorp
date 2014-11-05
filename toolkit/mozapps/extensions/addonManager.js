@@ -152,7 +152,8 @@ amManager.prototype = {
    */
   receiveMessage: function AMC_receiveMessage(aMessage) {
     let payload = aMessage.data;
-    let referer = Services.io.newURI(payload.referer, null, null);
+    let referer = payload.referer ? Services.io.newURI(payload.referer, null, null)
+                                  : null;
 
     switch (aMessage.name) {
       case MSG_INSTALL_ENABLED:
