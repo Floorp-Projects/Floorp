@@ -1097,7 +1097,8 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_OK);
   nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContentForIME();
-  IMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent);
+  IMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent,
+                                   mEditor);
 
   return NS_OK;
 }
