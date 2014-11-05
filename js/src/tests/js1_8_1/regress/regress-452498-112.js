@@ -22,11 +22,11 @@ function test()
 
 // ------- Comment #112 From Jesse Ruderman
 
-  expect = 'TypeError: q is not a function';
+  expect = 'ReferenceError: can\'t access lexical declaration `q\' before initialization';
 
   try
   {
-    q = new Function("(function() { q(3); })(); const q;"); q();
+    q = new Function("(function() { q(3); })(); const q = undefined;"); q();
   }
   catch(ex)
   {

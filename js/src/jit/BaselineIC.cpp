@@ -201,6 +201,12 @@ ICStub::trace(JSTracer *trc)
             MarkObject(trc, &callStub->templateObject(), "baseline-callnative-template");
         break;
       }
+      case ICStub::Call_ClassHook: {
+        ICCall_ClassHook *callStub = toCall_ClassHook();
+        if (callStub->templateObject())
+            MarkObject(trc, &callStub->templateObject(), "baseline-callclasshook-template");
+        break;
+      }
       case ICStub::Call_StringSplit: {
         ICCall_StringSplit *callStub = toCall_StringSplit();
         MarkObject(trc, &callStub->templateObject(), "baseline-callstringsplit-template");
@@ -704,6 +710,7 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
     MOZ_ASSERT(kind == ICStub::Call_Scripted                             ||
                kind == ICStub::Call_AnyScripted                          ||
                kind == ICStub::Call_Native                               ||
+               kind == ICStub::Call_ClassHook                            ||
                kind == ICStub::Call_ScriptedApplyArray                   ||
                kind == ICStub::Call_ScriptedApplyArguments               ||
                kind == ICStub::Call_ScriptedFunCall                      ||
@@ -8583,6 +8590,22 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 static bool
+GetTemplateObjectForClassHook(JSContext *cx, JSNative hook, CallArgs &args,
+                              MutableHandleObject templateObject)
+{
+    if (hook == TypedObject::constructSized) {
+        Rooted<TypeDescr *> descr(cx, &args.callee().as<TypeDescr>());
+        JSObject *obj = TypedObject::createZeroed(cx, descr, 1, gc::TenuredHeap);
+        if (!obj)
+            return false;
+        templateObject.set(obj);
+        return true;
+    }
+
+    return true;
+}
+
+static bool
 IsOptimizableCallStringSplit(Value callee, Value thisv, int argc, Value *args)
 {
     if (argc != 1 || !thisv.isString() || !args[0].isString())
@@ -8631,8 +8654,27 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         return true;
 
     RootedObject obj(cx, &callee.toObject());
-    if (!obj->is<JSFunction>())
+    if (!obj->is<JSFunction>()) {
+        if (JSNative hook = constructing ? obj->constructHook() : obj->callHook()) {
+            if (op != JSOP_FUNAPPLY && !isSpread && !useNewType) {
+                RootedObject templateObject(cx);
+                CallArgs args = CallArgsFromVp(argc, vp);
+                if (!GetTemplateObjectForClassHook(cx, hook, args, &templateObject))
+                    return false;
+
+                JitSpew(JitSpew_BaselineIC, "  Generating Call_ClassHook stub");
+                ICCall_ClassHook::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                                                    obj->getClass(), hook, templateObject, constructing);
+                ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+                if (!newStub)
+                    return false;
+
+                stub->addNewStub(newStub);
+                return true;
+            }
+        }
         return true;
+    }
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
 
@@ -9793,6 +9835,97 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
 #else
     masm.callWithABI(Address(callee, JSFunction::offsetOfNativeOrScript()));
 #endif
+
+    // Test for failure.
+    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+    // Load the return value into R0.
+    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), R0);
+
+    leaveStubFrame(masm);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    GeneralRegisterSet regs(availableGeneralRegs(0));
+
+    Register argcReg = R0.scratchReg();
+    regs.take(argcReg);
+    regs.takeUnchecked(BaselineTailCallReg);
+
+    // Load the callee in R1.
+    BaseIndex calleeSlot(BaselineStackReg, argcReg, TimesEight, ICStackValueOffset + sizeof(Value));
+    masm.loadValue(calleeSlot, R1);
+    regs.take(R1);
+
+    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
+
+    // Ensure the callee's class matches the one in this stub.
+    Register callee = masm.extractObject(R1, ExtractTemp0);
+    Register scratch = regs.takeAny();
+    masm.loadObjClass(callee, scratch);
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(BaselineStubReg, ICCall_ClassHook::offsetOfClass()),
+                   scratch, &failure);
+
+    regs.add(R1);
+    regs.takeUnchecked(callee);
+
+    // Push a stub frame so that we can perform a non-tail call.
+    // Note that this leaves the return address in TailCallReg.
+    enterStubFrame(masm, regs.getAny());
+
+    regs.add(scratch);
+    pushCallArguments(masm, regs, argcReg);
+    regs.take(scratch);
+
+    if (isConstructing_) {
+        // Stack looks like: [ ..., Arg0Val, ThisVal, CalleeVal ]
+        // Replace ThisVal with MagicValue(JS_IS_CONSTRUCTING)
+        masm.storeValue(MagicValue(JS_IS_CONSTRUCTING), Address(BaselineStackReg, sizeof(Value)));
+    }
+
+    masm.checkStackAlignment();
+
+    // Native functions have the signature:
+    //
+    //    bool (*)(JSContext *, unsigned, Value *vp)
+    //
+    // Where vp[0] is space for callee/return value, vp[1] is |this|, and vp[2] onward
+    // are the function arguments.
+
+    // Initialize vp.
+    Register vpReg = regs.takeAny();
+    masm.movePtr(StackPointer, vpReg);
+
+    // Construct a native exit frame.
+    masm.push(argcReg);
+
+    EmitCreateStubFrameDescriptor(masm, scratch);
+    masm.push(scratch);
+    masm.push(BaselineTailCallReg);
+    masm.enterFakeExitFrame(IonNativeExitFrameLayout::Token());
+
+    // If needed, update SPS Profiler frame entry.  At this point, BaselineTailCallReg
+    // and scratch can be clobbered.
+    emitProfilingUpdate(masm, BaselineTailCallReg, scratch, ICCall_Native::offsetOfPCOffset());
+
+    // Execute call.
+    masm.setupUnalignedABICall(3, scratch);
+    masm.loadJSContext(scratch);
+    masm.passABIArg(scratch);
+    masm.passABIArg(argcReg);
+    masm.passABIArg(vpReg);
+    masm.callWithABI(Address(BaselineStubReg, ICCall_ClassHook::offsetOfNative()));
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -11155,6 +11288,33 @@ ICCall_Native::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub
     RootedNativeObject templateObject(cx, other.templateObject_);
     return New(space, other.jitCode(), firstMonitorStub, callee, templateObject,
                other.pcOffset_);
+}
+
+ICCall_ClassHook::ICCall_ClassHook(JitCode *stubCode, ICStub *firstMonitorStub,
+                                   const Class *clasp, Native native, HandleObject templateObject)
+  : ICMonitoredStub(ICStub::Call_ClassHook, stubCode, firstMonitorStub),
+    clasp_(clasp),
+    native_(JS_FUNC_TO_DATA_PTR(void *, native)),
+    templateObject_(templateObject)
+{
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+    // The simulator requires VM calls to be redirected to a special swi
+    // instruction to handle them. To make this work, we store the redirected
+    // pointer in the stub.
+    native_ = Simulator::RedirectNativeFunction(native_, Args_General3);
+#endif
+}
+
+/* static */ ICCall_ClassHook *
+ICCall_ClassHook::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub,
+                        ICCall_ClassHook &other)
+{
+    RootedObject templateObject(cx, other.templateObject_);
+    ICCall_ClassHook *res = New(space, other.jitCode(), firstMonitorStub,
+                                other.clasp(), nullptr, templateObject);
+    if (res)
+        res->native_ = other.native();
+    return res;
 }
 
 /* static */ ICCall_ScriptedApplyArray *

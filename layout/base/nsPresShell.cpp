@@ -4915,7 +4915,14 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
     nsView* view = rootFrame->GetView();
     if (view && view->GetWidget() &&
         nsLayoutUtils::GetDisplayRootFrame(rootFrame) == rootFrame) {
-      flags |= nsLayoutUtils::PAINT_WIDGET_LAYERS;
+      LayerManager* layerManager = view->GetWidget()->GetLayerManager();
+      // ClientLayerManagers in content processes don't support
+      // taking snapshots.
+      if (layerManager &&
+          (!layerManager->AsClientLayerManager() ||
+           XRE_GetProcessType() == GeckoProcessType_Default)) {
+        flags |= nsLayoutUtils::PAINT_WIDGET_LAYERS;
+      }
     }
   }
   if (!(aFlags & RENDER_CARET)) {
@@ -5255,7 +5262,9 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
     ctx->SetMatrix(initialTM.Translate(rootOffset));
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
-    rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, &rc, nsDisplayList::PAINT_DEFAULT);
+    nsRefPtr<LayerManager> layerManager =
+        rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, &rc,
+                                   nsDisplayList::PAINT_DEFAULT);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
 
@@ -8802,10 +8811,6 @@ PresShell::DidPaintWindow()
     // This could be a popup's presshell. No point in notifying XPConnect
     // about compositing of popups.
     return;
-  }
-
-  if (nsContentUtils::XPConnect()) {
-    nsContentUtils::XPConnect()->NotifyDidPaint();
   }
 }
 

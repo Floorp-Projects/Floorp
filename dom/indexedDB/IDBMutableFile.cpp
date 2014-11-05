@@ -321,6 +321,11 @@ IDBMutableFile::Open(FileMode aMode, ErrorResult& aError)
     return nullptr;
   }
 
+  if (mInvalidated) {
+    aError.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
+    return nullptr;
+  }
+
   nsRefPtr<IDBFileHandle> fileHandle =
     IDBFileHandle::Create(aMode, FileHandleBase::NORMAL, this);
   if (!fileHandle) {
