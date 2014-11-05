@@ -21,7 +21,7 @@ describe("loop.shared.mixins", function() {
     sandbox.restore();
   });
 
-  describe("loop.webapp.UrlHashChangeMixin", function() {
+  describe("loop.shared.mixins.UrlHashChangeMixin", function() {
     function createTestComponent(onUrlHashChange) {
       var TestComp = React.createClass({
         mixins: [loop.shared.mixins.UrlHashChangeMixin],
@@ -61,7 +61,7 @@ describe("loop.shared.mixins", function() {
     });
   });
 
-  describe("loop.webapp.DocumentLocationMixin", function() {
+  describe("loop.shared.mixins.DocumentLocationMixin", function() {
     var reloadStub, TestComp;
 
     beforeEach(function() {
@@ -90,7 +90,33 @@ describe("loop.shared.mixins", function() {
     });
   });
 
-  describe("loop.panel.DocumentVisibilityMixin", function() {
+  describe("loop.shared.mixins.DocumentTitleMixin", function() {
+    var TestComp, rootObject;
+
+    beforeEach(function() {
+      rootObject = {
+        document: {}
+      };
+      sharedMixins.setRootObject(rootObject);
+
+      TestComp = React.createClass({
+        mixins: [loop.shared.mixins.DocumentTitleMixin],
+        render: function() {
+          return React.DOM.div();
+        }
+      });
+    });
+
+    it("should set window.document.title", function() {
+      var comp = TestUtils.renderIntoDocument(TestComp());
+
+      comp.setTitle("It's a Fake!");
+
+      expect(rootObject.document.title).eql("It's a Fake!");
+    });
+  });
+
+  describe("loop.shared.mixins.DocumentVisibilityMixin", function() {
     var comp, TestComp, onDocumentVisibleStub, onDocumentHiddenStub;
 
     beforeEach(function() {

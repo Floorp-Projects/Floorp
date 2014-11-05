@@ -27,7 +27,7 @@
 
     <CheckBoxPreference android:key="android.not_a_preference.new_tablet_ui"
                         android:title="@string/new_tablet_pref"
-                        android:defaultValue="false" />
+                        android:defaultValue="true" />
 
     <PreferenceCategory android:title="@string/pref_category_advanced">
 

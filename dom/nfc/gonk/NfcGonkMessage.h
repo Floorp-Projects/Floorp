@@ -68,15 +68,6 @@ enum SecureElementOrigin {
   OriginEndGuard = 3
 };
 
-enum NdefType {
-  UNKNOWN = -1,
-  TYPE1_TAG = 0,
-  TYPE2_TAG = 1,
-  TYPE3_TAG = 2,
-  TYPE4_TAG = 3,
-  MIFARE_CLASSIC_TAG = 4
-};
-
 } // namespace mozilla
 
 #endif // NfcGonkMessage_h

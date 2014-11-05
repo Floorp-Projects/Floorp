@@ -86,8 +86,9 @@ struct EventOptions
 {
   EventOptions()
     : mType(EmptyString()), mStatus(-1), mErrorCode(-1), mSessionId(-1), mRequestId(EmptyString()),
-      mMajorVersion(-1), mMinorVersion(-1), mIsReadOnly(-1), mCanBeMadeReadOnly(-1),
-      mMaxSupportedLength(-1), mPowerLevel(-1), mOriginType(-1), mOriginIndex(-1)
+      mMajorVersion(-1), mMinorVersion(-1),
+      mTagType(-1), mMaxNDEFSize(-1), mIsReadOnly(-1), mIsFormatable(-1), mPowerLevel(-1),
+      mOriginType(-1), mOriginIndex(-1)
   {}
 
   nsString mType;
@@ -99,9 +100,10 @@ struct EventOptions
   int32_t mMinorVersion;
   nsTArray<uint8_t> mTechList;
   nsTArray<NDEFRecordStruct> mRecords;
+  int32_t mTagType;
+  int32_t mMaxNDEFSize;
   int32_t mIsReadOnly;
-  int32_t mCanBeMadeReadOnly;
-  int32_t mMaxSupportedLength;
+  int32_t mIsFormatable;
   int32_t mPowerLevel;
 
   int32_t mOriginType;

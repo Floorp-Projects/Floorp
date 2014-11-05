@@ -7,10 +7,19 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(44eb02f4-6eba-4c12-8ed1-c142513776c9)]
+[scriptable, uuid(9b43bdda-52f4-4712-b28c-ad7cba736e14)]
 interface nsINfcTagEvent : nsISupports
 {
   readonly attribute nsIVariant techList;
+
+  // one of NFCTagType defined in MozNFCTag.webidl.
+  readonly attribute DOMString tagType;
+
+  readonly attribute long maxNDEFSize;
+
+  readonly attribute boolean isReadOnly;
+
+  readonly attribute boolean isFormatable;
 };
 
 [scriptable, uuid(2074503e-f590-4017-a45e-85d3ca766f41)]
