@@ -66,9 +66,12 @@ amContentHandler.prototype = {
                                                 Ci.nsIURI);
       }
 
+      let browser = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDocShell)
+                          .chromeEventHandler;
       let manager = Cc["@mozilla.org/addons/integration;1"].
                     getService(Ci.amIWebInstaller);
-      manager.installAddonsFromWebpage(aMimetype, window, referer, [uri.spec],
+      manager.installAddonsFromWebpage(aMimetype, browser, referer, [uri.spec],
                                        [null], [null], [null], null, 1);
     }
   },
