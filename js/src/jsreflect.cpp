@@ -6,8 +6,6 @@
 
 /* JS reflection package. */
 
-#include "jsreflect.h"
-
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 
@@ -34,7 +32,80 @@ using JS::AutoValueArray;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 
-char const * const js::aopNames[] = {
+enum ASTType {
+    AST_ERROR = -1,
+#define ASTDEF(ast, str, method) ast,
+#include "jsast.tbl"
+#undef ASTDEF
+    AST_LIMIT
+};
+
+enum AssignmentOperator {
+    AOP_ERR = -1,
+
+    /* assign */
+    AOP_ASSIGN = 0,
+    /* operator-assign */
+    AOP_PLUS, AOP_MINUS, AOP_STAR, AOP_DIV, AOP_MOD,
+    /* shift-assign */
+    AOP_LSH, AOP_RSH, AOP_URSH,
+    /* binary */
+    AOP_BITOR, AOP_BITXOR, AOP_BITAND,
+
+    AOP_LIMIT
+};
+
+enum BinaryOperator {
+    BINOP_ERR = -1,
+
+    /* eq */
+    BINOP_EQ = 0, BINOP_NE, BINOP_STRICTEQ, BINOP_STRICTNE,
+    /* rel */
+    BINOP_LT, BINOP_LE, BINOP_GT, BINOP_GE,
+    /* shift */
+    BINOP_LSH, BINOP_RSH, BINOP_URSH,
+    /* arithmetic */
+    BINOP_ADD, BINOP_SUB, BINOP_STAR, BINOP_DIV, BINOP_MOD,
+    /* binary */
+    BINOP_BITOR, BINOP_BITXOR, BINOP_BITAND,
+    /* misc */
+    BINOP_IN, BINOP_INSTANCEOF,
+
+    BINOP_LIMIT
+};
+
+enum UnaryOperator {
+    UNOP_ERR = -1,
+
+    UNOP_DELETE = 0,
+    UNOP_NEG,
+    UNOP_POS,
+    UNOP_NOT,
+    UNOP_BITNOT,
+    UNOP_TYPEOF,
+    UNOP_VOID,
+
+    UNOP_LIMIT
+};
+
+enum VarDeclKind {
+    VARDECL_ERR = -1,
+    VARDECL_VAR = 0,
+    VARDECL_CONST,
+    VARDECL_LET,
+    VARDECL_LIMIT
+};
+
+enum PropKind {
+    PROP_ERR = -1,
+    PROP_INIT = 0,
+    PROP_GETTER,
+    PROP_SETTER,
+    PROP_MUTATEPROTO,
+    PROP_LIMIT
+};
+
+static const char* const aopNames[] = {
     "=",    /* AOP_ASSIGN */
     "+=",   /* AOP_PLUS */
     "-=",   /* AOP_MINUS */
@@ -49,7 +120,7 @@ char const * const js::aopNames[] = {
     "&="    /* AOP_BITAND */
 };
 
-char const * const js::binopNames[] = {
+static const char* const binopNames[] = {
     "==",         /* BINOP_EQ */
     "!=",         /* BINOP_NE */
     "===",        /* BINOP_STRICTEQ */
@@ -73,7 +144,7 @@ char const * const js::binopNames[] = {
     "instanceof", /* BINOP_INSTANCEOF */
 };
 
-char const * const js::unopNames[] = {
+static const char* const unopNames[] = {
     "delete",  /* UNOP_DELETE */
     "-",       /* UNOP_NEG */
     "+",       /* UNOP_POS */
@@ -83,14 +154,14 @@ char const * const js::unopNames[] = {
     "void"     /* UNOP_VOID */
 };
 
-char const * const js::nodeTypeNames[] = {
+static const char* const nodeTypeNames[] = {
 #define ASTDEF(ast, str, method) str,
 #include "jsast.tbl"
 #undef ASTDEF
     nullptr
 };
 
-static char const * const callbackNames[] = {
+static const char* const callbackNames[] = {
 #define ASTDEF(ast, str, method) method,
 #include "jsast.tbl"
 #undef ASTDEF
