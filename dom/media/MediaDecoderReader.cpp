@@ -129,8 +129,7 @@ MediaDecoderReader::SetStartTime(int64_t aStartTime)
 }
 
 nsresult
-MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered,
-                                int64_t aStartTime)
+MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered)
 {
   MediaResource* stream = mDecoder->GetResource();
   int64_t durationUs = 0;
