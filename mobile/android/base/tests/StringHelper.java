@@ -187,7 +187,7 @@ public class StringHelper {
     public static final String ABOUT_LABEL = "About " + BRAND_NAME;
     public static final String FAQS_LABEL = "FAQs";
     public static final String FEEDBACK_LABEL = "Give feedback";
-    public static final String LOCATION_SERVICES_LABEL = "Mozilla location services";
+    public static final String LOCATION_SERVICES_LABEL = "Mozilla Location Service";
     public static final String HEALTH_REPORT_LABEL = BRAND_NAME + " Health Report";
     public static final String MY_HEALTH_REPORT_LABEL = "View my Health Report";
 
