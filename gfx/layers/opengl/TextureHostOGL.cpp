@@ -599,10 +599,8 @@ SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
     NS_WARNING("Trying to bind a texture without a GLContext");
     return;
   }
-  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
 
   gl()->fActiveTexture(aTextureUnit);
-  gl()->fBindTexture(mTextureTarget, tex);
 #ifndef DEBUG
   // SurfaceTexture spams us if there are any existing GL errors, so
   // we'll clear them here in order to avoid that.
