@@ -5850,9 +5850,18 @@ AddonInstall.prototype = {
 
   getInterface: function AI_getInterface(iid) {
     if (iid.equals(Ci.nsIAuthPrompt2)) {
-      var factory = Cc["@mozilla.org/prompter;1"].
+      let win = this.window;
+      if (!win && this.browser)
+        win = this.browser.ownerDocument.defaultView;
+
+      let factory = Cc["@mozilla.org/prompter;1"].
                     getService(Ci.nsIPromptFactory);
-      return factory.getPrompt(this.window, Ci.nsIAuthPrompt);
+      let prompt = factory.getPrompt(win, Ci.nsIAuthPrompt2);
+
+      if (this.browser && this.browser.isRemoteBrowser && prompt instanceof Ci.nsILoginManagerPrompter)
+        prompt.setE10sData(this.browser, null);
+
+      return prompt;
     }
     else if (iid.equals(Ci.nsIChannelEventSink)) {
       return this;
