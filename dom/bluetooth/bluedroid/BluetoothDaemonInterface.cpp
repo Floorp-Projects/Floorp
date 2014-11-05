@@ -8,6 +8,7 @@
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
 #include "BluetoothDaemonSocketInterface.h"
+#include "BluetoothInterfaceHelpers.h"
 #include "mozilla/unused.h"
 
 using namespace mozilla::ipc;
@@ -132,13 +133,11 @@ private:
   // Responses
   //
 
-  typedef
-    BluetoothDaemonInterfaceRunnable0<BluetoothSetupResultHandler, void>
+  typedef BluetoothResultRunnable0<BluetoothSetupResultHandler, void>
     ResultRunnable;
 
-  typedef
-    BluetoothDaemonInterfaceRunnable1<BluetoothSetupResultHandler, void,
-                                      BluetoothStatus, BluetoothStatus>
+  typedef BluetoothResultRunnable1<BluetoothSetupResultHandler, void,
+                                   BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
   void
@@ -146,8 +145,8 @@ private:
            BluetoothDaemonPDU& aPDU,
            BluetoothSetupResultHandler* aRes)
   {
-    ErrorRunnable::Dispatch<0x00, 0x00>(
-      aRes, &BluetoothSetupResultHandler::OnError, aPDU);
+    ErrorRunnable::Dispatch(
+      aRes, &BluetoothSetupResultHandler::OnError, UnpackPDUInitOp(aPDU));
   }
 
   void
@@ -156,7 +155,8 @@ private:
                     BluetoothSetupResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothSetupResultHandler::RegisterModule);
+      aRes, &BluetoothSetupResultHandler::RegisterModule,
+      UnpackPDUInitOp(aPDU));
   }
 
   void
@@ -165,7 +165,8 @@ private:
                       BluetoothSetupResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothSetupResultHandler::UnregisterModule);
+      aRes, &BluetoothSetupResultHandler::UnregisterModule,
+      UnpackPDUInitOp(aPDU));
   }
 
   void
@@ -174,7 +175,8 @@ private:
                    BluetoothSetupResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothSetupResultHandler::Configuration);
+      aRes, &BluetoothSetupResultHandler::Configuration,
+      UnpackPDUInitOp(aPDU));
   }
 };
 
@@ -595,21 +597,19 @@ private:
   // Responses
   //
 
-  typedef
-    BluetoothDaemonInterfaceRunnable0<BluetoothResultHandler, void>
+  typedef BluetoothResultRunnable0<BluetoothResultHandler, void>
     ResultRunnable;
 
-  typedef
-    BluetoothDaemonInterfaceRunnable1<BluetoothResultHandler, void,
-                                      BluetoothStatus, BluetoothStatus>
+  typedef BluetoothResultRunnable1<BluetoothResultHandler, void,
+                                   BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
   void ErrorRsp(const BluetoothDaemonPDUHeader& aHeader,
                 BluetoothDaemonPDU& aPDU,
                 BluetoothResultHandler* aRes)
   {
-    ErrorRunnable::Dispatch<0x01, 0x00>(
-      aRes, &BluetoothResultHandler::OnError, aPDU);
+    ErrorRunnable::Dispatch(
+      aRes, &BluetoothResultHandler::OnError, UnpackPDUInitOp(aPDU));
   }
 
   void EnableRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -617,7 +617,7 @@ private:
                  BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::Enable);
+      aRes, &BluetoothResultHandler::Enable, UnpackPDUInitOp(aPDU));
   }
 
   void DisableRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -625,7 +625,7 @@ private:
                   BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::Disable);
+      aRes, &BluetoothResultHandler::Disable, UnpackPDUInitOp(aPDU));
   }
 
   void GetAdapterPropertiesRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -633,7 +633,8 @@ private:
                                BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::GetAdapterProperties);
+      aRes, &BluetoothResultHandler::GetAdapterProperties,
+      UnpackPDUInitOp(aPDU));
   }
 
   void GetAdapterPropertyRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -641,7 +642,8 @@ private:
                              BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::GetAdapterProperty);
+      aRes, &BluetoothResultHandler::GetAdapterProperty,
+      UnpackPDUInitOp(aPDU));
   }
 
   void SetAdapterPropertyRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -649,7 +651,8 @@ private:
                              BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::SetAdapterProperty);
+      aRes, &BluetoothResultHandler::SetAdapterProperty,
+      UnpackPDUInitOp(aPDU));
   }
 
   void GetRemoteDevicePropertiesRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -657,7 +660,8 @@ private:
                                     BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::GetRemoteDeviceProperties);
+      aRes, &BluetoothResultHandler::GetRemoteDeviceProperties,
+      UnpackPDUInitOp(aPDU));
   }
 
   void
@@ -666,7 +670,8 @@ private:
                              BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::GetRemoteDeviceProperty);
+      aRes, &BluetoothResultHandler::GetRemoteDeviceProperty,
+      UnpackPDUInitOp(aPDU));
   }
 
   void SetRemoteDevicePropertyRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -674,7 +679,8 @@ private:
                                   BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::SetRemoteDeviceProperty);
+      aRes, &BluetoothResultHandler::SetRemoteDeviceProperty,
+      UnpackPDUInitOp(aPDU));
   }
 
   void GetRemoteServiceRecordRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -682,7 +688,8 @@ private:
                                  BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::GetRemoteServiceRecord);
+      aRes, &BluetoothResultHandler::GetRemoteServiceRecord,
+      UnpackPDUInitOp(aPDU));
   }
 
   void GetRemoteServicesRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -690,7 +697,8 @@ private:
                             BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::GetRemoteServices);
+      aRes, &BluetoothResultHandler::GetRemoteServices,
+      UnpackPDUInitOp(aPDU));
   }
 
   void StartDiscoveryRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -698,7 +706,8 @@ private:
                          BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::StartDiscovery);
+      aRes, &BluetoothResultHandler::StartDiscovery,
+      UnpackPDUInitOp(aPDU));
   }
 
   void CancelDiscoveryRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -706,7 +715,8 @@ private:
                           BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::CancelDiscovery);
+      aRes, &BluetoothResultHandler::CancelDiscovery,
+      UnpackPDUInitOp(aPDU));
   }
 
   void CreateBondRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -714,7 +724,8 @@ private:
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::CreateBond);
+      aRes, &BluetoothResultHandler::CreateBond,
+      UnpackPDUInitOp(aPDU));
   }
 
   void RemoveBondRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -722,7 +733,8 @@ private:
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::RemoveBond);
+      aRes, &BluetoothResultHandler::RemoveBond,
+      UnpackPDUInitOp(aPDU));
   }
 
   void CancelBondRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -730,7 +742,8 @@ private:
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::CancelBond);
+      aRes, &BluetoothResultHandler::CancelBond,
+      UnpackPDUInitOp(aPDU));
   }
 
   void PinReplyRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -738,7 +751,8 @@ private:
                    BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::PinReply);
+      aRes, &BluetoothResultHandler::PinReply,
+      UnpackPDUInitOp(aPDU));
   }
 
   void SspReplyRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -746,7 +760,8 @@ private:
                    BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::SspReply);
+      aRes, &BluetoothResultHandler::SspReply,
+      UnpackPDUInitOp(aPDU));
   }
 
   void DutModeConfigureRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -754,7 +769,8 @@ private:
                            BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::DutModeConfigure);
+      aRes, &BluetoothResultHandler::DutModeConfigure,
+      UnpackPDUInitOp(aPDU));
   }
 
   void DutModeSendRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -762,7 +778,8 @@ private:
                       BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::DutModeSend);
+      aRes, &BluetoothResultHandler::DutModeSend,
+      UnpackPDUInitOp(aPDU));
   }
 
   void LeTestModeRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -770,7 +787,8 @@ private:
                      BluetoothResultHandler* aRes)
   {
     ResultRunnable::Dispatch(
-      aRes, &BluetoothResultHandler::LeTestMode);
+      aRes, &BluetoothResultHandler::LeTestMode,
+      UnpackPDUInitOp(aPDU));
   }
 
   void HandleRsp(const BluetoothDaemonPDUHeader& aHeader,
@@ -841,142 +859,467 @@ private:
     }
   };
 
-  typedef BluetoothDaemonNotificationRunnable1<NotificationHandlerWrapper, void,
-                                               bool>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+                                         bool>
     AdapterStateChangedNotification;
 
-  typedef BluetoothDaemonNotificationRunnable3<NotificationHandlerWrapper, void,
-                                               BluetoothStatus, int,
-                                               nsAutoArrayPtr<BluetoothProperty>,
-                                               BluetoothStatus, int,
-                                               const BluetoothProperty*>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         BluetoothStatus, int,
+                                         const BluetoothProperty*>
     AdapterPropertiesNotification;
 
-  typedef BluetoothDaemonNotificationRunnable4<NotificationHandlerWrapper, void,
-                                               BluetoothStatus, nsString, int,
-                                               nsAutoArrayPtr<BluetoothProperty>,
-                                               BluetoothStatus, const nsAString&,
-                                               int, const BluetoothProperty*>
+  typedef BluetoothNotificationRunnable4<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString, int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         BluetoothStatus, const nsAString&,
+                                         int, const BluetoothProperty*>
     RemoteDevicePropertiesNotification;
 
-  typedef BluetoothDaemonNotificationRunnable2<NotificationHandlerWrapper, void,
-                                               int,
-                                               nsAutoArrayPtr<BluetoothProperty>,
-                                               int, const BluetoothProperty*>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         int,
+                                         nsAutoArrayPtr<BluetoothProperty>,
+                                         int, const BluetoothProperty*>
     DeviceFoundNotification;
 
-  typedef BluetoothDaemonNotificationRunnable1<NotificationHandlerWrapper, void,
-                                               bool>
+  typedef BluetoothNotificationRunnable1<NotificationHandlerWrapper, void,
+                                         bool>
     DiscoveryStateChangedNotification;
 
-  typedef BluetoothDaemonNotificationRunnable3<NotificationHandlerWrapper, void,
-                                               nsString, nsString, uint32_t,
-                                               const nsAString&, const nsAString&>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         nsString, nsString, uint32_t,
+                                         const nsAString&, const nsAString&>
     PinRequestNotification;
 
-  typedef BluetoothDaemonNotificationRunnable5<NotificationHandlerWrapper, void,
-                                               nsString, nsString, uint32_t,
-                                               nsString, uint32_t,
-                                               const nsAString&, const nsAString&,
-                                               uint32_t, const nsAString&>
+  typedef BluetoothNotificationRunnable5<NotificationHandlerWrapper, void,
+                                         nsString, nsString, uint32_t,
+                                         nsString, uint32_t,
+                                         const nsAString&, const nsAString&,
+                                         uint32_t, const nsAString&>
     SspRequestNotification;
 
-  typedef BluetoothDaemonNotificationRunnable3<NotificationHandlerWrapper, void,
-                                               BluetoothStatus, nsString,
-                                               BluetoothBondState,
-                                               BluetoothStatus, const nsAString&>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString,
+                                         BluetoothBondState,
+                                         BluetoothStatus, const nsAString&>
     BondStateChangedNotification;
 
-  typedef BluetoothDaemonNotificationRunnable3<NotificationHandlerWrapper, void,
-                                               BluetoothStatus, nsString, bool,
-                                               BluetoothStatus, const nsAString&>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, nsString, bool,
+                                         BluetoothStatus, const nsAString&>
     AclStateChangedNotification;
 
-  typedef BluetoothDaemonNotificationRunnable3<NotificationHandlerWrapper, void,
-                                               uint16_t, nsAutoArrayPtr<uint8_t>,
-                                               uint8_t, uint16_t, const uint8_t*>
+  typedef BluetoothNotificationRunnable3<NotificationHandlerWrapper, void,
+                                         uint16_t, nsAutoArrayPtr<uint8_t>,
+                                         uint8_t, uint16_t, const uint8_t*>
     DutModeRecvNotification;
 
-  typedef BluetoothDaemonNotificationRunnable2<NotificationHandlerWrapper, void,
-                                               BluetoothStatus, uint16_t>
+  typedef BluetoothNotificationRunnable2<NotificationHandlerWrapper, void,
+                                         BluetoothStatus, uint16_t>
     LeTestModeNotification;
 
   void AdapterStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
                               BluetoothDaemonPDU& aPDU)
   {
-    AdapterStateChangedNotification::Dispatch<0x01, 0x81>(
-      &BluetoothNotificationHandler::AdapterStateChangedNotification, aPDU);
+    AdapterStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::AdapterStateChangedNotification,
+      UnpackPDUInitOp(aPDU));
   }
+
+  // Init operator class for AdapterPropertiesNotification
+  class AdapterPropertiesInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    AdapterPropertiesInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (BluetoothStatus& aArg1, int& aArg2,
+                 nsAutoArrayPtr<BluetoothProperty>& aArg3) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read status */
+      nsresult rv = UnpackPDU(pdu, aArg1);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read number of properties */
+      uint8_t numProperties;
+      rv = UnpackPDU(pdu, numProperties);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      aArg2 = numProperties;
+
+      /* Read properties array */
+      UnpackArray<BluetoothProperty> properties(aArg3, aArg2);
+      rv = UnpackPDU(pdu, properties);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void AdapterPropertiesNtf(const BluetoothDaemonPDUHeader& aHeader,
                             BluetoothDaemonPDU& aPDU)
   {
-    AdapterPropertiesNotification::Dispatch<0x01, 0x82>(
-      &BluetoothNotificationHandler::AdapterPropertiesNotification, aPDU);
+    AdapterPropertiesNotification::Dispatch(
+      &BluetoothNotificationHandler::AdapterPropertiesNotification,
+      AdapterPropertiesInitOp(aPDU));
   }
+
+  // Init operator class for RemoteDevicePropertiesNotification
+  class RemoteDevicePropertiesInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    RemoteDevicePropertiesInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (BluetoothStatus& aArg1, nsString& aArg2, int& aArg3,
+                 nsAutoArrayPtr<BluetoothProperty>& aArg4) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read status */
+      nsresult rv = UnpackPDU(pdu, aArg1);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read address */
+      rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read number of properties */
+      uint8_t numProperties;
+      rv = UnpackPDU(pdu, numProperties);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      aArg3 = numProperties;
+
+      /* Read properties array */
+      UnpackArray<BluetoothProperty> properties(aArg4, aArg3);
+      rv = UnpackPDU(pdu, properties);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void RemoteDevicePropertiesNtf(const BluetoothDaemonPDUHeader& aHeader,
                                  BluetoothDaemonPDU& aPDU)
   {
-    RemoteDevicePropertiesNotification::Dispatch<0x01, 0x83>(
+    RemoteDevicePropertiesNotification::Dispatch(
       &BluetoothNotificationHandler::RemoteDevicePropertiesNotification,
-      aPDU);
+      RemoteDevicePropertiesInitOp(aPDU));
   }
+
+  // Init operator class for DeviceFoundNotification
+  class DeviceFoundInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    DeviceFoundInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (int& aArg1, nsAutoArrayPtr<BluetoothProperty>& aArg2) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read number of properties */
+      uint8_t numProperties;
+      nsresult rv = UnpackPDU(pdu, numProperties);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      aArg1 = numProperties;
+
+      /* Read properties array */
+      UnpackArray<BluetoothProperty> properties(aArg2, aArg1);
+      rv = UnpackPDU(pdu, properties);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void DeviceFoundNtf(const BluetoothDaemonPDUHeader& aHeader,
                       BluetoothDaemonPDU& aPDU)
   {
-    DeviceFoundNotification::Dispatch<0x01, 0x84>(
-      &BluetoothNotificationHandler::DeviceFoundNotification, aPDU);
+    DeviceFoundNotification::Dispatch(
+      &BluetoothNotificationHandler::DeviceFoundNotification,
+      DeviceFoundInitOp(aPDU));
   }
 
   void DiscoveryStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
                                 BluetoothDaemonPDU& aPDU)
   {
-    DiscoveryStateChangedNotification::Dispatch<0x01, 0x85>(
-      &BluetoothNotificationHandler::DiscoveryStateChangedNotification, aPDU);
+    DiscoveryStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::DiscoveryStateChangedNotification,
+      UnpackPDUInitOp(aPDU));
   }
+
+  // Init operator class for PinRequestNotification
+  class PinRequestInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    PinRequestInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (nsString& aArg1, nsString& aArg2, uint32_t& aArg3) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read remote address */
+      nsresult rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read remote name */
+      rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read CoD */
+      rv = UnpackPDU(pdu, aArg3);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void PinRequestNtf(const BluetoothDaemonPDUHeader& aHeader,
                      BluetoothDaemonPDU& aPDU)
   {
-    PinRequestNotification::Dispatch<0x01, 0x86>(
-      &BluetoothNotificationHandler::PinRequestNotification, aPDU);
+    PinRequestNotification::Dispatch(
+      &BluetoothNotificationHandler::PinRequestNotification,
+      PinRequestInitOp(aPDU));
   }
+
+  // Init operator class for SspRequestNotification
+  class SspRequestInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    SspRequestInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (nsString& aArg1, nsString& aArg2, uint32_t& aArg3,
+                 nsString& aArg4, uint32_t& aArg5) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read remote address */
+      nsresult rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read remote name */
+      rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read CoD */
+      rv = UnpackPDU(pdu, aArg3);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read pairing variant */
+      rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothSspPairingVariant, nsAString>(aArg4));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read passkey */
+      rv = UnpackPDU(pdu, aArg5);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void SspRequestNtf(const BluetoothDaemonPDUHeader& aHeader,
                      BluetoothDaemonPDU& aPDU)
   {
-    SspRequestNotification::Dispatch<0x01, 0x87>(
-      &BluetoothNotificationHandler::SspRequestNotification, aPDU);
+    SspRequestNotification::Dispatch(
+      &BluetoothNotificationHandler::SspRequestNotification,
+      SspRequestInitOp(aPDU));
   }
+
+  // Init operator class for BondStateChangedNotification
+  class BondStateChangedInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    BondStateChangedInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (BluetoothStatus& aArg1, nsString& aArg2,
+                 BluetoothBondState& aArg3) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read status */
+      nsresult rv = UnpackPDU(pdu, aArg1);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read remote address */
+      rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read bond state */
+      rv = UnpackPDU(pdu, aArg3);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void BondStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
                            BluetoothDaemonPDU& aPDU)
   {
-    BondStateChangedNotification::Dispatch<0x01, 0x88>(
-      &BluetoothNotificationHandler::BondStateChangedNotification, aPDU);
+    BondStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::BondStateChangedNotification,
+      BondStateChangedInitOp(aPDU));
   }
+
+  // Init operator class for AclStateChangedNotification
+  class AclStateChangedInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    AclStateChangedInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (BluetoothStatus& aArg1, nsString& aArg2, bool& aArg3) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read status */
+      nsresult rv = UnpackPDU(pdu, aArg1);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read remote address */
+      rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read ACL state */
+      rv = UnpackPDU(
+        pdu, UnpackConversion<BluetoothAclState, bool>(aArg3));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void AclStateChangedNtf(const BluetoothDaemonPDUHeader& aHeader,
                           BluetoothDaemonPDU& aPDU)
   {
-    AclStateChangedNotification::Dispatch<0x01, 0x89>(
-      &BluetoothNotificationHandler::AclStateChangedNotification, aPDU);
+    AclStateChangedNotification::Dispatch(
+      &BluetoothNotificationHandler::AclStateChangedNotification,
+      AclStateChangedInitOp(aPDU));
   }
+
+  // Init operator class for DutModeRecvNotification
+  class DutModeRecvInitOp MOZ_FINAL : private PDUInitOp
+  {
+  public:
+    DutModeRecvInitOp(BluetoothDaemonPDU& aPDU)
+    : PDUInitOp(aPDU)
+    { }
+
+    nsresult
+    operator () (uint16_t& aArg1, nsAutoArrayPtr<uint8_t>& aArg2,
+                 uint8_t& aArg3) const
+    {
+      BluetoothDaemonPDU& pdu = GetPDU();
+
+      /* Read opcode */
+      nsresult rv = UnpackPDU(pdu, aArg1);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read length */
+      rv = UnpackPDU(pdu, aArg3);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      /* Read data */
+      rv = UnpackPDU(pdu, UnpackArray<uint8_t>(aArg2, aArg3));
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      WarnAboutTrailingData();
+      return NS_OK;
+    }
+  };
 
   void DutModeRecvNtf(const BluetoothDaemonPDUHeader& aHeader,
                       BluetoothDaemonPDU& aPDU)
   {
-    DutModeRecvNotification::Dispatch<0x01, 0x8a>(
-      &BluetoothNotificationHandler::DutModeRecvNotification, aPDU);
+    DutModeRecvNotification::Dispatch(
+      &BluetoothNotificationHandler::DutModeRecvNotification,
+      DutModeRecvInitOp(aPDU));
   }
 
   void LeTestModeNtf(const BluetoothDaemonPDUHeader& aHeader,
                      BluetoothDaemonPDU& aPDU)
   {
-    LeTestModeNotification::Dispatch<0x01, 0x8b>(
-      &BluetoothNotificationHandler::LeTestModeNotification, aPDU);
+    LeTestModeNotification::Dispatch(
+      &BluetoothNotificationHandler::LeTestModeNotification,
+      UnpackPDUInitOp(aPDU));
   }
 
   void HandleNtf(const BluetoothDaemonPDUHeader& aHeader,
@@ -1642,9 +1985,10 @@ void
 BluetoothDaemonInterface::DispatchError(BluetoothResultHandler* aRes,
                                         BluetoothStatus aStatus)
 {
-  BluetoothDaemonInterfaceRunnable1<
+  BluetoothResultRunnable1<
     BluetoothResultHandler, void, BluetoothStatus, BluetoothStatus>::Dispatch(
-    aRes, &BluetoothResultHandler::OnError, aStatus);
+    aRes, &BluetoothResultHandler::OnError,
+    ConstantInitOp1<BluetoothStatus>(aStatus));
 }
 
 // Profile Interfaces

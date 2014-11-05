@@ -104,9 +104,19 @@
         <item name="android:scaleType">center</item>
         <item name="android:background">@drawable/new_tablet_action_bar_button</item>
 
-        <!-- layout_* doesn't work here, likely because it's an ImageButton, so we use padding instead. -->
-        <item name="android:paddingTop">@dimen/new_tablet_browser_toolbar_menu_item_padding_vertical</item>
-        <item name="android:paddingBottom">@dimen/new_tablet_browser_toolbar_menu_item_padding_vertical</item>
+        <!-- layout_width/height doesn't work here, likely because it's
+             an ImageButton, so we use padding instead.
+
+             Because the curve of the reload button is lower than the end of the arrow and thus
+             the top of the view, it is perceived to be slighly lower than the other buttons.
+             Thus we use padding to fill a slightly smaller height than the toolbar and let
+             android:gravity center the image with a slight offset (.5dp higher) instead. Note that
+             this offset also affects the pressed state, but it's hardly noticeable and thus negligible.
+
+             Note: the above change is done on a generic style and thus any other items added
+             to the menu bar may appear to be offset. -->
+        <item name="android:paddingTop">20dp</item>
+        <item name="android:paddingBottom">21dp</item>
         <item name="android:paddingLeft">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
         <item name="android:paddingRight">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
     </style>

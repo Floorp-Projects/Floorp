@@ -20,6 +20,7 @@
         android:layout_width="@dimen/new_tablet_tab_strip_height"
         android:src="@drawable/tab_new_level"
         android:contentDescription="@string/new_tab"
-        android:background="@drawable/action_bar_button_inverse"/>
+        android:layout_marginRight="9dp"
+        android:background="@drawable/new_tablet_tab_strip_button"/>
 
 </merge>
