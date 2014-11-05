@@ -651,7 +651,7 @@ ComponentsUtilsInterposition.methods.Sandbox =
                typeof(principals) == "object" &&
                "every" in principals &&
                principals.length &&
-               principals.every(e instanceof Ci.nsIDOMWindow && e => Cu.isCrossProcessWrapper(e))) {
+               principals.every(e => e instanceof Ci.nsIDOMWindow && Cu.isCrossProcessWrapper(e))) {
       let chromeGlobal = chromeGlobalForContentWindow(principals[0]);
 
       // The principals we pass to the content process must use an
