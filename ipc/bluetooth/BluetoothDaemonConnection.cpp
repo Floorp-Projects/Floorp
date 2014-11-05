@@ -58,6 +58,15 @@ BluetoothDaemonPDU::BluetoothDaemonPDU(size_t aPayloadSize)
 , mUserData(nullptr)
 { }
 
+void
+BluetoothDaemonPDU::GetHeader(uint8_t& aService, uint8_t& aOpcode,
+                              uint16_t& aPayloadSize)
+{
+  memcpy(&aService, GetData(OFF_SERVICE), sizeof(aService));
+  memcpy(&aOpcode, GetData(OFF_OPCODE), sizeof(aOpcode));
+  memcpy(&aPayloadSize, GetData(OFF_LENGTH), sizeof(aPayloadSize));
+}
+
 ssize_t
 BluetoothDaemonPDU::Send(int aFd)
 {
