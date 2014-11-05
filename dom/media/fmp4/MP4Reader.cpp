@@ -821,12 +821,13 @@ MP4Reader::GetEvictionOffset(double aTime)
 }
 
 nsresult
-MP4Reader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
+MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
 {
   MonitorAutoLock mon(mIndexMonitor);
   if (!mIndexReady) {
     return NS_OK;
   }
+  MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
 
   MediaResource* resource = mDecoder->GetResource();
   nsTArray<MediaByteRange> ranges;
@@ -838,8 +839,8 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
     nsTArray<Interval<Microseconds>> timeRanges;
     mDemuxer->ConvertByteRangesToTime(ranges, &timeRanges);
     for (size_t i = 0; i < timeRanges.Length(); i++) {
-      aBuffered->Add((timeRanges[i].start - aStartTime) / 1000000.0,
-                     (timeRanges[i].end - aStartTime) / 1000000.0);
+      aBuffered->Add((timeRanges[i].start - mStartTime) / 1000000.0,
+                     (timeRanges[i].end - mStartTime) / 1000000.0);
     }
   }
 
