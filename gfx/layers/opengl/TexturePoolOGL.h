@@ -25,6 +25,8 @@ public:
   // the pool
   static void Fill(GLContext* aContext);
 
+  static GLContext* GetGLContext();
+
   // Initializes the pool, but does not fill it. Called by gfxPlatform init.
   static void Init();
 
