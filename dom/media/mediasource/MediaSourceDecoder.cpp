@@ -164,6 +164,13 @@ MediaSourceDecoder::Ended()
   mon.NotifyAll();
 }
 
+bool
+MediaSourceDecoder::IsExpectingMoreData()
+{
+  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+  return !mReader->IsEnded();
+}
+
 void
 MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
 {
