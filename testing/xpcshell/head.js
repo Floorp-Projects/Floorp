@@ -1071,6 +1071,7 @@ function do_load_child_test_harness()
       + "const _HTTPD_JS_PATH=" + uneval(_HTTPD_JS_PATH) + "; "
       + "const _HEAD_FILES=" + uneval(_HEAD_FILES) + "; "
       + "const _TAIL_FILES=" + uneval(_TAIL_FILES) + "; "
+      + "const _TEST_NAME=" + uneval(_TEST_NAME) + "; "
       + "const _XPCSHELL_PROCESS='child';";
 
   if (this._TESTING_MODULES_DIR) {
@@ -1104,7 +1105,6 @@ function run_test_in_child(testFile, optionalCallback)
   do_test_pending("run in child");
   sendCommand("_testLogger.info('CHILD-TEST-STARTED'); "
               + "const _TEST_FILE=['" + testPath + "']; "
-              + "const _TEST_NAME=" + uneval(_TEST_NAME) + "; "
               + "_execute_test(); "
               + "_testLogger.info('CHILD-TEST-COMPLETED');",
               callback);
