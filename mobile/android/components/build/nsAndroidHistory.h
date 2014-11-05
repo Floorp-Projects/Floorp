@@ -41,9 +41,14 @@ private:
 
   static nsAndroidHistory* sHistory;
 
+  // Will mimic the value of the places.history.enabled preference.
+  bool mHistoryEnabled;
+
   nsDataHashtable<nsStringHashKey, nsTArray<mozilla::dom::Link *> *> mListeners;
   nsTPriorityQueue<nsString> mPendingURIs;
 
+  void LoadPrefs();
+  bool ShouldRecordHistory();
   nsresult CanAddURI(nsIURI* aURI, bool* canAdd);
 
   /**
