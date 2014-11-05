@@ -390,7 +390,8 @@ function numberRange(lower, upper)
 function test_keyed_boolean_histogram()
 {
   const KEYED_ID = "test::keyed::boolean";
-  const KEYS = ["key"+(i+1) for (i of numberRange(0, 3))];
+  KEYS = ["key"+(i+1) for (i of numberRange(0, 2))];
+  KEYS.push("漢語");
   let histogramBase = {
     "min": 1,
     "max": 2,
