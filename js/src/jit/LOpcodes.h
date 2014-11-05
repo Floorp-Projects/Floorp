@@ -187,7 +187,6 @@
     _(RegExpTest)                   \
     _(RegExpReplace)                \
     _(StringReplace)                \
-    _(Substr)                       \
     _(Lambda)                       \
     _(LambdaArrow)                  \
     _(LambdaForSingleton)           \
