@@ -38,6 +38,13 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Extract the token information and type for the standalone window
+     */
+    ExtractTokenInfo: Action.define("extractTokenInfo", {
+      windowPath: String
+    }),
+
+    /**
      * Used to pass round the window data so that stores can
      * record the appropriate data.
      */
@@ -49,6 +56,15 @@ loop.shared.actions = (function() {
       // around with this action. They are for the setup of calls and rooms and
       // depend on the type. See LoopCalls and LoopRooms for the details of this
       // data.
+    }),
+
+    /**
+     * Used to fetch the data from the server for a room or call for the
+     * token.
+     */
+    FetchServerData: Action.define("fetchServerData", {
+      token: String,
+      windowType: String
     }),
 
     /**
