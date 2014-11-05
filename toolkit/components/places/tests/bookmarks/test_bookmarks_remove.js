@@ -44,17 +44,15 @@ add_task(function* remove_nonexistent_guid() {
 });
 
 add_task(function* remove_roots_fail() {
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
   try {
-    yield PlacesUtils.bookmarks.remove(unfiledGuid);
+    yield PlacesUtils.bookmarks.remove(PlacesUtils.bookmarks.unfiledGuid);
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
     Assert.ok(/It's not possible to remove Places root folders/.test(ex));
   }
 
-  let placesRootGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.placesRootId);
   try {
-    yield PlacesUtils.bookmarks.remove(placesRootGuid);
+    yield PlacesUtils.bookmarks.remove(PlacesUtils.bookmarks.rootGuid);
     Assert.ok(false, "Should have thrown");
   } catch (ex) {
     Assert.ok(/It's not possible to remove Places root folders/.test(ex));
@@ -62,8 +60,7 @@ add_task(function* remove_roots_fail() {
 });
 
 add_task(function* remove_bookmark() {
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                  url: "http://example.com/",
                                                  title: "a bookmark" });
@@ -73,7 +70,7 @@ add_task(function* remove_bookmark() {
   checkBookmarkObject(bm2);
 
   Assert.deepEqual(bm1, bm2);
-  Assert.equal(bm2.parentGuid, unfiledGuid);
+  Assert.equal(bm2.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
   Assert.equal(bm2.index, 0);
   Assert.deepEqual(bm2.dateAdded, bm2.lastModified);
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
@@ -84,8 +81,7 @@ add_task(function* remove_bookmark() {
 
 
 add_task(function* remove_bookmark_orphans() {
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                  url: "http://example.com/",
                                                  title: "a bookmark",
@@ -111,8 +107,7 @@ add_task(function* remove_bookmark_orphans() {
 });
 
 add_task(function* remove_bookmark_empty_title() {
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                  url: "http://example.com/",
                                                  title: "" });
@@ -128,8 +123,7 @@ add_task(function* remove_bookmark_empty_title() {
 });
 
 add_task(function* remove_folder() {
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                  title: "a folder" });
   checkBookmarkObject(bm1);
@@ -138,7 +132,7 @@ add_task(function* remove_folder() {
   checkBookmarkObject(bm2);
 
   Assert.deepEqual(bm1, bm2);
-  Assert.equal(bm2.parentGuid, unfiledGuid);
+  Assert.equal(bm2.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
   Assert.equal(bm2.index, 0);
   Assert.deepEqual(bm2.dateAdded, bm2.lastModified);
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_FOLDER);
@@ -148,8 +142,7 @@ add_task(function* remove_folder() {
 });
 
 add_task(function* remove_folder_empty_title() {
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_FOLDER,
                                                  title: "" });
   checkBookmarkObject(bm1);
@@ -163,8 +156,7 @@ add_task(function* remove_folder_empty_title() {
 });
 
 add_task(function* remove_separator() {
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let bm1 = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                  type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
   checkBookmarkObject(bm1);
 
@@ -172,7 +164,7 @@ add_task(function* remove_separator() {
   checkBookmarkObject(bm2);
 
   Assert.deepEqual(bm1, bm2);
-  Assert.equal(bm2.parentGuid, unfiledGuid);
+  Assert.equal(bm2.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
   Assert.equal(bm2.index, 0);
   Assert.deepEqual(bm2.dateAdded, bm2.lastModified);
   Assert.equal(bm2.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);

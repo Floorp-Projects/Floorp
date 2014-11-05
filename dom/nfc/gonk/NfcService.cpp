@@ -157,9 +157,14 @@ public:
       }
     }
 
+    if (mEvent.mTagType != -1) {
+      event.mTagType.Construct();
+      event.mTagType.Value() = static_cast<NFCTagType>(mEvent.mTagType);
+    }
+
+    COPY_OPT_FIELD(mMaxNDEFSize, -1)
     COPY_OPT_FIELD(mIsReadOnly, -1)
-    COPY_OPT_FIELD(mCanBeMadeReadOnly, -1)
-    COPY_OPT_FIELD(mMaxSupportedLength, -1)
+    COPY_OPT_FIELD(mIsFormatable, -1)
 
     // HCI Event Transaction parameters.
     if (mEvent.mOriginType != -1) {

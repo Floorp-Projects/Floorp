@@ -277,34 +277,35 @@ nsNavBookmarks::ReadRoots()
 {
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDB->MainConn()->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT root_name, folder_id FROM moz_bookmarks_roots"
+    "SELECT guid, id FROM moz_bookmarks WHERE guid IN ( "
+      "'root________', 'menu________', 'toolbar_____', "
+      "'tags________', 'unfiled_____' )"
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool hasResult;
   while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    nsAutoCString rootName;
-    rv = stmt->GetUTF8String(0, rootName);
+    nsAutoCString guid;
+    rv = stmt->GetUTF8String(0, guid);
     NS_ENSURE_SUCCESS(rv, rv);
-    int64_t rootId;
-    rv = stmt->GetInt64(1, &rootId);
+    int64_t id;
+    rv = stmt->GetInt64(1, &id);
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ABORT_IF_FALSE(rootId != 0, "Root id is 0, that is an invalid value.");
 
-    if (rootName.EqualsLiteral("places")) {
-      mRoot = rootId;
+    if (guid.EqualsLiteral("root________")) {
+      mRoot = id;
     }
-    else if (rootName.EqualsLiteral("menu")) {
-      mMenuRoot = rootId;
+    else if (guid.EqualsLiteral("menu________")) {
+      mMenuRoot = id;
     }
-    else if (rootName.EqualsLiteral("toolbar")) {
-      mToolbarRoot = rootId;
+    else if (guid.EqualsLiteral("toolbar_____")) {
+      mToolbarRoot = id;
     }
-    else if (rootName.EqualsLiteral("tags")) {
-      mTagsRoot = rootId;
+    else if (guid.EqualsLiteral("tags________")) {
+      mTagsRoot = id;
     }
-    else if (rootName.EqualsLiteral("unfiled")) {
-      mUnfiledRoot = rootId;
+    else if (guid.EqualsLiteral("unfiled_____")) {
+      mUnfiledRoot = id;
     }
   }
 

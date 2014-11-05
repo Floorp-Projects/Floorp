@@ -8,11 +8,10 @@ add_task(function* test_eraseEverything() {
   let frecencyForMozilla = frecencyForUrl("http://example.com/");
   Assert.ok(frecencyForExample > 0);
   Assert.ok(frecencyForMozilla > 0);
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  let unfiledFolder = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let unfiledFolder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                            type: PlacesUtils.bookmarks.TYPE_FOLDER });
   checkBookmarkObject(unfiledFolder);
-  let unfiledBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: unfiledGuid,
+  let unfiledBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                              type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                              url: "http://example.com/",
                                                              keyword: "kw1" });
@@ -25,11 +24,10 @@ add_task(function* test_eraseEverything() {
   PlacesUtils.annotations.setItemAnnotation((yield PlacesUtils.promiseItemId(unfiledBookmarkInFolder.guid)),
                                             "testanno1", "testvalue1", 0, 0);
 
-  let menuGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.bookmarksMenuFolderId);
-  let menuFolder = yield PlacesUtils.bookmarks.insert({ parentGuid: menuGuid,
+  let menuFolder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                         type: PlacesUtils.bookmarks.TYPE_FOLDER });
   checkBookmarkObject(menuFolder);
-  let menuBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: menuGuid,
+  let menuBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.menuGuid,
                                                           type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                           url: "http://example.com/",
                                                           keyword: "kw2" });
@@ -42,11 +40,10 @@ add_task(function* test_eraseEverything() {
   PlacesUtils.annotations.setItemAnnotation((yield PlacesUtils.promiseItemId(menuBookmarkInFolder.guid)),
                                             "testanno1", "testvalue1", 0, 0);
 
-  let toolbarGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.toolbarFolderId);
-  let toolbarFolder = yield PlacesUtils.bookmarks.insert({ parentGuid: toolbarGuid,
+  let toolbarFolder = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                                            type: PlacesUtils.bookmarks.TYPE_FOLDER });
   checkBookmarkObject(toolbarFolder);
-  let toolbarBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: toolbarGuid,
+  let toolbarBookmark = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.toolbarGuid,
                                                              type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
                                                              url: "http://example.com/",
                                                              keyword: "kw3" });
@@ -82,16 +79,11 @@ add_task(function* test_eraseEverything_roots() {
   yield PlacesUtils.bookmarks.eraseEverything();
 
   // Ensure the roots have not been removed.
-  let unfiledGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.unfiledBookmarksFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(unfiledGuid));
-  let toolbarGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.toolbarFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(toolbarGuid));
-  let menuGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.bookmarksMenuFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(menuGuid));
-  let tagsGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.tagsFolderId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(tagsGuid));
-  let rootGuid = yield PlacesUtils.promiseItemGuid(PlacesUtils.placesRootId);
-  Assert.ok(yield PlacesUtils.bookmarks.fetch(rootGuid));
+  Assert.ok(yield PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.unfiledGuid));
+  Assert.ok(yield PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.toolbarGuid));
+  Assert.ok(yield PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.menuGuid));
+  Assert.ok(yield PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.tagsGuid));
+  Assert.ok(yield PlacesUtils.bookmarks.fetch(PlacesUtils.bookmarks.rootGuid));
 });
 
 function run_test() {
