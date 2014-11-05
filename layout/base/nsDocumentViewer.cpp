@@ -80,7 +80,6 @@
 
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
-#include "SelectionCarets.h"
 
 //--------------------------
 // Printing Include
@@ -708,14 +707,6 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
   rv = selection->AddSelectionListener(mSelectionListener);
   if (NS_FAILED(rv))
     return rv;
-
-  nsRefPtr<SelectionCarets> selectionCaret = mPresShell->GetSelectionCarets();
-  if (selectionCaret) {
-    nsCOMPtr<nsIDocShell> docShell(mContainer);
-    if (docShell) {
-      docShell->AddWeakScrollObserver(selectionCaret);
-    }
-  }
 
   // Save old listener so we can unregister it
   nsRefPtr<nsDocViewerFocusListener> oldFocusListener = mFocusListener;
@@ -4427,14 +4418,6 @@ nsDocumentViewer::DestroyPresShell()
   nsRefPtr<mozilla::dom::Selection> selection = GetDocumentSelection();
   if (selection && mSelectionListener)
     selection->RemoveSelectionListener(mSelectionListener);
-
-  nsRefPtr<SelectionCarets> selectionCaret = mPresShell->GetSelectionCarets();
-  if (selectionCaret) {
-    nsCOMPtr<nsIDocShell> docShell(mContainer);
-    if (docShell) {
-      docShell->RemoveWeakScrollObserver(selectionCaret);
-    }
-  }
 
   nsAutoScriptBlocker scriptBlocker;
   mPresShell->Destroy();
