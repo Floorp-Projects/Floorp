@@ -18,4 +18,8 @@ function test() {
       EventUtils.synthesizeMouseAtCenter(button, {}, cw);
     }, cw);
   });
+
+  // This test relies on the test timing out in order to indicate failure so
+  // let's add a dummy pass.
+  ok(true, "Each test requires at least one pass, fail or todo so here is a pass.");
 }
