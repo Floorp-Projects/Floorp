@@ -824,7 +824,7 @@ nsresult GStreamerReader::GetBuffered(dom::TimeRanges* aBuffered)
 #if GST_VERSION_MAJOR == 0
   GstFormat format = GST_FORMAT_TIME;
 #endif
-  MediaResource* resource = mDecoder->GetResource();
+  AutoPinned<MediaResource> resource(mDecoder->GetResource());
   nsTArray<MediaByteRange> ranges;
   resource->GetCachedRanges(ranges);
 

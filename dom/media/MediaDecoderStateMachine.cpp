@@ -2985,15 +2985,6 @@ void MediaDecoderStateMachine::StartBuffering()
 #endif
 }
 
-nsresult MediaDecoderStateMachine::GetBuffered(dom::TimeRanges* aBuffered) {
-  MediaResource* resource = mDecoder->GetResource();
-  NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
-  resource->Pin();
-  nsresult res = mReader->GetBuffered(aBuffered);
-  resource->Unpin();
-  return res;
-}
-
 void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)
 {
   AssertCurrentThreadInMonitor();

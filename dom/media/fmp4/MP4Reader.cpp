@@ -800,13 +800,11 @@ MP4Reader::UpdateIndex()
     return;
   }
 
-  MediaResource* resource = mDecoder->GetResource();
-  resource->Pin();
+  AutoPinned<MediaResource> resource(mDecoder->GetResource());
   nsTArray<MediaByteRange> ranges;
   if (NS_SUCCEEDED(resource->GetCachedRanges(ranges))) {
     mDemuxer->UpdateIndex(ranges);
   }
-  resource->Unpin();
 }
 
 int64_t
@@ -829,11 +827,9 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
   }
   MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
 
-  MediaResource* resource = mDecoder->GetResource();
+  AutoPinned<MediaResource> resource(mDecoder->GetResource());
   nsTArray<MediaByteRange> ranges;
-  resource->Pin();
   nsresult rv = resource->GetCachedRanges(ranges);
-  resource->Unpin();
 
   if (NS_SUCCEEDED(rv)) {
     nsTArray<Interval<Microseconds>> timeRanges;

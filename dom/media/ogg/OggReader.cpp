@@ -1900,7 +1900,7 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
     return NS_OK;
   }
 
-  MediaResource* resource = mDecoder->GetResource();
+  AutoPinned<MediaResource> resource(mDecoder->GetResource());
   nsTArray<MediaByteRange> ranges;
   nsresult res = resource->GetCachedRanges(ranges);
   NS_ENSURE_SUCCESS(res, res);
