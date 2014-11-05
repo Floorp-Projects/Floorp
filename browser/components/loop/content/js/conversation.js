@@ -496,12 +496,14 @@ loop.conversation = (function(mozL10n) {
     declineAndBlock: function() {
       navigator.mozLoop.stopAlerting();
       var token = this.props.conversation.get("callToken");
-      this.props.client.deleteCallUrl(token, function(error) {
-        // XXX The conversation window will be closed when this cb is triggered
-        // figure out if there is a better way to report the error to the user
-        // (bug 1048909).
-        console.log(error);
-      });
+      this.props.client.deleteCallUrl(token,
+        this.props.conversation.get("sessionType"),
+        function(error) {
+          // XXX The conversation window will be closed when this cb is triggered
+          // figure out if there is a better way to report the error to the user
+          // (bug 1048909).
+          console.log(error);
+        });
       this._declineCall();
     },
 
