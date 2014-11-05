@@ -23,7 +23,7 @@
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsSurfaceTexture.h"
+#include "AndroidSurfaceTexture.h"
 #include "GfxTexturesReporter.h"        // for GfxTexturesReporter
 #include "GLBlitTextureImageHelper.h"
 #ifdef XP_MACOSX
@@ -68,7 +68,7 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceTextureDescriptor: {
       const SurfaceTextureDescriptor& desc = aDesc.get_SurfaceTextureDescriptor();
       result = new SurfaceTextureHost(aFlags,
-                                      (nsSurfaceTexture*)desc.surfTex(),
+                                      (AndroidSurfaceTexture*)desc.surfTex(),
                                       desc.size());
       break;
     }
@@ -578,7 +578,7 @@ GLTextureSource::gl() const
 #ifdef MOZ_WIDGET_ANDROID
 
 SurfaceTextureSource::SurfaceTextureSource(CompositorOGL* aCompositor,
-                                           nsSurfaceTexture* aSurfTex,
+                                           AndroidSurfaceTexture* aSurfTex,
                                            gfx::SurfaceFormat aFormat,
                                            GLenum aTarget,
                                            GLenum aWrapMode,
@@ -643,7 +643,7 @@ SurfaceTextureSource::GetTextureTransform()
 ////////////////////////////////////////////////////////////////////////
 
 SurfaceTextureHost::SurfaceTextureHost(TextureFlags aFlags,
-                                       nsSurfaceTexture* aSurfTex,
+                                       AndroidSurfaceTexture* aSurfTex,
                                        gfx::IntSize aSize)
   : TextureHost(aFlags)
   , mSurfTex(aSurfTex)
