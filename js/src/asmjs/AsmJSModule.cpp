@@ -512,14 +512,15 @@ TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t 
             return true;
     }
 
-    // Enable
+    // The exit may have become optimized while executing the FFI.
+    if (module.exitIsOptimized(exitIndex))
+        return true;
+
     IonScript *ionScript = script->ionScript();
     if (!ionScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
         return false;
 
-    AsmJSModule::ExitDatum &exitDatum = module.exitIndexToGlobalDatum(exitIndex);
-    exitDatum.exit = module.ionExitTrampoline(module.exit(exitIndex));
-    exitDatum.ionScript = ionScript;
+    module.optimizeExit(exitIndex, ionScript);
     return true;
 }
 
