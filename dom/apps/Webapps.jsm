@@ -3243,10 +3243,17 @@ this.DOMApplicationRegistry = {
     // After this point, it's too late to cancel the download.
     AppDownloadManager.remove(aNewApp.manifestURL);
 
-    let hash = yield this._computeFileHash(zipFile.path);
-
     let responseStatus = requestChannel.responseStatus;
-    let oldPackage = (responseStatus == 304 || hash == aOldApp.packageHash);
+    let oldPackage = responseStatus == 304;
+
+    // If the response was 304 we probably won't have anything to hash.
+    let hash = null;
+    if (!oldPackage) {
+      hash = yield this._computeFileHash(zipFile.path);
+    }
+
+    oldPackage = oldPackage || (hash == aOldApp.packageHash);
+
 
     if (oldPackage) {
       debug("package's etag or hash unchanged; sending 'applied' event");
