@@ -361,17 +361,17 @@ XULTreeGridRowAccessible::ChildCount() const
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridRowAccessible: XULTreeItemAccessibleBase implementation
 
-Accessible*
+XULTreeGridCellAccessible*
 XULTreeGridRowAccessible::GetCellAccessible(nsITreeColumn* aColumn) const
 {
   NS_PRECONDITION(aColumn, "No tree column!");
 
   void* key = static_cast<void*>(aColumn);
-  Accessible* cachedCell = mAccessibleCache.GetWeak(key);
+  XULTreeGridCellAccessible* cachedCell = mAccessibleCache.GetWeak(key);
   if (cachedCell)
     return cachedCell;
 
-  nsRefPtr<Accessible> cell =
+  nsRefPtr<XULTreeGridCellAccessible> cell =
     new XULTreeGridCellAccessibleWrap(mContent, mDoc,
                                       const_cast<XULTreeGridRowAccessible*>(this),
                                       mTree, mTreeView, mRow, aColumn);
@@ -394,12 +394,9 @@ XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
     nsCOMPtr<nsITreeColumn> column;
     treeColumns->GetColumnAt(colIdx, getter_AddRefs(column));
     if (column && !nsCoreUtils::IsColumnHidden(column)) {
-      Accessible* cellAccessible = GetCellAccessible(column);
-      if (cellAccessible) {
-        nsRefPtr<XULTreeGridCellAccessible> cellAcc = do_QueryObject(cellAccessible);
-
-        nameChanged |= cellAcc->CellInvalidated();
-      }
+      XULTreeGridCellAccessible* cell = GetCellAccessible(column);
+      if (cell)
+        nameChanged |= cell->CellInvalidated();
     }
   }
 
@@ -452,10 +449,8 @@ XULTreeGridCellAccessible::~XULTreeGridCellAccessible()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible, LeafAccessible,
                                    mTree, mColumn)
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible)
-  NS_INTERFACE_TABLE_INHERITED(XULTreeGridCellAccessible,
-                               XULTreeGridCellAccessible)
-NS_INTERFACE_TABLE_TAIL_INHERITING(LeafAccessible)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible)
+NS_INTERFACE_MAP_END_INHERITING(LeafAccessible)
 NS_IMPL_ADDREF_INHERITED(XULTreeGridCellAccessible, LeafAccessible)
 NS_IMPL_RELEASE_INHERITED(XULTreeGridCellAccessible, LeafAccessible)
 
