@@ -60,7 +60,12 @@ function SettingsServiceLock(aSettingsService, aTransactionCallback) {
     cpmm.addMessageListener(msgs[msg], this);
   }
 
-  cpmm.sendAsyncMessage("Settings:CreateLock", {lockID: this._id, isServiceLock: true}, undefined, Services.scriptSecurityManager.getSystemPrincipal());
+  cpmm.sendAsyncMessage("Settings:CreateLock",
+                        { lockID: this._id,
+                          isServiceLock: true,
+                          windowID: undefined },
+                        undefined,
+                        Services.scriptSecurityManager.getSystemPrincipal());
   Services.tm.currentThread.dispatch(closeHelper, Ci.nsIThread.DISPATCH_NORMAL);
 }
 

@@ -64,6 +64,9 @@ public:
     return mUserData;
   }
 
+  void GetHeader(uint8_t& aService, uint8_t& aOpcode,
+                 uint16_t& aPayloadSize);
+
   ssize_t Send(int aFd);
   ssize_t Receive(int aFd);
 

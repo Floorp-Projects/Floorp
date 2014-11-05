@@ -1180,7 +1180,6 @@
           // Cache these as cancelling the installs will remove this
           // notification which will drop these references
           let browser = this.notification.browser;
-          let contentWindow = this.notification.options.contentWindow;
           let sourceURI = this.notification.options.sourceURI;
 
           let installs = this.notification.options.installs;
@@ -1206,7 +1205,7 @@
             callback: function() {
               let weblistener = Cc["@mozilla.org/addons/web-install-listener;1"].
                                 getService(Ci.amIWebInstallListener);
-              if (weblistener.onWebInstallRequested(contentWindow, sourceURI,
+              if (weblistener.onWebInstallRequested(browser, sourceURI,
                                                     installs, installs.length)) {
                 installs.forEach(function(aInstall) {
                   aInstall.install();
