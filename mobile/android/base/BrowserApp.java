@@ -1326,10 +1326,14 @@ public class BrowserApp extends GeckoApp
     }
 
     private void updateSideBarState() {
+        if (NewTabletUI.isEnabled(this)) {
+            return;
+        }
+
         if (mMainLayoutAnimator != null)
             mMainLayoutAnimator.stop();
 
-        boolean isSideBar = !NewTabletUI.isEnabled(this) && (HardwareUtils.isTablet() && getOrientation() == Configuration.ORIENTATION_LANDSCAPE);
+        boolean isSideBar = (HardwareUtils.isTablet() && getOrientation() == Configuration.ORIENTATION_LANDSCAPE);
         final int sidebarWidth = getResources().getDimensionPixelSize(R.dimen.tabs_sidebar_width);
 
         ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) mTabsPanel.getLayoutParams();
@@ -1729,6 +1733,10 @@ public class BrowserApp extends GeckoApp
         if (!areTabsShown()) {
             mTabsPanel.setVisibility(View.INVISIBLE);
             mTabsPanel.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        } else {
+            // Cancel editing mode to return to page content when the TabsPanel closes. We cancel
+            // it here because there are graphical glitches if it's canceled while it's visible.
+            mBrowserToolbar.cancelEdit();
         }
 
         mTabsPanel.finishTabsAnimation();

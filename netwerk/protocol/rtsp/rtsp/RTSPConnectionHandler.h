@@ -24,6 +24,8 @@
 
 #include "RtspPrlog.h"
 
+#include "nsIOService.h"
+
 #include <ctype.h>
 #include <cutils/properties.h>
 
@@ -961,6 +963,12 @@ struct RtspConnectionHandler : public AHandler {
 
                 if (track->mNumAccessUnitsReceiveds == 0) {
                     LOGI("stream ended? aborting.");
+                    if (gIOService->IsOffline()) {
+                        sp<AMessage> reply = new AMessage(kWhatDisconnected, id());
+                        reply->setInt32("result", ERROR_CONNECTION_LOST);
+                        mConn->disconnect(reply);
+                        break;
+                    }
                     sp<AMessage> endStreamMsg = new AMessage(kWhatEndOfStream, id());
                     endStreamMsg->setSize("trackIndex", trackIndex);
                     endStreamMsg->post();
