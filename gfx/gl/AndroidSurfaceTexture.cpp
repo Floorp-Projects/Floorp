@@ -46,6 +46,7 @@ public:
     jSurfaceTexture_Ctor = env->GetMethodID(jSurfaceTextureClass, "<init>", "(I)V");
     jSurfaceTexture_updateTexImage = env->GetMethodID(jSurfaceTextureClass, "updateTexImage", "()V");
     jSurfaceTexture_getTransformMatrix = env->GetMethodID(jSurfaceTextureClass, "getTransformMatrix", "([F)V");
+    jSurfaceTexture_setDefaultBufferSize = env->GetMethodID(jSurfaceTextureClass, "setDefaultBufferSize", "(II)V");
 
     jSurfaceClass = (jclass)env->NewGlobalRef(env->FindClass("android/view/Surface"));
     jSurface_Ctor = env->GetMethodID(jSurfaceClass, "<init>", "(Landroid/graphics/SurfaceTexture;)V");
@@ -127,6 +128,14 @@ public:
     return false;
   }
 
+  void SetDefaultBufferSize(jobject aSurfaceTexture, int32_t width, int32_t height)
+  {
+    JNIEnv* env = GetJNIForThread();
+
+    AutoLocalJNIFrame jniFrame(env);
+    env->CallVoidMethod(aSurfaceTexture, jSurfaceTexture_setDefaultBufferSize, width, height);
+  }
+
 private:
   bool mInitialized;
 
@@ -134,6 +143,7 @@ private:
   jmethodID jSurfaceTexture_Ctor;
   jmethodID jSurfaceTexture_updateTexImage;
   jmethodID jSurfaceTexture_getTransformMatrix;
+  jmethodID jSurfaceTexture_setDefaultBufferSize;
 
   jclass jSurfaceClass;
   jmethodID jSurface_Ctor;
@@ -242,12 +252,19 @@ AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix)
 void
 AndroidSurfaceTexture::SetFrameAvailableCallback(nsIRunnable* aRunnable)
 {
-  if (aRunnable)
+  if (aRunnable) {
     GeckoAppShell::RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
-  else
-    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+  } else {
+     GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+  }
 
   mFrameAvailableCallback = aRunnable;
+}
+
+void
+AndroidSurfaceTexture::SetDefaultSize(mozilla::gfx::IntSize size)
+{
+  sJNIFunctions.SetDefaultBufferSize(mSurfaceTexture, size.width, size.height);
 }
 
 void
