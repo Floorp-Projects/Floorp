@@ -108,6 +108,7 @@ namespace jit {
     _(ToInt32)                                                              \
     _(TruncateToInt32)                                                      \
     _(ToString)                                                             \
+    _(ToObjectOrNull)                                                       \
     _(NewArray)                                                             \
     _(NewArrayCopyOnWrite)                                                  \
     _(NewObject)                                                            \
@@ -176,6 +177,8 @@ namespace jit {
     _(LoadElementHole)                                                      \
     _(StoreElement)                                                         \
     _(StoreElementHole)                                                     \
+    _(StoreUnboxedObjectOrNull)                                             \
+    _(StoreUnboxedString)                                                   \
     _(ArrayPopShift)                                                        \
     _(ArrayPush)                                                            \
     _(ArrayConcat)                                                          \

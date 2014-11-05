@@ -173,6 +173,7 @@
     _(IntToString)                  \
     _(DoubleToString)               \
     _(ValueToString)                \
+    _(ValueToObjectOrNull)          \
     _(Int32x4ToFloat32x4)           \
     _(Float32x4ToInt32x4)           \
     _(Start)                        \
@@ -221,6 +222,7 @@
     _(LoadElementHole)              \
     _(StoreElementV)                \
     _(StoreElementT)                \
+    _(StoreUnboxedPointer)          \
     _(ArrayPopShiftV)               \
     _(ArrayPopShiftT)               \
     _(ArrayPushV)                   \

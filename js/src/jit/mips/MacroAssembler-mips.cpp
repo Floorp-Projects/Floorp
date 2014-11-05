@@ -2043,25 +2043,37 @@ MacroAssemblerMIPSCompat::store32(Register src, const BaseIndex &dest)
     ma_store(src, dest, SizeWord);
 }
 
+template <typename T>
 void
-MacroAssemblerMIPSCompat::storePtr(ImmWord imm, const Address &address)
+MacroAssemblerMIPSCompat::storePtr(ImmWord imm, T address)
 {
     ma_li(ScratchRegister, Imm32(imm.value));
     ma_sw(ScratchRegister, address);
 }
 
+template void MacroAssemblerMIPSCompat::storePtr<Address>(ImmWord imm, Address address);
+template void MacroAssemblerMIPSCompat::storePtr<BaseIndex>(ImmWord imm, BaseIndex address);
+
+template <typename T>
 void
-MacroAssemblerMIPSCompat::storePtr(ImmPtr imm, const Address &address)
+MacroAssemblerMIPSCompat::storePtr(ImmPtr imm, T address)
 {
     storePtr(ImmWord(uintptr_t(imm.value)), address);
 }
 
+template void MacroAssemblerMIPSCompat::storePtr<Address>(ImmPtr imm, Address address);
+template void MacroAssemblerMIPSCompat::storePtr<BaseIndex>(ImmPtr imm, BaseIndex address);
+
+template <typename T>
 void
-MacroAssemblerMIPSCompat::storePtr(ImmGCPtr imm, const Address &address)
+MacroAssemblerMIPSCompat::storePtr(ImmGCPtr imm, T address)
 {
     ma_li(ScratchRegister, imm);
     ma_sw(ScratchRegister, address);
 }
+
+template void MacroAssemblerMIPSCompat::storePtr<Address>(ImmGCPtr imm, Address address);
+template void MacroAssemblerMIPSCompat::storePtr<BaseIndex>(ImmGCPtr imm, BaseIndex address);
 
 void
 MacroAssemblerMIPSCompat::storePtr(Register src, const Address &address)
