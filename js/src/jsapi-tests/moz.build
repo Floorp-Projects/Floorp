@@ -19,7 +19,6 @@ UNIFIED_SOURCES += [
     'testClassGetter.cpp',
     'testCloneScript.cpp',
     'testContexts.cpp',
-    'testCustomIterator.cpp',
     'testDebugger.cpp',
     'testDeepFreeze.cpp',
     'testDefineGetterSetterNonEnumerable.cpp',
