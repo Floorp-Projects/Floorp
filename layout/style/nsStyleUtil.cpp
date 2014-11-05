@@ -542,6 +542,29 @@ nsStyleUtil::IsSignificantChild(nsIContent* aChild, bool aTextIsSignificant,
 }
 
 /* static */ bool
+nsStyleUtil::IsFlexBasisMainSize(const nsStyleCoord& aFlexBasis,
+                                 bool aIsMainAxisHorizontal)
+{
+  // "main-size" is stored as an enumerated value; so if we're not enumerated,
+  // we're not "main-size".
+  if (aFlexBasis.GetUnit() != eStyleUnit_Enumerated) {
+    return false;
+  }
+
+  if (!aIsMainAxisHorizontal) {
+    // Special case for vertical flex items: We don't support any enumerated
+    // values (e.g. "-moz-max-content") for "height"-flavored properties
+    // yet. So, if our computed flex-basis is *any* enumerated value, we'll
+    // just behave as if it were "main-size" (the initial value of flex-basis).
+    // NOTE: Once we support intrinsic sizing keywords for "height",
+    // we can remove this special-case.
+    return true;
+  }
+
+  return aFlexBasis.GetIntValue() == NS_STYLE_FLEX_BASIS_MAIN_SIZE;
+}
+
+/* static */ bool
 nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
                                   nsIPrincipal* aPrincipal,
                                   nsIURI* aSourceURI,
