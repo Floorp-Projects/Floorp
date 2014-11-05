@@ -889,11 +889,18 @@ WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
   return true;
 }
 
-nsresult
+void
 WMFReader::Seek(int64_t aTargetUs,
                 int64_t aStartTime,
                 int64_t aEndTime,
                 int64_t aCurrentTime)
+{
+  nsresult res = SeekInternal(aTargetUs);
+  GetCallback()->OnSeekCompleted(res);
+}
+
+nsresult
+WMFReader::SeekInternal(int64_t aTargetUs)
 {
   DECODER_LOG("WMFReader::Seek() %lld", aTargetUs);
 
