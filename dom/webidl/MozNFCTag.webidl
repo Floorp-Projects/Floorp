@@ -21,8 +21,51 @@ enum NFCTechType {
   "NFC_BARCODE"
 };
 
+/**
+ * The enumeration of the types of the tag, the type of a tag could be either
+ * one of those types defined in NFC Forum (type1 ~ type 4), or it could be a
+ * NXP-specific tag, like Mifare Classic.
+ */
+enum NFCTagType {
+  "type1",
+  "type2",
+  "type3",
+  "type4",
+  "mifare_classic"
+};
+
 [JSImplementation="@mozilla.org/nfc/NFCTag;1", AvailableIn="CertifiedApps"]
 interface MozNFCTag {
+  /**
+   * The supported technologies of this tag, null if unknown.
+   */
+  [Cached, Pure] readonly attribute sequence<NFCTechType>? techList;
+
+  /**
+   * The type of this tag, null if unknown.
+   */
+  readonly attribute NFCTagType? type;
+
+  /**
+   * The maximum size of the NDEF supported on this tag, null if unknown.
+   */
+  readonly attribute long? maxNDEFSize;
+
+  /**
+   * Indicate if this tag is Read-Only, null if unknown.
+   */
+  readonly attribute boolean? isReadOnly;
+
+  /**
+   * Indicate if this tag is formatable, null if unknown.
+   */
+  readonly attribute boolean? isFormatable;
+
+  /**
+   * Indicate if this tag could be made Read-Only, null if unknown.
+   */
+  readonly attribute boolean? canBeMadeReadOnly;
+
   DOMRequest readNDEF();
   DOMRequest writeNDEF(sequence<MozNDEFRecord> records);
   DOMRequest makeReadOnlyNDEF();

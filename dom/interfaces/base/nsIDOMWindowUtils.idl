@@ -51,7 +51,11 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
+<<<<<<< local
 [scriptable, uuid(01e0c3ca-37e7-4ab4-bd22-3e99d8d23336)]
+=======
+[scriptable, uuid(e293355b-ae7f-4ef7-9237-452bcf3e9e6b)]
+>>>>>>> other
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1606,7 +1610,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Same as the above method but allows passing the URI as a string.
    */
-  void loadSheetFromURIString(in ACString sheetURI, in unsigned long type);
+  void loadSheetUsingURIString(in ACString sheetURI, in unsigned long type);
 
   /**
    * Adds a style sheet to the list of additional style sheets of the document.
@@ -1622,6 +1626,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * style sheets of the document.  The removal takes effect immediately.
    */
   void removeSheet(in nsIURI sheetURI, in unsigned long type);
+
+  /**
+   * Same as the above method but allows passing the URI as a string.
+   */
+  void removeSheetUsingURIString(in ACString sheetURI, in unsigned long type);
 
   /**
    * Returns true if a user input is being handled.

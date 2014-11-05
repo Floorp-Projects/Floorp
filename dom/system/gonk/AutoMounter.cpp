@@ -9,6 +9,7 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#include <sys/statfs.h>
 
 #include <arpa/inet.h>
 #include <linux/types.h>
@@ -215,7 +216,7 @@ public:
       mMode(AUTOMOUNTER_DISABLE)
   {
     VolumeManager::RegisterStateObserver(&mVolumeManagerStateObserver);
-    Volume::RegisterObserver(&mVolumeEventObserver);
+    Volume::RegisterVolumeObserver(&mVolumeEventObserver, "AutoMounter");
 
     // It's possible that the VolumeManager is already in the READY state,
     // so we call CheckVolumeSettings here to cover that case. Otherwise,
@@ -228,15 +229,7 @@ public:
 
   ~AutoMounter()
   {
-    VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
-    VolumeManager::VolumeArray::index_type volIndex;
-    for (volIndex = 0; volIndex < numVolumes; volIndex++) {
-      RefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
-      if (vol) {
-        vol->UnregisterObserver(&mVolumeEventObserver);
-      }
-    }
-    Volume::UnregisterObserver(&mVolumeEventObserver);
+    Volume::UnregisterVolumeObserver(&mVolumeEventObserver, "AutoMounter");
     VolumeManager::UnregisterStateObserver(&mVolumeManagerStateObserver);
   }
 
@@ -257,7 +250,6 @@ public:
     for (i = 0; i < numVolumes; i++) {
       RefPtr<Volume> vol = VolumeManager::GetVolume(i);
       if (vol) {
-        vol->RegisterObserver(&mVolumeEventObserver);
         // We need to pick up the intial value of the
         // ums.volume.NAME.enabled setting.
         AutoMounterSetting::CheckVolumeSettings(vol->Name());
@@ -926,6 +918,39 @@ AutoMounter::UpdateState()
     if (!vol->MediaPresent()) {
       // No media - nothing we can do
       continue;
+    }
+
+    if (vol->State() == nsIVolume::STATE_CHECKMNT) {
+      // vold reports the volume is "Mounted". Need to check if the volume is
+      // accessible by statfs(). Once it can be accessed, set the volume as
+      // STATE_MOUNTED, otherwise, post a delay task of UpdateState to check it
+      // again.
+      struct statfs fsbuf;
+      int rc = MOZ_TEMP_FAILURE_RETRY(statfs(vol->MountPoint().get(), &fsbuf));
+      if (rc == -1) {
+        // statfs() failed. Stay in STATE_CHECKMNT. Any failures here
+        // are probably non-recoverable, so we need to wait until
+        // something else changes the state back to IDLE/UNMOUNTED, etc.
+        ERR("statfs failed for '%s': errno = %d (%s)", vol->NameStr(), errno, strerror(errno));
+        continue;
+      }
+      static int delay = 250;
+      if (fsbuf.f_blocks == 0) {
+        if (delay <= 4000) {
+          LOG("UpdateState: Volume '%s' is inaccessible, checking again in %d msec", vol->NameStr(), delay);
+          MessageLoopForIO::current()->
+            PostDelayedTask(FROM_HERE,
+                            NewRunnableMethod(this, &AutoMounter::UpdateState),
+                            delay);
+          delay *= 2;
+        } else {
+          LOG("UpdateState: Volume '%s' is inaccessible, giving up", vol->NameStr());
+        }
+        continue;
+      } else {
+        delay = 250;
+        vol->SetState(nsIVolume::STATE_MOUNTED);
+      }
     }
 
     if ((tryToShare && vol->IsSharingEnabled()) ||

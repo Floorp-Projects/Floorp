@@ -1692,7 +1692,7 @@ this.PlacesUtils = {
 
 
     if (!aItemGuid)
-      aItemGuid = yield this.promiseItemGuid(PlacesUtils.placesRootId);
+      aItemGuid = this.bookmarks.rootGuid;
 
     let hasExcludeItemsCallback =
       aOptions.hasOwnProperty("excludeItemsCallback");

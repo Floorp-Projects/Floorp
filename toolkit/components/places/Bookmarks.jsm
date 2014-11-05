@@ -100,6 +100,20 @@ let Bookmarks = Object.freeze({
   DEFAULT_INDEX: -1,
 
   /**
+   * Special GUIDs associated with bookmark roots.
+   * It's guaranteed that the roots will always have these guids.
+   */
+
+   rootGuid:    "root________",
+   menuGuid:    "menu________",
+   toolbarGuid: "toolbar_____",
+   unfiledGuid: "unfiled_____",
+
+   // With bug 424160, tags will stop being bookmarks, thus this root will
+   // be removed.  Do not rely on this, rather use the tagging service API.
+   tagsGuid:    "tags________",
+
+  /**
    * Inserts a bookmark-item into the bookmarks tree.
    *
    * For creating a bookmark, the following set of properties is required:
@@ -437,9 +451,9 @@ let Bookmarks = Object.freeze({
       let rows = yield db.executeCached(
         `WITH RECURSIVE
          descendants(did) AS (
-           SELECT id FROM moz_bookmarks
-           WHERE parent IN (SELECT folder_id FROM moz_bookmarks_roots
-                            WHERE root_name IN ("toolbar", "menu", "unfiled"))
+           SELECT b.id FROM moz_bookmarks b
+           JOIN moz_bookmarks p ON b.parent = p.id
+           WHERE p.guid IN ( :toolbarGuid, :menuGuid, :unfiledGuid )
            UNION ALL
            SELECT id FROM moz_bookmarks
            JOIN descendants ON parent = did
@@ -452,21 +466,23 @@ let Bookmarks = Object.freeze({
          JOIN moz_bookmarks p ON p.id = b.parent
          LEFT JOIN moz_places h ON b.fk = h.id
          WHERE b.id IN descendants
-        `);
+        `, { menuGuid: this.menuGuid, toolbarGuid: this.toolbarGuid,
+             unfiledGuid: this.unfiledGuid });
       let items = rowsToItemsArray(rows);
 
       yield db.executeCached(
         `WITH RECURSIVE
          descendants(did) AS (
-           SELECT id FROM moz_bookmarks
-           WHERE parent IN (SELECT folder_id FROM moz_bookmarks_roots
-                            WHERE root_name IN ("toolbar", "menu", "unfiled"))
+           SELECT b.id FROM moz_bookmarks b
+           JOIN moz_bookmarks p ON b.parent = p.id
+           WHERE p.guid IN ( :toolbarGuid, :menuGuid, :unfiledGuid )
            UNION ALL
            SELECT id FROM moz_bookmarks
            JOIN descendants ON parent = did
          )
          DELETE FROM moz_bookmarks WHERE id IN descendants
-        `);
+        `, { menuGuid: this.menuGuid, toolbarGuid: this.toolbarGuid,
+             unfiledGuid: this.unfiledGuid });
 
       // Clenup orphans.
       yield removeOrphanAnnotations(db);
@@ -477,9 +493,11 @@ let Bookmarks = Object.freeze({
       // Update roots' lastModified.
       yield db.executeCached(
         `UPDATE moz_bookmarks SET lastModified = :time
-         WHERE id IN (SELECT folder_id FROM moz_bookmarks_roots
-                      WHERE root_name IN ("places", "toolbar", "menu", "unfiled"));
-        `, { time: toPRTime(new Date()) });
+         WHERE id IN (SELECT id FROM moz_bookmarks
+                      WHERE guid IN ( :rootGuid, :toolbarGuid, :menuGuid, :unfiledGuid ))
+        `, { time: toPRTime(new Date()), rootGuid: this.rootGuid,
+             menuGuid: this.menuGuid, toolbarGuid: this.toolbarGuid,
+             unfiledGuid: this.unfiledGuid });
 
       let urls = [for (item of items) if (item.url) item.url];
       updateFrecency(db, urls).then(null, Cu.reportError);
@@ -506,7 +524,7 @@ let Bookmarks = Object.freeze({
           }
         }
       }
-    });
+    }.bind(this));
   }),
 
   /**

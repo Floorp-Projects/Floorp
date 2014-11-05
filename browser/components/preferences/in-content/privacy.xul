@@ -80,7 +80,7 @@
                 preference="privacy.trackingprotection.enabled"
                 accesskey="&trackingProtection.accesskey;"
                 label="&trackingProtection.label;" />
-      <image id="trackingProtectionImage" src="chrome://browser/skin/bad-content-blocked-16.png"/>
+      <image id="trackingProtectionImage"/>
     </hbox>
     <label id="trackingProtectionLearnMore"
            class="text-link"

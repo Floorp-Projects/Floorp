@@ -1,62 +1,42 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * This file tests migration invariants from schema version 19 to the current
- * schema version.
- */
+const ANNO_LEGACYGUID = "placesInternal/GUID";
 
-////////////////////////////////////////////////////////////////////////////////
-//// Globals
-
-const kGuidAnnotationName = "placesInternal/GUID";
-
-function getTotalGuidAnnotationsCount(aStorageConnection) {
-  stmt = aStorageConnection.createStatement(
+let getTotalGuidAnnotationsCount = Task.async(function* (db) {
+  let rows = yield db.execute(
     `SELECT count(*)
      FROM moz_items_annos a
      JOIN moz_anno_attributes b ON a.anno_attribute_id = b.id
-     WHERE b.name = :attr_name`
-  );
-  try {
-    stmt.params.attr_name = kGuidAnnotationName;
-    do_check_true(stmt.executeStep());
-    return stmt.getInt32(0);
-  } finally {
-    stmt.finalize();
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// Tests
-
-function run_test()
-{
-  setPlacesDatabase("places_v19.sqlite");
-  run_next_test();
-}
-
-add_test(function test_initial_state()
-{
-  let dbFile = gProfD.clone();
-  dbFile.append(kDBName);
-  let db = Services.storage.openUnsharedDatabase(dbFile);
-
-  // There should be an obsolete bookmark GUID annotation.
-  do_check_eq(getTotalGuidAnnotationsCount(db), 1);
-
-  // Check our schema version to make sure it is actually at 19.
-  do_check_eq(db.schemaVersion, 19);
-
-  db.close();
-  run_next_test();
+     WHERE b.name = :attr_name
+    `, { attr_name: ANNO_LEGACYGUID });
+  return rows[0].getResultByIndex(0);
 });
 
-add_test(function test_bookmark_guid_annotation_removed()
+add_task(function* setup() {
+  yield setupPlacesDatabase("places_v19.sqlite");
+});
+
+add_task(function* initial_state() {
+  let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
+  let db = yield Sqlite.openConnection({ path: path });
+
+  Assert.equal((yield getTotalGuidAnnotationsCount(db)), 1,
+               "There should be 1 obsolete guid annotation");
+  yield db.close();
+});
+
+add_task(function* database_is_valid() {
+  Assert.equal(PlacesUtils.history.databaseStatus,
+               PlacesUtils.history.DATABASE_STATUS_UPGRADED);
+
+  let db = yield PlacesUtils.promiseDBConnection();
+  Assert.equal((yield db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
+});
+
+add_task(function test_bookmark_guid_annotation_removed()
 {
-
-  // There should be no obsolete bookmark GUID annotation anymore.
-  do_check_eq(getTotalGuidAnnotationsCount(DBConn()), 0);
-
-  run_next_test();
+  let db = yield PlacesUtils.promiseDBConnection();
+  Assert.equal((yield getTotalGuidAnnotationsCount(db)), 0,
+               "There should be no more obsolete GUID annotations.");
 });
