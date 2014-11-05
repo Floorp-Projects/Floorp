@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -193,8 +194,69 @@ public class TopSitesPanel extends HomeFragment {
             }
         });
 
-        mGrid.setOnUrlOpenListener(mUrlOpenListener);
-        mGrid.setOnEditPinnedSiteListener(mEditPinnedSiteListener);
+        mGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TopSitesGridItemView item = (TopSitesGridItemView) view;
+
+                // Decode "user-entered" URLs before loading them.
+                String url = StringUtils.decodeUserEnteredUrl(item.getUrl());
+                int type = item.getType();
+
+                // If the url is empty, the user can pin a site.
+                // If not, navigate to the page given by the url.
+                if (type != TopSites.TYPE_BLANK) {
+                    if (mUrlOpenListener != null) {
+                        final TelemetryContract.Method method;
+                        if (type == TopSites.TYPE_SUGGESTED) {
+                            method = TelemetryContract.Method.SUGGESTION;
+                        } else {
+                            method = TelemetryContract.Method.GRID_ITEM;
+                        }
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method, Integer.toString(position));
+
+                        mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
+                    }
+                } else {
+                    if (mEditPinnedSiteListener != null) {
+                        mEditPinnedSiteListener.onEditPinnedSite(position, "");
+                    }
+                }
+            }
+        });
+
+        mGrid.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+
+                TopSitesGridItemView item = (TopSitesGridItemView) view;
+                if (cursor == null || item.getType() == TopSites.TYPE_BLANK) {
+                    mGrid.setContextMenuInfo(null);
+                    return false;
+                }
+
+                TopSitesGridContextMenuInfo contextMenuInfo = new TopSitesGridContextMenuInfo(view, position, id);
+                updateContextMenuFromCursor(contextMenuInfo, cursor);
+                mGrid.setContextMenuInfo(contextMenuInfo);
+                return mGrid.showContextMenuForChild(mGrid);
+            }
+
+            /*
+             * Update the fields of a TopSitesGridContextMenuInfo object
+             * from a cursor.
+             *
+             * @param  info    context menu info object to be updated
+             * @param  cursor  used to update the context menu info object
+             */
+            private void updateContextMenuFromCursor(TopSitesGridContextMenuInfo info, Cursor cursor) {
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
+                info.type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
+                info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.HISTORY_ID));
+            }
+        });
 
         registerForContextMenu(mList);
         registerForContextMenu(mGrid);
