@@ -106,6 +106,11 @@ public:
     COPY_OPT_FIELD(mMinorVersion, -1)
     COPY_OPT_FIELD(mPowerLevel, -1)
 
+    if (mEvent.mErrorCode != -1) {
+      event.mErrorMsg.Construct();
+      event.mErrorMsg.Value() = static_cast<NfcErrorMessage>(mEvent.mErrorCode);
+    }
+
     if (mEvent.mTechList.Length() > 0) {
       int length = mEvent.mTechList.Length();
       event.mTechList.Construct();
@@ -152,9 +157,14 @@ public:
       }
     }
 
+    if (mEvent.mTagType != -1) {
+      event.mTagType.Construct();
+      event.mTagType.Value() = static_cast<NFCTagType>(mEvent.mTagType);
+    }
+
+    COPY_OPT_FIELD(mMaxNDEFSize, -1)
     COPY_OPT_FIELD(mIsReadOnly, -1)
-    COPY_OPT_FIELD(mCanBeMadeReadOnly, -1)
-    COPY_OPT_FIELD(mMaxSupportedLength, -1)
+    COPY_OPT_FIELD(mIsFormatable, -1)
 
     // HCI Event Transaction parameters.
     if (mEvent.mOriginType != -1) {

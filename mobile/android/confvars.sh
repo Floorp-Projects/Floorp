@@ -98,7 +98,7 @@ if test ! "$RELEASE_BUILD"; then
 fi
 
 # Enable generational GC on mobile.
-JSGC_GENERATIONAL=1
+export JSGC_GENERATIONAL=1
 
 # Use the low-memory GC tuning.
-JS_GC_SMALL_CHUNK_SIZE=1
+export JS_GC_SMALL_CHUNK_SIZE=1

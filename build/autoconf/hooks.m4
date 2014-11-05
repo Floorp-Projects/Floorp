@@ -16,6 +16,7 @@ define([AC_INIT_PREPARE],
 [_MOZ_AC_INIT_PREPARE($1)
 MOZ_CONFIG_LOG_TRAP
 > subconfigures
+> skip_subconfigures
 ])
 
 define([AC_OUTPUT_SUBDIRS],
@@ -53,16 +54,33 @@ define([AC_OUTPUT_SUBDIRS],
 
   eval $dumpenv $PYTHON $_topsrcdir/build/subconfigure.py --prepare "$srcdir" "$moz_config_dir" "$_CONFIG_SHELL" $ac_configure_args ifelse($2,,,--cache-file="$2")
 
-  dnl Execute subconfigure, unless --no-recursion was passed to configure.
-  if test "$no_recursion" != yes; then
-    trap '' EXIT
-    if ! $PYTHON $_topsrcdir/build/subconfigure.py "$objdir"; then
-        exit 1
-    fi
-    MOZ_CONFIG_LOG_TRAP
-  fi
+  dnl Actual subconfigure execution happens in MOZ_RUN_CONFIG_STATUS
 done
 ])
+
+define([AC_OUTPUT_SUBDIRS_NOW],
+[
+for moz_config_dir_ in $1; do
+  AC_OUTPUT_SUBDIRS($moz_config_dir_,$2)
+  tail -1 subconfigures >> skip_subconfigures
+  MOZ_RUN_SUBCONFIGURES(`tail -1 skip_subconfigures`)
+done
+])
+
+define([MOZ_RUN_SUBCONFIGURES],
+[dnl Execute subconfigure, unless --no-recursion was passed to configure.
+if test "$no_recursion" != yes; then
+  trap '' EXIT
+  if ! $PYTHON $_topsrcdir/build/subconfigure.py $1; then
+      exit 1
+  fi
+  MOZ_CONFIG_LOG_TRAP
+fi
+])
+
+define([MOZ_RUN_ALL_SUBCONFIGURES],
+MOZ_RUN_SUBCONFIGURES([--list subconfigures --skip skip_subconfigures])
+)
 
 dnl Print error messages in config.log as well as stderr
 define([AC_MSG_ERROR],

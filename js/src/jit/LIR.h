@@ -1293,9 +1293,6 @@ class LSafepoint : public TempObject
 #ifdef JS_NUNBOX32
     // List of registers (in liveRegs) and stack slots which contain pieces of Values.
     NunboxList nunboxParts_;
-
-    // Number of nunboxParts which are not completely filled in.
-    uint32_t partialNunboxes_;
 #elif JS_PUNBOX64
     // The subset of liveRegs which have Values.
     GeneralRegisterSet valueRegs_;

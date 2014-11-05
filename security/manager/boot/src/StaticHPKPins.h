@@ -79,10 +79,6 @@ static const char kCybertrust_Global_RootFingerprint[] =
 static const char kDigiCert_Assured_ID_Root_CAFingerprint[] =
   "I/Lt/z7ekCWanjD0Cvj5EqXls2lOaThEA0H2Bg4BT/o=";
 
-/* DigiCert ECC Secure Server CA */
-static const char kDigiCert_ECC_Secure_Server_CAFingerprint[] =
-  "PZXN3lRAy+8tBKk2Ox6F7jIlnzr2Yzmwqc3JnyfXoCw=";
-
 /* DigiCert Global Root CA */
 static const char kDigiCert_Global_Root_CAFingerprint[] =
   "r/mIkG3eEpVdm+u/ko/cwxzOMo1bk4TyHIlByibiA5E=";
@@ -126,6 +122,10 @@ static const char kGOOGLE_PIN_AlphaSSL_G2Fingerprint[] =
 /* GOOGLE_PIN_CryptoCat1 */
 static const char kGOOGLE_PIN_CryptoCat1Fingerprint[] =
   "vKaqtTLWmVuXPVJE+0OqN5sRc4VCcSQHI/W3XTDVR24=";
+
+/* GOOGLE_PIN_DigiCertECCSecureServerCA */
+static const char kGOOGLE_PIN_DigiCertECCSecureServerCAFingerprint[] =
+  "PZXN3lRAy+8tBKk2Ox6F7jIlnzr2Yzmwqc3JnyfXoCw=";
 
 /* GOOGLE_PIN_EntrustRootEC1 */
 static const char kGOOGLE_PIN_EntrustRootEC1Fingerprint[] =
@@ -745,7 +745,7 @@ static const StaticFingerprints kPinset_facebook_sha1 = {
 };
 
 static const char* kPinset_facebook_sha256_Data[] = {
-  kDigiCert_ECC_Secure_Server_CAFingerprint,
+  kGOOGLE_PIN_DigiCertECCSecureServerCAFingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
   kGOOGLE_PIN_SymantecClass3EVG3Fingerprint,
 };
@@ -1125,4 +1125,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1423303741261000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1423593806543000);

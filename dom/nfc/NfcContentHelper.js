@@ -133,7 +133,7 @@ NfcContentHelper.prototype = {
     let val = cpmm.sendSyncMessage("NFC:CheckSessionToken", {
       sessionToken: sessionToken
     });
-    return (val[0] === NFC.NFC_SUCCESS);
+    return (val[0] === NFC.NFC_GECKO_SUCCESS);
   },
 
   // NFCTag interface
@@ -359,7 +359,12 @@ NfcContentHelper.prototype = {
             this.eventTarget.notifyPeerLost(result.sessionToken);
             break;
           case NFC.TAG_EVENT_FOUND:
-            let event = new NfcTagEvent(result.techList);
+            let event = new NfcTagEvent(result.techList,
+                                        result.tagType,
+                                        result.maxNDEFSize,
+                                        result.isReadOnly,
+                                        result.isFormatable);
+
             this.eventTarget.notifyTagFound(result.sessionToken, event, result.records);
             break;
           case NFC.TAG_EVENT_LOST:
@@ -413,13 +418,21 @@ NfcContentHelper.prototype = {
   },
 };
 
-function NfcTagEvent(techList) {
+function NfcTagEvent(techList, tagType, maxNDEFSize, isReadOnly, isFormatable) {
   this.techList = techList;
+  this.tagType = tagType;
+  this.maxNDEFSize = maxNDEFSize;
+  this.isReadOnly = isReadOnly;
+  this.isFormatable = isFormatable;
 }
 NfcTagEvent.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINfcTagEvent]),
 
-  techList: null
+  techList: null,
+  tagType: null,
+  maxNDEFSize: 0,
+  isReadOnly: false,
+  isFormatable: false
 };
 
 if (NFC_ENABLED) {

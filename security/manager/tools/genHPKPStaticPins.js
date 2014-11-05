@@ -67,8 +67,8 @@ const PINSETDEF = "/* Pinsets are each an ordered list by the actual value of th
   "};\n\n";
 
 // Command-line arguments
-var gStaticPins = parseJson(arguments[0]);
-var gTestCertFile = arguments[1];
+let gStaticPins = parseJson(arguments[0]);
+let gTestCertFile = arguments[1];
 
 // Open the output file.
 let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
@@ -90,7 +90,7 @@ function readFileToString(filename) {
 }
 
 function stripComments(buf) {
-  var lines = buf.split("\n");
+  let lines = buf.split("\n");
   let entryRegex = /^\s*\/\//;
   let data = "";
   for (let i = 0; i < lines.length; ++i) {
@@ -118,7 +118,7 @@ function isCertBuiltIn(cert) {
 }
 
 function download(filename) {
-  var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+  let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
               .createInstance(Ci.nsIXMLHttpRequest);
   req.open("GET", filename, false); // doing the request synchronously
   try {
@@ -133,7 +133,7 @@ function download(filename) {
           req.status);
   }
 
-  var resultDecoded;
+  let resultDecoded;
   try {
     resultDecoded = atob(req.responseText);
   }
@@ -145,8 +145,8 @@ function download(filename) {
 
 function downloadAsJson(filename) {
   // we have to filter out '//' comments
-  var result = download(filename).replace(/\/\/[^\n]*\n/g, "");
-  var data = null;
+  let result = download(filename).replace(/\/\/[^\n]*\n/g, "");
+  let data = null;
   try {
     data = JSON.parse(result);
   }
@@ -196,6 +196,7 @@ function downloadAndParseChromeCerts(filename, certSKDToName) {
   let hash = "";
   let chromeNameToHash = {};
   let chromeNameToMozName = {}
+  let chromeName;
   for (let i = 0; i < lines.length; ++i) {
     let line = lines[i];
     // Skip comments and newlines.
@@ -232,6 +233,7 @@ function downloadAndParseChromeCerts(filename, certSKDToName) {
           state = PRE_NAME;
           hash = getSKDFromPem(pemCert);
           pemCert = "";
+          let mozName;
           if (hash in certSKDToName) {
             mozName = certSKDToName[hash];
           } else {
@@ -319,6 +321,10 @@ function downloadAndParseChromePins(filename,
   const cData = gStaticPins.chromium_data;
   let entries = chromePreloads.entries;
   entries.forEach(function(entry) {
+    // HSTS entry only
+    if (!entry.pins) {
+      return;
+    }
     let pinsetName = cData.substitute_pinsets[entry.pins];
     if (!pinsetName) {
       pinsetName = entry.pins;
@@ -474,11 +480,13 @@ function writeEntry(entry) {
   } else {
     printVal += "false, ";
   }
-  if (entry.id >= 256) {
-    throw("Not enough buckets in histogram");
-  }
-  if (entry.id >= 0) {
-    printVal += entry.id + ", ";
+  if ("id" in entry) {
+    if (entry.id >= 256) {
+      throw("Not enough buckets in histogram");
+    }
+    if (entry.id >= 0) {
+      printVal += entry.id + ", ";
+    }
   } else {
     printVal += "-1, ";
   }
@@ -492,6 +500,19 @@ function writeDomainList(chromeImportedEntries) {
   writeString("static const TransportSecurityPreload " +
           "kPublicKeyPinningPreloadList[] = {\n");
   let count = 0;
+  let mozillaDomains = {};
+  gStaticPins.entries.forEach(function(entry) {
+    mozillaDomains[entry.name] = true;
+  });
+  // For any domain for which we have set pins, exclude them from
+  // chromeImportedEntries.
+  for (let i = chromeImportedEntries.length - 1; i >= 0; i--) {
+    if (mozillaDomains[chromeImportedEntries[i].name]) {
+      dump("Skipping duplicate pinset for domain " +
+           JSON.stringify(chromeImportedEntries[i], undefined, 2) + "\n");
+      chromeImportedEntries.splice(i, 1);
+    }
+  }
   let sortedEntries = gStaticPins.entries;
   sortedEntries.push.apply(sortedEntries, chromeImportedEntries);
   for (let entry of sortedEntries.sort(compareByName)) {
@@ -508,7 +529,7 @@ function writeFile(certNameToSKD, certSKDToName,
                    chromeImportedPinsets, chromeImportedEntries) {
   // Compute used pins from both Chrome's and our pinsets, so we can output
   // them later.
-  usedFingerprints = {};
+  let usedFingerprints = {};
   gStaticPins.pinsets.forEach(function(pinset) {
     // We aren't guaranteed to have sha1_hashes in our own JSON.
     if (pinset.sha1_hashes) {

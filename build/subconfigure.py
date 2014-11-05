@@ -15,6 +15,28 @@ import pickle
 
 import mozpack.path as mozpath
 
+try:
+    from multiprocessing import Pool, cpu_count
+except ImportError:
+    import itertools
+
+    class Pool(object):
+        def __init__(self, size):
+            pass
+
+        def imap_unordered(self, fn, iterable):
+            return itertools.imap(fn, iterable)
+
+        def close(self):
+            pass
+
+        def join(self):
+            pass
+
+    def cpu_count():
+        return 1
+
+
 class File(object):
     def __init__(self, path):
         self._path = path
@@ -68,6 +90,9 @@ PRECIOUS_VARS = set([
     'CCASFLAGS',
     'CCAS',
 ])
+
+
+CONFIGURE_DATA = 'configure.pkl'
 
 
 # Autoconf, in some of the sub-configures used in the tree, likes to error
@@ -160,7 +185,7 @@ def get_config_files(data):
     return config_files, command_files
 
 
-def prepare(data_file, srcdir, objdir, shell, args):
+def prepare(srcdir, objdir, shell, args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--target', type=str)
     parser.add_argument('--host', type=str)
@@ -172,7 +197,7 @@ def prepare(data_file, srcdir, objdir, shell, args):
     # will take it from the configure path anyways).
     parser.add_argument('--srcdir', type=str)
 
-    data_file = os.path.join(objdir, data_file)
+    data_file = os.path.join(objdir, CONFIGURE_DATA)
     previous_args = None
     if os.path.exists(data_file):
         with open(data_file, 'rb') as f:
@@ -227,10 +252,15 @@ def prepare(data_file, srcdir, objdir, shell, args):
         pickle.dump(data, f)
 
 
-def run(data_file, objdir):
-    ret = 0
+def prefix_lines(text, prefix):
+    return ''.join('%s> %s' % (prefix, line) for line in text.splitlines(True))
 
-    with open(os.path.join(objdir, data_file), 'rb') as f:
+
+def run(objdir):
+    ret = 0
+    output = ''
+
+    with open(os.path.join(objdir, CONFIGURE_DATA), 'rb') as f:
         data = pickle.load(f)
 
     data['objdir'] = objdir
@@ -271,6 +301,8 @@ def run(data_file, objdir):
                 cleared_cache:
             skip_configure = False
 
+    relobjdir = os.path.relpath(objdir, os.getcwd())
+
     if not skip_configure:
         command = [data['shell'], configure]
         for kind in ('target', 'build', 'host'):
@@ -283,13 +315,14 @@ def run(data_file, objdir):
         # We're going to run it ourselves.
         command += ['--no-create']
 
-        print 'configuring in %s' % os.path.relpath(objdir, os.getcwd())
-        print 'running %s' % ' '.join(command[:-1])
+        print prefix_lines('configuring', relobjdir)
+        print prefix_lines('running %s' % ' '.join(command[:-1]), relobjdir)
         sys.stdout.flush()
-        ret = subprocess.call(command, cwd=objdir, env=data['env'])
-
-        if ret:
-            return ret
+        try:
+            output += subprocess.check_output(command,
+                stderr=subprocess.STDOUT, cwd=objdir, env=data['env'])
+        except subprocess.CalledProcessError as e:
+            return relobjdir, e.returncode, e.output
 
         # Leave config.status with a new timestamp if configure is newer than
         # its original mtime.
@@ -317,25 +350,61 @@ def run(data_file, objdir):
 
     if not skip_config_status:
         if skip_configure:
-            print 'running config.status in %s' % os.path.relpath(objdir,
-                os.getcwd())
+            print prefix_lines('running config.status', relobjdir)
             sys.stdout.flush()
-        ret = subprocess.call([data['shell'], '-c', './config.status'],
-            cwd=objdir, env=data['env'])
+        try:
+            output += subprocess.check_output([data['shell'], '-c',
+                './config.status'], stderr=subprocess.STDOUT, cwd=objdir,
+                env=data['env'])
+        except subprocess.CalledProcessError as e:
+            ret = e.returncode
+            output += e.output
 
         for f in contents:
             f.update_time()
 
+    return relobjdir, ret, output
+
+
+def subconfigure(args):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--list', type=str,
+        help='File containing a list of subconfigures to run')
+    parser.add_argument('--skip', type=str,
+        help='File containing a list of Subconfigures to skip')
+    parser.add_argument('subconfigures', type=str, nargs='*',
+        help='Subconfigures to run if no list file is given')
+    args, others = parser.parse_known_args(args)
+    subconfigures = args.subconfigures
+    if args.list:
+        subconfigures.extend(open(args.list, 'rb').read().splitlines())
+    if args.skip:
+        skips = set(open(args.skip, 'rb').read().splitlines())
+        subconfigures = [s for s in subconfigures if s not in skips]
+
+    if not subconfigures:
+        return 0
+
+    ret = 0
+    # One would think using a ThreadPool would be faster, considering
+    # everything happens in subprocesses anyways, but no, it's actually
+    # slower on Windows. (20s difference overall!)
+    pool = Pool(min(len(subconfigures), cpu_count()))
+    for relobjdir, returncode, output in \
+            pool.imap_unordered(run, subconfigures):
+        print prefix_lines(output, relobjdir)
+        sys.stdout.flush()
+        ret = max(returncode, ret)
+        if ret:
+            break
+    pool.close()
+    pool.join()
     return ret
 
 
-CONFIGURE_DATA = 'configure.pkl'
-
 def main(args):
     if args[0] != '--prepare':
-        if len(args) != 1:
-            raise Exception('Usage: %s relativeobjdir' % __file__)
-        return run(CONFIGURE_DATA, args[0])
+        return subconfigure(args)
 
     topsrcdir = os.path.abspath(args[1])
     subdir = args[2]
@@ -347,7 +416,7 @@ def main(args):
     srcdir = os.path.join(topsrcdir, srcdir)
     objdir = os.path.abspath(subdir)
 
-    return prepare(CONFIGURE_DATA, srcdir, objdir, args[3], args[4:])
+    return prepare(srcdir, objdir, args[3], args[4:])
 
 
 if __name__ == '__main__':

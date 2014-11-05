@@ -261,7 +261,7 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /** Synthesize a mouse event. The event types supported are:
    *    mousedown, mouseup, mousemove, mouseover, mouseout, contextmenu,
-   *    MozMouseHitTest
+   *    MozMouseHittest
    *
    * Events are sent in coordinates offset by aX and aY from the window.
    *

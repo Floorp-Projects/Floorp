@@ -692,6 +692,7 @@ protected:
 
     void SetDrawsInTitlebar(bool aState);
     void SetDrawsTitle(bool aState);
+    void UpdateBrightTitlebarForeground(nsIDocument* aDocument);
 
     void RemoveBroadcaster(const nsAString & broadcasterId);
 

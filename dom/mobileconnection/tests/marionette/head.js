@@ -7,7 +7,17 @@ const SETTINGS_KEY_DATA_ENABLED = "ril.data.enabled";
 const SETTINGS_KEY_DATA_ROAMING_ENABLED = "ril.data.roaming_enabled";
 const SETTINGS_KEY_DATA_APN_SETTINGS = "ril.data.apnSettings";
 
-let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
+const PREF_KEY_RIL_DEBUGGING_ENABLED = "ril.debugging.enabled";
+
+// Emulate Promise.jsm semantics.
+Promise.defer = function() { return new Deferred(); };
+function Deferred() {
+  this.promise = new Promise(function(resolve, reject) {
+    this.resolve = resolve;
+    this.reject = reject;
+  }.bind(this));
+  Object.freeze(this);
+}
 
 let _pendingEmulatorCmdCount = 0;
 let _pendingEmulatorShellCmdCount = 0;
@@ -1109,8 +1119,16 @@ function cleanUp() {
  *        A function that takes no parameter.
  */
 function startTestBase(aTestCaseMain) {
+  // Turn on debugging pref.
+  let debugPref = SpecialPowers.getBoolPref(PREF_KEY_RIL_DEBUGGING_ENABLED);
+  SpecialPowers.setBoolPref(PREF_KEY_RIL_DEBUGGING_ENABLED, true);
+
   Promise.resolve()
     .then(aTestCaseMain)
+    .then(() => {
+      // Restore debugging pref.
+      SpecialPowers.setBoolPref(PREF_KEY_RIL_DEBUGGING_ENABLED, debugPref);
+    })
     .then(cleanUp, function() {
       ok(false, 'promise rejects during test.');
       cleanUp();
