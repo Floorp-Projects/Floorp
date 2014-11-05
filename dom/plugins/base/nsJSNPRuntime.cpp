@@ -54,6 +54,14 @@ struct JSObjWrapperHasher : public js::DefaultHasher<nsJSObjWrapperKey>
   }
 };
 
+class NPObjWrapperHashEntry : public PLDHashEntryHdr
+{
+public:
+  NPObject *mNPObj; // Must be the first member for the PLDHash stubs to work
+  JS::TenuredHeap<JSObject*> mJSObj;
+  NPP mNpp;
+};
+
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
 // plugins access the JSObject x, two wrappers for x will be
@@ -79,9 +87,8 @@ static PLDHashTable sNPObjWrappers;
 // wrappers and we can kill off hash tables etc.
 static int32_t sWrapperCount;
 
-// The JSRuntime. Used to unroot JSObjects when no JSContext is
-// reachable.
-static JSRuntime *sJSRuntime;
+// The runtime service used to register/unregister GC callbacks.
+nsCOMPtr<nsIJSRuntimeService> sCallbackRuntime;
 
 static nsTArray<NPObject*>* sDelayedReleases;
 
@@ -158,7 +165,10 @@ static bool
 NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS::MutableHandle<JS::Value> vp);
 
 static void
-NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj);
+NPObjWrapper_Finalize(js::FreeOp *fop, JSObject *obj);
+
+static void
+NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old);
 
 static bool
 NPObjWrapper_Call(JSContext *cx, unsigned argc, JS::Value *vp);
@@ -171,7 +181,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
                      JS::Handle<jsid> id,  NPVariant* getPropertyResult,
                      JS::MutableHandle<JS::Value> vp);
 
-const JSClass sNPObjectJSWrapperClass =
+const static js::Class sNPObjectJSWrapperClass =
   {
     NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
@@ -185,7 +195,17 @@ const JSClass sNPObjectJSWrapperClass =
     NPObjWrapper_Finalize,
     NPObjWrapper_Call,
     nullptr,                                                /* hasInstance */
-    NPObjWrapper_Construct
+    NPObjWrapper_Construct,
+    nullptr,                                                /* trace */
+    JS_NULL_CLASS_SPEC,
+    {
+      nullptr,                                              /* outerObject */
+      nullptr,                                              /* innerObject */
+      nullptr,                                              /* iteratorObject */
+      false,                                                /* isWrappedNative */
+      nullptr,                                              /* weakmapKeyDelegateOp */
+      NPObjWrapper_ObjectMoved
+    }
   };
 
 typedef struct NPObjectMemberPrivate {
@@ -221,6 +241,28 @@ static void
 OnWrapperDestroyed();
 
 static void
+TraceJSObjWrappers(JSTracer *trc, void *data)
+{
+  if (!sJSObjWrappers.initialized()) {
+    return;
+  }
+
+  // Trace all JSObjects in the sJSObjWrappers table and rekey the entries if
+  // any of them moved.
+  for (JSObjWrapperTable::Enum e(sJSObjWrappers); !e.empty(); e.popFront()) {
+    nsJSObjWrapperKey key = e.front().key();
+    JS_CallUnbarrieredObjectTracer(trc, &key.mJSObj, "sJSObjWrappers key object");
+    nsJSObjWrapper *wrapper = e.front().value();
+    if (wrapper->mJSObj) {
+      JS_CallObjectTracer(trc, &wrapper->mJSObj, "sJSObjWrappers wrapper object");
+    }
+    if (key != e.front().key()) {
+      e.rekeyFront(key);
+    }
+  }
+}
+
+static void
 DelayedReleaseGCCallback(JSGCStatus status)
 {
   if (JSGC_END == status) {
@@ -240,22 +282,116 @@ DelayedReleaseGCCallback(JSGCStatus status)
   }
 }
 
+static bool
+RegisterGCCallbacks()
+{
+  if (sCallbackRuntime) {
+    return true;
+  }
+
+  static const char rtsvc_id[] = "@mozilla.org/js/xpc/RuntimeService;1";
+  nsCOMPtr<nsIJSRuntimeService> rtsvc(do_GetService(rtsvc_id));
+  if (!rtsvc) {
+    return false;
+  }
+
+  JSRuntime *jsRuntime = nullptr;
+  rtsvc->GetRuntime(&jsRuntime);
+  MOZ_ASSERT(jsRuntime != nullptr);
+
+  // Register a callback to trace wrapped JSObjects.
+  if (!JS_AddExtraGCRootsTracer(jsRuntime, TraceJSObjWrappers, nullptr)) {
+    return false;
+  }
+
+  // Register our GC callback to perform delayed destruction of finalized
+  // NPObjects.
+  rtsvc->RegisterGCCallback(DelayedReleaseGCCallback);
+
+  // Set runtime pointer to indicate that callbacks have been registered.
+  sCallbackRuntime = rtsvc;
+  return true;
+}
+
+static void
+UnregisterGCCallbacks()
+{
+  MOZ_ASSERT(sCallbackRuntime);
+
+  JSRuntime *jsRuntime = nullptr;
+  sCallbackRuntime->GetRuntime(&jsRuntime);
+  MOZ_ASSERT(jsRuntime != nullptr);
+
+  // Remove tracing callback.
+  JS_RemoveExtraGCRootsTracer(jsRuntime, TraceJSObjWrappers, nullptr);
+
+  // Remove delayed destruction callback.
+  sCallbackRuntime->UnregisterGCCallback(DelayedReleaseGCCallback);
+
+  // Unset runtime pointer to indicate callbacks are no longer registered.
+  sCallbackRuntime = nullptr;
+}
+
+static bool
+CreateJSObjWrapperTable()
+{
+  MOZ_ASSERT(!sJSObjWrappersAccessible);
+  MOZ_ASSERT(!sJSObjWrappers.initialized());
+
+  if (!RegisterGCCallbacks()) {
+    return false;
+  }
+
+  if (!sJSObjWrappers.init(16)) {
+    NS_ERROR("Error initializing PLDHashTable sJSObjWrappers!");
+    return false;
+  }
+
+  sJSObjWrappersAccessible = true;
+  return true;
+}
+
+static void
+DestroyJSObjWrapperTable()
+{
+  MOZ_ASSERT(sJSObjWrappersAccessible);
+  MOZ_ASSERT(sJSObjWrappers.initialized());
+  MOZ_ASSERT(sJSObjWrappers.count() == 0);
+
+  // No more wrappers, and our hash was initialized. Finish the
+  // hash to prevent leaking it.
+  sJSObjWrappers.finish();
+  sJSObjWrappersAccessible = false;
+}
+
+static bool
+CreateNPObjWrapperTable()
+{
+  MOZ_ASSERT(!sNPObjWrappers.ops);
+
+  if (!RegisterGCCallbacks()) {
+    return false;
+  }
+
+  PL_DHashTableInit(&sNPObjWrappers, PL_DHashGetStubOps(), nullptr,
+                    sizeof(NPObjWrapperHashEntry));
+  return true;
+}
+
+static void
+DestroyNPObjWrapperTable()
+{
+  MOZ_ASSERT(sNPObjWrappers.EntryCount() == 0);
+
+  PL_DHashTableFinish(&sNPObjWrappers);
+
+  sNPObjWrappers.ops = nullptr;
+}
+
 static void
 OnWrapperCreated()
 {
-  if (sWrapperCount++ == 0) {
-    static const char rtsvc_id[] = "@mozilla.org/js/xpc/RuntimeService;1";
-    nsCOMPtr<nsIJSRuntimeService> rtsvc(do_GetService(rtsvc_id));
-    if (!rtsvc)
-      return;
-
-    rtsvc->GetRuntime(&sJSRuntime);
-    NS_ASSERTION(sJSRuntime != nullptr, "no JSRuntime?!");
-
-    // Register our GC callback to perform delayed destruction of finalized
-    // NPObjects. Leave this callback around and don't ever unregister it.
-    rtsvc->RegisterGCCallback(DelayedReleaseGCCallback);
-  }
+  ++sWrapperCount;
 }
 
 static void
@@ -265,26 +401,16 @@ OnWrapperDestroyed()
 
   if (--sWrapperCount == 0) {
     if (sJSObjWrappersAccessible) {
-      MOZ_ASSERT(sJSObjWrappers.count() == 0);
-
-      // No more wrappers, and our hash was initialized. Finish the
-      // hash to prevent leaking it.
-      sJSObjWrappers.finish();
-      sJSObjWrappersAccessible = false;
+      DestroyJSObjWrapperTable();
     }
 
     if (sNPObjWrappers.ops) {
-      MOZ_ASSERT(sNPObjWrappers.EntryCount() == 0);
-
       // No more wrappers, and our hash was initialized. Finish the
       // hash to prevent leaking it.
-      PL_DHashTableFinish(&sNPObjWrappers);
-
-      sNPObjWrappers.ops = nullptr;
+      DestroyNPObjWrapperTable();
     }
 
-    // No more need for this.
-    sJSRuntime = nullptr;
+    UnregisterGCCallbacks();
   }
 }
 
@@ -507,7 +633,7 @@ ReportExceptionIfPending(JSContext *cx)
 }
 
 nsJSObjWrapper::nsJSObjWrapper(NPP npp)
-  : mJSObj(GetJSContext(npp), nullptr), mNpp(npp)
+  : mJSObj(nullptr), mNpp(npp)
 {
   MOZ_COUNT_CTOR(nsJSObjWrapper);
   OnWrapperCreated();
@@ -517,7 +643,7 @@ nsJSObjWrapper::~nsJSObjWrapper()
 {
   MOZ_COUNT_DTOR(nsJSObjWrapper);
 
-  // Invalidate first, since it relies on sJSRuntime and sJSObjWrappers.
+  // Invalidate first, since it relies on sJSObjWrappers.
   NP_Invalidate(this);
 
   OnWrapperDestroyed();
@@ -982,9 +1108,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
   // class and private from the JSObject, neither of which cares about
   // compartments.
 
-  const JSClass *clazz = JS_GetClass(obj);
-
-  if (clazz == &sNPObjectJSWrapperClass) {
+  if (nsNPObjWrapper::IsWrapper(obj)) {
     // obj is one of our own, its private data is the NPObject we're
     // looking for.
 
@@ -1005,12 +1129,8 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
 
   if (!sJSObjWrappers.initialized()) {
     // No hash yet (or any more), initialize it.
-    if (!sJSObjWrappers.init(16)) {
-      NS_ERROR("Error initializing PLDHashTable!");
-
+    if (!CreateJSObjWrapperTable())
       return nullptr;
-    }
-    sJSObjWrappersAccessible = true;
   }
   MOZ_ASSERT(sJSObjWrappersAccessible);
 
@@ -1032,10 +1152,10 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
     return nullptr;
   }
 
-  // Assign mJSObj, rooting the JSObject. Its lifetime is now tied to that of
-  // the NPObject.
   wrapper->mJSObj = obj;
 
+  // Insert the new wrapper into the hashtable, rooting the JSObject. Its
+  // lifetime is now tied to that of the NPObject.
   nsJSObjWrapperKey key(obj, npp);
   if (!sJSObjWrappers.putNew(key, wrapper)) {
     // Out of memory, free the wrapper we created.
@@ -1060,7 +1180,7 @@ GetNPObjectWrapper(JSContext *cx, JSObject *aObj, bool wrapResult = true)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   while (obj && (obj = js::CheckedUnwrap(obj))) {
-    if (JS_GetClass(obj) == &sNPObjectJSWrapperClass) {
+    if (nsNPObjWrapper::IsWrapper(obj)) {
       if (wrapResult && !JS_WrapObject(cx, &obj)) {
         return nullptr;
       }
@@ -1627,7 +1747,7 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
 }
 
 static void
-NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj)
+NPObjWrapper_Finalize(js::FreeOp *fop, JSObject *obj)
 {
   NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
   if (npobj) {
@@ -1639,6 +1759,32 @@ NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj)
   if (!sDelayedReleases)
     sDelayedReleases = new nsTArray<NPObject*>;
   sDelayedReleases->AppendElement(npobj);
+}
+
+static void
+NPObjWrapper_ObjectMoved(JSObject *obj, const JSObject *old)
+{
+  // The wrapper JSObject has been moved, so we need to update the entry in the
+  // sNPObjWrappers hash table, if present.
+
+  if (!sNPObjWrappers.ops) {
+    return;
+  }
+
+  NPObject *npobj = (NPObject *)::JS_GetPrivate(obj);
+  if (!npobj) {
+    return;
+  }
+
+  // The hazard analysis thinks that PL_DHashTableOperate() can GC but this is
+  // not possible if we pass PL_DHASH_LOOKUP.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
+    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_LOOKUP));
+  MOZ_ASSERT(PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj);
+  MOZ_ASSERT(entry->mJSObj == old);
+  entry->mJSObj = obj;
 }
 
 static bool
@@ -1657,14 +1803,11 @@ NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp)
   return CallNPMethodInternal(cx, obj, args.length(), args.array(), vp, true);
 }
 
-class NPObjWrapperHashEntry : public PLDHashEntryHdr
+bool
+nsNPObjWrapper::IsWrapper(JSObject *obj)
 {
-public:
-  NPObject *mNPObj; // Must be the first member for the PLDHash stubs to work
-  JSObject *mJSObj;
-  NPP mNpp;
-};
-
+  return js::GetObjectClass(obj) == &sNPObjectJSWrapperClass;
+}
 
 // An NPObject is going away, make sure we null out the JS object's
 // private data in case this is an NPObject that came from a plugin
@@ -1736,8 +1879,9 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   if (!sNPObjWrappers.ops) {
     // No hash yet (or any more), initialize it.
-    PL_DHashTableInit(&sNPObjWrappers, PL_DHashGetStubOps(), nullptr,
-                      sizeof(NPObjWrapperHashEntry));
+    if (!CreateNPObjWrapperTable()) {
+      return nullptr;
+    }
   }
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
@@ -1767,8 +1911,8 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   // No existing JSObject, create one.
 
-  JS::Rooted<JSObject*> obj(cx, ::JS_NewObject(cx, &sNPObjectJSWrapperClass, JS::NullPtr(),
-                                               JS::NullPtr()));
+  JS::Rooted<JSObject*> obj(cx, ::JS_NewObject(cx, js::Jsvalify(&sNPObjectJSWrapperClass),
+                                               JS::NullPtr(), JS::NullPtr()));
 
   if (generation != sNPObjWrappers.Generation()) {
       // Reload entry if the JS_NewObject call caused a GC and reallocated
