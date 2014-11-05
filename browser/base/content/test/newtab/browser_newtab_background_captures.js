@@ -37,6 +37,12 @@ function runTests() {
   // for the hidden newtab docshell.
   let tab = gWindow.gBrowser.addTab("about:blank");
   yield addNewTabPageTab();
+
+  // When newtab is loaded very quickly (which is what happens in 99% of cases)
+  // there is no need to wait so no tests are run. Because each test requires
+  // either a pass, fail or todo we run a dummy test here.
+  ok(true, "Each test requires at least one pass, fail or todo so here is a pass.");
+
   let swapWaitCount = 0;
   let swapped = imports.BrowserNewTabPreloader.newTab(tab);
   while (!swapped) {

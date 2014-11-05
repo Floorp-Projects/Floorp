@@ -4,10 +4,12 @@
 
 function test() {
   if (!isTiltEnabled()) {
+    aborting();
     info("Skipping controller test because Tilt isn't enabled.");
     return;
   }
   if (!isWebGLSupported()) {
+    aborting();
     info("Skipping controller test because WebGL isn't supported.");
     return;
   }
@@ -122,7 +124,7 @@ function test() {
       }
     }, true, function suddenDeath()
     {
-      info("Tilt could not be initialized properly.");
+      ok(false, "Tilt could not be initialized properly.");
       cleanup();
     });
   });
