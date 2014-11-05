@@ -4242,9 +4242,10 @@ nsTextFrame::GetCursor(const nsPoint& aPoint,
         }
       }
     }
+    return NS_OK;
+  } else {
+    return nsFrame::GetCursor(aPoint, aCursor);
   }
-
-  return NS_OK;
 }
 
 nsIFrame*

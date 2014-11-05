@@ -3750,16 +3750,16 @@ this.XPIProvider = {
    *         Icon URLs for the install
    * @param  aVersion
    *         A version for the install
-   * @param  aLoadGroup
-   *         An nsILoadGroup to associate requests with
+   * @param  aBrowser
+   *         The browser performing the install
    * @param  aCallback
    *         A callback to pass the AddonInstall to
    */
   getInstallForURL: function XPI_getInstallForURL(aUrl, aHash, aName, aIcons,
-                                                  aVersion, aLoadGroup, aCallback) {
+                                                  aVersion, aBrowser, aCallback) {
     AddonInstall.createDownload(function getInstallForURL_createDownload(aInstall) {
       aCallback(aInstall.wrapper);
-    }, aUrl, aHash, aName, aIcons, aVersion, aLoadGroup);
+    }, aUrl, aHash, aName, aIcons, aVersion, aBrowser);
   },
 
   /**
@@ -4755,13 +4755,13 @@ function getHashStringForCrypto(aCrypto) {
  *         An optional nsIURI of release notes for the add-on
  * @param  aExistingAddon
  *         The add-on this install will update if known
- * @param  aLoadGroup
- *         The nsILoadGroup to associate any requests with
+ * @param  aBrowser
+ *         The browser performing the install
  * @throws if the url is the url of a local file and the hash does not match
  *         or the add-on does not contain an valid install manifest
  */
 function AddonInstall(aInstallLocation, aUrl, aHash, aReleaseNotesURI,
-                      aExistingAddon, aLoadGroup) {
+                      aExistingAddon, aBrowser) {
   this.wrapper = new AddonInstallWrapper(this);
   this.installLocation = aInstallLocation;
   this.sourceURI = aUrl;
@@ -4774,16 +4774,12 @@ function AddonInstall(aInstallLocation, aUrl, aHash, aReleaseNotesURI,
     };
   }
   this.hash = this.originalHash;
-  this.loadGroup = aLoadGroup;
+  this.browser = aBrowser;
   this.listeners = [];
   this.icons = {};
   this.existingAddon = aExistingAddon;
   this.error = 0;
-  if (aLoadGroup)
-    this.window = aLoadGroup.notificationCallbacks
-                            .getInterface(Ci.nsIDOMWindow);
-  else
-    this.window = null;
+  this.window = aBrowser ? aBrowser.contentWindow : null;
 
   // Giving each instance of AddonInstall a reference to the logger.
   this.logger = logger;
@@ -4796,7 +4792,7 @@ AddonInstall.prototype = {
   crypto: null,
   originalHash: null,
   hash: null,
-  loadGroup: null,
+  browser: null,
   badCertHandler: null,
   listeners: null,
   restartDownload: false,
@@ -5854,9 +5850,18 @@ AddonInstall.prototype = {
 
   getInterface: function AI_getInterface(iid) {
     if (iid.equals(Ci.nsIAuthPrompt2)) {
-      var factory = Cc["@mozilla.org/prompter;1"].
+      let win = this.window;
+      if (!win && this.browser)
+        win = this.browser.ownerDocument.defaultView;
+
+      let factory = Cc["@mozilla.org/prompter;1"].
                     getService(Ci.nsIPromptFactory);
-      return factory.getPrompt(this.window, Ci.nsIAuthPrompt);
+      let prompt = factory.getPrompt(win, Ci.nsIAuthPrompt2);
+
+      if (this.browser && this.browser.isRemoteBrowser && prompt instanceof Ci.nsILoginManagerPrompter)
+        prompt.setE10sData(this.browser, null);
+
+      return prompt;
     }
     else if (iid.equals(Ci.nsIChannelEventSink)) {
       return this;
@@ -5920,15 +5925,15 @@ AddonInstall.createInstall = function AI_createInstall(aCallback, aFile) {
  *         An icon URLs for the add-on
  * @param  aVersion
  *         A version for the add-on
- * @param  aLoadGroup
- *         An nsILoadGroup to associate the download with
+ * @param  aBrowser
+ *         The browser performing the install
  */
 AddonInstall.createDownload = function AI_createDownload(aCallback, aUri, aHash, aName, aIcons,
-                                       aVersion, aLoadGroup) {
+                                       aVersion, aBrowser) {
   let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
   let url = NetUtil.newURI(aUri);
 
-  let install = new AddonInstall(location, url, aHash, null, null, aLoadGroup);
+  let install = new AddonInstall(location, url, aHash, null, null, aBrowser);
   if (url instanceof Ci.nsIFileURL)
     install.initLocalInstall(aCallback);
   else

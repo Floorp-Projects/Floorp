@@ -15,7 +15,7 @@ describe("loop.store.Room", function () {
   });
 });
 
-describe("loop.store.RoomListStore", function () {
+describe("loop.store.RoomStore", function () {
   "use strict";
 
   var sharedActions = loop.shared.actions;
@@ -57,13 +57,13 @@ describe("loop.store.RoomListStore", function () {
   describe("#constructor", function() {
     it("should throw an error if the dispatcher is missing", function() {
       expect(function() {
-        new loop.store.RoomListStore({mozLoop: {}});
+        new loop.store.RoomStore({mozLoop: {}});
       }).to.Throw(/dispatcher/);
     });
 
     it("should throw an error if mozLoop is missing", function() {
       expect(function() {
-        new loop.store.RoomListStore({dispatcher: dispatcher});
+        new loop.store.RoomStore({dispatcher: dispatcher});
       }).to.Throw(/mozLoop/);
     });
   });
@@ -71,24 +71,28 @@ describe("loop.store.RoomListStore", function () {
   describe("constructed", function() {
     var fakeMozLoop, store;
 
+    var defaultStoreState = {
+      error: undefined,
+      pendingCreation: false,
+      pendingInitialRetrieval: false,
+      rooms: [],
+      activeRoom: {}
+    };
+
     beforeEach(function() {
       fakeMozLoop = {
+        copyString: function() {},
         rooms: {
           create: function() {},
           getAll: function() {},
           on: sandbox.stub()
         }
       };
-      store = new loop.store.RoomListStore({
+      store = new loop.store.RoomStore({
         dispatcher: dispatcher,
         mozLoop: fakeMozLoop
       });
-      store.setStoreState({
-        error: undefined,
-        pendingCreation: false,
-        pendingInitialRetrieval: false,
-        rooms: []
-      });
+      store.setStoreState(defaultStoreState);
     });
 
     describe("MozLoop rooms event listeners", function() {
@@ -146,6 +150,19 @@ describe("loop.store.RoomListStore", function () {
             return room.roomToken === "_nxD4V4FflQ";
           })).eql(false);
         });
+      });
+    });
+
+    describe("#getStoreState", function() {
+      it("should retrieve the whole state by default", function() {
+        expect(store.getStoreState()).eql(defaultStoreState);
+      });
+
+      it("should retrieve a given property state", function() {
+        var fakeActiveRoom = {fake: true};
+        store.setStoreState({activeRoom: fakeActiveRoom});
+
+        expect(store.getStoreState().activeRoom).eql(fakeActiveRoom);
       });
     });
 
@@ -243,6 +260,19 @@ describe("loop.store.RoomListStore", function () {
       });
     });
 
+    describe("#copyRoomUrl", function() {
+      it("should copy the room URL", function() {
+        var copyString = sandbox.stub(fakeMozLoop, "copyString");
+
+        store.copyRoomUrl(new sharedActions.CopyRoomUrl({
+          roomUrl: "http://invalid"
+        }));
+
+        sinon.assert.calledOnce(copyString);
+        sinon.assert.calledWithExactly(copyString, "http://invalid");
+      });
+    });
+
     describe("#setStoreState", function() {
       it("should update store state data", function() {
         store.setStoreState({pendingCreation: true});
@@ -252,6 +282,14 @@ describe("loop.store.RoomListStore", function () {
 
       it("should trigger a `change` event", function(done) {
         store.once("change", function() {
+          done();
+        });
+
+        store.setStoreState({pendingCreation: true});
+      });
+
+      it("should trigger a `change:<prop>` event", function(done) {
+        store.once("change:pendingCreation", function() {
           done();
         });
 
@@ -325,6 +363,40 @@ describe("loop.store.RoomListStore", function () {
         expect(store.getStoreState().pendingInitialRetrieval).eql(false);
       });
     });
+
+    describe("ActiveRoomStore substore", function() {
+      var store, activeRoomStore;
+
+      beforeEach(function() {
+        activeRoomStore = new loop.store.ActiveRoomStore({
+          dispatcher: dispatcher,
+          mozLoop: fakeMozLoop
+        });
+        store = new loop.store.RoomStore({
+          dispatcher: dispatcher,
+          mozLoop: fakeMozLoop,
+          activeRoomStore: activeRoomStore
+        });
+      });
+
+      it("should subscribe to substore changes", function() {
+        var fakeServerData = {fake: true};
+
+        activeRoomStore.setStoreState({serverData: fakeServerData});
+
+        expect(store.getStoreState().activeRoom.serverData)
+          .eql(fakeServerData);
+      });
+
+      it("should trigger a change event when the substore is updated",
+        function(done) {
+          store.once("change:activeRoom", function() {
+            done();
+          });
+
+          activeRoomStore.setStoreState({serverData: {}});
+        });
+    });
   });
 
   describe("#openRoom", function() {
@@ -336,7 +408,7 @@ describe("loop.store.RoomListStore", function () {
           open: sinon.spy()
         }
       };
-      store = new loop.store.RoomListStore({
+      store = new loop.store.RoomStore({
         dispatcher: dispatcher,
         mozLoop: fakeMozLoop
       });

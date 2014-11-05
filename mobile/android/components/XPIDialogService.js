@@ -18,7 +18,7 @@ WebInstallPrompt.prototype = {
   classID: Components.ID("{c1242012-27d8-477e-a0f1-0b098ffc329b}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallPrompt]),
 
-  confirm: function(aWindow, aURL, aInstalls) {
+  confirm: function(aBrowser, aURL, aInstalls) {
     let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     let prompt = Services.prompt;
@@ -27,7 +27,7 @@ WebInstallPrompt.prototype = {
     let button = bundle.GetStringFromName("addonsConfirmInstall.install");
 
     aInstalls.forEach(function(install) {
-      let result = (prompt.confirmEx(aWindow, title, install.name, flags, button, null, null, null, {value: false}) == 0);
+      let result = (prompt.confirmEx(aBrowser.contentWindow, title, install.name, flags, button, null, null, null, {value: false}) == 0);
       if (result)
         install.install();
       else

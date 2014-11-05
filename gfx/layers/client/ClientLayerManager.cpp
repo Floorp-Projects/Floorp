@@ -217,6 +217,9 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
   // to it. This will happen at the end of the transaction.
   if (aTarget && XRE_GetProcessType() == GeckoProcessType_Default) {
     mShadowTarget = aTarget;
+  } else {
+    NS_ASSERTION(!aTarget,
+                 "Content-process ClientLayerManager::BeginTransactionWithTarget not supported");
   }
 
   // If this is a new paint, increment the paint sequence number.

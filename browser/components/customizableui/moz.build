@@ -15,8 +15,6 @@ EXTRA_JS_MODULES += [
     'ScrollbarSampler.jsm',
 ]
 
-DEFINES['E10S_TESTING_ONLY'] = CONFIG['E10S_TESTING_ONLY']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
     DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
 
