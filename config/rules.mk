@@ -1161,10 +1161,11 @@ ifdef XPT_NAME #{
 ifndef NO_DIST_INSTALL
 _XPT_NAME_FILES := $(DEPTH)/config/makefiles/xpidl/xpt/$(XPT_NAME)
 _XPT_NAME_DEST := $(FINAL_TARGET)/components
+_XPT_NAME_TARGET := misc
 INSTALL_TARGETS += _XPT_NAME
 
 ifndef NO_INTERFACES_MANIFEST
-libs:: $(call mkdir_deps,$(FINAL_TARGET)/components)
+misc:: $(call mkdir_deps,$(FINAL_TARGET)/components)
 	$(call py_action,buildlist,$(FINAL_TARGET)/components/interfaces.manifest 'interfaces $(XPT_NAME)')
 	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'manifest components/interfaces.manifest')
 endif
