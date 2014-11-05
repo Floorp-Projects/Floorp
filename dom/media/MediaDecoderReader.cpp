@@ -6,6 +6,7 @@
 
 #include "MediaDecoderReader.h"
 #include "AbstractMediaDecoder.h"
+#include "MediaResource.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
 
@@ -131,7 +132,7 @@ MediaDecoderReader::SetStartTime(int64_t aStartTime)
 nsresult
 MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered)
 {
-  MediaResource* stream = mDecoder->GetResource();
+  AutoPinned<MediaResource> stream(mDecoder->GetResource());
   int64_t durationUs = 0;
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());

@@ -1092,7 +1092,7 @@ nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered)
     return NS_ERROR_FAILURE;
   }
 
-  MediaResource* resource = mDecoder->GetResource();
+  AutoPinned<MediaResource> resource(mDecoder->GetResource());
 
   // Special case completely cached files.  This also handles local files.
   if (mContext && resource->IsDataCachedToEndOfResource(0)) {
