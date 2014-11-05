@@ -42,6 +42,10 @@ public:
   // be able to create and use a SurfaceTexture
   static bool Check();
 
+  AndroidNativeWindow* NativeWindow() {
+    return mNativeWindow;
+  }
+
   // This attaches the updated data to the TEXTURE_EXTERNAL target
   void UpdateTexImage();
 
@@ -70,6 +74,7 @@ private:
   jobject mSurfaceTexture;
   jobject mSurface;
 
+  RefPtr<AndroidNativeWindow> mNativeWindow;
   int mID;
   nsRefPtr<nsIRunnable> mFrameAvailableCallback;
 };
