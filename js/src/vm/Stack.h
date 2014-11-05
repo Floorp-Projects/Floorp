@@ -1066,6 +1066,7 @@ class InvokeArgs : public JS::CallArgs
     explicit InvokeArgs(JSContext* cx, bool construct = false) : v_(cx) {}
 
     bool init(unsigned argc, bool construct = false) {
+        MOZ_ASSERT(2 + argc + construct > argc);  // no overflow
         if (!v_.resize(2 + argc + construct))
             return false;
         ImplicitCast<CallArgs>(*this) = CallArgsFromVp(argc, v_.begin());
