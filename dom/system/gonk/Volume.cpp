@@ -14,7 +14,20 @@
 namespace mozilla {
 namespace system {
 
-Volume::EventObserverList Volume::mEventObserverList;
+#if DEBUG_VOLUME_OBSERVER
+void
+VolumeObserverList::Broadcast(Volume* const& aVolume)
+{
+  uint32_t size = mObservers.Length();
+  for (uint32_t i = 0; i < size; ++i) {
+    LOG("VolumeObserverList::Broadcast to [%u] %p volume '%s'",
+        i, mObservers[i], aVolume->NameStr());
+    mObservers[i]->Notify(aVolume);
+  }
+}
+#endif
+
+VolumeObserverList Volume::sEventObserverList;
 
 // We have a feature where volumes can be locked when mounted. This
 // is used to prevent a volume from being shared with the PC while
@@ -82,7 +95,7 @@ Volume::SetIsSharing(bool aIsSharing)
   mIsSharing = aIsSharing;
   LOG("Volume %s: IsSharing set to %d state %s",
       NameStr(), (int)mIsSharing, StateStr(mState));
-  mEventObserverList.Broadcast(this);
+  sEventObserverList.Broadcast(this);
 }
 
 void
@@ -95,7 +108,7 @@ Volume::SetIsFormatting(bool aIsFormatting)
   LOG("Volume %s: IsFormatting set to %d state %s",
       NameStr(), (int)mIsFormatting, StateStr(mState));
   if (mIsFormatting) {
-    mEventObserverList.Broadcast(this);
+    sEventObserverList.Broadcast(this);
   }
 }
 
@@ -108,7 +121,7 @@ Volume::SetIsUnmounting(bool aIsUnmounting)
   mIsUnmounting = aIsUnmounting;
   LOG("Volume %s: IsUnmounting set to %d state %s",
       NameStr(), (int)mIsUnmounting, StateStr(mState));
-  mEventObserverList.Broadcast(this);
+  sEventObserverList.Broadcast(this);
 }
 
 void
@@ -146,7 +159,7 @@ Volume::SetMediaPresent(bool aMediaPresent)
 
   LOG("Volume: %s media %s", NameStr(), aMediaPresent ? "inserted" : "removed");
   mMediaPresent = aMediaPresent;
-  mEventObserverList.Broadcast(this);
+  sEventObserverList.Broadcast(this);
 }
 
 void
@@ -156,7 +169,7 @@ Volume::SetSharingEnabled(bool aSharingEnabled)
 
   LOG("SetSharingMode for volume %s to %d canBeShared = %d",
       NameStr(), (int)mSharingEnabled, (int)mCanBeShared);
-  mEventObserverList.Broadcast(this);
+  sEventObserverList.Broadcast(this);
 }
 
 void
@@ -199,12 +212,12 @@ Volume::SetState(Volume::STATE aNewState)
     LOG("Volume %s (%u): changing state from %s to %s @ '%s' (%d observers) "
         "mountGeneration = %d, locked = %d",
         NameStr(), mId, StateStr(mState),
-        StateStr(aNewState), mMountPoint.get(), mEventObserverList.Length(),
+        StateStr(aNewState), mMountPoint.get(), sEventObserverList.Length(),
         mMountGeneration, (int)mMountLocked);
   } else {
     LOG("Volume %s (%u): changing state from %s to %s (%d observers)",
         NameStr(), mId, StateStr(mState),
-        StateStr(aNewState), mEventObserverList.Length());
+        StateStr(aNewState), sEventObserverList.Length());
   }
 
   switch (aNewState) {
@@ -247,13 +260,13 @@ Volume::SetState(Volume::STATE aNewState)
        mIsSharing = false;
        break;
 
-     case nsIVolume::STATE_IDLE:
-       break;
+     case nsIVolume::STATE_IDLE: // Fall through
+     case nsIVolume::STATE_CHECKMNT: // Fall through
      default:
        break;
   }
   mState = aNewState;
-  mEventObserverList.Broadcast(this);
+  sEventObserverList.Broadcast(this);
 }
 
 void
@@ -325,12 +338,16 @@ Volume::StartCommand(VolumeCommand* aCommand)
 
 //static
 void
-Volume::RegisterObserver(Volume::EventObserver* aObserver)
+Volume::RegisterVolumeObserver(Volume::EventObserver* aObserver, const char* aName)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
-  mEventObserverList.AddObserver(aObserver);
+  sEventObserverList.AddObserver(aObserver);
+
+  DBG("Added Volume Observer '%s' @%p, length = %u",
+      aName, aObserver, sEventObserverList.Length());
+
   // Send an initial event to the observer (for each volume)
   size_t numVolumes = VolumeManager::NumVolumes();
   for (size_t volIndex = 0; volIndex < numVolumes; volIndex++) {
@@ -341,12 +358,15 @@ Volume::RegisterObserver(Volume::EventObserver* aObserver)
 
 //static
 void
-Volume::UnregisterObserver(Volume::EventObserver* aObserver)
+Volume::UnregisterVolumeObserver(Volume::EventObserver* aObserver, const char* aName)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
-  mEventObserverList.RemoveObserver(aObserver);
+  sEventObserverList.RemoveObserver(aObserver);
+
+  DBG("Removed Volume Observer '%s' @%p, length = %u",
+      aName, aObserver, sEventObserverList.Length());
 }
 
 //static
@@ -365,7 +385,7 @@ Volume::UpdateMountLock(const nsACString& aVolumeName,
   if (vol->mMountLocked != aMountLocked) {
     vol->mMountLocked = aMountLocked;
     DBG("Volume::UpdateMountLock for '%s' to %d\n", vol->NameStr(), (int)aMountLocked);
-    mEventObserverList.Broadcast(vol);
+    sEventObserverList.Broadcast(vol);
   }
 }
 
@@ -408,7 +428,15 @@ Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer
         if (token.EqualsLiteral("to")) {
           nsresult errCode;
           token = aTokenizer.nextToken();
-          SetState((STATE)token.ToInteger(&errCode));
+          STATE newState = (STATE)(token.ToInteger(&errCode));
+          if (newState == nsIVolume::STATE_MOUNTED) {
+            // We set the state to STATE_CHECKMNT here, and the once the
+            // AutoMounter detects that the volume is actually accessible
+            // then the AutoMounter will set the volume as STATE_MOUNTED.
+            SetState(nsIVolume::STATE_CHECKMNT);
+          } else {
+            SetState(newState);
+          }
           break;
         }
       }

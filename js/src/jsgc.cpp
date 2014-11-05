@@ -838,18 +838,15 @@ Chunk::init(JSRuntime *rt)
 }
 
 inline Chunk **
-GCRuntime::getAvailableChunkList(Zone *zone)
+GCRuntime::getAvailableChunkList()
 {
-    return zone->isSystem
-           ? &systemAvailableChunkListHead
-           : &userAvailableChunkListHead;
+    return &availableChunkListHead;
 }
 
 inline void
-Chunk::addToAvailableList(Zone *zone)
+Chunk::addToAvailableList(JSRuntime *rt)
 {
-    JSRuntime *rt = zone->runtimeFromAnyThread();
-    insertToAvailableList(rt->gc.getAvailableChunkList(zone));
+    insertToAvailableList(rt->gc.getAvailableChunkList());
 }
 
 inline void
@@ -1052,7 +1049,7 @@ Chunk::releaseArena(ArenaHeader *aheader)
     if (info.numArenasFree == 1) {
         MOZ_ASSERT(!info.prevp);
         MOZ_ASSERT(!info.next);
-        addToAvailableList(zone);
+        addToAvailableList(rt);
     } else if (!unused()) {
         MOZ_ASSERT(info.prevp);
     } else {
@@ -1122,10 +1119,10 @@ class js::gc::AutoMaybeStartBackgroundAllocation
 };
 
 Chunk *
-GCRuntime::pickChunk(const AutoLockGC &lock, Zone *zone,
+GCRuntime::pickChunk(const AutoLockGC &lock,
                      AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation)
 {
-    Chunk **listHeadp = getAvailableChunkList(zone);
+    Chunk **listHeadp = getAvailableChunkList();
     Chunk *chunk = *listHeadp;
     if (chunk)
         return chunk;
@@ -1159,7 +1156,7 @@ GCRuntime::pickChunk(const AutoLockGC &lock, Zone *zone,
 
     chunk->info.prevp = nullptr;
     chunk->info.next = nullptr;
-    chunk->addToAvailableList(zone);
+    chunk->addToAvailableList(rt);
 
     return chunk;
 }
@@ -1174,8 +1171,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     stats(rt),
     marker(rt),
     usage(nullptr),
-    systemAvailableChunkListHead(nullptr),
-    userAvailableChunkListHead(nullptr),
+    availableChunkListHead(nullptr),
     maxMallocBytes(0),
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
@@ -1206,6 +1202,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     sweepOnBackgroundThread(false),
     foundBlackGrayEdges(false),
     sweepingZones(nullptr),
+    freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     zoneGroupIndex(0),
     zoneGroups(nullptr),
     currentZoneGroup(nullptr),
@@ -1418,8 +1415,7 @@ GCRuntime::finish()
 
     zones.clear();
 
-    systemAvailableChunkListHead = nullptr;
-    userAvailableChunkListHead = nullptr;
+    availableChunkListHead = nullptr;
     if (chunkSet.initialized()) {
         for (GCChunkSet::Range r(chunkSet.all()); !r.empty(); r.popFront())
             releaseChunk(r.front());
@@ -1990,7 +1986,7 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
     if (maybeLock.isNothing())
         maybeLock.emplace(rt);
 
-    Chunk *chunk = rt->gc.pickChunk(maybeLock.ref(), zone, maybeStartBGAlloc);
+    Chunk *chunk = rt->gc.pickChunk(maybeLock.ref(), maybeStartBGAlloc);
     if (!chunk)
         return nullptr;
 
@@ -2509,10 +2505,10 @@ GCRuntime::updatePointersToRelocatedCells()
     }
 
     // Type inference may put more blocks here to free.
-    rt->freeLifoAlloc.freeAll();
+    freeLifoAlloc.freeAll();
 
     // Clear runtime caches that can contain cell pointers.
-    // TODO: Should possibly just call PurgeRuntime() here.
+    // TODO: Should possibly just call purgeRuntime() here.
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
 
@@ -3243,8 +3239,7 @@ GCRuntime::decommitArenasFromAvailableList(Chunk **availableListHeadp)
 void
 GCRuntime::decommitArenas()
 {
-    decommitArenasFromAvailableList(&systemAvailableChunkListHead);
-    decommitArenasFromAvailableList(&userAvailableChunkListHead);
+    decommitArenasFromAvailableList(&availableChunkListHead);
 }
 
 void
@@ -3493,7 +3488,7 @@ GCHelperState::doSweep(const AutoLockGC &lock)
 
         rt->gc.sweepBackgroundThings();
 
-        rt->freeLifoAlloc.freeAll();
+        rt->gc.freeLifoAlloc.freeAll();
     }
 
     bool shrinking = shrinkFlag;
@@ -3613,15 +3608,30 @@ GCRuntime::sweepZones(FreeOp *fop, bool lastGC)
     zones.resize(write - zones.begin());
 }
 
-static void
-PurgeRuntime(JSRuntime *rt)
+void
+GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc *lifo)
+{
+    MOZ_ASSERT(isHeapBusy());
+    freeLifoAlloc.transferUnusedFrom(lifo);
+}
+
+void
+GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc *lifo)
+{
+    MOZ_ASSERT(isHeapBusy());
+    freeLifoAlloc.transferFrom(lifo);
+}
+
+void
+GCRuntime::purgeRuntime()
 {
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
         comp->purge();
 
-    rt->freeLifoAlloc.transferUnusedFrom(&rt->tempLifoAlloc);
-    rt->interpreterStack().purge(rt);
 
+    freeUnusedLifoBlocksAfterSweeping(&rt->tempLifoAlloc);
+
+    rt->interpreterStack().purge(rt);
     rt->gsnCache.purge();
     rt->scopeCoordinateNameCache.purge();
     rt->newObjectCache.purge();
@@ -3863,7 +3873,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
      */
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_PURGE);
-        PurgeRuntime(rt);
+        purgeRuntime();
     }
 
     /*
@@ -5316,7 +5326,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 
         sweepBackgroundThings();
 
-        rt->freeLifoAlloc.freeAll();
+        freeLifoAlloc.freeAll();
 
         /* Ensure the compartments get swept if it's the last GC. */
         if (lastGC)

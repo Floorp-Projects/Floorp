@@ -4852,6 +4852,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
     BrowserApp.deck.addEventListener("touchstart", this, true);
+    BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
     BrowserApp.deck.addEventListener("click", InputWidgetHelper, true);
     BrowserApp.deck.addEventListener("click", SelectHelper, true);
 
@@ -4884,6 +4885,9 @@ var BrowserEventHandler = {
       case 'touchstart':
         this._handleTouchStart(aEvent);
         break;
+      case 'MozMouseHittest':
+        this._handleRetargetedTouchStart(aEvent);
+        break;
       case 'MozMagnifyGesture':
         this.observe(this, aEvent.type,
                      JSON.stringify({x: aEvent.screenX, y: aEvent.screenY,
@@ -4915,6 +4919,19 @@ var BrowserEventHandler = {
       if (this._scrollableElement != rootScrollable) {
         Messaging.sendRequest({ type: "Panning:Override" });
       }
+    }
+  },
+
+  _handleRetargetedTouchStart: function(aEvent) {
+    // we should only get this called just after a new touchstart with a single
+    // touch point.
+    if (!BrowserApp.isBrowserContentDocumentDisplayed() || aEvent.defaultPrevented) {
+      return;
+    }
+
+    let target = aEvent.target;
+    if (!target) {
+      return;
     }
 
     let uri = this._getLinkURI(target);

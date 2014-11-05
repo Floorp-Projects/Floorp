@@ -413,6 +413,12 @@ class TreeMetadataEmitter(LoggingMixin):
             if v in context and context[v]:
                 passthru.variables[v] = context[v]
 
+        if context.config.substs.get('OS_TARGET') == 'WINNT' and \
+                context['DELAYLOAD_DLLS']:
+            context['LDFLAGS'].extend([('-DELAYLOAD:%s' % dll)
+                for dll in context['DELAYLOAD_DLLS']])
+            context['OS_LIBS'].append('delayimp')
+
         for v in ['CFLAGS', 'CXXFLAGS', 'CMFLAGS', 'CMMFLAGS', 'LDFLAGS']:
             if v in context and context[v]:
                 passthru.variables['MOZBUILD_' + v] = context[v]
@@ -420,11 +426,6 @@ class TreeMetadataEmitter(LoggingMixin):
         # NO_VISIBILITY_FLAGS is slightly different
         if context['NO_VISIBILITY_FLAGS']:
             passthru.variables['VISIBILITY_FLAGS'] = ''
-
-        if context['DELAYLOAD_DLLS']:
-            passthru.variables['DELAYLOAD_LDFLAGS'] = [('-DELAYLOAD:%s' % dll)
-                for dll in context['DELAYLOAD_DLLS']]
-            passthru.variables['USE_DELAYIMP'] = True
 
         varmap = dict(
             SOURCES={

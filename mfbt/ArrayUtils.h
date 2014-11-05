@@ -25,10 +25,16 @@
 namespace mozilla {
 
 /*
- * Safely subtract two pointers when it is known that aEnd >= aBegin.  This
- * avoids the common compiler bug that if (size_t(aEnd) - size_t(aBegin)) has
- * the MSB set, the unsigned subtraction followed by right shift will produce
- * -1, or size_t(-1), instead of the real difference.
+ * Safely subtract two pointers when it is known that aEnd >= aBegin, yielding a
+ * size_t result.
+ *
+ * Ordinary pointer subtraction yields a ptrdiff_t result, which, being signed,
+ * has insufficient range to express the distance between pointers at opposite
+ * ends of the address space. Furthermore, most compilers use ptrdiff_t to
+ * represent the intermediate byte address distance, before dividing by
+ * sizeof(T); if that intermediate result overflows, they'll produce results
+ * with the wrong sign even when the correct scaled distance would fit in a
+ * ptrdiff_t.
  */
 template<class T>
 MOZ_ALWAYS_INLINE size_t

@@ -245,13 +245,6 @@ endif
 #
 _ENABLE_PIC=1
 
-# PGO on MSVC is opt-in
-ifdef _MSC_VER
-ifndef MSVC_ENABLE_PGO
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-endif
-
 # No sense in profiling tools
 ifdef INTERNAL_TOOLS
 NO_PROFILE_GUIDED_OPTIMIZE = 1
@@ -288,10 +281,6 @@ AR_FLAGS += -LTCG
 endif
 endif # MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
-
-ifdef _MSC_VER
-OS_LDFLAGS += $(DELAYLOAD_LDFLAGS)
-endif # _MSC_VER
 
 MAKE_JARS_FLAGS = \
 	-t $(topsrcdir) \
@@ -701,24 +690,6 @@ OBJ_SUFFIX := i_o
 endif
 endif
 endif
-
-# EXPAND_LIBNAME - $(call EXPAND_LIBNAME,foo)
-# expands to $(LIB_PREFIX)foo.$(LIB_SUFFIX) or -lfoo, depending on linker
-# arguments syntax. Should only be used for system libraries
-
-# EXPAND_LIBNAME_PATH - $(call EXPAND_LIBNAME_PATH,foo,dir)
-# expands to dir/$(LIB_PREFIX)foo.$(LIB_SUFFIX)
-
-# EXPAND_MOZLIBNAME - $(call EXPAND_MOZLIBNAME,foo)
-# expands to $(DIST)/lib/$(LIB_PREFIX)foo.$(LIB_SUFFIX)
-
-ifdef GNU_CC
-EXPAND_LIBNAME = $(addprefix -l,$(1))
-else
-EXPAND_LIBNAME = $(foreach lib,$(1),$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
-endif
-EXPAND_LIBNAME_PATH = $(foreach lib,$(1),$(2)/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
-EXPAND_MOZLIBNAME = $(foreach lib,$(1),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX))
 
 PLY_INCLUDE = -I$(topsrcdir)/other-licenses/ply
 

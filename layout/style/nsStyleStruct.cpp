@@ -2815,14 +2815,16 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     }
   }
 
+  // Note that the HasTransformStyle() != aOther.HasTransformStyle() 
+  // test above handles relevant changes in the
+  // NS_STYLE_WILL_CHANGE_TRANSFORM bit, which in turn handles frame 
+  // reconstruction for changes in the containing block of 
+  // fixed-positioned elements.  Other than that, all changes to 
+  // 'will-change' can be handled by a repaint.
   uint8_t willChangeBitsChanged =
     mWillChangeBitField ^ aOther.mWillChangeBitField;
-  if (willChangeBitsChanged & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) {
+  if (willChangeBitsChanged) {
     NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-  }
-  if (willChangeBitsChanged & ~uint8_t(NS_STYLE_WILL_CHANGE_STACKING_CONTEXT)) {
-    // FIXME (Bug 974125): Don't reconstruct the frame
-    NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
   }
 
   // Note:  Our current behavior for handling changes to the

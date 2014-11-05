@@ -24,18 +24,38 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "nsIAppsService");
 
 /**
- * NFCTag
+ * Implementation of NFCTag.
+ *
+ * @param window  global window object.
+ * @param sessionToken  session token received from parent process.
+ * @parem event   type of nsINfcTagEvent received from parent process.
  */
-function MozNFCTag(aWindow, aSessionToken) {
-  debug("In MozNFCTag Constructor");
+function MozNFCTagImpl(window, sessionToken, event) {
+  debug("In MozNFCTagImpl Constructor");
   this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                              .getService(Ci.nsINfcContentHelper);
-  this._window = aWindow;
-  this.session = aSessionToken;
+  this._window = window;
+  this.session = sessionToken;
+  this.techList = event.techList;
+  this.type = event.tagType || null;
+  this.maxNDEFSize = event.maxNDEFSize || null;
+  this.isReadOnly = event.isReadOnly || null;
+  this.isFormatable = event.isFormatable || null;
+  this.canBeMadeReadOnly = this.type ?
+                             (this.type == "type1" || this.type == "type2" ||
+                              this.type == "mifare_classic") :
+                             null;
 }
-MozNFCTag.prototype = {
+MozNFCTagImpl.prototype = {
   _nfcContentHelper: null,
   _window: null,
+  session: null,
+  techList: null,
+  type: null,
+  maxNDEFSize: 0,
+  isReadOnly: false,
+  isFormatable: false,
+  canBeMadeReadOnly: false,
 
   // NFCTag interface:
   readNDEF: function readNDEF() {
@@ -55,17 +75,20 @@ MozNFCTag.prototype = {
 };
 
 /**
- * NFCPeer
+ * Implementation of NFCPeer.
+ *
+ * @param window  global window object.
+ * @param sessionToken  session token received from parent process.
  */
-function MozNFCPeer(aWindow, aSessionToken) {
-  debug("In MozNFCPeer Constructor");
+function MozNFCPeerImpl(aWindow, aSessionToken) {
+  debug("In MozNFCPeerImpl Constructor");
   this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                              .getService(Ci.nsINfcContentHelper);
 
   this._window = aWindow;
   this.session = aSessionToken;
 }
-MozNFCPeer.prototype = {
+MozNFCPeerImpl.prototype = {
   _nfcContentHelper: null,
   _window: null,
   _isLost: false,
@@ -103,10 +126,10 @@ MozNFCPeer.prototype = {
 };
 
 /**
- * Navigator NFC object
+ * Implementation of navigator NFC object.
  */
-function mozNfc() {
-  debug("In mozNfc Constructor");
+function MozNFCImpl() {
+  debug("In MozNFCImpl Constructor");
   try {
     this._nfcContentHelper = Cc["@mozilla.org/nfc/content-helper;1"]
                                .getService(Ci.nsINfcContentHelper);
@@ -116,13 +139,13 @@ function mozNfc() {
 
   this._nfcContentHelper.registerEventTarget(this);
 }
-mozNfc.prototype = {
+MozNFCImpl.prototype = {
   _nfcContentHelper: null,
   _window: null,
   nfcObject: null,
 
   init: function init(aWindow) {
-    debug("mozNfc init called");
+    debug("MozNFCImpl init called");
     this._window = aWindow;
     this.defineEventHandlerGetterSetter("ontagfound");
     this.defineEventHandlerGetterSetter("ontaglost");
@@ -172,7 +195,7 @@ mozNfc.prototype = {
     }
 
     if (!this.nfcObject || this.nfcObject.session != sessionToken) {
-      let obj = new MozNFCPeer(this._window, sessionToken);
+      let obj = new MozNFCPeerImpl(this._window, sessionToken);
       this.nfcObject = obj;
       this.nfcObject.contentObject = this._window.MozNFCPeer._create(this._window, obj);
     }
@@ -219,8 +242,8 @@ mozNfc.prototype = {
       return;
     }
 
-    let tag = new MozNFCTag(this._window, sessionToken);
-    let tagContentObj = this._window.MozNFCTag._create(this._window, tag);
+    let tagImpl = new MozNFCTagImpl(this._window, sessionToken, event);
+    let tag = this._window.MozNFCTag._create(this._window, tagImpl);
 
     let length = records ? records.length : 0;
     let ndefRecords = records ? [] : null;
@@ -233,7 +256,7 @@ mozNfc.prototype = {
     }
 
     let eventData = {
-      "tag": tagContentObj,
+      "tag": tag,
       "ndefRecords": ndefRecords
     };
 
@@ -329,4 +352,5 @@ mozNfc.prototype = {
                                          Ci.nsINfcDOMEventTarget]),
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozNFCTag, MozNFCPeer, mozNfc]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozNFCTagImpl,
+  MozNFCPeerImpl, MozNFCImpl]);
