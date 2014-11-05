@@ -858,11 +858,7 @@ bin/libfreebl_32int64_3.so
 #ifdef XP_WIN
 @BINPATH@/webapp-uninstaller@BIN_SUFFIX@
 #endif
-#ifdef XP_MACOSX
-@APPNAME@/Contents/MacOS/webapprt-stub@BIN_SUFFIX@
-#else
 @BINPATH@/webapprt-stub@BIN_SUFFIX@
-#endif
 @BINPATH@/webapprt/webapprt.ini
 @BINPATH@/webapprt/chrome.manifest
 @BINPATH@/webapprt/chrome/webapprt@JAREXT@
