@@ -166,7 +166,7 @@ main(int argc, char **argv)
 
       //we know the firefox path, so copy the new webapprt here
       NSString *newWebRTPath =
-        [NSString stringWithFormat: @"%@%s%s", firefoxPath, APP_MACOS_PATH,
+        [NSString stringWithFormat: @"%@%s%s", firefoxPath, APP_RESOURCES_PATH,
                                                WEBAPPRT_EXECUTABLE];
       NSLog(@"### Firefox webapprt path: %@", newWebRTPath);
       if (![fileClerk fileExistsAtPath:newWebRTPath]) {
