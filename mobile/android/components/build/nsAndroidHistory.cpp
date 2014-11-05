@@ -10,7 +10,13 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 
+#include "mozilla/Preferences.h"
+
 #define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
+
+// We copy Places here.
+// Note that we don't yet observe this pref at runtime.
+#define PREF_HISTORY_ENABLED "places.history.enabled"
 
 using namespace mozilla;
 using mozilla::dom::Link;
@@ -33,7 +39,9 @@ nsAndroidHistory::GetSingleton()
 }
 
 nsAndroidHistory::nsAndroidHistory()
+  : mHistoryEnabled(true)
 {
+  LoadPrefs();
 }
 
 NS_IMETHODIMP
@@ -103,6 +111,16 @@ nsAndroidHistory::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
     mRecentlyVisitedURIs.ElementAt(mRecentlyVisitedURIsNextIndex) = aURI;
     mRecentlyVisitedURIsNextIndex++;
   }
+}
+
+bool
+nsAndroidHistory::ShouldRecordHistory() {
+  return mHistoryEnabled;
+}
+
+void
+nsAndroidHistory::LoadPrefs() {
+  mHistoryEnabled = Preferences::GetBool(PREF_HISTORY_ENABLED, true);
 }
 
 inline bool
@@ -265,6 +283,12 @@ nsAndroidHistory::CanAddURI(nsIURI* aURI, bool* canAdd)
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG_POINTER(canAdd);
+
+  // See if we're disabled.
+  if (!ShouldRecordHistory()) {
+    *canAdd = false;
+    return NS_OK;
+  }
 
   nsAutoCString scheme;
   nsresult rv = aURI->GetScheme(scheme);

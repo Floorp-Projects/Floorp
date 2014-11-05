@@ -565,999 +565,163 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, nsTArray<T>& aOut)
   return NS_OK;
 }
 
-template<typename T1, uint8_t Service, uint8_t Opcode>
-inline nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1)
-{
-  return UnpackPDU(aPDU, aArg1);
-}
-
-template<>
-inline nsresult
-UnpackPDU<int, 0x02, 0x01>(
-  BluetoothDaemonPDU& aPDU, int& aArg1)
-{
-  aArg1 = aPDU.AcquireFd();
-
-  if (NS_WARN_IF(aArg1 < 0)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  return NS_OK;
-}
-
-
-template<typename T1, typename T2, uint8_t Service, uint8_t Opcode>
-inline nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1, T2& aArg2)
-{
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return UnpackPDU(aPDU, aArg2);
-}
-
-template<>
-inline nsresult
-UnpackPDU<int, nsAutoArrayPtr<BluetoothProperty>, 0x01, 0x84>(
-  BluetoothDaemonPDU& aPDU,
-  int& aArg1, nsAutoArrayPtr<BluetoothProperty>& aArg2)
-{
-  /* Read number of properties */
-  uint8_t numProperties;
-  nsresult rv = UnpackPDU(aPDU, numProperties);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aArg1 = numProperties;
-
-  /* Read properties array */
-  UnpackArray<BluetoothProperty> properties(aArg2, aArg1);
-  return UnpackPDU(aPDU, properties);
-}
-
-template<typename T1, typename T2, typename T3,
-         uint8_t Service, uint8_t Opcode>
-inline nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1, T2& aArg2, T3& aArg3)
-{
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = UnpackPDU(aPDU, aArg2);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return UnpackPDU(aPDU, aArg3);
-}
-
-template<>
-inline nsresult
-UnpackPDU<BluetoothStatus, int, nsAutoArrayPtr<BluetoothProperty>, 0x01, 0x82>(
-  BluetoothDaemonPDU& aPDU,
-  BluetoothStatus& aArg1, int& aArg2, nsAutoArrayPtr<BluetoothProperty>& aArg3)
-{
-  /* Read status */
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read number of properties */
-  uint8_t numProperties;
-  rv = UnpackPDU(aPDU, numProperties);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aArg2 = numProperties;
-
-  /* Read properties array */
-  UnpackArray<BluetoothProperty> properties(aArg3, aArg2);
-  return UnpackPDU(aPDU, properties);
-}
-
-template<>
-inline nsresult
-UnpackPDU<nsString, nsString, uint32_t, 0x01, 0x86>(
-  BluetoothDaemonPDU& aPDU,
-  nsString& aArg1, nsString& aArg2, uint32_t& aArg3)
-{
-  /* Read remote address */
-  nsresult rv = UnpackPDU(
-    aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read remote name */
-  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read CoD */
-  return UnpackPDU(aPDU, aArg3);
-}
-
-template<>
-inline nsresult
-UnpackPDU<BluetoothStatus, nsString, BluetoothBondState, 0x01, 0x88>(
-  BluetoothDaemonPDU& aPDU,
-  BluetoothStatus& aArg1, nsString& aArg2, BluetoothBondState& aArg3)
-{
-  /* Read status */
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read remote address */
-  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read bond state */
-  return UnpackPDU(aPDU, aArg3);
-}
-
-template<>
-inline nsresult
-UnpackPDU<BluetoothStatus, nsString, bool, 0x01, 0x89>(
-  BluetoothDaemonPDU& aPDU,
-  BluetoothStatus& aArg1, nsString& aArg2, bool& aArg3)
-{
-  /* Read status */
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read remote address */
-  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read ACL state */
-  return UnpackPDU(aPDU, UnpackConversion<BluetoothAclState, bool>(aArg3));
-}
-
-template<>
-inline nsresult
-UnpackPDU<uint16_t, nsAutoArrayPtr<uint8_t>, uint8_t, 0x01, 0x8a>(
-  BluetoothDaemonPDU& aPDU,
-  uint16_t& aArg1, nsAutoArrayPtr<uint8_t>& aArg2, uint8_t& aArg3)
-{
-  /* Read opcode */
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read length */
-  rv = UnpackPDU(aPDU, aArg3);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read data */
-  return UnpackPDU(aPDU, UnpackArray<uint8_t>(aArg2, aArg3));
-}
-
-template<typename T1, typename T2, typename T3, typename T4,
-         uint8_t Service, uint8_t Opcode>
-inline nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4)
-{
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = UnpackPDU(aPDU, aArg2);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = UnpackPDU(aPDU, aArg3);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return UnpackPDU(aPDU, aArg4);
-}
-
-template<>
-inline nsresult
-UnpackPDU<BluetoothStatus, nsString, int, nsAutoArrayPtr<BluetoothProperty>,
-          0x01, 0x83>(
-  BluetoothDaemonPDU& aPDU,
-  BluetoothStatus& aArg1, nsString& aArg2, int& aArg3,
-  nsAutoArrayPtr<BluetoothProperty>& aArg4)
-{
-  /* Read status */
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read address */
-  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read number of properties */
-  uint8_t numProperties;
-  rv = UnpackPDU(aPDU, numProperties);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  aArg3 = numProperties;
-
-  /* Read properties array */
-  UnpackArray<BluetoothProperty> properties(aArg4, aArg3);
-  return UnpackPDU(aPDU, properties);
-}
-
-template<typename T1, typename T2, typename T3, typename T4, typename T5,
-         uint8_t Service, uint8_t Opcode>
-inline nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU,
-          T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4, T5& aArg5)
-{
-  nsresult rv = UnpackPDU(aPDU, aArg1);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = UnpackPDU(aPDU, aArg2);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = UnpackPDU(aPDU, aArg3);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  rv = UnpackPDU(aPDU, aArg4);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return UnpackPDU(aPDU, aArg5);
-}
-
-template<>
-inline nsresult
-UnpackPDU<nsString, nsString, uint32_t, nsString, uint32_t, 0x01, 0x87>(
-  BluetoothDaemonPDU& aPDU,
-  nsString& aArg1, nsString& aArg2, uint32_t& aArg3,
-  nsString& aArg4, uint32_t& aArg5)
-{
-  /* Read remote address */
-  nsresult rv = UnpackPDU(
-    aPDU, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read remote name */
-  rv = UnpackPDU(aPDU, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read CoD */
-  rv = UnpackPDU(aPDU, aArg3);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read pairing variant */
-  rv = UnpackPDU(
-    aPDU, UnpackConversion<BluetoothSspPairingVariant, nsAString>(aArg4));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  /* Read passkey */
-  return UnpackPDU(aPDU, aArg5);
-}
-
 //
-// Result handling
+// Init operators
 //
 
-template <typename Obj, typename Res>
-class BluetoothDaemonInterfaceRunnable0 : public nsRunnable
+// |PDUInitOP| provides functionality for init operators that unpack PDUs.
+class PDUInitOp
 {
-public:
-  typedef BluetoothDaemonInterfaceRunnable0<Obj, Res> SelfType;
+protected:
+  PDUInitOp(BluetoothDaemonPDU& aPDU)
+  : mPDU(&aPDU)
+  { }
 
-  static already_AddRefed<SelfType> Create(
-    Obj* aObj, Res (Obj::*aMethod)())
+  BluetoothDaemonPDU& GetPDU() const
   {
-    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
-
-    return runnable.forget();
+    return *mPDU; // cannot be nullptr
   }
 
-  static void
-  Dispatch(Obj* aObj, Res (Obj::*aMethod)())
+  void WarnAboutTrailingData() const
   {
-    nsRefPtr<SelfType> runnable = Create(aObj, aMethod);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonInterfaceRunnable0::Create failed");
+    size_t size = mPDU->GetSize();
+
+    if (MOZ_LIKELY(!size)) {
       return;
     }
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
-    }
-  }
 
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    ((*mObj).*mMethod)();
-    return NS_OK;
+    uint8_t service, opcode;
+    uint16_t payloadSize;
+    mPDU->GetHeader(service, opcode, payloadSize);
+
+    BT_LOGR("Unpacked PDU of type (%x,%x) still contains %zu Bytes of data.",
+            service, opcode, size);
   }
 
 private:
-  BluetoothDaemonInterfaceRunnable0(Obj* aObj, Res (Obj::*aMethod)())
-  : mObj(aObj)
-  , mMethod(aMethod)
-  {
-    MOZ_ASSERT(mObj);
-    MOZ_ASSERT(mMethod);
-  }
-
-  nsRefPtr<Obj> mObj;
-  void (Obj::*mMethod)();
+  BluetoothDaemonPDU* mPDU; // Hold pointer to allow for constant instances
 };
 
-template <typename Obj, typename Res, typename Tin1, typename Arg1>
-class BluetoothDaemonInterfaceRunnable1 : public nsRunnable
+// |UnpackPDUInitOp| is a general-purpose init operator for all variants
+// of |BluetoothResultRunnable| and |BluetoothNotificationRunnable|. The
+// call operators of |UnpackPDUInitOp| unpack a PDU into the supplied
+// arguments.
+class UnpackPDUInitOp MOZ_FINAL : private PDUInitOp
 {
 public:
-  typedef BluetoothDaemonInterfaceRunnable1<Obj, Res, Tin1, Arg1> SelfType;
+  UnpackPDUInitOp(BluetoothDaemonPDU& aPDU)
+  : PDUInitOp(aPDU)
+  { }
 
-  template<uint8_t Service, uint8_t Opcode>
-  static already_AddRefed<SelfType> Create(
-    Obj* aObj, Res (Obj::*aMethod)(Arg1), BluetoothDaemonPDU& aPDU)
+  nsresult operator () () const
   {
-    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
-
-    if (NS_FAILED((runnable->UnpackAndSet<Service, Opcode>(aPDU)))) {
-      return nullptr;
-    }
-    return runnable.forget();
-  }
-
-  static already_AddRefed<SelfType> Create(
-    Obj* aObj, Res (Obj::*aMethod)(Arg1), const Arg1& aArg1)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod, aArg1));
-    return runnable.forget();
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  static void
-  Dispatch(Obj* aObj, Res (Obj::*aMethod)(Arg1),
-           BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable = Create<Service, Opcode>(aObj, aMethod, aPDU);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonInterfaceRunnable1::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
-    }
-  }
-
-  static void
-  Dispatch(Obj* aObj, Res (Obj::*aMethod)(Arg1), const Tin1& aArg1)
-  {
-    nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aArg1);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonInterfaceRunnable1::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
-    }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    ((*mObj).*mMethod)(mArg1);
+    WarnAboutTrailingData();
     return NS_OK;
   }
 
-private:
-  BluetoothDaemonInterfaceRunnable1(Obj* aObj, Res (Obj::*aMethod)(Arg1))
-  : mObj(aObj)
-  , mMethod(aMethod)
+  template<typename T1>
+  nsresult operator () (T1& aArg1) const
   {
-    MOZ_ASSERT(mObj);
-    MOZ_ASSERT(mMethod);
-  }
-
-  BluetoothDaemonInterfaceRunnable1(Obj* aObj, Res (Obj::*aMethod)(Arg1),
-                                    const Tin1& aArg1)
-  : mObj(aObj)
-  , mMethod(aMethod)
-  , mArg1(aArg1)
-  {
-    MOZ_ASSERT(mObj);
-    MOZ_ASSERT(mMethod);
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  nsresult
-  UnpackAndSet(BluetoothDaemonPDU& aPDU)
-  {
-    return UnpackPDU<Tin1, Service, Opcode>(aPDU, mArg1);
-  }
-
-  nsRefPtr<Obj> mObj;
-  Res (Obj::*mMethod)(Arg1);
-  Tin1 mArg1;
-};
-
-template <typename Obj, typename Res,
-          typename Tin1, typename Tin2, typename Tin3,
-          typename Arg1, typename Arg2, typename Arg3>
-class BluetoothDaemonInterfaceRunnable3 : public nsRunnable
-{
-public:
-  typedef BluetoothDaemonInterfaceRunnable3<Obj, Res,
-                                            Tin1, Tin2, Tin3,
-                                            Arg1, Arg2, Arg3> SelfType;
-
-  template<uint8_t Service, uint8_t Opcode>
-  static already_AddRefed<SelfType> Create(
-    Obj* aObj, Res (Obj::*aMethod)(Arg1, Arg2, Arg3), BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod));
-
-    if (NS_FAILED((runnable->UnpackAndSet<Service, Opcode>(aPDU)))) {
-      return nullptr;
-    }
-    return runnable.forget();
-  }
-
-  static already_AddRefed<SelfType> Create(
-    Obj* aObj, Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
-    const Tin1& aArg1, const Tin2& aArg2, const Tin3& aArg3)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aObj, aMethod,
-                                             aArg1, aArg2, aArg3));
-    return runnable.forget();
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  static void
-  Dispatch(Obj* aObj, Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
-           BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable = Create<Service, Opcode>(aObj, aMethod, aPDU);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonInterfaceRunnable3::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
+    nsresult rv = UnpackPDU(GetPDU(), aArg1);
     if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+      return rv;
     }
-  }
-
-  static void
-  Dispatch(Obj* aObj, Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
-           const Tin1& aArg1, const Tin2& aArg2, const Tin3& aArg3)
-  {
-    nsRefPtr<SelfType> runnable = Create(aObj, aMethod, aArg1, aArg2, aArg3);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonInterfaceRunnable3::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
-    }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    ((*mObj).*mMethod)(mArg1, mArg2, mArg3);
+    WarnAboutTrailingData();
     return NS_OK;
   }
 
-private:
-  BluetoothDaemonInterfaceRunnable3(Obj* aObj,
-                                    Res (Obj::*aMethod)(Arg1, Arg2, Arg3))
-  : mObj(aObj)
-  , mMethod(aMethod)
+  template<typename T1, typename T2>
+  nsresult operator () (T1& aArg1, T2& aArg2) const
   {
-    MOZ_ASSERT(mObj);
-    MOZ_ASSERT(mMethod);
-  }
+    BluetoothDaemonPDU& pdu = GetPDU();
 
-  BluetoothDaemonInterfaceRunnable3(Obj* aObj,
-                                    Res (Obj::*aMethod)(Arg1, Arg2, Arg3),
-                                    const Tin1& aArg1, const Tin2& aArg2,
-                                    const Tin3& aArg3)
-  : mObj(aObj)
-  , mMethod(aMethod)
-  , mArg1(aArg1)
-  , mArg2(aArg2)
-  , mArg3(aArg3)
-  {
-    MOZ_ASSERT(mObj);
-    MOZ_ASSERT(mMethod);
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  nsresult
-  UnpackAndSet(BluetoothDaemonPDU& aPDU)
-  {
-    return UnpackPDU<Tin1, Tin2, Tin3, Service, Opcode>(aPDU,
-                                                        mArg1, mArg2,
-                                                        mArg3);
-  }
-
-  nsRefPtr<Obj> mObj;
-  Res (Obj::*mMethod)(Arg1, Arg2, Arg3);
-  Tin1 mArg1;
-  Tin2 mArg2;
-  Tin3 mArg3;
-};
-
-//
-// Notification handling
-//
-
-template <typename ObjectWrapper, typename Res>
-class BluetoothDaemonNotificationRunnable0 : public nsRunnable
-{
-public:
-  typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothDaemonNotificationRunnable0<ObjectWrapper, Res> SelfType;
-
-  static already_AddRefed<SelfType> Create(Res (ObjectType::*aMethod)())
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
-
-    return runnable.forget();
-  }
-
-  static void
-  Dispatch(Res (ObjectType::*aMethod)())
-  {
-    nsRefPtr<SelfType> runnable = Create(aMethod);
-
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonNotificationRunnable0::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
+    nsresult rv = UnpackPDU(pdu, aArg1);
     if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+      return rv;
     }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    ObjectType* obj = ObjectWrapper::GetInstance();
-
-    if (!obj) {
-      BT_WARNING("Notification handler not initialized");
-    } else {
-      ((*obj).*mMethod)();
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    WarnAboutTrailingData();
     return NS_OK;
   }
 
-private:
-  BluetoothDaemonNotificationRunnable0(Res (ObjectType::*aMethod)())
-  : mMethod(aMethod)
+  template<typename T1, typename T2, typename T3>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3) const
   {
-    MOZ_ASSERT(mMethod);
-  }
+    BluetoothDaemonPDU& pdu = GetPDU();
 
-  Res (ObjectType::*mMethod)();
-};
-
-template <typename ObjectWrapper, typename Res,
-          typename Tin1, typename Arg1=Tin1>
-class BluetoothDaemonNotificationRunnable1 : public nsRunnable
-{
-public:
-  typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothDaemonNotificationRunnable1<ObjectWrapper, Res,
-                                               Tin1, Arg1> SelfType;
-
-  template<uint8_t Service, uint8_t Opcode>
-  static already_AddRefed<SelfType> Create(
-    Res (ObjectType::*aMethod)(Arg1), BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
-
-    if (NS_FAILED((runnable->UnpackAndSet<Service, Opcode>(aPDU)))) {
-      return nullptr;
-    }
-    return runnable.forget();
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  static void
-  Dispatch(Res (ObjectType::*aMethod)(Arg1), BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable = Create<Service, Opcode>(aMethod, aPDU);
-
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonNotificationRunnable1::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
+    nsresult rv = UnpackPDU(pdu, aArg1);
     if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+      return rv;
     }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    ObjectType* obj = ObjectWrapper::GetInstance();
-
-    if (!obj) {
-      BT_WARNING("Notification handler not initialized");
-    } else {
-      ((*obj).*mMethod)(mArg1);
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
     return NS_OK;
   }
 
-private:
-  BluetoothDaemonNotificationRunnable1(Res (ObjectType::*aMethod)(Arg1))
-  : mMethod(aMethod)
+  template<typename T1, typename T2, typename T3, typename T4>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4) const
   {
-    MOZ_ASSERT(mMethod);
-  }
+    BluetoothDaemonPDU& pdu = GetPDU();
 
-  template<uint8_t Service, uint8_t Opcode>
-  nsresult
-  UnpackAndSet(BluetoothDaemonPDU& aPDU)
-  {
-    return UnpackPDU<Tin1, Service, Opcode>(aPDU, mArg1);
-  }
-
-  Res (ObjectType::*mMethod)(Arg1);
-  Tin1 mArg1;
-};
-
-template <typename ObjectWrapper, typename Res,
-          typename Tin1, typename Tin2,
-          typename Arg1=Tin1, typename Arg2=Tin2>
-class BluetoothDaemonNotificationRunnable2 : public nsRunnable
-{
-public:
-  typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothDaemonNotificationRunnable2<ObjectWrapper, Res,
-                                               Tin1, Tin2,
-                                               Arg1, Arg2> SelfType;
-
-  template<uint8_t Service, uint8_t Opcode>
-  static already_AddRefed<SelfType> Create(
-    Res (ObjectType::*aMethod)(Arg1, Arg2), BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
-
-    if (NS_FAILED((runnable->UnpackAndSet<Service, Opcode>(aPDU)))) {
-      return nullptr;
-    }
-    return runnable.forget();
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  static void
-  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2),
-           BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable = Create<Service, Opcode>(aMethod, aPDU);
-
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonNotificationRunnable2::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
+    nsresult rv = UnpackPDU(pdu, aArg1);
     if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+      return rv;
     }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    ObjectType* obj = ObjectWrapper::GetInstance();
-
-    if (!obj) {
-      BT_WARNING("Notification handler not initialized");
-    } else {
-      ((*obj).*mMethod)(mArg1, mArg2);
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
     return NS_OK;
   }
 
-private:
-  BluetoothDaemonNotificationRunnable2(
-    Res (ObjectType::*aMethod)(Arg1, Arg2))
-  : mMethod(aMethod)
+  template<typename T1, typename T2, typename T3, typename T4, typename T5>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4,
+                        T5& aArg5) const
   {
-    MOZ_ASSERT(mMethod);
-  }
+    BluetoothDaemonPDU& pdu = GetPDU();
 
-  template<uint8_t Service, uint8_t Opcode>
-  nsresult
-  UnpackAndSet(BluetoothDaemonPDU& aPDU)
-  {
-    return UnpackPDU<Tin1, Tin2, Service, Opcode>(aPDU, mArg1, mArg2);
-  }
-
-  Res (ObjectType::*mMethod)(Arg1, Arg2);
-  Tin1 mArg1;
-  Tin2 mArg2;
-};
-
-template <typename ObjectWrapper, typename Res,
-          typename Tin1, typename Tin2, typename Tin3,
-          typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3>
-class BluetoothDaemonNotificationRunnable3 : public nsRunnable
-{
-public:
-  typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothDaemonNotificationRunnable3<ObjectWrapper, Res,
-                                               Tin1, Tin2, Tin3,
-                                               Arg1, Arg2, Arg3> SelfType;
-
-  template<uint8_t Service, uint8_t Opcode>
-  static already_AddRefed<SelfType> Create(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3),
-    BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
-
-    if (NS_FAILED((runnable->UnpackAndSet<Service, Opcode>(aPDU)))) {
-      return nullptr;
-    }
-    return runnable.forget();
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  static void
-  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3),
-           BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable = Create<Service, Opcode>(aMethod, aPDU);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonNotificationRunnable3::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
+    nsresult rv = UnpackPDU(pdu, aArg1);
     if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
+      return rv;
     }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    ObjectType* obj = ObjectWrapper::GetInstance();
-
-    if (!obj) {
-      BT_WARNING("Notification handler not initialized");
-    } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3);
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
     return NS_OK;
   }
-
-private:
-  BluetoothDaemonNotificationRunnable3(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3))
-  : mMethod(aMethod)
-  {
-    MOZ_ASSERT(mMethod);
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  nsresult
-  UnpackAndSet(BluetoothDaemonPDU& aPDU)
-  {
-    return UnpackPDU<Tin1, Tin2, Tin3, Service, Opcode>(aPDU,
-                                                        mArg1, mArg2,
-                                                        mArg3);
-  }
-
-  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3);
-  Tin1 mArg1;
-  Tin2 mArg2;
-  Tin3 mArg3;
-};
-
-template <typename ObjectWrapper, typename Res,
-          typename Tin1, typename Tin2, typename Tin3, typename Tin4,
-          typename Arg1=Tin1, typename Arg2=Tin2,
-          typename Arg3=Tin3, typename Arg4=Tin4>
-class BluetoothDaemonNotificationRunnable4 : public nsRunnable
-{
-public:
-  typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothDaemonNotificationRunnable4<ObjectWrapper, Res,
-    Tin1, Tin2, Tin3, Tin4, Arg1, Arg2, Arg3, Arg4> SelfType;
-
-  template<uint8_t Service, uint8_t Opcode>
-  static already_AddRefed<SelfType> Create(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4),
-    BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
-
-    if (NS_FAILED((runnable->UnpackAndSet<Service, Opcode>(aPDU)))) {
-      return nullptr;
-    }
-    return runnable.forget();
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  static void
-  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4),
-           BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable = Create<Service, Opcode>(aMethod, aPDU);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonNotificationRunnable4::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
-    }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    ObjectType* obj = ObjectWrapper::GetInstance();
-
-    if (!obj) {
-      BT_WARNING("Notification handler not initialized");
-    } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4);
-    }
-    return NS_OK;
-  }
-
-private:
-  BluetoothDaemonNotificationRunnable4(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4))
-  : mMethod(aMethod)
-  {
-    MOZ_ASSERT(mMethod);
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  nsresult
-  UnpackAndSet(BluetoothDaemonPDU& aPDU)
-  {
-    return UnpackPDU<Tin1, Tin2, Tin3, Tin4, Service, Opcode>(aPDU,
-                                                              mArg1, mArg2,
-                                                              mArg3, mArg4);
-  }
-
-  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4);
-  Tin1 mArg1;
-  Tin2 mArg2;
-  Tin3 mArg3;
-  Tin4 mArg4;
-};
-
-template <typename ObjectWrapper, typename Res,
-          typename Tin1, typename Tin2, typename Tin3,
-          typename Tin4, typename Tin5,
-          typename Arg1=Tin1, typename Arg2=Tin2, typename Arg3=Tin3,
-          typename Arg4=Tin4, typename Arg5=Tin5>
-class BluetoothDaemonNotificationRunnable5 : public nsRunnable
-{
-public:
-  typedef typename ObjectWrapper::ObjectType  ObjectType;
-  typedef BluetoothDaemonNotificationRunnable5<ObjectWrapper, Res,
-    Tin1, Tin2, Tin3, Tin4, Tin5, Arg1, Arg2, Arg3, Arg4, Arg5> SelfType;
-
-  template<uint8_t Service, uint8_t Opcode>
-  static already_AddRefed<SelfType> Create(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5),
-    BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable(new SelfType(aMethod));
-
-    if (NS_FAILED((runnable->UnpackAndSet<Service, Opcode>(aPDU)))) {
-      return nullptr;
-    }
-    return runnable.forget();
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  static void
-  Dispatch(Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5),
-           BluetoothDaemonPDU& aPDU)
-  {
-    nsRefPtr<SelfType> runnable = Create<Service, Opcode>(aMethod, aPDU);
-    if (!runnable) {
-      BT_WARNING("BluetoothDaemonNotificationRunnable5::Create failed");
-      return;
-    }
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    if (NS_FAILED(rv)) {
-      BT_WARNING("NS_DispatchToMainThread failed: %X", rv);
-    }
-  }
-
-  NS_METHOD
-  Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    ObjectType* obj = ObjectWrapper::GetInstance();
-
-    if (!obj) {
-      BT_WARNING("Notification handler not initialized");
-    } else {
-      ((*obj).*mMethod)(mArg1, mArg2, mArg3, mArg4, mArg5);
-    }
-    return NS_OK;
-  }
-
-private:
-  BluetoothDaemonNotificationRunnable5(
-    Res (ObjectType::*aMethod)(Arg1, Arg2, Arg3, Arg4, Arg5))
-  : mMethod(aMethod)
-  {
-    MOZ_ASSERT(mMethod);
-  }
-
-  template<uint8_t Service, uint8_t Opcode>
-  nsresult
-  UnpackAndSet(BluetoothDaemonPDU& aPDU)
-  {
-    return UnpackPDU<Tin1, Tin2, Tin3, Tin4, Tin5, Service, Opcode>(aPDU,
-                                                                    mArg1,
-                                                                    mArg2,
-                                                                    mArg3,
-                                                                    mArg4,
-                                                                    mArg5);
-  }
-
-  Res (ObjectType::*mMethod)(Arg1, Arg2, Arg3, Arg4, Arg5);
-  Tin1 mArg1;
-  Tin2 mArg2;
-  Tin3 mArg3;
-  Tin4 mArg4;
-  Tin5 mArg5;
 };
 
 END_BLUETOOTH_NAMESPACE

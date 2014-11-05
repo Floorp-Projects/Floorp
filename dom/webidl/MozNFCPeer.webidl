@@ -20,4 +20,9 @@ interface MozNFCPeer {
 partial interface MozNFCPeer {
   [ChromeOnly]
   attribute DOMString session;
+
+  /**
+   * Indicate if this peer is already lost.
+   */
+  readonly attribute boolean isLost;
 };

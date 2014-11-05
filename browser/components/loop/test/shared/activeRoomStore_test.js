@@ -3,7 +3,7 @@
 var expect = chai.expect;
 var sharedActions = loop.shared.actions;
 
-describe("loop.store.LocalRoomStore", function () {
+describe("loop.store.ActiveRoomStore", function () {
   "use strict";
 
   var sandbox, dispatcher;
@@ -20,13 +20,13 @@ describe("loop.store.LocalRoomStore", function () {
   describe("#constructor", function() {
     it("should throw an error if the dispatcher is missing", function() {
       expect(function() {
-        new loop.store.LocalRoomStore({mozLoop: {}});
+        new loop.store.ActiveRoomStore({mozLoop: {}});
       }).to.Throw(/dispatcher/);
     });
 
     it("should throw an error if mozLoop is missing", function() {
       expect(function() {
-        new loop.store.LocalRoomStore({dispatcher: dispatcher});
+        new loop.store.ActiveRoomStore({dispatcher: dispatcher});
       }).to.Throw(/mozLoop/);
     });
   });
@@ -41,7 +41,7 @@ describe("loop.store.LocalRoomStore", function () {
         rooms: { get: sandbox.stub() }
       };
 
-      store = new loop.store.LocalRoomStore(
+      store = new loop.store.ActiveRoomStore(
         {mozLoop: fakeMozLoop, dispatcher: dispatcher});
       fakeMozLoop.rooms.get.
         withArgs(fakeToken).
@@ -64,7 +64,7 @@ describe("loop.store.LocalRoomStore", function () {
       }));
     });
 
-    it("should set localRoomId on the store from the action data",
+    it("should set roomToken on the store from the action data",
       function(done) {
 
         store.once("change", function () {

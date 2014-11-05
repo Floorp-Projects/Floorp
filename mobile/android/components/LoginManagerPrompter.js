@@ -108,7 +108,7 @@ LoginManagerPrompter.prototype = {
         this.log("===== initialized =====");
     },
 
-    setE10sData : function (aBrowser) {
+    setE10sData : function (aBrowser, aOpener) {
         throw new Error("This should be filled in when Android is multiprocess");
     },
 

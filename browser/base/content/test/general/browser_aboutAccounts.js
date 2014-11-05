@@ -331,6 +331,38 @@ let gTests = [
     is(url, sign_up_url + "&entrypoint=abouthome", "entrypoint=abouthome got the expected URL");
   },
 },
+{
+  desc: "about:accounts URL params should be copied to remote URL params " +
+        "when remote URL has no URL params, except for 'action'",
+  teardown() {
+    gBrowser.removeCurrentTab();
+  },
+  run: function* () {
+    let signupURL = "https://example.com/";
+    setPref("identity.fxaccounts.remote.signup.uri", signupURL);
+    let queryStr = "email=foo%40example.com&foo=bar&baz=quux";
+    let [tab, url] =
+      yield promiseNewTabWithIframeLoadEvent("about:accounts?" + queryStr +
+                                             "&action=action");
+    is(url, signupURL + "?" + queryStr, "URL params are copied to signup URL");
+  },
+},
+{
+  desc: "about:accounts URL params should be copied to remote URL params " +
+        "when remote URL already has some URL params, except for 'action'",
+  teardown() {
+    gBrowser.removeCurrentTab();
+  },
+  run: function* () {
+    let signupURL = "https://example.com/?param";
+    setPref("identity.fxaccounts.remote.signup.uri", signupURL);
+    let queryStr = "email=foo%40example.com&foo=bar&baz=quux";
+    let [tab, url] =
+      yield promiseNewTabWithIframeLoadEvent("about:accounts?" + queryStr +
+                                             "&action=action");
+    is(url, signupURL + "&" + queryStr, "URL params are copied to signup URL");
+  },
+},
 ]; // gTests
 
 function test()

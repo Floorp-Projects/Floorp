@@ -1363,6 +1363,13 @@ nsGonkCameraControl::SetVideoConfiguration(const Configuration& aConfig)
 {
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
+  // The application may cache an old configuration and already have
+  // a desired recorder profile without checking the capabilities first
+  nsresult rv = LoadRecorderProfiles();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   RecorderProfile* profile;
   if (!mRecorderProfiles.Get(aConfig.mRecorderProfile, &profile)) {
     DOM_CAMERA_LOGE("Recorder profile '%s' is not supported\n",
