@@ -714,15 +714,25 @@ function trimURL(aURL) {
   // nsIURIFixup::createFixupURI with the result will produce a different URI.
 
   // remove single trailing slash for http/https/ftp URLs
-  let rv = aURL.replace(/^((?:http|https|ftp):\/\/[^/]+)\/$/, "$1");
+  let url = aURL.replace(/^((?:http|https|ftp):\/\/[^/]+)\/$/, "$1");
 
-  // Strip the leading http:// only if the host has at least one '.' or
-  // looks like an ipv6 ip:
-  let hostMatch = rv.match(/^http:\/\/([^\/]*)/);
-  let ipv6Regex = /\[[\da-f:]*\]/;
-  if (hostMatch && (hostMatch[1].contains(".") || ipv6Regex.test(hostMatch[1]))) {
-    /* remove http:// unless the host starts with "ftp\d*\." or contains "@" */
-    rv = rv.replace(/^http:\/\/((?!ftp\d*\.)[^\/@]+(?:\/|$))/, "$1");
+  // remove http://
+  if (!url.startsWith("http://")) {
+    return url;
   }
-  return rv;
+  let urlWithoutProtocol = url.substring(7);
+
+  let flags = Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP |
+              Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
+  let fixedUpURL = Services.uriFixup.createFixupURI(urlWithoutProtocol, flags);
+  let expectedURLSpec;
+  try {
+    expectedURLSpec = makeURI(aURL).spec;
+  } catch (ex) {
+    return url;
+  }
+  if (fixedUpURL.spec == expectedURLSpec) {
+    return urlWithoutProtocol;
+  }
+  return url;
 }
