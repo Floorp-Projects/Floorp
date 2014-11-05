@@ -13,13 +13,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
-#include "nsSurfaceTexture.h"
-
-namespace mozilla {
-namespace gl {
-class SurfaceStream;
-}
-}
+#include "AndroidSurfaceTexture.h"
 
 namespace mozilla {
 namespace layers {
@@ -80,7 +74,7 @@ class SurfaceTextureClient : public TextureClient
 {
 public:
   SurfaceTextureClient(TextureFlags aFlags,
-                       nsSurfaceTexture* aSurfTex,
+                       gl::AndroidSurfaceTexture* aSurfTex,
                        gfx::IntSize aSize,
                        bool aInverted);
 
@@ -119,7 +113,7 @@ public:
   }
 
 protected:
-  const nsRefPtr<nsSurfaceTexture> mSurfTex;
+  const RefPtr<gl::AndroidSurfaceTexture> mSurfTex;
   const gfx::IntSize mSize;
   bool mIsLocked;
 };
