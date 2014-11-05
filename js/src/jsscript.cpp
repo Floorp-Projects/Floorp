@@ -92,9 +92,9 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
     MOZ_ASSERT(numVars <= LOCALNO_LIMIT);
     MOZ_ASSERT(numBlockScoped <= LOCALNO_LIMIT);
     MOZ_ASSERT(numBodyLevelLexicals <= LOCALNO_LIMIT);
-    uint64_t totalSlots = uint64_t(numVars) +
-                          uint64_t(numBodyLevelLexicals) +
-                          uint64_t(numBlockScoped);
+    mozilla::DebugOnly<uint64_t> totalSlots = uint64_t(numVars) +
+                                              uint64_t(numBodyLevelLexicals) +
+                                              uint64_t(numBlockScoped);
     MOZ_ASSERT(totalSlots <= LOCALNO_LIMIT);
     MOZ_ASSERT(UINT32_MAX - numArgs >= totalSlots);
 

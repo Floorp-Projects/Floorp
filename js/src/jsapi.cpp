@@ -5599,6 +5599,7 @@ JS::GetWellKnownSymbol(JSContext *cx, JS::SymbolCode which)
     return cx->wellKnownSymbols().get(uint32_t(which));
 }
 
+#ifdef DEBUG
 static bool
 PropertySpecNameIsDigits(const char *s) {
     if (JS::PropertySpecNameIsSymbol(s))
@@ -5611,6 +5612,7 @@ PropertySpecNameIsDigits(const char *s) {
     }
     return true;
 }
+#endif // DEBUG
 
 JS_PUBLIC_API(bool)
 JS::PropertySpecNameEqualsId(const char *name, HandleId id)
