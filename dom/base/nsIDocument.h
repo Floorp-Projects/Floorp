@@ -136,8 +136,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x6bbf1955, 0xd9c4, 0x4d61, \
- { 0xbf, 0x75, 0x1b, 0xba, 0x55, 0xf7, 0x99, 0xc2 } }
+{ 0x1f343423, 0x957c, 0x4da3, \
+  { 0xaa, 0xa3, 0x07, 0x37, 0x54, 0x3e, 0x79, 0x2a } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -2344,7 +2344,7 @@ public:
                      mozilla::ErrorResult& rv);
   nsINode* CreateNSResolver(nsINode& aNodeResolver);
   already_AddRefed<mozilla::dom::XPathResult>
-    Evaluate(JSContext* aCx, const nsAString& aExpression, nsINode* aContextNode,
+    Evaluate(JSContext* aCx, const nsAString& aExpression, nsINode& aContextNode,
              mozilla::dom::XPathNSResolver* aResolver, uint16_t aType,
              JS::Handle<JSObject*> aResult, mozilla::ErrorResult& rv);
   // Touch event handlers already on nsINode

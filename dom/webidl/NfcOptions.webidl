@@ -22,6 +22,7 @@ dictionary NfcEventOptions
   DOMString type = "";
 
   long status;
+  NfcErrorMessage errorMsg;
   long sessionId;
   DOMString requestId;
 
@@ -31,9 +32,10 @@ dictionary NfcEventOptions
   sequence<NFCTechType> techList;
   sequence<MozNDEFRecordOptions> records;
 
+  NFCTagType tagType;
+  long maxNDEFSize;
   boolean isReadOnly;
-  boolean canBeMadeReadOnly;
-  long maxSupportedLength;
+  boolean isFormatable;
 
   long powerLevel;
 

@@ -150,7 +150,12 @@ enum nsChangeHint {
    * different data would be cached information that would be re-calculated
    * to the same values, such as nsStyleBorder::mSubImages.)
    */
-  nsChangeHint_NeutralChange = 0x100000
+  nsChangeHint_NeutralChange = 0x100000,
+
+  /**
+   * This will cause rendering observers to be invalidated.
+   */
+  nsChangeHint_InvalidateRenderingObservers = 0x200000
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
   // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
@@ -205,6 +210,7 @@ inline bool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
 #define nsChangeHint_Hints_NotHandledForDescendants nsChangeHint( \
           nsChangeHint_UpdateTransformLayer | \
           nsChangeHint_UpdateEffects | \
+          nsChangeHint_InvalidateRenderingObservers | \
           nsChangeHint_UpdateOpacityLayer | \
           nsChangeHint_UpdateOverflow | \
           nsChangeHint_UpdatePostTransformOverflow | \
@@ -219,6 +225,7 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
   nsChangeHint result = nsChangeHint(aChangeHint & (
     nsChangeHint_UpdateTransformLayer |
     nsChangeHint_UpdateEffects |
+    nsChangeHint_InvalidateRenderingObservers |
     nsChangeHint_UpdateOpacityLayer |
     nsChangeHint_UpdateOverflow |
     nsChangeHint_UpdatePostTransformOverflow |

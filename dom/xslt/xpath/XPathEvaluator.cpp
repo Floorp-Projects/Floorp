@@ -175,16 +175,16 @@ XPathEvaluator::Constructor(const GlobalObject& aGlobal,
 
 already_AddRefed<XPathResult>
 XPathEvaluator::Evaluate(JSContext* aCx, const nsAString& aExpression,
-                         nsINode* aContextNode,
-                         XPathNSResolver* aResolver, uint16_t aType,
-                         JS::Handle<JSObject*> aResult, ErrorResult& rv)
+                         nsINode& aContextNode, XPathNSResolver* aResolver,
+                         uint16_t aType, JS::Handle<JSObject*> aResult,
+                         ErrorResult& rv)
 {
     nsAutoPtr<XPathExpression> expression(CreateExpression(aExpression,
                                                            aResolver, rv));
     if (rv.Failed()) {
         return nullptr;
     }
-    return expression->Evaluate(aCx, *aContextNode, aType, aResult, rv);
+    return expression->Evaluate(aCx, aContextNode, aType, aResult, rv);
 }
 
 
