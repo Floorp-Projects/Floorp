@@ -101,13 +101,15 @@ public:
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags) = 0;
 
+  // Requests the Reader to seek and call OnSeekCompleted on the callback
+  // once completed.
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime
   // is the current playback position in microseconds.
-  virtual nsresult Seek(int64_t aTime,
-                        int64_t aStartTime,
-                        int64_t aEndTime,
-                        int64_t aCurrentTime) = 0;
+  virtual void Seek(int64_t aTime,
+                    int64_t aStartTime,
+                    int64_t aEndTime,
+                    int64_t aCurrentTime) = 0;
 
   // Called to move the reader into idle state. When the reader is
   // created it is assumed to be active (i.e. not idle). When the media
@@ -275,6 +277,8 @@ public:
   // fulfiled. The reason is passed as aReason.
   virtual void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason) = 0;
 
+  virtual void OnSeekCompleted(nsresult aResult) = 0;
+
   // Called during shutdown to break any reference cycles.
   virtual void BreakCycles() = 0;
 
@@ -298,6 +302,7 @@ public:
   virtual void OnAudioDecoded(AudioData* aSample) MOZ_OVERRIDE;
   virtual void OnVideoDecoded(VideoData* aSample) MOZ_OVERRIDE {}
   virtual void OnNotDecoded(MediaData::Type aType, NotDecodedReason aReason) MOZ_OVERRIDE;
+  virtual void OnSeekCompleted(nsresult aResult) MOZ_OVERRIDE {};
   virtual void BreakCycles() MOZ_OVERRIDE {};
   void Reset();
 
