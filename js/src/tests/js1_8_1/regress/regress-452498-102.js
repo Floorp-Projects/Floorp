@@ -32,9 +32,9 @@ function test()
   function f() {
     "" + (function(){
         for( ; [function(){}] ; x = 0)
-          with({x: ""})
+          with({x: ""}) {
             const x = []
-            });
+           }});
   }
   f();
 

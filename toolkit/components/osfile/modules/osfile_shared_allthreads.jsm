@@ -19,15 +19,17 @@
 
 // Boilerplate used to be able to import this module both from the main
 // thread and from worker threads.
+
+// Since const is lexically scoped, hoist the
+// conditionally-useful definition ourselves.
+const Cu = typeof Components != "undefined" ? Components.utils : undefined;
+const Ci = typeof Components != "undefined" ? Components.interfaces : undefined;
+const Cc = typeof Components != "undefined" ? Components.classes : undefined;
 if (typeof Components != "undefined") {
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
   // loader.
   this.exports = {};
-
-  const Cu = Components.utils;
-  const Ci = Components.interfaces;
-  const Cc = Components.classes;
 
   Cu.import("resource://gre/modules/Services.jsm", this);
 }

@@ -101,15 +101,6 @@ public:
      **/
 
     /**
-     * Stroke the current path using the current settings (such as line
-     * width and color).
-     * A path is set up using functions such as Line, Rectangle and Arc.
-     *
-     * Does not consume the current path.
-     */
-    void Stroke();
-    void Stroke(const Pattern& aPattern);
-    /**
      * Fill the current path according to the current settings.
      *
      * Does not consume the current path.
@@ -368,13 +359,6 @@ public:
      ** Line Properties
      **/
 
-    typedef enum {
-        gfxLineSolid,
-        gfxLineDashed,
-        gfxLineDotted
-    } gfxLineType;
-
-    void SetDash(gfxLineType ltype);
     void SetDash(gfxFloat *dashes, int ndash, gfxFloat offset);
     // Return true if dashing is set, false if it's not enabled or the
     // context is in an error state.  |offset| can be nullptr to mean

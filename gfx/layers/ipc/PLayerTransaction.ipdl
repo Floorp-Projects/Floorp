@@ -84,7 +84,7 @@ parent:
   // The next time the layer tree is composited, add this async scroll offset in
   // CSS pixels for the given ViewID.
   // Useful for testing rendering of async scrolling.
-  async SetAsyncScrollOffset(ViewID id, int32_t x, int32_t y);
+  sync SetAsyncScrollOffset(ViewID id, int32_t x, int32_t y);
 
   // Drop any front buffers that might be retained on the compositor
   // side.

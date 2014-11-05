@@ -405,6 +405,32 @@ ConvertToStringPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction
 
 template bool ConvertToStringPolicy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
 template bool ConvertToStringPolicy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+template bool ConvertToStringPolicy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins);
+
+template <unsigned Op>
+bool
+ConvertToObjectOrNullPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
+{
+    MDefinition *in = ins->getOperand(Op);
+    if (in->type() == MIRType_Object ||
+        in->type() == MIRType_Null ||
+        in->type() == MIRType_ObjectOrNull)
+    {
+        return true;
+    }
+
+    MToObjectOrNull *replace = MToObjectOrNull::New(alloc, in);
+    ins->block()->insertBefore(ins, replace);
+    ins->replaceOperand(Op, replace);
+
+    if (!BoxPolicy<0>::staticAdjustInputs(alloc, replace))
+        return false;
+
+    return true;
+}
+
+template bool ConvertToObjectOrNullPolicy<2>::staticAdjustInputs(TempAllocator &alloc,
+                                                                 MInstruction *ins);
 
 template <unsigned Op>
 bool
@@ -941,6 +967,8 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     _(BoxPolicy<0>)                                                     \
     _(ConvertToInt32Policy<0>)                                          \
     _(ConvertToStringPolicy<0>)                                         \
+    _(ConvertToStringPolicy<2>)                                         \
+    _(ConvertToObjectOrNullPolicy<2>)                                   \
     _(DoublePolicy<0>)                                                  \
     _(FloatingPointPolicy<0>)                                           \
     _(IntPolicy<0>)                                                     \

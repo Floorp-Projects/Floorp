@@ -1004,6 +1004,31 @@ CodeGenerator::visitValueToString(LValueToString *lir)
     return true;
 }
 
+typedef JSObject *(*ToObjectFn)(JSContext *, HandleValue, bool);
+static const VMFunction ToObjectInfo = FunctionInfo<ToObjectFn>(ToObjectSlow);
+
+bool
+CodeGenerator::visitValueToObjectOrNull(LValueToObjectOrNull *lir)
+{
+    ValueOperand input = ToValue(lir, LValueToObjectOrNull::Input);
+    Register output = ToRegister(lir->output());
+
+    OutOfLineCode *ool = oolCallVM(ToObjectInfo, lir, (ArgList(), input, Imm32(0)),
+                                   StoreRegisterTo(output));
+    if (!ool)
+        return false;
+
+    Label done;
+    masm.branchTestObject(Assembler::Equal, input, &done);
+    masm.branchTestNull(Assembler::NotEqual, input, ool->entry());
+
+    masm.bind(&done);
+    masm.unboxNonDouble(input, output);
+
+    masm.bind(ool->rejoin());
+    return true;
+}
+
 typedef JSObject *(*CloneRegExpObjectFn)(JSContext *, JSObject *);
 static const VMFunction CloneRegExpObjectInfo =
     FunctionInfo<CloneRegExpObjectFn>(CloneRegExpObject);
@@ -3919,12 +3944,14 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
     if (!branchIfInvalidated(temp, &done))
         return false;
 
-    if (mir->type() == MIRType_Object &&
+    if ((mir->type() == MIRType_Object || mir->type() == MIRType_ObjectOrNull) &&
         mir->resultTypeSet() &&
         !mir->resultTypeSet()->unknownObject())
     {
         // We have a result TypeSet, assert this object is in it.
         Label miss, ok;
+        if (mir->type() == MIRType_ObjectOrNull)
+            masm.branchPtr(Assembler::NotEqual, output, ImmWord(0), &ok);
         if (mir->resultTypeSet()->getObjectCount() > 0)
             masm.guardObjectType(output, mir->resultTypeSet(), temp, &miss);
         else
@@ -3944,11 +3971,26 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
         masm.loadJSContext(temp);
         masm.passABIArg(temp);
         masm.passABIArg(output);
-        masm.callWithABINoProfiling(mir->type() == MIRType_Object
-                                    ? JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectPtr)
-                                    : mir->type() == MIRType_String
-                                      ? JS_FUNC_TO_DATA_PTR(void *, AssertValidStringPtr)
-                                      : JS_FUNC_TO_DATA_PTR(void *, AssertValidSymbolPtr));
+
+        void *callee;
+        switch (mir->type()) {
+          case MIRType_Object:
+            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectPtr);
+            break;
+          case MIRType_ObjectOrNull:
+            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectOrNullPtr);
+            break;
+          case MIRType_String:
+            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidStringPtr);
+            break;
+          case MIRType_Symbol:
+            callee = JS_FUNC_TO_DATA_PTR(void *, AssertValidSymbolPtr);
+            break;
+          default:
+            MOZ_CRASH();
+        }
+
+        masm.callWithABINoProfiling(callee);
         restoreVolatile();
     }
 
@@ -4028,6 +4070,7 @@ CodeGenerator::emitDebugResultChecks(LInstruction *ins)
 
     switch (mir->type()) {
       case MIRType_Object:
+      case MIRType_ObjectOrNull:
       case MIRType_String:
       case MIRType_Symbol:
         return emitObjectOrStringResultChecks(ins, mir);
@@ -4449,6 +4492,30 @@ CodeGenerator::visitOutOfLineNewObject(OutOfLineNewObject *ool)
     if (!visitNewObjectVMCall(ool->lir()))
         return false;
     masm.jump(ool->rejoin());
+    return true;
+}
+
+typedef InlineTypedObject *(*NewTypedObjectFn)(JSContext *, Handle<InlineTypedObject *>, gc::InitialHeap);
+static const VMFunction NewTypedObjectInfo =
+    FunctionInfo<NewTypedObjectFn>(InlineTypedObject::createCopy);
+
+bool
+CodeGenerator::visitNewTypedObject(LNewTypedObject *lir)
+{
+    Register object = ToRegister(lir->output());
+    Register temp = ToRegister(lir->temp());
+    InlineTypedObject *templateObject = lir->mir()->templateObject();
+    gc::InitialHeap initialHeap = lir->mir()->initialHeap();
+
+    OutOfLineCode *ool = oolCallVM(NewTypedObjectInfo, lir,
+                                   (ArgList(), ImmGCPtr(templateObject), Imm32(initialHeap)),
+                                   StoreRegisterTo(object));
+    if (!ool)
+        return false;
+
+    masm.createGCObject(object, temp, templateObject, initialHeap, ool->entry());
+
+    masm.bind(ool->rejoin());
     return true;
 }
 
@@ -6658,6 +6725,45 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
 
     restoreLive(ins);
     masm.jump(ool->rejoin());
+    return true;
+}
+
+template <typename T>
+static void
+StoreUnboxedPointer(MacroAssembler &masm, T address, MIRType type, const LAllocation *value)
+{
+    masm.patchableCallPreBarrier(address, type);
+    if (value->isConstant()) {
+        Value v = *value->toConstant();
+        if (v.isMarkable()) {
+            masm.storePtr(ImmGCPtr(v.toGCThing()), address);
+        } else {
+            MOZ_ASSERT(v.isNull());
+            masm.storePtr(ImmWord(0), address);
+        }
+    } else {
+        masm.storePtr(ToRegister(value), address);
+    }
+}
+
+bool
+CodeGenerator::visitStoreUnboxedPointer(LStoreUnboxedPointer *lir)
+{
+    MOZ_ASSERT(lir->mir()->isStoreUnboxedObjectOrNull() || lir->mir()->isStoreUnboxedString());
+    MIRType type = lir->mir()->isStoreUnboxedObjectOrNull() ? MIRType_Object : MIRType_String;
+
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *index = lir->index();
+    const LAllocation *value = lir->value();
+
+    if (index->isConstant()) {
+        Address address(elements, ToInt32(index) * sizeof(uintptr_t));
+        StoreUnboxedPointer(masm, address, type, value);
+    } else {
+        BaseIndex address(elements, ToRegister(index), ScalePointer);
+        StoreUnboxedPointer(masm, address, type, value);
+    }
+
     return true;
 }
 

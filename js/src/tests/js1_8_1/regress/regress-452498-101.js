@@ -22,7 +22,7 @@ function test()
 
 // ------- Comment #101 From Gary Kwong [:nth10sd]
 
-  uneval(function(){with({functional: []}){x5, y = this;const y }});
+  uneval(function(){with({functional: []}){x5, y = this;const y = undefined }});
 // Assertion failure: strcmp(rval, with_cookie) == 0, at ../jsopcode.cpp:2567
 
   reportCompare(expect, actual, summary);
