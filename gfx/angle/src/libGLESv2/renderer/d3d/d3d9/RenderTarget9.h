@@ -20,7 +20,7 @@ class Renderer9;
 class RenderTarget9 : public RenderTarget
 {
   public:
-    RenderTarget9(Renderer *renderer, IDirect3DSurface9 *surface);
+    RenderTarget9(Renderer *renderer, IDirect3DSurface9 *surface, GLenum internalFormatOverride = 0);
     RenderTarget9(Renderer *renderer, GLsizei width, GLsizei height, GLenum internalFormat, GLsizei samples);
     virtual ~RenderTarget9();
 
