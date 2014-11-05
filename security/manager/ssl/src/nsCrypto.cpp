@@ -50,21 +50,22 @@ nsPkcs11::DeleteModule(const nsAString& aModuleName)
   }
   
   NS_ConvertUTF16toUTF8 modName(aModuleName);
+#ifndef MOZ_NO_SMART_CARDS
+  SECMODModule* module = SECMOD_FindModule(modName.get());
+  if (!module) {
+    return NS_ERROR_FAILURE;
+  }
+  nssComponent->ShutdownSmartCardThread(module);
+  SECMOD_DestroyModule(module);
+#endif
+
   int32_t modType;
   SECStatus srv = SECMOD_DeleteModule(modName.get(), &modType);
-  if (srv == SECSuccess) {
-    SECMODModule *module = SECMOD_FindModule(modName.get());
-    if (module) {
-#ifndef MOZ_NO_SMART_CARDS
-      nssComponent->ShutdownSmartCardThread(module);
-#endif
-      SECMOD_DestroyModule(module);
-    }
-    rv = NS_OK;
-  } else {
-    rv = NS_ERROR_FAILURE;
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
   }
-  return rv;
+
+  return NS_OK;
 }
 
 //Add a new PKCS11 module to the user's profile.
