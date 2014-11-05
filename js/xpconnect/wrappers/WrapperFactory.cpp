@@ -16,11 +16,9 @@
 #include "xpcprivate.h"
 #include "XPCMaps.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "JavaScriptParent.h"
 #include "jsfriendapi.h"
 #include "mozilla/Likely.h"
 #include "nsContentUtils.h"
-#include "nsXULAppAPI.h"
 
 using namespace JS;
 using namespace js;
@@ -425,12 +423,9 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     }
 
     // If this is a chrome function being exposed to content, we need to allow
-    // call (but nothing else). We allow CPOWs that purport to be function's
-    // here, but only in the content process.
+    // call (but nothing else).
     else if (originIsChrome && !targetIsChrome &&
-             (IdentifyStandardInstance(obj) == JSProto_Function ||
-              (jsipc::IsCPOW(obj) && JS::IsCallable(obj) &&
-               XRE_GetProcessType() == GeckoProcessType_Content)))
+             IdentifyStandardInstance(obj) == JSProto_Function)
     {
         wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
     }
