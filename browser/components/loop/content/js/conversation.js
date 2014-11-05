@@ -287,7 +287,7 @@ loop.conversation = (function(mozL10n) {
           if (this.state.callFailed) {
             return GenericFailureView({
               cancelCall: this.closeWindow.bind(this)}
-            )
+            );
           }
 
           document.title = mozL10n.get("conversation_has_ended");
@@ -540,7 +540,7 @@ loop.conversation = (function(mozL10n) {
       conversationStore: React.PropTypes.instanceOf(loop.store.ConversationStore)
                               .isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      localRoomStore: React.PropTypes.instanceOf(loop.store.LocalRoomStore)
+      roomStore: React.PropTypes.instanceOf(loop.store.RoomStore)
     },
 
     getInitialState: function() {
@@ -580,7 +580,7 @@ loop.conversation = (function(mozL10n) {
         case "room": {
           return (DesktopRoomView({
             mozLoop: navigator.mozLoop, 
-            localRoomStore: this.props.localRoomStore}
+            roomStore: this.props.roomStore}
           ));
         }
         case "failed": {
@@ -634,10 +634,15 @@ loop.conversation = (function(mozL10n) {
       dispatcher: dispatcher,
       sdkDriver: sdkDriver
     });
-    var localRoomStore = new loop.store.LocalRoomStore({
+    var activeRoomStore = new loop.store.ActiveRoomStore({
       dispatcher: dispatcher,
       mozLoop: navigator.mozLoop
-    });;
+    });
+    var roomStore = new loop.store.RoomStore({
+      dispatcher: dispatcher,
+      mozLoop: navigator.mozLoop,
+      activeRoomStore: activeRoomStore
+    });
 
     // XXX Old class creation for the incoming conversation view, whilst
     // we transition across (bug 1072323).
@@ -665,7 +670,7 @@ loop.conversation = (function(mozL10n) {
 
     React.renderComponent(AppControllerView({
       conversationAppStore: conversationAppStore, 
-      localRoomStore: localRoomStore, 
+      roomStore: roomStore, 
       conversationStore: conversationStore, 
       client: client, 
       conversation: conversation, 
