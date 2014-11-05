@@ -182,6 +182,11 @@ class CrashInfo(object):
         if self._dump_files is None:
             self._dump_files = [(path, os.path.splitext(path)[0] + '.extra') for path in
                                 glob.glob(os.path.join(self.dump_directory, '*.dmp'))]
+            max_dumps = 10
+            if len(self._dump_files) > max_dumps:
+                self.logger.warning("Found %d dump files -- limited to %d!" % (len(self._dump_files), max_dumps))
+                del self._dump_files[max_dumps:]
+
         return self._dump_files
 
     @property

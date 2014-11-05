@@ -12,6 +12,11 @@ DEFINES += -DBOOTSTRAP
 DIST_FILES += bootstrap.js
 endif
 
+ifeq ($(MOZ_BUILD_APP),b2g/dev)
+DEFINES += -DBOOTSTRAP
+DEFINES += -DREFTEST_B2G
+endif
+
 ifeq ($(MOZ_BUILD_APP),b2g)
 DEFINES += -DBOOTSTRAP
 DEFINES += -DREFTEST_B2G
@@ -30,6 +35,7 @@ _HARNESS_FILES = \
   $(srcdir)/remotereftest.py \
   $(srcdir)/runreftestb2g.py \
   $(srcdir)/b2g_desktop.py \
+  $(srcdir)/gaia_lock_screen.js \
   automation.py \
   $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanager.py \
   $(topsrcdir)/testing/mozbase/mozdevice/mozdevice/devicemanagerADB.py \

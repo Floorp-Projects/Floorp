@@ -334,7 +334,7 @@ this.PlacesDBUtils = {
        )`);
     cleanupStatements.push(deleteOrphanAnnos);
 
-    // MOZ_BOOKMARKS_ROOTS
+    // Bookmarks roots
     // C.1 fix missing Places root
     //     Bug 477739 shows a case where the root could be wrongly removed
     //     due to an endianness issue.  We try to fix broken roots here.
@@ -346,17 +346,21 @@ this.PlacesDBUtils = {
       let createPlacesRoot = DBConn.createAsyncStatement(
         `INSERT INTO moz_bookmarks (id, type, fk, parent, position, title,
                                     guid)
-         VALUES (:places_root, 2, NULL, 0, 0, :title, GENERATE_GUID())`);
+         VALUES (:places_root, 2, NULL, 0, 0, :title, :guid)`);
       createPlacesRoot.params["places_root"] = PlacesUtils.placesRootId;
       createPlacesRoot.params["title"] = "";
+      createPlacesRoot.params["guid"] = PlacesUtils.bookmarks.rootGuid;
       cleanupStatements.push(createPlacesRoot);
 
       // Now ensure that other roots are children of Places root.
       let fixPlacesRootChildren = DBConn.createAsyncStatement(
-        `UPDATE moz_bookmarks SET parent = :places_root WHERE id IN
-           (SELECT folder_id FROM moz_bookmarks_roots
-             WHERE folder_id <> :places_root)`);
+        `UPDATE moz_bookmarks SET parent = :places_root WHERE guid IN
+           ( :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid )`);
       fixPlacesRootChildren.params["places_root"] = PlacesUtils.placesRootId;
+      fixPlacesRootChildren.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+      fixPlacesRootChildren.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+      fixPlacesRootChildren.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+      fixPlacesRootChildren.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
       cleanupStatements.push(fixPlacesRootChildren);
     }
     selectPlacesRoot.finalize();
@@ -400,20 +404,25 @@ this.PlacesDBUtils = {
     // D.1 remove items without a valid place
     // if fk IS NULL we fix them in D.7
     let deleteNoPlaceItems = DBConn.createAsyncStatement(
-      `DELETE FROM moz_bookmarks WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `DELETE FROM moz_bookmarks WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT b.id FROM moz_bookmarks b
          WHERE fk NOT NULL AND b.type = :bookmark_type
            AND NOT EXISTS (SELECT url FROM moz_places WHERE id = b.fk LIMIT 1)
        )`);
     deleteNoPlaceItems.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
+    deleteNoPlaceItems.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    deleteNoPlaceItems.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    deleteNoPlaceItems.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    deleteNoPlaceItems.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    deleteNoPlaceItems.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(deleteNoPlaceItems);
 
     // D.2 remove items that are not uri bookmarks from tag containers
     let deleteBogusTagChildren = DBConn.createAsyncStatement(
-      `DELETE FROM moz_bookmarks WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `DELETE FROM moz_bookmarks WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT b.id FROM moz_bookmarks b
          WHERE b.parent IN
@@ -422,12 +431,17 @@ this.PlacesDBUtils = {
        )`);
     deleteBogusTagChildren.params["tags_folder"] = PlacesUtils.tagsFolderId;
     deleteBogusTagChildren.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
+    deleteBogusTagChildren.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    deleteBogusTagChildren.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    deleteBogusTagChildren.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    deleteBogusTagChildren.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    deleteBogusTagChildren.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(deleteBogusTagChildren);
 
     // D.3 remove empty tags
     let deleteEmptyTags = DBConn.createAsyncStatement(
-      `DELETE FROM moz_bookmarks WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `DELETE FROM moz_bookmarks WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT b.id FROM moz_bookmarks b
          WHERE b.id IN
@@ -436,31 +450,45 @@ this.PlacesDBUtils = {
              (SELECT id from moz_bookmarks WHERE parent = b.id LIMIT 1)
        )`);
     deleteEmptyTags.params["tags_folder"] = PlacesUtils.tagsFolderId;
+    deleteEmptyTags.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    deleteEmptyTags.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    deleteEmptyTags.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    deleteEmptyTags.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    deleteEmptyTags.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(deleteEmptyTags);
 
     // D.4 move orphan items to unsorted folder
     let fixOrphanItems = DBConn.createAsyncStatement(
-      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT b.id FROM moz_bookmarks b
-         WHERE b.parent <> 0 /* exclude Places root */
-         AND NOT EXISTS
+         WHERE NOT EXISTS
            (SELECT id FROM moz_bookmarks WHERE id = b.parent LIMIT 1)
        )`);
     fixOrphanItems.params["unsorted_folder"] = PlacesUtils.unfiledBookmarksFolderId;
+    fixOrphanItems.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    fixOrphanItems.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    fixOrphanItems.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    fixOrphanItems.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    fixOrphanItems.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(fixOrphanItems);
 
     // D.5 fix wrong keywords
     let fixInvalidKeywords = DBConn.createAsyncStatement(
-      `UPDATE moz_bookmarks SET keyword_id = NULL WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `UPDATE moz_bookmarks SET keyword_id = NULL WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT id FROM moz_bookmarks b
          WHERE keyword_id NOT NULL
            AND NOT EXISTS
              (SELECT id FROM moz_keywords WHERE id = b.keyword_id LIMIT 1)
        )`);
+    fixInvalidKeywords.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    fixInvalidKeywords.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    fixInvalidKeywords.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    fixInvalidKeywords.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    fixInvalidKeywords.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(fixInvalidKeywords);
 
     // D.6 fix wrong item types
@@ -468,8 +496,8 @@ this.PlacesDBUtils = {
     //     If they have a valid fk convert them to bookmarks. Later in D.9 we
     //     will move eventual children to unsorted bookmarks.
     let fixBookmarksAsFolders = DBConn.createAsyncStatement(
-      `UPDATE moz_bookmarks SET type = :bookmark_type WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `UPDATE moz_bookmarks SET type = :bookmark_type WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT id FROM moz_bookmarks b
          WHERE type IN (:folder_type, :separator_type)
@@ -478,14 +506,19 @@ this.PlacesDBUtils = {
     fixBookmarksAsFolders.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     fixBookmarksAsFolders.params["folder_type"] = PlacesUtils.bookmarks.TYPE_FOLDER;
     fixBookmarksAsFolders.params["separator_type"] = PlacesUtils.bookmarks.TYPE_SEPARATOR;
+    fixBookmarksAsFolders.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    fixBookmarksAsFolders.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    fixBookmarksAsFolders.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    fixBookmarksAsFolders.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    fixBookmarksAsFolders.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(fixBookmarksAsFolders);
 
     // D.7 fix wrong item types
     //     Bookmarks should have an fk, if they don't have any, convert them to
     //     folders.
     let fixFoldersAsBookmarks = DBConn.createAsyncStatement(
-      `UPDATE moz_bookmarks SET type = :folder_type WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `UPDATE moz_bookmarks SET type = :folder_type WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT id FROM moz_bookmarks b
          WHERE type = :bookmark_type
@@ -493,14 +526,19 @@ this.PlacesDBUtils = {
        )`);
     fixFoldersAsBookmarks.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     fixFoldersAsBookmarks.params["folder_type"] = PlacesUtils.bookmarks.TYPE_FOLDER;
+    fixFoldersAsBookmarks.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    fixFoldersAsBookmarks.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    fixFoldersAsBookmarks.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    fixFoldersAsBookmarks.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    fixFoldersAsBookmarks.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(fixFoldersAsBookmarks);
 
     // D.9 fix wrong parents
     //     Items cannot have separators or other bookmarks
     //     as parent, if they have bad parent move them to unsorted bookmarks.
     let fixInvalidParents = DBConn.createAsyncStatement(
-      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE id NOT IN (
-         SELECT folder_id FROM moz_bookmarks_roots /* skip roots */
+      `UPDATE moz_bookmarks SET parent = :unsorted_folder WHERE guid NOT IN (
+         :rootGuid, :menuGuid, :toolbarGuid, :unfiledGuid, :tagsGuid  /* skip roots */
        ) AND id IN (
          SELECT id FROM moz_bookmarks b
          WHERE EXISTS
@@ -511,6 +549,11 @@ this.PlacesDBUtils = {
     fixInvalidParents.params["unsorted_folder"] = PlacesUtils.unfiledBookmarksFolderId;
     fixInvalidParents.params["bookmark_type"] = PlacesUtils.bookmarks.TYPE_BOOKMARK;
     fixInvalidParents.params["separator_type"] = PlacesUtils.bookmarks.TYPE_SEPARATOR;
+    fixInvalidParents.params["rootGuid"] = PlacesUtils.bookmarks.rootGuid;
+    fixInvalidParents.params["menuGuid"] = PlacesUtils.bookmarks.menuGuid;
+    fixInvalidParents.params["toolbarGuid"] = PlacesUtils.bookmarks.toolbarGuid;
+    fixInvalidParents.params["unfiledGuid"] = PlacesUtils.bookmarks.unfiledGuid;
+    fixInvalidParents.params["tagsGuid"] = PlacesUtils.bookmarks.tagsGuid;
     cleanupStatements.push(fixInvalidParents);
 
     // D.10 recalculate positions

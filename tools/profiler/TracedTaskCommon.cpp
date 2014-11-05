@@ -107,13 +107,6 @@ FakeTracedTask::FakeTracedTask(int* aVptr)
   LogVirtualTablePtr(mTaskId, mSourceEventId, aVptr);
 }
 
-FakeTracedTask::FakeTracedTask(const FakeTracedTask& aTask)
-{
-  mTaskId = aTask.mTaskId;
-  mSourceEventId = aTask.mSourceEventId;
-  mSourceEventType = aTask.mSourceEventType;
-}
-
 void
 FakeTracedTask::BeginFakeTracedTask()
 {
@@ -129,19 +122,17 @@ FakeTracedTask::EndFakeTracedTask()
 }
 
 AutoRunFakeTracedTask::AutoRunFakeTracedTask(FakeTracedTask* aFakeTracedTask)
-  : mInitialized(false)
+  : mFakeTracedTask(aFakeTracedTask)
 {
-  if (aFakeTracedTask) {
-    mInitialized = true;
-    mFakeTracedTask = *aFakeTracedTask;
-    mFakeTracedTask.BeginFakeTracedTask();
+  if (mFakeTracedTask) {
+    mFakeTracedTask->BeginFakeTracedTask();
   }
 }
 
 AutoRunFakeTracedTask::~AutoRunFakeTracedTask()
 {
-  if (mInitialized) {
-    mFakeTracedTask.EndFakeTracedTask();
+  if (mFakeTracedTask) {
+    mFakeTracedTask->EndFakeTracedTask();
   }
 }
 

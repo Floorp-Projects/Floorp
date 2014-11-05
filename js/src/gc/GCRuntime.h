@@ -476,6 +476,10 @@ class GCRuntime
     static void *refillFreeListFromAnyThread(ThreadSafeContext *cx, AllocKind thingKind);
     static void *refillFreeListInGC(Zone *zone, AllocKind thingKind);
 
+    // Free certain LifoAlloc blocks from the background sweep thread.
+    void freeUnusedLifoBlocksAfterSweeping(LifoAlloc *lifo);
+    void freeAllLifoBlocksAfterSweeping(LifoAlloc *lifo);
+
   private:
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
@@ -514,6 +518,7 @@ class GCRuntime
     void resetIncrementalGC(const char *reason);
     void incrementalCollectSlice(int64_t budget, JS::gcreason::Reason reason);
     void pushZealSelectedObjects();
+    void purgeRuntime();
     bool beginMarkPhase(JS::gcreason::Reason reason);
     bool shouldPreserveJITCode(JSCompartment *comp, int64_t currentTime,
                                JS::gcreason::Reason reason);
@@ -697,6 +702,12 @@ class GCRuntime
 
     /* List head of zones to be swept in the background. */
     JS::Zone *sweepingZones;
+
+    /*
+     * Free LIFO blocks are transferred to this allocator before being freed on
+     * the background GC thread.
+     */
+    js::LifoAlloc freeLifoAlloc;
 
     /* Index of current zone group (for stats). */
     unsigned zoneGroupIndex;
