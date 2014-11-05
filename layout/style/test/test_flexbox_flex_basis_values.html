@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1032922
+-->
+<head>
+  <meta charset="utf-8">
+  <title>
+    Test that 'flex-basis' accepts all valid values for 'width' and 'height'
+    (helper for Bug 1032922)
+  </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+
+</div>
+<pre id="test">
+<script type="text/javascript;version=1.7">
+"use strict";
+
+/**
+ * Test that 'flex-basis' accepts all valid values for 'width' and 'height'
+ * (helper for Bug 1032922)
+ *
+ * PEDANTIC NOTE: Technically, the flexbox spec's "value" definition for
+ * "flex-basis" only says it accepts "main-size | <'width'>" -- there's no
+ * mention of <'height'>.
+ *
+ * However, the prose later on is clear that all valid "height" values are
+ * supposed to be accepted as well:
+ *  # The flex-basis property [...] accepts the same values
+ *  # as the 'width' and 'height' property.
+ * http://dev.w3.org/csswg/css-flexbox/#propdef-flex-basis
+ *
+ * Presumably the spec's value-definition omits <'height'> just for brevity's
+ * sake, since <'width'> already covers the full range of valid "height"
+ * values (for now at least; and probably forever).
+ *
+ * In any case: in this test, we ensure that flex-basis really does accept all
+ * of property_database's valid sample-values for both "width" *and* "height",
+ * to be on the safe side.
+ */
+
+function check_accepted(decl, origPropName, val)
+{
+  decl.setProperty("flex-basis", val, "");
+
+  // Note: decl.getPropertyValue() will return something non-empty here if the
+  // value was parsed successfully. Otherwise (i.e. if the value is rejected),
+  // it'll return the empty string.
+  isnot(decl.getPropertyValue("flex-basis"), "",
+       "value '" + val + "' which is valid for '" + origPropName +
+       "' should also be valid for 'flex-basis' ");
+
+  decl.removeProperty("flex-basis");
+}
+
+function main()
+{
+  let decl = document.getElementById("testnode").style;
+
+  let props = [ "width", "height" ];
+  props.forEach(function(prop) {
+    let info = gCSSProperties[prop];
+    let all_values = info.initial_values.concat(info.other_values);
+    all_values.forEach(function(value) {
+      check_accepted(decl, prop, value);
+    });
+  });
+}
+
+main();
+
+</script>
+</pre>
+</body>
+</html>
