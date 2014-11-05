@@ -518,14 +518,14 @@ VARIABLES = {
 
         This variable contains a list of files to copy into
         ``$(FINAL_TARGET)/modules.
-        """, 'libs'),
+        """, 'misc'),
 
     'EXTRA_PP_JS_MODULES': (HierarchicalStringList, list,
         """Additional JavaScript files to distribute.
 
         This variable contains a list of files to copy into
         ``$(FINAL_TARGET)/modules``, after preprocessing.
-        """, 'libs'),
+        """, 'misc'),
 
     'TESTING_JS_MODULES': (HierarchicalStringList, list,
         """JavaScript modules to install in the test-only destination.
@@ -537,7 +537,7 @@ VARIABLES = {
         variable to control the final destination. e.g.
 
         ``TESTING_JS_MODULES.foo += ['module.jsm']``.
-        """, 'libs'),
+        """, None),
 
     'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list,
         """Javascript XPCOM files.
