@@ -151,23 +151,25 @@ loop.Client = (function($) {
      * Block call URL based on the token identifier
      *
      * @param {string} token Conversation identifier used to block the URL
+     * @param {mozLoop.LOOP_SESSION_TYPE} sessionType The type of session which
+     *                                                the url belongs to.
      * @param {function} cb Callback function used for handling an error
      *                      response. XXX The incoming call panel does not
      *                      exist after the block button is clicked therefore
      *                      it does not make sense to display an error.
      **/
-    deleteCallUrl: function(token, cb) {
+    deleteCallUrl: function(token, sessionType, cb) {
       this._ensureRegistered(function(err) {
         if (err) {
           cb(err);
           return;
         }
 
-        this._deleteCallUrlInternal(token, cb);
+        this._deleteCallUrlInternal(token, sessionType, cb);
       }.bind(this));
     },
 
-    _deleteCallUrlInternal: function(token, cb) {
+    _deleteCallUrlInternal: function(token, sessionType, cb) {
       function deleteRequestCallback(error, responseText) {
         if (error) {
           this._failureHandler(cb, error);
@@ -182,8 +184,7 @@ loop.Client = (function($) {
         }
       }
 
-      // XXX hard-coding of GUEST to be removed by 1065155
-      this.mozLoop.hawkRequest(this.mozLoop.LOOP_SESSION_TYPE.GUEST,
+      this.mozLoop.hawkRequest(sessionType,
                                "/call-url/" + token, "DELETE", null,
                                deleteRequestCallback.bind(this));
     },
