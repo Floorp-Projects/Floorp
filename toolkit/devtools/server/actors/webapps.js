@@ -18,6 +18,9 @@ let { ActorPool } = require("devtools/server/actors/common");
 let { DebuggerServer } = require("devtools/server/main");
 let Services = require("Services");
 
+// Comma separated list of permissions that a sideloaded app can't ask for
+const UNSAFE_PERMISSIONS = Services.prefs.getCharPref("devtools.apps.forbidden-permissions");
+
 let FramesMock = null;
 
 exports.setFramesMock = function (mock) {
@@ -488,6 +491,18 @@ WebappsActor.prototype = {
           } catch(e) {
             self._sendError(deferred, "Error Parsing manifest.webapp: " + e, aId);
             return;
+          }
+
+          // Completely forbid pushing apps asking for unsafe permissions
+          if ("permissions" in manifest) {
+            let list = UNSAFE_PERMISSIONS.split(",");
+            let hasOne = list.some(p => p.trim() in manifest.permissions);
+            if (hasOne) {
+              self._sendError(deferred, "Installing apps with any of these " +
+                                        "permissions is forbidden: " +
+                                        UNSAFE_PERMISSIONS, aId);
+              return;
+            }
           }
 
           let appType = self._getAppType(manifest.type);

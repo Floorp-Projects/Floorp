@@ -123,7 +123,7 @@ LoginManagerPrompter.prototype = {
     },
 
 
-    setE10sData : function (aBrowser) {
+    setE10sData : function (aBrowser, aOpener) {
       // XXX Implement me!
       throw new Error("Not Yet Implemented");
     },

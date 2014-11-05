@@ -270,9 +270,6 @@ public class BrowserApp extends GeckoApp
         Log.d(LOGTAG, "BrowserApp.onTabChanged: " + tab.getId() + ": " + msg);
         switch(msg) {
             case LOCATION_CHANGE:
-                if (Tabs.getInstance().isSelectedTab(tab)) {
-                    maybeCancelFaviconLoad(tab);
-                }
                 // fall through
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
@@ -296,16 +293,7 @@ public class BrowserApp extends GeckoApp
                 }
                 break;
             case PAGE_SHOW:
-                loadFavicon(tab);
-                break;
-            case LINK_FAVICON:
-                // If tab is not loading and the favicon is updated, we
-                // want to load the image straight away. If tab is still
-                // loading, we only load the favicon once the page's content
-                // is fully loaded.
-                if (tab.getState() != Tab.STATE_LOADING) {
-                    loadFavicon(tab);
-                }
+                tab.loadFavicon();
                 break;
             case BOOKMARK_ADDED:
                 showBookmarkAddedToast();
@@ -1410,7 +1398,7 @@ public class BrowserApp extends GeckoApp
             });
 
         } else if ("Feedback:LastUrl".equals(event)) {
-            getLastUrl();
+            getLastUrl(callback);
 
         } else if ("Feedback:MaybeLater".equals(event)) {
             resetFeedbackLaunchCount();
@@ -1839,41 +1827,6 @@ public class BrowserApp extends GeckoApp
     private boolean isHomePagerVisible() {
         return (mHomePager != null && mHomePager.isVisible()
             && mHomePagerContainer != null && mHomePagerContainer.getVisibility() == View.VISIBLE);
-    }
-
-    /* Favicon stuff. */
-    private static OnFaviconLoadedListener sFaviconLoadedListener = new OnFaviconLoadedListener() {
-        @Override
-        public void onFaviconLoaded(String pageUrl, String faviconURL, Bitmap favicon) {
-            // If we failed to load a favicon, we use the default favicon instead.
-            Tabs.getInstance()
-                .updateFaviconForURL(pageUrl,
-                                     (favicon == null) ? Favicons.defaultFavicon : favicon);
-        }
-    };
-
-    private void loadFavicon(final Tab tab) {
-        maybeCancelFaviconLoad(tab);
-
-        final int tabFaviconSize = getResources().getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
-
-        int flags = (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST;
-        int id = Favicons.getSizedFavicon(getContext(), tab.getURL(), tab.getFaviconURL(), tabFaviconSize, flags, sFaviconLoadedListener);
-
-        tab.setFaviconLoadId(id);
-    }
-
-    private void maybeCancelFaviconLoad(Tab tab) {
-        int faviconLoadId = tab.getFaviconLoadId();
-
-        if (Favicons.NOT_LOADING == faviconLoadId) {
-            return;
-        }
-
-        // Cancel load task and reset favicon load state if it wasn't already
-        // in NOT_LOADING state.
-        Favicons.cancelFaviconLoad(faviconLoadId);
-        tab.setFaviconLoadId(Favicons.NOT_LOADING);
     }
 
     /**
@@ -3064,7 +3017,7 @@ public class BrowserApp extends GeckoApp
         settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).apply();
     }
 
-    private void getLastUrl() {
+    private void getLastUrl(final EventCallback callback) {
         (new UIAsyncTask.WithoutParams<String>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public synchronized String doInBackground() {
@@ -3085,9 +3038,7 @@ public class BrowserApp extends GeckoApp
 
             @Override
             public void onPostExecute(String url) {
-                // Don't bother sending a message if there is no URL.
-                if (url.length() > 0)
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Feedback:LastUrl", url));
+                callback.sendSuccess(url);
             }
         }).execute();
     }

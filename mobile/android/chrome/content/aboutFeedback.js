@@ -58,8 +58,6 @@ function init() {
   document.getElementById("sumo-icon").src = helpSectionIcon;
   document.getElementById("sad-thanks-icon").src = sadThanksIcon;
 
-  window.addEventListener("unload", uninit, false);
-
   document.getElementById("open-play-store").addEventListener("click", openPlayStore, false);
   document.forms[0].addEventListener("submit", sendFeedback, false);
   for (let anchor of document.querySelectorAll(".no-thanks")) {
@@ -76,20 +74,14 @@ function init() {
   }, false);
 
   // Fill "Last visited site" input with most recent history entry URL.
-  Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+  Messaging.sendRequestForResult({ type: "Feedback:LastUrl" }).then(function(aData) {
     aData = aData.substring(0, 200);
     document.getElementById("last-url").value = aData;
     // Enable the parent div iff the URL is valid.
     if (aData.length != 0) {
       document.getElementById("last-url-div").style.display="block";
     }
-  }, "Feedback:LastUrl", false);
-
-  Messaging.sendRequest({ type: "Feedback:LastUrl" });
-}
-
-function uninit() {
-  Services.obs.removeObserver(this, "Feedback:LastUrl");
+  });
 }
 
 function switchSection(aSection) {
