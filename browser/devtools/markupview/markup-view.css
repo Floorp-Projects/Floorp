@@ -35,7 +35,7 @@
 
 .html-editor-inner {
   border: solid .1px;
-  flex: 1 1 auto;
+  flex: 1 1 main-size;
 }
 
 .html-editor iframe {
