@@ -136,56 +136,58 @@ typedef GeckoContentController::APZStateChange APZStateChange;
 typedef mozilla::gfx::Point Point;
 typedef mozilla::gfx::Matrix4x4 Matrix4x4;
 
-/*
+/**
+ * \page APZCPrefs APZ preferences
+ *
  * The following prefs are used to control the behaviour of the APZC.
  * The default values are provided in gfxPrefs.h.
  *
- * "apz.allow_checkerboarding"
+ * \li\b apz.allow_checkerboarding
  * Pref that allows or disallows checkerboarding
  *
- * "apz.asyncscroll.throttle"
- * The time period that throttles mozbrowserasyncscroll event.
+ * \li\b apz.asyncscroll.throttle
+ * The time period that throttles mozbrowserasyncscroll event.\n
  * Units: milliseconds
  *
- * "apz.asyncscroll.timeout"
- * The timeout for mAsyncScrollTimeoutTask delay task.
+ * \li\b apz.asyncscroll.timeout
+ * The timeout for mAsyncScrollTimeoutTask delay task.\n
  * Units: milliseconds
  *
- * "apz.axis_lock.mode"
+ * \li\b apz.axis_lock.mode
  * The preferred axis locking style. See AxisLockMode for possible values.
  *
- * "apz.axis_lock.lock_angle"
- * Angle from axis within which we stay axis-locked.
+ * \li\b apz.axis_lock.lock_angle
+ * Angle from axis within which we stay axis-locked.\n
  * Units: radians
  *
- * "apz.axis_lock.breakout_threshold"
- * Distance in inches the user must pan before axis lock can be broken.
+ * \li\b apz.axis_lock.breakout_threshold
+ * Distance in inches the user must pan before axis lock can be broken.\n
  * Units: (real-world, i.e. screen) inches
  *
- * "apz.axis_lock.breakout_angle"
- * Angle at which axis lock can be broken.
+ * \li\b apz.axis_lock.breakout_angle
+ * Angle at which axis lock can be broken.\n
  * Units: radians
  *
- * "apz.axis_lock.direct_pan_angle"
+ * \li\b apz.axis_lock.direct_pan_angle
  * If the angle from an axis to the line drawn by a pan move is less than
  * this value, we can assume that panning can be done in the allowed direction
- * (horizontal or vertical).
+ * (horizontal or vertical).\n
  * Currently used only for touch-action css property stuff and was addded to
- * keep behaviour consistent with IE.
+ * keep behaviour consistent with IE.\n
  * Units: radians
  *
- * "apz.content_response_timeout"
+ * \li\b apz.content_response_timeout
  * Amount of time before we timeout response from content. For example, if
  * content is being unruly/slow and we don't get a response back within this
  * time, we will just pretend that content did not preventDefault any touch
- * events we dispatched to it.
+ * events we dispatched to it.\n
  * Units: milliseconds
  *
- * "apz.cross_slide_enabled"
+ * \li\b apz.cross_slide_enabled
  * Pref that enables integration with the Metro "cross-slide" gesture.
  *
- * "apz.danger_zone_x"
- * "apz.danger_zone_y"
+ * \li\b apz.danger_zone_x
+ * \li\b apz.danger_zone_y
  * When drawing high-res tiles, we drop down to drawing low-res tiles
  * when we know we can't keep up with the scrolling. The way we determine
  * this is by checking if we are entering the "danger zone", which is the
@@ -195,179 +197,182 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * only 10 pixels away from showing checkerboarding so we are probably in
  * a state where we can't keep up with scrolling. The danger zone prefs specify
  * how wide this margin is; in the above example a y-axis danger zone of 10
- * pixels would make us drop to low-res at y=490...990.
+ * pixels would make us drop to low-res at y=490...990.\n
  * This value is in layer pixels.
  *
- * "apz.enlarge_displayport_when_clipped"
+ * \li\b apz.enlarge_displayport_when_clipped
  * Pref that enables enlarging of the displayport along one axis when the
  * generated displayport's size is beyond that of the scrollable rect on the
  * opposite axis.
  *
- * "apz.fling_accel_interval_ms"
+ * \li\b apz.fling_accel_interval_ms
  * The time that determines whether a second fling will be treated as
  * accelerated. If two flings are started within this interval, the second one
  * will be accelerated. Setting an interval of 0 means that acceleration will
- * be disabled.
+ * be disabled.\n
  * Units: milliseconds
  *
- * "apz.fling_accel_base_mult"
- * "apz.fling_accel_supplemental_mult"
+ * \li\b apz.fling_accel_base_mult
+ * \li\b apz.fling_accel_supplemental_mult
  * When applying an acceleration on a fling, the new computed velocity is
  * (new_fling_velocity * base_mult) + (old_velocity * supplemental_mult).
  * The base_mult and supplemental_mult multiplier values are controlled by
  * these prefs. Note that "old_velocity" here is the initial velocity of the
  * previous fling _after_ acceleration was applied to it (if applicable).
  *
- * "apz.fling_curve_function_x1"
- * "apz.fling_curve_function_y1"
- * "apz.fling_curve_function_x2"
- * "apz.fling_curve_function_y2"
- * "apz.fling_curve_threshold_inches_per_ms"
+ * \li\b apz.fling_curve_function_x1
+ * \li\b apz.fling_curve_function_y1
+ * \li\b apz.fling_curve_function_x2
+ * \li\b apz.fling_curve_function_y2
+ * \li\b apz.fling_curve_threshold_inches_per_ms
  * These five parameters define a Bezier curve function and threshold used to
  * increase the actual velocity relative to the user's finger velocity. When the
  * finger velocity is below the threshold (or if the threshold is not positive),
  * the velocity is used as-is. If the finger velocity exceeds the threshold
  * velocity, then the function defined by the curve is applied on the part of
  * the velocity that exceeds the threshold. Note that the upper bound of the
- * velocity is still specified by the apz.max_velocity_inches_per_ms pref, and
+ * velocity is still specified by the \b apz.max_velocity_inches_per_ms pref, and
  * the function will smoothly curve the velocity from the threshold to the
  * max. In general the function parameters chosen should define an ease-out
  * curve in order to increase the velocity in this range, or an ease-in curve to
  * decrease the velocity. A straight-line curve is equivalent to disabling the
  * curve entirely by setting the threshold to -1. The max velocity pref must
  * also be set in order for the curving to take effect, as it defines the upper
- * bound of the velocity curve.
+ * bound of the velocity curve.\n
  * The points (x1, y1) and (x2, y2) used as the two intermediate control points
- * in the cubic bezier curve; the first and last points are (0,0) and (1,1).
- * Some example values for these prefs can be found at
+ * in the cubic bezier curve; the first and last points are (0,0) and (1,1).\n
+ * Some example values for these prefs can be found at\n
  * http://mxr.mozilla.org/mozilla-central/source/layout/style/nsStyleStruct.cpp?rev=21282be9ad95#2462
  *
- * "apz.fling_friction"
+ * \li\b apz.fling_friction
  * Amount of friction applied during flings.
  *
- * "apz.fling_repaint_interval"
+ *
+ * \li\b apz.fling_repaint_interval
  * Maximum amount of time flinging before sending a viewport change. This will
- * asynchronously repaint the page.
+ * asynchronously repaint the page.\n
  * Units: milliseconds
  *
- * "apz.fling_stop_on_tap_threshold"
+ * \li\b apz.fling_stop_on_tap_threshold
  * When flinging, if the velocity is above this number, then a tap on the
  * screen will stop the fling without dispatching a tap to content. If the
  * velocity is below this threshold a tap will also be dispatched.
  * Note: when modifying this pref be sure to run the APZC gtests as some of
- * them depend on the value of this pref.
+ * them depend on the value of this pref.\n
  * Units: screen pixels per millisecond
  *
- * "apz.fling_stopped_threshold"
+ * \li\b apz.fling_stopped_threshold
  * When flinging, if the velocity goes below this number, we just stop the
  * animation completely. This is to prevent asymptotically approaching 0
- * velocity and rerendering unnecessarily.
+ * velocity and rerendering unnecessarily.\n
  * Units: screen pixels per millisecond
  *
- * "apz.max_velocity_inches_per_ms"
+ * \li\b apz.max_velocity_inches_per_ms
  * Maximum velocity.  Velocity will be capped at this value if a faster fling
- * occurs.  Negative values indicate unlimited velocity.
+ * occurs.  Negative values indicate unlimited velocity.\n
  * Units: (real-world, i.e. screen) inches per millisecond
  *
- * "apz.max_velocity_queue_size"
+ * \li\b apz.max_velocity_queue_size
  * Maximum size of velocity queue. The queue contains last N velocity records.
  * On touch end we calculate the average velocity in order to compensate
  * touch/mouse drivers misbehaviour.
  *
- * "apz.min_skate_speed"
+ * \li\b apz.min_skate_speed
  * Minimum amount of speed along an axis before we switch to "skate" multipliers
- * rather than using the "stationary" multipliers.
+ * rather than using the "stationary" multipliers.\n
  * Units: CSS pixels per millisecond
  *
- * "apz.num_paint_duration_samples"
+ * \li\b apz.num_paint_duration_samples
  * Number of samples to store of how long it took to paint after the previous
  *
- * "apz.overscroll.enabled"
+ * \li\b apz.overscroll.enabled
  * Pref that enables overscrolling. If this is disabled, excess scroll that
  * cannot be handed off is discarded.
  *
- * "apz.overscroll.min_pan_distance_ratio"
+ * \li\b apz.overscroll.min_pan_distance_ratio
  * The minimum ratio of the pan distance along one axis to the pan distance
  * along the other axis needed to initiate overscroll along the first axis
  * during panning.
  *
- * "apz.overscroll.stretch_factor"
+ * \li\b apz.overscroll.stretch_factor
  * How much overscrolling can stretch content along an axis.
  * The maximum stretch along an axis is a factor of (1 + kStretchFactor).
  * (So if kStretchFactor is 0, you can't stretch at all; if kStretchFactor
  * is 1, you can stretch at most by a factor of 2).
  *
- * "apz.overscroll.spring_stiffness"
+ * \li\b apz.overscroll.spring_stiffness
  * The stiffness of the spring used in the physics model for the overscroll
  * animation.
  *
- * "apz.overscroll.spring_friction"
+ * \li\b apz.overscroll.spring_friction
  * The friction of the spring used in the physics model for the overscroll
  * animation.
  * Even though a realistic physics model would dictate that this be the same
- * as "apz.fling_friction", we allow it to be set to be something different,
+ * as \b apz.fling_friction, we allow it to be set to be something different,
  * because in practice we want flings to skate smoothly (low friction), while
  * we want the overscroll bounce-back to oscillate few times (high friction).
  *
- * "apz.overscroll.stop_distance_threshold"
- * "apz.overscroll.stop_velocity_threshold"
+ * \li\b apz.overscroll.stop_distance_threshold
+ * \li\b apz.overscroll.stop_velocity_threshold
  * Thresholds for stopping the overscroll animation. When both the distance
- * and the velocity fall below their thresholds, we stop oscillating.
+ * and the velocity fall below their thresholds, we stop oscillating.\n
  * Units: screen pixels (for distance)
  *        screen pixels per millisecond (for velocity)
  *
- * "apz.pan_repaint_interval"
+ * \li\b apz.pan_repaint_interval
  * Maximum amount of time while panning before sending a viewport change. This
  * will asynchronously repaint the page. It is also forced when panning stops.
  *
- * "apz.smooth_scroll_repaint_interval"
+ * \li\b apz.smooth_scroll_repaint_interval
  * Maximum amount of time doing a smooth scroll before sending a viewport
- * change. This will asynchronously repaint the page.
+ * change. This will asynchronously repaint the page.\n
  * Units: milliseconds
  *
- * "apz.test.logging_enabled"
+ * \li\b apz.test.logging_enabled
  * Enable logging of APZ test data (see bug 961289).
  *
- * "apz.touch_start_tolerance"
+ * \li\b apz.touch_start_tolerance
  * Constant describing the tolerance in distance we use, multiplied by the
  * device DPI, before we start panning the screen. This is to prevent us from
  * accidentally processing taps as touch moves, and from very short/accidental
- * touches moving the screen.
+ * touches moving the screen.\n
  * Units: (real-world, i.e. screen) inches
  *
- * "apz.use_paint_duration"
+ * \li\b apz.use_paint_duration
  * Whether or not to use the estimated paint duration as a factor when projecting
  * the displayport in the direction of scrolling. If this value is set to false,
  * a constant 50ms paint time is used; the projection can be scaled as desired
- * using the apz.velocity_bias pref below.
+ * using the \b apz.velocity_bias pref below.
  *
- * "apz.velocity_bias"
+ * \li\b apz.velocity_bias
  * How much to adjust the displayport in the direction of scrolling. This value
  * is multiplied by the velocity and added to the displayport offset.
  *
- * "apz.velocity_relevance_time_ms"
+ * \li\b apz.velocity_relevance_time_ms
  * When computing a fling velocity from the most recently stored velocity
  * information, only velocities within the most X milliseconds are used.
- * This pref controls the value of X.
+ * This pref controls the value of X.\n
  * Units: ms
  *
- * "apz.x_skate_size_multiplier", "apz.y_skate_size_multiplier"
+ * \li\b apz.x_skate_size_multiplier
+ * \li\b apz.y_skate_size_multiplier
  * The multiplier we apply to the displayport size if it is skating (current
- * velocity is above apz.min_skate_speed). We prefer to increase the size of the
- * Y axis because it is more natural in the case that a user is reading a page
- * that scrolls up/down. Note that one, both or neither of these may be used
- * at any instant.
- * In general we want apz.[xy]_skate_size_multiplier to be smaller than the corresponding
+ * velocity is above \b apz.min_skate_speed). We prefer to increase the size of
+ * the Y axis because it is more natural in the case that a user is reading a
+ * page page that scrolls up/down. Note that one, both or neither of these may be
+ * used at any instant.\n
+ * In general we want \b apz.[xy]_skate_size_multiplier to be smaller than the corresponding
  * stationary size multiplier because when panning fast we would like to paint
  * less and get faster, more predictable paint times. When panning slowly we
  * can afford to paint more even though it's slower.
  *
- * "apz.x_stationary_size_multiplier", "apz.y_stationary_size_multiplier"
+ * \li\b apz.x_stationary_size_multiplier
+ * \li\b apz.y_stationary_size_multiplier
  * The multiplier we apply to the displayport size if it is not skating (see
  * documentation for the skate size multipliers above).
  *
- * "apz.zoom_animation_duration_ms"
- * This controls how long the zoom-to-rect animation takes.
+ * \li\b apz.zoom_animation_duration_ms
+ * This controls how long the zoom-to-rect animation takes.\n
  * Units: ms
  */
 
