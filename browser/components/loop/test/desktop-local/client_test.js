@@ -32,7 +32,7 @@ describe("loop.Client", function() {
         .returns(null)
         .withArgs("hawk-session-token")
         .returns(fakeToken),
-      ensureRegistered: sinon.stub().callsArgWith(0, null),
+      ensureRegistered: sinon.stub().callsArgWith(1, null),
       noteCallUrlExpiry: sinon.spy(),
       hawkRequest: sinon.stub(),
       LOOP_SESSION_TYPE: {
@@ -62,7 +62,7 @@ describe("loop.Client", function() {
       });
 
       it("should send an error when registration fails", function() {
-        mozLoop.ensureRegistered.callsArgWith(0, "offline");
+        mozLoop.ensureRegistered.callsArgWith(1, "offline");
 
         client.deleteCallUrl("fakeToken", mozLoop.LOOP_SESSION_TYPE.FXA, callback);
 
@@ -113,7 +113,7 @@ describe("loop.Client", function() {
       });
 
       it("should send an error when registration fails", function() {
-        mozLoop.ensureRegistered.callsArgWith(0, "offline");
+        mozLoop.ensureRegistered.callsArgWith(1, "offline");
 
         client.requestCallUrl("foo", callback);
 

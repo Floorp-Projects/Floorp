@@ -43,7 +43,7 @@ add_task(function test_initialize_with_urls_and_no_auth_token() {
   });
 
   yield MozLoopService.initialize().then((msg) => {
-    Assert.equal(msg, "initialized to guest status", "Initialize should register as a " +
+    Assert.equal(msg, "initialized without FxA status", "Initialize should register as a " +
                                                      "guest when no auth tokens but expired URLs");
   }, (error) => {
     Assert.ok(false, error, "should have resolved the promise that initialize returned");
@@ -70,7 +70,7 @@ add_task(function test_initialize_with_invalid_fxa_token() {
     Assert.ok(false, "Initializing with an invalid token should reject the promise");
   },
   (error) => {
-    Assert.equal(MozLoopServiceInternal.pushHandler.pushUrl, kEndPointUrl, "Push URL should match");
+    Assert.equal(MozLoopServiceInternal.pushHandler.registrationPushURL, kEndPointUrl, "Push URL should match");
     Assert.equal(Services.prefs.getCharPref(LOOP_FXA_TOKEN_PREF), "",
                  "FXA pref should be cleared if token was invalid");
     Assert.equal(Services.prefs.getCharPref(LOOP_FXA_PROFILE_PREF), "",
@@ -104,7 +104,7 @@ function run_test() {
   // Note, this is just used to speed up the test.
   Services.prefs.setIntPref(LOOP_INITIAL_DELAY_PREF, 0);
   MozLoopServiceInternal.mocks.pushHandler = mockPushHandler;
-  mockPushHandler.pushUrl = kEndPointUrl;
+  mockPushHandler.registrationPushURL = kEndPointUrl;
 
   do_register_cleanup(function() {
     MozLoopServiceInternal.mocks.pushHandler = undefined;

@@ -342,7 +342,7 @@ add_task(function* logoutWithIncorrectPushURL() {
   const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
   Services.prefs.setCharPref(fxASessionPref, "X".repeat(HAWK_TOKEN_LENGTH));
 
-  yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA, {calls: pushURL});
+  yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA);
   let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
   ise(registrationResponse.response.simplePushURLs.calls, pushURL, "Check registered push URL");
   mockPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA] = "http://www.example.com/invalid";
@@ -365,7 +365,7 @@ add_task(function* logoutWithNoPushURL() {
   const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
   Services.prefs.setCharPref(fxASessionPref, "X".repeat(HAWK_TOKEN_LENGTH));
 
-  yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA, {calls: pushURL});
+  yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA);
   let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
   ise(registrationResponse.response.simplePushURLs.calls, pushURL, "Check registered push URL");
   mockPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA] = null;
