@@ -532,8 +532,7 @@ public:
   {
     MOZ_ASSERT(mCallback);
     mCallback->UpdateFailed(aError);
-    mCallback = nullptr;
-    Done(NS_ERROR_DOM_JS_EXCEPTION);
+    FailCommon(NS_ERROR_DOM_JS_EXCEPTION);
   }
 
   // Public so our error handling code can continue with a successful worker.
@@ -661,16 +660,39 @@ private:
     mCallback = nullptr;
   }
 
+  void
+  FailCommon(nsresult aRv)
+  {
+    mCallback = nullptr;
+    MaybeRemoveRegistration();
+    // Ensures that the job can't do anything useful from this point on.
+    mRegistration = nullptr;
+    Done(aRv);
+  }
+
   // This MUST only be called when the job is still performing actions related
   // to registration or update. After the spec resolves the update promise, use
   // Done() with the failure code instead.
   void
-  Fail(nsresult rv)
+  Fail(nsresult aRv)
   {
     MOZ_ASSERT(mCallback);
-    mCallback->UpdateFailed(rv);
-    mCallback = nullptr;
-    Done(rv);
+    mCallback->UpdateFailed(aRv);
+    FailCommon(aRv);
+  }
+
+  void
+  MaybeRemoveRegistration()
+  {
+    MOZ_ASSERT(mRegistration);
+    nsRefPtr<ServiceWorkerInfo> newest = mRegistration->Newest();
+    if (!newest) {
+      nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+        swm->GetDomainInfo(mRegistration->mScope);
+      MOZ_ASSERT(domainInfo);
+      domainInfo->RemoveRegistration(mRegistration);
+    }
   }
 
   void
@@ -693,6 +715,7 @@ private:
       mRegistration->mInstallingWorker = nullptr;
       swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                      WhichServiceWorker::INSTALLING_WORKER);
+      MaybeRemoveRegistration();
       return Done(NS_ERROR_DOM_ABORT_ERR);
     }
 
