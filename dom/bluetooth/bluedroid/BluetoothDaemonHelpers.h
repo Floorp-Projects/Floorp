@@ -863,6 +863,165 @@ UnpackPDU<nsString, nsString, uint32_t, nsString, uint32_t, 0x01, 0x87>(
 }
 
 //
+// Init operators
+//
+
+// |PDUInitOP| provides functionality for init operators that unpack PDUs.
+class PDUInitOp
+{
+protected:
+  PDUInitOp(BluetoothDaemonPDU& aPDU)
+  : mPDU(&aPDU)
+  { }
+
+  BluetoothDaemonPDU& GetPDU() const
+  {
+    return *mPDU; // cannot be nullptr
+  }
+
+  void WarnAboutTrailingData() const
+  {
+    size_t size = mPDU->GetSize();
+
+    if (MOZ_LIKELY(!size)) {
+      return;
+    }
+
+    uint8_t service, opcode;
+    uint16_t payloadSize;
+    mPDU->GetHeader(service, opcode, payloadSize);
+
+    BT_LOGR("Unpacked PDU of type (%x,%x) still contains %zu Bytes of data.",
+            service, opcode, size);
+  }
+
+private:
+  BluetoothDaemonPDU* mPDU; // Hold pointer to allow for constant instances
+};
+
+// |UnpackPDUInitOp| is a general-purpose init operator for all variants
+// of |BluetoothResultRunnable| and |BluetoothNotificationRunnable|. The
+// call operators of |UnpackPDUInitOp| unpack a PDU into the supplied
+// arguments.
+class UnpackPDUInitOp MOZ_FINAL : private PDUInitOp
+{
+public:
+  UnpackPDUInitOp(BluetoothDaemonPDU& aPDU)
+  : PDUInitOp(aPDU)
+  { }
+
+  nsresult operator () () const
+  {
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1>
+  nsresult operator () (T1& aArg1) const
+  {
+    nsresult rv = UnpackPDU(GetPDU(), aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2>
+  nsresult operator () (T1& aArg1, T2& aArg2) const
+  {
+    BluetoothDaemonPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3) const
+  {
+    BluetoothDaemonPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4) const
+  {
+    BluetoothDaemonPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+
+  template<typename T1, typename T2, typename T3, typename T4, typename T5>
+  nsresult operator () (T1& aArg1, T2& aArg2, T3& aArg3, T4& aArg4,
+                        T5& aArg5) const
+  {
+    BluetoothDaemonPDU& pdu = GetPDU();
+
+    nsresult rv = UnpackPDU(pdu, aArg1);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg2);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg4);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = UnpackPDU(pdu, aArg5);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    WarnAboutTrailingData();
+    return NS_OK;
+  }
+};
+
+//
 // Result handling
 //
 
