@@ -19,7 +19,7 @@ print(BUGNUMBER + ": " + summary);
 // syntax was removed.  Leaving it all in one file will make it easier to
 // eventually remove.  Avert your eyes!
 
-if (typeof Reflect !== "undefined")
+if (typeof Reflect !== "undefined" && Reflect.parse)
   Reflect.parse("for (var x = 3 in []) { }");
 
 /******************************************************************************/
