@@ -28,7 +28,6 @@
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
 #include "nsISupports.h"
-#include "nsITextControlElement.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
 #include "nsThreadUtils.h"
@@ -99,8 +98,11 @@ IMEContentObserver::IMEContentObserver()
 void
 IMEContentObserver::Init(nsIWidget* aWidget,
                          nsPresContext* aPresContext,
-                         nsIContent* aContent)
+                         nsIContent* aContent,
+                         nsIEditor* aEditor)
 {
+  MOZ_ASSERT(aEditor, "aEditor must not be null");
+
   mESM = aPresContext->EventStateManager();
   mESM->OnStartToObserveContent(this);
 
@@ -110,27 +112,8 @@ IMEContentObserver::Init(nsIWidget* aWidget,
     return;
   }
 
-  nsCOMPtr<nsITextControlElement> textControlElement =
-    do_QueryInterface(mEditableNode);
-  if (textControlElement) {
-    // This may fail. For example, <input type="button" contenteditable>
-    mEditor = textControlElement->GetTextEditor();
-    if (!mEditor && mEditableNode->IsContent()) {
-      // The element must be an editing host.
-      nsIContent* editingHost = mEditableNode->AsContent()->GetEditingHost();
-      MOZ_ASSERT(editingHost == mEditableNode,
-                 "found editing host should be mEditableNode");
-      if (editingHost == mEditableNode) {
-        mEditor = nsContentUtils::GetHTMLEditor(aPresContext);
-      }
-    }
-  } else {
-    mEditor = nsContentUtils::GetHTMLEditor(aPresContext);
-  }
-  MOZ_ASSERT(mEditor, "Failed to get editor");
-  if (mEditor) {
-    mEditor->AddEditorObserver(this);
-  }
+  mEditor = aEditor;
+  mEditor->AddEditorObserver(this);
 
   nsIPresShell* presShell = aPresContext->PresShell();
 
