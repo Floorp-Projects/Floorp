@@ -467,7 +467,6 @@ static const js::Class SandboxClass = {
     {
       nullptr,      /* outerObject */
       nullptr,      /* innerObject */
-      nullptr,      /* iteratorObject */
       false,        /* isWrappedNative */
       nullptr,      /* weakmapKeyDelegateOp */
       sandbox_moved /* objectMovedOp */
@@ -487,7 +486,6 @@ static const js::Class SandboxWriteToProtoClass = {
     {
       nullptr,      /* outerObject */
       nullptr,      /* innerObject */
-      nullptr,      /* iteratorObject */
       false,        /* isWrappedNative */
       nullptr,      /* weakmapKeyDelegateOp */
       sandbox_moved /* objectMovedOp */
