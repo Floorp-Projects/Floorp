@@ -92,6 +92,15 @@ public:
   static const index_type NoIndex = index_type(-1);
 
   index_type Find(double aTime);
+
+  bool Contains(double aStart, double aEnd) {
+    index_type target = Find(aStart);
+    if (target == NoIndex) {
+      return false;
+    }
+
+    return mRanges[target].mEnd >= aEnd;
+  }
 };
 
 } // namespace dom
