@@ -126,9 +126,9 @@ let gSyncPane = {
     });
     setEventListener("syncViewQuota", "command", gSyncPane.openQuotaDialog);
     setEventListener("syncChangePassword", "command",
-      gSyncUtils.changePassword);
+      () => gSyncUtils.changePassword());
     setEventListener("syncResetPassphrase", "command",
-      gSyncUtils.resetPassphrase);
+      () => gSyncUtils.resetPassphrase());
     setEventListener("syncReset", "command", gSyncPane.resetSync);
     setEventListener("syncAddDeviceLabel", "click", function () {
       gSyncPane.openAddDevice();
