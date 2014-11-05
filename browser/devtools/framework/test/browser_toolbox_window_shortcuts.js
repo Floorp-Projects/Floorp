@@ -6,12 +6,6 @@ let Toolbox = devtools.Toolbox;
 let toolbox, toolIDs, idIndex, modifiedPrefs = [];
 
 function test() {
-  if (window.navigator.userAgent.indexOf("Mac OS X 10.8") != -1 ||
-      window.navigator.userAgent.indexOf("Windows NT 5.1") != -1) {
-    info("Skipping Mac OSX 10.8 and Windows xp, see bug 838069");
-    finish();
-    return;
-  }
   addTab("about:blank").then(function() {
     toolIDs = [];
     for (let [id, definition] of gDevTools._tools) {

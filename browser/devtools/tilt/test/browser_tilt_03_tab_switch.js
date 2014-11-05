@@ -6,6 +6,10 @@ let tab0, tab1, tab2;
 let testStep = -1;
 
 function test() {
+  // This test relies on a timeout to indicate pass or fail. All tests need at
+  // least one pass, fail or todo so let's create a dummy pass.
+  ok(true, "Each test requires at least one pass, fail or todo so here is a pass.");
+
   if (!isTiltEnabled()) {
     info("Skipping tab switch test because Tilt isn't enabled.");
     return;
@@ -32,7 +36,7 @@ function createTab1() {
       }
     }, false, function suddenDeath()
     {
-      info("Tilt could not be initialized properly.");
+      ok(false, "Tilt could not be initialized properly.");
       cleanup();
     });
   });
@@ -49,7 +53,7 @@ function createTab2() {
       }
     }, false, function suddenDeath()
     {
-      info("Tilt could not be initialized properly.");
+      ok(false, "Tilt could not be initialized properly.");
       cleanup();
     });
   });
