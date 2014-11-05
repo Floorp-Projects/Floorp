@@ -50,6 +50,7 @@ public class StringHelper {
     public static final String CONTEXT_MENU_COPY_ADDRESS = "Copy Address";
     public static final String CONTEXT_MENU_EDIT_SITE_SETTINGS = "Edit Site Settings";
     public static final String CONTEXT_MENU_ADD_TO_HOME_SCREEN = "Add to Home Screen";
+    public static final String CONTEXT_MENU_PIN_SITE = "Pin Site";
 
     // Context Menu menu items
     public static final String[] CONTEXT_MENU_ITEMS_IN_PRIVATE_TAB = new String[] {
@@ -142,6 +143,10 @@ public class StringHelper {
     public static final String ROBOCOP_TEXT_PAGE_TITLE = "Robocop Text Page";
     public static final String ROBOCOP_INPUT_TITLE = "Robocop Input";
     public static final String ROBOCOP_SELECTION_HANDLER_TITLE = "Automated Text Selection tests for Mobile";
+
+    // Distribution tile labels
+    public static final String DISTRIBUTION1_LABEL = "Distribution 1";
+    public static final String DISTRIBUTION2_LABEL = "Distribution 2";
 
     // Settings menu strings
     // Section labels - ordered as found in the settings menu
