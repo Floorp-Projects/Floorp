@@ -17,6 +17,9 @@
 namespace mozilla {
 namespace widget {
 namespace android {
+
+#define MEDIACODEC_EXCEPTION_INDEX -255
+
 void InitSDKStubs(JNIEnv *jEnv);
 
 class MediaCodec : public AutoGlobalWrappedJavaObject {
@@ -24,7 +27,7 @@ public:
     static void InitStubs(JNIEnv *jEnv);
     static MediaCodec* Wrap(jobject obj);
     MediaCodec(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
-    void Configure(jobject a0, jobject a1, jobject a2, int32_t a3);
+    bool Configure(jobject a0, jobject a1, jobject a2, int32_t a3);
     static jobject CreateByCodecName(const nsAString& a0);
     static jobject CreateDecoderByType(const nsAString& a0);
     static jobject CreateEncoderByType(const nsAString& a0);
@@ -40,7 +43,7 @@ public:
     void Release();
     void ReleaseOutputBuffer(int32_t a0, bool a1);
     void SetVideoScalingMode(int32_t a0);
-    void Start();
+    bool Start();
     void Stop();
     static int32_t getBUFFER_FLAG_CODEC_CONFIG();
     static int32_t getBUFFER_FLAG_END_OF_STREAM();
