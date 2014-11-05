@@ -181,11 +181,8 @@
       let func = message.objects.func;
       let result = func(n => 2*n);
       ok(result == 20, "result == 20");
-      function f() {
-        return 101;
-      }
       let obj = {a:1, __exposedProps__: {"a": "r"}};
-      savedMM.sendAsyncMessage("cpows:from_parent", {}, {obj: obj, func: f});
+      savedMM.sendAsyncMessage("cpows:from_parent", {}, {obj: obj});
     }
 
     // Make sure errors in this file actually hit window.onerror.
