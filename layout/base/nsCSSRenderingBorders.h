@@ -16,7 +16,6 @@
 #include "nsCOMPtr.h"
 #include "nsStyleConsts.h"
 
-class gfxContext;
 struct nsBorderColors;
 
 namespace mozilla {
@@ -47,8 +46,7 @@ class GradientStops;
 /*
  * Helper class that handles border rendering.
  *
- * appUnitsPerPixel -- current value of AUPP
- * destContext -- the gfxContext to which the border should be rendered
+ * aDrawTarget -- the DrawTarget to which the border should be rendered
  * outsideRect -- the rectangle on the outer edge of the border
  *
  * For any parameter where an array of side values is passed in,
@@ -87,7 +85,7 @@ class nsCSSBorderRenderer MOZ_FINAL
 
 public:
 
-  nsCSSBorderRenderer(gfxContext* aDestContext,
+  nsCSSBorderRenderer(DrawTarget* aDrawTarget,
                       Rect& aOuterRect,
                       const uint8_t* aBorderStyles,
                       const Float* aBorderWidths,
@@ -116,9 +114,8 @@ private:
 
   RectCornerRadii mBorderCornerDimensions;
 
-  // destination context
+  // destination DrawTarget
   DrawTarget* mDrawTarget;
-  gfxContext* mContext;
 
   // the rectangle of the outside and the inside of the border
   Rect mOuterRect;
@@ -270,16 +267,6 @@ static inline void PrintAsFormatString(const char *fmt, ...) {
   va_end(vl);
 }
 
-static inline void PrintGfxContext(gfxContext *ctx) {
-  mozilla::gfx::Point p = ctx->CurrentPoint();
-  fprintf (stderr, "p: %f %f\n", p.x, p.y);
-  return;
-  ctx->MoveTo(p + Point(-2, -2)); ctx->LineTo(p + Point(2, 2));
-  ctx->MoveTo(p + Point(-2, 2)); ctx->LineTo(p + Point(2, -2));
-  ctx->MoveTo(p);
-}
-
-
 #else
 static inline void PrintAsString(const mozilla::gfx::Point& p) {}
 static inline void PrintAsString(const mozilla::gfx::Size& s) {}
@@ -288,7 +275,6 @@ static inline void PrintAsString(const mozilla::gfx::Float f) {}
 static inline void PrintAsString(const char *s) {}
 static inline void PrintAsStringNewline(const char *s = nullptr) {}
 static inline void PrintAsFormatString(const char *fmt, ...) {}
-static inline void PrintGfxContext(gfxContext *ctx) {}
 #endif
 
 }

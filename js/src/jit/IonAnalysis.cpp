@@ -1977,10 +1977,10 @@ jit::AssertGraphCoherency(MIRGraph &graph)
 #endif
 }
 
+#ifdef DEBUG
 static void
 AssertResumePointDominatedByOperands(MResumePoint *resume)
 {
-#ifdef DEBUG
     for (size_t i = 0, e = resume->numOperands(); i < e; ++i) {
         MDefinition *op = resume->getOperand(i);
         if (op->type() == MIRType_MagicOptimizedArguments)
@@ -1988,8 +1988,8 @@ AssertResumePointDominatedByOperands(MResumePoint *resume)
         MOZ_ASSERT(op->block()->dominates(resume->block()),
                    "Resume point is not dominated by its operands");
     }
-#endif
 }
+#endif // DEBUG
 
 void
 jit::AssertExtendedGraphCoherency(MIRGraph &graph)

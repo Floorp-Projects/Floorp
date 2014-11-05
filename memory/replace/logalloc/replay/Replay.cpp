@@ -394,7 +394,7 @@ public:
     size_t num = parseNumber(aArgs.SplitChar(','));
     size_t size = parseNumber(aArgs);
     aSlot.mPtr = ::calloc_impl(num, size);
-    aSlot.mSize = size;
+    aSlot.mSize = size * num;
     Commit(aSlot);
   }
 

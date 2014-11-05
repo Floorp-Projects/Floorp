@@ -178,9 +178,9 @@ class ThreadPool : public Monitor
     // The current job.
     ParallelJob *job_;
 
+#ifdef DEBUG
     // Initialized at startup only.
     JSRuntime *const runtime_;
-#ifdef DEBUG
     // Number of stolen slices in the last parallel job.
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stolenSlices_;
 #endif

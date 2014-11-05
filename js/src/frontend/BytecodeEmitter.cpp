@@ -3080,6 +3080,13 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
     if (Emit1(cx, bce, JSOP_RETRVAL) < 0)
         return false;
 
+    // If all locals are aliased, the frame's block slots won't be used, so we
+    // can set numBlockScoped = 0. This is nice for generators as it ensures
+    // nfixed == 0, so we don't have to initialize any local slots when resuming
+    // a generator.
+    if (bce->sc->allLocalsAliased())
+        bce->script->bindings.setAllLocalsAliased();
+
     if (!JSScript::fullyInitFromEmitter(cx, bce->script, bce))
         return false;
 
