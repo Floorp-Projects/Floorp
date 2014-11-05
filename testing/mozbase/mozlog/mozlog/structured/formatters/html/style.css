@@ -44,22 +44,16 @@ table {
 span.pass, .pass .col-result {
 	color: green;
 }
-span.expected_fail, .expected_fail .col-result {
-	color: orange;
-}
+span.expected_fail, .expected_fail .col-result,
 span.skip, .skip .col-result {
 	color: orange;
 }
-span.unexpected_pass, .unexpected_pass .col-result {
+span.fail, .fail .col-result,
+span.unexpected_fail, .unexpected_fail .col-result,
+span.unexpected_pass, .unexpected_pass .col-result,
+span.error,.error .col-result {
 	color: red;
 }
-span.fail, .fail .col-result {
-	color: red;
-}
-span.error,.error .col-result  {
-	color: red;
-}
-
 
 /******************************
  * RESULTS TABLE

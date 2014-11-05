@@ -94,8 +94,6 @@ class HTMLFormatter(base.BaseFormatter):
         self.make_result_html(data)
 
     def make_result_html(self, data):
-        cls_name = ""
-        tc_name = unicode(data["test"])
         tc_time = (data["time"] - self.start_times.pop(data["test"])) / 1000.
         additional_html = []
         debug = data.get("extra", {})
@@ -149,9 +147,8 @@ class HTMLFormatter(base.BaseFormatter):
 
         self.result_rows.append(
             html.tr([html.td(status_name, class_='col-result'),
-                     html.td(cls_name, class_='col-class'),
-                     html.td(tc_name, class_='col-name'),
-                     html.td("%.2f" % tc_time, class_='col-duration'),
+                     html.td(data['test'], class_='col-name'),
+                     html.td('%.2f' % tc_time, class_='col-duration'),
                      html.td(links_html, class_='col-links'),
                      html.td(additional_html, class_='debug')],
                     class_=status_name.lower() + ' results-table-row'))
@@ -189,8 +186,7 @@ class HTMLFormatter(base.BaseFormatter):
                     html.table([html.thead(
                         html.tr([
                             html.th('Result', class_='sortable', col='result'),
-                            html.th('Class', class_='sortable', col='class'),
-                            html.th('Test Name', class_='sortable', col='name'),
+                            html.th('Test', class_='sortable', col='name'),
                             html.th('Duration', class_='sortable numeric', col='duration'),
                             html.th('Links')]), id='results-table-head'),
                         html.tbody(self.result_rows, id='results-table-body')], id='results-table')))
