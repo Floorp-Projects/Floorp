@@ -259,6 +259,8 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     SAFE_OP(BoundsCheckLower)
     SAFE_OP(LoadElement)
     SAFE_OP(LoadElementHole)
+    SAFE_OP(LoadUnboxedObjectOrNull)
+    SAFE_OP(LoadUnboxedString)
     MAYBE_WRITE_GUARDED_OP(StoreElement, elements)
     WRITE_GUARDED_OP(StoreElementHole, elements)
     UNSAFE_OP(StoreUnboxedObjectOrNull)
