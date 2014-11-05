@@ -658,6 +658,10 @@ ValueNumberer::leader(MDefinition *def)
             if (!values_.add(p, def))
                 return nullptr;
         }
+
+#ifdef DEBUG
+        JitSpew(JitSpew_GVN, "      Recording %s%u", def->opName(), def->id());
+#endif
     }
 
     return def;
