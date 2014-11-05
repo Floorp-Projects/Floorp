@@ -56,5 +56,8 @@ public class AppGlobals {
             guiLogMessageBuffer.add("<font color='" + color +"'>" + msg + "</font>");
         }
     }
+
+    public static final String ACTION_TEST_SETTING_ENABLED = "stumbler-test-setting-enabled";
+    public static final String ACTION_TEST_SETTING_DISABLED = "stumbler-test-setting-disabled";
 }
 
