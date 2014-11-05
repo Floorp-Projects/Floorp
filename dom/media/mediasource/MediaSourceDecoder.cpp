@@ -82,7 +82,7 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
     // Return empty range.
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
     nsRefPtr<dom::TimeRanges> bufferedRanges = new dom::TimeRanges();
-    mMediaSource->GetBuffered(bufferedRanges);
+    mReader->GetBuffered(bufferedRanges);
     aSeekable->Add(bufferedRanges->GetStartTime(), bufferedRanges->GetEndTime());
   } else {
     aSeekable->Add(0, duration);
