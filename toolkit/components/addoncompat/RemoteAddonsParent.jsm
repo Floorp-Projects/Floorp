@@ -257,7 +257,7 @@ let ComponentRegistrarInterposition = new Interposition("ComponentRegistrarInter
 
 ComponentRegistrarInterposition.methods.registerFactory =
   function(addon, target, class_, className, contractID, factory) {
-    if (contractID.startsWith("@mozilla.org/network/protocol/about;1?")) {
+    if (contractID && contractID.startsWith("@mozilla.org/network/protocol/about;1?")) {
       AboutProtocolParent.registerFactory(class_, className, contractID, factory);
     }
 
