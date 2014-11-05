@@ -16,6 +16,7 @@
 #include "jsobj.h"
 #include "jspubtd.h"
 
+#include "builtin/Reflect.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "js/CharacterEncoding.h"
@@ -3743,29 +3744,17 @@ reflect_parse(JSContext* cx, uint32_t argc, jsval* vp)
     return true;
 }
 
-JS_PUBLIC_API(JSObject*)
-JS_InitReflect(JSContext* cx, HandleObject obj)
+JS_PUBLIC_API(bool)
+JS_InitReflectParse(JSContext* cx, HandleObject global)
 {
-    static const JSFunctionSpec static_methods[] = {
-        JS_FN("parse", reflect_parse, 1, 0),
-        JS_FS_END
-    };
-
-    RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
-    if (!proto)
-        return nullptr;
-    RootedPlainObject Reflect(cx, NewObjectWithGivenProto<PlainObject>(cx, proto,
-                                                                       SingletonObject));
-    if (!Reflect)
-        return nullptr;
-
-    if (!JS_DefineProperty(cx, obj, "Reflect", Reflect, 0,
-                           JS_STUBGETTER, JS_STUBSETTER)) {
-        return nullptr;
+    RootedValue reflectVal(cx);
+    if (!GetProperty(cx, global, global, cx->names().Reflect, &reflectVal))
+        return false;
+    if (!reflectVal.isObject()) {
+        JS_ReportError(cx, "JS_InitReflectParse must be called during global initialization");
+        return false;
     }
 
-    if (!JS_DefineFunctions(cx, Reflect, static_methods))
-        return nullptr;
-
-    return Reflect;
+    RootedObject reflectObj(cx, &reflectVal.toObject());
+    return JS_DefineFunction(cx, reflectObj, "parse", reflect_parse, 1, 0);
 }

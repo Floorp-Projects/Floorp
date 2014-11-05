@@ -113,6 +113,8 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         init = nullptr;
 
     const Class* clasp = ProtoKeyToClass(key);
+    if (!init && !clasp)
+        return true;  // JSProto_Null or a compile-time-disabled feature.
 
     // Some classes have no init routine, which means that they're disabled at
     // compile-time. We could try to enforce that callers never pass such keys
