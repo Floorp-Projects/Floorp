@@ -15,8 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
@@ -31,6 +32,8 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinSiteDialog.OnSiteSelectedListener;
 import org.mozilla.gecko.home.TopSitesGridView.OnEditPinnedSiteListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
+import org.mozilla.gecko.tiles.TilesRecorder;
+import org.mozilla.gecko.tiles.Tile;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -99,6 +102,9 @@ public class TopSitesPanel extends HomeFragment {
     // Max number of entries shown in the grid from the cursor.
     private int mMaxGridEntries;
 
+    // Fields used for tiles metrics recording.
+    private TilesRecorder mTilesRecorder;
+
     // Time in ms until the Gecko thread is reset to normal priority.
     private static final long PRIORITY_RESET_TIMEOUT = 10000;
 
@@ -121,11 +127,22 @@ public class TopSitesPanel extends HomeFragment {
         }
     }
 
+    public interface BrowserTilesRecorderProvider {
+        public TilesRecorder getTilesRecorder();
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
         mMaxGridEntries = activity.getResources().getInteger(R.integer.number_of_top_sites);
+
+        try {
+            mTilesRecorder = ((BrowserTilesRecorderProvider) activity).getTilesRecorder();
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement TopSitesPanel.BrowserTilesRecorderProvider");
+        }
     }
 
     @Override
@@ -215,6 +232,12 @@ public class TopSitesPanel extends HomeFragment {
                         }
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method, Integer.toString(position));
 
+                        // Record tile click events on non-private tabs.
+                        final Tab tab = Tabs.getInstance().getSelectedTab();
+                        if (!tab.isPrivate()) {
+                            mTilesRecorder.recordAction(tab, TilesRecorder.ACTION_CLICK, position, getTilesSnapshot());
+                        }
+
                         mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else {
@@ -260,6 +283,26 @@ public class TopSitesPanel extends HomeFragment {
 
         registerForContextMenu(mList);
         registerForContextMenu(mGrid);
+    }
+
+    private List<Tile> getTilesSnapshot() {
+        final int count = mGrid.getCount();
+        final ArrayList<Tile> snapshot = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            final Cursor cursor = (Cursor) mGrid.getItemAtPosition(i);
+            final int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
+
+            if (type == TopSites.TYPE_BLANK) {
+                snapshot.add(null);
+                continue;
+            }
+
+            final String url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
+            final int id = BrowserDB.getTrackingIdForUrl(url);
+            final boolean pinned = (type == TopSites.TYPE_PINNED);
+            snapshot.add(new Tile(id, pinned));
+        }
+        return snapshot;
     }
 
     @Override
