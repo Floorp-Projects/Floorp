@@ -12,6 +12,7 @@
 #include "jsgc.h"
 
 #include "jit/BaselineICList.h"
+#include "jit/BaselineJIT.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICList.h"
 #include "jit/SharedICRegisters.h"
