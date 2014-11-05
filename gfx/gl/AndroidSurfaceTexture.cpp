@@ -9,15 +9,21 @@
 #include <set>
 #include <map>
 #include <android/log.h>
-#include "nsSurfaceTexture.h"
+#include "AndroidSurfaceTexture.h"
+#include "gfxImageSurface.h"
 #include "AndroidBridge.h"
 #include "nsThreadUtils.h"
 #include "mozilla/gfx/Matrix.h"
+#include "GeneratedJNIWrappers.h"
 
 using namespace mozilla;
+using namespace mozilla::widget::android;
+
+namespace mozilla {
+namespace gl {
 
 // UGH
-static std::map<int, nsSurfaceTexture*> sInstances;
+static std::map<int, AndroidSurfaceTexture*> sInstances;
 static int sNextID = 0;
 
 static class JNIFunctions {
@@ -41,6 +47,9 @@ public:
     jSurfaceTexture_updateTexImage = env->GetMethodID(jSurfaceTextureClass, "updateTexImage", "()V");
     jSurfaceTexture_getTransformMatrix = env->GetMethodID(jSurfaceTextureClass, "getTransformMatrix", "([F)V");
 
+    jSurfaceClass = (jclass)env->NewGlobalRef(env->FindClass("android/view/Surface"));
+    jSurface_Ctor = env->GetMethodID(jSurfaceClass, "<init>", "(Landroid/graphics/SurfaceTexture;)V");
+
     mInitialized = true;
     return true;
   }
@@ -55,6 +64,16 @@ public:
     AutoLocalJNIFrame jniFrame(env);
 
     return env->NewGlobalRef(env->NewObject(jSurfaceTextureClass, jSurfaceTexture_Ctor, (int) aTexture));
+  }
+
+  jobject CreateSurface(jobject aSurfaceTexture)
+  {
+    if (!EnsureInitialized())
+      return nullptr;
+
+    JNIEnv* env = GetJNIForThread();
+    AutoLocalJNIFrame jniFrame(env);
+    return env->NewGlobalRef(env->NewObject(jSurfaceClass, jSurface_Ctor, aSurfaceTexture));
   }
 
   void ReleaseSurfaceTexture(jobject aSurfaceTexture)
@@ -116,19 +135,21 @@ private:
   jmethodID jSurfaceTexture_updateTexImage;
   jmethodID jSurfaceTexture_getTransformMatrix;
 
+  jclass jSurfaceClass;
+  jmethodID jSurface_Ctor;
+
 } sJNIFunctions;
 
-nsSurfaceTexture*
-nsSurfaceTexture::Create(GLuint aTexture)
+AndroidSurfaceTexture*
+AndroidSurfaceTexture::Create(GLuint aTexture)
 {
-  // Right now we only support creating this on the main thread because
-  // of the JNIEnv assumptions in JNIHelper and elsewhere
-  if (!NS_IsMainThread())
+  if (AndroidBridge::Bridge()->GetAPIVersion() < 14 /* Ice Cream Sandwich */) {
     return nullptr;
+  }
 
-  nsSurfaceTexture* st = new nsSurfaceTexture();
+  AndroidSurfaceTexture* st = new AndroidSurfaceTexture();
   if (!st->Init(aTexture)) {
-    printf_stderr("Failed to initialize nsSurfaceTexture");
+    printf_stderr("Failed to initialize AndroidSurfaceTexture");
     delete st;
     st = nullptr;
   }
@@ -136,10 +157,10 @@ nsSurfaceTexture::Create(GLuint aTexture)
   return st;
 }
 
-nsSurfaceTexture*
-nsSurfaceTexture::Find(int id)
+AndroidSurfaceTexture*
+AndroidSurfaceTexture::Find(int id)
 {
-  std::map<int, nsSurfaceTexture*>::iterator it;
+  std::map<int, AndroidSurfaceTexture*>::iterator it;
 
   it = sInstances.find(id);
   if (it == sInstances.end())
@@ -149,13 +170,13 @@ nsSurfaceTexture::Find(int id)
 }
 
 bool
-nsSurfaceTexture::Check()
+AndroidSurfaceTexture::Check()
 {
   return sJNIFunctions.EnsureInitialized();
 }
 
 bool
-nsSurfaceTexture::Init(GLuint aTexture)
+AndroidSurfaceTexture::Init(GLuint aTexture)
 {
   if (!sJNIFunctions.EnsureInitialized())
     return false;
@@ -163,85 +184,88 @@ nsSurfaceTexture::Init(GLuint aTexture)
   JNIEnv* env = GetJNIForThread();
 
   mSurfaceTexture = sJNIFunctions.CreateSurfaceTexture(aTexture);
-  if (!mSurfaceTexture)
+  if (!mSurfaceTexture) {
     return false;
+  }
 
-  mNativeWindow = AndroidBridge::Bridge()->AcquireNativeWindowFromSurfaceTexture(env, mSurfaceTexture);
+  mSurface = sJNIFunctions.CreateSurface(mSurfaceTexture);
+  if (!mSurface) {
+    return false;
+  }
 
   mID = ++sNextID;
-  sInstances.insert(std::pair<int, nsSurfaceTexture*>(mID, this));
+  sInstances.insert(std::pair<int, AndroidSurfaceTexture*>(mID, this));
+
+  mTexture = aTexture;
 
   return true;
 }
 
-nsSurfaceTexture::nsSurfaceTexture()
-  : mSurfaceTexture(nullptr), mNativeWindow(nullptr)
+AndroidSurfaceTexture::AndroidSurfaceTexture()
+  : mTexture(0), mSurfaceTexture(nullptr), mSurface(nullptr)
 {
 }
 
-nsSurfaceTexture::~nsSurfaceTexture()
+AndroidSurfaceTexture::~AndroidSurfaceTexture()
 {
   sInstances.erase(mID);
 
   mFrameAvailableCallback = nullptr;
 
-  if (mNativeWindow) {
-    AndroidBridge::Bridge()->ReleaseNativeWindowForSurfaceTexture(mSurfaceTexture);
-    mNativeWindow = nullptr;
-  }
-
   JNIEnv* env = GetJNIForThread();
 
   if (mSurfaceTexture) {
-    mozilla::widget::android::GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
 
     env->DeleteGlobalRef(mSurfaceTexture);
     mSurfaceTexture = nullptr;
   }
-}
 
-void*
-nsSurfaceTexture::GetNativeWindow()
-{
-  return mNativeWindow;
+  if (mSurface) {
+    env->DeleteGlobalRef(mSurface);
+    mSurface = nullptr;
+  }
 }
 
 void
-nsSurfaceTexture::UpdateTexImage()
+AndroidSurfaceTexture::UpdateTexImage()
 {
   sJNIFunctions.UpdateTexImage(mSurfaceTexture);
 }
 
 bool
-nsSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix)
+AndroidSurfaceTexture::GetTransformMatrix(gfx::Matrix4x4& aMatrix)
 {
   return sJNIFunctions.GetTransformMatrix(mSurfaceTexture, aMatrix);
 }
 
 void
-nsSurfaceTexture::SetFrameAvailableCallback(nsIRunnable* aRunnable)
+AndroidSurfaceTexture::SetFrameAvailableCallback(nsIRunnable* aRunnable)
 {
   if (aRunnable)
-    mozilla::widget::android::GeckoAppShell::RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
+    GeckoAppShell::RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
   else
-    mozilla::widget::android::GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
 
   mFrameAvailableCallback = aRunnable;
 }
 
 void
-nsSurfaceTexture::NotifyFrameAvailable()
+AndroidSurfaceTexture::NotifyFrameAvailable()
 {
   if (mFrameAvailableCallback) {
     // Proxy to main thread if we aren't on it
     if (!NS_IsMainThread()) {
-      // Proxy to main thread 
-      nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &nsSurfaceTexture::NotifyFrameAvailable);
+      // Proxy to main thread
+      nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &AndroidSurfaceTexture::NotifyFrameAvailable);
       NS_DispatchToCurrentThread(event);
     } else {
       mFrameAvailableCallback->Run();
     }
   }
 }
+
+} // gl
+} // mozilla
 
 #endif // MOZ_WIDGET_ANDROID
