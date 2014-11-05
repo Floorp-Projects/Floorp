@@ -536,6 +536,10 @@ public:
   static const KTableValue kBoxOrientKTable[];
   static const KTableValue kBoxPackKTable[];
   static const KTableValue kClipShapeSizingKTable[];
+  static const KTableValue kCounterRangeKTable[];
+  static const KTableValue kCounterSpeakAsKTable[];
+  static const KTableValue kCounterSymbolsSystemKTable[];
+  static const KTableValue kCounterSystemKTable[];
   static const KTableValue kDominantBaselineKTable[];
   static const KTableValue kShapeRadiusKTable[];
   static const KTableValue kFillRuleKTable[];
@@ -592,6 +596,7 @@ public:
   static const KTableValue kFontWeightKTable[];
   static const KTableValue kGridAutoFlowKTable[];
   static const KTableValue kGridTrackBreadthKTable[];
+  static const KTableValue kHyphensKTable[];
   static const KTableValue kImageOrientationKTable[];
   static const KTableValue kImageOrientationFlipKTable[];
   static const KTableValue kIsolationKTable[];
@@ -659,11 +664,6 @@ public:
   static const KTableValue kWordBreakKTable[];
   static const KTableValue kWordWrapKTable[];
   static const KTableValue kWritingModeKTable[];
-  static const KTableValue kHyphensKTable[];
-  static const KTableValue kCounterSystemKTable[];
-  static const KTableValue kCounterSymbolsSystemKTable[];
-  static const KTableValue kCounterRangeKTable[];
-  static const KTableValue kCounterSpeakAsKTable[];
 };
 
 inline nsCSSProps::EnabledState operator|(nsCSSProps::EnabledState a,
