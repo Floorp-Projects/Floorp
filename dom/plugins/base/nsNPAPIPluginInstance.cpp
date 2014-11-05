@@ -952,7 +952,7 @@ void nsNPAPIPluginInstance::ReleaseContentTexture(nsNPAPIPluginInstance::Texture
   mContentTexture->Release(aTextureInfo);
 }
 
-nsSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
+AndroidSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
 {
   if (!EnsureGLContext())
     return nullptr;
@@ -961,7 +961,7 @@ nsSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
   if (!texture)
     return nullptr;
 
-  nsSurfaceTexture* surface = nsSurfaceTexture::Create(texture);
+  AndroidSurfaceTexture* surface = AndroidSurfaceTexture::Create(texture);
   if (!surface)
     return nullptr;
 
@@ -985,7 +985,7 @@ void* nsNPAPIPluginInstance::AcquireContentWindow()
       return nullptr;
   }
 
-  return mContentSurface->GetNativeWindow();
+  return mContentSurface->NativeWindow()->Handle();
 }
 
 EGLImage
@@ -997,7 +997,7 @@ nsNPAPIPluginInstance::AsEGLImage()
   return mContentTexture->CreateEGLImage();
 }
 
-nsSurfaceTexture*
+AndroidSurfaceTexture*
 nsNPAPIPluginInstance::AsSurfaceTexture()
 {
   if (!mContentSurface)
@@ -1008,13 +1008,13 @@ nsNPAPIPluginInstance::AsSurfaceTexture()
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
 {
-  nsSurfaceTexture* surface = CreateSurfaceTexture();
+  AndroidSurfaceTexture* surface = CreateSurfaceTexture();
   if (!surface)
     return nullptr;
 
   VideoInfo* info = new VideoInfo(surface);
 
-  void* window = info->mSurfaceTexture->GetNativeWindow();
+  void* window = info->mSurfaceTexture->NativeWindow()->Handle();
   mVideos.insert(std::pair<void*, VideoInfo*>(window, info));
 
   return window;
