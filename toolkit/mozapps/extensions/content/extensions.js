@@ -243,6 +243,12 @@ function getMainWindow() {
                .getInterface(Ci.nsIDOMWindow);
 }
 
+function getBrowserElement() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDocShell)
+               .chromeEventHandler;
+}
+
 /**
  * Obtain the DOMWindow that can open a preferences pane.
  *
@@ -1215,7 +1221,7 @@ var gViewController = {
             if (installs.length > 0) {
               // Display the normal install confirmation for the installs
               AddonManager.installAddonsFromWebpage("application/x-xpinstall",
-                                                    window, null, installs);
+                                                    getBrowserElement(), null, installs);
             }
             return;
           }
@@ -3613,7 +3619,7 @@ var gDragDrop = {
         if (installs.length > 0) {
           // Display the normal install confirmation for the installs
           AddonManager.installAddonsFromWebpage("application/x-xpinstall",
-                                                window, null, installs);
+                                                getBrowserElement(), null, installs);
         }
         return;
       }

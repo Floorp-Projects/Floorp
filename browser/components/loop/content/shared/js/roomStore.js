@@ -48,14 +48,16 @@ loop.store = loop.store || {};
    * Room store.
    *
    * Options:
-   * - {loop.Dispatcher} dispatcher The dispatcher for dispatching actions and
-   *                                registering to consume actions.
-   * - {mozLoop}         mozLoop    The MozLoop API object.
+   * - {loop.Dispatcher} dispatcher       The dispatcher for dispatching actions
+   *                                      and registering to consume actions.
+   * - {mozLoop}         mozLoop          The MozLoop API object.
+   * - {ActiveRoomStore} activeRoomStore  An optional substore for active room
+   *                                      state.
    *
    * @extends {Backbone.Events}
    * @param {Object} options Options object.
    */
-  function RoomListStore(options) {
+  function RoomStore(options) {
     options = options || {};
 
     if (!options.dispatcher) {
@@ -68,9 +70,16 @@ loop.store = loop.store || {};
     }
     this._mozLoop = options.mozLoop;
 
+    if (options.activeRoomStore) {
+      this.activeRoomStore = options.activeRoomStore;
+      this.activeRoomStore.on("change",
+                              this._onActiveRoomStoreChange.bind(this));
+    }
+
     this._dispatcher.register(this, [
       "createRoom",
       "createRoomError",
+      "copyRoomUrl",
       "deleteRoom",
       "deleteRoomError",
       "getAllRooms",
@@ -80,7 +89,7 @@ loop.store = loop.store || {};
     ]);
   }
 
-  RoomListStore.prototype = _.extend({
+  RoomStore.prototype = _.extend({
     /**
      * Maximum size given to createRoom; only 2 is supported (and is
      * always passed) because that's what the user-experience is currently
@@ -101,6 +110,7 @@ loop.store = loop.store || {};
      * @see  #getStoreState
      */
     _storeState: {
+      activeRoom: {},
       error: null,
       pendingCreation: false,
       pendingInitialRetrieval: false,
@@ -115,21 +125,36 @@ loop.store = loop.store || {};
      * - {Boolean} pendingInitialRetrieval Pending initial list retrieval flag.
      * - {Array}   rooms                   The current room list.
      * - {Error}   error                   Latest error encountered, if any.
+     * - {Object}  activeRoom              Active room data, if any.
      *
+     * You can request a given state property by providing the `key` argument.
+     *
+     * @param  {String|undefined} key An optional state property name.
      * @return {Object}
      */
-    getStoreState: function() {
+    getStoreState: function(key) {
+      if (key) {
+        return this._storeState[key];
+      }
       return this._storeState;
     },
 
     /**
-     * Updates store state and trigger a "change" event.
+     * Updates store state and trigger a global "change" event, plus one for
+     * each provided newState property:
      *
-     * @param {Object} newState The new store state.
+     * - change:rooms
+     * - change:pendingInitialRetrieval
+     * - change:pendingCreation
+     * - change:error
+     * - change:activeRoom
+     *
+     * @param {Object} newState The new store state object.
      */
     setStoreState: function(newState) {
       for (var key in newState) {
         this._storeState[key] = newState[key];
+        this.trigger("change:" + key);
       }
       this.trigger("change");
     },
@@ -142,6 +167,13 @@ loop.store = loop.store || {};
       this._mozLoop.rooms.on("add", this._onRoomAdded.bind(this));
       this._mozLoop.rooms.on("update", this._onRoomUpdated.bind(this));
       this._mozLoop.rooms.on("delete", this._onRoomRemoved.bind(this));
+    },
+
+    /**
+     * Updates active room store state.
+     */
+    _onActiveRoomStoreChange: function() {
+      this.setStoreState({activeRoom: this.activeRoomStore.getStoreState()});
     },
 
     /**
@@ -286,6 +318,15 @@ loop.store = loop.store || {};
     },
 
     /**
+     * Copy a room url.
+     *
+     * @param  {sharedActions.CopyRoomUrl} actionData The action data.
+     */
+    copyRoomUrl: function(actionData) {
+      this._mozLoop.copyString(actionData.roomUrl);
+    },
+
+    /**
      * Creates a new room.
      *
      * @param {sharedActions.DeleteRoom} actionData The action data.
@@ -362,5 +403,5 @@ loop.store = loop.store || {};
     }
   }, Backbone.Events);
 
-  loop.store.RoomListStore = RoomListStore;
+  loop.store.RoomStore = RoomStore;
 })();

@@ -335,9 +335,11 @@ var PrintPreviewListener = {
       browser = document.createElement("browser");
       browser.setAttribute("id", "ppBrowser");
       browser.setAttribute("flex", "1");
+      browser.setAttribute("type", "content");
       document.getElementById("appcontent").
         insertBefore(browser, document.getElementById("FindToolbar"));
     }
+
     return browser;
   },
   getSourceBrowser: function () {

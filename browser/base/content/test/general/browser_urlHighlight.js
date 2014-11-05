@@ -16,7 +16,7 @@ function testVal(aExpected) {
     value = value.substring(pos + range.length);
   }
   result += value;
-  is(result, aExpected);
+  is(result, aExpected, "Correct part of the urlbar contents is highlighted");
 }
 
 function test() {
