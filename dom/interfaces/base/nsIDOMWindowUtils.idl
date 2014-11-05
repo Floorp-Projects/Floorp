@@ -51,11 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-<<<<<<< local
-[scriptable, uuid(01e0c3ca-37e7-4ab4-bd22-3e99d8d23336)]
-=======
 [scriptable, uuid(e293355b-ae7f-4ef7-9237-452bcf3e9e6b)]
->>>>>>> other
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
