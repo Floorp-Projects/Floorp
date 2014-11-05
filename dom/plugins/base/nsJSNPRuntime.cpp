@@ -201,7 +201,6 @@ const static js::Class sNPObjectJSWrapperClass =
     {
       nullptr,                                              /* outerObject */
       nullptr,                                              /* innerObject */
-      nullptr,                                              /* iteratorObject */
       false,                                                /* isWrappedNative */
       nullptr,                                              /* weakmapKeyDelegateOp */
       NPObjWrapper_ObjectMoved
