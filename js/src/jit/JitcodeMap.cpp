@@ -14,7 +14,7 @@
 
 namespace js {
 namespace jit {
- 
+
 bool
 JitcodeGlobalEntry::IonEntry::callStackAtAddr(JSRuntime *rt, void *ptr,
                                               BytecodeLocationVector &results,
@@ -662,7 +662,7 @@ JitcodeIonTable::WriteIonTable(CompactBufferWriter &writer,
         // Calculate the length of the next run.
         uint32_t runLength = JitcodeRegionEntry::ExpectedRunLength(curEntry, end);
         MOZ_ASSERT(runLength > 0);
-        MOZ_ASSERT(runLength <= (end - curEntry));
+        MOZ_ASSERT(runLength <= uintptr_t(end - curEntry));
         JitSpew(JitSpew_Profiling, "  Run at entry %d, length %d, buffer offset %d",
                 int(curEntry - start), int(runLength), int(writer.length()));
 

@@ -61,10 +61,9 @@ BaselineFrame::trace(JSTracer *trc, JitFrameIterator &frameIterator)
 
     if (nfixed != nlivefixed) {
         jsbytecode *pc;
-        NestedScopeObject *staticScope;
-
         frameIterator.baselineScriptAndPc(nullptr, &pc);
-        staticScope = script->getStaticScope(pc);
+
+        NestedScopeObject *staticScope = script->getStaticScope(pc);
         while (staticScope && !staticScope->is<StaticBlockObject>())
             staticScope = staticScope->enclosingNestedScope();
 
