@@ -502,9 +502,6 @@ BrowserGlue.prototype = {
 #endif
     os.addObserver(this, "browser-search-engine-modified", false);
     os.addObserver(this, "browser-search-service", false);
-#ifdef NIGHTLY_BUILD
-    Services.prefs.addObserver(POLARIS_ENABLED, this, false);
-#endif
   },
 
   // cleanup (called on application shutdown)
@@ -600,6 +597,10 @@ BrowserGlue.prototype = {
     ContentPrefServiceParent.init();
 
     LoginManagerParent.init();
+
+#ifdef NIGHTLY_BUILD
+    Services.prefs.addObserver(POLARIS_ENABLED, this, false);
+#endif
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },
@@ -2285,28 +2286,23 @@ let DefaultBrowserCheck = {
     } catch (ex) {
       Cu.reportError(ex);
     }
-    this.closePrompt();
   },
 
-  _createPopup: function(win, bundle) {
+  _createPopup: function(win, notNowStrings, neverStrings) {
     let doc = win.document;
     let popup = doc.createElement("menupopup");
     popup.id = this.OPTIONPOPUP;
 
     let notNowItem = doc.createElement("menuitem");
     notNowItem.id = "defaultBrowserNotNow";
-    let label = bundle.getString("setDefaultBrowserNotNow.label");
-    notNowItem.setAttribute("label", label);
-    let accesskey = bundle.getString("setDefaultBrowserNotNow.accesskey");
-    notNowItem.setAttribute("accesskey", accesskey);
+    notNowItem.setAttribute("label", notNowStrings.label);
+    notNowItem.setAttribute("accesskey", notNowStrings.accesskey);
     popup.appendChild(notNowItem);
 
     let neverItem = doc.createElement("menuitem");
     neverItem.id = "defaultBrowserNever";
-    label = bundle.getString("setDefaultBrowserNever.label");
-    neverItem.setAttribute("label", label);
-    accesskey = bundle.getString("setDefaultBrowserNever.accesskey");
-    neverItem.setAttribute("accesskey", accesskey);
+    neverItem.setAttribute("label", neverStrings.label);
+    neverItem.setAttribute("accesskey", neverStrings.accesskey);
     popup.appendChild(neverItem);
 
     popup.addEventListener("command", this);
@@ -2332,40 +2328,72 @@ let DefaultBrowserCheck = {
     let promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage2",
                                                        [brandShortName]);
 
-    let confirmMessage = shellBundle.getFormattedString("setDefaultBrowserConfirm.label",
-                                                        [brandShortName]);
-    let confirmKey = shellBundle.getString("setDefaultBrowserConfirm.accesskey");
+    let yesButton = shellBundle.getFormattedString("setDefaultBrowserConfirm.label",
+                                                   [brandShortName]);
 
-    let optionsMessage = shellBundle.getString("setDefaultBrowserOptions.label");
-    let optionsKey = shellBundle.getString("setDefaultBrowserOptions.accesskey");
+    let notNowButton = shellBundle.getString("setDefaultBrowserNotNow.label");
+    let notNowButtonKey = shellBundle.getString("setDefaultBrowserNotNow.accesskey");
 
-    let selectedBrowser = win.gBrowser.selectedBrowser;
-    let notificationBox = win.document.getElementById("high-priority-global-notificationbox");
+    let neverLabel = shellBundle.getString("setDefaultBrowserNever.label");
+    let neverKey = shellBundle.getString("setDefaultBrowserNever.accesskey");
 
-    this._createPopup(win, shellBundle);
+    let useNotificationBar = Services.prefs.getBoolPref("browser.defaultbrowser.notificationbar");
+    if (useNotificationBar) {
+      let optionsMessage = shellBundle.getString("setDefaultBrowserOptions.label");
+      let optionsKey = shellBundle.getString("setDefaultBrowserOptions.accesskey");
 
-    let buttons = [
-      {
-        label: confirmMessage,
-        accessKey: confirmKey,
-        callback: this.setAsDefault.bind(this)
-      },
-      {
-        label: optionsMessage,
-        accessKey: optionsKey,
-        popup: this.OPTIONPOPUP
+      let yesButtonKey = shellBundle.getString("setDefaultBrowserConfirm.accesskey");
+
+      let notificationBox = win.document.getElementById("high-priority-global-notificationbox");
+
+      this._createPopup(win, {
+        label: notNowButton,
+        accesskey: notNowButtonKey
+      }, {
+        label: neverLabel,
+        accesskey: neverKey
+      });
+
+      let buttons = [
+        {
+          label: yesButton,
+          accessKey: yesButtonKey,
+          callback: () => {
+            this.setAsDefault();
+            this.closePrompt();
+          }
+        },
+        {
+          label: optionsMessage,
+          accessKey: optionsKey,
+          popup: this.OPTIONPOPUP
+        }
+      ];
+
+      let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
+      let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
+      const priority = notificationBox.PRIORITY_WARNING_HIGH;
+      let callback = this._onNotificationEvent.bind(this);
+      this._notification = notificationBox.appendNotification(promptMessage, "default-browser",
+                                                              iconURL, priority, buttons,
+                                                              callback);
+    } else {
+      // Modal prompt
+      let promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+
+      let ps = Services.prompt;
+      let dontAsk = { value: false };
+      let buttonFlags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
+                        (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_1) +
+                        ps.BUTTON_POS_0_DEFAULT;
+      let rv = ps.confirmEx(win, promptTitle, promptMessage, buttonFlags,
+                            yesButton, notNowButton, null, neverLabel, dontAsk);
+      if (rv == 0) {
+        this.setAsDefault();
+      } else if (dontAsk.value) {
+        ShellService.shouldCheckDefaultBrowser = false;
       }
-    ];
-
-
-    let iconPixels = win.devicePixelRatio > 1 ? "32" : "16";
-    let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
-    const priority = notificationBox.PRIORITY_WARNING_HIGH;
-    let callback = this._onNotificationEvent.bind(this);
-    this._notification = notificationBox.appendNotification(promptMessage, "default-browser",
-                                                            iconURL, priority, buttons,
-                                                            callback);
-    this._notification.persistence = -1;
+    }
   },
 
   _onNotificationEvent: function(eventType) {
