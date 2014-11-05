@@ -231,6 +231,20 @@ describe("loop.webapp", function() {
                 loop.webapp.FailedConversationView);
             });
 
+            it("should reset multiplexGum when a call is rejected",
+              function() {
+                var multiplexGum = new standaloneMedia._MultiplexGum();
+                standaloneMedia.setSingleton(multiplexGum);
+                sandbox.stub(standaloneMedia._MultiplexGum.prototype, "reset");
+
+                ocView._websocket.trigger("progress", {
+                  state: "terminated",
+                  reason: "reject"
+                });
+
+                sinon.assert.calledOnce(multiplexGum.reset);
+              });
+
             it("should display an error message if the reason is not 'cancel'",
               function() {
                 ocView._websocket.trigger("progress", {
