@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from urlparse import urlparse
 import mozinfo
 import moznetwork
 import optparse
 import os
 import tempfile
 
-from automationutils import addCommonOptions, isURL
+from automationutils import addCommonOptions
 from mozprofile import DEFAULT_PORTS
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -504,7 +505,7 @@ class MochitestOptions(optparse.OptionParser):
         if options.certPath:
             options.certPath = mochitest.getFullPath(options.certPath)
 
-        if options.symbolsPath and not isURL(options.symbolsPath):
+        if options.symbolsPath and len(urlparse(options.symbolsPath).scheme) < 2:
             options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
         # Set server information on the options object
