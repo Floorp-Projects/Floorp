@@ -37,6 +37,7 @@
 #include "libGLESv2/angletypes.h"
 
 #include "libEGL/Display.h"
+#include "libEGL/Surface.h"
 
 #include "common/utilities.h"
 
@@ -72,6 +73,16 @@ static const D3DFORMAT RenderTargetFormats[] =
         D3DFMT_R5G6B5,
     //  D3DFMT_X1R5G5B5,      // Has no compatible OpenGL ES renderbuffer format
         D3DFMT_X8R8G8B8
+    };
+
+static const GLenum RenderTargetExposedFormats[] =
+    {
+        GL_RGB5_A1,  // D3DFMT_A1R5G5B5
+    //  GL_RGB10_A2, // D3DFMT_A2R10G10B10
+        GL_RGBA8,    // D3DFMT_A8R8G8B8
+        GL_RGB565,   // D3DFMT_R5G6B5
+    //  GL_RGB5,     // D3DFMT_X1R5G5B5 (No real matching format)
+        GL_RGB8      // D3DFMT_X8R8G8B8
     };
 
 static const D3DFORMAT DepthStencilFormats[] =
@@ -436,6 +447,7 @@ int Renderer9::generateConfigs(ConfigDesc **configDescList)
     for (unsigned int formatIndex = 0; formatIndex < numRenderFormats; formatIndex++)
     {
         const d3d9::D3DFormat &renderTargetFormatInfo = d3d9::GetD3DFormatInfo(RenderTargetFormats[formatIndex]);
+        const GLenum renderTargetExposedFormat = RenderTargetExposedFormats[formatIndex];
         const gl::TextureCaps &renderTargetFormatCaps = getRendererTextureCaps().get(renderTargetFormatInfo.internalFormat);
         if (renderTargetFormatCaps.renderable)
         {
@@ -446,7 +458,7 @@ int Renderer9::generateConfigs(ConfigDesc **configDescList)
                 if (depthStencilFormatCaps.renderable || DepthStencilFormats[depthStencilIndex] == D3DFMT_UNKNOWN)
                 {
                     ConfigDesc newConfig;
-                    newConfig.renderTargetFormat = renderTargetFormatInfo.internalFormat;
+                    newConfig.renderTargetFormat = renderTargetExposedFormat;
                     newConfig.depthStencilFormat = depthStencilFormatInfo.internalFormat;
                     newConfig.multiSample = 0; // FIXME: enumerate multi-sampling
                     newConfig.fastConfig = (currentDisplayMode.Format == RenderTargetFormats[formatIndex]);
@@ -2764,10 +2776,13 @@ gl::Error Renderer9::readPixels(gl::Framebuffer *framebuffer, GLint x, GLint y, 
     return gl::Error(GL_NO_ERROR);
 }
 
-RenderTarget *Renderer9::createRenderTarget(SwapChain *swapChain, bool depth)
+RenderTarget *Renderer9::createRenderTarget(egl::Surface *eglSurface, bool depth)
 {
+    SwapChain *swapChain = eglSurface->getSwapChain();
     SwapChain9 *swapChain9 = SwapChain9::makeSwapChain9(swapChain);
+
     IDirect3DSurface9 *surface = NULL;
+    GLenum exposedFormatOverride = 0;
     if (depth)
     {
         surface = swapChain9->getDepthStencil();
@@ -2775,9 +2790,10 @@ RenderTarget *Renderer9::createRenderTarget(SwapChain *swapChain, bool depth)
     else
     {
         surface = swapChain9->getRenderTarget();
+        exposedFormatOverride = eglSurface->getFormat();
     }
 
-    RenderTarget9 *renderTarget = new RenderTarget9(this, surface);
+    RenderTarget9 *renderTarget = new RenderTarget9(this, surface, exposedFormatOverride);
 
     return renderTarget;
 }
