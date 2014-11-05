@@ -10,8 +10,8 @@
 #include "jit/IonAnalysis.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
-#include "jit/ValueNumbering.h"
 #include "jit/RangeAnalysis.h"
+#include "jit/ValueNumbering.h"
 
 namespace js {
 namespace jit {
