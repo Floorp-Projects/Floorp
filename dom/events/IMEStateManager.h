@@ -11,6 +11,7 @@
 
 class nsIContent;
 class nsIDOMMouseEvent;
+class nsIEditor;
 class nsINode;
 class nsPIDOMWindow;
 class nsPresContext;
@@ -65,7 +66,8 @@ public:
   // Note that this method changes the IME state of the active element in the
   // widget.  So, the caller must have focus.
   static void UpdateIMEState(const IMEState &aNewIMEState,
-                             nsIContent* aContent);
+                             nsIContent* aContent,
+                             nsIEditor* aEditor);
 
   // This method is called when user operates mouse button in focused editor
   // and before the editor handles it.
@@ -89,7 +91,8 @@ public:
   //   If the editor is for contenteditable, the active editinghost.
   //   If the editor is for designMode, nullptr.
   static void OnFocusInEditor(nsPresContext* aPresContext,
-                              nsIContent* aContent);
+                              nsIContent* aContent,
+                              nsIEditor* aEditor);
 
   /**
    * All composition events must be dispatched via DispatchCompositionEvent()
@@ -149,7 +152,7 @@ protected:
                                  nsIContent* aContent);
 
   static void EnsureTextCompositionArray();
-  static void CreateIMEContentObserver();
+  static void CreateIMEContentObserver(nsIEditor* aEditor);
   static void DestroyIMEContentObserver();
 
   static bool IsEditable(nsINode* node);
