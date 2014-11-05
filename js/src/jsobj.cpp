@@ -2387,6 +2387,15 @@ NativeObject::fillInAfterSwap(JSContext *cx, const Vector<Value> &values, void *
     initSlotRange(0, values.begin(), values.length());
 }
 
+void
+JSObject::fixDictionaryShapeAfterSwap()
+{
+    // Dictionary shapes can point back to their containing objects, so after
+    // swapping the guts of those objects fix the pointers up.
+    if (isNative() && as<NativeObject>().inDictionaryMode())
+        shape_->listp = &shape_;
+}
+
 /* Use this method with extreme caution. It trades the guts of two objects. */
 bool
 JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
@@ -2441,6 +2450,9 @@ JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
         js_memcpy(tmp, a, size);
         js_memcpy(a, b, size);
         js_memcpy(b, tmp, size);
+
+        a->fixDictionaryShapeAfterSwap();
+        b->fixDictionaryShapeAfterSwap();
     } else {
         // Avoid GC in here to avoid confusing the tracing code with our
         // intermediate state.
@@ -2478,18 +2490,14 @@ JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
         js_memcpy(a, b, sizeof tmp);
         js_memcpy(b, &tmp, sizeof tmp);
 
+        a->fixDictionaryShapeAfterSwap();
+        b->fixDictionaryShapeAfterSwap();
+
         if (na)
             b->as<NativeObject>().fillInAfterSwap(cx, avals, apriv);
         if (nb)
             a->as<NativeObject>().fillInAfterSwap(cx, bvals, bpriv);
     }
-
-    // Dictionary shapes can point back to their containing objects, so fix
-    // those pointers up.
-    if (a->isNative() && a->as<NativeObject>().inDictionaryMode())
-        a->lastProperty()->listp = &a->shape_;
-    if (b->isNative() && b->as<NativeObject>().inDictionaryMode())
-        b->lastProperty()->listp = &b->shape_;
 
     // Swapping the contents of two objects invalidates type sets which contain
     // either of the objects, so mark all such sets as unknown.
