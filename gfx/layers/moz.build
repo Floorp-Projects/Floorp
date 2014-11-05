@@ -290,6 +290,7 @@ UNIFIED_SOURCES += [
     'Compositor.cpp',
     'CopyableCanvasLayer.cpp',
     'Effects.cpp',
+    'GLImages.cpp',
     'ImageDataSerializer.cpp',
     'ImageLayers.cpp',
     'ipc/AsyncTransactionTracker.cpp',
