@@ -1,10 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
-const Cu = Components.utils;
+"use strict"
+
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -16,25 +15,31 @@ let (commonFile = do_get_file("../head_common.js", false)) {
 
 // Put any other stuff relative to this test folder below.
 
-const kDBName = "places.sqlite";
+const DB_FILENAME = "places.sqlite";
 
 /**
  * Sets the database to use for the given test.  This should be the very first
- * thing we do otherwise, this database will not be used!
+ * thing in the test, otherwise this database will not be used!
  *
  * @param aFileName
  *        The filename of the database to use.  This database must exist in
  *        toolkit/components/places/tests/migration!
+ * @return {Promise}
  */
-function setPlacesDatabase(aFileName)
-{
-  let file = do_get_file(aFileName);
+let setupPlacesDatabase = Task.async(function* (aFileName) {
+  let currentDir = yield OS.File.getCurrentDirectory();
+
+  let src = OS.Path.join(currentDir, aFileName);
+  Assert.ok((yield OS.File.exists(src)), "Database file found");
 
   // Ensure that our database doesn't already exist.
-  let (dbFile = gProfD.clone()) {
-    dbFile.append(kDBName);
-    do_check_false(dbFile.exists());
-  }
+  let dest = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
+  Assert.ok(!(yield OS.File.exists(dest)), "Database file should not exist yet");
 
-  file.copyToFollowingLinks(gProfD, kDBName);
+  yield OS.File.copy(src, dest);
+});
+
+// This works provided all tests in this folder use add_task.
+function run_test() {
+  run_next_test();
 }
