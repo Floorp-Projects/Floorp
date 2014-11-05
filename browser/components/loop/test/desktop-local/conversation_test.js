@@ -126,14 +126,14 @@ describe("loop.conversation", function() {
 
   describe("AppControllerView", function() {
     var conversationStore, conversation, client, ccView, oldTitle, dispatcher;
-    var conversationAppStore, localRoomStore;
+    var conversationAppStore, roomStore;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
         loop.conversation.AppControllerView({
           client: client,
           conversation: conversation,
-          localRoomStore: localRoomStore,
+          roomStore: roomStore,
           sdk: {},
           conversationStore: conversationStore,
           conversationAppStore: conversationAppStore
@@ -161,7 +161,7 @@ describe("loop.conversation", function() {
         dispatcher: dispatcher,
         sdkDriver: {}
       });
-      localRoomStore = new loop.store.LocalRoomStore({
+      roomStore = new loop.store.RoomStore({
         mozLoop: navigator.mozLoop,
         dispatcher: dispatcher
       });

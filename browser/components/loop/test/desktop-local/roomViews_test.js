@@ -3,28 +3,26 @@ var expect = chai.expect;
 describe("loop.roomViews", function () {
   "use strict";
 
-  var store, fakeWindow, sandbox, fakeAddCallback, fakeMozLoop,
-    fakeRemoveCallback, fakeRoomId, fakeWindow;
+  var sandbox, dispatcher, roomStore, activeRoomStore, fakeWindow, fakeMozLoop,
+      fakeRoomId;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
-    fakeRoomId = "fakeRoomId";
-    fakeAddCallback =
-      sandbox.stub().withArgs(fakeRoomId, "RoomCreationError");
-    fakeRemoveCallback =
-      sandbox.stub().withArgs(fakeRoomId, "RoomCreationError");
-    fakeMozLoop = { rooms: { addCallback: fakeAddCallback,
-                             removeCallback: fakeRemoveCallback } };
+    dispatcher = new loop.Dispatcher();
 
     fakeWindow = { document: {} };
     loop.shared.mixins.setRootObject(fakeWindow);
 
-    store = new loop.store.LocalRoomStore({
-      dispatcher: { register: function() {} },
-      mozLoop: fakeMozLoop
+    activeRoomStore = new loop.store.ActiveRoomStore({
+      dispatcher: dispatcher,
+      mozLoop: {}
     });
-    store.setStoreState({localRoomId: fakeRoomId});
+    roomStore = new loop.store.RoomStore({
+      dispatcher: dispatcher,
+      mozLoop: {},
+      activeRoomStore: activeRoomStore
+    });
   });
 
   afterEach(function() {
@@ -36,23 +34,19 @@ describe("loop.roomViews", function () {
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
         new loop.roomViews.DesktopRoomView({
-          mozLoop: fakeMozLoop,
-          localRoomStore: store
+          mozLoop: {},
+          roomStore: roomStore
         }));
     }
 
     describe("#render", function() {
-      it("should set document.title to store.serverData.roomName",
-        function() {
-          var fakeRoomName = "Monkey";
-          store.setStoreState({serverData: {roomName: fakeRoomName},
-                               localRoomId: fakeRoomId});
+      it("should set document.title to store.serverData.roomName", function() {
+        mountTestComponent();
 
-          mountTestComponent();
+        activeRoomStore.setStoreState({serverData: {roomName: "fakeName"}});
 
-          expect(fakeWindow.document.title).to.equal(fakeRoomName);
-        });
+        expect(fakeWindow.document.title).to.equal("fakeName");
+      });
     });
-
   });
 });

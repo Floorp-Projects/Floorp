@@ -140,7 +140,7 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.PanelView", function() {
-    var fakeClient, dispatcher, roomListStore, callUrlData;
+    var fakeClient, dispatcher, roomStore, callUrlData;
 
     beforeEach(function() {
       callUrlData = {
@@ -155,7 +155,7 @@ describe("loop.panel", function() {
       };
 
       dispatcher = new loop.Dispatcher();
-      roomListStore = new loop.store.RoomListStore({
+      roomStore = new loop.store.RoomStore({
         dispatcher: dispatcher,
         mozLoop: navigator.mozLoop
       });
@@ -167,7 +167,7 @@ describe("loop.panel", function() {
         client: fakeClient,
         showTabButtons: true,
         dispatcher: dispatcher,
-        roomListStore: roomListStore
+        roomStore: roomStore
       }));
     }
 
@@ -679,11 +679,13 @@ describe("loop.panel", function() {
       });
 
       it("should copy the URL when the click event fires", function() {
+        sandbox.stub(dispatcher, "dispatch");
+
         TestUtils.Simulate.click(copyButton);
 
-        sinon.assert.calledOnce(navigator.mozLoop.copyString);
-        sinon.assert.calledWithExactly(navigator.mozLoop.copyString,
-          roomData.roomUrl);
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.CopyRoomUrl({roomUrl: roomData.roomUrl}));
       });
 
       it("should set state.urlCopied when the click event fires", function() {
@@ -757,16 +759,16 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.RoomList", function() {
-    var roomListStore, dispatcher, fakeEmail;
+    var roomStore, dispatcher, fakeEmail;
 
     beforeEach(function() {
       fakeEmail = "fakeEmail@example.com";
       dispatcher = new loop.Dispatcher();
-      roomListStore = new loop.store.RoomListStore({
+      roomStore = new loop.store.RoomStore({
         dispatcher: dispatcher,
         mozLoop: navigator.mozLoop
       });
-      roomListStore.setStoreState({
+      roomStore.setStoreState({
         pendingCreation: false,
         pendingInitialRetrieval: false,
         rooms: [],
@@ -776,7 +778,7 @@ describe("loop.panel", function() {
 
     function createTestComponent() {
       return TestUtils.renderIntoDocument(loop.panel.RoomList({
-        store: roomListStore,
+        store: roomStore,
         dispatcher: dispatcher,
         userDisplayName: fakeEmail
       }));
@@ -809,7 +811,7 @@ describe("loop.panel", function() {
     it("should disable the create button when a creation operation is ongoing",
       function() {
         var dispatch = sandbox.stub(dispatcher, "dispatch");
-        roomListStore.setStoreState({pendingCreation: true});
+        roomStore.setStoreState({pendingCreation: true});
 
         var view = createTestComponent();
 
@@ -820,7 +822,7 @@ describe("loop.panel", function() {
     it("should disable the create button when a list retrieval operation is pending",
       function() {
         var dispatch = sandbox.stub(dispatcher, "dispatch");
-        roomListStore.setStoreState({pendingInitialRetrieval: true});
+        roomStore.setStoreState({pendingInitialRetrieval: true});
 
         var view = createTestComponent();
 
