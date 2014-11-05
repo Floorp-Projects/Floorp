@@ -35,6 +35,8 @@ add_test(function test_registration_uses_hawk_session_token() {
 function run_test() {
   setupFakeLoopServer();
 
+  mockPushHandler.registrationPushURL = kEndPointUrl;
+
   do_register_cleanup(function() {
     Services.prefs.clearUserPref("loop.hawk-session-token");
   });

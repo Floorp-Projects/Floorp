@@ -373,6 +373,7 @@ function injectLoopAPI(targetWindow) {
      * Callback parameters:
      * - err null on successful registration, non-null otherwise.
      *
+     * @param {LOOP_SESSION_TYPE} sessionType
      * @param {Function} callback Will be called once registration is complete,
      *                            or straight away if registration has already
      *                            happened.
@@ -380,10 +381,10 @@ function injectLoopAPI(targetWindow) {
     ensureRegistered: {
       enumerable: true,
       writable: true,
-      value: function(callback) {
+      value: function(sessionType, callback) {
         // We translate from a promise to a callback, as we can't pass promises from
         // Promise.jsm across the priv versus unpriv boundary.
-        MozLoopService.promiseRegisteredWithServers().then(() => {
+        MozLoopService.promiseRegisteredWithServers(sessionType).then(() => {
           callback(null);
         }, err => {
           callback(cloneValueInto(err, targetWindow));
