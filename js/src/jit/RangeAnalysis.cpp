@@ -1115,6 +1115,19 @@ Range::ceil(TempAllocator &alloc, const Range *op)
     return copy;
 }
 
+Range *
+Range::sign(TempAllocator &alloc, const Range *op)
+{
+    if (op->canBeNaN())
+        return nullptr;
+
+    return new(alloc) Range(Max(Min(op->lower_, 1), -1),
+                            Max(Min(op->upper_, 1), -1),
+                            Range::ExcludesFractionalParts,
+                            NegativeZeroFlag(op->canBeNegativeZero()),
+                            0);
+}
+
 bool
 Range::negativeZeroMul(const Range *lhs, const Range *rhs)
 {
@@ -1707,16 +1720,7 @@ MMathFunction::computeRange(TempAllocator &alloc)
             setRange(Range::NewDoubleRange(alloc, -1.0, 1.0));
         break;
       case Sign:
-        if (!opRange.canBeNaN()) {
-            // Note that Math.sign(-0) is -0, and we treat -0 as equal to 0.
-            int32_t lower = -1;
-            int32_t upper = 1;
-            if (opRange.hasInt32LowerBound() && opRange.lower() >= 0)
-                lower = 0;
-            if (opRange.hasInt32UpperBound() && opRange.upper() <= 0)
-                upper = 0;
-            setRange(Range::NewInt32Range(alloc, lower, upper));
-        }
+        setRange(Range::sign(alloc, &opRange));
         break;
     default:
         break;
