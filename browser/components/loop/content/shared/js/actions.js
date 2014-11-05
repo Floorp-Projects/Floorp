@@ -203,6 +203,14 @@ loop.shared.actions = (function() {
      */
     OpenRoom: Action.define("openRoom", {
       roomToken: String
+    }),
+
+    /**
+     * Copy a room url in the user's clipboard.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    CopyRoomUrl: Action.define("copyRoomUrl", {
+      roomUrl: String
     })
   };
 })();
