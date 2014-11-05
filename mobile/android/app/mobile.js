@@ -663,6 +663,11 @@ pref("urlclassifier.gethash.timeout_ms", 5000);
 pref("urlclassifier.max-complete-age", 2700);
 #endif
 
+// URL for posting tiles metrics.
+#ifdef RELEASE_BUILD
+pref("browser.tiles.reportURL", "https://tiles.services.mozilla.com/v2/links/click");
+#endif
+
 // True if this is the first time we are showing about:firstrun
 pref("browser.firstrun.show.uidiscovery", true);
 pref("browser.firstrun.show.localepicker", false);
