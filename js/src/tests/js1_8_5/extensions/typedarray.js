@@ -203,7 +203,7 @@ function test()
         gc();
         buffer = null;
         views = null;
-        gcslice(3); gcslice(3); gcslice(3); gcslice(3); gcslice(3); gcslice(3); gc();
+        gcslice(2); gcslice(2); gcslice(2); gcslice(2); gcslice(2); gcslice(2); gc();
     }
 
     var buf, buf2;

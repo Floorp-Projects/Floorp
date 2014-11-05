@@ -4,7 +4,7 @@ function gen()
     yield 1;
     local = null;
     gc();
-    gcslice(0); // Start IGC, but don't mark anything.
+    gcslice(0);
     yield 2;
 }
 

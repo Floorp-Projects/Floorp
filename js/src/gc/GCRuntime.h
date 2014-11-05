@@ -281,7 +281,7 @@ class GCRuntime
     void gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
     void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
     void gcFinalSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason);
-    void gcDebugSlice(SliceBudget &budget);
+    void gcDebugSlice(bool limit, int64_t objCount);
 
     void runDebugGC();
     inline void poke();
@@ -509,14 +509,14 @@ class GCRuntime
 
     bool initZeal();
     void requestMajorGC(JS::gcreason::Reason reason);
-    void collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gckind,
+    void collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
-    bool gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gckind,
+    bool gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
     gcstats::ZoneGCStats scanZonesBeforeGC();
-    void budgetIncrementalGC(SliceBudget &budget);
+    void budgetIncrementalGC(int64_t *budget);
     void resetIncrementalGC(const char *reason);
-    void incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason reason);
+    void incrementalCollectSlice(int64_t budget, JS::gcreason::Reason reason);
     void pushZealSelectedObjects();
     void purgeRuntime();
     bool beginMarkPhase(JS::gcreason::Reason reason);

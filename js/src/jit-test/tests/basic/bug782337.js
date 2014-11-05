@@ -12,5 +12,5 @@ function recur(n)
 }
 
 validategc(false);
-gcslice(1);
+gcslice(0);
 recur(10);
