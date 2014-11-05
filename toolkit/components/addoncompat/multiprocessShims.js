@@ -77,7 +77,13 @@ AddonInterpositionService.prototype = {
   // determines the type of the target object.
   getObjectTag: function(target) {
     if (Cu.isCrossProcessWrapper(target)) {
-      return Cu.getCrossProcessWrapperTag(target);
+      if (target instanceof Ci.nsIDocShellTreeItem) {
+        return "ContentDocShellTreeItem";
+      }
+
+      if (target instanceof Ci.nsIDOMDocument) {
+        return "ContentDocument";
+      }
     }
 
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
