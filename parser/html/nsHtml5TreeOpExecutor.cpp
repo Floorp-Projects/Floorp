@@ -29,6 +29,7 @@
 #include "nsIScriptContext.h"
 #include "mozilla/Preferences.h"
 #include "nsIHTMLDocument.h"
+#include "nsILoadInfo.h"
 
 using namespace mozilla;
 
@@ -412,7 +413,11 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
         GetParser()->GetStreamParser();
       // Now parse content left in the document.write() buffer queue if any.
       // This may generate tree ops on its own or dequeue a speculation.
-      GetParser()->ParseUntilBlocked();
+      nsresult rv = GetParser()->ParseUntilBlocked();
+      if (NS_FAILED(rv)) {
+        MarkAsBroken(rv);
+        return;
+      }
     }
 
     if (mOpQueue.IsEmpty()) {
@@ -495,21 +500,24 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
   }
 }
 
-void
+nsresult
 nsHtml5TreeOpExecutor::FlushDocumentWrite()
 {
+  nsresult rv = IsBroken();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   FlushSpeculativeLoads(); // Make sure speculative loads never start after the
                 // corresponding normal loads for the same URLs.
 
   if (MOZ_UNLIKELY(!mParser)) {
     // The parse has ended.
     mOpQueue.Clear(); // clear in order to be able to assert in destructor
-    return;
+    return rv;
   }
   
   if (mFlushState != eNotFlushing) {
     // XXX Can this happen? In case it can, let's avoid crashing.
-    return;
+    return rv;
   }
 
   mFlushState = eInFlush;
@@ -542,7 +550,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
     }
     NS_ASSERTION(mFlushState == eInDocUpdate, 
       "Tried to perform tree op outside update batch.");
-    nsresult rv = iter->Perform(this, &scriptElement);
+    rv = iter->Perform(this, &scriptElement);
     if (NS_FAILED(rv)) {
       MarkAsBroken(rv);
       break;
@@ -557,13 +565,14 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 
   if (MOZ_UNLIKELY(!mParser)) {
     // Ending the doc update caused a call to nsIParser::Terminate().
-    return;
+    return rv;
   }
 
   if (scriptElement) {
     // must be tail call when mFlushState is eNotFlushing
     RunScript(scriptElement);
   }
+  return rv;
 }
 
 // copied from HTML content sink
@@ -797,12 +806,15 @@ nsHtml5TreeOpExecutor::GetViewSourceBaseURI()
     // We query the channel for the baseURI because in certain situations it
     // cannot otherwise be determined. If this process fails, fall back to the
     // standard method.
-    nsCOMPtr<nsIViewSourceChannel> vsc;
-    vsc = do_QueryInterface(mDocument->GetChannel());
-    if (vsc) {
-      nsresult rv =  vsc->GetBaseURI(getter_AddRefs(mViewSourceBaseURI));
-      if (NS_SUCCEEDED(rv) && mViewSourceBaseURI) {
-        return mViewSourceBaseURI;
+    nsCOMPtr<nsIChannel> channel = mDocument->GetChannel();
+    if (channel) {
+      nsCOMPtr<nsILoadInfo> loadInfo;
+      nsresult rv = channel->GetLoadInfo(getter_AddRefs(loadInfo));
+      if (NS_SUCCEEDED(rv) && loadInfo) {
+        rv = loadInfo->GetBaseURI(getter_AddRefs(mViewSourceBaseURI));
+        if (NS_SUCCEEDED(rv) && mViewSourceBaseURI) {
+          return mViewSourceBaseURI;
+        }
       }
     }
 

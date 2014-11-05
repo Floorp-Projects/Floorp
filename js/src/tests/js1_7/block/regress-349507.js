@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = /TypeError: redeclaration of const b/;
   try
   {
     eval('(function() { let(x = 1) { const b = 2 }; let b = 3; })');
@@ -30,7 +29,7 @@ function test()
     actual = ex + '';
   }
 
-  reportMatch(expect, actual, summary);
+  reportCompare(expect, actual, summary);
 
   exitFunc ('test');
 }

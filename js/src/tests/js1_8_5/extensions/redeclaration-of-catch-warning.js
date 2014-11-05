@@ -30,7 +30,7 @@ function assertRedeclarationErrorThrown(expression)
   }
 }
 
-assertRedeclarationErrorThrown("try {} catch(e) { const e; }");
+assertRedeclarationErrorThrown("try {} catch(e) { const e = undefined; }");
 assertRedeclarationErrorThrown("try {} catch(e) { let e; }");
 
 if (typeof reportCompare === "function")

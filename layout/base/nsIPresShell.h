@@ -1102,8 +1102,8 @@ public:
     RENDER_DRAWWINDOW_NOT_FLUSHING = 0x40
   };
   virtual nsresult RenderDocument(const nsRect& aRect, uint32_t aFlags,
-                                              nscolor aBackgroundColor,
-                                              gfxContext* aRenderedContext) = 0;
+                                  nscolor aBackgroundColor,
+                                  gfxContext* aRenderedContext) = 0;
 
   /**
    * Renders a node aNode to a surface and returns it. The aRegion may be used

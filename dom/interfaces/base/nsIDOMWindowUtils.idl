@@ -104,6 +104,11 @@ interface nsIDOMWindowUtils : nsISupports {
   unsigned long redraw([optional] in unsigned long aCount);
 
   /**
+   * Force a synchronous layer transaction for this window if necessary.
+   */
+  void updateLayerTree();
+
+  /**
    * Set the CSS viewport to be |widthPx| x |heightPx| in units of CSS
    * pixels, regardless of the size of the enclosing widget/view.
    * This will trigger reflow.

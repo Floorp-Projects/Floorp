@@ -8,6 +8,7 @@ from manifestparser import TestManifest, ParseError
 
 here = os.path.dirname(os.path.abspath(__file__))
 
+
 class TestTestManifest(unittest.TestCase):
     """Test the Test Manifest"""
 
@@ -44,7 +45,6 @@ class TestTestManifest(unittest.TestCase):
         self.assertRaises(IOError, manifest.update, tempdir)
 
         shutil.rmtree(tempdir)
-
 
     def test_comments(self):
         """
@@ -102,6 +102,19 @@ class TestTestManifest(unittest.TestCase):
         manifest.tests[0]['subsuite'] = 'subsuite=bar,foo=="bar",type="nothing"'
         self.assertRaises(ParseError, manifest.active_tests, exists=False,
                           options=AttributeDict(options), **info)
+
+    def test_none_and_empty_manifest(self):
+        """
+        Test TestManifest for None and empty manifest, see
+        https://bugzilla.mozilla.org/show_bug.cgi?id=1087682
+        """
+        none_manifest = TestManifest(manifests=None, strict=False)
+        self.assertEqual(len(none_manifest.test_paths()), 0)
+        self.assertEqual(len(none_manifest.active_tests()), 0)
+
+        empty_manifest = TestManifest(manifests=[], strict=False)
+        self.assertEqual(len(empty_manifest.test_paths()), 0)
+        self.assertEqual(len(empty_manifest.active_tests()), 0)
 
 if __name__ == '__main__':
     unittest.main()
