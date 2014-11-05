@@ -32,22 +32,11 @@ var emailTreeView;
 var userTreeView;
 var orphanTreeView;
 
-var smartCardObserver = {
-  observe: function() {
-    onSmartCardChange();
-  }
-};
-
-function DeregisterSmartCardObservers()
-{
-  Services.obs.removeObserver(smartCardObserver, "smartcard-insert");
-  Services.obs.removeObserver(smartCardObserver, "smartcard-remove");
-}
-
 function LoadCerts()
 {
-  Services.obs.addObserver(smartCardObserver, "smartcard-insert", false);
-  Services.obs.addObserver(smartCardObserver, "smartcard-remove", false);
+  window.crypto.enableSmartCardEvents = true;
+  document.addEventListener("smartcard-insert", onSmartCardChange, false);
+  document.addEventListener("smartcard-remove", onSmartCardChange, false);
 
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
@@ -624,3 +613,4 @@ function addException()
   orphanTreeView.loadCertsFromCache(certcache, nsIX509Cert.UNKNOWN_CERT);
   orphanTreeView.selection.clearSelection();
 }
+
