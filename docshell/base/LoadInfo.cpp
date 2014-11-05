@@ -17,11 +17,13 @@ namespace mozilla {
 LoadInfo::LoadInfo(nsIPrincipal* aPrincipal,
                    nsINode* aLoadingContext,
                    nsSecurityFlags aSecurityFlags,
-                   nsContentPolicyType aContentPolicyType)
+                   nsContentPolicyType aContentPolicyType,
+                   nsIURI* aBaseURI)
   : mPrincipal(aPrincipal)
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mSecurityFlags(aSecurityFlags)
   , mContentPolicyType(aContentPolicyType)
+  , mBaseURI(aBaseURI)
 {
   MOZ_ASSERT(aPrincipal);
   // if the load is sandboxed, we can not also inherit the principal
@@ -92,6 +94,14 @@ NS_IMETHODIMP
 LoadInfo::GetContentPolicyType(nsContentPolicyType* outContentPolicyType)
 {
   *outContentPolicyType = mContentPolicyType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetBaseURI(nsIURI** aBaseURI)
+{
+  *aBaseURI = mBaseURI;
+  NS_IF_ADDREF(*aBaseURI);
   return NS_OK;
 }
 
