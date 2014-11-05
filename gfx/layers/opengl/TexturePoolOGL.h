@@ -12,7 +12,7 @@ namespace gl {
 
 // A texture pool for for the on-screen GLContext. The main purpose of this class
 // is to provide the ability to easily allocate an on-screen texture from the
-// content thread. The unfortunate nature of the SurfaceTexture API (see nsSurfaceTexture)
+// content thread. The unfortunate nature of the SurfaceTexture API (see AndroidSurfaceTexture)
 // necessitates this.
 class TexturePoolOGL
 {
