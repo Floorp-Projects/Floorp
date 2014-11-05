@@ -34,13 +34,13 @@ function startTest(test, token)
     } catch (ex) {
       threwError = true;
     }
-    ok(threwError, token + " - Should throw an error when trying to draw EME video to canvas.");
+    ok(threwError, TimeStamp(token) + " - Should throw an error when trying to draw EME video to canvas.");
     manager.finished(token);
   });
 
   v.addEventListener("error", bail(token + " got error event"));
 
-  LoadTest(test, v);
+  LoadTest(test, v, token);
 }
 
 function beginTest() {

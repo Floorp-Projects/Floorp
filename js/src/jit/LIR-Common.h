@@ -730,6 +730,24 @@ class LNewObject : public LInstructionHelper<1, 0, 1>
     }
 };
 
+class LNewTypedObject : public LInstructionHelper<1, 0, 1>
+{
+  public:
+    LIR_HEADER(NewTypedObject)
+
+    explicit LNewTypedObject(const LDefinition &temp) {
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    MNewTypedObject *mir() const {
+        return mir_->toNewTypedObject();
+    }
+};
+
 class LNewPar : public LInstructionHelper<1, 1, 2>
 {
   public:
@@ -3667,6 +3685,22 @@ class LValueToString : public LInstructionHelper<1, BOX_PIECES, 1>
     }
 };
 
+// Convert a value to an object or null pointer.
+class LValueToObjectOrNull : public LInstructionHelper<1, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(ValueToObjectOrNull)
+
+    explicit LValueToObjectOrNull()
+    {}
+
+    static const size_t Input = 0;
+
+    const MToObjectOrNull *mir() {
+        return mir_->toToObjectOrNull();
+    }
+};
+
 class LInt32x4ToFloat32x4 : public LInstructionHelper<1, 1, 0>
 {
   public:
@@ -4557,6 +4591,33 @@ class LStoreElementHoleT : public LInstructionHelper<0, 4, 0>
     }
     const LAllocation *value() {
         return getOperand(3);
+    }
+};
+
+class LStoreUnboxedPointer : public LInstructionHelper<0, 3, 0>
+{
+  public:
+    LIR_HEADER(StoreUnboxedPointer)
+
+    LStoreUnboxedPointer(LAllocation elements, LAllocation index, LAllocation value) {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setOperand(2, value);
+    }
+
+    MDefinition *mir() {
+        MOZ_ASSERT(mir_->isStoreUnboxedObjectOrNull() || mir_->isStoreUnboxedString());
+        return mir_;
+    }
+
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
+    }
+    const LAllocation *value() {
+        return getOperand(2);
     }
 };
 

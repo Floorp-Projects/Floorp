@@ -25,6 +25,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMMouseEvent.h"
+#include "nsIEditor.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsINode.h"
@@ -559,12 +560,14 @@ IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 // static
 void
 IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
-                                 nsIContent* aContent)
+                                 nsIContent* aContent,
+                                 nsIEditor* aEditor)
 {
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
-    ("ISM: IMEStateManager::OnFocusInEditor(aPresContext=0x%p, aContent=0x%p), "
-     "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p",
-     aPresContext, aContent, sPresContext, sContent,
+    ("ISM: IMEStateManager::OnFocusInEditor(aPresContext=0x%p, aContent=0x%p, "
+     "aEditor=0x%p), sPresContext=0x%p, sContent=0x%p, "
+     "sActiveIMEContentObserver=0x%p",
+     aPresContext, aContent, aEditor, sPresContext, sContent,
      sActiveIMEContentObserver));
 
   if (sPresContext != aPresContext || sContent != aContent) {
@@ -586,21 +589,22 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     DestroyIMEContentObserver();
   }
 
-  CreateIMEContentObserver();
+  CreateIMEContentObserver(aEditor);
 }
 
 // static
 void
 IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
-                                nsIContent* aContent)
+                                nsIContent* aContent,
+                                nsIEditor* aEditor)
 {
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
     ("ISM: IMEStateManager::UpdateIMEState(aNewIMEState={ mEnabled=%s, "
-     "mOpen=%s }, aContent=0x%p), "
+     "mOpen=%s }, aContent=0x%p, aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
      "sIsGettingNewIMEState=%s",
      GetIMEStateEnabledName(aNewIMEState.mEnabled),
-     GetIMEStateSetOpenName(aNewIMEState.mOpen), aContent,
+     GetIMEStateSetOpenName(aNewIMEState.mOpen), aContent, aEditor,
      sPresContext, sContent, sActiveIMEContentObserver,
      GetBoolName(sIsGettingNewIMEState)));
 
@@ -651,7 +655,7 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   }
 
   if (createTextStateManager) {
-    CreateIMEContentObserver();
+    CreateIMEContentObserver(aEditor);
   }
 }
 
@@ -1145,13 +1149,13 @@ IMEStateManager::DestroyIMEContentObserver()
 
 // static
 void
-IMEStateManager::CreateIMEContentObserver()
+IMEStateManager::CreateIMEContentObserver(nsIEditor* aEditor)
 {
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
-    ("ISM: IMEStateManager::CreateIMEContentObserver(), "
+    ("ISM: IMEStateManager::CreateIMEContentObserver(aEditor=0x%p), "
      "sPresContext=0x%p, sContent=0x%p, sActiveIMEContentObserver=0x%p, "
      "sActiveIMEContentObserver->IsManaging(sPresContext, sContent)=%s",
-     sPresContext, sContent, sActiveIMEContentObserver,
+     aEditor, sPresContext, sContent, sActiveIMEContentObserver,
      GetBoolName(sActiveIMEContentObserver ?
        sActiveIMEContentObserver->IsManaging(sPresContext, sContent) : false)));
 
@@ -1195,7 +1199,7 @@ IMEStateManager::CreateIMEContentObserver()
   // instance.  So, sActiveIMEContentObserver would be replaced with new one.
   // We should hold the current instance here.
   nsRefPtr<IMEContentObserver> kungFuDeathGrip(sActiveIMEContentObserver);
-  sActiveIMEContentObserver->Init(widget, sPresContext, sContent);
+  sActiveIMEContentObserver->Init(widget, sPresContext, sContent, aEditor);
 }
 
 // static
