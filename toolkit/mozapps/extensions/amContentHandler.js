@@ -9,6 +9,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 const XPI_CONTENT_TYPE = "application/x-xpinstall";
+const MSG_INSTALL_ADDONS = "WebInstallerInstallAddonsFromWebpage";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -42,35 +43,31 @@ amContentHandler.prototype = {
     if (callbacks)
       window = callbacks.getInterface(Ci.nsIDOMWindow);
 
+    let referer = null;
+    if (aRequest instanceof Ci.nsIPropertyBag2) {
+      referer = aRequest.getPropertyAsInterface("docshell.internalReferrer",
+                                                Ci.nsIURI);
+    }
+
+    if (!referer && aRequest instanceof Ci.nsIHttpChannel)
+      referer = aRequest.referrer;
+
     aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
-    let appinfo = Cc["@mozilla.org/xre/app-info;1"].
-                  getService(Ci.nsIXULRuntime);
-    if (appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
-      try {
-        if (!window.InstallTrigger) 
-          window = window.wrappedJSObject;
-  
-        if (window.InstallTrigger)
-          window.InstallTrigger.startSoftwareUpdate(uri.spec);
-        else
-          this.log("Window does not have an InstallTrigger");
-      } catch(ex) {
-        this.log(ex);
-      }
-    }
-    else {
-      let referer = null;
-      if (aRequest instanceof Ci.nsIPropertyBag2) {
-        referer = aRequest.getPropertyAsInterface("docshell.internalReferrer",
-                                                Ci.nsIURI);
-      }
+    let messageManager = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDocShell)
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIContentFrameMessageManager);
 
-      let manager = Cc["@mozilla.org/addons/integration;1"].
-                    getService(Ci.amIWebInstaller);
-      manager.installAddonsFromWebpage(aMimetype, window, referer, [uri.spec],
-                                       [null], [null], [null], null, 1);
-    }
+    messageManager.sendAsyncMessage(MSG_INSTALL_ADDONS, {
+      uris: [uri.spec],
+      hashes: [null],
+      names: [null],
+      icons: [null],
+      mimetype: XPI_CONTENT_TYPE,
+      referer: referer ? referer.spec : null,
+      callbackID: -1
+    });
   },
 
   classID: Components.ID("{7beb3ba8-6ec3-41b4-b67c-da89b8518922}"),
