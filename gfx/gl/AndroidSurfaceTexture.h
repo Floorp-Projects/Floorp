@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsSurfaceTexture_h__
-#define nsSurfaceTexture_h__
+#ifndef AndroidSurfaceTexture_h__
+#define AndroidSurfaceTexture_h__
 #ifdef MOZ_WIDGET_ANDROID
 
 #include <jni.h>
@@ -13,31 +13,36 @@
 #include "gfxPlatform.h"
 #include "GLDefs.h"
 
+#include "AndroidNativeWindow.h"
+
+class gfxASurface;
+
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;
 }
 }
 
+namespace mozilla {
+namespace gl {
+
 /**
  * This class is a wrapper around Android's SurfaceTexture class.
  * Usage is pretty much exactly like the Java class, so see
  * the Android documentation for details.
  */
-class nsSurfaceTexture MOZ_FINAL {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsSurfaceTexture)
+class AndroidSurfaceTexture {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AndroidSurfaceTexture)
 
 public:
-  static nsSurfaceTexture* Create(GLuint aTexture);
-  static nsSurfaceTexture* Find(int id);
+  static AndroidSurfaceTexture* Create(GLuint aTexture);
+  static AndroidSurfaceTexture* Find(int id);
 
   // Returns with reasonable certainty whether or not we'll
   // be able to create and use a SurfaceTexture
   static bool Check();
-
-  // This is an ANativeWindow. Use AndroidBridge::LockWindow and
-  // friends for manipulating it.
-  void* GetNativeWindow();
+  
+  ~AndroidSurfaceTexture();
 
   // This attaches the updated data to the TEXTURE_EXTERNAL target
   void UpdateTexImage();
@@ -52,19 +57,24 @@ public:
   // Only should be called by AndroidJNI when we get a
   // callback from the underlying SurfaceTexture instance
   void NotifyFrameAvailable();
-private:
-  nsSurfaceTexture();
 
-  // Private destructor, to discourage deletion outside of Release():
-  ~nsSurfaceTexture();
+  GLuint Texture() { return mTexture; }
+private:
+  AndroidSurfaceTexture();
 
   bool Init(GLuint aTexture);
 
+  GLuint mTexture;
   jobject mSurfaceTexture;
-  void* mNativeWindow;
+  jobject mSurface;
+
   int mID;
   nsRefPtr<nsIRunnable> mFrameAvailableCallback;
 };
+  
+}
+}
+
 
 #endif
 #endif
