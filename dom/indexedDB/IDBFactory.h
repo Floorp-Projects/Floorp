@@ -73,7 +73,6 @@ class IDBFactory MOZ_FINAL
   PRThread* mOwningThread;
 #endif
 
-  bool mRootedOwningObject;
   bool mBackgroundActorFailed;
   bool mPrivateBrowsingMode;
 
