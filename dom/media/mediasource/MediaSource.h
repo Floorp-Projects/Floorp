@@ -74,6 +74,8 @@ public:
   bool Attach(MediaSourceDecoder* aDecoder);
   void Detach();
 
+  void GetBuffered(TimeRanges* aBuffered);
+
   // Set mReadyState to aState and fire the required events at the MediaSource.
   void SetReadyState(MediaSourceReadyState aState);
 

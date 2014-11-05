@@ -6,7 +6,6 @@
 
 #include "MediaDecoderReader.h"
 #include "AbstractMediaDecoder.h"
-#include "MediaResource.h"
 #include "VideoUtils.h"
 #include "ImageContainer.h"
 
@@ -62,7 +61,6 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aDecoder)
   , mIgnoreAudioOutputFormat(false)
-  , mStartTime(-1)
   , mAudioDiscontinuity(false)
   , mVideoDiscontinuity(false)
 {
@@ -122,17 +120,11 @@ VideoData* MediaDecoderReader::DecodeToFirstVideoData()
   return (d = VideoQueue().PeekFront()) ? d : nullptr;
 }
 
-void
-MediaDecoderReader::SetStartTime(int64_t aStartTime)
-{
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  mStartTime = aStartTime;
-}
-
 nsresult
-MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered)
+MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered,
+                                int64_t aStartTime)
 {
-  AutoPinned<MediaResource> stream(mDecoder->GetResource());
+  MediaResource* stream = mDecoder->GetResource();
   int64_t durationUs = 0;
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());

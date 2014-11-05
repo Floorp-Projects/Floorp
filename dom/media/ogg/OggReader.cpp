@@ -1881,16 +1881,15 @@ nsresult OggReader::SeekBisection(int64_t aTarget,
   return NS_OK;
 }
 
-nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
+nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
-  MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
   {
     mozilla::ReentrantMonitorAutoEnter mon(mMonitor);
     if (mIsChained)
       return NS_ERROR_FAILURE;
   }
 #ifdef OGG_ESTIMATE_BUFFERED
-  return MediaDecoderReader::GetBuffered(aBuffered);
+  return MediaDecoderReader::GetBuffered(aBuffered, aStartTime);
 #else
   // HasAudio and HasVideo are not used here as they take a lock and cause
   // a deadlock. Accessing mInfo doesn't require a lock - it doesn't change
@@ -1900,7 +1899,7 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
     return NS_OK;
   }
 
-  AutoPinned<MediaResource> resource(mDecoder->GetResource());
+  MediaResource* resource = mDecoder->GetResource();
   nsTArray<MediaByteRange> ranges;
   nsresult res = resource->GetCachedRanges(ranges);
   NS_ENSURE_SUCCESS(res, res);
@@ -1920,7 +1919,7 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
     // we special-case (startOffset == 0) so that the first
     // buffered range always appears to be buffered from the media start
     // time, rather than from the end-time of the first page.
-    int64_t startTime = (startOffset == 0) ? mStartTime : -1;
+    int64_t startTime = (startOffset == 0) ? aStartTime : -1;
 
     // Find the start time of the range. Read pages until we find one with a
     // granulepos which we can convert into a timestamp to use as the time of
@@ -1988,8 +1987,8 @@ nsresult OggReader::GetBuffered(dom::TimeRanges* aBuffered)
       // find an end time.
       int64_t endTime = RangeEndTime(startOffset, endOffset, true);
       if (endTime != -1) {
-        aBuffered->Add((startTime - mStartTime) / static_cast<double>(USECS_PER_S),
-                       (endTime - mStartTime) / static_cast<double>(USECS_PER_S));
+        aBuffered->Add((startTime - aStartTime) / static_cast<double>(USECS_PER_S),
+                       (endTime - aStartTime) / static_cast<double>(USECS_PER_S));
       }
     }
   }

@@ -210,7 +210,8 @@ SourceBufferDecoder::NotifyDataArrived(const char* aBuffer, uint32_t aLength, in
 nsresult
 SourceBufferDecoder::GetBuffered(dom::TimeRanges* aBuffered)
 {
-  return mReader->GetBuffered(aBuffered);
+  // XXX: Need mStartTime (from StateMachine) instead of passing 0.
+  return mReader->GetBuffered(aBuffered, 0);
 }
 
 int64_t
