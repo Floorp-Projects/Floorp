@@ -815,8 +815,7 @@ nsresult GStreamerReader::Seek(int64_t aTarget,
   return NS_OK;
 }
 
-nsresult GStreamerReader::GetBuffered(dom::TimeRanges* aBuffered,
-                                      int64_t aStartTime)
+nsresult GStreamerReader::GetBuffered(dom::TimeRanges* aBuffered)
 {
   if (!mInfo.HasValidMedia()) {
     return NS_OK;

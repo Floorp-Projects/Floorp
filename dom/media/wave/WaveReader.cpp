@@ -278,7 +278,7 @@ static double RoundToUsecs(double aSeconds) {
   return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
 }
 
-nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
+nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered)
 {
   if (!mInfo.HasAudio()) {
     return NS_OK;
