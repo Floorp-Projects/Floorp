@@ -12,6 +12,7 @@ import sys
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIR);
 
+from urlparse import urlparse
 import ctypes
 import glob
 import json
@@ -35,7 +36,6 @@ import bisection
 
 from automationutils import (
     environment,
-    isURL,
     KeyValueParseError,
     parseKeyValue,
     processLeakLog,
@@ -2125,7 +2125,7 @@ def main():
 
   options.utilityPath = mochitest.getFullPath(options.utilityPath)
   options.certPath = mochitest.getFullPath(options.certPath)
-  if options.symbolsPath and not isURL(options.symbolsPath):
+  if options.symbolsPath and len(urlparse(options.symbolsPath).scheme) < 2:
     options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
   return_code = mochitest.runTests(options)
