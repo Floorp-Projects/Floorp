@@ -200,14 +200,18 @@ MozNFCImpl.prototype = {
     return this._nfcContentHelper.powerOff();
   },
 
+  _createNFCPeer: function _createNFCPeer(sessionToken) {
+    let peer = new MozNFCPeerImpl(this._window, sessionToken);
+    return this._window.MozNFCPeer._create(this._window, peer);
+  },
+
   getNFCPeer: function getNFCPeer(sessionToken) {
     if (!sessionToken || !this._nfcContentHelper.checkSessionToken(sessionToken, true)) {
       return null;
     }
 
     if (!this.nfcPeer || this.nfcPeer.session != sessionToken) {
-      let peer = new MozNFCPeerImpl(this._window, sessionToken);
-      this.nfcPeer = this._window.MozNFCPeer._create(this._window, peer);
+      this.nfcPeer = this._createNFCPeer();
     }
 
     return this.nfcPeer;
@@ -307,7 +311,8 @@ MozNFCImpl.prototype = {
     }
 
     this.session = sessionToken;
-    let eventData = { "peer": this.getNFCPeer(sessionToken) };
+    this.nfcPeer = this._createNFCPeer(sessionToken);
+    let eventData = { "peer": this.nfcPeer };
     let type = (isPeerReady) ? "peerready" : "peerfound";
 
     debug("fire on" + type + " " + sessionToken);
