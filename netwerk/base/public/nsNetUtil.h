@@ -605,7 +605,8 @@ NS_NewInputStreamChannelInternal(nsIChannel**        outChannel,
                                  nsINode*            aRequestingNode,
                                  nsIPrincipal*       aRequestingPrincipal,
                                  nsSecurityFlags     aSecurityFlags,
-                                 nsContentPolicyType aContentPolicyType)
+                                 nsContentPolicyType aContentPolicyType,
+                                 nsIURI*             aBaseURI = nullptr)
 {
   nsresult rv;
   nsCOMPtr<nsIInputStreamChannel> isc =
@@ -633,7 +634,8 @@ NS_NewInputStreamChannelInternal(nsIChannel**        outChannel,
     new mozilla::LoadInfo(aRequestingPrincipal,
                           aRequestingNode,
                           aSecurityFlags,
-                          aContentPolicyType);
+                          aContentPolicyType,
+                          aBaseURI);
   if (!loadInfo) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -679,7 +681,8 @@ NS_NewInputStreamChannelInternal(nsIChannel**        outChannel,
                                  nsIPrincipal*       aRequestingPrincipal,
                                  nsSecurityFlags     aSecurityFlags,
                                  nsContentPolicyType aContentPolicyType,
-                                 bool                aIsSrcdocChannel = false)
+                                 bool                aIsSrcdocChannel = false,
+                                 nsIURI*             aBaseURI = nullptr)
 {
   nsresult rv;
   nsCOMPtr<nsIStringInputStream> stream;
@@ -704,7 +707,8 @@ NS_NewInputStreamChannelInternal(nsIChannel**        outChannel,
                                         aRequestingNode,
                                         aRequestingPrincipal,
                                         aSecurityFlags,
-                                        aContentPolicyType);
+                                        aContentPolicyType,
+                                        aBaseURI);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -725,7 +729,8 @@ NS_NewInputStreamChannel(nsIChannel**        outChannel,
                          nsIPrincipal*       aRequestingPrincipal,
                          nsSecurityFlags     aSecurityFlags,
                          nsContentPolicyType aContentPolicyType,
-                         bool                aIsSrcdocChannel = false)
+                         bool                aIsSrcdocChannel = false,
+                         nsIURI*             aBaseURI = nullptr)
 {
   return NS_NewInputStreamChannelInternal(outChannel,
                                           aUri,
@@ -735,7 +740,8 @@ NS_NewInputStreamChannel(nsIChannel**        outChannel,
                                           aRequestingPrincipal,
                                           aSecurityFlags,
                                           aContentPolicyType,
-                                          aIsSrcdocChannel);
+                                          aIsSrcdocChannel,
+                                          aBaseURI);
 }
 
 inline nsresult

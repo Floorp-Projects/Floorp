@@ -33,7 +33,6 @@ protected:
 
 private:
     nsCOMPtr<nsIInputStream> mContentStream;
-    nsCOMPtr<nsIURI> mBaseURI;
     nsString mSrcdocData;
     bool mIsSrcdocChannel;
 };
