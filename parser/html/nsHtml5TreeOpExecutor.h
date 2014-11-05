@@ -178,7 +178,7 @@ class nsHtml5TreeOpExecutor MOZ_FINAL : public nsHtml5DocumentBuilder,
                   
     void RunFlushLoop();
 
-    void FlushDocumentWrite();
+    nsresult FlushDocumentWrite();
 
     void MaybeSuspend();
 

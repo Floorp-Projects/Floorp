@@ -261,7 +261,7 @@ class nsHtml5Parser MOZ_FINAL : public nsIParser,
     /**
      * Parse until pending data is exhausted or a script blocks the parser
      */
-    void ParseUntilBlocked();
+    nsresult ParseUntilBlocked();
 
   private:
 
