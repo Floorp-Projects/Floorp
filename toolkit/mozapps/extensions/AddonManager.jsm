@@ -1628,7 +1628,7 @@ var AddonManagerInternal = {
    */
   getInstallForURL: function AMI_getInstallForURL(aUrl, aCallback, aMimetype,
                                                   aHash, aName, aIcons,
-                                                  aVersion, aLoadGroup) {
+                                                  aVersion, aBrowser) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1667,15 +1667,15 @@ var AddonManagerInternal = {
       throw Components.Exception("aVersion must be a string or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aLoadGroup && (!(aLoadGroup instanceof Ci.nsILoadGroup)))
-      throw Components.Exception("aLoadGroup must be a nsILoadGroup or null",
+    if (aBrowser && (!(aBrowser instanceof Ci.nsIDOMElement)))
+      throw Components.Exception("aBrowser must be a nsIDOMElement or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     let providers = this.providers.slice(0);
     for (let provider of providers) {
       if (callProvider(provider, "supportsMimetype", false, aMimetype)) {
         callProviderAsync(provider, "getInstallForURL",
-                          aUrl, aHash, aName, aIcons, aVersion, aLoadGroup,
+                          aUrl, aHash, aName, aIcons, aVersion, aBrowser,
                           function  getInstallForURL_safeCall(aInstall) {
           safeCall(aCallback, aInstall);
         });
@@ -1878,15 +1878,15 @@ var AddonManagerInternal = {
    *
    * @param  aMimetype
    *         The mimetype of add-ons being installed
-   * @param  aSource
-   *         The optional nsIDOMWindow that started the installs
+   * @param  aBrowser
+   *         The optional browser element that started the installs
    * @param  aURI
    *         The optional nsIURI that started the installs
    * @param  aInstalls
    *         The array of AddonInstalls to be installed
    */
   installAddonsFromWebpage: function AMI_installAddonsFromWebpage(aMimetype,
-                                                                  aSource,
+                                                                  aBrowser,
                                                                   aURI,
                                                                   aInstalls) {
     if (!gStarted)
@@ -1897,8 +1897,8 @@ var AddonManagerInternal = {
       throw Components.Exception("aMimetype must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (aSource && !(aSource instanceof Ci.nsIDOMWindow) && !(aSource instanceof Ci.nsIDOMNode))
-      throw Components.Exception("aSource must be a nsIDOMWindow, a XUL element, or null",
+    if (aBrowser && !(aBrowser instanceof Ci.nsIDOMElement))
+      throw Components.Exception("aSource must be a nsIDOMElement, or null",
                                  Cr.NS_ERROR_INVALID_ARG);
 
     if (aURI && !(aURI instanceof Ci.nsIURI))
@@ -1922,18 +1922,18 @@ var AddonManagerInternal = {
                         getService(Ci.amIWebInstallListener);
 
       if (!this.isInstallEnabled(aMimetype, aURI)) {
-        weblistener.onWebInstallDisabled(aSource, aURI, aInstalls,
+        weblistener.onWebInstallDisabled(aBrowser, aURI, aInstalls,
                                          aInstalls.length);
       }
       else if (!this.isInstallAllowed(aMimetype, aURI)) {
-        if (weblistener.onWebInstallBlocked(aSource, aURI, aInstalls,
+        if (weblistener.onWebInstallBlocked(aBrowser, aURI, aInstalls,
                                             aInstalls.length)) {
           aInstalls.forEach(function(aInstall) {
             aInstall.install();
           });
         }
       }
-      else if (weblistener.onWebInstallRequested(aSource, aURI, aInstalls,
+      else if (weblistener.onWebInstallRequested(aBrowser, aURI, aInstalls,
                                                    aInstalls.length)) {
         aInstalls.forEach(function(aInstall) {
           aInstall.install();
@@ -2720,9 +2720,9 @@ this.AddonManager = {
 
   getInstallForURL: function AM_getInstallForURL(aUrl, aCallback, aMimetype,
                                                  aHash, aName, aIcons,
-                                                 aVersion, aLoadGroup) {
+                                                 aVersion, aBrowser) {
     AddonManagerInternal.getInstallForURL(aUrl, aCallback, aMimetype, aHash,
-                                          aName, aIcons, aVersion, aLoadGroup);
+                                          aName, aIcons, aVersion, aBrowser);
   },
 
   getInstallForFile: function AM_getInstallForFile(aFile, aCallback, aMimetype) {
@@ -2787,9 +2787,9 @@ this.AddonManager = {
     return AddonManagerInternal.isInstallAllowed(aType, aUri);
   },
 
-  installAddonsFromWebpage: function AM_installAddonsFromWebpage(aType, aSource,
+  installAddonsFromWebpage: function AM_installAddonsFromWebpage(aType, aBrowser,
                                                                  aUri, aInstalls) {
-    AddonManagerInternal.installAddonsFromWebpage(aType, aSource, aUri, aInstalls);
+    AddonManagerInternal.installAddonsFromWebpage(aType, aBrowser, aUri, aInstalls);
   },
 
   addManagerListener: function AM_addManagerListener(aListener) {
