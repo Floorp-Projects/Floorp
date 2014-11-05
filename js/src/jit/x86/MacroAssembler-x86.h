@@ -725,13 +725,16 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void load32(AbsoluteAddress address, Register dest) {
         movl(Operand(address), dest);
     }
-    void storePtr(ImmWord imm, const Address &address) {
+    template <typename T>
+    void storePtr(ImmWord imm, T address) {
         movl(Imm32(imm.value), Operand(address));
     }
-    void storePtr(ImmPtr imm, const Address &address) {
+    template <typename T>
+    void storePtr(ImmPtr imm, T address) {
         storePtr(ImmWord(uintptr_t(imm.value)), address);
     }
-    void storePtr(ImmGCPtr imm, const Address &address) {
+    template <typename T>
+    void storePtr(ImmGCPtr imm, T address) {
         movl(imm, Operand(address));
     }
     void storePtr(Register src, const Address &address) {

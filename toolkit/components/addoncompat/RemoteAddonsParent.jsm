@@ -257,7 +257,7 @@ let ComponentRegistrarInterposition = new Interposition("ComponentRegistrarInter
 
 ComponentRegistrarInterposition.methods.registerFactory =
   function(addon, target, class_, className, contractID, factory) {
-    if (contractID.startsWith("@mozilla.org/network/protocol/about;1?")) {
+    if (contractID && contractID.startsWith("@mozilla.org/network/protocol/about;1?")) {
       AboutProtocolParent.registerFactory(class_, className, contractID, factory);
     }
 
@@ -651,7 +651,7 @@ ComponentsUtilsInterposition.methods.Sandbox =
                typeof(principals) == "object" &&
                "every" in principals &&
                principals.length &&
-               principals.every(e => Cu.isCrossProcessWrapper(e) && e instanceof Ci.nsIDOMWindow)) {
+               principals.every(e => e instanceof Ci.nsIDOMWindow && Cu.isCrossProcessWrapper(e))) {
       let chromeGlobal = chromeGlobalForContentWindow(principals[0]);
 
       // The principals we pass to the content process must use an

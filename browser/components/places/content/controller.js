@@ -636,7 +636,7 @@ PlacesController.prototype = {
       if (!openContainerInTabsItem.hidden) {
         var containerToUse = this._view.selectedNode || this._view.result.root;
         if (PlacesUtils.nodeIsContainer(containerToUse)) {
-          if (!PlacesUtils.hasChildURIs(containerToUse, true)) {
+          if (!PlacesUtils.hasChildURIs(containerToUse)) {
             openContainerInTabsItem.disabled = true;
             // Ensure that we don't display the menu if nothing is enabled:
             usableItemCount--;

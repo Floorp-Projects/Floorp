@@ -766,7 +766,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             load32(Address(ScratchReg, 0x0), dest);
         }
     }
-    void storePtr(ImmWord imm, const Address &address) {
+    template <typename T>
+    void storePtr(ImmWord imm, T address) {
         if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
             movq(Imm32((int32_t)imm.value), Operand(address));
         } else {
@@ -774,10 +775,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             movq(ScratchReg, Operand(address));
         }
     }
-    void storePtr(ImmPtr imm, const Address &address) {
+    template <typename T>
+    void storePtr(ImmPtr imm, T address) {
         storePtr(ImmWord(uintptr_t(imm.value)), address);
     }
-    void storePtr(ImmGCPtr imm, const Address &address) {
+    template <typename T>
+    void storePtr(ImmGCPtr imm, T address) {
         movq(imm, ScratchReg);
         movq(ScratchReg, Operand(address));
     }

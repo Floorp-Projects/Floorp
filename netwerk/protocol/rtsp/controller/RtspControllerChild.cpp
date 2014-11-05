@@ -462,6 +462,8 @@ RtspControllerChild::PlaybackEnded()
 {
   LOG(("RtspControllerChild::PlaybackEnded"));
 
+  StopPlayAndPauseTimer();
+
   if (NS_IsMainThread()) {
     if (!OKToSendIPC() || !SendPlaybackEnded()) {
       return NS_ERROR_FAILURE;

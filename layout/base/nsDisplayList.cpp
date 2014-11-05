@@ -1278,23 +1278,17 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   return anyVisible;
 }
 
-void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
-                              nsRenderingContext* aCtx,
-                              uint32_t aFlags) {
-  PROFILER_LABEL("nsDisplayList", "PaintRoot",
-    js::ProfileEntry::Category::GRAPHICS);
-  PaintForFrame(aBuilder, aCtx, aBuilder->RootReferenceFrame(), aFlags);
-}
-
 /**
  * We paint by executing a layer manager transaction, constructing a
  * single layer representing the display list, and then making it the
  * root of the layer manager, drawing into the PaintedLayers.
  */
-void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
-                                  nsRenderingContext* aCtx,
-                                  nsIFrame* aForFrame,
-                                  uint32_t aFlags) {
+already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
+                                                        nsRenderingContext* aCtx,
+                                                        uint32_t aFlags) {
+  PROFILER_LABEL("nsDisplayList", "PaintRoot",
+    js::ProfileEntry::Category::GRAPHICS);
+
   nsRefPtr<LayerManager> layerManager;
   bool widgetTransaction = false;
   bool allowRetaining = false;
@@ -1317,7 +1311,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   if (!layerManager) {
     if (!aCtx) {
       NS_WARNING("Nowhere to paint into");
-      return;
+      return nullptr;
     }
     layerManager = new BasicLayerManager(BasicLayerManager::BLM_OFFSCREEN);
   }
@@ -1347,7 +1341,8 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
     layerBuilder->DidBeginRetainedLayerTransaction(layerManager);
   }
 
-  nsPresContext* presContext = aForFrame->PresContext();
+  nsIFrame* frame = aBuilder->RootReferenceFrame();
+  nsPresContext* presContext = frame->PresContext();
   nsIPresShell* presShell = presContext->GetPresShell();
 
   NotifySubDocInvalidationFunc computeInvalidFunc =
@@ -1364,7 +1359,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
   nsRefPtr<ContainerLayer> root = layerBuilder->
-    BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, this,
+    BuildContainerLayerFor(aBuilder, layerManager, frame, nullptr, this,
                            containerParameters, nullptr);
 
   nsIDocument* document = nullptr;
@@ -1374,7 +1369,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   if (!root) {
     layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
-    return;
+    return nullptr;
   }
   // Root is being scaled up by the X/Y resolution. Scale it back down.
   root->SetPostScale(1.0f/containerParameters.mXScale,
@@ -1384,11 +1379,11 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
 
-  nsRect viewport(aBuilder->ToReferenceFrame(aForFrame), aForFrame->GetSize());
+  nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
 
   root->SetFrameMetrics(
-    nsDisplayScrollLayer::ComputeFrameMetrics(aForFrame, rootScrollFrame,
-                       aBuilder->FindReferenceFrameFor(aForFrame),
+    nsDisplayScrollLayer::ComputeFrameMetrics(frame, rootScrollFrame,
+                       aBuilder->FindReferenceFrameFor(frame),
                        root, FrameMetrics::NULL_SCROLL_ID, viewport,
                        !isRoot, isRoot, containerParameters));
 
@@ -1418,7 +1413,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
       // but they still need the invalidation state bits cleared in order for
       // invalidation for CSS/SMIL animation to work properly.
       (document && document->IsBeingUsedAsImage())) {
-    aForFrame->ClearInvalidationStateBits();
+    frame->ClearInvalidationStateBits();
   }
 
   bool temp = aBuilder->SetIsCompositingCheap(layerManager->IsCompositingCheap());
@@ -1473,6 +1468,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
   }
 
   layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
+  return layerManager.forget();
 }
 
 uint32_t nsDisplayList::Count() const {
@@ -4416,12 +4412,6 @@ void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
     rect = aRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
   }
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
-}
-
-void nsDisplayZoom::Paint(nsDisplayListBuilder* aBuilder,
-                          nsRenderingContext* aCtx)
-{
-  mList.PaintForFrame(aBuilder, aCtx, mFrame, nsDisplayList::PAINT_DEFAULT);
 }
 
 bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,

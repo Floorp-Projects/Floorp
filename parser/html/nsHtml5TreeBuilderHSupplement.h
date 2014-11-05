@@ -223,4 +223,4 @@
 
     void errEndWithUnclosedElements(nsIAtom* aName);
 
-    void MarkAsBroken();
+    void MarkAsBroken(nsresult aRv);

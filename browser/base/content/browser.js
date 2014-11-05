@@ -1194,7 +1194,9 @@ var gBrowserInit = {
     BrowserOffline.init();
     OfflineApps.init();
     IndexedDBPromptHelper.init();
+#ifdef E10S_TESTING_ONLY
     gRemoteTabsUI.init();
+#endif
 
     // Initialize the full zoom setting.
     // We do this before the session restore service gets initialized so we can
@@ -1616,7 +1618,9 @@ var gBrowserInit = {
     gSyncUI.init();
 #endif
 
+#ifdef E10S_TESTING_ONLY
     gRemoteTabsUI.init();
+#endif
   },
 
   nonBrowserWindowShutdown: function() {
@@ -7315,14 +7319,9 @@ let gRemoteTabsUI = {
 
     let newRemoteWindow = document.getElementById("menu_newRemoteWindow");
     let newNonRemoteWindow = document.getElementById("menu_newNonRemoteWindow");
-#ifdef E10S_TESTING_ONLY
     let autostart = Services.appinfo.browserTabsRemoteAutostart;
     newRemoteWindow.hidden = autostart;
     newNonRemoteWindow.hidden = !autostart;
-#else
-    newRemoteWindow.hidden = true;
-    newNonRemoteWindow.hidden = true;
-#endif
   }
 };
 

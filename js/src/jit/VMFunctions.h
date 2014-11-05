@@ -17,6 +17,7 @@ namespace js {
 class DeclEnvObject;
 class ForkJoinContext;
 class StaticWithObject;
+class InlineTypedObject;
 
 namespace jit {
 
@@ -289,6 +290,7 @@ template <class> struct TypeToDataType { /* Unexpected return type for a VMFunct
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<NativeObject *> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<InlineTypedObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<DeclEnvObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<ArrayObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString *> { static const DataType result = Type_Object; };
@@ -298,6 +300,7 @@ template <> struct TypeToDataType<HandleString> { static const DataType result =
 template <> struct TypeToDataType<HandlePropertyName> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleFunction> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<NativeObject *> > { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<Handle<InlineTypedObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<ArrayObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<StaticWithObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<StaticBlockObject *> > { static const DataType result = Type_Handle; };
@@ -327,6 +330,9 @@ template <> struct TypeToArgProperties<HandleFunction> {
 };
 template <> struct TypeToArgProperties<Handle<NativeObject *> > {
     static const uint32_t result = TypeToArgProperties<NativeObject *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<Handle<InlineTypedObject *> > {
+    static const uint32_t result = TypeToArgProperties<InlineTypedObject *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<Handle<ArrayObject *> > {
     static const uint32_t result = TypeToArgProperties<ArrayObject *>::result | VMFunction::ByRef;
@@ -394,6 +400,9 @@ template <> struct TypeToRootType<HandleScript> {
     static const uint32_t result = VMFunction::RootCell;
 };
 template <> struct TypeToRootType<Handle<NativeObject *> > {
+    static const uint32_t result = VMFunction::RootObject;
+};
+template <> struct TypeToRootType<Handle<InlineTypedObject *> > {
     static const uint32_t result = VMFunction::RootObject;
 };
 template <> struct TypeToRootType<Handle<ArrayObject *> > {
@@ -736,6 +745,7 @@ bool SetDenseElement(JSContext *cx, HandleNativeObject obj, int32_t index, Handl
 
 #ifdef DEBUG
 void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
+void AssertValidObjectOrNullPtr(JSContext *cx, JSObject *obj);
 void AssertValidStringPtr(JSContext *cx, JSString *str);
 void AssertValidSymbolPtr(JSContext *cx, JS::Symbol *sym);
 void AssertValidValue(JSContext *cx, Value *v);
@@ -745,6 +755,7 @@ JSObject *TypedObjectProto(JSObject *obj);
 
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
 void MarkStringFromIon(JSRuntime *rt, JSString **stringp);
+void MarkObjectFromIon(JSRuntime *rt, JSObject **objp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
 void MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep);
 
@@ -757,6 +768,8 @@ IonMarkFunction(MIRType type)
         return JS_FUNC_TO_DATA_PTR(void *, MarkValueFromIon);
       case MIRType_String:
         return JS_FUNC_TO_DATA_PTR(void *, MarkStringFromIon);
+      case MIRType_Object:
+        return JS_FUNC_TO_DATA_PTR(void *, MarkObjectFromIon);
       case MIRType_Shape:
         return JS_FUNC_TO_DATA_PTR(void *, MarkShapeFromIon);
       case MIRType_TypeObject:

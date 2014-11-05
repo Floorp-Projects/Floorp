@@ -33,6 +33,7 @@ EXTRA_JS_MODULES.devtools += [
 EXTRA_JS_MODULES.devtools.shared += [
     'autocomplete-popup.js',
     'd3.js',
+    'doorhanger.js',
     'frame-script-utils.js',
     'inplace-editor.js',
     'observable-object.js',

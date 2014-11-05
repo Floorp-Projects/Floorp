@@ -4,9 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
+                                  "resource://services-common/utils.js");
+
 let Reader = {
-  // Version of the cache database schema
-  DB_VERSION: 1,
+  // Version of the cache schema.
+  CACHE_VERSION: 1,
 
   DEBUG: 0,
 
@@ -76,7 +79,8 @@ let Reader = {
   observe: function(aMessage, aTopic, aData) {
     switch(aTopic) {
       case "Reader:Removed": {
-        this.removeArticleFromCache(aData);
+        let uri = Services.io.newURI(aData, null, null);
+        this.removeArticleFromCache(uri).catch(e => Cu.reportError("Error removing article from cache: " + e));
         break;
       }
 
@@ -91,10 +95,13 @@ let Reader = {
 
   _addTabToReadingList: function(tabID) {
     let tab = BrowserApp.getTabForId(tabID);
-    let currentURI = tab.browser.currentURI;
-    let urlWithoutRef = currentURI.specIgnoringRef;
+    if (!tab) {
+      Cu.reportError("Can't add tab to reading list because no tab found for ID: " + tabID);
+      return;
+    }
+    let uri = tab.browser.currentURI;
 
-    this.getArticleFromCache(urlWithoutRef, (article) => {
+    this.getArticleFromCache(uri).then(article => {
       // If the article is already in the cache, just use that.
       if (article) {
         this.addArticleToReadingList(article);
@@ -102,7 +109,7 @@ let Reader = {
       }
 
       // Otherwise, get the article data from the tab.
-      this.getArticleForTab(tabID, urlWithoutRef, (article) => {
+      this.getArticleForTab(tabID, uri.specIgnoringRef, article => {
         if (article) {
           this.addArticleToReadingList(article);
         } else {
@@ -114,7 +121,7 @@ let Reader = {
           });
         }
       });
-    });
+    }, e => Cu.reportError("Error trying to get article from cache: " + e));
   },
 
   addArticleToReadingList: function(article) {
@@ -131,7 +138,7 @@ let Reader = {
       excerpt: article.excerpt || "",
     });
 
-    this.storeArticleInCache(article);
+    this.storeArticleInCache(article).catch(e => Cu.reportError("Error storing article in cache: " + e));
   },
 
   getStateForParseOnLoad: function Reader_getStateForParseOnLoad() {
@@ -154,30 +161,28 @@ let Reader = {
     let request = { url: url, callbacks: [callback] };
     this._requests[url] = request;
 
-    try {
-      this.log("parseDocumentFromURL: " + url);
+    let uri = Services.io.newURI(url, null, null);
 
-      // First, try to find a cached parsed article in the DB
-      this.getArticleFromCache(url, function(article) {
-        if (article) {
-          this.log("Page found in cache, return article immediately");
-          this._runCallbacksAndFinish(request, article);
-          return;
-        }
+    // First, try to find a parsed article in the cache.
+    this.getArticleFromCache(uri).then(article => {
+      if (article) {
+        this.log("Page found in cache, return article immediately");
+        this._runCallbacksAndFinish(request, article);
+        return;
+      }
 
-        if (!this._requests) {
-          this.log("Reader has been destroyed, abort");
-          return;
-        }
+      if (!this._requests) {
+        this.log("Reader has been destroyed, abort");
+        return;
+      }
 
-        // Article hasn't been found in the cache DB, we need to
-        // download the page and parse the article out of it.
-        this._downloadAndParseDocument(url, request);
-      }.bind(this));
-    } catch (e) {
-      this.log("Error parsing document from URL: " + e);
+      // Article hasn't been found in the cache, we need to
+      // download the page and parse the article out of it.
+      this._downloadAndParseDocument(url, request);
+    }, e => {
+      Cu.reportError("Error trying to get article from cache: " + e);
       this._runCallbacksAndFinish(request, null);
-    }
+    });
   },
 
   getArticleForTab: function Reader_getArticleForTab(tabId, url, callback) {
@@ -194,109 +199,81 @@ let Reader = {
     this.parseDocumentFromURL(url, callback);
   },
 
-  parseDocumentFromTab: function(tabId, callback) {
-    try {
-      this.log("parseDocumentFromTab: " + tabId);
+  parseDocumentFromTab: function (tab, callback) {
+    let uri = tab.browser.currentURI;
+    if (!this._shouldCheckUri(uri)) {
+      callback(null);
+      return;
+    }
 
-      let tab = BrowserApp.getTabForId(tabId);
-      let url = tab.browser.contentWindow.location.href;
-      let uri = Services.io.newURI(url, null, null);
-
-      if (!this._shouldCheckUri(uri)) {
-        callback(null);
+    // First, try to find a parsed article in the cache.
+    this.getArticleFromCache(uri).then(article => {
+      if (article) {
+        this.log("Page found in cache, return article immediately");
+        callback(article);
         return;
       }
 
-      // First, try to find a cached parsed article in the DB
-      this.getArticleFromCache(url, function(article) {
-        if (article) {
-          this.log("Page found in cache, return article immediately");
-          callback(article);
+      let doc = tab.browser.contentWindow.document;
+      this._readerParse(uri, doc, article => {
+        if (!article) {
+          this.log("Failed to parse page");
+          callback(null);
           return;
         }
-
-        let doc = tab.browser.contentWindow.document;
-        this._readerParse(uri, doc, function (article) {
-          if (!article) {
-            this.log("Failed to parse page");
-            callback(null);
-            return;
-          }
-
-          callback(article);
-        }.bind(this));
-      }.bind(this));
-    } catch (e) {
-      this.log("Error parsing document from tab: " + e);
+        callback(article);
+      });
+    }, e => {
+      Cu.reportError("Error trying to get article from cache: " + e);
       callback(null);
+    });
+  },
+
+  /**
+   * Retrieves an article from the cache given an article URI.
+   *
+   * @param uri The article URI.
+   * @return Promise
+   * @resolve JS object representing the article, or null if no article is found.
+   * @rejects OS.File.Error
+   */
+  getArticleFromCache: Task.async(function* (uri) {
+    let path = this._toHashedPath(uri.specIgnoringRef);
+    try {
+      let array = yield OS.File.read(path);
+      return JSON.parse(new TextDecoder().decode(array));
+    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+      return null;
     }
-  },
+  }),
 
-  getArticleFromCache: function Reader_getArticleFromCache(url, callback) {
-    this._getCacheDB(function(cacheDB) {
-      if (!cacheDB) {
-        callback(false);
-        return;
-      }
+  /**
+   * Stores an article in the cache.
+   *
+   * @param article JS object representing article.
+   * @return Promise
+   * @resolve When the article is stored.
+   * @rejects OS.File.Error
+   */
+  storeArticleInCache: Task.async(function* (article) {
+    let array = new TextEncoder().encode(JSON.stringify(article));
+    let path = this._toHashedPath(article.url);
+    yield this._ensureCacheDir();
+    yield OS.File.writeAtomic(path, array, { tmpPath: path + ".tmp" });
+  }),
 
-      let transaction = cacheDB.transaction(cacheDB.objectStoreNames);
-      let articles = transaction.objectStore(cacheDB.objectStoreNames[0]);
-
-      let request = articles.get(url);
-
-      request.onerror = function(event) {
-        this.log("Error getting article from the cache DB: " + url);
-        callback(null);
-      }.bind(this);
-
-      request.onsuccess = function(event) {
-        this.log("Got article from the cache DB: " + event.target.result);
-        callback(event.target.result);
-      }.bind(this);
-    }.bind(this));
-  },
-
-  storeArticleInCache: function Reader_storeArticleInCache(article) {
-    this._getCacheDB(function(cacheDB) {
-      if (!cacheDB) {
-        return;
-      }
-
-      let transaction = cacheDB.transaction(cacheDB.objectStoreNames, "readwrite");
-      let articles = transaction.objectStore(cacheDB.objectStoreNames[0]);
-
-      let request = articles.add(article);
-
-      request.onerror = function(event) {
-        this.log("Error storing article in the cache DB: " + article.url);
-      }.bind(this);
-
-      request.onsuccess = function(event) {
-        this.log("Stored article in the cache DB: " + article.url);
-      }.bind(this);
-    }.bind(this));
-  },
-
-  removeArticleFromCache: function Reader_removeArticleFromCache(url) {
-    this._getCacheDB(function(cacheDB) {
-      if (!cacheDB) {
-        return;
-      }
-
-      let transaction = cacheDB.transaction(cacheDB.objectStoreNames, "readwrite");
-      let articles = transaction.objectStore(cacheDB.objectStoreNames[0]);
-
-      let request = articles.delete(url);
-
-      request.onerror = function(event) {
-        this.log("Error removing article from the cache DB: " + url);
-      }.bind(this);
-
-      request.onsuccess = function(event) {
-        this.log("Removed article from the cache DB: " + url);
-      }.bind(this);
-    }.bind(this));
-  },
+  /**
+   * Removes an article from the cache given an article URI.
+   *
+   * @param uri The article URI.
+   * @return Promise
+   * @resolve When the article is removed.
+   * @rejects OS.File.Error
+   */
+  removeArticleFromCache: Task.async(function* (uri) {
+    let path = this._toHashedPath(uri.specIgnoringRef);
+    yield OS.File.remove(path);
+  }),
 
   uninit: function Reader_uninit() {
     Services.prefs.removeObserver("reader.parse-on-load.", this);
@@ -312,11 +289,6 @@ let Reader = {
       }
     }
     delete this._requests;
-
-    if (this._cacheDB) {
-      this._cacheDB.close();
-      delete this._cacheDB;
-    }
   },
 
   log: function(msg) {
@@ -374,7 +346,7 @@ let Reader = {
         doc: new XMLSerializer().serializeToString(doc)
       });
     } catch (e) {
-      dump("Reader: could not build Readability arguments: " + e);
+      Cu.reportError("Reader: could not build Readability arguments: " + e);
       callback(null);
     }
   },
@@ -406,7 +378,7 @@ let Reader = {
     browser.webNavigation.allowMetaRedirects = true;
     browser.webNavigation.allowPlugins = false;
 
-    browser.addEventListener("DOMContentLoaded", function (event) {
+    browser.addEventListener("DOMContentLoaded", event => {
       let doc = event.originalTarget;
 
       // ignore on frames and other documents
@@ -423,7 +395,7 @@ let Reader = {
       }
 
       callback(doc);
-    }.bind(this));
+    });
 
     browser.loadURIWithFlags(url, Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                              null, null, null);
@@ -435,7 +407,7 @@ let Reader = {
     try {
       this.log("Needs to fetch page, creating request: " + url);
 
-      request.browser = this._downloadDocument(url, function(doc) {
+      request.browser = this._downloadDocument(url, doc => {
         this.log("Finished loading page: " + doc);
 
         if (!doc) {
@@ -447,7 +419,7 @@ let Reader = {
         this.log("Parsing response with Readability");
 
         let uri = Services.io.newURI(url, null, null);
-        this._readerParse(uri, doc, function (article) {
+        this._readerParse(uri, doc, article => {
           // Delete reference to the browser element as we've finished parsing.
           let browser = request.browser;
           if (browser) {
@@ -462,47 +434,57 @@ let Reader = {
           }
 
           this.log("Parsing has been successful");
-
           this._runCallbacksAndFinish(request, article);
-        }.bind(this));
-      }.bind(this));
+        });
+      });
     } catch (e) {
       this.log("Error downloading and parsing document: " + e);
       this._runCallbacksAndFinish(request, null);
     }
   },
 
-  _getCacheDB: function Reader_getCacheDB(callback) {
-    if (this._cacheDB) {
-      callback(this._cacheDB);
-      return;
-    }
+  get _cryptoHash() {
+    delete this._cryptoHash;
+    return this._cryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);
+  },
 
-    let request = window.indexedDB.open("about:reader", this.DB_VERSION);
+  get _unicodeConverter() {
+    delete this._unicodeConverter;
+    this._unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                              .createInstance(Ci.nsIScriptableUnicodeConverter);
+    this._unicodeConverter.charset = "utf8";
+    return this._unicodeConverter;
+  },
 
-    request.onerror = function(event) {
-      this.log("Error connecting to the cache DB");
-      this._cacheDB = null;
-      callback(null);
-    }.bind(this);
+  /**
+   * Calculate the hashed path for a stripped article URL.
+   *
+   * @param url The article URL. This should have referrers removed.
+   * @return The file path to the cached article.
+   */
+  _toHashedPath: function (url) {
+    let value = this._unicodeConverter.convertToByteArray(url);
+    this._cryptoHash.init(this._cryptoHash.MD5);
+    this._cryptoHash.update(value, value.length);
 
-    request.onsuccess = function(event) {
-      this.log("Successfully connected to the cache DB");
-      this._cacheDB = event.target.result;
-      callback(this._cacheDB);
-    }.bind(this);
+    let hash = CommonUtils.encodeBase32(this._cryptoHash.finish(false));
+    let fileName = hash.substring(0, hash.indexOf("=")) + ".json";
+    return OS.Path.join(OS.Constants.Path.profileDir, "readercache", fileName);
+  },
 
-    request.onupgradeneeded = function(event) {
-      this.log("Database schema upgrade from " +
-           event.oldVersion + " to " + event.newVersion);
-
-      let cacheDB = event.target.result;
-
-      // Create the articles object store
-      this.log("Creating articles object store");
-      cacheDB.createObjectStore("articles", { keyPath: "url" });
-
-      this.log("Database upgrade done: " + this.DB_VERSION);
-    }.bind(this);
+  /**
+   * Ensures the cache directory exists.
+   *
+   * @return Promise
+   * @resolves When the cache directory exists.
+   * @rejects OS.File.Error
+   */
+  _ensureCacheDir: function () {
+    let dir = OS.Path.join(OS.Constants.Path.profileDir, "readercache");
+    return OS.File.exists(dir).then(exists => {
+      if (!exists) {
+        return OS.File.makeDir(dir);
+      }
+    });
   }
 };
