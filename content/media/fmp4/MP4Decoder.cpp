@@ -24,6 +24,9 @@
 #include "apple/AppleCMLinker.h"
 #include "apple/AppleVTLinker.h"
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
 
 namespace mozilla {
 
@@ -178,6 +181,10 @@ HavePlatformMPEGDecoders()
 #ifdef XP_WIN
          // We have H.264/AAC platform decoders on Windows Vista and up.
          IsVistaOrLater() ||
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+         // We need android.media.MediaCodec which exists in API level 16 and higher.
+         (AndroidBridge::Bridge()->GetAPIVersion() >= 16) ||
 #endif
          IsFFmpegAvailable() ||
          IsAppleAvailable() ||
