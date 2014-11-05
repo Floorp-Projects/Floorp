@@ -10,7 +10,6 @@
 
 #include "mozilla/Assertions.h"
 
-#include "gc/Statistics.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 
@@ -19,12 +18,6 @@
 using namespace js;
 using namespace js::gc;
 using mozilla::ReentrancyGuard;
-
-gcstats::Statistics&
-StoreBuffer::stats()
-{
-    return runtime_->gc.stats;
-}
 
 /*** Edges ***/
 
@@ -100,8 +93,6 @@ StoreBuffer::MonoTypeBuffer<T>::handleOverflow(StoreBuffer *owner)
          * Compact the buffer now, and if that fails to free enough space then
          * trigger a minor collection.
          */
-        gcstats::AutoPhase ap(owner->stats(), gcstats::PHASE_COMPACT_STOREBUFFER_NO_PARENT);
-        owner->stats().count(gcstats::STAT_STOREBUFFER_OVERFLOW);
         compact(owner);
         if (isLowOnSpace())
             owner->setAboutToOverflow();
@@ -110,10 +101,8 @@ StoreBuffer::MonoTypeBuffer<T>::handleOverflow(StoreBuffer *owner)
           * A minor GC has already been triggered, so there's no point
           * compacting unless the buffer is totally full.
           */
-        if (storage_->availableInCurrentChunk() < sizeof(T)) {
-            owner->stats().count(gcstats::STAT_STOREBUFFER_OVERFLOW);
-            maybeCompact(owner, gcstats::PHASE_COMPACT_STOREBUFFER_NO_PARENT);
-        }
+        if (storage_->availableInCurrentChunk() < sizeof(T))
+            maybeCompact(owner);
     }
 }
 
@@ -141,7 +130,6 @@ StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates(StoreBuffer *owner)
     storage_->release(insert.mark());
 
     duplicates.clear();
-    owner->stats().count(gcstats::STAT_COMPACT_STOREBUFFER);
 }
 
 template <typename T>
@@ -155,13 +143,11 @@ StoreBuffer::MonoTypeBuffer<T>::compact(StoreBuffer *owner)
 
 template <typename T>
 void
-StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner, int phase)
+StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner)
 {
     MOZ_ASSERT(storage_);
-    if (storage_->used() != usedAtLastCompact_) {
-        gcstats::AutoPhase ap(owner->stats(), static_cast<gcstats::Phase>(phase));
+    if (storage_->used() != usedAtLastCompact_)
         compact(owner);
-    }
 }
 
 template <typename T>
@@ -173,8 +159,7 @@ StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer *owner, JSTracer *trc)
     if (!storage_)
         return;
 
-    maybeCompact(owner, gcstats::PHASE_COMPACT_STOREBUFFER_IN_MINOR_GC);
-
+    maybeCompact(owner);
     for (LifoAlloc::Enum e(*storage_); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
         edge->mark(trc);
