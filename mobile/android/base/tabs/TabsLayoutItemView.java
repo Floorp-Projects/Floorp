@@ -9,13 +9,15 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.view.TouchDelegate;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Checkable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -85,6 +87,22 @@ public class TabsLayoutItemView extends LinearLayout
         mThumbnail = (ImageView) findViewById(R.id.thumbnail);
         mCloseButton = (ImageButton) findViewById(R.id.close);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
+
+        getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                getViewTreeObserver().removeOnPreDrawListener(this);
+
+                final Rect r = new Rect();
+                mCloseButton.getHitRect(r);
+                r.left -= 25;
+                r.bottom += 25;
+
+                setTouchDelegate(new TouchDelegate(r, mCloseButton));
+
+                return true;
+            }
+        });
     }
 
     protected void assignValues(Tab tab)  {
