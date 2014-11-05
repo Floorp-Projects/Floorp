@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test presence of legacy window.crypto features when
+         MOZ_DISABLE_CRYPTOLEGACY is NOT set and dom.unsafe_legacy_crypto.enabled is true</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+function test_unsafe_legacy_crypto_enabled() {
+  ok("crypto" in window, "crypto in window");
+  ok("version" in window.crypto, "version in window.crypto");
+  ok("enableSmartCardEvents" in window.crypto,
+     "enableSmartCardEvents in window.crypto");
+  ok("generateCRMFRequest" in window.crypto,
+     "generateCRMFRequest in window.crypto");
+  ok("importUserCertificates" in window.crypto,
+     "importUserCertificates in window.crypto");
+  ok("signText" in window.crypto, "signText in window.crypto");
+
+  function jsCallback () {
+  }
+
+  try {
+    window.crypto.generateCRMFRequest(null, null, null, null, jsCallback.toString());
+    ok(false, "window.crypto.generateCRMFRequest failed, should throw error");
+  } catch (e) {
+    ok(e.toString().search(/Failure/) > -1,
+       "Expected error: ReqDN cannot be null");
+  }
+
+  try {
+    window.crypto.generateCRMFRequest(document.documentElement, null, null, null,
+                                      null);
+    ok(false, "window.crypto.generateCRMFRequest failed, should throw error");
+  } catch (e) {
+    ok(e.toString().search(/Failure/) > -1,
+       "Expected error: jsCallback cannot be null");
+  }
+
+  try {
+    window.crypto.generateCRMFRequest(document.documentElement, null, null, null,
+                                      jsCallback.toString(), 1024);
+    ok(false, "window.crypto.generateCRMFRequest failed, should throw error");
+  } catch (e) {
+    ok(e.toString().search(/TypeError/) > -1,
+       "Expected error: Not enough arguments");
+  }
+
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv({"set": [["dom.unsafe_legacy_crypto.enabled", true]]},
+                          test_unsafe_legacy_crypto_enabled);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body></html>

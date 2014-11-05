@@ -383,6 +383,10 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
+  SmartCardEvent:                            { create: function (aName, aProps) {
+                                                         return new SmartCardEvent(aName, aProps);
+                                                       },
+                                             },
   SpeechRecognitionEvent:                    { create: function (aName, aProps) {
                                                          return new SpeechRecognitionEvent(aName, aProps);
                                                        },

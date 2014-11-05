@@ -14,6 +14,8 @@
 #include "nsIStringBundle.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+#endif
 #include "nsINSSErrorsService.h"
 #include "nsNSSCallbacks.h"
 #include "SharedCertVerifier.h"
@@ -85,7 +87,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
 
-#ifndef MOZ_NO_SMART_CARDS
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule* module) = 0;
 
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule* module) = 0;
@@ -138,7 +140,7 @@ public:
                                            nsAString& outString);
   NS_IMETHOD LogoutAuthenticatedPK11();
 
-#ifndef MOZ_NO_SMART_CARDS
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   NS_IMETHOD LaunchSmartCardThread(SECMODModule* module);
   NS_IMETHOD ShutdownSmartCardThread(SECMODModule* module);
   void LaunchSmartCardThreads();
@@ -185,7 +187,7 @@ private:
   bool mObserversRegistered;
   static int mInstanceCount;
   nsNSSShutDownList* mShutdownObjectList;
-#ifndef MOZ_NO_SMART_CARDS
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
   SmartCardThreadList* mThreadList;
 #endif
   bool mIsNetworkDown;

@@ -85,6 +85,9 @@
 #include "nsIDocCharset.h"
 #include "nsIDocument.h"
 #include "Crypto.h"
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+#include "nsIDOMCryptoLegacy.h"
+#endif
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
@@ -2368,6 +2371,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   nsCOMPtr<nsIDocument> oldDoc = mDoc;
 
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+  // clear smartcard events, our document has gone away.
+  if (mCrypto && XRE_GetProcessType() != GeckoProcessType_Content) {
+    nsresult rv = mCrypto->SetEnableSmartCardEvents(false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#endif
+
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext *cx = jsapi.cx();
@@ -4454,7 +4465,20 @@ nsGlobalWindow::GetCrypto(ErrorResult& aError)
   FORWARD_TO_INNER_OR_THROW(GetCrypto, (aError), aError, nullptr);
 
   if (!mCrypto) {
-    mCrypto = new Crypto();
+#ifndef MOZ_DISABLE_CRYPTOLEGACY
+    if (XRE_GetProcessType() != GeckoProcessType_Content) {
+      nsresult rv;
+      mCrypto = do_CreateInstance(NS_CRYPTO_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) {
+        aError.Throw(rv);
+        return nullptr;
+      }
+    } else
+#endif
+    {
+      mCrypto = new Crypto();
+    }
+
     mCrypto->Init(this);
   }
   return mCrypto;
