@@ -1068,7 +1068,7 @@ TypeSet::hasType(Type type) const
 inline void
 TypeSet::setBaseObjectCount(uint32_t count)
 {
-    MOZ_ASSERT(count <= TYPE_FLAG_OBJECT_COUNT_LIMIT);
+    MOZ_ASSERT(count <= TYPE_FLAG_DOMOBJECT_COUNT_LIMIT);
     flags = (flags & ~TYPE_FLAG_OBJECT_COUNT_MASK)
           | (count << TYPE_FLAG_OBJECT_COUNT_SHIFT);
 }
