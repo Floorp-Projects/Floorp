@@ -36,12 +36,10 @@ public:
   const NPP mNpp;
 };
 
-extern const JSClass sNPObjectJSWrapperClass;
-
 class nsJSObjWrapper : public NPObject
 {
 public:
-  JS::PersistentRooted<JSObject *> mJSObj;
+  JS::Heap<JSObject *> mJSObj;
   const NPP mNpp;
 
   static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
@@ -78,6 +76,7 @@ public:
 class nsNPObjWrapper
 {
 public:
+  static bool IsWrapper(JSObject *obj);
   static void OnDestroy(NPObject *npobj);
   static JSObject *GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj);
 };
