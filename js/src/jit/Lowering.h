@@ -73,6 +73,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitNewArray(MNewArray *ins);
     bool visitNewArrayCopyOnWrite(MNewArrayCopyOnWrite *ins);
     bool visitNewObject(MNewObject *ins);
+    bool visitNewTypedObject(MNewTypedObject *ins);
     bool visitNewDeclEnvObject(MNewDeclEnvObject *ins);
     bool visitNewCallObject(MNewCallObject *ins);
     bool visitNewRunOnceCallObject(MNewRunOnceCallObject *ins);
@@ -157,6 +158,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitToInt32(MToInt32 *convert);
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
     bool visitToString(MToString *convert);
+    bool visitToObjectOrNull(MToObjectOrNull *convert);
     bool visitRegExp(MRegExp *ins);
     bool visitRegExpExec(MRegExpExec *ins);
     bool visitRegExpTest(MRegExpTest *ins);
@@ -200,6 +202,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitLoadElementHole(MLoadElementHole *ins);
     bool visitStoreElement(MStoreElement *ins);
     bool visitStoreElementHole(MStoreElementHole *ins);
+    bool visitStoreUnboxedObjectOrNull(MStoreUnboxedObjectOrNull *ins);
+    bool visitStoreUnboxedString(MStoreUnboxedString *ins);
     bool visitEffectiveAddress(MEffectiveAddress *ins);
     bool visitArrayPopShift(MArrayPopShift *ins);
     bool visitArrayPush(MArrayPush *ins);

@@ -225,30 +225,6 @@ gfxContext::CurrentPoint()
 }
 
 void
-gfxContext::Stroke()
-{
-  Stroke(PatternFromState(this));
-}
-
-void
-gfxContext::Stroke(const Pattern& aPattern)
-{
-  AzureState &state = CurrentState();
-  if (mPathIsRect) {
-    MOZ_ASSERT(!mTransformChanged);
-
-    mDT->StrokeRect(mRect, aPattern,
-                    state.strokeOptions,
-                    DrawOptions(1.0f, GetOp(), state.aaMode));
-  } else {
-    EnsurePath();
-
-    mDT->Stroke(mPath, aPattern, state.strokeOptions,
-                DrawOptions(1.0f, GetOp(), state.aaMode));
-  }
-}
-
-void
 gfxContext::Fill()
 {
   Fill(PatternFromState(this));
@@ -521,26 +497,6 @@ AntialiasMode
 gfxContext::CurrentAntialiasMode() const
 {
   return CurrentState().aaMode;
-}
-
-void
-gfxContext::SetDash(gfxLineType ltype)
-{
-  static double dash[] = {5.0, 5.0};
-  static double dot[] = {1.0, 1.0};
-
-  switch (ltype) {
-      case gfxLineDashed:
-          SetDash(dash, 2, 0.0);
-          break;
-      case gfxLineDotted:
-          SetDash(dot, 2, 0.0);
-          break;
-      case gfxLineSolid:
-      default:
-          SetDash(nullptr, 0, 0.0);
-          break;
-  }
 }
 
 void

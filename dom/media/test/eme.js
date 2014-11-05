@@ -50,14 +50,34 @@ function HexToBase64(hex)
   return window.btoa(bin).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
+function TimeStamp(token) {
+  function pad(x) {
+    return (x < 10) ? "0" + x : x;
+  }
+  var now = new Date();
+  var ms = now.getMilliseconds();
+  var time = "[" +
+             pad(now.getHours()) + ":" +
+             pad(now.getMinutes()) + ":" +
+             pad(now.getSeconds()) + "." +
+             ms +
+             "]" +
+             (ms < 10 ? "  " : (ms < 100 ? " " : ""));
+  return token ? (time + " " + token) : time;
+}
+
+function Log(token, msg) {
+  info(TimeStamp(token) + " " + msg);
+}
+
 function UpdateSessionFunc(test, token) {
   return function(ev) {
     var msgStr = ArrayBufferToString(ev.message);
     var msg = JSON.parse(msgStr);
 
-    info(token + " got message from CDM: " + msgStr);
-    is(msg.type, test.sessionType, token + " key session type should match");
-    ok(msg.kids, token + " message event should contain key ID array");
+    Log(token, "got message from CDM: " + msgStr);
+    is(msg.type, test.sessionType, TimeStamp(token) + " key session type should match");
+    ok(msg.kids, TimeStamp(token) + " message event should contain key ID array");
 
     var outKeys = [];
 
@@ -67,7 +87,7 @@ function UpdateSessionFunc(test, token) {
       var key = test.keys[idHex];
 
       if (key) {
-        info(token + " found key " + key + " for key id " + idHex);
+        Log(token, "found key " + key + " for key id " + idHex);
         outKeys.push({
           "kty":"oct",
           "alg":"A128KW",
@@ -75,7 +95,7 @@ function UpdateSessionFunc(test, token) {
           "k":HexToBase64(key)
         });
       } else {
-        bail(token + " Couldn't find key for key id " + idHex);
+        bail(token + " couldn't find key for key id " + idHex);
       }
     }
 
@@ -83,15 +103,15 @@ function UpdateSessionFunc(test, token) {
       "keys" : outKeys,
       "type" : msg.type
     });
-    info(token + " sending update message to CDM: " + update);
+    Log(token, "sending update message to CDM: " + update);
 
     ev.target.update(StringToArrayBuffer(update)).then(function() {
-      info(token + " MediaKeySession update ok!");
+      Log(token, "MediaKeySession update ok!");
     }, bail(token + " MediaKeySession update failed"));
   }
 }
 
-function PlayFragmented(test, elem)
+function PlayFragmented(test, elem, token)
 {
   return new Promise(function(resolve, reject) {
     var ms = new MediaSource();
@@ -102,6 +122,7 @@ function PlayFragmented(test, elem)
 
     function addNextFragment() {
       if (curFragment >= test.fragments.length) {
+        Log(token, "addNextFragment() end of stream");
         ms.endOfStream();
         resolve();
         return;
@@ -114,18 +135,19 @@ function PlayFragmented(test, elem)
       req.responseType = "arraybuffer";
 
       req.addEventListener("load", function() {
-        info("fetch of " + fragmentFile + " complete");
+        Log(token, "fetch of " + fragmentFile + " complete, appending");
         sb.appendBuffer(new Uint8Array(req.response));
       });
 
-      req.addEventListener("error", bail("Error fetching " + fragmentFile));
-      req.addEventListener("abort", bail("Aborted fetching " + fragmentFile));
+      req.addEventListener("error", bail(token + " error fetching " + fragmentFile));
+      req.addEventListener("abort", bail(token + " aborted fetching " + fragmentFile));
 
-      info("fetching resource " + fragmentFile);
+      Log(token, "addNextFragment() fetching next fragment " + fragmentFile);
       req.send(null);
     }
 
     ms.addEventListener("sourceopen", function () {
+      Log(token, "sourceopen");
       sb = ms.addSourceBuffer(test.type);
       sb.addEventListener("updateend", addNextFragment);
 
@@ -137,10 +159,10 @@ function PlayFragmented(test, elem)
 // Returns a promise that is resovled when the media element is ready to have
 // its play() function called; when it's loaded MSE fragments, or once the load
 // has started for non-MSE video.
-function LoadTest(test, elem)
+function LoadTest(test, elem, token)
 {
   if (test.fragments) {
-    return PlayFragmented(test, elem);
+    return PlayFragmented(test, elem, token);
   }
 
   // This file isn't fragmented; set the media source normally.
@@ -155,10 +177,12 @@ function SetupEME(test, token, params)
   var v = document.createElement("video");
 
   // Log events dispatched to make debugging easier...
-  ["loadstart", "loadedmetadata", "loadeddata", "ended",
-    "play", "canplay", "playing", "canplaythrough"].forEach(function (e) {
+  [ "canplay", "canplaythrough", "ended", "error", "loadeddata",
+    "loadedmetadata", "loadstart", "pause", "play", "playing", "progress",
+    "stalled", "suspend", "waiting",
+  ].forEach(function (e) {
     v.addEventListener(e, function(event) {
-      info(token + " " + e);
+      Log(token, "" + e);
     }, false);
   });
 
@@ -167,13 +191,13 @@ function SetupEME(test, token, params)
     : bail(token + " Failed to set MediaKeys on <video> element");
 
   v.addEventListener("encrypted", function(ev) {
-    info(token + " got encrypted event");
+    Log(token, "got encrypted event");
     MediaKeys.create(KEYSYSTEM_TYPE).then(function(mediaKeys) {
-      info(token + " created MediaKeys object ok");
+      Log(token, "created MediaKeys object ok");
       mediaKeys.sessions = [];
       return v.setMediaKeys(mediaKeys);
     }, bail("failed to create MediaKeys object")).then(function() {
-      info(token + " set MediaKeys on <video> element ok");
+      Log(token, "set MediaKeys on <video> element ok");
 
       var session = v.mediaKeys.createSession(test.sessionType);
       if (params && params.onsessioncreated) {
