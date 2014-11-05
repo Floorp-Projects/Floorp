@@ -219,6 +219,8 @@
     _(LoadElementV)                 \
     _(LoadElementT)                 \
     _(LoadElementHole)              \
+    _(LoadUnboxedPointerV)          \
+    _(LoadUnboxedPointerT)          \
     _(StoreElementV)                \
     _(StoreElementT)                \
     _(StoreUnboxedPointer)          \
