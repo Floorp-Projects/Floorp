@@ -226,6 +226,10 @@ RangeAnalysis::addBetaNodes()
                     bound = intbound;
             }
             comp.setDouble(conservativeLower, bound);
+
+            // Negative zero is not less than zero.
+            if (bound == 0)
+                comp.refineToExcludeNegativeZero();
             break;
           case JSOP_GE:
             comp.setDouble(bound, conservativeUpper);
@@ -238,13 +242,24 @@ RangeAnalysis::addBetaNodes()
                     bound = intbound;
             }
             comp.setDouble(bound, conservativeUpper);
+
+            // Negative zero is not greater than zero.
+            if (bound == 0)
+                comp.refineToExcludeNegativeZero();
             break;
           case JSOP_EQ:
             comp.setDouble(bound, bound);
             break;
-          default:
-            continue; // well, for neq we could have
+          case JSOP_NE:
+            // Negative zero is not not-equal to zero.
+            if (bound == 0) {
+                comp.refineToExcludeNegativeZero();
+                break;
+            }
+            continue; // well, we could have
                       // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
+          default:
+            continue;
         }
 
         if (JitSpewEnabled(JitSpew_Range)) {
