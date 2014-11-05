@@ -142,6 +142,14 @@
   <color name="toast_button_pressed">#DD2C3136</color>
   <color name="toast_button_text">#FFFFFFFF</color>
 
+  <!-- Tab History colors. -->
+  <color name="tab_history_background">#EBEBF0</color>
+  <color name="tab_history_timeline_separator">#D7D9DB</color>
+  <color name="tab_history_favicon_border">#D7D9DB</color>
+  <color name="tab_history_favicon_background">#FFFFFF</color>
+  <color name="tab_history_title_color">#363B40</color>
+  <color name="tab_history_border_color">#DADADF</color>
+
   <!-- Colour used for Find-In-Page dialog -->
   <color name="find_status_default">#AFB1B3</color>
 

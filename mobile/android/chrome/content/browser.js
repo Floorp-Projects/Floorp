@@ -350,8 +350,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
     Services.obs.addObserver(this, "Session:Back", false);
-    Services.obs.addObserver(this, "Session:ShowHistory", false);
     Services.obs.addObserver(this, "Session:Forward", false);
+    Services.obs.addObserver(this, "Session:Navigate", false);
     Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
@@ -377,6 +377,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Webapps:Load", false);
     Services.obs.addObserver(this, "Webapps:AutoUninstall", false);
     Services.obs.addObserver(this, "sessionstore-state-purge-complete", false);
+    Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
     function showFullScreenWarning() {
       NativeWindow.toast.show(Strings.browser.GetStringFromName("alertFullScreenToast"), "short");
@@ -1573,6 +1574,11 @@ var BrowserApp = {
         browser.goForward();
         break;
 
+      case "Session:Navigate":
+          let index = JSON.parse(aData);
+          browser.gotoIndex(index);
+          break;
+
       case "Session:Reload": {
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY | Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
 
@@ -1605,12 +1611,6 @@ var BrowserApp = {
       case "Session:Stop":
         browser.stop();
         break;
-
-      case "Session:ShowHistory": {
-        let data = JSON.parse(aData);
-        this.showHistory(data.fromIndex, data.toIndex, data.selIndex);
-        break;
-      }
 
       case "Tab:Load": {
         let data = JSON.parse(aData);
@@ -1978,30 +1978,26 @@ var BrowserApp = {
     this._prefObservers = newPrefObservers;
   },
 
-  // This method will print a list from fromIndex to toIndex, optionally
+  // This method will return a list of history items from fromIndex to toIndex, optionally
   // selecting selIndex(if fromIndex<=selIndex<=toIndex)
-  showHistory: function(fromIndex, toIndex, selIndex) {
+  getHistory: function(data) {
+    let fromIndex = data.fromIndex;
+    let toIndex = data.toIndex;
+    let selIndex = data.selIndex;
     let browser = this.selectedBrowser;
     let hist = browser.sessionHistory;
     let listitems = [];
     for (let i = toIndex; i >= fromIndex; i--) {
       let entry = hist.getEntryAtIndex(i, false);
       let item = {
-        label: entry.title || entry.URI.spec,
+        title: entry.title || entry.URI.spec,
+        url: entry.URI.spec,
         selected: (i == selIndex)
       };
       listitems.push(item);
     }
 
-    let p = new Prompt({
-      window: browser.contentWindow
-    }).setSingleChoiceItems(listitems).show(function(data) {
-        let selected = data.button;
-        if (selected == -1)
-          return;
-
-        browser.gotoIndex(toIndex-selected);
-    });
+    return { "historyItems" : listitems };
   },
 };
 

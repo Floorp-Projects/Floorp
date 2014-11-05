@@ -26,6 +26,7 @@ import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
+import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
@@ -132,6 +133,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     protected boolean hasSoftMenuButton;
 
     protected UIMode uiMode;
+    protected TabHistoryController tabHistoryController;
 
     private final Paint shadowPaint;
     private final int shadowSize;
@@ -370,6 +372,10 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public void setProgressBar(ToolbarProgressView progressBar) {
         this.progressBar = progressBar;
+    }
+
+    public void setTabHistoryController(TabHistoryController tabHistoryController) {
+        this.tabHistoryController = tabHistoryController;
     }
 
     public void refresh() {
