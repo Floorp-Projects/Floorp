@@ -102,7 +102,7 @@ browser.jar:
     content/browser/devtools/framework/toolbox.xul                     (framework/toolbox.xul)
     content/browser/devtools/framework/options-panel.css               (framework/options-panel.css)
     content/browser/devtools/framework/toolbox-process-window.xul      (framework/toolbox-process-window.xul)
-    content/browser/devtools/framework/toolbox-process-window.js       (framework/toolbox-process-window.js)
+*   content/browser/devtools/framework/toolbox-process-window.js       (framework/toolbox-process-window.js)
     content/browser/devtools/framework/dev-edition-promo.xul           (framework/dev-edition-promo/dev-edition-promo.xul)
     content/browser/devtools/framework/dev-edition-promo.css           (framework/dev-edition-promo/dev-edition-promo.css)
     content/browser/devtools/framework/dev-edition-logo.png            (framework/dev-edition-promo/dev-edition-logo.png)
