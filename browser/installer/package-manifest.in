@@ -441,7 +441,6 @@
 @BINPATH@/components/nsUpdateTimerManager.js
 @BINPATH@/components/addoncompat.manifest
 @BINPATH@/components/multiprocessShims.js
-@BINPATH@/components/remoteTagService.js
 @BINPATH@/components/pluginGlue.manifest
 @BINPATH@/components/ProcessSingleton.manifest
 @BINPATH@/components/MainProcessSingleton.js
