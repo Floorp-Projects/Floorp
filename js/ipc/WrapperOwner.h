@@ -61,6 +61,8 @@ class WrapperOwner : public virtual JavaScriptShared
     bool objectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValue);
     const char* className(JSContext *cx, JS::HandleObject proxy);
     bool regexp_toShared(JSContext *cx, JS::HandleObject proxy, js::RegExpGuard *g);
+    bool isCallable(JSObject *obj);
+    bool isConstructor(JSObject *obj);
 
     nsresult instanceOf(JSObject *obj, const nsID *id, bool *bp);
 
@@ -149,6 +151,9 @@ class WrapperOwner : public virtual JavaScriptShared
                                 ReturnStatus *rs, bool *instanceof) = 0;
     virtual bool SendDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                                    ReturnStatus *rs, bool *instanceof) = 0;
+
+    virtual bool SendIsCallable(const ObjectId &objId, bool *result) = 0;
+    virtual bool SendIsConstructor(const ObjectId &objId, bool *result) = 0;
 };
 
 bool
