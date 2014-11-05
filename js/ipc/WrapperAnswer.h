@@ -62,6 +62,9 @@ class WrapperAnswer : public virtual JavaScriptShared
     bool RecvDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                            ReturnStatus *rs, bool *instanceof);
 
+    bool RecvIsCallable(const ObjectId &objId, bool *result);
+    bool RecvIsConstructor(const ObjectId &objId, bool *result);
+
     bool RecvDropObject(const ObjectId &objId);
 
   private:
