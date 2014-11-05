@@ -736,6 +736,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
 
   // Get the correct gfxFontGroup that corresponds to the earlier font changes.
   if (length) {
+    font.size = NSToCoordRound(font.size * mFontInflation);
     nsPresContext* pc = styles[0]->PresContext();
     nsRefPtr<nsFontMetrics> metrics;
     pc->DeviceContext()->GetMetricsFor(font,
