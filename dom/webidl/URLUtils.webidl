@@ -40,8 +40,6 @@ interface URLUtils {
   [Throws]
            attribute DOMString search;
 
-           attribute URLSearchParams searchParams;
-
   [Throws]
            attribute DOMString hash;
 
