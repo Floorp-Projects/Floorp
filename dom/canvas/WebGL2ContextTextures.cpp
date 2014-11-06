@@ -460,14 +460,31 @@ JS::Value
 WebGL2Context::GetTexParameterInternal(const TexTarget& target, GLenum pname)
 {
     switch (pname) {
-        case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
         case LOCAL_GL_TEXTURE_BASE_LEVEL:
+        case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+        case LOCAL_GL_TEXTURE_COMPARE_MODE:
+        case LOCAL_GL_TEXTURE_IMMUTABLE_FORMAT:
+        case LOCAL_GL_TEXTURE_IMMUTABLE_LEVELS:
         case LOCAL_GL_TEXTURE_MAX_LEVEL:
+        case LOCAL_GL_TEXTURE_SWIZZLE_A:
+        case LOCAL_GL_TEXTURE_SWIZZLE_B:
+        case LOCAL_GL_TEXTURE_SWIZZLE_G:
+        case LOCAL_GL_TEXTURE_SWIZZLE_R:
+        case LOCAL_GL_TEXTURE_WRAP_R:
         {
             GLint i = 0;
             gl->fGetTexParameteriv(target.get(), pname, &i);
             return JS::NumberValue(uint32_t(i));
         }
+
+        case LOCAL_GL_TEXTURE_MAX_LOD:
+        case LOCAL_GL_TEXTURE_MIN_LOD:
+        {
+            GLfloat f = 0.0f;
+            gl->fGetTexParameterfv(target.get(), pname, &f);
+            return JS::NumberValue(float(f));
+        }
     }
+
     return WebGLContext::GetTexParameterInternal(target, pname);
 }
