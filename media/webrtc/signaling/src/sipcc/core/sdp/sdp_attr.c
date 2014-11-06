@@ -458,7 +458,6 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char          tmp[SDP_MAX_STRING_LEN];
     char          *src_ptr;
     char          *temp_ptr = NULL;
-    tinybool flag=FALSE;
     char         *tok=NULL;
     char         *temp=NULL;
     u16          custom_x=0;
@@ -495,29 +494,11 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     fmtp_p->packetization_mode = SDP_DEFAULT_PACKETIZATION_MODE_VALUE;
     fmtp_p->level_asymmetry_allowed = SDP_DEFAULT_LEVEL_ASYMMETRY_ALLOWED_VALUE;
 
-    /* BEGIN - a typical macro fn to replace '/' with ';' from fmtp line*/
-    /* This ugly replacement of '/' with ';' is only done because
-    *  econf/MS client sends in this wierd /illegal format.
-    * fmtp parameters MUST be  separated by ';'
-    */
     temp_ptr = cpr_strdup(ptr);
     if (temp_ptr == NULL) {
         return (SDP_FAILURE);
     }
     fmtp_ptr = src_ptr = temp_ptr;
-    while (flag == FALSE) {
-        if (*src_ptr == '\n') {
-            flag = TRUE;
-            break;
-        }
-        if (*src_ptr == '/') {
-            *src_ptr =';' ;
-        }
-        src_ptr++;
-    }
-    /* END */
-    /* Once we move to RFC compliant video codec implementations, the above
-    *  patch should be removed */
 
     src_ptr = temp_ptr;
     while (!done) {
