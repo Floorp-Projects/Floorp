@@ -116,14 +116,6 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Answer::RecvDOMInstanceOf(ObjectId::deserialize(objId), prototypeID, depth, rs, instanceof);
     }
 
-    bool RecvIsCallable(const uint64_t &objId, bool *result) {
-        return Answer::RecvIsCallable(ObjectId::deserialize(objId), result);
-    }
-
-    bool RecvIsConstructor(const uint64_t &objId, bool *result) {
-        return Answer::RecvIsConstructor(ObjectId::deserialize(objId), result);
-    }
-
     bool RecvDropObject(const uint64_t &objId) {
         return Answer::RecvDropObject(ObjectId::deserialize(objId));
     }
@@ -213,14 +205,6 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool SendDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                            ReturnStatus *rs, bool *instanceof) {
         return Base::SendDOMInstanceOf(objId.serialize(), prototypeID, depth, rs, instanceof);
-    }
-
-    bool SendIsCallable(const ObjectId &objId, bool *result) {
-        return Base::SendIsCallable(objId.serialize(), result);
-    }
-
-    bool SendIsConstructor(const ObjectId &objId, bool *result) {
-        return Base::SendIsConstructor(objId.serialize(), result);
     }
 
     /* The following code is needed to suppress a bogus MSVC warning (C4250). */
