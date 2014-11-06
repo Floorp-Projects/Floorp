@@ -135,7 +135,7 @@ $(plugin_file): $(plugin_source_file) $(call mkdir_deps,$(dir $(plugin_file)))
 search-jar: $(search-jar)
 $(search-jar): $(search-jar-preqs)
 	@echo '\nGenerating: search-jar'
-	printf '$(AB_CD).jar:' > $@
+	echo '$(AB_CD).jar:' > $@
 	ln -fn $@ .
 	$(foreach plugin,$(shell cat $(plugin_file)),\
 		echo " locale/$(AB_CD)/browser/searchplugins/$(plugin).xml ($(plugin).xml)" >> $@;)
