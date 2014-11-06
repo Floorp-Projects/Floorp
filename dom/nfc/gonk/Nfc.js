@@ -555,7 +555,7 @@ Nfc.prototype = {
      case "HCIEventTransactionNotification":
         this.notifyHCIEventTransaction(message);
         break;
-     case "ConfigResponse":
+     case "PowerResponse":
         if (!message.errorMsg) {
           this.powerLevel = message.powerLevel;
         }
@@ -615,16 +615,16 @@ Nfc.prototype = {
 
     switch (message.name) {
       case "NFC:StartPoll":
-        this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_ENABLED,
-                        requestId: message.data.requestId});
+        message.data.powerLevel = NFC.NFC_POWER_LEVEL_ENABLED;
+        this.sendToNfcService("power", message.data);
         break;
       case "NFC:StopPoll":
-        this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_LOW,
-                        requestId: message.data.requestId});
+        message.data.powerLevel = NFC.NFC_POWER_LEVEL_LOW;
+        this.sendToNfcService("power", message.data);
         break;
       case "NFC:PowerOff":
-        this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_DISABLED,
-                        requestId: message.data.requestId});
+        message.data.powerLevel = NFC.NFC_POWER_LEVEL_DISABLED;
+        this.sendToNfcService("power", message.data);
         break;
       case "NFC:ReadNDEF":
         this.sendToNfcService("readNDEF", message.data);
@@ -689,10 +689,6 @@ Nfc.prototype = {
     if (topic != "profile-after-change") {
       debug("Should receive 'profile-after-change' only, received " + topic);
     }
-  },
-
-  setConfig: function setConfig(prop) {
-    this.sendToNfcService("config", prop);
   },
 
   shutdown: function shutdown() {
