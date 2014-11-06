@@ -8,7 +8,8 @@ module.metadata = {
 };
 
 var getPrototypeOf = Object.getPrototypeOf;
-var getNames = Object.getOwnPropertyNames;
+var getNames = x => [...Object.getOwnPropertyNames(x),
+                     ...Object.getOwnPropertySymbols(x)];
 var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
 var create = Object.create;
 var freeze = Object.freeze;
