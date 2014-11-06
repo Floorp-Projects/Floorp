@@ -356,9 +356,6 @@ class BaselineFrame
     bool isDebuggerFrame() const {
         return false;
     }
-    bool isGeneratorFrame() const {
-        return false;
-    }
 
     IonJSFrameLayout *framePrefix() const {
         uint8_t *fp = (uint8_t *)this + Size() + FramePointerOffset;
