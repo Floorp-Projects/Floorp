@@ -82,12 +82,15 @@ public:
 #endif
 
 private:
+  friend class DecodersToInitialize;
   ~TrackBuffer();
 
-  // Create a new decoder, set mCurrentDecoder to the new decoder, and queue
-  // the decoder for initialization.  The decoder is not considered
-  // initialized until it is added to mDecoders.
-  bool NewDecoder();
+  // Create a new decoder, set mCurrentDecoder to the new decoder and
+  // returns it. The new decoder must be queued using QueueInitializeDecoder
+  // for initialization.
+  // The decoder is not considered initialized until it is added to
+  // mInitializedDecoders.
+  already_AddRefed<SourceBufferDecoder> NewDecoder();
 
   // Helper for AppendData, ensures NotifyDataArrived is called whenever
   // data is appended to the current decoder's SourceBufferResource.
