@@ -14,19 +14,6 @@ namespace gl {
 
 class GLContext;
 
-typedef uintptr_t SharedTextureHandle;
-
-MOZ_BEGIN_ENUM_CLASS(SharedTextureShareType)
-    SameProcess = 0,
-    CrossProcess
-MOZ_END_ENUM_CLASS(SharedTextureShareType)
-
-MOZ_BEGIN_ENUM_CLASS(SharedTextureBufferType)
-    TextureID,
-    SurfaceTexture,
-    IOSurface
-MOZ_END_ENUM_CLASS(SharedTextureBufferType)
-
 MOZ_BEGIN_ENUM_CLASS(GLContextType)
     Unknown,
     WGL,
