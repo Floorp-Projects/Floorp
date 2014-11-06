@@ -377,8 +377,6 @@ def ContextDerivedTypedList(type, base_class=List):
 # - 'export'
 # - 'libs': everything that is not built from C/C++/ObjC source and that has
 #      traditionally been in the libs tier.
-# - 'misc': like libs, but with parallel build. Eventually, everything that
-#      currently is in libs should move here.
 # A value of None means the variable has no direct effect on any tier.
 
 VARIABLES = {
@@ -511,7 +509,7 @@ VARIABLES = {
 
        This variable contains a list of files to copy into
        ``$(FINAL_TARGET)/components/``.
-        """, 'misc'),
+        """, 'libs'),
 
     'EXTRA_JS_MODULES': (HierarchicalStringList, list,
         """Additional JavaScript files to distribute.
@@ -544,7 +542,7 @@ VARIABLES = {
 
        This variable contains a list of files to preprocess.  Generated
        files will be installed in the ``/components`` directory of the distribution.
-        """, 'misc'),
+        """, 'libs'),
 
     'FINAL_LIBRARY': (unicode, unicode,
         """Library in which the objects of the current directory will be linked.
