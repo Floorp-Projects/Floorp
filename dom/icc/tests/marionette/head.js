@@ -10,6 +10,88 @@ const DEFAULT_PIN = "0000";
 // The puk code hard coded in emulator is "12345678".
 const DEFAULT_PUK = "12345678";
 
+const WHT = 0xFFFFFFFF;
+const BLK = 0x000000FF;
+const RED = 0xFF0000FF;
+const GRN = 0x00FF00FF;
+const BLU = 0x0000FFFF;
+const TSP = 0;
+
+// Basic Image, see record number 1 in EFimg.
+const BASIC_ICON = {
+  width: 8,
+  height: 8,
+  codingScheme: "basic",
+  pixels: [WHT, WHT, WHT, WHT, WHT, WHT, WHT, WHT,
+           BLK, BLK, BLK, BLK, BLK, BLK, WHT, WHT,
+           WHT, BLK, WHT, BLK, BLK, WHT, BLK, WHT,
+           WHT, BLK, BLK, WHT, WHT, BLK, BLK, WHT,
+           WHT, BLK, BLK, WHT, WHT, BLK, BLK, WHT,
+           WHT, BLK, WHT, BLK, BLK, WHT, BLK, WHT,
+           WHT, WHT, BLK, BLK, BLK, BLK, WHT, WHT,
+           WHT, WHT, WHT, WHT, WHT, WHT, WHT, WHT]
+};
+// Color Image, see record number 3 in EFimg.
+const COLOR_ICON = {
+  width: 8,
+  height: 8,
+  codingScheme: "color",
+  pixels: [BLU, BLU, BLU, BLU, BLU, BLU, BLU, BLU,
+           BLU, RED, RED, RED, RED, RED, RED, BLU,
+           BLU, RED, GRN, GRN, GRN, RED, RED, BLU,
+           BLU, RED, RED, GRN, GRN, RED, RED, BLU,
+           BLU, RED, RED, GRN, GRN, RED, RED, BLU,
+           BLU, RED, RED, GRN, GRN, GRN, RED, BLU,
+           BLU, RED, RED, RED, RED, RED, RED, BLU,
+           BLU, BLU, BLU, BLU, BLU, BLU, BLU, BLU]
+};
+// Color Image with Transparency, see record number 5 in EFimg.
+const COLOR_TRANSPARENCY_ICON = {
+  width: 8,
+  height: 8,
+  codingScheme: "color-transparency",
+  pixels: [TSP, TSP, TSP, TSP, TSP, TSP, TSP, TSP,
+           TSP, RED, RED, RED, RED, RED, RED, TSP,
+           TSP, RED, GRN, GRN, GRN, RED, RED, TSP,
+           TSP, RED, RED, GRN, GRN, RED, RED, TSP,
+           TSP, RED, RED, GRN, GRN, RED, RED, TSP,
+           TSP, RED, RED, GRN, GRN, GRN, RED, TSP,
+           TSP, RED, RED, RED, RED, RED, RED, TSP,
+           TSP, TSP, TSP, TSP, TSP, TSP, TSP, TSP]
+};
+
+/**
+ * Helper function for checking stk icon.
+ */
+function isIcons(aIcons, aExpectedIcons) {
+  is(aIcons.length, aExpectedIcons.length, "icons.length");
+  for (let i = 0; i < aIcons.length; i++) {
+    let icon = aIcons[i];
+    let expectedIcon = aExpectedIcons[i];
+
+    is(icon.width, expectedIcon.width, "icon.width");
+    is(icon.height, expectedIcon.height, "icon.height");
+    is(icon.codingScheme, expectedIcon.codingScheme, "icon.codingScheme");
+
+    is(icon.pixels.length, expectedIcon.pixels.length);
+    for (let j = 0; j < icon.pixels.length; j++) {
+      is(icon.pixels[j], expectedIcon.pixels[j], "icon.pixels[" + j + "]");
+    }
+  }
+}
+
+/**
+ * Helper function for checking stk text.
+ */
+function isStkText(aStkText, aExpectedStkText) {
+  is(aStkText.text, aExpectedStkText.text, "stkText.text");
+  if (aExpectedStkText.icons) {
+    is(aStkText.iconSelfExplanatory, aExpectedStkText.iconSelfExplanatory,
+       "stkText.iconSelfExplanatory");
+    isIcons(aStkText.icons, aExpectedStkText.icons);
+  }
+}
+
 // Emulate Promise.jsm semantics.
 Promise.defer = function() { return new Deferred(); }
 function Deferred() {
