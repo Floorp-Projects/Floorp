@@ -721,24 +721,6 @@ void MediaDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
     Invalidate();
     mOwner->MetadataLoaded(aInfo, aTags);
   }
-}
-
-void MediaDecoder::FirstFrameLoaded(MediaInfo* aInfo)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mShuttingDown) {
-    return;
-  }
-
-  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
-              aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
-              aInfo->HasAudio(), aInfo->HasVideo());
-
-  if (mPlayState == PLAY_STATE_LOADING && mIsDormant && !mIsExitingDormant) {
-    return;
-  }
-
-  mInfo = aInfo;
 
   if (mOwner) {
     mOwner->FirstFrameLoaded();

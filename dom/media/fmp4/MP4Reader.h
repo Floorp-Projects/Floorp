@@ -45,8 +45,6 @@ public:
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags) MOZ_OVERRIDE;
 
-  virtual void ReadUpdatedMetadata(MediaInfo* aInfo) MOZ_OVERRIDE;
-
   virtual void Seek(int64_t aTime,
                     int64_t aStartTime,
                     int64_t aEndTime,
