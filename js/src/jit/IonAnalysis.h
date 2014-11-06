@@ -168,6 +168,12 @@ AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
 bool
 AnalyzeArgumentsUsage(JSContext *cx, JSScript *script);
 
+bool
+DeadIfUnused(const MDefinition *def);
+
+bool
+IsDiscardable(const MDefinition *def);
+
 } // namespace jit
 } // namespace js
 
