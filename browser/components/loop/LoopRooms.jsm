@@ -18,6 +18,9 @@ XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
 
 this.EXPORTED_SYMBOLS = ["LoopRooms", "roomsPushNotification"];
 
+// The maximum number of clients that we support currently.
+const CLIENT_MAX_SIZE = 2;
+
 const roomsPushNotification = function(version, channelID) {
   return LoopRoomsInternal.onNotification(version, channelID);
 };
@@ -271,6 +274,81 @@ let LoopRoomsInternal = {
       }, error => callback(error)).catch(error => callback(error));
   },
 
+  /**
+   * Internal function to handle POSTs to a room.
+   *
+   * @param {String} roomToken  The room token.
+   * @param {Object} postData   The data to post to the room.
+   * @param {Function} callback Function that will be invoked once the operation
+   *                            finished. The first argument passed will be an
+   *                            `Error` object or `null`.
+   */
+  _postToRoom(roomToken, postData, callback) {
+    let url = "/rooms/" + encodeURIComponent(roomToken);
+    MozLoopService.hawkRequest(this.sessionType, url, "POST", postData).then(response => {
+      // Delete doesn't have a body return.
+      var joinData = response.body ? JSON.parse(response.body) : {};
+      callback(null, joinData);
+    }, error => callback(error)).catch(error => callback(error));
+  },
+
+  /**
+   * Joins a room
+   *
+   * @param {String} roomToken  The room token.
+   * @param {Function} callback Function that will be invoked once the operation
+   *                            finished. The first argument passed will be an
+   *                            `Error` object or `null`.
+   */
+  join: function(roomToken, callback) {
+    this._postToRoom(roomToken, {
+      action: "join",
+      displayName: MozLoopService.userProfile.email,
+      clientMaxSize: CLIENT_MAX_SIZE
+    }, callback);
+  },
+
+  /**
+   * Refreshes a room
+   *
+   * @param {String} roomToken    The room token.
+   * @param {String} sessionToken The session token for the session that has been
+   *                              joined
+   * @param {Function} callback   Function that will be invoked once the operation
+   *                              finished. The first argument passed will be an
+   *                              `Error` object or `null`.
+   */
+  refreshMembership: function(roomToken, sessionToken, callback) {
+    this._postToRoom(roomToken, {
+      action: "refresh",
+      sessionToken: sessionToken
+    }, callback);
+  },
+
+  /**
+   * Leaves a room. Although this is an sync function, no data is returned
+   * from the server.
+   *
+   * @param {String} roomToken    The room token.
+   * @param {String} sessionToken The session token for the session that has been
+   *                              joined
+   * @param {Function} callback   Optional. Function that will be invoked once the operation
+   *                              finished. The first argument passed will be an
+   *                              `Error` object or `null`.
+   */
+  leave: function(roomToken, sessionToken, callback) {
+    if (!callback) {
+      callback = function(error) {
+        if (error) {
+          MozLoopService.log.error(error);
+        }
+      };
+    }
+    this._postToRoom(roomToken, {
+      action: "leave",
+      sessionToken: sessionToken
+    }, callback);
+  },
 
   /**
    * Callback used to indicate changes to rooms data on the LoopServer.
@@ -320,6 +398,19 @@ this.LoopRooms = {
 
   delete: function(roomToken, callback) {
     return LoopRoomsInternal.delete(roomToken, callback);
+  },
+
+  join: function(roomToken, callback) {
+    return LoopRoomsInternal.join(roomToken, callback);
+  },
+
+  refreshMembership: function(roomToken, sessionToken, callback) {
+    return LoopRoomsInternal.refreshMembership(roomToken, sessionToken,
+      callback);
+  },
+
+  leave: function(roomToken, sessionToken, callback) {
+    return LoopRoomsInternal.leave(roomToken, sessionToken, callback);
   },
 
   promise: function(method, ...params) {
