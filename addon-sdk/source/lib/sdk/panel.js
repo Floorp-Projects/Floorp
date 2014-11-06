@@ -3,12 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// The panel module currently supports only Firefox.
+// The panel module currently supports only Firefox and SeaMonkey.
 // See: https://bugzilla.mozilla.org/show_bug.cgi?id=jetpack-panel-apps
 module.metadata = {
   "stability": "stable",
   "engines": {
-    "Firefox": "*"
+    "Firefox": "*",
+    "SeaMonkey": "*"
   }
 };
 

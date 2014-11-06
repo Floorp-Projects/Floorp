@@ -34,6 +34,9 @@ DEFAULT_COMMON_PREFS = {
     # Allow installing extensions dropped into the profile folder
     'extensions.autoDisableScopes' : 10,
 
+    # shut up some warnings on `about:` page
+    'app.releaseNotesURL': 'http://localhost/app-dummy/',
+    'app.vendorURL': 'http://localhost/app-dummy/'
 }
 
 DEFAULT_NO_CONNECTIONS_PREFS = {

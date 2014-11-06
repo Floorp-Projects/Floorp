@@ -14,6 +14,7 @@ const { emit } = require('../event/core');
 const { isPrivate } = require('../private-browsing/utils');
 const { isWindowPrivate } = require('../window/utils');
 const { when: unload } = require('../system/unload');
+const { BLANK } = require('../content/thumbnail');
 const { viewFor } = require('../view/core');
 const { EVENTS } = require('./events');
 
@@ -94,7 +95,7 @@ const Tab = Class({
     console.error(ERR_FENNEC_MSG);
 
     // return 80x45 blank default
-    return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAtCAYAAAA5reyyAAAAJElEQVRoge3BAQEAAACCIP+vbkhAAQAAAAAAAAAAAAAAAADXBjhtAAGQ0AF/AAAAAElFTkSuQmCC';
+    return BLANK;
   },
 
   /**

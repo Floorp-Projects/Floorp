@@ -30,13 +30,18 @@ const isPacked = rootURI && rootURI.indexOf("jar:") === 0;
 const uri = (path="") =>
   path.contains(":") ? path : addonDataURI + path.replace(/^\.\//, "");
 
+let { preferencesBranch } = options;
+if (/[^\w{@}.-]/.test(preferencesBranch)) {
+  preferencesBranch = id;
+  console.warn("Ignoring preferences-branch (not a valid branch name)");
+}
 
 // Some XPCOM APIs require valid URIs as an argument for certain operations
 // (see `nsILoginManager` for example). This property represents add-on
 // associated unique URI string that can be used for that.
 exports.uri = 'addon:' + id;
 exports.id = id;
-exports.preferencesBranch = options.preferencesBranch || id;
+exports.preferencesBranch = preferencesBranch || id;
 exports.name = name;
 exports.loadReason = loadReason;
 exports.version = version;

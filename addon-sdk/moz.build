@@ -172,6 +172,7 @@ EXTRA_JS_MODULES.commonjs.diffpatcher.test += [
 
 EXTRA_JS_MODULES.commonjs.framescript += [
     'source/lib/framescript/FrameScriptManager.jsm',
+    'source/lib/framescript/LoaderHelper.jsm',
     'source/lib/framescript/tab-events.js',
 ]
 
@@ -240,6 +241,8 @@ EXTRA_JS_MODULES.commonjs.sdk.content += [
     'source/lib/sdk/content/sandbox.js',
     'source/lib/sdk/content/thumbnail.js',
     'source/lib/sdk/content/utils.js',
+    'source/lib/sdk/content/worker-child.js',
+    'source/lib/sdk/content/worker-parent.js',
     'source/lib/sdk/content/worker.js',
 ]
 
@@ -429,7 +432,6 @@ EXTRA_JS_MODULES.commonjs.sdk.util += [
     'source/lib/sdk/util/contract.js',
     'source/lib/sdk/util/deprecate.js',
     'source/lib/sdk/util/dispatcher.js',
-    'source/lib/sdk/util/iteration.js',
     'source/lib/sdk/util/list.js',
     'source/lib/sdk/util/match-pattern.js',
     'source/lib/sdk/util/object.js',
@@ -453,4 +455,5 @@ EXTRA_JS_MODULES.commonjs.sdk.zip += [
 
 EXTRA_JS_MODULES.commonjs.toolkit += [
     'source/lib/toolkit/loader.js',
+    'source/lib/toolkit/require.js',
 ]

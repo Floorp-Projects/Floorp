@@ -15,7 +15,7 @@ const { on, off, emit } = require('../../event/core');
 
 const { data } = require('sdk/self');
 
-const { isObject } = require('../../lang/type');
+const { isObject, isNil } = require('../../lang/type');
 
 const { getMostRecentBrowserWindow } = require('../../window/utils');
 const { ignoreWindow } = require('../../private-browsing/utils');
@@ -114,7 +114,7 @@ function nodeFor(id, window=getMostRecentBrowserWindow()) {
 exports.nodeFor = nodeFor;
 
 function create(options) {
-  let { id, label, icon, type } = options;
+  let { id, label, icon, type, badge } = options;
 
   if (views.has(id))
     throw new Error('The ID "' + id + '" seems already used.');
@@ -137,7 +137,7 @@ function create(options) {
         node.style.display = 'none';
 
       node.setAttribute('id', this.id);
-      node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional');
+      node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional badged-button');
       node.setAttribute('type', type);
       node.setAttribute('label', label);
       node.setAttribute('tooltiptext', label);
@@ -212,6 +212,27 @@ function setChecked(id, window, checked) {
     node.checked = checked;
 }
 exports.setChecked = setChecked;
+
+function setBadge(id, window, badge, color) {
+  let node = nodeFor(id, window);
+
+  if (node) {
+    // `Array.from` is needed to handle unicode symbol properly:
+    // '𝐀𝐁'.length is 4 where Array.from('𝐀𝐁').length is 2
+    let text = isNil(badge)
+                  ? ''
+                  : Array.from(String(badge)).slice(0, 4).join('');
+
+    node.setAttribute('badge', text);
+
+    let badgeNode = node.ownerDocument.getAnonymousElementByAttribute(node,
+                                        'class', 'toolbarbutton-badge');
+
+    if (badgeNode)
+      badgeNode.style.backgroundColor = isNil(color) ? '' : color;
+  }
+}
+exports.setBadge = setBadge;
 
 function click(id) {
   let node = nodeFor(id);
