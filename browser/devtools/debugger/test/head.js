@@ -964,4 +964,13 @@ function callInTab(tab, name) {
   info("Calling function with name " + name + " in tab.");
 
   sendMessageToTab(tab, "test:call", name);
+  waitForMessageFromTab(tab, "test:call");
+}
+
+function sendMouseClickToTab(tab, target) {
+  info("Sending mouse click to tab.");
+
+  sendMessageToTab(tab, "test:click", undefined, {
+    target: target
+  });
 }
