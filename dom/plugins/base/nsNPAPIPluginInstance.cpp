@@ -56,10 +56,9 @@ using namespace mozilla::dom;
 #include "GLContextProvider.h"
 #include "GLContext.h"
 #include "TexturePoolOGL.h"
+#include "GLSharedHandleHelpers.h"
 #include "SurfaceTypes.h"
-#include "EGLUtils.h"
 
-using namespace mozilla;
 using namespace mozilla::gl;
 
 typedef nsNPAPIPluginInstance::VideoInfo VideoInfo;
@@ -128,7 +127,7 @@ public:
     mLock.Unlock();
   }
 
-  EGLImage CreateEGLImage()
+  SharedTextureHandle CreateSharedHandle()
   {
     MutexAutoLock lock(mLock);
 
@@ -138,15 +137,18 @@ public:
     if (mTextureInfo.mWidth == 0 || mTextureInfo.mHeight == 0)
       return 0;
 
-    GLuint& tex = mTextureInfo.mTexture;
-    EGLImage image = gl::CreateEGLImage(sPluginContext, tex);
+    SharedTextureHandle handle =
+      gl::CreateSharedHandle(sPluginContext,
+                             gl::SharedTextureShareType::SameProcess,
+                             (void*)mTextureInfo.mTexture,
+                             gl::SharedTextureBufferType::TextureID);
 
     // We want forget about this now, so delete the texture. Assigning it to zero
     // ensures that we create a new one in Lock()
-    sPluginContext->fDeleteTextures(1, &tex);
-    tex = 0;
+    sPluginContext->fDeleteTextures(1, &mTextureInfo.mTexture);
+    mTextureInfo.mTexture = 0;
 
-    return image;
+    return handle;
   }
 
 private:
@@ -947,7 +949,7 @@ void nsNPAPIPluginInstance::ReleaseContentTexture(nsNPAPIPluginInstance::Texture
   mContentTexture->Release(aTextureInfo);
 }
 
-AndroidSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
+nsSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
 {
   if (!EnsureGLContext())
     return nullptr;
@@ -956,8 +958,7 @@ AndroidSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
   if (!texture)
     return nullptr;
 
-  AndroidSurfaceTexture* surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
-                                                                 texture);
+  nsSurfaceTexture* surface = nsSurfaceTexture::Create(texture);
   if (!surface)
     return nullptr;
 
@@ -981,36 +982,31 @@ void* nsNPAPIPluginInstance::AcquireContentWindow()
       return nullptr;
   }
 
-  return mContentSurface->NativeWindow()->Handle();
+  return mContentSurface->GetNativeWindow();
 }
 
-EGLImage
-nsNPAPIPluginInstance::AsEGLImage()
+SharedTextureHandle nsNPAPIPluginInstance::CreateSharedHandle()
 {
-  if (!mContentTexture)
-    return 0;
-
-  return mContentTexture->CreateEGLImage();
-}
-
-AndroidSurfaceTexture*
-nsNPAPIPluginInstance::AsSurfaceTexture()
-{
-  if (!mContentSurface)
-    return nullptr;
-
-  return mContentSurface;
+  if (mContentTexture) {
+    return mContentTexture->CreateSharedHandle();
+  } else if (mContentSurface) {
+    EnsureGLContext();
+    return gl::CreateSharedHandle(sPluginContext,
+                                  gl::SharedTextureShareType::SameProcess,
+                                  mContentSurface,
+                                  gl::SharedTextureBufferType::SurfaceTexture);
+  } else return 0;
 }
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
 {
-  AndroidSurfaceTexture* surface = CreateSurfaceTexture();
+  nsSurfaceTexture* surface = CreateSurfaceTexture();
   if (!surface)
     return nullptr;
 
   VideoInfo* info = new VideoInfo(surface);
 
-  void* window = info->mSurfaceTexture->NativeWindow()->Handle();
+  void* window = info->mSurfaceTexture->GetNativeWindow();
   mVideos.insert(std::pair<void*, VideoInfo*>(window, info));
 
   return window;
