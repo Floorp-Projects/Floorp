@@ -894,29 +894,6 @@ var BrowserApp = {
     }
   },
 
-  shutdown: function shutdown() {
-    NativeWindow.uninit();
-    LightWeightThemeWebInstaller.uninit();
-    FormAssistant.uninit();
-    IndexedDB.uninit();
-    ViewportHandler.uninit();
-    XPInstallObserver.uninit();
-    HealthReportStatusListener.uninit();
-    CharacterEncoding.uninit();
-    SearchEngines.uninit();
-    RemoteDebugger.uninit();
-    Reader.uninit();
-    UserAgentOverrides.uninit();
-    DesktopUserAgent.uninit();
-    ExternalApps.uninit();
-    CastingApps.uninit();
-    Distribution.uninit();
-    Tabs.uninit();
-#ifdef NIGHTLY_BUILD
-    WebcompatReporter.uninit();
-#endif
-  },
-
   // This function returns false during periods where the browser displayed document is
   // different from the browser content document, so user actions and some kinds of viewport
   // updates should be ignored. This period starts when we start loading a new page or
@@ -2026,14 +2003,6 @@ var NativeWindow = {
     this.contextmenus.init();
   },
 
-  uninit: function() {
-    Services.obs.removeObserver(this, "Menu:Clicked");
-    Services.obs.removeObserver(this, "Doorhanger:Reply");
-    Services.obs.removeObserver(this, "Toast:Click", false);
-    Services.obs.removeObserver(this, "Toast:Hidden", false);
-    this.contextmenus.uninit();
-  },
-
   loadDex: function(zipFile, implClass) {
     Messaging.sendRequest({
       type: "Dex:Load",
@@ -2215,10 +2184,6 @@ var NativeWindow = {
 
     init: function() {
       BrowserApp.deck.addEventListener("contextmenu", this.show.bind(this), false);
-    },
-
-    uninit: function() {
-      BrowserApp.deck.removeEventListener("contextmenu", this.show.bind(this), false);
     },
 
     add: function() {
@@ -2878,12 +2843,6 @@ var LightWeightThemeWebInstaller = {
     BrowserApp.deck.addEventListener("ResetBrowserThemePreview", this, false, true);
   },
 
-  uninit: function() {
-    BrowserApp.deck.removeEventListener("InstallBrowserTheme", this, false, true);
-    BrowserApp.deck.removeEventListener("PreviewBrowserTheme", this, false, true);
-    BrowserApp.deck.removeEventListener("ResetBrowserThemePreview", this, false, true);
-  },
-
   handleEvent: function (event) {
     switch (event.type) {
       case "InstallBrowserTheme":
@@ -2999,10 +2958,6 @@ var DesktopUserAgent = {
                         .getService(Ci.nsIHttpProtocolHandler).userAgent
                         .replace(/Android; [a-zA-Z]+/, "X11; Linux x86_64")
                         .replace(/Gecko\/[0-9\.]+/, "Gecko/20100101");
-  },
-
-  uninit: function ua_uninit() {
-    Services.obs.removeObserver(this, "DesktopMode:Change");
   },
 
   onRequest: function(channel, defaultUA) {
@@ -5528,21 +5483,6 @@ var FormAssistant = {
     LoginManagerParent.init();
   },
 
-  uninit: function() {
-    Services.obs.removeObserver(this, "FormAssist:AutoComplete");
-    Services.obs.removeObserver(this, "FormAssist:Blocklisted");
-    Services.obs.removeObserver(this, "FormAssist:Hidden");
-    Services.obs.removeObserver(this, "FormAssist:Remove");
-    Services.obs.removeObserver(this, "invalidformsubmit");
-    Services.obs.removeObserver(this, "PanZoom:StateChange");
-
-    BrowserApp.deck.removeEventListener("focus", this);
-    BrowserApp.deck.removeEventListener("blur", this);
-    BrowserApp.deck.removeEventListener("click", this);
-    BrowserApp.deck.removeEventListener("input", this);
-    BrowserApp.deck.removeEventListener("pageshow", this);
-  },
-
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "PanZoom:StateChange":
@@ -5891,17 +5831,6 @@ let HealthReportStatusListener = {
     }
   },
 
-  uninit: function () {
-    Services.obs.removeObserver(this, "HealthReport:RequestSnapshot");
-    Services.prefs.removeObserver(this.PREF_ACCEPT_LANG, this);
-    Services.prefs.removeObserver(this.PREF_BLOCKLIST_ENABLED, this);
-    if (this.PREF_TELEMETRY_ENABLED) {
-      Services.prefs.removeObserver(this.PREF_TELEMETRY_ENABLED, this);
-    }
-
-    AddonManager.removeAddonListener(this);
-  },
-
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
       case "HealthReport:RequestSnapshot":
@@ -6066,13 +5995,6 @@ var XPInstallObserver = {
     Services.obs.addObserver(XPInstallObserver, "addon-install-started", false);
 
     AddonManager.addInstallListener(XPInstallObserver);
-  },
-
-  uninit: function xpi_uninit() {
-    Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
-    Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
-
-    AddonManager.removeInstallListener(XPInstallObserver);
   },
 
   observe: function xpi_observer(aSubject, aTopic, aData) {
@@ -6251,11 +6173,6 @@ var ViewportHandler = {
   init: function init() {
     addEventListener("DOMMetaAdded", this, false);
     Services.obs.addObserver(this, "Window:Resize", false);
-  },
-
-  uninit: function uninit() {
-    removeEventListener("DOMMetaAdded", this, false);
-    Services.obs.removeObserver(this, "Window:Resize");
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -6578,12 +6495,6 @@ var IndexedDB = {
     Services.obs.addObserver(this, this._quotaCancel, false);
   },
 
-  uninit: function IndexedDB_uninit() {
-    Services.obs.removeObserver(this, this._permissionsPrompt);
-    Services.obs.removeObserver(this, this._quotaPrompt);
-    Services.obs.removeObserver(this, this._quotaCancel);
-  },
-
   observe: function IndexedDB_observe(subject, topic, data) {
     if (topic != this._permissionsPrompt &&
         topic != this._quotaPrompt &&
@@ -6678,11 +6589,6 @@ var CharacterEncoding = {
     Services.obs.addObserver(this, "CharEncoding:Get", false);
     Services.obs.addObserver(this, "CharEncoding:Set", false);
     this.sendState();
-  },
-
-  uninit: function uninit() {
-    Services.obs.removeObserver(this, "CharEncoding:Get");
-    Services.obs.removeObserver(this, "CharEncoding:Set");
   },
 
   observe: function observe(aSubject, aTopic, aData) {
@@ -7005,17 +6911,6 @@ var SearchEngines = {
         SearchEngines.addEngine(aElement);
       }
     });
-  },
-
-  uninit: function uninit() {
-    Services.obs.removeObserver(this, "SearchEngines:Add");
-    Services.obs.removeObserver(this, "SearchEngines:GetVisible");
-    Services.obs.removeObserver(this, "SearchEngines:Remove");
-    Services.obs.removeObserver(this, "SearchEngines:RestoreDefaults");
-    Services.obs.removeObserver(this, "SearchEngines:SetDefault");
-    Services.obs.removeObserver(this, "browser-search-engine-modified");
-    if (this._contextMenuId != null)
-      NativeWindow.contextmenus.remove(this._contextMenuId);
   },
 
   // Fetch list of search engines. all ? All engines : Visible engines only.
@@ -7346,11 +7241,6 @@ var RemoteDebugger = {
     }
   },
 
-  uninit: function rd_uninit() {
-    Services.prefs.removeObserver("devtools.debugger.", this);
-    this._stop();
-  },
-
   _getPort: function _rd_getPort() {
     return Services.prefs.getIntPref("devtools.debugger.remote-port");
   },
@@ -7473,13 +7363,6 @@ var ExternalApps = {
       return apps.length == 1 ? Strings.browser.formatStringFromName("helperapps.openWithApp2", [apps[0].name], 1) :
                                 Strings.browser.GetStringFromName("helperapps.openWithList2");
     }, this.filter, this.openExternal);
-  },
-
-  uninit: function helper_uninit() {
-    if (this._contextMenuId !== null) {
-      NativeWindow.contextmenus.remove(this._contextMenuId);
-    }
-    this._contextMenuId = null;
   },
 
   filter: {
@@ -7609,12 +7492,6 @@ var Distribution = {
     this._file = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
     this._file.append("distribution.json");
     this.readJSON(this._file, this.update);
-  },
-
-  uninit: function dc_uninit() {
-    Services.obs.removeObserver(this, "Distribution:Set");
-    Services.obs.removeObserver(this, "prefservice:after-app-defaults");
-    Services.obs.removeObserver(this, "Campaign:Set");
   },
 
   observe: function dc_observe(aSubject, aTopic, aData) {
@@ -7763,19 +7640,6 @@ var Tabs = {
 
     BrowserApp.deck.addEventListener("pageshow", this, false);
     BrowserApp.deck.addEventListener("TabOpen", this, false);
-  },
-
-  uninit: function() {
-    if (!this._enableTabExpiration) {
-      // If _enableTabExpiration is true then we won't have this
-      // observer registered any more.
-      Services.obs.removeObserver(this, "memory-pressure");
-    }
-
-    Services.obs.removeObserver(this, "Session:Prefetch");
-
-    BrowserApp.deck.removeEventListener("pageshow", this);
-    BrowserApp.deck.removeEventListener("TabOpen", this);
   },
 
   observe: function(aSubject, aTopic, aData) {

@@ -18,17 +18,6 @@ var WebcompatReporter = {
     this.addMenuItem();
   },
 
-  uninit: function() {
-    Services.obs.removeObserver(this, "DesktopMode:Change");
-    Services.obs.removeObserver(this, "chrome-document-global-created");
-    Services.obs.removeObserver(this, "content-document-global-created");
-
-    if (this.menuItem) {
-      NativeWindow.menu.remove(this.menuItem);
-      this.menuItem = null;
-    }
-  },
-
   observe: function(subject, topic, data) {
     if (topic == "content-document-global-created" || topic == "chrome-document-global-created") {
       let win = subject;
