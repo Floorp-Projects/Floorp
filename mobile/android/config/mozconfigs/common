@@ -53,3 +53,5 @@ ac_add_options --enable-stdcxx-compat
 mk_add_options "export ANT_HOME=$topsrcdir/apache-ant"
 
 mk_add_options "export PATH=$topsrcdir/apache-ant/bin:$PATH"
+
+JS_BINARY="$topsrcdir/mobile/android/config/js_wrapper.sh"

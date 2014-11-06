@@ -54,12 +54,17 @@ CallObject::setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, js
 }
 
 inline void
-CallObject::setAliasedLexicalsToThrowOnTouch(JSScript *script)
+CallObject::initRemainingSlotsToUninitializedLexicals(uint32_t begin)
 {
-    uint32_t aliasedLexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
-    uint32_t aliasedLexicalEnd = numFixedSlots();
-    for (uint32_t slot = aliasedLexicalBegin; slot < aliasedLexicalEnd; slot++)
-        initFixedSlot(slot, MagicValue(JS_UNINITIALIZED_LEXICAL));
+    uint32_t end = slotSpan();
+    for (uint32_t slot = begin; slot < end; slot++)
+        initSlot(slot, MagicValue(JS_UNINITIALIZED_LEXICAL));
+}
+
+inline void
+CallObject::initAliasedLexicalsToThrowOnTouch(JSScript *script)
+{
+    initRemainingSlotsToUninitializedLexicals(script->bindings.aliasedBodyLevelLexicalBegin());
 }
 
 template <AllowGC allowGC>

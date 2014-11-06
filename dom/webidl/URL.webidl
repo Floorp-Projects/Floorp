@@ -19,6 +19,7 @@
 interface URL {
 };
 URL implements URLUtils;
+URL implements URLUtilsSearchParams;
 
 partial interface URL {
   [Throws]

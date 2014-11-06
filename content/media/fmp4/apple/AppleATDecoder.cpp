@@ -10,6 +10,7 @@
 #include "MP4Decoder.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ReentrantMonitor.h"
+#include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "nsIThread.h"
 #include "AppleATDecoder.h"
@@ -355,6 +356,19 @@ AppleATDecoder::SetupDecoder()
 void
 AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
 {
+  // Prepend ADTS header to AAC audio.
+  if (!strcmp(mConfig.mime_type, "audio/mp4a-latm")) {
+    bool rv = mp4_demuxer::Adts::ConvertSample(mConfig.channel_count,
+                                               mConfig.frequency_index,
+                                               mConfig.aac_profile,
+                                               aSample);
+    if (!rv) {
+      NS_ERROR("Failed to apply ADTS header");
+      mCallback->Error();
+      return;
+    }
+  }
+  // Push the sample to the AudioFileStream for parsing.
   mSamplePosition = aSample->byte_offset;
   mCurrentAudioTimestamp = aSample->composition_timestamp;
   uint32_t flags = mFlushed ? kAudioFileStreamParseFlag_Discontinuity : 0;
