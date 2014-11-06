@@ -169,8 +169,8 @@ this.Social = {
     return SocialService.getManifestByOrigin(origin);
   },
 
-  installProvider: function(doc, data, installCallback, aBypassUserEnable=false) {
-    SocialService.installProvider(doc, data, installCallback, aBypassUserEnable);
+  installProvider: function(data, installCallback, options={}) {
+    SocialService.installProvider(data, installCallback, options);
   },
 
   uninstallProvider: function(origin, aCallback) {
