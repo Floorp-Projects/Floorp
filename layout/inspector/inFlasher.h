@@ -9,8 +9,6 @@
 #include "nsCoord.h"
 #include "nsColor.h"
 
-class nsRenderingContext;
-
 #define BOUND_INNER 0
 #define BOUND_OUTER 1
 

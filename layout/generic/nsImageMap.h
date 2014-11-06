@@ -16,7 +16,6 @@
 #include "nsIDOMEventListener.h"
 
 class Area;
-class nsRenderingContext;
 class nsImageFrame;
 class nsIFrame;
 class nsIContent;
