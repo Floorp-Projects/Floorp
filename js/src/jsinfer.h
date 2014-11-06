@@ -395,9 +395,10 @@ enum MOZ_ENUM_TYPE(uint32_t) {
                           TYPE_FLAG_SYMBOL,
 
     /* Mask/shift for the number of objects in objectSet */
-    TYPE_FLAG_OBJECT_COUNT_MASK   = 0x3e00,
-    TYPE_FLAG_OBJECT_COUNT_SHIFT  = 9,
-    TYPE_FLAG_OBJECT_COUNT_LIMIT  =
+    TYPE_FLAG_OBJECT_COUNT_MASK     = 0x3e00,
+    TYPE_FLAG_OBJECT_COUNT_SHIFT    = 9,
+    TYPE_FLAG_OBJECT_COUNT_LIMIT    = 7,
+    TYPE_FLAG_DOMOBJECT_COUNT_LIMIT =
         TYPE_FLAG_OBJECT_COUNT_MASK >> TYPE_FLAG_OBJECT_COUNT_SHIFT,
 
     /* Whether the contents of this type set are totally unknown. */
@@ -622,6 +623,9 @@ class TypeSet
     /* Whether any values in this set might have the specified type. */
     bool mightBeMIRType(jit::MIRType type);
 
+    /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
+    bool isDOMClass();
+
     /*
      * Get whether this type set is known to be a subset of other.
      * This variant doesn't freeze constraints. That variant is called knownSubset
@@ -799,9 +803,6 @@ class TemporaryTypeSet : public TypeSet
 
     /* Get the shared typed array type of all objects in this set, or Scalar::TypeMax. */
     Scalar::Type getSharedTypedArrayType();
-
-    /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
-    bool isDOMClass();
 
     /* Whether clasp->isCallable() is true for one or more objects in this set. */
     bool maybeCallable();

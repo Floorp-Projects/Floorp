@@ -2716,6 +2716,30 @@ LIRGenerator::visitLoadElementHole(MLoadElementHole *ins)
 }
 
 bool
+LIRGenerator::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *ins)
+{
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->type() == MIRType_Value);
+
+    LLoadUnboxedPointerV *lir = new(alloc()) LLoadUnboxedPointerV(useRegister(ins->elements()),
+                                                                  useRegisterOrConstant(ins->index()));
+    return defineBox(lir, ins);
+}
+
+bool
+LIRGenerator::visitLoadUnboxedString(MLoadUnboxedString *ins)
+{
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->type() == MIRType_String);
+
+    LLoadUnboxedPointerT *lir = new(alloc()) LLoadUnboxedPointerT(useRegister(ins->elements()),
+                                                                  useRegisterOrConstant(ins->index()));
+    return define(lir, ins);
+}
+
+bool
 LIRGenerator::visitStoreElement(MStoreElement *ins)
 {
     MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);

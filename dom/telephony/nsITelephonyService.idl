@@ -4,6 +4,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIMobileCallForwardingOptions;
+
 [scriptable, uuid(464d4cf8-454a-4cdb-9329-bfe7ede97103)]
 interface nsITelephonyListener : nsISupports
 {
@@ -189,7 +191,7 @@ interface nsITelephonyCallback : nsISupports
 /**
  * A callback interface for handling asynchronous response for telephony.dial.
  */
-[scriptable, uuid(4481212f-72e9-4aef-97e1-5397af782113)]
+[scriptable, uuid(ac5fa441-a48a-4efb-af08-48a0f41fde63)]
 interface nsITelephonyDialCallback : nsITelephonyCallback
 {
   /**
@@ -215,11 +217,16 @@ interface nsITelephonyDialCallback : nsITelephonyCallback
   /**
    * Called when a MMI code request succeeds.
    * The function should only be called after notifyDialMMI.
-   *
-   * @param result
-   *        Result of the request. See MozMMIResult.
    */
-  void notifyDialMMISuccess(in jsval result);
+  void notifyDialMMISuccess(in AString statusMessage);
+  void notifyDialMMISuccessWithInteger(in AString statusMessage,
+                                       in unsigned short aAdditionalInformation);
+  void notifyDialMMISuccessWithStrings(in AString statusMessage,
+                                       in unsigned long aLength,
+                                       [array, size_is(aLength)] in wstring aAdditionalInformation);
+  void notifyDialMMISuccessWithCallForwardingOptions(in AString statusMessage,
+                                                     in unsigned long aLength,
+                                                     [array, size_is(aLength)] in nsIMobileCallForwardingOptions aAdditionalInformation);
 
   /**
    * Called when a MMI code request fails.

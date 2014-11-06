@@ -595,71 +595,46 @@ TelephonyRequestParent::NotifyDialCallSuccess(uint32_t aCallIndex,
 }
 
 NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialMMISuccess(JS::Handle<JS::Value> aResult)
+TelephonyRequestParent::NotifyDialMMISuccess(const nsAString& aStatusMessage)
 {
-  AutoSafeJSContext cx;
-  RootedDictionary<MozMMIResult> result(cx);
+  return SendResponse(DialResponseMMISuccess(nsAutoString(aStatusMessage),
+                                             AdditionalInformation(mozilla::void_t())));
+}
 
-  if (!result.Init(cx, aResult)) {
-    return NS_ERROR_TYPE_ERR;
+NS_IMETHODIMP
+TelephonyRequestParent::NotifyDialMMISuccessWithInteger(const nsAString& aStatusMessage,
+                                                        uint16_t aAdditionalInformation)
+{
+  return SendResponse(DialResponseMMISuccess(nsAutoString(aStatusMessage),
+                                             AdditionalInformation(aAdditionalInformation)));
+}
+
+NS_IMETHODIMP
+TelephonyRequestParent::NotifyDialMMISuccessWithStrings(const nsAString& aStatusMessage,
+                                                        uint32_t aCount,
+                                                        const char16_t** aAdditionalInformation)
+{
+  nsTArray<nsString> additionalInformation;
+  for (uint32_t i = 0; i < aCount; i++) {
+    additionalInformation.AppendElement(nsDependentString(aAdditionalInformation[i]));
   }
 
-  // No additionInformation passed
-  if (!result.mAdditionalInformation.WasPassed()) {
-    return SendResponse(DialResponseMMISuccess(result.mStatusMessage,
-                                               AdditionalInformation(mozilla::void_t())));
+  return SendResponse(DialResponseMMISuccess(nsAutoString(aStatusMessage),
+                                             AdditionalInformation(additionalInformation)));
+}
+
+NS_IMETHODIMP
+TelephonyRequestParent::NotifyDialMMISuccessWithCallForwardingOptions(const nsAString& aStatusMessage,
+                                                                      uint32_t aCount,
+                                                                      nsIMobileCallForwardingOptions** aAdditionalInformation)
+{
+  nsTArray<nsIMobileCallForwardingOptions*> additionalInformation;
+  for (uint32_t i = 0; i < aCount; i++) {
+    additionalInformation.AppendElement(aAdditionalInformation[i]);
   }
 
-  OwningUnsignedShortOrObject& info = result.mAdditionalInformation.Value();
-
-  // Currently, we could only accept the following values for |info|:
-  //   1. array of string
-  //   2. array of MozCallForwardingOptions
-  if (!info.IsObject()) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  JS::Rooted<JSObject*> object(cx, info.GetAsObject());
-  JS::Rooted<JS::Value> value(cx);
-  uint32_t length;
-
-  if (!JS_IsArrayObject(cx, object) ||
-      !JS_GetArrayLength(cx, object, &length) || length <= 0 ||
-      // Check first element to decide the format of array.
-      !JS_GetElement(cx, object, 0, &value)) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  if (value.isString()) {
-    // String[]
-    nsTArray<nsString> infos;
-
-    for (uint32_t i = 0; i < length; i++) {
-      nsAutoJSString str;
-      if (!JS_GetElement(cx, object, i, &value) || !value.isString() ||
-          !str.init(cx, value.toString())) {
-        return NS_ERROR_TYPE_ERR;
-      }
-      infos.AppendElement(str);
-    }
-
-    return SendResponse(DialResponseMMISuccess(result.mStatusMessage,
-                                               AdditionalInformation(infos)));
-  } else {
-    // IPC::MozCallForwardingOptions[]
-    nsTArray<IPC::MozCallForwardingOptions> infos;
-
-    for (uint32_t i = 0; i < length; i++) {
-      IPC::MozCallForwardingOptions info;
-      if (!JS_GetElement(cx, object, i, &value) || !info.Init(cx, value)) {
-        return NS_ERROR_TYPE_ERR;
-      }
-      infos.AppendElement(info);
-    }
-
-    return SendResponse(DialResponseMMISuccess(result.mStatusMessage,
-                                               AdditionalInformation(infos)));
-  }
+  return SendResponse(DialResponseMMISuccess(nsAutoString(aStatusMessage),
+                                             AdditionalInformation(additionalInformation)));
 }
 
 NS_IMETHODIMP

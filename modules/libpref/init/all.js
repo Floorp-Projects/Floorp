@@ -233,6 +233,13 @@ pref("print.shrink-to-fit.scale-limit-percent", 20);
 
 // Media cache size in kilobytes
 pref("media.cache_size", 512000);
+// When a network connection is suspended, don't resume it until the
+// amount of buffered data falls below this threshold (in seconds).
+pref("media.cache_resume_threshold", 999999);
+// Stop reading ahead when our buffered data is this many seconds ahead
+// of the current playback position. This limit can stop us from using arbitrary
+// amounts of network bandwidth prefetching huge videos.
+pref("media.cache_readahead_limit", 999999);
 
 // Master HTML5 media volume scale.
 pref("media.volume_scale", "1.0");
@@ -391,10 +398,10 @@ pref("media.getusermedia.screensharing.enabled", true);
 #endif
 
 #ifdef RELEASE_BUILD
-pref("media.getusermedia.screensharing.allowed_domains", "webex.com,*.webex.com,collaborate.com,*.collaborate.com,projectsquared.com,*.projectsquared.com,room.co,beta.talky.io,talky.io,example.com");
+pref("media.getusermedia.screensharing.allowed_domains", "webex.com,*.webex.com,collaborate.com,*.collaborate.com,projectsquared.com,*.projectsquared.com,*.room.co,room.co,beta.talky.io,talky.io,example.com");
 #else
  // temporary value, not intended for release - bug 1049087
-pref("media.getusermedia.screensharing.allowed_domains", "mozilla.github.io,webex.com,*.webex.com,collaborate.com,*.collaborate.com,projectsquared.com,*.projectsquared.com,room.co,beta.talky.io,talky.io,example.com");
+pref("media.getusermedia.screensharing.allowed_domains", "mozilla.github.io,webex.com,*.webex.com,collaborate.com,*.collaborate.com,projectsquared.com,*.projectsquared.com,*.room.co,room.co,beta.talky.io,talky.io,example.com");
 #endif
 // OS/X 10.6 and XP have screen/window sharing off by default due to various issues - Caveat emptor
 pref("media.getusermedia.screensharing.allow_on_old_platforms", false);
@@ -2074,6 +2081,13 @@ pref("layout.css.getBoxQuads.enabled", true);
 pref("layout.css.convertFromNode.enabled", false);
 #else
 pref("layout.css.convertFromNode.enabled", true);
+#endif
+
+// Is support for unicode-range enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.unicode-range.enabled", false);
+#else
+pref("layout.css.unicode-range.enabled", true);
 #endif
 
 // Is support for CSS "text-align: true X" enabled?

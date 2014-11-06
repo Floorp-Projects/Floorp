@@ -1454,10 +1454,19 @@ nsresult OggReader::SeekInUnbuffered(int64_t aTarget,
   return SeekBisection(seekTarget, k, SEEK_FUZZ_USECS);
 }
 
-nsresult OggReader::Seek(int64_t aTarget,
-                         int64_t aStartTime,
-                         int64_t aEndTime,
-                         int64_t aCurrentTime)
+void OggReader::Seek(int64_t aTarget,
+                     int64_t aStartTime,
+                     int64_t aEndTime,
+                     int64_t aCurrentTime)
+{
+  nsresult res = SeekInternal(aTarget, aStartTime, aEndTime, aCurrentTime);
+  GetCallback()->OnSeekCompleted(res);
+}
+
+nsresult OggReader::SeekInternal(int64_t aTarget,
+                                 int64_t aStartTime,
+                                 int64_t aEndTime,
+                                 int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   if (mIsChained)

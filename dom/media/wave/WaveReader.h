@@ -43,7 +43,7 @@ public:
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
-  virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
+  virtual void Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
 
   // To seek in a buffered range, we just have to seek the stream.

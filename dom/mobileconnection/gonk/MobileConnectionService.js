@@ -290,47 +290,33 @@ TelephonyDialCallback.prototype = {
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsITelephonyDialCallback]),
   classID:          TELEPHONYDIALCALLBACK_CID,
 
-  _notifySendCancelMmiSuccess: function(aResult) {
-    // No additional information.
-    if (aResult.additionalInformation === undefined) {
-      this.callback.notifySendCancelMmiSuccess(aResult.serviceCode,
-                                               aResult.statusMessage);
-      return;
-    }
-
-    // Additional information is an integer.
-    if (!isNaN(parseInt(aResult.additionalInformation, 10))) {
-      this.callback.notifySendCancelMmiSuccessWithInteger(
-        aResult.serviceCode, aResult.statusMessage, aResult.additionalInformation);
-      return;
-    }
-
-    // Additional information should be an array.
-    let array = aResult.additionalInformation;
-    if (Array.isArray(array) && array.length > 0) {
-      let item = array[0];
-      if (typeof item === "string" || item instanceof String) {
-        this.callback.notifySendCancelMmiSuccessWithStrings(
-          aResult.serviceCode, aResult.statusMessage,
-          aResult.additionalInformation.length, aResult.additionalInformation);
-        return;
-      }
-
-      this.callback.notifySendCancelMmiSuccessWithCallForwardingOptions(
-        aResult.serviceCode, aResult.statusMessage,
-        aResult.additionalInformation.length, aResult.additionalInformation);
-      return;
-    }
-
-    throw Cr.NS_ERROR_UNEXPECTED;
-  },
-
   notifyDialMMI: function(mmiServiceCode) {
     this.serviceCode = mmiServiceCode;
   },
 
-  notifyDialMMISuccess: function(result) {
-    this._notifySendCancelMmiSuccess(result);
+  notifyDialMMISuccess: function(statusMessage) {
+    this.callback.notifySendCancelMmiSuccess(this.serviceCode, statusMessage);
+  },
+
+  notifyDialMMISuccessWithInteger: function(statusMessage, additionalInfo) {
+    this.callback.notifySendCancelMmiSuccessWithInteger(this.serviceCode,
+                                                        statusMessage,
+                                                        additionalInfo);
+  },
+
+  notifyDialMMISuccessWithStrings: function(statusMessage, count, additionalInfo) {
+    this.callback.notifySendCancelMmiSuccessWithStrings(this.serviceCode,
+                                                        statusMessage,
+                                                        count,
+                                                        additionalInfo);
+  },
+
+  notifyDialMMISuccessWithCallForwardingOptions: function(statusMessage, count, additionalInfo) {
+    this.callback.notifySendCancelMmiSuccessWithCallForwardingOptions(
+                                                        this.serviceCode,
+                                                        statusMessage,
+                                                        count,
+                                                        additionalInfo);
   },
 
   notifyDialMMIError: function(error) {

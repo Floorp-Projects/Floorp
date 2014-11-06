@@ -22,6 +22,7 @@ let utils = {};
 loader.loadSubScript("chrome://marionette/content/EventUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/ChromeUtils.js", utils);
 loader.loadSubScript("chrome://marionette/content/atoms.js", utils);
+loader.loadSubScript("chrome://marionette/content/marionette-sendkeys.js", utils);
 
 // SpecialPowers requires insecure automation-only features that we put behind a pref.
 Services.prefs.setBoolPref('security.turn_off_all_security_so_that_viruses_can_take_over_this_computer',
@@ -2044,16 +2045,12 @@ MarionetteServerConnection.prototype = {
   sendKeysToElement: function MDA_sendKeysToElement(aRequest) {
     let command_id = this.command_id = this.getCommandId();
     if (this.context == "chrome") {
-      try {
-        let el = this.curBrowser.elementManager.getKnownElement(
-            aRequest.parameters.id, this.getCurrentWindow());
-        el.focus();
-        utils.sendString(aRequest.parameters.value.join(""), utils.window);
-        this.sendOk(command_id);
-      }
-      catch (e) {
-        this.sendError(e.message, e.code, e.stack, command_id);
-      }
+      let currentWindow = this.getCurrentWindow();
+      let el = this.curBrowser.elementManager.getKnownElement(
+        aRequest.parameters.id, currentWindow);
+      utils.sendKeysToElement(currentWindow, el, aRequest.parameters.value,
+                              this.sendOk.bind(this), this.sendError.bind(this),
+                              command_id, this.context);
     }
     else {
       this.sendAsync("sendKeysToElement",

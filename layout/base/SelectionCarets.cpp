@@ -71,6 +71,7 @@ static const int32_t kScrollEndTimerDelay = 300;
 static bool kSupportNonEditableFields = false;
 
 NS_IMPL_ISUPPORTS(SelectionCarets,
+                  nsIReflowObserver,
                   nsISelectionListener,
                   nsIScrollObserver,
                   nsISupportsWeakReference)
@@ -107,6 +108,20 @@ SelectionCarets::SelectionCarets(nsIPresShell* aPresShell)
   }
 }
 
+void
+SelectionCarets::Init()
+{
+  nsPresContext* presContext = mPresShell->GetPresContext();
+  MOZ_ASSERT(presContext, "PresContext should be given in PresShell::Init()");
+
+  nsIDocShell* docShell = presContext->GetDocShell();
+  if (!docShell) {
+    return;
+  }
+
+  docShell->AddWeakReflowObserver(this);
+}
+
 SelectionCarets::~SelectionCarets()
 {
   SELECTIONCARETS_LOG("Destructor");
@@ -120,6 +135,20 @@ SelectionCarets::~SelectionCarets()
   if (mScrollEndDetectorTimer) {
     mScrollEndDetectorTimer->Cancel();
     mScrollEndDetectorTimer = nullptr;
+  }
+
+  mPresShell = nullptr;
+}
+
+void
+SelectionCarets::Terminate()
+{
+  nsPresContext* presContext = mPresShell->GetPresContext();
+  MOZ_ASSERT(presContext, "PresContext should be given in PresShell::Init()");
+
+  nsIDocShell* docShell = presContext->GetDocShell();
+  if (docShell) {
+    docShell->RemoveWeakReflowObserver(this);
   }
 
   mPresShell = nullptr;
@@ -1089,4 +1118,21 @@ SelectionCarets::FireScrollEnd(nsITimer* aTimer, void* aSelectionCarets)
   SELECTIONCARETS_LOG_STATIC("Update selection carets!");
   self->SetVisibility(true);
   self->UpdateSelectionCarets();
+}
+
+NS_IMETHODIMP
+SelectionCarets::Reflow(DOMHighResTimeStamp aStart, DOMHighResTimeStamp aEnd)
+{
+  if (mVisible) {
+    SELECTIONCARETS_LOG("Update selection carets after reflow!");
+    UpdateSelectionCarets();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SelectionCarets::ReflowInterruptible(DOMHighResTimeStamp aStart,
+                                     DOMHighResTimeStamp aEnd)
+{
+  return Reflow(aStart, aEnd);
 }

@@ -275,7 +275,9 @@ gfxFontEntry::RealFaceName()
 }
 
 already_AddRefed<gfxFont>
-gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, bool aNeedsBold)
+gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle,
+                             bool aNeedsBold,
+                             gfxCharacterMap* aUnicodeRangeMap)
 {
     // the font entry name is the psname, not the family name
     nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(this, aStyle);
@@ -289,6 +291,7 @@ gfxFontEntry::FindOrMakeFont(const gfxFontStyle *aStyle, bool aNeedsBold)
             return nullptr;
         }
         font = newFont;
+        font->SetUnicodeRangeMap(aUnicodeRangeMap);
         gfxFontCache::GetCache()->AddNew(font);
     }
     return font.forget();
@@ -1124,22 +1127,128 @@ gfxFontEntry*
 gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle, 
                                 bool& aNeedsSyntheticBold)
 {
-    if (!mHasStyles)
+    nsAutoTArray<gfxFontEntry*,4> matched;
+    FindAllFontsForStyle(aFontStyle, matched, aNeedsSyntheticBold);
+    if (!matched.IsEmpty()) {
+        return matched[0];
+    }
+    return nullptr;
+}
+
+static inline uint32_t
+StyleStretchDistance(gfxFontEntry *aFontEntry, bool aTargetItalic,
+                     int16_t aTargetStretch)
+{
+    // Compute a measure of the "distance" between the requested style
+    // and the given fontEntry,
+    // considering italicness and font-stretch but not weight.
+
+    int32_t distance = 0;
+    if (aTargetStretch != aFontEntry->mStretch) {
+        // stretch values are in the range -4 .. +4
+        // if aTargetStretch is positive, we prefer more-positive values;
+        // if zero or negative, prefer more-negative
+        if (aTargetStretch > 0) {
+            distance = (aFontEntry->mStretch - aTargetStretch) * 2;
+        } else {
+            distance = (aTargetStretch - aFontEntry->mStretch) * 2;
+        }
+        // if the computed "distance" here is negative, it means that
+        // aFontEntry lies in the "non-preferred" direction from aTargetStretch,
+        // so we treat that as larger than any preferred-direction distance
+        // (max possible is 8) by adding an extra 10 to the absolute value
+        if (distance < 0) {
+            distance = -distance + 10;
+        }
+    }
+    if (aFontEntry->IsItalic() != aTargetItalic) {
+        distance += 1;
+    }
+    return uint32_t(distance);
+}
+
+#define NON_DESIRED_DIRECTION_DISTANCE 1000
+#define MAX_WEIGHT_DISTANCE            2000
+
+// CSS currently limits font weights to multiples of 100 but the weight
+// matching code below does not assume this.
+//
+// Calculate weight values with range (0..1000). In general, heavier weights
+// match towards even heavier weights while lighter weights match towards even
+// lighter weights. Target weight values in the range [400..500] are special,
+// since they will first match up to 500, then down to 0, then up again
+// towards 999.
+//
+// Example: with target 600 and font weight 800, distance will be 200. With
+// target 300 and font weight 600, distance will be 1300, since heavier weights
+// are farther away than lighter weights. If the target is 5 and the font weight
+// 995, the distance would be 1990 for the same reason.
+
+static inline uint32_t
+WeightDistance(uint32_t aTargetWeight, uint32_t aFontWeight)
+{
+    // Compute a measure of the "distance" between the requested
+    // weight and the given fontEntry
+
+    int32_t distance = 0, addedDistance = 0;
+    if (aTargetWeight != aFontWeight) {
+        if (aTargetWeight > 500) {
+            distance = aFontWeight - aTargetWeight;
+        } else if (aTargetWeight < 400) {
+            distance = aTargetWeight - aFontWeight;
+        } else {
+            // special case - target is between 400 and 500
+
+            // font weights between 400 and 500 are close
+            if (aFontWeight >= 400 && aFontWeight <= 500) {
+                if (aFontWeight < aTargetWeight) {
+                    distance = 500 - aFontWeight;
+                } else {
+                    distance = aFontWeight - aTargetWeight;
+                }
+            } else {
+                // font weights outside use rule for target weights < 400 with
+                // added distance to separate from font weights in
+                // the [400..500] range
+                distance = aTargetWeight - aFontWeight;
+                addedDistance = 100;
+            }
+        }
+        if (distance < 0) {
+            distance = -distance + NON_DESIRED_DIRECTION_DISTANCE;
+        }
+        distance += addedDistance;
+    }
+    return uint32_t(distance);
+}
+
+void
+gfxFontFamily::FindAllFontsForStyle(const gfxFontStyle& aFontStyle,
+                                    nsTArray<gfxFontEntry*>& aFontEntryList,
+                                    bool& aNeedsSyntheticBold)
+{
+    if (!mHasStyles) {
         FindStyleVariations(); // collect faces for the family, if not already done
+    }
 
     NS_ASSERTION(mAvailableFonts.Length() > 0, "font family with no faces!");
+    NS_ASSERTION(aFontEntryList.IsEmpty(), "non-empty fontlist passed in");
 
     aNeedsSyntheticBold = false;
 
     int8_t baseWeight = aFontStyle.ComputeWeight();
     bool wantBold = baseWeight >= 6;
+    gfxFontEntry *fe = nullptr;
 
-    // If the family has only one face, we simply return it; no further checking needed
-    if (mAvailableFonts.Length() == 1) {
-        gfxFontEntry *fe = mAvailableFonts[0];
+    // If the family has only one face, we simply return it; no further
+    // checking needed
+    uint32_t count = mAvailableFonts.Length();
+    if (count == 1) {
+        fe = mAvailableFonts[0];
         aNeedsSyntheticBold =
             wantBold && !fe->IsBold() && aFontStyle.allowSyntheticWeight;
-        return fe;
+        aFontEntryList.AppendElement(fe);
+        return;
     }
 
     bool wantItalic = (aFontStyle.style &
@@ -1160,10 +1269,11 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
                             (wantBold ? kBoldMask : 0);
 
         // if the desired style is available, return it directly
-        gfxFontEntry *fe = mAvailableFonts[faceIndex];
+        fe = mAvailableFonts[faceIndex];
         if (fe) {
             // no need to set aNeedsSyntheticBold here as we matched the boldness request
-            return fe;
+            aFontEntryList.AppendElement(fe);
+            return;
         }
 
         // order to check fallback faces in a simple family, depending on requested style
@@ -1182,67 +1292,59 @@ gfxFontFamily::FindFontForStyle(const gfxFontStyle& aFontStyle,
                 aNeedsSyntheticBold =
                     wantBold && !fe->IsBold() &&
                     aFontStyle.allowSyntheticWeight;
-                return fe;
+                aFontEntryList.AppendElement(fe);
+                return;
             }
         }
 
         // this can't happen unless we have totally broken the font-list manager!
         NS_NOTREACHED("no face found in simple font family!");
-        return nullptr;
     }
 
-    // This is a large/rich font family, so we do full style- and weight-matching:
-    // first collect a list of weights that are the best match for the requested
-    // font-stretch and font-style, then pick the best weight match among those
-    // available.
+    // Pick the font(s) that are closest to the desired weight, style, and
+    // stretch. Iterate over all fonts, measuring the weight/style distance.
+    // Because of unicode-range values, there may be more than one font for a
+    // given but the 99% use case is only a single font entry per
+    // weight/style/stretch distance value. To optimize this, only add entries
+    // to the matched font array when another entry already has the same
+    // weight/style/stretch distance and add the last matched font entry. For
+    // normal platform fonts with a single font entry for each
+    // weight/style/stretch combination, only the last matched font entry will
+    // be added.
 
-    gfxFontEntry *weightList[10] = { 0 };
-    bool foundWeights = FindWeightsForStyle(weightList, wantItalic, aFontStyle.stretch);
-    if (!foundWeights) {
-        return nullptr;
-    }
-
-    // First find a match for the best weight
-    int8_t matchBaseWeight = 0;
-    int8_t i = baseWeight;
-
-    // Need to special case when normal face doesn't exist but medium does.
-    // In that case, use medium otherwise weights < 400
-    if (baseWeight == 4 && !weightList[4]) {
-        i = 5; // medium
-    }
-
-    // Loop through weights, since one exists loop will terminate
-    int8_t direction = (baseWeight > 5) ? 1 : -1;
-    for (; ; i += direction) {
-        if (weightList[i]) {
-            matchBaseWeight = i;
-            break;
-        }
-
-        // If we've reached one side without finding a font,
-        // start over and go the other direction until we find a match
-        if (i == 1 || i == 9) {
-            i = baseWeight;
-            direction = -direction;
+    uint32_t minDistance = 0xffffffff;
+    gfxFontEntry* matched = nullptr;
+    // iterate in reverse order so that the last-defined font is the first one
+    // in the fontlist used for matching, as per CSS Fonts spec
+    for (int32_t i = count - 1; i >= 0; i--) {
+        fe = mAvailableFonts[i];
+        uint32_t distance =
+            WeightDistance(aFontStyle.weight, fe->Weight()) +
+            (StyleStretchDistance(fe, wantItalic, aFontStyle.stretch) *
+             MAX_WEIGHT_DISTANCE);
+        if (distance < minDistance) {
+            matched = fe;
+            if (!aFontEntryList.IsEmpty()) {
+                aFontEntryList.Clear();
+            }
+            minDistance = distance;
+        } else if (distance == minDistance) {
+            if (matched) {
+                aFontEntryList.AppendElement(matched);
+            }
+            matched = fe;
         }
     }
 
-    NS_ASSERTION(matchBaseWeight != 0, 
-                 "weight mapping should always find at least one font in a family");
+    NS_ASSERTION(matched, "didn't match a font within a family");
 
-    gfxFontEntry *matchFE = weightList[matchBaseWeight];
-
-    NS_ASSERTION(matchFE,
-                 "weight mapping should always find at least one font in a family");
-
-    if (!matchFE->IsBold() && baseWeight >= 6 &&
-        aFontStyle.allowSyntheticWeight)
-    {
-        aNeedsSyntheticBold = true;
+    if (matched) {
+        aFontEntryList.AppendElement(matched);
+        if (!matched->IsBold() && aFontStyle.weight >= 600 &&
+            aFontStyle.allowSyntheticWeight) {
+            aNeedsSyntheticBold = true;
+        }
     }
-
-    return matchFE;
 }
 
 void
@@ -1312,93 +1414,6 @@ gfxFontFamily::ContainsFace(gfxFontEntry* aFontEntry) {
     return false;
 }
 #endif
-
-static inline uint32_t
-StyleDistance(gfxFontEntry *aFontEntry,
-              bool anItalic, int16_t aStretch)
-{
-    // Compute a measure of the "distance" between the requested style
-    // and the given fontEntry,
-    // considering italicness and font-stretch but not weight.
-
-    int32_t distance = 0;
-    if (aStretch != aFontEntry->mStretch) {
-        // stretch values are in the range -4 .. +4
-        // if aStretch is positive, we prefer more-positive values;
-        // if zero or negative, prefer more-negative
-        if (aStretch > 0) {
-            distance = (aFontEntry->mStretch - aStretch) * 2;
-        } else {
-            distance = (aStretch - aFontEntry->mStretch) * 2;
-        }
-        // if the computed "distance" here is negative, it means that
-        // aFontEntry lies in the "non-preferred" direction from aStretch,
-        // so we treat that as larger than any preferred-direction distance
-        // (max possible is 8) by adding an extra 10 to the absolute value
-        if (distance < 0) {
-            distance = -distance + 10;
-        }
-    }
-    if (aFontEntry->IsItalic() != anItalic) {
-        distance += 1;
-    }
-    return uint32_t(distance);
-}
-
-bool
-gfxFontFamily::FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
-                                   bool anItalic, int16_t aStretch)
-{
-    uint32_t foundWeights = 0;
-    uint32_t bestMatchDistance = 0xffffffff;
-
-    uint32_t count = mAvailableFonts.Length();
-    for (uint32_t i = 0; i < count; i++) {
-        // this is not called for "simple" families, and therefore it does not
-        // need to check the mAvailableFonts entries for nullptr.
-        gfxFontEntry *fe = mAvailableFonts[i];
-        uint32_t distance = StyleDistance(fe, anItalic, aStretch);
-        if (distance <= bestMatchDistance) {
-            int8_t wt = fe->mWeight / 100;
-            NS_ASSERTION(wt >= 1 && wt < 10, "invalid weight in fontEntry");
-            if (!aFontsForWeights[wt]) {
-                // record this as a possible candidate for weight matching
-                aFontsForWeights[wt] = fe;
-                ++foundWeights;
-            } else {
-                uint32_t prevDistance =
-                    StyleDistance(aFontsForWeights[wt], anItalic, aStretch);
-                if (prevDistance >= distance) {
-                    // replacing a weight we already found,
-                    // so don't increment foundWeights
-                    aFontsForWeights[wt] = fe;
-                }
-            }
-            bestMatchDistance = distance;
-        }
-    }
-
-    NS_ASSERTION(foundWeights > 0, "Font family containing no faces?");
-
-    if (foundWeights == 1) {
-        // no need to cull entries if we only found one weight
-        return true;
-    }
-
-    // we might have recorded some faces that were a partial style match, but later found
-    // others that were closer; in this case, we need to cull the poorer matches from the
-    // weight list we'll return
-    for (uint32_t i = 0; i < 10; ++i) {
-        if (aFontsForWeights[i] &&
-            StyleDistance(aFontsForWeights[i], anItalic, aStretch) > bestMatchDistance)
-        {
-            aFontsForWeights[i] = 0;
-        }
-    }
-
-    return (foundWeights > 0);
-}
-
 
 void gfxFontFamily::LocalizedName(nsAString& aLocalizedName)
 {

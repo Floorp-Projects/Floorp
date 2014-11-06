@@ -89,6 +89,10 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx)
     MOZ_OVERRIDE;
 
+#ifdef MOZ_WIDGET_GONK
+  static void PreinitCameraHardware();
+#endif
+
 protected:
   void XpComShutdown();
   void Shutdown(uint64_t aWindowId);

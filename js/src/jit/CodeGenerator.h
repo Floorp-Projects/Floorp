@@ -248,6 +248,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitLoadElementT(LLoadElementT *lir);
     bool visitLoadElementV(LLoadElementV *load);
     bool visitLoadElementHole(LLoadElementHole *lir);
+    bool visitLoadUnboxedPointerV(LLoadUnboxedPointerV *lir);
+    bool visitLoadUnboxedPointerT(LLoadUnboxedPointerT *lir);
     bool visitStoreElementT(LStoreElementT *lir);
     bool visitStoreElementV(LStoreElementV *lir);
     bool visitStoreElementHoleT(LStoreElementHoleT *lir);

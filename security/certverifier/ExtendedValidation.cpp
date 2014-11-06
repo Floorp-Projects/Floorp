@@ -90,7 +90,10 @@ struct nsMyTrustedEVInfo
 // OCSP signing certificate, or OCSP for the intermediate certificates
 // isn't working, or OCSP isn't working at all.
 
+#ifdef DEBUG
 static const size_t NUM_TEST_EV_ROOTS = 2;
+#endif
+
 static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   // IMPORTANT! When extending this list,
   // pairs of dotted_oid and oid_name should always be unique pairs.

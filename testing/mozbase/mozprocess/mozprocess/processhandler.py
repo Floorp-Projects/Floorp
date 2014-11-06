@@ -812,7 +812,7 @@ falling back to not using job objects for managing child processes"""
         - '0' if the process ended without failures
 
         """
-        if self.outThread:
+        if self.outThread and self.outThread is not threading.current_thread():
             # Thread.join() blocks the main thread until outThread is finished
             # wake up once a second in case a keyboard interrupt is sent
             count = 0
