@@ -1207,9 +1207,12 @@ this.MozLoopService = {
     // stub out API functions for unit testing
     Object.freeze(this);
 
+    // Clear the old throttling mechanism.
+    Services.prefs.clearUserPref("loop.throttled");
+
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled") ||
-        Services.prefs.getBoolPref("loop.throttled")) {
+        Services.prefs.getBoolPref("loop.throttled2")) {
       return Promise.reject("loop is not enabled");
     }
 
@@ -1244,14 +1247,11 @@ this.MozLoopService = {
    * isn't already activated, check whether it's time for it to become active.
    * If so, activate the loop service.
    *
-   * @param {Object} buttonNode DOM node representing the Loop button -- if we
-   *                            change from inactive to active, we need this
-   *                            in order to unhide the Loop button.
    * @param {Function} doneCb   [optional] Callback that is called when the
    *                            check has completed.
    */
-  checkSoftStart(buttonNode, doneCb) {
-    if (!Services.prefs.getBoolPref("loop.throttled")) {
+  checkSoftStart(doneCb) {
+    if (!Services.prefs.getBoolPref("loop.throttled2")) {
       if (typeof(doneCb) == "function") {
         doneCb(new Error("Throttling is not active"));
       }
@@ -1314,8 +1314,7 @@ this.MozLoopService = {
       if (now_serving > ticket) {
         // Hot diggity! It's our turn! Activate the service.
         log.info("MozLoopService: Activating Loop via soft-start");
-        Services.prefs.setBoolPref("loop.throttled", false);
-        buttonNode.hidden = false;
+        Services.prefs.setBoolPref("loop.throttled2", false);
         this.initialize();
       }
       if (typeof(doneCb) == "function") {
@@ -1354,7 +1353,7 @@ this.MozLoopService = {
       throw new Error("Loop is not enabled");
     }
 
-    if (Services.prefs.getBoolPref("loop.throttled")) {
+    if (Services.prefs.getBoolPref("loop.throttled2")) {
       throw new Error("Loop is disabled by the soft-start mechanism");
     }
 
