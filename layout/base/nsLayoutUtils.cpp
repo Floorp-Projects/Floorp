@@ -6755,7 +6755,9 @@ ShouldInflateFontsForContainer(const nsIFrame *aFrame)
          !(aFrame->GetStateBits() & NS_FRAME_IN_CONSTRAINED_HEIGHT) &&
          // We also want to disable font inflation for containers that have
          // preformatted text.
-         styleText->WhiteSpaceCanWrap(aFrame);
+         // MathML cells need special treatment. See bug 1002526 comment 56.
+         (styleText->WhiteSpaceCanWrap(aFrame) ||
+          aFrame->IsFrameOfType(nsIFrame::eMathML));
 }
 
 nscoord
@@ -7224,7 +7226,9 @@ AutoMaybeDisableFontInflation::AutoMaybeDisableFontInflation(nsIFrame *aFrame)
   // root's NCA's (nearest common ancestor of its inflatable
   // descendants) width, we could probably disable inflation in
   // fewer cases than we currently do.
-  if (aFrame->IsContainerForFontSizeInflation()) {
+  // MathML cells need special treatment. See bug 1002526 comment 56.
+  if (aFrame->IsContainerForFontSizeInflation() &&
+      !aFrame->IsFrameOfType(nsIFrame::eMathML)) {
     mPresContext = aFrame->PresContext();
     mOldValue = mPresContext->mInflationDisabledForShrinkWrap;
     mPresContext->mInflationDisabledForShrinkWrap = true;
