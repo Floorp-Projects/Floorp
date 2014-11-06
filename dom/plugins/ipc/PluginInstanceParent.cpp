@@ -28,7 +28,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "Layers.h"
-#include "ImageContainer.h"
+#include "SharedTextureImage.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 
