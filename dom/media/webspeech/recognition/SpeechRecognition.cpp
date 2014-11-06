@@ -940,11 +940,11 @@ NS_IMPL_ISUPPORTS(SpeechRecognition::GetUserMediaSuccessCallback, nsIDOMGetUserM
 NS_IMETHODIMP
 SpeechRecognition::GetUserMediaSuccessCallback::OnSuccess(nsISupports* aStream)
 {
-  DOMLocalMediaStream *localStream = nullptr;
-  nsresult rv = CallQueryInterface(aStream, &localStream);
-  if (NS_SUCCEEDED(rv)) {
-    mRecognition->StartRecording(localStream);
+  nsRefPtr<DOMMediaStream> stream = do_QueryObject(aStream);
+  if (!stream) {
+    return NS_ERROR_NO_INTERFACE;
   }
+  mRecognition->StartRecording(stream);
   return NS_OK;
 }
 
