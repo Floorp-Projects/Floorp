@@ -4130,8 +4130,6 @@ js_DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start)
             fprintf(stderr, " debugger");
         if (i.isEvalFrame())
             fprintf(stderr, " eval");
-        if (!i.isJit() && i.interpFrame()->isGeneratorFrame())
-            fprintf(stderr, " generator");
         fputc('\n', stderr);
 
         fprintf(stderr, "  scopeChain: (JSObject *) %p\n", (void *) i.scopeChain());

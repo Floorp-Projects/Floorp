@@ -1478,33 +1478,11 @@ Interpret(JSContext *cx, RunState &state)
     RootedScript rootScript0(cx);
     DebugOnly<uint32_t> blockDepth;
 
-    if (MOZ_UNLIKELY(REGS.fp()->isGeneratorFrame())) {
-        MOZ_ASSERT(script->containsPC(REGS.pc));
-        MOZ_ASSERT(REGS.stackDepth() <= script->nslots());
-
-        /*
-         * To support generator_throw and to catch ignored exceptions,
-         * fail if cx->isExceptionPending() is true.
-         */
-        if (cx->isExceptionPending()) {
-            probes::EnterScript(cx, script, script->functionNonDelazifying(), REGS.fp());
-            goto error;
-        }
-    }
-
     /* State communicated between non-local jumps: */
     bool interpReturnOK;
 
-    if (!activation.entryFrame()->isGeneratorFrame()) {
-        if (!activation.entryFrame()->prologue(cx))
-            goto error;
-    } else {
-        if (!probes::EnterScript(cx, script, script->functionNonDelazifying(),
-                                 activation.entryFrame()))
-        {
-            goto error;
-        }
-    }
+    if (!activation.entryFrame()->prologue(cx))
+        goto error;
 
     switch (Debugger::onEnterFrame(cx, activation.entryFrame())) {
       case JSTRAP_CONTINUE:
@@ -3368,7 +3346,6 @@ END_CASE(JSOP_DEBUGLEAVEBLOCK)
 CASE(JSOP_GENERATOR)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
-    REGS.fp()->initGeneratorFrame();
     JSObject *obj = GeneratorObject::create(cx, REGS);
     if (!obj)
         goto error;
