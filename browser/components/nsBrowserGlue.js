@@ -2514,7 +2514,7 @@ let E10SUINotification = {
     Services.prefs.setIntPref("browser.displayedE10SNotice", this.CURRENT_NOTICE_COUNT);
 
     let nb = win.document.getElementById("high-priority-global-notificationbox");
-    let message = "Thanks for helping to test multiprocess Firefox (e10s). Some functions might not work yet."
+    let message = "You're now helping to test Process Separation (e10s)! Please report problems you find.";
     let buttons = [
       {
         label: "Learn More",
