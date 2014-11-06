@@ -29,7 +29,7 @@ function check(v) {
 function test() {
     var AT = new T.ArrayType(T.int32,10);
     var v = new Object;         // Not actually a typed object
-    var w = new AT(10);         // Actually a typed object
+    var w = new AT();           // Actually a typed object
     var a = [v,w];
     for ( var i=0 ; i < 1000 ; i++ )
         try { check(a[i%2]); } catch (e) {}
