@@ -9,10 +9,28 @@
 #include "SharedWorker.h"
 #include "WorkerPrivate.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 
 using namespace mozilla::dom;
-USING_WORKERS_NAMESPACE
+
+namespace mozilla {
+namespace dom {
+namespace workers {
+
+bool
+ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.serviceWorkers.enabled", false);
+  }
+
+  ServiceWorkerGlobalScope* scope = nullptr;
+  nsresult rv = UnwrapObject<prototypes::id::ServiceWorkerGlobalScope_workers,
+                             mozilla::dom::ServiceWorkerGlobalScopeBinding_workers::NativeType>(aObj, scope);
+  return NS_SUCCEEDED(rv);
+}
 
 ServiceWorker::ServiceWorker(nsPIDOMWindow* aWindow,
                              SharedWorker* aSharedWorker)
@@ -55,3 +73,7 @@ ServiceWorker::GetWorkerPrivate() const
   MOZ_ASSERT(mSharedWorker);
   return mSharedWorker->GetWorkerPrivate();
 }
+
+} // namespace workers
+} // namespace dom
+} // namespace mozilla
