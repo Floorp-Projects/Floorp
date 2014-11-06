@@ -311,6 +311,22 @@ let snapshotFormatters = {
     // Clear the no-copy class
     $("prefs-user-js-section").className = "";
   },
+
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+  sandbox: function sandbox(data) {
+    const keys = ["hasSeccompBPF", "canSandboxContent", "canSandboxMedia"];
+    let strings = stringBundle();
+    let tbody = $("sandbox-tbody");
+    for (key of keys) {
+      if (key in data) {
+	tbody.appendChild($.new("tr", [
+	  $.new("th", strings.GetStringFromName(key), "column"),
+	  $.new("td", data[key])
+	]));
+      }
+    }
+  },
+#endif
 };
 
 let $ = document.getElementById.bind(document);
