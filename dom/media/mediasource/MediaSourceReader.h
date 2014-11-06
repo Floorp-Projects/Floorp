@@ -56,6 +56,8 @@ public:
 
   void OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason);
 
+  void OnSeekCompleted(nsresult aResult);
+
   bool HasVideo() MOZ_OVERRIDE
   {
     return mInfo.HasVideo();
@@ -66,6 +68,8 @@ public:
     return mInfo.HasAudio();
   }
 
+  void NotifyTimeRangesChanged();
+
   // We can't compute a proper start time since we won't necessarily
   // have the first frame of the resource available. This does the same
   // as chrome/blink and assumes that we always start at t=0.
@@ -74,8 +78,8 @@ public:
   bool IsMediaSeekable() { return true; }
 
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
-  nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
-                int64_t aCurrentTime) MOZ_OVERRIDE;
+  void Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
+            int64_t aCurrentTime) MOZ_OVERRIDE;
 
   already_AddRefed<SourceBufferDecoder> CreateSubDecoder(const nsACString& aType);
 
@@ -115,10 +119,7 @@ private:
   already_AddRefed<MediaDecoderReader> SelectReader(int64_t aTarget,
                                                     const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
 
-  // Waits on the decoder monitor for aTime to become available in the active
-  // TrackBuffers.  Used to block a Seek call until the necessary data has been
-  // provided to the relevant SourceBuffers.
-  void WaitForTimeRange(int64_t aTime);
+  void AttemptSeek();
 
   nsRefPtr<MediaDecoderReader> mAudioReader;
   nsRefPtr<MediaDecoderReader> mVideoReader;
@@ -135,6 +136,20 @@ private:
   // These are read and written on the decode task queue threads.
   int64_t mLastAudioTime;
   int64_t mLastVideoTime;
+
+  // Temporary seek information while we wait for the data
+  // to be added to the track buffer.
+  int64_t mPendingSeekTime;
+  int64_t mPendingStartTime;
+  int64_t mPendingEndTime;
+  int64_t mPendingCurrentTime;
+  bool mWaitingForSeekData;
+
+  // Number of outstanding OnSeekCompleted notifications
+  // we're expecting to get from child decoders, and the
+  // result we're going to forward onto our callback.
+  uint32_t mPendingSeeks;
+  nsresult mSeekResult;
 
   int64_t mTimeThreshold;
   bool mDropAudioBeforeThreshold;

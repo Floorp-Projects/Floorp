@@ -281,8 +281,11 @@ public:
 
     // Look up a font in the cache. Returns an addrefed pointer, or null
     // if there's nothing matching in the cache
-    already_AddRefed<gfxFont> Lookup(const gfxFontEntry *aFontEntry,
-                                     const gfxFontStyle *aStyle);
+    already_AddRefed<gfxFont>
+    Lookup(const gfxFontEntry* aFontEntry,
+           const gfxFontStyle* aStyle,
+           const gfxCharacterMap* aUnicodeRangeMap = nullptr);
+
     // We created a new font (presumably because Lookup returned null);
     // put it in the cache. The font's refcount should be nonzero. It is
     // allowable to add a new font even if there is one already in the
@@ -341,8 +344,12 @@ protected:
     struct Key {
         const gfxFontEntry* mFontEntry;
         const gfxFontStyle* mStyle;
-        Key(const gfxFontEntry* aFontEntry, const gfxFontStyle* aStyle)
-            : mFontEntry(aFontEntry), mStyle(aStyle) {}
+        const gfxCharacterMap* mUnicodeRangeMap;
+        Key(const gfxFontEntry* aFontEntry, const gfxFontStyle* aStyle,
+            const gfxCharacterMap* aUnicodeRangeMap)
+            : mFontEntry(aFontEntry), mStyle(aStyle),
+              mUnicodeRangeMap(aUnicodeRangeMap)
+        {}
     };
 
     class HashEntry : public PLDHashEntryHdr {
@@ -359,7 +366,8 @@ protected:
         bool KeyEquals(const KeyTypePointer aKey) const;
         static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
         static PLDHashNumber HashKey(const KeyTypePointer aKey) {
-            return mozilla::HashGeneric(aKey->mStyle->Hash(), aKey->mFontEntry);
+            return mozilla::HashGeneric(aKey->mStyle->Hash(), aKey->mFontEntry,
+                                        aKey->mUnicodeRangeMap);
         }
         enum { ALLOW_MEMMOVE = true };
 
@@ -1600,9 +1608,19 @@ public:
 
     gfxFontEntry *GetFontEntry() const { return mFontEntry.get(); }
     bool HasCharacter(uint32_t ch) {
-        if (!mIsValid)
+        if (!mIsValid ||
+            (mUnicodeRangeMap && !mUnicodeRangeMap->test(ch))) {
             return false;
+        }
         return mFontEntry->HasCharacter(ch); 
+    }
+
+    const gfxCharacterMap* GetUnicodeRangeMap() const {
+        return mUnicodeRangeMap.get();
+    }
+
+    void SetUnicodeRangeMap(gfxCharacterMap* aUnicodeRangeMap) {
+        mUnicodeRangeMap = aUnicodeRangeMap;
     }
 
     uint16_t GetUVSGlyph(uint32_t aCh, uint32_t aVS) {
@@ -1998,6 +2016,10 @@ protected:
     // is actually enabled
     nsAutoPtr<gfxFontShaper>   mHarfBuzzShaper;
     nsAutoPtr<gfxFontShaper>   mGraphiteShaper;
+
+    // if a userfont with unicode-range specified, contains map of *possible*
+    // ranges supported by font
+    nsRefPtr<gfxCharacterMap> mUnicodeRangeMap;
 
     mozilla::RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 

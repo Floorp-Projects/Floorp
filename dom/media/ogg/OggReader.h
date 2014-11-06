@@ -78,7 +78,7 @@ public:
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
-  virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
+  virtual void Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
@@ -97,6 +97,8 @@ private:
   // Specialized Reset() method to signal if the seek is
   // to the start of the stream.
   nsresult ResetDecode(bool start);
+
+  nsresult SeekInternal(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
 
   bool HasSkeleton() {
     return mSkeletonState != 0 && mSkeletonState->mActive;

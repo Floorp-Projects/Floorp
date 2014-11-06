@@ -269,6 +269,8 @@ class Build(MachCommandBase):
     @Command('build', category='build', description='Build the tree.')
     @CommandArgument('--jobs', '-j', default='0', metavar='jobs', type=int,
         help='Number of concurrent jobs to run. Default is the number of CPUs.')
+    @CommandArgument('-C', '--directory', default=None,
+        help='Change to a subdirectory of the build directory first.')
     @CommandArgument('what', default=None, nargs='*', help=BUILD_WHAT_HELP)
     @CommandArgument('-X', '--disable-extra-make-dependencies',
                      default=False, action='store_true',
@@ -276,7 +278,7 @@ class Build(MachCommandBase):
     @CommandArgument('-v', '--verbose', action='store_true',
         help='Verbose output for what commands the build is running.')
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
-        verbose=False):
+        directory=None, verbose=False):
         import which
         from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
@@ -291,6 +293,17 @@ class Build(MachCommandBase):
         with BuildOutputManager(self.log_manager, monitor) as output:
             monitor.start()
 
+            if directory is not None and not what:
+                print('Can only use -C/--directory with an explicit target '
+                    'name.')
+                return 1
+
+            if directory is not None:
+                disable_extra_make_dependencies=True
+                directory = mozpath.normsep(directory)
+                if directory.startswith('/'):
+                    directory = directory[1:]
+
             if what:
                 top_make = os.path.join(self.topobjdir, 'Makefile')
                 if not os.path.exists(top_make):
@@ -303,8 +316,13 @@ class Build(MachCommandBase):
                 for target in what:
                     path_arg = self._wrap_path_argument(target)
 
-                    make_dir, make_target = resolve_target_to_make(self.topobjdir,
-                        path_arg.relpath())
+                    if directory is not None:
+                        make_dir = os.path.join(self.topobjdir, directory)
+                        make_target = target
+                    else:
+                        make_dir, make_target = \
+                            resolve_target_to_make(self.topobjdir,
+                                path_arg.relpath())
 
                     if make_dir is None and make_target is None:
                         return 1

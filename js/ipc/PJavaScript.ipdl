@@ -46,9 +46,6 @@ both:
     prio(high) sync InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
     prio(high) sync DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
 
-    prio(high) sync IsCallable(uint64_t objId) returns (bool result);
-    prio(high) sync IsConstructor(uint64_t objId) returns (bool result);
-
 parent:
     async __delete__();
 };

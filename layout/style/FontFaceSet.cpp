@@ -861,6 +861,23 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                  "@font-face font-language-override has unexpected unit");
   }
 
+  // set up unicode-range
+  nsAutoPtr<gfxCharacterMap> unicodeRanges;
+  aFontFace->GetDesc(eCSSFontDesc_UnicodeRange, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Array) {
+    unicodeRanges = new gfxCharacterMap();
+    const nsCSSValue::Array& sources = *val.GetArrayValue();
+    NS_ABORT_IF_FALSE(sources.Count() % 2 == 0,
+                      "odd number of entries in a unicode-range: array");
+
+    for (uint32_t i = 0; i < sources.Count(); i += 2) {
+      uint32_t min = sources[i].GetIntValue();
+      uint32_t max = sources[i+1].GetIntValue();
+      unicodeRanges->SetRange(min, max);
+    }
+  }
+
   // set up src array
   nsTArray<gfxFontFaceSrc> srcArray;
 
@@ -961,7 +978,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                                             stretch, italicStyle,
                                             featureSettings,
                                             languageOverride,
-                                            nullptr /* aUnicodeRanges */);
+                                            unicodeRanges);
   return entry.forget();
 }
 

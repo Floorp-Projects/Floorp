@@ -262,7 +262,9 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
 }
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()
-{}
+{
+  DestroyEGLImage();
+}
 
 void
 GrallocTextureHostOGL::SetCompositor(Compositor* aCompositor)

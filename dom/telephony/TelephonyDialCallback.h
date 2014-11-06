@@ -35,35 +35,11 @@ public:
 
   NS_FORWARD_NSITELEPHONYCALLBACK(TelephonyCallback::)
 
-  nsresult
-  NotifyDialMMISuccess(const nsAString& aStatusMessage);
-
-  template<typename T>
-  nsresult
-  NotifyDialMMISuccess(const nsAString& aStatusMessage, const T& aInfo)
-  {
-    AutoJSAPI jsapi;
-    if (!NS_WARN_IF(jsapi.Init(mWindow))) {
-      return NS_ERROR_FAILURE;
-    }
-
-    JSContext* cx = jsapi.cx();
-    JS::Rooted<JS::Value> info(cx);
-
-    if (!ToJSValue(cx, aInfo, &info)) {
-      JS_ClearPendingException(cx);
-      return NS_ERROR_TYPE_ERR;
-    }
-
-    return NotifyDialMMISuccess(cx, aStatusMessage, info);
-  }
-
 private:
   ~TelephonyDialCallback() {}
 
   nsresult
-  NotifyDialMMISuccess(JSContext* aCx, const nsAString& aStatusMessage,
-                       JS::Handle<JS::Value> aInfo);
+  NotifyDialMMISuccess(JS::Handle<JS::Value> aResult);
 
   nsresult
   NotifyDialMMISuccess(JSContext* aCx, const MozMMIResult& aResult);

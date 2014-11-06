@@ -45,6 +45,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     private final int columnCount;
 
     private int rowCount;
+    private Throwable allocationStack;
 
     Object[] data;
 
@@ -65,6 +66,9 @@ public class MatrixBlobCursor extends AbstractCursor {
         }
 
         this.data = new Object[columnCount * initialCapacity];
+        if (AppConstants.DEBUG_BUILD) {
+            this.allocationStack = new Throwable("allocationStack");
+        }
     }
 
     /**
@@ -76,6 +80,15 @@ public class MatrixBlobCursor extends AbstractCursor {
     @WrapElementForJNI
     public MatrixBlobCursor(String[] columnNames) {
         this(columnNames, 16);
+    }
+
+    /**
+     * Closes the Cursor, releasing all of its resources.
+     */
+    public void close() {
+        this.allocationStack = null;
+        this.data = null;
+        super.close();
     }
 
     /**
@@ -344,7 +357,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     protected void finalize() {
         if (AppConstants.DEBUG_BUILD) {
             if (!isClosed()) {
-                Log.e(LOGTAG, "Cursor finalized without being closed", new RuntimeException("stack"));
+                Log.e(LOGTAG, "Cursor finalized without being closed", this.allocationStack);
             }
         }
 
