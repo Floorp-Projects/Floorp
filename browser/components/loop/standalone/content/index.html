@@ -29,6 +29,14 @@
     </script>
     <script type="text/javascript" src="js/multiplexGum.js"></script>
     <script type="text/javascript" src="shared/libs/sdk.js"></script>
+    <script>
+      // multiplexGum needs evaluation before sdk.js, but TBPlugin is not
+      // defined until after sdk.js has been evaluated. This updates the
+      // navigator object to reference TBPlugin if it was defined by sdk.js.
+      if (!navigator.originalGum) {
+        navigator.originalGum = (window["TBPlugin"] && TBPlugin.getUserMedia);
+      }
+    </script>
     <script type="text/javascript" src="libs/l10n-gaia-02ca67948fe8.js"></script>
     <script type="text/javascript" src="shared/libs/react-0.11.2.js"></script>
     <script type="text/javascript" src="shared/libs/jquery-2.1.0.js"></script>
