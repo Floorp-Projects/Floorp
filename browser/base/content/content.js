@@ -837,6 +837,31 @@ addEventListener("pageshow", function(event) {
   }
 });
 
+let SocialMessenger = {
+  init: function() {
+    addMessageListener("Social:GetPageData", this);
+    addMessageListener("Social:GetMicrodata", this);
+
+    XPCOMUtils.defineLazyGetter(this, "og", function() {
+      let tmp = {};
+      Cu.import("resource:///modules/Social.jsm", tmp);
+      return tmp.OpenGraphBuilder;
+    });
+  },
+  receiveMessage: function(aMessage) {
+    switch(aMessage.name) {
+      case "Social:GetPageData":
+        sendAsyncMessage("Social:PageDataResult", this.og.getData(content.document));
+        break;
+      case "Social:GetMicrodata":
+        let target = aMessage.objects;
+        sendAsyncMessage("Social:PageDataResult", this.og.getMicrodata(content.document, target));
+        break;
+    }
+  }
+}
+SocialMessenger.init();
+
 addEventListener("ActivateSocialFeature", function (aEvent) {
   let document = content.document;
   if (PrivateBrowsingUtils.isContentWindowPrivate(content)) {
