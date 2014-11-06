@@ -186,6 +186,9 @@ public:
     {
         return NS_ERROR_NOT_IMPLEMENTED;
     }
+
+    virtual void DisableSpdy() { }
+    virtual void ReuseConnectionOnRestartOK(bool) { }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpTransaction, NS_AHTTPTRANSACTION_IID)
