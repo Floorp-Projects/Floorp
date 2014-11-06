@@ -280,7 +280,7 @@ dictionary MozStkInput : MozStkIconContainer
   boolean isHelpAvailable;
 };
 
-dictionary MozStkBrowserSetting : MozStkIconContainer
+dictionary MozStkBrowserSetting
 {
   /**
    * Confirm message to launch browser.
@@ -300,7 +300,7 @@ dictionary MozStkBrowserSetting : MozStkIconContainer
   unsigned short mode;
 };
 
-dictionary MozStkSetUpCall : MozStkIconContainer
+dictionary MozStkSetUpCall
 {
   /**
    * The Dialling number.
