@@ -17,8 +17,14 @@ function chunkifyTests(tests, totalChunks, thisChunk, chunkByDir, logger) {
     for (var i = 0; i < tests.length; ++i) {
       if ((tests[i] instanceof Object) && ('test' in tests[i])) {
         var test_path = tests[i]['test']['url'];
-      } else {
+      }
+      else if ((tests[i] instanceof Object) && ('url' in tests[i])) {
+        // This condition is needed to run --chunk-by-dir on mochitest bc and dt.
         var test_path = tests[i]['url'];
+      }
+      else {
+        // This condition is needed to run --chunk-by-dir on android chunks.
+        var test_path = tests[i];
       }
       if (test_path[0] == '/') {
         test_path = test_path.substr(1);
