@@ -319,6 +319,7 @@ class RecursiveMakeBackend(CommonBackend):
             'libs': set(),
         }
         self._no_skip = {
+            'misc': set(),
             'tools': set(),
         }
 
@@ -530,6 +531,7 @@ class RecursiveMakeBackend(CommonBackend):
         filters = [
             ('export', parallel_filter),
             ('libs', libs_filter),
+            ('misc', parallel_filter),
             ('tools', tools_filter),
         ]
 
