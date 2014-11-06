@@ -20,6 +20,48 @@
 
     <!-- libs -->
     <script>
+      // IE9, 10, and 11 lack the window.CustomEvent constructor. IE11 has the
+      // window.CustomEvent object, but it throws when new CustomEvent(...) is
+      // called, with the exception of "Object doesn't support this action". IE9
+      // introduced document.createEvent. Nothing we can do for IE8 here.
+      var customEventCtorWorks;
+      try {
+        if (window.CustomEvent) {
+          customEventCtorWorks = new CustomEvent("test", {"detail":{"sampleProperty":true}});
+        }
+      } catch (ex) {}
+      var basicCustomEvent = document.createEvent("CustomEvent");
+      if (!customEventCtorWorks && basicCustomEvent && basicCustomEvent.initCustomEvent) {
+        function myCustomEvent(event, params) {
+          params = params || {bubbles: false, cancelable: false, detail: undefined};
+          var evt = document.createEvent("CustomEvent");
+          evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+          return evt;
+        };
+
+        myCustomEvent.prototype = window.Event.prototype;
+        window.CustomEvent = myCustomEvent;
+      }
+ 
+      // To support IE for the l10n-gaia library on IE <= 10.
+      if (!"language" in navigator) {
+        navigator.language = navigator.browserLanguage;
+      }
+
+      // To support IE <= 10.
+      if (!window.MutationObserver) {
+        // Define a dummy MutationObserver object if one doesn't exist
+        // This could later be extended to use Mutation events but for
+        // now this will simply result in no-ops.
+        function myMutationObserver() {};
+        myMutationObserver.prototype = {
+          disconnect: function() {},
+          observe: function () {},
+          takeRecords: function() {},
+        };
+        window.MutationObserver = myMutationObserver;
+      }
+
       window.OTProperties = {
         cdnURL: 'shared/libs/',
       };
