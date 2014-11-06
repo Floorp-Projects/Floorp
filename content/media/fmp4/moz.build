@@ -25,7 +25,7 @@ if CONFIG['MOZ_WMF']:
 
 if CONFIG['MOZ_EME']:
     DIRS += ['eme']
-    
+
 if CONFIG['MOZ_FFMPEG']:
     EXPORTS += [
         'ffmpeg/FFmpegRuntimeLinker.h',
@@ -66,6 +66,14 @@ if CONFIG['ANDROID_VERSION'] >= '18'and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DIRS += ['gonk']
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXPORTS += [
+        'android/AndroidDecoderModule.h',
+    ]
+    UNIFIED_SOURCES += [
+        'android/AndroidDecoderModule.cpp',
+    ]
 
 FINAL_LIBRARY = 'xul'
 

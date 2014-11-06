@@ -22,7 +22,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
-DEFINES['E10S_TESTING_ONLY'] = CONFIG['E10S_TESTING_ONLY']
+
 DEFINES['APP_LICENSE_BLOCK'] = '%s/content/overrides/app-license.html' % SRCDIR
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):

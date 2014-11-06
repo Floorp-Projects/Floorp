@@ -9,6 +9,7 @@
 #include <ICrypto.h>
 #include "GonkAudioDecoderManager.h"
 #include "MediaDecoderReader.h"
+#include "mp4_demuxer/Adts.h"
 #include "VideoUtils.h"
 #include "nsTArray.h"
 #include "prlog.h"
@@ -42,11 +43,16 @@ GonkAudioDecoderManager::GonkAudioDecoderManager(
   , mAudioRate(aConfig.samples_per_second)
   , mAudioProfile(aConfig.aac_profile)
   , mAudioBuffer(nullptr)
+  , mUseAdts(true)
 {
   MOZ_COUNT_CTOR(GonkAudioDecoderManager);
   MOZ_ASSERT(mAudioChannels);
   mUserData.AppendElements(&aConfig.audio_specific_config[0],
                            aConfig.audio_specific_config.length());
+  // Pass through mp3 without applying an ADTS header.
+  if (strcmp(aConfig.mime_type, "audio/mp4a-latm") != 0) {
+      mUseAdts = false;
+  }
 }
 
 GonkAudioDecoderManager::~GonkAudioDecoderManager()
@@ -214,6 +220,18 @@ GonkAudioDecoderManager::Input(mp4_demuxer::MP4Sample* aSample)
   if (mDecoder == nullptr) {
     ALOG("Decoder is not inited");
     return NS_ERROR_UNEXPECTED;
+  }
+  if (aSample && mUseAdts) {
+    int8_t frequency_index =
+        mp4_demuxer::Adts::GetFrequencyIndex(mAudioRate);
+    bool rv = mp4_demuxer::Adts::ConvertSample(mAudioChannels,
+                                               frequency_index,
+                                               mAudioProfile,
+                                               aSample);
+    if (!rv) {
+      ALOG("Failed to apply ADTS header");
+      return NS_ERROR_FAILURE;
+    }
   }
 
   status_t rv;
