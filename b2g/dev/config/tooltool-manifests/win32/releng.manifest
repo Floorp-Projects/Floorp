@@ -1,0 +1,27 @@
+[
+{
+"size": 266240,
+"digest": "bb345b0e700ffab4d09436981f14b5de84da55a3f18a7f09ebc4364a4488acdeab8d46f447b12ac70f2da1444a68b8ce8b8675f0dae2ccf845e966d1df0f0869",
+"algorithm": "sha512",
+"filename": "mozmake.exe"
+},
+{
+"size": 51,
+"digest": "c8e40edb314eeabfb92c77cf5ff9a7857033f15dd65a00349bcf9e3e5b75624afc71f733b2ff7e029c20a78313038409c2bd022bf7e5a7e0c487fc2c2d640986",
+"algorithm": "sha512",
+"filename": "setup.sh"
+},
+{
+"size": 168320,
+"digest": "c0f4a2da0b07ca6fc69290fbc5ed68f56c6b1ba4d593b220fd49b14ac4885e6ec949e695fd9a7ac464e0e86b652e99f6bd4af849fec072264b29a8f9686d2fc4",
+"algorithm": "sha512",
+"filename": "sccache.tar.bz2"
+},
+{
+"size": 31057326,
+"digest": "b844c3e52be493d2cacafa58c4a924b89c9be8d2dcc2a7c71aed58c253d8035fba4d51df309f73e3c4342a1f3c3898a9a25c4815e2112888d1280f43c41c8e51",
+"algorithm": "sha512",
+"filename": "moztt.tar.bz2",
+"unpack": "True"
+}
+]
