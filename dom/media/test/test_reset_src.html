@@ -26,7 +26,7 @@ function finish(v) {
   manager.finished(v.token);
 }
 
-function onLoadedData_Audio(e) {
+function onLoadedMetadata_Audio(e) {
   var t = e.target;
   is(t.videoHeight, 0, t.name + ": videoHeight should be zero when there is no video.");
   is(t.videoWidth, 0, t.name + ": videoWidth should be zero when there is no video.");
@@ -62,14 +62,14 @@ function onTimeUpdate_Video(e) {
       todo("No audio file available.")
       finish(t);
     } else {
-      t.removeEventListener("loadeddata", onLoadedData_Video);
-      t.addEventListener("loadeddata", onLoadedData_Audio);
+      t.removeEventListener("loadedmetadata", onLoadedMetadata_Video);
+      t.addEventListener("loadedmetadata", onLoadedMetadata_Audio);
       t.src = source.name;
     }
   }
 }
 
-function onLoadedData_Video(e) {
+function onLoadedMetadata_Video(e) {
   var t = e.target;
   isnot(t.videoHeight, 0, t.name + ": We should have a videoHeight.");
   isnot(t.videoWidth, 0, t.name + ": We should have a videoWidth.");
@@ -80,12 +80,12 @@ function onLoadedData_Video(e) {
 function startTest(test, token) {
   var v = document.createElement('video');
   document.body.appendChild(v);
+  v.preload = "metadata";
   v._firstTime = true;
-  v.addEventListener("loadeddata", onLoadedData_Video);
+  v.addEventListener("loadedmetadata", onLoadedMetadata_Video);
   v.src = test.name;
   v.token = token;
   v.name = test.name;
-  v.play();
   manager.started(token);
 }
 
