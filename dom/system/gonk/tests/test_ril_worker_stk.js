@@ -882,24 +882,27 @@ add_test(function test_stk_proactive_command_set_up_call() {
   test_stk_proactive_command({
     pdu: [
       0xD0,
-      0x2d,
+      0x31,
       0x81, 0x03, 0x01, 0x10, 0x04,
       0x82, 0x02, 0x81, 0x82,
       0x05, 0x0A, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x6E, 0x6E, 0x65, 0x63, 0x74,
       0x86, 0x09, 0x81, 0x10, 0x32, 0x04, 0x21, 0x43, 0x65, 0x1C, 0x2C,
       0x05, 0x07, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-      0x9E, 0x02, 0x00, 0x01
+      0x9E, 0x02, 0x00, 0x01,
+      0x9E, 0x02, 0x01, 0x02
     ],
     typeOfCommand: STK_CMD_SET_UP_CALL,
-    icons: [1],
+    icons: [1, 2],
     testFunc: (context, cmdDetails, ctlvs) => {
       let setupCall = cmdDetails.options;
 
       do_check_eq(setupCall.address, "012340123456,1,2");
-      do_check_eq(setupCall.confirmMessage, "Disconnect");
-      do_check_eq(setupCall.callMessage, "Message");
-      do_check_eq(setupCall.iconSelfExplanatory, true);
-      do_check_eq(setupCall.icons, 1);
+      do_check_eq(setupCall.confirmMessage.text, "Disconnect");
+      do_check_eq(setupCall.confirmMessage.iconSelfExplanatory, true);
+      do_check_eq(setupCall.confirmMessage.icons, 1);
+      do_check_eq(setupCall.callMessage.text, "Message");
+      do_check_eq(setupCall.callMessage.iconSelfExplanatory, false);
+      do_check_eq(setupCall.callMessage.icons, 2);
     }
   });
 
