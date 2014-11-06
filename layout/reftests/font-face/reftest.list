@@ -59,6 +59,12 @@ HTTP(..) == prop-order-over-rule-order-1b.html prop-order-over-rule-order-2b.htm
 HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.html
 skip-if(B2G) HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html # bug 773482
 
+# unicode-range (Linux implementation - bug 1056479)
+pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-1.html unicoderange-1-ref.html
+pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-2.html unicoderange-2-ref.html
+pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-3.html unicoderange-3-ref.html
+pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == unicoderange-4.html unicoderange-4-ref.html
+
 # Dynamic changes
 # we need to skip these because of the bug that's causing order-2.html to fail
 HTTP(..) == enable-sheet-1.html enable-sheet-1-ref.html
