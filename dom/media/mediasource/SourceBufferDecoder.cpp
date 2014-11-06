@@ -96,6 +96,12 @@ SourceBufferDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
 }
 
 void
+SourceBufferDecoder::FirstFrameLoaded(MediaInfo* aInfo)
+{
+  MSE_DEBUG("SourceBufferDecoder(%p)::FirstFrameLoaded UNIMPLEMENTED", this);
+}
+
+void
 SourceBufferDecoder::QueueMetadata(int64_t aTime, MediaInfo* aInfo, MetadataTags* aTags)
 {
   MSE_DEBUG("SourceBufferDecoder(%p)::QueueMetadata UNIMPLEMENTED", this);
