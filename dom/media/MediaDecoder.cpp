@@ -668,8 +668,8 @@ already_AddRefed<nsIPrincipal> MediaDecoder::GetCurrentPrincipal()
 }
 
 void MediaDecoder::QueueMetadata(int64_t aPublishTime,
-                                 nsAutoPtr<MediaInfo> aInfo,
-                                 nsAutoPtr<MetadataTags> aTags)
+                                 MediaInfo* aInfo,
+                                 MetadataTags* aTags)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   GetReentrantMonitor().AssertCurrentThreadIn();
@@ -684,11 +684,9 @@ MediaDecoder::IsDataCachedToEndOfResource()
           mResource->IsDataCachedToEndOfResource(mDecoderPosition));
 }
 
-void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                  nsAutoPtr<MetadataTags> aTags)
+void MediaDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   if (mShuttingDown) {
     return;
   }
@@ -714,21 +712,20 @@ void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
     SetInfinite(true);
   }
 
-  mInfo = aInfo.forget();
+  mInfo = aInfo;
   ConstructMediaTracks();
 
   if (mOwner) {
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
+    mOwner->MetadataLoaded(aInfo, aTags);
   }
 }
 
-void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo)
+void MediaDecoder::FirstFrameLoaded(MediaInfo* aInfo)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   if (mShuttingDown) {
     return;
   }
@@ -741,7 +738,7 @@ void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo)
     return;
   }
 
-  mInfo = aInfo.forget();
+  mInfo = aInfo;
 
   if (mOwner) {
     Invalidate();
