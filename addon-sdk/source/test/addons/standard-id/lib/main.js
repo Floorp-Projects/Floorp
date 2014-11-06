@@ -19,11 +19,6 @@ exports.testStandardID = function(assert) {
   assert.equal(service.get('extensions.standard-id@jetpack.test14'), simple.prefs.test14, 'simple test14 also 15');
 }
 
-exports.testInvalidPreferencesBranch = function(assert) {
-  assert.notEqual(preferencesBranch, 'invalid^branch*name', 'invalid preferences-branch value ignored');
-  assert.equal(preferencesBranch, 'standard-id@jetpack', 'preferences-branch is standard-id@jetpack');
-}
-
 // from `/test/test-self.js`, adapted to `sdk/test/assert` API
 exports.testSelfID = function*(assert) {
   assert.equal(typeof(id), 'string', 'self.id is a string');
