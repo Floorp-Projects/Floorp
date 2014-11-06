@@ -753,7 +753,7 @@ bool OggReader::ReadOggChain()
   OpusState* newOpusState = nullptr;
 #endif /* MOZ_OPUS */
   VorbisState* newVorbisState = nullptr;
-  MetadataTags* tags = nullptr;
+  nsAutoPtr<MetadataTags> tags;
 
   if (HasVideo() || HasSkeleton() || !HasAudio()) {
     return false;
@@ -846,7 +846,7 @@ bool OggReader::ReadOggChain()
       *info = mInfo;
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
       mDecoder->QueueMetadata((mDecodedAudioFrames * USECS_PER_S) / mInfo.mAudio.mRate,
-                              info.forget(), tags);
+                              info, tags);
     }
     return true;
   }
