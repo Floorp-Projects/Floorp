@@ -3106,6 +3106,16 @@ nsXPCComponents_Utils::IsCrossProcessWrapper(HandleValue obj, bool *out)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetCrossProcessWrapperTag(HandleValue obj, nsACString &out)
+{
+    if (obj.isPrimitive() || !jsipc::IsWrappedCPOW(&obj.toObject()))
+        return NS_ERROR_INVALID_ARG;
+
+    jsipc::GetWrappedCPOWTag(&obj.toObject(), out);
+    return NS_OK;
+}
+
 /* void recomputerWrappers(jsval vobj); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::RecomputeWrappers(HandleValue vobj, JSContext *cx)

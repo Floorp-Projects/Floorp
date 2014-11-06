@@ -178,8 +178,8 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
 void
 MediaSourceDecoder::NotifyTimeRangesChanged()
 {
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mon.NotifyAll();
+  MOZ_ASSERT(mReader);
+  mReader->NotifyTimeRangesChanged();
 }
 
 void

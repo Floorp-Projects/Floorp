@@ -148,10 +148,24 @@
           panel.appendChild(this.content);
 
         let URLTemplate = provider.markURL;
-        pageData = pageData || OpenGraphBuilder.getData(gBrowser);
+        let _dataFn;
+        if (!pageData) {
+          messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
+            messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+            this.loadPanel(msg.json, target);
+          });
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetPageData");
+          return;
+        }
         // if this is a share of a selected item, get any microdata
         if (!pageData.microdata && target) {
-          pageData.microdata = OpenGraphBuilder.getMicrodata(gBrowser, target);
+          messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
+            messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+            pageData.microdata = msg.data;
+            this.loadPanel(pageData, target);
+          });
+          gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetMicrodata", null, target);
+          return;
         }
         this.pageData = pageData;
 

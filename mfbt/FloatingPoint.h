@@ -159,8 +159,8 @@ IsFinite(T aValue)
 }
 
 /**
- * Determines whether a float/double is negative.  It is an error to call this
- * method on a float/double which is NaN.
+ * Determines whether a float/double is negative or -0.  It is an error
+ * to call this method on a float/double which is NaN.
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool

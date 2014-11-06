@@ -280,36 +280,6 @@ Object.freeze({
     Object.defineProperty(exports, "self", {
       value: self
     });
-
-    exports.on = function deprecatedOn() {
-      console.error("DEPRECATED: The global `on()` function in content " +
-                    "scripts is deprecated in favor of the `self.on()` " +
-                    "function, which works the same. Replace calls to `on()` " +
-                    "with calls to `self.on()`" +
-                    "For more info on `self.on`, see " +
-                    "<https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/using_postMessage>.");
-      return self.on.apply(null, arguments);
-    };
-
-    // Deprecated use of `onMessage` from globals
-    let onMessage = null;
-    Object.defineProperty(exports, "onMessage", {
-      get: function () onMessage,
-      set: function (v) {
-        if (onMessage)
-          self.removeListener("message", onMessage);
-        console.error("DEPRECATED: The global `onMessage` function in content" +
-                      "scripts is deprecated in favor of the `self.on()` " +
-                      "function. Replace `onMessage = function (data){}` " +
-                      "definitions with calls to `self.on('message', " +
-                      "function (data){})`. " +
-                      "For more info on `self.on`, see " +
-                      "<https://developer.mozilla.org/en-US/Add-ons/SDK/Guides/Content_Scripts/using_postMessage>.");
-        onMessage = v;
-        if (typeof onMessage == "function")
-          self.on("message", onMessage);
-      }
-    });
   },
 
   injectOptions: function (exports, options) {
