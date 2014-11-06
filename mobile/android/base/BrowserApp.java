@@ -17,6 +17,7 @@ import java.util.Vector;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
@@ -49,6 +50,7 @@ import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenInBackgroundListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.HomePanelsManager;
+import org.mozilla.gecko.home.TopSitesPanel;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
@@ -58,7 +60,12 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
+import org.mozilla.gecko.tabs.TabHistoryController;
+import org.mozilla.gecko.tabs.TabHistoryFragment;
+import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
+import org.mozilla.gecko.tiles.TilesRecorder;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
@@ -143,7 +150,8 @@ public class BrowserApp extends GeckoApp
                                    OnUrlOpenListener,
                                    OnUrlOpenInBackgroundListener,
                                    ActionModeCompat.Presenter,
-                                   LayoutInflater.Factory {
+                                   LayoutInflater.Factory,
+                                   TopSitesPanel.BrowserTilesRecorderProvider {
     private static final String LOGTAG = "GeckoBrowserApp";
 
     private static final int TABS_ANIMATION_DURATION = 450;
@@ -175,9 +183,11 @@ public class BrowserApp extends GeckoApp
     protected Telemetry.Timer mAboutHomeStartupTimer;
     private ActionModeCompat mActionMode;
     private boolean mShowActionModeEndAnimation;
+    private TabHistoryController tabHistoryController;
 
     private static final int GECKO_TOOLS_MENU = -1;
     private static final int ADDON_MENU_OFFSET = 1000;
+    public static final String TAB_HISTORY_FRAGMENT_TAG = "tabHistoryFragment";
     private static class MenuItemInfo {
         public int id;
         public String label;
@@ -242,6 +252,8 @@ public class BrowserApp extends GeckoApp
     private boolean mHideWebContentOnAnimationEnd;
 
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
+
+    private TilesRecorder mTilesRecorder;
 
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
@@ -461,6 +473,22 @@ public class BrowserApp extends GeckoApp
         mProgressView = (ToolbarProgressView) findViewById(R.id.progress);
         mBrowserToolbar.setProgressBar(mProgressView);
 
+        // Initialize Tab History Controller.
+        tabHistoryController = new TabHistoryController(new OnShowTabHistory() {
+            @Override
+            public void onShowHistory(final List<TabHistoryPage> historyPageList, final int toIndex) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final TabHistoryFragment fragment = TabHistoryFragment.newInstance(historyPageList, toIndex);
+                        final FragmentManager fragmentManager = getSupportFragmentManager();
+                        fragment.show(R.id.tab_history_panel, fragmentManager.beginTransaction(), TAB_HISTORY_FRAGMENT_TAG);
+                    }
+                });
+            }
+        });
+        mBrowserToolbar.setTabHistoryController(tabHistoryController);
+
         final String action = intent.getAction();
         if (Intent.ACTION_VIEW.equals(action)) {
             // Show the target URL immediately in the toolbar.
@@ -584,6 +612,8 @@ public class BrowserApp extends GeckoApp
                 Log.e(LOGTAG, "Error initializing media manager", ex);
             }
         }
+
+        mTilesRecorder = new TilesRecorder();
     }
 
     private void setupSystemUITinting() {
@@ -649,7 +679,6 @@ public class BrowserApp extends GeckoApp
 
         return null;
     }
-
 
     @Override
     public void onBackPressed() {
@@ -2574,6 +2603,12 @@ public class BrowserApp extends GeckoApp
         if (aMenu == null)
             return false;
 
+        // Hide the tab history panel when hardware menu button is pressed.
+        TabHistoryFragment frag = (TabHistoryFragment) getSupportFragmentManager().findFragmentByTag(TAB_HISTORY_FRAGMENT_TAG);
+        if (frag != null) {
+            frag.dismiss();
+        }
+
         if (!GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             aMenu.findItem(R.id.settings).setEnabled(false);
             aMenu.findItem(R.id.help).setEnabled(false);
@@ -2935,9 +2970,15 @@ public class BrowserApp extends GeckoApp
     @Override
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            // If the tab search history is already shown, do nothing.
+            TabHistoryFragment frag = (TabHistoryFragment) getSupportFragmentManager().findFragmentByTag(TAB_HISTORY_FRAGMENT_TAG);
+            if (frag != null) {
+                return false;
+            }
+
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null) {
-                return tab.showAllHistory();
+                return tabHistoryController.showTabHistory(tab, TabHistoryController.HistoryAction.ALL);
             }
         }
         return super.onKeyLongPress(keyCode, event);
@@ -3234,5 +3275,10 @@ public class BrowserApp extends GeckoApp
                                          osLocale,
                                          appLocale,
                                          previousSession);
+    }
+
+    @Override
+    public TilesRecorder getTilesRecorder() {
+        return mTilesRecorder;
     }
 }

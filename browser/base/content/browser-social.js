@@ -8,12 +8,10 @@ let SocialUI,
     SocialMarks,
     SocialShare,
     SocialSidebar,
-    SocialStatus;
+    SocialStatus,
+    SocialActivationListener;
 
 (function() {
-
-XPCOMUtils.defineLazyModuleGetter(this, "SharedFrame",
-  "resource:///modules/SharedFrame.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame",
   "resource:///modules/PanelFrame.jsm");
@@ -73,8 +71,8 @@ SocialUI = {
 
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
-    gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
     CustomizableUI.addListener(this);
+    SocialActivationListener.init();
 
     // menupopups that list social providers. we only populate them when shown,
     // and if it has not been done already.
@@ -108,6 +106,7 @@ SocialUI = {
 
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
     CustomizableUI.removeListener(this);
+    SocialActivationListener.uninit();
 
     document.getElementById("viewSidebarMenu").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
     document.getElementById("social-statusarea-popup").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
@@ -172,95 +171,6 @@ SocialUI = {
     SocialShare.populateProviderMenu();
     SocialStatus.populateToolbarPalette();
     SocialMarks.populateToolbarPalette();
-  },
-
-  // This handles "ActivateSocialFeature" events fired against content documents
-  // in this window.  If this activation happens from within Firefox, such as
-  // about:home or the share panel, we bypass the enable prompt. Any website
-  // activation, such as from the activations directory or a providers website
-  // will still get the prompt.
-  _activationEventHandler: function SocialUI_activationHandler(e, options={}) {
-    let targetDoc;
-    let node;
-    if (e.target instanceof HTMLDocument) {
-      // version 0 support
-      targetDoc = e.target;
-      node = targetDoc.documentElement
-    } else {
-      targetDoc = e.target.ownerDocument;
-      node = e.target;
-    }
-    if (!(targetDoc instanceof HTMLDocument))
-      return;
-
-    // The share panel iframe will not match "content" so it passes a bypass
-    // flag
-    if (!options.bypassContentCheck && targetDoc.defaultView != content)
-      return;
-
-    // If we are in PB mode, we silently do nothing (bug 829404 exists to
-    // do something sensible here...)
-    if (PrivateBrowsingUtils.isWindowPrivate(window))
-      return;
-
-    // If the last event was received < 1s ago, ignore this one
-    let now = Date.now();
-    if (now - Social.lastEventReceived < 1000)
-      return;
-    Social.lastEventReceived = now;
-
-    // We only want to activate if it is as a result of user input.
-    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIDOMWindowUtils);
-    if (!dwu.isHandlingUserInput) {
-      Cu.reportError("attempt to activate provider without user input from " + targetDoc.nodePrincipal.origin);
-      return;
-    }
-
-    let data = node.getAttribute("data-service");
-    if (data) {
-      try {
-        data = JSON.parse(data);
-      } catch(e) {
-        Cu.reportError("Social Service manifest parse error: "+e);
-        return;
-      }
-    }
-    Social.installProvider(targetDoc, data, function(manifest) {
-      Social.activateFromOrigin(manifest.origin, function(provider) {
-        if (provider.sidebarURL) {
-          SocialSidebar.show(provider.origin);
-        }
-        if (provider.shareURL) {
-          // Ensure that the share button is somewhere usable.
-          // SocialShare.shareButton may return null if it is in the menu-panel
-          // and has never been visible, so we check the widget directly. If
-          // there is no area for the widget we move it into the toolbar.
-          let widget = CustomizableUI.getWidget("social-share-button");
-          if (!widget.areaType) {
-            CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
-            // ensure correct state
-            SocialUI.onCustomizeEnd(window);
-          }
-
-          // make this new provider the selected provider. If the panel hasn't
-          // been opened, we need to make the frame first.
-          SocialShare._createFrame();
-          SocialShare.iframe.setAttribute('src', 'data:text/plain;charset=utf8,');
-          SocialShare.iframe.setAttribute('origin', provider.origin);
-          // get the right button selected
-          SocialShare.populateProviderMenu();
-          if (SocialShare.panel.state == "open") {
-            SocialShare.sharePage(provider.origin);
-          }
-        }
-        if (provider.postActivationURL) {
-          // if activated from an open share panel, we load the landing page in
-          // a background tab
-          gBrowser.loadOneTab(provider.postActivationURL, {inBackground: SocialShare.panel.state == "open"});
-        }
-      });
-    }, options);
   },
 
   showLearnMore: function() {
@@ -353,6 +263,68 @@ SocialUI = {
       return;
     // larger update that may change button icons
     SocialMarks.update();
+  }
+}
+
+// message manager handlers
+SocialActivationListener = {
+  init: function() {
+    messageManager.addMessageListener("Social:Activation", this);
+  },
+  uninit: function() {
+    messageManager.removeMessageListener("Social:Activation", this);
+  },
+  receiveMessage: function(aMessage) {
+    let data = aMessage.json;
+    let browser = aMessage.target;
+    data.window = window;
+    // if the source if the message is the share panel, we do a one-click
+    // installation. The source of activations is controlled by the
+    // social.directories preference
+    let options;
+    if (browser == SocialShare.iframe && Services.prefs.getBoolPref("social.share.activationPanelEnabled")) {
+      options = { bypassContentCheck: true, bypassInstallPanel: true };
+    }
+
+    // If we are in PB mode, we silently do nothing (bug 829404 exists to
+    // do something sensible here...)
+    if (PrivateBrowsingUtils.isWindowPrivate(window))
+      return;
+    Social.installProvider(data, function(manifest) {
+      Social.activateFromOrigin(manifest.origin, function(provider) {
+        if (provider.sidebarURL) {
+          SocialSidebar.show(provider.origin);
+        }
+        if (provider.shareURL) {
+          // Ensure that the share button is somewhere usable.
+          // SocialShare.shareButton may return null if it is in the menu-panel
+          // and has never been visible, so we check the widget directly. If
+          // there is no area for the widget we move it into the toolbar.
+          let widget = CustomizableUI.getWidget("social-share-button");
+          if (!widget.areaType) {
+            CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
+            // ensure correct state
+            SocialUI.onCustomizeEnd(window);
+          }
+
+          // make this new provider the selected provider. If the panel hasn't
+          // been opened, we need to make the frame first.
+          SocialShare._createFrame();
+          SocialShare.iframe.setAttribute('src', 'data:text/plain;charset=utf8,');
+          SocialShare.iframe.setAttribute('origin', provider.origin);
+          // get the right button selected
+          SocialShare.populateProviderMenu();
+          if (SocialShare.panel.state == "open") {
+            SocialShare.sharePage(provider.origin);
+          }
+        }
+        if (provider.postActivationURL) {
+          // if activated from an open share panel, we load the landing page in
+          // a background tab
+          gBrowser.loadOneTab(provider.postActivationURL, {inBackground: SocialShare.panel.state == "open"});
+        }
+      });
+    }, options);
   }
 }
 
@@ -517,15 +489,8 @@ SocialShare = {
       return this.panel.lastChild;
   },
 
-  _activationHandler: function(event) {
-    if (!Services.prefs.getBoolPref("social.share.activationPanelEnabled"))
-      return;
-    SocialUI._activationEventHandler(event, { bypassContentCheck: true, bypassInstallPanel: true });
-  },
-
   uninit: function () {
     if (this.iframe) {
-      this.iframe.removeEventListener("ActivateSocialFeature", this._activationHandler, true, true);
       this.iframe.remove();
     }
   },
@@ -544,7 +509,10 @@ SocialShare = {
     iframe.setAttribute("disableglobalhistory", "true");
     iframe.setAttribute("flex", "1");
     panel.appendChild(iframe);
-    this.iframe.addEventListener("ActivateSocialFeature", this._activationHandler, true, true);
+    iframe.addEventListener("DOMContentLoaded", function _firstload() {
+      iframe.removeEventListener("DOMContentLoaded", _firstload, true);
+      iframe.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
+    }, true);
     this.populateProviderMenu();
   },
 
@@ -671,18 +639,31 @@ SocialShare = {
     // endpoints (e.g. oexchange) that do not support additional
     // socialapi functionality.  One tweak is that we shoot an event
     // containing the open graph data.
+    let _dataFn;
     if (!pageData || sharedURI == gBrowser.currentURI) {
-      pageData = OpenGraphBuilder.getData(gBrowser);
-      if (graphData) {
-        // overwrite data retreived from page with data given to us as a param
-        for (let p in graphData) {
-          pageData[p] = graphData[p];
+      messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
+        messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+        let pageData = msg.json;
+        if (graphData) {
+          // overwrite data retreived from page with data given to us as a param
+          for (let p in graphData) {
+            pageData[p] = graphData[p];
+          }
         }
-      }
+        this.sharePage(providerOrigin, pageData, target);
+      });
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetPageData");
+      return;
     }
     // if this is a share of a selected item, get any microdata
     if (!pageData.microdata && target) {
-      pageData.microdata = OpenGraphBuilder.getMicrodata(gBrowser, target);
+      messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
+        messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+        pageData.microdata = msg.data;
+        this.sharePage(providerOrigin, pageData, target);
+      });
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetMicrodata", null, target);
+      return;
     }
     this.currentShare = pageData;
 
@@ -1267,7 +1248,6 @@ SocialStatus = {
     let notificationFrameId = "social-status-" + origin;
     let frame = document.getElementById(notificationFrameId);
     if (frame) {
-      SharedFrame.forgetGroup(frame.id);
       frame.parentNode.removeChild(frame);
     }
   },

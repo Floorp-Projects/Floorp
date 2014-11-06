@@ -130,7 +130,7 @@ var tests = {
   testShareDisabledOnActivation: function(next) {
     // starting on about:blank page, share should be visible but disabled when
     // adding provider
-    is(gBrowser.contentDocument.location.href, "about:blank");
+    is(gBrowser.currentURI.spec, "about:blank");
 
     // initialize the button into the navbar
     CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
