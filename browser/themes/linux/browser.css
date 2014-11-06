@@ -1591,7 +1591,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Loop */
-#loop-call-button {
+#loop-button-throttled {
   list-style-image: url("chrome://global/skin/loop/loop-call.png");
 }
 

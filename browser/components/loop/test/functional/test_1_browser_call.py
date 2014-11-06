@@ -47,7 +47,7 @@ class Test1BrowserCall(MarionetteTestCase):
         return self.marionette.find_element(by, locator)
 
     def switch_to_panel(self):
-        button = self.marionette.find_element(By.ID, "loop-call-button")
+        button = self.marionette.find_element(By.ID, "loop-button-throttled")
 
         # click the element
         button.click()
