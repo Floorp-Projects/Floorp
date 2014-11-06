@@ -4250,7 +4250,7 @@ Tab.prototype = {
 
           if(!this.readerEnabled)
             this.readerEnabled = true;
-        }, e => Cu.reportError(e));
+        }, e => Cu.reportError("Error parsing document from tab: " + e));
       }
     }
   },
