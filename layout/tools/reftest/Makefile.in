@@ -66,8 +66,8 @@ include $(topsrcdir)/build/automation-build.mk
 # so this seems to be the simplest way to make that happen.
 ifndef XPI_NAME
 make-xpi:
-	+$(MAKE) -C $(DEPTH)/netwerk/test/httpserver libs XPI_NAME=reftest
-	+$(MAKE) libs XPI_NAME=reftest
+	+$(MAKE) -C $(DEPTH)/netwerk/test/httpserver misc libs XPI_NAME=reftest
+	+$(MAKE) misc libs XPI_NAME=reftest
 copy-harness: make-xpi
 libs:: copy-harness
 endif
