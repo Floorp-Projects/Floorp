@@ -31,7 +31,6 @@
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
 #include "nsIWidget.h"                  // for nsIWidget, NS_NATIVE_WINDOW
 #include "nsRect.h"                     // for nsRect
-#include "nsRenderingContext.h"         // for nsRenderingContext
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"               // for nsDependentString
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl

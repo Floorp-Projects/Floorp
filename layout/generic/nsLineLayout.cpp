@@ -18,7 +18,6 @@
 #include "nsFloatManager.h"
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
