@@ -47,7 +47,6 @@ EXPORTS += [
     'gfxUserFontSet.h',
     'gfxUtils.h',
     'GraphicsFilter.h',
-    'nsSurfaceTexture.h',
     'RoundedRect.h',
 ]
 
@@ -239,7 +238,6 @@ UNIFIED_SOURCES += [
     'gfxSVGGlyphs.cpp',
     'gfxTeeSurface.cpp',
     'gfxUtils.cpp',
-    'nsSurfaceTexture.cpp',
     'nsUnicodeRange.cpp',
 ]
 
