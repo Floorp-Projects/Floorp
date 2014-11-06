@@ -21,14 +21,14 @@ const ARTICLE = {
 
 const ARTICLE_URI = Services.io.newURI(ARTICLE.url, null, null);
 
-add_task(function test_article_not_found() {
+add_task(function* test_article_not_found() {
   let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
 
   let article = yield Reader.getArticleFromCache(ARTICLE_URI);
   do_check_eq(article, null);
 });
 
-add_task(function test_store_article() {
+add_task(function* test_store_article() {
   let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
 
   yield Reader.storeArticleInCache(ARTICLE);
@@ -37,7 +37,7 @@ add_task(function test_store_article() {
   checkArticle(article);
 });
 
-add_task(function test_remove_article() {
+add_task(function* test_remove_article() {
   let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
 
   yield Reader.removeArticleFromCache(ARTICLE_URI);
@@ -46,13 +46,11 @@ add_task(function test_remove_article() {
   do_check_eq(article, null);
 });
 
-add_test(function test_parse_article() {
+add_task(function* test_parse_article() {
   let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
 
-  Reader.parseDocumentFromURL(ARTICLE.url, function parseCallback(article) {
-    checkArticle(article);
-    run_next_test();
-  });
+  let article = yield Reader._downloadAndParseDocument(ARTICLE.url);
+  checkArticle(article);
 });
 
 function checkArticle(article) {

@@ -4218,7 +4218,7 @@ Tab.prototype = {
           return;
 
         // Once document is fully loaded, parse it
-        Reader.parseDocumentFromTab(this, function (article) {
+        Reader.parseDocumentFromTab(this).then(article => {
           // The loaded page may have changed while we were parsing the document. 
           // Make sure we've got the current one.
           let uri = this.browser.currentURI;
@@ -4250,7 +4250,7 @@ Tab.prototype = {
 
           if(!this.readerEnabled)
             this.readerEnabled = true;
-        }.bind(this));
+        }, e => Cu.reportError(e));
       }
     }
   },
