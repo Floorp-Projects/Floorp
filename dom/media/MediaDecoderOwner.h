@@ -51,8 +51,9 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
+  // Must take ownership of MetadataTags aTags argument.
   virtual void MetadataLoaded(const MediaInfo* aInfo,
-                              const MetadataTags* aTags) = 0;
+                              nsAutoPtr<const MetadataTags> aTags) = 0;
 
   // Called by the decoder object, on the main thread,
   // when it has read the first frame of the video or audio.
