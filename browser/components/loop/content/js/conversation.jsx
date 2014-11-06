@@ -21,7 +21,7 @@ loop.conversation = (function(mozL10n) {
   var DesktopRoomView = loop.roomViews.DesktopRoomView;
 
   var IncomingCallView = React.createClass({
-    mixins: [sharedMixins.DropdownMenuMixin],
+    mixins: [sharedMixins.DropdownMenuMixin, sharedMixins.AudioMixin],
 
     propTypes: {
       model: React.PropTypes.object.isRequired,
@@ -185,8 +185,14 @@ loop.conversation = (function(mozL10n) {
    * incoming call views (bug 1088672).
    */
   var GenericFailureView = React.createClass({
+    mixins: [sharedMixins.AudioMixin],
+
     propTypes: {
       cancelCall: React.PropTypes.func.isRequired
+    },
+
+    componentDidMount: function() {
+      this.play("failure");
     },
 
     render: function() {
