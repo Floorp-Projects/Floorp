@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
-using struct IPC::MozCallForwardingOptions from "mozilla/dom/mobileconnection/MobileConnectionIPCSerializer.h";
+using nsMobileCallForwardingOptions from "mozilla/dom/mobileconnection/MobileConnectionIPCSerializer.h";
 
 namespace mozilla {
 namespace dom {
@@ -38,7 +38,7 @@ union AdditionalInformation {
   void_t;
   uint16_t;
   nsString[];
-  MozCallForwardingOptions[];
+  nsMobileCallForwardingOptions[];
 };
 
 } /* namespace telephony */
