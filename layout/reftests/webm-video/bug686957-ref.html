@@ -5,7 +5,7 @@
 <video src="frames.webm"
        preload="auto"
        id="v"
-       onloadedmetadata="document.getElementById('v').currentTime=document.getElementById('v').duration-1.0;document.getElementById('v').play();"
+       onloadeddata="document.getElementById('v').currentTime=document.getElementById('v').duration-1.0;document.getElementById('v').play();"
        onended="setTimeout(function(){document.documentElement.className = '';}, 0);"
 </video>
 </body>
