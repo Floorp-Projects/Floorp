@@ -882,7 +882,7 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
   return result;
 }
 
-nsresult
+void
 MediaCodecReader::Seek(int64_t aTime,
                        int64_t aStartTime,
                        int64_t aEndTime,
@@ -914,7 +914,8 @@ MediaCodecReader::Seek(int64_t aTime,
     options.setSeekTo(aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
     if (mVideoTrack.mSource->read(&source_buffer, &options) != OK ||
         source_buffer == nullptr) {
-      return NS_ERROR_FAILURE;
+      GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
+      return;
     }
     sp<MetaData> format = source_buffer->meta_data();
     if (format != nullptr) {
@@ -938,7 +939,7 @@ MediaCodecReader::Seek(int64_t aTime,
     MOZ_ASSERT(mAudioTrack.mTaskQueue->IsEmpty());
     DispatchAudioTask();
   }
-  return NS_OK;
+  GetCallback()->OnSeekCompleted(NS_OK);
 }
 
 bool

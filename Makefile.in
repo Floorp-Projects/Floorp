@@ -37,10 +37,10 @@ endif
 ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend here
 # otherwise the rule in rules.mk doesn't run early enough.
-libs binaries export tools:: CLOBBER $(configure_dir)/configure config.status backend.RecursiveMakeBackend
+$(TIERS) binaries:: CLOBBER $(configure_dir)/configure config.status backend.RecursiveMakeBackend
 ifndef JS_STANDALONE
 ifndef LIBXUL_SDK
-libs binaries export tools:: $(topsrcdir)/js/src/configure js/src/config.status
+$(TIERS) binaries:: $(topsrcdir)/js/src/configure js/src/config.status
 endif
 endif
 endif
@@ -174,7 +174,7 @@ endif
 endif
 
 default all::
-	$(call BUILDSTATUS,TIERS export $(if $(COMPILE_ENVIRONMENT),compile )libs tools $(if $(MOZ_AUTOMATION),$(MOZ_AUTOMATION_TIERS)))
+	$(call BUILDSTATUS,TIERS $(TIERS) $(if $(MOZ_AUTOMATION),$(MOZ_AUTOMATION_TIERS)))
 
 include $(topsrcdir)/config/rules.mk
 

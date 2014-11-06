@@ -174,6 +174,8 @@ namespace jit {
     _(InArray)                                                              \
     _(LoadElement)                                                          \
     _(LoadElementHole)                                                      \
+    _(LoadUnboxedObjectOrNull)                                              \
+    _(LoadUnboxedString)                                                    \
     _(StoreElement)                                                         \
     _(StoreElementHole)                                                     \
     _(StoreUnboxedObjectOrNull)                                             \

@@ -401,12 +401,7 @@ def generate_build_for_target(pkg_cfg, target, deps,
         build['preferencesBranch'] = jid
 
     if 'preferences-branch' in target_cfg:
-        # check it's a non-empty, valid branch name
-        preferencesBranch = target_cfg['preferences-branch']
-        if re.match('^[\w{@}-]+$', preferencesBranch):
-            build['preferencesBranch'] = preferencesBranch
-        elif not is_running_tests:
-            print >>sys.stderr, "IGNORING preferences-branch (not a valid branch name)"
+        build['preferencesBranch'] = target_cfg['preferences-branch']
 
     return build
 

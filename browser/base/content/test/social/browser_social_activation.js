@@ -86,9 +86,6 @@ function activateIFrameProvider(domain, callback) {
 }
 
 function waitForProviderLoad(cb) {
-  Services.obs.addObserver(function providerSet(subject, topic, data) {
-    Services.obs.removeObserver(providerSet, "social:provider-enabled");
-    info("social:provider-enabled observer was notified");
     waitForCondition(function() {
       let sbrowser = document.getElementById("social-sidebar-browser");
       let provider = SocialSidebar.provider;
@@ -104,7 +101,6 @@ function waitForProviderLoad(cb) {
       executeSoon(cb);
     },
     "waitForProviderLoad: provider profile was not set");
-  }, "social:provider-enabled", false);
 }
 
 
@@ -149,14 +145,15 @@ function activateOneProvider(manifest, finishActivation, aCallback) {
   let panel = document.getElementById("servicesInstall-notification");
   PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
     PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
-    info("servicesInstall-notification panel opened");
+    ok(!panel.hidden, "servicesInstall-notification panel opened");
     if (finishActivation)
       panel.button.click();
     else
       panel.closebutton.click();
   });
-
-  activateProvider(manifest.origin, function() {
+  PopupNotifications.panel.addEventListener("popuphidden", function _hidden() {
+    PopupNotifications.panel.removeEventListener("popuphidden", _hidden);
+    ok(panel.hidden, "servicesInstall-notification panel hidden");
     if (!finishActivation) {
       ok(panel.hidden, "activation panel is not showing");
       executeSoon(aCallback);
@@ -168,6 +165,11 @@ function activateOneProvider(manifest, finishActivation, aCallback) {
         executeSoon(aCallback);
       });
     }
+  });
+
+  // the test will continue as the popup events fire...
+  activateProvider(manifest.origin, function() {
+    info("waiting on activation panel to open/close...");
   });
 }
 

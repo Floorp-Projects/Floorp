@@ -4374,14 +4374,6 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               NS_STYLE_TEXT_SIZE_ADJUST_NONE, // none value
               0, 0);
 
-  // -moz-text-discard: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForControlCharacterVisibility(),
-              text->mControlCharacterVisibility,
-              canStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
-              parentText->mControlCharacterVisibility,
-              NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN, 0, 0, 0, 0);
-
   // text-orientation: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForTextOrientation(), text->mTextOrientation,
               canStoreInRuleTree,
@@ -4396,6 +4388,14 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
               parentText->mTextCombineUpright,
               NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE, 0, 0, 0, 0);
+
+  // -moz-text-discard: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForControlCharacterVisibility(),
+              text->mControlCharacterVisibility,
+              canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              parentText->mControlCharacterVisibility,
+              NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN, 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(Text, text)
 }

@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_test import MarionetteTestCase
+from marionette_test import MarionetteTestCase, skip_if_b2g
 from keys import Keys
 from errors import ElementNotVisibleException
 
@@ -49,6 +49,38 @@ class TestTyping(MarionetteTestCase):
         keyReporter = self.marionette.find_element("id", "keyReporter")
         keyReporter.send_keys("ABC DEF")
         self.assertEqual(keyReporter.get_attribute("value"), "ABC DEF")
+
+    @skip_if_b2g
+    def testCutAndPasteShortcuts(self):
+        # Test that modifier keys work via copy/paste shortcuts.
+        if self.marionette.session_capabilities['platformName'] == 'DARWIN':
+            mod_key = Keys.META
+        else:
+            mod_key = Keys.CONTROL
+
+        test_html = self.marionette.absolute_url("javascriptPage.html")
+        self.marionette.navigate(test_html)
+
+        keyReporter = self.marionette.find_element("id", "keyReporter")
+        self.assertEqual(keyReporter.get_attribute("value"), "")
+        keyReporter.send_keys("zyxwvutsr")
+        self.assertEqual(keyReporter.get_attribute("value"), "zyxwvutsr")
+
+        # Select all and cut.
+        keyReporter.send_keys(mod_key, 'a')
+        keyReporter.send_keys(mod_key, 'x')
+        self.assertEqual(keyReporter.get_attribute("value"), "")
+
+        self.marionette.set_context("chrome")
+        url_bar = self.marionette.find_element("id", "urlbar")
+
+        # Clear and paste.
+        url_bar.send_keys(mod_key, 'a')
+        url_bar.send_keys(Keys.BACK_SPACE)
+
+        self.assertEqual(url_bar.get_attribute("value"), "")
+        url_bar.send_keys(mod_key, 'v')
+        self.assertEqual(url_bar.get_attribute("value"), "zyxwvutsr")
 
     def testShouldBeAbleToTypeQuoteMarks(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")

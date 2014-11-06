@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 'use strict';
 
 const { emit } = require('sdk/event/core');
@@ -115,13 +114,32 @@ exports['test remove a listener'] = function(assert) {
     })
   });
 
-  target.off('message'); // must do nothing.
   emit(target, 'message');
   assert.deepEqual([ 1 ], actual, 'first listener called');
   emit(target, 'message');
   assert.deepEqual([ 1, 1, 2 ], actual, 'second listener called');
   emit(target, 'message');
   assert.deepEqual([ 1, 1, 2, 2, 2 ], actual, 'first listener removed');
+};
+
+exports['test .off() removes all listeners'] = function(assert) {
+  let target = EventTarget();
+  let actual = [];
+  target.on('message', function listener() {
+    actual.push(1);
+    target.on('message', function() {
+      target.removeListener('message', listener);
+      actual.push(2);
+    })
+  });
+
+  emit(target, 'message');
+  assert.deepEqual([ 1 ], actual, 'first listener called');
+  emit(target, 'message');
+  assert.deepEqual([ 1, 1, 2 ], actual, 'second listener called');
+  target.off();
+  emit(target, 'message');
+  assert.deepEqual([ 1, 1, 2 ], actual, 'target.off() removed all listeners');
 };
 
 exports['test error handling'] = function(assert) {
@@ -201,5 +219,4 @@ exports['test target is chainable'] = function (assert, done) {
   emit(emitter, 'data', 'message');
 };
 
-require('test').run(exports);
-
+require('sdk/test').run(exports);

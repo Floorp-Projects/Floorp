@@ -426,6 +426,10 @@ class IonBuilder
                                            int32_t fieldOffset,
                                            TypedObjectPrediction fieldTypeReprs,
                                            types::TemporaryTypeSet *resultTypes);
+    bool getPropTryReferencePropOfTypedObject(bool *emitted, MDefinition *typedObj,
+                                              int32_t fieldOffset,
+                                              TypedObjectPrediction fieldPrediction,
+                                              types::TemporaryTypeSet *resultTypes);
     bool getPropTryComplexPropOfTypedObject(bool *emitted, MDefinition *typedObj,
                                             int32_t fieldOffset,
                                             TypedObjectPrediction fieldTypeReprs,
@@ -505,10 +509,12 @@ class IonBuilder
                                 MDefinition *offset,
                                 TypedObjectPrediction derivedTypeDescrs,
                                 MDefinition *derivedTypeObj);
-    bool pushScalarLoadFromTypedObject(bool *emitted,
-                                       MDefinition *obj,
+    bool pushScalarLoadFromTypedObject(MDefinition *obj,
                                        MDefinition *offset,
                                        ScalarTypeDescr::Type type);
+    bool pushReferenceLoadFromTypedObject(MDefinition *typedObj,
+                                          MDefinition *byteOffset,
+                                          ReferenceTypeDescr::Type type);
     MDefinition *neuterCheck(MDefinition *obj);
 
     // jsop_setelem() helpers.
@@ -553,6 +559,11 @@ class IonBuilder
                                            TypedObjectPrediction objTypeReprs,
                                            TypedObjectPrediction elemTypeReprs,
                                            int32_t elemSize);
+    bool getElemTryReferenceElemOfTypedObject(bool *emitted,
+                                              MDefinition *obj,
+                                              MDefinition *index,
+                                              TypedObjectPrediction objPrediction,
+                                              TypedObjectPrediction elemPrediction);
     bool getElemTryComplexElemOfTypedObject(bool *emitted,
                                             MDefinition *obj,
                                             MDefinition *index,

@@ -46,7 +46,7 @@ this.MozSocialAPI = {
 function injectController(doc, topic, data) {
   try {
     let window = doc.defaultView;
-    if (!window || PrivateBrowsingUtils.isWindowPrivate(window))
+    if (!window || PrivateBrowsingUtils.isContentWindowPrivate(window))
       return;
 
     // Do not attempt to load the API into about: error pages
