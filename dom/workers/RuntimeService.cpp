@@ -181,16 +181,6 @@ bool gRuntimeServiceDuringInit = false;
 bool gTestPBackground = false;
 #endif // ENABLE_TESTS
 
-enum {
-  ID_Worker = 0,
-  ID_ChromeWorker,
-  ID_Event,
-  ID_MessageEvent,
-  ID_ErrorEvent,
-
-  ID_COUNT
-};
-
 class LiteralRebindingCString : public nsDependentCString
 {
 public:
