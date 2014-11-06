@@ -19,7 +19,6 @@ namespace layers {
 class Image;
 class PlanarYCbCrImage;
 class GrallocImage;
-class SurfaceTextureImage;
 }
 
 namespace gl {
@@ -98,7 +97,6 @@ class GLBlitHelper MOZ_FINAL
         BlitTexRect,
         ConvertGralloc,
         ConvertPlanarYCbCr,
-        ConvertSurfaceTexture
     };
     // The GLContext is the sole owner of the GLBlitHelper.
     GLContext* mGL;
@@ -111,8 +109,6 @@ class GLBlitHelper MOZ_FINAL
     GLuint mTex2DRectBlit_Program;
 
     GLint mYFlipLoc;
-
-    GLint mTextureTransformLoc;
 
     // Data for image blit path
     GLuint mTexExternalBlit_FragShader;
@@ -146,9 +142,6 @@ class GLBlitHelper MOZ_FINAL
     bool BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip = false);
 #endif
     bool BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage, bool yFlip = false);
-#ifdef MOZ_WIDGET_ANDROID
-    bool BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage);
-#endif
 
 public:
 
@@ -182,9 +175,6 @@ public:
                               const gfx::IntSize& destSize,
                               GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                               GLenum destTarget = LOCAL_GL_TEXTURE_2D);
-    bool BlitImageToFramebuffer(layers::Image* srcImage, const gfx::IntSize& destSize,
-                                GLuint destFB, bool yFlip = false, GLuint xoffset = 0,
-                                GLuint yoffset = 0, GLuint width = 0, GLuint height = 0);
     bool BlitImageToTexture(layers::Image* srcImage, const gfx::IntSize& destSize,
                             GLuint destTex, GLenum destTarget, bool yFlip = false, GLuint xoffset = 0,
                             GLuint yoffset = 0, GLuint width = 0, GLuint height = 0);
