@@ -57,7 +57,7 @@ MediaOmxCommonDecoder::CheckDecoderCanOffloadAudio()
 }
 
 void
-MediaOmxCommonDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo)
+MediaOmxCommonDecoder::FirstFrameLoaded(MediaInfo* aInfo)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MediaDecoder::FirstFrameLoaded(aInfo);

@@ -90,22 +90,19 @@ SourceBufferDecoder::IsMediaSeekable()
 }
 
 void
-SourceBufferDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
-                                    nsAutoPtr<MetadataTags> aTags)
+SourceBufferDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
 {
   MSE_DEBUG("SourceBufferDecoder(%p)::MetadataLoaded UNIMPLEMENTED", this);
 }
 
 void
-SourceBufferDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo)
+SourceBufferDecoder::FirstFrameLoaded(MediaInfo* aInfo)
 {
   MSE_DEBUG("SourceBufferDecoder(%p)::FirstFrameLoaded UNIMPLEMENTED", this);
 }
 
 void
-SourceBufferDecoder::QueueMetadata(int64_t aTime,
-                                   nsAutoPtr<MediaInfo> aInfo,
-                                   nsAutoPtr<MetadataTags> aTags)
+SourceBufferDecoder::QueueMetadata(int64_t aTime, MediaInfo* aInfo, MetadataTags* aTags)
 {
   MSE_DEBUG("SourceBufferDecoder(%p)::QueueMetadata UNIMPLEMENTED", this);
 }

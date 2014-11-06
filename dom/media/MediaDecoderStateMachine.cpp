@@ -2049,7 +2049,7 @@ MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
   nsAutoPtr<MediaInfo> info(new MediaInfo());
   *info = mInfo;
   nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-    new MetadataEventRunner(mDecoder, info, mMetadataTags);
+    new MetadataEventRunner(mDecoder, info.forget(), mMetadataTags.forget());
   NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 }
 
@@ -2165,12 +2165,12 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
     // FirstFrame event.
     event =
       new MetadataUpdatedEventRunner(mDecoder,
-                                     info,
-                                     mMetadataTags);
+                                     info.forget(),
+                                     mMetadataTags.forget());
   } else {
     // Inform the element that we've loaded the first frame.
     event =
-      new FirstFrameLoadedEventRunner(mDecoder, info);
+      new FirstFrameLoadedEventRunner(mDecoder, info.forget());
   }
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
@@ -3249,15 +3249,15 @@ bool MediaDecoderStateMachine::IsShutdown()
 }
 
 void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
-                                             nsAutoPtr<MediaInfo> aInfo,
-                                             nsAutoPtr<MetadataTags> aTags)
+                                             MediaInfo* aInfo,
+                                             MetadataTags* aTags)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   AssertCurrentThreadInMonitor();
   TimedMetadata* metadata = new TimedMetadata;
   metadata->mPublishTime = aPublishTime;
-  metadata->mInfo = aInfo.forget();
-  metadata->mTags = aTags.forget();
+  metadata->mInfo = aInfo;
+  metadata->mTags = aTags;
   mMetadataManager.QueueMetadata(metadata);
 }
 

@@ -2886,11 +2886,11 @@ void HTMLMediaElement::ProcessMediaFragmentURI()
 }
 
 void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
-                                      nsAutoPtr<const MetadataTags> aTags)
+                                      const MetadataTags* aTags)
 {
   mHasAudio = aInfo->HasAudio();
   mHasVideo = aInfo->HasVideo();
-  mTags = aTags.forget();
+  mTags = aTags;
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   DispatchAsyncEvent(NS_LITERAL_STRING("durationchange"));
