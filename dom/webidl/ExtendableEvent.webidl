@@ -7,12 +7,13 @@
  * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
  */
 
-// While not explicitly restricted to ServiceWorkerGlobalScope, it probably
-// should be. https://github.com/slightlyoff/ServiceWorker/issues/254
-[Constructor(DOMString type, optional EventInit eventInitDict),
- Func="mozilla::dom::workers::ServiceWorkerEventsVisible",
- Exposed=(ServiceWorker,Window)]
-interface InstallPhaseEvent : Event {
+[Constructor(DOMString type, optional ExtendableEventInit eventInitDict),
+ Exposed=ServiceWorker]
+interface ExtendableEvent : Event {
   // https://github.com/slightlyoff/ServiceWorker/issues/261
   void waitUntil(Promise<any> p);
+};
+
+dictionary ExtendableEventInit : EventInit {
+  // Defined for the forward compatibility across the derived events
 };
