@@ -528,8 +528,25 @@ TypeSet::addType(Type type, LifoAlloc *alloc)
 
         setBaseObjectCount(objectCount);
 
-        if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT)
-            goto unknownObject;
+        // Limit the number of objects we track. There is a different limit
+        // depending on whether the set only contains DOM objects, which can
+        // have many different classes and prototypes but are still optimizable
+        // by IonMonkey.
+        if (objectCount >= TYPE_FLAG_OBJECT_COUNT_LIMIT) {
+            JS_STATIC_ASSERT(TYPE_FLAG_DOMOBJECT_COUNT_LIMIT >= TYPE_FLAG_OBJECT_COUNT_LIMIT);
+            // Examining the entire type set is only required when we first hit
+            // the normal object limit.
+            if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT && !isDOMClass())
+                goto unknownObject;
+
+            // Make sure the newly added object is also a DOM object.
+            if (!object->clasp()->isDOMClass())
+                goto unknownObject;
+
+            // Limit the number of DOM objects.
+            if (objectCount == TYPE_FLAG_DOMOBJECT_COUNT_LIMIT)
+                goto unknownObject;
+        }
     }
 
     if (type.isTypeObject()) {
@@ -2055,7 +2072,7 @@ TemporaryTypeSet::getSharedTypedArrayType()
 }
 
 bool
-TemporaryTypeSet::isDOMClass()
+TypeSet::isDOMClass()
 {
     if (unknownObject())
         return false;

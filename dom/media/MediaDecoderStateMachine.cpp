@@ -212,6 +212,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDropAudioUntilNextDiscontinuity(false),
   mDropVideoUntilNextDiscontinuity(false),
   mDecodeToSeekTarget(false),
+  mWaitingForDecoderSeek(false),
   mCurrentTimeBeforeSeek(0),
   mLastFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNINITIALIZED),
   mDecodingFrozenAtStateMetadata(false),
@@ -1734,7 +1735,7 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
 
   MOZ_ASSERT(mState > DECODER_STATE_DECODING_METADATA);
 
-  if (IsAudioDecoding() && !mAudioRequestPending) {
+  if (IsAudioDecoding() && !mAudioRequestPending && !mWaitingForDecoderSeek) {
     RefPtr<nsIRunnable> task(
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DecodeAudio));
     nsresult rv = mDecodeTaskQueue->Dispatch(task);
@@ -1779,7 +1780,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 
   MOZ_ASSERT(mState > DECODER_STATE_DECODING_METADATA);
 
-  if (IsVideoDecoding() && !mVideoRequestPending) {
+  if (IsVideoDecoding() && !mVideoRequestPending && !mWaitingForDecoderSeek) {
     RefPtr<nsIRunnable> task(
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DecodeVideo));
     nsresult rv = mDecodeTaskQueue->Dispatch(task);
@@ -2136,22 +2137,34 @@ void MediaDecoderStateMachine::DecodeSeek()
       // the reader, since it could do I/O or deadlock some other way.
       res = mReader->ResetDecode();
       if (NS_SUCCEEDED(res)) {
-        res = mReader->Seek(seekTime,
-                            mStartTime,
-                            mEndTime,
-                            mCurrentTimeBeforeSeek);
+        mReader->Seek(seekTime,
+                      mStartTime,
+                      mEndTime,
+                      mCurrentTimeBeforeSeek);
       }
     }
     if (NS_FAILED(res)) {
       DecodeError();
       return;
     }
-
-    // We must decode the first samples of active streams, so we can determine
-    // the new stream time. So dispatch tasks to do that.
-    mDecodeToSeekTarget = true;
-    DispatchDecodeTasksIfNeeded();
+    mWaitingForDecoderSeek = true;
   }
+}
+
+void
+MediaDecoderStateMachine::OnSeekCompleted(nsresult aResult)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  mWaitingForDecoderSeek = false;
+  if (NS_FAILED(aResult)) {
+    DecodeError();
+    return;
+  }
+
+  // We must decode the first samples of active streams, so we can determine
+  // the new stream time. So dispatch tasks to do that.
+  mDecodeToSeekTarget = true;
+  DispatchDecodeTasksIfNeeded();
 }
 
 void

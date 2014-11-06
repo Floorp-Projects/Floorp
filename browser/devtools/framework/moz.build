@@ -18,6 +18,5 @@ EXTRA_JS_MODULES.devtools.framework += [
     'toolbox-highlighter-utils.js',
     'toolbox-hosts.js',
     'toolbox-options.js',
-    'toolbox-process-window.js',
     'toolbox.js',
 ]

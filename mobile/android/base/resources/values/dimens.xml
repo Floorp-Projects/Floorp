@@ -163,6 +163,21 @@
     <dimen name="arrow_popup_arrow_height">12dip</dimen>
     <dimen name="arrow_popup_arrow_offset">8dp</dimen>
 
+    <!-- TabHistoryItemRow dimensions. -->
+    <dimen name="tab_history_timeline_width">3dp</dimen>
+    <dimen name="tab_history_timeline_height">14dp</dimen>
+    <dimen name="tab_history_favicon_bg">32dp</dimen>
+    <dimen name="tab_history_favicon_padding">5dp</dimen>
+    <dimen name="tab_history_favicon_border_enabled">3dp</dimen>
+    <dimen name="tab_history_favicon_border_disabled">1dp</dimen>
+    <dimen name="tab_history_combo_margin_left">15dp</dimen>
+    <dimen name="tab_history_combo_margin_right">15dp</dimen>
+    <dimen name="tab_history_title_fading_width">50dp</dimen>
+    <dimen name="tab_history_title_margin_right">15dp</dimen>
+    <dimen name="tab_history_title_text_size">14sp</dimen>
+    <dimen name="tab_history_bg_width">2dp</dimen>
+    <dimen name="tab_history_border_padding">2dp</dimen>
+
     <!-- Find-In-Page dialog dimensions. -->
     <dimen name="find_in_page_text_margin_left">5dip</dimen>
     <dimen name="find_in_page_text_margin_right">12dip</dimen>

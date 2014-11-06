@@ -84,22 +84,6 @@ var CastingApps = {
     BrowserApp.deck.addEventListener("ended", this, true);
   },
 
-  uninit: function ca_uninit() {
-    BrowserApp.deck.removeEventListener("TabSelect", this, true);
-    BrowserApp.deck.removeEventListener("pageshow", this, true);
-    BrowserApp.deck.removeEventListener("playing", this, true);
-    BrowserApp.deck.removeEventListener("ended", this, true);
-
-    Services.obs.removeObserver(this, "Casting:Play");
-    Services.obs.removeObserver(this, "Casting:Pause");
-    Services.obs.removeObserver(this, "Casting:Stop");
-    Services.obs.removeObserver(this, "Casting:Mirror");
-    Services.obs.removeObserver(this, "ssdp-service-found");
-    Services.obs.removeObserver(this, "ssdp-service-lost");
-
-    NativeWindow.contextmenus.remove(this._castMenuId);
-  },
-
   _mirrorStarted: function(stopMirrorCallback) {
     this.stopMirrorCallback = stopMirrorCallback;
     NativeWindow.menu.update(this.mirrorStartMenuId, { visible: false });

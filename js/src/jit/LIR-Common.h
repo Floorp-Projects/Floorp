@@ -4473,6 +4473,48 @@ class LLoadElementT : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LLoadUnboxedPointerV : public LInstructionHelper<BOX_PIECES, 2, 0>
+{
+  public:
+    LIR_HEADER(LoadUnboxedPointerV)
+
+    LLoadUnboxedPointerV(const LAllocation &elements, const LAllocation &index) {
+        setOperand(0, elements);
+        setOperand(1, index);
+    }
+
+    const MLoadUnboxedObjectOrNull *mir() const {
+        return mir_->toLoadUnboxedObjectOrNull();
+    }
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
+    }
+};
+
+class LLoadUnboxedPointerT : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(LoadUnboxedPointerT)
+
+    LLoadUnboxedPointerT(const LAllocation &elements, const LAllocation &index) {
+        setOperand(0, elements);
+        setOperand(1, index);
+    }
+
+    const MLoadUnboxedString *mir() const {
+        return mir_->toLoadUnboxedString();
+    }
+    const LAllocation *elements() {
+        return getOperand(0);
+    }
+    const LAllocation *index() {
+        return getOperand(1);
+    }
+};
+
 // Store a boxed value to a dense array's element vector.
 class LStoreElementV : public LInstructionHelper<0, 2 + BOX_PIECES, 0>
 {

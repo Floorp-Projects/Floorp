@@ -9,6 +9,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.favicons.Favicons;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -56,6 +57,12 @@ public class FaviconView extends ImageView {
     // Size of the background rectangle.
     private final RectF mBackgroundRect;
 
+    // Type of the border whose value is defined in attrs.xml .
+    private final boolean isDominantBorderEnabled;
+
+    // boolean switch for overriding scaletype, whose value is defined in attrs.xml .
+    private final boolean isOverrideScaleTypeEnabled;
+
     // Initializing the static paints.
     static {
         sStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -67,7 +74,18 @@ public class FaviconView extends ImageView {
 
     public FaviconView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        setScaleType(ImageView.ScaleType.CENTER);
+        TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.FaviconView, 0, 0);
+
+        try {
+            isDominantBorderEnabled = a.getBoolean(R.styleable.FaviconView_dominantBorderEnabled, true);
+            isOverrideScaleTypeEnabled = a.getBoolean(R.styleable.FaviconView_overrideScaleType, true);
+        } finally {
+            a.recycle();
+        }
+
+        if (isOverrideScaleTypeEnabled) {
+            setScaleType(ImageView.ScaleType.CENTER);
+        }
 
         mStrokeRect = new RectF();
         mBackgroundRect = new RectF();
@@ -105,12 +123,14 @@ public class FaviconView extends ImageView {
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        // 27.5% transparent dominant color.
-        sBackgroundPaint.setColor(mDominantColor & 0x46FFFFFF);
-        canvas.drawRect(mStrokeRect, sBackgroundPaint);
+        if (isDominantBorderEnabled) {
+            // 27.5% transparent dominant color.
+            sBackgroundPaint.setColor(mDominantColor & 0x46FFFFFF);
+            canvas.drawRect(mStrokeRect, sBackgroundPaint);
 
-        sStrokePaint.setColor(mDominantColor);
-        canvas.drawRoundRect(mStrokeRect, sStrokeWidth, sStrokeWidth, sStrokePaint);
+            sStrokePaint.setColor(mDominantColor);
+            canvas.drawRoundRect(mStrokeRect, sStrokeWidth, sStrokeWidth, sStrokePaint);
+        }
     }
 
     /**

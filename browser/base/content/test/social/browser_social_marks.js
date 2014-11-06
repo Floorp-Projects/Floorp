@@ -43,15 +43,6 @@ function makeMarkProvider(origin) {
   }
 }
 
-function openWindowAndWaitForInit(callback) {
-  let topic = "browser-delayed-startup-finished";
-  let w = OpenBrowserWindow();
-  Services.obs.addObserver(function providerSet(subject, topic, data) {
-    Services.obs.removeObserver(providerSet, topic);
-    executeSoon(() => callback(w));
-  }, topic, false);
-}
-
 function test() {
   waitForExplicitFinish();
 
@@ -105,7 +96,14 @@ var tests = {
     let activationURL = manifest3.origin + "/browser/browser/base/content/test/social/social_activate.html"
     addTab(activationURL, function(tab) {
       let doc = tab.linkedBrowser.contentDocument;
-      Social.installProvider(doc, manifest3, function(addonManifest) {
+      let data = {
+        origin: doc.nodePrincipal.origin,
+        url: doc.location.href,
+        manifest: manifest3,
+        window: window
+      }
+
+      Social.installProvider(data, function(addonManifest) {
         // enable the provider so we know the button would have appeared
         SocialService.enableProvider(manifest3.origin, function(provider) {
           is(provider.origin, manifest3.origin, "provider is installed");
@@ -133,7 +131,14 @@ var tests = {
     let activationURL = manifest2.origin + "/browser/browser/base/content/test/social/social_activate.html"
     addTab(activationURL, function(tab) {
       let doc = tab.linkedBrowser.contentDocument;
-      Social.installProvider(doc, manifest2, function(addonManifest) {
+      let data = {
+        origin: doc.nodePrincipal.origin,
+        url: doc.location.href,
+        manifest: manifest2,
+        window: window
+      }
+
+      Social.installProvider(data, function(addonManifest) {
         SocialService.enableProvider(manifest2.origin, function(provider) {
           is(provider.origin, manifest2.origin, "provider is installed");
           let id = SocialMarks._toolbarHelper.idFromOrigin(manifest2.origin);
@@ -280,56 +285,6 @@ var tests = {
     });
   },
 
-  testMarkMicrodata: function(next) {
-    let provider = Social._getProviderFromOrigin(manifest2.origin);
-    let port = provider.getWorkerPort();
-    let target, testTab;
-
-    // browser_share tests microdata on the full page, this is testing a
-    // specific target element.
-    let expecting = JSON.stringify({
-      "url": "https://example.com/browser/browser/base/content/test/social/microdata.html",
-      "microdata": {
-        "items": [{
-            "types": ["http://schema.org/UserComments"],
-            "properties": {
-              "url": ["https://example.com/browser/browser/base/content/test/social/microdata.html#c2"],
-              "creator": [{
-                  "types": ["http://schema.org/Person"],
-                  "properties": {
-                    "name": ["Charlotte"]
-                  }
-                }
-              ],
-              "commentTime": ["2013-08-29"]
-            }
-          }
-        ]
-      }
-    });
-
-    port.onmessage = function (e) {
-      let topic = e.data.topic;
-      switch (topic) {
-        case "got-share-data-message":
-          is(JSON.stringify(e.data.result), expecting, "microdata data ok");
-          gBrowser.removeTab(testTab);
-          port.close();
-          next();
-          break;
-      }
-    }
-    port.postMessage({topic: "test-init"});
-
-    let url = "https://example.com/browser/browser/base/content/test/social/microdata.html"
-    addTab(url, function(tab) {
-      testTab = tab;
-      let doc = tab.linkedBrowser.contentDocument;
-      target = doc.getElementById("test-comment");
-      SocialMarks.markLink(manifest2.origin, url, target);
-    });
-  },
-
   testButtonOnDisable: function(next) {
     // enable the provider now
     let provider = Social._getProviderFromOrigin(manifest2.origin);
@@ -379,7 +334,14 @@ var tests = {
       let toolbar = document.getElementById("nav-bar");
       addTab(activationURL, function(tab) {
         let doc = tab.linkedBrowser.contentDocument;
-        Social.installProvider(doc, manifest, function(addonManifest) {
+        let data = {
+          origin: doc.nodePrincipal.origin,
+          url: doc.location.href,
+          manifest: manifest,
+          window: window
+        }
+
+        Social.installProvider(data, function(addonManifest) {
           // enable the provider so we know the button would have appeared
           SocialService.enableProvider(manifest.origin, function(provider) {
             waitForCondition(function() { return CustomizableUI.getWidget(id) },

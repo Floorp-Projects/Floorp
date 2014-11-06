@@ -50,13 +50,10 @@ exports.testTabRelativePath = function(assert, done) {
   const { merge } = require("sdk/util/object");
   const self = require("sdk/self");
 
-  let loader = Loader(module, null, null, {
-    modules: {
-      "sdk/self": merge({}, self, {
-        data: merge({}, self.data, fixtures)
-      })
-    }
-  });
+  const options = merge({}, require('@loader/options'),
+                        { prefixURI: require('./fixtures').url() });
+
+  let loader = Loader(module, null, options);
 
   let tabs = loader.require("sdk/tabs");
 
@@ -73,6 +70,7 @@ exports.testTabRelativePath = function(assert, done) {
             "Tab attach a contentScriptFile with relative path worked");
 
           tab.close(done);
+          loader.unload();
         }
       });
     }

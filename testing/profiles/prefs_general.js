@@ -216,6 +216,9 @@ user_pref('browser.contentHandlers.types.3.uri', 'http://test1.example.org/rss?u
 user_pref('browser.contentHandlers.types.4.uri', 'http://test1.example.org/rss?url=%%s')
 user_pref('browser.contentHandlers.types.5.uri', 'http://test1.example.org/rss?url=%%s')
 
+// Set dummy server for Android tiles testing.
+user_pref('browser.tiles.reportURL', 'http://%(server)s/tests/robocop/robocop_tiles.sjs')
+
 // We want to collect telemetry, but we don't want to send in the results.
 user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
 
@@ -266,3 +269,5 @@ user_pref("media.eme.enabled", true);
 
 // Don't prompt about e10s
 user_pref("browser.displayedE10SPrompt.1", 5);
+// Don't use auto-enabled e10s
+user_pref("browser.tabs.remote.autostart.1", false);

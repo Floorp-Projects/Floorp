@@ -13,15 +13,42 @@
 #include "xpcprivate.h"
 #include "WrapperFactory.h"
 
+#include "nsIRemoteTagService.h"
+
 using namespace js;
 using namespace JS;
 using namespace mozilla;
 using namespace mozilla::jsipc;
 
+struct AuxCPOWData
+{
+    ObjectId id;
+    bool isCallable;
+    bool isConstructor;
+
+    // The object tag is just some auxilliary information that clients can use
+    // however they see fit.
+    nsCString objectTag;
+
+    AuxCPOWData(ObjectId id, bool isCallable, bool isConstructor, const nsACString &objectTag)
+      : id(id),
+        isCallable(isCallable),
+        isConstructor(isConstructor),
+        objectTag(objectTag)
+    {}
+};
+
 WrapperOwner::WrapperOwner(JSRuntime *rt)
   : JavaScriptShared(rt),
     inactive_(false)
 {
+}
+
+static inline AuxCPOWData *
+AuxCPOWDataOf(JSObject *obj)
+{
+    MOZ_ASSERT(IsCPOW(obj));
+    return static_cast<AuxCPOWData *>(GetProxyExtra(obj, 1).toPrivate());
 }
 
 static inline WrapperOwner *
@@ -36,13 +63,9 @@ WrapperOwner::idOfUnchecked(JSObject *obj)
 {
     MOZ_ASSERT(IsCPOW(obj));
 
-    Value v = GetProxyExtra(obj, 1);
-    MOZ_ASSERT(v.isDouble());
-
-    ObjectId objId = ObjectId::deserialize(BitwiseCast<uint64_t>(v.toDouble()));
-    MOZ_ASSERT(!objId.isNull());
-
-    return objId;
+    AuxCPOWData *aux = AuxCPOWDataOf(obj);
+    MOZ_ASSERT(!aux->id.isNull());
+    return aux->id;
 }
 
 ObjectId
@@ -688,7 +711,12 @@ WrapperOwner::regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g)
 void
 CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
 {
+    AuxCPOWData *aux = AuxCPOWDataOf(proxy);
+
     OwnerOf(proxy)->drop(proxy);
+
+    if (aux)
+        delete aux;
 }
 
 void
@@ -700,47 +728,15 @@ CPOWProxyHandler::objectMoved(JSObject *proxy, const JSObject *old) const
 bool
 CPOWProxyHandler::isCallable(JSObject *proxy) const
 {
-    WrapperOwner *parent = OwnerOf(proxy);
-    if (!parent->active())
-        return false;
-    return parent->isCallable(proxy);
-}
-
-bool
-WrapperOwner::isCallable(JSObject *obj)
-{
-    ObjectId objId = idOf(obj);
-
-    bool callable = false;
-    if (!SendIsCallable(objId, &callable)) {
-        NS_WARNING("IPC isCallable() failed");
-        return false;
-    }
-
-    return callable;
+    AuxCPOWData *aux = AuxCPOWDataOf(proxy);
+    return aux->isCallable;
 }
 
 bool
 CPOWProxyHandler::isConstructor(JSObject *proxy) const
 {
-    WrapperOwner *parent = OwnerOf(proxy);
-    if (!parent->active())
-        return false;
-    return parent->isConstructor(proxy);
-}
-
-bool
-WrapperOwner::isConstructor(JSObject *obj)
-{
-    ObjectId objId = idOf(obj);
-
-    bool constructor = false;
-    if (!SendIsConstructor(objId, &constructor)) {
-        NS_WARNING("IPC isConstructor() failed");
-        return false;
-    }
-
-    return constructor;
+    AuxCPOWData *aux = AuxCPOWDataOf(proxy);
+    return aux->isConstructor;
 }
 
 void
@@ -813,6 +809,17 @@ IsWrappedCPOW(JSObject *obj)
     if (!unwrapped)
         return false;
     return IsCPOW(unwrapped);
+}
+
+void
+GetWrappedCPOWTag(JSObject *obj, nsACString &out)
+{
+    JSObject *unwrapped = js::UncheckedUnwrap(obj, true);
+    MOZ_ASSERT(IsCPOW(unwrapped));
+
+    AuxCPOWData *aux = AuxCPOWDataOf(unwrapped);
+    if (aux)
+        out = aux->objectTag;
 }
 
 nsresult
@@ -895,6 +902,24 @@ WrapperOwner::ok(JSContext *cx, const ReturnStatus &status)
     return false;
 }
 
+static RemoteObject
+MakeRemoteObject(JSContext *cx, ObjectId id, HandleObject obj)
+{
+    nsCString objectTag;
+
+    nsCOMPtr<nsIRemoteTagService> service =
+        do_GetService("@mozilla.org/addons/remote-tag-service;1");
+    if (service) {
+        RootedValue objVal(cx, ObjectValue(*obj));
+        service->GetRemoteObjectTag(objVal, objectTag);
+    }
+
+    return RemoteObject(id.serialize(),
+                        JS::IsCallable(obj),
+                        JS::IsConstructor(obj),
+                        objectTag);
+}
+
 bool
 WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *objVarp)
 {
@@ -916,7 +941,7 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     ObjectId id = objectIdMap(waiveXray).find(obj);
     if (!id.isNull()) {
         MOZ_ASSERT(id.hasXrayWaiver() == waiveXray);
-        *objVarp = RemoteObject(id.serialize());
+        *objVarp = MakeRemoteObject(cx, id, obj);
         return true;
     }
 
@@ -931,7 +956,7 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     if (!objectIdMap(waiveXray).add(cx, obj, id))
         return false;
 
-    *objVarp = RemoteObject(id.serialize());
+    *objVarp = MakeRemoteObject(cx, id, obj);
     return true;
 }
 
@@ -970,8 +995,13 @@ WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
         // Incref once we know the decref will be called.
         incref();
 
+        AuxCPOWData *aux = new AuxCPOWData(objId,
+                                           objVar.isCallable(),
+                                           objVar.isConstructor(),
+                                           objVar.objectTag());
+
         SetProxyExtra(obj, 0, PrivateValue(this));
-        SetProxyExtra(obj, 1, DoubleValue(BitwiseCast<double>(objId.serialize())));
+        SetProxyExtra(obj, 1, PrivateValue(aux));
     }
 
     if (!JS_WrapObject(cx, &obj))
