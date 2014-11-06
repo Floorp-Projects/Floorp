@@ -1477,6 +1477,7 @@ nsCSSBorderRenderer::DrawBorders()
     AppendRoundedRectToPath(builder, ToRect(borderInnerRect.rect), borderInnerRect.corners, false);
     RefPtr<Path> path = builder->Finish();
     mDrawTarget->Fill(path, color);
+    return;
   }
 
   bool hasCompositeColors;
