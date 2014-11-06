@@ -118,8 +118,8 @@ toolbar[brighttext] #downloads-indicator-counter {
 }
 
 /* URL bar and search bar*/
-.searchbar-textbox,
-#urlbar {
+#urlbar,
+#navigator-toolbox .searchbar-textbox {
   background-color: var(--url-and-searchbar-background-color) !important;
   background-image: none !important;
   color: var(--url-and-searchbar-color);
