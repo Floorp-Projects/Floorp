@@ -58,6 +58,21 @@ function runEmulatorCmdSafe(aCommand) {
   return deferred.promise;
 }
 
+/**
+ * Send stk proactive pdu.
+ *
+ * Fulfill params: (none)
+ * Reject params: (none)
+ *
+ * @param aPdu
+ *
+ * @return A deferred promise.
+ */
+function sendEmulatorStkPdu(aPdu) {
+  let cmd = "stk pdu " + aPdu;
+  return runEmulatorCmdSafe(cmd);
+}
+
 let workingFrame;
 let iccManager;
 
