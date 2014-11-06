@@ -8,7 +8,7 @@
 
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector, toolbox } = yield openInspectorForURL("about:blank");
 
   yield selectNode("body", inspector);

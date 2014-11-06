@@ -11,8 +11,8 @@
 const TEST_PAGE = "data:text/html;charset=utf-8," +
                   "<p id=\"one\">one</p><p id=\"two\">two</p>";
 
-let test = asyncTest(function*() {
-  let {inspector} = yield addTab(TEST_PAGE).then(openInspector);
+add_task(function*() {
+  let {inspector} = yield openInspectorForURL(TEST_PAGE);
 
   info("Making sure the markup-view frame is focused");
   inspector.markup._frame.focus();

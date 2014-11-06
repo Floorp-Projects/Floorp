@@ -57,7 +57,7 @@ const KEY_STATES = [
 const TEST_URL = TEST_URL_ROOT +
   "doc_inspector_search-suggestions.html";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);
   yield focusSearchBoxUsingShortcut(inspector.panelWin);
 

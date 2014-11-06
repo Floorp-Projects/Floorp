@@ -17,20 +17,15 @@ const Cc = Components.classes;
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
 const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/inspector/test/";
+const ROOT_TEST_DIR = getRootDirectory(gTestPath);
+const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 // All test are asynchronous
 waitForExplicitFinish();
 
-let tempScope = {};
-Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tempScope);
-let LayoutHelpers = tempScope.LayoutHelpers;
-
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
-let TargetFactory = devtools.TargetFactory;
-
-Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
-let console = tempScope.console;
+let {TargetFactory, require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
@@ -67,32 +62,23 @@ registerCleanupFunction(function*() {
 });
 
 /**
- * Define an async test based on a generator function
- */
-function asyncTest(generator) {
-  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
-}
-
-/**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
 let addTab = Task.async(function* (url) {
   info("Adding a new tab with URL: '" + url + "'");
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  let loaded = once(gBrowser.selectedBrowser, "load", true);
 
-  content.location = url;
-  yield loaded;
+  window.focus();
 
+  let tab = gBrowser.selectedTab = gBrowser.addTab(url);
+  let browser = tab.linkedBrowser;
+
+  info("Loading the helper frame script " + FRAME_SCRIPT_URL);
+  browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
+
+  yield once(browser, "load", true);
   info("URL '" + url + "' loading complete");
-
-  let def = promise.defer();
-  let isBlank = url == "about:blank";
-  waitForFocus(def.resolve, content, isBlank);
-
-  yield def.promise;
 
   return tab;
 });
@@ -136,46 +122,34 @@ function getNode(nodeOrSelector, options = {}) {
 /**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
- * @param {String|DOMNode} nodeOrSelector
+ * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector
  *        The instance of InspectorPanel currently loaded in the toolbox
  * @return a promise that resolves when the inspector is updated with the new
  * node
  */
-function selectAndHighlightNode(nodeOrSelector, inspector) {
-  info("Highlighting and selecting the node " + nodeOrSelector);
-
-  let node = getNode(nodeOrSelector);
-  let updated = inspector.toolbox.once("highlighter-ready");
-  inspector.selection.setNode(node, "test-highlight");
-  return updated;
-
+function selectAndHighlightNode(selector, inspector) {
+  info("Highlighting and selecting the node " + selector);
+  return selectNode(selector, inspector, "test-highlight");
 }
 
 /**
- * Set the inspector's current selection to a node or to the first match of the
- * given css selector.
- * @param {String|DOMNode|NodeFront} nodeOrSelector
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @param {String} reason
- *        Defaults to "test" which instructs the inspector not to highlight the
- *        node upon selection
- * @return a promise that resolves when the inspector is updated with the new
- * node
+ * Set the inspector's current selection to the first match of the given css
+ * selector
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @param {String} reason Defaults to "test" which instructs the inspector not
+ * to highlight the node upon selection
+ * @return {Promise} Resolves when the inspector is updated with the new node
  */
-function selectNode(nodeOrSelector, inspector, reason="test") {
-  info("Selecting the node " + nodeOrSelector);
-
-  let node = getNode(nodeOrSelector);
+let selectNode = Task.async(function*(selector, inspector, reason="test") {
+  info("Selecting the node for '" + selector + "'");
+  let nodeFront = yield getNodeFront(selector, inspector);
   let updated = inspector.once("inspector-updated");
-  if (node._form) {
-    inspector.selection.setNodeFront(node, reason);
-  } else {
-    inspector.selection.setNode(node, reason);
-  }
-  return updated;
-}
+  inspector.selection.setNodeFront(nodeFront, reason);
+  yield updated;
+});
 
 /**
  * Open the inspector in a tab with given URL.
@@ -251,25 +225,51 @@ function waitForToolboxFrameFocus(toolbox) {
   return def.promise;
 }
 
-function getActiveInspector()
-{
+function getActiveInspector() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   return gDevTools.getToolbox(target).getPanel("inspector");
 }
 
-function getNodeFront(node)
-{
-  let inspector = getActiveInspector();
-  return inspector.walker.frontForRawNode(node);
+/**
+ * Get the NodeFront for a node that matches a given css selector, via the
+ * protocol.
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {Promise} Resolves to the NodeFront instance
+ */
+function getNodeFront(selector, {walker}) {
+  if (selector._form) {
+    return selector;
+  }
+  return walker.querySelector(walker.rootNode, selector);
 }
 
-function getHighlighter()
-{
-  return gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container");
-}
+/**
+ * Get the NodeFront for a node that matches a given css selector inside a
+ * given iframe.
+ * @param {String|NodeFront} selector
+ * @param {String|NodeFront} frameSelector A selector that matches the iframe
+ * the node is in
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @param {String} reason Defaults to "test" which instructs the inspector not
+ * to highlight the node upon selection
+ * @return {Promise} Resolves when the inspector is updated with the new node
+ */
+let getNodeFrontInFrame = Task.async(function*(selector, frameSelector, inspector,
+                                             reason="test") {
+  let iframe = yield getNodeFront(frameSelector, inspector);
+  let {nodes} = yield inspector.walker.children(iframe);
+  return inspector.walker.querySelector(nodes[0], selector);
+});
 
-function getSimpleBorderRect() {
-  let {p1, p2, p3, p4} = getBoxModelStatus().border.points;
+/**
+ * Get the current rect of the border region of the box-model highlighter
+ */
+let getSimpleBorderRect = Task.async(function*(toolbox) {
+  let {border} = yield getBoxModelStatus(toolbox);
+  let {p1, p2, p3, p4} = border.points;
 
   return {
     top: p1.y,
@@ -277,64 +277,86 @@ function getSimpleBorderRect() {
     width: p2.x - p1.x,
     height: p4.y - p1.y
   };
+});
+
+function getHighlighterActorID(toolbox) {
+  return toolbox.highlighter.actorID;
 }
 
-function getBoxModelRoot() {
-  let highlighter = getHighlighter();
-  return highlighter.querySelector(".box-model-root");
-}
+/**
+ * Get the current positions and visibility of the various box-model highlighter
+ * elements.
+ */
+let getBoxModelStatus = Task.async(function*(toolbox) {
+  let isVisible = yield isHighlighting(toolbox);
 
-function getBoxModelStatus() {
-  let root = getBoxModelRoot();
-  let inspector = getActiveInspector();
+  let ret = {
+    visible: isVisible
+  };
+
+  for (let region of ["margin", "border", "padding", "content"]) {
+    let points = yield getPointsForRegion(region, toolbox);
+    let visible = yield isRegionHidden(region, toolbox);
+    ret[region] = {points, visible};
+  }
+
+  ret.guides = {};
+  for (let guide of ["top", "right", "bottom", "left"]) {
+    ret.guides[guide] = yield getGuideStatus(guide, toolbox);
+  }
+
+  return ret;
+});
+
+let getGuideStatus = Task.async(function*(location, toolbox) {
+  let actorID = getHighlighterActorID(toolbox);
+  let {data: hidden} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-guide-" + location,
+    name: "hidden",
+    actorID
+  });
+  let {data: x1} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-guide-" + location,
+    name: "x1",
+    actorID
+  });
+  let {data: y1} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-guide-" + location,
+    name: "y1",
+    actorID
+  });
+  let {data: x2} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-guide-" + location,
+    name: "x2",
+    actorID
+  });
+  let {data: y2} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-guide-" + location,
+    name: "y2",
+    actorID
+  });
 
   return {
-    visible: !root.hasAttribute("hidden"),
-    currentNode: inspector.walker.currentNode,
-    margin: {
-      points: getPointsForRegion("margin"),
-      visible: isRegionHidden("margin")
-    },
-    border: {
-      points: getPointsForRegion("border"),
-      visible: isRegionHidden("border")
-    },
-    padding: {
-      points: getPointsForRegion("padding"),
-      visible: isRegionHidden("padding")
-    },
-    content: {
-      points: getPointsForRegion("content"),
-      visible: isRegionHidden("content")
-    },
-    guides: {
-      top: getGuideStatus("top"),
-      right: getGuideStatus("right"),
-      bottom: getGuideStatus("bottom"),
-      left: getGuideStatus("left")
-    }
+    visible: !hidden,
+    x1: x1,
+    y1: y1,
+    x2: x2,
+    y2: y2
   };
-}
+});
 
-function getGuideStatus(location) {
-  let root = getBoxModelRoot();
-  let guide = root.querySelector(".box-model-guide-" + location);
+/**
+ * Get the coordinate (points attribute) from one of the polygon elements in the
+ * box model highlighter.
+ */
+let getPointsForRegion = Task.async(function*(region, toolbox) {
+  let {data: points} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-" + region,
+    name: "points",
+    actorID: getHighlighterActorID(toolbox)
+  });
+  points = points.split(/[, ]/);
 
-  return {
-    visible: !guide.hasAttribute("hidden"),
-    x1: guide.getAttribute("x1"),
-    y1: guide.getAttribute("y1"),
-    x2: guide.getAttribute("x2"),
-    y2: guide.getAttribute("y2")
-  };
-}
-
-function getPointsForRegion(region) {
-  let root = getBoxModelRoot();
-  let box = root.querySelector(".box-model-" + region);
-  let points = box.getAttribute("points").split(/[, ]/);
-
-  // We multiply each value by 1 to cast it into a number
   return {
     p1: {
       x: parseFloat(points[0]),
@@ -353,52 +375,72 @@ function getPointsForRegion(region) {
       y: parseFloat(points[7])
     }
   };
-}
-
-function isRegionHidden(region) {
-  let root = getBoxModelRoot();
-  let box = root.querySelector(".box-model-" + region);
-
-  return !box.hasAttribute("hidden");
-}
-
-function isHighlighting()
-{
-  let root = getBoxModelRoot();
-  return !root.hasAttribute("hidden");
-}
+});
 
 /**
- * Observes mutation changes on the box-model highlighter and returns a promise
- * that resolves when one of the attributes changes.
- * If an attribute changes in the box-model, it means its position/dimensions
- * got updated
+ * Is a given region polygon element of the box-model highlighter currently
+ * hidden?
  */
-function waitForBoxModelUpdate() {
-  let def = promise.defer();
-
-  let root = getBoxModelRoot();
-  let polygon = root.querySelector(".box-model-content");
-  let observer = new polygon.ownerDocument.defaultView.MutationObserver(() => {
-    observer.disconnect();
-    def.resolve();
+let isRegionHidden = Task.async(function*(region, toolbox) {
+  let {data: value} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-" + region,
+    name: "hidden",
+    actorID: getHighlighterActorID(toolbox)
   });
-  observer.observe(polygon, {attributes: true});
+  return value !== null;
+});
 
-  return def.promise;
-}
+/**
+ * Is the highlighter currently visible on the page?
+ */
+let isHighlighting = Task.async(function*(toolbox) {
+  let {data: value} = yield executeInContent("Test:GetHighlighterAttribute", {
+    nodeID: "box-model-root",
+    name: "hidden",
+    actorID: getHighlighterActorID(toolbox)
+  });
+  return value === null;
+});
 
-function getHighlitNode()
-{
-  if (isHighlighting()) {
-    let helper = new LayoutHelpers(window.content);
-    let points = getBoxModelStatus().content.points;
+let getHighlitNode = Task.async(function*(toolbox) {
+  let {visible, content} = yield getBoxModelStatus(toolbox);
+  let points = content.points;
+  if (visible) {
     let x = (points.p1.x + points.p2.x + points.p3.x + points.p4.x) / 4;
     let y = (points.p1.y + points.p2.y + points.p3.y + points.p4.y) / 4;
 
-    return helper.getElementFromPoint(window.content.document, x, y);
+    let {objects} = yield executeInContent("Test:ElementFromPoint", {x, y});
+    return objects.element;
   }
-}
+});
+
+/**
+ * Assert that the box-model highlighter's current position corresponds to the
+ * given node boxquads.
+ * @param {DOMNode|CPOW} node The node to get the boxQuads from
+ * @param {String} prefix An optional prefix for logging information to the
+ * console.
+ */
+let isNodeCorrectlyHighlighted = Task.async(function*(node, toolbox, prefix="") {
+  prefix += (prefix ? " " : "") + node.nodeName;
+  prefix += (node.id ? "#" + node.id : "");
+  prefix += (node.classList.length ? "." + [...node.classList].join(".") : "");
+  prefix += " ";
+
+  let boxModel = yield getBoxModelStatus(toolbox);
+  let {data: regions} = yield executeInContent("Test:GetAllAdjustedQuads", null,
+                                               {node});
+
+  for (let boxType of ["content", "padding", "border", "margin"]) {
+    let quads = regions[boxType];
+    for (let point in boxModel[boxType].points) {
+      is(boxModel[boxType].points[point].x, quads[point].x,
+        prefix + boxType + " point " + point + " x coordinate is correct");
+      is(boxModel[boxType].points[point].y, quads[point].y,
+        prefix + boxType + " point " + point + " y coordinate is correct");
+    }
+  }
+});
 
 function synthesizeKeyFromKeyTag(aKeyId, aDocument = null) {
   let document = aDocument || document;
@@ -442,31 +484,94 @@ let focusSearchBoxUsingShortcut = Task.async(function* (panelWin, callback) {
   }
 });
 
-function isNodeCorrectlyHighlighted(node, prefix="") {
-  let boxModel = getBoxModelStatus();
-  let helper = new LayoutHelpers(window.content);
-
-  prefix += (prefix ? " " : "") + node.nodeName;
-  prefix += (node.id ? "#" + node.id : "");
-  prefix += (node.classList.length ? "." + [...node.classList].join(".") : "");
-  prefix += " ";
-
-  for (let boxType of ["content", "padding", "border", "margin"]) {
-    let quads = helper.getAdjustedQuads(node, boxType);
-    for (let point in boxModel[boxType].points) {
-      is(boxModel[boxType].points[point].x, quads[point].x,
-        prefix + boxType + " point " + point + " x coordinate is correct");
-      is(boxModel[boxType].points[point].y, quads[point].y,
-        prefix + boxType + " point " + point + " y coordinate is correct");
-    }
-  }
+/**
+ * Get the MarkupContainer object instance that corresponds to the given
+ * NodeFront
+ * @param {NodeFront} nodeFront
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {MarkupContainer}
+ */
+function getContainerForNodeFront(nodeFront, {markup}) {
+  return markup.getContainer(nodeFront);
 }
 
-function getContainerForRawNode(markupView, rawNode)
-{
-  let front = markupView.walker.frontForRawNode(rawNode);
-  let container = markupView.getContainer(front);
+/**
+ * Get the MarkupContainer object instance that corresponds to the given
+ * selector
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {MarkupContainer}
+ */
+let getContainerForSelector = Task.async(function*(selector, inspector) {
+  info("Getting the markup-container for node " + selector);
+  let nodeFront = yield getNodeFront(selector, inspector);
+  let container = getContainerForNodeFront(nodeFront, inspector);
+  info("Found markup-container " + container);
   return container;
+});
+
+/**
+ * Simulate a mouse-over on the markup-container (a line in the markup-view)
+ * that corresponds to the selector passed.
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {Promise} Resolves when the container is hovered and the higlighter
+ * is shown on the corresponding node
+ */
+let hoverContainer = Task.async(function*(selector, inspector) {
+  info("Hovering over the markup-container for node " + selector);
+
+  let nodeFront = yield getNodeFront(selector, inspector);
+  let container = getContainerForNodeFront(nodeFront, inspector);
+
+  let highlit = inspector.toolbox.once("node-highlight");
+  EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousemove"},
+    inspector.markup.doc.defaultView);
+  return highlit;
+});
+
+/**
+ * Simulate a click on the markup-container (a line in the markup-view)
+ * that corresponds to the selector passed.
+ * @param {String|NodeFront} selector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return {Promise} Resolves when the node has been selected.
+ */
+let clickContainer = Task.async(function*(selector, inspector) {
+  info("Clicking on the markup-container for node " + selector);
+
+  let nodeFront = yield getNodeFront(selector, inspector);
+  let container = getContainerForNodeFront(nodeFront, inspector);
+
+  let updated = inspector.once("inspector-updated");
+  EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousedown"},
+    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mouseup"},
+    inspector.markup.doc.defaultView);
+  return updated;
+});
+
+/**
+ * Simulate the mouse leaving the markup-view area
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
+ * @return a promise when done
+ */
+function mouseLeaveMarkupView(inspector) {
+  info("Leaving the markup-view area");
+  let def = promise.defer();
+
+  // Find another element to mouseover over in order to leave the markup-view
+  let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
+
+  EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
+    inspector.toolbox.doc.defaultView);
+  executeSoon(def.resolve);
+
+  return def.promise;
 }
 
 /**
@@ -498,4 +603,51 @@ function once(target, eventName, useCapture=false) {
   }
 
   return deferred.promise;
+}
+
+/**
+ * Wait for a content -> chrome message on the message manager (the window
+ * messagemanager is used).
+ * @param {String} name The message name
+ * @return {Promise} A promise that resolves to the response data when the
+ * message has been received
+ */
+function waitForContentMessage(name) {
+  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+
+  let def = promise.defer();
+  mm.addMessageListener(name, function onMessage(msg) {
+    mm.removeMessageListener(name, onMessage);
+    def.resolve(msg);
+  });
+  return def.promise;
+}
+
+function wait(ms) {
+  let def = promise.defer();
+  setTimeout(def.resolve, ms);
+  return def.promise;
+}
+
+/**
+ * Send an async message to the frame script (chrome -> content) and wait for a
+ * response message with the same name (content -> chrome).
+ * @param {String} name The message name. Should be one of the messages defined
+ * in doc_frame_script.js
+ * @param {Object} data Optional data to send along
+ * @param {Object} objects Optional CPOW objects to send along
+ * @param {Boolean} expectResponse If set to false, don't wait for a response
+ * with the same name from the content script. Defaults to true.
+ * @return {Promise} Resolves to the response data if a response is expected,
+ * immediately resolves otherwise
+ */
+function executeInContent(name, data={}, objects={}, expectResponse=true) {
+  let mm = gBrowser.selectedTab.linkedBrowser.messageManager;
+
+  mm.sendAsyncMessage(name, data, objects);
+  if (expectResponse) {
+    return waitForContentMessage(name);
+  } else {
+    return promise.resolve();
+  }
 }
