@@ -6,7 +6,7 @@
  */
 
 function test() {
-  initDebugger("about:blank").then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger("about:blank").then(([aTab,, aPanel]) => {
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
