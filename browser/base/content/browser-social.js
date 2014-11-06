@@ -639,18 +639,31 @@ SocialShare = {
     // endpoints (e.g. oexchange) that do not support additional
     // socialapi functionality.  One tweak is that we shoot an event
     // containing the open graph data.
+    let _dataFn;
     if (!pageData || sharedURI == gBrowser.currentURI) {
-      pageData = OpenGraphBuilder.getData(gBrowser);
-      if (graphData) {
-        // overwrite data retreived from page with data given to us as a param
-        for (let p in graphData) {
-          pageData[p] = graphData[p];
+      messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
+        messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+        let pageData = msg.json;
+        if (graphData) {
+          // overwrite data retreived from page with data given to us as a param
+          for (let p in graphData) {
+            pageData[p] = graphData[p];
+          }
         }
-      }
+        this.sharePage(providerOrigin, pageData, target);
+      });
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetPageData");
+      return;
     }
     // if this is a share of a selected item, get any microdata
     if (!pageData.microdata && target) {
-      pageData.microdata = OpenGraphBuilder.getMicrodata(gBrowser, target);
+      messageManager.addMessageListener("Social:PageDataResult", _dataFn = (msg) => {
+        messageManager.removeMessageListener("Social:PageDataResult", _dataFn);
+        pageData.microdata = msg.data;
+        this.sharePage(providerOrigin, pageData, target);
+      });
+      gBrowser.selectedBrowser.messageManager.sendAsyncMessage("Social:GetMicrodata", null, target);
+      return;
     }
     this.currentShare = pageData;
 
