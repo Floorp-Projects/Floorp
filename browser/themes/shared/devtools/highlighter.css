@@ -1,0 +1,172 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+  The :-moz-native-anonymous selector prefix prevents the styles defined here
+  from impacting web content.
+  Indeed, this pseudo-class is only available to chrome code.
+  This stylesheet is loaded as a ua stylesheet via the addon sdk, so having this
+  pseudo-class is important.
+  Having bug 1086532 fixed would make it possible to load this stylesheet in a
+  <style scoped> node instead, directly in the native anonymous container
+  element.
+*/
+
+:-moz-native-anonymous .highlighter-container {
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+:-moz-native-anonymous .highlighter-container [hidden] {
+  display: none;
+}
+
+/* Box model highlighter */
+
+:-moz-native-anonymous .box-model-container {
+  opacity: 0.4;
+}
+
+:-moz-native-anonymous .box-model-content {
+  fill: #80d4ff;
+}
+
+:-moz-native-anonymous .box-model-padding {
+  fill: #66cc52;
+}
+
+:-moz-native-anonymous .box-model-border {
+  fill: #ffe431;
+}
+
+:-moz-native-anonymous .box-model-margin {
+  fill: #d89b28;
+}
+
+:-moz-native-anonymous .box-model-content,
+:-moz-native-anonymous .box-model-padding,
+:-moz-native-anonymous .box-model-border,
+:-moz-native-anonymous .box-model-margin {
+  stroke: none;
+}
+
+:-moz-native-anonymous .box-model-guide-top,
+:-moz-native-anonymous .box-model-guide-right,
+:-moz-native-anonymous .box-model-guide-bottom,
+:-moz-native-anonymous .box-model-guide-left {
+  stroke: #08C;
+  stroke-dasharray: 5 3;
+  shape-rendering: crispEdges;
+}
+
+/* Highlighter - Node Infobar */
+
+:-moz-native-anonymous .box-model-nodeinfobar-container {
+  position: absolute;
+  max-width: 95%;
+
+  font: message-box;
+  font-size: 11px;
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar {
+  position: relative;
+
+  /* Centering the nodeinfobar in the container */
+  left: -50%;
+
+  padding: 5px;
+  min-width: 75px;
+
+  border-radius: 3px;
+  background: hsl(214,13%,24%) no-repeat padding-box;
+
+  color: hsl(216,33%,97%);
+  text-shadow: none;
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-container[hide-arrow] > .box-model-nodeinfobar {
+  margin: 7px 0;
+}
+
+/* Arrows */
+
+:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:before {
+  content: "";
+  display: none;
+
+  position: absolute;
+  left: calc(50% - 14px);
+
+  height: 0;
+  width: 0;
+  border: 14px solid hsl(210,2%,22%);
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:before {
+  border-bottom: 0;
+  top: 100%;
+  display: block;
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:before {
+  border-top: 0;
+  bottom: 100%;
+  display: block;
+}
+
+/* Text container */
+
+:-moz-native-anonymous .box-model-nodeinfobar-text {
+  overflow: hidden;
+  white-space: nowrap;
+  direction: ltr;
+  text-align: center;
+  padding-bottom: 1px;
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-tagname {
+  color: hsl(285,100%,75%);
+  text-transform: lowercase;
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-id {
+  color: hsl(103,46%,54%);
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-classes,
+:-moz-native-anonymous .box-model-nodeinfobar-pseudo-classes {
+  color: hsl(200,74%,57%);
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-dimensions {
+  color: hsl(210,30%,85%);
+  -moz-border-start: 1px solid #5a6169;
+  -moz-margin-start: 6px;
+  -moz-padding-start: 6px;
+}
+
+/* Css transform highlighter */
+
+:-moz-native-anonymous .css-transform-transformed {
+  fill: #80d4ff;
+  opacity: 0.8;
+}
+
+:-moz-native-anonymous .css-transform-untransformed {
+  fill: #66cc52;
+  opacity: 0.8;
+}
+
+:-moz-native-anonymous .css-transform-transformed,
+:-moz-native-anonymous .css-transform-untransformed,
+:-moz-native-anonymous .css-transform-line {
+  stroke: #08C;
+  stroke-dasharray: 5 3;
+  stroke-width: 2;
+}
