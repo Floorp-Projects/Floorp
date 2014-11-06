@@ -505,7 +505,7 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx,
     return result;
 }
 
-const Class UnsizedArrayTypeDescr::class_ = {
+const Class ArrayTypeDescr::class_ = {
     "ArrayType",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     JS_PropertyStub,
@@ -518,24 +518,7 @@ const Class UnsizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    OutlineTypedObject::constructUnsized,
-    nullptr
-};
-
-const Class SizedArrayTypeDescr::class_ = {
-    "ArrayType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    JS_PropertyStub,
-    JS_DeletePropertyStub,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    nullptr,
-    nullptr,
-    nullptr,
-    TypedObject::constructSized,
+    TypedObject::construct,
     nullptr
 };
 
@@ -545,7 +528,6 @@ const JSPropertySpec ArrayMetaTypeDescr::typeObjectProperties[] = {
 
 const JSFunctionSpec ArrayMetaTypeDescr::typeObjectMethods[] = {
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
-    JS_FN("dimension", UnsizedArrayTypeDescr::dimension, 1, 0),
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_SELF_HOSTED_FN("build",    "TypedObjectArrayTypeBuild", 3, 0),
@@ -577,11 +559,9 @@ bool
 js::CreateUserSizeAndAlignmentProperties(JSContext *cx, HandleTypeDescr descr)
 {
     // If data is transparent, also store the public slots.
-    if (descr->transparent() && descr->is<SizedTypeDescr>()) {
-        Rooted<SizedTypeDescr*> sizedDescr(cx, &descr->as<SizedTypeDescr>());
-
+    if (descr->transparent()) {
         // byteLength
-        RootedValue typeByteLength(cx, Int32Value(sizedDescr->size()));
+        RootedValue typeByteLength(cx, Int32Value(descr->size()));
         if (!JSObject::defineProperty(cx, descr, cx->names().byteLength,
                                       typeByteLength,
                                       nullptr, nullptr,
@@ -591,7 +571,7 @@ js::CreateUserSizeAndAlignmentProperties(JSContext *cx, HandleTypeDescr descr)
         }
 
         // byteAlignment
-        RootedValue typeByteAlignment(cx, Int32Value(sizedDescr->alignment()));
+        RootedValue typeByteAlignment(cx, Int32Value(descr->alignment()));
         if (!JSObject::defineProperty(cx, descr, cx->names().byteAlignment,
                                       typeByteAlignment,
                                       nullptr, nullptr,
@@ -619,42 +599,39 @@ js::CreateUserSizeAndAlignmentProperties(JSContext *cx, HandleTypeDescr descr)
         }
     }
 
-    // variable -- true for unsized arrays
-    RootedValue variable(cx, BooleanValue(!descr->is<SizedTypeDescr>()));
-    if (!JSObject::defineProperty(cx, descr, cx->names().variable,
-                                  variable,
-                                  nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
-    {
-        return false;
-    }
-
     return true;
 }
 
-template<class T>
-T *
+ArrayTypeDescr *
 ArrayMetaTypeDescr::create(JSContext *cx,
                            HandleObject arrayTypePrototype,
-                           HandleSizedTypeDescr elementType,
+                           HandleTypeDescr elementType,
                            HandleAtom stringRepr,
-                           int32_t size)
+                           int32_t size,
+                           int32_t length)
 {
-    Rooted<T*> obj(cx);
-    obj = NewObjectWithProto<T>(cx, arrayTypePrototype, nullptr, SingletonObject);
+    Rooted<ArrayTypeDescr*> obj(cx);
+    obj = NewObjectWithProto<ArrayTypeDescr>(cx, arrayTypePrototype, nullptr, SingletonObject);
     if (!obj)
         return nullptr;
 
-    obj->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(T::Kind));
+    obj->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(ArrayTypeDescr::Kind));
     obj->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
     obj->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(elementType->alignment()));
     obj->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(size));
     obj->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(elementType->opaque()));
     obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE, ObjectValue(*elementType));
+    obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH, Int32Value(length));
 
     RootedValue elementTypeVal(cx, ObjectValue(*elementType));
     if (!JSObject::defineProperty(cx, obj, cx->names().elementType,
                                   elementTypeVal, nullptr, nullptr,
+                                  JSPROP_READONLY | JSPROP_PERMANENT))
+        return nullptr;
+
+    RootedValue lengthValue(cx, NumberValue(length));
+    if (!JSObject::defineProperty(cx, obj, cx->names().length,
+                                  lengthValue, nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
         return nullptr;
 
@@ -687,25 +664,42 @@ ArrayMetaTypeDescr::construct(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject arrayTypeGlobal(cx, &args.callee());
 
-    // Expect one argument which is a sized type object
-    if (args.length() < 1) {
+    // Expect two arguments. The first is a type object, the second is a length.
+    if (args.length() < 2) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
-                             "ArrayType", "0", "");
+                             "ArrayType", "1", "");
         return false;
     }
 
-    if (!args[0].isObject() || !args[0].toObject().is<SizedTypeDescr>()) {
+    if (!args[0].isObject() || !args[0].toObject().is<TypeDescr>()) {
         ReportCannotConvertTo(cx, args[0], "ArrayType element specifier");
         return false;
     }
 
-    Rooted<SizedTypeDescr*> elementType(cx);
-    elementType = &args[0].toObject().as<SizedTypeDescr>();
+    if (!args[1].isInt32() || args[1].toInt32() < 0) {
+        ReportCannotConvertTo(cx, args[1], "ArrayType length specifier");
+        return false;
+    }
 
-    // Construct a canonical string `new ArrayType(<elementType>)`:
+    Rooted<TypeDescr*> elementType(cx, &args[0].toObject().as<TypeDescr>());
+
+    int32_t length = args[1].toInt32();
+
+    // Compute the byte size.
+    CheckedInt32 size = CheckedInt32(elementType->size()) * length;
+    if (!size.isValid()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                             JSMSG_TYPEDOBJECT_TOO_BIG);
+        return false;
+    }
+
+    // Construct a canonical string `new ArrayType(<elementType>, N)`:
     StringBuffer contents(cx);
     contents.append("new ArrayType(");
     contents.append(&elementType->stringRepr());
+    contents.append(", ");
+    if (!NumberValueToStringBuffer(cx, NumberValue(length), contents))
+        return false;
     contents.append(")");
     RootedAtom stringRepr(cx, contents.finishAtom());
     if (!stringRepr)
@@ -717,89 +711,9 @@ ArrayMetaTypeDescr::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     // Create the instance of ArrayType
-    Rooted<UnsizedArrayTypeDescr *> obj(cx);
-    obj = create<UnsizedArrayTypeDescr>(cx, arrayTypePrototype, elementType,
-                                        stringRepr, 0);
+    Rooted<ArrayTypeDescr *> obj(cx);
+    obj = create(cx, arrayTypePrototype, elementType, stringRepr, size.value(), length);
     if (!obj)
-        return false;
-
-    // Add `length` property, which is undefined for an unsized array.
-    if (!JSObject::defineProperty(cx, obj, cx->names().length,
-                                  UndefinedHandleValue, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
-        return false;
-
-    args.rval().setObject(*obj);
-    return true;
-}
-
-/*static*/ bool
-UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
-{
-    // Expect that the `this` pointer is an unsized array type
-    // and the first argument is an integer size.
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1 ||
-        !args.thisv().isObject() ||
-        !args.thisv().toObject().is<UnsizedArrayTypeDescr>() ||
-        !args[0].isInt32() ||
-        args[0].toInt32() < 0)
-    {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             JSMSG_TYPEDOBJECT_ARRAYTYPE_BAD_ARGS);
-        return false;
-    }
-
-    // Extract arguments.
-    Rooted<UnsizedArrayTypeDescr*> unsizedTypeDescr(cx);
-    unsizedTypeDescr = &args.thisv().toObject().as<UnsizedArrayTypeDescr>();
-    int32_t length = args[0].toInt32();
-    Rooted<SizedTypeDescr*> elementType(cx, &unsizedTypeDescr->elementType());
-
-    // Compute the size.
-    CheckedInt32 size = CheckedInt32(elementType->size()) * length;
-    if (!size.isValid()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                             JSMSG_TYPEDOBJECT_TOO_BIG);
-        return false;
-    }
-
-    // Construct a canonical string `new ArrayType(<elementType>).dimension(N)`:
-    StringBuffer contents(cx);
-    contents.append("new ArrayType(");
-    contents.append(&elementType->stringRepr());
-    contents.append(").dimension(");
-    if (!NumberValueToStringBuffer(cx, NumberValue(length), contents))
-        return false;
-    contents.append(")");
-    RootedAtom stringRepr(cx, contents.finishAtom());
-    if (!stringRepr)
-        return false;
-
-    // Create the sized type object.
-    Rooted<SizedArrayTypeDescr*> obj(cx);
-    obj = ArrayMetaTypeDescr::create<SizedArrayTypeDescr>(cx, unsizedTypeDescr,
-                                                          elementType,
-                                                          stringRepr, size.value());
-    if (!obj)
-        return false;
-
-    obj->initReservedSlot(JS_DESCR_SLOT_SIZED_ARRAY_LENGTH,
-                          Int32Value(length));
-
-    // Add `length` property.
-    RootedValue lengthVal(cx, Int32Value(length));
-    if (!JSObject::defineProperty(cx, obj, cx->names().length,
-                                  lengthVal, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
-        return false;
-
-    // Add `unsized` property, which is a link from the sized
-    // array to the unsized array.
-    RootedValue unsizedTypeDescrValue(cx, ObjectValue(*unsizedTypeDescr));
-    if (!JSObject::defineProperty(cx, obj, cx->names().unsized,
-                                  unsizedTypeDescrValue, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
         return false;
 
     args.rval().setObject(*obj);
@@ -812,7 +726,7 @@ js::IsTypedObjectArray(JSObject &obj)
     if (!obj.is<TypedObject>())
         return false;
     TypeDescr& d = obj.as<TypedObject>().typeDescr();
-    return d.is<SizedArrayTypeDescr>() || d.is<UnsizedArrayTypeDescr>();
+    return d.is<ArrayTypeDescr>();
 }
 
 /*********************************
@@ -832,7 +746,7 @@ const Class StructTypeDescr::class_ = {
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
-    TypedObject::constructSized,
+    TypedObject::construct,
     nullptr  /* trace */
 };
 
@@ -893,7 +807,7 @@ StructMetaTypeDescr::create(JSContext *cx,
 
     RootedValue fieldTypeVal(cx);
     RootedId id(cx);
-    Rooted<SizedTypeDescr*> fieldType(cx);
+    Rooted<TypeDescr*> fieldType(cx);
     for (unsigned int i = 0; i < ids.length(); i++) {
         id = ids[i];
 
@@ -909,7 +823,7 @@ StructMetaTypeDescr::create(JSContext *cx,
         // The value should be a type descriptor.
         if (!JSObject::getGeneric(cx, fields, fields, id, &fieldTypeVal))
             return nullptr;
-        fieldType = ToObjectIf<SizedTypeDescr>(fieldTypeVal);
+        fieldType = ToObjectIf<TypeDescr>(fieldTypeVal);
         if (!fieldType) {
             ReportCannotConvertTo(cx, fieldTypeVal, "StructType field specifier");
             return nullptr;
@@ -1168,22 +1082,22 @@ StructTypeDescr::maybeForwardedFieldOffset(size_t index) const
     return AssertedCast<size_t>(fieldOffsets.getDenseElement(index).toInt32());
 }
 
-SizedTypeDescr&
+TypeDescr&
 StructTypeDescr::fieldDescr(size_t index) const
 {
     NativeObject &fieldDescrs = fieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
-    return fieldDescrs.getDenseElement(index).toObject().as<SizedTypeDescr>();
+    return fieldDescrs.getDenseElement(index).toObject().as<TypeDescr>();
 }
 
-SizedTypeDescr&
+TypeDescr&
 StructTypeDescr::maybeForwardedFieldDescr(size_t index) const
 {
     NativeObject &fieldDescrs = maybeForwardedFieldInfoObject(JS_DESCR_SLOT_STRUCT_FIELD_TYPES);
     MOZ_ASSERT(index < fieldDescrs.getDenseInitializedLength());
     JSObject &descr =
         *MaybeForwarded(&fieldDescrs.getDenseElement(index).toObject());
-    return descr.as<SizedTypeDescr>();
+    return descr.as<TypeDescr>();
 }
 
 /******************************************************************************
@@ -1468,9 +1382,7 @@ TypedObject::offset() const
 int32_t
 TypedObject::length() const
 {
-    if (typeDescr().is<SizedArrayTypeDescr>())
-        return typeDescr().as<SizedArrayTypeDescr>().length();
-    return as<OutlineTypedObject>().unsizedLength();
+    return typeDescr().as<ArrayTypeDescr>().length();
 }
 
 uint8_t *
@@ -1617,18 +1529,14 @@ OutlineTypedObject::createUnattachedWithClass(JSContext *cx,
     if (!proto)
         return nullptr;
 
-    gc::AllocKind allocKind = allocKindForTypeDescriptor(type);
     NewObjectKind newKind = (heap == gc::TenuredHeap) ? MaybeSingletonObject : GenericObject;
-    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, nullptr, allocKind, newKind);
+    JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, nullptr, gc::FINALIZE_OBJECT0, newKind);
     if (!obj)
         return nullptr;
 
     OutlineTypedObject *typedObj = &obj->as<OutlineTypedObject>();
 
     typedObj->setOwnerAndData(nullptr, nullptr);
-    if (type->kind() == type::UnsizedArray)
-        typedObj->setUnsizedLength(length);
-
     return typedObj;
 }
 
@@ -1668,7 +1576,7 @@ OutlineTypedObject::attach(JSContext *cx, TypedObject &typedObj, int32_t offset)
 }
 
 // Returns a suitable JS_TYPEDOBJ_SLOT_LENGTH value for an instance of
-// the type `type`. `type` must not be an unsized array.
+// the type `type`.
 static int32_t
 TypedObjLengthFromType(TypeDescr &descr)
 {
@@ -1679,17 +1587,14 @@ TypedObjLengthFromType(TypeDescr &descr)
       case type::Simd:
         return 0;
 
-      case type::SizedArray:
-        return descr.as<SizedArrayTypeDescr>().length();
-
-      case type::UnsizedArray:
-        MOZ_CRASH("TypedObjLengthFromType() invoked on unsized type");
+      case type::Array:
+        return descr.as<ArrayTypeDescr>().length();
     }
     MOZ_CRASH("Invalid kind");
 }
 
 /*static*/ OutlineTypedObject *
-OutlineTypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
+OutlineTypedObject::createDerived(JSContext *cx, HandleTypeDescr type,
                                   HandleTypedObject typedObj, int32_t offset)
 {
     MOZ_ASSERT(offset <= typedObj->size());
@@ -1713,11 +1618,9 @@ OutlineTypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
 TypedObject::createZeroed(JSContext *cx, HandleTypeDescr descr, int32_t length, gc::InitialHeap heap)
 {
     // If possible, create an object with inline data.
-    if (descr->is<SizedTypeDescr>() &&
-        (size_t) descr->as<SizedTypeDescr>().size() <= InlineTypedObject::MaximumSize)
-    {
+    if ((size_t) descr->size() <= InlineTypedObject::MaximumSize) {
         InlineTypedObject *obj = InlineTypedObject::create(cx, descr, heap);
-        descr->as<SizedTypeDescr>().initInstances(cx->runtime(), obj->inlineTypedMem(), 1);
+        descr->initInstances(cx->runtime(), obj->inlineTypedMem(), 1);
         return obj;
     }
 
@@ -1727,49 +1630,14 @@ TypedObject::createZeroed(JSContext *cx, HandleTypeDescr descr, int32_t length, 
         return nullptr;
 
     // Allocate and initialize the memory for this instance.
-    // Also initialize the JS_TYPEDOBJ_SLOT_LENGTH slot.
-    switch (descr->kind()) {
-      case type::Scalar:
-      case type::Reference:
-      case type::Struct:
-      case type::Simd:
-      case type::SizedArray:
-      {
-        size_t totalSize = descr->as<SizedTypeDescr>().size();
-        Rooted<ArrayBufferObject*> buffer(cx);
-        buffer = ArrayBufferObject::create(cx, totalSize);
-        if (!buffer)
-            return nullptr;
-        descr->as<SizedTypeDescr>().initInstances(cx->runtime(), buffer->dataPointer(), 1);
-        obj->attach(cx, *buffer, 0);
-        return obj;
-      }
-
-      case type::UnsizedArray:
-      {
-        Rooted<SizedTypeDescr*> elementTypeRepr(cx);
-        elementTypeRepr = &descr->as<UnsizedArrayTypeDescr>().elementType();
-
-        CheckedInt32 totalSize = CheckedInt32(elementTypeRepr->size()) * length;
-        if (!totalSize.isValid()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                                 JSMSG_TYPEDOBJECT_TOO_BIG);
-            return nullptr;
-        }
-
-        Rooted<ArrayBufferObject*> buffer(cx);
-        buffer = ArrayBufferObject::create(cx, totalSize.value());
-        if (!buffer)
-            return nullptr;
-
-        if (length)
-            elementTypeRepr->initInstances(cx->runtime(), buffer->dataPointer(), length);
-        obj->attach(cx, *buffer, 0);
-        return obj;
-      }
-    }
-
-    MOZ_CRASH("Bad TypeRepresentation Kind");
+    size_t totalSize = descr->size();
+    Rooted<ArrayBufferObject*> buffer(cx);
+    buffer = ArrayBufferObject::create(cx, totalSize);
+    if (!buffer)
+        return nullptr;
+    descr->initInstances(cx->runtime(), buffer->dataPointer(), 1);
+    obj->attach(cx, *buffer, 0);
+    return obj;
 }
 
 static bool
@@ -1823,22 +1691,7 @@ OutlineTypedObject::obj_trace(JSTracer *trc, JSObject *object)
     if (!descr.opaque() || !typedObj.maybeForwardedIsAttached())
         return;
 
-    switch (descr.kind()) {
-      case type::Scalar:
-      case type::Reference:
-      case type::Struct:
-      case type::SizedArray:
-      case type::Simd:
-        descr.as<SizedTypeDescr>().traceInstances(trc, mem, 1);
-        break;
-
-      case type::UnsizedArray:
-      {
-        SizedTypeDescr &elemType = descr.as<UnsizedArrayTypeDescr>().maybeForwardedElementType();
-        elemType.traceInstances(trc, mem, typedObj.unsizedLength());
-        break;
-      }
-    }
+    descr.traceInstances(trc, mem, 1);
 }
 
 bool
@@ -1854,8 +1707,7 @@ TypedObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
       case type::Simd:
         break;
 
-      case type::SizedArray:
-      case type::UnsizedArray:
+      case type::Array:
       {
         uint32_t index;
         if (js_IdIsIndex(id, &index))
@@ -1982,8 +1834,7 @@ TypedObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiv
       case type::Simd:
         break;
 
-      case type::SizedArray:
-      case type::UnsizedArray:
+      case type::Array:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             if (!typedObj->isAttached()) {
                 JS_ReportErrorNumber(
@@ -2005,7 +1856,7 @@ TypedObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiv
             break;
 
         size_t offset = descr->fieldOffset(fieldIndex);
-        Rooted<SizedTypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
+        Rooted<TypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
         return Reify(cx, fieldType, typedObj, offset, vp);
       }
     }
@@ -2042,13 +1893,8 @@ TypedObject::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiv
       case type::Struct:
         break;
 
-      case type::SizedArray:
-        return obj_getArrayElement<SizedArrayTypeDescr>(cx, typedObj, descr,
-                                                        index, vp);
-
-      case type::UnsizedArray:
-        return obj_getArrayElement<UnsizedArrayTypeDescr>(cx, typedObj, descr,
-                                                          index, vp);
+      case type::Array:
+        return obj_getArrayElement(cx, typedObj, descr, index, vp);
     }
 
     RootedObject proto(cx, obj->getProto());
@@ -2060,7 +1906,6 @@ TypedObject::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiv
     return JSObject::getElement(cx, proto, receiver, index, vp);
 }
 
-template<class T>
 /*static*/ bool
 TypedObject::obj_getArrayElement(JSContext *cx,
                                 Handle<TypedObject*> typedObj,
@@ -2068,14 +1913,12 @@ TypedObject::obj_getArrayElement(JSContext *cx,
                                 uint32_t index,
                                 MutableHandleValue vp)
 {
-    MOZ_ASSERT(typeDescr->is<T>());
-
     if (index >= (size_t) typedObj->length()) {
         vp.setUndefined();
         return true;
     }
 
-    Rooted<SizedTypeDescr*> elementType(cx, &typeDescr->as<T>().elementType());
+    Rooted<TypeDescr*> elementType(cx, &typeDescr->as<ArrayTypeDescr>().elementType());
     size_t offset = elementType->size() * index;
     return Reify(cx, elementType, typedObj, offset, vp);
 }
@@ -2099,8 +1942,7 @@ TypedObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
       case type::Simd:
         break;
 
-      case type::SizedArray:
-      case type::UnsizedArray:
+      case type::Array:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                  nullptr, JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
@@ -2116,7 +1958,7 @@ TypedObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
             break;
 
         size_t offset = descr->fieldOffset(fieldIndex);
-        Rooted<SizedTypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
+        Rooted<TypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
         return ConvertAndCopyTo(cx, fieldType, typedObj, offset, vp);
       }
     }
@@ -2148,17 +1990,13 @@ TypedObject::obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
       case type::Struct:
         break;
 
-      case type::SizedArray:
-        return obj_setArrayElement<SizedArrayTypeDescr>(cx, typedObj, descr, index, vp);
-
-      case type::UnsizedArray:
-        return obj_setArrayElement<UnsizedArrayTypeDescr>(cx, typedObj, descr, index, vp);
+      case type::Array:
+        return obj_setArrayElement(cx, typedObj, descr, index, vp);
     }
 
     return ReportTypedObjTypeError(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, typedObj);
 }
 
-template<class T>
 /*static*/ bool
 TypedObject::obj_setArrayElement(JSContext *cx,
                                 Handle<TypedObject*> typedObj,
@@ -2166,16 +2004,14 @@ TypedObject::obj_setArrayElement(JSContext *cx,
                                 uint32_t index,
                                 MutableHandleValue vp)
 {
-    MOZ_ASSERT(descr->is<T>());
-
     if (index >= (size_t) typedObj->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage,
                              nullptr, JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX);
         return false;
     }
 
-    Rooted<SizedTypeDescr*> elementType(cx);
-    elementType = &descr->as<T>().elementType();
+    Rooted<TypeDescr*> elementType(cx);
+    elementType = &descr->as<ArrayTypeDescr>().elementType();
     size_t offset = elementType->size() * index;
     return ConvertAndCopyTo(cx, elementType, typedObj, offset, vp);
 }
@@ -2194,8 +2030,7 @@ TypedObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
       case type::Simd:
         break;
 
-      case type::SizedArray:
-      case type::UnsizedArray:
+      case type::Array:
         if (js_IdIsIndex(id, &index)) {
             *attrsp = JSPROP_ENUMERATE | JSPROP_PERMANENT;
             return true;
@@ -2235,8 +2070,7 @@ IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
       case type::Simd:
         return false;
 
-      case type::SizedArray:
-      case type::UnsizedArray:
+      case type::Array:
         return js_IdIsIndex(id, &index) || JSID_IS_ATOM(id, cx->names().length);
 
       case type::Struct:
@@ -2305,8 +2139,7 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
         }
         break;
 
-      case type::SizedArray:
-      case type::UnsizedArray:
+      case type::Array:
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
           case JSENUMERATE_INIT:
@@ -2366,8 +2199,6 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 void
 OutlineTypedObject::neuter(void *newData)
 {
-    if (typeDescr().kind() == type::UnsizedArray)
-        setUnsizedLength(0);
     setData(reinterpret_cast<uint8_t *>(newData));
 }
 
@@ -2418,7 +2249,7 @@ InlineTypedObject::obj_trace(JSTracer *trc, JSObject *object)
     // may not have had their slots updated yet.
     TypeDescr &descr = typedObj.maybeForwardedTypeDescr();
 
-    descr.as<SizedTypeDescr>().traceInstances(trc, typedObj.inlineTypedMem(), 1);
+    descr.traceInstances(trc, typedObj.inlineTypedMem(), 1);
 }
 
 ArrayBufferObject *
@@ -2437,7 +2268,7 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext *cx)
 
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::createPlain(inlineTypedMem());
-    size_t nbytes = typeDescr().as<SizedTypeDescr>().size();
+    size_t nbytes = typeDescr().size();
 
     // Prevent GC under ArrayBufferObject::create, which might move this object
     // and its contents.
@@ -2594,11 +2425,8 @@ LengthForType(TypeDescr &descr)
       case type::Simd:
         return 0;
 
-      case type::SizedArray:
-        return descr.as<SizedArrayTypeDescr>().length();
-
-      case type::UnsizedArray:
-        return 0;
+      case type::Array:
+        return descr.as<ArrayTypeDescr>().length();
     }
 
     MOZ_CRASH("Invalid kind");
@@ -2633,15 +2461,15 @@ CheckOffset(int32_t offset,
 }
 
 /*static*/ bool
-TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
+TypedObject::construct(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    MOZ_ASSERT(args.callee().is<SizedTypeDescr>());
-    Rooted<SizedTypeDescr*> callee(cx, &args.callee().as<SizedTypeDescr>());
+    MOZ_ASSERT(args.callee().is<TypeDescr>());
+    Rooted<TypeDescr*> callee(cx, &args.callee().as<TypeDescr>());
 
-    // Typed object constructors for sized types are overloaded in
-    // three ways, in order of precedence:
+    // Typed object constructors are overloaded in three ways, in order of
+    // precedence:
     //
     //   new TypeObj()
     //   new TypeObj(buffer, [offset])
@@ -2726,162 +2554,6 @@ TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
     return false;
 }
 
-/*static*/ bool
-TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    MOZ_ASSERT(args.callee().is<TypeDescr>());
-    Rooted<UnsizedArrayTypeDescr*> callee(cx);
-    callee = &args.callee().as<UnsizedArrayTypeDescr>();
-
-    // Typed object constructors for unsized arrays are overloaded in
-    // four ways, in order of precedence:
-    //
-    //   new TypeObj(buffer, [offset, [length]]) // [1]
-    //   new TypeObj(length)                     // [1]
-    //   new TypeObj(data)
-    //   new TypeObj()
-    //
-    // [1] Explicit lengths only available for unsized arrays.
-
-    // Zero argument constructor:
-    if (args.length() == 0) {
-        Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, 0));
-        if (!obj)
-            return false;
-        args.rval().setObject(*obj);
-        return true;
-    }
-
-    // Length constructor.
-    if (args[0].isInt32()) {
-        int32_t length = args[0].toInt32();
-        if (length < 0) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-        Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
-        if (!obj)
-            return false;
-        args.rval().setObject(*obj);
-        return true;
-    }
-
-    // Buffer constructor.
-    if (args[0].isObject() && args[0].toObject().is<ArrayBufferObject>()) {
-        Rooted<ArrayBufferObject*> buffer(cx);
-        buffer = &args[0].toObject().as<ArrayBufferObject>();
-
-        if (callee->opaque()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-
-        int32_t offset;
-        if (args.length() >= 2 && !args[1].isUndefined()) {
-            if (!args[1].isInt32()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-                return false;
-            }
-
-            offset = args[1].toInt32();
-        } else {
-            offset = 0;
-        }
-
-        if (!CheckOffset(offset, 0, callee->alignment(), buffer->byteLength())) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-
-        int32_t elemSize = callee->elementType().size();
-        int32_t bytesRemaining = buffer->byteLength() - offset;
-        int32_t maximumLength = bytesRemaining / elemSize;
-
-        int32_t length;
-        if (args.length() >= 3 && !args[2].isUndefined()) {
-            if (!args[2].isInt32()) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-                return false;
-            }
-            length = args[2].toInt32();
-
-            if (length < 0 || length > maximumLength) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-                return false;
-            }
-        } else {
-            if ((bytesRemaining % elemSize) != 0) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-                return false;
-            }
-
-            length = maximumLength;
-        }
-
-        if (buffer->isNeutered()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-
-        Rooted<OutlineTypedObject*> obj(cx);
-        obj = OutlineTypedObject::createUnattached(cx, callee, length);
-        if (!obj)
-            return false;
-
-        obj->attach(cx, args[0].toObject().as<ArrayBufferObject>(), offset);
-    }
-
-    // Data constructor for unsized values
-    if (args[0].isObject()) {
-        // Read length out of the object.
-        RootedObject arg(cx, &args[0].toObject());
-        RootedValue lengthVal(cx);
-        if (!JSObject::getProperty(cx, arg, arg, cx->names().length, &lengthVal))
-            return false;
-        if (!lengthVal.isInt32()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-        int32_t length = lengthVal.toInt32();
-
-        // Check that length * elementSize does not overflow.
-        int32_t elementSize = callee->elementType().size();
-        int32_t byteLength;
-        if (!SafeMul(elementSize, length, &byteLength)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return false;
-        }
-
-        // Create the unsized array.
-        Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
-        if (!obj)
-            return false;
-
-        // Initialize from `arg`
-        if (!ConvertAndCopyTo(cx, obj, args[0]))
-            return false;
-        args.rval().setObject(*obj);
-        return true;
-    }
-
-    // Something bogus.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                         nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-    return false;
-}
-
 /******************************************************************************
  * Intrinsics
  */
@@ -2891,9 +2563,9 @@ js::NewOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<SizedTypeDescr>());
+    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypeDescr>());
 
-    Rooted<SizedTypeDescr*> descr(cx, &args[0].toObject().as<SizedTypeDescr>());
+    Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
     int32_t length = TypedObjLengthFromType(*descr);
     Rooted<OutlineTypedObject*> obj(cx);
     obj = OutlineTypedObject::createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, length);
@@ -2908,11 +2580,11 @@ js::NewDerivedTypedObject(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
-    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<SizedTypeDescr>());
+    MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypeDescr>());
     MOZ_ASSERT(args[1].isObject() && args[1].toObject().is<TypedObject>());
     MOZ_ASSERT(args[2].isInt32());
 
-    Rooted<SizedTypeDescr*> descr(cx, &args[0].toObject().as<SizedTypeDescr>());
+    Rooted<TypeDescr*> descr(cx, &args[0].toObject().as<TypeDescr>());
     Rooted<TypedObject*> typedObj(cx, &args[1].toObject().as<TypedObject>());
     int32_t offset = args[2].toInt32();
 
@@ -3057,44 +2729,13 @@ js::TypeDescrIsArrayType(ThreadSafeContext *, unsigned argc, Value *vp)
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[0].toObject().is<js::TypeDescr>());
     JSObject& obj = args[0].toObject();
-    args.rval().setBoolean(obj.is<js::SizedArrayTypeDescr>() ||
-                           obj.is<js::UnsizedArrayTypeDescr>());
+    args.rval().setBoolean(obj.is<js::ArrayTypeDescr>());
     return true;
 }
 
 JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypeDescrIsArrayTypeJitInfo,
                                       TypeDescrIsArrayTypeJitInfo,
                                       js::TypeDescrIsArrayType);
-
-bool
-js::TypeDescrIsSizedArrayType(ThreadSafeContext *, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(args[0].toObject().is<js::TypeDescr>());
-    args.rval().setBoolean(args[0].toObject().is<js::SizedArrayTypeDescr>());
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypeDescrIsSizedArrayTypeJitInfo,
-                                      TypeDescrIsSizedArrayTypeJitInfo,
-                                      js::TypeDescrIsSizedArrayType);
-
-bool
-js::TypeDescrIsUnsizedArrayType(ThreadSafeContext *, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(args[0].toObject().is<js::TypeDescr>());
-    args.rval().setBoolean(args[0].toObject().is<js::UnsizedArrayTypeDescr>());
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypeDescrIsUnsizedArrayTypeJitInfo,
-                                      TypeDescrIsUnsizedArrayTypeJitInfo,
-                                      js::TypeDescrIsUnsizedArrayType);
 
 bool
 js::TypedObjectIsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
@@ -3311,7 +2952,7 @@ JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_IMPL)
 
 template<typename V>
 static void
-visitReferences(SizedTypeDescr &descr,
+visitReferences(TypeDescr &descr,
                 uint8_t *mem,
                 V& visitor)
 {
@@ -3327,10 +2968,10 @@ visitReferences(SizedTypeDescr &descr,
         visitor.visitReference(descr.as<ReferenceTypeDescr>(), mem);
         return;
 
-      case type::SizedArray:
+      case type::Array:
       {
-        SizedArrayTypeDescr &arrayDescr = descr.as<SizedArrayTypeDescr>();
-        SizedTypeDescr &elementDescr = arrayDescr.maybeForwardedElementType();
+        ArrayTypeDescr &arrayDescr = descr.as<ArrayTypeDescr>();
+        TypeDescr &elementDescr = arrayDescr.maybeForwardedElementType();
         for (int32_t i = 0; i < arrayDescr.length(); i++) {
             visitReferences(elementDescr, mem, visitor);
             mem += elementDescr.size();
@@ -3338,16 +2979,11 @@ visitReferences(SizedTypeDescr &descr,
         return;
       }
 
-      case type::UnsizedArray:
-      {
-        MOZ_CRASH("Only Sized Type representations");
-      }
-
       case type::Struct:
       {
         StructTypeDescr &structDescr = descr.as<StructTypeDescr>();
         for (size_t i = 0; i < structDescr.maybeForwardedFieldCount(); i++) {
-            SizedTypeDescr &descr = structDescr.maybeForwardedFieldDescr(i);
+            TypeDescr &descr = structDescr.maybeForwardedFieldDescr(i);
             size_t offset = structDescr.maybeForwardedFieldOffset(i);
             visitReferences(descr, mem + offset, visitor);
         }
@@ -3406,7 +3042,7 @@ js::MemoryInitVisitor::visitReference(ReferenceTypeDescr &descr, uint8_t *mem)
 }
 
 void
-SizedTypeDescr::initInstances(const JSRuntime *rt, uint8_t *mem, size_t length)
+TypeDescr::initInstances(const JSRuntime *rt, uint8_t *mem, size_t length)
 {
     MOZ_ASSERT(length >= 1);
 
@@ -3476,7 +3112,7 @@ js::MemoryTracingVisitor::visitReference(ReferenceTypeDescr &descr, uint8_t *mem
 }
 
 void
-SizedTypeDescr::traceInstances(JSTracer *trace, uint8_t *mem, size_t length)
+TypeDescr::traceInstances(JSTracer *trace, uint8_t *mem, size_t length)
 {
     MemoryTracingVisitor visitor(trace);
 
