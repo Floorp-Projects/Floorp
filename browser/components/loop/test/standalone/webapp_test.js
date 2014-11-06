@@ -582,7 +582,7 @@ describe("loop.webapp", function() {
 
   describe("WebappRootView", function() {
     var helper, sdk, conversationModel, client, props, standaloneAppStore;
-    var dispatcher;
+    var dispatcher, activeRoomStore;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -593,7 +593,8 @@ describe("loop.webapp", function() {
         sdk: sdk,
         conversation: conversationModel,
         feedbackApiClient: feedbackApiClient,
-        standaloneAppStore: standaloneAppStore
+        standaloneAppStore: standaloneAppStore,
+        activeRoomStore: activeRoomStore
       }));
     }
 
@@ -609,6 +610,10 @@ describe("loop.webapp", function() {
         baseServerUrl: "fakeUrl"
       });
       dispatcher = new loop.Dispatcher();
+      activeRoomStore = new loop.store.ActiveRoomStore({
+        dispatcher: dispatcher,
+        mozLoop: {}
+      });
       standaloneAppStore = new loop.store.StandaloneAppStore({
         dispatcher: dispatcher,
         sdk: sdk,

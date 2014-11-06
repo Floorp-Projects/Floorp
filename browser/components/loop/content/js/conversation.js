@@ -671,7 +671,11 @@ loop.conversation = (function(mozL10n) {
 
     window.addEventListener("unload", function(event) {
       // Handle direct close of dialog box via [x] control.
+      // XXX Move to the conversation models, when we transition
+      // incoming calls to flux (bug 1088672).
       navigator.mozLoop.calls.clearCallInProgress(windowId);
+
+      dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
     React.renderComponent(AppControllerView({
