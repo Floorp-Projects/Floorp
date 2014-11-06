@@ -675,7 +675,7 @@ exports["test console.log in Panel"] = function(assert, done) {
   }
 };
 
-if (isWindowPBSupported) {
+/*if (isWindowPBSupported) {
   exports.testPanelDoesNotShowInPrivateWindowNoAnchor = function(assert, done) {
     let { loader } = LoaderWithHookedConsole(module, ignorePassingDOMNodeWarning);
     let { Panel } = loader.require("sdk/panel");
@@ -783,7 +783,7 @@ if (isWindowPBSupported) {
       then(testShowPanel.bind(null, assert, panel)).
       then(done, assert.fail.bind(assert));
   }
-}
+}*/
 
 function testShowPanel(assert, panel) {
   let { promise, resolve } = defer();

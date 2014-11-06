@@ -31,16 +31,11 @@ function activate(node) {
   node.dispatchEvent(event);
 }
 
-function oldActivate(node) {
-  var event = new CustomEvent("ActivateSocialFeature");
-  document.dispatchEvent(event);
-}
 </script>
 <body>
 
 nothing to see here
 
-<button id="activation-old" onclick="oldActivate(this)">Activate The Demo Provider</button>
 <button id="activation" onclick="activate(this)">Activate The Demo Provider</button>
 
 </body>

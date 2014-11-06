@@ -6,6 +6,9 @@
 
 var BaseAssert = require("sdk/test/assert").Assert;
 
+const getOwnIdentifiers = x => [...Object.getOwnPropertyNames(x),
+                                ...Object.getOwnPropertySymbols(x)];
+
 /**
  * Whether or not given property descriptors are equivalent. They are
  * equivalent either if both are marked as "conflict" or "required" property
@@ -52,7 +55,7 @@ function equivalentSets(source, target) {
  */
 function findNonEquivalentPropertyName(source, target) {
   var value = null;
-  Object.getOwnPropertyNames(source).some(function(key) {
+  getOwnIdentifiers(source).some(function(key) {
     var areEquivalent = false;
     if (!equivalentDescriptors(source[key], target[key])) {
       value = key;
@@ -67,8 +70,8 @@ var AssertDescriptor = {
   equalTraits: {
     value: function equivalentTraits(actual, expected, message) {
       var difference;
-      var actualKeys = Object.getOwnPropertyNames(actual);
-      var expectedKeys = Object.getOwnPropertyNames(expected);
+      var actualKeys = getOwnIdentifiers(actual);
+      var expectedKeys = getOwnIdentifiers(expected);
 
       if (equivalentSets(actualKeys, expectedKeys)) {
         this.fail({
