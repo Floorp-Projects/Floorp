@@ -18,16 +18,10 @@ function getStyle(node, property) {
   return node.style.getPropertyValue(property);
 }
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
   let {toolbox, inspector, view} = yield openLayoutView();
 
-  yield runTests(inspector, view);
-  yield destroyToolbox(inspector);
-});
-
-addTest("Test that adding a border applies a border style when necessary",
-function*(inspector, view) {
   let node = content.document.getElementById("div1");
   is(getStyle(node, "border-top-width"), "", "Should have the right border");
   is(getStyle(node, "border-top-style"), "", "Should have the right border");
