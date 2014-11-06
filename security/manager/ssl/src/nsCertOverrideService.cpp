@@ -7,6 +7,7 @@
 #include "nsCertOverrideService.h"
 
 #include "pkix/pkixtypes.h"
+#include "mozilla/Telemetry.h"
 #include "nsIX509Cert.h"
 #include "NSSCertDBTrustDomain.h"
 #include "nsNSSCertificate.h"
@@ -172,7 +173,7 @@ nsCertOverrideService::Observe(nsISupports     *,
       mSettingsFile = nullptr;
     }
     Read();
-
+    CountPermanentOverrideTelemetry();
   }
 
   return NS_OK;
@@ -658,6 +659,29 @@ nsCertOverrideService::GetAllOverrideHostsWithPorts(uint32_t *aCount,
                                                         char16_t ***aHostsWithPortsArray)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+static PLDHashOperator
+CountPermanentEntriesCallback(nsCertOverrideEntry* aEntry, void* aArg)
+{
+  uint32_t* overrideCount = reinterpret_cast<uint32_t*>(aArg);
+  if (aEntry && !aEntry->mSettings.mIsTemporary) {
+    *overrideCount = *overrideCount + 1;
+    return PL_DHASH_NEXT;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+void
+nsCertOverrideService::CountPermanentOverrideTelemetry()
+{
+  ReentrantMonitorAutoEnter lock(monitor);
+  uint32_t overrideCount = 0;
+  mSettingsTable.EnumerateEntries(CountPermanentEntriesCallback,
+                                  &overrideCount);
+  Telemetry::Accumulate(Telemetry::SSL_PERMANENT_CERT_ERROR_OVERRIDES,
+                        overrideCount);
 }
 
 static bool
