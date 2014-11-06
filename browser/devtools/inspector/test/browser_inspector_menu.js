@@ -81,12 +81,12 @@ const COPY_ITEMS_TEST_DATA = [
   },
 ];
 
-let clipboard = devtools.require("sdk/clipboard");
+let clipboard = require("sdk/clipboard");
 registerCleanupFunction(() => {
   clipboard = null;
 });
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
 
   yield testMenuItemSensitivity();
@@ -117,10 +117,17 @@ let test = asyncTest(function* () {
     for (let {desc, selector, disabled} of MENU_SENSITIVITY_TEST_DATA) {
       info("Testing context menu entries for " + desc);
 
-      let node = getNode(selector) || content.document.doctype;
-      yield selectNode(node, inspector);
+      let front;
+      if (selector) {
+        front = yield getNodeFront(selector, inspector);
+      } else {
+        // Select the docType if no selector is provided
+        let {nodes} = yield inspector.walker.children(inspector.walker.rootNode);
+        front = nodes[0];
+      }
+      yield selectNode(front, inspector);
 
-      contextMenuClick(getContainerForRawNode(inspector.markup, node).tagLine);
+      contextMenuClick(getContainerForNodeFront(front, inspector).tagLine);
 
       for (let name of MENU_ITEMS) {
         checkMenuItem(name, disabled);
@@ -132,15 +139,15 @@ let test = asyncTest(function* () {
     info("Checking 'Paste Outer HTML' menu item sensitivity for different types" +
          "of data");
 
-    let node = getNode("p");
-    let markupTagLine = getContainerForRawNode(inspector.markup, node).tagLine;
+    let nodeFront = yield getNodeFront("p", inspector);
+    let markupTagLine = getContainerForNodeFront(nodeFront, inspector).tagLine;
 
     for (let data of PASTE_OUTER_HTML_TEST_DATA) {
       let { desc, clipboardData, clipboardDataType, disabled } = data;
       info("Checking 'Paste Outer HTML' for " + desc);
       clipboard.set(clipboardData, clipboardDataType);
 
-      yield selectNode(node, inspector);
+      yield selectNode(nodeFront, inspector);
 
       contextMenuClick(markupTagLine);
       checkMenuItem("node-menu-pasteouterhtml", disabled);
@@ -187,10 +194,10 @@ let test = asyncTest(function* () {
     info("Testing that 'Paste Outer HTML' menu item works.");
     clipboard.set("this was pasted");
 
-    let node = getNode("h1");
-    yield selectNode(node, inspector);
+    let nodeFront = yield getNodeFront("h1", inspector);
+    yield selectNode(nodeFront, inspector);
 
-    contextMenuClick(getContainerForRawNode(inspector.markup, node).tagLine);
+    contextMenuClick(getContainerForNodeFront(nodeFront, inspector).tagLine);
 
     let onNodeReselected = inspector.markup.once("reselectedonremoved");
     let menu = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
@@ -222,7 +229,7 @@ let test = asyncTest(function* () {
 
   function* testDeleteRootNode() {
     info("Testing 'Delete Node' menu item does not delete root node.");
-    yield selectNode(content.document.documentElement, inspector);
+    yield selectNode(inspector.walker.rootNode, inspector);
 
     let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
     dispatchCommandEvent(deleteNode);

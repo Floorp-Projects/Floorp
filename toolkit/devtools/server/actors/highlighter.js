@@ -13,9 +13,6 @@ const Heritage = require("sdk/core/heritage");
 const {CssLogic} = require("devtools/styleinspector/css-logic");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 
-// Make sure the domnode type is known here
-require("devtools/server/actors/inspector");
-
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -108,23 +105,23 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
     this._isPreviousWindowXUL = isXUL(this._tabActor);
 
     if (!this._isPreviousWindowXUL) {
-      this._boxModelHighlighter = new BoxModelHighlighter(this._tabActor,
+      this._highlighter = new BoxModelHighlighter(this._tabActor,
                                                           this._inspector);
-      this._boxModelHighlighter.on("ready", this._highlighterReady);
-      this._boxModelHighlighter.on("hide", this._highlighterHidden);
+      this._highlighter.on("ready", this._highlighterReady);
+      this._highlighter.on("hide", this._highlighterHidden);
     } else {
-      this._boxModelHighlighter = new SimpleOutlineHighlighter(this._tabActor);
+      this._highlighter = new SimpleOutlineHighlighter(this._tabActor);
     }
   },
 
   _destroyHighlighter: function() {
-    if (this._boxModelHighlighter) {
+    if (this._highlighter) {
       if (!this._isPreviousWindowXUL) {
-        this._boxModelHighlighter.off("ready", this._highlighterReady);
-        this._boxModelHighlighter.off("hide", this._highlighterHidden);
+        this._highlighter.off("ready", this._highlighterReady);
+        this._highlighter.off("hide", this._highlighterHidden);
       }
-      this._boxModelHighlighter.destroy();
-      this._boxModelHighlighter = null;
+      this._highlighter.destroy();
+      this._highlighter = null;
     }
   },
 
@@ -163,14 +160,17 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
    */
   showBoxModel: method(function(node, options={}) {
     if (node && isNodeValid(node.rawNode)) {
-      this._boxModelHighlighter.show(node.rawNode, options);
+      this._highlighter.show(node.rawNode, options);
     } else {
-      this._boxModelHighlighter.hide();
+      this._highlighter.hide();
     }
   }, {
     request: {
       node: Arg(0, "domnode"),
-      region: Option(1)
+      region: Option(1),
+      hideInfoBar: Option(1),
+      hideGuides: Option(1),
+      showOnly: Option(1)
     }
   }),
 
@@ -178,7 +178,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
    * Hide the box model highlighting if it was shown before
    */
   hideBoxModel: method(function() {
-    this._boxModelHighlighter.hide();
+    this._highlighter.hide();
   }, {
     request: {}
   }),
@@ -213,7 +213,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
       this._isPicking = false;
       if (this._autohide) {
         this._tabActor.window.setTimeout(() => {
-          this._boxModelHighlighter.hide();
+          this._highlighter.hide();
         }, HIGHLIGHTER_PICKED_TIMER);
       }
       events.emit(this._walker, "picker-node-picked", this._findAndAttachElement(event));
@@ -223,7 +223,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
       this._preventContentEvent(event);
       let res = this._findAndAttachElement(event);
       if (this._hoveredNode !== res.node) {
-        this._boxModelHighlighter.show(res.node.rawNode);
+        this._highlighter.show(res.node.rawNode);
         events.emit(this._walker, "picker-node-hovered", res);
         this._hoveredNode = res.node;
       }
@@ -290,7 +290,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
 
   cancelPick: method(function() {
     if (this._isPicking) {
-      this._boxModelHighlighter.hide();
+      this._highlighter.hide();
       this._stopPickerListeners();
       this._isPicking = false;
       this._hoveredNode = null;
@@ -328,6 +328,10 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
     // container to append their elements, so if this is a XUL window, bail out.
     if (!isXUL(this._inspector.tabActor)) {
       this._highlighter = new constructor(inspector.tabActor);
+    } else {
+      throw new Error("Custom " + typeName +
+        "highlighter cannot be created in a XUL window");
+      return;
     }
   },
 
@@ -502,6 +506,8 @@ CanvasFrameAnonymousContentHelper.prototype = {
  * - this.win: the current window
  */
 function AutoRefreshHighlighter(tabActor) {
+  EventEmitter.decorate(this);
+
   this.tabActor = tabActor;
   this.browser = tabActor.browser;
   this.win = tabActor.window;
@@ -608,6 +614,7 @@ AutoRefreshHighlighter.prototype = {
     }
 
     this._update();
+    this.emit("updated");
   },
 
   _show: function() {
@@ -894,6 +901,8 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
     if (this._updateBoxModel()) {
       if (!this.options.hideInfoBar) {
         this._showInfobar();
+      } else {
+        this._hideInfobar();
       }
       this._showBoxModel();
     } else {

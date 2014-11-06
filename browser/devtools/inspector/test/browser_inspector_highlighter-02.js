@@ -10,70 +10,33 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_inspector_highlighter.html";
 
-let test = asyncTest(function*() {
-  let { inspector } = yield openInspectorForURL(TEST_URI);
+add_task(function*() {
+  let {toolbox, inspector} = yield openInspectorForURL(TEST_URI);
 
   info("Selecting the simple, non-transformed DIV");
-  let div = getNode("#simple-div");
-  yield selectAndHighlightNode(div, inspector);
+  yield selectAndHighlightNode("#simple-div", inspector);
 
-  testSimpleDivHighlighted(div);
-  yield zoomTo(2);
-  testZoomedSimpleDivHighlighted(div);
-  yield zoomTo(1);
+  let isVisible = yield isHighlighting(toolbox);
+  ok(isVisible, "The highlighter is shown");
+  let highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode, getNode("#simple-div"),
+    "The highlighter's outline corresponds to the simple div");
+  yield isNodeCorrectlyHighlighted(getNode("#simple-div"), toolbox,
+    "non-zoomed");
 
   info("Selecting the rotated DIV");
-  let rotated = getNode("#rotated-div");
-  let onBoxModelUpdate = waitForBoxModelUpdate();
-  yield selectAndHighlightNode(rotated, inspector);
-  yield onBoxModelUpdate;
+  yield selectAndHighlightNode("#rotated-div", inspector);
 
-  testMouseOverRotatedHighlights(rotated);
+  isVisible = yield isHighlighting(toolbox);
+  ok(isVisible, "The highlighter is shown");
+  yield isNodeCorrectlyHighlighted(getNode("#rotated-div"), toolbox,
+    "rotated");
 
   info("Selecting the zero width height DIV");
-  let zeroWidthHeight = getNode("#widthHeightZero-div");
-  onBoxModelUpdate = waitForBoxModelUpdate();
-  yield selectAndHighlightNode(zeroWidthHeight, inspector);
-  yield onBoxModelUpdate;
+  yield selectAndHighlightNode("#widthHeightZero-div", inspector);
 
-  testMouseOverWidthHeightZeroDiv(zeroWidthHeight);
-
+  isVisible = yield isHighlighting(toolbox);
+  ok(isVisible, "The highlighter is shown");
+  yield isNodeCorrectlyHighlighted(getNode("#widthHeightZero-div"), toolbox,
+    "zero width height");
 });
-
-function testSimpleDivHighlighted(div) {
-  ok(isHighlighting(), "The highlighter is shown");
-  is(getHighlitNode(), div, "The highlighter's outline corresponds to the simple div");
-
-  info("Checking that the simple div is correctly highlighted");
-  isNodeCorrectlyHighlighted(div, "non-zoomed");
-}
-
-function testZoomedSimpleDivHighlighted(div) {
-  info("Checking that the simple div is correctly highlighted, " +
-    "even when the page is zoomed");
-  isNodeCorrectlyHighlighted(div, "zoomed");
-}
-
-function zoomTo(level) {
-  info("Zooming page to " + level);
-  let def = promise.defer();
-
-  waitForBoxModelUpdate().then(def.resolve);
-  let contentViewer = gBrowser.selectedBrowser.docShell.contentViewer;
-  contentViewer.fullZoom = level;
-
-  return def.promise;
-}
-
-function testMouseOverRotatedHighlights(rotated) {
-  ok(isHighlighting(), "The highlighter is shown");
-  info("Checking that the rotated div is correctly highlighted");
-  isNodeCorrectlyHighlighted(rotated, "rotated");
-}
-
-function testMouseOverWidthHeightZeroDiv(zeroHeightWidthDiv) {
-  ok(isHighlighting(), "The highlighter is shown");
-  info("Checking that the zero width height div is correctly highlighted");
-  isNodeCorrectlyHighlighted(zeroHeightWidthDiv, "zero width height");
-
-}

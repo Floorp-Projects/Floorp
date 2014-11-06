@@ -239,27 +239,6 @@ function waitForChildrenUpdated({markup}) {
 }
 
 /**
- * Simulate a mouse-over on the markup-container (a line in the markup-view)
- * that corresponds to the selector passed.
- * @param {String|NodeFront} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * loaded in the toolbox
- * @return {Promise} Resolves when the container is hovered and the higlighter
- * is shown on the corresponding node
- */
-let hoverContainer = Task.async(function*(selector, inspector) {
-  info("Hovering over the markup-container for node " + selector);
-
-  let nodeFront = yield getNodeFront(selector, inspector);
-  let container = getContainerForNodeFront(nodeFront, inspector);
-
-  let highlit = inspector.toolbox.once("node-highlight");
-  EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousemove"},
-    inspector.markup.doc.defaultView);
-  return highlit;
-});
-
-/**
  * Simulate a click on the markup-container (a line in the markup-view)
  * that corresponds to the selector passed.
  * @param {String|NodeFront} selector
@@ -289,25 +268,6 @@ function isHighlighterVisible() {
   let highlighter = gBrowser.selectedBrowser.parentNode
                             .querySelector(".highlighter-container .box-model-root");
   return highlighter && !highlighter.hasAttribute("hidden");
-}
-
-/**
- * Simulate the mouse leaving the markup-view area
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
- * @return a promise when done
- */
-function mouseLeaveMarkupView(inspector) {
-  info("Leaving the markup-view area");
-  let def = promise.defer();
-
-  // Find another element to mouseover over in order to leave the markup-view
-  let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
-
-  EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
-    inspector.toolbox.doc.defaultView);
-  executeSoon(def.resolve);
-
-  return def.promise;
 }
 
 /**

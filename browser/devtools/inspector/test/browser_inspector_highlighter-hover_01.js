@@ -8,13 +8,16 @@
 // by clicking on it leaves the highlighter visible for as long as the mouse is
 // over the node
 
-let test = asyncTest(function*() {
-  let {inspector} = yield addTab("data:text/html,<p>It's going to be legen....</p>").then(openInspector);
+const TEST_URL = "data:text/html;charset=utf-8,<p>It's going to be legen....</p>";
+
+add_task(function*() {
+  let {toolbox, inspector} = yield openInspectorForURL(TEST_URL);
   let p = getNode("p");
 
   info("hovering over the <p> line in the markup-view");
   yield hoverContainer("p", inspector);
-  ok(isHighlighterVisible(), "the highlighter is still visible");
+  let isVisible = yield isHighlighting(toolbox);
+  ok(isVisible, "the highlighter is still visible");
 
   info("selecting the <p> line by clicking in the markup-view");
   yield clickContainer("p", inspector);
@@ -25,7 +28,8 @@ let test = asyncTest(function*() {
 
   let updated = inspector.once("inspector-updated");
   p.textContent = "dary!!!!";
-  ok(isHighlighterVisible(), "the highlighter is still visible");
+  isVisible = yield isHighlighting(toolbox);
+  ok(isVisible, "the highlighter is still visible");
   yield updated;
 });
 
