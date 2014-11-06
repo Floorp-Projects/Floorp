@@ -63,6 +63,11 @@ int NR_LOG_TURN = 0;
                                                   times out after about 5. */
 #define TURN_PERMISSION_LIFETIME_SECONDS 300   /* 5 minutes. From RFC 5766 2.3 */
 
+// Set to enable a temporary fix that will run the TURN reservation keep-alive
+// logic when data is received via a TURN relayed path: a DATA_INDICATION packet is received.
+// TODO(pkerr@mozilla.com) This should be replace/removed when bug 935806 is implemented.
+#define REFRESH_RESERVATION_ON_RECV 1
+
 static int nr_turn_stun_ctx_create(nr_turn_client_ctx *tctx, int type,
                                    NR_async_cb success_cb,
                                    NR_async_cb failure_cb,
@@ -789,6 +794,12 @@ int nr_turn_client_parse_data_indication(nr_turn_client_ctx *ctx,
   if ((r=nr_transport_addr_copy(remote_addr,
                                 &attr->u.xor_mapped_address.unmasked)))
     ABORT(r);
+
+#if REFRESH_RESERVATION_ON_RECV
+  if ((r=nr_turn_client_ensure_perm(ctx, remote_addr))) {
+    ABORT(r);
+  }
+#endif
 
   if (!nr_stun_message_has_attribute(ind, NR_STUN_ATTR_DATA, &attr)) {
     ABORT(R_BAD_DATA);
