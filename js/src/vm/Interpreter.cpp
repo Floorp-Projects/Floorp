@@ -3346,7 +3346,8 @@ END_CASE(JSOP_DEBUGLEAVEBLOCK)
 CASE(JSOP_GENERATOR)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
-    JSObject *obj = GeneratorObject::create(cx, REGS);
+    MOZ_ASSERT(REGS.stackDepth() == 0);
+    JSObject *obj = GeneratorObject::create(cx, REGS.fp());
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);
