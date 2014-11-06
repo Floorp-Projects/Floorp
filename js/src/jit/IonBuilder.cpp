@@ -7235,6 +7235,8 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
     if (elemPrediction.isUseless())
         return true;
 
+    MOZ_ASSERT(TypeDescr::isSized(elemPrediction.kind()));
+
     int32_t elemSize;
     if (!elemPrediction.hasKnownSize(&elemSize))
         return true;
@@ -7245,7 +7247,7 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
       case type::Struct:
-      case type::Array:
+      case type::SizedArray:
         return getElemTryComplexElemOfTypedObject(emitted,
                                                   obj,
                                                   index,
@@ -7266,6 +7268,9 @@ IonBuilder::getElemTryTypedObject(bool *emitted, MDefinition *obj, MDefinition *
                                                     index,
                                                     objPrediction,
                                                     elemPrediction);
+
+      case type::UnsizedArray:
+        MOZ_CRASH("Unsized arrays cannot be element types");
     }
 
     MOZ_CRASH("Bad kind");
@@ -7299,6 +7304,12 @@ IonBuilder::checkTypedObjectIndexInBounds(int32_t elemSize,
         types::TypeObjectKey *globalType = types::TypeObjectKey::get(&script()->global());
         if (globalType->hasFlags(constraints(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED))
             return false;
+    } else if (objPrediction.kind() == type::UnsizedArray) {
+        // Note: unsized arrays will have their length set to zero if they are
+        // neutered, so we don't need to make sure that no neutering has
+        // occurred which affects this object.
+        length = MTypedObjectUnsizedLength::New(alloc(), obj);
+        current->add(length->toInstruction());
     } else {
         return false;
     }
@@ -8191,6 +8202,8 @@ IonBuilder::setElemTryTypedObject(bool *emitted, MDefinition *obj,
     if (elemPrediction.isUseless())
         return true;
 
+    MOZ_ASSERT(TypeDescr::isSized(elemPrediction.kind()));
+
     int32_t elemSize;
     if (!elemPrediction.hasKnownSize(&elemSize))
         return true;
@@ -8214,7 +8227,8 @@ IonBuilder::setElemTryTypedObject(bool *emitted, MDefinition *obj,
                                                  elemSize);
 
       case type::Struct:
-      case type::Array:
+      case type::SizedArray:
+      case type::UnsizedArray:
         // Not yet optimized.
         return true;
     }
@@ -8706,6 +8720,8 @@ IonBuilder::jsop_length_fastPath()
             if (prediction.hasKnownArrayLength(&sizedLength)) {
                 obj->setImplicitlyUsedUnchecked();
                 length = MConstant::New(alloc(), Int32Value(sizedLength));
+            } else if (prediction.kind() == type::UnsizedArray) {
+                length = MTypedObjectUnsizedLength::New(alloc(), obj);
             } else {
                 return false;
             }
@@ -9433,7 +9449,7 @@ IonBuilder::getPropTryTypedObject(bool *emitted,
         return true;
 
       case type::Struct:
-      case type::Array:
+      case type::SizedArray:
         return getPropTryComplexPropOfTypedObject(emitted,
                                                   obj,
                                                   fieldOffset,
@@ -9454,6 +9470,9 @@ IonBuilder::getPropTryTypedObject(bool *emitted,
                                                  fieldOffset,
                                                  fieldPrediction,
                                                  resultTypes);
+
+      case type::UnsizedArray:
+        MOZ_CRASH("Field of unsized array type");
     }
 
     MOZ_CRASH("Bad kind");
@@ -10147,7 +10166,8 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
                                                  value, fieldPrediction);
 
       case type::Struct:
-      case type::Array:
+      case type::SizedArray:
+      case type::UnsizedArray:
         return true;
     }
 
