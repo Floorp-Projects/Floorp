@@ -25,6 +25,17 @@ HeaderSetDecompressor.prototype.read = function() {
   return pair;
 }
 
+var http2_connection = require('../node-http2/lib/protocol/connection');
+var Connection = http2_connection.Connection;
+var originalClose = Connection.prototype.close;
+Connection.prototype.close = function (error, lastId) {
+  if (lastId !== undefined) {
+    this._lastIncomingStream = lastId;
+  }
+
+  originalClose.apply(this, arguments);
+}
+
 function getHttpContent(path) {
   var content = '<!doctype html>' +
                 '<html>' +
@@ -71,6 +82,9 @@ var m = {
     }
   }
 };
+
+var h11required_conn = null;
+var h11required_header = "yes";
 
 function handleRequest(req, res) {
   var u = url.parse(req.url);
@@ -226,6 +240,26 @@ function handleRequest(req, res) {
     });
 
     return;
+  }
+
+  else if (u.pathname === "/h11required_stream") {
+    if (req.httpVersionMajor === 2) {
+      h11required_conn = req.stream.connection;
+      res.stream.reset('HTTP_1_1_REQUIRED');
+      return;
+    }
+  }
+
+  else if (u.pathname === "/h11required_session") {
+    if (req.httpVersionMajor === 2) {
+      if (h11required_conn !== req.stream.connection) {
+        h11required_header = "no";
+      }
+      res.stream.connection.close('HTTP_1_1_REQUIRED', res.stream.id - 2);
+      return;
+    } else {
+      res.setHeader('X-H11Required-Stream-Ok', h11required_header);
+    }
   }
 
   res.setHeader('Content-Type', 'text/html');

@@ -1750,6 +1750,9 @@ Http2Session::RecvGoAway(Http2Session *self)
     Http2Stream *stream =
       static_cast<Http2Stream *>(self->mGoAwayStreamsToRestart.PopFront());
 
+    if (statusCode == HTTP_1_1_REQUIRED) {
+      stream->Transaction()->DisableSpdy();
+    }
     self->CloseStream(stream, NS_ERROR_NET_RESET);
     if (stream->HasRegisteredID())
       self->mStreamIDHash.Remove(stream->StreamID());
@@ -1763,6 +1766,9 @@ Http2Session::RecvGoAway(Http2Session *self)
   for (uint32_t count = 0; count < size; ++count) {
     Http2Stream *stream =
       static_cast<Http2Stream *>(self->mQueuedStreams.PopFront());
+    if (statusCode == HTTP_1_1_REQUIRED) {
+      stream->Transaction()->DisableSpdy();
+    }
     self->CloseStream(stream, NS_ERROR_NET_RESET);
     self->mStreamTransactionHash.Remove(stream->Transaction());
   }
@@ -2577,6 +2583,10 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
     // equivalent to cancel.
     if (mDownstreamRstReason == REFUSED_STREAM_ERROR) {
       streamCleanupCode = NS_ERROR_NET_RESET;      // can retry this 100% safely
+    } else if (mDownstreamRstReason == HTTP_1_1_REQUIRED) {
+      streamCleanupCode = NS_ERROR_NET_RESET;
+      mInputFrameDataStream->Transaction()->ReuseConnectionOnRestartOK(true);
+      mInputFrameDataStream->Transaction()->DisableSpdy();
     } else {
       streamCleanupCode = mInputFrameDataStream->RecvdData() ?
         NS_ERROR_NET_PARTIAL_TRANSFER :
