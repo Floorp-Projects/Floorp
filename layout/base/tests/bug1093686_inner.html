@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html id="html" style="height:100%">
+<head>
+  <title>Testing effect of listener on body</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  .target { position:absolute; left:200px; top:200px; width:200px; height:200px; background:blue; }
+  </style>
+</head>
+<body id="body" onload="setTimeout(runTest, 0)" style="margin:0; width:100%; height:100%; overflow:hidden">
+<div id="content">
+  <div id="ruler" style="position:absolute; left:0; top:0; width:1mozmm; height:0;"></div>
+  <div class="target" id="t"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+var eventTarget;
+window.onmousedown = function(event) { eventTarget = event.target; };
+
+// Make sure the target div is "clickable" by adding a click listener on it.
+document.getElementById('t').addEventListener('click', function(e) {
+  parent.ok(true, "target was clicked on");
+}, false);
+
+// Helper functions
+
+function testMouseClick(aX, aY, aExpectedId, aMsg) {
+  eventTarget = null;
+  synthesizeMouseAtPoint(aX, aY, {});
+  try {
+    parent.is(eventTarget.id, aExpectedId,
+       "checking offset " + aX + "," + aY + " hit " + aExpectedId + " [" + aMsg + "]");
+  } catch (ex) {
+    parent.ok(false, "checking offset " + aX + "," + aY + " hit " + aExpectedId + " [" + aMsg + "]; got " + eventTarget);
+  }
+}
+
+function testWithAndWithoutBodyListener(aX, aY, aExpectedId, aMsg) {
+  var func = function(e) {
+    // no-op function
+    parent.ok(true, "body was clicked on");
+  };
+  testMouseClick(aX, aY, aExpectedId, aMsg + " without listener on body");
+  document.body.addEventListener("click", func, false);
+  testMouseClick(aX, aY, aExpectedId, aMsg + " with listener on body");
+  document.body.removeEventListener("click", func, false);
+}
+
+// Main tests
+
+var mm;
+function runTest() {
+  mm = document.getElementById("ruler").getBoundingClientRect().width;
+  parent.ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
+
+  // Test near the target, check it hits the target
+  testWithAndWithoutBodyListener(200 - 2*mm, 200 - 2*mm, "t", "basic click retargeting");
+  // Test on the target, check it hits the target
+  testWithAndWithoutBodyListener(200 + 2*mm, 200 + 2*mm, "t", "direct click");
+  // Test outside the target, check it hits the root
+  testWithAndWithoutBodyListener(40, 40, "body", "click way outside target");
+
+  SpecialPowers.pushPrefEnv({"set": [["ui.mouse.radius.enabled", false]]}, runTest2);
+}
+
+function runTest2() {
+  // In this test, mouse event retargeting is disabled.
+
+  // Test near the target, check it hits the body
+  testWithAndWithoutBodyListener(200 - 2*mm, 200 - 2*mm, "body", "basic click retargeting");
+  // Test on the target, check it hits the target
+  testWithAndWithoutBodyListener(200 + 2*mm, 200 + 2*mm, "t", "direct click");
+  // Test outside the target, check it hits the root
+  testWithAndWithoutBodyListener(40, 40, "body", "click way outside target");
+
+  parent.finishTest();
+}
+
+</script>
+</pre>
+</body>
+</html>
