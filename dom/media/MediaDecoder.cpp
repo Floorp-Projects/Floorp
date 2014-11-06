@@ -741,7 +741,6 @@ void MediaDecoder::FirstFrameLoaded(MediaInfo* aInfo)
   mInfo = aInfo;
 
   if (mOwner) {
-    Invalidate();
     mOwner->FirstFrameLoaded();
   }
 
