@@ -44,3 +44,8 @@ exports.getThumbnailCanvasForWindow = getThumbnailCanvasForWindow;
 exports.getThumbnailURIForWindow = function getThumbnailURIForWindow(window) {
   return getThumbnailCanvasForWindow(window).toDataURL()
 };
+
+// default 80x45 blank when not available
+exports.BLANK = 'data:image/png;base64,' +
+  'iVBORw0KGgoAAAANSUhEUgAAAFAAAAAtCAYAAAA5reyyAAAAJElEQVRoge3BAQ'+
+  'EAAACCIP+vbkhAAQAAAAAAAAAAAAAAAADXBjhtAAGQ0AF/AAAAAElFTkSuQmCC';

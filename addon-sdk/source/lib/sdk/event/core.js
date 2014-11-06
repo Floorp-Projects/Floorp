@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -80,14 +79,16 @@ exports.once = once;
  *    Arguments that will be passed to listeners.
  */
 function emit (target, type, ...args) {
+  let all = observers(target, '*').length;
   let state = observers(target, type);
   let listeners = state.slice();
   let count = listeners.length;
   let index = 0;
 
-  // If error event and there are no handlers then print error message
-  // into a console.
-  if (count === 0 && type === 'error') console.exception(args[0]);
+  // If error event and there are no handlers (explicit or catch-all)
+  // then print error message to the console.
+  if (count === 0 && type === 'error' && all === 0)
+    console.exception(args[0]);
   while (index < count) {
     try {
       let listener = listeners[index];
