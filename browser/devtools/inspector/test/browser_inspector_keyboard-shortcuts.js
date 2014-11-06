@@ -18,9 +18,10 @@ const TEST_DATA = [
   { key: "VK_LEFT", selectedNode: "body" },
 ];
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URI);
-  is(inspector.selection.node, getNode("body"),
+  let bodyFront = yield getNodeFront("body", inspector);
+  is(inspector.selection.nodeFront, bodyFront,
     "Body should be selected initially.");
 
   info("Focusing the currently active breadcrumb button");
@@ -34,7 +35,8 @@ let test = asyncTest(function* () {
     EventUtils.synthesizeKey(key, {});
     yield updated;
 
-    is(inspector.selection.node, getNode(selectedNode),
+    let selectedNodeFront = yield getNodeFront(selectedNode, inspector);
+    is(inspector.selection.nodeFront, selectedNodeFront,
       selectedNode + " is selected.");
   }
 });

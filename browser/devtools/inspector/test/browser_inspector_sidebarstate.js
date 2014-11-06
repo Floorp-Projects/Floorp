@@ -6,7 +6,7 @@
 const TEST_URI = "data:text/html;charset=UTF-8," +
   "<h1>browser_inspector_sidebarstate.js</h1>";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
 
   info("Selecting ruleview.");

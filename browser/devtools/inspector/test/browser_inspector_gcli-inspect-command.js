@@ -7,7 +7,7 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_inspector_gcli-inspect-command.html";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   return helpers.addTabWithToolbar(TEST_URI, function(options) {
     return helpers.audit(options, [
       {

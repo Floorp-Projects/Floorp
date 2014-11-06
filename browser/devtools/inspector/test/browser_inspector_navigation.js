@@ -13,7 +13,7 @@ const TEST_URL_FILE = "browser/browser/devtools/inspector/test/" +
 const TEST_URL_1 = "http://test1.example.org/" + TEST_URL_FILE;
 const TEST_URL_2 = "http://test2.example.org/" + TEST_URL_FILE;
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL_1);
   let markuploaded = inspector.once("markuploaded");
 
