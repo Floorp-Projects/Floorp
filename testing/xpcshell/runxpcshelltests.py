@@ -489,7 +489,7 @@ class XPCShellTestThread(Thread):
         """Log a line of output (either a parser json object or text output from
         the test process"""
         if isinstance(line, basestring):
-            line = cleanup_encoding(line)
+            line = cleanup_encoding(line).rstrip("\r\n")
             self.log.process_output(self.proc_ident,
                                     line,
                                     command=self.complete_command)
