@@ -14,8 +14,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "SharedFrame", "resource:///modules/SharedFrame.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "DynamicResizeWatcher", "resource:///modules/Social.jsm");
 
 // The minimum sizes for the auto-resize panel code.
@@ -48,44 +46,44 @@ let PanelFrameInternal = {
   _attachNotificatonPanel: function(aWindow, aParent, aButton, aType, aOrigin, aSrc, aSize) {
     aParent.hidden = false;
     let notificationFrameId = aOrigin ? aType + "-status-" + aOrigin : aType;
-    let frame = aWindow.document.getElementById(notificationFrameId);
+    let doc = aWindow.document;
+    let frame = doc.getElementById(notificationFrameId);
 
     // If the button was customized to a new location, destroy the
     // iframe and start fresh.
     if (frame && frame.parentNode != aParent) {
-      SharedFrame.forgetGroup(frame.id);
       frame.parentNode.removeChild(frame);
       frame = null;
     }
 
     if (!frame) {
       let {width, height} = aSize ? aSize : {width: PANEL_MIN_WIDTH, height: PANEL_MIN_HEIGHT};
+      frame = doc.createElement("browser");
+      let attrs = {
+        "type": "content",
+        "mozbrowser": "true",
+        // All frames use social-panel-frame as the class.
+        "class": "social-panel-frame",
+        "id": notificationFrameId,
+        "tooltip": "aHTMLTooltip",
+        "context": "contentAreaContextMenu",
+        "flex": "1",
 
-      frame = SharedFrame.createFrame(
-        notificationFrameId, /* frame name */
-        aParent, /* parent */
-        {
-          "type": "content",
-          "mozbrowser": "true",
-          // All frames use social-panel-frame as the class.
-          "class": "social-panel-frame",
-          "id": notificationFrameId,
-          "tooltip": "aHTMLTooltip",
-          "context": "contentAreaContextMenu",
-          "flex": "1",
+        // work around bug 793057 - by making the panel roughly the final size
+        // we are more likely to have the anchor in the correct position.
+        "style": "width: " + width + "px; height: " + height + "px;",
+        "dynamicresizer": !aSize,
 
-          // work around bug 793057 - by making the panel roughly the final size
-          // we are more likely to have the anchor in the correct position.
-          "style": "width: " + width + "px; height: " + height + "px;",
-          "dynamicresizer": !aSize,
-
-          "origin": aOrigin,
-          "src": aSrc
-        }
-      );
+        "origin": aOrigin,
+        "src": aSrc
+      };
+      for (let [k, v] of Iterator(attrs)) {
+        frame.setAttribute(k, v);
+      }
+      aParent.appendChild(frame);
     } else {
       frame.setAttribute("origin", aOrigin);
-      SharedFrame.updateURL(notificationFrameId, aSrc);
+      frame.setAttribute("src", aSrc);
     }
     aButton.setAttribute("notificationFrameId", notificationFrameId);
   }
@@ -156,7 +154,6 @@ let PanelFrame = {
 
     panel.addEventListener("popupshown", function onpopupshown() {
       panel.removeEventListener("popupshown", onpopupshown);
-      SharedFrame.setOwner(notificationFrameId, notificationFrame);
       let initFrameShow = () => {
         notificationFrame.docShell.isActive = true;
         notificationFrame.docShell.isAppTab = true;
