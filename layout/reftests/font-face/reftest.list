@@ -48,11 +48,9 @@ skip-if(B2G) fails-if(Android) random-if(gtk2Widget) == src-list-local-ps.html s
 # Mac-specific test of 100 weight faces
 random-if(!cocoaWidget) == helveticaneue-ultra.html helveticaneue-ultra-ref.html
 
-# FIXME: The behavior here is neither mandated nor specified by the spec, but
-# it really ought to be.
 HTTP(..) == order-1.html order-1-ref.html
-fails HTTP(..) == order-2.html order-2-ref.html # bug 465414
-fails HTTP(..) == order-3.html order-3-ref.html # bug 465414
+pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == order-2.html order-2-ref.html # bug 1056479
+pref(layout.css.unicode-range.enabled,true) random-if(gtk2Widget) HTTP(..) == order-3.html order-3-ref.html # bug 1056479
 HTTP(..) == multiple-in-family-1.html multiple-in-family-1-ref.html
 HTTP(..) == multiple-in-family-1b.html multiple-in-family-1-ref.html
 HTTP(..) != multiple-in-family-1.html multiple-in-family-1-notref.html
@@ -62,8 +60,8 @@ HTTP(..) != prop-order-over-rule-order-1a.html prop-order-over-rule-order-1b.htm
 skip-if(B2G) HTTP(..) == cross-iframe-1.html cross-iframe-1-ref.html # bug 773482
 
 # Dynamic changes
-HTTP(..) == enable-sheet-1.html enable-sheet-1-ref.html
 # we need to skip these because of the bug that's causing order-2.html to fail
+HTTP(..) == enable-sheet-1.html enable-sheet-1-ref.html
 skip HTTP(..) == enable-sheet-2.html multiple-in-family-1-ref.html
 skip HTTP(..) == enable-sheet-3.html multiple-in-family-1-ref.html
 HTTP(..) == enable-sheet-4.html enable-sheet-4-ref.html
