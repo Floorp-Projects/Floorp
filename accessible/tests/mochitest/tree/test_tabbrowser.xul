@@ -169,6 +169,23 @@
                   ]
                 }
               ]
+            },
+            {
+              // notificationbox
+              role: ROLE_PROPERTYPAGE,
+              children: [
+                {
+                  // browser
+                  role: ROLE_INTERNAL_FRAME,
+                  children: [
+                    {
+                      // #document ("about:newtab" preloaded)
+                      role: ROLE_APPLICATION
+                      // children: [ ... ] // Ignore document content.
+                    }
+                  ]
+                }
+              ]
             }
           ]
         };
