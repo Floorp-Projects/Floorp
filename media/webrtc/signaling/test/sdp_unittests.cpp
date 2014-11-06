@@ -755,13 +755,13 @@ TEST_F(SdpTest, parseFmtpMaxFs) {
   u32 val = 0;
   ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=300;max-fr=30\r\n");
   ASSERT_EQ(sdp_attr_get_fmtp_max_fs(sdp_ptr_, 1, 0, 1, &val), SDP_SUCCESS);
-  ASSERT_EQ(val, 300);
+  ASSERT_EQ(val, 300U);
 }
 TEST_F(SdpTest, parseFmtpMaxFr) {
   u32 val = 0;
   ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=300;max-fr=30\r\n");
   ASSERT_EQ(sdp_attr_get_fmtp_max_fr(sdp_ptr_, 1, 0, 1, &val), SDP_SUCCESS);
-  ASSERT_EQ(val, 30);
+  ASSERT_EQ(val, 30U);
 }
 
 TEST_F(SdpTest, addFmtpMaxFs) {
@@ -787,6 +787,29 @@ TEST_F(SdpTest, addFmtpMaxFsFr) {
   std::string body = SerializeSdp();
   ASSERT_NE(body.find("a=fmtp:120 max-fs=300;max-fr=30\r\n"),
             std::string::npos);
+}
+
+static const std::string kBrokenFmtp =
+  "v=0\r\n"
+  "o=- 137331303 2 IN IP4 127.0.0.1\r\n"
+  "s=SIP Call\r\n"
+  "t=0 0\r\n"
+  "m=video 56436 RTP/SAVPF 120\r\n"
+  "c=IN IP4 198.51.100.7\r\n"
+  "a=rtpmap:120 VP8/90000\r\n"
+  /* Note: the \0 in this string triggered bz://1089207
+   */
+  "a=fmtp:120 max-fs=300;max\0fr=30";
+
+TEST_F(SdpTest, parseBrokenFmtp) {
+  u32 val = 0;
+  char *buf = const_cast<char *>(kBrokenFmtp.data());
+  ResetSdp();
+  /* We need to manually invoke the parser here to be able to specify the length
+   * of the string beyond the \0 in last line of the string.
+   */
+  ASSERT_EQ(sdp_parse(sdp_ptr_, &buf, 165), SDP_SUCCESS);
+  ASSERT_EQ(sdp_attr_get_fmtp_max_fs(sdp_ptr_, 1, 0, 1, &val), SDP_INVALID_PARAMETER);
 }
 
 TEST_F(SdpTest, addIceLite) {
