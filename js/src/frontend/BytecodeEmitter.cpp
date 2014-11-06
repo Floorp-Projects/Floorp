@@ -3062,6 +3062,9 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
         if (bce->sc->asFunctionBox()->isStarGenerator() && !EmitFinishIteratorResult(cx, bce, true))
             return false;
 
+        if (Emit1(cx, bce, JSOP_SETRVAL) < 0)
+            return false;
+
         ScopeCoordinate sc;
         // We know that .generator is on the top scope chain node, as we are
         // at the function end.
@@ -3071,7 +3074,7 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
             return false;
 
         // No need to check for finally blocks, etc as in EmitReturn.
-        if (Emit1(cx, bce, JSOP_FINALYIELD) < 0)
+        if (Emit1(cx, bce, JSOP_FINALYIELDRVAL) < 0)
             return false;
     }
 
@@ -5596,6 +5599,9 @@ EmitYield(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return false;
 
     if (Emit1(cx, bce, pn->getOp()) < 0)
+        return false;
+
+    if (pn->getOp() == JSOP_INITIALYIELD && Emit1(cx, bce, JSOP_POP) < 0)
         return false;
 
     return true;
