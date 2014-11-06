@@ -514,7 +514,7 @@ let onmouseover = function(e) {
   let region = e.target.getAttribute("data-box");
 
   tooltip.textContent = e.target.getAttribute("tooltip");
-  this.layoutview.showBoxModel({region: region});
+  this.layoutview.showBoxModel({region});
 
   return false;
 }.bind(window);
