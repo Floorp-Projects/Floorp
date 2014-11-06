@@ -228,7 +228,7 @@ class MessageChannel : HasResultCodes
 
     bool InterruptEventOccurred();
 
-    bool ProcessPendingRequest(Message aUrgent);
+    bool ProcessPendingRequest(const Message& aUrgent);
 
     void MaybeUndeferIncall();
     void EnqueuePendingMessages();
@@ -510,7 +510,7 @@ class MessageChannel : HasResultCodes
            if (mChan->mCurrentTransaction == 0)
                mChan->mCurrentTransaction = mChan->NextSeqno();
        }
-       explicit AutoEnterTransaction(MessageChannel *aChan, Message *message)
+       explicit AutoEnterTransaction(MessageChannel *aChan, const Message *message)
         : mChan(aChan),
           mOldTransaction(mChan->mCurrentTransaction)
        {
