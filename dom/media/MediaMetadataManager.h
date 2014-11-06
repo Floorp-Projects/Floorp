@@ -53,8 +53,8 @@ namespace mozilla {
 
           nsCOMPtr<nsIRunnable> metadataUpdatedEvent =
             new MetadataUpdatedEventRunner(aDecoder,
-                                           metadata->mInfo.forget(),
-                                           metadata->mTags.forget());
+                                           metadata->mInfo,
+                                           metadata->mTags);
           NS_DispatchToMainThread(metadataUpdatedEvent);
           delete mMetadataQueue.popFirst();
           metadata = mMetadataQueue.getFirst();
