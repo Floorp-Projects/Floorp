@@ -12,7 +12,14 @@ describe("loop.roomViews", function () {
 
     dispatcher = new loop.Dispatcher();
 
-    fakeWindow = { document: {} };
+    fakeWindow = {
+      document: {},
+      navigator: {
+        mozLoop: {
+          getAudioBlob: sinon.stub()
+        }
+      }
+    };
     loop.shared.mixins.setRootObject(fakeWindow);
 
     // XXX These stubs should be hoisted in a common file
