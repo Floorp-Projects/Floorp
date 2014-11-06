@@ -335,7 +335,7 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
       SubtractFromExposedRegion(&exposedRegion, region);
     }
 
-    if (!IsElementClickable(f)) {
+    if (!IsElementClickable(f, nsGkAtoms::body)) {
       continue;
     }
     // If our current closest frame is a descendant of 'f', skip 'f' (prefer
