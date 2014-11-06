@@ -138,6 +138,19 @@ Reporter(int nr, siginfo_t *info, void *void_context)
   args[4] = SECCOMP_PARM5(ctx);
   args[5] = SECCOMP_PARM6(ctx);
 
+#if defined(ANDROID) && ANDROID_VERSION < 16
+  // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
+  // bionic commit 10c8ce59a (in JB and up; API level 16 = Android 4.1).
+  if (syscall_nr == __NR_tkill) {
+    intptr_t ret = syscall(__NR_tgkill, getpid(), args[0], args[1]);
+    if (ret < 0) {
+      ret = -errno;
+    }
+    SECCOMP_RESULT(ctx) = ret;
+    return;
+  }
+#endif
+
 #ifdef MOZ_GMP_SANDBOX
   if (syscall_nr == __NR_open && gMediaPluginFilePath) {
     const char *path = reinterpret_cast<const char*>(args[0]);
