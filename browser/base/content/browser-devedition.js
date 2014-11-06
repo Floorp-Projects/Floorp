@@ -86,6 +86,7 @@ let DevEdition = {
       this.styleSheet.removeEventListener("load", this);
       gBrowser.tabContainer._positionPinnedTabs();
       ToolbarIconColor.inferFromText();
+      Services.obs.notifyObservers(window, "devedition-theme-state-changed", true);
     }
   },
 
@@ -102,6 +103,7 @@ let DevEdition = {
       this.styleSheet = null;
       gBrowser.tabContainer._positionPinnedTabs();
       ToolbarIconColor.inferFromText();
+      Services.obs.notifyObservers(window, "devedition-theme-state-changed", false);
     }
   },
 

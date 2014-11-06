@@ -19,6 +19,7 @@ const kToolbarVisibilityBtn = "customization-toolbar-visibility-button";
 const kDrawInTitlebarPref = "browser.tabs.drawInTitlebar";
 const kDeveditionThemePref = "browser.devedition.theme.enabled";
 const kDeveditionButtonPref = "browser.devedition.theme.showCustomizeButton";
+const kDeveditionChangedNotification = "devedition-theme-state-changed";
 const kMaxTransitionDurationMs = 2000;
 
 const kPanelItemContextMenu = "customizationPanelItemContextMenu";
@@ -64,9 +65,11 @@ function CustomizeMode(aWindow) {
   this.paletteEmptyNotice = this.document.getElementById("customization-empty");
   this.paletteSpacer = this.document.getElementById("customization-spacer");
   this.tipPanel = this.document.getElementById("customization-tipPanel");
-  let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
   if (Services.prefs.getCharPref("general.skins.selectedSkin") != "classic/1.0") {
+    let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
+    let deveditionButton = this.document.getElementById("customization-devedition-theme-button");
     lwthemeButton.setAttribute("hidden", "true");
+    deveditionButton.setAttribute("hidden", "true");
   }
 #ifdef CAN_DRAW_IN_TITLEBAR
   this._updateTitlebarButton();
@@ -74,7 +77,7 @@ function CustomizeMode(aWindow) {
 #endif
   this._updateDevEditionThemeButton();
   Services.prefs.addObserver(kDeveditionButtonPref, this, false);
-  Services.prefs.addObserver(kDeveditionThemePref, this, false);
+  Services.obs.addObserver(this, kDeveditionChangedNotification, false);
   this.window.addEventListener("unload", this);
 };
 
@@ -111,7 +114,7 @@ CustomizeMode.prototype = {
     Services.prefs.removeObserver(kDrawInTitlebarPref, this);
 #endif
     Services.prefs.removeObserver(kDeveditionButtonPref, this);
-    Services.prefs.removeObserver(kDeveditionThemePref, this);
+    Services.obs.removeObserver(this, kDeveditionChangedNotification);
   },
 
   toggle: function() {
@@ -470,6 +473,7 @@ CustomizeMode.prototype = {
         toolbar.removeAttribute("customizing");
 
       this.window.PanelUI.endBatchUpdate();
+      delete this._lastLightWeightTheme;
       this._changed = false;
       this._transitioning = false;
       this._handler.isExitingCustomizeMode = false;
@@ -1481,7 +1485,6 @@ CustomizeMode.prototype = {
 #ifdef CAN_DRAW_IN_TITLEBAR
         this._updateTitlebarButton();
 #endif
-        this._updateDevEditionThemeButton();
         break;
       case "lightweight-theme-window-updated":
         if (aSubject == this.window) {
@@ -1491,6 +1494,13 @@ CustomizeMode.prototype = {
           } else {
             this.updateLWTStyling(aData);
           }
+        }
+        break;
+      case kDeveditionChangedNotification:
+        if (aSubject == this.window) {
+          this._updateDevEditionThemeButton();
+          this._updateResetButton();
+          this._updateUndoResetButton();
         }
         break;
     }
@@ -1520,7 +1530,7 @@ CustomizeMode.prototype = {
   _updateDevEditionThemeButton: function() {
     let button = this.document.getElementById("customization-devedition-theme-button");
 
-    let themeEnabled = Services.prefs.getBoolPref(kDeveditionThemePref);
+    let themeEnabled = !!this.window.DevEdition.styleSheet;
     if (themeEnabled) {
       button.setAttribute("checked", "true");
     } else {
@@ -1535,9 +1545,24 @@ CustomizeMode.prototype = {
     }
   },
   toggleDevEditionTheme: function() {
+    const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
     let button = this.document.getElementById("customization-devedition-theme-button");
-    let preferenceValue = button.hasAttribute("checked");
-    Services.prefs.setBoolPref(kDeveditionThemePref, preferenceValue);
+    let shouldEnable = button.hasAttribute("checked");
+
+    Services.prefs.setBoolPref(kDeveditionThemePref, shouldEnable);
+    if (LightweightThemeManager.currentTheme && shouldEnable) {
+      this._lastLightWeightTheme = LightweightThemeManager.currentTheme;
+      AddonManager.getAddonByID(DEFAULT_THEME_ID, function(aDefaultTheme) {
+        // Theoretically, this could race if people are /very/ quick in switching
+        // something else here, so doublecheck:
+        if (button.hasAttribute("checked")) {
+          aDefaultTheme.userDisabled = false;
+        }
+      });
+    } else if (!LightweightThemeManager.currentTheme && !shouldEnable &&
+               this._lastLightWeightTheme) {
+      LightweightThemeManager.currentTheme = this._lastLightWeightTheme;
+    }
   },
 
   _onDragStart: function(aEvent) {
