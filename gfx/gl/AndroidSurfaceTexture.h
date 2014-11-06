@@ -12,6 +12,8 @@
 #include "nsIRunnable.h"
 #include "gfxPlatform.h"
 #include "GLDefs.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/Monitor.h"
 
 #include "AndroidNativeWindow.h"
 
@@ -26,6 +28,8 @@ class Matrix4x4;
 namespace mozilla {
 namespace gl {
 
+class GLContext;
+
 /**
  * This class is a wrapper around Android's SurfaceTexture class.
  * Usage is pretty much exactly like the Java class, so see
@@ -35,12 +39,35 @@ class AndroidSurfaceTexture {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AndroidSurfaceTexture)
 
 public:
-  static AndroidSurfaceTexture* Create(GLuint aTexture);
+
+  // The SurfaceTexture is created in an attached state. This method requires
+  // Android Ice Cream Sandwich.
+  static AndroidSurfaceTexture* Create(GLContext* aGLContext, GLuint aTexture);
+
+  // Here the SurfaceTexture will be created in a detached state. You must call
+  // Attach() with the GLContext you wish to composite with. It must be done
+  // on the thread where that GLContext is current. This method requires
+  // Android Jelly Bean.
+  static AndroidSurfaceTexture* Create();
+
   static AndroidSurfaceTexture* Find(int id);
 
   // Returns with reasonable certainty whether or not we'll
   // be able to create and use a SurfaceTexture
   static bool Check();
+
+  // If we are on Jelly Bean, the SurfaceTexture can be detached and reattached
+  // to allow consumption from different GLContexts. It is recommended to only
+  // attach while you are consuming in order to allow this.
+  //
+  // Only one GLContext may be attached at any given time. If another is already
+  // attached, we try to wait for it to become detached.
+  bool Attach(GLContext* aContext, PRIntervalTime aTiemout = PR_INTERVAL_NO_TIMEOUT);
+
+  // This is a noop on ICS, and will always fail
+  bool Detach();
+
+  GLContext* GetAttachedContext() { return mAttachedContext; }
 
   AndroidNativeWindow* NativeWindow() {
     return mNativeWindow;
@@ -68,17 +95,20 @@ private:
   AndroidSurfaceTexture();
   ~AndroidSurfaceTexture();
 
-  bool Init(GLuint aTexture);
+  bool Init(GLContext* aContext, GLuint aTexture);
 
   GLuint mTexture;
   jobject mSurfaceTexture;
   jobject mSurface;
 
+  Monitor mMonitor;
+  GLContext* mAttachedContext;
+
   RefPtr<AndroidNativeWindow> mNativeWindow;
   int mID;
   nsRefPtr<nsIRunnable> mFrameAvailableCallback;
 };
-  
+
 }
 }
 
