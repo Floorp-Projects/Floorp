@@ -17,11 +17,6 @@ exports.testCurlyID = function(assert) {
   assert.equal(service.get('extensions.{34a1eae1-c20a-464f-9b0e-000000000000}.test14'), simple.prefs.test14, 'simple test14 also 15');
 }
 
-exports.testInvalidPreferencesBranch = function(assert) {
-  assert.notEqual(preferencesBranch, 'invalid^branch*name', 'invalid preferences-branch value ignored');
-  assert.equal(preferencesBranch, '{34a1eae1-c20a-464f-9b0e-000000000000}', 'preferences-branch is {34a1eae1-c20a-464f-9b0e-000000000000}');
-}
-
 // from `/test/test-self.js`, adapted to `sdk/test/assert` API
 exports.testSelfID = function*(assert) {
   assert.equal(typeof(id), 'string', 'self.id is a string');

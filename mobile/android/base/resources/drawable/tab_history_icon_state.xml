@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_enabled="false">
+        <shape>
+            <solid android:color="@color/tab_history_favicon_background" />
+            <stroke android:width="@dimen/tab_history_favicon_border_disabled"
+                    android:color="@color/tab_history_favicon_border" />
+        </shape>
+    </item>
+
+    <item android:state_enabled="true">
+        <shape>
+            <solid android:color="@color/tab_history_favicon_background" />
+            <stroke android:width="@dimen/tab_history_favicon_border_enabled"
+                    android:color="@color/tab_history_favicon_border" />
+        </shape>
+    </item>
+
+</selector>

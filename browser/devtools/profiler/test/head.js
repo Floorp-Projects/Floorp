@@ -74,7 +74,7 @@ function* initFrontend(url, id = "jsprofiler") {
 
   let tab = yield addTab(url);
   let target = TargetFactory.forTab(tab);
-  let debuggee = target.window.wrappedJSObject;
+  let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
 
   yield target.makeRemote();
 

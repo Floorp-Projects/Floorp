@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.URLMetadata;
 import org.mozilla.gecko.favicons.Favicons;
@@ -74,7 +73,6 @@ public class Tab {
     private boolean mEnteringReaderMode;
     private final Context mAppContext;
     private ErrorType mErrorType = ErrorType.NONE;
-    private static final int MAX_HISTORY_LIST_SIZE = 50;
     private volatile int mLoadProgress;
     private volatile int mRecordingCount;
     private String mMostRecentHomePanel;
@@ -91,6 +89,7 @@ public class Tab {
     public static final int LOAD_PROGRESS_STOP = 100;
 
     private static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
+    public static final int MAX_HISTORY_LIST_SIZE = 50;
 
     public enum ErrorType {
         CERT_ERROR,  // Pages with certificate problems
@@ -321,6 +320,14 @@ public class Tab {
         return mContentType;
     }
 
+    public int getHistoryIndex() {
+        return mHistoryIndex;
+    }
+
+    public int getHistorySize() {
+        return mHistorySize;
+    }
+
     public synchronized void updateTitle(String title) {
         // Keep the title unchanged while entering reader mode.
         if (mEnteringReaderMode) {
@@ -541,53 +548,6 @@ public class Tab {
             return false;
 
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Back", "");
-        GeckoAppShell.sendEventToGecko(e);
-        return true;
-    }
-
-    public boolean showBackHistory() {
-        if (!canDoBack())
-            return false;
-        return this.showHistory(Math.max(mHistoryIndex - MAX_HISTORY_LIST_SIZE, 0), mHistoryIndex, mHistoryIndex);
-    }
-
-    public boolean showForwardHistory() {
-        if (!canDoForward())
-            return false;
-        return this.showHistory(mHistoryIndex, Math.min(mHistorySize - 1, mHistoryIndex + MAX_HISTORY_LIST_SIZE), mHistoryIndex);
-    }
-
-    public boolean showAllHistory() {
-        if (!canDoForward() && !canDoBack())
-            return false;
-
-        int min = mHistoryIndex - MAX_HISTORY_LIST_SIZE / 2;
-        int max = mHistoryIndex + MAX_HISTORY_LIST_SIZE / 2;
-        if (min < 0) {
-            max -= min;
-        }
-        if (max > mHistorySize - 1) {
-            min -= max - (mHistorySize - 1);
-            max = mHistorySize - 1;
-        }
-        min = Math.max(min, 0);
-
-        return this.showHistory(min, max, mHistoryIndex);
-    }
-
-    /**
-     * This method will show the history starting on fromIndex until toIndex of the history.
-     */
-    public boolean showHistory(int fromIndex, int toIndex, int selIndex) {
-        JSONObject json = new JSONObject();
-        try {
-            json.put("fromIndex", fromIndex);
-            json.put("toIndex", toIndex);
-            json.put("selIndex", selIndex);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error", e);
-        }
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:ShowHistory", json.toString());
         GeckoAppShell.sendEventToGecko(e);
         return true;
     }
