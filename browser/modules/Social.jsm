@@ -169,8 +169,8 @@ this.Social = {
     return SocialService.getManifestByOrigin(origin);
   },
 
-  installProvider: function(doc, data, installCallback, aBypassUserEnable=false) {
-    SocialService.installProvider(doc, data, installCallback, aBypassUserEnable);
+  installProvider: function(data, installCallback, options={}) {
+    SocialService.installProvider(data, installCallback, options);
   },
 
   uninstallProvider: function(origin, aCallback) {
@@ -511,27 +511,26 @@ this.OpenGraphBuilder = {
     return endpointURL;
   },
 
-  getData: function(browser, target) {
+  getData: function(aDocument, target) {
     let res = {
-      url: this._validateURL(browser, browser.currentURI.spec),
-      title: browser.contentDocument.title,
+      url: this._validateURL(aDocument, aDocument.documentURI),
+      title: aDocument.title,
       previews: []
     };
-    this._getMetaData(browser, res);
-    this._getLinkData(browser, res);
-    this._getPageData(browser, res);
-    res.microdata = this.getMicrodata(browser, target);
+    this._getMetaData(aDocument, res);
+    this._getLinkData(aDocument, res);
+    this._getPageData(aDocument, res);
+    res.microdata = this.getMicrodata(aDocument, target);
     return res;
   },
 
-  getMicrodata: function (browser, target) {
-    return getMicrodata(browser.contentDocument, target);
+  getMicrodata: function (aDocument, target) {
+    return getMicrodata(aDocument, target);
   },
 
-  _getMetaData: function(browser, o) {
+  _getMetaData: function(aDocument, o) {
     // query for standardized meta data
-    let els = browser.contentDocument
-                  .querySelectorAll("head > meta[property], head > meta[name]");
+    let els = aDocument.querySelectorAll("head > meta[property], head > meta[name]");
     if (els.length < 1)
       return;
     let url;
@@ -564,17 +563,17 @@ this.OpenGraphBuilder = {
           o.medium = value;
           break;
         case "og:video":
-          url = this._validateURL(browser, value);
+          url = this._validateURL(aDocument, value);
           if (url)
             o.source = url;
           break;
         case "og:url":
-          url = this._validateURL(browser, value);
+          url = this._validateURL(aDocument, value);
           if (url)
             o.url = url;
           break;
         case "og:image":
-          url = this._validateURL(browser, value);
+          url = this._validateURL(aDocument, value);
           if (url)
             o.previews.push(url);
           break;
@@ -582,14 +581,13 @@ this.OpenGraphBuilder = {
     }
   },
 
-  _getLinkData: function(browser, o) {
-    let els = browser.contentDocument
-                  .querySelectorAll("head > link[rel], head > link[id]");
+  _getLinkData: function(aDocument, o) {
+    let els = aDocument.querySelectorAll("head > link[rel], head > link[id]");
     for (let el of els) {
       let url = el.getAttribute("href");
       if (!url)
         continue;
-      url = this._validateURL(browser, unescapeService.unescape(url.trim()));
+      url = this._validateURL(aDocument, unescapeService.unescape(url.trim()));
       switch (el.getAttribute("rel") || el.getAttribute("id")) {
         case "shorturl":
         case "shortlink":
@@ -620,26 +618,27 @@ this.OpenGraphBuilder = {
   },
 
   // scrape through the page for data we want
-  _getPageData: function(browser, o) {
+  _getPageData: function(aDocument, o) {
     if (o.previews.length < 1)
-      o.previews = this._getImageUrls(browser);
+      o.previews = this._getImageUrls(aDocument);
   },
 
-  _validateURL: function(browser, url) {
-    let uri = Services.io.newURI(browser.currentURI.resolve(url), null, null);
+  _validateURL: function(aDocument, url) {
+    let docURI = Services.io.newURI(aDocument.documentURI, null, null);
+    let uri = Services.io.newURI(docURI.resolve(url), null, null);
     if (["http", "https", "ftp", "ftps"].indexOf(uri.scheme) < 0)
       return null;
     uri.userPass = "";
     return uri.spec;
   },
 
-  _getImageUrls: function(browser) {
+  _getImageUrls: function(aDocument) {
     let l = [];
-    let els = browser.contentDocument.querySelectorAll("img");
+    let els = aDocument.querySelectorAll("img");
     for (let el of els) {
-      let content = el.getAttribute("src");
-      if (content) {
-        l.push(this._validateURL(browser, unescapeService.unescape(content)));
+      let src = el.getAttribute("src");
+      if (src) {
+        l.push(this._validateURL(aDocument, unescapeService.unescape(src)));
         // we don't want a billion images
         if (l.length > 5)
           break;
