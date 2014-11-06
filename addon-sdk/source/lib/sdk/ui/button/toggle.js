@@ -100,6 +100,7 @@ on(toggleButtonStateEvents, 'data', ({target, window, state}) => {
   view.setLabel(id, window, state.label);
   view.setDisabled(id, window, state.disabled);
   view.setChecked(id, window, state.checked);
+  view.setBadge(id, window, state.badge, state.badgeColor);
 });
 
 on(clickEvents, 'data', ({target: id, window, checked }) => {

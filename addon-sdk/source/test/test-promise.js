@@ -221,7 +221,7 @@ exports['test promised with promise args'] = function(assert, done) {
   deferred.resolve(24);
 };
 
-exports['test promised error handleing'] = function(assert, done) {
+exports['test promised error handling'] = function(assert, done) {
   let expected = Error('boom');
   let f = promised(function() {
     throw expected;
@@ -291,6 +291,18 @@ exports['test promised are not greedy'] = function(assert, done) {
   promised(() => ++runs)()
     .catch(assert.fail).then(done);
   assert.equal(runs, 0, 'promised does not run task right away');
+};
+
+exports['test promised does not flatten arrays'] = function(assert, done) {
+  let p = promised(function(empty, one, two, nested) {
+    assert.equal(empty.length, 0, "first argument is empty");
+    assert.deepEqual(one, ['one'], "second has one");
+    assert.deepEqual(two, ['two', 'more'], "third has two more");
+    assert.deepEqual(nested, [[]], "forth is properly nested");
+    done();
+  });
+
+  p([], ['one'], ['two', 'more'], [[]]);
 };
 
 exports['test arrays should not flatten'] = function(assert, done) {
