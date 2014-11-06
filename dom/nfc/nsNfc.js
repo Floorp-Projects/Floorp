@@ -389,7 +389,7 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    if (!this.checkPermissions(["nfc-read", "nfc-write"])) {
+    if (!this.checkPermissions(["nfc"])) {
       return;
     }
 
@@ -426,7 +426,7 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    if (!this.checkPermissions(["nfc-read", "nfc-write"])) {
+    if (!this.checkPermissions(["nfc"])) {
       return;
     }
 
@@ -461,7 +461,8 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    if (!this.checkPermissions(["nfc-write"])) {
+    let perm = isPeerReady ? ["nfc-share"] : ["nfc"];
+    if (!this.checkPermissions(perm)) {
       return;
     }
 
@@ -483,7 +484,7 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    if (!this.checkPermissions(["nfc-write"])) {
+    if (!this.checkPermissions(["nfc", "nfc-share"])) {
       return;
     }
 
