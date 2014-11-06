@@ -88,6 +88,10 @@ MFBT_API pid_t NuwaSpawn();
  * @param recreate The custom function that will be called in the spawned
  *                 process, after the thread is recreated. Can be nullptr if no
  *                 custom function to be called after the thread is recreated.
+ *                 Note that this function is called duing thread recreation
+ *                 while other threads are frozen. It must not perform any
+ *                 action (e.g. acquiring a mutex) that might depend on another
+ *                 thread that is still blocked.
  * @param arg The argument passed to the custom function. Can be nullptr.
  */
 MFBT_API void NuwaMarkCurrentThread(void (*recreate)(void *), void *arg);
@@ -137,21 +141,37 @@ MFBT_API void MakeNuwaProcess();
 
 /**
  * Register a method to be invoked after a new process is spawned. The method
- * will be invoked on the main thread.
+ * will be invoked on the main thread *before* recreating the other threads.
+ * The registered method must not perform any action (e.g. acquiring a mutex)
+ * that might depend on another thread that has not yet been recreated.
  *
  * @param construct The method to be invoked.
  * @param arg The argument passed to the method.
  */
 MFBT_API void NuwaAddConstructor(void (*construct)(void *), void *arg);
 
+
 /**
  * Register a method to be invoked after a new process is spawned and threads
- * are recreated. The method will be invoked on the main thread.
+ * are recreated. The method will be invoked on the main thread *after*
+ * the other threads are recreated and fully functional.
  *
  * @param construct The method to be invoked.
  * @param arg The argument passed to the method.
  */
 MFBT_API void NuwaAddFinalConstructor(void (*construct)(void *), void *arg);
+
+
+/**
+ * Register a method to be invoked after the current thread is recreated in the
+ * spawned process. Note that this function is called while other threads are
+ * frozen. It must not perform any action (e.g. acquiring a mutex) that might
+ * depend on another thread that is still blocked.
+ *
+ * @param construct The method to be invoked.
+ * @param arg The argument passed to the method.
+ */
+MFBT_API void NuwaAddThreadConstructor(void (*construct)(void *), void *arg);
 
 /**
  * The methods to query the Nuwa-related states.
