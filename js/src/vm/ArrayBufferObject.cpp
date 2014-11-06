@@ -126,6 +126,7 @@ const Class ArrayBufferObject::class_ = {
     {
         nullptr,    /* outerObject */
         nullptr,    /* innerObject */
+        nullptr,    /* iteratorObject */
         false,      /* isWrappedNative */
         nullptr,    /* weakmapKeyDelegateOp */
         ArrayBufferObject::objectMoved

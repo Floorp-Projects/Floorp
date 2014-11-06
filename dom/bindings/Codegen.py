@@ -370,6 +370,7 @@ class CGDOMJSClass(CGThing):
             {
               nullptr, /* outerObject */
               nullptr, /* innerObject */
+              nullptr, /* iteratorObject */
               false,   /* isWrappedNative */
               nullptr, /* weakmapKeyDelegateOp */
               ${objectMoved} /* objectMovedOp */
@@ -387,6 +388,7 @@ class CGDOMJSClass(CGThing):
                     {
                       nsGlobalWindow::OuterObject, /* outerObject */
                       nullptr, /* innerObject */
+                      nullptr, /* iteratorObject */
                       false,   /* isWrappedNative */
                       nullptr, /* weakmapKeyDelegateOp */
                       ${objectMoved} /* objectMovedOp */
@@ -498,6 +500,7 @@ class CGDOMProxyJSClass(CGThing):
                                    ${flags},
                                    PROXY_MAKE_EXT(nullptr, /* outerObject */
                                                   nullptr, /* innerObject */
+                                                  nullptr, /* iteratorObject */
                                                   false,   /* isWrappedNative */
                                                   ${objectMoved})),
               $*{descriptor}
