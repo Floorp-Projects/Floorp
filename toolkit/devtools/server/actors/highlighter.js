@@ -999,11 +999,16 @@ BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype
   },
 
   _nodeNeedsHighlighting: function() {
+    let hasNoQuads = !this.currentQuads.margin &&
+                     !this.currentQuads.border &&
+                     !this.currentQuads.padding &&
+                     !this.currentQuads.content;
     if (!this.currentNode ||
         Cu.isDeadWrapper(this.currentNode) ||
         this.currentNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
         !this.currentNode.ownerDocument ||
-        !this.currentNode.ownerDocument.defaultView) {
+        !this.currentNode.ownerDocument.defaultView ||
+        hasNoQuads) {
       return false;
     }
 
