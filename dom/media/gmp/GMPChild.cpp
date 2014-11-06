@@ -411,7 +411,7 @@ GMPChild::LoadPluginLibrary(const std::string& aPluginPath)
 
   // Enable sandboxing here -- we know the plugin file's path, but
   // this process's execution hasn't been affected by its content yet.
-  if (mozilla::CanSandboxMediaPlugin()) {
+  if (mozilla::MediaPluginSandboxStatus() != mozilla::kSandboxingWouldFail) {
     mozilla::SetMediaPluginSandbox(nativePath.get());
   } else {
     printf_stderr("GMPChild::LoadPluginLibrary: Loading media plugin %s unsandboxed.\n",
