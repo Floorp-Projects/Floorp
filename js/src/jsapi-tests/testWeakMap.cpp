@@ -152,6 +152,7 @@ JSObject *newKey()
         {
             nullptr,
             nullptr,
+            nullptr,
             false,
             GetKeyDelegate
         },

@@ -1747,6 +1747,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     {                                                                          \
         nullptr,             /* outerObject */                                 \
         nullptr,             /* innerObject */                                 \
+        nullptr,             /* iteratorObject */                              \
         false,               /* isWrappedNative */                             \
         nullptr,             /* weakmapKeyDelegateOp */                        \
         TypedArrayObject::ObjectMoved                                          \
