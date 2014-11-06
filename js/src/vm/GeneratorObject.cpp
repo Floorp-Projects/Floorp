@@ -132,15 +132,12 @@ GeneratorObject::resume(JSContext *cx, InterpreterActivation &activation,
 
     activation.regs().pc = callee->nonLazyScript()->code() + genObj->suspendedBytecodeOffset();
 
-    // If we are resuming a JSOP_YIELD, always push on a value, even if we are
-    // raising an exception.  In the exception case, the stack needs to have
-    // something on it so that exception handling doesn't skip the catch
-    // blocks.  See TryNoteIter::settle.
-    if (!genObj->isNewborn()) {
-        activation.regs().sp++;
-        MOZ_ASSERT(activation.regs().spForStackDepth(activation.regs().stackDepth()));
-        activation.regs().sp[-1] = arg;
-    }
+    // Always push on a value, even if we are raising an exception. In the
+    // exception case, the stack needs to have something on it so that exception
+    // handling doesn't skip the catch blocks. See TryNoteIter::settle.
+    activation.regs().sp++;
+    MOZ_ASSERT(activation.regs().spForStackDepth(activation.regs().stackDepth()));
+    activation.regs().sp[-1] = arg;
 
     switch (resumeKind) {
       case NEXT:
