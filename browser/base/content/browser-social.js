@@ -12,9 +12,6 @@ let SocialUI,
 
 (function() {
 
-XPCOMUtils.defineLazyModuleGetter(this, "SharedFrame",
-  "resource:///modules/SharedFrame.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame",
   "resource:///modules/PanelFrame.jsm");
 
@@ -1267,7 +1264,6 @@ SocialStatus = {
     let notificationFrameId = "social-status-" + origin;
     let frame = document.getElementById(notificationFrameId);
     if (frame) {
-      SharedFrame.forgetGroup(frame.id);
       frame.parentNode.removeChild(frame);
     }
   },
