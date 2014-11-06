@@ -711,9 +711,10 @@ WrapperOwner::regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g)
 void
 CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
 {
+    AuxCPOWData *aux = AuxCPOWDataOf(proxy);
+
     OwnerOf(proxy)->drop(proxy);
 
-    AuxCPOWData *aux = AuxCPOWDataOf(proxy);
     if (aux)
         delete aux;
 }
