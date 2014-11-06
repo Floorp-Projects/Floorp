@@ -14,6 +14,8 @@
 #include "GeckoTaskTracer.h"
 #endif
 
+#include "mozilla/Move.h"
+
 #ifdef MOZ_TASK_TRACER
 using namespace mozilla::tasktracer;
 #endif
@@ -80,6 +82,18 @@ Message::Message(const Message& other) : Pickle(other) {
 #endif
 }
 
+Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
+  InitLoggingVariables(other.name_);
+#if defined(OS_POSIX)
+  file_descriptor_set_ = other.file_descriptor_set_.forget();
+#endif
+#ifdef MOZ_TASK_TRACER
+  header()->source_event_id = other.header()->source_event_id;
+  header()->parent_task_id = other.header()->parent_task_id;
+  header()->source_event_type = other.header()->source_event_type;
+#endif
+}
+
 void Message::InitLoggingVariables(const char* const name) {
   name_ = name;
 #ifdef IPC_MESSAGE_LOG_ENABLED
@@ -99,6 +113,20 @@ Message& Message::operator=(const Message& other) {
   header()->source_event_id = other.header()->source_event_id;
   header()->parent_task_id = other.header()->parent_task_id;
   header()->source_event_type = other.header()->source_event_type;
+#endif
+  return *this;
+}
+
+Message& Message::operator=(Message&& other) {
+  *static_cast<Pickle*>(this) = mozilla::Move(other);
+  InitLoggingVariables(other.name_);
+#if defined(OS_POSIX)
+  file_descriptor_set_.swap(other.file_descriptor_set_);
+#endif
+#ifdef MOZ_TASK_TRACER
+  std::swap(header()->source_event_id, other.header()->source_event_id);
+  std::swap(header()->parent_task_id, other.header()->parent_task_id);
+  std::swap(header()->source_event_type, other.header()->source_event_type);
 #endif
   return *this;
 }
