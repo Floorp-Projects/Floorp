@@ -275,22 +275,6 @@ let Reader = {
     yield OS.File.remove(path);
   }),
 
-  uninit: function Reader_uninit() {
-    Services.prefs.removeObserver("reader.parse-on-load.", this);
-
-    Services.obs.removeObserver(this, "Reader:Removed");
-
-    let requests = this._requests;
-    for (let url in requests) {
-      let request = requests[url];
-      if (request.browser) {
-        let browser = request.browser;
-        browser.parentNode.removeChild(browser);
-      }
-    }
-    delete this._requests;
-  },
-
   log: function(msg) {
     if (this.DEBUG)
       dump("Reader: " + msg);
