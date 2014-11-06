@@ -71,10 +71,38 @@
   --space-above-tabbar: 9px;
 }
 
-.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  padding-left: 0;
-  padding-right: 0;
+/* Override @tabCurveHalfWidth@ and @tabCurveWidth@.  XXX: Switch to a CSS variable once the perf is sorted out - bug 1088771 */
+.tab-background-middle {
+  border-left-width: 0;
+  border-right-width: 0;
+  margin: 0;
 }
+
+.tab-background,
+.tabs-newtab-button {
+  -moz-margin-end: 0;
+  -moz-margin-start: 0;
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
+  -moz-padding-end: 0;
+  -moz-padding-start: 0;
+}
+
+.tab-background-start[selected=true]::after,
+.tab-background-start[selected=true]::before,
+.tab-background-start,
+.tab-background-end,
+.tab-background-end[selected=true]::after,
+.tab-background-end[selected=true]::before {
+  width: 0;
+}
+
+.tab-background-start[selected=true]::after,
+.tab-background-end[selected=true]::after {
+  -moz-margin-start: 0;
+}
+/* End override @tabCurveHalfWidth@ and @tabCurveWidth@ */
 
 #navigator-toolbox ::-moz-selection {
   background-color: #074D75;
