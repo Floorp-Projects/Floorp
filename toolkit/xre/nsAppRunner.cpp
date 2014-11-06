@@ -2345,6 +2345,21 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
     return ShowProfileManager(aProfileSvc, aNative);
   }
 
+#ifndef MOZ_DEV_EDITION
+  // If the only existing profile is the dev-edition-profile and this is not
+  // Developer Edition, then no valid profiles were found.
+  if (count == 1) {
+    nsCOMPtr<nsIToolkitProfile> deProfile;
+    // GetSelectedProfile will auto-select the only profile if there's just one
+    aProfileSvc->GetSelectedProfile(getter_AddRefs(deProfile));
+    nsAutoCString profileName;
+    deProfile->GetName(profileName);
+    if (profileName.EqualsLiteral("dev-edition-default")) {
+      count = 0;
+    }
+  }
+#endif
+
   if (!count) {
     gDoMigration = true;
     gDoProfileReset = false;
@@ -2355,6 +2370,7 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
                                              NS_LITERAL_CSTRING("default"),
                                              getter_AddRefs(profile));
     if (NS_SUCCEEDED(rv)) {
+      aProfileSvc->SetSelectedProfile(profile);
       aProfileSvc->Flush();
       rv = profile->Lock(nullptr, aResult);
       if (NS_SUCCEEDED(rv)) {
