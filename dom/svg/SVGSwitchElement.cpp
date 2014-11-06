@@ -5,7 +5,7 @@
 
 #include "mozilla/dom/SVGSwitchElement.h"
 
-#include "nsSVGEffects.h"
+#include "nsLayoutUtils.h"
 #include "nsSVGUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/SVGSwitchElementBinding.h"
@@ -62,7 +62,9 @@ SVGSwitchElement::MaybeInvalidate()
 
   nsIFrame *frame = GetPrimaryFrame();
   if (frame) {
-    nsSVGEffects::InvalidateRenderingObservers(frame);
+    nsLayoutUtils::PostRestyleEvent(
+      this, nsRestyleHint(0),
+      nsChangeHint_InvalidateRenderingObservers);
     nsSVGUtils::ScheduleReflowSVG(frame);
   }
 
