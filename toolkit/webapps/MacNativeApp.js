@@ -222,7 +222,8 @@ NativeApp.prototype = {
 
   _copyPrebuiltFiles: function(aDir) {
     let destDir = getFile(aDir, this.macOSDir);
-    let stub = getFile(this.runtimeFolder, "webapprt-stub");
+    let stub = getFile(OS.Path.join(OS.Path.dirname(this.runtimeFolder),
+                                    "Resources"), "webapprt-stub");
     stub.copyTo(destDir, "webapprt");
   },
 

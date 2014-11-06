@@ -16,8 +16,8 @@ class Adts
 {
 public:
   static int8_t GetFrequencyIndex(uint16_t aSamplesPerSecond);
-  static bool ConvertEsdsToAdts(uint16_t aChannelCount, int8_t aFrequencyIndex,
-                                int8_t aProfile, MP4Sample* aSample);
+  static bool ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
+                            int8_t aProfile, MP4Sample* aSample);
 };
 }
 
