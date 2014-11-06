@@ -129,5 +129,5 @@ _DEPRECATED_VARIABLES := \
 
 $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES) $(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
 
-TIERS := export $(if $(COMPILE_ENVIRONMENT),compile )libs tools
+TIERS := export $(if $(COMPILE_ENVIRONMENT),compile )misc libs tools
 endif
