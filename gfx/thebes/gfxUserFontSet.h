@@ -235,13 +235,6 @@ public:
     // the given name
     gfxUserFontFamily* LookupFamily(const nsAString& aName) const;
 
-    // Lookup a userfont entry for a given style, loaded or not.
-    // aFamily must be a family returned by our LookupFamily method.
-    // If only invalid fonts in family, returns null.
-    gfxUserFontEntry* FindUserFontEntry(gfxFontFamily* aFamily,
-                                        const gfxFontStyle& aFontStyle,
-                                        bool& aNeedsBold);
-
     // Lookup a font entry for a given style, returns null if not loaded.
     // aFamily must be a family returned by our LookupFamily method.
     // (only used by gfxPangoFontGroup for now)
@@ -566,6 +559,19 @@ public:
     bool WaitForUserFont() const {
         return mUserFontLoadState == STATUS_LOADING &&
                mFontDataLoadingState < LOADING_SLOWLY;
+    }
+
+    // for userfonts, cmap is used to store the unicode range data
+    // no cmap ==> all codepoints permitted
+    bool CharacterInUnicodeRange(uint32_t ch) const {
+        if (mCharacterMap) {
+            return mCharacterMap->test(ch);
+        }
+        return true;
+    }
+
+    gfxCharacterMap* GetUnicodeRangeMap() const {
+        return mCharacterMap.get();
     }
 
     // load the font - starts the loading of sources which continues until

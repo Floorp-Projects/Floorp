@@ -8914,6 +8914,44 @@ CodeGenerator::visitLoadElementHole(LLoadElementHole *lir)
 }
 
 bool
+CodeGenerator::visitLoadUnboxedPointerV(LLoadUnboxedPointerV *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    const ValueOperand out = ToOutValue(lir);
+
+    if (lir->index()->isConstant())
+        masm.loadPtr(Address(elements, ToInt32(lir->index()) * sizeof(uintptr_t)), out.scratchReg());
+    else
+        masm.loadPtr(BaseIndex(elements, ToRegister(lir->index()), ScalePointer), out.scratchReg());
+
+    Label notNull, done;
+    masm.branchPtr(Assembler::NotEqual, out.scratchReg(), ImmWord(0), &notNull);
+
+    masm.moveValue(NullValue(), out);
+    masm.jump(&done);
+
+    masm.bind(&notNull);
+    masm.tagValue(JSVAL_TYPE_OBJECT, out.scratchReg(), out);
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
+CodeGenerator::visitLoadUnboxedPointerT(LLoadUnboxedPointerT *lir)
+{
+    Register elements = ToRegister(lir->elements());
+    const LAllocation *index = lir->index();
+    Register out = ToRegister(lir->output());
+
+    if (index->isConstant())
+        masm.loadPtr(Address(elements, ToInt32(index) * sizeof(uintptr_t)), out);
+    else
+        masm.loadPtr(BaseIndex(elements, ToRegister(index), ScalePointer), out);
+    return true;
+}
+
+bool
 CodeGenerator::visitLoadTypedArrayElement(LLoadTypedArrayElement *lir)
 {
     Register elements = ToRegister(lir->elements());

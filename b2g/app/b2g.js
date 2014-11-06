@@ -319,6 +319,11 @@ pref("dom.indexedDB.warningQuota", 5);
 pref("media.preload.default", 1); // default to preload none
 pref("media.preload.auto", 2);    // preload metadata if preload=auto
 pref("media.cache_size", 4096);    // 4MB media cache
+// Try to save battery by not resuming reading from a connection until we fall
+// below 10s of buffered data.
+pref("media.cache_resume_threshold", 10);
+pref("media.cache_readahead_limit", 30);
+
 #ifdef MOZ_FMP4
 // Enable/Disable Gonk Decoder Module
 pref("media.fragmented-mp4.gonk.enabled", false);
