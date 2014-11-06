@@ -43,10 +43,10 @@ public:
   nsresult ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags) MOZ_OVERRIDE;
 
-  nsresult Seek(int64_t aTime,
-                int64_t aStartTime,
-                int64_t aEndTime,
-                int64_t aCurrentTime) MOZ_OVERRIDE;
+  void Seek(int64_t aTime,
+            int64_t aStartTime,
+            int64_t aEndTime,
+            int64_t aCurrentTime) MOZ_OVERRIDE;
 
   bool IsMediaSeekable() MOZ_OVERRIDE;
   
@@ -72,6 +72,8 @@ private:
 
   // Attempt to initialize DXVA. Returns true on success.
   bool InitializeDXVA();  
+
+  nsresult SeekInternal(int64_t aTime);
 
   RefPtr<IMFSourceReader> mSourceReader;
   RefPtr<WMFByteStream> mByteStream;

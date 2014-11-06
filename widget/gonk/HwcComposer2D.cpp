@@ -395,36 +395,23 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     }
 
     LayerRenderState state = aLayer->GetRenderState();
-    nsIntSize surfaceSize;
-    nsIntRect visibleRect = visibleRegion.GetBounds();
 
-    if (state.mSurface.get()) {
-        surfaceSize = state.mSize;
-        // In some cases the visible rect assigned to the layer can be larger
-        // than the layer's surface, e.g., an ImageLayer with a small Image
-        // in it.
-        visibleRect.IntersectRect(visibleRect,
-            nsIntRect(nsIntPoint(0, 0), surfaceSize));
-    } else {
-        if (aLayer->AsColorLayer() && mColorFill) {
-            fillColor = true;
-        } else {
-            LOGD("%s Layer doesn't have a gralloc buffer", aLayer->Name());
-            return false;
-        }
+    if (!state.mSurface.get()) {
+      if (aLayer->AsColorLayer() && mColorFill) {
+        fillColor = true;
+      } else {
+          LOGD("%s Layer doesn't have a gralloc buffer", aLayer->Name());
+          return false;
+      }
     }
-    // Buffer rotation is not to be confused with the angled rotation done by a transform matrix
-    // It's a fancy PaintedLayer feature used for scrolling
-    if (state.BufferRotated()) {
-        LOGD("%s Layer has a rotated buffer", aLayer->Name());
-        return false;
-    }
+
+    nsIntRect visibleRect = visibleRegion.GetBounds();
 
     nsIntRect bufferRect;
     if (fillColor) {
         bufferRect = nsIntRect(visibleRect);
     } else {
-        if(state.mHasOwnOffset) {
+        if (state.mHasOwnOffset) {
             bufferRect = nsIntRect(state.mOffset.x, state.mOffset.y,
                                    state.mSize.width, state.mSize.height);
         } else {
@@ -432,6 +419,17 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             //surface size as its buffer bounds
             bufferRect = nsIntRect(0, 0, state.mSize.width, state.mSize.height);
         }
+        // In some cases the visible rect assigned to the layer can be larger
+        // than the layer's surface, e.g., an ImageLayer with a small Image
+        // in it.
+        visibleRect.IntersectRect(visibleRect, bufferRect);
+    }
+
+    // Buffer rotation is not to be confused with the angled rotation done by a transform matrix
+    // It's a fancy PaintedLayer feature used for scrolling
+    if (state.BufferRotated()) {
+        LOGD("%s Layer has a rotated buffer", aLayer->Name());
+        return false;
     }
 
     hwc_rect_t sourceCrop, displayFrame;

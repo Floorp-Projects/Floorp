@@ -755,14 +755,15 @@ MP4Reader::DecodeVideoFrame(bool &aKeyframeSkip,
   return rv;
 }
 
-nsresult
+void
 MP4Reader::Seek(int64_t aTime,
                 int64_t aStartTime,
                 int64_t aEndTime,
                 int64_t aCurrentTime)
 {
   if (!mDecoder->GetResource()->IsTransportSeekable() || !mDemuxer->CanSeek()) {
-    return NS_ERROR_FAILURE;
+    GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
+    return;
   }
 
   mQueuedVideoSample = nullptr;
@@ -775,7 +776,7 @@ MP4Reader::Seek(int64_t aTime,
       mQueuedVideoSample ? mQueuedVideoSample->composition_timestamp : aTime);
   }
 
-  return NS_OK;
+  GetCallback()->OnSeekCompleted(NS_OK);
 }
 
 void

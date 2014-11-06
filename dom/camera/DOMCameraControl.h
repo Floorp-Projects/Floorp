@@ -18,6 +18,9 @@
 #include "nsHashPropertyBag.h"
 #include "DeviceStorage.h"
 #include "DOMCameraControlListener.h"
+#ifdef MOZ_WIDGET_GONK
+#include "nsITimer.h"
+#endif
 
 class nsDOMDeviceStorage;
 class nsPIDOMWindow;
@@ -140,6 +143,11 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+#ifdef MOZ_WIDGET_GONK
+  static void PreinitCameraHardware();
+  static void DiscardCachedCameraInstance(nsITimer* aTimer, void* aClosure);
+#endif
+
   IMPL_EVENT_HANDLER(facesdetected)
   IMPL_EVENT_HANDLER(shutter)
   IMPL_EVENT_HANDLER(close)
@@ -252,6 +260,13 @@ protected:
   dom::CameraStartRecordingOptions mOptions;
   nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
   DOMCameraControlListener::PreviewState mPreviewState;
+
+#ifdef MOZ_WIDGET_GONK
+  // cached camera control, to improve start-up time
+  static StaticRefPtr<ICameraControl> sCachedCameraControl;
+  static nsresult sCachedCameraControlStartResult;
+  static nsCOMPtr<nsITimer> sDiscardCachedCameraControlTimer;
+#endif
 
 private:
   nsDOMCameraControl(const nsDOMCameraControl&) MOZ_DELETE;

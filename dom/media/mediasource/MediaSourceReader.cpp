@@ -39,6 +39,13 @@ MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
   , mLastAudioTime(-1)
   , mLastVideoTime(-1)
+  , mPendingSeekTime(-1)
+  , mPendingStartTime(-1)
+  , mPendingEndTime(-1)
+  , mPendingCurrentTime(-1)
+  , mWaitingForSeekData(false)
+  , mPendingSeeks(0)
+  , mSeekResult(NS_OK)
   , mTimeThreshold(-1)
   , mDropAudioBeforeThreshold(false)
   , mDropVideoBeforeThreshold(false)
@@ -366,21 +373,6 @@ MediaSourceReader::OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const Medi
   mDecoder->NotifyWaitingForResourcesStatusChanged();
 }
 
-void
-MediaSourceReader::WaitForTimeRange(int64_t aTime)
-{
-  MSE_DEBUG("MediaSourceReader(%p)::WaitForTimeRange(%lld)", this, aTime);
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-  // Loop until we have the requested time range in the active TrackBuffers.
-  // Ideally, this wait loop would use an async request and callback
-  // instead.  Bug 1056441 covers that change.
-  while (!TrackBuffersContainTime(aTime) && !IsShutdown() && !IsEnded()) {
-    MSE_DEBUG("MediaSourceReader(%p)::WaitForTimeRange(%lld) waiting", this, aTime);
-    mon.Wait();
-  }
-}
-
 bool
 MediaSourceReader::TrackBuffersContainTime(int64_t aTime)
 {
@@ -394,12 +386,84 @@ MediaSourceReader::TrackBuffersContainTime(int64_t aTime)
   return true;
 }
 
-nsresult
+void
+MediaSourceReader::NotifyTimeRangesChanged()
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (mWaitingForSeekData) {
+    //post a task to the state machine thread to call seek.
+    RefPtr<nsIRunnable> task(NS_NewRunnableMethod(
+        this, &MediaSourceReader::AttemptSeek));
+    GetTaskQueue()->Dispatch(task.forget());
+  }
+}
+
+void
 MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                         int64_t aCurrentTime)
 {
   MSE_DEBUG("MediaSourceReader(%p)::Seek(aTime=%lld, aStart=%lld, aEnd=%lld, aCurrent=%lld)",
             this, aTime, aStartTime, aEndTime, aCurrentTime);
+
+  if (IsShutdown()) {
+    GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Store pending seek target in case the track buffers don't contain
+  // the desired time and we delay doing the seek.
+  mPendingSeekTime = aTime;
+  mPendingStartTime = aStartTime;
+  mPendingEndTime = aEndTime;
+  mPendingCurrentTime = aCurrentTime;
+
+  // Only increment the number of expected OnSeekCompleted
+  // notifications if we weren't already waiting for AttemptSeek
+  // to complete (and they would have been accounted for already).
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+    if (!mWaitingForSeekData) {
+      mWaitingForSeekData = true;
+      if (mAudioTrack) {
+        mPendingSeeks++;
+      }
+      if (mVideoTrack) {
+        mPendingSeeks++;
+      }
+    }
+  }
+
+  AttemptSeek();
+}
+
+void
+MediaSourceReader::OnSeekCompleted(nsresult aResult)
+{
+  mPendingSeeks--;
+  // Keep the most recent failed result (if any)
+  if (NS_FAILED(aResult)) {
+    mSeekResult = aResult;
+  }
+  // Only dispatch the final event onto the state machine
+  // since it's only expecting one response.
+  if (!mPendingSeeks) {
+    GetCallback()->OnSeekCompleted(mSeekResult);
+    mSeekResult = NS_OK;
+  }
+}
+
+void
+MediaSourceReader::AttemptSeek()
+{
+  // Make sure we don't hold the monitor while calling into the reader
+  // Seek methods since it can deadlock.
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    if (!mWaitingForSeekData || !TrackBuffersContainTime(mPendingSeekTime)) {
+      return;
+    }
+  }
 
   ResetDecode();
   for (uint32_t i = 0; i < mTrackBuffers.Length(); ++i) {
@@ -407,34 +471,31 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   }
 
   // Decoding discontinuity upon seek, reset last times to seek target.
-  mLastAudioTime = aTime;
-  mLastVideoTime = aTime;
-
-  WaitForTimeRange(aTime);
-
-  if (IsShutdown()) {
-    return NS_ERROR_FAILURE;
-  }
+  mLastAudioTime = mPendingSeekTime;
+  mLastVideoTime = mPendingSeekTime;
 
   if (mAudioTrack) {
     mAudioIsSeeking = true;
-    SwitchAudioReader(aTime);
-    nsresult rv = mAudioReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
-    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p rv=%x", this, mAudioReader.get(), rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    SwitchAudioReader(mPendingSeekTime);
+    mAudioReader->Seek(mPendingSeekTime,
+                       mPendingStartTime,
+                       mPendingEndTime,
+                       mPendingCurrentTime);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek audio reader=%p", this, mAudioReader.get());
   }
   if (mVideoTrack) {
     mVideoIsSeeking = true;
-    SwitchVideoReader(aTime);
-    nsresult rv = mVideoReader->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
-    MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p rv=%x", this, mVideoReader.get(), rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+    SwitchVideoReader(mPendingSeekTime);
+    mVideoReader->Seek(mPendingSeekTime,
+                       mPendingStartTime,
+                       mPendingEndTime,
+                       mPendingCurrentTime);
+    MSE_DEBUG("MediaSourceReader(%p)::Seek video reader=%p", this, mVideoReader.get());
   }
-  return NS_OK;
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    mWaitingForSeekData = false;
+  }
 }
 
 nsresult

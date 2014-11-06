@@ -85,6 +85,8 @@ class InputQueue;
  *
  * Note that the ClearTree function MUST be called when this class is no longer needed;
  * see the method documentation for details.
+ *
+ * Behaviour of APZ is controlled by a number of preferences shown \ref APZCPrefs "here".
  */
 class APZCTreeManager {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZCTreeManager)

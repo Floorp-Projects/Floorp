@@ -93,13 +93,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       var attributes = {"src": aSRC};
       testAttrs(acc, attributes, true);
 
-      if (aActionCount) {
-        is(acc.actionCount, aActionCount,
-           "Wrong number of actions for " + aID + "!");
-
-        for (index = 0; index < aActionNames.length; index++)
+      var actionCount = aActionCount || 0;
+      is(acc.actionCount, actionCount,
+         "Wrong number of actions for " + aID + "!");
+      if (actionCount) {
+        for (index = 0; index < aActionNames.length; index++) {
           is(acc.getActionName(index), aActionNames[index],
              "Wrong action name for " + aID + ", index " + index +"!");
+        }
       }
     }
 
@@ -109,12 +110,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       testThis("nonLinkedImage", "moz.png", 89, 38);
 
       // Test linked image
-      testThis("linkedImage", "moz.png", 89, 38);
+      var actionNamesArray = new Array("jump");
+      testThis("linkedImage", "moz.png", 89, 38, 1,
+               actionNamesArray);
 
       // Image with long desc
       var actionNamesArray = new Array("showlongdesc");
       testThis("longdesc", "moz.png", 89, 38, 1,
                actionNamesArray);
+
+      // Image with invalid url in long desc
+      testThis("invalidLongdesc", "moz.png", 89, 38, 0);
 
       // Image with click and long desc
       actionNamesArray = null;
@@ -132,6 +138,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
       actionNamesArray = null;
       actionNamesArray = new Array("showlongdesc");
       testThis("longdesc2", "moz.png",
+               89, 38, 1, actionNamesArray);
+
+      // Image described by HTML:a@href with whitespaces
+      actionNamesArray = null;
+      actionNamesArray = new Array("showlongdesc");
+      testThis("longdesc3", "moz.png",
                89, 38, 1, actionNamesArray);
 
       SimpleTest.finish();
@@ -162,6 +174,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
   <br>Image with longdesc:<br>
   <img id="longdesc" src="moz.png" longdesc="longdesc_src.html"
        alt="Image of Mozilla logo"/>
+  <br>Image with invalid url in longdesc:<br>
+  <img id="invalidLongdesc" src="moz.png" longdesc="longdesc src.html"
+       alt="Image of Mozilla logo"/>
   <br>Image with click and longdesc:<br>
   <img id="clickAndLongdesc" src="moz.png" longdesc="longdesc_src.html"
        alt="Another image of Mozilla logo" onclick="alert('Clicked!');"/>
@@ -170,6 +185,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429659
   <img id="longdesc2" src="moz.png" aria-describedby="describing_link"
        alt="Second Image of Mozilla logo"/>
   <a id="describing_link" href="longdesc_src.html">link to description of image</a>
+
+  <br>Image described by a link to be treated as longdesc with whitespaces<br>
+  <img id="longdesc3" src="moz.png" aria-describedby="describing_link2"
+       alt="Second Image of Mozilla logo"/>
+  <a id="describing_link2" href="longdesc src.html">link to description of image</a>
 
   <br>Image with click:<br>
   <img id="click" src="moz.png"

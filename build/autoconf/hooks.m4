@@ -78,9 +78,9 @@ if test "$no_recursion" != yes; then
 fi
 ])
 
-define([MOZ_RUN_ALL_SUBCONFIGURES],
+define([MOZ_RUN_ALL_SUBCONFIGURES],[
 MOZ_RUN_SUBCONFIGURES([--list subconfigures --skip skip_subconfigures])
-)
+])
 
 dnl Print error messages in config.log as well as stderr
 define([AC_MSG_ERROR],

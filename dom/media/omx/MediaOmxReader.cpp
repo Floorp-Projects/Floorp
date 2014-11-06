@@ -539,7 +539,7 @@ bool MediaOmxReader::DecodeAudioData()
                                       source.mAudioChannels));
 }
 
-nsresult MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
+void MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
   EnsureActive();
@@ -565,7 +565,7 @@ nsresult MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndT
     mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
   }
 
-  return NS_OK;
+  GetCallback()->OnSeekCompleted(NS_OK);
 }
 
 void MediaOmxReader::SetIdle() {

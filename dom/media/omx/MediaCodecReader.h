@@ -89,10 +89,10 @@ public:
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime
   // is the current playback position in microseconds.
-  virtual nsresult Seek(int64_t aTime,
-                        int64_t aStartTime,
-                        int64_t aEndTime,
-                        int64_t aCurrentTime);
+  virtual void Seek(int64_t aTime,
+                    int64_t aStartTime,
+                    int64_t aEndTime,
+                    int64_t aCurrentTime);
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 
