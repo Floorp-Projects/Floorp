@@ -165,6 +165,7 @@ assertAsmTypeFail('glob', USE_ASM + "var f32=glob.Math.fround;" + I32 + "functio
 
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); return x.length|0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4).y; return x|0;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); return (x.x > (1>>>0)) | 0;} return f");
 
 CheckI4('', 'var x=i4(0,0,0,0)', [0,0,0,0]);
 CheckI4('', 'var x=i4(1,2,3,4)', [1,2,3,4]);
@@ -180,6 +181,7 @@ CheckF4('', 'var x=f4(13.37, 2., 3., -0)', [13.37, 2, 3, -0]);
 
 // signMask
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); var y=0.0; y=x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); return (x.signMask > (1>>>0)) | 0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + FROUND + "function f() {var x=i4(1,2,3,4); var y=f32(0.0); y=x.signMask;} return f");
 
 assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42; return x.signMask;} return f");
