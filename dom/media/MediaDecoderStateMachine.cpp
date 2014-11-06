@@ -371,7 +371,8 @@ void MediaDecoderStateMachine::SendStreamData()
     return;
   }
 
-  if (mState == DECODER_STATE_DECODING_METADATA) {
+  if (mState == DECODER_STATE_DECODING_METADATA ||
+      mState == DECODER_STATE_DECODING_FIRSTFRAME) {
     return;
   }
 
@@ -705,9 +706,9 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
              (audio ? audio->mDiscontinuity : 0));
 
   switch (mState) {
-    case DECODER_STATE_DECODING_METADATA: {
+    case DECODER_STATE_DECODING_FIRSTFRAME: {
       Push(audio.forget());
-      MaybeFinishDecodeMetadata();
+      MaybeFinishDecodeFirstFrame();
       return;
     }
 
@@ -770,7 +771,7 @@ MediaDecoderStateMachine::Push(AudioData* aSample)
   // otherwise AdvanceFrame may pop the sample before we have a chance
   // to reach playing.
   AudioQueue().Push(aSample);
-  if (mState > DECODER_STATE_DECODING_METADATA) {
+  if (mState > DECODER_STATE_DECODING_FIRSTFRAME) {
     SendStreamData();
     // The ready state can change when we've decoded data, so update the
     // ready state, so that DOM events can fire.
@@ -788,7 +789,7 @@ MediaDecoderStateMachine::Push(VideoData* aSample)
   // otherwise AdvanceFrame may pop the sample before we have a chance
   // to reach playing.
   VideoQueue().Push(aSample);
-  if (mState > DECODER_STATE_DECODING_METADATA) {
+  if (mState > DECODER_STATE_DECODING_FIRSTFRAME) {
     SendStreamData();
     // The ready state can change when we've decoded data, so update the
     // ready state, so that DOM events can fire.
@@ -839,8 +840,8 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
   }
   isAudio ? AudioQueue().Finish() : VideoQueue().Finish();
   switch (mState) {
-    case DECODER_STATE_DECODING_METADATA: {
-      MaybeFinishDecodeMetadata();
+    case DECODER_STATE_DECODING_FIRSTFRAME: {
+      MaybeFinishDecodeFirstFrame();
       return;
     }
 
@@ -883,14 +884,14 @@ MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError()
 }
 
 void
-MediaDecoderStateMachine::MaybeFinishDecodeMetadata()
+MediaDecoderStateMachine::MaybeFinishDecodeFirstFrame()
 {
   AssertCurrentThreadInMonitor();
   if ((IsAudioDecoding() && AudioQueue().GetSize() == 0) ||
       (IsVideoDecoding() && VideoQueue().GetSize() == 0)) {
     return;
   }
-  if (NS_FAILED(FinishDecodeMetadata())) {
+  if (NS_FAILED(FinishDecodeFirstFrame())) {
     DecodeError();
   }
 }
@@ -908,9 +909,9 @@ MediaDecoderStateMachine::OnVideoDecoded(VideoData* aVideoSample)
              (video ? video->mDiscontinuity : 0));
 
   switch (mState) {
-    case DECODER_STATE_DECODING_METADATA: {
+    case DECODER_STATE_DECODING_FIRSTFRAME: {
       Push(video.forget());
-      MaybeFinishDecodeMetadata();
+      MaybeFinishDecodeFirstFrame();
       return;
     }
 
@@ -1221,6 +1222,7 @@ static const char* const gMachineStateStr[] = {
   "NONE",
   "DECODING_METADATA",
   "WAIT_FOR_RESOURCES",
+  "DECODING_FIRSTFRAME",
   "DORMANT",
   "DECODING",
   "SEEKING",
@@ -1527,12 +1529,55 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
     DECODER_WARN("Seek() function should not be called on a non-seekable state machine");
     return;
   }
+
   // MediaDecoder::mPlayState should be SEEKING while we seek, and
   // in that case MediaDecoder shouldn't be calling us.
   NS_ASSERTION(mState != DECODER_STATE_SEEKING,
                "We shouldn't already be seeking");
-  NS_ASSERTION(mState >= DECODER_STATE_DECODING,
-               "We should have loaded metadata");
+  NS_ASSERTION(mState > DECODER_STATE_DECODING_METADATA,
+               "We should have got duration already");
+
+  if (mState <= DECODER_STATE_DECODING_FIRSTFRAME) {
+    DECODER_LOG("Seek() Not Enough Data to continue at this stage, queuing seek");
+    mQueuedSeekTarget = aTarget;
+    return;
+  }
+  mQueuedSeekTarget.Reset();
+
+  StartSeek(aTarget);
+}
+
+void
+MediaDecoderStateMachine::EnqueueStartQueuedSeekTask()
+{
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::StartQueuedSeek);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+}
+
+void
+MediaDecoderStateMachine::StartQueuedSeek()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (!mQueuedSeekTarget.IsValid()) {
+    return;
+  }
+  StartSeek(mQueuedSeekTarget);
+  mQueuedSeekTarget.Reset();
+}
+
+void
+MediaDecoderStateMachine::StartSeek(const SeekTarget& aTarget)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  AssertCurrentThreadInMonitor();
+
+  MOZ_ASSERT(mState >= DECODER_STATE_DECODING);
+
+  if (mState == DECODER_STATE_SHUTDOWN) {
+    return;
+  }
 
   // Bound the seek time to be inside the media range.
   NS_ASSERTION(mStartTime != -1, "Should know start time by now");
@@ -1554,8 +1599,8 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
 
 void MediaDecoderStateMachine::StopAudioThread()
 {
-  NS_ASSERTION(OnDecodeThread() ||
-               OnStateMachineThread(), "Should be on decode thread or state machine thread");
+  NS_ASSERTION(OnDecodeThread() || OnStateMachineThread(),
+               "Should be on decode thread or state machine thread");
   AssertCurrentThreadInMonitor();
 
   if (mStopAudioThread) {
@@ -1593,6 +1638,19 @@ MediaDecoderStateMachine::EnqueueDecodeMetadataTask()
 
   RefPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeMetadata));
+  nsresult rv = mDecodeTaskQueue->Dispatch(task);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult
+MediaDecoderStateMachine::EnqueueDecodeFirstFrameTask()
+{
+  AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_FIRSTFRAME);
+
+  RefPtr<nsIRunnable> task(
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeFirstFrame));
   nsresult rv = mDecodeTaskQueue->Dispatch(task);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
@@ -1733,7 +1791,7 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
     return NS_OK;
   }
 
-  MOZ_ASSERT(mState > DECODER_STATE_DECODING_METADATA);
+  MOZ_ASSERT(mState > DECODER_STATE_DECODING_FIRSTFRAME);
 
   if (IsAudioDecoding() && !mAudioRequestPending && !mWaitingForDecoderSeek) {
     RefPtr<nsIRunnable> task(
@@ -1778,7 +1836,7 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
     return NS_OK;
   }
 
-  MOZ_ASSERT(mState > DECODER_STATE_DECODING_METADATA);
+  MOZ_ASSERT(mState > DECODER_STATE_DECODING_FIRSTFRAME);
 
   if (IsVideoDecoding() && !mVideoRequestPending && !mWaitingForDecoderSeek) {
     RefPtr<nsIRunnable> task(
@@ -1856,8 +1914,8 @@ bool MediaDecoderStateMachine::HasLowUndecodedData()
 bool MediaDecoderStateMachine::HasLowUndecodedData(double aUsecs)
 {
   AssertCurrentThreadInMonitor();
-  NS_ASSERTION(mState > DECODER_STATE_DECODING_METADATA,
-               "Must have loaded metadata for GetBuffered() to work");
+  NS_ASSERTION(mState > DECODER_STATE_DECODING_FIRSTFRAME,
+               "Must have loaded first frame for GetBuffered() to work");
 
   bool reliable;
   double bytesPerSecond = mDecoder->ComputePlaybackRate(&reliable);
@@ -1967,6 +2025,55 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
   mDecoder->StartProgressUpdates();
   mGotDurationFromMetaData = (GetDuration() != -1);
 
+  if (mGotDurationFromMetaData) {
+    // We have all the information required: duration and size
+    // Inform the element that we've loaded the metadata.
+    EnqueueLoadedMetadataEvent();
+  }
+
+  if (mState == DECODER_STATE_DECODING_METADATA) {
+    SetState(DECODER_STATE_DECODING_FIRSTFRAME);
+    res = EnqueueDecodeFirstFrameTask();
+    if (NS_FAILED(res)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  ScheduleStateMachine();
+
+  return NS_OK;
+}
+
+void
+MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
+{
+  nsAutoPtr<MediaInfo> info(new MediaInfo());
+  *info = mInfo;
+  nsCOMPtr<nsIRunnable> metadataLoadedEvent =
+    new MetadataEventRunner(mDecoder, info.forget(), mMetadataTags.forget());
+  NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
+}
+
+void
+MediaDecoderStateMachine::CallDecodeFirstFrame()
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (mState != DECODER_STATE_DECODING_FIRSTFRAME) {
+    return;
+  }
+  if (NS_FAILED(DecodeFirstFrame())) {
+    DECODER_WARN("Decode failed to start, shutting down decoder");
+    DecodeError();
+  }
+}
+
+nsresult
+MediaDecoderStateMachine::DecodeFirstFrame()
+{
+  AssertCurrentThreadInMonitor();
+  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_FIRSTFRAME);
+  DECODER_LOG("DecodeFirstFrame started");
+
   if (HasAudio()) {
     RefPtr<nsIRunnable> decodeTask(
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::DispatchAudioDecodeTaskIfNeeded));
@@ -1980,11 +2087,11 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
 
   if (mScheduler->IsRealTime()) {
     SetStartTime(0);
-    res = FinishDecodeMetadata();
+    nsresult res = FinishDecodeFirstFrame();
     NS_ENSURE_SUCCESS(res, res);
   } else if (mDecodingFrozenAtStateMetadata) {
     SetStartTime(mStartTime);
-    res = FinishDecodeMetadata();
+    nsresult res = FinishDecodeFirstFrame();
     NS_ENSURE_SUCCESS(res, res);
   } else {
     if (HasAudio()) {
@@ -2001,11 +2108,11 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
 }
 
 nsresult
-MediaDecoderStateMachine::FinishDecodeMetadata()
+MediaDecoderStateMachine::FinishDecodeFirstFrame()
 {
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  DECODER_LOG("FinishDecodeMetadata");
+  DECODER_LOG("FinishDecodeFirstFrame");
 
   if (mState == DECODER_STATE_SHUTDOWN) {
     return NS_ERROR_FAILURE;
@@ -2044,19 +2151,34 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
     mLowAudioThresholdUsecs /= NO_VIDEO_AMPLE_AUDIO_DIVISOR;
   }
 
-  // Inform the element that we've loaded the metadata and the first frame.
+  // Get potentially updated metadata
+  {
+    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+    mReader->ReadUpdatedMetadata(&mInfo);
+  }
+
   nsAutoPtr<MediaInfo> info(new MediaInfo());
   *info = mInfo;
-  nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-    new MetadataEventRunner(mDecoder, info.forget(), mMetadataTags.forget());
-  NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
+  nsCOMPtr<nsIRunnable> event;
+  if (!mGotDurationFromMetaData) {
+    // We now have a duration, we can fire the LoadedMetadata and
+    // FirstFrame event.
+    event =
+      new MetadataUpdatedEventRunner(mDecoder,
+                                     info.forget(),
+                                     mMetadataTags.forget());
+  } else {
+    // Inform the element that we've loaded the first frame.
+    event =
+      new FirstFrameLoadedEventRunner(mDecoder, info.forget());
+  }
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
-  if (mState == DECODER_STATE_DECODING_METADATA) {
-    DECODER_LOG("Changed state from DECODING_METADATA to DECODING");
+  if (mState == DECODER_STATE_DECODING_FIRSTFRAME) {
     StartDecoding();
   }
 
-  // For very short media the metadata decode can decode the entire media.
+  // For very short media the first frame decode can decode the entire media.
   // So we need to check if this has occurred, else our decode pipeline won't
   // run (since it doesn't need to) and we won't detect end of stream.
   CheckIfDecodeComplete();
@@ -2066,6 +2188,10 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
       !IsPlaying())
   {
     StartPlayback();
+  }
+
+  if (mQueuedSeekTarget.IsValid()) {
+    EnqueueStartQueuedSeekTask();
   }
 
   return NS_OK;
@@ -2214,6 +2340,7 @@ MediaDecoderStateMachine::SeekCompleted()
 
   mDecoder->StartProgressUpdates();
   if (mState == DECODER_STATE_DECODING_METADATA ||
+      mState == DECODER_STATE_DECODING_FIRSTFRAME ||
       mState == DECODER_STATE_DORMANT ||
       mState == DECODER_STATE_SHUTDOWN) {
     return;
@@ -2396,6 +2523,11 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
     }
 
     case DECODER_STATE_DECODING_METADATA: {
+      return NS_OK;
+    }
+
+    case DECODER_STATE_DECODING_FIRSTFRAME: {
+      // DECODER_STATE_DECODING_FIRSTFRAME will be started by DecodeMetadata
       return NS_OK;
     }
 
