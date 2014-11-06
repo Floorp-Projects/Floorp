@@ -24,6 +24,7 @@
 #include "nsIXULRuntime.h"
 
 #include "nsIGfxInfo.h"
+#include "GfxDriverInfo.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -68,6 +69,10 @@
 
 #include "SurfaceCache.h"
 #include "gfxPrefs.h"
+
+#if defined(MOZ_CRASHREPORTER)
+#include "nsExceptionHandler.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -395,7 +400,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     if (isVistaOrHigher && !safeMode && tryD2D &&
         device &&
         device->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0 &&
-        DoesD3D11DeviceSupportResourceSharing(device)) {
+        DoesD3D11DeviceWork(device)) {
 
         VerifyD2DDevice(d2dForceEnabled);
         if (mD2DDevice) {
@@ -1507,7 +1512,7 @@ gfxWindowsPlatform::GetDXGIAdapter()
 
 // See bug 1083071. On some drivers, Direct3D 11 CreateShaderResourceView fails
 // with E_OUTOFMEMORY.
-bool DoesD3D11DeviceSupportResourceSharing(ID3D11Device *device)
+bool DoesD3D11DeviceWork(ID3D11Device *device)
 {
   static bool checked;
   static bool result;
@@ -1515,6 +1520,40 @@ bool DoesD3D11DeviceSupportResourceSharing(ID3D11Device *device)
   if (checked)
       return result;
   checked = true;
+
+  if (GetModuleHandleW(L"dlumd32.dll") && GetModuleHandleW(L"igd10umd32.dll")) {
+    nsString displayLinkModuleVersionString;
+    gfxWindowsPlatform::GetDLLVersion(L"dlumd32.dll", displayLinkModuleVersionString);
+    uint64_t displayLinkModuleVersion;
+    if (!ParseDriverVersion(displayLinkModuleVersionString, &displayLinkModuleVersion)) {
+#if defined(MOZ_CRASHREPORTER)
+      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DisplayLink: could not parse version\n"));
+#endif
+      return false;
+    }
+    if (displayLinkModuleVersion <= GFX_DRIVER_VERSION(8,6,1,36484)) {
+#if defined(MOZ_CRASHREPORTER)
+      CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DisplayLink: too old version\n"));
+#endif
+      return false;
+    }
+  }
+
+  if (GetModuleHandleW(L"atidxx32.dll")) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (gfxInfo) {
+      nsString vendorID, vendorID2;
+      gfxInfo->GetAdapterVendorID(vendorID);
+      gfxInfo->GetAdapterVendorID2(vendorID2);
+      if (vendorID.EqualsLiteral("0x8086") && vendorID2.IsEmpty()) {
+#if defined(MOZ_CRASHREPORTER)
+        CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("Unexpected Intel/AMD dual-GPU setup\n"));
+#endif
+        return false;
+      }
+    }
+  }
+
   RefPtr<ID3D11Texture2D> texture;
   D3D11_TEXTURE2D_DESC desc;
   desc.Width = 32;

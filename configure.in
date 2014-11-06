@@ -3523,8 +3523,9 @@ dnl ========================================================
 dnl Multiprocess Firefox Nightly Testing UI
 dnl To be removed in Bug 1003313
 dnl ========================================================
-if test -z "$NIGHTLY_BUILD"; then
+if test -n "$NIGHTLY_BUILD"; then
     E10S_TESTING_ONLY=1
+    AC_DEFINE(E10S_TESTING_ONLY)
 fi
 
 AC_SUBST(E10S_TESTING_ONLY)
@@ -5287,8 +5288,15 @@ fi;
 dnl ========================================================
 dnl = Built-in fragmented MP4 support.
 dnl ========================================================
+
+if test "$OS_TARGET" = Android; then
+    MOZ_FMP4=1
+fi
+
 if test -n "$MOZ_WMF" -o -n "$MOZ_FFMPEG" -o -n "$MOZ_APPLEMEDIA"; then
-    dnl Enable fragmented MP4 parser on platforms with decoder support.
+    dnl Enable fragmented MP4 parser on Windows by default.
+    dnl We will also need to enable it on other platforms as we implement
+    dnl platform decoder support there too.
     MOZ_FMP4=1
 fi
 
@@ -8939,6 +8947,9 @@ AC_SUBST(MOZ_FOLD_LIBS)
 
 AC_SUBST(MOZ_ENABLE_SZIP)
 AC_SUBST(MOZ_SZIP_FLAGS)
+
+dnl Host JavaScript runtime, if any, to use during cross compiles.
+AC_SUBST(JS_BINARY)
 
 if test "$MOZ_DEBUG"; then
     MOZ_EM_DEBUG=1

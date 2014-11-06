@@ -17,6 +17,9 @@
 #ifdef MOZ_GONK_MEDIACODEC
 #include "GonkDecoderModule.h"
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidDecoderModule.h"
+#endif
 
 #include "mozilla/Preferences.h"
 #ifdef MOZ_EME
@@ -33,6 +36,8 @@ extern PlatformDecoderModule* CreateBlankDecoderModule();
 bool PlatformDecoderModule::sUseBlankDecoder = false;
 bool PlatformDecoderModule::sFFmpegDecoderEnabled = false;
 bool PlatformDecoderModule::sGonkDecoderEnabled = false;
+bool PlatformDecoderModule::sAndroidMCDecoderEnabled = false;
+bool PlatformDecoderModule::sAndroidMCDecoderPreferred = false;
 
 /* static */
 void
@@ -49,10 +54,18 @@ PlatformDecoderModule::Init()
                                "media.fragmented-mp4.use-blank-decoder");
   Preferences::AddBoolVarCache(&sFFmpegDecoderEnabled,
                                "media.fragmented-mp4.ffmpeg.enabled", false);
+
 #ifdef MOZ_GONK_MEDIACODEC
   Preferences::AddBoolVarCache(&sGonkDecoderEnabled,
                                "media.fragmented-mp4.gonk.enabled", false);
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+  Preferences::AddBoolVarCache(&sAndroidMCDecoderEnabled,
+                               "media.fragmented-mp4.android-media-codec.enabled", false);
+  Preferences::AddBoolVarCache(&sAndroidMCDecoderPreferred,
+                               "media.fragmented-mp4.android-media-codec.preferred", false);
+#endif
+
 #ifdef XP_WIN
   WMFDecoderModule::Init();
 #endif
@@ -122,6 +135,11 @@ PlatformDecoderModule::Create()
   // Note: This runs on the decode thread.
   MOZ_ASSERT(!NS_IsMainThread());
 
+#ifdef MOZ_WIDGET_ANDROID
+  if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled){
+    return new AndroidDecoderModule();
+  }
+#endif
   if (sUseBlankDecoder) {
     return CreateBlankDecoderModule();
   }
@@ -148,6 +166,11 @@ PlatformDecoderModule::Create()
 #ifdef MOZ_GONK_MEDIACODEC
   if (sGonkDecoderEnabled) {
     return new GonkDecoderModule();
+  }
+#endif
+#ifdef MOZ_WIDGET_ANDROID
+  if(sAndroidMCDecoderEnabled){
+    return new AndroidDecoderModule();
   }
 #endif
   return nullptr;

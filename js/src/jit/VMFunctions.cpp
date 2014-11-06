@@ -555,9 +555,9 @@ MallocWrapper(JSRuntime *rt, size_t nbytes)
 }
 
 JSObject *
-NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type)
+NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type, uint32_t lexicalBegin)
 {
-    JSObject *obj = CallObject::create(cx, shape, type);
+    JSObject *obj = CallObject::create(cx, shape, type, lexicalBegin);
     if (!obj)
         return nullptr;
 
@@ -573,9 +573,9 @@ NewCallObject(JSContext *cx, HandleShape shape, HandleTypeObject type)
 }
 
 JSObject *
-NewSingletonCallObject(JSContext *cx, HandleShape shape)
+NewSingletonCallObject(JSContext *cx, HandleShape shape, uint32_t lexicalBegin)
 {
-    JSObject *obj = CallObject::createSingleton(cx, shape);
+    JSObject *obj = CallObject::createSingleton(cx, shape, lexicalBegin);
     if (!obj)
         return nullptr;
 

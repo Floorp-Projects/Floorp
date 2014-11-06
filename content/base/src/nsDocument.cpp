@@ -4015,7 +4015,7 @@ nsDocument::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                           bool aNotify)
 {
   if (aKid->IsElement() && GetRootElement()) {
-    NS_ERROR("Inserting element child when we already have one");
+    NS_WARNING("Inserting root element when we already have one");
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 

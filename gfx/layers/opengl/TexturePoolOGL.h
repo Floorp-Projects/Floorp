@@ -12,7 +12,7 @@ namespace gl {
 
 // A texture pool for for the on-screen GLContext. The main purpose of this class
 // is to provide the ability to easily allocate an on-screen texture from the
-// content thread. The unfortunate nature of the SurfaceTexture API (see nsSurfaceTexture)
+// content thread. The unfortunate nature of the SurfaceTexture API (see AndroidSurfaceTexture)
 // necessitates this.
 class TexturePoolOGL
 {
@@ -24,6 +24,8 @@ public:
   // Called by the active LayerManagerOGL to fill
   // the pool
   static void Fill(GLContext* aContext);
+
+  static GLContext* GetGLContext();
 
   // Initializes the pool, but does not fill it. Called by gfxPlatform init.
   static void Init();
