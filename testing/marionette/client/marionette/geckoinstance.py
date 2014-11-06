@@ -26,7 +26,9 @@ class GeckoInstance(object):
                       "browser.displayedE10SPrompt.1": 5,
                       "browser.displayedE10SPrompt.2": 5,
                       "browser.displayedE10SPrompt.3": 5,
-                      "browser.displayedE10SPrompt.4": 5}
+                      "browser.displayedE10SPrompt.4": 5,
+                      "browser.tabs.remote.autostart.1": False,
+                      "browser.tabs.remote.autostart.2": False}
 
     def __init__(self, host, port, bin, profile, app_args=None, symbols_path=None,
                   gecko_log=None, prefs=None):

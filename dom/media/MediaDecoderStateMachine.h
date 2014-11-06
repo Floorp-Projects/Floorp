@@ -342,6 +342,7 @@ public:
   void OnAudioDecoded(AudioData* aSample);
   void OnVideoDecoded(VideoData* aSample);
   void OnNotDecoded(MediaData::Type aType, RequestSampleCallback::NotDecodedReason aReason);
+  void OnSeekCompleted(nsresult aResult);
 
 private:
   void AcquireMonitorAndInvokeDecodeError();
@@ -914,6 +915,11 @@ protected:
   // True if we need to decode forwards to the seek target inside
   // mCurrentSeekTarget.
   bool mDecodeToSeekTarget;
+
+  // True if we've issued Seek() to the reader, but haven't yet received
+  // OnSeekCompleted. We should avoid trying to decode more audio/video
+  // until this completes.
+  bool mWaitingForDecoderSeek;
 
   // We record the playback position before we seek in order to
   // determine where the seek terminated relative to the playback position

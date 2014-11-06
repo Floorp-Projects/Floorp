@@ -7828,6 +7828,76 @@ class MLoadElementHole
     ALLOW_CLONE(MLoadElementHole)
 };
 
+class MLoadUnboxedObjectOrNull : public MBinaryInstruction
+{
+    MLoadUnboxedObjectOrNull(MDefinition *elements, MDefinition *index)
+      : MBinaryInstruction(elements, index)
+    {
+        setResultType(MIRType_Value);
+        setMovable();
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadUnboxedObjectOrNull)
+
+    static MLoadUnboxedObjectOrNull *New(TempAllocator &alloc,
+                                         MDefinition *elements, MDefinition *index) {
+        return new(alloc) MLoadUnboxedObjectOrNull(elements, index);
+    }
+
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Element);
+    }
+
+    ALLOW_CLONE(MLoadUnboxedObjectOrNull)
+};
+
+class MLoadUnboxedString : public MBinaryInstruction
+{
+    MLoadUnboxedString(MDefinition *elements, MDefinition *index)
+      : MBinaryInstruction(elements, index)
+    {
+        setResultType(MIRType_String);
+        setMovable();
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadUnboxedString)
+
+    static MLoadUnboxedString *New(TempAllocator &alloc,
+                                   MDefinition *elements, MDefinition *index) {
+        return new(alloc) MLoadUnboxedString(elements, index);
+    }
+
+    MDefinition *elements() const {
+        return getOperand(0);
+    }
+    MDefinition *index() const {
+        return getOperand(1);
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::Element);
+    }
+
+    ALLOW_CLONE(MLoadUnboxedString)
+};
+
 class MStoreElementCommon
 {
     MIRType elementType_;

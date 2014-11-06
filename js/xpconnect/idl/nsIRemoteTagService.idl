@@ -1,0 +1,13 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable,uuid(59dbe3d0-6084-11e4-9803-0800200c9a66)]
+interface nsIRemoteTagService : nsISupports
+{
+    ACString getRemoteObjectTag(in jsval target);
+};
