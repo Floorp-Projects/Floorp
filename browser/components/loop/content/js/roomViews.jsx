@@ -10,6 +10,8 @@ var loop = loop || {};
 loop.roomViews = (function(mozL10n) {
   "use strict";
 
+  var ROOM_STATES = loop.store.ROOM_STATES;
+
   var DesktopRoomView = React.createClass({
     mixins: [Backbone.Events, loop.shared.mixins.DocumentTitleMixin],
 
@@ -19,7 +21,7 @@ loop.roomViews = (function(mozL10n) {
     },
 
     getInitialState: function() {
-      return this.props.roomStore.getStoreState();
+      return this.props.roomStore.getStoreState("activeRoom");
     },
 
     componentWillMount: function() {
@@ -41,13 +43,28 @@ loop.roomViews = (function(mozL10n) {
       this.stopListening(this.props.roomStore);
     },
 
+    /**
+     * Closes the window if the cancel button is pressed in the generic failure view.
+     */
+    closeWindow: function() {
+      window.close();
+    },
+
     render: function() {
-      if (this.state.serverData && this.state.serverData.roomName) {
-        this.setTitle(this.state.serverData.roomName);
+      if (this.state.roomName) {
+        this.setTitle(this.state.roomName);
+      }
+
+      if (this.state.roomState === ROOM_STATES.FAILED) {
+        return (<loop.conversation.GenericFailureView
+          cancelCall={this.closeWindow}
+        />);
       }
 
       return (
-        <div className="goat"/>
+        <div>
+          <div>{mozL10n.get("invite_header_text")}</div>
+        </div>
       );
     }
   });

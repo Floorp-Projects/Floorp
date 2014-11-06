@@ -68,6 +68,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to signal when the window is being unloaded.
+     */
+    WindowUnload: Action.define("windowUnload", {
+    }),
+
+    /**
      * Fetch a new call url from the server, intended to be sent over email when
      * a contact can't be reached.
      */
@@ -227,6 +233,46 @@ loop.shared.actions = (function() {
      */
     CopyRoomUrl: Action.define("copyRoomUrl", {
       roomUrl: String
+    }),
+
+    /**
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    RoomFailure: Action.define("roomFailure", {
+      error: Object
+    }),
+
+    /**
+     * Updates the room information when it is received.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     *
+     * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
+     */
+    UpdateRoomInfo: Action.define("updateRoomInfo", {
+      roomName: String,
+      roomOwner: String,
+      roomToken: String,
+      roomUrl: String
+    }),
+
+    /**
+     * Starts the process for the user to join the room.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    JoinRoom: Action.define("joinRoom", {
+    }),
+
+    /**
+     * Signals the user has successfully joined the room on the loop-server.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     *
+     * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#Joining_a_Room
+     */
+    JoinedRoom: Action.define("joinedRoom", {
+      apiKey: String,
+      sessionToken: String,
+      sessionId: String,
+      expires: Number
     })
   };
 })();
