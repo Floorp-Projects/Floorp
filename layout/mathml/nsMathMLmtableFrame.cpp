@@ -1123,6 +1123,18 @@ nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
 }
 
+void
+nsMathMLmtdFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
+{
+  nsTableCellFrame::Init(aContent, aParent, aPrevInFlow);
+
+  // We want to use the ancestor <math> element's font inflation to avoid
+  // individual cells having their own varying font inflation.
+  RemoveStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+}
+
 int32_t
 nsMathMLmtdFrame::GetRowSpan()
 {

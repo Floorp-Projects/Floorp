@@ -242,6 +242,10 @@ public:
 
   // overloaded nsTableCellFrame methods
 
+  virtual void Init(nsIContent*       aContent,
+                    nsContainerFrame* aParent,
+                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+
   virtual nsresult
   AttributeChanged(int32_t  aNameSpaceID,
                    nsIAtom* aAttribute,
