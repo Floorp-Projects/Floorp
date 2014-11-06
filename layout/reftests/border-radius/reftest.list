@@ -29,6 +29,7 @@ fails == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 # Corners
 fuzzy(64,58) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
 random == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
+fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android||B2G,3,15) == corner-3.html corner-3-ref.svg
 
 # Test that radii too long are reduced
 == border-reduce-height.html border-reduce-height-ref.html
