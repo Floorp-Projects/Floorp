@@ -21,8 +21,7 @@ section {
   margin-right: auto;
   overflow: auto;
   height: calc(100% - 80px);
-  margin: 20px;
-  padding: 5px;
+  padding: 25px;
 }
 
 section:not([active]) {
