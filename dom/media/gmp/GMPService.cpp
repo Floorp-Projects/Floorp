@@ -479,7 +479,7 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
                                          GMPDecryptorProxy** aDecryptor)
 {
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-  if (!mozilla::CanSandboxMediaPlugin()) {
+  if (mozilla::MediaPluginSandboxStatus() == kSandboxingWouldFail) {
     NS_WARNING("GeckoMediaPluginService::GetGMPDecryptor: "
                "EME decryption not available without sandboxing support.");
     return NS_ERROR_NOT_AVAILABLE;
