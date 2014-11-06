@@ -545,6 +545,9 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
     return nmarked;
 }
 
+// Finalize arenas from src list, releasing empty arenas if keepArenas wasn't
+// specified and inserting the others into the appropriate destination size
+// bins.
 template<typename T>
 static inline bool
 FinalizeTypedArenas(FreeOp *fop,
@@ -554,11 +557,10 @@ FinalizeTypedArenas(FreeOp *fop,
                     SliceBudget &budget,
                     ArenaLists::KeepArenasEnum keepArenas)
 {
-    /*
-     * Finalize arenas from src list, releasing empty arenas if keepArenas
-     * wasn't specified and inserting the others into the appropriate
-     * destination size bins.
-     */
+    // When operating in the foreground, take the lock at the top.
+    Maybe<AutoLockGC> maybeLock;
+    if (!fop->runtime()->gc.isBackgroundSweeping())
+        maybeLock.emplace(fop->runtime());
 
     /*
      * During parallel sections, we sometimes finalize the parallel arenas,
@@ -575,12 +577,18 @@ FinalizeTypedArenas(FreeOp *fop,
         size_t nmarked = aheader->getArena()->finalize<T>(fop, thingKind, thingSize);
         size_t nfree = thingsPerArena - nmarked;
 
-        if (nmarked)
+        if (nmarked) {
             dest.insertAt(aheader, nfree);
-        else if (keepArenas)
+        } else if (keepArenas) {
             aheader->chunk()->recycleArena(aheader, dest, thingKind, thingsPerArena);
-        else
-            aheader->chunk()->releaseArena(aheader);
+        } else if (fop->runtime()->gc.isBackgroundSweeping()) {
+            // When background sweeping, take the lock around each release so
+            // that we do not block the foreground for extended periods.
+            AutoLockGC lock(fop->runtime());
+            fop->runtime()->gc.releaseArena(aheader, lock);
+        } else {
+            fop->runtime()->gc.releaseArena(aheader, maybeLock.ref());
+        }
 
         budget.step(thingsPerArena);
         if (budget.isOverBudget())
@@ -945,67 +953,14 @@ Chunk::fetchNextFreeArena(JSRuntime *rt)
 }
 
 ArenaHeader *
-Chunk::allocateArena(Zone *zone, AllocKind thingKind)
+Chunk::allocateArena(JSRuntime *rt, Zone *zone, AllocKind thingKind, const AutoLockGC &lock)
 {
-    MOZ_ASSERT(hasAvailableArenas());
-
-    JSRuntime *rt = zone->runtimeFromAnyThread();
-    if (!rt->isHeapMinorCollecting() &&
-        !rt->isHeapCompacting() &&
-        rt->gc.usage.gcBytes() >= rt->gc.tunables.gcMaxBytes())
-    {
-#ifdef JSGC_FJGENERATIONAL
-        // This is an approximation to the best test, which would check that
-        // this thread is currently promoting into the tenured area.  I doubt
-        // the better test would make much difference.
-        if (!rt->isFJMinorCollecting())
-            return nullptr;
-#else
-        return nullptr;
-#endif
-    }
-
-    ArenaHeader *aheader = MOZ_LIKELY(info.numArenasFreeCommitted > 0)
+    ArenaHeader *aheader = info.numArenasFreeCommitted > 0
                            ? fetchNextFreeArena(rt)
                            : fetchNextDecommittedArena();
     aheader->init(zone, thingKind);
     if (MOZ_UNLIKELY(!hasAvailableArenas()))
         removeFromAvailableList();
-
-    zone->usage.addGCArena();
-
-    if (!rt->isHeapCompacting()) {
-        size_t usedBytes = zone->usage.gcBytes();
-        size_t thresholdBytes = zone->threshold.gcTriggerBytes();
-        size_t igcThresholdBytes = thresholdBytes * rt->gc.tunables.zoneAllocThresholdFactor();
-
-        if (usedBytes >= thresholdBytes) {
-            // The threshold has been surpassed, immediately trigger a GC,
-            // which will be done non-incrementally.
-            AutoUnlockGC unlock(rt);
-            rt->gc.triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
-        } else if (usedBytes >= igcThresholdBytes) {
-            // Reduce the delay to the start of the next incremental slice.
-            if (zone->gcDelayBytes < ArenaSize)
-                zone->gcDelayBytes = 0;
-            else
-                zone->gcDelayBytes -= ArenaSize;
-
-            if (!zone->gcDelayBytes) {
-                // Start or continue an in progress incremental GC. We do this
-                // to try to avoid performing non-incremental GCs on zones
-                // which allocate a lot of data, even when incremental slices
-                // can't be triggered via scheduling in the event loop.
-                AutoUnlockGC unlock(rt);
-                rt->gc.triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
-
-                // Delay the next slice until a certain amount of allocation
-                // has been performed.
-                zone->gcDelayBytes = rt->gc.tunables.zoneAllocDelayBytes();
-            }
-        }
-    }
-
     return aheader;
 }
 
@@ -1035,20 +990,10 @@ Chunk::recycleArena(ArenaHeader *aheader, SortedArenaList &dest, AllocKind thing
 }
 
 void
-Chunk::releaseArena(ArenaHeader *aheader)
+Chunk::releaseArena(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock)
 {
     MOZ_ASSERT(aheader->allocated());
     MOZ_ASSERT(!aheader->hasDelayedMarking);
-    Zone *zone = aheader->zone;
-    JSRuntime *rt = zone->runtimeFromAnyThread();
-
-    Maybe<AutoLockGC> maybeLock;
-    if (rt->gc.isBackgroundSweeping())
-        maybeLock.emplace(rt);
-
-    if (rt->gc.isBackgroundSweeping())
-        zone->threshold.updateForRemovedArena(rt->gc.tunables);
-    zone->usage.removeGCArena();
 
     aheader->setAsNotAllocated();
     addArenaToFreeList(rt, aheader);
@@ -1060,12 +1005,10 @@ Chunk::releaseArena(ArenaHeader *aheader)
     } else if (!unused()) {
         MOZ_ASSERT(info.prevp);
     } else {
-        if (maybeLock.isNothing())
-            maybeLock.emplace(rt);
         MOZ_ASSERT(unused());
         removeFromAvailableList();
         decommitAllArenas(rt);
-        rt->gc.moveChunkToFreePool(this, maybeLock.ref());
+        rt->gc.moveChunkToFreePool(this, lock);
     }
 }
 
@@ -1166,6 +1109,46 @@ GCRuntime::pickChunk(const AutoLockGC &lock,
     chunk->addToAvailableList(rt);
 
     return chunk;
+}
+
+ArenaHeader *
+GCRuntime::allocateArena(Chunk *chunk, Zone *zone, AllocKind thingKind, const AutoLockGC &lock)
+{
+    MOZ_ASSERT(chunk->hasAvailableArenas());
+
+    // Fail the allocation if we are over our heap size limits.
+    if (!isHeapMinorCollecting() &&
+        !isHeapCompacting() &&
+        usage.gcBytes() >= tunables.gcMaxBytes())
+    {
+#ifdef JSGC_FJGENERATIONAL
+        // This is an approximation to the best test, which would check that
+        // this thread is currently promoting into the tenured area.  I doubt
+        // the better test would make much difference.
+        if (!isFJMinorCollecting())
+            return nullptr;
+#else
+        return nullptr;
+#endif
+    }
+
+    ArenaHeader *aheader = chunk->allocateArena(rt, zone, thingKind, lock);
+    zone->usage.addGCArena();
+
+    // Trigger an incremental slice if needed.
+    if (!isHeapMinorCollecting() && !isHeapCompacting())
+        maybeAllocTriggerZoneGC(zone, lock);
+
+    return aheader;
+}
+
+void
+GCRuntime::releaseArena(ArenaHeader *aheader, const AutoLockGC &lock)
+{
+    aheader->zone->usage.removeGCArena();
+    if (isBackgroundSweeping())
+        aheader->zone->threshold.updateForRemovedArena(tunables);
+    return aheader->chunk()->releaseArena(rt, aheader, lock);
 }
 
 GCRuntime::GCRuntime(JSRuntime *rt) :
@@ -1913,7 +1896,8 @@ ZoneHeapThreshold::updateForRemovedArena(const GCSchedulingTunables &tunables)
 }
 
 Allocator::Allocator(Zone *zone)
-  : zone_(zone)
+  : arenas(zone->runtimeFromMainThread()),
+    zone_(zone)
 {}
 
 inline void
@@ -1999,7 +1983,7 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
 
     // Although our chunk should definitely have enough space for another arena,
     // there are other valid reasons why Chunk::allocateArena() may fail.
-    aheader = chunk->allocateArena(zone, thingKind);
+    aheader = rt->gc.allocateArena(chunk, zone, thingKind, maybeLock.ref());
     if (!aheader)
         return nullptr;
 
@@ -2560,6 +2544,7 @@ void
 GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
 {
     // Release the relocated arenas, now containing only forwarding pointers
+    AutoLockGC lock(rt);
 
     unsigned count = 0;
     while (relocatedList) {
@@ -2582,7 +2567,7 @@ GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
                   JS_MOVED_TENURED_PATTERN, Arena::thingsSpan(thingSize));
 #endif
 
-        aheader->chunk()->releaseArena(aheader);
+        releaseArena(aheader, lock);
         ++count;
     }
 
@@ -2591,6 +2576,35 @@ GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
 }
 
 #endif // JSGC_COMPACTING
+
+void
+ReleaseArenaList(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock)
+{
+    ArenaHeader *next;
+    for (; aheader; aheader = next) {
+        next = aheader->next;
+        rt->gc.releaseArena(aheader, lock);
+    }
+}
+
+ArenaLists::~ArenaLists()
+{
+    AutoLockGC lock(runtime_);
+
+    for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
+        /*
+         * We can only call this during the shutdown after the last GC when
+         * the background finalization is disabled.
+         */
+        MOZ_ASSERT(backgroundFinalizeState[i] == BFS_DONE);
+        ReleaseArenaList(runtime_, arenaLists[i].head(), lock);
+    }
+    ReleaseArenaList(runtime_, incrementalSweptArenas.head(), lock);
+
+    for (size_t i = 0; i < FINALIZE_OBJECT_LIMIT; i++)
+        ReleaseArenaList(runtime_, savedObjectArenas[i].head(), lock);
+    ReleaseArenaList(runtime_, savedEmptyObjectArenas, lock);
+}
 
 void
 ArenaLists::finalizeNow(FreeOp *fop, const FinalizePhase& phase)
@@ -2758,7 +2772,8 @@ ArenaLists::queueForegroundObjectsForSweep(FreeOp *fop)
 void
 ArenaLists::mergeForegroundSweptObjectArenas()
 {
-    ReleaseArenaList(savedEmptyObjectArenas);
+    AutoLockGC lock(runtime_);
+    ReleaseArenaList(runtime_, savedEmptyObjectArenas, lock);
     savedEmptyObjectArenas = nullptr;
 
     mergeSweptArenas(FINALIZE_OBJECT0);
@@ -3030,6 +3045,40 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
     return true;
 }
 
+void
+GCRuntime::maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock)
+{
+    size_t usedBytes = zone->usage.gcBytes();
+    size_t thresholdBytes = zone->threshold.gcTriggerBytes();
+    size_t igcThresholdBytes = thresholdBytes * tunables.zoneAllocThresholdFactor();
+
+    if (usedBytes >= thresholdBytes) {
+        // The threshold has been surpassed, immediately trigger a GC,
+        // which will be done non-incrementally.
+        AutoUnlockGC unlock(rt);
+        triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
+    } else if (usedBytes >= igcThresholdBytes) {
+        // Reduce the delay to the start of the next incremental slice.
+        if (zone->gcDelayBytes < ArenaSize)
+            zone->gcDelayBytes = 0;
+        else
+            zone->gcDelayBytes -= ArenaSize;
+
+        if (!zone->gcDelayBytes) {
+            // Start or continue an in progress incremental GC. We do this
+            // to try to avoid performing non-incremental GCs on zones
+            // which allocate a lot of data, even when incremental slices
+            // can't be triggered via scheduling in the event loop.
+            AutoUnlockGC unlock(rt);
+            triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
+
+            // Delay the next slice until a certain amount of allocation
+            // has been performed.
+            zone->gcDelayBytes = tunables.zoneAllocDelayBytes();
+        }
+    }
+}
+
 bool
 GCRuntime::triggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 {
@@ -3149,8 +3198,9 @@ GCRuntime::decommitAllWithoutUnlocking(const AutoLockGC &lock)
 }
 
 void
-GCRuntime::decommitArenasFromAvailableList(Chunk **availableListHeadp)
+GCRuntime::decommitArenas(const AutoLockGC &lock)
 {
+    Chunk **availableListHeadp = &availableChunkListHead;
     Chunk *chunk = *availableListHeadp;
     if (!chunk)
         return;
@@ -3258,12 +3308,6 @@ GCRuntime::decommitArenasFromAvailableList(Chunk **availableListHeadp)
 }
 
 void
-GCRuntime::decommitArenas()
-{
-    decommitArenasFromAvailableList(&availableChunkListHead);
-}
-
-void
 GCRuntime::expireChunksAndArenas(bool shouldShrink, const AutoLockGC &lock)
 {
 #ifdef JSGC_FJGENERATIONAL
@@ -3276,7 +3320,7 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink, const AutoLockGC &lock)
     }
 
     if (shouldShrink)
-        decommitArenas();
+        decommitArenas(lock);
 }
 
 void
@@ -6651,7 +6695,7 @@ ArenaLists::adoptArenas(JSRuntime *rt, ArenaLists *fromArenaLists)
             // Therefore, if fromHeader is empty, send it back to the
             // chunk now. Otherwise, attach to |toList|.
             if (fromHeader->isEmpty())
-                fromHeader->chunk()->releaseArena(fromHeader);
+                rt->gc.releaseArena(fromHeader, lock);
             else
                 toList->insertAtCursor(fromHeader);
         }
