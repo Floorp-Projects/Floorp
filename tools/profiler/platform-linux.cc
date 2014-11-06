@@ -252,15 +252,9 @@ static void ProfilerSignalThread(ThreadProfile *profile,
   }
 }
 
-// If the Nuwa process is enabled, we need to use the wrapper of tgkill() to
-// perform the mapping of thread ID.
-#ifdef MOZ_NUWA_PROCESS
-extern "C" MFBT_API int tgkill(pid_t tgid, pid_t tid, int signalno);
-#else
 int tgkill(pid_t tgid, pid_t tid, int signalno) {
   return syscall(SYS_tgkill, tgid, tid, signalno);
 }
-#endif
 
 class PlatformData : public Malloced {
  public:

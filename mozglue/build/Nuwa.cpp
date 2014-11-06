@@ -29,10 +29,6 @@
 
 using namespace mozilla;
 
-extern "C" MFBT_API int tgkill(pid_t tgid, pid_t tid, int signalno) {
-  return syscall(__NR_tgkill, tgid, tid, signalno);
-}
-
 /**
  * Provides the wrappers to a selected set of pthread and system-level functions
  * as the basis for implementing Zygote-like preforking mechanism.
@@ -1348,27 +1344,6 @@ __wrap_close(int aFd) {
   }
 
   return rv;
-}
-
-extern "C" MFBT_API int
-__wrap_tgkill(pid_t tgid, pid_t tid, int signalno)
-{
-  if (sIsNuwaProcess) {
-    return tgkill(tgid, tid, signalno);
-  }
-
-  if (tid == sMainThread.origNativeThreadID) {
-    return tgkill(tgid, sMainThread.recreatedNativeThreadID, signalno);
-  }
-
-  thread_info_t *tinfo = (tid == sMainThread.origNativeThreadID ?
-      &sMainThread :
-      GetThreadInfo(tid));
-  if (!tinfo) {
-    return tgkill(tgid, tid, signalno);
-  }
-
-  return tgkill(tgid, tinfo->recreatedNativeThreadID, signalno);
 }
 
 static void *
