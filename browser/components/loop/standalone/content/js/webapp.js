@@ -286,7 +286,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     },
 
     _handleRingingProgress: function() {
-      this.play("ringing", {loop: true});
+      this.play("ringtone", {loop: true});
       this.setState({callState: "ringing"});
     },
 
@@ -530,18 +530,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * Ended conversation view.
    */
   var EndedConversationView = React.createClass({displayName: 'EndedConversationView',
-    mixins: [sharedMixins.AudioMixin],
-
     propTypes: {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
       sdk: React.PropTypes.object.isRequired,
       feedbackApiClient: React.PropTypes.object.isRequired,
       onAfterFeedbackReceived: React.PropTypes.func.isRequired
-    },
-
-    componentDidMount: function() {
-      this.play("terminated");
     },
 
     render: function() {
