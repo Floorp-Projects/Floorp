@@ -379,6 +379,17 @@
       </table>
       <!-- - - - - - - - - - - - - - - - - - - - - -->
 
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
+      <h2 class="major-section" id="sandbox">
+	&aboutSupport.sandboxTitle;
+      </h2>
+
+      <table>
+	<tbody id="sandbox-tbody">
+	</tbody>
+      </table>
+#endif
+
     </div>
 
   </body>
