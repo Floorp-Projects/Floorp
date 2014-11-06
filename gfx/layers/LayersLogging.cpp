@@ -68,6 +68,26 @@ AppendToString(std::stringstream& aStream, const gfxRGBA& c,
 }
 
 void
+AppendToString(std::stringstream& aStream, const nsPoint& p,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString("(x=%d, y=%d)", p.x, p.y).get();
+  aStream << sfx;
+}
+
+void
+AppendToString(std::stringstream& aStream, const nsRect& r,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx;
+  aStream << nsPrintfCString(
+    "(x=%d, y=%d, w=%d, h=%d)",
+    r.x, r.y, r.width, r.height).get();
+  aStream << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const nsIntPoint& p,
                const char* pfx, const char* sfx)
 {
