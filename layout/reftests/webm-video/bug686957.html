@@ -11,7 +11,7 @@
 <video src="frames.webm"
        preload="auto"
        id="v"
-       onloadeddata="document.getElementById('v').currentTime=document.getElementById('v').duration"
+       onloadedmetadata="document.getElementById('v').currentTime=document.getElementById('v').duration"
        onseeked="setTimeout(function(){document.documentElement.className = '';}, 1000);"
 </video>
 </body>
