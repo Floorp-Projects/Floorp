@@ -123,11 +123,22 @@ TypedObjectPrediction::ofArrayKind() const
       case type::Struct:
         return false;
 
-      case type::Array:
+      case type::SizedArray:
+      case type::UnsizedArray:
         return true;
     }
 
     MOZ_CRASH("Bad kind");
+}
+
+static bool
+DescrHasKnownSize(const TypeDescr &descr, int32_t *out)
+{
+    if (!descr.is<SizedTypeDescr>())
+        return false;
+
+    *out = descr.as<SizedTypeDescr>().size();
+    return true;
 }
 
 bool
@@ -139,8 +150,7 @@ TypedObjectPrediction::hasKnownSize(int32_t *out) const
         break;
 
       case TypedObjectPrediction::Descr:
-        *out = descr().size();
-        return true;
+        return DescrHasKnownSize(descr(), out);
 
       case TypedObjectPrediction::Prefix:
         // We only know a prefix of the struct fields, hence we do not
@@ -223,8 +233,8 @@ TypedObjectPrediction::hasKnownArrayLength(int32_t *length) const
       case TypedObjectPrediction::Descr:
         // In later patches, this condition will always be true
         // so long as this represents an array
-        if (descr().is<ArrayTypeDescr>()) {
-            *length = descr().as<ArrayTypeDescr>().length();
+        if (descr().is<SizedArrayTypeDescr>()) {
+            *length = descr().as<SizedArrayTypeDescr>().length();
             return true;
         }
         return false;
@@ -233,6 +243,13 @@ TypedObjectPrediction::hasKnownArrayLength(int32_t *length) const
         break; // Prefixes are always structs, never arrays
     }
     MOZ_CRASH("Bad prediction kind");
+}
+
+static TypeDescr &
+DescrArrayElementType(const TypeDescr &descr) {
+    return (descr.is<SizedArrayTypeDescr>()
+            ? descr.as<SizedArrayTypeDescr>().elementType()
+            : descr.as<UnsizedArrayTypeDescr>().elementType());
 }
 
 TypedObjectPrediction
@@ -245,7 +262,7 @@ TypedObjectPrediction::arrayElementType() const
         break;
 
       case TypedObjectPrediction::Descr:
-        return TypedObjectPrediction(descr().as<ArrayTypeDescr>().elementType());
+        return TypedObjectPrediction(DescrArrayElementType(descr()));
 
       case TypedObjectPrediction::Prefix:
         break; // Prefixes are always structs, never arrays
