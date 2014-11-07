@@ -89,8 +89,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
      * zone to finish marking before the delegate zone.
      */
     CHECK(newCCW(map, delegate));
-    js::SliceBudget budget(js::SliceBudget::WorkBudget(1000000));
-    rt->gc.gcDebugSlice(budget);
+    rt->gc.gcDebugSlice(true, 1000000);
 #ifdef DEBUG
     CHECK(map->zone()->lastZoneGroupIndex() < delegate->zone()->lastZoneGroupIndex());
 #endif
@@ -103,8 +102,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     /* Check the delegate keeps the entry alive even if the key is not reachable. */
     key = nullptr;
     CHECK(newCCW(map, delegate));
-    budget = js::SliceBudget(js::SliceBudget::WorkBudget(100000));
-    rt->gc.gcDebugSlice(budget);
+    rt->gc.gcDebugSlice(true, 100000);
     CHECK(checkSize(map, 1));
 
     /*
