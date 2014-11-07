@@ -253,7 +253,6 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
 
   // XXXkhuey should this be GetOurCurrentDoc?  Decoding if we're not in
   // the document seems silly.
-  bool startedDecoding = false;
   nsIDocument* doc = GetOurOwnerDoc();
   nsIPresShell* shell = doc ? doc->GetShell() : nullptr;
   if (shell && shell->IsVisible() &&
@@ -274,9 +273,7 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
       // visible.
       if (!mFrameCreateCalled || (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
           mVisibleCount > 0 || shell->AssumeAllImagesVisible()) {
-        if (NS_SUCCEEDED(mCurrentRequest->StartDecoding())) {
-          startedDecoding = true;
-        }
+        mCurrentRequest->StartDecoding();
       }
     }
   }
@@ -288,8 +285,8 @@ nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
   uint32_t reqStatus;
   aRequest->GetImageStatus(&reqStatus);
   if (NS_SUCCEEDED(aStatus) && !(reqStatus & imgIRequest::STATUS_ERROR) &&
-      (reqStatus & imgIRequest::STATUS_DECODE_STARTED ||
-       (startedDecoding && !(reqStatus & imgIRequest::STATUS_DECODE_COMPLETE)))) {
+      (reqStatus & imgIRequest::STATUS_DECODE_STARTED) &&
+      !(reqStatus & imgIRequest::STATUS_DECODE_COMPLETE)) {
     mFireEventsOnDecode = true;
   } else {
     // Fire the appropriate DOM event.

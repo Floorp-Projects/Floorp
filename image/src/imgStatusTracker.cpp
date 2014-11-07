@@ -430,8 +430,6 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
   ImageStatusDiff diff;
   diff.diffState = ~mState & aOther->mState & ~FLAG_REQUEST_STARTED;
   diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
-  diff.unsetDecodeStarted = mImageStatus & imgIRequest::STATUS_DECODE_STARTED
-                         && !(aOther->mImageStatus & imgIRequest::STATUS_DECODE_STARTED);
 
   MOZ_ASSERT(!mIsMultipart || aOther->mIsMultipart, "mIsMultipart should be monotonic");
   diff.foundIsMultipart = !mIsMultipart && aOther->mIsMultipart;
@@ -486,10 +484,6 @@ imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
 
   // Update the image status. There are some subtle points which are handled below.
   mImageStatus |= aDiff.diffImageStatus;
-
-  // Unset bits which can get unset as part of the decoding process.
-  if (aDiff.unsetDecodeStarted)
-    mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
 }
 
 void
@@ -633,8 +627,9 @@ imgStatusTracker::RecordDecoded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordDecoded called before we have an Image");
   mState |= FLAG_DECODE_STARTED | FLAG_DECODE_STOPPED | FLAG_FRAME_STOPPED;
-  mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE | imgIRequest::STATUS_DECODE_COMPLETE;
-  mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
+  mImageStatus |= imgIRequest::STATUS_DECODE_STARTED |
+                  imgIRequest::STATUS_DECODE_COMPLETE |
+                  imgIRequest::STATUS_FRAME_COMPLETE;
 }
 
 void
@@ -703,7 +698,6 @@ imgStatusTracker::RecordStopDecode(nsresult aStatus)
 
   mState |= FLAG_DECODE_STOPPED;
   mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
-  mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
 
   if (NS_SUCCEEDED(aStatus) && !(mImageStatus & imgIRequest::STATUS_ERROR)) {
     mHasBeenDecoded = true;
