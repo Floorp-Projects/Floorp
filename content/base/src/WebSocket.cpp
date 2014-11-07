@@ -2261,6 +2261,12 @@ WebSocketImpl::CancelInternal()
 {
   AssertIsOnTargetThread();
 
+   // If CancelInternal is called by a runnable, we may already be disconnected
+   // by the time it runs.
+  if (mDisconnected) {
+    return NS_OK;
+  }
+
   int64_t readyState = mWebSocket->ReadyState();
   if (readyState == WebSocket::CLOSING || readyState == WebSocket::CLOSED) {
     return NS_OK;
