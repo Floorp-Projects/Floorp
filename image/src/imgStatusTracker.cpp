@@ -146,7 +146,6 @@ imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
-    mIsMultipart(false),
     mHadLastPart(false),
     mHasBeenDecoded(false)
 {
@@ -158,7 +157,6 @@ imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
   : mImage(aOther.mImage),
     mState(aOther.mState),
     mImageStatus(aOther.mImageStatus),
-    mIsMultipart(aOther.mIsMultipart),
     mHadLastPart(aOther.mHadLastPart),
     mHasBeenDecoded(aOther.mHasBeenDecoded)
     // Note: we explicitly don't copy several fields:
@@ -208,6 +206,11 @@ imgStatusTracker::ResetImage()
 {
   NS_ABORT_IF_FALSE(mImage, "Resetting image when it's already null!");
   mImage = nullptr;
+}
+
+void imgStatusTracker::SetIsMultipart()
+{
+  mState |= FLAG_IS_MULTIPART;
 }
 
 bool
@@ -423,8 +426,6 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
   diff.diffState = ~mState & aOther->mState & ~FLAG_REQUEST_STARTED;
   diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
 
-  MOZ_ASSERT(!mIsMultipart || aOther->mIsMultipart, "mIsMultipart should be monotonic");
-  diff.foundIsMultipart = !mIsMultipart && aOther->mIsMultipart;
   diff.foundLastPart = !mHadLastPart && aOther->mHadLastPart;
 
   diff.gotDecoded = !mHasBeenDecoded && aOther->mHasBeenDecoded;
@@ -470,7 +471,6 @@ imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
   // Synchronize our state.
   mState |= aDiff.diffState | loadState;
 
-  mIsMultipart = mIsMultipart || aDiff.foundIsMultipart;
   mHadLastPart = mHadLastPart || aDiff.foundLastPart;
   mHasBeenDecoded = mHasBeenDecoded || aDiff.gotDecoded;
 
