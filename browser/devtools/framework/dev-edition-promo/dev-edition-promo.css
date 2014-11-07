@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+window {
+  -moz-appearance: none;
+  background-color: transparent;
+}
+
 #doorhanger-container {
   width: 450px;
 }
@@ -10,7 +15,20 @@
   padding: 20px;
   background: #343c45; /* toolbars */
   color: #8fa1b2; /* body text */
+/*
+ * Sloppy preprocessing since UNIX_BUT_NOT_MAC is only defined
+ * in `browser/app/profile/firefox.js`, which this file cannot
+ * depend on. Must style font-size to target linux.
+ */
+%ifdef XP_UNIX
+%ifndef XP_MACOSX
+  font-size: 13px;
+%else
   font-size: 15px;
+%endif
+%else
+  font-size: 15px;
+%endif
   line-height: 19px;
   min-height: 100px;
 }
@@ -60,6 +78,8 @@
   border-radius: 5px;
   height: 30px;
   width: 450px;
+  /* Override embossed borders on Windows/Linux */
+  border: none;
 }
 
 #close {

@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1093028
+-->
+<head>
+  <title>Test for Bug 1093028</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1093028">Mozilla Bug 1093028</a>
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+    var counter = 0;
+    var fcounter = 0;
+    var order = [];
+    function loaded() {
+      counter++;
+    }
+    function failed() {
+      fcounter++;
+    }
+  </script>
+  <link rel="import" href="file_blocking_DOMContentLoaded_A.html" onload="loaded()" onerror="failed()"></link>
+  <script type="text/javascript">
+    is(counter, 4, "Imports are loaded");
+    is(fcounter, 0, "No error in imports");
+    var expected = ["AS0","BS0","CS0","DS0"];
+    for (i in expected)
+      is(order[i], expected[i], "import " + i + " should be " + expected[i]);
+    SimpleTest.finish();
+  </script>
+</body>
+</html>

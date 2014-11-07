@@ -569,7 +569,7 @@ class Type
         MOZ_ASSERT(isSimd());
         switch (which_) {
           case Int32x4:
-            return Int;
+            return Signed;
           case Float32x4:
             return Float;
           // Scalar types
@@ -4320,7 +4320,7 @@ CheckDotAccess(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *ty
     JSAtomState &names = m.cx()->names();
 
     if (field == names.signMask) {
-        *type = Type::Int;
+        *type = Type::Signed;
         *def = f.extractSignMask(baseDef);
         return true;
     }

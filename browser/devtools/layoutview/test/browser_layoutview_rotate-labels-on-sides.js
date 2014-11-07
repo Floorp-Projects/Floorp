@@ -29,7 +29,7 @@ const TEST_URI = encodeURIComponent([
 ].join(""));
 const LONG_TEXT_ROTATE_LIMIT = 3;
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html," + TEST_URI);
   let {toolbox, inspector, view} = yield openLayoutView();
   yield selectNode("div", inspector);
@@ -43,6 +43,4 @@ let test = asyncTest(function*() {
 
     is(canBeRotated && isLong, isRotated, res1[i].selector + " correctly rotated.");
   }
-
-  yield destroyToolbox(inspector);
 });
