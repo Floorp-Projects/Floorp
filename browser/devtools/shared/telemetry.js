@@ -281,6 +281,23 @@ Telemetry.prototype = {
     }
   },
 
+  /**
+   * Return the theme index for a given toolbox theme.
+   *
+   * @param  {String} themeName
+   *                  Theme name
+   */
+  getThemeIndex: function(themeName) {
+    switch (themeName) {
+      case "light":
+        return 0;
+      case "dark":
+        return 1;
+      default:
+        return 2;
+    }
+  },
+
   destroy: function() {
     for (let histogramId of this._timers.keys()) {
       this.stopTimer(histogramId);
