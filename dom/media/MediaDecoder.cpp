@@ -437,7 +437,7 @@ MediaDecoder::MediaDecoder() :
   mReentrantMonitor("media.decoder"),
   mIsDormant(false),
   mIsExitingDormant(false),
-  mPlayState(PLAY_STATE_PAUSED),
+  mPlayState(PLAY_STATE_LOADING),
   mNextState(PLAY_STATE_PAUSED),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
@@ -562,8 +562,6 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
   // set them now
   SetStateMachineParameters();
 
-  ChangeState(PLAY_STATE_LOADING);
-
   return ScheduleStateMachineThread();
 }
 
@@ -670,8 +668,8 @@ already_AddRefed<nsIPrincipal> MediaDecoder::GetCurrentPrincipal()
 }
 
 void MediaDecoder::QueueMetadata(int64_t aPublishTime,
-                                 MediaInfo* aInfo,
-                                 MetadataTags* aTags)
+                                 nsAutoPtr<MediaInfo> aInfo,
+                                 nsAutoPtr<MetadataTags> aTags)
 {
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
   GetReentrantMonitor().AssertCurrentThreadIn();
@@ -686,9 +684,11 @@ MediaDecoder::IsDataCachedToEndOfResource()
           mResource->IsDataCachedToEndOfResource(mDecoderPosition));
 }
 
-void MediaDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
+void MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
+                                  nsAutoPtr<MetadataTags> aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
   if (mShuttingDown) {
     return;
   }
@@ -714,17 +714,37 @@ void MediaDecoder::MetadataLoaded(MediaInfo* aInfo, MetadataTags* aTags)
     SetInfinite(true);
   }
 
-  mInfo = aInfo;
+  mInfo = aInfo.forget();
   ConstructMediaTracks();
 
   if (mOwner) {
     // Make sure the element and the frame (if any) are told about
     // our new size.
     Invalidate();
-    mOwner->MetadataLoaded(aInfo, aTags);
+    mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
+  }
+}
+
+void MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mShuttingDown) {
+    return;
   }
 
+  DECODER_LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d",
+              aInfo->mAudio.mChannels, aInfo->mAudio.mRate,
+              aInfo->HasAudio(), aInfo->HasVideo());
+
+  if (mPlayState == PLAY_STATE_LOADING && mIsDormant && !mIsExitingDormant) {
+    return;
+  }
+
+  mInfo = aInfo.forget();
+
   if (mOwner) {
+    Invalidate();
     mOwner->FirstFrameLoaded();
   }
 

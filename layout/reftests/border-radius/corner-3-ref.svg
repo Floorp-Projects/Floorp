@@ -1,0 +1,5 @@
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <rect x="20" y="50" width="60" height="130" rx="30" fill="rgba(0,0,255,0.5)"/>
+  <!-- cover left side of first rect -->
+  <rect width="50" height="100%" fill="white"/>
+</svg>

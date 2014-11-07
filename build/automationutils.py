@@ -21,8 +21,6 @@ __all__ = [
   "addCommonOptions",
   "dumpLeakLog",
   "processLeakLog",
-  'KeyValueParseError',
-  'parseKeyValue',
   'systemMemory',
   'environment',
   'dumpScreen',
@@ -370,27 +368,6 @@ def processLeakLog(leakLogFile, options):
       leakThreshold = leakThresholds.get(processType, 0)
       processSingleLeakFile(thisFile, processType, leakThreshold,
                             processType in ignoreMissingLeaks)
-
-class KeyValueParseError(Exception):
-  """error when parsing strings of serialized key-values"""
-  def __init__(self, msg, errors=()):
-    self.errors = errors
-    Exception.__init__(self, msg)
-
-def parseKeyValue(strings, separator='=', context='key, value: '):
-  """
-  parse string-serialized key-value pairs in the form of
-  `key = value`. Returns a list of 2-tuples.
-  Note that whitespace is not stripped.
-  """
-
-  # syntax check
-  missing = [string for string in strings if separator not in string]
-  if missing:
-    raise KeyValueParseError("Error: syntax error in %s" % (context,
-                                                            ','.join(missing)),
-                                                            errors=missing)
-  return [string.split(separator, 1) for string in strings]
 
 def systemMemory():
   """

@@ -841,7 +841,6 @@ ifdef MOZ_PROFILE_GENERATE
 	touch -t `date +%Y%m%d%H%M.%S -d 'now+5seconds'` pgo.relink
 endif
 endif	# WINNT && !GCC
-	@$(RM) foodummyfilefoo $(DELETE_AFTER_LINK)
 	chmod +x $@
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
@@ -1206,26 +1205,6 @@ EXTRA_MANIFESTS = $(filter %.manifest,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS)
 ifneq (,$(EXTRA_MANIFESTS))
 misc:: $(call mkdir_deps,$(FINAL_TARGET))
 	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest $(patsubst %,'manifest components/%',$(notdir $(EXTRA_MANIFESTS))))
-endif
-
-################################################################################
-# Copy each element of EXTRA_JS_MODULES to
-# $(FINAL_TARGET)/modules.
-FINAL_JS_MODULES_PATH := $(FINAL_TARGET)/modules
-
-ifdef EXTRA_JS_MODULES
-ifndef NO_DIST_INSTALL
-EXTRA_JS_MODULES_FILES := $(EXTRA_JS_MODULES)
-EXTRA_JS_MODULES_DEST := $(FINAL_JS_MODULES_PATH)
-INSTALL_TARGETS += EXTRA_JS_MODULES
-endif
-endif
-
-ifdef EXTRA_PP_JS_MODULES
-ifndef NO_DIST_INSTALL
-EXTRA_PP_JS_MODULES_PATH := $(FINAL_JS_MODULES_PATH)
-PP_TARGETS += EXTRA_PP_JS_MODULES
-endif
 endif
 
 ################################################################################

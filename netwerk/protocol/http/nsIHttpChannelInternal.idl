@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(2677e555-8c48-4147-b883-5c2a673f65d5)]
+[scriptable, uuid(62a8d6e2-3418-4c6f-9d90-88573838f6dd)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -235,4 +235,9 @@ interface nsIHttpChannelInternal : nsISupports
      * interception and proceed immediately to the network/cache.
      */
     void forceNoIntercept();
+
+    /**
+     * The URI of the top-level window that's associated with this channel.
+     */
+    readonly attribute nsIURI topWindowURI;
 };

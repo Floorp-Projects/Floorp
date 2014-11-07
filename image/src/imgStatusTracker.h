@@ -27,18 +27,27 @@ namespace image {
 
 class Image;
 
+// Image state bitflags.
+enum {
+  FLAG_REQUEST_STARTED    = 1u << 0,
+  FLAG_HAS_SIZE           = 1u << 1,  // STATUS_SIZE_AVAILABLE
+  FLAG_DECODE_STARTED     = 1u << 2,  // STATUS_DECODE_STARTED
+  FLAG_DECODE_STOPPED     = 1u << 3,  // STATUS_DECODE_COMPLETE
+  FLAG_FRAME_STOPPED      = 1u << 4,  // STATUS_FRAME_COMPLETE
+  FLAG_REQUEST_STOPPED    = 1u << 5,  // STATUS_LOAD_COMPLETE
+  FLAG_ONLOAD_BLOCKED     = 1u << 6,
+  FLAG_ONLOAD_UNBLOCKED   = 1u << 7,
+  FLAG_IS_ANIMATED        = 1u << 8,
+  FLAG_IS_MULTIPART       = 1u << 9,
+  FLAG_MULTIPART_STOPPED  = 1u << 10,
+  FLAG_HAS_ERROR          = 1u << 11  // STATUS_ERROR
+};
+
 struct ImageStatusDiff
 {
   ImageStatusDiff()
     : invalidRect()
     , diffState(0)
-    , diffImageStatus(0)
-    , unblockedOnload(false)
-    , unsetDecodeStarted(false)
-    , foundError(false)
-    , foundIsMultipart(false)
-    , foundLastPart(false)
-    , gotDecoded(false)
   { }
 
   static ImageStatusDiff NoChange() { return ImageStatusDiff(); }
@@ -47,48 +56,16 @@ struct ImageStatusDiff
   bool operator!=(const ImageStatusDiff& aOther) const { return !(*this == aOther); }
   bool operator==(const ImageStatusDiff& aOther) const {
     return aOther.invalidRect == invalidRect
-        && aOther.diffState == diffState
-        && aOther.diffImageStatus == diffImageStatus
-        && aOther.unblockedOnload == unblockedOnload
-        && aOther.unsetDecodeStarted == unsetDecodeStarted
-        && aOther.foundError == foundError
-        && aOther.foundIsMultipart == foundIsMultipart
-        && aOther.foundLastPart == foundLastPart
-        && aOther.gotDecoded == gotDecoded;
+        && aOther.diffState == diffState;
   }
 
   void Combine(const ImageStatusDiff& aOther) {
     invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
-    diffImageStatus |= aOther.diffImageStatus;
-    unblockedOnload = unblockedOnload || aOther.unblockedOnload;
-    unsetDecodeStarted = unsetDecodeStarted || aOther.unsetDecodeStarted;
-    foundError = foundError || aOther.foundError;
-    foundIsMultipart = foundIsMultipart || aOther.foundIsMultipart;
-    foundLastPart = foundLastPart || aOther.foundLastPart;
-    gotDecoded = gotDecoded || aOther.gotDecoded;
   }
 
   nsIntRect invalidRect;
   uint32_t  diffState;
-  uint32_t  diffImageStatus;
-  bool      unblockedOnload    : 1;
-  bool      unsetDecodeStarted : 1;
-  bool      foundError         : 1;
-  bool      foundIsMultipart   : 1;
-  bool      foundLastPart      : 1;
-  bool      gotDecoded         : 1;
-};
-
-enum {
-  stateRequestStarted    = 1u << 0,
-  stateHasSize           = 1u << 1,
-  stateDecodeStarted     = 1u << 2,
-  stateDecodeStopped     = 1u << 3,
-  stateFrameStopped      = 1u << 4,
-  stateRequestStopped    = 1u << 5,
-  stateBlockingOnload    = 1u << 6,
-  stateImageIsAnimated   = 1u << 7
 };
 
 } // namespace image
@@ -130,7 +107,7 @@ public:
   void ResetImage();
 
   // Inform this status tracker that it is associated with a multipart image.
-  void SetIsMultipart() { mIsMultipart = true; }
+  void SetIsMultipart();
 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
@@ -220,7 +197,6 @@ public:
   void SendStopFrame(imgRequestProxy* aProxy);
   void RecordStopDecode(nsresult statusg);
   void SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus);
-  void RecordDiscard();
   void SendDiscard(imgRequestProxy* aProxy);
   void RecordUnlockedDraw();
   void SendUnlockedDraw(imgRequestProxy* aProxy);
@@ -263,7 +239,7 @@ public:
 
   void RecordError();
 
-  bool IsMultipart() const { return mIsMultipart; }
+  bool IsMultipart() const { return mState & mozilla::image::FLAG_IS_MULTIPART; }
 
   // Weak pointer getters - no AddRefs.
   inline already_AddRefed<mozilla::image::Image> GetImage() const {
@@ -308,7 +284,7 @@ private:
   // thread, and mConsumers is not threadsafe.
   static void SyncNotifyState(ProxyArray& proxies,
                               bool hasImage, uint32_t state,
-                              nsIntRect& dirtyRect, bool hadLastPart);
+                              nsIntRect& dirtyRect);
 
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
@@ -327,10 +303,6 @@ private:
   mozilla::RefPtr<imgDecoderObserver> mTrackerObserver;
 
   uint32_t mState;
-  uint32_t mImageStatus;
-  bool mIsMultipart    : 1;
-  bool mHadLastPart    : 1;
-  bool mHasBeenDecoded : 1;
 };
 
 class imgStatusTrackerInit
