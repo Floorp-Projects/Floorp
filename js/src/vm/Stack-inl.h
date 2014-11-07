@@ -529,14 +529,6 @@ AbstractFramePtr::useNewType() const
 }
 
 inline bool
-AbstractFramePtr::isGeneratorFrame() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->isGeneratorFrame();
-    return false;
-}
-
-inline bool
 AbstractFramePtr::isFunctionFrame() const
 {
     if (isInterpreterFrame())

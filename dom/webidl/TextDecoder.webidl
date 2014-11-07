@@ -11,7 +11,7 @@
  */
 
 [Constructor(optional DOMString label = "utf-8", optional TextDecoderOptions options),
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker,System)]
 interface TextDecoder {
   [Constant]
   readonly attribute DOMString encoding;
