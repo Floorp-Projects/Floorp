@@ -8,10 +8,11 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/WebChannel.jsm");
 
-const ERROR_ID_ORIGIN_REQUIRED = "WebChannel id and origin are required.";
+const ERROR_ID_ORIGIN_REQUIRED = "WebChannel id and originOrPermission are required.";
 const VALID_WEB_CHANNEL_ID = "id";
 const URL_STRING = "http://example.com";
 const VALID_WEB_CHANNEL_ORIGIN = Services.io.newURI(URL_STRING, null, null);
+const TEST_PERMISSION_NAME = "test-webchannel-permissions";
 
 let MockWebChannelBroker = {
   _channelMap: new Map(),
@@ -34,7 +35,7 @@ function run_test() {
  */
 
 /**
- * Test channel listening
+ * Test channel listening with originOrPermission being an nsIURI.
  */
 add_task(function test_web_channel_listen() {
   return new Promise((resolve, reject) => {
@@ -43,7 +44,54 @@ add_task(function test_web_channel_listen() {
     });
     let delivered = 0;
     do_check_eq(channel.id, VALID_WEB_CHANNEL_ID);
-    do_check_eq(channel.origin.spec, VALID_WEB_CHANNEL_ORIGIN.spec);
+    do_check_eq(channel._originOrPermission.spec, VALID_WEB_CHANNEL_ORIGIN.spec);
+    do_check_eq(channel._deliverCallback, null);
+
+    channel.listen(function(id, message, target) {
+      do_check_eq(id, VALID_WEB_CHANNEL_ID);
+      do_check_true(message);
+      do_check_true(message.command);
+      do_check_true(target.sender);
+      delivered++;
+      // 2 messages should be delivered
+      if (delivered === 2) {
+        channel.stopListening();
+        do_check_eq(channel._deliverCallback, null);
+        resolve();
+      }
+    });
+
+    // send two messages
+    channel.deliver({
+      id: VALID_WEB_CHANNEL_ID,
+      message: {
+        command: "one"
+      }
+    }, { sender: true });
+
+    channel.deliver({
+      id: VALID_WEB_CHANNEL_ID,
+      message: {
+        command: "two"
+      }
+    }, { sender: true });
+  });
+});
+
+/**
+ * Test channel listening with originOrPermission being a permission string.
+ */
+add_task(function test_web_channel_listen_permission() {
+  return new Promise((resolve, reject) => {
+    // add a new permission
+    Services.perms.add(VALID_WEB_CHANNEL_ORIGIN, TEST_PERMISSION_NAME, Services.perms.ALLOW_ACTION);
+    do_register_cleanup(() => Services.perms.remove(VALID_WEB_CHANNEL_ORIGIN.spec, TEST_PERMISSION_NAME));
+    let channel = new WebChannel(VALID_WEB_CHANNEL_ID, TEST_PERMISSION_NAME, {
+      broker: MockWebChannelBroker
+    });
+    let delivered = 0;
+    do_check_eq(channel.id, VALID_WEB_CHANNEL_ID);
+    do_check_eq(channel._originOrPermission, TEST_PERMISSION_NAME);
     do_check_eq(channel._deliverCallback, null);
 
     channel.listen(function(id, message, target) {
