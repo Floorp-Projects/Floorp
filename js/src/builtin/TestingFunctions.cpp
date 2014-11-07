@@ -633,7 +633,7 @@ GCSlice(JSContext *cx, unsigned argc, Value *vp)
         uint32_t work = 0;
         if (!ToUint32(cx, args[0], &work))
             return false;
-        budget = SliceBudget(WorkBudget(work));
+        budget = SliceBudget(SliceBudget::WorkBudget(work));
     }
 
     cx->runtime()->gc.gcDebugSlice(budget);
