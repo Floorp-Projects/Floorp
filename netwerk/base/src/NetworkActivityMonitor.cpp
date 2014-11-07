@@ -175,10 +175,12 @@ private:
 };
 
 NetworkActivityMonitor * NetworkActivityMonitor::gInstance = nullptr;
+static PRDescIdentity sNetActivityMonitorLayerIdentity;
+static PRIOMethods sNetActivityMonitorLayerMethods;
+static PRIOMethods *sNetActivityMonitorLayerMethodsPtr = nullptr;
 
 NetworkActivityMonitor::NetworkActivityMonitor()
-  : mLayerIdentity(PR_INVALID_IO_LAYER)
-  , mBlipInterval(PR_INTERVAL_NO_TIMEOUT)
+  : mBlipInterval(PR_INTERVAL_NO_TIMEOUT)
 {
   MOZ_COUNT_CTOR(NetworkActivityMonitor);
 
@@ -224,17 +226,21 @@ NetworkActivityMonitor::Shutdown()
 nsresult
 NetworkActivityMonitor::Init_Internal(int32_t blipInterval)
 {
-  mLayerIdentity = PR_GetUniqueIdentity("network activity monitor layer");
-  mLayerMethods  = *PR_GetDefaultIOMethods();
-  mLayerMethods.connect    = nsNetMon_Connect;
-  mLayerMethods.read       = nsNetMon_Read;
-  mLayerMethods.write      = nsNetMon_Write;
-  mLayerMethods.writev     = nsNetMon_Writev;
-  mLayerMethods.recv       = nsNetMon_Recv;
-  mLayerMethods.send       = nsNetMon_Send;
-  mLayerMethods.recvfrom   = nsNetMon_RecvFrom;
-  mLayerMethods.sendto     = nsNetMon_SendTo;
-  mLayerMethods.acceptread = nsNetMon_AcceptRead;
+  if (!sNetActivityMonitorLayerMethodsPtr) {
+    sNetActivityMonitorLayerIdentity =
+      PR_GetUniqueIdentity("network activity monitor layer");
+    sNetActivityMonitorLayerMethods  = *PR_GetDefaultIOMethods();
+    sNetActivityMonitorLayerMethods.connect    = nsNetMon_Connect;
+    sNetActivityMonitorLayerMethods.read       = nsNetMon_Read;
+    sNetActivityMonitorLayerMethods.write      = nsNetMon_Write;
+    sNetActivityMonitorLayerMethods.writev     = nsNetMon_Writev;
+    sNetActivityMonitorLayerMethods.recv       = nsNetMon_Recv;
+    sNetActivityMonitorLayerMethods.send       = nsNetMon_Send;
+    sNetActivityMonitorLayerMethods.recvfrom   = nsNetMon_RecvFrom;
+    sNetActivityMonitorLayerMethods.sendto     = nsNetMon_SendTo;
+    sNetActivityMonitorLayerMethods.acceptread = nsNetMon_AcceptRead;
+    sNetActivityMonitorLayerMethodsPtr = &sNetActivityMonitorLayerMethods;
+  }
 
   mBlipInterval = PR_MillisecondsToInterval(blipInterval);
   // Set the last notification times to time that has just expired, so any
@@ -254,8 +260,8 @@ NetworkActivityMonitor::AttachIOLayer(PRFileDesc *fd)
   PRFileDesc * layer;
   PRStatus     status;
 
-  layer = PR_CreateIOLayerStub(gInstance->mLayerIdentity,
-                               &gInstance->mLayerMethods);
+  layer = PR_CreateIOLayerStub(sNetActivityMonitorLayerIdentity,
+                               sNetActivityMonitorLayerMethodsPtr);
   if (!layer) {
     return NS_ERROR_FAILURE;
   }
