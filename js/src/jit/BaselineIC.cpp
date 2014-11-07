@@ -3545,20 +3545,13 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
 
 static bool
 IsCacheableSetPropCall(JSContext *cx, JSObject *obj, JSObject *holder, Shape *shape,
-                       Shape* oldShape, bool *isScripted, bool *isTemporarilyUnoptimizable)
+                       bool *isScripted, bool *isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(isScripted);
 
     // Currently we only optimize setter calls for setters bound on prototypes.
     if (obj == holder)
         return false;
-
-    if (obj->lastProperty() != oldShape) {
-        // During the property set, the shape of the object changed.  Not much
-        // point caching this based on the post-set shape, since the object
-        // wouldn't have matched such an IC stub anyway.
-        return false;
-    }
 
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -7822,8 +7815,8 @@ TryAttachSetValuePropStub(JSContext *cx, HandleScript script, jsbytecode *pc, IC
 // an accessor property.
 static bool
 TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetProp_Fallback *stub,
-                             HandleObject obj, HandleShape oldShape, HandleTypeObject oldType, uint32_t oldSlots,
-                             HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached,
+                             HandleObject obj, HandleShape receiverShape, HandlePropertyName name,
+                             HandleId id, HandleValue rhs, bool *attached,
                              bool *isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(!*attached);
@@ -7838,7 +7831,7 @@ TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         return false;
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape, oldShape,
+    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape,
                                                 &isScripted, isTemporarilyUnoptimizable);
 
     // Try handling scripted setters.
@@ -7848,7 +7841,7 @@ TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         MOZ_ASSERT(callee->hasScript());
 
         if (UpdateExistingSetPropCallStubs(stub, ICStub::SetProp_CallScripted,
-                                           holder, oldShape, callee)) {
+                                           holder, receiverShape, callee)) {
             *attached = true;
             return true;
         }
@@ -7873,7 +7866,7 @@ TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         MOZ_ASSERT(callee->isNative());
 
         if (UpdateExistingSetPropCallStubs(stub, ICStub::SetProp_CallNative,
-                                           holder, oldShape, callee)) {
+                                           holder, receiverShape, callee)) {
             *attached = true;
             return true;
         }
@@ -7936,8 +7929,8 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     // end up attaching a stub for the exact same access later.
     bool isTemporarilyUnoptimizable = false;
     if (stub->numOptimizedStubs() < ICSetProp_Fallback::MAX_OPTIMIZED_STUBS &&
-        !TryAttachSetAccessorPropStub(cx, script, pc, stub, obj, oldShape, oldType, oldSlots,
-                                      name, id, rhs, &attached, &isTemporarilyUnoptimizable))
+        !TryAttachSetAccessorPropStub(cx, script, pc, stub, obj, oldShape, name, id,
+                                      rhs, &attached, &isTemporarilyUnoptimizable))
     {
         return false;
     }
