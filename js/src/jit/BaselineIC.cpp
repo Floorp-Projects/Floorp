@@ -5766,17 +5766,9 @@ UpdateExistingSetPropCallStubs(ICSetProp_Fallback* fallbackStub,
             if (setPropStub->holder() == holder) {
                 // We want to update the holder shape to match the new one no
                 // matter what, even if the receiver shape is different.
-                //
-                // We would like to assert that either
-                // setPropStub->holderShape() != holder->lastProperty() or
-                // setPropStub->shape() != receiverShape, but that assertion can
-                // fail if there is something in a setter that changes something
-                // that we guard on in our stub but don't check for before/after
-                // differences across the set during stub generation.  For
-                // example, a setter mutating the shape of the proto the setter
-                // lives on would cause us to create an IC stub that never
-                // matches as protos with the old shape flow into it, but always
-                // matches post-set, which is where we are now.
+                MOZ_ASSERT(setPropStub->holderShape() != holder->lastProperty() ||
+                           setPropStub->shape() != receiverShape,
+                           "Why didn't we end up using this stub?");
                 setPropStub->holderShape() = holder->lastProperty();
                 // Make sure to update the setter, since a shape change might
                 // have changed which setter we want to use.
