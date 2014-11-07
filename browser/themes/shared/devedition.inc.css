@@ -7,24 +7,35 @@
    there are overrides for each platform in their devedition.css files. */
 
 :root {
-  /* Chrome */
   --space-above-tabbar: 1px;
+  --toolbarbutton-text-shadow: none;
+  --panel-ui-button-background-size: 1px calc(100% - 1px);
+  --panel-ui-button-background-position: 1px 0px;
+}
+
+:root[devtoolstheme="dark"] {
+  /* Chrome */
   --chrome-background-color: #1C2126;
   --chrome-color: #F5F7FA;
   --chrome-secondary-background-color: #39424D;
   --chrome-navigator-toolbox-separator-color: rgba(0,0,0,.2);
+  --chrome-nav-bar-separator-color: rgba(0,0,0,.2);
+  --chrome-nav-buttons-background: #252C33;
+  --chrome-nav-buttons-hover-background: #1B2127;
+  --chrome-selection-color: #fff;
+  --chrome-selection-background-color: #074D75;
 
   /* Tabs */
   --tabs-toolbar-color: #F5F7FA;
   --tab-background-color: #1C2126;
   --tab-color: #ced3d9;
-  --tab-hover-background-color: hsla(206,37%,4%,.5);
-  --tab-separator-color: #464C50;
+  --tab-hover-background-color: #07090a;
+  --tab-separator-color: #474C50;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #1a4666;
   --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
                                      0 8px 3px -5px #2b82bf inset,
-                                     0 -2px 0 rgba(0,0,0,.2) inset;
+                                     0 -1px 0 rgba(0,0,0,.2) inset;
 
   /* Toolbar buttons */
   --toolbarbutton-hover-background: rgba(25,33, 38,.6) linear-gradient(rgba(25,33,38,.6), rgba(25,33,38,.6)) padding-box;
@@ -36,7 +47,6 @@
   --toolbarbutton-checkedhover-backgroundcolor: #1D4F73;
   --toolbarbutton-combined-boxshadow: none;
   --toolbarbutton-combined-backgroundimage: linear-gradient(#5F6670 0, #5F6670 18px);
-  --toolbarbutton-text-shadow: none;
 
   /* Identity box */
   --identity-box-chrome-color: #46afe3;
@@ -53,16 +63,57 @@
   --urlbar-dropmarker-2x-url: url("chrome://browser/skin/devedition/urlbar-history-dropmarker.svg");
   --urlbar-dropmarker-2x-region: rect(0px, 11px, 14px, 0px);
   --urlbar-dropmarker-active-2x-region: rect(0px, 22px, 14px, 11px);
+  --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon-inverted");
 
   /* Menu button separator */
-  --panel-ui-button-background-image: linear-gradient(to bottom, #5E6670, #5E6670);
-  --panel-ui-button-background-size: 1px calc(100% - 1px);
-  --panel-ui-button-background-position: 1px 0px;
+  --panel-ui-button-background-image: linear-gradient(to bottom, transparent, #5F6670 30%, #5F6670 70%, transparent);
 }
 
-.searchbar-dropmarker-image {
+:root[devtoolstheme="dark"] .searchbar-dropmarker-image {
   --searchbar-dropmarker-url: url("chrome://browser/skin/devtools/dropmarker.svg");
   --searchbar-dropmarker-2x-url: url("chrome://browser/skin/devtools/dropmarker.svg");
+}
+
+:root[devtoolstheme="light"] {
+  --url-and-searchbar-background-color: #fff;
+
+  --chrome-background-color: #E3E4E6;
+  --chrome-color: #18191a;
+  --chrome-secondary-background-color: #f0f1f2;
+  --chrome-navigator-toolbox-separator-color: #cccccc;
+  --chrome-nav-bar-separator-color: #B6B6B8;
+  --chrome-nav-buttons-background: #f0f1f2;
+  --chrome-nav-buttons-hover-background: #DADBDB;
+  --chrome-selection-color: #f5f7fa;
+  --chrome-selection-background-color: #4c9ed9;
+
+  --tab-color: #18191a;
+  --tab-background-color: #E3E4E6;
+  --tab-hover-background-color: rgba(170,170,170,.2);
+  --tab-color: #18191a;
+  --tab-separator-color: rgba(170,170,170,.5);
+  --tab-selection-color: #f5f7fa;
+  --tab-selection-background-color: #4c9ed9;
+  --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
+                              0 8px 3px -5px #319BDB inset,
+                              0 -1px 0 #2A7CB1 inset;
+
+  /* Toolbar buttons */
+  --toolbarbutton-hover-background: #D7D7D8;
+  --toolbarbutton-hover-boxshadow: none;
+  --toolbarbutton-hover-bordercolor: rgba(0,0,0,0.1);
+  --toolbarbutton-active-background: rgba(76,158,217,.5) linear-gradient(rgba(76,158,217,.5), rgba(76,158,217,.5)) border-box
+  --toolbarbutton-active-boxshadow: none;
+  --toolbarbutton-active-bordercolor: rgba(0,0,0,0.3);
+  --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,0.2);
+  --toolbarbutton-combined-boxshadow: none;
+  --toolbarbutton-combined-backgroundimage: linear-gradient(rgba(0,0,0,0.1) 0, rgba(0,0,0,0.1) 18px);
+
+  /* Url and search bars */
+  --search-button-image: url("chrome://browser/skin/devedition/search.svg#search-icon");
+
+  /* Menu button separator */
+  --panel-ui-button-background-image: linear-gradient(to bottom, transparent, rgba(0,0,0,0.1) 30%, rgba(0,0,0,0.1) 70%, transparent);
 }
 
 /* Give some space to drag the window around while customizing
@@ -104,9 +155,10 @@
 }
 /* End override @tabCurveHalfWidth@ and @tabCurveWidth@ */
 
-#navigator-toolbox ::-moz-selection {
-  background-color: #074D75;
-  color: #fff;
+#urlbar ::-moz-selection,
+#navigator-toolbox .searchbar-textbox ::-moz-selection {
+  background-color: var(--chrome-selection-background-color);
+  color: var(--chrome-selection-color);
 }
 
 /* Change the base colors for the browser chrome */
@@ -119,7 +171,7 @@
 }
 
 #navigator-toolbox::after {
-  background: var(--chrome-navigator-toolbox-separator-color)
+  background: var(--chrome-navigator-toolbox-separator-color);
 }
 
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
@@ -173,7 +225,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   margin-top: 0 !important;
   border: none !important;
   border-radius: 0 !important;
-  box-shadow: 0 -1px var(--chrome-navigator-toolbox-separator-color) !important;
+  box-shadow: 0 1px var(--chrome-nav-bar-separator-color) inset !important;
   background-image: none !important;
 }
 
@@ -192,7 +244,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 .search-go-button {
    /* !important is needed because searchbar.css is loaded after this */
   -moz-image-region: auto !important;
-  list-style-image: url("chrome://browser/skin/devedition/search.svg#search-icon-inverted");
+  list-style-image: var(--search-button-image);
 }
 
 .tab-background {
@@ -202,7 +254,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
 .tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
-  background-image: linear-gradient(to top, #474C50, #474C50);
+  background-image: linear-gradient(to top, var(--tab-separator-color), var(--tab-separator-color));
   background-position: 1px 0;
   background-repeat: no-repeat;
   background-size: 1px 100%;
@@ -242,7 +294,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 }
 
 .tabbrowser-tab[selected] {
-  color: var(--tab-selection-color);
+  color: var(--tab-selection-color) !important; /* Override color: inherit */
   background-color: var(--tab-selection-background-color);
   box-shadow: var(--tab-selection-box-shadow);
 }

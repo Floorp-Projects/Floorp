@@ -59,22 +59,12 @@ function testDevtoolsTheme() {
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
   is (document.documentElement.getAttribute("devtoolstheme"), "light",
     "The documentElement has an attribute based on devtools theme.");
-  ok (!DevEdition.styleSheet, "The devedition stylesheet has been removed because of light devtools theme.");
+  ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the light devtools theme.");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
   is (document.documentElement.getAttribute("devtoolstheme"), "dark",
     "The documentElement has an attribute based on devtools theme.");
-  ok (DevEdition.styleSheet, "The devedition stylesheet has been readded because of dark devtools theme.");
-
-  Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
-  is (document.documentElement.getAttribute("devtoolstheme"), "light",
-    "The documentElement has an attribute based on devtools theme.");
-  ok (!DevEdition.styleSheet, "The devedition stylesheet has been removed because of light devtools theme.");
-
-  Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
-  is (document.documentElement.getAttribute("devtoolstheme"), "dark",
-    "The documentElement has an attribute based on devtools theme.");
-  ok (DevEdition.styleSheet, "The devedition stylesheet has been readded because of dark devtools theme.");
+  ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the dark devtools theme.");
 }
 
 function dummyLightweightTheme(id) {
