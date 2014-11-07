@@ -552,6 +552,9 @@ public class LocalBrowserDB {
         } else if ("favicons".equals(database)) {
             uri = mFaviconsUriWithProfile;
             columns = new String[] { Favicons._ID };
+        } else if ("readinglist".equals(database)) {
+            uri = mReadingListUriWithProfile;
+            columns = new String[] { ReadingListItems._ID };
         }
         if (uri != null) {
             final Cursor cursor = cr.query(uri, columns, constraint, null, null);
