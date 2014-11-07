@@ -28,8 +28,6 @@ function runTests() {
 
   // Clean up.
   gBrowser.removeCurrentTab({animate: false});
-
-  ok(true, "Each test requires at least one pass, fail or todo so here is a pass.");
 }
 
 function whenBrowserLoaded(browser) {
