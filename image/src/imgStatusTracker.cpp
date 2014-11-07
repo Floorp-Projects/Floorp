@@ -699,13 +699,13 @@ imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy)
 void
 imgStatusTracker::RecordStopDecode(nsresult aStatus)
 {
-  NS_ABORT_IF_FALSE(mImage,
-                    "RecordStopDecode called before we have an Image");
+  MOZ_ASSERT(mImage, "RecordStopDecode called before we have an Image");
+
   mState |= FLAG_DECODE_STOPPED;
+  mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
+  mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
 
   if (NS_SUCCEEDED(aStatus) && !(mImageStatus & imgIRequest::STATUS_ERROR)) {
-    mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
-    mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
     mHasBeenDecoded = true;
   } else {
     mImageStatus |= imgIRequest::STATUS_ERROR;
