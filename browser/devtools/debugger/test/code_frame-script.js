@@ -10,9 +10,10 @@ loadSubScript("chrome://marionette/content/EventUtils.js", EventUtils);
 dump("Frame script loaded.\n");
 
 addMessageListener("test:call", function (message) {
-  dump("Calling function with name " + message.data + ".\n");
+  dump("Calling function with name " + message.data.name + ".\n");
 
-  XPCNativeWrapper.unwrap(content)[message.data]();
+  let data = message.data;
+  XPCNativeWrapper.unwrap(content)[data.name].apply(undefined, data.args);
   sendAsyncMessage("test:call");
 });
 
