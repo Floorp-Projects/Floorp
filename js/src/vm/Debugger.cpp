@@ -4833,7 +4833,7 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
     if (unsigned(i) < frame.numActualArgs()) {
         script = frame.script();
         {
-            AutoCompartment ac(cx);
+            AutoCompartment ac(cx, script->compartment());
             if (!script->ensureHasAnalyzedArgsUsage(cx))
                 return false;
         }
