@@ -23,8 +23,7 @@ class MediaOmxCommonDecoder : public MediaDecoder
 public:
   MediaOmxCommonDecoder();
 
-  virtual void MetadataLoaded(MediaInfo* aInfo,
-                              MetadataTags* aTags);
+  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo);
   virtual void ChangeState(PlayState aState);
   virtual void ApplyStateToStateMachine(PlayState aState);
   virtual void SetVolume(double aVolume);

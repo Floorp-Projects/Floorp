@@ -23,12 +23,14 @@
 == percent-3.html percent-3-ref.html
 
 # more serious tests, using SVG reference
-fuzzy(64,75) == border-circle-2.html border-circle-2-ref.xhtml
+== border-circle-2.html border-circle-2-ref.xhtml
 fails == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 
 # Corners
-fuzzy(64,58) == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
+== corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
 random == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
+fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android||B2G,3,15) == corner-3.html corner-3-ref.svg
+== corner-4.html corner-4-ref.svg
 
 # Test that radii too long are reduced
 == border-reduce-height.html border-reduce-height-ref.html
@@ -37,7 +39,7 @@ random == corner-2.html corner-2-ref.svg # right corners different radius than l
 fails == clipping-1.html clipping-1-ref.html # background color should completely fill box; bug 466572
 != clipping-2.html about:blank # background color clipped to inner/outer border, can't get
 # great tests for this due to antialiasing problems described in bug 466572
-fuzzy(64,75) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
+fuzzy-if(Android&&AndroidVersion<15,9,73) fuzzy-if(Android&&AndroidVersion>=15,9,200) == clipping-3.html clipping-3-ref.xhtml # edge of border-radius clips an underlying object's background
 
 # Tests for clipping the contents of replaced elements and overflow!=visible
 != clipping-4-ref.html clipping-4-notref.html
@@ -85,6 +87,6 @@ skip-if(B2G) fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,20) fuzzy-if(A
 == iframe-1.html iframe-1-ref.html
 
 # Test for antialiasing gaps between background and border
-skip-if(B2G) fails-if(d2d) fuzzy-if(Android,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+skip-if(B2G) fails-if(d2d) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(Android,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html

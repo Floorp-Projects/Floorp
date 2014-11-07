@@ -86,7 +86,8 @@ private:
               int32_t                  aPseudoUnit,
               const nsCSSValue&        aCSSValue,
               const nsHTMLReflowMetrics& aDesiredSize,
-              nscoord&                 aValueToUpdate) const;
+              nscoord&                 aValueToUpdate,
+              float                    aFontSizeInflation) const;
 };
 
 #endif /* nsMathMLmpaddedFrame_h___ */

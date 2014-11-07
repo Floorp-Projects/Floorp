@@ -66,6 +66,7 @@ public:
   ReflowChar(nsPresContext*      aPresContext,
              nsRenderingContext& aRenderingContext,
              nsFontMetrics&       aFontMetrics,
+             float                aFontSizeInflation,
              nsMathMLChar*        aMathMLChar,
              nsOperatorFlags      aForm,
              int32_t              aScriptLevel,

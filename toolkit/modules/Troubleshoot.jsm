@@ -469,4 +469,20 @@ let dataProviders = {
       exists: userJSFile.exists() && userJSFile.fileSize > 0,
     });
   },
+
+#if defined(XP_LINUX) && defined (MOZ_SANDBOX)
+  sandbox: function sandbox(done) {
+    const keys = ["hasSeccompBPF", "canSandboxContent", "canSandboxMedia"];
+
+    let sysInfo = Cc["@mozilla.org/system-info;1"].
+                  getService(Ci.nsIPropertyBag2);
+    let data = {};
+    for (key of keys) {
+      if (sysInfo.hasKey(key)) {
+        data[key] = sysInfo.getPropertyAsBool(key);
+      }
+    }
+    done(data);
+  }
+#endif
 };

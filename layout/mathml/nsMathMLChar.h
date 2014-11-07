@@ -114,6 +114,7 @@ public:
   nsresult
   Stretch(nsPresContext*           aPresContext,
           nsRenderingContext&     aRenderingContext,
+          float                    aFontSizeInflation,
           nsStretchDirection       aStretchDirection,
           const nsBoundingMetrics& aContainerSize,
           nsBoundingMetrics&       aDesiredStretchSize,
@@ -167,6 +168,7 @@ public:
   nscoord
   GetMaxWidth(nsPresContext* aPresContext,
               nsRenderingContext& aRenderingContext,
+              float aFontSizeInflation,
               uint32_t aStretchHint = NS_STRETCH_NORMAL,
               float aMaxSize = NS_MATHML_OPERATOR_SIZE_INFINITY,
               // Perhaps just nsOperatorFlags aFlags.
@@ -245,6 +247,7 @@ private:
   nsresult
   StretchInternal(nsPresContext*           aPresContext,
                   gfxContext*              aThebesContext,
+                  float                    aFontSizeInflation,
                   nsStretchDirection&      aStretchDirection,
                   const nsBoundingMetrics& aContainerSize,
                   nsBoundingMetrics&       aDesiredStretchSize,

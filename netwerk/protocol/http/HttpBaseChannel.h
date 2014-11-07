@@ -187,6 +187,7 @@ public:
   NS_IMETHOD ForcePending(bool aForcePending);
   NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime);
   NS_IMETHOD ForceNoIntercept();
+  NS_IMETHOD GetTopWindowURI(nsIURI **aTopWindowURI);
 
   inline void CleanRedirectCacheChainIfNecessary()
   {
@@ -407,6 +408,7 @@ protected:
   nsCOMPtr<nsIPrincipal>            mPrincipal;
 
   bool                              mForcePending;
+  nsCOMPtr<nsIURI>                  mTopWindowURI;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting
