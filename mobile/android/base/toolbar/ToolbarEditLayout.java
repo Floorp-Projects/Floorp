@@ -130,7 +130,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
     }
 
     protected void saveTabEditingState(final TabEditingState editingState) {
-        editingState.lastEditingText = mEditText.getNonAutocompleteText();
+        editingState.lastEditingText = getText();
         editingState.selectionStart = mEditText.getSelectionStart();
         editingState.selectionEnd = mEditText.getSelectionEnd();
    }
