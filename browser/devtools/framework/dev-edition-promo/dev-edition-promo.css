@@ -1,0 +1,94 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+window {
+  -moz-appearance: none;
+  background-color: transparent;
+}
+
+#doorhanger-container {
+  width: 450px;
+}
+
+#top-panel {
+  padding: 20px;
+  background: #343c45; /* toolbars */
+  color: #8fa1b2; /* body text */
+/*
+ * Sloppy preprocessing since UNIX_BUT_NOT_MAC is only defined
+ * in `browser/app/profile/firefox.js`, which this file cannot
+ * depend on. Must style font-size to target linux.
+ */
+%ifdef XP_UNIX
+%ifndef XP_MACOSX
+  font-size: 13px;
+%else
+  font-size: 15px;
+%endif
+%else
+  font-size: 15px;
+%endif
+  line-height: 19px;
+  min-height: 100px;
+}
+
+#top-panel h1 {
+  font-weight: bold;
+  font-family: Open Sans, sans-serif;
+  font-size: 1.1em;
+}
+
+#top-panel p {
+  font-family: Open Sans, sans-serif;
+  font-size: 0.9em;
+  width: 300px;
+  display: block;
+  margin: 5px 0px 0px 0px;
+}
+
+#icon {
+  background-image: url("chrome://browser/content/devtools/framework/dev-edition-logo.png");
+  background-size: 64px 64px;
+  background-repeat: no-repeat;
+  width: 64px;
+  height: 64px;
+  margin-right: 20px;
+}
+
+#lower-panel {
+  padding: 20px;
+  background-color: #252c33; /* tab toolbars */
+  min-height: 75px;
+  border-top: 1px solid #292e33; /* text high contrast (light) */
+}
+
+#button-container {
+  margin: auto 20px;
+}
+
+#button-container button {
+  font: message-box !important;
+  font-size: 16px !important;
+  cursor: pointer;
+  width: 125px;
+  opacity: 1;
+  position: static;
+  -moz-appearance: none;
+  border-radius: 5px;
+  height: 30px;
+  width: 450px;
+  /* Override embossed borders on Windows/Linux */
+  border: none;
+}
+
+#close {
+  background-color: transparent;
+  color: #8fa1b2; /* body text */
+}
+
+#go {
+  margin-left: 100px;
+  background-color: #70bf53; /* green */
+  color: #f5f7fa; /* selection text color */
+}

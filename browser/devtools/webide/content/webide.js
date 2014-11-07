@@ -21,6 +21,7 @@ const ProjectEditor = require("projecteditor/projecteditor");
 const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
 const {GetAvailableAddons} = require("devtools/webide/addons");
 const {GetTemplatesJSON, GetAddonsJSON} = require("devtools/webide/remote-resources");
+const {showDoorhanger} = require("devtools/shared/doorhanger");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
@@ -117,6 +118,11 @@ let UI = {
         AppManager.selectedProject.type != "runtimeApp") {
       AppManager.validateProject(AppManager.selectedProject);
     }
+
+    // Hook to display promotional Developer Edition doorhanger. Only displayed once.
+    // Hooked into the `onfocus` event because sometimes does not work
+    // when run at the end of `init`. ¯\(°_o)/¯
+    showDoorhanger({ window, type: "deveditionpromo", anchor: document.querySelector("#deck") });
   },
 
   appManagerUpdate: function(event, what, details) {
