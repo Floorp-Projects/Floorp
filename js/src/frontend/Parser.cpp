@@ -899,7 +899,8 @@ Parser<FullParseHandler>::checkFunctionArguments()
     // ES6 9.2.13.17 says that a lexical binding of 'arguments' shadows the
     // arguments object.
     bool argumentsHasLocalBinding = maybeArgDef && (maybeArgDef->kind() != Definition::ARG &&
-                                                    maybeArgDef->kind() != Definition::LET);
+                                                    maybeArgDef->kind() != Definition::LET &&
+                                                    maybeArgDef->kind() != Definition::CONST);
     bool hasRest = pc->sc->asFunctionBox()->function()->hasRest();
     if (hasRest && argumentsHasLocalBinding) {
         report(ParseError, false, nullptr, JSMSG_ARGUMENTS_AND_REST);
