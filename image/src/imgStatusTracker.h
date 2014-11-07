@@ -38,7 +38,8 @@ enum {
   FLAG_ONLOAD_BLOCKED     = 1u << 6,
   FLAG_ONLOAD_UNBLOCKED   = 1u << 7,
   FLAG_IS_ANIMATED        = 1u << 8,
-  FLAG_IS_MULTIPART       = 1u << 9
+  FLAG_IS_MULTIPART       = 1u << 9,
+  FLAG_MULTIPART_STOPPED  = 1u << 10
 };
 
 struct ImageStatusDiff
@@ -47,7 +48,6 @@ struct ImageStatusDiff
     : invalidRect()
     , diffState(0)
     , diffImageStatus(0)
-    , foundLastPart(false)
     , gotDecoded(false)
   { }
 
@@ -59,7 +59,6 @@ struct ImageStatusDiff
     return aOther.invalidRect == invalidRect
         && aOther.diffState == diffState
         && aOther.diffImageStatus == diffImageStatus
-        && aOther.foundLastPart == foundLastPart
         && aOther.gotDecoded == gotDecoded;
   }
 
@@ -67,14 +66,12 @@ struct ImageStatusDiff
     invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
     diffImageStatus |= aOther.diffImageStatus;
-    foundLastPart = foundLastPart || aOther.foundLastPart;
     gotDecoded = gotDecoded || aOther.gotDecoded;
   }
 
   nsIntRect invalidRect;
   uint32_t  diffState;
   uint32_t  diffImageStatus;
-  bool      foundLastPart      : 1;
   bool      gotDecoded         : 1;
 };
 
@@ -294,7 +291,7 @@ private:
   // thread, and mConsumers is not threadsafe.
   static void SyncNotifyState(ProxyArray& proxies,
                               bool hasImage, uint32_t state,
-                              nsIntRect& dirtyRect, bool hadLastPart);
+                              nsIntRect& dirtyRect);
 
   nsCOMPtr<nsIRunnable> mRequestRunnable;
 
@@ -314,7 +311,6 @@ private:
 
   uint32_t mState;
   uint32_t mImageStatus;
-  bool mHadLastPart    : 1;
   bool mHasBeenDecoded : 1;
 };
 

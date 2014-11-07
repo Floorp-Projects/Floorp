@@ -146,7 +146,6 @@ imgStatusTracker::imgStatusTracker(Image* aImage)
   : mImage(aImage),
     mState(0),
     mImageStatus(imgIRequest::STATUS_NONE),
-    mHadLastPart(false),
     mHasBeenDecoded(false)
 {
   mTrackerObserver = new imgStatusTrackerObserver(this);
@@ -157,7 +156,6 @@ imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
   : mImage(aOther.mImage),
     mState(aOther.mState),
     mImageStatus(aOther.mImageStatus),
-    mHadLastPart(aOther.mHadLastPart),
     mHasBeenDecoded(aOther.mHasBeenDecoded)
     // Note: we explicitly don't copy several fields:
     //  - mRequestRunnable, because it won't be nulled out when the
@@ -366,7 +364,7 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
 /* static */ void
 imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
                                   bool hasImage, uint32_t state,
-                                  nsIntRect& dirtyRect, bool hadLastPart)
+                                  nsIntRect& dirtyRect)
 {
   MOZ_ASSERT(NS_IsMainThread());
   // OnStartRequest
@@ -414,7 +412,7 @@ imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
   }
 
   if (state & FLAG_REQUEST_STOPPED) {
-    NOTIFY_IMAGE_OBSERVERS(OnStopRequest(hadLastPart));
+    NOTIFY_IMAGE_OBSERVERS(OnStopRequest(state & FLAG_MULTIPART_STOPPED));
   }
 }
 
@@ -425,8 +423,6 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
   ImageStatusDiff diff;
   diff.diffState = ~mState & aOther->mState & ~FLAG_REQUEST_STARTED;
   diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
-
-  diff.foundLastPart = !mHadLastPart && aOther->mHadLastPart;
 
   diff.gotDecoded = !mHasBeenDecoded && aOther->mHasBeenDecoded;
 
@@ -471,7 +467,6 @@ imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
   // Synchronize our state.
   mState |= aDiff.diffState | loadState;
 
-  mHadLastPart = mHadLastPart || aDiff.foundLastPart;
   mHasBeenDecoded = mHasBeenDecoded || aDiff.gotDecoded;
 
   // Update the image status. There are some subtle points which are handled below.
@@ -486,7 +481,7 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& diff)
 
   nsIntRect invalidRect = mInvalidRect.Union(diff.invalidRect);
 
-  SyncNotifyState(mConsumers, !!mImage, diff.diffState, invalidRect, mHadLastPart);
+  SyncNotifyState(mConsumers, !!mImage, diff.diffState, invalidRect);
 
   mInvalidRect.SetEmpty();
 
@@ -525,7 +520,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 
   ProxyArray array;
   array.AppendElement(proxy);
-  SyncNotifyState(array, !!mImage, mState, r, mHadLastPart);
+  SyncNotifyState(array, !!mImage, mState, r);
 }
 
 void
@@ -609,9 +604,10 @@ void
 imgStatusTracker::RecordLoaded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordLoaded called before we have an Image");
-  mState |= FLAG_REQUEST_STARTED | FLAG_HAS_SIZE | FLAG_REQUEST_STOPPED;
-  mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE | imgIRequest::STATUS_LOAD_COMPLETE;
-  mHadLastPart = true;
+  mState |= FLAG_REQUEST_STARTED | FLAG_HAS_SIZE |
+            FLAG_REQUEST_STOPPED | FLAG_MULTIPART_STOPPED;
+  mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE |
+                  imgIRequest::STATUS_LOAD_COMPLETE;
 }
 
 void
@@ -826,8 +822,10 @@ void
 imgStatusTracker::RecordStopRequest(bool aLastPart,
                                     nsresult aStatus)
 {
-  mHadLastPart = aLastPart;
   mState |= FLAG_REQUEST_STOPPED;
+  if (aLastPart) {
+    mState |= FLAG_MULTIPART_STOPPED;
+  }
 
   // If we were successful in loading, note that the image is complete.
   if (NS_SUCCEEDED(aStatus)) {
