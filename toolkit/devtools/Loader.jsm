@@ -219,24 +219,8 @@ SrcdirProvider.prototype = {
   },
 
   _writeFile: function(filename, data) {
-    let deferred = promise.defer();
-    let file = new FileUtils.File(filename);
-
-    var ostream = FileUtils.openSafeFileOutputStream(file)
-
-    var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    var istream = converter.convertToInputStream(data);
-    NetUtil.asyncCopy(istream, ostream, (status) => {
-      if (!Components.isSuccessCode(status)) {
-        deferred.reject(new Error("Couldn't write manifest: " + filename + "\n"));
-        return;
-      }
-
-      deferred.resolve(null);
-    });
-    return deferred.promise;
+    let promise = OS.File.writeAtomic(filename, data, {encoding: "utf-8"});
+    return promise.then(null, (ex) => new Error("Couldn't write manifest: " + ex + "\n"));
   },
 
   _writeManifest: function(dir) {
