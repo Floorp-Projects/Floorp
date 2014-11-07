@@ -12,7 +12,6 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsRenderingContext.h"
 #include "nsPresContext.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"

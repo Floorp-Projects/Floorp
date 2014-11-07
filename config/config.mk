@@ -503,16 +503,6 @@ WIN32_EXE_LDFLAGS	+= -STACK:2097152
 endif
 endif
 
-# If we're building a component on MSVC, we don't want to generate an
-# import lib, because that import lib will collide with the name of a
-# static version of the same library.
-ifeq ($(GNU_LD)$(OS_ARCH),WINNT)
-ifdef IS_COMPONENT
-LDFLAGS += -IMPLIB:fake.lib
-DELETE_AFTER_LINK = fake.lib fake.exp
-endif
-endif
-
 #
 # Include any personal overrides the user might think are needed.
 #

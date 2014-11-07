@@ -104,6 +104,14 @@ struct SandboxFlags {
 
 static const SandboxFlags gSandboxFlags;
 
+SandboxFeatureFlags
+GetSandboxFeatureFlags()
+{
+  return gSandboxFlags.isSupported
+    ? kSandboxFeatureSeccompBPF
+    : static_cast<SandboxFeatureFlags>(0);
+}
+
 /**
  * This is the SIGSYS handler function. It is used to report to the user
  * which system call has been denied by Seccomp.
@@ -137,6 +145,19 @@ Reporter(int nr, siginfo_t *info, void *void_context)
   args[3] = SECCOMP_PARM4(ctx);
   args[4] = SECCOMP_PARM5(ctx);
   args[5] = SECCOMP_PARM6(ctx);
+
+#if defined(ANDROID) && ANDROID_VERSION < 16
+  // Bug 1093893: Translate tkill to tgkill for pthread_kill; fixed in
+  // bionic commit 10c8ce59a (in JB and up; API level 16 = Android 4.1).
+  if (syscall_nr == __NR_tkill) {
+    intptr_t ret = syscall(__NR_tgkill, getpid(), args[0], args[1]);
+    if (ret < 0) {
+      ret = -errno;
+    }
+    SECCOMP_RESULT(ctx) = ret;
+    return;
+  }
+#endif
 
 #ifdef MOZ_GMP_SANDBOX
   if (syscall_nr == __NR_open && gMediaPluginFilePath) {
@@ -463,10 +484,11 @@ SetContentProcessSandbox()
   SetCurrentProcessSandbox(kSandboxContentProcess);
 }
 
-bool
-CanSandboxContentProcess()
+SandboxStatus
+ContentProcessSandboxStatus()
 {
-  return gSandboxFlags.isSupported || gSandboxFlags.isDisabledForContent;
+  return gSandboxFlags.isDisabledForContent ? kSandboxingDisabled :
+    gSandboxFlags.isSupported ? kSandboxingSupported : kSandboxingWouldFail;
 }
 #endif // MOZ_CONTENT_SANDBOX
 
@@ -502,10 +524,11 @@ SetMediaPluginSandbox(const char *aFilePath)
   SetCurrentProcessSandbox(kSandboxMediaPlugin);
 }
 
-bool
-CanSandboxMediaPlugin()
+SandboxStatus
+MediaPluginSandboxStatus()
 {
-  return gSandboxFlags.isSupported || gSandboxFlags.isDisabledForGMP;
+  return gSandboxFlags.isDisabledForGMP ? kSandboxingDisabled :
+    gSandboxFlags.isSupported ? kSandboxingSupported : kSandboxingWouldFail;
 }
 #endif // MOZ_GMP_SANDBOX
 

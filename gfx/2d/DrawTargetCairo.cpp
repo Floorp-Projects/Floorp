@@ -37,6 +37,9 @@
 
 #include <algorithm>
 
+// 2^23
+#define CAIRO_COORD_MAX (Float(0x7fffff))
+
 namespace mozilla {
 
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCairoSurface, cairo_surface_t, cairo_surface_destroy);
@@ -90,6 +93,64 @@ private:
   cairo_t* mCtx;
 };
 
+/* Clamp r to (0,0) (2^23,2^23)
+ * these are to be device coordinates.
+ *
+ * Returns false if the rectangle is completely out of bounds,
+ * true otherwise.
+ *
+ * This function assumes that it will be called with a rectangle being
+ * drawn into a surface with an identity transformation matrix; that
+ * is, anything above or to the left of (0,0) will be offscreen.
+ *
+ * First it checks if the rectangle is entirely beyond
+ * CAIRO_COORD_MAX; if so, it can't ever appear on the screen --
+ * false is returned.
+ *
+ * Then it shifts any rectangles with x/y < 0 so that x and y are = 0,
+ * and adjusts the width and height appropriately.  For example, a
+ * rectangle from (0,-5) with dimensions (5,10) will become a
+ * rectangle from (0,0) with dimensions (5,5).
+ *
+ * If after negative x/y adjustment to 0, either the width or height
+ * is negative, then the rectangle is completely offscreen, and
+ * nothing is drawn -- false is returned.
+ *
+ * Finally, if x+width or y+height are greater than CAIRO_COORD_MAX,
+ * the width and height are clamped such x+width or y+height are equal
+ * to CAIRO_COORD_MAX, and true is returned.
+ */
+static bool
+ConditionRect(Rect& r) {
+  // if either x or y is way out of bounds;
+  // note that we don't handle negative w/h here
+  if (r.X() > CAIRO_COORD_MAX || r.Y() > CAIRO_COORD_MAX)
+    return false;
+
+  if (r.X() < 0.f) {
+    r.width += r.X();
+    if (r.width < 0.f)
+      return false;
+    r.x = 0.f;
+  }
+
+  if (r.XMost() > CAIRO_COORD_MAX) {
+    r.width = CAIRO_COORD_MAX - r.X();
+  }
+
+  if (r.Y() < 0.f) {
+    r.height += r.Y();
+    if (r.Height() < 0.f)
+      return false;
+
+    r.y = 0.f;
+  }
+
+  if (r.YMost() > CAIRO_COORD_MAX) {
+    r.height = CAIRO_COORD_MAX - r.Y();
+  }
+  return true;
+}
 
 } // end anonymous namespace
 
@@ -856,16 +917,50 @@ DrawTargetCairo::FillRect(const Rect &aRect,
 {
   AutoPrepareForDrawing prep(this, mContext);
 
+  bool restoreTransform = false;
+  Matrix mat;
+  Rect r = aRect;
+
+  /* Clamp coordinates to work around a design bug in cairo */
+  if (r.width > CAIRO_COORD_MAX ||
+      r.height > CAIRO_COORD_MAX ||
+      r.x < -CAIRO_COORD_MAX ||
+      r.x > CAIRO_COORD_MAX ||
+      r.y < -CAIRO_COORD_MAX ||
+      r.y > CAIRO_COORD_MAX)
+  {
+    if (!mat.IsRectilinear()) {
+      gfxWarning() << "DrawTargetCairo::FillRect() misdrawing huge Rect "
+                      "with non-rectilinear transform";
+    }
+
+    mat = GetTransform();
+    r = mat.TransformBounds(r);
+
+    if (!ConditionRect(r)) {
+      gfxWarning() << "Ignoring DrawTargetCairo::FillRect() call with "
+                      "out-of-bounds Rect";
+      return;
+    }
+
+    restoreTransform = true;
+    SetTransform(Matrix());
+  }
+
   cairo_new_path(mContext);
-  cairo_rectangle(mContext, aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  cairo_rectangle(mContext, r.x, r.y, r.Width(), r.Height());
 
   bool pathBoundsClip = false;
 
-  if (aRect.Contains(GetUserSpaceClip())) {
+  if (r.Contains(GetUserSpaceClip())) {
     pathBoundsClip = true;
   }
 
   DrawPattern(aPattern, StrokeOptions(), aOptions, DRAW_FILL, pathBoundsClip);
+
+  if (restoreTransform) {
+    SetTransform(mat);
+  }
 }
 
 void

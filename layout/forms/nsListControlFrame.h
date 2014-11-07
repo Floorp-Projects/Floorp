@@ -423,6 +423,9 @@ protected:
   // True if the drop-down can show more rows.  Always false if this list
   // is not in drop-down mode.
   bool mDropdownCanGrow:1;
+
+  // True if the selection can be set to nothing or disabled options.
+  bool mForceSelection:1;
   
   // The last computed height we reflowed at if we're a combobox dropdown.
   // XXXbz should we be using a subclass here?  Or just not worry
