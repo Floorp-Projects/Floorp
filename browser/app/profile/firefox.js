@@ -1311,6 +1311,17 @@ pref("browser.devedition.theme.enabled", false);
 pref("browser.devedition.theme.showCustomizeButton", false);
 #endif
 
+// Developer edition promo preferences
+pref("devtools.devedition.promo.shown", false);
+pref("devtools.devedition.promo.url", "https://mozilla.org/firefox/developer");
+
+// Only potentially show in beta release
+#ifdef MOZ_UPDATE_CHANNEL == beta
+  pref("devtools.devedition.promo.enabled", true);
+#else
+  pref("devtools.devedition.promo.enabled", false);
+#endif
+
 // Disable the error console
 pref("devtools.errorconsole.enabled", false);
 

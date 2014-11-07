@@ -17,6 +17,7 @@ let EventEmitter = require("devtools/toolkit/event-emitter");
 let Telemetry = require("devtools/shared/telemetry");
 let {getHighlighterUtils} = require("devtools/framework/toolbox-highlighter-utils");
 let HUDService = require("devtools/webconsole/hudservice");
+let {showDoorhanger} = require("devtools/shared/doorhanger");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -100,6 +101,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   this._prefChanged = this._prefChanged.bind(this);
   this._saveSplitConsoleHeight = this._saveSplitConsoleHeight.bind(this);
   this._onFocus = this._onFocus.bind(this);
+  this._showDevEditionPromo = this._showDevEditionPromo.bind(this);
 
   this._target.on("close", this.destroy);
 
@@ -123,6 +125,8 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
 
   this.on("host-changed", this._refreshHostTitle);
   this.on("select", this._refreshHostTitle);
+
+  this.on("ready", this._showDevEditionPromo);
 
   gDevTools.on("tool-registered", this._toolRegistered);
   gDevTools.on("tool-unregistered", this._toolUnregistered);
@@ -1629,5 +1633,18 @@ Toolbox.prototype = {
 
   _highlighterHidden: function() {
     this.emit("highlighter-hide");
+  },
+
+  /**
+   * For displaying the promotional Doorhanger on first opening of
+   * the developer tools, promoting the Developer Edition.
+   */
+  _showDevEditionPromo: function() {
+    // Do not display in browser toolbox
+    if (this.target.chrome) {
+      return;
+    }
+    let window = this.frame.contentWindow;
+    showDoorhanger({ window, type: "deveditionpromo" });
   }
 };
