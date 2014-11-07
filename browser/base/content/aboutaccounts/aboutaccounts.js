@@ -377,13 +377,19 @@ function show(id, childId) {
 
 // Migrate sync data from the default profile to the dev-edition profile.
 function migrateToDevEdition(user, entryPoint) {
-  let migrateSyncCreds = false;
+  let defaultProfilePath;
   try {
-    migrateSyncCreds = Services.prefs.getBoolPref("identity.fxaccounts.migrateToDevEdition");
-  } catch (e) {}
+    defaultProfilePath = window.getDefaultProfilePath();
+  } catch (e) {} // no default profile.
+  let migrateSyncCreds = false;
+  if (defaultProfilePath) {
+    try {
+      migrateSyncCreds = Services.prefs.getBoolPref("identity.fxaccounts.migrateToDevEdition");
+    } catch (e) {}
+  }
   if (migrateSyncCreds) {
     Cu.import("resource://gre/modules/osfile.jsm");
-    let fxAccountsStorage = OS.Path.join(window.getDefaultProfilePath(), fxAccountsCommon.DEFAULT_STORAGE_FILENAME);
+    let fxAccountsStorage = OS.Path.join(defaultProfilePath, fxAccountsCommon.DEFAULT_STORAGE_FILENAME);
     return OS.File.read(fxAccountsStorage, { encoding: "utf-8" }).then(text => {
       let accountData = JSON.parse(text).accountData;
       return fxAccounts.setSignedInUser(accountData);
