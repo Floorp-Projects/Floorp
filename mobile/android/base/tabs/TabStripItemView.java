@@ -9,11 +9,15 @@ import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.widget.ResizablePathDrawable;
+import org.mozilla.gecko.widget.ResizablePathDrawable.NonScaledPathShape;
 import org.mozilla.gecko.widget.ThemedImageButton;
 import org.mozilla.gecko.widget.ThemedLinearLayout;
 import org.mozilla.gecko.widget.ThemedTextView;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -45,10 +49,10 @@ public class TabStripItemView extends ThemedLinearLayout
     private final ThemedTextView titleView;
     private final ThemedImageButton closeView;
 
-    private final Paint tabPaint;
-    private final Path tabShape;
+    private final ResizablePathDrawable backgroundDrawable;
     private final Region tabRegion;
     private final Region tabClipRegion;
+    private boolean tabRegionNeedsUpdate;
 
     private final int faviconSize;
     private Bitmap lastFavicon;
@@ -61,17 +65,17 @@ public class TabStripItemView extends ThemedLinearLayout
         super(context, attrs);
         setOrientation(HORIZONTAL);
 
-        tabShape = new Path();
         tabRegion = new Region();
         tabClipRegion = new Region();
 
-        tabPaint = new Paint();
-        tabPaint.setAntiAlias(true);
-        tabPaint.setColor(0xFFFF0000);
-        tabPaint.setStrokeWidth(0.0f);
-        tabPaint.setXfermode(new PorterDuffXfermode(Mode.DST_IN));
+        final Resources res = context.getResources();
 
-        faviconSize = getResources().getDimensionPixelSize(R.dimen.new_tablet_tab_strip_favicon_size);
+        final ColorStateList tabColors =
+                res.getColorStateList(R.drawable.new_tablet_tab_strip_item_bg);
+        backgroundDrawable = new ResizablePathDrawable(new TabCurveShape(), tabColors);
+        setBackgroundDrawable(backgroundDrawable);
+
+        faviconSize = res.getDimensionPixelSize(R.dimen.new_tablet_tab_strip_favicon_size);
 
         LayoutInflater.from(context).inflate(R.layout.tab_strip_item_view, this);
         setOnClickListener(new View.OnClickListener() {
@@ -106,36 +110,10 @@ public class TabStripItemView extends ThemedLinearLayout
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
         super.onSizeChanged(width, height, oldWidth, oldHeight);
 
-        tabShape.reset();
-
-        final int curveWidth = TabCurve.getWidthForHeight(height);
-
-        tabShape.moveTo(0, height);
-        TabCurve.drawFromBottom(tabShape, 0, height, TabCurve.Direction.RIGHT);
-        tabShape.lineTo(width - curveWidth, 0);
-
-        TabCurve.drawFromTop(tabShape, width - curveWidth, height, TabCurve.Direction.RIGHT);
-        tabShape.lineTo(0, height);
-
-        tabClipRegion.set(0, 0, width, height);
-        tabRegion.setPath(tabShape, tabClipRegion);
-    }
-
-    @Override
-    public void draw(Canvas canvas) {
-        final int saveCount = canvas.saveLayer(0, 0,
-                                               getWidth(), getHeight(), null,
-                                               Canvas.MATRIX_SAVE_FLAG |
-                                               Canvas.CLIP_SAVE_FLAG |
-                                               Canvas.HAS_ALPHA_LAYER_SAVE_FLAG |
-                                               Canvas.FULL_COLOR_LAYER_SAVE_FLAG |
-                                               Canvas.CLIP_TO_LAYER_SAVE_FLAG);
-
-        super.draw(canvas);
-
-        canvas.drawPath(tabShape, tabPaint);
-
-        canvas.restoreToCount(saveCount);
+        // Queue a tab region update in the next draw() call. We don't
+        // update it immediately here because we need the new path from
+        // the background drawable to be updated first.
+        tabRegionNeedsUpdate = true;
     }
 
     @Override
@@ -150,6 +128,18 @@ public class TabStripItemView extends ThemedLinearLayout
         }
 
         return super.onTouchEvent(event);
+    }
+
+    @Override
+    public void draw(Canvas canvas) {
+        super.draw(canvas);
+
+        if (tabRegionNeedsUpdate) {
+            final Path path = backgroundDrawable.getPath();
+            tabClipRegion.set(0, 0, getWidth(), getHeight());
+            tabRegion.setPath(path, tabClipRegion);
+            tabRegionNeedsUpdate = false;
+        }
     }
 
     @Override
@@ -236,5 +226,23 @@ public class TabStripItemView extends ThemedLinearLayout
         final Bitmap scaledFavicon =
                 Bitmap.createScaledBitmap(favicon, faviconSize, faviconSize, false);
         faviconView.setImageBitmap(scaledFavicon);
+    }
+
+    private static class TabCurveShape extends NonScaledPathShape {
+        @Override
+        protected void onResize(float width, float height) {
+            final Path path = getPath();
+
+            path.reset();
+
+            final float curveWidth = TabCurve.getWidthForHeight(height);
+
+            path.moveTo(0, height);
+            TabCurve.drawFromBottom(path, 0, height, TabCurve.Direction.RIGHT);
+            path.lineTo(width - curveWidth, 0);
+
+            TabCurve.drawFromTop(path, width - curveWidth, height, TabCurve.Direction.RIGHT);
+            path.lineTo(0, height);
+        }
     }
 }

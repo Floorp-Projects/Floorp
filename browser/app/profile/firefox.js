@@ -1636,17 +1636,7 @@ pref("shumway.disabled", true);
 // (This is intentionally on the high side; see bug 746055.)
 pref("image.mem.max_decoded_image_kb", 256000);
 
-// Enable by default development builds up until early beta
-#ifdef EARLY_BETA_OR_EARLIER
 pref("loop.enabled", true);
-pref("loop.throttled", false);
-#else
-pref("loop.enabled", true);
-pref("loop.throttled", true);
-pref("loop.soft_start_ticket_number", -1);
-pref("loop.soft_start_hostname", "soft-start.loop.services.mozilla.com");
-#endif
-
 pref("loop.server", "https://loop.services.mozilla.com");
 pref("loop.seenToS", "unseen");
 pref("loop.learnMoreUrl", "https://www.firefox.com/hello/");

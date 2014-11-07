@@ -12,7 +12,6 @@ const QUERY = "NOTFOUND";
 var gProvider;
 
 function test() {
-  return;
   waitForExplicitFinish();
   
   // Turn on searching for this test
