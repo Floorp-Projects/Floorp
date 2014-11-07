@@ -224,7 +224,7 @@ imgStatusTracker::IsLoading() const
   // Checking for whether OnStopRequest has fired allows us to say we're
   // loading before OnStartRequest gets called, letting the request properly
   // get removed from the cache in certain cases.
-  return !(mState & stateRequestStopped);
+  return !(mState & FLAG_REQUEST_STOPPED);
 }
 
 uint32_t
@@ -375,19 +375,19 @@ imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
 {
   MOZ_ASSERT(NS_IsMainThread());
   // OnStartRequest
-  if (state & stateRequestStarted)
+  if (state & FLAG_REQUEST_STARTED)
     NOTIFY_IMAGE_OBSERVERS(OnStartRequest());
 
   // OnStartContainer
-  if (state & stateHasSize)
+  if (state & FLAG_HAS_SIZE)
     NOTIFY_IMAGE_OBSERVERS(OnStartContainer());
 
   // OnStartDecode
-  if (state & stateDecodeStarted)
+  if (state & FLAG_DECODE_STARTED)
     NOTIFY_IMAGE_OBSERVERS(OnStartDecode());
 
   // BlockOnload
-  if (state & stateBlockingOnload)
+  if (state & FLAG_ONLOAD_BLOCKED)
     NOTIFY_IMAGE_OBSERVERS(BlockOnload());
 
   if (hasImage) {
@@ -398,20 +398,20 @@ imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
     if (!dirtyRect.IsEmpty())
       NOTIFY_IMAGE_OBSERVERS(OnFrameUpdate(&dirtyRect));
 
-    if (state & stateFrameStopped)
+    if (state & FLAG_FRAME_STOPPED)
       NOTIFY_IMAGE_OBSERVERS(OnStopFrame());
 
     // OnImageIsAnimated
-    if (state & stateImageIsAnimated)
+    if (state & FLAG_IS_ANIMATED)
       NOTIFY_IMAGE_OBSERVERS(OnImageIsAnimated());
   }
 
-  if (state & stateDecodeStopped) {
+  if (state & FLAG_DECODE_STOPPED) {
     NS_ABORT_IF_FALSE(hasImage, "stopped decoding without ever having an image?");
     NOTIFY_IMAGE_OBSERVERS(OnStopDecode());
   }
 
-  if (state & stateRequestStopped) {
+  if (state & FLAG_REQUEST_STOPPED) {
     NOTIFY_IMAGE_OBSERVERS(OnStopRequest(hadLastPart));
   }
 }
@@ -421,9 +421,9 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
 {
   MOZ_ASSERT(aOther, "aOther cannot be null");
   ImageStatusDiff diff;
-  diff.diffState = ~mState & aOther->mState & ~stateRequestStarted;
+  diff.diffState = ~mState & aOther->mState & ~FLAG_REQUEST_STARTED;
   diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
-  diff.unblockedOnload = mState & stateBlockingOnload && !(aOther->mState & stateBlockingOnload);
+  diff.unblockedOnload = mState & FLAG_ONLOAD_BLOCKED && !(aOther->mState & FLAG_ONLOAD_BLOCKED);
   diff.unsetDecodeStarted = mImageStatus & imgIRequest::STATUS_DECODE_STARTED
                          && !(aOther->mImageStatus & imgIRequest::STATUS_DECODE_STARTED);
   diff.foundError = (mImageStatus != imgIRequest::STATUS_ERROR)
@@ -457,7 +457,7 @@ ImageStatusDiff
 imgStatusTracker::DecodeStateAsDifference() const
 {
   ImageStatusDiff diff;
-  diff.diffState = mState & ~stateRequestStarted;
+  diff.diffState = mState & ~FLAG_REQUEST_STARTED;
 
   // All other ImageStatusDiff fields are intentionally left at their default
   // values; we only want to notify decode state changes.
@@ -471,12 +471,12 @@ imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
   LOG_SCOPE(GetImgLog(), "imgStatusTracker::ApplyDifference");
 
   // We must not modify or notify for the start-load state, which happens from Necko callbacks.
-  uint32_t loadState = mState & stateRequestStarted;
+  uint32_t loadState = mState & FLAG_REQUEST_STARTED;
 
   // Synchronize our state.
   mState |= aDiff.diffState | loadState;
   if (aDiff.unblockedOnload)
-    mState &= ~stateBlockingOnload;
+    mState &= ~FLAG_ONLOAD_BLOCKED;
 
   mIsMultipart = mIsMultipart || aDiff.foundIsMultipart;
   mHadLastPart = mHadLastPart || aDiff.foundLastPart;
@@ -567,15 +567,15 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
 
   // In certain cases the request might not have started yet.
   // We still need to fulfill the contract.
-  if (!(mState & stateRequestStarted)) {
+  if (!(mState & FLAG_REQUEST_STARTED)) {
     aProxy->OnStartRequest();
   }
 
-  if (mState & stateBlockingOnload) {
+  if (mState & FLAG_ONLOAD_BLOCKED) {
     aProxy->UnblockOnload();
   }
 
-  if (!(mState & stateRequestStopped)) {
+  if (!(mState & FLAG_REQUEST_STOPPED)) {
     aProxy->OnStopRequest(true);
   }
 }
@@ -637,7 +637,7 @@ void
 imgStatusTracker::RecordLoaded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordLoaded called before we have an Image");
-  mState |= stateRequestStarted | stateHasSize | stateRequestStopped;
+  mState |= FLAG_REQUEST_STARTED | FLAG_HAS_SIZE | FLAG_REQUEST_STOPPED;
   mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE | imgIRequest::STATUS_LOAD_COMPLETE;
   mHadLastPart = true;
 }
@@ -646,7 +646,7 @@ void
 imgStatusTracker::RecordDecoded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordDecoded called before we have an Image");
-  mState |= stateDecodeStarted | stateDecodeStopped | stateFrameStopped;
+  mState |= FLAG_DECODE_STARTED | FLAG_DECODE_STOPPED | FLAG_FRAME_STOPPED;
   mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE | imgIRequest::STATUS_DECODE_COMPLETE;
   mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
 }
@@ -655,7 +655,7 @@ void
 imgStatusTracker::RecordStartDecode()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordStartDecode without an Image");
-  mState |= stateDecodeStarted;
+  mState |= FLAG_DECODE_STARTED;
   mImageStatus |= imgIRequest::STATUS_DECODE_STARTED;
 }
 
@@ -674,7 +674,7 @@ imgStatusTracker::RecordStartContainer(imgIContainer* aContainer)
                     "RecordStartContainer called before we have an Image");
   NS_ABORT_IF_FALSE(mImage == aContainer,
                     "RecordStartContainer called with wrong Image");
-  mState |= stateHasSize;
+  mState |= FLAG_HAS_SIZE;
   mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE;
 }
 
@@ -698,7 +698,7 @@ void
 imgStatusTracker::RecordStopFrame()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordStopFrame called before we have an Image");
-  mState |= stateFrameStopped;
+  mState |= FLAG_FRAME_STOPPED;
   mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE;
 }
 
@@ -715,7 +715,7 @@ imgStatusTracker::RecordStopDecode(nsresult aStatus)
 {
   NS_ABORT_IF_FALSE(mImage,
                     "RecordStopDecode called before we have an Image");
-  mState |= stateDecodeStopped;
+  mState |= FLAG_DECODE_STOPPED;
 
   if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR) {
     mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
@@ -742,7 +742,7 @@ imgStatusTracker::RecordDiscard()
   NS_ABORT_IF_FALSE(mImage,
                     "RecordDiscard called before we have an Image");
   // Clear the state bits we no longer deserve.
-  uint32_t stateBitsToClear = stateDecodeStopped;
+  uint32_t stateBitsToClear = FLAG_DECODE_STOPPED;
   mState &= ~stateBitsToClear;
 
   // Clear the status bits we no longer deserve.
@@ -773,7 +773,7 @@ imgStatusTracker::RecordImageIsAnimated()
 {
   NS_ABORT_IF_FALSE(mImage,
                     "RecordImageIsAnimated called before we have an Image");
-  mState |= stateImageIsAnimated;
+  mState |= FLAG_IS_ANIMATED;
 }
 
 void
@@ -834,14 +834,14 @@ imgStatusTracker::RecordStartRequest()
   mImageStatus &= ~imgIRequest::STATUS_FRAME_COMPLETE;
   mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
   mImageStatus &= ~imgIRequest::STATUS_DECODE_COMPLETE;
-  mState &= ~stateRequestStarted;
-  mState &= ~stateDecodeStarted;
-  mState &= ~stateDecodeStopped;
-  mState &= ~stateRequestStopped;
-  mState &= ~stateBlockingOnload;
-  mState &= ~stateImageIsAnimated;
+  mState &= ~FLAG_REQUEST_STARTED;
+  mState &= ~FLAG_DECODE_STARTED;
+  mState &= ~FLAG_DECODE_STOPPED;
+  mState &= ~FLAG_REQUEST_STOPPED;
+  mState &= ~FLAG_ONLOAD_BLOCKED;
+  mState &= ~FLAG_IS_ANIMATED;
 
-  mState |= stateRequestStarted;
+  mState |= FLAG_REQUEST_STARTED;
 }
 
 void
@@ -871,7 +871,7 @@ imgStatusTracker::RecordStopRequest(bool aLastPart,
                                     nsresult aStatus)
 {
   mHadLastPart = aLastPart;
-  mState |= stateRequestStopped;
+  mState |= FLAG_REQUEST_STOPPED;
 
   // If we were successful in loading, note that the image is complete.
   if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR)
@@ -1016,8 +1016,8 @@ imgStatusTracker::OnDataAvailable()
 void
 imgStatusTracker::RecordBlockOnload()
 {
-  MOZ_ASSERT(!(mState & stateBlockingOnload));
-  mState |= stateBlockingOnload;
+  MOZ_ASSERT(!(mState & FLAG_ONLOAD_BLOCKED));
+  mState |= FLAG_ONLOAD_BLOCKED;
 }
 
 void
@@ -1032,7 +1032,7 @@ imgStatusTracker::SendBlockOnload(imgRequestProxy* aProxy)
 void
 imgStatusTracker::RecordUnblockOnload()
 {
-  mState &= ~stateBlockingOnload;
+  mState &= ~FLAG_ONLOAD_BLOCKED;
 }
 
 void
@@ -1052,7 +1052,7 @@ imgStatusTracker::MaybeUnblockOnload()
       NS_NewRunnableMethod(this, &imgStatusTracker::MaybeUnblockOnload));
     return;
   }
-  if (!(mState & stateBlockingOnload)) {
+  if (!(mState & FLAG_ONLOAD_BLOCKED)) {
     return;
   }
 
