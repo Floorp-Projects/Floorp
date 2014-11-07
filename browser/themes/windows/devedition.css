@@ -10,13 +10,25 @@
 
 #back-button > .toolbarbutton-icon,
 #forward-button > .toolbarbutton-icon {
-  background: #252C33 !important;
+  background: var(--chrome-nav-buttons-background) !important;
   border-radius: 0 !important;
   width: auto !important;
   height: auto !important;
   padding: 2px 6px !important;
   margin: 0 !important;
   border: none !important;
+  box-shadow: none !important;
+}
+
+/* Override a box shadow for disabled back button */
+#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
+  box-shadow: none !important;
+}
+
+/* Override !important properties for hovered back button */
+#main-window #back-button:hover:not([disabled="true"]) > .toolbarbutton-icon,
+#main-window #forward-button:hover:not([disabled="true"]) > .toolbarbutton-icon {
+  background: var(--chrome-nav-buttons-hover-background) !important;
   box-shadow: none !important;
 }
 
