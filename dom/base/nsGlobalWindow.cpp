@@ -194,7 +194,6 @@
 
 #include "mozilla/dom/SelectionChangeEvent.h"
 
-#include "mozilla/AddonPathService.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "nsLocation.h"
@@ -2266,7 +2265,6 @@ CreateNativeGlobalForInner(JSContext* aCx,
     top = aNewInner->GetTop();
   }
   JS::CompartmentOptions options;
-  options.setAddonId(MapURIToAddonID(aURI));
   if (top) {
     if (top->GetGlobalJSObject()) {
       options.setSameZoneAs(top->GetGlobalJSObject());

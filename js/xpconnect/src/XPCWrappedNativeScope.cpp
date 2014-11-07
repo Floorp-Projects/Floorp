@@ -346,11 +346,6 @@ XPCWrappedNativeScope::EnsureAddonScope(JSContext *cx, JSAddonId *addonId)
     MOZ_ASSERT(addonId);
     MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(GetPrincipal()));
 
-    // If the global is already part of the add-on then there's no reason to
-    // create a new one.
-    if (AddonIdOfObject(global) == addonId)
-        return global;
-
     // If we already have an addon scope object, we know what to use.
     for (size_t i = 0; i < mAddonScopes.Length(); i++) {
         if (JS::AddonIdOfObject(js::UncheckedUnwrap(mAddonScopes[i])) == addonId)
