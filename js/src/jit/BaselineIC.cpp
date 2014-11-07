@@ -7929,6 +7929,19 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         return false;
     uint32_t oldSlots = obj->isNative() ? obj->as<NativeObject>().numDynamicSlots() : 0;
 
+    bool attached = false;
+    // There are some reasons we can fail to attach a stub that are temporary.
+    // We want to avoid calling noteUnoptimizableAccess() if the reason we
+    // failed to attach a stub is one of those temporary reasons, since we might
+    // end up attaching a stub for the exact same access later.
+    bool isTemporarilyUnoptimizable = false;
+    if (stub->numOptimizedStubs() < ICSetProp_Fallback::MAX_OPTIMIZED_STUBS &&
+        !TryAttachSetAccessorPropStub(cx, script, pc, stub, obj, oldShape, oldType, oldSlots,
+                                      name, id, rhs, &attached, &isTemporarilyUnoptimizable))
+    {
+        return false;
+    }
+
     if (op == JSOP_INITPROP) {
         MOZ_ASSERT(obj->is<JSObject>());
         if (!DefineNativeProperty(cx, obj.as<NativeObject>(), id, rhs,
@@ -7964,22 +7977,9 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         return true;
     }
 
-    bool attached = false;
-    if (!TryAttachSetValuePropStub(cx, script, pc, stub, obj, oldShape,
+    if (!attached &&
+        !TryAttachSetValuePropStub(cx, script, pc, stub, obj, oldShape,
                                    oldType, oldSlots, name, id, rhs, &attached))
-    {
-        return false;
-    }
-    if (attached)
-        return true;
-
-    // There are some reasons we can fail to attach a stub that are temporary.
-    // We want to avoid calling noteUnoptimizableAccess() if the reason we
-    // failed to attach a stub is one of those temporary reasons, since we might
-    // end up attaching a stub for the exact same access later.
-    bool isTemporarilyUnoptimizable = false;
-    if (!TryAttachSetAccessorPropStub(cx, script, pc, stub, obj, oldShape, oldType, oldSlots,
-                                      name, id, rhs, &attached, &isTemporarilyUnoptimizable))
     {
         return false;
     }
