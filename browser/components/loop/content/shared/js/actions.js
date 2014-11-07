@@ -273,6 +273,12 @@ loop.shared.actions = (function() {
       sessionToken: String,
       sessionId: String,
       expires: Number
+    }),
+
+    /**
+     * Used to indicate the user wishes to leave the room.
+     */
+    LeaveRoom: Action.define("leaveRoom", {
     })
   };
 })();
