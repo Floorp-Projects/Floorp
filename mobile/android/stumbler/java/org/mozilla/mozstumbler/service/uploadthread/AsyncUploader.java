@@ -24,7 +24,7 @@ import org.mozilla.mozstumbler.service.utils.NetworkUtils;
 * preferences, do not call any code that isn't thread-safe. You will cause suffering.
 * An exception is made for AppGlobals.isDebug, a false reading is of no consequence. */
 public class AsyncUploader extends AsyncTask<Void, Void, SyncSummary> {
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + AsyncUploader.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(AsyncUploader.class.getSimpleName());
     private final UploadSettings mSettings;
     private final Object mListenerLock = new Object();
     private AsyncUploaderListener mListener;

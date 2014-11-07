@@ -23,7 +23,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class ScanManager {
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + ScanManager.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(ScanManager.class.getSimpleName());
     private Timer mPassiveModeFlushTimer;
     private Context mContext;
     private boolean mIsScanning;
