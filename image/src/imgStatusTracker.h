@@ -37,7 +37,8 @@ enum {
   FLAG_REQUEST_STOPPED    = 1u << 5,
   FLAG_ONLOAD_BLOCKED     = 1u << 6,
   FLAG_ONLOAD_UNBLOCKED   = 1u << 7,
-  FLAG_IS_ANIMATED        = 1u << 8
+  FLAG_IS_ANIMATED        = 1u << 8,
+  FLAG_IS_MULTIPART       = 1u << 9
 };
 
 struct ImageStatusDiff
@@ -46,7 +47,6 @@ struct ImageStatusDiff
     : invalidRect()
     , diffState(0)
     , diffImageStatus(0)
-    , foundIsMultipart(false)
     , foundLastPart(false)
     , gotDecoded(false)
   { }
@@ -59,7 +59,6 @@ struct ImageStatusDiff
     return aOther.invalidRect == invalidRect
         && aOther.diffState == diffState
         && aOther.diffImageStatus == diffImageStatus
-        && aOther.foundIsMultipart == foundIsMultipart
         && aOther.foundLastPart == foundLastPart
         && aOther.gotDecoded == gotDecoded;
   }
@@ -68,7 +67,6 @@ struct ImageStatusDiff
     invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
     diffImageStatus |= aOther.diffImageStatus;
-    foundIsMultipart = foundIsMultipart || aOther.foundIsMultipart;
     foundLastPart = foundLastPart || aOther.foundLastPart;
     gotDecoded = gotDecoded || aOther.gotDecoded;
   }
@@ -76,7 +74,6 @@ struct ImageStatusDiff
   nsIntRect invalidRect;
   uint32_t  diffState;
   uint32_t  diffImageStatus;
-  bool      foundIsMultipart   : 1;
   bool      foundLastPart      : 1;
   bool      gotDecoded         : 1;
 };
@@ -120,7 +117,7 @@ public:
   void ResetImage();
 
   // Inform this status tracker that it is associated with a multipart image.
-  void SetIsMultipart() { mIsMultipart = true; }
+  void SetIsMultipart();
 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
@@ -252,7 +249,7 @@ public:
 
   void RecordError();
 
-  bool IsMultipart() const { return mIsMultipart; }
+  bool IsMultipart() const { return mState & mozilla::image::FLAG_IS_MULTIPART; }
 
   // Weak pointer getters - no AddRefs.
   inline already_AddRefed<mozilla::image::Image> GetImage() const {
@@ -317,7 +314,6 @@ private:
 
   uint32_t mState;
   uint32_t mImageStatus;
-  bool mIsMultipart    : 1;
   bool mHadLastPart    : 1;
   bool mHasBeenDecoded : 1;
 };
