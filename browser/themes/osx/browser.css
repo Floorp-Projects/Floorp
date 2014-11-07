@@ -1426,73 +1426,73 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(0px, 192px, 32px, 160px);
   }
 
-  #loop-call-button > .toolbarbutton-badge-container {
+  #loop-button-throttled > .toolbarbutton-badge-container {
     list-style-image: url("chrome://browser/skin/loop/toolbar@2x.png");
     -moz-image-region: rect(0, 36px, 36px, 0);
   }
 
-  toolbar[brighttext] #loop-call-button > .toolbarbutton-badge-container {
+  toolbar[brighttext] #loop-button-throttled > .toolbarbutton-badge-container {
     list-style-image: url("chrome://browser/skin/loop/toolbar-inverted@2x.png");
   }
 
-  #loop-call-button[state="disabled"] > .toolbarbutton-badge-container,
-  #loop-call-button[disabled="true"] > .toolbarbutton-badge-container {
+  #loop-button-throttled[state="disabled"] > .toolbarbutton-badge-container,
+  #loop-button-throttled[disabled="true"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 72px, 36px, 36px);
   }
 
-  #loop-call-button:not([disabled="true"])[state="error"] > .toolbarbutton-badge-container {
+  #loop-button-throttled:not([disabled="true"])[state="error"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 108px, 36px, 72px);
   }
 
-  #loop-call-button:not([disabled="true"])[state="action"] > .toolbarbutton-badge-container {
+  #loop-button-throttled:not([disabled="true"])[state="action"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 144px, 36px, 108px);
   }
 
-  #loop-call-button:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
+  #loop-button-throttled:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 180px, 36px, 144px);
   }
 
-  #loop-call-button:not([disabled="true"])[state="active"] > .toolbarbutton-badge-container {
+  #loop-button-throttled:not([disabled="true"])[state="active"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 216px, 36px, 180px);
   }
 
-  #loop-call-button:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
+  #loop-button-throttled:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 252px, 36px, 216px);
   }
 
-  #loop-call-button[cui-areatype="menu-panel"] > .toolbarbutton-badge-container,
-  toolbarpaletteitem[place="palette"] > #loop-call-button > .toolbarbutton-badge-container {
+  #loop-button-throttled[cui-areatype="menu-panel"] > .toolbarbutton-badge-container,
+  toolbarpaletteitem[place="palette"] > #loop-button-throttled > .toolbarbutton-badge-container {
     list-style-image: url(chrome://browser/skin/loop/menuPanel@2x.png);
     -moz-image-region: rect(0, 64px, 64px, 0);
   }
 
   /* Make sure that the state icons are not shown in the customization palette. */
-  toolbarpaletteitem[place="palette"] > #loop-call-button > .toolbarbutton-badge-container {
+  toolbarpaletteitem[place="palette"] > #loop-button-throttled > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 64px, 64px, 0) !important;
   }
 
-  #loop-call-button[cui-areatype="menu-panel"][state="disabled"] > .toolbarbutton-badge-container,
-  #loop-call-button[cui-areatype="menu-panel"][disabled="true"] > .toolbarbutton-badge-container {
+  #loop-button-throttled[cui-areatype="menu-panel"][state="disabled"] > .toolbarbutton-badge-container,
+  #loop-button-throttled[cui-areatype="menu-panel"][disabled="true"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 128px, 64px, 64px);
   }
 
-  #loop-call-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="error"] > .toolbarbutton-badge-container {
+  #loop-button-throttled[cui-areatype="menu-panel"]:not([disabled="true"])[state="error"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 192px, 64px, 128px);
   }
 
-  #loop-call-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"] > .toolbarbutton-badge-container {
+  #loop-button-throttled[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 256px, 64px, 192px);
   }
 
-  #loop-call-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
+  #loop-button-throttled[cui-areatype="menu-panel"]:not([disabled="true"])[state="action"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 320px, 64px, 256px);
   }
 
-  #loop-call-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"] > .toolbarbutton-badge-container {
+  #loop-button-throttled[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"] > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 384px, 64px, 320px);
   }
 
-  #loop-call-button[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
+  #loop-button-throttled[cui-areatype="menu-panel"]:not([disabled="true"])[state="active"]:-moz-any(:hover,:hover:active,[open]) > .toolbarbutton-badge-container {
     -moz-image-region: rect(0, 448px, 64px, 384px);
   }
 }

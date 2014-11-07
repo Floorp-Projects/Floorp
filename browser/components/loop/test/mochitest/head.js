@@ -17,7 +17,7 @@ var gMozLoopAPI;
 function promiseGetMozLoopAPI() {
   let deferred = Promise.defer();
   let loopPanel = document.getElementById("loop-notification-panel");
-  let btn = document.getElementById("loop-call-button");
+  let btn = document.getElementById("loop-button-throttled");
 
   // Wait for the popup to be shown if it's not already, then we can get the iframe and
   // wait for the iframe's load to be completed.
@@ -213,6 +213,13 @@ let mockPushHandler = {
     this._notificationCallback(version);
   }
 };
+
+// Add the Loop button to the navbar.
+CustomizableUI.addWidgetToArea("loop-button-throttled", CustomizableUI.AREA_NAVBAR);
+
+registerCleanupFunction(function() {
+  CustomizableUI.reset();
+});
 
 const mockDb = {
   _store: { },

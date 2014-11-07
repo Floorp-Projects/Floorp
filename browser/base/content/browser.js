@@ -1281,6 +1281,19 @@ var gBrowserInit = {
 #endif
 
     LoopUI.init();
+    // Loop throttling support.
+    const kWidgetId = "loop-button-throttled";
+    // If we're throttled, check to see if it's our turn to be unthrottled
+    if (Services.prefs.getBoolPref("loop.throttled2")) {
+      MozLoopService.checkSoftStart(() => {
+        // If the check unthrottled us and the button was not customized to an
+        // area by the user, move it to the nav-bar.
+        let widget = CustomizableUI.getWidget(kWidgetId);
+        if (!Services.prefs.getBoolPref("loop.throttled2") && !widget.areaType) {
+          CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_NAVBAR);
+        }
+      });
+    }
 
     gBrowserThumbnails.init();
 

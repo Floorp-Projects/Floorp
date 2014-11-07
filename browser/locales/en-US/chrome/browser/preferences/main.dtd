@@ -31,8 +31,11 @@
 <!ENTITY alwaysAsk.label "Always ask me where to save files">
 <!ENTITY alwaysAsk.accesskey "A">
 
+<!ENTITY alwaysCheckDefault.label         "Always check to see if &brandShortName; is the default browser on startup">
 <!ENTITY alwaysCheckDefault2.label        "Always check if &brandShortName; is your default browser">
 <!ENTITY alwaysCheckDefault2.accesskey    "w">
+<!ENTITY setAsMyDefaultBrowser.label      "Make &brandShortName; My Default Browser">
+<!ENTITY setAsMyDefaultBrowser.accesskey  "D">
 <!ENTITY setAsMyDefaultBrowser2.label     "Make Default">
 <!ENTITY setAsMyDefaultBrowser2.accesskey "D">
 <!ENTITY isDefault.label                  "&brandShortName; is currently your default browser">
