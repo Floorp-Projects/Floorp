@@ -15,8 +15,8 @@ class nsIControllers;
 class nsIController;
 
 #define NS_IWINDOWROOT_IID \
-{ 0x3f71f50c, 0xa7e0, 0x43bc, \
- { 0xac, 0x25, 0x4d, 0xbb, 0x88, 0x7b, 0x21, 0x09 } }
+{ 0x728a2682, 0x55c0, 0x4860, \
+ { 0x82, 0x6b, 0x0c, 0x30, 0x0a, 0xac, 0xaa, 0x60 } }
 
 class nsPIWindowRoot : public mozilla::dom::EventTarget
 {
@@ -32,6 +32,9 @@ public:
   virtual nsresult GetControllerForCommand(const char *aCommand,
                                            nsIController** aResult) = 0;
   virtual nsresult GetControllers(nsIControllers** aResult) = 0;
+
+  virtual void GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
+                                          nsTArray<nsCString>& aDisabledCommands) = 0;
 
   virtual void SetParentTarget(mozilla::dom::EventTarget* aTarget) = 0;
   virtual mozilla::dom::EventTarget* GetParentTarget() = 0;

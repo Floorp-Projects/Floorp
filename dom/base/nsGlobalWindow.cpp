@@ -9309,6 +9309,36 @@ public:
   nsString                             mAction;
 };
 
+class ChildCommandDispatcher : public nsRunnable
+{
+public:
+  ChildCommandDispatcher(nsGlobalWindow* aWindow,
+                         nsITabChild* aTabChild,
+                         const nsAString& aAction)
+  : mWindow(aWindow), mTabChild(aTabChild), mAction(aAction) {}
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsPIWindowRoot> root = mWindow->GetTopWindowRoot();
+    if (!root) {
+      return NS_OK;
+    }
+
+    nsTArray<nsCString> enabledCommands, disabledCommands;
+    root->GetEnabledDisabledCommands(enabledCommands, disabledCommands);
+    if (enabledCommands.Length() || disabledCommands.Length()) {
+      mTabChild->EnableDisableCommands(mAction, enabledCommands, disabledCommands);
+    }
+
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<nsGlobalWindow>             mWindow;
+  nsCOMPtr<nsITabChild>                mTabChild;
+  nsString                             mAction;
+};
+
 static bool
 CheckReason(int16_t aReason, SelectionChangeReason aReasonType)
 {
@@ -9367,26 +9397,35 @@ GetSelectionBoundingRect(Selection* aSel, nsIPresShell* aShell)
 NS_IMETHODIMP
 nsGlobalWindow::UpdateCommands(const nsAString& anAction, nsISelection* aSel, int16_t aReason)
 {
-  nsPIDOMWindow *rootWindow = nsGlobalWindow::GetPrivateRoot();
-  if (!rootWindow)
-    return NS_OK;
+  if (!anAction.EqualsLiteral("selectionchange")) {
+    // If this is a child process, redirect to the parent process.
+    if (nsCOMPtr<nsITabChild> child = do_GetInterface(GetDocShell())) {
+      nsContentUtils::AddScriptRunner(new ChildCommandDispatcher(this, child, anAction));
+    } else {
+      nsPIDOMWindow* rootWindow = nsGlobalWindow::GetPrivateRoot();
+      if (!rootWindow) {
+        return NS_OK;
+      }
 
-  nsCOMPtr<nsIDOMXULDocument> xulDoc =
-    do_QueryInterface(rootWindow->GetExtantDoc());
-  // See if we contain a XUL document.
-  // selectionchange action is only used for mozbrowser, not for XUL. So we bypass
-  // XUL command dispatch if anAction is "selectionchange".
-  if (xulDoc && !anAction.EqualsLiteral("selectionchange")) {
-    // Retrieve the command dispatcher and call updateCommands on it.
-    nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
-    xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
-    if (xulCommandDispatcher) {
-      nsContentUtils::AddScriptRunner(new CommandDispatcher(xulCommandDispatcher,
-                                                            anAction));
+      nsCOMPtr<nsIDOMXULDocument> xulDoc =
+        do_QueryInterface(rootWindow->GetExtantDoc());
+      // See if we contain a XUL document.
+      if (xulDoc) {
+        // Retrieve the command dispatcher and call updateCommands on it.
+        nsCOMPtr<nsIDOMXULCommandDispatcher> xulCommandDispatcher;
+        xulDoc->GetCommandDispatcher(getter_AddRefs(xulCommandDispatcher));
+        if (xulCommandDispatcher) {
+          nsContentUtils::AddScriptRunner(new CommandDispatcher(xulCommandDispatcher,
+                                                                anAction));
+        }
+      }
     }
+
+    return NS_OK;
   }
 
-  if (gSelectionCaretPrefEnabled && mDoc && anAction.EqualsLiteral("selectionchange")) {
+  // XXXndeakin this code will be removed by bug 1090008.
+  if (gSelectionCaretPrefEnabled && mDoc) {
     SelectionChangeEventInit init;
     init.mBubbles = true;
     if (aSel) {
