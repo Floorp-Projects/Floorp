@@ -71,6 +71,16 @@ add_test(function test_child_simple () {
 });
 '''
 
+CHILD_HARNESS_SIMPLE = '''
+function run_test () { run_next_test(); }
+
+add_test(function test_child_assert () {
+  do_load_child_test_harness();
+  sendCommand("Assert.ok(true);");
+  run_next_test();
+});
+'''
+
 CHILD_TEST_HANG = '''
 function run_test () { run_next_test(); }
 
@@ -454,6 +464,24 @@ tail =
         self.assertInLog("CHILD-TEST-STARTED")
         self.assertNotInLog("CHILD-TEST-COMPLETED")
         self.assertNotInLog(TEST_PASS_STRING)
+
+    @unittest.skipIf(build_obj.defines.get('MOZ_B2G'),
+                     'selftests with child processes fail on b2g desktop builds')
+    def testChild(self):
+        """
+        Checks that calling do_load_child_test_harness without run_test_in_child
+        results in a usable test state.
+        """
+        self.writeFile("test_child_assertions.js", CHILD_HARNESS_SIMPLE)
+        self.writeManifest(["test_child_assertions.js"])
+
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertEquals(0, self.x.todoCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog(TEST_FAIL_STRING)
 
     def testSyntaxError(self):
         """

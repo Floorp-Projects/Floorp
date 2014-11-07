@@ -76,6 +76,14 @@ def getUrlProperties(filename):
         properties = {prop: 'UNKNOWN' for prop, condition in property_conditions}
     return properties
 
+def getPartialInfo(props):
+    return [{
+        "from_buildid": props.get("previous_buildid"),
+        "size": props.get("partialMarSize"),
+        "hash": props.get("partialMarHash"),
+        "url": props.get("partialMarUrl"),
+    }]
+
 if __name__ == '__main__':
     parser = ArgumentParser(description='Generate mach_build_properties.json for automation builds.')
     parser.add_argument("--complete-mar-file", required=True,
@@ -90,9 +98,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     json_data = getMarProperties(args.complete_mar_file)
+    json_data.update(getUrlProperties(args.upload_output))
     if args.partial_mar_file:
         json_data.update(getMarProperties(args.partial_mar_file, partial=True))
-    json_data.update(getUrlProperties(args.upload_output))
+
+        # Pull the previous buildid from the partial mar filename.
+        res = re.match(r'.*\.([0-9]+)-[0-9]+.mar', args.partial_mar_file)
+        if res:
+            json_data['previous_buildid'] = res.group(1)
+
+            # Set partialInfo to be a collection of the partial mar properties
+            # useful for balrog.
+            json_data['partialInfo'] = getPartialInfo(json_data)
 
     with open('mach_build_properties.json', 'w') as outfile:
         json.dump(json_data, outfile, indent=4)

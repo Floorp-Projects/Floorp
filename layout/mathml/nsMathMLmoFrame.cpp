@@ -206,6 +206,7 @@ nsMathMLmoFrame::ProcessOperatorData()
   // if we have been here before, we will just use our cached form
   nsOperatorFlags form = NS_MATHML_OPERATOR_GET_FORM(mFlags);
   nsAutoString value;
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
 
   // special bits are always kept in mFlags.
   // remember the mutable bit from ProcessTextData().
@@ -364,7 +365,8 @@ nsMathMLmoFrame::ProcessOperatorData()
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
       nsRefPtr<nsFontMetrics> fm;
-      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                            fontSizeInflation);
       GetEmHeight(fm, em);
 
       mEmbellishData.leadingSpace = NSToCoordRound(lspace * em);
@@ -405,7 +407,8 @@ nsMathMLmoFrame::ProcessOperatorData()
       if ((eCSSUnit_Number == cssValue.GetUnit()) && !cssValue.GetFloatValue())
         leadingSpace = 0;
       else if (cssValue.IsLengthUnit())
-        leadingSpace = CalcLength(presContext, mStyleContext, cssValue);
+        leadingSpace = CalcLength(presContext, mStyleContext, cssValue,
+                                  fontSizeInflation);
       mFlags |= NS_MATHML_OPERATOR_LSPACE_ATTR;
     }
   }
@@ -431,7 +434,8 @@ nsMathMLmoFrame::ProcessOperatorData()
       if ((eCSSUnit_Number == cssValue.GetUnit()) && !cssValue.GetFloatValue())
         trailingSpace = 0;
       else if (cssValue.IsLengthUnit())
-        trailingSpace = CalcLength(presContext, mStyleContext, cssValue);
+        trailingSpace = CalcLength(presContext, mStyleContext, cssValue,
+                                   fontSizeInflation);
       mFlags |= NS_MATHML_OPERATOR_RSPACE_ATTR;
     }
   }
@@ -514,7 +518,8 @@ nsMathMLmoFrame::ProcessOperatorData()
       else if (eCSSUnit_Percent == unit)
         mMinSize = cssValue.GetPercentValue();
       else if (eCSSUnit_Null != unit) {
-        mMinSize = float(CalcLength(presContext, mStyleContext, cssValue));
+        mMinSize = float(CalcLength(presContext, mStyleContext, cssValue,
+                                    fontSizeInflation));
         mFlags |= NS_MATHML_OPERATOR_MINSIZE_ABSOLUTE;
       }
     }
@@ -546,7 +551,8 @@ nsMathMLmoFrame::ProcessOperatorData()
       else if (eCSSUnit_Percent == unit)
         mMaxSize = cssValue.GetPercentValue();
       else if (eCSSUnit_Null != unit) {
-        mMaxSize = float(CalcLength(presContext, mStyleContext, cssValue));
+        mMaxSize = float(CalcLength(presContext, mStyleContext, cssValue,
+                                    fontSizeInflation));
         mFlags |= NS_MATHML_OPERATOR_MAXSIZE_ABSOLUTE;
       }
     }
@@ -609,8 +615,10 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   nsIFrame* firstChild = mFrames.FirstChild();
 
   // get the axis height;
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                        fontSizeInflation);
   nscoord axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 
@@ -738,6 +746,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
 
     // let the MathMLChar stretch itself...
     nsresult res = mMathMLChar.Stretch(PresContext(), aRenderingContext,
+                                       fontSizeInflation,
                                        aStretchDirection, container, charSize,
                                        stretchHint,
                                        StyleVisibility()->mDirection);
@@ -980,6 +989,7 @@ nsMathMLmoFrame::GetIntrinsicISizeMetrics(nsRenderingContext *aRenderingContext,
                                           StyleFont());
     aDesiredSize.Width() = mMathMLChar.
       GetMaxWidth(PresContext(), *aRenderingContext,
+                  nsLayoutUtils::FontSizeInflationFor(this),
                   stretchHint, mMaxSize,
                   NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(mFlags));
   }

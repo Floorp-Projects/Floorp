@@ -97,7 +97,8 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
   {
     const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
     return DoAsyncOpen(a.uri(), a.original(), a.doc(), a.referrer(),
-                       a.apiRedirectTo(), a.loadFlags(), a.requestHeaders(),
+                       a.apiRedirectTo(), a.topWindowURI(),
+                       a.loadFlags(), a.requestHeaders(),
                        a.requestMethod(), a.uploadStream(),
                        a.uploadStreamHasHeaders(), a.priority(),
                        a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
@@ -172,6 +173,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalURIParams&   aDocURI,
                                  const OptionalURIParams&   aReferrerURI,
                                  const OptionalURIParams&   aAPIRedirectToURI,
+                                 const OptionalURIParams&   aTopWindowURI,
                                  const uint32_t&            aLoadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsCString&           requestMethod,
@@ -203,6 +205,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   nsCOMPtr<nsIURI> docUri = DeserializeURI(aDocURI);
   nsCOMPtr<nsIURI> referrerUri = DeserializeURI(aReferrerURI);
   nsCOMPtr<nsIURI> apiRedirectToUri = DeserializeURI(aAPIRedirectToURI);
+  nsCOMPtr<nsIURI> topWindowUri = DeserializeURI(aTopWindowURI);
 
   nsCString uriSpec;
   uri->GetSpec(uriSpec);
@@ -266,6 +269,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     mChannel->SetReferrerInternal(referrerUri);
   if (apiRedirectToUri)
     mChannel->RedirectTo(apiRedirectToUri);
+  if (topWindowUri)
+    mChannel->SetTopWindowURI(topWindowUri);
   if (loadFlags != nsIRequest::LOAD_NORMAL)
     mChannel->SetLoadFlags(loadFlags);
 

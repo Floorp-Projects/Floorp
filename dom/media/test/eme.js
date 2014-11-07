@@ -139,8 +139,8 @@ function PlayFragmented(test, elem, token)
         sb.appendBuffer(new Uint8Array(req.response));
       });
 
-      req.addEventListener("error", bail(token + " error fetching " + fragmentFile));
-      req.addEventListener("abort", bail(token + " aborted fetching " + fragmentFile));
+      req.addEventListener("error", function(){info(token + " error fetching " + fragmentFile);});
+      req.addEventListener("abort", function(){info(token + " aborted fetching " + fragmentFile);});
 
       Log(token, "addNextFragment() fetching next fragment " + fragmentFile);
       req.send(null);

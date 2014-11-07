@@ -503,7 +503,7 @@ public:
 
   static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                           const float& aOpacity,
-                          gfxTextContextPaint *aOuterContextPaint);
+                          gfxTextContextPaint *aContextPaint);
 
   /*
    * @return false if there is no stroke

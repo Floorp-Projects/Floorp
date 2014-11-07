@@ -14,6 +14,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIIOService.h"
 #include "nsIPermissionManager.h"
 #include "nsIProtocolHandler.h"
@@ -76,20 +77,24 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
         return NS_OK;
     }
 
-    nsCOMPtr<nsIDOMWindow> win;
-    rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, getter_AddRefs(win));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIURI> uri;
-    rv = thirdPartyUtil->GetURIFromWindow(win, getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> uri;
+    rv = chan->GetTopWindowURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!uri) {
+      LOG(("nsChannelClassifier[%p]: No window URI\n", this));
+    }
+
     const char ALLOWLIST_EXAMPLE_PREF[] = "channelclassifier.allowlist_example";
     if (!uri && Preferences::GetBool(ALLOWLIST_EXAMPLE_PREF, false)) {
-      LOG(("nsChannelClassifier[%p]: Allowlisting test domain", this));
+      LOG(("nsChannelClassifier[%p]: Allowlisting test domain\n", this));
       rv = ios->NewURI(NS_LITERAL_CSTRING("http://allowlisted.example.com"),
                        nullptr, nullptr, getter_AddRefs(uri));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -141,7 +146,13 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     }
 
     // Tracking protection will be disabled so update the security state
-    // of the document and fire a secure change event.
+    // of the document and fire a secure change event. If we can't get the
+    // window for the channel, then the shield won't show up so we can't send
+    // and event to the securityUI anyway.
+    nsCOMPtr<nsIDOMWindow> win;
+    rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, getter_AddRefs(win));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(win, &rv);
     NS_ENSURE_SUCCESS(rv, NS_OK);
     nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();

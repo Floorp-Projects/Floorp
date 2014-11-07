@@ -305,6 +305,7 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
                                bool                 aPlaceOrigin,
                                nsHTMLReflowMetrics& aDesiredSize)
 {
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
   nsIAtom* tag = mContent->Tag();
   if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE) {
@@ -314,20 +315,23 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0);
+                                                          this, 0, 0,
+                                                          fontSizeInflation);
     } else if (tag == nsGkAtoms::munder_) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0);
+                                                          this, 0, 0,
+                                                          fontSizeInflation);
     } else {
       NS_ASSERTION(tag == nsGkAtoms::mover_, "mContent->Tag() not recognized");
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0);
+                                                          this, 0, 0,
+                                                          fontSizeInflation);
     }
     
   }
@@ -395,7 +399,8 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   // Place Children
 
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                        fontSizeInflation);
 
   nscoord xHeight = fm->XHeight();
   nscoord oneDevPixel = fm->AppUnitsPerDevPixel();
