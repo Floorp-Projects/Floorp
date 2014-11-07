@@ -7730,15 +7730,14 @@ BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 // SetProp_Fallback
 //
 
-// Attach an optimized stub for a SETPROP/SETGNAME/SETNAME op.
+// Attach an optimized property set stub for a SETPROP/SETGNAME/SETNAME op on a
+// value property.
 static bool
-TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetProp_Fallback *stub,
-                     HandleObject obj, HandleShape oldShape, HandleTypeObject oldType, uint32_t oldSlots,
-                     HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached,
-                     bool *isTemporarilyUnoptimizable)
+TryAttachSetValuePropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetProp_Fallback *stub,
+                          HandleObject obj, HandleShape oldShape, HandleTypeObject oldType, uint32_t oldSlots,
+                          HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached)
 {
     MOZ_ASSERT(!*attached);
-    MOZ_ASSERT(!*isTemporarilyUnoptimizable);
 
     if (!obj->isNative() || obj->watched())
         return true;
@@ -7815,6 +7814,28 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
         *attached = true;
         return true;
     }
+
+    return true;
+}
+
+// Attach an optimized property set stub for a SETPROP/SETGNAME/SETNAME op on
+// an accessor property.
+static bool
+TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetProp_Fallback *stub,
+                             HandleObject obj, HandleShape oldShape, HandleTypeObject oldType, uint32_t oldSlots,
+                             HandlePropertyName name, HandleId id, HandleValue rhs, bool *attached,
+                             bool *isTemporarilyUnoptimizable)
+{
+    MOZ_ASSERT(!*attached);
+    MOZ_ASSERT(!*isTemporarilyUnoptimizable);
+
+    if (!obj->isNative() || obj->watched())
+        return true;
+
+    RootedShape shape(cx);
+    RootedObject holder(cx);
+    if (!EffectlesslyLookupProperty(cx, obj, name, &holder, &shape))
+        return false;
 
     bool isScripted = false;
     bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape, oldShape,
@@ -7944,13 +7965,21 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     }
 
     bool attached = false;
+    if (!TryAttachSetValuePropStub(cx, script, pc, stub, obj, oldShape,
+                                   oldType, oldSlots, name, id, rhs, &attached))
+    {
+        return false;
+    }
+    if (attached)
+        return true;
+
     // There are some reasons we can fail to attach a stub that are temporary.
     // We want to avoid calling noteUnoptimizableAccess() if the reason we
     // failed to attach a stub is one of those temporary reasons, since we might
     // end up attaching a stub for the exact same access later.
     bool isTemporarilyUnoptimizable = false;
-    if (!TryAttachSetPropStub(cx, script, pc, stub, obj, oldShape, oldType, oldSlots,
-                              name, id, rhs, &attached, &isTemporarilyUnoptimizable))
+    if (!TryAttachSetAccessorPropStub(cx, script, pc, stub, obj, oldShape, oldType, oldSlots,
+                                      name, id, rhs, &attached, &isTemporarilyUnoptimizable))
     {
         return false;
     }
