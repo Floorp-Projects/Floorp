@@ -7,12 +7,12 @@
 
 [scriptable, uuid(D5B61B82-1DA4-11d3-BF87-00105A1B0627)]
 interface nsIController : nsISupports {
-	boolean isCommandEnabled(in string command);
-	boolean supportsCommand(in string command);
+  boolean isCommandEnabled(in string command);
+  boolean supportsCommand(in string command);
 
-	void doCommand(in string command);
+  void doCommand(in string command);
 
-	void onEvent(in string eventName);
+  void onEvent(in string eventName);
 };
 
 
@@ -25,7 +25,7 @@ interface nsIController : nsISupports {
 
 interface nsICommandParams;
 
-[scriptable, uuid(EBE55080-C8A9-11D5-A73C-DD620D6E04BC)]
+[scriptable, uuid(EEC0B435-7F53-44FE-B00A-CF3EED65C01A)]
 interface nsICommandController : nsISupports
 {
   
@@ -33,6 +33,8 @@ interface nsICommandController : nsISupports
     
   void        doCommandWithParams(in string command, in nsICommandParams aCommandParams);
 
+  void getSupportedCommands(out unsigned long count,
+                            [array, size_is(count), retval] out string commands);
 };
 
 
