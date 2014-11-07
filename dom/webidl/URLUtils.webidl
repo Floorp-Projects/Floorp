@@ -14,7 +14,7 @@
  */
 
 [NoInterfaceObject,
- Exposed=(Window, Worker,System)]
+ Exposed=(Window, Worker)]
 interface URLUtils {
   // Bug 824857: no support for stringifier attributes yet.
   //  stringifier attribute ScalarValueString href;
@@ -49,7 +49,7 @@ interface URLUtils {
 };
 
 [NoInterfaceObject,
- Exposed=(Window, Worker, System)]
+ Exposed=(Window, Worker)]
 interface URLUtilsSearchParams {
            attribute URLSearchParams searchParams;
 };
