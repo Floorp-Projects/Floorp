@@ -38,7 +38,7 @@ struct JS_PUBLIC_API(SliceBudget)
 
     static const intptr_t CounterReset = 1000;
 
-    static const int64_t Unlimited = -1;
+    static const int64_t Unlimited = 0;
 
     /* Use to create an unlimited budget. */
     SliceBudget();
@@ -59,7 +59,7 @@ struct JS_PUBLIC_API(SliceBudget)
     }
 
     bool isOverBudget() {
-        if (counter > 0)
+        if (counter >= 0)
             return false;
         return checkOverBudget();
     }
