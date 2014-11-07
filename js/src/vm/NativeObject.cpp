@@ -2250,62 +2250,96 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 {
     MOZ_ASSERT(cxArg->isThreadLocal(obj));
 
+    // Fire watchpoints, if any.
     if (MOZ_UNLIKELY(obj->watched())) {
         if (mode == ParallelExecution)
             return false;
 
-        /* Fire watchpoints, if any. */
         JSContext *cx = cxArg->asJSContext();
         WatchpointMap *wpmap = cx->compartment()->watchpointMap;
         if (wpmap && !wpmap->triggerWatchpoint(cx, obj, id, vp))
             return false;
     }
 
-    RootedObject pobj(cxArg);
+    // Step numbers below reference ES6 rev 27 9.1.9, the [[Set]] internal
+    // method for ordinary objects. We substitute our own names for these names
+    // used in the spec: O -> pobj, P -> id, V -> *vp, ownDesc -> shape.
     RootedShape shape(cxArg);
-    if (mode == ParallelExecution) {
-        NativeObject *npobj;
-        if (!LookupPropertyPure(cxArg, obj, id, &npobj, shape.address()))
-            return false;
-        pobj = npobj;
-    } else {
-        JSContext *cx = cxArg->asJSContext();
-        if (!LookupNativeProperty(cx, obj, id, &pobj, &shape))
-            return false;
-    }
+    RootedNativeObject pobj(cxArg, obj);
 
-    if (!shape)
-        return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
-
-    if (pobj->isNative()) {
-        RootedNativeObject nativePObj(cxArg, &pobj->as<NativeObject>());
-        return SetExistingProperty<mode>(cxArg, obj, receiver, id, nativePObj, shape, vp, strict);
-    }
-
-    if (pobj->is<ProxyObject>()) {
-        if (mode == ParallelExecution)
-            return false;
-
-        JSContext *cx = cxArg->asJSContext();
-        Rooted<PropertyDescriptor> pd(cx);
-        if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
-            return false;
-
-        if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-            return !pd.setter() ||
-                   CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
+    // This loop isn't explicit in the spec algorithm. See the comment on step
+    // 4.c.i below.
+    for (;;) {
+        // Steps 2-3. ('done' is a SpiderMonkey-specific thing, used below.)
+        bool done;
+        if (mode == ParallelExecution) {
+            // Use the loop in LookupPropertyPure instead of this loop.
+            // It amounts to the same thing.
+            NativeObject *ancestor;
+            if (!LookupPropertyPure(cxArg, pobj, id, &ancestor, shape.address()))
+                return false;
+            done = true;
+            if (shape)
+                pobj = ancestor;
+        } else {
+            RootedObject ancestor(cxArg);
+            if (!LookupOwnPropertyInline<CanGC>(cxArg->asJSContext(), pobj, id, &ancestor,
+                                                &shape, &done))
+            {
+                return false;
+            }
+            if (!done || ancestor != pobj)
+                shape = nullptr;
         }
 
-        if (pd.isReadonly()) {
-            if (strict)
-                return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-            if (cx->compartment()->options().extraWarnings(cx))
-                return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-            return true;
+        if (shape) {
+            // Steps 5-6.
+            return SetExistingProperty<mode>(cxArg, obj, receiver, id, pobj, shape, vp, strict);
         }
-    }
 
-    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
+        // Steps 4.a-b. The check for 'done' on this next line is tricky.
+        // done can be true in exactly these unlikely-sounding cases:
+        // - We're looking up an element, and pobj is a TypedArray that
+        //   doesn't have that many elements.
+        // - We're being called from a resolve hook to assign to the property
+        //   being resolved.
+        // - We're running in parallel mode so we've already done the whole
+        //   lookup (in LookupPropertyPure above).
+        // What they all have in common is we do not want to keep walking
+        // the prototype chain.
+        RootedObject proto(cxArg, done ? nullptr : pobj->getProto());
+        if (!proto) {
+            // Step 4.d.i (and step 5).
+            return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
+        }
+
+        // Step 4.c.i. If the prototype is also native, this step is a
+        // recursive tail call, and we don't need to go through all the
+        // plumbing of JSObject::setGeneric; the top of the loop is where
+        // we're going to end up anyway. But if pobj is non-native,
+        // that optimization would be incorrect.
+        if (!proto->isNative()) {
+            if (mode == ParallelExecution)
+                return false;
+
+            // Unqualified assignments are not specified to go through [[Set]]
+            // at all, but they do go through this function. So check for
+            // unqualified assignment to a nonexistent global (a strict error).
+            if (!qualified) {
+                RootedObject pobj(cxArg);
+                if (!JSObject::lookupGeneric(cxArg->asJSContext(), proto, id, &pobj, &shape))
+                    return false;
+                if (!shape) {
+                    return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp,
+                                                        strict);
+                }
+            }
+
+            return JSObject::setGeneric(cxArg->asJSContext(), proto, receiver, id, vp,
+                                        strict);
+        }
+        pobj = &proto->as<NativeObject>();
+    }
 }
 
 template bool
