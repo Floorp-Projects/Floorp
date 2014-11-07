@@ -1331,7 +1331,7 @@
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://communicator/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
@@ -1598,7 +1598,7 @@
   <binding id="autocomplete-history-popup"
            extends="chrome://global/content/bindings/popup.xml#popup-scrollbars">
     <resources>
-      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://communicator/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
