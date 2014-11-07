@@ -8,45 +8,27 @@
 
     <item android:state_pressed="true"
           android:state_checked="true"
-          gecko:state_private="true">
-        <shape>
-            <solid android:color="@color/highlight_nav_pb" />
-        </shape>
-    </item>
+          gecko:state_private="true"
+          android:color="@color/highlight_nav_pb" />
 
     <item android:state_checked="true"
-          gecko:state_private="true">
-        <shape>
-            <solid android:color="@color/background_private" />
-        </shape>
-    </item>
+          gecko:state_private="true"
+          android:color="@color/background_private" />
 
     <item android:state_pressed="true"
-          gecko:state_private="true">
-        <shape>
-            <solid android:color="@color/highlight_dark_focused" />
-        </shape>
-    </item>
+          gecko:state_private="true"
+          android:color="@color/highlight_dark_focused" />
 
     <item android:state_pressed="true"
-          android:state_checked="true">
-        <shape>
-            <solid android:color="@color/new_tablet_highlight" />
-        </shape>
-    </item>
+          android:state_checked="true"
+          android:color="@color/new_tablet_highlight" />
 
-    <item android:state_checked="true">
-        <shape>
-            <solid android:color="@color/background_normal" />
-        </shape>
-    </item>
+    <item android:state_checked="true"
+          android:color="@color/background_normal" />
 
-    <item android:state_pressed="true">
-        <shape>
-            <solid android:color="@color/new_tablet_highlight_dark" />
-        </shape>
-    </item>
+    <item android:state_pressed="true"
+          android:color="@color/new_tablet_highlight_dark" />
 
-    <item android:drawable="@android:color/transparent"/>
+    <item android:color="@android:color/transparent"/>
 
 </selector>
