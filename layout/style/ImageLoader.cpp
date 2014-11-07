@@ -350,6 +350,7 @@ void InvalidateImagesCallback(nsIFrame* aFrame,
   }
 
   aItem->Invalidate();
+  aFrame->SchedulePaint();
 
   // Update ancestor rendering observers (-moz-element etc)
   nsIFrame *f = aFrame;
@@ -360,7 +361,7 @@ void InvalidateImagesCallback(nsIFrame* aFrame,
 }
 
 void
-ImageLoader::DoRedraw(FrameSet* aFrameSet)
+ImageLoader::DoRedraw(FrameSet* aFrameSet, bool aForcePaint)
 {
   NS_ASSERTION(aFrameSet, "Must have a frame set");
   NS_ASSERTION(mDocument, "Should have returned earlier!");
@@ -377,7 +378,9 @@ ImageLoader::DoRedraw(FrameSet* aFrameSet)
         frame->InvalidateFrame();
       } else {
         FrameLayerBuilder::IterateRetainedDataFor(frame, InvalidateImagesCallback);
-        frame->SchedulePaint();
+        if (aForcePaint) {
+          frame->SchedulePaint();
+        }
       }
     }
   }
@@ -466,7 +469,10 @@ ImageLoader::OnStopFrame(imgIRequest *aRequest)
 
   NS_ASSERTION(frameSet, "This should never be null!");
 
-  DoRedraw(frameSet);
+  // Since we just finished decoding a frame, we always want to paint, in case
+  // we're now able to paint an image that we couldn't paint before (and hence
+  // that we don't have retained data for).
+  DoRedraw(frameSet, /* aForcePaint = */ true);
 
   return NS_OK;
 }
@@ -485,7 +491,7 @@ ImageLoader::FrameChanged(imgIRequest *aRequest)
 
   NS_ASSERTION(frameSet, "This should never be null!");
 
-  DoRedraw(frameSet);
+  DoRedraw(frameSet, /* aForcePaint = */ false);
 
   return NS_OK;
 }
