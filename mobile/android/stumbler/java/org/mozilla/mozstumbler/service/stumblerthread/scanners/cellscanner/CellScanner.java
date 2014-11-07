@@ -26,7 +26,7 @@ public class CellScanner {
     public static final String ACTION_CELLS_SCANNED_ARG_CELLS = "cells";
     public static final String ACTION_CELLS_SCANNED_ARG_TIME = AppGlobals.ACTION_ARG_TIME;
 
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + CellScanner.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(CellScanner.class.getSimpleName());
     private static final long CELL_MIN_UPDATE_TIME = 1000; // milliseconds
 
     private final Context mContext;
