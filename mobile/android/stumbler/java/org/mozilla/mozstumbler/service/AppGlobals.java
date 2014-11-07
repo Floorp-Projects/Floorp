@@ -7,7 +7,7 @@ package org.mozilla.mozstumbler.service;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class AppGlobals {
-    public static final String LOG_PREFIX = "Stumbler:";
+    public static final String LOG_PREFIX = "Stumbler_";
 
     /* All intent actions start with this string. Only locally broadcasted. */
     public static final String ACTION_NAMESPACE = "org.mozilla.mozstumbler.intent.action";
@@ -55,6 +55,14 @@ public class AppGlobals {
             }
             guiLogMessageBuffer.add("<font color='" + color +"'>" + msg + "</font>");
         }
+    }
+
+    public static String makeLogTag(String name) {
+        final int maxLen = 23 - LOG_PREFIX.length();
+        if (name.length() > maxLen) {
+            name = name.substring(name.length() - maxLen, name.length());
+        }
+        return LOG_PREFIX + name;
     }
 
     public static final String ACTION_TEST_SETTING_ENABLED = "stumbler-test-setting-enabled";
