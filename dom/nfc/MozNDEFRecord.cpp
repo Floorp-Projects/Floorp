@@ -131,23 +131,30 @@ MozNDEFRecord::MozNDEFRecord(JSContext* aCx, nsPIDOMWindow* aWindow,
   mWindow = aWindow; // For GetParentObject()
 
   mTnf = aOptions.mTnf;
+  mSize = 3; // 1(flags) + 1(type_length) + 1(payload_length)
 
   if (aOptions.mType.WasPassed()) {
     const Uint8Array& type = aOptions.mType.Value();
     type.ComputeLengthAndData();
     mType = Uint8Array::Create(aCx, this, type.Length(), type.Data());
+    mSize += type.Length();
   }
 
   if (aOptions.mId.WasPassed()) {
     const Uint8Array& id = aOptions.mId.Value();
     id.ComputeLengthAndData();
     mId = Uint8Array::Create(aCx, this, id.Length(), id.Data());
+    mSize += 1 /* id_length */ + id.Length();
   }
 
   if (aOptions.mPayload.WasPassed()) {
     const Uint8Array& payload = aOptions.mPayload.Value();
     payload.ComputeLengthAndData();
     mPayload = Uint8Array::Create(aCx, this, payload.Length(), payload.Data());
+    if (payload.Length() > 0xff) {
+      mSize += 3;
+    }
+    mSize += payload.Length();
   }
 
   HoldData();
