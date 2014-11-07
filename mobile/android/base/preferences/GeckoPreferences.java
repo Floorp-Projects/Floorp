@@ -889,9 +889,6 @@ OnSharedPreferenceChangeListener
        if (GeckoAppShell.getGeckoInterface() != null) {
            intent.putExtra("user_agent", GeckoAppShell.getGeckoInterface().getDefaultUAString());
        }
-       if (!AppConstants.MOZILLA_OFFICIAL) {
-           intent.putExtra("is_debug", true);
-       }
        broadcastAction(context, intent);
     }
 
