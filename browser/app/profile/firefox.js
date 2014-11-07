@@ -1809,6 +1809,10 @@ pref("browser.polaris.enabled", false);
 pref("privacy.trackingprotection.ui.enabled", false);
 #endif
 
+#ifdef NIGHTLY_BUILD
+pref("browser.tabs.remote.autostart.1", true);
+#endif
+
 // Temporary pref to allow printing in e10s windows on some platforms.
 #ifdef UNIX_BUT_NOT_MAC
 pref("print.enable_e10s_testing", false);

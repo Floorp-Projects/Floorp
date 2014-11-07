@@ -23,9 +23,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/TextDecoderBinding.h"
-#include "mozilla/dom/TextEncoderBinding.h"
-#include "mozilla/dom/DOMErrorBinding.h"
 
 #include "nsDOMMutationObserver.h"
 #include "nsICycleCollectorListener.h"
@@ -436,17 +433,6 @@ InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal, uint32_t 
 
     // Stuff coming through this path always ends up as a DOM global.
     MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL);
-
-    // Init WebIDL binding constructors wanted on all XPConnect globals.
-    //
-    // XXX Please do not add any additional classes here without the approval of
-    //     the XPConnect module owner.
-    if (!PromiseBinding::GetConstructorObject(aJSContext, aGlobal) ||
-        !TextDecoderBinding::GetConstructorObject(aJSContext, aGlobal) ||
-        !TextEncoderBinding::GetConstructorObject(aJSContext, aGlobal) ||
-        !DOMErrorBinding::GetConstructorObject(aJSContext, aGlobal)) {
-        return UnexpectedFailure(false);
-    }
 
     if (!(aFlags & nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK))
         JS_FireOnNewGlobalObject(aJSContext, aGlobal);

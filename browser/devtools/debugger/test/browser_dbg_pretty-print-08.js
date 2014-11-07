@@ -4,19 +4,17 @@
 
 // Test stepping through pretty printed sources.
 
-let gTab, gDebuggee, gPanel, gClient, gThreadClient, gSource;
+let gTab, gPanel, gClient, gThreadClient, gSource;
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print-2.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gClient = gPanel.panelWin.gClient;
     gThreadClient = gPanel.panelWin.DebuggerController.activeThread;
 
-    gDebuggee.noop = x => x;
     findSource();
   });
 }
@@ -47,7 +45,7 @@ function prettyPrintSource(source) {
 function runCode({ error }) {
   ok(!error);
   gClient.addOneTimeListener("paused", testDbgStatement);
-  gDebuggee.main3();
+  callInTab(gTab, "main3");
 }
 
 function testDbgStatement(event, { why, frame }) {
@@ -90,5 +88,5 @@ function testHitBreakpoint() {
 }
 
 registerCleanupFunction(function() {
-  gTab = gDebuggee = gPanel = gClient = gThreadClient = gSource = null;
+  gTab = gPanel = gClient = gThreadClient = gSource = null;
 });

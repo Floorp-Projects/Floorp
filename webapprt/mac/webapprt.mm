@@ -168,10 +168,18 @@ main(int argc, char **argv)
       NSString *newWebRTPath =
         [NSString stringWithFormat: @"%@%s%s", firefoxPath, APP_RESOURCES_PATH,
                                                WEBAPPRT_EXECUTABLE];
-      NSLog(@"### Firefox webapprt path: %@", newWebRTPath);
+      NSLog(@"### Trying Firefox webapprt path: %@", newWebRTPath);
       if (![fileClerk fileExistsAtPath:newWebRTPath]) {
-        NSString* msg = [NSString stringWithFormat: @"This version of Firefox (%@) cannot run web applications, because it is not recent enough or damaged", firefoxVersion];
-        @throw MakeException(@"Missing Web Runtime Files", msg);
+        newWebRTPath =
+          [NSString stringWithFormat: @"%@%s%s", firefoxPath, APP_MACOS_PATH,
+                                                 WEBAPPRT_EXECUTABLE];
+        NSLog(@"### Trying Firefox webapprt path: %@", newWebRTPath);
+        if (![fileClerk fileExistsAtPath:newWebRTPath]) {
+          NSString* msg =
+            [NSString stringWithFormat:
+              @"This version of Firefox (%@) cannot run web applications, because it is not recent enough or damaged", firefoxVersion];
+          @throw MakeException(@"Missing Web Runtime Files", msg);
+        }
       }
 
       [fileClerk removeItemAtPath: myWebRTPath error: &errorDesc];

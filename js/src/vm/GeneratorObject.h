@@ -50,21 +50,21 @@ class GeneratorObject : public NativeObject
         return CLOSE;
     }
 
-    static JSObject *create(JSContext *cx, const InterpreterRegs &regs);
+    static JSObject *create(JSContext *cx, AbstractFramePtr frame);
 
-    static bool suspend(JSContext *cx, HandleObject obj, InterpreterFrame *fp, jsbytecode *pc,
+    static bool suspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame, jsbytecode *pc,
                         Value *vp, unsigned nvalues, SuspendKind kind);
 
     static bool resume(JSContext *cx, InterpreterActivation &activation,
                        HandleObject obj, HandleValue arg, ResumeKind resumeKind);
 
-    static bool initialSuspend(JSContext *cx, HandleObject obj, InterpreterFrame *fp, jsbytecode *pc) {
-        return suspend(cx, obj, fp, pc, nullptr, 0, INITIAL);
+    static bool initialSuspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame, jsbytecode *pc) {
+        return suspend(cx, obj, frame, pc, nullptr, 0, INITIAL);
     }
 
-    static bool normalSuspend(JSContext *cx, HandleObject obj, InterpreterFrame *fp, jsbytecode *pc,
+    static bool normalSuspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame, jsbytecode *pc,
                               Value *vp, unsigned nvalues) {
-        return suspend(cx, obj, fp, pc, vp, nvalues, NORMAL);
+        return suspend(cx, obj, frame, pc, vp, nvalues, NORMAL);
     }
 
     static bool finalSuspend(JSContext *cx, HandleObject obj);
@@ -165,6 +165,25 @@ class GeneratorObject : public NativeObject
         setFixedSlot(ARGS_OBJ_SLOT, NullValue());
         setFixedSlot(EXPRESSION_STACK_SLOT, NullValue());
         setFixedSlot(BYTECODE_OFFSET_SLOT, NullValue());
+    }
+
+    static size_t offsetOfCalleeSlot() {
+        return getFixedSlotOffset(CALLEE_SLOT);
+    }
+    static size_t offsetOfThisSlot() {
+        return getFixedSlotOffset(THIS_SLOT);
+    }
+    static size_t offsetOfScopeChainSlot() {
+        return getFixedSlotOffset(SCOPE_CHAIN_SLOT);
+    }
+    static size_t offsetOfArgsObjSlot() {
+        return getFixedSlotOffset(ARGS_OBJ_SLOT);
+    }
+    static size_t offsetOfBytecodeOffsetSlot() {
+        return getFixedSlotOffset(BYTECODE_OFFSET_SLOT);
+    }
+    static size_t offsetOfExpressionStackSlot() {
+        return getFixedSlotOffset(EXPRESSION_STACK_SLOT);
     }
 };
 

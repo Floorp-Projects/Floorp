@@ -68,6 +68,35 @@ private:
   nsRefPtr<SourceBufferDecoder> mDecoder;
 };
 
+MOZ_STACK_CLASS class DecodersToInitialize MOZ_FINAL {
+public:
+  explicit DecodersToInitialize(TrackBuffer* aOwner)
+    : mOwner(aOwner)
+  {
+  }
+
+  ~DecodersToInitialize()
+  {
+    for (size_t i = 0; i < mDecoders.Length(); i++) {
+      mOwner->QueueInitializeDecoder(mDecoders[i]);
+    }
+  }
+
+  bool NewDecoder()
+  {
+    nsRefPtr<SourceBufferDecoder> decoder = mOwner->NewDecoder();
+    if (!decoder) {
+      return false;
+    }
+    mDecoders.AppendElement(decoder);
+    return true;
+  }
+
+private:
+  TrackBuffer* mOwner;
+  nsAutoTArray<nsRefPtr<SourceBufferDecoder>,2> mDecoders;
+};
+
 void
 TrackBuffer::Shutdown()
 {
@@ -90,10 +119,11 @@ bool
 TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  DecodersToInitialize decoders(this);
   // TODO: Run more of the buffer append algorithm asynchronously.
   if (mParser->IsInitSegmentPresent(aData, aLength)) {
     MSE_DEBUG("TrackBuffer(%p)::AppendData: New initialization segment.", this);
-    if (!NewDecoder()) {
+    if (!decoders.NewDecoder()) {
       return false;
     }
   } else if (!mParser->HasInitData()) {
@@ -110,7 +140,7 @@ TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
 
       // This data is earlier in the timeline than data we have already
       // processed, so we must create a new decoder to handle the decoding.
-      if (!NewDecoder()) {
+      if (!decoders.NewDecoder()) {
         return false;
       }
       MSE_DEBUG("TrackBuffer(%p)::AppendData: Decoder marked as initialized.", this);
@@ -218,7 +248,7 @@ TrackBuffer::Buffered(dom::TimeRanges* aRanges)
   return highestEndTime;
 }
 
-bool
+already_AddRefed<SourceBufferDecoder>
 TrackBuffer::NewDecoder()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -228,7 +258,7 @@ TrackBuffer::NewDecoder()
 
   nsRefPtr<SourceBufferDecoder> decoder = mParentDecoder->CreateSubDecoder(mType);
   if (!decoder) {
-    return false;
+    return nullptr;
   }
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   mCurrentDecoder = decoder;
@@ -238,7 +268,7 @@ TrackBuffer::NewDecoder()
   mLastEndTimestamp = 0;
 
   decoder->SetTaskQueue(mTaskQueue);
-  return QueueInitializeDecoder(decoder);
+  return decoder.forget();
 }
 
 bool
