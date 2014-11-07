@@ -115,9 +115,6 @@ add_task(function() {
   is(undoResetButton.hidden, true, "Undo reset button should be hidden at start of test");
   Services.prefs.setBoolPref(prefName, !defaultValue);
 
-  //XXXgijs this line should be removed once bug 1094509 lands
-  Services.prefs.setCharPref("devtools.theme", "dark");
-
   yield waitForCondition(() => !restoreDefaultsButton.disabled);
   ok(!restoreDefaultsButton.disabled, "Restore defaults button should be enabled when pref changed");
   is(deveditionThemeButton.hasAttribute("checked"), !defaultValue, "Devedition theme button should reflect changed pref value");

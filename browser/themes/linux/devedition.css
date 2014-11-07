@@ -31,7 +31,7 @@
   margin: 0;
   border: none;
   padding: 2px 6px;
-  background: #252C33;
+  background: var(--chrome-nav-buttons-background);
   box-shadow: none !important;
 }
 
@@ -42,7 +42,7 @@
 
 #back-button:hover:not([disabled="true"]) > .toolbarbutton-icon,
 #forward-button:hover:not([disabled="true"]) > .toolbarbutton-icon {
-  background: #1B2127 !important;
+  background: var(--chrome-nav-buttons-hover-background) !important;
 }
 
 #back-button > .toolbarbutton-icon {
@@ -60,4 +60,13 @@
 #alltabs-button,
 #new-tab-button {
   background: var(--chrome-background-color);
+}
+
+#new-tab-button:hover > .toolbarbutton-icon {
+  border-color: transparent !important;
+}
+
+/* Prevent double border below tabs toolbar */
+#TabsToolbar:not([collapsed="true"]) + #nav-bar {
+  border-top-width: 0 !important;
 }
