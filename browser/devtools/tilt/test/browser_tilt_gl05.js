@@ -14,6 +14,7 @@ function onWebGLSuccess() {
 
 function test() {
   if (!isWebGLSupported()) {
+    aborting();
     info("Skipping tilt_gl05 because WebGL isn't supported on this hardware.");
     return;
   }
@@ -24,6 +25,7 @@ function test() {
   let gl = renderer.context;
 
   if (!isWebGLAvailable) {
+    aborting();
     return;
   }
 

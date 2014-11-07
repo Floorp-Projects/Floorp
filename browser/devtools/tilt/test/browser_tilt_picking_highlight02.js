@@ -7,10 +7,12 @@ let presenter;
 
 function test() {
   if (!isTiltEnabled()) {
+    aborting();
     info("Skipping highlight test because Tilt isn't enabled.");
     return;
   }
   if (!isWebGLSupported()) {
+    aborting();
     info("Skipping highlight test because WebGL isn't supported.");
     return;
   }
@@ -31,7 +33,7 @@ function test() {
       }
     }, false, function suddenDeath()
     {
-      info("Tilt could not be initialized properly.");
+      ok(false, "Tilt could not be initialized properly.");
       cleanup();
     });
   });

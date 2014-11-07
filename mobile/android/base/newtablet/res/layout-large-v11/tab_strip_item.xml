@@ -9,6 +9,5 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="@dimen/new_tablet_tab_strip_item_width"
     android:layout_height="match_parent"
-    android:background="@drawable/new_tablet_tab_strip_item_bg"
     android:paddingLeft="28dp"
     android:paddingRight="12dp"/>
