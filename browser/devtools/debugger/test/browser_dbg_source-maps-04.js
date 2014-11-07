@@ -16,7 +16,7 @@ DevToolsUtils.reportingDisabled = true;
 let gPanel, gDebugger, gFrames, gSources, gPrefs, gOptions;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gFrames = gDebugger.DebuggerView.StackFrames;
