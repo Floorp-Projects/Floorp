@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(078f159c-28ee-4653-9cfe-633132152f47)]
+[scriptable, builtinclass, uuid(710f22f0-558b-11e4-8ed6-0800200c9a66)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -42,14 +42,6 @@ interface imgIRequest : nsIRequest
    * and height of the image, and have thus called SetSize()
    * on the container.
    *
-   * STATUS_LOAD_PARTIAL: Used internally by imgRequest to
-   * flag that a request is being cancelled as a result of
-   * a failure of a proxy holder and not an internal failure.
-   * At least I think that's what it does. Regardless, there's
-   * no reason for this flag to be public, and it should either
-   * go away or become a private state flag within imgRequest.
-   * Don't rely on it.
-   *
    * STATUS_LOAD_COMPLETE: The data has been fully loaded
    * to memory, but not necessarily fully decoded.
    *
@@ -66,12 +58,11 @@ interface imgIRequest : nsIRequest
   //@{
   const long STATUS_NONE             = 0x0;
   const long STATUS_SIZE_AVAILABLE   = 0x1;
-  const long STATUS_LOAD_PARTIAL     = 0x2;
-  const long STATUS_LOAD_COMPLETE    = 0x4;
-  const long STATUS_ERROR            = 0x8;
-  const long STATUS_DECODE_STARTED   = 0x10;
-  const long STATUS_FRAME_COMPLETE   = 0x20;
-  const long STATUS_DECODE_COMPLETE  = 0x40;
+  const long STATUS_LOAD_COMPLETE    = 0x2;
+  const long STATUS_ERROR            = 0x4;
+  const long STATUS_DECODE_STARTED   = 0x8;
+  const long STATUS_FRAME_COMPLETE   = 0x10;
+  const long STATUS_DECODE_COMPLETE  = 0x20;
   //@}
 
   /**

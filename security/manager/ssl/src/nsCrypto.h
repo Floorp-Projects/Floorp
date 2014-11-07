@@ -8,10 +8,13 @@
 
 #include "nsIPKCS11.h"
 
+#include "nsNSSShutDown.h"
+
 #define NS_PKCS11_CID \
   {0x74b7a390, 0x3b41, 0x11d4, { 0x8a, 0x80, 0x00, 0x60, 0x08, 0xc8, 0x44, 0xc3} }
 
 class nsPkcs11 : public nsIPKCS11
+               , public nsNSSShutDownObject
 {
 public:
   nsPkcs11();
@@ -21,6 +24,9 @@ public:
 
 protected:
   virtual ~nsPkcs11();
+
+private:
+  virtual void virtualDestroyNSSReference() {}
 };
 
 #endif //_nsCrypto_h_

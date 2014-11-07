@@ -45,7 +45,8 @@ function frameLoad() {
 function load() {
     window.loaded = true;
 
-    var imgsrc = "<img onload ='window.parent.imgLoad()' src='image.png'>\n";
+    var imgsrc = "<img onload ='window.parent.imgLoad()' src='image.png?noCache="
+               + (new Date().getTime()) + "'>\n";
     var doc = $('iframe').contentWindow.document;
     doc.writeln(imgsrc);
     doc.close();

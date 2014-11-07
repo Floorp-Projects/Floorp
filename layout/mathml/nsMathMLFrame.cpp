@@ -212,7 +212,8 @@ nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
 /* static */ nscoord
 nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
                           nsStyleContext*   aStyleContext,
-                          const nsCSSValue& aCSSValue)
+                          const nsCSSValue& aCSSValue,
+                          float             aFontSizeInflation)
 {
   NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");
 
@@ -232,7 +233,8 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   else if (eCSSUnit_XHeight == unit) {
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
-                                                 getter_AddRefs(fm));
+                                                 getter_AddRefs(fm),
+                                                 aFontSizeInflation);
     nscoord xHeight = fm->XHeight();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
@@ -247,7 +249,8 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
                                  nscoord*          aLengthValue,
                                  uint32_t          aFlags,
                                  nsPresContext*    aPresContext,
-                                 nsStyleContext*   aStyleContext)
+                                 nsStyleContext*   aStyleContext,
+                                 float             aFontSizeInflation)
 {
   nsCSSValue cssValue;
 
@@ -269,7 +272,8 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
   }
   
   // Absolute units.
-  *aLengthValue = CalcLength(aPresContext, aStyleContext, cssValue);
+  *aLengthValue = CalcLength(aPresContext, aStyleContext, cssValue,
+                             aFontSizeInflation);
 }
 
 // ================
