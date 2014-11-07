@@ -432,8 +432,6 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
   diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
   diff.unsetDecodeStarted = mImageStatus & imgIRequest::STATUS_DECODE_STARTED
                          && !(aOther->mImageStatus & imgIRequest::STATUS_DECODE_STARTED);
-  diff.foundError = (mImageStatus != imgIRequest::STATUS_ERROR)
-                 && (aOther->mImageStatus == imgIRequest::STATUS_ERROR);
 
   MOZ_ASSERT(!mIsMultipart || aOther->mIsMultipart, "mIsMultipart should be monotonic");
   diff.foundIsMultipart = !mIsMultipart && aOther->mIsMultipart;
@@ -492,10 +490,6 @@ imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
   // Unset bits which can get unset as part of the decoding process.
   if (aDiff.unsetDecodeStarted)
     mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
-
-  // The error state is sticky and overrides all other bits.
-  if (mImageStatus & imgIRequest::STATUS_ERROR)
-    mImageStatus = imgIRequest::STATUS_ERROR;
 }
 
 void
@@ -510,7 +504,7 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& diff)
 
   mInvalidRect.SetEmpty();
 
-  if (diff.foundError) {
+  if (diff.diffImageStatus & imgIRequest::STATUS_ERROR) {
     FireFailureNotification();
   }
 }
@@ -620,8 +614,9 @@ imgStatusTracker::FirstConsumerIs(imgRequestProxy* aConsumer)
 void
 imgStatusTracker::RecordCancel()
 {
-  if (!(mImageStatus & imgIRequest::STATUS_LOAD_PARTIAL))
-    mImageStatus = imgIRequest::STATUS_ERROR;
+  if (!(mImageStatus & imgIRequest::STATUS_LOAD_PARTIAL)) {
+    mImageStatus |= imgIRequest::STATUS_ERROR;
+  }
 }
 
 void
@@ -708,13 +703,12 @@ imgStatusTracker::RecordStopDecode(nsresult aStatus)
                     "RecordStopDecode called before we have an Image");
   mState |= FLAG_DECODE_STOPPED;
 
-  if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR) {
+  if (NS_SUCCEEDED(aStatus) && !(mImageStatus & imgIRequest::STATUS_ERROR)) {
     mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
     mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
     mHasBeenDecoded = true;
-  // If we weren't successful, clear all success status bits and set error.
   } else {
-    mImageStatus = imgIRequest::STATUS_ERROR;
+    mImageStatus |= imgIRequest::STATUS_ERROR;
   }
 }
 
@@ -866,10 +860,11 @@ imgStatusTracker::RecordStopRequest(bool aLastPart,
   mState |= FLAG_REQUEST_STOPPED;
 
   // If we were successful in loading, note that the image is complete.
-  if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR)
+  if (NS_SUCCEEDED(aStatus)) {
     mImageStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
-  else
-    mImageStatus = imgIRequest::STATUS_ERROR;
+  } else {
+    mImageStatus |= imgIRequest::STATUS_ERROR;
+  }
 }
 
 void
@@ -919,7 +914,7 @@ imgStatusTracker::OnStopRequest(bool aLastPart,
       new OnStopRequestEvent(this, aLastPart, aStatus));
     return;
   }
-  bool preexistingError = mImageStatus == imgIRequest::STATUS_ERROR;
+  bool preexistingError = mImageStatus & imgIRequest::STATUS_ERROR;
 
   RecordStopRequest(aLastPart, aStatus);
   /* notify the kids */
@@ -1065,7 +1060,7 @@ imgStatusTracker::MaybeUnblockOnload()
 void
 imgStatusTracker::RecordError()
 {
-  mImageStatus = imgIRequest::STATUS_ERROR;
+  mImageStatus |= imgIRequest::STATUS_ERROR;
 }
 
 void
