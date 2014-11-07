@@ -20,30 +20,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMMediaStream,
-                                   DOMEventTargetHelper,
-                                   mWindow,
-                                   mTracks,
-                                   mConsumersToKeepAlive);
-
-NS_IMPL_ADDREF_INHERITED(DOMMediaStream, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(DOMMediaStream, DOMEventTargetHelper)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMMediaStream)
-  NS_INTERFACE_MAP_ENTRY(DOMMediaStream)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_ISUPPORTS_INHERITED0(DOMLocalMediaStream, DOMMediaStream)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream,
-                                   mStreamNode)
-
-NS_IMPL_ADDREF_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
-NS_IMPL_RELEASE_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMAudioNodeMediaStream)
-NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
-
 class DOMMediaStream::StreamListener : public MediaStreamListener {
 public:
   explicit StreamListener(DOMMediaStream* aStream)
@@ -126,6 +102,49 @@ private:
   // These fields may only be accessed on the main thread
   DOMMediaStream* mStream;
 };
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMMediaStream,
+                                                DOMEventTargetHelper)
+  if (tmp->mListener) {
+    // Make sure |mListener| cannot call back after |mTracks| is collected
+    tmp->mListener->Forget();
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMMediaStream,
+                                                  DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTracks)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumersToKeepAlive)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_ADDREF_INHERITED(DOMMediaStream, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(DOMMediaStream, DOMEventTargetHelper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMMediaStream)
+  NS_INTERFACE_MAP_ENTRY(DOMMediaStream)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(DOMLocalMediaStream, DOMMediaStream)
+NS_IMPL_RELEASE_INHERITED(DOMLocalMediaStream, DOMMediaStream)
+
+NS_INTERFACE_MAP_BEGIN(DOMLocalMediaStream)
+  NS_INTERFACE_MAP_ENTRY(DOMLocalMediaStream)
+NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream,
+                                   mStreamNode)
+
+NS_IMPL_ADDREF_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
+NS_IMPL_RELEASE_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMAudioNodeMediaStream)
+NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 DOMMediaStream::DOMMediaStream()
   : mLogicalStreamStartTime(0),

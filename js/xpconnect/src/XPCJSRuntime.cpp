@@ -990,6 +990,7 @@ class Watchdog
       , mHibernating(false)
       , mInitialized(false)
       , mShuttingDown(false)
+      , mMinScriptRunTimeSeconds(1)
     {}
     ~Watchdog() { MOZ_ASSERT(!Initialized()); }
 
@@ -1063,6 +1064,14 @@ class Watchdog
         mInitialized = false;
     }
 
+    void SetMinScriptRunTimeSeconds(int32_t seconds)
+    {
+        // This variable is atomic, and is set from the main thread without
+        // locking.
+        MOZ_ASSERT(seconds > 0);
+        mMinScriptRunTimeSeconds = seconds;
+    }
+
     //
     // Invoked by the watchdog thread only.
     //
@@ -1085,6 +1094,11 @@ class Watchdog
         PR_NotifyCondVar(mWakeup);
     }
 
+    int32_t MinScriptRunTimeSeconds()
+    {
+        return mMinScriptRunTimeSeconds;
+    }
+
   private:
     WatchdogManager *mManager;
 
@@ -1094,11 +1108,15 @@ class Watchdog
     bool mHibernating;
     bool mInitialized;
     bool mShuttingDown;
+    mozilla::Atomic<int32_t> mMinScriptRunTimeSeconds;
 };
 
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
 #endif
+
+#define PREF_MAX_SCRIPT_RUN_TIME_CONTENT "dom.max_script_run_time"
+#define PREF_MAX_SCRIPT_RUN_TIME_CHROME "dom.max_chrome_script_run_time"
 
 class WatchdogManager : public nsIObserver
 {
@@ -1117,6 +1135,8 @@ class WatchdogManager : public nsIObserver
 
         // Register ourselves as an observer to get updates on the pref.
         mozilla::Preferences::AddStrongObserver(this, "dom.use_watchdog");
+        mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
+        mozilla::Preferences::AddStrongObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
     }
 
   protected:
@@ -1128,6 +1148,8 @@ class WatchdogManager : public nsIObserver
         // consumers to shut it down manually before releasing it.
         MOZ_ASSERT(!mWatchdog);
         mozilla::Preferences::RemoveObserver(this, "dom.use_watchdog");
+        mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CONTENT);
+        mozilla::Preferences::RemoveObserver(this, PREF_MAX_SCRIPT_RUN_TIME_CHROME);
     }
 
   public:
@@ -1191,12 +1213,22 @@ class WatchdogManager : public nsIObserver
     void RefreshWatchdog()
     {
         bool wantWatchdog = Preferences::GetBool("dom.use_watchdog", true);
-        if (wantWatchdog == !!mWatchdog)
-            return;
-        if (wantWatchdog)
-            StartWatchdog();
-        else
-            StopWatchdog();
+        if (wantWatchdog != !!mWatchdog) {
+            if (wantWatchdog)
+                StartWatchdog();
+            else
+                StopWatchdog();
+        }
+
+        if (mWatchdog) {
+            int32_t contentTime = Preferences::GetInt(PREF_MAX_SCRIPT_RUN_TIME_CONTENT, 10);
+            if (contentTime <= 0)
+                contentTime = INT32_MAX;
+            int32_t chromeTime = Preferences::GetInt(PREF_MAX_SCRIPT_RUN_TIME_CHROME, 20);
+            if (chromeTime <= 0)
+                chromeTime = INT32_MAX;
+            mWatchdog->SetMinScriptRunTimeSeconds(std::min(contentTime, chromeTime));
+        }
     }
 
     void StartWatchdog()
@@ -1270,11 +1302,12 @@ WatchdogMain(void *arg)
         // Rise and shine.
         manager->RecordTimestamp(TimestampWatchdogWakeup);
 
-        // Don't request an interrupt callback if activity started less than one second ago.
-        // The callback is only used for detecting long running scripts, and triggering the
-        // callback from off the main thread can be expensive.
+        // Don't request an interrupt callback unless the current script has
+        // been running long enough that we might show the slow script dialog.
+        // Triggering the callback from off the main thread can be expensive.
+        PRTime usecs = self->MinScriptRunTimeSeconds() * PR_USEC_PER_SEC;
         if (manager->IsRuntimeActive() &&
-            manager->TimeSinceLastRuntimeStateChange() >= PRTime(PR_USEC_PER_SEC))
+            manager->TimeSinceLastRuntimeStateChange() >= usecs)
         {
             bool debuggerAttached = false;
             nsCOMPtr<nsIDebug2> dbg = do_GetService("@mozilla.org/xpcom/debug;1");
@@ -1356,8 +1389,8 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
     // is.
     TimeDuration duration = TimeStamp::NowLoRes() - self->mSlowScriptCheckpoint;
     bool chrome = nsContentUtils::IsCallerChrome();
-    const char *prefName = chrome ? "dom.max_chrome_script_run_time"
-                                  : "dom.max_script_run_time";
+    const char *prefName = chrome ? PREF_MAX_SCRIPT_RUN_TIME_CHROME
+                                  : PREF_MAX_SCRIPT_RUN_TIME_CONTENT;
     int32_t limit = Preferences::GetInt(prefName, chrome ? 20 : 10);
 
     // If there's no limit, or we're within the limit, let it go.
