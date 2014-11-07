@@ -393,7 +393,6 @@ gbjar.sources += [
     'Tab.java',
     'Tabs.java',
     'tabs/PrivateTabsPanel.java',
-    'tabs/RemoteTabsPanel.java',
     'tabs/TabCurve.java',
     'tabs/TabHistoryController.java',
     'tabs/TabHistoryFragment.java',

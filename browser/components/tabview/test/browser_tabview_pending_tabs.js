@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 const STATE = {
   windows: [{

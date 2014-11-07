@@ -5,6 +5,7 @@
 // This test makes sure that the URL bar is focused when entering the private window.
 
 "use strict";
+Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 function checkUrlbarFocus(win) {
   let urlbar = win.gURLBar;

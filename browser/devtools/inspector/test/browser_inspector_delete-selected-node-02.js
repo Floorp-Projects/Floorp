@@ -12,7 +12,7 @@
 const TEST_PAGE = TEST_URL_ROOT +
   "doc_inspector_delete-selected-node-02.html";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_PAGE);
 
   yield testManuallyDeleteSelectedNode();
@@ -23,11 +23,10 @@ let test = asyncTest(function* () {
     info("Selecting a node, deleting it via context menu and checking that " +
           "its parent node is selected and breadcrumbs are updated.");
 
-    let div = getNode("#deleteManually");
-    yield selectNode(div, inspector);
+    yield selectNode("#deleteManually", inspector);
 
     info("Getting the node container in the markup view.");
-    let container = getContainerForRawNode(inspector.markup, div);
+    let container = yield getContainerForSelector("#deleteManually", inspector);
 
     info("Simulating right-click on the markup view container.");
     EventUtils.synthesizeMouse(container.tagLine, 2, 2,
@@ -43,26 +42,24 @@ let test = asyncTest(function* () {
     yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    let parent = getNode("#deleteChildren");
-    assertNodeSelectedAndPanelsUpdated(parent, "ul#deleteChildren");
+    yield assertNodeSelectedAndPanelsUpdated("#deleteChildren", "ul#deleteChildren");
   }
 
   function* testAutomaticallyDeleteSelectedNode() {
     info("Selecting a node, deleting it via javascript and checking that " +
          "its parent node is selected and breadcrumbs are updated.");
 
-    let div = getNode("#deleteAutomatically");
+    let div = yield getNodeFront("#deleteAutomatically", inspector);
     yield selectNode(div, inspector);
 
     info("Deleting selected node via javascript.");
-    div.remove();
+    yield inspector.walker.removeNode(div);
 
     info("Waiting for inspector to update.");
     yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    let parent = getNode("#deleteChildren");
-    assertNodeSelectedAndPanelsUpdated(parent, "ul#deleteChildren");
+    yield assertNodeSelectedAndPanelsUpdated("#deleteChildren", "ul#deleteChildren");
   }
 
   function* testDeleteSelectedNodeContainerFrame() {
@@ -71,23 +68,23 @@ let test = asyncTest(function* () {
          "breadcrumbs are updated.");
 
     info("Selecting an element inside iframe.");
-    let iframe = getNode("#deleteIframe");
-    let div = iframe.contentDocument.getElementById("deleteInIframe");
+    let iframe = yield getNodeFront("#deleteIframe", inspector);
+    let div = yield getNodeFrontInFrame("#deleteInIframe", iframe, inspector);
     yield selectNode(div, inspector);
 
     info("Deleting selected node via javascript.");
-    iframe.remove();
+    yield inspector.walker.removeNode(iframe);
 
     info("Waiting for inspector to update.");
     yield inspector.once("inspector-updated");
 
     info("Inspector updated, performing checks.");
-    assertNodeSelectedAndPanelsUpdated(getNode("body"), "body");
+    yield assertNodeSelectedAndPanelsUpdated("body", "body");
   }
 
-  function assertNodeSelectedAndPanelsUpdated(node, crumbLabel) {
-    is(inspector.selection.nodeFront, getNodeFront(node),
-      "The right node is selected");
+  function* assertNodeSelectedAndPanelsUpdated(selector, crumbLabel) {
+    let nodeFront = yield getNodeFront(selector, inspector);
+    is(inspector.selection.nodeFront, nodeFront, "The right node is selected");
 
     let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
     is(breadcrumbs.querySelector("button[checked=true]").textContent, crumbLabel,

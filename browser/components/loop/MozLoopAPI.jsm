@@ -13,6 +13,7 @@ Cu.import("resource:///modules/loop/LoopCalls.jsm");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
 Cu.import("resource:///modules/loop/LoopContacts.jsm");
+Cu.importGlobalProperties(["Blob"]);
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
                                         "resource:///modules/loop/LoopContacts.jsm");
@@ -685,6 +686,31 @@ function injectLoopAPI(targetWindow) {
         return MozLoopService.generateUUID();
       }
     },
+
+    getAudioBlob: {
+      enumerable: true,
+      writable: true,
+      value: function(name, callback) {
+        let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                        .createInstance(Ci.nsIXMLHttpRequest);
+        let url = `chrome://browser/content/loop/shared/sounds/${name}.ogg`;
+
+        request.open("GET", url, true);
+        request.responseType = "arraybuffer";
+        request.onload = () => {
+          if (request.status < 200 || request.status >= 300) {
+            let error = new Error(request.status + " " + request.statusText);
+            callback(cloneValueInto(error, targetWindow));
+            return;
+          }
+
+          let blob = new Blob([request.response], {type: "audio/ogg"});
+          callback(null, cloneValueInto(blob, targetWindow));
+        };
+
+        request.send();
+      }
+    }
   };
 
   function onStatusChanged(aSubject, aTopic, aData) {

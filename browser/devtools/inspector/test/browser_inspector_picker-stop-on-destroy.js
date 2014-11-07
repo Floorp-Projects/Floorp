@@ -10,7 +10,7 @@
 const TEST_URI = "data:text/html;charset=utf-8," +
   "<p>testing the highlighter goes away on destroy</p>";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector, toolbox } = yield openInspectorForURL(TEST_URI);
   let pickerStopped = toolbox.once("picker-stopped");
 

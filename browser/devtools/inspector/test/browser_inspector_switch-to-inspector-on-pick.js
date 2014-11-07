@@ -9,7 +9,7 @@
 const TEST_URI = "data:text/html;charset=UTF-8," +
   "<p>Switch to inspector on pick</p>";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let tab = yield addTab(TEST_URI);
   let toolbox = yield openToolbox(tab);
 

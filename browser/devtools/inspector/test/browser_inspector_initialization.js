@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 // Tests for different ways to initialize the inspector.
@@ -19,10 +20,9 @@ const DOCUMENT_HTML = '<div id="first" style="{margin: 10em; font-size: 14pt;' +
   '<p id="closing">end transmission</p>\n' +
   '</div>';
 
-const TEST_URI = "data:text/html;charset=utf-8," +
-  "browser_inspector_initialization.js";
+const TEST_URI = "data:text/html;charset=utf-8,test page";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let tab = yield addTab(TEST_URI);
   content.document.body.innerHTML = DOCUMENT_HTML;
   content.document.title = "Inspector Initialization Test";
@@ -44,17 +44,16 @@ function* testToolboxInitialization(tab) {
   ok(inspector.isReady, "Inspector instance is ready.");
   is(inspector.target.tab, tab, "Valid target.");
 
-  let p = getNode("p");
-  yield selectNode(p, inspector);
-  testMarkupView(p, inspector);
-  testBreadcrumbs(p, inspector);
+  yield selectNode("p", inspector);
+  yield testMarkupView("p", inspector);
+  yield testBreadcrumbs("p", inspector);
 
   let span = getNode("span");
   span.scrollIntoView();
 
-  yield selectNode(span, inspector);
-  testMarkupView(span, inspector);
-  testBreadcrumbs(span, inspector);
+  yield selectNode("span", inspector);
+  yield testMarkupView("span", inspector);
+  yield testBreadcrumbs("span", inspector);
 
   info("Destroying toolbox");
   let destroyed = toolbox.once("destroyed");
@@ -72,8 +71,8 @@ function* testContextMenuInitialization() {
   yield clickOnInspectMenuItem(salutation);
 
   info("Checking inspector state.");
-  testMarkupView(salutation);
-  testBreadcrumbs(salutation);
+  yield testMarkupView("#salutation");
+  yield testBreadcrumbs("#salutation");
 }
 
 function* testContextMenuInspectorAlreadyOpen() {
@@ -86,14 +85,15 @@ function* testContextMenuInspectorAlreadyOpen() {
   yield clickOnInspectMenuItem(closing);
 
   ok(true, "Inspector was updated when 'Inspect Element' was clicked.");
-  testMarkupView(closing, inspector);
-  testBreadcrumbs(closing, inspector);
+  yield testMarkupView("#closing", inspector);
+  yield testBreadcrumbs("#closing", inspector);
 }
 
-function testMarkupView(node, inspector) {
+function* testMarkupView(selector, inspector) {
   inspector = inspector || getActiveInspector();
+  let nodeFront = yield getNodeFront(selector, inspector);
   try {
-    is(inspector.markup._selectedContainer.node.rawNode(), node,
+    is(inspector.selection.nodeFront, nodeFront,
        "Right node is selected in the markup view");
   } catch(ex) {
     ok(false, "Got exception while resolving selected node of markup view.");
@@ -101,10 +101,12 @@ function testMarkupView(node, inspector) {
   }
 }
 
-function testBreadcrumbs(node, inspector) {
+function* testBreadcrumbs(selector, inspector) {
   inspector = inspector || getActiveInspector();
+  let nodeFront = yield getNodeFront(selector, inspector);
+
   let b = inspector.breadcrumbs;
-  let expectedText = b.prettyPrintNodeAsText(getNodeFront(node));
+  let expectedText = b.prettyPrintNodeAsText(nodeFront);
   let button = b.container.querySelector("button[checked=true]");
   ok(button, "A crumbs is checked=true");
   is(button.getAttribute("tooltiptext"), expectedText, "Crumb refers to the right node");

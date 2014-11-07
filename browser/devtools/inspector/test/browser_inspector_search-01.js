@@ -51,7 +51,7 @@ const KEY_STATES = [
   ["r", "p3", false],
 ];
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);
   let { searchBox } = inspector;
 
