@@ -30,16 +30,17 @@ class Image;
 // Image state bitflags.
 enum {
   FLAG_REQUEST_STARTED    = 1u << 0,
-  FLAG_HAS_SIZE           = 1u << 1,
-  FLAG_DECODE_STARTED     = 1u << 2,
-  FLAG_DECODE_STOPPED     = 1u << 3,
-  FLAG_FRAME_STOPPED      = 1u << 4,
-  FLAG_REQUEST_STOPPED    = 1u << 5,
+  FLAG_HAS_SIZE           = 1u << 1,  // STATUS_SIZE_AVAILABLE
+  FLAG_DECODE_STARTED     = 1u << 2,  // STATUS_DECODE_STARTED
+  FLAG_DECODE_STOPPED     = 1u << 3,  // STATUS_DECODE_COMPLETE
+  FLAG_FRAME_STOPPED      = 1u << 4,  // STATUS_FRAME_COMPLETE
+  FLAG_REQUEST_STOPPED    = 1u << 5,  // STATUS_LOAD_COMPLETE
   FLAG_ONLOAD_BLOCKED     = 1u << 6,
   FLAG_ONLOAD_UNBLOCKED   = 1u << 7,
   FLAG_IS_ANIMATED        = 1u << 8,
   FLAG_IS_MULTIPART       = 1u << 9,
-  FLAG_MULTIPART_STOPPED  = 1u << 10
+  FLAG_MULTIPART_STOPPED  = 1u << 10,
+  FLAG_HAS_ERROR          = 1u << 11  // STATUS_ERROR
 };
 
 struct ImageStatusDiff
@@ -47,7 +48,6 @@ struct ImageStatusDiff
   ImageStatusDiff()
     : invalidRect()
     , diffState(0)
-    , diffImageStatus(0)
   { }
 
   static ImageStatusDiff NoChange() { return ImageStatusDiff(); }
@@ -56,19 +56,16 @@ struct ImageStatusDiff
   bool operator!=(const ImageStatusDiff& aOther) const { return !(*this == aOther); }
   bool operator==(const ImageStatusDiff& aOther) const {
     return aOther.invalidRect == invalidRect
-        && aOther.diffState == diffState
-        && aOther.diffImageStatus == diffImageStatus;
+        && aOther.diffState == diffState;
   }
 
   void Combine(const ImageStatusDiff& aOther) {
     invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
-    diffImageStatus |= aOther.diffImageStatus;
   }
 
   nsIntRect invalidRect;
   uint32_t  diffState;
-  uint32_t  diffImageStatus;
 };
 
 } // namespace image
@@ -306,7 +303,6 @@ private:
   mozilla::RefPtr<imgDecoderObserver> mTrackerObserver;
 
   uint32_t mState;
-  uint32_t mImageStatus;
 };
 
 class imgStatusTrackerInit
