@@ -6,7 +6,7 @@ if (!this.hasOwnProperty("TypedObject"))
 
 var { ArrayType, StructType, uint32 } = TypedObject;
 var Point = new StructType({x: uint32, y: uint32});
-var Points = Point.array();
+var Points = Point.array(0);
 var points = new Points();
 points.mapPar(function() {});
 

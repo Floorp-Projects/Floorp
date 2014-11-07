@@ -284,7 +284,6 @@
     _(TypedArrayLength)             \
     _(TypedArrayElements)           \
     _(TypedObjectProto)             \
-    _(TypedObjectUnsizedLength)     \
     _(TypedObjectElements)          \
     _(SetTypedObjectOffset)         \
     _(StringLength)                 \

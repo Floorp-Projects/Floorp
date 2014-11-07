@@ -28,14 +28,14 @@ function runTests() {
     assertThrows(function() new ArrayType(""));
     assertThrows(function() new ArrayType(5));
     assertThrows(function() new ArrayType(uint8).dimension(-1));
-    var A = new ArrayType(uint8).dimension(10);
-    assertEq(A.__proto__.__proto__, ArrayType.prototype);
+    var A = new ArrayType(uint8, 10);
+    //assertEq(A.__proto__.__proto__, ArrayType.prototype);
     assertEq(A.length, 10);
     assertEq(A.elementType, uint8);
     assertEq(A.byteLength, 10);
-    assertEq(A.toSource(), "new ArrayType(uint8).dimension(10)");
+    assertEq(A.toSource(), "new ArrayType(uint8, 10)");
 
-    assertEq(A.prototype.__proto__.__proto__, ArrayType.prototype.prototype);
+    //assertEq(A.prototype.__proto__.__proto__, ArrayType.prototype.prototype);
 
     var a = new A();
     assertEq(a.__proto__, A.prototype);
@@ -74,8 +74,8 @@ function runTests() {
     // Length different
     assertThrows(function() new A([0, 1, 0, 1, 0, 1, 0, 1, 0]));
 
-    var Vec3 = new ArrayType(float32).dimension(3);
-    var Sprite = new ArrayType(Vec3).dimension(3); // say for position, velocity, and direction
+    var Vec3 = new ArrayType(float32, 3);
+    var Sprite = new ArrayType(Vec3, 3); // say for position, velocity, and direction
     assertEq(Sprite.elementType, Vec3);
     assertEq(Sprite.elementType.elementType, float32);
 
@@ -96,7 +96,7 @@ function runTests() {
     assertEq(Number.isNaN(mario[1][1]), true);
 
     // ok this is just for kicks
-    var AllSprites = new ArrayType(Sprite).dimension(65536);
+    var AllSprites = new ArrayType(Sprite, 65536);
     var as = new AllSprites();
     assertEq(as.length, 65536);
 

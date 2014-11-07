@@ -21,9 +21,8 @@ if (!this.TypedObject) {
 }
 
 var T = TypedObject;
-var AT = new T.ArrayType(T.int32);
-var IT = AT.dimension(100);
-var ix = AT.build(100, x => x == 0 ? 99 : x-1);  // [99, 0, 1, ..., 98]
+var IT = new T.ArrayType(T.int32, 100);
+var ix = IT.build(x => x == 0 ? 99 : x-1);  // [99, 0, 1, ..., 98]
 
 // This is a left-rotate by one place
 function check(v) {
@@ -31,7 +30,7 @@ function check(v) {
 }
 
 function test() {
-    var w = AT.build(100, x => x);
+    var w = IT.build(x => x);
     for ( var i=0 ; i < 77 ; i++ )
 	w = check(w);
     return w;

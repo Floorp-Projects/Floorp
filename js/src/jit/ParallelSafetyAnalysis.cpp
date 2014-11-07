@@ -249,7 +249,6 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     SAFE_OP(TypedArrayLength)
     SAFE_OP(TypedArrayElements)
     SAFE_OP(TypedObjectProto)
-    SAFE_OP(TypedObjectUnsizedLength)
     SAFE_OP(TypedObjectElements)
     SAFE_OP(SetTypedObjectOffset)
     SAFE_OP(InitializedLength)

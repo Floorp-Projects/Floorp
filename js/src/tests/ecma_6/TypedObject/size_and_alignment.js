@@ -39,9 +39,9 @@ function runTests() {
 
     {type: new StructType({a: uint8, b: uint8, c: uint16}), size: 4, alignment: 2},
 
-    {type: new ArrayType(uint8).dimension(32), size: 32, alignment: 1},
-    {type: new ArrayType(uint16).dimension(16), size: 32, alignment: 2},
-    {type: new ArrayType(uint32).dimension(8), size: 32, alignment: 4},
+    {type: new ArrayType(uint8, 32), size: 32, alignment: 1},
+    {type: new ArrayType(uint16, 16), size: 32, alignment: 2},
+    {type: new ArrayType(uint32, 8), size: 32, alignment: 4},
   ];
 
   for (var i = 0; i < typesAndAlignments.length; i++) {

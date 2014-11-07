@@ -1014,9 +1014,9 @@ JSObject *
 CreateDerivedTypedObj(JSContext *cx, HandleObject descr,
                       HandleObject owner, int32_t offset)
 {
-    MOZ_ASSERT(descr->is<SizedTypeDescr>());
+    MOZ_ASSERT(descr->is<TypeDescr>());
     MOZ_ASSERT(owner->is<TypedObject>());
-    Rooted<SizedTypeDescr*> descr1(cx, &descr->as<SizedTypeDescr>());
+    Rooted<TypeDescr*> descr1(cx, &descr->as<TypeDescr>());
     Rooted<TypedObject*> owner1(cx, &owner->as<TypedObject>());
     return OutlineTypedObject::createDerived(cx, descr1, owner1, offset);
 }
