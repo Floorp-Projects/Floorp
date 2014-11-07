@@ -27,6 +27,18 @@ namespace image {
 
 class Image;
 
+// Image state bitflags.
+enum {
+  FLAG_REQUEST_STARTED    = 1u << 0,
+  FLAG_HAS_SIZE           = 1u << 1,
+  FLAG_DECODE_STARTED     = 1u << 2,
+  FLAG_DECODE_STOPPED     = 1u << 3,
+  FLAG_FRAME_STOPPED      = 1u << 4,
+  FLAG_REQUEST_STOPPED    = 1u << 5,
+  FLAG_ONLOAD_BLOCKED     = 1u << 6,
+  FLAG_IS_ANIMATED        = 1u << 7
+};
+
 struct ImageStatusDiff
 {
   ImageStatusDiff()
@@ -78,17 +90,6 @@ struct ImageStatusDiff
   bool      foundIsMultipart   : 1;
   bool      foundLastPart      : 1;
   bool      gotDecoded         : 1;
-};
-
-enum {
-  stateRequestStarted    = 1u << 0,
-  stateHasSize           = 1u << 1,
-  stateDecodeStarted     = 1u << 2,
-  stateDecodeStopped     = 1u << 3,
-  stateFrameStopped      = 1u << 4,
-  stateRequestStopped    = 1u << 5,
-  stateBlockingOnload    = 1u << 6,
-  stateImageIsAnimated   = 1u << 7
 };
 
 } // namespace image
