@@ -16,6 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "DrawMode.h"
 #include "harfbuzz/hb.h"
+#include "nsUnicodeScriptCodes.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -27,6 +28,7 @@ class gfxUserFontSet;
 class gfxTextContextPaint;
 class nsIAtom;
 class nsILanguageAtomService;
+class gfxMissingFontRecorder;
 
 /**
  * Callback for Draw() to use when drawing text with mode
@@ -764,7 +766,8 @@ public:
      * This calls FetchGlyphExtents on the textrun.
      */
     virtual gfxTextRun *MakeTextRun(const char16_t *aString, uint32_t aLength,
-                                    const Parameters *aParams, uint32_t aFlags);
+                                    const Parameters *aParams, uint32_t aFlags,
+                                    gfxMissingFontRecorder *aMFR);
     /**
      * Make a textrun for a given string.
      * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
@@ -772,7 +775,8 @@ public:
      * This calls FetchGlyphExtents on the textrun.
      */
     virtual gfxTextRun *MakeTextRun(const uint8_t *aString, uint32_t aLength,
-                                    const Parameters *aParams, uint32_t aFlags);
+                                    const Parameters *aParams, uint32_t aFlags,
+                                    gfxMissingFontRecorder *aMFR);
 
     /**
      * Textrun creation helper for clients that don't want to pass
@@ -782,12 +786,13 @@ public:
     gfxTextRun *MakeTextRun(const T *aString, uint32_t aLength,
                             gfxContext *aRefContext,
                             int32_t aAppUnitsPerDevUnit,
-                            uint32_t aFlags)
+                            uint32_t aFlags,
+                            gfxMissingFontRecorder *aMFR)
     {
         gfxTextRunFactory::Parameters params = {
             aRefContext, nullptr, nullptr, nullptr, 0, aAppUnitsPerDevUnit
         };
-        return MakeTextRun(aString, aLength, &params, aFlags);
+        return MakeTextRun(aString, aLength, &params, aFlags, aMFR);
     }
 
     /**
@@ -1083,7 +1088,8 @@ protected:
     void InitTextRun(gfxContext *aContext,
                      gfxTextRun *aTextRun,
                      const T *aString,
-                     uint32_t aLength);
+                     uint32_t aLength,
+                     gfxMissingFontRecorder *aMFR);
 
     // InitTextRun helper to handle a single script run, by finding font ranges
     // and calling each font's InitTextRun() as appropriate
@@ -1093,7 +1099,8 @@ protected:
                        const T *aString,
                        uint32_t aScriptRunStart,
                        uint32_t aScriptRunEnd,
-                       int32_t aRunScript);
+                       int32_t aRunScript,
+                       gfxMissingFontRecorder *aMFR);
 
     // Helper for font-matching:
     // When matching the italic case, allow use of the regular face
@@ -1119,4 +1126,54 @@ protected:
 
     static nsILanguageAtomService* gLangService;
 };
+
+// A "missing font recorder" is to be used during text-run creation to keep
+// a record of any scripts encountered for which font coverage was lacking;
+// when Flush() is called, it sends a notification that front-end code can use
+// to download fonts on demand (or whatever else it wants to do).
+
+#define GFX_MISSING_FONTS_NOTIFY_PREF "gfx.missing_fonts.notify"
+
+class gfxMissingFontRecorder {
+public:
+    gfxMissingFontRecorder()
+    {
+        memset(&mMissingFonts, 0, sizeof(mMissingFonts));
+    }
+
+    ~gfxMissingFontRecorder()
+    {
+#ifdef DEBUG
+        for (uint32_t i = 0; i < kNumScriptBitsWords; i++) {
+            NS_ASSERTION(mMissingFonts[i] == 0,
+                         "failed to flush the missing-font recorder");
+        }
+#endif
+    }
+
+    // record this script code in our mMissingFonts bitset
+    void RecordScript(int32_t aScriptCode)
+    {
+        mMissingFonts[uint32_t(aScriptCode) >> 5] |=
+            (1 << (uint32_t(aScriptCode) & 0x1f));
+    }
+
+    // send a notification of any missing-scripts that have been
+    // recorded, and clear the mMissingFonts set for re-use
+    void Flush();
+
+    // forget any missing-scripts that have been recorded up to now;
+    // called before discarding a recorder we no longer care about
+    void Clear()
+    {
+        memset(&mMissingFonts, 0, sizeof(mMissingFonts));
+    }
+
+private:
+    // Number of 32-bit words needed for the missing-script flags
+    static const uint32_t kNumScriptBitsWords =
+        ((MOZ_NUM_SCRIPT_CODES + 31) / 32);
+    uint32_t mMissingFonts[kNumScriptBitsWords];
+};
+
 #endif
