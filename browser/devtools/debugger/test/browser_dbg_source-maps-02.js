@@ -8,12 +8,12 @@
 const TAB_URL = EXAMPLE_URL + "doc_binary_search.html";
 const JS_URL = EXAMPLE_URL + "code_binary_search.js";
 
-let gDebuggee, gPanel, gDebugger, gEditor;
+let gTab, gPanel, gDebugger, gEditor;
 let gSources, gFrames, gPrefs, gOptions;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
-    gDebuggee = aDebuggee;
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+    gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gEditor = gDebugger.DebuggerView.editor;
@@ -81,7 +81,7 @@ function testSetBreakpoint() {
 
       // This will cause the breakpoint to be hit, and put us back in the
       // paused state.
-      gDebuggee.binary_search([0, 2, 3, 5, 7, 10], 5);
+      callInTab(gTab, "binary_search", [0, 2, 3, 5, 7, 10], 5);
     });
   });
 
@@ -135,7 +135,7 @@ function testResume() {
 }
 
 registerCleanupFunction(function() {
-  gDebuggee = null;
+  gTab = null;
   gPanel = null;
   gDebugger = null;
   gEditor = null;

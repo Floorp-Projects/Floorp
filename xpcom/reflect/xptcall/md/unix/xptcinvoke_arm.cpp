@@ -224,6 +224,7 @@ static inline void copy_dword(uint32_t* &ireg_args,
     *(uint64_t *)ireg_args = data;
     ireg_args += 2;
   } else {
+    ireg_args = end;
     if ((uint32_t)stack_args & 4) {
       stack_args++;
     }

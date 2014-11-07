@@ -963,7 +963,10 @@ function waitForMessageFromTab(tab, name) {
 function callInTab(tab, name) {
   info("Calling function with name " + name + " in tab.");
 
-  sendMessageToTab(tab, "test:call", name);
+  sendMessageToTab(tab, "test:call", {
+    name: name,
+    args: Array.prototype.slice.call(arguments, 2)
+  });
   waitForMessageFromTab(tab, "test:call");
 }
 
