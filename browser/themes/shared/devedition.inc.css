@@ -128,8 +128,8 @@
   color: var(--chrome-color);
 }
 
-#navigator-toolbox .toolbarbutton-1:not(.subviewbutton):not(:hover):not([open]),
-toolbarbutton.bookmark-item:not(.subviewbutton):not(:hover):not([open]) {
+#navigator-toolbox .toolbarbutton-1,
+#PlacesToolbar toolbarbutton.bookmark-item {
   color: var(--chrome-color);
   text-shadow: var(--toolbarbutton-text-shadow);
 }

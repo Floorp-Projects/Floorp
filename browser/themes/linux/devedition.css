@@ -20,8 +20,8 @@
 }
 
 /* Allow buttons with -moz-appearance set to look normal on hover and open states */
-#navigator-toolbox .toolbarbutton-1:not(.subviewbutton):-moz-any(:hover, [open="true"]),
-toolbarbutton.bookmark-item:not(.subviewbutton):-moz-any(:hover, [open="true"]) {
+#navigator-toolbox .toolbarbutton-1:-moz-any(:hover, [open="true"]),
+#PlacesToolbar toolbarbutton.bookmark-item:-moz-any(:hover, [open="true"]) {
   color: initial;
 }
 
