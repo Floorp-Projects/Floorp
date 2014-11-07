@@ -1543,6 +1543,8 @@ public class BrowserApp extends GeckoApp
                     BrowserDB.getCount(getContentResolver(), "favicons"));
             Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT",
                     BrowserDB.getCount(getContentResolver(), "thumbnails"));
+            Telemetry.HistogramAdd("FENNEC_READING_LIST_COUNT",
+                    BrowserDB.getCount(getContentResolver(), "readinglist"));
             Telemetry.HistogramAdd("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser(Intent.ACTION_VIEW) ? 1 : 0));
             if (Versions.feature16Plus) {
                 Telemetry.HistogramAdd("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
