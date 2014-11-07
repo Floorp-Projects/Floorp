@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/social/xpcshell.ini',
     'test/xpcshell/xpcshell.ini',
@@ -29,7 +28,6 @@ EXTRA_JS_MODULES += [
     'offlineAppCache.jsm',
     'PanelFrame.jsm',
     'RemotePrompt.jsm',
-    'SharedFrame.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
     'TabCrashReporter.jsm',

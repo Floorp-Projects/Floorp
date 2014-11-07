@@ -11,11 +11,13 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/TimeStamp.h"
 #ifdef XP_WIN
 #include "mozilla/TimeStamp_windows.h"
 #endif
 #include "mozilla/TypedEnum.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/IntegerTypeTraits.h"
 
 #include <stdint.h>
@@ -464,12 +466,51 @@ struct ParamTraits<FallibleTArray<E> >
 {
   typedef FallibleTArray<E> paramType;
 
+  // We write arrays of integer or floating-point data using a single pickling
+  // call, rather than writing each element individually.  We deliberately do
+  // not use mozilla::IsPod here because it is perfectly reasonable to have
+  // a data structure T for which IsPod<T>::value is true, yet also have a
+  // ParamTraits<T> specialization.
+  static const bool sUseWriteBytes = (mozilla::IsIntegral<E>::value ||
+                                      mozilla::IsFloatingPoint<E>::value);
+
+  // Compute the byte length for |aNumElements| of type E.  If that length
+  // would overflow an int, return false.  Otherwise, return true and place
+  // the byte length in |aTotalLength|.
+  //
+  // Pickle's ReadBytes/WriteBytes interface takes lengths in ints, hence this
+  // dance.
+  static bool ByteLengthIsValid(size_t aNumElements, int* aTotalLength) {
+    static_assert(sizeof(int) == sizeof(int32_t), "int is an unexpected size!");
+
+    // nsTArray only handles sizes up to INT32_MAX.
+    if (aNumElements > size_t(INT32_MAX)) {
+      return false;
+    }
+
+    int64_t numBytes = static_cast<int64_t>(aNumElements) * sizeof(E);
+    if (numBytes > int64_t(INT32_MAX)) {
+      return false;
+    }
+
+    *aTotalLength = static_cast<int>(numBytes);
+    return true;
+  }
+
   static void Write(Message* aMsg, const paramType& aParam)
   {
     uint32_t length = aParam.Length();
     WriteParam(aMsg, length);
-    for (uint32_t index = 0; index < length; index++) {
-      WriteParam(aMsg, aParam[index]);
+
+    if (sUseWriteBytes) {
+      int pickledLength = 0;
+      mozilla::DebugOnly<bool> valid = ByteLengthIsValid(length, &pickledLength);
+      MOZ_ASSERT(valid);
+      aMsg->WriteBytes(aParam.Elements(), pickledLength);
+    } else {
+      for (uint32_t index = 0; index < length; index++) {
+        WriteParam(aMsg, aParam[index]);
+      }
     }
   }
 
@@ -480,11 +521,34 @@ struct ParamTraits<FallibleTArray<E> >
       return false;
     }
 
-    aResult->SetCapacity(length);
-    for (uint32_t index = 0; index < length; index++) {
-      E* element = aResult->AppendElement();
-      if (!(element && ReadParam(aMsg, aIter, element))) {
+    if (sUseWriteBytes) {
+      int pickledLength = 0;
+      if (!ByteLengthIsValid(length, &pickledLength)) {
         return false;
+      }
+
+      const char* outdata;
+      if (!aMsg->ReadBytes(aIter, &outdata, pickledLength)) {
+        return false;
+      }
+
+      E* elements = aResult->AppendElements(length);
+      if (!elements) {
+        return false;
+      }
+
+      memcpy(elements, outdata, pickledLength);
+    } else {
+      if (!aResult->SetCapacity(length)) {
+        return false;
+      }
+
+      for (uint32_t index = 0; index < length; index++) {
+        E* element = aResult->AppendElement();
+        MOZ_ASSERT(element);
+        if (!ReadParam(aMsg, aIter, element)) {
+          return false;
+        }
       }
     }
 
