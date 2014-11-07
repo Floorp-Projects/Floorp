@@ -407,29 +407,6 @@ operator!=(NSCAP_Zero* aLhs, const nsAutoPtr<T>& aRhs)
 }
 
 
-#ifdef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
-
-// We need to explicitly define comparison operators for `int'
-// because the compiler is lame.
-
-template <class T>
-inline bool
-operator==(const nsAutoPtr<T>& aLhs, int aRhs)
-// specifically to allow |smartPtr == 0|
-{
-  return static_cast<const void*>(aLhs.get()) == reinterpret_cast<const void*>(aRhs);
-}
-
-template <class T>
-inline bool
-operator==(int aLhs, const nsAutoPtr<T>& aRhs)
-// specifically to allow |0 == smartPtr|
-{
-  return reinterpret_cast<const void*>(aLhs) == static_cast<const void*>(aRhs.get());
-}
-
-#endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
-
 /*****************************************************************************/
 
 // template <class T> class nsAutoArrayPtrGetterTransfers;
@@ -781,29 +758,6 @@ operator!=(NSCAP_Zero* aLhs, const nsAutoArrayPtr<T>& aRhs)
   return reinterpret_cast<const void*>(aLhs) != static_cast<const void*>(aRhs.get());
 }
 
-
-#ifdef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
-
-// We need to explicitly define comparison operators for `int'
-// because the compiler is lame.
-
-template <class T>
-inline bool
-operator==(const nsAutoArrayPtr<T>& aLhs, int aRhs)
-// specifically to allow |smartPtr == 0|
-{
-  return static_cast<const void*>(aLhs.get()) == reinterpret_cast<const void*>(aRhs);
-}
-
-template <class T>
-inline bool
-operator==(int aLhs, const nsAutoArrayPtr<T>& aRhs)
-// specifically to allow |0 == smartPtr|
-{
-  return reinterpret_cast<const void*>(aLhs) == static_cast<const void*>(aRhs.get());
-}
-
-#endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
 
 /*****************************************************************************/
 
