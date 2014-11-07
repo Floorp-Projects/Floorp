@@ -20,15 +20,12 @@ function spawnTest () {
     "ChannelSplitterNode", "ChannelMergerNode", "DynamicsCompressorNode", "OscillatorNode"
   ];
 
-  // For some reason nodeTypes.forEach and params.forEach fail here so we use
-  // simple for loops.
-  for (let i = 0; i < nodeTypes.length; i++) {
-    let type = nodeTypes[i];
+  nodeTypes.forEach(function (type, i) {
     let params = allNodeParams[i];
+    params.forEach(function ({param, value, flags}) {
 
-    for (let {param, value, flags} of params) {
-      let testFlags = yield nodes[i].getParamFlags(param);
-      ok(typeof testFlags === "object", type + " has flags from #getParamFlags(" + param + ")");
+      let testFlags = yield nodes[i].getParamFlag(param);
+      ok(typeof testFlags === "object", type + " has flags from #getParamFlag(" + param + ")");
 
       if (param === "buffer") {
         is(flags.Buffer, true, "`buffer` params have Buffer flag");
@@ -41,8 +38,8 @@ function spawnTest () {
       } else {
         is(Object.keys(flags), 0, type + "-" + param + " has no flags set")
       }
-    }
-  }
+    });
+  });
 
   yield removeTab(target.tab);
   finish();
