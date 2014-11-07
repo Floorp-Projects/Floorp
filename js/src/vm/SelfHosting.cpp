@@ -914,18 +914,6 @@ js::intrinsic_TypeDescrIsArrayType(JSContext *cx, unsigned argc, Value *vp)
     return js::TypeDescrIsArrayType(cx, argc, vp);
 }
 
-bool
-js::intrinsic_TypeDescrIsUnsizedArrayType(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::TypeDescrIsUnsizedArrayType(cx, argc, vp);
-}
-
-bool
-js::intrinsic_TypeDescrIsSizedArrayType(JSContext *cx, unsigned argc, Value *vp)
-{
-    return js::TypeDescrIsSizedArrayType(cx, argc, vp);
-}
-
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -1131,12 +1119,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FNINFO("TypeDescrIsArrayType",
               intrinsic_TypeDescrIsArrayType,
               &js::TypeDescrIsArrayTypeJitInfo, 1, 0),
-    JS_FNINFO("TypeDescrIsUnsizedArrayType",
-              intrinsic_TypeDescrIsUnsizedArrayType,
-              &js::TypeDescrIsUnsizedArrayTypeJitInfo, 1, 0),
-    JS_FNINFO("TypeDescrIsSizedArrayType",
-              intrinsic_TypeDescrIsSizedArrayType,
-              &js::TypeDescrIsSizedArrayTypeJitInfo, 1, 0),
     JS_FNINFO("TypeDescrIsSimpleType",
               intrinsic_TypeDescrIsSimpleType,
               &js::TypeDescrIsSimpleTypeJitInfo, 1, 0),

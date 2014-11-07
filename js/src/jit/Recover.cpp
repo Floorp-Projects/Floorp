@@ -1113,7 +1113,7 @@ RNewDerivedTypedObject::RNewDerivedTypedObject(CompactBufferReader &reader)
 bool
 RNewDerivedTypedObject::recover(JSContext *cx, SnapshotIterator &iter) const
 {
-    Rooted<SizedTypeDescr *> descr(cx, &iter.read().toObject().as<SizedTypeDescr>());
+    Rooted<TypeDescr *> descr(cx, &iter.read().toObject().as<TypeDescr>());
     Rooted<TypedObject *> owner(cx, &iter.read().toObject().as<TypedObject>());
     int32_t offset = iter.read().toInt32();
 

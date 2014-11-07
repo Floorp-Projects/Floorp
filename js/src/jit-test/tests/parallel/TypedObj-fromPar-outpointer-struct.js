@@ -17,7 +17,7 @@ function test() {
     matrix[i][0] = i;
 
   var Point = new StructType({x: uint32, y: uint32});
-  var Points = Point.array();
+  var Points = Point.array(L);
 
   assertParallelExecSucceeds(
     // FIXME Bug 983692 -- no where to pass `m` to
