@@ -78,7 +78,7 @@ NS_IMETHODIMP
 TelephonyDialCallback::NotifyDialMMISuccess(const nsAString& aStatusMessage)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -96,7 +96,7 @@ TelephonyDialCallback::NotifyDialMMISuccessWithInteger(const nsAString& aStatusM
                                                        uint16_t aAdditionalInformation)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -116,7 +116,7 @@ TelephonyDialCallback::NotifyDialMMISuccessWithStrings(const nsAString& aStatusM
                                                        const char16_t** aAdditionalInformation)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -149,7 +149,7 @@ TelephonyDialCallback::NotifyDialMMISuccessWithCallForwardingOptions(const nsASt
                                                                      nsIMobileCallForwardingOptions** aResults)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
