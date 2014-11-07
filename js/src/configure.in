@@ -2664,24 +2664,6 @@ if test "$ac_cv_cpp_unused_required" = yes ; then
 fi
 
 
-dnl Some compilers have trouble comparing a constant reference to a templatized
-dnl class to zero, and require an explicit operator==() to be defined that takes
-dnl an int. This test separates the strong from the weak.
-
-AC_CACHE_CHECK(for trouble comparing to zero near std::operator!=(),
-               ac_cv_trouble_comparing_to_zero,
-               [AC_TRY_COMPILE([#include <algorithm>
-                                template <class T> class Foo {};
-                                class T2;
-                                template <class T> int operator==(const T2*, const T&) { return 0; }
-                                template <class T> int operator!=(const T2*, const T&) { return 0; }],
-                               [Foo<int> f; return (0 != f);],
-                               ac_cv_trouble_comparing_to_zero=no,
-                               ac_cv_trouble_comparing_to_zero=yes)])
-if test "$ac_cv_trouble_comparing_to_zero" = yes ; then
-  AC_DEFINE(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
-fi
-
 # try harder, when checking for __thread support, see bug 521750 comment #33 and below
 # We pass MOZ_OPTIMIZE_LDFLAGS to the linker because if dead_strip is
 # enabled, the linker in xcode 4.1 will crash. Without this it would crash when
