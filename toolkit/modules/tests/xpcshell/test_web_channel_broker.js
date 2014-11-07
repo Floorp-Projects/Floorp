@@ -5,7 +5,6 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/WebChannel.jsm");
 
@@ -52,34 +51,33 @@ add_test(function test_web_channel_broker_channel_map() {
 /**
  * Test WebChannelBroker _listener test
  */
-add_test(function test_web_channel_broker_listener() {
-  let cb = Async.makeSpinningCallback();
-  var channel = new Object({
-    id: VALID_WEB_CHANNEL_ID,
-    origin: VALID_WEB_CHANNEL_ORIGIN,
-    deliver: function(data, sender) {
-      do_check_eq(data.id, VALID_WEB_CHANNEL_ID);
-      do_check_eq(data.message.command, "hello");
-      WebChannelBroker.unregisterChannel(channel);
-      cb();
-      run_next_test();
-    }
-  });
-
-  WebChannelBroker.registerChannel(channel);
-
-  var mockEvent = {
-    data: {
+add_task(function test_web_channel_broker_listener() {
+  return new Promise((resolve, reject) => {
+    var channel = new Object({
       id: VALID_WEB_CHANNEL_ID,
-      message: {
-        command: "hello"
+      origin: VALID_WEB_CHANNEL_ORIGIN,
+      deliver: function(data, sender) {
+        do_check_eq(data.id, VALID_WEB_CHANNEL_ID);
+        do_check_eq(data.message.command, "hello");
+        WebChannelBroker.unregisterChannel(channel);
+        resolve();
       }
-    },
-    principal: {
-      origin: URL_STRING
-    }
-  };
+    });
 
-  WebChannelBroker._listener(mockEvent);
-  cb.wait();
+    WebChannelBroker.registerChannel(channel);
+
+    var mockEvent = {
+      data: {
+        id: VALID_WEB_CHANNEL_ID,
+        message: {
+          command: "hello"
+        }
+      },
+      principal: {
+        origin: URL_STRING
+      }
+    };
+
+    WebChannelBroker._listener(mockEvent);
+  });
 });
