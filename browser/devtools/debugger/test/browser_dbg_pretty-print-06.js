@@ -8,13 +8,12 @@
 const TAB_URL = EXAMPLE_URL + "doc_included-script.html";
 const JS_URL = EXAMPLE_URL + "code_location-changes.js";
 
-let gTab, gDebuggee, gPanel, gDebugger, gClient;
+let gTab, gPanel, gDebugger, gClient;
 let gEditor, gSources, gControllerSources, gPrettyPrinted;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gClient = gDebugger.gClient;
@@ -83,7 +82,6 @@ function clickPrettyPrintButton() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gClient = null;

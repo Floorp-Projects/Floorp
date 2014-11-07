@@ -8,14 +8,15 @@
 const TAB_URL = EXAMPLE_URL + "doc_event-listeners-02.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+    let gTab = aTab;
     let gDebugger = aPanel.panelWin;
     let gView = gDebugger.DebuggerView;
     let gEvents = gView.EventListeners;
 
     Task.spawn(function() {
       yield waitForSourceShown(aPanel, ".html");
-      aDebuggee.addBodyClickEventListener();
+      yield callInTab(gTab, "addBodyClickEventListener");
 
       let fetched = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_LISTENERS_FETCHED);
       gView.toggleInstrumentsPane({ visible: true, animated: false }, 1);
@@ -33,11 +34,7 @@ function test() {
       yield ensureThreadClientState(aPanel, "resumed");
 
       let paused = waitForCaretAndScopes(aPanel, 48);
-      // Spin the event loop before causing the debuggee to pause, to allow
-      // this function to yield first.
-      executeSoon(() => {
-        EventUtils.sendMouseEvent({ type: "click" }, aDebuggee.document.body, aDebuggee);
-      });
+      sendMouseClickToTab(gTab, content.document.body);
       yield paused;
       yield ensureThreadClientState(aPanel, "paused");
 

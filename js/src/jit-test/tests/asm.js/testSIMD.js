@@ -36,33 +36,16 @@ function assertEqX4(real, expected, assertFunc) {
 
 function CheckI4(header, code, expected) {
     // code needs to contain a local called x
-    header = USE_ASM + I32 + header;
-    var lanes = ['x', 'y', 'z', 'w'];
-    for (var i = 0; i < 4; ++i) {
-        var lane = lanes[i];
-        assertEq(asmLink(asmCompile('glob', header + ';function f() {' + code + ';return x.' + lane + '|0} return f'), this)(), expected[i]);
-    }
+    header = USE_ASM + I32 + F32 + header;
+    var observed = asmLink(asmCompile('glob', header + ';function f() {' + code + ';return i4(x)} return f'), this)();
+    assertEqX4(observed, expected);
 }
 
 function CheckF4(header, code, expected) {
     // code needs to contain a local called x
-    var lanes = ['x', 'y', 'z', 'w'];
     header = USE_ASM + F32 + header;
-    for (var i = 0; i < 4; ++i) {
-        var lane = lanes[i];
-        assertEq(asmLink(asmCompile('glob', header + ';function f() {' + code + ';return +x.' + lane + '} return f'), this)(), Math.fround(expected[i]));
-    }
-}
-
-function CheckF4Comp(header, code, expected) {
-    // code needs to contain a local called x containing the result of the
-    // comparison
-    var lanes = ['x', 'y', 'z', 'w'];
-    header = USE_ASM + F32 + I32 + header;
-    for (var i = 0; i < 4; ++i) {
-        var lane = lanes[i];
-        assertEq(asmLink(asmCompile('glob', header + ';function f() {' + code + ';return x.' + lane + '|0} return f'), this)(), expected[i]);
-    }
+    var observed = asmLink(asmCompile('glob', header + ';function f() {' + code + ';return f4(x)} return f'), this)();
+    assertEqX4(observed, expected.map(Math.fround));
 }
 
 try {
@@ -165,21 +148,34 @@ assertAsmTypeFail('glob', USE_ASM + "var f32=glob.Math.fround;" + I32 + "functio
 
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); return x.length|0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4).y; return x|0;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); return (x.x > (1>>>0)) | 0;} return f");
 
-CheckI4('', 'var x=i4(0,0,0,0)', [0,0,0,0]);
-CheckI4('', 'var x=i4(1,2,3,4)', [1,2,3,4]);
-CheckI4('', 'var x=i4(' + INT32_MIN + ',2,3,' + INT32_MAX + ')', [INT32_MIN,2,3,INT32_MAX]);
-CheckI4('', 'var x=i4(1,2,3,4); var y=i4(5,6,7,8)', [1,2,3,4]);
-CheckI4('', 'var a=1; var b=i4(9,8,7,6); var c=13.37; var x=i4(1,2,3,4); var y=i4(5,6,7,8)', [1,2,3,4]);
-CheckI4('', 'var y=i4(5,6,7,8); var x=i4(1,2,3,4)', [1,2,3,4]);
+function CheckSignMask(innerBody, coerceBefore, coerceAfter, expected) {
+    var lanes = ['x', 'y', 'z', 'w'];
+    for (var i = 0; i < lanes.length; i++) {
+        var lane = lanes[i];
+        var laneCheckCode = `"use asm"; var i4=glob.SIMD.int32x4; var f4=glob.SIMD.float32x4; function f() {${innerBody}; return ${coerceBefore}x.${lane}${coerceAfter} } return f;`;
+        assertEq(asmLink(asmCompile('glob', laneCheckCode), this)(), expected[i]);
+    }
+}
+function CheckSignMaskI4(innerBody, expected) { return CheckSignMask(innerBody, '', '|0', expected); }
+function CheckSignMaskF4(innerBody, expected) { return CheckSignMask(innerBody, '+', '', expected.map(Math.fround)); }
 
-CheckF4('', 'var x=f4(' + INT32_MAX + ', 2, 3, ' + INT32_MIN + ')', [INT32_MAX, 2, 3, INT32_MIN]);
-CheckF4('', 'var x=f4(' + (INT32_MAX + 1) + ', 2, 3, 4)', [INT32_MAX + 1, 2, 3, 4]);
-CheckF4('', 'var x=f4(1.3, 2.4, 3.5, 98.76)', [1.3, 2.4, 3.5, 98.76]);
-CheckF4('', 'var x=f4(13.37, 2., 3., -0)', [13.37, 2, 3, -0]);
+CheckSignMaskI4('var x=i4(0,0,0,0);', [0,0,0,0]);
+CheckSignMaskI4('var x=i4(1,2,3,4);', [1,2,3,4]);
+CheckSignMaskI4('var x=i4(' + INT32_MIN + ',2,3,' + INT32_MAX + ')', [INT32_MIN,2,3,INT32_MAX]);
+CheckSignMaskI4('var x=i4(1,2,3,4); var y=i4(5,6,7,8)', [1,2,3,4]);
+CheckSignMaskI4('var a=1; var b=i4(9,8,7,6); var c=13.37; var x=i4(1,2,3,4); var y=i4(5,6,7,8)', [1,2,3,4]);
+CheckSignMaskI4('var y=i4(5,6,7,8); var x=i4(1,2,3,4)', [1,2,3,4]);
+
+CheckSignMaskF4('var x=f4(' + INT32_MAX + ', 2, 3, ' + INT32_MIN + ')', [INT32_MAX, 2, 3, INT32_MIN]);
+CheckSignMaskF4('var x=f4(' + (INT32_MAX + 1) + ', 2, 3, 4)', [INT32_MAX + 1, 2, 3, 4]);
+CheckSignMaskF4('var x=f4(1.3, 2.4, 3.5, 98.76)', [1.3, 2.4, 3.5, 98.76]);
+CheckSignMaskF4('var x=f4(13.37, 2., 3., -0)', [13.37, 2, 3, -0]);
 
 // signMask
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); var y=0.0; y=x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); return (x.signMask > (1>>>0)) | 0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + FROUND + "function f() {var x=i4(1,2,3,4); var y=f32(0.0); y=x.signMask;} return f");
 
 assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42; return x.signMask;} return f");
@@ -606,35 +602,35 @@ const NEF32 = 'var ne=f4.notEqual;';
 
 assertAsmTypeFail('glob', USE_ASM + F32 + "var lt=f4.lessThan; function f() {var x=f4(1,2,3,4); var y=f4(5,6,7,8); x=lt(x,y);} return f");
 
-CheckF4Comp(LTF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=lt(y,z)', [F, F, F, F]);
-CheckF4Comp(LTF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=lt(y,z)', [T, T, T, T]);
-CheckF4Comp(LTF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=lt(y,z)', [F, T, T, F]);
-CheckF4Comp(LTF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=lt(y,z);', [F, F, F, F]);
+CheckI4(LTF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=lt(y,z)', [F, F, F, F]);
+CheckI4(LTF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=lt(y,z)', [T, T, T, T]);
+CheckI4(LTF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=lt(y,z)', [F, T, T, F]);
+CheckI4(LTF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=lt(y,z);', [F, F, F, F]);
 
-CheckF4Comp(LEF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=le(y,z)', [F, F, F, F]);
-CheckF4Comp(LEF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=le(y,z)', [T, T, T, T]);
-CheckF4Comp(LEF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=le(y,z)', [T, T, T, F]);
-CheckF4Comp(LEF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=le(y,z);', [T, T, F, F]);
+CheckI4(LEF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=le(y,z)', [F, F, F, F]);
+CheckI4(LEF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=le(y,z)', [T, T, T, T]);
+CheckI4(LEF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=le(y,z)', [T, T, T, F]);
+CheckI4(LEF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=le(y,z);', [T, T, F, F]);
 
-CheckF4Comp(EQF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=eq(y,z)', [F, F, F, F]);
-CheckF4Comp(EQF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=eq(y,z)', [F, F, F, F]);
-CheckF4Comp(EQF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=eq(y,z)', [T, F, F, F]);
-CheckF4Comp(EQF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=eq(y,z);', [T, T, F, F]);
+CheckI4(EQF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=eq(y,z)', [F, F, F, F]);
+CheckI4(EQF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=eq(y,z)', [F, F, F, F]);
+CheckI4(EQF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=eq(y,z)', [T, F, F, F]);
+CheckI4(EQF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=eq(y,z);', [T, T, F, F]);
 
-CheckF4Comp(NEF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=ne(y,z)', [T, T, T, T]);
-CheckF4Comp(NEF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=ne(y,z)', [T, T, T, T]);
-CheckF4Comp(NEF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=ne(y,z)', [F, T, T, T]);
-CheckF4Comp(NEF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=ne(y,z);', [F, F, T, T]);
+CheckI4(NEF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=ne(y,z)', [T, T, T, T]);
+CheckI4(NEF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=ne(y,z)', [T, T, T, T]);
+CheckI4(NEF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=ne(y,z)', [F, T, T, T]);
+CheckI4(NEF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=ne(y,z);', [F, F, T, T]);
 
-CheckF4Comp(GTF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=gt(y,z)', [T, T, T, T]);
-CheckF4Comp(GTF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=gt(y,z)', [F, F, F, F]);
-CheckF4Comp(GTF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=gt(y,z)', [F, F, F, T]);
-CheckF4Comp(GTF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=gt(y,z);', [F, F, F, F]);
+CheckI4(GTF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=gt(y,z)', [T, T, T, T]);
+CheckI4(GTF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=gt(y,z)', [F, F, F, F]);
+CheckI4(GTF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=gt(y,z)', [F, F, F, T]);
+CheckI4(GTF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=gt(y,z);', [F, F, F, F]);
 
-CheckF4Comp(GEF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=ge(y,z)', [T, T, T, T]);
-CheckF4Comp(GEF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=ge(y,z)', [F, F, F, F]);
-CheckF4Comp(GEF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=ge(y,z)', [T, F, F, T]);
-CheckF4Comp(GEF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=ge(y,z);', [T, T, F, F]);
+CheckI4(GEF32, 'var y=f4(1,2,3,4);  var z=f4(-1,1,0,2); var x=i4(0,0,0,0); x=ge(y,z)', [T, T, T, T]);
+CheckI4(GEF32, 'var y=f4(-1,1,0,2); var z=f4(1,2,3,4);  var x=i4(0,0,0,0); x=ge(y,z)', [F, F, F, F]);
+CheckI4(GEF32, 'var y=f4(1,0,3,4);  var z=f4(1,1,7,0);  var x=i4(0,0,0,0); x=ge(y,z)', [T, F, F, T]);
+CheckI4(GEF32 + 'const nan = glob.NaN; const fround=glob.Math.fround', 'var y=f4(0,0,0,0); var z=f4(0,0,0,0); var x=i4(0,0,0,0); y=f4(fround(0.0),fround(-0.0),fround(0.0),fround(nan)); z=f4(fround(-0.0),fround(0.0),fround(nan),fround(0.0)); x=ge(y,z);', [T, T, F, F]);
 
 // Conversions operators
 const CVTIF = 'var cvt=f4.fromInt32x4;';

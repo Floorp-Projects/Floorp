@@ -11,8 +11,42 @@ loop.standaloneRoomViews = (function() {
   "use strict";
 
   var StandaloneRoomView = React.createClass({
+    mixins: [Backbone.Events],
+
+    propTypes: {
+      activeRoomStore:
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired
+    },
+
+    getInitialState: function() {
+      return this.props.activeRoomStore.getStoreState();
+    },
+
+    componentWillMount: function() {
+      this.listenTo(this.props.activeRoomStore, "change",
+                    this._onActiveRoomStateChanged);
+    },
+
+    /**
+     * Handles a "change" event on the roomStore, and updates this.state
+     * to match the store.
+     *
+     * @private
+     */
+    _onActiveRoomStateChanged: function() {
+      this.setState(this.props.activeRoomStore.getStoreState());
+    },
+
+    componentWillUnmount: function() {
+      this.stopListening(this.props.activeRoomStore);
+    },
+
     render: function() {
-      return (<div>Room</div>);
+      return (
+        <div>
+          <div>{this.state.roomState}</div>
+        </div>
+      );
     }
   });
 

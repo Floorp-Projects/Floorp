@@ -57,7 +57,10 @@ describe("loop.conversation", function() {
           channel: "test",
           platform: "test"
         };
-      }
+      },
+      getAudioBlob: sinon.spy(function(name, callback) {
+        callback(null, new Blob([new ArrayBuffer(10)], {type: 'audio/ogg'}));
+      })
     };
 
     // XXX These stubs should be hoisted in a common file
@@ -690,8 +693,8 @@ describe("loop.conversation", function() {
           function() {
             conversation.trigger("session:network-disconnected");
 
-              TestUtils.findRenderedComponentWithType(icView,
-                loop.conversation.GenericFailureView);
+            TestUtils.findRenderedComponentWithType(icView,
+              loop.conversation.GenericFailureView);
           });
 
         it("should update the conversation window toolbar title",
@@ -747,7 +750,7 @@ describe("loop.conversation", function() {
   });
 
   describe("IncomingCallView", function() {
-    var view, model;
+    var view, model, fakeAudio;
 
     beforeEach(function() {
       var Model = Backbone.Model.extend({
@@ -756,6 +759,13 @@ describe("loop.conversation", function() {
       model = new Model();
       sandbox.spy(model, "trigger");
       sandbox.stub(model, "set");
+
+      fakeAudio = {
+        play: sinon.spy(),
+        pause: sinon.spy(),
+        removeAttribute: sinon.spy()
+      };
+      sandbox.stub(window, "Audio").returns(fakeAudio);
 
       view = TestUtils.renderIntoDocument(loop.conversation.IncomingCallView({
         model: model,
@@ -895,5 +905,33 @@ describe("loop.conversation", function() {
         sinon.assert.calledWith(model.trigger, "declineAndBlock");
       });
     });
+  });
+
+  describe("GenericFailureView", function() {
+    var view, fakeAudio;
+
+    beforeEach(function() {
+      fakeAudio = {
+        play: sinon.spy(),
+        pause: sinon.spy(),
+        removeAttribute: sinon.spy()
+      };
+      sandbox.stub(window, "Audio").returns(fakeAudio);
+
+      view = TestUtils.renderIntoDocument(
+        loop.conversation.GenericFailureView({
+          cancelCall: function() {}
+        })
+      );
+    });
+
+    it("should play a failure sound, once", function() {
+      sinon.assert.calledOnce(navigator.mozLoop.getAudioBlob);
+      sinon.assert.calledWithExactly(navigator.mozLoop.getAudioBlob,
+                                     "failure", sinon.match.func);
+      sinon.assert.calledOnce(fakeAudio.play);
+      expect(fakeAudio.loop).to.equal(false);
+    });
+
   });
 });

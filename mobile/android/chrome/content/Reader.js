@@ -145,6 +145,7 @@ let Reader = {
    * @param tabId (optional) The id of the tab where we can look for a saved article.
    * @return {Promise}
    * @resolves JS object representing the article, or null if no article is found.
+   * @rejects Never.
    */
   getArticle: Task.async(function* (url, tabId) {
     // First, look for an article object stored on the tab.
@@ -167,7 +168,10 @@ let Reader = {
 
     // Article hasn't been found in the cache, we need to
     // download the page and parse the article out of it.
-    return yield this._downloadAndParseDocument(url);
+    return yield this._downloadAndParseDocument(url).catch(e => {
+      Cu.reportError("Error downloading and parsing article: " + e);
+      return null;
+    });
   }),
 
   /**
@@ -287,6 +291,10 @@ let Reader = {
         resolve(article);
       };
 
+      worker.onerror = function (evt) {
+        reject(evt.message);
+      };
+
       try {
         worker.postMessage({
           uri: {
@@ -354,7 +362,6 @@ let Reader = {
     this.log("Finished loading page: " + doc);
 
     try {
-      this.log("Parsing response with Readability");
       let uri = Services.io.newURI(url, null, null);
       let article = yield this._readerParse(uri, doc);
       this.log("Document parsed successfully");

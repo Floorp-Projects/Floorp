@@ -6,7 +6,7 @@
 
 // Test that hovering over nodes on the breadcrumb buttons in the inspector shows the highlighter over
 // those nodes
-let test = asyncTest(function*() {
+add_task(function*() {
   info("Loading the test document and opening the inspector");
   yield addTab("data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");
   let {toolbox, inspector} = yield openInspector();
@@ -18,15 +18,23 @@ let test = asyncTest(function*() {
   let button = bcButtons.childNodes[1];
   EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"}, button.ownerDocument.defaultView);
   yield onNodeHighlighted;
-  ok(isHighlighting(), "The highlighter is shown on a markup container hover");
-  is(getHighlitNode(), getNode("body"), "The highlighter highlights the right node");
+
+  let isVisible = yield isHighlighting(toolbox);
+  ok(isVisible, "The highlighter is shown on a markup container hover");
+
+  let highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode, getNode("body"), "The highlighter highlights the right node");
 
   onNodeHighlighted = toolbox.once("node-highlight");
   button = bcButtons.childNodes[2];
   EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"}, button.ownerDocument.defaultView);
   yield onNodeHighlighted;
-  ok(isHighlighting(), "The highlighter is shown on a markup container hover");
-  is(getHighlitNode(), getNode("span"), "The highlighter highlights the right node");
+
+  isVisible = yield isHighlighting(toolbox);
+  ok(isVisible, "The highlighter is shown on a markup container hover");
+
+  highlightedNode = yield getHighlitNode(toolbox);
+  is(highlightedNode, getNode("span"), "The highlighter highlights the right node");
 
   gBrowser.removeCurrentTab();
 });
