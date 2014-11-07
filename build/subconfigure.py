@@ -7,6 +7,7 @@
 
 import argparse
 import errno
+import itertools
 import os
 import re
 import subprocess
@@ -15,26 +16,24 @@ import pickle
 
 import mozpack.path as mozpath
 
-try:
-    from multiprocessing import Pool, cpu_count
-except ImportError:
-    import itertools
 
-    class Pool(object):
-        def __init__(self, size):
-            pass
+class Pool(object):
+    def __new__(cls, size):
+        try:
+            import multiprocessing
+            size = min(size, multiprocessing.cpu_count())
+            return multiprocessing.Pool(size)
+        except:
+            return super(Pool, cls).__new__(cls)
 
-        def imap_unordered(self, fn, iterable):
-            return itertools.imap(fn, iterable)
+    def imap_unordered(self, fn, iterable):
+        return itertools.imap(fn, iterable)
 
-        def close(self):
-            pass
+    def close(self):
+        pass
 
-        def join(self):
-            pass
-
-    def cpu_count():
-        return 1
+    def join(self):
+        pass
 
 
 class File(object):
@@ -389,7 +388,7 @@ def subconfigure(args):
     # One would think using a ThreadPool would be faster, considering
     # everything happens in subprocesses anyways, but no, it's actually
     # slower on Windows. (20s difference overall!)
-    pool = Pool(min(len(subconfigures), cpu_count()))
+    pool = Pool(len(subconfigures))
     for relobjdir, returncode, output in \
             pool.imap_unordered(run, subconfigures):
         print prefix_lines(output, relobjdir)
