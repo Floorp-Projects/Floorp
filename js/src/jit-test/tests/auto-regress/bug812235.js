@@ -3,7 +3,7 @@
 //
 gc()
 schedulegc(this)
-gcslice(3)
+gcslice(2)
 function f() {
     this["x"] = this["x"] = {}
 }
