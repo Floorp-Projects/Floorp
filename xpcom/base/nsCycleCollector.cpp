@@ -177,6 +177,7 @@
 #include "nsDumpUtils.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
+#include "js/SliceBudget.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -3621,9 +3622,7 @@ nsCycleCollector::Collect(ccType aCCType,
         break;
     }
     if (continueSlice) {
-      // Force SliceBudget::isOverBudget to check the time.
-      aBudget.step(SliceBudget::CounterReset);
-      continueSlice = !aBudget.isOverBudget();
+      continueSlice = !aBudget.checkOverBudget();
     }
   } while (continueSlice);
 
@@ -4187,7 +4186,7 @@ nsCycleCollector_collect(nsICycleCollectorListener* aManualListener)
 }
 
 void
-nsCycleCollector_collectSlice(SliceBudget& budget)
+nsCycleCollector_collectSlice(int64_t aSliceTime)
 {
   CollectorData* data = sCollectorData.get();
 
@@ -4198,6 +4197,29 @@ nsCycleCollector_collectSlice(SliceBudget& budget)
   PROFILER_LABEL("nsCycleCollector", "collectSlice",
                  js::ProfileEntry::Category::CC);
 
+  SliceBudget budget;
+  if (aSliceTime >= 0) {
+    budget = SliceBudget(SliceBudget::TimeBudget(aSliceTime));
+  }
+  data->mCollector->Collect(SliceCC, budget, nullptr);
+}
+
+void
+nsCycleCollector_collectSliceWork(int64_t aSliceWork)
+{
+  CollectorData* data = sCollectorData.get();
+
+  // We should have started the cycle collector by now.
+  MOZ_ASSERT(data);
+  MOZ_ASSERT(data->mCollector);
+
+  PROFILER_LABEL("nsCycleCollector", "collectSliceWork",
+                 js::ProfileEntry::Category::CC);
+
+  SliceBudget budget;
+  if (aSliceWork >= 0) {
+    budget = SliceBudget(SliceBudget::WorkBudget(aSliceWork));
+  }
   data->mCollector->Collect(SliceCC, budget, nullptr);
 }
 
