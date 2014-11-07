@@ -137,22 +137,6 @@ ValueNumberer::VisibleValues::has(const MDefinition *def) const
 }
 #endif
 
-// Test whether |def| would be needed if it had no uses.
-static bool
-DeadIfUnused(const MDefinition *def)
-{
-    return !def->isEffectful() && !def->isGuard() && !def->isControlInstruction() &&
-           (!def->isInstruction() || !def->toInstruction()->resumePoint());
-}
-
-// Test whether |def| may be safely discarded, due to being dead or due to being
-// located in a basic block which has itself been marked for discarding.
-static bool
-IsDiscardable(const MDefinition *def)
-{
-    return !def->hasUses() && (DeadIfUnused(def) || def->block()->isMarked());
-}
-
 // Call MDefinition::justReplaceAllUsesWith, and add some GVN-specific asserts.
 static void
 ReplaceAllUsesWith(MDefinition *from, MDefinition *to)
