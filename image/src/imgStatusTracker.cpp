@@ -439,7 +439,7 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
 {
   MOZ_ASSERT(aOther, "aOther cannot be null");
   ImageStatusDiff diff;
-  diff.diffState = ~mState & aOther->mState & ~FLAG_REQUEST_STARTED;
+  diff.diffState = ~mState & aOther->mState;
 
   // Only record partial invalidations if we haven't been decoded before.
   // When images are re-decoded after discarding, we don't want to display
@@ -463,11 +463,8 @@ ImageStatusDiff
 imgStatusTracker::DecodeStateAsDifference() const
 {
   ImageStatusDiff diff;
+  // XXX(seth): Is FLAG_REQUEST_STARTED really the only non-"decode state" flag?
   diff.diffState = mState & ~FLAG_REQUEST_STARTED;
-
-  // All other ImageStatusDiff fields are intentionally left at their default
-  // values; we only want to notify decode state changes.
-
   return diff;
 }
 
@@ -475,12 +472,7 @@ void
 imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
 {
   LOG_SCOPE(GetImgLog(), "imgStatusTracker::ApplyDifference");
-
-  // We must not modify or notify for the start-load state, which happens from Necko callbacks.
-  uint32_t loadState = mState & FLAG_REQUEST_STARTED;
-
-  // Synchronize our state.
-  mState |= aDiff.diffState | loadState;
+  mState |= aDiff.diffState;
 }
 
 void
@@ -776,7 +768,8 @@ void
 imgStatusTracker::RecordStartRequest()
 {
   // We're starting a new load, so clear any status and state bits indicating
-  // load/decode
+  // load/decode.
+  // XXX(seth): Are these really the only flags we want to clear?
   mState &= ~FLAG_REQUEST_STARTED;
   mState &= ~FLAG_DECODE_STARTED;
   mState &= ~FLAG_DECODE_STOPPED;
