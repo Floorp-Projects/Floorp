@@ -46,7 +46,6 @@ struct ImageStatusDiff
     : invalidRect()
     , diffState(0)
     , diffImageStatus(0)
-    , unsetDecodeStarted(false)
     , foundIsMultipart(false)
     , foundLastPart(false)
     , gotDecoded(false)
@@ -60,7 +59,6 @@ struct ImageStatusDiff
     return aOther.invalidRect == invalidRect
         && aOther.diffState == diffState
         && aOther.diffImageStatus == diffImageStatus
-        && aOther.unsetDecodeStarted == unsetDecodeStarted
         && aOther.foundIsMultipart == foundIsMultipart
         && aOther.foundLastPart == foundLastPart
         && aOther.gotDecoded == gotDecoded;
@@ -70,7 +68,6 @@ struct ImageStatusDiff
     invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
     diffImageStatus |= aOther.diffImageStatus;
-    unsetDecodeStarted = unsetDecodeStarted || aOther.unsetDecodeStarted;
     foundIsMultipart = foundIsMultipart || aOther.foundIsMultipart;
     foundLastPart = foundLastPart || aOther.foundLastPart;
     gotDecoded = gotDecoded || aOther.gotDecoded;
@@ -79,7 +76,6 @@ struct ImageStatusDiff
   nsIntRect invalidRect;
   uint32_t  diffState;
   uint32_t  diffImageStatus;
-  bool      unsetDecodeStarted : 1;
   bool      foundIsMultipart   : 1;
   bool      foundLastPart      : 1;
   bool      gotDecoded         : 1;
