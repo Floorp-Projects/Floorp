@@ -4,10 +4,12 @@
 
 function test() {
   if (!isTiltEnabled()) {
+    aborting();
     info("Skipping notifications test because Tilt isn't enabled.");
     return;
   }
   if (!isWebGLSupported()) {
+    aborting();
     info("Skipping visualizer test because WebGL isn't supported.");
     return;
   }

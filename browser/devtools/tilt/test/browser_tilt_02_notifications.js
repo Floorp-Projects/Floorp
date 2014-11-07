@@ -8,10 +8,12 @@ let tabEvents = "";
 
 function test() {
   if (!isTiltEnabled()) {
+    aborting();
     info("Skipping notifications test because Tilt isn't enabled.");
     return;
   }
   if (!isWebGLSupported()) {
+    aborting();
     info("Skipping notifications test because WebGL isn't supported.");
     return;
   }
@@ -43,7 +45,7 @@ function createNewTab() {
       }
     }, false, function suddenDeath()
     {
-      info("Tilt could not be initialized properly.");
+      ok(false, "Tilt could not be initialized properly.");
       cleanup();
     });
   });
@@ -95,10 +97,6 @@ let testSteps = [
 ];
 
 function finalize(win) {
-  if (!tabEvents) {
-    return;
-  }
-
   is(win, tab1.linkedBrowser.contentWindow, "Saw the correct window");
 
   is(tabEvents, "STARTUP;INITIALIZING;HIDDEN;SHOWN;DESTROYING;",

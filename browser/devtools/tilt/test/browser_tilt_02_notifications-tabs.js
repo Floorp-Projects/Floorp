@@ -35,10 +35,12 @@ function after(notification, callback) {
 
 function test() {
   if (!isTiltEnabled()) {
+    aborting();
     info("Skipping tab switch test because Tilt isn't enabled.");
     return;
   }
   if (!isWebGLSupported()) {
+    aborting();
     info("Skipping tab switch test because WebGL isn't supported.");
     return;
   }
@@ -71,7 +73,7 @@ let testSteps = [
 
       createTilt({}, false, function suddenDeath()
       {
-        info("Tilt could not be initialized properly.");
+        ok(false, "Tilt could not be initialized properly.");
         cleanup();
       });
     });
@@ -87,7 +89,7 @@ let testSteps = [
 
       createTilt({}, false, function suddenDeath()
       {
-        info("Tilt could not be initialized properly.");
+        ok(false, "Tilt could not be initialized properly.");
         cleanup();
       });
     });

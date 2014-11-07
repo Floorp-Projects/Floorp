@@ -354,7 +354,13 @@ Tester.prototype = {
         catch (ex) {
           this.currentTest.addResult(new testResult(false, "Cleanup function threw an exception", ex, false));
         }
-      };
+      }
+
+      if (this.currentTest.passCount === 0 &&
+          this.currentTest.failCount === 0 &&
+          this.currentTest.todoCount === 0) {
+        this.currentTest.addResult(new testResult(false, "This test contains no passes, no fails and no todos. Maybe it threw a silent exception? Make sure you use waitForExplicitFinish() if you need it.", "", false));
+      }
 
       if (testScope.__expected == 'fail' && testScope.__num_failed <= 0) {
         this.currentTest.addResult(new testResult(false, "We expected at least one assertion to fail because this test file was marked as fail-if in the manifest", "", false));
