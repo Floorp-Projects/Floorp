@@ -275,8 +275,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     Directives directives(options.strictOption);
     GlobalSharedContext globalsc(cx, scopeChain, directives, options.extraWarningsOption);
 
-    bool savedCallerFun = options.compileAndGo &&
-                          evalCaller && evalCaller->functionOrCallerFunction();
+    bool savedCallerFun = evalCaller && evalCaller->functionOrCallerFunction();
     Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), savedCallerFun,
                                                   options, staticLevel, sourceObject, 0,
                                                   srcBuf.length()));
@@ -312,7 +311,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (evalCaller && evalCaller->strict())
         globalsc.strict = true;
 
-    if (options.compileAndGo && evalCaller && evalCaller->functionOrCallerFunction()) {
+    if (savedCallerFun) {
         /*
          * An eval script in a caller frame needs to have its enclosing
          * function captured in case it refers to an upvar, and someone
