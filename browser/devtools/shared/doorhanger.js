@@ -76,6 +76,14 @@ exports.showDoorhanger = Task.async(function *({ window, type, anchor }) {
     return;
   }
 
+  // Call success function to set preferences/cleanup immediately,
+  // so if triggered multiple times, only happens once (Windows/Linux)
+  success();
+
+  // Wait 200ms to prevent flickering where the popup is displayed
+  // before the underlying window (Windows 7, 64bit)
+  yield wait(200);
+
   let document = window.document;
 
   let panel = document.createElementNS(XULNS, "panel");
@@ -108,9 +116,6 @@ exports.showDoorhanger = Task.async(function *({ window, type, anchor }) {
       close();
     });
   }
-
-  // Call success function to set preferences, etc.
-  success();
 });
 
 function setDoorhangerStyle (panel, frame) {
@@ -146,4 +151,10 @@ function onFrameLoad (frame) {
 
 function getGBrowser () {
   return getMostRecentBrowserWindow().gBrowser;
+}
+
+function wait (n) {
+  let { resolve, promise } = Promise.defer();
+  setTimeout(resolve, n);
+  return promise;
 }
