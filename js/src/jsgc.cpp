@@ -1457,7 +1457,7 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
         setMaxMallocBytes(value);
         break;
       case JSGC_SLICE_TIME_BUDGET:
-        sliceBudget = value ? value : SliceBudget::Unlimited;
+        sliceBudget = value;
         break;
       case JSGC_MARK_STACK_LIMIT:
         setMarkStackLimit(value);
@@ -2937,10 +2937,9 @@ SliceBudget::SliceBudget()
 
 SliceBudget::SliceBudget(TimeBudget time)
 {
-    if (time.budget < 0) {
+    if (time.budget == Unlimited) {
         reset();
     } else {
-        // Note: TimeBudget(0) is equivalent to WorkBudget(CounterReset).
         deadline = PRMJ_Now() + time.budget * PRMJ_USEC_PER_MSEC;
         counter = CounterReset;
     }
@@ -2948,18 +2947,14 @@ SliceBudget::SliceBudget(TimeBudget time)
 
 SliceBudget::SliceBudget(WorkBudget work)
 {
-    if (work.budget < 0) {
-        reset();
-    } else {
-        deadline = 0;
-        counter = work.budget;
-    }
+    deadline = 0;
+    counter = work.budget;
 }
 
 bool
 SliceBudget::checkOverBudget()
 {
-    bool over = PRMJ_Now() >= deadline;
+    bool over = PRMJ_Now() > deadline;
     if (!over)
         counter = CounterReset;
     return over;
