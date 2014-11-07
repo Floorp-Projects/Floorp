@@ -48,7 +48,6 @@ struct ImageStatusDiff
     : invalidRect()
     , diffState(0)
     , diffImageStatus(0)
-    , gotDecoded(false)
   { }
 
   static ImageStatusDiff NoChange() { return ImageStatusDiff(); }
@@ -58,21 +57,18 @@ struct ImageStatusDiff
   bool operator==(const ImageStatusDiff& aOther) const {
     return aOther.invalidRect == invalidRect
         && aOther.diffState == diffState
-        && aOther.diffImageStatus == diffImageStatus
-        && aOther.gotDecoded == gotDecoded;
+        && aOther.diffImageStatus == diffImageStatus;
   }
 
   void Combine(const ImageStatusDiff& aOther) {
     invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
     diffImageStatus |= aOther.diffImageStatus;
-    gotDecoded = gotDecoded || aOther.gotDecoded;
   }
 
   nsIntRect invalidRect;
   uint32_t  diffState;
   uint32_t  diffImageStatus;
-  bool      gotDecoded         : 1;
 };
 
 } // namespace image
@@ -311,7 +307,6 @@ private:
 
   uint32_t mState;
   uint32_t mImageStatus;
-  bool mHasBeenDecoded : 1;
 };
 
 class imgStatusTrackerInit
