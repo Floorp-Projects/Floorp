@@ -1384,6 +1384,8 @@ public class BrowserApp extends GeckoApp
                     BrowserDB.getCount(getContentResolver(), "favicons"));
             Telemetry.HistogramAdd("FENNEC_THUMBNAILS_COUNT",
                     BrowserDB.getCount(getContentResolver(), "thumbnails"));
+            Telemetry.HistogramAdd("FENNEC_READING_LIST_COUNT",
+                    BrowserDB.getCount(getContentResolver(), "readinglist"));
             Telemetry.HistogramAdd("BROWSER_IS_USER_DEFAULT", (isDefaultBrowser() ? 1 : 0));
         } else if ("Updater:Launch".equals(event)) {
             handleUpdaterLaunch();
