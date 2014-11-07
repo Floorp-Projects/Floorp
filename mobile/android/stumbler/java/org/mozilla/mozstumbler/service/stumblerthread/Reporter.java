@@ -30,7 +30,7 @@ import org.mozilla.mozstumbler.service.stumblerthread.scanners.GPSScanner;
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.WifiScanner;
 
 public final class Reporter extends BroadcastReceiver {
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + Reporter.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(Reporter.class.getSimpleName());
     public static final String ACTION_FLUSH_TO_BUNDLE = AppGlobals.ACTION_NAMESPACE + ".FLUSH";
     private boolean mIsStarted;
 
@@ -195,7 +195,8 @@ public final class Reporter extends BroadcastReceiver {
         }
 
         if (AppGlobals.isDebug) {
-            Log.d(LOG_TAG, "Received bundle: " + mlsObj.toString());
+            // PII: do not log the bundle without obfuscating it
+            Log.d(LOG_TAG, "Received bundle");
         }
 
         if (wifiCount + cellCount < 1) {

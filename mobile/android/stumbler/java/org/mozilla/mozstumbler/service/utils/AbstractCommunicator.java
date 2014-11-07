@@ -20,7 +20,7 @@ import java.net.URL;
 
 public abstract class AbstractCommunicator {
 
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + AbstractCommunicator.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(AbstractCommunicator.class.getSimpleName());
     private static final String NICKNAME_HEADER = "X-Nickname";
     private static final String USER_AGENT_HEADER = "User-Agent";
     private HttpURLConnection mHttpURLConnection;

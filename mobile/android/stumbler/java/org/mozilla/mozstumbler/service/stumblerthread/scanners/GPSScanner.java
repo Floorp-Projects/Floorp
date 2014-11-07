@@ -34,7 +34,7 @@ public class GPSScanner implements LocationListener {
     public static final String NEW_STATUS_ARG_SATS = "sats";
     public static final String NEW_LOCATION_ARG_LOCATION = "location";
 
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + GPSScanner.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(GPSScanner.class.getSimpleName());
     private static final int MIN_SAT_USED_IN_FIX = 3;
     private static final long ACTIVE_MODE_GPS_MIN_UPDATE_TIME_MS = 1000;
     private static final float ACTIVE_MODE_GPS_MIN_UPDATE_DISTANCE_M = 10;
@@ -191,13 +191,8 @@ public class GPSScanner implements LocationListener {
         sendToLogActivity(logMsg);
 
         if (mBlockList.contains(location)) {
-            Log.w(LOG_TAG, "Blocked location: " + location);
             reportLocationLost();
             return;
-        }
-
-        if (AppGlobals.isDebug) {
-            Log.d(LOG_TAG, "New location: " + location);
         }
 
         mLocation = location;

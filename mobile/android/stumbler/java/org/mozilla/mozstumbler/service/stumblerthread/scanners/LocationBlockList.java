@@ -10,7 +10,7 @@ import org.mozilla.mozstumbler.service.AppGlobals;
 import org.mozilla.mozstumbler.service.Prefs;
 
 public final class LocationBlockList {
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + LocationBlockList.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(LocationBlockList.class.getSimpleName());
     private static final double MAX_ALTITUDE = 8848;      // Mount Everest's altitude in meters
     private static final double MIN_ALTITUDE = -418;      // Dead Sea's altitude in meters
     private static final float MAX_SPEED = 340.29f;   // Mach 1 in meters/second
