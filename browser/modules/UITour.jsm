@@ -100,7 +100,7 @@ this.UITour = {
     }],
     ["help",        {query: "#PanelUI-help"}],
     ["home",        {query: "#home-button"}],
-    ["loop",        {query: "#loop-call-button"}],
+    ["loop",        {query: "#loop-button"}],
     ["devtools",    {query: "#developer-button"}],
     ["webide",      {query: "#webide-button"}],
     ["forget", {
