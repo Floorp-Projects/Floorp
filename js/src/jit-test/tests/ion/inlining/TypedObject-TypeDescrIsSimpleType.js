@@ -23,10 +23,10 @@ if (!this.TypedObject) {
 }
 
 var T = TypedObject;
-var AT = new T.ArrayType(T.uint32);
+var AT = new T.ArrayType(T.uint32, 100);
 
 function check() {
-    return AT.build(100, x => x+1);
+    return AT.build(x => x+1);
 }
 
 function test() {

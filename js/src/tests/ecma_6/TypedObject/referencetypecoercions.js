@@ -27,7 +27,7 @@ function TestValues(type, values) {
     compare(struct.f, values[i]);
   }
 
-  var Array = new ArrayType(type).dimension(1);
+  var Array = new ArrayType(type, 1);
   for (var i = 0; i < values.length; i++) {
     var array = new Array();
     array[0] = values[i].input;

@@ -9,14 +9,14 @@ load(libdir + "asserts.js")
 var {StructType, uint32, Object, Any, storage, objectType} = TypedObject;
 
 function main(variant) { // once a C programmer, always a C programmer.
-  var Uints = uint32.array();
+  var Uints = uint32.array(0);
   var Unit = new StructType({});   // Empty struct type
   var buffer = new ArrayBuffer(0); // Empty buffer
   var p = new Unit(buffer);        // OK
   neuter(buffer, variant);
   assertThrowsInstanceOf(() => new Unit(buffer), TypeError,
                          "Able to instantiate atop neutered buffer");
-  assertThrowsInstanceOf(() => new Uints(buffer, 0), TypeError,
+  assertThrowsInstanceOf(() => new Uints(buffer), TypeError,
                          "Able to instantiate atop neutered buffer");
 }
 

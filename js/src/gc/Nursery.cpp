@@ -404,11 +404,9 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
         return InlineTypedObject::allocKindForTypeDescriptor(descr);
     }
 
-    // Outline typed objects have special requirements for their allocation kind.
-    if (obj->is<OutlineTypedObject>()) {
-        TypeDescr *descr = &obj->as<OutlineTypedObject>().typeDescr();
-        return OutlineTypedObject::allocKindForTypeDescriptor(descr);
-    }
+    // Outline typed objects use the minimum allocation kind.
+    if (obj->is<OutlineTypedObject>())
+        return FINALIZE_OBJECT0;
 
     // The only non-native objects in existence are proxies and typed objects.
     MOZ_ASSERT(obj->isNative());
