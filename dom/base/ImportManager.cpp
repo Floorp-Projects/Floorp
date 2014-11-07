@@ -149,6 +149,7 @@ ImportLoader::Updater::UpdateMainReferrer(uint32_t aNewIdx)
     // Our import parent is changed, let's block the new one and later unblock
     // the old one.
     newMainReferrer->OwnerDoc()->ScriptLoader()->AddExecuteBlocker();
+    newMainReferrer->OwnerDoc()->BlockDOMContentLoaded();
   }
 
   if (mLoader->mDocument) {
@@ -168,6 +169,7 @@ ImportLoader::Updater::UpdateMainReferrer(uint32_t aNewIdx)
 
   if (mLoader->IsBlocking()) {
     mLoader->mImportParent->ScriptLoader()->RemoveExecuteBlocker();
+    mLoader->mImportParent->UnblockDOMContentLoaded();
   }
 
   // Finally update mMainReferrer to point to the newly added link.
@@ -300,6 +302,7 @@ ImportLoader::BlockScripts()
 {
   MOZ_ASSERT(!mBlockingScripts);
   mImportParent->ScriptLoader()->AddExecuteBlocker();
+  mImportParent->BlockDOMContentLoaded();
   mBlockingScripts = true;
 }
 
@@ -308,6 +311,7 @@ ImportLoader::UnblockScripts()
 {
   MOZ_ASSERT(mBlockingScripts);
   mImportParent->ScriptLoader()->RemoveExecuteBlocker();
+  mImportParent->UnblockDOMContentLoaded();
   for (uint32_t i = 0; i < mBlockedScriptLoaders.Length(); i++) {
     mBlockedScriptLoaders[i]->RemoveExecuteBlocker();
   }

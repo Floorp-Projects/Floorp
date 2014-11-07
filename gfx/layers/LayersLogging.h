@@ -46,6 +46,14 @@ AppendToString(std::stringstream& aStream, const gfxRGBA& c,
                const char* pfx="", const char* sfx="");
 
 void
+AppendToString(std::stringstream& aStream, const nsPoint& p,
+               const char* pfx="", const char* sfx="");
+
+void
+AppendToString(std::stringstream& aStream, const nsRect& r,
+               const char* pfx="", const char* sfx="");
+
+void
 AppendToString(std::stringstream& aStream, const nsIntPoint& p,
                const char* pfx="", const char* sfx="");
 

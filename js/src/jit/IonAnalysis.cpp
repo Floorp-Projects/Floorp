@@ -535,6 +535,22 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
     return true;
 }
 
+// Test whether |def| would be needed if it had no uses.
+bool
+js::jit::DeadIfUnused(const MDefinition *def)
+{
+    return !def->isEffectful() && !def->isGuard() && !def->isControlInstruction() &&
+           (!def->isInstruction() || !def->toInstruction()->resumePoint());
+}
+
+// Test whether |def| may be safely discarded, due to being dead or due to being
+// located in a basic block which has itself been marked for discarding.
+bool
+js::jit::IsDiscardable(const MDefinition *def)
+{
+    return !def->hasUses() && (DeadIfUnused(def) || def->block()->isMarked());
+}
+
 // Instructions are useless if they are unused and have no side effects.
 // This pass eliminates useless instructions.
 // The graph itself is unchanged.
@@ -550,9 +566,7 @@ jit::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
         // Remove unused instructions.
         for (MInstructionReverseIterator iter = block->rbegin(); iter != block->rend(); ) {
             MInstruction *inst = *iter++;
-            if (!inst->isEffectful() && !inst->resumePoint() &&
-                !inst->hasUses() && !inst->isGuard() &&
-                !inst->isControlInstruction())
+            if (js::jit::IsDiscardable(inst))
             {
                 block->discard(inst);
             } else if (!inst->isRecoveredOnBailout() && !inst->isGuard() &&
