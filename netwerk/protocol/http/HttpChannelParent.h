@@ -173,8 +173,8 @@ private:
   nsRefPtr<nsHttpHandler>  mHttpHandler;
 
   nsRefPtr<HttpChannelParentListener> mParentListener;
-  // The first listener in the decode chain if channel decoding is applied.
-  nsCOMPtr<nsIStreamListener> mConverterListener;
+  // This is listener we are diverting to.
+  nsCOMPtr<nsIStreamListener> mDivertListener;
   // Set to the canceled status value if the main channel was canceled.
   nsresult mStatus;
   // Once set, no OnStart/OnData/OnStop calls should be accepted; conversely, it
