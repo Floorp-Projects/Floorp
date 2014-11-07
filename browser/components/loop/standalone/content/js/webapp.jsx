@@ -893,7 +893,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       standaloneAppStore: React.PropTypes.instanceOf(
         loop.store.StandaloneAppStore).isRequired,
       activeRoomStore: React.PropTypes.instanceOf(
-        loop.store.ActiveRoomStore).isRequired
+        loop.store.ActiveRoomStore).isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
     getInitialState: function() {
@@ -938,6 +939,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           return (
             <loop.standaloneRoomViews.StandaloneRoomView
               activeRoomStore={this.props.activeRoomStore}
+              dispatcher={this.props.dispatcher}
             />
           );
         }
@@ -958,6 +960,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
    */
   function init() {
     var helper = new sharedUtils.Helper();
+    var standaloneMozLoop = new loop.StandaloneMozLoop({
+      baseServerUrl: loop.config.serverUrl
+    });
 
     // Older non-flux based items.
     var notifications = new sharedModels.NotificationCollection();
@@ -991,9 +996,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
     });
     var activeRoomStore = new loop.store.ActiveRoomStore({
       dispatcher: dispatcher,
-      // XXX Bug 1074702 will introduce a mozLoop compatible object for
-      // the standalone rooms.
-      mozLoop: {}
+      mozLoop: standaloneMozLoop
+    });
+
+    window.addEventListener("unload", function() {
+      dispatcher.dispatch(new sharedActions.WindowUnload());
     });
 
     React.renderComponent(<WebappRootView
@@ -1005,6 +1012,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       feedbackApiClient={feedbackApiClient}
       standaloneAppStore={standaloneAppStore}
       activeRoomStore={activeRoomStore}
+      dispatcher={dispatcher}
     />, document.querySelector("#main"));
 
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated
