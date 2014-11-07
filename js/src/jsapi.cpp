@@ -1223,7 +1223,9 @@ static const JSStdName builtin_property_names[] = {
     { EAGER_ATOM(SIMD), JSProto_SIMD },
     { EAGER_ATOM(TypedObject), JSProto_TypedObject },
 #endif
+#ifdef ENABLE_SHARED_ARRAY_BUFFER
     { EAGER_ATOM(Atomics), JSProto_Atomics },
+#endif
 
     { 0, JSProto_LIMIT }
 };

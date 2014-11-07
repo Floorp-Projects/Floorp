@@ -8,12 +8,12 @@
 const TAB_URL = EXAMPLE_URL + "doc_minified.html";
 const JS_URL = EXAMPLE_URL + "code_math.js";
 
-let gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gEditor, gSources, gFrames;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
-    gDebuggee = aDebuggee;
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+    gTab = aTab;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gEditor = gDebugger.DebuggerView.editor;
@@ -64,7 +64,7 @@ function testSetBreakpoint() {
 
       // This will cause the breakpoint to be hit, and put us back in the
       // paused state.
-      gDebuggee.arithmetic();
+      callInTab(gTab, "arithmetic");
     });
   });
 
@@ -72,7 +72,7 @@ function testSetBreakpoint() {
 }
 
 registerCleanupFunction(function() {
-  gDebuggee = null;
+  gTab = null;
   gPanel = null;
   gDebugger = null;
   gEditor = null;
