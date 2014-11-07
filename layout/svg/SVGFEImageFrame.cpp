@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Keep in (case-insensitive) order:
+#include "nsContainerFrame.h"
 #include "nsContentUtils.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
@@ -122,7 +123,9 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
 {
   SVGFEImageElement *element = static_cast<SVGFEImageElement*>(mContent);
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
-    nsSVGEffects::InvalidateRenderingObservers(this);
+    MOZ_ASSERT(GetParent()->GetType() == nsGkAtoms::svgFilterFrame,
+               "Observers observe the filter, so that's what we must invalidate");
+    nsSVGEffects::InvalidateDirectRenderingObservers(GetParent());
   }
   if (aNameSpaceID == kNameSpaceID_XLink &&
       aAttribute == nsGkAtoms::href) {
@@ -140,5 +143,5 @@ SVGFEImageFrame::AttributeChanged(int32_t  aNameSpaceID,
   }
 
   return SVGFEImageFrameBase::AttributeChanged(aNameSpaceID,
-                                                 aAttribute, aModType);
+                                               aAttribute, aModType);
 }

@@ -6,6 +6,8 @@
  * effects - rather than just testing MozLoopAPI alone.
  */
 
+Components.utils.import("resource://gre/modules/Promise.jsm", this);
+
 add_task(loadLoopPanel);
 
 add_task(function* test_mozLoop_doNotDisturb() {

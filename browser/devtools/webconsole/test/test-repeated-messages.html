@@ -5,7 +5,10 @@
     <title>Test for bugs 720180, 800510 and 865288</title>
     <script>
       function testConsole() {
-        console.log("foo repeat"); console.log("foo repeat");
+        // same line and column number
+        for(var i = 0; i < 2; i++) {
+          console.log("foo repeat");
+        }
         console.log("foo repeat"); console.error("foo repeat");
       }
       function testConsoleObjects() {
