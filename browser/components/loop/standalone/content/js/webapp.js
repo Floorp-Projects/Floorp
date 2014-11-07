@@ -286,7 +286,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     },
 
     _handleRingingProgress: function() {
-      this.play("ringing", {loop: true});
+      this.play("ringtone", {loop: true});
       this.setState({callState: "ringing"});
     },
 
@@ -534,18 +534,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
    * Ended conversation view.
    */
   var EndedConversationView = React.createClass({displayName: 'EndedConversationView',
-    mixins: [sharedMixins.AudioMixin],
-
     propTypes: {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
       sdk: React.PropTypes.object.isRequired,
       feedbackApiClient: React.PropTypes.object.isRequired,
       onAfterFeedbackReceived: React.PropTypes.func.isRequired
-    },
-
-    componentDidMount: function() {
-      this.play("terminated");
     },
 
     render: function() {
@@ -897,7 +891,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
       // XXX New types for flux style
       standaloneAppStore: React.PropTypes.instanceOf(
-        loop.store.StandaloneAppStore).isRequired
+        loop.store.StandaloneAppStore).isRequired,
+      activeRoomStore: React.PropTypes.instanceOf(
+        loop.store.ActiveRoomStore).isRequired
     },
 
     getInitialState: function() {
@@ -939,7 +935,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
           );
         }
         case "room": {
-          return loop.standaloneRoomViews.StandaloneRoomView(null);
+          return (
+            loop.standaloneRoomViews.StandaloneRoomView({
+              activeRoomStore: this.props.activeRoomStore}
+            )
+          );
         }
         case "home": {
           return HomeView(null);
@@ -989,6 +989,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
       helper: helper,
       sdk: OT
     });
+    var activeRoomStore = new loop.store.ActiveRoomStore({
+      dispatcher: dispatcher,
+      // XXX Bug 1074702 will introduce a mozLoop compatible object for
+      // the standalone rooms.
+      mozLoop: {}
+    });
 
     React.renderComponent(WebappRootView({
       client: client, 
@@ -997,7 +1003,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       notifications: notifications, 
       sdk: OT, 
       feedbackApiClient: feedbackApiClient, 
-      standaloneAppStore: standaloneAppStore}
+      standaloneAppStore: standaloneAppStore, 
+      activeRoomStore: activeRoomStore}
     ), document.querySelector("#main"));
 
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated

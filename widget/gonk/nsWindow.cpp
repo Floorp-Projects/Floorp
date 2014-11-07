@@ -526,15 +526,26 @@ nsWindow::StartRemoteDrawing()
     int bytepp;
     SurfaceFormat format = HalFormatToSurfaceFormat(display->surfaceformat,
                                                     &bytepp);
-    return mFramebufferTarget = Factory::CreateDrawTargetForData(
-        BackendType::CAIRO, (uint8_t*)vaddr,
-        IntSize(width, height), mFramebuffer->stride * bytepp, format);
+    mFramebufferTarget = Factory::CreateDrawTargetForData(
+         BackendType::CAIRO, (uint8_t*)vaddr,
+         IntSize(width, height), mFramebuffer->stride * bytepp, format);
+    if (!mBackBuffer ||
+        mBackBuffer->GetSize() != mFramebufferTarget->GetSize() ||
+        mBackBuffer->GetFormat() != mFramebufferTarget->GetFormat()) {
+        mBackBuffer = mFramebufferTarget->CreateSimilarDrawTarget(
+            mFramebufferTarget->GetSize(), mFramebufferTarget->GetFormat());
+    }
+    return mBackBuffer;
 }
 
 void
 nsWindow::EndRemoteDrawing()
 {
     if (mFramebufferTarget) {
+        IntSize size = mFramebufferTarget->GetSize();
+        Rect rect(0, 0, size.width, size.height);
+        RefPtr<SourceSurface> source = mBackBuffer->Snapshot();
+        mFramebufferTarget->DrawSurface(source, rect, rect);
         gralloc_module()->unlock(gralloc_module(), mFramebuffer->handle);
     }
     if (mFramebuffer) {

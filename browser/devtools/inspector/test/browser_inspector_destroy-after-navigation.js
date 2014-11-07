@@ -8,7 +8,7 @@
 const URL_1 = "data:text/plain;charset=UTF-8,abcde";
 const URL_2 = "data:text/plain;charset=UTF-8,12345";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { toolbox } = yield openInspectorForURL(URL_1);
 
   info("Navigating to different URL.");
