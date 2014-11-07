@@ -10,11 +10,37 @@ let prefBranch = Cc["@mozilla.org/preferences-service;1"]
                    .getService(Ci.nsIPrefService)
                    .getBranch('image.mem.');
 
-function isImgDecoded() {
+function ImageDiscardObserver(result) {
+  this.discard = function onDiscard(request)
+  {
+    result.wasDiscarded = true;
+    this.synchronous = false;
+  }
+
+  this.synchronous = true;
+}
+
+function currentRequest() {
   let img = gBrowser.getBrowserForTab(newTab).contentWindow
             .document.getElementById('testImg');
   img.QueryInterface(Ci.nsIImageLoadingContent);
-  let request = img.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+  return img.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+}
+
+function attachDiscardObserver(result) {
+  // Create the discard observer.
+  let observer = new ImageDiscardObserver(result);
+  let scriptedObserver = Cc["@mozilla.org/image/tools;1"]
+                           .getService(Ci.imgITools)
+                           .createScriptedObserver(observer);
+
+  // Clone the current imgIRequest with our new observer.
+  let request = currentRequest();
+  return request.clone(scriptedObserver);
+}
+
+function isImgDecoded() {
+  let request = currentRequest();
   return request.imageStatus & Ci.imgIRequest.STATUS_FRAME_COMPLETE ? true : false;
 }
 
@@ -43,6 +69,10 @@ function test() {
 }
 
 function step2() {
+  // Attach a discard listener and create a place to hold the result.
+  var result = { wasDiscarded: false };
+  var clonedRequest = attachDiscardObserver(result);
+
   // Check that the image is decoded.
   forceDecodeImg();
   ok(isImgDecoded(), 'Image should initially be decoded.');
@@ -53,10 +83,11 @@ function step2() {
   var os = Cc["@mozilla.org/observer-service;1"]
              .getService(Ci.nsIObserverService);
   os.notifyObservers(null, 'memory-pressure', 'heap-minimize');
-  ok(!isImgDecoded(), 'Image should be discarded.');
+  ok(result.wasDiscarded, 'Image should be discarded.');
 
   // And we're done.
   gBrowser.removeTab(newTab);
   prefBranch.setBoolPref('discardable', oldDiscardingPref);
+  clonedRequest.cancelAndForgetObserver(0);
   finish();
 }
