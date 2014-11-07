@@ -2002,6 +2002,41 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
                                          JSPROP_ENUMERATE, v, true, strict);
 }
 
+/*
+ * Implement "the rest of" assignment to a property when no property receiver[id]
+ * was found anywhere on the prototype chain.
+ *
+ * FIXME: This should be updated to follow ES6 draft rev 28, section 9.1.9,
+ * steps 4.d.i and 5. Right now it doesn't exactly follow any standard, and in
+ * particular receiver should be used instead of obj throughout.
+ *
+ * Note that receiver is not necessarily native.
+ */
+template <ExecutionMode mode>
+static bool
+SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                       HandleObject obj, HandleObject receiver, HandleId id,
+                       baseops::QualifiedBool qualified, HandleValue v, bool strict)
+{
+    // We should never add properties to lexical blocks.
+    MOZ_ASSERT(!obj->is<BlockObject>());
+
+    if (obj->isUnqualifiedVarObj() && !qualified) {
+        if (mode == ParallelExecution)
+            return false;
+
+        if (!MaybeReportUndeclaredVarAssignment(cxArg->asJSContext(), JSID_TO_STRING(id)))
+            return false;
+    }
+
+    if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
+        Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
+        return ArraySetLength<mode>(cxArg, arr, id, JSPROP_ENUMERATE, v, strict);
+    }
+
+    return SetPropertyByDefining<mode>(cxArg, receiver, id, v, strict);
+}
+
 template <ExecutionMode mode>
 bool
 baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
@@ -2033,56 +2068,44 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         if (!LookupNativeProperty(cx, obj, id, &pobj, &shape))
             return false;
     }
-    if (shape) {
-        if (!pobj->isNative()) {
-            if (pobj->is<ProxyObject>()) {
-                if (mode == ParallelExecution)
-                    return false;
 
-                JSContext *cx = cxArg->asJSContext();
-                Rooted<PropertyDescriptor> pd(cx);
-                if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
-                    return false;
+    if (!shape)
+        return SetNonexistentProperty<mode>(cxArg, obj, receiver, id, qualified, vp, strict);
 
-                if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-                    return !pd.setter() ||
-                           CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
-                }
-
-                if (pd.isReadonly()) {
-                    if (strict)
-                        return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                    if (cx->compartment()->options().extraWarnings(cx))
-                        return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-                    return true;
-                }
-            }
-
-            shape = nullptr;
-        }
-    } else {
-        /* We should never add properties to lexical blocks. */
-        MOZ_ASSERT(!obj->is<BlockObject>());
-
-        if (obj->isUnqualifiedVarObj() && !qualified) {
+    if (!pobj->isNative()) {
+        if (pobj->is<ProxyObject>()) {
             if (mode == ParallelExecution)
                 return false;
 
-            if (!MaybeReportUndeclaredVarAssignment(cxArg->asJSContext(), JSID_TO_STRING(id)))
+            JSContext *cx = cxArg->asJSContext();
+            Rooted<PropertyDescriptor> pd(cx);
+            if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
                 return false;
+
+            if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
+                return !pd.setter() ||
+                       CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
+            }
+
+            if (pd.isReadonly()) {
+                if (strict)
+                    return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
+                if (cx->compartment()->options().extraWarnings(cx))
+                    return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+                return true;
+            }
         }
+
+        return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
     }
 
-    /*
-     * Now either shape is null, meaning id was not found in obj or one of its
-     * prototypes; or shape is non-null, meaning id was found directly in pobj.
-     */
+    /* Now shape is non-null and obj[id] was found directly in pobj, which is native. */
     unsigned attrs = JSPROP_ENUMERATE;
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
         if (pobj != obj)
             shape = nullptr;
-    } else if (shape) {
+    } else {
         /* ES5 8.12.4 [[Put]] step 2. */
         if (shape->isAccessorDescriptor()) {
             if (shape->hasDefaultSetter()) {
