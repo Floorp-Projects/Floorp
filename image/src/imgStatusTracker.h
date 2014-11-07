@@ -210,7 +210,6 @@ public:
   void SendStopFrame(imgRequestProxy* aProxy);
   void RecordStopDecode(nsresult statusg);
   void SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus);
-  void RecordDiscard();
   void SendDiscard(imgRequestProxy* aProxy);
   void RecordUnlockedDraw();
   void SendUnlockedDraw(imgRequestProxy* aProxy);
