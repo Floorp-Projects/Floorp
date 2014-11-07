@@ -11,7 +11,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const SCHEME = "place";
-const OURURL = "chrome://browser/content/places/content-ui/controller.xhtml";
+const URL = "chrome://browser/content/places/content-ui/controller.xhtml";
 
 function PlacesProtocolHandler() {}
 
@@ -30,7 +30,7 @@ PlacesProtocolHandler.prototype = {
   },
 
   newChannel: function PPH_newChannel(aUri) {
-    let chan = NetUtil.newChannel(OURURL);
+    let chan = NetUtil.newChannel(URL);
     chan.originalURI = aUri;
     return chan;
   },

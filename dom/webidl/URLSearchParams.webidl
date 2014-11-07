@@ -15,7 +15,7 @@
 
 [Constructor(optional ScalarValueString init = ""),
  Constructor(URLSearchParams init),
- Exposed=(Window,Worker,System)]
+ Exposed=(Window,Worker)]
 interface URLSearchParams {
   void append(ScalarValueString name, ScalarValueString value);
   void delete(ScalarValueString name);
