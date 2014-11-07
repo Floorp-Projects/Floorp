@@ -3354,8 +3354,8 @@ pref("font.alias-list", "sans,sans-serif,serif,monospace");
 // ar
 
 pref("font.name.serif.el", "Droid Serif"); // not Charis SIL Compact, only has a few Greek chars
-pref("font.name.sans-serif.el", "Roboto"); // To be updated once the Greek letters in Fira are revised
-pref("font.name.monospace.el", "Droid Sans Mono");
+pref("font.name.sans-serif.el", "Fira Sans");
+pref("font.name.monospace.el", "Fira Mono");
 
 pref("font.name.serif.he", "Charis SIL Compact");
 pref("font.name.sans-serif.he", "Fira Sans");
