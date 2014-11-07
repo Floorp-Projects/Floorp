@@ -47,7 +47,6 @@ struct ImageStatusDiff
     , diffState(0)
     , diffImageStatus(0)
     , unsetDecodeStarted(false)
-    , foundError(false)
     , foundIsMultipart(false)
     , foundLastPart(false)
     , gotDecoded(false)
@@ -62,7 +61,6 @@ struct ImageStatusDiff
         && aOther.diffState == diffState
         && aOther.diffImageStatus == diffImageStatus
         && aOther.unsetDecodeStarted == unsetDecodeStarted
-        && aOther.foundError == foundError
         && aOther.foundIsMultipart == foundIsMultipart
         && aOther.foundLastPart == foundLastPart
         && aOther.gotDecoded == gotDecoded;
@@ -73,7 +71,6 @@ struct ImageStatusDiff
     diffState |= aOther.diffState;
     diffImageStatus |= aOther.diffImageStatus;
     unsetDecodeStarted = unsetDecodeStarted || aOther.unsetDecodeStarted;
-    foundError = foundError || aOther.foundError;
     foundIsMultipart = foundIsMultipart || aOther.foundIsMultipart;
     foundLastPart = foundLastPart || aOther.foundLastPart;
     gotDecoded = gotDecoded || aOther.gotDecoded;
@@ -83,7 +80,6 @@ struct ImageStatusDiff
   uint32_t  diffState;
   uint32_t  diffImageStatus;
   bool      unsetDecodeStarted : 1;
-  bool      foundError         : 1;
   bool      foundIsMultipart   : 1;
   bool      foundLastPart      : 1;
   bool      gotDecoded         : 1;
