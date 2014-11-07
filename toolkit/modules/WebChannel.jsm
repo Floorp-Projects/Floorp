@@ -77,7 +77,7 @@ let WebChannelBroker = Object.create({
 
         for (var channel of this._channelMap.keys()) {
           if (channel.id === data.id &&
-            channel.origin.prePath === event.principal.origin) {
+            channel._originCheckCallback(event.principal)) {
             validChannelFound = true;
             channel.deliver(data, sender);
           }
@@ -133,17 +133,43 @@ let WebChannelBroker = Object.create({
  *
  * @param id {String}
  *        WebChannel id
- * @param origin {nsIURI}
- *        Valid origin that should be part of requests for this channel
+ * @param originOrPermission {nsIURI/string}
+ *        If an nsIURI, a valid origin that should be part of requests for
+ *        this channel.  If a string, a permission for which the permission
+ *        manager will be checked to determine if the request is allowed. Note
+ *        that in addition to the permission manager check, the request must
+ *        be made over https://
  * @constructor
  */
-this.WebChannel = function(id, origin) {
-  if (!id || !origin) {
-    throw new Error("WebChannel id and origin are required.");
+this.WebChannel = function(id, originOrPermission) {
+  if (!id || !originOrPermission) {
+    throw new Error("WebChannel id and originOrPermission are required.");
   }
 
   this.id = id;
-  this.origin = origin;
+  // originOrPermission can be either an nsIURI or a string representing a
+  // permission name.
+  if (typeof originOrPermission == "string") {
+    this._originCheckCallback = requestPrincipal => {
+      // The permission manager operates on domain names rather than true
+      // origins (bug 1066517).  To mitigate that, we explicitly check that
+      // the scheme is https://.
+      let uri = Services.io.newURI(requestPrincipal.origin, null, null);
+      if (uri.scheme != "https") {
+        return false;
+      }
+      // OK - we have https - now we can check the permission.
+      let perm = Services.perms.testExactPermissionFromPrincipal(requestPrincipal,
+                                                                 originOrPermission);
+      return perm == Ci.nsIPermissionManager.ALLOW_ACTION;
+    }
+  } else {
+    // a simple URI, so just check for an exact match.
+    this._originCheckCallback = requestPrincipal => {
+      return originOrPermission.prePath === requestPrincipal.origin;
+    }
+  }
+  this._originOrPermission = originOrPermission;
 };
 
 this.WebChannel.prototype = {
@@ -154,9 +180,16 @@ this.WebChannel.prototype = {
   id: null,
 
   /**
-   * WebChannel origin
+   * The originOrPermission value passed to the constructor, mainly for
+   * debugging and tests.
    */
-  origin: null,
+  _originOrPermission: null,
+
+  /**
+   * Callback that will be called with the principal of an incoming message
+   * to check if the request should be dispatched to the listeners.
+   */
+  _originCheckCallback: null,
 
   /**
    * WebChannelBroker that manages WebChannels

@@ -14,3 +14,7 @@ host	uitour	1	about:home
 # XPInstall
 host	install	1	addons.mozilla.org
 host	install	1	marketplace.firefox.com
+
+# Remote troubleshooting
+host	remote-troubleshooting	1	input.mozilla.org
+host	remote-troubleshooting	1	support.mozilla.org
