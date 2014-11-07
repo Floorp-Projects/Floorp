@@ -7,6 +7,8 @@
 
 "use strict";
 
+Components.utils.import("resource://gre/modules/Promise.jsm", this);
+
 registerCleanupFunction(function*() {
   MozLoopService.doNotDisturb = false;
   MozLoopServiceInternal.fxAOAuthProfile = null;

@@ -787,9 +787,6 @@ statuspanel[inactive][previoustype=overLink] {
   max-width: 32em;
 }
 
-/* highlighter */
-%include highlighter.css
-
 /* gcli */
 
 html|*#gcli-tooltip-frame,
