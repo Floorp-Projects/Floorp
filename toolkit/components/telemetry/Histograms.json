@@ -4926,6 +4926,17 @@
     "n_buckets": "80 + 1",
     "description": "The time (in milliseconds) after showing a PopupNotification that the mainAction was first triggered"
   },
+  "DEVTOOLS_SELECTED_TOOLBOX_THEME_ENUMERATED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "3",
+    "description": "Theme applied to the built-in developer tools (0=light, 1=dark, 2=other)"
+  },
+  "DEVTOOLS_SELECTED_BROWSER_THEME_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Is the devtools browser theme enabled?"
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_RELOAD_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
