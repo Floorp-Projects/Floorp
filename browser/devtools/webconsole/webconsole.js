@@ -44,6 +44,8 @@ const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/docs/Securi
 
 const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
 
+const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE = "https://developer.mozilla.org/docs/Security/Weak_Signature_Algorithm";
+
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
@@ -1596,6 +1598,9 @@ WebConsoleFrame.prototype = {
      break;
      case "Invalid HSTS Headers":
       url = STRICT_TRANSPORT_SECURITY_LEARN_MORE;
+     break;
+     case "SHA-1 Signature":
+      url = WEAK_SIGNATURE_ALGORITHM_LEARN_MORE;
      break;
      default:
       // Unknown category. Return without adding more info node.
@@ -4689,6 +4694,7 @@ var Utils = {
       case "CSP":
       case "Invalid HSTS Headers":
       case "Invalid HPKP Headers":
+      case "SHA-1 Signature":
       case "Insecure Password Field":
       case "SSL":
       case "CORS":
