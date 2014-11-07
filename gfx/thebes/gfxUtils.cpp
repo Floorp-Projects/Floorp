@@ -43,6 +43,44 @@ using namespace mozilla::gfx;
 
 #include "DeprecatedPremultiplyTables.h"
 
+extern "C" {
+
+/**
+ * Dump a raw image to the default log.  This function is exported
+ * from libxul, so it can be called from any library in addition to
+ * (of course) from a debugger.
+ *
+ * Note: this helper currently assumes that all 2-bytepp images are
+ * r5g6b5, and that all 4-bytepp images are r8g8b8a8.
+ */
+NS_EXPORT
+void mozilla_dump_image(void* bytes, int width, int height, int bytepp,
+                        int strideBytes)
+{
+    if (0 == strideBytes) {
+        strideBytes = width * bytepp;
+    }
+    SurfaceFormat format;
+    // TODO more flexible; parse string?
+    switch (bytepp) {
+    case 2:
+        format = SurfaceFormat::R5G6B5;
+        break;
+    case 4:
+    default:
+        format = SurfaceFormat::R8G8B8A8;
+        break;
+    }
+
+    RefPtr<DataSourceSurface> surf =
+        Factory::CreateWrappingDataSourceSurface((uint8_t*)bytes, strideBytes,
+                                                 gfx::IntSize(width, height),
+                                                 format);
+    gfxUtils::DumpAsDataURI(surf);
+}
+
+}
+
 static const uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
     return gfxUtils::sPremultiplyTable[a*256+v];
 }
