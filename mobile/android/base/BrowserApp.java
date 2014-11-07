@@ -68,7 +68,6 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tiles.TilesRecorder;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
-import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
@@ -246,8 +245,6 @@ public class BrowserApp extends GeckoApp
     // The tab to be selected on editing mode exit.
     private Integer mTargetTabForEditingMode;
 
-    private final TabEditingState mLastTabEditingState = new TabEditingState();
-
     // The animator used to toggle HomePager visibility has a race where if the HomePager is shown
     // (starting the animation), the HomePager is hidden, and the HomePager animation completes,
     // both the web content and the HomePager will be hidden. This flag is used to prevent the
@@ -316,54 +313,15 @@ public class BrowserApp extends GeckoApp
             case BOOKMARK_REMOVED:
                 showBookmarkRemovedToast();
                 break;
-
-            case UNSELECTED:
-                // We receive UNSELECTED immediately after the SELECTED listeners run
-                // so we are ensured that the unselectedTabEditingText has not changed.
-                if (tab.isEditing()) {
-                    // Copy to avoid constructing new objects.
-                    tab.getEditingState().copyFrom(mLastTabEditingState);
-                }
-                break;
         }
 
         if (NewTabletUI.isEnabled(this) && msg == TabEvents.SELECTED) {
-            updateEditingModeForTab(tab);
+            // Note: this is a duplicate call if maybeSwitchToTab
+            // is called, though the call is idempotent.
+            mBrowserToolbar.cancelEdit();
         }
 
         super.onTabChanged(tab, msg, data);
-    }
-
-    private void updateEditingModeForTab(final Tab selectedTab) {
-        if (!Tabs.getInstance().isSelectedTab(selectedTab)) {
-            throw new IllegalStateException("Expected given tab to be selected");
-        }
-
-        saveTabEditingState(mLastTabEditingState);
-
-        if (selectedTab.isEditing()) {
-            enterEditingMode();
-            restoreTabEditingState(selectedTab.getEditingState());
-        } else {
-            mBrowserToolbar.cancelEdit();
-        }
-    }
-
-    private void saveTabEditingState(final TabEditingState editingState) {
-        mBrowserToolbar.saveTabEditingState(editingState);
-        editingState.setIsBrowserSearchShown(mBrowserSearch.getUserVisibleHint());
-    }
-
-    private void restoreTabEditingState(final TabEditingState editingState) {
-        mBrowserToolbar.restoreTabEditingState(editingState);
-
-        // Since changing the editing text will show/hide browser search, this
-        // must be called after we restore the editing state in the edit text View.
-        if (editingState.isBrowserSearchShown()) {
-            showBrowserSearch();
-        } else {
-            hideBrowserSearch();
-        }
     }
 
     private void showBookmarkAddedToast() {
@@ -880,11 +838,6 @@ public class BrowserApp extends GeckoApp
         mBrowserToolbar.setOnStartEditingListener(new BrowserToolbar.OnStartEditingListener() {
             @Override
             public void onStartEditing() {
-                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-                if (selectedTab != null) {
-                    selectedTab.setIsEditing(true);
-                }
-
                 // Temporarily disable doorhanger notifications.
                 mDoorHangerPopup.disable();
             }
@@ -893,11 +846,6 @@ public class BrowserApp extends GeckoApp
         mBrowserToolbar.setOnStopEditingListener(new BrowserToolbar.OnStopEditingListener() {
             @Override
             public void onStopEditing() {
-                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-                if (selectedTab != null) {
-                    selectedTab.setIsEditing(false);
-                }
-
                 selectTargetTabForEditingMode();
 
                 // Since the underlying LayerView is set visible in hideHomePager, we would
@@ -1867,11 +1815,6 @@ public class BrowserApp extends GeckoApp
 
         if (tab == null) {
             return false;
-        }
-
-        final Tab oldTab = tabs.getSelectedTab();
-        if (oldTab != null) {
-            oldTab.setIsEditing(false);
         }
 
         // Set the target tab to null so it does not get selected (on editing
