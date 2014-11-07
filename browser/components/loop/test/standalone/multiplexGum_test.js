@@ -199,7 +199,7 @@ describe("loop.standaloneMedia._MultiplexGum", function() {
 
     it("should not call a getPermsAndCacheMedia success callback at the time" +
        " of gUM success callback fires",
-      function(done) {
+      function() {
         var fakeLocalStream = {};
         multiplexGum.userMedia.localStream = fakeLocalStream;
         navigator.originalGum.callsArgWith(1, fakeLocalStream);
@@ -219,23 +219,21 @@ describe("loop.standaloneMedia._MultiplexGum", function() {
             }, function() {
               sinon.assert.fail("error callback should not have fired");
               reject();
-              done();
             });
         });
 
-        promiseCalledOnce.then(function() {
+        return promiseCalledOnce.then(function() {
           defaultGum(null, function gUMSuccess(localStream2) {
             expect(localStream2).to.eql(fakeLocalStream);
             expect(multiplexGum.userMedia).to.have.property('pending', false);
             expect(multiplexGum.userMedia.successCallbacks.length).to.equal(0);
-            done();
           });
         });
       });
 
     it("should not call a getPermsAndCacheMedia error callback when the " +
       " gUM error callback fires",
-      function(done) {
+      function() {
         var fakeError = "monkeys ate the stream";
         multiplexGum.userMedia.error = fakeError;
         navigator.originalGum.callsArgWith(2, fakeError);
@@ -244,7 +242,6 @@ describe("loop.standaloneMedia._MultiplexGum", function() {
           multiplexGum.getPermsAndCacheMedia(null, function() {
             sinon.assert.fail("success callback should not have fired");
             reject();
-            done();
           }, function gPACMError(errString) {
             expect(errString).to.eql(fakeError);
             expect(multiplexGum.userMedia).to.have.property('pending', false);
@@ -256,12 +253,11 @@ describe("loop.standaloneMedia._MultiplexGum", function() {
           });
         });
 
-        promiseCalledOnce.then(function() {
+        return promiseCalledOnce.then(function() {
           defaultGum(null, function() {},
             function gUMError(errString) {
               expect(errString).to.eql(fakeError);
               expect(multiplexGum.userMedia).to.have.property('pending', false);
-              done();
             });
         });
       });
