@@ -1,18 +1,18 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsCrypto.h"
-#include "nsNSSComponent.h"
-#include "secmod.h"
 
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
-#include "nsXPIDLString.h"
-#include "nsISaveAsCharset.h"
+#include "nsCrypto.h"
+
+#include "nsNSSComponent.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "pkix/ScopedPtr.h"
+#include "secmod.h"
+
+typedef mozilla::pkix::ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 
 // QueryInterface implementation for nsPkcs11
 NS_INTERFACE_MAP_BEGIN(nsPkcs11)
@@ -29,56 +29,66 @@ nsPkcs11::nsPkcs11()
 
 nsPkcs11::~nsPkcs11()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+  shutdown(calledFromObject);
 }
 
-//Delete a PKCS11 module from the user's profile.
+// Delete a PKCS11 module from the user's profile.
 NS_IMETHODIMP
 nsPkcs11::DeleteModule(const nsAString& aModuleName)
 {
-  NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
-  nsresult rv;
-  nsString errorMessage;
-
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   if (aModuleName.IsEmpty()) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    return NS_ERROR_INVALID_ARG;
   }
-  
-  NS_ConvertUTF16toUTF8 modName(aModuleName);
-  int32_t modType;
-  SECStatus srv = SECMOD_DeleteModule(modName.get(), &modType);
-  if (srv == SECSuccess) {
-    SECMODModule *module = SECMOD_FindModule(modName.get());
-    if (module) {
+
+  NS_ConvertUTF16toUTF8 moduleName(aModuleName);
+  // Introduce additional scope for module so all references to it are released
+  // before we call SECMOD_DeleteModule, below.
 #ifndef MOZ_NO_SMART_CARDS
-      nssComponent->ShutdownSmartCardThread(module);
-#endif
-      SECMOD_DestroyModule(module);
+  {
+    ScopedSECMODModule module(SECMOD_FindModule(moduleName.get()));
+    if (!module) {
+      return NS_ERROR_FAILURE;
     }
-    rv = NS_OK;
-  } else {
-    rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsINSSComponent> nssComponent(
+      do_GetService(PSM_COMPONENT_CONTRACTID));
+    nssComponent->ShutdownSmartCardThread(module.get());
   }
-  return rv;
+#endif
+
+  // modType is an output variable. We ignore it.
+  int32_t modType;
+  SECStatus srv = SECMOD_DeleteModule(moduleName.get(), &modType);
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
-//Add a new PKCS11 module to the user's profile.
+// Add a new PKCS11 module to the user's profile.
 NS_IMETHODIMP
-nsPkcs11::AddModule(const nsAString& aModuleName, 
-                    const nsAString& aLibraryFullPath, 
-                    int32_t aCryptoMechanismFlags, 
+nsPkcs11::AddModule(const nsAString& aModuleName,
+                    const nsAString& aLibraryFullPath,
+                    int32_t aCryptoMechanismFlags,
                     int32_t aCipherFlags)
 {
-  NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
-  nsresult rv;
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (aModuleName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   NS_ConvertUTF16toUTF8 moduleName(aModuleName);
   nsCString fullPath;
@@ -86,28 +96,21 @@ nsPkcs11::AddModule(const nsAString& aModuleName,
   NS_CopyUnicodeToNative(aLibraryFullPath, fullPath);
   uint32_t mechFlags = SECMOD_PubMechFlagstoInternal(aCryptoMechanismFlags);
   uint32_t cipherFlags = SECMOD_PubCipherFlagstoInternal(aCipherFlags);
-  SECStatus srv = SECMOD_AddNewModule(moduleName.get(), fullPath.get(), 
+  SECStatus srv = SECMOD_AddNewModule(moduleName.get(), fullPath.get(),
                                       mechFlags, cipherFlags);
-  if (srv == SECSuccess) {
-    SECMODModule *module = SECMOD_FindModule(moduleName.get());
-    if (module) {
-#ifndef MOZ_NO_SMART_CARDS
-      nssComponent->LaunchSmartCardThread(module);
-#endif
-      SECMOD_DestroyModule(module);
-    }
+  if (srv != SECSuccess) {
+    return NS_ERROR_FAILURE;
   }
 
-  // The error message we report to the user depends directly on 
-  // what the return value for SEDMOD_AddNewModule is
-  switch (srv) {
-  case SECSuccess:
-    return NS_OK;
-  case SECFailure:
+#ifndef MOZ_NO_SMART_CARDS
+  ScopedSECMODModule module(SECMOD_FindModule(moduleName.get()));
+  if (!module) {
     return NS_ERROR_FAILURE;
-  case -2:
-    return NS_ERROR_ILLEGAL_VALUE;
   }
-  NS_ERROR("Bogus return value, this should never happen");
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsINSSComponent> nssComponent(
+    do_GetService(PSM_COMPONENT_CONTRACTID));
+  nssComponent->LaunchSmartCardThread(module.get());
+#endif
+
+  return NS_OK;
 }

@@ -527,8 +527,7 @@ nsCSSBorderRenderer::FillSolidBorder(const Rect& aOuterRect,
   // If we have a border radius, do full rounded rectangles
   // and fill, regardless of what sides we're asked to draw.
   if (!AllCornersZeroSize(aBorderRadii)) {
-    RefPtr<PathBuilder> builder =
-      mDrawTarget->CreatePathBuilder(FillRule::FILL_EVEN_ODD);
+    RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
 
     RectCornerRadii innerRadii;
     ComputeInnerRadii(aBorderRadii, aBorderSizes, &innerRadii);
@@ -1473,12 +1472,12 @@ nsCSSBorderRenderer::DrawBorders()
     // doesn't need to compute an offset curve to stroke the path. We know that
     // the rounded parts are elipses we can offset exactly and can just compute
     // a new cubic approximation.
-    RefPtr<PathBuilder> builder =
-      mDrawTarget->CreatePathBuilder(FillRule::FILL_EVEN_ODD);
+    RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
     AppendRoundedRectToPath(builder, mOuterRect, mBorderRadii, true);
     AppendRoundedRectToPath(builder, ToRect(borderInnerRect.rect), borderInnerRect.corners, false);
     RefPtr<Path> path = builder->Finish();
     mDrawTarget->Fill(path, color);
+    return;
   }
 
   bool hasCompositeColors;

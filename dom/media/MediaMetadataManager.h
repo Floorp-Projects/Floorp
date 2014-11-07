@@ -52,9 +52,9 @@ namespace mozilla {
           NS_DispatchToMainThread(removeTracksEvent);
 
           nsCOMPtr<nsIRunnable> metadataUpdatedEvent =
-            new MetadataEventRunner(aDecoder,
-                                    metadata->mInfo.forget(),
-                                    metadata->mTags.forget());
+            new MetadataUpdatedEventRunner(aDecoder,
+                                           metadata->mInfo,
+                                           metadata->mTags);
           NS_DispatchToMainThread(metadataUpdatedEvent);
           delete mMetadataQueue.popFirst();
           metadata = mMetadataQueue.getFirst();
