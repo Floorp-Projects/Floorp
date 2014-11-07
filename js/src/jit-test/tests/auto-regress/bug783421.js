@@ -20,7 +20,7 @@ function h(code) {
 h("\
   p=m();\
   gcPreserveCode();\
-  gcslice(7);\
+  gcslice(8);\
 ")
 h("\"\"")
 h("")

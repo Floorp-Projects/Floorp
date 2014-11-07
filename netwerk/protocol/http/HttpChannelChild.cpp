@@ -1493,7 +1493,11 @@ HttpChannelChild::ContinueAsyncOpen()
     mThirdPartyFlags |= thirdParty ?
       nsIHttpChannelInternal::THIRD_PARTY_PARENT_IS_THIRD_PARTY :
       nsIHttpChannelInternal::THIRD_PARTY_PARENT_IS_SAME_PARTY;
+    nsCOMPtr<nsIURI> uri;
+    GetTopWindowURI(getter_AddRefs(uri));
   }
+
+  SerializeURI(mTopWindowURI, openArgs.topWindowURI());
 
   openArgs.fds() = optionalFDs;
 

@@ -15,6 +15,8 @@ template<class T> struct already_AddRefed;
 #include "nsError.h"
 #include "nsID.h"
 
+#include "js/SliceBudget.h"
+
 namespace mozilla {
 
 class CycleCollectedJSRuntime;
@@ -56,13 +58,7 @@ already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink();
 
 void nsCycleCollector_collect(nsICycleCollectorListener* aManualListener);
 
-// If aSliceTime is negative, the CC will run to completion. Otherwise,
-// aSliceTime will be used as the time budget for the slice, in ms.
-void nsCycleCollector_collectSlice(int64_t aSliceTime);
-
-// If aSliceTime is negative, the CC will run to completion. Otherwise,
-// aSliceTime will be used as the work budget for the slice.
-void nsCycleCollector_collectSliceWork(int64_t aSliceWork);
+void nsCycleCollector_collectSlice(js::SliceBudget& budget);
 
 uint32_t nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdown();

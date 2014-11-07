@@ -24,8 +24,8 @@ public:
   }
   virtual void FireTimeUpdate(bool aPeriodic) MOZ_OVERRIDE {}
   virtual bool GetPaused() MOZ_OVERRIDE { return false; }
-  virtual void MetadataLoaded(const MediaInfo* aInfo, const MetadataTags* aTags)
-    MOZ_OVERRIDE
+  virtual void MetadataLoaded(const MediaInfo* aInfo,
+                              nsAutoPtr<const MetadataTags> aTags) MOZ_OVERRIDE
   {
   }
   virtual void NetworkError() MOZ_OVERRIDE {}
