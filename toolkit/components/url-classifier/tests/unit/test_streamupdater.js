@@ -7,6 +7,8 @@ function doTest(updates, assertions, expectError)
   }
 }
 
+// Never use the same URLs for multiple tests, because we aren't guaranteed
+// to reset the database between tests.
 function testFillDb() {
   var add1Urls = [ "zaz.com/a", "yxz.com/c" ];
 
@@ -27,9 +29,9 @@ function testFillDb() {
 }
 
 function testSimpleForward() {
-  var add1Urls = [ "foo.com/a", "bar.com/c" ];
-  var add2Urls = [ "foo.com/b" ];
-  var add3Urls = [ "bar.com/d" ];
+  var add1Urls = [ "foo-simple.com/a", "bar-simple.com/c" ];
+  var add2Urls = [ "foo-simple.com/b" ];
+  var add3Urls = [ "bar-simple.com/d" ];
 
   var update = "n:1000\n";
   update += "i:test-phish-simple\n";
@@ -60,8 +62,8 @@ function testSimpleForward() {
 // Make sure that a nested forward (a forward within a forward) causes
 // the update to fail.
 function testNestedForward() {
-  var add1Urls = [ "foo.com/a", "bar.com/c" ];
-  var add2Urls = [ "foo.com/b" ];
+  var add1Urls = [ "foo-nested.com/a", "bar-nested.com/c" ];
+  var add2Urls = [ "foo-nested.com/b" ];
 
   var update = "n:1000\n";
   update += "i:test-phish-simple\n";
@@ -91,46 +93,44 @@ function testNestedForward() {
 
 // An invalid URL forward causes the update to fail.
 function testInvalidUrlForward() {
-  var add1Urls = [ "foo.com/a", "bar.com/c" ];
+  var add1Urls = [ "foo-invalid.com/a", "bar-invalid.com/c" ];
 
   var update = buildPhishingUpdate(
     [{ "chunkNum" : 1,
        "urls" : add1Urls }]);
   update += "u:asdf://blah/blah\n";  // invalid URL scheme
 
-  // The first part of the update should have succeeded.
-
+  // add1Urls is present, but that is an artifact of the way we do the test.
   var assertions = {
-    "tableData" : "test-phish-simple;a:1",
+    "tableData" : "",
     "urlsExist" : add1Urls
   };
 
-  doTest([update], assertions, false);
+  doTest([update], assertions, true);
 }
 
 // A failed network request causes the update to fail.
 function testErrorUrlForward() {
-  var add1Urls = [ "foo.com/a", "bar.com/c" ];
+  var add1Urls = [ "foo-forward.com/a", "bar-forward.com/c" ];
 
   var update = buildPhishingUpdate(
     [{ "chunkNum" : 1,
        "urls" : add1Urls }]);
   update += "u:http://test.invalid/asdf/asdf\n";  // invalid URL scheme
 
-  // The first part of the update should have succeeded
-
+  // add1Urls is present, but that is an artifact of the way we do the test.
   var assertions = {
-    "tableData" : "test-phish-simple;a:1",
+    "tableData" : "",
     "urlsExist" : add1Urls
   };
 
-  doTest([update], assertions, false);
+  doTest([update], assertions, true);
 }
 
 function testMultipleTables() {
-  var add1Urls = [ "foo.com/a", "bar.com/c" ];
-  var add2Urls = [ "foo.com/b" ];
-  var add3Urls = [ "bar.com/d" ];
+  var add1Urls = [ "foo-multiple.com/a", "bar-multiple.com/c" ];
+  var add2Urls = [ "foo-multiple.com/b" ];
+  var add3Urls = [ "bar-multiple.com/d" ];
 
   var update = "n:1000\n";
   update += "i:test-phish-simple\n";
@@ -179,7 +179,7 @@ QueryInterface: function(iid)
 
 // Tests a database reset request.
 function testReset() {
-  var addUrls1 = [ "foo.com/a", "foo.com/b" ];
+  var addUrls1 = [ "foo-reset.com/a", "foo-reset.com/b" ];
   var update1 = buildPhishingUpdate(
     [
       { "chunkNum" : 1,
@@ -188,7 +188,7 @@ function testReset() {
 
   var update2 = "n:1000\nr:pleasereset\n";
 
-  var addUrls3 = [ "bar.com/a", "bar.com/b" ];
+  var addUrls3 = [ "bar-reset.com/a", "bar-reset.com/b" ];
   var update3 = buildPhishingUpdate(
     [
       { "chunkNum" : 3,
