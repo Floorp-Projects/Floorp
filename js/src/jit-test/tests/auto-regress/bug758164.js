@@ -3,4 +3,4 @@
 //
 
 gc();
-evaluate("gcslice(1);");
+evaluate("gcslice(0);");
