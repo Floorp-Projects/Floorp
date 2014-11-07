@@ -1359,7 +1359,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
 /* static */ float
 nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                        const float& aOpacity,
-                       gfxTextContextPaint *aOuterContextPaint)
+                       gfxTextContextPaint *aContextPaint)
 {
   float opacity = 1.0f;
   switch (aOpacityType) {
@@ -1367,17 +1367,17 @@ nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
     opacity = aOpacity;
     break;
   case eStyleSVGOpacitySource_ContextFillOpacity:
-    if (aOuterContextPaint) {
-      opacity = aOuterContextPaint->GetFillOpacity();
+    if (aContextPaint) {
+      opacity = aContextPaint->GetFillOpacity();
     } else {
-      NS_WARNING("context-fill-opacity used outside of an SVG glyph");
+      NS_WARNING("Content used context-fill-opacity when not in a context element");
     }
     break;
   case eStyleSVGOpacitySource_ContextStrokeOpacity:
-    if (aOuterContextPaint) {
-      opacity = aOuterContextPaint->GetStrokeOpacity();
+    if (aContextPaint) {
+      opacity = aContextPaint->GetStrokeOpacity();
     } else {
-      NS_WARNING("context-stroke-opacity used outside of an SVG glyph");
+      NS_WARNING("Content used context-stroke-opacity when not in a context element");
     }
     break;
   default:

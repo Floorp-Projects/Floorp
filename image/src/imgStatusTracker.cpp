@@ -107,14 +107,6 @@ public:
     tracker->RecordStopRequest(aLastPart, aStatus);
   }
 
-  virtual void OnDiscard() MOZ_OVERRIDE
-  {
-    LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnDiscard");
-    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
-    if (!tracker) { return; }
-    tracker->RecordDiscard();
-  }
-
   virtual void OnUnlockedDraw() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnUnlockedDraw");
@@ -151,24 +143,16 @@ private:
 // imgStatusTracker methods
 
 imgStatusTracker::imgStatusTracker(Image* aImage)
-  : mImage(aImage),
-    mState(0),
-    mImageStatus(imgIRequest::STATUS_NONE),
-    mIsMultipart(false),
-    mHadLastPart(false),
-    mHasBeenDecoded(false)
+  : mImage(aImage)
+  , mState(0)
 {
   mTrackerObserver = new imgStatusTrackerObserver(this);
 }
 
 // Private, used only by CloneForRecording.
 imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
-  : mImage(aOther.mImage),
-    mState(aOther.mState),
-    mImageStatus(aOther.mImageStatus),
-    mIsMultipart(aOther.mIsMultipart),
-    mHadLastPart(aOther.mHadLastPart),
-    mHasBeenDecoded(aOther.mHasBeenDecoded)
+  : mImage(aOther.mImage)
+  , mState(aOther.mState)
     // Note: we explicitly don't copy several fields:
     //  - mRequestRunnable, because it won't be nulled out when the
     //    mRequestRunnable's Run function eventually gets called.
@@ -218,19 +202,46 @@ imgStatusTracker::ResetImage()
   mImage = nullptr;
 }
 
+void imgStatusTracker::SetIsMultipart()
+{
+  mState |= FLAG_IS_MULTIPART;
+}
+
 bool
 imgStatusTracker::IsLoading() const
 {
   // Checking for whether OnStopRequest has fired allows us to say we're
   // loading before OnStartRequest gets called, letting the request properly
   // get removed from the cache in certain cases.
-  return !(mState & stateRequestStopped);
+  return !(mState & FLAG_REQUEST_STOPPED);
 }
 
 uint32_t
 imgStatusTracker::GetImageStatus() const
 {
-  return mImageStatus;
+  uint32_t status = imgIRequest::STATUS_NONE;
+
+  // Translate our current state to a set of imgIRequest::STATE_* flags.
+  if (mState & FLAG_HAS_SIZE) {
+    status |= imgIRequest::STATUS_SIZE_AVAILABLE;
+  }
+  if (mState & FLAG_DECODE_STARTED) {
+    status |= imgIRequest::STATUS_DECODE_STARTED;
+  }
+  if (mState & FLAG_DECODE_STOPPED) {
+    status |= imgIRequest::STATUS_DECODE_COMPLETE;
+  }
+  if (mState & FLAG_FRAME_STOPPED) {
+    status |= imgIRequest::STATUS_FRAME_COMPLETE;
+  }
+  if (mState & FLAG_REQUEST_STOPPED) {
+    status |= imgIRequest::STATUS_LOAD_COMPLETE;
+  }
+  if (mState & FLAG_HAS_ERROR) {
+    status |= imgIRequest::STATUS_ERROR;
+  }
+
+  return status;
 }
 
 // A helper class to allow us to call SyncNotify asynchronously.
@@ -371,23 +382,23 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
 /* static */ void
 imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
                                   bool hasImage, uint32_t state,
-                                  nsIntRect& dirtyRect, bool hadLastPart)
+                                  nsIntRect& dirtyRect)
 {
   MOZ_ASSERT(NS_IsMainThread());
   // OnStartRequest
-  if (state & stateRequestStarted)
+  if (state & FLAG_REQUEST_STARTED)
     NOTIFY_IMAGE_OBSERVERS(OnStartRequest());
 
   // OnStartContainer
-  if (state & stateHasSize)
+  if (state & FLAG_HAS_SIZE)
     NOTIFY_IMAGE_OBSERVERS(OnStartContainer());
 
   // OnStartDecode
-  if (state & stateDecodeStarted)
+  if (state & FLAG_DECODE_STARTED)
     NOTIFY_IMAGE_OBSERVERS(OnStartDecode());
 
   // BlockOnload
-  if (state & stateBlockingOnload)
+  if (state & FLAG_ONLOAD_BLOCKED)
     NOTIFY_IMAGE_OBSERVERS(BlockOnload());
 
   if (hasImage) {
@@ -398,21 +409,28 @@ imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
     if (!dirtyRect.IsEmpty())
       NOTIFY_IMAGE_OBSERVERS(OnFrameUpdate(&dirtyRect));
 
-    if (state & stateFrameStopped)
+    if (state & FLAG_FRAME_STOPPED)
       NOTIFY_IMAGE_OBSERVERS(OnStopFrame());
 
     // OnImageIsAnimated
-    if (state & stateImageIsAnimated)
+    if (state & FLAG_IS_ANIMATED)
       NOTIFY_IMAGE_OBSERVERS(OnImageIsAnimated());
   }
 
-  if (state & stateDecodeStopped) {
+  // Send UnblockOnload before OnStopDecode and OnStopRequest. This allows
+  // observers that can fire events when they receive those notifications to do
+  // so then, instead of being forced to wait for UnblockOnload.
+  if (state & FLAG_ONLOAD_UNBLOCKED) {
+    NOTIFY_IMAGE_OBSERVERS(UnblockOnload());
+  }
+
+  if (state & FLAG_DECODE_STOPPED) {
     NS_ABORT_IF_FALSE(hasImage, "stopped decoding without ever having an image?");
     NOTIFY_IMAGE_OBSERVERS(OnStopDecode());
   }
 
-  if (state & stateRequestStopped) {
-    NOTIFY_IMAGE_OBSERVERS(OnStopRequest(hadLastPart));
+  if (state & FLAG_REQUEST_STOPPED) {
+    NOTIFY_IMAGE_OBSERVERS(OnStopRequest(state & FLAG_MULTIPART_STOPPED));
   }
 }
 
@@ -421,27 +439,15 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
 {
   MOZ_ASSERT(aOther, "aOther cannot be null");
   ImageStatusDiff diff;
-  diff.diffState = ~mState & aOther->mState & ~stateRequestStarted;
-  diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
-  diff.unblockedOnload = mState & stateBlockingOnload && !(aOther->mState & stateBlockingOnload);
-  diff.unsetDecodeStarted = mImageStatus & imgIRequest::STATUS_DECODE_STARTED
-                         && !(aOther->mImageStatus & imgIRequest::STATUS_DECODE_STARTED);
-  diff.foundError = (mImageStatus != imgIRequest::STATUS_ERROR)
-                 && (aOther->mImageStatus == imgIRequest::STATUS_ERROR);
-
-  MOZ_ASSERT(!mIsMultipart || aOther->mIsMultipart, "mIsMultipart should be monotonic");
-  diff.foundIsMultipart = !mIsMultipart && aOther->mIsMultipart;
-  diff.foundLastPart = !mHadLastPart && aOther->mHadLastPart;
-
-  diff.gotDecoded = !mHasBeenDecoded && aOther->mHasBeenDecoded;
+  diff.diffState = ~mState & aOther->mState;
 
   // Only record partial invalidations if we haven't been decoded before.
   // When images are re-decoded after discarding, we don't want to display
   // partially decoded versions to the user.
-  const uint32_t combinedStatus = mImageStatus | aOther->mImageStatus;
-  const bool doInvalidations  = !(mHasBeenDecoded || aOther->mHasBeenDecoded)
-                             || combinedStatus & imgIRequest::STATUS_ERROR
-                             || combinedStatus & imgIRequest::STATUS_DECODE_COMPLETE;
+  const uint32_t combinedState = mState | aOther->mState;
+  const bool doInvalidations = !(mState & FLAG_DECODE_STOPPED) ||
+                               aOther->mState & FLAG_DECODE_STOPPED ||
+                               combinedState & FLAG_HAS_ERROR;
 
   // Record and reset the invalid rectangle.
   // XXX(seth): We shouldn't be resetting anything here; see bug 910441.
@@ -457,11 +463,8 @@ ImageStatusDiff
 imgStatusTracker::DecodeStateAsDifference() const
 {
   ImageStatusDiff diff;
-  diff.diffState = mState & ~stateRequestStarted;
-
-  // All other ImageStatusDiff fields are intentionally left at their default
-  // values; we only want to notify decode state changes.
-
+  // XXX(seth): Is FLAG_REQUEST_STARTED really the only non-"decode state" flag?
+  diff.diffState = mState & ~FLAG_REQUEST_STARTED;
   return diff;
 }
 
@@ -469,29 +472,7 @@ void
 imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
 {
   LOG_SCOPE(GetImgLog(), "imgStatusTracker::ApplyDifference");
-
-  // We must not modify or notify for the start-load state, which happens from Necko callbacks.
-  uint32_t loadState = mState & stateRequestStarted;
-
-  // Synchronize our state.
-  mState |= aDiff.diffState | loadState;
-  if (aDiff.unblockedOnload)
-    mState &= ~stateBlockingOnload;
-
-  mIsMultipart = mIsMultipart || aDiff.foundIsMultipart;
-  mHadLastPart = mHadLastPart || aDiff.foundLastPart;
-  mHasBeenDecoded = mHasBeenDecoded || aDiff.gotDecoded;
-
-  // Update the image status. There are some subtle points which are handled below.
-  mImageStatus |= aDiff.diffImageStatus;
-
-  // Unset bits which can get unset as part of the decoding process.
-  if (aDiff.unsetDecodeStarted)
-    mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
-
-  // The error state is sticky and overrides all other bits.
-  if (mImageStatus & imgIRequest::STATUS_ERROR)
-    mImageStatus = imgIRequest::STATUS_ERROR;
+  mState |= aDiff.diffState;
 }
 
 void
@@ -502,24 +483,11 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& diff)
 
   nsIntRect invalidRect = mInvalidRect.Union(diff.invalidRect);
 
-  SyncNotifyState(mConsumers, !!mImage, diff.diffState, invalidRect, mHadLastPart);
+  SyncNotifyState(mConsumers, !!mImage, diff.diffState, invalidRect);
 
   mInvalidRect.SetEmpty();
 
-  if (diff.unblockedOnload) {
-    ProxyArray::ForwardIterator iter(mConsumers);
-    while (iter.HasMore()) {
-      // Hold on to a reference to this proxy, since notifying the state can
-      // cause it to disappear.
-      nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-
-      if (proxy && !proxy->NotificationsDeferred()) {
-        SendUnblockOnload(proxy);
-      }
-    }
-  }
-
-  if (diff.foundError) {
+  if (diff.diffState & FLAG_HAS_ERROR) {
     FireFailureNotification();
   }
 }
@@ -554,7 +522,7 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
 
   ProxyArray array;
   array.AppendElement(proxy);
-  SyncNotifyState(array, !!mImage, mState, r, mHadLastPart);
+  SyncNotifyState(array, !!mImage, mState, r);
 }
 
 void
@@ -567,15 +535,15 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
 
   // In certain cases the request might not have started yet.
   // We still need to fulfill the contract.
-  if (!(mState & stateRequestStarted)) {
+  if (!(mState & FLAG_REQUEST_STARTED)) {
     aProxy->OnStartRequest();
   }
 
-  if (mState & stateBlockingOnload) {
+  if (mState & FLAG_ONLOAD_BLOCKED && !(mState & FLAG_ONLOAD_UNBLOCKED)) {
     aProxy->UnblockOnload();
   }
 
-  if (!(mState & stateRequestStopped)) {
+  if (!(mState & FLAG_REQUEST_STOPPED)) {
     aProxy->OnStopRequest(true);
   }
 }
@@ -629,34 +597,29 @@ imgStatusTracker::FirstConsumerIs(imgRequestProxy* aConsumer)
 void
 imgStatusTracker::RecordCancel()
 {
-  if (!(mImageStatus & imgIRequest::STATUS_LOAD_PARTIAL))
-    mImageStatus = imgIRequest::STATUS_ERROR;
+  mState |= FLAG_HAS_ERROR;
 }
 
 void
 imgStatusTracker::RecordLoaded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordLoaded called before we have an Image");
-  mState |= stateRequestStarted | stateHasSize | stateRequestStopped;
-  mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE | imgIRequest::STATUS_LOAD_COMPLETE;
-  mHadLastPart = true;
+  mState |= FLAG_REQUEST_STARTED | FLAG_HAS_SIZE |
+            FLAG_REQUEST_STOPPED | FLAG_MULTIPART_STOPPED;
 }
 
 void
 imgStatusTracker::RecordDecoded()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordDecoded called before we have an Image");
-  mState |= stateDecodeStarted | stateDecodeStopped | stateFrameStopped;
-  mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE | imgIRequest::STATUS_DECODE_COMPLETE;
-  mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
+  mState |= FLAG_DECODE_STARTED | FLAG_DECODE_STOPPED | FLAG_FRAME_STOPPED;
 }
 
 void
 imgStatusTracker::RecordStartDecode()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordStartDecode without an Image");
-  mState |= stateDecodeStarted;
-  mImageStatus |= imgIRequest::STATUS_DECODE_STARTED;
+  mState |= FLAG_DECODE_STARTED;
 }
 
 void
@@ -674,8 +637,7 @@ imgStatusTracker::RecordStartContainer(imgIContainer* aContainer)
                     "RecordStartContainer called before we have an Image");
   NS_ABORT_IF_FALSE(mImage == aContainer,
                     "RecordStartContainer called with wrong Image");
-  mState |= stateHasSize;
-  mImageStatus |= imgIRequest::STATUS_SIZE_AVAILABLE;
+  mState |= FLAG_HAS_SIZE;
 }
 
 void
@@ -698,8 +660,7 @@ void
 imgStatusTracker::RecordStopFrame()
 {
   NS_ABORT_IF_FALSE(mImage, "RecordStopFrame called before we have an Image");
-  mState |= stateFrameStopped;
-  mImageStatus |= imgIRequest::STATUS_FRAME_COMPLETE;
+  mState |= FLAG_FRAME_STOPPED;
 }
 
 void
@@ -713,17 +674,12 @@ imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy)
 void
 imgStatusTracker::RecordStopDecode(nsresult aStatus)
 {
-  NS_ABORT_IF_FALSE(mImage,
-                    "RecordStopDecode called before we have an Image");
-  mState |= stateDecodeStopped;
+  MOZ_ASSERT(mImage, "RecordStopDecode called before we have an Image");
 
-  if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR) {
-    mImageStatus |= imgIRequest::STATUS_DECODE_COMPLETE;
-    mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
-    mHasBeenDecoded = true;
-  // If we weren't successful, clear all success status bits and set error.
-  } else {
-    mImageStatus = imgIRequest::STATUS_ERROR;
+  mState |= FLAG_DECODE_STOPPED;
+
+  if (NS_FAILED(aStatus)) {
+    mState |= FLAG_HAS_ERROR;
   }
 }
 
@@ -734,22 +690,6 @@ imgStatusTracker::SendStopDecode(imgRequestProxy* aProxy,
   MOZ_ASSERT(NS_IsMainThread());
   if (!aProxy->NotificationsDeferred())
     aProxy->OnStopDecode();
-}
-
-void
-imgStatusTracker::RecordDiscard()
-{
-  NS_ABORT_IF_FALSE(mImage,
-                    "RecordDiscard called before we have an Image");
-  // Clear the state bits we no longer deserve.
-  uint32_t stateBitsToClear = stateDecodeStopped;
-  mState &= ~stateBitsToClear;
-
-  // Clear the status bits we no longer deserve.
-  uint32_t statusBitsToClear = imgIRequest::STATUS_DECODE_STARTED |
-                               imgIRequest::STATUS_FRAME_COMPLETE |
-                               imgIRequest::STATUS_DECODE_COMPLETE;
-  mImageStatus &= ~statusBitsToClear;
 }
 
 void
@@ -773,7 +713,7 @@ imgStatusTracker::RecordImageIsAnimated()
 {
   NS_ABORT_IF_FALSE(mImage,
                     "RecordImageIsAnimated called before we have an Image");
-  mState |= stateImageIsAnimated;
+  mState |= FLAG_IS_ANIMATED;
 }
 
 void
@@ -828,20 +768,17 @@ void
 imgStatusTracker::RecordStartRequest()
 {
   // We're starting a new load, so clear any status and state bits indicating
-  // load/decode
-  mImageStatus &= ~imgIRequest::STATUS_LOAD_PARTIAL;
-  mImageStatus &= ~imgIRequest::STATUS_LOAD_COMPLETE;
-  mImageStatus &= ~imgIRequest::STATUS_FRAME_COMPLETE;
-  mImageStatus &= ~imgIRequest::STATUS_DECODE_STARTED;
-  mImageStatus &= ~imgIRequest::STATUS_DECODE_COMPLETE;
-  mState &= ~stateRequestStarted;
-  mState &= ~stateDecodeStarted;
-  mState &= ~stateDecodeStopped;
-  mState &= ~stateRequestStopped;
-  mState &= ~stateBlockingOnload;
-  mState &= ~stateImageIsAnimated;
+  // load/decode.
+  // XXX(seth): Are these really the only flags we want to clear?
+  mState &= ~FLAG_REQUEST_STARTED;
+  mState &= ~FLAG_DECODE_STARTED;
+  mState &= ~FLAG_DECODE_STOPPED;
+  mState &= ~FLAG_REQUEST_STOPPED;
+  mState &= ~FLAG_ONLOAD_BLOCKED;
+  mState &= ~FLAG_ONLOAD_UNBLOCKED;
+  mState &= ~FLAG_IS_ANIMATED;
 
-  mState |= stateRequestStarted;
+  mState |= FLAG_REQUEST_STARTED;
 }
 
 void
@@ -870,14 +807,13 @@ void
 imgStatusTracker::RecordStopRequest(bool aLastPart,
                                     nsresult aStatus)
 {
-  mHadLastPart = aLastPart;
-  mState |= stateRequestStopped;
-
-  // If we were successful in loading, note that the image is complete.
-  if (NS_SUCCEEDED(aStatus) && mImageStatus != imgIRequest::STATUS_ERROR)
-    mImageStatus |= imgIRequest::STATUS_LOAD_COMPLETE;
-  else
-    mImageStatus = imgIRequest::STATUS_ERROR;
+  mState |= FLAG_REQUEST_STOPPED;
+  if (aLastPart) {
+    mState |= FLAG_MULTIPART_STOPPED;
+  }
+  if (NS_FAILED(aStatus)) {
+    mState |= FLAG_HAS_ERROR;
+  }
 }
 
 void
@@ -927,7 +863,7 @@ imgStatusTracker::OnStopRequest(bool aLastPart,
       new OnStopRequestEvent(this, aLastPart, aStatus));
     return;
   }
-  bool preexistingError = mImageStatus == imgIRequest::STATUS_ERROR;
+  bool preexistingError = mState & FLAG_HAS_ERROR;
 
   RecordStopRequest(aLastPart, aStatus);
   /* notify the kids */
@@ -948,7 +884,6 @@ void
 imgStatusTracker::OnDiscard()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  RecordDiscard();
 
   /* notify the kids */
   ProxyArray::ForwardIterator iter(mConsumers);
@@ -1016,8 +951,7 @@ imgStatusTracker::OnDataAvailable()
 void
 imgStatusTracker::RecordBlockOnload()
 {
-  MOZ_ASSERT(!(mState & stateBlockingOnload));
-  mState |= stateBlockingOnload;
+  mState |= FLAG_ONLOAD_BLOCKED;
 }
 
 void
@@ -1032,7 +966,11 @@ imgStatusTracker::SendBlockOnload(imgRequestProxy* aProxy)
 void
 imgStatusTracker::RecordUnblockOnload()
 {
-  mState &= ~stateBlockingOnload;
+  // We sometimes unblock speculatively, so only actually unblock if we've
+  // previously blocked.
+  if (mState & FLAG_ONLOAD_BLOCKED) {
+    mState |= FLAG_ONLOAD_UNBLOCKED;
+  }
 }
 
 void
@@ -1052,7 +990,7 @@ imgStatusTracker::MaybeUnblockOnload()
       NS_NewRunnableMethod(this, &imgStatusTracker::MaybeUnblockOnload));
     return;
   }
-  if (!(mState & stateBlockingOnload)) {
+  if (!(mState & FLAG_ONLOAD_BLOCKED) || (mState & FLAG_ONLOAD_UNBLOCKED)) {
     return;
   }
 
@@ -1070,7 +1008,7 @@ imgStatusTracker::MaybeUnblockOnload()
 void
 imgStatusTracker::RecordError()
 {
-  mImageStatus = imgIRequest::STATUS_ERROR;
+  mState |= FLAG_HAS_ERROR;
 }
 
 void
