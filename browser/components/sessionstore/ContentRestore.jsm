@@ -198,7 +198,7 @@ ContentRestoreInternal.prototype = {
         }
         let referrer = loadArguments.referrer ?
                        Utils.makeURI(loadArguments.referrer) : null;
-        webNavigation.loadURI(loadArguments.uri, loadArguments.loadFlags,
+        webNavigation.loadURI(loadArguments.uri, loadArguments.flags,
                               referrer, null, null);
       } else if (tabData.userTypedValue && tabData.userTypedClear) {
         // If the user typed a URL into the URL bar and hit enter right before
