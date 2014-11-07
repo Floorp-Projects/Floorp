@@ -13,6 +13,8 @@
 
 // template <class T> class nsRefPtrGetterAddRefs;
 
+class nsCOMPtr_helper;
+
 template <class T>
 class nsRefPtr
 {
@@ -103,14 +105,7 @@ public:
   {
   }
 
-  MOZ_IMPLICIT nsRefPtr(const nsCOMPtr_helper& aHelper)
-  {
-    void* newRawPtr;
-    if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
-      newRawPtr = 0;
-    }
-    mRawPtr = static_cast<T*>(newRawPtr);
-  }
+  MOZ_IMPLICIT nsRefPtr(const nsCOMPtr_helper& aHelper);
 
   // Assignment operators
 
@@ -148,16 +143,7 @@ public:
     return *this;
   }
 
-  nsRefPtr<T>&
-  operator=(const nsCOMPtr_helper& aHelper)
-  {
-    void* newRawPtr;
-    if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
-      newRawPtr = 0;
-    }
-    assign_assuming_AddRef(static_cast<T*>(newRawPtr));
-    return *this;
-  }
+  nsRefPtr<T>& operator=(const nsCOMPtr_helper& aHelper);
 
   nsRefPtr<T>&
   operator=(nsRefPtr<T> && aRefPtr)
@@ -291,6 +277,28 @@ public:
 #endif
   }
 };
+
+template <class T>
+nsRefPtr<T>::nsRefPtr(const nsCOMPtr_helper& aHelper)
+{
+  void* newRawPtr;
+  if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
+    newRawPtr = 0;
+  }
+  mRawPtr = static_cast<T*>(newRawPtr);
+}
+
+template <class T>
+nsRefPtr<T>&
+nsRefPtr<T>::operator=(const nsCOMPtr_helper& aHelper)
+{
+  void* newRawPtr;
+  if (NS_FAILED(aHelper(NS_GET_TEMPLATE_IID(T), &newRawPtr))) {
+    newRawPtr = 0;
+  }
+  assign_assuming_AddRef(static_cast<T*>(newRawPtr));
+  return *this;
+}
 
 class nsCycleCollectionTraversalCallback;
 template <typename T>
