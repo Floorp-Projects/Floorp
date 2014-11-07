@@ -593,7 +593,7 @@ nsCaseTransformTextRunFactory::TransformString(
 
 void
 nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
-    gfxContext* aRefContext)
+    gfxContext* aRefContext, gfxMissingFontRecorder *aMFR)
 {
   nsAutoString convertedString;
   nsAutoTArray<bool,50> charsToMergeArray;
@@ -628,7 +628,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   } else {
     cachedChild = fontGroup->MakeTextRun(
         convertedString.BeginReading(), convertedString.Length(),
-        &innerParams, flags);
+        &innerParams, flags, aMFR);
     child = cachedChild.get();
   }
   if (!child)
@@ -640,7 +640,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   child->SetPotentialLineBreaks(0, canBreakBeforeArray.Length(),
       canBreakBeforeArray.Elements(), aRefContext);
   if (transformedChild) {
-    transformedChild->FinishSettingProperties(aRefContext);
+    transformedChild->FinishSettingProperties(aRefContext, aMFR);
   }
 
   if (mergeNeeded) {

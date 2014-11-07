@@ -572,6 +572,10 @@ pref("gfx.bundled_fonts.enabled", true);
 pref("gfx.bundled_fonts.force-enabled", false);
 #endif
 
+// Do we fire a notification about missing fonts, so the front-end can decide
+// whether to try and do something about it (e.g. download additional fonts)?
+pref("gfx.missing_fonts.notify", false);
+
 pref("gfx.filter.nearest.force-enabled", false);
 
 // prefs controlling the font (name/cmap) loader that runs shortly after startup

@@ -561,10 +561,11 @@ template<typename T>
 gfxTextRun *
 MakeTextRun(const T *aText, uint32_t aLength,
             gfxFontGroup *aFontGroup, const gfxFontGroup::Parameters* aParams,
-            uint32_t aFlags)
+            uint32_t aFlags, gfxMissingFontRecorder *aMFR)
 {
     nsAutoPtr<gfxTextRun> textRun(aFontGroup->MakeTextRun(aText, aLength,
-                                                          aParams, aFlags));
+                                                          aParams, aFlags,
+                                                          aMFR));
     if (!textRun) {
         return nullptr;
     }
@@ -842,6 +843,7 @@ public:
     mCurrentFramesAllSameTextRun(nullptr),
     mContext(aContext),
     mLineContainer(aLineContainer),
+    mMissingFonts(aPresContext->MissingFontRecorder()),
     mBidiEnabled(aPresContext->BidiEnabled()),
     mSkipIncompleteTextRuns(false),
     mWhichTextRun(aWhichTextRun),
@@ -971,7 +973,7 @@ public:
                                             aCapitalize, mContext);
     }
 
-    void Finish() {
+    void Finish(gfxMissingFontRecorder* aMFR) {
       NS_ASSERTION(!(mTextRun->GetFlags() &
                      (gfxTextRunFactory::TEXT_UNUSED_FLAGS |
                       nsTextFrameUtils::TEXT_UNUSED_FLAG)),
@@ -979,7 +981,7 @@ public:
       if (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_TRANSFORMED) {
         nsTransformedTextRun* transformedTextRun =
           static_cast<nsTransformedTextRun*>(mTextRun);
-        transformedTextRun->FinishSettingProperties(mContext);
+        transformedTextRun->FinishSettingProperties(mContext, aMFR);
       }
       // The way nsTransformedTextRun is implemented, its glyph runs aren't
       // available until after nsTransformedTextRun::FinishSettingProperties()
@@ -1007,6 +1009,7 @@ private:
   // The common ancestor of the current frame and the previous leaf frame
   // on the line, or null if there was no previous leaf frame.
   nsIFrame*                     mCommonAncestorWithLastFrame;
+  gfxMissingFontRecorder*       mMissingFonts;
   // mMaxTextLength is an upper bound on the size of the text in all mapped frames
   // The value UINT32_MAX represents overflow; text will be discarded
   uint32_t                      mMaxTextLength;
@@ -1506,7 +1509,7 @@ void BuildTextRunsScanner::FlushLineBreaks(gfxTextRun* aTrailingTextRun)
       // TODO cause frames associated with the textrun to be reflowed, if they
       // aren't being reflowed already!
     }
-    mBreakSinks[i]->Finish();
+    mBreakSinks[i]->Finish(mMissingFonts);
   }
   mBreakSinks.Clear();
 
@@ -2138,26 +2141,30 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     const char16_t* text = static_cast<const char16_t*>(textPtr);
     if (transformingFactory) {
       textRun = transformingFactory->MakeTextRun(text, transformedLength, &params,
-                                                 fontGroup, textFlags, styles.Elements());
+                                                 fontGroup, textFlags, styles.Elements(),
+                                                 mMissingFonts);
       if (textRun) {
         // ownership of the factory has passed to the textrun
         transformingFactory.forget();
       }
     } else {
-      textRun = MakeTextRun(text, transformedLength, fontGroup, &params, textFlags);
+      textRun = MakeTextRun(text, transformedLength, fontGroup, &params,
+                            textFlags, mMissingFonts);
     }
   } else {
     const uint8_t* text = static_cast<const uint8_t*>(textPtr);
     textFlags |= gfxFontGroup::TEXT_IS_8BIT;
     if (transformingFactory) {
       textRun = transformingFactory->MakeTextRun(text, transformedLength, &params,
-                                                 fontGroup, textFlags, styles.Elements());
+                                                 fontGroup, textFlags, styles.Elements(),
+                                                 mMissingFonts);
       if (textRun) {
         // ownership of the factory has passed to the textrun
         transformingFactory.forget();
       }
     } else {
-      textRun = MakeTextRun(text, transformedLength, fontGroup, &params, textFlags);
+      textRun = MakeTextRun(text, transformedLength, fontGroup, &params,
+                            textFlags, mMissingFonts);
     }
   }
   if (!textRun) {
