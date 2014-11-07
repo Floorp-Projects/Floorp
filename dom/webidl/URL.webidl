@@ -15,7 +15,7 @@
 // [Constructor(DOMString url, optional (URL or DOMString) base = "about:blank")]
 [Constructor(DOMString url, URL base),
  Constructor(DOMString url, optional DOMString base = "about:blank"),
- Exposed=(Window,Worker)]
+ Exposed=(Window,Worker,System)]
 interface URL {
 };
 URL implements URLUtils;
