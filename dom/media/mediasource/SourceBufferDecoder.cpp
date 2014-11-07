@@ -119,6 +119,12 @@ SourceBufferDecoder::UpdatePlaybackPosition(int64_t aTime)
   MSE_DEBUG("SourceBufferDecoder(%p)::UpdatePlaybackPosition UNIMPLEMENTED", this);
 }
 
+bool
+SourceBufferDecoder::HasInitializationData()
+{
+  return true;
+}
+
 void
 SourceBufferDecoder::OnReadMetadataCompleted()
 {
