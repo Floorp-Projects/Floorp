@@ -370,6 +370,8 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(uint32_t requestedTimeout)
   nsAutoCString strTimeout;
   strTimeout.AppendInt(requestedTimeout);
   if (successCallback) {
+    LOG(("nsUrlClassifierStreamUpdater::UpdateSuccess callback [this=%p]",
+         this));
     successCallback->HandleEvent(strTimeout);
   }
   // Now fetch the next request
@@ -439,24 +441,25 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
   bool downloadError = false;
   nsAutoCString strStatus;
   nsresult status = NS_OK;
+  LOG(("nsUrlClassifierStreamUpdater::OnStartRequest"));
 
   // Only update if we got http success header
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(request);
   if (httpChannel) {
     rv = httpChannel->GetStatus(&status);
+    LOG(("nsUrlClassifierStreamUpdater::OnStartRequest (status=%x)", status));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_ERROR_CONNECTION_REFUSED == status ||
-        NS_ERROR_NET_TIMEOUT == status) {
+    if (NS_FAILED(status)) {
       // Assume we're overloading the server and trigger backoff.
       downloadError = true;
-    }
-
-    if (NS_SUCCEEDED(status)) {
+    } else {
       bool succeeded = false;
       rv = httpChannel->GetRequestSucceeded(&succeeded);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      LOG(("nsUrlClassifierStreamUpdater::OnStartRequest (%s)", succeeded ?
+           "succeeded" : "failed"));
       if (!succeeded) {
         // 404 or other error, pass error status back
         LOG(("HTTP request returned failure code."));
@@ -473,6 +476,7 @@ nsUrlClassifierStreamUpdater::OnStartRequest(nsIRequest *request,
   }
 
   if (downloadError) {
+    LOG(("nsUrlClassifierStreamUpdater::Download error"));
     mDownloadErrorCallback->HandleEvent(strStatus);
     mDownloadError = true;
     status = NS_ERROR_ABORT;
@@ -540,7 +544,12 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
 
   mChannel = nullptr;
 
-  return rv;
+  // If the fetch failed, return the network status rather than NS_OK, the
+  // result of finishing a possibly-empty update
+  if (NS_SUCCEEDED(aStatus)) {
+    return rv;
+  }
+  return aStatus;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
