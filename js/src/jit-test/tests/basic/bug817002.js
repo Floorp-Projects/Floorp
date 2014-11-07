@@ -4,7 +4,7 @@ evalcx("\
       gcslice = function() { };\
     array = new Uint8Array;\
     t0 = array.subarray();\
-    gcslice(11); \
+    gcslice(12); \
     array.subarray();\
     gc();\
     gc();\

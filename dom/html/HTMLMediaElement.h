@@ -160,7 +160,7 @@ public:
   // when it has read the metadata containing video dimensions,
   // etc.
   virtual void MetadataLoaded(const MediaInfo* aInfo,
-                              const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
+                              nsAutoPtr<const MetadataTags> aTags) MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the decoder object, on the main thread,
   // when it has read the first frame of the video or audio.

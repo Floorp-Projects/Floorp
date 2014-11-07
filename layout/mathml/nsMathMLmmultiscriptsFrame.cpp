@@ -97,6 +97,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
   nscoord subScriptShift = 0;
   nscoord supScriptShift = 0;
   nsIAtom* tag = mContent->Tag();
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(this);
 
   // subscriptshift
   //
@@ -114,7 +115,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::subscriptshift_, value);
     if (!value.IsEmpty()) {
       ParseNumericValue(value, &subScriptShift, 0, PresContext(),
-                        mStyleContext);
+                        mStyleContext, fontSizeInflation);
     }
   }
   // superscriptshift
@@ -132,11 +133,12 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
     mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::superscriptshift_, value);
     if (!value.IsEmpty()) {
       ParseNumericValue(value, &supScriptShift, 0, PresContext(),
-                        mStyleContext);
+                        mStyleContext, fontSizeInflation);
     }
   }
   return PlaceMultiScript(PresContext(), aRenderingContext, aPlaceOrigin,
-                          aDesiredSize, this, subScriptShift, supScriptShift);
+                          aDesiredSize, this, subScriptShift, supScriptShift,
+                          fontSizeInflation);
 }
 
 // exported routine that both munderover and mmultiscripts share.
@@ -148,7 +150,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
                                         nsHTMLReflowMetrics& aDesiredSize,
                                         nsMathMLContainerFrame* aFrame,
                                         nscoord              aUserSubScriptShift,
-                                        nscoord              aUserSupScriptShift)
+                                        nscoord              aUserSupScriptShift,
+                                        float                aFontSizeInflation)
 {
   nsIAtom* tag = aFrame->GetContent()->Tag();
 
@@ -184,7 +187,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
   // get x-height (an ex)
   const nsStyleFont* font = aFrame->StyleFont();
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(baseFrame, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(baseFrame, getter_AddRefs(fm),
+                                        aFontSizeInflation);
 
   nscoord xHeight = fm->XHeight();
 
@@ -389,7 +393,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         subScriptFrame = childFrame;
         GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
         // get the subdrop from the subscript font
-        GetSubDropFromChild (subScriptFrame, subDrop);
+        GetSubDropFromChild (subScriptFrame, subDrop, aFontSizeInflation);
         // parameter v, Rule 18a, App. G, TeXbook
         minSubScriptShift = bmBase.descent + subDrop;
         trySubScriptShift = std::max(minSubScriptShift,subScriptShift);
@@ -430,7 +434,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         supScriptFrame = childFrame;
         GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
         // get the supdrop from the supscript font
-        GetSupDropFromChild (supScriptFrame, supDrop);
+        GetSupDropFromChild (supScriptFrame, supDrop, aFontSizeInflation);
         // parameter u, Rule 18a, App. G, TeXbook
         minSupScriptShift = bmBase.ascent - supDrop;
         nscoord superscriptBottomMin;

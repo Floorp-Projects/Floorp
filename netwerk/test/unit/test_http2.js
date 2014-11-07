@@ -473,6 +473,35 @@ function test_http2_pushapi_1() {
   chan.asyncOpen(listener, chan);
 }
 
+function test_http2_h11required_stream() {
+  var chan = makeChan("https://localhost:6944/h11required_stream");
+  var listener = new Http2CheckListener();
+  listener.shouldBeHttp2 = false;
+  chan.asyncOpen(listener, null);
+}
+
+function H11RequiredSessionListener () { }
+H11RequiredSessionListener.prototype = new Http2CheckListener();
+
+H11RequiredSessionListener.prototype.onStopRequest = function (request, ctx, status) {
+  var streamReused = request.getResponseHeader("X-H11Required-Stream-Ok");
+  do_check_eq(streamReused, "yes");
+
+  do_check_true(this.onStartRequestFired);
+  do_check_true(this.onDataAvailableFired);
+  do_check_true(this.isHttp2Connection == this.shouldBeHttp2);
+
+  run_next_test();
+  do_test_finished();
+};
+
+function test_http2_h11required_session() {
+  var chan = makeChan("https://localhost:6944/h11required_session");
+  var listener = new H11RequiredSessionListener();
+  listener.shouldBeHttp2 = false;
+  chan.asyncOpen(listener, null);
+}
+
 // hack - the header test resets the multiplex object on the server,
 // so make sure header is always run before the multiplex test.
 //
@@ -494,6 +523,9 @@ var tests = [ test_http2_post_big
             , test_http2_big
             , test_http2_post
             , test_http2_pushapi_1
+            // These next two must always come in this order
+            , test_http2_h11required_stream
+            , test_http2_h11required_session
             ];
 var current_test = 0;
 

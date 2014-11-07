@@ -67,7 +67,9 @@ The state machine has the following states:
 
 DECODING_METADATA
   The media headers are being loaded, and things like framerate, etc are
-  being determined, and the first frame of audio/video data is being decoded.
+  being determined.
+DECODING_FIRSTFRAME
+  The first frame of audio/video data is being decoded.
 DECODING
   The decode has started. If the PlayState is PLAYING, the decode thread
   should be alive and decoding video and audio frame, the audio thread
@@ -104,32 +106,36 @@ Seek(double)
 
 A state transition diagram:
 
-DECODING_METADATA
-  |      |
-  v      | Shutdown()
-  |      |
-  v      -->-------------------->--------------------------|
-  |---------------->----->------------------------|        v
-DECODING             |          |  |              |        |
-  ^                  v Seek(t)  |  |              |        |
-  |         Play()   |          v  |              |        |
-  ^-----------<----SEEKING      |  v Complete     v        v
-  |                  |          |  |              |        |
-  |                  |          |  COMPLETED    SHUTDOWN-<-|
-  ^                  ^          |  |Shutdown()    |
-  |                  |          |  >-------->-----^
-  |          Play()  |Seek(t)   |Buffer()         |
-  -----------<--------<-------BUFFERING           |
-                                |                 ^
-                                v Shutdown()      |
-                                |                 |
-                                ------------>-----|
+   |---<-- DECODING_METADATA ----->--------|
+   |        |                              |
+ Seek(t)    v                          Shutdown()
+   |        |                              |
+   -->--- DECODING_FIRSTFRAME              |------->-----------------|
+            |        |                                               |
+            |    Shutdown()                                          |
+            |        |                                               |
+            v        |-->----------------->--------------------------|
+            |---------------->----->------------------------|        v
+          DECODING             |          |  |              |        |
+            ^                  v Seek(t)  |  |              |        |
+            |         Play()   |          v  |              |        |
+            ^-----------<----SEEKING      |  v Complete     v        v
+            |                  |          |  |              |        |
+            |                  |          |  COMPLETED    SHUTDOWN-<-|
+            ^                  ^          |  |Shutdown()    |
+            |                  |          |  >-------->-----^
+            |          Play()  |Seek(t)   |Buffer()         |
+            -----------<--------<-------BUFFERING           |
+                                          |                 ^
+                                          v Shutdown()      |
+                                          |                 |
+                                          ------------>-----|
 
 The following represents the states that the MediaDecoder object
 can be in, and the valid states the MediaDecoderStateMachine can be in at that
 time:
 
-player LOADING   decoder DECODING_METADATA
+player LOADING   decoder DECODING_METADATA, DECODING_FIRSTFRAME
 player PLAYING   decoder DECODING, BUFFERING, SEEKING, COMPLETED
 player PAUSED    decoder DECODING, BUFFERING, SEEKING, COMPLETED
 player SEEKING   decoder SEEKING
@@ -756,8 +762,8 @@ public:
   // main thread to be presented when the |currentTime| of the media is greater
   // or equal to aPublishTime.
   void QueueMetadata(int64_t aPublishTime,
-                     MediaInfo* aInfo,
-                     MetadataTags* aTags);
+                     nsAutoPtr<MediaInfo> aInfo,
+                     nsAutoPtr<MetadataTags> aTags);
 
   int64_t GetSeekTime() { return mRequestedSeekTarget.mTime; }
   void ResetSeekTime() { mRequestedSeekTarget.Reset(); }
@@ -782,8 +788,12 @@ public:
 
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
-  virtual void MetadataLoaded(MediaInfo* aInfo,
-                              MetadataTags* aTags);
+  virtual void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
+                              nsAutoPtr<MetadataTags> aTags);
+
+  // Called when the first audio and/or video from the media file has been loaded
+  // by the state machine. Call on the main thread only.
+  virtual void FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo);
 
   // Called from MetadataLoaded(). Creates audio tracks and adds them to its
   // owner's audio track list, and implies to video tracks respectively.
@@ -793,10 +803,6 @@ public:
   // Removes all audio tracks and video tracks that are previously added into
   // the track list. Call on the main thread only.
   virtual void RemoveMediaTracks() MOZ_OVERRIDE;
-
-  // Called when the first frame has been loaded.
-  // Call on the main thread only.
-  void FirstFrameLoaded();
 
   // Returns true if the resource has been loaded. Acquires the monitor.
   // Call from any thread.

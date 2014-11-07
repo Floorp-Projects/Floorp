@@ -35,6 +35,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPerformance.h"
 #include "nsINetworkInterceptController.h"
+#include "mozIThirdPartyUtil.h"
 
 #include <algorithm>
 
@@ -1330,6 +1331,36 @@ HttpBaseChannel::RedirectTo(nsIURI *newURI)
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIHttpChannelInternal
 //-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::GetTopWindowURI(nsIURI **aTopWindowURI)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<mozIThirdPartyUtil> util;
+  // Only compute the top window URI once. In e10s, this must be computed in the
+  // child. The parent gets the top window URI through HttpChannelOpenArgs.
+  if (!mTopWindowURI) {
+    util = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+    if (!util) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    nsCOMPtr<nsIDOMWindow> win;
+    nsresult rv = util->GetTopWindowForChannel(this, getter_AddRefs(win));
+    if (NS_SUCCEEDED(rv)) {
+      rv = util->GetURIFromWindow(win, getter_AddRefs(mTopWindowURI));
+#if DEBUG
+      if (mTopWindowURI) {
+        nsCString spec;
+        rv = mTopWindowURI->GetSpec(spec);
+        LOG(("HttpChannelBase::Setting topwindow URI spec %s [this=%p]\n",
+             spec.get(), this));
+      }
+#endif
+    }
+  }
+  NS_IF_ADDREF(*aTopWindowURI = mTopWindowURI);
+  return rv;
+}
 
 NS_IMETHODIMP
 HttpBaseChannel::GetDocumentURI(nsIURI **aDocumentURI)

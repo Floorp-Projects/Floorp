@@ -406,7 +406,8 @@ ExtractSpacingValues(const nsAString&   aString,
                      nsTArray<nscoord>& aSpacingArray,
                      nsIFrame*          aFrame,
                      nscoord            aDefaultValue0,
-                     nscoord            aDefaultValue1)
+                     nscoord            aDefaultValue1,
+                     float              aFontSizeInflation)
 {
   nsPresContext* presContext = aFrame->PresContext();
   nsStyleContext* styleContext = aFrame->StyleContext();
@@ -444,7 +445,8 @@ ExtractSpacingValues(const nsAString&   aString,
       }
       nsMathMLFrame::ParseNumericValue(valueString, &newValue,
                                        nsMathMLElement::PARSE_ALLOW_UNITLESS,
-                                       presContext, styleContext);
+                                       presContext, styleContext,
+                                       aFontSizeInflation);
       aSpacingArray.AppendElement(newValue);
 
       startIndex += count;
@@ -478,8 +480,10 @@ ParseSpacingAttribute(nsMathMLmtableFrame* aFrame, nsIAtom* aAttribute)
   nscoord value;
   nscoord value2;
   // Set defaults
+  float fontSizeInflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
   nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
+                                        fontSizeInflation);
   if (nsGkAtoms::rowspacing_ == aAttribute) {
     value = kDefaultRowspacingEx * fm->XHeight();
     value2 = 0;
@@ -492,7 +496,8 @@ ParseSpacingAttribute(nsMathMLmtableFrame* aFrame, nsIAtom* aAttribute)
   }
 
   nsTArray<nscoord> valueList;
-  ExtractSpacingValues(attrValue, aAttribute, valueList, aFrame, value, value2);
+  ExtractSpacingValues(attrValue, aAttribute, valueList, aFrame, value, value2,
+                       fontSizeInflation);
   if (valueList.Length() == 0) {
     if (frameContent->HasAttr(kNameSpaceID_None, aAttribute)) {
       ReportParseError(aFrame, aAttribute->GetUTF16String(),
@@ -856,7 +861,9 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
     default: {
       // XXX should instead use style data from the row of reference here ?
       nsRefPtr<nsFontMetrics> fm;
-      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+      nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                            nsLayoutUtils::
+                                            FontSizeInflationFor(this));
       nscoord axisHeight;
       GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
       if (rowFrame) {
@@ -1114,6 +1121,18 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmtdFrame)
 
 nsMathMLmtdFrame::~nsMathMLmtdFrame()
 {
+}
+
+void
+nsMathMLmtdFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
+{
+  nsTableCellFrame::Init(aContent, aParent, aPrevInFlow);
+
+  // We want to use the ancestor <math> element's font inflation to avoid
+  // individual cells having their own varying font inflation.
+  RemoveStateBits(NS_FRAME_FONT_INFLATION_FLOW_ROOT);
 }
 
 int32_t

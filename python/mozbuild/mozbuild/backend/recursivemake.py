@@ -922,6 +922,7 @@ INSTALL_TARGETS += %(prefix)s
                                    % (prefix, ' '.join(strings)))
                 backend_file.write('%s_DEST = %s\n' %
                                    (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
+                backend_file.write('%s_TARGET := misc\n' % prefix)
                 backend_file.write('INSTALL_TARGETS += %s\n\n' % prefix)
             return
 
@@ -935,6 +936,7 @@ INSTALL_TARGETS += %(prefix)s
                                    % (prefix, ' '.join(strings)))
                 backend_file.write('%s_PATH = %s\n' %
                                    (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
+                backend_file.write('%s_TARGET := misc\n' % prefix)
                 backend_file.write('PP_TARGETS += %s\n\n' % prefix)
             return
 
