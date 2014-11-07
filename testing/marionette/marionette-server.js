@@ -699,6 +699,14 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
+   * Gets the context of the server, either 'chrome' or 'content'.
+   */
+  getContext: function MDA_getContext() {
+    this.command_id = this.getCommandId();
+    this.sendResponse(this.context, this.command_id);
+  },
+
+  /**
    * Returns a chrome sandbox that can be used by the execute_foo functions.
    *
    * @param nsIDOMWindow aWindow
@@ -2735,6 +2743,7 @@ MarionetteServerConnection.prototype.requestTypes = {
   "log": MarionetteServerConnection.prototype.log,
   "getLogs": MarionetteServerConnection.prototype.getLogs,
   "setContext": MarionetteServerConnection.prototype.setContext,
+  "getContext": MarionetteServerConnection.prototype.getContext,
   "executeScript": MarionetteServerConnection.prototype.execute,
   "setScriptTimeout": MarionetteServerConnection.prototype.setScriptTimeout,
   "timeouts": MarionetteServerConnection.prototype.timeouts,
