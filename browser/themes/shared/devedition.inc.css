@@ -227,6 +227,13 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   background-color: var(--tab-background-color);
 }
 
+.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
+  /* The -2px in `calc` is the height of `tabToolbarNavbarOverlap` plus a 1px offset from the center */
+  background-image: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, rgba(29,79,115,0) 70%);
+  background-position: center;
+  background-size: 100%;
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover,
 .tabbrowser-arrowscrollbox > .scrollbutton-up:not([disabled]):hover,
 .tabbrowser-tab:hover {
