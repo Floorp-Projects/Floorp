@@ -176,8 +176,9 @@ function doErrorUpdate(tables, success, failure) {
 function doStreamUpdate(updateText, success, failure, downloadFailure) {
   var dataUpdate = "data:," + encodeURIComponent(updateText);
 
-  if (!downloadFailure)
+  if (!downloadFailure) {
     downloadFailure = failure;
+  }
 
   streamUpdater.downloadUpdates("test-phish-simple,test-malware-simple", "",
                                 dataUpdate, success, failure, downloadFailure);
