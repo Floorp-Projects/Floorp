@@ -389,7 +389,7 @@ OSXNotificationCenter::Notify(imgIRequest *aRequest, int32_t aType, const nsIntR
     NSImage *cocoaImage = nil;
     uint32_t imgStatus = imgIRequest::STATUS_ERROR;
     nsresult rv = aRequest->GetImageStatus(&imgStatus);
-    if (NS_SUCCEEDED(rv) && imgStatus != imgIRequest::STATUS_ERROR) {
+    if (NS_SUCCEEDED(rv) && !(imgStatus & imgIRequest::STATUS_ERROR)) {
       nsCOMPtr<imgIContainer> image;
       rv = aRequest->GetImage(getter_AddRefs(image));
       if (NS_SUCCEEDED(rv)) {
