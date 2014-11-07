@@ -110,13 +110,6 @@ public:
   virtual void OnStopRequest(bool aIsLastPart, nsresult aStatus) = 0;
 
   /**
-   * Called when the decoded image data is discarded. This means that the frames
-   * no longer exist in decoded form, and any attempt to access or draw the
-   * image will initiate a new series of progressive decode notifications.
-   */
-  virtual void OnDiscard() = 0;
-
-  /**
    * Called when we are asked to Draw an image that is not locked.
    */
   virtual void OnUnlockedDraw() = 0;
