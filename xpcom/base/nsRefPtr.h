@@ -7,7 +7,9 @@
 #ifndef nsRefPtr_h
 #define nsRefPtr_h
 
-#include "nsCOMPtr.h"
+#include "AlreadyAddRefed.h"
+#include "nsDebug.h"
+#include "nsISupportsUtils.h"
 
 /*****************************************************************************/
 
@@ -269,12 +271,8 @@ public:
   T**
   StartAssignment()
   {
-#ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
-    return reinterpret_cast<T**>(begin_assignment());
-#else
     assign_assuming_AddRef(0);
     return reinterpret_cast<T**>(&mRawPtr);
-#endif
   }
 };
 
@@ -473,13 +471,15 @@ operator!=(U* aLhs, const nsRefPtr<T>& aRhs)
   return const_cast<const U*>(aLhs) != static_cast<const T*>(aRhs.get());
 }
 
-
+namespace detail {
+class nsRefPtrZero;
+}
 
 // Comparing an |nsRefPtr| to |0|
 
 template <class T>
 inline bool
-operator==(const nsRefPtr<T>& aLhs, NSCAP_Zero* aRhs)
+operator==(const nsRefPtr<T>& aLhs, ::detail::nsRefPtrZero* aRhs)
 // specifically to allow |smartPtr == 0|
 {
   return static_cast<const void*>(aLhs.get()) == reinterpret_cast<const void*>(aRhs);
@@ -487,7 +487,7 @@ operator==(const nsRefPtr<T>& aLhs, NSCAP_Zero* aRhs)
 
 template <class T>
 inline bool
-operator==(NSCAP_Zero* aLhs, const nsRefPtr<T>& aRhs)
+operator==(::detail::nsRefPtrZero* aLhs, const nsRefPtr<T>& aRhs)
 // specifically to allow |0 == smartPtr|
 {
   return reinterpret_cast<const void*>(aLhs) == static_cast<const void*>(aRhs.get());
@@ -495,7 +495,7 @@ operator==(NSCAP_Zero* aLhs, const nsRefPtr<T>& aRhs)
 
 template <class T>
 inline bool
-operator!=(const nsRefPtr<T>& aLhs, NSCAP_Zero* aRhs)
+operator!=(const nsRefPtr<T>& aLhs, ::detail::nsRefPtrZero* aRhs)
 // specifically to allow |smartPtr != 0|
 {
   return static_cast<const void*>(aLhs.get()) != reinterpret_cast<const void*>(aRhs);
@@ -503,7 +503,7 @@ operator!=(const nsRefPtr<T>& aLhs, NSCAP_Zero* aRhs)
 
 template <class T>
 inline bool
-operator!=(NSCAP_Zero* aLhs, const nsRefPtr<T>& aRhs)
+operator!=(::detail::nsRefPtrZero* aLhs, const nsRefPtr<T>& aRhs)
 // specifically to allow |0 != smartPtr|
 {
   return reinterpret_cast<const void*>(aLhs) != static_cast<const void*>(aRhs.get());
