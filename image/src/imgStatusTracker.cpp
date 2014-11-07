@@ -406,6 +406,13 @@ imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
       NOTIFY_IMAGE_OBSERVERS(OnImageIsAnimated());
   }
 
+  // Send UnblockOnload before OnStopDecode and OnStopRequest. This allows
+  // observers that can fire events when they receive those notifications to do
+  // so then, instead of being forced to wait for UnblockOnload.
+  if (state & FLAG_ONLOAD_UNBLOCKED) {
+    NOTIFY_IMAGE_OBSERVERS(UnblockOnload());
+  }
+
   if (state & FLAG_DECODE_STOPPED) {
     NS_ABORT_IF_FALSE(hasImage, "stopped decoding without ever having an image?");
     NOTIFY_IMAGE_OBSERVERS(OnStopDecode());
@@ -423,7 +430,6 @@ imgStatusTracker::Difference(imgStatusTracker* aOther) const
   ImageStatusDiff diff;
   diff.diffState = ~mState & aOther->mState & ~FLAG_REQUEST_STARTED;
   diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
-  diff.unblockedOnload = mState & FLAG_ONLOAD_BLOCKED && !(aOther->mState & FLAG_ONLOAD_BLOCKED);
   diff.unsetDecodeStarted = mImageStatus & imgIRequest::STATUS_DECODE_STARTED
                          && !(aOther->mImageStatus & imgIRequest::STATUS_DECODE_STARTED);
   diff.foundError = (mImageStatus != imgIRequest::STATUS_ERROR)
@@ -475,8 +481,6 @@ imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
 
   // Synchronize our state.
   mState |= aDiff.diffState | loadState;
-  if (aDiff.unblockedOnload)
-    mState &= ~FLAG_ONLOAD_BLOCKED;
 
   mIsMultipart = mIsMultipart || aDiff.foundIsMultipart;
   mHadLastPart = mHadLastPart || aDiff.foundLastPart;
@@ -505,19 +509,6 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& diff)
   SyncNotifyState(mConsumers, !!mImage, diff.diffState, invalidRect, mHadLastPart);
 
   mInvalidRect.SetEmpty();
-
-  if (diff.unblockedOnload) {
-    ProxyArray::ForwardIterator iter(mConsumers);
-    while (iter.HasMore()) {
-      // Hold on to a reference to this proxy, since notifying the state can
-      // cause it to disappear.
-      nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-
-      if (proxy && !proxy->NotificationsDeferred()) {
-        SendUnblockOnload(proxy);
-      }
-    }
-  }
 
   if (diff.foundError) {
     FireFailureNotification();
@@ -571,7 +562,7 @@ imgStatusTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
     aProxy->OnStartRequest();
   }
 
-  if (mState & FLAG_ONLOAD_BLOCKED) {
+  if (mState & FLAG_ONLOAD_BLOCKED && !(mState & FLAG_ONLOAD_UNBLOCKED)) {
     aProxy->UnblockOnload();
   }
 
@@ -839,6 +830,7 @@ imgStatusTracker::RecordStartRequest()
   mState &= ~FLAG_DECODE_STOPPED;
   mState &= ~FLAG_REQUEST_STOPPED;
   mState &= ~FLAG_ONLOAD_BLOCKED;
+  mState &= ~FLAG_ONLOAD_UNBLOCKED;
   mState &= ~FLAG_IS_ANIMATED;
 
   mState |= FLAG_REQUEST_STARTED;
@@ -1016,7 +1008,6 @@ imgStatusTracker::OnDataAvailable()
 void
 imgStatusTracker::RecordBlockOnload()
 {
-  MOZ_ASSERT(!(mState & FLAG_ONLOAD_BLOCKED));
   mState |= FLAG_ONLOAD_BLOCKED;
 }
 
@@ -1032,7 +1023,11 @@ imgStatusTracker::SendBlockOnload(imgRequestProxy* aProxy)
 void
 imgStatusTracker::RecordUnblockOnload()
 {
-  mState &= ~FLAG_ONLOAD_BLOCKED;
+  // We sometimes unblock speculatively, so only actually unblock if we've
+  // previously blocked.
+  if (mState & FLAG_ONLOAD_BLOCKED) {
+    mState |= FLAG_ONLOAD_UNBLOCKED;
+  }
 }
 
 void
@@ -1052,7 +1047,7 @@ imgStatusTracker::MaybeUnblockOnload()
       NS_NewRunnableMethod(this, &imgStatusTracker::MaybeUnblockOnload));
     return;
   }
-  if (!(mState & FLAG_ONLOAD_BLOCKED)) {
+  if (!(mState & FLAG_ONLOAD_BLOCKED) || (mState & FLAG_ONLOAD_UNBLOCKED)) {
     return;
   }
 

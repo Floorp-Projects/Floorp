@@ -36,7 +36,8 @@ enum {
   FLAG_FRAME_STOPPED      = 1u << 4,
   FLAG_REQUEST_STOPPED    = 1u << 5,
   FLAG_ONLOAD_BLOCKED     = 1u << 6,
-  FLAG_IS_ANIMATED        = 1u << 7
+  FLAG_ONLOAD_UNBLOCKED   = 1u << 7,
+  FLAG_IS_ANIMATED        = 1u << 8
 };
 
 struct ImageStatusDiff
@@ -45,7 +46,6 @@ struct ImageStatusDiff
     : invalidRect()
     , diffState(0)
     , diffImageStatus(0)
-    , unblockedOnload(false)
     , unsetDecodeStarted(false)
     , foundError(false)
     , foundIsMultipart(false)
@@ -61,7 +61,6 @@ struct ImageStatusDiff
     return aOther.invalidRect == invalidRect
         && aOther.diffState == diffState
         && aOther.diffImageStatus == diffImageStatus
-        && aOther.unblockedOnload == unblockedOnload
         && aOther.unsetDecodeStarted == unsetDecodeStarted
         && aOther.foundError == foundError
         && aOther.foundIsMultipart == foundIsMultipart
@@ -73,7 +72,6 @@ struct ImageStatusDiff
     invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
     diffImageStatus |= aOther.diffImageStatus;
-    unblockedOnload = unblockedOnload || aOther.unblockedOnload;
     unsetDecodeStarted = unsetDecodeStarted || aOther.unsetDecodeStarted;
     foundError = foundError || aOther.foundError;
     foundIsMultipart = foundIsMultipart || aOther.foundIsMultipart;
@@ -84,7 +82,6 @@ struct ImageStatusDiff
   nsIntRect invalidRect;
   uint32_t  diffState;
   uint32_t  diffImageStatus;
-  bool      unblockedOnload    : 1;
   bool      unsetDecodeStarted : 1;
   bool      foundError         : 1;
   bool      foundIsMultipart   : 1;
