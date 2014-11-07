@@ -186,7 +186,6 @@ InterpreterFrame::prologue(JSContext *cx)
 {
     RootedScript script(cx, this->script());
 
-    MOZ_ASSERT(!isGeneratorFrame());
     MOZ_ASSERT(cx->interpreterRegs().pc == script->code());
 
     if (isEvalFrame()) {
@@ -847,22 +846,6 @@ FrameIter::isNonEvalFunctionFrame() const
         return !isEvalFrame() && isFunctionFrame();
       case ASMJS:
         return true;
-    }
-    MOZ_CRASH("Unexpected state");
-}
-
-bool
-FrameIter::isGeneratorFrame() const
-{
-    switch (data_.state_) {
-      case DONE:
-        break;
-      case INTERP:
-        return interpFrame()->isGeneratorFrame();
-      case JIT:
-        return false;
-      case ASMJS:
-        return false;
     }
     MOZ_CRASH("Unexpected state");
 }

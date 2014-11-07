@@ -2411,7 +2411,7 @@ let DefaultBrowserCheck = {
 let E10SUINotification = {
   // Increase this number each time we want to roll out an
   // e10s testing period to Nightly users.
-  CURRENT_NOTICE_COUNT: 1,
+  CURRENT_NOTICE_COUNT: 2,
   CURRENT_PROMPT_PREF: "browser.displayedE10SPrompt.1",
   PREVIOUS_PROMPT_PREF: "browser.displayedE10SPrompt",
 
@@ -2514,7 +2514,7 @@ let E10SUINotification = {
     Services.prefs.setIntPref("browser.displayedE10SNotice", this.CURRENT_NOTICE_COUNT);
 
     let nb = win.document.getElementById("high-priority-global-notificationbox");
-    let message = "Thanks for helping to test multiprocess Firefox (e10s). Some functions might not work yet."
+    let message = "You're now helping to test Process Separation (e10s)! Please report problems you find.";
     let buttons = [
       {
         label: "Learn More",

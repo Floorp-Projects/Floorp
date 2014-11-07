@@ -2136,7 +2136,7 @@ IonCompile(JSContext *cx, JSScript *script,
 static bool
 CheckFrame(BaselineFrame *frame)
 {
-    MOZ_ASSERT(!frame->isGeneratorFrame());
+    MOZ_ASSERT(!frame->script()->isGenerator());
     MOZ_ASSERT(!frame->isDebuggerFrame());
 
     // This check is to not overrun the stack.
@@ -2163,6 +2163,11 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
         // logic in pushBailoutFrame to deal with linking prev.
         // Additionally, JSOP_DEFVAR support will require baking in isEvalFrame().
         JitSpew(JitSpew_IonAbort, "eval script");
+        return false;
+    }
+
+    if (script->isGenerator()) {
+        JitSpew(JitSpew_IonAbort, "generator script");
         return false;
     }
 
