@@ -229,3 +229,7 @@ https://bad.include-subdomains.pinning-dynamic.example.com:443    privileged,cer
 
 # Host for static pin tests
 https://include-subdomains.pinning.example.com:443                privileged,cert=staticPinningBad
+
+# Hosts for sha1 console warning tests
+https://sha1ee.example.com:443                                    privileged,cert=sha1_end_entity
+https://sha256ee.example.com:443                                  privileged,cert=sha256_end_entity

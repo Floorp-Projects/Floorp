@@ -596,7 +596,7 @@ menuitem.bookmark-item {
     list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
   }
 
-  #loop-call-button > .toolbarbutton-badge-container {
+  #loop-button > .toolbarbutton-badge-container {
     list-style-image: url(chrome://browser/skin/loop/toolbar-lunaSilver.png)
   }
 }

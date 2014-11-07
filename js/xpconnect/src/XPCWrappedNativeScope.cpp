@@ -346,16 +346,6 @@ XPCWrappedNativeScope::EnsureAddonScope(JSContext *cx, JSAddonId *addonId)
     MOZ_ASSERT(addonId);
     MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(GetPrincipal()));
 
-    // In bug 1092156, we found that add-on scopes don't work correctly when the
-    // window navigates. The add-on global's prototype is an outer window, so,
-    // after the navigation, looking up window properties in the add-on scope
-    // will fail. However, in most cases where the window can be navigated, the
-    // entire window is part of the add-on. To solve the problem, we avoid
-    // returning an add-on scope for a window that is already tagged with the
-    // add-on ID.
-    if (AddonIdOfObject(global) == addonId)
-        return global;
-
     // If we already have an addon scope object, we know what to use.
     for (size_t i = 0; i < mAddonScopes.Length(); i++) {
         if (JS::AddonIdOfObject(js::UncheckedUnwrap(mAddonScopes[i])) == addonId)

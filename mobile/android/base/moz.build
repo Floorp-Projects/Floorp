@@ -470,6 +470,7 @@ gbjar.sources += [
     'widget/GeckoSwipeRefreshLayout.java',
     'widget/GeckoViewFlipper.java',
     'widget/IconTabWidget.java',
+    'widget/ResizablePathDrawable.java',
     'widget/SquaredImageView.java',
     'widget/SwipeDismissListViewTouchListener.java',
     'widget/TabThumbnailWrapper.java',
