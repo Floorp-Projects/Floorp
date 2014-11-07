@@ -19,12 +19,11 @@ function getStyle(node, property) {
   return node.style.getPropertyValue(property);
 }
 
-let test = asyncTest(function*() {
+add_task(function*() {
   yield addTab("data:text/html," + encodeURIComponent(TEST_URI));
   let {toolbox, inspector, view} = yield openLayoutView();
 
   yield runTests(inspector, view);
-  yield destroyToolbox(inspector);
 });
 
 addTest("Test that entering units works",

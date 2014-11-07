@@ -52,7 +52,7 @@ let TEST_DATA = [
   }
 ];
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(PAGE_1);
 
   for (let { url, nodeToSelect, selectedNode } of TEST_DATA) {

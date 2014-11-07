@@ -97,9 +97,6 @@ let UI = {
     }
 
     this.setupDeck();
-
-    // Hook to display promotional Developer Edition doorhanger. Only displayed once.
-    showDoorhanger({ window, type: "deveditionpromo", anchor: document.querySelector("#deck") });
   },
 
   uninit: function() {
@@ -129,6 +126,11 @@ let UI = {
         AppManager.selectedProject.type != "tab") {
       AppManager.validateProject(AppManager.selectedProject);
     }
+
+    // Hook to display promotional Developer Edition doorhanger. Only displayed once.
+    // Hooked into the `onfocus` event because sometimes does not work
+    // when run at the end of `init`. ¯\(°_o)/¯
+    showDoorhanger({ window, type: "deveditionpromo", anchor: document.querySelector("#deck") });
   },
 
   appManagerUpdate: function(event, what, details) {

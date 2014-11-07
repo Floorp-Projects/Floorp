@@ -10,31 +10,39 @@ const protocol = require("devtools/server/protocol");
 const {Arg, Option, method} = protocol;
 const events = require("sdk/event/core");
 const Heritage = require("sdk/core/heritage");
-
 const {CssLogic} = require("devtools/styleinspector/css-logic");
 const EventEmitter = require("devtools/toolkit/event-emitter");
-const GUIDE_STROKE_WIDTH = 1;
-
-// Make sure the domnode type is known here
-require("devtools/server/actors/inspector");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // FIXME: add ":visited" and ":link" after bug 713106 is fixed
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
-const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
-let HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
-HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important; outline-offset: -2px!important } ";
-const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
+const BOX_MODEL_SIDES = ["top", "right", "bottom", "left"];
 const SVG_NS = "http://www.w3.org/2000/svg";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const HIGHLIGHTER_STYLESHEET_URI = "chrome://browser/skin/devtools/highlighter.css";
 const HIGHLIGHTER_PICKED_TIMER = 1000;
-const INFO_BAR_OFFSET = 5;
+// How high is the nodeinfobar
+const NODE_INFOBAR_HEIGHT = 40; //px
+const NODE_INFOBAR_ARROW_SIZE = 15; // px
+// Width of boxmodelhighlighter guides
+const GUIDE_STROKE_WIDTH = 1;
 // The minimum distance a line should be before it has an arrow marker-end
 const ARROW_LINE_MIN_DISTANCE = 10;
 // How many maximum nodes can be highlighted at the same time by the
 // SelectorHighlighter
 const MAX_HIGHLIGHTED_ELEMENTS = 100;
+// SimpleOutlineHighlighter's stylesheet
+const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
+const SIMPLE_OUTLINE_SHEET = ".__fx-devtools-hide-shortcut__ {" +
+                             "  visibility: hidden !important" +
+                             "}" +
+                             HIGHLIGHTED_PSEUDO_CLASS + " {" +
+                             "  outline: 2px dashed #F06!important;" +
+                             "  outline-offset: -2px!important;" +
+                             "}";
 
 // All possible highlighter classes
 let HIGHLIGHTER_CLASSES = exports.HIGHLIGHTER_CLASSES = {
@@ -82,30 +90,58 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
 
     this._highlighterReady = this._highlighterReady.bind(this);
     this._highlighterHidden = this._highlighterHidden.bind(this);
+    this._onNavigate = this._onNavigate.bind(this);
 
-    if (supportXULBasedHighlighter(this._tabActor)) {
-      this._boxModelHighlighter =
-        new BoxModelHighlighter(this._tabActor, this._inspector);
+    this._createHighlighter();
 
-        this._boxModelHighlighter.on("ready", this._highlighterReady);
-        this._boxModelHighlighter.on("hide", this._highlighterHidden);
-    } else {
-      this._boxModelHighlighter = new SimpleOutlineHighlighter(this._tabActor);
-    }
+    // Listen to navigation events to switch from the BoxModelHighlighter to the
+    // SimpleOutlineHighlighter, and back, if the top level window changes.
+    events.on(this._tabActor, "navigate", this._onNavigate);
   },
 
   get conn() this._inspector && this._inspector.conn,
 
+  _createHighlighter: function() {
+    this._isPreviousWindowXUL = isXUL(this._tabActor);
+
+    if (!this._isPreviousWindowXUL) {
+      this._highlighter = new BoxModelHighlighter(this._tabActor,
+                                                          this._inspector);
+      this._highlighter.on("ready", this._highlighterReady);
+      this._highlighter.on("hide", this._highlighterHidden);
+    } else {
+      this._highlighter = new SimpleOutlineHighlighter(this._tabActor);
+    }
+  },
+
+  _destroyHighlighter: function() {
+    if (this._highlighter) {
+      if (!this._isPreviousWindowXUL) {
+        this._highlighter.off("ready", this._highlighterReady);
+        this._highlighter.off("hide", this._highlighterHidden);
+      }
+      this._highlighter.destroy();
+      this._highlighter = null;
+    }
+  },
+
+  _onNavigate: function({isTopLevel}) {
+    if (!isTopLevel) {
+      return;
+    }
+
+    // Only rebuild the highlighter if the window type changed.
+    if (isXUL(this._tabActor) !== this._isPreviousWindowXUL) {
+      this._destroyHighlighter();
+      this._createHighlighter();
+    }
+  },
+
   destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
-    if (this._boxModelHighlighter) {
-      if (supportXULBasedHighlighter(this._tabActor)) {
-        this._boxModelHighlighter.off("ready", this._highlighterReady);
-        this._boxModelHighlighter.off("hide", this._highlighterHidden);
-      }
-      this._boxModelHighlighter.destroy();
-      this._boxModelHighlighter = null;
-    }
+
+    this._destroyHighlighter();
+    events.off(this._tabActor, "navigate", this._onNavigate);
     this._autohide = null;
     this._inspector = null;
     this._walker = null;
@@ -124,14 +160,17 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
    */
   showBoxModel: method(function(node, options={}) {
     if (node && isNodeValid(node.rawNode)) {
-      this._boxModelHighlighter.show(node.rawNode, options);
+      this._highlighter.show(node.rawNode, options);
     } else {
-      this._boxModelHighlighter.hide();
+      this._highlighter.hide();
     }
   }, {
     request: {
       node: Arg(0, "domnode"),
-      region: Option(1)
+      region: Option(1),
+      hideInfoBar: Option(1),
+      hideGuides: Option(1),
+      showOnly: Option(1)
     }
   }),
 
@@ -139,7 +178,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
    * Hide the box model highlighting if it was shown before
    */
   hideBoxModel: method(function() {
-    this._boxModelHighlighter.hide();
+    this._highlighter.hide();
   }, {
     request: {}
   }),
@@ -174,7 +213,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
       this._isPicking = false;
       if (this._autohide) {
         this._tabActor.window.setTimeout(() => {
-          this._boxModelHighlighter.hide();
+          this._highlighter.hide();
         }, HIGHLIGHTER_PICKED_TIMER);
       }
       events.emit(this._walker, "picker-node-picked", this._findAndAttachElement(event));
@@ -184,7 +223,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
       this._preventContentEvent(event);
       let res = this._findAndAttachElement(event);
       if (this._hoveredNode !== res.node) {
-        this._boxModelHighlighter.show(res.node.rawNode);
+        this._highlighter.show(res.node.rawNode);
         events.emit(this._walker, "picker-node-hovered", res);
         this._hoveredNode = res.node;
       }
@@ -251,7 +290,7 @@ let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
 
   cancelPick: method(function() {
     if (this._isPicking) {
-      this._boxModelHighlighter.hide();
+      this._highlighter.hide();
       this._stopPickerListeners();
       this._isPicking = false;
       this._hoveredNode = null;
@@ -285,10 +324,14 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
       return;
     }
 
-    // The assumption is that all custom highlighters need a XUL parent in the
-    // browser to append their elements
-    if (supportXULBasedHighlighter(inspector.tabActor)) {
+    // The assumption is that all custom highlighters need the canvasframe
+    // container to append their elements, so if this is a XUL window, bail out.
+    if (!isXUL(this._inspector.tabActor)) {
       this._highlighter = new constructor(inspector.tabActor);
+    } else {
+      throw new Error("Custom " + typeName +
+        "highlighter cannot be created in a XUL window");
+      return;
     }
   },
 
@@ -345,19 +388,139 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
 let CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
 
 /**
- * Parent class for XUL-based complex highlighter that are inserted in the
- * parent browser structure
+ * Every highlighters should insert their markup content into the document's
+ * canvasFrame anonymous content container (see dom/webidl/Document.webidl).
+ *
+ * Since this container gets cleared when the document navigates, highlighters
+ * should use this helper to have their markup content automatically re-inserted
+ * in the new document.
+ *
+ * Since the markup content is inserted in the canvasFrame using
+ * insertAnonymousContent, this means that it can be modified using the API
+ * described in AnonymousContent.webidl.
+ * To retrieve the AnonymousContent instance, use the content getter.
+ *
+ * @param {TabActor} tabActor
+ *        The tabactor which windows will be used to insert the node
+ * @param {Function} nodeBuilder
+ *        A function that, when executed, returns a DOM node to be inserted into
+ *        the canvasFrame
  */
-function XULBasedHighlighter(tabActor) {
+function CanvasFrameAnonymousContentHelper(tabActor, nodeBuilder) {
+  this.tabActor = tabActor;
+  this.nodeBuilder = nodeBuilder;
+
+  this._insert();
+
+  this._onNavigate = this._onNavigate.bind(this);
+  events.on(this.tabActor, "navigate", this._onNavigate);
+}
+
+CanvasFrameAnonymousContentHelper.prototype = {
+  destroy: function() {
+    // If the current window isn't the one the content was inserted into, this
+    // will fail, but that's fine.
+    try {
+      let doc = this.tabActor.window.document;
+      doc.removeAnonymousContent(this._content);
+    } catch (e) {}
+    events.off(this.tabActor, "navigate", this._onNavigate);
+    this.tabActor = this.nodeBuilder = this._content = null;
+  },
+
+  _insert: function() {
+    // Re-insert the content node after page navigation only if the new page
+    // isn't XUL.
+    if (!isXUL(this.tabActor)) {
+      // For now highlighter.css is injected in content as a ua sheet because
+      // <style scoped> doesn't work inside anonymous content (see bug 1086532).
+      // If it did, highlighter.css would be injected as an anonymous content
+      // node using CanvasFrameAnonymousContentHelper instead.
+      installHelperSheet(this.tabActor.window,
+        "@import url('" + HIGHLIGHTER_STYLESHEET_URI + "');");
+      let node = this.nodeBuilder();
+      let doc = this.tabActor.window.document;
+      this._content = doc.insertAnonymousContent(node);
+    }
+  },
+
+  _onNavigate: function({isTopLevel}) {
+    if (isTopLevel) {
+      this._insert();
+    }
+  },
+
+  getTextContentForElement: function(id) {
+    if (!this.content) {
+      return null;
+    }
+    return this.content.getTextContentForElement(id);
+  },
+
+  setTextContentForElement: function(id, text) {
+    if (this.content) {
+      this.content.setTextContentForElement(id, text);
+    }
+  },
+
+  setAttributeForElement: function(id, name, value) {
+    if (this.content) {
+      this.content.setAttributeForElement(id, name, value);
+    }
+  },
+
+  getAttributeForElement: function(id, name) {
+    if (!this.content) {
+      return null;
+    }
+    return this.content.getAttributeForElement(id, name);
+  },
+
+  removeAttributeForElement: function(id, name) {
+    if (this.content) {
+      this.content.removeAttributeForElement(id, name);
+    }
+  },
+
+  get content() {
+    if (Cu.isDeadWrapper(this._content)) {
+      return null;
+    }
+    return this._content;
+  }
+};
+
+/**
+ * Base class for auto-refresh-on-change highlighters. Sub classes will have a
+ * chance to update whenever the current node's geometry changes.
+ *
+ * Sub classes must implement the following methods:
+ * _show: called when the highlighter should be shown,
+ * _hide: called when the highlighter should be hidden,
+ * _update: called while the highlighter is shown and the geometry of the
+ *          current node changes.
+ *
+ * Sub classes will have access to the following properties:
+ * - this.currentNode: the node to be shown
+ * - this.currentQuads: all of the node's box model region quads
+ * - this.win: the current window
+ */
+function AutoRefreshHighlighter(tabActor) {
+  EventEmitter.decorate(this);
+
+  this.tabActor = tabActor;
   this.browser = tabActor.browser;
   this.win = tabActor.window;
-  this.chromeDoc = this.browser.ownerDocument;
+
   this.currentNode = null;
+  this.currentQuads = {};
+
+  this.layoutHelpers = new LayoutHelpers(this.win);
 
   this.update = this.update.bind(this);
 }
 
-XULBasedHighlighter.prototype = {
+AutoRefreshHighlighter.prototype = {
   /**
    * Show the highlighter on a given node
    * @param {DOMNode} node
@@ -365,15 +528,19 @@ XULBasedHighlighter.prototype = {
    *        Object used for passing options
    */
   show: function(node, options={}) {
-    if (!isNodeValid(node) || node === this.currentNode) {
+    let isSameNode = node === this.currentNode;
+    let isSameOptions = this._isSameOptions(options);
+
+    if (!isNodeValid(node) || (isSameNode && isSameOptions)) {
       return;
     }
 
     this.options = options;
 
-    this._detachPageListeners();
+    this._stopRefreshLoop();
     this.currentNode = node;
-    this._attachPageListeners();
+    this._updateAdjustedQuads();
+    this._startRefreshLoop();
     this._show();
   },
 
@@ -386,24 +553,74 @@ XULBasedHighlighter.prototype = {
     }
 
     this._hide();
-    this._detachPageListeners();
+    this._stopRefreshLoop();
     this.currentNode = null;
+    this.currentQuads = {};
     this.options = null;
   },
 
   /**
-   * Update the highlighter while shown
+   * Are the provided options the same as the currently stored options?
+   * Returns false if there are no options stored currently.
    */
-  update: function() {
-    if (isNodeValid(this.currentNode)) {
-      this._update();
+  _isSameOptions: function(options) {
+    if (!this.options) {
+      return false;
     }
+
+    let keys = Object.keys(options);
+
+    if (keys.length !== Object.keys(this.options).length) {
+      return false;
+    }
+
+    for (let key of keys) {
+      if (this.options[key] !== options[key]) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /**
+   * Update the stored box quads by reading the current node's box quads.
+   */
+  _updateAdjustedQuads: function() {
+    for (let region of BOX_MODEL_REGIONS) {
+      this.currentQuads[region] = this.layoutHelpers.getAdjustedQuads(
+        this.currentNode, region);
+    }
+  },
+
+  /**
+   * Update the knowledge we have of the current node's boxquads and return true
+   * if any of the points x/y or bounds have change since.
+   * @return {Boolean}
+   */
+  _hasMoved: function() {
+    let oldQuads = JSON.stringify(this.currentQuads);
+    this._updateAdjustedQuads();
+    let newQuads = JSON.stringify(this.currentQuads);
+    return oldQuads !== newQuads;
+  },
+
+  /**
+   * Update the highlighter if the node has moved since the last update.
+   */
+  update: function(e) {
+    if (!isNodeValid(this.currentNode) || !this._hasMoved()) {
+      return;
+    }
+
+    this._update();
+    this.emit("updated");
   },
 
   _show: function() {
     // To be implemented by sub classes
     // When called, sub classes should actually show the highlighter for
-    // this.currentNode
+    // this.currentNode, potentially using options in this.options
   },
 
   _update: function() {
@@ -418,33 +635,29 @@ XULBasedHighlighter.prototype = {
     // When called, sub classes should actually hide the highlighter
   },
 
-  /**
-   * Listen to changes on the content page to update the highlighter
-   */
-  _attachPageListeners: function() {
-    if (isNodeValid(this.currentNode)) {
-      let win = this.currentNode.ownerDocument.defaultView;
-      this.browser.addEventListener("MozAfterPaint", this.update);
-    }
+  _startRefreshLoop: function() {
+    let win = this.currentNode.ownerDocument.defaultView;
+    this.rafID = win.requestAnimationFrame(this._startRefreshLoop.bind(this));
+    this.update();
   },
 
-  /**
-   * Stop listening to page changes
-   */
-  _detachPageListeners: function() {
-    if (isNodeValid(this.currentNode)) {
-      let win = this.currentNode.ownerDocument.defaultView;
-      this.browser.removeEventListener("MozAfterPaint", this.update);
+  _stopRefreshLoop: function() {
+    if (!this.rafID) {
+      return;
     }
+    let win = this.currentNode.ownerDocument.defaultView;
+    win.cancelAnimationFrame(this.rafID);
+    this.rafID = null;
   },
 
   destroy: function() {
     this.hide();
 
+    this.tabActor = null;
     this.win = null;
     this.browser = null;
-    this.chromeDoc = null;
     this.currentNode = null;
+    this.layoutHelpers = null;
   }
 };
 
@@ -474,7 +687,7 @@ XULBasedHighlighter.prototype = {
  *    If set, only this region will be highlighted
  *
  * Structure:
- * <stack class="highlighter-container">
+ * <div class="highlighter-container">
  *   <svg class="box-model-root" hidden="true">
  *     <g class="box-model-container">
  *       <polygon class="box-model-margin" points="317,122 747,36 747,181 317,267" />
@@ -487,27 +700,26 @@ XULBasedHighlighter.prototype = {
  *     <line class="box-model-guide-bottom" x1="0" y1="612" x2="99999" y2="612" />
  *     <line class="box-model-guide-left" x1="334" y1="0" x2="334" y2="99999" />
  *   </svg>
- *   <box class="highlighter-nodeinfobar-container">
- *     <box class="highlighter-nodeinfobar-positioner" position="top" />
- *       <box class="highlighter-nodeinfobar-arrow highlighter-nodeinfobar-arrow-top" />
- *       <hbox class="highlighter-nodeinfobar">
- *         <hbox class="highlighter-nodeinfobar-text" align="center" flex="1">
- *           <span class="highlighter-nodeinfobar-tagname">Node name</span>
- *           <span class="highlighter-nodeinfobar-id">Node id</span>
- *           <span class="highlighter-nodeinfobar-classes">.someClass</span>
- *           <span class="highlighter-nodeinfobar-pseudo-classes">:hover</span>
- *         </hbox>
- *       </hbox>
- *       <box class="highlighter-nodeinfobar-arrow highlighter-nodeinfobar-arrow-bottom"/>
- *     </box>
- *   </box>
- * </stack>
+ *   <div class="highlighter-nodeinfobar-container">
+ *     <div class="highlighter-nodeinfobar-arrow highlighter-nodeinfobar-arrow-top" />
+ *     <div class="highlighter-nodeinfobar">
+ *       <div class="highlighter-nodeinfobar-text" align="center" flex="1">
+ *         <span class="highlighter-nodeinfobar-tagname">Node name</span>
+ *         <span class="highlighter-nodeinfobar-id">Node id</span>
+ *         <span class="highlighter-nodeinfobar-classes">.someClass</span>
+ *         <span class="highlighter-nodeinfobar-pseudo-classes">:hover</span>
+ *       </div>
+ *     </div>
+ *     <div class="highlighter-nodeinfobar-arrow highlighter-nodeinfobar-arrow-bottom"/>
+ *   </div>
+ * </div>
  */
 function BoxModelHighlighter(tabActor) {
-  XULBasedHighlighter.call(this, tabActor);
-  this.layoutHelpers = new LayoutHelpers(this.win);
-  this._initMarkup();
+  AutoRefreshHighlighter.call(this, tabActor);
   EventEmitter.decorate(this);
+
+  this.markup = new CanvasFrameAnonymousContentHelper(this.tabActor,
+    this._buildMarkup.bind(this));
 
   /**
    * Optionally customize each region's fill color by adding an entry to the
@@ -518,7 +730,9 @@ function BoxModelHighlighter(tabActor) {
   this._currentNode = null;
 }
 
-BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
+BoxModelHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
+  ID_CLASS_PREFIX: "box-model-",
+
   get zoom() {
     return this.win.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIDOMWindowUtils).fullZoom;
@@ -533,120 +747,105 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     this._computedStyle = null;
   },
 
-  _initMarkup: function() {
-    let stack = this.browser.parentNode;
+  _buildMarkup: function() {
+    let doc = this.win.document;
 
-    this._highlighterContainer = this.chromeDoc.createElement("stack");
-    this._highlighterContainer.className = "highlighter-container";
+    let highlighterContainer = doc.createElement("div");
+    highlighterContainer.className = "highlighter-container";
 
-    this._svgRoot = this._createSVGNode("root", "svg", this._highlighterContainer);
+    // Building the SVG element with its polygons and lines
 
-    // Set the SVG canvas height to 0 to stop content jumping around on small
-    // screens.
-    this._svgRoot.setAttribute("height", "0");
+    let svgRoot = this._createSVGNode("svg", highlighterContainer, {
+      "id": "root",
+      "class": "root",
+      "width": "100%",
+      "height": "100%",
+      "style": "width:100%;height:100%;",
+      "hidden": "true"
+    });
 
-    this._boxModelContainer = this._createSVGNode("container", "g", this._svgRoot);
+    let boxModelContainer = this._createSVGNode("g", svgRoot, {
+      "class": "container"
+    });
 
-    this._boxModelNodes = {
-      margin: this._createSVGNode("margin", "polygon", this._boxModelContainer),
-      border: this._createSVGNode("border", "polygon", this._boxModelContainer),
-      padding: this._createSVGNode("padding", "polygon", this._boxModelContainer),
-      content: this._createSVGNode("content", "polygon", this._boxModelContainer)
-    };
+    for (let region of BOX_MODEL_REGIONS) {
+      this._createSVGNode("polygon", boxModelContainer, {
+        "class": region,
+        "id": region
+      });
+    }
 
-    this._guideNodes = {
-      top: this._createSVGNode("guide-top", "line", this._svgRoot),
-      right: this._createSVGNode("guide-right", "line", this._svgRoot),
-      bottom: this._createSVGNode("guide-bottom", "line", this._svgRoot),
-      left: this._createSVGNode("guide-left", "line", this._svgRoot)
-    };
+    for (let side of BOX_MODEL_SIDES) {
+      this._createSVGNode("line", svgRoot, {
+        "class": "guide-" + side,
+        "id": "guide-" + side,
+        "stroke-width": GUIDE_STROKE_WIDTH
+      });
+    }
 
-    this._guideNodes.top.setAttribute("stroke-width", GUIDE_STROKE_WIDTH);
-    this._guideNodes.right.setAttribute("stroke-width", GUIDE_STROKE_WIDTH);
-    this._guideNodes.bottom.setAttribute("stroke-width", GUIDE_STROKE_WIDTH);
-    this._guideNodes.left.setAttribute("stroke-width", GUIDE_STROKE_WIDTH);
+    highlighterContainer.appendChild(svgRoot);
 
-    this._highlighterContainer.appendChild(this._svgRoot);
+    // Building the nodeinfo bar markup
 
-    let infobarContainer = this.chromeDoc.createElement("box");
-    infobarContainer.className = "highlighter-nodeinfobar-container";
-    this._highlighterContainer.appendChild(infobarContainer);
+    let infobarContainer = this._createNode("div", highlighterContainer, {
+      "class": "nodeinfobar-container",
+      "id": "nodeinfobar-container",
+      "position": "top",
+      "hidden": "true"
+    });
 
-    // Insert the highlighter right after the browser
-    stack.insertBefore(this._highlighterContainer, stack.childNodes[1]);
+    let nodeInfobar = this._createNode("div", infobarContainer, {
+      "class": "nodeinfobar"
+    });
 
-    // Building the infobar
-    let infobarPositioner = this.chromeDoc.createElement("box");
-    infobarPositioner.className = "highlighter-nodeinfobar-positioner";
-    infobarPositioner.setAttribute("position", "top");
-    infobarPositioner.setAttribute("disabled", "true");
+    let texthbox = this._createNode("div", nodeInfobar, {
+      "class": "nodeinfobar-text"
+    });
+    this._createNode("span", texthbox, {
+      "class": "nodeinfobar-tagname",
+      "id": "nodeinfobar-tagname"
+    });
+    this._createNode("span", texthbox, {
+      "class": "nodeinfobar-id",
+      "id": "nodeinfobar-id"
+    });
+    this._createNode("span", texthbox, {
+      "class": "nodeinfobar-classes",
+      "id": "nodeinfobar-classes"
+    });
+    this._createNode("span", texthbox, {
+      "class": "nodeinfobar-pseudo-classes",
+      "id": "nodeinfobar-pseudo-classes"
+    });
+    this._createNode("span", texthbox, {
+      "class": "nodeinfobar-dimensions",
+      "id": "nodeinfobar-dimensions"
+    });
 
-    let nodeInfobar = this.chromeDoc.createElement("hbox");
-    nodeInfobar.className = "highlighter-nodeinfobar";
-
-    let arrowBoxTop = this.chromeDoc.createElement("box");
-    arrowBoxTop.className = "highlighter-nodeinfobar-arrow highlighter-nodeinfobar-arrow-top";
-
-    let arrowBoxBottom = this.chromeDoc.createElement("box");
-    arrowBoxBottom.className = "highlighter-nodeinfobar-arrow highlighter-nodeinfobar-arrow-bottom";
-
-    let tagNameLabel = this.chromeDoc.createElementNS(XHTML_NS, "span");
-    tagNameLabel.className = "highlighter-nodeinfobar-tagname";
-
-    let idLabel = this.chromeDoc.createElementNS(XHTML_NS, "span");
-    idLabel.className = "highlighter-nodeinfobar-id";
-
-    let classesBox = this.chromeDoc.createElementNS(XHTML_NS, "span");
-    classesBox.className = "highlighter-nodeinfobar-classes";
-
-    let pseudoClassesBox = this.chromeDoc.createElementNS(XHTML_NS, "span");
-    pseudoClassesBox.className = "highlighter-nodeinfobar-pseudo-classes";
-
-    let dimensionBox = this.chromeDoc.createElementNS(XHTML_NS, "span");
-    dimensionBox.className = "highlighter-nodeinfobar-dimensions";
-
-    // Add some content to force a better boundingClientRect
-    pseudoClassesBox.textContent = "&nbsp;";
-
-    // <hbox class="highlighter-nodeinfobar-text"/>
-    let texthbox = this.chromeDoc.createElement("hbox");
-    texthbox.className = "highlighter-nodeinfobar-text";
-    texthbox.setAttribute("align", "center");
-    texthbox.setAttribute("flex", "1");
-
-    texthbox.appendChild(tagNameLabel);
-    texthbox.appendChild(idLabel);
-    texthbox.appendChild(classesBox);
-    texthbox.appendChild(pseudoClassesBox);
-    texthbox.appendChild(dimensionBox);
-
-    nodeInfobar.appendChild(texthbox);
-
-    infobarPositioner.appendChild(arrowBoxTop);
-    infobarPositioner.appendChild(nodeInfobar);
-    infobarPositioner.appendChild(arrowBoxBottom);
-
-    infobarContainer.appendChild(infobarPositioner);
-
-    let barHeight = infobarPositioner.getBoundingClientRect().height;
-
-    this.nodeInfo = {
-      tagNameLabel: tagNameLabel,
-      idLabel: idLabel,
-      classesBox: classesBox,
-      pseudoClassesBox: pseudoClassesBox,
-      dimensionBox: dimensionBox,
-      positioner: infobarPositioner,
-      barHeight: barHeight,
-    };
+    return highlighterContainer;
   },
 
-  _createSVGNode: function(classPostfix, nodeType, parent) {
-    let node = this.chromeDoc.createElementNS(SVG_NS, nodeType);
-    node.setAttribute("class", "box-model-" + classPostfix);
+  _createSVGNode: function(nodeType, parent, attributes={}) {
+    return this._createNode(nodeType, parent, attributes, SVG_NS);
+  },
+
+  _createNode: function(nodeType, parent, attributes={}, namespace=null) {
+    let node;
+    if (namespace) {
+      node = this.win.document.createElementNS(namespace, nodeType);
+    } else {
+      node = this.win.document.createElement(nodeType);
+    }
+
+    for (let name in attributes) {
+      let value = attributes[name];
+      if (name === "class" || name === "id") {
+        value = this.ID_CLASS_PREFIX + value
+      }
+      node.setAttribute(name, value);
+    }
 
     parent.appendChild(node);
-
     return node;
   },
 
@@ -654,45 +853,21 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function() {
-    XULBasedHighlighter.prototype.destroy.call(this);
+    AutoRefreshHighlighter.prototype.destroy.call(this);
 
-    this._highlighterContainer.remove();
-    this._highlighterContainer = null;
+    this.markup.destroy();
 
-    this.nodeInfo = null;
     this._currentNode = null;
-  },
-
-  /**
-   * Show the highlighter on a given node. We override this method so that the
-   * same node can be rehighlighted e.g. to highlight different regions from the
-   * layout view.
-   *
-   * @param {DOMNode} node
-   * @param {Object} options
-   *        Object used for passing options
-   */
-  show: function(node, options={}) {
-    if (!isNodeValid(node)) {
-      return;
-    }
-
-    this.options = options;
-
-    if (!this.options.region) {
-      this.options.region = "content";
-    }
-
-    this._detachPageListeners();
-    this.currentNode = node;
-    this._attachPageListeners();
-    this._show();
   },
 
   /**
    * Show the highlighter on a given node
    */
   _show: function() {
+    if (BOX_MODEL_REGIONS.indexOf(this.options.region) == -1)  {
+      this.options.region = "content";
+    }
+
     this._update();
     this._trackMutations();
     this.emit("ready");
@@ -726,6 +901,8 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     if (this._updateBoxModel()) {
       if (!this.options.hideInfoBar) {
         this._showInfobar();
+      } else {
+        this._hideInfobar();
       }
       this._showBoxModel();
     } else {
@@ -747,14 +924,16 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * Hide the infobar
    */
   _hideInfobar: function() {
-    this.nodeInfo.positioner.setAttribute("hidden", "true");
+    this.markup.setAttributeForElement(
+      this.ID_CLASS_PREFIX + "nodeinfobar-container", "hidden", "true");
   },
 
   /**
    * Show the infobar
    */
   _showInfobar: function() {
-    this.nodeInfo.positioner.removeAttribute("hidden");
+    this.markup.removeAttributeForElement(
+      this.ID_CLASS_PREFIX + "nodeinfobar-container", "hidden");
     this._updateInfobar();
   },
 
@@ -762,14 +941,16 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * Hide the box model
    */
   _hideBoxModel: function() {
-    this._svgRoot.setAttribute("hidden", "true");
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "root", "hidden",
+      "true");
   },
 
   /**
    * Show the box model
    */
   _showBoxModel: function() {
-    this._svgRoot.removeAttribute("hidden");
+    this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + "root",
+      "hidden");
   },
 
   /**
@@ -782,30 +963,25 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     this.options.region = this.options.region || "content";
 
     if (this._nodeNeedsHighlighting()) {
-      for (let boxType in this._boxModelNodes) {
-
-        let quads = this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
-        if (!quads) {
-          continue;
-        }
-        let {p1, p2, p3, p4} = quads;
-
-        let boxNode = this._boxModelNodes[boxType];
+      for (let boxType of BOX_MODEL_REGIONS) {
+        let {p1, p2, p3, p4} = this.currentQuads[boxType];
 
         if (this.regionFill[boxType]) {
-          boxNode.setAttribute("style", "fill:" + this.regionFill[boxType]);
+          this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + boxType,
+            "style", "fill:" + this.regionFill[boxType]);
         } else {
-          boxNode.removeAttribute("style");
+          this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + boxType,
+            "style", "");
         }
 
         if (!this.options.showOnly || this.options.showOnly === boxType) {
-          boxNode.setAttribute("points",
-                               p1.x + "," + p1.y + " " +
-                               p2.x + "," + p2.y + " " +
-                               p3.x + "," + p3.y + " " +
-                               p4.x + "," + p4.y);
+          this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + boxType,
+            "points", p1.x + "," + p1.y + " " +
+                      p2.x + "," + p2.y + " " +
+                      p3.x + "," + p3.y + " " +
+                      p4.x + "," + p4.y);
         } else {
-          boxNode.setAttribute("points", "");
+          this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + boxType, "points");
         }
 
         if (boxType === this.options.region && !this.options.hideGuides) {
@@ -823,11 +999,16 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
   },
 
   _nodeNeedsHighlighting: function() {
+    let hasNoQuads = !this.currentQuads.margin &&
+                     !this.currentQuads.border &&
+                     !this.currentQuads.padding &&
+                     !this.currentQuads.content;
     if (!this.currentNode ||
         Cu.isDeadWrapper(this.currentNode) ||
         this.currentNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
         !this.currentNode.ownerDocument ||
-        !this.currentNode.ownerDocument.defaultView) {
+        !this.currentNode.ownerDocument.defaultView ||
+        hasNoQuads) {
       return false;
     }
 
@@ -840,7 +1021,7 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
 
   _getOuterBounds: function() {
     for (let region of ["margin", "border", "padding", "content"]) {
-      let quads = this.layoutHelpers.getAdjustedQuads(this.currentNode, region);
+      let quads = this.currentQuads[region];
 
       if (!quads) {
         // Invisible element such as a script tag.
@@ -850,24 +1031,19 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
       let {bottom, height, left, right, top, width, x, y} = quads.bounds;
 
       if (width > 0 || height > 0) {
-        return this._boundsHelper(bottom, height, left, right, top, width, x, y);
+        return {bottom, height, left, right, top, width, x, y};
       }
     }
 
-    return this._boundsHelper();
-  },
-
-  _boundsHelper: function(bottom=0, height=0, left=0, right=0,
-                          top=0, width=0, x=0, y=0) {
     return {
-      bottom: bottom,
-      height: height,
-      left: left,
-      right: right,
-      top: top,
-      width: width,
-      x: x,
-      y: y
+      bottom: 0,
+      height: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      width: 0,
+      x: 0,
+      y: 0
     };
   },
 
@@ -902,15 +1078,16 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     }
 
     // Move guide into place or hide it if no valid co-ordinate was found.
-    this._updateGuide(this._guideNodes.top, toShowY[0]);
-    this._updateGuide(this._guideNodes.right, toShowX[1]);
-    this._updateGuide(this._guideNodes.bottom, toShowY[1]);
-    this._updateGuide(this._guideNodes.left, toShowX[0]);
+    this._updateGuide("top", toShowY[0]);
+    this._updateGuide("right", toShowX[1]);
+    this._updateGuide("bottom", toShowY[1]);
+    this._updateGuide("left", toShowX[0]);
   },
 
   _hideGuides: function() {
-    for (let side in this._guideNodes) {
-      this._guideNodes[side].setAttribute("hidden", "true");
+    for (let side of BOX_MODEL_SIDES) {
+      this.markup.setAttributeForElement(
+        this.ID_CLASS_PREFIX + "guide-" + side, "hidden", "true");
     }
   },
 
@@ -918,37 +1095,40 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * Move a guide to the appropriate position and display it. If no point is
    * passed then the guide is hidden.
    *
-   * @param  {SVGLine} guide
+   * @param  {String} side
    *         The guide to update
    * @param  {Integer} point
    *         x or y co-ordinate. If this is undefined we hide the guide.
    */
-  _updateGuide: function(guide, point=-1) {
+  _updateGuide: function(side, point=-1) {
+    let guideId = this.ID_CLASS_PREFIX + "guide-" + side;
+
     if (point <= 0) {
-      guide.setAttribute("hidden", "true");
+      this.markup.setAttributeForElement(guideId, "hidden", "true");
       return false;
     }
 
     let offset = GUIDE_STROKE_WIDTH / 2;
 
-    if (guide === this._guideNodes.top || guide === this._guideNodes.left) {
+    if (side === "top" || side === "left") {
       point -= offset;
     } else {
       point += offset;
     }
 
-    if (guide === this._guideNodes.top || guide === this._guideNodes.bottom) {
-      guide.setAttribute("x1", 0);
-      guide.setAttribute("y1", point);
-      guide.setAttribute("x2", "100%");
-      guide.setAttribute("y2", point);
+    if (side === "top" || side === "bottom") {
+      this.markup.setAttributeForElement(guideId, "x1", "0");
+      this.markup.setAttributeForElement(guideId, "y1", point + "");
+      this.markup.setAttributeForElement(guideId, "x2", "100%");
+      this.markup.setAttributeForElement(guideId, "y2", point + "");
     } else {
-      guide.setAttribute("x1", point);
-      guide.setAttribute("y1", 0);
-      guide.setAttribute("x2", point);
-      guide.setAttribute("y2", "100%");
+      this.markup.setAttributeForElement(guideId, "x1", point + "");
+      this.markup.setAttributeForElement(guideId, "y1", "0");
+      this.markup.setAttributeForElement(guideId, "x2", point + "");
+      this.markup.setAttributeForElement(guideId, "y2", "100%");
     }
-    guide.removeAttribute("hidden");
+
+    this.markup.removeAttributeForElement(guideId, "hidden");
 
     return true;
   },
@@ -961,46 +1141,33 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
       return;
     }
 
-    let info = this.nodeInfo;
-
     let {bindingElement:node, pseudo} =
       CssLogic.getBindingElementAndPseudo(this.currentNode);
 
-    // Update the tag, id, classes, pseudo-classes and dimensions only if they
-    // changed to avoid triggering paint events
+    // Update the tag, id, classes, pseudo-classes and dimensions
     let tagName = node.tagName;
-    if (info.tagNameLabel.textContent !== tagName) {
-      info.tagNameLabel.textContent = tagName;
-    }
 
     let id = node.id ? "#" + node.id : "";
-    if (info.idLabel.textContent !== id) {
-      info.idLabel.textContent = id;
-    }
 
     let classList = (node.classList || []).length ? "." + [...node.classList].join(".") : "";
-    if (info.classesBox.textContent !== classList) {
-      info.classesBox.textContent = classList;
-    }
 
     let pseudos = PSEUDO_CLASSES.filter(pseudo => {
       return DOMUtils.hasPseudoClassLock(node, pseudo);
     }, this).join("");
-
     if (pseudo) {
       // Display :after as ::after
       pseudos += ":" + pseudo;
     }
 
-    if (info.pseudoClassesBox.textContent !== pseudos) {
-      info.pseudoClassesBox.textContent = pseudos;
-    }
-
     let rect = node.getBoundingClientRect();
     let dim = Math.ceil(rect.width) + " x " + Math.ceil(rect.height);
-    if (info.dimensionBox.textContent !== dim) {
-      info.dimensionBox.textContent = dim;
-    }
+
+    let elementId = this.ID_CLASS_PREFIX + "nodeinfobar-";
+    this.markup.setTextContentForElement(elementId + "tagname", tagName);
+    this.markup.setTextContentForElement(elementId + "id", id);
+    this.markup.setTextContentForElement(elementId + "classes", classList);
+    this.markup.setTextContentForElement(elementId + "pseudo-classes", pseudos);
+    this.markup.setTextContentForElement(elementId + "dimensions", dim);
 
     this._moveInfobar();
   },
@@ -1013,60 +1180,47 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     let winHeight = this.win.innerHeight * this.zoom;
     let winWidth = this.win.innerWidth * this.zoom;
 
-    // Ensure that positionerBottom and positionerTop are at least zero to avoid
+    // Ensure that containerBottom and containerTop are at least zero to avoid
     // showing tooltips outside the viewport.
-    let positionerBottom = Math.max(0, bounds.bottom);
-    let positionerTop = Math.max(0, bounds.top);
+    let containerBottom = Math.max(0, bounds.bottom) + NODE_INFOBAR_ARROW_SIZE;
+    let containerTop = Math.min(winHeight, bounds.top);
+    let containerId = this.ID_CLASS_PREFIX + "nodeinfobar-container";
 
-    // Avoid showing the nodeInfoBar on top of the findbar or awesomebar.
-    if (this.chromeDoc.defaultView.gBrowser) {
-      // Get the y co-ordinate of the top of the viewport
-      let viewportTop = this.browser.getBoundingClientRect().top;
-
-      // Get the offset to the top of the findbar
-      let findbar = this.chromeDoc.defaultView.gBrowser.getFindBar();
-      let findTop = findbar.getBoundingClientRect().top - viewportTop;
-
-      // Either show the positioner where it is or move it above the findbar.
-      positionerTop = Math.min(positionerTop, findTop);
-    }
-
-    this.nodeInfo.positioner.removeAttribute("disabled");
     // Can the bar be above the node?
-    if (positionerTop < this.nodeInfo.barHeight) {
-      // No. Can we move the toolbar under the node?
-      if (positionerBottom + this.nodeInfo.barHeight > winHeight) {
+    let top;
+    if (containerTop < NODE_INFOBAR_HEIGHT) {
+      // No. Can we move the bar under the node?
+      if (containerBottom + NODE_INFOBAR_HEIGHT > winHeight) {
         // No. Let's move it inside.
-        this.nodeInfo.positioner.style.top = positionerTop + "px";
-        this.nodeInfo.positioner.setAttribute("position", "overlap");
+        top = containerTop;
+        this.markup.setAttributeForElement(containerId, "position", "overlap");
       } else {
         // Yes. Let's move it under the node.
-        this.nodeInfo.positioner.style.top = positionerBottom - INFO_BAR_OFFSET + "px";
-        this.nodeInfo.positioner.setAttribute("position", "bottom");
+        top = containerBottom;
+        this.markup.setAttributeForElement(containerId, "position", "bottom");
       }
     } else {
       // Yes. Let's move it on top of the node.
-      this.nodeInfo.positioner.style.top =
-        positionerTop + INFO_BAR_OFFSET - this.nodeInfo.barHeight + "px";
-      this.nodeInfo.positioner.setAttribute("position", "top");
+      top = containerTop - NODE_INFOBAR_HEIGHT;
+      this.markup.setAttributeForElement(containerId, "position", "top");
     }
 
-    let barWidth = this.nodeInfo.positioner.getBoundingClientRect().width;
-    let left = bounds.right - bounds.width / 2 - barWidth / 2;
-
-    // Make sure the whole infobar is visible
-    if (left < 0) {
-      left = 0;
-      this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
+    // Align the bar with the box's center if possible.
+    let left = bounds.right - bounds.width / 2;
+    // Make sure the while infobar is visible.
+    let buffer = 100;
+    if (left < buffer) {
+      left = buffer;
+      this.markup.setAttributeForElement(containerId, "hide-arrow", "true");
+    } else if (left > winWidth - buffer) {
+      left = winWidth - buffer;
+      this.markup.setAttributeForElement(containerId, "hide-arrow", "true");
     } else {
-      if (left + barWidth > winWidth) {
-        left = winWidth - barWidth;
-        this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
-      } else {
-        this.nodeInfo.positioner.removeAttribute("hide-arrow");
-      }
+      this.markup.removeAttributeForElement(containerId, "hide-arrow");
     }
-    this.nodeInfo.positioner.style.left = left + "px";
+
+    let style = "top:" + top + "px;left:" + left + "px;";
+    this.markup.setAttributeForElement(containerId, "style", style);
   }
 });
 
@@ -1076,65 +1230,85 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
  * as well as arrows connecting the 2 outlines' corners.
  */
 function CssTransformHighlighter(tabActor) {
-  XULBasedHighlighter.call(this, tabActor);
+  AutoRefreshHighlighter.call(this, tabActor);
 
-  this.layoutHelpers = new LayoutHelpers(tabActor.window);
-  this._initMarkup();
+  this.markup = new CanvasFrameAnonymousContentHelper(this.tabActor,
+    this._buildMarkup.bind(this));
 }
 
 let MARKER_COUNTER = 1;
 
-CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
-  _initMarkup: function() {
-    let stack = this.browser.parentNode;
+CssTransformHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.prototype, {
+  ID_CLASS_PREFIX: "css-transform-",
 
-    this._container = this.chromeDoc.createElement("stack");
-    this._container.className = "highlighter-container";
+  _buildMarkup: function() {
+    let doc = this.win.document;
 
-    this._svgRoot = this._createSVGNode("root", "svg", this._container);
-    this._svgRoot.setAttribute("hidden", "true");
+    let container = doc.createElement("div");
+    container.className = "highlighter-container";
+
+    let svgRoot = this._createSVGNode("svg", container, {
+      "class": "root",
+      "id": "root",
+      "hidden": "true",
+      "width": "100%",
+      "height": "100%"
+    });
 
     // Add a marker tag to the svg root for the arrow tip
-    let marker = this.chromeDoc.createElementNS(SVG_NS, "marker");
-    this.markerId = "css-transform-arrow-marker-" + MARKER_COUNTER;
+    this.markerId = "arrow-marker-" + MARKER_COUNTER;
     MARKER_COUNTER ++;
-    marker.setAttribute("id", this.markerId);
-    marker.setAttribute("markerWidth", "10");
-    marker.setAttribute("markerHeight", "5");
-    marker.setAttribute("orient", "auto");
-    marker.setAttribute("markerUnits", "strokeWidth");
-    marker.setAttribute("refX", "10");
-    marker.setAttribute("refY", "5");
-    marker.setAttribute("viewBox", "0 0 10 10");
-    let path = this.chromeDoc.createElementNS(SVG_NS, "path");
-    path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
-    path.setAttribute("fill", "#08C");
-    marker.appendChild(path);
-    this._svgRoot.appendChild(marker);
+    let marker = this._createSVGNode("marker", svgRoot, {
+      "id": this.markerId,
+      "markerWidth": "10",
+      "markerHeight": "5",
+      "orient": "auto",
+      "markerUnits": "strokeWidth",
+      "refX": "10",
+      "refY": "5",
+      "viewBox": "0 0 10 10",
+    });
+    this._createSVGNode("path", marker, {
+      "d": "M 0 0 L 10 5 L 0 10 z",
+      "fill": "#08C"
+    });
+
+    let shapesGroup = this._createSVGNode("g", svgRoot);
 
     // Create the 2 polygons (transformed and untransformed)
-    let shapesGroup = this._createSVGNode("container", "g", this._svgRoot);
-    this._shapes = {
-      untransformed: this._createSVGNode("untransformed", "polygon", shapesGroup),
-      transformed: this._createSVGNode("transformed", "polygon", shapesGroup)
-    };
+    this._createSVGNode("polygon", shapesGroup, {
+      "id": "untransformed",
+      "class": "untransformed"
+    });
+    this._createSVGNode("polygon", shapesGroup, {
+      "id": "transformed",
+      "class": "transformed"
+    });
 
     // Create the arrows
     for (let nb of ["1", "2", "3", "4"]) {
-      let line = this._createSVGNode("line", "line", shapesGroup);
-      line.setAttribute("marker-end", "url(#" + this.markerId + ")");
-      this._shapes["line" + nb] = line;
+      this._createSVGNode("line", shapesGroup, {
+        "id": "line" + nb,
+        "class": "line",
+        "marker-end": "url(#" + this.markerId + ")"
+      });
     }
 
-    this._container.appendChild(this._svgRoot);
+    container.appendChild(svgRoot);
 
-    // Insert the highlighter right after the browser
-    stack.insertBefore(this._container, stack.childNodes[1]);
+    return container;
   },
 
-  _createSVGNode: function(classPostfix, nodeType, parent) {
-    let node = this.chromeDoc.createElementNS(SVG_NS, nodeType);
-    node.setAttribute("class", "css-transform-" + classPostfix);
+  _createSVGNode: function(nodeType, parent, attributes={}) {
+    let node = this.win.document.createElementNS(SVG_NS, nodeType);
+
+    for (let name in attributes) {
+      let value = attributes[name];
+      if (name === "class" || name === "id") {
+        value = this.ID_CLASS_PREFIX + value
+      }
+      node.setAttribute(name, value);
+    }
 
     parent.appendChild(node);
     return node;
@@ -1144,10 +1318,8 @@ CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototyp
    * Destroy the nodes. Remove listeners.
    */
   destroy: function() {
-    XULBasedHighlighter.prototype.destroy.call(this);
-
-    this._container.remove();
-    this._container = null;
+    AutoRefreshHighlighter.prototype.destroy.call(this);
+    this.markup.destroy();
   },
 
   /**
@@ -1171,25 +1343,28 @@ CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototyp
     return style && (style.transform !== "none" && style.display !== "inline");
   },
 
-  _setPolygonPoints: function(quad, poly) {
+  _setPolygonPoints: function(quad, id) {
     let points = [];
     for (let point of ["p1","p2", "p3", "p4"]) {
       points.push(quad[point].x + "," + quad[point].y);
     }
-    poly.setAttribute("points", points.join(" "));
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id,
+                                       "points",
+                                       points.join(" "));
   },
 
-  _setLinePoints: function(p1, p2, line) {
-    line.setAttribute("x1", p1.x);
-    line.setAttribute("y1", p1.y);
-    line.setAttribute("x2", p2.x);
-    line.setAttribute("y2", p2.y);
+  _setLinePoints: function(p1, p2, id) {
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "x1", p1.x);
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "y1", p1.y);
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "x2", p2.x);
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "y2", p2.y);
 
     let dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
     if (dist < ARROW_LINE_MIN_DISTANCE) {
-      line.removeAttribute("marker-end");
+      this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + id, "marker-end");
     } else {
-      line.setAttribute("marker-end", "url(#" + this.markerId + ")");
+      this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + id, "marker-end",
+                                         "url(#" + this.markerId + ")");
     }
   },
 
@@ -1200,7 +1375,7 @@ CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototyp
    */
   _update: function() {
     // Getting the points for the transformed shape
-    let quad = this.layoutHelpers.getAdjustedQuads(this.currentNode, "border");
+    let quad = this.currentQuads.border;
     if (!quad || quad.bounds.width <= 0 || quad.bounds.height <= 0) {
       this._hideShapes();
       return null;
@@ -1209,11 +1384,10 @@ CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototyp
     // Getting the points for the untransformed shape
     let untransformedQuad = this.layoutHelpers.getNodeBounds(this.currentNode);
 
-    this._setPolygonPoints(quad, this._shapes.transformed);
-    this._setPolygonPoints(untransformedQuad, this._shapes.untransformed);
+    this._setPolygonPoints(quad, "transformed");
+    this._setPolygonPoints(untransformedQuad, "untransformed");
     for (let nb of ["1", "2", "3", "4"]) {
-      this._setLinePoints(untransformedQuad["p" + nb], quad["p" + nb],
-        this._shapes["line" + nb]);
+      this._setLinePoints(untransformedQuad["p" + nb], quad["p" + nb], "line" + nb);
     }
 
     this._showShapes();
@@ -1227,11 +1401,11 @@ CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototyp
   },
 
   _hideShapes: function() {
-    this._svgRoot.setAttribute("hidden", "true");
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "root", "hidden", "true");
   },
 
   _showShapes: function() {
-    this._svgRoot.removeAttribute("hidden");
+    this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + "root", "hidden");
   }
 });
 
@@ -1301,10 +1475,9 @@ SelectorHighlighter.prototype = {
 /**
  * The SimpleOutlineHighlighter is a class that has the same API than the
  * BoxModelHighlighter, but adds a pseudo-class on the target element itself
- * to draw a simple outline.
- * It is used by the HighlighterActor too, but in case the more complex
- * BoxModelHighlighter can't be attached (which is the case for FirefoxOS and
- * Fennec targets for instance).
+ * to draw a simple css outline around the element.
+ * It is used by the HighlighterActor when canvasframe-based highlighters can't
+ * be used. This is the case for XUL windows.
  */
 function SimpleOutlineHighlighter(tabActor) {
   this.chromeDoc = tabActor.window.document;
@@ -1316,24 +1489,7 @@ SimpleOutlineHighlighter.prototype = {
    */
   destroy: function() {
     this.hide();
-    if (this.installedHelpers) {
-      this.installedHelpers.clear();
-    }
     this.chromeDoc = null;
-  },
-
-  _installHelperSheet: function(node) {
-    if (!this.installedHelpers) {
-      this.installedHelpers = new WeakMap;
-    }
-    let win = node.ownerDocument.defaultView;
-    if (!this.installedHelpers.has(win)) {
-      let {Style} = require("sdk/stylesheet/style");
-      let {attach} = require("sdk/content/mod");
-      let style = Style({source: HELPER_SHEET, type: "agent"});
-      attach(style, win);
-      this.installedHelpers.set(win, style);
-    }
   },
 
   /**
@@ -1344,7 +1500,7 @@ SimpleOutlineHighlighter.prototype = {
     if (!this.currentNode || node !== this.currentNode) {
       this.hide();
       this.currentNode = node;
-      this._installHelperSheet(node);
+      installHelperSheet(node.ownerDocument.defaultView, SIMPLE_OUTLINE_SHEET);
       DOMUtils.addPseudoClassLock(node, HIGHLIGHTED_PSEUDO_CLASS);
     }
   },
@@ -1359,20 +1515,6 @@ SimpleOutlineHighlighter.prototype = {
     }
   }
 };
-
-/**
- * Can the host support the XUL-based highlighters which require a parent
- * XUL node to get attached.
- * @param {TabActor}
- * @return {Boolean}
- */
-function supportXULBasedHighlighter(tabActor) {
-  // Note that <browser>s on Fennec also have a XUL parentNode but the box
-  // model highlighter doesn't display correctly on Fennec (bug 993190)
-  return tabActor.browser &&
-         !!tabActor.browser.parentNode &&
-         Services.appinfo.ID !== "{aa3c5121-dab2-40e2-81ca-7ea25febc110}";
-}
 
 function isNodeValid(node) {
   // Is it null or dead?
@@ -1399,6 +1541,28 @@ function isNodeValid(node) {
   }
 
   return true;
+}
+
+/**
+ * Inject a helper stylesheet in the window.
+ */
+let installedHelperSheets = new WeakMap;
+function installHelperSheet(win, source, type="agent") {
+  if (installedHelperSheets.has(win.document)) {
+    return;
+  }
+  let {Style} = require("sdk/stylesheet/style");
+  let {attach} = require("sdk/content/mod");
+  let style = Style({source, type});
+  attach(style, win);
+  installedHelperSheets.set(win.document, style);
+}
+
+/**
+ * Is the content window in this tabActor a XUL window
+ */
+function isXUL(tabActor) {
+  return tabActor.window.document.documentElement.namespaceURI === XUL_NS;
 }
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {

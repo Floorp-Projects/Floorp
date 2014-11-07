@@ -546,6 +546,24 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     }
   },
 
+  hidePrettyPrinting: function() {
+    this._prettyPrintButton.style.display = 'none';
+
+    if (this._blackBoxButton.style.display === 'none') {
+      let sep = document.querySelector('#sources-toolbar .devtools-separator');
+      sep.style.display = 'none';
+    }
+  },
+
+  hideBlackBoxing: function() {
+    this._blackBoxButton.style.display = 'none';
+
+    if (this._prettyPrintButton.style.display === 'none') {
+      let sep = document.querySelector('#sources-toolbar .devtools-separator');
+      sep.style.display = 'none';
+    }
+  },
+
   /**
    * Marks a breakpoint as selected in this sources container.
    *
