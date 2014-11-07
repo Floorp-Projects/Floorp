@@ -9,7 +9,10 @@
 
 #include "mozilla/NullPtr.h"
 
+#include "jsalloc.h"
 #include "jspubtd.h"
+
+#include "js/HashTable.h"
 
 class JS_PUBLIC_API(JSTracer);
 
@@ -211,6 +214,15 @@ JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind);
 
 extern JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc);
+
+namespace JS {
+typedef js::HashSet<Zone *, js::DefaultHasher<Zone *>, js::SystemAllocPolicy> ZoneSet;
+}
+
+// Trace every value within |zones| that is wrapped by a cross-compartment
+// wrapper from a zone that is not an element of |zones|.
+extern JS_PUBLIC_API(void)
+JS_TraceIncomingCCWs(JSTracer *trc, const JS::ZoneSet &zones);
 
 extern JS_PUBLIC_API(void)
 JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
