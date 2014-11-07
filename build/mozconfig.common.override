@@ -9,5 +9,3 @@
 # to override anything done previously.
 #
 # The common expected usage is for try builds with nondefault options.
-
-ac_add_options --enable-update-channel=nightly-gum
