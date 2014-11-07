@@ -9017,8 +9017,7 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
-if test "$MOZ_UPDATE_CHANNEL" = "aurora" ||
-   test "$MOZ_UPDATE_CHANNEL" = "nightly-gum"; then
+if test "$MOZ_UPDATE_CHANNEL" = "aurora"; then
     AC_DEFINE(MOZ_DEV_EDITION)
 fi
 
