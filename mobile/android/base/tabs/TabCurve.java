@@ -40,12 +40,12 @@ public class TabCurve {
     private TabCurve() {
     }
 
-    public static int getWidthForHeight(int height) {
+    public static float getWidthForHeight(float height) {
         return (int) (height * ASPECT_RATIO);
     }
 
-    public static void drawFromTop(Path path, int from, int height, Direction dir) {
-        final int width = getWidthForHeight(height);
+    public static void drawFromTop(Path path, float from, float height, Direction dir) {
+        final float width = getWidthForHeight(height);
 
         path.cubicTo(from + width * W_M1 * dir.value, 0.0f,
                      from + width * W_M2 * dir.value, height * H_M1,
@@ -55,8 +55,8 @@ public class TabCurve {
                      from + width * dir.value, height);
     }
 
-    public static void drawFromBottom(Path path, int from, int height, Direction dir) {
-        final int width = getWidthForHeight(height);
+    public static void drawFromBottom(Path path, float from, float height, Direction dir) {
+        final float width = getWidthForHeight(height);
 
         path.cubicTo(from + width * (1f - W_M3) * dir.value, height * H_M4,
                      from + width * (1f - W_M2) * dir.value, height * H_M3,
