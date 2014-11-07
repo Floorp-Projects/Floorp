@@ -220,7 +220,7 @@
     { "name": "media.mozilla.com", "include_subdomains": true,
       "pins": "mozilla", "test_mode": false },
     { "name": "services.mozilla.com", "include_subdomains": true,
-      "pins": "mozilla_services", "test_mode": true, "id": 6 },
+      "pins": "mozilla_services", "test_mode": false, "id": 6 },
     { "name": "include-subdomains.pinning.example.com",
       "include_subdomains": true, "pins": "mozilla_test",
       "test_mode": false },
