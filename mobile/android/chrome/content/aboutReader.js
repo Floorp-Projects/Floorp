@@ -512,10 +512,10 @@ AboutReader.prototype = {
   _loadArticle: Task.async(function* (url, tabId) {
     this._showProgressDelayed();
 
-    try {
-      let article = yield gChromeWin.Reader.getArticle(url, tabId);
+    let article = yield gChromeWin.Reader.getArticle(url, tabId);
+    if (article) {
       this._showContent(article);
-    } catch (e) {
+    } else {
       this._win.location.href = url;
     }
   }),

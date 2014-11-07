@@ -1359,9 +1359,19 @@ WebConsoleFrame.prototype = {
   {
     // Warnings and legacy strict errors become warnings; other types become
     // errors.
-    let severity = SEVERITY_ERROR;
+    let severity = 'error';
     if (aScriptError.warning || aScriptError.strict) {
-      severity = SEVERITY_WARNING;
+      severity = 'warning';
+    }
+
+    let category = 'js';
+    switch(aCategory) {
+      case CATEGORY_CSS:
+        category = 'css';
+        break;
+      case CATEGORY_SECURITY:
+        category = 'security';
+        break;
     }
 
     let objectActors = new Set();
@@ -1379,20 +1389,26 @@ WebConsoleFrame.prototype = {
       errorMessage = errorMessage.initial;
     }
 
-    let node = this.createMessageNode(aCategory, severity,
-                                      errorMessage,
-                                      aScriptError.sourceName,
-                                      aScriptError.lineNumber, null, null,
-                                      aScriptError.timeStamp);
+    // Create a new message
+    let msg = new Messages.Simple(errorMessage, {
+      location: {
+        url: aScriptError.sourceName,
+        line: aScriptError.lineNumber,
+        column: aScriptError.columnNumber
+      },
+      category: category,
+      severity: severity,
+      timestamp: aScriptError.timeStamp,
+      private: aScriptError.private,
+      filterDuplicates: true
+    });
+
+    let node = msg.init(this.output).render().element;
 
     // Select the body of the message node that is displayed in the console
     let msgBody = node.getElementsByClassName("message-body")[0];
     // Add the more info link node to messages that belong to certain categories
     this.addMoreInfoLink(msgBody, aScriptError);
-
-    if (aScriptError.private) {
-      node.setAttribute("private", true);
-    }
 
     if (objectActors.size > 0) {
       node._objectActors = objectActors;
@@ -2561,7 +2577,8 @@ WebConsoleFrame.prototype = {
     // right side of the message, if applicable.
     let locationNode;
     if (aSourceURL && IGNORED_SOURCE_URLS.indexOf(aSourceURL) == -1) {
-      locationNode = this.createLocationNode(aSourceURL, aSourceLine);
+      locationNode = this.createLocationNode({url: aSourceURL,
+                                              line: aSourceLine});
     }
 
     node.appendChild(timestampNode);
@@ -2604,11 +2621,8 @@ WebConsoleFrame.prototype = {
    * Creates the anchor that displays the textual location of an incoming
    * message.
    *
-   * @param string aSourceURL
-   *        The URL of the source file responsible for the error.
-   * @param number aSourceLine [optional]
-   *        The line number on which the error occurred. If zero or omitted,
-   *        there is no line number associated with this message.
+   * @param object aLocation
+   *        An object containing url, line and column number of the message source (destructured).
    * @param string aTarget [optional]
    *        Tells which tool to open the link with, on click. Supported tools:
    *        jsdebugger, styleeditor, scratchpad.
@@ -2616,10 +2630,10 @@ WebConsoleFrame.prototype = {
    *         The new anchor element, ready to be added to the message node.
    */
   createLocationNode:
-  function WCF_createLocationNode(aSourceURL, aSourceLine, aTarget)
+  function WCF_createLocationNode({url, line, column}, aTarget)
   {
-    if (!aSourceURL) {
-      aSourceURL = "";
+    if (!url) {
+      url = "";
     }
     let locationNode = this.document.createElementNS(XHTML_NS, "a");
     let filenameNode = this.document.createElementNS(XHTML_NS, "span");
@@ -2630,13 +2644,13 @@ WebConsoleFrame.prototype = {
     let fullURL;
     let isScratchpad = false;
 
-    if (/^Scratchpad\/\d+$/.test(aSourceURL)) {
-      filename = aSourceURL;
-      fullURL = aSourceURL;
+    if (/^Scratchpad\/\d+$/.test(url)) {
+      filename = url;
+      fullURL = url;
       isScratchpad = true;
     }
     else {
-      fullURL = aSourceURL.split(" -> ").pop();
+      fullURL = url.split(" -> ").pop();
       filename = WebConsoleUtils.abbreviateSourceURL(fullURL);
     }
 
@@ -2649,27 +2663,27 @@ WebConsoleFrame.prototype = {
     if (aTarget) {
       locationNode.target = aTarget;
     }
-    locationNode.setAttribute("title", aSourceURL);
+    locationNode.setAttribute("title", url);
     locationNode.className = "message-location theme-link devtools-monospace";
 
     // Make the location clickable.
     let onClick = () => {
       let target = locationNode.target;
       if (target == "scratchpad" || isScratchpad) {
-        this.owner.viewSourceInScratchpad(aSourceURL);
+        this.owner.viewSourceInScratchpad(url);
         return;
       }
 
       let category = locationNode.parentNode.category;
       if (target == "styleeditor" || category == CATEGORY_CSS) {
-        this.owner.viewSourceInStyleEditor(fullURL, aSourceLine);
+        this.owner.viewSourceInStyleEditor(fullURL, line);
       }
       else if (target == "jsdebugger" ||
                category == CATEGORY_JS || category == CATEGORY_WEBDEV) {
-        this.owner.viewSourceInDebugger(fullURL, aSourceLine);
+        this.owner.viewSourceInDebugger(fullURL, line);
       }
       else {
-        this.owner.viewSource(fullURL, aSourceLine);
+        this.owner.viewSource(fullURL, line);
       }
     };
 
@@ -2677,12 +2691,12 @@ WebConsoleFrame.prototype = {
       this._addMessageLinkCallback(locationNode, onClick);
     }
 
-    if (aSourceLine) {
+    if (line) {
       let lineNumberNode = this.document.createElementNS(XHTML_NS, "span");
       lineNumberNode.className = "line-number";
-      lineNumberNode.textContent = ":" + aSourceLine;
+      lineNumberNode.textContent = ":" + line + (column >= 0 ? ":" + column : "");
       locationNode.appendChild(lineNumberNode);
-      locationNode.sourceLine = aSourceLine;
+      locationNode.sourceLine = line;
     }
 
     return locationNode;

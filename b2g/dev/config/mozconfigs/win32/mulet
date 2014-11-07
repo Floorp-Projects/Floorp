@@ -1,3 +1,7 @@
 . "$topsrcdir/browser/config/mozconfigs/win32/nightly"
 
 ac_add_options --enable-application=b2g/dev
+
+# Include Firefox OS fonts.
+# TODO Uncomment after Mulet ships with the fonts (bug 1011562).
+#MOZTTDIR=$topsrcdir/moztt

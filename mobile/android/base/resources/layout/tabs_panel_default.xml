@@ -70,12 +70,6 @@
                 android:layout_height="match_parent"
                 android:visibility="gone"/>
 
-        <org.mozilla.gecko.tabs.RemoteTabsPanel
-                android:id="@+id/remote_tabs"
-                android:layout_height="match_parent"
-                android:layout_width="match_parent"
-                android:visibility="gone"/>
-
     </view>
 
     <!-- To preserve the ID, even when building for pre-11. -->

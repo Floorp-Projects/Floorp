@@ -10,11 +10,20 @@
  * ALL need to match an error in order for that error not to cause a test
  * failure. */
 const kWhitelist = [
-  {sourceName: /cleopatra.*(tree|ui)\.css/i}, /* Cleopatra is imported as-is, see bug 1004421 */
-  {sourceName: /codemirror\.css/i}, /* CodeMirror is imported as-is, see bug 1004423 */
-  {sourceName: /web\/viewer\.css/i, errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i }, /* PDFjs is futureproofing its pseudoselectors, and those rules are dropped. */
-  {sourceName: /aboutaccounts\/(main|normalize)\.css/i}, /* Tracked in bug 1004428 */
-  {sourceName: /loop\/.*sdk-content\/.*\.css$/i /* TokBox SDK assets, see bug 1032469 */}
+  // Cleopatra is imported as-is, see bug 1004421.
+  {sourceName: /cleopatra.*(tree|ui)\.css/i},
+  // CodeMirror is imported as-is, see bug 1004423.
+  {sourceName: /codemirror\.css/i},
+  // PDFjs is futureproofing its pseudoselectors, and those rules are dropped.
+  {sourceName: /web\/viewer\.css/i,
+   errorMessage: /Unknown pseudo-class.*(fullscreen|selection)/i},
+  // Tracked in bug 1004428.
+  {sourceName: /aboutaccounts\/(main|normalize)\.css/i},
+  // TokBox SDK assets, see bug 1032469.
+  {sourceName: /loop\/.*sdk-content\/.*\.css$/i},
+  // Highlighter CSS uses chrome-only pseudo-class, see bug 985597.
+  {sourceName: /highlighter\.css/i,
+   errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i}
 ];
 
 let moduleLocation = gTestPath.replace(/\/[^\/]*$/i, "/parsingTestHelpers.jsm");

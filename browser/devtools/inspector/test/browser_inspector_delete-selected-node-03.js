@@ -8,19 +8,18 @@
 
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 
-let test = asyncTest(function* () {
+add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URL);
 
-  let iframe = getNode("iframe");
-  let node = getNode("span", { document: iframe.contentDocument });
+  let iframe = yield getNodeFront("iframe", inspector);
+  let node = yield getNodeFrontInFrame("span", iframe, inspector);
   yield selectNode(node, inspector);
 
   info("Removing iframe.");
-  iframe.remove();
+  yield inspector.walker.removeNode(iframe);
 
-  let lh = new LayoutHelpers(window.content);
-  ok(!lh.isNodeConnected(node), "Node considered as disconnected.");
-  ok(!inspector.selection.isConnected(), "Selection considered as disconnected.");
+  let body = yield getNodeFront("body", inspector);
+  is(inspector.selection.nodeFront, body, "Selection is now the body node");
 
   yield inspector.once("inspector-updated");
 });

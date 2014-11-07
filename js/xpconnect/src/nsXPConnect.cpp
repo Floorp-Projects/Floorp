@@ -1012,6 +1012,13 @@ NS_IMETHODIMP
 nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
                                 uint32_t aRecursionDepth)
 {
+    // If ProcessNextEvent was called during a Promise "then" callback, we
+    // must process any pending microtasks before blocking in the event loop,
+    // otherwise we may deadlock until an event enters the queue later.
+    if (aMayWait) {
+        Promise::PerformMicroTaskCheckpoint();
+    }
+
     // Record this event.
     mEventDepth++;
 

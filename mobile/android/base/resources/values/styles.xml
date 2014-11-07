@@ -503,16 +503,6 @@
          <item name="android:nextFocusLeft">@+id/info</item>
     </style>
 
-    <!-- RemoteTabsList -->
-    <style name="RemoteTabsList" parent="android:style/Widget.ListView">
-         <item name="android:listSelector">@android:color/transparent</item>
-         <item name="android:cacheColorHint">@android:color/transparent</item>
-         <item name="android:divider">@android:color/transparent</item>
-         <item name="android:dividerHeight">1dip</item>
-         <item name="android:childDivider">@drawable/remote_tabs_child_divider</item>
-         <item name="android:groupIndicator">@android:color/transparent</item>
-    </style>
-
     <!-- Tabs panel -->
     <style name="TabsPanelFrameBase">
         <item name="android:paddingLeft">16dp</item>
