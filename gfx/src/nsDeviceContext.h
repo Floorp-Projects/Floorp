@@ -103,11 +103,11 @@ public:
     static int32_t AppUnitsPerCSSInch() { return mozilla::AppUnitsPerCSSInch(); }
 
     /**
-     * Get the unscaled ratio of app units to dev pixels; useful if something
-     * needs to be converted from to unscaled pixels
+     * Get the ratio of app units to dev pixels that would be used at unit
+     * (100%) full zoom.
      */
-    int32_t UnscaledAppUnitsPerDevPixel() const
-    { return mAppUnitsPerDevNotScaledPixel; }
+    int32_t AppUnitsPerDevPixelAtUnitFullZoom() const
+    { return mAppUnitsPerDevPixelAtUnitFullZoom; }
 
     /**
      * Get the nsFontMetrics that describe the properties of
@@ -265,7 +265,7 @@ private:
     nscoord  mHeight;
     uint32_t mDepth;
     int32_t  mAppUnitsPerDevPixel;
-    int32_t  mAppUnitsPerDevNotScaledPixel;
+    int32_t  mAppUnitsPerDevPixelAtUnitFullZoom;
     int32_t  mAppUnitsPerPhysicalInch;
     float    mPixelScale;
     float    mPrintingScale;
