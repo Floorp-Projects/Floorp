@@ -8,8 +8,6 @@ const MAX_ORDINAL = 99;
 const ZOOM_PREF = "devtools.toolbox.zoomValue";
 const SPLITCONSOLE_ENABLED_PREF = "devtools.toolbox.splitconsoleEnabled";
 const SPLITCONSOLE_HEIGHT_PREF = "devtools.toolbox.splitconsoleHeight";
-const THEME_HISTOGRAM_TOOLBOX = "DEVTOOLS_SELECTED_TOOLBOX_THEME_ENUMERATED";
-const THEME_HISTOGRAM_BROWSER = "DEVTOOLS_SELECTED_BROWSER_THEME_BOOLEAN";
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 2;
 
@@ -299,13 +297,6 @@ Toolbox.prototype = {
         let buttonsPromise = this._buildButtons();
 
         this._telemetry.toolOpened("toolbox");
-
-        let toolboxTheme = Services.prefs.getCharPref("devtools.theme");
-        this._telemetry.log(THEME_HISTOGRAM_TOOLBOX,
-                            this._telemetry.getThemeIndex(toolboxTheme));
-
-        this._telemetry.log(THEME_HISTOGRAM_BROWSER,
-                            Services.prefs.getBoolPref("browser.devedition.theme.enabled"));
 
         this.selectTool(this._defaultToolId).then(panel => {
 
