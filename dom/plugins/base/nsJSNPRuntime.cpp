@@ -159,7 +159,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
 
 static bool
 NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                        JS::MutableHandle<JSObject*> objp);
+                        bool *resolvedp);
 
 static bool
 NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS::MutableHandle<JS::Value> vp);
@@ -184,13 +184,13 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
 const static js::Class sNPObjectJSWrapperClass =
   {
     NPRUNTIME_JSCLASS_NAME,
-    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_NEW_ENUMERATE,
     NPObjWrapper_AddProperty,
     NPObjWrapper_DelProperty,
     NPObjWrapper_GetProperty,
     NPObjWrapper_SetProperty,
     (JSEnumerateOp)NPObjWrapper_newEnumerate,
-    (JSResolveOp)NPObjWrapper_NewResolve,
+    NPObjWrapper_NewResolve,
     NPObjWrapper_Convert,
     NPObjWrapper_Finalize,
     NPObjWrapper_Call,
@@ -1654,7 +1654,7 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
 
 static bool
 NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                        JS::MutableHandle<JSObject*> objp)
+                        bool *resolvedp)
 {
   if (JSID_IS_SYMBOL(id))
     return true;
@@ -1684,7 +1684,7 @@ NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsi
         return false;
     }
 
-    objp.set(obj);
+    *resolvedp = true;
 
     return true;
   }
@@ -1700,7 +1700,7 @@ NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsi
     JSFunction *fnc = ::JS_DefineFunctionById(cx, obj, id, CallNPMethod, 0,
                                               JSPROP_ENUMERATE);
 
-    objp.set(obj);
+    *resolvedp = true;
 
     return fnc != nullptr;
   }

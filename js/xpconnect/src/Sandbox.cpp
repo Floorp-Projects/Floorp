@@ -303,10 +303,9 @@ sandbox_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static bool
-sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id)
+sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 {
-    bool resolved;
-    return JS_ResolveStandardClass(cx, obj, id, &resolved);
+    return JS_ResolveStandardClass(cx, obj, id, resolvedp);
 }
 
 static void
