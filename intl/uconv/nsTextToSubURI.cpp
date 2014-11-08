@@ -263,13 +263,10 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
     const char16_t* unsafeChars =
       mUnsafeChars.IsEmpty() ? sNetworkIDNBlacklistChars : mUnsafeChars;
     if (PromiseFlatString(_retval).FindCharInSet(unsafeChars) != kNotFound) {
-      nsAutoCString reescapedSpec;
-
       // Note that this reescapes all non-ASCII characters in the URI, not just
       // the unsafe characters.
-      NS_EscapeURL(unescapedSpec, esc_OnlyNonASCII, reescapedSpec);
-      convertURItoUnicode(PromiseFlatCString(aCharset), reescapedSpec,
-                          false, _retval);
+      nsString reescapedSpec;
+      _retval = NS_EscapeURL(_retval, esc_OnlyNonASCII, reescapedSpec);
     }
   }
 
