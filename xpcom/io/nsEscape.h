@@ -100,15 +100,19 @@ enum EscapeMask {
  * NS_EscapeURL
  *
  * Escapes invalid char's in an URL segment.  Has no side-effect if the URL
- * segment is already escaped.  Otherwise, the escaped URL segment is appended
- * to |result|.
+ * segment is already escaped, unless aFlags has the esc_Forced bit in which
+ * case % will also be escaped.  Iff some part of aStr is escaped is the
+ * final result appended to aResult.  You can also request that aStr is
+ * always appended to aResult with esc_AlwaysCopy.
  *
- * @param  str     url segment string
- * @param  len     url segment string length (-1 if unknown)
- * @param  flags   url segment type flag
- * @param  result  result buffer, untouched if part is already escaped
+ * @param aStr     url segment string
+ * @param aLen     url segment string length (-1 if unknown)
+ * @param aFlags   url segment type flag (see EscapeMask above)
+ * @param aResult  result buffer, untouched if aStr is already escaped unless
+ *                 aFlags has esc_AlwaysCopy
  *
- * @return TRUE if escaping was performed, FALSE otherwise.
+ * @return true if aResult was written to (i.e. at least one character was
+ *              escaped or esc_AlwaysCopy was requested), false otherwise.
  */
 bool NS_EscapeURL(const char* aStr,
                   int32_t aLen,
@@ -118,13 +122,15 @@ bool NS_EscapeURL(const char* aStr,
 /**
  * Expands URL escape sequences... beware embedded null bytes!
  *
- * @param  str     url string to unescape
- * @param  len     length of |str|
- * @param  flags   only esc_OnlyNonASCII, esc_SkipControl and esc_AlwaysCopy
+ * @param aStr     url string to unescape
+ * @param aLen     length of aStr
+ * @param aFlags   only esc_OnlyNonASCII, esc_SkipControl and esc_AlwaysCopy
  *                 are recognized
- * @param  result  result buffer, untouched if |str| is already unescaped
+ * @param aResult  result buffer, untouched if aStr is already unescaped unless
+ *                 aFlags has esc_AlwaysCopy
  *
- * @return TRUE if unescaping was performed, FALSE otherwise.
+ * @return true if aResult was written to (i.e. at least one character was
+ *              unescaped or esc_AlwaysCopy was requested), false otherwise.
  */
 bool NS_UnescapeURL(const char* aStr,
                     int32_t aLen,
@@ -157,6 +163,8 @@ NS_UnescapeURL(const nsCSubstring& aStr, uint32_t aFlags, nsCSubstring& aResult)
   }
   return aStr;
 }
+const nsSubstring&
+NS_EscapeURL(const nsSubstring& aStr, uint32_t aFlags, nsSubstring& aResult);
 
 /**
  * CString version of nsEscape. Returns true on success, false
