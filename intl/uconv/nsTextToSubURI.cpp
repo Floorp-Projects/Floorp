@@ -10,11 +10,38 @@
 #include "nsTextToSubURI.h"
 #include "nsCRT.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Preferences.h"
+#include "nsISupportsPrimitives.h"
 
 using mozilla::dom::EncodingUtils;
 
+// Fallback value for the pref "network.IDN.blacklist_chars".
+// UnEscapeURIForUI allows unescaped space; other than that, this is
+// the same as the default "network.IDN.blacklist_chars" value.
+static const char16_t sNetworkIDNBlacklistChars[] =
+{
+/*0x0020,*/
+          0x00A0, 0x00BC, 0x00BD, 0x00BE, 0x01C3, 0x02D0, 0x0337,
+  0x0338, 0x0589, 0x05C3, 0x05F4, 0x0609, 0x060A, 0x066A, 0x06D4,
+  0x0701, 0x0702, 0x0703, 0x0704, 0x115F, 0x1160, 0x1735, 0x2000,
+  0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008,
+  0x2009, 0x200A, 0x200B, 0x200E, 0x200F, 0x2024, 0x2027, 0x2028,
+  0x2029, 0x202A, 0x202B, 0x202C, 0x202D, 0x202E, 0x202F, 0x2039,
+  0x203A, 0x2041, 0x2044, 0x2052, 0x205F, 0x2153, 0x2154, 0x2155,
+  0x2156, 0x2157, 0x2158, 0x2159, 0x215A, 0x215B, 0x215C, 0x215D,
+  0x215E, 0x215F, 0x2215, 0x2236, 0x23AE, 0x2571, 0x29F6, 0x29F8,
+  0x2AFB, 0x2AFD, 0x2FF0, 0x2FF1, 0x2FF2, 0x2FF3, 0x2FF4, 0x2FF5,
+  0x2FF6, 0x2FF7, 0x2FF8, 0x2FF9, 0x2FFA, 0x2FFB, 0x3000, 0x3002,
+  0x3014, 0x3015, 0x3033, 0x3164, 0x321D, 0x321E, 0x33AE, 0x33AF,
+  0x33C6, 0x33DF, 0xA789, 0xFE14, 0xFE15, 0xFE3F, 0xFE5D, 0xFE5E,
+  0xFEFF, 0xFF0E, 0xFF0F, 0xFF61, 0xFFA0, 0xFFF9, 0xFFFA, 0xFFFB,
+  0xFFFC, 0xFFFD,
+  '\0'
+};
+
 nsTextToSubURI::nsTextToSubURI()
 {
+  mUnsafeChars.SetIsVoid(true);
 }
 nsTextToSubURI::~nsTextToSubURI()
 {
@@ -213,9 +240,39 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
   // sequences are also considered failure in this context
   if (convertURItoUnicode(
                 PromiseFlatCString(aCharset), unescapedSpec, true, _retval)
-      != NS_OK)
+      != NS_OK) {
     // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
-    CopyUTF8toUTF16(aURIFragment, _retval); 
+    CopyUTF8toUTF16(aURIFragment, _retval);
+  } else {
+    // if there are any characters that are unsafe for IRIs, reescape.
+    if (mUnsafeChars.IsVoid()) {
+      nsCOMPtr<nsISupportsString> blacklist;
+      nsresult rv = mozilla::Preferences::GetComplex("network.IDN.blacklist_chars",
+                                                     NS_GET_IID(nsISupportsString),
+                                                     getter_AddRefs(blacklist));
+      if (NS_SUCCEEDED(rv)) {
+        blacklist->ToString(getter_Copies(mUnsafeChars));
+        mUnsafeChars.StripChars(" "); // we allow SPACE in this method
+        MOZ_ASSERT(!mUnsafeChars.IsVoid());
+      } else {
+        NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
+      }
+    }
+    // We check IsEmpty() intentionally here instead of IsVoid() because an
+    // empty (or just spaces) pref value is likely a mistake/error of some sort.
+    const char16_t* unsafeChars =
+      mUnsafeChars.IsEmpty() ? sNetworkIDNBlacklistChars : mUnsafeChars;
+    if (PromiseFlatString(_retval).FindCharInSet(unsafeChars) != kNotFound) {
+      nsAutoCString reescapedSpec;
+
+      // Note that this reescapes all non-ASCII characters in the URI, not just
+      // the unsafe characters.
+      NS_EscapeURL(unescapedSpec, esc_OnlyNonASCII, reescapedSpec);
+      convertURItoUnicode(PromiseFlatCString(aCharset), reescapedSpec,
+                          false, _retval);
+    }
+  }
+
   return NS_OK;
 }
 
