@@ -665,7 +665,8 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
 
   // Initialize our view manager
   int32_t p2a = mPresContext->AppUnitsPerDevPixel();
-  MOZ_ASSERT(p2a == mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel());
+  MOZ_ASSERT(p2a ==
+             mPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
   nscoord width = p2a * mBounds.width;
   nscoord height = p2a * mBounds.height;
 
