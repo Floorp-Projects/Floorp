@@ -86,6 +86,7 @@ let DevEdition = {
       this.styleSheet.removeEventListener("load", this);
       gBrowser.tabContainer._positionPinnedTabs();
       ToolbarIconColor.inferFromText();
+      Services.obs.notifyObservers(window, "devedition-theme-state-changed", true);
     }
   },
 
@@ -96,12 +97,15 @@ let DevEdition = {
         'xml-stylesheet', styleSheetAttr);
       this.styleSheet.addEventListener("load", this);
       document.insertBefore(this.styleSheet, document.documentElement);
+      // NB: we'll notify observers once the stylesheet has fully loaded, see
+      // handleEvent above.
     } else if (!deveditionThemeEnabled && this.styleSheet) {
       this.styleSheet.removeEventListener("load", this);
       this.styleSheet.remove();
       this.styleSheet = null;
       gBrowser.tabContainer._positionPinnedTabs();
       ToolbarIconColor.inferFromText();
+      Services.obs.notifyObservers(window, "devedition-theme-state-changed", false);
     }
   },
 

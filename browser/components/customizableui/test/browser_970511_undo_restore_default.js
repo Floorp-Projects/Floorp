@@ -114,6 +114,11 @@ add_task(function() {
   is(deveditionThemeButton.hasAttribute("checked"), defaultValue, "Devedition theme button should reflect pref value");
   is(undoResetButton.hidden, true, "Undo reset button should be hidden at start of test");
   Services.prefs.setBoolPref(prefName, !defaultValue);
+
+  //XXXgijs this line should be removed once bug 1094509 lands
+  Services.prefs.setCharPref("devtools.theme", "dark");
+
+  yield waitForCondition(() => !restoreDefaultsButton.disabled);
   ok(!restoreDefaultsButton.disabled, "Restore defaults button should be enabled when pref changed");
   is(deveditionThemeButton.hasAttribute("checked"), !defaultValue, "Devedition theme button should reflect changed pref value");
   ok(!CustomizableUI.inDefaultState, "With devedition theme flipped, no longer default");
@@ -134,6 +139,8 @@ add_task(function() {
   is(Services.prefs.getBoolPref(prefName), !defaultValue, "Undo-reset goes back to previous pref value");
   is(undoResetButton.hidden, true, "Undo reset button should be hidden after undo-reset clicked");
 
+  //XXXgijs this line should be removed once bug 1094509 lands
+  Services.prefs.clearUserPref("devtools.theme");
   Services.prefs.clearUserPref(prefName);
   ok(CustomizableUI.inDefaultState, "In default state after pref cleared");
   is(undoResetButton.hidden, true, "Undo reset button should be hidden at end of test");

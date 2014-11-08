@@ -38,7 +38,7 @@ nsresult
 MobileConnectionCallback::NotifySendCancelMmiSuccess(const MozMMIResult& aResult)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -77,7 +77,7 @@ NS_IMETHODIMP
 MobileConnectionCallback::NotifySuccessWithString(const nsAString& aResult)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -112,7 +112,7 @@ MobileConnectionCallback::NotifyGetNetworksSuccess(uint32_t aCount,
   }
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -158,7 +158,7 @@ MobileConnectionCallback::NotifySendCancelMmiSuccessWithStrings(const nsAString&
                                                                 const char16_t** aAdditionalInformation)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -193,7 +193,7 @@ MobileConnectionCallback::NotifySendCancelMmiSuccessWithCallForwardingOptions(
                                                                 nsIMobileCallForwardingOptions** aResults)
 {
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -294,7 +294,7 @@ MobileConnectionCallback::NotifyGetCallForwardingSuccess(uint32_t aCount,
   }
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -320,7 +320,7 @@ MobileConnectionCallback::NotifyGetCallBarringSuccess(uint16_t aProgram,
   result.mServiceClass.Construct().SetValue(aServiceClass);
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -342,7 +342,7 @@ MobileConnectionCallback::NotifyGetClirStatusSuccess(uint16_t aN, uint16_t aM)
   result.mM.Construct(aM);
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.Init(mWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(mWindow))) {
     return NS_ERROR_FAILURE;
   }
 

@@ -5191,6 +5191,20 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'listAddons' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTPROCESSES_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'listProcesses' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_LISTPROCESSES_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'listProcesses' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_DELETE_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

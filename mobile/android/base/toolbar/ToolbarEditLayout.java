@@ -11,6 +11,7 @@ import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnCommitListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
+import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.widget.ThemedLinearLayout;
 
 import android.content.Context;
@@ -126,5 +127,16 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
 
     String getText() {
         return mEditText.getText().toString();
+    }
+
+    protected void saveTabEditingState(final TabEditingState editingState) {
+        editingState.lastEditingText = mEditText.getNonAutocompleteText();
+        editingState.selectionStart = mEditText.getSelectionStart();
+        editingState.selectionEnd = mEditText.getSelectionEnd();
+   }
+
+    protected void restoreTabEditingState(final TabEditingState editingState) {
+        mEditText.setText(editingState.lastEditingText);
+        mEditText.setSelection(editingState.selectionStart, editingState.selectionEnd);
     }
 }
