@@ -14,7 +14,7 @@
 
 /* Use only 1px separator between nav toolbox and page content */
 #navigator-toolbox::after {
-  linear-gradient(to top, var(--chrome-navigator-toolbox-separator-color), var(--chrome-navigator-toolbox-separator-color) 1px, transparent 1px);
+  background: linear-gradient(to top, var(--chrome-navigator-toolbox-separator-color), var(--chrome-navigator-toolbox-separator-color) 1px, transparent 1px);
 }
 
 /* Include extra space on left/right for dragging since there is no space above
