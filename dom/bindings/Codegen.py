@@ -419,12 +419,10 @@ class CGDOMJSClass(CGThing):
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
             reservedSlots = slotCount
         if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
-            newResolveHook = "(JSResolveOp)" + NEWRESOLVE_HOOK_NAME
-            classFlags += " | JSCLASS_NEW_RESOLVE"
+            newResolveHook = NEWRESOLVE_HOOK_NAME
             enumerateHook = ENUMERATE_HOOK_NAME
         elif self.descriptor.isGlobal():
-            newResolveHook = "(JSResolveOp) mozilla::dom::ResolveGlobal"
-            classFlags += " | JSCLASS_NEW_RESOLVE"
+            newResolveHook = "mozilla::dom::ResolveGlobal"
             enumerateHook = "mozilla::dom::EnumerateGlobal"
         else:
             newResolveHook = "JS_ResolveStub"
@@ -7609,7 +7607,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JS::MutableHandle<JSObject*>', 'objp')]
+                Argument('bool*', 'resolvedp')]
         # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, NEWRESOLVE_HOOK_NAME,
@@ -7634,7 +7632,7 @@ class CGNewResolveHook(CGAbstractBindingMethod):
                                        JS_PROPERTYOP_SETTER(desc.setter()))) {
               return false;
             }
-            objp.set(obj);
+            *resolvedp = true;
             return true;
             """))
 
@@ -7642,10 +7640,10 @@ class CGNewResolveHook(CGAbstractBindingMethod):
         if self.descriptor.isGlobal():
             # Resolve standard classes
             prefix = dedent("""
-                if (!ResolveGlobal(cx, obj, id, objp)) {
+                if (!ResolveGlobal(cx, obj, id, resolvedp)) {
                   return false;
                 }
-                if (objp) {
+                if (*resolvedp) {
                   return true;
                 }
 
