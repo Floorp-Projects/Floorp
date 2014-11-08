@@ -3278,9 +3278,9 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
         Label loop;
         masm.bind(&loop);
 
-        // We remove sizeof(void*) from argvOffset because withtout it we target
+        // We remove sizeof(void*) from argvOffset because without it we target
         // the address after the memory area that we want to copy.
-        BaseIndex disp(StackPointer, argcreg, ScaleFromElemWidth(sizeof(Value)), argvOffset - sizeof(void*));
+        BaseValueIndex disp(StackPointer, argcreg, argvOffset - sizeof(void*));
 
         // Do not use Push here because other this account to 1 in the framePushed
         // instead of 0.  These push are only counted by argcreg.
@@ -3298,7 +3298,8 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
 
     // Compute the stack usage.
     masm.movePtr(argcreg, extraStackSpace);
-    masm.lshiftPtr(Imm32::ShiftOf(ScaleFromElemWidth(sizeof(Value))), extraStackSpace);
+    NativeObject::elementsSizeMustNotOverflow();
+    masm.lshiftPtr(Imm32(ValueShift), extraStackSpace);
 
     // Join with all arguments copied and the extra stack usage computed.
     masm.bind(&end);
@@ -7238,7 +7239,7 @@ CodeGenerator::visitGetFrameArgument(LGetFrameArgument *lir)
         masm.loadValue(argPtr, result);
     } else {
         Register i = ToRegister(index);
-        BaseIndex argPtr(StackPointer, i, ScaleFromElemWidth(sizeof(Value)), argvOffset);
+        BaseValueIndex argPtr(StackPointer, i, argvOffset);
         masm.loadValue(argPtr, result);
     }
     return true;
@@ -8847,10 +8848,12 @@ CodeGenerator::visitLoadElementV(LLoadElementV *load)
     Register elements = ToRegister(load->elements());
     const ValueOperand out = ToOutValue(load);
 
-    if (load->index()->isConstant())
+    if (load->index()->isConstant()) {
+        NativeObject::elementsSizeMustNotOverflow();
         masm.loadValue(Address(elements, ToInt32(load->index()) * sizeof(Value)), out);
-    else
-        masm.loadValue(BaseIndex(elements, ToRegister(load->index()), TimesEight), out);
+    } else {
+        masm.loadValue(BaseObjectElementIndex(elements, ToRegister(load->index())), out);
+    }
 
     if (load->mir()->needsHoleCheck()) {
         Label testMagic;
@@ -8876,10 +8879,11 @@ CodeGenerator::visitLoadElementHole(LLoadElementHole *lir)
     Label undefined, done;
     if (lir->index()->isConstant()) {
         masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(ToInt32(lir->index())), &undefined);
+        NativeObject::elementsSizeMustNotOverflow();
         masm.loadValue(Address(elements, ToInt32(lir->index()) * sizeof(Value)), out);
     } else {
         masm.branch32(Assembler::BelowOrEqual, initLength, ToRegister(lir->index()), &undefined);
-        masm.loadValue(BaseIndex(elements, ToRegister(lir->index()), TimesEight), out);
+        masm.loadValue(BaseObjectElementIndex(elements, ToRegister(lir->index())), out);
     }
 
     // If a hole check is needed, and the value wasn't a hole, we're done.
@@ -9241,6 +9245,7 @@ CodeGenerator::visitInArray(LInArray *lir)
 
         masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(index), failedInitLength);
         if (mir->needsHoleCheck()) {
+            NativeObject::elementsSizeMustNotOverflow();
             Address address = Address(elements, index * sizeof(Value));
             masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
         }
