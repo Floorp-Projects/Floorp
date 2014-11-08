@@ -484,9 +484,6 @@ static MOZ_ALWAYS_INLINE bool
 CallResolveOp(JSContext *cx, HandleNativeObject obj, HandleId id, MutableHandleObject objp,
               MutableHandleShape propp, bool *recursedp)
 {
-    const Class *clasp = obj->getClass();
-    JSResolveOp resolve = clasp->resolve;
-
     /*
      * Avoid recursion on (obj, id) already being resolved on cx.
      *
@@ -503,46 +500,21 @@ CallResolveOp(JSContext *cx, HandleNativeObject obj, HandleId id, MutableHandleO
     }
     *recursedp = false;
 
-    propp.set(nullptr);
+    bool resolved = false;
+    if (!obj->getClass()->resolve(cx, obj, id, &resolved))
+        return false;
 
-    if (clasp->flags & JSCLASS_NEW_RESOLVE) {
-        JSNewResolveOp newresolve = reinterpret_cast<JSNewResolveOp>(resolve);
-        RootedObject obj2(cx, nullptr);
-        if (!newresolve(cx, obj, id, &obj2))
-            return false;
+    if (!resolved)
+        return true;
 
-        /*
-         * We trust the new style resolve hook to set obj2 to nullptr when
-         * the id cannot be resolved. But, when obj2 is not null, we do
-         * not assume that id must exist and do full nativeLookup for
-         * compatibility.
-         */
-        if (!obj2)
-            return true;
+    objp.set(obj);
 
-        if (!obj2->isNative()) {
-            /* Whoops, newresolve handed back a foreign obj2. */
-            MOZ_ASSERT(obj2 != obj);
-            return JSObject::lookupGeneric(cx, obj2, id, objp, propp);
-        }
-
-        objp.set(obj2);
-    } else {
-        if (!resolve(cx, obj, id))
-            return false;
-
-        objp.set(obj);
-    }
-
-    NativeObject *nobjp = &objp->as<NativeObject>();
-
-    if (JSID_IS_INT(id) && nobjp->containsDenseElement(JSID_TO_INT(id))) {
+    if (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))) {
         MarkDenseOrTypedArrayElementFound<CanGC>(propp);
         return true;
     }
 
-    Shape *shape;
-    if (!nobjp->empty() && (shape = nobjp->lookup(cx, id)))
+    if (Shape *shape = obj->lookup(cx, id))
         propp.set(shape);
     else
         objp.set(nullptr);

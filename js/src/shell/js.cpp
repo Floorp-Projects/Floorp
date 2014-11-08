@@ -2513,31 +2513,23 @@ sandbox_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static bool
-sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
+sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 {
     RootedValue v(cx);
     if (!JS_GetProperty(cx, obj, "lazy", &v))
         return false;
 
-    if (ToBoolean(v)) {
-        bool resolved;
-        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
-            return false;
-        if (resolved) {
-            objp.set(obj);
-            return true;
-        }
-    }
-    objp.set(nullptr);
+    if (ToBoolean(v))
+        return JS_ResolveStandardClass(cx, obj, id, resolvedp);
     return true;
 }
 
 static const JSClass sandbox_class = {
     "sandbox",
-    JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
+    JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,   JS_DeletePropertyStub,
     JS_PropertyStub,   JS_StrictPropertyStub,
-    sandbox_enumerate, (JSResolveOp)sandbox_resolve,
+    sandbox_enumerate, sandbox_resolve,
     JS_ConvertStub, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
@@ -4824,27 +4816,20 @@ global_enumerate(JSContext *cx, HandleObject obj)
 }
 
 static bool
-global_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
+global_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 {
 #ifdef LAZY_STANDARD_CLASSES
-    bool resolved;
-
-    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+    if (!JS_ResolveStandardClass(cx, obj, id, resolvedp))
         return false;
-    if (resolved) {
-        objp.set(obj);
-        return true;
-    }
 #endif
-
     return true;
 }
 
 static const JSClass global_class = {
-    "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
+    "global", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
-    global_enumerate, (JSResolveOp) global_resolve,
+    global_enumerate, global_resolve,
     JS_ConvertStub,   nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook

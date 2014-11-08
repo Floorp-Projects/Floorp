@@ -119,24 +119,12 @@ typedef bool
 // (e.g., the DOM attributes for a given node reflected as obj) on demand.
 //
 // JS looks for a property in an object, and if not found, tries to resolve
-// the given id.  If resolve succeeds, the engine looks again in case resolve
-// defined obj[id].  If no such property exists directly in obj, the process
-// is repeated with obj's prototype, etc.
+// the given id. *resolvedp should be set to true iff the property was
+// was defined on |obj|.
 //
-// NB: JSNewResolveOp provides a cheaper way to resolve lazy properties.
 typedef bool
-(* JSResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
-
-// Like JSResolveOp, except the *objp out parameter, on success, should be null
-// to indicate that id was not resolved; and non-null, referring to obj or one
-// of its prototypes, if id was resolved.  The hook may assume *objp is null on
-// entry.
-//
-// This hook instead of JSResolveOp is called via the JSClass.resolve member
-// if JSCLASS_NEW_RESOLVE is set in JSClass.flags.
-typedef bool
-(* JSNewResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                   JS::MutableHandleObject objp);
+(* JSResolveOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                bool *resolvedp);
 
 // Convert obj to the given type, returning true with the resulting value in
 // *vp on success, and returning false on error or exception.
@@ -400,7 +388,6 @@ struct JSClass {
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  // has JSNewEnumerateOp hook
-#define JSCLASS_NEW_RESOLVE             (1<<2)  // has JSNewResolveOp hook
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  // private is (nsISupports *)
 #define JSCLASS_IS_DOMJSCLASS           (1<<4)  // objects are DOM
 #define JSCLASS_IMPLEMENTS_BARRIERS     (1<<5)  // Correctly implements GC read

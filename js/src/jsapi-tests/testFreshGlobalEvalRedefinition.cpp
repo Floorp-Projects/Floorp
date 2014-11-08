@@ -14,10 +14,9 @@ GlobalEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
 }
 
 static bool
-GlobalResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id)
+GlobalResolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *resolvedp)
 {
-    bool resolved = false;
-    return JS_ResolveStandardClass(cx, obj, id, &resolved);
+    return JS_ResolveStandardClass(cx, obj, id, resolvedp);
 }
 
 BEGIN_TEST(testRedefineGlobalEval)
