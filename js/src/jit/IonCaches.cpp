@@ -659,6 +659,7 @@ EmitLoadSlot(MacroAssembler &masm, NativeObject *holder, Shape *shape, Register 
              TypedOrValueRegister output, Register scratchReg)
 {
     MOZ_ASSERT(holder);
+    NativeObject::slotsSizeMustNotOverflow();
     if (holder->isFixedSlot(shape->slot())) {
         Address addr(holderReg, NativeObject::getFixedSlotOffset(shape->slot()));
         masm.loadTypedOrValue(addr, output);
@@ -2006,6 +2007,7 @@ GenerateSetSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
         }
     }
 
+    NativeObject::slotsSizeMustNotOverflow();
     if (obj->isFixedSlot(shape->slot())) {
         Address addr(object, NativeObject::getFixedSlotOffset(shape->slot()));
 
@@ -2612,6 +2614,7 @@ GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &att
 
     // Set the value on the object. Since this is an add, obj->lastProperty()
     // must be the shape of the property we are adding.
+    NativeObject::slotsSizeMustNotOverflow();
     if (obj->isFixedSlot(newShape->slot())) {
         Address addr(object, NativeObject::getFixedSlotOffset(newShape->slot()));
         masm.storeConstantOrRegister(value, addr);
@@ -3182,7 +3185,7 @@ GenerateDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher
     masm.branch32(Assembler::BelowOrEqual, initLength, indexReg, &hole);
 
     // Check for holes & load the value.
-    masm.loadElementTypedOrValue(BaseIndex(object, indexReg, TimesEight),
+    masm.loadElementTypedOrValue(BaseObjectElementIndex(object, indexReg),
                                  output, true, &hole);
 
     masm.pop(object);
@@ -3426,7 +3429,7 @@ GetElementIC::attachArgumentsElement(JSContext *cx, HandleScript outerScript, Io
 
     // Restore original index register value, to use for indexing element.
     masm.pop(indexReg);
-    BaseIndex elemIdx(tmpReg, indexReg, ScaleFromElemWidth(sizeof(Value)));
+    BaseValueIndex elemIdx(tmpReg, indexReg);
 
     // Ensure result is not magic value, and type-check result.
     masm.branchTestMagic(Assembler::Equal, elemIdx, &failureRestoreIndex);
@@ -3600,7 +3603,7 @@ IsTypedArrayElementSetInlineable(JSObject *obj, const Value &idval, const Value 
 
 static void
 StoreDenseElement(MacroAssembler &masm, ConstantOrRegister value, Register elements,
-                  BaseIndex target)
+                  BaseObjectElementIndex target)
 {
     // If the ObjectElements::CONVERT_DOUBLE_ELEMENTS flag is set, int32 values
     // have to be converted to double first. If the value is not int32, it can
@@ -3684,7 +3687,7 @@ GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttac
         masm.loadPtr(Address(object, NativeObject::offsetOfElements()), elements);
 
         // Compute the location of the element.
-        BaseIndex target(elements, index, TimesEight);
+        BaseObjectElementIndex target(elements, index);
 
         // If TI cannot help us deal with HOLES by preventing indexed properties
         // on the prototype chain, we have to be very careful to check for ourselves
