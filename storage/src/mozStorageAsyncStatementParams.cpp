@@ -40,7 +40,7 @@ NS_IMPL_ISUPPORTS(
 #define XPC_MAP_CLASSNAME AsyncStatementParams
 #define XPC_MAP_QUOTED_CLASSNAME "AsyncStatementParams"
 #define XPC_MAP_WANT_SETPROPERTY
-#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_WANT_RESOLVE
 #define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h"
 
@@ -87,14 +87,12 @@ AsyncStatementParams::SetProperty(
 }
 
 NS_IMETHODIMP
-AsyncStatementParams::NewResolve(
-  nsIXPConnectWrappedNative *aWrapper,
-  JSContext *aCtx,
-  JSObject *aScopeObj,
-  jsid aId,
-  JSObject **_objp,
-  bool *_retval
-)
+AsyncStatementParams::Resolve(nsIXPConnectWrappedNative *aWrapper,
+                              JSContext *aCtx,
+                              JSObject *aScopeObj,
+                              jsid aId,
+                              bool *aResolvedp,
+                              bool *_retval)
 {
   JS::Rooted<JSObject*> scopeObj(aCtx, aScopeObj);
 
@@ -121,7 +119,7 @@ AsyncStatementParams::NewResolve(
   }
 
   *_retval = ok;
-  *_objp = resolved && ok ? scopeObj.get() : nullptr;
+  *aResolvedp = resolved && ok;
   return NS_OK;
 }
 

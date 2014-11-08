@@ -58,8 +58,8 @@ XPC_MAP_CLASSNAME::GetScriptableFlags()
 #ifdef XPC_MAP_WANT_NEWENUMERATE
     nsIXPCScriptable::WANT_NEWENUMERATE |
 #endif
-#ifdef XPC_MAP_WANT_NEWRESOLVE
-    nsIXPCScriptable::WANT_NEWRESOLVE |
+#ifdef XPC_MAP_WANT_RESOLVE
+    nsIXPCScriptable::WANT_RESOLVE |
 #endif
 #ifdef XPC_MAP_WANT_CONVERT
     nsIXPCScriptable::WANT_CONVERT |
@@ -133,8 +133,8 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::Enumerate(nsIXPConnectWrappedNative *wrapper, J
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
-#ifndef XPC_MAP_WANT_NEWRESOLVE
-NS_IMETHODIMP XPC_MAP_CLASSNAME::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsid id, JSObject * *objp, bool *_retval)
+#ifndef XPC_MAP_WANT_RESOLVE
+NS_IMETHODIMP XPC_MAP_CLASSNAME::Resolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, jsid id, bool *resolvedp, bool *_retval)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
@@ -209,8 +209,8 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext *cx, JSObject *pr
 #undef XPC_MAP_WANT_NEWENUMERATE
 #endif
 
-#ifdef XPC_MAP_WANT_NEWRESOLVE
-#undef XPC_MAP_WANT_NEWRESOLVE
+#ifdef XPC_MAP_WANT_RESOLVE
+#undef XPC_MAP_WANT_RESOLVE
 #endif
 
 #ifdef XPC_MAP_WANT_CONVERT
