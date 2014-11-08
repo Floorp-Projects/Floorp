@@ -38,6 +38,11 @@ enum Scale {
     TimesEight = 3
 };
 
+static_assert(sizeof(JS::Value) == 8,
+              "required for TimesEight and 3 below to be correct");
+static const Scale ValueScale = TimesEight;
+static const size_t ValueShift = 3;
+
 static inline unsigned
 ScaleToShift(Scale scale)
 {
@@ -307,6 +312,40 @@ struct BaseIndex
     { }
 
     BaseIndex() { mozilla::PodZero(this); }
+};
+
+// A BaseIndex used to access Values.  Note that |offset| is *not* scaled by
+// sizeof(Value).  Use this *only* if you're indexing into a series of Values
+// that aren't object elements or object slots (for example, values on the
+// stack, values in an arguments object, &c.).  If you're indexing into an
+// object's elements or slots, don't use this directly!  Use
+// BaseObject{Element,Slot}Index instead.
+struct BaseValueIndex : BaseIndex
+{
+    BaseValueIndex(Register base, Register index, int32_t offset = 0)
+      : BaseIndex(base, index, ValueScale, offset)
+    { }
+};
+
+// Specifies the address of an indexed Value within object elements from a
+// base.  The index must not already be scaled by sizeof(Value)!
+struct BaseObjectElementIndex : BaseValueIndex
+{
+    BaseObjectElementIndex(Register base, Register index)
+      : BaseValueIndex(base, index)
+    {
+        NativeObject::elementsSizeMustNotOverflow();
+    }
+};
+
+// Like BaseObjectElementIndex, except for object slots.
+struct BaseObjectSlotIndex : BaseValueIndex
+{
+    BaseObjectSlotIndex(Register base, Register index)
+      : BaseValueIndex(base, index)
+    {
+        NativeObject::slotsSizeMustNotOverflow();
+    }
 };
 
 class Relocation {
