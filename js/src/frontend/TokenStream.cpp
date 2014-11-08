@@ -1161,8 +1161,12 @@ TokenStream::getTokenInternal(TokenKind *ttp, Modifier modifier)
 
         tp = newToken(-1);
 
-        // '$' and '_' don't pass IsLetter, but they're < 128 so never appear here.
-        JS_STATIC_ASSERT('$' < 128 && '_' < 128);
+        static_assert('$' < 128,
+                      "IdentifierStart contains '$', but as !IsLetter('$'), "
+                      "ensure that '$' is never handled here");
+        static_assert('_' < 128,
+                      "IdentifierStart contains '_', but as !IsLetter('_'), "
+                      "ensure that '_' is never handled here");
         if (IsLetter(c)) {
             identStart = userbuf.addressOfNextRawChar() - 1;
             hadUnicodeEscape = false;
