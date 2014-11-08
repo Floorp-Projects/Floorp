@@ -7,9 +7,6 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>browser_telemetry_toolbox.js</
 // opened we make use of setTimeout() to create tool active times.
 const TOOL_DELAY = 200;
 
-const THEME_HISTOGRAM_TOOLBOX = "DEVTOOLS_SELECTED_TOOLBOX_THEME_ENUMERATED";
-const THEME_HISTOGRAM_BROWSER = "DEVTOOLS_SELECTED_BROWSER_THEME_BOOLEAN";
-
 let {Promise: promise} = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
@@ -76,18 +73,6 @@ function checkResults() {
       });
 
       ok(okay, "All " + histId + " entries have time > 0");
-    } else if (histId === THEME_HISTOGRAM_TOOLBOX) {
-      let item = result[THEME_HISTOGRAM_TOOLBOX];
-      let expected = isInDevEdition() ? "1,1,1,1" : "0,0,0,0";
-
-      ok(item.length === 4 && item.join(",") === expected,
-        "Devtools toolbox theme correctly logged");
-    } else if (histId === THEME_HISTOGRAM_BROWSER) {
-      let item = result[THEME_HISTOGRAM_BROWSER];
-      let expected = isInDevEdition() ? "true,true,true,true" :
-                                        "false,false,false,false";
-      ok(item.length === 4 && item.join(",") === expected,
-        "DevTools browser theme correctly logged");
     }
   }
 
