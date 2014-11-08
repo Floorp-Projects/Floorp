@@ -27,23 +27,20 @@ namespace dom {
 namespace indexedDB {
 
 IDBCursor::IDBCursor(Type aType,
-                     IDBObjectStore* aSourceObjectStore,
-                     IDBIndex* aSourceIndex,
-                     IDBTransaction* aTransaction,
                      BackgroundCursorChild* aBackgroundActor,
-                     Direction aDirection,
                      const Key& aKey)
-  : mSourceObjectStore(aSourceObjectStore)
-  , mSourceIndex(aSourceIndex)
-  , mTransaction(aTransaction)
-  , mBackgroundActor(aBackgroundActor)
-  , mScriptOwner(aTransaction->Database()->GetScriptOwner())
+  : mBackgroundActor(aBackgroundActor)
+  , mRequest(aBackgroundActor->GetRequest())
+  , mSourceObjectStore(aBackgroundActor->GetObjectStore())
+  , mSourceIndex(aBackgroundActor->GetIndex())
+  , mTransaction(mRequest->GetTransaction())
+  , mScriptOwner(mTransaction->Database()->GetScriptOwner())
   , mCachedKey(JSVAL_VOID)
   , mCachedPrimaryKey(JSVAL_VOID)
   , mCachedValue(JSVAL_VOID)
   , mKey(aKey)
   , mType(aType)
-  , mDirection(aDirection)
+  , mDirection(aBackgroundActor->GetDirection())
   , mHaveCachedKey(false)
   , mHaveCachedPrimaryKey(false)
   , mHaveCachedValue(false)
@@ -51,12 +48,13 @@ IDBCursor::IDBCursor(Type aType,
   , mContinueCalled(false)
   , mHaveValue(true)
 {
-  MOZ_ASSERT_IF(aType == Type_ObjectStore || aType == Type_ObjectStoreKey,
-                aSourceObjectStore);
-  MOZ_ASSERT_IF(aType == Type_Index || aType == Type_IndexKey, aSourceIndex);
-  MOZ_ASSERT(aTransaction);
-  aTransaction->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor);
+  aBackgroundActor->AssertIsOnOwningThread();
+  MOZ_ASSERT(mRequest);
+  MOZ_ASSERT_IF(aType == Type_ObjectStore || aType == Type_ObjectStoreKey,
+                mSourceObjectStore);
+  MOZ_ASSERT_IF(aType == Type_Index || aType == Type_IndexKey, mSourceIndex);
+  MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(!aKey.IsUnset());
   MOZ_ASSERT(mScriptOwner);
 
@@ -80,25 +78,18 @@ IDBCursor::~IDBCursor()
 
 // static
 already_AddRefed<IDBCursor>
-IDBCursor::Create(IDBObjectStore* aObjectStore,
-                  BackgroundCursorChild* aBackgroundActor,
-                  Direction aDirection,
+IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
                   const Key& aKey,
                   StructuredCloneReadInfo&& aCloneInfo)
 {
-  MOZ_ASSERT(aObjectStore);
-  aObjectStore->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor);
+  aBackgroundActor->AssertIsOnOwningThread();
+  MOZ_ASSERT(aBackgroundActor->GetObjectStore());
+  MOZ_ASSERT(!aBackgroundActor->GetIndex());
   MOZ_ASSERT(!aKey.IsUnset());
 
   nsRefPtr<IDBCursor> cursor =
-    new IDBCursor(Type_ObjectStore,
-                  aObjectStore,
-                  nullptr,
-                  aObjectStore->Transaction(),
-                  aBackgroundActor,
-                  aDirection,
-                  aKey);
+    new IDBCursor(Type_ObjectStore, aBackgroundActor, aKey);
 
   cursor->mCloneInfo = Move(aCloneInfo);
 
@@ -107,51 +98,37 @@ IDBCursor::Create(IDBObjectStore* aObjectStore,
 
 // static
 already_AddRefed<IDBCursor>
-IDBCursor::Create(IDBObjectStore* aObjectStore,
-                  BackgroundCursorChild* aBackgroundActor,
-                  Direction aDirection,
+IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
                   const Key& aKey)
 {
-  MOZ_ASSERT(aObjectStore);
-  aObjectStore->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor);
+  aBackgroundActor->AssertIsOnOwningThread();
+  MOZ_ASSERT(aBackgroundActor->GetObjectStore());
+  MOZ_ASSERT(!aBackgroundActor->GetIndex());
   MOZ_ASSERT(!aKey.IsUnset());
 
   nsRefPtr<IDBCursor> cursor =
-    new IDBCursor(Type_ObjectStoreKey,
-                  aObjectStore,
-                  nullptr,
-                  aObjectStore->Transaction(),
-                  aBackgroundActor,
-                  aDirection,
-                  aKey);
+    new IDBCursor(Type_ObjectStoreKey, aBackgroundActor, aKey);
 
   return cursor.forget();
 }
 
 // static
 already_AddRefed<IDBCursor>
-IDBCursor::Create(IDBIndex* aIndex,
-                  BackgroundCursorChild* aBackgroundActor,
-                  Direction aDirection,
+IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
                   const Key& aKey,
                   const Key& aPrimaryKey,
                   StructuredCloneReadInfo&& aCloneInfo)
 {
-  MOZ_ASSERT(aIndex);
-  aIndex->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor);
+  aBackgroundActor->AssertIsOnOwningThread();
+  MOZ_ASSERT(aBackgroundActor->GetIndex());
+  MOZ_ASSERT(!aBackgroundActor->GetObjectStore());
   MOZ_ASSERT(!aKey.IsUnset());
   MOZ_ASSERT(!aPrimaryKey.IsUnset());
 
   nsRefPtr<IDBCursor> cursor =
-    new IDBCursor(Type_Index,
-                  nullptr,
-                  aIndex,
-                  aIndex->ObjectStore()->Transaction(),
-                  aBackgroundActor,
-                  aDirection,
-                  aKey);
+    new IDBCursor(Type_Index, aBackgroundActor, aKey);
 
   cursor->mPrimaryKey = Move(aPrimaryKey);
   cursor->mCloneInfo = Move(aCloneInfo);
@@ -161,26 +138,19 @@ IDBCursor::Create(IDBIndex* aIndex,
 
 // static
 already_AddRefed<IDBCursor>
-IDBCursor::Create(IDBIndex* aIndex,
-                  BackgroundCursorChild* aBackgroundActor,
-                  Direction aDirection,
+IDBCursor::Create(BackgroundCursorChild* aBackgroundActor,
                   const Key& aKey,
                   const Key& aPrimaryKey)
 {
-  MOZ_ASSERT(aIndex);
-  aIndex->AssertIsOnOwningThread();
   MOZ_ASSERT(aBackgroundActor);
+  aBackgroundActor->AssertIsOnOwningThread();
+  MOZ_ASSERT(aBackgroundActor->GetIndex());
+  MOZ_ASSERT(!aBackgroundActor->GetObjectStore());
   MOZ_ASSERT(!aKey.IsUnset());
   MOZ_ASSERT(!aPrimaryKey.IsUnset());
 
   nsRefPtr<IDBCursor> cursor =
-    new IDBCursor(Type_IndexKey,
-                  nullptr,
-                  aIndex,
-                  aIndex->ObjectStore()->Transaction(),
-                  aBackgroundActor,
-                  aDirection,
-                  aKey);
+    new IDBCursor(Type_IndexKey, aBackgroundActor, aKey);
 
   cursor->mPrimaryKey = Move(aPrimaryKey);
 
@@ -800,9 +770,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBCursor)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRequest)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceObjectStore)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceIndex)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTransaction)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
@@ -819,7 +789,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBCursor)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBCursor)
-  // Don't unlink mSourceObjectStore or mSourceIndex or mTransaction!
+  // Don't unlink mRequest, mSourceObjectStore, or mSourceIndex!
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   tmp->DropJSObjects();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
