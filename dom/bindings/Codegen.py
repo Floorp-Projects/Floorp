@@ -21,7 +21,7 @@ OBJECT_MOVED_HOOK_NAME = '_objectMoved'
 CONSTRUCT_HOOK_NAME = '_constructor'
 LEGACYCALLER_HOOK_NAME = '_legacycaller'
 HASINSTANCE_HOOK_NAME = '_hasInstance'
-NEWRESOLVE_HOOK_NAME = '_newResolve'
+RESOLVE_HOOK_NAME = '_resolve'
 ENUMERATE_HOOK_NAME = '_enumerate'
 ENUM_ENTRY_VARIABLE_NAME = 'strings'
 INSTANCE_RESERVED_SLOTS = 1
@@ -275,7 +275,7 @@ class CGNativePropertyHooks(CGThing):
             resolveOwnProperty = "ResolveOwnProperty"
             enumerateOwnProperties = "EnumerateOwnProperties"
         elif self.descriptor.needsXrayResolveHooks():
-            resolveOwnProperty = "ResolveOwnPropertyViaNewresolve"
+            resolveOwnProperty = "ResolveOwnPropertyViaResolve"
             enumerateOwnProperties = "EnumerateOwnPropertiesViaGetOwnPropertyNames"
         else:
             resolveOwnProperty = "nullptr"
@@ -418,14 +418,14 @@ class CGDOMJSClass(CGThing):
         else:
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
             reservedSlots = slotCount
-        if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
-            newResolveHook = NEWRESOLVE_HOOK_NAME
+        if self.descriptor.interface.getExtendedAttribute("NeedResolve"):
+            resolveHook = RESOLVE_HOOK_NAME
             enumerateHook = ENUMERATE_HOOK_NAME
         elif self.descriptor.isGlobal():
-            newResolveHook = "mozilla::dom::ResolveGlobal"
+            resolveHook = "mozilla::dom::ResolveGlobal"
             enumerateHook = "mozilla::dom::EnumerateGlobal"
         else:
-            newResolveHook = "JS_ResolveStub"
+            resolveHook = "JS_ResolveStub"
             enumerateHook = "JS_EnumerateStub"
 
         return fill(
@@ -459,7 +459,7 @@ class CGDOMJSClass(CGThing):
             flags=classFlags,
             addProperty=ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'JS_PropertyStub',
             enumerate=enumerateHook,
-            resolve=newResolveHook,
+            resolve=resolveHook,
             finalize=FINALIZE_HOOK_NAME,
             call=callHook,
             trace=traceHook,
@@ -7597,12 +7597,12 @@ class CGLegacyCallHook(CGAbstractBindingMethod):
                             self._legacycaller)
 
 
-class CGNewResolveHook(CGAbstractBindingMethod):
+class CGResolveHook(CGAbstractBindingMethod):
     """
-    NewResolve hook for objects with custom hooks.
+    Resolve hook for objects that have the NeedResolve extended attribute.
     """
     def __init__(self, descriptor):
-        assert descriptor.interface.getExtendedAttribute("NeedNewResolve")
+        assert descriptor.interface.getExtendedAttribute("NeedResolve")
 
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
@@ -7610,19 +7610,19 @@ class CGNewResolveHook(CGAbstractBindingMethod):
                 Argument('bool*', 'resolvedp')]
         # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
-            self, descriptor, NEWRESOLVE_HOOK_NAME,
+            self, descriptor, RESOLVE_HOOK_NAME,
             args, getThisObj="", callArgs="")
 
     def generate_code(self):
         return CGGeneric(dedent("""
             JS::Rooted<JSPropertyDescriptor> desc(cx);
-            if (!self->DoNewResolve(cx, obj, id, &desc)) {
+            if (!self->DoResolve(cx, obj, id, &desc)) {
               return false;
             }
             if (!desc.object()) {
               return true;
             }
-            // If desc.value() is undefined, then the DoNewResolve call
+            // If desc.value() is undefined, then the DoResolve call
             // has already defined it on the object.  Don't try to also
             // define it.
             if (!desc.value().isUndefined() &&
@@ -7658,7 +7658,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
     Enumerate hook for objects with custom hooks.
     """
     def __init__(self, descriptor):
-        assert descriptor.interface.getExtendedAttribute("NeedNewResolve")
+        assert descriptor.interface.getExtendedAttribute("NeedResolve")
 
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj')]
@@ -9564,10 +9564,10 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
         return "return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc);\n"
 
 
-class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
+class CGResolveOwnPropertyViaResolve(CGAbstractBindingMethod):
     """
     An implementation of Xray ResolveOwnProperty stuff for things that have a
-    newresolve hook.
+    resolve hook.
     """
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
@@ -9576,7 +9576,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JSPropertyDescriptor>', 'desc')]
         CGAbstractBindingMethod.__init__(self, descriptor,
-                                         "ResolveOwnPropertyViaNewresolve",
+                                         "ResolveOwnPropertyViaResolve",
                                          args, getThisObj="",
                                          callArgs="")
 
@@ -9591,10 +9591,10 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
               // them.
               JSAutoCompartment ac(cx, obj);
               JS::Rooted<JSPropertyDescriptor> objDesc(cx);
-              if (!self->DoNewResolve(cx, obj, id, &objDesc)) {
+              if (!self->DoResolve(cx, obj, id, &objDesc)) {
                 return false;
               }
-              // If desc.value() is undefined, then the DoNewResolve call
+              // If desc.value() is undefined, then the DoResolve call
               // has already defined the property on the object.  Don't
               // try to also define it.
               if (objDesc.object() &&
@@ -9606,7 +9606,7 @@ class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
                 return false;
               }
             }
-            return self->DoNewResolve(cx, wrapper, id, desc);
+            return self->DoResolve(cx, wrapper, id, desc);
             """))
 
 
@@ -9626,7 +9626,7 @@ class CGEnumerateOwnProperties(CGAbstractStaticMethod):
 class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
     """
     An implementation of Xray EnumerateOwnProperties stuff for things
-    that have a newresolve hook.
+    that have a resolve hook.
     """
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
@@ -11092,7 +11092,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGResolveOwnProperty(descriptor))
             cgThings.append(CGEnumerateOwnProperties(descriptor))
         elif descriptor.needsXrayResolveHooks():
-            cgThings.append(CGResolveOwnPropertyViaNewresolve(descriptor))
+            cgThings.append(CGResolveOwnPropertyViaResolve(descriptor))
             cgThings.append(CGEnumerateOwnPropertiesViaGetOwnPropertyNames(descriptor))
 
         # Now that we have our ResolveOwnProperty/EnumerateOwnProperties stuff
@@ -11109,8 +11109,8 @@ class CGDescriptor(CGThing):
             cgThings.append(CGNamedConstructors(descriptor))
 
         cgThings.append(CGLegacyCallHook(descriptor))
-        if descriptor.interface.getExtendedAttribute("NeedNewResolve"):
-            cgThings.append(CGNewResolveHook(descriptor))
+        if descriptor.interface.getExtendedAttribute("NeedResolve"):
+            cgThings.append(CGResolveHook(descriptor))
             cgThings.append(CGEnumerateHook(descriptor))
 
         if descriptor.hasNamedPropertiesObject:

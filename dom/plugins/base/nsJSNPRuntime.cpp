@@ -158,8 +158,8 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
                           JS::Value *statep, jsid *idp);
 
 static bool
-NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                        bool *resolvedp);
+NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                     bool *resolvedp);
 
 static bool
 NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType type, JS::MutableHandle<JS::Value> vp);
@@ -190,7 +190,7 @@ const static js::Class sNPObjectJSWrapperClass =
     NPObjWrapper_GetProperty,
     NPObjWrapper_SetProperty,
     (JSEnumerateOp)NPObjWrapper_newEnumerate,
-    NPObjWrapper_NewResolve,
+    NPObjWrapper_Resolve,
     NPObjWrapper_Convert,
     NPObjWrapper_Finalize,
     NPObjWrapper_Call,
@@ -1653,8 +1653,8 @@ NPObjWrapper_newEnumerate(JSContext *cx, JS::Handle<JSObject*> obj, JSIterateOp 
 }
 
 static bool
-NPObjWrapper_NewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                        bool *resolvedp)
+NPObjWrapper_Resolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                     bool *resolvedp)
 {
   if (JSID_IS_SYMBOL(id))
     return true;
