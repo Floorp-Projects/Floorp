@@ -663,14 +663,14 @@ class Descriptor(DescriptorProvider):
 
     def needsXrayResolveHooks(self):
         """
-        Generally, any interface with NeedNewResolve needs Xray
+        Generally, any interface with NeedResolve needs Xray
         resolveOwnProperty and enumerateOwnProperties hooks.  But for
         the special case of plugin-loading elements, we do NOT want
         those, because we don't want to instantiate plug-ins simply
         due to chrome touching them and that's all those hooks do on
         those elements.  So we special-case those here.
         """
-        return (self.interface.getExtendedAttribute("NeedNewResolve") and
+        return (self.interface.getExtendedAttribute("NeedResolve") and
                 self.interface.identifier.name not in ["HTMLObjectElement",
                                                        "HTMLEmbedElement",
                                                        "HTMLAppletElement"])

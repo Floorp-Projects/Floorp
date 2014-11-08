@@ -157,7 +157,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * SetupProtoChain handles actually inserting the plug-in
      * scriptable object into the proto chain if needed.
      *
-     * DoNewResolve is a hook that allows us to find out when the web
+     * DoResolve is a hook that allows us to find out when the web
      * page is looking up a property name on our object and make sure
      * that our plug-in, if any, is instantiated.
      */
@@ -167,10 +167,10 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // Remove plugin from protochain
     void TeardownProtoChain();
 
-    // Helper for WebIDL newResolve
-    bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                      JS::Handle<jsid> aId,
-                      JS::MutableHandle<JSPropertyDescriptor> aDesc);
+    // Helper for WebIDL NeedResolve
+    bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                   JS::Handle<jsid> aId,
+                   JS::MutableHandle<JSPropertyDescriptor> aDesc);
     // Helper for WebIDL enumeration
     void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& /* unused */,
                              mozilla::ErrorResult& aRv);
