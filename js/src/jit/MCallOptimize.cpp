@@ -219,12 +219,7 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineHasClass(callInfo,
                               &ScalarTypeDescr::class_, &ReferenceTypeDescr::class_);
     if (native == intrinsic_TypeDescrIsArrayType)
-        return inlineHasClass(callInfo,
-                              &SizedArrayTypeDescr::class_, &UnsizedArrayTypeDescr::class_);
-    if (native == intrinsic_TypeDescrIsSizedArrayType)
-        return inlineHasClass(callInfo, &SizedArrayTypeDescr::class_);
-    if (native == intrinsic_TypeDescrIsUnsizedArrayType)
-        return inlineHasClass(callInfo, &UnsizedArrayTypeDescr::class_);
+        return inlineHasClass(callInfo, &ArrayTypeDescr::class_);
     if (native == intrinsic_SetTypedObjectOffset)
         return inlineSetTypedObjectOffset(callInfo);
 
@@ -286,8 +281,8 @@ IonBuilder::inlineNonFunctionCall(CallInfo &callInfo, JSObject *target)
     // Inline a call to a non-function object, invoking the object's call or
     // construct hook.
 
-    if (callInfo.constructing() && target->constructHook() == TypedObject::constructSized)
-        return inlineConstructTypedObject(callInfo, &target->as<SizedTypeDescr>());
+    if (callInfo.constructing() && target->constructHook() == TypedObject::construct)
+        return inlineConstructTypedObject(callInfo, &target->as<TypeDescr>());
 
     return InliningStatus_NotInlined;
 }
@@ -1652,7 +1647,6 @@ IonBuilder::elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefin
     if (elemPrediction.isUseless() || elemPrediction.kind() != type::Scalar)
         return false;
 
-    MOZ_ASSERT(type::isSized(elemPrediction.kind()));
     *arrayType = elemPrediction.scalarType();
     return true;
 }
@@ -2519,7 +2513,7 @@ IonBuilder::inlineIsConstructing(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineConstructTypedObject(CallInfo &callInfo, SizedTypeDescr *descr)
+IonBuilder::inlineConstructTypedObject(CallInfo &callInfo, TypeDescr *descr)
 {
     // Only inline default constructors for now.
     if (callInfo.argc() != 0)

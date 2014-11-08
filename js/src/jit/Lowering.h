@@ -192,7 +192,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTypedObjectElements(MTypedObjectElements *ins);
     bool visitSetTypedObjectOffset(MSetTypedObjectOffset *ins);
     bool visitTypedObjectProto(MTypedObjectProto *ins);
-    bool visitTypedObjectUnsizedLength(MTypedObjectUnsizedLength *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitSetInitializedLength(MSetInitializedLength *ins);
     bool visitNot(MNot *ins);

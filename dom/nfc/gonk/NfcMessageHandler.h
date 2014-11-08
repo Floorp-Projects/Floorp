@@ -25,8 +25,8 @@ public:
 
 private:
   bool GeneralResponse(const android::Parcel& aParcel, EventOptions& aOptions);
-  bool ConfigRequest(android::Parcel& aParcel, const CommandOptions& options);
-  bool ConfigResponse(const android::Parcel& aParcel, EventOptions& aOptions);
+  bool PowerRequest(android::Parcel& aParcel, const CommandOptions& options);
+  bool PowerResponse(const android::Parcel& aParcel, EventOptions& aOptions);
   bool ReadNDEFRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool ReadNDEFResponse(const android::Parcel& aParcel, EventOptions& aOptions);
   bool WriteNDEFRequest(android::Parcel& aParcel, const CommandOptions& options);

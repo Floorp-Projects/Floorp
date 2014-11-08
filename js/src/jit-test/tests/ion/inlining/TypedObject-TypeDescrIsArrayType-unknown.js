@@ -29,14 +29,14 @@ if (!this.TypedObject) {
 }
 
 var T = TypedObject;
-var AT = new T.ArrayType(T.int32);
+var AT = new T.ArrayType(T.int32, 100);
 
 function check(v) {
     return v.map(x => x+1);
 }
 
 function test() {
-    var w1 = AT.build(100, x => x+1);
+    var w1 = AT.build(x => x+1);
     var w2 = Array.build(100, x => x+1);
     w2.map = w1.map;
     var a = [ w1, w2 ];

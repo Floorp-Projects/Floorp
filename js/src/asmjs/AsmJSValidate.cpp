@@ -8392,6 +8392,7 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     // during jump delay slot.
     masm.pop(HeapReg);
     masm.as_jr(HeapReg);
+    masm.loadAsmJSHeapRegisterFromGlobalData();
 #elif defined(JS_CODEGEN_ARM)
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(Registers::AllMask & ~(1<<Registers::sp)), FloatRegisterSet(uint32_t(0))));   // save all GP registers,excep sp
