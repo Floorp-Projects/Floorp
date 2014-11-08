@@ -2027,7 +2027,6 @@ BackgroundCursorChild::SendContinueInternal(const CursorRequestParams& aParams)
   MOZ_ASSERT(!mStrongCursor);
 
   // Make sure all our DOM objects stay alive.
-  mStrongRequest = mRequest;
   mStrongCursor = mCursor;
 
   MOZ_ASSERT(mRequest->ReadyState() == IDBRequestReadyState::Done);
@@ -2119,9 +2118,7 @@ BackgroundCursorChild::HandleResponse(
   if (mCursor) {
     mCursor->Reset(Move(response.key()), Move(cloneReadInfo));
   } else {
-    newCursor = IDBCursor::Create(mObjectStore,
-                                  this,
-                                  mDirection,
+    newCursor = IDBCursor::Create(this,
                                   Move(response.key()),
                                   Move(cloneReadInfo));
     mCursor = newCursor;
@@ -2150,10 +2147,7 @@ BackgroundCursorChild::HandleResponse(
   if (mCursor) {
     mCursor->Reset(Move(response.key()));
   } else {
-    newCursor = IDBCursor::Create(mObjectStore,
-                                  this,
-                                  mDirection,
-                                  Move(response.key()));
+    newCursor = IDBCursor::Create(this, Move(response.key()));
     mCursor = newCursor;
   }
 
@@ -2187,9 +2181,7 @@ BackgroundCursorChild::HandleResponse(const IndexCursorResponse& aResponse)
                    Move(response.objectKey()),
                    Move(cloneReadInfo));
   } else {
-    newCursor = IDBCursor::Create(mIndex,
-                                  this,
-                                  mDirection,
+    newCursor = IDBCursor::Create(this,
                                   Move(response.key()),
                                   Move(response.objectKey()),
                                   Move(cloneReadInfo));
@@ -2218,9 +2210,7 @@ BackgroundCursorChild::HandleResponse(const IndexKeyCursorResponse& aResponse)
   if (mCursor) {
     mCursor->Reset(Move(response.key()), Move(response.objectKey()));
   } else {
-    newCursor = IDBCursor::Create(mIndex,
-                                  this,
-                                  mDirection,
+    newCursor = IDBCursor::Create(this,
                                   Move(response.key()),
                                   Move(response.objectKey()));
     mCursor = newCursor;
@@ -2265,8 +2255,8 @@ BackgroundCursorChild::RecvResponse(const CursorResponse& aResponse)
   MOZ_ASSERT(aResponse.type() != CursorResponse::T__None);
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mTransaction);
-  MOZ_ASSERT(mStrongRequest);
   MOZ_ASSERT_IF(mCursor, mStrongCursor);
+  MOZ_ASSERT_IF(!mCursor, mStrongRequest);
 
   MaybeCollectGarbageOnIPCMessage();
 
