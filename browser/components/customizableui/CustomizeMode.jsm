@@ -1263,7 +1263,8 @@ CustomizeMode.prototype = {
     const RECENT_LWT_COUNT = 5;
 
     function previewTheme(aEvent) {
-      LightweightThemeManager.previewTheme(aEvent.target.theme);
+      LightweightThemeManager.previewTheme(aEvent.target.theme.id != DEFAULT_THEME_ID ?
+                                           aEvent.target.theme : null);
     }
 
     function resetPreview() {
