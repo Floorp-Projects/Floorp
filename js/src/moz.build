@@ -244,6 +244,7 @@ UNIFIED_SOURCES += [
     'vm/DebuggerMemory.cpp',
     'vm/ErrorObject.cpp',
     'vm/ForkJoin.cpp',
+    'vm/ForOfIterator.cpp',
     'vm/GeneratorObject.cpp',
     'vm/GlobalObject.cpp',
     'vm/HelperThreads.cpp',
