@@ -243,31 +243,31 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeURIForUI(const nsACString & aCharset,
       != NS_OK) {
     // assume UTF-8 instead of ASCII  because hostname (IDN) may be in UTF-8
     CopyUTF8toUTF16(aURIFragment, _retval);
-  } else {
-    // if there are any characters that are unsafe for IRIs, reescape.
-    if (mUnsafeChars.IsVoid()) {
-      nsCOMPtr<nsISupportsString> blacklist;
-      nsresult rv = mozilla::Preferences::GetComplex("network.IDN.blacklist_chars",
-                                                     NS_GET_IID(nsISupportsString),
-                                                     getter_AddRefs(blacklist));
-      if (NS_SUCCEEDED(rv)) {
-        blacklist->ToString(getter_Copies(mUnsafeChars));
-        mUnsafeChars.StripChars(" "); // we allow SPACE in this method
-        MOZ_ASSERT(!mUnsafeChars.IsVoid());
-      } else {
-        NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
-      }
+  }
+
+  // if there are any characters that are unsafe for IRIs, reescape.
+  if (mUnsafeChars.IsVoid()) {
+    nsCOMPtr<nsISupportsString> blacklist;
+    nsresult rv = mozilla::Preferences::GetComplex("network.IDN.blacklist_chars",
+                                                   NS_GET_IID(nsISupportsString),
+                                                   getter_AddRefs(blacklist));
+    if (NS_SUCCEEDED(rv)) {
+      blacklist->ToString(getter_Copies(mUnsafeChars));
+      mUnsafeChars.StripChars(" "); // we allow SPACE in this method
+      MOZ_ASSERT(!mUnsafeChars.IsVoid());
+    } else {
+      NS_WARNING("Failed to get the 'network.IDN.blacklist_chars' preference");
     }
-    // We check IsEmpty() intentionally here instead of IsVoid() because an
-    // empty (or just spaces) pref value is likely a mistake/error of some sort.
-    const char16_t* unsafeChars =
-      mUnsafeChars.IsEmpty() ? sNetworkIDNBlacklistChars : mUnsafeChars;
-    if (PromiseFlatString(_retval).FindCharInSet(unsafeChars) != kNotFound) {
-      // Note that this reescapes all non-ASCII characters in the URI, not just
-      // the unsafe characters.
-      nsString reescapedSpec;
-      _retval = NS_EscapeURL(_retval, esc_OnlyNonASCII, reescapedSpec);
-    }
+  }
+  // We check IsEmpty() intentionally here instead of IsVoid() because an
+  // empty (or just spaces) pref value is likely a mistake/error of some sort.
+  const char16_t* unsafeChars =
+    mUnsafeChars.IsEmpty() ? sNetworkIDNBlacklistChars : mUnsafeChars;
+  if (PromiseFlatString(_retval).FindCharInSet(unsafeChars) != kNotFound) {
+    // Note that this reescapes all non-ASCII characters in the URI, not just
+    // the unsafe characters.
+    nsString reescapedSpec;
+    _retval = NS_EscapeURL(_retval, esc_OnlyNonASCII, reescapedSpec);
   }
 
   return NS_OK;
