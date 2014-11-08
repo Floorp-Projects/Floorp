@@ -4,8 +4,6 @@
 
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-let {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {});
-
 let TargetFactory = devtools.TargetFactory;
 
 gDevTools.testing = true;
@@ -147,16 +145,4 @@ function* createHost(type = "bottom", src = "data:text/html;charset=utf-8,") {
   yield loaded.promise;
 
   return [host, iframe.contentWindow, iframe.contentDocument];
-}
-
-function getAreaWidgetIds(areaId) {
-  return CustomizableUI.getWidgetIdsInArea(areaId);
-}
-
-XPCOMUtils.defineLazyGetter(this, 'gDeveloperButtonInNavbar', function() {
-  return getAreaWidgetIds(CustomizableUI.AREA_NAVBAR).indexOf("developer-button") != -1;
-});
-
-function isInDevEdition() {
-  return gDeveloperButtonInNavbar;
 }
