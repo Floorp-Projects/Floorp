@@ -288,7 +288,7 @@ protected:
 
   // Indicate what track types we eventually expect to add to this stream
   uint8_t mHintContents;
-  // Indicate what track types have been added to this stream
+  // Indicate what track types have arrived in this stream
   uint8_t mTrackTypesAvailable;
   bool mNotifiedOfMediaStreamGraphShutdown;
 
