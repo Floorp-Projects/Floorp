@@ -11878,8 +11878,7 @@ class CGResolveSystemBinding(CGAbstractMethod):
                                   [Argument('JSContext*', 'aCx'),
                                    Argument('JS::Handle<JSObject*>', 'aObj'),
                                    Argument('JS::Handle<jsid>', 'aId'),
-                                   Argument('JS::MutableHandle<JSObject*>',
-                                            'aObjp')])
+                                   Argument('bool*', 'aResolvedp')])
         self.config = config
 
     def definition_body(self):
@@ -11912,7 +11911,7 @@ class CGResolveSystemBinding(CGAbstractMethod):
             defineCode = "!%s::GetConstructorObject(aCx, aObj)" % bindingNS
             defineCode = CGIfWrapper(CGGeneric("return false;\n"), defineCode)
             defineCode = CGList([defineCode,
-                                 CGGeneric("aObjp.set(aObj);\n")])
+                                 CGGeneric("*aResolvedp = true;\n")])
 
             condition = "JSID_IS_VOID(aId) || aId == %s" % descNameToId(desc.name)
             if desc.isExposedConditionally():

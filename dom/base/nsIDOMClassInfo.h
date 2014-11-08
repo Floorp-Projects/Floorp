@@ -23,7 +23,7 @@
 
 #define DEFAULT_SCRIPTABLE_FLAGS                                           \
   (DOM_BASE_SCRIPTABLE_FLAGS |                                             \
-   nsIXPCScriptable::WANT_NEWRESOLVE |                                     \
+   nsIXPCScriptable::WANT_RESOLVE |                                        \
    nsIXPCScriptable::WANT_PRECREATE)
 
 #define DOM_DEFAULT_SCRIPTABLE_FLAGS                                       \

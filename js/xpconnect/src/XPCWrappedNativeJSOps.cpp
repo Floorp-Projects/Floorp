@@ -861,7 +861,7 @@ XPC_WN_Helper_NewResolve(JSContext *cx, HandleObject obj, HandleId id,
 {
     nsresult rv = NS_OK;
     bool retval = true;
-    RootedObject obj2FromScriptable(cx);
+    bool resolved = false;
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
@@ -869,15 +869,14 @@ XPC_WN_Helper_NewResolve(JSContext *cx, HandleObject obj, HandleId id,
     RootedId old(cx, ccx.SetResolveName(id));
 
     XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if (si && si->GetFlags().WantNewResolve()) {
+    if (si && si->GetFlags().WantResolve()) {
         XPCWrappedNative* oldResolvingWrapper;
         bool allowPropMods = si->GetFlags().AllowPropModsDuringResolve();
 
         if (allowPropMods)
             oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
 
-        rv = si->GetCallback()->NewResolve(wrapper, cx, obj, id,
-                                           obj2FromScriptable.address(), &retval);
+        rv = si->GetCallback()->Resolve(wrapper, cx, obj, id, &resolved, &retval);
 
         if (allowPropMods)
             (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
@@ -890,8 +889,8 @@ XPC_WN_Helper_NewResolve(JSContext *cx, HandleObject obj, HandleId id,
         return Throw(rv, cx);
     }
 
-    if (obj2FromScriptable) {
-        objp.set(obj2FromScriptable);
+    if (resolved) {
+        objp.set(obj);
     } else if (wrapper->HasMutatedSet()) {
         // We are here if scriptable did not resolve this property and
         // it *might* be in the instance set but not the proto set.
