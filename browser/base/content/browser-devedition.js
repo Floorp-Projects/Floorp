@@ -14,7 +14,6 @@ let DevEdition = {
 
   styleSheetLocation: "chrome://browser/skin/devedition.css",
   styleSheet: null,
-  defaultThemeID: "{972ce4c6-7e08-4474-a285-3208198ce6fd}",
 
   init: function () {
     this._updateDevtoolsThemeAttribute();
@@ -32,7 +31,7 @@ let DevEdition = {
   observe: function (subject, topic, data) {
     if (topic == "lightweight-theme-styling-update") {
       let newTheme = JSON.parse(data);
-      if (!newTheme || newTheme.id === this.defaultThemeID) {
+      if (!newTheme) {
         // A lightweight theme has been unapplied, so just re-read prefs.
         this._updateStyleSheetFromPrefs();
       } else {
