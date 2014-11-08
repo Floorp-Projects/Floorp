@@ -9,7 +9,7 @@ const TAB_URL = EXAMPLE_URL + "doc_watch-expression-button.html";
 
 function test() {
   Task.spawn(function() {
-    let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
+    let [tab,, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
     let events = win.EVENTS;
     let watch = win.DebuggerView.WatchExpressions;
@@ -37,8 +37,7 @@ function test() {
         "The expression at index 0 is correct.");
     }
 
-    // Allow this generator function to yield first.
-    executeSoon(() => debuggee.start());
+    callInTab(tab, "start");
     yield waitForSourceAndCaretAndScopes(panel, ".html", 19);
 
     // Inspect primitive value variable.

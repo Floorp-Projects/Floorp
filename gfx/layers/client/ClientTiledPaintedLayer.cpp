@@ -193,7 +193,7 @@ ClientTiledPaintedLayer::UseFastPath()
   }
   const FrameMetrics& parentMetrics = scrollAncestor.Metrics();
 
-  bool multipleTransactionsNeeded = gfxPrefs::UseProgressiveTilePainting()
+  bool multipleTransactionsNeeded = gfxPlatform::GetPlatform()->UseProgressivePaint()
                                  || gfxPrefs::UseLowPrecisionBuffer()
                                  || !parentMetrics.mCriticalDisplayPort.IsEmpty();
   bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
@@ -214,7 +214,7 @@ ClientTiledPaintedLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
 
   // Only draw progressively when the resolution is unchanged, and we're not
   // in a reftest scenario (that's what the HasShadowManager() check is for).
-  if (gfxPrefs::UseProgressiveTilePainting() &&
+  if (gfxPlatform::GetPlatform()->UseProgressivePaint() &&
       !ClientManager()->HasShadowTarget() &&
       mContentClient->mTiledBuffer.GetFrameResolution() == mPaintData.mResolution) {
     // Store the old valid region, then clear it before painting.

@@ -839,6 +839,12 @@ MacroAssemblerMIPS::ma_sw(Imm32 imm, Address address)
 }
 
 void
+MacroAssemblerMIPS::ma_sw(Register data, BaseIndex &address)
+{
+    ma_store(data, address, SizeWord);
+}
+
+void
 MacroAssemblerMIPS::ma_pop(Register r)
 {
     as_lw(r, StackPointer, 0);
@@ -2535,6 +2541,19 @@ MacroAssemblerMIPSCompat::branchTestValue(Condition cond, const Address &valaddr
 }
 
 // unboxing code
+void
+MacroAssemblerMIPSCompat::unboxNonDouble(const ValueOperand &operand, Register dest)
+{
+    if (operand.payloadReg() != dest)
+        ma_move(dest, operand.payloadReg());
+}
+
+void
+MacroAssemblerMIPSCompat::unboxNonDouble(const Address &src, Register dest)
+{
+    ma_lw(dest, Address(src.base, src.offset + PAYLOAD_OFFSET));
+}
+
 void
 MacroAssemblerMIPSCompat::unboxInt32(const ValueOperand &operand, Register dest)
 {

@@ -308,6 +308,11 @@ protected:
   nsresult MoveTempToTarget();
 
   /**
+   * Set the target file permissions to be appropriate.
+   */
+  nsresult FixTargetPermissions();
+
+  /**
    * Update the start time which also implies the last update time is the same.
    */
   void SetStartTime(int64_t aStartTime);

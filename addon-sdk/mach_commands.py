@@ -103,7 +103,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
                     path = d.split('/')
                     module_path = ''.join('.' + p if p.find('-') == -1 else "['%s']" % p for p in path)
                     dir_path = d + '/'
-                filelist = ["'source/lib/%s%s'" % (dir_path, f) for f in sorted(files)]
+                filelist = ["'source/lib/%s%s'" % (dir_path, f)
+                            for f in sorted(files, key=lambda x: x.lower())]
                 js_modules.append("EXTRA_JS_MODULES.commonjs%s += [\n    %s,\n]\n"
                                   % (module_path, ',\n    '.join(filelist)))
             stringified = '\n'.join(js_modules)

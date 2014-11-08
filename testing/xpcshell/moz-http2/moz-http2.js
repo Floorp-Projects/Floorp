@@ -85,6 +85,8 @@ var m = {
 
 var h11required_conn = null;
 var h11required_header = "yes";
+var didRst = false;
+var rstConnection = null;
 
 function handleRequest(req, res) {
   var u = url.parse(req.url);
@@ -260,6 +262,26 @@ function handleRequest(req, res) {
     } else {
       res.setHeader('X-H11Required-Stream-Ok', h11required_header);
     }
+  }
+
+  else if (u.pathname === "/rstonce") {
+    if (!didRst) {
+      didRst = true;
+      rstConnection = req.stream.connection;
+      req.stream.reset('REFUSED_STREAM');
+      return;
+    }
+
+    if (rstConnection === null ||
+        rstConnection !== req.stream.connection) {
+      res.writeHead(400);
+      res.end("WRONG CONNECTION, HOMIE!");
+      return;
+    }
+
+    res.writeHead(200);
+    res.end("It's all good.");
+    return;
   }
 
   res.setHeader('Content-Type', 'text/html');

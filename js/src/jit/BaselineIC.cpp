@@ -8607,7 +8607,7 @@ static bool
 GetTemplateObjectForClassHook(JSContext *cx, JSNative hook, CallArgs &args,
                               MutableHandleObject templateObject)
 {
-    if (hook == TypedObject::constructSized) {
+    if (hook == TypedObject::construct) {
         Rooted<TypeDescr *> descr(cx, &args.callee().as<TypeDescr>());
         JSObject *obj = TypedObject::createZeroed(cx, descr, 1, gc::TenuredHeap);
         if (!obj)

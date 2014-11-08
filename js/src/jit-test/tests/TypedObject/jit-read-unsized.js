@@ -11,7 +11,7 @@ setJitCompilerOption("ion.warmup.trigger", 30);
 var N = 100;
 var T = TypedObject;
 var Point = new T.StructType({x: T.uint32, y: T.uint32, z: T.uint32});
-var PointArray = Point.array();
+var PointArray = Point.array(N);
 
 function bar(array, i, x, y, z) {
   assertEq(array[i].x, x);
@@ -20,7 +20,7 @@ function bar(array, i, x, y, z) {
 }
 
 function foo() {
-  var array = new PointArray(N);
+  var array = new PointArray();
   for (var i = 0; i < N; i++) {
     array[i].x = i + 0;
     array[i].y = i + 1;

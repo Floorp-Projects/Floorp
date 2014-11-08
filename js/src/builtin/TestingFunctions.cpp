@@ -2017,7 +2017,8 @@ EvalReturningScope(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedString str(cx);
-    if (!JS_ConvertArguments(cx, args, "S", str.address()))
+    RootedObject global(cx);
+    if (!JS_ConvertArguments(cx, args, "S/o", str.address(), global.address()))
         return false;
 
     AutoStableStringChars strChars(cx);
@@ -2043,12 +2044,88 @@ EvalReturningScope(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS::Compile(cx, JS::NullPtr(), options, srcBuf, &script))
         return false;
 
-    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    if (global) {
+        global = CheckedUnwrap(global);
+        if (!global) {
+            JS_ReportError(cx, "Permission denied to access global");
+            return false;
+        }
+        if (!global->is<GlobalObject>()) {
+            JS_ReportError(cx, "Argument must be a global object");
+            return false;
+        }
+    } else {
+        global = JS::CurrentGlobalOrNull(cx);
+    }
+
     RootedObject scope(cx);
-    if (!js::ExecuteInGlobalAndReturnScope(cx, global, script, &scope))
+
+    {
+        // If we're switching globals here, ExecuteInGlobalAndReturnScope will
+        // take care of cloning the script into that compartment before
+        // executing it.
+        AutoCompartment ac(cx, global);
+
+        if (!js::ExecuteInGlobalAndReturnScope(cx, global, script, &scope))
+            return false;
+    }
+
+    if (!cx->compartment()->wrap(cx, &scope))
         return false;
 
     args.rval().setObject(*scope);
+    return true;
+}
+
+static bool
+ShellCloneAndExecuteScript(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedString str(cx);
+    RootedObject global(cx);
+    if (!JS_ConvertArguments(cx, args, "So", str.address(), global.address()))
+        return false;
+
+    AutoStableStringChars strChars(cx);
+    if (!strChars.initTwoByte(cx, str))
+        return false;
+
+    mozilla::Range<const char16_t> chars = strChars.twoByteRange();
+    size_t srclen = chars.length();
+    const char16_t *src = chars.start().get();
+
+    JS::AutoFilename filename;
+    unsigned lineno;
+
+    DescribeScriptedCaller(cx, &filename, &lineno);
+
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(filename.get(), lineno);
+    options.setNoScriptRval(true);
+    options.setCompileAndGo(false);
+
+    JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
+    RootedScript script(cx);
+    if (!JS::Compile(cx, JS::NullPtr(), options, srcBuf, &script))
+        return false;
+
+    global = CheckedUnwrap(global);
+    if (!global) {
+        JS_ReportError(cx, "Permission denied to access global");
+        return false;
+    }
+    if (!global->is<GlobalObject>()) {
+        JS_ReportError(cx, "Argument must be a global object");
+        return false;
+    }
+
+    AutoCompartment ac(cx, global);
+
+    if (!JS::CloneAndExecuteScript(cx, global, script))
+        return false;
+
+    args.rval().setUndefined();
     return true;
 }
 
@@ -2399,8 +2476,14 @@ gc::ZealModeHelpText),
 #endif
 
     JS_FN_HELP("evalReturningScope", EvalReturningScope, 1, 0,
-"evalReturningScope(scriptStr)",
-"  Evaluate the script in a new scope and return the scope."),
+"evalReturningScope(scriptStr, [global])",
+"  Evaluate the script in a new scope and return the scope.\n"
+"  If |global| is present, clone the script to |global| before executing."),
+
+    JS_FN_HELP("cloneAndExecuteScript", ShellCloneAndExecuteScript, 2, 0,
+"cloneAndExecuteScript(source, global)",
+"  Compile |source| in the current compartment, clone it into |global|'s\n"
+"  compartment, and run it there."),
 
     JS_FN_HELP("backtrace", DumpBacktrace, 1, 0,
 "backtrace()",
