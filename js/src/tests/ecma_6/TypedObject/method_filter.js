@@ -21,31 +21,14 @@ var float64 = TypedObject.float64;
 
 var objectType = TypedObject.objectType;
 
-function filterOddsFromVariable() {
+function filterOdds() {
   var length = 100;
-  var Uint32s = uint32.array();
-  var uint32s = new Uint32s(100);
-  for (var i = 0; i < length; i++)
-    uint32s[i] = i;
-
-  var odds = uint32s.filter(i => (i % 2) != 0);
-  assertEq(true, objectType(odds) == Uint32s);
-  assertEq(true, Uint32s.variable);
-  assertEq(50, odds.length);
-  for (var i = 0, j = 1; j < length; i++, j += 2)
-    assertEq(odds[i], j);
-}
-
-function filterOddsFromSized() {
-  var length = 100;
-  var Uint32s = uint32.array(100);
+  var Uint32s = new ArrayType(uint32, 100);
   var uint32s = new Uint32s();
   for (var i = 0; i < length; i++)
     uint32s[i] = i;
 
   var odds = uint32s.filter(i => (i % 2) != 0);
-  assertEq(true, objectType(odds) == Uint32s.unsized);
-  assertEq(true, objectType(odds).variable);
   assertEq(50, odds.length);
   for (var i = 0, j = 1; j < length; i++, j += 2)
     assertEq(odds[i], j);
@@ -54,8 +37,7 @@ function filterOddsFromSized() {
 function runTests() {
     print(BUGNUMBER + ": " + summary);
 
-    filterOddsFromVariable();
-    filterOddsFromSized();
+    filterOdds();
 
     if (typeof reportCompare === "function")
         reportCompare(true, true);

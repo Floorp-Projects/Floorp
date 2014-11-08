@@ -612,15 +612,29 @@ this.DownloadIntegration = {
       }
 #endif
 
-      // Now that the file is completely downloaded, make it accessible by other
-      // users on this system.  On Unix, the umask of the process is respected.
-      // This call has no effect on Windows.
+      // The file with the partially downloaded data has restrictive permissions
+      // that don't allow other users on the system to access it.  Now that the
+      // download is completed, we need to adjust permissions based on whether
+      // this is a permanently downloaded file or a temporary download to be
+      // opened read-only with an external application.
       try {
-        yield OS.File.setPermissions(aDownload.target.path,
-                                     { unixMode: 0o666 });
+        // The following logic to determine whether this is a temporary download
+        // is due to the fact that "deleteTempFileOnExit" is false on Mac, where
+        // downloads to be opened with external applications are preserved in
+        // the "Downloads" folder like normal downloads.
+        let isTemporaryDownload =
+          aDownload.launchWhenSucceeded && (aDownload.source.isPrivate ||
+          Services.prefs.getBoolPref("browser.helperApps.deleteTempFileOnExit"));
+        // Permanently downloaded files are made accessible by other users on
+        // this system, while temporary downloads are marked as read-only.
+        let unixMode = isTemporaryDownload ? 0o400 : 0o666;
+        // On Unix, the umask of the process is respected.  This call has no
+        // effect on Windows.
+        yield OS.File.setPermissions(aDownload.target.path, { unixMode });
       } catch (ex) {
-        // Errors with making the permissions less restrictive should be
-        // reported, but should not prevent the download from completing.
+        // We should report errors with making the permissions less restrictive
+        // or marking the file as read-only on Unix and Mac, but this should not
+        // prevent the download from completing.
         Cu.reportError(ex);
       }
 

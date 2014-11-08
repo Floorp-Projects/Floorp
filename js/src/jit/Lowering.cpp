@@ -2523,13 +2523,6 @@ LIRGenerator::visitTypedObjectProto(MTypedObjectProto *ins)
 }
 
 bool
-LIRGenerator::visitTypedObjectUnsizedLength(MTypedObjectUnsizedLength *ins)
-{
-    MOZ_ASSERT(ins->type() == MIRType_Int32);
-    return define(new(alloc()) LTypedObjectUnsizedLength(useRegisterAtStart(ins->object())), ins);
-}
-
-bool
 LIRGenerator::visitTypedObjectElements(MTypedObjectElements *ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Elements);

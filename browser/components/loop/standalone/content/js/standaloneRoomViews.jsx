@@ -10,12 +10,16 @@ var loop = loop || {};
 loop.standaloneRoomViews = (function() {
   "use strict";
 
+  var ROOM_STATES = loop.store.ROOM_STATES;
+  var sharedActions = loop.shared.actions;
+
   var StandaloneRoomView = React.createClass({
     mixins: [Backbone.Events],
 
     propTypes: {
       activeRoomStore:
-        React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
     },
 
     getInitialState: function() {
@@ -41,12 +45,34 @@ loop.standaloneRoomViews = (function() {
       this.stopListening(this.props.activeRoomStore);
     },
 
+    joinRoom: function() {
+      this.props.dispatcher.dispatch(new sharedActions.JoinRoom());
+    },
+
+    leaveRoom: function() {
+      this.props.dispatcher.dispatch(new sharedActions.LeaveRoom());
+    },
+
+    // XXX Implement tests for this view when we do the proper views
+    // - bug 1074705 and others
     render: function() {
-      return (
-        <div>
-          <div>{this.state.roomState}</div>
-        </div>
-      );
+      switch(this.state.roomState) {
+        case ROOM_STATES.READY: {
+          return (
+            <div><button onClick={this.joinRoom}>Join</button></div>
+          );
+        }
+        case ROOM_STATES.JOINED: {
+          return (
+            <div><button onClick={this.leaveRoom}>Leave</button></div>
+          );
+        }
+        default: {
+          return (
+            <div>{this.state.roomState}</div>
+          );
+        }
+      }
     }
   });
 
