@@ -5098,16 +5098,6 @@ CodeGenerator::visitTypedObjectProto(LTypedObjectProto *lir)
 }
 
 bool
-CodeGenerator::visitTypedObjectUnsizedLength(LTypedObjectUnsizedLength *lir)
-{
-    Register obj = ToRegister(lir->object());
-    Register out = ToRegister(lir->output());
-
-    masm.load32(Address(obj, OutlineTypedObject::offsetOfUnsizedLength()), out);
-    return true;
-}
-
-bool
 CodeGenerator::visitTypedObjectElements(LTypedObjectElements *lir)
 {
     Register obj = ToRegister(lir->object());
