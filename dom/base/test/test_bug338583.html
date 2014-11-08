@@ -353,13 +353,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function fnMessageListenerTest3h(e) {
     fnMessageListenerTest3h.msg_ok = (fnMessageListenerTest3h.msg_ok && e.data == "ok");
-    fnMessageListenerTest3h.id_ok = (fnMessageListenerTest3h.msg_ok && e.lastEventId == "");
+    fnMessageListenerTest3h.id_ok = (fnMessageListenerTest3h.id_ok && e.lastEventId == "");
   }
 
   function doTest3_h(test_id) {
     gEventSourceObj3_h = new EventSource("badMessageEvent2.eventsource");
 
-    gEventSourceObj3_h.addEventListener('message event', fnMessageListenerTest3h, true);
+    gEventSourceObj3_h.addEventListener('message', fnMessageListenerTest3h, true);
     fnMessageListenerTest3h.msg_ok = true;
     fnMessageListenerTest3h.id_ok = true;
 
@@ -375,7 +375,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
       }
       gEventSourceObj3_h.close();
       setTestHasFinished(test_id);
-    }, parseInt(3000*stress_factor));
+    }, parseInt(6000*stress_factor));
   }
 
 // in order to test (4)
