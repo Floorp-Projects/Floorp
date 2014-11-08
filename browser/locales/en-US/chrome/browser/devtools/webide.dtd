@@ -39,6 +39,8 @@
 <!ENTITY runtimeMenu_showDetails_accesskey "E">
 <!ENTITY runtimeMenu_showMonitor_label "Monitor">
 <!ENTITY runtimeMenu_showMonitor_accesskey "M">
+<!ENTITY runtimeMenu_showDevicePrefs_label "Device Preferences">
+<!ENTITY runtimeMenu_showDevicePrefs_accesskey "D">
 
 <!ENTITY viewMenu_label "View">
 <!ENTITY viewMenu_accesskey "V">
@@ -131,6 +133,17 @@
 <!ENTITY runtimedetails_restrictedPrivileges "DevTools restricted privileges: ">
 <!ENTITY runtimedetails_requestPrivileges "request higher privileges">
 <!ENTITY runtimedetails_privilegesWarning "(Will reboot device. Requires root access.)">
+
+<!-- Device Preferences -->
+<!ENTITY devicepreferences_title "Device Preferences">
+<!ENTITY devicepreferences_search "Search preferences">
+<!ENTITY devicepreferences_newname "New preference name">
+<!ENTITY devicepreferences_newtext "Preference value">
+<!ENTITY devicepreferences_addnew "Add new preference">
+<!ENTITY devicepreferences_typeboolean "Boolean">
+<!ENTITY devicepreferences_typenumber "Integer">
+<!ENTITY devicepreferences_typestring "String">
+<!ENTITY devicepreferences_typenone "Select a type">
 
 <!-- Monitor -->
 <!ENTITY monitor_title "Monitor">

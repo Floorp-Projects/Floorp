@@ -559,13 +559,15 @@ WebConsoleActor.prototype =
           startedListeners.push(listener);
           break;
         case "FileActivity":
-          if (!this.consoleProgressListener) {
-            this.consoleProgressListener =
-              new ConsoleProgressListener(this.window, this);
+          if (this.window instanceof Ci.nsIDOMWindow) {
+            if (!this.consoleProgressListener) {
+              this.consoleProgressListener =
+                new ConsoleProgressListener(this.window, this);
+            }
+            this.consoleProgressListener.startMonitor(this.consoleProgressListener.
+                                                      MONITOR_FILE_ACTIVITY);
+            startedListeners.push(listener);
           }
-          this.consoleProgressListener.startMonitor(this.consoleProgressListener.
-                                                    MONITOR_FILE_ACTIVITY);
-          startedListeners.push(listener);
           break;
         case "ReflowActivity":
           if (!this.consoleReflowListener) {

@@ -411,6 +411,14 @@ gfxPlatformMac::UseTiling()
   return nsCocoaFeatures::OnLionOrLater() && gfxPlatform::UseTiling();
 }
 
+bool
+gfxPlatformMac::UseProgressivePaint()
+{
+  // Progressive painting requires cross-process mutexes, which don't work so
+  // well on OS X 10.6 so we disable there.
+  return nsCocoaFeatures::OnLionOrLater() && gfxPlatform::UseProgressivePaint();
+}
+
 void
 gfxPlatformMac::GetPlatformCMSOutputProfile(void* &mem, size_t &size)
 {

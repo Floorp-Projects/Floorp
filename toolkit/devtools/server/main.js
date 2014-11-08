@@ -704,6 +704,69 @@ var DebuggerServer = {
     return this._onConnection(transport, aPrefix, true);
   },
 
+  connectToContent: function (aConnection, aMm) {
+    let deferred = defer();
+
+    let prefix = aConnection.allocID("content-process");
+    let actor, childTransport;
+
+    aMm.addMessageListener("debug:content-process-actor", function listener(msg) {
+      // Arbitrarily choose the first content process to reply
+      // XXX: This code needs to be updated if we use more than one content process
+      aMm.removeMessageListener("debug:content-process-actor", listener);
+
+      // Pipe Debugger message from/to parent/child via the message manager
+      childTransport = new ChildDebuggerTransport(aMm, prefix);
+      childTransport.hooks = {
+        onPacket: aConnection.send.bind(aConnection),
+        onClosed: function () {}
+      };
+      childTransport.ready();
+
+      aConnection.setForwarding(prefix, childTransport);
+
+      dumpn("establishing forwarding for process with prefix " + prefix);
+
+      actor = msg.json.actor;
+
+      deferred.resolve(actor);
+    });
+
+    aMm.sendAsyncMessage("DevTools:InitDebuggerServer", {
+      prefix: prefix
+    });
+
+    function onDisconnect() {
+      Services.obs.removeObserver(onMessageManagerDisconnect, "message-manager-disconnect");
+      events.off(aConnection, "closed", onDisconnect);
+      if (childTransport) {
+        // If we have a child transport, the actor has already
+        // been created. We need to stop using this message manager.
+        childTransport.close();
+        childTransport = null;
+        aConnection.cancelForwarding(prefix);
+
+        // ... and notify the child process to clean the tab actors.
+        try {
+          aMm.sendAsyncMessage("debug:content-process-destroy");
+        } catch(e) {}
+      }
+    }
+
+    let onMessageManagerDisconnect = DevToolsUtils.makeInfallible(function (subject, topic, data) {
+      if (subject == aMm) {
+        onDisconnect();
+        aConnection.send({ from: actor.actor, type: "tabDetached" });
+      }
+    }).bind(this);
+    Services.obs.addObserver(onMessageManagerDisconnect,
+                             "message-manager-disconnect", false);
+
+    events.on(aConnection, "closed", onDisconnect);
+
+    return deferred.promise;
+  },
+
   /**
    * Connect to a child process.
    *
