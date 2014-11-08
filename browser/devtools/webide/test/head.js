@@ -173,6 +173,25 @@ function removeTab(aTab, aWindow) {
   return deferred.promise;
 }
 
+function connectToLocalRuntime(aWindow) {
+  info("Loading local runtime.");
+
+  let panelNode = aWindow.document.querySelector("#runtime-panel");
+  let items = panelNode.querySelectorAll(".runtime-panel-item-other");
+  is(items.length, 2, "Found 2 custom runtime buttons");
+
+  let deferred = promise.defer();
+  aWindow.AppManager.on("app-manager-update", function onUpdate(e,w) {
+    if (w == "list-tabs-response") {
+      aWindow.AppManager.off("app-manager-update", onUpdate);
+      deferred.resolve();
+    }
+  });
+
+  items[1].click();
+  return deferred.promise;
+}
+
 function handleError(aError) {
   ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
   finish();
