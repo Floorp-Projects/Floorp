@@ -534,7 +534,7 @@ bool
 FunctionHasResolveHook(const JSAtomState &atomState, PropertyName *name);
 
 extern bool
-fun_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp);
+fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp);
 
 extern bool
 fun_toString(JSContext *cx, unsigned argc, Value *vp);

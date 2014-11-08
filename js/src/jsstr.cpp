@@ -399,7 +399,7 @@ str_enumerate(JSContext *cx, HandleObject obj)
 }
 
 bool
-js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObject objp)
+js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 {
     if (!JSID_IS_INT(id))
         return true;
@@ -417,7 +417,7 @@ js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObjec
         {
             return false;
         }
-        objp.set(obj);
+        *resolvedp = true;
     }
     return true;
 }
@@ -425,13 +425,13 @@ js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObjec
 const Class StringObject::class_ = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(StringObject::RESERVED_SLOTS) |
-    JSCLASS_NEW_RESOLVE | JSCLASS_HAS_CACHED_PROTO(JSProto_String),
+    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     str_enumerate,
-    (JSResolveOp)str_resolve,
+    str_resolve,
     JS_ConvertStub
 };
 
