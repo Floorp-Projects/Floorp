@@ -142,9 +142,6 @@ this.LightweightThemeManager = {
   },
 
   previewTheme: function LightweightThemeManager_previewTheme(aData) {
-    if (!aData)
-      return;
-
     let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
     cancel.data = false;
     Services.obs.notifyObservers(cancel, "lightweight-theme-preview-requested",
