@@ -20,7 +20,7 @@
 
 extern fsmdef_dcb_t *fsmdef_dcbs;
 
-#define FSMXFR_NULL_DIALSTRING '\0'
+#define FSMXFR_NULL_DIALSTRING ""
 static fsmxfr_xcb_t *fsmxfr_xcbs;
 
 typedef enum fsmxfr_states_t_ {
@@ -30,11 +30,10 @@ typedef enum fsmxfr_states_t_ {
     FSMXFR_S_MAX
 } fsmxfr_states_t;
 
-static const char *fsmxfr_state_names[] = {
+static const char *const fsmxfr_state_names[] = {
     "IDLE",
     "ACTIVE"
 };
-
 
 static sm_rcs_t fsmxfr_ev_idle_setup(sm_event_t *event);
 static sm_rcs_t fsmxfr_ev_idle_feature(sm_event_t *event);
