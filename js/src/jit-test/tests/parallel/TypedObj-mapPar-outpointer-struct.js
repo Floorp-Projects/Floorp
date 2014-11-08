@@ -11,8 +11,8 @@ var { ArrayType, StructType, uint32 } = TypedObject;
 function test() {
   var L = minItemsTestingThreshold;
   var Point = new StructType({x: uint32, y: uint32});
-  var Points = Point.array();
-  var points = new Points(L);
+  var Points = Point.array(L);
+  var points = new Points();
   for (var i = 0; i < L; i++)
     points[i].x = i;
 

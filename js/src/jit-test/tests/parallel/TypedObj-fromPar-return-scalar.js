@@ -10,7 +10,7 @@ var { uint8, uint32 } = TypedObject;
 function test() {
   var L = minItemsTestingThreshold;
   var Uints = uint32.array(L);
-  var Uint8s = uint8.array();
+  var Uint8s = uint8.array(L);
 
   var uint32s = new Uints();
 

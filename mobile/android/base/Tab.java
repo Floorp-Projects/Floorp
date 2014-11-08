@@ -22,6 +22,7 @@ import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.RemoteFavicon;
 import org.mozilla.gecko.gfx.Layer;
+import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -76,6 +77,9 @@ public class Tab {
     private volatile int mLoadProgress;
     private volatile int mRecordingCount;
     private String mMostRecentHomePanel;
+
+    private boolean mIsEditing;
+    private final TabEditingState mEditingState = new TabEditingState();
 
     public static final int STATE_DELAYED = 0;
     public static final int STATE_LOADING = 1;
@@ -844,5 +848,17 @@ public class Tab {
 
     public boolean isRecording() {
         return mRecordingCount > 0;
+    }
+
+    public boolean isEditing() {
+        return mIsEditing;
+    }
+
+    public void setIsEditing(final boolean isEditing) {
+        this.mIsEditing = isEditing;
+    }
+
+    public TabEditingState getEditingState() {
+        return mEditingState;
     }
 }
