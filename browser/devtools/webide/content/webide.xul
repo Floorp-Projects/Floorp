@@ -35,6 +35,7 @@
       <command id="cmd_newApp" oncommand="Cmds.newApp()" label="&projectMenu_newApp_label;"/>
       <command id="cmd_importPackagedApp" oncommand="Cmds.importPackagedApp()" label="&projectMenu_importPackagedApp_label;"/>
       <command id="cmd_importHostedApp" oncommand="Cmds.importHostedApp()" label="&projectMenu_importHostedApp_label;"/>
+      <command id="cmd_showDevicePrefs" label="&runtimeMenu_showDevicePrefs_label;" oncommand="Cmds.showDevicePrefs()"/>
       <command id="cmd_removeProject" oncommand="Cmds.removeProject()" label="&projectMenu_remove_label;"/>
       <command id="cmd_showProjectPanel" oncommand="Cmds.showProjectPanel()"/>
       <command id="cmd_showRuntimePanel" oncommand="Cmds.showRuntimePanel()"/>
@@ -78,6 +79,7 @@
         <menuitem command="cmd_takeScreenshot" accesskey="&runtimeMenu_takeScreenshot_accesskey;"/>
         <menuitem command="cmd_showPermissionsTable" accesskey="&runtimeMenu_showPermissionTable_accesskey;"/>
         <menuitem command="cmd_showRuntimeDetails" accesskey="&runtimeMenu_showDetails_accesskey;"/>
+        <menuitem command="cmd_showDevicePrefs" accesskey="&runtimeMenu_showDevicePrefs_accesskey;"/>
         <menuseparator/>
         <menuitem command="cmd_disconnectRuntime" accesskey="&runtimeMenu_disconnect_accesskey;"/>
       </menupopup>
@@ -165,6 +167,7 @@
         <vbox flex="1" id="runtime-actions">
           <toolbarbutton class="panel-item" id="runtime-details" command="cmd_showRuntimeDetails"/>
           <toolbarbutton class="panel-item" id="runtime-permissions" command="cmd_showPermissionsTable"/>
+          <toolbarbutton class="panel-item" id="runtime-preferences" command="cmd_showDevicePrefs"/>
           <toolbarbutton class="panel-item" id="runtime-screenshot"  command="cmd_takeScreenshot"/>
           <toolbarbutton class="panel-item" id="runtime-disconnect"  command="cmd_disconnectRuntime"/>
         </vbox>
@@ -182,6 +185,7 @@
       <iframe id="deck-panel-permissionstable" flex="1" src="permissionstable.xhtml"/>
       <iframe id="deck-panel-runtimedetails" flex="1" src="runtimedetails.xhtml"/>
       <iframe id="deck-panel-monitor" flex="1" lazysrc="monitor.xhtml"/>
+      <iframe id="deck-panel-devicepreferences" flex="1" src="devicepreferences.xhtml"/>
     </deck>
     <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
     <!-- toolbox iframe will be inserted here -->
