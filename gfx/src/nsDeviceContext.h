@@ -259,7 +259,7 @@ private:
     void ComputeFullAreaUsingScreen(nsRect *outRect);
     void FindScreen(nsIScreen **outScreen);
     void CalcPrintingSize();
-    void UpdateScaledAppUnits();
+    void UpdateAppUnitsForFullZoom();
 
     nscoord  mWidth;
     nscoord  mHeight;

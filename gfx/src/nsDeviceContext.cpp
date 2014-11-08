@@ -365,7 +365,7 @@ nsDeviceContext::SetDPI()
     NS_ASSERTION(dpi != -1.0, "no dpi set");
 
     mAppUnitsPerPhysicalInch = NS_lround(dpi * mAppUnitsPerDevPixelAtUnitFullZoom);
-    UpdateScaledAppUnits();
+    UpdateAppUnitsForFullZoom();
 }
 
 nsresult
@@ -740,12 +740,12 @@ nsDeviceContext::SetPixelScale(float aScale)
     }
     int32_t oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
     mPixelScale = aScale;
-    UpdateScaledAppUnits();
+    UpdateAppUnitsForFullZoom();
     return oldAppUnitsPerDevPixel != mAppUnitsPerDevPixel;
 }
 
 void
-nsDeviceContext::UpdateScaledAppUnits()
+nsDeviceContext::UpdateAppUnitsForFullZoom()
 {
     mAppUnitsPerDevPixel =
         std::max(1, NSToIntRound(float(mAppUnitsPerDevPixelAtUnitFullZoom) / mPixelScale));
