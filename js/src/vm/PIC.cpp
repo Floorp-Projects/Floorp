@@ -6,6 +6,7 @@
 
 #include "vm/PIC.h"
 #include "jscntxt.h"
+#include "jscompartment.h"
 #include "jsobj.h"
 #include "gc/Marking.h"
 
