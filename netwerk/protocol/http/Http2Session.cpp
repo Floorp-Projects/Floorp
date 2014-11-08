@@ -2583,6 +2583,7 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
     // equivalent to cancel.
     if (mDownstreamRstReason == REFUSED_STREAM_ERROR) {
       streamCleanupCode = NS_ERROR_NET_RESET;      // can retry this 100% safely
+      mInputFrameDataStream->Transaction()->ReuseConnectionOnRestartOK(true);
     } else if (mDownstreamRstReason == HTTP_1_1_REQUIRED) {
       streamCleanupCode = NS_ERROR_NET_RESET;
       mInputFrameDataStream->Transaction()->ReuseConnectionOnRestartOK(true);
@@ -2593,8 +2594,9 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
         NS_ERROR_NET_INTERRUPT;
     }
 
-    if (mDownstreamRstReason == COMPRESSION_ERROR)
+    if (mDownstreamRstReason == COMPRESSION_ERROR) {
       mShouldGoAway = true;
+    }
 
     // mInputFrameDataStream is reset by ChangeDownstreamState
     Http2Stream *stream = mInputFrameDataStream;

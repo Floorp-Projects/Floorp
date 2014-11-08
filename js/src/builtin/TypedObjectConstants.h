@@ -27,7 +27,7 @@
 #define JS_DESCR_SLOT_KIND               0  // Atomized string representation
 #define JS_DESCR_SLOT_STRING_REPR        1  // Atomized string representation
 #define JS_DESCR_SLOT_ALIGNMENT          2  // Alignment in bytes
-#define JS_DESCR_SLOT_SIZE               3  // Size in bytes, if sized, else 0
+#define JS_DESCR_SLOT_SIZE               3  // Size in bytes, else 0
 #define JS_DESCR_SLOT_OPAQUE             4  // Atomized string representation
 #define JS_DESCR_SLOT_TYPROTO            5  // Prototype for instances, if any
 
@@ -37,8 +37,8 @@
 // Slots on all array descriptors
 #define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    6
 
-// Slots on sized array descriptors
-#define JS_DESCR_SLOT_SIZED_ARRAY_LENGTH 7
+// Slots on array descriptors
+#define JS_DESCR_SLOT_ARRAY_LENGTH 7
 
 // Slots on struct type objects
 #define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 6
@@ -51,12 +51,10 @@
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer TypeRepresentation::Scalar etc, which allows you to
 // write a switch which will receive a warning if you omit a case.
-#define JS_TYPEREPR_UNSIZED_ARRAY_KIND  0
-#define JS_TYPEREPR_MAX_UNSIZED_KIND    0    // Unsized kinds go above here
 #define JS_TYPEREPR_SCALAR_KIND         1
 #define JS_TYPEREPR_REFERENCE_KIND      2
 #define JS_TYPEREPR_STRUCT_KIND         3
-#define JS_TYPEREPR_SIZED_ARRAY_KIND    4
+#define JS_TYPEREPR_ARRAY_KIND          4
 #define JS_TYPEREPR_SIMD_KIND           5
 
 // These constants are for use exclusively in JS code. In C++ code,
