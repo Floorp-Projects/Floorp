@@ -331,19 +331,22 @@ function init() {
         show("remote");
         wrapper.init(url, entryPoint);
       });
-    } else if (window.location.href.contains("action=migrateToDevEdition") &&
-               user == null) {
-      migrateToDevEdition(user, entryPoint);
     } else {
-      // No action specified, or migration request when we already have a user.
+      // No action specified.
       if (user) {
         show("stage", "manage");
         let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
         document.title = sb.GetStringFromName("manage.pageTitle");
       } else {
-        show("stage", "intro");
-        // load the remote frame in the background
-        wrapper.init(fxAccounts.getAccountsSignUpURI(), entryPoint);
+        // Attempt a migration if enabled or show the introductory page
+        // otherwise.
+        migrateToDevEdition(entryPoint).then(migrated => {
+          if (!migrated) {
+            show("stage", "intro");
+            // load the remote frame in the background
+            wrapper.init(fxAccounts.getAccountsSignUpURI(), entryPoint);
+          }
+        });
       }
     }
   });
@@ -376,7 +379,9 @@ function show(id, childId) {
 }
 
 // Migrate sync data from the default profile to the dev-edition profile.
-function migrateToDevEdition(user, entryPoint) {
+// Returns a promise of a true value if migration succeeded, or false if it
+// failed.
+function migrateToDevEdition(entryPoint) {
   let defaultProfilePath;
   try {
     defaultProfilePath = window.getDefaultProfilePath();
@@ -387,31 +392,34 @@ function migrateToDevEdition(user, entryPoint) {
       migrateSyncCreds = Services.prefs.getBoolPref("identity.fxaccounts.migrateToDevEdition");
     } catch (e) {}
   }
-  if (migrateSyncCreds) {
-    Cu.import("resource://gre/modules/osfile.jsm");
-    let fxAccountsStorage = OS.Path.join(defaultProfilePath, fxAccountsCommon.DEFAULT_STORAGE_FILENAME);
-    return OS.File.read(fxAccountsStorage, { encoding: "utf-8" }).then(text => {
-      let accountData = JSON.parse(text).accountData;
-      return fxAccounts.setSignedInUser(accountData);
-    }).then(() => {
-      return fxAccounts.promiseAccountsForceSigninURI().then(url => {
-        show("remote");
-        wrapper.init(url, entryPoint);
-      });
-    }).then(null, error => {
-      log("Failed to migrate FX Account: " + error);
-      show("stage", "intro");
-      // load the remote frame in the background
-      wrapper.init(fxAccounts.getAccountsSignUpURI(), entryPoint);
-    }).then(() => {
-      // Reset the pref after migration.
-      Services.prefs.setBoolPref("identity.fxaccounts.migrateToDevEdition", false);
+
+  if (!migrateSyncCreds) {
+    return Promise.resolve(false);
+  }
+
+  Cu.import("resource://gre/modules/osfile.jsm");
+  let fxAccountsStorage = OS.Path.join(defaultProfilePath, fxAccountsCommon.DEFAULT_STORAGE_FILENAME);
+  return OS.File.read(fxAccountsStorage, { encoding: "utf-8" }).then(text => {
+    let accountData = JSON.parse(text).accountData;
+    return fxAccounts.setSignedInUser(accountData);
+  }).then(() => {
+    return fxAccounts.promiseAccountsForceSigninURI().then(url => {
+      show("remote");
+      wrapper.init(url, entryPoint);
     });
-  } else {
+  }).then(null, error => {
+    log("Failed to migrate FX Account: " + error);
     show("stage", "intro");
     // load the remote frame in the background
     wrapper.init(fxAccounts.getAccountsSignUpURI(), entryPoint);
-  }
+  }).then(() => {
+    // Reset the pref after migration.
+    Services.prefs.setBoolPref("identity.fxaccounts.migrateToDevEdition", false);
+    return true;
+  }).then(null, err => {
+    Cu.reportError("Failed to reset the migrateToDevEdition pref: " + err);
+    return false;
+  });
 }
 
 // Helper function that returns the path of the default profile on disk. Will be
