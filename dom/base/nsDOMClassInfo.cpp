@@ -2151,7 +2151,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  // Note - Our only caller is nsGlobalWindow::DoNewResolve, which checks that
+  // Note - Our only caller is nsGlobalWindow::DoResolve, which checks that
   // JSID_IS_STRING(id) is true.
   nsAutoJSString name;
   if (!name.init(cx, JSID_TO_STRING(id))) {

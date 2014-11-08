@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=853283
   <!-- test code goes here -->
   <script type="application/javascript">
   <![CDATA[
-  /** Test nsNavigatorSH::NewResolve in conjunction with Xrays.**/
+  /** Test nsNavigatorSH::Resolve in conjunction with Xrays.**/
   SimpleTest.waitForExplicitFinish();
   const Cu = Components.utils;
 

@@ -1961,9 +1961,9 @@ Navigator::GetMozAudioChannelManager(ErrorResult& aRv)
 #endif
 
 bool
-Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                        JS::Handle<jsid> aId,
-                        JS::MutableHandle<JSPropertyDescriptor> aDesc)
+Navigator::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                     JS::Handle<jsid> aId,
+                     JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   if (!JSID_IS_STRING(aId)) {
     return true;
