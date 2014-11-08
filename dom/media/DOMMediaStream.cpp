@@ -345,11 +345,9 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
   switch (aType) {
   case MediaSegment::AUDIO:
     track = new AudioStreamTrack(this, aTrackID);
-    mTrackTypesAvailable |= HINT_CONTENTS_AUDIO;
     break;
   case MediaSegment::VIDEO:
     track = new VideoStreamTrack(this, aTrackID);
-    mTrackTypesAvailable |= HINT_CONTENTS_VIDEO;
     break;
   default:
     MOZ_CRASH("Unhandled track type");
@@ -369,7 +367,7 @@ DOMMediaStream::BindDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
       track = mTracks[i]->AsAudioStreamTrack();
       if (track) {
         track->BindTrackID(aTrackID);
-        MOZ_ASSERT(mTrackTypesAvailable & HINT_CONTENTS_AUDIO);
+        mTrackTypesAvailable |= HINT_CONTENTS_AUDIO;
         break;
       }
     }
@@ -380,7 +378,7 @@ DOMMediaStream::BindDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
       track = mTracks[i]->AsVideoStreamTrack();
       if (track) {
         track->BindTrackID(aTrackID);
-        MOZ_ASSERT(mTrackTypesAvailable & HINT_CONTENTS_VIDEO);
+        mTrackTypesAvailable |= HINT_CONTENTS_VIDEO;
         break;
       }
     }
