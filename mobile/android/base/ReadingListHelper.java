@@ -70,7 +70,7 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
             }
 
             case "Reader:ListStatusRequest": {
-                handleReadingListStatusRequest(message.getString("url"));
+                handleReadingListStatusRequest(callback, message.getString("url"));
                 break;
             }
         }
@@ -155,7 +155,7 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
      * Gecko (ReaderMode) requests the page ReadingList status, to display
      * the proper ReaderMode banner icon (readinglist-add / readinglist-remove).
      */
-    private void handleReadingListStatusRequest(final String url) {
+    private void handleReadingListStatusRequest(final EventCallback callback, final String url) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
@@ -168,11 +168,10 @@ public final class ReadingListHelper implements GeckoEventListener, NativeEventL
                     json.put("inReadingList", inReadingList);
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "JSON error - failed to return inReadingList status", e);
-                    return;
                 }
 
-                GeckoAppShell.sendEventToGecko(
-                    GeckoEvent.createBroadcastEvent("Reader:ListStatusReturn", json.toString()));
+                // Return the json object to fulfill the promise.
+                callback.sendSuccess(json.toString());
             }
         });
     }

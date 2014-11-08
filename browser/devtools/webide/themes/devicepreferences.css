@@ -1,0 +1,75 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html, body {
+  background: white;
+}
+
+.action {
+  display: inline;
+}
+
+.action[hidden] {
+  display: none;
+}
+
+#device-preferences {
+  font-family: sans-serif;
+  padding-left: 6px;
+  width: 100%;
+  table-layout: auto;
+  margin-top: 110px;
+}
+
+#custom-value-name {
+  width: 70%;
+}
+
+header {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid #EEE;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  padding: 10px 20px;
+}
+
+#device-preferences td {
+  background-color: #f1f1f1;
+  border-bottom: 1px solid #ccc;
+  border-right: 1px solid #fff;
+  width: 33.3%;
+}
+
+#device-preferences td.preference-name {
+  width: 50%;
+  min-width: 400px;
+  word-break: break-all;
+}
+
+#device-preferences button {
+  display: inline-block;
+  font-family: sans-serif;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+#device-preferences tr.hide, #device-preferences button.hide {
+  display: none;
+}
+
+#device-preferences .custom-input {
+  width: 300px;
+}
+
+#search {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+#search-bar {
+  width: 80%;
+}

@@ -595,6 +595,21 @@ DebuggerClient.prototype = {
   },
 
   /**
+   * Attach to a process in order to get the form of a ChildProcessActor.
+   *
+   * @param string aId
+   *        The ID for the process to attach (returned by `listProcesses`).
+   */
+  attachProcess: function (aId) {
+    let packet = {
+      to: 'root',
+      type: 'attachProcess',
+      id: aId
+    }
+    return this.request(packet);
+  },
+
+  /**
    * Release an object actor.
    *
    * @param string aActor
@@ -1291,6 +1306,15 @@ RootClient.prototype = {
    */
   listAddons: DebuggerClient.requester({ type: "listAddons" },
                                        { telemetry: "LISTADDONS" }),
+
+  /**
+   * List the running processes.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  listProcesses: DebuggerClient.requester({ type: "listProcesses" },
+                                       { telemetry: "LISTPROCESSES" }),
 
   /**
    * Description of protocol's actors and methods.

@@ -21,6 +21,7 @@ SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 EXTRA_JS_MODULES.devtools += [
+    'content-server.jsm',
     'dbg-server.jsm',
 ]
 
@@ -34,6 +35,7 @@ EXTRA_JS_MODULES.devtools.server += [
 EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/call-watcher.js',
     'actors/canvas.js',
+    'actors/child-process.js',
     'actors/childtab.js',
     'actors/common.js',
     'actors/csscoverage.js',

@@ -35,7 +35,6 @@ let AboutReader = function(doc, win) {
   Services.obs.addObserver(this, "Reader:FaviconReturn", false);
   Services.obs.addObserver(this, "Reader:Added", false);
   Services.obs.addObserver(this, "Reader:Removed", false);
-  Services.obs.addObserver(this, "Reader:ListStatusReturn", false);
   Services.obs.addObserver(this, "Gesture:DoubleTap", false);
 
   this._article = null;
@@ -205,23 +204,6 @@ AboutReader.prototype = {
         break;
       }
 
-      case "Reader:ListStatusReturn": {
-        let args = JSON.parse(aData);
-        if (args.url == this._article.url) {
-          if (this._isReadingListItem != args.inReadingList) {
-            let isInitialStateChange = (this._isReadingListItem == -1);
-            this._isReadingListItem = args.inReadingList;
-            this._updateToggleButton();
-
-            // Display the toolbar when all its initial component states are known
-            if (isInitialStateChange) {
-              this._setToolbarVisibility(true);
-            }
-          }
-        }
-        break;
-      }
-
       case "Gesture:DoubleTap": {
         let args = JSON.parse(aData);
         let scrollBy;
@@ -275,7 +257,6 @@ AboutReader.prototype = {
       case "unload":
         Services.obs.removeObserver(this, "Reader:Added");
         Services.obs.removeObserver(this, "Reader:Removed");
-        Services.obs.removeObserver(this, "Reader:ListStatusReturn");
         Services.obs.removeObserver(this, "Gesture:DoubleTap");
         break;
     }
@@ -303,9 +284,23 @@ AboutReader.prototype = {
   },
 
   _requestReadingListStatus: function Reader_requestReadingListStatus() {
-    Messaging.sendRequest({
+    Messaging.sendRequestForResult({
       type: "Reader:ListStatusRequest",
       url: this._article.url
+    }).then((data) => {
+      let args = JSON.parse(data);
+      if (args.url == this._article.url) {
+        if (this._isReadingListItem != args.inReadingList) {
+          let isInitialStateChange = (this._isReadingListItem == -1);
+          this._isReadingListItem = args.inReadingList;
+          this._updateToggleButton();
+
+          // Display the toolbar when all its initial component states are known
+          if (isInitialStateChange) {
+            this._setToolbarVisibility(true);
+          }
+        }
+      }
     });
   },
 

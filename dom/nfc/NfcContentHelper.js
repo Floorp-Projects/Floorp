@@ -59,7 +59,7 @@ const NFC_IPC_MSG_NAMES = [
   "NFC:CheckP2PRegistrationResponse",
   "NFC:DOMEvent",
   "NFC:NotifySendFileStatusResponse",
-  "NFC:ConfigResponse"
+  "NFC:PowerResponse"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -341,7 +341,7 @@ NfcContentHelper.prototype = {
       case "NFC:WriteNDEFResponse":
       case "NFC:MakeReadOnlyResponse":
       case "NFC:NotifySendFileStatusResponse":
-      case "NFC:ConfigResponse":
+      case "NFC:PowerResponse":
         if (result.errorMsg) {
           this.fireRequestError(atob(result.requestId), result.errorMsg);
         } else {

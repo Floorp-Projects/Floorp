@@ -34,23 +34,7 @@
           yield documentIsLoaded(permIframe.contentWindow.document);
           yield documentIsLoaded(infoIframe.contentWindow.document);
 
-          win.AppManager._rebuildRuntimeList();
-
-          let panelNode = win.document.querySelector("#runtime-panel");
-          let items = panelNode.querySelectorAll(".runtime-panel-item-other");
-          is(items.length, 2, "Found 2 other runtimes button");
-
-          let deferred = promise.defer();
-          win.AppManager.on("app-manager-update", function onUpdate(e,w) {
-            if (w == "list-tabs-response") {
-              win.AppManager.off("app-manager-update", onUpdate);
-              deferred.resolve();
-            }
-          });
-
-          items[1].click();
-
-          yield deferred.promise;
+          yield connectToLocalRuntime(win);
 
           yield nextTick();
 
