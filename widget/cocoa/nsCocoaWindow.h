@@ -77,6 +77,8 @@ typedef struct _nsCocoaWindowList {
 
   NSTrackingArea* mTrackingArea;
 
+  NSRect mDirtyRect;
+
   BOOL mBeingShown;
   BOOL mDrawTitle;
   BOOL mBrightTitlebarForeground;
@@ -115,6 +117,8 @@ typedef struct _nsCocoaWindowList {
 
 - (void)disableSetNeedsDisplay;
 - (void)enableSetNeedsDisplay;
+
+- (NSRect)getAndResetNativeDirtyRect;
 
 @end
 

@@ -396,10 +396,9 @@ NS_IMPL_ISUPPORTS(MediaDeviceErrorCallback, nsIDOMGetUserMediaErrorCallback)
 NS_IMETHODIMP
 MediaDeviceErrorCallback::OnError(nsISupports* aError)
 {
-  MediaStreamError *error = nullptr;
-  nsresult rv = CallQueryInterface(aError, &error);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsRefPtr<MediaStreamError> error = do_QueryObject(aError);
+  if (!error) {
+    return NS_ERROR_NO_INTERFACE;
   }
 
   nsString name;

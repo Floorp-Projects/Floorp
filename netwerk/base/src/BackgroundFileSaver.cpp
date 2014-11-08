@@ -618,10 +618,15 @@ BackgroundFileSaver::ProcessStateChange()
   }
 
   // Create the target file, or append to it if we already started writing it.
+  // The 0600 permissions are used while the file is being downloaded, and for
+  // interrupted downloads. Those may be located in the system temporary
+  // directory, as well as the target directory, and generally have a ".part"
+  // extension. Those part files should never be group or world-writable even
+  // if the umask allows it.
   nsCOMPtr<nsIOutputStream> outputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
                                    mActualTarget,
-                                   PR_WRONLY | creationIoFlags, 0644);
+                                   PR_WRONLY | creationIoFlags, 0600);
   NS_ENSURE_SUCCESS(rv, rv);
 
   outputStream = NS_BufferOutputStream(outputStream, BUFFERED_IO_SIZE);
