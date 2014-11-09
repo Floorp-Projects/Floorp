@@ -2465,16 +2465,18 @@ MayHaveChild(void* aObj, nsCycleCollectionParticipant* aCp)
   return cf.MayHaveChild();
 }
 
-template<class T>
+template<class T, size_t N>
 class SegmentedArrayElement
-  : public LinkedListElement<SegmentedArrayElement<T>>
-  , public AutoFallibleTArray<T, 60>
+  : public LinkedListElement<SegmentedArrayElement<T, N>>
+  , public AutoFallibleTArray<T, N>
 {
 };
 
-template<class T>
+template<class T, size_t N>
 class SegmentedArray
 {
+  typedef SegmentedArrayElement<T, N> Segment;
+
 public:
   ~SegmentedArray()
   {
@@ -2483,9 +2485,9 @@ public:
 
   void AppendElement(T& aElement)
   {
-    SegmentedArrayElement<T>* last = mSegments.getLast();
+    Segment* last = mSegments.getLast();
     if (!last || last->Length() == last->Capacity()) {
-      last = new SegmentedArrayElement<T>();
+      last = new Segment();
       mSegments.insertBack(last);
     }
     last->AppendElement(aElement);
@@ -2493,24 +2495,29 @@ public:
 
   void Clear()
   {
-    SegmentedArrayElement<T>* first;
+    Segment* first;
     while ((first = mSegments.popFirst())) {
       delete first;
     }
   }
 
-  SegmentedArrayElement<T>* GetFirstSegment()
+  Segment* GetFirstSegment()
   {
     return mSegments.getFirst();
   }
 
-  bool IsEmpty()
+  const Segment* GetFirstSegment() const
+  {
+    return mSegments.getFirst();
+  }
+
+  bool IsEmpty() const
   {
     return !GetFirstSegment();
   }
 
 private:
-  mozilla::LinkedList<SegmentedArrayElement<T>> mSegments;
+  mozilla::LinkedList<Segment> mSegments;
 };
 
 // JSPurpleBuffer keeps references to GCThings which might affect the
@@ -2553,8 +2560,8 @@ public:
   // pointers which may point into the nursery. The purple buffer never contains
   // pointers to the nursery because nursery gcthings can never be gray and only
   // gray things can be inserted into the purple buffer.
-  SegmentedArray<JS::Value> mValues;
-  SegmentedArray<JSObject*> mObjects;
+  SegmentedArray<JS::Value, 60> mValues;
+  SegmentedArray<JSObject*, 60> mObjects;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(JSPurpleBuffer)
@@ -2588,42 +2595,58 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(JSPurpleBuffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(JSPurpleBuffer, Release)
 
-struct SnowWhiteObject
-{
-  void* mPointer;
-  nsCycleCollectionParticipant* mParticipant;
-  nsCycleCollectingAutoRefCnt* mRefCnt;
-};
-
 class SnowWhiteKiller : public TraceCallbacks
 {
+  struct SnowWhiteObject
+  {
+    void* mPointer;
+    nsCycleCollectionParticipant* mParticipant;
+    nsCycleCollectingAutoRefCnt* mRefCnt;
+  };
+
+  // Segments are 4 KiB on 32-bit and 8 KiB on 64-bit.
+  static const size_t kIdealSegmentSize = sizeof(void*) * 1024;
+  static const size_t kSingleElemSegmentSize =
+    sizeof(SegmentedArrayElement<SnowWhiteObject, 1>);
+  static const size_t kSegmentCapacity =
+    (kIdealSegmentSize - kSingleElemSegmentSize) / sizeof(SnowWhiteObject) + 1;
+
+  static const size_t kActualSegmentSize =
+      sizeof(SegmentedArrayElement<SnowWhiteObject, kSegmentCapacity>);
+
+  typedef SegmentedArray<SnowWhiteObject, kSegmentCapacity> ObjectsArray;
+
 public:
   SnowWhiteKiller(nsCycleCollector* aCollector, uint32_t aMaxCount)
     : mCollector(aCollector)
+    , mObjects()
   {
     MOZ_ASSERT(mCollector, "Calling SnowWhiteKiller after nsCC went away");
-    while (true) {
-      if (mObjects.SetCapacity(aMaxCount)) {
-        break;
-      }
-      if (aMaxCount == 1) {
-        NS_RUNTIMEABORT("Not enough memory to even delete objects!");
-      }
-      aMaxCount /= 2;
-    }
+
+    // The segment capacity should be such that the actual segment size is as
+    // close as possible to the ideal segment size.
+    static_assert(
+      kIdealSegmentSize - kActualSegmentSize <= sizeof(SnowWhiteObject),
+      "ill-sized SnowWhiteKiller segments"
+    );
   }
 
   ~SnowWhiteKiller()
   {
-    for (uint32_t i = 0; i < mObjects.Length(); ++i) {
-      SnowWhiteObject& o = mObjects[i];
-      if (!o.mRefCnt->get() && !o.mRefCnt->IsInPurpleBuffer()) {
-        mCollector->RemoveObjectFromGraph(o.mPointer);
-        o.mRefCnt->stabilizeForDeletion();
-        o.mParticipant->Trace(o.mPointer, *this, nullptr);
-        o.mParticipant->DeleteCycleCollectable(o.mPointer);
+    auto segment = mObjects.GetFirstSegment();
+    while (segment) {
+      for (uint32_t i = 0; i < segment->Length(); i++) {
+        SnowWhiteObject& o = segment->ElementAt(i);
+        if (!o.mRefCnt->get() && !o.mRefCnt->IsInPurpleBuffer()) {
+          mCollector->RemoveObjectFromGraph(o.mPointer);
+          o.mRefCnt->stabilizeForDeletion();
+          o.mParticipant->Trace(o.mPointer, *this, nullptr);
+          o.mParticipant->DeleteCycleCollectable(o.mPointer);
+        }
       }
+      segment = segment->getNext();
     }
+    mObjects.Clear();
   }
 
   void
@@ -2635,15 +2658,14 @@ public:
       nsCycleCollectionParticipant* cp = aEntry->mParticipant;
       CanonicalizeParticipant(&o, &cp);
       SnowWhiteObject swo = { o, cp, aEntry->mRefCnt };
-      if (mObjects.AppendElement(swo)) {
-        aBuffer.Remove(aEntry);
-      }
+      mObjects.AppendElement(swo);
+      aBuffer.Remove(aEntry);
     }
   }
 
   bool HasSnowWhiteObjects() const
   {
-    return mObjects.Length() > 0;
+    return !mObjects.IsEmpty();
   }
 
   virtual void Trace(JS::Heap<JS::Value>* aValue, const char* aName,
@@ -2701,7 +2723,7 @@ public:
 
 private:
   nsCycleCollector* mCollector;
-  FallibleTArray<SnowWhiteObject> mObjects;
+  ObjectsArray mObjects;
 };
 
 class RemoveSkippableVisitor : public SnowWhiteKiller
