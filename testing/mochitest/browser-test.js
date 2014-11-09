@@ -630,7 +630,7 @@ Tester.prototype = {
       // Ignore if no head.js exists, but report all other errors.  Note this
       // will also ignore an existing head.js attempting to import a missing
       // module - see bug 755558 for why this strategy is preferred anyway.
-      if (ex.toString() != 'Error opening input stream (invalid filename?)') {
+      if (!/^Error opening input stream/.test(ex.toString())) {
        this.currentTest.addResult(new testResult(false, "head.js import threw an exception", ex, false));
       }
     }

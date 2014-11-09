@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1092477
+-->
+<window title="Mozilla Bug 1092477"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1092477"
+     target="_blank">Mozilla Bug 1092477</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+var Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
+var exn;
+var url = "resource://non-existent/script.js";
+try {
+    Services.scriptloader.loadSubScript(url);
+    ok(false, "This line should never be reached!");
+}
+catch (e) {
+    exn = String(e);
+}
+var msg = "loadSubscript should throw an exception for trying to load a non-existent script"
+is(exn, "Error opening input stream (invalid filename?): " + url, msg);
+  ]]></script>
+</window>
