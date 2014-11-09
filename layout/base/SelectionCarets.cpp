@@ -83,7 +83,7 @@ SelectionCarets::SelectionCarets(nsIPresShell* aPresShell)
   , mActiveTouchId(-1)
   , mCaretCenterToDownPointOffsetY(0)
   , mDragMode(NONE)
-  , mAPZenabled(false)
+  , mAsyncPanZoomEnabled(false)
   , mEndCaretVisible(false)
   , mStartCaretVisible(false)
   , mVisible(false)
@@ -118,6 +118,9 @@ SelectionCarets::Init()
   if (!docShell) {
     return;
   }
+
+  docShell->GetAsyncPanZoomEnabled(&mAsyncPanZoomEnabled);
+  mAsyncPanZoomEnabled = mAsyncPanZoomEnabled && gfxPrefs::AsyncPanZoomEnabled();
 
   docShell->AddWeakReflowObserver(this);
   docShell->AddWeakScrollObserver(this);
@@ -1014,9 +1017,6 @@ DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState a
 void
 SelectionCarets::AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
 {
-  // Receives the notifications from AsyncPanZoom, sets mAPZenabled as true here
-  // to bypass the notifications from ScrollPositionChanged callbacks
-  mAPZenabled = true;
   SetVisibility(false);
 
   SELECTIONCARETS_LOG("Dispatch scroll started with position x=%d, y=%d",
@@ -1037,7 +1037,7 @@ SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
 void
 SelectionCarets::ScrollPositionChanged()
 {
-  if (!mAPZenabled && mVisible) {
+  if (!mAsyncPanZoomEnabled && mVisible) {
     SetVisibility(false);
     //TODO: handling scrolling for selection bubble when APZ is off
 
@@ -1049,7 +1049,7 @@ SelectionCarets::ScrollPositionChanged()
 void
 SelectionCarets::LaunchLongTapDetector()
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (mAsyncPanZoomEnabled) {
     return;
   }
 
@@ -1071,7 +1071,7 @@ SelectionCarets::LaunchLongTapDetector()
 void
 SelectionCarets::CancelLongTapDetector()
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (mAsyncPanZoomEnabled) {
     return;
   }
 
