@@ -2855,8 +2855,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       usingDisplayport = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
           *aBuilder, mOuter, displayportBase, &displayPort);
     } else {
-      // For a root frame, just get the value of the existing of the display
-      // port, if any.
+      // For a root frame, just get the value of the existing display port, if
+      // any.
       usingDisplayport = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
     }
 
