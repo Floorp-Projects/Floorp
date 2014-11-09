@@ -1032,11 +1032,12 @@ UploadLastDir::FetchDirectoryAndDisplayPicker(nsIDocument* aDoc,
   nsCOMPtr<nsIContentPrefCallback2> prefCallback = 
     new UploadLastDir::ContentPrefCallback(aFilePicker, aFpCallback);
 
+#ifdef MOZ_B2G
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // FIXME (bug 949666): Run this code in the parent process.
     prefCallback->HandleCompletion(nsIContentPrefCallback2::COMPLETE_ERROR);
     return NS_OK;
   }
+#endif
 
   // Attempt to get the CPS, if it's not present we'll fallback to use the Desktop folder
   nsCOMPtr<nsIContentPrefService2> contentPrefService =
@@ -1062,10 +1063,11 @@ UploadLastDir::StoreLastUsedDirectory(nsIDocument* aDoc, nsIFile* aDir)
     return NS_OK;
   }
 
+#ifdef MOZ_B2G
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    // FIXME (bug 949666): Run this code in the parent process.
     return NS_OK;
   }
+#endif
 
   nsCOMPtr<nsIURI> docURI = aDoc->GetDocumentURI();
   NS_PRECONDITION(docURI, "docURI is null");

@@ -136,8 +136,13 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback)
 {
   mCallback = aCallback;
 
-  SendOpen(mSelectedType, mAddToRecentDocs, mDefault,
-           mDefaultExtension, mFilters, mFilterNames);
+  nsString displayDirectory;
+  if (mDisplayDirectory) {
+    mDisplayDirectory->GetPath(displayDirectory);
+  }
+
+  SendOpen(mSelectedType, mAddToRecentDocs, mDefault, mDefaultExtension,
+           mFilters, mFilterNames, displayDirectory);
 
   return NS_OK;
 }
