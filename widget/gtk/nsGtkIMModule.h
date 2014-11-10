@@ -27,35 +27,12 @@ protected:
     typedef mozilla::widget::InputContextAction InputContextAction;
 
 public:
-    nsrefcnt AddRef()
-    {
-        NS_PRECONDITION(int32_t(mRefCnt) >= 0, "mRefCnt is negative");
-        ++mRefCnt;
-        NS_LOG_ADDREF(this, mRefCnt, "nsGtkIMModule", sizeof(*this));
-        return mRefCnt;
-    }
-    nsrefcnt Release()
-    {
-        NS_PRECONDITION(mRefCnt != 0, "mRefCnt is alrady zero");
-        --mRefCnt;
-        NS_LOG_RELEASE(this, mRefCnt, "nsGtkIMModule");
-        if (mRefCnt == 0) {
-            mRefCnt = 1; /* stabilize */
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-
-protected:
-    nsAutoRefCnt mRefCnt;
-
-public:
     // aOwnerWindow is a pointer of the owner window.  When aOwnerWindow is
     // destroyed, the related IME contexts are released (i.e., IME cannot be
     // used with the instance after that).
     explicit nsGtkIMModule(nsWindow* aOwnerWindow);
-    ~nsGtkIMModule();
+
+    NS_INLINE_DECL_REFCOUNTING(nsGtkIMModule)
 
     // "Enabled" means the users can use all IMEs.
     // I.e., the focus is in the normal editors.
@@ -90,6 +67,8 @@ public:
     void OnUpdateComposition();
 
 protected:
+    ~nsGtkIMModule();
+
     // Owner of an instance of this class. This should be top level window.
     // The owner window must release the contexts when it's destroyed because
     // the IME contexts need the native window.  If OnDestroyWindow() is called
