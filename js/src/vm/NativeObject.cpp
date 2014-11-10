@@ -1192,6 +1192,12 @@ UpdateShapeTypeAndValue(typename ExecutionModeTraits<mode>::ExclusiveContextType
 }
 
 template <ExecutionMode mode>
+static bool
+NativeSet(typename ExecutionModeTraits<mode>::ContextType cx,
+          HandleNativeObject obj, HandleObject receiver,
+          HandleShape shape, bool strict, MutableHandleValue vp);
+
+template <ExecutionMode mode>
 static inline bool
 DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
                         HandleNativeObject obj, HandleId id,
@@ -1662,10 +1668,9 @@ js::NativeGet(JSContext *cx, HandleObject obj, HandleNativeObject pobj, HandleSh
 }
 
 template <ExecutionMode mode>
-bool
-js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
-              HandleNativeObject obj, Handle<JSObject*> receiver,
-              HandleShape shape, bool strict, MutableHandleValue vp)
+static bool
+NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg, HandleNativeObject obj,
+          HandleObject receiver, HandleShape shape, bool strict, MutableHandleValue vp)
 {
     MOZ_ASSERT(cxArg->isThreadLocal(obj));
     MOZ_ASSERT(obj->isNative());
@@ -1722,15 +1727,6 @@ js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
 
     return true;
 }
-
-template bool
-js::NativeSet<SequentialExecution>(JSContext *cx,
-                                   HandleNativeObject obj, HandleObject receiver,
-                                   HandleShape shape, bool strict, MutableHandleValue vp);
-template bool
-js::NativeSet<ParallelExecution>(ForkJoinContext *cx,
-                                 HandleNativeObject obj, HandleObject receiver,
-                                 HandleShape shape, bool strict, MutableHandleValue vp);
 
 /*
  * Given pc pointing after a property accessing bytecode, return true if the
@@ -1941,6 +1937,100 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
                                         JSMSG_UNDECLARED_VAR, bytes.ptr());
 }
 
+/*
+ * When a [[Set]] operation finds no existing property with the given id
+ * or finds a writable data property on the prototype chain, we end up here.
+ * Finish the [[Set]] by defining a new property on receiver.
+ *
+ * This should follow ES6 draft rev 28, 9.1.9 [[Set]] steps 5.c-f, but it
+ * is really old code and we're not there yet.
+ */
+template <ExecutionMode mode>
+static bool
+SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                      HandleObject receiver, HandleId id, HandleValue v, bool strict)
+{
+    // If receiver is inextensible, stop. (According to the specification, this
+    // is supposed to be enforced by [[DefineOwnProperty]], but we haven't
+    // implemented that yet.)
+    bool extensible;
+    if (mode == ParallelExecution) {
+        if (receiver->is<ProxyObject>())
+            return false;
+        extensible = receiver->nonProxyIsExtensible();
+    } else {
+        if (!JSObject::isExtensible(cxArg->asJSContext(), receiver, &extensible))
+            return false;
+    }
+    if (!extensible) {
+        // Error in strict mode code, warn with extra warnings option,
+        // otherwise do nothing.
+        if (strict)
+            return receiver->reportNotExtensible(cxArg);
+        if (mode == SequentialExecution &&
+            cxArg->asJSContext()->compartment()->options().extraWarnings(cxArg->asJSContext()))
+        {
+            return receiver->reportNotExtensible(cxArg, JSREPORT_STRICT | JSREPORT_WARNING);
+        }
+        return true;
+    }
+
+    // Invalidate SpiderMonkey-specific caches or bail.
+    const Class *clasp = receiver->getClass();
+    if (mode == ParallelExecution) {
+        if (receiver->isDelegate())
+            return false;
+
+        if (clasp->getProperty != JS_PropertyStub || !types::HasTypePropertyId(receiver, id, v))
+            return false;
+    } else {
+        // Purge the property cache of now-shadowed id in receiver's scope chain.
+        if (!PurgeScopeChain(cxArg->asJSContext(), receiver, id))
+            return false;
+    }
+
+    // Define the new data property.
+    if (!receiver->is<NativeObject>()) {
+        if (mode == ParallelExecution)
+            return false;
+        return JSObject::defineGeneric(cxArg->asJSContext(), receiver, id, v,
+                                       clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
+    }
+    Rooted<NativeObject*> nativeReceiver(cxArg, &receiver->as<NativeObject>());
+    return DefinePropertyOrElement<mode>(cxArg, nativeReceiver, id,
+                                         clasp->getProperty, clasp->setProperty,
+                                         JSPROP_ENUMERATE, v, true, strict);
+}
+
+/*
+ * Implement "the rest of" assignment to a property when no property receiver[id]
+ * was found anywhere on the prototype chain.
+ *
+ * FIXME: This should be updated to follow ES6 draft rev 28, section 9.1.9,
+ * steps 4.d.i and 5.
+ *
+ * Note that receiver is not necessarily native.
+ */
+template <ExecutionMode mode>
+static bool
+SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
+                       HandleObject receiver, HandleId id, baseops::QualifiedBool qualified,
+                       HandleValue v, bool strict)
+{
+    // We should never add properties to lexical blocks.
+    MOZ_ASSERT(!receiver->is<BlockObject>());
+
+    if (receiver->isUnqualifiedVarObj() && !qualified) {
+        if (mode == ParallelExecution)
+            return false;
+
+        if (!MaybeReportUndeclaredVarAssignment(cxArg->asJSContext(), JSID_TO_STRING(id)))
+            return false;
+    }
+
+    return SetPropertyByDefining<mode>(cxArg, receiver, id, v, strict);
+}
+
 template <ExecutionMode mode>
 bool
 baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg,
@@ -1972,60 +2062,44 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         if (!LookupNativeProperty(cx, obj, id, &pobj, &shape))
             return false;
     }
-    if (shape) {
-        if (!pobj->isNative()) {
-            if (pobj->is<ProxyObject>()) {
-                if (mode == ParallelExecution)
-                    return false;
 
-                JSContext *cx = cxArg->asJSContext();
-                Rooted<PropertyDescriptor> pd(cx);
-                if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
-                    return false;
+    if (!shape)
+        return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
 
-                if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
-                    return !pd.setter() ||
-                           CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
-                }
-
-                if (pd.isReadonly()) {
-                    if (strict)
-                        return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
-                    if (cx->compartment()->options().extraWarnings(cx))
-                        return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-                    return true;
-                }
-            }
-
-            shape = nullptr;
-        }
-    } else {
-        /* We should never add properties to lexical blocks. */
-        MOZ_ASSERT(!obj->is<BlockObject>());
-
-        if (obj->isUnqualifiedVarObj() && !qualified) {
+    if (!pobj->isNative()) {
+        if (pobj->is<ProxyObject>()) {
             if (mode == ParallelExecution)
                 return false;
 
-            if (!MaybeReportUndeclaredVarAssignment(cxArg->asJSContext(), JSID_TO_STRING(id)))
+            JSContext *cx = cxArg->asJSContext();
+            Rooted<PropertyDescriptor> pd(cx);
+            if (!Proxy::getPropertyDescriptor(cx, pobj, id, &pd))
                 return false;
+
+            if ((pd.attributes() & (JSPROP_SHARED | JSPROP_SHADOWABLE)) == JSPROP_SHARED) {
+                return !pd.setter() ||
+                       CallSetter(cx, receiver, id, pd.setter(), pd.attributes(), strict, vp);
+            }
+
+            if (pd.isReadonly()) {
+                if (strict)
+                    return JSObject::reportReadOnly(cx, id, JSREPORT_ERROR);
+                if (cx->compartment()->options().extraWarnings(cx))
+                    return JSObject::reportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
+                return true;
+            }
         }
+
+        return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
     }
 
-    /*
-     * Now either shape is null, meaning id was not found in obj or one of its
-     * prototypes; or shape is non-null, meaning id was found directly in pobj.
-     */
+    /* Now shape is non-null and obj[id] was found directly in pobj, which is native. */
     unsigned attrs = JSPROP_ENUMERATE;
-    const Class *clasp = obj->getClass();
-    PropertyOp getter = clasp->getProperty;
-    StrictPropertyOp setter = clasp->setProperty;
-
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
         if (pobj != obj)
             shape = nullptr;
-    } else if (shape) {
+    } else {
         /* ES5 8.12.4 [[Put]] step 2. */
         if (shape->isAccessorDescriptor()) {
             if (shape->hasDefaultSetter()) {
@@ -2057,11 +2131,11 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
             }
         }
 
-        attrs = shape->attributes();
-        if (pobj != obj) {
-            /*
-             * We found id in a prototype object: prepare to share or shadow.
-             */
+        if (pobj == obj) {
+            attrs = shape->attributes();
+        } else {
+            // We found id in a prototype object: prepare to share or shadow.
+
             if (!shape->shadowable()) {
                 if (shape->hasDefaultSetter() && !shape->hasGetterValue())
                     return true;
@@ -2072,28 +2146,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
                 return shape->set(cxArg->asJSContext(), obj, receiver, strict, vp);
             }
 
-            /*
-             * Preserve attrs except JSPROP_SHARED, getter, and setter when
-             * shadowing any property that has no slot (is shared). We must
-             * clear the shared attribute for the shadowing shape so that the
-             * property in obj that it defines has a slot to retain the value
-             * being set, in case the setter simply cannot operate on instances
-             * of obj's class by storing the value in some class-specific
-             * location.
-             */
-            if (!shape->hasSlot()) {
-                attrs &= ~JSPROP_SHARED;
-                getter = shape->getter();
-                setter = shape->setter();
-            } else {
-                /* Restore attrs to the ECMA default for new properties. */
-                attrs = JSPROP_ENUMERATE;
-            }
-
-            /*
-             * Forget we found the proto-property now that we've copied any
-             * needed member values.
-             */
+            // Forget we found the proto-property since we're shadowing it.
             shape = nullptr;
         }
     }
@@ -2153,48 +2206,11 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         return ArraySetLength<mode>(cxArg, arr, id, attrs, vp, strict);
     }
 
-    if (!shape) {
-        bool extensible;
-        if (mode == ParallelExecution) {
-            if (obj->is<ProxyObject>())
-                return false;
-            extensible = obj->nonProxyIsExtensible();
-        } else {
-            if (!JSObject::isExtensible(cxArg->asJSContext(), obj, &extensible))
-                return false;
-        }
+    if (shape)
+        return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
 
-        if (!extensible) {
-            /* Error in strict mode code, warn with extra warnings option, otherwise do nothing. */
-            if (strict)
-                return obj->reportNotExtensible(cxArg);
-            if (mode == SequentialExecution &&
-                cxArg->asJSContext()->compartment()->options().extraWarnings(cxArg->asJSContext()))
-            {
-                return obj->reportNotExtensible(cxArg, JSREPORT_STRICT | JSREPORT_WARNING);
-            }
-            return true;
-        }
-
-        if (mode == ParallelExecution) {
-            if (obj->isDelegate())
-                return false;
-
-            if (getter != JS_PropertyStub || !types::HasTypePropertyId(obj, id, vp))
-                return false;
-        } else {
-            JSContext *cx = cxArg->asJSContext();
-
-            /* Purge the property cache of now-shadowed id in obj's scope chain. */
-            if (!PurgeScopeChain(cx, obj, id))
-                return false;
-        }
-
-        return DefinePropertyOrElement<mode>(cxArg, obj, id, getter, setter,
-                                             attrs, vp, true, strict);
-    }
-
-    return NativeSet<mode>(cxArg, obj, receiver, shape, strict, vp);
+    MOZ_ASSERT(attrs == JSPROP_ENUMERATE);
+    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
 }
 
 template bool

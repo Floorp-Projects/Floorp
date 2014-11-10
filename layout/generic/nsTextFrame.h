@@ -13,6 +13,7 @@
 #include "gfxSkipChars.h"
 #include "gfxTextRun.h"
 #include "nsDisplayList.h"
+#include "JustificationUtils.h"
 
 class nsTextPaintStyle;
 class PropertyProvider;
@@ -234,10 +235,6 @@ public:
     // true if we trimmed some space or changed metrics in some other way.
     // In this case, we should call RecomputeOverflow on this frame.
     bool mChanged;
-    // true if the last character is not justifiable so should be subtracted
-    // from the count of justifiable characters in the frame, since the last
-    // character in a line is not justifiable.
-    bool mLastCharIsJustifiable;
     // an amount to *subtract* from the frame's width (zero if !mChanged)
     nscoord      mDeltaWidth;
   };
@@ -528,6 +525,9 @@ public:
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE;
 
+  void AssignJustificationGaps(const mozilla::JustificationAssignment& aAssign);
+  mozilla::JustificationAssignment GetJustificationAssignment() const;
+
 protected:
   virtual ~nsTextFrame();
 
@@ -710,6 +710,8 @@ protected:
   virtual bool HasAnyNoncollapsedCharacters() MOZ_OVERRIDE;
 
   void ClearMetrics(nsHTMLReflowMetrics& aMetrics);
+
+  NS_DECLARE_FRAME_PROPERTY(JustificationAssignment, nullptr)
 };
 
 #endif

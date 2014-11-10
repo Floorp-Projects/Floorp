@@ -274,9 +274,9 @@ public:
 
   already_AddRefed<ServiceWorkerContainer> ServiceWorker();
 
-  bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                    JS::Handle<jsid> aId,
-                    JS::MutableHandle<JSPropertyDescriptor> aDesc);
+  bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                 JS::Handle<jsid> aId,
+                 JS::MutableHandle<JSPropertyDescriptor> aDesc);
   void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
                            ErrorResult& aRv);
   void GetLanguages(nsTArray<nsString>& aLanguages);
@@ -358,7 +358,7 @@ private:
   nsRefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
-  // Hashtable for saving cached objects newresolve created, so we don't create
+  // Hashtable for saving cached objects DoResolve created, so we don't create
   // the object twice if asked for it twice, whether due to use of "delete" or
   // due to Xrays.  We could probably use a nsJSThingHashtable here, but then
   // we'd need to figure out exactly how to trace that, and that seems to be
