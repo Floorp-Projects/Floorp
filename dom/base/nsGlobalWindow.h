@@ -483,9 +483,9 @@ public:
   static bool IsShowModalDialogEnabled(JSContext* /* unused */ = nullptr,
                                        JSObject* /* unused */ = nullptr);
 
-  bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                    JS::Handle<jsid> aId,
-                    JS::MutableHandle<JSPropertyDescriptor> aDesc);
+  bool DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                 JS::Handle<jsid> aId,
+                 JS::MutableHandle<JSPropertyDescriptor> aDesc);
 
   void GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
                            mozilla::ErrorResult& aRv);

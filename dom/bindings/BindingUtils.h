@@ -2803,7 +2803,7 @@ FinalizeGlobal(JSFreeOp* aFop, JSObject* aObj);
 
 bool
 ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
-              JS::Handle<jsid> aId, JS::MutableHandle<JSObject*> aObjp);
+              JS::Handle<jsid> aId, bool* aResolvedp);
 
 bool
 EnumerateGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj);

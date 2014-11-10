@@ -42,6 +42,7 @@ if (typeof assertThrowsValue === 'undefined') {
 if (typeof assertDeepEq === 'undefined') {
     var assertDeepEq = (function(){
         var call = Function.prototype.call,
+            Array_isArray = Array.isArray,
             Map_ = Map,
             Error_ = Error,
             Map_has = call.bind(Map.prototype.has),
@@ -118,6 +119,13 @@ if (typeof assertDeepEq === 'undefined') {
                     nb = Object_getOwnPropertyNames(b);
                 if (na.length !== nb.length)
                     failPropList(na, nb, msg);
+
+                // Ignore differences in whether Array elements are stored densely.
+                if (Array_isArray(a)) {
+                    na.sort();
+                    nb.sort();
+                }
+
                 for (var i = 0; i < na.length; i++) {
                     var name = na[i];
                     if (name !== nb[i])

@@ -20,18 +20,13 @@ const IID IID_IDataObjCollection =
  */
 
 nsDataObjCollection::nsDataObjCollection()
-  : m_cRef(0), mIsAsyncMode(FALSE), mIsInOperation(FALSE)
+  : m_cRef(0)
 {
-  m_enumFE = new CEnumFormatEtc();
-  m_enumFE->AddRef();
 }
 
 nsDataObjCollection::~nsDataObjCollection()
 {
-  mDataFlavors.Clear();
   mDataObjects.Clear();
-
-  m_enumFE->Release();
 }
 
 
@@ -48,6 +43,12 @@ STDMETHODIMP nsDataObjCollection::QueryInterface(REFIID riid, void** ppv)
 
   if ( IID_IDataObjCollection  == riid ) {
     *ppv = static_cast<nsIDataObjCollection*>(this); 
+    AddRef();
+    return NOERROR;
+  }
+  //offer to operate asynchronously (required by nsDragService)
+  if (IID_IAsyncOperation == riid) {
+    *ppv = static_cast<IAsyncOperation*>(this);
     AddRef();
     return NOERROR;
   }
@@ -68,18 +69,6 @@ STDMETHODIMP_(ULONG) nsDataObjCollection::Release()
   delete this;
 
   return 0;
-}
-
-BOOL nsDataObjCollection::FormatsMatch(const FORMATETC& source,
-                                       const FORMATETC& target) const
-{
-  if ((source.cfFormat == target.cfFormat) &&
-      (source.dwAspect & target.dwAspect)  &&
-      (source.tymed    & target.tymed)) {
-    return TRUE;
-  } else {
-    return FALSE;
-  }
 }
 
 // IDataObject methods
@@ -133,12 +122,6 @@ STDMETHODIMP nsDataObjCollection::QueryGetData(LPFORMATETC pFE)
   return DV_E_FORMATETC;
 }
 
-STDMETHODIMP nsDataObjCollection::GetCanonicalFormatEtc(LPFORMATETC pFEIn,
-                                                        LPFORMATETC pFEOut)
-{
-  return E_NOTIMPL;
-}
-
 STDMETHODIMP nsDataObjCollection::SetData(LPFORMATETC pFE,
                                           LPSTGMEDIUM pSTM,
                                           BOOL fRelease)
@@ -148,50 +131,6 @@ STDMETHODIMP nsDataObjCollection::SetData(LPFORMATETC pFE,
   if (mDataObjects.Length() == 0)
     return E_FAIL;
   return mDataObjects.ElementAt(0)->SetData(pFE, pSTM, fRelease);
-}
-
-STDMETHODIMP nsDataObjCollection::EnumFormatEtc(DWORD dwDir,
-                                                LPENUMFORMATETC *ppEnum)
-{
-  if (dwDir == DATADIR_GET) {
-    // Clone addref's the new enumerator.
-    m_enumFE->Clone(ppEnum);
-    if (!(*ppEnum))
-      return E_FAIL;
-    (*ppEnum)->Reset();
-    return S_OK;
-  }
-
-  return E_NOTIMPL;
-}
-
-STDMETHODIMP nsDataObjCollection::DAdvise(LPFORMATETC pFE,
-                                          DWORD dwFlags,
-                                          LPADVISESINK pIAdviseSink,
-                                          DWORD* pdwConn)
-{
-  return OLE_E_ADVISENOTSUPPORTED;
-}
-
-STDMETHODIMP nsDataObjCollection::DUnadvise(DWORD dwConn)
-{
-  return OLE_E_ADVISENOTSUPPORTED;
-}
-
-STDMETHODIMP nsDataObjCollection::EnumDAdvise(LPENUMSTATDATA *ppEnum)
-{
-  return OLE_E_ADVISENOTSUPPORTED;
-}
-
-// GetData and SetData helper functions
-HRESULT nsDataObjCollection::AddSetFormat(FORMATETC& aFE)
-{
-  return S_OK;
-}
-
-HRESULT nsDataObjCollection::AddGetFormat(FORMATETC& aFE)
-{
-  return S_OK;
 }
 
 // Registers a DataFlavor/FE pair
@@ -391,7 +330,7 @@ HRESULT nsDataObjCollection::GetFileDescriptors(LPFORMATETC pFE,
   FORMATETC fe = *pFE;
   HGLOBAL hGlobalMemory;
   HRESULT hr;
-  uint32_t buffersize = sizeof(FILEGROUPDESCRIPTOR);
+  uint32_t buffersize = sizeof(UINT);
   uint32_t alloclen = sizeof(FILEDESCRIPTOR);
 
   hGlobalMemory = GlobalAlloc(GHND, buffersize);
@@ -420,7 +359,7 @@ HRESULT nsDataObjCollection::GetFileDescriptors(LPFORMATETC pFE,
     if (!realbuffer)
       return E_FAIL;
     FILEDESCRIPTOR* copyloc = (FILEDESCRIPTOR*)((char*)realbuffer + buffersize);
-    memcpy(copyloc, buffer, sizeof(FILEDESCRIPTOR));
+    memcpy(copyloc, buffer, alloclen);
     realbuffer->cItems++;
     GlobalUnlock(hGlobalMemory);
     GlobalUnlock(workingmedium.hGlobal);
@@ -448,7 +387,7 @@ HRESULT nsDataObjCollection::GetFileContents(LPFORMATETC pFE, LPSTGMEDIUM pSTM)
       continue;
     if (num == numwanted)
       return dataObj->GetData(pFE, pSTM);
-    numwanted++;
+    num++;
   }
   return DV_E_LINDEX;
 }
