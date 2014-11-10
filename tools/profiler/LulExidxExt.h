@@ -179,20 +179,15 @@ class MemoryRange {
 // from .ARM.exidx and .ARM.extab sections.
 class ExceptionTableInfo {
  public:
-  ExceptionTableInfo(const char* exidx, size_t exidx_size,
-                     const char* extab, size_t extab_size,
-                     uint32_t text_last_svma,
+  ExceptionTableInfo(const char* exidx_avma, size_t exidx_size,
+                     const char* extab_avma, size_t extab_size,
+                     uint32_t text_last_avma,
                      lul::ARMExToModule* handler,
-                     const char* mapping_addr,
-                     uint32_t loading_addr,
-                     uintptr_t text_bias,
                      void (*log)(const char*))
-      : mr_exidx_(lul::MemoryRange(exidx, exidx_size)),
-        mr_extab_(lul::MemoryRange(extab, extab_size)),
-        text_last_svma_(text_last_svma),
-        handler_(handler), mapping_addr_(mapping_addr),
-        loading_addr_(loading_addr),
-        text_bias_(text_bias),
+      : mr_exidx_avma_(lul::MemoryRange(exidx_avma, exidx_size)),
+        mr_extab_avma_(lul::MemoryRange(extab_avma, extab_size)),
+        text_last_avma_(text_last_avma),
+        handler_(handler),
         log_(log) { }
 
   ~ExceptionTableInfo() { }
@@ -203,13 +198,12 @@ class ExceptionTableInfo {
   void Start();
 
  private:
-  lul::MemoryRange mr_exidx_;
-  lul::MemoryRange mr_extab_;
-  uint32_t text_last_svma_;
+  // Memory ranges for the exidx and extab sections in the executing image
+  lul::MemoryRange mr_exidx_avma_;
+  lul::MemoryRange mr_extab_avma_;
+  // Address of the last byte of the text segment in the executing image
+  uint32_t text_last_avma_;
   lul::ARMExToModule* handler_;
-  const char* mapping_addr_;
-  uint32_t loading_addr_;
-  uintptr_t text_bias_;
   // debugging message sink
   void (*log_)(const char*);
   enum ExExtractResult {

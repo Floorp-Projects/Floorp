@@ -325,9 +325,9 @@ ExceptionTableInfo::ExtabEntryExtract(const struct exidx_entry* entry,
        (_lval) = *(reinterpret_cast<const uint32_t*>(_addr)); } while (0)
 
 # define GET_EXIDX_U32(_lval, _addr) \
-            GET_EX_U32(_lval, _addr, mr_exidx_)
+            GET_EX_U32(_lval, _addr, mr_exidx_avma_)
 # define GET_EXTAB_U32(_lval, _addr) \
-            GET_EX_U32(_lval, _addr, mr_extab_)
+            GET_EX_U32(_lval, _addr, mr_extab_avma_)
 
   uint32_t data;
   GET_EXIDX_U32(data, &entry->data);
@@ -575,10 +575,10 @@ int ExceptionTableInfo::ExtabEntryDecode(const uint8_t* buf, size_t buf_size)
 void ExceptionTableInfo::Start()
 {
   const struct exidx_entry* start
-    = reinterpret_cast<const struct exidx_entry*>(mr_exidx_.data());
+    = reinterpret_cast<const struct exidx_entry*>(mr_exidx_avma_.data());
   const struct exidx_entry* end
-    = reinterpret_cast<const struct exidx_entry*>(mr_exidx_.data()
-                                                  + mr_exidx_.length());
+    = reinterpret_cast<const struct exidx_entry*>(mr_exidx_avma_.data()
+                                                  + mr_exidx_avma_.length());
 
   // Iterate over each of the EXIDX entries (pairs of 32-bit words).
   // These occupy the entire .exidx section.
@@ -586,17 +586,11 @@ void ExceptionTableInfo::Start()
 
     // Figure out the code address range that this table entry is
     // associated with.
-    //
-    // I don't claim to understand the biasing here.  It appears that
-    //   (Prel31ToAddr(&entry->addr))
-    //    - mapping_addr_ + loading_addr_) & 0x7fffffff
-    // produces a SVMA.  Adding the text_bias_ gives plausible AVMAs.
-    uint32_t svma = (reinterpret_cast<char*>(Prel31ToAddr(&entry->addr))
-                     - mapping_addr_ + loading_addr_) & 0x7fffffff;
-    uint32_t next_svma;
+    uint32_t avma = reinterpret_cast<uint32_t>(Prel31ToAddr(&entry->addr));
+    uint32_t next_avma;
     if (entry < end - 1) {
-      next_svma = (reinterpret_cast<char*>(Prel31ToAddr(&((entry + 1)->addr)))
-                   - mapping_addr_ + loading_addr_) & 0x7fffffff;
+      next_avma
+        = reinterpret_cast<uint32_t>(Prel31ToAddr(&((entry + 1)->addr)));
     } else {
       // This is the last EXIDX entry in the sequence, so we don't
       // have an address for the start of the next function, to limit
@@ -604,28 +598,30 @@ void ExceptionTableInfo::Start()
       // text section associated with this .exidx section, that we
       // have been given.  So as to avoid junking up the CFI unwind
       // tables with absurdly large address ranges in the case where
-      // text_last_svma_ is wrong, only use the value if it is nonzero
-      // and within one page of |svma|.  Otherwise assume a length of 1.
+      // text_last_avma_ is wrong, only use the value if it is nonzero
+      // and within one page of |avma|.  Otherwise assume a length of 1.
       //
       // In some cases, gcc has been observed to finish the exidx
       // section with an entry of length 1 marked CANT_UNWIND,
       // presumably exactly for the purpose of giving a definite
       // length for the last real entry, without having to look at
       // text segment boundaries.
-      bool plausible = false;
-      next_svma = svma + 1;
-      if (text_last_svma_ != 0) {
-        uint32_t maybe_next_svma = text_last_svma_ + 1;
-        if (maybe_next_svma > svma && maybe_next_svma - svma <= 4096) {
-          next_svma = maybe_next_svma;
-          plausible = true;
-        }
+
+      bool plausible;
+      uint32_t maybe_next_avma = text_last_avma_ + 1;
+      if (maybe_next_avma > avma && maybe_next_avma - avma <= 4096) {
+        next_avma = maybe_next_avma;
+        plausible = true;
+      } else {
+        next_avma = avma + 1;
+        plausible = false;
       }
-      if (!plausible) {
+
+      if (!plausible && avma != text_last_avma_ + 1) {
         char buf[100];
         snprintf(buf, sizeof(buf),
                  "ExceptionTableInfo: implausible EXIDX last entry size %d"
-                 "; using 1 instead.", (int32_t)(text_last_svma_ - svma));
+                 "; using 1 instead.", (int32_t)(text_last_avma_ - avma));
         buf[sizeof(buf)-1] = 0;
         log_(buf);
       }
@@ -672,7 +668,7 @@ void ExceptionTableInfo::Start()
     // create CFI entries that Breakpad can use.  This can also fail.
     // First, add a new stack frame entry, into which ExtabEntryDecode
     // will write the CFI entries.
-    handler_->AddStackFrame(svma + text_bias_, next_svma - svma);
+    handler_->AddStackFrame(avma, next_avma - avma);
     int ret = ExtabEntryDecode(buf, buf_used);
     if (ret < 0) {
       handler_->DeleteStackFrame();
