@@ -32,6 +32,7 @@
 #include "gfxGDIFont.h"
 
 #include "mozilla/layers/CompositorParent.h"   // for CompositorParent::IsInCompositorThread
+#include "mozilla/IntegerPrintfMacros.h"
 #include "DeviceManagerD3D9.h"
 #include "mozilla/layers/ReadbackManagerD3D11.h"
 
@@ -1522,6 +1523,9 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
   checked = true;
 
   if (GetModuleHandleW(L"dlumd32.dll") && GetModuleHandleW(L"igd10umd32.dll")) {
+#if defined(MOZ_CRASHREPORTER)
+   CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DisplayLink: detected\n"));
+#endif
     nsString displayLinkModuleVersionString;
     gfxWindowsPlatform::GetDLLVersion(L"dlumd32.dll", displayLinkModuleVersionString);
     uint64_t displayLinkModuleVersion;
@@ -1531,6 +1535,11 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
 #endif
       return false;
     }
+#if defined(MOZ_CRASHREPORTER)
+   nsPrintfCString displayLinkInfo("Version: " PRIx64 "\n", displayLinkModuleVersion);
+   CrashReporter::AppendAppNotesToCrashReport(displayLinkInfo);
+#endif
+
     if (displayLinkModuleVersion <= GFX_DRIVER_VERSION(8,6,1,36484)) {
 #if defined(MOZ_CRASHREPORTER)
       CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DisplayLink: too old version\n"));
