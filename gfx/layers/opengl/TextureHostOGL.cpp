@@ -209,8 +209,9 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
                                      nsIntRegion* aDestRegion,
                                      gfx::IntPoint* aSrcOffset)
 {
-  MOZ_ASSERT(mGL);
-  if (!mGL) {
+  GLContext *gl = mCompositor->gl();
+  MOZ_ASSERT(gl);
+  if (!gl) {
     NS_WARNING("trying to update TextureImageTextureSourceOGL without a GLContext");
     return false;
   }
@@ -222,7 +223,7 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
     if (mFlags & TextureFlags::DISALLOW_BIGIMAGE) {
       GLint maxTextureSize;
-      mGL->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+      gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxTextureSize);
       if (size.width > maxTextureSize || size.height > maxTextureSize) {
         NS_WARNING("Texture exceeds maximum texture size, refusing upload");
         return false;
@@ -230,7 +231,7 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       // Explicitly use CreateBasicTextureImage instead of CreateTextureImage,
       // because CreateTextureImage might still choose to create a tiled
       // texture image.
-      mTexImage = CreateBasicTextureImage(mGL, size,
+      mTexImage = CreateBasicTextureImage(gl, size,
                                           gfx::ContentForFormat(aSurface->GetFormat()),
                                           LOCAL_GL_CLAMP_TO_EDGE,
                                           FlagsToGLFlags(mFlags),
@@ -240,7 +241,7 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       // require the size of the destination surface to be different from
       // the size of aSurface.
       // See bug 893300 (tracks the implementation of ContentHost for new textures).
-      mTexImage = CreateTextureImage(mGL,
+      mTexImage = CreateTextureImage(gl,
                                      size,
                                      gfx::ContentForFormat(aSurface->GetFormat()),
                                      LOCAL_GL_CLAMP_TO_EDGE,
@@ -275,7 +276,7 @@ TextureImageTextureSourceOGL::EnsureBuffer(const nsIntSize& aSize,
   if (!mTexImage ||
       mTexImage->GetSize() != aSize.ToIntSize() ||
       mTexImage->GetContentType() != aContentType) {
-    mTexImage = CreateTextureImage(mGL,
+    mTexImage = CreateTextureImage(mCompositor->gl(),
                                    aSize.ToIntSize(),
                                    aContentType,
                                    LOCAL_GL_CLAMP_TO_EDGE,
@@ -294,7 +295,7 @@ TextureImageTextureSourceOGL::CopyTo(const nsIntRect& aSourceRect,
     aDest->AsSourceOGL()->AsTextureImageTextureSource();
   MOZ_ASSERT(dest, "Incompatible destination type!");
 
-  mGL->BlitTextureImageHelper()->BlitTextureImage(mTexImage, aSourceRect,
+  mCompositor->BlitTextureImageHelper()->BlitTextureImage(mTexImage, aSourceRect,
                                                   dest->mTexImage, aDestRect);
   dest->mTexImage->MarkValid();
 }
@@ -304,9 +305,9 @@ TextureImageTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
 
-  if (!glCompositor || (mGL != glCompositor->gl())) {
+  if (!glCompositor || (mCompositor != glCompositor)) {
     DeallocateDeviceData();
-    mGL = glCompositor ? glCompositor->gl() : nullptr;
+    mCompositor = glCompositor;
   }
 }
 
@@ -344,7 +345,7 @@ TextureImageTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilt
   MOZ_ASSERT(mTexImage,
     "Trying to bind a TextureSource that does not have an underlying GL texture.");
   mTexImage->BindTexture(aTextureUnit);
-  SetFilter(mGL, aFilter);
+  SetFilter(mCompositor->gl(), aFilter);
 }
 
 ////////////////////////////////////////////////////////////////////////
