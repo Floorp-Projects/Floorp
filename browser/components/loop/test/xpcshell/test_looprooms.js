@@ -260,11 +260,12 @@ add_task(function* test_getRoom() {
   Assert.deepEqual(room, kRooms.get(roomToken));
 });
 
+// Disabled on Aurora/35 because .rejects() isn't available (bug 984172)
 // Test if fetching a room with incorrect token or return values yields an error.
-add_task(function* test_errorStates() {
-  yield Assert.rejects(LoopRooms.promise("get", "error401"), /Not Found/, "Fetching a non-existent room should fail");
-  yield Assert.rejects(LoopRooms.promise("get", "errorMalformed"), /SyntaxError/, "Wrong message format should reject");
-});
+//add_task(function* test_errorStates() {
+//  yield Assert.rejects(LoopRooms.promise("get", "error401"), /Not Found/, "Fetching a non-existent room should fail");
+//  yield Assert.rejects(LoopRooms.promise("get", "errorMalformed"), /SyntaxError/, "Wrong message format should reject");
+//});
 
 // Test if creating a new room works as expected.
 add_task(function* test_createRoom() {
