@@ -3622,9 +3622,9 @@ nsObjectLoadingContent::TeardownProtoChain()
 }
 
 bool
-nsObjectLoadingContent::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
-                                     JS::Handle<jsid> aId,
-                                     JS::MutableHandle<JSPropertyDescriptor> aDesc)
+nsObjectLoadingContent::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                                  JS::Handle<jsid> aId,
+                                  JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   // We don't resolve anything; we just try to make sure we're instantiated.
   // This purposefully does not fire for chrome/xray resolves, see bug 967694
@@ -3642,7 +3642,7 @@ nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
                                             nsTArray<nsString>& /* unused */,
                                             ErrorResult& aRv)
 {
-  // Just like DoNewResolve, just make sure we're instantiated.  That will do
+  // Just like DoResolve, just make sure we're instantiated.  That will do
   // the work our Enumerate hook needs to do.  This purposefully does not fire
   // for xray resolves, see bug 967694
   nsRefPtr<nsNPAPIPluginInstance> pi;

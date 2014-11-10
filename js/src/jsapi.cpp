@@ -2181,8 +2181,9 @@ JS_EnumerateStub(JSContext *cx, HandleObject obj)
 }
 
 JS_PUBLIC_API(bool)
-JS_ResolveStub(JSContext *cx, HandleObject obj, HandleId id)
+JS_ResolveStub(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 {
+    MOZ_ASSERT(*resolvedp == false);
     return true;
 }
 

@@ -32,6 +32,9 @@ private:
                                const nsAFlatCString &aURI, 
                                bool aIRI, 
                                nsAString &_retval);
+
+  // Void until we get the pref "network.IDN.blacklist_chars" successfully.
+  nsXPIDLString mUnsafeChars;
 };
 
 #endif // nsTextToSubURI_h__

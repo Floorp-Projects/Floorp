@@ -16,6 +16,8 @@ class nsTreeBodyFrame;
 namespace mozilla {
 namespace a11y {
 
+class XULTreeGridCellAccessible;
+
 /*
  * A class the represents the XUL Tree widget.
  */
@@ -174,7 +176,7 @@ public:
    * Return cell accessible for the given column. If XUL tree accessible is not
    * accessible table then return null.
    */
-  virtual Accessible* GetCellAccessible(nsITreeColumn* aColumn) const
+  virtual XULTreeGridCellAccessible* GetCellAccessible(nsITreeColumn* aColumn) const
     { return nullptr; }
 
   /**
