@@ -328,8 +328,8 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
         return false;
     }
 
-    GtkIMContext* im = GetContext();
-    if (MOZ_UNLIKELY(!im)) {
+    GtkIMContext* currentContext = GetCurrentContext();
+    if (MOZ_UNLIKELY(!currentContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return false;
@@ -338,7 +338,8 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
     mKeyDownEventWasSent = aKeyDownEventWasSent;
     mFilterKeyEvent = true;
     mProcessingKeyEvent = aEvent;
-    gboolean isFiltered = gtk_im_context_filter_keypress(im, aEvent);
+    gboolean isFiltered =
+        gtk_im_context_filter_keypress(currentContext, aEvent);
     mProcessingKeyEvent = nullptr;
 
     // We filter the key event if the event was not committed (because
@@ -362,7 +363,8 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
                 // IM.  For compromising this issue, we should dispatch
                 // compositionend event, however, we don't need to reset IM
                 // actually.
-                DispatchCompositionEventsForCommit(im, EmptyString());
+                DispatchCompositionEventsForCommit(currentContext,
+                                                   EmptyString());
                 filterThisEvent = false;
             }
         } else {
@@ -400,14 +402,14 @@ nsGtkIMModule::ResetIME()
         ("GtkIMModule(%p): ResetIME, mCompositionState=%s, mIsIMFocused=%s",
          this, GetCompositionStateName(), mIsIMFocused ? "YES" : "NO"));
 
-    GtkIMContext *im = GetContext();
-    if (MOZ_UNLIKELY(!im)) {
+    GtkIMContext* currentContext = GetCurrentContext();
+    if (MOZ_UNLIKELY(!currentContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return;
     }
 
-    gtk_im_context_reset(im);
+    gtk_im_context_reset(currentContext);
 }
 
 nsresult
@@ -453,7 +455,7 @@ nsGtkIMModule::OnUpdateComposition()
         return;
     }
 
-    SetCursorPosition(GetContext(), mCompositionTargetOffset);
+    SetCursorPosition(GetCurrentContext(), mCompositionTargetOffset);
 }
 
 void
@@ -507,8 +509,8 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
 #if (MOZ_WIDGET_GTK == 3)
         static bool sInputPurposeSupported = !gtk_check_version(3, 6, 0);
         if (sInputPurposeSupported && mInputContext.mIMEState.MaybeEditable()) {
-            GtkIMContext* context = GetContext();
-            if (context) {
+            GtkIMContext* currentContext = GetCurrentContext();
+            if (currentContext) {
                 GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
                 const nsString& inputType = mInputContext.mHTMLInputType;
                 // Password case has difficult issue.  Desktop IMEs disable
@@ -541,7 +543,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
                     purpose = GTK_INPUT_PURPOSE_NUMBER;
                 }
 
-                g_object_set(context, "input-purpose", purpose, nullptr);
+                g_object_set(currentContext, "input-purpose", purpose, nullptr);
             }
         }
 #endif // #if (MOZ_WIDGET_GTK == 3)
@@ -572,7 +574,7 @@ nsGtkIMModule::IsVirtualKeyboardOpened()
 }
 
 GtkIMContext*
-nsGtkIMModule::GetContext()
+nsGtkIMModule::GetCurrentContext() const
 {
     if (IsEnabled()) {
         return mContext;
@@ -595,7 +597,7 @@ nsGtkIMModule::IsValidContext(GtkIMContext* aContext) const
 }
 
 bool
-nsGtkIMModule::IsEnabled()
+nsGtkIMModule::IsEnabled() const
 {
     return mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
            mInputContext.mIMEState.mEnabled == IMEState::PLUGIN ||
@@ -616,8 +618,8 @@ nsGtkIMModule::Focus()
         return;
     }
 
-    GtkIMContext *im = GetContext();
-    if (!im) {
+    GtkIMContext* currentContext = GetCurrentContext();
+    if (!currentContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return;
@@ -629,7 +631,7 @@ nsGtkIMModule::Focus()
 
     sLastFocusedModule = this;
 
-    gtk_im_context_focus_in(im);
+    gtk_im_context_focus_in(currentContext);
     mIsIMFocused = true;
 
     if (!IsEnabled()) {
@@ -650,14 +652,14 @@ nsGtkIMModule::Blur()
         return;
     }
 
-    GtkIMContext *im = GetContext();
-    if (!im) {
+    GtkIMContext* currentContext = GetCurrentContext();
+    if (!currentContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return;
     }
 
-    gtk_im_context_focus_out(im);
+    gtk_im_context_focus_out(currentContext);
     mIsIMFocused = false;
 }
 
@@ -696,14 +698,14 @@ void
 nsGtkIMModule::OnStartCompositionNative(GtkIMContext *aContext)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): OnStartCompositionNative, aContext=%p",
-         this, aContext));
+        ("GtkIMModule(%p): OnStartCompositionNative, aContext=%p, "
+         "current context=%p",
+         this, aContext, GetCurrentContext()));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
-    if (GetContext() != aContext) {
+    if (GetCurrentContext() != aContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, given context doesn't match, GetContext()=%p",
-             GetContext()));
+            ("    FAILED, given context doesn't match"));
         return;
     }
 
@@ -730,11 +732,10 @@ nsGtkIMModule::OnEndCompositionNative(GtkIMContext *aContext)
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     // Note that if this is called after focus move, the context may different
-    // from the result of GetContext().
+    // from any our owning context.
     if (!IsValidContext(aContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, given context doesn't match, GetContext()=%p",
-             GetContext()));
+            ("    FAILED, given context doesn't match with any context"));
         return;
     }
 
@@ -764,11 +765,10 @@ nsGtkIMModule::OnChangeCompositionNative(GtkIMContext *aContext)
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     // Note that if this is called after focus move, the context may different
-    // from the result of GetContext().
+    // from any our owning context.
     if (!IsValidContext(aContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, given context doesn't match, GetContext()=%p",
-             GetContext()));
+            ("    FAILED, given context doesn't match with any context"));
         return;
     }
 
@@ -795,14 +795,14 @@ gboolean
 nsGtkIMModule::OnRetrieveSurroundingNative(GtkIMContext *aContext)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): OnRetrieveSurroundingNative, aContext=%p, current context=%p",
-         this, aContext, GetContext()));
+        ("GtkIMModule(%p): OnRetrieveSurroundingNative, aContext=%p, "
+         "current context=%p",
+         this, aContext, GetCurrentContext()));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
-    if (GetContext() != aContext) {
+    if (GetCurrentContext() != aContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, given context doesn't match, GetContext()=%p",
-             GetContext()));
+            ("    FAILED, given context doesn't match"));
         return FALSE;
     }
 
@@ -836,14 +836,14 @@ nsGtkIMModule::OnDeleteSurroundingNative(GtkIMContext  *aContext,
                                          gint           aNChars)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): OnDeleteSurroundingNative, aContext=%p, current context=%p",
-         this, aContext, GetContext()));
+        ("GtkIMModule(%p): OnDeleteSurroundingNative, aContext=%p, "
+         "current context=%p",
+         this, aContext, GetCurrentContext()));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
-    if (GetContext() != aContext) {
+    if (GetCurrentContext() != aContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, given context doesn't match, GetContext()=%p",
-             GetContext()));
+            ("    FAILED, given context doesn't match"));
         return FALSE;
     }
 
@@ -874,14 +874,14 @@ nsGtkIMModule::OnCommitCompositionNative(GtkIMContext *aContext,
     const gchar *commitString = aUTF8Char ? aUTF8Char : &emptyStr;
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): OnCommitCompositionNative, aContext=%p, current context=%p, commitString=\"%s\"",
-         this, aContext, GetContext(), commitString));
+        ("GtkIMModule(%p): OnCommitCompositionNative, aContext=%p, "
+         "current context=%p, commitString=\"%s\"",
+         this, aContext, GetCurrentContext(), commitString));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
-    if (GetContext() != aContext) {
+    if (GetCurrentContext() != aContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, given context doesn't match, GetContext()=%p",
-             GetContext()));
+            ("    FAILED, given context doesn't match"));
         return;
     }
 
