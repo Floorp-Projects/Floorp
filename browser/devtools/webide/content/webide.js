@@ -285,7 +285,14 @@ let UI = {
       this.cancelBusyTimeout();
       this.unbusy();
     }, (e) => {
-      let message = operationDescription + (e ? (": " + e) : "");
+      let message;
+      if (e.error && e.message) {
+        // Some errors come from fronts that are not based on protocol.js.
+        // Errors are not translated to strings.
+        message = operationDescription + " (" + e.error + "): " + e.message;
+      } else {
+        message = operationDescription + (e ? (": " + e) : "");
+      }
       this.cancelBusyTimeout();
       let operationCanceled = e && e.canceled;
       if (!operationCanceled) {
@@ -817,7 +824,8 @@ let UI = {
         playCmd.setAttribute("disabled", "true");
         stopCmd.setAttribute("disabled", "true");
       } else {
-        if (AppManager.selectedProject.errorsCount == 0) {
+        if (AppManager.selectedProject.errorsCount == 0 &&
+            AppManager.runtimeCanHandleApps()) {
           playCmd.removeAttribute("disabled");
         } else {
           playCmd.setAttribute("disabled", "true");
