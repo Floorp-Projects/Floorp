@@ -29,8 +29,7 @@ protocol PFilePicker
 
 parent:
     Open(int16_t selectedType, bool addToRecentDocs, nsString defaultFile,
-         nsString defaultExtension, nsString[] filters, nsString[] filterNames,
-         nsString displayDirectory);
+         nsString defaultExtension, nsString[] filters, nsString[] filterNames);
 
 child:
     __delete__(MaybeInputFiles files, int16_t result);
