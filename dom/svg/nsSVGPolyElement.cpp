@@ -105,7 +105,7 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
     if (i == 1) {
       aMarks->ElementAt(0).angle = angle;
     } else {
-      aMarks->ElementAt(aMarks->Length() - 2).angle =
+      aMarks->ElementAt(aMarks->Length() - 1).angle =
         SVGContentUtils::AngleBisect(prevAngle, angle);
     }
 
