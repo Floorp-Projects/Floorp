@@ -60,6 +60,8 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   int32_t mAudioChannels;
   int32_t mAudioSampleRate;
   int64_t mDurationUs;
+  int64_t mVideoLastFrameTime;
+
   VideoFrame mVideoFrame;
   AudioFrame mAudioFrame;
   MP3FrameParser mMP3FrameParser;
