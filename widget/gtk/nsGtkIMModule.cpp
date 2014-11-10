@@ -68,6 +68,7 @@ nsGtkIMModule::nsGtkIMModule(nsWindow* aOwnerWindow)
     , mContext(nullptr)
     , mSimpleContext(nullptr)
     , mDummyContext(nullptr)
+    , mComposingContext(nullptr)
     , mCompositionStart(UINT32_MAX)
     , mProcessingKeyEvent(nullptr)
     , mCompositionTargetOffset(UINT32_MAX)
@@ -218,6 +219,11 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
         mDummyContext = nullptr;
     }
 
+    if (NS_WARN_IF(mComposingContext)) {
+        g_object_unref(mComposingContext);
+        mComposingContext = nullptr;
+    }
+
     mOwnerWindow = nullptr;
     mLastFocusedWindow = nullptr;
     mInputContext.mIMEState.mEnabled = IMEState::DISABLED;
@@ -328,8 +334,8 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
         return false;
     }
 
-    GtkIMContext* currentContext = GetCurrentContext();
-    if (MOZ_UNLIKELY(!currentContext)) {
+    GtkIMContext* activeContext = GetActiveContext();
+    if (MOZ_UNLIKELY(!activeContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return false;
@@ -339,7 +345,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
     mFilterKeyEvent = true;
     mProcessingKeyEvent = aEvent;
     gboolean isFiltered =
-        gtk_im_context_filter_keypress(currentContext, aEvent);
+        gtk_im_context_filter_keypress(activeContext, aEvent);
     mProcessingKeyEvent = nullptr;
 
     // We filter the key event if the event was not committed (because
@@ -363,7 +369,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
                 // IM.  For compromising this issue, we should dispatch
                 // compositionend event, however, we don't need to reset IM
                 // actually.
-                DispatchCompositionEventsForCommit(currentContext,
+                DispatchCompositionEventsForCommit(activeContext,
                                                    EmptyString());
                 filterThisEvent = false;
             }
@@ -402,14 +408,14 @@ nsGtkIMModule::ResetIME()
         ("GtkIMModule(%p): ResetIME, mCompositionState=%s, mIsIMFocused=%s",
          this, GetCompositionStateName(), mIsIMFocused ? "YES" : "NO"));
 
-    GtkIMContext* currentContext = GetCurrentContext();
-    if (MOZ_UNLIKELY(!currentContext)) {
+    GtkIMContext* activeContext = GetActiveContext();
+    if (MOZ_UNLIKELY(!activeContext)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, there are no context"));
         return;
     }
 
-    gtk_im_context_reset(currentContext);
+    gtk_im_context_reset(activeContext);
 }
 
 nsresult
@@ -455,7 +461,7 @@ nsGtkIMModule::OnUpdateComposition()
         return;
     }
 
-    SetCursorPosition(GetCurrentContext(), mCompositionTargetOffset);
+    SetCursorPosition(GetActiveContext(), mCompositionTargetOffset);
 }
 
 void
@@ -709,6 +715,8 @@ nsGtkIMModule::OnStartCompositionNative(GtkIMContext *aContext)
         return;
     }
 
+    mComposingContext = static_cast<GtkIMContext*>(g_object_ref(aContext));
+
     if (!DispatchCompositionStart(aContext)) {
         return;
     }
@@ -738,6 +746,9 @@ nsGtkIMModule::OnEndCompositionNative(GtkIMContext *aContext)
             ("    FAILED, given context doesn't match with any context"));
         return;
     }
+
+    g_object_unref(mComposingContext);
+    mComposingContext = nullptr;
 
     if (!IsComposing()) {
         // If we already handled the commit event, we should do nothing here.

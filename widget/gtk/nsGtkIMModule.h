@@ -106,18 +106,23 @@ protected:
     nsWindow* mLastFocusedWindow;
 
     // Actual context. This is used for handling the user's input.
-    GtkIMContext       *mContext;
+    GtkIMContext* mContext;
 
     // mSimpleContext is used for the password field and
     // the |ime-mode: disabled;| editors if sUseSimpleContext is true.
     // These editors disable IME.  But dead keys should work.  Fortunately,
     // the simple IM context of GTK2 support only them.
-    GtkIMContext       *mSimpleContext;
+    GtkIMContext* mSimpleContext;
 
     // mDummyContext is a dummy context and will be used in Focus()
     // when the state of mEnabled means disabled.  This context's IME state is
     // always "closed", so it closes IME forcedly.
-    GtkIMContext       *mDummyContext;
+    GtkIMContext* mDummyContext;
+
+    // mComposingContext is not nullptr while one of mContext, mSimpleContext
+    // and mDummyContext has composition.
+    // XXX: We don't assume that two or more context have composition same time.
+    GtkIMContext* mComposingContext;
 
     // IME enabled state and other things defined in InputContext.
     // Use following helper methods if you don't need the detail of the status.
@@ -255,6 +260,14 @@ protected:
      *     context by the signals.
      */
     GtkIMContext* GetCurrentContext() const;
+
+    /**
+     * GetActiveContext() returns a composing context or current context.
+     */
+    GtkIMContext* GetActiveContext() const
+    {
+        return mComposingContext ? mComposingContext : GetCurrentContext();
+    }
 
     // If the owner window and IM context have been destroyed, returns TRUE.
     bool IsDestroyed() { return !mOwnerWindow; }
