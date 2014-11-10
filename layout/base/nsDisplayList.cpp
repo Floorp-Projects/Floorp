@@ -724,10 +724,9 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   // Only the root scrollable frame for a given presShell should pick up
   // the presShell's resolution. All the other frames are 1.0.
   if (aScrollFrame == presShell->GetRootScrollFrame()) {
-    metrics.mPresShellResolution = ParentLayerToLayerScale(presShell->GetXResolution(),
-                                                  presShell->GetYResolution());
+    metrics.mPresShellResolution = presShell->GetXResolution();
   } else {
-    metrics.mPresShellResolution = ParentLayerToLayerScale(1.0f);
+    metrics.mPresShellResolution = 1.0f;
   }
   // The cumulative resolution is the resolution at which the scroll frame's
   // content is actually rendered. It includes the pres shell resolutions of
@@ -747,9 +746,9 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
 
   // Initially, AsyncPanZoomController should render the content to the screen
   // at the painted resolution.
-  const LayerToScreenScale layerToScreenScale(1.0f);
+  const LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.SetZoom(metrics.mCumulativeResolution * metrics.mDevPixelsPerCSSPixel
-                  * layerToScreenScale);
+                  * layerToParentLayerScale);
 
   if (presShell) {
     nsIDocument* document = nullptr;
@@ -763,11 +762,6 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
     metrics.SetMayHaveTouchCaret(presShell->MayHaveTouchCaret());
   }
 
-  LayoutDeviceToParentLayerScale layoutToParentLayerScale =
-    // The ScreenToParentLayerScale should be mTransformScale which is not calculated yet,
-    // but we don't yet handle CSS transforms, so we assume it's 1 here.
-    metrics.mCumulativeResolution * LayerToScreenScale(1.0) * ScreenToParentLayerScale(1.0);
-
   // Calculate the composition bounds as the size of the scroll frame and
   // its origin relative to the reference frame.
   // If aScrollFrame is null, we are in a document without a root scroll frame,
@@ -776,7 +770,8 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   nsRect compositionBounds(frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aReferenceFrame),
                            frameForCompositionBoundsCalculation->GetSize());
   ParentLayerRect frameBounds = LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
-                                 * layoutToParentLayerScale;
+                              * metrics.mCumulativeResolution
+                              * layerToParentLayerScale;
   metrics.mCompositionBounds = frameBounds;
 
   // For the root scroll frame of the root content document, the above calculation
