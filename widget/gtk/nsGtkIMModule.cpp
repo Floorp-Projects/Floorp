@@ -361,7 +361,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
                 // IM.  For compromising this issue, we should dispatch
                 // compositionend event, however, we don't need to reset IM
                 // actually.
-                CommitCompositionBy(EmptyString());
+                DispatchCompositionEventsForCommit(EmptyString());
                 filterThisEvent = false;
             }
         } else {
@@ -921,20 +921,7 @@ nsGtkIMModule::OnCommitCompositionNative(GtkIMContext *aContext,
     }
 
     NS_ConvertUTF8toUTF16 str(commitString);
-    CommitCompositionBy(str); // Be aware, widget can be gone
-}
-
-bool
-nsGtkIMModule::CommitCompositionBy(const nsAString& aString)
-{
-    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): CommitCompositionBy, aString=\"%s\", "
-         "mDispatchedCompositionString=\"%s\"",
-         this, NS_ConvertUTF16toUTF8(aString).get(),
-         NS_ConvertUTF16toUTF8(mDispatchedCompositionString).get()));
-
-     // Be aware, widget can be gone
-     return DispatchCompositionEventsForCommit(aString);
+    DispatchCompositionEventsForCommit(str); // Be aware, widget can be gone
 }
 
 void
