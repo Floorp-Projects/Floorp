@@ -30,3 +30,4 @@ pref("devtools.webide.widget.inNavbarByDefault", true);
 pref("devtools.webide.widget.enabled", false);
 pref("devtools.webide.widget.inNavbarByDefault", false);
 #endif
+pref("devtools.webide.zoom", "1");
