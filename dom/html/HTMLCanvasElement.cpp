@@ -726,7 +726,7 @@ HTMLCanvasElement::GetContext(const nsAString& aContextId,
 }
 
 static bool
-IsContextIdWebGL(const nsAString& str)
+IsContextIdWebGL1(const nsAString& str)
 {
   return str.EqualsLiteral("webgl") ||
          str.EqualsLiteral("experimental-webgl");
@@ -762,21 +762,17 @@ HTMLCanvasElement::GetContext(JSContext* aCx,
     mCurrentContextId.Assign(aContextId);
   }
 
-  if (!mCurrentContextId.Equals(aContextId)) {
-    if (IsContextIdWebGL(aContextId) &&
-        IsContextIdWebGL(mCurrentContextId))
-    {
-      // Warn when we get a request for a webgl context with an id that differs
-      // from the id it was created with.
-      nsCString creationId = NS_LossyConvertUTF16toASCII(mCurrentContextId);
-      nsCString requestId = NS_LossyConvertUTF16toASCII(aContextId);
-      JS_ReportWarning(aCx, "WebGL: Retrieving a WebGL context from a canvas "
-                            "via a request id ('%s') different from the id used "
-                            "to create the context ('%s') is not allowed.",
-                            requestId.get(),
-                            creationId.get());
-    }
-    
+  if (mCurrentContextId.Equals(aContextId)) {
+      // Valid.
+  } else if (IsContextIdWebGL1(aContextId) &&
+             IsContextIdWebGL1(mCurrentContextId))
+  {
+      /* Valid.
+       * WebGL 1.0, $2.1 "Context Creation":
+       *   If the user agent supports both the webgl and experimental-webgl
+       *   canvas context types, they shall be treated as aliases.
+       */
+  } else {
     //XXX eventually allow for more than one active context on a given canvas
     return nullptr;
   }
