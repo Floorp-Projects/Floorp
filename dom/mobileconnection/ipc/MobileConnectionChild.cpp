@@ -193,11 +193,10 @@ MobileConnectionChild::GetPreferredNetworkType(nsIMobileConnectionCallback* aCal
 }
 
 NS_IMETHODIMP
-MobileConnectionChild::SetRoamingPreference(const nsAString& aMode,
+MobileConnectionChild::SetRoamingPreference(int32_t aMode,
                                             nsIMobileConnectionCallback* aCallback)
 {
-  return SendRequest(SetRoamingPreferenceRequest(nsAutoString(aMode)),
-                     aCallback)
+  return SendRequest(SetRoamingPreferenceRequest(aMode), aCallback)
     ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -548,12 +547,6 @@ MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccess& aReply
 }
 
 bool
-MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessString& aReply)
-{
-  return NS_SUCCEEDED(mRequestCallback->NotifySuccessWithString(aReply.result()));
-}
-
-bool
 MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessBoolean& aReply)
 {
   return NS_SUCCEEDED(mRequestCallback->NotifySuccessWithBoolean(aReply.result()));
@@ -667,6 +660,12 @@ MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessPreferre
 }
 
 bool
+MobileConnectionRequestChild::DoReply(const MobileConnectionReplySuccessRoamingPreference& aReply)
+{
+  return NS_SUCCEEDED(mRequestCallback->NotifyGetRoamingPreferenceSuccess(aReply.mode()));
+}
+
+bool
 MobileConnectionRequestChild::DoReply(const MobileConnectionReplyError& aReply)
 {
   return NS_SUCCEEDED(mRequestCallback->NotifyError(aReply.message()));
@@ -706,8 +705,6 @@ MobileConnectionRequestChild::Recv__delete__(const MobileConnectionReply& aReply
   switch (aReply.type()) {
     case MobileConnectionReply::TMobileConnectionReplySuccess:
       return DoReply(aReply.get_MobileConnectionReplySuccess());
-    case MobileConnectionReply::TMobileConnectionReplySuccessString:
-      return DoReply(aReply.get_MobileConnectionReplySuccessString());
     case MobileConnectionReply::TMobileConnectionReplySuccessBoolean:
       return DoReply(aReply.get_MobileConnectionReplySuccessBoolean());
     case MobileConnectionReply::TMobileConnectionReplySuccessNetworks:
@@ -722,6 +719,8 @@ MobileConnectionRequestChild::Recv__delete__(const MobileConnectionReply& aReply
       return DoReply(aReply.get_MobileConnectionReplySuccessClirStatus());
     case MobileConnectionReply::TMobileConnectionReplySuccessPreferredNetworkType:
       return DoReply(aReply.get_MobileConnectionReplySuccessPreferredNetworkType());
+    case MobileConnectionReply::TMobileConnectionReplySuccessRoamingPreference:
+      return DoReply(aReply.get_MobileConnectionReplySuccessRoamingPreference());
     case MobileConnectionReply::TMobileConnectionReplyError:
       return DoReply(aReply.get_MobileConnectionReplyError());
     case MobileConnectionReply::TMobileConnectionReplyErrorMmi:
