@@ -4,7 +4,6 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "nsAppStartup.h"
-#include "nsTerminator.h"
 #include "nsUserInfo.h"
 #include "nsToolkitCompsCID.h"
 #include "nsFindService.h"
@@ -44,12 +43,23 @@
 #include "NativeFileWatcherNotSupported.h"
 #endif // (XP_WIN)
 
+#if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
+#define MOZ_HAS_TERMINATOR
+#endif
+
+#if defined(MOZ_HAS_TERMINATOR)
+#include "nsTerminator.h"
+#endif
+
 using namespace mozilla;
 
 /////////////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
+
+#if defined(MOZ_HAS_TERMINATOR)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTerminator)
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindService)
@@ -105,7 +115,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NativeFileWatcherService, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonPathService, AddonPathService::GetInstance)
 
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
+#if defined(MOZ_HAS_TERMINATOR)
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_TERMINATOR_CID);
+#endif
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
 NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
@@ -134,7 +146,9 @@ NS_DEFINE_NAMED_CID(NATIVE_FILEWATCHER_SERVICE_CID);
 
 static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, nullptr, nsAppStartupConstructor },
+#if defined(MOZ_HAS_TERMINATOR)
   { &kNS_TOOLKIT_TERMINATOR_CID, false, nullptr, nsTerminatorConstructor },
+#endif
   { &kNS_USERINFO_CID, false, nullptr, nsUserInfoConstructor },
   { &kNS_ALERTSSERVICE_CID, false, nullptr, nsAlertsServiceConstructor },
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
@@ -165,7 +179,9 @@ static const Module::CIDEntry kToolkitCIDs[] = {
 
 static const Module::ContractIDEntry kToolkitContracts[] = {
   { NS_APPSTARTUP_CONTRACTID, &kNS_TOOLKIT_APPSTARTUP_CID },
+#if defined(MOZ_HAS_TERMINATOR)
   { NS_TOOLKIT_TERMINATOR_CONTRACTID, &kNS_TOOLKIT_TERMINATOR_CID },
+#endif
   { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },
   { NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID },
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
