@@ -37,7 +37,7 @@
 // [node-https]:          http://nodejs.org/api/https.html
 // [node-http]:           http://nodejs.org/api/http.html
 
-exports.VERSION = 'h2-14';
+exports.VERSION = 'h2-15';
 
 exports.Endpoint = require('./endpoint').Endpoint;
 
