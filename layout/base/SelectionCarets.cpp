@@ -480,6 +480,11 @@ SelectionCarets::UpdateSelectionCarets()
 
   // Check start and end frame is rtl or ltr text
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
+  if (!fs) {
+    SetVisibility(false);
+    return;
+  }
+
   int32_t startOffset;
   nsIFrame* startFrame = FindFirstNodeWithFrame(mPresShell->GetDocument(),
                                                 firstRange, fs, false, startOffset);
@@ -637,7 +642,9 @@ SelectionCarets::SelectWord()
 
   // Clear maintain selection otherwise we cannot select less than a word
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
-  fs->MaintainSelection();
+  if (fs) {
+    fs->MaintainSelection();
+  }
   return rs;
 }
 
@@ -727,6 +734,9 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
   }
 
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
+  if (!fs) {
+    return nsEventStatus_eConsumeNoDefault;
+  }
 
   nsresult result;
   nsIFrame *newFrame = nullptr;
@@ -751,6 +761,10 @@ SelectionCarets::DragSelection(const nsPoint &movePoint)
   }
 
   nsRefPtr<dom::Selection> selection = GetSelection();
+  if (!selection) {
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
   int32_t rangeCount = selection->GetRangeCount();
   if (rangeCount <= 0) {
     return nsEventStatus_eConsumeNoDefault;
@@ -801,12 +815,19 @@ SelectionCarets::GetCaretYCenterPosition()
   }
 
   nsRefPtr<dom::Selection> selection = GetSelection();
+  if (!selection) {
+    return 0;
+  }
+
   int32_t rangeCount = selection->GetRangeCount();
   if (rangeCount <= 0) {
     return 0;
   }
 
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
+  if (!fs) {
+    return 0;
+  }
 
   MOZ_ASSERT(mDragMode != NONE);
   nsCOMPtr<nsIContent> node;
@@ -839,14 +860,18 @@ void
 SelectionCarets::SetSelectionDragState(bool aState)
 {
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
-  fs->SetDragState(aState);
+  if (fs) {
+    fs->SetDragState(aState);
+  }
 }
 
 void
 SelectionCarets::SetSelectionDirection(bool aForward)
 {
   nsRefPtr<dom::Selection> selection = GetSelection();
-  selection->SetDirection(aForward ? eDirNext : eDirPrevious);
+  if (selection) {
+    selection->SetDirection(aForward ? eDirNext : eDirPrevious);
+  }
 }
 
 static void
