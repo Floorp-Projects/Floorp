@@ -25,17 +25,13 @@
                        class="devtools-toolbarbutton"
                        oncommand="TimelineController.toggleRecording()"
                        tooltiptext="&timelineUI.recordButton.tooltip;"/>
-        <checkbox id="memory-checkbox"
-                  label="&timelineUI.memoryCheckbox.label;"
-                  oncommand="TimelineController.updateMemoryRecording()"
-                  tooltiptext="&timelineUI.memoryCheckbox.tooltip;"/>
+        <spacer flex="1"/>
         <label id="record-label"
                value="&timelineUI.recordLabel;"/>
       </hbox>
     </toolbar>
 
-    <vbox id="markers-overview"/>
-    <vbox id="memory-overview"/>
+    <vbox id="timeline-overview"/>
 
     <deck id="timeline-pane"
           flex="1">
