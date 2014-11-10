@@ -29,7 +29,7 @@ GfxInfoWebGL::GetWebGLParameter(const nsAString& aParam, nsAString& aResult)
   else return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsIDOMWebGLRenderingContext> webgl =
-    do_CreateInstance("@mozilla.org/content/canvas-rendering-context;1?id=experimental-webgl");
+    do_CreateInstance("@mozilla.org/content/canvas-rendering-context;1?id=webgl");
   if (!webgl)
     return NS_ERROR_NOT_AVAILABLE;
 
