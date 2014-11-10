@@ -116,6 +116,7 @@ function Toolbox(target, selectedTool, hostType, hostOptions) {
   }
   this._defaultToolId = selectedTool;
 
+  this._hostOptions = hostOptions;
   this._host = this._createHost(hostType, hostOptions);
 
   EventEmitter.decorate(this);
@@ -289,8 +290,12 @@ Toolbox.prototype = {
         this._addKeysToWindow();
         this._addReloadKeys();
         this._addHostListeners();
-        this._addZoomKeys();
-        this._loadInitialZoom();
+        if (this._hostOptions && this._hostOptions.zoom === false) {
+          this._disableZoomKeys();
+        } else {
+          this._addZoomKeys();
+          this._loadInitialZoom();
+        }
 
         this.webconsolePanel = this.doc.querySelector("#toolbox-panel-webconsole");
         this.webconsolePanel.height =
@@ -451,6 +456,20 @@ Toolbox.prototype = {
 
     let resetKey = this.doc.getElementById("toolbox-zoom-reset-key");
     resetKey.addEventListener("command", this.zoomReset.bind(this), true);
+  },
+
+  _disableZoomKeys: function() {
+    let inKey = this.doc.getElementById("toolbox-zoom-in-key");
+    inKey.setAttribute("disabled", "true");
+
+    let inKey2 = this.doc.getElementById("toolbox-zoom-in-key2");
+    inKey2.setAttribute("disabled", "true");
+
+    let outKey = this.doc.getElementById("toolbox-zoom-out-key");
+    outKey.setAttribute("disabled", "true");
+
+    let resetKey = this.doc.getElementById("toolbox-zoom-reset-key");
+    resetKey.setAttribute("disabled", "true");
   },
 
   /**
