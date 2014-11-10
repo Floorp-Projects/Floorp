@@ -1068,9 +1068,8 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
     compositionChangeEvent.mData =
       mDispatchedCompositionString = aCompositionString;
 
-    // NOTE: CreateTextRangeArray() assumes that mDispatchedCompositionString
-    //       has been updated already.
-    compositionChangeEvent.mRanges = CreateTextRangeArray(aContext);
+    compositionChangeEvent.mRanges =
+      CreateTextRangeArray(aContext, mDispatchedCompositionString);
     targetOffset += compositionChangeEvent.mRanges->TargetClauseOffset();
 
     mCompositionState = eCompositionState_CompositionChangeEventDispatched;
@@ -1173,10 +1172,14 @@ nsGtkIMModule::DispatchCompositionEventsForCommit(
 }
 
 already_AddRefed<TextRangeArray>
-nsGtkIMModule::CreateTextRangeArray(GtkIMContext* aContext)
+nsGtkIMModule::CreateTextRangeArray(GtkIMContext* aContext,
+                                    const nsAString& aLastDispatchedData)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): CreateTextRangeArray, aContext=%p", this, aContext));
+        ("GtkIMModule(%p): CreateTextRangeArray, aContext=%p, "
+         "aLastDispatchedData=\"%s\" (length=%u)",
+         this, aContext, NS_ConvertUTF16toUTF8(aLastDispatchedData).get(),
+         aLastDispatchedData.Length()));
 
     nsRefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
 
@@ -1277,8 +1280,8 @@ nsGtkIMModule::CreateTextRangeArray(GtkIMContext* aContext)
     TextRange range;
     if (cursor_pos < 0) {
         range.mStartOffset = 0;
-    } else if (uint32_t(cursor_pos) > mDispatchedCompositionString.Length()) {
-        range.mStartOffset = mDispatchedCompositionString.Length();
+    } else if (uint32_t(cursor_pos) > aLastDispatchedData.Length()) {
+        range.mStartOffset = aLastDispatchedData.Length();
     } else {
         range.mStartOffset = uint32_t(cursor_pos);
     }
