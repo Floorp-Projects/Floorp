@@ -257,7 +257,7 @@ struct ProgramProfileOGL
   do {                                                                  \
     GLuint currentProgram;                                              \
     mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &currentProgram);       \
-    NS_ASSERTION(currentProgram == mProgram,                            \
+    MOZ_ASSERT(currentProgram == mProgram,                              \
                  "SetUniform with wrong program active!");              \
   } while (0)
 #else
@@ -283,7 +283,7 @@ public:
     return mProgramState == STATE_OK;
   }
 
-  void Activate();
+  GLuint GetProgram();
 
   bool Initialize();
 
