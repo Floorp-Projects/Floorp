@@ -704,7 +704,6 @@ const js::Class OuterWindowProxyClass =
         PROXY_MAKE_EXT(
             nullptr, /* outerObject */
             js::proxy_innerObject,
-            nullptr, /* iteratorObject */
             false,   /* isWrappedNative */
             nsOuterWindowProxy::ObjectMoved
         ));
@@ -4239,9 +4238,9 @@ nsGlobalWindow::GetSupportedNames(nsTArray<nsString>& aNames)
 }
 
 bool
-nsGlobalWindow::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                             JS::Handle<jsid> aId,
-                             JS::MutableHandle<JSPropertyDescriptor> aDesc)
+nsGlobalWindow::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
+                          JS::Handle<jsid> aId,
+                          JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
   MOZ_ASSERT(IsInnerWindow());
 

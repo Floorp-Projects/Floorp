@@ -9,8 +9,6 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsCycleCollectionNoteChild.h"
-
 /*****************************************************************************/
 
 // template <class T> class nsRefPtrGetterAddRefs;
@@ -293,6 +291,12 @@ public:
 #endif
   }
 };
+
+class nsCycleCollectionTraversalCallback;
+template <typename T>
+void
+CycleCollectionNoteChild(nsCycleCollectionTraversalCallback& aCallback,
+                         T* aChild, const char* aName, uint32_t aFlags);
 
 template <typename T>
 inline void
