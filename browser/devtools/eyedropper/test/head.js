@@ -13,6 +13,13 @@ Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers
 
 waitForExplicitFinish();
 
+/**
+ * Define an async test based on a generator function
+ */
+function asyncTest(generator) {
+  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
+}
+
 function cleanup()
 {
   while (gBrowser.tabs.length > 1) {
@@ -36,6 +43,19 @@ function addTab(uri) {
   content.location = uri;
 
   return deferred.promise;
+}
+
+function waitForClipboard(setup, expected) {
+  let deferred = promise.defer();
+  SimpleTest.waitForClipboard(expected, setup, deferred.resolve, deferred.reject);
+  return deferred.promise;
+}
+
+function dropperStarted(dropper) {
+  if (dropper.isStarted) {
+    return promise.resolve();
+  }
+  return dropper.once("started");
 }
 
 function dropperLoaded(dropper) {
