@@ -87,12 +87,14 @@ BEGIN_TEST(testGCFinalizeCallback)
     FinalizeCalls = 0;
     JS_SetGCZeal(cx, 9, 1000000);
     JS::PrepareForFullGC(rt);
-    rt->gc.gcDebugSlice(true, 1);
+    js::SliceBudget budget(js::WorkBudget(1));
+    rt->gc.gcDebugSlice(budget);
     CHECK(rt->gc.state() == js::gc::MARK);
     CHECK(rt->gc.isFullGc());
 
     JS::RootedObject global4(cx, createTestGlobal());
-    rt->gc.gcDebugSlice(true, 1);
+    budget = js::SliceBudget(js::WorkBudget(1));
+    rt->gc.gcDebugSlice(budget);
     CHECK(rt->gc.state() == js::gc::NO_INCREMENTAL);
     CHECK(!rt->gc.isFullGc());
     CHECK(checkMultipleGroups());

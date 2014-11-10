@@ -384,9 +384,20 @@ struct IMEState {
   {
   }
 
+  // Returns true if the user can input characters.
+  // This means that a plain text editor, an HTML editor, a password editor or
+  // a plain text editor whose ime-mode is "disabled".
   bool IsEditable() const
   {
     return mEnabled == ENABLED || mEnabled == PASSWORD;
+  }
+  // Returns true if the user might be able to input characters.
+  // This means that a plain text editor, an HTML editor, a password editor,
+  // a plain text editor whose ime-mode is "disabled" or a windowless plugin
+  // has focus.
+  bool MaybeEditable() const
+  {
+    return IsEditable() || mEnabled == PLUGIN;
   }
 };
 

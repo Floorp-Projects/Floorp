@@ -2,13 +2,19 @@
 <html>
 <meta charset="utf-8">
 <style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/gw432047.ttf);
+}
 div {
-  font:16px monospace;
+  font:16px test;
   width:200px;
   border:1px solid red;
   -moz-text-align-last:justify;
   text-align-last:justify;
 }
+span {
+  color: transparent;
+}
 </style>
-<div lang="zh">
-你好<span style="color:transparent">你好</span>你好
+<div lang="zh">&#x4e00;&#x845b;<span>&#x4e00;&#x845b;</span>&#x4e00;&#x845b;
