@@ -14,7 +14,6 @@ let DevEdition = {
 
   styleSheetLocation: "chrome://browser/skin/devedition.css",
   styleSheet: null,
-  defaultThemeID: "{972ce4c6-7e08-4474-a285-3208198ce6fd}",
 
   init: function () {
     this._updateDevtoolsThemeAttribute();
@@ -32,7 +31,7 @@ let DevEdition = {
   observe: function (subject, topic, data) {
     if (topic == "lightweight-theme-styling-update") {
       let newTheme = JSON.parse(data);
-      if (!newTheme || newTheme.id === this.defaultThemeID) {
+      if (!newTheme) {
         // A lightweight theme has been unapplied, so just re-read prefs.
         this._updateStyleSheetFromPrefs();
       } else {
@@ -56,6 +55,7 @@ let DevEdition = {
     // to change colors based on the selected devtools theme.
     document.documentElement.setAttribute("devtoolstheme",
       Services.prefs.getCharPref(this._devtoolsThemePrefName));
+    ToolbarIconColor.inferFromText();
     this._updateStyleSheetFromPrefs();
   },
 
@@ -70,13 +70,8 @@ let DevEdition = {
        defaultThemeSelected = Services.prefs.getCharPref(this._themePrefName) == "classic/1.0";
     } catch(e) {}
 
-    let devtoolsIsDark = false;
-    try {
-       devtoolsIsDark = Services.prefs.getCharPref(this._devtoolsThemePrefName) == "dark";
-    } catch(e) {}
-
     let deveditionThemeEnabled = Services.prefs.getBoolPref(this._prefName) &&
-      !lightweightThemeSelected && defaultThemeSelected && devtoolsIsDark;
+      !lightweightThemeSelected && defaultThemeSelected;
 
     this._toggleStyleSheet(deveditionThemeEnabled);
   },
