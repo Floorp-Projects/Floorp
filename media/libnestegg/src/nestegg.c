@@ -2106,9 +2106,6 @@ nestegg_offset_seek(nestegg * ctx, uint64_t offset)
 {
   int r;
 
-  if (offset > INT64_MAX)
-    return -1;
-
   /* Seek and set up parser state for segment-level element (Cluster). */
   r = ne_io_seek(ctx->io, offset, NESTEGG_SEEK_SET);
   if (r != 0)
