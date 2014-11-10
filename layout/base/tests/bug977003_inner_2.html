@@ -55,12 +55,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       finishTest();
     }
     function finishTest() {
-      setTimeout(function() {
-        parent.is(test_down_got,  true,  "Part 2: pointerdown event should be received by target");
-        parent.is(test_listener,  false, "Part 2: listener shouldn't receive any events");
-        logger("finishTest");
-        parent.finishTest();
-      }, 1000);
+      parent.is(test_down_got,  true,  "Part 2: pointerdown event should be received by target");
+      parent.is(test_listener,  false, "Part 2: listener should not receive any events");
+      logger("finishTest");
+      parent.finishTest();
     }
   </script>
 </head>
