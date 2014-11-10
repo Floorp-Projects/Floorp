@@ -738,6 +738,7 @@ let UI = {
     }
     deck.selectedPanel = panel;
     this.updateProjectEditorMenusVisibility();
+    this.updateToolboxFullscreenState();
   },
 
   resetDeck: function() {
@@ -896,6 +897,8 @@ let UI = {
     splitter.removeAttribute("hidden");
 
     let iframe = document.createElement("iframe");
+    iframe.id = "toolbox";
+
     document.querySelector("notificationbox").insertBefore(iframe, splitter.nextSibling);
     let host = devtools.Toolbox.HostType.CUSTOM;
     let options = { customIframe: iframe };
@@ -906,7 +909,20 @@ let UI = {
 
     document.querySelector("#action-button-debug").setAttribute("active", "true");
 
+    this.updateToolboxFullscreenState();
     return gDevTools.showToolbox(target, null, host, options);
+  },
+
+  updateToolboxFullscreenState: function() {
+    let panel = document.querySelector("#deck").selectedPanel;
+    let nbox = document.querySelector("#notificationbox");
+    if (panel.id == "deck-panel-details" &&
+        AppManager.selectedProject.type != "packaged" &&
+        this.toolboxIframe) {
+      nbox.setAttribute("toolboxfullscreen", "true");
+    } else {
+      nbox.removeAttribute("toolboxfullscreen");
+    }
   },
 
   closeToolboxUI: function() {
@@ -921,6 +937,7 @@ let UI = {
     let splitter = document.querySelector(".devtools-horizontal-splitter");
     splitter.setAttribute("hidden", "true");
     document.querySelector("#action-button-debug").removeAttribute("active");
+    this.updateToolboxFullscreenState();
   },
 };
 
