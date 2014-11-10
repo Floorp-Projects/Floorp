@@ -6376,11 +6376,14 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
     FindClusterEnd(mTextRun,
                    provider.GetStart().GetOriginalOffset() + provider.GetOriginalLength(),
                    &extraClusterLastChar);
+    PropertyProvider::Spacing spacing;
     gfxFloat charWidth =
         mTextRun->GetAdvanceWidth(extraCluster.GetSkippedOffset(),
                                   GetSkippedDistance(extraCluster, extraClusterLastChar) + 1,
-                                  &provider);
-    selectedOffset = !aForInsertionPoint || width <= fitWidth + charWidth/2
+                                  &provider, &spacing);
+    charWidth -= spacing.mBefore + spacing.mAfter;
+    selectedOffset = !aForInsertionPoint ||
+      width <= fitWidth + spacing.mBefore + charWidth/2
         ? extraCluster.GetOriginalOffset()
         : extraClusterLastChar.GetOriginalOffset() + 1;
   } else {
