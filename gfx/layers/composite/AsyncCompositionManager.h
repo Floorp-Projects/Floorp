@@ -28,8 +28,8 @@ class AutoResolveRefLayers;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
-  explicit ViewTransform(ParentLayerToScreenScale aScale = ParentLayerToScreenScale(),
-                         ScreenPoint aTranslation = ScreenPoint())
+  explicit ViewTransform(LayerToParentLayerScale aScale = LayerToParentLayerScale(),
+                         ParentLayerPoint aTranslation = ParentLayerPoint())
     : mScale(aScale)
     , mTranslation(aTranslation)
   {}
@@ -55,8 +55,8 @@ struct ViewTransform {
     return !(*this == rhs);
   }
 
-  ParentLayerToScreenScale mScale;
-  ScreenPoint mTranslation;
+  LayerToParentLayerScale mScale;
+  ParentLayerPoint mTranslation;
 };
 
 /**
@@ -139,11 +139,11 @@ private:
   void SyncViewportInfo(const LayerIntRect& aDisplayPort,
                         const CSSToLayerScale& aDisplayResolution,
                         bool aLayersUpdated,
-                        ScreenPoint& aScrollOffset,
-                        CSSToScreenScale& aScale,
+                        ParentLayerPoint& aScrollOffset,
+                        CSSToParentLayerScale& aScale,
                         LayerMargin& aFixedLayerMargins,
                         ScreenPoint& aOffset);
-  void SyncFrameMetrics(const ScreenPoint& aScrollOffset,
+  void SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                         float aZoom,
                         const CSSRect& aCssPageRect,
                         bool aLayersUpdated,
