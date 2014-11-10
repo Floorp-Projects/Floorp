@@ -59,7 +59,7 @@ public:
 
     // "Enabled" means the users can use all IMEs.
     // I.e., the focus is in the normal editors.
-    bool IsEnabled();
+    bool IsEnabled() const;
 
     // OnFocusWindow is a notification that aWindow is going to be focused.
     void OnFocusWindow(nsWindow* aWindow);
@@ -246,16 +246,15 @@ protected:
     void OnStartCompositionNative(GtkIMContext *aContext);
     void OnEndCompositionNative(GtkIMContext *aContext);
 
-
     /**
-     * GetContext() returns current IM context which is chosen by the enabled
-     * state.
+     * GetCurrentContext() returns current IM context which is chosen with the
+     * enabled state.
      * WARNING:
      *     When this class receives some signals for a composition after focus
      *     is moved in Gecko, the result of this may be different from given
      *     context by the signals.
      */
-    GtkIMContext* GetContext();
+    GtkIMContext* GetCurrentContext() const;
 
     // If the owner window and IM context have been destroyed, returns TRUE.
     bool IsDestroyed() { return !mOwnerWindow; }
