@@ -9,55 +9,62 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
 /**
  * Overview
  * --------
- * This modules serves as the transactions manager for Places, and implements
- * all the standard transactions for its UI commands (creating items, editing
- * various properties, etc.). It shares most of its semantics with common
- * command pattern implementations, the HTML5 Undo Manager in particular.
- * However, the asynchronous design of [future] Places APIs, combined with the
- * commitment to serialize all UI operations, makes things a little bit
- * different.  For example, when |undo| is called in order to undo the top undo
- * entry, the caller cannot tell for sure what entry would it be because the
- * execution of some transaction is either in process, or queued.
+ * This modules serves as the transactions manager for Places (hereinafter PTM).
+ * It implements all the elementary transactions for its UI commands: creating
+ * items, editing their various properties, and so forth.
  *
- * GUIDs and item-ids
- * -------------------
- * The Bookmarks API still relies heavily on item-ids, but since those do not
- * play nicely with the concept of undo and redo (especially not in an
- * asynchronous environment), this API only accepts bookmark GUIDs, both for
- * input (e.g. for specifying the parent folder for a new bookmark) and for
- * output (when the GUID for such a bookmark is propagated).
+ * Note that since the effect of invoking a Places command is not limited to the
+ * window in which it was performed (e.g. a folder created in the Library may be
+ * the parent of a bookmark created in some browser window), PTM is a singleton.
+ * It's therefore unnecessary to initialize PTM in any way apart importing this
+ * module.
  *
- * GUIDs are readily available when dealing with the "output" of this API and
- * when result nodes are used (see nsINavHistoryResultNode::bookmarkGuid).
- * If you only have item-ids in hand, use PlacesUtils.promiseItemGuid for
- * converting them.  Should you need to convert them back into itemIds, use
- * PlacesUtils.promiseItemId.
+ * PTM shares most of its semantics with common command pattern implementations.
+ * However, the asynchronous design of contemporary and future APIs, combined
+ * with the commitment to serialize all UI operations, does make things a little
+ * bit different.  For example, when |undo| is called in order to undo the top
+ * undo entry, the caller cannot tell for sure what entry would it be, because
+ * the execution of some transactions is either in process, or enqueued to be.
  *
- * The Standard Transactions
+ * Also note that unlike the nsITransactionManager, for example, this API is by
+ * no means generic.  That is, it cannot be used to execute anything but the
+ * elementary transactions implemented here (Please file a bug if you find
+ * anything uncovered).  More-complex transactions (e.g. creating a folder and
+ * moving a bookmark into it) may be implemented as a batch (see below).
+ *
+ * A note about GUIDs and item-ids
+ * -------------------------------
+ * There's an ongoing effort (see bug 1071511) to deprecate item-ids in Places
+ * in favor of GUIDs.  Both because new APIs (e.g. Bookmark.jsm) expose them to
+ * the minimum necessary, and because GUIDs play much better with implementing
+ * |redo|, this API doesn't support item-ids at all, and only accepts bookmark
+ * GUIDs, both for input (e.g. for setting the parent folder for a new bookmark)
+ * and for output (when the GUID for such a bookmark is propagated).
+ *
+ * When working in conjugation with older Places API which only expose item ids,
+ * use PlacesUtils.promiseItemGuid for converting those to GUIDs (note that
+ * for result nodes, the guid is available through their bookmarkGuid getter).
+ * Should you need to convert GUIDs to item-ids, use PlacesUtils.promiseItemId.
+ *
+ * Constructing transactions
  * -------------------------
- * At the bottom of this module you will find implementations for all Places UI
- * commands (One should almost never fallback to raw Places APIs.  Please file
- * a bug if you find anything uncovered). The transactions' constructors are
- * set on the PlacesTransactions object (e.g. PlacesTransactions.NewFolder).
- * The input for this constructors is taken in the form of a single argument
- * plain object.  Input properties may be either required (e.g. the |keyword|
- * property for the EditKeyword transaction) or optional (e.g. the |keyword|
- * property for NewBookmark).  Once a transaction is created, you may pass it
- * to |transact| or use it in the for batching (see next section).
- *
- * The constructors throw right away when any required input is missing or when
- * some input is invalid "on the surface" (e.g. GUID values are validated to be
- * 12-characters strings, but are not validated to point to existing item.  Such
- * an error will reveal when the transaction is executed).
+ * At the bottom of this module you will find transactions for all Places UI
+ * commands.  They are exposed as constructors set on the PlacesTransactions
+ * object (e.g. PlacesTransactions.NewFolder).  The input for this constructors
+ * is taken in the form of a single argument, a plain object consisting of the
+ * properties for the transaction.  Input properties may be either required or
+ * optional (for example, |keyword| is required for the EditKeyword transaction,
+ * but optional for the NewBookmark transaction).
  *
  * To make things simple, a given input property has the same basic meaning and
  * valid values across all transactions which accept it in the input object.
  * Here is a list of all supported input properties along with their expected
  * values:
- *  - uri: an nsIURI object or an uri spec string.
- *  - feedURI: an nsIURI object, holding the url for a live bookmark.
- *  - siteURI: an nsIURI object, holding the url for the site with which
- *             a live bookmark is associated.
+ *  - url: a URL object, an nsIURI object, or a href.
+ *  - urls: an array of urls, as above.
+ *  - feedUrl: an url (as above), holding the url for a live bookmark.
+ *  - siteUrl an url (as above), holding the url for the site with which
+ *            a live bookmark is associated.
  *  - tag - a string.
  *  - tags: an array of strings.
  *  - guid, parentGuid, newParentGuid: a valid places GUID string.
@@ -70,32 +77,87 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
  *  - excludingAnnotation: a string (annotation name).
  *  - excludingAnnotations: an array of string (annotation names).
  *
- * Batching transactions
- * ---------------------
- * Sometimes it is useful to "batch" or "merge" transactions. For example,
- * "Bookmark All Tabs" may be implemented as one NewFolder transaction followed
- * by numerous NewBookmark transactions - all to be undone or redone in a single
- * command.  The |transact| method makes this possible using a generator
- * function as an input.  These generators have the same semantics as in
- * Task.jsm except that when you yield a transaction, it's executed, and the
- * resolution (e.g. the new bookmark GUID) is sent to the generator so you can
- * use it as the input for another transaction.  See |transact| for the details.
+ * If a required property is missing in the input object (e.g. not specifying
+ * parentGuid for NewBookmark), or if the value for any of the input properties
+ * is invalid "on the surface" (e.g. a numeric value for GUID, or a string that
+ * isn't 12-characters long), the transaction constructor throws right way.
+ * More complex errors (e.g. passing a non-existent GUID for parentGuid) only
+ * reveal once the transaction is executed.
  *
- * "Custom" transactions
- * ---------------------
- * In the legacy transactions API it was possible to pass-in transactions
- * implemented "externally".  For various reason this isn't allowed anymore:
- * transact throws right away if one attempts to pass a transaction that was not
- * created by this module.  However, it's almost always possible to achieve the
- * same functionality with the batching technique described above.
+ * Executing Transactions (the |transact| method of transactions)
+ * --------------------------------------------------------------
+ * Once a transaction is created, you must call its |transact| method for it to
+ * be executed and take effect.  |transact| is an asynchronous method that takes
+ * no arguments, and returns a promise that resolves once the transaction is
+ * executed.  Executing one of the transactions for creating items (NewBookmark,
+ * NewFolder, NewSeparator or NewLivemark) resolve to the new item's GUID.
+ * There's no resolution value for other transactions.
+ * If a transaction fails to execute, |transact| rejects and the transactions
+ * history is not affected.
+ *
+ * |transact| throws if it's called more than once (successfully or not) on the
+ * same transaction object.
+ *
+ * Batches
+ * -------
+ * Sometimes it is useful to "batch" or "merge" transactions.  For example,
+ * something like "Bookmark All Tabs" may be implemented as one NewFolder
+ * transaction followed by numerous NewBookmark transactions - all to be undone
+ * or redone in a single undo or redo command.  Use |PlacesTransactions.batch|
+ * in such cases.  It can take either an array of transactions which will be
+ * executed in the given order and later be treated a a single entry in the
+ * transactions history, or a generator function that is passed to Task.spawn,
+ * that is to "contain" the batch: once the generator function is called a batch
+ * starts, and it lasts until the asynchronous generator iteration is complete
+ * All transactions executed by |transact| during this time are to be treated as
+ * a single entry in the transactions history.
+ *
+ * In both modes, |PlacesTransactions.batch| returns a promise that is to be
+ * resolved when the batch ends.  In the array-input mode, there's no resolution
+ * value.  In the generator mode, the resolution value is whatever the generator
+ * function returned (the semantics are the same as in Task.spawn, basically).
+ *
+ * The array-input mode of |PlacesTransactions.batch| is useful for implementing
+ * a batch of mostly-independent transaction (for example, |paste| into a folder
+ * can be implemented as a batch of multiple NewBookmark transactions).
+ * The generator mode is useful when the resolution value of executing one
+ * transaction is the input of one more subsequent transaction.
+ *
+ * In the array-input mode, if any transactions fails to execute, the batch
+ * continues (exceptions are logged).  Only transactions that were executed
+ * successfully are added to the transactions history.
+ *
+ * WARNING: "nested" batches are not supported, if you call batch while another
+ * batch is still running, the new batch is enqueued with all other PTM work
+ * and thus not run until the running batch ends. The same goes for undo, redo
+ * and clearTransactionsHistory (note batches cannot be done partially, meaning
+ * undo and redo calls that during a batch are just enqueued).
+ *
+ * *****************************************************************************
+ * IT"S PARTICULARLY IMPORTANT NOT TO YIELD ANY PROMISE RETURNED BY ANY OF
+ * THESE METHODS (undo, redo, clearTransactionsHistory) FROM A BATCH FUNCTION.
+ * UNTIL WE FIND A WAY TO THROW IN THAT CASE (SEE BUG 1091446) DOING SO WILL
+ * COMPLETELY BREAK PTM UNTIL SHUTDOWN, NOT ALLOWING THE EXECUTION OF ANY
+ * TRANSACTION!
+ * *****************************************************************************
+ *
+ * Serialization
+ * -------------
+ * All |PlacesTransaction| operations are serialized.  That is, even though the
+ * implementation is asynchronous, the order in which PlacesTransactions methods
+ * is called does guarantee the order in which they are to be invoked.
+ *
+ * The only exception to this rule is |transact| calls done during a batch (see
+ * above).  |transact| calls are serialized with each other (and with undo, redo
+ * and clearTransactionsHistory), but they  are, of course, not serialized with
+ * batches.
  *
  * The transactions-history structure
  * ----------------------------------
  * The transactions-history is a two-dimensional stack of transactions: the
  * transactions are ordered in reverse to the order they were committed.
- * It's two-dimensional because the undo manager allows batching transactions
- * together for the purpose of undo or redo (batched transactions can never be
- * undone or redone partially).
+ * It's two-dimensional because PTM allows batching transactions together for
+ * the purpose of undo or redo (see Batches above).
  *
  * The undoPosition property is set to the index of the top entry. If there is
  * no entry at that index, there is nothing to undo.
@@ -124,22 +186,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
-// Updates commands in the undo group of the active window commands.
-// Inactive windows commands will be updated on focus.
-function updateCommandsOnActiveWindow() {
-  // Updating "undo" will cause a group update including "redo".
-  try {
-    let win = Services.focus.activeWindow;
-    if (win)
-      win.updateCommands("undo");
-  }
-  catch(ex) { console.error(ex, "Couldn't update undo commands"); }
-}
+Components.utils.importGlobalProperties(["URL"]);
 
-// The internal object for managing the transactions history.
-// The public API is included in PlacesTransactions.
-// TODO bug 982099: extending the array "properly" makes it painful to implement
-// getters.  If/when ES6 gets proper array subclassing we can revise this.
 let TransactionsHistory = [];
 TransactionsHistory.__proto__ = {
   __proto__: Array.prototype,
@@ -169,7 +217,9 @@ TransactionsHistory.__proto__ = {
    * @see getRawTransaction for retrieving the raw transaction.
    */
   proxifyTransaction: function (aRawTransaction) {
-    let proxy = Object.freeze({});
+    let proxy = Object.freeze({
+      transact() TransactionsManager.transact(this)
+    });
     this.proxifiedToRaw.set(proxy, aRawTransaction);
     return proxy;
   },
@@ -191,61 +241,7 @@ TransactionsHistory.__proto__ = {
    * @return the transaction proxified by aProxy; |undefined| is returned if
    * aProxy is not a proxified transaction.
    */
-  getRawTransaction: function (aProxy) this.proxifiedToRaw.get(aProxy),
-
-  /**
-   * Undo the top undo entry, if any, and update the undo position accordingly.
-   */
-  undo: function* () {
-    let entry = this.topUndoEntry;
-    if (!entry)
-      return;
-
-    for (let transaction of entry) {
-      try {
-        yield TransactionsHistory.getRawTransaction(transaction).undo();
-      }
-      catch(ex) {
-        // If one transaction is broken, it's not safe to work with any other
-        // undo entry.  Report the error and clear the undo history.
-        console.error(ex,
-                      "Couldn't undo a transaction, clearing all undo entries.");
-        this.clearUndoEntries();
-        return;
-      }
-    }
-    this._undoPosition++;
-    updateCommandsOnActiveWindow();
-  },
-
-  /**
-   * Redo the top redo entry, if any, and update the undo position accordingly.
-   */
-  redo: function* () {
-    let entry = this.topRedoEntry;
-    if (!entry)
-      return;
-
-    for (let i = entry.length - 1; i >= 0; i--) {
-      let transaction = TransactionsHistory.getRawTransaction(entry[i]);
-      try {
-        if (transaction.redo)
-          yield transaction.redo();
-        else
-          yield transaction.execute();
-      }
-      catch(ex) {
-        // If one transaction is broken, it's not safe to work with any other
-        // redo entry. Report the error and clear the undo history.
-        console.error(ex,
-                      "Couldn't redo a transaction, clearing all redo entries.");
-        this.clearRedoEntries();
-        return;
-      }
-    }
-    this._undoPosition--;
-    updateCommandsOnActiveWindow();
-  },
+  getRawTransaction(aProxy) this.proxifiedToRaw.get(aProxy),
 
   /**
    * Add a transaction either as a new entry, if forced or if there are no undo
@@ -259,7 +255,7 @@ TransactionsHistory.__proto__ = {
    *        If false, an entry will we created only if there's no undo entry
    *        to extend.
    */
-  add: function (aProxifiedTransaction, aForceNewEntry = false) {
+  add(aProxifiedTransaction, aForceNewEntry = false) {
     if (!this.isProxifiedTransactionObject(aProxifiedTransaction))
       throw new Error("aProxifiedTransaction is not a proxified transaction");
 
@@ -270,13 +266,12 @@ TransactionsHistory.__proto__ = {
     else {
       this[this.undoPosition].unshift(aProxifiedTransaction);
     }
-    updateCommandsOnActiveWindow();
   },
 
   /**
    * Clear all undo entries.
    */
-  clearUndoEntries: function () {
+  clearUndoEntries() {
     if (this.undoPosition < this.length)
       this.splice(this.undoPosition);
   },
@@ -284,7 +279,7 @@ TransactionsHistory.__proto__ = {
   /**
    * Clear all redo entries.
    */
-  clearRedoEntries: function () {
+  clearRedoEntries() {
     if (this.undoPosition > 0) {
       this.splice(0, this.undoPosition);
       this._undoPosition = 0;
@@ -294,7 +289,7 @@ TransactionsHistory.__proto__ = {
   /**
    * Clear all entries.
    */
-  clearAllEntries: function () {
+  clearAllEntries() {
     if (this.length > 0) {
       this.splice(0);
       this._undoPosition = 0;
@@ -303,141 +298,36 @@ TransactionsHistory.__proto__ = {
 };
 
 
-// Our transaction manager is asynchronous in the sense that all of its methods
-// don't execute synchronously. However, all actions must be serialized.
-let currentTask = Promise.resolve();
-function Serialize(aTask) {
-  // Ignore failures.
-  return currentTask = currentTask.then( () => Task.spawn(aTask) )
-                                  .then(null, Components.utils.reportError);
-}
-
-// Transactions object should never be recycled (that is, |execute| should
-// only be called once, or not at all, after they're constructed.
-// This keeps track of all transactions which were executed.
-let executedTransactions = new WeakMap(); // TODO: use WeakSet (bug 792439)
-executedTransactions.add = k => executedTransactions.set(k, null);
-
 let PlacesTransactions = {
   /**
-   * Asynchronously transact either a single transaction, or a sequence of
-   * transactions that would be treated as a single entry in the transactions
-   * history.
-   *
-   * @param aToTransact
-   *        Either a transaction object or an array of transaction objects, or a
-   *        generator function (ES6-style only) that yields transaction objects.
-   *
-   *        Generator mode how-to: when a transaction is yielded, it's executed.
-   *        Then, if it was executed successfully, the resolution of |execute|
-   *        is sent to the generator.  If |execute| threw or rejected, the
-   *        exception is propagated to the generator.
-   *        Any other value yielded by a generator function is handled the
-   *        same way as in a Task (see Task.jsm).
-   *
-   * @return {Promise}
-   * @resolves either to the resolution of |execute|, in single-transaction
-   * mode, or to the return value of the generator, in generator-mode. For an
-   * array of transactions, there's no resolution value.
-   *
-   * @rejects either if |execute| threw, in single-transaction mode, or if
-   * the generator function threw (or didn't handle) an exception, in generator
-   * mode.
-   * @throws if aTransactionOrGeneratorFunction is neither a transaction object
-   * created by this module, nor an array of such object, nor a generator
-   * function.
-   * @note If no transaction was executed successfully, the transactions history
-   * is not affected.
-   *
-   * @note All PlacesTransactions operations are serialized. This means that the
-   * transactions history state may change by the time the transaction/generator
-   * is processed.  It's guaranteed, however, that a generator function "blocks"
-   * the queue: that is, it is assured that no other operations are performed
-   * by or on PlacesTransactions until the generator returns.  Keep in mind you
-   * are not protected from consumers who use the raw places APIs directly.
+   * @see Batches in the module documentation.
    */
-  transact: function (aToTransact) {
-    if (Array.isArray(aToTransact)) {
-      if (aToTransact.some(
+  batch(aToBatch) {
+    let batchFunc;
+    if (Array.isArray(aToBatch)) {
+      if (aToBatch.length == 0)
+        throw new Error("aToBatch must not be an empty array");
+
+      if (aToBatch.some(
            o => !TransactionsHistory.isProxifiedTransactionObject(o))) {
-        throw new Error("aToTransact contains non-transaction element");
+        throw new Error("aToBatch contains non-transaction element");
       }
-      // Proceed as if a generator yielding the transactions was passed in.
-      return this.transact(function* () {
-        for (let t of aToTransact) {
-          yield t;
+      return TransactionsManager.batch(function* () {
+        for (let txn of aToBatch) {
+          try {
+            yield txn.transact();
+          }
+          catch(ex) {
+            console.error(ex);
+          }
         }
       });
     }
-
-    let isGeneratorObj =
-      o => Object.prototype.toString.call(o) ==  "[object Generator]";
-
-    let generator = null;
-    if (typeof(aToTransact) == "function") {
-      generator = aToTransact();
-      if (!isGeneratorObj(generator))
-        throw new Error("aToTransact is not a generator function");
-    }
-    else if (!TransactionsHistory.isProxifiedTransactionObject(aToTransact)) {
-      throw new Error("aToTransact is not a valid transaction object");
-    }
-    else if (executedTransactions.has(aToTransact)) {
-      throw new Error("Transactions objects may not be recycled.");
+    if (typeof(aToBatch) == "function") {
+      return TransactionsManager.batch(aToBatch);
     }
 
-    return Serialize(function* () {
-      // The entry in the transactions history is created once the first
-      // transaction is committed. This means that if |transact| is called
-      // in its "generator mode" and no transactions are committed by the
-      // generator, the transactions history is left unchanged.
-      // Bug 982115: Depending on how this API is actually used we may revise
-      // this decision and make it so |transact| always forces a new entry.
-      let forceNewEntry = true;
-      function* transactOneTransaction(aTransaction) {
-        let retval =
-          yield TransactionsHistory.getRawTransaction(aTransaction).execute();
-        executedTransactions.add(aTransaction);
-        TransactionsHistory.add(aTransaction, forceNewEntry);
-        forceNewEntry = false;
-        return retval;
-      }
-
-      function* transactBatch(aGenerator) {
-        let error = false;
-        let sendValue = undefined;
-        while (true) {
-          let next = error ?
-                     aGenerator.throw(sendValue) : aGenerator.next(sendValue);
-          sendValue = next.value;
-          if (isGeneratorObj(sendValue)) {
-            sendValue = yield transactBatch(sendValue);
-          }
-          else if (typeof(sendValue) == "object" && sendValue) {
-            if (TransactionsHistory.isProxifiedTransactionObject(sendValue)) {
-              if (executedTransactions.has(sendValue)) {
-                sendValue = new Error("Transactions may not be recycled.");
-                error = true;
-              }
-              else {
-                sendValue = yield transactOneTransaction(sendValue);
-              }
-            }
-            else if ("then" in sendValue) {
-              sendValue = yield sendValue;
-            }
-          }
-          if (next.done)
-            break;
-        }
-        return sendValue;
-      }
-
-      if (generator)
-        return yield transactBatch(generator);
-      else
-        return yield transactOneTransaction(aToTransact);
-    }.bind(this));
+    throw new Error("aToBatch must be either a function or a transactions array");
   },
 
   /**
@@ -449,7 +339,7 @@ let PlacesTransactions = {
    * @note All undo manager operations are queued. This means that transactions
    * history may change by the time your request is fulfilled.
    */
-  undo: function () Serialize(() => TransactionsHistory.undo()),
+  undo() TransactionsManager.undo(),
 
   /**
    * Asynchronously redo the transaction immediately before the current undo
@@ -460,7 +350,7 @@ let PlacesTransactions = {
    * @note All undo manager operations are queued. This means that transactions
    * history may change by the time your request is fulfilled.
    */
-  redo: function () Serialize(() => TransactionsHistory.redo()),
+  redo() TransactionsManager.redo(),
 
   /**
    * Asynchronously clear the undo, redo, or all entries from the transactions
@@ -476,19 +366,8 @@ let PlacesTransactions = {
    * @note All undo manager operations are queued. This means that transactions
    * history may change by the time your request is fulfilled.
    */
-  clearTransactionsHistory:
-  function (aUndoEntries = true, aRedoEntries = true) {
-    return Serialize(function* () {
-      if (aUndoEntries && aRedoEntries)
-        TransactionsHistory.clearAllEntries();
-      else if (aUndoEntries)
-        TransactionsHistory.clearUndoEntries();
-      else if (aRedoEntries)
-        TransactionsHistory.clearRedoEntries();
-      else
-        throw new Error("either aUndoEntries or aRedoEntries should be true");
-    });
-  },
+  clearTransactionsHistory(aUndoEntries = true, aRedoEntries = true)
+    TransactionsManager.clearTransactionsHistory(aUndoEntries, aRedoEntries),
 
   /**
    * The numbers of entries in the transactions history.
@@ -507,7 +386,7 @@ let PlacesTransactions = {
    * @note the returned array is a clone of the history entry and is not
    * kept in sync with the original entry if it changes.
    */
-  entry: function (aIndex) {
+  entry(aIndex) {
     if (!Number.isInteger(aIndex) || aIndex < 0 || aIndex >= this.length)
       throw new Error("Invalid index");
 
@@ -531,6 +410,216 @@ let PlacesTransactions = {
    * Shortcut for accessing the top redo entry in the transaction history.
    */
   get topRedoEntry() TransactionsHistory.topRedoEntry
+};
+
+/**
+ * Helper for serializing the calls to TransactionsManager methods. It allows
+ * us to guarantee that the order in which TransactionsManager asynchronous
+ * methods are called also enforces the order in which they're executed, and
+ * that they are never executed in parallel.
+ *
+ * In other words: Enqueuer.enqueue(aFunc1); Enqueuer.enqueue(aFunc2) is roughly
+ * the same as Task.spawn(aFunc1).then(Task.spawn(aFunc2)).
+ */
+function Enqueuer() {
+  this._promise = Promise.resolve();
+}
+Enqueuer.prototype = {
+  /**
+   * Spawn a functions once all previous functions enqueued are done running,
+   * and all promises passed to alsoWaitFor are no longer pending.
+   *
+   * @param   aFunc
+   *          @see Task.spawn.
+   * @return  a promise that resolves once aFunc is done running. The promise
+   *          "mirrors" the promise returned by aFunc.
+   */
+  enqueue(aFunc) {
+    let promise = this._promise.then(Task.async(aFunc));
+
+    // Propagate exceptions to the caller, but dismiss them internally.
+    this._promise = promise.catch(console.error);
+    return promise;
+  },
+
+  /**
+   * Same as above, but for a promise returned by a function that already run.
+   * This is useful, for example, for serializing transact calls with undo calls,
+   * even though transact has its own Enqueuer.
+   *
+   * @param aPromise
+   *        any promise.
+   */
+  alsoWaitFor(aPromise) {
+    // We don't care if aPromise resolves or rejects, but just that is not
+    // pending anymore.
+    let promise = aPromise.catch(console.error);
+    this._promise = Promise.all([this._promise, promise]);
+  },
+
+  /**
+   * The promise for this queue.
+   */
+  get promise() this._promise
+};
+
+
+let TransactionsManager = {
+  // See the documentation at the top of this file. |transact| calls are not
+  // serialized with |batch| calls.
+  _mainEnqueuer: new Enqueuer(),
+  _transactEnqueuer: new Enqueuer(),
+
+  // Is a batch in progress? set when we enter a batch function and unset when
+  // it's execution is done.
+  _batching: false,
+
+  // If a batch started, this indicates if we've already created an entry in the
+  // transactions history for the batch (i.e. if at least one transaction was
+  // executed successfully).
+  _createdBatchEntry: false,
+
+  // Transactions object should never be recycled (that is, |execute| should
+  // only be called once (or not at all) after they're constructed.
+  // This keeps track of all transactions which were executed.
+  _executedTransactions: new WeakSet(),
+
+  transact(aTxnProxy) {
+    let rawTxn = TransactionsHistory.getRawTransaction(aTxnProxy);
+    if (!rawTxn)
+      throw new Error("|transact| was called with an unexpected object");
+
+    if (this._executedTransactions.has(rawTxn))
+      throw new Error("Transactions objects may not be recycled.");
+
+    // Add it in advance so one doesn't accidentally do
+    // sameTxn.transact(); sameTxn.transact();
+    this._executedTransactions.add(rawTxn);
+
+    let promise = this._transactEnqueuer.enqueue(function* () {
+      // Don't try to catch exceptions. If execute fails, we better not add the
+      // transaction to the undo stack.
+      let retval = yield rawTxn.execute();
+
+      let forceNewEntry = !this._batching || !this._createdBatchEntry;
+      TransactionsHistory.add(aTxnProxy, forceNewEntry);
+      if (this._batching)
+        this._createdBatchEntry = true;
+
+      this._updateCommandsOnActiveWindow();
+      return retval;
+    }.bind(this));
+    this._mainEnqueuer.alsoWaitFor(promise);
+    return promise;
+  },
+
+  batch(aTask) {
+    return this._mainEnqueuer.enqueue(function* () {
+      this._batching = true;
+      this._createdBatchEntry = false;
+      let rv;
+      try {
+        // We should return here, but bug 958949 makes that impossible.
+        rv = (yield Task.spawn(aTask));
+      }
+      finally {
+        this._batching = false;
+        this._createdBatchEntry = false;
+      }
+      return rv;
+    }.bind(this));
+  },
+
+  /**
+   * Undo the top undo entry, if any, and update the undo position accordingly.
+   */
+  undo() {
+    let promise = this._mainEnqueuer.enqueue(function* () {
+      let entry = TransactionsHistory.topUndoEntry;
+      if (!entry)
+        return;
+
+      for (let txnProxy of entry) {
+        try {
+          yield TransactionsHistory.getRawTransaction(txnProxy).undo();
+        }
+        catch(ex) {
+          // If one transaction is broken, it's not safe to work with any other
+          // undo entry.  Report the error and clear the undo history.
+          console.error(ex,
+                        "Couldn't undo a transaction, clearing all undo entries.");
+          TransactionsHistory.clearUndoEntries();
+          return;
+        }
+      }
+      TransactionsHistory._undoPosition++;
+      this._updateCommandsOnActiveWindow();
+    }.bind(this));
+    this._transactEnqueuer.alsoWaitFor(promise);
+    return promise;
+  },
+
+  /**
+   * Redo the top redo entry, if any, and update the undo position accordingly.
+   */
+  redo() {
+    let promise = this._mainEnqueuer.enqueue(function* () {
+      let entry = TransactionsHistory.topRedoEntry;
+      if (!entry)
+        return;
+
+      for (let i = entry.length - 1; i >= 0; i--) {
+        let transaction = TransactionsHistory.getRawTransaction(entry[i]);
+        try {
+          if (transaction.redo)
+            yield transaction.redo();
+          else
+            yield transaction.execute();
+        }
+        catch(ex) {
+          // If one transaction is broken, it's not safe to work with any other
+          // redo entry. Report the error and clear the undo history.
+          console.error(ex,
+                        "Couldn't redo a transaction, clearing all redo entries.");
+          TransactionsHistory.clearRedoEntries();
+          return;
+        }
+      }
+      TransactionsHistory._undoPosition--;
+      this._updateCommandsOnActiveWindow();
+    }.bind(this));
+
+    this._transactEnqueuer.alsoWaitFor(promise);
+    return promise;
+  },
+
+  clearTransactionsHistory(aUndoEntries, aRedoEntries) {
+    let promise = this._mainEnqueuer.enqueue(function* () {
+      if (aUndoEntries && aRedoEntries)
+        TransactionsHistory.clearAllEntries();
+      else if (aUndoEntries)
+        TransactionsHistory.clearUndoEntries();
+      else if (aRedoEntries)
+        TransactionsHistory.clearRedoEntries();
+      else
+        throw new Error("either aUndoEntries or aRedoEntries should be true");
+    }.bind(this));
+
+    this._transactEnqueuer.alsoWaitFor(promise);
+    return promise;
+  },
+
+  // Updates commands in the undo group of the active window commands.
+  // Inactive windows commands will be updated on focus.
+  _updateCommandsOnActiveWindow() {
+    // Updating "undo" will cause a group update including "redo".
+    try {
+      let win = Services.focus.activeWindow;
+      if (win)
+        win.updateCommands("undo");
+    }
+    catch(ex) { console.error(ex, "Couldn't update undo commands"); }
+  }
 };
 
 /**
@@ -618,10 +707,13 @@ DefineTransaction.annotationObjectValidate = function (obj) {
   throw new Error("Invalid annotation object");
 };
 
-DefineTransaction.uriValidate = function(uriOrSpec) {
-  if (uriOrSpec instanceof Components.interfaces.nsIURI)
-    return uriOrSpec;
-  return NetUtil.newURI(uriOrSpec);
+DefineTransaction.urlValidate = function(url) {
+  // When this module is updated to use Bookmarks.jsm, we should actually
+  // convert nsIURIs/spec to URL objects.
+  if (url instanceof Components.interfaces.nsIURI)
+    return url;
+  let spec = url instanceof URL ? url.href : url;
+  return NetUtil.newURI(spec);
 };
 
 DefineTransaction.inputProps = new Map();
@@ -672,8 +764,8 @@ function (aName, aBasePropertyName) {
       return [for (e of aValue) baseProp.validateValue(e)];
     },
 
-    // We allow setting either the array property itself (e.g. uris), or a
-    // single element of it (uri, in that example), that is then transformed
+    // We allow setting either the array property itself (e.g. urls), or a
+    // single element of it (url, in that example), that is then transformed
     // into a single-element array.
     validateInput: function (aInput, aRequired) {
       if (aName in aInput) {
@@ -763,8 +855,8 @@ function (aInput, aRequiredProps = [], aOptionalProps = []) {
 
 // Update the documentation at the top of this module if you add or
 // remove properties.
-DefineTransaction.defineInputProps(["uri", "feedURI", "siteURI"],
-                                   DefineTransaction.uriValidate, null);
+DefineTransaction.defineInputProps(["url", "feedUrl", "siteUrl"],
+                                   DefineTransaction.urlValidate, null);
 DefineTransaction.defineInputProps(["guid", "parentGuid", "newParentGuid"],
                                    DefineTransaction.guidValidate);
 DefineTransaction.defineInputProps(["title"],
@@ -777,7 +869,7 @@ DefineTransaction.defineInputProps(["index", "newIndex"],
                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
 DefineTransaction.defineInputProps(["annotation"],
                                    DefineTransaction.annotationObjectValidate);
-DefineTransaction.defineArrayInputProp("uris", "uri");
+DefineTransaction.defineArrayInputProp("urls", "url");
 DefineTransaction.defineArrayInputProp("tags", "tag");
 DefineTransaction.defineArrayInputProp("annotations", "annotation");
 DefineTransaction.defineArrayInputProp("excludingAnnotations",
@@ -955,12 +1047,12 @@ let PT = PlacesTransactions;
 /**
  * Transaction for creating a bookmark.
  *
- * Required Input Properties: uri, parentGuid.
+ * Required Input Properties: url, parentGuid.
  * Optional Input Properties: index, title, keyword, annotations, tags.
  *
  * When this transaction is executed, it's resolved to the new bookmark's GUID.
  */
-PT.NewBookmark = DefineTransaction(["parentGuid", "uri"],
+PT.NewBookmark = DefineTransaction(["parentGuid", "url"],
                                    ["index", "title", "keyword", "postData",
                                     "annotations", "tags"]);
 PT.NewBookmark.prototype = Object.seal({
@@ -1039,14 +1131,14 @@ PT.NewSeparator.prototype = Object.seal({
  * Transaction for creating a live bookmark (see mozIAsyncLivemarks for the
  * semantics).
  *
- * Required Input Properties: feedURI, title, parentGuid.
- * Optional Input Properties: siteURI, index, annotations.
+ * Required Input Properties: feedUrl, title, parentGuid.
+ * Optional Input Properties: siteUrl, index, annotations.
  *
  * When this transaction is executed, it's resolved to the new livemark's
  * GUID.
  */
-PT.NewLivemark = DefineTransaction(["feedURI", "title", "parentGuid"],
-                                   ["siteURI", "index", "annotations"]);
+PT.NewLivemark = DefineTransaction(["feedUrl", "title", "parentGuid"],
+                                   ["siteUrl", "index", "annotations"]);
 PT.NewLivemark.prototype = Object.seal({
   execute: function* (aFeedURI, aTitle, aParentGuid, aSiteURI, aIndex, aAnnos) {
     let livemarkInfo = { title: aTitle
@@ -1132,10 +1224,10 @@ PT.EditTitle.prototype = Object.seal({
 /**
  * Transaction for setting the URI for an item.
  *
- * Required Input Properties: guid, uri.
+ * Required Input Properties: guid, url.
  */
-PT.EditURI = DefineTransaction(["guid", "uri"]);
-PT.EditURI.prototype = Object.seal({
+PT.EditUrl = DefineTransaction(["guid", "url"]);
+PT.EditUrl.prototype = Object.seal({
   execute: function* (aGuid, aURI) {
     let itemId = yield PlacesUtils.promiseItemId(aGuid),
         oldURI = PlacesUtils.bookmarks.getBookmarkURI(itemId),
@@ -1315,9 +1407,9 @@ PT.Remove.prototype = {
 /**
  * Transaction for tagging a URI.
  *
- * Required Input Properties: uris, tags.
+ * Required Input Properties: urls, tags.
  */
-PT.Tag = DefineTransaction(["uris", "tags"]);
+PT.Tag = DefineTransaction(["urls", "tags"]);
 PT.Tag.prototype = {
   execute: function* (aURIs, aTags) {
     let onUndo = [], onRedo = [];
@@ -1335,7 +1427,7 @@ PT.Tag.prototype = {
       if (yield promiseIsBookmarked(currentURI)) {
         // Tagging is only allowed for bookmarked URIs (but see 424160).
         let createTxn = TransactionsHistory.getRawTransaction(
-          PT.NewBookmark({ uri: currentURI
+          PT.NewBookmark({ url: currentURI
                          , tags: aTags
                          , parentGuid: PlacesUtils.bookmarks.unfiledGuid }));
         yield createTxn.execute();
@@ -1370,12 +1462,12 @@ PT.Tag.prototype = {
 /**
  * Transaction for removing tags from a URI.
  *
- * Required Input Properties: uris.
+ * Required Input Properties: urls.
  * Optional Input Properties: tags.
  *
- * If |tags| is not set, all tags set for |uri| are removed.
+ * If |tags| is not set, all tags set for |url| are removed.
  */
-PT.Untag = DefineTransaction(["uris"], ["tags"]);
+PT.Untag = DefineTransaction(["urls"], ["tags"]);
 PT.Untag.prototype = {
   execute: function* (aURIs, aTags) {
     let onUndo = [], onRedo = [];
