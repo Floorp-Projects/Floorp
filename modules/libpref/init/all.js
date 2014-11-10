@@ -4295,3 +4295,5 @@ pref("camera.control.low_memory_thresholdMB", 404);
 
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
+
+pref("dom.unsafe_legacy_crypto.enabled", true);
