@@ -646,26 +646,21 @@ nsCSPParser::sourceExpression()
   // mCurValue = ""
   resetCurValue();
 
-  // If mCurToken does not provide a scheme (scheme-less source), we apply the scheme
-  // from selfURI but we also need to remember if the protected resource is http, in
-  // which case we should allow https loads, see:
-  // http://www.w3.org/TR/CSP2/#match-source-expression
-  bool allowHttps = false;
+  // If mCurToken does not provide a scheme, we apply the scheme from selfURI
   if (parsedScheme.IsEmpty()) {
     // Resetting internal helpers, because we might already have parsed some of the host
     // when trying to parse a scheme.
     resetCurChar(mCurToken);
-    nsAutoCString selfScheme;
-    mSelfURI->GetScheme(selfScheme);
-    parsedScheme.AssignASCII(selfScheme.get());
-    allowHttps = selfScheme.EqualsASCII("http");
+    nsAutoCString scheme;
+    mSelfURI->GetScheme(scheme);
+    parsedScheme.AssignASCII(scheme.get());
   }
 
   // At this point we are expecting a host to be parsed.
   // Trying to create a new nsCSPHost.
   if (nsCSPHostSrc *cspHost = hostSource()) {
     // Do not forget to set the parsed scheme.
-    cspHost->setScheme(parsedScheme, allowHttps);
+    cspHost->setScheme(parsedScheme);
     return cspHost;
   }
   // Error was reported in hostSource()
