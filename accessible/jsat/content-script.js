@@ -69,8 +69,13 @@ function forwardToChild(aMessage, aListener, aVCPosition) {
 function activateContextMenu(aMessage) {
   let position = Utils.getVirtualCursor(content.document).position;
   if (!forwardToChild(aMessage, activateContextMenu, position)) {
-    sendAsyncMessage('AccessFu:ActivateContextMenu',
-      { bounds: Utils.getBounds(position, true) });
+    let center = Utils.getBounds(position, true).center();
+
+    let evt = content.document.createEvent('HTMLEvents');
+    evt.initEvent('contextmenu', true, true);
+    evt.clientX = center.x;
+    evt.clientY = center.y;
+    position.DOMNode.dispatchEvent(evt);
   }
 }
 
