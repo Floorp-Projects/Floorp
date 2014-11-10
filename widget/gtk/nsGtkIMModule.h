@@ -281,9 +281,13 @@ protected:
      * Generates our text range array from current composition string.
      *
      * @param aContext              A GtkIMContext which is being handled.
+     * @param aLastDispatchedData   The data of the last compositionchange event
+     *                              of current composition.  This should be
+     *                              mDispatchedCompositionString.
      */
     already_AddRefed<mozilla::TextRangeArray>
-        CreateTextRangeArray(GtkIMContext* aContext);
+        CreateTextRangeArray(GtkIMContext* aContext,
+                             const nsAString& aLastDispatchedData);
 
     /**
      * Sets the offset's cursor position to IME.
