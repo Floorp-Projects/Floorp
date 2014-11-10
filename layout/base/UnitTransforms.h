@@ -21,9 +21,13 @@ namespace mozilla {
 
 MOZ_BEGIN_ENUM_CLASS(PixelCastJustification, uint8_t)
   // For the root layer, Screen Pixel = Parent Layer Pixel.
-  ScreenToParentLayerForRoot,
+  ScreenIsParentLayerForRoot,
   // For the root composition size we want to view it as layer pixels in any layer
-  ParentLayerToLayerForRootComposition
+  ParentLayerToLayerForRootComposition,
+  // The transform that is usually used to convert between two coordinate
+  // systems is not available (for example, because the object that stores it
+  // is being destroyed), so fall back to the identity.
+  TransformNotAvailable
 MOZ_END_ENUM_CLASS(PixelCastJustification)
 
 template <class TargetUnits, class SourceUnits>
@@ -33,6 +37,16 @@ gfx::SizeTyped<TargetUnits> ViewAs(const gfx::SizeTyped<SourceUnits>& aSize, Pix
 template <class TargetUnits, class SourceUnits>
 gfx::IntSizeTyped<TargetUnits> ViewAs(const gfx::IntSizeTyped<SourceUnits>& aSize, PixelCastJustification) {
   return gfx::IntSizeTyped<TargetUnits>(aSize.width, aSize.height);
+}
+template <class TargetUnits, class SourceUnits>
+gfx::PointTyped<TargetUnits> ViewAs(const gfx::PointTyped<SourceUnits>& aPoint, PixelCastJustification) {
+  return gfx::PointTyped<TargetUnits>(aPoint.x, aPoint.y);
+}
+template <class NewTargetUnits, class OldTargetUnits, class SourceUnits>
+gfx::ScaleFactor<SourceUnits, NewTargetUnits> ViewTargetAs(
+    const gfx::ScaleFactor<SourceUnits, OldTargetUnits>& aScaleFactor,
+    PixelCastJustification) {
+  return gfx::ScaleFactor<SourceUnits, NewTargetUnits>(aScaleFactor.scale);
 }
 
 // Convenience functions for casting untyped entities to typed entities.
@@ -91,6 +105,18 @@ static gfx::IntRectTyped<TargetUnits> TransformTo(const gfx::Matrix4x4& aTransfo
   return RoundedToInt(ViewAs<TargetUnits>(aTransform.TransformBounds(rect)));
 }
 
+// Transform |aVector|, which is anchored at |aAnchor|, by the given transform
+// matrix, yielding a point in |TargetUnits|.
+// The anchor is necessary because with 3D tranforms, the location of the
+// vector can affect the result of the transform.
+template <typename TargetUnits, typename SourceUnits>
+static gfx::PointTyped<TargetUnits> TransformVector(const gfx::Matrix4x4& aTransform,
+                                                    const gfx::PointTyped<SourceUnits>& aVector,
+                                                    const gfx::PointTyped<SourceUnits>& aAnchor) {
+  gfx::PointTyped<TargetUnits> transformedStart = TransformTo<TargetUnits>(aTransform, aAnchor);
+  gfx::PointTyped<TargetUnits> transformedEnd = TransformTo<TargetUnits>(aTransform, aAnchor + aVector);
+  return transformedEnd - transformedStart;
+}
 
 }
 

@@ -42,13 +42,19 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 {
 }
 
-float Axis::ToLocalVelocity(float aVelocityInchesPerMs) {
-  ScreenPoint aVelocityPoint = MakePoint(aVelocityInchesPerMs * APZCTreeManager::GetDPI());
-  mAsyncPanZoomController->ToLocalScreenCoordinates(&aVelocityPoint, mAsyncPanZoomController->PanStart());
-  return aVelocityPoint.Length();
+float Axis::ToLocalVelocity(float aVelocityInchesPerMs) const {
+  ScreenPoint velocity = MakePoint(aVelocityInchesPerMs * APZCTreeManager::GetDPI());
+  // Use ToScreenCoordinates() to convert a point rather than a vector by
+  // treating the point as a vector, and using (0, 0) as the anchor.
+  ScreenPoint panStart = mAsyncPanZoomController->ToScreenCoordinates(
+      mAsyncPanZoomController->PanStart(),
+      ParentLayerPoint());
+  ParentLayerPoint localVelocity =
+      mAsyncPanZoomController->ToParentLayerCoordinates(velocity, panStart);
+  return localVelocity.Length();
 }
 
-void Axis::UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs) {
+void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimestampMs) {
   // mVelocityQueue is controller-thread only
   AsyncPanZoomController::AssertOnControllerThread();
 
@@ -98,16 +104,16 @@ void Axis::UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs)
   }
 }
 
-void Axis::StartTouch(ScreenCoord aPos, uint32_t aTimestampMs) {
+void Axis::StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs) {
   mStartPos = aPos;
   mPos = aPos;
   mPosTimeMs = aTimestampMs;
   mAxisLocked = false;
 }
 
-bool Axis::AdjustDisplacement(ScreenCoord aDisplacement,
-                              /* ScreenCoord */ float& aDisplacementOut,
-                              /* ScreenCoord */ float& aOverscrollAmountOut)
+bool Axis::AdjustDisplacement(ParentLayerCoord aDisplacement,
+                              /* ParentLayerCoord */ float& aDisplacementOut,
+                              /* ParentLayerCoord */ float& aOverscrollAmountOut)
 {
   if (mAxisLocked) {
     aOverscrollAmountOut = 0;
@@ -115,10 +121,10 @@ bool Axis::AdjustDisplacement(ScreenCoord aDisplacement,
     return false;
   }
 
-  ScreenCoord displacement = aDisplacement;
+  ParentLayerCoord displacement = aDisplacement;
 
   // First consume any overscroll in the opposite direction along this axis.
-  ScreenCoord consumedOverscroll = 0;
+  ParentLayerCoord consumedOverscroll = 0;
   if (mOverscroll > 0 && aDisplacement < 0) {
     consumedOverscroll = std::min(mOverscroll, -aDisplacement);
   } else if (mOverscroll < 0 && aDisplacement > 0) {
@@ -140,7 +146,7 @@ bool Axis::AdjustDisplacement(ScreenCoord aDisplacement,
   return fabsf(consumedOverscroll) > EPSILON;
 }
 
-ScreenCoord Axis::ApplyResistance(ScreenCoord aRequestedOverscroll) const {
+ParentLayerCoord Axis::ApplyResistance(ParentLayerCoord aRequestedOverscroll) const {
   // 'resistanceFactor' is a value between 0 and 1, which:
   //   - tends to 1 as the existing overscroll tends to 0
   //   - tends to 0 as the existing overscroll tends to the composition length
@@ -148,10 +154,10 @@ ScreenCoord Axis::ApplyResistance(ScreenCoord aRequestedOverscroll) const {
   // factor; this should prevent overscrolling by more than the composition
   // length.
   float resistanceFactor = 1 - fabsf(mOverscroll) / GetCompositionLength();
-  return resistanceFactor < 0 ? ScreenCoord(0) : aRequestedOverscroll * resistanceFactor;
+  return resistanceFactor < 0 ? ParentLayerCoord(0) : aRequestedOverscroll * resistanceFactor;
 }
 
-void Axis::OverscrollBy(ScreenCoord aOverscroll) {
+void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
   MOZ_ASSERT(CanScroll());
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
@@ -178,7 +184,7 @@ void Axis::OverscrollBy(ScreenCoord aOverscroll) {
   mOverscroll += aOverscroll;
 }
 
-ScreenCoord Axis::GetOverscroll() const {
+ParentLayerCoord Axis::GetOverscroll() const {
   return mOverscroll;
 }
 
@@ -250,15 +256,15 @@ void Axis::ClearOverscroll() {
   mOverscroll = 0;
 }
 
-ScreenCoord Axis::PanStart() const {
+ParentLayerCoord Axis::PanStart() const {
   return mStartPos;
 }
 
-ScreenCoord Axis::PanDistance() const {
+ParentLayerCoord Axis::PanDistance() const {
   return fabs(mPos - mStartPos);
 }
 
-ScreenCoord Axis::PanDistance(ScreenCoord aPos) const {
+ParentLayerCoord Axis::PanDistance(ParentLayerCoord aPos) const {
   return fabs(aPos - mStartPos);
 }
 
@@ -314,9 +320,9 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta,
   return true;
 }
 
-ScreenCoord Axis::DisplacementWillOverscrollAmount(ScreenCoord aDisplacement) const {
-  ScreenCoord newOrigin = GetOrigin() + aDisplacement;
-  ScreenCoord newCompositionEnd = GetCompositionEnd() + aDisplacement;
+ParentLayerCoord Axis::DisplacementWillOverscrollAmount(ParentLayerCoord aDisplacement) const {
+  ParentLayerCoord newOrigin = GetOrigin() + aDisplacement;
+  ParentLayerCoord newCompositionEnd = GetCompositionEnd() + aDisplacement;
   // If the current pan plus a displacement takes the window to the left of or
   // above the current page rect.
   bool minus = newOrigin < GetPageStart();
@@ -338,11 +344,11 @@ ScreenCoord Axis::DisplacementWillOverscrollAmount(ScreenCoord aDisplacement) co
 }
 
 CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const {
-  // Internally, do computations in Screen coordinates *before* the scale is
-  // applied.
-  CSSToScreenScale zoom = GetFrameMetrics().GetZoom();
-  ScreenCoord focus = aFocus * zoom;
-  ScreenCoord originAfterScale = (GetOrigin() + focus) - (focus / aScale);
+  // Internally, do computations in ParentLayer coordinates *before* the scale
+  // is applied.
+  CSSToParentLayerScale zoom = GetFrameMetrics().GetZoom();
+  ParentLayerCoord focus = aFocus * zoom;
+  ParentLayerCoord originAfterScale = (GetOrigin() + focus) - (focus / aScale);
 
   bool both = ScaleWillOverscrollBothSides(aScale);
   bool minus = GetPageStart() - originAfterScale > COORDINATE_EPSILON;
@@ -370,39 +376,37 @@ void Axis::SetVelocity(float aVelocity) {
   mVelocity = aVelocity;
 }
 
-ScreenCoord Axis::GetCompositionEnd() const {
+ParentLayerCoord Axis::GetCompositionEnd() const {
   return GetOrigin() + GetCompositionLength();
 }
 
-ScreenCoord Axis::GetPageEnd() const {
+ParentLayerCoord Axis::GetPageEnd() const {
   return GetPageStart() + GetPageLength();
 }
 
-ScreenCoord Axis::GetOrigin() const {
-  ScreenPoint origin = GetFrameMetrics().GetScrollOffset() * GetFrameMetrics().GetZoom();
+ParentLayerCoord Axis::GetOrigin() const {
+  ParentLayerPoint origin = GetFrameMetrics().GetScrollOffset() * GetFrameMetrics().GetZoom();
   return GetPointOffset(origin);
 }
 
-ScreenCoord Axis::GetCompositionLength() const {
-  return GetRectLength(GetFrameMetrics().mCompositionBounds / GetFrameMetrics().mTransformScale);
+ParentLayerCoord Axis::GetCompositionLength() const {
+  return GetRectLength(GetFrameMetrics().mCompositionBounds);
 }
 
-ScreenCoord Axis::GetPageStart() const {
-  ScreenRect pageRect = GetFrameMetrics().GetExpandedScrollableRect() * GetFrameMetrics().GetZoom();
+ParentLayerCoord Axis::GetPageStart() const {
+  ParentLayerRect pageRect = GetFrameMetrics().GetExpandedScrollableRect() * GetFrameMetrics().GetZoom();
   return GetRectOffset(pageRect);
 }
 
-ScreenCoord Axis::GetPageLength() const {
-  ScreenRect pageRect = GetFrameMetrics().GetExpandedScrollableRect() * GetFrameMetrics().GetZoom();
+ParentLayerCoord Axis::GetPageLength() const {
+  ParentLayerRect pageRect = GetFrameMetrics().GetExpandedScrollableRect() * GetFrameMetrics().GetZoom();
   return GetRectLength(pageRect);
 }
 
 bool Axis::ScaleWillOverscrollBothSides(float aScale) const {
   const FrameMetrics& metrics = GetFrameMetrics();
-
-  ScreenToParentLayerScale scale(metrics.mTransformScale.scale * aScale);
-  ScreenRect screenCompositionBounds = metrics.mCompositionBounds / scale;
-
+  ParentLayerRect screenCompositionBounds = metrics.mCompositionBounds
+                                          / ParentLayerToParentLayerScale(aScale);
   return GetRectLength(screenCompositionBounds) - GetPageLength() > COORDINATE_EPSILON;
 }
 
@@ -417,17 +421,17 @@ AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-ScreenCoord AxisX::GetPointOffset(const ScreenPoint& aPoint) const
+ParentLayerCoord AxisX::GetPointOffset(const ParentLayerPoint& aPoint) const
 {
   return aPoint.x;
 }
 
-ScreenCoord AxisX::GetRectLength(const ScreenRect& aRect) const
+ParentLayerCoord AxisX::GetRectLength(const ParentLayerRect& aRect) const
 {
   return aRect.width;
 }
 
-ScreenCoord AxisX::GetRectOffset(const ScreenRect& aRect) const
+ParentLayerCoord AxisX::GetRectOffset(const ParentLayerRect& aRect) const
 {
   return aRect.x;
 }
@@ -443,17 +447,17 @@ AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-ScreenCoord AxisY::GetPointOffset(const ScreenPoint& aPoint) const
+ParentLayerCoord AxisY::GetPointOffset(const ParentLayerPoint& aPoint) const
 {
   return aPoint.y;
 }
 
-ScreenCoord AxisY::GetRectLength(const ScreenRect& aRect) const
+ParentLayerCoord AxisY::GetRectLength(const ParentLayerRect& aRect) const
 {
   return aRect.height;
 }
 
-ScreenCoord AxisY::GetRectOffset(const ScreenRect& aRect) const
+ParentLayerCoord AxisY::GetRectOffset(const ParentLayerRect& aRect) const
 {
   return aRect.y;
 }

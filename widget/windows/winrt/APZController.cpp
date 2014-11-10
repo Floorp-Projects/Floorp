@@ -253,8 +253,8 @@ APZController::GetRootZoomConstraints(ZoomConstraints* aOutConstraints)
     // from 1/4 to 4x by default.
     aOutConstraints->mAllowZoom = true;
     aOutConstraints->mAllowDoubleTapZoom = false;
-    aOutConstraints->mMinZoom = CSSToScreenScale(0.25f);
-    aOutConstraints->mMaxZoom = CSSToScreenScale(4.0f);
+    aOutConstraints->mMinZoom = CSSToParentLayerScale(0.25f);
+    aOutConstraints->mMaxZoom = CSSToParentLayerScale(4.0f);
     return true;
   }
   return false;

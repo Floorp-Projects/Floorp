@@ -188,7 +188,7 @@ public:
 
   bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
                                       ViewTransform* aOutTransform,
-                                      ScreenPoint& aScrollOffset) {
+                                      ParentLayerPoint& aScrollOffset) {
     bool ret = AdvanceAnimations(aSampleTime);
     AsyncPanZoomController::SampleContentTransformForFrame(
       aOutTransform, aScrollOffset);
@@ -243,12 +243,12 @@ protected:
 
   void MakeApzcZoomable()
   {
-    apzc->UpdateZoomConstraints(ZoomConstraints(true, true, CSSToScreenScale(0.25f), CSSToScreenScale(4.0f)));
+    apzc->UpdateZoomConstraints(ZoomConstraints(true, true, CSSToParentLayerScale(0.25f), CSSToParentLayerScale(4.0f)));
   }
 
   void MakeApzcUnzoomable()
   {
-    apzc->UpdateZoomConstraints(ZoomConstraints(false, false, CSSToScreenScale(1.0f), CSSToScreenScale(1.0f)));
+    apzc->UpdateZoomConstraints(ZoomConstraints(false, false, CSSToParentLayerScale(1.0f), CSSToParentLayerScale(1.0f)));
   }
 
   AsyncPanZoomController::GestureBehavior mGestureBehavior;
@@ -277,11 +277,33 @@ public:
  * code to dispatch input events.
  */
 
+// Some helper functions for constructing input event objects suitable to be
+// passed either to an APZC (which expects an transformed point), or to an APZTM
+// (which expects an untransformed point). We handle both cases by setting both
+// the transformed and untransformed fields to the same value.
+static SingleTouchData
+CreateSingleTouchData(int32_t aIdentifier, int aX, int aY)
+{
+  SingleTouchData touch(aIdentifier, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0);
+  touch.mLocalScreenPoint = ParentLayerPoint(aX, aY);
+  return touch;
+}
+static PinchGestureInput
+CreatePinchGestureInput(PinchGestureInput::PinchGestureType aType,
+                        int aFocusX, int aFocusY,
+                        float aCurrentSpan, float aPreviousSpan)
+{
+  PinchGestureInput result(aType, 0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
+                           aCurrentSpan, aPreviousSpan, 0);
+  result.mLocalFocusPoint = ParentLayerPoint(aFocusX, aFocusY);
+  return result;
+}
+
 template<class InputReceiver> static nsEventStatus
 TouchDown(const nsRefPtr<InputReceiver>& aTarget, int aX, int aY, int aTime, uint64_t* aOutInputBlockId = nullptr)
 {
   MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, aTime, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(CreateSingleTouchData(0, aX, aY));
   return aTarget->ReceiveInputEvent(mti, nullptr, aOutInputBlockId);
 }
 
@@ -289,7 +311,7 @@ template<class InputReceiver> static nsEventStatus
 TouchMove(const nsRefPtr<InputReceiver>& aTarget, int aX, int aY, int aTime)
 {
   MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, aTime, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(CreateSingleTouchData(0, aX, aY));
   return aTarget->ReceiveInputEvent(mti, nullptr, nullptr);
 }
 
@@ -297,7 +319,7 @@ template<class InputReceiver> static nsEventStatus
 TouchUp(const nsRefPtr<InputReceiver>& aTarget, int aX, int aY, int aTime)
 {
   MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, aTime, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(aX, aY), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(CreateSingleTouchData(0, aX, aY));
   return aTarget->ReceiveInputEvent(mti, nullptr, nullptr);
 }
 
@@ -435,28 +457,25 @@ PinchWithPinchInput(const nsRefPtr<InputReceiver>& aTarget,
                     nsEventStatus (*aOutEventStatuses)[3] = nullptr)
 {
   nsEventStatus actualStatus = aTarget->ReceiveInputEvent(
-    PinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
-                      0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
-                      10.0, 10.0, 0),
-    nullptr);
+      CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
+                              aFocusX, aFocusY, 10.0, 10.0),
+      nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = actualStatus;
   }
   actualStatus = aTarget->ReceiveInputEvent(
-    PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                      0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
-                      10.0 * aScale, 10.0, 0),
-    nullptr);
+      CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                              aFocusX, aFocusY, 10.0 * aScale, 10.0),
+      nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = actualStatus;
   }
   actualStatus = aTarget->ReceiveInputEvent(
-    PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
-                      0, TimeStamp(), ScreenPoint(aFocusX, aFocusY),
-                      // note: negative values here tell APZC
-                      //       not to turn the pinch into a pan
-                      -1.0, -1.0, 0),
-    nullptr);
+      CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
+                              // note: negative values here tell APZC
+                              //       not to turn the pinch into a pan
+                              aFocusX, aFocusY, -1.0, -1.0),
+      nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = actualStatus;
   }
@@ -498,8 +517,8 @@ PinchWithTouchInput(const nsRefPtr<InputReceiver>& aTarget,
   }
 
   MultiTouchInput mtiStart = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
-  mtiStart.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(aFocusX, aFocusY), ScreenSize(0, 0), 0, 0));
-  mtiStart.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(aFocusX, aFocusY), ScreenSize(0, 0), 0, 0));
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX, aFocusY));
+  mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX, aFocusY));
   nsEventStatus status = aTarget->ReceiveInputEvent(mtiStart, aOutInputBlockId);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[0] = status;
@@ -510,24 +529,24 @@ PinchWithTouchInput(const nsRefPtr<InputReceiver>& aTarget,
   }
 
   MultiTouchInput mtiMove1 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
-  mtiMove1.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(aFocusX - pinchLength, aFocusY), ScreenSize(0, 0), 0, 0));
-  mtiMove1.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(aFocusX + pinchLength, aFocusY), ScreenSize(0, 0), 0, 0));
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX - pinchLength, aFocusY));
+  mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX + pinchLength, aFocusY));
   status = aTarget->ReceiveInputEvent(mtiMove1, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[1] = status;
   }
 
   MultiTouchInput mtiMove2 = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
-  mtiMove2.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(aFocusX - pinchLengthScaled, aFocusY), ScreenSize(0, 0), 0, 0));
-  mtiMove2.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(aFocusX + pinchLengthScaled, aFocusY), ScreenSize(0, 0), 0, 0));
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX - pinchLengthScaled, aFocusY));
+  mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX + pinchLengthScaled, aFocusY));
   status = aTarget->ReceiveInputEvent(mtiMove2, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[2] = status;
   }
 
   MultiTouchInput mtiEnd = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
-  mtiEnd.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(aFocusX - pinchLengthScaled, aFocusY), ScreenSize(0, 0), 0, 0));
-  mtiEnd.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(aFocusX + pinchLengthScaled, aFocusY), ScreenSize(0, 0), 0, 0));
+  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId, aFocusX - pinchLengthScaled, aFocusY));
+  mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, aFocusX + pinchLengthScaled, aFocusY));
   status = aTarget->ReceiveInputEvent(mtiEnd, nullptr);
   if (aOutEventStatuses) {
     (*aOutEventStatuses)[3] = status;
@@ -567,7 +586,7 @@ protected:
     fm.mCompositionBounds = ParentLayerRect(200, 200, 100, 200);
     fm.mScrollableRect = CSSRect(0, 0, 980, 1000);
     fm.SetScrollOffset(CSSPoint(300, 300));
-    fm.SetZoom(CSSToScreenScale(2.0));
+    fm.SetZoom(CSSToParentLayerScale(2.0));
     // the visible area of the document in CSS pixels is x=300 y=300 w=50 h=100
     return fm;
   }
@@ -610,7 +629,7 @@ protected:
 
     // part 2 of the test, move to the top-right corner of the page and pinch and
     // make sure we stay in the correct spot
-    fm.SetZoom(CSSToScreenScale(2.0));
+    fm.SetZoom(CSSToParentLayerScale(2.0));
     fm.SetScrollOffset(CSSPoint(930, 5));
     apzc->SetFrameMetrics(fm);
     // the visible area of the document in CSS pixels is x=930 y=5 w=50 h=100
@@ -709,7 +728,7 @@ TEST_F(APZCBasicTester, Overzoom) {
   fm.mCompositionBounds = ParentLayerRect(0, 0, 100, 100);
   fm.mScrollableRect = CSSRect(0, 0, 125, 150);
   fm.SetScrollOffset(CSSPoint(10, 0));
-  fm.SetZoom(CSSToScreenScale(1.0));
+  fm.SetZoom(CSSToParentLayerScale(1.0));
   apzc->SetFrameMetrics(fm);
 
   MakeApzcZoomable();
@@ -728,11 +747,11 @@ TEST_F(APZCBasicTester, Overzoom) {
 }
 
 TEST_F(APZCBasicTester, SimpleTransform) {
-  ScreenPoint pointOut;
+  ParentLayerPoint pointOut;
   ViewTransform viewTransformOut;
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
-  EXPECT_EQ(ScreenPoint(), pointOut);
+  EXPECT_EQ(ParentLayerPoint(), pointOut);
   EXPECT_EQ(ViewTransform(), viewTransformOut);
 }
 
@@ -778,8 +797,8 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   metrics.SetScrollOffset(CSSPoint(10, 10));
   metrics.mScrollableRect = CSSRect(0, 0, 50, 50);
   metrics.mCumulativeResolution = LayoutDeviceToLayerScale(2);
-  metrics.mPresShellResolution = ParentLayerToLayerScale(2);
-  metrics.SetZoom(CSSToScreenScale(6));
+  metrics.mPresShellResolution = 2.0f;
+  metrics.SetZoom(CSSToParentLayerScale(6));
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(3);
   metrics.SetScrollId(FrameMetrics::START_SCROLL_ID);
 
@@ -789,7 +808,7 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   layers[0]->SetFrameMetrics(metrics);
   layers[1]->SetFrameMetrics(childMetrics);
 
-  ScreenPoint pointOut;
+  ParentLayerPoint pointOut;
   ViewTransform viewTransformOut;
 
   // Both the parent and child layer should behave exactly the same here, because
@@ -799,40 +818,40 @@ TEST_F(APZCBasicTester, ComplexTransform) {
   apzc->SetFrameMetrics(metrics);
   apzc->NotifyLayersUpdated(metrics, true);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint()), viewTransformOut);
-  EXPECT_EQ(ScreenPoint(60, 60), pointOut);
+  EXPECT_EQ(ViewTransform(LayerToParentLayerScale(2), ParentLayerPoint()), viewTransformOut);
+  EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->NotifyLayersUpdated(childMetrics, true);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint()), viewTransformOut);
-  EXPECT_EQ(ScreenPoint(60, 60), pointOut);
+  EXPECT_EQ(ViewTransform(LayerToParentLayerScale(2), ParentLayerPoint()), viewTransformOut);
+  EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);
 
   // do an async scroll by 5 pixels and check the transform
   metrics.ScrollBy(CSSPoint(5, 0));
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint(-30, 0)), viewTransformOut);
-  EXPECT_EQ(ScreenPoint(90, 60), pointOut);
+  EXPECT_EQ(ViewTransform(LayerToParentLayerScale(2), ParentLayerPoint(-30, 0)), viewTransformOut);
+  EXPECT_EQ(ParentLayerPoint(90, 60), pointOut);
 
   childMetrics.ScrollBy(CSSPoint(5, 0));
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(2), ScreenPoint(-30, 0)), viewTransformOut);
-  EXPECT_EQ(ScreenPoint(90, 60), pointOut);
+  EXPECT_EQ(ViewTransform(LayerToParentLayerScale(2), ParentLayerPoint(-30, 0)), viewTransformOut);
+  EXPECT_EQ(ParentLayerPoint(90, 60), pointOut);
 
   // do an async zoom of 1.5x and check the transform
   metrics.ZoomBy(1.5f);
   apzc->SetFrameMetrics(metrics);
   apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(3), ScreenPoint(-45, 0)), viewTransformOut);
-  EXPECT_EQ(ScreenPoint(135, 90), pointOut);
+  EXPECT_EQ(ViewTransform(LayerToParentLayerScale(3), ParentLayerPoint(-45, 0)), viewTransformOut);
+  EXPECT_EQ(ParentLayerPoint(135, 90), pointOut);
 
   childMetrics.ZoomBy(1.5f);
   childApzc->SetFrameMetrics(childMetrics);
   childApzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-  EXPECT_EQ(ViewTransform(ParentLayerToScreenScale(3), ScreenPoint(-45, 0)), viewTransformOut);
-  EXPECT_EQ(ScreenPoint(135, 90), pointOut);
+  EXPECT_EQ(ViewTransform(LayerToParentLayerScale(3), ParentLayerPoint(-45, 0)), viewTransformOut);
+  EXPECT_EQ(ParentLayerPoint(135, 90), pointOut);
 }
 
 class APZCPanningTester : public APZCBasicTester {
@@ -850,7 +869,7 @@ protected:
     int time = 0;
     int touchStart = 50;
     int touchEnd = 10;
-    ScreenPoint pointOut;
+    ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
 
     nsTArray<uint32_t> allowedTouchBehaviors;
@@ -861,10 +880,10 @@ protected:
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
     if (aShouldTriggerScroll) {
-      EXPECT_EQ(ScreenPoint(0, -(touchEnd-touchStart)), pointOut);
+      EXPECT_EQ(ParentLayerPoint(0, -(touchEnd-touchStart)), pointOut);
       EXPECT_NE(ViewTransform(), viewTransformOut);
     } else {
-      EXPECT_EQ(ScreenPoint(), pointOut);
+      EXPECT_EQ(ParentLayerPoint(), pointOut);
       EXPECT_EQ(ViewTransform(), viewTransformOut);
     }
 
@@ -876,7 +895,7 @@ protected:
     PanAndCheckStatus(apzc, time, touchEnd, touchStart, aShouldBeConsumed, &allowedTouchBehaviors);
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
-    EXPECT_EQ(ScreenPoint(), pointOut);
+    EXPECT_EQ(ParentLayerPoint(), pointOut);
     EXPECT_EQ(ViewTransform(), viewTransformOut);
   }
 
@@ -887,7 +906,7 @@ protected:
     int time = 0;
     int touchStart = 50;
     int touchEnd = 10;
-    ScreenPoint pointOut;
+    ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
     uint64_t blockId = 0;
 
@@ -904,7 +923,7 @@ protected:
     EXPECT_LE(1, mcc->RunThroughDelayedTasks());
 
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
-    EXPECT_EQ(ScreenPoint(), pointOut);
+    EXPECT_EQ(ParentLayerPoint(), pointOut);
     EXPECT_EQ(ViewTransform(), viewTransformOut);
 
     apzc->AssertStateIsReset();
@@ -961,12 +980,12 @@ TEST_F(APZCBasicTester, Fling) {
   int time = 0;
   int touchStart = 50;
   int touchEnd = 10;
-  ScreenPoint pointOut;
+  ParentLayerPoint pointOut;
   ViewTransform viewTransformOut;
 
   // Fling down. Each step scroll further down
   Pan(apzc, time, touchStart, touchEnd);
-  ScreenPoint lastPoint;
+  ParentLayerPoint lastPoint;
   for (int i = 1; i < 50; i+=1) {
     apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(i), &viewTransformOut, pointOut);
     EXPECT_GT(pointOut.y, lastPoint.y);
@@ -1054,11 +1073,11 @@ TEST_F(APZCBasicTester, OverScrollPanning) {
   // Check that we recover from overscroll via an animation.
   const TimeDuration increment = TimeDuration::FromMilliseconds(1);
   bool recoveredFromOverscroll = false;
-  ScreenPoint pointOut;
+  ParentLayerPoint pointOut;
   ViewTransform viewTransformOut;
   while (apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut)) {
     // The reported scroll offset should be the same throughout.
-    EXPECT_EQ(ScreenPoint(0, 90), pointOut);
+    EXPECT_EQ(ParentLayerPoint(0, 90), pointOut);
 
     if (!apzc->IsOverscrolled()) {
       recoveredFromOverscroll = true;
@@ -1080,7 +1099,7 @@ TEST_F(APZCBasicTester, OverScrollAbort) {
   Pan(apzc, time, touchStart, touchEnd);
   EXPECT_TRUE(apzc->IsOverscrolled());
 
-  ScreenPoint pointOut;
+  ParentLayerPoint pointOut;
   ViewTransform viewTransformOut;
 
   // This sample call will run to the end of the fling animation
@@ -1140,7 +1159,7 @@ protected:
     int tapCallsExpected = aSlow ? 1 : 0;
 
     // Advance the fling animation by timeDelta milliseconds.
-    ScreenPoint pointOut;
+    ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
     apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(timeDelta), &viewTransformOut, pointOut);
 
@@ -1151,7 +1170,7 @@ protected:
     while (mcc->RunThroughDelayedTasks());
 
     // Verify that we didn't advance any further after the fling was aborted, in either case.
-    ScreenPoint finalPointOut;
+    ParentLayerPoint finalPointOut;
     apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(timeDelta + 1000), &viewTransformOut, finalPointOut);
     EXPECT_EQ(pointOut.x, finalPointOut.x);
     EXPECT_EQ(pointOut.y, finalPointOut.y);
@@ -1173,7 +1192,7 @@ protected:
     while (mcc->RunThroughDelayedTasks());
 
     // Sample the fling a couple of times to ensure it's going.
-    ScreenPoint point, finalPoint;
+    ParentLayerPoint point, finalPoint;
     ViewTransform viewTransform;
     apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(10), &viewTransform, point);
     apzc->SampleContentTransformForFrame(testStartTime + TimeDuration::FromMilliseconds(20), &viewTransform, finalPoint);
@@ -1385,7 +1404,7 @@ protected:
     time += 1000;
 
     MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, time, TimeStamp(), 0);
-    mti.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(touchX, touchEndY), ScreenSize(0, 0), 0, 0));
+    mti.mTouches.AppendElement(SingleTouchData(0, ParentLayerPoint(touchX, touchEndY), ScreenSize(0, 0), 0, 0));
     status = apzc->ReceiveInputEvent(mti, nullptr);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
@@ -1393,11 +1412,11 @@ protected:
     status = TouchUp(apzc, touchX, touchEndY, time);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, status);
 
-    ScreenPoint pointOut;
+    ParentLayerPoint pointOut;
     ViewTransform viewTransformOut;
     apzc->SampleContentTransformForFrame(testStartTime, &viewTransformOut, pointOut);
 
-    EXPECT_EQ(ScreenPoint(), pointOut);
+    EXPECT_EQ(ParentLayerPoint(), pointOut);
     EXPECT_EQ(ViewTransform(), viewTransformOut);
 
     apzc->AssertStateIsReset();
@@ -1563,13 +1582,13 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByPinch) {
   int inputId = 0;
   MultiTouchInput mti;
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, time, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(20, 20), ScreenSize(0, 0), 0, 0));
-  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(10, 10), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
   apzc->ReceiveInputEvent(mti, nullptr);
 
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, time, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(20, 20), ScreenSize(0, 0), 0, 0));
-  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(10, 10), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
   apzc->ReceiveInputEvent(mti, nullptr);
 
   while (mcc->RunThroughDelayedTasks());
@@ -1588,17 +1607,17 @@ TEST_F(APZCGestureDetectorTester, TapFollowedByMultipleTouches) {
   int inputId = 0;
   MultiTouchInput mti;
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, time, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(20, 20), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20), ScreenSize(0, 0), 0, 0));
   apzc->ReceiveInputEvent(mti, nullptr);
 
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, time, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(20, 20), ScreenSize(0, 0), 0, 0));
-  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(10, 10), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
   apzc->ReceiveInputEvent(mti, nullptr);
 
   mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, time, TimeStamp(), 0);
-  mti.mTouches.AppendElement(SingleTouchData(inputId, ScreenIntPoint(20, 20), ScreenSize(0, 0), 0, 0));
-  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ScreenIntPoint(10, 10), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId, ParentLayerPoint(20, 20), ScreenSize(0, 0), 0, 0));
+  mti.mTouches.AppendElement(SingleTouchData(inputId + 1, ParentLayerPoint(10, 10), ScreenSize(0, 0), 0, 0));
   apzc->ReceiveInputEvent(mti, nullptr);
 
   while (mcc->RunThroughDelayedTasks());
