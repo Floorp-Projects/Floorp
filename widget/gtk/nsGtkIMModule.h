@@ -303,14 +303,10 @@ protected:
      *    Following methods dispatch gecko events.  Then, the focused widget
      *    can be destroyed, and also it can be stolen focus.  If they returns
      *    FALSE, callers cannot continue the composition.
-     *      - CommitCompositionBy
      *      - DispatchCompositionStart
      *      - DispatchCompositionChangeEvent
      *      - DispatchCompositionEventsForCommit
      */
-
-    // Commits the current composition by the aString.
-    bool CommitCompositionBy(const nsAString& aString);
 
     /**
      * Dispatches a composition start event.
