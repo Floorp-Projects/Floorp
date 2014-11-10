@@ -143,12 +143,10 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     aMetrics.SetScrollOffset(actualScrollOffset);
 
     // The pres shell resolution is updated by the the async zoom since the
-    // last paint. The ScreenToLayerScale(1.0f) reflects this async zoom being
-    // turned into a "sync" zoom during the repaint.
-    ParentLayerToLayerScale presShellResolution = aMetrics.mPresShellResolution
-                                                * aMetrics.GetAsyncZoom()
-                                                * ScreenToLayerScale(1.0f);
-    aUtils->SetResolution(presShellResolution.scale, presShellResolution.scale);
+    // last paint.
+    float presShellResolution = aMetrics.mPresShellResolution
+                              * aMetrics.GetAsyncZoom().scale;
+    aUtils->SetResolution(presShellResolution, presShellResolution);
 
     // Finally, we set the displayport.
     nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aMetrics.GetScrollId());
