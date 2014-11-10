@@ -572,13 +572,6 @@ nsGtkIMModule::GetInputContext()
     return mInputContext;
 }
 
-/* static */
-bool
-nsGtkIMModule::IsVirtualKeyboardOpened()
-{
-    return false;
-}
-
 GtkIMContext*
 nsGtkIMModule::GetCurrentContext() const
 {

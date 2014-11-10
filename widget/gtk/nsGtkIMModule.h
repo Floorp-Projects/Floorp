@@ -89,10 +89,6 @@ public:
     InputContext GetInputContext();
     void OnUpdateComposition();
 
-    // If a software keyboard has been opened, this returns TRUE.
-    // Otherwise, FALSE.
-    static bool IsVirtualKeyboardOpened();
-
 protected:
     // Owner of an instance of this class. This should be top level window.
     // The owner window must release the contexts when it's destroyed because
