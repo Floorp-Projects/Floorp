@@ -30,6 +30,9 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
 const HTML = "http://www.w3.org/1999/xhtml";
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/WebIDE/Troubleshooting";
 
+const MAX_ZOOM = 1.4;
+const MIN_ZOOM = 0.6;
+
 // download template index early
 GetTemplatesJSON(true);
 
@@ -97,6 +100,12 @@ let UI = {
     }
 
     this.setupDeck();
+
+    this.contentViewer = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShell)
+                               .contentViewer;
+    this.contentViewer.fullZoom = Services.prefs.getCharPref("devtools.webide.zoom");
   },
 
   uninit: function() {
@@ -901,7 +910,7 @@ let UI = {
 
     document.querySelector("notificationbox").insertBefore(iframe, splitter.nextSibling);
     let host = devtools.Toolbox.HostType.CUSTOM;
-    let options = { customIframe: iframe };
+    let options = { customIframe: iframe, zoom: false };
     this.toolboxIframe = iframe;
 
     let height = Services.prefs.getIntPref("devtools.toolbox.footer.height");
@@ -1274,5 +1283,24 @@ let Cmds = {
 
   showPrefs: function() {
     UI.selectDeckPanel("prefs");
+  },
+
+  zoomIn: function() {
+    if (UI.contentViewer.fullZoom < MAX_ZOOM) {
+      UI.contentViewer.fullZoom += 0.1;
+      Services.prefs.setCharPref("devtools.webide.zoom", UI.contentViewer.fullZoom);
+    }
+  },
+
+  zoomOut: function() {
+    if (UI.contentViewer.fullZoom > MIN_ZOOM) {
+      UI.contentViewer.fullZoom -= 0.1;
+      Services.prefs.setCharPref("devtools.webide.zoom", UI.contentViewer.fullZoom);
+    }
+  },
+
+  resetZoom: function() {
+    UI.contentViewer.fullZoom = 1;
+    Services.prefs.setCharPref("devtools.webide.zoom", 1);
   },
 };
