@@ -471,7 +471,7 @@ gfxGDIFont::GetGlyphWidth(gfxContext *aCtx, uint16_t aGID)
         return width;
     }
 
-    DCFromContext dc(aCtx);
+    DCFromDrawTarget dc(*aCtx->GetDrawTarget());
     AutoSelectFont fs(dc, GetHFONT());
 
     int devWidth;
