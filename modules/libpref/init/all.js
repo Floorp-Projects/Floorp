@@ -3345,8 +3345,6 @@ pref("layout.css.scroll-behavior.property-enabled", false);
 #if defined(ANDROID) || defined(FXOS_SIMULATOR)
 // font names
 
-pref("font.alias-list", "sans,sans-serif,serif,monospace");
-
 // Gonk (along with FxOS Simulator) and Android ship different sets of fonts
 #if defined(MOZ_WIDGET_GONK) || defined(FXOS_SIMULATOR)
 
@@ -3568,8 +3566,6 @@ pref("print.print_paper_size", 0);
 pref("print.print_extra_margin", 0); // twips
 
 // font names
-
-pref("font.alias-list", "sans,sans-serif,serif,monospace");
 
 pref("font.size.fixed.ar", 12);
 
