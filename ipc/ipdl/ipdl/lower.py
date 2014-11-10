@@ -1620,6 +1620,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         for md in p.messageDecls:
             ns.addstmts([
                 _generateMessageClass(md.msgClass(), md.msgId(),
+                                      md.decl.type.priority,
                                       md.prettyMsgName(p.name+'::'),
                                       md.decl.type.compress),
                 Whitespace.NL ])
@@ -1627,6 +1628,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                 ns.addstmts([
                     _generateMessageClass(
                         md.replyClass(), md.replyId(),
+                        md.decl.type.priority,
                         md.prettyReplyName(p.name+'::'),
                         md.decl.type.compress),
                     Whitespace.NL ])
@@ -1818,7 +1820,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageClass(clsname, msgid, prettyName, compress):
+def _generateMessageClass(clsname, msgid, priority, prettyName, compress):
     cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
     cls.addstmt(Label.PUBLIC)
 
@@ -1831,12 +1833,19 @@ def _generateMessageClass(clsname, msgid, prettyName, compress):
         compression = ExprVar('COMPRESSION_ENABLED')
     else:
         compression = ExprVar('COMPRESSION_NONE')
+    if priority == ipdl.ast.NORMAL_PRIORITY:
+        priorityEnum = 'IPC::Message::PRIORITY_NORMAL'
+    elif priority == ipdl.ast.HIGH_PRIORITY:
+        priorityEnum = 'IPC::Message::PRIORITY_HIGH'
+    else:
+        assert priority == ipdl.ast.URGENT_PRIORITY
+        priorityEnum = 'IPC::Message::PRIORITY_URGENT'
     ctor = ConstructorDefn(
         ConstructorDecl(clsname),
         memberinits=[ ExprMemberInit(ExprVar('IPC::Message'),
                                      [ ExprVar('MSG_ROUTING_NONE'),
                                        ExprVar('ID'),
-                                       ExprVar('IPC::Message::PRIORITY_NORMAL'),
+                                       ExprVar(priorityEnum),
                                        compression,
                                        ExprLiteral.String(prettyName) ]) ])
     cls.addstmts([ ctor, Whitespace.NL ])
@@ -5196,10 +5205,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         elif md.decl.type.isInterrupt():
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_interrupt'))))
-
-        stmts.append(StmtExpr(ExprCall(
-            ExprSelect(var, '->', 'set_priority'),
-            args=[ ExprLiteral.Int(md.decl.type.priority) ])))
 
         if reply:
             stmts.append(StmtExpr(ExprCall(
