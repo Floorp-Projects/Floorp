@@ -135,7 +135,8 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
             this, aBuffer, aOffset, aCount);
   ReentrantMonitorAutoEnter mon(mMonitor);
   int64_t oldOffset = mOffset;
-  nsresult rv = ReadAt(aOffset, aBuffer, aCount, nullptr);
+  uint32_t bytesRead;
+  nsresult rv = ReadAt(aOffset, aBuffer, aCount, &bytesRead);
   mOffset = oldOffset;
   return rv;
 }
