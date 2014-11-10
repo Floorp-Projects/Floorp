@@ -305,16 +305,20 @@ protected:
      *    FALSE, callers cannot continue the composition.
      *      - CommitCompositionBy
      *      - DispatchCompositionStart
-     *      - DispatchCompositionEnd
      *      - DispatchCompositionChangeEvent
+     *      - DispatchCompositionEventsForCommit
      */
 
     // Commits the current composition by the aString.
     bool CommitCompositionBy(const nsAString& aString);
 
-    // Dispatches a composition start event or a composition end event.
+    /**
+     * Dispatches a composition start event.
+     *
+     * @return                      true if the focused widget is neither
+     *                              destroyed nor changed.  Otherwise, false.
+     */
     bool DispatchCompositionStart();
-    bool DispatchCompositionEnd();
 
     // Dispatches a compositionchange event.  If aIsCommit is TRUE, dispatches
     // a committed compositionchange event.  Otherwise, dispatches a composing
@@ -322,6 +326,16 @@ protected:
     bool DispatchCompositionChangeEvent(const nsAString& aCompositionString,
                                         bool aIsCommit);
 
+    /**
+     * Dispatches a compositionchange event for committing the composition
+     * string and a compositionend event.
+     *
+     * @param aCommitString         The string which the composition is
+     *                              committed with.
+     * @return                      true if the focused widget is neither
+     *                              destroyed nor changed.  Otherwise, false.
+     */
+    bool DispatchCompositionEventsForCommit(const nsAString& aCommitString);
 };
 
 #endif // __nsGtkIMModule_h__
