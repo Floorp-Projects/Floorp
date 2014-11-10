@@ -279,7 +279,6 @@ nsCSPSchemeSrc::toString(nsAString& outStr) const
 
 nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost)
   : mHost(aHost)
-  , mAllowHttps(false)
 {
   ToLowerCase(mHost);
 }
@@ -308,16 +307,7 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   NS_ENSURE_SUCCESS(rv, false);
   if (!mScheme.IsEmpty() &&
       !mScheme.EqualsASCII(scheme.get())) {
-
-    // We should not return false for scheme-less sources where the protected resource
-    // is http and the load is https, see:
-    // http://www.w3.org/TR/CSP2/#match-source-expression
-    bool isHttpsScheme =
-      (NS_SUCCEEDED(aUri->SchemeIs("https", &isHttpsScheme)) && isHttpsScheme);
-
-    if (!(isHttpsScheme && mAllowHttps)) {
-      return false;
-    }
+    return false;
   }
 
   // The host in nsCSpHostSrc should never be empty. In case we are enforcing
@@ -396,13 +386,7 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   if (mPort.IsEmpty()) {
     int32_t port = NS_GetDefaultPort(NS_ConvertUTF16toUTF8(mScheme).get());
     if (port != uriPort) {
-      // We should not return false for scheme-less sources where the protected resource
-      // is http and the load is https, see: http://www.w3.org/TR/CSP2/#match-source-expression
-      // BUT, we only allow scheme-less sources to be upgraded from http to https if CSP
-      // does not explicitly define a port.
-      if (!(uriPort == NS_GetDefaultPort("https") && mAllowHttps)) {
-        return false;
-      }
+      return false;
     }
   }
   // 4.7) Port matching: Compare the ports.
@@ -447,11 +431,10 @@ nsCSPHostSrc::toString(nsAString& outStr) const
 }
 
 void
-nsCSPHostSrc::setScheme(const nsAString& aScheme, bool aAllowHttps)
+nsCSPHostSrc::setScheme(const nsAString& aScheme)
 {
   mScheme = aScheme;
   ToLowerCase(mScheme);
-  mAllowHttps = aAllowHttps;
 }
 
 void
