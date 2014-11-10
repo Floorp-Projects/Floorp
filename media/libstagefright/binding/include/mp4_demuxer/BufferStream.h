@@ -20,6 +20,8 @@ public:
 
   virtual bool ReadAt(int64_t aOffset, void* aData, size_t aLength,
                       size_t* aBytesRead) MOZ_OVERRIDE;
+  virtual bool CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
+                            size_t* aBytesRead) MOZ_OVERRIDE;
   virtual bool Length(int64_t* aLength) MOZ_OVERRIDE;
 
   virtual void DiscardBefore(int64_t aOffset) MOZ_OVERRIDE;
