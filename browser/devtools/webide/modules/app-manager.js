@@ -106,18 +106,28 @@ let AppManager = exports.AppManager = {
       this._listTabsResponse = null;
     } else {
       this.connection.client.listTabs((response) => {
-        let front = new AppActorFront(this.connection.client,
-                                      response);
-        front.on("install-progress", this.onInstallProgress);
-        front.watchApps(() => this.checkIfProjectIsRunning())
-             .then(() => front.fetchIcons())
-             .then(() => {
-               this._appsFront = front;
-               this.checkIfProjectIsRunning();
-               this.update("runtime-apps-found");
-             });
-        this._listTabsResponse = response;
-        this.update("list-tabs-response");
+        if (response.webappsActor) {
+          let front = new AppActorFront(this.connection.client,
+                                        response);
+          front.on("install-progress", this.onInstallProgress);
+          front.watchApps(() => this.checkIfProjectIsRunning())
+          .then(() => {
+            // This can't be done earlier as many operations
+            // in the apps actor require watchApps to be called
+            // first.
+            this._appsFront = front;
+            this._listTabsResponse = response;
+            this.update("list-tabs-response");
+            return front.fetchIcons();
+          })
+          .then(() => {
+            this.checkIfProjectIsRunning();
+            this.update("runtime-apps-found");
+          });
+        } else {
+          this._listTabsResponse = response;
+          this.update("list-tabs-response");
+        }
       });
     }
 
@@ -416,6 +426,10 @@ let AppManager = exports.AppManager = {
     }
   },
 
+  runtimeCanHandleApps: function() {
+    return !!this._appsFront;
+  },
+
   installAndRunProject: function() {
     let project = this.selectedProject;
 
@@ -426,6 +440,11 @@ let AppManager = exports.AppManager = {
 
     if (!this._listTabsResponse) {
       this.reportError("error_cantInstallNotFullyConnected");
+      return promise.reject("Can't install");
+    }
+
+    if (!this._appsFront) {
+      console.error("Runtime doesn't have a webappsActor");
       return promise.reject("Can't install");
     }
 
