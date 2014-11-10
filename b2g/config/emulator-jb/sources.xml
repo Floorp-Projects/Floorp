@@ -12,12 +12,12 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="8986df0f82e15ac2798df0b6c2ee3435400677ac">
+  <project name="platform_build" path="build" remote="b2g" revision="0e94c080bee081a50aa2097527b0b40852f9143f">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="6c569cf6242c13610768c111963f786faa928269"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="ae2e8e79abf972ce3fa647880e6edc297bfd8236"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="45c54a55e31758f7e54e5eafe0d01d387f35897a"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e9cf0dc485a2af12353b41e9f1e41b23f3f07b41"/>
