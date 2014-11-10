@@ -32,6 +32,11 @@ public:
     return mImpl->gl();
   }
 
+  virtual void ActivateProgram(ShaderProgramOGL *aProg) MOZ_OVERRIDE
+  {
+    mImpl->ActivateProgram(aProg);
+  }
+
   virtual ShaderProgramOGL* GetProgram(GLenum aTarget, gfx::SurfaceFormat aFormat) MOZ_OVERRIDE
   {
     ShaderConfigOGL config = ShaderConfigFromTargetAndFormat(aTarget, aFormat);

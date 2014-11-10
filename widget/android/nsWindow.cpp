@@ -2369,7 +2369,9 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect)
         return;
     }
 
-    gl::GLContext* gl = static_cast<CompositorOGL*>(aManager->GetCompositor())->gl();
+    CompositorOGL *compositor = static_cast<CompositorOGL*>(aManager->GetCompositor());
+    compositor->ResetProgram();
+    gl::GLContext* gl = compositor->gl();
     bool scissorEnabled = gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
     GLint scissorRect[4];
     gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
@@ -2398,7 +2400,9 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
 
     mozilla::widget::android::GeckoLayerClient* client = AndroidBridge::Bridge()->GetLayerClient();
 
-    gl::GLContext* gl = static_cast<CompositorOGL*>(aManager->GetCompositor())->gl();
+    CompositorOGL *compositor = static_cast<CompositorOGL*>(aManager->GetCompositor());
+    compositor->ResetProgram();
+    gl::GLContext* gl = compositor->gl();
     bool scissorEnabled = gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST);
     GLint scissorRect[4];
     gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
