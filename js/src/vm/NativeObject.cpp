@@ -1389,7 +1389,7 @@ PurgeScopeChainHelper(ExclusiveContext *cx, HandleObject objArg, HandleId id)
 static inline bool
 PurgeScopeChain(ExclusiveContext *cx, JS::HandleObject obj, JS::HandleId id)
 {
-    if (obj->isDelegate())
+    if (obj->isDelegate() && obj->isNative())
         return PurgeScopeChainHelper(cx, obj, id);
     return true;
 }
