@@ -30,10 +30,11 @@ ClearCacheEntry(const void* aKey, nsRefPtr<T>& aAccessible, void* aUserArg)
  * Clear the cache and shutdown the accessibles.
  */
 
+template <class T>
 static void
-ClearCache(mozilla::a11y::AccessibleHashtable& aCache)
+ClearCache(nsRefPtrHashtable<nsPtrHashKey<const void>, T>& aCache)
 {
-  aCache.Enumerate(ClearCacheEntry<mozilla::a11y::Accessible>, nullptr);
+  aCache.Enumerate(ClearCacheEntry<T>, nullptr);
 }
 
 #endif

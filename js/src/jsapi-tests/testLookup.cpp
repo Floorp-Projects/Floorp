@@ -50,13 +50,13 @@ static const JSClass DocumentAllClass = {
 };
 
 bool
-document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                 JS::MutableHandleObject objp)
+document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *resolvedp)
 {
     // If id is "all", resolve document.all=true.
     JS::RootedValue v(cx);
     if (!JS_IdToValue(cx, id, &v))
         return false;
+
     if (v.isString()) {
         JSString *str = v.toString();
         JSFlatString *flatStr = JS_FlattenString(cx, str);
@@ -67,20 +67,24 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                                          JS_NewObject(cx, &DocumentAllClass, JS::NullPtr(), JS::NullPtr()));
             if (!docAll)
                 return false;
+
             JS::Rooted<JS::Value> allValue(cx, JS::ObjectValue(*docAll));
-            bool ok = JS_DefinePropertyById(cx, obj, id, allValue, 0);
-            objp.set(ok ? obj.get() : nullptr);
-            return ok;
+            if (!JS_DefinePropertyById(cx, obj, id, allValue, 0))
+                return false;
+
+            *resolvedp = true;
+            return true;
         }
     }
-    objp.set(nullptr);
+
+    *resolvedp = false;
     return true;
 }
 
 static const JSClass document_class = {
-    "document", JSCLASS_NEW_RESOLVE,
+    "document", 0,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, (JSResolveOp) document_resolve, JS_ConvertStub
+    JS_EnumerateStub, document_resolve, JS_ConvertStub
 };
 
 BEGIN_TEST(testLookup_bug570195)

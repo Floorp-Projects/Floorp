@@ -6,6 +6,7 @@
 
 EXTRA_JS_MODULES.devtools.eyedropper += [
     'commands.js',
+    'eyedropper-child.js',
     'eyedropper.js'
 ]
 

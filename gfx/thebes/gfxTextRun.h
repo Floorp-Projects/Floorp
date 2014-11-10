@@ -267,9 +267,13 @@ public:
     /**
      * Computes just the advance width for a substring.
      * Uses GetSpacing from aBreakProvider.
+     * If aSpacing is not null, the spacing attached before and after
+     * the substring would be returned in it. NOTE: the spacing is
+     * included in the advance width.
      */
     gfxFloat GetAdvanceWidth(uint32_t aStart, uint32_t aLength,
-                             PropertyProvider *aProvider);
+                             PropertyProvider *aProvider,
+                             PropertyProvider::Spacing* aSpacing = nullptr);
 
     /**
      * Clear all stored line breaks for the given range (both before and after),

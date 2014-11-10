@@ -91,6 +91,19 @@ public:
     return true;
   }
 
+  virtual bool CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
+                            size_t* aBytesRead) MOZ_OVERRIDE
+  {
+    nsresult rv = mResource->ReadFromCache(reinterpret_cast<char*>(aBuffer),
+                                           aOffset, aCount);
+    if (NS_FAILED(rv)) {
+      *aBytesRead = 0;
+      return false;
+    }
+    *aBytesRead = aCount;
+    return true;
+  }
+
   virtual bool Length(int64_t* aSize) MOZ_OVERRIDE
   {
     if (mResource->GetLength() < 0)
@@ -785,14 +798,7 @@ void
 MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
                              int64_t aOffset)
 {
-  if (NS_IsMainThread()) {
-    if (GetTaskQueue()) {
-      GetTaskQueue()->Dispatch(
-        NS_NewRunnableMethod(this, &MP4Reader::UpdateIndex));
-    }
-  } else {
-    UpdateIndex();
-  }
+  UpdateIndex();
 }
 
 void
