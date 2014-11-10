@@ -271,6 +271,7 @@ class GCRuntime
     void decFJMinorCollecting() { fjCollectionCounter--; }
 
     bool triggerGC(JS::gcreason::Reason reason);
+    void maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock);
     bool triggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
     bool maybeGC(Zone *zone);
     void maybePeriodicFullGC();
@@ -481,11 +482,15 @@ class GCRuntime
     void freeUnusedLifoBlocksAfterSweeping(LifoAlloc *lifo);
     void freeAllLifoBlocksAfterSweeping(LifoAlloc *lifo);
 
+    // Public here for ReleaseArenaLists and FinalizeTypedArenas.
+    void releaseArena(ArenaHeader *aheader, const AutoLockGC &lock);
+
   private:
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
     Chunk *pickChunk(const AutoLockGC &lock,
                      AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
+    ArenaHeader *allocateArena(Chunk *chunk, Zone *zone, AllocKind kind, const AutoLockGC &lock);
     inline void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
 
     template <AllowGC allowGC>
@@ -543,8 +548,7 @@ class GCRuntime
     bool sweepPhase(SliceBudget &sliceBudget);
     void endSweepPhase(bool lastGC);
     void sweepZones(FreeOp *fop, bool lastGC);
-    void decommitArenasFromAvailableList(Chunk **availableListHeadp);
-    void decommitArenas();
+    void decommitArenas(const AutoLockGC &lock);
     void expireChunksAndArenas(bool shouldShrink, const AutoLockGC &lock);
     void sweepBackgroundThings();
     void assertBackgroundSweepingFinished();
