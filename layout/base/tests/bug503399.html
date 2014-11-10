@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <title>Testcase for bug 503399</title>
+  <style type="text/css">
+    html, body {
+      color: black;
+      background-color: white;
+      font: 16px monospace;
+    }
+    p {
+      text-align: justify;
+      max-width: 180px;
+      height: 1em;
+      overflow: hidden;
+      position: relative;
+    }
+    span {
+      display: inline-block;
+      position: absolute;
+      height: 100%;
+    }
+  </style>
+  <script>
+    var done = false;
+    function runTest(p) {
+      if (done)
+        return;
+      try {
+        var r = window.getSelection().getRangeAt(0);
+        r.setStart(p.childNodes[0],14);
+        r.setEnd(p.childNodes[0],14);
+      } catch (e) {}
+      document.documentElement.removeAttribute('class');
+      done = true;
+    }
+  </script>
+</head>
+<body onload="var p = document.getElementsByTagName('p')[0]; p.focus(); setTimeout(function(){runTest(p)},1000)">
+  <p onfocus="runTest(this)" contentEditable="true">&nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;<span></span> &nbsp;&nbsp; &nbsp;&nbsp;</p>
+</body>
+</html>
