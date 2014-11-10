@@ -744,22 +744,15 @@ GCRuntime::expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock)
     return freeList;
 }
 
-static void
-FreeChunkPool(JSRuntime *rt, ChunkPool &pool)
+void
+GCRuntime::freeEmptyChunks(JSRuntime *rt)
 {
-    for (ChunkPool::Enum e(pool); !e.empty();) {
+    for (ChunkPool::Enum e(emptyChunks_); !e.empty();) {
         Chunk *chunk = e.front();
         e.removeAndPopFront();
         MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
         FreeChunk(rt, chunk);
     }
-    MOZ_ASSERT(pool.count() == 0);
-}
-
-void
-GCRuntime::freeEmptyChunks(JSRuntime *rt, const AutoLockGC &lock)
-{
-    FreeChunkPool(rt, emptyChunks(lock));
 }
 
 void
@@ -1429,7 +1422,7 @@ GCRuntime::finish()
         chunkSet.clear();
     }
 
-    FreeChunkPool(rt, emptyChunks_);
+    freeEmptyChunks(rt);
 
     if (rootsHash.initialized())
         rootsHash.clear();
@@ -3127,25 +3120,6 @@ GCRuntime::maybePeriodicFullGC()
         }
     }
 #endif
-}
-
-// Do all possible decommit immediately from the current thread without
-// releasing the GC lock or allocating any memory.
-void
-GCRuntime::decommitAllWithoutUnlocking(const AutoLockGC &lock)
-{
-    MOZ_ASSERT(emptyChunks(lock).count() == 0);
-    for (Chunk *chunk = *getAvailableChunkList(); chunk; chunk = chunk->info.next) {
-        for (size_t i = 0; i < ArenasPerChunk; ++i) {
-            if (chunk->decommittedArenas.get(i) || chunk->arenas[i].aheader.allocated())
-                continue;
-
-            if (MarkPagesUnused(&chunk->arenas[i], ArenaSize)) {
-                chunk->info.numArenasFreeCommitted--;
-                chunk->decommittedArenas.set(i);
-            }
-        }
-    }
 }
 
 void
@@ -6242,12 +6216,7 @@ GCRuntime::onOutOfMallocMemory()
 
     // Throw away any excess chunks we have lying around.
     AutoLockGC lock(rt);
-    freeEmptyChunks(rt, lock);
-
-    // Immediately decommit as many arenas as possible in the hopes that this
-    // might let the OS scrape together enough pages to satisfy the failing
-    // malloc request.
-    decommitAllWithoutUnlocking(lock);
+    expireChunksAndArenas(true, lock);
 }
 
 void
