@@ -124,15 +124,13 @@ interface nsIMobileConnectionListener : nsISupports
 #define NO_ADDITIONAL_INFORMATION 0
 %}
 
-[scriptable, builtinclass, uuid(413e8bff-9f65-41a0-953f-b82e6cdbc00d)]
+[scriptable, builtinclass, uuid(16e77f19-0298-46de-ae49-9b2fb92a28c0)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
    * notify*Success*() will be called, when request is succeed.
    */
   void notifySuccess();
-
-  void notifySuccessWithString(in DOMString result);
 
   void notifySuccessWithBoolean(in boolean result);
 
@@ -167,6 +165,8 @@ interface nsIMobileConnectionCallback : nsISupports
   void notifyGetClirStatusSuccess(in unsigned short n, in unsigned short m);
 
   void notifyGetPreferredNetworkTypeSuccess(in long type);
+
+  void notifyGetRoamingPreferenceSuccess(in long mode);
 
   /**
    * notifyError() will be called, when request is failed.
@@ -235,7 +235,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(d6b15551-d290-4e38-9749-d21eb35cdaf1)]
+[scriptable, uuid(5250a0ba-19a2-4e5b-a5ee-1e69ba2897a9)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -327,6 +327,13 @@ interface nsIMobileConnection : nsISupports
   const long PREFERRED_NETWORK_TYPE_LTE_WCDMA_GSM           = 9;
   const long PREFERRED_NETWORK_TYPE_LTE_WCDMA_GSM_CDMA_EVDO = 10;
   const long PREFERRED_NETWORK_TYPE_LTE_ONLY                = 11;
+
+  /**
+   * CDMA roaming preference.
+   */
+  const long CDMA_ROAMING_PREFERENCE_HOME       = 0;
+  const long CDMA_ROAMING_PREFERENCE_AFFILIATED = 1;
+  const long CDMA_ROAMING_PREFERENCE_ANY        = 2;
 
   readonly attribute unsigned long serviceId;
 
@@ -470,8 +477,7 @@ interface nsIMobileConnection : nsISupports
    * Set roaming preference.
    *
    * @param mode
-   *        DOMString indicates the desired roaming preference.
-   *        Possible values: 'home', 'affiliated', or 'any'.
+   *        One of the nsIMobileConnection.CDMA_ROAMING_PREFERENCE_* values.
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -481,7 +487,7 @@ interface nsIMobileConnection : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setRoamingPreference(in DOMString mode,
+  void setRoamingPreference(in long mode,
                             in nsIMobileConnectionCallback requestCallback);
 
   /**
@@ -490,9 +496,10 @@ interface nsIMobileConnection : nsISupports
    * @param requestCallback
    *        Called when request is finished.
    *
-   * If successful, the notifySuccessWithString() will be called. And the result
-   * will be a string indicating the current roaming preference. The value will
-   * be either 'home', 'affiliated', or 'any'.
+   * If successful, the notifyGetRoamingPreferenceSuccess() will be called, and
+   * the result 'mode' will be one of the
+   * nsIMobileConnection.CDMA_ROAMING_PREFERENCE_* values, indicating the
+   * current roaming preference.
    *
    * Otherwise, the notifyError() will be called, and the error will be either
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
