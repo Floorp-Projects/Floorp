@@ -29,9 +29,6 @@
 
 #define CUBEB_STREAM_MAX 32
 #define NBUFS 4
-/* When cubeb_stream.soft_volume is set to this value, the device supports
- * setting the volume. Otherwise, a gain will be applied manually. */
-#define SETTING_VOLUME_SUPPORTED -1.0
 
 const GUID KSDATAFORMAT_SUBTYPE_PCM =
 { 0x00000001, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 } };
@@ -160,9 +157,9 @@ winmm_refill_stream(cubeb_stream * stm)
   hdr->dwBufferLength = got * bytes_per_frame(stm->params);
   assert(hdr->dwBufferLength <= stm->buffer_size);
 
-  if (stm->soft_volume != SETTING_VOLUME_SUPPORTED) {
+  if (stm->soft_volume != -1.0) {
     if (stm->params.format == CUBEB_SAMPLE_FLOAT32NE) {
-      short * b = (short *) hdr->lpData;
+      float * b = (float *) hdr->lpData;
       uint32_t i;
       for (i = 0; i < got * stm->params.channels; i++) {
         b[i] *= stm->soft_volume;
@@ -351,7 +348,6 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
 {
   MMRESULT r;
   WAVEFORMATEXTENSIBLE wfx;
-  WAVEOUTCAPS waveoutcaps;
   cubeb_stream * stm;
   int i;
   size_t bufsz;
@@ -438,19 +434,7 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     return CUBEB_ERROR;
   }
 
-  r = waveOutGetDevCaps(WAVE_MAPPER, &waveoutcaps, sizeof(WAVEOUTCAPS)); 
-  if(r != MMSYSERR_NOERROR) {
-    winmm_stream_destroy(stm);
-    return CUBEB_ERROR;
-  }
-
-  stm->soft_volume = SETTING_VOLUME_SUPPORTED;
-
-  /* if this device does not support setting the volume, do it manually. */
-  if(!(waveoutcaps.dwSupport & WAVECAPS_VOLUME)) {
-    stm->soft_volume = 1.0;
-  }
-
+  stm->soft_volume = -1.0;
 
   /* winmm_buffer_callback will be called during waveOutOpen, so all
      other initialization must be complete before calling it. */
@@ -668,28 +652,9 @@ winmm_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 static int
 winmm_stream_set_volume(cubeb_stream * stm, float volume)
 {
-  MMRESULT r;
-  DWORD vol;
-
-  if (stm->soft_volume != SETTING_VOLUME_SUPPORTED) {
-    stm->soft_volume = volume;
-    return CUBEB_OK;
-  }
-
-  // lower order word is the left channel, higher order
-  // word is the right channel. Full volume on a channel is 0xffff.
-  vol = volume * 0xffff;
-  vol |= vol << 16;
-
   EnterCriticalSection(&stm->lock);
-  r = waveOutSetVolume(stm->waveout, vol);
-  if (r != MMSYSERR_NOERROR) {
-    stm->soft_volume = volume;
-    LeaveCriticalSection(&stm->lock);
-    return CUBEB_ERROR;
-  }
+  stm->soft_volume = volume;
   LeaveCriticalSection(&stm->lock);
-
   return CUBEB_OK;
 }
 
