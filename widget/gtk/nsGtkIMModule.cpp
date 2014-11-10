@@ -787,7 +787,7 @@ nsGtkIMModule::OnChangeCompositionNative(GtkIMContext *aContext)
     }
 
     // Be aware, widget can be gone
-    DispatchCompositionChangeEvent(compositionString, false);
+    DispatchCompositionChangeEvent(compositionString);
 }
 
 /* static */
@@ -1035,12 +1035,11 @@ nsGtkIMModule::DispatchCompositionStart()
 
 bool
 nsGtkIMModule::DispatchCompositionChangeEvent(
-                   const nsAString &aCompositionString,
-                   bool aIsCommit)
+                   const nsAString& aCompositionString)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): DispatchCompositionChangeEvent, aIsCommit=%s",
-         this, aIsCommit ? "TRUE" : "FALSE"));
+        ("GtkIMModule(%p): DispatchCompositionChangeEvent, ",
+         this));
 
     if (!mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -1084,16 +1083,12 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
     compositionChangeEvent.mData =
       mDispatchedCompositionString = aCompositionString;
 
-    if (!aIsCommit) {
-        // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
-        //       has been updated already.
-        compositionChangeEvent.mRanges = CreateTextRangeArray();
-        targetOffset += compositionChangeEvent.mRanges->TargetClauseOffset();
-    }
+    // NOTE: CreateTextRangeArray() assumes that mDispatchedCompositionString
+    //       has been updated already.
+    compositionChangeEvent.mRanges = CreateTextRangeArray();
+    targetOffset += compositionChangeEvent.mRanges->TargetClauseOffset();
 
-    mCompositionState = aIsCommit ?
-        eCompositionState_CommitCompositionChangeEventDispatched :
-        eCompositionState_CompositionChangeEventDispatched;
+    mCompositionState = eCompositionState_CompositionChangeEventDispatched;
 
     mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
     if (lastFocusedWindow->IsDestroyed() ||
@@ -1616,7 +1611,7 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
 
     nsAutoString compositionString;
     GetCompositionString(GetContext(), compositionString);
-    if (!DispatchCompositionChangeEvent(compositionString, false)) {
+    if (!DispatchCompositionChangeEvent(compositionString)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, restoring composition string"));
         return NS_ERROR_FAILURE;
