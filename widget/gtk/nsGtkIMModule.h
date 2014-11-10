@@ -320,11 +320,14 @@ protected:
      */
     bool DispatchCompositionStart();
 
-    // Dispatches a compositionchange event.  If aIsCommit is TRUE, dispatches
-    // a committed compositionchange event.  Otherwise, dispatches a composing
-    // compositionchange event.
-    bool DispatchCompositionChangeEvent(const nsAString& aCompositionString,
-                                        bool aIsCommit);
+    /**
+     * Dispatches a compositionchange event.
+     *
+     * @param aCompositionString    New composition string.
+     * @return                      true if the focused widget is neither
+     *                              destroyed nor changed.  Otherwise, false.
+     */
+    bool DispatchCompositionChangeEvent(const nsAString& aCompositionString);
 
     /**
      * Dispatches a compositionchange event for committing the composition
