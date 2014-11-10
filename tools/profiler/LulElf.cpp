@@ -238,13 +238,13 @@ template<typename ElfClass>
 bool LoadARMexidx(const typename ElfClass::Ehdr* elf_header,
                   const typename ElfClass::Shdr* exidx_section,
                   const typename ElfClass::Shdr* extab_section,
-                  uint32_t loading_addr,
                   uintptr_t text_bias,
+                  uintptr_t rx_avma, size_t rx_size,
                   SecMap* smap,
                   void (*log)(const char*)) {
   // To do this properly we need to know:
-  // * the bounds of the .ARM.exidx section in the mapped image
-  // * the bounds of the .ARM.extab section in the mapped image
+  // * the bounds of the .ARM.exidx section in the process image
+  // * the bounds of the .ARM.extab section in the process image
   // * the vma of the last byte in the text section associated with the .exidx
   // The first two are easy.  The third is a bit tricky.  If we can't
   // figure out what it is, just pass in zero.
@@ -258,18 +258,46 @@ bool LoadARMexidx(const typename ElfClass::Ehdr* elf_header,
   // though .extab is missing, the range checks done by GET_EX_U32 in
   // ExceptionTableInfo::ExtabEntryExtract should prevent any invalid
   // memory accesses, and cause the .extab to be rejected as invalid.
-  const char *exidx_img
-    = GetOffset<ElfClass, char>(elf_header, exidx_section->sh_offset);
-  size_t exidx_size = exidx_section->sh_size;
-  const char *extab_img
-    = extab_section
-        ? GetOffset<ElfClass, char>(elf_header, extab_section->sh_offset)
-        : nullptr;
-  size_t extab_size = extab_section ? extab_section->sh_size : 0;
+
+  uintptr_t exidx_svma = exidx_section->sh_addr;
+  uintptr_t exidx_avma = exidx_svma + text_bias;
+  size_t    exidx_size = exidx_section->sh_size;
+
+  uintptr_t extab_svma = 0;
+  uintptr_t extab_avma = 0;
+  size_t    extab_size = 0;
+  if (extab_section) {
+    extab_svma = extab_section->sh_addr;
+    extab_avma = extab_svma + text_bias;
+    extab_size = extab_section->sh_size;
+  }
+
+  // Because we are reading EXIDX directly out of the executing image,
+  // we need to be careful to check that the relevant sections have
+  // really been mapped with r permissions, so as to guarantee that
+  // reading them won't segfault.  Do this by checking that rx mapped
+  // area covers the exidx and extab as mapped in.
+
+  if (rx_size == 0)
+    // This seems sufficiently bogus that we shouldn't proceed further.
+    return false;
+
+  if (exidx_size == 0)
+    // There's no EXIDX data.  No point in continuing.
+    return false;
+
+  if (!(exidx_avma >= rx_avma && exidx_avma + exidx_size <= rx_avma + rx_size))
+    // The mapped .exidx isn't entirely inside the rx area.
+    return false;
+
+  if (extab_section &&
+      !(extab_avma >= rx_avma && extab_avma + extab_size <= rx_avma + rx_size))
+    // There an .extab section, but it isn't entirely inside the rx area.
+    return false;
 
   // The sh_link field of the exidx section gives the section number
   // for the associated text section.
-  uint32_t exidx_text_last_svma = 0;
+  uint32_t exidx_text_last_avma = 0;
   int exidx_text_sno = exidx_section->sh_link;
   typedef typename ElfClass::Shdr Shdr;
   // |sections| points to the section header table
@@ -279,17 +307,18 @@ bool LoadARMexidx(const typename ElfClass::Ehdr* elf_header,
   if (exidx_text_sno >= 0 && exidx_text_sno < num_sections) {
     const Shdr* exidx_text_shdr = &sections[exidx_text_sno];
     if (exidx_text_shdr->sh_size > 0) {
-      exidx_text_last_svma
+      uint32_t exidx_text_last_svma
         = exidx_text_shdr->sh_addr + exidx_text_shdr->sh_size - 1;
+      exidx_text_last_avma
+        = exidx_text_last_svma + text_bias;
     }
   }
 
   lul::ARMExToModule handler(smap, log);
   lul::ExceptionTableInfo
-    parser(exidx_img, exidx_size, extab_img, extab_size, exidx_text_last_svma,
-           &handler,
-           reinterpret_cast<const char*>(elf_header),
-           loading_addr, text_bias, log);
+    parser(reinterpret_cast<const char*>(exidx_avma), exidx_size,
+           reinterpret_cast<const char*>(extab_avma), extab_size,
+           exidx_text_last_avma, &handler, log);
   parser.Start();
   return true;
 }
@@ -417,7 +446,7 @@ bool LoadSymbols(const string& obj_file,
                  const bool read_gnu_debug_link,
                  LoadSymbolsInfo<ElfClass>* info,
                  SecMap* smap,
-                 void* rx_avma,
+                 void* rx_avma, size_t rx_size,
                  void (*log)(const char*)) {
   typedef typename ElfClass::Phdr Phdr;
   typedef typename ElfClass::Shdr Shdr;
@@ -523,7 +552,9 @@ bool LoadSymbols(const string& obj_file,
       info->LoadedSection(".ARM.extab");
     bool result = LoadARMexidx<ElfClass>(elf_header,
                                          arm_exidx_section, arm_extab_section,
-                                         loading_addr, text_bias, smap, log);
+                                         text_bias,
+                                         reinterpret_cast<uintptr_t>(rx_avma),
+                                         rx_size, smap, log);
     found_usable_info = found_usable_info || result;
     if (result)
       log("LoadSymbols:   read EXIDX from .ARM.{exidx,extab}");
@@ -590,7 +621,7 @@ template<typename ElfClass>
 bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
                             const string& obj_filename,
                             const vector<string>& debug_dirs,
-                            SecMap* smap, void* rx_avma,
+                            SecMap* smap, void* rx_avma, size_t rx_size,
                             void (*log)(const char*)) {
   typedef typename ElfClass::Ehdr Ehdr;
 
@@ -621,7 +652,7 @@ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
   LoadSymbolsInfo<ElfClass> info(debug_dirs);
   if (!LoadSymbols<ElfClass>(obj_filename, big_endian, elf_header,
                              !debug_dirs.empty(), &info,
-                             smap, rx_avma, log)) {
+                             smap, rx_avma, rx_size, log)) {
     const string debuglink_file = info.debuglink_file();
     if (debuglink_file.empty())
       return false;
@@ -660,7 +691,7 @@ bool ReadSymbolDataElfClass(const typename ElfClass::Ehdr* elf_header,
 
     if (!LoadSymbols<ElfClass>(debuglink_file, debug_big_endian,
                                debug_elf_header, false, &info,
-                               smap, rx_avma, log)) {
+                               smap, rx_avma, rx_size, log)) {
       return false;
     }
   }
@@ -676,7 +707,7 @@ namespace lul {
 bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const string& obj_filename,
                             const vector<string>& debug_dirs,
-                            SecMap* smap, void* rx_avma,
+                            SecMap* smap, void* rx_avma, size_t rx_size,
                             void (*log)(const char*)) {
 
   if (!IsValidElf(obj_file)) {
@@ -688,12 +719,12 @@ bool ReadSymbolDataInternal(const uint8_t* obj_file,
   if (elfclass == ELFCLASS32) {
     return ReadSymbolDataElfClass<ElfClass32>(
         reinterpret_cast<const Elf32_Ehdr*>(obj_file),
-        obj_filename, debug_dirs, smap, rx_avma, log);
+        obj_filename, debug_dirs, smap, rx_avma, rx_size, log);
   }
   if (elfclass == ELFCLASS64) {
     return ReadSymbolDataElfClass<ElfClass64>(
         reinterpret_cast<const Elf64_Ehdr*>(obj_file),
-        obj_filename, debug_dirs, smap, rx_avma, log);
+        obj_filename, debug_dirs, smap, rx_avma, rx_size, log);
   }
 
   return false;
@@ -701,7 +732,7 @@ bool ReadSymbolDataInternal(const uint8_t* obj_file,
 
 bool ReadSymbolData(const string& obj_file,
                     const vector<string>& debug_dirs,
-                    SecMap* smap, void* rx_avma,
+                    SecMap* smap, void* rx_avma, size_t rx_size,
                     void (*log)(const char*)) {
   MmapWrapper map_wrapper;
   void* elf_header = NULL;
@@ -709,7 +740,8 @@ bool ReadSymbolData(const string& obj_file,
     return false;
 
   return ReadSymbolDataInternal(reinterpret_cast<uint8_t*>(elf_header),
-                                obj_file, debug_dirs, smap, rx_avma, log);
+                                obj_file, debug_dirs,
+                                smap, rx_avma, rx_size, log);
 }
 
 

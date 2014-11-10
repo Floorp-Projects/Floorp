@@ -50,7 +50,8 @@ namespace lul {
 // or shared library, and add it to SMAP.
 bool ReadSymbolData(const std::string& obj_file,
                     const std::vector<std::string>& debug_dirs,
-                    SecMap* smap, void* rx_avma,
+                    SecMap* smap,
+                    void* rx_avma, size_t rx_size,
                     void (*log)(const char*));
 
 // The same as ReadSymbolData, except that OBJ_FILE is assumed to
@@ -58,7 +59,8 @@ bool ReadSymbolData(const std::string& obj_file,
 bool ReadSymbolDataInternal(const uint8_t* obj_file,
                             const std::string& obj_filename,
                             const std::vector<std::string>& debug_dirs,
-                            SecMap* smap, void* rx_avma,
+                            SecMap* smap,
+                            void* rx_avma, size_t rx_size,
                             void (*log)(const char*));
 
 }  // namespace lul

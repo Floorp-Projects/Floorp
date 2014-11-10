@@ -974,12 +974,12 @@ LUL::NotifyAfterMap(uintptr_t aRXavma, size_t aSize,
     if (!aMappedImage) {
       (void)lul::ReadSymbolData(
               string(aFileName), std::vector<string>(), smap,
-              (void*)aRXavma, mLog);
+              (void*)aRXavma, aSize, mLog);
     } else {
       (void)lul::ReadSymbolDataInternal(
               (const uint8_t*)aMappedImage,
               string(aFileName), std::vector<string>(), smap,
-              (void*)aRXavma, mLog);
+              (void*)aRXavma, aSize, mLog);
     }
 
     mLog("NotifyMap .. preparing entries\n");
