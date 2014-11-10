@@ -27,39 +27,16 @@ protected:
     typedef mozilla::widget::InputContextAction InputContextAction;
 
 public:
-    nsrefcnt AddRef()
-    {
-        NS_PRECONDITION(int32_t(mRefCnt) >= 0, "mRefCnt is negative");
-        ++mRefCnt;
-        NS_LOG_ADDREF(this, mRefCnt, "nsGtkIMModule", sizeof(*this));
-        return mRefCnt;
-    }
-    nsrefcnt Release()
-    {
-        NS_PRECONDITION(mRefCnt != 0, "mRefCnt is alrady zero");
-        --mRefCnt;
-        NS_LOG_RELEASE(this, mRefCnt, "nsGtkIMModule");
-        if (mRefCnt == 0) {
-            mRefCnt = 1; /* stabilize */
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-
-protected:
-    nsAutoRefCnt mRefCnt;
-
-public:
     // aOwnerWindow is a pointer of the owner window.  When aOwnerWindow is
     // destroyed, the related IME contexts are released (i.e., IME cannot be
     // used with the instance after that).
     explicit nsGtkIMModule(nsWindow* aOwnerWindow);
-    ~nsGtkIMModule();
+
+    NS_INLINE_DECL_REFCOUNTING(nsGtkIMModule)
 
     // "Enabled" means the users can use all IMEs.
     // I.e., the focus is in the normal editors.
-    bool IsEnabled();
+    bool IsEnabled() const;
 
     // OnFocusWindow is a notification that aWindow is going to be focused.
     void OnFocusWindow(nsWindow* aWindow);
@@ -89,11 +66,9 @@ public:
     InputContext GetInputContext();
     void OnUpdateComposition();
 
-    // If a software keyboard has been opened, this returns TRUE.
-    // Otherwise, FALSE.
-    static bool IsVirtualKeyboardOpened();
-
 protected:
+    ~nsGtkIMModule();
+
     // Owner of an instance of this class. This should be top level window.
     // The owner window must release the contexts when it's destroyed because
     // the IME contexts need the native window.  If OnDestroyWindow() is called
@@ -106,18 +81,23 @@ protected:
     nsWindow* mLastFocusedWindow;
 
     // Actual context. This is used for handling the user's input.
-    GtkIMContext       *mContext;
+    GtkIMContext* mContext;
 
     // mSimpleContext is used for the password field and
     // the |ime-mode: disabled;| editors if sUseSimpleContext is true.
     // These editors disable IME.  But dead keys should work.  Fortunately,
     // the simple IM context of GTK2 support only them.
-    GtkIMContext       *mSimpleContext;
+    GtkIMContext* mSimpleContext;
 
     // mDummyContext is a dummy context and will be used in Focus()
     // when the state of mEnabled means disabled.  This context's IME state is
     // always "closed", so it closes IME forcedly.
-    GtkIMContext       *mDummyContext;
+    GtkIMContext* mDummyContext;
+
+    // mComposingContext is not nullptr while one of mContext, mSimpleContext
+    // and mDummyContext has composition.
+    // XXX: We don't assume that two or more context have composition same time.
+    GtkIMContext* mComposingContext;
 
     // IME enabled state and other things defined in InputContext.
     // Use following helper methods if you don't need the detail of the status.
@@ -246,16 +226,23 @@ protected:
     void OnStartCompositionNative(GtkIMContext *aContext);
     void OnEndCompositionNative(GtkIMContext *aContext);
 
+    /**
+     * GetCurrentContext() returns current IM context which is chosen with the
+     * enabled state.
+     * WARNING:
+     *     When this class receives some signals for a composition after focus
+     *     is moved in Gecko, the result of this may be different from given
+     *     context by the signals.
+     */
+    GtkIMContext* GetCurrentContext() const;
 
-    // GetContext() returns current IM context which is chosen by the enabled
-    // state.  So, this means *current* IM context.
-    GtkIMContext* GetContext();
-
-    // "Editable" means the users can input characters. They may be not able to
-    // use IMEs but they can use dead keys.
-    // I.e., the focus is in the normal editors or the password editors or
-    // the |ime-mode: disabled;| editors.
-    bool IsEditable();
+    /**
+     * GetActiveContext() returns a composing context or current context.
+     */
+    GtkIMContext* GetActiveContext() const
+    {
+        return mComposingContext ? mComposingContext : GetCurrentContext();
+    }
 
     // If the owner window and IM context have been destroyed, returns TRUE.
     bool IsDestroyed() { return !mOwnerWindow; }
@@ -277,11 +264,27 @@ protected:
     void GetCompositionString(GtkIMContext* aContext,
                               nsAString& aCompositionString);
 
-    // Generates our text range array from current composition string.
-    already_AddRefed<mozilla::TextRangeArray> CreateTextRangeArray();
+    /**
+     * Generates our text range array from current composition string.
+     *
+     * @param aContext              A GtkIMContext which is being handled.
+     * @param aLastDispatchedData   The data of the last compositionchange event
+     *                              of current composition.  This should be
+     *                              mDispatchedCompositionString.
+     */
+    already_AddRefed<mozilla::TextRangeArray>
+        CreateTextRangeArray(GtkIMContext* aContext,
+                             const nsAString& aLastDispatchedData);
 
-    // Sets the offset's cursor position to IME.
-    void SetCursorPosition(uint32_t aTargetOffset);
+    /**
+     * Sets the offset's cursor position to IME.
+     *
+     * @param aContext              A GtkIMContext which is being handled.
+     * @param aTargetOffset         Offset of a character which is anchor of
+     *                              a candidate window.  This is offset in
+     *                              UTF-16 string.
+     */
+    void SetCursorPosition(GtkIMContext* aContext, uint32_t aTargetOffset);
 
     // Queries the current selection offset of the window.
     uint32_t GetSelectionOffset(nsWindow* aWindow);
@@ -289,8 +292,17 @@ protected:
     // Get current paragraph text content and cursor position
     nsresult GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos);
 
-    // Delete text portion
-    nsresult DeleteText(const int32_t aOffset, const uint32_t aNChars);
+    /**
+     * Delete text portion
+     *
+     * @param aContext              A GtkIMContext which is being handled.
+     * @param aOffset               Start offset of the range to delete.
+     * @param aNChars               Count of characters to delete.  It depends
+     *                              on |g_utf8_strlen()| what is one character.
+     */
+    nsresult DeleteText(GtkIMContext* aContext,
+                        int32_t aOffset,
+                        uint32_t aNChars);
 
     // Initializes the GUI event.
     void InitEvent(mozilla::WidgetGUIEvent& aEvent);
@@ -303,25 +315,43 @@ protected:
      *    Following methods dispatch gecko events.  Then, the focused widget
      *    can be destroyed, and also it can be stolen focus.  If they returns
      *    FALSE, callers cannot continue the composition.
-     *      - CommitCompositionBy
      *      - DispatchCompositionStart
-     *      - DispatchCompositionEnd
      *      - DispatchCompositionChangeEvent
+     *      - DispatchCompositionEventsForCommit
      */
 
-    // Commits the current composition by the aString.
-    bool CommitCompositionBy(const nsAString& aString);
+    /**
+     * Dispatches a composition start event.
+     *
+     * @param aContext              A GtkIMContext which is being handled.
+     * @return                      true if the focused widget is neither
+     *                              destroyed nor changed.  Otherwise, false.
+     */
+    bool DispatchCompositionStart(GtkIMContext* aContext);
 
-    // Dispatches a composition start event or a composition end event.
-    bool DispatchCompositionStart();
-    bool DispatchCompositionEnd();
+    /**
+     * Dispatches a compositionchange event.
+     *
+     * @param aContext              A GtkIMContext which is being handled.
+     * @param aCompositionString    New composition string.
+     * @return                      true if the focused widget is neither
+     *                              destroyed nor changed.  Otherwise, false.
+     */
+    bool DispatchCompositionChangeEvent(GtkIMContext* aContext,
+                                        const nsAString& aCompositionString);
 
-    // Dispatches a compositionchange event.  If aIsCommit is TRUE, dispatches
-    // a committed compositionchange event.  Otherwise, dispatches a composing
-    // compositionchange event.
-    bool DispatchCompositionChangeEvent(const nsAString& aCompositionString,
-                                        bool aIsCommit);
-
+    /**
+     * Dispatches a compositionchange event for committing the composition
+     * string and a compositionend event.
+     *
+     * @param aContext              A GtkIMContext which is being handled.
+     * @param aCommitString         The string which the composition is
+     *                              committed with.
+     * @return                      true if the focused widget is neither
+     *                              destroyed nor changed.  Otherwise, false.
+     */
+    bool DispatchCompositionEventsForCommit(GtkIMContext* aContext,
+                                            const nsAString& aCommitString);
 };
 
 #endif // __nsGtkIMModule_h__

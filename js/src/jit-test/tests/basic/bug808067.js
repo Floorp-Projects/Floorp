@@ -11,8 +11,8 @@ expect = "generator function foo returns a value";
 actual = (function (j)  {}).message;
 reportCompare(expect, actual, summary + ": 1");
 reportCompare(expect, actual, summary + ": 2");
-gcslice(0);
 gcslice(1);
+gcslice(2);
 gc();
 var strings = [ (0), ];
 for (var i = 0; i < strings.length; i++)

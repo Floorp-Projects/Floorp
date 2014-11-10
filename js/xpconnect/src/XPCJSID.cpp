@@ -295,7 +295,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsJSIID, nsIJSID, nsIJSIID)
 // The nsIXPCScriptable map declaration that will generate stubs for us...
 #define XPC_MAP_CLASSNAME           nsJSIID
 #define XPC_MAP_QUOTED_CLASSNAME   "nsJSIID"
-#define                             XPC_MAP_WANT_NEWRESOLVE
+#define                             XPC_MAP_WANT_RESOLVE
 #define                             XPC_MAP_WANT_ENUMERATE
 #define                             XPC_MAP_WANT_HASINSTANCE
 #define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
@@ -382,12 +382,11 @@ nsJSIID::NewID(nsIInterfaceInfo* aInfo)
 }
 
 
-/* bool resolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval id); */
 NS_IMETHODIMP
-nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                    JSContext * cx, JSObject * objArg,
-                    jsid idArg, JSObject * *objp,
-                    bool *_retval)
+nsJSIID::Resolve(nsIXPConnectWrappedNative *wrapper,
+                 JSContext * cx, JSObject * objArg,
+                 jsid idArg, bool *resolvedp,
+                 bool *_retval)
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
@@ -406,7 +405,7 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
         if (!member->GetConstantValue(ccx, iface, val.address()))
             return NS_ERROR_OUT_OF_MEMORY;
 
-        *objp = obj;
+        *resolvedp = true;
         *_retval = JS_DefinePropertyById(cx, obj, id, val,
                                          JSPROP_ENUMERATE | JSPROP_READONLY |
                                          JSPROP_PERMANENT);

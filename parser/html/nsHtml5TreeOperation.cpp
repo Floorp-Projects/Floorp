@@ -158,7 +158,8 @@ nsHtml5TreeOperation::AppendText(const char16_t* aBuffer,
                                 aBuilder);
   }
 
-  nsRefPtr<nsTextNode> text = new nsTextNode(aBuilder->GetNodeInfoManager());
+  nsNodeInfoManager* nodeInfoManager = aParent->OwnerDoc()->NodeInfoManager();
+  nsRefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
   NS_ASSERTION(text, "Infallible malloc failed?");
   rv = text->SetText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -335,6 +336,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
                                     nsIAtom* aName,
                                     nsHtml5HtmlAttributes* aAttributes,
                                     mozilla::dom::FromParser aFromParser,
+                                    nsNodeInfoManager* aNodeInfoManager,
                                     nsHtml5DocumentBuilder* aBuilder)
 {
   bool isKeygen = (aName == nsHtml5Atoms::keygen && aNs == kNameSpaceID_XHTML);
@@ -343,7 +345,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
   }
 
   nsCOMPtr<dom::Element> newElement;
-  nsRefPtr<dom::NodeInfo> nodeInfo = aBuilder->GetNodeInfoManager()->
+  nsRefPtr<dom::NodeInfo> nodeInfo = aNodeInfoManager->
     GetNodeInfo(aName, nullptr, aNs, nsIDOMNode::ELEMENT_NODE);
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
   NS_NewElement(getter_AddRefs(newElement),
@@ -383,10 +385,10 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
                         false);
 
     nsRefPtr<dom::NodeInfo> optionNodeInfo =
-      aBuilder->GetNodeInfoManager()->GetNodeInfo(nsHtml5Atoms::option,
-                                                  nullptr,
-                                                  kNameSpaceID_XHTML,
-                                                  nsIDOMNode::ELEMENT_NODE);
+      aNodeInfoManager->GetNodeInfo(nsHtml5Atoms::option,
+                                    nullptr,
+                                    kNameSpaceID_XHTML,
+                                    nsIDOMNode::ELEMENT_NODE);
 
     for (uint32_t i = 0; i < theContent.Length(); ++i) {
       nsCOMPtr<dom::Element> optionElt;
@@ -394,8 +396,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
       NS_NewElement(getter_AddRefs(optionElt),
                     ni.forget(),
                     aFromParser);
-      nsRefPtr<nsTextNode> optionText =
-        new nsTextNode(aBuilder->GetNodeInfoManager());
+      nsRefPtr<nsTextNode> optionText = new nsTextNode(aNodeInfoManager);
       (void) optionText->SetText(theContent[i], false);
       optionElt->AppendChildTo(optionText, false);
       newContent->AppendChildTo(optionElt, false);
@@ -517,8 +518,8 @@ nsHtml5TreeOperation::FosterParentText(nsIContent* aStackParent,
                                   aBuilder);
     }
 
-    nsRefPtr<nsTextNode> text =
-      new nsTextNode(aBuilder->GetNodeInfoManager());
+    nsNodeInfoManager* nodeInfoManager = aStackParent->OwnerDoc()->NodeInfoManager();
+    nsRefPtr<nsTextNode> text = new nsTextNode(nodeInfoManager);
     NS_ASSERTION(text, "Infallible malloc failed?");
     rv = text->SetText(aBuffer, aLength, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -538,8 +539,8 @@ nsHtml5TreeOperation::AppendComment(nsIContent* aParent,
                                     int32_t aLength,
                                     nsHtml5DocumentBuilder* aBuilder)
 {
-  nsRefPtr<dom::Comment> comment =
-    new dom::Comment(aBuilder->GetNodeInfoManager());
+  nsNodeInfoManager* nodeInfoManager = aParent->OwnerDoc()->NodeInfoManager();
+  nsRefPtr<dom::Comment> comment = new dom::Comment(nodeInfoManager);
   NS_ASSERTION(comment, "Infallible malloc failed?");
   nsresult rv = comment->SetText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -590,6 +591,13 @@ nsHtml5TreeOperation::GetDocumentFragmentForTemplate(nsIContent* aNode)
     static_cast<dom::HTMLTemplateElement*>(aNode);
   nsRefPtr<dom::DocumentFragment> frag = tempElem->Content();
   return frag;
+}
+
+nsIContent*
+nsHtml5TreeOperation::GetFosterParent(nsIContent* aTable, nsIContent* aStackParent)
+{
+  nsIContent* tableParent = aTable->GetParent();
+  return IsElementOrTemplateContent(tableParent) ? tableParent : aStackParent;
 }
 
 void
@@ -672,6 +680,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       int32_t ns = mFour.integer;
       nsCOMPtr<nsIAtom> name = Reget(mTwo.atom);
       nsHtml5HtmlAttributes* attributes = mThree.attributes;
+      nsIContent* intendedParent = mFive.node ? *(mFive.node) : nullptr;
+
+      // intendedParent == nullptr is a special case where the
+      // intended parent is the document.
+      nsNodeInfoManager* nodeInfoManager = intendedParent ?
+         intendedParent->OwnerDoc()->NodeInfoManager() :
+         aBuilder->GetNodeInfoManager();
 
       *target = CreateElement(ns,
                               name,
@@ -679,6 +694,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                               mOpCode == eTreeOpCreateElementNetwork ?
                                 dom::FROM_PARSER_NETWORK :
                                 dom::FROM_PARSER_DOCUMENT_WRITE,
+                              nodeInfoManager,
                               aBuilder);
       return NS_OK;
     }
@@ -727,6 +743,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpGetDocumentFragmentForTemplate: {
       nsIContent* node = *(mOne.node);
       *mTwo.node = GetDocumentFragmentForTemplate(node);
+      return NS_OK;
+    }
+    case eTreeOpGetFosterParent: {
+      nsIContent* table = *(mOne.node);
+      nsIContent* stackParent = *(mTwo.node);
+      nsIContent* fosterParent = GetFosterParent(table, stackParent);
+      *mThree.node = fosterParent;
       return NS_OK;
     }
     case eTreeOpMarkAsBroken: {

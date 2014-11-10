@@ -192,13 +192,13 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE |
-                           nsIXPCScriptable::WANT_NEWRESOLVE |
+                           nsIXPCScriptable::WANT_RESOLVE |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
   NS_DEFINE_CLASSINFO_DATA(DOMConstructor, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE |
-                           nsIXPCScriptable::WANT_NEWRESOLVE |
+                           nsIXPCScriptable::WANT_RESOLVE |
                            nsIXPCScriptable::WANT_HASINSTANCE |
                            nsIXPCScriptable::WANT_CALL |
                            nsIXPCScriptable::WANT_CONSTRUCT |
@@ -1015,11 +1015,18 @@ nsDOMClassInfo::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
   return NS_ERROR_UNEXPECTED;
 }
 
-nsresult
-nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
-                                   JSObject **objp)
+NS_IMETHODIMP
+nsDOMClassInfo::Resolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                        JSObject *aObj, jsid aId, bool *resolvedp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
+  JS::Rooted<jsid> id(cx, aId);
+
+  if (id != sConstructor_id) {
+    *resolvedp = false;
+    return NS_OK;
+  }
+
   JS::Rooted<JSObject*> global(cx, ::JS_GetGlobalForObject(cx, obj));
 
   JS::Rooted<JS::Value> val(cx);
@@ -1032,27 +1039,13 @@ nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *aObj,
     // constructor for this class, or someone messed with
     // window.classname, just fall through and let the JS engine
     // return the Object constructor.
-
-    JS::Rooted<jsid> id(cx, sConstructor_id);
     if (!::JS_DefinePropertyById(cx, obj, id, val,
                                  JSPROP_ENUMERATE,
                                  JS_STUBGETTER, JS_STUBSETTER)) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    *objp = obj;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                           JSObject *obj, jsid id, JSObject **objp,
-                           bool *_retval)
-{
-  if (id == sConstructor_id) {
-    return ResolveConstructor(cx, obj, objp);
+    *resolvedp = true;
   }
 
   return NS_OK;
@@ -2158,7 +2151,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   nsScriptNameSpaceManager *nameSpaceManager = GetNameSpaceManager();
   NS_ENSURE_TRUE(nameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
-  // Note - Our only caller is nsGlobalWindow::DoNewResolve, which checks that
+  // Note - Our only caller is nsGlobalWindow::DoResolve, which checks that
   // JSID_IS_STRING(id) is true.
   nsAutoJSString name;
   if (!name.init(cx, JSID_TO_STRING(id))) {
@@ -2622,9 +2615,9 @@ nsDOMConstructorSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                               JSObject *aObj, jsid aId, JSObject **objp,
-                               bool *_retval)
+nsDOMConstructorSH::Resolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                            JSObject *aObj, jsid aId, bool *resolvedp,
+                            bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);
   JS::Rooted<jsid> id(cx, aId);
@@ -2645,7 +2638,7 @@ nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx
   // Now re-lookup the ID to see if we should report back that we resolved the
   // looked-for constant. Note that we don't have to worry about infinitely
   // recurring back here because the Xray wrapper's holder object doesn't call
-  // NewResolve hooks.
+  // Resolve hooks.
   bool found;
   if (!JS_HasPropertyById(cx, nativePropsObj, id, &found)) {
     *_retval = false;
@@ -2653,7 +2646,7 @@ nsDOMConstructorSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx
   }
 
   if (found) {
-    *objp = obj;
+    *resolvedp = true;
   }
   return NS_OK;
 }
