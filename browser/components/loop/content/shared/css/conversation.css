@@ -677,3 +677,51 @@ html, .fx-embedded, #main,
   }
 }
 
+/**
+ * Rooms
+ */
+
+.room-conversation-wrapper {
+  position: relative;
+  height: 100%;
+}
+
+/**
+ * Hides the hangup button for room conversations.
+ */
+.room-conversation .conversation-toolbar .btn-hangup-entry {
+  display: none;
+}
+
+.room-invitation-overlay {
+  position: absolute;
+  background: rgba(0, 0, 0, .6);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  text-align: center;
+  color: #fff;
+  z-index: 1010;
+}
+
+.room-invitation-overlay form {
+  padding: 8em 0 2.5em 0;
+}
+
+.room-invitation-overlay input[type="text"] {
+  display: block;
+  background: rgba(0, 0, 0, .5);
+  color: #fff;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 3px;
+  padding: .5em;
+  width: 200px;
+  margin: 0 auto;
+}
+
+.room-invitation-overlay .btn-group {
+  position: absolute;
+  bottom: 10px;
+}
