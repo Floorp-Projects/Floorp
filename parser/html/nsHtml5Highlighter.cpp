@@ -79,7 +79,7 @@ nsHtml5Highlighter::Start(const nsAutoString& aTitle)
 
   mOpQueue.AppendElement()->Init(STANDARDS_MODE);
 
-  nsIContent** root = CreateElement(nsHtml5Atoms::html, nullptr);
+  nsIContent** root = CreateElement(nsHtml5Atoms::html, nullptr, nullptr);
   mOpQueue.AppendElement()->Init(eTreeOpAppendToDocument, root);
   mStack.AppendElement(root);
 
@@ -655,7 +655,8 @@ nsHtml5Highlighter::AllocateContentHandle()
 
 nsIContent**
 nsHtml5Highlighter::CreateElement(nsIAtom* aName,
-                                  nsHtml5HtmlAttributes* aAttributes)
+                                  nsHtml5HtmlAttributes* aAttributes,
+                                  nsIContent** aIntendedParent)
 {
   NS_PRECONDITION(aName, "Got null name.");
   nsIContent** content = AllocateContentHandle();
@@ -663,6 +664,7 @@ nsHtml5Highlighter::CreateElement(nsIAtom* aName,
                                  aName,
                                  aAttributes,
                                  content,
+                                 aIntendedParent,
                                  true);
   return content;
 }
@@ -679,7 +681,7 @@ nsHtml5Highlighter::Push(nsIAtom* aName,
                          nsHtml5HtmlAttributes* aAttributes)
 {
   NS_PRECONDITION(mStack.Length() >= 1, "Pushing without root.");
-  nsIContent** elt = CreateElement(aName, aAttributes); // Don't inline below!
+  nsIContent** elt = CreateElement(aName, aAttributes, CurrentNode()); // Don't inline below!
   mOpQueue.AppendElement()->Init(eTreeOpAppend, elt, CurrentNode());
   mStack.AppendElement(elt);
 }
