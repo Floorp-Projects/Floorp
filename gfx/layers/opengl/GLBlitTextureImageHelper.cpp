@@ -197,6 +197,10 @@ GLBlitTextureImageHelper::SetBlitFramebufferForDestTexture(GLuint aTexture)
 void
 GLBlitTextureImageHelper::UseBlitProgram()
 {
+    // XXX: GLBlitTextureImageHelper doesn't use ShaderProgramOGL
+    // so we need to Reset the program
+    mCompositor->ResetProgram();
+
     GLContext *gl = mCompositor->gl();
     if (mBlitProgram) {
         gl->fUseProgram(mBlitProgram);
