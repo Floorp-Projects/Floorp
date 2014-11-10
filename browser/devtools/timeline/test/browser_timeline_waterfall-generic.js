@@ -16,7 +16,7 @@ let test = Task.async(function*() {
   panel.panelWin.on(EVENTS.OVERVIEW_UPDATED, () => updated++);
 
   ok((yield waitUntil(() => updated > 0)),
-    "The overview graphs were updated a bunch of times.");
+    "The overview graph was updated a bunch of times.");
   ok((yield waitUntil(() => TimelineController.getMarkers().length > 0)),
     "There are some markers available.");
 
@@ -25,42 +25,42 @@ let test = Task.async(function*() {
 
   // Test the header container.
 
-  ok($(".waterfall-header-container"),
+  ok($(".timeline-header-container"),
     "A header container should have been created.");
 
   // Test the header sidebar (left).
 
-  ok($(".waterfall-header-container > .waterfall-sidebar"),
+  ok($(".timeline-header-sidebar"),
     "A header sidebar node should have been created.");
-  ok($(".waterfall-header-container > .waterfall-sidebar > .waterfall-header-name"),
+  ok($(".timeline-header-sidebar > .timeline-header-name"),
     "A header name label should have been created inside the sidebar.");
 
   // Test the header ticks (right).
 
-  ok($(".waterfall-header-ticks"),
+  ok($(".timeline-header-ticks"),
     "A header ticks node should have been created.");
-  ok($$(".waterfall-header-ticks > .waterfall-header-tick").length > 0,
+  ok($$(".timeline-header-ticks > .timeline-header-tick").length > 0,
     "Some header tick labels should have been created inside the tick node.");
 
   // Test the markers container.
 
-  ok($(".waterfall-marker-container"),
+  ok($(".timeline-marker-container"),
     "A marker container should have been created.");
 
   // Test the markers sidebar (left).
 
-  ok($$(".waterfall-marker-container > .waterfall-sidebar").length,
+  ok($$(".timeline-marker-sidebar").length,
     "Some marker sidebar nodes should have been created.");
-  ok($$(".waterfall-marker-container > .waterfall-sidebar:not(spacer) > .waterfall-marker-bullet").length,
+  ok($$(".timeline-marker-sidebar:not(spacer) > .timeline-marker-bullet").length,
     "Some marker color bullets should have been created inside the sidebar.");
-  ok($$(".waterfall-marker-container > .waterfall-sidebar:not(spacer) > .waterfall-marker-name").length,
+  ok($$(".timeline-marker-sidebar:not(spacer) > .timeline-marker-name").length,
     "Some marker name labels should have been created inside the sidebar.");
 
   // Test the markers waterfall (right).
 
-  ok($$(".waterfall-marker-item").length,
+  ok($$(".timeline-marker-waterfall").length,
     "Some marker waterfall nodes should have been created.");
-  ok($$(".waterfall-marker-item:not(spacer) > .waterfall-marker-bar").length,
+  ok($$(".timeline-marker-waterfall:not(spacer) > .timeline-marker-bar").length,
     "Some marker color bars should have been created inside the waterfall.");
 
   yield teardown(panel);
