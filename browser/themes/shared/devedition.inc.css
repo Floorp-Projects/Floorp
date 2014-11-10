@@ -36,6 +36,7 @@
   --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
                                      0 8px 3px -5px #2b82bf inset,
                                      0 -1px 0 rgba(0,0,0,.2) inset;
+  --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, transparent 70%);
 
   /* Toolbar buttons */
   --toolbarbutton-hover-background: rgba(25,33, 38,.6) linear-gradient(rgba(25,33,38,.6), rgba(25,33,38,.6)) padding-box;
@@ -97,6 +98,8 @@
   --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
                               0 8px 3px -5px #319BDB inset,
                               0 -1px 0 #2A7CB1 inset;
+  --pinned-tab-glow: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, transparent 16%);
+
 
   /* Toolbar buttons */
   --toolbarbutton-hover-background: #D7D7D8;
@@ -281,7 +284,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
   /* The -2px in `calc` is the height of `tabToolbarNavbarOverlap` plus a 1px offset from the center */
-  background-image: radial-gradient(22px at center calc(100% - 2px), rgba(76,158,217,0.9) 13%, rgba(0,0,0,0.4) 16%, rgba(29,79,115,0) 70%);
+  background-image: var(--pinned-tab-glow);
   background-position: center;
   background-size: 100%;
 }
