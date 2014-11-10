@@ -31,26 +31,29 @@ function spawnTest() {
 }
 
 function inspectAndWaitForCopy() {
-  let deferred = promise.defer();
-
-  waitForClipboard(DIV_COLOR, () => {
+  return waitForClipboard(() => {
     inspectPage(); // setup: inspect the page
-  }, deferred.resolve, deferred.reject);
-
-  return deferred.promise;
+  }, DIV_COLOR);
 }
 
 function inspectPage() {
-  let target = content.document.getElementById("test");
-  let win = content.window;
+  let target = document.documentElement;
+  let win = window;
 
-  EventUtils.synthesizeMouse(target, 20, 20, { type: "mousemove" }, win);
+  // get location of the <div> in the content, offset from browser window
+  let box = gBrowser.selectedTab.linkedBrowser.getBoundingClientRect();
+  let x = box.left + 100;
+  let y = box.top + 100;
 
   let dropper = EyedropperManager.getInstance(window);
 
-  return dropperLoaded(dropper).then(() => {
-    EventUtils.synthesizeMouse(target, 30, 30, { type: "mousemove" }, win);
+  return dropperStarted(dropper).then(() => {
+    EventUtils.synthesizeMouse(target, x, y, { type: "mousemove" }, win);
 
-    EventUtils.synthesizeMouse(target, 30, 30, {}, win);
-  });
+    return dropperLoaded(dropper).then(() => {
+      EventUtils.synthesizeMouse(target, x + 10, y + 10, { type: "mousemove" }, win);
+
+      EventUtils.synthesizeMouse(target, x + 10, y + 10, {}, win);
+    });
+  })
 }

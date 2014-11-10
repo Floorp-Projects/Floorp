@@ -573,7 +573,18 @@ SetUsbFunction(const char* aUsbFunc)
     }
   }
 
-  LOG("SetUsbFunction(%s) %s to '%s'", aUsbFunc, SYS_USB_CONFIG, newSysUsbConfig);
+  // If the persisted function didn't have mass_storage (this happens on
+  // the nexus 4/5, then we can get to here and have oldSysUsbConfig equal
+  // to newSysUsbConfig. So we need to check for that.
+
+  if (strcmp(oldSysUsbConfig, newSysUsbConfig) == 0) {
+    DBG("SetUsbFunction('%s') %s is already set to '%s' - nothing to do",
+        aUsbFunc, SYS_USB_CONFIG, newSysUsbConfig);
+    return;
+  }
+
+  LOG("SetUsbFunction(%s) %s from '%s' to '%s'", aUsbFunc, SYS_USB_CONFIG,
+      oldSysUsbConfig, newSysUsbConfig);
   property_set(SYS_USB_CONFIG, newSysUsbConfig);
 }
 

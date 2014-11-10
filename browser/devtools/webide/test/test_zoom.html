@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
+            let viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsIDocShell)
+                            .contentViewer;
+
+            win.Cmds.zoomOut();
+            win.Cmds.zoomOut();
+            win.Cmds.zoomOut();
+            win.Cmds.zoomOut();
+            win.Cmds.zoomOut();
+            win.Cmds.zoomOut();
+            win.Cmds.zoomOut();
+
+            let roundZoom = Math.round(10 * viewer.fullZoom) / 10;
+            is(roundZoom, 0.6, "Reach min zoom");
+
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+            win.Cmds.zoomIn();
+
+            roundZoom = Math.round(10 * viewer.fullZoom) / 10;
+            is(roundZoom, 1.4, "Reach max zoom");
+
+            yield closeWebIDE(win);
+
+            win = yield openWebIDE();
+            viewer = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell)
+                        .contentViewer;
+
+            roundZoom = Math.round(10 * viewer.fullZoom) / 10;
+            is(roundZoom, 1.4, "Zoom restored");
+
+            win.Cmds.resetZoom();
+
+            is(viewer.fullZoom, 1, "Zoom reset");
+
+            SimpleTest.finish();
+        });
+      }
+    </script>
+  </body>
+</html>
