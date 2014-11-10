@@ -63,6 +63,7 @@ function check_telemetry() {
   do_check_eq(histogram.counts[10], 5); // SEC_ERROR_EXPIRED_CERTIFICATE
   do_check_eq(histogram.counts[11], 2); // MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY
   do_check_eq(histogram.counts[12], 1); // MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA
+  do_check_eq(histogram.counts[13], 1); // MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE
   run_next_test();
 }
 
@@ -149,6 +150,10 @@ function add_simple_tests() {
     clearSessionCache();
     run_next_test();
   });
+
+  add_cert_override_test("inadequate-key-size-ee.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_INADEQUATE_KEY_SIZE));
 }
 
 function add_combo_tests() {
