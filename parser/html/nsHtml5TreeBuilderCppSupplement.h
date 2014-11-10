@@ -67,7 +67,9 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
 }
 
 nsIContentHandle*
-nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes)
+nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
+                                  nsHtml5HtmlAttributes* aAttributes,
+                                  nsIContentHandle* aIntendedParent)
 {
   NS_PRECONDITION(aAttributes, "Got null attributes.");
   NS_PRECONDITION(aName, "Got null name.");
@@ -78,11 +80,22 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
 
   if (mBuilder) {
     nsCOMPtr<nsIAtom> name = nsHtml5TreeOperation::Reget(aName);
+
+    nsIContent* intendedParent = aIntendedParent ?
+      static_cast<nsIContent*>(aIntendedParent) : nullptr;
+
+    // intendedParent == nullptr is a special case where the
+    // intended parent is the document.
+    nsNodeInfoManager* nodeInfoManager = intendedParent ?
+       intendedParent->OwnerDoc()->NodeInfoManager() :
+       mBuilder->GetNodeInfoManager();
+
     nsIContent* elem =
       nsHtml5TreeOperation::CreateElement(aNamespace,
                                           name,
                                           aAttributes,
                                           mozilla::dom::FROM_PARSER_FRAGMENT,
+                                          nodeInfoManager,
                                           mBuilder);
     if (MOZ_UNLIKELY(aAttributes != tokenizer->GetAttributes() &&
                      aAttributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES)) {
@@ -98,6 +111,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
                aName,
                aAttributes,
                content,
+               aIntendedParent,
                !!mSpeculativeLoadStage);
   // mSpeculativeLoadStage is non-null only in the off-the-main-thread
   // tree builder, which handles the network stream
@@ -257,9 +271,13 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
 }
 
 nsIContentHandle*
-nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes, nsIContentHandle* aFormElement)
+nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
+                                  nsHtml5HtmlAttributes* aAttributes,
+                                  nsIContentHandle* aFormElement,
+                                  nsIContentHandle* aIntendedParent)
 {
-  nsIContentHandle* content = createElement(aNamespace, aName, aAttributes);
+  nsIContentHandle* content = createElement(aNamespace, aName, aAttributes,
+                                            aIntendedParent);
   if (aFormElement) {
     if (mBuilder) {
       nsHtml5TreeOperation::SetFormElement(static_cast<nsIContent*>(content),
@@ -276,7 +294,10 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
 nsIContentHandle*
 nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttributes)
 {
-  nsIContentHandle* content = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::html, aAttributes);
+  nsIContentHandle* content = createElement(kNameSpaceID_XHTML,
+                                            nsHtml5Atoms::html,
+                                            aAttributes,
+                                            nullptr);
   if (mBuilder) {
     nsresult rv = nsHtml5TreeOperation::AppendToDocument(static_cast<nsIContent*>(content),
                                                          mBuilder);
@@ -289,6 +310,49 @@ nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttribute
     treeOp->Init(eTreeOpAppendToDocument, content);
   }
   return content;
+}
+
+nsIContentHandle*
+nsHtml5TreeBuilder::createAndInsertFosterParentedElement(int32_t aNamespace, nsIAtom* aName,
+                                                         nsHtml5HtmlAttributes* aAttributes,
+                                                         nsIContentHandle* aFormElement,
+                                                         nsIContentHandle* aTable,
+                                                         nsIContentHandle* aStackParent)
+{
+  NS_PRECONDITION(aTable, "Null table");
+  NS_PRECONDITION(aStackParent, "Null stack parent");
+
+  if (mBuilder) {
+    // Get the foster parent to use as the intended parent when creating
+    // the child element.
+    nsIContent* fosterParent = nsHtml5TreeOperation::GetFosterParent(
+      static_cast<nsIContent*>(aTable),
+      static_cast<nsIContent*>(aStackParent));
+
+    nsIContentHandle* child = createElement(aNamespace, aName, aAttributes,
+      aFormElement, fosterParent);
+
+    insertFosterParentedChild(child, aTable, aStackParent);
+
+    return child;
+  }
+
+  // Tree op to get the foster parent that we use as the intended parent
+  // when creating the child element.
+  nsHtml5TreeOperation* fosterParentTreeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(fosterParentTreeOp, "Tree op allocation failed.");
+  nsIContentHandle* fosterParentHandle = AllocateContentHandle();
+  fosterParentTreeOp->Init(eTreeOpGetFosterParent, aTable,
+                           aStackParent, fosterParentHandle);
+
+  // Create the element with the correct intended parent.
+  nsIContentHandle* child = createElement(aNamespace, aName, aAttributes,
+    aFormElement, fosterParentHandle);
+
+  // Insert the child into the foster parent.
+  insertFosterParentedChild(child, aTable, aStackParent);
+
+  return child;
 }
 
 void
