@@ -150,10 +150,10 @@ ComputeViewTransform(const FrameMetrics& aContentMetrics, const FrameMetrics& aC
   // but with aContentMetrics used in place of mLastContentPaintMetrics, because they
   // should be equivalent, modulo race conditions while transactions are inflight.
 
-  ParentLayerToScreenScale scale = aCompositorMetrics.mPresShellResolution
-                                 * aCompositorMetrics.GetAsyncZoom();
-  ScreenPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
-                         * aCompositorMetrics.GetZoom();
+  LayerToParentLayerScale scale(aCompositorMetrics.mPresShellResolution
+                                * aCompositorMetrics.GetAsyncZoom().scale);
+  ParentLayerPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
+                               * aCompositorMetrics.GetZoom();
   return ViewTransform(scale, -translation);
 }
 
@@ -1366,8 +1366,8 @@ GetCompositorSideCompositionBounds(const LayerMetricsWrapper& aScrollAncestor,
                                    const ViewTransform& aAPZTransform)
 {
   Matrix4x4 nonTransientAPZUntransform = Matrix4x4::Scaling(
-    aScrollAncestor.Metrics().mPresShellResolution.scale,
-    aScrollAncestor.Metrics().mPresShellResolution.scale,
+    aScrollAncestor.Metrics().mPresShellResolution,
+    aScrollAncestor.Metrics().mPresShellResolution,
     1.f);
   nonTransientAPZUntransform.Invert();
 
