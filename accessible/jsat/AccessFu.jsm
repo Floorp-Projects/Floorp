@@ -225,9 +225,6 @@ this.AccessFu = { // jshint ignore:line
       case 'AccessFu:Input':
         this.Input.setEditState(aMessage.json);
         break;
-      case 'AccessFu:ActivateContextMenu':
-        this.Input.activateContextMenu(aMessage.json);
-        break;
       case 'AccessFu:DoScroll':
         this.Input.doScroll(aMessage.json);
         break;
@@ -274,7 +271,6 @@ this.AccessFu = { // jshint ignore:line
     aMessageManager.addMessageListener('AccessFu:Present', this);
     aMessageManager.addMessageListener('AccessFu:Input', this);
     aMessageManager.addMessageListener('AccessFu:Ready', this);
-    aMessageManager.addMessageListener('AccessFu:ActivateContextMenu', this);
     aMessageManager.addMessageListener('AccessFu:DoScroll', this);
   },
 
@@ -282,7 +278,6 @@ this.AccessFu = { // jshint ignore:line
     aMessageManager.removeMessageListener('AccessFu:Present', this);
     aMessageManager.removeMessageListener('AccessFu:Input', this);
     aMessageManager.removeMessageListener('AccessFu:Ready', this);
-    aMessageManager.removeMessageListener('AccessFu:ActivateContextMenu', this);
     aMessageManager.removeMessageListener('AccessFu:DoScroll', this);
   },
 
@@ -664,9 +659,6 @@ var Input = {
       case 'doubletap1':
         this.activateCurrent();
         break;
-      case 'taphold1':
-        this.sendContextMenuMessage();
-        break;
       case 'swiperight1':
         this.moveCursor('moveNext', 'Simple', 'gestures');
         break;
@@ -873,15 +865,6 @@ var Input = {
   sendContextMenuMessage: function sendContextMenuMessage() {
     let mm = Utils.getMessageManager(Utils.CurrentBrowser);
     mm.sendAsyncMessage('AccessFu:ContextMenu', {});
-  },
-
-  activateContextMenu: function activateContextMenu(aDetails) {
-    if (Utils.MozBuildApp === 'mobile/android') {
-      let p = AccessFu.adjustContentBounds(aDetails.bounds,
-                                           Utils.CurrentBrowser, true).center();
-      Services.obs.notifyObservers(null, 'Gesture:LongPress',
-                                   JSON.stringify({x: p.x, y: p.y}));
-    }
   },
 
   setEditState: function setEditState(aEditState) {
