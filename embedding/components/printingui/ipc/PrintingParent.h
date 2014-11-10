@@ -7,28 +7,45 @@
 #ifndef mozilla_embedding_PrintingParent_h
 #define mozilla_embedding_PrintingParent_h
 
-#include "mozilla/embedding/PPrintingParent.h"
 #include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/embedding/PPrintingParent.h"
+#include "mozilla/embedding/PPrintProgressDialogParent.h"
+
+class nsIDOMWindow;
 
 namespace mozilla {
 namespace embedding {
-class PrintingParent : public PPrintingParent
+
+class PrintingParent MOZ_FINAL : public PPrintingParent
 {
 public:
     virtual bool
     RecvShowProgress(PBrowserParent* parent,
-                     const bool& isForPrinting);
+                     PPrintProgressDialogParent* printProgressDialog,
+                     const bool& isForPrinting,
+                     bool* notifyOnOpen,
+                     bool* success);
     virtual bool
     RecvShowPrintDialog(PBrowserParent* parent,
                         const PrintData& initSettings,
                         PrintData* retVal,
                         bool* success);
 
+    virtual PPrintProgressDialogParent*
+    AllocPPrintProgressDialogParent();
+
+    virtual bool
+    DeallocPPrintProgressDialogParent(PPrintProgressDialogParent* aActor);
+
     virtual void
     ActorDestroy(ActorDestroyReason aWhy);
 
     MOZ_IMPLICIT PrintingParent();
     virtual ~PrintingParent();
+
+private:
+    nsIDOMWindow*
+    DOMWindowFromBrowserParent(PBrowserParent* parent);
 };
 } // namespace embedding
 } // namespace mozilla
