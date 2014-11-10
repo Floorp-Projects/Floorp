@@ -595,8 +595,6 @@ class SortedArenaList
 
 class ArenaLists
 {
-    JSRuntime *runtime_;
-
     /*
      * For each arena kind its free list is represented as the first span with
      * free things. Initially all the spans are initialized as empty. After we
@@ -641,7 +639,7 @@ class ArenaLists
     ArenaHeader *savedEmptyObjectArenas;
 
   public:
-    ArenaLists(JSRuntime *rt) : runtime_(rt) {
+    ArenaLists() {
         for (size_t i = 0; i != FINALIZE_LIMIT; ++i)
             freeLists[i].initAsEmpty();
         for (size_t i = 0; i != FINALIZE_LIMIT; ++i)
@@ -656,7 +654,21 @@ class ArenaLists
         savedEmptyObjectArenas = nullptr;
     }
 
-    ~ArenaLists();
+    ~ArenaLists() {
+        for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
+            /*
+             * We can only call this during the shutdown after the last GC when
+             * the background finalization is disabled.
+             */
+            MOZ_ASSERT(backgroundFinalizeState[i] == BFS_DONE);
+            ReleaseArenaList(arenaLists[i].head());
+        }
+        ReleaseArenaList(incrementalSweptArenas.head());
+
+        for (size_t i = 0; i < FINALIZE_OBJECT_LIMIT; i++)
+            ReleaseArenaList(savedObjectArenas[i].head());
+        ReleaseArenaList(savedEmptyObjectArenas);
+    }
 
     static uintptr_t getFreeListOffset(AllocKind thingKind) {
         uintptr_t offset = offsetof(ArenaLists, freeLists);
