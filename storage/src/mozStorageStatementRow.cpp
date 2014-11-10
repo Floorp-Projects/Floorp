@@ -35,7 +35,7 @@ NS_IMPL_ISUPPORTS(
 #define XPC_MAP_CLASSNAME StatementRow
 #define XPC_MAP_QUOTED_CLASSNAME "StatementRow"
 #define XPC_MAP_WANT_GETPROPERTY
-#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_WANT_RESOLVE
 #define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h"
 
@@ -113,12 +113,12 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
 }
 
 NS_IMETHODIMP
-StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
-                         JSContext *aCtx,
-                         JSObject *aScopeObj,
-                         jsid aId,
-                         JSObject **_objp,
-                         bool *_retval)
+StatementRow::Resolve(nsIXPConnectWrappedNative *aWrapper,
+                      JSContext *aCtx,
+                      JSObject *aScopeObj,
+                      jsid aId,
+                      bool *aResolvedp,
+                      bool *_retval)
 {
   JS::Rooted<JSObject*> scopeObj(aCtx, aScopeObj);
 
@@ -137,13 +137,13 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
       // It's highly likely that the name doesn't exist, so let the JS engine
       // check the prototype chain and throw if that doesn't have the property
       // either.
-      *_objp = nullptr;
+      *aResolvedp = false;
       return NS_OK;
     }
 
     JS::Rooted<jsid> id(aCtx, aId);
     *_retval = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue, 0);
-    *_objp = scopeObj;
+    *aResolvedp = true;
     return NS_OK;
   }
 

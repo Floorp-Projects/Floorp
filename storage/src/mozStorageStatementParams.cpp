@@ -40,7 +40,7 @@ NS_IMPL_ISUPPORTS(
 #define XPC_MAP_QUOTED_CLASSNAME "StatementParams"
 #define XPC_MAP_WANT_SETPROPERTY
 #define XPC_MAP_WANT_NEWENUMERATE
-#define XPC_MAP_WANT_NEWRESOLVE
+#define XPC_MAP_WANT_RESOLVE
 #define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h"
 
@@ -156,12 +156,12 @@ StatementParams::NewEnumerate(nsIXPConnectWrappedNative *aWrapper,
 }
 
 NS_IMETHODIMP
-StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
-                            JSContext *aCtx,
-                            JSObject *aScopeObj,
-                            jsid aId,
-                            JSObject **_objp,
-                            bool *_retval)
+StatementParams::Resolve(nsIXPConnectWrappedNative *aWrapper,
+                         JSContext *aCtx,
+                         JSObject *aScopeObj,
+                         jsid aId,
+                         bool *resolvedp,
+                         bool *_retval)
 {
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
   // We do not throw at any point after this unless our index is out of range
@@ -202,7 +202,7 @@ StatementParams::NewResolve(nsIXPConnectWrappedNative *aWrapper,
   }
 
   *_retval = ok;
-  *_objp = resolved && ok ? scope.get() : nullptr;
+  *resolvedp = resolved && ok;
   return NS_OK;
 }
 

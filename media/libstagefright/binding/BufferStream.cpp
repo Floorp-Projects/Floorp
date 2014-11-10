@@ -29,6 +29,13 @@ BufferStream::ReadAt(int64_t aOffset, void* aData, size_t aLength,
 }
 
 /*virtual*/ bool
+BufferStream::CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
+                           size_t* aBytesRead)
+{
+  return ReadAt(aOffset, aData, aLength, aBytesRead);
+}
+
+/*virtual*/ bool
 BufferStream::Length(int64_t* aLength)
 {
   *aLength = mStartOffset + mData.Length();

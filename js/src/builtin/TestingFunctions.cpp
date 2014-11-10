@@ -628,16 +628,15 @@ GCSlice(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    bool limit = true;
-    uint32_t budget = 0;
+    SliceBudget budget;
     if (args.length() == 1) {
-        if (!ToUint32(cx, args[0], &budget))
+        uint32_t work = 0;
+        if (!ToUint32(cx, args[0], &work))
             return false;
-    } else {
-        limit = false;
+        budget = SliceBudget(WorkBudget(work));
     }
 
-    cx->runtime()->gc.gcDebugSlice(limit, budget);
+    cx->runtime()->gc.gcDebugSlice(budget);
     args.rval().setUndefined();
     return true;
 }

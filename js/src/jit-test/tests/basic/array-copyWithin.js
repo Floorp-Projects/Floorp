@@ -116,7 +116,12 @@ var proxyObj = {
 };
 
 var p = new Proxy([1, 2, 3, 4, 5], proxyObj);
-assertDeepEq(Array.prototype.copyWithin.call(p, 0, 3), [6, 7, , , 5]);
+Array.prototype.copyWithin.call(p, 0, 3);
+for (name of Object.getOwnPropertyNames(p)) {
+    print(name + ": " + uneval(Object.getOwnPropertyDescriptor(p, name)));
+}
+
+assertDeepEq(p, [6, 7, , , 5]);
 
 // test if we throw in between
 arr = [1, 2, 3, 4, 5];

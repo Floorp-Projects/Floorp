@@ -1397,7 +1397,6 @@ skip-if(B2G) == 502447-1.html 502447-1-ref.html
 == 502942-1.html 502942-1-ref.html
 == 503364-1a.html 503364-1-ref.html
 == 503364-1b.html 503364-1-ref.html
-== 503399.html 503399-ref.html
 # Reftest for bug 503531 marked as failing; should be re-enabled when
 # bug 607548 gets resolved.
 needs-focus fails == 503531-1.html 503531-1-ref.html

@@ -16,14 +16,13 @@ BEGIN_TEST(testResolveRecursion)
 {
     static const JSClass my_resolve_class = {
         "MyResolve",
-        JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE,
-
+        JSCLASS_HAS_PRIVATE,
         JS_PropertyStub,       // add
         JS_DeletePropertyStub, // delete
         JS_PropertyStub,       // get
         JS_StrictPropertyStub, // set
         JS_EnumerateStub,
-        (JSResolveOp) my_resolve,
+        my_resolve,
         JS_ConvertStub
     };
 
@@ -79,7 +78,7 @@ struct AutoIncrCounters {
 };
 
 bool
-doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
+doResolve(JS::HandleObject obj, JS::HandleId id, bool *resolvedp)
 {
     CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);
@@ -97,12 +96,12 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
             EVAL("obj2.y = true", &v);
             CHECK_SAME(v, JSVAL_TRUE);
             CHECK(JS_DefinePropertyById(cx, obj, id, JS::FalseHandleValue, 0));
-            objp.set(obj);
+            *resolvedp = true;
             return true;
         }
         if (obj == obj2) {
             CHECK_EQUAL(resolveEntryCount, 4);
-            objp.set(nullptr);
+            *resolvedp = false;
             return true;
         }
     } else if (JS_FlatStringEqualsAscii(str, "y")) {
@@ -113,7 +112,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
             CHECK(v.isUndefined());
             EVAL("obj1.y", &v);
             CHECK_SAME(v, JSVAL_ZERO);
-            objp.set(obj);
+            *resolvedp = true;
             return true;
         }
         if (obj == obj1) {
@@ -128,7 +127,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
             CHECK(v.isUndefined());
             EVAL("obj1.y = 0", &v);
             CHECK_SAME(v, JSVAL_ZERO);
-            objp.set(obj);
+            *resolvedp = true;
             return true;
         }
     }
@@ -137,10 +136,10 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
 }
 
 static bool
-my_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
+my_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *resolvedp)
 {
     return static_cast<cls_testResolveRecursion *>(JS_GetPrivate(obj))->
-           doResolve(obj, id, objp);
+           doResolve(obj, id, resolvedp);
 }
 
 END_TEST(testResolveRecursion)

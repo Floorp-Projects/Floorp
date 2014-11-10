@@ -34,9 +34,7 @@ BaseProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) 
 bool
 BaseProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
 {
-    // Note: Proxy::set needs to invoke hasOwn to determine where the setter
-    // lives, so we allow SET operations to invoke us.
-    assertEnteredPolicy(cx, proxy, id, GET | SET);
+    assertEnteredPolicy(cx, proxy, id, GET);
     Rooted<PropertyDescriptor> desc(cx);
     if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
         return false;
@@ -153,15 +151,16 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
                 desc.setGetter(JS_PropertyStub);
         }
         desc.value().set(vp.get());
-        return handler->defineProperty(cx, receiver, id, desc);
+        return JSObject::defineGeneric(cx, receiver, id, desc.value(),
+                                       desc.getter(), desc.setter(), desc.attributes());
     }
-
     desc.object().set(receiver);
     desc.value().set(vp.get());
     desc.setAttributes(JSPROP_ENUMERATE);
     desc.setGetter(nullptr);
     desc.setSetter(nullptr); // Pick up the class getter/setter.
-    return handler->defineProperty(cx, receiver, id, desc);
+    return JSObject::defineGeneric(cx, receiver, id, desc.value(), nullptr, nullptr,
+                                   JSPROP_ENUMERATE);
 }
 
 bool

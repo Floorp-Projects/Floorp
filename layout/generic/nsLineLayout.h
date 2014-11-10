@@ -22,6 +22,7 @@
 #include "plarena.h"
 #include "gfxTypes.h"
 #include "WritingModes.h"
+#include "JustificationUtils.h"
 
 class nsFloatManager;
 struct nsStyleText;
@@ -112,9 +113,9 @@ public:
 
   // Support methods for word-wrapping during line reflow
 
-  void SetTextJustificationWeights(int32_t aNumSpaces, int32_t aNumLetters) {
-    mTextJustificationNumSpaces = aNumSpaces;
-    mTextJustificationNumLetters = aNumLetters;
+  void SetJustificationInfo(const mozilla::JustificationInfo& aInfo)
+  {
+    mJustificationInfo = aInfo;
   }
 
   /**
@@ -389,12 +390,9 @@ protected:
     mozilla::LogicalMargin mOffsets;
 
     // state for text justification
-    int32_t mJustificationNumSpaces;
-    int32_t mJustificationNumLetters;
+    mozilla::JustificationInfo mJustificationInfo;
+    mozilla::JustificationAssignment mJustificationAssignment;
     
-    // Other state we use
-    uint8_t mBlockDirAlign;
-
 // PerFrameData flags
 #define PFD_RELATIVEPOS                 0x00000001
 #define PFD_ISTEXTFRAME                 0x00000002
@@ -404,14 +402,19 @@ protected:
 #define PFD_RECOMPUTEOVERFLOW           0x00000020
 #define PFD_ISBULLET                    0x00000040
 #define PFD_SKIPWHENTRIMMINGWHITESPACE  0x00000080
-#define PFD_LASTFLAG                    PFD_SKIPWHENTRIMMINGWHITESPACE
+#define PFD_ISEMPTY                     0x00000100
+#define PFD_LASTFLAG                    PFD_ISEMPTY
 
-    uint8_t mFlags;
+    // Other state we use
+    uint16_t mFlags;
+    uint8_t mBlockDirAlign;
+
+    static_assert(PFD_LASTFLAG <= UINT16_MAX,
+                  "Flag value exceeds the length of flags variable.");
 
     void SetFlag(uint32_t aFlag, bool aValue)
     {
       NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
-      NS_ASSERTION(aFlag<=UINT8_MAX, "bad flag");
       if (aValue) { // set flag
         mFlags |= aFlag;
       }
@@ -433,6 +436,22 @@ protected:
         pfd = pfd->mNext;
       }
       return pfd;
+    }
+
+    bool IsStartJustifiable() const
+    {
+      return mJustificationInfo.mIsStartJustifiable;
+    }
+
+    bool IsEndJustifiable() const
+    {
+      return mJustificationInfo.mIsEndJustifiable;
+    }
+
+    bool ParticipatesInJustification() const
+    {
+      // Skip bullets and empty frames
+      return !GetFlag(PFD_ISBULLET) && !GetFlag(PFD_ISEMPTY);
     }
   };
   PerFrameData* mFrameFreeList;
@@ -500,8 +519,7 @@ protected:
   // This state varies during the reflow of a line but is line
   // "global" state not span "local" state.
   int32_t mLineNumber;
-  int32_t mTextJustificationNumSpaces;
-  int32_t mTextJustificationNumLetters;
+  mozilla::JustificationInfo mJustificationInfo;
 
   int32_t mTotalPlacedFrames;
 
@@ -584,23 +602,14 @@ protected:
 
   bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaISize);
 
-  void ComputeJustificationWeights(PerSpanData* psd, int32_t* numSpaces, int32_t* numLetters);
-
-  struct FrameJustificationState {
-    int32_t mTotalNumSpaces;
-    int32_t mTotalNumLetters;
-    nscoord mTotalWidthForSpaces;
-    nscoord mTotalWidthForLetters;
-    int32_t mNumSpacesProcessed;
-    int32_t mNumLettersProcessed;
-    nscoord mWidthForSpacesProcessed;
-    nscoord mWidthForLettersProcessed;
-  };
+  struct JustificationComputationState;
+  int32_t ComputeFrameJustification(PerSpanData* psd,
+                                    JustificationComputationState& aState);
 
   // Apply justification.  The return value is the amount by which the width of
   // the span corresponding to aPSD got increased due to justification.
-  nscoord ApplyFrameJustification(PerSpanData* aPSD,
-                                  FrameJustificationState* aState);
+  nscoord ApplyFrameJustification(
+      PerSpanData* aPSD, mozilla::JustificationApplicationState& aState);
 
 
 #ifdef DEBUG
