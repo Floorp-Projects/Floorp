@@ -805,11 +805,15 @@ function elementInViewport(el, x, y) {
  *        If they are not specified, then the center of the target is used.
  */
 function checkVisible(el, x, y) {
-  //check if the element is visible
-  let visible = utils.isElementDisplayed(el);
-  if (!visible) {
-    return false;
+  // Bug 1094246 - Webdriver's isShown doesn't work with content xul
+  if (utils.getElementAttribute(el, "namespaceURI").indexOf("there.is.only.xul") == -1) {
+    //check if the element is visible
+    let visible = utils.isElementDisplayed(el);
+    if (!visible) {
+      return false;
+    }
   }
+
   if (el.tagName.toLowerCase() === 'body') {
     return true;
   }
