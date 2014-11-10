@@ -246,7 +246,7 @@ nsDeviceContext::nsDeviceContext()
     : mWidth(0), mHeight(0), mDepth(0),
       mAppUnitsPerDevPixel(-1), mAppUnitsPerDevPixelAtUnitFullZoom(-1),
       mAppUnitsPerPhysicalInch(-1),
-      mPixelScale(1.0f), mPrintingScale(1.0f),
+      mFullZoom(1.0f), mPrintingScale(1.0f),
       mFontCache(nullptr)
 {
     MOZ_ASSERT(NS_IsMainThread(), "nsDeviceContext created off main thread");
@@ -732,14 +732,14 @@ bool nsDeviceContext::CheckDPIChange() {
 }
 
 bool
-nsDeviceContext::SetPixelScale(float aScale)
+nsDeviceContext::SetFullZoom(float aScale)
 {
     if (aScale <= 0) {
-        NS_NOTREACHED("Invalid pixel scale value");
+        NS_NOTREACHED("Invalid full zoom value");
         return false;
     }
     int32_t oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
-    mPixelScale = aScale;
+    mFullZoom = aScale;
     UpdateAppUnitsForFullZoom();
     return oldAppUnitsPerDevPixel != mAppUnitsPerDevPixel;
 }
@@ -748,7 +748,7 @@ void
 nsDeviceContext::UpdateAppUnitsForFullZoom()
 {
     mAppUnitsPerDevPixel =
-        std::max(1, NSToIntRound(float(mAppUnitsPerDevPixelAtUnitFullZoom) / mPixelScale));
-    // adjust mPixelScale to reflect appunit rounding
-    mPixelScale = float(mAppUnitsPerDevPixelAtUnitFullZoom) / mAppUnitsPerDevPixel;
+        std::max(1, NSToIntRound(float(mAppUnitsPerDevPixelAtUnitFullZoom) / mFullZoom));
+    // adjust mFullZoom to reflect appunit rounding
+    mFullZoom = float(mAppUnitsPerDevPixelAtUnitFullZoom) / mAppUnitsPerDevPixel;
 }
