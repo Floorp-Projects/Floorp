@@ -2808,9 +2808,9 @@ public:
       mLength(aLength),
       mWordSpacing(WordSpacing(aFrame, aTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
-      mJustificationSpacing(0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
+      mJustificationSpacing(0),
       mReflowing(true),
       mWhichTextRun(aWhichTextRun)
   {
@@ -2833,9 +2833,9 @@ public:
       mLength(aFrame->GetContentLength()),
       mWordSpacing(WordSpacing(aFrame)),
       mLetterSpacing(LetterSpacing(aFrame)),
-      mJustificationSpacing(0),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
+      mJustificationSpacing(0),
       mReflowing(false),
       mWhichTextRun(aWhichTextRun)
   {
@@ -2867,16 +2867,10 @@ public:
                           bool aIgnoreTabs);
 
   /**
-   * Count the number of justifiable characters in the given DOM range
+   * Compute the justification information in given DOM range, and fill data
+   * necessary for computation of spacing.
    */
-  uint32_t ComputeJustifiableCharacters(int32_t aOffset, int32_t aLength);
-  /**
-   * Find the start and end of the justifiable characters. Does not depend on the
-   * position of aStart or aEnd, although it's most efficient if they are near the
-   * start and end of the text frame.
-   */
-  void FindJustificationRange(gfxSkipCharsIterator* aStart,
-                              gfxSkipCharsIterator* aEnd);
+  void ComputeJustification(int32_t aOffset, int32_t aLength);
 
   const nsStyleText* StyleText() { return mTextStyle; }
   nsTextFrame* GetFrame() { return mFrame; }
@@ -2906,6 +2900,11 @@ public:
   void CalcTabWidths(uint32_t aTransformedStart, uint32_t aTransformedLength);
 
   const gfxSkipCharsIterator& GetEndHint() { return mTempIterator; }
+
+  const JustificationInfo& GetJustificationInfo() const
+  {
+    return mJustificationInfo;
+  }
 
 protected:
   void SetupJustificationSpacing(bool aPostReflow);
@@ -2937,30 +2936,21 @@ protected:
   int32_t               mLength; // DOM string length, may be INT32_MAX
   gfxFloat              mWordSpacing;     // space for each whitespace char
   gfxFloat              mLetterSpacing;   // space for each letter
-  gfxFloat              mJustificationSpacing;
   gfxFloat              mHyphenWidth;
   gfxFloat              mOffsetFromBlockOriginForTabs;
+
+  // The total spacing for justification
+  gfxFloat              mJustificationSpacing;
+  int32_t               mTotalJustificationGaps;
+  JustificationInfo     mJustificationInfo;
+  // The values in mJustificationAssignments corresponds to unskipped
+  // characters start from mJustificationArrayStart.
+  uint32_t              mJustificationArrayStart;
+  nsTArray<JustificationAssignment> mJustificationAssignments;
+
   bool                  mReflowing;
   nsTextFrame::TextRunType mWhichTextRun;
 };
-
-uint32_t
-PropertyProvider::ComputeJustifiableCharacters(int32_t aOffset, int32_t aLength)
-{
-  // Scan non-skipped characters and count justifiable chars.
-  nsSkipCharsRunIterator
-    run(mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aLength);
-  run.SetOriginalOffset(aOffset);
-  uint32_t justifiableChars = 0;
-  bool isCJ = IsChineseOrJapanese(mFrame);
-  while (run.NextRun()) {
-    for (int32_t i = 0; i < run.GetRunLength(); ++i) {
-      justifiableChars +=
-        IsJustifiableCharacter(mFrag, run.GetOriginalOffset() + i, isCJ);
-    }
-  }
-  return justifiableChars;
-}
 
 /**
  * Finds the offset of the first character of the cluster containing aPos
@@ -2999,6 +2989,73 @@ static void FindClusterEnd(gfxTextRun* aTextRun, int32_t aOriginalEnd,
     aPos->AdvanceOriginal(1);
   }
   aPos->AdvanceOriginal(-1);
+}
+
+void
+PropertyProvider::ComputeJustification(int32_t aOffset, int32_t aLength)
+{
+  bool isCJ = IsChineseOrJapanese(mFrame);
+  nsSkipCharsRunIterator
+    run(mStart, nsSkipCharsRunIterator::LENGTH_INCLUDES_SKIPPED, aLength);
+  run.SetOriginalOffset(aOffset);
+  mJustificationArrayStart = run.GetSkippedOffset();
+
+  MOZ_ASSERT(mJustificationAssignments.IsEmpty());
+  mJustificationAssignments.SetCapacity(aLength);
+  while (run.NextRun()) {
+    uint32_t originalOffset = run.GetOriginalOffset();
+    uint32_t skippedOffset = run.GetSkippedOffset();
+    uint32_t length = run.GetRunLength();
+    mJustificationAssignments.SetLength(
+      skippedOffset + length - mJustificationArrayStart);
+
+    gfxSkipCharsIterator iter = run.GetPos();
+    for (uint32_t i = 0; i < length; ++i) {
+      uint32_t offset = originalOffset + i;
+      if (!IsJustifiableCharacter(mFrag, offset, isCJ)) {
+        continue;
+      }
+
+      iter.SetOriginalOffset(offset);
+
+      FindClusterStart(mTextRun, originalOffset, &iter);
+      uint32_t firstCharOffset = iter.GetSkippedOffset();
+      uint32_t firstChar = firstCharOffset > mJustificationArrayStart ?
+        firstCharOffset - mJustificationArrayStart : 0;
+      if (!firstChar) {
+        mJustificationInfo.mIsStartJustifiable = true;
+      } else {
+        auto& assign = mJustificationAssignments[firstChar];
+        auto& prevAssign = mJustificationAssignments[firstChar - 1];
+        if (prevAssign.mGapsAtEnd) {
+          prevAssign.mGapsAtEnd = 1;
+          assign.mGapsAtStart = 1;
+        } else {
+          assign.mGapsAtStart = 2;
+          mJustificationInfo.mInnerOpportunities++;
+        }
+      }
+
+      FindClusterEnd(mTextRun, originalOffset + length, &iter);
+      uint32_t lastChar = iter.GetSkippedOffset() - mJustificationArrayStart;
+      // Assign the two gaps temporary to the last char. If the next cluster is
+      // justifiable as well, one of the gaps will be removed by code above.
+      mJustificationAssignments[lastChar].mGapsAtEnd = 2;
+      mJustificationInfo.mInnerOpportunities++;
+
+      // Skip the whole cluster
+      i = iter.GetOriginalOffset() - originalOffset;
+    }
+  }
+
+  if (!mJustificationAssignments.IsEmpty() &&
+      mJustificationAssignments.LastElement().mGapsAtEnd) {
+    // We counted the expansion opportunity after the last character,
+    // but it is not an inner opportunity.
+    MOZ_ASSERT(mJustificationInfo.mInnerOpportunities > 0);
+    mJustificationInfo.mInnerOpportunities--;
+    mJustificationInfo.mIsEndJustifiable = true;
+  }
 }
 
 // aStart, aLength in transformed string offsets
@@ -3075,35 +3132,21 @@ PropertyProvider::GetSpacingInternal(uint32_t aStart, uint32_t aLength,
   }
 
   // Now add in justification spacing
-  if (mJustificationSpacing) {
-    gfxFloat halfJustificationSpace = mJustificationSpacing/2;
-    // Scan non-skipped characters and adjust justifiable chars, adding
-    // justification space on either side of the cluster
-    bool isCJ = IsChineseOrJapanese(mFrame);
-    gfxSkipCharsIterator justificationStart(mStart), justificationEnd(mStart);
-    FindJustificationRange(&justificationStart, &justificationEnd);
-
-    nsSkipCharsRunIterator
-      run(start, nsSkipCharsRunIterator::LENGTH_UNSKIPPED_ONLY, aLength);
-    while (run.NextRun()) {
-      gfxSkipCharsIterator iter = run.GetPos();
-      int32_t runOriginalOffset = run.GetOriginalOffset();
-      for (int32_t i = 0; i < run.GetRunLength(); ++i) {
-        int32_t iterOriginalOffset = runOriginalOffset + i;
-        if (IsJustifiableCharacter(mFrag, iterOriginalOffset, isCJ)) {
-          iter.SetOriginalOffset(iterOriginalOffset);
-          FindClusterStart(mTextRun, runOriginalOffset, &iter);
-          uint32_t clusterFirstChar = iter.GetSkippedOffset();
-          FindClusterEnd(mTextRun, runOriginalOffset + run.GetRunLength(), &iter);
-          uint32_t clusterLastChar = iter.GetSkippedOffset();
-          // Only apply justification to characters before justificationEnd
-          if (clusterFirstChar >= justificationStart.GetSkippedOffset() &&
-              clusterLastChar < justificationEnd.GetSkippedOffset()) {
-            aSpacing[clusterFirstChar - aStart].mBefore += halfJustificationSpace;
-            aSpacing[clusterLastChar - aStart].mAfter += halfJustificationSpace;
-          }
-        }
-      }
+  if (mJustificationSpacing > 0 && mTotalJustificationGaps) {
+    // If there is any spaces trimmed at the end, aStart + aLength may
+    // be larger than the flags array. When that happens, we can simply
+    // ignore those spaces.
+    auto arrayEnd = mJustificationArrayStart +
+      static_cast<uint32_t>(mJustificationAssignments.Length());
+    auto end = std::min(aStart + aLength, arrayEnd);
+    MOZ_ASSERT(aStart >= mJustificationArrayStart);
+    JustificationApplicationState state(
+        mTotalJustificationGaps, NSToCoordRound(mJustificationSpacing));
+    for (auto i = aStart; i < end; i++) {
+      const auto& assign =
+        mJustificationAssignments[i - mJustificationArrayStart];
+      aSpacing[i - aStart].mBefore += state.Consume(assign.mGapsAtStart);
+      aSpacing[i - aStart].mAfter += state.Consume(assign.mGapsAtEnd);
     }
   }
 }
@@ -3312,37 +3355,6 @@ static uint32_t GetSkippedDistance(const gfxSkipCharsIterator& aStart,
 }
 
 void
-PropertyProvider::FindJustificationRange(gfxSkipCharsIterator* aStart,
-                                         gfxSkipCharsIterator* aEnd)
-{
-  NS_PRECONDITION(mLength != INT32_MAX, "Can't call this with undefined length");
-  NS_ASSERTION(aStart && aEnd, "aStart or/and aEnd is null");
-
-  aStart->SetOriginalOffset(mStart.GetOriginalOffset());
-  aEnd->SetOriginalOffset(mStart.GetOriginalOffset() + mLength);
-
-  // Ignore first cluster at start of line for justification purposes
-  if (mFrame->GetStateBits() & TEXT_START_OF_LINE) {
-    while (aStart->GetOriginalOffset() < aEnd->GetOriginalOffset()) {
-      aStart->AdvanceOriginal(1);
-      if (!aStart->IsOriginalCharSkipped() &&
-          mTextRun->IsClusterStart(aStart->GetSkippedOffset()))
-        break;
-    }
-  }
-
-  // Ignore trailing cluster at end of line for justification purposes
-  if (mFrame->GetStateBits() & TEXT_END_OF_LINE) {
-    while (aEnd->GetOriginalOffset() > aStart->GetOriginalOffset()) {
-      aEnd->AdvanceOriginal(-1);
-      if (!aEnd->IsOriginalCharSkipped() &&
-          mTextRun->IsClusterStart(aEnd->GetSkippedOffset()))
-        break;
-    }
-  }
-}
-
-void
 PropertyProvider::SetupJustificationSpacing(bool aPostReflow)
 {
   NS_PRECONDITION(mLength != INT32_MAX, "Can't call this with undefined length");
@@ -3358,12 +3370,13 @@ PropertyProvider::SetupJustificationSpacing(bool aPostReflow)
     mFrame->GetTrimmedOffsets(mFrag, true, aPostReflow);
   end.AdvanceOriginal(trimmed.mLength);
   gfxSkipCharsIterator realEnd(end);
-  FindJustificationRange(&start, &end);
+  ComputeJustification(start.GetOriginalOffset(),
+                       end.GetOriginalOffset() - start.GetOriginalOffset());
 
-  int32_t justifiableCharacters =
-    ComputeJustifiableCharacters(start.GetOriginalOffset(),
-                                 end.GetOriginalOffset() - start.GetOriginalOffset());
-  if (justifiableCharacters == 0) {
+  auto assign = mFrame->GetJustificationAssignment();
+  mTotalJustificationGaps =
+    JustificationUtils::CountGaps(mJustificationInfo, assign);
+  if (!mTotalJustificationGaps || mJustificationAssignments.IsEmpty()) {
     // Nothing to do, nothing is justifiable and we shouldn't have any
     // justification space assigned
     return;
@@ -3375,13 +3388,14 @@ PropertyProvider::SetupJustificationSpacing(bool aPostReflow)
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
     naturalWidth += GetHyphenWidth();
   }
-  gfxFloat totalJustificationSpace = mFrame->GetSize().width - naturalWidth;
-  if (totalJustificationSpace <= 0) {
+  mJustificationSpacing = mFrame->GetSize().width - naturalWidth;
+  if (mJustificationSpacing <= 0) {
     // No space available
     return;
   }
-  
-  mJustificationSpacing = totalJustificationSpace/justifiableCharacters;
+
+  mJustificationAssignments[0].mGapsAtStart = assign.mGapsAtStart;
+  mJustificationAssignments.LastElement().mGapsAtEnd = assign.mGapsAtEnd;
 }
 
 //----------------------------------------------------------------------
@@ -8395,15 +8409,9 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
       (lineContainer->StyleText()->mTextAlign == NS_STYLE_TEXT_ALIGN_JUSTIFY ||
        lineContainer->StyleText()->mTextAlignLast == NS_STYLE_TEXT_ALIGN_JUSTIFY) &&
       !lineContainer->IsSVGText()) {
-    AddStateBits(TEXT_JUSTIFICATION_ENABLED);    // This will include a space for trailing whitespace, if any is present.
-    // This is corrected for in nsLineLayout::TrimWhiteSpaceIn.
-    int32_t numJustifiableCharacters =
-      provider.ComputeJustifiableCharacters(offset, charsFit);
-
-    NS_ASSERTION(numJustifiableCharacters <= charsFit,
-                 "Bad justifiable character count");
-    aLineLayout.SetTextJustificationWeights(numJustifiableCharacters,
-        charsFit - numJustifiableCharacters);
+    AddStateBits(TEXT_JUSTIFICATION_ENABLED);
+    provider.ComputeJustification(offset, charsFit);
+    aLineLayout.SetJustificationInfo(provider.GetJustificationInfo());
   }
 
   SetLength(contentLength, &aLineLayout, ALLOW_FRAME_CREATION_AND_DESTRUCTION);
@@ -8430,7 +8438,6 @@ nsTextFrame::TrimTrailingWhiteSpace(nsRenderingContext* aRC)
 {
   TrimOutput result;
   result.mChanged = false;
-  result.mLastCharIsJustifiable = false;
   result.mDeltaWidth = 0;
 
   AddStateBits(TEXT_END_OF_LINE);
@@ -8453,10 +8460,8 @@ nsTextFrame::TrimTrailingWhiteSpace(nsRenderingContext* aRC)
   gfxFloat delta = 0;
   uint32_t trimmedEnd = trimmedEndIter.ConvertOriginalToSkipped(trimmed.GetEnd());
   
-  if (GetStateBits() & TEXT_TRIMMED_TRAILING_WHITESPACE) {
-    // We pre-trimmed this frame, so the last character is justifiable
-    result.mLastCharIsJustifiable = true;
-  } else if (trimmed.GetEnd() < GetContentEnd()) {
+  if (!(GetStateBits() & TEXT_TRIMMED_TRAILING_WHITESPACE) &&
+      trimmed.GetEnd() < GetContentEnd()) {
     gfxSkipCharsIterator end = trimmedEndIter;
     uint32_t endOffset = end.ConvertOriginalToSkipped(GetContentOffset() + contentLength);
     if (trimmedEnd < endOffset) {
@@ -8465,28 +8470,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsRenderingContext* aRC)
       PropertyProvider provider(mTextRun, textStyle, frag, this, start, contentLength,
                                 nullptr, 0, nsTextFrame::eInflated);
       delta = mTextRun->GetAdvanceWidth(trimmedEnd, endOffset - trimmedEnd, &provider);
-      // non-compressed whitespace being skipped at end of line -> justifiable
-      // XXX should we actually *count* justifiable characters that should be
-      // removed from the overall count? I think so...
-      result.mLastCharIsJustifiable = true;
       result.mChanged = true;
-    }
-  }
-
-  if (!result.mLastCharIsJustifiable &&
-      (GetStateBits() & TEXT_JUSTIFICATION_ENABLED)) {
-    // Check if any character in the last cluster is justifiable
-    PropertyProvider provider(mTextRun, textStyle, frag, this, start, contentLength,
-                              nullptr, 0, nsTextFrame::eInflated);
-    bool isCJ = IsChineseOrJapanese(this);
-    gfxSkipCharsIterator justificationStart(start), justificationEnd(trimmedEndIter);
-    provider.FindJustificationRange(&justificationStart, &justificationEnd);
-
-    for (int32_t i = justificationEnd.GetOriginalOffset();
-         i < trimmed.GetEnd(); ++i) {
-      if (IsJustifiableCharacter(frag, i, isCJ)) {
-        result.mLastCharIsJustifiable = true;
-      }
     }
   }
 
@@ -8883,4 +8867,26 @@ nsTextFrame::UpdateOverflow()
   UnionAdditionalOverflow(PresContext(), decorationsBlock, provider,
                           &overflowAreas.VisualOverflow(), true);
   return FinishAndStoreOverflow(overflowAreas, GetSize());
+}
+
+void
+nsTextFrame::AssignJustificationGaps(
+    const mozilla::JustificationAssignment& aAssign)
+{
+  int32_t encoded = (aAssign.mGapsAtStart << 8) | aAssign.mGapsAtEnd;
+  static_assert(sizeof(aAssign) == 1,
+                "The encoding might be broken if JustificationAssignment "
+                "is larger than 1 byte");
+  Properties().Set(JustificationAssignment(), NS_INT32_TO_PTR(encoded));
+}
+
+mozilla::JustificationAssignment
+nsTextFrame::GetJustificationAssignment() const
+{
+  int32_t encoded =
+    NS_PTR_TO_INT32(Properties().Get(JustificationAssignment()));
+  mozilla::JustificationAssignment result;
+  result.mGapsAtStart = encoded >> 8;
+  result.mGapsAtEnd = encoded & 0xFF;
+  return result;
 }
