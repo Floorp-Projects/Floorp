@@ -306,7 +306,8 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
 {
     NS_PRECONDITION(aEvent, "aEvent must be non-null");
 
-    if (!IsEditable() || MOZ_UNLIKELY(IsDestroyed())) {
+    if (!mInputContext.mIMEState.MaybeEditable() ||
+        MOZ_UNLIKELY(IsDestroyed())) {
         return false;
     }
 
@@ -495,7 +496,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
         aContext->mHTMLInputType != mInputContext.mHTMLInputType;
 
     // Release current IME focus if IME is enabled.
-    if (changingEnabledState && IsEditable()) {
+    if (changingEnabledState && mInputContext.mIMEState.MaybeEditable()) {
         EndIMEComposition(mLastFocusedWindow);
         Blur();
     }
@@ -505,7 +506,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
     if (changingEnabledState) {
 #if (MOZ_WIDGET_GTK == 3)
         static bool sInputPurposeSupported = !gtk_check_version(3, 6, 0);
-        if (sInputPurposeSupported && IsEditable()) {
+        if (sInputPurposeSupported && mInputContext.mIMEState.MaybeEditable()) {
             GtkIMContext* context = GetContext();
             if (context) {
                 GtkInputPurpose purpose = GTK_INPUT_PURPOSE_FREE_FORM;
@@ -600,14 +601,6 @@ nsGtkIMModule::IsEnabled()
            mInputContext.mIMEState.mEnabled == IMEState::PLUGIN ||
            (!sUseSimpleContext &&
             mInputContext.mIMEState.mEnabled == IMEState::PASSWORD);
-}
-
-bool
-nsGtkIMModule::IsEditable()
-{
-    return mInputContext.mIMEState.mEnabled == IMEState::ENABLED ||
-           mInputContext.mIMEState.mEnabled == IMEState::PLUGIN ||
-           mInputContext.mIMEState.mEnabled == IMEState::PASSWORD;
 }
 
 void

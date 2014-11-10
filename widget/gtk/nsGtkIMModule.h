@@ -251,12 +251,6 @@ protected:
     // state.  So, this means *current* IM context.
     GtkIMContext* GetContext();
 
-    // "Editable" means the users can input characters. They may be not able to
-    // use IMEs but they can use dead keys.
-    // I.e., the focus is in the normal editors or the password editors or
-    // the |ime-mode: disabled;| editors.
-    bool IsEditable();
-
     // If the owner window and IM context have been destroyed, returns TRUE.
     bool IsDestroyed() { return !mOwnerWindow; }
 
