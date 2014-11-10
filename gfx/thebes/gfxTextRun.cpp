@@ -949,7 +949,8 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
 
 gfxFloat
 gfxTextRun::GetAdvanceWidth(uint32_t aStart, uint32_t aLength,
-                            PropertyProvider *aProvider)
+                            PropertyProvider *aProvider,
+                            PropertyProvider::Spacing* aSpacing)
 {
     NS_ASSERTION(aStart + aLength <= GetLength(), "Substring out of range");
 
@@ -959,6 +960,10 @@ gfxTextRun::GetAdvanceWidth(uint32_t aStart, uint32_t aLength,
 
     gfxFloat result = ComputePartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
                       ComputePartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
+
+    if (aSpacing) {
+        aSpacing->mBefore = aSpacing->mAfter = 0;
+    }
 
     // Account for all remaining spacing here. This is more efficient than
     // processing it along with the glyphs.
@@ -971,6 +976,10 @@ gfxTextRun::GetAdvanceWidth(uint32_t aStart, uint32_t aLength,
             for (i = 0; i < ligatureRunEnd - ligatureRunStart; ++i) {
                 PropertyProvider::Spacing *space = &spacingBuffer[i];
                 result += space->mBefore + space->mAfter;
+            }
+            if (aSpacing) {
+                aSpacing->mBefore = spacingBuffer[0].mBefore;
+                aSpacing->mAfter = spacingBuffer.LastElement().mAfter;
             }
         }
     }

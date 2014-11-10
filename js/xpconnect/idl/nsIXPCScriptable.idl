@@ -31,7 +31,7 @@ interface nsIXPConnectWrappedNative;
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(d945a647-a60e-462d-9635-c79d5fa694ce)]
+[uuid(e7dee706-1286-4a22-954b-f0d8a9821bc9)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
@@ -45,7 +45,7 @@ interface nsIXPCScriptable : nsISupports
     const uint32_t WANT_SETPROPERTY                 = 1 <<  6;
     const uint32_t WANT_ENUMERATE                   = 1 <<  7;
     const uint32_t WANT_NEWENUMERATE                = 1 <<  8;
-    const uint32_t WANT_NEWRESOLVE                  = 1 <<  9;
+    const uint32_t WANT_RESOLVE                     = 1 <<  9;
     const uint32_t WANT_CONVERT                     = 1 << 10;
     const uint32_t WANT_FINALIZE                    = 1 << 11;
     // unused bit here!
@@ -115,9 +115,9 @@ interface nsIXPCScriptable : nsISupports
                         in JSContextPtr cx, in JSObjectPtr obj,
                         in uint32_t enum_op, in JSValPtr statep, out jsid idp);
 
-    boolean newResolve(in nsIXPConnectWrappedNative wrapper,
-                      in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
-                      out JSObjectPtr objp);
+    boolean resolve(in nsIXPConnectWrappedNative wrapper,
+                    in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
+                    out boolean resolvedp);
 
     boolean convert(in nsIXPConnectWrappedNative wrapper,
                    in JSContextPtr cx, in JSObjectPtr obj,

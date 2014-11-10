@@ -34,7 +34,8 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
   }
 
   size_t bytes;
-  if (!mContext->mSource->ReadAt(aOffset, header, sizeof(header), &bytes) ||
+  if (!mContext->mSource->CachedReadAt(aOffset, header, sizeof(header),
+                                       &bytes) ||
       bytes != sizeof(header)) {
     return;
   }
@@ -46,8 +47,8 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
                                   headerRange.mEnd + sizeof(bigLength));
     if ((mParent && !mParent->mRange.Contains(bigLengthRange)) ||
         !byteRange->Contains(bigLengthRange) ||
-        !mContext->mSource->ReadAt(aOffset, bigLength,
-                                   sizeof(bigLengthRange), &bytes) ||
+        !mContext->mSource->CachedReadAt(aOffset, bigLength,
+                                         sizeof(bigLengthRange), &bytes) ||
         bytes != sizeof(bigLengthRange)) {
       return;
     }
@@ -86,8 +87,8 @@ Box::Read(nsTArray<uint8_t>* aDest)
 {
   aDest->SetLength(mRange.mEnd - mChildOffset);
   size_t bytes;
-  if (!mContext->mSource->ReadAt(mChildOffset, &(*aDest)[0], aDest->Length(),
-                                 &bytes) ||
+  if (!mContext->mSource->CachedReadAt(mChildOffset, &(*aDest)[0],
+                                       aDest->Length(), &bytes) ||
       bytes != aDest->Length()) {
     // Byte ranges are being reported incorrectly
     MOZ_ASSERT(false);
