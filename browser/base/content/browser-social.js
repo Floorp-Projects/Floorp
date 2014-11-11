@@ -509,8 +509,8 @@ SocialShare = {
     iframe.setAttribute("disableglobalhistory", "true");
     iframe.setAttribute("flex", "1");
     panel.appendChild(iframe);
-    iframe.addEventListener("DOMContentLoaded", function _firstload() {
-      iframe.removeEventListener("DOMContentLoaded", _firstload, true);
+    iframe.addEventListener("load", function _firstload() {
+      iframe.removeEventListener("load", _firstload, true);
       iframe.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
     }, true);
     this.populateProviderMenu();

@@ -102,6 +102,7 @@ namespace system {
 
 #define USB_FUNC_ADB    "adb"
 #define USB_FUNC_MTP    "mtp"
+#define USB_FUNC_NONE   "none"
 #define USB_FUNC_RNDIS  "rndis"
 #define USB_FUNC_UMS    "mass_storage"
 
@@ -528,6 +529,13 @@ SetUsbFunction(const char* aUsbFunc)
   char oldSysUsbConfig[PROPERTY_VALUE_MAX];
   property_get(SYS_USB_CONFIG, oldSysUsbConfig, "");
 
+  if (strcmp(oldSysUsbConfig, USB_FUNC_NONE) == 0) {
+    // It's quite possible that sys.usb.config may have the value "none". We
+    // convert that to an empty string here, and at the end we convert the
+    // empty string back to "none".
+    oldSysUsbConfig[0] = '\0';
+  }
+
   if (IsUsbFunctionEnabled(oldSysUsbConfig, aUsbFunc)) {
     // The function is already configured. Nothing else to do.
     DBG("SetUsbFunction('%s') - already set - nothing to do", aUsbFunc);
@@ -583,6 +591,10 @@ SetUsbFunction(const char* aUsbFunc)
     return;
   }
 
+  if (newSysUsbConfig[0] == '\0') {
+    // Convert the empty string back to the string "none"
+    strlcpy(newSysUsbConfig, USB_FUNC_NONE, sizeof(newSysUsbConfig));
+  }
   LOG("SetUsbFunction(%s) %s from '%s' to '%s'", aUsbFunc, SYS_USB_CONFIG,
       oldSysUsbConfig, newSysUsbConfig);
   property_set(SYS_USB_CONFIG, newSysUsbConfig);

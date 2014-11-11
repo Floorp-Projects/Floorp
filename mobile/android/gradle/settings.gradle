@@ -1,0 +1,8 @@
+include ':app'
+project(':app').projectDir = new File("${topsrcdir}/mobile/android/app")
+
+include ':base'
+project(':base').projectDir = new File("${topsrcdir}/mobile/android/base")
+
+include ':thirdparty'
+project(':thirdparty').projectDir = new File("${topsrcdir}/mobile/android/thirdparty")

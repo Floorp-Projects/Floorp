@@ -152,6 +152,8 @@
 
   <!-- Colour used for Find-In-Page dialog -->
   <color name="find_status_default">#AFB1B3</color>
+  <color name="find_matchcase_on">#AFB1B3</color>
+  <color name="find_matchcase_off">#D02626</color>
 
   <!-- Canvas delegate paint color -->
   <color name="canvas_delegate_paint">#FFFF0000</color>

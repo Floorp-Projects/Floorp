@@ -1,0 +1,61 @@
+project.buildDir = "${topobjdir}/mobile/android/gradle/app/build"
+
+apply plugin: 'android'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            runProguard false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    android {
+        lintOptions {
+            abortOnError false
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest {
+                srcFile "${topobjdir}/mobile/android/base/AndroidManifest.xml"
+            }
+
+            assets {
+                srcDir "${topobjdir}/dist/fennec/assets"
+            }
+
+            jniLibs {
+                srcDir "${topobjdir}/dist/fennec/lib"
+            }
+        }
+
+        androidTest {
+            java {
+                srcDir "${topobjdir}/mobile/android/gradle/app/src/androidTest/robocop_harness/java"
+                srcDir "${topobjdir}/mobile/android/gradle/app/src/androidTest/robocop/java"
+                srcDir "${topobjdir}/mobile/android/gradle/app/src/androidTest/background/java"
+                srcDir "${topobjdir}/mobile/android/gradle/app/src/androidTest/browser/java"
+            }
+        }
+    }
+}
+
+dependencies {
+    compile project(':base')
+    androidTestCompile fileTree(dir: "../../../build/mobile/robocop", include: ['*.jar'])
+}

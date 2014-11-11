@@ -128,6 +128,13 @@ function checkAuth(req) {
   let auth = req.getHeader("Authorization");
   if (!auth.startsWith("Bearer "))
     throw new HTTPError(401, "Invalid Authorization header content: '" + auth + "'");
+
+  // Rejecting inactive subscriptions.
+  if (auth.contains("inactive")) {
+    const INACTIVE_STATE_RESPONSE = "<html><body><h1>TranslateApiException</h1><p>Method: TranslateArray()</p><p>Message: The Azure Market Place Translator Subscription associated with the request credentials is not in an active state.</p><code></code><p>message id=5641.V2_Rest.TranslateArray.48CC6470</p></body></html>";
+    throw new HTTPError(401, INACTIVE_STATE_RESPONSE);
+  }
+
 }
 
 function reallyHandleRequest(req, res) {
@@ -189,8 +196,17 @@ const methodHandlers = {
       return;
     }
 
+    // Defines the tokens for certain client ids.
+    const TOKEN_MAP = {
+      'testInactive'  : 'inactive',
+      'testClient'    : 'test'
+    };
+    let token = 'test'; // Default token.
+    if((params.client_id in TOKEN_MAP)){
+      token = TOKEN_MAP[params.client_id];
+    }
     let content = JSON.stringify({
-      access_token: "test",
+      access_token: token,
       expires_in: 600
     });
 

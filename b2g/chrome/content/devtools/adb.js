@@ -100,11 +100,11 @@ let AdbController = {
       return;
     }
     let storage = this.storages[storageIndex];
-    DEBUG && debug("Checking availability of storage: '" + storage.storageName);
+    DEBUG && debug("Checking availability of storage: '" + storage.storageName + "'");
 
     let req = storage.available();
     req.onsuccess = function(e) {
-      DEBUG && debug("Storage: '" + storage.storageName + "' is '" + e.target.result);
+      DEBUG && debug("Storage: '" + storage.storageName + "' is '" + e.target.result + "'");
       if (e.target.result == 'shared') {
         // We've found a storage area that's being shared with the PC.
         // We can stop looking now.
@@ -216,6 +216,11 @@ let AdbController = {
     // Configure adb.
     let currentConfig = libcutils.property_get("persist.sys.usb.config");
     let configFuncs = currentConfig.split(",");
+    if (currentConfig == "" || currentConfig == "none") {
+      // We want to treat none like the empty string.
+      // "".split(",") yields [""] and not []
+      configFuncs = [];
+    }
     let adbIndex = configFuncs.indexOf("adb");
 
     if (enableAdb) {
@@ -230,6 +235,11 @@ let AdbController = {
       }
     }
     let newConfig = configFuncs.join(",");
+    if (newConfig == "") {
+      // Convert the empty string back into none, since that's what init.rc
+      // needs.
+      newConfig = "none";
+    }
     if (newConfig != currentConfig) {
       DEBUG && debug("updateState: currentConfig = " + currentConfig);
       DEBUG && debug("updateState:     newConfig = " + newConfig);
