@@ -1800,8 +1800,7 @@ function switchToFrame(msg) {
   * Add a cookie to the document
   */
 function addCookie(msg) {
-  cookie = msg.json.cookie;
-
+  let cookie = msg.json.cookie;
   if (!cookie.expiry) {
     var date = new Date();
     var thePresent = new Date(Date.now());
@@ -1832,17 +1831,12 @@ function addCookie(msg) {
   if (!document || !document.contentType.match(/html/i)) {
     sendError('You may only set cookies on html documents', 25, null, msg.json.command_id);
   }
-  let cookieManager;
-  try {
-    // Retrieving the cookie manager fails with e10s enabled.
-    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                      getService(Ci.nsICookieManager2);
-  } catch (ex) {
-    sendError("Error retrieving cookie manager: " + ex, 13, null, msg.json.command_id);
+
+  let added = sendSyncMessage("Marionette:addCookie", {value: cookie});
+  if (added[0] !== true) {
+    sendError("Error setting cookie", 13, null, msg.json.command_id);
     return;
   }
-  cookieManager.add(cookie.domain, cookie.path, cookie.name, cookie.value,
-                   cookie.secure, false, false, cookie.expiry);
   sendOk(msg.json.command_id);
 }
 
@@ -1852,12 +1846,7 @@ function addCookie(msg) {
 function getCookies(msg) {
   var toReturn = [];
   var cookies = getVisibleCookies(curFrame.location);
-  if (typeof cookies == "undefined") {
-    sendError("Error retrieving cookie manager", 13, null, msg.json.command_id);
-    return;
-  }
-  for (var i = 0; i < cookies.length; i++) {
-    var cookie = cookies[i];
+  for (let cookie of cookies) {
     var expires = cookie.expires;
     if (expires == 0) {  // Session cookie, don't return an expiry.
       expires = null;
@@ -1873,7 +1862,6 @@ function getCookies(msg) {
       'expiry': expires
     });
   }
-
   sendResponse({value: toReturn}, msg.json.command_id);
 }
 
@@ -1881,23 +1869,15 @@ function getCookies(msg) {
  * Delete a cookie by name
  */
 function deleteCookie(msg) {
-  var toDelete = msg.json.name;
-
-  let cookieManager;
-  try {
-    // Retrieving the cookie manager fails with e10s enabled.
-    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                      getService(Ci.nsICookieManager);
-  } catch (ex) {
-    sendError("Error retrieving cookie manager: " + ex, 13, null, msg.json.command_id);
-    return;
-  }
-
-  var cookies = getVisibleCookies(curFrame.location);
-  for (var i = 0; i < cookies.length; i++) {
-    var cookie = cookies[i];
+  let toDelete = msg.json.name;
+  let cookies = getVisibleCookies(curFrame.location);
+  for (let cookie of cookies) {
     if (cookie.name == toDelete) {
-      cookieManager.remove(cookie.host, cookie.name, cookie.path, false);
+      let deleted = sendSyncMessage("Marionette:deleteCookie", {value: cookie});
+      if (deleted[0] !== true) {
+        sendError("Could not delete cookie: " + msg.json.name, 13, null, msg.json.command_id);
+        return;
+      }
     }
   }
 
@@ -1908,19 +1888,13 @@ function deleteCookie(msg) {
  * Delete all the visibile cookies on a page
  */
 function deleteAllCookies(msg) {
-  let cookieManager;
-  try {
-    // Retrieving the cookie manager fails with e10s enabled.
-    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                      getService(Ci.nsICookieManager);
-  } catch (ex) {
-    sendError("Error retrieving cookie manager: " + ex, 13, null, msg.json.command_id);
-    return;
-  }
   let cookies = getVisibleCookies(curFrame.location);
-  for (let i = 0; i < cookies.length; i++) {
-    let cookie = cookies[i];
-    cookieManager.remove(cookie.host, cookie.name, cookie.path, false);
+  for (let cookie of cookies) {
+    let deleted = sendSyncMessage("Marionette:deleteCookie", {value: cookie});
+    if (!deleted[0]) {
+      sendError("Could not delete cookie: " + JSON.stringify(cookie), 13, null, msg.json.command_id);
+      return;
+    }
   }
   sendOk(msg.json.command_id);
 }
@@ -1929,39 +1903,10 @@ function deleteAllCookies(msg) {
  * Get all the visible cookies from a location
  */
 function getVisibleCookies(location) {
-  let results = [];
-  let currentPath = location.pathname;
-  if (!currentPath) currentPath = '/';
-  let isForCurrentPath = function(aPath) {
-    return currentPath.indexOf(aPath) != -1;
-  }
-
-  let cookieManager;
-  try {
-    // Retrieving the cookie manager fails with e10s enabled.
-    cookieManager = Cc['@mozilla.org/cookiemanager;1'].
-                      getService(Ci.nsICookieManager);
-  } catch (ex) {
-    return;
-  }
-
-  let enumerator = cookieManager.enumerator;
-  while (enumerator.hasMoreElements()) {
-    let cookie = enumerator.getNext().QueryInterface(Ci['nsICookie']);
-
-    // Take the hostname and progressively shorten
-    let hostname = location.hostname;
-    do {
-      if ((cookie.host == '.' + hostname || cookie.host == hostname)
-          && isForCurrentPath(cookie.path)) {
-          results.push(cookie);
-          break;
-      }
-      hostname = hostname.replace(/^.*?\./, '');
-    } while (hostname.indexOf('.') != -1);
-  }
-
-  return results;
+  let currentPath = location.pathname || '/';
+  let result = sendSyncMessage("Marionette:getVisibleCookies",
+                               {value: [currentPath, location.hostname]});
+  return result[0];
 }
 
 function getAppCacheStatus(msg) {
