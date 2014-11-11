@@ -104,7 +104,8 @@
   }
 }
 
-.searchbar-dropmarker-image {
+/* This rule is specific to the dark theme, because we only set the dropdown image there */
+:root[devtoolstheme="dark"] .searchbar-dropmarker-image {
   /* Reset image-region from the windows theme */
   -moz-image-region: auto !important;
   /* Add margin otherwise it looks weird */
