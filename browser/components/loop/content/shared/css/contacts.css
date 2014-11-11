@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.contact-import-spinner {
+  display: none;
+}
+
+.contact-import-spinner.busy {
+  display: inline-block;
+  vertical-align: middle;
+  -moz-margin-start: 10px;
+}
+
 .content-area input.contact-filter {
   margin-top: 14px;
   border-radius: 10000px;
