@@ -200,6 +200,7 @@ fuzzy-if(cocoaWidget,15,19679) fuzzy-if(winWidget,1,8800) fuzzy-if(!cocoaWidget&
 == marker-viewBox-01.svg marker-viewBox-01-ref.svg
 == marker-orientation-01.svg marker-orientation-01-ref.svg
 pref(svg.marker-improvements.enabled,true) == marker-orientation-02.svg marker-orientation-02-ref.svg
+== marker-orientation-03.svg pass.svg
 == mask-basic-01.svg pass.svg
 == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-basic-03.svg pass.svg
