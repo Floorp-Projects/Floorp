@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(710f22f0-558b-11e4-8ed6-0800200c9a66)]
+[scriptable, builtinclass, uuid(dc61f0ea-4139-4c2a-ae69-cec82d33e089)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -82,6 +82,11 @@ interface imgIRequest : nsIRequest
    * load).
    */
   readonly attribute nsIURI URI;
+
+  /**
+   * The URI of the resource we ended up loading after all redirects, etc.
+   */
+  readonly attribute nsIURI currentURI;
 
   readonly attribute imgINotificationObserver notificationObserver;
 

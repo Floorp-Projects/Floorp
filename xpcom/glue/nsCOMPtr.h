@@ -1482,29 +1482,6 @@ operator!=(NSCAP_Zero* aLhs, const nsCOMPtr<T>& aRhs)
 }
 
 
-#ifdef HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
-
-// We need to explicitly define comparison operators for `int'
-// because the compiler is lame.
-
-// Specifically to allow |smartPtr == 0|.
-template<class T>
-inline bool
-operator==(const nsCOMPtr<T>& lhs, int rhs)
-{
-  return static_cast<const void*>(lhs.get()) == reinterpret_cast<const void*>(rhs);
-}
-
-// Specifically to allow |0 == smartPtr|.
-template<class T>
-inline bool
-operator==(int lhs, const nsCOMPtr<T>& rhs)
-{
-  return reinterpret_cast<const void*>(lhs) == static_cast<const void*>(rhs.get());
-}
-
-#endif // !defined(HAVE_CPP_TROUBLE_COMPARING_TO_ZERO)
-
 // Comparing any two [XP]COM objects for identity
 
 inline bool

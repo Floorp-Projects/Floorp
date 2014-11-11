@@ -531,6 +531,7 @@ BluetoothOppManager::AfterOppDisconnected()
   mLastCommand = 0;
   mPutPacketReceivedLength = 0;
   mDsFile = nullptr;
+  mDummyDsFile = nullptr;
 
   // We can't reset mSuccessFlag here since this function may be called
   // before we send system message of transfer complete
@@ -558,6 +559,34 @@ BluetoothOppManager::AfterOppDisconnected()
 }
 
 void
+BluetoothOppManager::RecoverFileName()
+{
+  // Remove the trailing ".part" file name from mDsFile by two steps
+  // 1. mDsFile->SetPath() so that the notification sent to Gaia will carry
+  //    correct information of the file.
+  // 2. mDsFile->mFile->RenameTo() so that the file name would actually be
+  //    changed in file system.
+  if (mDsFile && mDsFile->mFile) {
+    nsString path;
+    path.AssignLiteral(TARGET_SUBDIR);
+    path.Append(mFileName);
+
+    mDsFile->SetPath(path);
+    mDsFile->mFile->RenameTo(nullptr, mFileName);
+  }
+}
+
+void
+BluetoothOppManager::DeleteDummyFile()
+{
+  // Remove the empty temp file
+  if (mDummyDsFile && mDummyDsFile->mFile) {
+    mDummyDsFile->mFile->Remove(false);
+    mDummyDsFile = nullptr;
+  }
+}
+
+void
 BluetoothOppManager::DeleteReceivedFile()
 {
   if (mOutputStream) {
@@ -569,6 +598,8 @@ BluetoothOppManager::DeleteReceivedFile()
     mDsFile->mFile->Remove(false);
     mDsFile = nullptr;
   }
+
+  DeleteDummyFile();
 }
 
 bool
@@ -576,25 +607,39 @@ BluetoothOppManager::CreateFile()
 {
   MOZ_ASSERT(mPutPacketReceivedLength == mPacketLength);
 
+  // Create one dummy file to be a placeholder for the target file name, and
+  // create another file with a meaningless file extension to write the received
+  // data. By doing this, we can prevent applications from parsing incomplete
+  // data in the middle of the receiving process.
   nsString path;
   path.AssignLiteral(TARGET_SUBDIR);
   path.Append(mFileName);
 
-  mDsFile = DeviceStorageFile::CreateUnique(
-              path, nsIFile::NORMAL_FILE_TYPE, 0644);
+  // Use an empty dummy file object to occupy the file name, so that after the
+  // whole file has been received successfully by using mDsFile, we could just
+  // remove mDummyDsFile and rename mDsFile to the file name of mDummyDsFile.
+  mDummyDsFile =
+    DeviceStorageFile::CreateUnique(path, nsIFile::NORMAL_FILE_TYPE, 0644);
+  NS_ENSURE_TRUE(mDummyDsFile, false);
+
+  // The function CreateUnique() may create a file with a different file
+  // name from the original mFileName. Therefore we have to retrieve
+  // the file name again.
+  mDummyDsFile->mFile->GetLeafName(mFileName);
+
+  BT_LOGR("mFileName: %s", NS_ConvertUTF16toUTF8(mFileName).get());
+
+  // Prepare the entire file path for the .part file
+  path.Truncate();
+  path.AssignLiteral(TARGET_SUBDIR);
+  path.Append(mFileName);
+  path.AppendLiteral(".part");
+
+  mDsFile =
+    DeviceStorageFile::CreateUnique(path, nsIFile::NORMAL_FILE_TYPE, 0644);
   NS_ENSURE_TRUE(mDsFile, false);
 
-  nsCOMPtr<nsIFile> f;
-  mDsFile->mFile->Clone(getter_AddRefs(f));
-
-  /*
-   * The function CreateUnique() may create a file with a different file
-   * name from the original mFileName. Therefore we have to retrieve
-   * the file name again.
-   */
-  f->GetLeafName(mFileName);
-
-  NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), f);
+  NS_NewLocalFileOutputStream(getter_AddRefs(mOutputStream), mDsFile->mFile);
   NS_ENSURE_TRUE(mOutputStream, false);
 
   return true;
@@ -911,6 +956,10 @@ BluetoothOppManager::ServerDataHandler(UnixSocketRawData* aMessage)
     // Success to receive a file and notify completion
     if (mPutFinalFlag) {
       mSuccessFlag = true;
+
+      DeleteDummyFile();
+      RecoverFileName();
+
       FileTransferComplete();
       NotifyAboutFileChange();
     }

@@ -20,8 +20,8 @@
 #include "gfxDWriteFonts.h"
 #endif
 #include "gfxPlatform.h"
-#include "gfxContext.h"
-
+#include "gfxTypes.h"
+#include "mozilla/Attributes.h"
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
@@ -44,6 +44,9 @@
 #endif
 
 namespace mozilla {
+namespace gfx {
+class DrawTarget;
+}
 namespace layers {
 class DeviceManagerD3D9;
 class ReadbackManagerD3D11;
@@ -55,44 +58,31 @@ struct IDXGIAdapter1;
 
 class nsIMemoryReporter;
 
-// Utility to get a Windows HDC from a thebes context,
-// used by both GDI and Uniscribe font shapers
-struct DCFromContext {
-    DCFromContext(gfxContext *aContext) {
-        dc = nullptr;
-        nsRefPtr<gfxASurface> aSurface = aContext->CurrentSurface();
-        if (aSurface &&
-            (aSurface->GetType() == gfxSurfaceType::Win32 ||
-             aSurface->GetType() == gfxSurfaceType::Win32Printing))
-        {
-            dc = static_cast<gfxWindowsSurface*>(aSurface.get())->GetDC();
-            needsRelease = false;
-            SaveDC(dc);
-            cairo_scaled_font_t* scaled =
-                cairo_get_scaled_font(aContext->GetCairo());
-            cairo_win32_scaled_font_select_font(scaled, dc);
-        }
-        if (!dc) {
-            dc = GetDC(nullptr);
-            SetGraphicsMode(dc, GM_ADVANCED);
-            needsRelease = true;
-        }
-    }
+/**
+ * Utility to get a Windows HDC from a Moz2D DrawTarget.  If the DrawTarget is
+ * not backed by a HDC this will get the HDC for the screen device context
+ * instead.
+ */
+class MOZ_STACK_CLASS DCFromDrawTarget MOZ_FINAL
+{
+public:
+    DCFromDrawTarget(mozilla::gfx::DrawTarget& aDrawTarget);
 
-    ~DCFromContext() {
-        if (needsRelease) {
-            ReleaseDC(nullptr, dc);
+    ~DCFromDrawTarget() {
+        if (mNeedsRelease) {
+            ReleaseDC(nullptr, mDC);
         } else {
-            RestoreDC(dc, -1);
+            RestoreDC(mDC, -1);
         }
     }
 
     operator HDC () {
-        return dc;
+        return mDC;
     }
 
-    HDC dc;
-    bool needsRelease;
+private:
+    HDC mDC;
+    bool mNeedsRelease;
 };
 
 // ClearType parameters set by running ClearType tuner

@@ -8,11 +8,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_promise.html";
 
 const test = Task.async(function* () {
-  const [tab, debuggee, panel] = yield initDebugger(TAB_URL);
+  const [tab,, panel] = yield initDebugger(TAB_URL);
   yield ensureSourceIs(panel, "doc_promise.html", true);
 
   const scopes = waitForCaretAndScopes(panel, 21);
-  executeSoon(debuggee.doPause);
+  callInTab(tab, "doPause");
   yield scopes;
 
   const variables = panel.panelWin.DebuggerView.Variables;

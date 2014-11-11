@@ -123,9 +123,6 @@ this.SystemMessagePermissionsTable = {
   "nfc-manager-send-file": {
     "nfc-manager": []
   },
-  "nfc-powerlevel-change": {
-    "settings": ["read", "write"]
-  },
   "wifip2p-pairing-request": { },
   "first-run-with-sim": {
     "settings": ["read", "write"]
