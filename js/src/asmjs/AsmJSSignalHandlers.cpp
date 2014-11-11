@@ -19,6 +19,7 @@
 #include "asmjs/AsmJSSignalHandlers.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PodOperations.h"
 
 #include "asmjs/AsmJSModule.h"
 #include "vm/Runtime.h"
@@ -28,6 +29,81 @@ using namespace js::jit;
 
 using JS::GenericNaN;
 using mozilla::DebugOnly;
+using mozilla::PodArrayZero;
+
+#if defined(ANDROID)
+# include <sys/system_properties.h>
+# if defined(MOZ_LINKER)
+extern "C" MFBT_API bool IsSignalHandlingBroken();
+# endif
+
+static bool
+IsSignalHandlingBrokenOnAndroid()
+{
+    // pthread_kill appears to cause memory corruption on Android 2.3 (SDK
+    // version 9-10) on tinderbox. It's possible the bug is just in the
+    // emulator, so if we end up wanting signal-handler-based optimizations for
+    // non-emulated Android 2.3, we could refine this test to only report
+    // failure if on an emulator. Most phones are on a newer Android version.
+    char version_string[PROP_VALUE_MAX];
+    PodArrayZero(version_string);
+    if (__system_property_get("ro.build.version.sdk", version_string) > 0) {
+        long version = atol(version_string);
+        if (version && version <= 10)
+            return true;
+    }
+
+# if defined(MOZ_LINKER)
+    // Apparently, on some Android systems, the signal handler is always passed
+    // nullptr as the faulting address. This would cause the asm.js signal
+    // handler to think that a safe out-of-bounds access was a nullptr-deref.
+    // This brokenness is already detected by ElfLoader (enabled by MOZ_LINKER),
+    // so reuse that check to disable asm.js compilation on systems where the
+    // signal handler is broken.
+    if (IsSignalHandlingBroken())
+        return true;
+# endif
+
+    return false;
+}
+#endif
+
+// For platforms where the signal/exception handler runs on the same
+// thread/stack as the victim (Unix and Windows), we can use TLS to find any
+// currently executing asm.js code.
+static JSRuntime *
+RuntimeForCurrentThread()
+{
+    PerThreadData *threadData = TlsPerThreadData.get();
+    if (!threadData)
+        return nullptr;
+
+    return threadData->runtimeIfOnOwnerThread();
+}
+
+// Crashing inside the signal handler can cause the handler to be recursively
+// invoked, eventually blowing the stack without actually showing a crash
+// report dialog via Breakpad. To guard against this we watch for such
+// recursion and fall through to the next handler immediately rather than
+// trying to handle it.
+class AutoSetHandlingSignal
+{
+    JSRuntime *rt;
+
+  public:
+    explicit AutoSetHandlingSignal(JSRuntime *rt)
+      : rt(rt)
+    {
+        MOZ_ASSERT(!rt->handlingSignal);
+        rt->handlingSignal = true;
+    }
+
+    ~AutoSetHandlingSignal()
+    {
+        MOZ_ASSERT(rt->handlingSignal);
+        rt->handlingSignal = false;
+    }
+};
 
 #if defined(XP_WIN)
 # define XMM_sig(p,i) ((p)->Xmm##i)
@@ -152,69 +228,10 @@ using mozilla::DebugOnly;
 #  define R15_sig(p) ((p)->uc_mcontext.mc_r15)
 # endif
 #elif defined(XP_MACOSX)
-// Mach requires special treatment.
+# define EIP_sig(p) ((p)->uc_mcontext->__ss.__eip)
+# define RIP_sig(p) ((p)->uc_mcontext->__ss.__rip)
 #else
 # error "Don't know how to read/write to the thread state via the mcontext_t."
-#endif
-
-// For platforms where the signal/exception handler runs on the same
-// thread/stack as the victim (Unix and Windows), we can use TLS to find any
-// currently executing asm.js code.
-#if !defined(XP_MACOSX)
-static JSRuntime *
-RuntimeForCurrentThread()
-{
-    PerThreadData *threadData = TlsPerThreadData.get();
-    if (!threadData)
-        return nullptr;
-
-    return threadData->runtimeIfOnOwnerThread();
-}
-#endif // !defined(XP_MACOSX)
-
-// Crashing inside the signal handler can cause the handler to be recursively
-// invoked, eventually blowing the stack without actually showing a crash
-// report dialog via Breakpad. To guard against this we watch for such
-// recursion and fall through to the next handler immediately rather than
-// trying to handle it.
-class AutoSetHandlingSignal
-{
-    JSRuntime *rt;
-
-  public:
-    explicit AutoSetHandlingSignal(JSRuntime *rt)
-      : rt(rt)
-    {
-        MOZ_ASSERT(!rt->handlingSignal);
-        rt->handlingSignal = true;
-    }
-
-    ~AutoSetHandlingSignal()
-    {
-        MOZ_ASSERT(rt->handlingSignal);
-        rt->handlingSignal = false;
-    }
-};
-
-#if defined(JS_CODEGEN_X64)
-template <class T>
-static void
-SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
-{
-    if (isFloat32) {
-        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
-        float *floats = reinterpret_cast<float*>(xmm_reg);
-        floats[0] = GenericNaN();
-        floats[1] = 0;
-        floats[2] = 0;
-        floats[3] = 0;
-    } else {
-        JS_STATIC_ASSERT(sizeof(T) == 2 * sizeof(double));
-        double *dbls = reinterpret_cast<double*>(xmm_reg);
-        dbls[0] = GenericNaN();
-        dbls[1] = 0;
-    }
-}
 #endif
 
 #if defined(XP_WIN)
@@ -228,7 +245,7 @@ SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
 # include <sys/ucontext.h> // for ucontext_t, mcontext_t
 #endif
 
-#if defined(JS_CODEGEN_X64)
+#if defined(JS_CPU_X64)
 # if defined(__DragonFly__)
 #  include <machine/npx.h> // for union savefpu
 # elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
@@ -317,18 +334,6 @@ enum { REG_EIP = 14 };
 # endif  // !defined(__BIONIC_HAVE_UCONTEXT_T)
 #endif // defined(ANDROID)
 
-#if defined(ANDROID) && defined(MOZ_LINKER)
-// Apparently, on some Android systems, the signal handler is always passed
-// nullptr as the faulting address. This would cause the asm.js signal handler
-// to think that a safe out-of-bounds access was a nullptr-deref. This
-// brokenness is already detected by ElfLoader (enabled by MOZ_LINKER), so
-// reuse that check to disable asm.js compilation on systems where the signal
-// handler is broken.
-extern "C" MFBT_API bool IsSignalHandlingBroken();
-#else
-static bool IsSignalHandlingBroken() { return false; }
-#endif // defined(MOZ_LINKER)
-
 #if !defined(XP_WIN)
 # define CONTEXT ucontext_t
 #endif
@@ -343,41 +348,33 @@ static bool IsSignalHandlingBroken() { return false; }
 # define PC_sig(p) EPC_sig(p)
 #endif
 
-static bool
-HandleSimulatorInterrupt(JSRuntime *rt, AsmJSActivation *activation, void *faultingAddress)
-{
-    // If the ARM simulator is enabled, the pc is in the simulator C++ code and
-    // not in the generated code, so we check the simulator's pc manually. Also
-    // note that we can't simply use simulator->set_pc() here because the
-    // simulator could be in the middle of an instruction. On ARM, the signal
-    // handlers are currently only used for Odin code, see bug 964258.
-
-#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
-    const AsmJSModule &module = activation->module();
-    if (module.containsFunctionPC((void *)rt->mainThread.simulator()->get_pc()) &&
-        module.containsFunctionPC(faultingAddress))
-    {
-        activation->setResumePC(nullptr);
-        int32_t nextpc = int32_t(module.interruptExit());
-        rt->mainThread.simulator()->set_resume_pc(nextpc);
-        return true;
-    }
-#endif
-    return false;
-}
-
-#if !defined(XP_MACOSX)
 static uint8_t **
 ContextToPC(CONTEXT *context)
 {
-#ifdef JS_CODEGEN_NONE
-    MOZ_CRASH();
-#else
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
-#endif
 }
 
-# if defined(JS_CODEGEN_X64)
+#if defined(JS_CPU_X64)
+template <class T>
+static void
+SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
+{
+    if (isFloat32) {
+        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
+        float *floats = reinterpret_cast<float*>(xmm_reg);
+        floats[0] = GenericNaN();
+        floats[1] = 0;
+        floats[2] = 0;
+        floats[3] = 0;
+    } else {
+        JS_STATIC_ASSERT(sizeof(T) == 2 * sizeof(double));
+        double *dbls = reinterpret_cast<double*>(xmm_reg);
+        dbls[0] = GenericNaN();
+        dbls[1] = 0;
+    }
+}
+
+# if !defined(XP_MACOSX)
 static void
 SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
 {
@@ -423,13 +420,13 @@ SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
         }
     }
 }
-# endif  // JS_CODEGEN_X64
-#endif   // !XP_MACOSX
+# endif  // !XP_MACOSX
+#endif // JS_CPU_X64
 
 #if defined(XP_WIN)
 
 static bool
-HandleException(PEXCEPTION_POINTERS exception)
+HandleFault(PEXCEPTION_POINTERS exception)
 {
     EXCEPTION_RECORD *record = exception->ExceptionRecord;
     CONTEXT *context = exception->ContextRecord;
@@ -444,19 +441,13 @@ HandleException(PEXCEPTION_POINTERS exception)
     if (record->NumberParameters < 2)
         return false;
 
-    void *faultingAddress = (void*)record->ExceptionInformation[1];
-
-    JSRuntime *rt = RuntimeForCurrentThread();
-
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
+    JSRuntime *rt = RuntimeForCurrentThread();
     if (!rt || rt->handlingSignal)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
-        return true;
-
-    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
     if (!activation)
         return false;
 
@@ -464,23 +455,10 @@ HandleException(PEXCEPTION_POINTERS exception)
     if (!module.containsFunctionPC(pc))
         return false;
 
-    // If we faulted trying to execute code in 'module', this must be an
-    // interrupt callback (see RequestInterruptForAsmJSCode). Redirect
-    // execution to a trampoline which will call js::HandleExecutionInterrupt.
-    // The trampoline will jump to activation->resumePC if execution isn't
-    // interrupted.
-    if (module.containsFunctionPC(faultingAddress)) {
-        activation->setResumePC(pc);
-        *ppc = module.interruptExit();
-
-        JSRuntime::AutoLockForInterrupt lock(rt);
-        module.unprotectCode(rt);
-        return true;
-    }
-
-# if defined(JS_CODEGEN_X64)
+# if defined(JS_CPU_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
+    void *faultingAddress = (void*)record->ExceptionInformation[1];
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -512,9 +490,9 @@ HandleException(PEXCEPTION_POINTERS exception)
 }
 
 static LONG WINAPI
-AsmJSExceptionHandler(LPEXCEPTION_POINTERS exception)
+AsmJSFaultHandler(LPEXCEPTION_POINTERS exception)
 {
-    if (HandleException(exception))
+    if (HandleFault(exception))
         return EXCEPTION_CONTINUE_EXECUTION;
 
     // No need to worry about calling other handlers, the OS does this for us.
@@ -527,18 +505,16 @@ AsmJSExceptionHandler(LPEXCEPTION_POINTERS exception)
 static uint8_t **
 ContextToPC(x86_thread_state_t &state)
 {
-# if defined(JS_CODEGEN_X64)
+# if defined(JS_CPU_X64)
     JS_STATIC_ASSERT(sizeof(state.uts.ts64.__rip) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&state.uts.ts64.__rip);
-# elif defined(JS_CODEGEN_NONE)
-    MOZ_CRASH();
 # else
     JS_STATIC_ASSERT(sizeof(state.uts.ts32.__eip) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&state.uts.ts32.__eip);
 # endif
 }
 
-# if defined(JS_CODEGEN_X64)
+# if defined(JS_CPU_X64)
 static bool
 SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
                               const AsmJSHeapAccess &heapAccess)
@@ -650,45 +626,18 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
         return false;
 
-    void *faultingAddress = (void*)request.body.code[1];
-
-    if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
-        return true;
-
     AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
     if (!activation)
         return false;
 
     const AsmJSModule &module = activation->module();
-    if (HandleSimulatorInterrupt(rt, activation, faultingAddress)) {
-        JSRuntime::AutoLockForInterrupt lock(rt);
-        module.unprotectCode(rt);
-        return true;
-    }
-
     if (!module.containsFunctionPC(pc))
         return false;
 
-    // If we faulted trying to execute code in 'module', this must be an
-    // interrupt callback (see RequestInterruptForAsmJSCode). Redirect
-    // execution to a trampoline which will call js::HandleExecutionInterrupt.
-    // The trampoline will jump to activation->resumePC if execution isn't
-    // interrupted.
-    if (module.containsFunctionPC(faultingAddress)) {
-        activation->setResumePC(pc);
-        *ppc = module.interruptExit();
-
-        JSRuntime::AutoLockForInterrupt lock(rt);
-        module.unprotectCode(rt);
-
-        // Update the thread state with the new pc.
-        kret = thread_set_state(rtThread, x86_THREAD_STATE, (thread_state_t)&state, x86_THREAD_STATE_COUNT);
-        return kret == KERN_SUCCESS;
-    }
-
-# if defined(JS_CODEGEN_X64)
+# if defined(JS_CPU_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
+    void *faultingAddress = (void*)request.body.code[1];
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -879,55 +828,30 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
 static bool
-HandleSignal(int signum, siginfo_t *info, void *ctx)
+HandleFault(int signum, siginfo_t *info, void *ctx)
 {
     CONTEXT *context = (CONTEXT *)ctx;
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
 
-    void *faultingAddress = info->si_addr;
-
-    JSRuntime *rt = RuntimeForCurrentThread();
-
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
+    JSRuntime *rt = RuntimeForCurrentThread();
     if (!rt || rt->handlingSignal)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    if (rt->jitRuntime() && rt->jitRuntime()->handleAccessViolation(rt, faultingAddress))
-        return true;
-
-    AsmJSActivation *activation = PerThreadData::innermostAsmJSActivation();
+    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
     if (!activation)
         return false;
 
     const AsmJSModule &module = activation->module();
-    if (HandleSimulatorInterrupt(rt, activation, faultingAddress)) {
-        JSRuntime::AutoLockForInterrupt lock(rt);
-        module.unprotectCode(rt);
-        return true;
-    }
-
     if (!module.containsFunctionPC(pc))
         return false;
 
-    // If we faulted trying to execute code in 'module', this must be an
-    // interrupt callback (see RequestInterruptForAsmJSCode). Redirect
-    // execution to a trampoline which will call js::HandleExecutionInterrupt.
-    // The trampoline will jump to activation->resumePC if execution isn't
-    // interrupted.
-    if (module.containsFunctionPC(faultingAddress)) {
-        activation->setResumePC(pc);
-        *ppc = module.interruptExit();
-
-        JSRuntime::AutoLockForInterrupt lock(rt);
-        module.unprotectCode(rt);
-        return true;
-    }
-
-# if defined(JS_CODEGEN_X64)
+# if defined(JS_CPU_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
+    void *faultingAddress = info->si_addr;
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -954,12 +878,12 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
 # endif
 }
 
-static struct sigaction sPrevHandler;
+static struct sigaction sPrevSEGVHandler;
 
 static void
 AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
 {
-    if (HandleSignal(signum, info, context))
+    if (HandleFault(signum, info, context))
         return;
 
     // This signal is not for any asm.js code we expect, so we need to forward
@@ -974,90 +898,188 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
     // signal to it's original disposition and returning.
     //
     // Note: the order of these tests matter.
-    if (sPrevHandler.sa_flags & SA_SIGINFO)
-        sPrevHandler.sa_sigaction(signum, info, context);
-    else if (sPrevHandler.sa_handler == SIG_DFL || sPrevHandler.sa_handler == SIG_IGN)
-        sigaction(signum, &sPrevHandler, nullptr);
+    if (sPrevSEGVHandler.sa_flags & SA_SIGINFO)
+        sPrevSEGVHandler.sa_sigaction(signum, info, context);
+    else if (sPrevSEGVHandler.sa_handler == SIG_DFL || sPrevSEGVHandler.sa_handler == SIG_IGN)
+        sigaction(signum, &sPrevSEGVHandler, nullptr);
     else
-        sPrevHandler.sa_handler(signum);
+        sPrevSEGVHandler.sa_handler(signum);
 }
 #endif
 
-#if !defined(XP_MACOSX)
-static bool sInstalledHandlers = false;
+static void
+RedirectIonBackedgesToInterruptCheck(JSRuntime *rt)
+{
+    if (jit::JitRuntime *jitRuntime = rt->jitRuntime()) {
+        // If the backedge list is being mutated, the pc must be in C++ code and
+        // thus not in a JIT iloop. We assume that the interrupt flag will be
+        // checked at least once before entering JIT code (if not, no big deal;
+        // the browser will just request another interrupt in a second).
+        if (!jitRuntime->mutatingBackedgeList())
+            jitRuntime->patchIonBackedges(rt, jit::JitRuntime::BackedgeInterruptCheck);
+    }
+}
+
+static void
+RedirectJitCodeToInterruptCheck(JSRuntime *rt, CONTEXT *context)
+{
+    RedirectIonBackedgesToInterruptCheck(rt);
+
+    if (AsmJSActivation *activation = rt->mainThread.asmJSActivationStack()) {
+        const AsmJSModule &module = activation->module();
+
+#if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
+        if (module.containsFunctionPC((void*)rt->mainThread.simulator()->get_pc()))
+            rt->mainThread.simulator()->set_resume_pc(int32_t(module.interruptExit()));
+#endif
+
+        uint8_t **ppc = ContextToPC(context);
+        uint8_t *pc = *ppc;
+        if (module.containsFunctionPC(pc)) {
+            activation->setResumePC(pc);
+            *ppc = module.interruptExit();
+        }
+    }
+}
+
+#if !defined(XP_WIN)
+// For the interrupt signal, pick a signal number that:
+//  - is not otherwise used by mozilla or standard libraries
+//  - defaults to nostop and noprint on gdb/lldb so that noone is bothered
+// SIGVTALRM a relative of SIGALRM, so intended for user code, but, unlike
+// SIGALRM, not used anywhere else in Mozilla.
+static const int sInterruptSignal = SIGVTALRM;
+
+static void
+JitInterruptHandler(int signum, siginfo_t *info, void *context)
+{
+    if (JSRuntime *rt = RuntimeForCurrentThread())
+        RedirectJitCodeToInterruptCheck(rt, (CONTEXT*)context);
+}
 #endif
 
 bool
-js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
+js::EnsureSignalHandlersInstalled(JSRuntime *rt)
 {
-#ifdef JS_CODEGEN_NONE
-    // Don't install signal handlers in builds with the JIT disabled.
-    return false;
-#endif
-
-    if (IsSignalHandlingBroken())
-        return false;
-
 #if defined(XP_MACOSX)
-    // On OSX, each JSRuntime gets its own handler.
-    return rt->asmJSMachExceptionHandler.installed() || rt->asmJSMachExceptionHandler.install(rt);
-#else
-    // Assume Windows or Unix. For these platforms, there is a single,
-    // process-wide signal handler installed. Take care to only install it once.
-    if (sInstalledHandlers)
-        return true;
-
-# if defined(XP_WIN)
-    if (!AddVectoredExceptionHandler(/* FirstHandler = */true, AsmJSExceptionHandler))
+    // On OSX, each JSRuntime gets its own handler thread.
+    if (!rt->asmJSMachExceptionHandler.installed() && !rt->asmJSMachExceptionHandler.install(rt))
         return false;
-# else
-    // Assume Unix. SA_NODEFER allows us to reenter the signal handler if we
-    // crash while handling the signal, and fall through to the Breakpad
-    // handler by testing handlingSignal.
-    struct sigaction sigAction;
-    sigAction.sa_flags = SA_SIGINFO | SA_NODEFER;
-    sigAction.sa_sigaction = &AsmJSFaultHandler;
-    sigemptyset(&sigAction.sa_mask);
-    if (sigaction(SIGSEGV, &sigAction, &sPrevHandler))
-        return false;
-# endif
-
-    sInstalledHandlers = true;
 #endif
+
+    // All the rest of the handlers are process-wide and thus must only be
+    // installed once. We assume that there are no races creating the first
+    // JSRuntime of the process.
+    static bool sTried = false;
+    static bool sResult = false;
+    if (sTried)
+        return sResult;
+    sTried = true;
+
+#if defined(ANDROID)
+    // Signal handling is broken on some android systems.
+    if (IsSignalHandlingBrokenOnAndroid())
+        return false;
+#endif
+
+#if defined(XP_WIN)
+    // Windows uses SuspendThread to stop the main thread from another thread,
+    // so the only handler we need is for asm.js out-of-bound faults.
+    if (!AddVectoredExceptionHandler(/* FirstHandler = */true, AsmJSFaultHandler))
+        return false;
+#else
+    // The interrupt handler allows the main thread to be paused from another
+    // thread (see InterruptRunningJitCode).
+    struct sigaction interruptHandler;
+    interruptHandler.sa_flags = SA_SIGINFO;
+    interruptHandler.sa_sigaction = &JitInterruptHandler;
+    sigemptyset(&interruptHandler.sa_mask);
+    struct sigaction prev;
+    if (sigaction(sInterruptSignal, &interruptHandler, &prev))
+        MOZ_CRASH("unable to install interrupt handler");
+
+    // There shouldn't be any other handlers installed for sInterruptSignal. If
+    // there are, we could always forward, but we need to understand what we're
+    // doing to avoid problematic interference.
+    if ((prev.sa_flags & SA_SIGINFO && prev.sa_sigaction) ||
+        (prev.sa_handler != SIG_DFL && prev.sa_handler != SIG_IGN))
+    {
+        MOZ_CRASH("contention for interrupt signal");
+    }
+
+    // Lastly, install a SIGSEGV handler to handle safely-out-of-bounds asm.js
+    // heap access. OSX handles seg faults via the Mach exception handler above,
+    // so don't install AsmJSFaultHandler.
+# if !defined(XP_MACOSX)
+    // SA_NODEFER allows us to reenter the signal handler if we crash while
+    // handling the signal, and fall through to the Breakpad handler by testing
+    // handlingSignal.
+    struct sigaction faultHandler;
+    faultHandler.sa_flags = SA_SIGINFO | SA_NODEFER;
+    faultHandler.sa_sigaction = &AsmJSFaultHandler;
+    sigemptyset(&faultHandler.sa_mask);
+    if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler))
+        return false;
+# endif // defined(XP_MACOSX)
+#endif // defined(XP_WIN)
+
+    sResult = true;
     return true;
 }
 
-// To interrupt execution of a JSRuntime, any thread may call
-// JS_RequestInterruptCallback (JSRuntime::requestInterruptCallback from inside
-// the engine). In the simplest case, this sets some state that is polled at
-// regular intervals (function prologues, loop headers). For tight loops, this
-// poses non-trivial overhead. For asm.js, we can do better: when another
-// thread requests an interrupt, we simply mprotect all of the innermost asm.js
-// module activation's code. This will trigger a SIGSEGV, taking us into
-// AsmJSFaultHandler. From there, we can manually redirect execution to call
-// js::HandleExecutionInterrupt. The memory is un-protected from the signal
-// handler after control flow is redirected.
+// JSRuntime::requestInterrupt sets interrupt_ (which is checked frequently by
+// C++ code at every Baseline JIT loop backedge) and jitStackLimit_ (which is
+// checked at every Baseline and Ion JIT function prologue). The remaining
+// sources of potential iloops (Ion loop backedges and all asm.js code) are
+// handled by this function:
+//  1. Ion loop backedges are patched to instead point to a stub that handles the
+//     interrupt;
+//  2. if the main thread's pc is inside asm.js code, the pc is updated to point
+//     to a stub that handles the interrupt.
 void
-js::RequestInterruptForAsmJSCode(JSRuntime *rt, int interruptModeRaw)
+js::InterruptRunningJitCode(JSRuntime *rt)
 {
-    switch (JSRuntime::InterruptMode(interruptModeRaw)) {
-      case JSRuntime::RequestInterruptMainThread:
-      case JSRuntime::RequestInterruptAnyThread:
-        break;
-      case JSRuntime::RequestInterruptAnyThreadDontStopIon:
-      case JSRuntime::RequestInterruptAnyThreadForkJoin:
-        // It is ok to wait for asm.js execution to complete; we aren't trying
-        // to break an iloop or anything. Avoid the overhead of protecting all
-        // the code and taking a fault.
+    // If signal handlers weren't installed, then Ion and asm.js emit normal
+    // interrupt checks and don't need asynchronous interruption.
+    if (!rt->canUseSignalHandlers())
+        return;
+
+    // If we are on runtime's main thread, then: pc is not in asm.js code (so
+    // nothing to do for asm.js) and we can patch Ion backedges without any
+    // special synchronization.
+    if (rt == RuntimeForCurrentThread()) {
+        RedirectIonBackedgesToInterruptCheck(rt);
         return;
     }
 
-    AsmJSActivation *activation = rt->mainThread.asmJSActivationStack();
-    if (!activation)
-        return;
+    // We are not on the runtime's main thread, so to do 1 and 2 above, we need
+    // to halt the runtime's main thread first.
+#if defined(XP_WIN)
+    // On Windows, we can simply suspend the main thread and work directly on
+    // its context from this thread.
+    HANDLE thread = (HANDLE)rt->ownerThreadNative();
+    if (SuspendThread(thread) == -1)
+        MOZ_CRASH("Failed to suspend main thread");
 
-    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-    activation->module().protectCode(rt);
+    CONTEXT context;
+    context.ContextFlags = CONTEXT_CONTROL;
+    if (!GetThreadContext(thread, &context))
+        MOZ_CRASH("Failed to get suspended thread context");
+
+    RedirectJitCodeToInterruptCheck(rt, &context);
+
+    if (!SetThreadContext(thread, &context))
+        MOZ_CRASH("Failed to set suspended thread context");
+
+    if (ResumeThread(thread) == -1)
+        MOZ_CRASH("Failed to resume main thread");
+#else
+    // On Unix, we instead deliver an async signal to the main thread which
+    // halts the thread and callers our JitInterruptHandler (which has already
+    // been installed by EnsureSignalHandlersInstalled).
+    pthread_t thread = (pthread_t)rt->ownerThreadNative();
+    pthread_kill(thread, sInterruptSignal);
+#endif
 }
 
 // This is not supported by clang-cl yet.

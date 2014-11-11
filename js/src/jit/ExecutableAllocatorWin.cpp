@@ -251,22 +251,6 @@ void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
     DeallocateExecutableMemory(alloc.pages, alloc.size, pageSize);
 }
 
-void
-ExecutablePool::toggleAllCodeAsAccessible(bool accessible)
-{
-    char* begin = m_allocation.pages;
-    size_t size = m_freePtr - begin;
-
-    if (size) {
-        // N.B. DEP is not on automatically in Windows XP, so be sure to use
-        // PAGE_NOACCESS instead of PAGE_READWRITE when making inaccessible.
-        DWORD oldProtect;
-        int flags = accessible ? PAGE_EXECUTE_READWRITE : PAGE_NOACCESS;
-        if (!VirtualProtect(begin, size, flags, &oldProtect))
-            MOZ_CRASH();
-    }
-}
-
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
 #error "ASSEMBLER_WX_EXCLUSIVE not yet suported on this platform."
 #endif
