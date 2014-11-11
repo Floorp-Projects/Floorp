@@ -6,7 +6,7 @@
 #define mozilla_dom_TelephonyDialCallback_h
 
 #include "Telephony.h"
-#include "mozilla/dom/DOMRequest.h"
+#include "mozilla/dom/MMICall.h"
 #include "mozilla/dom/MozMobileConnectionBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ToJSValue.h"
@@ -39,9 +39,6 @@ private:
   ~TelephonyDialCallback() {}
 
   nsresult
-  NotifyDialMMISuccess(JS::Handle<JS::Value> aResult);
-
-  nsresult
   NotifyDialMMISuccess(JSContext* aCx, const MozMMIResult& aResult);
 
 
@@ -49,8 +46,8 @@ private:
   nsRefPtr<Telephony> mTelephony;
   uint32_t mServiceId;
 
-  nsRefPtr<DOMRequest> mMMIRequest;
   nsString mServiceCode;
+  nsRefPtr<MMICall> mMMICall;
 };
 
 } // namespace telephony

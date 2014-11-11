@@ -341,12 +341,12 @@ BaseProxyHandler::unwatch(JSContext *cx, HandleObject proxy, HandleId id) const
 }
 
 bool
-BaseProxyHandler::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
-                        HandleObject result) const
+BaseProxyHandler::getElements(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                              ElementAdder *adder) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
 
-    return js::SliceSlowly(cx, proxy, proxy, begin, end, result);
+    return js::GetElementsWithAdder(cx, proxy, proxy, begin, end, adder);
 }
 
 bool
