@@ -231,26 +231,30 @@ describe("loop.OTSdkDriver", function () {
     });
 
     describe("connectionDestroyed", function() {
-      it("should dispatch a peerHungupCall action if the client disconnected", function() {
-        session.trigger("connectionDestroyed", {
-          reason: "clientDisconnected"
+      it("should dispatch a remotePeerDisconnected action if the client" +
+        "disconnected", function() {
+          session.trigger("connectionDestroyed", {
+            reason: "clientDisconnected"
+          });
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("name", "remotePeerDisconnected"));
+          sinon.assert.calledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("peerHungup", true));
         });
 
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("name", "peerHungupCall"));
-      });
+      it("should dispatch a remotePeerDisconnected action if the connection" +
+        "failed", function() {
+          session.trigger("connectionDestroyed", {
+            reason: "networkDisconnected"
+          });
 
-      it("should dispatch a connectionFailure action if the connection failed", function() {
-        session.trigger("connectionDestroyed", {
-          reason: "networkDisconnected"
-        });
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("name", "connectionFailure"));
-        sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("reason", "peerNetworkDisconnected"));
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("name", "remotePeerDisconnected"));
+          sinon.assert.calledWithMatch(dispatcher.dispatch,
+            sinon.match.hasOwn("peerHungup", false));
       });
     });
 

@@ -118,18 +118,12 @@ loop.store.ConversationStore = (function() {
       this.dispatcher = options.dispatcher;
       this.sdkDriver = options.sdkDriver;
 
+      // XXX Further actions are registered in setupWindowData when
+      // we know what window type this is. At some stage, we might want to
+      // consider store mixins or some alternative which means the stores
+      // would only be created when we want them.
       this.dispatcher.register(this, [
-        "connectionFailure",
-        "connectionProgress",
-        "setupWindowData",
-        "connectCall",
-        "hangupCall",
-        "peerHungupCall",
-        "cancelCall",
-        "retryCall",
-        "mediaConnected",
-        "setMute",
-        "fetchEmailLink"
+        "setupWindowData"
       ]);
     },
 
@@ -196,6 +190,19 @@ loop.store.ConversationStore = (function() {
         return;
       }
 
+      this.dispatcher.register(this, [
+        "connectionFailure",
+        "connectionProgress",
+        "connectCall",
+        "hangupCall",
+        "remotePeerDisconnected",
+        "cancelCall",
+        "retryCall",
+        "mediaConnected",
+        "setMute",
+        "fetchEmailLink"
+      ]);
+
       this.set({
         contact: actionData.contact,
         outgoing: windowType === "outgoing",
@@ -236,11 +243,23 @@ loop.store.ConversationStore = (function() {
     },
 
     /**
-     * The peer hungup the call.
+     * The remote peer disconnected from the session.
+     *
+     * @param {sharedActions.RemotePeerDisconnected} actionData
      */
-    peerHungupCall: function() {
+    remotePeerDisconnected: function(actionData) {
       this._endSession();
-      this.set({callState: CALL_STATES.FINISHED});
+
+      // If the peer hungup, we end normally, otherwise
+      // we treat this as a call failure.
+      if (actionData.peerHungup) {
+        this.set({callState: CALL_STATES.FINISHED});
+      } else {
+        this.set({
+          callState: CALL_STATES.TERMINATED,
+          callStateReason: "peerNetworkDisconnected"
+        });
+      }
     },
 
     /**
