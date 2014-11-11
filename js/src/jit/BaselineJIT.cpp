@@ -60,11 +60,6 @@ static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
 static bool
 CheckFrame(InterpreterFrame *fp)
 {
-    if (fp->script()->isGenerator()) {
-        JitSpew(JitSpew_BaselineAbort, "generator frame");
-        return false;
-    }
-
     if (fp->isDebuggerFrame()) {
         // Debugger eval-in-frame. These are likely short-running scripts so
         // don't bother compiling them for now.
