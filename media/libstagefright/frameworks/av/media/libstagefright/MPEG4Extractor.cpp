@@ -113,14 +113,6 @@ private:
     status_t parseSampleAuxiliaryInformationOffsets(off64_t offset, off64_t size);
     void lookForMoof();
 
-    struct TrackFragmentData {
-        TrackFragmentData(): mPresent(false), mFlags(0), mBaseMediaDecodeTime(0) {}
-        bool mPresent;
-        uint32_t mFlags;
-        uint64_t mBaseMediaDecodeTime;
-    };
-    TrackFragmentData mTrackFragmentData;
-
     struct TrackFragmentHeaderInfo {
         enum Flags {
             kBaseDataOffsetPresent         = 0x01,
@@ -2855,22 +2847,18 @@ status_t MPEG4Source::parseTrackFragmentData(off64_t offset, off64_t size) {
     }
 
     uint8_t version = flags >> 24;
-    mTrackFragmentData.mFlags = flags;
 
     if (version == 0) {
-        uint32_t time;
-        if (mDataSource->getUInt32(offset + 4, &time)) {
-            mTrackFragmentData.mBaseMediaDecodeTime = time;
-            mTrackFragmentData.mPresent = true;
+        if (mDataSource->getUInt32(offset + 4, &mCurrentTime)) {
             return OK;
         }
     } else if (version == 1) {
         if (size < 12) {
             return -EINVAL;
         }
-        if (mDataSource->getUInt64(offset + 4,
-                &mTrackFragmentData.mBaseMediaDecodeTime)) {
-            mTrackFragmentData.mPresent = true;
+        uint64_t time;
+        if (mDataSource->getUInt64(offset + 4, &time)) {
+            mCurrentTime = time;
             return OK;
         }
     }
@@ -3622,13 +3610,9 @@ status_t MPEG4Source::fragmentedRead(
                         continue;
                     }
                     mCurrentMoofOffset = moofOffset;
-                    mTrackFragmentData.mPresent = false;
                     status_t ret = parseChunk(&moofOffset);
                     if (ret != OK) {
                         return ret;
-                    }
-                    if (mTrackFragmentData.mPresent) {
-                        mCurrentTime = mTrackFragmentData.mBaseMediaDecodeTime;
                     }
                 } while (mCurrentSamples.size() == 0);
                 uint32_t time = mCurrentTime;
@@ -3679,7 +3663,6 @@ status_t MPEG4Source::fragmentedRead(
             mDeferredSaio.clear();
             mDeferredSaiz.clear();
             mCurrentSampleIndex = 0;
-            mTrackFragmentData.mPresent = false;
             uint32_t hdr[2];
             do {
                 if (mDataSource->readAt(nextMoof, hdr, 8) < 8) {
@@ -3700,10 +3683,6 @@ status_t MPEG4Source::fragmentedRead(
                     return ret;
                 }
             } while (mCurrentSamples.size() == 0);
-
-            if (mTrackFragmentData.mPresent) {
-                mCurrentTime = mTrackFragmentData.mBaseMediaDecodeTime;
-            }
         }
 
         const Sample *smpl = &mCurrentSamples[mCurrentSampleIndex];
