@@ -16,6 +16,8 @@
 #define VPX_DONT_DEFINE_STDINT_TYPES
 #include "vpx/vpx_codec.h"
 
+#include "mozilla/layers/LayersTypes.h"
+
 #ifdef MOZ_TREMOR
 #include "tremor/ivorbiscodec.h"
 #else
@@ -25,10 +27,6 @@
 #ifdef MOZ_OPUS
 #include "OpusParser.h"
 #endif
-
-namespace mozilla {
-
-class WebMBufferedState;
 
 // Holds a nestegg_packet, and its file offset. This is needed so we
 // know the offset in the file we've played up to, in order to calculate
@@ -54,6 +52,18 @@ private:
   NesteggPacketHolder(const NesteggPacketHolder &aOther);
   NesteggPacketHolder& operator= (NesteggPacketHolder const& aOther);
 };
+
+template <>
+class nsAutoRefTraits<NesteggPacketHolder> : public nsPointerRefTraits<NesteggPacketHolder>
+{
+public:
+  static void Release(NesteggPacketHolder* aHolder) { delete aHolder; }
+};
+
+namespace mozilla {
+class WebMBufferedState;
+static const unsigned NS_PER_USEC = 1000;
+static const double NS_PER_S = 1e9;
 
 // Thread and type safe wrapper around nsDeque.
 class PacketQueueDeallocator : public nsDequeFunctor {
@@ -101,6 +111,21 @@ class WebMPacketQueue : private nsDeque {
   }
 };
 
+class WebMReader;
+
+// Class to handle various video decode paths
+class WebMVideoDecoder
+{
+public:
+  virtual nsresult Init(unsigned int aWidth = 0, unsigned int aHeight = 0) = 0;
+  virtual nsresult Flush() { return NS_OK; }
+  virtual void Shutdown() = 0;
+  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
+                                int64_t aTimeThreshold) = 0;
+  WebMVideoDecoder() {}
+  virtual ~WebMVideoDecoder() {}
+};
+
 class WebMReader : public MediaDecoderReader
 {
 public:
@@ -110,15 +135,13 @@ protected:
   ~WebMReader();
 
 public:
+  virtual void Shutdown() MOZ_OVERRIDE;
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
   virtual bool DecodeAudioData();
 
-  // If the Theora granulepos has not been captured, it may read several packets
-  // until one with a granulepos has been captured, to ensure that all packets
-  // read have valid time info.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  int64_t aTimeThreshold);
+                                int64_t aTimeThreshold);
 
   virtual bool HasAudio()
   {
@@ -143,7 +166,6 @@ public:
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 
-protected:
   // Value passed to NextPacket to determine if we are reading a video or an
   // audio packet.
   enum TrackType {
@@ -159,6 +181,15 @@ protected:
   // Pushes a packet to the front of the video packet queue.
   virtual void PushVideoPacket(NesteggPacketHolder* aItem);
 
+  int GetVideoCodec();
+  nsIntRect GetPicture();
+  nsIntSize GetInitialFrame();
+  uint64_t GetLastVideoFrameTime();
+  void SetLastVideoFrameTime(uint64_t aFrameTime);
+  layers::LayersBackend GetLayersBackendType() { return mLayersBackendType; }
+  MediaTaskQueue* GetTaskQueue() { return mTaskQueue; }
+
+protected:
 #ifdef MOZ_OPUS
   // Setup opus decoder
   bool InitOpusDecoder();
@@ -186,13 +217,16 @@ protected:
 
   virtual nsresult SeekInternal(int64_t aTime, int64_t aStartTime);
 
+  // Initializes mLayersBackendType if possible.
+  void InitLayersBackendType();
+
 private:
   // libnestegg context for webm container. Access on state machine thread
   // or decoder thread only.
   nestegg* mContext;
 
-  // VP8 decoder state
-  vpx_codec_ctx_t mVPX;
+  // The video decoder
+  nsAutoPtr<WebMVideoDecoder> mVideoDecoder;
 
   // Vorbis decoder state
   vorbis_info mVorbisInfo;
@@ -246,6 +280,9 @@ private:
   int mAudioCodec;
   // Codec ID of video track
   int mVideoCodec;
+
+  layers::LayersBackend mLayersBackendType;
+  nsRefPtr<MediaTaskQueue> mTaskQueue;
 
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;

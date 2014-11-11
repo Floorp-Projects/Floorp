@@ -284,6 +284,9 @@ pref("media.wave.enabled", true);
 #endif
 #ifdef MOZ_WEBM
 pref("media.webm.enabled", true);
+#if defined(MOZ_FMP4) && defined(MOZ_WMF)
+pref("media.webm.intel_decoder.enabled", false);
+#endif
 #endif
 #ifdef MOZ_GSTREAMER
 pref("media.gstreamer.enabled", true);
