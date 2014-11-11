@@ -587,6 +587,7 @@ loop.conversation = (function(mozL10n) {
           return (<DesktopRoomConversationView
             dispatcher={this.props.dispatcher}
             roomStore={this.props.roomStore}
+            dispatcher={this.props.dispatcher}
           />);
         }
         case "failed": {
@@ -642,7 +643,8 @@ loop.conversation = (function(mozL10n) {
     });
     var activeRoomStore = new loop.store.ActiveRoomStore({
       dispatcher: dispatcher,
-      mozLoop: navigator.mozLoop
+      mozLoop: navigator.mozLoop,
+      sdkDriver: sdkDriver
     });
     var roomStore = new loop.store.RoomStore({
       dispatcher: dispatcher,

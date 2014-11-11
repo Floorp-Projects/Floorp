@@ -136,6 +136,18 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to notify that the sdk session is now connected to the servers.
+     */
+    ConnectedToSdkServers: Action.define("connectedToSdkServers", {
+    }),
+
+    /**
+     * Used to notify that a remote peer has connected to the room.
+     */
+    RemotePeerConnected: Action.define("remotePeerConnected", {
+    }),
+
+    /**
      * Used by the ongoing views to notify stores about the elements
      * required for the sdk.
      */

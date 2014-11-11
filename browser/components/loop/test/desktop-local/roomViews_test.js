@@ -32,7 +32,8 @@ describe("loop.roomViews", function () {
 
     activeRoomStore = new loop.store.ActiveRoomStore({
       dispatcher: dispatcher,
-      mozLoop: {}
+      mozLoop: {},
+      sdkDriver: {}
     });
     roomStore = new loop.store.RoomStore({
       dispatcher: dispatcher,
@@ -62,6 +63,8 @@ describe("loop.roomViews", function () {
 
       expect(testView.state).eql({
         roomState: ROOM_STATES.INIT,
+        audioMuted: false,
+        videoMuted: false,
         foo: "bar"
       });
     });
@@ -77,12 +80,16 @@ describe("loop.roomViews", function () {
 
       activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
 
-      expect(testView.state).eql({roomState: ROOM_STATES.READY});
+      expect(testView.state.roomState).eql(ROOM_STATES.READY);
     });
   });
 
   describe("DesktopRoomConversationView", function() {
     var view;
+
+    beforeEach(function() {
+      sandbox.stub(dispatcher, "dispatch");
+    });
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -91,6 +98,71 @@ describe("loop.roomViews", function () {
           roomStore: roomStore
         }));
     }
+
+    it("should dispatch a setupStreamElements action when the view is created",
+      function() {
+        view = mountTestComponent();
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "setupStreamElements"));
+    });
+
+    it("should dispatch a setMute action when the audio mute button is pressed",
+      function() {
+        view = mountTestComponent();
+
+        view.setState({audioMuted: true});
+
+        var muteBtn = view.getDOMNode().querySelector('.btn-mute-audio');
+
+        React.addons.TestUtils.Simulate.click(muteBtn);
+
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "setMute"));
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("enabled", true));
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("type", "audio"));
+      });
+
+    it("should dispatch a setMute action when the video mute button is pressed",
+      function() {
+        view = mountTestComponent();
+
+        view.setState({videoMuted: false});
+
+        var muteBtn = view.getDOMNode().querySelector('.btn-mute-video');
+
+        React.addons.TestUtils.Simulate.click(muteBtn);
+
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("name", "setMute"));
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("enabled", false));
+        sinon.assert.calledWithMatch(dispatcher.dispatch,
+          sinon.match.hasOwn("type", "video"));
+      });
+
+    it("should set the mute button as mute off", function() {
+      view = mountTestComponent();
+
+      view.setState({videoMuted: false});
+
+      var muteBtn = view.getDOMNode().querySelector('.btn-mute-video');
+
+      expect(muteBtn.classList.contains("muted")).eql(false);
+    });
+
+    it("should set the mute button as mute on", function() {
+      view = mountTestComponent();
+
+      view.setState({audioMuted: true});
+
+      var muteBtn = view.getDOMNode().querySelector('.btn-mute-audio');
+
+      expect(muteBtn.classList.contains("muted")).eql(true);
+    });
 
     describe("#render", function() {
       it("should set document.title to store.serverData.roomName", function() {
