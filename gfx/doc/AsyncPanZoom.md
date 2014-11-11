@@ -148,7 +148,9 @@ However, on the main thread, web content might be running Javascript code that p
 Scroll changes driven from the main thread are just as legitimate and need to be propagated to the compositor thread, so that the visual display updates in response.
 
 Because the cross-thread messaging is asynchronous, reconciling the two types of scroll changes is a tricky problem.
-Our design solves this using various flags and generation counters that ensures compositor-driven scroll changes never overwrite content-driven scroll changes - this behaviour is usually the desired outcome.
+Our design solves this using various flags and generation counters.
+The general heuristic we have is that content-driven scroll position changes (e.g. scrollTo from JS) are never lost.
+For instance, if the user is doing an async scroll with their finger and content does a scrollTo in the middle, then some of the async scroll would occur before the "jump" and the rest after the "jump".
 
 ### Content preventing default behaviour of input events
 
@@ -165,3 +167,116 @@ The way the APZ implementation deals with this is that upon receiving a touch ev
 It also schedules a 300ms timeout during which content is allowed to prevent scrolling.
 There is an API that allows the main-thread event dispatching code to notify the APZ as to whether or not the default action should be prevented.
 If the APZ content response timeout expires, or if the main-thread event dispatching code notifies the APZ of the preventDefault status, then the APZ continues with the processing of the events (which may involve discarding the events).
+
+## Technical details
+
+This section describes various pieces of the APZ code, and goes into more specific detail on APIs and code than the previous sections.
+The primary purpose of this section is to help people who plan on making changes to the code, while also not going into so much detail that it needs to be updated with every patch.
+
+### Overall flow of input events
+
+This section describes how input events flow through the APZ code.
+<ol>
+<li value="1">
+Input events arrive from the hardware/widget code into the APZ via APZCTreeManager::ReceiveInputEvent.
+The thread that invokes this is called the input thread, and may or may not be the same as the Gecko main thread.
+</li>
+<li value="2">
+Conceptually the first thing that the APZCTreeManager does is to group these events into "input blocks".
+An input block is a contiguous set of events that get handled together.
+For example with touch events, all events following a touchstart up to but not including the next touchstart are in the same block.
+All of the events in a given block will go to the same APZC instance and will either all be processed or all be dropped.
+</li>
+<li value="3">
+Using the first event in the input block, the APZCTreeManager does a hit-test to see which APZC it hits.
+If no APZC is hit, the events are discarded and we jump to step 6.
+Otherwise, the input block is tagged with the APZC and put into a global APZ input queue.
+</li>
+<li value="4">
+ <ol>
+  <li value="i">
+   If the input events are not touch events, or if the APZC is for content without touch listeners, any available events in the input block are processed.
+   These may trigger behaviours like scrolling or tap gestures.
+  </li>
+  <li value="ii">
+   If the input events are touch events and the APZC is for content with touch listeners, the events are left in the queue and a 300ms timeout is initiated.
+   If the timeout expires before step 9 is completed, the APZ assumes the input block was not cancelled and processes them as part of step 10.
+  </li>
+ </ol>
+</li>
+<li value="5">
+The call stack unwinds back to APZCTreeManager::ReceiveInputEvent, which does an in-place modification of the input event so that any async transforms are removed.
+</li>
+<li value="6">
+The call stack unwinds back to the widget code that called ReceiveInputEvent.
+This code now has the event in the coordinate space Gecko is expecting, and so can dispatch it to the Gecko main thread.
+</li>
+<li value="7">
+Gecko performs its own usual hit-testing and event dispatching for the event.
+As part of this, it records whether any touch listeners cancelled the input block by calling preventDefault().
+</li>
+<li value="8">
+The call stack unwinds back to the widget code, which sends a notification to the APZ code by calling APZCTreeManager::ContentReceivedTouch on the input thread.
+This happens only once per input block.
+</li>
+<li value="9">
+ <ol>
+  <li value="i">
+   If the events were processed as part of step 4(i), the call to ContentReceivedTouch is ignored and step 10 is skipped.
+  </li>
+  <li value="ii">
+   If events were queued as part of step 4(ii), and steps 5-8 take less than 300ms, the ContentReceivedTouch call marks the input block ready for processing.
+  </li>
+  <li value="iii">
+   If events were queued as part of step 4(ii), but steps 5-8 take longer than 300ms, the ContentReceivedTouch will be ignored and step 10 will already have happened.
+  </li>
+ </ol>
+</li>
+<li value="10">
+If events were queued as part of step 4(ii) they are now either processed (if the input block was not cancelled, or if the timeout expired) or dropped (if it was cancelled).
+Processing the events may trigger behaviours like scrolling or tap gestures.
+</li>
+</ol>
+
+If the CSS touch-action property is enabled, the above steps are modified as follows:
+<ul>
+<li>
+ In step 4, the APZC also requires the allowed touch-action behaviours for the input event. This is not available yet, so the events are always queued.
+</li>
+<li>
+ In step 6, the widget code determines the content element at the point under the input element, and notifies the APZ code of the allowed touch-action behaviours.
+ This is done via a call to APZCTreeManager::SetAllowedTouchBehavior on the input thread.
+</li>
+</ul>
+
+#### Threading considerations
+
+The bulk of the input processing in the APZ code happens on what we call "the input thread".
+In practice the input thread could be the Gecko main thread, the compositor thread, or some other thread.
+There are obvious downsides to using the Gecko main thread - that is, "asynchronous" panning and zooming is not really asynchronous as input events can only be processed while Gecko is idle.
+However, this is the current state of things on B2G and Metro.
+Using the compositor thread as the input thread could work on some platforms, but may be inefficient on others.
+For example, on Android (Fennec) we receive input events from the system on a dedicated UI thread.
+We would have to redispatch the input events to the compositor thread if we wanted to the input thread to be the same as the compositor thread.
+This introduces a potential for higher latency, particularly if the compositor does any blocking operations - blocking SwapBuffers operations, for example.
+As a result, the APZ code itself does not assume that the input thread will be the same as the Gecko main thread or the compositor thread.
+
+#### Active vs. inactive scrollframes
+
+The number of scrollframes on a page is potentially unbounded.
+However, we do not want to create a separate layer for each scrollframe right away, as this would require large amounts of memory.
+Therefore, scrollframes as designated as either "active" or "inactive".
+Active scrollframes are the ones that do have their contents put on a separate layer (or set of layers), and inactive ones do not.
+
+Consider a page with a scrollframe that is initially inactive.
+When layout generates the layers for this page, it inserts a "scrollinfo" layer into the layer tree to let the APZ know that there is potentially scrollable content there.
+The scrollinfo layer is an empty ContainerLayer, which does not require much extra memory.
+The composition bounds of this scrollinfo layer are used on the compositor for hit-testing, and a "placeholder" APZC is created for this scrollframe.
+When the user starts interacting with that content, the hit-test in the APZ code finds the placeholder APZC and starts routing it the events as usual.
+The APZC eventually sends a repaint request to the main thread, and that repaint request sets a displayport on the scrollframe.
+Setting the displayport activates the scrollframe and causes it to get pushed onto a separate layer (or set of layers).
+
+This model imples that when the user initially attempts to scroll an inactive scrollframe, it will not initially scroll visually.
+(This is because although the APZC is tracking the events and updating scroll position, there is no layer to which it can apply the async scroll offset.)
+Only after the round-trip to the gecko thread is complete is there a layer for async scrolling to actually occur.
+At that point the scrollframe will visually "jump" to the correct scroll offset.

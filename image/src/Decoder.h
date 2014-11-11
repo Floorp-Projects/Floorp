@@ -69,14 +69,17 @@ public:
   void FinishSharedDecoder();
 
   /**
-   * Tells the decoder to flush any pending invalidations. This informs the image
-   * frame of its decoded region, and sends the appropriate OnDataAvailable call
-   * to consumers.
-   *
-   * This can be called any time when we're midway through decoding a frame,
-   * and must be called after finishing a frame (before starting a new one).
+   * Gets the invalidation region accumulated by the decoder so far, and clears
+   * the decoder's invalidation region. This means that each call to
+   * TakeInvalidRect() returns only the invalidation region accumulated since
+   * the last call to TakeInvalidRect().
    */
-  void FlushInvalidations();
+  nsIntRect TakeInvalidRect()
+  {
+    nsIntRect invalidRect = mInvalidRect;
+    mInvalidRect.SetEmpty();
+    return invalidRect;
+  }
 
   // We're not COM-y, so we don't get refcounts by default
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Decoder)

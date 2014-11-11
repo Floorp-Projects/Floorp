@@ -198,7 +198,6 @@ private:
   ReentrantMonitorAutoEnter(const ReentrantMonitorAutoEnter&);
   ReentrantMonitorAutoEnter& operator=(const ReentrantMonitorAutoEnter&);
   static void* operator new(size_t) CPP_THROW_NEW;
-  static void operator delete(void*);
 
   mozilla::ReentrantMonitor* mReentrantMonitor;
 };
@@ -240,7 +239,6 @@ private:
   ReentrantMonitorAutoExit(const ReentrantMonitorAutoExit&);
   ReentrantMonitorAutoExit& operator=(const ReentrantMonitorAutoExit&);
   static void* operator new(size_t) CPP_THROW_NEW;
-  static void operator delete(void*);
 
   ReentrantMonitor* mReentrantMonitor;
 };

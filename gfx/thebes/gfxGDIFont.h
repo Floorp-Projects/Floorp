@@ -60,7 +60,7 @@ public:
     virtual bool ProvidesGlyphWidths() const { return true; }
 
     // get hinted glyph width in pixels as 16.16 fixed-point value
-    virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID);
+    virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID);
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontCacheSizes* aSizes) const;
