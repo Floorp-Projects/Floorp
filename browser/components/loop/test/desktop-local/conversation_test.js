@@ -214,7 +214,7 @@ describe("loop.conversation", function() {
       ccView = mountTestComponent();
 
       TestUtils.findRenderedComponentWithType(ccView,
-        loop.roomViews.DesktopRoomView);
+        loop.roomViews.DesktopRoomControllerView);
     });
 
     it("should display the GenericFailureView for failures", function() {
