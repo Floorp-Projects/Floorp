@@ -213,8 +213,8 @@ private:
   // These times should be in milliseconds
   DECL_GFX_PREF(Once, "gfx.touch.resample.max-predict",        TouchResampleMaxPredict, int32_t, 8);
   DECL_GFX_PREF(Once, "gfx.touch.resample.vsync-adjust",       TouchVsyncSampleAdjust, int32_t, 5);
-  DECL_GFX_PREF(Once, "gfx.touch.resample.min-resample",       TouchResampleMinTime, int32_t, 2);
   DECL_GFX_PREF(Once, "gfx.touch.resample.delay-threshold",    TouchResampleVsyncDelayThreshold, int32_t, 20);
+  DECL_GFX_PREF(Once, "gfx.touch.resample.old-touch-threshold",TouchResampleOldTouchThreshold, int32_t, 17);
 
   DECL_GFX_PREF(Live, "gl.msaa-level",                         MSAALevel, uint32_t, 2);
 
