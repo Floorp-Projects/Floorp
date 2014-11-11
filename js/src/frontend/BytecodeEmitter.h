@@ -126,6 +126,8 @@ struct BytecodeEmitter
     int32_t         stackDepth;     /* current stack depth in script frame */
     uint32_t        maxStackDepth;  /* maximum stack depth so far */
 
+    uint32_t        yieldIndex;     /* index stored as operand of yield ops */
+
     uint32_t        arrayCompDepth; /* stack depth of array in comprehension */
 
     unsigned        emitLevel;      /* js::frontend::EmitTree recursion level */

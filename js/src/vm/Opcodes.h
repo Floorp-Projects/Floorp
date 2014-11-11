@@ -1565,19 +1565,19 @@
      * interpretation.
      *   Category: Statements
      *   Type: Generator
-     *   Operands:
+     *   Operands: uint24_t yieldIndex
      *   Stack: generator =>
      */ \
-    macro(JSOP_INITIALYIELD,  202,"initialyield", NULL,   1,  1,  1,  JOF_BYTE) \
+    macro(JSOP_INITIALYIELD,  202,"initialyield", NULL,   4,  1,  1,  JOF_UINT24) \
     /*
      * Pops the generator and the return value 'rval1', stops interpretation and
      * returns 'rval1'. Pushes sent value from 'send()' onto the stack.
      *   Category: Statements
      *   Type: Generator
-     *   Operands:
+     *   Operands: uint24_t yieldIndex
      *   Stack: rval1, gen => rval2
      */ \
-    macro(JSOP_YIELD,         203,"yield",       NULL,    1,  2,  1,  JOF_BYTE) \
+    macro(JSOP_YIELD,         203,"yield",       NULL,    4,  2,  1,  JOF_UINT24) \
     /*
      * Pops the generator and suspends and closes it. Yields the value in the
      * frame's return value slot.

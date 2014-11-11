@@ -60,19 +60,28 @@ GeneratorObject::create(JSContext *cx, AbstractFramePtr frame)
 
 bool
 GeneratorObject::suspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame, jsbytecode *pc,
-                         Value *vp, unsigned nvalues, GeneratorObject::SuspendKind suspendKind)
+                         Value *vp, unsigned nvalues)
 {
+    MOZ_ASSERT(*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD);
+
     Rooted<GeneratorObject*> genObj(cx, &obj->as<GeneratorObject>());
     MOZ_ASSERT(!genObj->hasExpressionStack());
 
-    if (suspendKind == NORMAL && genObj->isClosing()) {
+    if (*pc == JSOP_YIELD && genObj->isClosing()) {
         MOZ_ASSERT(genObj->is<LegacyGeneratorObject>());
         RootedValue val(cx, ObjectValue(*frame.callee()));
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, NullPtr());
         return false;
     }
 
-    genObj->setSuspendedBytecodeOffset(pc - frame.script()->code(), suspendKind == INITIAL);
+    uint32_t yieldIndex = GET_UINT24(pc);
+    MOZ_ASSERT((*pc == JSOP_INITIALYIELD) == (yieldIndex == 0));
+
+    static_assert(JSOP_INITIALYIELD_LENGTH == JSOP_YIELD_LENGTH,
+                  "code below assumes INITIALYIELD and YIELD have same length");
+    pc += JSOP_YIELD_LENGTH;
+
+    genObj->setSuspendedBytecodeOffset(frame.script()->pcToOffset(pc), yieldIndex);
     genObj->setScopeChain(*frame.scopeChain());
 
     if (nvalues) {
@@ -127,6 +136,15 @@ GeneratorObject::resume(JSContext *cx, InterpreterActivation &activation,
     }
 
     activation.regs().pc = callee->nonLazyScript()->code() + genObj->suspendedBytecodeOffset();
+
+#ifdef DEBUG
+    // Verify the YIELD_INDEX slot holds the right value.
+    static_assert(JSOP_INITIALYIELD_LENGTH == JSOP_YIELD_LENGTH,
+                  "code below assumes INITIALYIELD and YIELD have same length");
+    jsbytecode *yieldpc = activation.regs().pc - JSOP_YIELD_LENGTH;
+    MOZ_ASSERT(*yieldpc == JSOP_INITIALYIELD || *yieldpc == JSOP_YIELD);
+    MOZ_ASSERT(GET_UINT24(yieldpc) == genObj->suspendedYieldIndex());
+#endif
 
     // Always push on a value, even if we are raising an exception. In the
     // exception case, the stack needs to have something on it so that exception
