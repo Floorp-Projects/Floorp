@@ -2608,6 +2608,7 @@ InvalidateActivation(FreeOp *fop, const JitActivationIterator &activations, bool
             JitSpew(JitSpew_IonInvalidate, "#%d rectifier frame @ %p", frameno, it.fp());
             break;
           case JitFrame_Unwound_IonJS:
+          case JitFrame_Unwound_BaselineJS:
           case JitFrame_Unwound_BaselineStub:
             MOZ_CRASH("invalid");
           case JitFrame_Unwound_Rectifier:

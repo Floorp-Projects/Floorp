@@ -54,6 +54,7 @@ JitFrameIterator::isFakeExitFrame() const
 {
     bool res = (prevType() == JitFrame_Unwound_Rectifier ||
                 prevType() == JitFrame_Unwound_IonJS ||
+                prevType() == JitFrame_Unwound_BaselineJS ||
                 prevType() == JitFrame_Unwound_BaselineStub ||
                 (prevType() == JitFrame_Entry && type() == JitFrame_Exit));
     MOZ_ASSERT_IF(res, type() == JitFrame_Exit || type() == JitFrame_BaselineJS);
