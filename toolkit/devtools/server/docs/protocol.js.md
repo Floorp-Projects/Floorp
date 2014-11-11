@@ -68,9 +68,9 @@ The generated methods will return a Promise.  That promise will resolve to the R
 
 So if we have a reference to a HelloFront object, we can issue a `sayHello` request:
 
-  hello.sayHello().then(greeting => {
-    console.log(greeting);
-  });
+    hello.sayHello().then(greeting => {
+      console.log(greeting);
+    });
 
 How do you get an initial reference to the front?  That's a bit tricky, but basically there are two ways:
 
@@ -78,7 +78,8 @@ How do you get an initial reference to the front?  That's a bit tricky, but basi
 * Magically
 
 Manually - If you're using a DebuggerClient instance, you can discover the actorID manually and create a Front for it:
-  let hello = HelloFront(this.client, { actorID: <hello actorID> });
+
+    let hello = HelloFront(this.client, { actor: <hello actorID> });
 
 Magically - Once you have an initial reference to a protocol.js object, it can return other protocol.js objects and fronts will automatically be created.
 
