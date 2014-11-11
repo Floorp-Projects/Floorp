@@ -46,7 +46,7 @@ body {
   flex: 1;
   text-align: center;
   color: #ccc;
-  border-right: 1px solid #ccc;
+  -moz-border-end: 1px solid #ccc;
   padding: 0 10px;
   height: 16px;
   cursor: pointer;
@@ -56,7 +56,7 @@ body {
 }
 
 .tab-view > li:last-child {
-  border-right-style: none;
+  -moz-border-end-style: none;
 }
 
 .tab-view > li[data-tab-name="call"],
@@ -307,6 +307,10 @@ body {
   font-size: 12px;
 }
 
+.button > .button-caption {
+  vertical-align: middle;
+}
+
 .button:hover {
   background-color: #ebebeb;
 }
@@ -372,10 +376,41 @@ body[dir=rtl] .dropdown-menu-item {
   background-color: #eee;
 }
 
+/* Spinner */
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+}
+
+.spinner.busy {
+  background-image: url(../img/spinner.png);
+  animation-name: spinnerRotate;
+  animation-duration: 1s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@media (min-resolution: 2dppx) {
+  .spinner.busy {
+    background-image: url(../img/spinner@2x.png);
+  }
+}
+
 /* Share tab */
 
-.generate-url input {
+.generate-url-stack {
   margin: 14px 0;
+  position: relative;
+}
+
+.generate-url-input {
   outline: 0;
   border: 1px solid #ccc; /* Overriding background style for a text input (see
                              below) resets its borders to a weird beveled style;
@@ -386,10 +421,18 @@ body[dir=rtl] .dropdown-menu-item {
   font-size: 1em;
 }
 
-.generate-url input.pending {
-  background-image: url(../img/loading-icon.gif);
-  background-repeat: no-repeat;
-  background-position: right;
+.generate-url-spinner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  top: 4px;
+  left: auto;
+  right: 4px;
+}
+
+body[dir=rtl] .generate-url-spinner {
+  left: 4px;
+  right: auto;
 }
 
 .generate-url .button {
