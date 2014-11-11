@@ -183,8 +183,8 @@ HavePlatformMPEGDecoders()
          IsVistaOrLater() ||
 #endif
 #ifdef MOZ_WIDGET_ANDROID
-         // We need android.media.MediaCodec which exists in API level 16 and higher.
-         (AndroidBridge::Bridge()->GetAPIVersion() >= 16) ||
+         // Works on 16 and higher, but restrict to 21 (Lollipop) and higher
+         (AndroidBridge::Bridge()->GetAPIVersion() >= 21) ||
 #endif
          IsFFmpegAvailable() ||
          IsAppleAvailable() ||
