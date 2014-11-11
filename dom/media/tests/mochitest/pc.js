@@ -2583,6 +2583,48 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
+   * Compares the Ice server configured for this PeerConnectionWrapper
+   * with the ICE candidates received in the RTCP stats.
+   *
+   * @param {object} stats
+   *        The stats to be verified for relayed vs. direct connection.
+   */
+  checkStatsIceConnectionType : function PCW_checkStatsIceConnectionType(stats)
+  {
+    var lId;
+    var rId;
+    Object.keys(stats).forEach(function(name) {
+      if ((stats[name].type === "candidatepair") &&
+          (stats[name].selected)) {
+        lId = stats[name].localCandidateId;
+        rId = stats[name].remoteCandidateId;
+      }
+    });
+    info("checkStatsIceConnectionType verifying: local=" +
+         JSON.stringify(stats[lId]) + " remote=" + JSON.stringify(stats[rId]));
+    if ((typeof stats[lId] === 'undefined') ||
+        (typeof stats[rId] === 'undefined')) {
+      info("checkStatsIceConnectionType failed to find candidatepair IDs");
+      return;
+    }
+    var lType = stats[lId].candidateType;
+    var rType = stats[rId].candidateType;
+    var lIp = stats[lId].ipAddress;
+    var rIp = stats[rId].ipAddress;
+    if ((this.configuration) && (typeof this.configuration.iceServers !== 'undefined')) {
+      info("Ice Server configured");
+      // Note: the IP comparising is a workaround for bug 1097333
+      //       And this will fail if a TURN server address is a DNS name!
+      var serverIp = this.configuration.iceServers[0].url.split(':')[1];
+      ok((lType === "relayed" || rType === "relayed") ||
+         (lIp === serverIp || rIp === serverIp), "One peer uses a relay");
+    } else {
+      info("P2P configured");
+      ok(((lType !== "relayed") && (rType !== "relayed")), "Pure peer to peer call without a relay");
+    }
+  },
+
+  /**
    * Property-matching function for finding a certain stat in passed-in stats
    *
    * @param {object} stats
