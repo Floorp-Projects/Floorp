@@ -397,10 +397,10 @@ fennec_ids.txt: generated/org/mozilla/gecko/R.java fennec-ids-generator.py
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
 
-# This target is only used by the Eclipse integration. It rebuilds
-# resources that end up in omni.ja, does most of the packaging step,
-# and then updates omni.ja in place. If you're not using Eclipse, you
-# should be using |mach build mobile/android && mach package|.
+# This target is only used by IDE integrations. It rebuilds resources
+# that end up in omni.ja, does most of the packaging step, and then
+# updates omni.ja in place. If you're not using an IDE, you should be
+# using |mach build mobile/android && mach package|.
 $(abspath $(DIST)/fennec/$(OMNIJAR_NAME)): FORCE
 	$(REPORT_BUILD)
 	$(MAKE) -C ../locales
@@ -412,6 +412,12 @@ $(abspath $(DIST)/fennec/$(OMNIJAR_NAME)): FORCE
 	$(MAKE) -C ../installer stage-package
 	rsync --update $(DIST)/fennec/$(notdir $(OMNIJAR_NAME)) $@
 	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
+
+# Targets built very early during a Gradle build.
+gradle-targets: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
+gradle-targets: .aapt.deps
+
+.PHONY: gradle-targets
 
 libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
 	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
