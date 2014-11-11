@@ -3,7 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This file makes some assumptions about the versions of OS X.
+// Instead of making it work major version 11 right now,
+// we will wait until that happens and worry about it then.
+// There are MOZ_ASSERTs to remind us to do that.
+// We are assuming that the minor version is less than 16.
+// There are MOZ_ASSERTs for that as well.
+
+// The formula for the version integer based on OS X version 10.minor.bugfix is
+// 0x1000 + (minor << 4) + bugifix.  See AssembleVersion() below.
+
 #define MAC_OS_X_VERSION_MASK      0x0000FFFF
+#define MAC_OS_X_VERSION_10_0_HEX  0x00001000
 #define MAC_OS_X_VERSION_10_6_HEX  0x00001060
 #define MAC_OS_X_VERSION_10_7_HEX  0x00001070
 #define MAC_OS_X_VERSION_10_8_HEX  0x00001080
@@ -18,9 +29,31 @@
 #import <Cocoa/Cocoa.h>
 
 int32_t nsCocoaFeatures::mOSXVersion = 0;
-int32_t nsCocoaFeatures::mOSXVersionMajor = 0;
-int32_t nsCocoaFeatures::mOSXVersionMinor = 0;
-int32_t nsCocoaFeatures::mOSXVersionBugFix = 0;
+
+inline int32_t AssembleVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
+{
+    MOZ_ASSERT(aMajor == 10);
+    return MAC_OS_X_VERSION_10_0_HEX + (aMinor << 4) + aBugFix;
+}
+
+inline int32_t ExtractMajorVersion(int32_t aVersion)
+{
+    MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_MASK) == aVersion);
+    MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_10_0_HEX) == MAC_OS_X_VERSION_10_0_HEX);
+    return 10;
+}
+
+inline int32_t ExtractMinorVersion(int32_t aVersion)
+{
+    MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_MASK) == aVersion);
+    return (aVersion & 0xF0) >> 4;
+}
+
+inline int32_t ExtractBugFixVersion(int32_t aVersion)
+{
+    MOZ_ASSERT((aVersion & MAC_OS_X_VERSION_MASK) == aVersion);
+    return aVersion & 0x0F;
+}
 
 static int intAtStringIndex(NSArray *array, int index)
 {
@@ -46,6 +79,30 @@ static void GetSystemVersion(int &major, int &minor, int &bugfix)
     }
 }
 
+static int32_t GetFullVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
+{
+    int32_t osxVersion;
+    if (aMajor < 10) {
+        aMajor = 10;
+        NS_ERROR("Couldn't determine OS X version, assuming 10.6");
+        osxVersion = MAC_OS_X_VERSION_10_6_HEX;
+    } else if (aMinor < 6) {
+        aMinor = 6;
+        NS_ERROR("OS X version too old, assuming 10.6");
+        osxVersion = MAC_OS_X_VERSION_10_6_HEX;
+    } else {
+        MOZ_ASSERT(aMajor == 10);
+        MOZ_ASSERT(aMinor < 16);
+        MOZ_ASSERT(aBugFix >= 0);
+        MOZ_ASSERT(aBugFix < 16);
+        osxVersion = AssembleVersion(aMajor, aMinor, aBugFix);
+    }
+    MOZ_ASSERT(aMajor == ExtractMajorVersion(osxVersion));
+    MOZ_ASSERT(aMinor == ExtractMinorVersion(osxVersion));
+    MOZ_ASSERT(aBugFix == ExtractBugFixVersion(osxVersion));
+    return osxVersion;
+}
+
 /*static*/ void
 nsCocoaFeatures::InitializeVersionNumbers()
 {
@@ -57,25 +114,7 @@ nsCocoaFeatures::InitializeVersionNumbers()
 
     int major, minor, bugfix;
     GetSystemVersion(major, minor, bugfix);
-
-    mOSXVersionMajor = major;
-    mOSXVersionMinor = minor;
-    mOSXVersionBugFix = bugfix;
-
-    if (major < 10) {
-        NS_ERROR("Couldn't determine OS X version, assuming 10.6");
-        mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
-        mOSXVersionMajor = 10;
-        mOSXVersionMinor = 6;
-        mOSXVersionBugFix = 0;
-    } else if (minor < 6) {
-        NS_ERROR("OS X version too old, assuming 10.6");
-        mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
-        mOSXVersionMinor = 6;
-        mOSXVersionBugFix = 0;
-    } else {
-        mOSXVersion = 0x1000 + (minor << 4);
-    }
+    mOSXVersion = GetFullVersion(major, minor, bugfix);
 
     NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -83,7 +122,10 @@ nsCocoaFeatures::InitializeVersionNumbers()
 /* static */ int32_t
 nsCocoaFeatures::OSXVersion()
 {
+    // Don't let this be called while we're first setting the value...
+    MOZ_ASSERT((mOSXVersion & MAC_OS_X_VERSION_MASK) >= 0);
     if (!mOSXVersion) {
+        mOSXVersion = -1;
         InitializeVersionNumbers();
     }
     return mOSXVersion;
@@ -92,28 +134,20 @@ nsCocoaFeatures::OSXVersion()
 /* static */ int32_t
 nsCocoaFeatures::OSXVersionMajor()
 {
-    if (!mOSXVersion) {
-        InitializeVersionNumbers();
-    }
-    return mOSXVersionMajor;
+    MOZ_ASSERT((OSXVersion() & MAC_OS_X_VERSION_10_0_HEX) == MAC_OS_X_VERSION_10_0_HEX);
+    return 10;
 }
 
 /* static */ int32_t
 nsCocoaFeatures::OSXVersionMinor()
 {
-    if (!mOSXVersion) {
-        InitializeVersionNumbers();
-    }
-    return mOSXVersionMinor;
+    return ExtractMinorVersion(OSXVersion());
 }
 
 /* static */ int32_t
 nsCocoaFeatures::OSXVersionBugFix()
 {
-    if (!mOSXVersion) {
-        InitializeVersionNumbers();
-    }
-    return mOSXVersionBugFix;
+    return ExtractBugFixVersion(OSXVersion());
 }
 
 /* static */ bool
@@ -151,8 +185,11 @@ nsCocoaFeatures::OnYosemiteOrLater()
 /* static */ bool
 nsCocoaFeatures::AccelerateByDefault()
 {
-    return !(OSXVersionMajor() == 10 &&
-             OSXVersionMinor() == 6 &&
-             OSXVersionBugFix() <= 2);
+    return IsAtLeastVersion(10, 6, 3);
 }
 
+/* static */ bool
+nsCocoaFeatures::IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix)
+{
+    return OSXVersion() >= GetFullVersion(aMajor, aMinor, aBugFix);
+}
