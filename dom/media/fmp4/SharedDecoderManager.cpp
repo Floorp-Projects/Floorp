@@ -66,14 +66,14 @@ SharedDecoderManager::SharedDecoderManager()
 SharedDecoderManager::~SharedDecoderManager() {}
 
 already_AddRefed<MediaDataDecoder>
-SharedDecoderManager::CreateH264Decoder(
+SharedDecoderManager::CreateVideoDecoder(
   const mp4_demuxer::VideoDecoderConfig& aConfig,
   layers::LayersBackend aLayersBackend, layers::ImageContainer* aImageContainer,
   MediaTaskQueue* aVideoTaskQueue, MediaDataDecoderCallback* aCallback)
 {
   if (!mDecoder) {
     nsAutoPtr<PlatformDecoderModule> platform(PlatformDecoderModule::Create());
-    mDecoder = platform->CreateH264Decoder(
+    mDecoder = platform->CreateVideoDecoder(
       aConfig, aLayersBackend, aImageContainer, aVideoTaskQueue, mCallback);
     if (!mDecoder) {
       return nullptr;

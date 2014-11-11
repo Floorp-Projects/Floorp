@@ -34,11 +34,11 @@ public:
   virtual nsresult Shutdown() MOZ_OVERRIDE;
 
   virtual already_AddRefed<MediaDataDecoder>
-  CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                    layers::LayersBackend aLayersBackend,
-                    layers::ImageContainer* aImageContainer,
-                    MediaTaskQueue* aVideoTaskQueue,
-                    MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+  CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                     layers::LayersBackend aLayersBackend,
+                     layers::ImageContainer* aImageContainer,
+                     MediaTaskQueue* aVideoTaskQueue,
+                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
