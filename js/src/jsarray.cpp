@@ -237,12 +237,51 @@ GetElement(JSContext *cx, HandleObject obj, IndexType index, bool *hole, Mutable
     return GetElement(cx, obj, obj, index, hole, vp);
 }
 
-static bool
-GetElementsSlow(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
+void
+ElementAdder::append(JSContext *cx, HandleValue v)
 {
-    for (uint32_t i = 0; i < length; i++) {
-        if (!JSObject::getElement(cx, aobj, aobj, i, MutableHandleValue::fromMarkedLocation(&vp[i])))
-            return false;
+    MOZ_ASSERT(index_ < length_);
+    if (resObj_)
+        resObj_->as<NativeObject>().setDenseElementWithType(cx, index_++, v);
+    else
+        vp_[index_++] = v;
+}
+
+void
+ElementAdder::appendHole()
+{
+    MOZ_ASSERT(getBehavior_ == ElementAdder::CheckHasElemPreserveHoles);
+    MOZ_ASSERT(index_ < length_);
+    if (resObj_) {
+        MOZ_ASSERT(resObj_->as<NativeObject>().getDenseElement(index_).isMagic(JS_ELEMENTS_HOLE));
+        index_++;
+    } else {
+        vp_[index_++].setMagic(JS_ELEMENTS_HOLE);
+    }
+}
+
+bool
+js::GetElementsWithAdder(JSContext *cx, HandleObject obj, HandleObject receiver,
+                         uint32_t begin, uint32_t end, ElementAdder *adder)
+{
+    MOZ_ASSERT(begin <= end);
+
+    RootedValue val(cx);
+    for (uint32_t i = begin; i < end; i++) {
+        if (adder->getBehavior() == ElementAdder::CheckHasElemPreserveHoles) {
+            bool hole;
+            if (!GetElement(cx, obj, receiver, i, &hole, &val))
+                return false;
+            if (hole) {
+                adder->appendHole();
+                continue;
+            }
+        } else {
+            MOZ_ASSERT(adder->getBehavior() == ElementAdder::GetElement);
+            if (!JSObject::getElement(cx, obj, receiver, i, &val))
+                return false;
+        }
+        adder->append(cx, val);
     }
 
     return true;
@@ -272,7 +311,17 @@ js::GetElements(JSContext *cx, HandleObject aobj, uint32_t length, Value *vp)
         }
     }
 
-    return GetElementsSlow(cx, aobj, length, vp);
+    if (js::GetElementsOp op = aobj->getOps()->getElements) {
+        ElementAdder adder(cx, vp, length, ElementAdder::GetElement);
+        return op(cx, aobj, 0, length, &adder);
+    }
+
+    for (uint32_t i = 0; i < length; i++) {
+        if (!JSObject::getElement(cx, aobj, aobj, i, MutableHandleValue::fromMarkedLocation(&vp[i])))
+            return false;
+    }
+
+    return true;
 }
 
 /*
@@ -2816,6 +2865,24 @@ GetIndexedPropertiesInRange(JSContext *cx, HandleObject obj, uint32_t begin, uin
 }
 
 static bool
+SliceSlowly(JSContext* cx, HandleObject obj, HandleObject receiver,
+            uint32_t begin, uint32_t end, HandleObject result)
+{
+    RootedValue value(cx);
+    for (uint32_t slot = begin; slot < end; slot++) {
+        bool hole;
+        if (!CheckForInterrupt(cx) ||
+            !GetElement(cx, obj, receiver, slot, &hole, &value))
+        {
+            return false;
+        }
+        if (!hole && !JSObject::defineElement(cx, result, slot - begin, value))
+            return false;
+    }
+    return true;
+}
+
+static bool
 SliceSparse(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end, HandleObject result)
 {
     MOZ_ASSERT(begin <= end);
@@ -2913,14 +2980,16 @@ js::array_slice(JSContext *cx, unsigned argc, Value *vp)
         return false;
     TryReuseArrayType(obj, narr);
 
-    if (js::SliceOp op = obj->getOps()->slice) {
-        // Ensure that we have dense elements, so that DOM can use js::UnsafeDefineElement.
+    if (js::GetElementsOp op = obj->getOps()->getElements) {
+        // Ensure that we have dense elements, so that ElementAdder::append can
+        // use setDenseElementWithType.
         NativeObject::EnsureDenseResult result = narr->ensureDenseElements(cx, 0, end - begin);
         if (result == NativeObject::ED_FAILED)
              return false;
 
         if (result == NativeObject::ED_OK) {
-            if (!op(cx, obj, begin, end, narr))
+            ElementAdder adder(cx, narr, end - begin, ElementAdder::CheckHasElemPreserveHoles);
+            if (!op(cx, obj, begin, end, &adder))
                 return false;
 
             args.rval().setObject(*narr);
@@ -2940,24 +3009,6 @@ js::array_slice(JSContext *cx, unsigned argc, Value *vp)
     }
 
     args.rval().setObject(*narr);
-    return true;
-}
-
-JS_FRIEND_API(bool)
-js::SliceSlowly(JSContext* cx, HandleObject obj, HandleObject receiver,
-                uint32_t begin, uint32_t end, HandleObject result)
-{
-    RootedValue value(cx);
-    for (uint32_t slot = begin; slot < end; slot++) {
-        bool hole;
-        if (!CheckForInterrupt(cx) ||
-            !GetElement(cx, obj, receiver, slot, &hole, &value))
-        {
-            return false;
-        }
-        if (!hole && !JSObject::defineElement(cx, result, slot - begin, value))
-            return false;
-    }
     return true;
 }
 

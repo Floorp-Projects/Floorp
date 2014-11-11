@@ -974,7 +974,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* setGenericAttributes  */                                  \
         nullptr, /* deleteGeneric */                                          \
         nullptr, nullptr, /* watch/unwatch */                                 \
-        nullptr, /* slice */                                                  \
+        nullptr, /* getElements */                                            \
         XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_ThisObject,                                               \
     }
@@ -997,7 +997,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* setGenericAttributes  */                                  \
         nullptr, /* deleteGeneric */                                          \
         nullptr, nullptr, /* watch/unwatch */                                 \
-        nullptr, /* slice */                                                  \
+        nullptr, /* getElements */                                            \
         XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_ThisObject,                                               \
     }
