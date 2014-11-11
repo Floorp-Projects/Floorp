@@ -127,20 +127,20 @@
 
 /* Override @tabCurveHalfWidth@ and @tabCurveWidth@.  XXX: Switch to a CSS variable once the perf is sorted out - bug 1088771 */
 .tab-background-middle {
-  border-left-width: 0;
-  border-right-width: 0;
-  margin: 0;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+  margin: 0 -2px;
 }
 
 .tab-background,
 .tabs-newtab-button {
-  -moz-margin-end: 0;
-  -moz-margin-start: 0;
+  -moz-margin-end: -2px;
+  -moz-margin-start: -2px;
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
-  -moz-padding-end: 0;
-  -moz-padding-start: 0;
+  -moz-padding-end: 2px;
+  -moz-padding-start: 2px;
 }
 
 .tab-background-start[selected=true]::after,
@@ -149,12 +149,12 @@
 .tab-background-end,
 .tab-background-end[selected=true]::after,
 .tab-background-end[selected=true]::before {
-  width: 0;
+  width: 4px;
 }
 
 .tab-background-start[selected=true]::after,
 .tab-background-end[selected=true]::after {
-  -moz-margin-start: 0;
+  -moz-margin-start: -4px;
 }
 /* End override @tabCurveHalfWidth@ and @tabCurveWidth@ */
 
