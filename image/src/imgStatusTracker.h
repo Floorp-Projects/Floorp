@@ -46,8 +46,7 @@ enum {
 struct ImageStatusDiff
 {
   ImageStatusDiff()
-    : invalidRect()
-    , diffState(0)
+    : diffState(0)
   { }
 
   static ImageStatusDiff NoChange() { return ImageStatusDiff(); }
@@ -55,17 +54,14 @@ struct ImageStatusDiff
 
   bool operator!=(const ImageStatusDiff& aOther) const { return !(*this == aOther); }
   bool operator==(const ImageStatusDiff& aOther) const {
-    return aOther.invalidRect == invalidRect
-        && aOther.diffState == diffState;
+    return aOther.diffState == diffState;
   }
 
   void Combine(const ImageStatusDiff& aOther) {
-    invalidRect = invalidRect.Union(aOther.invalidRect);
     diffState |= aOther.diffState;
   }
 
-  nsIntRect invalidRect;
-  uint32_t  diffState;
+  uint32_t diffState;
 };
 
 } // namespace image
@@ -179,7 +175,7 @@ public:
   void RecordLoaded();
 
   // Shorthand for recording all the decode notifications: StartDecode,
-  // StartFrame, DataAvailable, StopFrame, StopDecode.
+  // DataAvailable, StopFrame, StopDecode.
   void RecordDecoded();
 
   /* non-virtual imgDecoderObserver methods */
@@ -189,10 +185,6 @@ public:
   void SendStartDecode(imgRequestProxy* aProxy);
   void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
-  void RecordStartFrame();
-  // No SendStartFrame since it's not observed below us.
-  void RecordFrameChanged(const nsIntRect* aDirtyRect);
-  void SendFrameChanged(imgRequestProxy* aProxy, const nsIntRect* aDirtyRect);
   void RecordStopFrame();
   void SendStopFrame(imgRequestProxy* aProxy);
   void RecordStopDecode(nsresult statusg);
@@ -219,7 +211,6 @@ public:
   void OnDataAvailable();
   void OnStopRequest(bool aLastPart, nsresult aStatus);
   void OnDiscard();
-  void FrameChanged(const nsIntRect* aDirtyRect);
   void OnUnlockedDraw();
   // This is called only by VectorImage, and only to ensure tests work
   // properly. Do not use it.
@@ -265,9 +256,8 @@ public:
   // Notify for the changes captured in an ImageStatusDiff. Because this may
   // result in recursive notifications, no decoding locks may be held.
   // Called on the main thread only.
-  void SyncNotifyDifference(const mozilla::image::ImageStatusDiff& aDiff);
-
-  nsIntRect GetInvalidRect() const { return mInvalidRect; }
+  void SyncNotifyDifference(const mozilla::image::ImageStatusDiff& aDiff,
+                            const nsIntRect& aInvalidRect = nsIntRect());
 
 private:
   typedef nsTObserverArray<mozilla::WeakPtr<imgRequestProxy>> ProxyArray;
@@ -282,15 +272,11 @@ private:
 
   // Main thread only, since imgRequestProxy calls are expected on the main
   // thread, and mConsumers is not threadsafe.
-  static void SyncNotifyState(ProxyArray& proxies,
-                              bool hasImage, uint32_t state,
-                              nsIntRect& dirtyRect);
+  static void SyncNotifyState(ProxyArray& aProxies,
+                              bool aHasImage, uint32_t aState,
+                              const nsIntRect& aInvalidRect);
 
   nsCOMPtr<nsIRunnable> mRequestRunnable;
-
-  // The invalid area of the most recent frame we know about. (All previous
-  // frames are assumed to be fully valid.)
-  nsIntRect mInvalidRect;
 
   // This weak ref should be set null when the image goes out of scope.
   mozilla::image::Image* mImage;

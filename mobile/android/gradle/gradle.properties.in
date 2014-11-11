@@ -1,0 +1,15 @@
+#filter substitution
+topsrcdir=@topsrcdir@
+topobjdir=@topobjdir@
+compileSdkVersion=android-@ANDROID_TARGET_SDK@
+buildToolsVersion=20.0.0
+targetSdkVersion=@ANDROID_TARGET_SDK@
+minSdkVersion=@MOZ_ANDROID_MIN_SDK_VERSION@
+#ifdef MOZ_ANDROID_MAX_SDK_VERSION
+maxSdkVersion=@MOZ_ANDROID_MAX_SDK_VERSION@
+#endif
+#if MOZ_CRASHREPORTER
+MOZ_CRASHREPORTER=true
+#else
+MOZ_CRASHREPORTER=false
+#endif
