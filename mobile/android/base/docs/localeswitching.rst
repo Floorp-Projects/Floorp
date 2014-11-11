@@ -1,6 +1,8 @@
-==================================
-Runtime locale switching in Fennec
-==================================
+.. -*- Mode: rst; fill-column: 80; -*-
+
+====================================
+ Runtime locale switching in Fennec
+====================================
 
 `Bug 917480 <https://bugzilla.mozilla.org/show_bug.cgi?id=917480>`_ built on `Bug 936756 <https://bugzilla.mozilla.org/show_bug.cgi?id=936756>`_ to allow users to switch between supported locales at runtime, within Fennec, without altering the system locale.
 

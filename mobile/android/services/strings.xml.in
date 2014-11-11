@@ -216,3 +216,6 @@
 <string name="fxaccount_remove_account_dialog_message">&fxaccount_remove_account_dialog_message;</string>
 <string name="fxaccount_remove_account_toast">&fxaccount_remove_account_toast;</string>
 <string name="fxaccount_remove_account_menu_item">&fxaccount_remove_account_menu_item;</string>
+
+<!-- Find-In-Page strings -->
+<string name="find_matchcase">&find_matchcase;</string>
