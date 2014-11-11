@@ -33,7 +33,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::jit;
 
 using mozilla::DebugOnly;
 
@@ -126,17 +125,17 @@ JSRuntime::createJitRuntime(JSContext *cx)
     // accessed by other threads with an exclusive context.
     AutoLockForExclusiveAccess atomsLock(cx);
 
+    // The runtime will only be created on its owning thread, but reads of a
+    // runtime's jitRuntime() can occur when another thread is requesting an
+    // interrupt.
+    AutoLockForInterrupt lock(this);
+
     MOZ_ASSERT(!jitRuntime_);
 
-    jit::JitRuntime *jrt = cx->new_<jit::JitRuntime>();
-    if (!jrt)
-        return nullptr;
+    jitRuntime_ = cx->new_<jit::JitRuntime>();
 
-    // Protect jitRuntime_ from being observed (by InterruptRunningJitCode)
-    // while it is being initialized. Unfortunately, initialization depends on
-    // jitRuntime_ being non-null, so we can't just wait to assign jitRuntime_.
-    JitRuntime::AutoMutateBackedges amb(jrt);
-    jitRuntime_ = jrt;
+    if (!jitRuntime_)
+        return nullptr;
 
     if (!jitRuntime_->initialize(cx)) {
         js_delete(jitRuntime_);

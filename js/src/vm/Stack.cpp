@@ -1556,7 +1556,11 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     module.activation() = this;
 
     prevAsmJS_ = cx->mainThread().asmJSActivationStack_;
-    cx->mainThread().asmJSActivationStack_ = this;
+
+    {
+        JSRuntime::AutoLockForInterrupt lock(cx->runtime());
+        cx->mainThread().asmJSActivationStack_ = this;
+    }
 
     // Now that the AsmJSActivation is fully initialized, make it visible to
     // asynchronous profiling.
@@ -1579,6 +1583,7 @@ AsmJSActivation::~AsmJSActivation()
     JSContext *cx = cx_->asJSContext();
     MOZ_ASSERT(cx->mainThread().asmJSActivationStack_ == this);
 
+    JSRuntime::AutoLockForInterrupt lock(cx->runtime());
     cx->mainThread().asmJSActivationStack_ = prevAsmJS_;
 }
 
@@ -1602,6 +1607,7 @@ void
 Activation::registerProfiling()
 {
     MOZ_ASSERT(isProfiling());
+    JSRuntime::AutoLockForInterrupt lock(cx_->asJSContext()->runtime());
     cx_->perThreadData->profilingActivation_ = this;
 }
 
@@ -1609,6 +1615,7 @@ void
 Activation::unregisterProfiling()
 {
     MOZ_ASSERT(isProfiling());
+    JSRuntime::AutoLockForInterrupt lock(cx_->asJSContext()->runtime());
     MOZ_ASSERT(cx_->perThreadData->profilingActivation_ == this);
     cx_->perThreadData->profilingActivation_ = prevProfiling_;
 }
