@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+   viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+  <style>
+    use:not(:target) {
+      display: none;
+    }
+    use {
+      fill: -moz-DialogText;
+    }
+    use[id$="-disabled"] {
+      fill: GrayText;
+    }
+  </style>
+  <defs style="display: none;">
+    <path id="dropdown-shape" fill-rule="evenodd" clip-rule="evenodd" d="M12,6l-4.016,4L4,6H12z"/>
+  </defs>
+  <use id="dropdown" xlink:href="#dropdown-shape"/>
+  <use id="dropdown-disabled" xlink:href="#dropdown-shape"/>
+</svg>
