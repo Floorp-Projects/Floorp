@@ -17,6 +17,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIProtocolHandler.h"
 #include "nsError.h"
 #include "nsIContentSecurityPolicy.h"
 #include "jswrapper.h"
@@ -488,6 +489,18 @@ nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
     if (url) {
       return url->GetFilePath(aBaseDomain);
     }
+  }
+
+  bool hasNoRelativeFlag;
+  nsresult rv = NS_URIChainHasFlags(mCodebase,
+                                    nsIProtocolHandler::URI_NORELATIVE,
+                                    &hasNoRelativeFlag);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (hasNoRelativeFlag) {
+    return mCodebase->GetSpec(aBaseDomain);
   }
 
   // For everything else, we ask the TLD service via

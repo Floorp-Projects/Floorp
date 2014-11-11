@@ -550,8 +550,8 @@ Proxy::unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id)
 }
 
 /* static */ bool
-Proxy::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
-             HandleObject result)
+Proxy::getElements(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                   ElementAdder *adder)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
@@ -560,11 +560,11 @@ Proxy::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
     if (!policy.allowed()) {
         if (policy.returnValue()) {
             MOZ_ASSERT(!cx->isExceptionPending());
-            return js::SliceSlowly(cx, proxy, proxy, begin, end, result);
+            return js::GetElementsWithAdder(cx, proxy, proxy, begin, end, adder);
         }
         return false;
     }
-    return handler->slice(cx, proxy, begin, end, result);
+    return handler->getElements(cx, proxy, begin, end, adder);
 }
 
 JSObject *
@@ -835,10 +835,10 @@ js::proxy_Unwatch(JSContext *cx, HandleObject obj, HandleId id)
 }
 
 bool
-js::proxy_Slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
-                HandleObject result)
+js::proxy_GetElements(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                      ElementAdder *adder)
 {
-    return Proxy::slice(cx, proxy, begin, end, result);
+    return Proxy::getElements(cx, proxy, begin, end, adder);
 }
 
 const Class js::ProxyObject::class_ =

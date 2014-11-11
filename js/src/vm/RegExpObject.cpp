@@ -621,8 +621,14 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t start,
             // in the bytecode interpreter, which can execute while tolerating
             // future interrupts. Otherwise, if we keep getting interrupted we
             // will never finish executing the regexp.
-            if (cx->runtime()->hasPendingInterrupt()) {
-                if (!cx->runtime()->handleInterrupt(cx))
+            bool interrupted;
+            {
+                JSRuntime::AutoLockForInterrupt lock(cx->runtime());
+                interrupted = cx->runtime()->interrupt;
+            }
+
+            if (interrupted) {
+                if (!InvokeInterruptCallback(cx))
                     return RegExpRunStatus_Error;
                 break;
             }
