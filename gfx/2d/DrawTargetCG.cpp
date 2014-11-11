@@ -1270,7 +1270,7 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
       extents = ComputeGlyphsExtents(bboxes, &positions.front(), aBuffer.mNumGlyphs, 1.0f);
       ScaledFontMac::CTFontDrawGlyphsPtr(macFont->mCTFont, &glyphs.front(),
                                          &positions.front(), aBuffer.mNumGlyphs, cg);
-      delete bboxes;
+      delete[] bboxes;
     } else {
       CGRect *bboxes = new CGRect[aBuffer.mNumGlyphs];
       CGFontGetGlyphBBoxes(macFont->mFont, &glyphs.front(), aBuffer.mNumGlyphs, bboxes);
@@ -1280,7 +1280,7 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
       CGContextSetFontSize(cg, macFont->mSize);
       CGContextShowGlyphsAtPositions(cg, &glyphs.front(), &positions.front(),
                                      aBuffer.mNumGlyphs);
-      delete bboxes;
+      delete[] bboxes;
     }
     CGContextScaleCTM(cg, 1, -1);
     DrawGradient(mColorSpace, cg, aPattern, extents);

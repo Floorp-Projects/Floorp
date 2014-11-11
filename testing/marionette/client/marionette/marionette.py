@@ -479,6 +479,7 @@ class Marionette(object):
         self.bin = bin
         self.instance = None
         self.session = None
+        self.session_id = None
         self.window = None
         self.runner = None
         self.emulator = None
@@ -607,12 +608,12 @@ class Marionette(object):
 
     @do_crash_check
     def _send_message(self, command, response_key="ok", **kwargs):
-        if not self.session and command != "newSession":
+        if not self.session_id and command != "newSession":
             raise errors.MarionetteException("Please start a session")
 
         message = {"name": command}
-        if self.session:
-            message["sessionId"] = self.session
+        if self.session_id:
+            message["sessionId"] = self.session_id
         if kwargs:
             message["parameters"] = kwargs
 
@@ -637,6 +638,8 @@ class Marionette(object):
                 continue;
 
             break;
+        if not self.session_id:
+            self.session_id = response.get("sessionId", None)
 
         if response_key in response:
             return response[response_key]
@@ -811,7 +814,7 @@ class Marionette(object):
         '''
         return "%s%s" % (self.baseurl, relative_url)
 
-    def start_session(self, desired_capabilities=None):
+    def start_session(self, desired_capabilities=None, session_id=None):
         """Create a new Marionette session.
 
         This method must be called before performing any other action.
@@ -820,7 +823,7 @@ class Marionette(object):
             capabilities.  This is currently ignored.
 
         :returns: A dict of the capabilities offered."""
-        self.session = self._send_message('newSession', 'value', capabilities=desired_capabilities)
+        self.session = self._send_message('newSession', 'value', capabilities=desired_capabilities, session_id=session_id)
         self.b2g = 'b2g' in self.session
         return self.session
 
@@ -836,6 +839,7 @@ class Marionette(object):
     def delete_session(self):
         """Close the current session and disconnect from the server."""
         response = self._send_message('deleteSession', 'ok')
+        self.session_id = None
         self.session = None
         self.window = None
         self.client.close()

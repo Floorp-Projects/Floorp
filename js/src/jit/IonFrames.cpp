@@ -280,6 +280,7 @@ SizeOfFramePrefix(FrameType type)
       case JitFrame_BaselineJS:
       case JitFrame_IonJS:
       case JitFrame_Bailout:
+      case JitFrame_Unwound_BaselineJS:
       case JitFrame_Unwound_IonJS:
         return IonJSFrameLayout::Size();
       case JitFrame_BaselineStub:
@@ -332,6 +333,8 @@ JitFrameIterator::operator++()
     type_ = current()->prevType();
     if (type_ == JitFrame_Unwound_IonJS)
         type_ = JitFrame_IonJS;
+    else if (type_ == JitFrame_Unwound_BaselineJS)
+        type_ = JitFrame_BaselineJS;
     else if (type_ == JitFrame_Unwound_BaselineStub)
         type_ = JitFrame_BaselineStub;
     returnAddressToFp_ = current()->returnAddress();
@@ -808,6 +811,7 @@ void
 EnsureExitFrame(IonCommonFrameLayout *frame)
 {
     if (frame->prevType() == JitFrame_Unwound_IonJS ||
+        frame->prevType() == JitFrame_Unwound_BaselineJS ||
         frame->prevType() == JitFrame_Unwound_BaselineStub ||
         frame->prevType() == JitFrame_Unwound_Rectifier)
     {
@@ -832,6 +836,12 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
 
     if (frame->prevType() == JitFrame_BaselineStub) {
         frame->changePrevType(JitFrame_Unwound_BaselineStub);
+        return;
+    }
+
+
+    if (frame->prevType() == JitFrame_BaselineJS) {
+        frame->changePrevType(JitFrame_Unwound_BaselineJS);
         return;
     }
 
@@ -1357,6 +1367,7 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
             MarkBailoutFrame(trc, frames);
             break;
           case JitFrame_Unwound_IonJS:
+          case JitFrame_Unwound_BaselineJS:
             MOZ_CRASH("invalid");
           case JitFrame_Rectifier:
             MarkRectifierFrame(trc, frames);
@@ -2506,6 +2517,7 @@ JitFrameIterator::dump() const
         fprintf(stderr, "  Frame size: %u\n", unsigned(current()->prevFrameLocalSize()));
         break;
       case JitFrame_Unwound_IonJS:
+      case JitFrame_Unwound_BaselineJS:
         fprintf(stderr, "Warning! Unwound JS frames are not observable.\n");
         break;
       case JitFrame_Exit:

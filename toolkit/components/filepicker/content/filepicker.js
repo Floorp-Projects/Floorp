@@ -45,13 +45,13 @@ function filepickerLoad() {
     const title = o.title;
     filePickerMode = o.mode;
     if (o.displayDirectory) {
-      const directory = o.displayDirectory.path;
+      var directory = o.displayDirectory.path;
     }
 
     const initialText = o.defaultString;
-    const filterTitles = o.filters.titles;
-    const filterTypes = o.filters.types;
-    const numFilters = filterTitles.length;
+    var filterTitles = o.filters.titles;
+    var filterTypes = o.filters.types;
+    var numFilters = filterTitles.length;
 
     document.title = title;
     allowURLs = o.allowURLs;
