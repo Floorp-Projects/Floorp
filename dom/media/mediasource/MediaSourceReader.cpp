@@ -33,6 +33,13 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 #define MSE_API(...)
 #endif
 
+// When a stream hits EOS it needs to decide what other stream to switch to. Due
+// to inaccuracies is determining buffer end frames (Bug 1065207) and rounding
+// issues we use a fuzz factor to determine the end time of this stream for
+// switching to the new stream. This value is based on the end of frame
+// default value used in Blink, kDefaultBufferDurationInMs.
+#define EOS_FUZZ_US 125000
+
 namespace mozilla {
 
 MediaSourceReader::MediaSourceReader(MediaSourceDecoder* aDecoder)
@@ -173,13 +180,43 @@ MediaSourceReader::OnNotDecoded(MediaData::Type aType, RequestSampleCallback::No
     GetCallback()->OnNotDecoded(aType, aReason);
     return;
   }
+  // End of stream. Force switching past this stream to another reader by
+  // switching to the end of the buffered range.
+  MOZ_ASSERT(aReason == RequestSampleCallback::END_OF_STREAM);
+  nsRefPtr<MediaDecoderReader> reader = aType == MediaData::AUDIO_DATA ?
+                                          mAudioReader : mVideoReader;
 
-  // See if we can find a different reader that can pick up where we left off.
-  if (aType == MediaData::AUDIO_DATA && SwitchAudioReader(mLastAudioTime)) {
+  // Find the closest approximation to the end time for this stream.
+  // mLast{Audio,Video}Time differs from the actual end time because of
+  // Bug 1065207 - the duration of a WebM fragment is an estimate not the
+  // actual duration. In the case of audio time an example of where they
+  // differ would be the actual sample duration being small but the
+  // previous sample being large. The buffered end time uses that last
+  // sample duration as an estimate of the end time duration giving an end
+  // time that is greater than mLastAudioTime, which is the actual sample
+  // end time.
+  // Reader switching is based on the buffered end time though so they can be
+  // quite different. By using the EOS_FUZZ_US and the buffered end time we
+  // attempt to account for this difference.
+  int64_t* time = aType == MediaData::AUDIO_DATA ? &mLastAudioTime : &mLastVideoTime;
+  if (reader) {
+    nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
+    reader->GetBuffered(ranges, 0);
+    if (ranges->Length() > 0) {
+      // End time is a double so we convert to nearest by adding 0.5.
+      int64_t end = ranges->GetEndTime() * USECS_PER_S + 0.5;
+      *time = std::max(*time, end);
+    }
+  }
+
+  // See if we can find a different reader that can pick up where we left off. We use the
+  // EOS_FUZZ_US to allow for the fact that our end time can be inaccurate due to bug
+  // 1065207 - the duration of a WebM frame is an estimate.
+  if (aType == MediaData::AUDIO_DATA && SwitchAudioReader(*time + EOS_FUZZ_US)) {
     RequestAudioData();
     return;
   }
-  if (aType == MediaData::VIDEO_DATA && SwitchVideoReader(mLastVideoTime)) {
+  if (aType == MediaData::VIDEO_DATA && SwitchVideoReader(*time + EOS_FUZZ_US)) {
     RequestVideoData(false, 0);
     return;
   }
