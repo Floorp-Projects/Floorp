@@ -661,6 +661,11 @@ dictionary MozCallBarringOptions
 dictionary MozMMIResult
 {
   /**
+   * Indicate whether the result is successful or not.
+   */
+  boolean success = true;
+
+  /**
    * String key that identifies the service associated with the MMI code
    * request. The UI is supposed to handle the localization of the strings
    * associated with this string key.
@@ -668,7 +673,9 @@ dictionary MozMMIResult
   DOMString serviceCode = "";
 
   /**
-   * String key containing the status message of the associated MMI request.
+   * String key containing the status message of the associated MMI request or
+   * the error message when the request fails.
+
    * The UI is supposed to handle the localization of the strings associated
    * with this string key.
    */
