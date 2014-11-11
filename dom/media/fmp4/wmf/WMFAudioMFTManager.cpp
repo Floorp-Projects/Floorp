@@ -221,9 +221,6 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
   hr = buffer->Lock(&data, &maxLength, &currentLength);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  int32_t numSamples = currentLength / mAudioBytesPerSample;
-  int32_t numFrames = numSamples / mAudioChannels;
-
   // Sometimes when starting decoding, the AAC decoder gives us samples
   // with a negative timestamp. AAC does usually have preroll (or encoder
   // delay) encoded into its bitstream, but the amount encoded to the stream
@@ -245,6 +242,13 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
   int32_t numFramesToStrip = 0;
   sample->GetUINT32(MFSampleExtension_Discontinuity, &discontinuity);
   if (mMustRecaptureAudioPosition || discontinuity) {
+    // Update the output type, in case this segment has a different
+    // rate. This also triggers on the first sample, which can have a
+    // different rate than is advertised in the container, and sometimes we
+    // don't get a MF_E_TRANSFORM_STREAM_CHANGE when the rate changes.
+    hr = UpdateOutputType();
+    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
     mAudioFrameSum = 0;
     LONGLONG timestampHns = 0;
     hr = sample->GetSampleTime(&timestampHns);
@@ -258,15 +262,10 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
       mAudioFrameOffset = 0;
     }
     mMustRecaptureAudioPosition = false;
-
-    // Also update the output type, in case this segment has a different
-    // rate. This also triggers on the first sample, which can have a
-    // different rate than is advertised in the container, and sometimes
-    // we don't get a MF_E_TRANSFORM_STREAM_CHANGE when the rate changes.
-    hr = UpdateOutputType();
-    NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   }
   MOZ_ASSERT(numFramesToStrip >= 0);
+  int32_t numSamples = currentLength / mAudioBytesPerSample;
+  int32_t numFrames = numSamples / mAudioChannels;
   int32_t offset = std::min<int32_t>(numFramesToStrip, numFrames);
   numFrames -= offset;
   numSamples -= offset * mAudioChannels;
