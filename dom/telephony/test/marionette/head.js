@@ -1268,6 +1268,21 @@ let emulator = (function() {
   }
 
   /**
+   * Send out the MMI code.
+   *
+   * @param mmi
+   *        String of MMI code
+   * @return Promise<MozMMIResult>
+   */
+  function sendMMI(mmi) {
+    return telephony.dial(mmi).then(mmiCall => {
+      ok(mmiCall instanceof MMICall, "mmiCall is instance of MMICall");
+      ok(mmiCall.result instanceof Promise, "result is Promise");
+      return mmiCall.result;
+    });
+  }
+
+  /**
    * Public members.
    */
 
@@ -1278,6 +1293,7 @@ let emulator = (function() {
   this.gInCallStrPool = inCallStrPool;
   this.gCheckState = checkState;
   this.gCheckAll = checkAll;
+  this.gSendMMI = sendMMI;
   this.gDial = dial;
   this.gDialEmergency = dialEmergency;
   this.gAnswer = answer;
@@ -1392,17 +1408,4 @@ function startDSDSTest(test) {
     ok(true);  // We should run at least one test.
     finish();
   }
-}
-
-function sendMMI(aMmi) {
-  let deferred = Promise.defer();
-
-  telephony.dial(aMmi)
-    .then(result => {
-      deferred.resolve(result);
-    }, cause => {
-      deferred.reject(cause);
-    });
-
-  return deferred.promise;
 }
