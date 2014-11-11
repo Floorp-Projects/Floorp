@@ -419,13 +419,6 @@ gradle-targets: .aapt.deps
 
 .PHONY: gradle-targets
 
-update-generated-wrappers:
-	mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp.old
-	mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h.old
-	@cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android
-	@cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android
-	@echo Updated GeneratedJNIWrappers
-
 libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
 	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
 	$(INSTALL) classes.dex $(FINAL_TARGET)
@@ -434,7 +427,7 @@ libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cp
 	  echo '***   Error: The generated JNI code has changed   ***' && \
 	  echo '* To update generated code in the tree, please run  *' && \
 	  echo && \
-	  echo '  make -C $(CURDIR) update-generated-wrappers' && \
+	  echo '  cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android && cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android' && \
 	  echo && \
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \

@@ -15,7 +15,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Monitor.h"
 
-#include "SurfaceTexture.h"
 #include "AndroidNativeWindow.h"
 
 class gfxASurface;
@@ -43,15 +42,19 @@ public:
 
   // The SurfaceTexture is created in an attached state. This method requires
   // Android Ice Cream Sandwich.
-  static TemporaryRef<AndroidSurfaceTexture> Create(GLContext* aGLContext, GLuint aTexture);
+  static AndroidSurfaceTexture* Create(GLContext* aGLContext, GLuint aTexture);
 
   // Here the SurfaceTexture will be created in a detached state. You must call
   // Attach() with the GLContext you wish to composite with. It must be done
   // on the thread where that GLContext is current. This method requires
   // Android Jelly Bean.
-  static TemporaryRef<AndroidSurfaceTexture> Create();
+  static AndroidSurfaceTexture* Create();
 
   static AndroidSurfaceTexture* Find(int id);
+
+  // Returns with reasonable certainty whether or not we'll
+  // be able to create and use a SurfaceTexture
+  static bool Check();
 
   // If we are on Jelly Bean, the SurfaceTexture can be detached and reattached
   // to allow consumption from different GLContexts. It is recommended to only
@@ -59,10 +62,10 @@ public:
   //
   // Only one GLContext may be attached at any given time. If another is already
   // attached, we try to wait for it to become detached.
-  nsresult Attach(GLContext* aContext, PRIntervalTime aTiemout = PR_INTERVAL_NO_TIMEOUT);
+  bool Attach(GLContext* aContext, PRIntervalTime aTiemout = PR_INTERVAL_NO_TIMEOUT);
 
   // This is a noop on ICS, and will always fail
-  nsresult Detach();
+  bool Detach();
 
   GLContext* GetAttachedContext() { return mAttachedContext; }
 
@@ -73,7 +76,7 @@ public:
   // This attaches the updated data to the TEXTURE_EXTERNAL target
   void UpdateTexImage();
 
-  void GetTransformMatrix(mozilla::gfx::Matrix4x4& aMatrix);
+  bool GetTransformMatrix(mozilla::gfx::Matrix4x4& aMatrix);
   int ID() { return mID; }
 
   void SetDefaultSize(mozilla::gfx::IntSize size);
@@ -87,7 +90,7 @@ public:
   void NotifyFrameAvailable();
 
   GLuint Texture() { return mTexture; }
-  jobject JavaSurface() { return mSurface->wrappedObject(); }
+  jobject JavaSurface() { return mSurface; }
 private:
   AndroidSurfaceTexture();
   ~AndroidSurfaceTexture();
@@ -95,8 +98,8 @@ private:
   bool Init(GLContext* aContext, GLuint aTexture);
 
   GLuint mTexture;
-  nsAutoPtr<mozilla::widget::android::sdk::SurfaceTexture> mSurfaceTexture;
-  nsAutoPtr<mozilla::widget::android::sdk::Surface> mSurface;
+  jobject mSurfaceTexture;
+  jobject mSurface;
 
   Monitor mMonitor;
   GLContext* mAttachedContext;
