@@ -22,7 +22,6 @@
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
   var CallFailedView = loop.conversationViews.CallFailedView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
-  var DesktopRoomInvitationView = loop.roomViews.DesktopRoomInvitationView;
 
   // 2. Standalone webapp
   var HomeView = loop.webapp.HomeView;
@@ -38,6 +37,9 @@
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
   var ConversationView = loop.shared.views.ConversationView;
   var FeedbackView = loop.shared.views.FeedbackView;
+
+  // Room constants
+  var ROOM_STATES = loop.store.ROOM_STATES;
 
   // Local helpers
   function returnTrue() {
@@ -533,20 +535,24 @@
             )
           ), 
 
-          Section({name: "DesktopRoomInvitationView"}, 
-            Example({summary: "Desktop room invitation", dashed: "true", 
+          Section({name: "DesktopRoomConversationView"}, 
+            Example({summary: "Desktop room conversation (invitation)", dashed: "true", 
                      style: {width: "260px", height: "265px"}}, 
               React.DOM.div({className: "fx-embedded"}, 
-                DesktopRoomInvitationView({roomStore: roomStore})
+                DesktopRoomConversationView({
+                  roomStore: roomStore, 
+                  dispatcher: dispatcher, 
+                  roomState: ROOM_STATES.INIT})
               )
-            )
-          ), 
+            ), 
 
-          Section({name: "DesktopRoomConversationView"}, 
             Example({summary: "Desktop room conversation", dashed: "true", 
                      style: {width: "260px", height: "265px"}}, 
               React.DOM.div({className: "fx-embedded"}, 
-                DesktopRoomConversationView({roomStore: roomStore})
+                DesktopRoomConversationView({
+                  roomStore: roomStore, 
+                  dispatcher: dispatcher, 
+                  roomState: ROOM_STATES.HAS_PARTICIPANTS})
               )
             )
           ), 
