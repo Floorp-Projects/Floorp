@@ -127,7 +127,6 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   // passing back "actor ids" with responses. unlike the debugger server,
   // we don't have multiple actors, so just use a dummy value of "0" here
   this.actorID = "0";
-  this.sessionId = null;
 
   this.globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
                              .getService(Ci.nsIMessageBroadcaster);
@@ -331,9 +330,7 @@ MarionetteServerConnection.prototype = {
   sendResponse: function MDA_sendResponse(value, command_id) {
     if (typeof(value) == 'undefined')
         value = null;
-    this.sendToClient({from:this.actorID,
-                       sessionId: this.sessionId,
-                       value: value}, command_id);
+    this.sendToClient({from:this.actorID, value: value}, command_id);
   },
 
   sayHello: function MDA_sayHello() {
@@ -556,8 +553,6 @@ MarionetteServerConnection.prototype = {
 
     this.scriptTimeout = 10000;
     if (aRequest && aRequest.parameters) {
-      this.sessionId = aRequest.parameters.session_id ? aRequest.parameters.session_id : null;
-      logger.info("Session Id is set to: " + this.sessionId);
       this.setSessionCapabilities(aRequest.parameters.capabilities);
     }
 
@@ -629,10 +624,6 @@ MarionetteServerConnection.prototype = {
    */
   getSessionCapabilities: function MDA_getSessionCapabilities() {
     this.command_id = this.getCommandId();
-
-    if (!this.sessionId) {
-      this.sessionId = this.uuidGen.generateUUID().toString();
-    }
 
     // eideticker (bug 965297) and mochitest (bug 965304)
     // compatibility.  They only check for the presence of this
@@ -2286,7 +2277,6 @@ MarionetteServerConnection.prototype = {
     if (this.mainFrame) {
       this.mainFrame.focus();
     }
-    this.sessionId = null;
     this.deleteFile('marionetteChromeScripts');
     this.deleteFile('marionetteContentScripts');
   },
