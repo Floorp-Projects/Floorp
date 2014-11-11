@@ -110,8 +110,11 @@ class ReftestRunner(MozbuildObject):
         return "'%s'" % re.sub("'", r"'\''", s)
 
     def run_b2g_test(self, b2g_home=None, xre_path=None, test_file=None,
-                     suite=None, **kwargs):
+                     suite=None, filter=None, **kwargs):
         """Runs a b2g reftest.
+
+        filter is a regular expression (in JS syntax, as could be passed to the
+        RegExp constructor) to select which reftests to run from the manifest.
 
         test_file is a path to a test file. It can be a relative path from the
         top source directory, an absolute filename, or a directory containing
@@ -206,6 +209,7 @@ class ReftestRunner(MozbuildObject):
         options.httpdPath = os.path.join(self.topsrcdir, 'netwerk', 'test', 'httpserver')
         options.xrePath = xre_path
         options.ignoreWindowSize = True
+        options.filter = filter
 
         # Don't enable oop for crashtest until they run oop in automation
         if suite == 'reftest':
@@ -375,6 +379,11 @@ def B2GCommand(func):
         type = int,
         help = 'Which chunk to run between 1 and --total-chunks.')
     func = thisChunk(func)
+
+    flter = CommandArgument('--filter', metavar='REGEX',
+        help='A JS regular expression to match test URLs against, to select '
+             'a subset of tests to run.')
+    func = flter(func)
 
     oop = CommandArgument('--enable-oop', action='store_true', dest='oop',
         help = 'Run tests in out-of-process mode.')
