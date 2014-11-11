@@ -11,7 +11,10 @@
 #include "skia/SkCanvas.h"
 #include "skia/SkBitmap.h"
 
+class GrContext;
+
 namespace mozilla {
+
 namespace gfx {
 
 class DrawTargetSkia;
@@ -37,6 +40,15 @@ public:
   bool InitFromCanvas(SkCanvas* aCanvas,
                       SurfaceFormat aFormat,
                       DrawTargetSkia* aOwner);
+
+  /**
+   * NOTE: While wrapping a Texture for SkiaGL, the texture *must* be created
+   *       with the same GLcontext of DrawTargetSkia
+   */
+  bool InitFromTexture(DrawTargetSkia* aOwner,
+                       unsigned int aTexture,
+                       const IntSize &aSize,
+                       SurfaceFormat aFormat);
 
   virtual unsigned char *GetData();
 
