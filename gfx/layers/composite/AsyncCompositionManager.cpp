@@ -150,6 +150,28 @@ TransformClipRect(Layer* aLayer,
   }
 }
 
+/**
+ * Set the given transform as the shadow transform on the layer, assuming
+ * that the given transform already has the pre- and post-scales applied.
+ * That is, this function cancels out the pre- and post-scales from aTransform
+ * before setting it as the shadow transform on the layer, so that when
+ * the layer's effective transform is computed, the pre- and post-scales will
+ * only be applied once.
+ */
+static void
+SetShadowTransform(Layer* aLayer, Matrix4x4 aTransform)
+{
+  if (ContainerLayer* c = aLayer->AsContainerLayer()) {
+    aTransform.PreScale(1.0f / c->GetPreXScale(),
+                        1.0f / c->GetPreYScale(),
+                        1);
+  }
+  aTransform.PostScale(1.0f / aLayer->GetPostXScale(),
+                       1.0f / aLayer->GetPostYScale(),
+                       1);
+  aLayer->AsLayerComposite()->SetShadowTransform(aTransform);
+}
+
 static void
 TranslateShadowLayer2D(Layer* aLayer,
                        const gfxPoint& aTranslation,
@@ -169,22 +191,8 @@ TranslateShadowLayer2D(Layer* aLayer,
   layerTransform._31 += aTranslation.x;
   layerTransform._32 += aTranslation.y;
 
-  // The transform already takes the resolution scale into account.  Since we
-  // will apply the resolution scale again when computing the effective
-  // transform, we must apply the inverse resolution scale here.
-  Matrix4x4 layerTransform3D = Matrix4x4::From2D(layerTransform);
-  if (ContainerLayer* c = aLayer->AsContainerLayer()) {
-    layerTransform3D.PreScale(1.0f/c->GetPreXScale(),
-                              1.0f/c->GetPreYScale(),
-                              1);
-  }
-  layerTransform3D.PostScale(1.0f/aLayer->GetPostXScale(),
-                             1.0f/aLayer->GetPostYScale(),
-                             1);
-
-  LayerComposite* layerComposite = aLayer->AsLayerComposite();
-  layerComposite->SetShadowTransform(layerTransform3D);
-  layerComposite->SetShadowTransformSetByAnimation(false);
+  SetShadowTransform(aLayer, Matrix4x4::From2D(layerTransform));
+  aLayer->AsLayerComposite()->SetShadowTransformSetByAnimation(false);
 
   if (aAdjustClipRect) {
     TransformClipRect(aLayer, Matrix4x4::Translation(aTranslation.x, aTranslation.y, 0));
@@ -566,7 +574,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
       ApplyAsyncContentTransformToTree(child);
   }
 
-  LayerComposite* layerComposite = aLayer->AsLayerComposite();
   Matrix4x4 oldTransform = aLayer->GetTransform();
 
   Matrix4x4 combinedAsyncTransformWithoutOverscroll;
@@ -614,21 +621,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
   }
 
   if (hasAsyncTransform) {
-    Matrix4x4 transform = AdjustAndCombineWithCSSTransform(combinedAsyncTransform, aLayer);
-
-    // GetTransform already takes the pre- and post-scale into account.  Since we
-    // will apply the pre- and post-scale again when computing the effective
-    // transform, we must apply the inverses here.
-    if (ContainerLayer* container = aLayer->AsContainerLayer()) {
-      transform.PreScale(1.0f/container->GetPreXScale(),
-                         1.0f/container->GetPreYScale(),
-                         1);
-    }
-    transform.PostScale(1.0f/aLayer->GetPostXScale(),
-                        1.0f/aLayer->GetPostYScale(),
-                        1);
-    layerComposite->SetShadowTransform(transform);
-    NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
+    SetShadowTransform(aLayer,
+        AdjustAndCombineWithCSSTransform(combinedAsyncTransform, aLayer));
+    NS_ASSERTION(!aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation(),
                  "overwriting animated transform!");
 
     const FrameMetrics& bottom = LayerMetricsWrapper::BottommostScrollableMetrics(aLayer);
@@ -763,18 +758,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     }
   }
 
-  // GetTransform already takes the pre- and post-scale into account.  Since we
-  // will apply the pre- and post-scale again when computing the effective
-  // transform, we must apply the inverses here.
-  if (ContainerLayer* container = aScrollbar->AsContainerLayer()) {
-    transform.PreScale(1.0f/container->GetPreXScale(),
-                       1.0f/container->GetPreYScale(),
-                        1);
-  }
-  transform.PostScale(1.0f/aScrollbar->GetPostXScale(),
-                      1.0f/aScrollbar->GetPostYScale(),
-                      1);
-  aScrollbar->AsLayerComposite()->SetShadowTransform(transform);
+  SetShadowTransform(aScrollbar, transform);
 }
 
 static LayerMetricsWrapper
@@ -835,8 +819,6 @@ AsyncCompositionManager::ApplyAsyncTransformToScrollbar(Layer* aLayer)
 void
 AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 {
-  LayerComposite* layerComposite = aLayer->AsLayerComposite();
-
   FrameMetrics metrics = LayerMetricsWrapper::TopmostScrollableMetrics(aLayer);
   if (!metrics.IsScrollable()) {
     // On Fennec it's possible that the there is no scrollable layer in the
@@ -909,20 +891,8 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   ScreenPoint translation = userScroll - geckoScroll;
   Matrix4x4 treeTransform = ViewTransform(scale, -translation);
 
-  // The transform already takes the resolution scale into account.  Since we
-  // will apply the resolution scale again when computing the effective
-  // transform, we must apply the inverse resolution scale here.
-  Matrix4x4 computedTransform = oldTransform * treeTransform;
-  if (ContainerLayer* container = aLayer->AsContainerLayer()) {
-    computedTransform.PreScale(1.0f/container->GetPreXScale(),
-                               1.0f/container->GetPreYScale(),
-                               1);
-  }
-  computedTransform.PostScale(1.0f/aLayer->GetPostXScale(),
-                              1.0f/aLayer->GetPostYScale(),
-                              1);
-  layerComposite->SetShadowTransform(computedTransform);
-  NS_ASSERTION(!layerComposite->GetShadowTransformSetByAnimation(),
+  SetShadowTransform(aLayer, oldTransform * treeTransform);
+  NS_ASSERTION(!aLayer->AsLayerComposite()->GetShadowTransformSetByAnimation(),
                "overwriting animated transform!");
 
   // Apply resolution scaling to the old transform - the layer tree as it is
