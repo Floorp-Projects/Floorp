@@ -1,0 +1,57 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+gradle := \
+  gradle.properties.in \
+  $(NULL)
+
+gradle_PATH := $(CURDIR)
+gradle_FLAGS += -Dtopsrcdir=$(abspath $(topsrcdir))
+gradle_FLAGS += -Dtopobjdir=$(abspath $(DEPTH))
+gradle_KEEP_PATH := 1
+PP_TARGETS += gradle
+
+wrapper_FILES := \
+  build.gradle \
+  settings.gradle \
+  gradle/wrapper/gradle-wrapper.jar \
+  gradle/wrapper/gradle-wrapper.properties \
+  gradlew \
+  $(NULL)
+
+wrapper_DEST := $(CURDIR)
+wrapper_KEEP_PATH := 1
+INSTALL_TARGETS += wrapper
+
+base/src/main/java/org/mozilla/gecko:
+	$(NSINSTALL) -D ${@D}
+	ln -s $(topsrcdir)/mobile/android/base $@
+libs:: base/src/main/java/org/mozilla/gecko
+
+base/src/main/res:
+	$(NSINSTALL) -D ${@D}
+	ln -s $(topsrcdir)/mobile/android/base/resources $@
+libs:: base/src/main/res
+
+app/src/androidTest/robocop_harness/java/org/mozilla/gecko:
+	$(NSINSTALL) -D ${@D}
+	ln -s $(topsrcdir)/build/mobile/robocop $@
+libs:: app/src/androidTest/robocop_harness/java/org/mozilla/gecko
+
+app/src/androidTest/robocop/java/org/mozilla/gecko/tests:
+	$(NSINSTALL) -D ${@D}
+	ln -s $(topsrcdir)/mobile/android/base/tests $@
+libs:: app/src/androidTest/robocop/java/org/mozilla/gecko/tests
+
+app/src/androidTest/browser/java/org/mozilla/gecko:
+	$(NSINSTALL) -D ${@D}
+	ln -s $(topsrcdir)/mobile/android/tests/browser/junit3/src $@
+libs:: app/src/androidTest/browser/java/org/mozilla/gecko
+
+app/src/androidTest/background/java/org/mozilla/gecko/background:
+	$(NSINSTALL) -D ${@D}
+	ln -s $(topsrcdir)/mobile/android/tests/background/junit3/src $@
+libs:: app/src/androidTest/background/java/org/mozilla/gecko/background
+
+include $(topsrcdir)/config/rules.mk
