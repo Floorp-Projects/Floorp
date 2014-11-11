@@ -85,6 +85,8 @@ private:
   void ReceivingFileConfirmation();
   bool CreateFile();
   bool WriteToFile(const uint8_t* aData, int aDataLength);
+  void RecoverFileName();
+  void DeleteDummyFile();
   void DeleteReceivedFile();
   void ReplyToConnect();
   void ReplyToDisconnectOrAbort();
@@ -209,6 +211,7 @@ private:
   nsCOMPtr<nsIInputStream> mInputStream;
   nsCOMPtr<nsIVolumeMountLock> mMountLock;
   nsRefPtr<DeviceStorageFile> mDsFile;
+  nsRefPtr<DeviceStorageFile> mDummyDsFile;
 
   // If a connection has been established, mSocket will be the socket
   // communicating with the remote socket. We maintain the invariant that if

@@ -183,7 +183,8 @@
     <dimen name="find_in_page_text_margin_right">12dip</dimen>
     <dimen name="find_in_page_text_padding_left">10dip</dimen>
     <dimen name="find_in_page_text_padding_right">10dip</dimen>
-    <dimen name="find_in_page_status_margin_right">5dip</dimen>
+    <dimen name="find_in_page_status_margin_right">15dip</dimen>
+    <dimen name="find_in_page_matchcase_margin_right">10dip</dimen>
     <dimen name="find_in_page_control_margin_top">2dip</dimen>
 
 </resources>

@@ -1,0 +1,23 @@
+buildDir = "${topobjdir}/mobile/android/gradle/build"
+
+ext {
+    compileSdkVersion = "${compileSdkVersion}"
+    buildToolsVersion = "${buildToolsVersion}"
+
+    targetSdkVersion = "${targetSdkVersion}"
+    minSdkVersion = "${minSdkVersion}"
+}
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.2'
+    }
+}
+
+repositories {
+    jcenter()
+}
