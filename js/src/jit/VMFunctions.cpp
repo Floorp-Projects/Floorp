@@ -829,6 +829,12 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     return ok;
 }
 
+JSObject *
+CreateGenerator(JSContext *cx, BaselineFrame *frame)
+{
+    return GeneratorObject::create(cx, frame);
+}
+
 bool
 StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 {
