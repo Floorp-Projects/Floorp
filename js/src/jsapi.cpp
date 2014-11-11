@@ -5072,7 +5072,7 @@ JS_GetInterruptCallback(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSRuntime *rt)
 {
-    rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
+    rt->requestInterrupt(JSRuntime::RequestInterruptAnyThread);
 }
 
 JS_PUBLIC_API(bool)
