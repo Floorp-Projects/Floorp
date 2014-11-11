@@ -6669,14 +6669,28 @@ var IdentityHandler = {
   IDENTITY_MODE_IDENTIFIED: "identified",
 
   // The following mixed content modes are only used if "security.mixed_content.block_active_content"
-  // is enabled. Even though the mixed content state and identitity state are orthogonal,
-  // our Java frontend coalesces them into one indicator.
+  // is enabled. Our Java frontend coalesces them into one indicator.
+
+  // No mixed content information. No mixed content icon is shown.
+  MIXED_MODE_UNKNOWN: "unknown",
 
   // Blocked active mixed content. Shield icon is shown, with a popup option to load content.
-  IDENTITY_MODE_MIXED_CONTENT_BLOCKED: "mixed_content_blocked",
+  MIXED_MODE_CONTENT_BLOCKED: "mixed_content_blocked",
 
   // Loaded active mixed content. Yellow triangle icon is shown.
-  IDENTITY_MODE_MIXED_CONTENT_LOADED: "mixed_content_loaded",
+  MIXED_MODE_CONTENT_LOADED: "mixed_content_loaded",
+
+  // The following tracking content modes are only used if "privacy.trackingprotection.enabled"
+  // is enabled. Our Java frontend coalesces them into one indicator.
+
+  // No tracking content information. No tracking content icon is shown.
+  TRACKING_MODE_UNKNOWN: "unknown",
+
+  // Blocked active tracking content. Shield icon is shown, with a popup option to load content.
+  TRACKING_MODE_CONTENT_BLOCKED: "tracking_content_blocked",
+
+  // Loaded active tracking content. Yellow triangle icon is shown.
+  TRACKING_MODE_CONTENT_LOADED: "tracking_content_loaded",
 
   // Cache the most recent SSLStatus and Location seen in getIdentityStrings
   _lastStatus : null,
@@ -6719,21 +6733,43 @@ var IdentityHandler = {
    * Determines the identity mode corresponding to the icon we show in the urlbar.
    */
   getIdentityMode: function getIdentityMode(aState) {
-    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT)
-      return this.IDENTITY_MODE_MIXED_CONTENT_BLOCKED;
+    if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
+      return this.IDENTITY_MODE_IDENTIFIED;
+    }
+
+    if (aState & Ci.nsIWebProgressListener.STATE_IS_SECURE) {
+      return this.IDENTITY_MODE_DOMAIN_VERIFIED;
+    }
+
+    return this.IDENTITY_MODE_UNKNOWN;
+  },
+
+  getMixedMode: function getMixedMode(aState) {
+    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
+      return this.MIXED_MODE_CONTENT_BLOCKED;
+    }
 
     // Only show an indicator for loaded mixed content if the pref to block it is enabled
     if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) &&
-         Services.prefs.getBoolPref("security.mixed_content.block_active_content"))
-      return this.IDENTITY_MODE_MIXED_CONTENT_LOADED;
+         Services.prefs.getBoolPref("security.mixed_content.block_active_content")) {
+      return this.MIXED_MODE_CONTENT_LOADED;
+    }
 
-    if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
-      return this.IDENTITY_MODE_IDENTIFIED;
+    return this.MIXED_MODE_UNKNOWN;
+  },
 
-    if (aState & Ci.nsIWebProgressListener.STATE_IS_SECURE)
-      return this.IDENTITY_MODE_DOMAIN_VERIFIED;
+  getTrackingMode: function getTrackingMode(aState) {
+    if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT) {
+      return this.TRACKING_MODE_CONTENT_BLOCKED;
+    }
 
-    return this.IDENTITY_MODE_UNKNOWN;
+    // Only show an indicator for loaded tracking content if the pref to block it is enabled
+    if ((aState & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) &&
+         Services.prefs.getBoolPref("privacy.trackingprotection.enabled")) {
+      return this.TRACKING_MODE_CONTENT_LOADED;
+    }
+
+    return this.TRACKING_MODE_UNKNOWN;
   },
 
   /**
@@ -6761,14 +6797,22 @@ var IdentityHandler = {
     }
     this._lastLocation = locationObj;
 
-    let mode = this.getIdentityMode(aState);
-    let result = { mode: mode };
+    let identityMode = this.getIdentityMode(aState);
+    let mixedMode = this.getMixedMode(aState);
+    let trackingMode = this.getTrackingMode(aState);
+    let result = {
+      mode: {
+        identity: identityMode,
+        mixed: mixedMode,
+        tracking: trackingMode
+      }
+    };
 
     // Don't show identity data for pages with an unknown identity or if any
     // mixed content is loaded (mixed display content is loaded by default).
-    if (mode == this.IDENTITY_MODE_UNKNOWN ||
-        aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN)
+    if (identityMode == this.IDENTITY_MODE_UNKNOWN || aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN) {
       return result;
+    }
 
     // Ideally we'd just make this a Java string
     result.encrypted = Strings.browser.GetStringFromName("identity.encrypted2");
