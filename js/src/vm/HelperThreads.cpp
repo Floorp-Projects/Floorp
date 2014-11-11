@@ -1065,7 +1065,7 @@ HelperThread::handleIonWorkload()
     // at the next interrupt callback. Don't interrupt Ion code for this, as
     // this incorporation can be delayed indefinitely without affecting
     // performance as long as the main thread is actually executing Ion code.
-    rt->requestInterrupt(JSRuntime::RequestInterruptAnyThreadDontStopIon);
+    rt->requestInterrupt(JSRuntime::RequestInterruptCanWait);
 
     // Notify the main thread in case it is waiting for the compilation to finish.
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);

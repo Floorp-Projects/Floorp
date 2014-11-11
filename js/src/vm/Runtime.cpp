@@ -27,6 +27,7 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jswatchpoint.h"
+#include "jswin.h"
 #include "jswrapper.h"
 
 #include "asmjs/AsmJSSignalHandlers.h"
@@ -140,8 +141,6 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     interruptPar_(false),
     handlingSignal(false),
     interruptCallback(nullptr),
-    interruptLock(nullptr),
-    interruptLockOwner(nullptr),
     exclusiveAccessLock(nullptr),
     exclusiveAccessOwner(nullptr),
     mainThreadHasExclusiveAccess(false),
@@ -152,6 +151,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     defaultVersion_(JSVERSION_DEFAULT),
     futexAPI_(nullptr),
     ownerThread_(nullptr),
+    ownerThreadNative_(0),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     execAlloc_(nullptr),
     jitRuntime_(nullptr),
@@ -256,9 +256,19 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 {
     ownerThread_ = PR_GetCurrentThread();
 
-    interruptLock = PR_NewLock();
-    if (!interruptLock)
-        return false;
+    // Get a platform-native handle for the owner thread, used by
+    // js::InterruptRunningJitCode to halt the runtime's main thread.
+#ifdef XP_WIN
+    size_t openFlags = THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME;
+    HANDLE self = OpenThread(openFlags, false, GetCurrentThreadId());
+    if (!self)
+        MOZ_CRASH("Unable to open thread handle");
+    static_assert(sizeof(HANDLE) <= sizeof(ownerThreadNative_), "need bigger field");
+    ownerThreadNative_ = (size_t)self;
+#else
+    static_assert(sizeof(pthread_t) <= sizeof(ownerThreadNative_), "need bigger field");
+    ownerThreadNative_ = (size_t)pthread_self();
+#endif
 
     exclusiveAccessLock = PR_NewLock();
     if (!exclusiveAccessLock)
@@ -325,7 +335,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
     jitSupportsSimd = js::jit::JitSupportsSimd();
 
-    signalHandlersInstalled_ = EnsureAsmJSSignalHandlersInstalled(this);
+    signalHandlersInstalled_ = EnsureSignalHandlersInstalled(this);
     canUseSignalHandlers_ = signalHandlersInstalled_ && !SignalBasedTriggersDisabled();
 
     if (!spsProfiler.init())
@@ -391,10 +401,6 @@ JSRuntime::~JSRuntime()
     MOZ_ASSERT(!numExclusiveThreads);
     mainThreadHasExclusiveAccess = true;
 
-    MOZ_ASSERT(!interruptLockOwner);
-    if (interruptLock)
-        PR_DestroyLock(interruptLock);
-
     /*
      * Even though all objects in the compartment are dead, we may have keep
      * some filenames around because of gcKeepAtoms.
@@ -444,6 +450,11 @@ JSRuntime::~JSRuntime()
     MOZ_ASSERT(oldCount > 0);
 
     js::TlsPerThreadData.set(nullptr);
+
+#ifdef XP_WIN
+    if (ownerThreadNative_)
+        CloseHandle((HANDLE)ownerThreadNative_);
+#endif
 }
 
 void
@@ -500,13 +511,9 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     if (execAlloc_)
         execAlloc_->addSizeOfCode(&rtSizes->code);
-    {
-        AutoLockForInterrupt lock(this);
-        if (jitRuntime()) {
-            if (jit::ExecutableAllocator *ionAlloc = jitRuntime()->ionAlloc(this))
-                ionAlloc->addSizeOfCode(&rtSizes->code);
-        }
-    }
+
+    if (jitRuntime() && jitRuntime()->ionAlloc(this))
+        jitRuntime()->ionAlloc(this)->addSizeOfCode(&rtSizes->code);
 
     rtSizes->gc.marker += gc.marker.sizeOfExcludingThis(mallocSizeOf);
 #ifdef JSGC_GENERATIONAL
@@ -611,11 +618,8 @@ JSRuntime::requestInterrupt(InterruptMode mode)
     interruptPar_ = true;
     mainThread.jitStackLimit_ = UINTPTR_MAX;
 
-    if (canUseSignalHandlers()) {
-        AutoLockForInterrupt lock(this);
-        RequestInterruptForAsmJSCode(this, mode);
-        jit::RequestInterruptForIonCode(this, mode);
-    }
+    if (mode == JSRuntime::RequestInterruptUrgent)
+        InterruptRunningJitCode(this);
 }
 
 bool
@@ -836,8 +840,6 @@ JSRuntime::assertCanLock(RuntimeLock which)
         MOZ_ASSERT(exclusiveAccessOwner != PR_GetCurrentThread());
       case HelperThreadStateLock:
         MOZ_ASSERT(!HelperThreadState().isLocked());
-      case InterruptLock:
-        MOZ_ASSERT(!currentThreadOwnsInterruptLock());
       case GCLock:
         gc.assertCanLock();
         break;
