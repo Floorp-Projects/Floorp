@@ -534,7 +534,9 @@ SurfaceTextureHost::Lock()
                                               mSize);
   }
 
-  return NS_SUCCEEDED(mSurfTex->Attach(gl()));
+  mSurfTex->Attach(gl());
+
+  return true;
 }
 
 void

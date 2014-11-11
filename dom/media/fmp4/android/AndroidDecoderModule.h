@@ -6,9 +6,10 @@
 #define AndroidDecoderModule_h_
 
 #include "PlatformDecoderModule.h"
+#include "AndroidJavaWrappers.h"
 #include "AndroidSurfaceTexture.h"
 
-#include "MediaCodec.h"
+#include "GeneratedSDKWrappers.h"
 #include "mozilla/Monitor.h"
 
 #include <queue>
@@ -19,11 +20,9 @@ typedef std::queue<mp4_demuxer::MP4Sample*> SampleQueue;
 
 namespace widget {
 namespace android {
-namespace sdk {
   class MediaCodec;
   class MediaFormat;
   class ByteBuffer;
-}
 }
 }
 
@@ -57,7 +56,7 @@ public:
 
   MediaCodecDataDecoder(MediaData::Type aType,
                         const char* aMimeType,
-                        mozilla::widget::android::sdk::MediaFormat* aFormat,
+                        mozilla::widget::android::MediaFormat* aFormat,
                         MediaDataDecoderCallback* aCallback);
 
   virtual ~MediaCodecDataDecoder();
@@ -74,11 +73,11 @@ protected:
   MediaData::Type mType;
 
   nsAutoPtr<char> mMimeType;
-  nsAutoPtr<mozilla::widget::android::sdk::MediaFormat> mFormat;
+  nsAutoPtr<mozilla::widget::android::MediaFormat> mFormat;
 
   MediaDataDecoderCallback* mCallback;
 
-  nsAutoPtr<mozilla::widget::android::sdk::MediaCodec> mDecoder;
+  nsAutoPtr<mozilla::widget::android::MediaCodec> mDecoder;
 
   jobjectArray mInputBuffers;
   jobjectArray mOutputBuffers;
@@ -95,11 +94,11 @@ protected:
 
   virtual nsresult InitDecoder(jobject aSurface = nullptr);
 
-  virtual nsresult Output(mozilla::widget::android::sdk::BufferInfo* aInfo, void* aBuffer, mozilla::widget::android::sdk::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
-  virtual nsresult PostOutput(mozilla::widget::android::sdk::BufferInfo* aInfo, mozilla::widget::android::sdk::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
+  virtual nsresult Output(mozilla::widget::android::BufferInfo* aInfo, void* aBuffer, mozilla::widget::android::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
+  virtual nsresult PostOutput(mozilla::widget::android::BufferInfo* aInfo, mozilla::widget::android::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
 
-  nsresult ResetInputBuffers();
-  nsresult ResetOutputBuffers();
+  void ResetInputBuffers();
+  void ResetOutputBuffers();
 
   void DecoderLoop();
   virtual void ClearQueue();

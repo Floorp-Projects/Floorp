@@ -41,9 +41,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsIHttpChannel.h"
-
-#include "MediaCodec.h"
-#include "SurfaceTexture.h"
+#include "GeneratedSDKWrappers.h"
 
 using namespace mozilla;
 using namespace mozilla::widget::android;
@@ -224,11 +222,8 @@ AndroidBridge::Init(JNIEnv *jEnv)
     InitAndroidJavaWrappers(jEnv);
 
     if (mAPIVersion >= 16 /* Jelly Bean */) {
-        sdk::InitMediaCodecStubs(jEnv);
-    }
-
-    if (mAPIVersion >= 14 /* ICS */) {
-        sdk::InitSurfaceTextureStubs(jEnv);
+        // We only use this for MediaCodec right now
+        InitSDKStubs(jEnv);
     }
 
     // jEnv should NOT be cached here by anything -- the jEnv here
