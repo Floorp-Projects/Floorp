@@ -113,17 +113,28 @@ NewGCObject(JSContext *cx, gc::AllocKind allocKind, gc::InitialHeap initialHeap)
 bool
 CheckOverRecursed(JSContext *cx)
 {
-    // We just failed the jitStackLimit check. There are two possible reasons:
-    //  - jitStackLimit was the real stack limit and we're over-recursed
-    //  - jitStackLimit was set to UINTPTR_MAX by JSRuntime::requestInterrupt
-    //    and we need to call JSRuntime::handleInterrupt.
+    // IonMonkey's stackLimit is equal to nativeStackLimit by default. When we
+    // request an interrupt, we set the jitStackLimit to nullptr, which causes
+    // the stack limit check to fail.
+    //
+    // There are two states we're concerned about here:
+    //   (1) The interrupt bit is set, and we need to fire the interrupt callback.
+    //   (2) The stack limit has been exceeded, and we need to throw an error.
+    //
+    // Note that we can reach here if jitStackLimit is MAXADDR, but interrupt
+    // has not yet been set to 1. That's okay; it will be set to 1 very shortly,
+    // and in the interim we might just fire a few useless calls to
+    // CheckOverRecursed.
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, 0, return false);
 #else
     JS_CHECK_RECURSION(cx, return false);
 #endif
-    gc::MaybeVerifyBarriers(cx);
-    return cx->runtime()->handleInterrupt(cx);
+
+    if (cx->runtime()->interrupt)
+        return InterruptCheck(cx);
+
+    return true;
 }
 
 // This function can get called in two contexts.  In the usual context, it's
@@ -167,8 +178,10 @@ CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
     JS_CHECK_RECURSION_WITH_SP(cx, checkSp, return false);
 #endif
 
-    gc::MaybeVerifyBarriers(cx);
-    return cx->runtime()->handleInterrupt(cx);
+    if (cx->runtime()->interrupt)
+        return InterruptCheck(cx);
+
+    return true;
 }
 
 bool
@@ -827,6 +840,57 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     }
 
     return ok;
+}
+
+JSObject *
+CreateGenerator(JSContext *cx, BaselineFrame *frame)
+{
+    return GeneratorObject::create(cx, frame);
+}
+
+bool
+InitialSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc)
+{
+    MOZ_ASSERT(*pc == JSOP_INITIALYIELD);
+    return GeneratorObject::initialSuspend(cx, obj, frame, pc);
+}
+
+bool
+NormalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc,
+              uint32_t stackDepth)
+{
+    MOZ_ASSERT(*pc == JSOP_YIELD);
+
+    // Return value is still on the stack.
+    MOZ_ASSERT(stackDepth >= 1);
+
+    // The expression stack slots are stored on the stack in reverse order, so
+    // we copy them to a Vector and pass a pointer to that instead. We use
+    // stackDepth - 1 because we don't want to include the return value.
+    AutoValueVector exprStack(cx);
+    if (!exprStack.reserve(stackDepth - 1))
+        return false;
+
+    size_t firstSlot = frame->numValueSlots() - stackDepth;
+    for (size_t i = 0; i < stackDepth - 1; i++)
+        exprStack.infallibleAppend(*frame->valueSlot(firstSlot + i));
+
+    MOZ_ASSERT(exprStack.length() == stackDepth - 1);
+
+    return GeneratorObject::normalSuspend(cx, obj, frame, pc, exprStack.begin(), stackDepth - 1);
+}
+
+bool
+FinalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc)
+{
+    MOZ_ASSERT(*pc == JSOP_FINALYIELDRVAL);
+
+    if (!GeneratorObject::finalSuspend(cx, obj)) {
+        // Leave this frame and propagate the exception to the caller.
+        return DebugEpilogue(cx, frame, pc, /* ok = */ false);
+    }
+
+    return true;
 }
 
 bool

@@ -7553,7 +7553,7 @@ nsTextFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                          const LogicalSize& aMargin,
                          const LogicalSize& aBorder,
                          const LogicalSize& aPadding,
-                         uint32_t aFlags)
+                         ComputeSizeFlags aFlags)
 {
   // Inlines and text don't compute size before reflow.
   return LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);

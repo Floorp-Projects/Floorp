@@ -236,13 +236,15 @@ class HTMLInputElementState MOZ_FINAL : public nsISupports
       mValue = aValue;
     }
 
-    const nsTArray<nsRefPtr<File>>& GetFiles() {
-      return mFiles;
+    const nsTArray<nsRefPtr<FileImpl>>& GetFileImpls() {
+      return mFileImpls;
     }
 
-    void SetFiles(const nsTArray<nsRefPtr<File>>& aFiles) {
-      mFiles.Clear();
-      mFiles.AppendElements(aFiles);
+    void SetFileImpls(const nsTArray<nsRefPtr<File>>& aFile) {
+      mFileImpls.Clear();
+      for (uint32_t i = 0, len = aFile.Length(); i < len; ++i) {
+        mFileImpls.AppendElement(aFile[i]->Impl());
+      }
     }
 
     HTMLInputElementState()
@@ -255,7 +257,7 @@ class HTMLInputElementState MOZ_FINAL : public nsISupports
     ~HTMLInputElementState() {}
 
     nsString mValue;
-    nsTArray<nsRefPtr<File>> mFiles;
+    nsTArray<nsRefPtr<FileImpl>> mFileImpls;
     bool mChecked;
     bool mCheckedSet;
 };
@@ -5697,7 +5699,7 @@ HTMLInputElement::SaveState()
     case VALUE_MODE_FILENAME:
       if (!mFiles.IsEmpty()) {
         inputState = new HTMLInputElementState();
-        inputState->SetFiles(mFiles);
+        inputState->SetFileImpls(mFiles);
       }
       break;
     case VALUE_MODE_VALUE:
@@ -5900,7 +5902,17 @@ HTMLInputElement::RestoreState(nsPresState* aState)
         break;
       case VALUE_MODE_FILENAME:
         {
-          const nsTArray<nsRefPtr<File>>& files = inputState->GetFiles();
+          const nsTArray<nsRefPtr<FileImpl>>& fileImpls = inputState->GetFileImpls();
+
+          nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
+          MOZ_ASSERT(global);
+
+          nsTArray<nsRefPtr<File>> files;
+          for (uint32_t i = 0, len = fileImpls.Length(); i < len; ++i) {
+            nsRefPtr<File> file = new File(global, fileImpls[i]);
+            files.AppendElement(file);
+          }
+
           SetFiles(files, true);
         }
         break;

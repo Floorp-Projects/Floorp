@@ -91,6 +91,7 @@ function loadNextTest() {
   if (counter == tests.length) {
     window.ConnectSrcExaminer.remove();
     SimpleTest.finish();
+    return;
   }
 
   var src = "file_csp_testserver.sjs";

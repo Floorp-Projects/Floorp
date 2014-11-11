@@ -332,8 +332,8 @@ class JS_FRIEND_API(BaseProxyHandler)
                        JS::HandleObject callable) const;
     virtual bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id) const;
 
-    virtual bool slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
-                       HandleObject result) const;
+    virtual bool getElements(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                             ElementAdder *adder) const;
 
     /* See comment for weakmapKeyDelegateOp in js/Class.h. */
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy) const;

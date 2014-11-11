@@ -69,8 +69,8 @@ class Proxy
     static bool watch(JSContext *cx, HandleObject proxy, HandleId id, HandleObject callable);
     static bool unwatch(JSContext *cx, HandleObject proxy, HandleId id);
 
-    static bool slice(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end,
-                      HandleObject result);
+    static bool getElements(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end,
+                            ElementAdder *adder);
 
     /* IC entry path for handling __noSuchMethod__ on access. */
     static bool callProp(JSContext *cx, HandleObject proxy, HandleObject reveiver, HandleId id,

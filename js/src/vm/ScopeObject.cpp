@@ -605,7 +605,7 @@ const Class DynamicWithObject::class_ = {
         with_SetGenericAttributes,
         with_DeleteGeneric,
         nullptr, nullptr,    /* watch/unwatch */
-        nullptr,             /* slice */
+        nullptr,             /* getElements */
         nullptr,             /* enumerate (native enumeration of target doesn't work) */
         with_ThisObject,
     }
@@ -1045,7 +1045,7 @@ const Class UninitializedLexicalObject::class_ = {
         uninitialized_SetGenericAttributes,
         uninitialized_DeleteGeneric,
         nullptr, nullptr,    /* watch/unwatch */
-        nullptr,             /* slice */
+        nullptr,             /* getElements */
         nullptr,             /* enumerate (native enumeration of target doesn't work) */
         nullptr,             /* this */
     }
