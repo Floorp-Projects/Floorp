@@ -1287,10 +1287,12 @@ public:
 
   static void DispatchGotOrLostPointerCaptureEvent(bool aIsGotCapture,
                                                    uint32_t aPointerId,
+                                                   uint16_t aPointerType,
                                                    nsIContent* aCaptureTarget);
   static void SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static void ReleasePointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
+  static uint16_t GetPointerType(uint32_t aPointerId);
   
   // CheckPointerCaptureState checks cases, when got/lostpointercapture events should be fired.
   // Function returns true, if any of events was fired; false, if no one event was fired.
