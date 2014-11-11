@@ -2941,10 +2941,13 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
     }
   }
 
-  ToJSValue(aCx, profileTimelineMarkers, aProfileTimelineMarkers);
-
   ClearProfileTimelineMarkers();
   mProfileTimelineMarkers.SwapElements(keptMarkers);
+
+  if (!ToJSValue(aCx, profileTimelineMarkers, aProfileTimelineMarkers)) {
+    JS_ClearPendingException(aCx);
+    return NS_ERROR_UNEXPECTED;
+  }
 
   return NS_OK;
 #else
