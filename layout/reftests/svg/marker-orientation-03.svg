@@ -1,0 +1,15 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="startMarker" markerUnits="userSpaceOnUse" orient="auto" markerWidth="30" markerHeight="45" refX="15" refY="22.5">
+      <rect fill="red" x="0.5" y="0.5" width="29" height="44"/>
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="lime"/>
+  <polyline fill="none" marker-start="url(#startMarker)" points="190 40 220 40 310 190 340 190"/>
+  <rect x="175" y="18" width="30" height="45" fill="lime" />
+
+</svg>
