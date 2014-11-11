@@ -292,7 +292,8 @@ void
 nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength)
 {
   if (!Assign(aData, aLength, fallible_t())) {
-    NS_ABORT_OOM(aLength);
+    NS_ABORT_OOM(aLength == size_type(-1) ? char_traits::length(aData)
+                                          : aLength);
   }
 }
 

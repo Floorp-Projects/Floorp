@@ -40,14 +40,17 @@ using namespace mozilla;
 using namespace mozilla::image;
 
 #if defined(PR_LOGGING)
-PRLogModuleInfo *
+PRLogModuleInfo*
 GetImgLog()
 {
-  static PRLogModuleInfo *sImgLog;
+  static PRLogModuleInfo* sImgLog;
   if (!sImgLog)
     sImgLog = PR_NewLogModule("imgRequest");
   return sImgLog;
 }
+#define LOG_TEST(level) (GetImgLog() && PR_LOG_TEST(GetImgLog(), (level)))
+#else
+#define LOG_TEST(level) false
 #endif
 
 NS_IMPL_ISUPPORTS(imgRequest,
@@ -360,6 +363,21 @@ nsresult imgRequest::GetURI(ImageURL **aURI)
 
   if (mURI) {
     *aURI = mURI;
+    NS_ADDREF(*aURI);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+nsresult imgRequest::GetCurrentURI(nsIURI **aURI)
+{
+  MOZ_ASSERT(aURI);
+
+  LOG_FUNC(GetImgLog(), "imgRequest::GetCurrentURI");
+
+  if (mCurrentURI) {
+    *aURI = mCurrentURI;
     NS_ADDREF(*aURI);
     return NS_OK;
   }
@@ -1064,16 +1082,24 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   mTimedChannel = do_QueryInterface(mChannel);
   mNewRedirectChannel = nullptr;
 
-#if defined(PR_LOGGING)
-  nsAutoCString oldspec;
-  if (mCurrentURI)
-    mCurrentURI->GetSpec(oldspec);
-  LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "old", oldspec.get());
-#endif
+  if (LOG_TEST(PR_LOG_DEBUG)) {
+    nsAutoCString spec;
+    if (mCurrentURI)
+      mCurrentURI->GetSpec(spec);
+    LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "old", spec.get());
+  }
 
   // make sure we have a protocol that returns data rather than opens
   // an external application, e.g. mailto:
   mChannel->GetURI(getter_AddRefs(mCurrentURI));
+
+  if (LOG_TEST(PR_LOG_DEBUG)) {
+    nsAutoCString spec;
+    if (mCurrentURI)
+      mCurrentURI->GetSpec(spec);
+    LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "new", spec.get());
+  }
+
   bool doesNotReturnData = false;
   nsresult rv =
     NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,

@@ -8,13 +8,13 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_tracing-01.html";
 
-let gTab, gDebuggee, gPanel;
+let gTab, gPanel;
 
 function test() {
   Task.async(function*() {
     yield pushPref();
 
-    [gTab, gDebuggee, gPanel] = yield initDebugger(TAB_URL);
+    [gTab,, gPanel] = yield initDebugger(TAB_URL);
 
     yield startTracing(gPanel);
     yield clickButton();
@@ -60,9 +60,7 @@ function test() {
 }
 
 function clickButton() {
-  EventUtils.sendMouseEvent({ type: "click" },
-                            gDebuggee.document.querySelector("button"),
-                            gDebuggee);
+  sendMouseClickToTab(gTab, content.document.querySelector("button"));
 }
 
 function pushPref() {
@@ -80,7 +78,6 @@ function popPref() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
 });
 

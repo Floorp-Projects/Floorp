@@ -37,6 +37,7 @@ struct Runtime;
 
 namespace js {
 
+class AutoLockGC;
 class FreeOp;
 
 #ifdef DEBUG
@@ -945,9 +946,10 @@ struct Chunk
     inline void insertToAvailableList(Chunk **insertPoint);
     inline void removeFromAvailableList();
 
-    ArenaHeader *allocateArena(JS::Zone *zone, AllocKind kind);
+    ArenaHeader *allocateArena(JSRuntime *rt, JS::Zone *zone, AllocKind kind,
+                               const AutoLockGC &lock);
 
-    void releaseArena(ArenaHeader *aheader);
+    void releaseArena(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock);
     void recycleArena(ArenaHeader *aheader, SortedArenaList &dest, AllocKind thingKind,
                       size_t thingsPerArena);
 
@@ -1145,17 +1147,6 @@ ArenaHeader::unsetAllocDuringSweep()
     MOZ_ASSERT(allocatedDuringIncremental);
     allocatedDuringIncremental = 0;
     auxNextLink = 0;
-}
-
-inline void
-ReleaseArenaList(ArenaHeader *aheader)
-{
-    ArenaHeader *next;
-    for (; aheader; aheader = next) {
-        // Copy aheader->next before releasing.
-        next = aheader->next;
-        aheader->chunk()->releaseArena(aheader);
-    }
 }
 
 static void

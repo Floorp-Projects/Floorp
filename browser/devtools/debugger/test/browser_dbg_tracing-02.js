@@ -7,13 +7,12 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_tracing-01.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 
 function test() {
   SpecialPowers.pushPrefEnv({'set': [["devtools.debugger.tracer", true]]}, () => {
-    initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+    initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
       gTab = aTab;
-      gDebuggee = aDebuggee;
       gPanel = aPanel;
       gDebugger = gPanel.panelWin;
 
@@ -40,9 +39,7 @@ function test() {
 }
 
 function clickButton() {
-  EventUtils.sendMouseEvent({ type: "click" },
-                            gDebuggee.document.querySelector("button"),
-                            gDebuggee);
+  sendMouseClickToTab(gTab, content.document.querySelector("button"));
 }
 
 function highlightCall() {
@@ -72,7 +69,6 @@ function testNoneHighlighted() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
 });

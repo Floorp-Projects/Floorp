@@ -246,35 +246,6 @@ Decoder::AllocateFrame()
 }
 
 void
-Decoder::FlushInvalidations()
-{
-  NS_ABORT_IF_FALSE(!HasDecoderError(),
-                    "Not allowed to make more decoder calls after error!");
-
-  // If we've got an empty invalidation rect, we have nothing to do
-  if (mInvalidRect.IsEmpty())
-    return;
-
-  if (mObserver) {
-#ifdef XP_MACOSX
-    // Bug 703231
-    // Because of high quality down sampling on mac we show scan lines while decoding.
-    // Bypass this problem by redrawing the border.
-    if (mImageMetadata.HasSize()) {
-      nsIntRect mImageBound(0, 0, mImageMetadata.GetWidth(), mImageMetadata.GetHeight());
-
-      mInvalidRect.Inflate(1);
-      mInvalidRect = mInvalidRect.Intersect(mImageBound);
-    }
-#endif
-    mObserver->FrameChanged(&mInvalidRect);
-  }
-
-  // Clear the invalidation rectangle
-  mInvalidRect.SetEmpty();
-}
-
-void
 Decoder::SetSizeOnImage()
 {
   MOZ_ASSERT(mImageMetadata.HasSize(), "Should have size");
@@ -320,11 +291,6 @@ Decoder::PostFrameStart()
   // We shouldn't already be mid-frame
   NS_ABORT_IF_FALSE(!mInFrame, "Starting new frame but not done with old one!");
 
-  // We should take care of any invalidation region when wrapping up the
-  // previous frame
-  NS_ABORT_IF_FALSE(mInvalidRect.IsEmpty(),
-                    "Start image frame with non-empty invalidation region!");
-
   // Update our state to reflect the new frame
   mFrameCount++;
   mInFrame = true;
@@ -334,11 +300,6 @@ Decoder::PostFrameStart()
   // reported by the Image.
   NS_ABORT_IF_FALSE(mFrameCount == mImage.GetNumFrames(),
                     "Decoder frame count doesn't match image's!");
-
-  // Fire notifications
-  if (mObserver) {
-    mObserver->OnStartFrame();
-  }
 }
 
 void
@@ -362,9 +323,6 @@ Decoder::PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha /* = FrameBlender::k
   mCurrentFrame->SetRawTimeout(aTimeout);
   mCurrentFrame->SetBlendMethod(aBlendMethod);
   mCurrentFrame->ImageUpdated(mCurrentFrame->GetRect());
-
-  // Flush any invalidations before we finish the frame
-  FlushInvalidations();
 
   // Fire notifications
   if (mObserver) {

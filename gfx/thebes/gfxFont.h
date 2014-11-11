@@ -1267,6 +1267,9 @@ class gfxFont {
     friend class gfxHarfBuzzShaper;
     friend class gfxGraphiteShaper;
 
+protected:
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
 public:
     nsrefcnt AddRef(void) {
         NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
@@ -1709,7 +1712,7 @@ public:
 
     virtual FontType GetType() const = 0;
 
-    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
+    virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(DrawTarget* aTarget)
     { return gfxPlatform::GetPlatform()->GetScaledFontForFont(aTarget, this); }
 
     bool KerningDisabled() {
@@ -1820,7 +1823,7 @@ protected:
 
     // The return value is interpreted as a horizontal advance in 16.16 fixed
     // point format.
-    virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID) {
+    virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID) {
         return -1;
     }
 

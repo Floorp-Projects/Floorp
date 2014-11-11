@@ -1,0 +1,19 @@
+<html>
+<head>
+<script type="text/javascript">
+  addEventListener('load', function(e) {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('mozbrowser', 'true');
+    iframe.setAttribute('remote', 'false');
+    iframe.setAttribute('mozapp', 'http://example.org/manifest.webapp');
+    iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
+      alert(e.detail.message);
+    });
+    document.body.appendChild(iframe);
+    iframe.src = 'http://example.org/tests/dom/browser-element/mochitest/file_browserElement_AppFramePermission.html';
+  });
+</script>
+</head>
+<body>
+</body>
+</html>
