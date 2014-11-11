@@ -109,9 +109,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Used to indicate the peer hung up the call.
+     * Used to indicate the remote peer was disconnected for some reason.
+     *
+     * peerHungup is true if the peer intentionally disconnected, false otherwise.
      */
-    PeerHungupCall: Action.define("peerHungupCall", {
+    RemotePeerDisconnected: Action.define("remotePeerDisconnected", {
+      peerHungup: Boolean
     }),
 
     /**
