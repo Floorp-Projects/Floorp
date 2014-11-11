@@ -129,6 +129,9 @@ public class DoorHanger extends LinearLayout {
             // Set a dark background, and use a smaller text size for dark-themed DoorHangers.
             setBackgroundColor(mResources.getColor(R.color.doorhanger_background_dark));
             mTextView.setTextAppearance(getContext(), R.style.TextAppearance_Widget_DoorHanger_Small);
+
+            // Set the inter-doorhanger divider color
+            mDivider.setBackgroundColor(mDividerColor);
         }
     }
 
