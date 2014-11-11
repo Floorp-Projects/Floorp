@@ -53,8 +53,6 @@ static StaticRefPtr<GeckoTouchDispatcher> sTouchDispatcher;
 GeckoTouchDispatcher::GeckoTouchDispatcher()
   : mTouchQueueLock("GeckoTouchDispatcher::mTouchQueueLock")
   , mTouchEventsFiltered(false)
-  , mTouchTimeDiff(0)
-  , mLastTouchTime(TimeStamp::Now())
 {
   // Since GeckoTouchDispatcher is initialized when input is initialized
   // and reads gfxPrefs, it is the first thing to touch gfxPrefs.
@@ -69,7 +67,7 @@ GeckoTouchDispatcher::GeckoTouchDispatcher()
                        gfxPrefs::HardwareVsyncEnabled();
   mVsyncAdjust = TimeDuration::FromMilliseconds(gfxPrefs::TouchVsyncSampleAdjust());
   mMaxPredict = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleMaxPredict());
-  mMinResampleTime = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleMinTime());
+  mOldTouchThreshold = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleOldTouchThreshold());
   mDelayedVsyncThreshold = TimeDuration::FromMilliseconds(gfxPrefs::TouchResampleVsyncDelayThreshold());
   sTouchDispatcher = this;
   ClearOnShutdown(&sTouchDispatcher);
@@ -147,8 +145,6 @@ GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
     MutexAutoLock lock(mTouchQueueLock);
     if (mResamplingEnabled) {
       mTouchMoveEvents.push_back(aTouch);
-      mTouchTimeDiff = aEventTime - mLastTouchTime;
-      mLastTouchTime = aEventTime;
       return;
     }
 
@@ -178,19 +174,17 @@ GeckoTouchDispatcher::DispatchTouchMoveEvents(TimeStamp aVsyncTime)
 
     if (mResamplingEnabled) {
       int touchCount = mTouchMoveEvents.size();
-      // Both aVsynctime and mLastTouchTime are uint64_t
-      // Need to store as a signed int.
-      TimeDuration vsyncTouchDiff = aVsyncTime - mLastTouchTime;
-      bool resample = (touchCount > 1) &&
-        (vsyncTouchDiff > mMinResampleTime);
+      TimeDuration vsyncTouchDiff = aVsyncTime - mTouchMoveEvents.back().mTimeStamp;
       // The delay threshold is a positive pref, but we're testing to see if the
       // vsync time is delayed from the touch, so add a negative sign.
       bool isDelayedVsyncEvent = vsyncTouchDiff < -mDelayedVsyncThreshold;
+      bool isOldTouch = vsyncTouchDiff > mOldTouchThreshold;
+      bool resample = (touchCount > 1) && !isDelayedVsyncEvent && !isOldTouch;
 
       if (!resample) {
         touchMove = mTouchMoveEvents.back();
         mTouchMoveEvents.clear();
-        if (!isDelayedVsyncEvent) {
+        if (!isDelayedVsyncEvent && !isOldTouch) {
           mTouchMoveEvents.push_back(touchMove);
         }
       } else {
@@ -300,10 +294,11 @@ GeckoTouchDispatcher::ResampleTouchMoves(MultiTouchInput& aOutTouch, TimeStamp a
   mTouchMoveEvents.push_back(currentTouch);
 
   TimeStamp sampleTime = aVsyncTime - mVsyncAdjust;
+  TimeDuration touchDiff = currentTouch.mTimeStamp - baseTouch.mTimeStamp;
 
-  if (mLastTouchTime < sampleTime) {
-    TimeDuration maxResampleTime = std::min(mTouchTimeDiff / 2, mMaxPredict);
-    TimeStamp maxTimestamp = mLastTouchTime + maxResampleTime;
+  if (currentTouch.mTimeStamp < sampleTime) {
+    TimeDuration maxResampleTime = std::min(touchDiff / 2, mMaxPredict);
+    TimeStamp maxTimestamp = currentTouch.mTimeStamp + maxResampleTime;
     if (sampleTime > maxTimestamp) {
       sampleTime = maxTimestamp;
       #ifdef LOG_RESAMPLE_DATA
@@ -312,7 +307,7 @@ GeckoTouchDispatcher::ResampleTouchMoves(MultiTouchInput& aOutTouch, TimeStamp a
     }
   }
 
-  ResampleTouch(aOutTouch, baseTouch, currentTouch, sampleTime - (mLastTouchTime - mTouchTimeDiff), mTouchTimeDiff);
+  ResampleTouch(aOutTouch, baseTouch, currentTouch, sampleTime - baseTouch.mTimeStamp, touchDiff);
 
   // Both mTimeStamp and mTime are being updated to sampleTime here.
   // mTime needs to be updated using a delta since TimeStamp doesn't
