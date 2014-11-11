@@ -370,7 +370,8 @@ describe("loop.store.RoomStore", function () {
       beforeEach(function() {
         activeRoomStore = new loop.store.ActiveRoomStore({
           dispatcher: dispatcher,
-          mozLoop: fakeMozLoop
+          mozLoop: fakeMozLoop,
+          sdkDriver: {}
         });
         store = new loop.store.RoomStore({
           dispatcher: dispatcher,

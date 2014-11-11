@@ -79,6 +79,7 @@ loop.OTSdkDriver = (function() {
     connectSession: function(sessionData) {
       this.session = this.sdk.initSession(sessionData.sessionId);
 
+      this.session.on("connectionCreated", this._onConnectionCreated.bind(this));
       this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
       this.session.on("connectionDestroyed",
         this._onConnectionDestroyed.bind(this));
@@ -130,6 +131,7 @@ loop.OTSdkDriver = (function() {
         return;
       }
 
+      this.dispatcher.dispatch(new sharedActions.ConnectedToSdkServers());
       this._sessionConnected = true;
       this._maybePublishLocalStream();
     },
@@ -160,6 +162,14 @@ loop.OTSdkDriver = (function() {
           reason: "networkDisconnected"
         }));
       }
+    },
+
+    _onConnectionCreated: function(event) {
+      if (this.session.connection.id === event.connection.id) {
+        return;
+      }
+
+      this.dispatcher.dispatch(new sharedActions.RemotePeerConnected());
     },
 
     /**
