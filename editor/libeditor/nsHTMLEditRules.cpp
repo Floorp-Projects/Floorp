@@ -447,7 +447,8 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
     res = PromoteRange(mDocChangeRange, action);
     NS_ENSURE_SUCCESS(res, res);
 
-    // if we did a ranged deletion, make sure we have a place to put caret.
+    // if we did a ranged deletion or handling backspace key, make sure we have
+    // a place to put caret.
     // Note we only want to do this if the overall operation was deletion,
     // not if deletion was done along the way for EditAction::loadHTML, EditAction::insertText, etc.
     // That's why this is here rather than DidDeleteSelection().
@@ -2044,6 +2045,10 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       NS_ENSURE_SUCCESS(res, res);
       res = InsertBRIfNeeded(aSelection);
       NS_ENSURE_SUCCESS(res, res);
+
+      // Remember that we did a ranged delete for the benefit of
+      // AfterEditInner().
+      mDidRangedDelete = true;
 
       return NS_OK;
     }
