@@ -7,6 +7,7 @@
 
 #include "nsGenericHTMLFrameElement.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ErrorResult.h"
 #include "GeckoProfiler.h"
@@ -434,6 +435,11 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
 
   // At the moment, you can't be an app without being a browser.
   if (!nsIMozBrowserFrame::GetReallyIsBrowserOrApp()) {
+    return NS_OK;
+  }
+
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    NS_WARNING("Can't embed-apps. Embed-apps is restricted to in-proc apps, see bug 1059662");
     return NS_OK;
   }
 
