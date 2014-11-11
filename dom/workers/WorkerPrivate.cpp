@@ -4243,7 +4243,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
     // Only perform the Promise microtask checkpoint on the outermost event
     // loop.  Don't run it, for example, during sync XHR or importScripts.
-    Promise::PerformMicroTaskCheckpoint();
+    (void)Promise::PerformMicroTaskCheckpoint();
 
     if (NS_HasPendingEvents(mThread)) {
       // Now *might* be a good time to GC. Let the JS engine make the decision.
