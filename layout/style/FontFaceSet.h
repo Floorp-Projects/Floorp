@@ -157,6 +157,11 @@ public:
    */
   void DidRefresh();
 
+  /**
+   * Returns whether the "layout.css.font-loading-api.enabled" pref is true.
+   */
+  static bool PrefEnabled();
+
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
                               bool aWasAlternate,
