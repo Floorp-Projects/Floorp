@@ -728,7 +728,8 @@ loop.shared.views = (function(_, OT, l10n) {
         <button onClick={this.props.onClick}
                 disabled={this.props.disabled}
                 className={cx(classObject)}>
-          {this.props.caption}
+          <span className="button-caption">{this.props.caption}</span>
+          {this.props.children}
         </button>
       )
     }
