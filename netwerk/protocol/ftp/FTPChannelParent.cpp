@@ -434,6 +434,13 @@ FTPChannelParent::SetParentListener(HttpChannelParentListener* aListener)
 }
 
 NS_IMETHODIMP
+FTPChannelParent::NotifyTrackingProtectionDisabled()
+{
+  // One day, this should probably be filled in.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 FTPChannelParent::Delete()
 {
   if (mIPCClosed || !SendDeleteSelf())
