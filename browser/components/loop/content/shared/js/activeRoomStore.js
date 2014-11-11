@@ -51,15 +51,13 @@ loop.store.ActiveRoomStore = (function() {
     }
     this._mozLoop = options.mozLoop;
 
+    // XXX Further actions are registered in setupWindowData and
+    // fetchServerData when we know what window type this is. At some stage,
+    // we might want to consider store mixins or some alternative which
+    // means the stores would only be created when we want them.
     this._dispatcher.register(this, [
-      "roomFailure",
       "setupWindowData",
-      "fetchServerData",
-      "updateRoomInfo",
-      "joinRoom",
-      "joinedRoom",
-      "windowUnload",
-      "leaveRoom"
+      "fetchServerData"
     ]);
 
     /**
@@ -114,6 +112,21 @@ loop.store.ActiveRoomStore = (function() {
     },
 
     /**
+     * Registers the actions with the dispatcher that this store is interested
+     * in.
+     */
+    _registerActions: function() {
+      this._dispatcher.register(this, [
+        "roomFailure",
+        "updateRoomInfo",
+        "joinRoom",
+        "joinedRoom",
+        "windowUnload",
+        "leaveRoom"
+      ]);
+    },
+
+    /**
      * Execute setupWindowData event action from the dispatcher. This gets
      * the room data from the mozLoop api, and dispatches an UpdateRoomInfo event.
      * It also dispatches JoinRoom as this action is only applicable to the desktop
@@ -126,6 +139,8 @@ loop.store.ActiveRoomStore = (function() {
         // Nothing for us to do here, leave it to other stores.
         return;
       }
+
+      this._registerActions();
 
       this.setStoreState({
         roomState: ROOM_STATES.GATHER
@@ -168,6 +183,8 @@ loop.store.ActiveRoomStore = (function() {
         // Nothing for us to do here, leave it to other stores.
         return;
       }
+
+      this._registerActions();
 
       this.setStoreState({
         roomToken: actionData.token,
