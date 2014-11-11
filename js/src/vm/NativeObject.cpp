@@ -1472,32 +1472,37 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
             }
         }
     } else if (!(attrs & JSPROP_IGNORE_VALUE)) {
-        /*
-         * We might still want to ignore redefining some of our attributes, if the
-         * request came through a proxy after Object.defineProperty(), but only if we're redefining
-         * a data property.
-         * FIXME: All this logic should be removed when Proxies use PropDesc, but we need to
-         *        remove JSPropertyOp getters and setters first.
-         * FIXME: This is still wrong for various array types, and will set the wrong attributes
-         *        by accident, but we can't use NativeLookupOwnProperty in this case, because of resolve
-         *        loops.
-         */
-        shape = obj->lookup(cx, id);
+        // If we did a normal lookup here, it would cause resolve hook recursion in
+        // the following case. Suppose the first script we run in a lazy global is
+        // |parseInt()|.
+        //   - js_InitNumber is called to resolve parseInt.
+        //   - js_InitNumber tries to define the Number constructor on the global.
+        //   - We end up here.
+        //   - This lookup for 'Number' triggers the global resolve hook.
+        //   - js_InitNumber is called again, this time to resolve Number.
+        //   - It creates a second Number constructor, which trips an assertion.
+        //
+        // Therefore we do a special lookup that does not call the resolve hook.
+        NativeLookupOwnPropertyNoResolve(cx, obj, id, &shape);
+
         if (shape) {
             if (shape->isAccessorDescriptor() &&
                 !CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
             {
                 return false;
             }
-            if (shape->isDataDescriptor())
+
+            // If any other JSPROP_IGNORE_* attributes are present, copy the
+            // corresponding JSPROP_* attributes from the existing property.
+            if (IsImplicitDenseOrTypedArrayElement(shape))
+                attrs = ApplyAttributes(attrs, true, true, !IsAnyTypedArray(obj));
+            else
                 attrs = ApplyOrDefaultAttributes(attrs, shape);
         }
     } else {
-        /*
-         * We have been asked merely to update some attributes by a caller of
-         * Object.defineProperty, laundered through the proxy system, and returning here. We can
-         * get away with just using JSObject::changeProperty here.
-         */
+        // We have been asked merely to update some attributes. If the
+        // property already exists and it's a data property, we can just
+        // call JSObject::changeProperty.
         if (!NativeLookupOwnProperty(cx, obj, id, &shape))
             return false;
 
