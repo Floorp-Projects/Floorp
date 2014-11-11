@@ -37,7 +37,6 @@
 #include <algorithm>
 
 #include "gfxMathTable.h"
-#include "nsUnicodeScriptCodes.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -390,7 +389,7 @@ nsPropertiesTable::MakeTextRun(gfxContext*        aThebesContext,
                "nsPropertiesTable can only access glyphs by code point");
   return aFontGroup->
     MakeTextRun(aGlyph.code, aGlyph.Length(), aThebesContext,
-                aAppUnitsPerDevPixel, 0, nullptr);
+                aAppUnitsPerDevPixel, 0);
 }
 
 // An instance of nsOpenTypeTable is associated with one gfxFontEntry that
@@ -471,7 +470,7 @@ nsOpenTypeTable::UpdateCache(gfxContext*   aThebesContext,
   if (mCharCache != aChar) {
     nsAutoPtr<gfxTextRun> textRun;
     textRun = aFontGroup->
-      MakeTextRun(&aChar, 1, aThebesContext, aAppUnitsPerDevPixel, 0, nullptr);
+      MakeTextRun(&aChar, 1, aThebesContext, aAppUnitsPerDevPixel, 0);
     const gfxTextRun::CompressedGlyph& data = textRun->GetCharacterGlyphs()[0];
     if (data.IsSimpleGlyph()) {
       mGlyphID = data.GetSimpleGlyph();
@@ -1550,8 +1549,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   nsAutoPtr<gfxTextRun> textRun;
   textRun = fm->GetThebesFontGroup()->
     MakeTextRun(static_cast<const char16_t*>(mData.get()), len, aThebesContext,
-                aPresContext->AppUnitsPerDevPixel(), 0,
-                aPresContext->MissingFontRecorder());
+                aPresContext->AppUnitsPerDevPixel(), 0);
   aDesiredStretchSize = MeasureTextRun(aThebesContext, textRun);
   mGlyphs[0] = textRun;
 
@@ -1689,14 +1687,6 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     
   if (glyphFound) {
     return NS_OK;
-  }
-
-  // We did not find a size variant or a glyph assembly to stretch this
-  // operator. Verify whether a font with an OpenType MATH table is available
-  // and record missing math script otherwise.
-  gfxMissingFontRecorder* MFR = aPresContext->MissingFontRecorder();
-  if (MFR && !fm->GetThebesFontGroup()->GetFirstMathFont()) {
-    MFR->RecordScript(MOZ_SCRIPT_MATHEMATICAL_NOTATION);
   }
 
   // stretchy character
