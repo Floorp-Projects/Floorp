@@ -133,15 +133,6 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         // First try to read the engine list from the jar.
         InputStream in = getInputStreamFromJar("list.txt");
 
-        // Fallback for standalone search activity.
-        if (in == null) {
-            try {
-                in = context.getResources().getAssets().open("engines/list.txt");
-            } catch (IOException e) {
-                throw new IllegalStateException("Error reading list.txt");
-            }
-        }
-
         final List<SearchEngine> list = new ArrayList<SearchEngine>();
         InputStreamReader isr = null;
 
@@ -185,11 +176,6 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
             in = getEngineFromProfile(identifier);
         }
 
-        // Fallback for standalone search activity.
-        if (in == null) {
-            in = getEngineFromAssets(identifier);
-        }
-
         if (in == null) {
             throw new IllegalArgumentException("Couldn't find search engine for identifier: " + identifier);
         }
@@ -207,22 +193,6 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         }
 
         return null;
-    }
-
-    /**
-     * Fallback for standalone search activity. These assets are not included
-     * in mozilla-central.
-     *
-     * @param identifier search engine identifier (e.g. "google")
-     * @return InputStream for open search plugin XML
-     */
-    private InputStream getEngineFromAssets(String identifier) {
-        try {
-            return context.getResources().getAssets().open("engines/" + identifier + ".xml");
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Exception getting search engine from assets", e);
-            return null;
-        }
     }
 
     /**
