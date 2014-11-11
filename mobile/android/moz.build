@@ -24,6 +24,7 @@ DIRS += [
     'fonts',
     'geckoview_library',
     'extensions',
+    'gradle',
 ]
 
 if not CONFIG['LIBXUL_SDK']:

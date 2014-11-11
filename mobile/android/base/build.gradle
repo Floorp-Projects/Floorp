@@ -1,0 +1,98 @@
+project.buildDir = "${topobjdir}/mobile/android/gradle/base/build"
+
+apply plugin: 'android-library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId 'org.mozilla.gecko'
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            runProguard false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    android {
+        lintOptions {
+            abortOnError false
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest {
+                srcFile 'gradle_AndroidManifest.xml'
+            }
+
+            java {
+                // The main sources are symlinked in here.
+                srcDir "${topobjdir}/mobile/android/gradle/base/src/main/java"
+                    exclude '**/tests/**'
+                    exclude '**/resources/**'
+                if (!MOZ_CRASHREPORTER) {
+                    exclude '**/CrashReporter.java'
+                }
+                srcDir "../search/java"
+                srcDir "../stumbler/java"
+                srcDir "${topobjdir}/mobile/android/base/generated"
+                    exclude '**/R.java'
+                    exclude '**/Manifest.java'
+            }
+
+            res {
+                srcDir "newtablet/res"
+                srcDir "../branding/unofficial/res"
+                srcDir "${topobjdir}/mobile/android/base/res"
+                // The main resources are symlinked in here.
+                srcDir "${topobjdir}/mobile/android/gradle/base/src/main/res"
+                if (MOZ_CRASHREPORTER) {
+                    srcDir "crashreporter/res"
+                }
+            }
+
+            resources {
+                srcDir '../locales'
+                srcDir '../chrome'
+                srcDir '../components'
+                srcDir '../modules'
+                srcDir '../app'
+                srcDir '../themes/core'
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile project(':thirdparty')
+    compile 'com.android.support:support-v4:19.1.+'
+    compile 'com.android.support:appcompat-v7:19.1.+'
+    compile 'com.android.support:mediarouter-v7:19.1.+'
+    compile 'com.google.android.gms:play-services:5.+'
+}
+
+task prepareObjDir(type:Exec) {
+  workingDir "${topobjdir}"
+
+  commandLine "${topsrcdir}/mach"
+  args 'build'
+  args '-C'
+  args 'mobile/android/base'
+  args 'gradle-targets'
+}
+
+android.libraryVariants.all { variant ->
+    variant.checkManifest.dependsOn prepareObjDir
+}

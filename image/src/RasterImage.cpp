@@ -484,10 +484,10 @@ RasterImage::RequestRefresh(const TimeStamp& aTime)
 
     UpdateImageContainer();
 
-    // Explicitly call this on mStatusTracker so we're sure to not interfere
-    // with the decoding process
-    if (mStatusTracker)
-      mStatusTracker->FrameChanged(&res.dirtyRect);
+    if (mStatusTracker) {
+      mStatusTracker->SyncNotifyDifference(ImageStatusDiff::NoChange(),
+                                           res.dirtyRect);
+    }
   }
 
   if (res.animationFinished) {
@@ -653,6 +653,17 @@ uint32_t
 RasterImage::GetRequestedFrameIndex(uint32_t aWhichFrame) const
 {
   return aWhichFrame == FRAME_FIRST ? 0 : GetCurrentFrameIndex();
+}
+
+nsIntRect
+RasterImage::GetFirstFrameRect()
+{
+  if (mAnim) {
+    return mAnim->GetFirstFrameRefreshArea();
+  }
+
+  // Fall back to our size. This is implicitly zero-size if !mHasSize.
+  return nsIntRect(nsIntPoint(0,0), mSize);
 }
 
 //******************************************************************************
@@ -1457,7 +1468,7 @@ RasterImage::ResetAnimation()
   // Update display
   if (mStatusTracker) {
     nsIntRect rect = mAnim->GetFirstFrameRefreshArea();
-    mStatusTracker->FrameChanged(&rect);
+    mStatusTracker->SyncNotifyDifference(ImageStatusDiff::NoChange(), rect);
   }
 
   // Start the animation again. It may not have been running before, if
@@ -1557,14 +1568,6 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   if (!StoringSourceData() && mHasSize) {
     rv = WriteToDecoder(aBuffer, aCount, DECODE_SYNC);
     CONTAINER_ENSURE_SUCCESS(rv);
-
-    // We're not storing source data, so this data is probably coming straight
-    // from the network. In this case, we want to display data as soon as we
-    // get it, so we want to flush invalidations after every write.
-    nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
-    mInDecoder = true;
-    mDecoder->FlushInvalidations();
-    mInDecoder = false;
 
     rv = FinishedSomeDecoding();
     CONTAINER_ENSURE_SUCCESS(rv);
@@ -2416,15 +2419,6 @@ RasterImage::SyncDecode()
                       DECODE_SYNC);
   CONTAINER_ENSURE_SUCCESS(rv);
 
-  // When we're doing a sync decode, we want to get as much information from the
-  // image as possible. We've send the decoder all of our data, so now's a good
-  // time  to flush any invalidations (in case we don't have all the data and what
-  // we got left us mid-frame).
-  nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
-  mInDecoder = true;
-  mDecoder->FlushInvalidations();
-  mInDecoder = false;
-
   rv = FinishedSomeDecoding();
   CONTAINER_ENSURE_SUCCESS(rv);
   
@@ -2498,9 +2492,8 @@ RasterImage::NotifyNewScaledFrame()
   if (mStatusTracker) {
     // Send an invalidation so observers will repaint and can take advantage of
     // the new scaled frame if possible.
-    // XXX(seth): Why does FrameChanged take a pointer and not a reference?
-    nsIntRect invalidationRect(0, 0, mSize.width, mSize.height);
-    mStatusTracker->FrameChanged(&invalidationRect);
+    nsIntRect rect(0, 0, mSize.width, mSize.height);
+    mStatusTracker->SyncNotifyDifference(ImageStatusDiff::NoChange(), rect);
   }
 }
 
@@ -3001,9 +2994,12 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
 
   bool done = false;
   bool wasSize = false;
+  nsIntRect invalidRect;
   nsresult rv = NS_OK;
 
   if (image->mDecoder) {
+    invalidRect = image->mDecoder->TakeInvalidRect();
+
     if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
     }
@@ -3046,6 +3042,17 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     }
   }
 
+  if (GetCurrentFrameIndex() > 0) {
+    // Don't send invalidations for animated frames after the first; let
+    // RequestRefresh take care of that.
+    invalidRect = nsIntRect();
+  }
+  if (mHasBeenDecoded && !invalidRect.IsEmpty()) {
+    // Don't send partial invalidations if we've been decoded before.
+    invalidRect = mDecoded ? GetFirstFrameRect()
+                           : nsIntRect();
+  }
+
   ImageStatusDiff diff =
     request ? image->mStatusTracker->Difference(request->mStatusTracker)
             : image->mStatusTracker->DecodeStateAsDifference();
@@ -3058,13 +3065,15 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     // FinishedSomeDecoding on the stack.
     NS_WARNING("Recursively notifying in RasterImage::FinishedSomeDecoding!");
     mStatusDiff.Combine(diff);
+    mInvalidRect.Union(invalidRect);
   } else {
     MOZ_ASSERT(mStatusDiff.IsNoChange(), "Shouldn't have an accumulated change at this point");
+    MOZ_ASSERT(mInvalidRect.IsEmpty(), "Shouldn't have an accumulated invalidation rect here");
 
-    while (!diff.IsNoChange()) {
+    while (!diff.IsNoChange() || !invalidRect.IsEmpty()) {
       // Tell the observers what happened.
       mNotifying = true;
-      image->mStatusTracker->SyncNotifyDifference(diff);
+      image->mStatusTracker->SyncNotifyDifference(diff, invalidRect);
       mNotifying = false;
 
       // Gather any status changes that may have occurred as a result of sending
@@ -3072,6 +3081,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
       // notifications for them next.
       diff = mStatusDiff;
       mStatusDiff = ImageStatusDiff::NoChange();
+      invalidRect = mInvalidRect;
+      mInvalidRect = nsIntRect();
     }
   }
 
@@ -3482,31 +3493,6 @@ RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
   if (aImg->mDecodeRequest) {
     aImg->mDecodeRequest->mDecodeTime += (TimeStamp::Now() - start);
     aImg->mDecodeRequest->mChunkCount += chunkCount;
-  }
-
-  // Flush invalidations (and therefore paint) now that we've decoded all the
-  // chunks we're going to.
-  //
-  // However, don't paint if:
-  //
-  //  * This was an until-size decode.  Until-size decodes are always followed
-  //    by normal decodes, so don't bother painting.
-  //
-  //  * The decoder flagged an error.  The decoder may have written garbage
-  //    into the output buffer; don't paint it to the screen.
-  //
-  //  * We have all the source data.  This disables progressive display of
-  //    previously-decoded images, thus letting us finish decoding faster,
-  //    since we don't waste time painting while we decode.
-  //    Decoder::PostFrameStop() will flush invalidations once the decode is
-  //    done.
-
-  if (aDecodeType != DECODE_TYPE_UNTIL_SIZE &&
-      !aImg->mDecoder->HasError() &&
-      !aImg->mHasSourceData) {
-    aImg->mInDecoder = true;
-    aImg->mDecoder->FlushInvalidations();
-    aImg->mInDecoder = false;
   }
 
   return NS_OK;
