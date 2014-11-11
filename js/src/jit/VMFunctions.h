@@ -707,6 +707,10 @@ bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
 bool DebugEpilogueOnBaselineReturn(JSContext *cx, BaselineFrame *frame, jsbytecode *pc);
 
 JSObject *CreateGenerator(JSContext *cx, BaselineFrame *frame);
+bool InitialSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc);
+bool NormalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc,
+                   uint32_t stackDepth);
+bool FinalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
 bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);
