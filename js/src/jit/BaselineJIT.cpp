@@ -339,23 +339,26 @@ BaselineScript *
 BaselineScript::New(JSScript *jsscript, uint32_t prologueOffset, uint32_t epilogueOffset,
                     uint32_t spsPushToggleOffset, uint32_t postDebugPrologueOffset,
                     size_t icEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
-                    size_t bytecodeTypeMapEntries)
+                    size_t bytecodeTypeMapEntries, size_t yieldEntries)
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
 
     size_t icEntriesSize = icEntries * sizeof(ICEntry);
     size_t pcMappingIndexEntriesSize = pcMappingIndexEntries * sizeof(PCMappingIndexEntry);
     size_t bytecodeTypeMapSize = bytecodeTypeMapEntries * sizeof(uint32_t);
+    size_t yieldEntriesSize = yieldEntries * sizeof(uintptr_t);
 
     size_t paddedICEntriesSize = AlignBytes(icEntriesSize, DataAlignment);
     size_t paddedPCMappingIndexEntriesSize = AlignBytes(pcMappingIndexEntriesSize, DataAlignment);
     size_t paddedPCMappingSize = AlignBytes(pcMappingSize, DataAlignment);
     size_t paddedBytecodeTypesMapSize = AlignBytes(bytecodeTypeMapSize, DataAlignment);
+    size_t paddedYieldEntriesSize = AlignBytes(yieldEntriesSize, DataAlignment);
 
     size_t allocBytes = paddedICEntriesSize +
                         paddedPCMappingIndexEntriesSize +
                         paddedPCMappingSize +
-                        paddedBytecodeTypesMapSize;
+                        paddedBytecodeTypesMapSize +
+                        paddedYieldEntriesSize;
 
     BaselineScript *script = jsscript->zone()->pod_malloc_with_extra<BaselineScript, uint8_t>(allocBytes);
     if (!script)
@@ -379,7 +382,12 @@ BaselineScript::New(JSScript *jsscript, uint32_t prologueOffset, uint32_t epilog
     offsetCursor += paddedPCMappingSize;
 
     script->bytecodeTypeMapOffset_ = bytecodeTypeMapEntries ? offsetCursor : 0;
+    offsetCursor += paddedBytecodeTypesMapSize;
 
+    script->yieldEntriesOffset_ = yieldEntries ? offsetCursor : 0;
+    offsetCursor += paddedYieldEntriesSize;
+
+    MOZ_ASSERT(offsetCursor == sizeof(BaselineScript) + allocBytes);
     return script;
 }
 
@@ -568,6 +576,17 @@ BaselineScript::icEntryFromReturnAddress(uint8_t *returnAddr)
     MOZ_ASSERT(returnAddr < method_->raw() + method_->instructionsSize());
     CodeOffsetLabel offset(returnAddr - method_->raw());
     return icEntryFromReturnOffset(offset);
+}
+
+void
+BaselineScript::copyYieldEntries(JSScript *script, Vector<uint32_t> &yieldOffsets)
+{
+    uint8_t **entries = yieldEntryList();
+
+    for (size_t i = 0; i < yieldOffsets.length(); i++) {
+        uint32_t offset = yieldOffsets[i];
+        entries[i] = nativeCodeForPC(script, script->offsetToPC(offset));
+    }
 }
 
 void
