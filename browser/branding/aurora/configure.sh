@@ -4,3 +4,4 @@
 
 MOZ_APP_DISPLAYNAME=FirefoxDeveloperEdition
 MOZ_APP_REMOTINGNAME=firefox-dev
+MOZ_DEV_EDITION=1

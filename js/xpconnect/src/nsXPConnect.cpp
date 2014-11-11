@@ -1008,15 +1008,33 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
     return NS_OK;
 }
 
+namespace {
+
+class DummyRunnable : public nsRunnable {
+public:
+    NS_IMETHOD Run() { return NS_OK; }
+};
+
+} // anonymous namespace
+
 NS_IMETHODIMP
 nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
                                 uint32_t aRecursionDepth)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     // If ProcessNextEvent was called during a Promise "then" callback, we
     // must process any pending microtasks before blocking in the event loop,
     // otherwise we may deadlock until an event enters the queue later.
     if (aMayWait) {
-        Promise::PerformMicroTaskCheckpoint();
+        if (Promise::PerformMicroTaskCheckpoint()) {
+            // If any microtask was processed, we post a dummy event in order to
+            // force the ProcessNextEvent call not to block.  This is required
+            // to support nested event loops implemented using a pattern like
+            // "while (condition) thread.processNextEvent(true)", in case the
+            // condition is triggered here by a Promise "then" callback.
+            NS_DispatchToMainThread(new DummyRunnable());
+        }
     }
 
     // Record this event.
@@ -1024,7 +1042,6 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
 
     // Push a null JSContext so that we don't see any script during
     // event processing.
-    MOZ_ASSERT(NS_IsMainThread());
     bool ok = PushJSContextNoScriptContext(nullptr);
     NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     return NS_OK;

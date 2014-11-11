@@ -51,7 +51,7 @@
 
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
-              ok(connection, win.AppManager.connection, "connection is valid");
+              is(connection, win.AppManager.connection, "connection is valid");
               connection.host = null; // force connectPipe
               connection.connect();
               return promise.resolve();
@@ -83,6 +83,8 @@
           yield win.UI._busyPromise;
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
+
+          yield waitForUpdate(win, "list-tabs-response");
 
           ok(isPlayActive(), "play button is enabled 1");
           ok(!isStopActive(), "stop button is disabled 1");
