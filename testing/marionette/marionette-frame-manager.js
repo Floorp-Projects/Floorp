@@ -202,6 +202,9 @@ FrameManager.prototype = {
     messageManager.addWeakMessageListener("Marionette:switchToModalOrigin", this.server);
     messageManager.addWeakMessageListener("Marionette:switchToFrame", this.server);
     messageManager.addWeakMessageListener("Marionette:switchedToFrame", this.server);
+    messageManager.addWeakMessageListener("Marionette:addCookie", this.server);
+    messageManager.addWeakMessageListener("Marionette:getVisibleCookies", this.server);
+    messageManager.addWeakMessageListener("Marionette:deleteCookie", this.server);
     messageManager.addWeakMessageListener("MarionetteFrame:handleModal", this);
     messageManager.addWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
     messageManager.addWeakMessageListener("MarionetteFrame:getInterruptedState", this);
@@ -230,6 +233,9 @@ FrameManager.prototype = {
     messageManager.removeWeakMessageListener("Marionette:runEmulatorShell", this.server);
     messageManager.removeWeakMessageListener("Marionette:switchToFrame", this.server);
     messageManager.removeWeakMessageListener("Marionette:switchedToFrame", this.server);
+    messageManager.removeWeakMessageListener("Marionette:addCookie", this.server);
+    messageManager.removeWeakMessageListener("Marionette:getVisibleCookies", this.server);
+    messageManager.removeWeakMessageListener("Marionette:deleteCookie", this.server);
     messageManager.removeWeakMessageListener("MarionetteFrame:handleModal", this);
     messageManager.removeWeakMessageListener("MarionetteFrame:getCurrentFrameId", this);
   },
