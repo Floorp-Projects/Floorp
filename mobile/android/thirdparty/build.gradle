@@ -1,0 +1,49 @@
+project.buildDir = "${topobjdir}/mobile/android/gradle/thirdparty/build"
+
+apply plugin: 'android-library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        applicationId 'org.mozilla.gecko.thirdparty'
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            runProguard false
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+
+    android {
+        lintOptions {
+            abortOnError false
+        }
+    }
+
+    sourceSets {
+        main {
+            manifest {
+                srcFile 'gradle_AndroidManifest.xml'
+            }
+
+            java {
+                srcDir "."
+            }
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v4:19.1.+'
+}
