@@ -3362,7 +3362,7 @@ CASE(JSOP_INITIALYIELD)
     obj = &REGS.sp[-1].toObject();
     POP_RETURN_VALUE();
     MOZ_ASSERT(REGS.stackDepth() == 0);
-    if (!GeneratorObject::initialSuspend(cx, obj, REGS.fp(), REGS.pc + JSOP_INITIALYIELD_LENGTH))
+    if (!GeneratorObject::initialSuspend(cx, obj, REGS.fp(), REGS.pc))
         goto error;
     goto successful_return_continuation;
 }
@@ -3373,7 +3373,7 @@ CASE(JSOP_YIELD)
     MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
     RootedObject &obj = rootObject0;
     obj = &REGS.sp[-1].toObject();
-    if (!GeneratorObject::normalSuspend(cx, obj, REGS.fp(), REGS.pc + JSOP_YIELD_LENGTH,
+    if (!GeneratorObject::normalSuspend(cx, obj, REGS.fp(), REGS.pc,
                                         REGS.spForStackDepth(0), REGS.stackDepth() - 2))
     {
         goto error;
