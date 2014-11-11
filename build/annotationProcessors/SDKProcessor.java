@@ -4,18 +4,24 @@
 
 package org.mozilla.gecko.annotationProcessors;
 
+import com.android.tools.lint.checks.ApiLookup;
+import com.android.tools.lint.LintCliClient;
+
 import org.mozilla.gecko.annotationProcessors.classloader.AnnotatableEntity;
 import org.mozilla.gecko.annotationProcessors.classloader.ClassWithOptions;
 import org.mozilla.gecko.annotationProcessors.classloader.IterableJarLoadingURLClassLoader;
 import org.mozilla.gecko.annotationProcessors.utils.GeneratableElementIterator;
+import org.mozilla.gecko.annotationProcessors.utils.Utils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.Vector;
 import java.net.URL;
@@ -34,10 +40,13 @@ public class SDKProcessor {
             "// annotations on Java methods. To update, change the annotations on the corresponding Java\n" +
             "// methods and rerun the build. Manually updating this file will cause your build to fail.\n\n";
 
+    private static ApiLookup sApiLookup;
+    private static int sMaxSdkVersion;
+
     public static void main(String[] args) {
         // We expect a list of jars on the commandline. If missing, whinge about it.
-        if (args.length < 4) {
-            System.err.println("Usage: java SDKProcessor sdkjar classlistfile outdir fileprefix");
+        if (args.length < 5) {
+            System.err.println("Usage: java SDKProcessor sdkjar classlistfile outdir fileprefix max-sdk-version");
             System.exit(1);
         }
 
@@ -47,6 +56,14 @@ public class SDKProcessor {
         Vector classes = getClassList(args[1]);
         String outdir = args[2];
         String generatedFilePrefix = args[3];
+        sMaxSdkVersion = Integer.parseInt(args[4]);
+
+        Properties props = System.getProperties();
+        props.setProperty("com.android.tools.lint.bindir",
+            new File(new File(sdkJar).getParentFile(), "../../tools").toString());
+
+        LintCliClient lintClient = new LintCliClient();
+        sApiLookup = ApiLookup.get(lintClient);
 
         // Start the clock!
         long s = System.currentTimeMillis();
@@ -125,7 +142,7 @@ public class SDKProcessor {
         System.out.println("SDK processing complete in " + (e - s) + "ms");
     }
 
-    private static Member[] sortMembers(Member[] members) {
+    private static Member[] sortAndFilterMembers(Member[] members) {
         Arrays.sort(members, new Comparator<Member>() {
             @Override
             public int compare(Member a, Member b) {
@@ -133,7 +150,31 @@ public class SDKProcessor {
             }
         });
 
-        return members;
+        ArrayList<Member> list = new ArrayList<>();
+        for (Member m : members) {
+            int version = 0;
+
+            if (m instanceof Method || m instanceof Constructor) {
+                version = sApiLookup.getCallVersion(Utils.getTypeSignatureStringForClass(m.getDeclaringClass()),
+                                                    m.getName(),
+                                                    Utils.getTypeSignatureStringForMember(m));
+            } else if (m instanceof Field) {
+                version = sApiLookup.getFieldVersion(Utils.getTypeSignatureStringForClass(m.getDeclaringClass()),
+                                                     m.getName());
+            } else {
+                throw new IllegalArgumentException("expected member to be Method, Constructor, or Field");
+            }
+
+            if (version > sMaxSdkVersion) {
+                System.out.println("Skipping " + m.getDeclaringClass().getName() + "." + m.getName() +
+                    ", version " + version + " > " + sMaxSdkVersion);
+                continue;
+            }
+
+            list.add(m);
+        }
+
+        return list.toArray(new Member[list.size()]);
     }
 
     private static void generateClass(Class<?> clazz,
@@ -145,9 +186,9 @@ public class SDKProcessor {
         CodeGenerator generator = new CodeGenerator(clazz, generatedName);
         stubInitializer.append("    ").append(generatedName).append("::InitStubs(jEnv);\n");
 
-        generator.generateMembers(sortMembers(clazz.getDeclaredConstructors()));
-        generator.generateMembers(sortMembers(clazz.getDeclaredMethods()));
-        generator.generateMembers(sortMembers(clazz.getDeclaredFields()));
+        generator.generateMembers(sortAndFilterMembers(clazz.getDeclaredConstructors()));
+        generator.generateMembers(sortAndFilterMembers(clazz.getDeclaredMethods()));
+        generator.generateMembers(sortAndFilterMembers(clazz.getDeclaredFields()));
 
         headerFile.append(generator.getHeaderFileContents());
         implementationFile.append(generator.getWrapperFileContents());
