@@ -13,6 +13,7 @@
 #include "nsTextFrameUtils.h"
 #include "nsFontMetrics.h"
 #include "nsDeviceContext.h"
+#include "nsUnicodeScriptCodes.h"
 
 using namespace mozilla;
 
@@ -678,6 +679,9 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         } else {
           // We fallback to the original character.
           ch2 = ch;
+          if (aMFR) {
+            aMFR->RecordScript(MOZ_SCRIPT_MATHEMATICAL_NOTATION);
+          }
         }
       }
     }
