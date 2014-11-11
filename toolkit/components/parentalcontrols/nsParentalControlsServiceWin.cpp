@@ -13,6 +13,9 @@
 #include "nsILocalFileWin.h"
 #include "nsArrayUtils.h"
 #include "nsIXULAppInfo.h"
+#include "mozilla/WindowsVersion.h"
+
+using namespace mozilla;
 
 static const CLSID CLSID_WinParentalControls = {0xE77CC89B,0x7401,0x4C04,{0x8C,0xED,0x14,0x9D,0xB3,0x5A,0xDD,0x04}};
 static const IID IID_IWinParentalControls  = {0x28B4D88B,0xE072,0x49E6,{0x80,0x4D,0x26,0xED,0xBE,0x21,0xA7,0xB9}};
@@ -47,8 +50,13 @@ nsParentalControlsService::nsParentalControlsService() :
 
   DWORD settings = 0;
   wpcs->GetRestrictions(&settings);
-  
-  if (settings) { // WPCFLAG_NO_RESTRICTION = 0
+
+  // If we can't determine specifically whether Web Filtering is on/off (i.e.
+  // we're on Windows < 8), then assume it's on unless no restrictions are set.
+  bool enable = IsWin8OrLater() ? settings & WPCFLAG_WEB_FILTERED
+                                : settings != WPCFLAG_NO_RESTRICTION;
+
+  if (enable) {
     gAdvAPIDLLInst = ::LoadLibrary("Advapi32.dll");
     if(gAdvAPIDLLInst)
     {
