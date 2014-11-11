@@ -417,6 +417,8 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     render: function() {
+      let cx = React.addons.classSet;
+
       let viewForItem = item => {
         return ContactDetail({key: item._guid, contact: item, 
                               handleContactAction: this.handleContactAction})
@@ -444,7 +446,6 @@ loop.contacts = (function(_, mozL10n) {
         }
       }
 
-      // TODO: bug 1076767 - add a spinner whilst importing contacts.
       return (
         React.DOM.div(null, 
           React.DOM.div({className: "content-area"}, 
@@ -453,7 +454,11 @@ loop.contacts = (function(_, mozL10n) {
                                ? mozL10n.get("importing_contacts_progress_button")
                                : mozL10n.get("import_contacts_button"), 
                       disabled: this.state.importBusy, 
-                      onClick: this.handleImportButtonClick}), 
+                      onClick: this.handleImportButtonClick}, 
+                React.DOM.div({className: cx({"contact-import-spinner": true,
+                                    spinner: true,
+                                    busy: this.state.importBusy})})
+              ), 
               Button({caption: mozL10n.get("new_contact_button"), 
                       onClick: this.handleAddContactButtonClick})
             ), 
