@@ -658,6 +658,9 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
       {
         tmp = selNode;
         selNode = GetNodeLocation(tmp, &selOffset);
+        // selNode might be null in case a mutation listener removed
+        // the stuff we just inserted from the DOM.
+        NS_ENSURE_STATE(selNode);
         ++selOffset;  // want to be *after* last leaf node in paste
       }
 
