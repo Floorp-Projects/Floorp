@@ -33,18 +33,18 @@ var FindHelper = {
 
   _findOpened: function() {
     Messaging.addListener((data) => {
-      this.doFind(data);
-      return this._getMatchesCountResult(data);
+      this.doFind(data.searchString, data.matchCase);
+      return this._getMatchesCountResult(data.searchString);
     }, "FindInPage:Find");
 
     Messaging.addListener((data) => {
-      this.findAgain(data, false);
-      return this._getMatchesCountResult(data);
+      this.findAgain(data.searchString, false, data.matchCase);
+      return this._getMatchesCountResult(data.searchString);
     }, "FindInPage:Next");
 
     Messaging.addListener((data) => {
-      this.findAgain(data, true);
-      return this._getMatchesCountResult(data);
+      this.findAgain(data.searchString, true, data.matchCase);
+      return this._getMatchesCountResult(data.searchString);
     }, "FindInPage:Prev");
   },
 
@@ -99,22 +99,24 @@ var FindHelper = {
     this._matchesCountResult = result;
   },
 
-  doFind: function(aSearchString) {
+  doFind: function(searchString, matchCase) {
     if (!this._finder) {
       this._init();
     }
 
-    this._finder.fastFind(aSearchString, false);
+    this._finder.caseSensitive = matchCase;
+    this._finder.fastFind(searchString, false);
   },
 
-  findAgain: function(aString, aFindBackwards) {
+  findAgain: function(searchString, findBackwards, matchCase) {
     // This can happen if the user taps next/previous after re-opening the search bar
     if (!this._finder) {
-      this.doFind(aString);
+      this.doFind(searchString, matchCase);
       return;
     }
 
-    this._finder.findAgain(aFindBackwards, false, false);
+    this._finder.caseSensitive = matchCase;
+    this._finder.findAgain(findBackwards, false, false);
   },
 
   onFindResult: function(aData) {
