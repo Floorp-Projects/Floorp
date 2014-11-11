@@ -220,7 +220,7 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const;
     void toString(nsAString& outStr) const;
 
-    void setScheme(const nsAString& aScheme);
+    void setScheme(const nsAString& aScheme, bool aAllowHttps = false);
     void setPort(const nsAString& aPort);
     void appendPath(const nsAString &aPath);
 
@@ -229,6 +229,7 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     nsString mHost;
     nsString mPort;
     nsString mPath;
+    bool     mAllowHttps;
 };
 
 /* =============== nsCSPKeywordSrc ============ */

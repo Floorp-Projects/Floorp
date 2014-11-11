@@ -29,4 +29,16 @@ class TestSession(marionette_test.MarionetteTestCase):
         self.assertIn("takesScreenshot", caps)
         self.assertIn("version", caps)
 
+    def test_we_can_get_the_session_id(self):
+        # Sends newSession
+        caps = self.marionette.start_session()
 
+        self.assertTrue(self.marionette.session_id is not None)
+        self.assertTrue(isinstance(self.marionette.session_id, unicode))
+
+    def test_we_can_set_the_session_id(self):
+        # Sends newSession
+        caps = self.marionette.start_session(session_id="ILoveCheese")
+
+        self.assertEqual(self.marionette.session_id, "ILoveCheese")
+        self.assertTrue(isinstance(self.marionette.session_id, unicode))

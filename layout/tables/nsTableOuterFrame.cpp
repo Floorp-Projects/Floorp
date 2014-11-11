@@ -493,7 +493,7 @@ ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
                   offsets.ComputedLogicalBorderPadding().Size(wm) -
                     offsets.ComputedLogicalPadding().Size(wm),
                   offsets.ComputedLogicalPadding().Size(wm),
-                  true);
+                  nsIFrame::ComputeSizeFlags::eShrinkWrap);
   if (aMarginResult)
     *aMarginResult = offsets.ComputedLogicalMargin().IStartEnd(wm);
   return size.ISize(wm) + offsets.ComputedLogicalMargin().IStartEnd(wm) +
