@@ -94,17 +94,24 @@ class ReftestRunner(MozbuildObject):
         return files[suite]
 
     def _find_manifest(self, suite, test_file):
+        """Return a tuple of (manifest-path, filter-string) for running test_file.
+
+        test_file can be a relative path to a single test file or manifest from
+        the top source directory, an absolute path to the same, or a directory
+        containing a manifest.
+        """
         assert test_file
         path_arg = self._wrap_path_argument(test_file)
         relpath = path_arg.relpath()
 
         if os.path.isdir(path_arg.srcdir_path()):
-            return mozpack.path.join(relpath, self._manifest_file(suite))
+            return (mozpack.path.join(relpath, self._manifest_file(suite)), None)
 
         if relpath.endswith('.list'):
-            return relpath
+            return (relpath, None)
 
-        raise Exception('Running a single test is not currently supported')
+        return (self._find_manifest(suite, mozpack.path.dirname(test_file))[0],
+                mozpack.path.basename(test_file))
 
     def _make_shell_string(self, s):
         return "'%s'" % re.sub("'", r"'\''", s)
@@ -137,9 +144,13 @@ class ReftestRunner(MozbuildObject):
             test_file = mozpack.path.relpath(os.path.abspath(test_file),
                                              self.topsrcdir)
 
-        manifest = self._find_manifest(suite, test_file)
+        (manifest, single_file_filter) = self._find_manifest(suite, test_file)
         if not os.path.exists(mozpack.path.join(self.topsrcdir, manifest)):
             raise Exception('No manifest file was found at %s.' % manifest)
+        if single_file_filter:
+            if filter:
+                raise Exception('Cannot run single files in conjunction with --filter')
+            filter = single_file_filter
 
         # Need to chdir to reftest_dir otherwise imports fail below.
         os.chdir(self.reftest_dir)
@@ -249,9 +260,13 @@ class ReftestRunner(MozbuildObject):
         extra_args = []
 
         if test_file:
-            path = self._find_manifest(suite, test_file)
+            (path, single_file_filter) = self._find_manifest(suite, test_file)
             if not os.path.exists(mozpack.path.join(self.topsrcdir, path)):
                 raise Exception('No manifest file was found at %s.' % path)
+            if single_file_filter:
+                if filter:
+                    raise Exception('Cannot run single files in conjunction with --filter')
+                filter = single_file_filter
             env[b'TEST_PATH'] = path
         if filter:
             extra_args.extend(['--filter', self._make_shell_string(filter)])
