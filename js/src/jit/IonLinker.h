@@ -82,10 +82,6 @@ class Linker
     }
 
     JitCode *newCodeForIonScript(JSContext *cx) {
-        // The caller must lock the runtime against interrupt requests, as the
-        // thread requesting an interrupt may use the executable allocator below.
-        MOZ_ASSERT(cx->runtime()->currentThreadOwnsInterruptLock());
-
         ExecutableAllocator *alloc = cx->runtime()->jitRuntime()->getIonAlloc(cx);
         if (!alloc)
             return nullptr;

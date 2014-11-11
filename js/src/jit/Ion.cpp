@@ -167,7 +167,7 @@ JitRuntime::JitRuntime()
     baselineDebugModeOSRHandler_(nullptr),
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
-    ionCodeProtected_(false),
+    mutatingBackedgeList_(false),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     jitcodeGlobalTable_(nullptr)
 {
@@ -191,7 +191,6 @@ bool
 JitRuntime::initialize(JSContext *cx)
 {
     MOZ_ASSERT(cx->runtime()->currentThreadHasExclusiveAccess());
-    MOZ_ASSERT(cx->runtime()->currentThreadOwnsInterruptLock());
 
     AutoCompartment ac(cx, cx->atomsCompartment());
 
@@ -366,8 +365,6 @@ JitRuntime::freeOsrTempData()
 ExecutableAllocator *
 JitRuntime::createIonAlloc(JSContext *cx)
 {
-    MOZ_ASSERT(cx->runtime()->currentThreadOwnsInterruptLock());
-
     ionAlloc_ = js_new<ExecutableAllocator>();
     if (!ionAlloc_)
         js_ReportOutOfMemory(cx);
@@ -375,76 +372,10 @@ JitRuntime::createIonAlloc(JSContext *cx)
 }
 
 void
-JitRuntime::ensureIonCodeProtected(JSRuntime *rt)
-{
-    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-
-    if (!rt->signalHandlersInstalled() || ionCodeProtected_ || !ionAlloc_)
-        return;
-
-    // Protect all Ion code in the runtime to trigger an access violation the
-    // next time any of it runs on the main thread.
-    ionAlloc_->toggleAllCodeAsAccessible(false);
-    ionCodeProtected_ = true;
-}
-
-bool
-JitRuntime::handleAccessViolation(JSRuntime *rt, void *faultingAddress)
-{
-    if (!rt->signalHandlersInstalled() || !ionAlloc_ || !ionAlloc_->codeContains((char *) faultingAddress))
-        return false;
-
-    // All places where the interrupt lock is taken must either ensure that Ion
-    // code memory won't be accessed within, or call ensureIonCodeAccessible to
-    // render the memory safe for accessing. Otherwise taking the lock below
-    // will deadlock the process.
-    MOZ_ASSERT(!rt->currentThreadOwnsInterruptLock());
-
-    // Taking this lock is necessary to prevent the interrupting thread from marking
-    // the memory as inaccessible while we are patching backedges. This will cause us
-    // to SEGV while still inside the signal handler, and the process will terminate.
-    JSRuntime::AutoLockForInterrupt lock(rt);
-
-    // Ion code in the runtime faulted after it was made inaccessible. Reset
-    // the code privileges and patch all loop backedges to perform an interrupt
-    // check instead.
-    ensureIonCodeAccessible(rt);
-    return true;
-}
-
-void
-JitRuntime::ensureIonCodeAccessible(JSRuntime *rt)
-{
-    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-
-    // This can only be called on the main thread and while handling signals,
-    // which happens on a separate thread in OS X.
-#ifndef XP_MACOSX
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-#endif
-
-    if (ionCodeProtected_) {
-        ionAlloc_->toggleAllCodeAsAccessible(true);
-        ionCodeProtected_ = false;
-    }
-
-    if (rt->hasPendingInterrupt()) {
-        // The interrupt handler needs to be invoked by this thread, but we may
-        // be inside a signal handler and have no idea what is above us on the
-        // stack (probably we are executing Ion code at an arbitrary point, but
-        // we could be elsewhere, say repatching a jump for an IonCache).
-        // Patch all backedges in the runtime so they will invoke the interrupt
-        // handler the next time they execute.
-        patchIonBackedges(rt, BackedgeInterruptCheck);
-    }
-}
-
-void
 JitRuntime::patchIonBackedges(JSRuntime *rt, BackedgeTarget target)
 {
-#ifndef XP_MACOSX
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-#endif
+    MOZ_ASSERT_IF(target == BackedgeLoopHeader, mutatingBackedgeList_);
+    MOZ_ASSERT_IF(target == BackedgeInterruptCheck, !mutatingBackedgeList_);
 
     // Patch all loop backedges in Ion code so that they either jump to the
     // normal loop header or to an interrupt handler each time they run.
@@ -457,47 +388,6 @@ JitRuntime::patchIonBackedges(JSRuntime *rt, BackedgeTarget target)
             PatchBackedge(patchableBackedge->backedge, patchableBackedge->loopHeader, target);
         else
             PatchBackedge(patchableBackedge->backedge, patchableBackedge->interruptCheck, target);
-    }
-}
-
-void
-jit::RequestInterruptForIonCode(JSRuntime *rt, JSRuntime::InterruptMode mode)
-{
-    JitRuntime *jitRuntime = rt->jitRuntime();
-    if (!jitRuntime)
-        return;
-
-    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-
-    // The mechanism for interrupting normal ion code varies depending on how
-    // the interrupt is being requested.
-    switch (mode) {
-      case JSRuntime::RequestInterruptMainThread:
-        // When requesting an interrupt from the main thread, Ion loop
-        // backedges can be patched directly. Make sure we don't segv while
-        // patching the backedges, to avoid deadlocking inside the signal
-        // handler.
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-        jitRuntime->ensureIonCodeAccessible(rt);
-        break;
-
-      case JSRuntime::RequestInterruptAnyThread:
-        // When requesting an interrupt from off the main thread, protect
-        // Ion code memory so that the main thread will fault and enter a
-        // signal handler when trying to execute the code. The signal
-        // handler will unprotect the code and patch loop backedges so
-        // that the interrupt handler is invoked afterwards.
-        jitRuntime->ensureIonCodeProtected(rt);
-        break;
-
-      case JSRuntime::RequestInterruptAnyThreadDontStopIon:
-      case JSRuntime::RequestInterruptAnyThreadForkJoin:
-        // The caller does not require Ion code to be interrupted.
-        // Nothing more needs to be done.
-        break;
-
-      default:
-        MOZ_CRASH("Bad interrupt mode");
     }
 }
 
@@ -870,10 +760,6 @@ JitCode::trace(JSTracer *trc)
 void
 JitCode::finalize(FreeOp *fop)
 {
-    // Make sure this can't race with an interrupting thread, which may try
-    // to read the contents of the pool we are releasing references in.
-    MOZ_ASSERT(fop->runtime()->currentThreadOwnsInterruptLock());
-
     // If this jitcode has a bytecode map, de-register it.
     if (hasBytecodeMap_) {
         MOZ_ASSERT(fop->runtime()->jitRuntime()->hasJitcodeGlobalTable());
@@ -883,7 +769,7 @@ JitCode::finalize(FreeOp *fop)
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
     // Don't do this if the Ion code is protected, as the signal handler will
     // deadlock trying to reacquire the interrupt lock.
-    if (fop->runtime()->jitRuntime() && !fop->runtime()->jitRuntime()->ionCodeProtected())
+    if (fop->runtime()->jitRuntime())
         memset(code_, JS_SWEPT_CODE_PATTERN, bufferSize_);
     code_ = nullptr;
 
@@ -1144,6 +1030,9 @@ IonScript::copyPatchableBackedges(JSContext *cx, JitCode *code,
                                   PatchableBackedgeInfo *backedges,
                                   MacroAssembler &masm)
 {
+    JitRuntime *jrt = cx->runtime()->jitRuntime();
+    JitRuntime::AutoMutateBackedges amb(jrt);
+
     for (size_t i = 0; i < backedgeEntries_; i++) {
         PatchableBackedgeInfo &info = backedges[i];
         PatchableBackedge *patchableBackedge = &backedgeList()[i];
@@ -1167,7 +1056,7 @@ IonScript::copyPatchableBackedges(JSContext *cx, JitCode *code,
         else
             PatchBackedge(backedge, loopHeader, JitRuntime::BackedgeLoopHeader);
 
-        cx->runtime()->jitRuntime()->addPatchableBackedge(patchableBackedge);
+        jrt->addPatchableBackedge(patchableBackedge);
     }
 }
 
@@ -1358,11 +1247,10 @@ IonScript::unlinkFromRuntime(FreeOp *fop)
     // The writes to the executable buffer below may clobber backedge jumps, so
     // make sure that those backedges are unlinked from the runtime and not
     // reclobbered with garbage if an interrupt is requested.
-    JSRuntime *rt = fop->runtime();
-    for (size_t i = 0; i < backedgeEntries_; i++) {
-        PatchableBackedge *backedge = &backedgeList()[i];
-        rt->jitRuntime()->removePatchableBackedge(backedge);
-    }
+    JitRuntime *jrt = fop->runtime()->jitRuntime();
+    JitRuntime::AutoMutateBackedges amb(jrt);
+    for (size_t i = 0; i < backedgeEntries_; i++)
+        jrt->removePatchableBackedge(&backedgeList()[i]);
 
     // Clear the list of backedges, so that this method is idempotent. It is
     // called during destruction, and may be additionally called when the

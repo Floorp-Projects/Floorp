@@ -826,10 +826,6 @@ class AsmJSModule
     bool                                  profilingEnabled_;
     bool                                  interrupted_;
 
-    // This field is accessed concurrently when requesting an interrupt.
-    // Access must be synchronized via the runtime's interrupt lock.
-    mutable bool                          codeIsProtected_;
-
     void restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer);
     void restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer, uint8_t *prevCode,
                                ExclusiveContext *cx);
@@ -1529,12 +1525,6 @@ class AsmJSModule
         MOZ_ASSERT(isDynamicallyLinked());
         interrupted_ = interrupted;
     }
-
-    // Additionally, these functions may only be called while holding the
-    // runtime's interrupt lock.
-    void protectCode(JSRuntime *rt) const;
-    void unprotectCode(JSRuntime *rt) const;
-    bool codeIsProtected(JSRuntime *rt) const;
 };
 
 // Store the just-parsed module in the cache using AsmJSCacheOps.
