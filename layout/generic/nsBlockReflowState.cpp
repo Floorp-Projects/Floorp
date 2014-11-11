@@ -641,7 +641,7 @@ FloatMarginISize(const nsHTMLReflowState& aCBReflowState,
               aFloatOffsetState.ComputedLogicalBorderPadding().Size(wm) -
                 aFloatOffsetState.ComputedLogicalPadding().Size(wm),
               aFloatOffsetState.ComputedLogicalPadding().Size(wm),
-              true);
+              nsIFrame::ComputeSizeFlags::eShrinkWrap);
 
   return floatSize.ISize(wm) +
          aFloatOffsetState.ComputedLogicalMargin().IStartEnd(wm) +

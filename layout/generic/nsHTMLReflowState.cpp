@@ -1461,9 +1461,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   bool widthIsAuto = eStyleUnit_Auto == mStylePosition->mWidth.GetUnit();
   bool heightIsAuto = eStyleUnit_Auto == mStylePosition->mHeight.GetUnit();
 
-  uint32_t computeSizeFlags = 0;
+  typedef nsIFrame::ComputeSizeFlags ComputeSizeFlags;
+  ComputeSizeFlags computeSizeFlags = ComputeSizeFlags::eDefault;
   if (leftIsAuto || rightIsAuto) {
-    computeSizeFlags |= nsIFrame::eShrinkWrap;
+    computeSizeFlags =
+      ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
   }
 
   {
@@ -2117,7 +2119,9 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       AutoMaybeDisableFontInflation an(frame);
 
       bool isBlock = NS_CSS_FRAME_TYPE_BLOCK == NS_FRAME_GET_TYPE(mFrameType);
-      uint32_t computeSizeFlags = isBlock ? 0 : nsIFrame::eShrinkWrap;
+      typedef nsIFrame::ComputeSizeFlags ComputeSizeFlags;
+      ComputeSizeFlags computeSizeFlags =
+        isBlock ? ComputeSizeFlags::eDefault : ComputeSizeFlags::eShrinkWrap;
 
       // Make sure legend frames with display:block and width:auto still
       // shrink-wrap.
@@ -2126,17 +2130,20 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
             frame->StyleContext()->GetPseudo() != nsCSSAnonBoxes::scrolledContent) ||
            (aFrameType == nsGkAtoms::scrollFrame &&
             frame->GetContentInsertionFrame()->GetType() == nsGkAtoms::legendFrame))) {
-        computeSizeFlags |= nsIFrame::eShrinkWrap;
+        computeSizeFlags =
+          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
       }
 
       const nsFlexContainerFrame* flexContainerFrame = GetFlexContainer(frame);
       if (flexContainerFrame) {
-        computeSizeFlags |= nsIFrame::eShrinkWrap;
+        computeSizeFlags =
+          ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
 
         // If we're inside of a flex container that needs to measure our
         // auto height, pass that information along to ComputeSize().
         if (mFlags.mIsFlexContainerMeasuringHeight) {
-          computeSizeFlags |= nsIFrame::eUseAutoHeight;
+          computeSizeFlags =
+            ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eUseAutoHeight);
         }
       } else {
         MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringHeight,

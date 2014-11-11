@@ -184,7 +184,7 @@ protected:
               const mozilla::LogicalSize& aMargin,
               const mozilla::LogicalSize& aBorder,
               const mozilla::LogicalSize& aPadding,
-              uint32_t aFlags) MOZ_OVERRIDE;
+              ComputeSizeFlags aFlags) MOZ_OVERRIDE;
 
   bool IsServerImageMap();
 

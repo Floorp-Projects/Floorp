@@ -30,6 +30,7 @@ using namespace js::jit;
 
 BaselineCompiler::BaselineCompiler(JSContext *cx, TempAllocator &alloc, JSScript *script)
   : BaselineCompilerSpecific(cx, alloc, script),
+    yieldOffsets_(cx),
     modifiesArguments_(false)
 {
 }
@@ -186,7 +187,8 @@ BaselineCompiler::compile()
                                                          icEntries_.length(),
                                                          pcMappingIndexEntries.length(),
                                                          pcEntries.length(),
-                                                         bytecodeTypeMapEntries);
+                                                         bytecodeTypeMapEntries,
+                                                         yieldOffsets_.length());
     if (!baselineScript)
         return Method_Error;
 
@@ -242,6 +244,8 @@ BaselineCompiler::compile()
     // The last entry in the last index found, and is used to avoid binary
     // searches for the sought entry when queries are in linear order.
     bytecodeMap[script->nTypeSets()] = 0;
+
+    baselineScript->copyYieldEntries(script, yieldOffsets_);
 
     if (script->compartment()->debugMode())
         baselineScript->setDebugMode();
@@ -496,7 +500,7 @@ bool
 BaselineCompiler::emitStackCheck(bool earlyCheck)
 {
     Label skipCall;
-    void *limitAddr = cx->runtime()->mainThread.addressOfJitStackLimit();
+    uintptr_t *limitAddr = &cx->runtime()->mainThread.jitStackLimit;
     uint32_t slotsSize = script->nslots() * sizeof(Value);
     uint32_t tolerance = earlyCheck ? slotsSize : 0;
 
@@ -646,7 +650,7 @@ BaselineCompiler::emitInterruptCheck()
     frame.syncStack(0);
 
     Label done;
-    void *interrupt = cx->runtimeAddressOfInterruptUint32();
+    void *interrupt = (void *)&cx->runtime()->interrupt;
     masm.branch32(Assembler::Equal, AbsoluteAddress(interrupt), Imm32(0), &done);
 
     prepareVMCall();
@@ -3234,4 +3238,119 @@ BaselineCompiler::emit_JSOP_REST()
     // Mark R0 as pushed stack value.
     frame.push(R0);
     return true;
+}
+
+typedef JSObject *(*CreateGeneratorFn)(JSContext *, BaselineFrame *);
+static const VMFunction CreateGeneratorInfo = FunctionInfo<CreateGeneratorFn>(jit::CreateGenerator);
+
+bool
+BaselineCompiler::emit_JSOP_GENERATOR()
+{
+    MOZ_ASSERT(frame.stackDepth() == 0);
+
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+    if (!callVM(CreateGeneratorInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}
+
+bool
+BaselineCompiler::addYieldOffset()
+{
+    MOZ_ASSERT(*pc == JSOP_INITIALYIELD || *pc == JSOP_YIELD);
+
+    uint32_t yieldIndex = GET_UINT24(pc);
+
+    while (yieldIndex >= yieldOffsets_.length()) {
+        if (!yieldOffsets_.append(0))
+            return false;
+    }
+
+    static_assert(JSOP_INITIALYIELD_LENGTH == JSOP_YIELD_LENGTH,
+                  "code below assumes INITIALYIELD and YIELD have same length");
+    yieldOffsets_[yieldIndex] = script->pcToOffset(pc + JSOP_YIELD_LENGTH);
+    return true;
+}
+
+typedef bool (*InitialSuspendFn)(JSContext *, HandleObject, BaselineFrame *, jsbytecode *);
+static const VMFunction InitialSuspendInfo = FunctionInfo<InitialSuspendFn>(jit::InitialSuspend);
+
+bool
+BaselineCompiler::emit_JSOP_INITIALYIELD()
+{
+    if (!addYieldOffset())
+        return false;
+
+    frame.syncStack(0);
+
+    // Store generator in R0, BaselineFrame pointer in R1.
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
+    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+
+    prepareVMCall();
+    pushArg(ImmPtr(pc));
+    pushArg(R1.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(InitialSuspendInfo))
+        return false;
+
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), JSReturnOperand);
+    return emitReturn();
+}
+
+typedef bool (*NormalSuspendFn)(JSContext *, HandleObject, BaselineFrame *, jsbytecode *, uint32_t);
+static const VMFunction NormalSuspendInfo = FunctionInfo<NormalSuspendFn>(jit::NormalSuspend);
+
+bool
+BaselineCompiler::emit_JSOP_YIELD()
+{
+    if (!addYieldOffset())
+        return false;
+
+    // Store generator in R0, BaselineFrame pointer in R1.
+    frame.popRegsAndSync(1);
+    masm.unboxObject(R0, R0.scratchReg());
+    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+
+    prepareVMCall();
+    pushArg(Imm32(frame.stackDepth()));
+    pushArg(ImmPtr(pc));
+    pushArg(R1.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(NormalSuspendInfo))
+        return false;
+
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), JSReturnOperand);
+    return emitReturn();
+}
+
+typedef bool (*FinalSuspendFn)(JSContext *, HandleObject, BaselineFrame *, jsbytecode *);
+static const VMFunction FinalSuspendInfo = FunctionInfo<FinalSuspendFn>(jit::FinalSuspend);
+
+bool
+BaselineCompiler::emit_JSOP_FINALYIELDRVAL()
+{
+    // Store generator in R0, BaselineFrame pointer in R1.
+    frame.popRegsAndSync(1);
+    masm.unboxObject(R0, R0.scratchReg());
+    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+
+    prepareVMCall();
+    pushArg(ImmPtr(pc));
+    pushArg(R1.scratchReg());
+    pushArg(R0.scratchReg());
+
+    if (!callVM(FinalSuspendInfo))
+        return false;
+
+    masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
+    return emitReturn();
 }
