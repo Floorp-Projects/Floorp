@@ -360,21 +360,27 @@ Promise::MaybeReject(const nsRefPtr<MediaStreamError>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
 }
 
-void
+bool
 Promise::PerformMicroTaskCheckpoint()
 {
   CycleCollectedJSRuntime* runtime = CycleCollectedJSRuntime::Get();
   nsTArray<nsRefPtr<nsIRunnable>>& microtaskQueue =
     runtime->GetPromiseMicroTaskQueue();
 
-  while (!microtaskQueue.IsEmpty()) {
+  if (microtaskQueue.IsEmpty()) {
+    return false;
+  }
+
+  do {
     nsRefPtr<nsIRunnable> runnable = microtaskQueue.ElementAt(0);
     MOZ_ASSERT(runnable);
 
     // This function can re-enter, so we remove the element before calling.
     microtaskQueue.RemoveElementAt(0);
     runnable->Run();
-  }
+  } while (!microtaskQueue.IsEmpty());
+
+  return true;
 }
 
 /* static */ bool
