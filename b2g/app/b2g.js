@@ -26,6 +26,8 @@ pref("browser.sessionstore.max_tabs_undo", 0);
 pref("browser.sessionstore.max_windows_undo", 0);
 pref("browser.sessionstore.restore_on_demand", false);
 pref("browser.sessionstore.resume_from_crash", false);
+// No e10s on mulet
+pref("browser.tabs.remote.autostart.1", false);
 #endif
 
 // Bug 945235: Prevent all bars to be considered visible:

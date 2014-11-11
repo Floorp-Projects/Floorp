@@ -1566,3 +1566,85 @@ add_test(function test_pnn_with_different_coding_scheme() {
 
   run_next_test();
 });
+
+/**
+ * Verify reading EF_PNN with different content.
+ */
+add_test(function test_pnn_with_different_content() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let record = context.SimRecordHelper;
+  let pduHelper = context.GsmPDUHelper;
+  let ril = context.RIL;
+  let buf = context.Buf;
+  let io = context.ICCIOHelper;
+
+  let test_data = [{
+    // [0]: {"fullName":"Test1","shortName":"Test1"}
+    pnn: [0x43, 0x06, 0x85, 0xD4, 0xF2, 0x9C, 0x1E, 0x03,
+          0x45, 0x06, 0x85, 0xD4, 0xF2, 0x9C, 0x1E, 0x03],
+    expectedResult: {"fullName": "Test1","shortName": "Test1"}
+  },{
+    // [1]: {"fullName":"Test2"}
+    pnn: [0x43, 0x06, 0x85, 0xD4, 0xF2, 0x9C, 0x2E, 0x03],
+    expectedResult: {"fullName": "Test2"}
+  },{
+    // [2]: undefined
+    pnn: [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+  },{
+    // [3]: {"fullName": "Test4"}
+    pnn: [0x43, 0x06, 0x85, 0xD4, 0xF2, 0x9C, 0x4E, 0x03],
+    expectedResult: {"fullName": "Test4"}
+  },{
+    // [4]: undefined
+    pnn: [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF],
+  }];
+
+  function do_test_pnn() {
+    ril.iccIO = function fakeIccIO(options) {
+      let index = options.p1 - 1;
+      let pnn = test_data[index].pnn;
+
+      // Write data size.
+      buf.writeInt32(pnn.length * 2);
+
+      // Write data.
+      for (let i = 0; i < pnn.length; i++) {
+        pduHelper.writeHexOctet(pnn[i]);
+      }
+
+      // Write string delimiter.
+      buf.writeStringDelimiter(pnn.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      options.p1 = 1;
+      options.totalRecords = test_data.length;
+
+      ril.iccIO(options);
+    };
+
+    record.readPNN();
+
+    do_check_eq(test_data.length, ril.iccInfoPrivate.PNN.length);
+    for (let i = 0; i < test_data.length; i++) {
+      if (test_data[i].expectedResult) {
+        do_check_eq(test_data[i].expectedResult.fullName,
+                    ril.iccInfoPrivate.PNN[i].fullName);
+        do_check_eq(test_data[i].expectedResult.shortName,
+                    ril.iccInfoPrivate.PNN[i].shortName);
+      } else {
+        do_check_eq(test_data[i].expectedResult, ril.iccInfoPrivate.PNN[i]);
+      }
+    }
+  }
+
+  ril.appType = CARD_APPTYPE_SIM;
+  do_test_pnn();
+
+  run_next_test();
+});
