@@ -19,6 +19,7 @@ describe("loop.store.RoomStore", function () {
   "use strict";
 
   var sharedActions = loop.shared.actions;
+  var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher;
 
   var fakeRoomList = [{
@@ -270,6 +271,20 @@ describe("loop.store.RoomStore", function () {
 
         sinon.assert.calledOnce(copyString);
         sinon.assert.calledWithExactly(copyString, "http://invalid");
+      });
+    });
+
+    describe("#emailRoomUrl", function() {
+      it("should call composeCallUrlEmail to email the url", function() {
+        sandbox.stub(sharedUtils, "composeCallUrlEmail");
+
+        store.emailRoomUrl(new sharedActions.EmailRoomUrl({
+          roomUrl: "http://invalid"
+        }));
+
+        sinon.assert.calledOnce(sharedUtils.composeCallUrlEmail);
+        sinon.assert.calledWithExactly(sharedUtils.composeCallUrlEmail,
+          "http://invalid");
       });
     });
 

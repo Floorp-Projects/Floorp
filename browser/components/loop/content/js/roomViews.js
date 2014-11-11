@@ -48,10 +48,10 @@ loop.roomViews = (function(mozL10n) {
 
     getInitialState: function() {
       var storeState = this.props.roomStore.getStoreState("activeRoom");
-      return _.extend(storeState, {
+      return _.extend({
         // Used by the UI showcase.
         roomState: this.props.roomState || storeState.roomState
-      });
+      }, storeState);
     }
   };
 
@@ -65,6 +65,12 @@ loop.roomViews = (function(mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
+    getInitialState: function() {
+      return {
+        copiedUrl: false
+      }
+    },
+
     handleFormSubmit: function(event) {
       event.preventDefault();
       // XXX
@@ -72,12 +78,18 @@ loop.roomViews = (function(mozL10n) {
 
     handleEmailButtonClick: function(event) {
       event.preventDefault();
-      // XXX
+
+      this.props.dispatcher.dispatch(
+        new sharedActions.EmailRoomUrl({roomUrl: this.state.roomUrl}));
     },
 
     handleCopyButtonClick: function(event) {
       event.preventDefault();
-      // XXX
+
+      this.props.dispatcher.dispatch(
+        new sharedActions.CopyRoomUrl({roomUrl: this.state.roomUrl}));
+
+      this.setState({copiedUrl: true});
     },
 
     render: function() {
@@ -95,7 +107,8 @@ loop.roomViews = (function(mozL10n) {
             ), 
             React.DOM.button({className: "btn btn-info btn-copy", 
                     onClick: this.handleCopyButtonClick}, 
-              mozL10n.get("copy_url_button2")
+              this.state.copiedUrl ? mozL10n.get("copied_url_button") :
+                                      mozL10n.get("copy_url_button2")
             )
           )
         )
