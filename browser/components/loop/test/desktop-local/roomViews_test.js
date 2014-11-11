@@ -81,13 +81,13 @@ describe("loop.roomViews", function () {
     });
   });
 
-  describe("DesktopRoomControllerView", function() {
+  describe("DesktopRoomConversationView", function() {
     var view;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
-        new loop.roomViews.DesktopRoomControllerView({
-          mozLoop: {},
+        new loop.roomViews.DesktopRoomConversationView({
+          dispatcher: dispatcher,
           roomStore: roomStore
         }));
     }
