@@ -173,6 +173,7 @@ namespace jit {
     _(JSOP_MOREITER)           \
     _(JSOP_ISNOITER)           \
     _(JSOP_ENDITER)            \
+    _(JSOP_GENERATOR)          \
     _(JSOP_CALLEE)             \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
