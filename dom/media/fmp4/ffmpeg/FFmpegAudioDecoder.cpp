@@ -25,6 +25,8 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   , mConfig(aConfig)
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
+  mExtraData.append(aConfig.audio_specific_config.begin(),
+                    aConfig.audio_specific_config.length());
 }
 
 nsresult
@@ -85,19 +87,6 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 void
 FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
 {
-  // Prepend ADTS header to AAC audio.
-  if (!strcmp(mConfig.mime_type, "audio/mp4a-latm")) {
-    bool rv = mp4_demuxer::Adts::ConvertSample(mConfig.channel_count,
-                                               mConfig.frequency_index,
-                                               mConfig.aac_profile,
-                                               aSample);
-    if (!rv) {
-      NS_ERROR("Failed to apply ADTS header");
-      mCallback->Error();
-      return;
-    }
-  }
-
   AVPacket packet;
   av_init_packet(&packet);
 
