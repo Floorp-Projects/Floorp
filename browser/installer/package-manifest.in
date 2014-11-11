@@ -922,3 +922,10 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/clang_rt.asan_dynamic-i386.dll
 #endif
 #endif
+
+
+; media
+#ifdef MOZ_EME
+@BINPATH@/gmp-clearkey/0.1/@DLL_PREFIX@clearkey@DLL_SUFFIX@
+@BINPATH@/gmp-clearkey/0.1/clearkey.info
+#endif
