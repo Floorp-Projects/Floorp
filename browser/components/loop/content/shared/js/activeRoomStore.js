@@ -20,10 +20,12 @@ loop.store.ActiveRoomStore = (function() {
     READY: "room-ready",
     // The room is known to be joined on the loop-server
     JOINED: "room-joined",
+    // The room is connected to the sdk server.
+    SESSION_CONNECTED: "room-session-connected",
+    // There are participants in the room.
+    HAS_PARTICIPANTS: "room-has-participants",
     // There was an issue with the room
-    FAILED: "room-failed",
-    // XXX to be implemented in bug 1074686/1074702
-    HAS_PARTICIPANTS: "room-has-participants"
+    FAILED: "room-failed"
   };
 
   /**
@@ -51,6 +53,11 @@ loop.store.ActiveRoomStore = (function() {
     }
     this._mozLoop = options.mozLoop;
 
+    if (!options.sdkDriver) {
+      throw new Error("Missing option sdkDriver");
+    }
+    this._sdkDriver = options.sdkDriver;
+
     // XXX Further actions are registered in setupWindowData and
     // fetchServerData when we know what window type this is. At some stage,
     // we might want to consider store mixins or some alternative which
@@ -73,7 +80,9 @@ loop.store.ActiveRoomStore = (function() {
      *                            otherwise it will be unset.
      */
     this._storeState = {
-      roomState: ROOM_STATES.INIT
+      roomState: ROOM_STATES.INIT,
+      audioMuted: false,
+      videoMuted: false
     };
   }
 
@@ -121,6 +130,11 @@ loop.store.ActiveRoomStore = (function() {
         "updateRoomInfo",
         "joinRoom",
         "joinedRoom",
+        "connectedToSdkServers",
+        "connectionFailure",
+        "setMute",
+        "remotePeerDisconnected",
+        "remotePeerConnected",
         "windowUnload",
         "leaveRoom"
       ]);
@@ -245,6 +259,57 @@ loop.store.ActiveRoomStore = (function() {
       });
 
       this._setRefreshTimeout(actionData.expires);
+      this._sdkDriver.connectSession(actionData);
+    },
+
+    /**
+     * Handles recording when the sdk has connected to the servers.
+     */
+    connectedToSdkServers: function() {
+      this.setStoreState({
+        roomState: ROOM_STATES.SESSION_CONNECTED
+      });
+    },
+
+    /**
+     * Handles disconnection of this local client from the sdk servers.
+     */
+    connectionFailure: function() {
+      // Treat all reasons as something failed. In theory, clientDisconnected
+      // could be a success case, but there's no way we should be intentionally
+      // sending that and still have the window open.
+      this._leaveRoom(ROOM_STATES.FAILED);
+    },
+
+    /**
+     * Records the mute state for the stream.
+     *
+     * @param {sharedActions.setMute} actionData The mute state for the stream type.
+     */
+    setMute: function(actionData) {
+      var muteState = {};
+      muteState[actionData.type + "Muted"] = !actionData.enabled;
+      this.setStoreState(muteState);
+    },
+
+    /**
+     * Handles recording when a remote peer has connected to the servers.
+     */
+    remotePeerConnected: function() {
+      this.setStoreState({
+        roomState: ROOM_STATES.HAS_PARTICIPANTS
+      });
+    },
+
+    /**
+     * Handles a remote peer disconnecting from the session.
+     */
+    remotePeerDisconnected: function() {
+      // As we only support two users at the moment, we just set this
+      // back to joined.
+      this.setStoreState({
+        roomState: ROOM_STATES.SESSION_CONNECTED
+      });
     },
 
     /**
@@ -292,22 +357,27 @@ loop.store.ActiveRoomStore = (function() {
     /**
      * Handles leaving a room. Clears any membership timeouts, then
      * signals to the server the leave of the room.
+     *
+     * @param {ROOM_STATES} nextState Optional; the next state to switch to.
+     *                                Switches to READY if undefined.
      */
-    _leaveRoom: function() {
-      if (this._storeState.roomState !== ROOM_STATES.JOINED) {
-        return;
-      }
+    _leaveRoom: function(nextState) {
+      this._sdkDriver.disconnectSession();
 
       if (this._timeout) {
         clearTimeout(this._timeout);
         delete this._timeout;
       }
 
-      this._mozLoop.rooms.leave(this._storeState.roomToken,
-        this._storeState.sessionToken);
+      if (this._storeState.roomState === ROOM_STATES.JOINED ||
+          this._storeState.roomState === ROOM_STATES.SESSION_CONNECTED ||
+          this._storeState.roomState === ROOM_STATES.HAS_PARTICIPANTS) {
+        this._mozLoop.rooms.leave(this._storeState.roomToken,
+          this._storeState.sessionToken);
+      }
 
       this.setStoreState({
-        roomState: ROOM_STATES.READY
+        roomState: nextState ? nextState : ROOM_STATES.READY
       });
     }
 

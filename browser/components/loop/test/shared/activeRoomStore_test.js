@@ -7,7 +7,7 @@ describe("loop.store.ActiveRoomStore", function () {
   "use strict";
 
   var ROOM_STATES = loop.store.ROOM_STATES;
-  var sandbox, dispatcher, store, fakeMozLoop;
+  var sandbox, dispatcher, store, fakeMozLoop, fakeSdkDriver;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -25,8 +25,16 @@ describe("loop.store.ActiveRoomStore", function () {
       }
     };
 
-    store = new loop.store.ActiveRoomStore(
-      {mozLoop: fakeMozLoop, dispatcher: dispatcher});
+    fakeSdkDriver = {
+      connectSession: sandbox.stub(),
+      disconnectSession: sandbox.stub()
+    };
+
+    store = new loop.store.ActiveRoomStore({
+      dispatcher: dispatcher,
+      mozLoop: fakeMozLoop,
+      sdkDriver: fakeSdkDriver
+    });
   });
 
   afterEach(function() {
@@ -44,6 +52,12 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(function() {
         new loop.store.ActiveRoomStore({dispatcher: dispatcher});
       }).to.Throw(/mozLoop/);
+    });
+
+    it("should throw an error if sdkDriver is missing", function() {
+      expect(function() {
+        new loop.store.ActiveRoomStore({dispatcher: dispatcher, mozLoop: {}});
+      }).to.Throw(/sdkDriver/);
     });
   });
 
@@ -281,6 +295,16 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(state.sessionId).eql(fakeJoinedData.sessionId);
     });
 
+    it("should start the session connection with the sdk", function() {
+      var actionData = new sharedActions.JoinedRoom(fakeJoinedData);
+
+      store.joinedRoom(actionData);
+
+      sinon.assert.calledOnce(fakeSdkDriver.connectSession);
+      sinon.assert.calledWithExactly(fakeSdkDriver.connectSession,
+        actionData);
+    });
+
     it("should call mozLoop.rooms.refreshMembership before the expiresTime",
       function() {
         store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
@@ -330,6 +354,93 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
+  describe("#connectedToSdkServers", function() {
+    it("should set the state to `SESSION_CONNECTED`", function() {
+      store.connectedToSdkServers(new sharedActions.ConnectedToSdkServers());
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.SESSION_CONNECTED);
+    });
+  });
+
+  describe("#connectionFailure", function() {
+    beforeEach(function() {
+      store.setStoreState({
+        roomState: ROOM_STATES.JOINED,
+        roomToken: "fakeToken",
+        sessionToken: "1627384950"
+      });
+    });
+
+    it("should disconnect from the servers via the sdk", function() {
+      store.connectionFailure();
+
+      sinon.assert.calledOnce(fakeSdkDriver.disconnectSession);
+    });
+
+    it("should clear any existing timeout", function() {
+      sandbox.stub(window, "clearTimeout");
+      store._timeout = {};
+
+      store.connectionFailure();
+
+      sinon.assert.calledOnce(clearTimeout);
+    });
+
+    it("should call mozLoop.rooms.leave", function() {
+      store.connectionFailure();
+
+      sinon.assert.calledOnce(fakeMozLoop.rooms.leave);
+      sinon.assert.calledWithExactly(fakeMozLoop.rooms.leave,
+        "fakeToken", "1627384950");
+    });
+
+    it("should set the state to `FAILED`", function() {
+      store.connectionFailure();
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.FAILED);
+    });
+  });
+
+  describe("#setMute", function() {
+    it("should save the mute state for the audio stream", function() {
+      store.setStoreState({audioMuted: false});
+
+      store.setMute(new sharedActions.SetMute({
+        type: "audio",
+        enabled: true
+      }));
+
+      expect(store.getStoreState().audioMuted).eql(false);
+    });
+
+    it("should save the mute state for the video stream", function() {
+      store.setStoreState({videoMuted: true});
+
+      store.setMute(new sharedActions.SetMute({
+        type: "video",
+        enabled: false
+      }));
+
+      expect(store.getStoreState().videoMuted).eql(true);
+    });
+  });
+
+  describe("#remotePeerConnected", function() {
+    it("should set the state to `HAS_PARTICIPANTS`", function() {
+      store.remotePeerConnected();
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.HAS_PARTICIPANTS);
+    });
+  });
+
+  describe("#remotePeerDisconnected", function() {
+    it("should set the state to `SESSION_CONNECTED`", function() {
+      store.remotePeerDisconnected();
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.SESSION_CONNECTED);
+    });
+  });
+
   describe("#windowUnload", function() {
     beforeEach(function() {
       store.setStoreState({
@@ -337,6 +448,12 @@ describe("loop.store.ActiveRoomStore", function () {
         roomToken: "fakeToken",
         sessionToken: "1627384950"
       });
+    });
+
+    it("should disconnect from the servers via the sdk", function() {
+      store.windowUnload();
+
+      sinon.assert.calledOnce(fakeSdkDriver.disconnectSession);
     });
 
     it("should clear any existing timeout", function() {
@@ -370,6 +487,12 @@ describe("loop.store.ActiveRoomStore", function () {
         roomToken: "fakeToken",
         sessionToken: "1627384950"
       });
+    });
+
+    it("should disconnect from the servers via the sdk", function() {
+      store.leaveRoom();
+
+      sinon.assert.calledOnce(fakeSdkDriver.disconnectSession);
     });
 
     it("should clear any existing timeout", function() {
