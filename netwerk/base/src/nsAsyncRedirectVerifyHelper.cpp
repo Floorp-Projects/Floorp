@@ -258,8 +258,17 @@ nsAsyncRedirectVerifyHelper::IsOldChannelCanceled()
         do_QueryInterface(mOldChan);
     if (oldChannelInternal) {
         oldChannelInternal->GetCanceled(&canceled);
-        if (canceled)
+        if (canceled) {
             return true;
+        }
+    } else if (mOldChan) {
+        // For non-HTTP channels check on the status, failure
+        // indicates the channel has probably been canceled.
+        nsresult status = NS_ERROR_FAILURE;
+        mOldChan->GetStatus(&status);
+        if (NS_FAILED(status)) {
+            return true;
+        }
     }
 
     return false;
