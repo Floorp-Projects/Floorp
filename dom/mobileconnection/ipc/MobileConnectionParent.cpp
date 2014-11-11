@@ -538,12 +538,6 @@ MobileConnectionRequestParent::NotifySuccess()
 }
 
 NS_IMETHODIMP
-MobileConnectionRequestParent::NotifySuccessWithString(const nsAString& aResult)
-{
-  return SendReply(MobileConnectionReplySuccessString(nsAutoString(aResult)));
-}
-
-NS_IMETHODIMP
 MobileConnectionRequestParent::NotifySuccessWithBoolean(bool aResult)
 {
   return SendReply(MobileConnectionReplySuccessBoolean(aResult));
@@ -646,6 +640,12 @@ NS_IMETHODIMP
 MobileConnectionRequestParent::NotifyGetPreferredNetworkTypeSuccess(int32_t aType)
 {
   return SendReply(MobileConnectionReplySuccessPreferredNetworkType(aType));
+}
+
+NS_IMETHODIMP
+MobileConnectionRequestParent::NotifyGetRoamingPreferenceSuccess(int32_t aMode)
+{
+  return SendReply(MobileConnectionReplySuccessRoamingPreference(aMode));
 }
 
 NS_IMETHODIMP

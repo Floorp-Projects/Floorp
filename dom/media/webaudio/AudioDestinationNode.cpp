@@ -39,22 +39,11 @@ public:
                                float aSampleRate)
     : AudioNodeEngine(aNode)
     , mWriteIndex(0)
+    , mNumberOfChannels(aNumberOfChannels)
     , mLength(aLength)
     , mSampleRate(aSampleRate)
+    , mBufferAllocated(false)
   {
-    // These allocations might fail if content provides a huge number of
-    // channels or size, but it's OK since we'll deal with the failure
-    // gracefully.
-    if (mInputChannels.SetLength(aNumberOfChannels)) {
-      static const fallible_t fallible = fallible_t();
-      for (uint32_t i = 0; i < aNumberOfChannels; ++i) {
-        mInputChannels[i] = new(fallible) float[aLength];
-        if (!mInputChannels[i]) {
-          mInputChannels.Clear();
-          break;
-        }
-      }
-    }
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
@@ -65,6 +54,25 @@ public:
     // Do this just for the sake of political correctness; this output
     // will not go anywhere.
     *aOutput = aInput;
+
+    // The output buffer is allocated lazily, on the rendering thread.
+    if (!mBufferAllocated) {
+      // These allocations might fail if content provides a huge number of
+      // channels or size, but it's OK since we'll deal with the failure
+      // gracefully.
+      if (mInputChannels.SetLength(mNumberOfChannels)) {
+        static const fallible_t fallible = fallible_t();
+        for (uint32_t i = 0; i < mNumberOfChannels; ++i) {
+          mInputChannels[i] = new(fallible) float[mLength];
+          if (!mInputChannels[i]) {
+            mInputChannels.Clear();
+            break;
+          }
+        }
+      }
+
+      mBufferAllocated = true;
+    }
 
     // Handle the case of allocation failure in the input buffer
     if (mInputChannels.IsEmpty()) {
@@ -169,9 +177,11 @@ private:
   InputChannels mInputChannels;
   // An index representing the next offset in mInputChannels to be written to.
   uint32_t mWriteIndex;
+  uint32_t mNumberOfChannels;
   // How many frames the OfflineAudioContext intends to produce.
   uint32_t mLength;
   float mSampleRate;
+  bool mBufferAllocated;
 };
 
 class InputMutedRunnable : public nsRunnable
