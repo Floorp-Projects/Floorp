@@ -98,6 +98,12 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        dismiss();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         dismiss();
