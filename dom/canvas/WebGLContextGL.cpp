@@ -1579,6 +1579,35 @@ void WebGLContext::TexParameter_base(GLenum rawTarget, GLenum pname,
             else
                 tex->SetMaxMipmapLevel(intParam);
             break;
+
+        case LOCAL_GL_TEXTURE_COMPARE_MODE:
+            if (!IsWebGL2())
+                return ErrorInvalidEnumInfo("texParameter: pname", pname);
+
+            paramValueInvalid = (intParam != LOCAL_GL_NONE &&
+                                 intParam != LOCAL_GL_COMPARE_REF_TO_TEXTURE);
+            break;
+
+        case LOCAL_GL_TEXTURE_COMPARE_FUNC:
+            if (!IsWebGL2())
+                return ErrorInvalidEnumInfo("texParameter: pname", pname);
+
+            switch (intParam) {
+            case LOCAL_GL_LEQUAL:
+            case LOCAL_GL_GEQUAL:
+            case LOCAL_GL_LESS:
+            case LOCAL_GL_GREATER:
+            case LOCAL_GL_EQUAL:
+            case LOCAL_GL_NOTEQUAL:
+            case LOCAL_GL_ALWAYS:
+            case LOCAL_GL_NEVER:
+                paramValueInvalid = false;
+
+            default:
+                paramValueInvalid = true;
+            }
+            break;
+
         case LOCAL_GL_TEXTURE_MIN_FILTER:
             switch (intParam) {
                 case LOCAL_GL_NEAREST:
