@@ -344,7 +344,7 @@ def ReftestCommand(func):
     return func
 
 def B2GCommand(func):
-    """Decorator that adds shared command arguments to b2g mochitest commands."""
+    """Decorator that adds shared command arguments to b2g reftest commands."""
 
     busybox = CommandArgument('--busybox', default=None,
         help='Path to busybox binary to install on device')
