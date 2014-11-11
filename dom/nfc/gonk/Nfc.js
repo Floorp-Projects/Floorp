@@ -452,7 +452,7 @@ Nfc.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsINfcGonkEventListener]),
 
-  powerLevel: NFC.NFC_POWER_LEVEL_UNKNOWN,
+  rfState: null,
 
   nfcService: null,
 
@@ -557,7 +557,7 @@ Nfc.prototype = {
         break;
      case "PowerResponse":
         if (!message.errorMsg) {
-          this.powerLevel = message.powerLevel;
+          this.rfState = message.rfState;
         }
 
         this.sendNfcResponse(message);
@@ -603,8 +603,8 @@ Nfc.prototype = {
                      message.name == "NFC:PowerOff";
 
     if (!isPowerAPI) {
-      if (this.powerLevel != NFC.NFC_POWER_LEVEL_ENABLED) {
-        debug("NFC is not enabled. current powerLevel:" + this.powerLevel);
+      if (this.rfState != NFC.NFC_RF_STATE_DISCOVERY) {
+        debug("NFC is not enabled. current rfState:" + this.rfState);
         this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_NOT_ENABLED);
         return null;
       }
@@ -615,15 +615,15 @@ Nfc.prototype = {
 
     switch (message.name) {
       case "NFC:StartPoll":
-        message.data.powerLevel = NFC.NFC_POWER_LEVEL_ENABLED;
+        message.data.rfState = NFC.NFC_RF_STATE_DISCOVERY;
         this.sendToNfcService("power", message.data);
         break;
       case "NFC:StopPoll":
-        message.data.powerLevel = NFC.NFC_POWER_LEVEL_LOW;
+        message.data.rfState = NFC.NFC_RF_STATE_LISTEN;
         this.sendToNfcService("power", message.data);
         break;
       case "NFC:PowerOff":
-        message.data.powerLevel = NFC.NFC_POWER_LEVEL_DISABLED;
+        message.data.rfState = NFC.NFC_RF_STATE_IDLE;
         this.sendToNfcService("power", message.data);
         break;
       case "NFC:ReadNDEF":

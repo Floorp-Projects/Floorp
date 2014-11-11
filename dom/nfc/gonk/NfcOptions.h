@@ -25,16 +25,16 @@ struct CommandOptions
 #define COPY_FIELD(prop) prop = aOther.prop;
 
 #define COPY_OPT_FIELD(prop, defaultValue)            \
-  if (aOther.prop.WasPassed()) {                      \
-    prop = aOther.prop.Value();                       \
-  } else {                                            \
-    prop = defaultValue;                              \
-  }
+  prop = aOther.prop.WasPassed() ? aOther.prop.Value() : defaultValue;
 
     COPY_FIELD(mType)
     COPY_FIELD(mRequestId)
     COPY_OPT_FIELD(mSessionId, 0)
-    COPY_OPT_FIELD(mPowerLevel, 0)
+
+    mRfState = aOther.mRfState.WasPassed() ?
+                 static_cast<int32_t>(aOther.mRfState.Value()) :
+                 0;
+
     COPY_OPT_FIELD(mTechType, 0)
     COPY_OPT_FIELD(mIsP2P, false)
 
@@ -76,7 +76,7 @@ struct CommandOptions
   nsString mType;
   int32_t mSessionId;
   nsString mRequestId;
-  int32_t mPowerLevel;
+  int32_t mRfState;
   int32_t mTechType;
   bool mIsP2P;
   nsTArray<NDEFRecordStruct> mRecords;
@@ -87,7 +87,7 @@ struct EventOptions
   EventOptions()
     : mType(EmptyString()), mStatus(-1), mErrorCode(-1), mSessionId(-1), mRequestId(EmptyString()),
       mMajorVersion(-1), mMinorVersion(-1),
-      mTagType(-1), mMaxNDEFSize(-1), mIsReadOnly(-1), mIsFormatable(-1), mPowerLevel(-1),
+      mTagType(-1), mMaxNDEFSize(-1), mIsReadOnly(-1), mIsFormatable(-1), mRfState(-1),
       mOriginType(-1), mOriginIndex(-1)
   {}
 
@@ -104,7 +104,7 @@ struct EventOptions
   int32_t mMaxNDEFSize;
   int32_t mIsReadOnly;
   int32_t mIsFormatable;
-  int32_t mPowerLevel;
+  int32_t mRfState;
 
   int32_t mOriginType;
   int32_t mOriginIndex;
