@@ -599,8 +599,8 @@ pref("media.video-queue.default-size", 3);
 // Enable the MediaCodec PlatformDecoderModule by default.
 pref("media.fragmented-mp4.exposed", true);
 pref("media.fragmented-mp4.enabled", true);
-pref("media.fragmented-mp4.android-media-codec.enabled", true);
-pref("media.fragmented-mp4.android-media-codec.preferred", true);
+pref("media.fragmented-mp4.android-media-codec.enabled", false);
+pref("media.fragmented-mp4.android-media-codec.preferred", false);
 
 // optimize images memory usage
 pref("image.mem.decodeondraw", true);
