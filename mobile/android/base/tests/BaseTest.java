@@ -549,6 +549,21 @@ abstract class BaseTest extends BaseRobocopTest {
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
     }
 
+    public void verifyPinned(final boolean isPinned, final String gridItemTitle) {
+        boolean viewFound = waitForText(gridItemTitle);
+        mAsserter.ok(viewFound, "Found top site title: " + gridItemTitle, null);
+
+        boolean success = waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                // We set the left compound drawable (index 0) to the pin icon.
+                final TextView gridItemTextView = mSolo.getText(gridItemTitle);
+                return isPinned == (gridItemTextView.getCompoundDrawables()[0] != null);
+            }
+        }, MAX_WAIT_MS);
+        mAsserter.ok(success, "Top site item was pinned: " + isPinned, null);
+    }
+
     // Used to perform clicks on pop-up buttons without having to close the virtual keyboard
     public void clickOnButton(String label) {
         final Button button = mSolo.getButton(label);
