@@ -370,7 +370,10 @@ ProfilerFront.prototype = {
     // for all toolboxes and interacts with the whole platform, so we don't want
     // to affect other clients by stopping (or restarting) it.
     if (!isActive) {
-      yield this._request("profiler", "startProfiler", this._customProfilerOptions);
+      // Make a copy of the options, because eventually _request wants
+      // to freeze the packet.
+      let localOptions = Cu.cloneInto(this._customProfilerOptions, {});
+      yield this._request("profiler", "startProfiler", localOptions);
       this._profilingStartTime = 0;
       this.emit("profiler-activated");
     } else {
