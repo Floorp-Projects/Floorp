@@ -3,10 +3,10 @@
 
 Cu.import("resource://gre/modules/Promise.jsm");
 
-function waitForCondition(condition, nextTest, errorMsg) {
+function waitForCondition(condition, nextTest, errorMsg, maxTries=30) {
   var tries = 0;
   var interval = setInterval(function() {
-    if (tries >= 30) {
+    if (tries >= maxTries) {
       ok(false, errorMsg);
       moveOn();
     }
@@ -23,6 +23,18 @@ function waitForCondition(condition, nextTest, errorMsg) {
     tries++;
   }, 100);
   var moveOn = function() { clearInterval(interval); nextTest(); };
+}
+
+/**
+ * Wrapper to partially transition tests to Task.
+ */
+function taskify(fun) {
+  return (done) => {
+    return Task.spawn(fun).then(done, (reason) => {
+      ok(false, reason);
+      done();
+    });
+  }
 }
 
 function is_hidden(element) {
@@ -102,6 +114,19 @@ function promisePanelElementShown(win, aPanel) {
   }, 5000);
   aPanel.addEventListener("popupshown", function onPanelOpen(e) {
     aPanel.removeEventListener("popupshown", onPanelOpen);
+    win.clearTimeout(timeoutId);
+    deferred.resolve();
+  });
+  return deferred.promise;
+}
+
+function promisePanelElementHidden(win, aPanel) {
+  let deferred = Promise.defer();
+  let timeoutId = win.setTimeout(() => {
+    deferred.reject("Panel did not show within 5 seconds.");
+  }, 5000);
+  aPanel.addEventListener("popuphidden", function onPanelOpen(e) {
+    aPanel.removeEventListener("popuphidden", onPanelOpen);
     win.clearTimeout(timeoutId);
     deferred.resolve();
   });
