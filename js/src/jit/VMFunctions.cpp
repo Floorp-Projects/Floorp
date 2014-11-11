@@ -836,6 +836,51 @@ CreateGenerator(JSContext *cx, BaselineFrame *frame)
 }
 
 bool
+InitialSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc)
+{
+    MOZ_ASSERT(*pc == JSOP_INITIALYIELD);
+    return GeneratorObject::initialSuspend(cx, obj, frame, pc);
+}
+
+bool
+NormalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc,
+              uint32_t stackDepth)
+{
+    MOZ_ASSERT(*pc == JSOP_YIELD);
+
+    // Return value is still on the stack.
+    MOZ_ASSERT(stackDepth >= 1);
+
+    // The expression stack slots are stored on the stack in reverse order, so
+    // we copy them to a Vector and pass a pointer to that instead. We use
+    // stackDepth - 1 because we don't want to include the return value.
+    AutoValueVector exprStack(cx);
+    if (!exprStack.reserve(stackDepth - 1))
+        return false;
+
+    size_t firstSlot = frame->numValueSlots() - stackDepth;
+    for (size_t i = 0; i < stackDepth - 1; i++)
+        exprStack.infallibleAppend(*frame->valueSlot(firstSlot + i));
+
+    MOZ_ASSERT(exprStack.length() == stackDepth - 1);
+
+    return GeneratorObject::normalSuspend(cx, obj, frame, pc, exprStack.begin(), stackDepth - 1);
+}
+
+bool
+FinalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc)
+{
+    MOZ_ASSERT(*pc == JSOP_FINALYIELDRVAL);
+
+    if (!GeneratorObject::finalSuspend(cx, obj)) {
+        // Leave this frame and propagate the exception to the caller.
+        return DebugEpilogue(cx, frame, pc, /* ok = */ false);
+    }
+
+    return true;
+}
+
+bool
 StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 {
     return frame->strictEvalPrologue(cx);
