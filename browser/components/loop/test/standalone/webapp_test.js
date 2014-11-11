@@ -612,7 +612,8 @@ describe("loop.webapp", function() {
       dispatcher = new loop.Dispatcher();
       activeRoomStore = new loop.store.ActiveRoomStore({
         dispatcher: dispatcher,
-        mozLoop: {}
+        mozLoop: {},
+        sdkDriver: {}
       });
       standaloneAppStore = new loop.store.StandaloneAppStore({
         dispatcher: dispatcher,

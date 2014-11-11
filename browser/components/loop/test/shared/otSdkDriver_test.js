@@ -300,5 +300,33 @@ describe("loop.OTSdkDriver", function () {
           sinon.match.hasOwn("name", "mediaConnected"));
       });
     });
+
+    describe("connectionCreated", function() {
+      beforeEach(function() {
+        session.connection = {
+          id: "localUser"
+        };
+      });
+
+      it("should dispatch a RemotePeerConnected action if this is for a remote user",
+        function() {
+          session.trigger("connectionCreated", {
+            connection: {id: "remoteUser"}
+          });
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.RemotePeerConnected());
+        });
+
+      it("should not dispatch an action if this is for a local user",
+        function() {
+          session.trigger("connectionCreated", {
+            connection: {id: "localUser"}
+          });
+
+          sinon.assert.notCalled(dispatcher.dispatch);
+        });
+    });
   });
 });

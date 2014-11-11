@@ -143,7 +143,8 @@ describe("loop.conversation", function() {
           roomStore: roomStore,
           sdk: {},
           conversationStore: conversationStore,
-          conversationAppStore: conversationAppStore
+          conversationAppStore: conversationAppStore,
+          dispatcher: dispatcher
         }));
     }
 

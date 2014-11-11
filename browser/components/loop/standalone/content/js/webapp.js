@@ -973,6 +973,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
     var client = new loop.StandaloneClient({
       baseServerUrl: loop.config.serverUrl
     });
+    var sdkDriver = new loop.OTSdkDriver({
+      dispatcher: dispatcher,
+      sdk: OT
+    });
 
     var standaloneAppStore = new loop.store.StandaloneAppStore({
       conversation: conversation,
@@ -982,7 +986,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
     });
     var activeRoomStore = new loop.store.ActiveRoomStore({
       dispatcher: dispatcher,
-      mozLoop: standaloneMozLoop
+      mozLoop: standaloneMozLoop,
+      sdkDriver: sdkDriver
     });
 
     window.addEventListener("unload", function() {
