@@ -224,6 +224,8 @@ public:
   GetAnimationPlayers(mozilla::dom::Element *aElement,
                       nsCSSPseudoElements::Type aPseudoType,
                       bool aCreateIfNeeded);
+  nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
+                                 nsCSSPseudoElements::Type aPseudoType);
 
 protected:
   virtual void ElementCollectionRemoved() MOZ_OVERRIDE
@@ -250,8 +252,6 @@ private:
                     float aFromKey, nsStyleContext* aFromContext,
                     mozilla::css::Declaration* aFromDeclaration,
                     float aToKey, nsStyleContext* aToContext);
-  nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
-                                 nsCSSPseudoElements::Type aPseudoType);
 
   // The guts of DispatchEvents
   void DoDispatchEvents();
