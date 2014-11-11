@@ -243,10 +243,18 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Copy a room url in the user's clipboard.
+     * Copy a room url into the user's clipboard.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     CopyRoomUrl: Action.define("copyRoomUrl", {
+      roomUrl: String
+    }),
+
+    /**
+     * Email a room url.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    EmailRoomUrl: Action.define("emailRoomUrl", {
       roomUrl: String
     }),
 
