@@ -8,14 +8,13 @@
 const TAB_URL = EXAMPLE_URL + "doc_tracing-01.html";
 const TRACER_PREF = "devtools.debugger.tracer";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gOriginalPref = Services.prefs.getBoolPref(TRACER_PREF);
 Services.prefs.setBoolPref(TRACER_PREF, false);
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
 
@@ -32,7 +31,6 @@ function test() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   Services.prefs.setBoolPref(TRACER_PREF, gOriginalPref);
