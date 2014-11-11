@@ -78,7 +78,7 @@ public:
               const mozilla::LogicalSize& aMargin,
               const mozilla::LogicalSize& aBorder,
               const mozilla::LogicalSize& aPadding,
-              uint32_t aFlags) MOZ_OVERRIDE;
+              ComputeSizeFlags aFlags) MOZ_OVERRIDE;
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const MOZ_OVERRIDE;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
