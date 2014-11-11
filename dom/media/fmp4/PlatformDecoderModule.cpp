@@ -182,4 +182,10 @@ PlatformDecoderModule::SupportsAudioMimeType(const char* aMimeType)
   return !strcmp(aMimeType, "audio/mp4a-latm");
 }
 
+bool
+PlatformDecoderModule::SupportsVideoMimeType(const char* aMimeType)
+{
+  return !strcmp(aMimeType, "video/mp4") || !strcmp(aMimeType, "video/avc");
+}
+
 } // namespace mozilla
