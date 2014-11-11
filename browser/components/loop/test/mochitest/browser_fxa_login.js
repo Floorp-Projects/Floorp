@@ -421,6 +421,10 @@ add_task(function* openFxASettings() {
   yield new Promise((resolve, reject) => {
     let progressListener = {
       onLocationChange: function onLocationChange(aBrowser) {
+        if (aBrowser.currentURI.spec == BASE_URL) {
+          // Ignore the changes from the addTab above.
+          return;
+        }
         gBrowser.removeTabsProgressListener(progressListener);
         let contentURI = Services.io.newURI(params.content_uri, null, null);
         is(aBrowser.currentURI.spec, Services.io.newURI("/settings", null, contentURI).spec,
