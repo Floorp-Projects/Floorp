@@ -142,9 +142,9 @@ bool
 NfcMessageHandler::PowerRequest(Parcel& aParcel, const CommandOptions& aOptions)
 {
   aParcel.writeInt32(NfcRequest::PowerReq);
-  aParcel.writeInt32(aOptions.mPowerLevel);
+  aParcel.writeInt32(aOptions.mRfState);
   mRequestIdQueue.AppendElement(aOptions.mRequestId);
-  mPowerLevelQueue.AppendElement(aOptions.mPowerLevel);
+  mRfStateQueue.AppendElement(aOptions.mRfState);
   return true;
 }
 
@@ -157,9 +157,9 @@ NfcMessageHandler::PowerResponse(const Parcel& aParcel, EventOptions& aOptions)
   aOptions.mRequestId = mRequestIdQueue[0];
   mRequestIdQueue.RemoveElementAt(0);
 
-  NS_ENSURE_TRUE(!mPowerLevelQueue.IsEmpty(), false);
-  aOptions.mPowerLevel = mPowerLevelQueue[0];
-  mPowerLevelQueue.RemoveElementAt(0);
+  NS_ENSURE_TRUE(!mRfStateQueue.IsEmpty(), false);
+  aOptions.mRfState = mRfStateQueue[0];
+  mRfStateQueue.RemoveElementAt(0);
   return true;
 }
 
