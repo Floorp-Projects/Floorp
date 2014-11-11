@@ -121,7 +121,8 @@ public:
                                            // the T values we support.
 
   // Called by DOM to let us execute our callbacks.  May be called recursively.
-  static void PerformMicroTaskCheckpoint();
+  // Returns true if at least one microtask was processed.
+  static bool PerformMicroTaskCheckpoint();
 
   // WebIDL
 

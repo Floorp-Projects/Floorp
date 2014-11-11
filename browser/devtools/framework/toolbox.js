@@ -761,6 +761,10 @@ Toolbox.prototype = {
     let tiltEnabled = !this.target.isMultiProcess &&
                       Services.prefs.getBoolPref("devtools.command-button-tilt.enabled");
     let tiltButton = this.doc.getElementById("command-button-tilt");
+    // Remote toolboxes don't add the button to the DOM at all
+    if (!tiltButton) {
+      return;
+    }
 
     if (tiltEnabled) {
       tiltButton.removeAttribute("hidden");

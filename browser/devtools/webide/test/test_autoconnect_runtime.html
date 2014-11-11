@@ -29,7 +29,7 @@
           let fakeRuntime = {
             type: "USB",
             connect: function(connection) {
-              ok(connection, win.AppManager.connection, "connection is valid");
+              is(connection, win.AppManager.connection, "connection is valid");
               connection.host = null; // force connectPipe
               connection.connect();
               return promise.resolve();

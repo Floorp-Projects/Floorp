@@ -79,6 +79,7 @@ loop.OTSdkDriver = (function() {
     connectSession: function(sessionData) {
       this.session = this.sdk.initSession(sessionData.sessionId);
 
+      this.session.on("connectionCreated", this._onConnectionCreated.bind(this));
       this.session.on("streamCreated", this._onRemoteStreamCreated.bind(this));
       this.session.on("connectionDestroyed",
         this._onConnectionDestroyed.bind(this));
@@ -130,6 +131,7 @@ loop.OTSdkDriver = (function() {
         return;
       }
 
+      this.dispatcher.dispatch(new sharedActions.ConnectedToSdkServers());
       this._sessionConnected = true;
       this._maybePublishLocalStream();
     },
@@ -141,18 +143,9 @@ loop.OTSdkDriver = (function() {
      * https://tokbox.com/opentok/libraries/client/js/reference/SessionDisconnectEvent.html
      */
     _onConnectionDestroyed: function(event) {
-      var action;
-      if (event.reason === "clientDisconnected") {
-        action = new sharedActions.PeerHungupCall();
-      } else {
-        // Strictly speaking this isn't a failure on our part, but since our
-        // flow requires a full reconnection, then we just treat this as
-        // if a failure of our end had occurred.
-        action = new sharedActions.ConnectionFailure({
-          reason: "peerNetworkDisconnected"
-        });
-      }
-      this.dispatcher.dispatch(action);
+      this.dispatcher.dispatch(new sharedActions.RemotePeerDisconnected({
+        peerHungup: event.reason === "clientDisconnected"
+      }));
     },
 
     /**
@@ -169,6 +162,14 @@ loop.OTSdkDriver = (function() {
           reason: "networkDisconnected"
         }));
       }
+    },
+
+    _onConnectionCreated: function(event) {
+      if (this.session.connection.id === event.connection.id) {
+        return;
+      }
+
+      this.dispatcher.dispatch(new sharedActions.RemotePeerConnected());
     },
 
     /**

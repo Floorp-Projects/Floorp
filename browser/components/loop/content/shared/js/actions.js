@@ -109,9 +109,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Used to indicate the peer hung up the call.
+     * Used to indicate the remote peer was disconnected for some reason.
+     *
+     * peerHungup is true if the peer intentionally disconnected, false otherwise.
      */
-    PeerHungupCall: Action.define("peerHungupCall", {
+    RemotePeerDisconnected: Action.define("remotePeerDisconnected", {
+      peerHungup: Boolean
     }),
 
     /**
@@ -130,6 +133,18 @@ loop.shared.actions = (function() {
     ConnectionFailure: Action.define("connectionFailure", {
       // A string relating to the reason the connection failed.
       reason: String
+    }),
+
+    /**
+     * Used to notify that the sdk session is now connected to the servers.
+     */
+    ConnectedToSdkServers: Action.define("connectedToSdkServers", {
+    }),
+
+    /**
+     * Used to notify that a remote peer has connected to the room.
+     */
+    RemotePeerConnected: Action.define("remotePeerConnected", {
     }),
 
     /**
