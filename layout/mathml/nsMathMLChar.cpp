@@ -37,6 +37,7 @@
 #include <algorithm>
 
 #include "gfxMathTable.h"
+#include "nsUnicodeScriptCodes.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -1688,6 +1689,14 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     
   if (glyphFound) {
     return NS_OK;
+  }
+
+  // We did not find a size variant or a glyph assembly to stretch this
+  // operator. Verify whether a font with an OpenType MATH table is available
+  // and record missing math script otherwise.
+  gfxMissingFontRecorder* MFR = aPresContext->MissingFontRecorder();
+  if (MFR && !fm->GetThebesFontGroup()->GetFirstMathFont()) {
+    MFR->RecordScript(MOZ_SCRIPT_MATHEMATICAL_NOTATION);
   }
 
   // stretchy character
