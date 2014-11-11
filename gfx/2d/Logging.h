@@ -342,6 +342,88 @@ public:
     return *this;
   }
 
+  Log& operator<<(SurfaceFormat aFormat) {
+    if (MOZ_UNLIKELY(LogIt())) {
+      switch(aFormat) {
+        case SurfaceFormat::B8G8R8A8:
+          mMessage << "SurfaceFormat::B8G8R8A8";
+          break;
+        case SurfaceFormat::B8G8R8X8:
+          mMessage << "SurfaceFormat::B8G8R8X8";
+          break;
+        case SurfaceFormat::R8G8B8A8:
+          mMessage << "SurfaceFormat::R8G8B8A8";
+          break;
+        case SurfaceFormat::R8G8B8X8:
+          mMessage << "SurfaceFormat::R8G8B8X8";
+          break;
+        case SurfaceFormat::R5G6B5:
+          mMessage << "SurfaceFormat::R5G6B5";
+          break;
+        case SurfaceFormat::A8:
+          mMessage << "SurfaceFormat::A8";
+          break;
+        case SurfaceFormat::YUV:
+          mMessage << "SurfaceFormat::YUV";
+          break;
+        case SurfaceFormat::UNKNOWN:
+          mMessage << "SurfaceFormat::UNKNOWN";
+          break;
+        default:
+          mMessage << "Invalid SurfaceFormat (" << (int)aFormat << ")";
+          break;
+      }
+    }
+    return *this;
+  }
+
+  Log& operator<<(SurfaceType aType) {
+    if (MOZ_UNLIKELY(LogIt())) {
+      switch(aType) {
+        case SurfaceType::DATA:
+          mMessage << "SurfaceType::DATA";
+          break;
+        case SurfaceType::D2D1_BITMAP:
+          mMessage << "SurfaceType::D2D1_BITMAP";
+          break;
+        case SurfaceType::D2D1_DRAWTARGET:
+          mMessage << "SurfaceType::D2D1_DRAWTARGET";
+          break;
+        case SurfaceType::CAIRO:
+          mMessage << "SurfaceType::CAIRO";
+          break;
+        case SurfaceType::CAIRO_IMAGE:
+          mMessage << "SurfaceType::CAIRO_IMAGE";
+          break;
+        case SurfaceType::COREGRAPHICS_IMAGE:
+          mMessage << "SurfaceType::COREGRAPHICS_IMAGE";
+          break;
+        case SurfaceType::COREGRAPHICS_CGCONTEXT:
+          mMessage << "SurfaceType::COREGRAPHICS_CGCONTEXT";
+          break;
+        case SurfaceType::SKIA:
+          mMessage << "SurfaceType::SKIA";
+          break;
+        case SurfaceType::DUAL_DT:
+          mMessage << "SurfaceType::DUAL_DT";
+          break;
+        case SurfaceType::D2D1_1_IMAGE:
+          mMessage << "SurfaceType::D2D1_1_IMAGE";
+          break;
+        case SurfaceType::RECORDING:
+          mMessage << "SurfaceType::RECORDING";
+          break;
+        case SurfaceType::TILED:
+          mMessage << "SurfaceType::TILED";
+          break;
+        default:
+          mMessage << "Invalid SurfaceType (" << (int)aType << ")";
+          break;
+      }
+    }
+    return *this;
+  }
+
   inline bool LogIt() const { return mLogIt; }
   inline bool NoNewline() const { return mOptions & int(LogOptions::NoNewline); }
   inline bool AutoPrefix() const { return mOptions & int(LogOptions::AutoPrefix); }
