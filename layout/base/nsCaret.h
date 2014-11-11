@@ -149,6 +149,9 @@ class nsCaret MOZ_FINAL : public nsISelectionListener
                                                uint8_t aBidiLevel,
                                                nsIFrame** aReturnFrame,
                                                int32_t* aReturnOffset);
+    static nsRect GetGeometryForFrame(nsIFrame* aFrame,
+                                      int32_t   aFrameOffset,
+                                      nscoord*  aBidiIndicatorSize);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -168,9 +171,6 @@ protected:
     };
     static Metrics ComputeMetrics(nsIFrame* aFrame, int32_t aOffset,
                                   nscoord aCaretHeight);
-    static nsRect GetGeometryForFrame(nsIFrame* aFrame,
-                                      int32_t   aFrameOffset,
-                                      nscoord*  aBidiIndicatorSize);
 
     void          ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
                                     nsRect* aCaretRect, nsRect* aHookRect);
