@@ -5856,6 +5856,11 @@
     "kind": "boolean",
     "description": "How many times has the devtool's Network Monitor been opened?"
   },
+  "DEVTOOLS_STORAGE_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the Storage Inspector been opened?"
+  },
   "DEVTOOLS_PAINTFLASHING_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -5975,6 +5980,11 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's Network Monitor?"
+  },
+  "DEVTOOLS_STORAGE_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Storage Inspector?"
   },
   "DEVTOOLS_PAINTFLASHING_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -6129,6 +6139,13 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has the network monitor been active (seconds)"
+  },
+  "DEVTOOLS_STORAGE_TIME_ACTIVE_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the storage inspector been active (seconds)"
   },
   "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",

@@ -29,13 +29,20 @@ import org.mozilla.mozstumbler.service.stumblerthread.StumblerService;
  *    is a good time to try upload, as it is likely that the network is in use.
  */
 public class PassiveServiceReceiver extends BroadcastReceiver {
-    static final String LOG_TAG = AppGlobals.LOG_PREFIX + PassiveServiceReceiver.class.getSimpleName();
+    // This allows global debugging logs to be enabled by doing
+    // |adb shell setprop log.tag.PassiveStumbler DEBUG|
+    static final String LOG_TAG = "PassiveStumbler";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent == null) {
             return;
         }
+
+        // This value is cached, so if |setprop| is performed (as described on the LOG_TAG above),
+        // then the start/stop intent must be resent by toggling the setting or stopping/starting Fennec.
+        // This does not guard against dumping PII (PII in stumbler is location, wifi BSSID, cell tower details).
+        AppGlobals.isDebug = Log.isLoggable(LOG_TAG, Log.DEBUG);
 
         final String action = intent.getAction();
         final boolean isIntentFromHostApp = (action != null) && action.contains(".STUMBLER_PREF");
@@ -47,9 +54,6 @@ public class PassiveServiceReceiver extends BroadcastReceiver {
             return;
         }
 
-        if (intent.hasExtra("is_debug")) {
-            AppGlobals.isDebug = intent.getBooleanExtra("is_debug", false);
-        }
         StumblerService.sFirefoxStumblingEnabled.set(intent.getBooleanExtra("enabled", false));
 
         if (!StumblerService.sFirefoxStumblingEnabled.get()) {

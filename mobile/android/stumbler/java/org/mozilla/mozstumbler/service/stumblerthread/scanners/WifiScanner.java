@@ -40,7 +40,7 @@ public class WifiScanner extends BroadcastReceiver {
     public static final int STATUS_ACTIVE = 1;
     public static final int STATUS_WIFI_DISABLED = -1;
 
-    private static final String LOG_TAG = AppGlobals.LOG_PREFIX + WifiScanner.class.getSimpleName();
+    private static final String LOG_TAG = AppGlobals.makeLogTag(WifiScanner.class.getSimpleName());
     private static final long WIFI_MIN_UPDATE_TIME = 5000; // milliseconds
 
     private boolean mStarted;
@@ -194,11 +194,9 @@ public class WifiScanner extends BroadcastReceiver {
 
     public static boolean shouldLog(ScanResult scanResult) {
         if (BSSIDBlockList.contains(scanResult)) {
-            Log.w(LOG_TAG, "Blocked BSSID: " + scanResult);
             return false;
         }
         if (SSIDBlockList.contains(scanResult)) {
-            Log.w(LOG_TAG, "Blocked SSID: " + scanResult);
             return false;
         }
         return true;

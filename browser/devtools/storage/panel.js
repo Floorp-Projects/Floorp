@@ -59,7 +59,7 @@ StoragePanel.prototype = {
   },
 
   /**
-   * Destroy the style editor.
+   * Destroy the storage inspector.
    */
   destroy: function() {
     if (!this._destroyed) {
