@@ -3235,3 +3235,24 @@ BaselineCompiler::emit_JSOP_REST()
     frame.push(R0);
     return true;
 }
+
+typedef JSObject *(*CreateGeneratorFn)(JSContext *, BaselineFrame *);
+static const VMFunction CreateGeneratorInfo = FunctionInfo<CreateGeneratorFn>(jit::CreateGenerator);
+
+bool
+BaselineCompiler::emit_JSOP_GENERATOR()
+{
+    MOZ_ASSERT(frame.stackDepth() == 0);
+
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+    if (!callVM(CreateGeneratorInfo))
+        return false;
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}
+
