@@ -254,7 +254,7 @@ function securityOnLoad() {
 
   if (info.isBroken) {
     hdr = pkiBundle.getString("pageInfo_MixedContent");
-    msg1 = pkiBundle.getString("pageInfo_Privacy_Mixed1");
+    msg1 = pkiBundle.getString("pageInfo_Privacy_Broken1");
     msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
   }
   else if (info.encryptionStrength > 0) {

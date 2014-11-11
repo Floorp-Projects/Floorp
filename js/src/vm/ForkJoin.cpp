@@ -1440,7 +1440,7 @@ ForkJoinShared::execute()
     // Sometimes a GC request occurs *just before* we enter into the
     // parallel section.  Rather than enter into the parallel section
     // and then abort, we just check here and abort early.
-    if (cx_->runtime()->interruptPar)
+    if (cx_->runtime()->hasPendingInterruptPar())
         return TP_RETRY_SEQUENTIALLY;
 
     AutoLockMonitor lock(*this);
@@ -1518,7 +1518,7 @@ ForkJoinShared::executeFromWorker(ThreadPoolWorker *worker, uintptr_t stackLimit
 
     // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
     // lock has not been initialized in these cases.
-    thisThread.jitStackLimit = stackLimit;
+    thisThread.initJitStackLimitPar(stackLimit);
     executePortion(&thisThread, worker);
     TlsPerThreadData.set(nullptr);
 
@@ -1551,7 +1551,7 @@ ForkJoinShared::executeFromMainThread(ThreadPoolWorker *worker)
     //
     // Thus, use GetNativeStackLimit instead of just propagating the
     // main thread's.
-    thisThread.jitStackLimit = GetNativeStackLimit(cx_);
+    thisThread.initJitStackLimitPar(GetNativeStackLimit(cx_));
     executePortion(&thisThread, worker);
     TlsPerThreadData.set(oldData);
 
@@ -1647,7 +1647,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
 void
 ForkJoinShared::setAbortFlagDueToInterrupt(ForkJoinContext &cx)
 {
-    MOZ_ASSERT(cx_->runtime()->interruptPar);
+    MOZ_ASSERT(cx_->runtime()->hasPendingInterruptPar());
     // The GC Needed flag should not be set during parallel
     // execution.  Instead, one of the requestGC() or
     // requestZoneGC() methods should be invoked.
@@ -1826,7 +1826,7 @@ ForkJoinContext::hasAcquiredJSContext() const
 bool
 ForkJoinContext::check()
 {
-    if (runtime()->interruptPar) {
+    if (runtime()->hasPendingInterruptPar()) {
         shared_->setAbortFlagDueToInterrupt(*this);
         return false;
     }
@@ -2271,13 +2271,6 @@ js::ParallelTestsShouldPass(JSContext *cx)
            !js_JitOptions.eagerCompilation &&
            js_JitOptions.baselineWarmUpThreshold != 0 &&
            cx->runtime()->gcZeal() == 0;
-}
-
-void
-js::RequestInterruptForForkJoin(JSRuntime *rt, JSRuntime::InterruptMode mode)
-{
-    if (mode != JSRuntime::RequestInterruptAnyThreadDontStopIon)
-        rt->interruptPar = true;
 }
 
 bool

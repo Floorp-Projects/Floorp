@@ -147,7 +147,7 @@ jit::CheckOverRecursedPar(ForkJoinContext *cx)
     }
 #endif
 
-    if (!JS_CHECK_STACK_SIZE(cx->perThreadData->jitStackLimit, &stackDummy_)) {
+    if (!JS_CHECK_STACK_SIZE(cx->perThreadData->jitStackLimit(), &stackDummy_)) {
         cx->bailoutRecord->joinCause(ParallelBailoutOverRecursed);
         return false;
     }
