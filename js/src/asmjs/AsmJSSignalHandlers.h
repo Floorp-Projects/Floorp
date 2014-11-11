@@ -28,16 +28,15 @@ struct JSRuntime;
 
 namespace js {
 
-// Set up any signal/exception handlers needed to execute code in the given
-// runtime. Return whether runtime can:
-//  - rely on fault handler support for avoiding asm.js heap bounds checks
-//  - rely on InterruptRunningJitCode to halt running Ion/asm.js from any thread
+// Returns whether signal handlers for asm.js and for JitRuntime access
+// violations have been installed.
 bool
-EnsureSignalHandlersInstalled(JSRuntime *rt);
+EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt);
 
-// Force any currently-executing asm.js code to call HandleExecutionInterrupt.
+// Force any currently-executing asm.js code to call
+// js::HandleExecutionInterrupt.
 extern void
-InterruptRunningJitCode(JSRuntime *rt);
+RequestInterruptForAsmJSCode(JSRuntime *rt, int interruptMode);
 
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
 // of Unix signals. Mach exceptions are not handled on the victim's stack but

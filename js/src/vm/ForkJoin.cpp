@@ -1667,7 +1667,9 @@ ForkJoinShared::setAbortFlagAndRequestInterrupt(bool fatal)
     abort_ = true;
     fatal_ = fatal_ || fatal;
 
-    cx_->runtime()->requestInterrupt(JSRuntime::RequestInterruptCanWait);
+    // Note: The ForkJoin trigger here avoids the expensive memory protection needed to
+    // interrupt Ion code compiled for sequential execution.
+    cx_->runtime()->requestInterrupt(JSRuntime::RequestInterruptAnyThreadForkJoin);
 }
 
 void
