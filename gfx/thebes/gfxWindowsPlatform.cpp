@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "gfxWindowsPlatform.h"
+
+#include "cairo.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
@@ -79,6 +80,31 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla::image;
+
+DCFromDrawTarget::DCFromDrawTarget(DrawTarget& aDrawTarget)
+{
+  mDC = nullptr;
+  if (aDrawTarget.GetBackendType() == BackendType::CAIRO) {
+    cairo_surface_t *surf = (cairo_surface_t*)
+        aDrawTarget.GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
+    cairo_surface_type_t surfaceType = cairo_surface_get_type(surf);
+    if (surfaceType == CAIRO_SURFACE_TYPE_WIN32 ||
+        surfaceType == CAIRO_SURFACE_TYPE_WIN32_PRINTING) {
+      mDC = cairo_win32_surface_get_dc(surf);
+      mNeedsRelease = false;
+      SaveDC(mDC);
+      cairo_t* ctx = (cairo_t*)
+          aDrawTarget.GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT);
+      cairo_scaled_font_t* scaled = cairo_get_scaled_font(ctx);
+      cairo_win32_scaled_font_select_font(scaled, mDC);
+    }
+    if (!mDC) {
+      mDC = GetDC(nullptr);
+      SetGraphicsMode(mDC, GM_ADVANCED);
+      mNeedsRelease = true;
+    }
+  }
+}
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 
@@ -1531,7 +1557,7 @@ bool DoesD3D11DeviceWork(ID3D11Device *device)
 #endif
       return false;
     }
-    if (displayLinkModuleVersion <= GFX_DRIVER_VERSION(8,6,1,36484)) {
+    if (displayLinkModuleVersion <= V(8,6,1,36484)) {
 #if defined(MOZ_CRASHREPORTER)
       CrashReporter::AppendAppNotesToCrashReport(NS_LITERAL_CSTRING("DisplayLink: too old version\n"));
 #endif

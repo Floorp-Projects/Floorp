@@ -485,6 +485,12 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   mTransactionIncomplete = false;
 
   if (mRoot) {
+    if (aFlags & END_NO_COMPOSITE) {
+      // Apply pending tree updates before recomputing effective
+      // properties.
+      mRoot->ApplyPendingUpdatesToSubtree();
+    }
+
     // Need to do this before we call ApplyDoubleBuffering,
     // which depends on correct effective transforms
     if (mTarget) {
@@ -498,12 +504,6 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
     ToData(mRoot)->Validate(aCallback, aCallbackData, nullptr);
     if (mRoot->GetMaskLayer()) {
       ToData(mRoot->GetMaskLayer())->Validate(aCallback, aCallbackData, nullptr);
-    }
-
-    if (aFlags & END_NO_COMPOSITE) {
-      // Apply pending tree updates before recomputing effective
-      // properties.
-      mRoot->ApplyPendingUpdatesToSubtree();
     }
   }
 
