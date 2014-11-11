@@ -3084,10 +3084,13 @@
               let spellInfo = aMessage.data.spellInfo;
               if (spellInfo)
                 spellInfo.target = aMessage.target.messageManager;
-              gContextMenuContentData = { event: aMessage.objects.event,
+              gContextMenuContentData = { isRemote: true,
+                                          event: aMessage.objects.event,
+                                          popupNode: aMessage.objects.popupNode,
                                           browser: browser,
                                           editFlags: aMessage.data.editFlags,
-                                          spellInfo: spellInfo };
+                                          spellInfo: spellInfo,
+                                          addonInfo: aMessage.data.addonInfo };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
               let event = gContextMenuContentData.event;
               let pos = browser.mapScreenCoordinatesFromContent(event.screenX, event.screenY);
