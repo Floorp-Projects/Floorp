@@ -454,32 +454,37 @@ public class testDistribution extends ContentProviderTest {
         TestableDistribution.clearReferrerDescriptorForTesting();
     }
 
-    public void checkTilesReporting() throws Exception {
+    public void checkTilesReporting() throws JSONException {
         // Slight hack: Force top sites grid to reload.
         inputAndLoadUrl(StringHelper.ABOUT_BLANK_URL);
         inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
 
         // Click the first tracking tile and verify the posted data.
         JSONObject response = clickTrackingTile(StringHelper.DISTRIBUTION1_LABEL);
-        assertEquals(response.getInt("click"), 0);
-        assertEquals(response.getString("tiles"), "[{\"id\":123},{\"id\":456},{},{},{},{}]");
+        mAsserter.is(0, response.getInt("click"), "JSON click index matched");
+        mAsserter.is("[{\"id\":123},{\"id\":456},{},{},{},{}]", response.getString("tiles"), "JSON tiles data matched");
 
         inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
 
         // Pin the second tracking tile.
+        verifyPinned(false, StringHelper.DISTRIBUTION2_LABEL);
         mSolo.clickLongOnText(StringHelper.DISTRIBUTION2_LABEL);
-        mSolo.waitForDialogToOpen();
+        boolean dialogOpened = mSolo.waitForDialogToOpen();
+        mAsserter.ok(dialogOpened, "Pin site dialog opened", null);
+        boolean pinSiteFound = waitForText(StringHelper.CONTEXT_MENU_PIN_SITE);
+        mAsserter.ok(pinSiteFound, "Found pin site menu item", null);
         mSolo.clickOnText(StringHelper.CONTEXT_MENU_PIN_SITE);
+        verifyPinned(true, StringHelper.DISTRIBUTION2_LABEL);
 
         // Click the second tracking tile and verify the posted data.
         response = clickTrackingTile(StringHelper.DISTRIBUTION2_LABEL);
-        assertEquals(response.getInt("click"), 1);
-        assertEquals(response.getString("tiles"), "[{\"id\":123},{\"id\":456,\"pin\":true},{},{},{},{}]");
+        mAsserter.is(1, response.getInt("click"), "JSON click index matched");
+        mAsserter.is("[{\"id\":123},{\"id\":456,\"pin\":true},{},{},{},{}]", response.getString("tiles"), "JSON tiles data matched");
     }
 
     private JSONObject clickTrackingTile(String text) throws JSONException {
-        boolean viewFound = waitForText(text);
-        assertTrue("Found text: " + text, viewFound);
+        boolean tileFound = waitForText(text);
+        mAsserter.ok(tileFound, "Found tile: " + text, null);
 
         Actions.EventExpecter loadExpecter = mActions.expectGeckoEvent("Robocop:TilesResponse");
         mSolo.clickOnText(text);
