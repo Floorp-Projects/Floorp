@@ -522,15 +522,11 @@ InterruptCheck(JSContext *cx)
 {
     gc::MaybeVerifyBarriers(cx);
 
-    // Fix loop backedges so that they do not invoke the interrupt again.
-    // No lock is held here and it's possible we could segv in the middle here
-    // and end up with a state where some fraction of the backedges point to
-    // the interrupt handler and some don't. This is ok since the interrupt
-    // is definitely about to be handled; if there are still backedges
-    // afterwards which point to the interrupt handler, the next time they are
-    // taken the backedges will just be reset again.
-    cx->runtime()->jitRuntime()->patchIonBackedges(cx->runtime(),
-                                                   JitRuntime::BackedgeLoopHeader);
+    {
+        JitRuntime *jrt = cx->runtime()->jitRuntime();
+        JitRuntime::AutoMutateBackedges amb(jrt);
+        jrt->patchIonBackedges(cx->runtime(), JitRuntime::BackedgeLoopHeader);
+    }
 
     return CheckForInterrupt(cx);
 }
