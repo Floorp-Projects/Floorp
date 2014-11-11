@@ -33,8 +33,7 @@ public:
             reinterpret_cast<const uint8_t*>(aString), aLength,
             aRC->ThebesContext(),
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics),
-            nullptr);
+            ComputeFlags(aMetrics));
     }
 
     AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
@@ -44,8 +43,7 @@ public:
             aString, aLength,
             aRC->ThebesContext(),
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics),
-            nullptr);
+            ComputeFlags(aMetrics));
     }
 
     gfxTextRun *get() { return mTextRun; }
