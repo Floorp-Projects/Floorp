@@ -39,6 +39,8 @@ using namespace mozilla::dom;
 #define LOG_ENABLED() PR_LOG_TEST(gfxUserFontSet::GetUserFontsLog(), \
                                   PR_LOG_DEBUG)
 
+#define FONT_LOADING_API_ENABLED_PREF "layout.css.font-loading-api.enabled"
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(FontFaceSet)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FontFaceSet, DOMEventTargetHelper)
@@ -83,7 +85,10 @@ FontFaceSet::FontFaceSet(nsPIDOMWindow* aWindow, nsPresContext* aPresContext)
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
 
-  if (global) {
+  // If the pref is not set, don't create the Promise (which the page wouldn't
+  // be able to get to anyway) as it causes the window.FontFaceSet constructor
+  // to be created.
+  if (global && PrefEnabled()) {
     ErrorResult rv;
     mReady = Promise::Create(global, rv);
   }
@@ -1337,7 +1342,7 @@ FontFaceSet::CheckLoadingStarted()
                               false))->RunDOMEventWhenSafe();
   }
 
-  if (mReadyIsResolved) {
+  if (mReadyIsResolved && PrefEnabled()) {
     nsRefPtr<Promise> ready;
     if (GetParentObject()) {
       ErrorResult rv;
@@ -1494,6 +1499,18 @@ FontFaceSet::HandleEvent(nsIDOMEvent* aEvent)
   CheckLoadingFinished();
 
   return NS_OK;
+}
+
+/* static */ bool
+FontFaceSet::PrefEnabled()
+{
+  static bool initialized = false;
+  static bool enabled;
+  if (!initialized) {
+    initialized = true;
+    Preferences::AddBoolVarCache(&enabled, FONT_LOADING_API_ENABLED_PREF);
+  }
+  return enabled;
 }
 
 // nsICSSLoaderObserver
