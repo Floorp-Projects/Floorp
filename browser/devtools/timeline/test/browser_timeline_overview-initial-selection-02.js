@@ -8,11 +8,8 @@
 
 let test = Task.async(function*() {
   let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
-  let { $, EVENTS, TimelineView, TimelineController } = panel.panelWin;
+  let { EVENTS, TimelineView, TimelineController } = panel.panelWin;
   let { OVERVIEW_INITIAL_SELECTION_RATIO: selectionRatio } = panel.panelWin;
-
-  $("#memory-checkbox").checked = true;
-  yield TimelineController.updateMemoryRecording();
 
   yield TimelineController.toggleRecording();
   ok(true, "Recording has started.");
@@ -21,13 +18,10 @@ let test = Task.async(function*() {
   ok(true, "Recording has ended.");
 
   let markers = TimelineController.getMarkers();
-  let memory = TimelineController.getMemory();
-  let selection = TimelineView.markersOverview.getSelection();
+  let selection = TimelineView.overview.getSelection();
 
   is(markers.length, 0,
     "There are no markers available.");
-  is(memory.length, 0,
-    "There are no memory measurements available.");
   is(selection.start, null,
     "The initial selection start is correct.");
   is(selection.end, null,
