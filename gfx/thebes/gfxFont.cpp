@@ -791,7 +791,7 @@ gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
         return 0;
     }
     if (ProvidesGlyphWidths()) {
-        return GetGlyphWidth(aCtx, aGID) / 65536.0;
+        return GetGlyphWidth(*aCtx->GetDrawTarget(), aGID) / 65536.0;
     }
     if (mFUnitsConvFactor == 0.0f) {
         GetMetrics(eHorizontal);
@@ -806,7 +806,7 @@ gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
     if (!shaper->Initialize()) {
         return 0;
     }
-    return shaper->GetGlyphHAdvance(aCtx, aGID) / 65536.0;
+    return shaper->GetGlyphHAdvance(aGID) / 65536.0;
 }
 
 /*static*/

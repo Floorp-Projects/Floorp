@@ -168,7 +168,7 @@ gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
 }
 
 int32_t
-gfxFT2FontBase::GetGlyphWidth(gfxContext *aCtx, uint16_t aGID)
+gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
 {
     cairo_text_extents_t extents;
     GetGlyphExtents(aGID, &extents);

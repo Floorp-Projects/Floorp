@@ -1172,6 +1172,92 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                            infoObject->GetPort(),
                                            versions.max);
 
+  bool weakEncryption = false;
+  SSLChannelInfo channelInfo;
+  rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
+  MOZ_ASSERT(rv == SECSuccess);
+  if (rv == SECSuccess) {
+    // Get the protocol version for telemetry
+    // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
+    unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
+    Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
+    AccumulateCipherSuite(
+      infoObject->IsFullHandshake() ? Telemetry::SSL_CIPHER_SUITE_FULL
+                                    : Telemetry::SSL_CIPHER_SUITE_RESUMED,
+      channelInfo);
+
+    SSLCipherSuiteInfo cipherInfo;
+    rv = SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                                sizeof cipherInfo);
+    MOZ_ASSERT(rv == SECSuccess);
+    if (rv == SECSuccess) {
+      weakEncryption =
+        (channelInfo.protocolVersion <= SSL_LIBRARY_VERSION_3_0) ||
+        (cipherInfo.symCipher == ssl_calg_rc4);
+
+      // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
+      Telemetry::Accumulate(
+        infoObject->IsFullHandshake()
+          ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
+          : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
+        cipherInfo.keaType);
+
+      DebugOnly<int16_t> KEAUsed;
+      MOZ_ASSERT(NS_SUCCEEDED(infoObject->GetKEAUsed(&KEAUsed)) &&
+                 (KEAUsed == cipherInfo.keaType));
+
+      if (infoObject->IsFullHandshake()) {
+        switch (cipherInfo.keaType) {
+          case ssl_kea_rsa:
+            AccumulateNonECCKeySize(Telemetry::SSL_KEA_RSA_KEY_SIZE_FULL,
+                                    channelInfo.keaKeyBits);
+            break;
+          case ssl_kea_dh:
+            AccumulateNonECCKeySize(Telemetry::SSL_KEA_DHE_KEY_SIZE_FULL,
+                                    channelInfo.keaKeyBits);
+            break;
+          case ssl_kea_ecdh:
+            AccumulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
+                               channelInfo.keaKeyBits);
+            break;
+          default:
+            MOZ_CRASH("impossible KEA");
+            break;
+        }
+
+        Telemetry::Accumulate(Telemetry::SSL_AUTH_ALGORITHM_FULL,
+                              cipherInfo.authAlgorithm);
+
+        // RSA key exchange doesn't use a signature for auth.
+        if (cipherInfo.keaType != ssl_kea_rsa) {
+          switch (cipherInfo.authAlgorithm) {
+            case ssl_auth_rsa:
+              AccumulateNonECCKeySize(Telemetry::SSL_AUTH_RSA_KEY_SIZE_FULL,
+                                      channelInfo.authKeyBits);
+              break;
+            case ssl_auth_dsa:
+              AccumulateNonECCKeySize(Telemetry::SSL_AUTH_DSA_KEY_SIZE_FULL,
+                                      channelInfo.authKeyBits);
+              break;
+            case ssl_auth_ecdsa:
+              AccumulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
+                                 channelInfo.authKeyBits);
+              break;
+            default:
+              MOZ_CRASH("impossible auth algorithm");
+              break;
+          }
+        }
+      }
+
+      Telemetry::Accumulate(
+          infoObject->IsFullHandshake()
+            ? Telemetry::SSL_SYMMETRIC_CIPHER_FULL
+            : Telemetry::SSL_SYMMETRIC_CIPHER_RESUMED,
+          cipherInfo.symCipher);
+    }
+  }
+
   PRBool siteSupportsSafeRenego;
   rv = SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn,
                                         &siteSupportsSafeRenego);
@@ -1180,8 +1266,9 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     siteSupportsSafeRenego = false;
   }
 
-  if (siteSupportsSafeRenego ||
-      !ioLayerHelpers.treatUnsafeNegotiationAsBroken()) {
+  if (!weakEncryption &&
+      (siteSupportsSafeRenego ||
+       !ioLayerHelpers.treatUnsafeNegotiationAsBroken())) {
     infoObject->SetSecurityState(nsIWebProgressListener::STATE_IS_SECURE |
                                  nsIWebProgressListener::STATE_SECURE_HIGH);
   } else {
@@ -1243,87 +1330,6 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
               ("HandshakeCallback using NEW cert %p\n", nssc.get()));
       status->mServerCert = nssc;
-    }
-  }
-
-  SSLChannelInfo channelInfo;
-  rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
-  MOZ_ASSERT(rv == SECSuccess);
-  if (rv == SECSuccess) {
-    // Get the protocol version for telemetry
-    // 0=ssl3, 1=tls1, 2=tls1.1, 3=tls1.2
-    unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
-    Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
-    AccumulateCipherSuite(
-      infoObject->IsFullHandshake() ? Telemetry::SSL_CIPHER_SUITE_FULL
-                                    : Telemetry::SSL_CIPHER_SUITE_RESUMED,
-      channelInfo);
-
-    SSLCipherSuiteInfo cipherInfo;
-    rv = SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
-                                sizeof cipherInfo);
-    MOZ_ASSERT(rv == SECSuccess);
-    if (rv == SECSuccess) {
-      // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
-      Telemetry::Accumulate(
-        infoObject->IsFullHandshake()
-          ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
-          : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
-        cipherInfo.keaType);
-
-      DebugOnly<int16_t> KEAUsed;
-      MOZ_ASSERT(NS_SUCCEEDED(infoObject->GetKEAUsed(&KEAUsed)) &&
-                 (KEAUsed == cipherInfo.keaType));
-
-      if (infoObject->IsFullHandshake()) {
-        switch (cipherInfo.keaType) {
-          case ssl_kea_rsa:
-            AccumulateNonECCKeySize(Telemetry::SSL_KEA_RSA_KEY_SIZE_FULL,
-                                    channelInfo.keaKeyBits);
-            break;
-          case ssl_kea_dh:
-            AccumulateNonECCKeySize(Telemetry::SSL_KEA_DHE_KEY_SIZE_FULL,
-                                    channelInfo.keaKeyBits);
-            break;
-          case ssl_kea_ecdh:
-            AccumulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
-                               channelInfo.keaKeyBits);
-            break;
-          default:
-            MOZ_CRASH("impossible KEA");
-            break;
-        }
-
-        Telemetry::Accumulate(Telemetry::SSL_AUTH_ALGORITHM_FULL,
-                              cipherInfo.authAlgorithm);
-
-        // RSA key exchange doesn't use a signature for auth.
-        if (cipherInfo.keaType != ssl_kea_rsa) {
-          switch (cipherInfo.authAlgorithm) {
-            case ssl_auth_rsa:
-              AccumulateNonECCKeySize(Telemetry::SSL_AUTH_RSA_KEY_SIZE_FULL,
-                                      channelInfo.authKeyBits);
-              break;
-            case ssl_auth_dsa:
-              AccumulateNonECCKeySize(Telemetry::SSL_AUTH_DSA_KEY_SIZE_FULL,
-                                      channelInfo.authKeyBits);
-              break;
-            case ssl_auth_ecdsa:
-              AccumulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
-                                 channelInfo.authKeyBits);
-              break;
-            default:
-              MOZ_CRASH("impossible auth algorithm");
-              break;
-          }
-        }
-      }
-
-      Telemetry::Accumulate(
-          infoObject->IsFullHandshake()
-            ? Telemetry::SSL_SYMMETRIC_CIPHER_FULL
-            : Telemetry::SSL_SYMMETRIC_CIPHER_RESUMED,
-          cipherInfo.symCipher);
     }
   }
 

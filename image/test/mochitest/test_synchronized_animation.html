@@ -33,6 +33,7 @@ var gRanEvent = false;
 var gObserver;
 var gImg1;
 var gImg2;
+var gFirstImageLoaded = false;
 var gOuter;
 var gFinished = false;
 var gFirstRequest = null;
@@ -71,20 +72,37 @@ function failTest() {
   cleanUpAndFinish();
 }
 
+function waitForLoadAndTest(image) {
+  return () => {
+    // Draw the image into a canvas to ensure it's decoded.
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0);
+
+    // Attach the observer.
+    var imgLoadingContent = image.QueryInterface(Ci.nsIImageLoadingContent);
+    imgLoadingContent.addObserver(gOuter);
+
+    // If the other image already loaded, add both images to the document, which
+    // begins the real test.
+    if (gFirstImageLoaded) {
+      gContent.appendChild(gImg1);
+      gContent.appendChild(gImg2);
+    } else {
+      gFirstImageLoaded = true;
+    }
+  };
+}
+
 function main() {
   gImg1 = new Image();
   gImg2 = new Image();
 
-  // Create, customize & attach decoder observer
+  // Create and customize decoder observer
   var obs = new ImageDecoderObserverStub();
   obs.frameUpdate = frameUpdate;
 
   gOuter = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools).createScriptedObserver(obs);
-  var imgLoadingContent = gImg1.QueryInterface(Ci.nsIImageLoadingContent);
-  imgLoadingContent.addObserver(gOuter);
-
-  imgLoadingContent = gImg2.QueryInterface(Ci.nsIImageLoadingContent);
-  imgLoadingContent.addObserver(gOuter);
 
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.
@@ -94,8 +112,9 @@ function main() {
   gImg1.src = "animated1.gif";
   gImg2.src = "animated2.gif";
 
-  gContent.appendChild(gImg1);
-  gContent.appendChild(gImg2);
+  // Wait for each image to load.
+  gImg1.addEventListener('load', waitForLoadAndTest(gImg1));
+  gImg2.addEventListener('load', waitForLoadAndTest(gImg2));
 
   // In case something goes wrong, fail earlier than mochitest timeout,
   // and with more information.
