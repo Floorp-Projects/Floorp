@@ -929,8 +929,8 @@ this.Download.prototype = {
     }
 
     // These are serialized unless they are false, null, or empty strings.
-    for (let property of kSerializableDownloadProperties) {
-      if (property != "startTime" && this[property]) {
+    for (let property of kPlainSerializableDownloadProperties) {
+      if (this[property]) {
         serializable[property] = this[property];
       }
     }
@@ -963,7 +963,7 @@ this.Download.prototype = {
 /**
  * Defines which properties of the Download object are serializable.
  */
-const kSerializableDownloadProperties = [
+const kPlainSerializableDownloadProperties = [
   "succeeded",
   "canceled",
   "totalBytes",
@@ -1032,14 +1032,14 @@ Download.fromSerializable = function (aSerializable) {
     download.error = aSerializable.error;
   }
 
-  for (let property of kSerializableDownloadProperties) {
+  for (let property of kPlainSerializableDownloadProperties) {
     if (property in aSerializable) {
       download[property] = aSerializable[property];
     }
   }
 
   deserializeUnknownProperties(download, aSerializable, property =>
-    kSerializableDownloadProperties.indexOf(property) == -1 &&
+    kPlainSerializableDownloadProperties.indexOf(property) == -1 &&
     property != "startTime" &&
     property != "source" &&
     property != "target" &&
