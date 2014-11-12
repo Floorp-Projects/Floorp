@@ -172,12 +172,6 @@ void
 JitcodeGlobalTable::removeEntry(void *startAddr)
 {
     JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
-    JitcodeGlobalEntry result;
-    mozilla::DebugOnly<bool> success = tree_.contains(query, &result);
-    MOZ_ASSERT(success);
-
-    // Destroy entry before removing it from tree.
-    result.destroy();
     tree_.remove(query);
 }
 
