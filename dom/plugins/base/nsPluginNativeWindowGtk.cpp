@@ -10,7 +10,7 @@
  */
 
 #include "nsDebug.h"
-#include "nsPluginNativeWindow.h"
+#include "nsPluginNativeWindowGtk.h"
 #include "nsNPAPIPlugin.h"
 #include "npapi.h"
 #include <gtk/gtk.h>
@@ -23,35 +23,6 @@
 #include "gtk2xtbin.h"
 #endif
 #include "mozilla/X11Util.h"
-
-class nsPluginNativeWindowGtk : public nsPluginNativeWindow {
-public: 
-  nsPluginNativeWindowGtk();
-  virtual ~nsPluginNativeWindowGtk();
-
-  virtual nsresult CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance);
-private:
-  void SetWindow(XID aWindow)
-  {
-    window = reinterpret_cast<void*>(static_cast<uintptr_t>(aWindow));
-  }
-  XID GetWindow() const
-  {
-    return static_cast<XID>(reinterpret_cast<uintptr_t>(window));
-  }
-
-  NPSetWindowCallbackStruct mWsInfo;
-  /**
-   * Either a GtkSocket or a special GtkXtBin widget (derived from GtkSocket)
-   * that encapsulates the Xt toolkit within a Gtk Application.
-   */
-  GtkWidget* mSocketWidget;
-  nsresult  CreateXEmbedWindow(bool aEnableXtFocus);
-#if (MOZ_WIDGET_GTK == 2)
-  nsresult  CreateXtWindow();
-#endif
-  void      SetAllocation();
-};
 
 static gboolean plug_removed_cb   (GtkWidget *widget, gpointer data);
 static void socket_unrealize_cb   (GtkWidget *widget, gpointer data);

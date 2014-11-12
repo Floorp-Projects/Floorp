@@ -8,6 +8,12 @@
 #include "nsWidgetsCID.h"
 #include "nsDebug.h"
 
+#if defined(MOZ_WIDGET_GTK)
+#include "nsPluginNativeWindowGtk.h"
+#else
+#include "nsPluginNativeWindow.h"
+#endif
+
 using namespace mozilla::widget;
 
 #define PWLOG(...)
@@ -28,6 +34,9 @@ static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 }
 
 PluginWidgetParent::PluginWidgetParent()
+#if defined(MOZ_WIDGET_GTK)
+  : mWrapper(nullptr)
+#endif
 {
   PWLOG("PluginWidgetParent::PluginWidgetParent()\n");
   MOZ_COUNT_CTOR(PluginWidgetParent);
@@ -60,9 +69,8 @@ PluginWidgetParent::ActorDestroy(ActorDestroyReason aWhy)
 
 // When plugins run in chrome, nsPluginNativeWindow(Plat) implements platform
 // specific functionality that wraps plugin widgets. With e10s we currently
-// bypass this code since we can't connect up platform specific bits in the
-// content process. We may need to instantiate nsPluginNativeWindow here and
-// enable some of its logic.
+// bypass this code on Window, and reuse a bit of it on Linux. Content still
+// makes use of some of the utility functions as well.
 
 bool
 PluginWidgetParent::RecvCreate()
@@ -72,6 +80,15 @@ PluginWidgetParent::RecvCreate()
   nsresult rv;
 
   mWidget = do_CreateInstance(kWidgetCID, &rv);
+
+#if defined(MOZ_WIDGET_GTK)
+  // We need this currently just for GTK in setting up a socket widget
+  // we can send over to content -> plugin.
+  PLUG_NewPluginNativeWindow((nsPluginNativeWindow**)&mWrapper);
+  if (!mWrapper) {
+    return false;
+  }
+#endif
 
   // This returns the top level window widget
   nsCOMPtr<nsIWidget> parentWidget = GetTabParent()->GetWidget();
@@ -97,6 +114,14 @@ PluginWidgetParent::RecvCreate()
   // initial position update this insures the widget doesn't overlap
   // chrome.
   RecvMove(0, 0);
+
+#if defined(MOZ_WIDGET_GTK)
+  // For setup, initially GTK code expects 'window' to hold the parent.
+  mWrapper->window = mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+  mWrapper->CreateXEmbedWindow(false);
+  mWrapper->SetAllocation();
+  PWLOG("Plugin XID=%p\n", (void*)mWrapper->window);
+#endif
 
   return true;
 }
@@ -143,7 +168,12 @@ PluginWidgetParent::RecvGetNativePluginPort(uintptr_t* value)
 {
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvGetNativeData()\n");
+#if defined(MOZ_WIDGET_GTK)
+  *value = (uintptr_t)mWrapper->window;
+#else
   *value = (uintptr_t)mWidget->GetNativeData(NS_NATIVE_PLUGIN_PORT);
+#endif
+  PWLOG("PluginWidgetParent::RecvGetNativeData() %p\n", (void*)*value);
   return true;
 }
 
@@ -153,6 +183,11 @@ PluginWidgetParent::RecvResize(const nsIntRect& aRect)
   ENSURE_CHANNEL;
   PWLOG("PluginWidgetParent::RecvResize(%d, %d, %d, %d)\n", aRect.x, aRect.y, aRect.width, aRect.height);
   mWidget->Resize(aRect.width, aRect.height, true);
+#if defined(MOZ_WIDGET_GTK)
+  mWrapper->width = aRect.width;
+  mWrapper->height = aRect.height;
+  mWrapper->SetAllocation();
+#endif
   return true;
 }
 

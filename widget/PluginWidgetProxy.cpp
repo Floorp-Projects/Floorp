@@ -143,6 +143,7 @@ PluginWidgetProxy::GetNativeData(uint32_t aDataType)
   }
   uintptr_t value = 0;
   mActor->SendGetNativePluginPort(&value);
+  PWLOG("PluginWidgetProxy::GetNativeData %p\n", (void*)value);
   return (void*)value;
 }
 
