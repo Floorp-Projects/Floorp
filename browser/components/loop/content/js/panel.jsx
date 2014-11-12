@@ -671,6 +671,7 @@ loop.panel = (function(_, mozL10n) {
           message: serviceError.error.friendlyMessage,
           details: serviceError.error.friendlyDetails,
           detailsButtonLabel: serviceError.error.friendlyDetailsButtonLabel,
+          detailsButtonCallback: serviceError.error.friendlyDetailsButtonCallback,
         });
       } else {
         this.props.notifications.remove(this.props.notifications.get("service-error"));
@@ -684,8 +685,8 @@ loop.panel = (function(_, mozL10n) {
       if (currUid != newUid) {
         // On profile change (login, logout), switch back to the default tab.
         this.selectTab("call");
+        this.setState({userProfile: profile});
       }
-      this.setState({userProfile: profile});
       this.updateServiceErrors();
     },
 

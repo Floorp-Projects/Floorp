@@ -265,6 +265,11 @@ p {
   color: #d74345
 }
 
+.notificationContainer > .details-error > .detailsButton {
+  float: right;
+  -moz-margin-start: 1em; /* Match .detailsBar padding */
+}
+
 .alert .close {
   position: relative;
   top: -.1rem;
