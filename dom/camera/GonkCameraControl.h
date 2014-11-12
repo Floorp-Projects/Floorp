@@ -106,6 +106,7 @@ protected:
   nsresult SetConfigurationInternal(const Configuration& aConfig);
   nsresult SetPictureConfiguration(const Configuration& aConfig);
   nsresult SetVideoConfiguration(const Configuration& aConfig);
+  nsresult StartInternal(const Configuration* aInitialConfig);
 
   template<class T> nsresult SetAndPush(uint32_t aKey, const T& aValue);
 
