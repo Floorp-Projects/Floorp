@@ -53,6 +53,21 @@ function addTab(url) {
   return def.promise;
 }
 
+/**
+ * Navigate the currently selected tab to a new URL and wait for it to load.
+ * @param {String} url The url to be loaded in the current tab.
+ * @return a promise that resolves when the page has fully loaded.
+ */
+function navigateTo(url) {
+  let navigating = promise.defer();
+  gBrowser.selectedBrowser.addEventListener("load", function onload() {
+    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+    navigating.resolve();
+  }, true);
+  content.location = url;
+  return navigating.promise;
+}
+
 function* cleanup()
 {
   gPanelWindow = null;

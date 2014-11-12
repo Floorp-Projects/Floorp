@@ -53,23 +53,23 @@ add_task(function* test_special_searches() {
   do_log_info("Star restrict");
   yield check_autocomplete({
     search: "*",
-    matches: [ { uri: uri5, title: "title" },
-               { uri: uri6, title: "foo.bar" },
-               { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar"] },
-               { uri: uri12, title: "foo.bar", tags: ["foo.bar"] } ]
+    matches: [ { uri: uri5, title: "title", style: [ "bookmark" ] },
+               { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar"], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: ["foo.bar"], style: [ "tag" ] } ]
   });
 
   do_log_info("Tag restrict");
   yield check_autocomplete({
     search: "+",
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   // Test specials as any word position
@@ -129,26 +129,26 @@ add_task(function* test_special_searches() {
   resetRestrict("history");
   yield check_autocomplete({
     search: "foo *",
-    matches: [ { uri: uri6, title: "foo.bar" },
-               { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo | -> is star (change pref)");
   changeRestrict("bookmark", "|");
   yield check_autocomplete({
     search: "foo |",
-    matches: [ { uri: uri6, title: "foo.bar" },
-               { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo # -> in title");
@@ -157,12 +157,12 @@ add_task(function* test_special_searches() {
     search: "foo #",
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri4, title: "foo.bar" },
-               { uri: uri6, title: "foo.bar" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+               { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo | -> in title (change pref)");
@@ -171,12 +171,12 @@ add_task(function* test_special_searches() {
     search: "foo |",
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri4, title: "foo.bar" },
-               { uri: uri6, title: "foo.bar" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+               { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo @ -> in url");
@@ -185,10 +185,10 @@ add_task(function* test_special_searches() {
     search: "foo @",
     matches: [ { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
-               { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo | -> in url (change pref)");
@@ -197,30 +197,30 @@ add_task(function* test_special_searches() {
     search: "foo |",
     matches: [ { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
-               { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo + -> is tag");
   resetRestrict("url");
   yield check_autocomplete({
     search: "foo +",
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo | -> is tag (change pref)");
   changeRestrict("tag", "|");
   yield check_autocomplete({
     search: "foo |",
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo ~ -> is typed");
@@ -228,7 +228,7 @@ add_task(function* test_special_searches() {
   yield check_autocomplete({
     search: "foo ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo | -> is typed (change pref)");
@@ -236,7 +236,7 @@ add_task(function* test_special_searches() {
   yield check_autocomplete({
     search: "foo |",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   // Test various pairs of special searches
@@ -244,8 +244,8 @@ add_task(function* test_special_searches() {
   resetRestrict("typed");
   yield check_autocomplete({
     search: "foo ^ *",
-    matches: [ { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo ^ # -> history, in title");
@@ -268,7 +268,7 @@ add_task(function* test_special_searches() {
   do_log_info("foo ^ + -> history, is tag");
   yield check_autocomplete({
     search: "foo ^ +",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo ^ ~ -> history, is typed");
@@ -281,81 +281,81 @@ add_task(function* test_special_searches() {
   do_log_info("foo * # -> is star, in title");
   yield check_autocomplete({
     search: "foo * #",
-    matches: [ { uri: uri6, title: "foo.bar" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo * @ -> is star, in url");
   yield check_autocomplete({
     search: "foo * @",
-    matches: [ { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo * + -> same as +");
   yield check_autocomplete({
     search: "foo * +",
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo * ~ -> is star, is typed");
   yield check_autocomplete({
     search: "foo * ~",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo # @ -> in title, in url");
   yield check_autocomplete({
     search: "foo # @",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo # + -> in title, is tag");
   yield check_autocomplete({
     search: "foo # +",
-    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo # ~ -> in title, is typed");
   yield check_autocomplete({
     search: "foo # ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo @ + -> in url, is tag");
   yield check_autocomplete({
     search: "foo @ +",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo @ ~ -> in url, is typed");
   yield check_autocomplete({
     search: "foo @ ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo + ~ -> is tag, is typed");
   yield check_autocomplete({
     search: "foo + ~",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   // Disable autoFill for the next tests, see test_autoFill_default_behavior.js
@@ -378,22 +378,22 @@ add_task(function* test_special_searches() {
   Services.prefs.setIntPref("browser.urlbar.default.behavior", 3);
   yield check_autocomplete({
     search: "foo",
-    matches: [ { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo -> default history, is star, is typed");
   Services.prefs.setIntPref("browser.urlbar.default.behavior", 35);
   yield check_autocomplete({
     search: "foo",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo -> default history, is star, in url");
   Services.prefs.setIntPref("browser.urlbar.default.behavior", 19);
   yield check_autocomplete({
     search: "foo",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   // Change the default to be less restrictive to make sure we find more
@@ -401,10 +401,10 @@ add_task(function* test_special_searches() {
   Services.prefs.setIntPref("browser.urlbar.default.behavior", 18);
   yield check_autocomplete({
     search: "foo",
-    matches: [ { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+    matches: [ { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo -> default in url");
@@ -413,10 +413,10 @@ add_task(function* test_special_searches() {
     search: "foo",
     matches: [ { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
-               { uri: uri7, title: "title" },
-               { uri: uri8, title: "foo.bar" },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } ]
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   yield cleanup();

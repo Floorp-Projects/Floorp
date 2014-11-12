@@ -12,7 +12,8 @@ let gSubDialog = {
   _injectedStyleSheets: ["chrome://mozapps/content/preferences/preferences.css",
                          "chrome://browser/skin/preferences/preferences.css",
                          "chrome://global/skin/in-content/common.css",
-                         "chrome://browser/skin/preferences/in-content/preferences.css"],
+                         "chrome://browser/skin/preferences/in-content/preferences.css",
+                         "chrome://browser/skin/preferences/in-content/dialog.css"],
 
   init: function() {
     this._frame = document.getElementById("dialogFrame");

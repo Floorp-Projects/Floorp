@@ -200,9 +200,9 @@ function injectLoopAPI(targetWindow) {
           if (error.hasOwnProperty("toString")) {
             delete error.toString;
           }
-          errors[type] = Cu.cloneInto(error, targetWindow);
+          errors[type] = Cu.waiveXrays(Cu.cloneInto(error, targetWindow, { cloneFunctions: true }));
         }
-        return Cu.cloneInto(errors, targetWindow);
+        return Cu.cloneInto(errors, targetWindow, { cloneFunctions: true });
       },
     },
 
