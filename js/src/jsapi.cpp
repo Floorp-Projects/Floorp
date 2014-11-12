@@ -4741,19 +4741,6 @@ JS::CloneAndExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptAr
     return ExecuteScript(cx, obj, script, nullptr);
 }
 
-JS_PUBLIC_API(bool)
-JS_ExecuteScriptVersion(JSContext *cx, HandleObject obj, HandleScript script,
-                        MutableHandleValue rval, JSVersion version)
-{
-    return ExecuteScript(cx, obj, script, rval.address());
-}
-
-JS_PUBLIC_API(bool)
-JS_ExecuteScriptVersion(JSContext *cx, HandleObject obj, HandleScript script, JSVersion version)
-{
-    return ExecuteScript(cx, obj, script, nullptr);
-}
-
 static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
 
 static bool
