@@ -264,6 +264,9 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
                              /* foldConstants = */ false,
                              (Parser<SyntaxParseHandler> *) nullptr,
                              (LazyScript *) nullptr);
+
+        if (!syntaxParser->checkOptions())
+            return nullptr;
     }
 
     Parser<FullParseHandler> parser(cx, alloc, options, srcBuf.get(), srcBuf.length(),
@@ -271,6 +274,9 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
                                     canLazilyParse ? syntaxParser.ptr() : nullptr, nullptr);
     parser.sct = sct;
     parser.ss = ss;
+
+    if (!parser.checkOptions())
+        return nullptr;
 
     Directives directives(options.strictOption);
     GlobalSharedContext globalsc(cx, scopeChain, directives, options.extraWarningsOption);
@@ -468,6 +474,8 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
 
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
                                     /* foldConstants = */ true, nullptr, lazy);
+    if (!parser.checkOptions())
+        return false;
 
     uint32_t staticLevel = lazy->staticLevel(cx);
 
@@ -549,6 +557,8 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
                              /* foldConstants = */ false,
                              (Parser<SyntaxParseHandler> *) nullptr,
                              (LazyScript *) nullptr);
+        if (!syntaxParser->checkOptions())
+            return false;
     }
 
     MOZ_ASSERT(!options.forEval);
@@ -559,6 +569,9 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
                                     canLazilyParse ? syntaxParser.ptr() : nullptr, nullptr);
     parser.sct = &sct;
     parser.ss = ss;
+
+    if (!parser.checkOptions())
+        return false;
 
     MOZ_ASSERT(fun);
     MOZ_ASSERT(fun->isTenured());
