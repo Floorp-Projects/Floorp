@@ -100,7 +100,13 @@ nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindo
 nsresult nsPluginNativeWindowGtk::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance)
 {
   if (aPluginInstance) {
-    if (type == NPWindowTypeWindow) {
+    if (type == NPWindowTypeWindow &&
+        XRE_GetProcessType() == GeckoProcessType_Content) {
+      // In this case, most of the initialization code here has already happened
+      // in the chrome process. The window we have in content is the XID of the
+      // socket widget we need to hand to plugins.
+      SetWindow((XID)window);
+	  } else if (type == NPWindowTypeWindow) {
       if (!mSocketWidget) {
         nsresult rv;
 
@@ -165,9 +171,9 @@ nsresult nsPluginNativeWindowGtk::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
 #endif
     } // NPWindowTypeWindow
     aPluginInstance->SetWindow(this);
-  }
-  else if (mPluginInstance)
+  } else if (mPluginInstance) {
     mPluginInstance->SetWindow(nullptr);
+  }
 
   SetPluginInstance(aPluginInstance);
   return NS_OK;
