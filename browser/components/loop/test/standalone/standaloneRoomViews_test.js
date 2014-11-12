@@ -102,6 +102,32 @@ describe("loop.standaloneRoomViews", function() {
         view = mountTestComponent();
       });
 
+      describe("Empty room message", function() {
+        it("should display an empty room message on JOINED",
+          function() {
+            activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
+
+            expect(view.getDOMNode().querySelector(".empty-room-message"))
+              .not.eql(null);
+          });
+
+        it("should display an empty room message on SESSION_CONNECTED",
+          function() {
+            activeRoomStore.setStoreState({roomState: ROOM_STATES.SESSION_CONNECTED});
+
+            expect(view.getDOMNode().querySelector(".empty-room-message"))
+              .not.eql(null);
+          });
+
+        it("shouldn't display an empty room message on HAS_PARTICIPANTS",
+          function() {
+            activeRoomStore.setStoreState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+
+            expect(view.getDOMNode().querySelector(".empty-room-message"))
+              .eql(null);
+          });
+      });
+
       describe("Join button", function() {
         function getJoinButton(view) {
           return view.getDOMNode().querySelector(".btn-join");
