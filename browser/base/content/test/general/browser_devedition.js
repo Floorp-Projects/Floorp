@@ -65,6 +65,11 @@ function testDevtoolsTheme() {
   is (document.documentElement.getAttribute("devtoolstheme"), "dark",
     "The documentElement has an attribute based on devtools theme.");
   ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the dark devtools theme.");
+
+  Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "foobar");
+  is (document.documentElement.getAttribute("devtoolstheme"), "light",
+    "The documentElement has 'light' as a default for the devtoolstheme attribute");
+  ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the foobar devtools theme.");
 }
 
 function dummyLightweightTheme(id) {
