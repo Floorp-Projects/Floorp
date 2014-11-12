@@ -53,8 +53,11 @@ let DevEdition = {
   _updateDevtoolsThemeAttribute: function() {
     // Set an attribute on root element to make it possible
     // to change colors based on the selected devtools theme.
-    document.documentElement.setAttribute("devtoolstheme",
-      Services.prefs.getCharPref(this._devtoolsThemePrefName));
+    let devtoolsTheme = Services.prefs.getCharPref(this._devtoolsThemePrefName);
+    if (devtoolsTheme != "dark") {
+      devtoolsTheme = "light";
+    }
+    document.documentElement.setAttribute("devtoolstheme", devtoolsTheme);
     ToolbarIconColor.inferFromText();
     this._updateStyleSheetFromPrefs();
   },
