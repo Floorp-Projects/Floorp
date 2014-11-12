@@ -2194,6 +2194,40 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void movsldup(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE3());
+        masm.movsldup_rr(src.code(), dest.code());
+    }
+    void movsldup(const Operand &src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE3());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.movsldup_rr(src.fpu(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.movsldup_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
+    void movshdup(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE3());
+        masm.movshdup_rr(src.code(), dest.code());
+    }
+    void movshdup(const Operand &src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE3());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.movshdup_rr(src.fpu(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.movshdup_mr(src.disp(), src.base(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void minsd(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.minsd_rr(src.code(), dest.code());

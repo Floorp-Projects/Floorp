@@ -2414,6 +2414,17 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
     uint32_t z = ins->laneZ();
     uint32_t w = ins->laneW();
 
+    if (AssemblerX86Shared::HasSSE3()) {
+        if (ins->lanesMatch(0, 0, 2, 2)) {
+            masm.movsldup(input, output);
+            return true;
+        }
+        if (ins->lanesMatch(1, 1, 3, 3)) {
+            masm.movshdup(input, output);
+            return true;
+        }
+    }
+
     // TODO Here and below, arch specific lowering could identify this pattern
     // and use defineReuseInput to avoid this move (bug 1084404)
     if (ins->lanesMatch(2, 3, 2, 3)) {
