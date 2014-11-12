@@ -152,6 +152,11 @@ public:
     MOZ_ASSERT(false, "Should have been overridden");
   }
 
+  virtual gfx::IntSize GetImageSize() const
+  {
+    MOZ_ASSERT(false, "Should have been overridden");
+  }
+
   /**
    * Adds a mask effect using this texture as the mask, if possible.
    * @return true if the effect was added, false otherwise.
