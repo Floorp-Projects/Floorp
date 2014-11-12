@@ -2597,7 +2597,7 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
   nsIntPoint offset(0, 0);
   while ((aWidget->WindowType() == eWindowType_child ||
-          aWidget->WindowType() == eWindowType_plugin)) {
+          aWidget->IsPlugin())) {
     nsIWidget* parent = aWidget->GetParent();
     if (!parent) {
       break;

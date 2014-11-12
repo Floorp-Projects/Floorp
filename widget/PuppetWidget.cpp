@@ -217,6 +217,29 @@ PuppetWidget::Resize(double aWidth,
   return NS_OK;
 }
 
+nsresult
+PuppetWidget::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
+{
+  for (uint32_t i = 0; i < aConfigurations.Length(); ++i) {
+    const Configuration& configuration = aConfigurations[i];
+    PuppetWidget* w = static_cast<PuppetWidget*>(configuration.mChild);
+    NS_ASSERTION(w->GetParent() == this,
+                 "Configured widget is not a child");
+    w->SetWindowClipRegion(configuration.mClipRegion, true);
+    nsIntRect bounds;
+    w->GetBounds(bounds);
+    if (bounds.Size() != configuration.mBounds.Size()) {
+      w->Resize(configuration.mBounds.x, configuration.mBounds.y,
+                configuration.mBounds.width, configuration.mBounds.height,
+                true);
+    } else if (bounds.TopLeft() != configuration.mBounds.TopLeft()) {
+      w->Move(configuration.mBounds.x, configuration.mBounds.y);
+    }
+    w->SetWindowClipRegion(configuration.mClipRegion, false);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PuppetWidget::SetFocus(bool aRaise)
 {
