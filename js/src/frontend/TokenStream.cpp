@@ -295,7 +295,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
     flags(),
     linebase(base - options.column),
     prevLinebase(nullptr),
-    userbuf(cx, base - options.column, length + options.column), // See comment below
+    userbuf(cx, base, length, options.column),
     filename(options.filename()),
     displayURL_(nullptr),
     sourceMapURL_(nullptr),
@@ -308,7 +308,6 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
     // initial line's base must be included in the buffer. linebase and userbuf
     // were adjusted above, and if we are starting tokenization part way through
     // this line then adjust the next character.
-    userbuf.setAddressOfNextRawChar(base, /* allowPoisoned = */ true);
 
     // Nb: the following tables could be static, but initializing them here is
     // much easier.  Don't worry, the time to initialize them for each
