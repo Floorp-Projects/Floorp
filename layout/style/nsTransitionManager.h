@@ -148,6 +148,9 @@ public:
     mozilla::dom::Element *aElement,
     nsCSSPseudoElements::Type aPseudoType,
     bool aCreateIfNeeded);
+  void WalkTransitionRule(mozilla::dom::Element* aElement,
+                          nsCSSPseudoElements::Type aPseudoType,
+                          nsRuleWalker* aRuleWalker);
 
 protected:
   virtual void ElementCollectionRemoved() MOZ_OVERRIDE;
@@ -164,8 +167,6 @@ private:
                              nsStyleContext* aNewStyleContext,
                              bool* aStartedAny,
                              nsCSSPropertySet* aWhichStarted);
-  void WalkTransitionRule(ElementDependentRuleProcessorData* aData,
-                          nsCSSPseudoElements::Type aPseudoType);
 
   bool mInAnimationOnlyStyleUpdate;
 };

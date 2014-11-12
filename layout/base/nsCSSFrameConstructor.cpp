@@ -9404,7 +9404,9 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
           int nextDisplay = -1;
           int prevDisplay = -1;
 
-          if (!endIter.AtStart() && IsRubyParentType(ourParentType)) {
+          if (!endIter.AtStart() &&
+              (IsRubyParentType(ourParentType) ||
+               IsRubyParentType(groupingParentType))) {
             FCItemIterator prevItemIter(endIter);
             prevItemIter.Prev();
             prevDisplay =
@@ -9413,9 +9415,22 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
 
           // We only need to compute nextDisplay for testing for ruby white
           // space.
-          if (!spaceEndIter.IsDone() && IsRubyParentType(ourParentType)) {
+          if (!spaceEndIter.IsDone() &&
+              (IsRubyParentType(ourParentType) ||
+               IsRubyParentType(groupingParentType))) {
             nextDisplay =
               spaceEndIter.item().mStyleContext->StyleDisplay()->mDisplay;
+          }
+
+          if (ourParentType == eTypeRubyBaseContainer &&
+              prevDisplay == -1 && nextDisplay == -1) {
+            if (aParentFrame->StyleContext()->GetPseudo()) {
+              // We are in a pseudo ruby base container, which has
+              // whitespaces only. This is a special case to handle
+              // inter-segment spaces.
+              endIter = spaceEndIter;
+              break;
+            }
           }
 
           // We drop the whitespace in the following cases:
@@ -9438,8 +9453,9 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
             prevDisplay == -1 && isRubyLeadingTrailingParentType;
           bool isRubyTrailing =
             nextDisplay == -1 && isRubyLeadingTrailingParentType;
-          // There's an implicit && "IsRubyParentType(ourParentType)" here
-          // because nextDisplay is only set if this is true.
+          // There's an implicit condition that we are in a ruby parent or
+          // we are grouping a ruby parent here, because nextDisplay and
+          // prevDisplay are only set if that is true.
           bool isRubyInterLevel =
             (nextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
             (nextDisplay == NS_STYLE_DISPLAY_RUBY_TEXT &&
@@ -9475,10 +9491,25 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
         // we'll traverse this whitespace again.  But it'll all just be quick
         // DesiredParentType() checks which will match ourParentType (that's
         // what it means that this is the group end), so it's OK.
+        // However, when we are grouping a ruby parent, and endIter points to
+        // a non-droppable whitespace, if the next non-whitespace item also
+        // wants a ruby parent which is not our parent, the whitespace should
+        // also be included into the current ruby parent.
         prevParentType = endIter.item().DesiredParentType();
         if (prevParentType == ourParentType) {
-          // End the group at endIter.
-          break;
+          if (endIter == spaceEndIter ||
+              // not grouping a ruby parent
+              !IsRubyParentType(groupingParentType) ||
+              spaceEndIter.IsDone()) {
+            // End the group at endIter.
+            break;
+          }
+          ParentType nextParentType = spaceEndIter.item().DesiredParentType();
+          if (nextParentType == ourParentType ||
+              !IsRubyParentType(nextParentType)) {
+            // End the group at endIter.
+            break;
+          }
         }
 
         if (ourParentType == eTypeTable &&
@@ -9489,11 +9520,29 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
           break;
         }
 
-        // Don't group ruby base boxes and ruby annotation boxes together
-        if (ourParentType == eTypeRuby &&
-            (prevParentType == eTypeRubyTextContainer) !=
-            (groupingParentType == eTypeRubyTextContainer)) {
-          break;
+        // Break from the boundary between a ruby base container and a
+        // ruby text container, or the boundary between an inter-segment
+        // whitespace and the next ruby segment.
+        if (ourParentType == eTypeRuby) {
+          if ((prevParentType == eTypeRubyBaseContainer &&
+               groupingParentType == eTypeRubyTextContainer) ||
+              (prevParentType == eTypeRubyTextContainer &&
+               groupingParentType == eTypeRubyBaseContainer)) {
+            // Don't group ruby base boxes and
+            // ruby annotation boxes together.
+            break;
+          } else if (groupingParentType == eTypeBlock &&
+                     endIter != spaceEndIter) {
+            // We are on inter-segment whitespaces, which we want to
+            // create an independent ruby base container for.
+            endIter = spaceEndIter;
+            break;
+          }
+          // The only case where prevParentType is different from
+          // groupingParentType but we still want to continue, is that
+          // we are on an inter-base or inter-annotation whitespace.
+          MOZ_ASSERT(groupingParentType == prevParentType ||
+                     prevParentType == eTypeBlock);
         }
 
         // If we have some whitespace that we were not able to drop and there is
@@ -9543,6 +9592,10 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
         if (groupingParentType == eTypeRubyTextContainer) {
           wrapperType = eTypeRubyTextContainer;
         } else {
+          NS_ASSERTION(groupingParentType == eTypeRubyBaseContainer ||
+                       groupingParentType == eTypeBlock,
+                       "It should be either a ruby base container, "
+                       "or an inter-segment whitespace");
           wrapperType = eTypeRubyBaseContainer;
         } 
         break;

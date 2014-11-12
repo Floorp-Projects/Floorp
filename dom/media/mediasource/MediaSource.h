@@ -74,8 +74,6 @@ public:
   bool Attach(MediaSourceDecoder* aDecoder);
   void Detach();
 
-  void GetBuffered(TimeRanges* aBuffered);
-
   // Set mReadyState to aState and fire the required events at the MediaSource.
   void SetReadyState(MediaSourceReadyState aState);
 
@@ -122,11 +120,9 @@ private:
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
-  void DurationChange(double aNewDuration, ErrorResult& aRv);
+  void DurationChange(double aOldDuration, double aNewDuration);
 
   void InitializationEvent();
-
-  double mDuration;
 
   nsRefPtr<SourceBufferList> mSourceBuffers;
   nsRefPtr<SourceBufferList> mActiveSourceBuffers;
