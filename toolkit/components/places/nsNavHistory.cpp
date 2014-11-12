@@ -3381,6 +3381,8 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   // folders
   const nsTArray<int64_t>& folders = aQuery->Folders();
   if (folders.Length() > 0) {
+    aOptions->SetQueryType(nsNavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS);
+
     nsTArray<int64_t> includeFolders;
     includeFolders.AppendElements(folders);
 
