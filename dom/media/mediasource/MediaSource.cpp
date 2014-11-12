@@ -467,7 +467,10 @@ MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
   double oldDuration = mDuration;
   mDuration = aNewDuration;
   if (aNewDuration < oldDuration) {
-    mSourceBuffers->RangeRemoval(aNewDuration, oldDuration);
+    mSourceBuffers->Remove(aNewDuration, oldDuration, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
   // TODO: If partial audio frames/text cues exist, clamp duration based on mSourceBuffers.
   // TODO: Update media element's duration and run element's duration change algorithm.
