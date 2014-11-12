@@ -957,7 +957,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   mDeviceContext = aDeviceContext;
 
-  if (mDeviceContext->SetFullZoom(mFullZoom))
+  if (mDeviceContext->SetPixelScale(mFullZoom))
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
@@ -1475,7 +1475,7 @@ nsPresContext::SetFullZoom(float aZoom)
   mShell->GetViewManager()->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
   float oldWidthDevPixels = oldWidthAppUnits / float(mCurAppUnitsPerDevPixel);
   float oldHeightDevPixels = oldHeightAppUnits / float(mCurAppUnitsPerDevPixel);
-  mDeviceContext->SetFullZoom(aZoom);
+  mDeviceContext->SetPixelScale(aZoom);
 
   NS_ASSERTION(!mSupressResizeReflow, "two zooms happening at the same time? impossible!");
   mSupressResizeReflow = true;
