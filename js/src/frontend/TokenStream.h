@@ -667,7 +667,7 @@ class MOZ_STACK_CLASS TokenStream
       public:
         TokenBuf(ExclusiveContext *cx, const char16_t *buf, size_t length, size_t startOffset)
           : base_(buf),
-            startOffset(startOffset),
+            startOffset_(startOffset),
             limit_(buf + length),
             ptr(buf)
         { }
@@ -680,14 +680,18 @@ class MOZ_STACK_CLASS TokenStream
             return offset() == 0;
         }
 
+        size_t startOffset() const {
+            return startOffset_;
+        }
+
         size_t offset() const {
-            return startOffset + mozilla::PointerRangeSize(base_, ptr);
+            return startOffset_ + mozilla::PointerRangeSize(base_, ptr);
         }
 
         const char16_t *rawCharPtrAt(size_t offset) const {
-            MOZ_ASSERT(startOffset <= offset);
-            MOZ_ASSERT(offset - startOffset <= mozilla::PointerRangeSize(base_, limit_));
-            return base_ + (offset - startOffset);
+            MOZ_ASSERT(startOffset_ <= offset);
+            MOZ_ASSERT(offset - startOffset_ <= mozilla::PointerRangeSize(base_, limit_));
+            return base_ + (offset - startOffset_);
         }
 
         const char16_t *limit() const {
@@ -747,12 +751,12 @@ class MOZ_STACK_CLASS TokenStream
         }
 
         // Returns the offset of the next EOL, but stops once 'max' characters
-        // have been scanned (*including* the char at startOffset).
-        size_t findEOLMax(size_t startOffset, size_t max);
+        // have been scanned (*including* the char at startOffset_).
+        size_t findEOLMax(size_t start, size_t max);
 
       private:
         const char16_t *base_;          // base of buffer
-        uint32_t startOffset;           // offset of base_[0]
+        uint32_t startOffset_;          // offset of base_[0]
         const char16_t *limit_;         // limit for quick bounds check
         const char16_t *ptr;            // next char to get
     };

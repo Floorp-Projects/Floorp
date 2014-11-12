@@ -696,6 +696,11 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
                              offset - windowRadius :
                              linebase;
 
+        // The window must start within the portion of the current line
+        // that we actually have in our buffer.
+        if (windowStart < userbuf.startOffset())
+            windowStart = userbuf.startOffset();
+
         // The window must end within the current line, no later than
         // windowRadius after offset.
         size_t windowEnd = userbuf.findEOLMax(offset, windowRadius);

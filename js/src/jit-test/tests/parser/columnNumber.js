@@ -36,3 +36,10 @@ assertEq(evaluate("saveStack().column", { columnNumber: maxColumn }),
 // column encoding.
 assertEq(evaluate(" saveStack().column", { columnNumber: maxColumn }),
          0);
+
+// Gathering source text for inclusion in error messages should not try to reach
+// outside the buffer to find the start of the source line. The below should
+// report the error without crashing.
+assertThrowsInstanceOf(() => evaluate("function x(y,y) { 'use strict'; } x()",
+                                      { columnNumber: 10 }),
+                       SyntaxError);
