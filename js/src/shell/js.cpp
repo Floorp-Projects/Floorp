@@ -940,6 +940,15 @@ ParseCompileOptions(JSContext *cx, CompileOptions &options, HandleObject opts,
         options.setLine(u);
     }
 
+    if (!JS_GetProperty(cx, opts, "columnNumber", &v))
+        return false;
+    if (!v.isUndefined()) {
+        int32_t c;
+        if (!ToInt32(cx, v, &c))
+            return false;
+        options.setColumn(c);
+    }
+
     if (!JS_GetProperty(cx, opts, "sourceIsLazy", &v))
         return false;
     if (v.isBoolean())
@@ -4259,6 +4268,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
 "      lineNumber: starting line number for error messages and debug info\n"
+"      columnNumber: starting column number for error messages and debug info\n"
 "      global: global in which to execute the code\n"
 "      newContext: if true, create and use a new cx (default: false)\n"
 "      saveFrameChain: if true, save the frame chain before evaluating code\n"
@@ -4463,6 +4473,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
 "      lineNumber: starting line number for error messages and debug info\n"
+"      columnNumber: starting column number for error messages and debug info\n"
 "      element: if present with value |v|, convert |v| to an object |o| and\n"
 "         mark the source as being attached to the DOM element |o|. If the\n"
 "         property is omitted or |v| is null, don't attribute the source to\n"

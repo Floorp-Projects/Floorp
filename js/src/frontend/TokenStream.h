@@ -258,6 +258,8 @@ class MOZ_STACK_CLASS TokenStream
 
     ~TokenStream();
 
+    bool checkOptions();
+
     // Accessors.
     const Token &currentToken() const { return tokens[cursor]; }
     bool isCurrentTokenType(TokenKind type) const {
@@ -289,6 +291,7 @@ class MOZ_STACK_CLASS TokenStream
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
+    bool reportErrorNoOffset(unsigned errorNumber, ...);
     bool reportWarning(unsigned errorNumber, ...);
 
     static const uint32_t NoOffset = UINT32_MAX;
