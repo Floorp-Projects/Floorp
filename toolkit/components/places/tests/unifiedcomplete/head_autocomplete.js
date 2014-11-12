@@ -28,6 +28,9 @@ function* cleanup() {
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.typed");
   Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
+  for (let type of ["history", "bookmark", "history.onlyTyped", "openpage"]) {
+    Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
+  }
   remove_all_bookmarks();
   yield promiseClearHistory();
 }
