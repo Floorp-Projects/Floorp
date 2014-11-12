@@ -12,10 +12,10 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsISupportsImpl.h"
 
 // #includes from MediaStream.h
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
 #include "AudioSegment.h"
 #include "MediaSegment.h"
 #include "StreamBuffer.h"
@@ -215,9 +215,11 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
 
 class Fake_DOMMediaStream;
 
-class Fake_MediaStreamTrack : public mozilla::RefCounted<Fake_MediaStreamTrack>
+class Fake_MediaStreamTrack
 {
 public:
+  NS_INLINE_DECL_REFCOUNTING(Fake_MediaStreamTrack)
+
   explicit Fake_MediaStreamTrack(bool aIsVideo) : mIsVideo (aIsVideo) {}
   mozilla::TrackID GetTrackID() { return mIsVideo ? 1 : 0; }
   Fake_DOMMediaStream *GetStream() { return nullptr; }
@@ -230,6 +232,8 @@ public:
     return mIsVideo? nullptr : this;
   }
 private:
+  ~Fake_MediaStreamTrack() {}
+
   const bool mIsVideo;
 };
 
