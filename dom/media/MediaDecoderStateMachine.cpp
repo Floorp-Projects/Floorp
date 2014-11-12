@@ -3034,6 +3034,11 @@ void MediaDecoderStateMachine::SetStartTime(int64_t aStartTimeUsecs)
       mEndTime = mStartTime + mEndTime;
     }
   }
+
+  // Pass along this immutable value to the reader so that it can make
+  // calculations independently of the state machine.
+  mReader->SetStartTime(mStartTime);
+
   // Set the audio start time to be start of media. If this lies before the
   // first actual audio frame we have, we'll inject silence during playback
   // to ensure the audio starts at the correct time.
@@ -3121,7 +3126,16 @@ void MediaDecoderStateMachine::StartBuffering()
 #endif
 }
 
-nsresult MediaDecoderStateMachine::GetBuffered(dom::TimeRanges* aBuffered) {
+nsresult MediaDecoderStateMachine::GetBuffered(dom::TimeRanges* aBuffered)
+{
+  // It's possible for JS to query .buffered before we've determined the start
+  // time from metadata, in which case the reader isn't ready to be asked this
+  // question.
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (mStartTime < 0) {
+    return NS_OK;
+  }
+
   MediaResource* resource = mDecoder->GetResource();
   NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
   resource->Pin();
