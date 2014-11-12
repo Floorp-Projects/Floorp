@@ -170,11 +170,15 @@ CommonAnimationManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 void
 CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {
+  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+
   PRCList* next = PR_LIST_HEAD(&mElementCollections);
   while (next != &mElementCollections) {
     AnimationPlayerCollection* collection =
       static_cast<AnimationPlayerCollection*>(next);
     next = PR_NEXT_LINK(next);
+
+    collection->EnsureStyleRuleFor(now, EnsureStyleRule_IsNotThrottled);
 
     dom::Element* elementToRestyle = collection->GetElementToRestyle();
     if (elementToRestyle) {

@@ -43,7 +43,7 @@ public:
 
   // Returns the highest end time of all of the buffered ranges in the
   // decoders managed by this TrackBuffer, and returns the union of the
-  // decoders buffered ranges in aRanges.
+  // decoders buffered ranges in aRanges. This may be called on any thread.
   double Buffered(dom::TimeRanges* aRanges);
 
   // Mark the current decoder's resource as ended, clear mCurrentDecoder and

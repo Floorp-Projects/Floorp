@@ -188,6 +188,7 @@
 @BINPATH@/components/dom_power.xpt
 @BINPATH@/components/dom_quota.xpt
 @BINPATH@/components/dom_range.xpt
+@BINPATH@/components/dom_security.xpt
 @BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_permissionsettings.xpt
 @BINPATH@/components/dom_sidebar.xpt

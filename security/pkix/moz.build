@@ -30,6 +30,8 @@ CXXFLAGS += ['-Wall']
 # -Wall with Visual C++ enables too many problematic warnings
 if CONFIG['_MSC_VER']:
   CXXFLAGS += [
+    '-wd4480', # nonstandard extension used: specifying underlying type for
+               # enum 'enum'
     '-wd4514', # 'function': unreferenced inline function has been removed
     '-wd4668', # 'symbol' is not defined as a preprocessor macro...
     '-wd4710', # 'function': function not inlined

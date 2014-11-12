@@ -65,6 +65,12 @@ IsValidDtmf(const char aChar) {
          (aChar >= 'A' && aChar <= 'D');
 }
 
+static bool
+IsSupportedChld(const int aChld) {
+  // We currently only support CHLD=0~3.
+  return (aChld >= 0 && aChld <= 3);
+}
+
 class BluetoothHfpManager::GetVolumeTask : public nsISettingsServiceCallback
 {
 public:
@@ -1419,6 +1425,13 @@ void
 BluetoothHfpManager::CallHoldNotification(BluetoothHandsfreeCallHoldType aChld)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!IsSupportedChld((int)aChld)) {
+    // We currently don't support Enhanced Call Control.
+    // AT+CHLD=1x and AT+CHLD=2x will be ignored
+    SendResponse(HFP_AT_RESPONSE_ERROR);
+    return;
+  }
 
   SendResponse(HFP_AT_RESPONSE_OK);
 

@@ -5183,32 +5183,32 @@ ShellCloseAsmJSCacheEntryForRead(size_t serializedSize, const uint8_t *memory, i
     close(handle);
 }
 
-static bool
+static JS::AsmJSCacheResult
 ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
                                  const char16_t *begin, const char16_t *end,
                                  size_t serializedSize, uint8_t **memoryOut, intptr_t *handleOut)
 {
     if (!jsCachingEnabled || !jsCacheAsmJSPath)
-        return false;
+        return JS::AsmJSCache_Disabled_ShellFlags;
 
     // Create the cache directory if it doesn't already exist.
     struct stat dirStat;
     if (stat(jsCacheDir, &dirStat) == 0) {
         if (!(dirStat.st_mode & S_IFDIR))
-            return false;
+            return JS::AsmJSCache_InternalError;
     } else {
 #ifdef XP_WIN
         if (mkdir(jsCacheDir) != 0)
-            return false;
+            return JS::AsmJSCache_InternalError;
 #else
         if (mkdir(jsCacheDir, 0777) != 0)
-            return false;
+            return JS::AsmJSCache_InternalError;
 #endif
     }
 
     ScopedFileDesc fd(open(jsCacheAsmJSPath, O_CREAT|O_RDWR, 0660), ScopedFileDesc::WRITE_LOCK);
     if (fd == -1)
-        return false;
+        return JS::AsmJSCache_InternalError;
 
     // Include extra space for the asmJSCacheCookie.
     serializedSize += sizeof(uint32_t);
@@ -5216,14 +5216,14 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
     // Resize the file to the appropriate size after zeroing their contents.
 #ifdef XP_WIN
     if (chsize(fd, 0))
-        return false;
+        return JS::AsmJSCache_InternalError;
     if (chsize(fd, serializedSize))
-        return false;
+        return JS::AsmJSCache_InternalError;
 #else
     if (ftruncate(fd, 0))
-        return false;
+        return JS::AsmJSCache_InternalError;
     if (ftruncate(fd, serializedSize))
-        return false;
+        return JS::AsmJSCache_InternalError;
 #endif
 
     // Map the file into memory.
@@ -5232,16 +5232,16 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
     HANDLE fdOsHandle = (HANDLE)_get_osfhandle(fd);
     HANDLE fileMapping = CreateFileMapping(fdOsHandle, nullptr, PAGE_READWRITE, 0, 0, nullptr);
     if (!fileMapping)
-        return false;
+        return JS::AsmJSCache_InternalError;
 
     memory = MapViewOfFile(fileMapping, FILE_MAP_WRITE, 0, 0, 0);
     CloseHandle(fileMapping);
     if (!memory)
-        return false;
+        return JS::AsmJSCache_InternalError;
 #else
     memory = mmap(nullptr, serializedSize, PROT_WRITE, MAP_SHARED, fd, 0);
     if (memory == MAP_FAILED)
-        return false;
+        return JS::AsmJSCache_InternalError;
 #endif
 
     // The embedding added the cookie so strip it off of the buffer returned to
@@ -5249,7 +5249,7 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
     MOZ_ASSERT(*(uint32_t *)memory == 0);
     *memoryOut = (uint8_t *)memory + sizeof(uint32_t);
     *handleOut = fd.forget();
-    return true;
+    return JS::AsmJSCache_Success;
 }
 
 static void

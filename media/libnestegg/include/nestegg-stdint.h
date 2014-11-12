@@ -1,10 +1,5 @@
-#ifdef _WIN32
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
-#if !defined(INT64_MAX)
-#define INT64_MAX 9223372036854775807LL
-#endif
-#else
-#include <stdint.h>
-#endif
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdint.h>

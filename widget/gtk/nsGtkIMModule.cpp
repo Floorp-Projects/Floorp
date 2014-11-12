@@ -1112,9 +1112,18 @@ nsGtkIMModule::DispatchCompositionEventsForCommit(
     }
 
     if (!IsComposing()) {
+        if (aCommitString.IsEmpty()) {
+            PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+                ("    FAILED, there is no composition and empty commit "
+                 "string"));
+            return true;
+        }
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, there is no composition"));
-        return true;
+            ("    The composition wasn't started, force starting..."));
+        nsCOMPtr<nsIWidget> kungFuDeathGrip(mLastFocusedWindow);
+        if (!DispatchCompositionStart(aContext)) {
+            return false;
+        }
     }
 
     nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
