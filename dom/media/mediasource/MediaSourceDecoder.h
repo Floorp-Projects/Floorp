@@ -54,7 +54,10 @@ public:
   void Ended();
   bool IsExpectingMoreData() MOZ_OVERRIDE;
 
+  void SetDecodedDuration(int64_t aDuration);
   void SetMediaSourceDuration(double aDuration);
+  double GetMediaSourceDuration();
+  void DurationChanged(double aOldDuration, double aNewDuration);
 
   // Called whenever a TrackBuffer has new data appended or a new decoder
   // initializes.  Safe to call from any thread.
@@ -74,6 +77,9 @@ private:
   // mMediaSource.
   dom::MediaSource* mMediaSource;
   nsRefPtr<MediaSourceReader> mReader;
+
+  // Protected by GetReentrantMonitor()
+  double mMediaSourceDuration;
 };
 
 } // namespace mozilla

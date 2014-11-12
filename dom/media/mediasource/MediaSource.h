@@ -120,11 +120,9 @@ private:
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
-  void DurationChange(double aNewDuration, ErrorResult& aRv);
+  void DurationChange(double aOldDuration, double aNewDuration);
 
   void InitializationEvent();
-
-  double mDuration;
 
   nsRefPtr<SourceBufferList> mSourceBuffers;
   nsRefPtr<SourceBufferList> mActiveSourceBuffers;
