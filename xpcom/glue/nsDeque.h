@@ -85,7 +85,7 @@ public:
   void Push(void* aItem)
   {
     if (!Push(aItem, fallible_t())) {
-      NS_ABORT_OOM(mSize * sizeof(void*));
+      NS_ABORT_OOM(mSize);
     }
   }
 
@@ -99,7 +99,7 @@ public:
   void PushFront(void* aItem)
   {
     if (!PushFront(aItem, fallible_t())) {
-      NS_ABORT_OOM(mSize * sizeof(void*));
+      NS_ABORT_OOM(mSize);
     }
   }
 
