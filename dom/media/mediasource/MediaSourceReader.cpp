@@ -353,6 +353,15 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType)
   if (!reader) {
     return nullptr;
   }
+
+  // MSE uses a start time of 0 everywhere. Set that immediately on the
+  // subreader to make sure that it's always in a state where we can invoke
+  // GetBuffered on it.
+  {
+    ReentrantMonitorAutoEnter mon(decoder->GetReentrantMonitor());
+    reader->SetStartTime(0);
+  }
+
   // Set a callback on the subreader that forwards calls to this reader.
   // This reader will then forward them onto the state machine via this
   // reader's callback.
