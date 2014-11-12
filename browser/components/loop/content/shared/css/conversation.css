@@ -725,3 +725,59 @@ html, .fx-embedded, #main,
   position: absolute;
   bottom: 10px;
 }
+
+/* Standalone rooms */
+
+.standalone .room-conversation-wrapper {
+  position: relative;
+}
+
+.standalone .room-inner-action-area {
+  position: absolute;
+  top: 35%;
+  z-index: 1000;
+  margin: 0 auto;
+  width: 50%;
+}
+
+.standalone .room-inner-action-area button {
+  position: absolute;
+  border-radius: 3px;
+  font-size: 1.2em;
+  padding: .2em 1.2em;
+  cursor: pointer;
+}
+
+.standalone .room-conversation h2.room-name {
+  position: absolute;
+  display: inline-block;
+  top: 0;
+  right: 0;
+  color: #fff;
+  z-index: 2000000;
+  font-size: 1.2em;
+  padding: .4em;
+}
+
+.standalone .room-conversation .media {
+  background: #000;
+}
+
+.standalone .room-conversation .video_wrapper.remote_wrapper {
+  background-color: #4e4e4e;
+  width: 75%;
+}
+
+.standalone .room-conversation .local-stream {
+  width: 33%;
+  height: 26.5%;
+}
+
+.standalone .room-conversation .conversation-toolbar {
+  background: #000;
+  border-top: none;
+}
+
+.standalone .room-conversation .conversation-toolbar .btn-hangup-entry {
+  display: block;
+}
