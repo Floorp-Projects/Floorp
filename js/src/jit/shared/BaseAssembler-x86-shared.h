@@ -380,6 +380,7 @@ private:
     typedef enum {
         OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
+        OP3_BLENDPS_VpsWpsIb = 0x0C,
         OP3_PTEST_VdVd      = 0x17,
         OP3_INSERTPS_VpsUps = 0x21,
         OP3_PINSRD_VdqEdIb  = 0x22
@@ -389,7 +390,8 @@ private:
         ESCAPE_PTEST        = 0x38,
         ESCAPE_PINSRD       = 0x3A,
         ESCAPE_ROUNDSD      = 0x3A,
-        ESCAPE_INSERTPS     = 0x3A
+        ESCAPE_INSERTPS     = 0x3A,
+        ESCAPE_BLENDPS      = 0x3A
     } ThreeByteEscape;
 
     TwoByteOpcodeID jccRel32(Condition cond)
@@ -3697,7 +3699,7 @@ public:
     void insertps_irr(unsigned mask, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(mask < 256);
-        spew("insertps   $%u, %s, %s", mask, nameFPReg(src), nameFPReg(dst));
+        spew("insertps   $%x, %s, %s", mask, nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_INSERTPS_VpsUps, ESCAPE_INSERTPS, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(uint8_t(mask));
@@ -3706,7 +3708,7 @@ public:
     void pinsrd_irr(unsigned lane, RegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(lane < 4);
-        spew("pinsrd     $%u, %s, %s", lane, nameIReg(src), nameFPReg(dst));
+        spew("pinsrd     $%x, %s, %s", lane, nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(uint8_t(lane));
@@ -3715,11 +3717,30 @@ public:
     void pinsrd_imr(unsigned lane, int offset, RegisterID base, XMMRegisterID dst)
     {
         MOZ_ASSERT(lane < 4);
-        spew("pinsrd     $%u, %s0x%x(%s), %s", lane, PRETTY_PRINT_OFFSET(offset),
+        spew("pinsrd     $%x, %s0x%x(%s), %s", lane, PRETTY_PRINT_OFFSET(offset),
              nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, (RegisterID)dst, base, offset);
         m_formatter.immediate8(uint8_t(lane));
+    }
+
+    void blendps_irr(unsigned imm, XMMRegisterID src, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(imm < 16);
+        spew("blendps    $%x, %s, %s", imm, nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(uint8_t(imm));
+    }
+
+    void blendps_imr(unsigned imm, int offset, RegisterID base, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(imm < 16);
+        spew("blendps    $%x, %s0x%x(%s), %s", imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base),
+             nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, (RegisterID)dst, base, offset);
+        m_formatter.immediate8(uint8_t(imm));
     }
 
     void minsd_rr(XMMRegisterID src, XMMRegisterID dst)
