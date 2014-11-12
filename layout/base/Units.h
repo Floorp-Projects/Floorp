@@ -168,9 +168,9 @@ struct CSSPixel {
 
 /*
  * The pixels that are referred to as "device pixels" in layout code. In
- * general this is obtained by converting a value in app units value by the
- * AppUnitsPerDevPixel() value. The size of these pixels
- * are affected by:
+ * general values measured in LayoutDevicePixels are obtained by dividing a
+ * value in app units by AppUnitsPerDevPixel(). Conversion between CSS pixels
+ * and LayoutDevicePixels is affected by:
  * 1) the "full zoom" (see nsPresContext::SetFullZoom)
  * 2) the "widget scale" (see nsIWidget::GetDefaultScale)
  */
@@ -219,11 +219,12 @@ struct LayoutDevicePixel {
 
 /*
  * The pixels that layout rasterizes and delivers to the graphics code.
- * These are generally referred to as "device pixels" in layout code. Layer
- * pixels are affected by:
+ * These also are generally referred to as "device pixels" in layout code.
+ * Conversion between CSS pixels and LayerPixels is affected by:
  * 1) the "display resolution" (see nsIPresShell::SetResolution)
  * 2) the "full zoom" (see nsPresContext::SetFullZoom)
  * 3) the "widget scale" (see nsIWidget::GetDefaultScale)
+ * 4) rasterizing at a different scale in the presence of some CSS transforms
  */
 struct LayerPixel {
   static nsIntRect ToUntyped(const LayerIntRect& aRect) {

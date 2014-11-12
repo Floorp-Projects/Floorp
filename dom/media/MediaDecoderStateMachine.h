@@ -269,7 +269,17 @@ public:
     return mState == DECODER_STATE_SEEKING;
   }
 
-  nsresult GetBuffered(dom::TimeRanges* aBuffered);
+  nsresult GetBuffered(dom::TimeRanges* aBuffered) {
+    // It's possible for JS to query .buffered before we've determined the start
+    // time from metadata, in which case the reader isn't ready to be asked this
+    // question.
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    if (mStartTime < 0) {
+      return NS_OK;
+    }
+
+    return mReader->GetBuffered(aBuffered);
+  }
 
   void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
@@ -443,7 +453,7 @@ protected:
   bool HasLowUndecodedData();
 
   // Returns true if we have less than aUsecs of undecoded data available.
-  bool HasLowUndecodedData(double aUsecs);
+  bool HasLowUndecodedData(int64_t aUsecs);
 
   // Returns the number of unplayed usecs of audio we've got decoded and/or
   // pushed to the hardware waiting to play. This is how much audio we can

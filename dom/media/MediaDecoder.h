@@ -804,9 +804,12 @@ public:
   // the track list. Call on the main thread only.
   virtual void RemoveMediaTracks() MOZ_OVERRIDE;
 
-  // Returns true if the resource has been loaded. Acquires the monitor.
-  // Call from any thread.
-  virtual bool IsDataCachedToEndOfResource();
+  // Returns true if the this decoder is expecting any more data to arrive
+  // sometime in the not-too-distant future, either from the network or from
+  // an appendBuffer call on a MediaSource element.
+  //
+  // Acquires the monitor. Call from any thread.
+  virtual bool IsExpectingMoreData();
 
   // Called when the video has completed playing.
   // Call on the main thread only.

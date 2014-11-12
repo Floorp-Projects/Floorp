@@ -20,6 +20,7 @@ GeckoCppUnitTests([
 MOCHITEST_MANIFESTS += [
     'chrome/mochitest.ini',
     'csp/mochitest.ini',
+    'mixedcontentblocker/mochitest.ini',
     'mochitest.ini',
     'websocket_hybi/mochitest.ini',
 ]
