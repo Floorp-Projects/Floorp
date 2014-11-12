@@ -300,9 +300,11 @@ private:
         OP2_MOVSD_WsdVsd    = 0x11,
         OP2_MOVPS_WpsVps    = 0x11,
         OP2_MOVHLPS_VqUq    = 0x12,
+        OP2_MOVSLDUP_VpsWps = 0x12,
         OP2_UNPCKLPS_VsdWsd = 0x14,
         OP2_UNPCKHPS_VsdWsd = 0x15,
         OP2_MOVLHPS_VqUq    = 0x16,
+        OP2_MOVSHDUP_VpsWps = 0x16,
         OP2_MOVAPD_VsdWsd   = 0x28,
         OP2_MOVAPS_VsdWsd   = 0x28,
         OP2_MOVAPS_WsdVsd   = 0x29,
@@ -3762,6 +3764,36 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_BLENDPS_VpsWpsIb, ESCAPE_BLENDPS, (RegisterID)dst, base, offset);
         m_formatter.immediate8(uint8_t(imm));
+    }
+
+    void movsldup_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("movsldup   %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSLDUP_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void movsldup_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("movsldup   %s0x%x(%s), %s", PRETTY_PRINT_OFFSET(offset), nameIReg(base),
+             nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSLDUP_VpsWps, (RegisterID)dst, base, offset);
+    }
+
+    void movshdup_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("movshdup   %s, %s", nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSHDUP_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void movshdup_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("movshdup   %s0x%x(%s), %s", PRETTY_PRINT_OFFSET(offset), nameIReg(base),
+             nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_MOVSHDUP_VpsWps, (RegisterID)dst, base, offset);
     }
 
     void minsd_rr(XMMRegisterID src, XMMRegisterID dst)
