@@ -25,7 +25,7 @@ template<class T> class nsReadingIterator;
 #include "nsNetUtil.h"
 #include "TestHarness.h"
 #include "nsIScriptSecurityManager.h"
-#include "../nsCSPContext.h"
+#include "mozilla/dom/nsCSPContext.h"
 
 #ifndef MOZILLA_INTERNAL_API
 #undef nsString_h___

@@ -2,6 +2,7 @@
 <meta charset="UTF-8">
 <head>
 <style>
+body { line-height: 5em; }
 ruby { display: ruby; }
 rb   { display: ruby-base; white-space: nowrap; }
 rp   { display: none; }
@@ -13,16 +14,27 @@ ruby, rb, rt, rbc, rtc { unicode-bidi: isolate; }
 </head>
 <body>
 
-<ruby>
-  <rbc>       <rb>   </rb>    <rb>Base three</rb>   </rbc> 
-      <rtc>    <rt>   </rt>   <rt>Text two</rt>   </rtc>    <rtc><rt></rt></rtc>
-        <rbc><rb>Segment two</rb></rbc><rtc><rt></rt></rtc>
-</ruby>
+<p>
+  <ruby>
+    <rbc>       <rb>   </rb>    <rb>Base three</rb>   </rbc> 
+    <rtc>    <rt>   </rt>   <rt>Text three</rt>   </rtc>    <rtc><rt></rt></rtc>
+    <rbc><rb>Segment two</rb></rbc><rtc><rt></rt></rtc>
+  </ruby>
+</p>
 
-<rbc>   <rb>  </rb>    <rb>Base two</rb>  </rbc>   <rtc><rt>  </rt>     <rt
-  >Text two</rt></rtc>
+<p>
+  <ruby>
+    <rb>Base one</rb>  <rb>Base three</rb>
+    <rt>Text one</rt>  <rt>Text three</rt>
+  </ruby>
+</p>
 
-<rb></rb>   <rb>Base two</rb>   <rt> </rt>
+<p>
+  <rb>Segment one</rb>  <rbc>   <rb>  </rb>    <rb>Base three</rb>  </rbc
+    >   <rtc><rt>  </rt>     <rt>Text three</rt></rtc>
+
+  <rb>Base one</rb>   <rb>Base three</rb>   <rt>Text one</rt><rt>Text two/three</rt>
+</p>
 
 </body>
 </html>

@@ -718,6 +718,33 @@ protected:
   bool mIsTransportSeekable;
 };
 
+/**
+ * RAII class that handles pinning and unpinning for MediaResource and derived.
+ * This should be used when making calculations that involve potentially-cached
+ * MediaResource data, so that the state of the world can't change out from under
+ * us.
+ */
+template<class T>
+class MOZ_STACK_CLASS AutoPinned {
+ public:
+  explicit AutoPinned(T* aResource MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : mResource(aResource) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mResource);
+    mResource->Pin();
+  }
+
+  ~AutoPinned() {
+    mResource->Unpin();
+  }
+
+  operator T*() const { return mResource; }
+  T* operator->() const { return mResource; }
+
+private:
+  T* mResource;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 } // namespace mozilla
 
 #endif

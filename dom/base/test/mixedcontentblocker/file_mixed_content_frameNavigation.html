@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
 <div id="testContent"></div>
 
 <script>
-  var baseUrlHttps = "https://example.com/tests/dom/base/test/file_mixed_content_frameNavigation_innermost.html";
+  var baseUrlHttps = "https://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation_innermost.html";
 
   // For tests that require setTimeout, set the maximum polling time to 50 x 100ms = 5 seconds.
   var MAX_COUNT = 50;
@@ -44,7 +44,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
       counter_test1++;
       return;
     }
-    if (loc == "http://example.com/tests/dom/base/test/file_mixed_content_frameNavigation_innermost.html?insecurePage_navigate_child_response") {
+    if (loc == "http://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation_innermost.html?insecurePage_navigate_child_response") {
       return;
     }
     else {
@@ -63,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
 
   // Test 2: Navigate secure grandchild iframe to insecure grandchild iframe on a page that has no secure parents
   var iframe_test2 = document.createElement("iframe");
-  iframe_test2.src = "http://example.com/tests/dom/base/test/file_mixed_content_frameNavigation_grandchild.html"
+  iframe_test2.src = "http://example.com/tests/dom/base/test/mixedcontentblocker/file_mixed_content_frameNavigation_grandchild.html"
   iframe_test2.onerror = function() {
     parent.postMessage({"test": "insecurePage_navigate_grandchild", "msg": "got an on error alert when loading or navigating testing iframe"}, "http://mochi.test:8888");
   };
