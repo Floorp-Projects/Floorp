@@ -209,6 +209,9 @@ size. -->
     demonstrate the font size setting.  It is meant to be whimsical and fun. -->
 <!ENTITY pref_font_size_preview_text "The quick orange fox jumps over your expectations with more speed, more flexibility and more security. As a non-profit, we\'re free to innovate on your behalf without any pressure to compromise. That means a better experience for you and a brighter future for the Web.">
 
+<!ENTITY pref_media_autoplay_enabled "Allow autoplay">
+<!ENTITY pref_media_autoplay_enabled_summary "Control if websites can autoplay videos and other media content">
+
 <!ENTITY pref_use_master_password "Use master password">
 <!ENTITY pref_sync "Sync">
 <!ENTITY pref_sync_summary "Sync your tabs, bookmarks, passwords, history">
@@ -510,8 +513,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY webapp_generic_name "App">
 
 <!ENTITY searchable_description "Bookmarks and history">
-
-<!ENTITY devtools_remote_debugging_forward "Don\'t forget to set up port forwarding!">
 
  <!-- Updater notifications -->
 <!ENTITY updater_start_title2 "Update available for &brandShortName;">
