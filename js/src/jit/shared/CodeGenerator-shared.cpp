@@ -614,7 +614,6 @@ CodeGeneratorShared::generateCompactNativeToBytecodeMap(JSContext *cx, JitCode *
             &nativeToBytecodeList_[0] + nativeToBytecodeList_.length(),
             &tableOffset, &numRegions))
     {
-        js_free(nativeToBytecodeScriptList_);
         return false;
     }
 
@@ -623,10 +622,8 @@ CodeGeneratorShared::generateCompactNativeToBytecodeMap(JSContext *cx, JitCode *
 
     // Writer is done, copy it to sized buffer.
     uint8_t *data = cx->runtime()->pod_malloc<uint8_t>(writer.length());
-    if (!data) {
-        js_free(nativeToBytecodeScriptList_);
+    if (!data)
         return false;
-    }
 
     memcpy(data, writer.buffer(), writer.length());
     nativeToBytecodeMap_ = data;
