@@ -507,7 +507,10 @@ AboutReader.prototype = {
   _loadArticle: Task.async(function* (url, tabId) {
     this._showProgressDelayed();
 
-    let article = yield gChromeWin.Reader.getArticle(url, tabId);
+    let article = yield gChromeWin.Reader.getArticle(url, tabId).catch(e => {
+      Cu.reportError("Error loading article: " + e);
+      return null;
+    });
     if (article) {
       this._showContent(article);
     } else {
