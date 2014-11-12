@@ -146,7 +146,7 @@ public:
   char_iterator BeginWriting()
   {
     if (!EnsureMutable()) {
-      AllocFailed(mLength);
+      NS_ABORT_OOM(mLength);
     }
 
     return mData;
@@ -160,7 +160,7 @@ public:
   char_iterator EndWriting()
   {
     if (!EnsureMutable()) {
-      AllocFailed(mLength);
+      NS_ABORT_OOM(mLength);
     }
 
     return mData + mLength;
@@ -742,7 +742,7 @@ public:
   size_type GetMutableData(char_type** aData, size_type aNewLen = size_type(-1))
   {
     if (!EnsureMutable(aNewLen)) {
-      AllocFailed(aNewLen == size_type(-1) ? mLength : aNewLen);
+      NS_ABORT_OOM(aNewLen == size_type(-1) ? mLength : aNewLen);
     }
 
     *aData = mData;
@@ -868,19 +868,6 @@ public:
   const;
   size_t SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSizeOf)
   const;
-
-  template<class T>
-  void NS_ABORT_OOM(T)
-  {
-    static_assert(false,
-      "In string classes, use AllocFailed to account for sizeof(char_type). "
-      "Use the global ::NS_ABORT_OOM if you really have a count of bytes.");
-  }
-
-  MOZ_ALWAYS_INLINE void AllocFailed(size_t aLength)
-  {
-    ::NS_ABORT_OOM(aLength * sizeof(char_type));
-  }
 
 protected:
 
