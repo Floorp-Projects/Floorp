@@ -8772,6 +8772,16 @@ nsGlobalWindow::LeaveModalState()
   nsGlobalWindow *inner = topWin->GetCurrentInnerWindowInternal();
   if (inner)
     inner->mLastDialogQuitTime = TimeStamp::Now();
+
+  if (topWin->mModalStateDepth == 0) {
+    nsCOMPtr<nsIDOMEvent> event;
+    NS_NewDOMEvent(getter_AddRefs(event), topWin, nullptr, nullptr);
+    event->InitEvent(NS_LITERAL_STRING("endmodalstate"), true, false);
+    event->SetTrusted(true);
+    event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
+    bool dummy;
+    topWin->DispatchEvent(event, &dummy);
+  }
 }
 
 bool
