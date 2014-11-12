@@ -121,6 +121,15 @@ function PlayFragmented(test, elem, token)
     var curFragment = 0;
 
     function addNextFragment() {
+      /* We can get another updateevent as a result of calling ms.endOfStream() if
+         the highest end time of our source buffers is different from that of the
+         media source duration. Due to bug 1065207 this can happen because of
+         inaccuracies in the frame duration calculations. Check if we are already
+         "ended" and ignore the update event */
+      if (ms.readyState == "ended") {
+        return;
+      }
+
       if (curFragment >= test.fragments.length) {
         Log(token, "addNextFragment() end of stream");
         ms.endOfStream();
