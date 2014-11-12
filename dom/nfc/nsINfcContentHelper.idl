@@ -22,8 +22,8 @@ interface nsINfcTagEvent : nsISupports
   readonly attribute boolean isFormatable;
 };
 
-[scriptable, uuid(2074503e-f590-4017-a45e-85d3ca766f41)]
-interface nsINfcDOMEventTarget : nsISupports
+[scriptable, uuid(42c7a85f-59ae-4bde-b961-e1f1436476c3)]
+interface nsINfcDOMEventListener : nsISupports
 {
   /**
    * Callback function used to notify tagfound.
@@ -65,7 +65,7 @@ interface nsINfcDOMEventTarget : nsISupports
   void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(d2a3fbf3-a0b2-4625-b0db-b6f37c937097)]
+[scriptable, uuid(632cd911-06bf-410b-a91e-8afa4e200e3b)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -100,11 +100,12 @@ interface nsINfcContentHelper : nsISupports
                             in DOMString sessionToken);
 
   /**
-   * Register the event target.
+   * Add the event listener.
    *
-   * @param target  An instance of the nsINfcDOMEventTarget.
+   * @param listener
+   *        An instance of the nsINfcDOMEventListener.
    */
-  void registerEventTarget(in nsINfcDOMEventTarget target);
+  void addEventListener(in nsINfcDOMEventListener listener);
 
   /**
    * Register the given application id with parent process
