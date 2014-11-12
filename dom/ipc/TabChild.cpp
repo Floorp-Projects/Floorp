@@ -3138,8 +3138,13 @@ TabChild::CreatePluginWidget(nsIWidget* aParent)
     return nullptr;
   }
 
-  nsresult rv = pluginWidget->Create(aParent, 0, nsIntRect(nsIntPoint(0, 0),
-                                     nsIntSize(0, 0)), nullptr, nullptr);
+  nsWidgetInitData initData;
+  initData.mWindowType = eWindowType_plugin_ipc_content;
+  initData.mUnicode = false;
+  initData.clipChildren = true;
+  initData.clipSiblings = true;
+  nsresult rv = pluginWidget->Create(aParent, nullptr, nsIntRect(nsIntPoint(0, 0),
+                                     nsIntSize(0, 0)), nullptr, &initData);
   if (NS_FAILED(rv)) {
     NS_WARNING("Creating native plugin widget on the chrome side failed.");
   }
