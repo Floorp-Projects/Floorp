@@ -8,11 +8,9 @@
 #define MEDIA_CODEC_PROXY_H
 
 #include <nsString.h>
-
 #include <stagefright/MediaCodec.h>
 #include <stagefright/MediaBuffer.h>
 #include <utils/threads.h>
-
 #include "MediaResourceHandler.h"
 
 namespace android {
@@ -134,6 +132,8 @@ public:
   bool IsWaitingResources();
   bool IsDormantNeeded();
   void ReleaseMediaResources();
+
+  void ReleaseMediaBuffer(MediaBuffer* abuffer);
 
 protected:
   virtual ~MediaCodecProxy();
