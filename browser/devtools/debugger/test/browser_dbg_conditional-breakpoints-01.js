@@ -11,12 +11,11 @@ function test() {
   // Linux debug test slaves are a bit slow at this test sometimes.
   requestLongerTimeout(2);
 
-  let gTab, gDebuggee, gPanel, gDebugger;
+  let gTab, gPanel, gDebugger;
   let gEditor, gSources, gBreakpoints, gBreakpointsAdded, gBreakpointsRemoving;
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gEditor = gDebugger.DebuggerView.editor;
@@ -67,7 +66,7 @@ function test() {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 
-    gDebuggee.ermahgerd();
+    callInTab(gTab, "ermahgerd");
   });
 
   function addBreakpoints() {
