@@ -2848,10 +2848,7 @@ js::PCToLineNumber(unsigned startLine, jssrcnote *notes, jsbytecode *code, jsbyt
             break;
 
         if (type == SRC_COLSPAN) {
-            ptrdiff_t colspan = js_GetSrcNoteOffset(sn, 0);
-
-            if (colspan >= SN_COLSPAN_DOMAIN / 2)
-                colspan -= SN_COLSPAN_DOMAIN;
+            ptrdiff_t colspan = SN_OFFSET_TO_COLSPAN(js_GetSrcNoteOffset(sn, 0));
             MOZ_ASSERT(ptrdiff_t(column) + colspan >= 0);
             column += colspan;
         }
