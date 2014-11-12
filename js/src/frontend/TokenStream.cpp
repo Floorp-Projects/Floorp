@@ -8,6 +8,7 @@
 
 #include "frontend/TokenStream.h"
 
+#include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
 
@@ -340,6 +341,19 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+bool
+TokenStream::checkOptions()
+{
+    // Constrain starting columns to half of the range of a signed 32-bit value,
+    // to avoid overflow.
+    if (options().column >= mozilla::MaxValue<int32_t>::value / 2 + 1) {
+        reportErrorNoOffset(JSMSG_BAD_COLUMN_NUMBER);
+        return false;
+    }
+
+    return true;
+}
 
 TokenStream::~TokenStream()
 {
@@ -732,6 +746,17 @@ TokenStream::reportError(unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
     bool result = reportCompileErrorNumberVA(currentToken().pos.begin, JSREPORT_ERROR, errorNumber,
+                                             args);
+    va_end(args);
+    return result;
+}
+
+bool
+TokenStream::reportErrorNoOffset(unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result = reportCompileErrorNumberVA(NoOffset, JSREPORT_ERROR, errorNumber,
                                              args);
     va_end(args);
     return result;
