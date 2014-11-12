@@ -124,9 +124,12 @@ child:
   // Called if redirect successful so that child can complete setup.
   Redirect3Complete();
 
-  // Associte the child with an application ids
+  // Associate the child with an application ids
   AssociateApplicationCache(nsCString groupID,
                             nsCString clientID);
+
+  // Tell the child that tracking protection was disabled for this load.
+  NotifyTrackingProtectionDisabled();
 
   // Parent has been suspended for diversion; no more events to be enqueued.
   FlushedForDiversion();

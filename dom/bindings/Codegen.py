@@ -9697,10 +9697,11 @@ class CGProxySpecialOperation(CGPerSignatureCall):
     resultVar: See the docstring for CGCallGenerator.
 
     foundVar: For getters and deleters, the generated code can also set a bool
-    variable, declared by the caller, to indicate whether the given indexed or
-    named property already existed or not. If the caller wants this, it should
-    pass the name of the bool variable as the foundVar keyword argument to the
-    constructor. The caller is responsible for declaring the variable.
+    variable, declared by the caller, if the given indexed or named property
+    already existed. If the caller wants this, it should pass the name of the
+    bool variable as the foundVar keyword argument to the constructor. The
+    caller is responsible for declaring the variable and initializing it to
+    false.
     """
     def __init__(self, descriptor, operation, checkFound=True,
                  argumentMutableValue=None, resultVar=None, foundVar=None):
@@ -9740,7 +9741,7 @@ class CGProxySpecialOperation(CGPerSignatureCall):
             self.cgRoot.prepend(instantiateJSToNativeConversion(info, templateValues))
         elif operation.isGetter() or operation.isDeleter():
             if foundVar is None:
-                self.cgRoot.prepend(CGGeneric("bool found;\n"))
+                self.cgRoot.prepend(CGGeneric("bool found = false;\n"))
 
     def getArguments(self):
         args = [(a, a.identifier.name) for a in self.arguments]
@@ -10217,7 +10218,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if self.descriptor.supportsNamedProperties():
                 set += fill(
                     """
-                    bool found;
+                    bool found = false;
                     $*{presenceChecker}
 
                     if (found) {
@@ -10258,7 +10259,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                     decls += "bool result;\n"
                     if foundVar is None:
                         foundVar = "found"
-                        decls += "bool found;\n"
+                        decls += "bool found = false;\n"
                     setBp = fill(
                         """
                         if (${foundVar}) {
@@ -10277,7 +10278,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
                 foundDecl = ""
                 if foundVar is None:
                     foundVar = "found"
-                    foundDecl = "bool found;\n"
+                    foundDecl = "bool found = false;\n"
                 body = fill(
                     """
                     $*{foundDecl}
@@ -10331,7 +10332,7 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             # unconditionally here.
             delete += fill(
                 """
-                bool found;
+                bool found = false;
                 $*{namedBody}
                 if (found) {
                   return true;
@@ -10442,7 +10443,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                 """
                 int32_t index = GetArrayIndexFromId(cx, id);
                 if (IsArrayIndex(index)) {
-                  bool found;
+                  bool found = false;
                   $*{presenceChecker}
 
                   *bp = found;
@@ -10472,7 +10473,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
             # property names, so no need to check for those here.
             named = fill(
                 """
-                bool found;
+                bool found = false;
                 $*{presenceChecker}
 
                 *bp = found;

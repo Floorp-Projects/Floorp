@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 sts=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,6 +15,7 @@
 #include "nsChannelClassifier.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "nsProxyRelease.h"
+#include "nsXULAppAPI.h"
 
 static PLDHashOperator
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
@@ -281,6 +283,12 @@ nsBaseChannel::ContinueHandleAsyncRedirect(nsresult result)
 void
 nsBaseChannel::ClassifyURI()
 {
+  // For channels created in the child process, delegate to the parent to
+  // classify URIs.
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return;
+  }
+
   nsresult rv;
 
   if (mLoadFlags & LOAD_CLASSIFY_URI) {

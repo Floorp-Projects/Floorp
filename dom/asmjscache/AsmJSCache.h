@@ -112,7 +112,7 @@ void
 CloseEntryForRead(size_t aSize,
                   const uint8_t* aMemory,
                   intptr_t aHandle);
-bool
+JS::AsmJSCacheResult
 OpenEntryForWrite(nsIPrincipal* aPrincipal,
                   bool aInstalled,
                   const char16_t* aBegin,
@@ -177,6 +177,13 @@ struct ParamTraits<mozilla::dom::asmjscache::WriteParams>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult);
   static void Log(const paramType& aParam, std::wstring* aLog);
 };
+
+template <>
+struct ParamTraits<JS::AsmJSCacheResult> :
+  public ContiguousEnumSerializer<JS::AsmJSCacheResult,
+                                  JS::AsmJSCache_MIN,
+                                  JS::AsmJSCache_LIMIT>
+{ };
 
 } // namespace IPC
 

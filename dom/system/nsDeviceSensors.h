@@ -73,7 +73,7 @@ private:
   mozilla::TimeStamp mLastDOMMotionEventTime;
   bool mIsUserProximityNear;
   mozilla::Maybe<DeviceAccelerationInit> mLastAcceleration;
-  mozilla::Maybe<DeviceAccelerationInit> mLastAccelerationIncluduingGravity;
+  mozilla::Maybe<DeviceAccelerationInit> mLastAccelerationIncludingGravity;
   mozilla::Maybe<DeviceRotationRateInit> mLastRotationRate;
 };
 

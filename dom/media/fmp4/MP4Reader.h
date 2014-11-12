@@ -59,8 +59,7 @@ public:
 
   virtual int64_t GetEvictionOffset(double aTime) MOZ_OVERRIDE;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
-                               int64_t aStartTime) MOZ_OVERRIDE;
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
 
   // For Media Resource Management
   virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
