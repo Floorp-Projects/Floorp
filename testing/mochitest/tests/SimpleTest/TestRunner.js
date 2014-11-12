@@ -259,7 +259,7 @@ function StructuredLogger(name) {
 
     this._dumpMessage = function(message) {
         var str;
-        if (this.interactiveDebugger) {
+        if (this.interactiveDebugger && !message.action.startsWith("buffering_")) {
             str = this.structuredFormatter[message.action](message);
         } else {
             str = LOG_DELIMITER + JSON.stringify(message) + LOG_DELIMITER;
