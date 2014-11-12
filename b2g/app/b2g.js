@@ -433,10 +433,7 @@ pref("dom.mozBrowserFramesEnabled", true);
 pref("dom.ipc.processCount", 100000);
 
 pref("dom.ipc.browser_frames.oop_by_default", false);
-
 pref("dom.browser_frames.useAsyncPanZoom", true);
-
-pref("dom.meta-viewport.enabled", true);
 
 // SMS/MMS
 pref("dom.sms.enabled", true);
