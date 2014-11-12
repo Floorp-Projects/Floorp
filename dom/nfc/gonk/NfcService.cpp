@@ -267,7 +267,7 @@ NfcService::FactoryCreate()
 }
 
 NS_IMETHODIMP
-NfcService::Start(nsINfcEventListener* aListener)
+NfcService::Start(nsINfcGonkEventListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
