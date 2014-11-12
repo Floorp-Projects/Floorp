@@ -218,6 +218,22 @@ public:
            aData[7] == 'p';
   }
 
+  bool IsMediaSegmentPresent(const uint8_t* aData, uint32_t aLength)
+  {
+    ContainerParser::IsMediaSegmentPresent(aData, aLength);
+    if (aLength < 8) {
+      return false;
+    }
+
+    uint32_t chunk_size = BigEndian::readUint32(aData);
+    if (chunk_size < 8) {
+      return false;
+    }
+
+    return aData[4] == 'm' && aData[5] == 'o' && aData[6] == 'o' &&
+           aData[7] == 'f';
+  }
+
   bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
                                   int64_t& aStart, int64_t& aEnd)
   {

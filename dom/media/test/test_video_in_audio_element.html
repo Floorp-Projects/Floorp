@@ -16,26 +16,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1060896
    **/
 
   var manager = new MediaTestManager;
-   
-  function ended(event) {
+
+  function error(event) {
     var a = event.target;
+    ok(!a.mozHasAudio, "Media must've had no active tracks to play");
+    a.removeEventListener("error", error);
+    a.removeEventListener("ended", ended);
     removeNodeAndSource(a);
     manager.finished(a.token);
   }
-   
+
+  function ended(event) {
+    var a = event.target;
+    a.removeEventListener("error", error);
+    a.removeEventListener("ended", ended);
+    removeNodeAndSource(a);
+    manager.finished(a.token);
+  }
+
   function initTest(test, token) {
     var a = document.createElement('audio');
     a.token = token;
     manager.started(token);
     a.autoplay = true;
-    
-    a.addEventListener("ended", ended, false);
+
+    a.addEventListener("error", error);
+    a.addEventListener("ended", ended);
 
     a.src = test.name;
   }
 
-  var videos = gSmallTests.filter(function(x){return /^video/.test(x.type);});
-  
+  var videos = getPlayableVideos(gSmallTests);
+
   manager.runTests(videos, initTest);
 
   </script>

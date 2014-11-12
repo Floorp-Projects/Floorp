@@ -172,9 +172,9 @@ unsigned int RenderbufferStorage::getTextureSerial() const
     return -1;
 }
 
-Colorbuffer::Colorbuffer(rx::Renderer *renderer, rx::SwapChain *swapChain)
+Colorbuffer::Colorbuffer(rx::Renderer *renderer, egl::Surface *surface)
 {
-    mRenderTarget = renderer->createRenderTarget(swapChain, false); 
+    mRenderTarget = renderer->createRenderTarget(surface, false);
 
     if (mRenderTarget)
     {
@@ -213,9 +213,9 @@ rx::RenderTarget *Colorbuffer::getRenderTarget()
     return mRenderTarget;
 }
 
-DepthStencilbuffer::DepthStencilbuffer(rx::Renderer *renderer, rx::SwapChain *swapChain)
+DepthStencilbuffer::DepthStencilbuffer(rx::Renderer *renderer, egl::Surface *surface)
 {
-    mDepthStencil = renderer->createRenderTarget(swapChain, true);
+    mDepthStencil = renderer->createRenderTarget(surface, true);
     if (mDepthStencil)
     {
         mWidth = mDepthStencil->getWidth();

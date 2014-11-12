@@ -50,8 +50,8 @@ class CompileRuntime
     const void *addressOfGCZeal();
 #endif
 
-    const void *addressOfInterrupt();
-    const void *addressOfInterruptPar();
+    const void *addressOfInterruptUint32();
+    const void *addressOfInterruptParUint32();
 
     const void *addressOfThreadPool();
 
