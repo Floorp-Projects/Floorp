@@ -77,6 +77,7 @@
     macro(float32, float32, "float32") \
     macro(float32x4, float32x4, "float32x4") \
     macro(float64, float64, "float64") \
+    macro(forceInterpreter, forceInterpreter, "forceInterpreter") \
     macro(format, format, "format") \
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
@@ -104,6 +105,7 @@
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
     macro(iterate, iterate, "iterate") \
     macro(Infinity, Infinity, "Infinity") \
+    macro(InterpretGeneratorResume, InterpretGeneratorResume, "InterpretGeneratorResume") \
     macro(int8, int8, "int8") \
     macro(int16, int16, "int16") \
     macro(int32, int32, "int32") \

@@ -102,3 +102,17 @@ function LegacyGeneratorClose() {
 
     callFunction(LegacyGeneratorCloseInternal, this);
 }
+
+function InterpretGeneratorResume(gen, val, kind) {
+    // If we want to resume a generator in the interpreter, the script containing
+    // the resumeGenerator/JSOP_RESUME also has to run in the interpreter. The
+    // forceInterpreter() call below compiles to a bytecode op that prevents us
+    // from JITing this script.
+    forceInterpreter();
+    if (kind === "next")
+       return resumeGenerator(gen, val, "next");
+    if (kind === "throw")
+       return resumeGenerator(gen, val, "throw");
+    assert(kind === "close", "Invalid resume kind");
+    return resumeGenerator(gen, val, "close");
+}
