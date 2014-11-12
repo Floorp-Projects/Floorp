@@ -301,6 +301,12 @@ public:
     int GetTileWidth();
     int GetTileHeight();
     void SetTileSize(int aWidth, int aHeight);
+    /**
+     * Calling this function will compute and set the ideal tile size for the
+     * platform. This should only be called in the parent process; child processes
+     * should be updated via SetTileSize to match the value computed in the parent.
+     */
+    void ComputeTileSize();
 
     /**
      * Rebuilds the any cached system font lists
