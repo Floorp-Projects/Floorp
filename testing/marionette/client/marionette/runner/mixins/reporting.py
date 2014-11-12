@@ -247,8 +247,8 @@ class HTMLReportingTestResultMixin(object):
 
     def gather_debug(self):
         debug = {}
-        # in the event we're gathering debug without starting a session, skip marionette commands
-        if self.marionette.session is not None and not self.marionette.check_for_crash():
+        # In the event we're gathering debug without starting a session, skip marionette commands
+        if self.marionette.session is not None:
             try:
                 self.marionette.set_context(self.marionette.CONTEXT_CHROME)
                 debug['screenshot'] = self.marionette.screenshot()

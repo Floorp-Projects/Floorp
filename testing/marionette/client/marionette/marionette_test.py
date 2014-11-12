@@ -260,19 +260,11 @@ class CommonTestCase(unittest.TestCase):
                     if self.expected == 'fail':
                         try:
                             testMethod()
-                            assert not self.marionette.check_for_crash()
                         except:
                             raise _ExpectedFailure(sys.exc_info())
                         raise _UnexpectedSuccess
                     else:
-                        try:
-                            testMethod()
-                            assert not self.marionette.check_for_crash()
-                        except _UnexpectedSuccess:
-                            try:
-                                assert not self.marionette.check_for_crash()
-                            except self.failureException:
-                                raise _ExpectedFailure(sys.exc_info())
+                        testMethod()
                 except self.failureException:
                     result.addFailure(self, sys.exc_info())
                 except KeyboardInterrupt:
@@ -517,11 +509,11 @@ class MarionetteTestCase(CommonTestCase):
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
-        if not self.marionette.check_for_crash():
-            self.marionette.set_context("content")
-            self.marionette.execute_script("log('TEST-END: %s:%s')" %
-                                           (self.filepath.replace('\\', '\\\\'), self.methodName))
-            self.marionette.test_name = None
+        self.marionette.check_for_crash()
+        self.marionette.set_context("content")
+        self.marionette.execute_script("log('TEST-END: %s:%s')" %
+                                       (self.filepath.replace('\\', '\\\\'), self.methodName))
+        self.marionette.test_name = None
         CommonTestCase.tearDown(self)
 
     def get_new_emulator(self):

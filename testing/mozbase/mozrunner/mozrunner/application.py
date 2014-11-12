@@ -128,9 +128,6 @@ class B2GContext(object):
 
         return find_executable(binary)
 
-    def start_application(self):
-        self.dm.shellCheckOutput(['start', 'b2g'])
-
     def stop_application(self):
         self.dm.shellCheckOutput(['stop', 'b2g'])
 
