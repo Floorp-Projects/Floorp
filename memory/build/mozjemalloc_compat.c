@@ -166,6 +166,7 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   stats->bookkeeping = 0;
 
   stats->bin_unused = compute_bin_unused(narenas);
+  stats->waste -= stats->bin_unused;
 }
 
 MOZ_JEMALLOC_API void
