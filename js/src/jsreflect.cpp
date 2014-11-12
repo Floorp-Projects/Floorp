@@ -3507,6 +3507,8 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     mozilla::Range<const char16_t> chars = flatChars.twoByteRange();
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars.start().get(),
                                     chars.length(), /* foldConstants = */ false, nullptr, nullptr);
+    if (!parser.checkOptions())
+        return false;
 
     serialize.setParser(&parser);
 
