@@ -1296,12 +1296,11 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
     return;
   }
 
-  if (mStartTime != -1) {
-    mEndTime = mStartTime + aDuration;
-  } else {
-    mStartTime = 0;
-    mEndTime = aDuration;
+  if (mStartTime == -1) {
+    SetStartTime(0);
   }
+
+  mEndTime = mStartTime + aDuration;
 }
 
 void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
@@ -3021,7 +3020,7 @@ MediaDecoderStateMachine::DropAudioUpToSeekTarget(AudioData* aSample)
 
 void MediaDecoderStateMachine::SetStartTime(int64_t aStartTimeUsecs)
 {
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  AssertCurrentThreadInMonitor();
   DECODER_LOG("SetStartTime(%lld)", aStartTimeUsecs);
   mStartTime = 0;
   if (aStartTimeUsecs != 0) {
