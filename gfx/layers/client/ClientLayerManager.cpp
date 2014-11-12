@@ -662,8 +662,8 @@ ClientLayerManager::GetTexturePool(SurfaceFormat aFormat)
   }
 
   mTexturePools.AppendElement(
-      new TextureClientPool(aFormat, IntSize(gfxPrefs::LayersTileWidth(),
-                                             gfxPrefs::LayersTileHeight()),
+      new TextureClientPool(aFormat, IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
+                                             gfxPlatform::GetPlatform()->GetTileHeight()),
                             gfxPrefs::LayersTileMaxPoolSize(),
                             gfxPrefs::LayersTileShrinkPoolTimeout(),
                             mForwarder));

@@ -386,6 +386,10 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   if (gfxPrefs::VsyncAlignedCompositor()) {
     mCompositorVsyncObserver = new CompositorVsyncObserver(this);
   }
+
+  gfxPlatform::GetPlatform()->SetTileSize(
+    gfxPrefs::LayersTileWidth(),
+    gfxPrefs::LayersTileHeight());
 }
 
 bool
