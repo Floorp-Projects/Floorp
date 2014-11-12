@@ -377,7 +377,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Condition testUndefined(Condition cond, const Address &addr) {
         return testUndefined(cond, Operand(addr));
     }
-
+    Condition testNull(Condition cond, const Operand &operand) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToType(operand), ImmTag(JSVAL_TAG_NULL));
+        return cond;
+    }
+    Condition testNull(Condition cond, const Address &addr) {
+        return testNull(cond, Operand(addr));
+    }
 
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
