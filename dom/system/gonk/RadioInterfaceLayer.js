@@ -103,9 +103,10 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
   "RIL:SendStkEventDownload",
-  "RIL:GetCardLockState",
+  "RIL:GetCardLockEnabled",
   "RIL:UnlockCardLock",
-  "RIL:SetCardLock",
+  "RIL:SetCardLockEnabled",
+  "RIL:ChangeCardLockPassword",
   "RIL:GetCardLockRetryCount",
   "RIL:IccOpenChannel",
   "RIL:IccExchangeAPDU",
@@ -1831,16 +1832,20 @@ RadioInterface.prototype = {
       case "RIL:GetRilContext":
         // This message is sync.
         return this.rilContext;
-      case "RIL:GetCardLockState":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockState",
+      case "RIL:GetCardLockEnabled":
+        this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockEnabled",
                                                 "RIL:GetCardLockResult");
         break;
       case "RIL:UnlockCardLock":
         this.workerMessenger.sendWithIPCMessage(msg, "iccUnlockCardLock",
                                                 "RIL:SetUnlockCardLockResult");
         break;
-      case "RIL:SetCardLock":
-        this.workerMessenger.sendWithIPCMessage(msg, "iccSetCardLock",
+      case "RIL:SetCardLockEnabled":
+        this.workerMessenger.sendWithIPCMessage(msg, "iccSetCardLockEnabled",
+                                                "RIL:SetUnlockCardLockResult");
+        break;
+      case "RIL:ChangeCardLockPassword":
+        this.workerMessenger.sendWithIPCMessage(msg, "iccChangeCardLockPassword",
                                                 "RIL:SetUnlockCardLockResult");
         break;
       case "RIL:GetCardLockRetryCount":
