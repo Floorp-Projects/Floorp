@@ -499,9 +499,8 @@ class BaseMarionetteTestRunner(object):
         def gather_debug(test, status):
             rv = {}
             marionette = test._marionette_weakref()
-
-            # In the event we're gathering debug without starting a session, skip marionette commands
-            if marionette.session is not None:
+            # in the event we're gathering debug without starting a session, skip marionette commands
+            if marionette.session is not None and not marionette.check_for_crash():
                 try:
                     marionette.set_context(marionette.CONTEXT_CHROME)
                     rv['screenshot'] = marionette.screenshot()
@@ -590,15 +589,19 @@ class BaseMarionetteTestRunner(object):
 
     def _build_kwargs(self):
         kwargs = {
+            'app': self.app,
             'device_serial': self.device_serial,
             'symbols_path': self.symbols_path,
             'timeout': self.timeout,
+            'process_args': {
+                'stream': None
+            }
         }
+
         if self.bin:
             kwargs.update({
                 'host': 'localhost',
                 'port': 2828,
-                'app': self.app,
                 'app_args': self.app_args,
                 'bin': self.bin,
                 'profile': self.profile,
@@ -620,14 +623,6 @@ class BaseMarionetteTestRunner(object):
             if self.emulator:
                 kwargs['connectToRunningEmulator'] = True
 
-            if not self.bin:
-                try:
-                    #establish a socket connection so we can vertify the data come back
-                    connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-                    connection.connect((host,int(port)))
-                    connection.close()
-                except Exception, e:
-                    raise Exception("Connection attempt to %s:%s failed with error: %s" %(host,port,e))
         elif self.emulator:
             kwargs.update({
                 'emulator': self.emulator,
@@ -758,11 +753,6 @@ setReq.onerror = function() {
             self.logger.info('\nFAILED TESTS\n-------')
             for failed_test in self.failures:
                 self.logger.info('%s' % failed_test[0])
-
-        try:
-            self.marionette.check_for_crash()
-        except:
-            traceback.print_exc()
 
         self.end_time = time.time()
         self.elapsedtime = self.end_time - self.start_time
@@ -906,8 +896,6 @@ setReq.onerror = function() {
 
         for test in tests:
             self.run_test(test['filepath'], test['expected'], test['test_container'])
-            if self.marionette.check_for_crash():
-                break
 
     def run_test_sets(self):
         if self.total_chunks > len(self.tests):
