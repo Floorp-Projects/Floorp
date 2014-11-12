@@ -1913,28 +1913,29 @@ bool MediaDecoderStateMachine::HasLowUndecodedData()
   return HasLowUndecodedData(mLowDataThresholdUsecs);
 }
 
-bool MediaDecoderStateMachine::HasLowUndecodedData(double aUsecs)
+bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
 {
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(mState > DECODER_STATE_DECODING_FIRSTFRAME,
                "Must have loaded first frame for GetBuffered() to work");
 
-  bool reliable;
-  double bytesPerSecond = mDecoder->ComputePlaybackRate(&reliable);
-  if (!reliable) {
-    // Default to assuming we have enough
-    return false;
-  }
+  nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
+  nsresult rv = mReader->GetBuffered(buffered.get());
+  NS_ENSURE_SUCCESS(rv, false);
 
-  MediaResource* stream = mDecoder->GetResource();
-  int64_t currentPos = stream->Tell();
-  int64_t requiredPos = currentPos + int64_t((aUsecs/1000000.0)*bytesPerSecond);
-  int64_t length = stream->GetLength();
-  if (length >= 0) {
-    requiredPos = std::min(requiredPos, length);
+  int64_t endOfDecodedVideoData = INT64_MAX;
+  if (HasVideo() && !VideoQueue().AtEndOfStream()) {
+    endOfDecodedVideoData = VideoQueue().Peek() ? VideoQueue().Peek()->GetEndTime() : mVideoFrameEndTime;
   }
+  int64_t endOfDecodedAudioData = INT64_MAX;
+  if (HasAudio() && !AudioQueue().AtEndOfStream()) {
+    endOfDecodedAudioData = AudioQueue().Peek() ? AudioQueue().Peek()->GetEndTime() : GetAudioClock();
+  }
+  int64_t endOfDecodedData = std::min(endOfDecodedVideoData, endOfDecodedAudioData);
 
-  return stream->GetCachedDataEnd(currentPos) < requiredPos;
+  return endOfDecodedData != INT64_MAX &&
+         !buffered->Contains(static_cast<double>(endOfDecodedData) / USECS_PER_S,
+                             static_cast<double>(std::min(endOfDecodedData + aUsecs, GetDuration())) / USECS_PER_S);
 }
 
 void
