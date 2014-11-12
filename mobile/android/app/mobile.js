@@ -596,9 +596,9 @@ pref("media.preload.auto", 2);    // preload metadata if preload=auto
 // of at least 4.
 pref("media.video-queue.default-size", 3);
 
-// Enable the MediaCodec PlatformDecoderModule by default.
-pref("media.fragmented-mp4.exposed", true);
-pref("media.fragmented-mp4.enabled", true);
+// Disable the MediaCodec PlatformDecoderModule by default.
+pref("media.fragmented-mp4.exposed", false);
+pref("media.fragmented-mp4.enabled", false);
 pref("media.fragmented-mp4.android-media-codec.enabled", false);
 pref("media.fragmented-mp4.android-media-codec.preferred", false);
 
