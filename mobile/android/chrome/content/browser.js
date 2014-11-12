@@ -4215,27 +4215,31 @@ Tab.prototype = {
           this.tilesData = null;
         }
 
-        if (!Reader.isEnabledForParseOnLoad)
+        if (!Reader.isEnabledForParseOnLoad) {
           return;
+        }
+
+        let resetReaderFlags = currentURL => {
+          // Don't clear the article for about:reader pages since we want to
+          // use the article from the previous page.
+          if (!currentURL.startsWith("about:reader")) {
+            this.savedArticle = null;
+            this.readerEnabled = false;
+            this.readerActive = false;
+          } else {
+            this.readerActive = true;
+          }
+        };
 
         // Once document is fully loaded, parse it
         Reader.parseDocumentFromTab(this).then(article => {
           // The loaded page may have changed while we were parsing the document. 
           // Make sure we've got the current one.
-          let uri = this.browser.currentURI;
-          let tabURL = uri.specIgnoringRef;
-          // Do nothing if there's no article or the page in this tab has
-          // changed
-          if (article == null || (article.url != tabURL)) {
-            // Don't clear the article for about:reader pages since we want to
-            // use the article from the previous page
-            if (!tabURL.startsWith("about:reader")) {
-              this.savedArticle = null;
-              this.readerEnabled = false;
-              this.readerActive = false;
-            } else {
-              this.readerActive = true;
-            }
+          let currentURL = this.browser.currentURI.specIgnoringRef;
+
+          // Do nothing if there's no article or the page in this tab has changed.
+          if (article == null || (article.url != currentURL)) {
+            resetReaderFlags(currentURL);
             return;
           }
 
@@ -4246,12 +4250,16 @@ Tab.prototype = {
             tabID: this.id
           });
 
-          if(this.readerActive)
+          if (this.readerActive) {
             this.readerActive = false;
-
-          if(!this.readerEnabled)
+          }
+          if (!this.readerEnabled) {
             this.readerEnabled = true;
-        }, e => Cu.reportError("Error parsing document from tab: " + e));
+          }
+        }).catch(e => {
+          Cu.reportError("Error parsing document from tab: " + e);
+          resetReaderFlags(this.browser.currentURI.specIgnoringRef);
+        });
       }
     }
   },
