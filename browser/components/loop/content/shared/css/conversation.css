@@ -475,6 +475,17 @@
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+.fx-embedded .local-stream.room-preview {
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  height: 100%;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+}
+
 .conversation .media.nested .remote {
   display: inline-block;
   position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
