@@ -2472,6 +2472,22 @@ class SegmentedArrayElement
 {
 };
 
+// For a given segment size (in bytes), compute the number of T elements
+// that can fit into it.
+template<typename T, size_t IdealSegmentSize>
+class SegmentedArrayCapacity
+{
+  static const size_t kSingleElemSegmentSize =
+    sizeof(SegmentedArrayElement<T, 1>);
+
+public:
+  static const size_t value =
+    (IdealSegmentSize - kSingleElemSegmentSize) / sizeof(T) + 1;
+
+  static const size_t kActualSegmentSize =
+    sizeof(SegmentedArrayElement<T, value>);
+};
+
 template<class T, size_t N>
 class SegmentedArray
 {
@@ -2605,15 +2621,8 @@ class SnowWhiteKiller : public TraceCallbacks
   };
 
   // Segments are 4 KiB on 32-bit and 8 KiB on 64-bit.
-  static const size_t kIdealSegmentSize = sizeof(void*) * 1024;
-  static const size_t kSingleElemSegmentSize =
-    sizeof(SegmentedArrayElement<SnowWhiteObject, 1>);
   static const size_t kSegmentCapacity =
-    (kIdealSegmentSize - kSingleElemSegmentSize) / sizeof(SnowWhiteObject) + 1;
-
-  static const size_t kActualSegmentSize =
-      sizeof(SegmentedArrayElement<SnowWhiteObject, kSegmentCapacity>);
-
+    SegmentedArrayCapacity<SnowWhiteObject, sizeof(void*) * 1024>::value;
   typedef SegmentedArray<SnowWhiteObject, kSegmentCapacity> ObjectsArray;
 
 public:
@@ -2622,13 +2631,6 @@ public:
     , mObjects()
   {
     MOZ_ASSERT(mCollector, "Calling SnowWhiteKiller after nsCC went away");
-
-    // The segment capacity should be such that the actual segment size is as
-    // close as possible to the ideal segment size.
-    static_assert(
-      kIdealSegmentSize - kActualSegmentSize <= sizeof(SnowWhiteObject),
-      "ill-sized SnowWhiteKiller segments"
-    );
   }
 
   ~SnowWhiteKiller()
@@ -3257,12 +3259,15 @@ nsCycleCollector::CollectWhite()
   //   - Unlink(whites), which drops outgoing links on each white.
   //   - Unroot(whites), which returns the whites to normal GC.
 
+  // Segments are 4 KiB on 32-bit and 8 KiB on 64-bit.
+  static const size_t cap =
+    SegmentedArrayCapacity<PtrInfo*, sizeof(void*) * 1024>::value;
+  SegmentedArray<PtrInfo*, cap> whiteNodes;
   TimeLog timeLog;
-  nsAutoTArray<PtrInfo*, 4000> whiteNodes;
 
   MOZ_ASSERT(mIncrementalPhase == ScanAndCollectWhitePhase);
 
-  whiteNodes.SetCapacity(mWhiteNodeCount);
+  uint32_t numWhiteNodes = 0;
   uint32_t numWhiteGCed = 0;
   uint32_t numWhiteJSZones = 0;
 
@@ -3282,11 +3287,11 @@ nsCycleCollector::CollectWhite()
       } else {
         whiteNodes.AppendElement(pinfo);
         pinfo->mParticipant->Root(pinfo->mPointer);
+        ++numWhiteNodes;
       }
     }
   }
 
-  uint32_t numWhiteNodes = whiteNodes.Length();
   mResults.mFreedRefCounted += numWhiteNodes;
   mResults.mFreedGCed += numWhiteGCed;
   mResults.mFreedJSZones += numWhiteJSZones;
@@ -3301,24 +3306,32 @@ nsCycleCollector::CollectWhite()
   // Unlink() can trigger a GC, so do not touch any JS or anything
   // else not in whiteNodes after here.
 
-  for (uint32_t i = 0; i < numWhiteNodes; ++i) {
-    PtrInfo* pinfo = whiteNodes.ElementAt(i);
-    MOZ_ASSERT(pinfo->mParticipant,
-               "Unlink shouldn't see objects removed from graph.");
-    pinfo->mParticipant->Unlink(pinfo->mPointer);
+  auto segment = whiteNodes.GetFirstSegment();
+  while (segment) {
+    for (uint32_t i = 0; i < segment->Length(); i++) {
+      PtrInfo* pinfo = segment->ElementAt(i);
+      MOZ_ASSERT(pinfo->mParticipant,
+                 "Unlink shouldn't see objects removed from graph.");
+      pinfo->mParticipant->Unlink(pinfo->mPointer);
 #ifdef DEBUG
-    if (mJSRuntime) {
-      mJSRuntime->AssertNoObjectsToTrace(pinfo->mPointer);
-    }
+      if (mJSRuntime) {
+        mJSRuntime->AssertNoObjectsToTrace(pinfo->mPointer);
+      }
 #endif
+    }
+    segment = segment->getNext();
   }
   timeLog.Checkpoint("CollectWhite::Unlink");
 
-  for (uint32_t i = 0; i < numWhiteNodes; ++i) {
-    PtrInfo* pinfo = whiteNodes.ElementAt(i);
-    MOZ_ASSERT(pinfo->mParticipant,
-               "Unroot shouldn't see objects removed from graph.");
-    pinfo->mParticipant->Unroot(pinfo->mPointer);
+  segment = whiteNodes.GetFirstSegment();
+  while (segment) {
+    for (uint32_t i = 0; i < segment->Length(); i++) {
+      PtrInfo* pinfo = segment->ElementAt(i);
+      MOZ_ASSERT(pinfo->mParticipant,
+                 "Unroot shouldn't see objects removed from graph.");
+      pinfo->mParticipant->Unroot(pinfo->mPointer);
+    }
+    segment = segment->getNext();
   }
   timeLog.Checkpoint("CollectWhite::Unroot");
 
@@ -3326,6 +3339,8 @@ nsCycleCollector::CollectWhite()
   timeLog.Checkpoint("CollectWhite::dispatchDeferredDeletion");
 
   mIncrementalPhase = CleanupPhase;
+
+  whiteNodes.Clear();
 
   return numWhiteNodes > 0 || numWhiteGCed > 0 || numWhiteJSZones > 0;
 }
