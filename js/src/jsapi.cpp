@@ -3840,8 +3840,8 @@ CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
         staticWith->initEnclosingNestedScope(staticEnclosingScope);
         staticEnclosingScope = staticWith;
 
-        dynamicWith = DynamicWithObject::create(cx, scopeChain[--i],
-                                                dynamicEnclosingScope, staticWith);
+        dynamicWith = DynamicWithObject::create(cx, scopeChain[--i], dynamicEnclosingScope,
+                                                staticWith, DynamicWithObject::NonSyntacticWith);
         if (!dynamicWith)
             return false;
         dynamicEnclosingScope = dynamicWith;
