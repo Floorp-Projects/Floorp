@@ -854,6 +854,9 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   // Expand the rect by the margins
   screenRect.Inflate(aMarginsData->mMargins);
 
+  int alignmentX = gfxPlatform::GetPlatform()->GetTileWidth();
+  int alignmentY = gfxPlatform::GetPlatform()->GetTileHeight();
+
   // And then align it to the requested alignment.
   // Note on the correctness of applying the alignment in Screen space:
   //   The correct space to apply the alignment in would be Layer space, but
@@ -865,7 +868,7 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   //   screen resolution; since this is what Layout does most of the time,
   //   this is a good approximation. A proper solution would involve moving the
   //   choosing of the resolution to display-list building time.
-  if (aMarginsData->mAlignmentX > 0 || aMarginsData->mAlignmentY > 0) {
+  if (alignmentX > 0 && alignmentY > 0) {
     // Inflate the rectangle by 1 so that we always push to the next tile
     // boundary. This is desirable to stop from having a rectangle with a
     // moving origin occasionally being smaller when it coincidentally lines
@@ -873,21 +876,21 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
     screenRect.Inflate(1);
 
     // Avoid division by zero.
-    if (aMarginsData->mAlignmentX == 0) {
-      aMarginsData->mAlignmentX = 1;
+    if (alignmentX == 0) {
+      alignmentX = 1;
     }
-    if (aMarginsData->mAlignmentY == 0) {
-      aMarginsData->mAlignmentY = 1;
+    if (alignmentY == 0) {
+      alignmentY = 1;
     }
 
     ScreenPoint scrollPosScreen = LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel)
                                 * res;
 
     screenRect += scrollPosScreen;
-    float x = aMarginsData->mAlignmentX * floor(screenRect.x / aMarginsData->mAlignmentX);
-    float y = aMarginsData->mAlignmentY * floor(screenRect.y / aMarginsData->mAlignmentY);
-    float w = aMarginsData->mAlignmentX * ceil(screenRect.XMost() / aMarginsData->mAlignmentX) - x;
-    float h = aMarginsData->mAlignmentY * ceil(screenRect.YMost() / aMarginsData->mAlignmentY) - y;
+    float x = alignmentX * floor(screenRect.x / alignmentX);
+    float y = alignmentY * floor(screenRect.y / alignmentY);
+    float w = alignmentX * ceil(screenRect.XMost() / alignmentX) - x;
+    float h = alignmentY * ceil(screenRect.YMost() / alignmentY) - y;
     screenRect = ScreenRect(x, y, w, h);
     screenRect -= scrollPosScreen;
   }
@@ -957,8 +960,6 @@ void
 nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                                      nsIPresShell* aPresShell,
                                      const ScreenMargin& aMargins,
-                                     uint32_t aAlignmentX,
-                                     uint32_t aAlignmentY,
                                      uint32_t aPriority,
                                      RepaintMode aRepaintMode)
 {
@@ -970,7 +971,7 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
 
   aContent->SetProperty(nsGkAtoms::DisplayPortMargins,
                         new DisplayPortMarginsPropertyData(
-                            aMargins, aAlignmentX, aAlignmentY, aPriority),
+                            aMargins, aPriority),
                         nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
 
   if (nsLayoutUtils::UsesAsyncScrolling()) {
@@ -2869,12 +2870,9 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
       ScreenMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
           metrics, ParentLayerPoint(0.0f, 0.0f), 0.0);
       nsIPresShell* presShell = aScrollFrame->PresContext()->GetPresShell();
-      gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
-          ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
-            gfx::IntSize(0, 0);
       nsLayoutUtils::SetDisplayPortMargins(
-          content, presShell, displayportMargins, alignment.width,
-          alignment.height, 0, nsLayoutUtils::RepaintMode::DoNotRepaint);
+          content, presShell, displayportMargins,
+          0, nsLayoutUtils::RepaintMode::DoNotRepaint);
       haveDisplayPort = GetDisplayPort(content, aOutDisplayport);
       NS_ASSERTION(haveDisplayPort, "should have a displayport after having just set it");
     }
