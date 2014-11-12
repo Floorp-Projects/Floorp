@@ -227,7 +227,8 @@ loop.roomViews = (function(mozL10n) {
       var localStreamClasses = React.addons.classSet({
         local: true,
         "local-stream": true,
-        "local-stream-audio": !this.state.videoMuted
+        "local-stream-audio": !this.state.videoMuted,
+        "room-preview": this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS
       });
 
       switch(this.state.roomState) {
