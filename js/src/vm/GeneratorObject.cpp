@@ -111,6 +111,18 @@ GeneratorObject::finalSuspend(JSContext *cx, HandleObject obj)
 }
 
 bool
+js::GeneratorThrow(JSContext *cx, HandleObject obj, HandleValue arg)
+{
+    GeneratorObject *genObj = &obj->as<GeneratorObject>();
+    cx->setPendingException(arg);
+    if (genObj->isNewborn())
+        genObj->setClosed();
+    else
+        genObj->setRunning();
+    return false;
+}
+
+bool
 GeneratorObject::resume(JSContext *cx, InterpreterActivation &activation,
                         HandleObject obj, HandleValue arg, GeneratorObject::ResumeKind resumeKind)
 {
@@ -159,12 +171,7 @@ GeneratorObject::resume(JSContext *cx, InterpreterActivation &activation,
         return true;
 
       case THROW:
-        cx->setPendingException(arg);
-        if (genObj->isNewborn())
-            genObj->setClosed();
-        else
-            genObj->setRunning();
-        return false;
+        return GeneratorThrow(cx, genObj, arg);
 
       case CLOSE:
         MOZ_ASSERT(genObj->is<LegacyGeneratorObject>());
