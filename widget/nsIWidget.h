@@ -38,6 +38,9 @@ namespace mozilla {
 namespace dom {
 class TabChild;
 }
+namespace plugins {
+class PluginWidgetChild;
+}
 namespace layers {
 class Composer2D;
 class CompositorChild;
@@ -2037,6 +2040,16 @@ public:
      */
     static already_AddRefed<nsIWidget>
     CreatePuppetWidget(TabChild* aTabChild);
+
+    /**
+     * Allocate and return a "plugin proxy widget", a subclass of PuppetWidget
+     * used in wrapping a PPluginWidget connection for remote widgets. Note
+     * this call creates the base object, it does not create the widget. Use
+     * nsIWidget's Create to do this.
+     */
+    static already_AddRefed<nsIWidget>
+    CreatePluginProxyWidget(TabChild* aTabChild,
+                            mozilla::plugins::PluginWidgetChild* aActor);
 
     /**
      * Reparent this widget's native widget.
