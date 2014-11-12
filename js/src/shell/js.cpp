@@ -3248,6 +3248,8 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
            .setCompileAndGo(false);
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
                                     /* foldConstants = */ true, nullptr, nullptr);
+    if (!parser.checkOptions())
+        return false;
 
     ParseNode *pn = parser.parse(nullptr);
     if (!pn)
@@ -3294,6 +3296,8 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     size_t length = scriptContents->length();
     Parser<frontend::SyntaxParseHandler> parser(cx, &cx->tempLifoAlloc(),
                                                 options, chars, length, false, nullptr, nullptr);
+    if (!parser.checkOptions())
+        return false;
 
     bool succeeded = parser.parse(nullptr);
     if (cx->isExceptionPending())
