@@ -348,6 +348,7 @@ MediaSource::Detach()
 void
 MediaSource::GetBuffered(TimeRanges* aBuffered)
 {
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   MOZ_ASSERT(aBuffered->Length() == 0);
   if (mActiveSourceBuffers->IsEmpty()) {
     return;
