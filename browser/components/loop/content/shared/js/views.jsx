@@ -81,7 +81,8 @@ loop.shared.views = (function(_, OT, l10n) {
     getDefaultProps: function() {
       return {
         video: {enabled: true, visible: true},
-        audio: {enabled: true, visible: true}
+        audio: {enabled: true, visible: true},
+        enableHangup: true
       };
     },
 
@@ -89,7 +90,9 @@ loop.shared.views = (function(_, OT, l10n) {
       video: React.PropTypes.object.isRequired,
       audio: React.PropTypes.object.isRequired,
       hangup: React.PropTypes.func.isRequired,
-      publishStream: React.PropTypes.func.isRequired
+      publishStream: React.PropTypes.func.isRequired,
+      hangupButtonLabel: React.PropTypes.string,
+      enableHangup: React.PropTypes.bool,
     },
 
     handleClickHangup: function() {
@@ -104,14 +107,19 @@ loop.shared.views = (function(_, OT, l10n) {
       this.props.publishStream("audio", !this.props.audio.enabled);
     },
 
+    _getHangupButtonLabel: function() {
+      return this.props.hangupButtonLabel || l10n.get("hangup_button_caption2");
+    },
+
     render: function() {
       var cx = React.addons.classSet;
       return (
         <ul className="conversation-toolbar">
           <li className="conversation-toolbar-btn-box btn-hangup-entry">
             <button className="btn btn-hangup" onClick={this.handleClickHangup}
-                    title={l10n.get("hangup_button_title")}>
-              {l10n.get("hangup_button_caption2")}
+                    title={l10n.get("hangup_button_title")}
+                    disabled={!this.props.enableHangup}>
+              {this._getHangupButtonLabel()}
             </button>
           </li>
           <li className="conversation-toolbar-btn-box">
