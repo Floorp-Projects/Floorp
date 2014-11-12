@@ -1837,3 +1837,4 @@ test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1-ref.html
 == 1078262-1.html about:blank
 == 1081072-1.html 1081072-1-ref.html
 == 1081185-1.html 1081185-1-ref.html
+== 1097437-1.html 1097437-1-ref.html
