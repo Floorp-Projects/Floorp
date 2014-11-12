@@ -52,6 +52,10 @@ namespace widget {
 struct AutoCacheNativeKeyCommands;
 }
 
+namespace plugins {
+class PluginWidgetChild;
+}
+
 namespace dom {
 
 class TabChild;
@@ -483,6 +487,13 @@ public:
     }
 
     virtual bool RecvUIResolutionChanged() MOZ_OVERRIDE;
+
+    /**
+     * Native widget remoting protocol for use with windowed plugins with e10s.
+     */
+    PPluginWidgetChild* AllocPPluginWidgetChild() MOZ_OVERRIDE;
+    bool DeallocPPluginWidgetChild(PPluginWidgetChild* aActor) MOZ_OVERRIDE;
+    already_AddRefed<nsIWidget> CreatePluginWidget(nsIWidget* aParent);
 
 protected:
     virtual ~TabChild();
