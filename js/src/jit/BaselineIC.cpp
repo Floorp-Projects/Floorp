@@ -3352,6 +3352,10 @@ CheckHasNoSuchProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
         if (!curObj->isNative())
             return false;
 
+        // Don't handle proto chains with resolve hooks.
+        if (curObj->getClass()->resolve != JS_ResolveStub)
+            return false;
+
         Shape *shape = curObj->as<NativeObject>().lookup(cx, NameToId(name));
         if (shape)
             return false;
