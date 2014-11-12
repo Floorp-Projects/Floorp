@@ -95,7 +95,7 @@ void
 AppendASCIItoUTF16(const nsACString& aSource, nsAString& aDest)
 {
   if (!AppendASCIItoUTF16(aSource, aDest, mozilla::fallible_t())) {
-    NS_ABORT_OOM(aDest.Length() + aSource.Length());
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
   }
 }
 
@@ -144,7 +144,7 @@ void
 AppendUTF16toUTF8(const nsAString& aSource, nsACString& aDest)
 {
   if (!AppendUTF16toUTF8(aSource, aDest, mozilla::fallible_t())) {
-    NS_ABORT_OOM(aDest.Length() + aSource.Length());
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
   }
 }
 
@@ -185,7 +185,7 @@ void
 AppendUTF8toUTF16(const nsACString& aSource, nsAString& aDest)
 {
   if (!AppendUTF8toUTF16(aSource, aDest, mozilla::fallible_t())) {
-    NS_ABORT_OOM(aDest.Length() + aSource.Length());
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
   }
 }
 
