@@ -203,7 +203,7 @@ MediaSourceReader::OnNotDecoded(MediaData::Type aType, RequestSampleCallback::No
   int64_t* time = aType == MediaData::AUDIO_DATA ? &mLastAudioTime : &mLastVideoTime;
   if (reader) {
     nsRefPtr<dom::TimeRanges> ranges = new dom::TimeRanges();
-    reader->GetBuffered(ranges, 0);
+    reader->GetBuffered(ranges);
     if (ranges->Length() > 0) {
       // End time is a double so we convert to nearest by adding 0.5.
       int64_t end = ranges->GetEndTime() * USECS_PER_S + 0.5;
