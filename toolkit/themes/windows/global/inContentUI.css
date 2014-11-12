@@ -60,6 +60,13 @@ html|html {
 }
 %endif
 
+/* Use the new in-content colors for #contentAreaDownloadsView. After landing
+   of bug 989469 the colors can be moved to *|*:root */
+*|*#contentAreaDownloadsView {
+  background: #f1f1f1;
+  color: #424e5a;
+}
+
 /* Content */
 *|*.main-content {
   /* Needed to allow the radius to clip the inner content, see bug 595656 */
