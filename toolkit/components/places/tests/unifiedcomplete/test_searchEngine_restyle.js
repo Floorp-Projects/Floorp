@@ -15,9 +15,18 @@ add_task(function* test_searchEngine() {
   addBookmark({ uri: uri2, title: "Terms - SearchEngine Search" });
 
   do_log_info("Past search terms should be styled, unless bookmarked");
+  Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
   yield check_autocomplete({
     search: "term",
     matches: [ { uri: uri1, title: "Terms", searchEngine: "SearchEngine", style: ["favicon", "search"] },
+               { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ]
+  });
+
+  do_log_info("Past search terms should not be styled if restyling is disabled");
+  Services.prefs.setBoolPref("browser.urlbar.restyleSearches", false);
+  yield check_autocomplete({
+    search: "term",
+    matches: [ { uri: uri1, title: "Terms - SearchEngine Search" },
                { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ]
   });
 
