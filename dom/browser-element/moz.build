@@ -12,6 +12,12 @@ SOURCES += [
     'BrowserElementParent.cpp',
 ]
 
+XPIDL_SOURCES += [
+    'nsIBrowserElementAPI.idl',
+]
+
+XPIDL_MODULE = 'browser-element'
+
 EXTRA_COMPONENTS += [
     'BrowserElementParent.js',
     'BrowserElementParent.manifest',
