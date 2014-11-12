@@ -166,7 +166,8 @@ MediaSource::Duration()
   if (mReadyState == MediaSourceReadyState::Closed) {
     return UnspecifiedNaN<double>();
   }
-  return mDuration;
+  MOZ_ASSERT(mDecoder);
+  return mDecoder->GetMediaSourceDuration();
 }
 
 void
@@ -183,7 +184,7 @@ MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  DurationChange(aDuration, aRv);
+  mDecoder->SetMediaSourceDuration(aDuration);
 }
 
 already_AddRefed<SourceBuffer>
@@ -271,7 +272,7 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
   mSourceBuffers->Ended();
   mDecoder->Ended();
   if (!aError.WasPassed()) {
-    DurationChange(mSourceBuffers->GetHighestBufferedEndTime(), aRv);
+    mDecoder->SetMediaSourceDuration(mSourceBuffers->GetHighestBufferedEndTime());
     if (aRv.Failed()) {
       return;
     }
@@ -336,7 +337,6 @@ MediaSource::Detach()
   mDecoder = nullptr;
   mFirstSourceBufferInitialized = false;
   SetReadyState(MediaSourceReadyState::Closed);
-  mDuration = UnspecifiedNaN<double>();
   if (mActiveSourceBuffers) {
     mActiveSourceBuffers->Clear();
   }
@@ -347,7 +347,6 @@ MediaSource::Detach()
 
 MediaSource::MediaSource(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
-  , mDuration(UnspecifiedNaN<double>())
   , mDecoder(nullptr)
   , mPrincipal(nullptr)
   , mReadyState(MediaSourceReadyState::Closed)
@@ -416,23 +415,19 @@ MediaSource::QueueAsyncSimpleEvent(const char* aName)
 }
 
 void
-MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
+MediaSource::DurationChange(double aOldDuration, double aNewDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MSE_DEBUG("MediaSource(%p)::DurationChange(aNewDuration=%f)", this, aNewDuration);
-  if (mDuration == aNewDuration) {
-    return;
-  }
-  double oldDuration = mDuration;
-  mDuration = aNewDuration;
-  if (aNewDuration < oldDuration) {
-    mSourceBuffers->Remove(aNewDuration, oldDuration, aRv);
-    if (aRv.Failed()) {
+
+  if (aNewDuration < aOldDuration) {
+    ErrorResult rv;
+    mSourceBuffers->Remove(aNewDuration, aOldDuration, rv);
+    if (rv.Failed()) {
       return;
     }
   }
   // TODO: If partial audio frames/text cues exist, clamp duration based on mSourceBuffers.
-  // TODO: Update media element's duration and run element's duration change algorithm.
 }
 
 void

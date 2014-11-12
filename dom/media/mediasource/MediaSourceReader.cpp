@@ -630,13 +630,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
   }
 
   if (maxDuration != -1) {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaDuration(maxDuration);
-    nsRefPtr<nsIRunnable> task (
-      NS_NewRunnableMethodWithArg<double>(static_cast<MediaSourceDecoder*>(mDecoder),
-                                          &MediaSourceDecoder::SetMediaSourceDuration,
-                                          static_cast<double>(maxDuration) / USECS_PER_S));
-    NS_DispatchToMainThread(task);
+    static_cast<MediaSourceDecoder*>(mDecoder)->SetDecodedDuration(maxDuration);
   }
 
   *aInfo = mInfo;
