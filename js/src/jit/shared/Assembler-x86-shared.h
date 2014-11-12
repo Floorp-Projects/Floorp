@@ -2157,6 +2157,26 @@ class AssemblerX86Shared : public AssemblerShared
         MOZ_ASSERT(HasSSE41());
         masm.insertps_irr(mask, src.code(), dest.code());
     }
+    unsigned blendpsMask(bool x, bool y, bool z, bool w) {
+        return x | (y << 1) | (z << 2) | (w << 3);
+    }
+    void blendps(FloatRegister src, FloatRegister dest, unsigned mask) {
+        MOZ_ASSERT(HasSSE41());
+        masm.blendps_irr(mask, src.code(), dest.code());
+    }
+    void blendps(const Operand &src, FloatRegister dest, unsigned mask) {
+        MOZ_ASSERT(HasSSE41());
+        switch (src.kind()) {
+          case Operand::FPREG:
+            masm.blendps_irr(mask, src.fpu(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.blendps_imr(mask, src.disp(), src.base(), dest.code());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void minsd(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.minsd_rr(src.code(), dest.code());
