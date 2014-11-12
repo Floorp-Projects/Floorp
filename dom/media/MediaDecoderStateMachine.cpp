@@ -821,9 +821,15 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     return;
   }
 
-  // If the decoder is waiting for data, there's nothing more to do after
-  // clearing the pending request.
+  // If the decoder is waiting for data, we need to make sure that the requests
+  // are cleared, which happened above. Additionally, if we're out of decoded
+  // samples, we need to switch to buffering mode.
   if (aReason == RequestSampleCallback::WAITING_FOR_DATA) {
+    bool outOfSamples = isAudio ? !AudioQueue().GetSize() : !VideoQueue().GetSize();
+    if (outOfSamples) {
+      StartBuffering();
+    }
+
     return;
   }
 

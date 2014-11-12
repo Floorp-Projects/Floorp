@@ -910,7 +910,6 @@ NS_IMETHODIMP MediaDecoder::Observe(nsISupports *aSubjet,
 MediaDecoder::Statistics
 MediaDecoder::GetStatistics()
 {
-  MOZ_ASSERT(NS_IsMainThread() || OnStateMachineThread());
   Statistics result;
 
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
