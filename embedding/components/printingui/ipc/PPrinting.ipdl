@@ -5,6 +5,7 @@
 
 include protocol PContent;
 include protocol PBrowser;
+include protocol PPrintProgressDialog;
 
 namespace mozilla {
 namespace embedding {
@@ -87,11 +88,19 @@ struct PrintData {
 sync protocol PPrinting
 {
   manager PContent;
+  manages PPrintProgressDialog;
 
 parent:
-  sync ShowProgress(PBrowser browser, bool isForPrinting);
+  sync ShowProgress(PBrowser browser,
+                    PPrintProgressDialog printProgressDialog,
+                    bool isForPrinting)
+    returns(bool notifyOnOpen,
+            bool success);
+
   sync ShowPrintDialog(PBrowser browser, PrintData settings)
     returns(PrintData modifiedSettings, bool success);
+
+  PPrintProgressDialog();
 
 child:
   __delete__();
