@@ -9,7 +9,6 @@
 #include "MP4Reader.h"
 #include "MP4Decoder.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/DecoderData.h"
 #include "nsIThread.h"
@@ -33,10 +32,11 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
   , mCallback(aCallback)
   , mConverter(nullptr)
   , mStream(nullptr)
-  , mCurrentAudioTimestamp(0)
+  , mCurrentAudioTimestamp(-1)
+  , mNextAudioTimestamp(-1)
   , mSamplePosition(0)
-  , mHaveOutput(false)
-  , mFlushed(false)
+  , mSizeDecoded(0)
+  , mLastError(noErr)
 {
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox decoder");
@@ -238,8 +238,7 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
   // Pick a multiple of the frame size close to a power of two
   // for efficient allocation.
   const uint32_t MAX_AUDIO_FRAMES = 128;
-  const uint32_t decodedSize = MAX_AUDIO_FRAMES * mConfig.channel_count *
-    sizeof(AudioDataValue);
+  const uint32_t maxDecodedSamples = MAX_AUDIO_FRAMES * mConfig.channel_count;
 
   // Descriptions for _decompressed_ audio packets. ignored.
   nsAutoArrayPtr<AudioStreamPacketDescription>
@@ -251,14 +250,15 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
   PassthroughUserData userData =
       { this, aNumPackets, aNumBytes, aData, aPackets, false };
 
-  do {
-    // Decompressed audio buffer
-    nsAutoArrayPtr<uint8_t> decoded(new uint8_t[decodedSize]);
+  // Decompressed audio buffer
+  nsAutoArrayPtr<AudioDataValue> decoded(new AudioDataValue[maxDecodedSamples]);
 
+  do {
     AudioBufferList decBuffer;
     decBuffer.mNumberBuffers = 1;
     decBuffer.mBuffers[0].mNumberChannels = mOutputFormat.mChannelsPerFrame;
-    decBuffer.mBuffers[0].mDataByteSize = decodedSize;
+    decBuffer.mBuffers[0].mDataByteSize =
+      maxDecodedSamples * sizeof(AudioDataValue);
     decBuffer.mBuffers[0].mData = decoded.get();
 
     // in: the max number of packets we can handle from the decoder.
@@ -274,50 +274,28 @@ AppleATDecoder::SampleCallback(uint32_t aNumBytes,
 
     if (rv && rv != kNeedMoreData) {
       LOG("Error decoding audio stream: %d\n", rv);
-      mCallback->Error();
-      break;
-    }
-    LOG("%d frames decoded", numFrames);
-
-    // If we decoded zero frames then AudioConverterFillComplexBuffer is out
-    // of data to provide.  We drained its internal buffer completely on the
-    // last pass.
-    if (numFrames == 0 && rv == kNeedMoreData) {
-      LOG("FillComplexBuffer out of data exactly\n");
-      mCallback->InputExhausted();
+      mLastError = rv;
       break;
     }
 
-    const int rate = mOutputFormat.mSampleRate;
-    const int channels = mOutputFormat.mChannelsPerFrame;
-
-    int64_t time = mCurrentAudioTimestamp;
-    int64_t duration = FramesToUsecs(numFrames, rate).value();
-
-    LOG("pushed audio at time %lfs; duration %lfs\n",
-        (double)time / USECS_PER_S, (double)duration / USECS_PER_S);
-
-    AudioData* audio = new AudioData(mSamplePosition,
-                                     time, duration, numFrames,
-                                     reinterpret_cast<AudioDataValue*>(decoded.forget()),
-                                     channels, rate);
-    mCallback->Output(audio);
-    mHaveOutput = true;
+    mOutputData.AppendElements(decoded.get(),
+                               numFrames * mConfig.channel_count);
 
     if (rv == kNeedMoreData) {
       // No error; we just need more data.
       LOG("FillComplexBuffer out of data\n");
-      mCallback->InputExhausted();
       break;
     }
+    LOG("%d frames decoded", numFrames);
   } while (true);
+
+  mSizeDecoded += aNumBytes;
 }
 
 void
 AppleATDecoder::SetupDecoder()
 {
   LOG("Setting up Apple AudioToolbox decoder.");
-  mHaveOutput = false;
 
   AudioStreamBasicDescription inputFormat;
   nsresult rv = AppleUtils::GetRichestDecodableFormat(mStream, inputFormat);
@@ -368,23 +346,84 @@ AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
       return;
     }
   }
-  // Push the sample to the AudioFileStream for parsing.
-  mSamplePosition = aSample->byte_offset;
-  mCurrentAudioTimestamp = aSample->composition_timestamp;
-  uint32_t flags = mFlushed ? kAudioFileStreamParseFlag_Discontinuity : 0;
+
+  const Microseconds fuzz = 5;
+  CheckedInt<Microseconds> upperFuzz = mNextAudioTimestamp + fuzz;
+  CheckedInt<Microseconds> lowerFuzz = mNextAudioTimestamp - fuzz;
+  bool discontinuity =
+    !mNextAudioTimestamp.isValid() || mNextAudioTimestamp.value() < 0 ||
+    !upperFuzz.isValid() || lowerFuzz.value() < 0 ||
+    upperFuzz.value() < aSample->composition_timestamp ||
+    lowerFuzz.value() > aSample->composition_timestamp;
+
+  if (discontinuity) {
+    LOG("Discontinuity detected, expected %lld got %lld\n",
+        mNextAudioTimestamp.value(), aSample->composition_timestamp);
+    mCurrentAudioTimestamp = aSample->composition_timestamp;
+    mSamplePosition = aSample->byte_offset;
+  }
+
+  uint32_t flags = discontinuity ? kAudioFileStreamParseFlag_Discontinuity : 0;
+
   OSStatus rv = AudioFileStreamParseBytes(mStream,
                                           aSample->size,
                                           aSample->data,
                                           flags);
+
+  if (!mOutputData.IsEmpty()) {
+    int rate = mOutputFormat.mSampleRate;
+    int channels = mOutputFormat.mChannelsPerFrame;
+    size_t numFrames = mOutputData.Length() / channels;
+    CheckedInt<Microseconds> duration = FramesToUsecs(numFrames, rate);
+    if (!duration.isValid()) {
+      NS_ERROR("Invalid count of accumulated audio samples");
+      mCallback->Error();
+      return;
+    }
+
+    LOG("pushed audio at time %lfs; duration %lfs\n",
+        (double)mCurrentAudioTimestamp.value() / USECS_PER_S,
+        (double)duration.value() / USECS_PER_S);
+
+    nsAutoArrayPtr<AudioDataValue>
+      data(new AudioDataValue[mOutputData.Length()]);
+    PodCopy(data.get(), &mOutputData[0], mOutputData.Length());
+    mOutputData.Clear();
+    AudioData* audio = new AudioData(mSamplePosition,
+                                     mCurrentAudioTimestamp.value(),
+                                     duration.value(),
+                                     numFrames,
+                                     data.forget(),
+                                     channels,
+                                     rate);
+    mCallback->Output(audio);
+    mCurrentAudioTimestamp += duration.value();
+    if (!mCurrentAudioTimestamp.isValid()) {
+      NS_ERROR("Invalid count of accumulated audio samples");
+      mCallback->Error();
+      return;
+    }
+    mSamplePosition += mSizeDecoded;
+    mSizeDecoded = 0;
+  }
+
+  // This is the timestamp of the next sample we should be receiving
+  mNextAudioTimestamp =
+    CheckedInt<Microseconds>(aSample->composition_timestamp) + aSample->duration;
+
   if (rv != noErr) {
     LOG("Error %d parsing audio data", rv);
     mCallback->Error();
+    return;
+  }
+  if (mLastError != noErr) {
+    LOG("Error %d during decoding", mLastError);
+    mCallback->Error();
+    mLastError = noErr;
+    return;
   }
 
-  // Sometimes we need multiple input samples before AudioToolbox
-  // starts decoding. If we haven't seen any output yet, ask for
-  // more data here.
-  if (!mHaveOutput) {
+  if (mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
   }
 }
@@ -392,7 +431,9 @@ AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
 void
 AppleATDecoder::SignalFlush()
 {
-  mFlushed = true;
+  mOutputData.Clear();
+  mNextAudioTimestamp = -1;
+  mSizeDecoded = 0;
 }
 
 } // namespace mozilla
