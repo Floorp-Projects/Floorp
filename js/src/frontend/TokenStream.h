@@ -266,7 +266,7 @@ class MOZ_STACK_CLASS TokenStream
     const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
-    unsigned getColumn() const { return userbuf.addressOfNextRawChar() - linebase - 1; }
+    unsigned getColumn() const { return userbuf.offset() - linebase - 1; }
     bool getMutedErrors() const { return mutedErrors; }
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
@@ -517,8 +517,8 @@ class MOZ_STACK_CLASS TokenStream
         const char16_t *buf;
         Flags flags;
         unsigned lineno;
-        const char16_t *linebase;
-        const char16_t *prevLinebase;
+        size_t linebase;
+        size_t prevLinebase;
         Token currentToken;
         unsigned lookahead;
         Token lookaheadTokens[maxLookahead];
@@ -743,9 +743,9 @@ class MOZ_STACK_CLASS TokenStream
             return c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR;
         }
 
-        // Finds the next EOL, but stops once 'max' characters have been scanned
-        // (*including* the starting char16_t).
-        const char16_t *findEOLMax(const char16_t *p, size_t max);
+        // Returns the offset of the next EOL, but stops once 'max' characters
+        // have been scanned (*including* the char at startOffset).
+        size_t findEOLMax(size_t startOffset, size_t max);
 
       private:
         const char16_t *base_;          // base of buffer
@@ -810,8 +810,8 @@ class MOZ_STACK_CLASS TokenStream
     unsigned            lookahead;          // count of lookahead tokens
     unsigned            lineno;             // current line number
     Flags               flags;              // flags -- see above
-    const char16_t      *linebase;          // start of current line;  points into userbuf
-    const char16_t      *prevLinebase;      // start of previous line;  nullptr if on the first line
+    size_t              linebase;           // start of current line
+    size_t              prevLinebase;       // start of previous line;  size_t(-1) if on the first line
     TokenBuf            userbuf;            // user input buffer
     const char          *filename;          // input filename or null
     mozilla::UniquePtr<char16_t[], JS::FreePolicy> displayURL_; // the user's requested source URL or null
