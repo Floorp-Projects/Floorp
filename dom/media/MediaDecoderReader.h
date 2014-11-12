@@ -153,6 +153,11 @@ public:
 
   virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio);
 
+  // Wait this number of seconds when buffering, then leave and play
+  // as best as we can if the required amount of data hasn't been
+  // retrieved.
+  virtual uint32_t GetBufferingWait() { return 30; }
+
   // Returns the number of bytes of memory allocated by structures/frames in
   // the video queue.
   size_t SizeOfVideoQueueInBytes() const;
