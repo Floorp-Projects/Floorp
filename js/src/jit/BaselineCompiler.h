@@ -177,6 +177,7 @@ namespace jit {
     _(JSOP_INITIALYIELD)       \
     _(JSOP_YIELD)              \
     _(JSOP_FINALYIELDRVAL)     \
+    _(JSOP_RESUME)             \
     _(JSOP_CALLEE)             \
     _(JSOP_SETRVAL)            \
     _(JSOP_RETRVAL)            \
