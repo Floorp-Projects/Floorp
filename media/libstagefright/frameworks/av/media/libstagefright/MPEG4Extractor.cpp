@@ -148,9 +148,12 @@ private:
         uint32_t size;
         uint32_t duration;
         uint32_t ctsOffset;
+        uint32_t flags;
         uint8_t iv[16];
         Vector<uint16_t> clearsizes;
         Vector<uint32_t> encryptedsizes;
+
+        bool isSync() const { return !(flags & 0x1010000); }
     };
     Vector<Sample> mCurrentSamples;
     MPEG4Extractor::TrackExtends mTrackExtends;
@@ -3128,6 +3131,8 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
                 dataOffset, sampleSize, sampleDuration,
                 (flags & kFirstSampleFlagsPresent) && i == 0
                     ? firstSampleFlags : sampleFlags);
+        tmp.flags = (flags & kFirstSampleFlagsPresent) && i == 0
+                ? firstSampleFlags : sampleFlags;
         tmp.offset = dataOffset;
         tmp.size = sampleSize;
         tmp.duration = sampleDuration;
@@ -3565,6 +3570,10 @@ status_t MPEG4Source::fragmentedRead(
     ReadOptions::SeekMode mode;
     if (options && options->getSeekTo(&seekTimeUs, &mode)) {
 
+        mCurrentSamples.clear();
+        mDeferredSaio.clear();
+        mDeferredSaiz.clear();
+        mCurrentSampleIndex = 0;
         int numSidxEntries = mSegments.size();
         if (numSidxEntries != 0) {
             int64_t totalTime = 0;
@@ -3587,16 +3596,62 @@ status_t MPEG4Source::fragmentedRead(
                 totalOffset += se->mSize;
             }
             mCurrentMoofOffset = totalOffset;
-            mCurrentSamples.clear();
-            mDeferredSaio.clear();
-            mDeferredSaiz.clear();
-            mCurrentSampleIndex = 0;
-            mTrackFragmentData.mPresent = false;
-            parseChunk(&totalOffset);
+            mNextMoofOffset = totalOffset;
             mCurrentTime = totalTime * mTimescale / 1000000ll;
-            if (mTrackFragmentData.mPresent) {
-                mCurrentTime += mTrackFragmentData.mBaseMediaDecodeTime;
+        }
+        else {
+            mNextMoofOffset = mFirstMoofOffset;
+            uint32_t seekTime = (int32_t) ((seekTimeUs * mTimescale) / 1000000ll);
+            while (true) {
+
+                uint32_t hdr[2];
+                do {
+                    off64_t moofOffset = mNextMoofOffset; // lastSample.offset + lastSample.size;
+                    if (mDataSource->readAt(moofOffset, hdr, 8) < 8) {
+                        ALOGV("Seek ERROR_END_OF_STREAM\n");
+                        return ERROR_END_OF_STREAM;
+                    }
+                    uint64_t chunk_size = ntohl(hdr[0]);
+                    uint32_t chunk_type = ntohl(hdr[1]);
+                    char chunk[5];
+                    MakeFourCCString(chunk_type, chunk);
+
+                    // If we're pointing to a segment type or sidx box then we skip them.
+                    if (chunk_type != FOURCC('m', 'o', 'o', 'f')) {
+                        moofOffset += chunk_size;
+                        continue;
+                    }
+                    mCurrentMoofOffset = moofOffset;
+                    mTrackFragmentData.mPresent = false;
+                    status_t ret = parseChunk(&moofOffset);
+                    if (ret != OK) {
+                        return ret;
+                    }
+                    if (mTrackFragmentData.mPresent) {
+                        mCurrentTime = mTrackFragmentData.mBaseMediaDecodeTime;
+                    }
+                } while (mCurrentSamples.size() == 0);
+                uint32_t time = mCurrentTime;
+                int i;
+                for (i = 0; i < mCurrentSamples.size() && time <= seekTime; i++) {
+                    const Sample *smpl = &mCurrentSamples[i];
+                    if (smpl->isSync()) {
+                        mCurrentSampleIndex = i;
+                        mCurrentTime = time;
+                    }
+                    time += smpl->duration;
+                }
+                if (i != mCurrentSamples.size()) {
+                    break;
+                }
+
+                mCurrentSamples.clear();
+                mDeferredSaio.clear();
+                mDeferredSaiz.clear();
+                mCurrentSampleIndex = 0;
             }
+            ALOGV("Seeking offset %d; %ldus\n", mCurrentTime - seekTime,
+                    (((int64_t) mCurrentTime - seekTime) * 1000000ll) / mTimescale);
         }
 
         if (mBuffer != NULL) {
@@ -3658,7 +3713,7 @@ status_t MPEG4Source::fragmentedRead(
         cts = mCurrentTime + smpl->ctsOffset;
         duration = smpl->duration;
         mCurrentTime += smpl->duration;
-        isSyncSample = (mCurrentSampleIndex == 0); // XXX
+        isSyncSample = smpl->isSync();
 
         int32_t max_size;
         CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
