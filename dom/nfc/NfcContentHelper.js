@@ -88,7 +88,7 @@ NfcContentHelper.prototype = {
 
   _window: null,
   _requestMap: null,
-  eventTarget: null,
+  eventListener: null,
 
   init: function init(aWindow) {
     if (aWindow == null) {
@@ -221,9 +221,9 @@ NfcContentHelper.prototype = {
     });
   },
 
-  registerEventTarget: function registerEventTarget(target) {
-    this.eventTarget = target;
-    cpmm.sendAsyncMessage("NFC:AddEventTarget");
+  addEventListener: function addEventListener(listener) {
+    this.eventListener = listener;
+    cpmm.sendAsyncMessage("NFC:AddEventListener");
   },
 
   registerTargetForPeerReady: function registerTargetForPeerReady(appId) {
@@ -351,13 +351,13 @@ NfcContentHelper.prototype = {
       case "NFC:DOMEvent":
         switch (result.event) {
           case NFC.PEER_EVENT_READY:
-            this.eventTarget.notifyPeerFound(result.sessionToken, /* isPeerReady */ true);
+            this.eventListener.notifyPeerFound(result.sessionToken, /* isPeerReady */ true);
             break;
           case NFC.PEER_EVENT_FOUND:
-            this.eventTarget.notifyPeerFound(result.sessionToken);
+            this.eventListener.notifyPeerFound(result.sessionToken);
             break;
           case NFC.PEER_EVENT_LOST:
-            this.eventTarget.notifyPeerLost(result.sessionToken);
+            this.eventListener.notifyPeerLost(result.sessionToken);
             break;
           case NFC.TAG_EVENT_FOUND:
             let event = new NfcTagEvent(result.techList,
@@ -366,10 +366,10 @@ NfcContentHelper.prototype = {
                                         result.isReadOnly,
                                         result.isFormatable);
 
-            this.eventTarget.notifyTagFound(result.sessionToken, event, result.records);
+            this.eventListener.notifyTagFound(result.sessionToken, event, result.records);
             break;
           case NFC.TAG_EVENT_LOST:
-            this.eventTarget.notifyTagLost(result.sessionToken);
+            this.eventListener.notifyTagLost(result.sessionToken);
             break;
         }
         break;
