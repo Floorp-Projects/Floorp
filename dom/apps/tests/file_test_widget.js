@@ -1,6 +1,7 @@
 var gWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=widget&getmanifest=true';
 var gInvalidWidgetManifestURL = 'http://test/tests/dom/apps/tests/file_app.sjs?apptype=invalidWidget&getmanifest=true';
 var gApp;
+var gHasBrowserPermission;
 
 function onError() {
   ok(false, "Error callback invoked");
@@ -82,21 +83,34 @@ function testApp(isValidWidget) {
 
 function testLimitedBrowserAPI(ifr) {
   var securitySensitiveCalls = [
-    'sendMouseEvent',
-    'sendTouchEvent',
-    'goBack',
-    'goForward',
-    'reload',
-    'stop',
-    'download',
-    'purgeHistory',
-    'getScreenshot',
-    'zoom',
-    'getCanGoBack',
-    'getCanGoForward'
+    { api: 'sendMouseEvent'      , args: ['mousedown', 0, 0, 0, 0, 0] },
+    { api: 'sendTouchEvent'      , args: ['touchstart', [0], [0], [0], [1], [1], [0], [1], 1, 0] },
+    { api: 'goBack'              , args: [] },
+    { api: 'goForward'           , args: [] },
+    { api: 'reload'              , args: [] },
+    { api: 'stop'                , args: [] },
+    { api: 'download'            , args: ['http://example.org'] },
+    { api: 'purgeHistory'        , args: [] },
+    { api: 'getScreenshot'       , args: [0, 0] },
+    { api: 'zoom'                , args: [0.1] },
+    { api: 'getCanGoBack'        , args: [] },
+    { api: 'getCanGoForward'     , args: [] },
+    { api: 'getContentDimensions', args: [] }
   ];
   securitySensitiveCalls.forEach( function(call) {
-    is(typeof ifr[call], "undefined", call + " should be hidden for widget");
+    if (gHasBrowserPermission) {
+      isnot(typeof ifr[call.api], "undefined", call.api + " should be defined");
+      var didThrow;
+      try {
+        ifr[call.api].apply(ifr, call.args);
+      } catch (e) {
+        ok(e instanceof DOMException, "throw right exception type");
+        didThrow = e.code;
+      }
+      is(didThrow, DOMException.INVALID_NODE_TYPE_ERR, "call " + call.api + " should throw exception");
+    } else {
+      is(typeof ifr[call.api], "undefined", call.api + " should be hidden for widget");
+    }
   });
 }
 
@@ -154,7 +168,7 @@ var tests = [
   // Permissions
   function() {
     SpecialPowers.pushPermissions(
-      [{ "type": "browser", "allow": 1, "context": document },
+      [{ "type": "browser", "allow": gHasBrowserPermission ? 1 : 0, "context": document },
        { "type": "embed-widgets", "allow": 1, "context": document },
        { "type": "webapps-manage", "allow": 1, "context": document }], runTest);
   },
