@@ -1496,8 +1496,11 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   // faster than played, mEndTime won't reflect the end of playable data
   // since we haven't played the frame at the end of buffered data. So update
   // mEndTime here as new data is downloaded to prevent such a lag.
+  //
+  // Make sure to only do this if we have a start time, otherwise the reader
+  // doesn't know how to compute GetBuffered.
   nsRefPtr<dom::TimeRanges> buffered = new dom::TimeRanges();
-  if (mDecoder->IsInfinite() &&
+  if (mDecoder->IsInfinite() && (mStartTime != -1) &&
       NS_SUCCEEDED(mDecoder->GetBuffered(buffered)))
   {
     uint32_t length = 0;
@@ -3124,24 +3127,6 @@ void MediaDecoderStateMachine::StartBuffering()
               stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
               stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
 #endif
-}
-
-nsresult MediaDecoderStateMachine::GetBuffered(dom::TimeRanges* aBuffered)
-{
-  // It's possible for JS to query .buffered before we've determined the start
-  // time from metadata, in which case the reader isn't ready to be asked this
-  // question.
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (mStartTime < 0) {
-    return NS_OK;
-  }
-
-  MediaResource* resource = mDecoder->GetResource();
-  NS_ENSURE_TRUE(resource, NS_ERROR_FAILURE);
-  resource->Pin();
-  nsresult res = mReader->GetBuffered(aBuffered, mStartTime);
-  resource->Unpin();
-  return res;
 }
 
 void MediaDecoderStateMachine::SetPlayStartTime(const TimeStamp& aTimeStamp)

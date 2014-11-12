@@ -135,9 +135,7 @@ public:
     mIgnoreAudioOutputFormat = true;
   }
 
-  // Populates aBuffered with the time ranges which are buffered. aStartTime
-  // must be the presentation time of the first frame in the media, e.g.
-  // the media time corresponding to playback time/position 0. This function
+  // Populates aBuffered with the time ranges which are buffered. This function
   // is called on the main, decode, and state machine threads.
   //
   // This base implementation in MediaDecoderReader estimates the time ranges
@@ -151,8 +149,7 @@ public:
   // The OggReader relies on this base implementation not performing I/O,
   // since in FirefoxOS we can't do I/O on the main thread, where this is
   // called.
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
-                               int64_t aStartTime);
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered);
 
   virtual int64_t ComputeStartTime(const VideoData* aVideo, const AudioData* aAudio);
 
