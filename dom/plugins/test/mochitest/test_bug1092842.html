@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 1092842</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<body onload="startTest()">
+  <script type="application/javascript;version=1.8">
+  SimpleTest.waitForExplicitFinish();
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  var p = null;
+
+  function startTest() {
+    p = document.getElementById('theplugin');
+    if (!p.hasWidget()) {
+      todo(false, "This test is only relevant for windowed plugins");
+      SimpleTest.finish();
+      return;
+    }
+
+    // Wait for the plugin to have painted once.
+    var interval = setInterval(function() {
+      if (!p.getPaintCount())
+        return;
+
+      clearInterval(interval);
+      doTest();
+      SimpleTest.finish();
+    }, 100);
+  }
+
+  function doTest() {
+    is(p.getClipRegionRectCount(), 1, "getClipRegionRectCount should be a single rect");
+    is(p.getClipRegionRectEdge(0,2) - p.getClipRegionRectEdge(0,0), 100, "width of clip region rect");
+    is(p.getClipRegionRectEdge(0,3) - p.getClipRegionRectEdge(0,1), 26, "height of clip region rect");
+  }
+  </script>
+
+  <div style="position:fixed; z-index:1; left:0; right:0; top:0; height:100px; border-bottom:24px solid blue; background:pink; transform:translateZ(0)"></div>
+  <object id="theplugin" type="application/x-test" drawmode="solid" color="ff00ff00" wmode="window"
+          style="position:absolute; top:50px; left:0; width:100px; height:100px"></object>
+
+  <p id="display"></p>
