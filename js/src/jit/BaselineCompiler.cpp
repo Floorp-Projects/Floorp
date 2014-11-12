@@ -3520,7 +3520,8 @@ BaselineCompiler::emit_JSOP_RESUME()
 
     if (resumeKind == GeneratorObject::NEXT) {
         // Mark as running and jump to the generator's JIT code.
-        masm.storeValue(Int32Value(0), Address(genObj, GeneratorObject::offsetOfBytecodeOffsetSlot()));
+        masm.storeValue(Int32Value(GeneratorObject::YIELD_INDEX_RUNNING),
+                        Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()));
         masm.jump(scratch1);
     } else {
         MOZ_ASSERT(resumeKind == GeneratorObject::THROW);
