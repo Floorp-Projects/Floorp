@@ -203,4 +203,10 @@ if (typeof Mozilla == 'undefined') {
 		});
 	};
 
+	Mozilla.UITour.setDefaultSearchEngine = function(identifier) {
+		_sendEvent('setDefaultSearchEngine', {
+			identifier: identifier,
+		});
+	};
+
 })();
