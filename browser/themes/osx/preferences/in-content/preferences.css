@@ -62,20 +62,6 @@ filefield + button {
  * Dialog
  */
 
-#dialogBox {
-  padding: 15px 20px 20px;
-}
-
 #dialogTitle {
   font-size: 1.1em;
-}
-
-.titlebar {
-  margin-bottom: 9px;
-  -moz-padding-start: 0;
-}
-
-.close-icon {
-  margin-top: -29px;
-  -moz-margin-end: -14px;
 }
