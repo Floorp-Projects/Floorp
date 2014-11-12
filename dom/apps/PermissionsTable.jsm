@@ -230,6 +230,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            "homescreen-webapps-manage": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },

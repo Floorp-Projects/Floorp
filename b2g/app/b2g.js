@@ -987,12 +987,12 @@ pref("apz.asyncscroll.throttle", 40);
 pref("apz.pan_repaint_interval", 16);
 
 // APZ physics settings, tuned by UX designers
-pref("apz.fling_curve_function_x1", "0.0");
+pref("apz.fling_curve_function_x1", "0.41");
 pref("apz.fling_curve_function_y1", "0.0");
-pref("apz.fling_curve_function_x2", "0.58");
+pref("apz.fling_curve_function_x2", "0.76");
 pref("apz.fling_curve_function_y2", "1.0");
-pref("apz.fling_curve_threshold_inches_per_ms", "0.03");
-pref("apz.fling_friction", "0.003");
+pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
+pref("apz.fling_friction", "0.0024");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 
 // Tweak default displayport values to reduce the risk of running out of
