@@ -188,10 +188,19 @@ SourceBuffer::Remove(double aStart, double aEnd, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
-  if (mUpdating || mMediaSource->ReadyState() != MediaSourceReadyState::Open) {
+  if (mUpdating) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
+  if (mMediaSource->ReadyState() == MediaSourceReadyState::Ended) {
+    mMediaSource->SetReadyState(MediaSourceReadyState::Open);
+  }
+  RangeRemoval(aStart, aEnd);
+}
+
+void
+SourceBuffer::RangeRemoval(double aStart, double aEnd)
+{
   StartUpdating();
   /// TODO: Run coded frame removal algorithm.
 
