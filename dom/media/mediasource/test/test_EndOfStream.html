@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>MSE: append initialization and media segment separately</title>
+  <title>MSE: endOfStream call after an appendBuffer</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="mediasource.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -12,31 +12,31 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var updateCount = 0;
+runWithMSE(function () {
+  var ms = new MediaSource();
 
-runWithMSE(function (ms, v) {
+  var v = document.createElement("video");
+  v.src = URL.createObjectURL(ms);
+  document.body.appendChild(v);
+
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
-      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 88966));
+      var count = 0;
       sb.addEventListener("updateend", function () {
-        updateCount++;
-        if (updateCount == 1) {
-          sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
-        }
-        else if (updateCount == 2) {
-          ms.endOfStream();
+        ++count;
+        if (count == 1) {
+          setTimeout(function() {
+                       ms.endOfStream();
+                       v.play();
+                     }, 1000);
         }
       });
-      v.play();
     });
   });
-
   v.addEventListener("ended", function () {
-    // XXX: Duration should be exactly 4.0, see bug 1065207.
-    ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
-    ok(Math.abs(v.currentTime - 4) <= 0.002, "Video has played to end");
     SimpleTest.finish();
   });
 });
