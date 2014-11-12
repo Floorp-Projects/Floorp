@@ -185,6 +185,7 @@ public:
   // Indicates if the media is seekable.
   // ReadMetada should be called before calling this method.
   virtual bool IsMediaSeekable() = 0;
+  void SetStartTime(int64_t aStartTime);
 
   MediaTaskQueue* GetTaskQueue() {
     return mTaskQueue;
@@ -245,6 +246,11 @@ protected:
   // what we support.
   bool mIgnoreAudioOutputFormat;
 
+  // The start time of the media, in microseconds. This is the presentation
+  // time of the first frame decoded from the media. This is initialized to -1,
+  // and then set to a value >= by MediaDecoderStateMachine::SetStartTime(),
+  // after which point it never changes.
+  int64_t mStartTime;
 private:
 
   nsRefPtr<RequestSampleCallback> mSampleDecodedCallback;

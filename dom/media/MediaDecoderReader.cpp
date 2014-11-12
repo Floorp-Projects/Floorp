@@ -61,6 +61,7 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   : mAudioCompactor(mAudioQueue)
   , mDecoder(aDecoder)
   , mIgnoreAudioOutputFormat(false)
+  , mStartTime(-1)
   , mAudioDiscontinuity(false)
   , mVideoDiscontinuity(false)
 {
@@ -118,6 +119,13 @@ VideoData* MediaDecoderReader::DecodeToFirstVideoData()
   }
   VideoData* d = nullptr;
   return (d = VideoQueue().PeekFront()) ? d : nullptr;
+}
+
+void
+MediaDecoderReader::SetStartTime(int64_t aStartTime)
+{
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+  mStartTime = aStartTime;
 }
 
 nsresult
