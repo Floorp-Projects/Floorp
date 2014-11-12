@@ -545,6 +545,13 @@ MediaSourceReader::AttemptSeek()
 }
 
 nsresult
+MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered)
+{
+  static_cast<MediaSourceDecoder*>(mDecoder)->mMediaSource->GetBuffered(aBuffered);
+  return NS_OK;
+}
+
+nsresult
 MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 {
   MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata tracks=%u/%u audio=%p video=%p",
