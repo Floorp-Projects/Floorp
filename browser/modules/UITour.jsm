@@ -521,6 +521,12 @@ this.UITour = {
         }).catch(log.error);
         break;
       }
+
+      case "setDefaultSearchEngine": {
+        let enginePromise = this.selectSearchEngine(data.identifier);
+        enginePromise.catch(Cu.reportError);
+        break;
+      }
     }
 
     if (!window.gMultiProcessBrowser) { // Non-e10s. See bug 1089000.
@@ -1395,6 +1401,26 @@ this.UITour = {
       mutation.target.removeAttribute("height");
       return;
     }
+  },
+
+  selectSearchEngine(aID) {
+    return new Promise((resolve, reject) => {
+      Services.search.init((rv) => {
+        if (!Components.isSuccessCode(rv)) {
+          reject("selectSearchEngine: search service init failed: " + rv);
+          return;
+        }
+
+        let engines = Services.search.getVisibleEngines();
+        for (let engine of engines) {
+          if (engine.identifier == aID) {
+            Services.search.defaultEngine = engine;
+            return resolve();
+          }
+        }
+        reject("selectSearchEngine could not find engine with given ID");
+      });
+    });
   },
 
   getAvailableSearchEngineTargets(aWindow) {
