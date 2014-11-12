@@ -163,6 +163,11 @@
   background: none;
 }
 
+/* Rooms edge cases */
+.standalone .room-conversation .remote_wrapper {
+  background: none;
+}
+
 /* SVG icons showcase */
 
 .svg-icon-entry {

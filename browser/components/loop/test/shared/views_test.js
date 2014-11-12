@@ -101,6 +101,28 @@ describe("loop.shared.views", function() {
       publishStream = sandbox.stub();
     });
 
+    it("should accept a hangupButtonLabel optional prop", function() {
+      var comp = mountTestComponent({
+        hangupButtonLabel: "foo",
+        hangup: hangup,
+        publishStream: publishStream
+      });
+
+      expect(comp.getDOMNode().querySelector("button.btn-hangup").textContent)
+            .eql("foo");
+    });
+
+    it("should accept a enableHangup optional prop", function() {
+      var comp = mountTestComponent({
+        enableHangup: false,
+        hangup: hangup,
+        publishStream: publishStream
+      });
+
+      expect(comp.getDOMNode().querySelector("button.btn-hangup").disabled)
+            .eql(true);
+    });
+
     it("should hangup when hangup button is clicked", function() {
       var comp = mountTestComponent({
         hangup: hangup,
