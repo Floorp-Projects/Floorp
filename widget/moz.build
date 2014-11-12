@@ -97,6 +97,8 @@ EXPORTS += [
     'GfxInfoBase.h',
     'GfxInfoCollector.h',
     'InputData.h',
+    'nsBaseScreen.h',
+    'nsBaseWidget.h',
     'nsIDeviceContextSpec.h',
     'nsIPluginWidget.h',
     'nsIRollupListener.h',
@@ -105,6 +107,7 @@ EXPORTS += [
     'nsPrintOptionsImpl.h',
     'nsWidgetInitData.h',
     'nsWidgetsCID.h',
+    'PuppetWidget.h',
 ]
 
 EXPORTS.mozilla += [

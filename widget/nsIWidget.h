@@ -98,8 +98,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xcfe7543b, 0x8c0e, 0x40c3, \
-  { 0x9a, 0x6d, 0x77, 0x6e, 0x84, 0x8a, 0x7c, 0xfc } };
+{ 0x13239ca, 0xaf3f, 0x4f27, \
+  { 0xaf, 0x83, 0x47, 0xa9, 0x82, 0x3d, 0x99, 0xee } };
 
 /*
  * Window shadow styles
@@ -1274,6 +1274,15 @@ class nsIWidget : public nsISupports {
     nsWindowType WindowType() { return mWindowType; }
 
     /**
+     * Determines if this widget is one of the three types of plugin widgets.
+     */
+    bool IsPlugin() {
+      return mWindowType == eWindowType_plugin ||
+             mWindowType == eWindowType_plugin_ipc_chrome ||
+             mWindowType == eWindowType_plugin_ipc_content;
+    }
+
+    /**
      * Set the transparency mode of the top-level window containing this widget.
      * So, e.g., if you call this on the widget for an IFRAME, the top level
      * browser window containing the IFRAME actually gets set. Be careful.
@@ -1325,6 +1334,8 @@ class nsIWidget : public nsISupports {
      * moved in that order.
      */
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) = 0;
+    virtual nsresult SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+                                         bool aIntersectWithExisting) = 0;
 
     /**
      * Appends to aRects the rectangles constituting this widget's clip
