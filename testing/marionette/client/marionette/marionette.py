@@ -20,6 +20,7 @@ from decorators import do_crash_check
 from keys import Keys
 from marionette_transport import MarionetteTransport
 
+from mozrunner import B2GDeviceRunner
 from mozrunner import B2GEmulatorRunner
 
 import geckoinstance
@@ -475,7 +476,7 @@ class Marionette(object):
                  busybox=None, symbols_path=None, timeout=None, socket_timeout=360,
                  device_serial=None, adb_path=None, process_args=None):
         self.host = host
-        self.port = self.local_port = port
+        self.port = self.remote_port = port
         self.bin = bin
         self.instance = None
         self.session = None
@@ -492,7 +493,7 @@ class Marionette(object):
         self.device_serial = device_serial
 
         if bin:
-            port = int(self.port)
+            port = int(self.remote_port)
             if not Marionette.is_port_available(port, host=self.host):
                 ex_msg = "%s:%d is unavailable." % (self.host, port)
                 raise errors.MarionetteException(message=ex_msg)
@@ -513,14 +514,14 @@ class Marionette(object):
                         ConfigParser.NoSectionError,
                         KeyError):
                     instance_class = geckoinstance.GeckoInstance
-            self.instance = instance_class(host=self.host, port=self.port,
+            self.instance = instance_class(host=self.host, port=self.remote_port,
                                            bin=self.bin, profile=profile,
                                            app_args=app_args, symbols_path=symbols_path,
                                            gecko_log=gecko_log)
             self.instance.start()
             assert(self.wait_for_port()), "Timed out waiting for port!"
 
-        if emulator:
+        elif emulator:
             self.runner = B2GEmulatorRunner(b2g_home=homedir,
                                             no_window=self.no_window,
                                             logdir=logdir,
@@ -535,17 +536,35 @@ class Marionette(object):
                                             process_args=process_args)
             self.emulator = self.runner.device
             self.emulator.start()
-            self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
+            self.port = self.emulator.setup_port_forwarding(remote_port=self.remote_port)
             assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
 
-        if connect_to_running_emulator:
+        elif connect_to_running_emulator:
             self.runner = B2GEmulatorRunner(b2g_home=homedir,
                                             logdir=logdir,
                                             process_args=process_args)
             self.emulator = self.runner.device
             self.emulator.connect()
-            self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
+            self.port = self.emulator.setup_port_forwarding(remote_port=self.remote_port)
             assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
+
+        elif app and app.lower() == 'b2g':
+            # There's no way to know if the target is a device, so we try to
+            # start a device runner and if that fails we assume the target is
+            # not a device
+            _runner = B2GDeviceRunner(adb_path=adb_path,
+                                      logdir=logdir,
+                                      serial=device_serial,
+                                      symbols_path=symbols_path,
+                                      process_args=process_args)
+            try:
+                _runner.start()
+                self.port = _runner.device.setup_port_forwarding(remote_port=self.remote_port)
+                assert(_runner.device.wait_for_port(self.port)), "Timed out waiting for port!"
+                self.runner = _runner
+            except IOError:
+                # No device found or target is not a device
+                pass
 
         self.client = MarionetteTransport(self.host, self.port, self.socket_timeout)
 
@@ -735,17 +754,14 @@ class Marionette(object):
         name = None
         crashed = False
         if self.runner:
-            if self.runner.check_for_crashes(test_name=self.test_name):
+            crashed = bool(self.runner.check_for_crashes(test_name=self.test_name))
+            if crashed and self.emulator:
                 returncode = self.emulator.proc.returncode
                 name = 'emulator'
-                crashed = True
         elif self.instance:
-            if self.instance.runner.check_for_crashes(
-                    test_name=self.test_name):
-                crashed = True
+            crashed = bool(self.instance.runner.check_for_crashes(test_name=self.test_name))
         if returncode is not None:
-            print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
-                (name, returncode))
+            print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' % (name, returncode))
         return crashed
 
     def enforce_gecko_prefs(self, prefs):
