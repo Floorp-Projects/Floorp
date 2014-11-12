@@ -29,7 +29,9 @@ public class TabCurve {
     // Width multipliers
     private static final float W_M1 = 0.343f;
     private static final float W_M2 = 0.514f;
-    private static final float W_M3 = 0.723f;
+    private static final float W_M3 = 0.49f;
+    private static final float W_M4 = 0.545f;
+    private static final float W_M5 = 0.723f;
 
     // Height multipliers
     private static final float H_M1 = 0.25f;
@@ -48,20 +50,20 @@ public class TabCurve {
         final int width = getWidthForHeight(height);
 
         path.cubicTo(from + width * W_M1 * dir.value, 0.0f,
-                     from + width * W_M2 * dir.value, height * H_M1,
+                     from + width * W_M3 * dir.value, height * H_M1,
                      from + width * W_M2 * dir.value, height * H_M2);
-        path.cubicTo(from + width * W_M2 * dir.value, height * H_M3,
-                     from + width * W_M3 * dir.value, height * H_M4,
+        path.cubicTo(from + width * W_M4 * dir.value, height * H_M3,
+                     from + width * W_M5 * dir.value, height * H_M4,
                      from + width * dir.value, height);
     }
 
     public static void drawFromBottom(Path path, int from, int height, Direction dir) {
         final int width = getWidthForHeight(height);
 
-        path.cubicTo(from + width * (1f - W_M3) * dir.value, height * H_M4,
-                     from + width * (1f - W_M2) * dir.value, height * H_M3,
+        path.cubicTo(from + width * (1f - W_M5) * dir.value, height * H_M4,
+                     from + width * (1f - W_M4) * dir.value, height * H_M3,
                      from + width * (1f - W_M2) * dir.value, height * H_M2);
-        path.cubicTo(from + width * (1f - W_M2) * dir.value, height * H_M1,
+        path.cubicTo(from + width * (1f - W_M3) * dir.value, height * H_M1,
                      from + width * (1f - W_M1) * dir.value, 0.0f,
                      from + width * dir.value, 0.0f);
     }
