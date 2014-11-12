@@ -184,8 +184,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   if (mozilla::ipc::MessageChannel::IsSpinLoopActive() && mPainting)
     return false;
 
-  if (mWindowType == eWindowType_plugin) {
-
+  if (IsPlugin()) {
     /**
      * After we CallUpdateWindow to the child, occasionally a WM_PAINT message
      * is posted to the parent event loop with an empty update rect. Do a

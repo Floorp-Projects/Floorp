@@ -37,8 +37,8 @@ namespace widget {
 
 struct AutoCacheNativeKeyCommands;
 
-class PuppetWidget MOZ_FINAL : public nsBaseWidget,
-                               public nsSupportsWeakReference
+class PuppetWidget : public nsBaseWidget,
+                     public nsSupportsWeakReference
 {
   typedef mozilla::dom::TabChild TabChild;
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -106,9 +106,7 @@ public:
 
   NS_IMETHOD SetFocus(bool aRaise = false);
 
-  // PuppetWidgets don't care about children.
-  virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
-  { return NS_OK; }
+  virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
 
   NS_IMETHOD Invalidate(const nsIntRect& aRect);
 
@@ -195,6 +193,10 @@ public:
     mDefaultScale = -1;
   }
 
+protected:
+  bool mEnabled;
+  bool mVisible;
+
 private:
   nsresult Paint();
 
@@ -228,8 +230,6 @@ private:
   nsRefPtr<PuppetWidget> mChild;
   nsIntRegion mDirtyRegion;
   nsRevocableEventPtr<PaintTask> mPaintTask;
-  bool mEnabled;
-  bool mVisible;
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
   mozilla::RefPtr<DrawTarget> mDrawTarget;
