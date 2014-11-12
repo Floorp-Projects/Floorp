@@ -450,7 +450,7 @@ Nfc.prototype = {
                                     classDescription: "Nfc",
                                     interfaces: [Ci.nsINfcService]}),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsINfcEventListener]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsINfcGonkEventListener]),
 
   powerLevel: NFC.NFC_POWER_LEVEL_UNKNOWN,
 

@@ -389,7 +389,7 @@ MozNFCImpl.prototype = {
   contractID: "@mozilla.org/navigatorNfc;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.nsINfcDOMEventListener]),
+                                         Ci.nsINfcEventListener]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozNFCTagImpl,
