@@ -126,7 +126,7 @@ public:
    */
   void AppendTo(nsAString& aString) const {
     if (!AppendTo(aString, mozilla::fallible_t())) {
-      NS_ABORT_OOM(GetLength());
+      aString.AllocFailed(aString.Length() + GetLength());
     }
   }
 
@@ -156,7 +156,7 @@ public:
    */
   void AppendTo(nsAString& aString, int32_t aOffset, int32_t aLength) const {
     if (!AppendTo(aString, aOffset, aLength, mozilla::fallible_t())) {
-      NS_ABORT_OOM(aLength);
+      aString.AllocFailed(aString.Length() + aLength);
     }
   }
 
