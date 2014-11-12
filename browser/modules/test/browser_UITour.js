@@ -343,6 +343,38 @@ let tests = [
     });
   },
 
+  function test_select_search_engine(done) {
+    Services.search.init(rv => {
+      if (!Components.isSuccessCode(rv)) {
+        ok(false, "search service init failed: " + rv);
+        done();
+        return;
+      }
+      let defaultEngine = Services.search.defaultEngine;
+      gContentAPI.getConfiguration("availableTargets", data => {
+        let searchEngines = data.targets.filter(t => t.startsWith("searchEngine-"));
+        let someOtherEngineID = searchEngines.filter(t => t != "searchEngine-" + defaultEngine.identifier)[0];
+        someOtherEngineID = someOtherEngineID.replace(/^searchEngine-/, "");
+
+        let observe = function (subject, topic, verb) {
+          info("browser-search-engine-modified: " + verb);
+          if (verb == "engine-current") {
+            is(Services.search.defaultEngine.identifier, someOtherEngineID, "correct engine was switched to");
+            done();
+          }
+        };
+        Services.obs.addObserver(observe, "browser-search-engine-modified", false);
+        registerCleanupFunction(() => {
+          // Clean up
+          Services.obs.removeObserver(observe, "browser-search-engine-modified");
+          Services.search.defaultEngine = defaultEngine;
+        });
+
+        gContentAPI.setDefaultSearchEngine(someOtherEngineID);
+      });
+    });
+  },
+
   // Make sure this test is last in the file so the appMenu gets left open and done will confirm it got tore down.
   function cleanupMenus(done) {
     gContentAPI.showMenu("appMenu");
