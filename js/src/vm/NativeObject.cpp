@@ -1933,15 +1933,29 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 template <ExecutionMode mode>
 static bool
 SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                      HandleObject receiver, HandleId id, HandleValue v, bool strict)
+                      HandleNativeObject obj, HandleObject receiver, HandleId id,
+                      HandleValue v, bool strict, bool objHasOwn)
 {
     // Step 5.c-d: Test whether receiver has an existing own property
     // receiver[id]. The spec calls [[GetOwnProperty]]; js::HasOwnProperty is
-    // the same thing except faster in the non-proxy case. (Once
-    // SetPropertyHelper is better-behaved, we will be able to optimize away
-    // even the HasOwnProperty call.)
+    // the same thing except faster in the non-proxy case. Sometimes we can
+    // even optimize away the HasOwnProperty call.
     bool existing;
-    if (mode == ParallelExecution) {
+    if (receiver == obj) {
+        // The common case. The caller has necessarily done a property lookup
+        // on obj and passed us the answer as objHasOwn.
+#ifdef DEBUG
+        // Check that objHasOwn is correct. This could fail if receiver or a
+        // native object on its prototype chain has a nondeterministic resolve
+        // hook. We shouldn't have any that are quite that badly behaved.
+        if (mode == SequentialExecution) {
+            if (!HasOwnProperty(cxArg->asJSContext(), receiver, id, &existing))
+                return false;
+            MOZ_ASSERT(existing == objHasOwn);
+        }
+#endif
+        existing = objHasOwn;
+    } else if (mode == ParallelExecution) {
         // Not the fastest possible implementation, but the fastest possible
         // without refactoring LookupPropertyPure or duplicating code.
         NativeObject *npobj;
@@ -2027,8 +2041,8 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
 template <ExecutionMode mode>
 static bool
 SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
-                       HandleObject receiver, HandleId id, baseops::QualifiedBool qualified,
-                       HandleValue v, bool strict)
+                       HandleNativeObject obj, HandleObject receiver, HandleId id,
+                       baseops::QualifiedBool qualified, HandleValue v, bool strict)
 {
     // We should never add properties to lexical blocks.
     MOZ_ASSERT(!receiver->is<BlockObject>());
@@ -2041,7 +2055,7 @@ SetNonexistentProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
             return false;
     }
 
-    return SetPropertyByDefining<mode>(cxArg, receiver, id, v, strict);
+    return SetPropertyByDefining<mode>(cxArg, obj, receiver, id, v, strict, false);
 }
 
 /*
@@ -2239,7 +2253,7 @@ SetExistingProperty(typename ExecutionModeTraits<mode>::ContextType cxArg,
     }
 
     // Shadow pobj[id] by defining a new data property receiver[id].
-    return SetPropertyByDefining<mode>(cxArg, receiver, id, vp, strict);
+    return SetPropertyByDefining<mode>(cxArg, obj, receiver, id, vp, strict, obj == pobj);
 }
 
 template <ExecutionMode mode>
@@ -2310,7 +2324,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         RootedObject proto(cxArg, done ? nullptr : pobj->getProto());
         if (!proto) {
             // Step 4.d.i (and step 5).
-            return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp, strict);
+            return SetNonexistentProperty<mode>(cxArg, obj, receiver, id, qualified, vp, strict);
         }
 
         // Step 4.c.i. If the prototype is also native, this step is a
@@ -2330,7 +2344,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
                 if (!JSObject::lookupGeneric(cxArg->asJSContext(), proto, id, &pobj, &shape))
                     return false;
                 if (!shape) {
-                    return SetNonexistentProperty<mode>(cxArg, receiver, id, qualified, vp,
+                    return SetNonexistentProperty<mode>(cxArg, obj, receiver, id, qualified, vp,
                                                         strict);
                 }
             }
