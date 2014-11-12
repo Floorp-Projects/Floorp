@@ -27,7 +27,7 @@ function test() {
     about_pb_title = "Open a private window?";
     pb_page_with_title = test_title + " - (Private Browsing)";
     pb_page_without_title = app_name + " - (Private Browsing)";
-    pb_about_pb_title = pb_page_without_title;
+    pb_about_pb_title = "You're browsing privately - (Private Browsing)";
   }
   else {
     page_with_title = test_title + " - " + app_name;
