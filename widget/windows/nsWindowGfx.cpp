@@ -42,6 +42,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "nsIWidgetListener.h"
 #include "mozilla/unused.h"
 #include "nsDebug.h"
+#include "nsIXULRuntime.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
