@@ -90,9 +90,9 @@
 
   --tab-color: #18191a;
   --tab-background-color: #E3E4E6;
-  --tab-hover-background-color: rgba(170,170,170,.2);
+  --tab-hover-background-color: #D7D8DA;
   --tab-color: #18191a;
-  --tab-separator-color: rgba(170,170,170,.5);
+  --tab-separator-color: #C6C6C7;
   --tab-selection-color: #f5f7fa;
   --tab-selection-background-color: #4c9ed9;
   --tab-selection-box-shadow: 0 2px 0 #d7f1ff inset,
