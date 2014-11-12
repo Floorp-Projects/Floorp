@@ -41,13 +41,13 @@ add_task(function* test_match_beginning() {
   yield check_autocomplete({
     search: "b a z",
     matches: [ { uri: uri2, title: "b(a)r b<a>z" },
-               { uri: uri4, title: "b(a)r b<a>z" } ]
+               { uri: uri4, title: "b(a)r b<a>z", style: [ "bookmark" ] } ]
   });
 
   do_log_info("Match 2 terms in url and 1 in title; make sure bookmark title is used for search");
   yield check_autocomplete({
     search: "k f t",
-    matches: [ { uri: uri3, title: "f(o)o b<a>r" } ]
+    matches: [ { uri: uri3, title: "f(o)o b<a>r", style: [ "bookmark" ] } ]
   });
 
   do_log_info("Match 3 terms in url and 1 in title");
