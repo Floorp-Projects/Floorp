@@ -380,6 +380,7 @@ private:
     typedef enum {
         OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
+        OP3_PEXTRD_EdVdqIb  = 0x16,
         OP3_BLENDPS_VpsWpsIb = 0x0C,
         OP3_PTEST_VdVd      = 0x17,
         OP3_INSERTPS_VpsUps = 0x21,
@@ -389,6 +390,7 @@ private:
     typedef enum {
         ESCAPE_PTEST        = 0x38,
         ESCAPE_PINSRD       = 0x3A,
+        ESCAPE_PEXTRD       = 0x3A,
         ESCAPE_ROUNDSD      = 0x3A,
         ESCAPE_INSERTPS     = 0x3A,
         ESCAPE_BLENDPS      = 0x3A
@@ -3708,7 +3710,7 @@ public:
     void pinsrd_irr(unsigned lane, RegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(lane < 4);
-        spew("pinsrd     $%x, %s, %s", lane, nameIReg(src), nameFPReg(dst));
+        spew("pinsrd     $%x, %s, %s", lane, nameIReg(4, src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(uint8_t(lane));
@@ -3721,6 +3723,25 @@ public:
              nameIReg(base), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_PINSRD_VdqEdIb, ESCAPE_PINSRD, (RegisterID)dst, base, offset);
+        m_formatter.immediate8(uint8_t(lane));
+    }
+
+    void pextrd_irr(unsigned lane, XMMRegisterID src, RegisterID dst)
+    {
+        MOZ_ASSERT(lane < 4);
+        spew("pextrd     $%x, %s, %s", lane, nameFPReg(src), nameIReg(4, dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PEXTRD_EdVdqIb, ESCAPE_PEXTRD, (RegisterID)src, (RegisterID)dst);
+        m_formatter.immediate8(uint8_t(lane));
+    }
+
+    void pextrd_imr(unsigned lane, XMMRegisterID src, int offset, RegisterID base)
+    {
+        MOZ_ASSERT(lane < 4);
+        spew("pextrd     $%x, %s, %s0x%x(%s)", lane, nameFPReg(src),
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_PEXTRD_EdVdqIb, ESCAPE_PEXTRD, (RegisterID)src, base, offset);
         m_formatter.immediate8(uint8_t(lane));
     }
 
