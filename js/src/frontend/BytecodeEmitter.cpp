@@ -466,17 +466,14 @@ UpdateSourceCoordNotes(ExclusiveContext *cx, BytecodeEmitter *bce, uint32_t offs
     uint32_t columnIndex = bce->parser->tokenStream.srcCoords.columnIndex(offset);
     ptrdiff_t colspan = ptrdiff_t(columnIndex) - ptrdiff_t(bce->current->lastColumn);
     if (colspan != 0) {
-        if (colspan < 0) {
-            colspan += SN_COLSPAN_DOMAIN;
-        } else if (colspan >= SN_COLSPAN_DOMAIN / 2) {
-            // If the column span is so large that we can't store it, then just
-            // discard this information because column information would most
-            // likely be useless anyway once the column numbers are ~4000000.
-            // This has been known to happen with scripts that have been
-            // minimized and put into all one line.
+        // If the column span is so large that we can't store it, then just
+        // discard this information. This can happen with minimized or otherwise
+        // machine-generated code. Even gigantic column numbers are still
+        // valuable if you have a source map to relate them to something real;
+        // but it's better to fail soft here.
+        if (!SN_REPRESENTABLE_COLSPAN(colspan))
             return true;
-        }
-        if (NewSrcNote2(cx, bce, SRC_COLSPAN, colspan) < 0)
+        if (NewSrcNote2(cx, bce, SRC_COLSPAN, SN_COLSPAN_TO_OFFSET(colspan)) < 0)
             return false;
         bce->current->lastColumn = columnIndex;
     }
@@ -7294,7 +7291,7 @@ static bool
 SetSrcNoteOffset(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned index, unsigned which,
                  ptrdiff_t offset)
 {
-    if (size_t(offset) > SN_MAX_OFFSET) {
+    if (!SN_REPRESENTABLE_OFFSET(offset)) {
         ReportStatementTooLarge(bce->parser->tokenStream, bce->topStmt);
         return false;
     }
@@ -7311,14 +7308,14 @@ SetSrcNoteOffset(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned index, uns
     }
 
     /*
-     * See if the new offset requires three bytes either by being too big or if
+     * See if the new offset requires four bytes either by being too big or if
      * the offset has already been inflated (in which case, we need to stay big
      * to not break the srcnote encoding if this isn't the last srcnote).
      */
     if (offset > (ptrdiff_t)SN_4BYTE_OFFSET_MASK || (*sn & SN_4BYTE_OFFSET_FLAG)) {
-        /* Maybe this offset was already set to a three-byte value. */
+        /* Maybe this offset was already set to a four-byte value. */
         if (!(*sn & SN_4BYTE_OFFSET_FLAG)) {
-            /* Insert two dummy bytes that will be overwritten shortly. */
+            /* Insert three dummy bytes that will be overwritten shortly. */
             jssrcnote dummy = 0;
             if (!(sn = notes.insert(sn, dummy)) ||
                 !(sn = notes.insert(sn, dummy)) ||

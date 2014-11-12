@@ -1901,9 +1901,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
 
           case SRC_COLSPAN:
-            colspan = js_GetSrcNoteOffset(sn, 0);
-            if (colspan >= SN_COLSPAN_DOMAIN / 2)
-                colspan -= SN_COLSPAN_DOMAIN;
+            colspan = SN_OFFSET_TO_COLSPAN(js_GetSrcNoteOffset(sn, 0));
             Sprint(sp, "%d", colspan);
             break;
 
