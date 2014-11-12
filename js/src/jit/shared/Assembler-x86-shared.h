@@ -1503,6 +1503,23 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void pextrd(unsigned lane, FloatRegister src, Register dest) {
+        MOZ_ASSERT(HasSSE41());
+        masm.pextrd_irr(lane, src.code(), dest.code());
+    }
+    void pextrd(unsigned lane, FloatRegister src, const Operand &dest) {
+        MOZ_ASSERT(HasSSE41());
+        switch (dest.kind()) {
+          case Operand::REG:
+            masm.pextrd_irr(lane, src.code(), dest.reg());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.pextrd_imr(lane, src.code(), dest.disp(), dest.base());
+            break;
+          default:
+            MOZ_CRASH("unexpected operand kind");
+        }
+    }
     void psrldq(Imm32 shift, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.psrldq_ir(shift.value, dest.code());
