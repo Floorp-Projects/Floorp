@@ -691,9 +691,11 @@ public final class GeckoProfile {
             Log.w(LOGTAG, "Couldn't write times.json.", e);
         }
 
-        // Initialize pref flag for displaying the start pane for a new profile.
-        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(mApplicationContext);
-        prefs.edit().putBoolean(BrowserApp.PREF_STARTPANE_ENABLED, true).apply();
+        // Initialize pref flag for displaying the start pane for a new non-webapp profile.
+        if (!mIsWebAppProfile) {
+            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(mApplicationContext);
+            prefs.edit().putBoolean(BrowserApp.PREF_STARTPANE_ENABLED, true).apply();
+        }
 
         return profileDir;
     }
