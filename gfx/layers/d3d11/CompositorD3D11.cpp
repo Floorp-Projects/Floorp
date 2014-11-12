@@ -869,7 +869,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
   mContext->RSSetState(mAttachments->mRasterizerState);
 
-  SetRenderTarget(mDefaultRT);
+  mFinalDestinationTarget = mDefaultRT;
 }
 
 void
@@ -888,6 +888,7 @@ CompositorD3D11::EndFrame()
   }
 
   mCurrentRT = nullptr;
+  mFinalDestinationTarget = nullptr;
 }
 
 void

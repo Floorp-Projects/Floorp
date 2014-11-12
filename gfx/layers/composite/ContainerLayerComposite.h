@@ -37,11 +37,6 @@ class ContainerLayerComposite : public ContainerLayer,
                            LayerManagerComposite* aManager,
                            const RenderTargetIntRect& aClipRect);
   template<class ContainerT>
-  friend void RenderIntermediate(ContainerT* aContainer,
-                   LayerManagerComposite* aManager,
-                   const nsIntRect& aClipRect,
-                   RefPtr<CompositingRenderTarget> surface);
-  template<class ContainerT>
   friend RefPtr<CompositingRenderTarget>
   CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
                                              LayerManagerComposite* aManager,
@@ -111,11 +106,6 @@ class RefLayerComposite : public RefLayer,
   friend void RenderLayers(ContainerT* aContainer,
                            LayerManagerComposite* aManager,
                            const nsIntRect& aClipRect);
-  template<class ContainerT>
-  friend void RenderIntermediate(ContainerT* aContainer,
-                   LayerManagerComposite* aManager,
-                   const nsIntRect& aClipRect,
-                   RefPtr<CompositingRenderTarget> surface);
   template<class ContainerT>
   friend RefPtr<CompositingRenderTarget>
   CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,

@@ -182,18 +182,12 @@ enum SurfaceInitMode
 class Compositor
 {
 protected:
-  virtual ~Compositor() {}
+  virtual ~Compositor();
 
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
-  explicit Compositor(PCompositorParent* aParent = nullptr)
-    : mCompositorID(0)
-    , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
-    , mParent(aParent)
-    , mScreenRotation(ROTATION_0)
-  {
-  }
+  explicit Compositor(PCompositorParent* aParent = nullptr);
 
   virtual TemporaryRef<DataTextureSource> CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) = 0;
   virtual bool Initialize() = 0;
@@ -478,6 +472,12 @@ public:
     mScreenRotation = aRotation;
   }
 
+  /**
+   * This is called to set the composition target (the screen or an offscreen target)
+   * after we've ran the prepare phase. This must be called after BeginFrame.
+   */
+  virtual void SetFinalDestinationTarget() = 0;
+
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
@@ -510,6 +510,7 @@ protected:
 
   RefPtr<gfx::DrawTarget> mTarget;
   nsIntRect mTargetBounds;
+  RefPtr<CompositingRenderTarget> mFinalDestinationTarget;
 
 private:
   static LayersBackend sBackend;

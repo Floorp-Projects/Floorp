@@ -592,7 +592,7 @@ CompositorD3D9::Ready()
     return false;
   }
 
-  NS_ASSERTION(!mCurrentRT && !mDefaultRT,
+  NS_ASSERTION(!mCurrentRT && !mFinalDestinationTarget,
                "Shouldn't have any render targets around, they must be released before our device");
   mSwapChain = nullptr;
 
@@ -645,10 +645,9 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
   device()->SetScissorRect(&r);
 
   nsRefPtr<IDirect3DSurface9> backBuffer = mSwapChain->GetBackBuffer();
-  mDefaultRT = new CompositingRenderTargetD3D9(backBuffer,
-                                               INIT_MODE_CLEAR,
-                                               IntRect(0, 0, mSize.width, mSize.height));
-  SetRenderTarget(mDefaultRT);
+  mFinalDestinationTarget = new CompositingRenderTargetD3D9(backBuffer,
+                                                       INIT_MODE_CLEAR,
+                                                       IntRect(0, 0, mSize.width, mSize.height));
 }
 
 void
@@ -669,7 +668,7 @@ CompositorD3D9::EndFrame()
   }
 
   mCurrentRT = nullptr;
-  mDefaultRT = nullptr;
+  mFinalDestinationTarget = nullptr;
 }
 
 void

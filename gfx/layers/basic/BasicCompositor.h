@@ -121,6 +121,10 @@ public:
 
   gfx::DrawTarget *GetDrawTarget() { return mDrawTarget; }
 
+  virtual void SetFinalDestinationTarget() MOZ_OVERRIDE {
+    MOZ_ASSERT(mFinalDestinationTarget);
+    SetRenderTarget(mFinalDestinationTarget);
+  }
 private:
 
   virtual gfx::IntSize GetWidgetSize() const MOZ_OVERRIDE { return mWidgetSize; }
