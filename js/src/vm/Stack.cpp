@@ -253,7 +253,9 @@ InterpreterFrame::epilogue(JSContext *cx)
     }
 
     if (isGlobalFrame()) {
-        MOZ_ASSERT(!scopeChain()->is<ScopeObject>());
+        MOZ_ASSERT(!scopeChain()->is<ScopeObject>() ||
+                   (scopeChain()->is<DynamicWithObject>() &&
+                    !scopeChain()->as<DynamicWithObject>().isSyntactic()));
         return;
     }
 

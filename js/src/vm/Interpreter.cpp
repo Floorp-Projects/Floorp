@@ -616,7 +616,10 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
     MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChainArg.is<ScopeObject>());
+    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL,
+                  !scopeChainArg.is<ScopeObject>() ||
+                  (scopeChainArg.is<DynamicWithObject>() &&
+                   !scopeChainArg.as<DynamicWithObject>().isSyntactic()));
 #ifdef DEBUG
     if (thisv.isObject()) {
         RootedObject thisObj(cx, &thisv.toObject());
