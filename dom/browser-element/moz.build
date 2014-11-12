@@ -24,7 +24,6 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    'BrowserElementParent.jsm',
     'BrowserElementPromptService.jsm',
 ]
 
