@@ -906,7 +906,16 @@ const LANE_SELECTORS = [
     [0, 1, 4, 5], [4, 5, 0, 1],
     [0, 4, 1, 5], [4, 0, 5, 1],
     [2, 6, 3, 7], [6, 2, 7, 3],
-    [4, 1, 2, 3], [0, 5, 6, 7]
+    [4, 1, 2, 3], [0, 5, 6, 7],
+    // Insert one element from rhs into lhs keeping other elements unchanged
+    [7, 1, 2, 3],
+    [0, 7, 2, 3],
+    [0, 1, 7, 2],
+    // These are effectively vector selects
+    [0, 5, 2, 3],
+    [0, 1, 6, 3],
+    [4, 5, 2, 3],
+    [4, 1, 6, 3]
 ];
 
 for (var lanes of LANE_SELECTORS) {

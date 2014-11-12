@@ -2475,12 +2475,44 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
     // MSimdSwizzle instead.
     MOZ_ASSERT(numLanesFromLHS < 4);
 
+    // If all values stay in their lane, this is a blend.
+    if (AssemblerX86Shared::HasSSE41()) {
+        if (x % 4 == 0 && y % 4 == 1 && z % 4 == 2 && w % 4 == 3) {
+            masm.blendps(rhs, out, masm.blendpsMask(x >= 4, y >= 4, z >= 4, w >= 4));
+            return true;
+        }
+    }
+
     // One element of the second, all other elements of the first
     if (numLanesFromLHS == 3) {
         unsigned firstMask = -1, secondMask = -1;
 
+        // register-register movss preserves the high lanes.
         if (ins->lanesMatch(4, 1, 2, 3)) {
             masm.movss(rhs, out);
+            return true;
+        }
+
+        // SSE4.1 insertps can handle any single element.
+        unsigned numLanesUnchanged = (x == 0) + (y == 1) + (z == 2) + (w == 3);
+        if (AssemblerX86Shared::HasSSE41() && numLanesUnchanged == 3) {
+            SimdLane srcLane;
+            SimdLane dstLane;
+            if (x >= 4) {
+                srcLane = SimdLane(x - 4);
+                dstLane = LaneX;
+            } else if (y >= 4) {
+                srcLane = SimdLane(y - 4);
+                dstLane = LaneY;
+            } else if (z >= 4) {
+                srcLane = SimdLane(z - 4);
+                dstLane = LaneZ;
+            } else {
+                MOZ_ASSERT(w >= 4);
+                srcLane = SimdLane(w - 4);
+                dstLane = LaneW;
+            }
+            masm.insertps(rhs, out, masm.insertpsMask(srcLane, dstLane));
             return true;
         }
 
