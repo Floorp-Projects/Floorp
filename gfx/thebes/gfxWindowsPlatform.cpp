@@ -611,6 +611,12 @@ gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
         reporter.SetSuccessful();
         mozilla::gfx::Factory::SetDirect3D10Device(cairo_d2d_device_get_device(mD2DDevice));
     }
+
+    ScopedGfxFeatureReporter reporter1_1("D2D1.1");
+
+    if (Factory::SupportsD2D1()) {
+      reporter1_1.SetSuccessful();
+    }
 #endif
 }
 
