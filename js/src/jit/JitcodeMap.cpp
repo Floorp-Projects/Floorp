@@ -172,6 +172,12 @@ void
 JitcodeGlobalTable::removeEntry(void *startAddr)
 {
     JitcodeGlobalEntry query = JitcodeGlobalEntry::MakeQuery(startAddr);
+    JitcodeGlobalEntry result;
+    mozilla::DebugOnly<bool> success = tree_.contains(query, &result);
+    MOZ_ASSERT(success);
+
+    // Destroy entry before removing it from tree.
+    result.destroy();
     tree_.remove(query);
 }
 
@@ -559,12 +565,16 @@ JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
     MOZ_ASSERT(numScripts > 0);
 
     if (numScripts == 1) {
-        out.init(code->raw(), code->raw() + code->instructionsSize(), scripts[0], this);
+        out.init(code->raw(), code->rawEnd(), scripts[0], this);
         return true;
     }
 
     if (numScripts < uint32_t(JitcodeGlobalEntry::IonEntry::Multi)) {
-        out.init(code->raw(), code->raw() + code->instructionsSize(), numScripts, scripts, this);
+        JSScript **scriptsCopy = cx->pod_malloc<JSScript *>(numScripts);
+        if (!scriptsCopy)
+            return false;
+        memcpy(scriptsCopy, scripts, sizeof(JSScript *) * numScripts);
+        out.init(code->raw(), code->rawEnd(), numScripts, scriptsCopy, this);
         return true;
     }
 
@@ -573,7 +583,7 @@ JitcodeIonTable::makeIonEntry(JSContext *cx, JitCode *code,
     if (!mem)
         return false;
     SizedScriptList *scriptList = new (mem) SizedScriptList(numScripts, scripts);
-    out.init(code->raw(), code->raw() + code->instructionsSize(), scriptList, this);
+    out.init(code->raw(), code->rawEnd(), scriptList, this);
     return true;
 }
 
