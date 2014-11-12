@@ -351,7 +351,7 @@ AppleVDADecoder::SubmitFrame(mp4_demuxer::MP4Sample* aSample)
   MOZ_ASSERT(CFGetRetainCount(frameInfo) >= 2, "Bad retain count");
 
   if (rv != noErr) {
-    NS_ERROR("AppleVDADecoder: Couldn't pass frame to decoder");
+    NS_WARNING("AppleVDADecoder: Couldn't pass frame to decoder");
     return NS_ERROR_FAILURE;
   }
 
