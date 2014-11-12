@@ -154,21 +154,28 @@ function* check_autocomplete(test) {
         if (matches[j] == undefined)
           continue;
 
-        let { uri, title, tags, searchEngine } = matches[j];
+        let { uri, title, tags, searchEngine, style } = matches[j];
         if (tags)
           title += " \u2013 " + tags.sort().join(", ");
         if (searchEngine)
           title += TITLE_SEARCH_ENGINE_SEPARATOR + searchEngine;
+        if (style)
+          style = style.sort();
+        else
+          style = ["favicon"];
 
         do_log_info("Checking against expected '" + uri.spec + "', '" + title + "'...");
         // Got a match on both uri and title?
         if (stripPrefix(uri.spec) == stripPrefix(value) && title == comment) {
           do_log_info("Got a match at index " + j + "!");
+          let actualStyle = controller.getStyleAt(i).split(/\W+/).sort();
+          if (style)
+            Assert.equal(actualStyle.toString(), style.toString(), "Match should have expected style");
+
           // Make it undefined so we don't process it again
           matches[j] = undefined;
           if (uri.spec.startsWith("moz-action:")) {
-            let style = controller.getStyleAt(i);
-            Assert.ok(style.contains("action"));
+            Assert.ok(actualStyle.indexOf("action") != -1, "moz-action results should always have 'action' in their style");
           }
           break;
         }
