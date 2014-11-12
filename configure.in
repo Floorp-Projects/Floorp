@@ -7560,6 +7560,7 @@ fi
 AC_SUBST(MOZ_B2G_BT)
 AC_SUBST(MOZ_B2G_BT_BLUEZ)
 AC_SUBST(MOZ_B2G_BT_BLUEDROID)
+AC_SUBST(MOZ_B2G_BT_DAEMON)
 
 dnl ========================================================
 dnl = Enable NFC Interface for B2G (Gonk usually)
