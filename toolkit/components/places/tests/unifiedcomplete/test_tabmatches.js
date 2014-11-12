@@ -27,17 +27,17 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("visiturl", {url: "http://abc.com/", input: "abc.com"}), title: "http://abc.com/" },
-               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" } ]
+    matches: [ { uri: makeActionURI("visiturl", {url: "http://abc.com/", input: "abc.com"}), title: "http://abc.com/", style: [ "action", "visiturl" ] },
+               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks", style: [ "action", "switchtab" ] } ]
   });
 
   do_log_info("three results, one tab match");
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch" },
-               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
-               { uri: uri2, title: "xyz.net - we're better than ABC" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks", style: [ "action", "switchtab" ] },
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
   });
 
   do_log_info("three results, both normal results are tab matches");
@@ -45,9 +45,9 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch" },
-               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
-               { uri: makeActionURI("switchtab", {url: "http://xyz.net/"}), title: "xyz.net - we're better than ABC" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks", style: [ "action", "switchtab" ] },
+               { uri: makeActionURI("switchtab", {url: "http://xyz.net/"}), title: "xyz.net - we're better than ABC", style: [ "action", "switchtab" ] } ]
   });
 
   do_log_info("three results, both normal results are tab matches, one has multiple tabs");
@@ -55,9 +55,9 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch" },
-               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
-               { uri: makeActionURI("switchtab", {url: "http://xyz.net/"}), title: "xyz.net - we're better than ABC" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks", style: [ "action", "switchtab" ] },
+               { uri: makeActionURI("switchtab", {url: "http://xyz.net/"}), title: "xyz.net - we're better than ABC", style: [ "action", "switchtab" ] } ]
   });
 
   do_log_info("three results, no tab matches");
@@ -66,9 +66,9 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch" },
-               { uri: uri1, title: "ABC rocks" },
-               { uri: uri2, title: "xyz.net - we're better than ABC" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
   });
 
   do_log_info("tab match search with restriction character");
@@ -76,34 +76,34 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: gTabRestrictChar + " abc",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: gTabRestrictChar + " abc", searchQuery: gTabRestrictChar + " abc"}), title: "MozSearch" },
-               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: gTabRestrictChar + " abc", searchQuery: gTabRestrictChar + " abc"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks", style: [ "action", "switchtab" ] } ]
   });
 
   do_log_info("tab match with not-addable pages");
   yield check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozilla", searchQuery: "mozilla"}), title: "MozSearch" },
-               { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "mozilla", searchQuery: "mozilla"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla", style: [ "action", "switchtab" ] } ]
   });
 
   do_log_info("tab match with not-addable pages and restriction character");
   yield check_autocomplete({
     search: gTabRestrictChar + " mozilla",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: gTabRestrictChar + " mozilla", searchQuery: gTabRestrictChar + " mozilla"}), title: "MozSearch" },
-               { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: gTabRestrictChar + " mozilla", searchQuery: gTabRestrictChar + " mozilla"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla", style: [ "action", "switchtab" ] } ]
   });
 
   do_log_info("tab match with not-addable pages and only restriction character");
   yield check_autocomplete({
     search: gTabRestrictChar,
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: gTabRestrictChar, searchQuery: gTabRestrictChar}), title: "MozSearch" },
-               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" },
-               { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla" },
-               { uri: makeActionURI("switchtab", {url: "data:text/html,test"}), title: "data:text/html,test" } ]
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: gTabRestrictChar, searchQuery: gTabRestrictChar}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks", style: [ "action", "switchtab" ] },
+               { uri: makeActionURI("switchtab", {url: "about:mozilla"}), title: "about:mozilla", style: [ "action", "switchtab" ] },
+               { uri: makeActionURI("switchtab", {url: "data:text/html,test"}), title: "data:text/html,test", style: [ "action", "switchtab" ] } ]
   });
 
   yield cleanup();

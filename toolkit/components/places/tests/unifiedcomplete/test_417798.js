@@ -32,7 +32,7 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "javascript:",
     matches: [ { uri: uri1, title: "Title with javascript:" },
-               { uri: uri2, title: "Title with javascript:" } ]
+               { uri: uri2, title: "Title with javascript:", style: [ "bookmark" ]} ]
   });
 
   do_log_info("Match nothing with non-first javascript:");
@@ -44,7 +44,7 @@ add_task(function* test_javascript_match() {
   do_log_info("Match javascript: with multi-word search");
   yield check_autocomplete({
     search: "javascript: 5",
-    matches: [ { uri: uri2, title: "Title with javascript:" } ]
+    matches: [ { uri: uri2, title: "Title with javascript:", style: [ "bookmark" ]} ]
   });
 
   yield cleanup();

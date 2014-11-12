@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../../shared/incontentprefs/preferences.css
+%include ../../../shared/incontentprefs/preferences.inc.css
 
 prefpane .groupbox-title {
   background: none;
@@ -50,14 +50,18 @@ filefield + button {
   -moz-margin-start: -8px;
 }
 
-#dialogTitle {
-  -moz-margin-start: 6px !important;
-}
-
 #popupPolicyRow {
   /* Override styles from
      browser/themes/osx/preferences/preferences.css */
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
   border-bottom: none;
+}
+
+/**
+ * Dialog
+ */
+
+#dialogTitle {
+  font-size: 1.1em;
 }

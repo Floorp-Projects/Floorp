@@ -1436,25 +1436,35 @@ ThreadActor.prototype = {
    * @param object aLocation
    *        The location of the breakpoint (in the generated source, if source
    *        mapping).
+   * @param Debugger.Script aOnlyThisScript [optional]
+   *        If provided, only set breakpoints in this Debugger.Script, and
+   *        nowhere else.
    */
-  _setBreakpoint: function (aLocation) {
+  _setBreakpoint: function (aLocation, aOnlyThisScript=null) {
+    let location = {
+      url: aLocation.url,
+      line: aLocation.line,
+      column: aLocation.column,
+      condition: aLocation.condition
+    };
+
     let actor;
-    let storedBp = this.breakpointStore.getBreakpoint(aLocation);
+    let storedBp = this.breakpointStore.getBreakpoint(location);
     if (storedBp.actor) {
       actor = storedBp.actor;
-      actor.condition = aLocation.condition;
+      actor.condition = location.condition;
     } else {
       storedBp.actor = actor = new BreakpointActor(this, {
-        url: aLocation.url,
-        line: aLocation.line,
-        column: aLocation.column,
-        condition: aLocation.condition
+        url: location.url,
+        line: location.line,
+        column: location.column,
+        condition: location.condition
       });
       this.threadLifetimePool.addActor(actor);
     }
 
     // Find all scripts matching the given location
-    let scripts = this.dbg.findScripts(aLocation);
+    let scripts = this.dbg.findScripts(location);
     if (scripts.length == 0) {
       // Since we did not find any scripts to set the breakpoint on now, return
       // early. When a new script that matches this breakpoint location is
@@ -1474,13 +1484,17 @@ ThreadActor.prototype = {
     let scriptsAndOffsetMappings = new Map();
 
     for (let script of scripts) {
-      this._findClosestOffsetMappings(aLocation,
+      this._findClosestOffsetMappings(location,
                                       script,
                                       scriptsAndOffsetMappings);
     }
 
     if (scriptsAndOffsetMappings.size > 0) {
       for (let [script, mappings] of scriptsAndOffsetMappings) {
+        if (aOnlyThisScript && script !== aOnlyThisScript) {
+          continue;
+        }
+
         for (let offsetMapping of mappings) {
           script.setBreakpoint(offsetMapping.offset, actor);
         }
@@ -1515,62 +1529,68 @@ ThreadActor.prototype = {
     let found = false;
     for (let script of scripts) {
       let offsets = script.getAllOffsets();
-      for (let line = aLocation.line; line < offsets.length; ++line) {
+
+      for (let line = location.line; line < offsets.length; ++line) {
         if (offsets[line]) {
-          for (let offset of offsets[line]) {
-            script.setBreakpoint(offset, actor);
+          if (!aOnlyThisScript || script === aOnlyThisScript) {
+            for (let offset of offsets[line]) {
+              script.setBreakpoint(offset, actor);
+            }
+            actor.addScript(script, this);
           }
-          actor.addScript(script, this);
+
           if (!actualLocation) {
             actualLocation = {
-              url: aLocation.url,
+              url: location.url,
               line: line
             };
           }
+
           found = true;
           break;
         }
       }
     }
+
     if (found) {
       let existingBp = this.breakpointStore.hasBreakpoint(actualLocation);
 
       if (existingBp && existingBp.actor) {
         /**
-         * We already have a breakpoint actor for the actual location, so
-         * actor we created earlier is now redundant. Delete it, update the
-         * breakpoint store, and return the actor for the actual location.
+         * We already have a breakpoint actor for the actual location, so actor
+         * we created earlier is now redundant. Delete it, update the breakpoint
+         * store, and return the actor for the actual location.
          */
         actor.onDelete();
-        this.breakpointStore.removeBreakpoint(aLocation);
+        this.breakpointStore.removeBreakpoint(location);
         return {
           actor: existingBp.actor.actorID,
           actualLocation: actualLocation
         };
-      } else {
-        /**
-         * We don't have a breakpoint actor for the actual location yet.
-         * Instead or creating a new actor, reuse the actor we created earlier,
-         * and update the breakpoint store.
-         */
-        actor.location = actualLocation;
-        this.breakpointStore.addBreakpoint({
-          actor: actor,
-          url: actualLocation.url,
-          line: actualLocation.line,
-          column: actualLocation.column
-        });
-        this.breakpointStore.removeBreakpoint(aLocation);
-        return {
-          actor: actor.actorID,
-          actualLocation: actualLocation
-        };
       }
+
+      /**
+       * We don't have a breakpoint actor for the actual location yet. Instead
+       * or creating a new actor, reuse the actor we created earlier, and update
+       * the breakpoint store.
+       */
+      actor.location = actualLocation;
+      this.breakpointStore.addBreakpoint({
+        actor: actor,
+        url: actualLocation.url,
+        line: actualLocation.line,
+        column: actualLocation.column
+      });
+      this.breakpointStore.removeBreakpoint(location);
+      return {
+        actor: actor.actorID,
+        actualLocation: actualLocation
+      };
     }
 
     /**
-     * If we get here, no line matching the given line was found, so just
-     * fail epically.
+     * If we get here, no line matching the given line was found, so just fail
+     * epically.
      */
     return {
       error: "noCodeAtLineColumn",
@@ -2343,13 +2363,10 @@ ThreadActor.prototype = {
 
     let endLine = aScript.startLine + aScript.lineCount - 1;
     for (let bp of this.breakpointStore.findBreakpoints({ url: aScript.url })) {
-      // Only consider breakpoints that are not already associated with
-      // scripts, and limit search to the line numbers contained in the new
-      // script.
-      if (!bp.actor.scripts.length
-          && bp.line >= aScript.startLine
+      // Limit the search to the line numbers contained in the new script.
+      if (bp.line >= aScript.startLine
           && bp.line <= endLine) {
-        this._setBreakpoint(bp);
+        this._setBreakpoint(bp, aScript);
       }
     }
 
@@ -4510,7 +4527,10 @@ FrameActor.prototype.requestTypes = {
  */
 function BreakpointActor(aThreadActor, { url, line, column, condition })
 {
-  this.scripts = [];
+  // The set of Debugger.Script instances that this breakpoint has been set
+  // upon.
+  this.scripts = new Set();
+
   this.threadActor = aThreadActor;
   this.location = { url: url, line: line, column: column };
   this.condition = condition;
@@ -4522,7 +4542,7 @@ BreakpointActor.prototype = {
 
   /**
    * Called when this same breakpoint is added to another Debugger.Script
-   * instance, in the case of a page reload.
+   * instance.
    *
    * @param aScript Debugger.Script
    *        The new source script on which the breakpoint has been set.
@@ -4531,7 +4551,7 @@ BreakpointActor.prototype = {
    */
   addScript: function (aScript, aThreadActor) {
     this.threadActor = aThreadActor;
-    this.scripts.push(aScript);
+    this.scripts.add(aScript);
   },
 
   /**
@@ -4541,7 +4561,7 @@ BreakpointActor.prototype = {
     for (let script of this.scripts) {
       script.clearBreakpoint(this);
     }
-    this.scripts = [];
+    this.scripts.clear();
   },
 
   /**
@@ -4552,7 +4572,7 @@ BreakpointActor.prototype = {
    *        The frame to evaluate the condition in
    */
   isValidCondition: function(aFrame) {
-    if(!this.condition) {
+    if (!this.condition) {
       return true;
     }
     var res = aFrame.eval(this.condition);
