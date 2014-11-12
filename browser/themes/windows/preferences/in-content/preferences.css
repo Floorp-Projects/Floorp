@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../../shared/incontentprefs/preferences.css
+%include ../../../shared/incontentprefs/preferences.inc.css
 
 .actionsMenu > .menulist-label-box > .menulist-icon {
   -moz-margin-end: 9px;
@@ -13,11 +13,10 @@ filefield + button {
   -moz-margin-start: -4px;
 }
 
-#dialogTitle {
-  -moz-margin-start: 13px !important;
-}
+/**
+ * Dialog
+ */
 
-.actionButtons {
-  margin-right: 8px !important;
-  margin-left: 8px !important;
+#dialogTitle {
+  font-size: 1em;
 }

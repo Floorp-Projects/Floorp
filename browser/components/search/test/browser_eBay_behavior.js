@@ -102,49 +102,10 @@ function test() {
           }
         }, true);
       }
-    },
-    {
-      name: "home page search",
-      searchURL: base,
-      run: function () {
-        // Bug 992270: Ignore uncaught about:home exceptions (related to snippets from IndexedDB)
-        ignoreAllUncaughtExceptions(true);
-
-        // load about:home, but remove the listener first so it doesn't
-        // get in the way
-        gBrowser.removeProgressListener(listener);
-        gBrowser.loadURI("about:home");
-        info("Waiting for about:home load");
-        tab.linkedBrowser.addEventListener("load", function load(event) {
-          if (event.originalTarget != tab.linkedBrowser.contentDocument ||
-              event.target.location.href == "about:blank") {
-            info("skipping spurious load event");
-            return;
-          }
-          tab.linkedBrowser.removeEventListener("load", load, true);
-
-          // Observe page setup
-          let doc = gBrowser.contentDocument;
-          let mutationObserver = new MutationObserver(function (mutations) {
-            for (let mutation of mutations) {
-              if (mutation.attributeName == "searchEngineName") {
-                // Re-add the listener, and perform a search
-                gBrowser.addProgressListener(listener);
-                doc.getElementById("searchText").value = "foo";
-                doc.getElementById("searchSubmit").click();
-              }
-            }
-          });
-          mutationObserver.observe(doc.documentElement, { attributes: true });
-        }, true);
-      }
     }
   ];
 
   function nextTest() {
-    // Make sure we listen again for uncaught exceptions in the next test or cleanup.
-    ignoreAllUncaughtExceptions(false);
-
     if (gTests.length) {
       gCurrTest = gTests.shift();
       info("Running : " + gCurrTest.name);

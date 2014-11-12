@@ -40,11 +40,11 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "foo",
     matches: [ { uri: uri1, title: "title" },
-               { uri: uri2, title: "title" },
+               { uri: uri2, title: "title", style: ["bookmark"] },
                { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" },
-               { uri: uri5, title: "title" },
-               { uri: uri6, title: "title" } ]
+               { uri: uri4, title: "title", style: ["bookmark"] },
+               { uri: uri5, title: "title", style: ["bookmark"] },
+               { uri: uri6, title: "title", style: ["bookmark"] } ]
   });
 
   do_log_info("Match only typed history");
@@ -66,11 +66,11 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "",
     matches: [ { uri: uri1, title: "title" },
-               { uri: uri2, title: "title" },
+               { uri: uri2, title: "title", style: ["bookmark"] },
                { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" },
-               { uri: uri5, title: "title" },
-               { uri: uri6, title: "title" } ]
+               { uri: uri4, title: "title", style: ["bookmark"] },
+               { uri: uri5, title: "title", style: ["bookmark"] },
+               { uri: uri6, title: "title", style: ["bookmark"] } ]
   });
 
   do_log_info("Drop-down empty search matches only typed");
@@ -78,8 +78,8 @@ add_task(function* test_javascript_match() {
   yield check_autocomplete({
     search: "",
     matches: [ { uri: uri3, title: "title" },
-               { uri: uri4, title: "title" },
-               { uri: uri6, title: "title" } ]
+               { uri: uri4, title: "title", style: ["bookmark"] },
+               { uri: uri6, title: "title", style: ["bookmark"] } ]
   });
 
   do_log_info("Drop-down empty search matches only typed history");

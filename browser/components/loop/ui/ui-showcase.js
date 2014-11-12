@@ -32,6 +32,7 @@
   var StartConversationView   = loop.webapp.StartConversationView;
   var FailedConversationView  = loop.webapp.FailedConversationView;
   var EndedConversationView   = loop.webapp.EndedConversationView;
+  var StandaloneRoomView      = loop.standaloneRoomViews.StandaloneRoomView;
 
   // 3. Shared components
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
@@ -553,6 +554,26 @@
                 DesktopRoomConversationView({
                   roomStore: roomStore, 
                   dispatcher: dispatcher, 
+                  roomState: ROOM_STATES.HAS_PARTICIPANTS})
+              )
+            )
+          ), 
+
+          Section({name: "StandaloneRoomView"}, 
+            Example({summary: "Standalone room conversation (ready)"}, 
+              React.DOM.div({className: "standalone"}, 
+                StandaloneRoomView({
+                  dispatcher: dispatcher, 
+                  activeRoomStore: activeRoomStore, 
+                  roomState: ROOM_STATES.READY})
+              )
+            ), 
+
+            Example({summary: "Standalone room conversation (has-participants)"}, 
+              React.DOM.div({className: "standalone"}, 
+                StandaloneRoomView({
+                  dispatcher: dispatcher, 
+                  activeRoomStore: activeRoomStore, 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS})
               )
             )

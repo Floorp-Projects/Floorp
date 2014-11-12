@@ -5,17 +5,7 @@
 %endif
 @namespace html "http://www.w3.org/1999/xhtml";
 
-#dialogBox,
-dialog,
-window,
-prefwindow,
-.windowDialog {
-  -moz-appearance: none;
-  background-color: #f1f1f1;
-  color: #424E5A;
-}
-
-prefpane {
+#mainPrefPane {
   max-width: 800px;
   padding: 0;
   font: message-box;
@@ -308,7 +298,7 @@ description > html|a {
 }
 
 /**
- * Sub-dialog
+ * Dialog
  */
 
 #dialogOverlay {
@@ -317,18 +307,31 @@ description > html|a {
 }
 
 #dialogBox {
-  border: 1px solid #666;
+  background-color: #fbfbfb;
+  color: #424e5a;
+  font-size: 14px;
+  border-radius: 2.5px;
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.5);
   display: -moz-box;
   margin: 0;
-  padding-right: 6px;
-  padding-left: 6px;
+  padding: 0;
 }
 
 #dialogBox[resizable="true"] {
   resize: both;
   overflow: hidden;
-  min-height: 30em;
+  min-height: 20em;
   min-width: 66ch;
+}
+
+#dialogBox > .groupbox-title {
+  padding: 3.5px 0;
+  background-color: #F1F1F1;
+  border-bottom: 1px solid #C1C1C1;
+}
+
+#dialogTitle {
+  text-align: center;
 }
 
 .close-icon {
@@ -342,25 +345,16 @@ description > html|a {
 
 #dialogBox > .groupbox-body {
   -moz-appearance: none;
-  padding: 0;
+  padding: 20px;
 }
 
 #dialogFrame {
   -moz-box-flex: 1;
   /* Default dialog dimensions */
-  height: 30em;
+  height: 20em;
   width: 66ch;
 }
 
-tree:not(#rejectsTree) {
-  min-height: 15em;
-}
-
-:-moz-any(dialog, window, prefwindow) groupbox {
-  -moz-margin-start: 8px;
-  -moz-margin-end: 8px;
-}
-
 /**
- * End sub-dialog
+ * End Dialog
  */

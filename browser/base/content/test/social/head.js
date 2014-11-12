@@ -170,6 +170,7 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
   let testIter = Iterator(tests);
   let providersAtStart = Social.providers.length;
   info("runSocialTests: start test run with " + providersAtStart + " providers");
+  window.focus();
 
   PopupNotifications.transitionsEnabled = false;
 
