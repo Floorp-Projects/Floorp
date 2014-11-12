@@ -715,7 +715,8 @@ setReq.onerror = function() {
 
         version_info = mozversion.get_version(binary=self.bin,
                                               sources=self.sources,
-                                              dm_type=os.environ.get('DM_TRANS', 'adb'))
+                                              dm_type=os.environ.get('DM_TRANS', 'adb'),
+                                              device_serial=self.device_serial)
 
         device_info = None
         if self.capabilities['device'] != 'desktop' and self.capabilities['browserName'] == 'B2G':
