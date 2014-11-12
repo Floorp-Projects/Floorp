@@ -302,16 +302,21 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   box-shadow: var(--tab-selection-box-shadow);
 }
 
-/* New tab buttons */
-#TabsToolbar > #new-tab-button,
+/* Don't need space for the tab curves (66px - 30px) */
 .tabs-newtab-button {
-  background-image: none !important;
-  margin: 0 !important;
-  width: 35px !important;
+  width: 36px;
+}
+
+/* Override @tabToolbarNavbarOverlap@ */
+#TabsToolbar .toolbarbutton-1,
+.tabbrowser-arrowscrollbox > .scrollbutton-up,
+.tabbrowser-arrowscrollbox > .scrollbutton-down {
+  margin-bottom: 0;
 }
 
 #TabsToolbar > #new-tab-button:hover,
 .tabs-newtab-button:hover {
   /* Important needed because !important is used in browser.css */
   background-color: var(--tab-hover-background-color) !important;
+  background-image: none;
 }
