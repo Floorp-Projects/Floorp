@@ -9,6 +9,10 @@
 #include "nsIWidget.h"
 #include "nsCOMPtr.h"
 
+#if defined(MOZ_WIDGET_GTK)
+class nsPluginNativeWindowGtk;
+#endif
+
 namespace mozilla {
 
 namespace dom {
@@ -40,6 +44,9 @@ private:
   mozilla::dom::TabParent* GetTabParent();
   // The chrome side native widget.
   nsCOMPtr<nsIWidget> mWidget;
+#if defined(MOZ_WIDGET_GTK)
+  UniquePtr<nsPluginNativeWindowGtk> mWrapper;
+#endif
 };
 
 } // namespace plugins
