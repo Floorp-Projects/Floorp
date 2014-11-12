@@ -518,7 +518,7 @@ random-if(cocoaWidget) == 350506-1.html 350506-1-ref.html
 == 355548-3.xml 355548-3-ref.xml
 == 355548-4.xml 355548-4-ref.xml
 == 355548-5.xml 355548-5-ref.xml
-fails-if(cocoaWidget) == 356774-1.html 356774-1-ref.html # probably bug 379317
+== 356774-1.html 356774-1-ref.html
 == 356775-1.html 356775-1-ref.html
 == 359869-1.html 359869-1-ref.html
 skip-if(B2G) == 359903-1.html 359903-1-ref.html
