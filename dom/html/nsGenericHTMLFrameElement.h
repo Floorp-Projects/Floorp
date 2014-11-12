@@ -9,14 +9,15 @@
 #define nsGenericHTMLFrameElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/nsBrowserElement.h"
+
 #include "nsElementFrameLoaderOwner.h"
+#include "nsFrameLoader.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIDOMEventListener.h"
 #include "nsIFrameLoader.h"
 #include "nsIMozBrowserFrame.h"
-#include "nsIDOMEventListener.h"
-#include "mozilla/ErrorResult.h"
-
-#include "nsFrameLoader.h"
 
 class nsXULElement;
 
@@ -25,6 +26,7 @@ class nsXULElement;
  */
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsElementFrameLoaderOwner,
+                                  public mozilla::nsBrowserElement,
                                   public nsIMozBrowserFrame
 {
 public:
