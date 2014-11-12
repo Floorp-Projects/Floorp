@@ -176,7 +176,7 @@ CategoryManagerInterposition.methods.addCategoryEntry =
 CategoryManagerInterposition.methods.deleteCategoryEntry =
   function(addon, target, category, entry, persist) {
     if (category == "content-policy") {
-      ContentPolicyParent.remoteContentPolicy(entry);
+      ContentPolicyParent.removeContentPolicy(entry);
     }
 
     target.deleteCategoryEntry(category, entry, persist);
