@@ -257,10 +257,6 @@ class Device(object):
         # Remove the test profile
         self.dm.removeDir(self.app_ctx.remote_profile)
 
-        # Restart the application
-        self.app_ctx.start_application()
-
-
     def _rotate_log(self, srclog, index=1):
         """
         Rotate a logfile, by recursively rotating logs further in the sequence,
