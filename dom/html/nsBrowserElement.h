@@ -10,6 +10,10 @@
 #include "mozilla/dom/BindingDeclarations.h"
 
 #include "nsCOMPtr.h"
+#include "nsIBrowserElementAPI.h"
+
+class nsFrameLoader;
+class nsIObserver;
 
 namespace mozilla {
 
@@ -27,6 +31,9 @@ class ErrorResult;
 class nsBrowserElement
 {
 public:
+  nsBrowserElement();
+  virtual ~nsBrowserElement();
+
   void SetVisible(bool aVisible, ErrorResult& aRv);
   already_AddRefed<dom::DOMRequest> GetVisible(ErrorResult& aRv);
   void SetActive(bool aActive, ErrorResult& aRv);
@@ -65,7 +72,7 @@ public:
   already_AddRefed<dom::DOMRequest>
   GetScreenshot(uint32_t aWidth,
                 uint32_t aHeight,
-                const dom::Optional<nsAString>& aMimeType,
+                const nsAString& aMimeType,
                 ErrorResult& aRv);
 
   void Zoom(float aZoom, ErrorResult& aRv);
@@ -81,6 +88,18 @@ public:
 
   already_AddRefed<dom::DOMRequest> SetInputMethodActive(bool isActive,
                                                          ErrorResult& aRv);
+
+protected:
+  NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;
+  nsCOMPtr<nsIBrowserElementAPI> mBrowserElementAPI;
+
+private:
+  void InitBrowserElementAPI();
+  bool IsBrowserElementOrThrow(ErrorResult& aRv);
+
+  class BrowserShownObserver;
+  friend class BrowserShownObserver;
+  nsRefPtr<BrowserShownObserver> mObserver;
 };
 
 } // namespace mozilla
