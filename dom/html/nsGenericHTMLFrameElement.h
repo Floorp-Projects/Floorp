@@ -9,15 +9,14 @@
 #define nsGenericHTMLFrameElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/nsBrowserElement.h"
-
 #include "nsElementFrameLoaderOwner.h"
-#include "nsFrameLoader.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMEventListener.h"
 #include "nsIFrameLoader.h"
 #include "nsIMozBrowserFrame.h"
+#include "nsIDOMEventListener.h"
+#include "mozilla/ErrorResult.h"
+
+#include "nsFrameLoader.h"
 
 class nsXULElement;
 
@@ -26,7 +25,6 @@ class nsXULElement;
  */
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsElementFrameLoaderOwner,
-                                  public mozilla::nsBrowserElement,
                                   public nsIMozBrowserFrame
 {
 public:
@@ -34,7 +32,6 @@ public:
                             mozilla::dom::FromParser aFromParser)
     : nsGenericHTMLElement(aNodeInfo)
     , nsElementFrameLoaderOwner(aFromParser)
-    , nsBrowserElement()
   {
   }
 
@@ -73,19 +70,6 @@ public:
                                                      nsGenericHTMLElement)
 
   static bool BrowserFramesEnabled();
-
-  /**
-   * nsIFrameLoaderOwner defines two GetFrameLoader() overloads. One
-   * is XPCOM style interface, the other one is C++ only.  "using" pulls
-   * them both in, now GetFrameLoader() is ambiguous because
-   * nsBrowserElement also has GetFrameLoader(). Explicit redefine
-   * GetFrameLoader() to choose nsElementFrameLoaderOwner::GetFrameLoader()
-   */
-  using nsElementFrameLoaderOwner::GetFrameLoader;
-  virtual already_AddRefed<nsFrameLoader> GetFrameLoader() MOZ_OVERRIDE
-  {
-    return nsElementFrameLoaderOwner::GetFrameLoader();
-  }
 
   /**
    * Helper method to map a HTML 'scrolling' attribute value to a nsIScrollable
