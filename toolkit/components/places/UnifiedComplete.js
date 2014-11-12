@@ -22,7 +22,6 @@ const PREF_ENABLED =                [ "autocomplete.enabled",   true ];
 const PREF_AUTOFILL =               [ "autoFill",               true ];
 const PREF_AUTOFILL_TYPED =         [ "autoFill.typed",         true ];
 const PREF_AUTOFILL_SEARCHENGINES = [ "autoFill.searchEngines", true ];
-const PREF_RESTYLESEARCHES        = [ "restyleSearches",        false ];
 const PREF_DELAY =                  [ "delay",                  50 ];
 const PREF_BEHAVIOR =               [ "matchBehavior", MATCH_BOUNDARY_ANYWHERE ];
 const PREF_DEFAULT_BEHAVIOR =       [ "default.behavior", DEFAULT_BEHAVIOR ];
@@ -372,7 +371,6 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
     store.autofill = prefs.get(...PREF_AUTOFILL);
     store.autofillTyped = prefs.get(...PREF_AUTOFILL_TYPED);
     store.autofillSearchEngines = prefs.get(...PREF_AUTOFILL_SEARCHENGINES);
-    store.restyleSearches = prefs.get(...PREF_RESTYLESEARCHES);
     store.delay = prefs.get(...PREF_DELAY);
     store.matchBehavior = prefs.get(...PREF_BEHAVIOR);
     store.filterJavaScript = prefs.get(...PREF_FILTER_JS);
@@ -1046,7 +1044,7 @@ Search.prototype = {
       }
 
       // Restyle past searches, unless they are bookmarks or special results.
-      if (Prefs.restyleSearches && match.style == "favicon") {
+      if (match.style == "favicon") {
         this._maybeRestyleSearchMatch(match);
       }
 
