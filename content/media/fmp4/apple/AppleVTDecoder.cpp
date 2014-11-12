@@ -240,7 +240,7 @@ AppleVTDecoder::SubmitFrame(mp4_demuxer::MP4Sample* aSample)
                                          CreateAppleFrameRef(aSample),
                                          &flags);
   if (rv != noErr) {
-    NS_ERROR("Couldn't pass frame to decoder");
+    NS_WARNING("Couldn't pass frame to decoder");
     return NS_ERROR_FAILURE;
   }
 
