@@ -448,6 +448,21 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize)
   mProjMatrix = matrix3d;
 }
 
+void
+CompositorOGL::SetFinalDestinationTarget() {
+  MOZ_ASSERT(mFinalDestinationTarget);
+  SetRenderTarget(mFinalDestinationTarget);
+
+  // If the Android compositor is being used, this clear will be done in
+  // DrawWindowUnderlay. Make sure the bits used here match up with those used
+  // in mobile/android/base/gfx/LayerRenderer.java
+#ifndef MOZ_WIDGET_ANDROID
+  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+#endif
+}
+
+
 TemporaryRef<CompositingRenderTarget>
 CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
 {
@@ -608,15 +623,10 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   TexturePoolOGL::Fill(gl());
 #endif
 
-  mCurrentRenderTarget =
+  mFinalDestinationTarget =
     CompositingRenderTargetOGL::RenderTargetForWindow(this,
                                                       IntSize(width, height));
-  mCurrentRenderTarget->BindRenderTarget();
-
   mContextStateTracker.PushOGLSection(gl(), "Frame");
-#ifdef DEBUG
-  mWindowRenderTarget = mCurrentRenderTarget;
-#endif
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
@@ -628,14 +638,6 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (aClipRectOut && !aClipRectIn) {
     aClipRectOut->SetRect(0, 0, width, height);
   }
-
-  // If the Android compositor is being used, this clear will be done in
-  // DrawWindowUnderlay. Make sure the bits used here match up with those used
-  // in mobile/android/base/gfx/LayerRenderer.java
-#ifndef MOZ_WIDGET_ANDROID
-  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
-  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-#endif
 }
 
 void
@@ -1175,7 +1177,8 @@ CompositorOGL::EndFrame()
   PROFILER_LABEL("CompositorOGL", "EndFrame",
     js::ProfileEntry::Category::GRAPHICS);
 
-  MOZ_ASSERT(mCurrentRenderTarget == mWindowRenderTarget, "Rendering target not properly restored");
+  MOZ_ASSERT(mCurrentRenderTarget == mFinalDestinationTarget,
+             "Rendering target not properly restored");
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
@@ -1204,6 +1207,7 @@ CompositorOGL::EndFrame()
   }
 
   mCurrentRenderTarget = nullptr;
+  mFinalDestinationTarget = nullptr;
 
   if (mTexturePool) {
     mTexturePool->EndFrame();
@@ -1296,6 +1300,7 @@ CompositorOGL::AbortFrame()
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
   mFrameInProgress = false;
   mCurrentRenderTarget = nullptr;
+  mFinalDestinationTarget = nullptr;
 
   if (mTexturePool) {
     mTexturePool->EndFrame();
