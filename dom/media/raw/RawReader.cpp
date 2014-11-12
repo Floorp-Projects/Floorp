@@ -290,7 +290,7 @@ nsresult RawReader::SeekInternal(int64_t aTime)
   return NS_OK;
 }
 
-nsresult RawReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
+nsresult RawReader::GetBuffered(dom::TimeRanges* aBuffered)
 {
   return NS_OK;
 }

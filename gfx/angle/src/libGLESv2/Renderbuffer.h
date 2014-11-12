@@ -17,6 +17,11 @@
 #include "common/angleutils.h"
 #include "common/RefCountObject.h"
 
+namespace egl
+{
+class Surface;
+}
+
 namespace rx
 {
 class Renderer;
@@ -103,7 +108,7 @@ class RenderbufferStorage
 class Colorbuffer : public RenderbufferStorage
 {
   public:
-    Colorbuffer(rx::Renderer *renderer, rx::SwapChain *swapChain);
+    Colorbuffer(rx::Renderer *renderer, egl::Surface *surface);
     Colorbuffer(rx::Renderer *renderer, GLsizei width, GLsizei height, GLenum format, GLsizei samples);
 
     virtual ~Colorbuffer();
@@ -119,7 +124,7 @@ class Colorbuffer : public RenderbufferStorage
 class DepthStencilbuffer : public RenderbufferStorage
 {
   public:
-    DepthStencilbuffer(rx::Renderer *renderer, rx::SwapChain *swapChain);
+    DepthStencilbuffer(rx::Renderer *renderer, egl::Surface *surface);
     DepthStencilbuffer(rx::Renderer *renderer, GLsizei width, GLsizei height, GLsizei samples);
 
     ~DepthStencilbuffer();

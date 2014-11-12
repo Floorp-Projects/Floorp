@@ -5,6 +5,7 @@
 include protocol PContent;
 
 using mozilla::dom::asmjscache::Metadata from "mozilla/dom/asmjscache/AsmJSCache.h";
+using JS::AsmJSCacheResult from "mozilla/dom/asmjscache/AsmJSCache.h";
 
 namespace mozilla {
 namespace dom {
@@ -29,7 +30,7 @@ child:
   OnOpenCacheFile(int64_t fileSize, FileDescriptor fileDesc);
 
 both:
-  __delete__();
+  __delete__(AsmJSCacheResult result);
 };
 
 } // namespace asmjscache
