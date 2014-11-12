@@ -387,9 +387,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
     mCompositorVsyncObserver = new CompositorVsyncObserver(this);
   }
 
-  gfxPlatform::GetPlatform()->SetTileSize(
-    gfxPrefs::LayersTileWidth(),
-    gfxPrefs::LayersTileHeight());
+  gfxPlatform::GetPlatform()->ComputeTileSize();
 }
 
 bool
@@ -522,6 +520,14 @@ CompositorParent::RecvFlushRendering()
     ForceComposeToTarget(nullptr);
   }
 
+  return true;
+}
+
+bool
+CompositorParent::RecvGetTileSize(int32_t* aWidth, int32_t* aHeight)
+{
+  *aWidth = gfxPlatform::GetPlatform()->GetTileWidth();
+  *aHeight = gfxPlatform::GetPlatform()->GetTileHeight();
   return true;
 }
 
@@ -1352,6 +1358,7 @@ public:
     , mNotifyAfterRemotePaint(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
+    gfxPlatform::GetPlatform()->ComputeTileSize();
   }
 
   // IToplevelProtocol::CloneToplevel()
@@ -1377,6 +1384,13 @@ public:
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) { return true; }
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) MOZ_OVERRIDE { return true; }
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) MOZ_OVERRIDE  { return true; }
+  virtual bool RecvGetTileSize(int32_t* aWidth, int32_t* aHeight) MOZ_OVERRIDE
+  {
+    *aWidth = gfxPlatform::GetPlatform()->GetTileWidth();
+    *aHeight = gfxPlatform::GetPlatform()->GetTileHeight();
+    return true;
+  }
+
 
   /**
    * Tells this CompositorParent to send a message when the compositor has received the transaction.
