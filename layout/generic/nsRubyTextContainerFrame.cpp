@@ -64,13 +64,11 @@ nsRubyTextContainerFrame::BeginRTCLineLayout(nsPresContext* aPresContext,
   nsBlockReflowState state(aReflowState, aPresContext, this, true, true,
                            false, consumedBSize);
 
-  NS_ASSERTION(!mLines.empty(),
-    "There should be at least one line in the ruby text container");
-  line_iterator firstLine = begin_lines();
+  line_iterator* firstLine = nullptr;
   mLineLayout = mozilla::MakeUnique<nsLineLayout>(
                            state.mPresContext,
                            state.mReflowState.mFloatManager,
-                           &state.mReflowState, &firstLine);
+                           &state.mReflowState, firstLine);
   mLineLayout->Init(&state, state.mMinLineHeight, state.mLineNumber);
 
   mozilla::WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
