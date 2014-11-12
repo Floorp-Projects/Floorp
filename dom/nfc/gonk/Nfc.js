@@ -80,9 +80,7 @@ const NFC_IPC_MANAGER_PERM_MSG_NAMES = [
   "NFC:CheckP2PRegistration",
   "NFC:NotifyUserAcceptedP2P",
   "NFC:NotifySendFileStatus",
-  "NFC:StartPoll",
-  "NFC:StopPoll",
-  "NFC:PowerOff"
+  "NFC:ChangeRFState"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
@@ -555,7 +553,7 @@ Nfc.prototype = {
      case "HCIEventTransactionNotification":
         this.notifyHCIEventTransaction(message);
         break;
-     case "PowerResponse":
+     case "ChangeRFStateResponse":
         if (!message.errorMsg) {
           this.rfState = message.rfState;
         }
@@ -598,11 +596,8 @@ Nfc.prototype = {
    * Process a message from the gMessageManager.
    */
   receiveMessage: function receiveMessage(message) {
-    let isPowerAPI = message.name == "NFC:StartPoll" ||
-                     message.name == "NFC:StopPoll"  ||
-                     message.name == "NFC:PowerOff";
-
-    if (!isPowerAPI) {
+    let isRFAPI = message.name == "NFC:ChangeRFState";
+    if (!isRFAPI) {
       if (this.rfState != NFC.NFC_RF_STATE_DISCOVERY) {
         debug("NFC is not enabled. current rfState:" + this.rfState);
         this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_NOT_ENABLED);
@@ -614,17 +609,8 @@ Nfc.prototype = {
     }
 
     switch (message.name) {
-      case "NFC:StartPoll":
-        message.data.rfState = NFC.NFC_RF_STATE_DISCOVERY;
-        this.sendToNfcService("power", message.data);
-        break;
-      case "NFC:StopPoll":
-        message.data.rfState = NFC.NFC_RF_STATE_LISTEN;
-        this.sendToNfcService("power", message.data);
-        break;
-      case "NFC:PowerOff":
-        message.data.rfState = NFC.NFC_RF_STATE_IDLE;
-        this.sendToNfcService("power", message.data);
+      case "NFC:ChangeRFState":
+        this.sendToNfcService("changeRFState", message.data);
         break;
       case "NFC:ReadNDEF":
         this.sendToNfcService("readNDEF", message.data);

@@ -59,7 +59,7 @@ const NFC_IPC_MSG_NAMES = [
   "NFC:CheckP2PRegistrationResponse",
   "NFC:DOMEvent",
   "NFC:NotifySendFileStatusResponse",
-  "NFC:PowerResponse"
+  "NFC:ChangeRFStateResponse"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -252,34 +252,16 @@ NfcContentHelper.prototype = {
     });
   },
 
-  startPoll: function startPoll() {
+  changeRFState: function changeRFState(rfState) {
     let request = Services.DOMRequest.createRequest(this._window);
     let requestId = btoa(this.getRequestId(request));
     this._requestMap[requestId] = this._window;
 
-    cpmm.sendAsyncMessage("NFC:StartPoll",
-                          {requestId: requestId});
+    cpmm.sendAsyncMessage("NFC:ChangeRFState",
+                          {requestId: requestId,
+                           rfState: rfState});
     return request;
-  },
 
-  stopPoll: function stopPoll() {
-    let request = Services.DOMRequest.createRequest(this._window);
-    let requestId = btoa(this.getRequestId(request));
-    this._requestMap[requestId] = this._window;
-
-    cpmm.sendAsyncMessage("NFC:StopPoll",
-                          {requestId: requestId});
-    return request;
-  },
-
-  powerOff: function powerOff() {
-    let request = Services.DOMRequest.createRequest(this._window);
-    let requestId = btoa(this.getRequestId(request));
-    this._requestMap[requestId] = this._window;
-
-    cpmm.sendAsyncMessage("NFC:PowerOff",
-                          {requestId: requestId});
-    return request;
   },
 
   // nsIObserver
@@ -341,7 +323,7 @@ NfcContentHelper.prototype = {
       case "NFC:WriteNDEFResponse":
       case "NFC:MakeReadOnlyResponse":
       case "NFC:NotifySendFileStatusResponse":
-      case "NFC:PowerResponse":
+      case "NFC:ChangeRFStateResponse":
         if (result.errorMsg) {
           this.fireRequestError(atob(result.requestId), result.errorMsg);
         } else {
