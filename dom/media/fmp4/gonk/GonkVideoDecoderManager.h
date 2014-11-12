@@ -7,6 +7,7 @@
 #if !defined(GonkVideoDecoderManager_h_)
 #define GonkVideoDecoderManager_h_
 
+#include <set>
 #include "MP4Reader.h"
 #include "nsRect.h"
 #include "GonkMediaDataDecoder.h"
@@ -14,6 +15,8 @@
 #include "I420ColorConverterHelper.h"
 #include "MediaCodecProxy.h"
 #include <stagefright/foundation/AHandler.h>
+#include "GonkNativeWindow.h"
+#include "GonkNativeWindowClient.h"
 
 using namespace android;
 
@@ -21,12 +24,18 @@ namespace android {
 struct MOZ_EXPORT ALooper;
 class MOZ_EXPORT MediaBuffer;
 struct MOZ_EXPORT AString;
+class GonkNativeWindow;
 } // namespace android
 
 namespace mozilla {
 
+namespace layers {
+class TextureClient;
+} // namespace mozilla::layers
+
 class GonkVideoDecoderManager : public GonkDecoderManager {
 typedef android::MediaCodecProxy MediaCodecProxy;
+typedef mozilla::layers::TextureClient TextureClient;
 
 public:
   GonkVideoDecoderManager(mozilla::layers::ImageContainer* aImageContainer,
@@ -41,6 +50,7 @@ public:
   virtual nsresult Output(int64_t aStreamOffset,
                           nsAutoPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
+  static void RecycleCallback(TextureClient* aClient, void* aClosure);
 private:
   struct FrameInfo
   {
@@ -102,6 +112,9 @@ private:
   void codecCanceled();
   void onMessageReceived(const sp<AMessage> &aMessage);
 
+  void ReleaseAllPendingVideoBuffersLocked();
+  void PostReleaseVideoBuffer(android::MediaBuffer *aBuffer);
+
   const mp4_demuxer::VideoDecoderConfig& mConfig;
   uint32_t mVideoWidth;
   uint32_t mVideoHeight;
@@ -121,12 +134,25 @@ private:
   android::sp<VideoResourceListener> mVideoListener;
   android::sp<MessageHandler> mHandler;
   android::sp<ALooper> mLooper;
+  android::sp<ALooper> mManagerLooper;
   FrameInfo mFrameInfo;
 
   // color converter
   android::I420ColorConverterHelper mColorConverter;
   nsAutoArrayPtr<uint8_t> mColorConverterBuffer;
   size_t mColorConverterBufferSize;
+
+  android::sp<android::GonkNativeWindow> mNativeWindow;
+  enum {
+    kNotifyPostReleaseBuffer = 'nprb',
+  };
+
+  // Hold video's MediaBuffers that are released.
+  // The holded MediaBuffers are released soon after flush.
+  Vector<android::MediaBuffer*> mPendingVideoBuffers;
+  // The lock protects mPendingVideoBuffers.
+  Mutex mPendingVideoBuffersLock;
+
 };
 
 } // namespace mozilla
