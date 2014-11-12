@@ -9,6 +9,7 @@
 
 // JS lexical scanner interface.
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
@@ -308,14 +309,14 @@ class MOZ_STACK_CLASS TokenStream
     JSAtom *getRawTemplateStringAtom() {
         MOZ_ASSERT(currentToken().type == TOK_TEMPLATE_HEAD ||
                    currentToken().type == TOK_NO_SUBS_TEMPLATE);
-        const char16_t *cur = userbuf.base() + currentToken().pos.begin + 1;
+        const char16_t *cur = userbuf.rawCharPtrAt(currentToken().pos.begin + 1);
         const char16_t *end;
         if (currentToken().type == TOK_TEMPLATE_HEAD) {
             // Of the form    |`...${|   or   |}...${|
-            end = userbuf.base() + currentToken().pos.end - 2;
+            end = userbuf.rawCharPtrAt(currentToken().pos.end - 2);
         } else {
             // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
-            end = userbuf.base() + currentToken().pos.end - 1;
+            end = userbuf.rawCharPtrAt(currentToken().pos.end - 1);
         }
 
         CharBuffer charbuf(cx);
@@ -528,8 +529,8 @@ class MOZ_STACK_CLASS TokenStream
     void seek(const Position &pos);
     bool seek(const Position &pos, const TokenStream &other);
 
-    const char16_t *rawBase() const {
-        return userbuf.base();
+    const char16_t *rawCharPtrAt(size_t offset) const {
+        return userbuf.rawCharPtrAt(offset);
     }
 
     const char16_t *rawLimit() const {
@@ -665,11 +666,16 @@ class MOZ_STACK_CLASS TokenStream
         }
 
         bool atStart() const {
-            return ptr == base_;
+            return offset() == 0;
         }
 
-        const char16_t *base() const {
-            return base_;
+        size_t offset() const {
+            return mozilla::PointerRangeSize(base_, ptr);
+        }
+
+        const char16_t *rawCharPtrAt(size_t offset) const {
+            MOZ_ASSERT(base_ + offset <= limit_);
+            return base_ + offset;
         }
 
         const char16_t *limit() const {
