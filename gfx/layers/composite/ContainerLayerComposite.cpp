@@ -138,6 +138,8 @@ ContainerPrepare(ContainerT* aContainer,
                  LayerManagerComposite* aManager,
                  const RenderTargetIntRect& aClipRect)
 {
+  Compositor* compositor = aManager->GetCompositor();
+
   aContainer->mPrepared = MakeUnique<PreparedData>();
   aContainer->mPrepared->mNeedsSurfaceCopy = false;
 
@@ -184,7 +186,12 @@ ContainerPrepare(ContainerT* aContainer,
       // If we don't need a copy we can render to the intermediate now to avoid
       // unecessary render target switching. This brings a big perf boost on mobile gpus.
       RefPtr<CompositingRenderTarget> surface = CreateTemporaryTarget(aContainer, aManager);
-      RenderIntermediate(aContainer, aManager, RenderTargetPixel::ToUntyped(aClipRect), surface);
+
+      if (surface) {
+        compositor->SetRenderTarget(surface);
+        RenderLayers(aContainer, aManager, aClipRect);
+      }
+
       aContainer->mPrepared->mTmpTarget = surface;
     } else {
       aContainer->mPrepared->mNeedsSurfaceCopy = true;
@@ -305,39 +312,25 @@ CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
 }
 
 template<class ContainerT> void
-RenderIntermediate(ContainerT* aContainer,
-                   LayerManagerComposite* aManager,
-                   const nsIntRect& aClipRect,
-                   RefPtr<CompositingRenderTarget> surface)
-{
-  Compositor* compositor = aManager->GetCompositor();
-  RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
-
-  if (!surface) {
-    return;
-  }
-
-  compositor->SetRenderTarget(surface);
-  // pre-render all of the layers into our temporary
-  RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
-  // Unbind the current surface and rebind the previous one.
-  compositor->SetRenderTarget(previousTarget);
-}
-
-template<class ContainerT> void
 ContainerRender(ContainerT* aContainer,
                  LayerManagerComposite* aManager,
                  const nsIntRect& aClipRect)
 {
+  Compositor* compositor = aManager->GetCompositor();
+
   MOZ_ASSERT(aContainer->mPrepared);
   if (aContainer->UseIntermediateSurface()) {
     RefPtr<CompositingRenderTarget> surface;
 
     if (aContainer->mPrepared->mNeedsSurfaceCopy) {
+      RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
       // we needed to copy the background so we waited until now to render the intermediate
       surface = CreateTemporaryTargetAndCopyFromBackground(aContainer, aManager);
-      RenderIntermediate(aContainer, aManager,
-                         aClipRect, surface);
+      compositor->SetRenderTarget(surface);
+      if (surface) {
+        RenderLayers(aContainer, aManager, RenderTargetPixel::FromUntyped(aClipRect));
+      }
+      compositor->SetRenderTarget(previousTarget);
     } else {
       surface = aContainer->mPrepared->mTmpTarget;
     }
@@ -352,7 +345,7 @@ ContainerRender(ContainerT* aContainer,
     nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPainting) {
-      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(aManager->GetCompositor());
+      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(compositor);
       if (surf) {
         WriteSnapshotToDumpFile(aContainer, surf);
       }

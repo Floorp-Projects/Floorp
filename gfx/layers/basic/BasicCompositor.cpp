@@ -85,13 +85,16 @@ void BasicCompositor::Destroy()
 TemporaryRef<CompositingRenderTarget>
 BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(aRect.width != 0 && aRect.height != 0, "Trying to create a render target of invalid size");
+  MOZ_ASSERT(aRect.width != 0 && aRect.height != 0,
+             "Trying to create a render target of invalid size");
 
   if (aRect.width * aRect.height == 0) {
     return nullptr;
   }
 
-  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
+  RefPtr<DrawTarget> target =
+    static_cast<BasicCompositingRenderTarget*>(mFinalDestinationTarget.get())->mDrawTarget->
+      CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
 
   if (!target) {
     return nullptr;
@@ -440,7 +443,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     }
     return;
   }
-  SetRenderTarget(target);
+  mFinalDestinationTarget = target;
 
   // We only allocate a surface sized to the invalidated region, so we need to
   // translate future coordinates.
@@ -454,9 +457,9 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   if (aClipRectIn) {
-    mRenderTarget->mDrawTarget->PushClipRect(*aClipRectIn);
+    mDrawTarget->PushClipRect(*aClipRectIn);
   } else {
-    mRenderTarget->mDrawTarget->PushClipRect(rect);
+    mDrawTarget->PushClipRect(rect);
     if (aClipRectOut) {
       *aClipRectOut = rect;
     }
@@ -503,6 +506,7 @@ BasicCompositor::EndFrame()
 
   mDrawTarget = nullptr;
   mRenderTarget = nullptr;
+  mFinalDestinationTarget = nullptr;
 }
 
 void
@@ -512,6 +516,7 @@ BasicCompositor::AbortFrame()
   mRenderTarget->mDrawTarget->PopClip();
   mDrawTarget = nullptr;
   mRenderTarget = nullptr;
+  mFinalDestinationTarget = nullptr;
 }
 
 }

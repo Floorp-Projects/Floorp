@@ -704,9 +704,15 @@ LayerManagerComposite::Render()
   }
 
   if (actualBounds.IsEmpty()) {
+    mCompositor->SetFinalDestinationTarget();
     mCompositor->GetWidget()->PostRender(this);
     return;
   }
+
+  // Prepare our intermediate surface to minimize render target switches.
+  RootLayer()->Prepare(RenderTargetPixel::FromUntyped(clipRect));
+
+  mCompositor->SetFinalDestinationTarget();
 
   // Allow widget to render a custom background.
   mCompositor->GetWidget()->DrawWindowUnderlay(this, nsIntRect(actualBounds.x,
@@ -722,7 +728,6 @@ LayerManagerComposite::Render()
   }
 
   // Render our layers.
-  RootLayer()->Prepare(RenderTargetPixel::FromUntyped(clipRect));
   RootLayer()->RenderLayer(clipRect);
 
   if (!mRegionToClear.IsEmpty()) {
