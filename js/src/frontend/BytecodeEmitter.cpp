@@ -133,12 +133,12 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     firstLine(lineNum),
     localsToFrameSlots_(sc->context),
     stackDepth(0), maxStackDepth(0),
-    yieldIndex(0),
     arrayCompDepth(0),
     emitLevel(0),
     constList(sc->context),
     tryNoteList(sc->context),
     blockScopeList(sc->context),
+    yieldOffsetList(sc->context),
     typesetCount(0),
     hasSingletons(false),
     emittingForInit(false),
@@ -3012,14 +3012,15 @@ EmitYieldOp(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
     if (off < 0)
         return false;
 
-    if (bce->yieldIndex >= JS_BIT(24)) {
+    uint32_t yieldIndex = bce->yieldOffsetList.length();
+    if (yieldIndex >= JS_BIT(24)) {
         bce->reportError(nullptr, JSMSG_TOO_MANY_YIELDS);
         return false;
     }
 
-    SET_UINT24(bce->code(off), bce->yieldIndex);
-    bce->yieldIndex++;
-    return true;
+    SET_UINT24(bce->code(off), yieldIndex);
+
+    return bce->yieldOffsetList.append(bce->offset());
 }
 
 bool
@@ -7575,6 +7576,15 @@ CGBlockScopeList::finish(BlockScopeArray *array)
 
     for (unsigned i = 0; i < length(); i++)
         array->vector[i] = list[i];
+}
+
+void
+CGYieldOffsetList::finish(YieldOffsetArray &array, uint32_t prologLength)
+{
+    MOZ_ASSERT(length() == array.length());
+
+    for (unsigned i = 0; i < length(); i++)
+        array[i] = prologLength + list[i];
 }
 
 /*
