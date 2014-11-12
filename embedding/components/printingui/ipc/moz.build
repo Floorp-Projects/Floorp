@@ -12,10 +12,13 @@ UNIFIED_SOURCES += [
     'nsPrintingPromptServiceProxy.cpp',
     'PrintDataUtils.cpp',
     'PrintingParent.cpp',
+    'PrintProgressDialogChild.cpp',
+    'PrintProgressDialogParent.cpp',
 ]
 
 IPDL_SOURCES += [
     'PPrinting.ipdl',
+    'PPrintProgressDialog.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

@@ -7,12 +7,15 @@ package org.mozilla.gecko;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.HardwareUtils;
 
 public class NewTabletUI {
-    // This value should be in sync with preferences_display.xml.
-    private static final boolean DEFAULT = false;
+    // This value should be in sync with preferences_display.xml. On non-release
+    // builds, the preference UI will be hidden and the (unused) default
+    // preference UI value will still be 'true'.
+    private static final boolean DEFAULT = !AppConstants.RELEASE_BUILD;
 
     private static Boolean sNewTabletUI;
 

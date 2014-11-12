@@ -58,7 +58,7 @@ describe("loop.roomViews", function () {
       });
 
       var testView = TestUtils.renderIntoDocument(TestView({
-        roomStore: activeRoomStore
+        roomStore: roomStore
       }));
 
       expect(testView.state).eql({
@@ -75,12 +75,75 @@ describe("loop.roomViews", function () {
         render: function() { return React.DOM.div(); }
       });
       var testView = TestUtils.renderIntoDocument(TestView({
-        roomStore: activeRoomStore
+        roomStore: roomStore
       }));
 
       activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
 
       expect(testView.state.roomState).eql(ROOM_STATES.READY);
+    });
+  });
+
+  describe("DesktopRoomInvitationView", function() {
+    var view;
+
+    beforeEach(function() {
+      sandbox.stub(dispatcher, "dispatch");
+    });
+
+    afterEach(function() {
+      view = null;
+    });
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        new loop.roomViews.DesktopRoomInvitationView({
+          dispatcher: dispatcher,
+          roomStore: roomStore
+        }));
+    }
+
+    it("should dispatch an EmailRoomUrl action when the email button is " +
+      "pressed", function() {
+        view = mountTestComponent();
+
+        view.setState({roomUrl: "http://invalid"});
+
+        var emailBtn = view.getDOMNode().querySelector('.btn-email');
+
+        React.addons.TestUtils.Simulate.click(emailBtn);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWith(dispatcher.dispatch,
+          new sharedActions.EmailRoomUrl({roomUrl: "http://invalid"}));
+      });
+
+    describe("Copy Button", function() {
+      beforeEach(function() {
+        view = mountTestComponent();
+
+        view.setState({roomUrl: "http://invalid"});
+      });
+
+      it("should dispatch a CopyRoomUrl action when the copy button is " +
+        "pressed", function() {
+          var copyBtn = view.getDOMNode().querySelector('.btn-copy');
+
+          React.addons.TestUtils.Simulate.click(copyBtn);
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWith(dispatcher.dispatch,
+            new sharedActions.CopyRoomUrl({roomUrl: "http://invalid"}));
+        });
+
+      it("should change the text when the url has been copied", function() {
+          var copyBtn = view.getDOMNode().querySelector('.btn-copy');
+
+          React.addons.TestUtils.Simulate.click(copyBtn);
+
+          // copied_url_button is the l10n string.
+          expect(copyBtn.textContent).eql("copied_url_button");
+      });
     });
   });
 
