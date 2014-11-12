@@ -17,8 +17,8 @@ add_task(function* test_searchEngine() {
   do_log_info("Past search terms should be styled, unless bookmarked");
   yield check_autocomplete({
     search: "term",
-    matches: [ { uri: uri1, title: "Terms", searchEngine: "SearchEngine" },
-               { uri: uri2, title: "Terms - SearchEngine Search" } ]
+    matches: [ { uri: uri1, title: "Terms", searchEngine: "SearchEngine", style: ["favicon", "search"] },
+               { uri: uri2, title: "Terms - SearchEngine Search", style: ["bookmark"] } ]
   });
 
   yield cleanup();
