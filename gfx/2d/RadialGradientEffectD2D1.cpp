@@ -116,7 +116,7 @@ RadialGradientEffectD2D1::PrepareForRender(D2D1_CHANGE_TYPE changeType)
     return S_OK;
   }
 
-  D2D1_POINT_2F dc = D2D1::Point2F(mCenter2.x - mCenter1.x, mCenter2.y - mCenter2.y);
+  D2D1_POINT_2F dc = D2D1::Point2F(mCenter2.x - mCenter1.x, mCenter2.y - mCenter1.y);
   float dr = mRadius2 - mRadius1;
   float A = dc.x * dc.x + dc.y * dc.y - dr * dr;
  
