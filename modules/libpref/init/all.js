@@ -261,7 +261,7 @@ pref("media.directshow.enabled", true);
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
-#if defined(XP_WIN) && defined(MOZ_WMF) || defined(XP_MACOSX)
+#if defined(XP_WIN) && defined(MOZ_WMF) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GONK)
 // Denotes that the fragmented MP4 parser can be created by <video> elements.
 pref("media.fragmented-mp4.exposed", true);
 #else
@@ -461,7 +461,7 @@ pref("layout.async-containerless-scrolling.enabled", true);
 // Whether to enable event region building during painting
 pref("layout.event-regions.enabled", false);
 
-// APZ preferences. For documentation/details on what these prefs do, check 
+// APZ preferences. For documentation/details on what these prefs do, check
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.allow_checkerboarding", true);
 pref("apz.asyncscroll.throttle", 100);
