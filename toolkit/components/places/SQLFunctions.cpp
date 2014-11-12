@@ -359,16 +359,25 @@ namespace places {
     nsAutoCString tags;
     (void)aArguments->GetUTF8String(kArgIndexTags, tags);
     int32_t openPageCount = aArguments->AsInt32(kArgIndexOpenPageCount);
+    bool matches = false;
+    if (HAS_BEHAVIOR(RESTRICT)) {
+      // Make sure we match all the filter requirements.  If a given restriction
+      // is active, make sure the corresponding condition is not true.
+      matches = (!HAS_BEHAVIOR(HISTORY) || visitCount > 0) &&
+                (!HAS_BEHAVIOR(TYPED) || typed) &&
+                (!HAS_BEHAVIOR(BOOKMARK) || bookmark) &&
+                (!HAS_BEHAVIOR(TAG) || !tags.IsVoid()) &&
+                (!HAS_BEHAVIOR(OPENPAGE) || openPageCount > 0);
+    } else {
+      // Make sure that we match all the filter requirements and that the
+      // corresponding condition is true if at least a given restriction is active.
+      matches = (HAS_BEHAVIOR(HISTORY) && visitCount > 0) ||
+                (HAS_BEHAVIOR(TYPED) && typed) ||
+                (HAS_BEHAVIOR(BOOKMARK) && bookmark) ||
+                (HAS_BEHAVIOR(TAG) && !tags.IsVoid()) ||
+                (HAS_BEHAVIOR(OPENPAGE) && openPageCount > 0);
+    }
 
-    // Make sure we match all the filter requirements.  If a given restriction
-    // is active, make sure the corresponding condition is not true.
-    bool matches = !(
-      (HAS_BEHAVIOR(HISTORY) && visitCount == 0) ||
-      (HAS_BEHAVIOR(TYPED) && !typed) ||
-      (HAS_BEHAVIOR(BOOKMARK) && !bookmark) ||
-      (HAS_BEHAVIOR(TAG) && tags.IsVoid()) ||
-      (HAS_BEHAVIOR(OPENPAGE) && openPageCount == 0)
-    );
     if (!matches) {
       NS_ADDREF(*_result = new IntegerVariant(0));
       return NS_OK;
