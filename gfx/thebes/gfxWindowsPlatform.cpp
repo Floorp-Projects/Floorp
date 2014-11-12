@@ -482,6 +482,7 @@ gfxWindowsPlatform::UpdateRenderMode()
 #ifdef USE_D2D1_1
       if (gfxPrefs::Direct2DUse1_1() && Factory::SupportsD2D1()) {
         contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
+        canvasMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
         defaultBackend = BackendType::DIRECT2D1_1;
       } else {
 #endif
