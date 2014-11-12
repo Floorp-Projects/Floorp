@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1060896
     a.src = test.name;
   }
 
-  var videos = gSmallTests.filter(function(x){return /^video/.test(x.type);});
+  var videos = getPlayableVideos(gSmallTests);
 
   manager.runTests(videos, initTest);
 
