@@ -74,7 +74,16 @@ public class SearchEngine {
     }
 
     private void readSearchPlugin(XmlPullParser parser) throws XmlPullParserException, IOException {
-        parser.require(XmlPullParser.START_TAG, null, "SearchPlugin");
+        if (XmlPullParser.START_TAG != parser.getEventType()) {
+            throw new XmlPullParserException("Expected start tag: " + parser.getPositionDescription());
+        }
+
+        final String name = parser.getName();
+        if (!"SearchPlugin".equals(name) && !"OpenSearchDescription".equals(name)) {
+            throw new XmlPullParserException("Expected <SearchPlugin> or <OpenSearchDescription> as root tag: "
+                + parser.getPositionDescription());
+        }
+
         while (parser.next() != XmlPullParser.END_TAG) {
             if (parser.getEventType() != XmlPullParser.START_TAG) {
                 continue;
