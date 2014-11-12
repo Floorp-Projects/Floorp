@@ -310,11 +310,11 @@ description > html|a {
   background-color: #fbfbfb;
   color: #424e5a;
   font-size: 14px;
-  border: 1px solid rgba(0,0,0,0.35);
   border-radius: 2.5px;
   box-shadow: 0 2px 4px 0 rgba(0,0,0,0.5);
   display: -moz-box;
   margin: 0;
+  padding: 0;
 }
 
 #dialogBox[resizable="true"] {
@@ -324,8 +324,14 @@ description > html|a {
   min-width: 66ch;
 }
 
-.titlebar {
-  -moz-margin-start: 4px;
+#dialogBox > .groupbox-title {
+  padding: 3.5px 0;
+  background-color: #F1F1F1;
+  border-bottom: 1px solid #C1C1C1;
+}
+
+#dialogTitle {
+  text-align: center;
 }
 
 .close-icon {
@@ -339,7 +345,7 @@ description > html|a {
 
 #dialogBox > .groupbox-body {
   -moz-appearance: none;
-  padding: 0;
+  padding: 20px;
 }
 
 #dialogFrame {
