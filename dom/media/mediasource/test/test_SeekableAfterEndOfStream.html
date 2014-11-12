@@ -12,6 +12,8 @@
 
 SimpleTest.waitForExplicitFinish();
 
+var updateCount = 0;
+
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
@@ -19,7 +21,13 @@ runWithMSE(function (ms, v) {
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
       sb.addEventListener("updateend", function () {
-        ms.endOfStream()
+        updateCount++;
+        /* Ensure that we endOfStream on the first update event only as endOfStream can
+           raise more if the duration of the last buffered range and the intial duration
+           differ. See bug 1065207 */
+        if (updateCount == 1) {
+          ms.endOfStream();
+        };
       });
     });
 
