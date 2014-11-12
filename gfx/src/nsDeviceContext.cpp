@@ -244,9 +244,9 @@ nsFontCache::Flush()
 
 nsDeviceContext::nsDeviceContext()
     : mWidth(0), mHeight(0), mDepth(0),
-      mAppUnitsPerDevPixel(-1), mAppUnitsPerDevPixelAtUnitFullZoom(-1),
+      mAppUnitsPerDevPixel(-1), mAppUnitsPerDevNotScaledPixel(-1),
       mAppUnitsPerPhysicalInch(-1),
-      mFullZoom(1.0f), mPrintingScale(1.0f),
+      mPixelScale(1.0f), mPrintingScale(1.0f),
       mFontCache(nullptr)
 {
     MOZ_ASSERT(NS_IsMainThread(), "nsDeviceContext created off main thread");
@@ -333,7 +333,7 @@ nsDeviceContext::SetDPI()
             break;
         }
 
-        mAppUnitsPerDevPixelAtUnitFullZoom =
+        mAppUnitsPerDevNotScaledPixel =
             NS_lround((AppUnitsPerCSSPixel() * 96) / dpi);
     } else {
         // A value of -1 means use the maximum of 96 and the system DPI.
@@ -358,14 +358,14 @@ nsDeviceContext::SetDPI()
                                                : CSSToLayoutDeviceScale(1.0);
         double devPixelsPerCSSPixel = scale.scale;
 
-        mAppUnitsPerDevPixelAtUnitFullZoom =
+        mAppUnitsPerDevNotScaledPixel =
             std::max(1, NS_lround(AppUnitsPerCSSPixel() / devPixelsPerCSSPixel));
     }
 
     NS_ASSERTION(dpi != -1.0, "no dpi set");
 
-    mAppUnitsPerPhysicalInch = NS_lround(dpi * mAppUnitsPerDevPixelAtUnitFullZoom);
-    UpdateAppUnitsForFullZoom();
+    mAppUnitsPerPhysicalInch = NS_lround(dpi * mAppUnitsPerDevNotScaledPixel);
+    UpdateScaledAppUnits();
 }
 
 nsresult
@@ -722,33 +722,33 @@ nsDeviceContext::CalcPrintingSize()
 }
 
 bool nsDeviceContext::CheckDPIChange() {
-    int32_t oldDevPixels = mAppUnitsPerDevPixelAtUnitFullZoom;
+    int32_t oldDevPixels = mAppUnitsPerDevNotScaledPixel;
     int32_t oldInches = mAppUnitsPerPhysicalInch;
 
     SetDPI();
 
-    return oldDevPixels != mAppUnitsPerDevPixelAtUnitFullZoom ||
+    return oldDevPixels != mAppUnitsPerDevNotScaledPixel ||
         oldInches != mAppUnitsPerPhysicalInch;
 }
 
 bool
-nsDeviceContext::SetFullZoom(float aScale)
+nsDeviceContext::SetPixelScale(float aScale)
 {
     if (aScale <= 0) {
-        NS_NOTREACHED("Invalid full zoom value");
+        NS_NOTREACHED("Invalid pixel scale value");
         return false;
     }
     int32_t oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
-    mFullZoom = aScale;
-    UpdateAppUnitsForFullZoom();
+    mPixelScale = aScale;
+    UpdateScaledAppUnits();
     return oldAppUnitsPerDevPixel != mAppUnitsPerDevPixel;
 }
 
 void
-nsDeviceContext::UpdateAppUnitsForFullZoom()
+nsDeviceContext::UpdateScaledAppUnits()
 {
     mAppUnitsPerDevPixel =
-        std::max(1, NSToIntRound(float(mAppUnitsPerDevPixelAtUnitFullZoom) / mFullZoom));
-    // adjust mFullZoom to reflect appunit rounding
-    mFullZoom = float(mAppUnitsPerDevPixelAtUnitFullZoom) / mAppUnitsPerDevPixel;
+        std::max(1, NSToIntRound(float(mAppUnitsPerDevNotScaledPixel) / mPixelScale));
+    // adjust mPixelScale to reflect appunit rounding
+    mPixelScale = float(mAppUnitsPerDevNotScaledPixel) / mAppUnitsPerDevPixel;
 }
