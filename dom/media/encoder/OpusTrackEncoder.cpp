@@ -158,6 +158,10 @@ OpusTrackEncoder::Init(int aChannels, int aSamplingRate)
   // let InterleaveTrackData downmix pcm data.
   mChannels = aChannels > MAX_CHANNELS ? MAX_CHANNELS : aChannels;
 
+  // Reject non-audio sample rates.
+  NS_ENSURE_TRUE(aSamplingRate >= 8000, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aSamplingRate <= 192000, NS_ERROR_INVALID_ARG);
+
   // According to www.opus-codec.org, creating an opus encoder requires the
   // sampling rate of source signal be one of 8000, 12000, 16000, 24000, or
   // 48000. If this constraint is not satisfied, we resample the input to 48kHz.

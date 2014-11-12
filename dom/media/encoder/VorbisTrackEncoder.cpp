@@ -49,10 +49,10 @@ VorbisTrackEncoder::~VorbisTrackEncoder()
 nsresult
 VorbisTrackEncoder::Init(int aChannels, int aSamplingRate)
 {
-  if (aChannels <= 0 || aChannels > 8) {
-    VORBISLOG("aChannels <= 0 || aChannels > 8");
-    return NS_ERROR_INVALID_ARG;
-  }
+  NS_ENSURE_TRUE(aChannels > 0, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aChannels <= 8, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aSamplingRate >= 8000, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aSamplingRate <= 192000, NS_ERROR_INVALID_ARG);
 
   // This monitor is used to wake up other methods that are waiting for encoder
   // to be completely initialized.

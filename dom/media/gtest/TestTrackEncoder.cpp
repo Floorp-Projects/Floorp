@@ -66,6 +66,15 @@ TEST(Media, OpusEncoder_Init)
   // Expect false with 0 or negative sampling rate of input signal.
   EXPECT_FALSE(TestOpusInit(1, 0));
   EXPECT_FALSE(TestOpusInit(1, -1));
+
+  // Verify sample rate bounds checking.
+  EXPECT_FALSE(TestOpusInit(2, 2000));
+  EXPECT_FALSE(TestOpusInit(2, 4000));
+  EXPECT_FALSE(TestOpusInit(2, 7999));
+  EXPECT_TRUE(TestOpusInit(2, 8000));
+  EXPECT_TRUE(TestOpusInit(2, 192000));
+  EXPECT_FALSE(TestOpusInit(2, 192001));
+  EXPECT_FALSE(TestOpusInit(2, 200000));
 }
 
 TEST(Media, OpusEncoder_Resample)
