@@ -54,6 +54,9 @@ VorbisTrackEncoder::Init(int aChannels, int aSamplingRate)
     return NS_ERROR_INVALID_ARG;
   }
 
+  MOZ_ASSERT(aSamplingRate >= 8000 && aSamplingRate <= 192000,
+      "Unreasonable sample rate for audio data.");
+
   // This monitor is used to wake up other methods that are waiting for encoder
   // to be completely initialized.
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
