@@ -1874,7 +1874,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         return module_->addBuiltinThunkCodeRange(builtin, begin->offset(), pret->offset(), end);
     }
 
-    void buildCompilationTimeReport(bool storedInCache, ScopedJSFreePtr<char> *out) {
+    void buildCompilationTimeReport(JS::AsmJSCacheResult cacheResult, ScopedJSFreePtr<char> *out) {
         ScopedJSFreePtr<char> slowFuns;
 #ifndef JS_MORE_DETERMINISTIC
         int64_t usecAfter = PRMJ_Now();
@@ -1895,10 +1895,39 @@ class MOZ_STACK_CLASS ModuleCompiler
                     return;
             }
         }
+        const char *cacheString = "";
+        switch (cacheResult) {
+          case JS::AsmJSCache_Success:
+            cacheString = "stored in cache";
+            break;
+          case JS::AsmJSCache_ModuleTooSmall:
+            cacheString = "not stored in cache (too small to benefit)";
+            break;
+          case JS::AsmJSCache_SynchronousScript:
+            cacheString = "unable to cache asm.js in synchronous scripts; try loading "
+                          "asm.js via <script async> or createElement('script')";
+            break;
+          case JS::AsmJSCache_QuotaExceeded:
+            cacheString = "not enough temporary storage quota to store in cache";
+            break;
+          case JS::AsmJSCache_Disabled_Internal:
+            cacheString = "caching disabled by internal configuration (consider filing a bug)";
+            break;
+          case JS::AsmJSCache_Disabled_ShellFlags:
+            cacheString = "caching disabled by missing command-line arguments";
+            break;
+          case JS::AsmJSCache_Disabled_JitInspector:
+            cacheString = "caching disabled by active JIT inspector";
+            break;
+          case JS::AsmJSCache_InternalError:
+            cacheString = "unable to store in cache due to internal error (consider filing a bug)";
+            break;
+          case JS::AsmJSCache_LIMIT:
+            MOZ_CRASH("bad AsmJSCacheResult");
+            break;
+        }
         out->reset(JS_smprintf("total compilation time %dms; %s%s",
-                               msTotal,
-                               storedInCache ? "stored in cache" : "not stored in cache",
-                               slowFuns ? slowFuns.get() : ""));
+                               msTotal, cacheString, slowFuns ? slowFuns.get() : ""));
 #endif
     }
 
@@ -8619,10 +8648,10 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
     if (!FinishModule(m, &module))
         return false;
 
-    bool storedInCache = StoreAsmJSModuleInCache(parser, *module, cx);
+    JS::AsmJSCacheResult cacheResult = StoreAsmJSModuleInCache(parser, *module, cx);
     module->staticallyLink(cx);
 
-    m.buildCompilationTimeReport(storedInCache, compilationTimeReport);
+    m.buildCompilationTimeReport(cacheResult, compilationTimeReport);
     *moduleOut = module.forget();
     return true;
 }

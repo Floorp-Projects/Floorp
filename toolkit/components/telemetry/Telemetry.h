@@ -43,6 +43,15 @@ void Init();
 void Accumulate(ID id, uint32_t sample);
 
 /**
+ * Adds sample to a keyed histogram defined in TelemetryHistograms.h
+ *
+ * @param id - keyed histogram id
+ * @param key - the string key
+ * @param sample - (optional) value to record, defaults to 1.
+ */
+void Accumulate(ID id, const nsCString& key, uint32_t sample = 1);
+
+/**
  * Adds a sample to a histogram defined in TelemetryHistograms.h.
  * This function is here to support telemetry measurements from Java,
  * where we have only names and not numeric IDs.  You should almost
