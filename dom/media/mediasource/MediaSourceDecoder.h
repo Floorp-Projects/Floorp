@@ -74,11 +74,6 @@ private:
   // mMediaSource.
   dom::MediaSource* mMediaSource;
   nsRefPtr<MediaSourceReader> mReader;
-
-  // XXXbholley - This is to allow the reader to invoke GetBuffered on
-  // mMediaSource. It goes away in a subsequent patch when that function gets
-  // hoisted into MediaSourceReader.
-  friend class MediaSourceReader;
 };
 
 } // namespace mozilla
