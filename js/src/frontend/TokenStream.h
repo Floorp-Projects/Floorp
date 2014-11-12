@@ -655,10 +655,18 @@ class MOZ_STACK_CLASS TokenStream
     // and do some extra stuff like converting all EOL sequences to '\n',
     // tracking the line number, and setting |flags.isEOF|.  (The "raw" in "raw
     // chars" refers to the lack of EOL sequence normalization.)
+    //
+    // buf[0..length-1] often represents a substring of some larger source,
+    // where we have only the substring in memory. The |startOffset| argument
+    // indicates the offset within this larger string at which our string
+    // begins, the offset of |buf[0]|.
     class TokenBuf {
       public:
-        TokenBuf(ExclusiveContext *cx, const char16_t *buf, size_t length)
-          : base_(buf), limit_(buf + length), ptr(buf)
+        TokenBuf(ExclusiveContext *cx, const char16_t *buf, size_t length, size_t startOffset)
+          : base_(buf),
+            startOffset(startOffset),
+            limit_(buf + length),
+            ptr(buf)
         { }
 
         bool hasRawChars() const {
@@ -670,12 +678,13 @@ class MOZ_STACK_CLASS TokenStream
         }
 
         size_t offset() const {
-            return mozilla::PointerRangeSize(base_, ptr);
+            return startOffset + mozilla::PointerRangeSize(base_, ptr);
         }
 
         const char16_t *rawCharPtrAt(size_t offset) const {
-            MOZ_ASSERT(base_ + offset <= limit_);
-            return base_ + offset;
+            MOZ_ASSERT(startOffset <= offset);
+            MOZ_ASSERT(offset - startOffset <= mozilla::PointerRangeSize(base_, limit_));
+            return base_ + (offset - startOffset);
         }
 
         const char16_t *limit() const {
@@ -740,6 +749,7 @@ class MOZ_STACK_CLASS TokenStream
 
       private:
         const char16_t *base_;          // base of buffer
+        uint32_t startOffset;           // offset of base_[0]
         const char16_t *limit_;         // limit for quick bounds check
         const char16_t *ptr;            // next char to get
     };
