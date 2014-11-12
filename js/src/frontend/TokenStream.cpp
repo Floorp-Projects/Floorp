@@ -367,7 +367,7 @@ TokenStream::updateLineInfoForEOL()
     prevLinebase = linebase;
     linebase = userbuf.addressOfNextRawChar();
     lineno++;
-    srcCoords.add(lineno, linebase - userbuf.base());
+    srcCoords.add(lineno, userbuf.offset());
 }
 
 MOZ_ALWAYS_INLINE void
@@ -516,13 +516,12 @@ TokenStream::TokenBuf::findEOLMax(const char16_t *p, size_t max)
 void
 TokenStream::advance(size_t position)
 {
-    MOZ_ASSERT(position <= mozilla::PointerRangeSize(userbuf.base(), userbuf.limit()));
-    const char16_t *end = userbuf.base() + position;
+    const char16_t *end = userbuf.rawCharPtrAt(position);
     while (userbuf.addressOfNextRawChar() < end)
         getChar();
 
     Token *cur = &tokens[cursor];
-    cur->pos.begin = userbuf.addressOfNextRawChar() - userbuf.base();
+    cur->pos.begin = userbuf.offset();
     MOZ_MAKE_MEM_UNDEFINED(&cur->type, sizeof(cur->type));
     lookahead = 0;
 }
@@ -677,7 +676,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
     // means that any error involving a multi-line token (e.g. an unterminated
     // multi-line string literal) won't have a context printed.
     if (offset != NoOffset && err.report.lineno == lineno && !callerFilename) {
-        const char16_t *tokenStart = userbuf.base() + offset;
+        const char16_t *tokenStart = userbuf.rawCharPtrAt(offset);
 
         // We show only a portion (a "window") of the line around the erroneous
         // token -- the first char in the token, plus |windowRadius| chars
@@ -924,7 +923,7 @@ TokenStream::newToken(ptrdiff_t adjust)
 {
     cursor = (cursor + 1) & ntokensMask;
     Token *tp = &tokens[cursor];
-    tp->pos.begin = userbuf.addressOfNextRawChar() + adjust - userbuf.base();
+    tp->pos.begin = userbuf.offset() + adjust;
 
     // NOTE: tp->pos.end is not set until the very end of getTokenInternal().
     MOZ_MAKE_MEM_UNDEFINED(&tp->pos.end, sizeof(tp->pos.end));
@@ -1624,14 +1623,14 @@ TokenStream::getTokenInternal(TokenKind *ttp, Modifier modifier)
 
   out:
     flags.isDirtyLine = true;
-    tp->pos.end = userbuf.addressOfNextRawChar() - userbuf.base();
+    tp->pos.end = userbuf.offset();
     MOZ_ASSERT(IsTokenSane(tp));
     *ttp = tp->type;
     return true;
 
   error:
     flags.isDirtyLine = true;
-    tp->pos.end = userbuf.addressOfNextRawChar() - userbuf.base();
+    tp->pos.end = userbuf.offset();
     MOZ_MAKE_MEM_UNDEFINED(&tp->type, sizeof(tp->type));
     flags.hadError = true;
 #ifdef DEBUG

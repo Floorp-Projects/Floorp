@@ -1905,11 +1905,10 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
         if (!addFreeVariablesFromLazyFunction(fun, pc, *pbodyLevelHoistedUse))
             return false;
 
-        // The position passed to tokenStream.advance() is relative to
-        // userbuf.base() while LazyScript::{begin,end} offsets are relative to
-        // the outermost script source. N.B: userbuf.base() is initialized
-        // (in TokenStream()) to begin() - column() so that column numbers in
-        // the lazily parsed script are correct.
+        // The position passed to tokenStream.advance() is an offset of the sort
+        // returned by userbuf.offset() and expected by userbuf.rawCharPtrAt(),
+        // while LazyScript::{begin,end} offsets are relative to the outermost
+        // script source.
         uint32_t userbufBase = lazyOuter->begin() - lazyOuter->column();
         tokenStream.advance(fun->lazyScript()->end() - userbufBase);
 
