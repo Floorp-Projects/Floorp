@@ -708,18 +708,6 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
-
-                    final Context thisContext = this;
-                    pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
-                        @Override
-                        public boolean onPreferenceClick(Preference preference) {
-                            // Display toast to remind setting up tcp forwarding.
-                            if (((CheckBoxPreference) preference).isChecked()) {
-                                Toast.makeText(thisContext, R.string.devtools_remote_debugging_forward, Toast.LENGTH_SHORT).show();
-                            }
-                            return true;
-                        }
-                    });
                 } else if (PREFS_RESTORE_SESSION.equals(key) ||
                            PREFS_BROWSER_LOCALE.equals(key)) {
                     // Set the summary string to the current entry. The summary
