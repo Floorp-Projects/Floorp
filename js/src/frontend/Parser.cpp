@@ -538,6 +538,9 @@ Parser<ParseHandler>::checkOptions()
     checkOptionsCalled = true;
 #endif
 
+    if (!tokenStream.checkOptions())
+        return false;
+
     return true;
 }
 
