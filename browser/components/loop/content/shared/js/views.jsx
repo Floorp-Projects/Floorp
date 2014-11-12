@@ -640,7 +640,8 @@ loop.shared.views = (function(_, OT, l10n) {
           <div className={"detailsBar details-" + notification.get("level")}
                hidden={!notification.get("details")}>
             <button className="detailsButton btn-info"
-                    hidden={true || !notification.get("detailsButtonLabel")}>
+                    onClick={notification.get("detailsButtonCallback")}
+                    hidden={!notification.get("detailsButtonLabel") || !notification.get("detailsButtonCallback")}>
               {notification.get("detailsButtonLabel")}
             </button>
             <span className="details">{notification.get("details")}</span>

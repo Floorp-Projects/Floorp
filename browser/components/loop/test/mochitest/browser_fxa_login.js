@@ -41,12 +41,20 @@ add_task(function* setup() {
   Services.prefs.setCharPref("loop.server", BASE_URL);
   Services.prefs.setCharPref("services.push.serverURL", "ws://localhost/");
   MozLoopServiceInternal.mocks.pushHandler = mockPushHandler;
+  // Normally the same pushUrl would be registered but we change it in the test
+  // to be able to check for success on the second registration.
+  mockPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA] = "https://localhost/pushUrl/fxa-calls";
+  mockPushHandler.registeredChannels[MozLoopService.channelIDs.roomsFxA] = "https://localhost/pushUrl/fxa-rooms";
+
   registerCleanupFunction(function* () {
     info("cleanup time");
     yield promiseDeletedOAuthParams(BASE_URL);
     Services.prefs.clearUserPref("loop.server");
     Services.prefs.clearUserPref("services.push.serverURL");
     MozLoopServiceInternal.mocks.pushHandler = undefined;
+    delete mockPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA];
+    delete mockPushHandler.registeredChannels[MozLoopService.channelIDs.roomsFxA];
+
     yield resetFxA();
     Services.prefs.clearUserPref(MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.GUEST));
   });
@@ -236,6 +244,31 @@ add_task(function* registrationWith401() {
   });
 
   yield checkFxA401();
+
+  // Make the server no longer return a 401
+  delete params.test_error;
+  yield promiseOAuthParamsSetup(BASE_URL, params);
+
+  // Create a fake FxA hawk session token
+  const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
+  Services.prefs.setCharPref(fxASessionPref, "X".repeat(HAWK_TOKEN_LENGTH));
+
+  let tokenData = yield MozLoopServiceInternal.promiseFxAOAuthToken("code1", "state");
+  is(tokenData.access_token, "code1_access_token", "Check access_token");
+  is(tokenData.scope, "profile", "Check scope");
+  is(tokenData.token_type, "bearer", "Check token_type");
+
+  // Try again with the retry function
+  let err = MozLoopService.errors.get("login");
+  // Catch the clearError notification first then the "login" one
+  let statusChangedPromise = promiseObserverNotified("loop-status-changed").then(
+    () => promiseObserverNotified("loop-status-changed", "login")
+  );
+
+  info("going to retry");
+  yield err.friendlyDetailsButtonCallback();
+  yield statusChangedPromise;
+  ok(!MozLoopService.errors.get("login"), "Shouldn't have a login error after");
 });
 
 add_task(function* basicAuthorizationAndRegistration() {
@@ -251,17 +284,9 @@ add_task(function* basicAuthorizationAndRegistration() {
 
   info("registering");
   mockPushHandler.registrationPushURL = "https://localhost/pushUrl/guest";
-  // Notification observed due to the error being cleared upon successful registration.
-  let statusChangedPromise = promiseObserverNotified("loop-status-changed");
   yield MozLoopService.promiseRegisteredWithServers();
-  yield statusChangedPromise;
 
-  // Normally the same pushUrl would be registered but we change it in the test
-  // to be able to check for success on the second registration.
-  mockPushHandler.registeredChannels[MozLoopService.channelIDs.callsFxA] = "https://localhost/pushUrl/fxa-calls"; 
-  mockPushHandler.registeredChannels[MozLoopService.channelIDs.roomsFxA] = "https://localhost/pushUrl/fxa-rooms"; 
-
-  statusChangedPromise = promiseObserverNotified("loop-status-changed");
+  let statusChangedPromise = promiseObserverNotified("loop-status-changed");
   yield loadLoopPanel({loopURL: BASE_URL, stayOnline: true});
   yield statusChangedPromise;
   let loopDoc = document.getElementById("loop").contentDocument;
