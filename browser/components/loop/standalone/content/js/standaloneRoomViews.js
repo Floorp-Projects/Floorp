@@ -129,19 +129,33 @@ loop.standaloneRoomViews = (function(mozL10n) {
              this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS;
     },
 
-    _renderActionButtons: function() {
+    _renderContextualRoomInfo: function() {
+      switch(this.state.roomState) {
+        case ROOM_STATES.INIT:
+        case ROOM_STATES.READY: {
+          // Join button
+          return (
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.button({className: "btn btn-join btn-info", onClick: this.joinRoom}, 
+                mozL10n.get("rooms_room_join_label")
+              )
+            )
+          );
+        }
+        case ROOM_STATES.JOINED:
+        case ROOM_STATES.SESSION_CONNECTED: {
+          // Empty room message
+          return (
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.p({className: "empty-room-message"}, 
+                mozL10n.get("rooms_only_occupant_label")
+              )
+            )
+          );
+        }
+      }
       // XXX Render "Start your own" button when room is over capacity (see
       //     bug 1074709)
-      if (this.state.roomState === ROOM_STATES.INIT ||
-          this.state.roomState === ROOM_STATES.READY) {
-        return (
-          React.DOM.div({className: "room-inner-action-area"}, 
-            React.DOM.button({className: "btn btn-join btn-info", onClick: this.joinRoom}, 
-              mozL10n.get("rooms_room_join_label")
-            )
-          )
-        );
-      }
     },
 
     render: function() {
@@ -154,7 +168,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         React.DOM.div({className: "room-conversation-wrapper"}, 
-          this._renderActionButtons(), 
+          this._renderContextualRoomInfo(), 
           React.DOM.div({className: "video-layout-wrapper"}, 
             React.DOM.div({className: "conversation room-conversation"}, 
               React.DOM.h2({className: "room-name"}, this.state.roomName), 
