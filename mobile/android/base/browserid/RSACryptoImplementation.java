@@ -145,9 +145,7 @@ public class RSACryptoImplementation {
       BigInteger n = new BigInteger(o.getString("n"), SERIALIZATION_BASE);
       BigInteger d = new BigInteger(o.getString("d"), SERIALIZATION_BASE);
       return createPrivateKey(n, d);
-    } catch (NullPointerException e) {
-      throw new InvalidKeySpecException("n and d must be integers encoded as strings, base " + SERIALIZATION_BASE);
-    } catch (NumberFormatException e) {
+    } catch (NullPointerException | NumberFormatException e) {
       throw new InvalidKeySpecException("n and d must be integers encoded as strings, base " + SERIALIZATION_BASE);
     }
   }
@@ -161,9 +159,7 @@ public class RSACryptoImplementation {
       BigInteger n = new BigInteger(o.getString("n"), SERIALIZATION_BASE);
       BigInteger e = new BigInteger(o.getString("e"), SERIALIZATION_BASE);
       return createPublicKey(n, e);
-    } catch (NullPointerException e) {
-      throw new InvalidKeySpecException("n and e must be integers encoded as strings, base " + SERIALIZATION_BASE);
-    } catch (NumberFormatException e) {
+    } catch (NullPointerException | NumberFormatException e) {
       throw new InvalidKeySpecException("n and e must be integers encoded as strings, base " + SERIALIZATION_BASE);
     }
   }
