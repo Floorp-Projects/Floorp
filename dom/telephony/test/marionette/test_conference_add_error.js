@@ -64,8 +64,6 @@ function testConferenceAddError() {
 // Start the test
 startTest(function() {
   testConferenceAddError()
-    .then(null, error => {
-      ok(false, 'promise rejects during test.');
-    })
+    .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });
