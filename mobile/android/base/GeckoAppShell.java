@@ -527,7 +527,7 @@ public class GeckoAppShell
         }
     }
 
-    private static final Runnable sCallbackRunnable = new Runnable() {
+    private static Runnable sCallbackRunnable = new Runnable() {
         @Override
         public void run() {
             ThreadUtils.assertOnUiThread();
@@ -1851,7 +1851,7 @@ public class GeckoAppShell
 
     private static final String PLUGIN_TYPE = "type";
     private static final String TYPE_NATIVE = "native";
-    public static final ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<>();
+    static public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
 
     // Returns null if plugins are blocked on the device.
     static String[] getPluginDirectories() {
@@ -2127,7 +2127,7 @@ public class GeckoAppShell
 
     static native void cameraCallbackBridge(byte[] data);
 
-    static final int kPreferredFps = 25;
+    static int kPreferedFps = 25;
     static byte[] sCameraBuffer;
 
 
@@ -2197,7 +2197,9 @@ public class GeckoAppShell
                         sCamera.setPreviewTexture(((TextureView)cameraView).getSurfaceTexture());
                     }
                 }
-            } catch (IOException | RuntimeException e) {
+            } catch(IOException e) {
+                Log.w(LOGTAG, "Error setPreviewXXX:", e);
+            } catch(RuntimeException e) {
                 Log.w(LOGTAG, "Error setPreviewXXX:", e);
             }
 

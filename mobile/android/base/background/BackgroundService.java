@@ -103,7 +103,11 @@ public abstract class BackgroundService extends IntentService {
     } catch (NoSuchMethodException e) {
       Logger.error(LOG_TAG, "Method " + className + "/" + methodName + " not found!");
       return;
-    } catch (IllegalArgumentException | InvocationTargetException | IllegalAccessException e) {
+    } catch (IllegalArgumentException e) {
+      Logger.error(LOG_TAG, "Got exception invoking " + methodName + ".");
+    } catch (IllegalAccessException e) {
+      Logger.error(LOG_TAG, "Got exception invoking " + methodName + ".");
+    } catch (InvocationTargetException e) {
       Logger.error(LOG_TAG, "Got exception invoking " + methodName + ".");
     }
   }

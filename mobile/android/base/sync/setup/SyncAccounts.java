@@ -437,7 +437,9 @@ public class SyncAccounts {
     String username;
     try {
       username = Utils.usernameFromAccount(account.name);
-    } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+    } catch (NoSuchAlgorithmException e) {
+      throw new CredentialException.MissingCredentialException("username");
+    } catch (UnsupportedEncodingException e) {
       throw new CredentialException.MissingCredentialException("username");
     }
 
