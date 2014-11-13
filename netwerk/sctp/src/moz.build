@@ -31,7 +31,6 @@ SOURCES += [
     'user_environment.c',
     'user_mbuf.c',
     'user_recv_thread.c',
-    'user_sctp_timer_iterate.c',
     'user_socket.c',
 ]
 

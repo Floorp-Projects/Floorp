@@ -56,15 +56,13 @@ public class AuthenticateAccountStage implements AuthenticatorStage {
         try {
           BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent(), "UTF-8"));
           BaseResource.consumeReader(reader);
-        } catch (IllegalStateException e) {
+        } catch (IllegalStateException | IOException e) {
           Logger.debug(LOG_TAG, "Error reading content.", e);
         } catch (RuntimeException e) {
           Logger.debug(LOG_TAG, "Unexpected exception.", e);
           if (httpRequest != null) {
             httpRequest.abort();
           }
-        } catch (IOException e) {
-          Logger.debug(LOG_TAG, "Error reading content.", e);
         }
       }
 

@@ -37,7 +37,7 @@ import android.os.RemoteException;
 
 public class FormHistoryRepositorySession extends
     StoreTrackingRepositorySession {
-  public static String LOG_TAG = "FormHistoryRepoSess";
+  public static final String LOG_TAG = "FormHistoryRepoSess";
 
   /**
    * Number of records to insert in one batch.
@@ -119,7 +119,7 @@ public class FormHistoryRepositorySession extends
     super.finish(delegate);
   }
 
-  protected static String[] GUID_COLUMNS = new String[] { FormHistory.GUID };
+  protected static final String[] GUID_COLUMNS = new String[] { FormHistory.GUID };
 
   @Override
   public void guidsSince(final long timestamp, final RepositorySessionGuidsSinceDelegate delegate) {
@@ -142,10 +142,7 @@ public class FormHistoryRepositorySession extends
             guids.add(cur.getString(0));
             cur.moveToNext();
           }
-        } catch (RemoteException e) {
-          delegate.onGuidsSinceFailed(e);
-          return;
-        } catch (NullCursorException e) {
+        } catch (RemoteException | NullCursorException e) {
           delegate.onGuidsSinceFailed(e);
           return;
         } finally {
@@ -161,10 +158,7 @@ public class FormHistoryRepositorySession extends
             guids.add(cur.getString(0));
             cur.moveToNext();
           }
-        } catch (RemoteException e) {
-          delegate.onGuidsSinceFailed(e);
-          return;
-        } catch (NullCursorException e) {
+        } catch (RemoteException | NullCursorException e) {
           delegate.onGuidsSinceFailed(e);
           return;
         } finally {
@@ -443,7 +437,7 @@ public class FormHistoryRepositorySession extends
     return cv;
   }
 
-  protected Object recordsBufferMonitor = new Object();
+  protected final Object recordsBufferMonitor = new Object();
   protected ArrayList<ContentValues> recordsBuffer = new ArrayList<ContentValues>();
 
   protected void enqueueRegularRecord(Record record) {

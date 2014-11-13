@@ -539,12 +539,12 @@ StyleEditorUI.prototype = {
               editor.removeAllUnusedRegions();
 
               if (data.reports.length > 0) {
-                // So there is some coverage markup, but can we apply it?
-                let text = editor.sourceEditor.getText() + "\r";
-                // If the CSS text contains a '}' with some non-whitespace
-                // after then we assume this is compressed CSS and stop
-                // marking-up.
-                if (!/}\s*\S+\s*\r/.test(text)) {
+                // Only apply if this file isn't compressed. We detect a
+                // compressed file if there are more rules than lines.
+                let text = editor.sourceEditor.getText();
+                let lineCount = text.split("\n").length;
+                let ruleCount = editor.styleSheet.ruleCount;
+                if (lineCount >= ruleCount) {
                   editor.addUnusedRegions(data.reports);
                 }
                 else {

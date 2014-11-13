@@ -743,16 +743,19 @@ html, .fx-embedded, #main,
   position: relative;
 }
 
-.standalone .room-inner-action-area {
+.standalone .room-inner-info-area {
   position: absolute;
   top: 35%;
+  left: 0;
+  right: 25%;
   z-index: 1000;
   margin: 0 auto;
   width: 50%;
+  color: #fff;
+  font-weight: bold;
 }
 
-.standalone .room-inner-action-area button {
-  position: absolute;
+.standalone .room-inner-info-area button {
   border-radius: 3px;
   font-size: 1.2em;
   padding: .2em 1.2em;

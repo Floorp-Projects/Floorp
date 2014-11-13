@@ -945,6 +945,12 @@ public:
                 gfxTextRunFactory::TEXT_ORIENT_HORIZONTAL;
     }
 
+    bool UseCenterBaseline() const {
+        uint32_t orient = GetFlags() & gfxTextRunFactory::TEXT_ORIENT_MASK;
+        return orient == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED ||
+               orient == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+    }
+
     bool IsRightToLeft() const {
         return (GetFlags() & gfxTextRunFactory::TEXT_IS_RTL) != 0;
     }
