@@ -1357,6 +1357,25 @@ CanvasRenderingContext2D::ClearTarget()
   state->colorStyles[Style::FILL] = NS_RGB(0,0,0);
   state->colorStyles[Style::STROKE] = NS_RGB(0,0,0);
   state->shadowColor = NS_RGBA(0,0,0,0);
+
+  // For vertical writing-mode, unless text-orientation is sideways,
+  // we'll modify the initial value of textBaseline to 'middle'.
+  nsRefPtr<nsStyleContext> canvasStyle;
+  if (mCanvasElement && mCanvasElement->IsInDoc()) {
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    if (presShell) {
+      canvasStyle =
+        nsComputedDOMStyle::GetStyleContextForElement(mCanvasElement,
+                                                      nullptr,
+                                                      presShell);
+      if (canvasStyle) {
+        WritingMode wm(canvasStyle);
+        if (wm.IsVertical() && !wm.IsSideways()) {
+          state->textBaseline = TextBaseline::MIDDLE;
+        }
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
