@@ -3405,6 +3405,22 @@ BaselineCompiler::emit_JSOP_YIELD()
     return emitReturn();
 }
 
+typedef bool (*DebugAfterYieldFn)(JSContext *, BaselineFrame *);
+static const VMFunction DebugAfterYieldInfo = FunctionInfo<DebugAfterYieldFn>(jit::DebugAfterYield);
+
+bool
+BaselineCompiler::emit_JSOP_DEBUGAFTERYIELD()
+{
+    if (!compileDebugInstrumentation_)
+        return true;
+
+    frame.assertSyncedStack();
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+    return callVM(DebugAfterYieldInfo);
+}
+
 typedef bool (*FinalSuspendFn)(JSContext *, HandleObject, BaselineFrame *, jsbytecode *);
 static const VMFunction FinalSuspendInfo = FunctionInfo<FinalSuspendFn>(jit::FinalSuspend);
 
