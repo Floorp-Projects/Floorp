@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -42,6 +41,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
@@ -286,7 +286,7 @@ public class Distribution {
         }
 
         try {
-            JSONObject all = new JSONObject(getFileContents(descFile));
+            JSONObject all = new JSONObject(FileUtils.getFileContents(descFile));
 
             if (!all.has("Global")) {
                 Log.e(LOGTAG, "Distribution preferences.json has no Global entry!");
@@ -314,7 +314,7 @@ public class Distribution {
         }
 
         try {
-            return new JSONArray(getFileContents(bookmarks));
+            return new JSONArray(FileUtils.getFileContents(bookmarks));
         } catch (IOException e) {
             Log.e(LOGTAG, "Error getting bookmarks", e);
             Telemetry.HistogramAdd(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
@@ -737,19 +737,6 @@ public class Distribution {
             return this.distributionDir = system;
         }
         return null;
-    }
-
-    // Shortcut to slurp a file without messing around with streams.
-    private String getFileContents(File file) throws IOException {
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner(file, "UTF-8");
-            return scanner.useDelimiter("\\A").next();
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
-        }
     }
 
     private String getDataDir() {
