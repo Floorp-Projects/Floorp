@@ -91,18 +91,3 @@ void ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSe
 }
 #endif
 
-void
-ExecutablePool::toggleAllCodeAsAccessible(bool accessible)
-{
-    char* begin = m_allocation.pages;
-    size_t size = m_freePtr - begin;
-
-    if (size) {
-        // N.B. Some systems, like 32bit Mac OS 10.6, implicitly add PROT_EXEC
-        // when mprotect'ing memory with any flag other than PROT_NONE. Be
-        // sure to use PROT_NONE when making inaccessible.
-        int flags = accessible ? PROT_READ | PROT_WRITE | PROT_EXEC : PROT_NONE;
-        if (mprotect(begin, size, flags))
-            MOZ_CRASH();
-    }
-}

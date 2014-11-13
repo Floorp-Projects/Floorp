@@ -149,19 +149,20 @@ PlacesController.prototype = {
       return PlacesTransactions.topRedoEntry != null;
     case "cmd_cut":
     case "placesCmd_cut":
-      var nodes = this._view.selectedNodes;
-      // If selection includes history nodes there's no reason to allow cut.
-      for (var i = 0; i < nodes.length; i++) {
-        if (nodes[i].itemId == -1)
+    case "placesCmd_moveBookmarks":
+      for (let node of this._view.selectedNodes) {
+        // If selection includes history nodes or tags-as-bookmark, disallow
+        // cutting.
+        if (node.itemId == -1 ||
+            (node.parent && PlacesUtils.nodeIsTagQuery(node.parent))) {
           return false;
+        }
       }
-      // Otherwise fallback to cmd_delete check.
+      // Otherwise fall through the cmd_delete check.
     case "cmd_delete":
     case "placesCmd_delete":
     case "placesCmd_deleteDataHost":
-      return this._hasRemovableSelection(false);
-    case "placesCmd_moveBookmarks":
-      return this._hasRemovableSelection(true);
+      return this._hasRemovableSelection();
     case "cmd_copy":
     case "placesCmd_copy":
       return this._view.hasSelection;
@@ -310,13 +311,11 @@ PlacesController.prototype = {
    * are non-removable. We don't need to worry about recursion here since it
    * is a policy decision that a removable item not be placed inside a non-
    * removable item.
-   * @param aIsMoveCommand
-   *        True if the command for which this method is called only moves the
-   *        selected items to another container, false otherwise.
+   *
    * @return true if all nodes in the selection can be removed,
    *         false otherwise.
    */
-  _hasRemovableSelection: function PC__hasRemovableSelection(aIsMoveCommand) {
+  _hasRemovableSelection() {
     var ranges = this._view.removableSelectionRanges;
     if (!ranges.length)
       return false;
@@ -1024,7 +1023,7 @@ PlacesController.prototype = {
    *          as part of another operation.
    */
   remove: Task.async(function* (aTxnName) {
-    if (!this._hasRemovableSelection(false))
+    if (!this._hasRemovableSelection())
       return;
 
     NS_ASSERT(aTxnName !== undefined, "Must supply Transaction Name");
@@ -1545,7 +1544,7 @@ let PlacesControllerDragHelper = {
   canMoveUnwrappedNode: function (aUnwrappedNode) {
     return aUnwrappedNode.id > 0 &&
            !PlacesUtils.isRootItem(aUnwrappedNode.id) &&
-           !PlacesUIUtils.isContentsReadOnly(aUnwrappedNode.parent) ||
+           (!aUnwrappedNode.parent || !PlacesUIUtils.isContentsReadOnly(aUnwrappedNode.parent)) &&
            aUnwrappedNode.parent != PlacesUtils.tagsFolderId &&
            aUnwrappedNode.grandParentId != PlacesUtils.tagsFolderId;
   },

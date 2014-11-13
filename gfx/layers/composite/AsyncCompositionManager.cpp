@@ -588,7 +588,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     hasAsyncTransform = true;
 
     ViewTransform asyncTransformWithoutOverscroll;
-    ScreenPoint scrollOffset;
+    ParentLayerPoint scrollOffset;
     controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
                                                scrollOffset);
     Matrix4x4 overscrollTransform = controller->GetOverscrollTransform();
@@ -718,7 +718,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
       // aScrollbarIsDescendant hunk below we unapply the entire async
       // transform, which includes the nontransientasync transform and would
       // normally account for the resolution.
-      scale *= metrics.mResolution.scale;
+      scale *= metrics.mPresShellResolution;
     }
     scrollbarTransform.PostScale(1.f, 1.f / transientTransform._22, 1.f);
     scrollbarTransform.PostTranslate(0, -transientTransform._42 * scale, 0);
@@ -726,7 +726,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
   if (aScrollbar->GetScrollbarDirection() == Layer::HORIZONTAL) {
     float scale = metrics.CalculateCompositedSizeInCssPixels().width / metrics.mScrollableRect.width;
     if (aScrollbarIsDescendant) {
-      scale *= metrics.mResolution.scale;
+      scale *= metrics.mPresShellResolution;
     }
     scrollbarTransform.PostScale(1.f / transientTransform._11, 1.f, 1.f);
     scrollbarTransform.PostTranslate(-transientTransform._41 * scale, 0, 0);
@@ -868,8 +868,8 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // appears to be that metrics.mZoom is poorly initialized in some scenarios. In these scenarios,
   // however, we can assume there is no async zooming in progress and so the following statement
   // works fine.
-  CSSToScreenScale userZoom(metrics.mDevPixelsPerCSSPixel * metrics.mCumulativeResolution * LayerToScreenScale(1));
-  ScreenPoint userScroll = metrics.GetScrollOffset() * userZoom;
+  CSSToParentLayerScale userZoom(metrics.mDevPixelsPerCSSPixel * metrics.mCumulativeResolution * LayerToParentLayerScale(1));
+  ParentLayerPoint userScroll = metrics.GetScrollOffset() * userZoom;
   SyncViewportInfo(displayPort, geckoZoom, mLayersUpdated,
                    userScroll, userZoom, fixedLayerMargins,
                    offset);
@@ -884,14 +884,15 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // primary scrollable layer. We compare this to the user zoom and scroll
   // offset in the view transform we obtained from Java in order to compute the
   // transformation we need to apply.
-  ScreenPoint geckoScroll(0, 0);
+  ParentLayerPoint geckoScroll(0, 0);
   if (metrics.IsScrollable()) {
     geckoScroll = metrics.GetScrollOffset() * userZoom;
   }
-  ParentLayerToScreenScale scale = userZoom
-                                  / metrics.mDevPixelsPerCSSPixel
-                                  / metrics.GetParentResolution();
-  ScreenPoint translation = userScroll - geckoScroll;
+
+  LayerToParentLayerScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel();
+  LayerToParentLayerScale scale(metrics.mPresShellResolution
+                                * asyncZoom.scale);
+  ParentLayerPoint translation = userScroll - geckoScroll;
   Matrix4x4 treeTransform = ViewTransform(scale, -translation);
 
   SetShadowTransform(aLayer, oldTransform * treeTransform);
@@ -900,14 +901,14 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 
   // Apply resolution scaling to the old transform - the layer tree as it is
   // doesn't have the necessary transform to display correctly.
-  oldTransform.PreScale(metrics.mResolution.scale, metrics.mResolution.scale, 1);
+  oldTransform.PreScale(metrics.mPresShellResolution, metrics.mPresShellResolution, 1);
 
   // Make sure that overscroll and under-zoom are represented in the old
   // transform so that fixed position content moves and scales accordingly.
   // These calculations will effectively scale and offset fixed position layers
   // in screen space when the compensatory transform is performed in
   // AlignFixedAndStickyLayers.
-  ScreenRect contentScreenRect = mContentRect * userZoom;
+  ParentLayerRect contentScreenRect = mContentRect * userZoom;
   Point3D overscrollTranslation;
   if (userScroll.x < contentScreenRect.x) {
     overscrollTranslation.x = contentScreenRect.x - userScroll.x;
@@ -1017,8 +1018,8 @@ void
 AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
                                           const CSSToLayerScale& aDisplayResolution,
                                           bool aLayersUpdated,
-                                          ScreenPoint& aScrollOffset,
-                                          CSSToScreenScale& aScale,
+                                          ParentLayerPoint& aScrollOffset,
+                                          CSSToParentLayerScale& aScale,
                                           LayerMargin& aFixedLayerMargins,
                                           ScreenPoint& aOffset)
 {
@@ -1034,7 +1035,7 @@ AsyncCompositionManager::SyncViewportInfo(const LayerIntRect& aDisplayPort,
 }
 
 void
-AsyncCompositionManager::SyncFrameMetrics(const ScreenPoint& aScrollOffset,
+AsyncCompositionManager::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
                                           float aZoom,
                                           const CSSRect& aCssPageRect,
                                           bool aLayersUpdated,

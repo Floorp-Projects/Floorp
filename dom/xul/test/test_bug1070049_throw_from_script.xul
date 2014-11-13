@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1070049
+-->
+<window title="Mozilla Bug 1070049"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 1070049 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    // Prevent the test from failing when the exception hits onerror.
+    SimpleTest.expectUncaughtException();
+
+    // Tell the test to expect exactly one console error with the given parameters,
+    // with SimpleTest.finish as a continuation function.
+    SimpleTest.monitorConsole(SimpleTest.finish, [{errorMessage: new RegExp('flimfniffle')}]);
+
+    // Schedule the console accounting (and continuation) to run next, right
+    // after we throw (below).
+    SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
+
+    // Throw.
+    throw "flimfniffle";
+  });
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1070049"
+     target="_blank">Mozilla Bug 1070049</a>
+  </body>
+</window>

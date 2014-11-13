@@ -645,12 +645,7 @@ FinalizeArenas(FreeOp *fop,
       case FINALIZE_SYMBOL:
         return FinalizeTypedArenas<JS::Symbol>(fop, src, dest, thingKind, budget, keepArenas);
       case FINALIZE_JITCODE:
-      {
-        // JitCode finalization may release references on an executable
-        // allocator that is accessed when requesting interrupts.
-        JSRuntime::AutoLockForInterrupt lock(fop->runtime());
         return FinalizeTypedArenas<jit::JitCode>(fop, src, dest, thingKind, budget, keepArenas);
-      }
       default:
         MOZ_CRASH("Invalid alloc kind");
     }
@@ -1063,7 +1058,7 @@ class js::gc::AutoMaybeStartBackgroundAllocation
     }
 
     ~AutoMaybeStartBackgroundAllocation() {
-        if (runtime && !runtime->currentThreadOwnsInterruptLock())
+        if (runtime)
             runtime->gc.startBackgroundAllocTaskIfIdle();
     }
 };
@@ -3000,7 +2995,7 @@ GCRuntime::requestMajorGC(JS::gcreason::Reason reason)
 
     majorGCRequested = true;
     majorGCTriggerReason = reason;
-    rt->requestInterrupt(JSRuntime::RequestInterruptMainThread);
+    rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
 
 void
@@ -3012,7 +3007,7 @@ GCRuntime::requestMinorGC(JS::gcreason::Reason reason)
 
     minorGCRequested = true;
     minorGCTriggerReason = reason;
-    rt->requestInterrupt(JSRuntime::RequestInterruptMainThread);
+    rt->requestInterrupt(JSRuntime::RequestInterruptUrgent);
 }
 
 bool
@@ -3029,10 +3024,6 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
      * onTooMuchMalloc().
      */
     if (!CurrentThreadCanAccessRuntime(rt))
-        return false;
-
-    /* Don't trigger GCs when allocating under the interrupt callback lock. */
-    if (rt->currentThreadOwnsInterruptLock())
         return false;
 
     /* GC is already running. */
@@ -3092,10 +3083,6 @@ GCRuntime::triggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 
     /* Zones in use by a thread with an exclusive context can't be collected. */
     if (zone->usedByExclusiveThread)
-        return false;
-
-    /* Don't trigger GCs when allocating under the interrupt callback lock. */
-    if (rt->currentThreadOwnsInterruptLock())
         return false;
 
     /* GC is already running. */
@@ -5344,10 +5331,8 @@ GCRuntime::endSweepPhase(bool lastGC)
         if (jit::ExecutableAllocator *execAlloc = rt->maybeExecAlloc())
             execAlloc->purge();
 
-        if (rt->jitRuntime() && rt->jitRuntime()->hasIonAlloc()) {
-            JSRuntime::AutoLockForInterrupt lock(rt);
+        if (rt->jitRuntime() && rt->jitRuntime()->hasIonAlloc())
             rt->jitRuntime()->ionAlloc(rt)->purge();
-        }
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make

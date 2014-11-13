@@ -16,6 +16,7 @@
 #include <android/log.h>
 #define ALOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define TIMEOUT_DEQUEUE_INPUTBUFFER_MS 1000000ll
+
 namespace android {
 
 // General Template: MediaCodec::getOutputGraphicBufferFromIndex(...)
@@ -224,6 +225,7 @@ MediaCodecProxy::start()
   if (mCodec == nullptr) {
     return NO_INIT;
   }
+
   return mCodec->start();
 }
 
@@ -560,8 +562,14 @@ status_t MediaCodecProxy::Output(MediaBuffer** aBuffer, int64_t aTimeoutUs)
   }
 
   MediaBuffer *buffer;
+  sp<GraphicBuffer> graphicBuffer;
 
-  buffer = new MediaBuffer(mOutputBuffers.itemAt(index));
+  if (getOutputGraphicBufferFromIndex(index, &graphicBuffer) == OK &&
+      graphicBuffer != nullptr) {
+    buffer = new MediaBuffer(graphicBuffer);
+  } else {
+    buffer = new MediaBuffer(mOutputBuffers.itemAt(index));
+  }
   sp<MetaData> metaData = buffer->meta_data();
   metaData->setInt32(kKeyBufferIndex, index);
   metaData->setInt64(kKeyTime, timeUs);
@@ -589,6 +597,16 @@ void MediaCodecProxy::ReleaseMediaResources()
     mCodec->stop();
     mCodec->release();
     mCodec.clear();
+  }
+}
+
+void MediaCodecProxy::ReleaseMediaBuffer(MediaBuffer* aBuffer) {
+  if (aBuffer) {
+    sp<MetaData> metaData = aBuffer->meta_data();
+    int32_t index;
+    metaData->findInt32(kKeyBufferIndex, &index);
+    aBuffer->release();
+    releaseOutputBuffer(index);
   }
 }
 

@@ -938,10 +938,6 @@
 
 /* Line graph widget */
 
-.line-graph-widget-canvas {
-  background: #0088cc;
-}
-
 .line-graph-widget-gutter {
   position: absolute;
   background: rgba(255,255,255,0.75);
@@ -957,7 +953,6 @@
   position: absolute;
   width: 100%;
   border-top: 1px solid;
-  transform: translateY(-1px);
 }
 
 .line-graph-widget-gutter-line[type=maximum] {
@@ -975,7 +970,6 @@
 .line-graph-widget-tooltip {
   position: absolute;
   background: rgba(255,255,255,0.75);
-  box-shadow: 0 2px 1px rgba(0,0,0,0.1);
   border-radius: 2px;
   line-height: 15px;
   -moz-padding-start: 6px;
@@ -986,7 +980,7 @@
   pointer-events: none;
 }
 
-.line-graph-widget-tooltip::before {
+.line-graph-widget-tooltip[with-arrows=true]::before {
   content: "";
   position: absolute;
   border-top: 3px solid transparent;
@@ -994,26 +988,38 @@
   top: calc(50% - 3px);
 }
 
-.line-graph-widget-tooltip[arrow=start]::before {
+.line-graph-widget-tooltip[arrow=start][with-arrows=true]::before {
   -moz-border-end: 3px solid rgba(255,255,255,0.75);
   left: -3px;
 }
 
-.line-graph-widget-tooltip[arrow=end]::before {
+.line-graph-widget-tooltip[arrow=end][with-arrows=true]::before {
   -moz-border-start: 3px solid rgba(255,255,255,0.75);
   right: -3px;
 }
 
 .line-graph-widget-tooltip[type=maximum] {
-  left: calc(10px + 6px);
+  left: -1px;
 }
 
 .line-graph-widget-tooltip[type=minimum] {
-  left: calc(10px + 6px);
+  left: -1px;
 }
 
 .line-graph-widget-tooltip[type=average] {
-  right: 6px;
+  right: -1px;
+}
+
+.line-graph-widget-tooltip[type=maximum][with-arrows=true] {
+  left: 14px;
+}
+
+.line-graph-widget-tooltip[type=minimum][with-arrows=true] {
+  left: 14px;
+}
+
+.line-graph-widget-tooltip[type=average][with-arrows=true] {
+  right: 4px;
 }
 
 .line-graph-widget-tooltip > [text=info] {

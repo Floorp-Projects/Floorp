@@ -14,8 +14,10 @@
 #include "nsWeakReference.h"
 #include "Units.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/WeakPtr.h"
 
 class nsCanvasFrame;
+class nsDocShell;
 class nsFrameSelection;
 class nsIContent;
 class nsIDocument;
@@ -38,6 +40,9 @@ class Selection;
  * when long tap event fired.
  *
  * The DOM structure is 2 div elements for showing start and end caret.
+ * Each div element has a child div element. That is, each caret consist of
+ * outer div and inner div. Outer div takes responsibility for detecting two
+ * carets are overlapping. Inner div is for actual appearance.
  *
  * Here is an explanation of the html class names:
  *   .moz-selectioncaret-left: Indicates start DIV.
@@ -46,7 +51,7 @@ class Selection;
  *            SetStartFrameVisibility and SetEndFrameVisibility. Element
  *            with this class name become hidden.
  *   .tilt: This class name is set by SetTilted. According to the
- *          UX spec, when selection contains only one characters, the image of
+ *          UX spec, when selection carets are overlapping, the image of
  *          caret becomes tilt.
  */
 class SelectionCarets MOZ_FINAL : public nsIReflowObserver,
@@ -150,25 +155,27 @@ private:
 
   /**
    * Check if aPosition is on the start or end frame of the
-   * selection carets.
+   * selection caret's inner div element.
    *
    * @param aPosition should be relative to document's root frame
    * in app units
    */
-  bool IsOnStartFrame(const nsPoint& aPosition);
-  bool IsOnEndFrame(const nsPoint& aPosition);
+  bool IsOnStartFrameInner(const nsPoint& aPosition);
+  bool IsOnEndFrameInner(const nsPoint& aPosition);
 
   /**
-   * Get rect of selection caret's start frame relative
+   * Get rect of selection caret's outer div element relative
    * to document's root frame, in app units.
    */
   nsRect GetStartFrameRect();
+  nsRect GetEndFrameRect();
 
   /**
-   * Get rect of selection caret's end frame relative
+   * Get rect of selection caret's inner div element relative
    * to document's root frame, in app units.
    */
-  nsRect GetEndFrameRect();
+  nsRect GetStartFrameRectInner();
+  nsRect GetEndFrameRectInner();
 
   /**
    * Set visibility for start part of selection caret, this function
@@ -204,6 +211,7 @@ private:
   static void FireScrollEnd(nsITimer* aTimer, void* aSelectionCarets);
 
   nsIPresShell* mPresShell;
+  WeakPtr<nsDocShell> mDocShell;
 
   // This timer is used for detecting long tap fire. If content process
   // has APZC, we'll use APZC for long tap detecting. Otherwise, we use this

@@ -21,38 +21,6 @@ template <typename T> struct ParamTraits;
 
 namespace mozilla {
 
-// The layer coordinates of the parent layer.
-// This can be arrived at in two ways:
-//   - Start with the CSS coordinates of the parent layer (note: NOT the
-//     CSS coordinates of the current layer, that will give you the wrong
-//     answer), multiply by the device scale and the resolutions of all
-//     layers from the root down to and including the parent.
-//   - Start with global screen coordinates and unapply all CSS and async
-//     transforms from the root down to and including the parent.
-// It's helpful to look at https://wiki.mozilla.org/Platform/GFX/APZ#Coordinate_systems
-// to get a picture of how the various coordinate systems relate to each other.
-struct ParentLayerPixel {};
-
-template<> struct IsPixel<ParentLayerPixel> : TrueType {};
-
-typedef gfx::MarginTyped<ParentLayerPixel> ParentLayerMargin;
-typedef gfx::PointTyped<ParentLayerPixel> ParentLayerPoint;
-typedef gfx::RectTyped<ParentLayerPixel> ParentLayerRect;
-typedef gfx::SizeTyped<ParentLayerPixel> ParentLayerSize;
-
-typedef gfx::IntMarginTyped<ParentLayerPixel> ParentLayerIntMargin;
-typedef gfx::IntPointTyped<ParentLayerPixel> ParentLayerIntPoint;
-typedef gfx::IntRectTyped<ParentLayerPixel> ParentLayerIntRect;
-typedef gfx::IntSizeTyped<ParentLayerPixel> ParentLayerIntSize;
-
-typedef gfx::ScaleFactor<CSSPixel, ParentLayerPixel> CSSToParentLayerScale;
-typedef gfx::ScaleFactor<LayoutDevicePixel, ParentLayerPixel> LayoutDeviceToParentLayerScale;
-typedef gfx::ScaleFactor<ScreenPixel, ParentLayerPixel> ScreenToParentLayerScale;
-
-typedef gfx::ScaleFactor<ParentLayerPixel, LayerPixel> ParentLayerToLayerScale;
-typedef gfx::ScaleFactor<ParentLayerPixel, ScreenPixel> ParentLayerToScreenScale;
-
-
 namespace layers {
 
 /**
@@ -76,9 +44,8 @@ public:
     , mDisplayPort(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
     , mScrollableRect(0, 0, 0, 0)
-    , mResolution(1)
+    , mPresShellResolution(1)
     , mCumulativeResolution(1)
-    , mTransformScale(1)
     , mDevPixelsPerCSSPixel(1)
     , mMayHaveTouchListeners(false)
     , mMayHaveTouchCaret(false)
@@ -97,6 +64,7 @@ public:
     , mUseDisplayPortMargins(false)
     , mPresShellId(-1)
     , mViewport(0, 0, 0, 0)
+    , mExtraResolution(1)
     , mBackgroundColor(0, 0, 0, 0)
   {
   }
@@ -113,7 +81,7 @@ public:
            mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mViewport.IsEqualEdges(aOther.mViewport) &&
            mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
-           mResolution == aOther.mResolution &&
+           mPresShellResolution == aOther.mPresShellResolution &&
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
            mMayHaveTouchListeners == aOther.mMayHaveTouchListeners &&
@@ -126,6 +94,7 @@ public:
            mSmoothScrollOffset == aOther.mSmoothScrollOffset &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
            mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
+           mExtraResolution == aOther.mExtraResolution &&
            mBackgroundColor == aOther.mBackgroundColor &&
            mDoSmoothScroll == aOther.mDoSmoothScroll;
   }
@@ -152,19 +121,27 @@ public:
     return mScrollId != NULL_SCROLL_ID;
   }
 
+  CSSToScreenScale DisplayportPixelsPerCSSPixel() const
+  {
+    // Note: use 'mZoom * ParentLayerToLayerScale(1.0f)' as the CSS-to-Layer scale
+    // instead of LayersPixelsPerCSSPixel(), because displayport calculations
+    // are done in the context of a repaint request, where we ask Layout to
+    // repaint at a new resolution that includes any async zoom. Until this
+    // repaint request is processed, LayersPixelsPerCSSPixel() does not yet
+    // include the async zoom, but it will when the displayport is interpreted
+    // for the repaint.
+    return mZoom * ParentLayerToLayerScale(1.0f) / mExtraResolution;
+  }
+
   CSSToLayerScale LayersPixelsPerCSSPixel() const
   {
     return mCumulativeResolution * mDevPixelsPerCSSPixel;
   }
 
-  LayerPoint GetScrollOffsetInLayerPixels() const
+  // Get the amount by which this frame has been zoomed since the last repaint.
+  LayerToParentLayerScale GetAsyncZoom() const
   {
-    return GetScrollOffset() * LayersPixelsPerCSSPixel();
-  }
-
-  LayoutDeviceToParentLayerScale GetParentResolution() const
-  {
-    return mCumulativeResolution / mResolution;
+    return mZoom / LayersPixelsPerCSSPixel();
   }
 
   // Ensure the scrollableRect is at least as big as the compositionBounds
@@ -194,31 +171,21 @@ public:
 
   // Return the scale factor needed to fit the viewport
   // into its composition bounds.
-  CSSToScreenScale CalculateIntrinsicScale() const
+  CSSToParentLayerScale CalculateIntrinsicScale() const
   {
-    return CSSToScreenScale(
+    return CSSToParentLayerScale(
         std::max(mCompositionBounds.width / mViewport.width,
                  mCompositionBounds.height / mViewport.height));
   }
 
-  // Return the scale factor for converting from CSS pixels (for this layer)
-  // to layer pixels of our parent layer. Much as mZoom is used to interface
-  // between inputs we get in screen pixels and quantities in CSS pixels,
-  // this is used to interface between mCompositionBounds and quantities
-  // in CSS pixels.
-  CSSToParentLayerScale GetZoomToParent() const
-  {
-    return mZoom * mTransformScale;
-  }
-
   CSSSize CalculateCompositedSizeInCssPixels() const
   {
-    return mCompositionBounds.Size() / GetZoomToParent();
+    return mCompositionBounds.Size() / GetZoom();
   }
 
   CSSRect CalculateCompositedRectInCssPixels() const
   {
-    return mCompositionBounds / GetZoomToParent();
+    return mCompositionBounds / GetZoom();
   }
 
   CSSSize CalculateBoundedCompositedSizeInCssPixels() const
@@ -329,26 +296,20 @@ public:
   // The following metrics are dimensionless.
   //
 
-  // The incremental resolution that the current frame has been painted at
-  // relative to the parent frame's resolution. This information is provided
-  // by Gecko at layout/paint time.
-  ParentLayerToLayerScale mResolution;
+  // The pres-shell resolution that has been induced on the document containing
+  // this scroll frame as a result of zooming this scroll frame (whether via
+  // user action, or choosing an initial zoom level on page load). This can
+  // only be different from 1.0 for frames that are zoomable, which currently
+  // is just the root content document's root scroll frame (mIsRoot = true).
+  // This is a plain float rather than a ScaleFactor because in and of itself
+  // it does not convert between any coordinate spaces for which we have names.
+  float mPresShellResolution;
 
   // The cumulative resolution that the current frame has been painted at.
-  // This is the product of our mResolution and the mResolutions of our parent frames.
-  // This information is provided by Gecko at layout/paint time.
+  // This is the product of the pres-shell resolutions of the document
+  // containing this scroll frame and its ancestors, and any css-driven
+  // resolution. This information is provided by Gecko at layout/paint time.
   LayoutDeviceToLayerScale mCumulativeResolution;
-
-  // The conversion factor between local screen pixels (the coordinate
-  // system in which APZCs receive input events) and our parent layer's
-  // layer pixels (the coordinate system of mCompositionBounds).
-  // This consists of the scale of the local CSS transform and the
-  // nontransient async transform.
-  // TODO: APZ does not currently work well if there is a CSS transform
-  //       on the layer being scrolled that's not just a scale that's
-  //       the same in both directions. When we fix this, mTransformScale
-  //       will probably need to turn into a matrix.
-  ScreenToParentLayerScale mTransformScale;
 
   // The conversion factor between CSS pixels and device pixels for this frame.
   // This can vary based on a variety of things, such as reflowing-zoom. The
@@ -397,12 +358,12 @@ public:
     return mSmoothScrollOffset;
   }
 
-  void SetZoom(const CSSToScreenScale& aZoom)
+  void SetZoom(const CSSToParentLayerScale& aZoom)
   {
     mZoom = aZoom;
   }
 
-  CSSToScreenScale GetZoom() const
+  CSSToParentLayerScale GetZoom() const
   {
     return mZoom;
   }
@@ -464,12 +425,12 @@ public:
     return mRootCompositionSize;
   }
 
-  void SetDisplayPortMargins(const LayerMargin& aDisplayPortMargins)
+  void SetDisplayPortMargins(const ScreenMargin& aDisplayPortMargins)
   {
     mDisplayPortMargins = aDisplayPortMargins;
   }
 
-  const LayerMargin& GetDisplayPortMargins() const
+  const ScreenMargin& GetDisplayPortMargins() const
   {
     return mDisplayPortMargins;
   }
@@ -502,6 +463,16 @@ public:
   const CSSRect& GetViewport() const
   {
     return mViewport;
+  }
+
+  void SetExtraResolution(const ScreenToLayerScale& aExtraResolution)
+  {
+    mExtraResolution = aExtraResolution;
+  }
+
+  ScreenToLayerScale GetExtraResolution() const
+  {
+    return mExtraResolution;
   }
 
   const gfxRGBA& GetBackgroundColor() const
@@ -587,7 +558,7 @@ private:
   // but will be drawn to the screen at mZoom. In the steady state, the
   // two will be the same, but during an async zoom action the two may
   // diverge. This information is initialized in Gecko but updated in the APZC.
-  CSSToScreenScale mZoom;
+  CSSToParentLayerScale mZoom;
 
   // Whether mScrollOffset was updated by something other than the APZ code, and
   // if the APZC receiving this metrics should update its local copy.
@@ -605,7 +576,7 @@ private:
 
   // A display port expressed as layer margins that apply to the rect of what
   // is drawn of the scrollable element.
-  LayerMargin mDisplayPortMargins;
+  ScreenMargin mDisplayPortMargins;
 
   // If this is true then we use the display port margins on this metrics,
   // otherwise use the display port rect.
@@ -623,6 +594,10 @@ private:
   // iframe. For layers that don't correspond to a document, this metric is
   // meaningless and invalid.
   CSSRect mViewport;
+
+  // The extra resolution at which content in this scroll frame is drawn beyond
+  // that necessary to draw one Layer pixel per Screen pixel.
+  ScreenToLayerScale mExtraResolution;
 
   // The background color to use when overscrolling.
   gfxRGBA mBackgroundColor;
@@ -721,8 +696,8 @@ gfx::Log<LogLevel>& operator<<(gfx::Log<LogLevel>& log, const ScrollableLayerGui
 struct ZoomConstraints {
   bool mAllowZoom;
   bool mAllowDoubleTapZoom;
-  CSSToScreenScale mMinZoom;
-  CSSToScreenScale mMaxZoom;
+  CSSToParentLayerScale mMinZoom;
+  CSSToParentLayerScale mMaxZoom;
 
   ZoomConstraints()
     : mAllowZoom(true)
@@ -733,8 +708,8 @@ struct ZoomConstraints {
 
   ZoomConstraints(bool aAllowZoom,
                   bool aAllowDoubleTapZoom,
-                  const CSSToScreenScale& aMinZoom,
-                  const CSSToScreenScale& aMaxZoom)
+                  const CSSToParentLayerScale& aMinZoom,
+                  const CSSToParentLayerScale& aMaxZoom)
     : mAllowZoom(aAllowZoom)
     , mAllowDoubleTapZoom(aAllowDoubleTapZoom)
     , mMinZoom(aMinZoom)

@@ -11,6 +11,7 @@ include protocol PImageBridge;
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
+using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -39,6 +40,8 @@ parent:
      * Asynchronously tell the Compositor side to remove the texture.
      */
     async RemoveTexture();
+
+    async RecycleTexture(TextureFlags aTextureFlags);
 };
 
 } // layers

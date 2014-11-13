@@ -92,12 +92,13 @@ if (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android') or \
    CONFIG['MOZ_WIDGET_GTK']:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
-# We should autogenerate these SSE related flags.
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     DEFINES['SKIA_DLL'] = 1
     DEFINES['GR_DLL'] = 1
 
+# We should autogenerate these SSE related flags.
+
+if CONFIG['_MSC_VER']:
     # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
     # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
     SOURCES['trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
@@ -110,8 +111,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES['trunk/src/opts/SkMorphology_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
     SOURCES['trunk/src/opts/SkUtils_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
     SOURCES['trunk/src/opts/SkXfermode_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    if CONFIG['CLANG_CL']:
-        SOURCES['trunk/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-msse4.1']
 
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
@@ -129,6 +128,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON
     DEFINES['USE_ANDROID_NDK_CPU_FEATURES'] = 0
 elif CONFIG['CLANG_CL']:
     SOURCES['trunk/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-msse4.1']
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 DEFINES['GR_IMPLEMENTATION'] = 1

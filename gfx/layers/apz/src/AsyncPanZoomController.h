@@ -90,9 +90,10 @@ public:
    * device DPI, before we start panning the screen. This is to prevent us from
    * accidentally processing taps as touch moves, and from very short/accidental
    * touches moving the screen.
-   * Note: this distance is in global screen coordinates.
+   * Note: It's an abuse of the 'Coord' class to use it to represent a 2D
+   *       distance, but it's the closest thing we currently have.
    */
-  static float GetTouchStartTolerance();
+  static ScreenCoord GetTouchStartTolerance();
 
   AsyncPanZoomController(uint64_t aLayersId,
                          APZCTreeManager* aTreeManager,
@@ -162,7 +163,7 @@ public:
    * out parameter.
    */
   void SampleContentTransformForFrame(ViewTransform* aOutTransform,
-                                      ScreenPoint& aScrollOffset);
+                                      ParentLayerPoint& aScrollOffset);
 
   /**
    * Return a visual effect that reflects this apzc's
@@ -245,9 +246,9 @@ public:
    * checkerboard immediately. This includes a bunch of logic, including
    * algorithms to bias painting in the direction of the velocity.
    */
-  static const LayerMargin CalculatePendingDisplayPort(
+  static const ScreenMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
-    const ScreenPoint& aVelocity,
+    const ParentLayerPoint& aVelocity,
     double aEstimatedPaintDuration);
 
   /**
@@ -335,25 +336,25 @@ public:
 
   /**
    * Convert the vector |aVector|, rooted at the point |aAnchor|, from
-   * this APZC's local screen coordinates into global screen coordinates.
+   * this APZC's ParentLayer coordinates into screen coordinates.
    * The anchor is necessary because with 3D tranforms, the location of the
    * vector can affect the result of the transform.
    * To respect the lock ordering, mMonitor must NOT be held when calling
    * this function (since this function acquires the tree lock).
    */
-  void ToGlobalScreenCoordinates(ScreenPoint* aVector,
-                                 const ScreenPoint& aAnchor) const;
+  ScreenPoint ToScreenCoordinates(const ParentLayerPoint& aVector,
+                                  const ParentLayerPoint& aAnchor) const;
 
   /**
    * Convert the vector |aVector|, rooted at the point |aAnchor|, from
-   * global screen coordinates into this APZC's local screen coordinates .
+   * screen coordinates into this APZC's ParentLayer coordinates.
    * The anchor is necessary because with 3D tranforms, the location of the
    * vector can affect the result of the transform.
    * To respect the lock ordering, mMonitor must NOT be held when calling
    * this function (since this function acquires the tree lock).
    */
-  void ToLocalScreenCoordinates(ScreenPoint* aVector,
-                                const ScreenPoint& aAnchor) const;
+  ParentLayerPoint ToParentLayerCoordinates(const ScreenPoint& aVector,
+                                            const ScreenPoint& aAnchor) const;
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -471,31 +472,29 @@ protected:
    * the distance between the current position and the initial position of the
    * current touch (this only makes sense if a touch is currently happening and
    * OnTouchMove() or the equivalent for pan gestures is being invoked).
-   * Note: This function returns a distance in global screen coordinates,
-   *       not the local screen coordinates of this APZC.
+   * Note: It's an abuse of the 'Coord' class to use it to represent a 2D
+   *       distance, but it's the closest thing we currently have.
    */
-  float PanDistance() const;
+  ScreenCoord PanDistance() const;
 
   /**
    * Gets the start point of the current touch.
    * Like PanDistance(), this only makes sense if a touch is currently
    * happening and OnTouchMove() or the equivalent for pan gestures is
    * being invoked.
-   * Unlikely PanDistance(), this function returns a point in local screen
-   * coordinates.
    */
-  ScreenPoint PanStart() const;
+  ParentLayerPoint PanStart() const;
 
   /**
    * Gets a vector of the velocities of each axis.
    */
-  const ScreenPoint GetVelocityVector() const;
+  const ParentLayerPoint GetVelocityVector() const;
 
   /**
    * Gets the first touch point from a MultiTouchInput.  This gets only
    * the first one and assumes the rest are either missing or not relevant.
    */
-  ScreenPoint GetFirstTouchScreenPoint(const MultiTouchInput& aEvent);
+  ParentLayerPoint GetFirstTouchPoint(const MultiTouchInput& aEvent);
 
   /**
    * Sets the panning state basing on the pan direction angle and current touch-action value.
@@ -509,7 +508,6 @@ protected:
 
   /**
    * Update the panning state and axis locks.
-   * Note: |aDelta| is expected to be in global screen coordinates.
    */
   void HandlePanningUpdate(const ScreenPoint& aDelta);
 
@@ -586,7 +584,7 @@ protected:
    * NOTE: This must be converted to CSSPoint relative to the child
    * document before sending over IPC.
    */
-  bool ConvertToGecko(const ScreenPoint& aPoint, CSSPoint* aOut);
+  bool ConvertToGecko(const ParentLayerPoint& aPoint, CSSPoint* aOut);
 
   enum AxisLockMode {
     FREE,     /* No locking at all */
@@ -596,18 +594,8 @@ protected:
 
   static AxisLockMode GetAxisLockMode();
 
-  // Convert a point from local screen coordinates to parent layer coordinates.
-  // This is a common operation as inputs from the tree manager are in screen
-  // coordinates but the composition bounds is in parent layer coordinates.
-  ParentLayerPoint ToParentLayerCoords(const ScreenPoint& aPoint);
-
-  // Update mFrameMetrics.mTransformScale. This should be called whenever
-  // our CSS transform or the non-transient part of our async transform
-  // changes, as it corresponds to the scale portion of those transforms.
-  void UpdateTransformScale();
-
   // Helper function for OnSingleTapUp() and OnSingleTapConfirmed().
-  nsEventStatus GenerateSingleTap(const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers);
+  nsEventStatus GenerateSingleTap(const ParentLayerPoint& aPoint, mozilla::Modifiers aModifiers);
 
   // Common processing at the end of a touch block.
   void OnTouchEndOrCancel();
@@ -824,7 +812,7 @@ public:
    *            APZC, and determines whether acceleration is applied to the
    *            fling.
    */
-  bool AttemptFling(ScreenPoint aVelocity,
+  bool AttemptFling(ParentLayerPoint aVelocity,
                     const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                     bool aHandoff);
 
@@ -833,7 +821,7 @@ private:
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
   // The initial velocity of the most recent fling.
-  ScreenPoint mLastFlingVelocity;
+  ParentLayerPoint mLastFlingVelocity;
   // The time at which the most recent fling started.
   TimeStamp mLastFlingTime;
 
@@ -842,18 +830,18 @@ private:
   // The overscroll is handled by trying to hand the fling off to an APZC
   // later in the handoff chain, or if there are no takers, continuing the
   // fling and entering an overscrolled state.
-  void HandleFlingOverscroll(const ScreenPoint& aVelocity,
+  void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
                              const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
 
-  void HandleSmoothScrollOverscroll(const ScreenPoint& aVelocity);
+  void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
 
   // Helper function used by TakeOverFling() and HandleFlingOverscroll().
-  void AcceptFling(const ScreenPoint& aVelocity,
+  void AcceptFling(const ParentLayerPoint& aVelocity,
                    const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                    bool aHandoff);
 
   // Start an overscroll animation with the given initial velocity.
-  void StartOverscrollAnimation(const ScreenPoint& aVelocity);
+  void StartOverscrollAnimation(const ParentLayerPoint& aVelocity);
 
   void StartSmoothScroll();
 
@@ -944,7 +932,7 @@ public:
    * state). If this returns false, the caller APZC knows that it should enter
    * an overscrolled state itself if it can.
    */
-  bool AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
+  bool AttemptScroll(const ParentLayerPoint& aStartPoint, const ParentLayerPoint& aEndPoint,
                      OverscrollHandoffState& aOverscrollHandoffState);
 
   void FlushRepaintForOverscrollHandoff();
@@ -982,8 +970,8 @@ private:
    * Guards against the case where the APZC is being concurrently destroyed
    * (and thus mTreeManager is being nulled out).
    */
-  bool CallDispatchScroll(const ScreenPoint& aStartPoint,
-                          const ScreenPoint& aEndPoint,
+  bool CallDispatchScroll(const ParentLayerPoint& aStartPoint,
+                          const ParentLayerPoint& aEndPoint,
                           OverscrollHandoffState& aOverscrollHandoffState);
 
   /**
@@ -991,7 +979,7 @@ private:
    * around OverscrollBy() that also implements restrictions on entering
    * overscroll based on the pan angle.
    */
-  bool OverscrollForPanning(ScreenPoint aOverscroll,
+  bool OverscrollForPanning(ParentLayerPoint aOverscroll,
                             const ScreenPoint& aPanDistance);
 
   /**
@@ -1000,7 +988,7 @@ private:
    * and the function returns true.
    * Otherwise, nothing happens and the function return false.
    */
-  bool OverscrollBy(const ScreenPoint& aOverscroll);
+  bool OverscrollBy(const ParentLayerPoint& aOverscroll);
 
 
   /* ===================================================================

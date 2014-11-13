@@ -50,7 +50,7 @@ nsCCUncollectableMarker::Init()
   if (sInited) {
     return NS_OK;
   }
-  
+
   nsCOMPtr<nsIObserver> marker = new nsCCUncollectableMarker;
   NS_ENSURE_TRUE(marker, NS_ERROR_OUT_OF_MEMORY);
 
@@ -201,7 +201,7 @@ MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS,
       }
     } else if (aPrepareForCC) {
       // Unfortunately we need to still mark user data just before running CC so
-      // that it has the right generation. 
+      // that it has the right generation.
       doc->PropertyTable(DOM_USER_DATA)->
         EnumerateAll(MarkUserData, &nsCCUncollectableMarker::sGeneration);
     }
@@ -247,7 +247,7 @@ MarkSHEntry(nsISHEntry* aSHEntry, bool aCleanupJS, bool aPrepareForCC)
     shCont->GetChildAt(i, getter_AddRefs(childEntry));
     MarkSHEntry(childEntry, aCleanupJS, aPrepareForCC);
   }
-  
+
 }
 
 void
@@ -317,9 +317,9 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     obs->RemoveObserver(this, "xpcom-shutdown");
     obs->RemoveObserver(this, "cycle-collector-begin");
     obs->RemoveObserver(this, "cycle-collector-forget-skippable");
-    
+
     sGeneration = 0;
-    
+
     return NS_OK;
   }
 
@@ -365,7 +365,7 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
     MarkWindowList(windowList, cleanupJS, prepareForCC);
   }
 
-  nsCOMPtr<nsIAppShellService> appShell = 
+  nsCOMPtr<nsIAppShellService> appShell =
     do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
   if (appShell) {
     nsCOMPtr<nsIXULWindow> hw;
@@ -394,19 +394,56 @@ nsCCUncollectableMarker::Observe(nsISupports* aSubject, const char* aTopic,
   }
 #endif
 
-  static bool previousWasJSCleanup = false;
+  enum ForgetSkippableCleanupState
+  {
+    eInitial = 0,
+    eUnmarkJSEventListeners = 1,
+    eUnmarkMessageManagers = 2,
+    eUnmarkStrongObservers = 3,
+    eUnmarkJSHolders = 4,
+    eDone = 5
+  };
+
+  static_assert(eDone == NS_MAJOR_FORGET_SKIPPABLE_CALLS,
+                "There must be one forgetSkippable call per cleanup state.");
+
+  static uint32_t sFSState = eDone;
+  if (prepareForCC) {
+    sFSState = eDone;
+    return NS_OK;
+  }
+
   if (cleanupJS) {
-    nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(sGeneration);
-    MarkMessageManagers();
+    // After a GC we start clean up phases from the beginning,
+    // but we don't want to do the additional clean up phases here
+    // since we have done already plenty of gray unmarking while going through
+    // frame message managers and docshells.
+    sFSState = eInitial;
+    return NS_OK;
+  } else {
+    ++sFSState;
+  }
 
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    static_cast<nsObserverService *>(obs.get())->UnmarkGrayStrongObservers();
-
-    previousWasJSCleanup = true;
-  } else if (previousWasJSCleanup) {
-    previousWasJSCleanup = false;
-    if (!prepareForCC) {
+  switch(sFSState) {
+    case eUnmarkJSEventListeners: {
+      nsContentUtils::UnmarkGrayJSListenersInCCGenerationDocuments(sGeneration);
+      break;
+    }
+    case eUnmarkMessageManagers: {
+      MarkMessageManagers();
+      break;
+    }
+    case eUnmarkStrongObservers: {
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      static_cast<nsObserverService *>(obs.get())->UnmarkGrayStrongObservers();
+      break;
+    }
+    case eUnmarkJSHolders: {
       xpc_UnmarkSkippableJSHolders();
+      break;
+    }
+    default: {
+      break;
     }
   }
 
