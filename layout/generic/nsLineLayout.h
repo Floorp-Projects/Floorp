@@ -385,9 +385,9 @@ protected:
     nsOverflowAreas mOverflowAreas;
 
     // From reflow-state
-    mozilla::LogicalMargin mMargin;
-    mozilla::LogicalMargin mBorderPadding;
-    mozilla::LogicalMargin mOffsets;
+    mozilla::LogicalMargin mMargin;        // in *line* writing mode
+    mozilla::LogicalMargin mBorderPadding; // in *line* writing mode
+    mozilla::LogicalMargin mOffsets;       // in *frame* writing mode
 
     // state for text justification
     mozilla::JustificationInfo mJustificationInfo;
