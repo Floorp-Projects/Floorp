@@ -609,6 +609,16 @@
                   helper={{isFirefox: returnFalse}} />
               </div>
             </Example>
+
+            <Example summary="Standalone room conversation (failed)">
+              <div className="standalone">
+                <StandaloneRoomView
+                  dispatcher={dispatcher}
+                  activeRoomStore={activeRoomStore}
+                  roomState={ROOM_STATES.FAILED}
+                  helper={{isFirefox: returnFalse}} />
+              </div>
+            </Example>
           </Section>
 
           <Section name="SVG icons preview">

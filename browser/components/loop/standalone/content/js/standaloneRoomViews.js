@@ -11,6 +11,7 @@ var loop = loop || {};
 loop.standaloneRoomViews = (function(mozL10n) {
   "use strict";
 
+  var FAILURE_REASONS = loop.shared.utils.FAILURE_REASONS;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
@@ -40,6 +41,20 @@ loop.standaloneRoomViews = (function(mozL10n) {
       );
     },
 
+    /**
+     * @return String An appropriate string according to the failureReason.
+     */
+    _getFailureString: function() {
+      switch(this.props.failureReason) {
+        case FAILURE_REASONS.MEDIA_DENIED:
+          return mozL10n.get("rooms_media_denied_message");
+        case FAILURE_REASONS.EXPIRED_OR_INVALID:
+          return mozL10n.get("rooms_unavailable_notification_message");
+        default:
+          return mozL10n.get("status_error");
+      };
+    },
+
     _renderContent: function() {
       switch(this.props.roomState) {
         case ROOM_STATES.INIT:
@@ -66,6 +81,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
                 mozL10n.get("rooms_room_full_label")
               ), 
               React.DOM.p(null, this._renderCallToActionLink())
+            )
+          );
+        case ROOM_STATES.FAILED:
+          return (
+            React.DOM.p({className: "failed-room-message"}, 
+              this._getFailureString()
             )
           );
         default:
@@ -252,6 +273,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.DOM.div({className: "room-conversation-wrapper"}, 
           StandaloneRoomHeader(null), 
           StandaloneRoomInfoArea({roomState: this.state.roomState, 
+                                  failureReason: this.state.failureReason, 
                                   joinRoom: this.joinRoom, 
                                   helper: this.props.helper}), 
           React.DOM.div({className: "video-layout-wrapper"}, 

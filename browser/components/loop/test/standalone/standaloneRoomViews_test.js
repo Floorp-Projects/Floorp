@@ -139,6 +139,16 @@ describe("loop.standaloneRoomViews", function() {
           });
       });
 
+      describe("Failed room message", function() {
+        it("should display a failed room message on FAILED",
+          function() {
+            activeRoomStore.setStoreState({roomState: ROOM_STATES.FAILED});
+
+            expect(view.getDOMNode().querySelector(".failed-room-message"))
+              .not.eql(null);
+          });
+      });
+
       describe("Join button", function() {
         function getJoinButton(view) {
           return view.getDOMNode().querySelector(".btn-join");
