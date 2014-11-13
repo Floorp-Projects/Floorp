@@ -330,6 +330,7 @@ private:
   // bit up the stack, and which will outlive us.  So we know the principal
   // can't go away until then either.
   nsIPrincipal* mWebIDLCallerPrincipal;
+  bool mIsMainThread;
   friend nsIPrincipal* GetWebIDLCallerPrincipal();
 };
 
