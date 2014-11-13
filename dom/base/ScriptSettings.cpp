@@ -122,10 +122,44 @@ ScriptSettingsStackEntry::~ScriptSettingsStackEntry()
   ScriptSettingsStack::Pop(this);
 }
 
+// If the entry or incumbent global ends up being something that the subject
+// principal doesn't subsume, we don't want to use it. This never happens on
+// the web, but can happen with asymmetric privilege relationships (i.e.
+// nsExpandedPrincipal and System Principal).
+//
+// The most correct thing to use instead would be the topmost global on the
+// callstack whose principal is subsumed by the subject principal. But that's
+// hard to compute, so we just substitute the global of the current
+// compartment. In practice, this is fine.
+//
+// Note that in particular things like:
+//
+// |SpecialPowers.wrap(crossOriginWindow).eval(open())|
+//
+// trigger this case. Although both the entry global and the current global
+// have normal principals, the use of Gecko-specific System-Principaled JS
+// puts the code from two different origins on the callstack at once, which
+// doesn't happen normally on the web.
+static nsIGlobalObject*
+ClampToSubject(nsIGlobalObject* aGlobalOrNull)
+{
+  if (!aGlobalOrNull || !NS_IsMainThread()) {
+    return aGlobalOrNull;
+  }
+
+  nsIPrincipal* globalPrin = aGlobalOrNull->PrincipalOrNull();
+  NS_ENSURE_TRUE(globalPrin, GetCurrentGlobal());
+  if (!nsContentUtils::SubjectPrincipal()->SubsumesConsideringDomain(globalPrin)) {
+    return GetCurrentGlobal();
+  }
+
+  return aGlobalOrNull;
+}
+
 nsIGlobalObject*
 GetEntryGlobal()
 {
-  return ScriptSettingsStack::EntryGlobal();
+  return ClampToSubject(ScriptSettingsStack::EntryGlobal());
 }
 
 nsIDocument*
@@ -154,12 +188,12 @@ GetIncumbentGlobal()
   // there's nothing on the JS stack, which will cause us to check the
   // incumbent script stack below.
   if (JSObject *global = JS::GetScriptedCallerGlobal(cx)) {
-    return xpc::NativeGlobal(global);
+    return ClampToSubject(xpc::NativeGlobal(global));
   }
 
   // Ok, nothing from the JS engine. Let's use whatever's on the
   // explicit stack.
-  return ScriptSettingsStack::IncumbentGlobal();
+  return ClampToSubject(ScriptSettingsStack::IncumbentGlobal());
 }
 
 nsIGlobalObject*
