@@ -83,7 +83,7 @@ SelectionCarets::SelectionCarets(nsIPresShell* aPresShell)
   , mActiveTouchId(-1)
   , mCaretCenterToDownPointOffsetY(0)
   , mDragMode(NONE)
-  , mAPZenabled(false)
+  , mAsyncPanZoomEnabled(false)
   , mEndCaretVisible(false)
   , mStartCaretVisible(false)
   , mVisible(false)
@@ -118,6 +118,9 @@ SelectionCarets::Init()
   if (!docShell) {
     return;
   }
+
+  docShell->GetAsyncPanZoomEnabled(&mAsyncPanZoomEnabled);
+  mAsyncPanZoomEnabled = mAsyncPanZoomEnabled && gfxPrefs::AsyncPanZoomEnabled();
 
   docShell->AddWeakReflowObserver(this);
   docShell->AddWeakScrollObserver(this);
@@ -374,19 +377,6 @@ IsRightToLeft(nsIFrame* aFrame)
     aFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 }
 
-/*
- * Reduce rect to 1 css pixel width along either left or right edge base on
- * aToRightEdge parameter.
- */
-static void
-ReduceRectToVerticalEdge(nsRect& aRect, bool aToRightEdge)
-{
-  if (aToRightEdge) {
-    aRect.x = aRect.XMost() - AppUnitsPerCSSPixel();
-  }
-  aRect.width = AppUnitsPerCSSPixel();
-}
-
 static nsIFrame*
 FindFirstNodeWithFrame(nsIDocument* aDocument,
                        nsRange* aRange,
@@ -469,16 +459,6 @@ SelectionCarets::UpdateSelectionCarets()
   nsRefPtr<nsRange> firstRange = selection->GetRangeAt(0);
   nsRefPtr<nsRange> lastRange = selection->GetRangeAt(rangeCount - 1);
 
-  nsLayoutUtils::FirstAndLastRectCollector collectorStart;
-  nsRange::CollectClientRects(&collectorStart, firstRange,
-                              firstRange->GetStartParent(), firstRange->StartOffset(),
-                              firstRange->GetEndParent(), firstRange->EndOffset(), true, true);
-
-  nsLayoutUtils::FirstAndLastRectCollector collectorEnd;
-  nsRange::CollectClientRects(&collectorEnd, lastRange,
-                              lastRange->GetStartParent(), lastRange->StartOffset(),
-                              lastRange->GetEndParent(), lastRange->EndOffset(), true, true);
-
   nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
   nsIFrame* rootFrame = mPresShell->GetRootFrame();
 
@@ -519,17 +499,29 @@ SelectionCarets::UpdateSelectionCarets()
   bool startFrameIsRTL = IsRightToLeft(startFrame);
   bool endFrameIsRTL = IsRightToLeft(endFrame);
 
-  // If start frame is LTR, then place start caret in first rect's leftmost
-  // otherwise put it to first rect's rightmost.
-  ReduceRectToVerticalEdge(collectorStart.mFirstRect, startFrameIsRTL);
+  mPresShell->FlushPendingNotifications(Flush_Layout);
+  nsRect firstRectInRootFrame =
+    nsCaret::GetGeometryForFrame(startFrame, startOffset, nullptr);
+  nsRect lastRectInRootFrame =
+    nsCaret::GetGeometryForFrame(endFrame, endOffset, nullptr);
 
-  // Contrary to start frame, if end frame is LTR, put end caret to last
-  // rect's rightmost position, otherwise, put it to last rect's leftmost.
-  ReduceRectToVerticalEdge(collectorEnd.mLastRect, !endFrameIsRTL);
+  // GetGeometryForFrame may return a rect that outside frame's rect. So
+  // constrain rect inside frame's rect.
+  firstRectInRootFrame = firstRectInRootFrame.ForceInside(startFrame->GetRectRelativeToSelf());
+  lastRectInRootFrame = lastRectInRootFrame.ForceInside(endFrame->GetRectRelativeToSelf());
+  nsRect firstRectInCanvasFrame = firstRectInRootFrame;
+  nsRect lastRectInCanvasFrame =lastRectInRootFrame;
+  nsLayoutUtils::TransformRect(startFrame, rootFrame, firstRectInRootFrame);
+  nsLayoutUtils::TransformRect(endFrame, rootFrame, lastRectInRootFrame);
+  nsLayoutUtils::TransformRect(startFrame, canvasFrame, firstRectInCanvasFrame);
+  nsLayoutUtils::TransformRect(endFrame, canvasFrame, lastRectInCanvasFrame);
+
+  firstRectInRootFrame.Inflate(AppUnitsPerCSSPixel(), 0);
+  lastRectInRootFrame.Inflate(AppUnitsPerCSSPixel(), 0);
 
   nsAutoTArray<nsIFrame*, 16> hitFramesInFirstRect;
   nsLayoutUtils::GetFramesForArea(rootFrame,
-    collectorStart.mFirstRect,
+    firstRectInRootFrame,
     hitFramesInFirstRect,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
       nsLayoutUtils::IGNORE_CROSS_DOC |
@@ -537,7 +529,7 @@ SelectionCarets::UpdateSelectionCarets()
 
   nsAutoTArray<nsIFrame*, 16> hitFramesInLastRect;
   nsLayoutUtils::GetFramesForArea(rootFrame,
-    collectorEnd.mLastRect,
+    lastRectInRootFrame,
     hitFramesInLastRect,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
       nsLayoutUtils::IGNORE_CROSS_DOC |
@@ -546,11 +538,8 @@ SelectionCarets::UpdateSelectionCarets()
   SetStartFrameVisibility(hitFramesInFirstRect.Contains(startFrame));
   SetEndFrameVisibility(hitFramesInLastRect.Contains(endFrame));
 
-  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collectorStart.mFirstRect);
-  nsLayoutUtils::TransformRect(rootFrame, canvasFrame, collectorEnd.mLastRect);
-
-  SetStartFramePos(collectorStart.mFirstRect.BottomLeft());
-  SetEndFramePos(collectorEnd.mLastRect.BottomRight());
+  SetStartFramePos(firstRectInCanvasFrame.BottomLeft());
+  SetEndFramePos(lastRectInCanvasFrame.BottomRight());
   SetVisibility(true);
 
   // If range select only one character, append tilt class name to it.
@@ -1014,9 +1003,6 @@ DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState a
 void
 SelectionCarets::AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
 {
-  // Receives the notifications from AsyncPanZoom, sets mAPZenabled as true here
-  // to bypass the notifications from ScrollPositionChanged callbacks
-  mAPZenabled = true;
   SetVisibility(false);
 
   SELECTIONCARETS_LOG("Dispatch scroll started with position x=%d, y=%d",
@@ -1037,7 +1023,7 @@ SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
 void
 SelectionCarets::ScrollPositionChanged()
 {
-  if (!mAPZenabled && mVisible) {
+  if (!mAsyncPanZoomEnabled && mVisible) {
     SetVisibility(false);
     //TODO: handling scrolling for selection bubble when APZ is off
 
@@ -1049,7 +1035,7 @@ SelectionCarets::ScrollPositionChanged()
 void
 SelectionCarets::LaunchLongTapDetector()
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (mAsyncPanZoomEnabled) {
     return;
   }
 
@@ -1071,7 +1057,7 @@ SelectionCarets::LaunchLongTapDetector()
 void
 SelectionCarets::CancelLongTapDetector()
 {
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+  if (mAsyncPanZoomEnabled) {
     return;
   }
 

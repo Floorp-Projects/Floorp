@@ -935,7 +935,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
     bool ok = false;
 
     {
-        // We're going to run script via JS_ExecuteScriptVersion or
+        // We're going to run script via JS_ExecuteScript or
         // JS_CallFunction, so we need an AutoEntryScript.
         // This is Gecko-specific and not in any spec.
         dom::AutoEntryScript aes(NativeGlobal(CurrentGlobalOrNull(cx)));
@@ -943,7 +943,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
         if (aPropagateExceptions)
             ContextOptionsRef(cx).setDontReportUncaught(true);
         if (script) {
-            ok = JS_ExecuteScriptVersion(cx, obj, script, JSVERSION_LATEST);
+            ok = JS_ExecuteScript(cx, obj, script);
         } else {
             RootedValue rval(cx);
             ok = JS_CallFunction(cx, obj, function, JS::HandleValueArray::empty(), &rval);

@@ -9,12 +9,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
 
 function test() {
-  let gTab, gDebuggee, gPanel, gDebugger;
+  let gTab, gPanel, gDebugger;
   let gSources, gBreakpoints, gLocation;
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
@@ -56,7 +55,7 @@ function test() {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 
-    gDebuggee.ermahgerd();
+    callInTab(gTab, "ermahgerd");
   });
 
   function addBreakpoint() {

@@ -711,6 +711,8 @@ bool InitialSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbyt
 bool NormalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc,
                    uint32_t stackDepth);
 bool FinalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc);
+bool InterpretResume(JSContext *cx, HandleObject obj, HandleValue val, HandlePropertyName kind,
+                     MutableHandleValue rval);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
 bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);

@@ -15,6 +15,40 @@
 namespace mozilla {
 
 inline bool
+EnsureLongPath(nsAString& aDosPath)
+{
+  uint32_t aDosPathOriginalLen = aDosPath.Length();
+  auto inputPath = PromiseFlatString(aDosPath);
+  // Try to get the long path, or else get the required length of the long path
+  DWORD longPathLen = GetLongPathNameW(inputPath.get(),
+                                       aDosPath.BeginWriting(),
+                                       aDosPathOriginalLen);
+  if (longPathLen == 0) {
+    return false;
+  }
+  aDosPath.SetLength(longPathLen);
+  if (longPathLen <= aDosPathOriginalLen) {
+    // Our string happened to be long enough for the first call to succeed.
+    return true;
+  }
+  // Now we have a large enough buffer, get the actual string
+  longPathLen = GetLongPathNameW(inputPath.get(),
+                                 aDosPath.BeginWriting(), aDosPath.Length());
+  if (longPathLen == 0) {
+    return false;
+  }
+  // This success check should always be less-than because longPathLen excludes
+  // the null terminator on success, but includes it in the first call that
+  // returned the required size.
+  if (longPathLen < aDosPath.Length()) {
+    aDosPath.SetLength(longPathLen);
+    return true;
+  }
+  // We shouldn't reach this, but if we do then it's a failure!
+  return false;
+}
+
+inline bool
 NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
 {
   aDosPath.Truncate();
@@ -76,7 +110,7 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
       if (found) {
         aDosPath = driveTemplate;
         aDosPath += pathComponent;
-        return true;
+        return EnsureLongPath(aDosPath);
       }
     }
     // Advance to the next NUL character in logicalDrives

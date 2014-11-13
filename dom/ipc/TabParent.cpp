@@ -15,6 +15,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
+#include "mozilla/plugins/PluginWidgetParent.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -2244,6 +2245,19 @@ TabParent::RecvRemotePaintIsReady()
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
   bool dummy;
   mFrameElement->DispatchEvent(event, &dummy);
+  return true;
+}
+
+mozilla::plugins::PPluginWidgetParent*
+TabParent::AllocPPluginWidgetParent()
+{
+  return new mozilla::plugins::PluginWidgetParent();
+}
+
+bool
+TabParent::DeallocPPluginWidgetParent(mozilla::plugins::PPluginWidgetParent* aActor)
+{
+  delete aActor;
   return true;
 }
 

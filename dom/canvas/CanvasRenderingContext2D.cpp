@@ -116,6 +116,7 @@
 #include "SkiaGLGlue.h"
 #ifdef USE_SKIA
 #include "SurfaceTypes.h"
+#include "GLBlitHelper.h"
 #endif
 
 using mozilla::gl::GLContext;
@@ -819,6 +820,9 @@ DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 CanvasRenderingContext2D::CanvasRenderingContext2D()
   : mRenderingMode(RenderingMode::OpenGLBackendMode)
+#ifdef USE_SKIA_GPU
+  , mVideoTexture(0)
+#endif
   // these are the default values from the Canvas spec
   , mWidth(0), mHeight(0)
   , mZero(false), mOpaque(false)
@@ -849,6 +853,13 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
   if (!sNumLivingContexts) {
     NS_IF_RELEASE(sErrorTarget);
   }
+#ifdef USE_SKIA_GPU
+  if (mVideoTexture) {
+    MOZ_ASSERT(gfxPlatform::GetPlatform()->GetSkiaGLGlue(), "null SkiaGLGlue");
+    gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->MakeCurrent();
+    gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
+  }
+#endif
 
   RemoveDemotableContext(this);
 }
@@ -1048,6 +1059,17 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   if (!IsTargetValid() || mRenderingMode == aRenderingMode) {
     return false;
   }
+
+#ifdef USE_SKIA_GPU
+  if (mRenderingMode == RenderingMode::OpenGLBackendMode) {
+    if (mVideoTexture) {
+      gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->MakeCurrent();
+      gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext()->fDeleteTextures(1, &mVideoTexture);
+    }
+	  mCurrentVideoSize.width = 0;
+	  mCurrentVideoSize.height = 0;
+  }
+#endif
 
   RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
@@ -3985,6 +4007,93 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
 
   nsLayoutUtils::DirectDrawInfo drawInfo;
 
+#ifdef USE_SKIA_GPU
+  if (mRenderingMode == RenderingMode::OpenGLBackendMode &&
+      !srcSurf &&
+      image.IsHTMLVideoElement() &&
+      gfxPlatform::GetPlatform()->GetSkiaGLGlue()) {
+    mozilla::gl::GLContext* gl = gfxPlatform::GetPlatform()->GetSkiaGLGlue()->GetGLContext();
+
+    HTMLVideoElement* video = &image.GetAsHTMLVideoElement();
+    if (!video) {
+      return;
+    }
+
+    uint16_t readyState;
+    if (NS_SUCCEEDED(video->GetReadyState(&readyState)) &&
+        readyState < nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA) {
+      // still loading, just return
+      return;
+    }
+
+    // If it doesn't have a principal, just bail
+    nsCOMPtr<nsIPrincipal> principal = video->GetCurrentPrincipal();
+    if (!principal) {
+      error.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
+    }
+
+    mozilla::layers::ImageContainer* container = video->GetImageContainer();
+    if (!container) {
+      error.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
+    }
+
+    nsRefPtr<mozilla::layers::Image> srcImage = container->LockCurrentImage();
+    if (!srcImage) {
+      error.Throw(NS_ERROR_NOT_AVAILABLE);
+      return;
+    }
+
+    gl->MakeCurrent();
+    if (!mVideoTexture) {
+      gl->fGenTextures(1, &mVideoTexture);
+    }
+    // skiaGL expect upload on drawing, and uses texture 0 for texturing,
+    // so we must active texture 0 and bind the texture for it.
+    gl->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mVideoTexture);
+
+    bool dimensionsMatch = mCurrentVideoSize.width == srcImage->GetSize().width &&
+                           mCurrentVideoSize.height == srcImage->GetSize().height;
+    if (!dimensionsMatch) {
+      // we need to allocation
+      mCurrentVideoSize.width = srcImage->GetSize().width;
+      mCurrentVideoSize.height = srcImage->GetSize().height;
+      gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGB, srcImage->GetSize().width, srcImage->GetSize().height, 0, LOCAL_GL_RGB, LOCAL_GL_UNSIGNED_SHORT_5_6_5, nullptr);
+      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+      gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    }
+    bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(), srcImage->GetSize(), mVideoTexture, LOCAL_GL_TEXTURE_2D, 1);
+    if (ok) {
+      NativeSurface texSurf;
+      texSurf.mType = NativeSurfaceType::OPENGL_TEXTURE;
+      texSurf.mFormat = SurfaceFormat::R5G6B5;
+      texSurf.mSize.width = mCurrentVideoSize.width;
+      texSurf.mSize.height = mCurrentVideoSize.height;
+      texSurf.mSurface = (void*)((uintptr_t)mVideoTexture);
+
+      srcSurf = mTarget->CreateSourceSurfaceFromNativeSurface(texSurf);
+      imgSize.width = mCurrentVideoSize.width;
+      imgSize.height = mCurrentVideoSize.height;
+
+      int32_t displayWidth = video->VideoWidth();
+      int32_t displayHeight = video->VideoHeight();
+      sw *= (double)imgSize.width / (double)displayWidth;
+      sh *= (double)imgSize.height / (double)displayHeight;
+    }
+    srcImage = nullptr;
+    container->UnlockCurrentImage();
+
+    if (mCanvasElement) {
+      CanvasUtils::DoDrawImageSecurityCheck(mCanvasElement,
+                                            principal, false,
+                                            video->GetCORSMode() != CORS_NONE);
+    }
+  }
+#endif
   if (!srcSurf) {
     // The canvas spec says that drawImage should draw the first frame
     // of animated images. We also don't want to rasterize vector images.

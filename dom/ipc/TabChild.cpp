@@ -17,6 +17,7 @@
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/indexedDB/PIndexedDBPermissionRequestChild.h"
+#include "mozilla/plugins/PluginWidgetChild.h"
 #include "mozilla/ipc/DocumentRendererChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/layers/ActiveElementManager.h"
@@ -3107,6 +3108,47 @@ TabChild::RecvUIResolutionChanged()
   nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
   presContext->UIResolutionChanged();
   return true;
+}
+
+mozilla::plugins::PPluginWidgetChild*
+TabChild::AllocPPluginWidgetChild()
+{
+    return new mozilla::plugins::PluginWidgetChild();
+}
+
+bool
+TabChild::DeallocPPluginWidgetChild(mozilla::plugins::PPluginWidgetChild* aActor)
+{
+    delete aActor;
+    return true;
+}
+
+already_AddRefed<nsIWidget>
+TabChild::CreatePluginWidget(nsIWidget* aParent)
+{
+  mozilla::plugins::PluginWidgetChild* child =
+    static_cast<mozilla::plugins::PluginWidgetChild*>(SendPPluginWidgetConstructor());
+  if (!child) {
+    NS_ERROR("couldn't create PluginWidgetChild");
+    return nullptr;
+  }
+  nsCOMPtr<nsIWidget> pluginWidget = nsIWidget::CreatePluginProxyWidget(this, child);
+  if (!pluginWidget) {
+    NS_ERROR("couldn't create PluginWidgetProxy");
+    return nullptr;
+  }
+
+  nsWidgetInitData initData;
+  initData.mWindowType = eWindowType_plugin_ipc_content;
+  initData.mUnicode = false;
+  initData.clipChildren = true;
+  initData.clipSiblings = true;
+  nsresult rv = pluginWidget->Create(aParent, nullptr, nsIntRect(nsIntPoint(0, 0),
+                                     nsIntSize(0, 0)), nullptr, &initData);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Creating native plugin widget on the chrome side failed.");
+  }
+  return pluginWidget.forget();
 }
 
 TabChildGlobal::TabChildGlobal(TabChildBase* aTabChild)

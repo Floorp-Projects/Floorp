@@ -662,6 +662,59 @@ nsBaseWidget::GetWindowClipRegion(nsTArray<nsIntRect>* aRects)
   }
 }
 
+const nsIntRegion
+nsBaseWidget::RegionFromArray(const nsTArray<nsIntRect>& aRects)
+{
+  nsIntRegion region;
+  for (uint32_t i = 0; i < aRects.Length(); ++i) {
+    region.Or(region, aRects[i]);
+  }
+  return region;
+}
+
+void
+nsBaseWidget::ArrayFromRegion(const nsIntRegion& aRegion, nsTArray<nsIntRect>& aRects)
+{
+  const nsIntRect* r;
+  for (nsIntRegionRectIterator iter(aRegion); (r = iter.Next());) {
+    aRects.AppendElement(*r);
+  }
+}
+
+nsresult
+nsBaseWidget::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+                                  bool aIntersectWithExisting)
+{
+  if (!aIntersectWithExisting) {
+    nsBaseWidget::StoreWindowClipRegion(aRects);
+  } else {
+    // In this case still early return if nothing changed.
+    if (mClipRects && mClipRectCount == aRects.Length() &&
+        memcmp(mClipRects,
+               aRects.Elements(),
+               sizeof(nsIntRect)*mClipRectCount) == 0) {
+      return NS_OK;
+    }
+
+    // get current rects
+    nsTArray<nsIntRect> currentRects;
+    GetWindowClipRegion(&currentRects);
+    // create region from them
+    nsIntRegion currentRegion = RegionFromArray(currentRects);
+    // create region from new rects
+    nsIntRegion newRegion = RegionFromArray(aRects);
+    // intersect regions
+    nsIntRegion intersection;
+    intersection.And(currentRegion, newRegion);
+    // create int rect array from intersection
+    nsTArray<nsIntRect> rects;
+    ArrayFromRegion(intersection, rects);
+    // store
+    nsBaseWidget::StoreWindowClipRegion(rects);
+  }
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Set window shadow style

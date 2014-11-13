@@ -2,10 +2,11 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=977003
+https://bugzilla.mozilla.org/show_bug.cgi?id=1094913
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 977003</title>
+  <title>Test for Bugs 977003, 1094913</title>
   <meta name="author" content="Maksim Lebedev" />
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
@@ -17,8 +18,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
     var target = undefined;
     var test_send_got = 0;
     var test_got_async = 0;
+    var test_got_type = "";
     var test_send_lost = 0;
     var test_lost_async = 0;
+    var test_lost_type = "";
 
     function DownHandler(event) {
       logger("Receive event: " + event.type);
@@ -28,18 +31,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       test_send_got++;
     }
     function GotPCHandler(event) {
-      logger("Receive event: " + event.type);
+      logger("Receive event: " + event.type + "(" + event.pointerType + ")");
       if(test_send_got)
         test_got_async++;
+      test_got_type = event.pointerType;
       logger("Send releasePointerCapture from target");
       target.releasePointerCapture(event.pointerId);
       logger("releasePointerCapture was executed");
       test_send_lost++;
     }
     function LostPCHandler(event) {
-      logger("Received event: " + event.type);
+      logger("Received event: " + event.type + "(" + event.pointerType + ")");
       if(test_send_lost)
         test_lost_async++;
+      test_lost_type = event.pointerType;
     }
     function logger(message) {
       console.log(message);
@@ -63,19 +68,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       finishTest();
     }
     function finishTest() {
-      setTimeout(function() {
-        parent.is(test_send_got,   1, "Part 1: gotpointercapture event should be sent once");
-        parent.is(test_got_async,  1, "Part 1: gotpointercapture event should be asynchronous");
-        parent.is(test_send_lost,  1, "Part 1: lostpointercapture event should be sent once");
-        parent.is(test_lost_async, 1, "Part 1: lostpointercapture event should be asynchronous");
-        logger("finishTest");
-        parent.finishTest();
-      }, 1000);
+      parent.is(test_send_got,        1, "Part 1: gotpointercapture event should be sent once");
+      parent.is(test_got_async,       1, "Part 1: gotpointercapture event should be asynchronous");
+      parent.is(test_got_type,  "mouse", "Part 1: gotpointercapture event should have pointerType mouse");
+      parent.is(test_send_lost,       1, "Part 1: lostpointercapture event should be sent once");
+      parent.is(test_lost_async,      1, "Part 1: lostpointercapture event should be asynchronous");
+      parent.is(test_lost_type, "mouse", "Part 1: lostpointercapture event should have pointerType mouse");
+      logger("finishTest");
+      parent.finishTest();
     }
   </script>
 </head>
 <body onload="prepareTest()">
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=977003">Mozilla Bug 977003 Test 1</a>
+  <br><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1094913">Mozilla Bug 1094913</a>
   <p id="display"></p>
   <div id="content" style="display: none">
   </div>

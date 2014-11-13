@@ -123,7 +123,7 @@ const size_t gStackSize = 8192;
 static const int64_t kICCIntersliceDelay = 32; // ms
 
 // Time budget for an incremental CC slice
-static const int64_t kICCSliceBudget = 10; // ms
+static const int64_t kICCSliceBudget = 5; // ms
 
 // Maximum total duration for an ICC
 static const uint32_t kMaxICCDuration = 2000; // ms

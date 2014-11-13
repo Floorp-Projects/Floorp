@@ -505,6 +505,9 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     ss(nullptr),
     keepAtoms(cx->perThreadData),
     foldConstants(foldConstants),
+#ifdef DEBUG
+    checkOptionsCalled(false),
+#endif
     abortedSyntaxParse(false),
     isUnexpectedEOF_(false),
     sawDeprecatedForEach(false),
@@ -527,9 +530,25 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     tempPoolMark = alloc->mark();
 }
 
+template<typename ParseHandler>
+bool
+Parser<ParseHandler>::checkOptions()
+{
+#ifdef DEBUG
+    checkOptionsCalled = true;
+#endif
+
+    if (!tokenStream.checkOptions())
+        return false;
+
+    return true;
+}
+
 template <typename ParseHandler>
 Parser<ParseHandler>::~Parser()
 {
+    MOZ_ASSERT(checkOptionsCalled);
+
     accumulateTelemetry();
 
     alloc.release(tempPoolMark);
@@ -690,6 +709,8 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::parse(JSObject *chain)
 {
+    MOZ_ASSERT(checkOptionsCalled);
+
     /*
      * Protect atoms from being collected by a GC activation, which might
      * - nest on this thread due to out of memory (the so-called "last ditch"
@@ -798,6 +819,8 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
                                                  Directives inheritedDirectives,
                                                  Directives *newDirectives)
 {
+    MOZ_ASSERT(checkOptionsCalled);
+
     Node fn = handler.newFunctionDefinition();
     if (!fn)
         return null();
@@ -1905,11 +1928,10 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
         if (!addFreeVariablesFromLazyFunction(fun, pc, *pbodyLevelHoistedUse))
             return false;
 
-        // The position passed to tokenStream.advance() is relative to
-        // userbuf.base() while LazyScript::{begin,end} offsets are relative to
-        // the outermost script source. N.B: userbuf.base() is initialized
-        // (in TokenStream()) to begin() - column() so that column numbers in
-        // the lazily parsed script are correct.
+        // The position passed to tokenStream.advance() is an offset of the sort
+        // returned by userbuf.offset() and expected by userbuf.rawCharPtrAt(),
+        // while LazyScript::{begin,end} offsets are relative to the outermost
+        // script source.
         uint32_t userbufBase = lazyOuter->begin() - lazyOuter->column();
         tokenStream.advance(fun->lazyScript()->end() - userbufBase);
 
@@ -2410,6 +2432,8 @@ ParseNode *
 Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned staticLevel,
                                                  bool strict, GeneratorKind generatorKind)
 {
+    MOZ_ASSERT(checkOptionsCalled);
+
     Node pn = handler.newFunctionDefinition();
     if (!pn)
         return null();
@@ -5699,6 +5723,8 @@ template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::statement(bool canHaveDirectives)
 {
+    MOZ_ASSERT(checkOptionsCalled);
+
     JS_CHECK_RECURSION(context, return null());
 
     TokenKind tt;

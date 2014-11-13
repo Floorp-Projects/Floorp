@@ -10,7 +10,7 @@
  */
 
 #include "nsDebug.h"
-#include "nsPluginNativeWindow.h"
+#include "nsPluginNativeWindowGtk.h"
 #include "nsNPAPIPlugin.h"
 #include "npapi.h"
 #include <gtk/gtk.h>
@@ -23,35 +23,6 @@
 #include "gtk2xtbin.h"
 #endif
 #include "mozilla/X11Util.h"
-
-class nsPluginNativeWindowGtk : public nsPluginNativeWindow {
-public: 
-  nsPluginNativeWindowGtk();
-  virtual ~nsPluginNativeWindowGtk();
-
-  virtual nsresult CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance);
-private:
-  void SetWindow(XID aWindow)
-  {
-    window = reinterpret_cast<void*>(static_cast<uintptr_t>(aWindow));
-  }
-  XID GetWindow() const
-  {
-    return static_cast<XID>(reinterpret_cast<uintptr_t>(window));
-  }
-
-  NPSetWindowCallbackStruct mWsInfo;
-  /**
-   * Either a GtkSocket or a special GtkXtBin widget (derived from GtkSocket)
-   * that encapsulates the Xt toolkit within a Gtk Application.
-   */
-  GtkWidget* mSocketWidget;
-  nsresult  CreateXEmbedWindow(bool aEnableXtFocus);
-#if (MOZ_WIDGET_GTK == 2)
-  nsresult  CreateXtWindow();
-#endif
-  void      SetAllocation();
-};
 
 static gboolean plug_removed_cb   (GtkWidget *widget, gpointer data);
 static void socket_unrealize_cb   (GtkWidget *widget, gpointer data);
@@ -100,7 +71,13 @@ nsresult PLUG_DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindo
 nsresult nsPluginNativeWindowGtk::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance)
 {
   if (aPluginInstance) {
-    if (type == NPWindowTypeWindow) {
+    if (type == NPWindowTypeWindow &&
+        XRE_GetProcessType() == GeckoProcessType_Content) {
+      // In this case, most of the initialization code here has already happened
+      // in the chrome process. The window we have in content is the XID of the
+      // socket widget we need to hand to plugins.
+      SetWindow((XID)window);
+	  } else if (type == NPWindowTypeWindow) {
       if (!mSocketWidget) {
         nsresult rv;
 
@@ -165,9 +142,9 @@ nsresult nsPluginNativeWindowGtk::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
 #endif
     } // NPWindowTypeWindow
     aPluginInstance->SetWindow(this);
-  }
-  else if (mPluginInstance)
+  } else if (mPluginInstance) {
     mPluginInstance->SetWindow(nullptr);
+  }
 
   SetPluginInstance(aPluginInstance);
   return NS_OK;

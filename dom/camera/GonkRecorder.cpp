@@ -1268,12 +1268,11 @@ status_t GonkRecorder::setupVideoEncoder(
     // CHECK_EQ causes an abort if the given condition fails.
     CHECK_EQ(client.connect(), (status_t)OK);
 
-    uint32_t encoder_flags = 0;
+    uint32_t encoder_flags = OMXCodec::kHardwareCodecsOnly;
     if (mIsMetaDataStoredInVideoBuffers) {
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
         encoder_flags |= OMXCodec::kStoreMetaDataInVideoBuffers;
 #else
-        encoder_flags |= OMXCodec::kHardwareCodecsOnly;
         encoder_flags |= OMXCodec::kStoreMetaDataInVideoBuffers;
         encoder_flags |= OMXCodec::kOnlySubmitOneInputBufferAtOneTime;
 #endif

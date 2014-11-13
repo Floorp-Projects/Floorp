@@ -36,6 +36,8 @@ EXPORTS.mozilla.plugins += [
     'PluginStreamChild.h',
     'PluginStreamParent.h',
     'PluginUtilsOSX.h',
+    'PluginWidgetChild.h',
+    'PluginWidgetParent.h',
     'ScopedMethodFactory.h',
     'StreamNotifyChild.h',
     'StreamNotifyParent.h',
@@ -92,6 +94,8 @@ UNIFIED_SOURCES += [
 SOURCES += [
     'PluginInstanceChild.cpp', # 'PluginThreadCallback' : ambiguous symbol
     'PluginModuleChild.cpp',   # Redefinition of mozilla::WindowsDllInterceptor sUser32Intercept
+    'PluginWidgetChild.cpp',
+    'PluginWidgetParent.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
