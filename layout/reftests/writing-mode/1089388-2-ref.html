@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+.v-lr { writing-mode:vertical-lr;  }
+.v-rl { writing-mode:vertical-rl; }
+
+div {
+  width: 300px;
+  height: 200px;
+  background: #ddd;
+  margin: 50px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="v-rl">
+First part of the block.
+<i id="test">New text inserted by script, to cause a reflow that slides the following lines.</i>
+We will insert enough new content that it wraps onto additional lines.
+<br><br>
+Here is some more text that follows a forced break.
+Observe what happens to it when text is added earlier.
+</div>
+
+</body>
+</html>

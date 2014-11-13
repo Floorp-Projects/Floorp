@@ -515,7 +515,9 @@ nsBlockFrame::GetCaretBaseline() const
   nscoord lineHeight =
     nsHTMLReflowState::CalcLineHeight(GetContent(), StyleContext(),
                                       contentRect.height, inflation);
-  return nsLayoutUtils::GetCenteredFontBaseline(fm, lineHeight) + bp.top;
+  const WritingMode wm = GetWritingMode();
+  return nsLayoutUtils::GetCenteredFontBaseline(fm, lineHeight,
+                                                wm.IsLineInverted()) + bp.top;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1231,6 +1233,42 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // Compute our final size
   nscoord blockEndEdgeOfChildren;
   ComputeFinalSize(*reflowState, state, aMetrics, &blockEndEdgeOfChildren);
+
+  // If the block direction is right-to-left, we need to update the bounds of
+  // lines that were placed relative to mContainerWidth during reflow, as
+  // we typically do not know the true container width (block-dir size of the
+  // finished paragraph/block) until we've reflowed all its children. So we
+  // use a "fake" mContainerWidth during reflow (see nsBlockReflowState's
+  // constructor) and then fix up the positions of the lines here, once the
+  // final block size is known.
+  //
+  // Note that writing-mode:vertical-rl is the only case where the block
+  // logical direction progresses in a negative physical direction, and
+  // therefore block-dir coordinate conversion depends on knowing the width
+  // of the coordinate space in order to translate between the logical and
+  // physical origins.
+  if (wm.GetBlockDir() == WritingMode::BlockDir::eBlockRL) {
+    nscoord deltaX = aMetrics.Width() - state.mContainerWidth;
+    if (deltaX) {
+      for (line_iterator line = begin_lines(), end = end_lines();
+           line != end; line++) {
+        SlideLine(state, line, -deltaX);
+      }
+      for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
+        nsPoint physicalDelta(deltaX, 0);
+        f->MovePositionBy(physicalDelta);
+      }
+      nsFrameList* bulletList = GetOutsideBulletList();
+      if (bulletList) {
+        nsPoint physicalDelta(deltaX, 0);
+        for (nsIFrame* f = bulletList->FirstChild(); f;
+             f = f->GetNextSibling()) {
+          f->MovePositionBy(physicalDelta);
+        }
+      }
+    }
+  }
+
   nsRect areaBounds = nsRect(0, 0, aMetrics.Width(), aMetrics.Height());
   ComputeOverflowAreas(areaBounds, reflowState->mStyleDisplay,
                        blockEndEdgeOfChildren, aMetrics.mOverflowAreas);
@@ -2516,7 +2554,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         nsLayoutUtils::FontSizeInflationFor(this));
 
       nscoord minAscent =
-        nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
+        nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight,
+                                               wm.IsLineInverted());
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
       aState.mBCoord += std::max(minAscent, metrics.BlockStartAscent()) +
@@ -2731,12 +2770,12 @@ nsBlockFrame::PullFrameFrom(nsLineBox*           aLine,
 
 void
 nsBlockFrame::SlideLine(nsBlockReflowState& aState,
-                        nsLineBox* aLine, nscoord aDY)
+                        nsLineBox* aLine, nscoord aDeltaBCoord)
 {
-  NS_PRECONDITION(aDY != 0, "why slide a line nowhere?");
+  NS_PRECONDITION(aDeltaBCoord != 0, "why slide a line nowhere?");
 
   // Adjust line state
-  aLine->SlideBy(aDY, aState.mContainerWidth);
+  aLine->SlideBy(aDeltaBCoord, aState.mContainerWidth);
 
   // Adjust the frames in the line
   nsIFrame* kid = aLine->mFirstChild;
@@ -2744,23 +2783,26 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
     return;
   }
 
+  WritingMode wm = GetWritingMode();
+  LogicalPoint translation(wm, 0, aDeltaBCoord);
+
   if (aLine->IsBlock()) {
-    if (aDY) {
-      kid->MovePositionBy(nsPoint(0, aDY));
+    if (aDeltaBCoord) {
+      kid->MovePositionBy(wm, translation);
     }
 
     // Make sure the frame's view and any child views are updated
     nsContainerFrame::PlaceFrameView(kid);
   }
   else {
-    // Adjust the Y coordinate of the frames in the line.
-    // Note: we need to re-position views even if aDY is 0, because
+    // Adjust the block-dir coordinate of the frames in the line.
+    // Note: we need to re-position views even if aDeltaBCoord is 0, because
     // one of our parent frames may have moved and so the view's position
-    // relative to its parent may have changed
+    // relative to its parent may have changed.
     int32_t n = aLine->GetChildCount();
     while (--n >= 0) {
-      if (aDY) {
-        kid->MovePositionBy(nsPoint(0, aDY));
+      if (aDeltaBCoord) {
+        kid->MovePositionBy(wm, translation);
       }
       // Make sure the frame's view and any child views are updated
       nsContainerFrame::PlaceFrameView(kid);

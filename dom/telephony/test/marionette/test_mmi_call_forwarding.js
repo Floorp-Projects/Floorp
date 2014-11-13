@@ -185,8 +185,6 @@ startTestWithPermissions(['mobileconnection'], function() {
 
   // reset call forwarding settings.
   return promise.then(() => clearAllCallForwardingSettings())
-    .then(null, cause => {
-      ok(false, 'promise rejects during test: ' + cause);
-    })
+    .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });

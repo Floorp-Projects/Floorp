@@ -811,8 +811,7 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
   }
 
   // Dump DMD's memory reports analysis to the file.
-  JSONWriter jsonWriter(MakeUnique<GZWriterWrapper>(gzWriter));
-  dmd::AnalyzeReports(jsonWriter);
+  dmd::AnalyzeReports(MakeUnique<GZWriterWrapper>(gzWriter));
 
   rv = gzWriter->Finish();
   NS_WARN_IF(NS_FAILED(rv));
