@@ -433,6 +433,10 @@ nsGeolocationRequest::GetElement(nsIDOMElement * *aRequestingElement)
 NS_IMETHODIMP
 nsGeolocationRequest::Cancel()
 {
+  if (mLocator->ClearPendingRequest(this)) {
+    return NS_OK;
+  }
+
   NotifyError(nsIDOMGeoPositionError::PERMISSION_DENIED);
   return NS_OK;
 }
@@ -441,6 +445,10 @@ NS_IMETHODIMP
 nsGeolocationRequest::Allow(JS::HandleValue aChoices)
 {
   MOZ_ASSERT(aChoices.isUndefined());
+
+  if (mLocator->ClearPendingRequest(this)) {
+    return NS_OK;
+  }
 
   // Kick off the geo device, if it isn't already running
   nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
@@ -1304,6 +1312,28 @@ Geolocation::NotifyError(uint16_t aErrorCode)
   return NS_OK;
 }
 
+bool
+Geolocation::IsAlreadyCleared(nsGeolocationRequest* aRequest)
+{
+  for (uint32_t i = 0, length = mClearedWatchIDs.Length(); i < length; ++i) {
+    if (mClearedWatchIDs[i] == aRequest->WatchId()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+Geolocation::ClearPendingRequest(nsGeolocationRequest* aRequest)
+{
+  if (aRequest->IsWatch() && this->IsAlreadyCleared(aRequest)) {
+    this->NotifyAllowedRequest(aRequest);
+    this->ClearWatch(aRequest->WatchId());
+    return true;
+  }
+  return false;
+}
+
 void
 Geolocation::GetCurrentPosition(PositionCallback& aCallback,
                                 PositionErrorCallback* aErrorCallback,
@@ -1489,10 +1519,15 @@ Geolocation::ClearWatch(int32_t aWatchId)
     return NS_OK;
   }
 
+  if (!mClearedWatchIDs.Contains(aWatchId)) {
+    mClearedWatchIDs.AppendElement(aWatchId);
+  }
+
   for (uint32_t i = 0, length = mWatchingCallbacks.Length(); i < length; ++i) {
     if (mWatchingCallbacks[i]->WatchId() == aWatchId) {
       mWatchingCallbacks[i]->Shutdown();
       RemoveRequest(mWatchingCallbacks[i]);
+      mClearedWatchIDs.RemoveElement(aWatchId);
       break;
     }
   }

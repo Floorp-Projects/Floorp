@@ -940,6 +940,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
             <loop.standaloneRoomViews.StandaloneRoomView
               activeRoomStore={this.props.activeRoomStore}
               dispatcher={this.props.dispatcher}
+              helper={this.props.helper}
             />
           );
         }

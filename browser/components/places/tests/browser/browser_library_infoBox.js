@@ -71,16 +71,24 @@ gTests.push({
       checkAddInfoFieldsCollapsed(PO);
 
       // open recently bookmarked node
+      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
+                                           NetUtil.newURI("place:folder=BOOKMARKS_MENU" +
+                                                          "&folder=UNFILED_BOOKMARKS" +
+                                                          "&folder=TOOLBAR" +
+                                                          "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+                                                          "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+                                                          "&maxResults=10" +
+                                                          "&excludeQueries=1"),
+                                           0, "Recent Bookmarks");
+      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
+                                           NetUtil.newURI("http://mozilla.org/"),
+                                           1, "Mozilla");
       var menuNode = PO._places.selectedNode.
                      QueryInterface(Ci.nsINavHistoryContainerResultNode);
       menuNode.containerOpen = true;
       childNode = menuNode.getChild(0);
       isnot(childNode, null, "Bookmarks menu child node exists.");
-      var recentlyBookmarkedTitle = PlacesUIUtils.
-                                    getString("recentlyBookmarkedTitle");
-      isnot(recentlyBookmarkedTitle, null,
-            "Correctly got the recently bookmarked title locale string.");
-      is(childNode.title, recentlyBookmarkedTitle,
+      is(childNode.title, "Recent Bookmarks",
          "Correctly selected recently bookmarked node.");
       PO._places.selectNode(childNode);
       checkInfoBoxSelected(PO);
@@ -97,15 +105,6 @@ gTests.push({
          "Expander button is not hidden for bookmark item.");
       checkAddInfoFieldsNotCollapsed(PO);
       checkAddInfoFields(PO, "bookmark item");
-
-      // make sure additional fields are still hidden in second bookmark item
-      ok(view.rowCount > 1, "Second bookmark item exists.");
-      view.selection.select(1);
-      checkInfoBoxSelected(PO);
-      ok(!infoBoxExpanderWrapper.hidden,
-         "Expander button is not hidden for second bookmark item.");
-      checkAddInfoFieldsNotCollapsed(PO);
-      checkAddInfoFields(PO, "second bookmark item");
 
       menuNode.containerOpen = false;
 
