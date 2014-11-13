@@ -3362,9 +3362,9 @@ nsDownload::FixTargetPermissions()
   rv = infoService->GetPropertyAsUint32(NS_LITERAL_STRING("umask"),
                                         &gUserUmask);
   if (NS_SUCCEEDED(rv)) {
-    rv = target->SetPermissions(0666 & ~gUserUmask);
+    (void)target->SetPermissions(0666 & ~gUserUmask);
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
