@@ -44,9 +44,7 @@ public class KeyBundle {
       // Hash appropriately.
       try {
         username = Utils.usernameFromAccount(username);
-      } catch (NoSuchAlgorithmException e) {
-        throw new IllegalArgumentException("Invalid username.");
-      } catch (UnsupportedEncodingException e) {
+      } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
         throw new IllegalArgumentException("Invalid username.");
       }
 
@@ -56,9 +54,7 @@ public class KeyBundle {
       Mac hmacHasher;
       try {
         hmacHasher = HKDF.makeHMACHasher(syncKey);
-      } catch (NoSuchAlgorithmException e) {
-        throw new CryptoException(e);
-      } catch (InvalidKeyException e) {
+      } catch (NoSuchAlgorithmException | InvalidKeyException e) {
         throw new CryptoException(e);
       }
       assert(hmacHasher != null); // If makeHMACHasher doesn't throw, then hmacHasher is non-null.

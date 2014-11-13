@@ -21,19 +21,19 @@
             title="&newtab.pageTitle;">
 
   <xul:panel id="newtab-intro-panel" orient="vertical" type="arrow"
-             noautohide="true">
+             noautohide="true" hidden="true">
     <h1>&newtab.intro.header;</h1>
   </xul:panel>
 
   <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
-             noautohide="true">
+             noautohide="true" hidden="true">
     <xul:hbox id="newtab-search-manage" class="newtab-search-panel-engine">
       <xul:label>&cmd_engineManager.label;</xul:label>
     </xul:hbox>
   </xul:panel>
 
   <xul:panel id="newtab-customize-panel" orient="vertical" type="arrow"
-             noautohide="true">
+             noautohide="true" hidden="true">
     <xul:hbox id="newtab-customize-enhanced" class="newtab-customize-panel-item">
       <xul:label>&newtab.customize.enhanced;</xul:label>
     </xul:hbox>

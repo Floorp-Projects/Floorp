@@ -569,6 +569,15 @@
               )
             ), 
 
+            Example({summary: "Standalone room conversation (joined)"}, 
+              React.DOM.div({className: "standalone"}, 
+                StandaloneRoomView({
+                  dispatcher: dispatcher, 
+                  activeRoomStore: activeRoomStore, 
+                  roomState: ROOM_STATES.JOINED})
+              )
+            ), 
+
             Example({summary: "Standalone room conversation (has-participants)"}, 
               React.DOM.div({className: "standalone"}, 
                 StandaloneRoomView({

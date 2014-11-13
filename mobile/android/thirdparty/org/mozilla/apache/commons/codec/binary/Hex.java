@@ -274,9 +274,7 @@ public class Hex implements BinaryEncoder, BinaryDecoder {
         try {
             byte[] byteArray = object instanceof String ? ((String) object).getBytes(getCharsetName()) : (byte[]) object;
             return encodeHex(byteArray);
-        } catch (ClassCastException e) {
-            throw new EncoderException(e.getMessage(), e);
-        } catch (UnsupportedEncodingException e) {
+        } catch (ClassCastException | UnsupportedEncodingException e) {
             throw new EncoderException(e.getMessage(), e);
         }
     }

@@ -4,9 +4,11 @@
 
 // Functional tests for inline autocomplete
 
+const PREF_AUTOCOMPLETE_ENABLED = "browser.urlbar.autocomplete.enabled";
+
 add_task(function* test_disabling_autocomplete() {
   do_log_info("Check disabling autocomplete disables autofill");
-  Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", false);
+  Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, false);
   yield promiseAddVisits({ uri: NetUtil.newURI("http://visit.mozilla.org"),
                            transition: TRANSITION_TYPED });
   yield check_autocomplete({
@@ -144,4 +146,24 @@ add_task(function* test_complete_fragment() {
     completed: "http://smokey.mozilla.org/foo?bacon=delicious#bar",
   });
   yield cleanup();
+});
+
+add_task(function* test_autocomplete_enabled_pref() {
+  Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, false);
+  let types = ["history", "bookmark", "openpage"];
+  for (type of types) {
+    do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false,
+                "suggest." + type + "pref should be false");
+  }
+  Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, true);
+  for (type of types) {
+    do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), true,
+                "suggest." + type + "pref should be true");
+  }
+
+  // Clear prefs.
+  Services.prefs.clearUserPref(PREF_AUTOCOMPLETE_ENABLED);
+  for (type of types) {
+    Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
+  }
 });

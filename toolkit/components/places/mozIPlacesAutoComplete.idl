@@ -13,7 +13,7 @@ interface nsIURI;
  * search provider as well as methods to track opened pages for AutoComplete
  * purposes.
  */
-[scriptable, uuid(3bf895a0-d6d9-4ba7-b8db-f2f0e0f32d23)]
+[scriptable, uuid(6e252399-77f9-4f11-98cc-6fa9fab96f92)]
 interface mozIPlacesAutoComplete : nsISupports
 {
   //////////////////////////////////////////////////////////////////////////////
@@ -95,6 +95,12 @@ interface mozIPlacesAutoComplete : nsISupports
    * in a tabbrowser.
    */
   const long BEHAVIOR_OPENPAGE = 1 << 7;
+
+  /**
+   * Use intersection between history, typed, bookmark, tag and openpage
+   * instead of union, when the restrict bit is set.
+   */
+  const long BEHAVIOR_RESTRICT = 1 << 8;
 
   /**
    * Mark a page as being currently open.

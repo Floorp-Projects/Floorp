@@ -23,8 +23,6 @@ function testConferenceTwoCalls() {
 // Start the test
 startTest(function() {
   testConferenceTwoCalls()
-    .then(null, error => {
-      ok(false, 'promise rejects during test.');
-    })
+    .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });
