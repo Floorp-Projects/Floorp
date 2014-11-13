@@ -509,6 +509,32 @@ ForcedReturn(JSContext *cx, const JitFrameIterator &frame, jsbytecode *pc,
 }
 
 static void
+HandleClosingGeneratorReturn(JSContext *cx, const JitFrameIterator &frame, jsbytecode *pc,
+                             jsbytecode *unwoundScopeToPc, ResumeFromException *rfe,
+                             bool *calledDebugEpilogue)
+{
+    // If we're closing a legacy generator, we need to return to the caller
+    // after executing the |finally| blocks. This is very similar to a forced
+    // return from the debugger.
+
+    if (!cx->isExceptionPending())
+        return;
+    RootedValue exception(cx);
+    if (!cx->getPendingException(&exception))
+        return;
+    if (!exception.isMagic(JS_GENERATOR_CLOSING))
+        return;
+
+    cx->clearPendingException();
+    frame.baselineFrame()->setReturnValue(UndefinedValue());
+
+    if (cx->compartment()->debugMode() && unwoundScopeToPc)
+        frame.baselineFrame()->setUnwoundScopeOverridePc(unwoundScopeToPc);
+
+    ForcedReturn(cx, frame, pc, rfe, calledDebugEpilogue);
+}
+
+static void
 HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFromException *rfe,
                         jsbytecode **unwoundScopeToPc, bool *calledDebugEpilogue)
 {
@@ -527,7 +553,10 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
         return;
     }
 
-    if (cx->isExceptionPending() && cx->compartment()->debugMode()) {
+    RootedValue exception(cx);
+    if (cx->isExceptionPending() && cx->compartment()->debugMode() &&
+        cx->getPendingException(&exception) && !exception.isMagic(JS_GENERATOR_CLOSING))
+    {
         BaselineFrame *baselineFrame = frame.baselineFrame();
         switch (Debugger::onExceptionUnwind(cx, baselineFrame)) {
           case JSTRAP_ERROR:
@@ -549,8 +578,10 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
         }
     }
 
-    if (!script->hasTrynotes())
+    if (!script->hasTrynotes()) {
+        HandleClosingGeneratorReturn(cx, frame, pc, *unwoundScopeToPc, rfe, calledDebugEpilogue);
         return;
+    }
 
     JSTryNote *tn = script->trynotes()->vector;
     JSTryNote *tnEnd = tn + script->trynotes()->length;
@@ -584,6 +615,13 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
         switch (tn->kind) {
           case JSTRY_CATCH:
             if (cx->isExceptionPending()) {
+                // If we're closing a legacy generator, we have to skip catch
+                // blocks.
+                if (!cx->getPendingException(&exception))
+                    continue;
+                if (exception.isMagic(JS_GENERATOR_CLOSING))
+                    continue;
+
                 // Ion can compile try-catch, but bailing out to catch
                 // exceptions is slow. Reset the warm-up counter so that if we
                 // catch many exceptions we won't Ion-compile the script.
@@ -628,6 +666,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
         }
     }
 
+    HandleClosingGeneratorReturn(cx, frame, pc, *unwoundScopeToPc, rfe, calledDebugEpilogue);
 }
 
 struct AutoDeleteDebugModeOSRInfo
