@@ -227,8 +227,14 @@ InternalSetAudioRoutesICS(SwitchState aState)
                                           AUDIO_POLICY_DEVICE_STATE_AVAILABLE, "");
     sHeadsetState |= AUDIO_DEVICE_OUT_WIRED_HEADPHONE;
   } else if (aState == SWITCH_STATE_OFF) {
-    AudioSystem::setDeviceConnectionState(static_cast<audio_devices_t>(sHeadsetState),
-                                          AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+    if (sHeadsetState & AUDIO_DEVICE_OUT_WIRED_HEADSET) {
+      AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADSET,
+                                            AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+    }
+    if (sHeadsetState & AUDIO_DEVICE_OUT_WIRED_HEADPHONE) {
+      AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADPHONE,
+                                            AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+    }
     sHeadsetState = 0;
   }
 }
