@@ -445,6 +445,28 @@ GetNextNonLoopEntryPc(jsbytecode *pc)
     return pc;
 }
 
+static bool
+HasLiveIteratorAtStackDepth(JSScript *script, jsbytecode *pc, uint32_t stackDepth)
+{
+    if (!script->hasTrynotes())
+        return false;
+
+    JSTryNote *tn = script->trynotes()->vector;
+    JSTryNote *tnEnd = tn + script->trynotes()->length;
+    uint32_t pcOffset = uint32_t(pc - script->main());
+    for (; tn != tnEnd; ++tn) {
+        if (pcOffset < tn->start)
+            continue;
+        if (pcOffset >= tn->start + tn->length)
+            continue;
+
+        if (tn->kind == JSTRY_ITER && stackDepth == tn->stackDepth)
+            return true;
+    }
+
+    return false;
+}
+
 // For every inline frame, we write out the following data:
 //
 //                      |      ...      |
@@ -847,10 +869,11 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             //
             // For instance, if calling |f()| pushed an Ion frame which threw,
             // the snapshot expects the return value to be pushed, but it's
-            // possible nothing was pushed before we threw. Iterators might
-            // still be on the stack, so we can't just drop the stack.
+            // possible nothing was pushed before we threw. We can't drop
+            // iterators, however, so read them out. They will be closed by
+            // HandleExceptionBaseline.
             MOZ_ASSERT(cx->compartment()->isDebuggee());
-            if (iter.moreFrames())
+            if (iter.moreFrames() || HasLiveIteratorAtStackDepth(script, pc, i + 1))
                 v = iter.read();
             else
                 v = MagicValue(JS_OPTIMIZED_OUT);
