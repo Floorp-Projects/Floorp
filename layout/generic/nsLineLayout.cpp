@@ -1519,7 +1519,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         }
         else {
           pfd->mBounds.BStart(lineWM) =
-            -aDistanceFromStart + pfd->mMargin.BStart(frameWM);
+            -aDistanceFromStart + pfd->mMargin.ConvertTo(lineWM, frameWM).BStart(lineWM);
         }
         pfd->mFrame->SetRect(lineWM, pfd->mBounds, containerWidth);
 #ifdef NOISY_BLOCKDIR_ALIGN
@@ -1527,7 +1527,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         nsFrame::ListTag(stdout, pfd->mFrame);
         printf(": y=%d dTop=%d [bp.top=%d topLeading=%d]\n",
                pfd->mBounds.BStart(lineWM), aDistanceFromStart,
-               span ? pfd->mBorderPadding.BStart(frameWM) : 0,
+               span ? pfd->mBorderPadding.ConvertTo(lineWM, frameWM).BStart(lineWM) : 0,
                span ? span->mBStartLeading : 0);
 #endif
         break;
@@ -1539,7 +1539,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         }
         else {
           pfd->mBounds.BStart(lineWM) = -aDistanceFromStart + aLineBSize -
-            pfd->mMargin.BEnd(frameWM) - pfd->mBounds.BSize(lineWM);
+            pfd->mMargin.ConvertTo(lineWM, frameWM).BEnd(lineWM) - pfd->mBounds.BSize(lineWM);
         }
         pfd->mFrame->SetRect(lineWM, pfd->mBounds, containerWidth);
 #ifdef NOISY_BLOCKDIR_ALIGN
@@ -1725,8 +1725,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
                      mBlockReflowState->ComputedHeight(),
                      inflation);
     nscoord contentBSize = spanFramePFD->mBounds.BSize(lineWM) -
-      spanFramePFD->mBorderPadding.BStart(frameWM) -
-      spanFramePFD->mBorderPadding.BEnd(frameWM);
+      spanFramePFD->mBorderPadding.ConvertTo(lineWM, frameWM).BStartEnd(lineWM);
 
     // Special-case for a ::first-letter frame, set the line height to
     // the frame block size if the user has left line-height == normal
@@ -1759,7 +1758,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // If there are child frames in this span that stick out of this area
       // then the minBCoord and maxBCoord are updated by the amount of logical
       // blockSize that is outside this range.
-      minBCoord = spanFramePFD->mBorderPadding.BStart(frameWM) -
+      minBCoord = spanFramePFD->mBorderPadding.ConvertTo(lineWM, frameWM).BStart(lineWM) -
                   psd->mBStartLeading;
       maxBCoord = minBCoord + psd->mLogicalBSize;
     }
@@ -1807,7 +1806,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       // For other elements the logical block size is the same as the
       // frame's block size plus its margins.
       logicalBSize = pfd->mBounds.BSize(lineWM) +
-                     pfd->mMargin.BStartEnd(frameWM);
+                     pfd->mMargin.ConvertTo(lineWM, frameWM).BStartEnd(lineWM);
       if (logicalBSize < 0 &&
           mPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
         pfd->mAscent -= logicalBSize;
@@ -1915,7 +1914,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           else {
             pfd->mBounds.BStart(lineWM) = baselineBCoord -
               (parentXHeight + logicalBSize)/2 +
-              pfd->mMargin.BStart(frameWM);
+              pfd->mMargin.ConvertTo(lineWM, frameWM).BStart(lineWM);
           }
           pfd->mBlockDirAlign = VALIGN_OTHER;
           break;
@@ -1930,11 +1929,11 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           nscoord parentAscent = fm->MaxAscent();
           if (frameSpan) {
             pfd->mBounds.BStart(lineWM) = baselineBCoord - parentAscent -
-              pfd->mBorderPadding.BStart(frameWM) + frameSpan->mBStartLeading;
+              pfd->mBorderPadding.ConvertTo(lineWM, frameWM).BStart(lineWM) + frameSpan->mBStartLeading;
           }
           else {
             pfd->mBounds.BStart(lineWM) = baselineBCoord - parentAscent +
-                                          pfd->mMargin.BStart(frameWM);
+                                          pfd->mMargin.ConvertTo(lineWM, frameWM).BStart(lineWM);
           }
           pfd->mBlockDirAlign = VALIGN_OTHER;
           break;
@@ -1948,13 +1947,13 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           if (frameSpan) {
             pfd->mBounds.BStart(lineWM) = baselineBCoord + parentDescent -
                                           pfd->mBounds.BSize(lineWM) +
-                                          pfd->mBorderPadding.BEnd(frameWM) -
+                                          pfd->mBorderPadding.ConvertTo(lineWM, frameWM).BEnd(lineWM) -
                                           frameSpan->mBEndLeading;
           }
           else {
             pfd->mBounds.BStart(lineWM) = baselineBCoord + parentDescent -
                                           pfd->mBounds.BSize(lineWM) -
-                                          pfd->mMargin.BEnd(frameWM);
+                                          pfd->mMargin.ConvertTo(lineWM, frameWM).BEnd(lineWM);
           }
           pfd->mBlockDirAlign = VALIGN_OTHER;
           break;
@@ -1969,7 +1968,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           }
           else {
             pfd->mBounds.BStart(lineWM) = baselineBCoord - logicalBSize/2 +
-                                          pfd->mMargin.BStart(frameWM);
+                                          pfd->mMargin.ConvertTo(lineWM, frameWM).BStart(lineWM);
           }
           pfd->mBlockDirAlign = VALIGN_OTHER;
           break;
@@ -2035,7 +2034,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         }
         else {
           blockStart = pfd->mBounds.BStart(lineWM) -
-                       pfd->mMargin.BStart(frameWM);
+                       pfd->mMargin.ConvertTo(lineWM, frameWM).BStart(lineWM);
           blockEnd = blockStart + logicalBSize;
         }
         if (!preMode &&
@@ -2146,7 +2145,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
            spanFramePFD->mAscent,
            psd->mLogicalBSize, psd->mBStartLeading, psd->mBEndLeading);
 #endif
-    nscoord goodMinBCoord = spanFramePFD->mBorderPadding.BStart(frameWM) -
+    nscoord goodMinBCoord = spanFramePFD->mBorderPadding.ConvertTo(lineWM, frameWM).BStart(lineWM) -
                             psd->mBStartLeading;
     nscoord goodMaxBCoord = goodMinBCoord + psd->mLogicalBSize;
 
