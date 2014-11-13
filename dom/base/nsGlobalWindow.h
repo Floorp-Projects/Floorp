@@ -1627,6 +1627,9 @@ protected:
   nsRefPtr<mozilla::dom::SpeechSynthesis> mSpeechSynthesis;
 #endif
 
+  // This is the CC generation the last time we called CanSkip.
+  uint32_t mCanSkipCCGeneration;
+
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;
