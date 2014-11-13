@@ -53,8 +53,7 @@ js::Debugger::onDebuggerStatement(JSContext *cx, AbstractFramePtr frame, Mutable
 /* static */ JSTrapStatus
 js::Debugger::onExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
 {
-    MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
-    if (!frame.isDebuggee())
+    if (!cx->compartment()->isDebuggee())
         return JSTRAP_CONTINUE;
     return slowPathOnExceptionUnwind(cx, frame);
 }

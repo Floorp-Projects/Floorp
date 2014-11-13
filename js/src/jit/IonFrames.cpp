@@ -423,9 +423,10 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
     if (cx->compartment()->isDebuggee()) {
         // We need to bail when debug mode is active to observe the Debugger's
         // exception unwinding handler if either a Debugger is observing all
-        // execution in the compartment, or it has observed this frame, i.e.,
-        // by there being a debuggee RematerializedFrame.
-        bool shouldBail = cx->compartment()->debugObservesAllExecution();
+        // execution in the compartment, or it has a live onExceptionUnwind
+        // hook, or it has observed this frame (e.g., for onPop).
+        bool shouldBail = cx->compartment()->debugObservesAllExecution() ||
+                          Debugger::hasLiveOnExceptionUnwind(cx->global());
         if (!shouldBail) {
             JitActivation *act = cx->mainThread().activation()->asJit();
             RematerializedFrame *rematFrame =
@@ -543,7 +544,7 @@ HandleClosingGeneratorReturn(JSContext *cx, const JitFrameIterator &frame, jsbyt
     cx->clearPendingException();
     frame.baselineFrame()->setReturnValue(UndefinedValue());
 
-    if (cx->compartment()->debugMode() && unwoundScopeToPc)
+    if (frame.baselineFrame()->isDebuggee() && unwoundScopeToPc)
         frame.baselineFrame()->setUnwoundScopeOverridePc(unwoundScopeToPc);
 
     ForcedReturn(cx, frame, pc, rfe, calledDebugEpilogue);
@@ -569,11 +570,10 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
     }
 
     RootedValue exception(cx);
-    BaselineFrame *baselineFrame = frame.baselineFrame();
-    if (cx->isExceptionPending() && baselineFrame->isDebuggee() &&
+    if (cx->isExceptionPending() && cx->compartment()->isDebuggee() &&
         cx->getPendingException(&exception) && !exception.isMagic(JS_GENERATOR_CLOSING))
     {
-        switch (Debugger::onExceptionUnwind(cx, baselineFrame)) {
+        switch (Debugger::onExceptionUnwind(cx, frame.baselineFrame())) {
           case JSTRAP_ERROR:
             // Uncatchable exception.
             MOZ_ASSERT(!cx->isExceptionPending());
