@@ -424,8 +424,13 @@ pref("media.mediasource.enabled", true);
 pref("media.mediasource.mp4.enabled", false);
 pref("media.mediasource.webm.enabled", false);
 #else
+#ifdef XP_WIN
+pref("media.mediasource.mp4.enabled", true);
+pref("media.mediasource.webm.enabled", false);
+#else
 pref("media.mediasource.mp4.enabled", false);
 pref("media.mediasource.webm.enabled", true);
+#endif
 #endif
 
 #ifdef MOZ_WEBSPEECH
