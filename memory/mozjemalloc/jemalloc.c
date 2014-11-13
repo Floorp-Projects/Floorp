@@ -284,6 +284,12 @@ typedef long ssize_t;
 #define	MALLOC_DECOMMIT
 #endif
 
+/*
+ * Allow unmapping pages on all platforms. Note that if this is disabled,
+ * jemalloc will never unmap anything, instead recycling pages for later use.
+ */
+#define JEMALLOC_MUNMAP
+
 #ifndef MOZ_MEMORY_WINDOWS
 #ifndef MOZ_MEMORY_SOLARIS
 #include <sys/cdefs.h>
@@ -1058,6 +1064,12 @@ struct arena_s {
 static unsigned		ncpus;
 #endif
 
+#ifdef JEMALLOC_MUNMAP
+static const bool config_munmap = true;
+#else
+static const bool config_munmap = false;
+#endif
+
 /*
  * When MALLOC_STATIC_SIZES is defined most of the parameters
  * controlling the malloc behavior are defined as compile-time constants
@@ -1360,7 +1372,7 @@ static void	*chunk_recycle(extent_tree_t *chunks_szad,
 static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool zero);
 static void	chunk_record(extent_tree_t *chunks_szad,
 	extent_tree_t *chunks_ad, void *chunk, size_t size);
-static void	chunk_dealloc_mmap(void *chunk, size_t size);
+static bool	chunk_dalloc_mmap(void *chunk, size_t size);
 static void	chunk_dealloc(void *chunk, size_t size);
 #ifndef NO_TLS
 static arena_t	*choose_arena_hard(void);
@@ -1960,7 +1972,21 @@ pages_decommit(void *addr, size_t size)
 {
 
 #ifdef MOZ_MEMORY_WINDOWS
-	VirtualFree(addr, size, MEM_DECOMMIT);
+	/*
+	* The region starting at addr may have been allocated in multiple calls
+	* to VirtualAlloc and recycled, so decommitting the entire region in one
+	* go may not be valid. However, since we allocate at least a chunk at a
+	* time, we may touch any region in chunksized increments.
+	*/
+	size_t pages_size = min(size, chunksize -
+		CHUNK_ADDR2OFFSET((uintptr_t)addr));
+	while (size > 0) {
+		if (!VirtualFree(addr, pages_size, MEM_DECOMMIT))
+			abort();
+		addr = (void *)((uintptr_t)addr + pages_size);
+		size -= pages_size;
+		pages_size = min(size, chunksize);
+	}
 #else
 	if (mmap(addr, size, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1,
 	    0) == MAP_FAILED)
@@ -1974,8 +2000,21 @@ pages_commit(void *addr, size_t size)
 {
 
 #  ifdef MOZ_MEMORY_WINDOWS
-	if (!VirtualAlloc(addr, size, MEM_COMMIT, PAGE_READWRITE))
-		abort();
+	/*
+	* The region starting at addr may have been allocated in multiple calls
+	* to VirtualAlloc and recycled, so committing the entire region in one
+	* go may not be valid. However, since we allocate at least a chunk at a
+	* time, we may touch any region in chunksized increments.
+	*/
+	size_t pages_size = min(size, chunksize -
+		CHUNK_ADDR2OFFSET((uintptr_t)addr));
+	while (size > 0) {
+		if (!VirtualAlloc(addr, pages_size, MEM_COMMIT, PAGE_READWRITE))
+			abort();
+		addr = (void *)((uintptr_t)addr + pages_size);
+		size -= pages_size;
+		pages_size = min(size, chunksize);
+	}
 #  else
 	if (mmap(addr, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE |
 	    MAP_ANON, -1, 0) == MAP_FAILED)
@@ -2668,21 +2707,39 @@ pages_purge(void *addr, size_t length)
 {
 	bool unzeroed;
 
-#ifdef MOZ_MEMORY_WINDOWS
-	VirtualAlloc(addr, length, MEM_RESET, PAGE_READWRITE);
-	unzeroed = true;
+#ifdef MALLOC_DECOMMIT
+	pages_decommit(addr, length);
+	unzeroed = false;
 #else
-#  ifdef MOZ_MEMORY_LINUX
-#    define JEMALLOC_MADV_PURGE MADV_DONTNEED
-#    define JEMALLOC_MADV_ZEROS true
-#  else /* FreeBSD and Darwin. */
-#    define JEMALLOC_MADV_PURGE MADV_FREE
-#    define JEMALLOC_MADV_ZEROS false
-#  endif
+#  ifdef MOZ_MEMORY_WINDOWS
+	/*
+	* The region starting at addr may have been allocated in multiple calls
+	* to VirtualAlloc and recycled, so resetting the entire region in one
+	* go may not be valid. However, since we allocate at least a chunk at a
+	* time, we may touch any region in chunksized increments.
+	*/
+	size_t pages_size = min(length, chunksize -
+		CHUNK_ADDR2OFFSET((uintptr_t)addr));
+	while (length > 0) {
+		VirtualAlloc(addr, pages_size, MEM_RESET, PAGE_READWRITE);
+		addr = (void *)((uintptr_t)addr + pages_size);
+		length -= pages_size;
+		pages_size = min(length, chunksize);
+	}
+	unzeroed = true;
+#  else
+#    ifdef MOZ_MEMORY_LINUX
+#      define JEMALLOC_MADV_PURGE MADV_DONTNEED
+#      define JEMALLOC_MADV_ZEROS true
+#    else /* FreeBSD and Darwin. */
+#      define JEMALLOC_MADV_PURGE MADV_FREE
+#      define JEMALLOC_MADV_ZEROS false
+#    endif
 	int err = madvise(addr, length, JEMALLOC_MADV_PURGE);
 	unzeroed = (JEMALLOC_MADV_ZEROS == false || err != 0);
-#  undef JEMALLOC_MADV_PURGE
-#  undef JEMALLOC_MADV_ZEROS
+#    undef JEMALLOC_MADV_PURGE
+#    undef JEMALLOC_MADV_ZEROS
+#  endif
 #endif
 	return (unzeroed);
 }
@@ -2766,6 +2823,9 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 
 	if (node != NULL)
 		base_node_dealloc(node);
+#ifdef MALLOC_DECOMMIT
+	pages_commit(ret, size);
+#endif
 	if (*zero) {
 		if (zeroed == false)
 			memset(ret, 0, size);
@@ -2792,6 +2852,12 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 	assert(alignment != 0);
 	assert((alignment & chunksize_mask) == 0);
 
+	if (!config_munmap) {
+		ret = chunk_recycle(&chunks_szad_mmap, &chunks_ad_mmap,
+			size, alignment, base, &zero);
+		if (ret != NULL)
+			goto RETURN;
+	}
 	ret = chunk_alloc_mmap(size, alignment);
 	if (ret != NULL) {
 		goto RETURN;
@@ -2901,11 +2967,14 @@ label_return:
 		base_node_dealloc(xprev);
 }
 
-static void
-chunk_dealloc_mmap(void *chunk, size_t size)
+static bool
+chunk_dalloc_mmap(void *chunk, size_t size)
 {
+	if (!config_munmap)
+		return true;
 
 	pages_unmap(chunk, size);
+	return false;
 }
 
 static void
@@ -2921,7 +2990,8 @@ chunk_dealloc(void *chunk, size_t size)
 	malloc_rtree_set(chunk_rtree, (uintptr_t)chunk, NULL);
 #endif
 
-	chunk_dealloc_mmap(chunk, size);
+	if (chunk_dalloc_mmap(chunk, size))
+		chunk_record(&chunks_szad_mmap, &chunks_ad_mmap, chunk, size);
 }
 
 /*
@@ -6609,6 +6679,15 @@ jemalloc_purge_freed_pages_impl()
 		arena_t *arena = arenas[i];
 		if (arena != NULL)
 			hard_purge_arena(arena);
+	}
+	if (!config_munmap) {
+		extent_node_t *node = extent_tree_szad_first(&chunks_szad_mmap);
+		while (node) {
+			pages_decommit(node->addr, node->size);
+			pages_commit(node->addr, node->size);
+			node->zeroed = true;
+			node = extent_tree_szad_next(&chunks_szad_mmap, node);
+		}
 	}
 }
 
