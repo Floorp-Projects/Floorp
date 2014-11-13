@@ -18,7 +18,6 @@ namespace mozilla
 {
 
 bool FFmpegDataDecoder<LIBAV_VER>::sFFmpegInitDone = false;
-Monitor FFmpegDataDecoder<LIBAV_VER>::sMonitor("FFmpegDataDecoder");
 
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(MediaTaskQueue* aTaskQueue,
                                                 AVCodecID aCodecID)
@@ -59,8 +58,6 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const PixelFormat* aFormats)
 nsresult
 FFmpegDataDecoder<LIBAV_VER>::Init()
 {
-  MonitorAutoLock mon(sMonitor);
-
   FFMPEG_LOG("Initialising FFmpeg decoder.");
 
   if (!sFFmpegInitDone) {
@@ -133,8 +130,6 @@ FFmpegDataDecoder<LIBAV_VER>::Flush()
 nsresult
 FFmpegDataDecoder<LIBAV_VER>::Shutdown()
 {
-  MonitorAutoLock mon(sMonitor);
-
   if (sFFmpegInitDone) {
     avcodec_close(mCodecContext);
     av_freep(&mCodecContext);
