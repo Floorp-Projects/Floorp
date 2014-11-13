@@ -305,13 +305,20 @@ pref("browser.search.official", true);
 // enable xul error pages
 pref("browser.xul.error_pages.enabled", true);
 
-// Specify emptyRestriction = 0 so that bookmarks appear in the list by default
-pref("browser.urlbar.default.behavior", 0);
-pref("browser.urlbar.default.behavior.emptyRestriction", 0);
-
 // Let the faviconservice know that we display favicons as 25x25px so that it
 // uses the right size when optimizing favicons
 pref("places.favicons.optimizeToDimension", 25);
+
+// The default behavior for the urlbar can be configured to use any combination
+// of the match filters with each additional filter adding more results (union).
+pref("browser.urlbar.suggest.history",              true);
+pref("browser.urlbar.suggest.bookmark",             true);
+pref("browser.urlbar.suggest.openpage",             true);
+pref("browser.urlbar.suggest.search",               true);
+
+// Restrictions to current suggestions can also be applied (intersection).
+// Typed suggestion works only if history is set to true.
+pref("browser.urlbar.suggest.history.onlyTyped",    false);
 
 // various and sundry awesomebar prefs (should remove/re-evaluate
 // these once bug 447900 is fixed)
