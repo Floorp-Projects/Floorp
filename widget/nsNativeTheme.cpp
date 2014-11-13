@@ -381,11 +381,7 @@ nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates)
 bool
 nsNativeTheme::IsFrameRTL(nsIFrame* aFrame)
 {
-  if (!aFrame) {
-    return false;
-  }
-  WritingMode wm = aFrame->GetWritingMode();
-  return !(wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR());
+  return aFrame && aFrame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 }
 
 bool
