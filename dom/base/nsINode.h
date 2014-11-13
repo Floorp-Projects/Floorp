@@ -1984,11 +1984,6 @@ ToCanonicalSupports(nsINode* aPointer)
     aLocalName = nsINode::LocalName(); \
     return NS_OK; \
   } \
-  NS_IMETHOD UnusedPlaceholder(bool* aResult) __VA_ARGS__ \
-  { \
-    *aResult = false; \
-    return NS_OK; \
-  } \
   NS_IMETHOD GetDOMBaseURI(nsAString& aBaseURI) __VA_ARGS__ \
   { \
     nsINode::GetBaseURI(aBaseURI); \
