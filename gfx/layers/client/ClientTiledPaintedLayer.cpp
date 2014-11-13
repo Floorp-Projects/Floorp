@@ -75,7 +75,7 @@ GetTransformToAncestorsParentLayer(Layer* aStart, const LayerMetricsWrapper& aAn
     // If the layer has a non-transient async transform then we need to apply it here
     // because it will get applied by the APZ in the compositor as well
     const FrameMetrics& metrics = iter.Metrics();
-    transform.PostScale(metrics.mPresShellResolution.scale, metrics.mPresShellResolution.scale, 1.f);
+    transform.PostScale(metrics.mResolution.scale, metrics.mResolution.scale, 1.f);
   }
   return transform;
 }
@@ -167,7 +167,7 @@ ClientTiledPaintedLayer::BeginPaint()
   // Store the resolution from the displayport ancestor layer. Because this is Gecko-side,
   // before any async transforms have occurred, we can use the zoom for this.
   mPaintData.mResolution = displayportMetrics.GetZoomToParent();
-  TILING_LOG("TILING %p: Resolution %f\n", this, mPaintData.mPresShellResolution.scale);
+  TILING_LOG("TILING %p: Resolution %f\n", this, mPaintData.mResolution.scale);
 
   // Store the applicable composition bounds in this layer's Layer units.
   mPaintData.mTransformToCompBounds =
