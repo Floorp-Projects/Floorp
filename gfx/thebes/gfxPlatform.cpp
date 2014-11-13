@@ -229,9 +229,6 @@ void CrashStatsLogForwarder::UpdateCrashReport()
   }
 
 #ifdef MOZ_CRASHREPORTER
-  if (!NS_IsMainThread()) {
-    return;
-  }
   nsCString reportString(message.str().c_str());
   nsresult annotated = CrashReporter::AnnotateCrashReport(mCrashCriticalKey, reportString);
 #else
