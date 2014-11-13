@@ -90,9 +90,13 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     // Selection caret
     mSelectionCaretsStartElement = doc->CreateHTMLElement(nsGkAtoms::div);
     aElements.AppendElement(mSelectionCaretsStartElement);
+    nsCOMPtr<mozilla::dom::Element> selectionCaretsStartElementInner = doc->CreateHTMLElement(nsGkAtoms::div);
+    mSelectionCaretsStartElement->AppendChildTo(selectionCaretsStartElementInner, false);
 
     mSelectionCaretsEndElement = doc->CreateHTMLElement(nsGkAtoms::div);
     aElements.AppendElement(mSelectionCaretsEndElement);
+    nsCOMPtr<mozilla::dom::Element> selectionCaretsEndElementInner = doc->CreateHTMLElement(nsGkAtoms::div);
+    mSelectionCaretsEndElement->AppendChildTo(selectionCaretsEndElementInner, false);
 
     rv = mSelectionCaretsStartElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                                NS_LITERAL_STRING("moz-selectioncaret-left hidden"),
