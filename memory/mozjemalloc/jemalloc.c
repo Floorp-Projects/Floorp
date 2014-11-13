@@ -290,7 +290,11 @@ typedef long ssize_t;
  */
 #define JEMALLOC_MUNMAP
 
-#undef JEMALLOC_RECYCLE
+/*
+ * Enable limited chunk recycling on all platforms. Note that when
+ * JEMALLOC_MUNMAP is not defined, all chunks will be recycled unconditionally.
+ */
+#define JEMALLOC_RECYCLE
 
 #ifndef MOZ_MEMORY_WINDOWS
 #ifndef MOZ_MEMORY_SOLARIS
