@@ -60,7 +60,7 @@ static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
 static bool
 CheckFrame(InterpreterFrame *fp)
 {
-    if (fp->isDebuggerFrame()) {
+    if (fp->isDebuggerEvalFrame()) {
         // Debugger eval-in-frame. These are likely short-running scripts so
         // don't bother compiling them for now.
         JitSpew(JitSpew_BaselineAbort, "debugger frame");
