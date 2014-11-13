@@ -220,7 +220,7 @@ class StarGeneratorObject : public GeneratorObject
     static const Class class_;
 };
 
-bool GeneratorThrow(JSContext *cx, HandleObject obj, HandleValue val);
+bool GeneratorThrowOrClose(JSContext *cx, HandleObject obj, HandleValue val, uint32_t resumeKind);
 
 } // namespace js
 

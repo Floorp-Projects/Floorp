@@ -3429,8 +3429,8 @@ typedef bool (*InterpretResumeFn)(JSContext *, HandleObject, HandleValue, Handle
                                   MutableHandleValue);
 static const VMFunction InterpretResumeInfo = FunctionInfo<InterpretResumeFn>(jit::InterpretResume);
 
-typedef bool (*GeneratorThrowFn)(JSContext *, HandleObject, HandleValue);
-static const VMFunction GeneratorThrowInfo = FunctionInfo<GeneratorThrowFn>(js::GeneratorThrow);
+typedef bool (*GeneratorThrowFn)(JSContext *, HandleObject, HandleValue, uint32_t);
+static const VMFunction GeneratorThrowInfo = FunctionInfo<GeneratorThrowFn>(js::GeneratorThrowOrClose);
 
 bool
 BaselineCompiler::emit_JSOP_RESUME()
@@ -3446,29 +3446,6 @@ BaselineCompiler::emit_JSOP_RESUME()
     // Load generator object.
     Register genObj = regs.takeAny();
     masm.unboxObject(frame.addressOfStackValue(frame.peek(-2)), genObj);
-
-    if (resumeKind == GeneratorObject::CLOSE) {
-        // Resume the CLOSE operation in the interpreter. This is only used for
-        // legacy generators and requires some complicated exception handling
-        // logic to only execute |finally| blocks and then return to the caller
-        // without throwing. Furthermore, because it only executes |finally|
-        // blocks, it's unlikely to benefit from JIT compilation.
-
-        ValueOperand retVal = regs.takeAnyValue();
-        masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), retVal);
-
-        prepareVMCall();
-        pushArg(ImmGCPtr(cx->names().close));
-        pushArg(retVal);
-        pushArg(genObj);
-
-        if (!callVM(InterpretResumeInfo))
-            return false;
-
-        frame.popn(2);
-        frame.push(R0);
-        return true;
-    }
 
     // Load callee.
     Register callee = regs.takeAny();
@@ -3594,7 +3571,7 @@ BaselineCompiler::emit_JSOP_RESUME()
                         Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()));
         masm.jump(scratch1);
     } else {
-        MOZ_ASSERT(resumeKind == GeneratorObject::THROW);
+        MOZ_ASSERT(resumeKind == GeneratorObject::THROW || resumeKind == GeneratorObject::CLOSE);
 
         // Update the frame's frameSize field.
         Register scratch3 = regs.takeAny();
@@ -3605,6 +3582,7 @@ BaselineCompiler::emit_JSOP_RESUME()
         masm.store32(scratch2, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
         prepareVMCall();
+        pushArg(Imm32(resumeKind));
         pushArg(retVal);
         pushArg(genObj);
 
@@ -3631,9 +3609,11 @@ BaselineCompiler::emit_JSOP_RESUME()
     prepareVMCall();
     if (resumeKind == GeneratorObject::NEXT) {
         pushArg(ImmGCPtr(cx->names().next));
-    } else {
-        MOZ_ASSERT(resumeKind == GeneratorObject::THROW);
+    } else if (resumeKind == GeneratorObject::THROW) {
         pushArg(ImmGCPtr(cx->names().throw_));
+    } else {
+        MOZ_ASSERT(resumeKind == GeneratorObject::CLOSE);
+        pushArg(ImmGCPtr(cx->names().close));
     }
 
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), retVal);
