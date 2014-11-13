@@ -4768,15 +4768,16 @@ nsTextFrame::GetTextDecorations(
   bool useOverride = false;
   nscolor overrideColor = NS_RGBA(0, 0, 0, 0);
 
-  // frameTopOffset represents the offset to f's top from our baseline in our
+  // frameBStartOffset represents the offset to f's BStart from our baseline in our
   // coordinate space
   // baselineOffset represents the offset from our baseline to f's baseline or
   // the nearest block's baseline, in our coordinate space, whichever is closest
   // during the particular iteration
-  nscoord frameTopOffset = mAscent,
+  nscoord frameBStartOffset = mAscent,
           baselineOffset = 0;
 
   bool nearestBlockFound = false;
+  bool vertical = GetWritingMode().IsVertical();
 
   for (nsIFrame* f = this, *fChild = nullptr;
        f;
@@ -4819,18 +4820,20 @@ nsTextFrame::GetTextDecorations(
         const nscoord lineBaselineOffset = LazyGetLineBaselineOffset(fChild,
                                                                      fBlock);
 
-        baselineOffset =
-          frameTopOffset - fChild->GetNormalPosition().y - lineBaselineOffset;
+        baselineOffset = frameBStartOffset - lineBaselineOffset -
+          (vertical ? fChild->GetNormalPosition().x
+                    : fChild->GetNormalPosition().y);
       }
     }
     else if (!nearestBlockFound) {
       // use a dummy WritingMode, because nsTextFrame::GetLogicalBaseLine
       // doesn't use it anyway
-      baselineOffset = frameTopOffset - f->GetLogicalBaseline(WritingMode());
+      baselineOffset = frameBStartOffset - f->GetLogicalBaseline(WritingMode());
     }
 
     nearestBlockFound = nearestBlockFound || firstBlock;
-    frameTopOffset += f->GetNormalPosition().y;
+    frameBStartOffset +=
+      vertical ? f->GetNormalPosition().x : f->GetNormalPosition().y;
 
     const uint8_t style = styleText->GetDecorationStyle();
     if (textDecorations) {
@@ -6157,13 +6160,28 @@ nsTextFrame::DrawTextRunAndDecorations(
 
     // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
     nscoord x = NSToCoordRound(aFramePt.x);
-    nscoord width = vertical ? GetRect().height : GetRect().width;
-    aClipEdges.Intersect(&x, &width);
+    nscoord y = NSToCoordRound(aFramePt.y);
 
-    gfxPoint decPt(x / app, 0);
+    // 'width' here is textrun-relative, so for a vertical run it's
+    // really the height of the decoration
+    nscoord width = vertical ? GetRect().height : GetRect().width;
+
+    // XXX todo: probably should have a vertical version of this...
+    if (!vertical) {
+      aClipEdges.Intersect(&x, &width);
+    }
+
+    // decPt is the physical point where the decoration is to be drawn,
+    // relative to the frame; one of its coordinates will be updated below.
+    gfxPoint decPt(x / app, y / app);
+    gfxFloat& bCoord = vertical ? decPt.x : decPt.y;
+
+    // ...whereas decSize is a textrun-relative size
     gfxSize decSize(width / app, 0);
     const gfxFloat ascent = gfxFloat(mAscent) / app;
-    const gfxFloat frameTop = aFramePt.y;
+
+    // The starting edge of the frame in block direction
+    const gfxFloat frameBStart = vertical ? aFramePt.x : aFramePt.y;
 
     gfxRect dirtyRect(aDirtyRect.x / app, aDirtyRect.y / app,
                       aDirtyRect.Width() / app, aDirtyRect.Height() / app);
@@ -6185,7 +6203,7 @@ nsTextFrame::DrawTextRunAndDecorations(
                             vertical);
 
       decSize.height = metrics.underlineSize;
-      decPt.y = (frameTop - dec.mBaselineOffset) / app;
+      bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
       PaintDecorationLine(this, aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
@@ -6206,7 +6224,7 @@ nsTextFrame::DrawTextRunAndDecorations(
                             vertical);
 
       decSize.height = metrics.underlineSize;
-      decPt.y = (frameTop - dec.mBaselineOffset) / app;
+      bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
       PaintDecorationLine(this, aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
@@ -6233,7 +6251,7 @@ nsTextFrame::DrawTextRunAndDecorations(
                             vertical);
 
       decSize.height = metrics.strikeoutSize;
-      decPt.y = (frameTop - dec.mBaselineOffset) / app;
+      bCoord = (frameBStart - dec.mBaselineOffset) / app;
 
       PaintDecorationLine(this, aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
