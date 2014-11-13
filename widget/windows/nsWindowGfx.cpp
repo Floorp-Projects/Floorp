@@ -25,6 +25,7 @@
 using mozilla::plugins::PluginInstanceParent;
 
 #include "nsWindowGfx.h"
+#include "nsAppRunner.h"
 #include <windows.h>
 #include "gfxImageSurface.h"
 #include "gfxUtils.h"
@@ -40,6 +41,8 @@ using mozilla::plugins::PluginInstanceParent;
 #include "WinUtils.h"
 #include "nsIWidgetListener.h"
 #include "mozilla/unused.h"
+#include "nsDebug.h"
+#include "nsIXULRuntime.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -184,14 +187,17 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   if (mozilla::ipc::MessageChannel::IsSpinLoopActive() && mPainting)
     return false;
 
-  if (mWindowType == eWindowType_plugin) {
-
-    /**
-     * After we CallUpdateWindow to the child, occasionally a WM_PAINT message
-     * is posted to the parent event loop with an empty update rect. Do a
-     * dummy paint so that Windows stops dispatching WM_PAINT in an inifinite
-     * loop. See bug 543788.
-     */
+  // After we CallUpdateWindow to the child, occasionally a WM_PAINT message
+  // is posted to the parent event loop with an empty update rect. Do a
+  // dummy paint so that Windows stops dispatching WM_PAINT in an inifinite
+  // loop. See bug 543788.
+  if (IsPlugin()) {
+    // XXX Ignore for now when we're running with full blown e10s
+    if (mozilla::BrowserTabsRemoteAutostart()) {
+      printf_stderr("nsWindow::OnPaint() bailing on paint!\n");
+      ValidateRect(mWnd, nullptr);
+      return true;
+    }
     RECT updateRect;
     if (!GetUpdateRect(mWnd, &updateRect, FALSE) ||
         (updateRect.left == updateRect.right &&

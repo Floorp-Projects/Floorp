@@ -881,6 +881,39 @@ FinalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *
 }
 
 bool
+InterpretResume(JSContext *cx, HandleObject obj, HandleValue val, HandlePropertyName kind,
+                MutableHandleValue rval)
+{
+    MOZ_ASSERT(obj->is<GeneratorObject>());
+
+    RootedValue selfHostedFun(cx);
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().InterpretGeneratorResume,
+                                         &selfHostedFun))
+    {
+        return false;
+    }
+
+    MOZ_ASSERT(selfHostedFun.toObject().is<JSFunction>());
+
+    InvokeArgs args(cx);
+    if (!args.init(3))
+        return false;
+
+    args.setCallee(selfHostedFun);
+    args.setThis(UndefinedValue());
+
+    args[0].setObject(*obj);
+    args[1].set(val);
+    args[2].setString(kind);
+
+    if (!Invoke(cx, args))
+        return false;
+
+    rval.set(args.rval());
+    return true;
+}
+
+bool
 StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 {
     return frame->strictEvalPrologue(cx);

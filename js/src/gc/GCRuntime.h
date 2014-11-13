@@ -503,7 +503,7 @@ class GCRuntime
      * Must be called either during the GC or with the GC lock taken.
      */
     Chunk *expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock);
-    void freeEmptyChunks(JSRuntime *rt);
+    void freeEmptyChunks(JSRuntime *rt, const AutoLockGC &lock);
     void freeChunkList(Chunk *chunkListHead);
     void prepareToFreeChunk(ChunkInfo &info);
     void releaseChunk(Chunk *chunk);
@@ -548,6 +548,7 @@ class GCRuntime
     bool sweepPhase(SliceBudget &sliceBudget);
     void endSweepPhase(bool lastGC);
     void sweepZones(FreeOp *fop, bool lastGC);
+    void decommitAllWithoutUnlocking(const AutoLockGC &lock);
     void decommitArenas(const AutoLockGC &lock);
     void expireChunksAndArenas(bool shouldShrink, const AutoLockGC &lock);
     void sweepBackgroundThings();

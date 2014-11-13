@@ -147,8 +147,9 @@ public:
 #else // XP_MACOSX
   void UpdateWindowPositionAndClipRect(bool aSetWindow);
   void UpdateWindowVisibility(bool aVisible);
-  void UpdateDocumentActiveState(bool aIsActive);
 #endif // XP_MACOSX
+
+  void UpdateDocumentActiveState(bool aIsActive);
 
   void SetFrame(nsPluginFrame *aFrame);
   nsPluginFrame* GetFrame();

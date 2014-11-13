@@ -166,7 +166,7 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
 nsresult
 nsJSUtils::EvaluateString(JSContext* aCx,
                           const nsAString& aScript,
-                          JS::Handle<JSObject*> aScopeObject,
+                          JS::Handle<JSObject*> aEvaluationGlobal,
                           JS::CompileOptions& aCompileOptions,
                           const EvaluateOptions& aEvaluateOptions,
                           JS::MutableHandle<JS::Value> aRetValue,
@@ -175,14 +175,14 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   const nsPromiseFlatString& flatScript = PromiseFlatString(aScript);
   JS::SourceBufferHolder srcBuf(flatScript.get(), aScript.Length(),
                                 JS::SourceBufferHolder::NoOwnership);
-  return EvaluateString(aCx, srcBuf, aScopeObject, aCompileOptions,
+  return EvaluateString(aCx, srcBuf, aEvaluationGlobal, aCompileOptions,
                         aEvaluateOptions, aRetValue, aOffThreadToken);
 }
 
 nsresult
 nsJSUtils::EvaluateString(JSContext* aCx,
                           JS::SourceBufferHolder& aSrcBuf,
-                          JS::Handle<JSObject*> aScopeObject,
+                          JS::Handle<JSObject*> aEvaluationGlobal,
                           JS::CompileOptions& aCompileOptions,
                           const EvaluateOptions& aEvaluateOptions,
                           JS::MutableHandle<JS::Value> aRetValue,
@@ -197,6 +197,8 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   MOZ_ASSERT_IF(!aEvaluateOptions.reportUncaught, aEvaluateOptions.needResult);
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
   MOZ_ASSERT(aSrcBuf.get());
+  MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(aEvaluationGlobal) ==
+             aEvaluationGlobal);
 
   // Unfortunately, the JS engine actually compiles scripts with a return value
   // in a different, less efficient way.  Furthermore, it can't JIT them in many
@@ -206,13 +208,11 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   // set to false.
   aRetValue.setUndefined();
 
-  JS::ExposeObjectToActiveJS(aScopeObject);
   nsAutoMicroTask mt;
   nsresult rv = NS_OK;
 
-  bool ok = false;
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  NS_ENSURE_TRUE(ssm->ScriptAllowed(js::GetGlobalForObjectCrossCompartment(aScopeObject)), NS_OK);
+  NS_ENSURE_TRUE(ssm->ScriptAllowed(aEvaluationGlobal), NS_OK);
 
   mozilla::Maybe<AutoDontReportUncaught> dontReport;
   if (!aEvaluateOptions.reportUncaught) {
@@ -221,32 +221,45 @@ nsJSUtils::EvaluateString(JSContext* aCx,
     dontReport.emplace(aCx);
   }
 
+  bool ok = true;
   // Scope the JSAutoCompartment so that we can later wrap the return value
   // into the caller's cx.
   {
-    JSAutoCompartment ac(aCx, aScopeObject);
+    JSAutoCompartment ac(aCx, aEvaluationGlobal);
 
-    JS::Rooted<JSObject*> rootedScope(aCx, aScopeObject);
-    if (aOffThreadToken) {
+    // Now make sure to wrap the scope chain into the right compartment.
+    JS::AutoObjectVector scopeChain(aCx);
+    if (!scopeChain.reserve(aEvaluateOptions.scopeChain.length())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    for (size_t i = 0; i < aEvaluateOptions.scopeChain.length(); ++i) {
+      JS::ExposeObjectToActiveJS(aEvaluateOptions.scopeChain[i]);
+      scopeChain.infallibleAppend(aEvaluateOptions.scopeChain[i]);
+      if (!JS_WrapObject(aCx, scopeChain[i])) {
+        ok = false;
+        break;
+      }
+    }
+
+    if (ok && aOffThreadToken) {
       JS::Rooted<JSScript*>
         script(aCx, JS::FinishOffThreadScript(aCx, JS_GetRuntime(aCx), *aOffThreadToken));
       *aOffThreadToken = nullptr; // Mark the token as having been finished.
       if (script) {
         if (aEvaluateOptions.needResult) {
-          ok = JS_ExecuteScript(aCx, rootedScope, script, aRetValue);
+          ok = JS_ExecuteScript(aCx, scopeChain, script, aRetValue);
         } else {
-          ok = JS_ExecuteScript(aCx, rootedScope, script);
+          ok = JS_ExecuteScript(aCx, scopeChain, script);
         }
       } else {
         ok = false;
       }
-    } else {
+    } else if (ok) {
       if (aEvaluateOptions.needResult) {
-        ok = JS::Evaluate(aCx, rootedScope, aCompileOptions,
-                          aSrcBuf, aRetValue);
+        ok = JS::Evaluate(aCx, scopeChain, aCompileOptions, aSrcBuf, aRetValue);
       } else {
-        ok = JS::Evaluate(aCx, rootedScope, aCompileOptions,
-                          aSrcBuf);
+        ok = JS::Evaluate(aCx, scopeChain, aCompileOptions, aSrcBuf);
       }
     }
 
@@ -290,28 +303,28 @@ nsJSUtils::EvaluateString(JSContext* aCx,
 nsresult
 nsJSUtils::EvaluateString(JSContext* aCx,
                           const nsAString& aScript,
-                          JS::Handle<JSObject*> aScopeObject,
+                          JS::Handle<JSObject*> aEvaluationGlobal,
                           JS::CompileOptions& aCompileOptions,
                           void **aOffThreadToken)
 {
-  EvaluateOptions options;
+  EvaluateOptions options(aCx);
   options.setNeedResult(false);
   JS::RootedValue unused(aCx);
-  return EvaluateString(aCx, aScript, aScopeObject, aCompileOptions,
+  return EvaluateString(aCx, aScript, aEvaluationGlobal, aCompileOptions,
                         options, &unused, aOffThreadToken);
 }
 
 nsresult
 nsJSUtils::EvaluateString(JSContext* aCx,
                           JS::SourceBufferHolder& aSrcBuf,
-                          JS::Handle<JSObject*> aScopeObject,
+                          JS::Handle<JSObject*> aEvaluationGlobal,
                           JS::CompileOptions& aCompileOptions,
                           void **aOffThreadToken)
 {
-  EvaluateOptions options;
+  EvaluateOptions options(aCx);
   options.setNeedResult(false);
   JS::RootedValue unused(aCx);
-  return EvaluateString(aCx, aSrcBuf, aScopeObject, aCompileOptions,
+  return EvaluateString(aCx, aSrcBuf, aEvaluationGlobal, aCompileOptions,
                         options, &unused, aOffThreadToken);
 }
 

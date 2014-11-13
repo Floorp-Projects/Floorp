@@ -189,7 +189,14 @@ NS_IMETHODIMP nsDelayedPopupsEnabledEvent::Run()
 static LRESULT CALLBACK PluginWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 /**
- *   New plugin window procedure
+ * New plugin window procedure
+ *
+ * e10s note - this subclass, and the hooks we set below using WindowsDllInterceptor
+ * are currently not in use when running with e10s. (Utility calls like CallSetWindow
+ * are still in use in the content process.) We would like to keep things this away,
+ * essentially making all the hacks here obsolete. Some of the mitigation work here has
+ * already been supplanted by code in PluginInstanceChild. The rest we eventually want
+ * to rip out.
  */
 static LRESULT CALLBACK PluginWndProcInternal(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -601,6 +608,8 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
   // not interested in subclassing business any more, undo and don't subclass
   if (!aPluginInstance) {
     UndoSubclassAndAssociateWindow();
+    // release plugin instance
+    SetPluginInstance(nullptr);
     nsPluginNativeWindow::CallSetWindow(aPluginInstance);
     return NS_OK;
   }
@@ -619,6 +628,14 @@ nsresult nsPluginNativeWindowWin::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
       else
         mPluginType = nsPluginType_Other;
     }
+  }
+
+  // With e10s we execute in the content process and as such we don't
+  // have access to native widgets. CallSetWindow and skip native widget
+  // subclassing.
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    nsPluginNativeWindow::CallSetWindow(aPluginInstance);
+    return NS_OK;
   }
 
   if (window) {
@@ -706,9 +723,6 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
 
 nsresult nsPluginNativeWindowWin::UndoSubclassAndAssociateWindow()
 {
-  // release plugin instance
-  SetPluginInstance(nullptr);
-
   // remove window property
   HWND hWnd = (HWND)window;
   if (IsWindow(hWnd))

@@ -15,6 +15,7 @@ include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
 include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
+include protocol PPluginWidget;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
@@ -80,12 +81,20 @@ prio(normal upto urgent) intr protocol PBrowser
     manages PIndexedDBPermissionRequest;
     manages PRenderFrame;
     manages POfflineCacheUpdate;
+    manages PPluginWidget;
 
 both:
     AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
                  Principal aPrincipal);
 
 parent:
+    /*
+     * Creates a new remoted nsIWidget connection for windowed plugins
+     * in e10s mode. This is always initiated from the child in response
+     * to windowed plugin creation.
+     */
+    sync PPluginWidget();
+
     /**
      * When child sends this message, parent should move focus to
      * the next or previous focusable element.

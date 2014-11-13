@@ -49,6 +49,10 @@ let bypassOffline = false;
 let qemu = "0";
 let device = null;
 
+XPCOMUtils.defineLazyServiceGetter(this, "cookieManager",
+                                   "@mozilla.org/cookiemanager;1",
+                                   "nsICookieManager");
+
 try {
   XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
     Cu.import("resource://gre/modules/systemlibs.js");
@@ -2678,6 +2682,45 @@ MarionetteServerConnection.prototype = {
           this.currentFrameElement = message.json.frameValue;
         }
         break;
+      case "Marionette:getVisibleCookies":
+        let [currentPath, host] = message.json.value;
+        let isForCurrentPath = function(aPath) {
+          return currentPath.indexOf(aPath) != -1;
+        }
+        let results = [];
+        let enumerator = cookieManager.enumerator;
+        while (enumerator.hasMoreElements()) {
+          let cookie = enumerator.getNext().QueryInterface(Ci['nsICookie']);
+          // Take the hostname and progressively shorten
+          let hostname = host;
+          do {
+            if ((cookie.host == '.' + hostname || cookie.host == hostname)
+                && isForCurrentPath(cookie.path)) {
+              results.push({
+                'name': cookie.name,
+                'value': cookie.value,
+                'path': cookie.path,
+                'host': cookie.host,
+                'secure': cookie.isSecure,
+                'expiry': cookie.expires
+              });
+              break;
+            }
+            hostname = hostname.replace(/^.*?\./, '');
+          } while (hostname.indexOf('.') != -1);
+        }
+        return results;
+      case "Marionette:addCookie":
+        let cookieToAdd = message.json.value;
+        Services.cookies.add(cookieToAdd.domain, cookieToAdd.path, cookieToAdd.name,
+                             cookieToAdd.value, cookieToAdd.secure, false, false,
+                             cookieToAdd.expiry);
+        return true;
+      case "Marionette:deleteCookie":
+        let cookieToDelete = message.json.value;
+        cookieManager.remove(cookieToDelete.host, cookieToDelete.name,
+                             cookieToDelete.path, false);
+        return true;
       case "Marionette:register":
         // This code processes the content listener's registration information
         // and either accepts the listener, or ignores it

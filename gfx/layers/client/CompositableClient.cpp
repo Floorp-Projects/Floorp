@@ -228,24 +228,6 @@ CompositableClient::OnTransaction()
 }
 
 void
-CompositableClient::UseTexture(TextureClient* aTexture)
-{
-  MOZ_ASSERT(aTexture);
-  if (!aTexture) {
-    return;
-  }
-
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  FenceHandle handle = aTexture->GetAcquireFenceHandle();
-  if (handle.IsValid()) {
-    RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(handle);
-    mForwarder->SendFenceHandle(tracker, aTexture->GetIPDLActor(), handle);
-  }
-#endif
-  mForwarder->UseTexture(this, aTexture);
-}
-
-void
 CompositableClient::RemoveTexture(TextureClient* aTexture)
 {
   mForwarder->RemoveTextureFromCompositable(this, aTexture);

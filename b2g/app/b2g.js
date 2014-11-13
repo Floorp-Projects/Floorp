@@ -320,7 +320,7 @@ pref("media.cache_readahead_limit", 30);
 
 #ifdef MOZ_FMP4
 // Enable/Disable Gonk Decoder Module
-pref("media.fragmented-mp4.gonk.enabled", false);
+pref("media.fragmented-mp4.gonk.enabled", true);
 #endif
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
