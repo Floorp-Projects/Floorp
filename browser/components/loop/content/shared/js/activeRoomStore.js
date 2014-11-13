@@ -25,7 +25,9 @@ loop.store.ActiveRoomStore = (function() {
     // There are participants in the room.
     HAS_PARTICIPANTS: "room-has-participants",
     // There was an issue with the room
-    FAILED: "room-failed"
+    FAILED: "room-failed",
+    // The room is full
+    FULL: "room-full"
   };
 
   /**
@@ -105,8 +107,7 @@ loop.store.ActiveRoomStore = (function() {
     },
 
     /**
-     * Handles a room failure. Currently this prints the error to the console
-     * and sets the roomState to failed.
+     * Handles a room failure.
      *
      * @param {sharedActions.RoomFailure} actionData
      */
@@ -116,7 +117,8 @@ loop.store.ActiveRoomStore = (function() {
 
       this.setStoreState({
         error: actionData.error,
-        roomState: ROOM_STATES.FAILED
+        roomState: actionData.error.errno === 202 ? ROOM_STATES.FULL
+                                                  : ROOM_STATES.FAILED
       });
     },
 

@@ -246,6 +246,16 @@ describe("loop.roomViews", function () {
             loop.conversation.GenericFailureView);
         });
 
+      it("should render the GenericFailureView if the roomState is `FULL`",
+        function() {
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.FULL});
+
+          view = mountTestComponent();
+
+          TestUtils.findRenderedComponentWithType(view,
+            loop.conversation.GenericFailureView);
+        });
+
       it("should render the DesktopRoomInvitationView if roomState is `JOINED`",
         function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINED});
