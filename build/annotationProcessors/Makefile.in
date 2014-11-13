@@ -4,7 +4,7 @@
 
 include $(topsrcdir)/config/rules.mk
 
-JAVA_CLASSPATH := $(ANDROID_SDK)/android.jar
+JAVA_CLASSPATH := $(ANDROID_SDK)/android.jar:$(ANDROID_SDK)/../../tools/lib/lint.jar:$(ANDROID_SDK)/../../tools/lib/lint-checks.jar
 
 # Include Android specific java flags, instead of what's in rules.mk.
 include $(topsrcdir)/config/android-common.mk
