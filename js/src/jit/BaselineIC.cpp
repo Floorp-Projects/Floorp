@@ -8675,6 +8675,10 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 
     RootedObject obj(cx, &callee.toObject());
     if (!obj->is<JSFunction>()) {
+        // Try to attach a stub for a call/construct hook on the object.
+        // Ignore proxies, which are special cased by callHook/constructHook.
+        if (obj->is<ProxyObject>())
+            return true;
         if (JSNative hook = constructing ? obj->constructHook() : obj->callHook()) {
             if (op != JSOP_FUNAPPLY && !isSpread && !useNewType) {
                 RootedObject templateObject(cx);
