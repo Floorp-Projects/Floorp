@@ -177,8 +177,6 @@ loop.shared.models = (function(l10n) {
                                   this._connectionDestroyed);
       this.listenTo(this.session, "sessionDisconnected",
                                   this._sessionDisconnected);
-      this.listenTo(this.session, "networkDisconnected",
-                                  this._networkDisconnected);
       this.session.connect(this.get("apiKey"), this.get("sessionToken"),
                            this._onConnectCompletion.bind(this));
     },
@@ -323,9 +321,17 @@ loop.shared.models = (function(l10n) {
      * @param  {SessionDisconnectEvent} event
      */
     _sessionDisconnected: function(event) {
+      if(event.reason === "networkDisconnected") {
+        this._signalEnd("session:network-disconnected", event);
+      } else {
+        this._signalEnd("session:ended", event);
+      }
+    },
+
+    _signalEnd: function(eventName, event) {
       this.set("connected", false)
           .set("ongoing", false)
-          .trigger("session:ended");
+          .trigger(eventName, event);
     },
 
     /**
@@ -335,24 +341,11 @@ loop.shared.models = (function(l10n) {
      * @param  {ConnectionEvent} event
      */
     _connectionDestroyed: function(event) {
-      this.set("connected", false)
-          .set("ongoing", false)
-          .trigger("session:peer-hungup", {
-            connectionId: event.connection.connectionId
-          });
-      this.endSession();
-    },
-
-    /**
-     * Network was disconnected.
-     * http://tokbox.com/opentok/libraries/client/js/reference/ConnectionEvent.html
-     *
-     * @param {ConnectionEvent} event
-     */
-    _networkDisconnected: function(event) {
-      this.set("connected", false)
-          .set("ongoing", false)
-          .trigger("session:network-disconnected");
+      if (event.reason === "networkDisconnected") {
+        this._signalEnd("session:network-disconnected", event);
+      } else {
+        this._signalEnd("session:peer-hungup", event);
+      }
       this.endSession();
     },
   });
