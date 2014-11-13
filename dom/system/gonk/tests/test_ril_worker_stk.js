@@ -403,10 +403,53 @@ add_test(function test_write_length() {
 });
 
 // Test Proactive commands.
+
+function test_stk_proactive_command(aOptions) {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let pduHelper = context.GsmPDUHelper;
+  let berHelper = context.BerTlvHelper;
+  let stkHelper = context.StkProactiveCmdHelper;
+  let stkFactory = context.StkCommandParamsFactory;
+
+  let testPdu = aOptions.pdu;
+  let testTypeOfCommand = aOptions.typeOfCommand;
+  let testIcons = aOptions.icons;
+  let testFunc = aOptions.testFunc;
+
+  if (testIcons) {
+    let ril = context.RIL;
+    ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                              0x00, 0x30]; //IMG: 39
+    ril.appType = CARD_APPTYPE_SIM;
+
+    // skip asynchornous process in IconLoader.loadIcons().
+    let iconLoader = context.IconLoader;
+    iconLoader.loadIcons = (recordNumbers, onsuccess, onerror) => {
+      onsuccess(testIcons);
+    };
+  }
+
+  for(let i = 0 ; i < testPdu.length; i++) {
+    pduHelper.writeHexOctet(testPdu[i]);
+  }
+
+  let berTlv = berHelper.decode(testPdu.length);
+  let ctlvs = berTlv.value;
+  let ctlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
+  let cmdDetails = ctlv.value;
+  do_check_eq(cmdDetails.typeOfCommand, testTypeOfCommand);
+
+  stkFactory.createParam(cmdDetails, ctlvs, (aResult) => {
+    cmdDetails.options = aResult;
+    testFunc(context, cmdDetails, ctlvs);
+  });
+}
+
 /**
- * Verify Proactive command helper : searchForNextTag
+ * Verify Proactive command helper : searchForSelectedTags
  */
-add_test(function test_stk_proactive_command_search_next_tag() {
+add_test(function test_stk_proactive_command_search_for_selected_tags() {
   let worker = newUint8Worker();
   let context = worker.ContextPool._contexts[0];
   let pduHelper = context.GsmPDUHelper;
@@ -427,20 +470,21 @@ add_test(function test_stk_proactive_command_search_next_tag() {
   }
 
   let berTlv = berHelper.decode(tag_test.length);
-  let iter = Iterator(berTlv.value);
-  let tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  let selectedCtlvs =
+      stkHelper.searchForSelectedTags(berTlv.value, [COMPREHENSIONTLV_TAG_ALPHA_ID]);
+  let tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
   do_check_eq(tlv.value.identifier, "alpha id 1");
 
-  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
   do_check_eq(tlv.value.identifier, "alpha id 2");
 
-  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
   do_check_eq(tlv.value.identifier, "alpha id 3");
 
-  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
   do_check_eq(tlv.value.identifier, "alpha id 4");
 
-  tlv = stkHelper.searchForNextTag(COMPREHENSIONTLV_TAG_ALPHA_ID, iter);
+  tlv = selectedCtlvs.retrieve(COMPREHENSIONTLV_TAG_ALPHA_ID);
   do_check_eq(tlv.value.identifier, "alpha id 5");
 
   run_next_test();
@@ -450,32 +494,22 @@ add_test(function test_stk_proactive_command_search_next_tag() {
  * Verify Proactive Command : Refresh
  */
 add_test(function test_stk_proactive_command_refresh() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
-
-  let refresh_1 = [
-    0xD0,
-    0x10,
-    0x81, 0x03, 0x01, 0x01, 0x01,
-    0x82, 0x02, 0x81, 0x82,
-    0x92, 0x05, 0x01, 0x3F, 0x00, 0x2F, 0xE2];
-
-  for (let i = 0; i < refresh_1.length; i++) {
-    pduHelper.writeHexOctet(refresh_1[i]);
-  }
-
-  let berTlv = berHelper.decode(refresh_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, 0x01);
-  do_check_eq(tlv.value.commandQualifier, 0x01);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_FILE_LIST, ctlvs);
-  do_check_eq(tlv.value.fileList, "3F002FE2");
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x10,
+      0x81, 0x03, 0x01, 0x01, 0x01,
+      0x82, 0x02, 0x81, 0x82,
+      0x92, 0x05, 0x01, 0x3F, 0x00, 0x2F, 0xE2
+    ],
+    typeOfCommand: STK_CMD_REFRESH,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let stkHelper = context.StkProactiveCmdHelper;
+      let ctlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_FILE_LIST, ctlvs);
+      do_check_eq(ctlv.value.fileList, "3F002FE2");
+    }
+  });
 
   run_next_test();
 });
@@ -484,50 +518,30 @@ add_test(function test_stk_proactive_command_refresh() {
  * Verify Proactive Command : Play Tone
  */
 add_test(function test_stk_proactive_command_play_tone() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
-  let ril = context.RIL;
-  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x10];
-  ril.appType = CARD_APPTYPE_SIM;
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x1F,
+      0x81, 0x03, 0x01, 0x20, 0x00,
+      0x82, 0x02, 0x81, 0x03,
+      0x85, 0x09, 0x44, 0x69, 0x61, 0x6C, 0x20, 0x54, 0x6F, 0x6E, 0x65,
+      0x8E, 0x01, 0x01,
+      0x84, 0x02, 0x01, 0x05,
+      0x9E, 0x02, 0x00, 0x01
+    ],
+    typeOfCommand: STK_CMD_PLAY_TONE,
+    icons: [1],
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let playTone = cmdDetails.options;
 
-  let tone_1 = [
-    0xD0,
-    0x1F,
-    0x81, 0x03, 0x01, 0x20, 0x00,
-    0x82, 0x02, 0x81, 0x03,
-    0x85, 0x09, 0x44, 0x69, 0x61, 0x6C, 0x20, 0x54, 0x6F, 0x6E, 0x65,
-    0x8E, 0x01, 0x01,
-    0x84, 0x02, 0x01, 0x05,
-    0x9E, 0x02, 0x00, 0x01];
-
-  for (let i = 0; i < tone_1.length; i++) {
-    pduHelper.writeHexOctet(tone_1[i]);
-  }
-
-  let berTlv = berHelper.decode(tone_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, 0x20);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
-  do_check_eq(tlv.value.identifier, "Dial Tone");
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TONE, ctlvs);
-  do_check_eq(tlv.value.tone, STK_TONE_TYPE_DIAL_TONE);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
-  do_check_eq(tlv.value.timeUnit, STK_TIME_UNIT_SECOND);
-  do_check_eq(tlv.value.timeInterval, 5);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifier, 0x01);
+      do_check_eq(playTone.text, "Dial Tone");
+      do_check_eq(playTone.tone, STK_TONE_TYPE_DIAL_TONE);
+      do_check_eq(playTone.duration.timeUnit, STK_TIME_UNIT_SECOND);
+      do_check_eq(playTone.duration.timeInterval, 5);
+      do_check_eq(playTone.iconSelfExplanatory, true);
+      do_check_eq(playTone.icons, 1);
+    }
+  });
 
   run_next_test();
 });
@@ -536,33 +550,23 @@ add_test(function test_stk_proactive_command_play_tone() {
  * Verify Proactive Command : Poll Interval
  */
 add_test(function test_stk_proactive_command_poll_interval() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x0D,
+      0x81, 0x03, 0x01, 0x03, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x84, 0x02, 0x01, 0x14
+    ],
+    typeOfCommand: STK_CMD_POLL_INTERVAL,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let interval = cmdDetails.options;
 
-  let poll_1 = [
-    0xD0,
-    0x0D,
-    0x81, 0x03, 0x01, 0x03, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x84, 0x02, 0x01, 0x14];
-
-  for (let i = 0; i < poll_1.length; i++) {
-    pduHelper.writeHexOctet(poll_1[i]);
-  }
-
-  let berTlv = berHelper.decode(poll_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, 0x03);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_DURATION, ctlvs);
-  do_check_eq(tlv.value.timeUnit, STK_TIME_UNIT_SECOND);
-  do_check_eq(tlv.value.timeInterval, 0x14);
+      do_check_eq(interval.timeUnit, STK_TIME_UNIT_SECOND);
+      do_check_eq(interval.timeInterval, 0x14);
+    }
+  });
 
   run_next_test();
 });
@@ -570,40 +574,28 @@ add_test(function test_stk_proactive_command_poll_interval() {
 /**
  * Verify Proactive Command: Display Text
  */
-add_test(function test_read_septets_to_string() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
-  let ril = context.RIL;
-  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x10];
-  ril.appType = CARD_APPTYPE_SIM;
+add_test(function test_stk_proactive_command_display_text() {
+  test_stk_proactive_command({
+    pdu: [
+      0xd0,
+      0x2c,
+      0x81, 0x03, 0x01, 0x21, 0x80,
+      0x82, 0x02, 0x81, 0x02,
+      0x0d, 0x1d, 0x00, 0xd3, 0x30, 0x9b, 0xfc, 0x06, 0xc9, 0x5c, 0x30, 0x1a,
+      0xa8, 0xe8, 0x02, 0x59, 0xc3, 0xec, 0x34, 0xb9, 0xac, 0x07, 0xc9, 0x60,
+      0x2f, 0x58, 0xed, 0x15, 0x9b, 0xb9, 0x40,
+      0x9e, 0x02, 0x00, 0x01
+    ],
+    typeOfCommand: STK_CMD_DISPLAY_TEXT,
+    icons: [1],
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let textMsg = cmdDetails.options;
 
-  let display_text_1 = [
-    0xd0,
-    0x2c,
-    0x81, 0x03, 0x01, 0x21, 0x80,
-    0x82, 0x02, 0x81, 0x02,
-    0x0d, 0x1d, 0x00, 0xd3, 0x30, 0x9b, 0xfc, 0x06, 0xc9, 0x5c, 0x30, 0x1a,
-    0xa8, 0xe8, 0x02, 0x59, 0xc3, 0xec, 0x34, 0xb9, 0xac, 0x07, 0xc9, 0x60,
-    0x2f, 0x58, 0xed, 0x15, 0x9b, 0xb9, 0x40,
-    0x9e, 0x02, 0x00, 0x01
-  ];
-
-  for (let i = 0; i < display_text_1.length; i++) {
-    pduHelper.writeHexOctet(display_text_1[i]);
-  }
-
-  let berTlv = berHelper.decode(display_text_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TEXT_STRING, ctlvs);
-  do_check_eq(tlv.value.textString, "Saldo 2.04 E. Validez 20/05/13. ");
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifier, 0x01);
+      do_check_eq(textMsg.text, "Saldo 2.04 E. Validez 20/05/13. ");
+      do_check_eq(textMsg.iconSelfExplanatory, true);
+      do_check_eq(textMsg.icons, 1);
+    }
+  });
 
   run_next_test();
 });
@@ -612,35 +604,26 @@ add_test(function test_read_septets_to_string() {
  * Verify Proactive Command: Set Up Event List.
  */
 add_test(function test_stk_proactive_command_event_list() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x0F,
+      0x81, 0x03, 0x01, 0x05, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x99, 0x04, 0x00, 0x01, 0x02, 0x03
+    ],
+    typeOfCommand: STK_CMD_SET_UP_EVENT_LIST,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let event = cmdDetails.options;
 
-  let event_1 = [
-    0xD0,
-    0x0F,
-    0x81, 0x03, 0x01, 0x05, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x99, 0x04, 0x00, 0x01, 0x02, 0x03];
+      do_check_eq(Array.isArray(event.eventList), true);
 
-  for (let i = 0; i < event_1.length; i++) {
-    pduHelper.writeHexOctet(event_1[i]);
-  }
-
-  let berTlv = berHelper.decode(event_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, 0x05);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_EVENT_LIST, ctlvs);
-  do_check_eq(Array.isArray(tlv.value.eventList), true);
-  for (let i = 0; i < tlv.value.eventList.length; i++) {
-    do_check_eq(tlv.value.eventList[i], i);
-  }
+      for (let i = 0; i < event.eventList.length; i++) {
+        do_check_eq(event.eventList[i], i);
+      }
+    }
+  });
 
   run_next_test();
 });
@@ -649,76 +632,57 @@ add_test(function test_stk_proactive_command_event_list() {
  * Verify Proactive Command : Get Input
  */
 add_test(function test_stk_proactive_command_get_input() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
-  let stkCmdHelper = context.StkCommandParamsFactory;
-  let ril = context.RIL;
-  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x10];
-  ril.appType = CARD_APPTYPE_SIM;
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x22,
+      0x81, 0x03, 0x01, 0x23, 0x8F,
+      0x82, 0x02, 0x81, 0x82,
+      0x8D, 0x05, 0x04, 0x54, 0x65, 0x78, 0x74,
+      0x91, 0x02, 0x01, 0x10,
+      0x17, 0x08, 0x04, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6C, 0x74,
+      0x9E, 0x02, 0x00, 0x01
+    ],
+    typeOfCommand: STK_CMD_GET_INPUT,
+    icons: [1],
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let input = cmdDetails.options;
 
-  let get_input_1 = [
-    0xD0,
-    0x22,
-    0x81, 0x03, 0x01, 0x23, 0x8F,
-    0x82, 0x02, 0x81, 0x82,
-    0x8D, 0x05, 0x04, 0x54, 0x65, 0x78, 0x74,
-    0x91, 0x02, 0x01, 0x10,
-    0x17, 0x08, 0x04, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6C, 0x74,
-    0x9E, 0x02, 0x00, 0x01];
+      do_check_eq(input.text, "Text");
+      do_check_eq(input.isAlphabet, true);
+      do_check_eq(input.isUCS2, true);
+      do_check_eq(input.hideInput, true);
+      do_check_eq(input.isPacked, true);
+      do_check_eq(input.isHelpAvailable, true);
+      do_check_eq(input.minLength, 0x01);
+      do_check_eq(input.maxLength, 0x10);
+      do_check_eq(input.defaultText, "Default");
+      do_check_eq(input.iconSelfExplanatory, true);
+      do_check_eq(input.icons, 1);
+    }
+  });
 
-  for (let i = 0; i < get_input_1.length; i++) {
-    pduHelper.writeHexOctet(get_input_1[i]);
-  }
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x11,
+      0x81, 0x03, 0x01, 0x23, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x8D, 0x00,
+      0x91, 0x02, 0x01, 0x10,
+      0x17, 0x00
+    ],
+    typeOfCommand: STK_CMD_GET_INPUT,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let input = cmdDetails.options;
 
-  let berTlv = berHelper.decode(get_input_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_GET_INPUT);
-
-  let input = stkCmdHelper.createParam(tlv.value, ctlvs);
-  do_check_eq(input.text, "Text");
-  do_check_eq(input.isAlphabet, true);
-  do_check_eq(input.isUCS2, true);
-  do_check_eq(input.hideInput, true);
-  do_check_eq(input.isPacked, true);
-  do_check_eq(input.isHelpAvailable, true);
-  do_check_eq(input.minLength, 0x01);
-  do_check_eq(input.maxLength, 0x10);
-  do_check_eq(input.defaultText, "Default");
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifier, 0x01);
-
-  let get_input_2 = [
-    0xD0,
-    0x11,
-    0x81, 0x03, 0x01, 0x23, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x8D, 0x00,
-    0x91, 0x02, 0x01, 0x10,
-    0x17, 0x00];
-
-  for (let i = 0; i < get_input_2.length; i++) {
-    pduHelper.writeHexOctet(get_input_2[i]);
-  }
-
-  berTlv = berHelper.decode(get_input_2.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_GET_INPUT);
-
-  input = stkCmdHelper.createParam(tlv.value, ctlvs);
-  do_check_eq(input.text, null);
-  do_check_eq(input.minLength, 0x01);
-  do_check_eq(input.maxLength, 0x10);
-  do_check_eq(input.defaultText, null);
+      do_check_eq(input.text, null);
+      do_check_eq(input.minLength, 0x01);
+      do_check_eq(input.maxLength, 0x10);
+      do_check_eq(input.defaultText, null);
+    }
+  });
 
   run_next_test();
 });
@@ -757,101 +721,79 @@ add_test(function test_stk_proactive_command_more_time() {
  * Verify Proactive Command : Select Item
  */
 add_test(function test_stk_proactive_command_select_item() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
-  let stkFactory = context.StkCommandParamsFactory;
-  let ril = context.RIL;
-  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x10];
-  ril.appType = CARD_APPTYPE_SIM;
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x3D,
+      0x81, 0x03, 0x01, 0x24, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
+      0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
+      0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
+      0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
+      0x18, 0x03, 0x10, 0x15, 0x20,
+      0x90, 0x01, 0x01,
+      0x9E, 0x02, 0x00, 0x01,
+      0x9F, 0x04, 0x00, 0x01, 0x02, 0x03
+    ],
+    typeOfCommand: STK_CMD_SELECT_ITEM,
+    icons: [1, 1, 2, 3],
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let menu = cmdDetails.options;
 
-  let select_item_1 = [
-    0xD0,
-    0x3C,
-    0x81, 0x03, 0x01, 0x24, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
-    0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
-    0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
-    0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
-    0x18, 0x03, 0x10, 0x15, 0x20,
-    0x90, 0x01, 0x01,
-    0x9E, 0x02, 0x00, 0x01,
-    0x9F, 0x03, 0x00, 0x01, 0x02
-  ];
+      do_check_eq(menu.title, "Title");
+      do_check_eq(menu.iconSelfExplanatory, true);
+      do_check_eq(menu.icons, 1);
+      do_check_eq(menu.items[0].identifier, 1);
+      do_check_eq(menu.items[0].text, "item 1");
+      do_check_eq(menu.items[0].iconSelfExplanatory, true);
+      do_check_eq(menu.items[0].icons, 1);
+      do_check_eq(menu.items[1].identifier, 2);
+      do_check_eq(menu.items[1].text, "item 2");
+      do_check_eq(menu.items[1].iconSelfExplanatory, true);
+      do_check_eq(menu.items[1].icons, 2);
+      do_check_eq(menu.items[2].identifier, 3);
+      do_check_eq(menu.items[2].text, "item 3");
+      do_check_eq(menu.items[2].iconSelfExplanatory, true);
+      do_check_eq(menu.items[2].icons, 3);
+      do_check_eq(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
+      do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
+      do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
+      do_check_eq(menu.defaultItem, 0x00);
+    }
+  });
 
-  for(let i = 0 ; i < select_item_1.length; i++) {
-    pduHelper.writeHexOctet(select_item_1[i]);
-  }
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x33,
+      0x81, 0x03, 0x01, 0x24, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
+      0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
+      0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
+      0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
+      0x18, 0x03, 0x00, 0x15, 0x81,
+      0x90, 0x01, 0x03
+    ],
+    typeOfCommand: STK_CMD_SELECT_ITEM,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let menu = cmdDetails.options;
 
-  let berTlv = berHelper.decode(select_item_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_SELECT_ITEM);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  let menu = stkFactory.createParam(tlv.value, ctlvs);
-  do_check_eq(menu.title, "Title");
-  do_check_eq(menu.items[0].identifier, 1);
-  do_check_eq(menu.items[0].text, "item 1");
-  do_check_eq(menu.items[1].identifier, 2);
-  do_check_eq(menu.items[1].text, "item 2");
-  do_check_eq(menu.items[2].identifier, 3);
-  do_check_eq(menu.items[2].text, "item 3");
-  do_check_eq(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
-  do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
-  do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
-  do_check_eq(menu.defaultItem, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifier, 0x01);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID_LIST, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifiers[0], 0x01);
-  do_check_eq(tlv.value.identifiers[1], 0x02);
-
-  let select_item_2 = [
-    0xD0,
-    0x33,
-    0x81, 0x03, 0x01, 0x24, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
-    0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
-    0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
-    0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
-    0x18, 0x03, 0x00, 0x15, 0x81,
-    0x90, 0x01, 0x03
-  ];
-
-  for(let i = 0 ; i < select_item_2.length; i++) {
-    pduHelper.writeHexOctet(select_item_2[i]);
-  }
-
-  berTlv = berHelper.decode(select_item_2.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_SELECT_ITEM);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  menu = stkFactory.createParam(tlv.value, ctlvs);
-  do_check_eq(menu.title, "Title");
-  do_check_eq(menu.items[0].identifier, 1);
-  do_check_eq(menu.items[0].text, "item 1");
-  do_check_eq(menu.items[1].identifier, 2);
-  do_check_eq(menu.items[1].text, "item 2");
-  do_check_eq(menu.items[2].identifier, 3);
-  do_check_eq(menu.items[2].text, "item 3");
-  do_check_eq(menu.nextActionList[0], STK_NEXT_ACTION_NULL);
-  do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
-  do_check_eq(menu.nextActionList[2], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
-  do_check_eq(menu.defaultItem, 0x02);
+      do_check_eq(menu.title, "Title");
+      do_check_eq(menu.items[0].identifier, 1);
+      do_check_eq(menu.items[0].text, "item 1");
+      do_check_eq(menu.items[1].identifier, 2);
+      do_check_eq(menu.items[1].text, "item 2");
+      do_check_eq(menu.items[2].identifier, 3);
+      do_check_eq(menu.items[2].text, "item 3");
+      do_check_eq(menu.nextActionList[0], STK_NEXT_ACTION_NULL);
+      do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
+      do_check_eq(menu.nextActionList[2], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
+      do_check_eq(menu.defaultItem, 0x02);
+    }
+  });
 
   run_next_test();
 });
@@ -860,97 +802,75 @@ add_test(function test_stk_proactive_command_select_item() {
  * Verify Proactive Command : Set Up Menu
  */
 add_test(function test_stk_proactive_command_set_up_menu() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
-  let stkFactory = context.StkCommandParamsFactory;
-  let ril = context.RIL;
-  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x10];
-  ril.appType = CARD_APPTYPE_SIM;
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x3A,
+      0x81, 0x03, 0x01, 0x25, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
+      0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
+      0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
+      0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
+      0x18, 0x03, 0x10, 0x15, 0x20,
+      0x9E, 0x02, 0x00, 0x01,
+      0x9F, 0x04, 0x00, 0x01, 0x02, 0x03
+    ],
+    typeOfCommand: STK_CMD_SET_UP_MENU,
+    icons: [1, 1, 2, 3],
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let menu = cmdDetails.options;
 
-  let set_up_menu_1 = [
-    0xD0,
-    0x39,
-    0x81, 0x03, 0x01, 0x25, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
-    0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
-    0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
-    0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
-    0x18, 0x03, 0x10, 0x15, 0x20,
-    0x9E, 0x02, 0x00, 0x01,
-    0x9F, 0x03, 0x00, 0x01, 0x02
-  ];
+      do_check_eq(menu.title, "Title");
+      do_check_eq(menu.iconSelfExplanatory, true);
+      do_check_eq(menu.icons, 1);
+      do_check_eq(menu.items[0].identifier, 1);
+      do_check_eq(menu.items[0].text, "item 1");
+      do_check_eq(menu.items[0].iconSelfExplanatory, true);
+      do_check_eq(menu.items[0].icons, 1);
+      do_check_eq(menu.items[1].identifier, 2);
+      do_check_eq(menu.items[1].text, "item 2");
+      do_check_eq(menu.items[1].iconSelfExplanatory, true);
+      do_check_eq(menu.items[1].icons, 2);
+      do_check_eq(menu.items[2].identifier, 3);
+      do_check_eq(menu.items[2].text, "item 3");
+      do_check_eq(menu.items[2].iconSelfExplanatory, true);
+      do_check_eq(menu.items[2].icons, 3);
+      do_check_eq(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
+      do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
+      do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
+    }
+  });
 
-  for(let i = 0 ; i < set_up_menu_1.length; i++) {
-    pduHelper.writeHexOctet(set_up_menu_1[i]);
-  }
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x30,
+      0x81, 0x03, 0x01, 0x25, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
+      0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
+      0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
+      0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
+      0x18, 0x03, 0x81, 0x00, 0x00
+    ],
+    typeOfCommand: STK_CMD_SET_UP_MENU,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let menu = cmdDetails.options;
 
-  let berTlv = berHelper.decode(set_up_menu_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_SET_UP_MENU);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  let menu = stkFactory.createParam(tlv.value, ctlvs);
-  do_check_eq(menu.title, "Title");
-  do_check_eq(menu.items[0].identifier, 1);
-  do_check_eq(menu.items[0].text, "item 1");
-  do_check_eq(menu.items[1].identifier, 2);
-  do_check_eq(menu.items[1].text, "item 2");
-  do_check_eq(menu.items[2].identifier, 3);
-  do_check_eq(menu.items[2].text, "item 3");
-  do_check_eq(menu.nextActionList[0], STK_CMD_SET_UP_CALL);
-  do_check_eq(menu.nextActionList[1], STK_CMD_LAUNCH_BROWSER);
-  do_check_eq(menu.nextActionList[2], STK_CMD_PLAY_TONE);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifier, 0x01);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID_LIST, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifiers[0], 0x01);
-  do_check_eq(tlv.value.identifiers[1], 0x02);
-
-  let set_up_menu_2 = [
-    0xD0,
-    0x30,
-    0x81, 0x03, 0x01, 0x25, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x05, 0x54, 0x69, 0x74, 0x6C, 0x65,
-    0x8F, 0x07, 0x01, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x31,
-    0x8F, 0x07, 0x02, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x32,
-    0x8F, 0x07, 0x03, 0x69, 0x74, 0x65, 0x6D, 0x20, 0x33,
-    0x18, 0x03, 0x81, 0x00, 0x00
-  ];
-
-  for(let i = 0 ; i < set_up_menu_2.length; i++) {
-    pduHelper.writeHexOctet(set_up_menu_2[i]);
-  }
-
-  berTlv = berHelper.decode(set_up_menu_2.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_SET_UP_MENU);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  menu = stkFactory.createParam(tlv.value, ctlvs);
-  do_check_eq(menu.title, "Title");
-  do_check_eq(menu.items[0].identifier, 1);
-  do_check_eq(menu.items[0].text, "item 1");
-  do_check_eq(menu.items[1].identifier, 2);
-  do_check_eq(menu.items[1].text, "item 2");
-  do_check_eq(menu.items[2].identifier, 3);
-  do_check_eq(menu.items[2].text, "item 3");
-  do_check_eq(menu.nextActionList[0], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
-  do_check_eq(menu.nextActionList[1], STK_NEXT_ACTION_NULL);
-  do_check_eq(menu.nextActionList[2], STK_NEXT_ACTION_NULL);
+      do_check_eq(menu.title, "Title");
+      do_check_eq(menu.items[0].identifier, 1);
+      do_check_eq(menu.items[0].text, "item 1");
+      do_check_eq(menu.items[1].identifier, 2);
+      do_check_eq(menu.items[1].text, "item 2");
+      do_check_eq(menu.items[2].identifier, 3);
+      do_check_eq(menu.items[2].text, "item 3");
+      do_check_eq(menu.nextActionList[0], STK_NEXT_ACTION_END_PROACTIVE_SESSION);
+      do_check_eq(menu.nextActionList[1], STK_NEXT_ACTION_NULL);
+      do_check_eq(menu.nextActionList[2], STK_NEXT_ACTION_NULL);
+    }
+  });
 
   run_next_test();
 });
@@ -959,45 +879,29 @@ add_test(function test_stk_proactive_command_set_up_menu() {
  * Verify Proactive Command : Set Up Call
  */
 add_test(function test_stk_proactive_command_set_up_call() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
-  let cmdFactory = context.StkCommandParamsFactory;
-  let ril = context.RIL;
-  ril.iccInfoPrivate.sst = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x10];
-  ril.appType = CARD_APPTYPE_SIM;
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x2d,
+      0x81, 0x03, 0x01, 0x10, 0x04,
+      0x82, 0x02, 0x81, 0x82,
+      0x05, 0x0A, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x6E, 0x6E, 0x65, 0x63, 0x74,
+      0x86, 0x09, 0x81, 0x10, 0x32, 0x04, 0x21, 0x43, 0x65, 0x1C, 0x2C,
+      0x05, 0x07, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
+      0x9E, 0x02, 0x00, 0x01
+    ],
+    typeOfCommand: STK_CMD_SET_UP_CALL,
+    icons: [1],
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let setupCall = cmdDetails.options;
 
-  let set_up_call_1 = [
-    0xD0,
-    0x2d,
-    0x81, 0x03, 0x01, 0x10, 0x04,
-    0x82, 0x02, 0x81, 0x82,
-    0x05, 0x0A, 0x44, 0x69, 0x73, 0x63, 0x6F, 0x6E, 0x6E, 0x65, 0x63, 0x74,
-    0x86, 0x09, 0x81, 0x10, 0x32, 0x04, 0x21, 0x43, 0x65, 0x1C, 0x2C,
-    0x05, 0x07, 0x4D, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-    0x9E, 0x02, 0x00, 0x01];
-
-  for (let i = 0 ; i < set_up_call_1.length; i++) {
-    pduHelper.writeHexOctet(set_up_call_1[i]);
-  }
-
-  let berTlv = berHelper.decode(set_up_call_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_SET_UP_CALL);
-
-  let setupCall = cmdFactory.createParam(tlv.value, ctlvs);
-  do_check_eq(setupCall.address, "012340123456,1,2");
-  do_check_eq(setupCall.confirmMessage, "Disconnect");
-  do_check_eq(setupCall.callMessage, "Message");
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ICON_ID, ctlvs);
-  do_check_eq(tlv.value.qualifier, 0x00);
-  do_check_eq(tlv.value.identifier, 0x01);
+      do_check_eq(setupCall.address, "012340123456,1,2");
+      do_check_eq(setupCall.confirmMessage, "Disconnect");
+      do_check_eq(setupCall.callMessage, "Message");
+      do_check_eq(setupCall.iconSelfExplanatory, true);
+      do_check_eq(setupCall.icons, 1);
+    }
+  });
 
   run_next_test();
 });
@@ -1006,61 +910,48 @@ add_test(function test_stk_proactive_command_set_up_call() {
  * Verify Proactive Command : Timer Management
  */
 add_test(function test_stk_proactive_command_timer_management() {
-  let worker = newUint8Worker();
-  let context = worker.ContextPool._contexts[0];
-  let pduHelper = context.GsmPDUHelper;
-  let berHelper = context.BerTlvHelper;
-  let stkHelper = context.StkProactiveCmdHelper;
+    // Timer Management - Start
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x11,
+      0x81, 0x03, 0x01, 0x27, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0xA4, 0x01, 0x01,
+      0xA5, 0x03, 0x10, 0x20, 0x30
+    ],
+    typeOfCommand: STK_CMD_TIMER_MANAGEMENT,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      do_check_eq(cmdDetails.commandQualifier, STK_TIMER_START);
 
-  // Timer Management - Start
-  let timer_management_1 = [
-    0xD0,
-    0x11,
-    0x81, 0x03, 0x01, 0x27, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0xA4, 0x01, 0x01,
-    0xA5, 0x03, 0x10, 0x20, 0x30
-  ];
+      let timer = cmdDetails.options;
 
-  for(let i = 0 ; i < timer_management_1.length; i++) {
-    pduHelper.writeHexOctet(timer_management_1[i]);
-  }
-
-  let berTlv = berHelper.decode(timer_management_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_TIMER_MANAGEMENT);
-  do_check_eq(tlv.value.commandQualifier, STK_TIMER_START);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER, ctlvs);
-  do_check_eq(tlv.value.timerId, 0x01);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TIMER_VALUE, ctlvs);
-  do_check_eq(tlv.value.timerValue, (0x01 * 60 * 60) + (0x02 * 60) + 0x03);
+      do_check_eq(timer.timerId, 0x01);
+      do_check_eq(timer.timerValue, (0x01 * 60 * 60) + (0x02 * 60) + 0x03);
+    }
+  });
 
   // Timer Management - Deactivate
-  let timer_management_2 = [
-    0xD0,
-    0x0C,
-    0x81, 0x03, 0x01, 0x27, 0x01,
-    0x82, 0x02, 0x81, 0x82,
-    0xA4, 0x01, 0x01
-  ];
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x0C,
+      0x81, 0x03, 0x01, 0x27, 0x01,
+      0x82, 0x02, 0x81, 0x82,
+      0xA4, 0x01, 0x01
+    ],
+    typeOfCommand: STK_CMD_TIMER_MANAGEMENT,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      do_check_eq(cmdDetails.commandQualifier, STK_TIMER_DEACTIVATE);
 
-  for(let i = 0 ; i < timer_management_2.length; i++) {
-    pduHelper.writeHexOctet(timer_management_2[i]);
-  }
+      let timer = cmdDetails.options;
 
-  berTlv = berHelper.decode(timer_management_2.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_TIMER_MANAGEMENT);
-  do_check_eq(tlv.value.commandQualifier, STK_TIMER_DEACTIVATE);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_TIMER_IDENTIFIER, ctlvs);
-  do_check_eq(tlv.value.timerId, 0x01);
+      do_check_eq(timer.timerId, 0x01);
+      do_check_true(timer.timerValue === undefined);
+    }
+  });
 
   run_next_test();
 });
@@ -1074,42 +965,43 @@ add_test(function test_stk_proactive_command_provide_local_information() {
   let pduHelper = context.GsmPDUHelper;
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
+  let stkCmdHelper = context.StkCommandParamsFactory;
 
   // Verify IMEI
-  let local_info_1 = [
-    0xD0,
-    0x09,
-    0x81, 0x03, 0x01, 0x26, 0x01,
-    0x82, 0x02, 0x81, 0x82];
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x09,
+      0x81, 0x03, 0x01, 0x26, 0x01,
+      0x82, 0x02, 0x81, 0x82
+    ],
+    typeOfCommand: STK_CMD_PROVIDE_LOCAL_INFO,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      do_check_eq(cmdDetails.commandQualifier, STK_LOCAL_INFO_IMEI);
 
-  for (let i = 0; i < local_info_1.length; i++) {
-    pduHelper.writeHexOctet(local_info_1[i]);
-  }
-
-  let berTlv = berHelper.decode(local_info_1.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_PROVIDE_LOCAL_INFO);
-  do_check_eq(tlv.value.commandQualifier, STK_LOCAL_INFO_IMEI);
+      let provideLocalInfo = cmdDetails.options;
+      do_check_eq(provideLocalInfo.localInfoType, STK_LOCAL_INFO_IMEI);
+    }
+  });
 
   // Verify Date and Time Zone
-  let local_info_2 = [
-    0xD0,
-    0x09,
-    0x81, 0x03, 0x01, 0x26, 0x03,
-    0x82, 0x02, 0x81, 0x82];
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x09,
+      0x81, 0x03, 0x01, 0x26, 0x03,
+      0x82, 0x02, 0x81, 0x82
+    ],
+    typeOfCommand: STK_CMD_PROVIDE_LOCAL_INFO,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      do_check_eq(cmdDetails.commandQualifier, STK_LOCAL_INFO_DATE_TIME_ZONE);
 
-  for (let i = 0; i < local_info_2.length; i++) {
-    pduHelper.writeHexOctet(local_info_2[i]);
-  }
-
-  berTlv = berHelper.decode(local_info_2.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_PROVIDE_LOCAL_INFO);
-  do_check_eq(tlv.value.commandQualifier, STK_LOCAL_INFO_DATE_TIME_ZONE);
+      let provideLocalInfo = cmdDetails.options;
+      do_check_eq(provideLocalInfo.localInfoType, STK_LOCAL_INFO_DATE_TIME_ZONE);
+    }
+  });
 
   run_next_test();
 });
@@ -1123,98 +1015,79 @@ add_test(function test_stk_proactive_command_open_channel() {
   let pduHelper = context.GsmPDUHelper;
   let berHelper = context.BerTlvHelper;
   let stkHelper = context.StkProactiveCmdHelper;
+  let stkCmdHelper = context.StkCommandParamsFactory;
 
   // Open Channel
-  let open_channel = [
-    0xD0,
-    0x0F,
-    0x81, 0x03, 0x01, 0x40, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x04, 0x4F, 0x70, 0x65, 0x6E //alpha id: "Open"
-  ];
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x0F,
+      0x81, 0x03, 0x01, 0x40, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x04, 0x4F, 0x70, 0x65, 0x6E //alpha id: "Open"
+    ],
+    typeOfCommand: STK_CMD_OPEN_CHANNEL,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let bipMsg = cmdDetails.options;
 
-  for (let i = 0; i < open_channel.length; i++) {
-    pduHelper.writeHexOctet(open_channel[i]);
-  }
-
-  let berTlv = berHelper.decode(open_channel.length);
-  let ctlvs = berTlv.value;
-  let tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_OPEN_CHANNEL);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
-  do_check_eq(tlv.value.identifier, "Open");
+      do_check_eq(bipMsg.text, "Open");
+    }
+  });
 
   // Close Channel
-  let close_channel = [
-    0xD0,
-    0x10,
-    0x81, 0x03, 0x01, 0x41, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x05, 0x43, 0x6C, 0x6F, 0x73, 0x65 //alpha id: "Close"
-  ];
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x10,
+      0x81, 0x03, 0x01, 0x41, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x05, 0x43, 0x6C, 0x6F, 0x73, 0x65 //alpha id: "Close"
+    ],
+    typeOfCommand: STK_CMD_CLOSE_CHANNEL,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let bipMsg = cmdDetails.options;
 
-  for (let i = 0; i < close_channel.length; i++) {
-    pduHelper.writeHexOctet(close_channel[i]);
-  }
-
-  berTlv = berHelper.decode(close_channel.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_CLOSE_CHANNEL);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
-  do_check_eq(tlv.value.identifier, "Close");
+      do_check_eq(bipMsg.text, "Close");
+    }
+  });
 
   // Receive Data
-  let receive_data = [
-    0XD0,
-    0X12,
-    0x81, 0x03, 0x01, 0x42, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x07, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65 //alpha id: "Receive"
-  ];
+  test_stk_proactive_command({
+    pdu: [
+      0XD0,
+      0X12,
+      0x81, 0x03, 0x01, 0x42, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x07, 0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65 //alpha id: "Receive"
+    ],
+    typeOfCommand: STK_CMD_RECEIVE_DATA,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let bipMsg = cmdDetails.options;
 
-  for (let i = 0; i < receive_data.length; i++) {
-    pduHelper.writeHexOctet(receive_data[i]);
-  }
-
-  berTlv = berHelper.decode(receive_data.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_RECEIVE_DATA);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
-  do_check_eq(tlv.value.identifier, "Receive");
+      do_check_eq(bipMsg.text, "Receive");
+    }
+  });
 
   // Send Data
-  let send_data = [
-    0xD0,
-    0x0F,
-    0x81, 0x03, 0x01, 0x43, 0x00,
-    0x82, 0x02, 0x81, 0x82,
-    0x85, 0x04, 0x53, 0x65, 0x6E, 0x64 //alpha id: "Send"
-  ];
+  test_stk_proactive_command({
+    pdu: [
+      0xD0,
+      0x0F,
+      0x81, 0x03, 0x01, 0x43, 0x00,
+      0x82, 0x02, 0x81, 0x82,
+      0x85, 0x04, 0x53, 0x65, 0x6E, 0x64 //alpha id: "Send"
+    ],
+    typeOfCommand: STK_CMD_SEND_DATA,
+    icons: null,
+    testFunc: (context, cmdDetails, ctlvs) => {
+      let bipMsg = cmdDetails.options;
 
-  for (let i = 0; i < send_data.length; i++) {
-    pduHelper.writeHexOctet(send_data[i]);
-  }
-
-  berTlv = berHelper.decode(send_data.length);
-  ctlvs = berTlv.value;
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_COMMAND_DETAILS, ctlvs);
-  do_check_eq(tlv.value.commandNumber, 0x01);
-  do_check_eq(tlv.value.typeOfCommand, STK_CMD_SEND_DATA);
-  do_check_eq(tlv.value.commandQualifier, 0x00);
-
-  tlv = stkHelper.searchForTag(COMPREHENSIONTLV_TAG_ALPHA_ID, ctlvs);
-  do_check_eq(tlv.value.identifier, "Send");
+      do_check_eq(bipMsg.text, "Send");
+    }
+  });
 
   run_next_test();
 });
