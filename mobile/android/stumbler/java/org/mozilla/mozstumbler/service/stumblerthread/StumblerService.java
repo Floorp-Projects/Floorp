@@ -17,7 +17,6 @@ import org.mozilla.mozstumbler.service.stumblerthread.blocklist.WifiBlockListInt
 import org.mozilla.mozstumbler.service.stumblerthread.datahandling.DataStorageManager;
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.ScanManager;
 import org.mozilla.mozstumbler.service.stumblerthread.scanners.cellscanner.CellScanner;
-import org.mozilla.mozstumbler.service.stumblerthread.scanners.cellscanner.CellScannerNoWCDMA;
 import org.mozilla.mozstumbler.service.uploadthread.UploadAlarmReceiver;
 import org.mozilla.mozstumbler.service.utils.NetworkUtils;
 import org.mozilla.mozstumbler.service.utils.PersistentIntentService;
@@ -109,10 +108,6 @@ public class StumblerService extends PersistentIntentService
         return mScanManager.getCellInfoCount();
     }
 
-    public int getCurrentCellInfoCount() {
-        return mScanManager.getCurrentCellInfoCount();
-    }
-
     public boolean isGeofenced () {
         return mScanManager.isGeofenced();
     }
@@ -124,10 +119,6 @@ public class StumblerService extends PersistentIntentService
         Prefs.createGlobalInstance(this);
         NetworkUtils.createGlobalInstance(this);
         DataStorageManager.createGlobalInstance(this, this);
-
-        if (!CellScanner.isCellScannerImplSet()) {
-            CellScanner.setCellScannerImpl(new CellScannerNoWCDMA(this));
-        }
 
         mReporter.startup(this);
     }
@@ -143,8 +134,6 @@ public class StumblerService extends PersistentIntentService
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        UploadAlarmReceiver.cancelAlarm(this, !mScanManager.isPassiveMode());
 
         if (!mScanManager.isScanning()) {
             return;

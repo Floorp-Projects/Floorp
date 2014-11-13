@@ -424,8 +424,8 @@ public class DataStorageManager {
         }
 
         mCurrentReports.reports.add(report);
-        mCurrentReports.wifiCount = wifiCount;
-        mCurrentReports.cellCount = cellCount;
+        mCurrentReports.wifiCount += wifiCount;
+        mCurrentReports.cellCount += cellCount;
 
         if (mCurrentReports.reports.size() >= MAX_REPORTS_IN_MEMORY) {
             // save to disk

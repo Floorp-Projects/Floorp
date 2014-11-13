@@ -32,6 +32,7 @@ import org.mozilla.mozstumbler.service.stumblerthread.scanners.WifiScanner;
 public final class Reporter extends BroadcastReceiver {
     private static final String LOG_TAG = AppGlobals.makeLogTag(Reporter.class.getSimpleName());
     public static final String ACTION_FLUSH_TO_BUNDLE = AppGlobals.ACTION_NAMESPACE + ".FLUSH";
+    public static final String ACTION_NEW_BUNDLE = AppGlobals.ACTION_NAMESPACE + ".NEW_BUNDLE";
     private boolean mIsStarted;
 
     /* The maximum number of Wi-Fi access points in a single observation. */
