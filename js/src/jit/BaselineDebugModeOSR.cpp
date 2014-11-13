@@ -380,6 +380,8 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
                 // directly to the IC resume address.
                 uint8_t *retAddr = bl->returnAddressForIC(bl->icEntryFromPCOffset(pcOffset));
                 SpewPatchBaselineFrame(prev->returnAddress(), retAddr, script, kind, pc);
+                DebugModeOSRVolatileJitFrameIterator::forwardLiveIterators(
+                    cx, prev->returnAddress(), retAddr);
                 prev->setReturnAddress(retAddr);
                 entryIndex++;
                 break;
@@ -994,4 +996,15 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext *cx, uint32_t *noFrame
 #endif
 
     return code;
+}
+
+/* static */ void
+DebugModeOSRVolatileJitFrameIterator::forwardLiveIterators(JSContext *cx,
+                                                           uint8_t *oldAddr, uint8_t *newAddr)
+{
+    DebugModeOSRVolatileJitFrameIterator *iter;
+    for (iter = cx->liveVolatileJitFrameIterators_; iter; iter = iter->prev) {
+        if (iter->returnAddressToFp_ == oldAddr)
+            iter->returnAddressToFp_ = newAddr;
+    }
 }
