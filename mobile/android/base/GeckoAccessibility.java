@@ -34,9 +34,11 @@ import com.googlecode.eyesfree.braille.selfbraille.WriteData;
 
 public class GeckoAccessibility {
     private static final String LOGTAG = "GeckoAccessibility";
-    private static final int VIRTUAL_CURSOR_PREVIOUS = 1;
-    private static final int VIRTUAL_CURSOR_POSITION = 2;
-    private static final int VIRTUAL_CURSOR_NEXT = 3;
+    private static final int VIRTUAL_ENTRY_POINT_BEFORE = 1;
+    private static final int VIRTUAL_CURSOR_PREVIOUS = 2;
+    private static final int VIRTUAL_CURSOR_POSITION = 3;
+    private static final int VIRTUAL_CURSOR_NEXT = 4;
+    private static final int VIRTUAL_ENTRY_POINT_AFTER = 5;
 
     private static boolean sEnabled;
     // Used to store the JSON message and populate the event later in the code path.
@@ -296,11 +298,13 @@ public class GeckoAccessibility {
         @Override
         public AccessibilityNodeProvider getAccessibilityNodeProvider(final View host) {
             if (mAccessibilityNodeProvider == null)
-                // The accessibility node structure for web content consists of 3 LayerView child nodes:
-                // 1. VIRTUAL_CURSOR_PREVIOUS: Represents the virtual cursor position that is previous to the
+                // The accessibility node structure for web content consists of 5 LayerView child nodes:
+                // 1. VIRTUAL_ENTRY_POINT_BEFORE: Represents the entry point before the LayerView.
+                // 2. VIRTUAL_CURSOR_PREVIOUS: Represents the virtual cursor position that is previous to the
                 // current one.
-                // 2. VIRTUAL_CURSOR_POSITION: Represents the current position of the virtual cursor.
-                // 3. VIRTUAL_CURSOR_NEXT: Represents the next virtual cursor position.
+                // 3. VIRTUAL_CURSOR_POSITION: Represents the current position of the virtual cursor.
+                // 4. VIRTUAL_CURSOR_NEXT: Represents the next virtual cursor position.
+                // 5. VIRTUAL_ENTRY_POINT_AFTER: Represents the entry point after the LayerView.
                 mAccessibilityNodeProvider = new AccessibilityNodeProvider() {
                         @Override
                         public AccessibilityNodeInfo createAccessibilityNodeInfo(int virtualDescendantId) {
@@ -312,9 +316,11 @@ public class GeckoAccessibility {
                             case View.NO_ID:
                                 // This is the parent LayerView node, populate it with children.
                                 onInitializeAccessibilityNodeInfo(host, info);
+                                info.addChild(host, VIRTUAL_ENTRY_POINT_BEFORE);
                                 info.addChild(host, VIRTUAL_CURSOR_PREVIOUS);
                                 info.addChild(host, VIRTUAL_CURSOR_POSITION);
                                 info.addChild(host, VIRTUAL_CURSOR_NEXT);
+                                info.addChild(host, VIRTUAL_ENTRY_POINT_AFTER);
                                 break;
                             default:
                                 info.setParent(host);
@@ -342,6 +348,7 @@ public class GeckoAccessibility {
                                 // The accessibility focus is permanently on the middle node, VIRTUAL_CURSOR_POSITION.
                                 // When accessibility focus is requested on one of its siblings we move the virtual cursor
                                 // either forward or backward depending on which sibling was selected.
+                                // When we enter the view forward or backward we just ask Gecko to get focus, keeping the current position.
 
                                 switch (virtualViewId) {
                                 case VIRTUAL_CURSOR_PREVIOUS:
@@ -352,6 +359,10 @@ public class GeckoAccessibility {
                                     GeckoAppShell.
                                         sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:NextObject", null));
                                     return true;
+                                case VIRTUAL_ENTRY_POINT_BEFORE:
+                                case VIRTUAL_ENTRY_POINT_AFTER:
+                                    GeckoAppShell.
+                                        sendEventToGecko(GeckoEvent.createBroadcastEvent("Accessibility:Focus", "true"));
                                 default:
                                     break;
                                 }
