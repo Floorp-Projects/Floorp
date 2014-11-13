@@ -41,21 +41,27 @@ public class CodeGenerator {
     private final HashSet<String> mTakenMemberNames = new HashSet<String>();
     private int mNameMunger;
 
+    private final boolean mLazyInit;
+
     public CodeGenerator(Class<?> aClass, String aGeneratedName) {
+        this(aClass, aGeneratedName, false);
+    }
+
+    public CodeGenerator(Class<?> aClass, String aGeneratedName, boolean aLazyInit) {
         mClassToWrap = aClass;
         mCClassName = aGeneratedName;
+        mLazyInit = aLazyInit;
 
         // Write the file header things. Includes and so forth.
         // GeneratedJNIWrappers.cpp is generated as the concatenation of wrapperStartupCode with
         // wrapperMethodBodies. Similarly, GeneratedJNIWrappers.h is the concatenation of headerPublic
         // with headerProtected.
-        wrapperStartupCode.append("void ").append(mCClassName).append("::InitStubs(JNIEnv *jEnv) {\n" +
-                                  "    initInit();\n");
+        wrapperStartupCode.append("void ").append(mCClassName).append("::InitStubs(JNIEnv *env) {\n");
 
         // Now we write the various GetStaticMethodID calls here...
         headerPublic.append("class ").append(mCClassName).append(" : public AutoGlobalWrappedJavaObject {\n" +
                             "public:\n" +
-                            "    static void InitStubs(JNIEnv *jEnv);\n");
+                            "    static void InitStubs(JNIEnv *env);\n");
         headerProtected.append("protected:");
 
         generateWrapperMethod();
@@ -80,7 +86,10 @@ public class CodeGenerator {
     private void generateMemberCommon(Member theMethod, String aCMethodName, Class<?> aClass) {
         ensureClassHeaderAndStartup(aClass);
         writeMemberIdField(theMethod, aCMethodName);
-        writeStartupCode(theMethod);
+
+        if (!mLazyInit) {
+            writeMemberInit(theMethod, wrapperStartupCode);
+        }
     }
 
     /**
@@ -115,16 +124,21 @@ public class CodeGenerator {
                         aMethodTuple.mAnnotationInfo.narrowChars);
     }
 
-    private void generateGetterOrSetterBody(Class<?> aFieldType, String aFieldName, boolean aIsFieldStatic, boolean isSetter, boolean aNarrowChars) {
+    private void generateGetterOrSetterBody(Field aField, String aFieldName, boolean aIsFieldStatic, boolean isSetter, boolean aNarrowChars) {
         StringBuilder argumentContent = null;
+        Class<?> fieldType = aField.getType();
 
         if (isSetter) {
-            Class<?>[] setterArguments = new Class<?>[]{aFieldType};
+            Class<?>[] setterArguments = new Class<?>[]{fieldType};
             // Marshall the argument..
             argumentContent = getArgumentMarshalling(setterArguments);
         }
 
-        boolean isObjectReturningMethod = Utils.isObjectType(aFieldType);
+        if (mLazyInit) {
+            writeMemberInit(aField, wrapperMethodBodies);
+        }
+
+        boolean isObjectReturningMethod = Utils.isObjectType(fieldType);
         wrapperMethodBodies.append("    ");
         if (isSetter) {
             wrapperMethodBodies.append("env->Set");
@@ -132,7 +146,7 @@ public class CodeGenerator {
             wrapperMethodBodies.append("return ");
 
             if (isObjectReturningMethod) {
-                wrapperMethodBodies.append("static_cast<").append(Utils.getCReturnType(aFieldType, aNarrowChars)).append(">(");
+                wrapperMethodBodies.append("static_cast<").append(Utils.getCReturnType(fieldType, aNarrowChars)).append(">(");
             }
 
             wrapperMethodBodies.append("env->Get");
@@ -141,7 +155,7 @@ public class CodeGenerator {
         if (aIsFieldStatic) {
             wrapperMethodBodies.append("Static");
         }
-        wrapperMethodBodies.append(Utils.getFieldType(aFieldType))
+        wrapperMethodBodies.append(Utils.getFieldType(fieldType))
                            .append("Field(");
 
         // Static will require the class and the field id. Nonstatic, the object and the field id.
@@ -189,7 +203,7 @@ public class CodeGenerator {
 
         writeFunctionStartupBoilerPlate(getterSignature, true);
 
-        generateGetterOrSetterBody(fieldType, CFieldName, isFieldStatic, false, aFieldTuple.mAnnotationInfo.narrowChars);
+        generateGetterOrSetterBody(theField, CFieldName, isFieldStatic, false, aFieldTuple.mAnnotationInfo.narrowChars);
 
         // If field not final, also generate a setter function.
         if (!isFieldFinal) {
@@ -204,7 +218,7 @@ public class CodeGenerator {
 
             writeFunctionStartupBoilerPlate(setterSignature, true);
 
-            generateGetterOrSetterBody(fieldType, CFieldName, isFieldStatic, true, aFieldTuple.mAnnotationInfo.narrowChars);
+            generateGetterOrSetterBody(theField, CFieldName, isFieldStatic, true, aFieldTuple.mAnnotationInfo.narrowChars);
         }
     }
 
@@ -282,8 +296,7 @@ public class CodeGenerator {
                        .append(";\n");
 
         // Add startup code to populate it..
-        wrapperStartupCode.append('\n')
-                          .append(Utils.getStartupLineForClass(aClass));
+        wrapperStartupCode.append(Utils.getStartupLineForClass(aClass));
 
         seenClasses.add(className);
     }
@@ -403,6 +416,10 @@ public class CodeGenerator {
 
         writeFramePushBoilerplate(theCtor, false, aNoThrow);
 
+        if (mLazyInit) {
+            writeMemberInit(theCtor, wrapperMethodBodies);
+        }
+
         // Marshall arguments for this constructor, if any...
         boolean hasArguments = argumentTypes.length != 0;
 
@@ -450,6 +467,10 @@ public class CodeGenerator {
         boolean isObjectReturningMethod = !returnType.getCanonicalName().equals("void") && Utils.isObjectType(returnType);
 
         writeFramePushBoilerplate(aMethod, isObjectReturningMethod, aNoThrow);
+
+        if (mLazyInit) {
+            writeMemberInit(aMethod, wrapperMethodBodies);
+        }
 
         // Marshall arguments, if we have any.
         boolean hasArguments = argumentTypes.length != 0;
@@ -525,33 +546,41 @@ public class CodeGenerator {
     }
 
     /**
-     * Generates the code to get the id of the given member on startup.
+     * Generates the code to get the id of the given member on startup or in the member body if lazy init
+     * is requested.
      *
      * @param aMember         The Java member being wrapped.
      */
-    private void writeStartupCode(Member aMember) {
-        wrapperStartupCode.append("    ")
-                          .append(mMembersToIds.get(aMember))
-                          .append(" = get");
+    private void writeMemberInit(Member aMember, StringBuilder aOutput) {
+        if (mLazyInit) {
+            aOutput.append("    if (!" + mMembersToIds.get(aMember) + ") {\n    ");
+        }
+
+        aOutput.append("    " + mMembersToIds.get(aMember)).append(" = AndroidBridge::Get");
         if (Utils.isMemberStatic(aMember)) {
-            wrapperStartupCode.append("Static");
+            aOutput.append("Static");
         }
 
         boolean isField = aMember instanceof Field;
         if (isField) {
-            wrapperStartupCode.append("Field(\"");
+            aOutput.append("FieldID(env, " + Utils.getClassReferenceName(aMember.getDeclaringClass()) + ", \"");
         } else {
-            wrapperStartupCode.append("Method(\"");
-        }
-        if (aMember instanceof Constructor) {
-            wrapperStartupCode.append("<init>");
-        } else {
-            wrapperStartupCode.append(aMember.getName());
+            aOutput.append("MethodID(env, " + Utils.getClassReferenceName(aMember.getDeclaringClass()) + ", \"");
         }
 
-        wrapperStartupCode.append("\", \"")
+        if (aMember instanceof Constructor) {
+            aOutput.append("<init>");
+        } else {
+            aOutput.append(aMember.getName());
+        }
+
+        aOutput.append("\", \"")
                           .append(Utils.getTypeSignatureStringForMember(aMember))
                           .append("\");\n");
+
+        if (mLazyInit) {
+            aOutput.append("    }\n\n");
+        }
     }
 
     private void writeZeroingFor(Member aMember, final String aMemberName) {

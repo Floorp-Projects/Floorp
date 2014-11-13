@@ -13,11 +13,9 @@ namespace widget {
 namespace android {
 jclass DownloadsIntegration::mDownloadsIntegrationClass = 0;
 jmethodID DownloadsIntegration::jScanMedia = 0;
-void DownloadsIntegration::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mDownloadsIntegrationClass = getClassGlobalRef("org/mozilla/gecko/DownloadsIntegration");
-    jScanMedia = getStaticMethod("scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
+void DownloadsIntegration::InitStubs(JNIEnv *env) {
+    mDownloadsIntegrationClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/DownloadsIntegration");
+    jScanMedia = AndroidBridge::GetStaticMethodID(env, mDownloadsIntegrationClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
 }
 
 DownloadsIntegration* DownloadsIntegration::Wrap(jobject obj) {
@@ -124,92 +122,90 @@ jmethodID GeckoAppShell::jUnlockScreenOrientation = 0;
 jmethodID GeckoAppShell::jUnregisterSurfaceTextureFrameListener = 0;
 jmethodID GeckoAppShell::jVibrate1 = 0;
 jmethodID GeckoAppShell::jVibrateA = 0;
-void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mGeckoAppShellClass = getClassGlobalRef("org/mozilla/gecko/GeckoAppShell");
-    jAcknowledgeEvent = getStaticMethod("acknowledgeEvent", "()V");
-    jAddPluginViewWrapper = getStaticMethod("addPluginView", "(Landroid/view/View;FFFFZ)V");
-    jAlertsProgressListener_OnProgress = getStaticMethod("alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
-    jCancelVibrate = getStaticMethod("cancelVibrate", "()V");
-    jCheckURIVisited = getStaticMethod("checkUriVisited", "(Ljava/lang/String;)V");
-    jClearMessageList = getStaticMethod("clearMessageList", "(I)V");
-    jCloseCamera = getStaticMethod("closeCamera", "()V");
-    jCloseNotification = getStaticMethod("closeNotification", "(Ljava/lang/String;)V");
-    jConnectionGetMimeType = getStaticMethod("connectionGetMimeType", "(Ljava/net/URLConnection;)Ljava/lang/String;");
-    jCreateInputStream = getStaticMethod("createInputStream", "(Ljava/net/URLConnection;)Ljava/io/InputStream;");
-    jCreateMessageListWrapper = getStaticMethod("createMessageList", "(JJ[Ljava/lang/String;ILjava/lang/String;ZZJZI)V");
-    jCreateShortcut = getStaticMethod("createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    jDeleteMessageWrapper = getStaticMethod("deleteMessage", "(II)V");
-    jDisableBatteryNotifications = getStaticMethod("disableBatteryNotifications", "()V");
-    jDisableNetworkNotifications = getStaticMethod("disableNetworkNotifications", "()V");
-    jDisableScreenOrientationNotifications = getStaticMethod("disableScreenOrientationNotifications", "()V");
-    jDisableSensor = getStaticMethod("disableSensor", "(I)V");
-    jEnableBatteryNotifications = getStaticMethod("enableBatteryNotifications", "()V");
-    jEnableLocation = getStaticMethod("enableLocation", "(Z)V");
-    jEnableLocationHighAccuracy = getStaticMethod("enableLocationHighAccuracy", "(Z)V");
-    jEnableNetworkNotifications = getStaticMethod("enableNetworkNotifications", "()V");
-    jEnableScreenOrientationNotifications = getStaticMethod("enableScreenOrientationNotifications", "()V");
-    jEnableSensor = getStaticMethod("enableSensor", "(I)V");
-    jGamepadAdded = getStaticMethod("gamepadAdded", "(II)V");
-    jGetConnection = getStaticMethod("getConnection", "(Ljava/lang/String;)Ljava/net/URLConnection;");
-    jGetContext = getStaticMethod("getContext", "()Landroid/content/Context;");
-    jGetCurrentBatteryInformationWrapper = getStaticMethod("getCurrentBatteryInformation", "()[D");
-    jGetCurrentNetworkInformationWrapper = getStaticMethod("getCurrentNetworkInformation", "()[D");
-    jGetDensity = getStaticMethod("getDensity", "()F");
-    jGetDpiWrapper = getStaticMethod("getDpi", "()I");
-    jGetExtensionFromMimeTypeWrapper = getStaticMethod("getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
-    jGetExternalPublicDirectory = getStaticMethod("getExternalPublicDirectory", "(Ljava/lang/String;)Ljava/lang/String;");
-    jGetHandlersForMimeTypeWrapper = getStaticMethod("getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
-    jGetHandlersForURLWrapper = getStaticMethod("getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
-    jGetIconForExtensionWrapper = getStaticMethod("getIconForExtension", "(Ljava/lang/String;I)[B");
-    jGetMessageWrapper = getStaticMethod("getMessage", "(II)V");
-    jGetMimeTypeFromExtensionsWrapper = getStaticMethod("getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
-    jGetNextMessageInListWrapper = getStaticMethod("getNextMessageInList", "(II)V");
-    jGetProxyForURIWrapper = getStaticMethod("getProxyForURI", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;");
-    jGetScreenDepthWrapper = getStaticMethod("getScreenDepth", "()I");
-    jGetScreenOrientationWrapper = getStaticMethod("getScreenOrientation", "()S");
-    jGetShowPasswordSetting = getStaticMethod("getShowPasswordSetting", "()Z");
-    jGetSystemColoursWrapper = getStaticMethod("getSystemColors", "()[I");
-    jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Lorg/mozilla/gecko/util/NativeJSContainer;)V");
-    jHandleUncaughtException = getStaticMethod("handleUncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
-    jHideProgressDialog = getStaticMethod("hideProgressDialog", "()V");
-    jInitCameraWrapper = getStaticMethod("initCamera", "(Ljava/lang/String;III)[I");
-    jIsNetworkLinkKnown = getStaticMethod("isNetworkLinkKnown", "()Z");
-    jIsNetworkLinkUp = getStaticMethod("isNetworkLinkUp", "()Z");
-    jIsTablet = getStaticMethod("isTablet", "()Z");
-    jKillAnyZombies = getStaticMethod("killAnyZombies", "()V");
-    jLoadPluginClass = getStaticMethod("loadPluginClass", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Class;");
-    jLockScreenOrientation = getStaticMethod("lockScreenOrientation", "(I)V");
-    jMarkURIVisited = getStaticMethod("markUriVisited", "(Ljava/lang/String;)V");
-    jMoveTaskToBack = getStaticMethod("moveTaskToBack", "()V");
-    jNetworkLinkType = getStaticMethod("networkLinkType", "()I");
-    jNotifyDefaultPrevented = getStaticMethod("notifyDefaultPrevented", "(Z)V");
-    jNotifyIME = getStaticMethod("notifyIME", "(I)V");
-    jNotifyIMEChange = getStaticMethod("notifyIMEChange", "(Ljava/lang/String;III)V");
-    jNotifyIMEContext = getStaticMethod("notifyIMEContext", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    jNotifyWakeLockChanged = getStaticMethod("notifyWakeLockChanged", "(Ljava/lang/String;Ljava/lang/String;)V");
-    jNotifyXreExit = getStaticMethod("onXreExit", "()V");
-    jOpenUriExternal = getStaticMethod("openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
-    jPerformHapticFeedback = getStaticMethod("performHapticFeedback", "(Z)V");
-    jPumpMessageLoop = getStaticMethod("pumpMessageLoop", "()Z");
-    jRegisterSurfaceTextureFrameListener = getStaticMethod("registerSurfaceTextureFrameListener", "(Ljava/lang/Object;I)V");
-    jRemovePluginView = getStaticMethod("removePluginView", "(Landroid/view/View;Z)V");
-    jRequestUiThreadCallback = getStaticMethod("requestUiThreadCallback", "(J)V");
-    jScheduleRestart = getStaticMethod("scheduleRestart", "()V");
-    jSendMessageWrapper = getStaticMethod("sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
-    jSetFullScreen = getStaticMethod("setFullScreen", "(Z)V");
-    jSetKeepScreenOn = getStaticMethod("setKeepScreenOn", "(Z)V");
-    jSetURITitle = getStaticMethod("setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
-    jShowAlertNotificationWrapper = getStaticMethod("showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    jShowInputMethodPicker = getStaticMethod("showInputMethodPicker", "()V");
-    jStartMonitoringGamepad = getStaticMethod("startMonitoringGamepad", "()V");
-    jStopMonitoringGamepad = getStaticMethod("stopMonitoringGamepad", "()V");
-    jUnlockProfile = getStaticMethod("unlockProfile", "()Z");
-    jUnlockScreenOrientation = getStaticMethod("unlockScreenOrientation", "()V");
-    jUnregisterSurfaceTextureFrameListener = getStaticMethod("unregisterSurfaceTextureFrameListener", "(Ljava/lang/Object;)V");
-    jVibrate1 = getStaticMethod("vibrate", "(J)V");
-    jVibrateA = getStaticMethod("vibrate", "([JI)V");
+void GeckoAppShell::InitStubs(JNIEnv *env) {
+    mGeckoAppShellClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/GeckoAppShell");
+    jAcknowledgeEvent = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "acknowledgeEvent", "()V");
+    jAddPluginViewWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "addPluginView", "(Landroid/view/View;FFFFZ)V");
+    jAlertsProgressListener_OnProgress = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "alertsProgressListener_OnProgress", "(Ljava/lang/String;JJLjava/lang/String;)V");
+    jCancelVibrate = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "cancelVibrate", "()V");
+    jCheckURIVisited = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "checkUriVisited", "(Ljava/lang/String;)V");
+    jClearMessageList = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "clearMessageList", "(I)V");
+    jCloseCamera = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "closeCamera", "()V");
+    jCloseNotification = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "closeNotification", "(Ljava/lang/String;)V");
+    jConnectionGetMimeType = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "connectionGetMimeType", "(Ljava/net/URLConnection;)Ljava/lang/String;");
+    jCreateInputStream = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "createInputStream", "(Ljava/net/URLConnection;)Ljava/io/InputStream;");
+    jCreateMessageListWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "createMessageList", "(JJ[Ljava/lang/String;ILjava/lang/String;ZZJZI)V");
+    jCreateShortcut = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "createShortcut", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jDeleteMessageWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "deleteMessage", "(II)V");
+    jDisableBatteryNotifications = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "disableBatteryNotifications", "()V");
+    jDisableNetworkNotifications = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "disableNetworkNotifications", "()V");
+    jDisableScreenOrientationNotifications = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "disableScreenOrientationNotifications", "()V");
+    jDisableSensor = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "disableSensor", "(I)V");
+    jEnableBatteryNotifications = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "enableBatteryNotifications", "()V");
+    jEnableLocation = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "enableLocation", "(Z)V");
+    jEnableLocationHighAccuracy = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "enableLocationHighAccuracy", "(Z)V");
+    jEnableNetworkNotifications = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "enableNetworkNotifications", "()V");
+    jEnableScreenOrientationNotifications = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "enableScreenOrientationNotifications", "()V");
+    jEnableSensor = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "enableSensor", "(I)V");
+    jGamepadAdded = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "gamepadAdded", "(II)V");
+    jGetConnection = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getConnection", "(Ljava/lang/String;)Ljava/net/URLConnection;");
+    jGetContext = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getContext", "()Landroid/content/Context;");
+    jGetCurrentBatteryInformationWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getCurrentBatteryInformation", "()[D");
+    jGetCurrentNetworkInformationWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getCurrentNetworkInformation", "()[D");
+    jGetDensity = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getDensity", "()F");
+    jGetDpiWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getDpi", "()I");
+    jGetExtensionFromMimeTypeWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getExtensionFromMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
+    jGetExternalPublicDirectory = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getExternalPublicDirectory", "(Ljava/lang/String;)Ljava/lang/String;");
+    jGetHandlersForMimeTypeWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getHandlersForMimeType", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+    jGetHandlersForURLWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getHandlersForURL", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;");
+    jGetIconForExtensionWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getIconForExtension", "(Ljava/lang/String;I)[B");
+    jGetMessageWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getMessage", "(II)V");
+    jGetMimeTypeFromExtensionsWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getMimeTypeFromExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
+    jGetNextMessageInListWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getNextMessageInList", "(II)V");
+    jGetProxyForURIWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getProxyForURI", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)Ljava/lang/String;");
+    jGetScreenDepthWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getScreenDepth", "()I");
+    jGetScreenOrientationWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getScreenOrientation", "()S");
+    jGetShowPasswordSetting = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getShowPasswordSetting", "()Z");
+    jGetSystemColoursWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "getSystemColors", "()[I");
+    jHandleGeckoMessageWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "handleGeckoMessage", "(Lorg/mozilla/gecko/util/NativeJSContainer;)V");
+    jHandleUncaughtException = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "handleUncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
+    jHideProgressDialog = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "hideProgressDialog", "()V");
+    jInitCameraWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "initCamera", "(Ljava/lang/String;III)[I");
+    jIsNetworkLinkKnown = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "isNetworkLinkKnown", "()Z");
+    jIsNetworkLinkUp = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "isNetworkLinkUp", "()Z");
+    jIsTablet = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "isTablet", "()Z");
+    jKillAnyZombies = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "killAnyZombies", "()V");
+    jLoadPluginClass = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "loadPluginClass", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Class;");
+    jLockScreenOrientation = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "lockScreenOrientation", "(I)V");
+    jMarkURIVisited = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "markUriVisited", "(Ljava/lang/String;)V");
+    jMoveTaskToBack = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "moveTaskToBack", "()V");
+    jNetworkLinkType = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "networkLinkType", "()I");
+    jNotifyDefaultPrevented = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "notifyDefaultPrevented", "(Z)V");
+    jNotifyIME = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "notifyIME", "(I)V");
+    jNotifyIMEChange = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "notifyIMEChange", "(Ljava/lang/String;III)V");
+    jNotifyIMEContext = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "notifyIMEContext", "(ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jNotifyWakeLockChanged = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "notifyWakeLockChanged", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jNotifyXreExit = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "onXreExit", "()V");
+    jOpenUriExternal = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "openUriExternal", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z");
+    jPerformHapticFeedback = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "performHapticFeedback", "(Z)V");
+    jPumpMessageLoop = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "pumpMessageLoop", "()Z");
+    jRegisterSurfaceTextureFrameListener = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "registerSurfaceTextureFrameListener", "(Ljava/lang/Object;I)V");
+    jRemovePluginView = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "removePluginView", "(Landroid/view/View;Z)V");
+    jRequestUiThreadCallback = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "requestUiThreadCallback", "(J)V");
+    jScheduleRestart = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "scheduleRestart", "()V");
+    jSendMessageWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
+    jSetFullScreen = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "setFullScreen", "(Z)V");
+    jSetKeepScreenOn = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "setKeepScreenOn", "(Z)V");
+    jSetURITitle = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jShowAlertNotificationWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    jShowInputMethodPicker = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "showInputMethodPicker", "()V");
+    jStartMonitoringGamepad = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "startMonitoringGamepad", "()V");
+    jStopMonitoringGamepad = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "stopMonitoringGamepad", "()V");
+    jUnlockProfile = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "unlockProfile", "()Z");
+    jUnlockScreenOrientation = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "unlockScreenOrientation", "()V");
+    jUnregisterSurfaceTextureFrameListener = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "unregisterSurfaceTextureFrameListener", "(Ljava/lang/Object;)V");
+    jVibrate1 = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "vibrate", "(J)V");
+    jVibrateA = AndroidBridge::GetStaticMethodID(env, mGeckoAppShellClass, "vibrate", "([JI)V");
 }
 
 GeckoAppShell* GeckoAppShell::Wrap(jobject obj) {
@@ -1342,17 +1338,15 @@ jmethodID GeckoJavaSampler::jPauseJavaProfiling = 0;
 jmethodID GeckoJavaSampler::jStartJavaProfiling = 0;
 jmethodID GeckoJavaSampler::jStopJavaProfiling = 0;
 jmethodID GeckoJavaSampler::jUnpauseJavaProfiling = 0;
-void GeckoJavaSampler::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mGeckoJavaSamplerClass = getClassGlobalRef("org/mozilla/gecko/GeckoJavaSampler");
-    jGetFrameNameJavaProfilingWrapper = getStaticMethod("getFrameName", "(III)Ljava/lang/String;");
-    jGetSampleTimeJavaProfiling = getStaticMethod("getSampleTime", "(II)D");
-    jGetThreadNameJavaProfilingWrapper = getStaticMethod("getThreadName", "(I)Ljava/lang/String;");
-    jPauseJavaProfiling = getStaticMethod("pause", "()V");
-    jStartJavaProfiling = getStaticMethod("start", "(II)V");
-    jStopJavaProfiling = getStaticMethod("stop", "()V");
-    jUnpauseJavaProfiling = getStaticMethod("unpause", "()V");
+void GeckoJavaSampler::InitStubs(JNIEnv *env) {
+    mGeckoJavaSamplerClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/GeckoJavaSampler");
+    jGetFrameNameJavaProfilingWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoJavaSamplerClass, "getFrameName", "(III)Ljava/lang/String;");
+    jGetSampleTimeJavaProfiling = AndroidBridge::GetStaticMethodID(env, mGeckoJavaSamplerClass, "getSampleTime", "(II)D");
+    jGetThreadNameJavaProfilingWrapper = AndroidBridge::GetStaticMethodID(env, mGeckoJavaSamplerClass, "getThreadName", "(I)Ljava/lang/String;");
+    jPauseJavaProfiling = AndroidBridge::GetStaticMethodID(env, mGeckoJavaSamplerClass, "pause", "()V");
+    jStartJavaProfiling = AndroidBridge::GetStaticMethodID(env, mGeckoJavaSamplerClass, "start", "(II)V");
+    jStopJavaProfiling = AndroidBridge::GetStaticMethodID(env, mGeckoJavaSamplerClass, "stop", "()V");
+    jUnpauseJavaProfiling = AndroidBridge::GetStaticMethodID(env, mGeckoJavaSamplerClass, "unpause", "()V");
 }
 
 GeckoJavaSampler* GeckoJavaSampler::Wrap(jobject obj) {
@@ -1457,13 +1451,11 @@ jclass RestrictedProfiles::mRestrictedProfilesClass = 0;
 jmethodID RestrictedProfiles::jGetUserRestrictions = 0;
 jmethodID RestrictedProfiles::jIsAllowed = 0;
 jmethodID RestrictedProfiles::jIsUserRestricted = 0;
-void RestrictedProfiles::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mRestrictedProfilesClass = getClassGlobalRef("org/mozilla/gecko/RestrictedProfiles");
-    jGetUserRestrictions = getStaticMethod("getUserRestrictions", "()Ljava/lang/String;");
-    jIsAllowed = getStaticMethod("isAllowed", "(ILjava/lang/String;)Z");
-    jIsUserRestricted = getStaticMethod("isUserRestricted", "()Z");
+void RestrictedProfiles::InitStubs(JNIEnv *env) {
+    mRestrictedProfilesClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/RestrictedProfiles");
+    jGetUserRestrictions = AndroidBridge::GetStaticMethodID(env, mRestrictedProfilesClass, "getUserRestrictions", "()Ljava/lang/String;");
+    jIsAllowed = AndroidBridge::GetStaticMethodID(env, mRestrictedProfilesClass, "isAllowed", "(ILjava/lang/String;)Z");
+    jIsUserRestricted = AndroidBridge::GetStaticMethodID(env, mRestrictedProfilesClass, "isUserRestricted", "()Z");
 }
 
 RestrictedProfiles* RestrictedProfiles::Wrap(jobject obj) {
@@ -1519,15 +1511,13 @@ jfieldID SurfaceBits::jbuffer = 0;
 jfieldID SurfaceBits::jformat = 0;
 jfieldID SurfaceBits::jheight = 0;
 jfieldID SurfaceBits::jwidth = 0;
-void SurfaceBits::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mSurfaceBitsClass = getClassGlobalRef("org/mozilla/gecko/SurfaceBits");
-    jSurfaceBits = getMethod("<init>", "()V");
-    jbuffer = getField("buffer", "Ljava/nio/ByteBuffer;");
-    jformat = getField("format", "I");
-    jheight = getField("height", "I");
-    jwidth = getField("width", "I");
+void SurfaceBits::InitStubs(JNIEnv *env) {
+    mSurfaceBitsClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/SurfaceBits");
+    jSurfaceBits = AndroidBridge::GetMethodID(env, mSurfaceBitsClass, "<init>", "()V");
+    jbuffer = AndroidBridge::GetFieldID(env, mSurfaceBitsClass, "buffer", "Ljava/nio/ByteBuffer;");
+    jformat = AndroidBridge::GetFieldID(env, mSurfaceBitsClass, "format", "I");
+    jheight = AndroidBridge::GetFieldID(env, mSurfaceBitsClass, "height", "I");
+    jwidth = AndroidBridge::GetFieldID(env, mSurfaceBitsClass, "width", "I");
 }
 
 SurfaceBits* SurfaceBits::Wrap(jobject obj) {
@@ -1589,11 +1579,9 @@ void SurfaceBits::setwidth(int32_t a0) {
 }
 jclass ThumbnailHelper::mThumbnailHelperClass = 0;
 jmethodID ThumbnailHelper::jSendThumbnail = 0;
-void ThumbnailHelper::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mThumbnailHelperClass = getClassGlobalRef("org/mozilla/gecko/ThumbnailHelper");
-    jSendThumbnail = getStaticMethod("notifyThumbnail", "(Ljava/nio/ByteBuffer;IZZ)V");
+void ThumbnailHelper::InitStubs(JNIEnv *env) {
+    mThumbnailHelperClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/ThumbnailHelper");
+    jSendThumbnail = AndroidBridge::GetStaticMethodID(env, mThumbnailHelperClass, "notifyThumbnail", "(Ljava/nio/ByteBuffer;IZZ)V");
 }
 
 ThumbnailHelper* ThumbnailHelper::Wrap(jobject obj) {
@@ -1624,13 +1612,11 @@ jclass DisplayPortMetrics::mDisplayPortMetricsClass = 0;
 jmethodID DisplayPortMetrics::jDisplayPortMetrics = 0;
 jfieldID DisplayPortMetrics::jMPosition = 0;
 jfieldID DisplayPortMetrics::jResolution = 0;
-void DisplayPortMetrics::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mDisplayPortMetricsClass = getClassGlobalRef("org/mozilla/gecko/gfx/DisplayPortMetrics");
-    jDisplayPortMetrics = getMethod("<init>", "(FFFFF)V");
-    jMPosition = getField("mPosition", "Landroid/graphics/RectF;");
-    jResolution = getField("resolution", "F");
+void DisplayPortMetrics::InitStubs(JNIEnv *env) {
+    mDisplayPortMetricsClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/DisplayPortMetrics");
+    jDisplayPortMetrics = AndroidBridge::GetMethodID(env, mDisplayPortMetricsClass, "<init>", "(FFFFF)V");
+    jMPosition = AndroidBridge::GetFieldID(env, mDisplayPortMetricsClass, "mPosition", "Landroid/graphics/RectF;");
+    jResolution = AndroidBridge::GetFieldID(env, mDisplayPortMetricsClass, "resolution", "F");
 }
 
 DisplayPortMetrics* DisplayPortMetrics::Wrap(jobject obj) {
@@ -1669,11 +1655,9 @@ jfloat DisplayPortMetrics::getResolution() {
 }
 jclass GLController::mGLControllerClass = 0;
 jmethodID GLController::jCreateEGLSurfaceForCompositorWrapper = 0;
-void GLController::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mGLControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/GLController");
-    jCreateEGLSurfaceForCompositorWrapper = getMethod("createEGLSurfaceForCompositor", "()Ljavax/microedition/khronos/egl/EGLSurface;");
+void GLController::InitStubs(JNIEnv *env) {
+    mGLControllerClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/GLController");
+    jCreateEGLSurfaceForCompositorWrapper = AndroidBridge::GetMethodID(env, mGLControllerClass, "createEGLSurfaceForCompositor", "()Ljavax/microedition/khronos/egl/EGLSurface;");
 }
 
 GLController* GLController::Wrap(jobject obj) {
@@ -1707,21 +1691,19 @@ jmethodID GeckoLayerClient::jSetFirstPaintViewport = 0;
 jmethodID GeckoLayerClient::jSetPageRect = 0;
 jmethodID GeckoLayerClient::jSyncFrameMetrics = 0;
 jmethodID GeckoLayerClient::jSyncViewportInfo = 0;
-void GeckoLayerClient::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mGeckoLayerClientClass = getClassGlobalRef("org/mozilla/gecko/gfx/GeckoLayerClient");
-    jActivateProgram = getMethod("activateProgram", "()V");
-    jContentDocumentChanged = getMethod("contentDocumentChanged", "()V");
-    jCreateFrame = getMethod("createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
-    jDeactivateProgramAndRestoreState = getMethod("deactivateProgramAndRestoreState", "(ZIIII)V");
-    jGetDisplayPort = getMethod("getDisplayPort", "(ZZILorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)Lorg/mozilla/gecko/gfx/DisplayPortMetrics;");
-    jIsContentDocumentDisplayed = getMethod("isContentDocumentDisplayed", "()Z");
-    jProgressiveUpdateCallback = getMethod("progressiveUpdateCallback", "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
-    jSetFirstPaintViewport = getMethod("setFirstPaintViewport", "(FFFFFFF)V");
-    jSetPageRect = getMethod("setPageRect", "(FFFF)V");
-    jSyncFrameMetrics = getMethod("syncFrameMetrics", "(FFFFFFFZIIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
-    jSyncViewportInfo = getMethod("syncViewportInfo", "(IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
+void GeckoLayerClient::InitStubs(JNIEnv *env) {
+    mGeckoLayerClientClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/GeckoLayerClient");
+    jActivateProgram = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "activateProgram", "()V");
+    jContentDocumentChanged = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "contentDocumentChanged", "()V");
+    jCreateFrame = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "createFrame", "()Lorg/mozilla/gecko/gfx/LayerRenderer$Frame;");
+    jDeactivateProgramAndRestoreState = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "deactivateProgramAndRestoreState", "(ZIIII)V");
+    jGetDisplayPort = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "getDisplayPort", "(ZZILorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)Lorg/mozilla/gecko/gfx/DisplayPortMetrics;");
+    jIsContentDocumentDisplayed = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "isContentDocumentDisplayed", "()Z");
+    jProgressiveUpdateCallback = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "progressiveUpdateCallback", "(ZFFFFFZ)Lorg/mozilla/gecko/gfx/ProgressiveUpdateData;");
+    jSetFirstPaintViewport = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "setFirstPaintViewport", "(FFFFFFF)V");
+    jSetPageRect = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "setPageRect", "(FFFF)V");
+    jSyncFrameMetrics = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "syncFrameMetrics", "(FFFFFFFZIIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
+    jSyncViewportInfo = AndroidBridge::GetMethodID(env, mGeckoLayerClientClass, "syncViewportInfo", "(IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;");
 }
 
 GeckoLayerClient* GeckoLayerClient::Wrap(jobject obj) {
@@ -1931,11 +1913,9 @@ jobject GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, i
 }
 jclass ImmutableViewportMetrics::mImmutableViewportMetricsClass = 0;
 jmethodID ImmutableViewportMetrics::jImmutableViewportMetrics = 0;
-void ImmutableViewportMetrics::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mImmutableViewportMetricsClass = getClassGlobalRef("org/mozilla/gecko/gfx/ImmutableViewportMetrics");
-    jImmutableViewportMetrics = getMethod("<init>", "(FFFFFFFFFFFFF)V");
+void ImmutableViewportMetrics::InitStubs(JNIEnv *env) {
+    mImmutableViewportMetricsClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/ImmutableViewportMetrics");
+    jImmutableViewportMetrics = AndroidBridge::GetMethodID(env, mImmutableViewportMetricsClass, "<init>", "(FFFFFFFFFFFFF)V");
 }
 
 ImmutableViewportMetrics* ImmutableViewportMetrics::Wrap(jobject obj) {
@@ -1972,11 +1952,9 @@ ImmutableViewportMetrics::ImmutableViewportMetrics(jfloat a0, jfloat a1, jfloat 
 }
 jclass LayerView::mLayerViewClass = 0;
 jmethodID LayerView::jRegisterCompositorWrapper = 0;
-void LayerView::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mLayerViewClass = getClassGlobalRef("org/mozilla/gecko/gfx/LayerView");
-    jRegisterCompositorWrapper = getStaticMethod("registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
+void LayerView::InitStubs(JNIEnv *env) {
+    mLayerViewClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/LayerView");
+    jRegisterCompositorWrapper = AndroidBridge::GetStaticMethodID(env, mLayerViewClass, "registerCxxCompositor", "()Lorg/mozilla/gecko/gfx/GLController;");
 }
 
 LayerView* LayerView::Wrap(jobject obj) {
@@ -2000,11 +1978,9 @@ jobject LayerView::RegisterCompositorWrapper() {
 }
 jclass NativePanZoomController::mNativePanZoomControllerClass = 0;
 jmethodID NativePanZoomController::jRequestContentRepaintWrapper = 0;
-void NativePanZoomController::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mNativePanZoomControllerClass = getClassGlobalRef("org/mozilla/gecko/gfx/NativePanZoomController");
-    jRequestContentRepaintWrapper = getMethod("requestContentRepaint", "(FFFFF)V");
+void NativePanZoomController::InitStubs(JNIEnv *env) {
+    mNativePanZoomControllerClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/NativePanZoomController");
+    jRequestContentRepaintWrapper = AndroidBridge::GetMethodID(env, mNativePanZoomControllerClass, "requestContentRepaint", "(FFFFF)V");
 }
 
 NativePanZoomController* NativePanZoomController::Wrap(jobject obj) {
@@ -2039,16 +2015,14 @@ jfieldID ProgressiveUpdateData::jabort = 0;
 jfieldID ProgressiveUpdateData::jscale = 0;
 jfieldID ProgressiveUpdateData::jx = 0;
 jfieldID ProgressiveUpdateData::jy = 0;
-void ProgressiveUpdateData::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mProgressiveUpdateDataClass = getClassGlobalRef("org/mozilla/gecko/gfx/ProgressiveUpdateData");
-    jProgressiveUpdateData = getMethod("<init>", "()V");
-    jsetViewport = getMethod("setViewport", "(Lorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)V");
-    jabort = getField("abort", "Z");
-    jscale = getField("scale", "F");
-    jx = getField("x", "F");
-    jy = getField("y", "F");
+void ProgressiveUpdateData::InitStubs(JNIEnv *env) {
+    mProgressiveUpdateDataClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/ProgressiveUpdateData");
+    jProgressiveUpdateData = AndroidBridge::GetMethodID(env, mProgressiveUpdateDataClass, "<init>", "()V");
+    jsetViewport = AndroidBridge::GetMethodID(env, mProgressiveUpdateDataClass, "setViewport", "(Lorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)V");
+    jabort = AndroidBridge::GetFieldID(env, mProgressiveUpdateDataClass, "abort", "Z");
+    jscale = AndroidBridge::GetFieldID(env, mProgressiveUpdateDataClass, "scale", "F");
+    jx = AndroidBridge::GetFieldID(env, mProgressiveUpdateDataClass, "x", "F");
+    jy = AndroidBridge::GetFieldID(env, mProgressiveUpdateDataClass, "y", "F");
 }
 
 ProgressiveUpdateData* ProgressiveUpdateData::Wrap(jobject obj) {
@@ -2131,20 +2105,18 @@ jfieldID ViewTransform::joffsetY = 0;
 jfieldID ViewTransform::jscale = 0;
 jfieldID ViewTransform::jx = 0;
 jfieldID ViewTransform::jy = 0;
-void ViewTransform::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mViewTransformClass = getClassGlobalRef("org/mozilla/gecko/gfx/ViewTransform");
-    jViewTransform = getMethod("<init>", "(FFF)V");
-    jfixedLayerMarginBottom = getField("fixedLayerMarginBottom", "F");
-    jfixedLayerMarginLeft = getField("fixedLayerMarginLeft", "F");
-    jfixedLayerMarginRight = getField("fixedLayerMarginRight", "F");
-    jfixedLayerMarginTop = getField("fixedLayerMarginTop", "F");
-    joffsetX = getField("offsetX", "F");
-    joffsetY = getField("offsetY", "F");
-    jscale = getField("scale", "F");
-    jx = getField("x", "F");
-    jy = getField("y", "F");
+void ViewTransform::InitStubs(JNIEnv *env) {
+    mViewTransformClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/gfx/ViewTransform");
+    jViewTransform = AndroidBridge::GetMethodID(env, mViewTransformClass, "<init>", "(FFF)V");
+    jfixedLayerMarginBottom = AndroidBridge::GetFieldID(env, mViewTransformClass, "fixedLayerMarginBottom", "F");
+    jfixedLayerMarginLeft = AndroidBridge::GetFieldID(env, mViewTransformClass, "fixedLayerMarginLeft", "F");
+    jfixedLayerMarginRight = AndroidBridge::GetFieldID(env, mViewTransformClass, "fixedLayerMarginRight", "F");
+    jfixedLayerMarginTop = AndroidBridge::GetFieldID(env, mViewTransformClass, "fixedLayerMarginTop", "F");
+    joffsetX = AndroidBridge::GetFieldID(env, mViewTransformClass, "offsetX", "F");
+    joffsetY = AndroidBridge::GetFieldID(env, mViewTransformClass, "offsetY", "F");
+    jscale = AndroidBridge::GetFieldID(env, mViewTransformClass, "scale", "F");
+    jx = AndroidBridge::GetFieldID(env, mViewTransformClass, "x", "F");
+    jy = AndroidBridge::GetFieldID(env, mViewTransformClass, "y", "F");
 }
 
 ViewTransform* ViewTransform::Wrap(jobject obj) {
@@ -2261,11 +2233,9 @@ void ViewTransform::sety(jfloat a0) {
 }
 jclass NativeZip::mNativeZipClass = 0;
 jmethodID NativeZip::jCreateInputStream = 0;
-void NativeZip::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mNativeZipClass = getClassGlobalRef("org/mozilla/gecko/mozglue/NativeZip");
-    jCreateInputStream = getMethod("createInputStream", "(Ljava/nio/ByteBuffer;I)Ljava/io/InputStream;");
+void NativeZip::InitStubs(JNIEnv *env) {
+    mNativeZipClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/mozglue/NativeZip");
+    jCreateInputStream = AndroidBridge::GetMethodID(env, mNativeZipClass, "createInputStream", "(Ljava/nio/ByteBuffer;I)Ljava/io/InputStream;");
 }
 
 NativeZip* NativeZip::Wrap(jobject obj) {
@@ -2293,15 +2263,13 @@ jmethodID MatrixBlobCursor::jMatrixBlobCursor0 = 0;
 jmethodID MatrixBlobCursor::jAddRow = 0;
 jmethodID MatrixBlobCursor::jAddRow1 = 0;
 jmethodID MatrixBlobCursor::jAddRow2 = 0;
-void MatrixBlobCursor::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mMatrixBlobCursorClass = getClassGlobalRef("org/mozilla/gecko/sqlite/MatrixBlobCursor");
-    jMatrixBlobCursor = getMethod("<init>", "([Ljava/lang/String;)V");
-    jMatrixBlobCursor0 = getMethod("<init>", "([Ljava/lang/String;I)V");
-    jAddRow = getMethod("addRow", "(Ljava/lang/Iterable;)V");
-    jAddRow1 = getMethod("addRow", "(Ljava/util/ArrayList;I)V");
-    jAddRow2 = getMethod("addRow", "([Ljava/lang/Object;)V");
+void MatrixBlobCursor::InitStubs(JNIEnv *env) {
+    mMatrixBlobCursorClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/sqlite/MatrixBlobCursor");
+    jMatrixBlobCursor = AndroidBridge::GetMethodID(env, mMatrixBlobCursorClass, "<init>", "([Ljava/lang/String;)V");
+    jMatrixBlobCursor0 = AndroidBridge::GetMethodID(env, mMatrixBlobCursorClass, "<init>", "([Ljava/lang/String;I)V");
+    jAddRow = AndroidBridge::GetMethodID(env, mMatrixBlobCursorClass, "addRow", "(Ljava/lang/Iterable;)V");
+    jAddRow1 = AndroidBridge::GetMethodID(env, mMatrixBlobCursorClass, "addRow", "(Ljava/util/ArrayList;I)V");
+    jAddRow2 = AndroidBridge::GetMethodID(env, mMatrixBlobCursorClass, "addRow", "([Ljava/lang/Object;)V");
 }
 
 MatrixBlobCursor* MatrixBlobCursor::Wrap(jobject obj) {
@@ -2372,13 +2340,11 @@ jclass SQLiteBridgeException::mSQLiteBridgeExceptionClass = 0;
 jmethodID SQLiteBridgeException::jSQLiteBridgeException = 0;
 jmethodID SQLiteBridgeException::jSQLiteBridgeException0 = 0;
 jfieldID SQLiteBridgeException::jserialVersionUID = 0;
-void SQLiteBridgeException::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mSQLiteBridgeExceptionClass = getClassGlobalRef("org/mozilla/gecko/sqlite/SQLiteBridgeException");
-    jSQLiteBridgeException = getMethod("<init>", "()V");
-    jSQLiteBridgeException0 = getMethod("<init>", "(Ljava/lang/String;)V");
-    jserialVersionUID = getStaticField("serialVersionUID", "J");
+void SQLiteBridgeException::InitStubs(JNIEnv *env) {
+    mSQLiteBridgeExceptionClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/sqlite/SQLiteBridgeException");
+    jSQLiteBridgeException = AndroidBridge::GetMethodID(env, mSQLiteBridgeExceptionClass, "<init>", "()V");
+    jSQLiteBridgeException0 = AndroidBridge::GetMethodID(env, mSQLiteBridgeExceptionClass, "<init>", "(Ljava/lang/String;)V");
+    jserialVersionUID = AndroidBridge::GetStaticFieldID(env, mSQLiteBridgeExceptionClass, "serialVersionUID", "J");
 }
 
 SQLiteBridgeException* SQLiteBridgeException::Wrap(jobject obj) {
@@ -2421,14 +2387,12 @@ jmethodID Clipboard::jClearText = 0;
 jmethodID Clipboard::jGetClipboardTextWrapper = 0;
 jmethodID Clipboard::jHasText = 0;
 jmethodID Clipboard::jSetClipboardText = 0;
-void Clipboard::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mClipboardClass = getClassGlobalRef("org/mozilla/gecko/util/Clipboard");
-    jClearText = getStaticMethod("clearText", "()V");
-    jGetClipboardTextWrapper = getStaticMethod("getText", "()Ljava/lang/String;");
-    jHasText = getStaticMethod("hasText", "()Z");
-    jSetClipboardText = getStaticMethod("setText", "(Ljava/lang/CharSequence;)V");
+void Clipboard::InitStubs(JNIEnv *env) {
+    mClipboardClass = AndroidBridge::GetClassGlobalRef(env, "org/mozilla/gecko/util/Clipboard");
+    jClearText = AndroidBridge::GetStaticMethodID(env, mClipboardClass, "clearText", "()V");
+    jGetClipboardTextWrapper = AndroidBridge::GetStaticMethodID(env, mClipboardClass, "getText", "()Ljava/lang/String;");
+    jHasText = AndroidBridge::GetStaticMethodID(env, mClipboardClass, "hasText", "()Z");
+    jSetClipboardText = AndroidBridge::GetStaticMethodID(env, mClipboardClass, "setText", "(Ljava/lang/CharSequence;)V");
 }
 
 Clipboard* Clipboard::Wrap(jobject obj) {
@@ -2490,25 +2454,25 @@ void Clipboard::SetClipboardText(const nsAString& a0) {
     env->PopLocalFrame(nullptr);
 }
 
-void InitStubs(JNIEnv *jEnv) {
-    DownloadsIntegration::InitStubs(jEnv);
-    GeckoAppShell::InitStubs(jEnv);
-    GeckoJavaSampler::InitStubs(jEnv);
-    RestrictedProfiles::InitStubs(jEnv);
-    SurfaceBits::InitStubs(jEnv);
-    ThumbnailHelper::InitStubs(jEnv);
-    DisplayPortMetrics::InitStubs(jEnv);
-    GLController::InitStubs(jEnv);
-    GeckoLayerClient::InitStubs(jEnv);
-    ImmutableViewportMetrics::InitStubs(jEnv);
-    LayerView::InitStubs(jEnv);
-    NativePanZoomController::InitStubs(jEnv);
-    ProgressiveUpdateData::InitStubs(jEnv);
-    ViewTransform::InitStubs(jEnv);
-    NativeZip::InitStubs(jEnv);
-    MatrixBlobCursor::InitStubs(jEnv);
-    SQLiteBridgeException::InitStubs(jEnv);
-    Clipboard::InitStubs(jEnv);
+void InitStubs(JNIEnv *env) {
+    DownloadsIntegration::InitStubs(env);
+    GeckoAppShell::InitStubs(env);
+    GeckoJavaSampler::InitStubs(env);
+    RestrictedProfiles::InitStubs(env);
+    SurfaceBits::InitStubs(env);
+    ThumbnailHelper::InitStubs(env);
+    DisplayPortMetrics::InitStubs(env);
+    GLController::InitStubs(env);
+    GeckoLayerClient::InitStubs(env);
+    ImmutableViewportMetrics::InitStubs(env);
+    LayerView::InitStubs(env);
+    NativePanZoomController::InitStubs(env);
+    ProgressiveUpdateData::InitStubs(env);
+    ViewTransform::InitStubs(env);
+    NativeZip::InitStubs(env);
+    MatrixBlobCursor::InitStubs(env);
+    SQLiteBridgeException::InitStubs(env);
+    Clipboard::InitStubs(env);
 }
 } /* android */
 } /* widget */
