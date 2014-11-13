@@ -908,6 +908,16 @@ InterpretResume(JSContext *cx, HandleObject obj, HandleValue val, HandleProperty
 }
 
 bool
+DebugAfterYield(JSContext *cx, BaselineFrame *frame)
+{
+    // The BaselineFrame has just been constructed by JSOP_RESUME in the
+    // caller. We need to set its debuggee flag as necessary.
+    if (frame->script()->isDebuggee())
+        frame->setIsDebuggee();
+    return true;
+}
+
+bool
 StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 {
     return frame->strictEvalPrologue(cx);
