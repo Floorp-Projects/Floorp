@@ -3,13 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AndroidDecoderModule.h"
-#include "PlatformDecoderModule.h"
-#include "GeneratedJNIWrappers.h"
-#include "GeneratedSDKWrappers.h"
 #include "AndroidBridge.h"
-#include "MediaTaskQueue.h"
-#include "SharedThreadPool.h"
-#include "TexturePoolOGL.h"
 #include "GLImages.h"
 
 #include "MediaData.h"
@@ -26,7 +20,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gl;
-using namespace mozilla::widget::android;
+using namespace mozilla::widget::android::sdk;
 
 namespace mozilla {
 
@@ -36,10 +30,7 @@ static MediaCodec* CreateDecoder(JNIEnv* aEnv, const char* aMimeType)
     return nullptr;
   }
 
-  nsAutoString mimeType;
-  mimeType.AssignASCII(aMimeType);
-
-  jobject decoder = MediaCodec::CreateDecoderByType(mimeType);
+  jobject decoder = MediaCodec::CreateDecoderByType(nsCString(aMimeType));
 
   return new MediaCodec(decoder, aEnv);
 }
@@ -103,7 +94,7 @@ public:
 protected:
   layers::ImageContainer* mImageContainer;
   const mp4_demuxer::VideoDecoderConfig& mConfig;
-  nsRefPtr<AndroidSurfaceTexture> mSurfaceTexture;
+  RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
 };
 
 class AudioDataDecoder : public MediaCodecDataDecoder {
@@ -115,11 +106,11 @@ public:
 
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
     if (!strcmp(mMimeType, "audio/mp4a-latm")) {
-      uint32_t numChannels = mFormat->GetInteger(NS_LITERAL_STRING("channel-count"));
-      uint32_t sampleRate = mFormat->GetInteger(NS_LITERAL_STRING("sample-rate"));
+      uint32_t numChannels = mFormat->GetInteger(NS_LITERAL_CSTRING("channel-count"));
+      uint32_t sampleRate = mFormat->GetInteger(NS_LITERAL_CSTRING("sample-rate"));
       uint8_t frequencyIndex =
           mp4_demuxer::Adts::GetFrequencyIndex(sampleRate);
-      uint32_t aacProfile = mFormat->GetInteger(NS_LITERAL_STRING("aac-profile"));
+      uint32_t aacProfile = mFormat->GetInteger(NS_LITERAL_CSTRING("aac-profile"));
       bool rv = mp4_demuxer::Adts::ConvertSample(numChannels,
                                                  frequencyIndex,
                                                  aacProfile,
@@ -135,8 +126,8 @@ public:
   nsresult Output(BufferInfo* aInfo, void* aBuffer, MediaFormat* aFormat, Microseconds aDuration) {
     // The output on Android is always 16-bit signed
 
-    uint32_t numChannels = aFormat->GetInteger(NS_LITERAL_STRING("channel-count"));
-    uint32_t sampleRate = aFormat->GetInteger(NS_LITERAL_STRING("sample-rate"));
+    uint32_t numChannels = aFormat->GetInteger(NS_LITERAL_CSTRING("channel-count"));
+    uint32_t sampleRate = aFormat->GetInteger(NS_LITERAL_CSTRING("sample-rate"));
     uint32_t numFrames = (aInfo->getSize() / numChannels) / 2;
 
     AudioDataValue* audio = new AudioDataValue[aInfo->getSize()];
@@ -169,10 +160,7 @@ AndroidDecoderModule::CreateH264Decoder(
                                 MediaTaskQueue* aVideoTaskQueue,
                                 MediaDataDecoderCallback* aCallback)
 {
-  nsAutoString mimeType;
-  mimeType.AssignASCII(aConfig.mime_type);
-
-  jobject jFormat = MediaFormat::CreateVideoFormat(mimeType,
+  jobject jFormat = MediaFormat::CreateVideoFormat(nsCString(aConfig.mime_type),
                                                    aConfig.display_width,
                                                    aConfig.display_height);
 
@@ -199,10 +187,7 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
 {
   MOZ_ASSERT(aConfig.bits_per_sample == 16, "We only handle 16-bit audio!");
 
-  nsAutoString mimeType;
-  mimeType.AssignASCII(aConfig.mime_type);
-
-  jobject jFormat = MediaFormat::CreateAudioFormat(mimeType,
+  jobject jFormat = MediaFormat::CreateAudioFormat(nsCString(aConfig.mime_type),
                                                    aConfig.samples_per_second,
                                                    aConfig.channel_count);
 
@@ -216,21 +201,21 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
 
   JNIEnv* env = GetJNIForThread();
 
-  if (!format->GetByteBuffer(NS_LITERAL_STRING("csd-0"))) {
+  if (!format->GetByteBuffer(NS_LITERAL_CSTRING("csd-0"))) {
     uint8_t* csd0 = new uint8_t[2];
 
     csd0[0] = aConfig.audio_specific_config[0];
     csd0[1] = aConfig.audio_specific_config[1];
 
     jobject buffer = env->NewDirectByteBuffer(csd0, 2);
-    format->SetByteBuffer(NS_LITERAL_STRING("csd-0"), buffer);
+    format->SetByteBuffer(NS_LITERAL_CSTRING("csd-0"), buffer);
 
     env->DeleteLocalRef(buffer);
   }
 
-  if (mimeType.EqualsLiteral("audio/mp4a-latm")) {
-    format->SetInteger(NS_LITERAL_STRING("is-adts"), 1);
-    format->SetInteger(NS_LITERAL_STRING("aac-profile"), aConfig.aac_profile);
+  if (strcmp(aConfig.mime_type, "audio/mp4a-latm") == 0) {
+    format->SetInteger(NS_LITERAL_CSTRING("is-adts"), 1);
+    format->SetInteger(NS_LITERAL_CSTRING("aac-profile"), aConfig.aac_profile);
   }
 
   nsRefPtr<MediaDataDecoder> decoder =
@@ -294,15 +279,26 @@ nsresult MediaCodecDataDecoder::InitDecoder(jobject aSurface)
     return NS_ERROR_FAILURE;
   }
 
-  if (!mDecoder->Configure(mFormat->wrappedObject(), aSurface, nullptr, 0)) {
-    mCallback->Error();
-    return NS_ERROR_FAILURE;
+  nsresult res;
+  mDecoder->Configure(mFormat->wrappedObject(), aSurface, nullptr, 0, &res);
+  if (NS_FAILED(res)) {
+    return res;
   }
 
-  mDecoder->Start();
+  mDecoder->Start(&res);
+  if (NS_FAILED(res)) {
+    return res;
+  }
 
-  ResetInputBuffers();
-  ResetOutputBuffers();
+  res = ResetInputBuffers();
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  res = ResetOutputBuffers();
+  if (NS_FAILED(res)) {
+    return res;
+  }
 
   NS_NewNamedThread("MC Decoder", getter_AddRefs(mThread),
                     NS_NewRunnableMethod(this, &MediaCodecDataDecoder::DecoderLoop));
@@ -321,6 +317,7 @@ void MediaCodecDataDecoder::DecoderLoop()
   mp4_demuxer::MP4Sample* sample = nullptr;
 
   nsAutoPtr<MediaFormat> outputFormat;
+  nsresult res;
 
   for (;;) {
     {
@@ -354,7 +351,13 @@ void MediaCodecDataDecoder::DecoderLoop()
 
     if (sample) {
       // We have a sample, try to feed it to the decoder
-      int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT);
+      int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
+      if (NS_FAILED(res)) {
+        printf_stderr("exiting decoder loop due to exception while dequeuing input\n");
+        mCallback->Error();
+        break;
+      }
+
       if (inputIndex >= 0) {
         jobject buffer = env->GetObjectArrayElement(mInputBuffers, inputIndex);
         void* directBuffer = env->GetDirectBufferAddress(buffer);
@@ -369,7 +372,13 @@ void MediaCodecDataDecoder::DecoderLoop()
 
         PodCopy((uint8_t*)directBuffer, sample->data, sample->size);
 
-        mDecoder->QueueInputBuffer(inputIndex, 0, sample->size, sample->composition_timestamp, 0);
+        mDecoder->QueueInputBuffer(inputIndex, 0, sample->size, sample->composition_timestamp, 0, &res);
+        if (NS_FAILED(res)) {
+          printf_stderr("exiting decoder loop due to exception while queuing input\n");
+          mCallback->Error();
+          break;
+        }
+
         mDurations.push(sample->duration);
 
         delete sample;
@@ -383,12 +392,23 @@ void MediaCodecDataDecoder::DecoderLoop()
     if (!outputDone) {
       BufferInfo bufferInfo;
 
-      int outputStatus = mDecoder->DequeueOutputBuffer(bufferInfo.wrappedObject(), DECODER_TIMEOUT);
+      int outputStatus = mDecoder->DequeueOutputBuffer(bufferInfo.wrappedObject(), DECODER_TIMEOUT, &res);
+      if (NS_FAILED(res)) {
+        printf_stderr("exiting decoder loop due to exception while dequeuing output\n");
+        mCallback->Error();
+        break;
+      }
+
       if (outputStatus == MediaCodec::getINFO_TRY_AGAIN_LATER()) {
         // We might want to call mCallback->InputExhausted() here, but there seems to be
         // some possible bad interactions here with the threading
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_BUFFERS_CHANGED()) {
-        ResetOutputBuffers();
+        res = ResetOutputBuffers();
+        if (NS_FAILED(res)) {
+          printf_stderr("exiting decoder loop due to exception while restting output buffers\n");
+          mCallback->Error();
+          break;
+        }
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_FORMAT_CHANGED()) {
         outputFormat = new MediaFormat(mDecoder->GetOutputFormat(), GetJNIForThread());
       } else if (outputStatus < 0) {
@@ -454,7 +474,7 @@ nsresult MediaCodecDataDecoder::Input(mp4_demuxer::MP4Sample* aSample) {
   return NS_OK;
 }
 
-void MediaCodecDataDecoder::ResetInputBuffers()
+nsresult MediaCodecDataDecoder::ResetInputBuffers()
 {
   JNIEnv* env = GetJNIForThread();
 
@@ -462,10 +482,16 @@ void MediaCodecDataDecoder::ResetInputBuffers()
     env->DeleteGlobalRef(mInputBuffers);
   }
 
-  mInputBuffers = (jobjectArray) env->NewGlobalRef(mDecoder->GetInputBuffers());
+  nsresult res;
+  mInputBuffers = (jobjectArray) env->NewGlobalRef(mDecoder->GetInputBuffers(&res));
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  return NS_OK;
 }
 
-void MediaCodecDataDecoder::ResetOutputBuffers()
+nsresult MediaCodecDataDecoder::ResetOutputBuffers()
 {
   JNIEnv* env = GetJNIForThread();
 
@@ -473,7 +499,13 @@ void MediaCodecDataDecoder::ResetOutputBuffers()
     env->DeleteGlobalRef(mOutputBuffers);
   }
 
-  mOutputBuffers = (jobjectArray) env->NewGlobalRef(mDecoder->GetOutputBuffers());
+  nsresult res;
+  mOutputBuffers = (jobjectArray) env->NewGlobalRef(mDecoder->GetOutputBuffers(&res));
+  if (NS_FAILED(res)) {
+    return res;
+  }
+
+  return NS_OK;
 }
 
 nsresult MediaCodecDataDecoder::Flush() {
@@ -515,6 +547,7 @@ nsresult MediaCodecDataDecoder::Shutdown() {
 
   mDecoder->Stop();
   mDecoder->Release();
+
   return NS_OK;
 }
 
