@@ -502,21 +502,28 @@ nsResizerFrame::GetDirection()
      {-1,  1},          {1,  1}
     };
 
-  if (!GetContent())
+  if (!GetContent()) {
     return directions[0]; // default: topleft
+  }
 
   int32_t index = GetContent()->FindAttrValueIn(kNameSpaceID_None,
                                                 nsGkAtoms::dir,
                                                 strings, eCaseMatters);
-  if(index < 0)
+  if (index < 0) {
     return directions[0]; // default: topleft
-  else if (index >= 8 && StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+  }
+
+  if (index >= 8) {
     // Directions 8 and higher are RTL-aware directions and should reverse the
     // horizontal component if RTL.
-    Direction direction = directions[index];
-    direction.mHorizontal *= -1;
-    return direction;
+    WritingMode wm = GetWritingMode();
+    if (!(wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR())) {
+      Direction direction = directions[index];
+      direction.mHorizontal *= -1;
+      return direction;
+    }
   }
+
   return directions[index];
 }
 
