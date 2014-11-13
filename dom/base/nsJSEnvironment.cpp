@@ -1785,10 +1785,8 @@ nsJSContext::BeginCycleCollectionCallback()
 
   MOZ_ASSERT(!sICCTimer, "Tried to create a new ICC timer when one already existed.");
 
-  if (!sIncrementalCC) {
-    return;
-  }
-
+  // Create an ICC timer even if ICC is globally disabled, because we could be manually triggering
+  // an incremental collection, and we want to be sure to finish it.
   CallCreateInstance("@mozilla.org/timer;1", &sICCTimer);
   if (sICCTimer) {
     sICCTimer->InitWithFuncCallback(ICCTimerFired,
