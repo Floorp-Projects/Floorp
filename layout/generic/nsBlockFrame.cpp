@@ -2745,12 +2745,11 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
   }
 
   WritingMode wm = GetWritingMode();
-  nsPoint physicalDelta =
-    LogicalPoint(wm, 0, aDeltaBCoord).GetPhysicalPoint(wm, 0);
+  LogicalPoint translation(wm, 0, aDeltaBCoord);
 
   if (aLine->IsBlock()) {
     if (aDeltaBCoord) {
-      kid->MovePositionBy(physicalDelta);
+      kid->MovePositionBy(wm, translation);
     }
 
     // Make sure the frame's view and any child views are updated
@@ -2764,7 +2763,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
     int32_t n = aLine->GetChildCount();
     while (--n >= 0) {
       if (aDeltaBCoord) {
-        kid->MovePositionBy(physicalDelta);
+        kid->MovePositionBy(wm, translation);
       }
       // Make sure the frame's view and any child views are updated
       nsContainerFrame::PlaceFrameView(kid);
