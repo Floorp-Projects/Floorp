@@ -124,7 +124,7 @@ def setup_logging(suite, args, defaults=None):
     Configure a structuredlogger based on command line arguments.
 
     The created structuredlogger will also be set as the default logger, and
-    can be retrieved with :py:func:`get_default_logger`.
+    can be retrieved with :py:func:`~mozlog.structured.structuredlog.get_default_logger`.
 
     :param suite: The name of the testsuite being run
     :param args: A dictionary of {argument_name:value} produced from
