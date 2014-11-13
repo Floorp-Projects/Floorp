@@ -19,6 +19,12 @@ using namespace js;
 using namespace js::gc;
 using mozilla::ReentrancyGuard;
 
+gcstats::Statistics&
+StoreBuffer::stats()
+{
+    return runtime_->gc.stats;
+}
+
 /*** Edges ***/
 
 void
@@ -110,6 +116,8 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates(StoreBuffer *owner)
 {
+    Statistics& stats = owner->stats();
+
     typedef HashSet<T, typename T::Hasher, SystemAllocPolicy> DedupSet;
 
     DedupSet duplicates;
@@ -130,6 +138,7 @@ StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates(StoreBuffer *owner)
     storage_->release(insert.mark());
 
     duplicates.clear();
+    stats.count(gcstats::STAT_COMPACT_STOREBUFFER);
 }
 
 template <typename T>
