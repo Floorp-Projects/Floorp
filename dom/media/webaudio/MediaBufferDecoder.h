@@ -22,7 +22,6 @@ class AudioBuffer;
 class AudioContext;
 class DecodeErrorCallback;
 class DecodeSuccessCallback;
-class Promise;
 }
 
 struct WebAudioDecodeJob MOZ_FINAL
@@ -31,7 +30,6 @@ struct WebAudioDecodeJob MOZ_FINAL
   // The callbacks are only necessary for asynchronous operation.
   WebAudioDecodeJob(const nsACString& aContentType,
                     dom::AudioContext* aContext,
-                    dom::Promise* aPromise,
                     dom::DecodeSuccessCallback* aSuccessCallback = nullptr,
                     dom::DecodeErrorCallback* aFailureCallback = nullptr);
 
@@ -60,7 +58,6 @@ struct WebAudioDecodeJob MOZ_FINAL
   nsCString mContentType;
   uint32_t mWriteIndex;
   nsRefPtr<dom::AudioContext> mContext;
-  nsRefPtr<dom::Promise> mPromise;
   nsRefPtr<dom::DecodeSuccessCallback> mSuccessCallback;
   nsRefPtr<dom::DecodeErrorCallback> mFailureCallback; // can be null
   nsRefPtr<dom::AudioBuffer> mOutput;
