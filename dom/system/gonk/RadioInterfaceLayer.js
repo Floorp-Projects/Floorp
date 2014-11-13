@@ -2228,6 +2228,12 @@ RadioInterface.prototype = {
     let oldSpn = this.rilContext.iccInfo ? this.rilContext.iccInfo.spn : null;
 
     if (!message || !message.iccid) {
+      // If iccInfo is already `null`, don't have to clear it and send
+      // RIL:IccInfoChanged.
+      if (!this.rilContext.iccInfo) {
+        return;
+      }
+
       // Card is not detected, clear iccInfo to null.
       this.rilContext.iccInfo = null;
     } else {
@@ -2253,11 +2259,6 @@ RadioInterface.prototype = {
     gMessageManager.sendIccMessage("RIL:IccInfoChanged",
                                    this.clientId,
                                    message.iccid ? message : null);
-
-    // In bug 864489, icc related code will be move to gonk IccProvider, we may
-    // need a better way to notify icc change to MobileConnectionService.
-    gMobileConnectionService.notifyIccChanged(this.clientId,
-                                              message.iccid || null);
 
     // Update lastKnownSimMcc.
     if (message.mcc) {

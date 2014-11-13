@@ -17,17 +17,21 @@ function setRadioEnabledAndWaitIccChange(aEnabled) {
 
 // Start tests
 startTestCommon(function() {
-  log("Test initial iccId");
-  is(mobileConnection.iccId, ICCID);
+  is(mobileConnection.iccId, ICCID, "test initial iccId");
 
   return setRadioEnabledAndWaitIccChange(false)
     .then(() => {
-      is(mobileConnection.iccId, null);
+      is(mobileConnection.iccId, null, "mobileConnection.iccId");
     })
 
     // Restore radio state.
     .then(() => setRadioEnabledAndWaitIccChange(true))
     .then(() => {
-      is(mobileConnection.iccId, ICCID);
+      is(mobileConnection.iccId, ICCID, "mobileConnection.iccId");
+
+      // ICC object should be ready in mozIccManager.
+      let icc = getMozIccByIccId(mobileConnection.iccId);
+      ok(icc instanceof MozIcc, "icc should be an instance of MozIcc");
+      is(icc.iccInfo.iccid, mobileConnection.iccId, "icc.iccInfo.iccid");
     });
 });
