@@ -12,12 +12,19 @@ public class AnnotationInfo {
     public final boolean isMultithreaded;
     public final boolean noThrow;
     public final boolean narrowChars;
+    public final boolean catchException;
 
     public AnnotationInfo(String aWrapperName, boolean aIsMultithreaded,
-                          boolean aNoThrow, boolean aNarrowChars) {
+                          boolean aNoThrow, boolean aNarrowChars, boolean aCatchException) {
         wrapperName = aWrapperName;
         isMultithreaded = aIsMultithreaded;
         noThrow = aNoThrow;
         narrowChars = aNarrowChars;
+        catchException = aCatchException;
+
+        if (!noThrow && catchException) {
+            // It doesn't make sense to have these together
+            throw new IllegalArgumentException("noThrow and catchException are not allowed together");
+        }
     }
 }

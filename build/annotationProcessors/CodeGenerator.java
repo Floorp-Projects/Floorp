@@ -111,8 +111,10 @@ public class CodeGenerator {
         Class<?> returnType = theMethod.getReturnType();
 
         // Get the C++ method signature for this method.
-        String implementationSignature = Utils.getCImplementationMethodSignature(parameterTypes, returnType, CMethodName, mCClassName, aMethodTuple.mAnnotationInfo.narrowChars);
-        String headerSignature = Utils.getCHeaderMethodSignature(parameterTypes, theMethod.getParameterAnnotations(), returnType, CMethodName, mCClassName, isFieldStatic, aMethodTuple.mAnnotationInfo.narrowChars);
+        String implementationSignature = Utils.getCImplementationMethodSignature(parameterTypes, returnType, CMethodName,
+            mCClassName, aMethodTuple.mAnnotationInfo.narrowChars, aMethodTuple.mAnnotationInfo.catchException);
+        String headerSignature = Utils.getCHeaderMethodSignature(parameterTypes, theMethod.getParameterAnnotations(), returnType,
+            CMethodName, mCClassName, isFieldStatic, aMethodTuple.mAnnotationInfo.narrowChars, aMethodTuple.mAnnotationInfo.catchException);
 
         // Add the header signature to the header file.
         writeSignatureToHeader(headerSignature);
@@ -121,7 +123,8 @@ public class CodeGenerator {
         writeMethodBody(implementationSignature, theMethod, mClassToWrap,
                         aMethodTuple.mAnnotationInfo.isMultithreaded,
                         aMethodTuple.mAnnotationInfo.noThrow,
-                        aMethodTuple.mAnnotationInfo.narrowChars);
+                        aMethodTuple.mAnnotationInfo.narrowChars,
+                        aMethodTuple.mAnnotationInfo.catchException);
     }
 
     private void generateGetterOrSetterBody(Field aField, String aFieldName, boolean aIsFieldStatic, boolean isSetter, boolean aNarrowChars) {
@@ -196,8 +199,8 @@ public class CodeGenerator {
         boolean isFieldFinal = Utils.isMemberFinal(theField);
 
         String getterName = "get" + CFieldName;
-        String getterSignature = Utils.getCImplementationMethodSignature(EMPTY_CLASS_ARRAY, fieldType, getterName, mCClassName, aFieldTuple.mAnnotationInfo.narrowChars);
-        String getterHeaderSignature = Utils.getCHeaderMethodSignature(EMPTY_CLASS_ARRAY, GETTER_ARGUMENT_ANNOTATIONS, fieldType, getterName, mCClassName, isFieldStatic, aFieldTuple.mAnnotationInfo.narrowChars);
+        String getterSignature = Utils.getCImplementationMethodSignature(EMPTY_CLASS_ARRAY, fieldType, getterName, mCClassName, aFieldTuple.mAnnotationInfo.narrowChars, false);
+        String getterHeaderSignature = Utils.getCHeaderMethodSignature(EMPTY_CLASS_ARRAY, GETTER_ARGUMENT_ANNOTATIONS, fieldType, getterName, mCClassName, isFieldStatic, aFieldTuple.mAnnotationInfo.narrowChars, false);
 
         writeSignatureToHeader(getterHeaderSignature);
 
@@ -211,8 +214,8 @@ public class CodeGenerator {
 
             Class<?>[] setterArguments = new Class<?>[]{fieldType};
 
-            String setterSignature = Utils.getCImplementationMethodSignature(setterArguments, Void.class, setterName, mCClassName, aFieldTuple.mAnnotationInfo.narrowChars);
-            String setterHeaderSignature = Utils.getCHeaderMethodSignature(setterArguments, SETTER_ARGUMENT_ANNOTATIONS, Void.class, setterName, mCClassName, isFieldStatic, aFieldTuple.mAnnotationInfo.narrowChars);
+            String setterSignature = Utils.getCImplementationMethodSignature(setterArguments, Void.class, setterName, mCClassName, aFieldTuple.mAnnotationInfo.narrowChars, false);
+            String setterHeaderSignature = Utils.getCHeaderMethodSignature(setterArguments, SETTER_ARGUMENT_ANNOTATIONS, Void.class, setterName, mCClassName, isFieldStatic, aFieldTuple.mAnnotationInfo.narrowChars, false);
 
             writeSignatureToHeader(setterHeaderSignature);
 
@@ -229,8 +232,10 @@ public class CodeGenerator {
 
         generateMemberCommon(theCtor, mCClassName, mClassToWrap);
 
-        String implementationSignature = Utils.getCImplementationMethodSignature(theCtor.getParameterTypes(), Void.class, CMethodName, mCClassName, aCtorTuple.mAnnotationInfo.narrowChars);
-        String headerSignature = Utils.getCHeaderMethodSignature(theCtor.getParameterTypes(), theCtor.getParameterAnnotations(), Void.class, CMethodName, mCClassName, false, aCtorTuple.mAnnotationInfo.narrowChars);
+        String implementationSignature = Utils.getCImplementationMethodSignature(theCtor.getParameterTypes(), Void.class, CMethodName,
+            mCClassName, aCtorTuple.mAnnotationInfo.narrowChars, aCtorTuple.mAnnotationInfo.catchException);
+        String headerSignature = Utils.getCHeaderMethodSignature(theCtor.getParameterTypes(), theCtor.getParameterAnnotations(), Void.class, CMethodName,
+            mCClassName, false, aCtorTuple.mAnnotationInfo.narrowChars, aCtorTuple.mAnnotationInfo.catchException);
 
         // Slice off the "void " from the start of the constructor declaration.
         headerSignature = headerSignature.substring(5);
@@ -242,7 +247,8 @@ public class CodeGenerator {
         // Use the implementation signature to generate the method body...
         writeCtorBody(implementationSignature, theCtor,
             aCtorTuple.mAnnotationInfo.isMultithreaded,
-            aCtorTuple.mAnnotationInfo.noThrow);
+            aCtorTuple.mAnnotationInfo.noThrow,
+            aCtorTuple.mAnnotationInfo.catchException);
 
         if (theCtor.getParameterTypes().length == 0) {
             mHasEncounteredDefaultConstructor = true;
@@ -258,7 +264,7 @@ public class CodeGenerator {
             String name = m.getName();
             name = name.substring(0, 1).toUpperCase() + name.substring(1);
 
-            AnnotationInfo info = new AnnotationInfo(name, true, true, true);
+            AnnotationInfo info = new AnnotationInfo(name, true, true, true, true);
             AnnotatableEntity entity = new AnnotatableEntity(m, info);
             if (m instanceof Constructor) {
                 generateConstructor(entity);
@@ -408,8 +414,20 @@ public class CodeGenerator {
         return argumentContent;
     }
 
+    private void writeCatchException() {
+        wrapperMethodBodies.append(
+            "    if (env->ExceptionCheck()) {\n" +
+            "        env->ExceptionClear();\n" +
+            "        if (aResult) {\n" +
+            "            *aResult = NS_ERROR_FAILURE;\n" +
+            "        }\n" +
+            "    } else if (aResult) {\n" +
+            "        *aResult = NS_OK;\n" +
+            "    }\n\n");
+    }
+
     private void writeCtorBody(String implementationSignature, Constructor<?> theCtor,
-            boolean aIsThreaded, boolean aNoThrow) {
+            boolean aIsThreaded, boolean aNoThrow, boolean aCatchException) {
         Class<?>[] argumentTypes = theCtor.getParameterTypes();
 
         writeFunctionStartupBoilerPlate(implementationSignature, aIsThreaded);
@@ -443,9 +461,14 @@ public class CodeGenerator {
         wrapperMethodBodies.append(mMembersToIds.get(theCtor))
         // Tack on the arguments, if any..
                            .append(argumentContent)
-                           .append("), env);\n" +
-                                   "    env->PopLocalFrame(nullptr);\n" +
-                                   "}\n");
+                           .append("), env);\n");
+
+        // Check for exception and set aResult
+        if (aCatchException) {
+            writeCatchException();
+        }
+
+        wrapperMethodBodies.append("    env->PopLocalFrame(nullptr);\n}\n");
     }
 
     /**
@@ -458,7 +481,8 @@ public class CodeGenerator {
      */
     private void writeMethodBody(String methodSignature, Method aMethod,
                                  Class<?> aClass, boolean aIsMultithreaded,
-                                 boolean aNoThrow, boolean aNarrowChars) {
+                                 boolean aNoThrow, boolean aNarrowChars,
+                                 boolean aCatchException) {
         Class<?>[] argumentTypes = aMethod.getParameterTypes();
         Class<?> returnType = aMethod.getReturnType();
 
@@ -524,6 +548,11 @@ public class CodeGenerator {
         // Check for exception and crash if any...
         if (!aNoThrow) {
             wrapperMethodBodies.append("    AndroidBridge::HandleUncaughtException(env);\n");
+        }
+
+        // Check for exception and set aResult
+        if (aCatchException) {
+            writeCatchException();
         }
 
         // If we're returning an object, pop the callee's stack frame extracting our ref as the return
