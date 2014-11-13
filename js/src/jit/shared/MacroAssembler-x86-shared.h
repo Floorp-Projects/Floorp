@@ -579,6 +579,9 @@ class MacroAssemblerX86Shared : public Assembler
     void jump(Label *label) {
         jmp(label);
     }
+    void jump(JitCode *code) {
+        jmp(code);
+    }
     void jump(RepatchLabel *label) {
         jmp(label);
     }
@@ -1196,6 +1199,9 @@ class MacroAssemblerX86Shared : public Assembler
     void call(AsmJSImmPtr target) {
         mov(target, eax);
         call(eax);
+    }
+    void callAndPushReturnAddress(Label *label) {
+        call(label);
     }
 
     void checkStackAlignment() {

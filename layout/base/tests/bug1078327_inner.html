@@ -90,7 +90,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1078327
       parent.is(test_mediator_over, 1,      "mediator should receive pointerover event only once");
       parent.is(test_mediator_move, 5,      "mediator should receive pointermove event five times");
       parent.is(test_mediator_out,  1,      "mediator should receive pointerout event only once");
-      parent.is(test_listener,      false,  "listener shouldn't receive any events");
+      parent.is(test_listener,      false,  "listener should not receive any events");
       logger("finishTest");
       parent.finishTest();
     }

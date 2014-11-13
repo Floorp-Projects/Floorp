@@ -153,7 +153,7 @@ function WorkerDebuggerLoader(options) {
     try {
       loadInSandbox(url, sandbox);
     } catch (error) {
-      if (String(error) === "Error opening input stream (invalid filename?)") {
+      if (/^Error opening input stream/.test(String(error))) {
         throw new Error("can't load module " + module.id + " with url " + url +
                         "!");
       }

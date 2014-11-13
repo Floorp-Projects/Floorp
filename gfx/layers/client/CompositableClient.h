@@ -196,8 +196,6 @@ public:
    */
   virtual void ClearCachedResources() {}
 
-  virtual void UseTexture(TextureClient* aTexture);
-
   /**
    * Should be called when deataching a TextureClient from a Compositable, because
    * some platforms need to do some extra book keeping when this happens (for

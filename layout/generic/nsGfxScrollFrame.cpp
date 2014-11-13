@@ -2434,6 +2434,12 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   // We pass in the amount to move visually
   ScrollVisual(oldScrollFramePos);
 
+  if (mOuter->ChildrenHavePerspective()) {
+    // The overflow areas of descendants may depend on the scroll position,
+    // so ensure they get updated.
+    mOuter->RecomputePerspectiveChildrenOverflow(mOuter->StyleContext(), nullptr);
+  }
+
   ScheduleSyntheticMouseMove();
   nsWeakFrame weakFrame(mOuter);
   UpdateScrollbarPosition();

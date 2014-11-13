@@ -947,10 +947,15 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     return;
   }
 
+  const RadialGradientPattern *pat = static_cast<const RadialGradientPattern*>(&aPattern);
+  if (pat->mCenter1 == pat->mCenter2 && pat->mRadius1 == pat->mRadius2) {
+    // Draw nothing!
+    return;
+  }
+
   RefPtr<ID2D1Effect> radialGradientEffect;
 
   mDC->CreateEffect(CLSID_RadialGradientEffect, byRef(radialGradientEffect));
-  const RadialGradientPattern *pat = static_cast<const RadialGradientPattern*>(&aPattern);
 
   radialGradientEffect->SetValue(RADIAL_PROP_STOP_COLLECTION,
                                  static_cast<const GradientStopsD2D*>(pat->mStops.get())->mStopCollection);

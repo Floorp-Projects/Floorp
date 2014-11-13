@@ -18,23 +18,27 @@ function test_basic() {
   // Default
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
+  // random wrong channel
+  ac.mozAudioChannelType = "foo";
+  is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
+
   // Unpermitted channels
-  ac = new AudioContext("content");
+  ac.mozAudioChannelType = "content";
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
-  ac = new AudioContext("notification");
+  ac.mozAudioChannelType = "notification";
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
-  ac = new AudioContext("alarm");
+  ac.mozAudioChannelType = "alarm";
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
-  ac = new AudioContext("telephony");
+  ac.mozAudioChannelType = "telephony";
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
-  ac = new AudioContext("ringer");
+  ac.mozAudioChannelType = "ringer";
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
-  ac = new AudioContext("publicnotification");
+  ac.mozAudioChannelType = "publicnotification";
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
   runTest();
@@ -52,7 +56,7 @@ function test_permission(aChannel) {
   SpecialPowers.pushPermissions(
     [{ "type": "audio-channel-" + aChannel, "allow": true, "context": document }],
     function() {
-      var ac = new AudioContext(aChannel);
+      ac.mozAudioChannelType = aChannel;
       is(ac.mozAudioChannelType, aChannel, "Default ac channel == '" + aChannel + "'");
 
       var channel = SpecialPowers.wrap(ac).testAudioChannelInAudioNodeStream();

@@ -2597,7 +2597,7 @@ nsLayoutUtils::TransformFrameRectToAncestor(nsIFrame* aFrame,
 static nsIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
   nsIntPoint offset(0, 0);
   while ((aWidget->WindowType() == eWindowType_child ||
-          aWidget->WindowType() == eWindowType_plugin)) {
+          aWidget->IsPlugin())) {
     nsIWidget* parent = aWidget->GetParent();
     if (!parent) {
       break;
@@ -3398,20 +3398,6 @@ void nsLayoutUtils::RectListBuilder::AddRect(const nsRect& aRect) {
 
   rect->SetLayoutRect(aRect);
   mRectList->Append(rect);
-}
-
-nsLayoutUtils::FirstAndLastRectCollector::FirstAndLastRectCollector()
-  : mSeenFirstRect(false)
-{
-}
-
-void nsLayoutUtils::FirstAndLastRectCollector::AddRect(const nsRect& aRect) {
-  if (!mSeenFirstRect) {
-    mSeenFirstRect = true;
-    mFirstRect = aRect;
-  }
-
-  mLastRect = aRect;
 }
 
 nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame)

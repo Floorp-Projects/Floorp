@@ -54,3 +54,4 @@ random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-o
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
 pref(layout.css.will-change.enabled,true) == willchange-containing-block.html?willchange willchange-containing-block.html?ref
 pref(layout.css.will-change.enabled,true) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
+== scroll-perspective-1.html scroll-perspective-1-ref.html

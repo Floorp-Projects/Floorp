@@ -744,6 +744,10 @@ protected:
 
   RenderingMode mRenderingMode;
 
+  // Texture informations for fast video rendering
+  unsigned int mVideoTexture;
+  nsIntSize mCurrentVideoSize;
+
   // Member vars
   int32_t mWidth, mHeight;
 

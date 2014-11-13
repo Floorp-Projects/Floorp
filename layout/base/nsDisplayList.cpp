@@ -1953,10 +1953,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
                                                drawBackgroundImage, drawBackgroundColor);
   }
 
-  bool hasInsetShadow = aFrame->StyleBorder()->mBoxShadow &&
-                        aFrame->StyleBorder()->mBoxShadow->HasShadowWithInset(true);
+  const nsStyleBorder* borderStyle = aFrame->StyleBorder();
+  bool hasInsetShadow = borderStyle->mBoxShadow &&
+                        borderStyle->mBoxShadow->HasShadowWithInset(true);
   bool willPaintBorder = !isThemed && !hasInsetShadow &&
-                         aFrame->StyleBorder()->HasBorder();
+                         borderStyle->HasBorder();
 
   nsPoint toRef = aBuilder->ToReferenceFrame(aFrame);
 
@@ -1968,12 +1969,20 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
   // to create an item for hit testing.
   if ((drawBackgroundColor && color != NS_RGBA(0,0,0,0)) ||
       aBuilder->IsForEventDelivery()) {
-
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     if (bg && !aBuilder->IsForEventDelivery()) {
+      // Disable the will-paint-border optimization for background
+      // colors with no border-radius. Enabling it for background colors
+      // doesn't help much (there are no tiling issues) and clipping the
+      // background breaks detection of the element's border-box being
+      // opaque. For nonzero border-radius we still need it because we
+      // want to inset the background if possible to avoid antialiasing
+      // artifacts along the rounded corners.
+      bool useWillPaintBorderOptimization = willPaintBorder &&
+          nsLayoutUtils::HasNonZeroCorner(borderStyle->mBorderRadius);
       SetBackgroundClipRegion(clipState, aFrame, toRef,
                               bg->BottomLayer(),
-                              willPaintBorder);
+                              useWillPaintBorderOptimization);
     }
     bgItemList.AppendNewToTop(
         new (aBuilder) nsDisplayBackgroundColor(aBuilder, aFrame, bg,

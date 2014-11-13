@@ -222,6 +222,7 @@ public:
   JSObject* GetGlobalJSObject() const;
 
   AudioChannel MozAudioChannelType() const;
+  void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
   AudioChannel TestAudioChannelInAudioNodeStream();
 
