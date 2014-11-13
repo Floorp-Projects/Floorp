@@ -60,11 +60,7 @@ public class DecryptDataStage extends JPakeStage {
       Logger.error(LOG_TAG, "I/O exception while creating JSON object.", e);
       jClient.abort(Constants.JPAKE_ERROR_INVALID);
       return;
-    } catch (ParseException e) {
-      Logger.error(LOG_TAG, "JSON parse error.", e);
-      jClient.abort(Constants.JPAKE_ERROR_INVALID);
-      return;
-    } catch (NonObjectJSONException e) {
+    } catch (ParseException | NonObjectJSONException e) {
       Logger.error(LOG_TAG, "JSON parse error.", e);
       jClient.abort(Constants.JPAKE_ERROR_INVALID);
       return;
