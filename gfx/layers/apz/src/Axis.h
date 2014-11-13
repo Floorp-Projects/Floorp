@@ -41,13 +41,13 @@ public:
    * Notify this Axis that a new touch has been received, including a timestamp
    * for when the touch was received. This triggers a recalculation of velocity.
    */
-  void UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos, uint32_t aTimestampMs);
+  void UpdateWithTouchAtDevicePoint(ScreenCoord aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has begun, i.e. the user has put their finger
    * on the screen but has not yet tried to pan.
    */
-  void StartTouch(ParentLayerCoord aPos, uint32_t aTimestampMs);
+  void StartTouch(ScreenCoord aPos, uint32_t aTimestampMs);
 
   /**
    * Notify this Axis that a touch has ended gracefully. This may perform
@@ -73,18 +73,18 @@ public:
    * displacement, and the function returns true iff internal overscroll amounts
    * were changed.
    */
-  bool AdjustDisplacement(ParentLayerCoord aDisplacement,
-                          /* ParentLayerCoord */ float& aDisplacementOut,
-                          /* ParentLayerCoord */ float& aOverscrollAmountOut);
+  bool AdjustDisplacement(ScreenCoord aDisplacement,
+                          /* ScreenCoord */ float& aDisplacementOut,
+                          /* ScreenCoord */ float& aOverscrollAmountOut);
 
   /**
    * Overscrolls this axis by the requested amount in the requested direction.
    * The axis must be at the end of its scroll range in this direction.
    */
-  void OverscrollBy(ParentLayerCoord aOverscroll);
+  void OverscrollBy(ScreenCoord aOverscroll);
 
   /**
-   * Return the amount of overscroll on this axis, in ParentLayer pixels.
+   * Return the amount of overscroll on this axis, in Screen pixels.
    *
    * If this amount is nonzero, the relevant component of
    * mAsyncPanZoomController->mFrameMetrics.mScrollOffset must be at its
@@ -94,7 +94,7 @@ public:
    * Note that if |mInUnderscroll| is true, the interpretation of this field
    * changes slightly (see below).
    */
-  ParentLayerCoord GetOverscroll() const;
+  ScreenCoord GetOverscroll() const;
 
   /**
    * Return whether the axis is in underscroll.
@@ -138,20 +138,20 @@ public:
   /**
    * Gets the starting position of the touch supplied in StartTouch().
    */
-  ParentLayerCoord PanStart() const;
+  ScreenCoord PanStart() const;
 
   /**
    * Gets the distance between the starting position of the touch supplied in
    * StartTouch() and the current touch from the last
    * UpdateWithTouchAtDevicePoint().
    */
-  ParentLayerCoord PanDistance() const;
+  ScreenCoord PanDistance() const;
 
   /**
    * Gets the distance between the starting position of the touch supplied in
    * StartTouch() and the supplied position.
    */
-  ParentLayerCoord PanDistance(ParentLayerCoord aPos) const;
+  ScreenCoord PanDistance(ScreenCoord aPos) const;
 
   /**
    * Applies friction during a fling, or cancels the fling if the velocity is
@@ -198,7 +198,7 @@ public:
    * If a displacement will overscroll the axis, this returns the amount and in
    * what direction.
    */
-  ParentLayerCoord DisplacementWillOverscrollAmount(ParentLayerCoord aDisplacement) const;
+  ScreenCoord DisplacementWillOverscrollAmount(ScreenCoord aDisplacement) const;
 
   /**
    * If a scale will overscroll the axis, this returns the amount and in what
@@ -209,7 +209,7 @@ public:
    * relative.
    *
    * Note: Unlike most other functions in Axis, this functions operates in
-   *       CSS coordinates so there is no confusion as to whether the ParentLayer
+   *       CSS coordinates so there is no confusion as to whether the Screen
    *       coordinates it operates in are before or after the scale is applied.
    */
   CSSCoord ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const;
@@ -223,30 +223,30 @@ public:
    */
   bool ScaleWillOverscrollBothSides(float aScale) const;
 
-  ParentLayerCoord GetOrigin() const;
-  ParentLayerCoord GetCompositionLength() const;
-  ParentLayerCoord GetPageStart() const;
-  ParentLayerCoord GetPageLength() const;
-  ParentLayerCoord GetCompositionEnd() const;
-  ParentLayerCoord GetPageEnd() const;
+  ScreenCoord GetOrigin() const;
+  ScreenCoord GetCompositionLength() const;
+  ScreenCoord GetPageStart() const;
+  ScreenCoord GetPageLength() const;
+  ScreenCoord GetCompositionEnd() const;
+  ScreenCoord GetPageEnd() const;
 
-  ParentLayerCoord GetPos() const { return mPos; }
+  ScreenCoord GetPos() const { return mPos; }
 
-  virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const = 0;
-  virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const = 0;
-  virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const = 0;
+  virtual ScreenCoord GetPointOffset(const ScreenPoint& aPoint) const = 0;
+  virtual ScreenCoord GetRectLength(const ScreenRect& aRect) const = 0;
+  virtual ScreenCoord GetRectOffset(const ScreenRect& aRect) const = 0;
 
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const = 0;
 
 protected:
-  ParentLayerCoord mPos;
+  ScreenCoord mPos;
   uint32_t mPosTimeMs;
-  ParentLayerCoord mStartPos;
-  float mVelocity;      // Units: ParentLayerCoords per millisecond
+  ScreenCoord mStartPos;
+  float mVelocity;      // Units: ScreenCoords per millisecond
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
-  ParentLayerCoord mOverscroll;  // See GetOverscroll().
-  bool mInUnderscroll;           // See IsInUnderscroll().
+  ScreenCoord mOverscroll;  // See GetOverscroll().
+  bool mInUnderscroll;      // See IsInUnderscroll().
   // A queue of (timestamp, velocity) pairs; these are the historical
   // velocities at the given timestamps. Timestamps are in milliseconds,
   // velocities are in screen pixels per ms. This member can only be
@@ -257,27 +257,27 @@ protected:
 
   // Adjust a requested overscroll amount for resistance, yielding a smaller
   // actual overscroll amount.
-  ParentLayerCoord ApplyResistance(ParentLayerCoord aOverscroll) const;
+  ScreenCoord ApplyResistance(ScreenCoord aOverscroll) const;
 
-  // Convert a velocity from global inches/ms into ParentLayerCoords/ms.
-  float ToLocalVelocity(float aVelocityInchesPerMs) const;
+  // Convert a velocity from global inches/ms into local ScreenCoords per ms
+  float ToLocalVelocity(float aVelocityInchesPerMs);
 };
 
 class AxisX : public Axis {
 public:
   explicit AxisX(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetPointOffset(const ScreenPoint& aPoint) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectLength(const ScreenRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectOffset(const ScreenRect& aRect) const MOZ_OVERRIDE;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
 };
 
 class AxisY : public Axis {
 public:
   explicit AxisY(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual ParentLayerCoord GetPointOffset(const ParentLayerPoint& aPoint) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
-  virtual ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetPointOffset(const ScreenPoint& aPoint) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectLength(const ScreenRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectOffset(const ScreenRect& aRect) const MOZ_OVERRIDE;
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
 };
 
