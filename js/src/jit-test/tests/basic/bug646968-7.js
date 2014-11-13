@@ -1,5 +1,4 @@
-var g = newGlobal();
-var dbg = new g.Debugger(this);
+load(libdir + "evalInFrame.js");
 
 function test(s) {
     eval(s);

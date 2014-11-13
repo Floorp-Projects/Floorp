@@ -1,7 +1,4 @@
-var global = newGlobal();
-var dbg = new global.Debugger(this);
-// Force dbg to observe all execution.
-dbg.onDebuggerStatement = function () {};
+load(libdir + "evalInFrame.js");
 
 function f() {
     let (x = 1) {
