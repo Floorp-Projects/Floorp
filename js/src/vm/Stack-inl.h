@@ -559,12 +559,12 @@ AbstractFramePtr::isEvalFrame() const
     return false;
 }
 inline bool
-AbstractFramePtr::isDebuggerFrame() const
+AbstractFramePtr::isDebuggerEvalFrame() const
 {
     if (isInterpreterFrame())
-        return asInterpreterFrame()->isDebuggerFrame();
+        return asInterpreterFrame()->isDebuggerEvalFrame();
     if (isBaselineFrame())
-        return asBaselineFrame()->isDebuggerFrame();
+        return asBaselineFrame()->isDebuggerEvalFrame();
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 }

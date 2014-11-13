@@ -2025,7 +2025,7 @@ static bool
 CheckFrame(BaselineFrame *frame)
 {
     MOZ_ASSERT(!frame->script()->isGenerator());
-    MOZ_ASSERT(!frame->isDebuggerFrame());
+    MOZ_ASSERT(!frame->isDebuggerEvalFrame());
 
     // This check is to not overrun the stack.
     if (frame->isFunctionFrame()) {

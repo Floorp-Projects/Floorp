@@ -1252,7 +1252,7 @@ ScopeIter::settle()
         MOZ_ASSERT(!cur_->is<ScopeObject>() ||
                    (cur_->is<DynamicWithObject>() &&
                     !cur_->as<DynamicWithObject>().isSyntactic()));
-        MOZ_ASSERT(frame_.isGlobalFrame() || frame_.isDebuggerFrame());
+        MOZ_ASSERT(frame_.isGlobalFrame() || frame_.isDebuggerEvalFrame());
         frame_ = NullFramePtr();
     }
 }

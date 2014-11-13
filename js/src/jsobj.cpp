@@ -4133,8 +4133,8 @@ js_DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start)
         fprintf(stderr, "  flags:");
         if (i.isConstructing())
             fprintf(stderr, " constructing");
-        if (!i.isJit() && i.interpFrame()->isDebuggerFrame())
-            fprintf(stderr, " debugger");
+        if (!i.isJit() && i.interpFrame()->isDebuggerEvalFrame())
+            fprintf(stderr, " debugger eval");
         if (i.isEvalFrame())
             fprintf(stderr, " eval");
         fputc('\n', stderr);
