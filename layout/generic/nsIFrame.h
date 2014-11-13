@@ -608,7 +608,7 @@ public:
    * The frame's writing-mode, used for logical layout computations.
    */
   mozilla::WritingMode GetWritingMode() const {
-    return mozilla::WritingMode(StyleVisibility());
+    return mozilla::WritingMode(StyleContext());
   }
 
   /**
