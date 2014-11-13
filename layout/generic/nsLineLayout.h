@@ -537,6 +537,7 @@ protected:
   // frame, if any
   nscoord mTrimmableISize;
 
+  // Physical width. Use only for physical <-> logical coordinate conversion.
   nscoord mContainerWidth;
 
   bool mFirstLetterStyleOK      : 1;

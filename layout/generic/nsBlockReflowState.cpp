@@ -54,8 +54,19 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     aFrame->GetLogicalSkipSides(&aReflowState);
   mBorderPadding.ApplySkipSides(logicalSkipSides);
 
-  // Note that mContainerWidth is the physical width!
-  mContainerWidth = aReflowState.ComputedWidth() + mBorderPadding.LeftRight(wm);
+  // Note that mContainerWidth is the physical width, needed to convert
+  // logical block-coordinates in vertical-rl writing mode (measured from a
+  // RHS origin) to physical coordinates within the containing block.
+  // If aReflowState doesn't have a constrained ComputedWidth(), we set it to
+  // zero, which means lines will be positioned (physically) incorrectly;
+  // we will fix them up at the end of nsBlockFrame::Reflow, after we know
+  // the total block-size of the frame.
+  mContainerWidth = aReflowState.ComputedWidth();
+  if (mContainerWidth == NS_UNCONSTRAINEDSIZE) {
+    mContainerWidth = 0;
+  }
+
+  mContainerWidth += mBorderPadding.LeftRight(wm);
 
   if ((aBStartMarginRoot && !logicalSkipSides.BStart()) ||
       0 != mBorderPadding.BStart(wm)) {
