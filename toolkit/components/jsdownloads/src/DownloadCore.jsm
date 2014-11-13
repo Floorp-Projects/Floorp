@@ -477,6 +477,16 @@ this.Download.prototype = {
         // Update the download error, unless a new attempt already started. The
         // change in the status property is notified in the finally block.
         if (this._currentAttempt == currentAttempt || !this._currentAttempt) {
+          if (!(ex instanceof DownloadError)) {
+            let properties = {innerException: ex};
+
+            if (ex.message) {
+              properties.message = ex.message;
+            }
+
+            ex = new DownloadError(properties);
+          }
+
           this.error = ex;
         }
         throw ex;
@@ -910,8 +920,8 @@ this.Download.prototype = {
       serializable.saver = saver;
     }
 
-    if (this.error && ("message" in this.error)) {
-      serializable.error = { message: this.error.message };
+    if (this.error) {
+      serializable.errorObj = this.error.toSerializable();
     }
 
     if (this.startTime) {
@@ -920,7 +930,7 @@ this.Download.prototype = {
 
     // These are serialized unless they are false, null, or empty strings.
     for (let property of kSerializableDownloadProperties) {
-      if (property != "error" && property != "startTime" && this[property]) {
+      if (property != "startTime" && this[property]) {
         serializable[property] = this[property];
       }
     }
@@ -956,7 +966,6 @@ this.Download.prototype = {
 const kSerializableDownloadProperties = [
   "succeeded",
   "canceled",
-  "error",
   "totalBytes",
   "hasPartialData",
   "tryToKeepPartialData",
@@ -1011,6 +1020,18 @@ Download.fromSerializable = function (aSerializable) {
     download.startTime = new Date(time);
   }
 
+  // If 'errorObj' is present it will take precedence over the 'error' property.
+  // 'error' is a legacy property only containing message, which is insufficient
+  // to represent all of the error information.
+  //
+  // Instead of just replacing 'error' we use a new 'errorObj' so that previous
+  // versions will keep it as an unknown property.
+  if ("errorObj" in aSerializable) {
+    download.error = DownloadError.fromSerializable(aSerializable.errorObj);
+  } else if ("error" in aSerializable) {
+    download.error = aSerializable.error;
+  }
+
   for (let property of kSerializableDownloadProperties) {
     if (property in aSerializable) {
       download[property] = aSerializable[property];
@@ -1022,6 +1043,7 @@ Download.fromSerializable = function (aSerializable) {
     property != "startTime" &&
     property != "source" &&
     property != "target" &&
+    property != "error" &&
     property != "saver");
 
   return download;
@@ -1263,6 +1285,10 @@ this.DownloadError = function (aProperties)
     this.becauseBlocked = true;
   }
 
+  if (aProperties.innerException) {
+    this.innerException = aProperties.innerException;
+  }
+
   this.stack = new Error().stack;
 }
 
@@ -1301,6 +1327,56 @@ this.DownloadError.prototype = {
    * and may be malware.
    */
   becauseBlockedByReputationCheck: false,
+
+  /**
+   * If this DownloadError was caused by an exception this property will
+   * contain the original exception. This will not be serialized when saving
+   * to the store.
+   */
+  innerException: null,
+
+  /**
+   * Returns a static representation of the current object state.
+   *
+   * @return A JavaScript object that can be serialized to JSON.
+   */
+  toSerializable: function ()
+  {
+    let serializable = {
+      result: this.result,
+      message: this.message,
+      becauseSourceFailed: this.becauseSourceFailed,
+      becauseTargetFailed: this.becauseTargetFailed,
+      becauseBlocked: this.becauseBlocked,
+      becauseBlockedByParentalControls: this.becauseBlockedByParentalControls,
+      becauseBlockedByReputationCheck: this.becauseBlockedByReputationCheck,
+    };
+
+    serializeUnknownProperties(this, serializable);
+    return serializable;
+  },
+};
+
+/**
+ * Creates a new DownloadError object from its serializable representation.
+ *
+ * @param aSerializable
+ *        Serializable representation of a DownloadError object.
+ *
+ * @return The newly created DownloadError object.
+ */
+this.DownloadError.fromSerializable = function (aSerializable) {
+  let e = new DownloadError(aSerializable);
+  deserializeUnknownProperties(e, aSerializable, property =>
+    property != "result" &&
+    property != "message" &&
+    property != "becauseSourceFailed" &&
+    property != "becauseTargetFailed" &&
+    property != "becauseBlocked" &&
+    property != "becauseBlockedByParentalControls" &&
+    property != "becauseBlockedByReputationCheck");
+
+  return e;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
