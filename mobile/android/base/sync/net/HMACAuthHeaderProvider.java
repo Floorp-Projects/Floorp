@@ -71,12 +71,8 @@ public class HMACAuthHeaderProvider implements AuthHeaderProvider {
 
     try {
       return getAuthHeader(request, context, client, timestamp, nonce, extra);
-    } catch (InvalidKeyException e) {
+    } catch (InvalidKeyException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
       // We lie a little and make every exception a GeneralSecurityException.
-      throw new GeneralSecurityException(e);
-    } catch (UnsupportedEncodingException e) {
-      throw new GeneralSecurityException(e);
-    } catch (NoSuchAlgorithmException e) {
       throw new GeneralSecurityException(e);
     }
   }

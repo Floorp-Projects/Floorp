@@ -46,9 +46,7 @@ public final class GeckoJarReader {
             if (inputStream != null) {
                 bitmap = new BitmapDrawable(resources, inputStream);
             }
-        } catch (IOException ex) {
-            Log.e(LOGTAG, "Exception ", ex);
-        } catch (URISyntaxException ex) {
+        } catch (IOException | URISyntaxException ex) {
             Log.e(LOGTAG, "Exception ", ex);
         } finally {
             if (inputStream != null) {
@@ -79,9 +77,7 @@ public final class GeckoJarReader {
                 reader = new BufferedReader(new InputStreamReader(input));
                 text = reader.readLine();
             }
-        } catch (IOException ex) {
-            Log.e(LOGTAG, "Exception ", ex);
-        } catch (URISyntaxException ex) {
+        } catch (IOException | URISyntaxException ex) {
             Log.e(LOGTAG, "Exception ", ex);
         } finally {
             if (reader != null) {
