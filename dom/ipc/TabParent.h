@@ -303,20 +303,6 @@ public:
                                       PIndexedDBPermissionRequestParent* aActor)
                                       MOZ_OVERRIDE;
 
-    virtual POfflineCacheUpdateParent*
-    AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
-                                   const URIParams& aDocumentURI,
-                                   const bool& aStickDocument) MOZ_OVERRIDE;
-    virtual bool
-    RecvPOfflineCacheUpdateConstructor(POfflineCacheUpdateParent* aActor,
-                                       const URIParams& aManifestURI,
-                                       const URIParams& aDocumentURI,
-                                       const bool& stickDocument) MOZ_OVERRIDE;
-    virtual bool
-    DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor) MOZ_OVERRIDE;
-
-    virtual bool RecvSetOfflinePermission(const IPC::Principal& principal) MOZ_OVERRIDE;
-
     bool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
     NS_DECL_ISUPPORTS
