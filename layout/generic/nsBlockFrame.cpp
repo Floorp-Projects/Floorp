@@ -1231,6 +1231,42 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   // Compute our final size
   nscoord blockEndEdgeOfChildren;
   ComputeFinalSize(*reflowState, state, aMetrics, &blockEndEdgeOfChildren);
+
+  // If the block direction is right-to-left, we need to update the bounds of
+  // lines that were placed relative to mContainerWidth during reflow, as
+  // we typically do not know the true container width (block-dir size of the
+  // finished paragraph/block) until we've reflowed all its children. So we
+  // use a "fake" mContainerWidth during reflow (see nsBlockReflowState's
+  // constructor) and then fix up the positions of the lines here, once the
+  // final block size is known.
+  //
+  // Note that writing-mode:vertical-rl is the only case where the block
+  // logical direction progresses in a negative physical direction, and
+  // therefore block-dir coordinate conversion depends on knowing the width
+  // of the coordinate space in order to translate between the logical and
+  // physical origins.
+  if (wm.GetBlockDir() == WritingMode::BlockDir::eBlockRL) {
+    nscoord deltaX = aMetrics.Width() - state.mContainerWidth;
+    if (deltaX) {
+      for (line_iterator line = begin_lines(), end = end_lines();
+           line != end; line++) {
+        SlideLine(state, line, -deltaX);
+      }
+      for (nsIFrame* f = mFloats.FirstChild(); f; f = f->GetNextSibling()) {
+        nsPoint physicalDelta(deltaX, 0);
+        f->MovePositionBy(physicalDelta);
+      }
+      nsFrameList* bulletList = GetOutsideBulletList();
+      if (bulletList) {
+        nsPoint physicalDelta(deltaX, 0);
+        for (nsIFrame* f = bulletList->FirstChild(); f;
+             f = f->GetNextSibling()) {
+          f->MovePositionBy(physicalDelta);
+        }
+      }
+    }
+  }
+
   nsRect areaBounds = nsRect(0, 0, aMetrics.Width(), aMetrics.Height());
   ComputeOverflowAreas(areaBounds, reflowState->mStyleDisplay,
                        blockEndEdgeOfChildren, aMetrics.mOverflowAreas);
