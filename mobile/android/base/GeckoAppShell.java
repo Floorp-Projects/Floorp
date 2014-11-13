@@ -527,7 +527,7 @@ public class GeckoAppShell
         }
     }
 
-    private static Runnable sCallbackRunnable = new Runnable() {
+    private static final Runnable sCallbackRunnable = new Runnable() {
         @Override
         public void run() {
             ThreadUtils.assertOnUiThread();
@@ -1851,7 +1851,7 @@ public class GeckoAppShell
 
     private static final String PLUGIN_TYPE = "type";
     private static final String TYPE_NATIVE = "native";
-    static public ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<PackageInfo>();
+    public static final ArrayList<PackageInfo> mPackageInfoCache = new ArrayList<>();
 
     // Returns null if plugins are blocked on the device.
     static String[] getPluginDirectories() {
@@ -2127,7 +2127,7 @@ public class GeckoAppShell
 
     static native void cameraCallbackBridge(byte[] data);
 
-    static int kPreferedFps = 25;
+    static final int kPreferredFPS = 25;
     static byte[] sCameraBuffer;
 
 
@@ -2166,13 +2166,13 @@ public class GeckoAppShell
                 Iterator<Integer> it = params.getSupportedPreviewFrameRates().iterator();
                 while (it.hasNext()) {
                     int nFps = it.next();
-                    if (Math.abs(nFps - kPreferedFps) < fpsDelta) {
-                        fpsDelta = Math.abs(nFps - kPreferedFps);
+                    if (Math.abs(nFps - kPreferredFPS) < fpsDelta) {
+                        fpsDelta = Math.abs(nFps - kPreferredFPS);
                         params.setPreviewFrameRate(nFps);
                     }
                 }
             } catch(Exception e) {
-                params.setPreviewFrameRate(kPreferedFps);
+                params.setPreviewFrameRate(kPreferredFPS);
             }
 
             // set up the closest preview size available
@@ -2197,9 +2197,7 @@ public class GeckoAppShell
                         sCamera.setPreviewTexture(((TextureView)cameraView).getSurfaceTexture());
                     }
                 }
-            } catch(IOException e) {
-                Log.w(LOGTAG, "Error setPreviewXXX:", e);
-            } catch(RuntimeException e) {
+            } catch (IOException | RuntimeException e) {
                 Log.w(LOGTAG, "Error setPreviewXXX:", e);
             }
 

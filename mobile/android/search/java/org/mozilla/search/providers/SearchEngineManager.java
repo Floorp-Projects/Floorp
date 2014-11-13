@@ -186,9 +186,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
             } finally {
                 in.close();
             }
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Exception creating search engine", e);
-        } catch (XmlPullParserException e) {
+        } catch (IOException | XmlPullParserException e) {
             Log.e(LOG_TAG, "Exception creating search engine", e);
         }
 
