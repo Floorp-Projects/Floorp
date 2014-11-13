@@ -144,7 +144,6 @@ NfcMessageHandler::ChangeRFStateRequest(Parcel& aParcel, const CommandOptions& a
   aParcel.writeInt32(NfcRequest::ChangeRFStateReq);
   aParcel.writeInt32(aOptions.mRfState);
   mRequestIdQueue.AppendElement(aOptions.mRequestId);
-  mRfStateQueue.AppendElement(aOptions.mRfState);
   return true;
 }
 
@@ -157,9 +156,7 @@ NfcMessageHandler::ChangeRFStateResponse(const Parcel& aParcel, EventOptions& aO
   aOptions.mRequestId = mRequestIdQueue[0];
   mRequestIdQueue.RemoveElementAt(0);
 
-  NS_ENSURE_TRUE(!mRfStateQueue.IsEmpty(), false);
-  aOptions.mRfState = mRfStateQueue[0];
-  mRfStateQueue.RemoveElementAt(0);
+  aOptions.mRfState = aParcel.readInt32();
   return true;
 }
 
