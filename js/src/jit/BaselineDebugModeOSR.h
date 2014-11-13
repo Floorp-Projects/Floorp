@@ -11,6 +11,8 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 
+#include "vm/Debugger.h"
+
 namespace js {
 namespace jit {
 
@@ -94,7 +96,9 @@ struct BaselineDebugModeOSRInfo
 };
 
 bool
-RecompileOnStackBaselineScriptsForDebugMode(JSContext *cx, JSCompartment *comp);
+RecompileOnStackBaselineScriptsForDebugMode(JSContext *cx,
+                                            const Debugger::ExecutionObservableSet &obs,
+                                            Debugger::IsObserving observing);
 
 } // namespace jit
 } // namespace js
