@@ -75,8 +75,6 @@ GeneratorObject::suspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame
     }
 
     uint32_t yieldIndex = GET_UINT24(pc);
-    MOZ_ASSERT((*pc == JSOP_INITIALYIELD) == (yieldIndex == 0)); // isNewborn() relies on this.
-
     genObj->setYieldIndex(yieldIndex);
     genObj->setScopeChain(*frame.scopeChain());
 
@@ -112,10 +110,7 @@ js::GeneratorThrowOrClose(JSContext *cx, HandleObject obj, HandleValue arg, uint
     GeneratorObject *genObj = &obj->as<GeneratorObject>();
     if (resumeKind == GeneratorObject::THROW) {
         cx->setPendingException(arg);
-        if (genObj->isNewborn())
-            genObj->setClosed();
-        else
-            genObj->setRunning();
+        genObj->setRunning();
     } else {
         MOZ_ASSERT(resumeKind == GeneratorObject::CLOSE);
         MOZ_ASSERT(genObj->is<LegacyGeneratorObject>());
@@ -183,11 +178,6 @@ LegacyGeneratorObject::close(JSContext *cx, HandleObject obj)
     // Avoid calling back into JS unless it is necessary.
      if (genObj->isClosed())
         return true;
-
-    if (genObj->isNewborn()) {
-        genObj->setClosed();
-        return true;
-    }
 
     RootedValue rval(cx);
 
