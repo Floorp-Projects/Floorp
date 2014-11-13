@@ -15,7 +15,7 @@ ac_add_options --enable-elf-hack
 
 ANDROID_NDK_VERSION="r8e"
 ANDROID_NDK_VERSION_32BIT="r8c"
-ANDROID_SDK_VERSION="20"
+ANDROID_SDK_VERSION="21"
 
 # Build Fennec
 ac_add_options --enable-application=mobile/android
