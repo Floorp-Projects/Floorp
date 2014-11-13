@@ -506,8 +506,6 @@ public:
   virtual TextureHostOGL* AsHostOGL() { return nullptr; }
 
 protected:
-  void RecycleTexture(TextureFlags aFlags);
-
   PTextureParent* mActor;
   TextureFlags mFlags;
 
