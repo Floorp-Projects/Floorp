@@ -130,15 +130,13 @@ FileInfo::GetReferences(int32_t* aRefCnt,
 
 void
 FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
-                           int32_t aDelta,
-                           bool aClear)
+                           int32_t aDelta)
 {
   // XXX This can go away once DOM objects no longer hold FileInfo objects...
   //     Looking at you, IDBMutableFile...
   if (IndexedDatabaseManager::IsClosed()) {
     MOZ_ASSERT(&aRefCount == &mRefCnt);
     MOZ_ASSERT(aDelta == 1 || aDelta == -1);
-    MOZ_ASSERT(!aClear);
 
     if (aDelta > 0) {
       ++aRefCount;
@@ -158,7 +156,7 @@ FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
   {
     MutexAutoLock lock(IndexedDatabaseManager::FileMutex());
 
-    aRefCount = aClear ? 0 : aRefCount + aDelta;
+    aRefCount = aRefCount + aDelta;
 
     if (mRefCnt + mDBRefCnt + mSliceRefCnt > 0) {
       return;
@@ -174,6 +172,29 @@ FileInfo::UpdateReferences(ThreadSafeAutoRefCnt& aRefCount,
   }
 
   delete this;
+}
+
+bool
+FileInfo::LockedClearDBRefs()
+{
+  MOZ_ASSERT(!IndexedDatabaseManager::IsClosed());
+
+  IndexedDatabaseManager::FileMutex().AssertCurrentThreadOwns();
+
+  mDBRefCnt = 0;
+
+  if (mRefCnt || mSliceRefCnt) {
+    return true;
+  }
+
+  // In this case, we are not responsible for removing the file info from the
+  // hashtable. It's up to FileManager which is the only caller of this method.
+
+  MOZ_ASSERT(mFileManager->Invalidated());
+
+  delete this;
+
+  return false;
 }
 
 void
