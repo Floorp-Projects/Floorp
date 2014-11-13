@@ -417,8 +417,12 @@ public class LocalBrowserDB {
             faviconField.setAccessible(true);
 
             return faviconField.getInt(null);
-        } catch (IllegalAccessException | NoSuchFieldException  ex) {
-            Log.wtf(LOGTAG, "Reflection error fetching favicon: " + name, ex);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            // We'll end up here for any default bookmark that doesn't have a favicon in
+            // resources/raw/ (i.e., about:firefox). When this happens, the Favicons service will
+            // fall back to the default branding icon for about pages. Non-about pages should always
+            // specify an icon; otherwise, the placeholder globe favicon will be used.
+            Log.d(LOGTAG, "No raw favicon resource found for " + name);
         }
 
         Log.e(LOGTAG, "Failed to find favicon resource ID for " + name);
