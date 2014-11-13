@@ -515,6 +515,8 @@ class MochitestUtilsMixin(object):
         self.urlOpts.append("timeout=%d" % options.timeout)
       if options.closeWhenDone:
         self.urlOpts.append("closeWhenDone=1")
+      if options.webapprtContent:
+        self.urlOpts.append("testRoot=webapprtContent")
       if options.logFile:
         self.urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
         self.urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
@@ -575,6 +577,8 @@ class MochitestUtilsMixin(object):
       return "a11y"
     elif options.webapprtChrome:
       return "webapprt-chrome"
+    elif options.webapprtContent:
+      return "webapprt-content"
     else:
       return "mochitest"
 
@@ -630,6 +634,8 @@ class MochitestUtilsMixin(object):
         self.testRoot = 'a11y'
       elif options.webapprtChrome:
         self.testRoot = 'webapprtChrome'
+      elif options.webapprtContent:
+        self.testRoot = 'webapprtContent'
       elif options.chrome:
         self.testRoot = 'chrome'
       else:
