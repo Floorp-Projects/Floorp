@@ -42,9 +42,6 @@ public abstract class AndroidBrowserRepository extends Repository {
     public void run() {
       try {
         getDataAccessor(context).purgeDeleted();
-      } catch (NullCursorException e) {
-        delegate.onCleanFailed(AndroidBrowserRepository.this, e);
-        return;
       } catch (Exception e) {
         delegate.onCleanFailed(AndroidBrowserRepository.this, e);
         return;

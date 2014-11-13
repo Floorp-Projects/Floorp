@@ -114,10 +114,7 @@ public class SyncAuthenticatorService extends Service {
       Logger.pii(LOG_TAG, "Account " + account.name + " hashes to " + username + ".");
       Logger.debug(LOG_TAG, "Setting username. Null? " + (username == null));
       result.putString(Constants.OPTION_USERNAME, username);
-    } catch (NoSuchAlgorithmException e) {
-      // Do nothing. Calling code must check for missing value.
-      Logger.debug(LOG_TAG, "Exception in account lookup: " + e);
-    } catch (UnsupportedEncodingException e) {
+    } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
       // Do nothing. Calling code must check for missing value.
       Logger.debug(LOG_TAG, "Exception in account lookup: " + e);
     }

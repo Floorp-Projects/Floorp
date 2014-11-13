@@ -36,6 +36,25 @@ var gPrivacyPane = {
 #endif
 
   /**
+   * Initialize autocomplete to ensure prefs are in sync.
+   */
+  _initAutocomplete: function () {
+    let unifiedCompletePref = false;
+    try {
+      unifiedCompletePref =
+        Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
+    } catch (ex) {}
+
+    if (unifiedCompletePref) {
+      Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
+                .getService(Components.interfaces.mozIPlacesAutoComplete);
+    } else {
+      Components.classes["@mozilla.org/autocomplete/search;1?name=history"]
+                .getService(Components.interfaces.mozIPlacesAutoComplete);
+    }
+  },
+
+  /**
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
    */
@@ -49,6 +68,7 @@ var gPrivacyPane = {
 #ifdef NIGHTLY_BUILD
     this._initTrackingProtection();
 #endif
+    this._initAutocomplete();
   },
 
   // HISTORY MODE
@@ -296,40 +316,16 @@ var gPrivacyPane = {
   // HISTORY
 
   /**
-   * Read the location bar enabled and suggestion prefs
-   * @return Int value for suggestion menulist
+   * Update browser.urlbar.autocomplete.enabled when a
+   * browser.urlbar.suggest.* pref is changed from the ui.
    */
-  readSuggestionPref: function PPP_readSuggestionPref()
-  {
-    let getVal = function(aPref)
-      document.getElementById("browser.urlbar." + aPref).value;
-
-    // Suggest nothing if autocomplete is not enabled
-    if (!getVal("autocomplete.enabled"))
-      return -1;
-
-    // Bottom 2 bits of default.behavior specify history/bookmark
-    return getVal("default.behavior") & 3;
-  },
-
-  /**
-   * Write the location bar enabled and suggestion prefs when necessary
-   * @return Bool value for enabled pref
-   */
-  writeSuggestionPref: function PPP_writeSuggestionPref()
-  {
-    let menuVal = document.getElementById("locationBarSuggestion").value;
-    let enabled = menuVal != -1;
-
-    // Only update default.behavior if we're giving suggestions
-    if (enabled) {
-      // Put the selected menu item's value directly into the bottom 2 bits
-      let behavior = document.getElementById("browser.urlbar.default.behavior");
-      behavior.value = behavior.value >> 2 << 2 | menuVal;
+  writeSuggestionPref: function PPP_writeSuggestionPref() {
+    let getVal = (aPref) => {
+      return document.getElementById("browser.urlbar.suggest." + aPref).value;
     }
-
-    // Always update the enabled pref
-    return enabled;
+    // autocomplete.enabled is true if any of the suggestions is true
+    let enabled = ["history", "bookmark", "openpage"].map(getVal).some(v => v);
+    Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", enabled);
   },
 
   /*

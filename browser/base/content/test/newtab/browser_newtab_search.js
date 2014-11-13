@@ -354,8 +354,8 @@ let checkCurrentEngine = Task.async(function* ({name: basename, logoPrefix1x, lo
 
     ok(base64.startsWith(expectedLogoPrefix), "Checking image prefix.");
 
+    logo.click();
     let panel = searchPanel();
-    panel.openPopup(logo);
     yield promisePanelShown(panel);
 
     panel.hidePopup();

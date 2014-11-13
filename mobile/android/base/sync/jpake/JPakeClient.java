@@ -69,7 +69,7 @@ public class JPakeClient {
   public boolean finished;
 
   // J-PAKE values.
-  public int jpakePollInterval;
+  public final int jpakePollInterval;
   public int jpakeMaxTries;
   public String channel;
   public volatile String channelUrl;
@@ -82,7 +82,7 @@ public class JPakeClient {
   public ExtendedJSONObject jIncoming;
 
   public JPakeParty jParty;
-  public JPakeNumGenerator numGen;
+  public final JPakeNumGenerator numGen;
 
   public int pollTries;
 
@@ -420,11 +420,7 @@ public class JPakeClient {
     ExtendedJSONObject jPayload = null;
     try {
       jPayload = encryptPayload(payload, keyBundle, true);
-    } catch (UnsupportedEncodingException e) {
-      Logger.error(LOG_TAG, "Failed to encrypt data.", e);
-      abort(Constants.JPAKE_ERROR_INTERNAL);
-      return;
-    } catch (CryptoException e) {
+    } catch (UnsupportedEncodingException | CryptoException e) {
       Logger.error(LOG_TAG, "Failed to encrypt data.", e);
       abort(Constants.JPAKE_ERROR_INTERNAL);
       return;
