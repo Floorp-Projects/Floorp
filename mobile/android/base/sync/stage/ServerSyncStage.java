@@ -549,7 +549,13 @@ public abstract class ServerSyncStage extends AbstractSessionManagingSyncStage i
     } catch (URISyntaxException e) {
       session.abort(e, "Invalid URI syntax for server repository.");
       return;
-    } catch (NonObjectJSONException | ParseException | IOException e) {
+    } catch (NonObjectJSONException e) {
+      session.abort(e, "Invalid persisted JSON for config.");
+      return;
+    } catch (IOException e) {
+      session.abort(e, "Invalid persisted JSON for config.");
+      return;
+    } catch (ParseException e) {
       session.abort(e, "Invalid persisted JSON for config.");
       return;
     }

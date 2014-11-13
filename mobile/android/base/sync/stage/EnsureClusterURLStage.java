@@ -123,7 +123,11 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
               output = reader.readLine();
               BaseResource.consumeReader(reader);
               reader.close();
-            } catch (IllegalStateException | IOException e) {
+            } catch (IllegalStateException e) {
+              delegate.handleError(e);
+              BaseResource.consumeEntity(response);
+              return;
+            } catch (IOException e) {
               delegate.handleError(e);
               BaseResource.consumeEntity(response);
               return;

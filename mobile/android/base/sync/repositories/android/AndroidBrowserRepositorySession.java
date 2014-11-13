@@ -155,6 +155,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       Logger.error(LOG_TAG, "ProfileDatabaseException from begin. Fennec must be launched once until this error is fixed");
       deferredDelegate.onBeginFailed(e);
       return;
+    } catch (NullCursorException e) {
+      deferredDelegate.onBeginFailed(e);
+      return;
     } catch (Exception e) {
       deferredDelegate.onBeginFailed(e);
       return;
@@ -216,6 +219,9 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
       Cursor cur;
       try {
         cur = dbHelper.getGUIDsSince(timestamp);
+      } catch (NullCursorException e) {
+        delegate.onGuidsSinceFailed(e);
+        return;
       } catch (Exception e) {
         delegate.onGuidsSinceFailed(e);
         return;
@@ -251,7 +257,7 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
   }
 
   abstract class FetchingRunnable implements Runnable {
-    protected final RepositorySessionFetchRecordsDelegate delegate;
+    protected RepositorySessionFetchRecordsDelegate delegate;
 
     public FetchingRunnable(RepositorySessionFetchRecordsDelegate delegate) {
       this.delegate = delegate;
@@ -529,6 +535,10 @@ public abstract class AndroidBrowserRepositorySession extends StoreTrackingRepos
           delegate.onRecordStoreFailed(e, record.guid);
           return;
         } catch (NoGuidForIdException e) {
+          Logger.error(LOG_TAG, "Store failed for " + record.guid, e);
+          delegate.onRecordStoreFailed(e, record.guid);
+          return;
+        } catch (NullCursorException e) {
           Logger.error(LOG_TAG, "Store failed for " + record.guid, e);
           delegate.onRecordStoreFailed(e, record.guid);
           return;

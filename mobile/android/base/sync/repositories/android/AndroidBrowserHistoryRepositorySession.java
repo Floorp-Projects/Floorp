@@ -34,7 +34,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
   /**
    * The number of records to queue for insertion before writing to databases.
    */
-  public static final int INSERT_RECORD_THRESHOLD = 50;
+  public static int INSERT_RECORD_THRESHOLD = 50;
 
   public AndroidBrowserHistoryRepositorySession(Repository repository, Context context) {
     super(repository);
@@ -154,7 +154,7 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     super.finish(delegate);
   }
 
-  protected final Object recordsBufferMonitor = new Object();
+  protected Object recordsBufferMonitor = new Object();
   protected ArrayList<HistoryRecord> recordsBuffer = new ArrayList<HistoryRecord>();
 
   /**
@@ -223,7 +223,10 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
       try {
         // Does not use androidID -- just GUID -> String map.
         updateBookkeeping(succeeded);
-      } catch (NoGuidForIdException | ParentNotFoundException e) {
+      } catch (NoGuidForIdException e) {
+        // Should not happen.
+        throw new NullCursorException(e);
+      } catch (ParentNotFoundException e) {
         // Should not happen.
         throw new NullCursorException(e);
       } catch (NullCursorException e) {
