@@ -341,10 +341,13 @@ nsBrowserElement::Download(const nsAString& aUrl,
   NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
   nsCOMPtr<nsIDOMDOMRequest> req;
+  nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(mBrowserElementAPI);
+  MOZ_ASSERT(wrappedObj, "Failed to get wrapped JS from XPCOM component.");
   AutoJSAPI jsapi;
-  jsapi.Init();
-  JS::Rooted<JS::Value> options(jsapi.cx());
-  if (!ToJSValue(jsapi.cx(), aOptions, &options)) {
+  jsapi.Init(wrappedObj->GetJSObject());
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> options(cx);
+  if (!ToJSValue(cx, aOptions, &options)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
