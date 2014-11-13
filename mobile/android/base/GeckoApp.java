@@ -386,13 +386,13 @@ public abstract class GeckoApp
             if (mMenuPanel == null) {
                 mMenuPanel = new MenuPanel(this, null);
             } else {
-                // Prepare the panel everytime before showing the menu.
+                // Prepare the panel every time before showing the menu.
                 onPreparePanel(featureId, mMenuPanel, mMenu);
             }
 
             return mMenuPanel; 
         }
-  
+
         return super.onCreatePanelView(featureId);
     }
 
