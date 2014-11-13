@@ -21,7 +21,6 @@
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
 #include "WebAudioUtils.h"
-#include "mozilla/dom/Promise.h"
 #ifdef XP_WIN
 #include "ThreadPoolCOMListener.h"
 #endif
@@ -513,17 +512,16 @@ MediaBufferDecoder::Shutdown() {
 
 WebAudioDecodeJob::WebAudioDecodeJob(const nsACString& aContentType,
                                      AudioContext* aContext,
-                                     Promise* aPromise,
                                      DecodeSuccessCallback* aSuccessCallback,
                                      DecodeErrorCallback* aFailureCallback)
   : mContentType(aContentType)
   , mWriteIndex(0)
   , mContext(aContext)
-  , mPromise(aPromise)
   , mSuccessCallback(aSuccessCallback)
   , mFailureCallback(aFailureCallback)
 {
   MOZ_ASSERT(aContext);
+  MOZ_ASSERT(aSuccessCallback);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(WebAudioDecodeJob);
 }
@@ -543,10 +541,7 @@ WebAudioDecodeJob::OnSuccess(ErrorCode aErrorCode)
   // Ignore errors in calling the callback, since there is not much that we can
   // do about it here.
   ErrorResult rv;
-  if (mSuccessCallback) {
-    mSuccessCallback->Call(*mOutput, rv);
-  }
-  mPromise->MaybeResolve(mOutput);
+  mSuccessCallback->Call(*mOutput, rv);
 
   mContext->RemoveFromDecodeQueue(this);
 }
@@ -593,8 +588,6 @@ WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode)
     ErrorResult rv;
     mFailureCallback->Call(rv);
   }
-
-  mPromise->MaybeReject(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
 
   mContext->RemoveFromDecodeQueue(this);
 }

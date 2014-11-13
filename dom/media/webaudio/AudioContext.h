@@ -61,7 +61,6 @@ class PannerNode;
 class ScriptProcessorNode;
 class WaveShaperNode;
 class PeriodicWave;
-class Promise;
 
 class AudioContext MOZ_FINAL : public DOMEventTargetHelper,
                                public nsIMemoryReporter
@@ -185,10 +184,9 @@ public:
   CreatePeriodicWave(const Float32Array& aRealData, const Float32Array& aImagData,
                      ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  DecodeAudioData(const ArrayBuffer& aBuffer,
-                  const Optional<OwningNonNull<DecodeSuccessCallback> >& aSuccessCallback,
-                  const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
+  void DecodeAudioData(const ArrayBuffer& aBuffer,
+                       DecodeSuccessCallback& aSuccessCallback,
+                       const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
 
   // OfflineAudioContext methods
   void StartRendering(ErrorResult& aRv);
