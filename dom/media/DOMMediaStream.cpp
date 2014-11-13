@@ -107,7 +107,10 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMMediaStream,
                                                 DOMEventTargetHelper)
-  tmp->Destroy();
+  if (tmp->mListener) {
+    // Make sure |mListener| cannot call back after |mTracks| is collected
+    tmp->mListener->Forget();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
