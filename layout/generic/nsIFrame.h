@@ -745,6 +745,15 @@ public:
   void MovePositionBy(const nsPoint& aTranslation);
 
   /**
+   * As above, using a logical-point delta in a given writing mode.
+   */
+  void MovePositionBy(mozilla::WritingMode aWritingMode,
+                      const mozilla::LogicalPoint& aTranslation)
+  {
+    MovePositionBy(aTranslation.GetPhysicalPoint(aWritingMode, 0));
+  }
+
+  /**
    * Return frame's position without relative positioning
    */
   nsPoint GetNormalPosition() const;
