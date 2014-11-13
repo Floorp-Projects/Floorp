@@ -81,6 +81,8 @@ public:
   void BeginFakeTracedTask();
   void EndFakeTracedTask();
 private:
+  virtual ~FakeTracedTask() {}
+
   // No copy allowed.
   FakeTracedTask() MOZ_DELETE;
   FakeTracedTask(const FakeTracedTask& aTask) MOZ_DELETE;

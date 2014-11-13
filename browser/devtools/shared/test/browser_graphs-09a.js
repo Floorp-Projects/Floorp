@@ -27,10 +27,26 @@ function* performTest() {
 }
 
 function* testGraph(graph) {
-  info("Should be able to set the grpah data before waiting for the ready event.");
+  info("Should be able to set the graph data before waiting for the ready event.");
 
   yield graph.setDataWhenReady(TEST_DATA);
   ok(graph.hasData(), "Data was set successfully.");
+
+  is(graph._gutter.hidden, false,
+    "The gutter should not be hidden because the tooltips have arrows.");
+  is(graph._maxTooltip.hidden, false,
+    "The max tooltip should not be hidden.");
+  is(graph._avgTooltip.hidden, false,
+    "The avg tooltip should not be hidden.");
+  is(graph._minTooltip.hidden, false,
+    "The min tooltip should not be hidden.");
+
+  is(graph._maxTooltip.getAttribute("with-arrows"), "true",
+    "The maximum tooltip has the correct 'with-arrows' attribute.");
+  is(graph._avgTooltip.getAttribute("with-arrows"), "true",
+    "The average tooltip has the correct 'with-arrows' attribute.");
+  is(graph._minTooltip.getAttribute("with-arrows"), "true",
+    "The minimum tooltip has the correct 'with-arrows' attribute.");
 
   is(graph._maxTooltip.querySelector("[text=info]").textContent, "max",
     "The maximum tooltip displays the correct info.");
@@ -41,7 +57,7 @@ function* testGraph(graph) {
 
   is(graph._maxTooltip.querySelector("[text=value]").textContent, "60",
     "The maximum tooltip displays the correct value.");
-  is(graph._avgTooltip.querySelector("[text=value]").textContent, "41",
+  is(graph._avgTooltip.querySelector("[text=value]").textContent, "41.71",
     "The average tooltip displays the correct value.");
   is(graph._minTooltip.querySelector("[text=value]").textContent, "10",
     "The minimum tooltip displays the correct value.");

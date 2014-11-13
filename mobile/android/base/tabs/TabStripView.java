@@ -11,7 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -33,8 +33,8 @@ public class TabStripView extends TwoWayView {
     private static final String LOGTAG = "GeckoTabStrip";
 
     private static final int ANIM_TIME_MS = 200;
-    private static final AccelerateDecelerateInterpolator ANIM_INTERPOLATOR =
-            new AccelerateDecelerateInterpolator();
+    private static final DecelerateInterpolator ANIM_INTERPOLATOR =
+            new DecelerateInterpolator();
 
     private final TabStripAdapter adapter;
     private final Drawable divider;

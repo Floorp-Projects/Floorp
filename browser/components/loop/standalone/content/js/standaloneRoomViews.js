@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* global loop:true, React */
+/* jshint newcap:false, maxlen:false */
 
 var loop = loop || {};
 loop.standaloneRoomViews = (function(mozL10n) {
@@ -14,6 +15,72 @@ loop.standaloneRoomViews = (function(mozL10n) {
   var sharedActions = loop.shared.actions;
   var sharedViews = loop.shared.views;
 
+  var StandaloneRoomInfoArea = React.createClass({displayName: 'StandaloneRoomInfoArea',
+    propTypes: {
+      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired
+    },
+
+    _renderCallToActionLink: function() {
+      if (this.props.helper.isFirefox(navigator.userAgent)) {
+        return (
+          React.DOM.a({href: loop.config.learnMoreUrl, className: "btn btn-info"}, 
+            mozL10n.get("rooms_room_full_call_to_action_label", {
+              clientShortname: mozL10n.get("clientShortname2")
+            })
+          )
+        );
+      }
+      return (
+        React.DOM.a({href: loop.config.brandWebsiteUrl, className: "btn btn-info"}, 
+          mozL10n.get("rooms_room_full_call_to_action_nonFx_label", {
+            brandShortname: mozL10n.get("brandShortname")
+          })
+        )
+      );
+    },
+
+    _renderContent: function() {
+      switch(this.props.roomState) {
+        case ROOM_STATES.INIT:
+        case ROOM_STATES.READY: {
+          return (
+            React.DOM.button({className: "btn btn-join btn-info", 
+                    onClick: this.props.joinRoom}, 
+              mozL10n.get("rooms_room_join_label")
+            )
+          );
+        }
+        case ROOM_STATES.JOINED:
+        case ROOM_STATES.SESSION_CONNECTED: {
+          return (
+            React.DOM.p({className: "empty-room-message"}, 
+              mozL10n.get("rooms_only_occupant_label")
+            )
+          );
+        }
+        case ROOM_STATES.FULL:
+          return (
+            React.DOM.div(null, 
+              React.DOM.p({className: "full-room-message"}, 
+                mozL10n.get("rooms_room_full_label")
+              ), 
+              React.DOM.p(null, this._renderCallToActionLink())
+            )
+          );
+        default:
+          return null;
+      }
+    },
+
+    render: function() {
+      return (
+        React.DOM.div({className: "room-inner-info-area"}, 
+          this._renderContent()
+        )
+      );
+    }
+  });
+
   var StandaloneRoomView = React.createClass({displayName: 'StandaloneRoomView',
     mixins: [Backbone.Events],
 
@@ -21,6 +88,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       activeRoomStore:
         React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired
     },
 
     getInitialState: function() {
@@ -129,35 +197,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
              this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS;
     },
 
-    _renderContextualRoomInfo: function() {
-      switch(this.state.roomState) {
-        case ROOM_STATES.INIT:
-        case ROOM_STATES.READY: {
-          // Join button
-          return (
-            React.DOM.div({className: "room-inner-info-area"}, 
-              React.DOM.button({className: "btn btn-join btn-info", onClick: this.joinRoom}, 
-                mozL10n.get("rooms_room_join_label")
-              )
-            )
-          );
-        }
-        case ROOM_STATES.JOINED:
-        case ROOM_STATES.SESSION_CONNECTED: {
-          // Empty room message
-          return (
-            React.DOM.div({className: "room-inner-info-area"}, 
-              React.DOM.p({className: "empty-room-message"}, 
-                mozL10n.get("rooms_only_occupant_label")
-              )
-            )
-          );
-        }
-      }
-      // XXX Render "Start your own" button when room is over capacity (see
-      //     bug 1074709)
-    },
-
     render: function() {
       var localStreamClasses = React.addons.classSet({
         hide: !this._roomIsActive(),
@@ -168,7 +207,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         React.DOM.div({className: "room-conversation-wrapper"}, 
-          this._renderContextualRoomInfo(), 
+          StandaloneRoomInfoArea({roomState: this.state.roomState, 
+                                  joinRoom: this.joinRoom, 
+                                  helper: this.props.helper}), 
           React.DOM.div({className: "video-layout-wrapper"}, 
             React.DOM.div({className: "conversation room-conversation"}, 
               React.DOM.h2({className: "room-name"}, this.state.roomName), 

@@ -16,6 +16,7 @@ function run_test()
   test_remove_breakpoint();
   test_find_breakpoints();
   test_duplicate_breakpoints();
+  test_move_breakpoint();
 }
 
 function test_has_breakpoint() {
@@ -179,4 +180,32 @@ function test_duplicate_breakpoints() {
   bpStore.addBreakpoint(location);
   do_check_eq(bpStore.size, 1, "We should have only 1 whole line breakpoint");
   bpStore.removeBreakpoint(location);
+}
+
+function test_move_breakpoint() {
+  let bpStore = new BreakpointStore();
+
+  let oldLocation = {
+    url: "http://example.com/foo.js",
+    line: 10
+  };
+
+  let newLocation = {
+    url: "http://example.com/foo.js",
+    line: 12
+  };
+
+  bpStore.addBreakpoint(oldLocation);
+  bpStore.moveBreakpoint(oldLocation, newLocation);
+
+  equal(bpStore.size, 1, "Moving a breakpoint maintains the correct size.");
+
+  let bp = bpStore.getBreakpoint(newLocation);
+  ok(bp, "We should be able to get a breakpoint at the new location.");
+  equal(bp.line, newLocation.line,
+        "We should get the moved line.");
+
+  equal(bpStore.hasBreakpoint({ url: "http://example.com/foo.js", line: 10 }),
+        null,
+        "And we shouldn't be able to get any BP at the old location.");
 }

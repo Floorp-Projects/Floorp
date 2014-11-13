@@ -21,6 +21,13 @@
                     linear-gradient(#ADB5C2, #BFC6D1);
 }
 
+/* Use the new in-content colors for #contentAreaDownloadsView. After landing
+   of bug 989469 the colors can be moved to *|*:root */
+*|*#contentAreaDownloadsView {
+  background: #f1f1f1;
+  color: #424e5a;
+}
+
 html|html {
   font: message-box;
 }
