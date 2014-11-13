@@ -95,7 +95,7 @@ struct DisplayPortPropertyData {
 };
 
 struct DisplayPortMarginsPropertyData {
-  DisplayPortMarginsPropertyData(const ScreenMargin& aMargins,
+  DisplayPortMarginsPropertyData(const LayerMargin& aMargins,
                                  uint32_t aAlignmentX, uint32_t aAlignmentY,
                                  uint32_t aPriority)
     : mMargins(aMargins)
@@ -103,7 +103,7 @@ struct DisplayPortMarginsPropertyData {
     , mAlignmentY(aAlignmentY)
     , mPriority(aPriority)
   {}
-  ScreenMargin mMargins;
+  LayerMargin mMargins;
   uint32_t mAlignmentX;
   uint32_t mAlignmentY;
   uint32_t mPriority;
@@ -137,7 +137,7 @@ public:
   typedef FrameMetrics::ViewID ViewID;
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSSize CSSSize;
-  typedef mozilla::ScreenMargin ScreenMargin;
+  typedef mozilla::LayerMargin LayerMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
 
   /**
@@ -188,7 +188,7 @@ public:
    */
   static void SetDisplayPortMargins(nsIContent* aContent,
                                     nsIPresShell* aPresShell,
-                                    const ScreenMargin& aMargins,
+                                    const LayerMargin& aMargins,
                                     uint32_t aAlignmentX,
                                     uint32_t aAlignmentY,
                                     uint32_t aPriority = 0,
@@ -741,12 +741,6 @@ public:
    * aAncestor to go up to the root frame.
    */
   static Matrix4x4 GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor);
-
-  /**
-   * Gets the scale factors of the transform for aFrame relative to the root
-   * frame if this transform is 2D, or the identity scale factors otherwise.
-   */
-  static gfxSize GetTransformToAncestorScale(nsIFrame* aFrame);
 
   /**
    * Transforms a list of CSSPoints from aFromFrame to aToFrame, taking into
