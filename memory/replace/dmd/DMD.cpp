@@ -1549,7 +1549,7 @@ private:
 };
 
 static void
-AnalyzeReportsImpl(JSONWriter& aWriter)
+AnalyzeReportsImpl(UniquePtr<JSONWriteFunc> aWriter)
 {
   if (!gIsDMDRunning) {
     return;
@@ -1572,76 +1572,77 @@ AnalyzeReportsImpl(JSONWriter& aWriter)
   static int analysisCount = 1;
   StatusMsg("Dump %d {\n", analysisCount++);
 
-  aWriter.Start();
+  JSONWriter writer(Move(aWriter));
+  writer.Start();
   {
-    aWriter.IntProperty("version", kOutputVersionNumber);
+    writer.IntProperty("version", kOutputVersionNumber);
 
-    aWriter.StartObjectProperty("invocation");
+    writer.StartObjectProperty("invocation");
     {
-      aWriter.StringProperty("dmdEnvVar", gOptions->DMDEnvVar());
-      aWriter.IntProperty("sampleBelowSize", gOptions->SampleBelowSize());
+      writer.StringProperty("dmdEnvVar", gOptions->DMDEnvVar());
+      writer.IntProperty("sampleBelowSize", gOptions->SampleBelowSize());
     }
-    aWriter.EndObject();
+    writer.EndObject();
 
     StatusMsg("  Constructing the heap block list...\n");
 
     ToIdStringConverter isc;
 
-    aWriter.StartArrayProperty("blockList");
+    writer.StartArrayProperty("blockList");
     {
       for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
         const Block& b = r.front();
         b.AddStackTracesToTable(usedStackTraces);
 
-        aWriter.StartObjectElement(aWriter.SingleLineStyle);
+        writer.StartObjectElement(writer.SingleLineStyle);
         {
           if (!b.IsSampled()) {
-            aWriter.IntProperty("req", b.ReqSize());
+            writer.IntProperty("req", b.ReqSize());
             if (b.SlopSize() > 0) {
-              aWriter.IntProperty("slop", b.SlopSize());
+              writer.IntProperty("slop", b.SlopSize());
             }
           }
-          aWriter.StringProperty("alloc", isc.ToIdString(b.AllocStackTrace()));
+          writer.StringProperty("alloc", isc.ToIdString(b.AllocStackTrace()));
           if (b.NumReports() > 0) {
-            aWriter.StartArrayProperty("reps");
+            writer.StartArrayProperty("reps");
             {
               if (b.ReportStackTrace1()) {
-                aWriter.StringElement(isc.ToIdString(b.ReportStackTrace1()));
+                writer.StringElement(isc.ToIdString(b.ReportStackTrace1()));
               }
               if (b.ReportStackTrace2()) {
-                aWriter.StringElement(isc.ToIdString(b.ReportStackTrace2()));
+                writer.StringElement(isc.ToIdString(b.ReportStackTrace2()));
               }
             }
-            aWriter.EndArray();
+            writer.EndArray();
           }
         }
-        aWriter.EndObject();
+        writer.EndObject();
       }
     }
-    aWriter.EndArray();
+    writer.EndArray();
 
     StatusMsg("  Constructing the stack trace table...\n");
 
-    aWriter.StartObjectProperty("traceTable");
+    writer.StartObjectProperty("traceTable");
     {
       for (StackTraceSet::Enum e(usedStackTraces); !e.empty(); e.popFront()) {
         const StackTrace* const st = e.front();
-        aWriter.StartArrayProperty(isc.ToIdString(st), aWriter.SingleLineStyle);
+        writer.StartArrayProperty(isc.ToIdString(st), writer.SingleLineStyle);
         {
           for (uint32_t i = 0; i < st->Length(); i++) {
             const void* pc = st->Pc(i);
-            aWriter.StringElement(isc.ToIdString(pc));
+            writer.StringElement(isc.ToIdString(pc));
             usedPcs.put(pc);
           }
         }
-        aWriter.EndArray();
+        writer.EndArray();
       }
     }
-    aWriter.EndObject();
+    writer.EndObject();
 
     StatusMsg("  Constructing the stack frame table...\n");
 
-    aWriter.StartObjectProperty("frameTable");
+    writer.StartObjectProperty("frameTable");
     {
       static const size_t locBufLen = 1024;
       char locBuf[locBufLen];
@@ -1652,14 +1653,14 @@ AnalyzeReportsImpl(JSONWriter& aWriter)
         // Use 0 for the frame number. See the JSON format description comment
         // in DMD.h to understand why.
         locService->GetLocation(0, pc, locBuf, locBufLen);
-        aWriter.StringProperty(isc.ToIdString(pc), locBuf);
+        writer.StringProperty(isc.ToIdString(pc), locBuf);
       }
     }
-    aWriter.EndObject();
+    writer.EndObject();
 
     iscSize = isc.sizeOfExcludingThis(MallocSizeOf);
   }
-  aWriter.End();
+  writer.End();
 
   if (gOptions->ShowDumpStats()) {
     Sizes sizes;
@@ -1727,9 +1728,9 @@ AnalyzeReportsImpl(JSONWriter& aWriter)
 }
 
 MOZ_EXPORT void
-AnalyzeReports(JSONWriter& aWriter)
+AnalyzeReports(UniquePtr<JSONWriteFunc> aWriter)
 {
-  AnalyzeReportsImpl(aWriter);
+  AnalyzeReportsImpl(Move(aWriter));
   ClearReports();
 }
 
