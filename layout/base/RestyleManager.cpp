@@ -1451,9 +1451,12 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
   // Until we get rid of these phases in bug 960465, we need to skip
   // animation restyles during the non-animation phase, and post
   // animation restyles so that we restyle those elements again in the
-  // animation phase.
+  // animation phase.  Furthermore, we need to add
+  // eRestyle_ChangeAnimationPhaseDescendants so that we actually honor
+  // these booleans in all cases.
   mSkipAnimationRules = true;
   mPostAnimationRestyles = true;
+  aRestyleHint |= eRestyle_ChangeAnimationPhaseDescendants;
 
   DoRebuildAllStyleData(mPendingRestyles, aExtraHint, aRestyleHint);
 
