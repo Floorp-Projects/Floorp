@@ -290,6 +290,8 @@ typedef long ssize_t;
  */
 #define JEMALLOC_MUNMAP
 
+#undef JEMALLOC_RECYCLE
+
 #ifndef MOZ_MEMORY_WINDOWS
 #ifndef MOZ_MEMORY_SOLARIS
 #include <sys/cdefs.h>
@@ -1070,6 +1072,12 @@ static const bool config_munmap = true;
 static const bool config_munmap = false;
 #endif
 
+#ifdef JEMALLOC_RECYCLE
+static const bool config_recycle = true;
+#else
+static const bool config_recycle = false;
+#endif
+
 /*
  * When MALLOC_STATIC_SIZES is defined most of the parameters
  * controlling the malloc behavior are defined as compile-time constants
@@ -1164,6 +1172,12 @@ static size_t		quantum_mask; /* (quantum - 1). */
 #define calculate_arena_maxclass()					\
 	(chunksize - (arena_chunk_header_npages << pagesize_2pow))
 
+/*
+ * Recycle at most 128 chunks. With 1 MiB chunks, this means we retain at most
+ * 6.25% of the process address space on a 32-bit OS for later use.
+ */
+#define CHUNK_RECYCLE_LIMIT 128
+
 #ifdef MALLOC_STATIC_SIZES
 #define CHUNKSIZE_DEFAULT		((size_t) 1 << CHUNK_2POW_DEFAULT)
 static const size_t	chunksize =	CHUNKSIZE_DEFAULT;
@@ -1171,13 +1185,18 @@ static const size_t	chunksize_mask =CHUNKSIZE_DEFAULT - 1;
 static const size_t	chunk_npages =	CHUNKSIZE_DEFAULT >> pagesize_2pow;
 #define arena_chunk_header_npages	calculate_arena_header_pages()
 #define arena_maxclass			calculate_arena_maxclass()
+static const size_t	recycle_limit = CHUNK_RECYCLE_LIMIT * CHUNKSIZE_DEFAULT;
 #else
 static size_t		chunksize;
 static size_t		chunksize_mask; /* (chunksize - 1). */
 static size_t		chunk_npages;
 static size_t		arena_chunk_header_npages;
 static size_t		arena_maxclass; /* Max size class for arenas. */
+static size_t		recycle_limit;
 #endif
+
+/* The current amount of recycled bytes, updated atomically. */
+static size_t recycled_size;
 
 /********/
 /*
@@ -1484,6 +1503,24 @@ static const bool osx_use_jemalloc = true;
  * End function prototypes.
  */
 /******************************************************************************/
+
+static inline size_t
+load_acquire_z(size_t *p)
+{
+	volatile size_t result = *p;
+#  ifdef MOZ_MEMORY_WINDOWS
+	/*
+	 * We use InterlockedExchange with a dummy value to insert a memory
+	 * barrier. This has been confirmed to generate the right instruction
+	 * and is also used by MinGW.
+	 */
+	volatile long dummy = 0;
+	InterlockedExchange(&dummy, 1);
+#  else
+	__sync_synchronize();
+#  endif
+	return result;
+}
 
 /*
  * umax2s() provides minimal integer printing functionality, which is
@@ -2819,6 +2856,10 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 		extent_tree_ad_insert(chunks_ad, node);
 		node = NULL;
 	}
+
+	if (config_munmap && config_recycle)
+		recycled_size -= size;
+
 	malloc_mutex_unlock(&chunks_mtx);
 
 	if (node != NULL)
@@ -2842,6 +2883,18 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 	return (ret);
 }
 
+#ifdef MOZ_MEMORY_WINDOWS
+/*
+ * On Windows, calls to VirtualAlloc and VirtualFree must be matched, making it
+ * awkward to recycle allocations of varying sizes. Therefore we only allow
+ * recycling when the size equals the chunksize, unless deallocation is entirely
+ * disabled.
+ */
+#define CAN_RECYCLE(size) (size == chunksize)
+#else
+#define CAN_RECYCLE(size) true
+#endif
+
 static void *
 chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 {
@@ -2852,7 +2905,7 @@ chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 	assert(alignment != 0);
 	assert((alignment & chunksize_mask) == 0);
 
-	if (!config_munmap) {
+	if (!config_munmap || (config_recycle && CAN_RECYCLE(size))) {
 		ret = chunk_recycle(&chunks_szad_mmap, &chunks_ad_mmap,
 			size, alignment, base, &zero);
 		if (ret != NULL)
@@ -2955,6 +3008,9 @@ chunk_record(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, void *chunk,
 		xprev = prev;
 	}
 
+	if (config_munmap && config_recycle)
+		recycled_size += size;
+
 label_return:
 	malloc_mutex_unlock(&chunks_mtx);
 	/*
@@ -2970,12 +3026,15 @@ label_return:
 static bool
 chunk_dalloc_mmap(void *chunk, size_t size)
 {
-	if (!config_munmap)
+	if (!config_munmap || (config_recycle && CAN_RECYCLE(size) &&
+			load_acquire_z(&recycled_size) < recycle_limit))
 		return true;
 
 	pages_unmap(chunk, size);
 	return false;
 }
+
+#undef CAN_RECYCLE
 
 static void
 chunk_dealloc(void *chunk, size_t size)
@@ -5810,7 +5869,11 @@ MALLOC_OUT:
 
 	arena_chunk_header_npages = calculate_arena_header_pages();
 	arena_maxclass = calculate_arena_maxclass();
+
+	recycle_limit = CHUNK_RECYCLE_LIMIT * chunksize;
 #endif
+
+	recycled_size = 0;
 
 #ifdef JEMALLOC_USES_MAP_ALIGN
 	/*
@@ -6680,7 +6743,7 @@ jemalloc_purge_freed_pages_impl()
 		if (arena != NULL)
 			hard_purge_arena(arena);
 	}
-	if (!config_munmap) {
+	if (!config_munmap || config_recycle) {
 		extent_node_t *node = extent_tree_szad_first(&chunks_szad_mmap);
 		while (node) {
 			pages_decommit(node->addr, node->size);
