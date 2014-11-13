@@ -245,7 +245,7 @@ public:
    * checkerboard immediately. This includes a bunch of logic, including
    * algorithms to bias painting in the direction of the velocity.
    */
-  static const ScreenMargin CalculatePendingDisplayPort(
+  static const LayerMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
     const ScreenPoint& aVelocity,
     double aEstimatedPaintDuration);

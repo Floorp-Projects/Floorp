@@ -663,6 +663,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
 {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
+  LayoutDeviceToLayerScale resolution(aContainerParameters.mXScale, aContainerParameters.mYScale);
 
   nsIPresShell* presShell = presContext->GetPresShell();
   FrameMetrics metrics;
@@ -729,18 +730,18 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   } else {
     metrics.mResolution = ParentLayerToLayerScale(1.0f);
   }
-  // The cumulative resolution is the resolution at which the scroll frame's
-  // content is actually rendered. It includes the pres shell resolutions of
-  // all the pres shells from here up to the root, as well as any css-driven
-  // resolution. We don't need to compute it as it's already stored in the
-  // container parameters.
-  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(aContainerParameters.mXScale,
-                                                           aContainerParameters.mYScale);
 
-  LayoutDeviceToScreenScale resolutionToScreen(
-      presShell->GetCumulativeResolution().width
-    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame : aForFrame).width);
-  metrics.SetExtraResolution(metrics.mCumulativeResolution / resolutionToScreen);
+  // For the cumulateive resolution, multiply the resolutions of all the
+  // presShells back up to the root
+  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(1.0f);
+  nsIPresShell* curPresShell = presShell;
+  while (curPresShell != nullptr) {
+    ParentLayerToLayerScale presShellResolution(curPresShell->GetXResolution(),
+                                                curPresShell->GetYResolution());
+    metrics.mCumulativeResolution.scale *= presShellResolution.scale;
+    nsPresContext* parentContext = curPresShell->GetPresContext()->GetParentPresContext();
+    curPresShell = parentContext ? parentContext->GetPresShell() : nullptr;
+  }
 
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(
     (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
