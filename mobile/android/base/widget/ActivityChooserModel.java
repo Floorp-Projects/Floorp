@@ -1125,10 +1125,8 @@ public class ActivityChooserModel extends DataSetObservable {
             if (DEBUG) {
                 Log.i(LOG_TAG, "Read " + historicalRecords.size() + " historical records.");
             }
-        } catch (XmlPullParserException xppe) {
+        } catch (XmlPullParserException | IOException xppe) {
             Log.e(LOG_TAG, "Error reading historical record file: " + mHistoryFileName, xppe);
-        } catch (IOException ioe) {
-            Log.e(LOG_TAG, "Error reading historical record file: " + mHistoryFileName, ioe);
         } finally {
             if (fis != null) {
                 try {
@@ -1190,12 +1188,8 @@ public class ActivityChooserModel extends DataSetObservable {
                 if (DEBUG) {
                     Log.i(LOG_TAG, "Wrote " + recordCount + " historical records.");
                 }
-            } catch (IllegalArgumentException iae) {
-                Log.e(LOG_TAG, "Error writing historical record file: " + mHistoryFileName, iae);
-            } catch (IllegalStateException ise) {
-                Log.e(LOG_TAG, "Error writing historical record file: " + mHistoryFileName, ise);
-            } catch (IOException ioe) {
-                Log.e(LOG_TAG, "Error writing historical record file: " + mHistoryFileName, ioe);
+            } catch (IllegalArgumentException | IOException | IllegalStateException e) {
+                Log.e(LOG_TAG, "Error writing historical record file: " + mHistoryFileName, e);
             } finally {
                 mCanReadHistoricalData = true;
                 if (fos != null) {
