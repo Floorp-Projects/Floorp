@@ -45,7 +45,6 @@ private:
 private:
   nsTArray<int32_t> mPendingReqQueue;
   nsTArray<nsString> mRequestIdQueue;
-  nsTArray<int32_t> mRfStateQueue;
 };
 
 } // namespace mozilla
