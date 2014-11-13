@@ -3493,7 +3493,7 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   if (aInflation != 1.0f) {
     font.size = NSToCoordRound(font.size * aInflation);
   }
-  WritingMode wm(aStyleContext->StyleVisibility());
+  WritingMode wm(aStyleContext);
   return pc->DeviceContext()->GetMetricsFor(
                   font, aStyleContext->StyleFont()->mLanguage,
                   wm.IsVertical() ? gfxFont::eVertical : gfxFont::eHorizontal,
@@ -5871,7 +5871,7 @@ nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
   default:
     break;
   }
-  WritingMode wm(aStyleContext->StyleVisibility());
+  WritingMode wm(aStyleContext);
   if (wm.IsVertical()) {
     switch (aStyleText->mTextOrientation) {
     case NS_STYLE_TEXT_ORIENTATION_MIXED:
