@@ -697,6 +697,38 @@ html, .fx-embedded, #main,
   height: 100%;
 }
 
+.standalone .room-conversation-wrapper {
+  height: calc(100% - 50px - 60px);
+  background: #000;
+}
+
+.room-conversation-wrapper header {
+  background: #000;
+  height: 50px;
+  text-align: left;
+}
+
+.room-conversation-wrapper header h1 {
+  font-size: 1.5em;
+  color: #fff;
+  line-height: 50px;
+  text-indent: 50px;
+  background-image: url("../img/firefox-logo.png");
+  background-size: 30px;
+  background-position: 10px;
+  background-repeat: no-repeat;
+}
+
+.room-conversation-wrapper footer {
+  background: #000;
+  height: 60px;
+  margin-top: -12px;
+}
+
+.room-conversation-wrapper footer a {
+  color: #555;
+}
+
 /**
  * Hides the hangup button for room conversations.
  */
@@ -745,7 +777,7 @@ html, .fx-embedded, #main,
 
 .standalone .room-inner-info-area {
   position: absolute;
-  top: 35%;
+  top: 50%;
   left: 0;
   right: 25%;
   z-index: 1000;
@@ -767,6 +799,7 @@ html, .fx-embedded, #main,
   padding: .5em 3em .3em 3em;
   border-radius: 3px;
   font-weight: normal;
+  max-width: 400px;
 }
 
 .standalone .room-conversation h2.room-name {
@@ -796,7 +829,7 @@ html, .fx-embedded, #main,
 
 .standalone .room-conversation .conversation-toolbar {
   background: #000;
-  border-top: none;
+  border: none;
 }
 
 .standalone .room-conversation .conversation-toolbar .btn-hangup-entry {
