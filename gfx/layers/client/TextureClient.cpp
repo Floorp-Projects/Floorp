@@ -177,9 +177,54 @@ TextureClient::AsTextureClient(PTextureChild* actor)
 }
 
 void
+TextureClient::AddFlags(TextureFlags aFlags)
+{
+  MOZ_ASSERT(!IsSharedWithCompositor() ||
+             ((GetFlags() & TextureFlags::RECYCLE) && !IsAddedToCompositableClient()));
+  mFlags |= aFlags;
+  if (mValid && mActor && mActor->IPCOpen()) {
+    mActor->SendRecycleTexture(mFlags);
+  }
+}
+
+void
+TextureClient::RemoveFlags(TextureFlags aFlags)
+{
+  MOZ_ASSERT(!IsSharedWithCompositor() ||
+             ((GetFlags() & TextureFlags::RECYCLE) && !IsAddedToCompositableClient()));
+  mFlags &= ~aFlags;
+  if (mValid && mActor && mActor->IPCOpen()) {
+    mActor->SendRecycleTexture(mFlags);
+  }
+}
+
+void
+TextureClient::RecycleTexture(TextureFlags aFlags)
+{
+  MOZ_ASSERT(GetFlags() & TextureFlags::RECYCLE);
+  MOZ_ASSERT(!HasRecycleCallback());
+
+  mAddedToCompositableClient = false;
+  if (mFlags != aFlags) {
+    mFlags = aFlags;
+    if (mValid && mActor && mActor->IPCOpen()) {
+      mActor->SendRecycleTexture(mFlags);
+    }
+  }
+}
+
+void
 TextureClient::WaitForCompositorRecycle()
 {
   mActor->WaitForCompositorRecycle();
+}
+
+void
+TextureClient::SetAddedToCompositableClient()
+{
+  if (!mAddedToCompositableClient) {
+    mAddedToCompositableClient = true;
+  }
 }
 
 bool
@@ -429,6 +474,7 @@ TextureClient::TextureClient(TextureFlags aFlags)
   : mFlags(aFlags)
   , mShared(false)
   , mValid(true)
+  , mAddedToCompositableClient(false)
 {}
 
 TextureClient::~TextureClient()
