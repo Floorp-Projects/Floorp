@@ -1300,9 +1300,9 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
   else {
     // the popup is positioned at a screen coordinate.
     // first convert the screen position in mScreenXPos and mScreenYPos from
-    // CSS pixels into device pixels, ignoring any scaling as mScreenXPos and
-    // mScreenYPos are unscaled screen coordinates.
-    int32_t factor = devContext->UnscaledAppUnitsPerDevPixel();
+    // CSS pixels into device pixels, ignoring any zoom as mScreenXPos and
+    // mScreenYPos are unzoomed screen coordinates.
+    int32_t factor = devContext->AppUnitsPerDevPixelAtUnitFullZoom();
 
     // context menus should be offset by two pixels so that they don't appear
     // directly where the cursor is. Otherwise, it is too easy to have the
@@ -1313,7 +1313,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
       offsetForContextMenu = presContext->DevPixelsToAppUnits(offsetForContextMenuDev);
     }
 
-    // next, convert into app units accounting for the scaling
+    // next, convert into app units accounting for the zoom
     screenPoint.x = presContext->DevPixelsToAppUnits(
                       nsPresContext::CSSPixelsToAppUnits(mScreenXPos) / factor);
     screenPoint.y = presContext->DevPixelsToAppUnits(
