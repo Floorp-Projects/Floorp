@@ -978,6 +978,8 @@ bool intrinsic_ObjectIsTypeDescr(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_TypeDescrIsSimpleType(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_TypeDescrIsArrayType(JSContext *cx, unsigned argc, Value *vp);
 
+bool intrinsic_IsSuspendedStarGenerator(JSContext *cx, unsigned argc, Value *vp);
+
 class AutoLockForExclusiveAccess
 {
     JSRuntime *runtime;
