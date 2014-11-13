@@ -6,57 +6,22 @@ MARIONETTE_HEAD_JS = 'head.js';
 
 let connection;
 
-function setRadioEnabled(enabled, callback) {
-  let request  = connection.setRadioEnabled(enabled);
+function setRadioEnabled(enabled) {
   let desiredRadioState = enabled ? 'enabled' : 'disabled';
+  log("Set radio: " + desiredRadioState);
 
-  let pending = ['onradiostatechange', 'onsuccess'];
-  let done = callback;
+  let promises = [];
 
-  connection.onradiostatechange = function() {
+  let promise = gWaitForEvent(connection, "radiostatechange", event => {
     let state = connection.radioState;
-    log("Received 'radiostatechange' event, radioState: " + state);
-
-    if (state == desiredRadioState) {
-      gReceivedPending('onradiostatechange', pending, done);
-    }
-  };
-
-  request.onsuccess = function onsuccess() {
-    gReceivedPending('onsuccess', pending, done);
-  };
-
-  request.onerror = function onerror() {
-    ok(false, "setRadioEnabled should be ok");
-  };
-}
-
-function dial(number) {
-  // Verify initial state before dial.
-  ok(telephony);
-  is(telephony.active, null);
-  ok(telephony.calls);
-  is(telephony.calls.length, 0);
-
-  log("Make an outgoing call.");
-
-  telephony.dial(number).then(null, cause => {
-    log("Received promise 'reject'");
-
-    is(telephony.active, null);
-    is(telephony.calls.length, 0);
-    is(cause, "RadioNotAvailable");
-
-    emulator.runCmdWithCallback("gsm list", function(result) {
-      log("Initial call list: " + result);
-
-      setRadioEnabled(true, cleanUp);
-    });
+    log("current radioState: " + state);
+    return state == desiredRadioState;
   });
-}
+  promises.push(promise);
 
-function cleanUp() {
-  finish();
+  promises.push(connection.setRadioEnabled(enabled));
+
+  return Promise.all(promises);
 }
 
 startTestWithPermissions(['mobileconnection'], function() {
@@ -64,7 +29,14 @@ startTestWithPermissions(['mobileconnection'], function() {
   ok(connection instanceof MozMobileConnection,
      "connection is instanceof " + connection.constructor);
 
-  setRadioEnabled(false, function() {
-    dial("0912345678");
-  });
+  setRadioEnabled(false)
+    .then(() => gDial("0912345678"))
+    .catch(cause => {
+      is(telephony.active, null);
+      is(telephony.calls.length, 0);
+      is(cause, "RadioNotAvailable");
+    })
+    .then(() => setRadioEnabled(true))
+    .catch(error => ok(false, "Promise reject: " + error))
+    .then(finish);
 });
