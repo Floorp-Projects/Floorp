@@ -2098,7 +2098,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #endif
         nscoord minimumLineBSize = mMinLineBSize;
         nscoord blockStart =
-          -nsLayoutUtils::GetCenteredFontBaseline(fm, minimumLineBSize);
+          -nsLayoutUtils::GetCenteredFontBaseline(fm, minimumLineBSize,
+                                                  lineWM.IsLineInverted());
         nscoord blockEnd = blockStart + minimumLineBSize;
 
         if (blockStart < minBCoord) minBCoord = blockStart;

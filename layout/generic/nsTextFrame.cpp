@@ -1790,13 +1790,13 @@ GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextF
 }
 
 static gfxFont::Metrics
-GetFirstFontMetrics(gfxFontGroup* aFontGroup, bool aVertical)
+GetFirstFontMetrics(gfxFontGroup* aFontGroup, bool aVerticalMetrics)
 {
   if (!aFontGroup)
     return gfxFont::Metrics();
   gfxFont* font = aFontGroup->GetFirstValidFont();
-  return font->GetMetrics(aVertical ? gfxFont::eVertical :
-                                      gfxFont::eHorizontal);
+  return font->GetMetrics(aVerticalMetrics ? gfxFont::eVertical
+                                           : gfxFont::eHorizontal);
 }
 
 PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_NORMAL == 0);
@@ -3161,7 +3161,7 @@ ComputeTabWidthAppUnits(nsIFrame* aFrame, gfxTextRun* aTextRun)
   // textruns do
   gfxFloat spaceWidthAppUnits =
     NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup(),
-                                 aTextRun->IsVertical()).spaceWidth *
+                                 aTextRun->UseCenterBaseline()).spaceWidth *
              aTextRun->GetAppUnitsPerDevUnit());
   return textStyle->mTabSize * spaceWidthAppUnits;
 }
@@ -4918,7 +4918,9 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
   nsRect shadowRect =
     nsLayoutUtils::GetTextShadowRectsUnion(*aVisualOverflowRect, this);
   aVisualOverflowRect->UnionRect(*aVisualOverflowRect, shadowRect);
-  bool vertical = mTextRun->IsVertical();
+  bool verticalRun = mTextRun->IsVertical();
+  bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
+  bool inverted = GetWritingMode().IsLineInverted();
 
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
@@ -4935,11 +4937,13 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     nsFontMetrics* fontMetrics = aProvider.GetFontMetrics();
     nscoord underlineOffset, underlineSize;
     fontMetrics->GetUnderline(underlineOffset, underlineSize);
-    nscoord maxAscent = fontMetrics->MaxAscent();
+    nscoord maxAscent = inverted ? fontMetrics->MaxDescent()
+                                 : fontMetrics->MaxAscent();
 
     gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel();
     gfxFloat gfxWidth =
-      (vertical ? aVisualOverflowRect->height : aVisualOverflowRect->width) /
+      (verticalRun ? aVisualOverflowRect->height
+                   : aVisualOverflowRect->width) /
       appUnitsPerDevUnit;
     gfxFloat gfxAscent = gfxFloat(mAscent) / appUnitsPerDevUnit;
     gfxFloat gfxMaxAscent = maxAscent / appUnitsPerDevUnit;
@@ -4948,11 +4952,11 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     nsRect underlineRect =
       nsCSSRendering::GetTextDecorationRect(aPresContext,
         gfxSize(gfxWidth, gfxUnderlineSize), gfxAscent, gfxUnderlineOffset,
-        NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, decorationStyle, vertical);
+        NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, decorationStyle, verticalRun);
     nsRect overlineRect =
       nsCSSRendering::GetTextDecorationRect(aPresContext,
         gfxSize(gfxWidth, gfxUnderlineSize), gfxAscent, gfxMaxAscent,
-        NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, decorationStyle, vertical);
+        NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, decorationStyle, verticalRun);
 
     aVisualOverflowRect->UnionRect(*aVisualOverflowRect, underlineRect);
     aVisualOverflowRect->UnionRect(*aVisualOverflowRect, overlineRect);
@@ -4972,11 +4976,16 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       nscoord inflationMinFontSize =
         nsLayoutUtils::InflationMinFontSizeFor(aBlock);
 
-      const nscoord measure = vertical ? GetSize().height : GetSize().width;
+      const nscoord measure = verticalRun ? GetSize().height : GetSize().width;
       const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
-                     gfxWidth = measure / appUnitsPerDevUnit,
-                     ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
-      nscoord top(nscoord_MAX), bottom(nscoord_MIN);
+                     gfxWidth = measure / appUnitsPerDevUnit;
+      gfxFloat ascent = gfxFloat(mAscent) / appUnitsPerDevUnit;
+      const WritingMode wm = GetWritingMode();
+      if (wm.IsVerticalRL()) {
+        ascent = -ascent;
+      }
+
+      nscoord topOrLeft(nscoord_MAX), bottomOrRight(nscoord_MIN);
       // Below we loop through all text decorations and compute the rectangle
       // containing all of them, in this frame's coordinate space
       for (uint32_t i = 0; i < textDecs.mUnderlines.Length(); ++i) {
@@ -4993,18 +5002,23 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
           GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
         const gfxFont::Metrics metrics =
           GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                              vertical);
+                              useVerticalMetrics);
 
         const nsRect decorationRect =
           nsCSSRendering::GetTextDecorationRect(aPresContext,
             gfxSize(gfxWidth, metrics.underlineSize),
             ascent, metrics.underlineOffset,
             NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, decorationStyle,
-            vertical) +
+            verticalRun) +
           nsPoint(0, -dec.mBaselineOffset);
 
-        top = std::min(decorationRect.y, top);
-        bottom = std::max(decorationRect.YMost(), bottom);
+        if (verticalRun) {
+          topOrLeft = std::min(decorationRect.x, topOrLeft);
+          bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
+        } else {
+          topOrLeft = std::min(decorationRect.y, topOrLeft);
+          bottomOrRight = std::max(decorationRect.YMost(), bottomOrRight);
+        }
       }
       for (uint32_t i = 0; i < textDecs.mOverlines.Length(); ++i) {
         const LineDecoration& dec = textDecs.mOverlines[i];
@@ -5020,18 +5034,23 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
           GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
         const gfxFont::Metrics metrics =
           GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                              vertical);
+                              useVerticalMetrics);
 
         const nsRect decorationRect =
           nsCSSRendering::GetTextDecorationRect(aPresContext,
             gfxSize(gfxWidth, metrics.underlineSize),
             ascent, metrics.maxAscent,
             NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, decorationStyle,
-            vertical) +
+            verticalRun) +
           nsPoint(0, -dec.mBaselineOffset);
 
-        top = std::min(decorationRect.y, top);
-        bottom = std::max(decorationRect.YMost(), bottom);
+        if (verticalRun) {
+          topOrLeft = std::min(decorationRect.x, topOrLeft);
+          bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
+        } else {
+          topOrLeft = std::min(decorationRect.y, topOrLeft);
+          bottomOrRight = std::max(decorationRect.YMost(), bottomOrRight);
+        }
       }
       for (uint32_t i = 0; i < textDecs.mStrikes.Length(); ++i) {
         const LineDecoration& dec = textDecs.mStrikes[i];
@@ -5047,23 +5066,29 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
           GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
         const gfxFont::Metrics metrics =
           GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                              vertical);
+                              useVerticalMetrics);
 
         const nsRect decorationRect =
           nsCSSRendering::GetTextDecorationRect(aPresContext,
             gfxSize(gfxWidth, metrics.strikeoutSize),
             ascent, metrics.strikeoutOffset,
             NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, decorationStyle,
-            vertical) +
+            verticalRun) +
           nsPoint(0, -dec.mBaselineOffset);
-        top = std::min(decorationRect.y, top);
-        bottom = std::max(decorationRect.YMost(), bottom);
+
+        if (verticalRun) {
+          topOrLeft = std::min(decorationRect.x, topOrLeft);
+          bottomOrRight = std::max(decorationRect.XMost(), bottomOrRight);
+        } else {
+          topOrLeft = std::min(decorationRect.y, topOrLeft);
+          bottomOrRight = std::max(decorationRect.YMost(), bottomOrRight);
+        }
       }
 
-      aVisualOverflowRect->UnionRect(*aVisualOverflowRect,
-                                     vertical ?
-                                       nsRect(top, 0, bottom - top, measure) :
-                                       nsRect(0, top, measure, bottom - top));
+      aVisualOverflowRect->UnionRect(
+        *aVisualOverflowRect,
+        verticalRun ? nsRect(topOrLeft, 0, bottomOrRight - topOrLeft, measure)
+                    : nsRect(0, topOrLeft, measure, bottomOrRight - topOrLeft));
     }
   }
   // When this frame is not selected, the text-decoration area must be in
@@ -5723,19 +5748,20 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   }
 
   gfxFont* firstFont = aProvider.GetFontGroup()->GetFirstValidFont();
-  bool vertical = mTextRun->IsVertical();
+  bool verticalRun = mTextRun->IsVertical();
+  bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
   gfxFont::Metrics
-    decorationMetrics(firstFont->GetMetrics(vertical ?
+    decorationMetrics(firstFont->GetMetrics(useVerticalMetrics ?
       gfxFont::eVertical : gfxFont::eHorizontal));
-  if (!vertical) {
+  if (!useVerticalMetrics) {
     // The potential adjustment from using gfxFontGroup::GetUnderlineOffset
-    // is only valid for horizontal text.
+    // is only valid for horizontal font metrics.
     decorationMetrics.underlineOffset =
       aProvider.GetFontGroup()->GetUnderlineOffset();
   }
 
   gfxFloat startIOffset =
-    vertical ? aTextBaselinePt.y - aFramePt.y : aTextBaselinePt.x - aFramePt.x;
+    verticalRun ? aTextBaselinePt.y - aFramePt.y : aTextBaselinePt.x - aFramePt.x;
   SelectionIterator iterator(selectedChars, aContentOffset, aContentLength,
                              aProvider, mTextRun, startIOffset);
   gfxFloat iOffset, hyphenWidth;
@@ -5743,7 +5769,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   int32_t app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
   // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
   gfxPoint pt;
-  if (vertical) {
+  if (verticalRun) {
     pt.x = (aTextBaselinePt.x - mAscent) / app;
   } else {
     pt.y = (aTextBaselinePt.y - mAscent) / app;
@@ -5757,7 +5783,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
-      if (vertical) {
+      if (verticalRun) {
         pt.y = (aFramePt.y + iOffset -
                (mTextRun->IsRightToLeft() ? advance : 0)) / app;
       } else {
@@ -5769,7 +5795,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
       DrawSelectionDecorations(aCtx, dirtyRect, aSelectionType, this,
                                aTextPaintStyle, selectedStyle, pt, xInFrame,
                                width, mAscent / app, decorationMetrics,
-                               aCallbacks, vertical);
+                               aCallbacks, verticalRun);
     }
     iterator.UpdateWithAdvance(advance);
   }
@@ -6013,15 +6039,14 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
 
   gfxContext* ctx = aRenderingContext->ThebesContext();
   const bool rtl = mTextRun->IsRightToLeft();
-  const bool vertical = mTextRun->IsVertical();
+  const bool verticalRun = mTextRun->IsVertical();
+  WritingMode wm = GetWritingMode();
   const nscoord frameWidth = GetSize().width;
   gfxPoint framePt(aPt.x, aPt.y);
   gfxPoint textBaselinePt;
-  if (vertical) {
-    WritingMode wm = GetWritingMode();
-    textBaselinePt =
-      gfxPoint(wm.IsVerticalLR() ? aPt.x + mAscent
-                                 : aPt.x + frameWidth - mAscent,
+  if (verticalRun) {
+    textBaselinePt = // XXX sideways-left will need different handling here
+      gfxPoint(aPt.x + (wm.IsVerticalLR() ? mAscent : frameWidth - mAscent),
                rtl ? aPt.y + GetSize().height : aPt.y);
   } else {
     textBaselinePt = gfxPoint(rtl ? gfxFloat(aPt.x + frameWidth) : framePt.x,
@@ -6034,7 +6059,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
          &startOffset, &maxLength, &snappedLeftEdge, &snappedRightEdge)) {
     return;
   }
-  if (vertical) {
+  if (verticalRun) {
     textBaselinePt.y += rtl ? -snappedRightEdge : snappedLeftEdge;
   } else {
     textBaselinePt.x += rtl ? -snappedRightEdge : snappedLeftEdge;
@@ -6159,32 +6184,43 @@ nsTextFrame::DrawTextRunAndDecorations(
     nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
     const gfxFloat app = aTextStyle.PresContext()->AppUnitsPerDevPixel();
-    bool vertical = mTextRun->IsVertical();
+    bool verticalRun = mTextRun->IsVertical();
+    bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
 
     // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
     nscoord x = NSToCoordRound(aFramePt.x);
     nscoord y = NSToCoordRound(aFramePt.y);
 
-    // 'width' here is textrun-relative, so for a vertical run it's
-    // really the height of the decoration
-    nscoord width = vertical ? GetRect().height : GetRect().width;
+    // 'measure' here is textrun-relative, so for a horizontal run it's the
+    // width, while for a vertical run it's the height of the decoration
+    const nsSize frameSize = GetSize();
+    nscoord measure = verticalRun ? frameSize.height : frameSize.width;
 
     // XXX todo: probably should have a vertical version of this...
-    if (!vertical) {
-      aClipEdges.Intersect(&x, &width);
+    if (!verticalRun) {
+      aClipEdges.Intersect(&x, &measure);
     }
 
     // decPt is the physical point where the decoration is to be drawn,
     // relative to the frame; one of its coordinates will be updated below.
     gfxPoint decPt(x / app, y / app);
-    gfxFloat& bCoord = vertical ? decPt.x : decPt.y;
+    gfxFloat& bCoord = verticalRun ? decPt.x : decPt.y;
 
-    // ...whereas decSize is a textrun-relative size
-    gfxSize decSize(width / app, 0);
-    const gfxFloat ascent = gfxFloat(mAscent) / app;
+    // decSize is a textrun-relative size, so its 'width' field is actually
+    // the run-relative measure, and 'height' will be the line thickness
+    gfxSize decSize(measure / app, 0);
+    gfxFloat ascent = gfxFloat(mAscent) / app;
 
     // The starting edge of the frame in block direction
-    const gfxFloat frameBStart = vertical ? aFramePt.x : aFramePt.y;
+    gfxFloat frameBStart = verticalRun ? aFramePt.x : aFramePt.y;
+
+    // In vertical-rl mode, block coordinates are measured from the right,
+    // so we need to adjust here.
+    const WritingMode wm = GetWritingMode();
+    if (wm.IsVerticalRL()) {
+      frameBStart += frameSize.width;
+      ascent = -ascent;
+    }
 
     gfxRect dirtyRect(aDirtyRect.x / app, aDirtyRect.y / app,
                       aDirtyRect.Width() / app, aDirtyRect.Height() / app);
@@ -6203,7 +6239,7 @@ nsTextFrame::DrawTextRunAndDecorations(
         GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
       const gfxFont::Metrics metrics =
         GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                            vertical);
+                            useVerticalMetrics);
 
       decSize.height = metrics.underlineSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
@@ -6211,7 +6247,7 @@ nsTextFrame::DrawTextRunAndDecorations(
       PaintDecorationLine(this, aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
         metrics.underlineOffset, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-        dec.mStyle, eNormalDecoration, aCallbacks, vertical);
+        dec.mStyle, eNormalDecoration, aCallbacks, verticalRun);
     }
     // Overlines
     for (uint32_t i = aDecorations.mOverlines.Length(); i-- > 0; ) {
@@ -6224,7 +6260,7 @@ nsTextFrame::DrawTextRunAndDecorations(
         GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
       const gfxFont::Metrics metrics =
         GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                            vertical);
+                            useVerticalMetrics);
 
       decSize.height = metrics.underlineSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
@@ -6232,7 +6268,7 @@ nsTextFrame::DrawTextRunAndDecorations(
       PaintDecorationLine(this, aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
         metrics.maxAscent, NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle,
-        eNormalDecoration, aCallbacks, vertical);
+        eNormalDecoration, aCallbacks, verticalRun);
     }
 
     // CSS 2.1 mandates that text be painted after over/underlines, and *then*
@@ -6251,7 +6287,7 @@ nsTextFrame::DrawTextRunAndDecorations(
         GetInflationForTextDecorations(dec.mFrame, inflationMinFontSize);
       const gfxFont::Metrics metrics =
         GetFirstFontMetrics(GetFontGroupForFrame(dec.mFrame, inflation),
-                            vertical);
+                            useVerticalMetrics);
 
       decSize.height = metrics.strikeoutSize;
       bCoord = (frameBStart - dec.mBaselineOffset) / app;
@@ -6259,7 +6295,7 @@ nsTextFrame::DrawTextRunAndDecorations(
       PaintDecorationLine(this, aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
         metrics.strikeoutOffset, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
-        dec.mStyle, eNormalDecoration, aCallbacks, vertical);
+        dec.mStyle, eNormalDecoration, aCallbacks, verticalRun);
     }
 }
 
@@ -6458,9 +6494,12 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
                                         GetFontSizeInflation());
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFirstValidFont();
-  bool vertical = GetWritingMode().IsVertical();
+  WritingMode wm = GetWritingMode();
+  bool verticalRun = wm.IsVertical();
+  bool useVerticalMetrics = verticalRun && !wm.IsSideways();
   const gfxFont::Metrics& metrics =
-    firstFont->GetMetrics(vertical ? gfxFont::eVertical : gfxFont::eHorizontal);
+    firstFont->GetMetrics(useVerticalMetrics ? gfxFont::eVertical
+                                             : gfxFont::eHorizontal);
   gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
   gfxFloat ascent = aPresContext->AppUnitsToGfxUnits(mAscent);
   gfxFloat descentLimit =
@@ -6505,7 +6544,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     decorationArea =
       nsCSSRendering::GetTextDecorationRect(aPresContext, size,
         ascent, underlineOffset, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-        style, vertical, descentLimit);
+        style, verticalRun, descentLimit);
     aRect.UnionRect(aRect, decorationArea);
   }
   DestroySelectionDetails(details);
@@ -7617,7 +7656,11 @@ nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
                               aContext, &provider);
   // mAscent should be the same as metrics.mAscent, but it's what we use to
   // paint so that's the one we'll use.
-  nsRect boundingBox = RoundOut(metrics.mBoundingBox) + nsPoint(0, mAscent);
+  nsRect boundingBox = RoundOut(metrics.mBoundingBox);
+  if (GetWritingMode().IsLineInverted()) {
+    boundingBox.y = -boundingBox.YMost();
+  }
+  boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     Swap(boundingBox.x, boundingBox.y);
@@ -8302,9 +8345,15 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     finalSize.BSize(wm) = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
     // Use actual text metrics for floating first letter frame.
-    aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mAscent));
-    finalSize.BSize(wm) = aMetrics.BlockStartAscent() +
-      NSToCoordCeil(textMetrics.mDescent);
+    if (wm.IsLineInverted()) {
+      aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mDescent));
+      finalSize.BSize(wm) = aMetrics.BlockStartAscent() +
+        NSToCoordCeil(textMetrics.mAscent);
+    } else {
+      aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mAscent));
+      finalSize.BSize(wm) = aMetrics.BlockStartAscent() +
+        NSToCoordCeil(textMetrics.mDescent);
+    }
   } else {
     // Otherwise, ascent should contain the overline drawable area.
     // And also descent should contain the underline drawable area.
@@ -8312,9 +8361,15 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     nsFontMetrics* fm = provider.GetFontMetrics();
     nscoord fontAscent = fm->MaxAscent();
     nscoord fontDescent = fm->MaxDescent();
-    aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
-    nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
-    finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
+    if (wm.IsLineInverted()) {
+      aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent));
+      nscoord descent = std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent);
+      finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
+    } else {
+      aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
+      nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
+      finalSize.BSize(wm) = aMetrics.BlockStartAscent() + descent;
+    }
   }
   aMetrics.SetSize(wm, finalSize);
 
@@ -8327,13 +8382,17 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   mAscent = aMetrics.BlockStartAscent();
 
   // Handle text that runs outside its normal bounds.
-  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
-  aMetrics.SetOverflowAreasToDesiredBounds();
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
+  if (wm.IsLineInverted()) {
+    boundingBox.y = -boundingBox.YMost();
+  }
+  boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     Swap(boundingBox.x, boundingBox.y);
     Swap(boundingBox.width, boundingBox.height);
   }
+  aMetrics.SetOverflowAreasToDesiredBounds();
   aMetrics.VisualOverflow().UnionRect(aMetrics.VisualOverflow(), boundingBox);
 
   // When we have text decorations, we don't need to compute their overflow now
@@ -8549,18 +8608,23 @@ nsTextFrame::RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState)
                           ComputeTransformedLength(provider),
                           gfxFont::LOOSE_INK_EXTENTS, nullptr,
                           &provider);
-  nsRect &vis = result.VisualOverflow();
-  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
+  nsRect boundingBox = RoundOut(textMetrics.mBoundingBox);
+  if (GetWritingMode().IsLineInverted()) {
+    boundingBox.y = -boundingBox.YMost();
+  }
+  boundingBox += nsPoint(0, mAscent);
   if (mTextRun->IsVertical()) {
     // Swap line-relative textMetrics dimensions to physical coordinates.
     Swap(boundingBox.x, boundingBox.y);
     Swap(boundingBox.width, boundingBox.height);
   }
+  nsRect &vis = result.VisualOverflow();
   vis.UnionRect(vis, boundingBox);
   UnionAdditionalOverflow(PresContext(), aBlockReflowState.frame, provider,
                           &vis, true);
   return result;
 }
+
 static char16_t TransformChar(const nsStyleText* aStyle, gfxTextRun* aTextRun,
                                uint32_t aSkippedOffset, char16_t aChar)
 {
