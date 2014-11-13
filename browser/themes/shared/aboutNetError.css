@@ -39,6 +39,10 @@ ul {
   -moz-padding-start: 2em;
 }
 
+#errorTitleText[sslv3] {
+  background-image: url("aboutNetError_alert.svg");
+}
+
 #errorTitleText:-moz-dir(rtl) {
   background-position: right 0;
 }
