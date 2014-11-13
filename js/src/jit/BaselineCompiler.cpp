@@ -1743,10 +1743,28 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
             return false;
     }
 
+    // Try to do the allocation inline.
+    Label done;
+    if (type && !type->shouldPreTenure() && !templateObject->hasDynamicSlots()) {
+        Label slowPath;
+        Register objReg = R0.scratchReg();
+        Register tempReg = R1.scratchReg();
+        masm.movePtr(ImmGCPtr(type), tempReg);
+        masm.branchTest32(Assembler::NonZero, Address(tempReg, types::TypeObject::offsetOfFlags()),
+                          Imm32(types::OBJECT_FLAG_PRE_TENURE), &slowPath);
+        masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(cx->compartment()->addressOfMetadataCallback()),
+                      ImmWord(0), &slowPath);
+        masm.createGCObject(objReg, tempReg, templateObject, gc::DefaultHeap, &slowPath);
+        masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
+        masm.jump(&done);
+        masm.bind(&slowPath);
+    }
+
     ICNewObject_Fallback::Compiler stubCompiler(cx, templateObject);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
+    masm.bind(&done);
     frame.push(R0);
     return true;
 }
