@@ -395,6 +395,16 @@ fennec_ids.txt: generated/org/mozilla/gecko/R.java fennec-ids-generator.py
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk
 
+update-generated-wrappers:
+	@mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp.old
+	@mv $(topsrcdir)/widget/android/GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h.old
+	@echo old GeneratedJNIWrappers.cpp/h moved to GeneratedJNIWrappers.cpp/h.old
+	@cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android
+	@cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android
+	@echo Updated GeneratedJNIWrappers
+
+.PHONY: update-generated-wrappers
+
 # This target is only used by the Eclipse integration. It rebuilds
 # resources that end up in omni.ja, does most of the packaging step,
 # and then updates omni.ja in place. If you're not using Eclipse, you
@@ -419,7 +429,7 @@ libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cp
 	  echo '***   Error: The generated JNI code has changed   ***' && \
 	  echo '* To update generated code in the tree, please run  *' && \
 	  echo && \
-	  echo '  cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android && cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android' && \
+	  echo '  make -C $(CURDIR) update-generated-wrappers' && \
 	  echo && \
 	  echo '* Repeat the build, and check in any changes.       *' && \
 	  echo '*****************************************************' && \
