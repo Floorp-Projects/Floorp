@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[builtinclass, uuid(24b34c61-7326-42d4-87ec-5d3b5c0b1b26)]
+[builtinclass, uuid(48eb8d72-95bb-402e-a8fc-f2b187abcbdb)]
 interface nsIDOMDocumentFragment : nsIDOMNode
 {
   /**
