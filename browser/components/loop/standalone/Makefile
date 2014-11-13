@@ -18,6 +18,7 @@ LOOP_FEEDBACK_PRODUCT_NAME := $(shell echo $${LOOP_FEEDBACK_PRODUCT_NAME-Loop})
 LOOP_BRAND_WEBSITE_URL := $(shell echo $${LOOP_BRAND_WEBSITE_URL-"https://www.mozilla.org/firefox/"})
 LOOP_PRIVACY_WEBSITE_URL := $(shell echo $${LOOP_PRIVACY_WEBSITE_URL-"https://www.mozilla.org/privacy"})
 LOOP_LEGAL_WEBSITE_URL := $(shell echo $${LOOP_LEGAL_WEBSITE_URL-"/legal/terms"})
+LOOP_PRODUCT_HOMEPAGE_URL := $(shell echo $${LOOP_PRODUCT_HOMEPAGE_URL-"https://www.firefox.com/hello/"})
 
 NODE_LOCAL_BIN=./node_modules/.bin
 
@@ -79,6 +80,7 @@ config:
 	@echo "loop.config.brandWebsiteUrl = '`echo $(LOOP_BRAND_WEBSITE_URL)`';" >> content/config.js
 	@echo "loop.config.privacyWebsiteUrl = '`echo $(LOOP_PRIVACY_WEBSITE_URL)`';" >> content/config.js
 	@echo "loop.config.legalWebsiteUrl = '`echo $(LOOP_LEGAL_WEBSITE_URL)`';" >> content/config.js
+	@echo "loop.config.learnMoreUrl = '`echo $(LOOP_PRODUCT_HOMEPAGE_URL)`';" >> content/config.js
 	@echo "loop.config.fxosApp = loop.config.fxosApp || {};" >> content/config.js
 	@echo "loop.config.fxosApp.name = 'Loop';" >> content/config.js
 	@echo "loop.config.fxosApp.manifestUrl = 'http://fake-market.herokuapp.com/apps/packagedApp/manifest.webapp';" >> content/config.js
