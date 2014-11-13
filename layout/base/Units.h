@@ -27,25 +27,12 @@ struct LayoutDevicePixel;
 struct LayerPixel;
 struct RenderTargetPixel;
 struct ScreenPixel;
-// The layer coordinates of the parent frame.
-// This can be arrived at in three ways:
-//   - Start with the CSS coordinates of the parent frame, multiply by the
-//     device scale and the cumulative resolution of the parent frame.
-//   - Start with the CSS coordinates of current frame, multiply by the device
-//     scale, the cumulative resolution of the current frame, and the scales
-//     from the CSS and async transforms of the current frame.
-//   - Start with global screen coordinates and unapply all CSS and async
-//     transforms from the root down to and including the parent.
-// It's helpful to look at https://wiki.mozilla.org/Platform/GFX/APZ#Coordinate_systems
-// to get a picture of how the various coordinate systems relate to each other.
-struct ParentLayerPixel {};
 
 template<> struct IsPixel<CSSPixel>          : TrueType {};
 template<> struct IsPixel<LayoutDevicePixel> : TrueType {};
 template<> struct IsPixel<LayerPixel>        : TrueType {};
 template<> struct IsPixel<RenderTargetPixel> : TrueType {};
 template<> struct IsPixel<ScreenPixel>       : TrueType {};
-template<> struct IsPixel<ParentLayerPixel>  : TrueType {};
 
 typedef gfx::CoordTyped<CSSPixel> CSSCoord;
 typedef gfx::IntCoordTyped<CSSPixel> CSSIntCoord;
@@ -80,6 +67,8 @@ typedef gfx::IntRectTyped<LayerPixel> LayerIntRect;
 typedef gfx::MarginTyped<LayerPixel> LayerMargin;
 typedef gfx::IntMarginTyped<LayerPixel> LayerIntMargin;
 
+typedef gfx::CoordTyped<ScreenPixel> ScreenCoord;
+typedef gfx::IntCoordTyped<ScreenPixel> ScreenIntCoord;
 typedef gfx::PointTyped<RenderTargetPixel> RenderTargetPoint;
 typedef gfx::IntPointTyped<RenderTargetPixel> RenderTargetIntPoint;
 typedef gfx::SizeTyped<RenderTargetPixel> RenderTargetSize;
@@ -89,8 +78,6 @@ typedef gfx::IntRectTyped<RenderTargetPixel> RenderTargetIntRect;
 typedef gfx::MarginTyped<RenderTargetPixel> RenderTargetMargin;
 typedef gfx::IntMarginTyped<RenderTargetPixel> RenderTargetIntMargin;
 
-typedef gfx::CoordTyped<ScreenPixel> ScreenCoord;
-typedef gfx::IntCoordTyped<ScreenPixel> ScreenIntCoord;
 typedef gfx::PointTyped<ScreenPixel> ScreenPoint;
 typedef gfx::IntPointTyped<ScreenPixel> ScreenIntPoint;
 typedef gfx::SizeTyped<ScreenPixel> ScreenSize;
@@ -100,38 +87,20 @@ typedef gfx::IntRectTyped<ScreenPixel> ScreenIntRect;
 typedef gfx::MarginTyped<ScreenPixel> ScreenMargin;
 typedef gfx::IntMarginTyped<ScreenPixel> ScreenIntMargin;
 
-typedef gfx::CoordTyped<ParentLayerPixel> ParentLayerCoord;
-typedef gfx::IntCoordTyped<ParentLayerPixel> ParentLayerIntCoord;
-typedef gfx::PointTyped<ParentLayerPixel> ParentLayerPoint;
-typedef gfx::IntPointTyped<ParentLayerPixel> ParentLayerIntPoint;
-typedef gfx::SizeTyped<ParentLayerPixel> ParentLayerSize;
-typedef gfx::IntSizeTyped<ParentLayerPixel> ParentLayerIntSize;
-typedef gfx::RectTyped<ParentLayerPixel> ParentLayerRect;
-typedef gfx::IntRectTyped<ParentLayerPixel> ParentLayerIntRect;
-typedef gfx::MarginTyped<ParentLayerPixel> ParentLayerMargin;
-typedef gfx::IntMarginTyped<ParentLayerPixel> ParentLayerIntMargin;
-
 typedef gfx::ScaleFactor<CSSPixel, LayoutDevicePixel> CSSToLayoutDeviceScale;
 typedef gfx::ScaleFactor<CSSPixel, LayerPixel> CSSToLayerScale;
 typedef gfx::ScaleFactor<CSSPixel, ScreenPixel> CSSToScreenScale;
-typedef gfx::ScaleFactor<CSSPixel, ParentLayerPixel> CSSToParentLayerScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, CSSPixel> LayoutDeviceToCSSScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, LayerPixel> LayoutDeviceToLayerScale;
 typedef gfx::ScaleFactor<LayoutDevicePixel, ScreenPixel> LayoutDeviceToScreenScale;
-typedef gfx::ScaleFactor<LayoutDevicePixel, ParentLayerPixel> LayoutDeviceToParentLayerScale;
 typedef gfx::ScaleFactor<LayerPixel, CSSPixel> LayerToCSSScale;
 typedef gfx::ScaleFactor<LayerPixel, LayoutDevicePixel> LayerToLayoutDeviceScale;
 typedef gfx::ScaleFactor<LayerPixel, RenderTargetPixel> LayerToRenderTargetScale;
 typedef gfx::ScaleFactor<LayerPixel, ScreenPixel> LayerToScreenScale;
-typedef gfx::ScaleFactor<LayerPixel, ParentLayerPixel> LayerToParentLayerScale;
 typedef gfx::ScaleFactor<RenderTargetPixel, ScreenPixel> RenderTargetToScreenScale;
 typedef gfx::ScaleFactor<ScreenPixel, CSSPixel> ScreenToCSSScale;
 typedef gfx::ScaleFactor<ScreenPixel, LayoutDevicePixel> ScreenToLayoutDeviceScale;
 typedef gfx::ScaleFactor<ScreenPixel, LayerPixel> ScreenToLayerScale;
-typedef gfx::ScaleFactor<ScreenPixel, ParentLayerPixel> ScreenToParentLayerScale;
-typedef gfx::ScaleFactor<ParentLayerPixel, LayerPixel> ParentLayerToLayerScale;
-typedef gfx::ScaleFactor<ParentLayerPixel, ScreenPixel> ParentLayerToScreenScale;
-typedef gfx::ScaleFactor<ParentLayerPixel, ParentLayerPixel> ParentLayerToParentLayerScale;
 
 /*
  * The pixels that content authors use to specify sizes in.

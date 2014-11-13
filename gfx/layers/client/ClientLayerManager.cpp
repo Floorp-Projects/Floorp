@@ -747,8 +747,8 @@ ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
       aMetrics.mCriticalDisplayPort : aMetrics.mDisplayPort;
   LayerRect displayPort = (metricsDisplayPort + aMetrics.GetScrollOffset()) * paintScale;
 
-  ParentLayerPoint scrollOffset;
-  CSSToParentLayerScale zoom;
+  ScreenPoint scrollOffset;
+  CSSToScreenScale zoom;
   bool ret = AndroidBridge::Bridge()->ProgressiveUpdateCallback(
     aHasPendingNewThebesContent, displayPort, paintScale.scale, aDrawingCritical,
     scrollOffset, zoom);

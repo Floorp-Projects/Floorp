@@ -158,10 +158,10 @@ AppendToString(std::stringstream& aStream, const FrameMetrics& m,
     aStream << nsPrintfCString(" um=%d", m.GetUseDisplayPortMargins()).get();
     AppendToString(aStream, m.GetRootCompositionSize(), " rcs=");
     AppendToString(aStream, m.GetViewport(), " v=");
-    aStream << nsPrintfCString(" z=(ld=%.3f r=%.3f cr=%.3f z=%.3f er=%.3f)",
-            m.mDevPixelsPerCSSPixel.scale, m.mPresShellResolution,
+    aStream << nsPrintfCString(" z=(ld=%.3f r=%.3f cr=%.3f z=%.3f ts=%.3f)",
+            m.mDevPixelsPerCSSPixel.scale, m.mPresShellResolution.scale,
             m.mCumulativeResolution.scale, m.GetZoom().scale,
-            m.GetExtraResolution().scale).get();
+            m.mTransformScale.scale).get();
     aStream << nsPrintfCString(" u=(%d %d %lu)",
             m.GetScrollOffsetUpdated(), m.GetDoSmoothScroll(),
             m.GetScrollGeneration()).get();

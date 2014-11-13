@@ -1493,7 +1493,7 @@ AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
 
 void
 AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
-                                bool aLayersUpdated, ParentLayerPoint& aScrollOffset, CSSToParentLayerScale& aScale,
+                                bool aLayersUpdated, ScreenPoint& aScrollOffset, CSSToScreenScale& aScale,
                                 LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
     mozilla::widget::android::GeckoLayerClient *client = mLayerClient;
@@ -1512,7 +1512,7 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLay
     }
 
     ViewTransform* viewTransform = ViewTransform::Wrap(viewTransformJObj);
-    aScrollOffset = ParentLayerPoint(viewTransform->getx(), viewTransform->gety());
+    aScrollOffset = ScreenPoint(viewTransform->getx(), viewTransform->gety());
     aScale.scale = viewTransform->getscale();
     aFixedLayerMargins.top = viewTransform->getfixedLayerMarginTop();
     aFixedLayerMargins.right = viewTransform->getfixedLayerMarginRight();
@@ -1523,7 +1523,7 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLay
     delete viewTransform;
 }
 
-void AndroidBridge::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
+void AndroidBridge::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                      bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                                      bool aIsFirstPaint, LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
@@ -1956,7 +1956,7 @@ AndroidBridge::IsContentDocumentDisplayed()
 
 bool
 AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution,
-                                         bool aDrawingCritical, ParentLayerPoint& aScrollOffset, CSSToParentLayerScale& aZoom)
+                                         bool aDrawingCritical, ScreenPoint& aScrollOffset, CSSToScreenScale& aZoom)
 {
     mozilla::widget::android::GeckoLayerClient *client = mLayerClient;
     if (!client) {
