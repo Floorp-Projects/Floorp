@@ -311,80 +311,92 @@ parsererror|sourcetext {
 
 div:-moz-native-anonymous.moz-touchcaret,
 div:-moz-native-anonymous.moz-selectioncaret-left,
-div:-moz-native-anonymous.moz-selectioncaret-right {
-  background-image: url("resource://gre/res/text_caret.png");
+div:-moz-native-anonymous.moz-selectioncaret-right,
+div:-moz-native-anonymous.moz-selectioncaret-left > div,
+div:-moz-native-anonymous.moz-selectioncaret-right > div {
   position: absolute;
   width: 29px;
   height: 31px;
-  margin-left: -15px;
   background-position: center center;
   background-size: 100% 100%;
   z-index: 2147483647;
 }
 
-div:-moz-native-anonymous.moz-selectioncaret-left.tilt {
-  background-image: url("resource://gre/res/text_caret_tilt_left.png");
-  margin-left: -29px;
-  width: 29px;
+div:-moz-native-anonymous.moz-touchcaret,
+div:-moz-native-anonymous.moz-selectioncaret-left > div,
+div:-moz-native-anonymous.moz-selectioncaret-right > div {
+  background-image: url("resource://gre/res/text_caret.png");
 }
 
-div:-moz-native-anonymous.moz-selectioncaret-right.tilt {
+div:-moz-native-anonymous.moz-touchcaret,
+div:-moz-native-anonymous.moz-selectioncaret-left,
+div:-moz-native-anonymous.moz-selectioncaret-right {
+  margin-left: -15px;
+}
+
+div:-moz-native-anonymous.moz-selectioncaret-left.tilt > div {
+  background-image: url("resource://gre/res/text_caret_tilt_left.png");
+  margin-left: -14px;
+}
+
+div:-moz-native-anonymous.moz-selectioncaret-right.tilt > div {
   background-image: url("resource://gre/res/text_caret_tilt_right.png");
-  margin-left: 0px;
-  width: 29px;
+  margin-left: 14px;
 }
 
 @media (min-resolution: 1.5dppx) {
   div:-moz-native-anonymous.moz-touchcaret,
-  div:-moz-native-anonymous.moz-selectioncaret-left,
-  div:-moz-native-anonymous.moz-selectioncaret-right {
+  div:-moz-native-anonymous.moz-selectioncaret-left > div,
+  div:-moz-native-anonymous.moz-selectioncaret-right > div {
     background-image: url("resource://gre/res/text_caret@1.5x.png");
   }
 
-  div:-moz-native-anonymous.moz-selectioncaret-left.tilt {
+  div:-moz-native-anonymous.moz-selectioncaret-left.tilt > div {
     background-image: url("resource://gre/res/text_caret_tilt_left@1.5x.png");
   }
 
-  div:-moz-native-anonymous.moz-selectioncaret-right.tilt {
+  div:-moz-native-anonymous.moz-selectioncaret-right.tilt > div {
     background-image: url("resource://gre/res/text_caret_tilt_right@1.5x.png");
   }
 }
 
 @media (min-resolution: 2dppx) {
   div:-moz-native-anonymous.moz-touchcaret,
-  div:-moz-native-anonymous.moz-selectioncaret-left,
-  div:-moz-native-anonymous.moz-selectioncaret-right {
+  div:-moz-native-anonymous.moz-selectioncaret-left > div,
+  div:-moz-native-anonymous.moz-selectioncaret-right > div {
     background-image: url("resource://gre/res/text_caret@2x.png");
   }
 
-  div:-moz-native-anonymous.moz-selectioncaret-left.tilt {
+  div:-moz-native-anonymous.moz-selectioncaret-left.tilt > div {
     background-image: url("resource://gre/res/text_caret_tilt_left@2x.png");
   }
 
-  div:-moz-native-anonymous.moz-selectioncaret-right.tilt {
+  div:-moz-native-anonymous.moz-selectioncaret-right.tilt > div {
     background-image: url("resource://gre/res/text_caret_tilt_right@2x.png");
   }
 }
 
 @media (min-resolution: 2.25dppx) {
   div:-moz-native-anonymous.moz-touchcaret,
-  div:-moz-native-anonymous.moz-selectioncaret-left,
-  div:-moz-native-anonymous.moz-selectioncaret-right {
+  div:-moz-native-anonymous.moz-selectioncaret-left > div,
+  div:-moz-native-anonymous.moz-selectioncaret-right > div {
     background-image: url("resource://gre/res/text_caret@2.25x.png");
   }
 
-  div:-moz-native-anonymous.moz-selectioncaret-left.tilt {
+  div:-moz-native-anonymous.moz-selectioncaret-left.tilt > div {
     background-image: url("resource://gre/res/text_caret_tilt_left@2.25x.png");
   }
 
-  div:-moz-native-anonymous.moz-selectioncaret-right.tilt {
+  div:-moz-native-anonymous.moz-selectioncaret-right.tilt > div {
     background-image: url("resource://gre/res/text_caret_tilt_right@2.25x.png");
   }
 }
 
 div:-moz-native-anonymous.moz-touchcaret.hidden,
 div:-moz-native-anonymous.moz-selectioncaret-left.hidden,
-div:-moz-native-anonymous.moz-selectioncaret-right.hidden {
+div:-moz-native-anonymous.moz-selectioncaret-right.hidden,
+div:-moz-native-anonymous.moz-selectioncaret-left.hidden > div,
+div:-moz-native-anonymous.moz-selectioncaret-right.hidden > div {
   width: 0px;
   height: 0px;
   margin: 0px;
