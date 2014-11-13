@@ -73,6 +73,16 @@
         return decodeURIComponent(url.slice(desc + 2));
       }
 
+      function getLocale()
+      {
+        var url = document.documentURI;
+        var matches = url.match(/l\=([^&]+)\&/);
+        if (!matches) {
+          return "";
+        }
+        return matches[1];
+      }
+
       function retryThis(buttonEl)
       {
         // Note: The application may wish to handle switching off "offline mode"
@@ -123,6 +133,27 @@
           ld.parentNode.replaceChild(errDesc, ld);
           // change id to the replaced child's id so styling works
           errDesc.id = "errorLongDesc";
+        }
+
+        if (err == "nssFailure2" && getLocale() == "en-US" &&
+            sd.textContent.contains("ssl_error_no_cypher_overlap")) {
+          errTitle.textContent = "Unable to Connect Securely";
+          errTitle.setAttribute("sslv3", "true");
+          sd.textContent = "Firefox cannot guarantee the safety of your data on " +
+            location.hostname + " because it uses SSLv3, a broken security protocol.";
+          errDesc.textContent = "Advanced info: ssl_error_no_cypher_overlap";
+          var learnMoreBtn = document.createElement("button");
+          learnMoreBtn.id = "errorTryAgain";
+          learnMoreBtn.textContent = "Learn More\u2026";
+          learnMoreBtn.setAttribute("autocomplete", "off");
+          learnMoreBtn.addEventListener("click", function(e) {
+            try {
+            location.href = "https://support.mozilla.org/kb/how-resolve-sslv3-error-messages-firefox";
+            } catch (ex) {/* Avoid breaking in case this throws weird errors */}
+            e.target.disabled = true;
+          });
+          var retryBtn = document.getElementById("errorTryAgain");
+          retryBtn.parentNode.replaceChild(learnMoreBtn, retryBtn);
         }
 
         // remove undisplayed errors to avoid bug 39098

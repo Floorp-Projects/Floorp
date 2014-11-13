@@ -65,7 +65,7 @@
       frame1.docShell.chromeEventHandler.removeAttribute("crashedPageTitle");
 
       SimpleTest.is(frame1.contentDocument.documentURI,
-                    "about:tabcrashed?e=tabcrashed&u=http%3A//www.example.com/1&c=UTF-8&f=regular&d=pageTitle",
+                    "about:tabcrashed?e=tabcrashed&u=http%3A//www.example.com/1&c=UTF-8&f=regular&l=en-US&d=pageTitle",
                     "Correct about:tabcrashed displayed for page with title.");
 
       errorPageReady = waitForErrorPage(frame2);
@@ -74,7 +74,7 @@
       yield errorPageReady;
 
       SimpleTest.is(frame2.contentDocument.documentURI,
-                    "about:tabcrashed?e=tabcrashed&u=http%3A//www.example.com/2&c=UTF-8&f=regular&d=%20",
+                    "about:tabcrashed?e=tabcrashed&u=http%3A//www.example.com/2&c=UTF-8&f=regular&l=en-US&d=%20",
                     "Correct about:tabcrashed displayed for page with no title.");
 
       SimpleTest.finish();

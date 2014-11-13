@@ -192,6 +192,7 @@
 #include "nsIURILoader.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWidget.h"
+#include "nsIChromeRegistry.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
@@ -5165,6 +5166,17 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const char16_t *aURL,
                   url_Path);
       errorPageUrl.AppendLiteral("&m=");
       errorPageUrl.AppendASCII(manifestParam.get());
+    }
+
+    // In some cases we need to hardcode new strings in the en-US case.
+    // Pass the locale because about:neterror doesn't know it:
+    nsCOMPtr<nsIXULChromeRegistry> xulreg =
+      mozilla::services::GetXULChromeRegistryService();
+    if (xulreg) {
+      nsAutoCString locale;
+      xulreg->GetSelectedLocale(NS_LITERAL_CSTRING("global"), locale);
+      errorPageUrl.AppendLiteral("&l=");
+      errorPageUrl.AppendASCII(locale.get());
     }
 
     // netError.xhtml's getDescription only handles the "d" parameter at the
