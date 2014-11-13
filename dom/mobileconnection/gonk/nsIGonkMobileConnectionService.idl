@@ -9,7 +9,7 @@
         "@mozilla.org/mobileconnection/gonkmobileconnectionservice;1"
 %}
 
-[scriptable, uuid(ef49b866-85a0-11e4-b023-f73e02752840)]
+[scriptable, uuid(3a7b8d47-d1c6-44c3-a312-df73fda1161e)]
 interface nsIGonkMobileConnectionService : nsIMobileConnectionService
 {
   void notifyNetworkInfoChanged(in unsigned long clientId, in jsval networkInfo);
@@ -32,8 +32,6 @@ interface nsIGonkMobileConnectionService : nsIMobileConnectionService
   void notifyEmergencyCallbackModeChanged(in unsigned long clientId,
                                           in boolean active,
                                           in unsigned long timeoutMs);
-
-  void notifyIccChanged(in unsigned long clientId, in DOMString iccId);
 
   void notifyNetworkSelectModeChanged(in unsigned long clientId,
                                       in long mode);
