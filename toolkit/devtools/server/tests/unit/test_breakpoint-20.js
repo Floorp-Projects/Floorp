@@ -16,10 +16,10 @@ Components.utils.import('resource:///modules/devtools/SourceMap.jsm');
 function run_test()
 {
   initTestTracerServer();
-  gDebuggee = addTestGlobal("test-tracer-actor");
+  gDebuggee = addTestGlobal("test-breakpoints");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect(function() {
-    attachTestThread(gClient, "test-tracer-actor", testBreakpoint);
+    attachTestThread(gClient, "test-breakpoints", testBreakpoint);
   });
   do_test_pending();
 }
