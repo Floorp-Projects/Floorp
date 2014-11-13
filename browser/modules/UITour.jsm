@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
 
 
+// See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
+const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
 const PREF_SEENPAGEIDS    = "browser.uitour.seenPageIDs";
 const MAX_BUTTONS         = 4;
 
@@ -42,6 +44,16 @@ const SEENPAGEID_EXPIRY  = 8 * 7 * 24 * 60 * 60 * 1000; // 8 weeks.
 // Prefix for any target matching a search engine.
 const TARGET_SEARCHENGINE_PREFIX = "searchEngine-";
 
+// Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let ConsoleAPI = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).ConsoleAPI;
+  let consoleOptions = {
+    // toLowerCase is because the loglevel values use title case to be compatible with Log.jsm.
+    maxLogLevel: Services.prefs.getCharPref(PREF_LOG_LEVEL).toLowerCase(),
+    prefix: "UITour",
+  };
+  return new ConsoleAPI(consoleOptions);
+});
 
 this.UITour = {
   url: null,
@@ -141,6 +153,7 @@ this.UITour = {
   ]),
 
   init: function() {
+    log.debug("Initializing UITour");
     // Lazy getter is initialized here so it can be replicated any time
     // in a test.
     delete this.seenPageIDs;
@@ -224,22 +237,29 @@ this.UITour = {
 
   onPageEvent: function(aMessage, aEvent) {
     let contentDocument = null;
-
     let browser = aMessage.target;
     let window = browser.ownerDocument.defaultView;
     let tab = window.gBrowser.getTabForBrowser(browser);
     let messageManager = browser.messageManager;
 
-    if (typeof aEvent.detail != "object")
+    log.debug("onPageEvent:", aEvent.detail);
+
+    if (typeof aEvent.detail != "object") {
+      log.warn("Malformed event - detail not an object");
       return false;
+    }
 
     let action = aEvent.detail.action;
-    if (typeof action != "string" || !action)
+    if (typeof action != "string" || !action) {
+      log.warn("Action not defined");
       return false;
+    }
 
     let data = aEvent.detail.data;
-    if (typeof data != "object")
+    if (typeof data != "object") {
+      log.warn("Malformed event - data not an object");
       return false;
+    }
 
     // Do this before bailing if there's no tab, so later we can pick up the pieces:
     window.gBrowser.tabContainer.addEventListener("TabSelect", this);
@@ -249,11 +269,12 @@ this.UITour = {
       if (!tab) {
         // This should only happen while detaching a tab:
         if (this._detachingTab) {
+          log.debug("Got event while detatching a tab");
           this._queuedEvents.push(aEvent);
           this._pendingDoc = Cu.getWeakReference(contentDocument);
           return;
         }
-        Cu.reportError("Discarding tabless UITour event (" + action + ") while not detaching a tab." +
+        log.error("Discarding tabless UITour event (" + action + ") while not detaching a tab." +
                        "This shouldn't happen!");
         return;
       }
@@ -262,22 +283,28 @@ this.UITour = {
     switch (action) {
       case "registerPageID": {
         // This is only relevant if Telemtry is enabled.
-        if (!UITelemetry.enabled)
+        if (!UITelemetry.enabled) {
+          log.debug("registerPageID: Telemery disabled, not doing anything");
           break;
+        }
 
         // We don't want to allow BrowserUITelemetry.BUCKET_SEPARATOR in the
         // pageID, as it could make parsing the telemetry bucket name difficult.
-        if (typeof data.pageID == "string" &&
-            !data.pageID.contains(BrowserUITelemetry.BUCKET_SEPARATOR)) {
-          this.addSeenPageID(data.pageID);
-
-          // Store tabs and windows separately so we don't need to loop over all
-          // tabs when a window is closed.
-          this.pageIDSourceTabs.set(tab, data.pageID);
-          this.pageIDSourceWindows.set(window, data.pageID);
-
-          this.setTelemetryBucket(data.pageID);
+        if (typeof data.pageID != "string" ||
+            data.pageID.contains(BrowserUITelemetry.BUCKET_SEPARATOR)) {
+          log.warn("registerPageID: Invalid page ID specified");
+          break;
         }
+
+        this.addSeenPageID(data.pageID);
+
+        // Store tabs and windows separately so we don't need to loop over all
+        // tabs when a window is closed.
+        this.pageIDSourceTabs.set(tab, data.pageID);
+        this.pageIDSourceWindows.set(window, data.pageID);
+
+        this.setTelemetryBucket(data.pageID);
+
         break;
       }
 
@@ -285,7 +312,7 @@ this.UITour = {
         let targetPromise = this.getTarget(window, data.target);
         targetPromise.then(target => {
           if (!target.node) {
-            Cu.reportError("UITour: Target could not be resolved: " + data.target);
+            log.error("UITour: Target could not be resolved: " + data.target);
             return;
           }
           let effect = undefined;
@@ -293,7 +320,7 @@ this.UITour = {
             effect = data.effect;
           }
           this.showHighlight(target, effect);
-        }).then(null, Cu.reportError);
+        }).catch(log.error);
         break;
       }
 
@@ -306,7 +333,7 @@ this.UITour = {
         let targetPromise = this.getTarget(window, data.target, true);
         targetPromise.then(target => {
           if (!target.node) {
-            Cu.reportError("UITour: Target could not be resolved: " + data.target);
+            log.error("UITour: Target could not be resolved: " + data.target);
             return;
           }
 
@@ -333,8 +360,10 @@ this.UITour = {
 
                 buttons.push(button);
 
-                if (buttons.length == MAX_BUTTONS)
+                if (buttons.length == MAX_BUTTONS) {
+                  log.warn("showInfo: Reached limit of allowed number of buttons");
                   break;
+                }
               }
             }
           }
@@ -347,7 +376,7 @@ this.UITour = {
             infoOptions.targetCallbackID = data.targetCallbackID;
 
           this.showInfo(messageManager, target, data.title, data.text, iconURL, buttons, infoOptions);
-        }).then(null, Cu.reportError);
+        }).catch(log.error);
         break;
       }
 
@@ -392,6 +421,7 @@ this.UITour = {
       case "startUrlbarCapture": {
         if (typeof data.text != "string" || !data.text ||
             typeof data.url != "string" || !data.url) {
+          log.warn("startUrlbarCapture: Text or URL not specified");
           return false;
         }
 
@@ -399,6 +429,7 @@ this.UITour = {
         try {
           uri = Services.io.newURI(data.url, null, null);
         } catch (e) {
+          log.warn("startUrlbarCapture: Malformed URL specified");
           return false;
         }
 
@@ -408,6 +439,7 @@ this.UITour = {
         try {
           secman.checkLoadURIWithPrincipal(principal, uri, flags);
         } catch (e) {
+          log.warn("startUrlbarCapture: Orginating page doesn't have permission to open specified URL");
           return false;
         }
 
@@ -422,6 +454,7 @@ this.UITour = {
 
       case "getConfiguration": {
         if (typeof data.configuration != "string") {
+          log.warn("getConfiguration: No configuration option specified");
           return false;
         }
 
@@ -448,7 +481,7 @@ this.UITour = {
         let targetPromise = this.getTarget(window, data.name);
         targetPromise.then(target => {
           this.addNavBarWidget(target, messageManager, data.callbackID);
-        }).then(null, Cu.reportError);
+        }).catch(log.error);
         break;
       }
     }
@@ -529,7 +562,7 @@ this.UITour = {
               try {
                 this.onPageEvent(this._queuedEvents.shift());
               } catch (ex) {
-                Cu.reportError(ex);
+                log.error(ex);
               }
             }
             break;
@@ -583,6 +616,7 @@ this.UITour = {
   },
 
   teardownTour: function(aWindow, aWindowClosing = false) {
+    log.debug("teardownTour: aWindowClosing = " + aWindowClosing);
     aWindow.gBrowser.tabContainer.removeEventListener("TabSelect", this);
     aWindow.PanelUI.panel.removeEventListener("popuphiding", this.hidePanelAnnotations);
     aWindow.PanelUI.panel.removeEventListener("ViewShowing", this.hidePanelAnnotations);
@@ -627,8 +661,10 @@ this.UITour = {
     if (!Services.prefs.getBoolPref("browser.uitour.requireSecure"))
       allowedSchemes.add("http");
 
-    if (!allowedSchemes.has(aURI.scheme))
+    if (!allowedSchemes.has(aURI.scheme)) {
+      log.error("Unsafe scheme:", aURI.scheme);
       return false;
+    }
 
     return true;
   },
@@ -648,6 +684,7 @@ this.UITour = {
 
   sendPageCallback: function(aMessageManager, aCallbackID, aData = {}) {
     let detail = {data: aData, callbackID: aCallbackID};
+    log.debug("sendPageCallback", detail);
     aMessageManager.sendAsyncMessage("UITour:SendPageCallback", detail);
   },
 
@@ -657,8 +694,10 @@ this.UITour = {
   },
 
   getTarget: function(aWindow, aTargetName, aSticky = false) {
+    log.debug("getTarget:", aTargetName);
     let deferred = Promise.defer();
     if (typeof aTargetName != "string" || !aTargetName) {
+      log.warn("getTarget: Invalid target name specified");
       deferred.reject("Invalid target name specified");
       return deferred.promise;
     }
@@ -678,6 +717,7 @@ this.UITour = {
 
     let targetObject = this.targets.get(aTargetName);
     if (!targetObject) {
+      log.warn("getTarget: The specified target name is not in the allowed set");
       deferred.reject("The specified target name is not in the allowed set");
       return deferred.promise;
     }
@@ -689,6 +729,7 @@ this.UITour = {
         try {
           node = targetQuery(aWindow.document);
         } catch (ex) {
+          log.warn("getTarget: Error running target query:", ex);
           node = null;
         }
       } else {
@@ -703,7 +744,7 @@ this.UITour = {
         widgetName: targetObject.widgetName,
         allowAdd: targetObject.allowAdd,
       });
-    }).then(null, Cu.reportError);
+    }).catch(log.error);
     return deferred.promise;
   },
 
@@ -729,9 +770,13 @@ this.UITour = {
    * we need to open or close the appMenu to see the annotation's anchor.
    */
   _setAppMenuStateForAnnotation: function(aWindow, aAnnotationType, aShouldOpenForHighlight, aCallback = null) {
+    log.debug("_setAppMenuStateForAnnotation:", aAnnotationType);
+    log.debug("_setAppMenuStateForAnnotation: Menu is exptected to be:", aShouldOpenForHighlight ? "open" : "closed");
+
     // If the panel is in the desired state, we're done.
     let panelIsOpen = aWindow.PanelUI.panel.state != "closed";
     if (aShouldOpenForHighlight == panelIsOpen) {
+      log.debug("_setAppMenuStateForAnnotation: Panel already in expected state");
       if (aCallback)
         aCallback();
       return;
@@ -739,6 +784,7 @@ this.UITour = {
 
     // Don't close the menu if it wasn't opened by us (e.g. via showmenu instead).
     if (!aShouldOpenForHighlight && !this.appMenuOpenForAnnotation.has(aAnnotationType)) {
+      log.debug("_setAppMenuStateForAnnotation: Menu not opened by us, not closing");
       if (aCallback)
         aCallback();
       return;
@@ -752,8 +798,10 @@ this.UITour = {
 
     // Actually show or hide the menu
     if (this.appMenuOpenForAnnotation.size) {
+      log.debug("_setAppMenuStateForAnnotation: Opening the menu");
       this.showMenu(aWindow, "appMenu", aCallback);
     } else {
+      log.debug("_setAppMenuStateForAnnotation: Closing the menu");
       this.hideMenu(aWindow, "appMenu");
       if (aCallback)
         aCallback();
@@ -870,6 +918,7 @@ this.UITour = {
 
       // Close a previous highlight so we can relocate the panel.
       if (highlighter.parentElement.state == "showing" || highlighter.parentElement.state == "open") {
+        log.debug("showHighlight: Closing previous highlight first");
         highlighter.parentElement.hidePopup();
       }
       /* The "overlap" position anchors from the top-left but we want to centre highlights at their
@@ -890,8 +939,10 @@ this.UITour = {
     }
 
     // Prevent showing a panel at an undefined position.
-    if (!this.isElementVisible(aTarget.node))
+    if (!this.isElementVisible(aTarget.node)) {
+      log.warn("showHighlight: Not showing a highlight since the target isn't visible", aTarget);
       return;
+    }
 
     this._setAppMenuStateForAnnotation(aTarget.node.ownerDocument.defaultView, "highlight",
                                        this.targetIsInAppMenu(aTarget),
@@ -1020,6 +1071,12 @@ this.UITour = {
       let alignment = "bottomcenter topright";
       this._addAnnotationPanelMutationObserver(tooltip);
       tooltip.openPopup(aAnchorEl, alignment);
+      if (tooltip.state == "closed") {
+        document.defaultView.addEventListener("endmodalstate", function endModalStateHandler() {
+          document.defaultView.removeEventListener("endmodalstate", endModalStateHandler);
+          tooltip.openPopup(aAnchorEl, alignment);
+        }, false);
+      }
     }
 
     // Prevent showing a panel at an undefined position.
@@ -1083,7 +1140,7 @@ this.UITour = {
     } else if (aMenuName == "searchEngines") {
       this.getTarget(aWindow, "searchProvider").then(target => {
         openMenuButton(target.node);
-      }).catch(Cu.reportError);
+      }).catch(log.error);
     }
   },
 
@@ -1125,7 +1182,7 @@ this.UITour = {
             return;
           }
           hideMethod(win);
-        }).then(null, Cu.reportError);
+        }).catch(log.error);
       }
     });
     UITour.appMenuOpenForAnnotation.clear();
@@ -1197,7 +1254,7 @@ this.UITour = {
         this.sendPageCallback(aMessageManager, aCallbackID, appinfo);
         break;
       default:
-        Cu.reportError("getConfiguration: Unknown configuration requested: " + aConfiguration);
+        log.error("getConfiguration: Unknown configuration requested: " + aConfiguration);
         break;
     }
   },
@@ -1207,6 +1264,7 @@ this.UITour = {
       let window = aChromeWindow;
       let data = this.availableTargetsCache.get(window);
       if (data) {
+        log.debug("getAvailableTargets: Using cached targets list", data.targets.join(","));
         this.sendPageCallback(aMessageManager, aCallbackID, data);
         return;
       }
@@ -1236,7 +1294,7 @@ this.UITour = {
       this.availableTargetsCache.set(window, data);
       this.sendPageCallback(aMessageManager, aCallbackID, data);
     }.bind(this)).catch(err => {
-      Cu.reportError(err);
+      log.error(err);
       this.sendPageCallback(aMessageManager, aCallbackID, {
         targets: [],
       });
@@ -1245,15 +1303,15 @@ this.UITour = {
 
   addNavBarWidget: function (aTarget, aMessageManager, aCallbackID) {
     if (aTarget.node) {
-      Cu.reportError("UITour: can't add a widget already present: " + data.target);
+      log.error("UITour: can't add a widget already present: " + data.target);
       return;
     }
     if (!aTarget.allowAdd) {
-      Cu.reportError("UITour: not allowed to add this widget: " + data.target);
+      log.error("UITour: not allowed to add this widget: " + data.target);
       return;
     }
     if (!aTarget.widgetName) {
-      Cu.reportError("UITour: can't add a widget without a widgetName property: " + data.target);
+      log.error("UITour: can't add a widget without a widgetName property: " + data.target);
       return;
     }
 

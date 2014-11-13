@@ -253,6 +253,20 @@ describe("loop.shared.models", function() {
               fakeSession.trigger("sessionDisconnected", {reason: "ko"});
             });
 
+          it("should trigger network-disconnected on networkDisconnect reason",
+             function(done) {
+               model.once("session:network-disconnected", function() {
+                 done();
+               });
+
+               var fakeEvent = {
+                 connectionId: 42,
+                 reason: "networkDisconnected"
+               };
+
+               fakeSession.trigger("sessionDisconnected", fakeEvent);
+            });
+
           it("should set the connected attribute to false on sessionDisconnected",
             function() {
               fakeSession.trigger("sessionDisconnected", {reason: "ko"});
@@ -273,7 +287,7 @@ describe("loop.shared.models", function() {
             it("should trigger a session:peer-hungup model event",
               function(done) {
                 model.once("session:peer-hungup", function(event) {
-                  expect(event.connectionId).eql(42);
+                  expect(event.connection.connectionId).eql(42);
                   done();
                 });
 
@@ -284,25 +298,6 @@ describe("loop.shared.models", function() {
               sandbox.stub(model, "endSession");
 
               fakeSession.trigger("connectionDestroyed", fakeEvent);
-
-              sinon.assert.calledOnce(model.endSession);
-            });
-          });
-
-          describe("networkDisconnected event received", function() {
-            it("should trigger a session:network-disconnected event",
-              function(done) {
-                model.once("session:network-disconnected", function() {
-                  done();
-                });
-
-                fakeSession.trigger("networkDisconnected");
-              });
-
-            it("should terminate the session", function() {
-              sandbox.stub(model, "endSession");
-
-              fakeSession.trigger("networkDisconnected", {reason: "ko"});
 
               sinon.assert.calledOnce(model.endSession);
             });

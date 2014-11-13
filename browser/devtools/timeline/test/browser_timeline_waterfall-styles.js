@@ -27,7 +27,7 @@ let test = Task.async(function*() {
   panel.panelWin.on(EVENTS.OVERVIEW_UPDATED, () => updated++);
 
   ok((yield waitUntil(() => updated > 0)),
-    "The overview graph was updated a bunch of times.");
+    "The overview graphs were updated a bunch of times.");
   ok((yield waitUntil(() => TimelineController.getMarkers().length > 0)),
     "There are some markers available.");
 

@@ -40,6 +40,9 @@ const N_INTERNALS = "{private:internals:" + salt + "}";
 const JS_HAS_SYMBOLS = typeof Symbol === "function";
 const ITERATOR_SYMBOL = JS_HAS_SYMBOLS ? Symbol.iterator : "@@iterator";
 
+// We use DOM Promise for scheduling the walker loop.
+const DOMPromise = Promise;
+
 /////// Warn-upon-finalization mechanism
 //
 // One of the difficult problems with promises is locating uncaught
@@ -685,8 +688,7 @@ this.PromiseWalker = {
   scheduleWalkerLoop: function()
   {
     this.walkerLoopScheduled = true;
-    Services.tm.currentThread.dispatch(this.walkerLoop,
-                                       Ci.nsIThread.DISPATCH_NORMAL);
+    DOMPromise.resolve().then(() => this.walkerLoop());
   },
 
   /**
