@@ -10,14 +10,14 @@ function usage() {
   echo "Usage: $0 [--dep] <variant>"
 }
 
-clean=""
+clean=1
 platform=""
 TIMEOUT=7200
 while [ $# -gt 1 ]; do
     case "$1" in
-        --clobber)
+        --dep)
             shift
-            clean=1
+            clean=""
             ;;
         --platform)
             shift
