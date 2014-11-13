@@ -8,7 +8,7 @@
 #define mozilla_layers_GestureEventListener_h
 
 #include "InputData.h"                  // for MultiTouchInput, etc
-#include "Units.h"                      // for ScreenIntPoint
+#include "Units.h"
 #include "mozilla/EventForwards.h"      // for nsEventStatus
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"
@@ -193,7 +193,7 @@ private:
    * or GESTURE_SECOND_SINGLE_TOUCH_DOWN then we're certain the gesture is
    * not tap.
    */
-  ScreenIntPoint mTouchStartPosition;
+  ParentLayerPoint mTouchStartPosition;
 
   /**
    * Task used to timeout a long tap. This gets posted to the UI thread such

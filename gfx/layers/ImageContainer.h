@@ -811,7 +811,7 @@ public:
 
   virtual ISharedImage* AsSharedImage() { return this; }
   virtual uint8_t* GetBuffer() { return nullptr; }
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient);
+  virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
 
   gfx::IntSize GetSize() { return mSize; }
 

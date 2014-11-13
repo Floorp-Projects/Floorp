@@ -26,6 +26,7 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/TypeTraits.h"
 
+#include "AlreadyAddRefed.h"
 #include "nsDebug.h" // for |NS_ABORT_IF_FALSE|, |NS_ASSERTION|
 #include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
 
@@ -113,137 +114,6 @@ namespace mozilla {
 struct unused_t;
 
 } // namespace mozilla
-
-/**
- * already_AddRefed cooperates with nsCOMPtr to allow you to assign in a
- * pointer _without_ |AddRef|ing it. You might want to use this as a return
- * type from a function that produces an already |AddRef|ed pointer as a
- * result.
- *
- * See also |getter_AddRefs()|, |dont_AddRef()|, and |class nsGetterAddRefs|.
- *
- * This type should be a nested class inside nsCOMPtr<T>.
- *
- * Yes, already_AddRefed could have been implemented as an nsCOMPtr_helper to
- * avoid adding specialized machinery to nsCOMPtr ... but this is the simplest
- * case, and perhaps worth the savings in time and space that its specific
- * implementation affords over the more general solution offered by
- * nsCOMPtr_helper.
- */
-template<class T>
-struct already_AddRefed
-{
-  /*
-   * We want to allow returning nullptr from functions returning
-   * already_AddRefed<T>, for simplicity.  But we also don't want to allow
-   * returning raw T*, instead preferring creation of already_AddRefed<T> from
-   * an nsRefPtr, nsCOMPtr, or the like.
-   *
-   * We address the latter requirement by making the (T*) constructor explicit.
-   * But |return nullptr| won't consider an explicit constructor, so we need
-   * another constructor to handle it.  Plain old (decltype(nullptr)) doesn't
-   * cut it, because if nullptr is emulated as __null (with type int or long),
-   * passing nullptr to an int/long parameter triggers compiler warnings.  We
-   * need a type that no one can pass accidentally; a pointer-to-member-function
-   * (where no such function exists) does the trick nicely.
-   *
-   * That handles the return-value case.  What about for locals, argument types,
-   * and so on?  |already_AddRefed<T>(nullptr)| considers both overloads (and
-   * the (already_AddRefed<T>&&) overload as well!), so there's an ambiguity.
-   * We can target true nullptr using decltype(nullptr), but we can't target
-   * emulated nullptr the same way, because passing __null to an int/long
-   * parameter triggers compiler warnings.  So just give up on this, and provide
-   * this behavior through the default constructor.
-   *
-   * We can revert to simply explicit (T*) and implicit (decltype(nullptr)) when
-   * nullptr no longer needs to be emulated to support the ancient b2g compiler.
-   * (The () overload could also be removed, if desired, if we changed callers.)
-   */
-  already_AddRefed() : mRawPtr(nullptr) {}
-
-  // The return and argument types here are arbitrarily selected so no
-  // corresponding member function exists.
-  typedef void (already_AddRefed::* MatchNullptr)(double, float);
-  MOZ_IMPLICIT already_AddRefed(MatchNullptr aRawPtr) : mRawPtr(nullptr) {}
-
-  explicit already_AddRefed(T* aRawPtr) : mRawPtr(aRawPtr) {}
-
-  // Disallowed. Use move semantics instead.
-  already_AddRefed(const already_AddRefed<T>& aOther) MOZ_DELETE;
-
-  already_AddRefed(already_AddRefed<T>&& aOther) : mRawPtr(aOther.take()) {}
-
-  ~already_AddRefed() { MOZ_ASSERT(!mRawPtr); }
-
-  // Specialize the unused operator<< for already_AddRefed, to allow
-  // nsCOMPtr<nsIFoo> foo;
-  // unused << foo.forget();
-  friend void operator<<(const mozilla::unused_t& aUnused,
-                         const already_AddRefed<T>& aRhs)
-  {
-    auto mutableAlreadyAddRefed = const_cast<already_AddRefed<T>*>(&aRhs);
-    aUnused << mutableAlreadyAddRefed->take();
-  }
-
-  MOZ_WARN_UNUSED_RESULT T* take()
-  {
-    T* rawPtr = mRawPtr;
-    mRawPtr = nullptr;
-    return rawPtr;
-  }
-
-  /**
-   * This helper is useful in cases like
-   *
-   *  already_AddRefed<BaseClass>
-   *  Foo()
-   *  {
-   *    nsRefPtr<SubClass> x = ...;
-   *    return x.forget();
-   *  }
-   *
-   * The autoconversion allows one to omit the idiom
-   *
-   *    nsRefPtr<BaseClass> y = x.forget();
-   *    return y.forget();
-   */
-  template<class U>
-  operator already_AddRefed<U>()
-  {
-    U* tmp = mRawPtr;
-    mRawPtr = nullptr;
-    return already_AddRefed<U>(tmp);
-  }
-
-  /**
-   * This helper provides a static_cast replacement for already_AddRefed, so
-   * if you have
-   *
-   *   already_AddRefed<Parent> F();
-   *
-   * you can write
-   *
-   *   already_AddRefed<Child>
-   *   G()
-   *   {
-   *     return F().downcast<Child>();
-   *   }
-   *
-   * instead of
-   *
-   *     return dont_AddRef(static_cast<Child*>(F().get()));
-   */
-  template<class U>
-  already_AddRefed<U> downcast()
-  {
-    U* tmp = static_cast<U*>(mRawPtr);
-    mRawPtr = nullptr;
-    return already_AddRefed<U>(tmp);
-  }
-
-private:
-  T* mRawPtr;
-};
 
 template<class T>
 inline already_AddRefed<T>

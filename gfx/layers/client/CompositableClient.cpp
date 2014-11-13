@@ -219,6 +219,7 @@ CompositableClient::AddTextureClient(TextureClient* aClient)
   if(!aClient || !aClient->IsAllocated()) {
     return false;
   }
+  aClient->SetAddedToCompositableClient();
   return aClient->InitIPDLActor(mForwarder);
 }
 
@@ -228,9 +229,33 @@ CompositableClient::OnTransaction()
 }
 
 void
+CompositableClient::ClearCachedResources()
+{
+  if (mTextureClientRecycler) {
+    mTextureClientRecycler = nullptr;
+  }
+}
+
+void
 CompositableClient::RemoveTexture(TextureClient* aTexture)
 {
   mForwarder->RemoveTextureFromCompositable(this, aTexture);
+}
+
+TextureClientRecycleAllocator*
+CompositableClient::GetTextureClientRecycler()
+{
+  if (mTextureClientRecycler) {
+    return mTextureClientRecycler;
+  }
+
+  if (!mForwarder) {
+    return nullptr;
+  }
+
+  mTextureClientRecycler =
+    new layers::TextureClientRecycleAllocator(mForwarder);
+  return mTextureClientRecycler;
 }
 
 } // namespace layers

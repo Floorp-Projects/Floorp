@@ -452,7 +452,6 @@ AtomStateOffsetToName(const JSAtomState &atomState, size_t offset)
 enum RuntimeLock {
     ExclusiveAccessLock,
     HelperThreadStateLock,
-    InterruptLock,
     GCLock
 };
 
@@ -541,14 +540,6 @@ class PerThreadData : public PerThreadDataFriendFields
     TraceLogger         *traceLogger;
 #endif
 
-    /*
-     * asm.js maintains a stack of AsmJSModule activations (see AsmJS.h). This
-     * stack is used by JSRuntime::requestInterrupt to stop long-running asm.js
-     * without requiring dynamic polling operations in the generated
-     * code. Since requestInterrupt may run on a separate thread than the
-     * JSRuntime's owner thread all reads/writes must be synchronized (by
-     * rt->interruptLock).
-     */
   private:
     friend class js::Activation;
     friend class js::ActivationIterator;
@@ -566,11 +557,11 @@ class PerThreadData : public PerThreadDataFriendFields
 
     /*
      * Points to the most recent profiling activation running on the
-     * thread.  Protected by rt->interruptLock.
+     * thread.
      */
     js::Activation * volatile profilingActivation_;
 
-    /* See AsmJSActivation comment. Protected by rt->interruptLock. */
+    /* See AsmJSActivation comment. */
     js::AsmJSActivation * volatile asmJSActivationStack_;
 
     /* Pointer to the current AutoFlushICache. */
@@ -714,10 +705,8 @@ struct JSRuntime : public JS::shadow::Runtime,
   public:
 
     enum InterruptMode {
-        RequestInterruptMainThread,
-        RequestInterruptAnyThread,
-        RequestInterruptAnyThreadDontStopIon,
-        RequestInterruptAnyThreadForkJoin
+        RequestInterruptUrgent,
+        RequestInterruptCanWait
     };
 
     // Any thread can call requestInterrupt() to request that the main JS thread
@@ -772,37 +761,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
   private:
     /*
-     * Lock taken when triggering an interrupt from another thread.
-     * Protects all data that is touched in this process.
-     */
-    PRLock *interruptLock;
-    PRThread *interruptLockOwner;
-
-  public:
-    class AutoLockForInterrupt {
-        JSRuntime *rt;
-      public:
-        explicit AutoLockForInterrupt(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) : rt(rt) {
-            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-            rt->assertCanLock(js::InterruptLock);
-            PR_Lock(rt->interruptLock);
-            rt->interruptLockOwner = PR_GetCurrentThread();
-        }
-        ~AutoLockForInterrupt() {
-            MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-            rt->interruptLockOwner = nullptr;
-            PR_Unlock(rt->interruptLock);
-        }
-
-        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    };
-
-    bool currentThreadOwnsInterruptLock() {
-        return interruptLockOwner == PR_GetCurrentThread();
-    }
-
-  private:
-    /*
      * Lock taken when using per-runtime or per-zone data that could otherwise
      * be accessed simultaneously by both the main thread and another thread
      * with an ExclusiveContext.
@@ -852,8 +810,13 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
     /* See comment for JS_AbortIfWrongThread in jsapi.h. */
     void *ownerThread_;
+    size_t ownerThreadNative_;
     friend bool js::CurrentThreadCanAccessRuntime(JSRuntime *rt);
   public:
+
+    size_t ownerThreadNative() const {
+        return ownerThreadNative_;
+    }
 
     /* Temporary arena pool used while compiling and decompiling. */
     static const size_t TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4 * 1024;
@@ -1089,16 +1052,15 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 
   private:
-    // Whether asm.js signal handlers have been installed and can be used for
-    // performing interrupt checks in loops.
+    // Whether EnsureSignalHandlersInstalled succeeded in installing all the
+    // relevant handlers for this platform.
     bool signalHandlersInstalled_;
+
     // Whether we should use them or they have been disabled for making
     // debugging easier. If signal handlers aren't installed, it is set to false.
     bool canUseSignalHandlers_;
+
   public:
-    bool signalHandlersInstalled() const {
-        return signalHandlersInstalled_;
-    }
     bool canUseSignalHandlers() const {
         return canUseSignalHandlers_;
     }

@@ -108,6 +108,8 @@ protected:
 class SingleTouchData
 {
 public:
+  // Construct a SingleTouchData from a Screen point.
+  // mLocalScreenPoint remains (0,0) unless it's set later.
   SingleTouchData(int32_t aIdentifier,
                   ScreenIntPoint aScreenPoint,
                   ScreenSize aRadius,
@@ -115,6 +117,23 @@ public:
                   float aForce)
     : mIdentifier(aIdentifier),
       mScreenPoint(aScreenPoint),
+      mRadius(aRadius),
+      mRotationAngle(aRotationAngle),
+      mForce(aForce)
+  {
+  }
+
+  // Construct a SingleTouchData from a ParentLayer point.
+  // mScreenPoint remains (0,0) unless it's set later.
+  // Note: if APZ starts using the radius for anything, we should add a local
+  // version of that too, and have this constructor take it as a ParentLayerSize.
+  SingleTouchData(int32_t aIdentifier,
+                  ParentLayerPoint aLocalScreenPoint,
+                  ScreenSize aRadius,
+                  float aRotationAngle,
+                  float aForce)
+    : mIdentifier(aIdentifier),
+      mLocalScreenPoint(aLocalScreenPoint),
       mRadius(aRadius),
       mRotationAngle(aRotationAngle),
       mForce(aForce)
@@ -134,6 +153,10 @@ public:
   // Point on the screen that the touch hit, in device pixels. They are
   // coordinates on the screen.
   ScreenIntPoint mScreenPoint;
+
+  // |mScreenPoint| transformed to the local coordinates of the APZC targeted
+  // by the hit. This is set and used by APZ.
+  ParentLayerPoint mLocalScreenPoint;
 
   // Radius that the touch covers, i.e. if you're using your thumb it will
   // probably be larger than using your pinky, even with the same force.
@@ -274,6 +297,11 @@ public:
 
   // Only non-zero if mType is PANGESTURE_PAN or PANGESTURE_MOMENTUMPAN.
   ScreenPoint mPanDisplacement;
+
+  // Versions of |mPanStartPoint| and |mPanDisplacement| in the local
+  // coordinates of the APZC receiving the pan. These are set and used by APZ.
+  ParentLayerPoint mLocalPanStartPoint;
+  ParentLayerPoint mLocalPanDisplacement;
 };
 
 /**
@@ -291,6 +319,8 @@ public:
     PINCHGESTURE_END
   };
 
+  // Construct a tap gesture from a Screen point.
+  // mLocalFocusPoint remains (0,0) unless it's set later.
   PinchGestureInput(PinchGestureType aType,
                     uint32_t aTime,
                     TimeStamp aTimeStamp,
@@ -304,8 +334,23 @@ public:
       mCurrentSpan(aCurrentSpan),
       mPreviousSpan(aPreviousSpan)
   {
+  }
 
-
+  // Construct a tap gesture from a ParentLayer point.
+  // mFocusPoint remains (0,0) unless it's set later.
+  PinchGestureInput(PinchGestureType aType,
+                    uint32_t aTime,
+                    TimeStamp aTimeStamp,
+                    const ParentLayerPoint& aLocalFocusPoint,
+                    float aCurrentSpan,
+                    float aPreviousSpan,
+                    Modifiers aModifiers)
+    : InputData(PINCHGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
+      mType(aType),
+      mLocalFocusPoint(aLocalFocusPoint),
+      mCurrentSpan(aCurrentSpan),
+      mPreviousSpan(aPreviousSpan)
+  {
   }
 
   PinchGestureType mType;
@@ -316,6 +361,10 @@ public:
   // between the very first and very last touch. This is in device pixels and
   // are the coordinates on the screen of this midpoint.
   ScreenPoint mFocusPoint;
+
+  // |mFocusPoint| transformed to the local coordinates of the APZC targeted
+  // by the hit. This is set and used by APZ.
+  ParentLayerPoint mLocalFocusPoint;
 
   // The distance in device pixels (though as a float for increased precision
   // and because it is the distance along both the x and y axis) between the
@@ -346,6 +395,8 @@ public:
     TAPGESTURE_CANCEL
   };
 
+  // Construct a tap gesture from a Screen point.
+  // mLocalPoint remains (0,0) unless it's set later.
   TapGestureInput(TapGestureType aType,
                   uint32_t aTime,
                   TimeStamp aTimeStamp,
@@ -355,12 +406,29 @@ public:
       mType(aType),
       mPoint(aPoint)
   {
+  }
 
-
+  // Construct a tap gesture from a ParentLayer point.
+  // mPoint remains (0,0) unless it's set later.
+  TapGestureInput(TapGestureType aType,
+                  uint32_t aTime,
+                  TimeStamp aTimeStamp,
+                  const ParentLayerPoint& aLocalPoint,
+                  Modifiers aModifiers)
+    : InputData(TAPGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
+      mType(aType),
+      mLocalPoint(aLocalPoint)
+  {
   }
 
   TapGestureType mType;
+
+  // The location of the tap in screen pixels.
   ScreenIntPoint mPoint;
+
+  // The location of the tap in the local coordinates of the APZC receiving it.
+  // This is set and used by APZ.
+  ParentLayerPoint mLocalPoint;
 };
 
 }
