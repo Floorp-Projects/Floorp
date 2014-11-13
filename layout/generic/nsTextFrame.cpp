@@ -6018,8 +6018,11 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   gfxPoint framePt(aPt.x, aPt.y);
   gfxPoint textBaselinePt;
   if (vertical) {
-    textBaselinePt = gfxPoint(aPt.x + mAscent,
-             rtl ? gfxFloat(aPt.y + GetSize().height) : aPt.y);
+    WritingMode wm = GetWritingMode();
+    textBaselinePt =
+      gfxPoint(wm.IsVerticalLR() ? aPt.x + mAscent
+                                 : aPt.x + frameWidth - mAscent,
+               rtl ? aPt.y + GetSize().height : aPt.y);
   } else {
     textBaselinePt = gfxPoint(rtl ? gfxFloat(aPt.x + frameWidth) : framePt.x,
              nsLayoutUtils::GetSnappedBaselineY(this, ctx, aPt.y, mAscent));
