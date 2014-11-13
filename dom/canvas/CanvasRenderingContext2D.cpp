@@ -1357,6 +1357,25 @@ CanvasRenderingContext2D::ClearTarget()
   state->colorStyles[Style::FILL] = NS_RGB(0,0,0);
   state->colorStyles[Style::STROKE] = NS_RGB(0,0,0);
   state->shadowColor = NS_RGBA(0,0,0,0);
+
+  // For vertical writing-mode, unless text-orientation is sideways,
+  // we'll modify the initial value of textBaseline to 'middle'.
+  nsRefPtr<nsStyleContext> canvasStyle;
+  if (mCanvasElement && mCanvasElement->IsInDoc()) {
+    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    if (presShell) {
+      canvasStyle =
+        nsComputedDOMStyle::GetStyleContextForElement(mCanvasElement,
+                                                      nullptr,
+                                                      presShell);
+      if (canvasStyle) {
+        WritingMode wm(canvasStyle);
+        if (wm.IsVertical() && !wm.IsSideways()) {
+          state->textBaseline = TextBaseline::MIDDLE;
+        }
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
@@ -3149,6 +3168,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     gfxPoint point = mPt;
     bool rtl = mTextRun->IsRightToLeft();
     bool verticalRun = mTextRun->IsVertical();
+    bool centerBaseline = mTextRun->UseCenterBaseline();
 
     gfxFloat& inlineCoord = verticalRun ? point.y : point.x;
     inlineCoord += xOffset;
@@ -3217,20 +3237,27 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
       if (runs[c].mOrientation ==
           gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT) {
         sidewaysRestore.Init(mCtx->mTarget);
-        // TODO: The baseline adjustment here is kinda ad-hoc; eventually
-        // perhaps we should check for horizontal and vertical baseline data
-        // in the font, and adjust accordingly.
-        // (The same will be true for HTML text layout.)
         const gfxFont::Metrics& metrics = mTextRun->GetFontGroup()->
           GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal);
-        mCtx->mTarget->SetTransform(mCtx->mTarget->GetTransform().Copy().
+
+        gfx::Matrix mat = mCtx->mTarget->GetTransform().Copy().
           PreTranslate(baselineOrigin).      // translate origin for rotation
           PreRotate(gfx::Float(M_PI / 2.0)). // turn 90deg clockwise
-          PreTranslate(-baselineOrigin).     // undo the translation
-          PreTranslate(Point(0, (metrics.emAscent - metrics.emDescent) / 2)));
-                              // and offset the (alphabetic) baseline of the
+          PreTranslate(-baselineOrigin);     // undo the translation
+
+        if (centerBaseline) {
+          // TODO: The baseline adjustment here is kinda ad hoc; eventually
+          // perhaps we should check for horizontal and vertical baseline data
+          // in the font, and adjust accordingly.
+          // (The same will be true for HTML text layout.)
+          float offset = (metrics.emAscent - metrics.emDescent) / 2;
+          mat = mat.PreTranslate(Point(0, offset));
+                              // offset the (alphabetic) baseline of the
                               // horizontally-shaped text from the (centered)
                               // default baseline used for vertical
+        }
+
+        mCtx->mTarget->SetTransform(mat);
       }
 
       RefPtr<GlyphRenderingOptions> renderingOptions = font->GetGlyphRenderingOptions();
@@ -3522,39 +3549,45 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
   processor.mPt.x -= anchorX * totalWidth;
 
-  // offset pt.y based on text baseline
+  // offset pt.y (or pt.x, for vertical text) based on text baseline
   processor.mFontgrp->UpdateUserFonts(); // ensure user font generation is current
   const gfxFont::Metrics& fontMetrics =
-    processor.mFontgrp->GetFirstValidFont()->GetMetrics(
-      ((processor.mTextRunFlags & gfxTextRunFactory::TEXT_ORIENT_MASK) ==
-        gfxTextRunFactory::TEXT_ORIENT_HORIZONTAL)
-      ? gfxFont::eHorizontal : gfxFont::eVertical);
+    processor.mFontgrp->GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal);
 
-  gfxFloat anchorY;
+  gfxFloat baselineAnchor;
 
   switch (state.textBaseline)
   {
   case TextBaseline::HANGING:
       // fall through; best we can do with the information available
   case TextBaseline::TOP:
-    anchorY = fontMetrics.emAscent;
+    baselineAnchor = fontMetrics.emAscent;
     break;
   case TextBaseline::MIDDLE:
-    anchorY = (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
+    baselineAnchor = (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
     break;
   case TextBaseline::IDEOGRAPHIC:
     // fall through; best we can do with the information available
   case TextBaseline::ALPHABETIC:
-    anchorY = 0;
+    baselineAnchor = 0;
     break;
   case TextBaseline::BOTTOM:
-    anchorY = -fontMetrics.emDescent;
+    baselineAnchor = -fontMetrics.emDescent;
     break;
   default:
     MOZ_CRASH("unexpected TextBaseline");
   }
 
-  processor.mPt.y += anchorY;
+  if (processor.mTextRun->IsVertical()) {
+    if (processor.mTextRun->UseCenterBaseline()) {
+      // Adjust to account for mTextRun being shaped using center baseline
+      // rather than alphabetic.
+      baselineAnchor -= (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
+    }
+    processor.mPt.x -= baselineAnchor;
+  } else {
+    processor.mPt.y += baselineAnchor;
+  }
 
   // correct bounding box to get it to be the correct size/position
   processor.mBoundingBox.width = totalWidth;

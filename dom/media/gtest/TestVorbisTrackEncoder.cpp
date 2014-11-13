@@ -130,6 +130,9 @@ TEST(VorbisTrackEncoder, Init)
   // Sample rate and channel range test.
   for (int i = 1; i <= 8; i++) {
     EXPECT_FALSE(TestVorbisInit(i, -1));
+    EXPECT_FALSE(TestVorbisInit(i, 2000));
+    EXPECT_FALSE(TestVorbisInit(i, 4000));
+    EXPECT_FALSE(TestVorbisInit(i, 7999));
     EXPECT_TRUE(TestVorbisInit(i, 8000));
     EXPECT_TRUE(TestVorbisInit(i, 11000));
     EXPECT_TRUE(TestVorbisInit(i, 16000));
@@ -138,6 +141,8 @@ TEST(VorbisTrackEncoder, Init)
     EXPECT_TRUE(TestVorbisInit(i, 44100));
     EXPECT_TRUE(TestVorbisInit(i, 48000));
     EXPECT_TRUE(TestVorbisInit(i, 96000));
+    EXPECT_TRUE(TestVorbisInit(i, 192000));
+    EXPECT_FALSE(TestVorbisInit(i, 192001));
     EXPECT_FALSE(TestVorbisInit(i, 200000 + 1));
   }
 }

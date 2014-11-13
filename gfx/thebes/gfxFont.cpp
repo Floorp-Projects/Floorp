@@ -1902,22 +1902,28 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         gfxPoint p(aPt->x * aRunParams.devPerApp,
                    aPt->y * aRunParams.devPerApp);
         const Metrics& metrics = GetMetrics(eHorizontal);
-        // Adjust the matrix to draw the (horizontally-shaped) textrun with
-        // 90-degree CW rotation, and adjust position so that the rotated
-        // horizontal text (which uses a standard alphabetic baseline) will
+        // Get a matrix we can use to draw the (horizontally-shaped) textrun
+        // with 90-degree CW rotation.
+        gfxMatrix mat = aRunParams.context->CurrentMatrix().
+            Translate(p).       // translate origin for rotation
+            Rotate(M_PI / 2.0). // turn 90deg clockwise
+            Translate(-p);      // undo the translation
+
+        // If we're drawing rotated horizontal text for an element styled
+        // text-orientation:mixed, the dominant baseline will be vertical-
+        // centered. So in this case, we need to adjust the position so that
+        // the rotated horizontal text (which uses an alphabetic baseline) will
         // look OK when juxtaposed with upright glyphs (rendered on a centered
         // vertical baseline). The adjustment here is somewhat ad hoc; we
         // should eventually look for baseline tables[1] in the fonts and use
         // those if available.
-        // [1] http://www.microsoft.com/typography/otspec/base.htm
-        aRunParams.context->SetMatrix(aRunParams.context->CurrentMatrix().
-            Translate(p).       // translate origin for rotation
-            Rotate(M_PI / 2.0). // turn 90deg clockwise
-            Translate(-p).      // undo the translation
-            Translate(gfxPoint(0, (metrics.emAscent - metrics.emDescent) / 2)));
-                                // and offset the (alphabetic) baseline of the
-                                // horizontally-shaped text from the (centered)
-                                // default baseline used for vertical
+        // [1] See http://www.microsoft.com/typography/otspec/base.htm
+        if (aTextRun->UseCenterBaseline()) {
+            gfxPoint baseAdj(0, (metrics.emAscent - metrics.emDescent) / 2);
+            mat.Translate(baseAdj);
+        }
+
+        aRunParams.context->SetMatrix(mat);
     }
 
     nsAutoPtr<gfxTextContextPaint> contextPaint;
@@ -2138,15 +2144,33 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     // Current position in appunits
     gfxFont::Orientation orientation =
         aOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT
-        ? gfxFont::eVertical : gfxFont::eHorizontal;
+        ? eVertical : eHorizontal;
     const gfxFont::Metrics& fontMetrics = GetMetrics(orientation);
 
+    gfxFloat baselineOffset = 0;
+    if (aTextRun->UseCenterBaseline() && orientation == eHorizontal) {
+        // For a horizontal font being used in vertical writing mode with
+        // text-orientation:mixed, the overall metrics we're accumulating
+        // will be aimed at a center baseline. But this font's metrics were
+        // based on the alphabetic baseline. So we compute a baseline offset
+        // that will be applied to ascent/descent values and glyph rects
+        // to effectively shift them relative to the baseline.
+        // XXX Eventually we should probably use the BASE table, if present.
+        // But it usually isn't, so we need an ad hoc adjustment for now.
+        baselineOffset = appUnitsPerDevUnit *
+            (fontMetrics.emAscent - fontMetrics.emDescent) / 2;
+    }
+
     RunMetrics metrics;
-    metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
-    metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
+    metrics.mAscent = fontMetrics.maxAscent * appUnitsPerDevUnit;
+    metrics.mDescent = fontMetrics.maxDescent * appUnitsPerDevUnit;
+
     if (aStart == aEnd) {
         // exit now before we look at aSpacing[0], which is undefined
-        metrics.mBoundingBox = gfxRect(0, -metrics.mAscent, 0, metrics.mAscent + metrics.mDescent);
+        metrics.mAscent -= baselineOffset;
+        metrics.mDescent += baselineOffset;
+        metrics.mBoundingBox = gfxRect(0, -metrics.mAscent,
+                                       0, metrics.mAscent + metrics.mDescent);
         return metrics;
     }
 
@@ -2245,6 +2269,12 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     }
     if (isRTL) {
         metrics.mBoundingBox -= gfxPoint(x, 0);
+    }
+
+    if (baselineOffset != 0) {
+        metrics.mAscent -= baselineOffset;
+        metrics.mDescent += baselineOffset;
+        metrics.mBoundingBox.y += baselineOffset;
     }
 
     metrics.mAdvanceWidth = x*direction;
