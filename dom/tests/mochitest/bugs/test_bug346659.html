@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=346659
 // do the tests in two batches, because otherwise the popup blocker kills off
 // our test because it opens too many windows.
 var numTestsSet1 = 6;
-var numTestsSet2 = 4;
+var numTestsSet2 = 2;
 var numTestsSet3 = 2;
 var complete = 0;
 SimpleTest.waitForExplicitFinish();
@@ -173,9 +173,7 @@ is(location.host, "mochi.test:8888", "Unexpected host");
 function startSecondBatch() {
   var baseurl = window.location.href.replace(/mochi\.test:8888/, "example.com");
   wins[7] = window.open(r(baseurl, 'bug346659-opener.html?{"load":7}'));
-  wins[8] = window.open(r(baseurl, 'bug346659-opener.html?{"write":8}'));
   wins[9] = window.open(r(baseurl, 'bug346659-parent.html?{"load":9}'));
-  wins[10] = window.open(r(baseurl, 'bug346659-parent.html?{"write":10}'));
 }
 
 function startThirdBatch() {
