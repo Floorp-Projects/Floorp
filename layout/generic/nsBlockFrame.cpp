@@ -515,7 +515,9 @@ nsBlockFrame::GetCaretBaseline() const
   nscoord lineHeight =
     nsHTMLReflowState::CalcLineHeight(GetContent(), StyleContext(),
                                       contentRect.height, inflation);
-  return nsLayoutUtils::GetCenteredFontBaseline(fm, lineHeight) + bp.top;
+  const WritingMode wm = GetWritingMode();
+  return nsLayoutUtils::GetCenteredFontBaseline(fm, lineHeight,
+                                                wm.IsLineInverted()) + bp.top;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2552,7 +2554,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         nsLayoutUtils::FontSizeInflationFor(this));
 
       nscoord minAscent =
-        nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
+        nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight,
+                                               wm.IsLineInverted());
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
       aState.mBCoord += std::max(minAscent, metrics.BlockStartAscent()) +

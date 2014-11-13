@@ -3496,7 +3496,8 @@ nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
   WritingMode wm(aStyleContext);
   return pc->DeviceContext()->GetMetricsFor(
                   font, aStyleContext->StyleFont()->mLanguage,
-                  wm.IsVertical() ? gfxFont::eVertical : gfxFont::eHorizontal,
+                  wm.IsVertical() && !wm.IsSideways()
+                    ? gfxFont::eVertical : gfxFont::eHorizontal,
                   fs, tp, *aFontMetrics);
 }
 
@@ -4893,9 +4894,11 @@ nsLayoutUtils::PaintTextShadow(const nsIFrame* aFrame,
 
 /* static */ nscoord
 nsLayoutUtils::GetCenteredFontBaseline(nsFontMetrics* aFontMetrics,
-                                       nscoord         aLineHeight)
+                                       nscoord        aLineHeight,
+                                       bool           aIsInverted)
 {
-  nscoord fontAscent = aFontMetrics->MaxAscent();
+  nscoord fontAscent = aIsInverted ? aFontMetrics->MaxDescent()
+                                   : aFontMetrics->MaxAscent();
   nscoord fontHeight = aFontMetrics->MaxHeight();
 
   nscoord leading = aLineHeight - fontHeight;
@@ -7350,7 +7353,8 @@ nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
     // The height of our box is the sum of our font size plus the top
     // and bottom border and padding. The height of children do not
     // affect our height.
-    aMetrics.SetBlockStartAscent(fm->MaxAscent());
+    aMetrics.SetBlockStartAscent(aLineWM.IsLineInverted() ? fm->MaxDescent()
+                                                          : fm->MaxAscent());
     aMetrics.BSize(aLineWM) = fm->MaxHeight();
   } else {
     NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
