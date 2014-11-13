@@ -2784,11 +2784,12 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
   nsIPresShell* presShell = presContext->PresShell();
   CSSToLayoutDeviceScale deviceScale(float(nsPresContext::AppUnitsPerCSSPixel())
                                      / presContext->AppUnitsPerDevPixel());
-  float resolution = 1.0f;
+  ParentLayerToLayerScale resolution;
   if (aScrollFrame == presShell->GetRootScrollFrame()) {
     // Only the root scrollable frame for a given presShell should pick up
     // the presShell's resolution. All the other frames are 1.0.
-    resolution = presShell->GetXResolution();
+    resolution = ParentLayerToLayerScale(presShell->GetXResolution(),
+                                         presShell->GetYResolution());
   }
   // Note: unlike in ComputeFrameMetrics(), we don't know the full cumulative
   // resolution including FrameMetrics::mExtraResolution, because layout hasn't
@@ -2800,11 +2801,10 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
       presShell->GetCumulativeResolution().width
     * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame).width);
 
-  LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.mDevPixelsPerCSSPixel = deviceScale;
   metrics.mPresShellResolution = resolution;
   metrics.mCumulativeResolution = cumulativeResolution;
-  metrics.SetZoom(deviceScale * cumulativeResolution * layerToParentLayerScale);
+  metrics.SetZoom(deviceScale * cumulativeResolution * LayerToScreenScale(1));
 
   // Only the size of the composition bounds is relevant to the
   // displayport calculation, not its origin.
@@ -2816,7 +2816,9 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
       compBoundsScale = LayoutDeviceToParentLayerScale(res.width, res.height);
     }
   } else {
-    compBoundsScale = cumulativeResolution * layerToParentLayerScale;
+    compBoundsScale = cumulativeResolution
+                    * LayerToScreenScale(1.0f)
+                    * ScreenToParentLayerScale(1.0f);
   }
   metrics.mCompositionBounds
       = LayoutDeviceRect::FromAppUnits(nsRect(nsPoint(0, 0), compositionSize),
@@ -2867,7 +2869,7 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
     if (!haveDisplayPort) {
       FrameMetrics metrics = CalculateFrameMetricsForDisplayPort(aScrollFrame, scrollableFrame);
       ScreenMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
-          metrics, ParentLayerPoint(0.0f, 0.0f), 0.0);
+          metrics, ScreenPoint(0.0f, 0.0f), 0.0);
       nsIPresShell* presShell = aScrollFrame->PresContext()->GetPresShell();
       gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
           ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
