@@ -728,7 +728,7 @@ GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
     ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
     mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
 
-    if (!surfaceTexture->Attach(mGL)) {
+    if (NS_FAILED(surfaceTexture->Attach(mGL))) {
         return false;
     }
 
