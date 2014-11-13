@@ -35,10 +35,10 @@ AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
 {
     // Correct the display-port by the difference between the requested scroll
     // offset and the resulting scroll offset after setting the requested value.
-    ScreenPoint shift =
+    LayerPoint shift =
         (aFrameMetrics.GetScrollOffset() - aActualScrollOffset) *
-        aFrameMetrics.DisplayportPixelsPerCSSPixel();
-    ScreenMargin margins = aFrameMetrics.GetDisplayPortMargins();
+        aFrameMetrics.LayersPixelsPerCSSPixel();
+    LayerMargin margins = aFrameMetrics.GetDisplayPortMargins();
     margins.left -= shift.x;
     margins.right += shift.x;
     margins.top -= shift.y;
@@ -49,7 +49,7 @@ AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
 static void
 RecenterDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics)
 {
-    ScreenMargin margins = aFrameMetrics.GetDisplayPortMargins();
+    LayerMargin margins = aFrameMetrics.GetDisplayPortMargins();
     margins.right = margins.left = margins.LeftRight() / 2;
     margins.top = margins.bottom = margins.TopBottom() / 2;
     aFrameMetrics.SetDisplayPortMargins(margins);
@@ -170,7 +170,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
         ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
           gfx::IntSize(0, 0);
-    ScreenMargin margins = aMetrics.GetDisplayPortMargins();
+    LayerMargin margins = aMetrics.GetDisplayPortMargins();
     aUtils->SetDisplayPortMarginsForElement(margins.left,
                                             margins.top,
                                             margins.right,
@@ -219,7 +219,7 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
         gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
             ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
               gfx::IntSize(0, 0);
-        ScreenMargin margins = aMetrics.GetDisplayPortMargins();
+        LayerMargin margins = aMetrics.GetDisplayPortMargins();
         utils->SetDisplayPortMarginsForElement(margins.left,
                                                margins.top,
                                                margins.right,

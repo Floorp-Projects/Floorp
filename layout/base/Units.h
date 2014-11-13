@@ -198,11 +198,6 @@ struct LayoutDevicePixel {
                             NSAppUnitsToFloatPixels(aRect.height, float(aAppUnitsPerDevPixel)));
   }
 
-  static LayoutDevicePoint FromAppUnits(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
-    return LayoutDevicePoint(NSAppUnitsToFloatPixels(aPoint.x, aAppUnitsPerDevPixel),
-                             NSAppUnitsToFloatPixels(aPoint.y, aAppUnitsPerDevPixel));
-  }
-
   static LayoutDeviceIntPoint FromAppUnitsRounded(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceIntPoint(NSAppUnitsToIntPixels(aPoint.x, aAppUnitsPerDevPixel),
                                 NSAppUnitsToIntPixels(aPoint.y, aAppUnitsPerDevPixel));
@@ -219,13 +214,6 @@ struct LayoutDevicePixel {
   static nsSize ToAppUnits(const LayoutDeviceIntSize& aSize, nscoord aAppUnitsPerDevPixel) {
     return nsSize(aSize.width * aAppUnitsPerDevPixel,
                   aSize.height * aAppUnitsPerDevPixel);
-  }
-
-  static nsRect ToAppUnits(const LayoutDeviceRect& aRect, nscoord aAppUnitsPerDevPixel) {
-    return nsRect(NSFloatPixelsToAppUnits(aRect.x, aAppUnitsPerDevPixel),
-                  NSFloatPixelsToAppUnits(aRect.y, aAppUnitsPerDevPixel),
-                  NSFloatPixelsToAppUnits(aRect.width, aAppUnitsPerDevPixel),
-                  NSFloatPixelsToAppUnits(aRect.height, aAppUnitsPerDevPixel));
   }
 };
 

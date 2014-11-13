@@ -181,7 +181,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * that each edge is located at a multiple of the "alignment" value.
    *
    * Note that both the margin values and alignment are treated as values in
-   * ScreenPixels. Refer to layout/base/Units.h for a description of this unit.
+   * LayerPixels. Refer to layout/base/Units.h for a description of this unit.
    * The base rect values are in app units.
    */
   void setDisplayPortMarginsForElement(in float aLeftMargin,
