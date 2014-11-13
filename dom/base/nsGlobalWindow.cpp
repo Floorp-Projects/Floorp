@@ -7748,7 +7748,7 @@ nsGlobalWindow::CallerInnerWindow()
   // the |source| of the received message to be the window set as the
   // sandboxPrototype. This used to work incidentally for unrelated reasons, but
   // now we need to do some special handling to support it.
-  {
+  if (xpc::IsSandbox(scope)) {
     JSAutoCompartment ac(cx, scope);
     JS::Rooted<JSObject*> scopeProto(cx);
     bool ok = JS_GetPrototype(cx, scope, &scopeProto);
@@ -7756,26 +7756,14 @@ nsGlobalWindow::CallerInnerWindow()
     if (scopeProto && xpc::IsSandboxPrototypeProxy(scopeProto) &&
         (scopeProto = js::CheckedUnwrap(scopeProto, /* stopAtOuter = */ false)))
     {
-      scope = scopeProto;
+      global = xpc::NativeGlobal(scopeProto);
+      NS_ENSURE_TRUE(global, nullptr);
     }
   }
-  JSAutoCompartment ac(cx, scope);
 
-  // We don't use xpc::WindowOrNull here because we want to be able to tell
-  // apart the cases of "scope is not an nsISupports at all" and "scope is an
-  // nsISupports that's not a window". It's not clear whether that's desirable,
-  // see bug 984467.
-  nsISupports* native =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(cx, scope);
-  if (!native)
-    return nullptr;
-
-  // The calling window must be holding a reference, so we can just return a
-  // raw pointer here and let the QI's addref be balanced by the nsCOMPtr
-  // destructor's release.
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(native);
-  if (!win)
-    return GetCurrentInnerWindowInternal();
+  // The calling window must be holding a reference, so we can return a weak
+  // pointer.
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(global);
   return static_cast<nsGlobalWindow*>(win.get());
 }
 
@@ -11891,6 +11879,9 @@ nsGlobalWindow::InnerForSetTimeoutOrInterval(ErrorResult& aError)
     // inner window that's calling window.setTimeout().
 
     forwardTo = CallerInnerWindow();
+    if (!forwardTo && nsContentUtils::IsCallerChrome()) {
+      forwardTo = currentInner;
+    }
     if (!forwardTo) {
       aError.Throw(NS_ERROR_NOT_AVAILABLE);
       return nullptr;
@@ -12109,14 +12100,15 @@ nsGlobalWindow::SetTimeoutOrInterval(bool aIsInterval, int32_t *aReturn)
 
   if (IsOuterWindow()) {
     nsGlobalWindow* callerInner = CallerInnerWindow();
-    NS_ENSURE_TRUE(callerInner, NS_ERROR_NOT_AVAILABLE);
+    NS_ENSURE_TRUE(callerInner || nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
     // If the caller and the callee share the same outer window,
     // forward to the callee inner. Else, we forward to the current
     // inner (e.g. someone is calling setTimeout() on a reference to
     // some other window).
 
-    if (callerInner->GetOuterWindow() == this &&
+    if (callerInner &&
+        callerInner->GetOuterWindow() == this &&
         callerInner->IsInnerWindow()) {
       return callerInner->SetTimeoutOrInterval(aIsInterval, aReturn);
     }
