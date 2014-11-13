@@ -1415,6 +1415,13 @@ public class GeckoAppShell
         return (Vibrator) layerView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
+    // Vibrate only if haptic feedback is enabled.
+    public static void vibrateOnHapticFeedbackEnabled(long milliseconds) {
+        if (Settings.System.getInt(getContext().getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) > 0) {
+            vibrate(milliseconds);
+        }
+    }
+
     @WrapElementForJNI(stubName = "Vibrate1")
     public static void vibrate(long milliseconds) {
         sVibrationEndTime = System.nanoTime() + milliseconds * 1000000;
