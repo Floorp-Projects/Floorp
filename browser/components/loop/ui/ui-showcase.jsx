@@ -565,7 +565,8 @@
                 <StandaloneRoomView
                   dispatcher={dispatcher}
                   activeRoomStore={activeRoomStore}
-                  roomState={ROOM_STATES.READY} />
+                  roomState={ROOM_STATES.READY}
+                  helper={{isFirefox: returnTrue}} />
               </div>
             </Example>
 
@@ -574,7 +575,8 @@
                 <StandaloneRoomView
                   dispatcher={dispatcher}
                   activeRoomStore={activeRoomStore}
-                  roomState={ROOM_STATES.JOINED} />
+                  roomState={ROOM_STATES.JOINED}
+                  helper={{isFirefox: returnTrue}} />
               </div>
             </Example>
 
@@ -583,7 +585,28 @@
                 <StandaloneRoomView
                   dispatcher={dispatcher}
                   activeRoomStore={activeRoomStore}
-                  roomState={ROOM_STATES.HAS_PARTICIPANTS} />
+                  roomState={ROOM_STATES.HAS_PARTICIPANTS}
+                  helper={{isFirefox: returnTrue}} />
+              </div>
+            </Example>
+
+            <Example summary="Standalone room conversation (full - FFx user)">
+              <div className="standalone">
+                <StandaloneRoomView
+                  dispatcher={dispatcher}
+                  activeRoomStore={activeRoomStore}
+                  roomState={ROOM_STATES.FULL}
+                  helper={{isFirefox: returnTrue}} />
+              </div>
+            </Example>
+
+            <Example summary="Standalone room conversation (full - non FFx user)">
+              <div className="standalone">
+                <StandaloneRoomView
+                  dispatcher={dispatcher}
+                  activeRoomStore={activeRoomStore}
+                  roomState={ROOM_STATES.FULL}
+                  helper={{isFirefox: returnFalse}} />
               </div>
             </Example>
           </Section>

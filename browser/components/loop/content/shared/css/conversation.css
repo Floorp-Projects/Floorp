@@ -753,6 +753,7 @@ html, .fx-embedded, #main,
   width: 50%;
   color: #fff;
   font-weight: bold;
+  font-size: 1.1em;
 }
 
 .standalone .room-inner-info-area button {
@@ -760,6 +761,12 @@ html, .fx-embedded, #main,
   font-size: 1.2em;
   padding: .2em 1.2em;
   cursor: pointer;
+}
+
+.standalone .room-inner-info-area a.btn {
+  padding: .5em 3em .3em 3em;
+  border-radius: 3px;
+  font-weight: normal;
 }
 
 .standalone .room-conversation h2.room-name {
