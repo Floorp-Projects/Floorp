@@ -12,6 +12,7 @@
 #include "xpcprivate.h" // For AutoCxPusher guts
 #include "xpcpublic.h"
 #include "nsIGlobalObject.h"
+#include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
@@ -70,7 +71,25 @@ public:
     ScriptSettingsStackEntry *entry = EntryPoint();
     return entry ? entry->mGlobalObject : nullptr;
   }
+
 };
+
+static unsigned long gRunToCompletionListeners = 0;
+
+void
+UseEntryScriptProfiling()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ++gRunToCompletionListeners;
+}
+
+void
+UnuseEntryScriptProfiling()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(gRunToCompletionListeners > 0);
+  --gRunToCompletionListeners;
+}
 
 void
 InitScriptSettings()
@@ -497,14 +516,30 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
               aCx ? aCx : FindJSContext(aGlobalObject))
   , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
   , mWebIDLCallerPrincipal(nullptr)
+  , mDocShellForJSRunToCompletion(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
   MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
+
+  if (aIsMainThread && gRunToCompletionListeners > 0) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobalObject);
+    if (window) {
+        mDocShellForJSRunToCompletion = window->GetDocShell();
+    }
+  }
+
+  if (mDocShellForJSRunToCompletion) {
+    mDocShellForJSRunToCompletion->NotifyJSRunToCompletionStart();
+  }
 }
 
 AutoEntryScript::~AutoEntryScript()
 {
+  if (mDocShellForJSRunToCompletion) {
+    mDocShellForJSRunToCompletion->NotifyJSRunToCompletionStop();
+  }
+
   // GC when we pop a script entry point. This is a useful heuristic that helps
   // us out on certain (flawed) benchmarks like sunspider, because it lets us
   // avoid GCing during the timing loop.
