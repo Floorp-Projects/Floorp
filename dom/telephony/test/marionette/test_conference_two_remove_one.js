@@ -30,8 +30,6 @@ function testConferenceTwoAndRemoveOne() {
 // Start the test
 startTest(function() {
   testConferenceTwoAndRemoveOne()
-    .then(null, error => {
-      ok(false, 'promise rejects during test.');
-    })
+    .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });

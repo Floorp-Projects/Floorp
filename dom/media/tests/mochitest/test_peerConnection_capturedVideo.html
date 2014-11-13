@@ -1,0 +1,55 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="templates.js"></script>
+  <script type="application/javascript" src="turnConfig.js"></script>
+</head>
+<body>
+<video id="v1" src="../../test/vp9cake.webm" height="120" width="160" autoplay muted></video>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  createHTML({
+    bug: "1081409",
+    title: "Captured video-only over peer connection",
+    visible: true
+  });
+
+  var domLoaded = new Promise(r => addEventListener("DOMContentLoaded", e => r()));
+  var test;
+  var stream;
+  var waitUntil = func => new Promise(resolve => {
+    var ival = setInterval(() => func() && resolve(clearInterval(ival)), 200);
+  });
+
+  runNetworkTest(function() {
+    test = new PeerConnectionTest();
+    test.setOfferOptions({ offerToReceiveVideo: false,
+                           offerToReceiveAudio: false });
+    test.chain.insertAfter("PC_LOCAL_GUM", [["PC_LOCAL_CAPTUREVIDEO", function (test) {
+      domLoaded
+      .then(() => waitUntil(() => v1.videoWidth > 0)) // TODO: Bug 1096723
+      .then(function() {
+        stream = v1.mozCaptureStreamUntilEnded();
+        is(stream.getTracks().length, 2, "Captured stream has 2 tracks");
+        stream.getTracks().forEach(tr => test.pcLocal._pc.addTrack(tr, stream));
+        test.pcLocal.constraints = [{ video: true, audio:true }]; // fool tests
+        test.next();
+      })
+      .catch(function(reason) {
+        ok(false, "unexpected failure: " + reason);
+        SimpleTest.finish();
+      });
+    }
+    ]]);
+    test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>

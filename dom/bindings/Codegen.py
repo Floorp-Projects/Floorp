@@ -14768,6 +14768,25 @@ class CGEventMethod(CGNativeMember):
                             target += ".SetValue()"
                             source += ".Value()"
                         members += sequenceCopy % (target, source)
+                    elif m.type.isSpiderMonkeyInterface():
+                        srcname = "%s.%s" % (self.args[1].name, name)
+                        if m.type.nullable():
+                            members += fill(
+                                """
+                                if (${srcname}.IsNull()) {
+                                  e->${varname} = nullptr;
+                                } else {
+                                  e->${varname} = ${srcname}.Value().Obj();
+                                }
+                                """,
+                            varname=name,
+                            srcname=srcname);
+                        else:
+                            members += fill(
+                                """
+                                e->${varname}.set(${srcname}.Obj());
+                                """,
+                            varname=name, srcname=srcname);
                     else:
                         members += "e->%s = %s.%s;\n" % (name, self.args[1].name, name)
                     if m.type.isAny() or m.type.isObject() or m.type.isSpiderMonkeyInterface():
