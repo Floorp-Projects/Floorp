@@ -548,7 +548,9 @@ nsWindow::Create(nsIWidget *aParent,
   // Plugins are created in the disabled state so that they can't
   // steal focus away from our main window.  This is especially
   // important if the plugin has loaded in a background tab.
-  if(aInitData->mWindowType == eWindowType_plugin) {
+  if (aInitData->mWindowType == eWindowType_plugin ||
+      aInitData->mWindowType == eWindowType_plugin_ipc_chrome ||
+      aInitData->mWindowType == eWindowType_plugin_ipc_content) {
     style |= WS_DISABLED;
   }
   mWnd = ::CreateWindowExW(extendedStyle,
@@ -574,7 +576,7 @@ nsWindow::Create(nsIWidget *aParent,
     WinUtils::dwmSetWindowAttributePtr(mWnd, DWMWA_NONCLIENT_RTL_LAYOUT, &dwAttribute, sizeof dwAttribute);
   }
 
-  if (mWindowType != eWindowType_plugin &&
+  if (!IsPlugin() &&
       mWindowType != eWindowType_invisible &&
       MouseScrollHandler::Device::IsFakeScrollableWindowNeeded()) {
     // Ugly Thinkpad Driver Hack (Bugs 507222 and 594977)
@@ -794,6 +796,8 @@ DWORD nsWindow::WindowStyle()
 
   switch (mWindowType) {
     case eWindowType_plugin:
+    case eWindowType_plugin_ipc_chrome:
+    case eWindowType_plugin_ipc_content:
     case eWindowType_child:
       style = WS_OVERLAPPED;
       break;
@@ -873,6 +877,8 @@ DWORD nsWindow::WindowExStyle()
   switch (mWindowType)
   {
     case eWindowType_plugin:
+    case eWindowType_plugin_ipc_chrome:
+    case eWindowType_plugin_ipc_content:
     case eWindowType_child:
       return 0;
 
@@ -1417,7 +1423,7 @@ NS_METHOD nsWindow::Move(double aX, double aY)
     // Workaround SetWindowPos bug with D3D9. If our window has a clip
     // region, some drivers or OSes may incorrectly copy into the clipped-out
     // area.
-    if (mWindowType == eWindowType_plugin &&
+    if (IsPlugin() &&
         (!mLayerManager || mLayerManager->GetBackendType() == LayersBackend::LAYERS_D3D9) &&
         mClipRects &&
         (mClipRectCount != 1 || !mClipRects[0].IsEqualInterior(nsIntRect(0, 0, mBounds.width, mBounds.height)))) {
@@ -2641,16 +2647,6 @@ void nsWindow::SetTransparencyMode(nsTransparencyMode aMode)
   GetTopLevelWindow(true)->SetWindowTranslucencyInner(aMode);
 }
 
-static const nsIntRegion
-RegionFromArray(const nsTArray<nsIntRect>& aRects)
-{
-  nsIntRegion region;
-  for (uint32_t i = 0; i < aRects.Length(); ++i) {
-    region.Or(region, aRects[i]);
-  }
-  return region;
-}
-
 void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
 {
   if (!HasGlass() || GetParent())
@@ -2663,7 +2659,7 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
   if (!aOpaqueRegion.IsEmpty()) {
     nsIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-      if (child->WindowType() == eWindowType_plugin) {
+      if (child->IsPlugin()) {
         // Collect the bounds of all plugins for GetLargestRectangle.
         nsIntRect childBounds;
         child->GetBounds(childBounds);
@@ -5328,7 +5324,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
   case WM_GESTURENOTIFY:
     {
       if (mWindowType != eWindowType_invisible &&
-          mWindowType != eWindowType_plugin) {
+          !IsPlugin()) {
         // A GestureNotify event is dispatched to decide which single-finger panning
         // direction should be active (including none) and if pan feedback should
         // be displayed. Java and plugin windows can make their own calls.
@@ -6421,6 +6417,13 @@ static void InvalidatePluginAsWorkaround(nsWindow *aWindow, const nsIntRect &aRe
 nsresult
 nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
 {
+  // If this is a remotely updated widget we receive clipping, position, and
+  // size information from a source other than our owner. Don't let our parent
+  // update this information.
+  if (mWindowType == eWindowType_plugin_ipc_chrome) {
+    return NS_OK;
+  }
+
   // XXXroc we could use BeginDeferWindowPos/DeferWindowPos/EndDeferWindowPos
   // here, if that helps in some situations. So far I haven't seen a
   // need.
@@ -6483,48 +6486,11 @@ CreateHRGNFromArray(const nsTArray<nsIntRect>& aRects)
   return ::ExtCreateRegion(nullptr, buf.Length(), data);
 }
 
-static void
-ArrayFromRegion(const nsIntRegion& aRegion, nsTArray<nsIntRect>& aRects)
-{
-  const nsIntRect* r;
-  for (nsIntRegionRectIterator iter(aRegion); (r = iter.Next());) {
-    aRects.AppendElement(*r);
-  }
-}
-
 nsresult
 nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                               bool aIntersectWithExisting)
 {
-  if (!aIntersectWithExisting) {
-    if (!StoreWindowClipRegion(aRects))
-      return NS_OK;
-  } else {
-    // In this case still early return if nothing changed.
-    if (mClipRects && mClipRectCount == aRects.Length() &&
-        memcmp(mClipRects,
-               aRects.Elements(),
-               sizeof(nsIntRect)*mClipRectCount) == 0) {
-      return NS_OK;
-    }
-
-    // get current rects
-    nsTArray<nsIntRect> currentRects;
-    GetWindowClipRegion(&currentRects);
-    // create region from them
-    nsIntRegion currentRegion = RegionFromArray(currentRects);
-    // create region from new rects
-    nsIntRegion newRegion = RegionFromArray(aRects);
-    // intersect regions
-    nsIntRegion intersection;
-    intersection.And(currentRegion, newRegion);
-    // create int rect array from intersection
-    nsTArray<nsIntRect> rects;
-    ArrayFromRegion(intersection, rects);
-    // store
-    if (!StoreWindowClipRegion(rects))
-      return NS_OK;
-  }
+  nsBaseWidget::SetWindowClipRegion(aRects, aIntersectWithExisting);
 
   HRGN dest = CreateHRGNFromArray(aRects);
   if (!dest)
@@ -6544,8 +6510,8 @@ nsWindow::SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
   // it should not be able to steal keyboard focus.  This code checks whether
   // the region that the plugin is being clipped to is NULLREGION.  If it is,
   // the plugin window gets disabled.
-  if(mWindowType == eWindowType_plugin) {
-    if(NULLREGION == ::CombineRgn(dest, dest, dest, RGN_OR)) {
+  if (IsPlugin()) {
+    if (NULLREGION == ::CombineRgn(dest, dest, dest, RGN_OR)) {
       ::ShowWindow(mWnd, SW_HIDE);
       ::EnableWindow(mWnd, FALSE);
     } else {
@@ -7146,7 +7112,7 @@ LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM l
         if (mozWin) {
           // If this window is windowed plugin window, the mouse events are not
           // sent to us.
-          if (static_cast<nsWindow*>(mozWin)->mWindowType == eWindowType_plugin)
+          if (static_cast<nsWindow*>(mozWin)->IsPlugin())
             ScheduleHookTimer(ms->hwnd, (UINT)wParam);
         } else {
           ScheduleHookTimer(ms->hwnd, (UINT)wParam);

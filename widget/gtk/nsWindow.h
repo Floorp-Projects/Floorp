@@ -142,7 +142,8 @@ public:
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
                                            bool aDoCapture);
     NS_IMETHOD         GetAttention(int32_t aCycleCount);
-
+    virtual nsresult   SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
+                                           bool aIntersectWithExisting) MOZ_OVERRIDE;
     virtual bool       HasPendingInputEvent();
 
     NS_IMETHOD         MakeFullScreen(bool aFullScreen);
@@ -340,8 +341,6 @@ private:
                                        GdkEventButton* aGdkEvent);
     bool               DispatchCommandEvent(nsIAtom* aCommand);
     bool               DispatchContentCommandEvent(int32_t aMsg);
-    void               SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
-                                           bool aIntersectWithExisting);
     bool               CheckForRollup(gdouble aMouseX, gdouble aMouseY,
                                       bool aIsWheel, bool aAlwaysRollup);
     bool               GetDragInfo(mozilla::WidgetMouseEvent* aMouseEvent,

@@ -157,9 +157,16 @@ int main(int argc, char* argv[])
   }
   // base case
   nsAutoString testPath(cDrive);
-  testPath.Append(L"\\Foo");
-  if (!TestNtPathToDosPath(testPath.get(), L"C:\\Foo")) {
+  testPath.Append(L"\\Program Files");
+  if (!TestNtPathToDosPath(testPath.get(), L"C:\\Program Files")) {
     fail("Base case");
+    result = 1;
+  }
+  // short filename
+  nsAutoString ntShortName(cDrive);
+  ntShortName.Append(L"\\progra~1");
+  if (!TestNtPathToDosPath(ntShortName.get(), L"C:\\Program Files")) {
+    fail("Short file name");
     result = 1;
   }
   // drive letters as symbolic links (NtCreateFile uses these)

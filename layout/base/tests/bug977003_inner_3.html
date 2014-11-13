@@ -72,14 +72,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       finishTest();
     }
     function finishTest() {
-      setTimeout(function() {
-        parent.is(test_down_got,      true,  "Part 3: pointerdown event should be received");
-        parent.is(test_mediator_got,  true,  "Part 3: gotpointercapture event should be received by Mediator");
-        parent.is(test_mediator_lost, true,  "Part 3: lostpointercapture event should be received by Mediator");
-        parent.is(test_listener,      false, "Part 3: listener shouldn't receive any events");
-        logger("finishTest");
-        parent.finishTest();
-      }, 1000);
+      parent.is(test_down_got,      true,  "Part 3: pointerdown event should be received");
+      parent.is(test_mediator_got,  true,  "Part 3: gotpointercapture event should be received by Mediator");
+      parent.is(test_mediator_lost, true,  "Part 3: lostpointercapture event should be received by Mediator");
+      parent.is(test_listener,      false, "Part 3: listener should not receive any events");
+      logger("finishTest");
+      parent.finishTest();
     }
   </script>
 </head>

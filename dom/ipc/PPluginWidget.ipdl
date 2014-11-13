@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+
+include "mozilla/GfxMessageUtils.h";
+
+using struct nsIntRect from "nsRect.h";
+
+namespace mozilla {
+namespace plugins {
+
+/**
+ * PPluginWidget - a nsIWidget'ish protocol for windowed plugins in e10s.
+ * On windows and linux we create native widgets in chrome which we then manage
+ * from content.  On the content side there's PluginWidgetProxy which
+ * implements nsIWidget. We hand this around layout and plugins code. Anything
+ * not dealt with via PluginWidgetProxy falls through to PuppetWidget. Native
+ * widget exists on the chrome side (PluginWidgetParent) attached to the
+ * browser window as a child. Window management calls are forwarded from
+ * PluginWidgetProxy to PluginWidgetParent over this interface.
+ *
+ * Note lifetime management for PluginWidgetProxy (the plugin widget) and the
+ * connection (PluginWidgetChild) are separated. PluginWidgetChild will
+ * be torn down first by the tab, followed by the deref'ing of the nsIWidget
+ * via layout.
+ */
+sync protocol PPluginWidget {
+  manager PBrowser;
+
+parent:
+  async __delete__();
+
+parent:
+  async Create();
+  async Destroy();
+  async SetFocus(bool aRaise);
+  async Invalidate(nsIntRect aRect);
+
+  /**
+   * Returns NS_NATIVE_PLUGIN_PORT and its variants: a sharable native
+   * window for plugins. On Linux, this returns an XID for a socket widget
+   * embedded in the chrome side native window. On Windows this returns the
+   * native HWND of the plugin widget.
+   */
+  sync GetNativePluginPort() returns (uintptr_t value);
+
+  /**
+   * nsIWidget interfaces we'll need until this information flows
+   * over the compositor connection.
+   */
+  async Show(bool aState);
+  async Resize(nsIntRect aRect);
+  async Move(double aX, double aY);
+  async SetWindowClipRegion(nsIntRect[] Regions, bool aIntersectWithExisting);
+};
+
+}
+}

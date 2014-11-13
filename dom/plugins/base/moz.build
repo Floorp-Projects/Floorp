@@ -31,6 +31,7 @@ EXPORTS += [
     'nsPluginInstanceOwner.h',
     'nsPluginLogging.h',
     'nsPluginNativeWindow.h',
+    'nsPluginNativeWindowGtk.h',
     'nsPluginPlayPreviewInfo.h',
     'nsPluginsCID.h',
     'nsPluginsDir.h',

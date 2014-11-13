@@ -411,6 +411,12 @@ class Range : public TempObject {
         return new(alloc) Range(l, h, ExcludesFractionalParts, ExcludesNegativeZero, MaxInt32Exponent);
     }
 
+    // Construct an int32 range containing just i. This is just a convenience
+    // wrapper around NewInt32Range.
+    static Range *NewInt32SingletonRange(TempAllocator &alloc, int32_t i) {
+        return NewInt32Range(alloc, i, i);
+    }
+
     static Range *NewUInt32Range(TempAllocator &alloc, uint32_t l, uint32_t h) {
         // For now, just pass them to the constructor as int64_t values.
         // They'll become unbounded if they're not in the int32_t range.

@@ -3840,8 +3840,8 @@ CreateScopeObjectsForScopeChain(JSContext *cx, AutoObjectVector &scopeChain,
         staticWith->initEnclosingNestedScope(staticEnclosingScope);
         staticEnclosingScope = staticWith;
 
-        dynamicWith = DynamicWithObject::create(cx, scopeChain[--i],
-                                                dynamicEnclosingScope, staticWith);
+        dynamicWith = DynamicWithObject::create(cx, scopeChain[--i], dynamicEnclosingScope,
+                                                staticWith, DynamicWithObject::NonSyntacticWith);
         if (!dynamicWith)
             return false;
         dynamicEnclosingScope = dynamicWith;
@@ -4518,7 +4518,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, HandleObject obj, const char *utf8, siz
                                               options, chars, length,
                                               /* foldConstants = */ true, nullptr, nullptr);
     JSErrorReporter older = JS_SetErrorReporter(cx->runtime(), nullptr);
-    if (!parser.parse(obj)) {
+    if (!parser.checkOptions() || !parser.parse(obj)) {
         // We ran into an error. If it was because we ran out of source, we
         // return false so our caller knows to try to collect more buffered
         // source.
@@ -4712,6 +4712,16 @@ ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg, jsval *rv
     return Execute(cx, script, *obj, rval);
 }
 
+static bool
+ExecuteScript(JSContext *cx, AutoObjectVector &scopeChain, HandleScript scriptArg, jsval *rval)
+{
+    RootedObject dynamicScope(cx);
+    RootedObject unusedStaticScope(cx);
+    if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScope, &unusedStaticScope))
+        return false;
+    return ExecuteScript(cx, dynamicScope, scriptArg, rval);
+}
+
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
 JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg, MutableHandleValue rval)
 {
@@ -4722,6 +4732,19 @@ MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
 JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg)
 {
     return ExecuteScript(cx, obj, scriptArg, nullptr);
+}
+
+MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
+JS_ExecuteScript(JSContext *cx, AutoObjectVector &scopeChain,
+                 HandleScript scriptArg, MutableHandleValue rval)
+{
+    return ExecuteScript(cx, scopeChain, scriptArg, rval.address());
+}
+
+MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
+JS_ExecuteScript(JSContext *cx, AutoObjectVector &scopeChain, HandleScript scriptArg)
+{
+    return ExecuteScript(cx, scopeChain, scriptArg, nullptr);
 }
 
 JS_PUBLIC_API(bool)
@@ -4738,19 +4761,6 @@ JS::CloneAndExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptAr
         Rooted<GlobalObject *> global(cx, script->compileAndGo() ? &script->global() : nullptr);
         js::Debugger::onNewScript(cx, script, global);
     }
-    return ExecuteScript(cx, obj, script, nullptr);
-}
-
-JS_PUBLIC_API(bool)
-JS_ExecuteScriptVersion(JSContext *cx, HandleObject obj, HandleScript script,
-                        MutableHandleValue rval, JSVersion version)
-{
-    return ExecuteScript(cx, obj, script, rval.address());
-}
-
-JS_PUBLIC_API(bool)
-JS_ExecuteScriptVersion(JSContext *cx, HandleObject obj, HandleScript script, JSVersion version)
-{
     return ExecuteScript(cx, obj, script, nullptr);
 }
 
@@ -4795,6 +4805,17 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
     }
 
     return result;
+}
+
+static bool
+Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &optionsArg,
+         SourceBufferHolder &srcBuf, JS::Value *rval)
+{
+    RootedObject dynamicScope(cx);
+    RootedObject unusedStaticScope(cx);
+    if (!CreateScopeObjectsForScopeChain(cx, scopeChain, &dynamicScope, &unusedStaticScope))
+        return false;
+    return ::Evaluate(cx, dynamicScope, optionsArg, srcBuf, rval);
 }
 
 static bool
@@ -4846,6 +4867,13 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
 }
 
 extern JS_PUBLIC_API(bool)
+JS::Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &optionsArg,
+             SourceBufferHolder &srcBuf, MutableHandleValue rval)
+{
+    return ::Evaluate(cx, scopeChain, optionsArg, srcBuf, rval.address());
+}
+
+extern JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
              const char16_t *chars, size_t length, MutableHandleValue rval)
 {
@@ -4871,6 +4899,13 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
              SourceBufferHolder &srcBuf)
 {
     return ::Evaluate(cx, obj, optionsArg, srcBuf, nullptr);
+}
+
+extern JS_PUBLIC_API(bool)
+JS::Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &optionsArg,
+             SourceBufferHolder &srcBuf)
+{
+    return ::Evaluate(cx, scopeChain, optionsArg, srcBuf, nullptr);
 }
 
 extern JS_PUBLIC_API(bool)
