@@ -10,6 +10,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
+#include "jit/JitFrameIterator.h"
 
 #include "vm/Debugger.h"
 
@@ -65,6 +66,31 @@ class DebugModeOSRVolatileStub
 
     bool operator!=(const T &other) const { MOZ_ASSERT(!invalid()); return stub_ != other; }
     bool operator==(const T &other) const { MOZ_ASSERT(!invalid()); return stub_ == other; }
+};
+
+//
+// A JitFrameIterator that updates itself in case of recompilation of an
+// on-stack baseline script.
+//
+class DebugModeOSRVolatileJitFrameIterator : public JitFrameIterator
+{
+    DebugModeOSRVolatileJitFrameIterator **stack, *prev;
+
+  public:
+    explicit DebugModeOSRVolatileJitFrameIterator(JSContext *cx)
+      : JitFrameIterator(cx)
+    {
+        stack = &cx->liveVolatileJitFrameIterators_;
+        prev = *stack;
+        *stack = this;
+    }
+
+    ~DebugModeOSRVolatileJitFrameIterator() {
+        MOZ_ASSERT(*stack == this);
+        *stack = prev;
+    }
+
+    static void forwardLiveIterators(JSContext *cx, uint8_t *oldAddr, uint8_t *newAddr);
 };
 
 //

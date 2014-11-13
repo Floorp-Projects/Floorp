@@ -708,7 +708,13 @@ HandleException(ResumeFromException *rfe)
     if (cx->runtime()->jitRuntime()->hasIonReturnOverride())
         cx->runtime()->jitRuntime()->takeIonReturnOverride();
 
-    JitFrameIterator iter(cx);
+    // The Debugger onExceptionUnwind hook (reachable via
+    // HandleExceptionBaseline below) may cause on-stack recompilation of
+    // baseline scripts, which may patch return addresses on the stack. Since
+    // JitFrameIterators cache the previous frame's return address when
+    // iterating, we need a variant here that is automatically updated should
+    // on-stack recompilation occur.
+    DebugModeOSRVolatileJitFrameIterator iter(cx);
     while (!iter.isEntry()) {
         bool overrecursed = false;
         if (iter.isIonJS()) {
