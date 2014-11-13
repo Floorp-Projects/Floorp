@@ -976,6 +976,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       nsIGlobalObject* nativeGlobal =
         xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(wrappedJS->GetJSObject()));
       AutoEntryScript aes(nativeGlobal);
+      aes.TakeOwnershipOfErrorReporting();
       JSContext* cx = aes.cx();
       JS::Rooted<JSObject*> object(cx, wrappedJS->GetJSObject());
 
@@ -1076,15 +1077,14 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           return NS_ERROR_UNEXPECTED;
         }
 
-        if (!JS_CallFunctionValue(cx, thisObject, funval, JS::HandleValueArray(argv), &rval)) {
-          nsJSUtils::ReportPendingException(cx);
+        if (!JS_CallFunctionValue(cx, thisObject, funval,
+                                  JS::HandleValueArray(argv), &rval)) {
           continue;
         }
         if (aJSONRetVal) {
           nsString json;
           if (!JS_Stringify(cx, &rval, JS::NullPtr(), JS::NullHandleValue,
                            JSONCreator, &json)) {
-            nsJSUtils::ReportPendingException(cx);
             continue;
           }
           aJSONRetVal->AppendElement(json);
