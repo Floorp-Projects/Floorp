@@ -49,6 +49,7 @@ browser.jar:
         content/browser/aboutneterror/netError.xhtml   (content/aboutneterror/netError.xhtml)
         content/browser/aboutneterror/netError.css     (content/aboutneterror/netError.css)
         content/browser/aboutneterror/info.svg         (content/aboutneterror/info.svg)
+        content/browser/aboutneterror/alert.svg        (content/aboutneterror/alert.svg)
 
 #ifdef MOZ_SERVICES_HEALTHREPORT
         content/browser/abouthealthreport/abouthealth.xhtml   (content/abouthealthreport/abouthealth.xhtml)
