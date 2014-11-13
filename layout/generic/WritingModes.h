@@ -168,12 +168,17 @@ public:
   /**
    * Return true if LTR. (Convenience method)
    */
-  bool IsBidiLTR() const { return eBidiLTR == (mWritingMode & eBidiMask); }
+  bool IsBidiLTR() const { return eBidiLTR == GetBidiDir(); }
 
   /**
    * True if vertical-mode block direction is LR (convenience method).
    */
-  bool IsVerticalLR() const { return eBlockLR == (mWritingMode & eBlockMask); }
+  bool IsVerticalLR() const { return eBlockLR == GetBlockDir(); }
+
+  /**
+   * True if vertical-mode block direction is RL (convenience method).
+   */
+  bool IsVerticalRL() const { return eBlockRL == GetBlockDir(); }
 
   /**
    * True if vertical writing mode, i.e. when
