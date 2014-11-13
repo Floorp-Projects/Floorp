@@ -292,6 +292,13 @@ nsLayoutStylesheetCache::EnsureGlobal()
 
   Preferences::AddBoolVarCache(&sNumberControlEnabled, NUMBER_CONTROL_PREF,
                                true);
+
+  // For each pref that controls a CSS feature that a UA style sheet depends
+  // on (such as a pref that enables a property that a UA style sheet uses),
+  // register DependentPrefChanged as a callback to ensure that the relevant
+  // style sheets will be re-parsed.
+  // Preferences::RegisterCallback(&DependentPrefChanged,
+  //                               "layout.css.example-pref.enabled");
 }
 
 void
@@ -388,6 +395,29 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
     ErrorLoadingBuiltinSheet(aURI,
       nsPrintfCString("LoadSheetSync failed with error %x", rv).get());
   }
+}
+
+/* static */ void
+nsLayoutStylesheetCache::InvalidateSheet(nsRefPtr<CSSStyleSheet>& aSheet)
+{
+  MOZ_ASSERT(gCSSLoader, "pref changed before we loaded a sheet?");
+
+  if (aSheet) {
+    gCSSLoader->ObsoleteSheet(aSheet->GetSheetURI());
+    aSheet = nullptr;
+  }
+}
+
+/* static */ void
+nsLayoutStylesheetCache::DependentPrefChanged(const char* aPref, void* aData)
+{
+  MOZ_ASSERT(gStyleCache, "pref changed after shutdown?");
+
+  // Cause any UA style sheets whose parsing depends on the value of prefs
+  // to be re-parsed by dropping the sheet from gCSSLoader's cache then
+  // setting our cached sheet pointer to null.  This will only work for sheets
+  // that are loaded lazily.
+  // InvalidateSheet(gStyleCache->mSomeLazilyLoadedSheet);
 }
 
 mozilla::StaticRefPtr<nsLayoutStylesheetCache>
