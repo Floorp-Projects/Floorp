@@ -319,7 +319,8 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
     //
     // Off to On:
     //  A. From a "can call" stub.
-    //  B. From a VM call (interrupt handler, debugger statement handler).
+    //  B. From a VM call (interrupt handler, debugger statement handler,
+    //                     throw).
     //
     // On to Off:
     //  - All the ways above.
@@ -420,7 +421,19 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const Debugger::ExecutionObservab
                 // Patching returns from an interrupt handler or the debugger
                 // statement handler is similar in that we can resume at the
                 // next op.
-                pc += GetBytecodeLength(pc);
+                //
+                // Throws are treated differently, as patching a throw means
+                // we are recompiling on-stack scripts from inside an
+                // onExceptionUnwind invocation. The Baseline compiler
+                // considers all bytecode after the throw to be unreachable
+                // and does not compile them, so we cannot patch the resume
+                // address to be the next pc. Since execution cannot continue
+                // after the throw anyways, it doesn't matter what we patch
+                // the resume address with. So that frame iterators may
+                // continue working, we patch the resume address to be right
+                // at the throw.
+                if (JSOp(*pc) != JSOP_THROW)
+                    pc += GetBytecodeLength(pc);
                 recompInfo->resumeAddr = bl->nativeCodeForPC(script, pc, &recompInfo->slotInfo);
                 popFrameReg = true;
                 break;
