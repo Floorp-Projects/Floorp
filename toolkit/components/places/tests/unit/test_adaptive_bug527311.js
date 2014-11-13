@@ -6,6 +6,7 @@
 
 const TEST_URL = "http://adapt.mozilla.org/";
 const SEARCH_STRING = "adapt";
+const SUGGEST_TYPES = ["history", "bookmark", "openpage"];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -20,6 +21,12 @@ let ps = Cc["@mozilla.org/preferences-service;1"].
 
 const PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC =
   "places-autocomplete-feedback-updated";
+
+function cleanup() {
+  for (let type of SUGGEST_TYPES) {
+    ps.clearUserPref("browser.urlbar.suggest." + type);
+  }
+}
 
 function AutoCompleteInput(aSearches) {
   this.searches = aSearches;
@@ -83,6 +90,7 @@ function check_results() {
     do_check_eq(controller.matchCount, 0);
 
     remove_all_bookmarks();
+    cleanup();
     do_test_finished();
  };
 
@@ -122,8 +130,11 @@ function run_test() {
   bs.insertBookmark(bs.unfiledBookmarksFolder, uri(TEST_URL),                   
                     bs.DEFAULT_INDEX, "test_book");
   // We want to search only history.
-  ps.setIntPref("browser.urlbar.default.behavior",
-                Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY);
+  for (let type of SUGGEST_TYPES) {
+    type == "history" ? ps.setBoolPref("browser.urlbar.suggest." + type, true)
+                      : ps.setBoolPref("browser.urlbar.suggest." + type, false);
+  }
+
   // Add an adaptive entry.
   addAdaptiveFeedback(TEST_URL, SEARCH_STRING, check_results);
 }

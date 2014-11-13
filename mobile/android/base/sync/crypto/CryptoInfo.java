@@ -138,12 +138,10 @@ public class CryptoInfo {
     byte[] outputMessage = null;
     try {
       outputMessage = cipher.doFinal(inputMessage);
-    } catch (IllegalBlockSizeException e) {
-      throw new CryptoException(e);
-    } catch (BadPaddingException e) {
+    } catch (IllegalBlockSizeException | BadPaddingException e) {
       throw new CryptoException(e);
     }
-    return outputMessage;
+      return outputMessage;
   }
 
   /**
@@ -176,9 +174,7 @@ public class CryptoInfo {
     // Generate HMAC.
     try {
       hmac = generatedHMACFor(encryptedBytes, keys);
-    } catch (NoSuchAlgorithmException e) {
-      throw new CryptoException(e);
-    } catch (InvalidKeyException e) {
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       throw new CryptoException(e);
     }
 
@@ -200,9 +196,7 @@ public class CryptoInfo {
       if (!generatedHMACIsHMAC()) {
         throw new HMACVerificationException();
       }
-    } catch (NoSuchAlgorithmException e) {
-      throw new CryptoException(e);
-    } catch (InvalidKeyException e) {
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       throw new CryptoException(e);
     }
 
@@ -231,9 +225,7 @@ public class CryptoInfo {
   private static Cipher getCipher(String transformation) throws CryptoException {
     try {
       return Cipher.getInstance(transformation);
-    } catch (NoSuchAlgorithmException e) {
-      throw new CryptoException(e);
-    } catch (NoSuchPaddingException e) {
+    } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
       throw new CryptoException(e);
     }
   }

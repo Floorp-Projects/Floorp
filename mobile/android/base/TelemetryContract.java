@@ -79,6 +79,9 @@ public interface TelemetryContract {
         // Sharing content.
         SHARE("share.1"),
 
+        // Show a UI element.
+        SHOW("show.1"),
+
         // Undoing a user action.
         // Note: Only used in JavaScript for now, but here for completeness.
         UNDO("undo.1"),
@@ -160,6 +163,9 @@ public interface TelemetryContract {
 
         // Action triggered from a settings screen.
         SETTINGS("settings"),
+
+        // Actions triggered from the share overlay.
+        SHARE_OVERLAY("shareoverlay"),
 
         // Action triggered from a suggestion provided to the user.
         SUGGESTION("suggestion"),

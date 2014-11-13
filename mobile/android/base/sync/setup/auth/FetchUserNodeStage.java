@@ -96,9 +96,7 @@ public class FetchUserNodeStage implements AuthenticatorStage {
             callbackDelegate.handleSuccess(server);
             BaseResource.consumeReader(reader);
             reader.close();
-          } catch (IllegalStateException e) {
-            callbackDelegate.handleError(e);
-          } catch (IOException e) {
+          } catch (IllegalStateException | IOException e) {
             callbackDelegate.handleError(e);
           }
           break;

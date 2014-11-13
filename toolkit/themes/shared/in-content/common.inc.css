@@ -133,7 +133,6 @@ xul|menulist {
   height: 30px;
   color: #333;
   line-height: 20px;
-  text-shadow: 0 1px 1px #fefffe;
   border: 1px solid #c1c1c1;
   -moz-border-top-colors: none !important;
   -moz-border-right-colors: none !important;
@@ -185,7 +184,7 @@ xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
   height: 16px;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/dropdown.png");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
 }
 
 xul|*.help-button {
@@ -262,32 +261,20 @@ xul|*.spinbuttons-down[disabled="true"] > xul|*.button-box > xul|*.button-icon {
 
 xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker {
   -moz-appearance: none;
-  -moz-margin-end: 10px;
+  -moz-margin-end: 4px;
   padding: 0;
   border: none;
   background-color: transparent;
-  list-style-image: url("chrome://global/skin/in-content/dropdown.png");
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown");
+}
+
+xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker > xul|*.dropmarker-icon {
+  width: 18px;
+  height: 18px;
 }
 
 xul|menulist[disabled="true"]:not([editable="true"]) > xul|*.menulist-dropmarker {
-  list-style-image: url("chrome://global/skin/in-content/dropdown-disabled.png")
-}
-
-@media (min-resolution: 2dppx) {
-  xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker,
-  xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
-    list-style-image: url("chrome://global/skin/in-content/dropdown@2x.png");
-  }
-
-  xul|menulist[disabled="true"]:not([editable="true"]) > xul|*.menulist-dropmarker {
-    list-style-image: url("chrome://global/skin/in-content/dropdown-disabled@2x.png")
-  }
-
-  xul|menulist:not([editable="true"]) > xul|*.menulist-dropmarker > xul|*.dropmarker-icon,
-  xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker > xul|*.dropmarker-icon {
-    width: 10px;
-    height: 16px;
-  }
+  list-style-image: url("chrome://global/skin/in-content/dropdown.svg#dropdown-disabled")
 }
 
 xul|menulist > xul|menupopup,
@@ -305,7 +292,7 @@ xul|button[type="menu"] > xul|menupopup xul|menuitem {
   -moz-appearance: none;
   font-size: 1.25rem;
   line-height: 22px;
-  height: 40px;
+  height: 30px;
   color: #333;
   -moz-padding-start: 10px;
   -moz-padding-end: 30px;
@@ -316,8 +303,7 @@ xul|menulist > xul|menupopup > xul|menuitem[_moz-menuactive="true"],
 xul|button[type="menu"] > xul|menupopup > xul|menu[_moz-menuactive="true"],
 xul|button[type="menu"] > xul|menupopup > xul|menuitem[_moz-menuactive="true"] {
   color: #333;
-  background-color: transparent;
-  background-image: linear-gradient(rgba(76,177,255,0.25), rgba(23,146,229,0.25));
+  background-color: rgba(0,149,221,0.25);
 }
 
 xul|menulist > xul|menupopup > xul|menu[selected="true"],
@@ -325,7 +311,7 @@ xul|menulist > xul|menupopup > xul|menuitem[selected="true"],
 xul|button[type="menu"] > xul|menupopup > xul|menu[selected="true"],
 xul|button[type="menu"] > xul|menupopup > xul|menuitem[selected="true"] {
   color: #fff;
-  background-image: linear-gradient(#4cb1ff, #1792e5);
+  background-color: #0095DD;
 }
 
 xul|menulist > xul|menupopup xul|menuseparator,

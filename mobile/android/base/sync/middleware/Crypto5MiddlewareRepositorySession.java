@@ -162,10 +162,7 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
     rec.keyBundle = this.keyBundle;
     try {
       rec.encrypt();
-    } catch (UnsupportedEncodingException e) {
-      delegate.onRecordStoreFailed(e, record.guid);
-      return;
-    } catch (CryptoException e) {
+    } catch (UnsupportedEncodingException | CryptoException e) {
       delegate.onRecordStoreFailed(e, record.guid);
       return;
     }
