@@ -8,7 +8,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
+    let gTab = aTab;
     let gDebugger = aPanel.panelWin;
     let gEvents = gDebugger.EVENTS;
     let gEditor = gDebugger.DebuggerView.editor;
@@ -66,7 +67,7 @@ function test() {
         yield ensureSourceIs(aPanel, "-01.js");
         yield verifyView({ disabled: false, visible: true });
 
-        executeSoon(() => aDebuggee.firstCall());
+        callInTab(gTab, "firstCall");
         yield waitForDebuggerEvents(aPanel, gEvents.FETCHED_SCOPES);
         yield ensureSourceIs(aPanel, "-01.js");
         yield ensureCaretAt(aPanel, 5);
@@ -83,7 +84,7 @@ function test() {
         yield ensureSourceIs(aPanel, "-02.js", true);
         yield verifyView({ disabled: false, visible: false });
 
-        executeSoon(() => aDebuggee.firstCall());
+        callInTab(gTab, "firstCall");
         yield waitForSourceAndCaretAndScopes(aPanel, "-01.js", 1);
         yield verifyView({ disabled: false, visible: true });
 
@@ -98,7 +99,7 @@ function test() {
         yield ensureSourceIs(aPanel, "-02.js", true);
         yield verifyView({ disabled: true, visible: false });
 
-        executeSoon(() => aDebuggee.firstCall());
+        callInTab(gTab, "firstCall");
         yield waitForDebuggerEvents(aPanel, gEvents.FETCHED_SCOPES);
         yield ensureSourceIs(aPanel, "-02.js");
         yield ensureCaretAt(aPanel, 1);
