@@ -300,6 +300,12 @@ HiddenBrowser.prototype = {
       this._applySize();
       doc.getElementById("win").appendChild(this._browser);
 
+      // The browser might not have a docShell here if the HostFrame was
+      // destroyed while the promise was resolved. Simply bail out.
+      if (!this._browser.docShell) {
+        return;
+      }
+
       // Let the docShell be inactive so that document.hidden=true.
       this._browser.docShell.isActive = false;
 

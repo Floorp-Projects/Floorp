@@ -112,7 +112,7 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
   /**
    * An array of known-special GUIDs.
    */
-  public static String[] SPECIAL_GUIDS = new String[] {
+  public static final String[] SPECIAL_GUIDS = new String[] {
     // Mobile and desktop places roots have to come first.
     "places",
     "mobile",
@@ -567,9 +567,6 @@ public class AndroidBrowserBookmarksRepositorySession extends AndroidBrowserRepo
       Logger.debug(LOG_TAG, "Got GUIDs for folders.");
     } catch (android.database.sqlite.SQLiteConstraintException e) {
       Logger.error(LOG_TAG, "Got sqlite constraint exception working with Fennec bookmark DB.", e);
-      delegate.onBeginFailed(e);
-      return;
-    } catch (NullCursorException e) {
       delegate.onBeginFailed(e);
       return;
     } catch (Exception e) {

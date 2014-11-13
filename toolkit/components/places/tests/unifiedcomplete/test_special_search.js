@@ -10,6 +10,12 @@
  * to just history either by default behavior or dynamic query restrict.
  */
 
+function setSuggestPrefsToFalse() {
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+}
+
 add_task(function* test_special_searches() {
   let uri1 = NetUtil.newURI("http://url/");
   let uri2 = NetUtil.newURI("http://url/2");
@@ -47,7 +53,7 @@ add_task(function* test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("Star restrict");
@@ -60,7 +66,7 @@ add_task(function* test_special_searches() {
                { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar"], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: ["foo.bar"], style: [ "tag" ] } ]
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("Tag restrict");
@@ -80,7 +86,7 @@ add_task(function* test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("Special as middle word");
@@ -90,7 +96,7 @@ add_task(function* test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("Special as last word");
@@ -100,7 +106,7 @@ add_task(function* test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   // Test restricting and matching searches with a term
@@ -111,7 +117,7 @@ add_task(function* test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo | -> history (change pref)");
@@ -122,7 +128,7 @@ add_task(function* test_special_searches() {
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo * -> is star");
@@ -254,7 +260,7 @@ add_task(function* test_special_searches() {
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo ^ @ -> history, in url");
@@ -262,7 +268,7 @@ add_task(function* test_special_searches() {
     search: "foo ^ @",
     matches: [ { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo ^ + -> history, is tag");
@@ -275,7 +281,7 @@ add_task(function* test_special_searches() {
   yield check_autocomplete({
     search: "foo ^ ~",
     matches: [ { uri: uri4, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo * # -> is star, in title");
@@ -362,61 +368,77 @@ add_task(function* test_special_searches() {
   // for specific tests.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
-  // Test default usage by setting certain bits of default.behavior to 1
+  // Test default usage by setting certain browser.urlbar.suggest.* prefs
   do_log_info("foo -> default history");
-  Services.prefs.setIntPref("browser.urlbar.default.behavior", 1);
+  setSuggestPrefsToFalse();
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   yield check_autocomplete({
     search: "foo",
     matches: [ { uri: uri2, title: "foo.bar" },
                { uri: uri3, title: "title" },
                { uri: uri4, title: "foo.bar" },
                { uri: uri6, title: "foo.bar" },
-               { uri: uri11, title: "title" } ]
+               { uri: uri11, title: "title", tags: ["foo.bar"], style: [ "tag" ] } ]
   });
 
   do_log_info("foo -> default history, is star");
-  Services.prefs.setIntPref("browser.urlbar.default.behavior", 3);
+  setSuggestPrefsToFalse();
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   yield check_autocomplete({
     search: "foo",
-    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri2, title: "foo.bar" },
+               { uri: uri3, title: "title" },
+               { uri: uri4, title: "foo.bar" },
+               { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar"], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
   do_log_info("foo -> default history, is star, is typed");
-  Services.prefs.setIntPref("browser.urlbar.default.behavior", 35);
+  setSuggestPrefsToFalse();
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   yield check_autocomplete({
     search: "foo",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+    matches: [ { uri: uri4, title: "foo.bar" },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_log_info("foo -> default history, is star, in url");
-  Services.prefs.setIntPref("browser.urlbar.default.behavior", 19);
+  do_log_info("foo -> is star");
+  setSuggestPrefsToFalse();
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   yield check_autocomplete({
     search: "foo",
-    matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
-  });
-
-  // Change the default to be less restrictive to make sure we find more
-  do_log_info("foo -> default is star, in url");
-  Services.prefs.setIntPref("browser.urlbar.default.behavior", 18);
-  yield check_autocomplete({
-    search: "foo",
-    matches: [ { uri: uri7, title: "title", style: [ "bookmark" ] },
-               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
-               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
-               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
-  });
-
-  do_log_info("foo -> default in url");
-  Services.prefs.setIntPref("browser.urlbar.default.behavior", 16);
-  yield check_autocomplete({
-    search: "foo",
-    matches: [ { uri: uri3, title: "title" },
-               { uri: uri4, title: "foo.bar" },
+    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri7, title: "title", style: [ "bookmark" ] },
                { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
+  });
+
+  do_log_info("foo -> is star, is typed");
+  setSuggestPrefsToFalse();
+  // only typed should be ignored
+  Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);
+  Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
+  yield check_autocomplete({
+    search: "foo",
+    matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri7, title: "title", style: [ "bookmark" ] },
+               { uri: uri8, title: "foo.bar", style: [ "bookmark" ] },
+               { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri10, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
+               { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] }  ]
   });
 
   yield cleanup();

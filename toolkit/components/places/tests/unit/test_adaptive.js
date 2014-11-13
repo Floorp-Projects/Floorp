@@ -165,10 +165,10 @@ Services.obs.addObserver(observer, PlacesUtils.TOPIC_FEEDBACK_UPDATED, false);
 /**
  * Make the result object for a given URI that will be passed to ensure_results.
  */
-function makeResult(aURI) {
+function makeResult(aURI, aStyle = "favicon") {
   return {
     uri: aURI,
-    style: "favicon",
+    style: aStyle,
   };
 }
 
@@ -314,11 +314,12 @@ let tests = [
     doAdaptiveDecay();
     yield task_setCountRank(uri1, c1, c1, s1);
   },
-  // Test that bookmarks or tags are hidden if the preferences are set right.
+  // Test that bookmarks are hidden if the preferences are set right.
   function() {
     print("Test 12 same count, diff rank, same term; no search; history only");
-    Services.prefs.setIntPref("browser.urlbar.matchBehavior",
-                              Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY);
+    Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    Services.prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
     observer.results = [
       makeResult(uri1),
       makeResult(uri2),
@@ -328,12 +329,14 @@ let tests = [
     yield task_setCountRank(uri1, c1, c1, s2, "bookmark");
     yield task_setCountRank(uri2, c1, c2, s2);
   },
+  // Test that tags are shown if the preferences are set right.
   function() {
     print("Test 13 same count, diff rank, same term; no search; history only with tag");
-    Services.prefs.setIntPref("browser.urlbar.matchBehavior",
-                              Ci.mozIPlacesAutoComplete.BEHAVIOR_HISTORY);
+    Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    Services.prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
     observer.results = [
-      makeResult(uri1),
+      makeResult(uri1, "tag"),
       makeResult(uri2),
     ];
     observer.search = s0;
@@ -364,6 +367,11 @@ add_task(function test_adaptive()
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.tagsFolderId);
     observer.runCount = -1;
+
+    let types = ["history", "bookmark", "openpage"];
+    for (let type of types) {
+      Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
+    }
 
     yield promiseClearHistory();
 

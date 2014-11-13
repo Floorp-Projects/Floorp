@@ -569,6 +569,15 @@
               </div>
             </Example>
 
+            <Example summary="Standalone room conversation (joined)">
+              <div className="standalone">
+                <StandaloneRoomView
+                  dispatcher={dispatcher}
+                  activeRoomStore={activeRoomStore}
+                  roomState={ROOM_STATES.JOINED} />
+              </div>
+            </Example>
+
             <Example summary="Standalone room conversation (has-participants)">
               <div className="standalone">
                 <StandaloneRoomView
