@@ -187,6 +187,8 @@
 <!ENTITY fxaccount_status_header2 'Firefox Account'>
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
 <!ENTITY fxaccount_status_auth_server 'Account server'>
+<!ENTITY fxaccount_status_sync_now 'Sync now'>
+<!ENTITY fxaccount_status_syncing 'Syncing...'>
 <!ENTITY fxaccount_status_device_name 'Device name'>
 <!ENTITY fxaccount_status_sync_server 'Sync server'>
 <!ENTITY fxaccount_status_sync '&syncBrand.shortName.label;'>
