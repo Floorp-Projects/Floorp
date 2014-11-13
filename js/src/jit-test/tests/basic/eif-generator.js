@@ -1,5 +1,7 @@
 var global = newGlobal();
 var dbg = new global.Debugger(this);
+// Force dbg to observe all execution.
+dbg.onDebuggerStatement = function () {};
 
 function f() {
     let (x = 1) {

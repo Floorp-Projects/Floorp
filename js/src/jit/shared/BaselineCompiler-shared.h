@@ -24,7 +24,7 @@ class BaselineCompilerShared
     MacroAssembler masm;
     bool ionCompileable_;
     bool ionOSRCompileable_;
-    bool debugMode_;
+    bool compileDebugInstrumentation_;
 
     TempAllocator &alloc_;
     BytecodeAnalysis analysis_;
@@ -140,6 +140,10 @@ class BaselineCompilerShared
   public:
     BytecodeAnalysis &analysis() {
         return analysis_;
+    }
+
+    void setCompileDebugInstrumentation() {
+        compileDebugInstrumentation_ = true;
     }
 };
 

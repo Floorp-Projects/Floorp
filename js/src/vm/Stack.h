@@ -218,6 +218,10 @@ class AbstractFramePtr
     inline bool prevUpToDate() const;
     inline void setPrevUpToDate() const;
 
+    inline bool isDebuggee() const;
+    inline void setIsDebuggee();
+    inline void unsetIsDebuggee();
+
     JSObject *evalPrevScopeChain(JSContext *cx) const;
 
     inline HandleValue returnValue() const;
@@ -296,17 +300,23 @@ class InterpreterFrame
         /* Debugger state */
         PREV_UP_TO_DATE    =     0x4000,  /* see DebugScopes::updateLiveScopes */
 
+        /*
+         * See comment above 'debugMode' in jscompartment.h for explanation of
+         * invariants of debuggee compartments, scripts, and frames.
+         */
+        DEBUGGEE           =     0x8000,  /* Execution is being observed by Debugger */
+
         /* Used in tracking calls and profiling (see vm/SPSProfiler.cpp) */
-        HAS_PUSHED_SPS_FRAME =   0x8000,  /* SPS was notified of enty */
+        HAS_PUSHED_SPS_FRAME =   0x10000, /* SPS was notified of enty */
 
         /*
          * If set, we entered one of the JITs and ScriptFrameIter should skip
          * this frame.
          */
-        RUNNING_IN_JIT     =    0x10000,
+        RUNNING_IN_JIT     =    0x20000,
 
         /* Miscellaneous state. */
-        USE_NEW_TYPE       =    0x20000   /* Use new type for constructed |this| object. */
+        USE_NEW_TYPE       =    0x40000   /* Use new type for constructed |this| object. */
     };
 
   private:
@@ -822,6 +832,16 @@ class InterpreterFrame
     void setPrevUpToDate() {
         flags_ |= PREV_UP_TO_DATE;
     }
+
+    bool isDebuggee() const {
+        return !!(flags_ & DEBUGGEE);
+    }
+
+    void setIsDebuggee() {
+        flags_ |= DEBUGGEE;
+    }
+
+    inline void unsetIsDebuggee();
 
   public:
     void mark(JSTracer *trc);
