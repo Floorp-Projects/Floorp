@@ -30,9 +30,27 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if defined(__Userspace__)
+#include <sys/types.h>
+#if !defined (__Userspace_os_Windows)
+#include <sys/wait.h>
+#include <unistd.h>
+#include <pthread.h>
+#endif
+#if defined(__Userspace_os_NaCl)
+#include <sys/select.h>
+#endif
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#include <netinet/sctp_sysctl.h>
+#include <netinet/sctp_pcb.h>
+#else
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_callout.h>
 #include <netinet/sctp_pcb.h>
+#endif
 
 /*
  * Callout/Timer routines for OS that doesn't have them
@@ -117,24 +135,16 @@ sctp_os_timer_stop(sctp_os_timer_t *c)
 	return (1);
 }
 
-#if defined(__APPLE__)
-/*
- * For __APPLE__, use a single main timer at a faster resolution than
- * fastim.  The timer just calls this existing callout infrastructure.
- */
-#endif
-void
-sctp_timeout(void *arg SCTP_UNUSED)
+static void
+sctp_handle_tick(int delta)
 {
 	sctp_os_timer_t *c;
 	void (*c_func)(void *);
 	void *c_arg;
 
 	SCTP_TIMERQ_LOCK();
-#if defined(__APPLE__)
 	/* update our tick count */
-	ticks += SCTP_BASE_VAR(sctp_main_timer_ticks);
-#endif
+	ticks += delta;
 	c = TAILQ_FIRST(&SCTP_BASE_INFO(callqueue));
 	while (c) {
 		if (c->c_time <= ticks) {
@@ -155,9 +165,60 @@ sctp_timeout(void *arg SCTP_UNUSED)
 	}
 	sctp_os_timer_next = NULL;
 	SCTP_TIMERQ_UNLOCK();
+}
 
 #if defined(__APPLE__)
-	/* restart the main timer */
+void
+sctp_timeout(void *arg SCTP_UNUSED)
+{
+	sctp_handle_tick(SCTP_BASE_VAR(sctp_main_timer_ticks));
 	sctp_start_main_timer();
+}
+#endif
+
+#if defined(__Userspace__)
+#define TIMEOUT_INTERVAL 10
+
+void *
+user_sctp_timer_iterate(void *arg)
+{
+	for (;;) {
+#if defined (__Userspace_os_Windows)
+		Sleep(TIMEOUT_INTERVAL);
+#else
+		struct timeval timeout;
+
+		timeout.tv_sec  = 0;
+		timeout.tv_usec = 1000 * TIMEOUT_INTERVAL;
+		select(0, NULL, NULL, NULL, &timeout);
+#endif
+		if (SCTP_BASE_VAR(timer_thread_should_exit)) {
+			break;
+		}
+		sctp_handle_tick(MSEC_TO_TICKS(TIMEOUT_INTERVAL));
+	}
+	return (NULL);
+}
+
+void
+sctp_start_timer(void)
+{
+	/*
+	 * No need to do SCTP_TIMERQ_LOCK_INIT();
+	 * here, it is being done in sctp_pcb_init()
+	 */
+#if defined (__Userspace_os_Windows)
+	if ((SCTP_BASE_VAR(timer_thread) = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)user_sctp_timer_iterate, NULL, 0, NULL)) == NULL) {
+		SCTP_PRINTF("ERROR; Creating ithread failed\n");
+	}
+#else
+	int rc;
+
+	rc = pthread_create(&SCTP_BASE_VAR(timer_thread), NULL, user_sctp_timer_iterate, NULL);
+	if (rc) {
+		SCTP_PRINTF("ERROR; return code from pthread_create() is %d\n", rc);
+	}
 #endif
 }
+
+#endif
