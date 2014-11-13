@@ -76,7 +76,7 @@ public:
     , mDisplayPort(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
     , mScrollableRect(0, 0, 0, 0)
-    , mPresShellResolution(1)
+    , mResolution(1)
     , mCumulativeResolution(1)
     , mTransformScale(1)
     , mDevPixelsPerCSSPixel(1)
@@ -114,7 +114,7 @@ public:
            mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mViewport.IsEqualEdges(aOther.mViewport) &&
            mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
-           mPresShellResolution == aOther.mPresShellResolution &&
+           mResolution == aOther.mResolution &&
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
            mMayHaveTouchListeners == aOther.mMayHaveTouchListeners &&
@@ -171,10 +171,14 @@ public:
     return mCumulativeResolution * mDevPixelsPerCSSPixel;
   }
 
-  // Get the amount by which this frame has been zoomed since the last repaint.
-  LayerToScreenScale GetAsyncZoom() const
+  LayerPoint GetScrollOffsetInLayerPixels() const
   {
-    return mZoom / LayersPixelsPerCSSPixel();
+    return GetScrollOffset() * LayersPixelsPerCSSPixel();
+  }
+
+  LayoutDeviceToParentLayerScale GetParentResolution() const
+  {
+    return mCumulativeResolution / mResolution;
   }
 
   // Ensure the scrollableRect is at least as big as the compositionBounds
@@ -339,17 +343,14 @@ public:
   // The following metrics are dimensionless.
   //
 
-  // The pres-shell resolution that has been induced on the document containing
-  // this scroll frame as a result of zooming this scroll frame (whether via
-  // user action, or choosing an initial zoom level on page load). This can
-  // only be different from 1.0 for frames that are zoomable, which currently
-  // is just the root content document's root scroll frame (mIsRoot = true).
-  ParentLayerToLayerScale mPresShellResolution;
+  // The incremental resolution that the current frame has been painted at
+  // relative to the parent frame's resolution. This information is provided
+  // by Gecko at layout/paint time.
+  ParentLayerToLayerScale mResolution;
 
   // The cumulative resolution that the current frame has been painted at.
-  // This is the product of the pres-shell resolutions of the document
-  // containing this scroll frame and its ancestors, and any css-driven
-  // resolution. This information is provided by Gecko at layout/paint time.
+  // This is the product of our mResolution and the mResolutions of our parent frames.
+  // This information is provided by Gecko at layout/paint time.
   LayoutDeviceToLayerScale mCumulativeResolution;
 
   // TODO(botond): This is now always 1 and should be removed (see bug 1055741).

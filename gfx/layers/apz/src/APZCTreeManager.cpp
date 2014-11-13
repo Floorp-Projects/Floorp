@@ -197,17 +197,12 @@ ComputeTouchSensitiveRegion(GeckoContentController* aController,
   ParentLayerRect visible(aMetrics.mCompositionBounds);
   CSSRect touchSensitiveRegion;
   if (aController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
-    // Here we assume 'touchSensitiveRegion' is in the CSS pixels of the
-    // parent frame. To convert it to ParentLayer pixels, we therefore need
-    // the cumulative resolution of the parent frame. We approximate this as
-    // the quotient of our cumulative resolution and our pres shell resolution;
-    // this approximation may not be accurate in the presence of a css-driven
-    // resolution.
-    LayoutDeviceToParentLayerScale parentCumulativeResolution =
-        aMetrics.mCumulativeResolution / aMetrics.mPresShellResolution;
+    // Note: we assume here that touchSensitiveRegion is in the CSS pixels
+    // of our parent layer, which makes this coordinate conversion
+    // correct.
     visible = visible.Intersect(touchSensitiveRegion
                                 * aMetrics.mDevPixelsPerCSSPixel
-                                * parentCumulativeResolution);
+                                * aMetrics.GetParentResolution());
   }
 
   // Not sure what rounding option is the most correct here, but if we ever

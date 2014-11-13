@@ -142,12 +142,19 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
 
     aMetrics.SetScrollOffset(actualScrollOffset);
 
-    // The pres shell resolution is updated by the the async zoom since the
-    // last paint. The ScreenToLayerScale(1.0f) reflects this async zoom being
-    // turned into a "sync" zoom during the repaint.
-    ParentLayerToLayerScale presShellResolution = aMetrics.mPresShellResolution
-                                                * aMetrics.GetAsyncZoom()
-                                                * ScreenToLayerScale(1.0f);
+    // The mZoom variable on the frame metrics stores the CSS-to-screen scale for this
+    // frame. This scale includes all of the (cumulative) resolutions set on the presShells
+    // from the root down to this frame. However, when setting the resolution, we only
+    // want the piece of the resolution that corresponds to this presShell, rather than
+    // all of the cumulative stuff, so we need to divide out the parent resolutions.
+    // Finally, we multiply by a ScreenToLayerScale of 1.0f because the goal here is to
+    // take the async zoom calculated by the APZC and tell gecko about it (turning it into
+    // a "sync" zoom) which will update the resolution at which the layer is painted.
+    ParentLayerToLayerScale presShellResolution =
+        aMetrics.GetZoom()
+        / aMetrics.mDevPixelsPerCSSPixel
+        / aMetrics.GetParentResolution()
+        * ScreenToLayerScale(1.0f);
     aUtils->SetResolution(presShellResolution.scale, presShellResolution.scale);
 
     // Finally, we set the displayport.
