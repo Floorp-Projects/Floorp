@@ -1279,9 +1279,10 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 pref("devtools.devedition.promo.shown", false);
 pref("devtools.devedition.promo.url", "https://mozilla.org/firefox/developer");
 
-// Only potentially show in beta release
+// Also disable for beta channel in this release to clean up
+// issues in dev edition before promoting it on this channel
 #ifdef MOZ_UPDATE_CHANNEL == beta
-  pref("devtools.devedition.promo.enabled", true);
+  pref("devtools.devedition.promo.enabled", false);
 #else
   pref("devtools.devedition.promo.enabled", false);
 #endif
