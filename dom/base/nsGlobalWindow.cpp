@@ -7732,46 +7732,15 @@ nsGlobalWindow::GetFrames(nsIDOMWindow** aFrames)
   return rv.ErrorCode();
 }
 
-JSObject* nsGlobalWindow::CallerGlobal()
-{
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-  if (!cx) {
-    NS_ERROR("Please don't call this method from C++!");
-
-    return nullptr;
-  }
-
-  // If somebody does sameOriginIframeWindow.postMessage(...), they probably
-  // expect the .source attribute of the resulting message event to be |window|
-  // rather than |sameOriginIframeWindow|, even though the transparent wrapper
-  // semantics of same-origin access will cause us to be in the iframe's
-  // compartment at the time of the call. This means that we want the incumbent
-  // global here, rather than the global of the current compartment.
-  //
-  // There are various edge cases in which the incumbent global and the current
-  // global would not be same-origin. They include:
-  // * A privileged caller (System Principal or Expanded Principal) manipulating
-  //   less-privileged content via Xray Waivers.
-  // * An unprivileged caller invoking a cross-origin function that was exposed
-  //   to it by privileged code (i.e. Sandbox.importFunction).
-  //
-  // In these cases, we probably don't want the privileged global appearing in the
-  // .source attribute. So we fall back to the compartment global there.
-  JS::Rooted<JSObject*> incumbentGlobal(cx, &IncumbentJSGlobal());
-  JS::Rooted<JSObject*> compartmentGlobal(cx, JS::CurrentGlobalOrNull(cx));
-  nsIPrincipal* incumbentPrin = nsContentUtils::ObjectPrincipal(incumbentGlobal);
-  nsIPrincipal* compartmentPrin = nsContentUtils::ObjectPrincipal(compartmentGlobal);
-  return incumbentPrin->EqualsConsideringDomain(compartmentPrin) ? incumbentGlobal
-                                                                 : compartmentGlobal;
-}
-
-
 nsGlobalWindow*
 nsGlobalWindow::CallerInnerWindow()
 {
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
   NS_ENSURE_TRUE(cx, nullptr);
-  JS::Rooted<JSObject*> scope(cx, CallerGlobal());
+  nsIGlobalObject* global = GetIncumbentGlobal();
+  NS_ENSURE_TRUE(global, nullptr);
+  JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
+  NS_ENSURE_TRUE(scope, nullptr);
 
   // When Jetpack runs content scripts inside a sandbox, it uses
   // sandboxPrototype to make them appear as though they're running in the
@@ -8207,10 +8176,9 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   else {
     // In case the global is not a window, it can be a sandbox, and the sandbox's
     // principal can be used for the security check.
-    JSObject *global = CallerGlobal();
+    nsIGlobalObject* global = GetIncumbentGlobal();
     NS_ASSERTION(global, "Why is there no global object?");
-    JSCompartment *compartment = js::GetObjectCompartment(global);
-    callerPrin = xpc::GetCompartmentPrincipal(compartment);
+    callerPrin = global->PrincipalOrNull();
   }
   if (!callerPrin) {
     return;
