@@ -11,7 +11,7 @@ const TAB_URL = EXAMPLE_URL + "doc_breakpoints-reload.html";
 let test = Task.async(function* () {
   requestLongerTimeout(4);
 
-  const [tab, debuggee, panel] = yield initDebugger(TAB_URL);
+  const [tab,, panel] = yield initDebugger(TAB_URL);
 
   yield ensureSourceIs(panel, "doc_breakpoints-reload.html", true);
 

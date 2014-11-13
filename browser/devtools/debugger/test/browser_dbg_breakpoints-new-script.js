@@ -8,12 +8,11 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_inline-script.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
 
@@ -33,7 +32,7 @@ function addBreakpoint() {
     });
   });
 
-  gDebuggee.runDebuggerStatement();
+  callInTab(gTab, "runDebuggerStatement");
 }
 
 function testResume() {
@@ -54,9 +53,7 @@ function testResume() {
       });
     });
 
-    EventUtils.sendMouseEvent({ type: "click" },
-      gDebuggee.document.querySelector("button"),
-      gDebuggee);
+    sendMouseClickToTab(gTab, content.document.querySelector("button"));
   });
 }
 
@@ -84,7 +81,6 @@ function testBreakpointHit() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
 });
