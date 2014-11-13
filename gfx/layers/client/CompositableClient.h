@@ -16,6 +16,7 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
+#include "mozilla/layers/TextureClientRecycleAllocator.h" // for TextureClientRecycleAllocator
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
@@ -194,7 +195,7 @@ public:
    * Clear any resources that are not immediately necessary. This may be called
    * in low-memory conditions.
    */
-  virtual void ClearCachedResources() {}
+  virtual void ClearCachedResources();
 
   /**
    * Should be called when deataching a TextureClient from a Compositable, because
@@ -229,12 +230,15 @@ public:
 
   TextureFlags GetTextureFlags() const { return mTextureFlags; }
 
+  TextureClientRecycleAllocator* GetTextureClientRecycler();
+
 protected:
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;
   // Some layers may want to enforce some flags to all their textures
   // (like disallowing tiling)
   TextureFlags mTextureFlags;
+  RefPtr<TextureClientRecycleAllocator> mTextureClientRecycler;
 
   friend class CompositableChild;
 };
