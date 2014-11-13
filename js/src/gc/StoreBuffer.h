@@ -144,7 +144,7 @@ class StoreBuffer
         virtual void compact(StoreBuffer *owner);
 
         /* Compacts if any entries have been added since the last compaction. */
-        void maybeCompact(StoreBuffer *owner);
+        void maybeCompact(StoreBuffer *owner, gcstats::Phase phase);
 
         /* Add one item to the buffer. */
         void put(StoreBuffer *owner, const T &t) {
