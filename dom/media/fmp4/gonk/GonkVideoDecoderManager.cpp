@@ -294,8 +294,10 @@ GonkVideoDecoderManager::SetVideoFormat()
       ALOG("It is not a valid region");
       return false;
     }
+    return true;
   }
-  return true;
+  ALOG("Fail to get output format");
+  return false;
 }
 
 // Blocks until decoded sample is produced by the deoder.
