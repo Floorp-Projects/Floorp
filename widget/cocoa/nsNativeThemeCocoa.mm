@@ -2289,7 +2289,7 @@ static bool
 IsHiDPIContext(nsPresContext* aContext)
 {
   return nsPresContext::AppUnitsPerCSSPixel() >=
-    2 * aContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
+    2 * aContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
 }
 
 NS_IMETHODIMP
