@@ -184,7 +184,7 @@ class AbstractFramePtr
     inline bool isFunctionFrame() const;
     inline bool isGlobalFrame() const;
     inline bool isEvalFrame() const;
-    inline bool isDebuggerFrame() const;
+    inline bool isDebuggerEvalFrame() const;
 
     inline JSScript *script() const;
     inline JSFunction *fun() const;
@@ -279,7 +279,7 @@ class InterpreterFrame
          *   previous frame in memory. Iteration should treat
          *   evalInFramePrev_ as this frame's previous frame.
          */
-        DEBUGGER           =        0x8,
+        DEBUGGER_EVAL      =        0x8,
 
         CONSTRUCTING       =       0x10,  /* frame is for a constructor invocation */
 
@@ -335,8 +335,8 @@ class InterpreterFrame
     void                *unused;
 
     /*
-     * For an eval-in-frame DEBUGGER frame, the frame in whose scope we're
-     * evaluating code. Iteration treats this as our previous frame.
+     * For an eval-in-frame DEBUGGER_EVAL frame, the frame in whose scope
+     * we're evaluating code. Iteration treats this as our previous frame.
      */
     AbstractFramePtr    evalInFramePrev_;
 
@@ -811,8 +811,8 @@ class InterpreterFrame
         return flags_ & USE_NEW_TYPE;
     }
 
-    bool isDebuggerFrame() const {
-        return !!(flags_ & DEBUGGER);
+    bool isDebuggerEvalFrame() const {
+        return !!(flags_ & DEBUGGER_EVAL);
     }
 
     bool prevUpToDate() const {
