@@ -21,9 +21,15 @@
 
         // if the direction is rtl, set the rtl attribute so that the
         // stylesheet can use this to make the cursor appear properly
-        var direction = window.getComputedStyle(this, "").direction;
-        if (direction == "rtl") {
-          this.setAttribute("rtl", "true");
+        var cs = window.getComputedStyle(this, "");
+        if (cs.writingMode === undefined || cs.writingMode == "horizontal-tb") {;
+          if (cs.direction == "rtl") {
+            this.setAttribute("rtl", "true");
+          }
+        } else {
+          if (cs.writingMode == "vertical-rl") {
+            this.setAttribute("rtl", "true");
+          }
         }
       ]]>
       </constructor>
