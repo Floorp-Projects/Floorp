@@ -34,6 +34,10 @@ taskHelper.push(function testIccUndetectedEvent() {
     is(iccManager.getIccById(evt.iccId), null,
        "should not get a valid icc object here");
 
+    // The mozMobileConnection.iccId should be in sync.
+    is(navigator.mozMobileConnections[0].iccId, null,
+       "check mozMobileConnection.iccId");
+
     taskHelper.runNext();
   });
 });
@@ -50,6 +54,10 @@ taskHelper.push(function testIccDetectedEvent() {
        "iccIds.length becomes to " + iccManager.iccIds.length);
     ok(iccManager.getIccById(evt.iccId) instanceof MozIcc,
        "should get a valid icc object here");
+
+    // The mozMobileConnection.iccId should be in sync.
+    is(navigator.mozMobileConnections[0].iccId, iccId,
+       "check mozMobileConnection.iccId");
 
     taskHelper.runNext();
   });

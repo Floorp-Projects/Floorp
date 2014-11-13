@@ -6,6 +6,7 @@
 #include "mozilla/dom/MozIccManagerBinding.h"
 #include "Icc.h"
 #include "IccListener.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/IccChangeEvent.h"
 #include "mozilla/Preferences.h"
 #include "nsIIccInfo.h"
@@ -74,8 +75,12 @@ IccManager::NotifyIccAdd(const nsAString& aIccId)
 
   nsRefPtr<IccChangeEvent> event =
     IccChangeEvent::Constructor(this, NS_LITERAL_STRING("iccdetected"), init);
+  event->SetTrusted(true);
 
-  return DispatchTrustedEvent(event);
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(this, event);
+
+  return asyncDispatcher->PostDOMEvent();
 }
 
 nsresult
@@ -90,8 +95,12 @@ IccManager::NotifyIccRemove(const nsAString& aIccId)
 
   nsRefPtr<IccChangeEvent> event =
     IccChangeEvent::Constructor(this, NS_LITERAL_STRING("iccundetected"), init);
+  event->SetTrusted(true);
 
-  return DispatchTrustedEvent(event);
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(this, event);
+
+  return asyncDispatcher->PostDOMEvent();
 }
 
 // MozIccManager
