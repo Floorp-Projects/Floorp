@@ -270,14 +270,11 @@ public class PasswordsRepositorySession extends
         PasswordRecord existingRecord;
         try {
           existingRecord = retrieveByGUID(guid);
-        } catch (NullCursorException e) {
+        } catch (NullCursorException | RemoteException e) {
           // Indicates a serious problem.
           delegate.onRecordStoreFailed(e, record.guid);
           return;
-        } catch (RemoteException e) {
-          delegate.onRecordStoreFailed(e, record.guid);
-          return;
-        }
+
 
         long lastLocalRetrieval  = 0;      // lastSyncTimestamp?
         long lastRemoteRetrieval = 0;      // TODO: adjust for clock skew.
