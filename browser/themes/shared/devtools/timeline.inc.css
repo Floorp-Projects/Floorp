@@ -48,23 +48,22 @@
   display: none;
 }
 
-.theme-dark #timeline-overview {
-  border-bottom: 1px solid #000;
+.theme-dark #timeline-pane {
+  border-top: 1px solid #000;
 }
 
-.theme-light #timeline-overview {
-  border-bottom: 1px solid #aaa;
+.theme-light #timeline-pane {
+  border-top: 1px solid #aaa;
 }
 
-.timeline-list-contents {
+.waterfall-list-contents {
   /* Hack: force hardware acceleration */
   transform: translateZ(1px);
   overflow-x: hidden;
   overflow-y: auto;
 }
 
-.timeline-header-ticks,
-.timeline-marker-waterfall {
+.waterfall-background-ticks {
   /* Background created on a <canvas> in js. */
   /* @see browser/devtools/timeline/widgets/waterfall.js */
   background-image: -moz-element(#waterfall-background);
@@ -72,76 +71,69 @@
   background-position: -1px center;
 }
 
-.timeline-marker-waterfall {
-  overflow: hidden;
-}
-
-.timeline-marker-container[is-spacer] {
+.waterfall-marker-container[is-spacer] {
   pointer-events: none;
 }
 
-.theme-dark .timeline-marker-container:not([is-spacer]):nth-child(2n) {
+.theme-dark .waterfall-marker-container:not([is-spacer]):nth-child(2n) {
   background-color: rgba(255,255,255,0.03);
 }
 
-.theme-light .timeline-marker-container:not([is-spacer]):nth-child(2n) {
+.theme-light .waterfall-marker-container:not([is-spacer]):nth-child(2n) {
   background-color: rgba(128,128,128,0.03);
 }
 
-.theme-dark .timeline-marker-container:hover {
+.theme-dark .waterfall-marker-container:hover {
   background-color: rgba(255,255,255,0.1) !important;
 }
 
-.theme-light .timeline-marker-container:hover {
+.theme-light .waterfall-marker-container:hover {
   background-color: rgba(128,128,128,0.1) !important;
 }
 
-.timeline-header-sidebar,
-.timeline-marker-sidebar {
+.waterfall-marker-item {
+  overflow: hidden;
+}
+
+.waterfall-sidebar {
   -moz-border-end: 1px solid;
 }
 
-.theme-dark .timeline-header-sidebar,
-.theme-dark .timeline-marker-sidebar {
+.theme-dark .waterfall-sidebar {
   -moz-border-end-color: #000;
 }
 
-.theme-light .timeline-header-sidebar,
-.theme-light .timeline-marker-sidebar {
+.theme-light .waterfall-sidebar {
   -moz-border-end-color: #aaa;
 }
 
-.timeline-header-sidebar {
-  padding: 5px;
-}
-
-.timeline-marker-sidebar {
-  padding: 2px;
-}
-
-.timeline-marker-container:hover > .timeline-marker-sidebar {
+.waterfall-marker-container:hover > .waterfall-sidebar {
   background-color: transparent;
 }
 
-.timeline-header-tick {
+.waterfall-header-name {
+  padding: 4px;
+}
+
+.waterfall-header-tick {
   width: 100px;
   font-size: 9px;
   transform-origin: left center;
 }
 
-.theme-dark .timeline-header-tick {
+.theme-dark .waterfall-header-tick {
   color: #a9bacb;
 }
 
-.theme-light .timeline-header-tick {
+.theme-light .waterfall-header-tick {
   color: #292e33;
 }
 
-.timeline-header-tick:not(:first-child) {
+.waterfall-header-tick:not(:first-child) {
   -moz-margin-start: -100px !important; /* Don't affect layout. */
 }
 
-.timeline-marker-bullet {
+.waterfall-marker-bullet {
   width: 8px;
   height: 8px;
   -moz-margin-start: 8px;
@@ -150,9 +142,13 @@
   border-radius: 1px;
 }
 
-.timeline-marker-bar {
-  margin-top: 4px;
-  margin-bottom: 4px;
+.waterfall-marker-name {
+  font-size: 95%;
+  padding-bottom: 1px !important;
+}
+
+.waterfall-marker-bar {
+  height: 9px;
   border: 1px solid;
   border-radius: 1px;
   transform-origin: left center;
