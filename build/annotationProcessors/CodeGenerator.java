@@ -252,6 +252,8 @@ public class CodeGenerator {
                 generateMethod(entity);
             } else if (m instanceof Field) {
                 generateField(entity);
+            } else {
+                throw new IllegalArgumentException("expected member to be Constructor, Method, or Field");
             }
         }
     }
