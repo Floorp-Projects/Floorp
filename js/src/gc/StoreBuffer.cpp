@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 
+#include "gc/Statistics.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 
@@ -99,7 +100,7 @@ StoreBuffer::MonoTypeBuffer<T>::handleOverflow(StoreBuffer *owner)
          * Compact the buffer now, and if that fails to free enough space then
          * trigger a minor collection.
          */
-        gcstats::AutoPhase ap(owner->stats(), PHASE_COMPACT_STOREBUFFER_NO_PARENT);
+        gcstats::AutoPhase ap(owner->stats(), gcstats::PHASE_COMPACT_STOREBUFFER_NO_PARENT);
         owner->stats().count(gcstats::STAT_STOREBUFFER_OVERFLOW);
         compact(owner);
         if (isLowOnSpace())
@@ -111,7 +112,7 @@ StoreBuffer::MonoTypeBuffer<T>::handleOverflow(StoreBuffer *owner)
           */
         if (storage_->availableInCurrentChunk() < sizeof(T)) {
             owner->stats().count(gcstats::STAT_STOREBUFFER_OVERFLOW);
-            maybeCompact(owner, PHASE_COMPACT_STOREBUFFER_NO_PARENT);
+            maybeCompact(owner, gcstats::PHASE_COMPACT_STOREBUFFER_NO_PARENT);
         }
     }
 }
@@ -154,11 +155,11 @@ StoreBuffer::MonoTypeBuffer<T>::compact(StoreBuffer *owner)
 
 template <typename T>
 void
-StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner, gcstats::Phase phase)
+StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner, int phase)
 {
     MOZ_ASSERT(storage_);
     if (storage_->used() != usedAtLastCompact_) {
-        gcstats::AutoPhase ap(owner->stats(), phase);
+        gcstats::AutoPhase ap(owner->stats(), static_cast<gcstats::Phase>(phase));
         compact(owner);
     }
 }
@@ -172,7 +173,7 @@ StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer *owner, JSTracer *trc)
     if (!storage_)
         return;
 
-    maybeCompact(owner, PHASE_COMPACT_STOREBUFFER_IN_MINOR_GC);
+    maybeCompact(owner, gcstats::PHASE_COMPACT_STOREBUFFER_IN_MINOR_GC);
 
     for (LifoAlloc::Enum e(*storage_); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
