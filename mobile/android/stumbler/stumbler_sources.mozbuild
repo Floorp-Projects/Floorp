@@ -17,7 +17,7 @@ stumbler_sources = [
     'java/org/mozilla/mozstumbler/service/stumblerthread/Reporter.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/cellscanner/CellInfo.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/cellscanner/CellScanner.java',
-    'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/cellscanner/CellScannerNoWCDMA.java',
+    'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/cellscanner/CellScannerImplementation.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/GPSScanner.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/LocationBlockList.java',
     'java/org/mozilla/mozstumbler/service/stumblerthread/scanners/ScanManager.java',
