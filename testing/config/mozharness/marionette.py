@@ -8,6 +8,7 @@ config = {
         "--log-raw=%(raw_log_file)s",
         "--binary=%(binary)s",
         "--address=%(address)s",
+        "--symbols-path=%(symbols_path)s",
     ],
     "marionette_emulator_options": [
         "--type=%(type)s",
@@ -15,6 +16,7 @@ config = {
         "--logcat-dir=%(logcat_dir)s",
         "--emulator=%(emulator)s",
         "--homedir=%(homedir)s",
+        "--symbols-path=%(symbols_path)s",
     ],
     "webapi_emulator_options": [
         "--type=%(type)s",
