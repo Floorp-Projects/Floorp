@@ -67,16 +67,24 @@ class StaticScopeIter
     StaticScopeIter(ExclusiveContext *cx, JSObject *obj)
       : obj(cx, obj), onNamedLambda(false)
     {
-        JS_STATIC_ASSERT(allowGC == CanGC);
-        MOZ_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->is<StaticWithObject>() ||
+        static_assert(allowGC == CanGC,
+                      "the context-accepting constructor should only be used "
+                      "in CanGC code");
+        MOZ_ASSERT_IF(obj,
+                      obj->is<StaticBlockObject>() ||
+                      obj->is<StaticWithObject>() ||
                       obj->is<JSFunction>());
     }
 
     explicit StaticScopeIter(JSObject *obj)
       : obj((ExclusiveContext *) nullptr, obj), onNamedLambda(false)
     {
-        JS_STATIC_ASSERT(allowGC == NoGC);
-        MOZ_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->is<StaticWithObject>() ||
+        static_assert(allowGC == NoGC,
+                      "the constructor not taking a context should only be "
+                      "used in NoGC code");
+        MOZ_ASSERT_IF(obj,
+                      obj->is<StaticBlockObject>() ||
+                      obj->is<StaticWithObject>() ||
                       obj->is<JSFunction>());
     }
 
