@@ -22,15 +22,14 @@ loader.lazyImporter(this, "clearNamedTimeout",
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const TIMELINE_IMMEDIATE_DRAW_MARKERS_COUNT = 30;
-const TIMELINE_FLUSH_OUTSTANDING_MARKERS_DELAY = 75; // ms
+const WATERFALL_SIDEBAR_WIDTH = 150; // px
 
-const TIMELINE_HEADER_TICKS_MULTIPLE = 5; // ms
-const TIMELINE_HEADER_TICKS_SPACING_MIN = 50; // px
-const TIMELINE_HEADER_TEXT_PADDING = 3; // px
+const WATERFALL_IMMEDIATE_DRAW_MARKERS_COUNT = 30;
+const WATERFALL_FLUSH_OUTSTANDING_MARKERS_DELAY = 75; // ms
 
-const TIMELINE_MARKER_SIDEBAR_WIDTH = 150; // px
-const TIMELINE_MARKER_BAR_WIDTH_MIN = 5; // px
+const WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
+const WATERFALL_HEADER_TICKS_SPACING_MIN = 50; // px
+const WATERFALL_HEADER_TEXT_PADDING = 3; // px
 
 const WATERFALL_BACKGROUND_TICKS_MULTIPLE = 5; // ms
 const WATERFALL_BACKGROUND_TICKS_SCALES = 3;
@@ -38,6 +37,7 @@ const WATERFALL_BACKGROUND_TICKS_SPACING_MIN = 10; // px
 const WATERFALL_BACKGROUND_TICKS_COLOR_RGB = [128, 136, 144];
 const WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 32; // byte
 const WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 32; // byte
+const WATERFALL_MARKER_BAR_WIDTH_MIN = 5; // px
 
 /**
  * A detailed waterfall view for the timeline data.
@@ -52,11 +52,11 @@ function Waterfall(parent) {
   this._outstandingMarkers = [];
 
   this._headerContents = this._document.createElement("hbox");
-  this._headerContents.className = "timeline-header-contents";
+  this._headerContents.className = "waterfall-header-contents";
   this._parent.appendChild(this._headerContents);
 
   this._listContents = this._document.createElement("vbox");
-  this._listContents.className = "timeline-list-contents";
+  this._listContents.className = "waterfall-list-contents";
   this._listContents.setAttribute("flex", "1");
   this._parent.appendChild(this._listContents);
 
@@ -75,18 +75,21 @@ Waterfall.prototype = {
    *
    * @param array markers
    *        A list of markers received from the controller.
+   * @param number timeEpoch
+   *        The absolute time (in milliseconds) when the recording started.
    * @param number timeStart
    *        The time (in milliseconds) to start drawing from.
    * @param number timeEnd
    *        The time (in milliseconds) to end drawing at.
    */
-  setData: function(markers, timeStart, timeEnd) {
+  setData: function(markers, timeEpoch, timeStart, timeEnd) {
     this.clearView();
 
     let dataScale = this._waterfallWidth / (timeEnd - timeStart);
     this._drawWaterfallBackground(dataScale);
+
     // Label the header as if the first possible marker was at T=0.
-    this._buildHeader(this._headerContents, timeStart - markers.startTime, dataScale);
+    this._buildHeader(this._headerContents, timeStart - timeEpoch, dataScale);
     this._buildMarkers(this._listContents, markers, timeStart, timeEnd, dataScale);
   },
 
@@ -111,7 +114,7 @@ Waterfall.prototype = {
    */
   recalculateBounds: function() {
     let bounds = this._parent.getBoundingClientRect();
-    this._waterfallWidth = bounds.width - TIMELINE_MARKER_SIDEBAR_WIDTH;
+    this._waterfallWidth = bounds.width - WATERFALL_SIDEBAR_WIDTH;
   },
 
   /**
@@ -126,22 +129,22 @@ Waterfall.prototype = {
    */
   _buildHeader: function(parent, timeStart, dataScale) {
     let container = this._document.createElement("hbox");
-    container.className = "timeline-header-container";
+    container.className = "waterfall-header-container";
     container.setAttribute("flex", "1");
 
     let sidebar = this._document.createElement("hbox");
-    sidebar.className = "timeline-header-sidebar theme-sidebar";
-    sidebar.setAttribute("width", TIMELINE_MARKER_SIDEBAR_WIDTH);
+    sidebar.className = "waterfall-sidebar theme-sidebar";
+    sidebar.setAttribute("width", WATERFALL_SIDEBAR_WIDTH);
     sidebar.setAttribute("align", "center");
     container.appendChild(sidebar);
 
     let name = this._document.createElement("label");
-    name.className = "plain timeline-header-name";
+    name.className = "plain waterfall-header-name";
     name.setAttribute("value", this._l10n.getStr("timeline.records"));
     sidebar.appendChild(name);
 
     let ticks = this._document.createElement("hbox");
-    ticks.className = "timeline-header-ticks";
+    ticks.className = "waterfall-header-ticks waterfall-background-ticks";
     ticks.setAttribute("align", "center");
     ticks.setAttribute("flex", "1");
     container.appendChild(ticks);
@@ -149,18 +152,18 @@ Waterfall.prototype = {
     let offset = this._isRTL ? this._waterfallWidth : 0;
     let direction = this._isRTL ? -1 : 1;
     let tickInterval = this._findOptimalTickInterval({
-      ticksMultiple: TIMELINE_HEADER_TICKS_MULTIPLE,
-      ticksSpacingMin: TIMELINE_HEADER_TICKS_SPACING_MIN,
+      ticksMultiple: WATERFALL_HEADER_TICKS_MULTIPLE,
+      ticksSpacingMin: WATERFALL_HEADER_TICKS_SPACING_MIN,
       dataScale: dataScale
     });
 
     for (let x = 0; x < this._waterfallWidth; x += tickInterval) {
-      let start = x + direction * TIMELINE_HEADER_TEXT_PADDING;
+      let start = x + direction * WATERFALL_HEADER_TEXT_PADDING;
       let time = Math.round(timeStart + x / dataScale);
       let label = this._l10n.getFormatStr("timeline.tick", time);
 
       let node = this._document.createElement("label");
-      node.className = "plain timeline-header-tick";
+      node.className = "plain waterfall-header-tick";
       node.style.transform = "translateX(" + (start - offset) + "px)";
       node.setAttribute("value", label);
       ticks.appendChild(node);
@@ -190,7 +193,7 @@ Waterfall.prototype = {
       // preserve a snappy UI. After a certain delay, continue building the
       // outstanding markers while there's (hopefully) no user interaction.
       let arguments_ = [this._fragment, marker, timeStart, dataScale];
-      if (processed++ < TIMELINE_IMMEDIATE_DRAW_MARKERS_COUNT) {
+      if (processed++ < WATERFALL_IMMEDIATE_DRAW_MARKERS_COUNT) {
         this._buildMarker.apply(this, arguments_);
       } else {
         this._outstandingMarkers.push(arguments_);
@@ -205,7 +208,7 @@ Waterfall.prototype = {
     // Otherwise prepare flushing the outstanding markers after a small delay.
     else {
       this._setNamedTimeout("flush-outstanding-markers",
-        TIMELINE_FLUSH_OUTSTANDING_MARKERS_DELAY,
+        WATERFALL_FLUSH_OUTSTANDING_MARKERS_DELAY,
         () => this._buildOutstandingMarkers(parent));
     }
 
@@ -241,7 +244,7 @@ Waterfall.prototype = {
    */
   _buildMarker: function(parent, marker, timeStart, dataScale) {
     let container = this._document.createElement("hbox");
-    container.className = "timeline-marker-container";
+    container.className = "waterfall-marker-container";
 
     if (marker) {
       this._buildMarkerSidebar(container, marker);
@@ -267,12 +270,12 @@ Waterfall.prototype = {
     let blueprint = this._blueprint[marker.name];
 
     let sidebar = this._document.createElement("hbox");
-    sidebar.className = "timeline-marker-sidebar theme-sidebar";
-    sidebar.setAttribute("width", TIMELINE_MARKER_SIDEBAR_WIDTH);
+    sidebar.className = "waterfall-sidebar theme-sidebar";
+    sidebar.setAttribute("width", WATERFALL_SIDEBAR_WIDTH);
     sidebar.setAttribute("align", "center");
 
     let bullet = this._document.createElement("hbox");
-    bullet.className = "timeline-marker-bullet";
+    bullet.className = "waterfall-marker-bullet";
     bullet.style.backgroundColor = blueprint.fill;
     bullet.style.borderColor = blueprint.stroke;
     bullet.setAttribute("type", marker.name);
@@ -281,7 +284,7 @@ Waterfall.prototype = {
     let name = this._document.createElement("label");
     name.setAttribute("crop", "end");
     name.setAttribute("flex", "1");
-    name.className = "plain timeline-marker-name";
+    name.className = "plain waterfall-marker-name";
 
     let label;
     if (marker.detail && marker.detail.causeName) {
@@ -314,7 +317,8 @@ Waterfall.prototype = {
     let blueprint = this._blueprint[marker.name];
 
     let waterfall = this._document.createElement("hbox");
-    waterfall.className = "timeline-marker-waterfall";
+    waterfall.className = "waterfall-marker-item waterfall-background-ticks";
+    waterfall.setAttribute("align", "center");
     waterfall.setAttribute("flex", "1");
 
     let start = (marker.start - timeStart) * dataScale;
@@ -322,12 +326,12 @@ Waterfall.prototype = {
     let offset = this._isRTL ? this._waterfallWidth : 0;
 
     let bar = this._document.createElement("hbox");
-    bar.className = "timeline-marker-bar";
+    bar.className = "waterfall-marker-bar";
     bar.style.backgroundColor = blueprint.fill;
     bar.style.borderColor = blueprint.stroke;
     bar.style.transform = "translateX(" + (start - offset) + "px)";
     bar.setAttribute("type", marker.name);
-    bar.setAttribute("width", Math.max(width, TIMELINE_MARKER_BAR_WIDTH_MIN));
+    bar.setAttribute("width", Math.max(width, WATERFALL_MARKER_BAR_WIDTH_MIN));
     waterfall.appendChild(bar);
 
     container.appendChild(waterfall);
@@ -341,11 +345,11 @@ Waterfall.prototype = {
    */
   _buildMarkerSpacer: function(container) {
     let sidebarSpacer = this._document.createElement("spacer");
-    sidebarSpacer.className = "timeline-marker-sidebar theme-sidebar";
-    sidebarSpacer.setAttribute("width", TIMELINE_MARKER_SIDEBAR_WIDTH);
+    sidebarSpacer.className = "waterfall-sidebar theme-sidebar";
+    sidebarSpacer.setAttribute("width", WATERFALL_SIDEBAR_WIDTH);
 
     let waterfallSpacer = this._document.createElement("spacer");
-    waterfallSpacer.className = "timeline-marker-waterfall";
+    waterfallSpacer.className = "waterfall-marker-item waterfall-background-ticks";
     waterfallSpacer.setAttribute("flex", "1");
 
     container.appendChild(sidebarSpacer);
