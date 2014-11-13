@@ -424,7 +424,7 @@ CloneStaticWithObject(JSContext *cx, HandleObject enclosingScope, Handle<StaticW
 
 DynamicWithObject *
 DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclosing,
-                          HandleObject staticWith)
+                          HandleObject staticWith, WithKind kind)
 {
     MOZ_ASSERT(staticWith->is<StaticWithObject>());
     RootedTypeObject type(cx, cx->getNewType(&class_, TaggedProto(staticWith.get())));
@@ -449,6 +449,7 @@ DynamicWithObject::create(JSContext *cx, HandleObject object, HandleObject enclo
     obj->as<ScopeObject>().setEnclosingScope(enclosing);
     obj->setFixedSlot(OBJECT_SLOT, ObjectValue(*object));
     obj->setFixedSlot(THIS_SLOT, ObjectValue(*thisp));
+    obj->setFixedSlot(KIND_SLOT, Int32Value(kind));
 
     return &obj->as<DynamicWithObject>();
 }
@@ -477,6 +478,32 @@ with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
     if (!IndexToId(cx, index, &id))
         return false;
     return with_LookupGeneric(cx, obj, id, objp, propp);
+}
+
+static bool
+with_DefineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
+                   JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+{
+    RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
+    return JSObject::defineGeneric(cx, actual, id, value, getter, setter, attrs);
+}
+
+static bool
+with_DefineProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value,
+                   JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+{
+    Rooted<jsid> id(cx, NameToId(name));
+    return with_DefineGeneric(cx, obj, id, value, getter, setter, attrs);
+}
+
+static bool
+with_DefineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue value,
+                   JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
+{
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return with_DefineGeneric(cx, obj, id, value, getter, setter, attrs);
 }
 
 static bool
@@ -592,9 +619,9 @@ const Class DynamicWithObject::class_ = {
         with_LookupGeneric,
         with_LookupProperty,
         with_LookupElement,
-        nullptr,             /* defineGeneric */
-        nullptr,             /* defineProperty */
-        nullptr,             /* defineElement */
+        with_DefineGeneric,
+        with_DefineProperty,
+        with_DefineElement,
         with_GetGeneric,
         with_GetProperty,
         with_GetElement,
@@ -1222,7 +1249,9 @@ ScopeIter::settle()
         hasScopeObject_ = true;
         MOZ_ASSERT_IF(type_ == Call, callobj.callee().nonLazyScript() == frame_.script());
     } else {
-        MOZ_ASSERT(!cur_->is<ScopeObject>());
+        MOZ_ASSERT(!cur_->is<ScopeObject>() ||
+                   (cur_->is<DynamicWithObject>() &&
+                    !cur_->as<DynamicWithObject>().isSyntactic()));
         MOZ_ASSERT(frame_.isGlobalFrame() || frame_.isDebuggerFrame());
         frame_ = NullFramePtr();
     }

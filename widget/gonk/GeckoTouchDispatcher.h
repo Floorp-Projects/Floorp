@@ -50,8 +50,6 @@ public:
   static bool NotifyVsync(TimeStamp aVsyncTimestamp);
 
 private:
-  int32_t InterpolateTouch(MultiTouchInput& aOutTouch, TimeStamp aSampleTime);
-  int32_t ExtrapolateTouch(MultiTouchInput& aOutTouch, TimeStamp aSampleTime);
   void ResampleTouchMoves(MultiTouchInput& aOutTouch, TimeStamp vsyncTime);
   void SendTouchEvent(MultiTouchInput& aData);
   void DispatchMouseEvent(MultiTouchInput& aMultiTouch,

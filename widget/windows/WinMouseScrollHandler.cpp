@@ -462,7 +462,7 @@ MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindowBase* aWidget,
     // message on its parent window.  However, note that the DOM event may
     // cause accessing the plugin.  Therefore, we should unlock the plugin
     // process by using PostMessage().
-    if (destWindow->WindowType() == eWindowType_plugin) {
+    if (destWindow->IsPlugin()) {
       destWindow = destWindow->GetParentWindowBase(false);
       if (!destWindow) {
         PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
@@ -501,7 +501,7 @@ MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindowBase* aWidget,
   // it on parent window.  However, note that the DOM event may cause accessing
   // the plugin.  Therefore, we should unlock the plugin process by using
   // PostMessage().
-  if (aWidget->WindowType() == eWindowType_plugin &&
+  if (aWidget->IsPlugin() &&
       aWidget->GetWindowHandle() == pluginWnd) {
     nsWindowBase* destWindow = aWidget->GetParentWindowBase(false);
     if (!destWindow) {
@@ -1532,7 +1532,7 @@ MouseScrollHandler::SynthesizingEvent::NativeMessageReceived(nsWindowBase* aWidg
     }
     // If the target window is not ours and received window is our plugin
     // window, it comes from child window of the plugin.
-    if (aWidget && aWidget->WindowType() == eWindowType_plugin &&
+    if (aWidget && aWidget->IsPlugin() &&
         !WinUtils::GetNSWindowBasePtr(mWnd)) {
       return;
     }

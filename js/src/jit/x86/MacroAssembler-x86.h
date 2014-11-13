@@ -377,7 +377,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Condition testUndefined(Condition cond, const Address &addr) {
         return testUndefined(cond, Operand(addr));
     }
-
+    Condition testNull(Condition cond, const Operand &operand) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        cmpl(ToType(operand), ImmTag(JSVAL_TAG_NULL));
+        return cond;
+    }
+    Condition testNull(Condition cond, const Address &addr) {
+        return testNull(cond, Operand(addr));
+    }
 
     Condition testUndefined(Condition cond, const ValueOperand &value) {
         return testUndefined(cond, value.typeReg());
@@ -828,9 +835,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     // Note: this function clobbers the source register.
     void boxDouble(FloatRegister src, const ValueOperand &dest) {
-        movd(src, dest.payloadReg());
-        psrldq(Imm32(4), src);
-        movd(src, dest.typeReg());
+        if (Assembler::HasSSE41()) {
+            movd(src, dest.payloadReg());
+            pextrd(1, src, dest.typeReg());
+        } else {
+            movd(src, dest.payloadReg());
+            psrldq(Imm32(4), src);
+            movd(src, dest.typeReg());
+        }
     }
     void boxNonDouble(JSValueType type, Register src, const ValueOperand &dest) {
         if (src != dest.payloadReg())

@@ -2,10 +2,12 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=977003
+https://bugzilla.mozilla.org/show_bug.cgi?id=1073563
+https://bugzilla.mozilla.org/show_bug.cgi?id=1094913
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 977003</title>
+  <title>Test for Bugs 977003, 1073563, 1094913</title>
   <meta name="author" content="Maksim Lebedev" />
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
@@ -18,7 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
     var listener = undefined;
     var test_down_target = false;
     var test_got_listener = false;
+    var test_got_type = "";
     var test_lost_listener = false;
+    var test_lost_type = "";
     var test_listener = false;
 
     function TargetDownHandler(event) {
@@ -29,13 +33,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       test_down_target = true;
     }
     function ListenerGotPCHandler(event) {
-      logger("Receive event on Listener: " + event.type);
+      logger("Receive event on Listener: " + event.type + "(" + event.pointerType + ")");
       listener.releasePointerCapture(event.pointerId);
       test_got_listener = true;
+      test_got_type = event.pointerType;
     }
     function ListenerLostPCHandler(event) {
-      logger("Receive event on Listener: " + event.type);
+      logger("Receive event on Listener: " + event.type + "(" + event.pointerType + ")");
       test_lost_listener = true;
+      test_lost_type = event.pointerType;
     }
     function ListenerHandler(event) {
       logger("Receive event on Listener: " + event.type);
@@ -63,25 +69,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       listener.addEventListener("pointerup",          ListenerHandler,        false);
       listener.addEventListener("pointerout",         ListenerHandler,        false);
       var rect = target.getBoundingClientRect();
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointermove"});
-      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup"});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown", inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointermove", inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
+      synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup",   inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH});
       finishTest();
     }
     function finishTest() {
-      setTimeout(function() {
-        parent.is(test_down_target,   true,   "Part 5: pointerdown event should be received by target");
-        parent.is(test_got_listener,  true,   "Part 5: listener should receive gotpointercapture event");
-        parent.is(test_lost_listener, true,   "Part 5: listener should receive lostpointercapture event");
-        parent.is(test_listener,      false,  "Part 5: listener shouldn't receive any other events");
-        logger("finishTest");
-        parent.finishTest();
-      }, 1000);
+      parent.is(test_down_target,     true, "Part 5: pointerdown event should be received by target");
+      parent.is(test_got_listener,    true, "Part 5: listener should receive gotpointercapture event");
+      parent.is(test_got_type,     "touch", "Part 5: gotpointercapture event should have pointerType touch");
+      parent.is(test_lost_listener,   true, "Part 5: listener should receive lostpointercapture event");
+      parent.is(test_lost_type,    "touch", "Part 5: lostpointercapture event should have pointerType touch");
+      parent.is(test_listener,       false, "Part 5: listener should not receive any other events");
+      logger("finishTest");
+      parent.finishTest();
     }
   </script>
 </head>
 <body onload="prepareTest()">
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=977003">Mozilla Bug 977003 Test 5</a>
+  <br><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1073563">Mozilla Bug 1073563</a>
+  <br><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1094913">Mozilla Bug 1094913</a>
   <p id="display"></p>
   <div id="content" style="display: none">
   </div>

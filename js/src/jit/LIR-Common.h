@@ -157,6 +157,15 @@ class LSimdExtractElementBase : public LInstructionHelper<1, 1, 0>
     SimdLane lane() const {
         return mir_->toSimdExtractElement()->lane();
     }
+    const char *extraName() const {
+        switch (lane()) {
+          case LaneX: return "lane x";
+          case LaneY: return "lane y";
+          case LaneZ: return "lane z";
+          case LaneW: return "lane w";
+        }
+        return "unknown lane";
+    }
 };
 
 // Extracts an element from a given SIMD int32x4 lane.
@@ -196,6 +205,15 @@ class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
     }
     SimdLane lane() const {
         return mir_->toSimdInsertElement()->lane();
+    }
+    const char *extraName() const {
+        switch (lane()) {
+          case LaneX: return "lane x";
+          case LaneY: return "lane y";
+          case LaneZ: return "lane z";
+          case LaneW: return "lane w";
+        }
+        return "unknown lane";
     }
 };
 

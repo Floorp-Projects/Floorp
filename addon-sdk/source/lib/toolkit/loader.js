@@ -327,7 +327,7 @@ const load = iced(function load(loader, module) {
     // not puts `:` after `"Error"` unlike regular errors thrown by JS code.
     // If there is a JS stack then this error has already been handled by an
     // inner module load.
-    if (String(error) === "Error opening input stream (invalid filename?)") {
+    if (/^Error opening input stream/.test(String(error))) {
       let caller = frames.slice(0).pop();
       fileName = caller.fileName;
       lineNumber = caller.lineNumber;

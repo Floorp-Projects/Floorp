@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdint.h>
+
 namespace mozilla {
 namespace a11y {
 
@@ -60,6 +62,11 @@ void ProxyCreated(ProxyAccessible*);
  * disposed of and other action taken.
  */
 void ProxyDestroyed(ProxyAccessible*);
+
+/**
+ * Callied when an event is fired on a proxied accessible.
+ */
+void ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType);
 } // namespace a11y
 } // namespace mozilla
 
