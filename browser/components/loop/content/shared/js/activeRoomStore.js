@@ -364,6 +364,10 @@ loop.store.ActiveRoomStore = (function() {
      *                                Switches to READY if undefined.
      */
     _leaveRoom: function(nextState) {
+      if (loop.standaloneMedia) {
+        loop.standaloneMedia.multiplexGum.reset();
+      }
+
       this._sdkDriver.disconnectSession();
 
       if (this._timeout) {
