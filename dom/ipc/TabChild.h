@@ -409,13 +409,6 @@ public:
                                        PIndexedDBPermissionRequestChild* aActor)
                                        MOZ_OVERRIDE;
 
-    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
-            const URIParams& manifestURI,
-            const URIParams& documentURI,
-            const bool& stickDocument) MOZ_OVERRIDE;
-    virtual bool
-    DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* offlineCacheUpdate) MOZ_OVERRIDE;
-
     virtual nsIWebNavigation* WebNavigation() MOZ_OVERRIDE { return mWebNav; }
     virtual nsIWidget* WebWidget() MOZ_OVERRIDE { return mWidget; }
 
