@@ -106,7 +106,6 @@ TiledContentClient::TiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
 void
 TiledContentClient::ClearCachedResources()
 {
-  CompositableClient::ClearCachedResources();
   mTiledBuffer.DiscardBuffers();
   mLowPrecisionTiledBuffer.DiscardBuffers();
 }
