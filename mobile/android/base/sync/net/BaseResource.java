@@ -65,7 +65,7 @@ public class BaseResource implements Resource {
 
   private boolean retryOnFailedRequest = true;
 
-  public static final boolean rewriteLocalhost = true;
+  public static boolean rewriteLocalhost = true;
 
   private static final String LOG_TAG = "BaseResource";
 
@@ -74,7 +74,7 @@ public class BaseResource implements Resource {
   protected DefaultHttpClient client;
   public    ResourceDelegate delegate;
   protected HttpRequestBase request;
-  public final String charset = "utf-8";
+  public String charset = "utf-8";
 
   protected static WeakReference<HttpResponseObserver> httpResponseObserver = null;
 
@@ -295,6 +295,10 @@ public class BaseResource implements Resource {
     try {
       this.prepareClient();
     } catch (KeyManagementException e) {
+      Logger.error(LOG_TAG, "Couldn't prepare client.", e);
+      delegate.handleTransportException(e);
+      return;
+    } catch (NoSuchAlgorithmException e) {
       Logger.error(LOG_TAG, "Couldn't prepare client.", e);
       delegate.handleTransportException(e);
       return;

@@ -61,7 +61,9 @@ public class GeckoMenuInflater extends MenuInflater {
 
             parseMenu(parser, attrs, menu);
 
-        } catch (XmlPullParserException | IOException e) {
+        } catch (XmlPullParserException e) {
+            throw new InflateException("Error inflating menu XML", e);
+        } catch (IOException e) {
             throw new InflateException("Error inflating menu XML", e);
         } finally {
             if (parser != null)

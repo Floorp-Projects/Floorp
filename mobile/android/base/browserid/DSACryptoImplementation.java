@@ -201,7 +201,9 @@ public class DSACryptoImplementation {
       BigInteger q = new BigInteger(o.getString("q"), SERIALIZATION_BASE);
       BigInteger g = new BigInteger(o.getString("g"), SERIALIZATION_BASE);
       return createPrivateKey(x, p, q, g);
-    } catch (NullPointerException | NumberFormatException e) {
+    } catch (NullPointerException e) {
+      throw new InvalidKeySpecException("x, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
+    } catch (NumberFormatException e) {
       throw new InvalidKeySpecException("x, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
     }
   }
@@ -217,7 +219,9 @@ public class DSACryptoImplementation {
       BigInteger q = new BigInteger(o.getString("q"), SERIALIZATION_BASE);
       BigInteger g = new BigInteger(o.getString("g"), SERIALIZATION_BASE);
       return createPublicKey(y, p, q, g);
-    } catch (NullPointerException | NumberFormatException e) {
+    } catch (NullPointerException e) {
+      throw new InvalidKeySpecException("y, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
+    } catch (NumberFormatException e) {
       throw new InvalidKeySpecException("y, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
     }
   }
