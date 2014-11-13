@@ -473,8 +473,10 @@ public:
     mContainerWidth = aContainerWidth;
     mBounds.BStart(mWritingMode) += aDBCoord;
     if (mData) {
+      nsPoint physicalDelta = mozilla::LogicalPoint(mWritingMode, 0, aDBCoord).
+                                         GetPhysicalPoint(mWritingMode, 0);
       NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-        mData->mOverflowAreas.Overflow(otype).y += aDBCoord;
+        mData->mOverflowAreas.Overflow(otype) += physicalDelta;
       }
     }
   }
@@ -585,9 +587,13 @@ public:
   nsIFrame* mFirstChild;
 
   mozilla::WritingMode mWritingMode;
+
+  // Physical width. Use only for physical <-> logical coordinate conversion.
   nscoord mContainerWidth;
+
  private:
   mozilla::LogicalRect mBounds;
+
  public:
   const mozilla::LogicalRect& GetBounds() { return mBounds; }
   nsRect GetPhysicalBounds() const
