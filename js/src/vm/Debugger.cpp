@@ -466,6 +466,19 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
     return true;
 }
 
+/* static */ bool
+Debugger::hasLiveOnExceptionUnwind(GlobalObject *global)
+{
+    if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
+        for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
+            Debugger *dbg = *p;
+            if (dbg->enabled && dbg->getHook(OnExceptionUnwind))
+                return true;
+        }
+    }
+    return false;
+}
+
 JSObject *
 Debugger::getHook(Hook hook) const
 {
@@ -1889,7 +1902,6 @@ Debugger::ensureExecutionObservabilityOfCompartment(JSContext *cx, JSCompartment
 }
 
 static const Debugger::Hook ObserveAllExecutionHooks[] = { Debugger::OnDebuggerStatement,
-                                                           Debugger::OnExceptionUnwind,
                                                            Debugger::OnEnterFrame,
                                                            Debugger::HookCount };
 
