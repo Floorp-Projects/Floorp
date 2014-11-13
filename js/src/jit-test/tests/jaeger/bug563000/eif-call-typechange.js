@@ -1,5 +1,4 @@
-var g = newGlobal();
-var dbg = new g.Debugger(this);
+load(libdir + "evalInFrame.js");
 
 function callee() {
   evalInFrame(1, "x = 'success'");
