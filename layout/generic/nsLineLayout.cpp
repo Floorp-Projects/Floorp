@@ -1830,42 +1830,65 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #endif
 
     if (verticalAlignEnum != nsIFrame::eInvalidVerticalAlign) {
+      if (lineWM.IsVertical()) {
+        if (verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_MIDDLE) {
+          // For vertical writing mode where the dominant baseline is centered
+          // (i.e. text-orientation is not sideways-*), we remap 'middle' to
+          // 'middle-with-baseline' so that images align sensibly with the
+          // center-baseline-aligned text.
+          if (!lineWM.IsSideways()) {
+            verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_MIDDLE_WITH_BASELINE;
+          }
+        } else if (lineWM.IsLineInverted()) {
+          // Swap the meanings of top and bottom when line is inverted
+          // relative to block direction.
+          switch (verticalAlignEnum) {
+            case NS_STYLE_VERTICAL_ALIGN_TOP:
+              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BOTTOM;
+              break;
+            case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_TOP;
+              break;
+            case NS_STYLE_VERTICAL_ALIGN_TEXT_TOP:
+              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM;
+              break;
+            case NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM:
+              verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_TEXT_TOP;
+              break;
+          }
+        }
+      }
+
+      // baseline coord that may be adjusted for script offset
+      nscoord revisedBaselineBCoord = baselineBCoord;
+
+      // For superscript and subscript, raise or lower the baseline of the box
+      // to the proper offset of the parent's box, then proceed as for BASELINE
+      if (verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_SUB ||
+          verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_SUPER) {
+        revisedBaselineBCoord += lineWM.FlowRelativeToLineRelativeFactor() *
+          (verticalAlignEnum == NS_STYLE_VERTICAL_ALIGN_SUB
+            ? fm->SubscriptOffset() : -fm->SuperscriptOffset());
+        verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
+      }
+
       switch (verticalAlignEnum) {
         default:
         case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-        {
-          // The element's baseline is aligned with the baseline of
-          // the parent.
-          pfd->mBounds.BStart(lineWM) = baselineBCoord - pfd->mAscent;
+          if (lineWM.IsVertical() && !lineWM.IsSideways()) {
+            if (frameSpan) {
+              pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord -
+                                            pfd->mBounds.BSize(lineWM)/2;
+            } else {
+              pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord -
+                                            logicalBSize/2 +
+                                            pfd->mMargin.BStart(lineWM);
+            }
+          } else {
+            pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord - pfd->mAscent;
+          }
           pfd->mBlockDirAlign = VALIGN_OTHER;
           break;
-        }
-
-        case NS_STYLE_VERTICAL_ALIGN_SUB:
-        {
-          // Lower the baseline of the box to the subscript offset
-          // of the parent's box. This is identical to the baseline
-          // alignment except for the addition of the subscript
-          // offset to the baseline BCoord.
-          nscoord parentSubscript = fm->SubscriptOffset();
-          nscoord revisedBaselineBCoord = baselineBCoord + parentSubscript;
-          pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord - pfd->mAscent;
-          pfd->mBlockDirAlign = VALIGN_OTHER;
-          break;
-        }
-
-        case NS_STYLE_VERTICAL_ALIGN_SUPER:
-        {
-          // Raise the baseline of the box to the superscript offset
-          // of the parent's box. This is identical to the baseline
-          // alignment except for the subtraction of the superscript
-          // offset to the baseline BCoord.
-          nscoord parentSuperscript = fm->SuperscriptOffset();
-          nscoord revisedBaselineBCoord = baselineBCoord - parentSuperscript;
-          pfd->mBounds.BStart(lineWM) = revisedBaselineBCoord - pfd->mAscent;
-          pfd->mBlockDirAlign = VALIGN_OTHER;
-          break;
-        }
 
         case NS_STYLE_VERTICAL_ALIGN_TOP:
         {
@@ -1901,7 +1924,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         {
           // Align the midpoint of the frame with 1/2 the parents
           // x-height above the baseline.
-          nscoord parentXHeight = fm->XHeight();
+          nscoord parentXHeight =
+            lineWM.FlowRelativeToLineRelativeFactor() * fm->XHeight();
           if (frameSpan) {
             pfd->mBounds.BStart(lineWM) = baselineBCoord -
               (parentXHeight + pfd->mBounds.BSize(lineWM))/2;
@@ -1921,7 +1945,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           // the parent element's text.
           // XXX For vertical text we will need a new API to get the logical
           //     max-ascent here
-          nscoord parentAscent = fm->MaxAscent();
+          nscoord parentAscent =
+            lineWM.IsLineInverted() ? fm->MaxDescent() : fm->MaxAscent();
           if (frameSpan) {
             pfd->mBounds.BStart(lineWM) = baselineBCoord - parentAscent -
               pfd->mBorderPadding.BStart(lineWM) + frameSpan->mBStartLeading;
@@ -1938,7 +1963,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         {
           // The bottom of the logical box is aligned with the
           // bottom of the parent elements text.
-          nscoord parentDescent = fm->MaxDescent();
+          nscoord parentDescent =
+            lineWM.IsLineInverted() ? fm->MaxAscent() : fm->MaxDescent();
           if (frameSpan) {
             pfd->mBounds.BStart(lineWM) = baselineBCoord + parentDescent -
                                           pfd->mBounds.BSize(lineWM) +
