@@ -591,7 +591,7 @@ public class Utils {
         StringBuilder sb = new StringBuilder();
         sb.append("    ");
         sb.append(getClassReferenceName(aClass));
-        sb.append(" = getClassGlobalRef(\"");
+        sb.append(" = AndroidBridge::GetClassGlobalRef(env, \"");
 
         String name = Utils.getTypeSignatureStringForClass(aClass);
         Class<?> containerClass = aClass.getDeclaringClass();

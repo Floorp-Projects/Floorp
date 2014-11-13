@@ -52,7 +52,7 @@ public class AnnotationProcessor {
                           "namespace mozilla {\n" +
                           "namespace widget {\n" +
                           "namespace android {\n" +
-                          "void InitStubs(JNIEnv *jEnv);\n\n");
+                          "void InitStubs(JNIEnv *env);\n\n");
 
         StringBuilder implementationFile = new StringBuilder(GENERATED_COMMENT);
         implementationFile.append("#include \"GeneratedJNIWrappers.h\"\n" +
@@ -66,7 +66,7 @@ public class AnnotationProcessor {
 
         // Used to track the calls to the various class-specific initialisation functions.
         StringBuilder stubInitialiser = new StringBuilder();
-        stubInitialiser.append("void InitStubs(JNIEnv *jEnv) {\n");
+        stubInitialiser.append("void InitStubs(JNIEnv *env) {\n");
 
         while (jarClassIterator.hasNext()) {
             ClassWithOptions aClassTuple = jarClassIterator.next();
@@ -81,7 +81,7 @@ public class AnnotationProcessor {
             }
             generatorInstance = new CodeGenerator(aClassTuple.wrappedClass, aClassTuple.generatedName);
 
-            stubInitialiser.append("    ").append(aClassTuple.generatedName).append("::InitStubs(jEnv);\n");
+            stubInitialiser.append("    ").append(aClassTuple.generatedName).append("::InitStubs(env);\n");
 
             // Iterate all annotated members in this class..
             while (methodIterator.hasNext()) {
