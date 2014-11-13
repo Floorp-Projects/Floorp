@@ -220,7 +220,7 @@ var commandsPeerConnection = [
     'PC_LOCAL_SANE_LOCAL_SDP',
     function (test) {
       test.pcLocal.verifySdp(test._local_offer, "offer",
-        test._offer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function(trickle) {
           test.pcLocal.localRequiresTrickleIce = trickle;
         });
@@ -231,7 +231,7 @@ var commandsPeerConnection = [
     'PC_REMOTE_SANE_REMOTE_SDP',
     function (test) {
       test.pcRemote.verifySdp(test._local_offer, "offer",
-        test._offer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function (trickle) {
           test.pcRemote.remoteRequiresTrickleIce = trickle;
         });
@@ -344,7 +344,7 @@ var commandsPeerConnection = [
     'PC_REMOTE_SANE_LOCAL_SDP',
     function (test) {
       test.pcRemote.verifySdp(test._remote_answer, "answer",
-        test._answer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function (trickle) {
           test.pcRemote.localRequiresTrickleIce = trickle;
         });
@@ -355,7 +355,7 @@ var commandsPeerConnection = [
     'PC_LOCAL_SANE_REMOTE_SDP',
     function (test) {
       test.pcLocal.verifySdp(test._remote_answer, "answer",
-        test._answer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function (trickle) {
           test.pcLocal.remoteRequiresTrickleIce = trickle;
         });
@@ -837,7 +837,7 @@ var commandsDataChannel = [
     'PC_LOCAL_SANE_LOCAL_SDP',
     function (test) {
       test.pcLocal.verifySdp(test._local_offer, "offer",
-        test._offer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function(trickle) {
           test.pcLocal.localRequiresTrickleIce = trickle;
         });
@@ -848,7 +848,7 @@ var commandsDataChannel = [
     'PC_REMOTE_SANE_REMOTE_SDP',
     function (test) {
       test.pcRemote.verifySdp(test._local_offer, "offer",
-        test._offer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function (trickle) {
           test.pcRemote.remoteRequiresTrickleIce = trickle;
         });
@@ -941,7 +941,7 @@ var commandsDataChannel = [
     'PC_REMOTE_SANE_LOCAL_SDP',
     function (test) {
       test.pcRemote.verifySdp(test._remote_answer, "answer",
-        test._answer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function (trickle) {
           test.pcRemote.localRequiresTrickleIce = trickle;
         });
@@ -952,7 +952,7 @@ var commandsDataChannel = [
     'PC_LOCAL_SANE_REMOTE_SDP',
     function (test) {
       test.pcLocal.verifySdp(test._remote_answer, "answer",
-        test._answer_constraints, test._offer_options,
+        test._offer_constraints, test._answer_constraints, test._offer_options,
         function (trickle) {
           test.pcLocal.remoteRequiresTrickleIce = trickle;
         });

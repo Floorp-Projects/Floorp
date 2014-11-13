@@ -36,8 +36,6 @@ startTestWithPermissions(['mobileconnection'], function() {
     .then(() => gRemoteAnswer(outCall))
     .then(() => gDelay(1000))  // See Bug 1018051 for the purpose of the delay.
     .then(() => gRemoteHangUp(outCall))
-    .then(null, () => {
-      ok(false, "promise rejects during test.");
-    })
+    .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });

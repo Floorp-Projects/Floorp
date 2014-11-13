@@ -1391,11 +1391,15 @@ public:
   /**
    * Gets the baseline to vertically center text from a font within a
    * line of specified height.
+   * aIsInverted: true if the text is inverted relative to the block
+   * direction, so that the block-dir "ascent" corresponds to font
+   * descent. (Applies to sideways text in vertical-lr mode.)
    *
    * Returns the baseline position relative to the top of the line.
    */
   static nscoord GetCenteredFontBaseline(nsFontMetrics* aFontMetrics,
-                                         nscoord         aLineHeight);
+                                         nscoord        aLineHeight,
+                                         bool           aIsInverted);
 
   /**
    * Derive a baseline of |aFrame| (measured from its top border edge)

@@ -1453,9 +1453,12 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
   // Until we get rid of these phases in bug 960465, we need to skip
   // animation restyles during the non-animation phase, and post
   // animation restyles so that we restyle those elements again in the
-  // animation phase.
+  // animation phase.  Furthermore, we need to add
+  // eRestyle_ChangeAnimationPhaseDescendants so that we actually honor
+  // these booleans in all cases.
   mSkipAnimationRules = true;
   mPostAnimationRestyles = true;
+  aRestyleHint |= eRestyle_ChangeAnimationPhaseDescendants;
 
   DoRebuildAllStyleData(mPendingRestyles, aExtraHint, aRestyleHint);
 
@@ -1495,8 +1498,12 @@ RestyleManager::DoRebuildAllStyleData(RestyleTracker& aRestyleTracker,
     // different styles).  If we use up the hint for one of the
     // ancestors that we hit first, then we'll fail to do the restyling
     // we need to do.
-    aRestyleTracker.AddPendingRestyle(mPresContext->Document()->GetRootElement(),
-                                      aRestyleHint, nsChangeHint(0));
+    Element* root = mPresContext->Document()->GetRootElement();
+    if (root) {
+      // If the root element is gone, dropping the hint on the floor
+      // should be fine.
+      aRestyleTracker.AddPendingRestyle(root, aRestyleHint, nsChangeHint(0));
+    }
     aRestyleHint = nsRestyleHint(0);
   }
 
@@ -2515,11 +2522,13 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     }
   }
 
-  // If we are restyling this frame with eRestyle_Self, we restyle
-  // children with nsRestyleHint(0).  But we pass the eRestyle_ForceDescendants
-  // flag down too.
+  // If we are restyling this frame with eRestyle_Self or weaker hints,
+  // we restyle children with nsRestyleHint(0).  But we pass the
+  // eRestyle_ChangeAnimationPhaseDescendants and eRestyle_ForceDescendants
+  // flags down too.
   nsRestyleHint childRestyleHint =
     nsRestyleHint(aRestyleHint & (eRestyle_Subtree |
+                                  eRestyle_ChangeAnimationPhaseDescendants |
                                   eRestyle_ForceDescendants));
 
   nsRefPtr<nsStyleContext> oldContext = mFrame->StyleContext();
@@ -3736,7 +3745,9 @@ RestyleManager::RestyleHintToString(nsRestyleHint aHint)
   bool any = false;
   const char* names[] = { "Self", "Subtree", "LaterSiblings", "CSSTransitions",
                           "CSSAnimations", "SVGAttrAnimations", "StyleAttribute",
-                          "ChangeAnimationPhase", "Force", "ForceDescendants" };
+                          "ChangeAnimationPhase",
+                          "ChangeAnimationPhaseDescendants",
+                          "Force", "ForceDescendants" };
   uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
   uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
   for (uint32_t i = 0; i < ArrayLength(names); i++) {

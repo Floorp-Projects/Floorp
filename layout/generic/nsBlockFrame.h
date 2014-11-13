@@ -408,11 +408,11 @@ protected:
     mState |= aFlags;
   }
 
-  /** move the frames contained by aLine by aDY
+  /** move the frames contained by aLine by aDeltaBCoord
     * if aLine is a block, its child floats are added to the state manager
     */
   void SlideLine(nsBlockReflowState& aState,
-                 nsLineBox* aLine, nscoord aDY);
+                 nsLineBox* aLine, nscoord aDeltaBCoord);
 
   void ComputeFinalSize(const nsHTMLReflowState& aReflowState,
                         nsBlockReflowState&      aState,

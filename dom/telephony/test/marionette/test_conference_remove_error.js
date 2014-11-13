@@ -61,8 +61,6 @@ function testConferenceRemoveError() {
 // Start the test
 startTest(function() {
   testConferenceRemoveError()
-    .then(null, error => {
-      ok(false, 'promise rejects during test.');
-    })
+    .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });

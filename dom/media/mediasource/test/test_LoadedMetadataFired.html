@@ -18,6 +18,8 @@ runWithMSE(function (ms, v) {
 
     v.addEventListener("loadedmetadata", function () {
       ok(true, "Got loadedmetadata event");
+      is(v.videoWidth, 320, "videoWidth has correct initial value");
+      is(v.videoHeight, 240, "videoHeight has correct initial value");
       SimpleTest.finish();
     });
 
