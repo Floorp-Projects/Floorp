@@ -114,6 +114,12 @@ CSSStyleSheet*
 nsLayoutStylesheetCache::UASheet()
 {
   EnsureGlobal();
+
+  if (!gStyleCache->mUASheet) {
+    LoadSheetURL("resource://gre-resources/ua.css",
+                 gStyleCache->mUASheet, true);
+  }
+
   return gStyleCache->mUASheet;
 }
 
@@ -258,13 +264,12 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
                mQuirkSheet, true);
   LoadSheetURL("resource://gre/res/svg.css",
                mSVGSheet, true);
-  LoadSheetURL("resource://gre-resources/ua.css",
-               mUASheet, true);
   LoadSheetURL("chrome://global/content/xul.css",
                mXULSheet, true);
 
-  // The remaining sheets are created on-demand since their use is rarer. This
-  // helps save memory for Firefox OS apps.
+  // The remaining sheets are created on-demand do to their use being rarer
+  // (which helps save memory for Firefox OS apps) or because they need to
+  // be re-loadable in DependentPrefChanged.
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache()
@@ -297,8 +302,8 @@ nsLayoutStylesheetCache::EnsureGlobal()
   // on (such as a pref that enables a property that a UA style sheet uses),
   // register DependentPrefChanged as a callback to ensure that the relevant
   // style sheets will be re-parsed.
-  // Preferences::RegisterCallback(&DependentPrefChanged,
-  //                               "layout.css.example-pref.enabled");
+  Preferences::RegisterCallback(&DependentPrefChanged,
+                                "layout.css.ruby.enabled");
 }
 
 void
@@ -417,7 +422,9 @@ nsLayoutStylesheetCache::DependentPrefChanged(const char* aPref, void* aData)
   // to be re-parsed by dropping the sheet from gCSSLoader's cache then
   // setting our cached sheet pointer to null.  This will only work for sheets
   // that are loaded lazily.
-  // InvalidateSheet(gStyleCache->mSomeLazilyLoadedSheet);
+
+  // for layout.css.ruby.enabled
+  InvalidateSheet(gStyleCache->mUASheet);
 }
 
 mozilla::StaticRefPtr<nsLayoutStylesheetCache>

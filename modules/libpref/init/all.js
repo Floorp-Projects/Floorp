@@ -2150,6 +2150,11 @@ pref("layout.css.overflow-clip-box.enabled", false);
 pref("layout.css.grid.enabled", false);
 
 // Is support for CSS Ruby enabled?
+//
+// When this pref is removed, make sure that the pref callback registration
+// in nsLayoutStylesheetCache::EnsureGlobal and the invalidation of
+// mUASheet in nsLayoutStylesheetCache::DependentPrefChanged (if it's not
+// otherwise needed) are removed.
 pref("layout.css.ruby.enabled", false);
 
 // Is support for CSS box-decoration-break enabled?
