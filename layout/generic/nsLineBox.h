@@ -587,9 +587,13 @@ public:
   nsIFrame* mFirstChild;
 
   mozilla::WritingMode mWritingMode;
+
+  // Physical width. Use only for physical <-> logical coordinate conversion.
   nscoord mContainerWidth;
+
  private:
   mozilla::LogicalRect mBounds;
+
  public:
   const mozilla::LogicalRect& GetBounds() { return mBounds; }
   nsRect GetPhysicalBounds() const
