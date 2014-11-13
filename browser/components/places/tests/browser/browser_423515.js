@@ -142,6 +142,7 @@ function test() {
       // tag a uri
       this.uri = makeURI("http://foo.com");
       PlacesUtils.tagging.tagURI(this.uri, ["bar"]);
+      registerCleanupFunction(() => PlacesUtils.tagging.untagURI(this.uri, ["bar"]));
     },
     validate: function() {
       // get tag root

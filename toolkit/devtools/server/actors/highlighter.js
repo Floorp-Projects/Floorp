@@ -22,7 +22,7 @@ const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
 const BOX_MODEL_SIDES = ["top", "right", "bottom", "left"];
 const SVG_NS = "http://www.w3.org/2000/svg";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const HIGHLIGHTER_STYLESHEET_URI = "chrome://browser/skin/devtools/highlighter.css";
+const HIGHLIGHTER_STYLESHEET_URI = "resource://gre/modules/devtools/server/actors/highlighter.css";
 const HIGHLIGHTER_PICKED_TIMER = 1000;
 // How high is the nodeinfobar
 const NODE_INFOBAR_HEIGHT = 40; //px

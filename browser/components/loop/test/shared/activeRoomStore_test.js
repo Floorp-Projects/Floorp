@@ -1,4 +1,4 @@
-/* global chai */
+/* global chai, loop */
 
 var expect = chai.expect;
 var sharedActions = loop.shared.actions;
@@ -8,6 +8,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sandbox, dispatcher, store, fakeMozLoop, fakeSdkDriver;
+  var fakeMultiplexGum;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -28,6 +29,14 @@ describe("loop.store.ActiveRoomStore", function () {
     fakeSdkDriver = {
       connectSession: sandbox.stub(),
       disconnectSession: sandbox.stub()
+    };
+
+    fakeMultiplexGum = {
+        reset: sandbox.spy()
+    };
+
+    loop.standaloneMedia = {
+      multiplexGum: fakeMultiplexGum
     };
 
     store = new loop.store.ActiveRoomStore({
@@ -82,7 +91,15 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.match(ROOM_STATES.READY), fakeError);
     });
 
-    it("should set the state to `FAILED`", function() {
+    it("should set the state to `FULL` on server errno 202", function() {
+      fakeError.errno = 202;
+
+      store.roomFailure({error: fakeError});
+
+      expect(store._storeState.roomState).eql(ROOM_STATES.FULL);
+    });
+
+    it("should set the state to `FAILED` on generic error", function() {
       store.roomFailure({error: fakeError});
 
       expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
@@ -371,6 +388,12 @@ describe("loop.store.ActiveRoomStore", function () {
       });
     });
 
+    it("should reset the multiplexGum", function() {
+      store.leaveRoom();
+
+      sinon.assert.calledOnce(fakeMultiplexGum.reset);
+    });
+
     it("should disconnect from the servers via the sdk", function() {
       store.connectionFailure();
 
@@ -450,6 +473,12 @@ describe("loop.store.ActiveRoomStore", function () {
       });
     });
 
+    it("should reset the multiplexGum", function() {
+      store.leaveRoom();
+
+      sinon.assert.calledOnce(fakeMultiplexGum.reset);
+    });
+
     it("should disconnect from the servers via the sdk", function() {
       store.windowUnload();
 
@@ -487,6 +516,12 @@ describe("loop.store.ActiveRoomStore", function () {
         roomToken: "fakeToken",
         sessionToken: "1627384950"
       });
+    });
+
+    it("should reset the multiplexGum", function() {
+      store.leaveRoom();
+
+      sinon.assert.calledOnce(fakeMultiplexGum.reset);
     });
 
     it("should disconnect from the servers via the sdk", function() {
