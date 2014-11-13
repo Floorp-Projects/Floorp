@@ -323,12 +323,17 @@ let MozLoopServiceInternal = {
 
   /**
    * Get endpoints with the push server and register for notifications.
-   * For now we register as both a Guest and FxA user and all must succeed.
+   * This should only be called from promiseRegisteredWithServers to prevent reentrancy.
    *
+   * @param {LOOP_SESSION_TYPE} sessionType
    * @return {Promise} resolves with all push endpoints
    *                   rejects if any of the push registrations failed
    */
-  promiseRegisteredWithPushServer: function() {
+  promiseRegisteredWithPushServer: function(sessionType) {
+    if (!this.deferredRegistrations.has(sessionType)) {
+      return Promise.reject("promiseRegisteredWithPushServer must be called while there is a " +
+                            "deferred in deferredRegistrations in order to prevent reentrancy");
+    }
     // Wrap push notification registration call-back in a Promise.
     function registerForNotification(channelID, onNotification) {
       log.debug("registerForNotification", channelID);
@@ -357,19 +362,23 @@ let MozLoopServiceInternal = {
     let options = this.mocks.webSocket ? { mockWebSocket: this.mocks.webSocket } : {};
     this.pushHandler.initialize(options);
 
-    let callsRegGuest = registerForNotification(MozLoopService.channelIDs.callsGuest,
+    if (sessionType == LOOP_SESSION_TYPE.GUEST) {
+      let callsRegGuest = registerForNotification(MozLoopService.channelIDs.callsGuest,
+                                                  LoopCalls.onNotification);
+
+      let roomsRegGuest = registerForNotification(MozLoopService.channelIDs.roomsGuest,
+                                                  roomsPushNotification);
+      return Promise.all([callsRegGuest, roomsRegGuest]);
+    } else if (sessionType == LOOP_SESSION_TYPE.FXA) {
+      let callsRegFxA = registerForNotification(MozLoopService.channelIDs.callsFxA,
                                                 LoopCalls.onNotification);
 
-    let roomsRegGuest = registerForNotification(MozLoopService.channelIDs.roomsGuest,
+      let roomsRegFxA = registerForNotification(MozLoopService.channelIDs.roomsFxA,
                                                 roomsPushNotification);
+      return Promise.all([callsRegFxA, roomsRegFxA]);
+    }
 
-    let callsRegFxA = registerForNotification(MozLoopService.channelIDs.callsFxA,
-                                              LoopCalls.onNotification);
-
-    let roomsRegFxA = registerForNotification(MozLoopService.channelIDs.roomsFxA,
-                                              roomsPushNotification);
-
-    return Promise.all([callsRegGuest, roomsRegGuest, callsRegFxA, roomsRegFxA]);
+    return Promise.reject("promiseRegisteredWithPushServer: Invalid sessionType");
   },
 
   /**
@@ -394,7 +403,7 @@ let MozLoopServiceInternal = {
     // We grab the promise early in case one of the callers below delete it from the map.
     result = deferred.promise;
 
-    this.promiseRegisteredWithPushServer().then(() => {
+    this.promiseRegisteredWithPushServer(sessionType).then(() => {
       return this.registerWithLoopServer(sessionType);
     }).then(() => {
       deferred.resolve("registered to status:" + sessionType);

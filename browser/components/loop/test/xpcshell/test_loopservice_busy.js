@@ -7,6 +7,7 @@ const { LoopCallsInternal } = Cu.import("resource:///modules/loop/LoopCalls.jsm"
 XPCOMUtils.defineLazyModuleGetter(this, "Chat",
                                   "resource:///modules/Chat.jsm");
 
+let actionReceived = false;
 let openChatOrig = Chat.open;
 
 const firstCallId = 4444333221;
@@ -21,107 +22,101 @@ let msgHandler = function(msg) {
   }
 };
 
-add_test(function test_busy_2guest_calls() {
+add_task(function* test_busy_2guest_calls() {
   actionReceived = false;
 
   mockPushHandler.registrationPushURL = kEndPointUrl;
 
-  MozLoopService.promiseRegisteredWithServers().then(() => {
-    let opened = 0;
-    let windowId;
-    Chat.open = function(contentWindow, origin, title, url) {
-      opened++;
-      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
-    };
+  yield MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.GUEST);
 
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
+  let opened = 0;
+  let windowId;
+  Chat.open = function(contentWindow, origin, title, url) {
+    opened++;
+    windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
+  };
 
-    waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
-      do_check_true(opened === 1, "should open only one chat window");
-      do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.clearCallInProgress(windowId);
-      run_next_test();
-    }, () => {
-      do_throw("should have opened a chat window for first call and rejected second call");
-    });
+  mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
 
+  yield waitForCondition(() => { return actionReceived && opened > 0; }).then(() => {
+    do_check_true(opened === 1, "should open only one chat window");
+    do_check_true(actionReceived, "should respond with busy/reject to second call");
+    LoopCalls.clearCallInProgress(windowId);
+  }, () => {
+    do_throw("should have opened a chat window for first call and rejected second call");
   });
 });
 
-add_test(function test_busy_1fxa_1guest_calls() {
+add_task(function* test_busy_1fxa_1guest_calls() {
   actionReceived = false;
 
-  MozLoopService.promiseRegisteredWithServers().then(() => {
-    let opened = 0;
-    let windowId;
-    Chat.open = function(contentWindow, origin, title, url) {
-      opened++;
-      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
-    };
+  yield MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.GUEST);
+  yield MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.FXA);
 
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
+  let opened = 0;
+  let windowId;
+  Chat.open = function(contentWindow, origin, title, url) {
+    opened++;
+    windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
+  };
 
-    waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
-      do_check_true(opened === 1, "should open only one chat window");
-      do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.clearCallInProgress(windowId);
-      run_next_test();
-    }, () => {
-      do_throw("should have opened a chat window for first call and rejected second call");
-    });
+  mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
+  mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
 
+  yield waitForCondition(() => { return actionReceived && opened > 0; }).then(() => {
+    do_check_true(opened === 1, "should open only one chat window");
+    do_check_true(actionReceived, "should respond with busy/reject to second call");
+    LoopCalls.clearCallInProgress(windowId);
+  }, () => {
+    do_throw("should have opened a chat window for first call and rejected second call");
   });
 });
 
-add_test(function test_busy_2fxa_calls() {
+add_task(function* test_busy_2fxa_calls() {
   actionReceived = false;
 
-  MozLoopService.promiseRegisteredWithServers().then(() => {
-    let opened = 0;
-    let windowId;
-    Chat.open = function(contentWindow, origin, title, url) {
-      opened++;
-      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
-    };
+  yield MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.FXA);
 
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
+  let opened = 0;
+  let windowId;
+  Chat.open = function(contentWindow, origin, title, url) {
+    opened++;
+    windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
+  };
 
-    waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
-      do_check_true(opened === 1, "should open only one chat window");
-      do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.clearCallInProgress(windowId);
-      run_next_test();
-    }, () => {
-      do_throw("should have opened a chat window for first call and rejected second call");
-    });
+  mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
 
+  yield waitForCondition(() => { return actionReceived && opened > 0; }).then(() => {
+    do_check_true(opened === 1, "should open only one chat window");
+    do_check_true(actionReceived, "should respond with busy/reject to second call");
+    LoopCalls.clearCallInProgress(windowId);
+  }, () => {
+    do_throw("should have opened a chat window for first call and rejected second call");
   });
 });
 
-add_test(function test_busy_1guest_1fxa_calls() {
+add_task(function* test_busy_1guest_1fxa_calls() {
   actionReceived = false;
 
-  MozLoopService.promiseRegisteredWithServers().then(() => {
-    let opened = 0;
-    let windowId;
-    Chat.open = function(contentWindow, origin, title, url) {
-      opened++;
-      windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
-    };
+  yield MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.GUEST);
+  yield MozLoopService.promiseRegisteredWithServers(LOOP_SESSION_TYPE.FXA);
 
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
-    mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
+  let opened = 0;
+  let windowId;
+  Chat.open = function(contentWindow, origin, title, url) {
+    opened++;
+    windowId = url.match(/about:loopconversation\#(\d+)$/)[1];
+  };
 
-    waitForCondition(() => {return actionReceived && opened > 0}).then(() => {
-      do_check_true(opened === 1, "should open only one chat window");
-      do_check_true(actionReceived, "should respond with busy/reject to second call");
-      LoopCalls.clearCallInProgress(windowId);
-      run_next_test();
-    }, () => {
-      do_throw("should have opened a chat window for first call and rejected second call");
-    });
+  mockPushHandler.notify(1, MozLoopService.channelIDs.callsGuest);
+  mockPushHandler.notify(1, MozLoopService.channelIDs.callsFxA);
 
+  yield waitForCondition(() => { return actionReceived && opened > 0; }).then(() => {
+    do_check_true(opened === 1, "should open only one chat window");
+    do_check_true(actionReceived, "should respond with busy/reject to second call");
+    LoopCalls.clearCallInProgress(windowId);
+  }, () => {
+    do_throw("should have opened a chat window for first call and rejected second call");
   });
 });
 
