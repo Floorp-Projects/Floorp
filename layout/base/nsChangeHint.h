@@ -339,16 +339,20 @@ enum nsRestyleHint {
   // FIXME: Remove this as part of bug 960465.
   eRestyle_ChangeAnimationPhase = (1 << 7),
 
+  // Same as the previous, except this applies to the entire subtree.
+  // FIXME: Remove this as part of bug 960465.
+  eRestyle_ChangeAnimationPhaseDescendants = (1 << 8),
+
   // Continue the restyling process to the current frame's children even
   // if this frame's restyling resulted in no style changes.
-  eRestyle_Force = (1<<8),
+  eRestyle_Force = (1<<9),
 
   // Continue the restyling process to all of the current frame's
   // descendants, even if any frame's restyling resulted in no style
   // changes.  (Implies eRestyle_Force.)  Note that this is weaker than
   // eRestyle_Subtree, which makes us rerun selector matching on all
   // descendants rather than just continuing the restyling process.
-  eRestyle_ForceDescendants = (1<<9),
+  eRestyle_ForceDescendants = (1<<10),
 };
 
 // The functions below need an integral type to cast to to avoid

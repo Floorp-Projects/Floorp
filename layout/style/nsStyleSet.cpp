@@ -1360,6 +1360,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                         eRestyle_SVGAttrAnimations |
                                         eRestyle_StyleAttribute |
                                         eRestyle_ChangeAnimationPhase |
+                                        eRestyle_ChangeAnimationPhaseDescendants |
                                         eRestyle_Force |
                                         eRestyle_ForceDescendants)),
                     // FIXME: Once bug 979133 lands we'll have a better
@@ -1372,11 +1373,27 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 
   // If we're changing animation phase, we have to reconsider what rules
   // are in these four levels.
-  if (aReplacements & eRestyle_ChangeAnimationPhase) {
-    aReplacements |= eRestyle_CSSTransitions |
-                     eRestyle_CSSAnimations |
-                     eRestyle_SVGAttrAnimations |
-                     eRestyle_StyleAttribute;
+  if (aReplacements & (eRestyle_ChangeAnimationPhase |
+                       eRestyle_ChangeAnimationPhaseDescendants)) {
+    // Animations are only on elements and on :before and :after
+    // pseudo-elements, so those are the only things we need to consider
+    // when changing animation phase.  Furthermore, the :before and
+    // :after pseudo-elements cannot have style attributes (although
+    // some other pseudo-elements can).  This lets us avoid the problem
+    // that the eRestyle_StyleAttribute case below can't handle
+    // pseudo-elements, but not adding that bit to aReplacements for
+    // pseudo-elements, since we don't need it.
+    if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+      aReplacements |= eRestyle_CSSTransitions |
+                       eRestyle_CSSAnimations |
+                       eRestyle_SVGAttrAnimations |
+                       eRestyle_StyleAttribute;
+    } else if (aPseudoType == nsCSSPseudoElements::ePseudo_before ||
+               aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+      aReplacements |= eRestyle_CSSTransitions |
+                       eRestyle_CSSAnimations |
+                       eRestyle_SVGAttrAnimations;
+    }
 
     RestyleManager* restyleManager = PresContext()->RestyleManager();
     skipAnimationRules = restyleManager->SkipAnimationRules();
@@ -1472,7 +1489,8 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           break;
         }
         case eRestyle_SVGAttrAnimations: {
-          MOZ_ASSERT(aReplacements & eRestyle_ChangeAnimationPhase,
+          MOZ_ASSERT(aReplacements & (eRestyle_ChangeAnimationPhase |
+                                      eRestyle_ChangeAnimationPhaseDescendants),
                      "don't know how to do this level without phase change");
 
           SVGAttrAnimationRuleProcessor* ruleProcessor =
@@ -1485,7 +1503,8 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           break;
         }
         case eRestyle_StyleAttribute: {
-          MOZ_ASSERT(aReplacements & eRestyle_ChangeAnimationPhase,
+          MOZ_ASSERT(aReplacements & (eRestyle_ChangeAnimationPhase |
+                                      eRestyle_ChangeAnimationPhaseDescendants),
                      "don't know how to do this level without phase change");
 
           if (!level->mIsImportant) {
