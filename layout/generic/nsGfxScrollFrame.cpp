@@ -1876,7 +1876,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
     // when scrolling.
     nsLayoutUtils::SetDisplayPortMargins(mOuter->GetContent(),
                                          mOuter->PresContext()->PresShell(),
-                                         LayerMargin(),
+                                         ScreenMargin(),
                                          gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight(),
                                          0,
                                          nsLayoutUtils::RepaintMode::DoNotRepaint);

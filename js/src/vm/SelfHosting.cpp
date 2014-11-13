@@ -705,18 +705,6 @@ intrinsic_LegacyGeneratorObjectIsClosed(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
-intrinsic_CloseNewbornLegacyGeneratorObject(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 1);
-    MOZ_ASSERT(args[0].isObject());
-
-    LegacyGeneratorObject *genObj = &args[0].toObject().as<LegacyGeneratorObject>();
-    args.rval().setBoolean(LegacyGeneratorObject::maybeCloseNewborn(genObj));
-    return true;
-}
-
-static bool
 intrinsic_CloseClosingLegacyGeneratorObject(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1050,7 +1038,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("IsLegacyGeneratorObject", intrinsic_IsLegacyGeneratorObject, 1,0),
     JS_FN("LegacyGeneratorObjectIsClosed", intrinsic_LegacyGeneratorObjectIsClosed, 1,0),
-    JS_FN("CloseNewbornLegacyGeneratorObject", intrinsic_CloseNewbornLegacyGeneratorObject, 1,0),
     JS_FN("CloseClosingLegacyGeneratorObject", intrinsic_CloseClosingLegacyGeneratorObject, 1,0),
     JS_FN("ThrowStopIteration",      intrinsic_ThrowStopIteration,      0,0),
 

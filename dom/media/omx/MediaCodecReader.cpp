@@ -11,6 +11,8 @@
 #include <gui/Surface.h>
 #include <ICrypto.h>
 
+#include "GonkNativeWindow.h"
+
 #include <stagefright/foundation/ABuffer.h>
 #include <stagefright/foundation/ADebug.h>
 #include <stagefright/foundation/ALooper.h>
@@ -24,6 +26,7 @@
 #include <stagefright/Utils.h>
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/layers/GrallocTextureClient.h"
 
 #include "gfx2DGlue.h"
 
@@ -112,6 +115,10 @@ MediaCodecReader::VideoResourceListener::codecCanceled()
   }
 }
 
+MediaCodecReader::TrackInputCopier::~TrackInputCopier()
+{
+}
+
 bool
 MediaCodecReader::TrackInputCopier::Copy(MediaBuffer* aSourceBuffer,
                                          sp<ABuffer> aCodecBuffer)
@@ -130,8 +137,9 @@ MediaCodecReader::TrackInputCopier::Copy(MediaBuffer* aSourceBuffer,
   return true;
 }
 
-MediaCodecReader::Track::Track()
-  : mSourceIsStopped(true)
+MediaCodecReader::Track::Track(Type type)
+  : mType(type)
+  , mSourceIsStopped(true)
   , mDurationLock("MediaCodecReader::Track::mDurationLock")
   , mDurationUs(INT64_C(0))
   , mInputIndex(sInvalidInputIndex)
@@ -142,6 +150,7 @@ MediaCodecReader::Track::Track()
   , mDiscontinuity(false)
   , mTaskQueue(nullptr)
 {
+  MOZ_ASSERT(mType != kUnknown, "Should have a valid Track::Type");
 }
 
 // Append the value of |kKeyValidSamples| to the end of each vorbis buffer.
@@ -173,11 +182,13 @@ MediaCodecReader::VorbisInputCopier::Copy(MediaBuffer* aSourceBuffer,
 }
 
 MediaCodecReader::AudioTrack::AudioTrack()
+  : Track(kAudio)
 {
 }
 
 MediaCodecReader::VideoTrack::VideoTrack()
-  : mWidth(0)
+  : Track(kVideo)
+  , mWidth(0)
   , mHeight(0)
   , mStride(0)
   , mSliceHeight(0)
@@ -279,13 +290,14 @@ MediaCodecReader::ProcessCachedDataTask::Run()
 
 MediaCodecReader::MediaCodecReader(AbstractMediaDecoder* aDecoder)
   : MediaOmxCommonReader(aDecoder)
-  , mColorConverterBufferSize(0)
   , mExtractor(nullptr)
+  , mIsWaitingResources(false)
+  , mTextureClientIndexesLock("MediaCodecReader::mTextureClientIndexesLock")
+  , mColorConverterBufferSize(0)
   , mParserMonitor("MediaCodecReader::mParserMonitor")
   , mParseDataFromCache(true)
   , mNextParserPosition(INT64_C(0))
   , mParsedDataLength(INT64_C(0))
-  , mIsWaitingResources(false)
 {
   mHandler = new MessageHandler(this);
   mVideoListener = new VideoResourceListener(this);
@@ -326,11 +338,11 @@ MediaCodecReader::ReleaseMediaResources()
 {
   // Stop the mSource because we are in the dormant state and the stop function
   // will rewind the mSource to the beginning of the stream.
-  if (mVideoTrack.mSource != nullptr) {
+  if (mVideoTrack.mSource != nullptr && !mVideoTrack.mSourceIsStopped) {
     mVideoTrack.mSource->stop();
     mVideoTrack.mSourceIsStopped = true;
   }
-  if (mAudioTrack.mSource != nullptr) {
+  if (mAudioTrack.mSource != nullptr && !mAudioTrack.mSourceIsStopped) {
     mAudioTrack.mSource->stop();
     mAudioTrack.mSourceIsStopped = true;
   }
@@ -752,6 +764,82 @@ MediaCodecReader::ResetDecode()
   return MediaDecoderReader::ResetDecode();
 }
 
+void
+MediaCodecReader::TextureClientRecycleCallback(TextureClient* aClient,
+                                               void* aClosure)
+{
+  nsRefPtr<MediaCodecReader> reader = static_cast<MediaCodecReader*>(aClosure);
+  MOZ_ASSERT(reader, "reader should not be nullptr in TextureClientRecycleCallback()");
+
+  reader->TextureClientRecycleCallback(aClient);
+}
+
+void
+MediaCodecReader::TextureClientRecycleCallback(TextureClient* aClient)
+{
+  MOZ_ASSERT(aClient, "aClient should not be nullptr in RecycleCallback()");
+
+  size_t index = 0;
+
+  {
+    MutexAutoLock al(mTextureClientIndexesLock);
+
+    aClient->ClearRecycleCallback();
+
+    // aClient has been removed from mTextureClientIndexes by
+    // ReleaseAllTextureClients() on another thread.
+    if (!mTextureClientIndexes.Get(aClient, &index)) {
+      return;
+    }
+    mTextureClientIndexes.Remove(aClient);
+  }
+
+  if (mVideoTrack.mCodec != nullptr) {
+    mVideoTrack.mCodec->releaseOutputBuffer(index);
+  }
+}
+
+PLDHashOperator
+MediaCodecReader::ReleaseTextureClient(TextureClient* aClient,
+                                       size_t& aIndex,
+                                       void* aUserArg)
+{
+  nsRefPtr<MediaCodecReader> reader = static_cast<MediaCodecReader*>(aUserArg);
+  MOZ_ASSERT(reader, "reader should not be nullptr in ReleaseTextureClient()");
+
+  return reader->ReleaseTextureClient(aClient, aIndex);
+}
+
+PLDHashOperator
+MediaCodecReader::ReleaseTextureClient(TextureClient* aClient,
+                                       size_t& aIndex)
+{
+  MOZ_ASSERT(aClient, "TextureClient should be a valid pointer");
+
+  aClient->ClearRecycleCallback();
+
+  if (mVideoTrack.mCodec != nullptr) {
+    mVideoTrack.mCodec->releaseOutputBuffer(aIndex);
+  }
+
+  return PL_DHASH_REMOVE;
+}
+
+void
+MediaCodecReader::ReleaseAllTextureClients()
+{
+  MutexAutoLock al(mTextureClientIndexesLock);
+  MOZ_ASSERT(mTextureClientIndexes.Count(), "All TextureClients should be released already");
+
+  if (mTextureClientIndexes.Count() == 0) {
+    return;
+  }
+  printf_stderr("All TextureClients should be released already");
+
+  mTextureClientIndexes.Enumerate(MediaCodecReader::ReleaseTextureClient, this);
+  mTextureClientIndexes.Clear();
+}
+
 bool
 MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
 {
@@ -795,75 +883,92 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
   }
 
   bool result = false;
-  if (bufferInfo.mBuffer != nullptr && bufferInfo.mSize > 0 &&
-      bufferInfo.mBuffer->data() != nullptr) {
-    uint8_t* yuv420p_buffer = bufferInfo.mBuffer->data();
-    int32_t stride = mVideoTrack.mStride;
-    int32_t slice_height = mVideoTrack.mSliceHeight;
-
-    // Converts to OMX_COLOR_FormatYUV420Planar
-    if (mVideoTrack.mColorFormat != OMX_COLOR_FormatYUV420Planar) {
-      ARect crop;
-      crop.top = 0;
-      crop.bottom = mVideoTrack.mHeight;
-      crop.left = 0;
-      crop.right = mVideoTrack.mWidth;
-
-      yuv420p_buffer = GetColorConverterBuffer(mVideoTrack.mWidth,
-                                               mVideoTrack.mHeight);
-      if (mColorConverter.convertDecoderOutputToI420(
-            bufferInfo.mBuffer->data(), mVideoTrack.mWidth, mVideoTrack.mHeight,
-            crop, yuv420p_buffer) != OK) {
-        mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
-        NS_WARNING("Unable to convert color format");
-        return false;
-      }
-
-      stride = mVideoTrack.mWidth;
-      slice_height = mVideoTrack.mHeight;
-    }
-
-    size_t yuv420p_y_size = stride * slice_height;
-    size_t yuv420p_u_size = ((stride + 1) / 2) * ((slice_height + 1) / 2);
-    uint8_t* yuv420p_y = yuv420p_buffer;
-    uint8_t* yuv420p_u = yuv420p_y + yuv420p_y_size;
-    uint8_t* yuv420p_v = yuv420p_u + yuv420p_u_size;
-
+  VideoData *v = nullptr;
+  RefPtr<TextureClient> textureClient;
+  sp<GraphicBuffer> graphicBuffer;
+  if (bufferInfo.mBuffer != nullptr) {
     // This is the approximate byte position in the stream.
     int64_t pos = mDecoder->GetResource()->Tell();
 
-    VideoData::YCbCrBuffer b;
-    b.mPlanes[0].mData = yuv420p_y;
-    b.mPlanes[0].mWidth = mVideoTrack.mWidth;
-    b.mPlanes[0].mHeight = mVideoTrack.mHeight;
-    b.mPlanes[0].mStride = stride;
-    b.mPlanes[0].mOffset = 0;
-    b.mPlanes[0].mSkip = 0;
+    if (mVideoTrack.mNativeWindow != nullptr &&
+        mVideoTrack.mCodec->getOutputGraphicBufferFromIndex(bufferInfo.mIndex, &graphicBuffer) == OK &&
+        graphicBuffer != nullptr) {
+      textureClient = mVideoTrack.mNativeWindow->getTextureClientFromBuffer(graphicBuffer.get());
+      v = VideoData::Create(mInfo.mVideo,
+                            mDecoder->GetImageContainer(),
+                            pos,
+                            bufferInfo.mTimeUs,
+                            1, // We don't know the duration.
+                            textureClient,
+                            bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_SYNCFRAME,
+                            -1,
+                            mVideoTrack.mRelativePictureRect);
+    } else if (bufferInfo.mSize > 0 &&
+        bufferInfo.mBuffer->data() != nullptr) {
+      uint8_t* yuv420p_buffer = bufferInfo.mBuffer->data();
+      int32_t stride = mVideoTrack.mStride;
+      int32_t slice_height = mVideoTrack.mSliceHeight;
 
-    b.mPlanes[1].mData = yuv420p_u;
-    b.mPlanes[1].mWidth = (mVideoTrack.mWidth + 1) / 2;
-    b.mPlanes[1].mHeight = (mVideoTrack.mHeight + 1) / 2;
-    b.mPlanes[1].mStride = (stride + 1) / 2;
-    b.mPlanes[1].mOffset = 0;
-    b.mPlanes[1].mSkip = 0;
+      // Converts to OMX_COLOR_FormatYUV420Planar
+      if (mVideoTrack.mColorFormat != OMX_COLOR_FormatYUV420Planar) {
+        ARect crop;
+        crop.top = 0;
+        crop.bottom = mVideoTrack.mHeight;
+        crop.left = 0;
+        crop.right = mVideoTrack.mWidth;
 
-    b.mPlanes[2].mData = yuv420p_v;
-    b.mPlanes[2].mWidth =(mVideoTrack.mWidth + 1) / 2;
-    b.mPlanes[2].mHeight = (mVideoTrack.mHeight + 1) / 2;
-    b.mPlanes[2].mStride = (stride + 1) / 2;
-    b.mPlanes[2].mOffset = 0;
-    b.mPlanes[2].mSkip = 0;
+        yuv420p_buffer = GetColorConverterBuffer(mVideoTrack.mWidth,
+                                                 mVideoTrack.mHeight);
+        if (mColorConverter.convertDecoderOutputToI420(
+              bufferInfo.mBuffer->data(), mVideoTrack.mWidth, mVideoTrack.mHeight,
+              crop, yuv420p_buffer) != OK) {
+          mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
+          NS_WARNING("Unable to convert color format");
+          return false;
+        }
 
-    VideoData *v = VideoData::Create(
-      mInfo.mVideo,
-      mDecoder->GetImageContainer(),
-      pos,
-      bufferInfo.mTimeUs,
-      1, // We don't know the duration.
-      b,
-      bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_SYNCFRAME,
-      -1,
-      mVideoTrack.mRelativePictureRect);
+        stride = mVideoTrack.mWidth;
+        slice_height = mVideoTrack.mHeight;
+      }
+
+      size_t yuv420p_y_size = stride * slice_height;
+      size_t yuv420p_u_size = ((stride + 1) / 2) * ((slice_height + 1) / 2);
+      uint8_t* yuv420p_y = yuv420p_buffer;
+      uint8_t* yuv420p_u = yuv420p_y + yuv420p_y_size;
+      uint8_t* yuv420p_v = yuv420p_u + yuv420p_u_size;
+
+      VideoData::YCbCrBuffer b;
+      b.mPlanes[0].mData = yuv420p_y;
+      b.mPlanes[0].mWidth = mVideoTrack.mWidth;
+      b.mPlanes[0].mHeight = mVideoTrack.mHeight;
+      b.mPlanes[0].mStride = stride;
+      b.mPlanes[0].mOffset = 0;
+      b.mPlanes[0].mSkip = 0;
+
+      b.mPlanes[1].mData = yuv420p_u;
+      b.mPlanes[1].mWidth = (mVideoTrack.mWidth + 1) / 2;
+      b.mPlanes[1].mHeight = (mVideoTrack.mHeight + 1) / 2;
+      b.mPlanes[1].mStride = (stride + 1) / 2;
+      b.mPlanes[1].mOffset = 0;
+      b.mPlanes[1].mSkip = 0;
+
+      b.mPlanes[2].mData = yuv420p_v;
+      b.mPlanes[2].mWidth =(mVideoTrack.mWidth + 1) / 2;
+      b.mPlanes[2].mHeight = (mVideoTrack.mHeight + 1) / 2;
+      b.mPlanes[2].mStride = (stride + 1) / 2;
+      b.mPlanes[2].mOffset = 0;
+      b.mPlanes[2].mSkip = 0;
+
+      v = VideoData::Create(mInfo.mVideo,
+                            mDecoder->GetImageContainer(),
+                            pos,
+                            bufferInfo.mTimeUs,
+                            1, // We don't know the duration.
+                            b,
+                            bufferInfo.mFlags & MediaCodec::BUFFER_FLAG_SYNCFRAME,
+                            -1,
+                            mVideoTrack.mRelativePictureRect);
+    }
 
     if (v) {
       result = true;
@@ -877,7 +982,14 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
       (status == ERROR_END_OF_STREAM)) {
     VideoQueue().Finish();
   }
-  mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
+
+  if (v != nullptr && textureClient != nullptr && graphicBuffer != nullptr && result) {
+    MutexAutoLock al(mTextureClientIndexesLock);
+    mTextureClientIndexes.Put(textureClient.get(), bufferInfo.mIndex);
+    textureClient->SetRecycleCallback(MediaCodecReader::TextureClientRecycleCallback, this);
+  } else {
+    mVideoTrack.mCodec->releaseOutputBuffer(bufferInfo.mIndex);
+  }
 
   return result;
 }
@@ -981,6 +1093,7 @@ MediaCodecReader::ReleaseCriticalResources()
   if (videoframe) {
     videoframe->ClearCurrentFrame();
   }
+  ReleaseAllTextureClients();
 
   DestroyMediaCodecs();
 
@@ -1005,16 +1118,18 @@ MediaCodecReader::CreateLooper()
   }
 
   // Create ALooper
-  mLooper = new ALooper;
-  mLooper->setName("MediaCodecReader");
+  sp<ALooper> looper = new ALooper;
+  looper->setName("MediaCodecReader::mLooper");
 
   // Register AMessage handler to ALooper.
-  mLooper->registerHandler(mHandler);
+  looper->registerHandler(mHandler);
 
   // Start ALooper thread.
-  if (mLooper->start() != OK) {
+  if (looper->start() != OK) {
     return false;
   }
+
+  mLooper = looper;
 
   return true;
 }
@@ -1202,12 +1317,19 @@ MediaCodecReader::CreateMediaCodec(sp<ALooper>& aLooper,
       aTrack.mInputCopier = new TrackInputCopier;
     }
 
+    uint32_t capability = MediaCodecProxy::kEmptyCapability;
+    if (aTrack.mType == Track::kVideo &&
+        aTrack.mCodec->getCapability(&capability) == OK &&
+        (capability & MediaCodecProxy::kCanExposeGraphicBuffer) == MediaCodecProxy::kCanExposeGraphicBuffer) {
+      aTrack.mNativeWindow = new GonkNativeWindow();
+    }
+
     if (!aAsync) {
       // Pending configure() and start() to codecReserved() if the creation
       // should be asynchronous.
       if (!aTrack.mCodec->allocated() || !ConfigureMediaCodec(aTrack)){
         NS_WARNING("Couldn't create and configure MediaCodec synchronously");
-        aTrack.mCodec = nullptr;
+        DestroyMediaCodec(aTrack);
         return false;
       }
     }
@@ -1224,12 +1346,17 @@ MediaCodecReader::ConfigureMediaCodec(Track& aTrack)
       return false;
     }
 
+    sp<Surface> surface;
+    if (aTrack.mNativeWindow != nullptr) {
+      surface = new Surface(aTrack.mNativeWindow->getBufferQueue());
+    }
+
     sp<MetaData> sourceFormat = aTrack.mSource->getFormat();
     sp<AMessage> codecFormat;
     convertMetaDataToMessage(sourceFormat, &codecFormat);
 
     bool allpass = true;
-    if (allpass && aTrack.mCodec->configure(codecFormat, nullptr, nullptr, 0) != OK) {
+    if (allpass && aTrack.mCodec->configure(codecFormat, surface, nullptr, 0) != OK) {
       NS_WARNING("Couldn't configure MediaCodec");
       allpass = false;
     }
@@ -1246,7 +1373,7 @@ MediaCodecReader::ConfigureMediaCodec(Track& aTrack)
       allpass = false;
     }
     if (!allpass) {
-      aTrack.mCodec = nullptr;
+      DestroyMediaCodec(aTrack);
       return false;
     }
   }
@@ -1257,14 +1384,15 @@ MediaCodecReader::ConfigureMediaCodec(Track& aTrack)
 void
 MediaCodecReader::DestroyMediaCodecs()
 {
-  DestroyMediaCodecs(mAudioTrack);
-  DestroyMediaCodecs(mVideoTrack);
+  DestroyMediaCodec(mAudioTrack);
+  DestroyMediaCodec(mVideoTrack);
 }
 
 void
-MediaCodecReader::DestroyMediaCodecs(Track& aTrack)
+MediaCodecReader::DestroyMediaCodec(Track& aTrack)
 {
   aTrack.mCodec = nullptr;
+  aTrack.mNativeWindow = nullptr;
 }
 
 bool
@@ -1512,6 +1640,13 @@ MediaCodecReader::UpdateVideoInfo()
 status_t
 MediaCodecReader::FlushCodecData(Track& aTrack)
 {
+  if (aTrack.mType == Track::kVideo) {
+    // TODO: if we do release TextureClient on a separate thread in the future,
+    // we will have to explicitly cleanup TextureClients which have been
+    // recycled through TextureClient::mRecycleCallback.
+    // Just NO-OP for now.
+  }
+
   if (aTrack.mSource == nullptr || aTrack.mCodec == nullptr ||
       !aTrack.mCodec->allocated()) {
     return UNKNOWN_ERROR;
@@ -1660,7 +1795,6 @@ MediaCodecReader::GetCodecOutputData(Track& aTrack,
       // Update output buffers of MediaCodec.
       if (aTrack.mCodec->getOutputBuffers(&aTrack.mOutputBuffers) != OK) {
         NS_WARNING("Couldn't get output buffers from MediaCodec");
-        aTrack.mCodec = nullptr;
         return UNKNOWN_ERROR;
       }
     }
@@ -1711,7 +1845,17 @@ MediaCodecReader::EnsureCodecFormatParsed(Track& aTrack)
                      &timeUs, &flags)) != INFO_FORMAT_CHANGED) {
     if (status == OK) {
       aTrack.mCodec->releaseOutputBuffer(index);
+    } else if (status == INFO_OUTPUT_BUFFERS_CHANGED) {
+      // Update output buffers of MediaCodec.
+      if (aTrack.mCodec->getOutputBuffers(&aTrack.mOutputBuffers) != OK) {
+        NS_WARNING("Couldn't get output buffers from MediaCodec");
+        return false;
+      }
+    } else if (status != -EAGAIN && status != INVALID_OPERATION){
+      // FIXME: let INVALID_OPERATION pass?
+      return false; // something wrong!!!
     }
+
     status = FillCodecInputData(aTrack);
     if (status == INFO_FORMAT_CHANGED) {
       break;
@@ -1776,7 +1920,7 @@ void
 MediaCodecReader::codecReserved(Track& aTrack)
 {
   if (!ConfigureMediaCodec(aTrack)) {
-    DestroyMediaCodecs(aTrack);
+    DestroyMediaCodec(aTrack);
     return;
   }
 
@@ -1791,7 +1935,7 @@ MediaCodecReader::codecReserved(Track& aTrack)
 void
 MediaCodecReader::codecCanceled(Track& aTrack)
 {
-  DestroyMediaCodecs(aTrack);
+  DestroyMediaCodec(aTrack);
 
   if (mHandler != nullptr) {
     // post kNotifyCodecCanceled to MediaCodecReader::mLooper thread.

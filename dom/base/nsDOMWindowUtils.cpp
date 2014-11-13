@@ -444,11 +444,11 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
   }
 
   // Note order change of arguments between our function signature and
-  // LayerMargin constructor.
-  LayerMargin displayportMargins(aTopMargin,
-                                 aRightMargin,
-                                 aBottomMargin,
-                                 aLeftMargin);
+  // ScreenMargin constructor.
+  ScreenMargin displayportMargins(aTopMargin,
+                                  aRightMargin,
+                                  aBottomMargin,
+                                  aLeftMargin);
 
   nsLayoutUtils::SetDisplayPortMargins(content, presShell, displayportMargins,
                                        aAlignmentX, aAlignmentY, aPriority);

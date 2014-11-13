@@ -106,6 +106,7 @@ TiledContentClient::TiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
 void
 TiledContentClient::ClearCachedResources()
 {
+  CompositableClient::ClearCachedResources();
   mTiledBuffer.DiscardBuffers();
   mLowPrecisionTiledBuffer.DiscardBuffers();
 }
@@ -150,11 +151,10 @@ ComputeViewTransform(const FrameMetrics& aContentMetrics, const FrameMetrics& aC
   // but with aContentMetrics used in place of mLastContentPaintMetrics, because they
   // should be equivalent, modulo race conditions while transactions are inflight.
 
-  ParentLayerToScreenScale scale = aCompositorMetrics.GetZoom()
-                     / aContentMetrics.mDevPixelsPerCSSPixel
-                     / aCompositorMetrics.GetParentResolution();
-  ScreenPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
-                         * aCompositorMetrics.GetZoom();
+  LayerToParentLayerScale scale(aCompositorMetrics.mPresShellResolution
+                                * aCompositorMetrics.GetAsyncZoom().scale);
+  ParentLayerPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
+                               * aCompositorMetrics.GetZoom();
   return ViewTransform(scale, -translation);
 }
 
@@ -1311,7 +1311,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   DrawDebugOverlay(drawTarget, aTileOrigin.x * mResolution,
-                   aTileOrigin.y * mResolution, GetTileLength(), GetTileLength());
+                   aTileOrigin.y * mPresShellResolution, GetTileLength(), GetTileLength());
 #endif
 
   ctxt = nullptr;
@@ -1367,8 +1367,8 @@ GetCompositorSideCompositionBounds(const LayerMetricsWrapper& aScrollAncestor,
                                    const ViewTransform& aAPZTransform)
 {
   Matrix4x4 nonTransientAPZUntransform = Matrix4x4::Scaling(
-    aScrollAncestor.Metrics().mResolution.scale,
-    aScrollAncestor.Metrics().mResolution.scale,
+    aScrollAncestor.Metrics().mPresShellResolution,
+    aScrollAncestor.Metrics().mPresShellResolution,
     1.f);
   nonTransientAPZUntransform.Invert();
 

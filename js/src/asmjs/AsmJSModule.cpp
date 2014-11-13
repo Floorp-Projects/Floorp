@@ -54,36 +54,6 @@ using mozilla::PodEqual;
 using mozilla::Compression::LZ4;
 using mozilla::Swap;
 
-// At any time, the executable code of an asm.js module can be protected (as
-// part of RequestInterruptForAsmJSCode). When we touch the executable outside
-// of executing it (which the AsmJSFaultHandler will correctly handle), we need
-// to guard against this by unprotecting the code (if it has been protected) and
-// preventing it from being protected while we are touching it.
-class AutoUnprotectCode
-{
-    JSRuntime *rt_;
-    JSRuntime::AutoLockForInterrupt lock_;
-    const AsmJSModule &module_;
-    const bool protectedBefore_;
-
-  public:
-    AutoUnprotectCode(JSContext *cx, const AsmJSModule &module)
-      : rt_(cx->runtime()),
-        lock_(rt_),
-        module_(module),
-        protectedBefore_(module_.codeIsProtected(rt_))
-    {
-        if (protectedBefore_)
-            module_.unprotectCode(rt_);
-    }
-
-    ~AutoUnprotectCode()
-    {
-        if (protectedBefore_)
-            module_.protectCode(rt_);
-    }
-};
-
 static uint8_t *
 AllocateExecutableMemory(ExclusiveContext *cx, size_t bytes)
 {
@@ -113,8 +83,7 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t srcStart, uint32_t
     dynamicallyLinked_(false),
     loadedFromCache_(false),
     profilingEnabled_(false),
-    interrupted_(false),
-    codeIsProtected_(false)
+    interrupted_(false)
 {
     mozilla::PodZero(&pod);
     pod.funcPtrTableAndExitBytes_ = SIZE_MAX;
@@ -830,7 +799,6 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
 #endif
 }
 
-// This method assumes the caller has a live AutoUnprotectCode.
 void
 AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer)
 {
@@ -852,7 +820,6 @@ AsmJSModule::restoreHeapToInitialState(ArrayBufferObjectMaybeShared *maybePrevBu
     heapDatum() = nullptr;
 }
 
-// This method assumes the caller has a live AutoUnprotectCode.
 void
 AsmJSModule::restoreToInitialState(ArrayBufferObjectMaybeShared *maybePrevBuffer,
                                    uint8_t *prevCode,
@@ -907,7 +874,6 @@ AsmJSModule::detachHeap(JSContext *cx)
     MOZ_ASSERT_IF(active(), activation()->exitReason() == AsmJSExit::Reason_IonFFI ||
                             activation()->exitReason() == AsmJSExit::Reason_SlowFFI);
 
-    AutoUnprotectCode auc(cx, *this);
     restoreHeapToInitialState(maybeHeap_);
 
     MOZ_ASSERT(hasDetachedHeap());
@@ -1568,8 +1534,6 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
 bool
 AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const
 {
-    AutoUnprotectCode auc(cx, *this);
-
     *moduleOut = cx->new_<AsmJSModule>(scriptSource_, srcStart_, srcBodyStart_, pod.strict_,
                                        pod.usesSignalHandlers_);
     if (!*moduleOut)
@@ -1628,7 +1592,6 @@ AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newHeap, JSContext *cx)
     if (interrupted_)
         return false;
 
-    AutoUnprotectCode auc(cx, *this);
     restoreHeapToInitialState(maybeHeap_);
     initHeap(newHeap, cx);
     return true;
@@ -1668,9 +1631,6 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
     // Conservatively flush the icache for the entire module.
     AutoFlushICache afc("AsmJSModule::setProfilingEnabled");
     setAutoFlushICacheRange();
-
-    // To enable profiling, we need to patch 3 kinds of things:
-    AutoUnprotectCode auc(cx, *this);
 
     // Patch all internal (asm.js->asm.js) callsites to call the profiling
     // prologues:
@@ -1816,59 +1776,6 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
     }
 
     profilingEnabled_ = enabled;
-}
-
-void
-AsmJSModule::protectCode(JSRuntime *rt) const
-{
-    MOZ_ASSERT(isDynamicallyLinked());
-    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-
-    codeIsProtected_ = true;
-
-    if (!pod.functionBytes_)
-        return;
-
-    // Technically, we should be able to only take away the execute permissions,
-    // however this seems to break our emulators which don't always check
-    // execute permissions while executing code.
-#if defined(XP_WIN)
-    DWORD oldProtect;
-    if (!VirtualProtect(codeBase(), functionBytes(), PAGE_NOACCESS, &oldProtect))
-        MOZ_CRASH();
-#else  // assume Unix
-    if (mprotect(codeBase(), functionBytes(), PROT_NONE))
-        MOZ_CRASH();
-#endif
-}
-
-void
-AsmJSModule::unprotectCode(JSRuntime *rt) const
-{
-    MOZ_ASSERT(isDynamicallyLinked());
-    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-
-    codeIsProtected_ = false;
-
-    if (!pod.functionBytes_)
-        return;
-
-#if defined(XP_WIN)
-    DWORD oldProtect;
-    if (!VirtualProtect(codeBase(), functionBytes(), PAGE_EXECUTE_READWRITE, &oldProtect))
-        MOZ_CRASH();
-#else  // assume Unix
-    if (mprotect(codeBase(), functionBytes(), PROT_READ | PROT_WRITE | PROT_EXEC))
-        MOZ_CRASH();
-#endif
-}
-
-bool
-AsmJSModule::codeIsProtected(JSRuntime *rt) const
-{
-    MOZ_ASSERT(isDynamicallyLinked());
-    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
-    return codeIsProtected_;
 }
 
 static bool

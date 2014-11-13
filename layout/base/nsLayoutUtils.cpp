@@ -836,32 +836,41 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
 
   nsPresContext* presContext = frame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
-  gfxSize res = presContext->PresShell()->GetCumulativeResolution();
 
-  // First convert the base rect to layer pixels
-  gfxSize parentRes = res;
+  LayoutDeviceToScreenScale res(presContext->PresShell()->GetCumulativeResolution().width
+                              * nsLayoutUtils::GetTransformToAncestorScale(frame).width);
+
+  // First convert the base rect to screen pixels
+  LayoutDeviceToScreenScale parentRes = res;
   if (isRoot) {
     // the base rect for root scroll frames is specified in the parent document
     // coordinate space, so it doesn't include the local resolution.
     gfxSize localRes = presContext->PresShell()->GetResolution();
-    parentRes.width /= localRes.width;
-    parentRes.height /= localRes.height;
+    parentRes.scale /= localRes.width;
   }
-  LayerRect layerRect(NSAppUnitsToFloatPixels(base.x, auPerDevPixel) * parentRes.width,
-                      NSAppUnitsToFloatPixels(base.y, auPerDevPixel) * parentRes.height,
-                      NSAppUnitsToFloatPixels(base.width, auPerDevPixel) * parentRes.width,
-                      NSAppUnitsToFloatPixels(base.height, auPerDevPixel) * parentRes.height);
+  ScreenRect screenRect = LayoutDeviceRect::FromAppUnits(base, auPerDevPixel)
+                        * parentRes;
 
   // Expand the rect by the margins
-  layerRect.Inflate(aMarginsData->mMargins);
+  screenRect.Inflate(aMarginsData->mMargins);
 
-  // And then align it to the requested alignment
+  // And then align it to the requested alignment.
+  // Note on the correctness of applying the alignment in Screen space:
+  //   The correct space to apply the alignment in would be Layer space, but
+  //   we don't necessarily know the scale to convert to Layer space at this
+  //   point because Layout may not yet have chosen the resolution at which to
+  //   render (it chooses that in FrameLayerBuilder, but this can be called
+  //   during display list building). Therefore, we perform the alignment in
+  //   Screen space, which basically assumes that Layout chose to render at
+  //   screen resolution; since this is what Layout does most of the time,
+  //   this is a good approximation. A proper solution would involve moving the
+  //   choosing of the resolution to display-list building time.
   if (aMarginsData->mAlignmentX > 0 || aMarginsData->mAlignmentY > 0) {
     // Inflate the rectangle by 1 so that we always push to the next tile
     // boundary. This is desirable to stop from having a rectangle with a
     // moving origin occasionally being smaller when it coincidentally lines
     // up to tile boundaries.
-    layerRect.Inflate(1);
+    screenRect.Inflate(1);
 
     // Avoid division by zero.
     if (aMarginsData->mAlignmentX == 0) {
@@ -871,23 +880,20 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
       aMarginsData->mAlignmentY = 1;
     }
 
-    LayerPoint scrollPosLayer(NSAppUnitsToFloatPixels(scrollPos.x, auPerDevPixel) * res.width,
-                              NSAppUnitsToFloatPixels(scrollPos.y, auPerDevPixel) * res.height);
+    ScreenPoint scrollPosScreen = LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel)
+                                * res;
 
-    layerRect += scrollPosLayer;
-    float x = aMarginsData->mAlignmentX * floor(layerRect.x / aMarginsData->mAlignmentX);
-    float y = aMarginsData->mAlignmentY * floor(layerRect.y / aMarginsData->mAlignmentY);
-    float w = aMarginsData->mAlignmentX * ceil(layerRect.XMost() / aMarginsData->mAlignmentX) - x;
-    float h = aMarginsData->mAlignmentY * ceil(layerRect.YMost() / aMarginsData->mAlignmentY) - y;
-    layerRect = LayerRect(x, y, w, h);
-    layerRect -= scrollPosLayer;
+    screenRect += scrollPosScreen;
+    float x = aMarginsData->mAlignmentX * floor(screenRect.x / aMarginsData->mAlignmentX);
+    float y = aMarginsData->mAlignmentY * floor(screenRect.y / aMarginsData->mAlignmentY);
+    float w = aMarginsData->mAlignmentX * ceil(screenRect.XMost() / aMarginsData->mAlignmentX) - x;
+    float h = aMarginsData->mAlignmentY * ceil(screenRect.YMost() / aMarginsData->mAlignmentY) - y;
+    screenRect = ScreenRect(x, y, w, h);
+    screenRect -= scrollPosScreen;
   }
 
   // Convert the aligned rect back into app units
-  nsRect result(NSFloatPixelsToAppUnits(layerRect.x / res.width, auPerDevPixel),
-                NSFloatPixelsToAppUnits(layerRect.y / res.height, auPerDevPixel),
-                NSFloatPixelsToAppUnits(layerRect.width / res.width, auPerDevPixel),
-                NSFloatPixelsToAppUnits(layerRect.height / res.height, auPerDevPixel));
+  nsRect result = LayoutDeviceRect::ToAppUnits(screenRect / res, auPerDevPixel);
 
   // Expand it for the low-res buffer if needed
   result = ApplyRectMultiplier(result, aMultiplier);
@@ -950,7 +956,7 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
 void
 nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                                      nsIPresShell* aPresShell,
-                                     const LayerMargin& aMargins,
+                                     const ScreenMargin& aMargins,
                                      uint32_t aAlignmentX,
                                      uint32_t aAlignmentY,
                                      uint32_t aPriority,
@@ -2301,6 +2307,19 @@ nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncesto
   return ctm;
 }
 
+gfxSize
+nsLayoutUtils::GetTransformToAncestorScale(nsIFrame* aFrame)
+{
+  Matrix4x4 transform = GetTransformToAncestor(aFrame,
+      nsLayoutUtils::GetDisplayRootFrame(aFrame));
+  Matrix transform2D;
+  if (transform.Is2D(&transform2D)) {
+    return ThebesMatrix(transform2D).ScaleFactors(true);
+  }
+  return gfxSize(1, 1);
+}
+
+
 static nsIFrame*
 FindNearestCommonAncestorFrame(nsIFrame* aFrame1, nsIFrame* aFrame2)
 {
@@ -2765,19 +2784,27 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
   nsIPresShell* presShell = presContext->PresShell();
   CSSToLayoutDeviceScale deviceScale(float(nsPresContext::AppUnitsPerCSSPixel())
                                      / presContext->AppUnitsPerDevPixel());
-  ParentLayerToLayerScale resolution;
+  float resolution = 1.0f;
   if (aScrollFrame == presShell->GetRootScrollFrame()) {
     // Only the root scrollable frame for a given presShell should pick up
     // the presShell's resolution. All the other frames are 1.0.
-    resolution = ParentLayerToLayerScale(presShell->GetXResolution(),
-                                         presShell->GetYResolution());
+    resolution = presShell->GetXResolution();
   }
-  LayoutDeviceToLayerScale cumulativeResolution(presShell->GetCumulativeResolution().width);
+  // Note: unlike in ComputeFrameMetrics(), we don't know the full cumulative
+  // resolution including FrameMetrics::mExtraResolution, because layout hasn't
+  // chosen a resolution to paint at yet. However, the display port calculation
+  // divides out mExtraResolution anyways, so we get the correct result by
+  // setting the mCumulativeResolution to everything except the extra resolution
+  // and leaving mExtraResolution at 1.
+  LayoutDeviceToLayerScale cumulativeResolution(
+      presShell->GetCumulativeResolution().width
+    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame).width);
 
+  LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.mDevPixelsPerCSSPixel = deviceScale;
-  metrics.mResolution = resolution;
+  metrics.mPresShellResolution = resolution;
   metrics.mCumulativeResolution = cumulativeResolution;
-  metrics.SetZoom(deviceScale * cumulativeResolution * LayerToScreenScale(1));
+  metrics.SetZoom(deviceScale * cumulativeResolution * layerToParentLayerScale);
 
   // Only the size of the composition bounds is relevant to the
   // displayport calculation, not its origin.
@@ -2789,9 +2816,7 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
       compBoundsScale = LayoutDeviceToParentLayerScale(res.width, res.height);
     }
   } else {
-    compBoundsScale = cumulativeResolution
-                    * LayerToScreenScale(1.0f)
-                    * ScreenToParentLayerScale(1.0f);
+    compBoundsScale = cumulativeResolution * layerToParentLayerScale;
   }
   metrics.mCompositionBounds
       = LayoutDeviceRect::FromAppUnits(nsRect(nsPoint(0, 0), compositionSize),
@@ -2841,8 +2866,8 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
       FrameMetrics metrics = CalculateFrameMetricsForDisplayPort(aScrollFrame, scrollableFrame);
-      LayerMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
-          metrics, ScreenPoint(0.0f, 0.0f), 0.0);
+      ScreenMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
+          metrics, ParentLayerPoint(0.0f, 0.0f), 0.0);
       nsIPresShell* presShell = aScrollFrame->PresContext()->GetPresShell();
       gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
           ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
@@ -7009,10 +7034,11 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
   if (aIsRootContentDocRootScrollFrame) {
     return ViewAs<LayerPixel>(aMetrics.mCompositionBounds.Size(),
                               PixelCastJustification::ParentLayerToLayerForRootComposition)
-           / aMetrics.LayersPixelsPerCSSPixel();
+           * LayerToScreenScale(1.0f)
+           / aMetrics.DisplayportPixelsPerCSSPixel();
   }
   nsPresContext* presContext = aFrame->PresContext();
-  LayerSize rootCompositionSize;
+  ScreenSize rootCompositionSize;
   nsPresContext* rootPresContext =
     presContext->GetToplevelContentDocumentPresContext();
   if (!rootPresContext) {
@@ -7026,12 +7052,13 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
     nsIPresShell* rootPresShell = rootPresContext->PresShell();
     if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
       LayoutDeviceToLayerScale cumulativeResolution(
-        rootPresShell->GetCumulativeResolution().width);
+        rootPresShell->GetCumulativeResolution().width
+      * nsLayoutUtils::GetTransformToAncestorScale(rootFrame).width);
       int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
       LayerSize frameSize =
         (LayoutDeviceRect::FromAppUnits(rootFrame->GetRect(), rootAUPerDevPixel)
          * cumulativeResolution).Size();
-      rootCompositionSize = frameSize;
+      rootCompositionSize = frameSize * LayerToScreenScale(1.0f);
 #ifdef MOZ_WIDGET_ANDROID
       nsIWidget* widget = rootFrame->GetNearestWidget();
 #else
@@ -7041,7 +7068,7 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
       if (widget) {
         nsIntRect widgetBounds;
         widget->GetBounds(widgetBounds);
-        rootCompositionSize = LayerSize(ViewAs<LayerPixel>(widgetBounds.Size()));
+        rootCompositionSize = ScreenSize(ViewAs<ScreenPixel>(widgetBounds.Size()));
 #ifdef MOZ_WIDGET_ANDROID
         if (frameSize.height < rootCompositionSize.height) {
           rootCompositionSize.height = frameSize.height;
@@ -7055,7 +7082,7 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
             gfxSize res = rootPresContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
             scale = LayoutDeviceToLayerScale(res.width, res.height);
           }
-          rootCompositionSize = contentSize * scale;
+          rootCompositionSize = contentSize * scale * LayerToScreenScale(1.0f);
         }
       }
     }
@@ -7063,7 +7090,7 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
     nsIWidget* widget = aFrame->GetNearestWidget();
     nsIntRect widgetBounds;
     widget->GetBounds(widgetBounds);
-    rootCompositionSize = LayerSize(ViewAs<LayerPixel>(widgetBounds.Size()));
+    rootCompositionSize = ScreenSize(ViewAs<ScreenPixel>(widgetBounds.Size()));
   }
 
   // Adjust composition size for the size of scroll bars.
@@ -7079,7 +7106,7 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
     rootCompositionSize.height -= margins.TopBottom();
   }
 
-  return rootCompositionSize / aMetrics.LayersPixelsPerCSSPixel();
+  return rootCompositionSize / aMetrics.DisplayportPixelsPerCSSPixel();
 }
 
 /* static */ nsRect
