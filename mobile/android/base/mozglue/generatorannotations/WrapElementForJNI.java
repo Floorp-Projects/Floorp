@@ -44,5 +44,14 @@ public @interface WrapElementForJNI {
      */
     boolean noThrow() default false;
 
+    /**
+     * If set, uses UTF-8 strings
+     */
     boolean narrowChars() default false;
+
+    /**
+     * If set, the generated stub will catch any exception thrown and
+     * set a passed-in nsresult to NS_ERROR_FAILURE
+     */
+    boolean catchException() default false;
 }
