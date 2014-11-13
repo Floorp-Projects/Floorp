@@ -380,6 +380,7 @@ class ICEntry
     _(Call_ScriptedApplyArguments) \
     _(Call_ScriptedFunCall)     \
     _(Call_StringSplit)         \
+    _(Call_IsSuspendedStarGenerator) \
                                 \
     _(GetElem_Fallback)         \
     _(GetElem_NativeSlot)       \
@@ -6233,6 +6234,36 @@ class ICCall_StringSplit : public ICMonitoredStub
             return ICCall_StringSplit::New(space, getStubCode(), firstMonitorStub_,
                                            pcOffset_, expectedThis_, expectedArg_,
                                            templateObject_);
+        }
+   };
+};
+
+class ICCall_IsSuspendedStarGenerator : public ICStub
+{
+    friend class ICStubSpace;
+
+  protected:
+    explicit ICCall_IsSuspendedStarGenerator(JitCode *stubCode)
+      : ICStub(ICStub::Call_IsSuspendedStarGenerator, stubCode)
+    {}
+
+  public:
+    static inline ICCall_IsSuspendedStarGenerator *New(ICStubSpace *space, JitCode *code) {
+        if (!code)
+            return nullptr;
+        return space->allocate<ICCall_IsSuspendedStarGenerator>(code);
+    }
+
+    class Compiler : public ICStubCompiler {
+      protected:
+        bool generateStubCode(MacroAssembler &masm);
+
+      public:
+        explicit Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::Call_IsSuspendedStarGenerator)
+        {}
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCall_IsSuspendedStarGenerator::New(space, getStubCode());
         }
    };
 };
