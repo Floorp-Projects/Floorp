@@ -607,6 +607,12 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         }
     }
 
+    // If we are bailing to a script whose execution is observed, mark the
+    // baseline frame as a debuggee frame. This is to cover the case where we
+    // don't rematerialize the Ion frame via the Debugger.
+    if (script->isDebuggee())
+        flags |= BaselineFrame::DEBUGGEE;
+
     // Initialize BaselineFrame's scopeChain and argsObj
     JSObject *scopeChain = nullptr;
     Value returnValue;
@@ -843,7 +849,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             // the snapshot expects the return value to be pushed, but it's
             // possible nothing was pushed before we threw. Iterators might
             // still be on the stack, so we can't just drop the stack.
-            MOZ_ASSERT(cx->compartment()->debugMode());
+            MOZ_ASSERT(cx->compartment()->isDebuggee());
             if (iter.moreFrames())
                 v = iter.read();
             else
@@ -1594,8 +1600,14 @@ CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size
             "  Copied from rematerialized frame at (%p,%u)",
             fp, inlineDepth);
 
-    if (cx->compartment()->debugMode())
+    // Propagate the debuggee frame flag. For the case where the Debugger did
+    // not rematerialize an Ion frame, the baseline frame has its debuggee
+    // flag set iff its script is considered a debuggee. See the debuggee case
+    // in InitFromBailout.
+    if (rematFrame->isDebuggee()) {
+        frame->setIsDebuggee();
         return Debugger::handleIonBailout(cx, rematFrame, frame);
+    }
 
     return true;
 }

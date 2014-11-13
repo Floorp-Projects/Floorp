@@ -90,7 +90,7 @@ MSG_DEF(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH, 0, JSEXN_TYPEERR, "can't define arr
 MSG_DEF(JSMSG_BAD_GET_SET_FIELD,       1, JSEXN_TYPEERR, "property descriptor's {0} field is neither undefined nor a function")
 MSG_DEF(JSMSG_THROW_TYPE_ERROR,        0, JSEXN_TYPEERR, "'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them")
 MSG_DEF(JSMSG_NOT_EXPECTED_TYPE,       3, JSEXN_TYPEERR, "{0}: expected {1}, got {2}")
-MSG_DEF(JSMSG_NEED_DEBUG_MODE,         0, JSEXN_ERR, "function can be called only in debug mode")
+MSG_DEF(JSMSG_NEED_DEBUG_MODE,         0, JSEXN_ERR, "function can be called only if a Debugger is observing all execution")
 MSG_DEF(JSMSG_NOT_ITERABLE,            1, JSEXN_TYPEERR, "{0} is not iterable")
 MSG_DEF(JSMSG_ALREADY_HAS_PRAGMA,      2, JSEXN_NONE, "{0} is being assigned a {1}, but already has one")
 MSG_DEF(JSMSG_NEXT_RETURNED_PRIMITIVE, 0, JSEXN_TYPEERR, "iterator.next() returned a non-object value")

@@ -563,7 +563,7 @@ void
 JSCompartment::sweepGlobalObject(FreeOp *fop)
 {
     if (global_.unbarrieredGet() && IsObjectAboutToBeFinalizedFromAnyThread(global_.unsafeGet())) {
-        if (debugMode())
+        if (isDebuggee())
             Debugger::detachAllDebuggersFromGlobal(fop, global_);
         global_.set(nullptr);
     }
@@ -716,17 +716,6 @@ JSCompartment::setObjectMetadataCallback(js::ObjectMetadataCallback callback)
     objectMetadataCallback = callback;
 }
 
-bool
-JSCompartment::hasScriptsOnStack()
-{
-    for (ActivationIterator iter(runtimeFromMainThread()); !iter.done(); ++iter) {
-        if (iter->compartment() == this)
-            return true;
-    }
-
-    return false;
-}
-
 static bool
 AddInnerLazyFunctionsFromScript(JSScript *script, AutoObjectVector &lazyFunctions)
 {
@@ -799,58 +788,12 @@ JSCompartment::ensureDelazifyScriptsForDebugMode(JSContext *cx)
     return true;
 }
 
-bool
-JSCompartment::updateJITForDebugMode(JSContext *maybecx, AutoDebugModeInvalidation &invalidate)
-{
-    // The AutoDebugModeInvalidation argument makes sure we can't forget to
-    // invalidate, but it is also important not to run any scripts in this
-    // compartment until the invalidate is destroyed.  That is the caller's
-    // responsibility.
-    return jit::UpdateForDebugMode(maybecx, this, invalidate);
-}
-
-bool
-JSCompartment::enterDebugMode(JSContext *cx)
-{
-    AutoDebugModeInvalidation invalidate(this);
-    return enterDebugMode(cx, invalidate);
-}
-
-bool
-JSCompartment::enterDebugMode(JSContext *cx, AutoDebugModeInvalidation &invalidate)
-{
-    if (!debugMode()) {
-        debugModeBits |= DebugMode;
-        if (!updateJITForDebugMode(cx, invalidate))
-            return false;
-    }
-    return true;
-}
-
-bool
-JSCompartment::leaveDebugMode(JSContext *cx)
-{
-    AutoDebugModeInvalidation invalidate(this);
-    return leaveDebugMode(cx, invalidate);
-}
-
-bool
-JSCompartment::leaveDebugMode(JSContext *cx, AutoDebugModeInvalidation &invalidate)
-{
-    if (debugMode()) {
-        leaveDebugModeUnderGC();
-        if (!updateJITForDebugMode(cx, invalidate))
-            return false;
-    }
-    return true;
-}
-
 void
-JSCompartment::leaveDebugModeUnderGC()
+JSCompartment::unsetIsDebuggee()
 {
-    if (debugMode()) {
-        debugModeBits &= ~DebugMode;
-        DebugScopes::onCompartmentLeaveDebugMode(this);
+    if (isDebuggee()) {
+        debugModeBits &= ~DebugExecutionMask;
+        DebugScopes::onCompartmentUnsetIsDebuggee(this);
     }
 }
 
