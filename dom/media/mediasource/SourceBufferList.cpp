@@ -108,12 +108,15 @@ SourceBufferList::AnyUpdating()
 }
 
 void
-SourceBufferList::RangeRemoval(double aStart, double aEnd)
+SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("SourceBufferList(%p)::RangeRemoval(aStart=%f, aEnd=%f", this, aStart, aEnd);
+  MSE_DEBUG("SourceBufferList(%p)::Remove(aStart=%f, aEnd=%f", this, aStart, aEnd);
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
-    mSourceBuffers[i]->RangeRemoval(aStart, aEnd);
+    mSourceBuffers[i]->Remove(aStart, aEnd, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
   }
 }
 

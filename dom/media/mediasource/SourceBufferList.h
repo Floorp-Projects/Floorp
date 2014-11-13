@@ -66,8 +66,9 @@ public:
   // Returns true if updating is true on any SourceBuffers in the list.
   bool AnyUpdating();
 
-  // Runs the range removal steps from the MSE specification on each SourceBuffer.
-  void RangeRemoval(double aStart, double aEnd);
+  // Calls Remove(aStart, aEnd) on each SourceBuffer in the list.  Aborts on
+  // first error, with result returned in aRv.
+  void Remove(double aStart, double aEnd, ErrorResult& aRv);
 
   // Mark all SourceBuffers input buffers as ended.
   void Ended();
