@@ -1041,8 +1041,8 @@ GetNativeStackLimit(JSContext *cx, int extraAllowance = 0)
         }                                                                       \
     JS_END_MACRO
 
-#define JS_CHECK_CHROME_RECURSION(cx, onerror)                                  \
-    JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx, 1024 * int(sizeof(size_t))), onerror)
+#define JS_CHECK_SYSTEM_RECURSION(cx, onerror)                                  \
+    JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx, js::StackForSystemCode), onerror)
 
 #define JS_CHECK_RECURSION_CONSERVATIVE(cx, onerror)                            \
     JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx, js::StackForUntrustedScript, -1024 * int(sizeof(size_t))), onerror)
