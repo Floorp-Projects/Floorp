@@ -13,6 +13,7 @@
 #include "nsCaret.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
+#include "nsDocShell.h"
 #include "nsDOMTokenList.h"
 #include "nsFocusManager.h"
 #include "nsFrame.h"
@@ -124,6 +125,8 @@ SelectionCarets::Init()
 
   docShell->AddWeakReflowObserver(this);
   docShell->AddWeakScrollObserver(this);
+
+  mDocShell = static_cast<nsDocShell*>(docShell);
 }
 
 SelectionCarets::~SelectionCarets()
@@ -147,10 +150,7 @@ SelectionCarets::~SelectionCarets()
 void
 SelectionCarets::Terminate()
 {
-  nsPresContext* presContext = mPresShell->GetPresContext();
-  MOZ_ASSERT(presContext, "PresContext should be given in PresShell::Init()");
-
-  nsIDocShell* docShell = presContext->GetDocShell();
+  nsRefPtr<nsDocShell> docShell(mDocShell.get());
   if (docShell) {
     docShell->RemoveWeakReflowObserver(this);
     docShell->RemoveWeakScrollObserver(this);
