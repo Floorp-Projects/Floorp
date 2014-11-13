@@ -1339,7 +1339,12 @@ nsFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   NS_ASSERTION(!NS_SUBTREE_DIRTY(this),
                "frame must not be dirty");
-  // Default to the bottom margin edge, per CSS2.1's definition of the
+  // Baseline for inverted line content is the top (block-start) margin edge,
+  // as the frame is in effect "flipped" for alignment purposes.
+  if (aWritingMode.IsLineInverted()) {
+    return -GetLogicalUsedMargin(aWritingMode).BStart(aWritingMode);
+  }
+  // Otherwise, the bottom margin edge, per CSS2.1's definition of the
   // 'baseline' value of 'vertical-align'.
   return BSize(aWritingMode) +
          GetLogicalUsedMargin(aWritingMode).BEnd(aWritingMode);

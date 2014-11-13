@@ -4162,8 +4162,12 @@ nsCSSRendering::PaintDecorationLine(nsIFrame* aFrame,
       return;
   }
 
-  // The y position should be set to the middle of the line.
-  rect.y += lineThickness / 2;
+  // The block-direction position should be set to the middle of the line.
+  if (aVertical) {
+    rect.x -= lineThickness / 2;
+  } else {
+    rect.y += lineThickness / 2;
+  }
 
   switch (aStyle) {
     case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
@@ -4360,12 +4364,18 @@ nsCSSRendering::DecorationLineToPath(nsIFrame* aFrame,
 
   gfxFloat lineThickness = std::max(NS_round(aLineSize.height), 1.0);
 
-  // The y position should be set to the middle of the line.
-  rect.y += lineThickness / 2;
-
-  aGfxContext->Rectangle
-    (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(0.0, lineThickness / 2)),
-             gfxSize(rect.Width(), lineThickness)));
+  // The block-direction position should be set to the middle of the line.
+  if (aVertical) {
+    rect.x -= lineThickness / 2;
+    aGfxContext->Rectangle
+      (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(lineThickness / 2, 0.0)),
+               gfxSize(lineThickness, rect.Height())));
+  } else {
+    rect.y += lineThickness / 2;
+    aGfxContext->Rectangle
+      (gfxRect(gfxPoint(rect.TopLeft() - gfxPoint(0.0, lineThickness / 2)),
+               gfxSize(rect.Width(), lineThickness)));
+  }
 }
 
 nsRect
