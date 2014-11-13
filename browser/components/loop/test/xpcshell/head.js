@@ -28,7 +28,7 @@ var loopServer;
 
 // Ensure loop is always enabled for tests
 Services.prefs.setBoolPref("loop.enabled", true);
-Services.prefs.setBoolPref("loop.throttled", false);
+Services.prefs.setBoolPref("loop.throttled2", false);
 
 // Cleanup function for all tests
 do_register_cleanup(() => {
