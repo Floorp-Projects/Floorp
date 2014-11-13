@@ -13,6 +13,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedActions = loop.shared.actions;
+  var sharedMixins = loop.shared.mixins;
   var sharedViews = loop.shared.views;
 
   var StandaloneRoomInfoArea = React.createClass({
@@ -81,6 +82,43 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
+  var StandaloneRoomHeader = React.createClass({
+    render: function() {
+      return (
+        <header>
+          <h1>{mozL10n.get("clientShortname2")}</h1>
+        </header>
+      );
+    }
+  });
+
+  var StandaloneRoomFooter = React.createClass({
+    _getContent: function() {
+      return mozL10n.get("legal_text_and_links", {
+        "clientShortname": mozL10n.get("clientShortname2"),
+        "terms_of_use_url": React.renderComponentToStaticMarkup(
+          <a href={loop.config.legalWebsiteUrl} target="_blank">
+            {mozL10n.get("terms_of_use_link_text")}
+          </a>
+        ),
+        "privacy_notice_url": React.renderComponentToStaticMarkup(
+          <a href={loop.config.privacyWebsiteUrl} target="_blank">
+            {mozL10n.get("privacy_notice_link_text")}
+          </a>
+        ),
+      });
+    },
+
+    render: function() {
+      return (
+        <footer>
+          <p dangerouslySetInnerHTML={{__html: this._getContent()}}></p>
+          <div className="footer-logo" />
+        </footer>
+      );
+    }
+  });
+
   var StandaloneRoomView = React.createClass({
     mixins: [Backbone.Events],
 
@@ -142,6 +180,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
           videoDisabledDisplayMode: "off"
         }
       };
+    },
+
+    componentDidMount: function() {
+      // Adding a class to the document body element from here to ease styling it.
+      document.body.classList.add("is-standalone-room");
     },
 
     componentWillUnmount: function() {
@@ -207,6 +250,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         <div className="room-conversation-wrapper">
+          <StandaloneRoomHeader />
           <StandaloneRoomInfoArea roomState={this.state.roomState}
                                   joinRoom={this.joinRoom}
                                   helper={this.props.helper} />
@@ -230,6 +274,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
                 enableHangup={this._roomIsActive()} />
             </div>
           </div>
+          <StandaloneRoomFooter />
         </div>
       );
     }
