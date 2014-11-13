@@ -832,13 +832,6 @@ CreateGenerator(JSContext *cx, BaselineFrame *frame)
 }
 
 bool
-InitialSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc)
-{
-    MOZ_ASSERT(*pc == JSOP_INITIALYIELD);
-    return GeneratorObject::initialSuspend(cx, obj, frame, pc);
-}
-
-bool
 NormalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytecode *pc,
               uint32_t stackDepth)
 {

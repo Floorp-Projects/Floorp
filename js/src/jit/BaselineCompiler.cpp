@@ -3296,9 +3296,6 @@ BaselineCompiler::addYieldOffset()
     return true;
 }
 
-typedef bool (*InitialSuspendFn)(JSContext *, HandleObject, BaselineFrame *, jsbytecode *);
-static const VMFunction InitialSuspendInfo = FunctionInfo<InitialSuspendFn>(jit::InitialSuspend);
-
 bool
 BaselineCompiler::emit_JSOP_INITIALYIELD()
 {
@@ -3306,20 +3303,33 @@ BaselineCompiler::emit_JSOP_INITIALYIELD()
         return false;
 
     frame.syncStack(0);
+    MOZ_ASSERT(frame.stackDepth() == 1);
 
-    // Store generator in R0, BaselineFrame pointer in R1.
-    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), R0.scratchReg());
-    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+    Register genObj = R2.scratchReg();
+    masm.unboxObject(frame.addressOfStackValue(frame.peek(-1)), genObj);
 
-    prepareVMCall();
-    pushArg(ImmPtr(pc));
-    pushArg(R1.scratchReg());
-    pushArg(R0.scratchReg());
+    MOZ_ASSERT(GET_UINT24(pc) == 0);
+    masm.storeValue(Int32Value(0), Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()));
 
-    if (!callVM(InitialSuspendInfo))
-        return false;
+    Register scopeObj = R0.scratchReg();
+    Address scopeChainSlot(genObj, GeneratorObject::offsetOfScopeChainSlot());
+    masm.loadPtr(frame.addressOfScopeChain(), scopeObj);
+    masm.patchableCallPreBarrier(scopeChainSlot, MIRType_Value);
+    masm.storeValue(JSVAL_TYPE_OBJECT, scopeObj, scopeChainSlot);
 
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), JSReturnOperand);
+#ifdef JSGC_GENERATIONAL
+    Register temp = R1.scratchReg();
+    Label skipBarrier;
+    masm.branchPtrInNurseryRange(Assembler::Equal, genObj, temp, &skipBarrier);
+    masm.branchPtrInNurseryRange(Assembler::NotEqual, scopeObj, temp, &skipBarrier);
+    masm.push(genObj);
+    MOZ_ASSERT(genObj == R2.scratchReg());
+    masm.call(&postBarrierSlot_);
+    masm.pop(genObj);
+    masm.bind(&skipBarrier);
+#endif
+
+    masm.tagValue(JSVAL_TYPE_OBJECT, genObj, JSReturnOperand);
     return emitReturn();
 }
 
@@ -3332,19 +3342,61 @@ BaselineCompiler::emit_JSOP_YIELD()
     if (!addYieldOffset())
         return false;
 
-    // Store generator in R0, BaselineFrame pointer in R1.
+    // Store generator in R0.
     frame.popRegsAndSync(1);
-    masm.unboxObject(R0, R0.scratchReg());
-    masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
 
-    prepareVMCall();
-    pushArg(Imm32(frame.stackDepth()));
-    pushArg(ImmPtr(pc));
-    pushArg(R1.scratchReg());
-    pushArg(R0.scratchReg());
+    Register genObj = R2.scratchReg();
+    masm.unboxObject(R0, genObj);
 
-    if (!callVM(NormalSuspendInfo))
-        return false;
+    MOZ_ASSERT(frame.stackDepth() >= 1);
+
+    if (frame.stackDepth() == 1) {
+        // If the expression stack is empty, we can inline the YIELD. For legacy
+        // generators we normally check if we're in the closing state and throw
+        // an exception, but we don't have to do anything here as the expression
+        // stack is never empty in finally blocks. In debug builds, we assert
+        // we're not in the closing state.
+#ifdef DEBUG
+        if (script->isLegacyGenerator()) {
+            Label ok;
+            masm.unboxInt32(Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()),
+                            R0.scratchReg());
+            masm.branch32(Assembler::NotEqual, R0.scratchReg(),
+                          Imm32(GeneratorObject::YIELD_INDEX_CLOSING), &ok);
+            masm.assumeUnreachable("Inline yield with closing generator");
+            masm.bind(&ok);
+        }
+#endif
+        masm.storeValue(Int32Value(GET_UINT24(pc)),
+                        Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()));
+
+        Register scopeObj = R0.scratchReg();
+        Address scopeChainSlot(genObj, GeneratorObject::offsetOfScopeChainSlot());
+        masm.loadPtr(frame.addressOfScopeChain(), scopeObj);
+        masm.patchableCallPreBarrier(scopeChainSlot, MIRType_Value);
+        masm.storeValue(JSVAL_TYPE_OBJECT, scopeObj, scopeChainSlot);
+
+#ifdef JSGC_GENERATIONAL
+        Register temp = R1.scratchReg();
+        Label skipBarrier;
+        masm.branchPtrInNurseryRange(Assembler::Equal, genObj, temp, &skipBarrier);
+        masm.branchPtrInNurseryRange(Assembler::NotEqual, scopeObj, temp, &skipBarrier);
+        MOZ_ASSERT(genObj == R2.scratchReg());
+        masm.call(&postBarrierSlot_);
+        masm.bind(&skipBarrier);
+#endif
+    } else {
+        masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
+
+        prepareVMCall();
+        pushArg(Imm32(frame.stackDepth()));
+        pushArg(ImmPtr(pc));
+        pushArg(R1.scratchReg());
+        pushArg(genObj);
+
+        if (!callVM(NormalSuspendInfo))
+            return false;
+    }
 
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), JSReturnOperand);
     return emitReturn();
