@@ -654,6 +654,12 @@ AudioContext::MozAudioChannelType() const
   return mDestination->MozAudioChannelType();
 }
 
+void
+AudioContext::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv)
+{
+  mDestination->SetMozAudioChannelType(aValue, aRv);
+}
+
 AudioChannel
 AudioContext::TestAudioChannelInAudioNodeStream()
 {

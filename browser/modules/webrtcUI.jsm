@@ -145,15 +145,36 @@ function denyRequest(aBrowser, aRequest) {
                                             windowID: aRequest.windowID});
 }
 
+function getHost(uri, href) {
+  let host;
+  try {
+    if (!uri) {
+      uri = Services.io.newURI(href, null, null);
+    }
+    host = uri.host;
+  } catch (ex) {};
+  if (!host) {
+    if (uri && uri.scheme.toLowerCase() == "about") {
+      // For about URIs, just use the full spec, without any #hash parts
+      host = uri.specIgnoringRef;
+    } else {
+      // This is unfortunate, but we should display *something*...
+      host = bundle.getString("getUserMedia.sharingMenuUnknownHost");
+    }
+  }
+  return host;
+}
+
 function prompt(aBrowser, aRequest) {
   let {audioDevices: audioDevices, videoDevices: videoDevices,
        sharingScreen: sharingScreen, requestTypes: requestTypes} = aRequest;
   let uri = Services.io.newURI(aRequest.documentURI, null, null);
+  let host = getHost(uri);
   let chromeDoc = aBrowser.ownerDocument;
   let chromeWin = chromeDoc.defaultView;
   let stringBundle = chromeWin.gNavigatorBundle;
   let stringId = "getUserMedia.share" + requestTypes.join("And") + ".message";
-  let message = stringBundle.getFormattedString(stringId, [uri.host]);
+  let message = stringBundle.getFormattedString(stringId, [host]);
 
   let mainLabel;
   if (sharingScreen) {
@@ -556,23 +577,7 @@ function onTabSharingMenuPopupShowing(e) {
     let doc = e.target.ownerDocument;
     let bundle = doc.defaultView.gNavigatorBundle;
 
-    let origin;
-    let uri;
-    let href = streamInfo.uri;
-    try {
-      uri = Services.io.newURI(href, null, null);
-      origin = uri.asciiHost;
-    } catch (ex) {};
-    if (!origin) {
-      if (uri && uri.scheme == "about") {
-        // For about URIs, just use the full spec, without any #hash parts
-        origin = uri.specIgnoringRef;
-      } else {
-        // This is unfortunate, but we should display *something*...
-        origin = bundle.getString("getUserMedia.sharingMenuUnknownHost");
-      }
-    }
-
+    let origin = getHost(null, streamInfo.uri);
     let menuitem = doc.createElement("menuitem");
     menuitem.setAttribute("label", bundle.getFormattedString(stringName, [origin]));
     menuitem.stream = streamInfo;
@@ -707,13 +712,14 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
     accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
     callback: function () {
       let uri = Services.io.newURI(aState.documentURI, null, null);
+      let host = getHost(uri);
       let perms = Services.perms;
       if (aState.camera &&
           perms.testExactPermission(uri, "camera") == perms.ALLOW_ACTION)
-        perms.remove(uri.host, "camera");
+        perms.remove(host, "camera");
       if (aState.microphone &&
           perms.testExactPermission(uri, "microphone") == perms.ALLOW_ACTION)
-        perms.remove(uri.host, "microphone");
+        perms.remove(host, "microphone");
 
       aBrowser.messageManager.sendAsyncMessage("webrtc:StopSharing", windowId);
     }

@@ -347,6 +347,14 @@ public:
       return mTabId;
     }
 
+    nsIntPoint GetChildProcessOffset();
+
+    /**
+     * Native widget remoting protocol for use with windowed plugins with e10s.
+     */
+    virtual PPluginWidgetParent* AllocPPluginWidgetParent() MOZ_OVERRIDE;
+    virtual bool DeallocPPluginWidgetParent(PPluginWidgetParent* aActor) MOZ_OVERRIDE;
+
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
@@ -367,7 +375,6 @@ protected:
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
     bool AllowContentIME();
-    nsIntPoint GetChildProcessOffset();
 
     virtual PRenderFrameParent* AllocPRenderFrameParent(ScrollingBehavior* aScrolling,
                                                         TextureFactoryIdentifier* aTextureFactoryIdentifier,

@@ -943,6 +943,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpl(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
         j(cond, label);
     }
+    void branchTestNull(Condition cond, const Address &address, Label *label) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        branchTestNull(cond, Operand(address), label);
+    }
 
     // Perform a type-test on a full Value loaded into a register.
     // Clobbers the ScratchReg.

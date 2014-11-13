@@ -9,6 +9,7 @@
 
 // JS lexical scanner interface.
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/UniquePtr.h"
@@ -257,6 +258,8 @@ class MOZ_STACK_CLASS TokenStream
 
     ~TokenStream();
 
+    bool checkOptions();
+
     // Accessors.
     const Token &currentToken() const { return tokens[cursor]; }
     bool isCurrentTokenType(TokenKind type) const {
@@ -265,7 +268,7 @@ class MOZ_STACK_CLASS TokenStream
     const CharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     unsigned getLineno() const { return lineno; }
-    unsigned getColumn() const { return userbuf.addressOfNextRawChar() - linebase - 1; }
+    unsigned getColumn() const { return userbuf.offset() - linebase - 1; }
     bool getMutedErrors() const { return mutedErrors; }
     JSVersion versionNumber() const { return VersionNumber(options().version); }
     JSVersion versionWithFlags() const { return options().version; }
@@ -288,6 +291,7 @@ class MOZ_STACK_CLASS TokenStream
 
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
+    bool reportErrorNoOffset(unsigned errorNumber, ...);
     bool reportWarning(unsigned errorNumber, ...);
 
     static const uint32_t NoOffset = UINT32_MAX;
@@ -308,14 +312,14 @@ class MOZ_STACK_CLASS TokenStream
     JSAtom *getRawTemplateStringAtom() {
         MOZ_ASSERT(currentToken().type == TOK_TEMPLATE_HEAD ||
                    currentToken().type == TOK_NO_SUBS_TEMPLATE);
-        const char16_t *cur = userbuf.base() + currentToken().pos.begin + 1;
+        const char16_t *cur = userbuf.rawCharPtrAt(currentToken().pos.begin + 1);
         const char16_t *end;
         if (currentToken().type == TOK_TEMPLATE_HEAD) {
             // Of the form    |`...${|   or   |}...${|
-            end = userbuf.base() + currentToken().pos.end - 2;
+            end = userbuf.rawCharPtrAt(currentToken().pos.end - 2);
         } else {
             // NO_SUBS_TEMPLATE is of the form   |`...`|   or   |}...`|
-            end = userbuf.base() + currentToken().pos.end - 1;
+            end = userbuf.rawCharPtrAt(currentToken().pos.end - 1);
         }
 
         CharBuffer charbuf(cx);
@@ -516,8 +520,8 @@ class MOZ_STACK_CLASS TokenStream
         const char16_t *buf;
         Flags flags;
         unsigned lineno;
-        const char16_t *linebase;
-        const char16_t *prevLinebase;
+        size_t linebase;
+        size_t prevLinebase;
         Token currentToken;
         unsigned lookahead;
         Token lookaheadTokens[maxLookahead];
@@ -528,8 +532,8 @@ class MOZ_STACK_CLASS TokenStream
     void seek(const Position &pos);
     bool seek(const Position &pos, const TokenStream &other);
 
-    const char16_t *rawBase() const {
-        return userbuf.base();
+    const char16_t *rawCharPtrAt(size_t offset) const {
+        return userbuf.rawCharPtrAt(offset);
     }
 
     const char16_t *rawLimit() const {
@@ -654,10 +658,18 @@ class MOZ_STACK_CLASS TokenStream
     // and do some extra stuff like converting all EOL sequences to '\n',
     // tracking the line number, and setting |flags.isEOF|.  (The "raw" in "raw
     // chars" refers to the lack of EOL sequence normalization.)
+    //
+    // buf[0..length-1] often represents a substring of some larger source,
+    // where we have only the substring in memory. The |startOffset| argument
+    // indicates the offset within this larger string at which our string
+    // begins, the offset of |buf[0]|.
     class TokenBuf {
       public:
-        TokenBuf(ExclusiveContext *cx, const char16_t *buf, size_t length)
-          : base_(buf), limit_(buf + length), ptr(buf)
+        TokenBuf(ExclusiveContext *cx, const char16_t *buf, size_t length, size_t startOffset)
+          : base_(buf),
+            startOffset_(startOffset),
+            limit_(buf + length),
+            ptr(buf)
         { }
 
         bool hasRawChars() const {
@@ -665,11 +677,21 @@ class MOZ_STACK_CLASS TokenStream
         }
 
         bool atStart() const {
-            return ptr == base_;
+            return offset() == 0;
         }
 
-        const char16_t *base() const {
-            return base_;
+        size_t startOffset() const {
+            return startOffset_;
+        }
+
+        size_t offset() const {
+            return startOffset_ + mozilla::PointerRangeSize(base_, ptr);
+        }
+
+        const char16_t *rawCharPtrAt(size_t offset) const {
+            MOZ_ASSERT(startOffset_ <= offset);
+            MOZ_ASSERT(offset - startOffset_ <= mozilla::PointerRangeSize(base_, limit_));
+            return base_ + (offset - startOffset_);
         }
 
         const char16_t *limit() const {
@@ -728,12 +750,13 @@ class MOZ_STACK_CLASS TokenStream
             return c == '\n' || c == '\r' || c == LINE_SEPARATOR || c == PARA_SEPARATOR;
         }
 
-        // Finds the next EOL, but stops once 'max' characters have been scanned
-        // (*including* the starting char16_t).
-        const char16_t *findEOLMax(const char16_t *p, size_t max);
+        // Returns the offset of the next EOL, but stops once 'max' characters
+        // have been scanned (*including* the char at startOffset_).
+        size_t findEOLMax(size_t start, size_t max);
 
       private:
         const char16_t *base_;          // base of buffer
+        uint32_t startOffset_;          // offset of base_[0]
         const char16_t *limit_;         // limit for quick bounds check
         const char16_t *ptr;            // next char to get
     };
@@ -794,8 +817,8 @@ class MOZ_STACK_CLASS TokenStream
     unsigned            lookahead;          // count of lookahead tokens
     unsigned            lineno;             // current line number
     Flags               flags;              // flags -- see above
-    const char16_t      *linebase;          // start of current line;  points into userbuf
-    const char16_t      *prevLinebase;      // start of previous line;  nullptr if on the first line
+    size_t              linebase;           // start of current line
+    size_t              prevLinebase;       // start of previous line;  size_t(-1) if on the first line
     TokenBuf            userbuf;            // user input buffer
     const char          *filename;          // input filename or null
     mozilla::UniquePtr<char16_t[], JS::FreePolicy> displayURL_; // the user's requested source URL or null

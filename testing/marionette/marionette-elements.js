@@ -297,30 +297,22 @@ ElementManager.prototype = {
     }
     let found = all ? this.findElements(values.using, values.value, win.document, startNode) :
                       this.findElement(values.using, values.value, win.document, startNode);
-    if (found) {
-      let type = Object.prototype.toString.call(found);
-      if ((type == '[object Array]') || (type == '[object HTMLCollection]') || (type == '[object NodeList]')) {
-        let ids = []
-        for (let i = 0 ; i < found.length ; i++) {
-          ids.push(this.addToKnownElements(found[i]));
-        }
-        on_success(ids, command_id);
-      }
-      else {
-        let id = this.addToKnownElements(found);
-        on_success({'ELEMENT':id}, command_id);
-      }
-      return;
-    } else {
+    let type = Object.prototype.toString.call(found);
+    let isArrayLike = ((type == '[object Array]') || (type == '[object HTMLCollection]') || (type == '[object NodeList]'));
+    if (found == null || (isArrayLike && found.length <= 0)) {
       if (!searchTimeout || new Date().getTime() - startTime > searchTimeout) {
-        // Format message depending on strategy if necessary
-        let message = "Unable to locate element: " + values.value;
-        if (values.using == ANON) {
-          message = "Unable to locate anonymous children";
-        } else if (values.using == ANON_ATTRIBUTE) {
-          message = "Unable to locate anonymous element: " + JSON.stringify(values.value);
+        if (all) {
+          on_success([], command_id); // findElements should return empty list
+        } else {
+          // Format message depending on strategy if necessary
+          let message = "Unable to locate element: " + values.value;
+          if (values.using == ANON) {
+            message = "Unable to locate anonymous children";
+          } else if (values.using == ANON_ATTRIBUTE) {
+            message = "Unable to locate anonymous element: " + JSON.stringify(values.value);
+          }
+          on_error(message, 7, null, command_id);
         }
-        on_error(message, 7, null, command_id);
       } else {
         values.time = startTime;
         this.timer.initWithCallback(this.find.bind(this, win, values,
@@ -330,6 +322,18 @@ ElementManager.prototype = {
                                     100,
                                     Components.interfaces.nsITimer.TYPE_ONE_SHOT);
       }
+    } else {
+      if (isArrayLike) {
+        let ids = []
+        for (let i = 0 ; i < found.length ; i++) {
+          ids.push(this.addToKnownElements(found[i]));
+        }
+        on_success(ids, command_id);
+      } else {
+        let id = this.addToKnownElements(found);
+        on_success({'ELEMENT':id}, command_id);
+      }
+      return;
     }
   },
 

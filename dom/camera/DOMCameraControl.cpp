@@ -1266,6 +1266,11 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
       }
       break;
 
+    case CameraControlListener::kHardwareOpenFailed:
+      DOM_CAMERA_LOGI("DOM OnHardwareStateChange: open failed\n");
+      OnUserError(DOMCameraControlListener::kInStartCamera, NS_ERROR_NOT_AVAILABLE);
+      break;
+
     default:
       DOM_CAMERA_LOGE("DOM OnHardwareStateChange: UNKNOWN=%d\n", aState);
       MOZ_ASSERT_UNREACHABLE("Unanticipated camera hardware state");

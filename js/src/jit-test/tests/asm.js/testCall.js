@@ -65,3 +65,11 @@ assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { var i=0; i=f() 
 assertAsmTypeFail(USE_ASM+"function f(){return 0.0} function g() { var i=0.0; i=f() } return g");
 assertAsmTypeFail(USE_ASM+"function f(){return 0} function g() { return (f()+1)|0 } return g");
 assertAsmTypeFail(USE_ASM+"function f(){return 0.0} function g() { return +(f()+1.0) } return g");
+
+assertEq(asmLink(asmCompile(USE_ASM + "const M = 42; function f() { return M } function g() { return f()|0 } return f"))(), 42);
+assertEq(asmLink(asmCompile(USE_ASM + "const M = -42; function f() { return M } function g() { return f()|0 } return f"))(), -42);
+assertAsmTypeFail(USE_ASM + "const M = 42; function f() { return M } function g() { return +f() } return f");
+assertEq(asmLink(asmCompile(USE_ASM + "const M = 42.1; function f() { return M } function g() { return +f() } return f"))(), 42.1);
+assertAsmTypeFail(USE_ASM + "const M = 42.1; function f() { return M } function g() { return f()|0 } return f");
+assertEq(asmLink(asmCompile('glob', USE_ASM + "var tof = glob.Math.fround; const M = tof(42); function f() { return M } function g() { return tof(f()) } return f"), this)(), 42);
+assertAsmTypeFail('glob', USE_ASM + "var tof = glob.Math.fround; const M = tof(42); function f() { return M } function g() { return +f() } return f");

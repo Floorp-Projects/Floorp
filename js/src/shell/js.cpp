@@ -940,6 +940,15 @@ ParseCompileOptions(JSContext *cx, CompileOptions &options, HandleObject opts,
         options.setLine(u);
     }
 
+    if (!JS_GetProperty(cx, opts, "columnNumber", &v))
+        return false;
+    if (!v.isUndefined()) {
+        int32_t c;
+        if (!ToInt32(cx, v, &c))
+            return false;
+        options.setColumn(c);
+    }
+
     if (!JS_GetProperty(cx, opts, "sourceIsLazy", &v))
         return false;
     if (v.isBoolean())
@@ -1892,9 +1901,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
 
           case SRC_COLSPAN:
-            colspan = js_GetSrcNoteOffset(sn, 0);
-            if (colspan >= SN_COLSPAN_DOMAIN / 2)
-                colspan -= SN_COLSPAN_DOMAIN;
+            colspan = SN_OFFSET_TO_COLSPAN(js_GetSrcNoteOffset(sn, 0));
             Sprint(sp, "%d", colspan);
             break;
 
@@ -3248,6 +3255,8 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
            .setCompileAndGo(false);
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
                                     /* foldConstants = */ true, nullptr, nullptr);
+    if (!parser.checkOptions())
+        return false;
 
     ParseNode *pn = parser.parse(nullptr);
     if (!pn)
@@ -3294,6 +3303,8 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     size_t length = scriptContents->length();
     Parser<frontend::SyntaxParseHandler> parser(cx, &cx->tempLifoAlloc(),
                                                 options, chars, length, false, nullptr, nullptr);
+    if (!parser.checkOptions())
+        return false;
 
     bool succeeded = parser.parse(nullptr);
     if (cx->isExceptionPending())
@@ -4255,6 +4266,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
 "      lineNumber: starting line number for error messages and debug info\n"
+"      columnNumber: starting column number for error messages and debug info\n"
 "      global: global in which to execute the code\n"
 "      newContext: if true, create and use a new cx (default: false)\n"
 "      saveFrameChain: if true, save the frame chain before evaluating code\n"
@@ -4459,6 +4471,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
 "      lineNumber: starting line number for error messages and debug info\n"
+"      columnNumber: starting column number for error messages and debug info\n"
 "      element: if present with value |v|, convert |v| to an object |o| and\n"
 "         mark the source as being attached to the DOM element |o|. If the\n"
 "         property is omitted or |v| is null, don't attribute the source to\n"

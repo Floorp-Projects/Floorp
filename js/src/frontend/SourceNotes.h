@@ -61,7 +61,7 @@ namespace js {
     M(SRC_ASSIGNOP,     "assignop",    0)  /* += or another assign-op follows. */                  \
     M(SRC_TRY,          "try",         1)  /* JSOP_TRY, offset points to goto at the end of the    \
                                               try block. */                                        \
-    /* All notes below here are "gettable".  See SN_IS_GETTABLE below. */                          \
+    /* All notes above here are "gettable".  See SN_IS_GETTABLE below. */                          \
     M(SRC_COLSPAN,      "colspan",     1)  /* Number of columns this opcode spans. */              \
     M(SRC_NEWLINE,      "newline",     0)  /* Bytecode follows a source newline. */                \
     M(SRC_SETLINE,      "setline",     1)  /* A file-absolute source line number note. */          \
@@ -136,20 +136,52 @@ SN_IS_TERMINATOR(jssrcnote *sn)
 #define SN_4BYTE_OFFSET_FLAG    0x80
 #define SN_4BYTE_OFFSET_MASK    0x7f
 
-/*
- * Negative SRC_COLSPAN offsets are rare, but can arise with for(;;) loops and
- * other constructs that generate code in non-source order. They can also arise
- * due to failure to update pn->pn_pos.end to be the last child's end -- such
- * failures are bugs to fix.
- *
- * Source note offsets in general must be non-negative and less than 0x800000,
- * per the above SN_4BYTE_* definitions. To encode negative colspans, we bias
- * them by the offset domain size and restrict non-negative colspans to less
- * than half this domain.
- */
-#define SN_COLSPAN_DOMAIN       ptrdiff_t(1 << 23)
+#define SN_OFFSET_BITS          31
+#define SN_MAX_OFFSET (((size_t) 1 << SN_OFFSET_BITS) - 1)
 
-#define SN_MAX_OFFSET ((size_t)((ptrdiff_t)SN_4BYTE_OFFSET_FLAG << 24) - 1)
+inline bool
+SN_REPRESENTABLE_OFFSET(ptrdiff_t offset)
+{
+    return 0 <= offset && size_t(offset) <= SN_MAX_OFFSET;
+}
+
+/*
+ * SRC_COLSPAN values represent changes to the column number. Colspans are
+ * signed: negative changes arise in describing constructs like for(;;) loops,
+ * that generate code in non-source order. (Negative colspans also have a
+ * history of indicating bugs in updating ParseNodes' source locations.)
+ *
+ * We store colspans using the same variable-length encoding as offsets,
+ * described above. However, unlike offsets, colspans are signed, so we truncate
+ * colspans (SN_COLSPAN_TO_OFFSET) for storage as offsets, and sign-extend
+ * offsets into colspans when we read them (SN_OFFSET_TO_COLSPAN).
+ */
+#define SN_COLSPAN_SIGN_BIT (1 << (SN_OFFSET_BITS - 1))
+#define SN_MIN_COLSPAN (-SN_COLSPAN_SIGN_BIT)
+#define SN_MAX_COLSPAN (SN_COLSPAN_SIGN_BIT - 1)
+
+inline bool
+SN_REPRESENTABLE_COLSPAN(ptrdiff_t colspan)
+{
+    return SN_MIN_COLSPAN <= colspan && colspan <= SN_MAX_COLSPAN;
+}
+
+inline ptrdiff_t
+SN_OFFSET_TO_COLSPAN(ptrdiff_t offset) {
+    // There should be no bits set outside the field we're going to sign-extend.
+    MOZ_ASSERT(!(offset & ~((1U << SN_OFFSET_BITS) - 1)));
+    // Sign-extend the least significant SN_OFFSET_BITS bits.
+    return (offset ^ SN_COLSPAN_SIGN_BIT) - SN_COLSPAN_SIGN_BIT;
+}
+
+inline ptrdiff_t
+SN_COLSPAN_TO_OFFSET(ptrdiff_t colspan) {
+    // Truncate the two's complement colspan, for storage as an offset.
+    ptrdiff_t offset = colspan & ((1U << SN_OFFSET_BITS) - 1);
+    // When we read this back, we'd better get the value we stored.
+    MOZ_ASSERT(SN_OFFSET_TO_COLSPAN(offset) == colspan);
+    return offset;
+}
 
 #define SN_LENGTH(sn)           ((js_SrcNoteSpec[SN_TYPE(sn)].arity == 0) ? 1 \
                                  : js_SrcNoteLength(sn))

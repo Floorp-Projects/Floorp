@@ -553,7 +553,7 @@ nsViewManager::InvalidateWidgetArea(nsView *aWidgetView,
       NS_ASSERTION(view != aWidgetView, "will recur infinitely");
       nsWindowType type = childWidget->WindowType();
       if (view && childWidget->IsVisible() && type != eWindowType_popup) {
-        NS_ASSERTION(type == eWindowType_plugin,
+        NS_ASSERTION(childWidget->IsPlugin(),
                      "Only plugin or popup widgets can be children!");
 
         // We do not need to invalidate in plugin widgets, but we should

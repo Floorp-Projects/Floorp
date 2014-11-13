@@ -121,6 +121,12 @@ assertEq(asmLink(asmCompile(USE_ASM + "function f(i,j) { i=i|0;j=j|0; var k=0; k
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i,j) { i=i|0;j=j|0; var k=0; k=(i|0)<=(j|0); return k|0 } return f"))(1,2), 1);
 assertEq(asmLink(asmCompile(USE_ASM + "function f(i,j) { i=i|0;j=j|0; var k=0; k=(i|0)>=(j|0); return k|0 } return f"))(1,2), 0);
 
+assertEq(asmLink(asmCompile(USE_ASM + "const I=2; function f(i) { i=i|0; var k=0; k=(i|0)<I; return k|0 } return f"))(1), 1);
+assertEq(asmLink(asmCompile(USE_ASM + "const I=2; function f(i) { i=i|0; var k=0; k=(i>>>0)<I; return k|0 } return f"))(1), 1);
+assertEq(asmLink(asmCompile(USE_ASM + "const I=-2; function f(i) { i=i|0; var k=0; k=(i|0)<I; return k|0 } return f"))(-1), 0);
+assertAsmTypeFail(USE_ASM + "const I=-2; function f(i) { i=i|0; var k=0; k=(i>>>0)<I; return k|0 } return f");
+assertAsmTypeFail(USE_ASM + "const I=0x80000000; function f(i) { i=i|0; var k=0; k=(i|0)<I; return k|0 } return f");
+
 var f = asmLink(asmCompile(USE_ASM + "function f(i,j) { i=i|0;j=j|0; return ((i|0)/(j|0))|0 } return f"));
 assertEq(f(4,2), 2);
 assertEq(f(3,2), 1);
