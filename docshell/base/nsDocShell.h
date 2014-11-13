@@ -950,6 +950,10 @@ private:
     nsWeakPtr mOpener;
     nsWeakPtr mOpenedRemote;
 
+    // A depth count of how many times NotifyRunToCompletionStart
+    // has been called without a matching NotifyRunToCompletionStop.
+    uint32_t          mJSRunToCompletionDepth;
+
     // True if recording profiles.
     bool mProfileTimelineRecording;
 
