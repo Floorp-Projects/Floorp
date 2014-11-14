@@ -1306,7 +1306,17 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
                // And the restyle bits
                ELEMENT_ALL_RESTYLE_FLAGS);
-  } else if (!IsInShadowTree()) {
+  } else if (IsInShadowTree()) {
+    // We're not in a document, but we did get inserted into a shadow tree.
+    // Since we won't have any restyle data in the document's restyle trackers,
+    // don't let us get inserted with restyle bits set incorrectly.
+    //
+    // Also clear all the other flags that are cleared above when we do get
+    // inserted into a document.
+    UnsetFlags(NODE_FORCE_XBL_BINDINGS |
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
+               ELEMENT_ALL_RESTYLE_FLAGS);
+  } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
     SetSubtreeRootPointer(aParent->SubtreeRoot());

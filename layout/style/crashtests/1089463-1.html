@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<div></div>
+<script>
+window.onload = function() {
+  var div = document.querySelector("div");
+  var shadow = div.createShadowRoot();
+  shadow.innerHTML = "<p style='display: none'><span><i>x</i></span></p>";
+  var p = shadow.lastChild;
+  var span = p.firstChild;
+  var i = span.firstChild;
+
+  span.style.color = 'blue';
+  p.remove();
+
+  document.body.offsetTop;
+
+  shadow.appendChild(p);
+  i.style.color = 'red';
+};
+</script>
