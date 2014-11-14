@@ -6,6 +6,7 @@
 
 #include "nsXPCOM.h"
 #include "nsXULAppAPI.h"
+#include "nsAutoPtr.h"
 
 // FIXME/cjones testing
 #if !defined(OS_WIN)
@@ -20,6 +21,8 @@
 #include "nsWindowsWMain.cpp"
 #include "nsSetDllDirectory.h"
 #endif
+
+#include "GMPLoader.h"
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
 #include "sandbox/chromium/base/basictypes.h"
@@ -82,7 +85,28 @@ void StartSandboxCallback()
         target_service->LowerToken();
     }
 }
+
+class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
+public:
+    virtual void Start() MOZ_OVERRIDE {
+        StartSandboxCallback();
+    }
+};
 #endif
+
+mozilla::gmp::SandboxStarter*
+MakeSandboxStarter()
+{
+    // Note: Linux and MacOSX create their SandboxStarters inside xul code,
+    // they need to change to statically link their sandbox code into
+    // plugin-container. Once they do that, we can create SandboxStarters for
+    // them here.
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    return new WinSandboxStarter();
+#else
+    return nullptr;
+#endif
+}
 
 int
 content_process_main(int argc, char* argv[])
@@ -154,8 +178,16 @@ content_process_main(int argc, char* argv[])
     }
 #endif
 #endif
-
-    nsresult rv = XRE_InitChildProcess(argc, argv);
+    nsAutoPtr<mozilla::gmp::GMPLoader> loader;
+#if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
+    // On desktop, the GMPLoader lives in plugin-container, so that its
+    // code can be covered by an EME/GMP vendor's voucher.
+    nsAutoPtr<mozilla::gmp::SandboxStarter> starter(MakeSandboxStarter());
+    if (XRE_GetProcessType() == GeckoProcessType_GMPlugin) {
+        loader = mozilla::gmp::CreateGMPLoader(starter);
+    }
+#endif
+    nsresult rv = XRE_InitChildProcess(argc, argv, loader);
     NS_ENSURE_SUCCESS(rv, 1);
 
     return 0;
