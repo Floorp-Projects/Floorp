@@ -214,6 +214,18 @@ public:
                             bool aPreventDefault);
 
   /**
+   * When the event regions code is enabled, this function should be invoked to
+   * to confirm the target of the input block. This is only needed in cases
+   * where the initial input event of the block hit a dispatch-to-content region
+   * but is safe to call for all input blocks. This function should always be
+   * invoked on the controller thread.
+   * In the case where the input block has no target, or the target is not a
+   * scrollable frame, |aGuid.mScrollId| should be set to FrameMetrics::
+   * NULL_SCROLL_ID.
+   */
+  void SetTargetAPZC(uint64_t aInputBlockId, const ScrollableLayerGuid& aGuid);
+
+  /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
    */
   void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
@@ -373,9 +385,16 @@ public:
      about it going away. These are public for testing code and generally should not be
      used by other production code.
   */
+  enum HitTestResult {
+    NoApzcHit,
+    ApzcHitRegion,
+    ApzcContentRegion,
+    OverscrolledApzc,
+  };
+
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint,
-                                                         bool* aOutInOverscrolledApzc);
+                                                         HitTestResult* aOutHitResult);
   gfx::Matrix4x4 GetScreenToApzcTransform(const AsyncPanZoomController *aApzc) const;
   gfx::Matrix4x4 GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) const;
 private:
@@ -384,11 +403,11 @@ private:
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc,
                                          const gfx::Point& aHitTestPoint,
-                                         bool* aOutInOverscrolledApzc);
+                                         HitTestResult* aOutHitResult);
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
-                                                                  bool* aOutInOverscrolledApzc);
+                                                                  HitTestResult* aOutHitResult);
   nsEventStatus ProcessTouchInput(MultiTouchInput& aInput,
                                   ScrollableLayerGuid* aOutTargetGuid,
                                   uint64_t* aOutInputBlockId);
@@ -450,10 +469,10 @@ private:
    * input delivery thread, and so does not require locking.
    */
   nsRefPtr<AsyncPanZoomController> mApzcForInputBlock;
-  /* Whether the current input event block is being ignored because the touch-start
-   * was inside an overscrolled APZC.
+  /* The hit result for the current input event block; this should always be in
+   * sync with mApzcForInputBlock.
    */
-  bool mInOverscrolledApzc;
+  HitTestResult mHitResultForInputBlock;
   /* Sometimes we want to ignore all touches except one. In such cases, this
    * is set to the identifier of the touch we are not ignoring; in other cases,
    * this is set to -1.

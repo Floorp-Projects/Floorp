@@ -121,7 +121,6 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject wrapper,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const MOZ_OVERRIDE;
-    virtual bool enumerate(JSContext *cx, HandleObject wrapper, AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
                                 MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
@@ -144,6 +143,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool hasOwn(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
                                               AutoIdVector &props) const MOZ_OVERRIDE;
+    virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
+                                           AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, HandleObject wrapper, unsigned flags,
                          MutableHandleValue vp) const MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
