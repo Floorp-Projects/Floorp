@@ -445,11 +445,11 @@ ChildProcessInit(int argc, char* argv[])
   void (*fXRE_SetProcessType)(char*);
   xul_dlsym("XRE_SetProcessType", &fXRE_SetProcessType);
 
-  mozglueresult (*fXRE_InitChildProcess)(int, char**);
+  mozglueresult (*fXRE_InitChildProcess)(int, char**, void*);
   xul_dlsym("XRE_InitChildProcess", &fXRE_InitChildProcess);
 
   fXRE_SetProcessType(argv[--argc]);
 
-  return fXRE_InitChildProcess(argc, argv);
+  return fXRE_InitChildProcess(argc, argv, nullptr);
 }
 

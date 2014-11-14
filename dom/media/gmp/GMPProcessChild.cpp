@@ -59,5 +59,21 @@ GMPProcessChild::CleanUp()
   BackgroundHangMonitor::Shutdown();
 }
 
+GMPLoader* GMPProcessChild::mLoader = nullptr;
+
+/* static */
+void
+GMPProcessChild::SetGMPLoader(GMPLoader* aLoader)
+{
+  mLoader = aLoader;
+}
+
+/* static */
+GMPLoader*
+GMPProcessChild::GetGMPLoader()
+{
+  return mLoader;
+}
+
 } // namespace gmp
 } // namespace mozilla
