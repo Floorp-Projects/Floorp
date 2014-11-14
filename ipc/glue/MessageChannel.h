@@ -80,8 +80,6 @@ class MessageChannel : HasResultCodes
     // Close the underlying transport channel.
     void Close();
 
-    bool Connected() const;
-
     // Force the channel to behave as if a channel error occurred. Valid
     // for process links only, not thread links.
     void CloseWithError();
@@ -344,6 +342,8 @@ class MessageChannel : HasResultCodes
         AssertWorkerThread();
         return mDispatchingSyncMessagePriority;
     }
+
+    bool Connected() const;
 
   private:
     // Executed on the IO thread.
