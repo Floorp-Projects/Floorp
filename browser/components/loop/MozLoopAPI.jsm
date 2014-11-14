@@ -707,6 +707,24 @@ function injectLoopAPI(targetWindow) {
 
         request.send();
       }
+    },
+
+    /**
+     * Associates a session-id and a call-id with a window for debugging.
+     *
+     * @param  {string}  windowId  The window id.
+     * @param  {string}  sessionId OT session id.
+     * @param  {string}  callId    The callId on the server.
+     */
+    addConversationContext: {
+      enumerable: true,
+      writable: true,
+      value: function(windowId, sessionId, callid) {
+        MozLoopService.addConversationContext(windowId, {
+          sessionId: sessionId,
+          callId: callid
+        });
+      }
     }
   };
 
