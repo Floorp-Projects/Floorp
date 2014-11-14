@@ -545,6 +545,9 @@ MozMtpDatabase::AddStorage(MtpStorageID aStorageID,
   // This is called on the IOThread from MozMtpStorage::StorageAvailable
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
+  MTP_DBG("StorageID: 0x%08x aPath: '%s' aName: '%s'",
+          aStorageID, aPath, aName);
+
   PRFileInfo  fileInfo;
   if (PR_GetFileInfo(aPath, &fileInfo) != PR_SUCCESS) {
     MTP_ERR("'%s' doesn't exist", aPath);

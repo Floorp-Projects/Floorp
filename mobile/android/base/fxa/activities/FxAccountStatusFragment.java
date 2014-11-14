@@ -38,6 +38,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 
 /**
  * A fragment that displays the status of an AndroidFxAccount.
@@ -86,6 +87,7 @@ public class FxAccountStatusFragment
   protected EditTextPreference deviceNamePreference;
   protected Preference syncServerPreference;
   protected Preference morePreference;
+  protected Preference syncNowPreference;
 
   protected volatile AndroidFxAccount fxAccount;
   // The contract is: when fxAccount is non-null, then clientsDataDelegate is
@@ -167,6 +169,10 @@ public class FxAccountStatusFragment
     morePreference = ensureFindPreference("more");
     morePreference.setOnPreferenceClickListener(this);
 
+    syncNowPreference = ensureFindPreference("sync_now");
+    syncNowPreference.setEnabled(true);
+    syncNowPreference.setOnPreferenceClickListener(this);
+
     if (HardwareUtils.hasMenuButton()) {
       syncCategory.removePreference(morePreference);
     }
@@ -229,6 +235,13 @@ public class FxAccountStatusFragment
       return true;
     }
 
+    if (preference == syncNowPreference) {
+      if (fxAccount != null) {
+        FirefoxAccounts.requestSync(fxAccount.getAndroidAccount(), FirefoxAccounts.FORCE, null, null);
+      }
+      return true;
+    }
+
     return false;
   }
 
@@ -250,6 +263,7 @@ public class FxAccountStatusFragment
     passwordsPreference.setEnabled(enabled);
     // Since we can't sync, we can't update our remote client record.
     deviceNamePreference.setEnabled(enabled);
+    syncNowPreference.setEnabled(enabled);
   }
 
   /**
@@ -470,6 +484,26 @@ public class FxAccountStatusFragment
     final String clientName = clientsDataDelegate.getClientName();
     deviceNamePreference.setSummary(clientName);
     deviceNamePreference.setText(clientName);
+
+    updateSyncNowPreference();
+  }
+
+  // This is a helper function similar to TabsAccessor.getLastSyncedString() to calculate relative "Last synced" time span.
+  private String getLastSyncedString(final long startTime) {
+    final CharSequence relativeTimeSpanString = DateUtils.getRelativeTimeSpanString(startTime);
+    return getActivity().getResources().getString(R.string.fxaccount_status_last_synced, relativeTimeSpanString);
+  }
+
+  protected void updateSyncNowPreference() {
+    final boolean currentlySyncing = fxAccount.isCurrentlySyncing();
+    syncNowPreference.setEnabled(!currentlySyncing);
+    if (currentlySyncing) {
+      syncNowPreference.setTitle(R.string.fxaccount_status_syncing);
+    } else {
+      syncNowPreference.setTitle(R.string.fxaccount_status_sync_now);
+    }
+    final String lastSynced = getLastSyncedString(fxAccount.getLastSyncedTimestamp());
+    syncNowPreference.setSummary(lastSynced);
   }
 
   protected void updateAuthServerPreference() {

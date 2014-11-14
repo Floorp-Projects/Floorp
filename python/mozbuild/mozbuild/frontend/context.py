@@ -501,6 +501,22 @@ VARIABLES = {
         delimiters.
         """, None),
 
+    'HAS_MISC_RULE': (bool, bool,
+        """Whether this directory should be traversed in the ``misc`` tier.
+
+        Many ``libs`` rules still exist in Makefile.in files. We highly prefer
+        that these rules exist in the ``misc`` tier/target so that they can be
+        executed concurrently during tier traversal (the ``misc`` tier is
+        fully concurrent).
+
+        Presence of this variable indicates that this directory should be
+        traversed by the ``misc`` tier.
+
+        Please note that converting ``libs`` rules to the ``misc`` tier must
+        be done with care, as there are many implicit dependencies that can
+        break the build in subtle ways.
+        """, 'misc'),
+
     'FINAL_TARGET_FILES': (HierarchicalStringList, list,
         """List of files to be installed into the application directory.
 

@@ -11,8 +11,10 @@ var loop = loop || {};
 loop.standaloneRoomViews = (function(mozL10n) {
   "use strict";
 
+  var FAILURE_REASONS = loop.shared.utils.FAILURE_REASONS;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedActions = loop.shared.actions;
+  var sharedMixins = loop.shared.mixins;
   var sharedViews = loop.shared.views;
 
   var StandaloneRoomInfoArea = React.createClass({displayName: 'StandaloneRoomInfoArea',
@@ -37,6 +39,20 @@ loop.standaloneRoomViews = (function(mozL10n) {
           })
         )
       );
+    },
+
+    /**
+     * @return String An appropriate string according to the failureReason.
+     */
+    _getFailureString: function() {
+      switch(this.props.failureReason) {
+        case FAILURE_REASONS.MEDIA_DENIED:
+          return mozL10n.get("rooms_media_denied_message");
+        case FAILURE_REASONS.EXPIRED_OR_INVALID:
+          return mozL10n.get("rooms_unavailable_notification_message");
+        default:
+          return mozL10n.get("status_error");
+      };
     },
 
     _renderContent: function() {
@@ -67,6 +83,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
               React.DOM.p(null, this._renderCallToActionLink())
             )
           );
+        case ROOM_STATES.FAILED:
+          return (
+            React.DOM.p({className: "failed-room-message"}, 
+              this._getFailureString()
+            )
+          );
         default:
           return null;
       }
@@ -76,6 +98,43 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         React.DOM.div({className: "room-inner-info-area"}, 
           this._renderContent()
+        )
+      );
+    }
+  });
+
+  var StandaloneRoomHeader = React.createClass({displayName: 'StandaloneRoomHeader',
+    render: function() {
+      return (
+        React.DOM.header(null, 
+          React.DOM.h1(null, mozL10n.get("clientShortname2"))
+        )
+      );
+    }
+  });
+
+  var StandaloneRoomFooter = React.createClass({displayName: 'StandaloneRoomFooter',
+    _getContent: function() {
+      return mozL10n.get("legal_text_and_links", {
+        "clientShortname": mozL10n.get("clientShortname2"),
+        "terms_of_use_url": React.renderComponentToStaticMarkup(
+          React.DOM.a({href: loop.config.legalWebsiteUrl, target: "_blank"}, 
+            mozL10n.get("terms_of_use_link_text")
+          )
+        ),
+        "privacy_notice_url": React.renderComponentToStaticMarkup(
+          React.DOM.a({href: loop.config.privacyWebsiteUrl, target: "_blank"}, 
+            mozL10n.get("privacy_notice_link_text")
+          )
+        ),
+      });
+    },
+
+    render: function() {
+      return (
+        React.DOM.footer(null, 
+          React.DOM.p({dangerouslySetInnerHTML: {__html: this._getContent()}}), 
+          React.DOM.div({className: "footer-logo"})
         )
       );
     }
@@ -144,6 +203,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
       };
     },
 
+    componentDidMount: function() {
+      // Adding a class to the document body element from here to ease styling it.
+      document.body.classList.add("is-standalone-room");
+    },
+
     componentWillUnmount: function() {
       this.stopListening(this.props.activeRoomStore);
     },
@@ -207,7 +271,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
       return (
         React.DOM.div({className: "room-conversation-wrapper"}, 
+          StandaloneRoomHeader(null), 
           StandaloneRoomInfoArea({roomState: this.state.roomState, 
+                                  failureReason: this.state.failureReason, 
                                   joinRoom: this.joinRoom, 
                                   helper: this.props.helper}), 
           React.DOM.div({className: "video-layout-wrapper"}, 
@@ -229,7 +295,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
                 hangupButtonLabel: mozL10n.get("rooms_leave_button_label"), 
                 enableHangup: this._roomIsActive()})
             )
-          )
+          ), 
+          StandaloneRoomFooter(null)
         )
       );
     }

@@ -434,10 +434,19 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     Logger.setThreadLogTag(FxAccountConstants.GLOBAL_LOG_TAG);
     Logger.resetLogging();
 
+    final Context context = getContext();
+    final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+
     Logger.info(LOG_TAG, "Syncing FxAccount" +
         " account named like " + Utils.obfuscateEmail(account.name) +
         " for authority " + authority +
         " with instance " + this + ".");
+
+    Logger.info(LOG_TAG, "Account last synced at: " + fxAccount.getLastSyncedTimestamp());
+
+    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      fxAccount.dump();
+    }
 
     final EnumSet<FirefoxAccounts.SyncHint> syncHints = FirefoxAccounts.getHintsToSyncFromBundle(extras);
     FirefoxAccounts.logSyncHints(syncHints);
@@ -448,12 +457,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       Logger.info(LOG_TAG, "Not syncing FxAccount " + Utils.obfuscateEmail(account.name) +
                            ": minimum interval not met.");
       return;
-    }
-
-    final Context context = getContext();
-    final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
-    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-      fxAccount.dump();
     }
 
     // Pickle in a background thread to avoid strict mode warnings.

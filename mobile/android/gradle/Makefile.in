@@ -3,12 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 gradle := \
+  local.properties.in \
   gradle.properties.in \
   $(NULL)
 
 gradle_PATH := $(CURDIR)
 gradle_FLAGS += -Dtopsrcdir=$(abspath $(topsrcdir))
 gradle_FLAGS += -Dtopobjdir=$(abspath $(DEPTH))
+gradle_FLAGS += -DANDROID_SDK_ROOT=$(ANDROID_SDK_ROOT)
 gradle_KEEP_PATH := 1
 PP_TARGETS += gradle
 

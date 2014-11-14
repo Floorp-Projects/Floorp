@@ -2,5 +2,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-title=You're browsing privately
-title.normal=Open a private window?
+component {c8605499-cfec-4cb5-a082-5f1f56d42adf} TelephonyAudioService.js
+contract @mozilla.org/telephony/audio-service;1 {c8605499-cfec-4cb5-a082-5f1f56d42adf}
