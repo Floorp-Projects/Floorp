@@ -733,8 +733,15 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   // all the pres shells from here up to the root, as well as any css-driven
   // resolution. We don't need to compute it as it's already stored in the
   // container parameters.
-  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(aContainerParameters.mXScale,
-                                                           aContainerParameters.mYScale);
+  // TODO: On Fennec, the container parameters do not appear to contain the
+  // cumulative resolution the way they do on B2G, and using them breaks
+  // rendering for normal pages (no CSS transform involves). As a temporary
+  // workaround, use the same value as the resolution-to-screen; this will make
+  // the "extra resolution" 1, and pages with CSS transforms may not be
+  // rendered correctly, but normal pages will.
+  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(
+      presShell->GetCumulativeResolution().width
+    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame : aForFrame).width);
 
   LayoutDeviceToScreenScale resolutionToScreen(
       presShell->GetCumulativeResolution().width

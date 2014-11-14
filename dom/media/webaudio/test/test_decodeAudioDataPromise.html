@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the decodeAudioData API with Promise</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script src="webaudio.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+
+var finished = 0;
+
+function finish() {
+  if (++finished == 2) {
+    SimpleTest.finish();
+  }
+}
+
+var ac = new AudioContext();
+// Test that a the promise is rejected with an invalid source buffer.
+expectNoException(function() {
+  var p = ac.decodeAudioData(" ");
+  ok(p instanceof Promise, "AudioContext.decodeAudioData should return a Promise");
+  p.then(function(data) {
+    ok(false, "Promise should not resolve with an invalid source buffer.");
+    finish();
+  }).catch(function(e) {
+    ok(true, "Promise should be rejected with an invalid source buffer.");
+    ok(e.name == "TypeError", "The error should be TypeError");
+    finish();
+  })
+});
+
+// Test that a the promise is resolved with a valid source buffer.
+var xhr = new XMLHttpRequest();
+xhr.open("GET", "ting-44.1k-1ch.ogg", true);
+xhr.responseType = "arraybuffer";
+xhr.onload = function() {
+  var p = ac.decodeAudioData(xhr.response);
+  ok(p instanceof Promise, "AudioContext.decodeAudioData should return a Promise");
+  p.then(function(data) {
+    ok(data instanceof AudioBuffer, "Promise should resolve, passing an AudioBuffer");
+    ok(true, "Promise should resolve with a valid source buffer.");
+    finish();
+  }).catch(function() {
+    ok(false, "Promise should not be rejected with a valid source buffer.");
+    finish();
+  });
+};
+xhr.send();
+});
+
+</script>
+</pre>
+</body>
+</html>

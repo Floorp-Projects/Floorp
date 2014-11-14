@@ -71,6 +71,7 @@
 #include "mozilla/ipc/XPCShellEnvironment.h"
 
 #include "GMPProcessChild.h"
+#include "GMPLoader.h"
 
 #include "GeckoProfiler.h"
 
@@ -103,6 +104,10 @@ using mozilla::plugins::PluginProcessChild;
 using mozilla::dom::ContentProcess;
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
+
+using mozilla::gmp::GMPLoader;
+using mozilla::gmp::CreateGMPLoader;
+using mozilla::gmp::GMPProcessChild;
 
 using mozilla::ipc::TestShellParent;
 using mozilla::ipc::TestShellCommandParent;
@@ -288,11 +293,24 @@ SetTaskbarGroupId(const nsString& aId)
 
 nsresult
 XRE_InitChildProcess(int aArgc,
-                     char* aArgv[])
+                     char* aArgv[],
+                     GMPLoader* aGMPLoader)
 {
   NS_ENSURE_ARG_MIN(aArgc, 2);
   NS_ENSURE_ARG_POINTER(aArgv);
   NS_ENSURE_ARG_POINTER(aArgv[0]);
+
+#if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
+  // On non-Fennec Gecko, the GMPLoader code resides in plugin-container,
+  // and we must forward it through to the GMP code here.
+  GMPProcessChild::SetGMPLoader(aGMPLoader);
+#else
+  // On Fennec, the GMPLoader's code resides inside XUL (because for the time
+  // being GMPLoader relies upon NSPR, which we can't use in plugin-container
+  // on Android), so we create it here inside XUL and pass it to the GMP code.
+  nsAutoPtr<GMPLoader> loader(CreateGMPLoader(nullptr));
+  GMPProcessChild::SetGMPLoader(loader);
+#endif
 
 #if defined(XP_WIN)
   // From the --attach-console support in nsNativeAppSupportWin.cpp, but
