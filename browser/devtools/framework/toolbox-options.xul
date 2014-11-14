@@ -49,15 +49,17 @@
             <label control="defaultColorUnitMenuList"
                    accesskey="&options.defaultColorUnit.accesskey;"
             >&options.defaultColorUnit.label;</label>
-            <menulist id="defaultColorUnitMenuList"
-                      data-pref="devtools.defaultColorUnit">
-              <menupopup>
-                <menuitem label="&options.defaultColorUnit.hex;" value="hex"/>
-                <menuitem label="&options.defaultColorUnit.hsl;" value="hsl"/>
-                <menuitem label="&options.defaultColorUnit.rgb;" value="rgb"/>
-                <menuitem label="&options.defaultColorUnit.name;" value="name"/>
-              </menupopup>
-            </menulist>
+            <hbox>
+              <menulist id="defaultColorUnitMenuList"
+                        data-pref="devtools.defaultColorUnit">
+                <menupopup>
+                  <menuitem label="&options.defaultColorUnit.hex;" value="hex"/>
+                  <menuitem label="&options.defaultColorUnit.hsl;" value="hsl"/>
+                  <menuitem label="&options.defaultColorUnit.rgb;" value="rgb"/>
+                  <menuitem label="&options.defaultColorUnit.name;" value="name"/>
+                </menupopup>
+              </menulist>
+            </hbox>
           </description>
         </vbox>
         <label>&options.webconsole.label;</label>
@@ -103,29 +105,33 @@
             <label control="devtools-sourceeditor-tabsize-menulist"
                    accesskey="&options.sourceeditor.tabsize.accesskey;"
             >&options.sourceeditor.tabsize.label;</label>
-            <menulist id="devtools-sourceeditor-tabsize-menulist"
-                      data-pref="devtools.editor.tabsize">
-              <menupopup>
-                <menuitem label="2" value="2"/>
-                <menuitem label="4" value="4"/>
-                <menuitem label="8" value="8"/>
-              </menupopup>
-            </menulist>
+            <hbox>
+              <menulist id="devtools-sourceeditor-tabsize-menulist"
+                        data-pref="devtools.editor.tabsize">
+                <menupopup>
+                  <menuitem label="2" value="2"/>
+                  <menuitem label="4" value="4"/>
+                  <menuitem label="8" value="8"/>
+                </menupopup>
+              </menulist>
+            </hbox>
           </description>
           <description>
             <label control="devtools-sourceeditor-keybinding-menulist"
                    accesskey="&options.sourceeditor.keybinding.accesskey;"
             >&options.sourceeditor.keybinding.label;</label>
-            <menulist id="devtools-sourceeditor-keybinding-menulist"
-                      data-pref="devtools.editor.keymap">
-              <menupopup>
-                <menuitem value="default"
-                          label="&options.sourceeditor.keybinding.default.label;"/>
-                <menuitem label="Vim" value="vim"/>
-                <menuitem label="Emacs" value="emacs"/>
-                <menuitem label="Sublime Text" value="sublime"/>
-              </menupopup>
-            </menulist>
+            <hbox>
+              <menulist id="devtools-sourceeditor-keybinding-menulist"
+                        data-pref="devtools.editor.keymap">
+                <menupopup>
+                  <menuitem value="default"
+                            label="&options.sourceeditor.keybinding.default.label;"/>
+                  <menuitem label="Vim" value="vim"/>
+                  <menuitem label="Emacs" value="emacs"/>
+                  <menuitem label="Sublime Text" value="sublime"/>
+                </menupopup>
+              </menulist>
+            </hbox>
           </description>
         </vbox>
         <label>&options.context.advancedSettings;</label>
