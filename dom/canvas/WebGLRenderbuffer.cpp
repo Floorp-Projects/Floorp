@@ -42,8 +42,8 @@ WebGLRenderbuffer::WrapObject(JSContext *cx) {
     return dom::WebGLRenderbufferBinding::Wrap(cx, this);
 }
 
-WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext *context)
-    : WebGLBindableName<RBTarget>()
+WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* context)
+    : WebGLBindable<RBTarget>()
     , WebGLContextBoundObject(context)
     , mPrimaryRB(0)
     , mSecondaryRB(0)

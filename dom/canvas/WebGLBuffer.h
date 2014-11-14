@@ -27,7 +27,7 @@ class WebGLBuffer MOZ_FINAL
     , public WebGLContextBoundObject
 {
 public:
-    explicit WebGLBuffer(WebGLContext* aContext);
+    explicit WebGLBuffer(WebGLContext* context, GLuint buf);
 
     void Delete();
 
