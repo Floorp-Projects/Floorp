@@ -155,6 +155,7 @@ public:
   virtual gfx::IntSize GetImageSize() const
   {
     MOZ_ASSERT(false, "Should have been overridden");
+    return gfx::IntSize();
   }
 
   /**
