@@ -56,6 +56,10 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         'nss3.dll',
         'xul.dll'
     ]
+    SOURCES += [
+        'sha256.c',
+    ]
+
 
 if CONFIG['_MSC_VER']:
     # Always enter a Windows program through wmain, whether or not we're
