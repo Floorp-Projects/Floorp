@@ -1016,6 +1016,11 @@ public:
     return mEventRegions.mHitRegion.Contains(point.x, point.y);
   }
 
+  bool DispatchToContentRegionContains(const ParentLayerPoint& aPoint) const {
+    ParentLayerIntPoint point = RoundedToInt(aPoint);
+    return mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y);
+  }
+
   bool IsOverscrolled() const {
     return mX.IsOverscrolled() || mY.IsOverscrolled();
   }
