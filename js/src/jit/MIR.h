@@ -3707,6 +3707,11 @@ class MCompare
     bool isFloat32Comparison() const {
         return compareType() == Compare_Float32;
     }
+    bool isNumericComparison() const {
+        return isInt32Comparison() ||
+               isDoubleComparison() ||
+               isFloat32Comparison();
+    }
     void setCompareType(CompareType type) {
         compareType_ = type;
     }

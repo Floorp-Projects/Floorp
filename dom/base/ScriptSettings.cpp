@@ -517,10 +517,14 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
   , mWebIDLCallerPrincipal(nullptr)
   , mDocShellForJSRunToCompletion(nullptr)
+  , mIsMainThread(aIsMainThread)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
   MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
+  if (aIsMainThread) {
+    nsContentUtils::EnterMicroTask();
+  }
 
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobalObject);
@@ -538,6 +542,10 @@ AutoEntryScript::~AutoEntryScript()
 {
   if (mDocShellForJSRunToCompletion) {
     mDocShellForJSRunToCompletion->NotifyJSRunToCompletionStop();
+  }
+
+  if (mIsMainThread) {
+    nsContentUtils::LeaveMicroTask();
   }
 
   // GC when we pop a script entry point. This is a useful heuristic that helps

@@ -1424,8 +1424,8 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   }
 
   bool inherit = false;
-  nsIPrincipal* requestingPrincipal = aLoadData->mLoaderPrincipal;
-  if (requestingPrincipal) {
+  nsIPrincipal* triggeringPrincipal = aLoadData->mLoaderPrincipal;
+  if (triggeringPrincipal) {
     rv = NS_URIChainHasFlags(aLoadData->mURI,
                              nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
                              &inherit);
@@ -1436,7 +1436,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                      CheckMayLoad(aLoadData->mURI, false, false))));
   }
   else {
-    requestingPrincipal = nsContentUtils::GetSystemPrincipal();
+    triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
   }
 
   if (aLoadData->mSyncLoad) {
@@ -1469,17 +1469,36 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     // principal.  This is because of a case where the node is the document
     // being styled and the principal is the stylesheet (perhaps from a
     // different origin)  that is applying the styles.
-    rv = NS_OpenURIInternal(getter_AddRefs(stream),
-                            aLoadData->mURI,
-                            aLoadData->mRequestingNode,
-                            requestingPrincipal,
-                            nsILoadInfo::SEC_NORMAL,
-                            nsIContentPolicy::TYPE_OTHER,
-                            nullptr,   // aLoadGroup
-                            nullptr,   // aCallbacks
-                            nsIRequest::LOAD_NORMAL,
-                            nullptr,   // aIoService
-                            getter_AddRefs(channel));
+    if (aLoadData->mRequestingNode) {
+      rv = NS_OpenURIWithTriggeringPrincipal(getter_AddRefs(stream),
+                                             aLoadData->mURI,
+                                             aLoadData->mRequestingNode,
+                                             triggeringPrincipal,
+                                             nsILoadInfo::SEC_NORMAL,
+                                             nsIContentPolicy::TYPE_OTHER,
+                                             nullptr,   // aLoadGroup
+                                             nullptr,   // aCallbacks
+                                             nsIRequest::LOAD_NORMAL,
+                                             nullptr,   // aIoService
+                                             getter_AddRefs(channel));
+    }
+    else {
+      // either we are loading something inside a document, in which case
+      // we should always have a requestingNode, or we are loading something
+      // outside a document, in which case the triggeringPrincipal
+      // should always be the systemPrincipal.
+      MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(triggeringPrincipal));
+      rv = NS_OpenURI(getter_AddRefs(stream),
+                      aLoadData->mURI,
+                      triggeringPrincipal,
+                      nsILoadInfo::SEC_NORMAL,
+                      nsIContentPolicy::TYPE_OTHER,
+                      nullptr,   // aLoadGroup
+                      nullptr,   // aCallbacks
+                      nsIRequest::LOAD_NORMAL,
+                      nullptr,   // aIoService
+                      getter_AddRefs(channel));
+    }
 
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to open URI synchronously"));
@@ -1560,20 +1579,38 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   }
 
   nsCOMPtr<nsIChannel> channel;
-  // Note we are calling NS_NewChannelInternal here with a node and a principal.
-  // This is because of a case where the node is the document being styled and
-  // the principal is the stylesheet (perhaps from a different origin)  that is
-  // applying the styles.
-  rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                             aLoadData->mURI,
-                             aLoadData->mRequestingNode,
-                             requestingPrincipal,
-                             securityFlags,
-                             nsIContentPolicy::TYPE_STYLESHEET,
-                             loadGroup,
-                             nullptr,   // aCallbacks
-                             nsIChannel::LOAD_NORMAL |
-                             nsIChannel::LOAD_CLASSIFY_URI);
+  // Note we are calling NS_NewChannelWithTriggeringPrincipal here with a node
+  // and a principal. This is because of a case where the node is the document
+  // being styled and the principal is the stylesheet (perhaps from a different
+  // origin)  that is applying the styles.
+  if (aLoadData->mRequestingNode) {
+    rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
+                                              aLoadData->mURI,
+                                              aLoadData->mRequestingNode,
+                                              triggeringPrincipal,
+                                              securityFlags,
+                                              nsIContentPolicy::TYPE_STYLESHEET,
+                                              loadGroup,
+                                              nullptr,   // aCallbacks
+                                              nsIChannel::LOAD_NORMAL |
+                                              nsIChannel::LOAD_CLASSIFY_URI);
+  }
+  else {
+    // either we are loading something inside a document, in which case
+    // we should always have a requestingNode, or we are loading something
+    // outside a document, in which case the triggeringPrincipal
+    // should always be the systemPrincipal.
+    MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(triggeringPrincipal));
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       aLoadData->mURI,
+                       triggeringPrincipal,
+                       securityFlags,
+                       nsIContentPolicy::TYPE_STYLESHEET,
+                       loadGroup,
+                       nullptr,   // aCallbacks
+                       nsIChannel::LOAD_NORMAL |
+                       nsIChannel::LOAD_CLASSIFY_URI);
+  }
 
   if (NS_FAILED(rv)) {
 #ifdef DEBUG

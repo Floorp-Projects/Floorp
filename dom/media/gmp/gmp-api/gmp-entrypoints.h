@@ -63,4 +63,10 @@ typedef GMPErr (*GMPGetAPIFunc)(const char* aAPIName, void* aHostAPI, void** aPl
 // - Called on main thread.
 typedef void   (*GMPShutdownFunc)(void);
 
+// GMPSetNodeId
+// - Optional, not required to be implemented. Only useful for EME plugins.
+// - Called after GMPInit to set the device-bound origin-specific node id
+//   that this GMP instance is running under.
+typedef void   (*GMPSetNodeIdFunc)(const char* aNodeId, uint32_t aLength);
+
 #endif // GMP_ENTRYPOINTS_h_

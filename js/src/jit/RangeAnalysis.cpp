@@ -247,9 +247,19 @@ RangeAnalysis::addBetaNodes()
             if (bound == 0)
                 comp.refineToExcludeNegativeZero();
             break;
+          case JSOP_STRICTEQ:
+            // A strict comparison can test for things other than numeric value.
+            if (!compare->isNumericComparison())
+                continue;
+            // Otherwise fall through to handle JSOP_STRICTEQ the same as JSOP_EQ.
           case JSOP_EQ:
             comp.setDouble(bound, bound);
             break;
+          case JSOP_STRICTNE:
+            // A strict comparison can test for things other than numeric value.
+            if (!compare->isNumericComparison())
+                continue;
+            // Otherwise fall through to handle JSOP_STRICTNE the same as JSOP_NE.
           case JSOP_NE:
             // Negative zero is not not-equal to zero.
             if (bound == 0) {

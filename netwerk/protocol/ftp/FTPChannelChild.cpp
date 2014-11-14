@@ -149,12 +149,18 @@ void
 propagateLoadInfo(nsILoadInfo *aLoadInfo,
                   FTPChannelOpenArgs& openArgs)
 {
-  mozilla::ipc::PrincipalInfo principalInfo;
+  mozilla::ipc::PrincipalInfo requestingPrincipalInfo;
+  mozilla::ipc::PrincipalInfo triggeringPrincipalInfo;
 
   if (aLoadInfo) {
     mozilla::ipc::PrincipalToPrincipalInfo(aLoadInfo->LoadingPrincipal(),
-                                           &principalInfo);
-    openArgs.requestingPrincipalInfo() = principalInfo;
+                                           &requestingPrincipalInfo);
+    openArgs.requestingPrincipalInfo() = requestingPrincipalInfo;
+
+    mozilla::ipc::PrincipalToPrincipalInfo(aLoadInfo->TriggeringPrincipal(),
+                                           &triggeringPrincipalInfo);
+    openArgs.triggeringPrincipalInfo() = triggeringPrincipalInfo;
+
     openArgs.securityFlags() = aLoadInfo->GetSecurityFlags();
     openArgs.contentPolicyType() = aLoadInfo->GetContentPolicyType();
     return;
@@ -162,8 +168,9 @@ propagateLoadInfo(nsILoadInfo *aLoadInfo,
 
   // use default values if no loadInfo is provided
   mozilla::ipc::PrincipalToPrincipalInfo(nsContentUtils::GetSystemPrincipal(),
-                                         &principalInfo);
-  openArgs.requestingPrincipalInfo() = principalInfo;
+                                         &requestingPrincipalInfo);
+  openArgs.requestingPrincipalInfo() = requestingPrincipalInfo;
+  openArgs.triggeringPrincipalInfo() = requestingPrincipalInfo;
   openArgs.securityFlags() = nsILoadInfo::SEC_NORMAL;
   openArgs.contentPolicyType() = nsIContentPolicy::TYPE_OTHER;
 }

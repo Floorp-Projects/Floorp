@@ -7,6 +7,7 @@ INSTALL_TARGETS += FAKE_GMP_PLUGIN
 FAKE_GMP_PLUGIN_DEST = $(DEPTH)/dist/bin/gmp-fake/1.0
 FAKE_GMP_PLUGIN_FILES = \
   $(SHARED_LIBRARY) \
-  $(srcdir)/fake.info
+  $(srcdir)/fake.info \
+  $(srcdir)/fake.voucher
 
 include $(topsrcdir)/config/rules.mk
