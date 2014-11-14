@@ -6009,6 +6009,7 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             }
             ICGetProp_CallNative::Compiler compiler(cx, monitorStub, current,
                                                     getter, script->pcToOffset(pc),
+                                                    /* outerClass = */ nullptr,
                                                     /* inputDefinitelyObject = */ true);
             newStub = compiler.getStub(compiler.getStubSpace(script));
         } else {
@@ -6019,6 +6020,7 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             }
             ICGetProp_CallNativePrototype::Compiler compiler(cx, monitorStub, global, current,
                                                              getter, script->pcToOffset(pc),
+                                                             /* outerClass = */ nullptr,
                                                              /* inputDefinitelyObject = */ true);
             newStub = compiler.getStub(compiler.getStubSpace(script));
         }
@@ -6582,13 +6584,10 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         return false;
     }
 
-    if (!isDOMProxy && !obj->isNative())
-        return true;
-
     bool isCallProp = (JSOp(*pc) == JSOP_CALLPROP);
 
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-    if (!isDOMProxy && IsCacheableGetPropReadSlot(obj, holder, shape)) {
+    if (!isDOMProxy && obj->isNative() && IsCacheableGetPropReadSlot(obj, holder, shape)) {
         bool isFixedSlot;
         uint32_t offset;
         GetFixedOrDynamicSlotOffset(&holder->as<NativeObject>(), shape->slot(), &isFixedSlot, &offset);
@@ -6620,8 +6619,8 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     bool isScripted = false;
-    bool cacheableCall = IsCacheableGetPropCall(cx, obj, holder, shape, &isScripted,
-                                                isTemporarilyUnoptimizable, isDOMProxy);
+    bool cacheableCall = obj->isNative() && IsCacheableGetPropCall(cx, obj, holder, shape, &isScripted,
+                                                                   isTemporarilyUnoptimizable);
 
     // Try handling scripted getters.
     if (cacheableCall && isScripted && !isDOMProxy) {
@@ -6661,6 +6660,56 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
+    // If it's a shadowed listbase proxy property, attach stub to call Proxy::get instead.
+    if (isDOMProxy && domProxyShadowsResult == Shadows) {
+        MOZ_ASSERT(obj == holder);
+#if JS_HAS_NO_SUCH_METHOD
+        if (isCallProp)
+            return true;
+#endif
+
+        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(DOMProxyProxy) stub");
+        Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
+        ICGetProp_DOMProxyShadowed::Compiler compiler(cx, monitorStub, proxy, name,
+                                                      script->pcToOffset(pc));
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!newStub)
+            return false;
+        stub->addNewStub(newStub);
+        *attached = true;
+        return true;
+    }
+
+    const Class *outerClass = nullptr;
+    if (!isDOMProxy && !obj->isNative()) {
+        outerClass = obj->getClass();
+        DebugOnly<JSObject *> outer = obj.get();
+        obj = GetInnerObject(obj);
+        MOZ_ASSERT(script->global().isNative());
+        if (obj != &script->global())
+            return true;
+        // ICGetProp_CallNative*::Compiler::generateStubCode depends on this.
+        MOZ_ASSERT(&((GetProxyDataLayout(outer)->values->privateSlot).toObject()) == obj);
+        if (!EffectlesslyLookupProperty(cx, obj, name, &holder, &shape, &isDOMProxy,
+                                        &domProxyShadowsResult, &domProxyHasGeneration))
+        {
+            return false;
+        }
+        cacheableCall = IsCacheableGetPropCall(cx, obj, holder, shape, &isScripted,
+                                               isTemporarilyUnoptimizable, isDOMProxy);
+    }
+
+    if (!shape || !shape->hasGetterValue() || !shape->getterValue().isObject() ||
+        !shape->getterObject()->is<JSFunction>())
+    {
+        return true;
+    }
+
+    RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
+
+    if (outerClass && (!callee->jitInfo() || callee->jitInfo()->needsOuterizedThisObject()))
+        return true;
+
     // Try handling JSNative getters.
     if (cacheableCall && !isScripted) {
 #if JS_HAS_NO_SUCH_METHOD
@@ -6671,7 +6720,6 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             return true;
 #endif
 
-        RootedFunction callee(cx, &shape->getterObject()->as<JSFunction>());
         MOZ_ASSERT(callee->isNative());
 
         JitSpew(JitSpew_BaselineIC, "  Generating GetProp(%s%s/NativeGetter %p) stub",
@@ -6704,7 +6752,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             }
 
             ICGetProp_CallNative::Compiler compiler(cx, monitorStub, obj, callee,
-                                                    script->pcToOffset(pc));
+                                                    script->pcToOffset(pc), outerClass);
             newStub = compiler.getStub(compiler.getStubSpace(script));
         } else {
             if (UpdateExistingGetPropCallStubs(stub, ICStub::GetProp_CallNativePrototype,
@@ -6714,29 +6762,9 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
             }
 
             ICGetProp_CallNativePrototype::Compiler compiler(cx, monitorStub, obj, holder, callee,
-                                                             script->pcToOffset(pc));
+                                                             script->pcToOffset(pc), outerClass);
             newStub = compiler.getStub(compiler.getStubSpace(script));
         }
-        if (!newStub)
-            return false;
-        stub->addNewStub(newStub);
-        *attached = true;
-        return true;
-    }
-
-    // If it's a shadowed listbase proxy property, attach stub to call Proxy::get instead.
-    if (isDOMProxy && domProxyShadowsResult == Shadows) {
-        MOZ_ASSERT(obj == holder);
-#if JS_HAS_NO_SUCH_METHOD
-        if (isCallProp)
-            return true;
-#endif
-
-        JitSpew(JitSpew_BaselineIC, "  Generating GetProp(DOMProxyProxy) stub");
-        Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
-        ICGetProp_DOMProxyShadowed::Compiler compiler(cx, monitorStub, proxy, name,
-                                                      script->pcToOffset(pc));
-        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
         stub->addNewStub(newStub);
@@ -7460,12 +7488,24 @@ ICGetProp_CallNative::Compiler::generateStubCode(MacroAssembler &masm)
 
     GeneralRegisterSet regs(availableGeneralRegs(0));
     Register obj = InvalidReg;
+
+    MOZ_ASSERT(!(inputDefinitelyObject_ && outerClass_));
     if (inputDefinitelyObject_) {
         obj = R0.scratchReg();
     } else {
         regs.take(R0);
         masm.branchTestObject(Assembler::NotEqual, R0, &failure);
         obj = masm.extractObject(R0, ExtractTemp0);
+        if (outerClass_) {
+            ValueOperand val = regs.takeAnyValue();
+            Register tmp = regs.takeAny();
+            masm.branchTestObjClass(Assembler::NotEqual, obj, tmp, outerClass_, &failure);
+            masm.loadPtr(Address(obj, ProxyDataOffset + offsetof(ProxyDataLayout, values)), tmp);
+            masm.loadValue(Address(tmp, offsetof(ProxyValueArray, privateSlot)), val);
+            obj = masm.extractObject(val, ExtractTemp0);
+            regs.add(val);
+            regs.add(tmp);
+        }
     }
     regs.takeUnchecked(obj);
 
@@ -7508,6 +7548,7 @@ ICGetProp_CallNativePrototype::Compiler::generateStubCode(MacroAssembler &masm)
     GeneralRegisterSet regs(availableGeneralRegs(0));
     Register objReg = InvalidReg;
 
+    MOZ_ASSERT(!(inputDefinitelyObject_ && outerClass_));
     if (inputDefinitelyObject_) {
         objReg = R0.scratchReg();
     } else {
@@ -7515,6 +7556,16 @@ ICGetProp_CallNativePrototype::Compiler::generateStubCode(MacroAssembler &masm)
         // Guard input is an object and unbox.
         masm.branchTestObject(Assembler::NotEqual, R0, &failure);
         objReg = masm.extractObject(R0, ExtractTemp0);
+        if (outerClass_) {
+            ValueOperand val = regs.takeAnyValue();
+            Register tmp = regs.takeAny();
+            masm.branchTestObjClass(Assembler::NotEqual, objReg, tmp, outerClass_, &failure);
+            masm.loadPtr(Address(objReg, ProxyDataOffset + offsetof(ProxyDataLayout, values)), tmp);
+            masm.loadValue(Address(tmp, offsetof(ProxyValueArray, privateSlot)), val);
+            objReg = masm.extractObject(val, ExtractTemp0);
+            regs.add(val);
+            regs.add(tmp);
+        }
     }
     regs.takeUnchecked(objReg);
 

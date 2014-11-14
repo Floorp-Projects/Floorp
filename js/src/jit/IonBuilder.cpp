@@ -10086,16 +10086,14 @@ IonBuilder::getPropTryInnerize(bool *emitted, MDefinition *obj, PropertyName *na
     // Note: the Baseline ICs don't know about this optimization, so it's
     // possible the global property's HeapTypeSet has not been initialized
     // yet. In this case we'll fall back to getPropTryCache for now.
-    //
-    // Also note that we don't call getPropTryCommonGetter below, because
-    // (a) it requires a Baseline getter stub, which we don't have for outer
-    // window proxies and (b) we have to be careful not to pass the inner
-    // object to scripted getters etc. See bug 1007631.
 
     if (!getPropTryConstant(emitted, inner, name, types) || *emitted)
         return *emitted;
 
     if (!getStaticName(&script()->global(), name, emitted) || *emitted)
+        return *emitted;
+
+    if (!getPropTryCommonGetter(emitted, inner, name, types) || *emitted)
         return *emitted;
 
     // Passing the inner object to GetProperty IC is safe, see the
