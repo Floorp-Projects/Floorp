@@ -7,13 +7,14 @@
 # Note: build rlz in its own moz.build, so it doesn't pickup any of
 # Chromium IPC's headers used in the moz.build of the parent file.
 
+Library('rlz')
+FORCE_STATIC_LIB = True
+USE_STATIC_LIBS = True
+
 UNIFIED_SOURCES += [
     'lib/string_utils.cc',
     'win/lib/machine_id_win.cc',
 ]
-
-FINAL_LIBRARY = 'xul'
-FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '..',

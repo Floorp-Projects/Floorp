@@ -48,6 +48,7 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         '/security/sandbox/chromium',
     ]
     USE_LIBS += [
+        'rlz',
         'sandbox_staticruntime_s',
     ]
     DELAYLOAD_DLLS += [
