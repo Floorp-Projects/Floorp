@@ -5,10 +5,9 @@
 
 #include "WebGLContext.h"
 
-#include <stdarg.h>
-
 #include "GLContext.h"
 #include "jsapi.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMEvent.h"
@@ -17,6 +16,7 @@
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "prprf.h"
+#include <stdarg.h>
 #include "WebGLBuffer.h"
 #include "WebGLExtensions.h"
 #include "WebGLFramebuffer.h"
@@ -24,8 +24,6 @@
 #include "WebGLTexture.h"
 #include "WebGLVertexArray.h"
 #include "WebGLContextUtils.h"
-
-#include "mozilla/dom/ScriptSettings.h"
 
 namespace mozilla {
 
@@ -83,33 +81,33 @@ GLComponents::GLComponents(TexInternalFormat internalformat)
     mComponents = 0;
 
     switch (unsizedformat.get()) {
-        case LOCAL_GL_RGBA:
-        case LOCAL_GL_RGBA4:
-        case LOCAL_GL_RGBA8:
-        case LOCAL_GL_RGB5_A1:
-        // Luminance + Alpha can be converted
-        // to and from RGBA
-        case LOCAL_GL_LUMINANCE_ALPHA:
-            mComponents |= Components::Alpha;
-        // Drops through
-        case LOCAL_GL_RGB:
-        case LOCAL_GL_RGB565:
-        // Luminance can be converted to and from RGB
-        case LOCAL_GL_LUMINANCE:
-            mComponents |= Components::Red | Components::Green | Components::Blue;
-            break;
-        case LOCAL_GL_ALPHA:
-            mComponents |= Components::Alpha;
-            break;
-        case LOCAL_GL_DEPTH_COMPONENT:
-            mComponents |= Components::Depth;
-            break;
-        case LOCAL_GL_DEPTH_STENCIL:
-            mComponents |= Components::Stencil;
-            break;
-        default:
-            MOZ_ASSERT(false, "Unhandled case - GLComponents");
-            break;
+    case LOCAL_GL_RGBA:
+    case LOCAL_GL_RGBA4:
+    case LOCAL_GL_RGBA8:
+    case LOCAL_GL_RGB5_A1:
+    // Luminance + Alpha can be converted
+    // to and from RGBA
+    case LOCAL_GL_LUMINANCE_ALPHA:
+        mComponents |= Components::Alpha;
+    // Drops through
+    case LOCAL_GL_RGB:
+    case LOCAL_GL_RGB565:
+    // Luminance can be converted to and from RGB
+    case LOCAL_GL_LUMINANCE:
+        mComponents |= Components::Red | Components::Green | Components::Blue;
+        break;
+    case LOCAL_GL_ALPHA:
+        mComponents |= Components::Alpha;
+        break;
+    case LOCAL_GL_DEPTH_COMPONENT:
+        mComponents |= Components::Depth;
+        break;
+    case LOCAL_GL_DEPTH_STENCIL:
+        mComponents |= Components::Stencil;
+        break;
+    default:
+        MOZ_ASSERT(false, "Unhandled case - GLComponents");
+        break;
     }
 }
 
@@ -173,8 +171,8 @@ EffectiveInternalFormatFromUnsizedInternalFormatAndType(TexInternalFormat intern
 
 void
 UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(TexInternalFormat effectiveinternalformat,
-                                                        TexInternalFormat* out_internalformat,
-                                                        TexType* out_type)
+                                                        TexInternalFormat* const out_internalformat,
+                                                        TexType* const out_type)
 {
     MOZ_ASSERT(TypeFromInternalFormat(effectiveinternalformat) != LOCAL_GL_NONE);
 
@@ -207,13 +205,13 @@ EffectiveInternalFormatFromInternalFormatAndType(TexInternalFormat internalforma
                                                  TexType type)
 {
     TexType typeOfInternalFormat = TypeFromInternalFormat(internalformat);
-    if (typeOfInternalFormat == LOCAL_GL_NONE) {
+    if (typeOfInternalFormat == LOCAL_GL_NONE)
         return EffectiveInternalFormatFromUnsizedInternalFormatAndType(internalformat, type);
-    } else if (typeOfInternalFormat == type) {
+
+    if (typeOfInternalFormat == type)
         return internalformat;
-    } else {
-        return LOCAL_GL_NONE;
-    }
+
+    return LOCAL_GL_NONE;
 }
 
 /**
@@ -223,9 +221,9 @@ EffectiveInternalFormatFromInternalFormatAndType(TexInternalFormat internalforma
 void
 DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
                                          TexInternalFormat effectiveinternalformat,
-                                         GLenum* out_driverInternalFormat,
-                                         GLenum* out_driverFormat,
-                                         GLenum* out_driverType)
+                                         GLenum* const out_driverInternalFormat,
+                                         GLenum* const out_driverFormat,
+                                         GLenum* const out_driverType)
 {
     MOZ_ASSERT(out_driverInternalFormat);
     MOZ_ASSERT(out_driverFormat);
@@ -235,14 +233,14 @@ DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
     TexType type = LOCAL_GL_NONE;
 
     UnsizedInternalFormatAndTypeFromEffectiveInternalFormat(effectiveinternalformat,
-                                                            &unsizedinternalformat, &type);
+                                                            &unsizedinternalformat,
+                                                            &type);
 
     // driverType: almost always the generic type that we just got, except on ES
     // we must replace HALF_FLOAT by HALF_FLOAT_OES
     GLenum driverType = type.get();
-    if (gl->IsGLES() && type == LOCAL_GL_HALF_FLOAT) {
+    if (gl->IsGLES() && type == LOCAL_GL_HALF_FLOAT)
         driverType = LOCAL_GL_HALF_FLOAT_OES;
-    }
 
     // driverFormat: always just the unsized internalformat that we just got
     GLenum driverFormat = unsizedinternalformat.get();
@@ -253,11 +251,10 @@ DriverFormatsFromEffectiveInternalFormat(gl::GLContext* gl,
     GLenum driverInternalFormat = driverFormat;
     if (!gl->IsGLES()) {
         // Cases where desktop OpenGL requires a tweak to 'format'
-        if (driverFormat == LOCAL_GL_SRGB) {
+        if (driverFormat == LOCAL_GL_SRGB)
             driverFormat = LOCAL_GL_RGB;
-        } else if (driverFormat == LOCAL_GL_SRGB_ALPHA) {
+        else if (driverFormat == LOCAL_GL_SRGB_ALPHA)
             driverFormat = LOCAL_GL_RGBA;
-        }
 
         // WebGL2's new formats are not legal values for internalformat,
         // as using unsized internalformat is deprecated.
@@ -405,7 +402,7 @@ GetBitsPerTexel(TexInternalFormat effectiveinternalformat)
 }
 
 void
-WebGLContext::GenerateWarning(const char *fmt, ...)
+WebGLContext::GenerateWarning(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -416,7 +413,7 @@ WebGLContext::GenerateWarning(const char *fmt, ...)
 }
 
 void
-WebGLContext::GenerateWarning(const char *fmt, va_list ap)
+WebGLContext::GenerateWarning(const char* fmt, va_list ap)
 {
     if (!ShouldGenerateWarnings())
         return;
@@ -432,27 +429,24 @@ WebGLContext::GenerateWarning(const char *fmt, va_list ap)
     JS_ReportWarning(cx, "WebGL: %s", buf);
     if (!ShouldGenerateWarnings()) {
         JS_ReportWarning(cx,
-            "WebGL: No further warnings will be reported for this WebGL context "
-            "(already reported %d warnings)", mAlreadyGeneratedWarnings);
+                         "WebGL: No further warnings will be reported for this"
+                         " WebGL context. (already reported %d warnings)",
+                         mAlreadyGeneratedWarnings);
     }
 }
 
 bool
 WebGLContext::ShouldGenerateWarnings() const
 {
-    if (mMaxWarnings == -1) {
+    if (mMaxWarnings == -1)
         return true;
-    }
 
     return mAlreadyGeneratedWarnings < mMaxWarnings;
 }
 
 CheckedUint32
-WebGLContext::GetImageSize(GLsizei height,
-                           GLsizei width,
-                           GLsizei depth,
-                           uint32_t pixelSize,
-                           uint32_t packOrUnpackAlignment)
+WebGLContext::GetImageSize(GLsizei height, GLsizei width, GLsizei depth,
+                           uint32_t pixelSize, uint32_t packOrUnpackAlignment)
 {
     CheckedUint32 checked_plainRowSize = CheckedUint32(width) * pixelSize;
 
@@ -460,8 +454,11 @@ WebGLContext::GetImageSize(GLsizei height,
     CheckedUint32 checked_alignedRowSize = RoundedToNextMultipleOf(checked_plainRowSize, packOrUnpackAlignment);
 
     // if height is 0, we don't need any memory to store this; without this check, we'll get an overflow
-    CheckedUint32 checked_2dImageSize
-        = height <= 0 ? 0 : (height-1) * checked_alignedRowSize + checked_plainRowSize;
+    CheckedUint32 checked_2dImageSize = 0;
+    if (height >= 1) {
+        checked_2dImageSize = (height-1) * checked_alignedRowSize +
+                              checked_plainRowSize;
+    }
 
     // FIXME - we should honor UNPACK_IMAGE_HEIGHT
     CheckedUint32 checked_imageSize = checked_2dImageSize * depth;
@@ -482,7 +479,7 @@ WebGLContext::SynthesizeGLError(GLenum err)
 }
 
 void
-WebGLContext::SynthesizeGLError(GLenum err, const char *fmt, ...)
+WebGLContext::SynthesizeGLError(GLenum err, const char* fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -493,7 +490,7 @@ WebGLContext::SynthesizeGLError(GLenum err, const char *fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
+WebGLContext::ErrorInvalidEnum(const char* fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -504,7 +501,7 @@ WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidEnumInfo(const char *info, GLenum enumvalue)
+WebGLContext::ErrorInvalidEnumInfo(const char* info, GLenum enumvalue)
 {
     nsCString name;
     EnumName(enumvalue, &name);
@@ -513,7 +510,7 @@ WebGLContext::ErrorInvalidEnumInfo(const char *info, GLenum enumvalue)
 }
 
 void
-WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
+WebGLContext::ErrorInvalidOperation(const char* fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -524,7 +521,7 @@ WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidValue(const char *fmt, ...)
+WebGLContext::ErrorInvalidValue(const char* fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -535,7 +532,7 @@ WebGLContext::ErrorInvalidValue(const char *fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidFramebufferOperation(const char *fmt, ...)
+WebGLContext::ErrorInvalidFramebufferOperation(const char* fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -546,7 +543,7 @@ WebGLContext::ErrorInvalidFramebufferOperation(const char *fmt, ...)
 }
 
 void
-WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
+WebGLContext::ErrorOutOfMemory(const char* fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
@@ -556,25 +553,25 @@ WebGLContext::ErrorOutOfMemory(const char *fmt, ...)
     return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);
 }
 
-const char *
+const char*
 WebGLContext::ErrorName(GLenum error)
 {
     switch(error) {
-        case LOCAL_GL_INVALID_ENUM:
-            return "INVALID_ENUM";
-        case LOCAL_GL_INVALID_OPERATION:
-            return "INVALID_OPERATION";
-        case LOCAL_GL_INVALID_VALUE:
-            return "INVALID_VALUE";
-        case LOCAL_GL_OUT_OF_MEMORY:
-            return "OUT_OF_MEMORY";
-        case LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION:
-            return "INVALID_FRAMEBUFFER_OPERATION";
-        case LOCAL_GL_NO_ERROR:
-            return "NO_ERROR";
-        default:
-            MOZ_ASSERT(false);
-            return "[unknown WebGL error!]";
+    case LOCAL_GL_INVALID_ENUM:
+        return "INVALID_ENUM";
+    case LOCAL_GL_INVALID_OPERATION:
+        return "INVALID_OPERATION";
+    case LOCAL_GL_INVALID_VALUE:
+        return "INVALID_VALUE";
+    case LOCAL_GL_OUT_OF_MEMORY:
+        return "OUT_OF_MEMORY";
+    case LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION:
+        return "INVALID_FRAMEBUFFER_OPERATION";
+    case LOCAL_GL_NO_ERROR:
+        return "NO_ERROR";
+    default:
+        MOZ_ASSERT(false);
+        return "[unknown WebGL error]";
     }
 }
 
@@ -919,31 +916,31 @@ bool
 WebGLContext::IsCompressedTextureFormat(GLenum format)
 {
     switch (format) {
-        case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-        case LOCAL_GL_ATC_RGB:
-        case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
-        case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
-        case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
-        case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
-        case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
-        case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
-        case LOCAL_GL_ETC1_RGB8_OES:
-        case LOCAL_GL_COMPRESSED_R11_EAC:
-        case LOCAL_GL_COMPRESSED_SIGNED_R11_EAC:
-        case LOCAL_GL_COMPRESSED_RG11_EAC:
-        case LOCAL_GL_COMPRESSED_SIGNED_RG11_EAC:
-        case LOCAL_GL_COMPRESSED_RGB8_ETC2:
-        case LOCAL_GL_COMPRESSED_SRGB8_ETC2:
-        case LOCAL_GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
-        case LOCAL_GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
-        case LOCAL_GL_COMPRESSED_RGBA8_ETC2_EAC:
-        case LOCAL_GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
-            return true;
-        default:
-            return false;
+    case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
+    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
+    case LOCAL_GL_ATC_RGB:
+    case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
+    case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
+    case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
+    case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
+    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
+    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
+    case LOCAL_GL_ETC1_RGB8_OES:
+    case LOCAL_GL_COMPRESSED_R11_EAC:
+    case LOCAL_GL_COMPRESSED_SIGNED_R11_EAC:
+    case LOCAL_GL_COMPRESSED_RG11_EAC:
+    case LOCAL_GL_COMPRESSED_SIGNED_RG11_EAC:
+    case LOCAL_GL_COMPRESSED_RGB8_ETC2:
+    case LOCAL_GL_COMPRESSED_SRGB8_ETC2:
+    case LOCAL_GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+    case LOCAL_GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+    case LOCAL_GL_COMPRESSED_RGBA8_ETC2_EAC:
+    case LOCAL_GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+        return true;
+    default:
+        return false;
     }
 }
 
@@ -995,7 +992,8 @@ AssertUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint shadow)
 }
 
 void
-AssertMaskedUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint mask, GLuint shadow)
+AssertMaskedUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint mask,
+                             GLuint shadow)
 {
     GLuint val = 0;
     gl->GetUIntegerv(pname, &val);
@@ -1040,11 +1038,11 @@ WebGLContext::AssertCachedBindings()
     GLenum activeTexture = mActiveTexture + LOCAL_GL_TEXTURE0;
     AssertUintParamCorrect(gl, LOCAL_GL_ACTIVE_TEXTURE, activeTexture);
 
-    WebGLTexture* curTex = activeBoundTextureForTarget(LOCAL_GL_TEXTURE_2D);
+    WebGLTexture* curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_2D);
     bound = curTex ? curTex->GLName() : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_2D, bound);
 
-    curTex = activeBoundTextureForTarget(LOCAL_GL_TEXTURE_CUBE_MAP);
+    curTex = ActiveBoundTextureForTarget(LOCAL_GL_TEXTURE_CUBE_MAP);
     bound = curTex ? curTex->GLName() : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, bound);
 
