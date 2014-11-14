@@ -13,7 +13,8 @@
 using namespace mozilla;
 
 WebGLTransformFeedback::WebGLTransformFeedback(WebGLContext* context)
-    : WebGLContextBoundObject(context)
+    : WebGLBindableName(0)
+    , WebGLContextBoundObject(context)
 {
     MOZ_CRASH("Not Implemented.");
 }
