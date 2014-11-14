@@ -327,7 +327,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
         aState.mIsFirstPaint && (aLayersId == aState.mOriginatingLayersId));
 
     nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
-    apzc->SetLayerHitTestData(unobscured, aAncestorTransform);
+    apzc->SetLayerHitTestData(EventRegions(unobscured), aAncestorTransform);
     APZCTM_LOG("Setting region %s as visible region for APZC %p\n",
         Stringify(unobscured).c_str(), apzc);
 
@@ -391,7 +391,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     // on top of B. Fixing this doesn't appear to be very easy so I'm leaving it for
     // now in the hopes that we won't run into this problem a lot.
     nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
-    apzc->AddHitTestRegion(unobscured);
+    apzc->AddHitTestRegions(EventRegions(unobscured));
     APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(unobscured).c_str(), apzc);
   }
 
@@ -1225,7 +1225,7 @@ APZCTreeManager::GetAPZCAtPoint(AsyncPanZoomController* aApzc,
     }
   }
   if (!result && hitTestPointForThisLayer.HasPositiveWCoord() &&
-      aApzc->VisibleRegionContains(ParentLayerPoint::FromUnknownPoint(hitTestPointForThisLayer.As2DPoint()))) {
+      aApzc->HitRegionContains(ParentLayerPoint::FromUnknownPoint(hitTestPointForThisLayer.As2DPoint()))) {
     APZCTM_LOG("Successfully matched untransformed point %f %f to visible region for APZC %p\n",
              hitTestPointForThisLayer.x, hitTestPointForThisLayer.y, aApzc);
     result = aApzc;
