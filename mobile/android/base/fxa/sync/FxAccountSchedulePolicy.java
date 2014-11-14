@@ -105,6 +105,7 @@ public class FxAccountSchedulePolicy implements SchedulePolicy {
 
   @Override
   public void onSuccessfulSync(int otherClientsCount) {
+    this.account.setLastSyncedTimestamp(System.currentTimeMillis());
     // This undoes the change made in observeBackoffMillis -- once we hit backoff we'll
     // periodically sync at the backoff duration, but as soon as we succeed we'll switch
     // into the client-count-dependent interval.
