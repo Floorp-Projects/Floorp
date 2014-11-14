@@ -5,8 +5,8 @@
 
 #include "WebGLVertexArrayFake.h"
 
-#include "WebGLContext.h"
 #include "GLContext.h"
+#include "WebGLContext.h"
 
 namespace mozilla {
 
@@ -29,26 +29,24 @@ WebGLVertexArrayFake::BindVertexArrayImpl()
 
         mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, vd.buf);
 
-        gl->fVertexAttribPointer(i, vd.size, vd.type, vd.normalized,
-                                 vd.stride, reinterpret_cast<void*>(vd.byteOffset));
+        gl->fVertexAttribPointer(i, vd.size, vd.type, vd.normalized, vd.stride,
+                                 reinterpret_cast<void*>(vd.byteOffset));
 
-        if (vd.enabled) {
+        if (vd.enabled)
             gl->fEnableVertexAttribArray(i);
-        } else {
+        else
             gl->fDisableVertexAttribArray(i);
-        }
     }
 
-    for (size_t i = mAttribs.Length(); i < prevVertexArray->mAttribs.Length(); ++i) {
+    size_t len = prevVertexArray->mAttribs.Length();
+    for (size_t i = mAttribs.Length(); i < len; ++i) {
         const WebGLVertexAttribData& vd = prevVertexArray->mAttribs[i];
 
-        if (vd.enabled) {
+        if (vd.enabled)
             gl->fDisableVertexAttribArray(i);
-        }
     }
 
     mContext->BindBuffer(LOCAL_GL_ARRAY_BUFFER, prevBuffer);
 }
 
 } // namespace mozilla
-

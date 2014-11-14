@@ -3,15 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLSAMPLER_H_
-#define WEBGLSAMPLER_H_
-
-#include "WebGLBindableName.h"
-#include "WebGLObjectModel.h"
-
-#include "nsWrapperCache.h"
+#ifndef WEBGL_SAMPLER_H_
+#define WEBGL_SAMPLER_H_
 
 #include "mozilla/LinkedList.h"
+#include "nsWrapperCache.h"
+#include "WebGLBindableName.h"
+#include "WebGLObjectModel.h"
 
 namespace mozilla {
 
@@ -25,8 +23,7 @@ class WebGLSampler MOZ_FINAL
     friend class WebGLContext2;
 
 public:
-
-    explicit WebGLSampler(WebGLContext* aContext, GLuint sampler);
+    explicit WebGLSampler(WebGLContext* webgl, GLuint sampler);
 
     void Delete();
     WebGLContext* GetParentObject() const;
@@ -39,10 +36,9 @@ private:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSampler)
 
 private:
-
     ~WebGLSampler();
 };
 
 } // namespace mozilla
 
-#endif // !WEBGLSAMPLER_H_
+#endif // WEBGL_SAMPLER_H_

@@ -25,6 +25,9 @@ EXPORTS.mozilla.dom += [
     'TextMetrics.h',
 ]
 
+# http://support.microsoft.com/kb/143208
+DEFINES['NOMINMAX'] = True
+
 # Canvas 2D and common sources
 UNIFIED_SOURCES += [
     'CanvasImageCache.cpp',

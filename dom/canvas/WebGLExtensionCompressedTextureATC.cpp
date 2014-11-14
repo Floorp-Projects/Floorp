@@ -2,18 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
 #include "WebGLExtensions.h"
+
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "WebGLContext.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-WebGLExtensionCompressedTextureATC::WebGLExtensionCompressedTextureATC(WebGLContext* context)
-    : WebGLExtensionBase(context)
+WebGLExtensionCompressedTextureATC::WebGLExtensionCompressedTextureATC(WebGLContext* webgl)
+    : WebGLExtensionBase(webgl)
 {
-    context->mCompressedTextureFormats.AppendElement(LOCAL_GL_ATC_RGB);
-    context->mCompressedTextureFormats.AppendElement(LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA);
-    context->mCompressedTextureFormats.AppendElement(LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA);
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_ATC_RGB);
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA);
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA);
 }
 
 WebGLExtensionCompressedTextureATC::~WebGLExtensionCompressedTextureATC()
@@ -21,3 +22,5 @@ WebGLExtensionCompressedTextureATC::~WebGLExtensionCompressedTextureATC()
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureATC)
+
+} // namespace mozilla

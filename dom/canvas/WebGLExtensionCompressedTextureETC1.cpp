@@ -7,12 +7,12 @@
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "WebGLContext.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-WebGLExtensionCompressedTextureETC1::WebGLExtensionCompressedTextureETC1(WebGLContext* context)
-    : WebGLExtensionBase(context)
+WebGLExtensionCompressedTextureETC1::WebGLExtensionCompressedTextureETC1(WebGLContext* webgl)
+    : WebGLExtensionBase(webgl)
 {
-    context->mCompressedTextureFormats.AppendElement(LOCAL_GL_ETC1_RGB8_OES);
+    webgl->mCompressedTextureFormats.AppendElement(LOCAL_GL_ETC1_RGB8_OES);
 }
 
 WebGLExtensionCompressedTextureETC1::~WebGLExtensionCompressedTextureETC1()
@@ -20,3 +20,5 @@ WebGLExtensionCompressedTextureETC1::~WebGLExtensionCompressedTextureETC1()
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionCompressedTextureETC1)
+
+} // namespace mozilla

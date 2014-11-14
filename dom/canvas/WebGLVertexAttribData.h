@@ -3,14 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLVERTEXATTRIBDATA_H_
-#define WEBGLVERTEXATTRIBDATA_H_
+#ifndef WEBGL_VERTEX_ATTRIB_DATA_H_
+#define WEBGL_VERTEX_ATTRIB_DATA_H_
+
+#include "GLDefs.h"
+#include "WebGLObjectModel.h"
 
 namespace mozilla {
 
 class WebGLBuffer;
 
-struct WebGLVertexAttribData {
+struct WebGLVertexAttribData
+{
     // note that these initial values are what GL initializes vertex attribs to
     WebGLVertexAttribData()
         : buf(0)
@@ -21,7 +25,7 @@ struct WebGLVertexAttribData {
         , type(LOCAL_GL_FLOAT)
         , enabled(false)
         , normalized(false)
-    { }
+    {}
 
     WebGLRefPtr<WebGLBuffer> buf;
     GLuint stride;
@@ -34,48 +38,51 @@ struct WebGLVertexAttribData {
 
     GLuint componentSize() const {
         switch(type) {
-            case LOCAL_GL_BYTE:
-                return sizeof(GLbyte);
-                break;
-            case LOCAL_GL_UNSIGNED_BYTE:
-                return sizeof(GLubyte);
-                break;
-            case LOCAL_GL_SHORT:
-                return sizeof(GLshort);
-                break;
-            case LOCAL_GL_UNSIGNED_SHORT:
-                return sizeof(GLushort);
-                break;
-            // XXX case LOCAL_GL_FIXED:
-            case LOCAL_GL_FLOAT:
-                return sizeof(GLfloat);
-                break;
-            default:
-                NS_ERROR("Should never get here!");
-                return 0;
+        case LOCAL_GL_BYTE:
+            return sizeof(GLbyte);
+
+        case LOCAL_GL_UNSIGNED_BYTE:
+            return sizeof(GLubyte);
+
+        case LOCAL_GL_SHORT:
+            return sizeof(GLshort);
+
+        case LOCAL_GL_UNSIGNED_SHORT:
+            return sizeof(GLushort);
+
+        // case LOCAL_GL_FIXED:
+        case LOCAL_GL_FLOAT:
+            return sizeof(GLfloat);
+
+        default:
+            NS_ERROR("Should never get here!");
+            return 0;
         }
     }
 
     GLuint actualStride() const {
-        if (stride) return stride;
+        if (stride)
+            return stride;
+
         return size * componentSize();
     }
 };
 
 } // namespace mozilla
 
-inline void ImplCycleCollectionUnlink(mozilla::WebGLVertexAttribData& aField)
+inline void
+ImplCycleCollectionUnlink(mozilla::WebGLVertexAttribData& field)
 {
-  aField.buf = nullptr;
+    field.buf = nullptr;
 }
 
 inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            mozilla::WebGLVertexAttribData& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
+                            mozilla::WebGLVertexAttribData& field,
+                            const char* name,
+                            uint32_t flags = 0)
 {
-  CycleCollectionNoteChild(aCallback, aField.buf.get(), aName, aFlags);
+    CycleCollectionNoteChild(callback, field.buf.get(), name, flags);
 }
 
-#endif
+#endif // WEBGL_VERTEX_ATTRIB_DATA_H_
