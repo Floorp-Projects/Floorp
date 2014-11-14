@@ -141,6 +141,10 @@ ifeq (.,$(DEPTH))
 # Interdependencies for parallel export.
 js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export
 accessible/xpcom/export: xpcom/xpidl/export
+
+# The widget binding generator code is part of the annotationProcessors.
+widget/android/bindings/export: build/annotationProcessors/export
+
 ifdef ENABLE_CLANG_PLUGIN
 $(filter-out build/clang-plugin/%,$(compile_targets)): build/clang-plugin/target build/clang-plugin/tests/target
 build/clang-plugin/tests/target: build/clang-plugin/target

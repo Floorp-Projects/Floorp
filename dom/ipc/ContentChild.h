@@ -404,6 +404,14 @@ public:
     PBrowserOrId
     GetBrowserOrId(TabChild* aTabChild);
 
+    virtual POfflineCacheUpdateChild* AllocPOfflineCacheUpdateChild(
+            const URIParams& manifestURI,
+            const URIParams& documentURI,
+            const bool& stickDocument,
+            const TabId& aTabId) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* offlineCacheUpdate) MOZ_OVERRIDE;
+
 private:
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 

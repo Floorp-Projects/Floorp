@@ -27,6 +27,7 @@ include protocol PMobileConnection;
 include protocol PNecko;
 include protocol PPluginModule;
 include protocol PPrinting;
+include protocol POfflineCacheUpdate;
 include protocol PScreenManager;
 include protocol PSharedBufferManager;
 include protocol PSms;
@@ -356,6 +357,7 @@ prio(normal upto urgent) intr protocol PContent
     manages PMemoryReportRequest;
     manages PMobileConnection;
     manages PNecko;
+    manages POfflineCacheUpdate;
     manages PPrinting;
     manages PScreenManager;
     manages PSms;
@@ -786,6 +788,40 @@ parent:
     sync AllocateTabId(TabId openerTabId, IPCTabContext context, ContentParentId cpId)
         returns (TabId tabId);
     async DeallocateTabId(TabId tabId);
+
+    /**
+     * Starts an offline application cache update.
+     * @param manifestURI
+     *   URI of the manifest to fetch, the application cache group ID
+     * @param documentURI
+     *   URI of the document that referred the manifest
+     * @param stickDocument
+     *   True if the update was initiated by a document load that referred
+     *   a manifest.
+     *   False if the update was initiated by applicationCache.update() call.
+     *
+     *   Tells the update to carry the documentURI to a potential separate
+     *   update of implicit (master) items.
+     *
+     *   Why this argument? If the document was not found in an offline cache
+     *   before load and refers a manifest and this manifest itself has not
+     *   been changed since the last fetch, we will not do the application
+     *   cache group update. But we must cache the document (identified by the
+     *   documentURI). This argument will ensure that a previously uncached
+     *   document will get cached and that we don't re-cache a document that
+     *   has already been cached (stickDocument=false).
+     * @param tabId
+     *   To identify which tab owns the app.
+     */
+    POfflineCacheUpdate(URIParams manifestURI, URIParams documentURI,
+                        bool stickDocument, TabId tabId);
+
+    /**
+     * Sets "offline-app" permission for the principal.  Called when we hit
+     * a web app with the manifest attribute in <html> and
+     * offline-apps.allow_by_default is set to true.
+     */
+    SetOfflinePermission(Principal principal);
 
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,

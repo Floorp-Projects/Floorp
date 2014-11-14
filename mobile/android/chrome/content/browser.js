@@ -1925,18 +1925,6 @@ var BrowserApp = {
     return this.defaultBrowserWidth = width;
   },
 
-  get layersTileWidth() {
-    delete this.layersTileWidth;
-    let width = Services.prefs.getIntPref("layers.tile-width");
-    return this.layersTileWidth = width;
-  },
-
-  get layersTileHeight() {
-    delete this.layersTileHeight;
-    let height = Services.prefs.getIntPref("layers.tile-height");
-    return this.layersTileHeight = height;
-  },
-
   // nsIAndroidBrowserApp
   get selectedTab() {
     return this._selectedTab;
@@ -3597,7 +3585,6 @@ Tab.prototype = {
                                           displayPortMargins.top,
                                           displayPortMargins.right,
                                           displayPortMargins.bottom,
-                                          BrowserApp.layersTileWidth, BrowserApp.layersTileHeight,
                                           element, 0);
     }
     this._oldDisplayPortMargins = displayPortMargins;

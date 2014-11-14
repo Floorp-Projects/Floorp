@@ -4,8 +4,7 @@
 // Flags: --ion-eager
 //
 
-var g = newGlobal();
-var dbg = new g.Debugger(this);
+load(libdir + "evalInFrame.js");
 
 var obj1 = {}, obj2 = {};
 obj2['b'+i] = 0;

@@ -182,4 +182,10 @@ JSScript::ensureHasAnalyzedArgsUsage(JSContext *cx)
     return js::jit::AnalyzeArgumentsUsage(cx, this);
 }
 
+inline bool
+JSScript::isDebuggee() const
+{
+    return compartment_->debugObservesAllExecution() || hasDebugScript_;
+}
+
 #endif /* jsscriptinlines_h */

@@ -371,8 +371,12 @@ protected:
                                          nsISupports* aOwner,
                                          bool aCloneChildren,
                                          nsISHEntry ** aNewEntry);
-    nsresult DoAddChildSHEntry(nsISHEntry* aNewEntry, int32_t aChildOffset,
-                               bool aCloneChildren);
+    nsresult AddChildSHEntryToParent(nsISHEntry* aNewEntry, int32_t aChildOffset,
+                                     bool aCloneChildren);
+
+    nsresult AddChildSHEntryInternal(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
+                                     int32_t aChildOffset, uint32_t loadType,
+                                     bool aCloneChildren);
 
     NS_IMETHOD LoadHistoryEntry(nsISHEntry * aEntry, uint32_t aLoadType);
     NS_IMETHOD PersistLayoutHistoryState();
@@ -945,6 +949,10 @@ private:
     nsCString         mOriginalUriString;
     nsWeakPtr mOpener;
     nsWeakPtr mOpenedRemote;
+
+    // A depth count of how many times NotifyRunToCompletionStart
+    // has been called without a matching NotifyRunToCompletionStop.
+    uint32_t          mJSRunToCompletionDepth;
 
     // True if recording profiles.
     bool mProfileTimelineRecording;

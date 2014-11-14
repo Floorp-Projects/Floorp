@@ -130,7 +130,6 @@ struct TypeInferenceSizes;
 }
 
 namespace js {
-class AutoDebugModeInvalidation;
 class DebugScopes;
 class LazyArrayBufferTable;
 class WeakMapBase;
@@ -321,8 +320,13 @@ struct JSCompartment
 
     enum {
         DebugMode = 1 << 0,
-        DebugNeedDelazification = 1 << 1
+        DebugObservesAllExecution = 1 << 1,
+        DebugNeedDelazification = 1 << 2
     };
+
+    // DebugObservesAllExecution is a submode of DebugMode, and is only valid
+    // when DebugMode is also set.
+    static const unsigned DebugExecutionMask = DebugMode | DebugObservesAllExecution;
 
     unsigned                     debugModeBits;
 
@@ -416,32 +420,66 @@ struct JSCompartment
   private:
     JSCompartment *thisForCtor() { return this; }
 
-    // Only called from {enter,leave}DebugMode.
-    bool updateJITForDebugMode(JSContext *maybecx, js::AutoDebugModeInvalidation &invalidate);
-
   public:
+    //
+    // The Debugger observes execution on a frame-by-frame basis. The
+    // invariants of JSCompartment's debug mode bits, JSScript::isDebuggee,
+    // InterpreterFrame::isDebuggee, and Baseline::isDebuggee are enumerated
+    // below.
+    //
+    // 1. When a compartment's isDebuggee() == true, relazification and lazy
+    //    parsing are disabled.
+    //
+    // 2. When a compartment's debugObservesAllExecution() == true, all of the
+    //    compartment's scripts are considered debuggee scripts.
+    //
+    // 3. A script is considered a debuggee script either when, per above, its
+    //    compartment is observing all execution, or if it has breakpoints set.
+    //
+    // 4. A debuggee script always pushes a debuggee frame.
+    //
+    // 5. A debuggee frame calls all slow path Debugger hooks in the
+    //    Interpreter and Baseline. A debuggee frame implies that its script's
+    //    BaselineScript, if extant, has been compiled with debug hook calls.
+    //
+    // 6. A debuggee script or a debuggee frame (i.e., during OSR) ensures
+    //    that the compiled BaselineScript is compiled with debug hook calls
+    //    when attempting to enter Baseline.
+    //
+    // 7. A debuggee script or a debuggee frame (i.e., during OSR) does not
+    //    attempt to enter Ion.
+    //
+    // Note that a debuggee frame may exist without its script being a
+    // debuggee script. e.g., Debugger.Frame.prototype.eval only marks the
+    // frame in which it is evaluating as a debuggee frame.
+    //
+
     // True if this compartment's global is a debuggee of some Debugger
     // object.
-    bool debugMode() const {
-        return !!(debugModeBits & DebugMode);
+    bool isDebuggee() const { return !!(debugModeBits & DebugMode); }
+    void setIsDebuggee() { debugModeBits |= DebugMode; }
+    void unsetIsDebuggee();
+
+    // True if an this compartment's global is a debuggee of some Debugger
+    // object with a live hook that observes all execution; e.g.,
+    // onEnterFrame.
+    bool debugObservesAllExecution() const {
+        return (debugModeBits & DebugExecutionMask) == DebugExecutionMask;
     }
-
-    bool enterDebugMode(JSContext *cx);
-    bool enterDebugMode(JSContext *cx, js::AutoDebugModeInvalidation &invalidate);
-    bool leaveDebugMode(JSContext *cx);
-    bool leaveDebugMode(JSContext *cx, js::AutoDebugModeInvalidation &invalidate);
-    void leaveDebugModeUnderGC();
-
-    /* True if any scripts from this compartment are on the JS stack. */
-    bool hasScriptsOnStack();
+    void setDebugObservesAllExecution() {
+        MOZ_ASSERT(isDebuggee());
+        debugModeBits |= DebugObservesAllExecution;
+    }
+    void unsetDebugObservesAllExecution() {
+        MOZ_ASSERT(isDebuggee());
+        debugModeBits &= ~DebugObservesAllExecution;
+    }
 
     /*
      * Schedule the compartment to be delazified. Called from
      * LazyScript::Create.
      */
-    void scheduleDelazificationForDebugMode() {
-        debugModeBits |= DebugNeedDelazification;
-    }
+    void scheduleDelazificationForDebugMode() { debugModeBits |= DebugNeedDelazification; }
 
     /*
      * If we scheduled delazification for turning on debug mode, delazify all
@@ -493,60 +531,6 @@ JSRuntime::isAtomsZone(JS::Zone *zone)
 {
     return zone == atomsCompartment_->zone();
 }
-
-// For use when changing the debug mode flag on one or more compartments.
-// Invalidate and discard JIT code since debug mode breaks JIT assumptions.
-//
-// AutoDebugModeInvalidation has two modes: compartment or zone
-// invalidation. While it is correct to always use compartment invalidation,
-// if you know ahead of time you need to invalidate a whole zone, it is faster
-// to invalidate the zone.
-//
-// Compartment invalidation only invalidates scripts belonging to that
-// compartment.
-//
-// Zone invalidation invalidates all scripts belonging to non-special
-// (i.e. those with principals) compartments of the zone.
-//
-// FIXME: Remove entirely once bug 716647 lands.
-//
-class js::AutoDebugModeInvalidation
-{
-    JSCompartment *comp_;
-    JS::Zone *zone_;
-
-    enum {
-        NoNeed = 0,
-        ToggledOn = 1,
-        ToggledOff = 2
-    } needInvalidation_;
-
-  public:
-    explicit AutoDebugModeInvalidation(JSCompartment *comp)
-      : comp_(comp), zone_(nullptr), needInvalidation_(NoNeed)
-    { }
-
-    explicit AutoDebugModeInvalidation(JS::Zone *zone)
-      : comp_(nullptr), zone_(zone), needInvalidation_(NoNeed)
-    { }
-
-    ~AutoDebugModeInvalidation();
-
-    bool isFor(JSCompartment *comp) {
-        if (comp_)
-            return comp == comp_;
-        return comp->zone() == zone_;
-    }
-
-    void scheduleInvalidation(bool debugMode) {
-        // If we are scheduling invalidation for multiple compartments, they
-        // must all agree on the toggle. This is so we can decide if we need
-        // to invalidate on-stack scripts.
-        MOZ_ASSERT_IF(needInvalidation_ != NoNeed,
-                      needInvalidation_ == (debugMode ? ToggledOn : ToggledOff));
-        needInvalidation_ = debugMode ? ToggledOn : ToggledOff;
-    }
-};
 
 namespace js {
 

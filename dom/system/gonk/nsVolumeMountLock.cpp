@@ -14,6 +14,7 @@
 #include "nsString.h"
 #include "nsXULAppAPI.h"
 
+#undef VOLUME_MANAGER_LOG_TAG
 #define VOLUME_MANAGER_LOG_TAG  "nsVolumeMountLock"
 #include "VolumeManagerLog.h"
 #include "nsServiceManagerUtils.h"

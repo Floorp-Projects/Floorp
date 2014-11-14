@@ -2995,7 +2995,10 @@ status_t MPEG4Source::parseTrackFragmentRun(off64_t offset, off64_t size) {
     }
     ALOGV("fragment run flags: %08x", flags);
 
-    if (flags & 0xff000000) {
+    // Some videos have the 0x01000000 flag (unknown) present, and ignoring
+    // it doesn't appear to affect playerback. Assume other flags in the high
+    // byte are invalid.
+    if (flags & 0xfe000000) {
         return -EINVAL;
     }
 

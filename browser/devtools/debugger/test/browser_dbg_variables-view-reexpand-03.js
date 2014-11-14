@@ -7,16 +7,15 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_scope-variable-4.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gBreakpoints, gSources, gVariables;
 
 function test() {
   // Debug test slaves are a bit slow at this test.
   requestLongerTimeout(4);
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
@@ -45,11 +44,7 @@ function addBreakpoint() {
 }
 
 function pauseDebuggee() {
-  // Spin the event loop before causing the debuggee to pause, to allow
-  // this function to return first.
-  executeSoon(() => {
-    gDebuggee.test();
-  });
+  callInTab(gTab, "test");
 
   return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES);
 }
@@ -120,7 +115,6 @@ function prepareScopes() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gBreakpoints = null;
