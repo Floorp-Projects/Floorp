@@ -40,19 +40,21 @@ protected:
 
   nsCOMPtr<nsIURI> mUrl;
   nsCOMPtr<nsIURI> mOriginalURI;
-  int64_t          mContentLength;
+  int64_t mContentLength;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>  mOwner;
   nsCOMPtr<nsILoadInfo>  mLoadInfo;
-  
+
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIStreamListener>  mListener;
-  
+
   nsresult MakeInputStream(nsIInputStream** _retval, bool nonBlocking);
-  
-  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, uint32_t * aDesiredImageSize,
-                           nsACString &aContentType, nsACString &aFileExtension);
+
+  nsresult ExtractIconInfoFromUrl(nsIFile** aLocalFile,
+                                  uint32_t* aDesiredImageSize,
+                                  nsACString& aContentType,
+                                  nsACString& aFileExtension);
 };
 
 #endif /* nsIconChannel_h___ */

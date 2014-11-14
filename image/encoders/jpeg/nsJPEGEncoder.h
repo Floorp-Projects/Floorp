@@ -18,7 +18,8 @@ extern "C" {
 }
 
 #define NS_JPEGENCODER_CID \
-{ /* ac2bb8fe-eeeb-4572-b40f-be03932b56e0 */         \
+{                                                    \
+  /* ac2bb8fe-eeeb-4572-b40f-be03932b56e0 */         \
      0xac2bb8fe,                                     \
      0xeeeb,                                         \
      0x4572,                                         \
@@ -46,7 +47,8 @@ protected:
 
   void ConvertHostARGBRow(const uint8_t* aSrc, uint8_t* aDest,
                           uint32_t aPixelWidth);
-  void ConvertRGBARow(const uint8_t* aSrc, uint8_t* aDest, uint32_t aPixelWidth);
+  void ConvertRGBARow(const uint8_t* aSrc, uint8_t* aDest,
+                      uint32_t aPixelWidth);
 
   static void initDestination(jpeg_compress_struct* cinfo);
   static boolean emptyOutputBuffer(jpeg_compress_struct* cinfo);
@@ -69,11 +71,9 @@ protected:
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
   uint32_t mNotifyThreshold;
 
-  /*
-    nsJPEGEncoder is designed to allow one thread to pump data into it while another
-    reads from it.  We lock to ensure that the buffer remains append-only while
-    we read from it (that it is not realloced) and to ensure that only one thread
-    dispatches a callback for each call to AsyncWait.
-   */
+  // nsJPEGEncoder is designed to allow one thread to pump data into it while
+  // another reads from it.  We lock to ensure that the buffer remains
+  // append-only while we read from it (that it is not realloced) and to ensure
+  // that only one thread dispatches a callback for each call to AsyncWait.
   ReentrantMonitor mReentrantMonitor;
 };
