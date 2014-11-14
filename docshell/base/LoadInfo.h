@@ -26,8 +26,9 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSILOADINFO
 
-  // aPrincipal MUST NOT BE NULL.
-  LoadInfo(nsIPrincipal* aPrincipal,
+  // aLoadingPrincipal MUST NOT BE NULL.
+  LoadInfo(nsIPrincipal* aLoadingPrincipal,
+           nsIPrincipal* aTriggeringPrincipal,
            nsINode* aLoadingContext,
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType,
@@ -36,7 +37,8 @@ public:
 private:
   ~LoadInfo();
 
-  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsWeakPtr              mLoadingContext;
   nsSecurityFlags        mSecurityFlags;
   nsContentPolicyType    mContentPolicyType;
