@@ -66,6 +66,7 @@
       ok(obj.a === 3, "constructor call");
       ok(document.title === "Hello, Kitty", "document node");
       is(typeof document.cookie, "string", "can get document.cookie");
+      is(typeof document.defaultView.navigator.userAgent, "string", "can get navigator.userAgent");
 
       data.i = 6;
       data.b = false;
