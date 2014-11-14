@@ -98,7 +98,7 @@ function waitForCondition(condition, nextTest, errorMsg) {
 let clickHandler = function (aEvent, aFunc) {
   gTestWin.gBrowser.removeEventListener("click", curClickHandler, true);
   gTestWin.contentAreaClick(aEvent, true);
-  gTestWin.gBrowser.addEventListener("load", aFunc, true);
+  waitForSomeTabToLoad(aFunc);
   aEvent.preventDefault();
   aEvent.stopPropagation();
 }
@@ -108,7 +108,7 @@ let clickHandler = function (aEvent, aFunc) {
 // from the contextmenu which dispatches to the function openLinkInTab.
 let contextMenuOpenHandler = function(aEvent, aFunc) {
   gTestWin.document.removeEventListener("popupshown", curContextMenu, false);
-  gTestWin.gBrowser.addEventListener("load", aFunc, true);
+  waitForSomeTabToLoad(aFunc);
   var openLinkInTabCommand = gTestWin.document.getElementById("context-openlinkintab");
   openLinkInTabCommand.doCommand();
   aEvent.target.hidePopup();
@@ -124,12 +124,24 @@ function setUpTest(aTestName, aIDForNextTest, aFuncForNextTest, aChildTabLink) {
   let target = gTestWin.content.document.getElementById(aIDForNextTest);
   gTestWin.gBrowser.addTab(target);
   gTestWin.gBrowser.selectTabAtIndex(1);
-  gTestWin.gBrowser.addEventListener("load", checkPopUpNotification, true);
+  waitForSomeTabToLoad(checkPopUpNotification);
+}
+
+// Waits for a load event somewhere in the browser but ignore events coming
+// from <xul:browser>s without a tab assigned. That are most likely browsers
+// that preload the new tab page.
+function waitForSomeTabToLoad(callback) {
+  gTestWin.gBrowser.addEventListener("load", function onLoad(event) {
+    let tab = gTestWin.gBrowser._getTabForContentWindow(event.target.defaultView.top);
+    if (tab) {
+      gTestWin.gBrowser.removeEventListener("load", onLoad, true);
+      callback();
+    }
+  }, true);
 }
 
 function checkPopUpNotification() {
-  gTestWin.gBrowser.removeEventListener("load", checkPopUpNotification, true);
-  gTestWin.gBrowser.addEventListener("load", reloadedTabAfterDisablingMCB, true);
+  waitForSomeTabToLoad(reloadedTabAfterDisablingMCB);
 
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in " + curTestName + "!");
@@ -142,8 +154,6 @@ function checkPopUpNotification() {
 }
 
 function reloadedTabAfterDisablingMCB() {
-  gTestWin.gBrowser.removeEventListener("load", reloadedTabAfterDisablingMCB, true);
-
   var expected = "Mixed Content Blocker disabled";
   waitForCondition(
     function() gTestWin.content.document.getElementById('mctestdiv').innerHTML == expected,
@@ -177,7 +187,6 @@ function test1() {
 }
 
 function test1A() {
-  gTestWin.gBrowser.removeEventListener("load", test1A, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear but isMixedContentBlocked should be >> NOT << true,
@@ -206,7 +215,6 @@ function test1B() {
 }
 
 function test1C() {
-  gTestWin.gBrowser.removeEventListener("load", test1C, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear but isMixedContentBlocked should be >> NOT << true,
@@ -241,7 +249,6 @@ function test2() {
 }
 
 function test2A() {
-  gTestWin.gBrowser.removeEventListener("load", test2A, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<,
@@ -270,7 +277,6 @@ function test2B() {
 }
 
 function test2C() {
-  gTestWin.gBrowser.removeEventListener("load", test2C, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<,
@@ -306,12 +312,10 @@ function test3() {
 
 function test3A() {
   // we need this indirection because the page is reloaded caused by meta-refresh
-  gTestWin.gBrowser.removeEventListener("load", test3A, true);
-  gTestWin.gBrowser.addEventListener("load", test3B, true);
+  waitForSomeTabToLoad(test3B);
 }
 
 function test3B() {
-  gTestWin.gBrowser.removeEventListener("load", test3B, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear but isMixedContentBlocked should be >> NOT << true!
@@ -340,12 +344,10 @@ function test3C() {
 
 function test3D() {
   // we need this indirection because the page is reloaded caused by meta-refresh
-  gTestWin.gBrowser.removeEventListener("load", test3D, true);
-  gTestWin.gBrowser.addEventListener("load", test3E, true);
+  waitForSomeTabToLoad(test3E);
 }
 
 function test3E() {
-  gTestWin.gBrowser.removeEventListener("load", test3E, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear but isMixedContentBlocked should be >> NOT << true!
@@ -380,12 +382,10 @@ function test4() {
 
 function test4A() {
   // we need this indirection because the page is reloaded caused by meta-refresh
-  gTestWin.gBrowser.removeEventListener("load", test4A, true);
-  gTestWin.gBrowser.addEventListener("load", test4B, true);
+  waitForSomeTabToLoad(test4B);
 }
 
 function test4B() {
-  gTestWin.gBrowser.removeEventListener("load", test4B, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<
@@ -414,12 +414,10 @@ function test4C() {
 
 function test4D() {
   // we need this indirection because the page is reloaded caused by meta-refresh
-  gTestWin.gBrowser.removeEventListener("load", test4D, true);
-  gTestWin.gBrowser.addEventListener("load", test4E, true);
+  waitForSomeTabToLoad(test4E);
 }
 
 function test4E() {
-  gTestWin.gBrowser.removeEventListener("load", test4E, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<
@@ -454,7 +452,6 @@ function test5() {
 }
 
 function test5A() {
-  gTestWin.gBrowser.removeEventListener("load", test5A, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear but isMixedContentBlocked should be >> NOT << true
@@ -483,7 +480,6 @@ function test5B() {
 }
 
 function test5C() {
-  gTestWin.gBrowser.removeEventListener("load", test5C, true);
   // move the tab again
   gTestWin.gBrowser.selectTabAtIndex(2);
 
@@ -520,7 +516,6 @@ function test6() {
 }
 
 function test6A() {
-  gTestWin.gBrowser.removeEventListener("load", test6A, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<
@@ -548,7 +543,6 @@ function test6B() {
 }
 
 function test6C() {
-  gTestWin.gBrowser.removeEventListener("load", test6C, true);
   gTestWin.gBrowser.selectTabAtIndex(2);
 
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<

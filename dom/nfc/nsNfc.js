@@ -174,6 +174,13 @@ MozNFCImpl.prototype = {
   nfcPeer: null,
   nfcTag: null,
 
+  // Should be mapped to the RFState defined in WebIDL.
+  rfState: {
+    IDLE: "idle",
+    LISTEN: "listen",
+    DISCOVERY: "discovery"
+  },
+
   init: function init(aWindow) {
     debug("MozNFCImpl init called");
     this._window = aWindow;
@@ -208,15 +215,15 @@ MozNFCImpl.prototype = {
   },
 
   startPoll: function startPoll() {
-    return this._nfcContentHelper.startPoll();
+    return this._nfcContentHelper.changeRFState(this.rfState.DISCOVERY);
   },
 
   stopPoll: function stopPoll() {
-    return this._nfcContentHelper.stopPoll();
+    return this._nfcContentHelper.changeRFState(this.rfState.LISTEN);
   },
 
   powerOff: function powerOff() {
-    return this._nfcContentHelper.powerOff();
+    return this._nfcContentHelper.changeRFState(this.rfState.IDLE);
   },
 
   _createNFCPeer: function _createNFCPeer(sessionToken) {
@@ -230,7 +237,7 @@ MozNFCImpl.prototype = {
     }
 
     if (!this.nfcPeer || this.nfcPeer.session != sessionToken) {
-      this.nfcPeer = this._createNFCPeer();
+      this.nfcPeer = this._createNFCPeer(sessionToken);
     }
 
     return this.nfcPeer;
