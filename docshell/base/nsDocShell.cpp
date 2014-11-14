@@ -10264,23 +10264,23 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     }
 
     bool isSandBoxed = mSandboxFlags & SANDBOXED_ORIGIN;
-    // only inherit if we have a requestingPrincipal
+    // only inherit if we have a triggeringPrincipal
     bool inherit = false;
 
-    nsCOMPtr<nsIPrincipal> requestingPrincipal = do_QueryInterface(aOwner);
-    if (requestingPrincipal) {
-      inherit = nsContentUtils::ChannelShouldInheritPrincipal(requestingPrincipal,
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal = do_QueryInterface(aOwner);
+    if (triggeringPrincipal) {
+      inherit = nsContentUtils::ChannelShouldInheritPrincipal(triggeringPrincipal,
                                                               aURI,
                                                               true, // aInheritForAboutBlank
                                                               isSrcdoc);
     }
-    else if (!requestingPrincipal && aReferrerURI) {
+    else if (!triggeringPrincipal && aReferrerURI) {
       rv = CreatePrincipalFromReferrer(aReferrerURI,
-                                       getter_AddRefs(requestingPrincipal));
+                                       getter_AddRefs(triggeringPrincipal));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-      requestingPrincipal = nsContentUtils::GetSystemPrincipal();
+      triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
     }
 
     nsSecurityFlags securityFlags = nsILoadInfo::SEC_NORMAL;
@@ -10293,11 +10293,13 @@ nsDocShell::DoURILoad(nsIURI * aURI,
 
     if (!isSrcdoc) {
       nsCOMPtr<nsILoadInfo> loadInfo =
-        new mozilla::LoadInfo(requestingPrincipal,
-                              requestingNode,
-                              securityFlags,
-                              aContentPolicyType,
-                              aBaseURI);
+        new LoadInfo(requestingNode ?
+                       requestingNode->NodePrincipal() : triggeringPrincipal.get(),
+                     triggeringPrincipal,
+                     requestingNode,
+                     securityFlags,
+                     aContentPolicyType,
+                     aBaseURI);
         rv = NS_NewChannelInternal(getter_AddRefs(channel),
                                    aURI,
                                    loadInfo,
@@ -10335,7 +10337,9 @@ nsDocShell::DoURILoad(nsIURI * aURI,
             rv = vsh->NewSrcdocChannel(aURI, aSrcdoc, getter_AddRefs(channel));
             NS_ENSURE_SUCCESS(rv, rv);
             nsCOMPtr<nsILoadInfo> loadInfo =
-              new LoadInfo(requestingPrincipal,
+              new LoadInfo(requestingNode ?
+                             requestingNode->NodePrincipal() : triggeringPrincipal.get(),
+                           triggeringPrincipal,
                            requestingNode,
                            securityFlags,
                            aContentPolicyType,
@@ -10348,7 +10352,9 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                                                   aSrcdoc,
                                                   NS_LITERAL_CSTRING("text/html"),
                                                   requestingNode,
-                                                  requestingPrincipal,
+                                                  requestingNode ?
+                                                    requestingNode->NodePrincipal() : triggeringPrincipal.get(),
+                                                  triggeringPrincipal,
                                                   securityFlags,
                                                   aContentPolicyType,
                                                   true,
@@ -11584,7 +11590,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
                     owner = nsNullPrincipal::CreateWithInheritedAttributes(loadInfo->LoadingPrincipal());
                     NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
                 } else if (loadInfo->GetForceInheritPrincipal()) {
-                    owner = loadInfo->LoadingPrincipal();
+                    owner = loadInfo->TriggeringPrincipal();
                 }
             }
         }

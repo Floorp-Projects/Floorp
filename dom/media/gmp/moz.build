@@ -39,6 +39,7 @@ EXPORTS += [
     'GMPDecryptorParent.h',
     'GMPDecryptorProxy.h',
     'GMPEncryptedBufferDataImpl.h',
+    'GMPLoader.h',
     'GMPMessageUtils.h',
     'GMPParent.h',
     'GMPPlatform.h',
@@ -61,6 +62,13 @@ EXPORTS += [
     'GMPVideoi420FrameImpl.h',
     'GMPVideoPlaneImpl.h',
 ]
+
+# We link GMPLoader into xul on B2G/Fennec as its code does not need to be
+# covered by a DRM vendor's voucher.
+if CONFIG['OS_TARGET'] == 'Android':
+    SOURCES += [
+      'GMPLoader.cpp',
+    ]
 
 UNIFIED_SOURCES += [
     'GMPAudioDecoderChild.cpp',

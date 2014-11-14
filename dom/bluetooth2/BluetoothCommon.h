@@ -18,13 +18,16 @@ extern bool gBluetoothDebugFlag;
 
 #if MOZ_IS_GCC && MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
 /* use designated array initializers if supported */
-#define CONVERT(in_, out_) \
+#define INIT_ARRAY_AT(in_, out_) \
   [in_] = out_
 #else
 /* otherwise init array element by position */
-#define CONVERT(in_, out_) \
+#define INIT_ARRAY_AT(in_, out_) \
   out_
 #endif
+
+#define CONVERT(in_, out_) \
+  INIT_ARRAY_AT(in_, out_)
 
 #undef BT_LOG
 #if defined(MOZ_WIDGET_GONK)

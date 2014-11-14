@@ -2039,7 +2039,7 @@ XrayWrapper<Base, Traits>::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
                                            AutoIdVector &props) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-    return enumerate(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
+    return getPropertyKeys(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
 }
 
 template <typename Base, typename Traits>
@@ -2061,37 +2061,6 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
     }
 
     return Traits::singleton.delete_(cx, wrapper, id, bp);
-}
-
-template <typename Base, typename Traits>
-bool
-XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper, unsigned flags,
-                                     AutoIdVector &props) const
-{
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-
-    // Enumerate expando properties first. Note that the expando object lives
-    // in the target compartment.
-    RootedObject target(cx, Traits::singleton.getTargetObject(wrapper));
-    RootedObject expando(cx);
-    if (!Traits::singleton.getExpandoObject(cx, target, wrapper, &expando))
-        return false;
-
-    if (expando) {
-        JSAutoCompartment ac(cx, expando);
-        if (!js::GetPropertyKeys(cx, expando, flags, &props))
-            return false;
-    }
-
-    return Traits::singleton.enumerateNames(cx, wrapper, flags, props);
-}
-
-template <typename Base, typename Traits>
-bool
-XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper,
-                                    AutoIdVector &props) const
-{
-    return enumerate(cx, wrapper, 0, props);
 }
 
 template <typename Base, typename Traits>
@@ -2145,6 +2114,14 @@ XrayWrapper<Base, Traits>::getOwnEnumerablePropertyKeys(JSContext *cx,
 {
     // Skip our Base if it isn't already ProxyHandler.
     return js::BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, wrapper, props);
+}
+
+template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::getEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
+                                                     AutoIdVector &props) const
+{
+    return getPropertyKeys(cx, wrapper, 0, props);
 }
 
 template <typename Base, typename Traits>
@@ -2264,6 +2241,29 @@ XrayWrapper<Base, Traits>::setImmutablePrototype(JSContext *cx, JS::HandleObject
     // necessary.
     *succeeded = false;
     return true;
+}
+
+template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::getPropertyKeys(JSContext *cx, HandleObject wrapper, unsigned flags,
+                                           AutoIdVector &props) const
+{
+    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
+
+    // Enumerate expando properties first. Note that the expando object lives
+    // in the target compartment.
+    RootedObject target(cx, Traits::singleton.getTargetObject(wrapper));
+    RootedObject expando(cx);
+    if (!Traits::singleton.getExpandoObject(cx, target, wrapper, &expando))
+        return false;
+
+    if (expando) {
+        JSAutoCompartment ac(cx, expando);
+        if (!js::GetPropertyKeys(cx, expando, flags, &props))
+            return false;
+    }
+
+    return Traits::singleton.enumerateNames(cx, wrapper, flags, props);
 }
 
 /*

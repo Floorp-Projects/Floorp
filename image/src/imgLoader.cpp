@@ -663,18 +663,18 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   //
   aLoadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
 
-  nsCOMPtr<nsIPrincipal> requestingPrincipal = aLoadingPrincipal;
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadingPrincipal;
   bool isSandBoxed = false;
   // only inherit if we have a principal
   bool inherit = false;
-  if (requestingPrincipal) {
-    inherit = nsContentUtils::ChannelShouldInheritPrincipal(requestingPrincipal,
+  if (triggeringPrincipal) {
+    inherit = nsContentUtils::ChannelShouldInheritPrincipal(triggeringPrincipal,
                                                             aURI,
                                                             false,  // aInheritForAboutBlank
                                                             false); // aForceInherit
   }
   else {
-    requestingPrincipal = nsContentUtils::GetSystemPrincipal();
+    triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
   }
   nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aRequestingContext);
   nsSecurityFlags securityFlags = nsILoadInfo::SEC_NORMAL;
@@ -682,19 +682,36 @@ static nsresult NewImageChannel(nsIChannel **aResult,
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
-  // Note we are calling NS_NewChannelInternal() here with a node and a principal.
-  // This is for things like background images that are specified by user
-  // stylesheets, where the document is being styled, but the principal is that
-  // of the user stylesheet.
-  rv = NS_NewChannelInternal(aResult,
-                             aURI,
-                             requestingNode,
-                             requestingPrincipal,
-                             securityFlags,
-                             aPolicyType,
-                             nullptr,   // loadGroup
-                             callbacks,
-                             aLoadFlags);
+  // Note we are calling NS_NewChannelWithTriggeringPrincipal() here with a node
+  // and a principal. This is for things like background images that are specified
+  // by user stylesheets, where the document is being styled, but the principal
+  // is that of the user stylesheet.
+  if (requestingNode) {
+    rv = NS_NewChannelWithTriggeringPrincipal(aResult,
+                                              aURI,
+                                              requestingNode,
+                                              triggeringPrincipal,
+                                              securityFlags,
+                                              nsIContentPolicy::TYPE_IMAGE,
+                                              nullptr,   // loadGroup
+                                              callbacks,
+                                              aLoadFlags);
+  }
+  else {
+    // either we are loading something inside a document, in which case
+    // we should always have a requestingNode, or we are loading something
+    // outside a document, in which case the triggeringPrincipal
+    // should always be the systemPrincipal.
+    MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(triggeringPrincipal));
+    rv = NS_NewChannel(aResult,
+                       aURI,
+                       triggeringPrincipal,
+                       securityFlags,
+                       nsIContentPolicy::TYPE_IMAGE,
+                       nullptr,   // loadGroup
+                       callbacks,
+                       aLoadFlags);
+  }
 
   if (NS_FAILED(rv))
     return rv;

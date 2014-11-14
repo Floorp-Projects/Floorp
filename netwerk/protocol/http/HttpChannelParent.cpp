@@ -105,8 +105,8 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.thirdPartyFlags(), a.resumeAt(), a.startPos(),
                        a.entityID(), a.chooseApplicationCache(),
                        a.appCacheClientID(), a.allowSpdy(), a.fds(),
-                       a.requestingPrincipalInfo(), a.securityFlags(),
-                       a.contentPolicyType());
+                       a.requestingPrincipalInfo(), a.triggeringPrincipalInfo(),
+                       a.securityFlags(), a.contentPolicyType());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -192,6 +192,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                allowSpdy,
                                  const OptionalFileDescriptorSet& aFds,
                                  const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
+                                 const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
                                  const uint32_t&            aSecurityFlags,
                                  const uint32_t&            aContentPolicyType)
 {
@@ -223,6 +224,11 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
   }
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+    mozilla::ipc::PrincipalInfoToPrincipal(aTriggeringPrincipalInfo, &rv);
+  if (NS_FAILED(rv)) {
+    return SendFailedAsyncOpen(rv);
+  }
 
   bool appOffline = false;
   uint32_t appId = GetAppId();
@@ -239,15 +245,16 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     uri,
-                     requestingPrincipal,
-                     aSecurityFlags,
-                     aContentPolicyType,
-                     nullptr,   // loadGroup
-                     nullptr,   // aCallbacks
-                     loadFlags,
-                     ios);
+  rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
+                                            uri,
+                                            requestingPrincipal,
+                                            triggeringPrincipal,
+                                            aSecurityFlags,
+                                            aContentPolicyType,
+                                            nullptr,   // loadGroup
+                                            nullptr,   // aCallbacks
+                                            loadFlags,
+                                            ios);
 
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);

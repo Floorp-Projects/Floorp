@@ -1073,18 +1073,27 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   // FetchBindingDocument().  LoadInfo will end up with no principal or node in those cases,
   // so we use systemPrincipal.  This achieves the same result of bypassing security checks,
   // but it gives the wrong information to potential future consumers of loadInfo.
-  nsCOMPtr<nsIPrincipal> requestingPrincipal = aOriginPrincipal ? aOriginPrincipal
-                                                                : nsContentUtils::GetSystemPrincipal();
   nsCOMPtr<nsIChannel> channel;
-  // Note that we are calling NS_NewChannelInternal here with both a node and a principal.
-  // This is because the principal and node could be different.
-  rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                             aDocumentURI,
-                             aBoundDocument,
-                             requestingPrincipal,
-                             nsILoadInfo::SEC_NORMAL,
-                             nsIContentPolicy::TYPE_OTHER,
-                             loadGroup);
+
+  if (aOriginPrincipal) {
+    // if there is an originPrincipal we should also have aBoundDocument
+    NS_ASSERTION(aBoundDocument, "can not create a channel without aBoundDocument");
+    rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
+                                              aDocumentURI,
+                                              aBoundDocument,
+                                              aOriginPrincipal,
+                                              nsILoadInfo::SEC_NORMAL,
+                                              nsIContentPolicy::TYPE_OTHER,
+                                              loadGroup);
+  }
+  else {
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       aDocumentURI,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER,
+                       loadGroup);
+  }
 
   NS_ENSURE_SUCCESS(rv, rv);
 

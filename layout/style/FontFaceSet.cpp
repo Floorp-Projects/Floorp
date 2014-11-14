@@ -389,17 +389,17 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsCOMPtr<nsILoadGroup> loadGroup(ps->GetDocument()->GetDocumentLoadGroup());
 
   nsCOMPtr<nsIChannel> channel;
-  // Note we are calling NS_NewChannelInternal() with both a node and a
-  // principal.  This is because the document where the font is being loaded
-  // might have a different origin from the principal of the stylesheet
-  // that initiated the font load.
-  rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                             aFontFaceSrc->mURI,
-                             ps->GetDocument(),
-                             aUserFontEntry->GetPrincipal(),
-                             nsILoadInfo::SEC_NORMAL,
-                             nsIContentPolicy::TYPE_FONT,
-                             loadGroup);
+  // Note we are calling NS_NewChannelWithTriggeringPrincipal() with both a
+  // node and a principal.  This is because the document where the font is
+  // being loaded might have a different origin from the principal of the
+  // stylesheet that initiated the font load.
+  rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
+                                            aFontFaceSrc->mURI,
+                                            ps->GetDocument(),
+                                            aUserFontEntry->GetPrincipal(),
+                                            nsILoadInfo::SEC_NORMAL,
+                                            nsIContentPolicy::TYPE_FONT,
+                                            loadGroup);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1185,16 +1185,16 @@ FontFaceSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
   if (!ps) {
     return NS_ERROR_FAILURE;
   }
-  // Note we are calling NS_NewChannelInternal() with both a node and a
-  // principal.  This is because the document where the font is being loaded
-  // might have a different origin from the principal of the stylesheet
-  // that initiated the font load.
-  rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                             aFontFaceSrc->mURI,
-                             ps->GetDocument(),
-                             aFontToLoad->GetPrincipal(),
-                             nsILoadInfo::SEC_NORMAL,
-                             nsIContentPolicy::TYPE_FONT);
+  // Note we are calling NS_NewChannelWithTriggeringPrincipal() with both a
+  // node and a principal.  This is because the document where the font is
+  // being loaded might have a different origin from the principal of the
+  // stylesheet that initiated the font load.
+  rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(channel),
+                                            aFontFaceSrc->mURI,
+                                            ps->GetDocument(),
+                                            aFontToLoad->GetPrincipal(),
+                                            nsILoadInfo::SEC_NORMAL,
+                                            nsIContentPolicy::TYPE_FONT);
 
   NS_ENSURE_SUCCESS(rv, rv);
 

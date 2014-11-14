@@ -363,6 +363,7 @@ falling back to not using job objects for managing child processes"""
                         if errcode == winprocess.ERROR_ABANDONED_WAIT_0:
                             # Then something has killed the port, break the loop
                             print >> sys.stderr, "IO Completion Port unexpectedly closed"
+                            self._process_events.put({self.pid: 'FINISHED'})
                             break
                         elif errcode == winprocess.WAIT_TIMEOUT:
                             # Timeouts are expected, just keep on polling

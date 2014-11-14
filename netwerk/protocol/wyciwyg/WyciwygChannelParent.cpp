@@ -62,6 +62,7 @@ NS_IMPL_ISUPPORTS(WyciwygChannelParent,
 bool
 WyciwygChannelParent::RecvInit(const URIParams&          aURI,
                                const ipc::PrincipalInfo& aRequestingPrincipalInfo,
+                               const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
                                const uint32_t&           aSecurityFlags,
                                const uint32_t&           aContentPolicyType)
 {
@@ -86,16 +87,23 @@ WyciwygChannelParent::RecvInit(const URIParams&          aURI,
     return SendCancelEarly(rv);
   }
 
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+    mozilla::ipc::PrincipalInfoToPrincipal(aTriggeringPrincipalInfo, &rv);
+  if (NS_FAILED(rv)) {
+    return SendCancelEarly(rv);
+  }
+
   nsCOMPtr<nsIChannel> chan;
-  rv = NS_NewChannel(getter_AddRefs(chan),
-                     uri,
-                     requestingPrincipal,
-                     aSecurityFlags,
-                     aContentPolicyType,
-                     nullptr,   // loadGroup
-                     nullptr,   // aCallbacks
-                     nsIRequest::LOAD_NORMAL,
-                     ios);
+  rv = NS_NewChannelWithTriggeringPrincipal(getter_AddRefs(chan),
+                                           uri,
+                                           requestingPrincipal,
+                                           triggeringPrincipal,
+                                           aSecurityFlags,
+                                           aContentPolicyType,
+                                           nullptr,   // loadGroup
+                                           nullptr,   // aCallbacks
+                                           nsIRequest::LOAD_NORMAL,
+                                           ios);
 
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);

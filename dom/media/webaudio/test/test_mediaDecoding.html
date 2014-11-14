@@ -359,30 +359,6 @@ function loadNextTest() {
   }
 }
 
-// Run some simple tests first
-function callbackShouldNeverRun() {
-  ok(false, "callback should not fire");
-}
-(function() {
-  var cx = new AudioContext();
-  expectTypeError(function() {
-    cx.decodeAudioData(null, callbackShouldNeverRun, callbackShouldNeverRun);
-  });
-  expectTypeError(function() {
-    cx.decodeAudioData(undefined, callbackShouldNeverRun, callbackShouldNeverRun);
-  });
-  expectTypeError(function() {
-    cx.decodeAudioData(123, callbackShouldNeverRun, callbackShouldNeverRun);
-  });
-  expectTypeError(function() {
-    cx.decodeAudioData("buffer", callbackShouldNeverRun, callbackShouldNeverRun);
-  });
-  expectTypeError(function() {
-    cx.decodeAudioData(new Uint8Array(100), callbackShouldNeverRun, callbackShouldNeverRun);
-  });
-})();
-
-// Now, let's get real!
 loadNextTest();
 
 </script>

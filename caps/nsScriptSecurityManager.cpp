@@ -332,7 +332,7 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
         }
 
         if (loadInfo->GetForceInheritPrincipal()) {
-            NS_ADDREF(*aPrincipal = loadInfo->LoadingPrincipal());
+            NS_ADDREF(*aPrincipal = loadInfo->TriggeringPrincipal());
             return NS_OK;
         }
     }
