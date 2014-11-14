@@ -44,6 +44,23 @@ VolumeManager::~VolumeManager()
 }
 
 //static
+void
+VolumeManager::Dump(const char* aLabel)
+{
+  if (!sVolumeManager) {
+    LOG("%s: sVolumeManager == null", aLabel);
+    return;
+  }
+
+  VolumeArray::size_type  numVolumes = NumVolumes();
+  VolumeArray::index_type volIndex;
+  for (volIndex = 0; volIndex < numVolumes; volIndex++) {
+    RefPtr<Volume> vol = GetVolume(volIndex);
+    vol->Dump(aLabel);
+  }
+}
+
+//static
 size_t
 VolumeManager::NumVolumes()
 {
@@ -138,6 +155,61 @@ VolumeManager::FindAddVolumeByName(const nsCSubstring& aName)
   return vol;
 }
 
+//static
+void VolumeManager::InitConfig()
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+
+  // This function uses /system/etc/volume.cfg to add additional volumes
+  // to the Volume Manager.
+  //
+  // This is useful on devices like the Nexus 4, which have no physical sd card
+  // or dedicated partition.
+  //
+  // The format of the volume.cfg file is as follows:
+  // create volume-name mount-point
+  // Blank lines and lines starting with the hash character "#" will be ignored.
+
+  ScopedCloseFile fp;
+  int n = 0;
+  char line[255];
+  char *command, *volNamePtr, *mountPointPtr, *save_ptr;
+  const char *filename = "/system/etc/volume.cfg";
+  if (!(fp = fopen(filename, "r"))) {
+    LOG("Unable to open volume configuration file '%s' - ignoring", filename);
+    return;
+  }
+  while(fgets(line, sizeof(line), fp)) {
+    const char *delim = " \t\n";
+    n++;
+
+    if (line[0] == '#')
+      continue;
+    if (!(command = strtok_r(line, delim, &save_ptr))) {
+      // Blank line - ignore
+      continue;
+    }
+    if (!strcmp(command, "create")) {
+      if (!(volNamePtr = strtok_r(nullptr, delim, &save_ptr))) {
+        ERR("No vol_name in %s line %d",  filename, n);
+        continue;
+      }
+      if (!(mountPointPtr = strtok_r(nullptr, delim, &save_ptr))) {
+        ERR("No mount point for volume '%s'. %s line %d", volNamePtr, filename, n);
+        continue;
+      }
+      nsCString mountPoint(mountPointPtr);
+      nsCString volName(volNamePtr);
+
+      RefPtr<Volume> vol = FindAddVolumeByName(volName);
+      vol->SetFakeVolume(mountPoint);
+    }
+    else {
+      ERR("Unrecognized command: '%s'", command);
+    }
+  }
+}
+
 class VolumeListCallback : public VolumeResponseCallback
 {
   virtual void ResponseReceived(const VolumeCommand* aCommand)
@@ -158,8 +230,11 @@ class VolumeListCallback : public VolumeResponseCallback
       }
 
       case ::ResponseCode::CommandOkay: {
-        // We've received the list of volumes. Tell anybody who
-        // is listening that we're open for business.
+        // We've received the list of volumes. Now read the Volume.cfg
+        // file to perform customizations, and then tell everybody
+        // that we're ready for business.
+        VolumeManager::InitConfig();
+        VolumeManager::Dump("READY");
         VolumeManager::SetState(VolumeManager::VOLUMES_READY);
         break;
       }
