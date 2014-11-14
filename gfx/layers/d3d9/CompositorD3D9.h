@@ -120,11 +120,6 @@ public:
 
   virtual TemporaryRef<DataTextureSource>
     CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) MOZ_OVERRIDE;
-
-  virtual void SetFinalDestinationTarget() MOZ_OVERRIDE {
-    MOZ_ASSERT(mFinalDestinationTarget);
-    SetRenderTarget(mFinalDestinationTarget);
-  }
 private:
   // ensure mSize is up to date with respect to mWidget
   void EnsureSize();
@@ -169,6 +164,7 @@ private:
   /* Widget associated with this layer manager */
   nsIWidget *mWidget;
 
+  RefPtr<CompositingRenderTargetD3D9> mDefaultRT;
   RefPtr<CompositingRenderTargetD3D9> mCurrentRT;
 
   nsIntSize mSize;
