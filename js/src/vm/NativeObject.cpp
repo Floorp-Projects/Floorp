@@ -2311,7 +2311,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleNativeObject obj, HandleId id, bool 
 
         if (!CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, succeeded))
             return false;
-        if (!succeeded)
+        if (!*succeeded)
             return true;
 
         NativeObject *nobj = &obj->as<NativeObject>();
@@ -2330,7 +2330,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleNativeObject obj, HandleId id, bool 
     RootedId propid(cx, shape->propid());
     if (!CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, propid, succeeded))
         return false;
-    if (!succeeded)
+    if (!*succeeded)
         return true;
 
     return obj->removeProperty(cx, id) && SuppressDeletedProperty(cx, obj, id);
