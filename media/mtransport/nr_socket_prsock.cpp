@@ -1107,7 +1107,7 @@ static nr_socket_vtbl nr_socket_local_vtbl={
 };
 
 int nr_socket_local_create(nr_transport_addr *addr, nr_socket **sockp) {
-  NrSocketBase *sock = nullptr;
+  RefPtr<NrSocketBase> sock;
 
   // create IPC bridge for content process
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
@@ -1129,15 +1129,16 @@ int nr_socket_local_create(nr_transport_addr *addr, nr_socket **sockp) {
   if (r)
     ABORT(r);
 
-  // Add a reference so that we can delete it in destroy()
-  sock->AddRef();
-
   _status = 0;
 
-abort:
-  if (_status) {
-    delete sock;
+  {
+    // We will release this reference in destroy(), not exactly the normal
+    // ownership model, but it is what it is.
+    NrSocketBase* dummy = sock.forget().take();
+    (void)dummy;
   }
+
+abort:
   return _status;
 }
 
