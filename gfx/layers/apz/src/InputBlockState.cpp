@@ -18,13 +18,29 @@ namespace layers {
 
 static uint64_t sBlockCounter = InputBlockState::NO_BLOCK_ID + 1;
 
-InputBlockState::InputBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
+InputBlockState::InputBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                                 bool aTargetConfirmed)
   : mTargetApzc(aTargetApzc)
+  , mTargetConfirmed(aTargetConfirmed)
   , mBlockId(sBlockCounter++)
 {
   // We should never be constructed with a nullptr target.
   MOZ_ASSERT(mTargetApzc);
   mOverscrollHandoffChain = mTargetApzc->BuildOverscrollHandoffChain();
+}
+
+bool
+InputBlockState::SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
+{
+  if (mTargetConfirmed) {
+    return false;
+  }
+  mTargetConfirmed = true;
+
+  // note that aTargetApzc MAY be null here.
+  mTargetApzc = aTargetApzc;
+  mOverscrollHandoffChain = (mTargetApzc ? mTargetApzc->BuildOverscrollHandoffChain() : nullptr);
+  return true;
 }
 
 const nsRefPtr<AsyncPanZoomController>&
@@ -45,8 +61,15 @@ InputBlockState::GetBlockId() const
   return mBlockId;
 }
 
-TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc)
-  : InputBlockState(aTargetApzc)
+bool
+InputBlockState::IsTargetConfirmed() const
+{
+  return mTargetConfirmed;
+}
+
+TouchBlockState::TouchBlockState(const nsRefPtr<AsyncPanZoomController>& aTargetApzc,
+                                 bool aTargetConfirmed)
+  : InputBlockState(aTargetApzc, aTargetConfirmed)
   , mAllowedTouchBehaviorSet(false)
   , mPreventDefault(false)
   , mContentResponded(false)
@@ -110,6 +133,9 @@ TouchBlockState::CopyAllowedTouchBehaviorsFrom(const TouchBlockState& aOther)
 bool
 TouchBlockState::IsReadyForHandling() const
 {
+  if (!IsTargetConfirmed()) {
+    return false;
+  }
   // TODO: for long-tap blocks we probably don't need the touch behaviour?
   if (gfxPrefs::TouchActionEnabled() && !mAllowedTouchBehaviorSet) {
     return false;
