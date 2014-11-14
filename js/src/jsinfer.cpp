@@ -1244,6 +1244,14 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
             break;
         }
 
+        // It could happen that one of the compiled scripts was made a
+        // debuggee mid-compilation (e.g., via setting a breakpoint). If so,
+        // throw away the compilation.
+        if (entry.script->isDebuggee()) {
+            succeeded = false;
+            break;
+        }
+
         if (!CheckFrozenTypeSet(cx, entry.thisTypes, types::TypeScript::ThisTypes(entry.script)))
             succeeded = false;
         unsigned nargs = entry.script->functionNonDelazifying()

@@ -51,7 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(e293355b-ae7f-4ef7-9237-452bcf3e9e6b)]
+[scriptable, uuid(9621eb05-b498-4e87-a012-95d817987624)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -188,8 +188,6 @@ interface nsIDOMWindowUtils : nsISupports {
                                        in float aTopMargin,
                                        in float aRightMargin,
                                        in float aBottomMargin,
-                                       in uint32_t aAlignmentX,
-                                       in uint32_t aAlignmentY,
                                        in nsIDOMElement aElement,
                                        in uint32_t aPriority);
 

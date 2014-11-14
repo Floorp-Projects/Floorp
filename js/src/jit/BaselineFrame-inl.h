@@ -34,7 +34,7 @@ BaselineFrame::popOffScopeChain()
 inline void
 BaselineFrame::popWith(JSContext *cx)
 {
-    if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
+    if (MOZ_UNLIKELY(isDebuggee()))
         DebugScopes::onPopWith(this);
 
     MOZ_ASSERT(scopeChain()->is<DynamicWithObject>());
