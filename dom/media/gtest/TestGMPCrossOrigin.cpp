@@ -571,6 +571,15 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 #endif
 
+  void TestPluginVoucher() {
+    CreateDecryptor(NS_LITERAL_STRING("example17.com"),
+                    NS_LITERAL_STRING("example18.com"),
+                    false);
+    Expect(NS_LITERAL_CSTRING("retrieved plugin-voucher: gmp-fake placeholder voucher"),
+           NS_NewRunnableMethod(this, &GMPStorageTest::SetFinished));
+    Update(NS_LITERAL_CSTRING("retrieve-plugin-voucher"));
+  }
+
   void Expect(const nsCString& aMessage, nsIRunnable* aContinuation) {
     mExpected.AppendElement(ExpectedMessage(aMessage, aContinuation));
   }
@@ -724,6 +733,11 @@ TEST(GeckoMediaPlugins, GMPStorageAsyncShutdownTimeout) {
 TEST(GeckoMediaPlugins, GMPStorageAsyncShutdownStorage) {
   nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestAsyncShutdownStorage);
+}
+
+TEST(GeckoMediaPlugins, GMPPluginVoucher) {
+  nsRefPtr<GMPStorageTest> runner = new GMPStorageTest();
+  runner->DoTest(&GMPStorageTest::TestPluginVoucher);
 }
 
 #if defined(XP_WIN)

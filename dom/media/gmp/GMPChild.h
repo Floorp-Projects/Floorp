@@ -51,6 +51,8 @@ public:
 
 private:
 
+  bool PreLoadPluginVoucher(const std::string& aPluginPath);
+
   bool GetLibPath(nsACString& aOutLibPath);
 
   virtual bool RecvSetNodeId(const nsCString& aNodeId) MOZ_OVERRIDE;
@@ -100,6 +102,7 @@ private:
 #endif
   std::string mNodeId;
   GMPLoader* mGMPLoader;
+  nsTArray<uint8_t> mPluginVoucher;
 };
 
 } // namespace gmp
