@@ -187,6 +187,30 @@ struct EventRegions {
     mDispatchToContentHitRegion.OrWith(aOther.mDispatchToContentHitRegion);
   }
 
+  void AndWith(const nsIntRegion& aRegion)
+  {
+    mHitRegion.AndWith(aRegion);
+    mDispatchToContentHitRegion.AndWith(aRegion);
+  }
+
+  void Sub(const EventRegions& aMinuend, const nsIntRegion& aSubtrahend)
+  {
+    mHitRegion.Sub(aMinuend.mHitRegion, aSubtrahend);
+    mDispatchToContentHitRegion.Sub(aMinuend.mDispatchToContentHitRegion, aSubtrahend);
+  }
+
+  void Transform(const gfx3DMatrix& aTransform)
+  {
+    mHitRegion.Transform(aTransform);
+    mDispatchToContentHitRegion.Transform(aTransform);
+  }
+
+  bool IsEmpty() const
+  {
+    return mHitRegion.IsEmpty()
+        && mDispatchToContentHitRegion.IsEmpty();
+  }
+
   nsCString ToString() const
   {
     nsCString result = mHitRegion.ToString();
