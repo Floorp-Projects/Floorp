@@ -17,6 +17,7 @@ window.onload = function() {
     Components.utils.import("resource://gre/modules/Promise.jsm", {});
   const {InspectorFront} =
     devtools.require("devtools/server/actors/inspector");
+  const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
   Services.prefs.setBoolPref("dom.webcomponents.enabled", true);
   SimpleTest.waitForExplicitFinish();
@@ -40,6 +41,20 @@ window.onload = function() {
         gWalker = walker;
       }).then(runNextTest));
     });
+  });
+
+  addAsyncTest(function* testXBLAnonymousInHTMLDocument() {
+    info ("Testing XBL anonymous in an HTML document.");
+    let rawToolbarbutton = gInspectee.createElementNS(XUL_NS, "toolbarbutton");
+    gInspectee.documentElement.appendChild(rawToolbarbutton);
+
+    let toolbarbutton = yield gWalker.querySelector(gWalker.rootNode, "toolbarbutton");
+    let children = yield gWalker.children(toolbarbutton);
+
+    is (toolbarbutton.numChildren, 3, "XBL content is visible even in HTML doc");
+    is (children.nodes.length, 3, "XBL content is returned even in HTML doc");
+
+    runNextTest();
   });
 
   addAsyncTest(function* testNativeAnonymous() {
