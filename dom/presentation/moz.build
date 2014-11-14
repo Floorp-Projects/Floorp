@@ -7,6 +7,7 @@
 DIRS += ['interfaces']
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
 EXPORTS.mozilla.dom.presentation += [
     'PresentationDeviceManager.h',
@@ -15,6 +16,15 @@ EXPORTS.mozilla.dom.presentation += [
 SOURCES += [
     'PresentationDeviceManager.cpp',
     'PresentationSessionRequest.cpp',
+]
+
+EXTRA_COMPONENTS += [
+    'PresentationDeviceInfoManager.js',
+    'PresentationDeviceInfoManager.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'PresentationDeviceInfoManager.jsm',
 ]
 
 FAIL_ON_WARNINGS = True
