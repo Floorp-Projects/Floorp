@@ -538,7 +538,7 @@ GMPChild::DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor)
 PGMPDecryptorChild*
 GMPChild::AllocPGMPDecryptorChild()
 {
-  GMPDecryptorChild* actor = new GMPDecryptorChild(this, mNodeId);
+  GMPDecryptorChild* actor = new GMPDecryptorChild(this);
   actor->AddRef();
   return actor;
 }
