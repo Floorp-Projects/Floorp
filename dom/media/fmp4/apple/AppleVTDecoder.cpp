@@ -44,8 +44,8 @@ AppleVTDecoder::AppleVTDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
   MOZ_COUNT_CTOR(AppleVTDecoder);
   // TODO: Verify aConfig.mime_type.
   LOG("Creating AppleVTDecoder for %dx%d h.264 video",
-      mConfig.display_width,
-      mConfig.display_height
+      mConfig.image_width,
+      mConfig.image_height
      );
 }
 
@@ -275,8 +275,8 @@ AppleVTDecoder::InitializeSession()
 
   rv = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
                                       kCMVideoCodecType_H264,
-                                      mConfig.display_width,
-                                      mConfig.display_height,
+                                      mConfig.image_width,
+                                      mConfig.image_height,
                                       extensions,
                                       &mFormat);
   if (rv != noErr) {
