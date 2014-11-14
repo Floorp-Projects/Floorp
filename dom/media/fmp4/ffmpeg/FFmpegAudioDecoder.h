@@ -35,7 +35,6 @@ private:
   void DecodePacket(mp4_demuxer::MP4Sample* aSample);
 
   MediaDataDecoderCallback* mCallback;
-  const mp4_demuxer::AudioDecoderConfig& mConfig;
 };
 
 } // namespace mozilla
