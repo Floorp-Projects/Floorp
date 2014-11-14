@@ -27,18 +27,7 @@ struct LayoutDevicePixel;
 struct LayerPixel;
 struct RenderTargetPixel;
 struct ScreenPixel;
-// The layer coordinates of the parent frame.
-// This can be arrived at in three ways:
-//   - Start with the CSS coordinates of the parent frame, multiply by the
-//     device scale and the cumulative resolution of the parent frame.
-//   - Start with the CSS coordinates of current frame, multiply by the device
-//     scale, the cumulative resolution of the current frame, and the scales
-//     from the CSS and async transforms of the current frame.
-//   - Start with global screen coordinates and unapply all CSS and async
-//     transforms from the root down to and including the parent.
-// It's helpful to look at https://wiki.mozilla.org/Platform/GFX/APZ#Coordinate_systems
-// to get a picture of how the various coordinate systems relate to each other.
-struct ParentLayerPixel {};
+struct ParentLayerPixel;
 
 template<> struct IsPixel<CSSPixel>          : TrueType {};
 template<> struct IsPixel<LayoutDevicePixel> : TrueType {};
@@ -336,6 +325,24 @@ struct RenderTargetPixel {
 struct ScreenPixel {
   static ScreenIntPoint FromUntyped(const nsIntPoint& aPoint) {
     return ScreenIntPoint(aPoint.x, aPoint.y);
+  }
+};
+
+/* The layer coordinates of the parent frame.
+ * This can be arrived at in three ways:
+ *   - Start with the CSS coordinates of the parent frame, multiply by the
+ *     device scale and the cumulative resolution of the parent frame.
+ *   - Start with the CSS coordinates of current frame, multiply by the device
+ *     scale, the cumulative resolution of the current frame, and the scales
+ *     from the CSS and async transforms of the current frame.
+ *   - Start with global screen coordinates and unapply all CSS and async
+ *     transforms from the root down to and including the parent.
+ * It's helpful to look at https://wiki.mozilla.org/Platform/GFX/APZ#Coordinate_systems
+ * to get a picture of how the various coordinate systems relate to each other.
+ */
+struct ParentLayerPixel {
+  static nsIntRect ToUntyped(const ParentLayerIntRect& aRect) {
+    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
 };
 
