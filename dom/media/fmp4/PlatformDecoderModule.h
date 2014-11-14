@@ -165,9 +165,8 @@ public:
 // media data that the decoder accepts as valid input and produces as
 // output is determined when the MediaDataDecoder is created.
 //
-// All functions are only called on the decode task queue. Don't block
-// inside these functions, unless it's explicitly noted that you should
-// (like in Flush() and Drain()).
+// All functions must be threadsafe, and be able to be called on an
+// arbitrary thread.
 //
 // Decoding is done asynchronously. Any async work can be done on the
 // MediaTaskQueue passed into the PlatformDecoderModules's Create*Decoder()
