@@ -56,15 +56,15 @@ this.Preferences =
   };
 
   Preferences._get = function(prefName, defaultValue, valueType) {
-    switch (this._prefSvc.getPrefType(prefName)) {
+    switch (this._prefBranch.getPrefType(prefName)) {
       case Ci.nsIPrefBranch.PREF_STRING:
-        return this._prefSvc.getComplexValue(prefName, valueType).data;
+        return this._prefBranch.getComplexValue(prefName, valueType).data;
 
       case Ci.nsIPrefBranch.PREF_INT:
-        return this._prefSvc.getIntPref(prefName);
+        return this._prefBranch.getIntPref(prefName);
 
       case Ci.nsIPrefBranch.PREF_BOOL:
-        return this._prefSvc.getBoolPref(prefName);
+        return this._prefBranch.getBoolPref(prefName);
 
       case Ci.nsIPrefBranch.PREF_INVALID:
         return defaultValue;
@@ -72,8 +72,8 @@ this.Preferences =
       default:
         // This should never happen.
         throw "Error getting pref " + prefName + "; its value's type is " +
-              this._prefSvc.getPrefType(prefName) + ", which I don't know " +
-              "how to handle.";
+              this._prefBranch.getPrefType(prefName) + ", which I don't " +
+              "know how to handle.";
     }
   };
 
@@ -117,10 +117,10 @@ this.Preferences =
     switch (prefType) {
       case "String":
         {
-          let string = Cc["@mozilla.org/supports-string;1"].
+          let str = Cc["@mozilla.org/supports-string;1"].
                        createInstance(Ci.nsISupportsString);
-          string.data = prefValue;
-          this._prefSvc.setComplexValue(prefName, Ci.nsISupportsString, string);
+          str.data = prefValue;
+          this._prefBranch.setComplexValue(prefName, Ci.nsISupportsString, str);
         }
         break;
 
@@ -134,7 +134,7 @@ this.Preferences =
                 prefValue + ", as number pref values must be in the signed " +
                 "32-bit integer range -(2^31-1) to 2^31-1.  To store numbers " +
                 "outside that range, store them as strings.");
-        this._prefSvc.setIntPref(prefName, prefValue);
+        this._prefBranch.setIntPref(prefName, prefValue);
         if (prefValue % 1 != 0)
           Cu.reportError("Warning: setting the " + prefName + " pref to the " +
                          "non-integer number " + prefValue + " converted it " +
@@ -144,7 +144,7 @@ this.Preferences =
         break;
 
       case "Boolean":
-        this._prefSvc.setBoolPref(prefName, prefValue);
+        this._prefBranch.setBoolPref(prefName, prefValue);
         break;
 
       default:
@@ -171,11 +171,7 @@ this.Preferences =
     if (Array.isArray(prefName))
       return prefName.map(this.has, this);
 
-    return this._has(prefName);
-  };
-
-  Preferences._has = function(prefName) {
-    return (this._prefSvc.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_INVALID);
+    return (this._prefBranch.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_INVALID);
   };
 
   /**
@@ -196,7 +192,7 @@ this.Preferences =
     if (Array.isArray(prefName))
       return prefName.map(this.isSet, this);
 
-    return (this.has(prefName) && this._prefSvc.prefHasUserValue(prefName));
+    return (this.has(prefName) && this._prefBranch.prefHasUserValue(prefName));
   },
 
   /**
@@ -212,7 +208,7 @@ this.Preferences =
       return;
     }
 
-    this._prefSvc.clearUserPref(prefName);
+    this._prefBranch.clearUserPref(prefName);
   };
 
   /**
@@ -225,7 +221,7 @@ this.Preferences =
     if (Array.isArray(prefName))
       prefName.map(this.lock, this);
 
-    this._prefSvc.lockPref(prefName);
+    this._prefBranch.lockPref(prefName);
   };
 
   /**
@@ -238,7 +234,7 @@ this.Preferences =
     if (Array.isArray(prefName))
       prefName.map(this.unlock, this);
 
-    this._prefSvc.unlockPref(prefName);
+    this._prefBranch.unlockPref(prefName);
   };
 
   /**
@@ -256,7 +252,7 @@ this.Preferences =
     if (Array.isArray(prefName))
       return prefName.map(this.locked, this);
 
-    return this._prefSvc.prefIsLocked(prefName);
+    return this._prefBranch.prefIsLocked(prefName);
   };
 
   /**
@@ -281,7 +277,7 @@ this.Preferences =
     let fullPrefName = this._branchStr + (prefName || "");
 
     let observer = new PrefObserver(fullPrefName, callback, thisObject);
-    Preferences._prefSvc.addObserver(fullPrefName, observer, true);
+    Preferences._prefBranch.addObserver(fullPrefName, observer, true);
     observers.push(observer);
 
     return observer;
@@ -321,20 +317,20 @@ this.Preferences =
                                                   v.thisObject == thisObject);
 
     if (observer) {
-      Preferences._prefSvc.removeObserver(fullPrefName, observer);
+      Preferences._prefBranch.removeObserver(fullPrefName, observer);
       observers.splice(observers.indexOf(observer), 1);
     }
   };
 
   Preferences.resetBranch = function(prefBranch = "") {
     try {
-      this._prefSvc.resetBranch(prefBranch);
+      this._prefBranch.resetBranch(prefBranch);
     }
     catch(ex) {
       // The current implementation of nsIPrefBranch in Mozilla
       // doesn't implement resetBranch, so we do it ourselves.
       if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED)
-        this.reset(this._prefSvc.getChildList(prefBranch, []));
+        this.reset(this._prefBranch.getChildList(prefBranch, []));
       else
         throw ex;
     }
@@ -349,7 +345,7 @@ this.Preferences =
 
   /**
    * The cached preferences branch object this instance encapsulates, or null.
-   * Do not use!  Use _prefSvc below instead.
+   * Do not use!  Use _prefBranch below instead.
    * @private
    */
   Preferences._cachedPrefBranch = null;
@@ -358,9 +354,9 @@ this.Preferences =
    * The preferences branch object for this instance.
    * @private
    */
-  Object.defineProperty(Preferences, "_prefSvc",
+  Object.defineProperty(Preferences, "_prefBranch",
   {
-    get: function _prefSvc() {
+    get: function _prefBranch() {
       if (!this._cachedPrefBranch) {
         let prefSvc = Services.prefs;
         this._cachedPrefBranch = this._defaultBranch ?
