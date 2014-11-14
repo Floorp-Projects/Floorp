@@ -9,7 +9,6 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import <CoreVideo/CoreVideo.h>
 
 #include "CustomCocoaEvents.h"
 #include "mozilla/WidgetTraceEvent.h"
@@ -38,9 +37,6 @@
 #include <IOKit/pwr_mgt/IOPMLib.h>
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/VsyncDispatcher.h"
-#include "gfxPrefs.h"
 
 using namespace mozilla::widget;
 
@@ -91,85 +87,7 @@ private:
     }
     return NS_OK;
   }
-}; // MacWakeLockListener
-
-// This is the renderer output callback function, called on the vsync thread
-static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
-                              const CVTimeStamp* aNow,
-                              const CVTimeStamp* aOutputTime,
-                              CVOptionFlags aFlagsIn,
-                              CVOptionFlags* aFlagsOut,
-                              void* aDisplayLinkContext)
-{
-  VsyncSource* vsyncSource = (VsyncSource*) aDisplayLinkContext;
-  if (vsyncSource->IsVsyncEnabled()) {
-    // Now refers to "Now" as in when this callback is called or when the current frame
-    // is displayed. aOutputTime is when the next frame should be displayed.
-    // Now is VERY VERY noisy, aOutputTime is in the future though.
-    int64_t timestamp = aOutputTime->hostTime;
-    mozilla::TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(timestamp);
-    mozilla::VsyncDispatcher::GetInstance()->NotifyVsync(vsyncTime);
-    return kCVReturnSuccess;
-  } else {
-    return kCVReturnDisplayLinkNotRunning;
-  }
-}
-
-class OSXVsyncSource MOZ_FINAL : public VsyncSource
-{
-public:
-  OSXVsyncSource()
-  {
-    EnableVsync();
-  }
-
-  virtual void EnableVsync() MOZ_OVERRIDE
-  {
-    // Create a display link capable of being used with all active displays
-    // TODO: See if we need to create an active DisplayLink for each monitor in multi-monitor
-    // situations. According to the docs, it is compatible with all displays running on the computer
-    // But if we have different monitors at different display rates, we may hit issues.
-    if (CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink) != kCVReturnSuccess) {
-      NS_WARNING("Could not create a display link, returning");
-      return;
-    }
-
-    // Set the renderer output callback function
-    if (CVDisplayLinkSetOutputCallback(mDisplayLink, &VsyncCallback, this) != kCVReturnSuccess) {
-      NS_WARNING("Could not set displaylink output callback");
-      return;
-    }
-
-    // Activate the display link
-    if (CVDisplayLinkStart(mDisplayLink) != kCVReturnSuccess) {
-      NS_WARNING("Could not activate the display link");
-      mDisplayLink = nullptr;
-    }
-  }
-
-  virtual void DisableVsync() MOZ_OVERRIDE
-  {
-    // Release the display link
-    if (mDisplayLink) {
-      CVDisplayLinkRelease(mDisplayLink);
-      mDisplayLink = nullptr;
-    }
-  }
-
-  virtual bool IsVsyncEnabled() MOZ_OVERRIDE
-  {
-    return mDisplayLink != nullptr;
-  }
-
-private:
-  virtual ~OSXVsyncSource()
-  {
-    DisableVsync();
-  }
-
-  // Manages the display link render thread
-  CVDisplayLinkRef   mDisplayLink;
-}; // OSXVsyncSource
+};
 
 // defined in nsCocoaWindow.mm
 extern int32_t             gXULModalLevel;
@@ -369,22 +287,13 @@ nsAppShell::Init()
   // context.version = 0;
   context.info = this;
   context.perform = ProcessGeckoEvents;
-
+  
   mCFRunLoopSource = ::CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &context);
   NS_ENSURE_STATE(mCFRunLoopSource);
 
   ::CFRunLoopAddSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
 
   rv = nsBaseAppShell::Init();
-
-  // gfxPrefs are init on the main thread and we need it super early
-  // to see if we should enable vsync aligned compositor
-  gfxPrefs::GetSingleton();
-  if (gfxPrefs::HardwareVsyncEnabled() && gfxPrefs::VsyncAlignedCompositor())
-  {
-    nsRefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
-    mozilla::VsyncDispatcher::GetInstance()->SetVsyncSource(osxVsyncSource);
-  }
 
 #ifndef __LP64__
   TextInputHandler::InstallPluginKeyEventsHandler();

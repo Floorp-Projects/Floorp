@@ -387,20 +387,11 @@ public:
   MOZ_CONSTEXPR TimeStamp() : mValue(0) {}
   // Default copy-constructor and assignment are OK
 
-  /**
-   * The system timestamps are the same as the TimeStamp
-   * retrieved by mozilla::TimeStamp. Since we need this for
-   * vsync timestamps, we enable the creation of mozilla::TimeStamps
-   * on platforms that support vsync aligned refresh drivers / compositors
-   * Verified true as of Nov 7, 2014: B2G and OS X
-   * UNTESTED ON OTHER PLATFORMS
-   */
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_COCOA)
-  static TimeStamp FromSystemTime(int64_t aSystemTime)
+#ifdef MOZ_WIDGET_GONK
+  TimeStamp(int64_t aAndroidTime) : mValue(aAndroidTime)
   {
-    static_assert(sizeof(aSystemTime) == sizeof(TimeStampValue),
-                  "System timestamp should be same units as TimeStampValue");
-    return TimeStamp(aSystemTime);
+    static_assert(sizeof(aAndroidTime) == sizeof(TimeStampValue),
+                  "Android timestamp should be same units as TimeStampValue");
   }
 #endif
 
