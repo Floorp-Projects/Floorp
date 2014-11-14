@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPluginStreamListenerPeer.h"
+#include "nsIDOMElement.h"
 #include "nsIStreamConverterService.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -640,8 +641,11 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
   nsresult rv = NS_OK;
 
   nsRefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
+  nsCOMPtr<nsIDOMElement> element;
   nsCOMPtr<nsIDocument> doc;
   if (owner) {
+    rv = owner->GetDOMElement(getter_AddRefs(element));
+    NS_ENSURE_SUCCESS(rv, rv);
     rv = owner->GetDocument(getter_AddRefs(doc));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -649,21 +653,32 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
   nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryReferent(mWeakPtrChannelCallbacks);
   nsCOMPtr<nsILoadGroup> loadGroup = do_QueryReferent(mWeakPtrChannelLoadGroup);
 
-  nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
-  if (!principal) {
-    principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                             mURL,
-                             doc,
-                             principal,
-                             nsILoadInfo::SEC_NORMAL,
-                             nsIContentPolicy::TYPE_OTHER,
-                             loadGroup,
-                             callbacks);
+  nsCOMPtr<nsINode> requestingNode(do_QueryInterface(element));
+  if (requestingNode) {
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       mURL,
+                       requestingNode,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER,
+                       loadGroup,
+                       callbacks);
+  }
+  else {
+    // in this else branch we really don't know where the load is coming
+    // from and in fact should use something better than just using
+    // a nullPrincipal as the loadingPrincipal.
+    nsCOMPtr<nsIPrincipal> principal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       mURL,
+                       principal,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER,
+                       loadGroup,
+                       callbacks);
+  }
 
   if (NS_FAILED(rv))
     return rv;
