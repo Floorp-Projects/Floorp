@@ -952,7 +952,7 @@ void nsNPAPIPluginInstance::ReleaseContentTexture(nsNPAPIPluginInstance::Texture
   mContentTexture->Release(aTextureInfo);
 }
 
-AndroidSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
+TemporaryRef<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceTexture()
 {
   if (!EnsureGLContext())
     return nullptr;
@@ -961,14 +961,15 @@ AndroidSurfaceTexture* nsNPAPIPluginInstance::CreateSurfaceTexture()
   if (!texture)
     return nullptr;
 
-  AndroidSurfaceTexture* surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
-                                                                 texture);
-  if (!surface)
+  RefPtr<AndroidSurfaceTexture> surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
+                                                                        texture);
+  if (!surface) {
     return nullptr;
+  }
 
   nsCOMPtr<nsIRunnable> frameCallback = NS_NewRunnableMethod(this, &nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable);
   surface->SetFrameAvailableCallback(frameCallback);
-  return surface;
+  return surface.forget();
 }
 
 void nsNPAPIPluginInstance::OnSurfaceTextureFrameAvailable()
@@ -1009,9 +1010,10 @@ nsNPAPIPluginInstance::AsSurfaceTexture()
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
 {
-  AndroidSurfaceTexture* surface = CreateSurfaceTexture();
-  if (!surface)
+  RefPtr<AndroidSurfaceTexture> surface = CreateSurfaceTexture();
+  if (!surface) {
     return nullptr;
+  }
 
   VideoInfo* info = new VideoInfo(surface);
 

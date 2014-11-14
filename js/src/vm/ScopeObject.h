@@ -940,7 +940,7 @@ class DebugScopes
     static void onPopBlock(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc);
     static void onPopWith(AbstractFramePtr frame);
     static void onPopStrictEvalScope(AbstractFramePtr frame);
-    static void onCompartmentLeaveDebugMode(JSCompartment *c);
+    static void onCompartmentUnsetIsDebuggee(JSCompartment *c);
 };
 
 }  /* namespace js */

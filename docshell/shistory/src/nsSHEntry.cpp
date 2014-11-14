@@ -691,6 +691,27 @@ nsSHEntry::GetChildAt(int32_t aIndex, nsISHEntry ** aResult)
 }
 
 NS_IMETHODIMP
+nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry)
+{
+  NS_ENSURE_STATE(aNewEntry);
+
+  uint64_t docshellID;
+  aNewEntry->GetDocshellID(&docshellID);
+
+  uint64_t otherID;
+  for (int32_t i = 0; i < mChildren.Count(); ++i) {
+    if (mChildren[i] && NS_SUCCEEDED(mChildren[i]->GetDocshellID(&otherID)) &&
+        docshellID == otherID) {
+      mChildren[i]->SetParent(nullptr);
+      if (mChildren.ReplaceObjectAt(aNewEntry, i)) {
+        return aNewEntry->SetParent(this);
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsSHEntry::AddChildShell(nsIDocShellTreeItem *aShell)
 {
   NS_ASSERTION(aShell, "Null child shell added to history entry");

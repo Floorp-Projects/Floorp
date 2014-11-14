@@ -176,6 +176,7 @@ namespace jit {
     _(JSOP_GENERATOR)          \
     _(JSOP_INITIALYIELD)       \
     _(JSOP_YIELD)              \
+    _(JSOP_DEBUGAFTERYIELD)    \
     _(JSOP_FINALYIELDRVAL)     \
     _(JSOP_RESUME)             \
     _(JSOP_CALLEE)             \
