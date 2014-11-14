@@ -27,6 +27,10 @@ public final class SharedPreferencesHelper
 {
     public static final String LOGTAG = "GeckoAndSharedPrefs";
 
+    // Calculate this once, at initialization. isLoggable is too expensive to
+    // have in-line in each log call.
+    private static final boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
+
     private enum Scope {
         APP("app"),
         PROFILE("profile"),
@@ -214,7 +218,7 @@ public final class SharedPreferencesHelper
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if (Log.isLoggable(LOGTAG, Log.VERBOSE)) {
+            if (logVerbose) {
                 Log.v(LOGTAG, "Got onSharedPreferenceChanged");
             }
             try {
@@ -279,19 +283,19 @@ public final class SharedPreferencesHelper
         // overwriting an in-progress response.
         try {
             if (event.equals("SharedPreferences:Set")) {
-                if (Log.isLoggable(LOGTAG, Log.VERBOSE)) {
+                if (logVerbose) {
                     Log.v(LOGTAG, "Got SharedPreferences:Set message.");
                 }
                 handleSet(message);
             } else if (event.equals("SharedPreferences:Get")) {
-                if (Log.isLoggable(LOGTAG, Log.VERBOSE)) {
+                if (logVerbose) {
                     Log.v(LOGTAG, "Got SharedPreferences:Get message.");
                 }
                 JSONObject obj = new JSONObject();
                 obj.put("values", handleGet(message));
                 EventDispatcher.sendResponse(message, obj);
             } else if (event.equals("SharedPreferences:Observe")) {
-                if (Log.isLoggable(LOGTAG, Log.VERBOSE)) {
+                if (logVerbose) {
                     Log.v(LOGTAG, "Got SharedPreferences:Observe message.");
                 }
                 handleObserve(message);

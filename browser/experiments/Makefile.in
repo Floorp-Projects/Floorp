@@ -8,9 +8,8 @@ include $(topsrcdir)/config/rules.mk
 addondir = $(srcdir)/test/addons
 testdir = $(abspath $(DEPTH)/_tests/xpcshell/browser/experiments/test/xpcshell)
 
-libs::
+misc:: $(call mkdir_deps,$(testdir))
 	$(EXIT_ON_ERROR) \
-	$(NSINSTALL) -D $(testdir); \
 	for dir in $(addondir)/*; do \
 	  base=`basename $$dir`; \
 	  (cd $$dir && zip -qr $(testdir)/$$base.xpi *); \
