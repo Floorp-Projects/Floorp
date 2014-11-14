@@ -24,14 +24,14 @@ this.Preferences =
     this._cachedPrefBranch = null;
     if (isObject(args)) {
       if (args.branch)
-        this._prefBranch = args.branch;
+        this._branchStr = args.branch;
       if (args.defaultBranch)
         this._defaultBranch = args.defaultBranch;
       if (args.privacyContext)
         this._privacyContext = args.privacyContext;
     }
     else if (args)
-      this._prefBranch = args;
+      this._branchStr = args;
   };
 
   /**
@@ -278,7 +278,7 @@ this.Preferences =
    * @returns the wrapped observer
    */
   Preferences.observe = function(prefName, callback, thisObject) {
-    let fullPrefName = this._prefBranch + (prefName || "");
+    let fullPrefName = this._branchStr + (prefName || "");
 
     let observer = new PrefObserver(fullPrefName, callback, thisObject);
     Preferences._prefSvc.addObserver(fullPrefName, observer, true);
@@ -310,7 +310,7 @@ this.Preferences =
    *          the object being used as |this| when calling a Function callback
    */
   Preferences.ignore = function(prefName, callback, thisObject) {
-    let fullPrefName = this._prefBranch + (prefName || "");
+    let fullPrefName = this._branchStr + (prefName || "");
 
     // This seems fairly inefficient, but I'm not sure how much better we can
     // make it.  We could index by fullBranch, but we can't index by callback
@@ -345,7 +345,7 @@ this.Preferences =
    * instance provides access.
    * @private
    */
-  Preferences._prefBranch = "";
+  Preferences._branchStr = "";
 
   /**
    * The cached preferences branch object this instance encapsulates, or null.
@@ -364,8 +364,8 @@ this.Preferences =
       if (!this._cachedPrefBranch) {
         let prefSvc = Services.prefs;
         this._cachedPrefBranch = this._defaultBranch ?
-                                 prefSvc.getDefaultBranch(this._prefBranch) :
-                                 prefSvc.getBranch(this._prefBranch);
+                                 prefSvc.getDefaultBranch(this._branchStr) :
+                                 prefSvc.getBranch(this._branchStr);
       }
       return this._cachedPrefBranch;
     },
