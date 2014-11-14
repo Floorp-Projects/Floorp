@@ -1502,7 +1502,7 @@ nsEventStatus AsyncPanZoomController::OnPanBegin(const PanGestureInput& aEvent) 
     CancelAnimation();
   }
 
-  mPanGestureState = MakeUnique<InputBlockState>(this);
+  mPanGestureState = MakeUnique<InputBlockState>(this, true);
 
   mX.StartTouch(aEvent.mLocalPanStartPoint.x, aEvent.mTime);
   mY.StartTouch(aEvent.mLocalPanStartPoint.y, aEvent.mTime);
@@ -1580,7 +1580,7 @@ nsEventStatus AsyncPanZoomController::OnPanMomentumStart(const PanGestureInput& 
     CancelAnimation();
   }
 
-  mPanGestureState = MakeUnique<InputBlockState>(this);
+  mPanGestureState = MakeUnique<InputBlockState>(this, true);
 
   return nsEventStatus_eConsumeNoDefault;
 }

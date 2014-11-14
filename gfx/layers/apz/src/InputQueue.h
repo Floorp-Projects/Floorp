@@ -41,13 +41,24 @@ public:
    * See the documentation on APZCTreeManager::ReceiveInputEvent for info on
    * return values from this function, including |aOutInputBlockId|.
    */
-  nsEventStatus ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget, const InputData& aEvent, uint64_t* aOutInputBlockId);
+  nsEventStatus ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                  bool aTargetConfirmed,
+                                  const InputData& aEvent,
+                                  uint64_t* aOutInputBlockId);
   /**
    * This function should be invoked to notify the InputQueue when web content
    * decides whether or not it wants to cancel a block of events. The block
    * id to which this applies should be provided in |aInputBlockId|.
    */
   void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault);
+  /**
+   * This function should be invoked to notify the InputQueue once the target
+   * APZC to handle an input block has been confirmed. In practice this should
+   * generally be decidable upon receipt of the input event, but in some cases
+   * we may need to query the layout engine to know for sure. The input block
+   * this applies to should be specified via the |aInputBlockId| parameter.
+   */
+  void SetConfirmedTargetApzc(uint64_t aInputBlockId, const nsRefPtr<AsyncPanZoomController>& aTargetApzc);
   /**
    * This function should be invoked to notify the InputQueue of the touch-
    * action properties for the different touch points in an input block. The
@@ -76,9 +87,11 @@ public:
 
 private:
   ~InputQueue();
-  TouchBlockState* StartNewTouchBlock(const nsRefPtr<AsyncPanZoomController>& aTarget, bool aCopyAllowedTouchBehaviorFromCurrent);
-  void ScheduleContentResponseTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId);
-  void ContentResponseTimeout(const uint64_t& aInputBlockId);
+  TouchBlockState* StartNewTouchBlock(const nsRefPtr<AsyncPanZoomController>& aTarget,
+                                      bool aTargetConfirmed,
+                                      bool aCopyAllowedTouchBehaviorFromCurrent);
+  void ScheduleMainThreadTimeout(const nsRefPtr<AsyncPanZoomController>& aTarget, uint64_t aInputBlockId);
+  void MainThreadTimeout(const uint64_t& aInputBlockId);
   void ProcessPendingInputBlocks();
 
 private:

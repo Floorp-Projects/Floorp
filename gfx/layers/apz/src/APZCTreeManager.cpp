@@ -622,7 +622,10 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
             transformToApzc, panInput.mPanStartPoint);
         panInput.mLocalPanDisplacement = TransformVector<ParentLayerPixel>(
             transformToApzc, panInput.mPanDisplacement, panInput.mPanStartPoint);
-        result = mInputQueue->ReceiveInputEvent(apzc, panInput, aOutInputBlockId);
+        result = mInputQueue->ReceiveInputEvent(
+            apzc,
+            /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
+            panInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -642,7 +645,10 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         transformToApzc = GetScreenToApzcTransform(apzc);
         pinchInput.mLocalFocusPoint = TransformTo<ParentLayerPixel>(
             transformToApzc, pinchInput.mFocusPoint);
-        result = mInputQueue->ReceiveInputEvent(apzc, pinchInput, aOutInputBlockId);
+        result = mInputQueue->ReceiveInputEvent(
+            apzc,
+            /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
+            pinchInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -660,7 +666,10 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         transformToApzc = GetScreenToApzcTransform(apzc);
         tapInput.mLocalPoint = TransformTo<ParentLayerPixel>(
             transformToApzc, tapInput.mPoint);
-        result = mInputQueue->ReceiveInputEvent(apzc, tapInput, aOutInputBlockId);
+        result = mInputQueue->ReceiveInputEvent(
+            apzc,
+            /* aTargetConfirmed = */ hitResult == ApzcHitRegion,
+            tapInput, aOutInputBlockId);
 
         // Update the out-parameters so they are what the caller expects.
         apzc->GetGuid(aOutTargetGuid);
@@ -735,13 +744,19 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     mTouchCount = aInput.mTouches.Length();
     mHitResultForInputBlock = NoApzcHit;
     nsRefPtr<AsyncPanZoomController> apzc = GetTouchInputBlockAPZC(aInput, &mHitResultForInputBlock);
+    // XXX the following check assumes mHitResultForInputBlock == ApzcHitRegion
+    // (and that mApzcForInputBlock was the confirmed target of the previous
+    // input block). Eventually it would be better to move this into InputQueue
+    // and have it auto-generated when we start processing events in a new
+    // event block.
     if (apzc != mApzcForInputBlock) {
       // If we're moving to a different APZC as our input target, then send a cancel event
       // to the old one so that it clears its internal state. Otherwise it could get left
       // in the middle of a panning touch block (for example) and not clean up properly.
       if (mApzcForInputBlock) {
         MultiTouchInput cancel(MultiTouchInput::MULTITOUCH_CANCEL, 0, TimeStamp::Now(), 0);
-        mInputQueue->ReceiveInputEvent(mApzcForInputBlock, cancel, nullptr);
+        mInputQueue->ReceiveInputEvent(mApzcForInputBlock,
+            /* aTargetConfirmed = */ true, cancel, nullptr);
       }
       mApzcForInputBlock = apzc;
     }
@@ -793,7 +808,9 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
       touchData.mLocalScreenPoint = TransformTo<ParentLayerPixel>(
           transformToApzc, ScreenPoint(touchData.mScreenPoint));
     }
-    result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock, aInput, aOutInputBlockId);
+    result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock,
+        /* aTargetConfirmed = */ mHitResultForInputBlock == ApzcHitRegion,
+        aInput, aOutInputBlockId);
 
     // For computing the event to pass back to Gecko, use the up-to-date transforms.
     // This ensures that transformToApzc and transformToGecko are in sync
@@ -929,6 +946,14 @@ APZCTreeManager::ContentReceivedTouch(uint64_t aInputBlockId,
                                       bool aPreventDefault)
 {
   mInputQueue->ContentReceivedTouch(aInputBlockId, aPreventDefault);
+}
+
+void
+APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId,
+                               const ScrollableLayerGuid& aGuid)
+{
+  nsRefPtr<AsyncPanZoomController> target = GetTargetAPZC(aGuid);
+  mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
 
 void
