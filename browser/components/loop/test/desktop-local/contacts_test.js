@@ -75,6 +75,80 @@ describe("loop.contacts", function() {
           expect(addButton).to.not.equal(null);
           expect(addButton.textContent).to.eql(fakeAddContactButtonText);
         });
+        it("should have all fields required by default", function() {
+          var view = TestUtils.renderIntoDocument(
+            loop.contacts.ContactDetailsForm({mode: "add"}));
+          var nameInput = view.getDOMNode().querySelector("input[type='text']");
+          var telInput = view.getDOMNode().querySelector("input[type='tel']");
+          var emailInput = view.getDOMNode().querySelector("input[type='email']");
+
+          expect(nameInput.required).to.equal(true);
+          expect(emailInput.required).to.equal(true);
+          expect(telInput.required).to.equal(true);
+        });
+        it("should have email and tel required after a name is input", function() {
+          var view = TestUtils.renderIntoDocument(
+            loop.contacts.ContactDetailsForm({mode: "add"}));
+          var nameInput = view.getDOMNode().querySelector("input[type='text']");
+          TestUtils.Simulate.change(nameInput, {target: {value: "Jenny"}});
+          var telInput = view.getDOMNode().querySelector("input[type='tel']");
+          var emailInput = view.getDOMNode().querySelector("input[type='email']");
+
+          expect(nameInput.required).to.equal(true);
+          expect(emailInput.required).to.equal(true);
+          expect(telInput.required).to.equal(true);
+        });
+        it("should allow a contact with only a name and a phone number", function() {
+          var view = TestUtils.renderIntoDocument(
+            loop.contacts.ContactDetailsForm({mode: "add"}));
+          var nameInput = view.getDOMNode().querySelector("input[type='text']");
+          TestUtils.Simulate.change(nameInput, {target: {value: "Jenny"}});
+          var telInput = view.getDOMNode().querySelector("input[type='tel']");
+          TestUtils.Simulate.change(telInput, {target: {value: "867-5309"}});
+          var emailInput = view.getDOMNode().querySelector("input[type='email']");
+
+          expect(nameInput.checkValidity()).to.equal(true, "nameInput");
+          expect(emailInput.required).to.equal(false, "emailInput");
+          expect(telInput.checkValidity()).to.equal(true, "telInput");
+        });
+        it("should allow a contact with only a name and email", function() {
+          var view = TestUtils.renderIntoDocument(
+            loop.contacts.ContactDetailsForm({mode: "add"}));
+          var nameInput = view.getDOMNode().querySelector("input[type='text']");
+          TestUtils.Simulate.change(nameInput, {target: {value: "Example"}});
+          var emailInput = view.getDOMNode().querySelector("input[type='email']");
+          TestUtils.Simulate.change(emailInput, {target: {value: "test@example.com"}});
+          var telInput = view.getDOMNode().querySelector("input[type='tel']");
+
+          expect(nameInput.checkValidity()).to.equal(true);
+          expect(emailInput.checkValidity()).to.equal(true);
+          expect(telInput.required).to.equal(false);
+        });
+        it("should not allow a contact with only a name", function() {
+          var view = TestUtils.renderIntoDocument(
+            loop.contacts.ContactDetailsForm({mode: "add"}));
+          var nameInput = view.getDOMNode().querySelector("input[type='text']");
+          TestUtils.Simulate.change(nameInput, {target: {value: "Example"}});
+          var emailInput = view.getDOMNode().querySelector("input[type='email']");
+          var telInput = view.getDOMNode().querySelector("input[type='tel']");
+
+          expect(nameInput.checkValidity()).to.equal(true);
+          expect(emailInput.checkValidity()).to.equal(false);
+          expect(telInput.checkValidity()).to.equal(false);
+        });
+        it("should not allow a contact without name", function() {
+          var view = TestUtils.renderIntoDocument(
+            loop.contacts.ContactDetailsForm({mode: "add"}));
+          var nameInput = view.getDOMNode().querySelector("input[type='text']");
+          var emailInput = view.getDOMNode().querySelector("input[type='email']");
+          TestUtils.Simulate.change(emailInput, {target: {value: "test@example.com"}});
+          var telInput = view.getDOMNode().querySelector("input[type='tel']");
+          TestUtils.Simulate.change(telInput, {target: {value: "867-5309"}});
+
+          expect(nameInput.checkValidity()).to.equal(false);
+          expect(emailInput.checkValidity()).to.equal(true);
+          expect(telInput.checkValidity()).to.equal(true);
+        });
       });
       describe("edit mode", function() {
         it("should render 'edit' header", function() {
@@ -137,28 +211,21 @@ describe("loop.contacts", function() {
     it("should not set the value on the object if the new value is empty," +
        " it didn't exist before, and it is optional", function() {
           var contact = {};
-          loop.contacts._setPreferred(contact, {field: "fakeField", value: "", optional: true});
+          loop.contacts._setPreferred(contact, "fakeField", "");
 
           expect(contact).to.not.have.property("fakeField");
        });
     it("should clear the value on the object if the new value is empty," +
        " it existed before, and it is optional", function() {
           var contact = {fakeField: [{value: "foobar"}]};
-          loop.contacts._setPreferred(contact, {field: "fakeField", value: "", optional: true});
+          loop.contacts._setPreferred(contact, "fakeField", "");
 
           expect(contact["fakeField"][0].value).to.eql("");
        });
     it("should set the value on the object if the new value is empty," +
        " and it did not exist before", function() {
-          var contact = {};
-          loop.contacts._setPreferred(contact, {field: "fakeField", value: ""});
-
-          expect(contact).to.have.property("fakeField");
-       });
-    it("should set the value on the object if the new value is empty," +
-       " and it did not exist before", function() {
           var contact = {fakeField: [{value: "foobar"}]};
-          loop.contacts._setPreferred(contact, {field: "fakeField", value: "barbaz"});
+          loop.contacts._setPreferred(contact, "fakeField", "barbaz");
 
           expect(contact["fakeField"][0].value).to.eql("barbaz");
        });
