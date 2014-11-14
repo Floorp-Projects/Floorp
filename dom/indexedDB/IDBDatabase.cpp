@@ -39,9 +39,12 @@
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
+#include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
+#include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
 #include "nsThreadUtils.h"
 #include "ProfilerHelpers.h"
@@ -314,7 +317,7 @@ IDBDatabase::InvalidateInternal()
   AssertIsOnOwningThread();
 
   InvalidateMutableFiles();
-  AbortTransactions();
+  AbortTransactions(/* aShouldWarn */ true);
 
   CloseInternal();
 }
@@ -751,7 +754,7 @@ IDBDatabase::UnregisterTransaction(IDBTransaction* aTransaction)
 }
 
 void
-IDBDatabase::AbortTransactions()
+IDBDatabase::AbortTransactions(bool aShouldWarn)
 {
   AssertIsOnOwningThread();
 
@@ -759,27 +762,31 @@ IDBDatabase::AbortTransactions()
   {
   public:
     static void
-    AbortTransactions(nsTHashtable<nsPtrHashKey<IDBTransaction>>& aTable)
+    AbortTransactions(nsTHashtable<nsPtrHashKey<IDBTransaction>>& aTable,
+                      nsTArray<nsRefPtr<IDBTransaction>>& aAbortedTransactions)
     {
       const uint32_t count = aTable.Count();
       if (!count) {
         return;
       }
 
-      nsTArray<nsRefPtr<IDBTransaction>> transactions;
+      nsAutoTArray<nsRefPtr<IDBTransaction>, 20> transactions;
       transactions.SetCapacity(count);
 
       aTable.EnumerateEntries(Collect, &transactions);
 
       MOZ_ASSERT(transactions.Length() == count);
 
-      IDB_REPORT_INTERNAL_ERR();
-
       for (uint32_t index = 0; index < count; index++) {
-        nsRefPtr<IDBTransaction> transaction = transactions[index].forget();
+        nsRefPtr<IDBTransaction> transaction = Move(transactions[index]);
         MOZ_ASSERT(transaction);
 
         transaction->Abort(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+        // We only care about warning for write transactions.
+        if (transaction->GetMode() != IDBTransaction::READ_ONLY) {
+          aAbortedTransactions.AppendElement(Move(transaction));
+        }
       }
     }
 
@@ -798,7 +805,25 @@ IDBDatabase::AbortTransactions()
     }
   };
 
-  Helper::AbortTransactions(mTransactions);
+  nsAutoTArray<nsRefPtr<IDBTransaction>, 5> abortedTransactions;
+  Helper::AbortTransactions(mTransactions, abortedTransactions);
+
+  if (aShouldWarn && !abortedTransactions.IsEmpty()) {
+    static const char kWarningMessage[] = "IndexedDBTransactionAbortNavigation";
+
+    for (uint32_t count = abortedTransactions.Length(), index = 0;
+         index < count;
+         index++) {
+      nsRefPtr<IDBTransaction>& transaction = abortedTransactions[index];
+      MOZ_ASSERT(transaction);
+
+      nsString filename;
+      uint32_t lineNo;
+      transaction->GetCallerLocation(filename, &lineNo);
+
+      LogWarning(kWarningMessage, filename, lineNo);
+    }
+  }
 }
 
 PBackgroundIDBDatabaseFileChild*
@@ -1153,6 +1178,65 @@ IDBDatabase::Invalidate()
 
     InvalidateInternal();
   }
+}
+
+void
+IDBDatabase::LogWarning(const char* aMessageName,
+                        const nsAString& aFilename,
+                        uint32_t aLineNumber)
+{
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aMessageName);
+
+  // For now this is main-thread only.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsXPIDLString localizedMessage;
+  if (NS_WARN_IF(NS_FAILED(
+    nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                       aMessageName,
+                                       localizedMessage)))) {
+    return;
+  }
+
+  nsAutoCString category;
+  if (mFactory->IsChrome()) {
+    category.AssignLiteral("chrome ");
+  } else {
+    category.AssignLiteral("content ");
+  }
+  category.AppendLiteral("javascript");
+
+  nsCOMPtr<nsIConsoleService> consoleService =
+    do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+  MOZ_ASSERT(consoleService);
+
+  nsCOMPtr<nsIScriptError> scriptError =
+    do_CreateInstance(NS_SCRIPTERROR_CONTRACTID);
+  MOZ_ASSERT(consoleService);
+
+  if (mFactory->GetParentObject()) {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      scriptError->InitWithWindowID(localizedMessage,
+                                    aFilename,
+                                    /* aSourceLine */ EmptyString(),
+                                    aLineNumber,
+                                    /* aColumnNumber */ 0,
+                                    nsIScriptError::warningFlag,
+                                    category,
+                                    mFactory->InnerWindowID())));
+  } else {
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+      scriptError->Init(localizedMessage,
+                        aFilename,
+                        /* aSourceLine */ EmptyString(),
+                        aLineNumber,
+                        /* aColumnNumber */ 0,
+                        nsIScriptError::warningFlag,
+                        category.get())));
+  }
+
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(consoleService->LogMessage(scriptError)));
 }
 
 NS_IMPL_ADDREF_INHERITED(IDBDatabase, IDBWrapperCache)
