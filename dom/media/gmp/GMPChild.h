@@ -10,6 +10,7 @@
 #include "GMPSharedMemManager.h"
 #include "GMPTimerChild.h"
 #include "GMPStorageChild.h"
+#include "GMPLoader.h"
 #include "gmp-async-shutdown.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
@@ -29,7 +30,6 @@ public:
             base::ProcessHandle aParentProcessHandle,
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
-  bool LoadPluginLibrary(const std::string& aPluginPath);
 #ifdef XP_WIN
   bool PreLoadLibraries(const std::string& aPluginPath);
 #endif
@@ -45,11 +45,13 @@ public:
   // GMPAsyncShutdownHost
   void ShutdownComplete() MOZ_OVERRIDE;
 
-private:
-
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   void StartMacSandbox();
 #endif
+
+private:
+
+  bool GetLibPath(nsACString& aOutLibPath);
 
   virtual bool RecvSetNodeId(const nsCString& aNodeId) MOZ_OVERRIDE;
   virtual bool RecvStartPlugin() MOZ_OVERRIDE;
@@ -85,18 +87,19 @@ private:
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
   virtual void ProcessingError(Result aWhat) MOZ_OVERRIDE;
 
+  GMPErr GetAPI(const char* aAPIName, void* aHostAPI, void** aPluginAPI);
+
   GMPAsyncShutdown* mAsyncShutdown;
   nsRefPtr<GMPTimerChild> mTimerChild;
   nsRefPtr<GMPStorageChild> mStorage;
 
-  PRLibrary* mLib;
-  GMPGetAPIFunc mGetAPIFunc;
   MessageLoop* mGMPMessageLoop;
   std::string mPluginPath;
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   nsCString mPluginBinaryPath;
 #endif
   std::string mNodeId;
+  GMPLoader* mGMPLoader;
 };
 
 } // namespace gmp
