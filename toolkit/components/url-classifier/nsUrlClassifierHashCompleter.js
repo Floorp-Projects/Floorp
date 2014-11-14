@@ -176,7 +176,7 @@ HashCompleterRequest.prototype = {
     this._requests.push({
       partialHash: aPartialHash,
       callback: aCallback,
-      responses: [],
+      responses: []
     });
   },
 
@@ -222,6 +222,10 @@ HashCompleterRequest.prototype = {
     let uri = Services.io.newURI(this.gethashUrl, null, null);
     let channel = Services.io.newChannelFromURI(uri);
     channel.loadFlags = loadFlags;
+
+    // Disable keepalive.
+    let httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+    httpChannel.setRequestHeader("Connection", "close", false);
 
     this._channel = channel;
 
@@ -365,6 +369,7 @@ HashCompleterRequest.prototype = {
       request.callback.completionFinished(Cr.NS_OK);
     }
   },
+
   notifyFailure: function HCR_notifyFailure(aStatus) {
     dump("hashcompleter: notifying failure\n");
     for (let i = 0; i < this._requests.length; i++) {
