@@ -205,7 +205,7 @@ BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
     AutoIdVector props(cx);
     if ((flags & JSITER_OWNONLY)
         ? !getOwnEnumerablePropertyKeys(cx, proxy, props)
-        : !enumerate(cx, proxy, props)) {
+        : !getEnumerablePropertyKeys(cx, proxy, props)) {
         return false;
     }
 

@@ -125,6 +125,20 @@ AppendToString(std::stringstream& aStream, const nsIntRegion& r,
 }
 
 void
+AppendToString(std::stringstream& aStream, const EventRegions& e,
+               const char* pfx, const char* sfx)
+{
+  aStream << pfx << "{";
+  if (!e.mHitRegion.IsEmpty()) {
+    AppendToString(aStream, e.mHitRegion, " hitregion=", "");
+  }
+  if (!e.mDispatchToContentHitRegion.IsEmpty()) {
+    AppendToString(aStream, e.mDispatchToContentHitRegion, " dispatchtocontentregion=", "");
+  }
+  aStream << "}" << sfx;
+}
+
+void
 AppendToString(std::stringstream& aStream, const nsIntSize& sz,
                const char* pfx, const char* sfx)
 {

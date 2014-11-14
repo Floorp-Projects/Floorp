@@ -3070,23 +3070,35 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   if (NS_FAILED(rv))
     return rv;
 
-  if (!principal) {
-    principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   // @arg loadgroup:
   // do not add this internal plugin's channel on the
   // load group otherwise this channel could be canceled
   // form |nsDocShell::OnLinkClickSync| bug 166613
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannelInternal(getter_AddRefs(channel),
-                             url,
-                             doc,
-                             principal,
-                             nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
-                             nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
-                             nullptr,  // aLoadGroup 
-                             listenerPeer);
+  nsCOMPtr<nsINode> requestingNode(do_QueryInterface(element));
+  if (requestingNode) {
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       url,
+                       requestingNode,
+                       nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                       nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+                       nullptr,  // aLoadGroup
+                       listenerPeer);
+  }
+  else {
+    // in this else branch we really don't know where the load is coming
+    // from and in fact should use something better than just using
+    // a nullPrincipal as the loadingPrincipal.
+    principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       url,
+                       principal,
+                       nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                       nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+                       nullptr,  // aLoadGroup
+                       listenerPeer);
+  }
 
   if (NS_FAILED(rv))
     return rv;
