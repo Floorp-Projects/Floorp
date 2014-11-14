@@ -45,6 +45,15 @@ static const char16_t OPEN_CURL    = '{';
 static const char16_t CLOSE_CURL   = '}';
 static const char16_t NUMBER_SIGN  = '#';
 static const char16_t QUESTIONMARK = '?';
+static const char16_t PERCENT_SIGN = '%';
+static const char16_t EXCLAMATION  = '!';
+static const char16_t DOLLAR       = '$';
+static const char16_t AMPERSAND    = '&';
+static const char16_t OPENBRACE    = '(';
+static const char16_t CLOSINGBRACE = ')';
+static const char16_t COMMA        = ',';
+static const char16_t EQUALS       = '=';
+static const char16_t ATSYMBOL     = '@';
 
 static uint32_t kSubHostPathCharacterCutoff = 512;
 
@@ -140,6 +149,14 @@ isNumberToken(char16_t aSymbol)
   return (aSymbol >= '0' && aSymbol <= '9');
 }
 
+bool
+isValidHexDig(char16_t aHexDig)
+{
+  return (isNumberToken(aHexDig) ||
+          (aHexDig >= 'A' && aHexDig <= 'F') ||
+          (aHexDig >= 'a' && aHexDig <= 'f'));
+}
+
 void
 nsCSPParser::resetCurChar(const nsAString& aToken)
 {
@@ -157,12 +174,116 @@ nsCSPParser::atEndOfPath()
   return (atEnd() || peek(QUESTIONMARK) || peek(NUMBER_SIGN));
 }
 
+void
+nsCSPParser::percentDecodeStr(const nsAString& aEncStr, nsAString& outDecStr)
+{
+  outDecStr.Truncate();
+
+  // helper function that should not be visible outside this methods scope
+  struct local {
+    static inline char16_t convertHexDig(char16_t aHexDig) {
+      if (isNumberToken(aHexDig)) {
+        return aHexDig - '0';
+      }
+      if (aHexDig >= 'A' && aHexDig <= 'F') {
+        return aHexDig - 'A' + 10;
+      }
+      // must be a lower case character
+      // (aHexDig >= 'a' && aHexDig <= 'f')
+      return aHexDig - 'a' + 10;
+    }
+  };
+
+  const char16_t *cur, *end, *hexDig1, *hexDig2;
+  cur = aEncStr.BeginReading();
+  end = aEncStr.EndReading();
+
+  while (cur != end) {
+    // if it's not a percent sign then there is
+    // nothing to do for that character
+    if (*cur != PERCENT_SIGN) {
+      outDecStr.Append(*cur);
+      cur++;
+      continue;
+    }
+
+    // get the two hexDigs following the '%'-sign
+    hexDig1 = cur + 1;
+    hexDig2 = cur + 2;
+
+    // if there are no hexdigs after the '%' then
+    // there is nothing to do for us.
+    if (hexDig1 == end || hexDig2 == end ||
+        !isValidHexDig(*hexDig1) ||
+        !isValidHexDig(*hexDig2)) {
+      outDecStr.Append(PERCENT_SIGN);
+      cur++;
+      continue;
+    }
+
+    // decode "% hexDig1 hexDig2" into a character.
+    char16_t decChar = (local::convertHexDig(*hexDig1) << 4) +
+                       local::convertHexDig(*hexDig2);
+    outDecStr.Append(decChar);
+
+    // increment 'cur' to after the second hexDig
+    cur = ++hexDig2;
+  }
+}
+
+// unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
 bool
-nsCSPParser::atValidPathChar()
+nsCSPParser::atValidUnreservedChar()
 {
   return (peek(isCharacterToken) || peek(isNumberToken) ||
           peek(DASH) || peek(DOT) ||
           peek(UNDERLINE) || peek(TILDE));
+}
+
+// sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+//                 / "*" / "+" / "," / ";" / "="
+// Please note that even though ',' and ';' appear to be
+// valid sub-delims according to the RFC production of paths,
+// both can not appear here by itself, they would need to be
+// pct-encoded in order to be part of the path.
+bool
+nsCSPParser::atValidSubDelimChar()
+{
+  return (peek(EXCLAMATION) || peek(DOLLAR) || peek(AMPERSAND) ||
+          peek(SINGLEQUOTE) || peek(OPENBRACE) || peek(CLOSINGBRACE) ||
+          peek(WILDCARD) || peek(PLUS) || peek(EQUALS));
+}
+
+// pct-encoded   = "%" HEXDIG HEXDIG
+bool
+nsCSPParser::atValidPctEncodedChar()
+{
+  const char16_t* pctCurChar = mCurChar;
+
+  if ((pctCurChar + 2) >= mEndChar) {
+    // string too short, can't be a valid pct-encoded char.
+    return false;
+  }
+
+  // Any valid pct-encoding must follow the following format:
+  // "% HEXDIG HEXDIG"
+  if (PERCENT_SIGN != *pctCurChar ||
+     !isValidHexDig(*(pctCurChar+1)) ||
+     !isValidHexDig(*(pctCurChar+2))) {
+    return false;
+  }
+  return true;
+}
+
+// pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
+// http://tools.ietf.org/html/rfc3986#section-3.3
+bool
+nsCSPParser::atValidPathChar()
+{
+  return (atValidUnreservedChar() ||
+          atValidSubDelimChar() ||
+          atValidPctEncodedChar() ||
+          peek(COLON) || peek(ATSYMBOL));
 }
 
 void
@@ -253,10 +374,15 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
   // is longer than 512 characters, or also to avoid endless loops
   // in case we are parsing unrecognized characters in the following loop.
   uint32_t charCounter = 0;
+  nsString pctDecodedSubPath;
 
   while (!atEndOfPath()) {
     if (peek(SLASH)) {
-      aCspHost->appendPath(mCurValue);
+      // before appendig any additional portion of a subpath we have to pct-decode
+      // that portion of the subpath. atValidPathChar() already verified a correct
+      // pct-encoding, now we can safely decode and append the decoded-sub path.
+      percentDecodeStr(mCurValue, pctDecodedSubPath);
+      aCspHost->appendPath(pctDecodedSubPath);
       // Resetting current value since we are appending parts of the path
       // to aCspHost, e.g; "http://www.example.com/path1/path2" then the
       // first part is "/path1", second part "/path2"
@@ -269,12 +395,23 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
                                params, ArrayLength(params));
       return false;
     }
+    // potentially we have encountred a valid pct-encoded character in atValidPathChar();
+    // if so, we have to account for "% HEXDIG HEXDIG" and advance the pointer past
+    // the pct-encoded char.
+    if (peek(PERCENT_SIGN)) {
+      advance();
+      advance();
+    }
     advance();
     if (++charCounter > kSubHostPathCharacterCutoff) {
       return false;
     }
   }
-  aCspHost->appendPath(mCurValue);
+  // before appendig any additional portion of a subpath we have to pct-decode
+  // that portion of the subpath. atValidPathChar() already verified a correct
+  // pct-encoding, now we can safely decode and append the decoded-sub path.
+  percentDecodeStr(mCurValue, pctDecodedSubPath);
+  aCspHost->appendPath(pctDecodedSubPath);
   resetCurValue();
   return true;
 }
@@ -301,7 +438,9 @@ nsCSPParser::path(nsCSPHostSrc* aCspHost)
   if (atEndOfPath()) {
     // one slash right after host [port] is also considered a path, e.g.
     // www.example.com/ should result in www.example.com/
-    aCspHost->appendPath(mCurValue);
+    // please note that we do not have to perform any pct-decoding here
+    // because we are just appending a '/' and not any actual chars.
+    aCspHost->appendPath(NS_LITERAL_STRING("/"));
     return true;
   }
   // path can begin with "/" but not "//"

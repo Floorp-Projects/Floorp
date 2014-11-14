@@ -128,8 +128,13 @@ class nsCSPParser {
     bool            path(nsCSPHostSrc* aCspHost);
 
     bool subHost();                                       // helper function to parse subDomains
+    bool atValidUnreservedChar();                         // helper function to parse unreserved
+    bool atValidSubDelimChar();                           // helper function to parse sub-delims
+    bool atValidPctEncodedChar();                         // helper function to parse pct-encoded
     bool subPath(nsCSPHostSrc* aCspHost);                 // helper function to parse paths
     void reportURIList(nsTArray<nsCSPBaseSrc*>& outSrcs); // helper function to parse report-uris
+    void percentDecodeStr(const nsAString& aEncStr,       // helper function to percent-decode
+                          nsAString& outDecStr);
 
     inline bool atEnd()
     {
