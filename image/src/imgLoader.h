@@ -149,7 +149,7 @@ private: // methods
   void SetHasNoProxies(bool hasNoProxies);
 
   // Private, unimplemented copy constructor.
-  imgCacheEntry(const imgCacheEntry &);
+  imgCacheEntry(const imgCacheEntry&);
 
 private: // data
   nsAutoRefCnt mRefCnt;

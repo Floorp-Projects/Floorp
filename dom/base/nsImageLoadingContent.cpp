@@ -1007,8 +1007,8 @@ void
 nsImageLoadingContent::UpdateImageState(bool aNotify)
 {
   if (mStateChangerDepth > 0) {
-    // Ignore this call; we'll update our state when the outermost state
-    // changer is destroyed. Need this to work around the fact that some libpr0n
+    // Ignore this call; we'll update our state when the outermost state changer
+    // is destroyed. Need this to work around the fact that some ImageLib
     // stuff is actually sync and hence we can get OnStopDecode called while
     // we're still under LoadImage, and OnStopDecode doesn't know anything about
     // aNotify.

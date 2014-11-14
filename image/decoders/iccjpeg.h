@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * iccprofile.h
+ * iccjpeg.h
  *
  * This file provides code to read and write International Color Consortium
  * (ICC) device profiles embedded in JFIF JPEG image files.  The ICC has
@@ -20,7 +20,10 @@
  * for details.
  */
 
-#include <stdio.h>		/* needed to define "FILE", "NULL" */
+#ifndef ICCJPEG_H
+#define ICCJPEG_H
+
+#include <stdio.h>  /* needed to define "FILE", "NULL" */
 #include "jpeglib.h"
 
 /*
@@ -59,5 +62,6 @@ extern void setup_read_icc_profile JPP((j_decompress_ptr cinfo));
  */
 
 extern boolean read_icc_profile JPP((j_decompress_ptr cinfo,
-				     JOCTET **icc_data_ptr,
-				     unsigned int *icc_data_len));
+                                     JOCTET** icc_data_ptr,
+                                     unsigned int* icc_data_len));
+#endif // ICCJPEG_H

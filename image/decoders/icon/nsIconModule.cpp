@@ -12,10 +12,11 @@
 #include "nsIconChannel.h"
 
 // objects that just require generic constructors
-/******************************************************************************
- * Protocol CIDs
- */
-#define NS_ICONPROTOCOL_CID   { 0xd0f9db12, 0x249c, 0x11d5, { 0x99, 0x5, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } } 
+//*****************************************************************************
+// Protocol CIDs
+
+#define NS_ICONPROTOCOL_CID { 0xd0f9db12, 0x249c, 0x11d5, \
+                              { 0x99, 0x5, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
 

@@ -27,8 +27,8 @@ NS_IMPL_ISUPPORTS(nsIconChannel,
                   nsIChannel)
 
 static nsresult
-moz_qicon_to_channel(QImage *image, nsIURI *aURI,
-                     nsIChannel **aChannel)
+moz_qicon_to_channel(QImage* image, nsIURI* aURI,
+                     nsIChannel** aChannel)
 {
   NS_ENSURE_ARG_POINTER(image);
 
@@ -40,18 +40,18 @@ moz_qicon_to_channel(QImage *image, nsIURI *aURI,
 
   const int n_channels = 4;
   long int buf_size = 2 + n_channels * height * width;
-  uint8_t * const buf = (uint8_t*)NS_Alloc(buf_size);
+  uint8_t* const buf = (uint8_t*)NS_Alloc(buf_size);
   NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
-  uint8_t *out = buf;
+  uint8_t* out = buf;
 
   *(out++) = width;
   *(out++) = height;
 
-  const uchar * const pixels = image->bits();
+  const uchar* const pixels = image->bits();
   int rowextra = image->bytesPerLine() - width * n_channels;
 
   // encode the RGB data and the A data
-  const uchar * in = pixels;
+  const uchar* in = pixels;
   for (int y = 0; y < height; ++y, in += rowextra) {
     for (int x = 0; x < width; ++x) {
       uint8_t r = *(in++);
@@ -117,10 +117,14 @@ nsIconChannel::Init(nsIURI* aURI)
   iconURI->GetIconState(iconStateString);
   bool disabled = iconStateString.EqualsLiteral("disabled");
 
-  // This is a workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=662299
-  // Try to find corresponding freedesktop icon and fallback to empty QIcon if failed.
-  QIcon icon = QIcon::fromTheme(QString(stockIcon.get()).replace("gtk-", "edit-"));
-  QPixmap pixmap = icon.pixmap(desiredImageSize, desiredImageSize, disabled ? QIcon::Disabled : QIcon::Normal);
+  // This is a workaround for
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=662299
+  // Try to find corresponding freedesktop icon and fallback to empty QIcon
+  // if failed.
+  QIcon icon = QIcon::fromTheme(QString(stockIcon.get()).replace("gtk-",
+                                                                 "edit-"));
+  QPixmap pixmap = icon.pixmap(desiredImageSize, desiredImageSize,
+                               disabled ? QIcon::Disabled : QIcon::Normal);
 
   QImage image = pixmap.toImage();
 

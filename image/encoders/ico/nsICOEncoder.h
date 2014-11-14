@@ -35,24 +35,24 @@ public:
   NS_DECL_NSIASYNCINPUTSTREAM
 
   nsICOEncoder();
-  
+
   // Obtains the width of the icon directory entry
   uint32_t GetRealWidth() const
   {
-    return mICODirEntry.mWidth == 0 ? 256 : mICODirEntry.mWidth; 
+    return mICODirEntry.mWidth == 0 ? 256 : mICODirEntry.mWidth;
   }
 
   // Obtains the height of the icon directory entry
   uint32_t GetRealHeight() const
   {
-    return mICODirEntry.mHeight == 0 ? 256 : mICODirEntry.mHeight; 
+    return mICODirEntry.mHeight == 0 ? 256 : mICODirEntry.mHeight;
   }
 
 protected:
   ~nsICOEncoder();
 
-  nsresult ParseOptions(const nsAString& aOptions, uint32_t* bpp, 
-                        bool *usePNG);
+  nsresult ParseOptions(const nsAString& aOptions, uint32_t* bpp,
+                        bool* usePNG);
   void NotifyListener();
 
   // Initializes the icon file header mICOFileHeader
@@ -87,7 +87,7 @@ protected:
   uint32_t mImageBufferSize;
   // Keeps track of the number of bytes in the image buffer which are read
   uint32_t mImageBufferReadPoint;
-  // Stores true if the image is done being encoded  
+  // Stores true if the image is done being encoded
   bool mFinished;
   // Stores true if the contained image is a PNG
   bool mUsePNG;

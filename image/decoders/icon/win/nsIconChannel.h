@@ -46,19 +46,22 @@ protected:
   int64_t          mContentLength;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-  nsCOMPtr<nsISupports>  mOwner; 
+  nsCOMPtr<nsISupports>  mOwner;
   nsCOMPtr<nsILoadInfo>  mLoadInfo;
 
   nsCOMPtr<nsIInputStreamPump> mPump;
   nsCOMPtr<nsIStreamListener>  mListener;
 
-  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, uint32_t * aDesiredImageSize, nsCString &aContentType, nsCString &aFileExtension);
-  nsresult GetHIconFromFile(HICON *hIcon);
+  nsresult ExtractIconInfoFromUrl(nsIFile** aLocalFile,
+                                  uint32_t* aDesiredImageSize,
+                                  nsCString& aContentType,
+                                  nsCString& aFileExtension);
+  nsresult GetHIconFromFile(HICON* hIcon);
   nsresult MakeInputStream(nsIInputStream** _retval, bool nonBlocking);
 
   // Functions specific to Vista and above
 protected:
-  nsresult GetStockHIcon(nsIMozIconURI *aIconURI, HICON *hIcon);
+  nsresult GetStockHIcon(nsIMozIconURI* aIconURI, HICON* hIcon);
 };
 
 #endif /* nsIconChannel_h___ */
