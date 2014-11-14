@@ -231,7 +231,7 @@ HwcComposer2D::RunVsyncEventControl(bool aEnable)
 void
 HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
 {
-    TimeStamp vsyncTime = mozilla::TimeStamp(aVsyncTimestamp);
+    TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(aVsyncTimestamp);
     nsecs_t vsyncInterval = aVsyncTimestamp - mLastVsyncTime;
     if (vsyncInterval < 16000000 || vsyncInterval > 17000000) {
       LOGE("Non-uniform vsync interval: %lld\n", vsyncInterval);
