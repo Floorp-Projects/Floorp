@@ -21,8 +21,6 @@ public:
   nsVolumeStat(const nsAString& aPath);
 
 private:
-  ~nsVolumeStat();
-
   struct statfs mStat;
 };
 

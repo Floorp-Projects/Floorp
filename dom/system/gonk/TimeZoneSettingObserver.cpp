@@ -26,6 +26,7 @@
 #include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #undef LOG
+#undef ERR
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Time Zone Setting" , ## args)
 #define ERR(args...)  __android_log_print(ANDROID_LOG_ERROR, "Time Zone Setting" , ## args)
 

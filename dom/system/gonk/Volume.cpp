@@ -87,6 +87,38 @@ Volume::Volume(const nsCSubstring& aName)
 }
 
 void
+Volume::Dump(const char* aLabel) const
+{
+  LOG("%s: Volume: %s (%d) is %s and %s @ %s gen %d locked %d",
+      aLabel,
+      NameStr(),
+      Id(),
+      StateStr(),
+      MediaPresent() ? "inserted" : "missing",
+      MountPoint().get(),
+      MountGeneration(),
+      (int)IsMountLocked());
+  LOG("%s:   Sharing %s Mounting %s Formating %s Unmounting %s",
+      aLabel,
+      CanBeShared() ? (IsSharingEnabled() ? (IsSharing() ? "en-y" : "en-n")
+                                          : "dis")
+                    : "x",
+      IsMountRequested() ? "req" : "n",
+      IsFormatRequested() ? (IsFormatting() ? "req-y" : "req-n")
+                          : (IsFormatting() ? "y" : "n"),
+      IsUnmountRequested() ? (IsUnmounting() ? "req-y" : "req-n")
+                           : (IsUnmounting() ? "y" : "n"));
+}
+
+void Volume::SetFakeVolume(const nsACString& aMountPoint)
+{
+  this->mMountLocked = false;
+  this->mCanBeShared = false;
+  this->mMountPoint = aMountPoint;
+  SetState(nsIVolume::STATE_MOUNTED);
+}
+
+void
 Volume::SetIsSharing(bool aIsSharing)
 {
   if (aIsSharing == mIsSharing) {
