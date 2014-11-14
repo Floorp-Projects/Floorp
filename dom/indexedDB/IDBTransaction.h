@@ -37,6 +37,7 @@ class BackgroundTransactionChild;
 class BackgroundVersionChangeTransactionChild;
 class IDBDatabase;
 class IDBObjectStore;
+class IDBOpenDBRequest;
 class IDBRequest;
 class IndexMetadata;
 class ObjectStoreSpec;
@@ -94,6 +95,9 @@ private:
   nsresult mAbortCode;
   uint32_t mPendingRequestCount;
 
+  nsString mFilename;
+  uint32_t mLineNo;
+
   ReadyState mReadyState;
   Mode mMode;
 
@@ -109,6 +113,7 @@ public:
   static already_AddRefed<IDBTransaction>
   CreateVersionChange(IDBDatabase* aDatabase,
                       BackgroundVersionChangeTransactionChild* aActor,
+                      IDBOpenDBRequest* aOpenRequest,
                       int64_t aNextObjectStoreId,
                       int64_t aNextIndexId);
 
@@ -183,6 +188,9 @@ public:
     AssertIsOnOwningThread();
     return NS_FAILED(mAbortCode);
   }
+
+  void
+  GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const;
 
   // 'Get' prefix is to avoid name collisions with the enum
   Mode
