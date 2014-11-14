@@ -277,11 +277,11 @@ let AllPages = {
    * @param aReason The reason for updating all pages.
    */
   update(aExceptPage, aReason = "") {
-    this._pages.forEach(function (aPage) {
-      if (aExceptPage != aPage) {
-        aPage.update(aReason);
+    for (let page of this._pages.slice()) {
+      if (aExceptPage != page) {
+        page.update(aReason);
       }
-    });
+    }
   },
 
   /**
