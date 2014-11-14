@@ -15,10 +15,12 @@
 js::Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
 {
     MOZ_ASSERT_IF(frame.isInterpreterFrame(), frame.asInterpreterFrame() == cx->interpreterFrame());
+    MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
-    bool evalTraps = frame.isEvalFrame() &&
-                     frame.script()->hasAnyBreakpointsOrStepMode();
-    if (cx->compartment()->debugMode() || evalTraps)
+    mozilla::DebugOnly<bool> evalTraps = frame.isEvalFrame() &&
+                                         frame.script()->hasAnyBreakpointsOrStepMode();
+    MOZ_ASSERT_IF(evalTraps, frame.isDebuggee());
+    if (frame.isDebuggee())
         ok = slowPathOnLeaveFrame(cx, frame, ok);
     return ok;
 }
@@ -28,6 +30,32 @@ js::Debugger::fromJSObject(JSObject *obj)
 {
     MOZ_ASSERT(js::GetObjectClass(obj) == &jsclass);
     return (Debugger *) obj->as<NativeObject>().getPrivate();
+}
+
+/* static */ JSTrapStatus
+js::Debugger::onEnterFrame(JSContext *cx, AbstractFramePtr frame)
+{
+    MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
+    if (!frame.isDebuggee())
+        return JSTRAP_CONTINUE;
+    return slowPathOnEnterFrame(cx, frame);
+}
+
+/* static */ JSTrapStatus
+js::Debugger::onDebuggerStatement(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp)
+{
+    MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
+    return frame.isDebuggee()
+           ? dispatchHook(cx, vp, OnDebuggerStatement)
+           : JSTRAP_CONTINUE;
+}
+
+/* static */ JSTrapStatus
+js::Debugger::onExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
+{
+    if (!cx->compartment()->isDebuggee())
+        return JSTRAP_CONTINUE;
+    return slowPathOnExceptionUnwind(cx, frame);
 }
 
 #endif /* vm_Debugger_inl_h */

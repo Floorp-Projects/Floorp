@@ -3017,7 +3017,10 @@ EmitYieldOp(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
 
     SET_UINT24(bce->code(off), yieldIndex);
 
-    return bce->yieldOffsetList.append(bce->offset());
+    if (!bce->yieldOffsetList.append(bce->offset()))
+        return false;
+
+    return Emit1(cx, bce, JSOP_DEBUGAFTERYIELD) >= 0;
 }
 
 bool

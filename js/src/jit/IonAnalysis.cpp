@@ -3096,7 +3096,7 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
     // scripts (generators can be suspended when speculation fails).
     //
     // FIXME: Don't build arguments for ES6 generator expressions.
-    if (cx->compartment()->debugMode() || script->isGenerator())
+    if (scriptArg->isDebuggee() || script->isGenerator())
         return true;
 
     // If the script has dynamic name accesses which could reach 'arguments',

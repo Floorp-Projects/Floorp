@@ -10,6 +10,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
+import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.search.autocomplete.SearchBar;
 import org.mozilla.search.autocomplete.SuggestionsFragment;
@@ -101,7 +102,7 @@ public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
         suggestionsFragment = (SuggestionsFragment) getSupportFragmentManager().findFragmentById(R.id.suggestions);
         postSearchFragment = (PostSearchFragment)  getSupportFragmentManager().findFragmentById(R.id.postsearch);
 
-        searchEngineManager = new SearchEngineManager(this);
+        searchEngineManager = new SearchEngineManager(this, Distribution.init(this));
         searchEngineManager.setChangeCallback(this);
 
         // Initialize the fragments with the selected search engine.
@@ -279,7 +280,10 @@ public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
         searchEngineManager.getEngine(new SearchEngineCallback() {
             @Override
             public void execute(SearchEngine engine) {
-                postSearchFragment.startSearch(engine, query);
+                // TODO: If engine is null, we should show an error message.
+                if (engine != null) {
+                    postSearchFragment.startSearch(engine, query);
+                }
             }
         });
     }
@@ -293,6 +297,10 @@ public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
      */
     @Override
     public void execute(SearchEngine engine) {
+        // TODO: If engine is null, we should show an error message.
+        if (engine == null) {
+            return;
+        }
         this.engine = engine;
         suggestionsFragment.setEngine(engine);
         searchBar.setEngine(engine);

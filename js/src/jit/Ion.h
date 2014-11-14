@@ -201,10 +201,6 @@ size_t SizeOfIonData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf);
 void DestroyIonScripts(FreeOp *fop, JSScript *script);
 void TraceIonScripts(JSTracer* trc, JSScript *script);
 
-bool RematerializeAllFrames(JSContext *cx, JSCompartment *comp);
-bool UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
-                        AutoDebugModeInvalidation &invalidate);
-
 bool JitSupportsFloatingPoint();
 bool JitSupportsSimd();
 

@@ -175,6 +175,9 @@
 <string name="fxaccount_status_header">&fxaccount_status_header2;</string>
 <string name="fxaccount_status_signed_in_as">&fxaccount_status_signed_in_as;</string>
 <string name="fxaccount_status_auth_server">&fxaccount_status_auth_server;</string>
+<string name="fxaccount_status_sync_now">&fxaccount_status_sync_now;</string>
+<string name="fxaccount_status_syncing">&fxaccount_status_syncing;</string>
+<string name="fxaccount_status_last_synced">&remote_tabs_last_synced;</string>
 <string name="fxaccount_status_device_name">&fxaccount_status_device_name;</string>
 <string name="fxaccount_status_sync_server">&fxaccount_status_sync_server;</string>
 <string name="fxaccount_status_sync">&fxaccount_status_sync;</string>
@@ -216,6 +219,3 @@
 <string name="fxaccount_remove_account_dialog_message">&fxaccount_remove_account_dialog_message;</string>
 <string name="fxaccount_remove_account_toast">&fxaccount_remove_account_toast;</string>
 <string name="fxaccount_remove_account_menu_item">&fxaccount_remove_account_menu_item;</string>
-
-<!-- Find-In-Page strings -->
-<string name="find_matchcase">&find_matchcase;</string>

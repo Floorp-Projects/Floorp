@@ -189,9 +189,9 @@ class TextureImageTextureSourceOGL MOZ_FINAL : public DataTextureSource
                                              , public BigImageIterator
 {
 public:
-  explicit TextureImageTextureSourceOGL(gl::GLContext* aGL,
+  explicit TextureImageTextureSourceOGL(CompositorOGL *aCompositor,
                                         TextureFlags aFlags = TextureFlags::DEFAULT)
-    : mGL(aGL)
+    : mCompositor(aCompositor)
     , mFlags(aFlags)
     , mIterating(false)
   {}
@@ -265,7 +265,7 @@ public:
 
 protected:
   nsRefPtr<gl::TextureImage> mTexImage;
-  gl::GLContext* mGL;
+  RefPtr<CompositorOGL> mCompositor;
   TextureFlags mFlags;
   bool mIterating;
 };
