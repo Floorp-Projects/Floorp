@@ -23,6 +23,7 @@ parent:
 
   Init(URIParams     uri,
        PrincipalInfo requestingPrincipalInfo,
+       PrincipalInfo triggeringPrincipalInfo,
        uint32_t      securityFlags,
        uint32_t      contentPolicyType);
   AsyncOpen(URIParams             originalURI,

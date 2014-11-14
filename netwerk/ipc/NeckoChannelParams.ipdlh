@@ -52,6 +52,7 @@ struct HttpChannelOpenArgs
   bool                        allowSpdy;
   OptionalFileDescriptorSet   fds;
   PrincipalInfo               requestingPrincipalInfo;
+  PrincipalInfo               triggeringPrincipalInfo;
   uint32_t                    securityFlags;
   uint32_t                    contentPolicyType;
 };
@@ -78,6 +79,7 @@ struct FTPChannelOpenArgs
   nsCString                 entityID;
   OptionalInputStreamParams uploadStream;
   PrincipalInfo             requestingPrincipalInfo;
+  PrincipalInfo             triggeringPrincipalInfo;
   uint32_t                  securityFlags;
   uint32_t                  contentPolicyType;
 };

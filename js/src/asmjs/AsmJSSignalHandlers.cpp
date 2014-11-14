@@ -324,7 +324,7 @@ ContextToPC(CONTEXT *context)
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
 }
 
-#if defined(JS_CPU_X64)
+#if defined(JS_CODEGEN_X64)
 template <class T>
 static void
 SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
@@ -391,7 +391,7 @@ SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
     }
 }
 # endif  // !XP_MACOSX
-#endif // JS_CPU_X64
+#endif // JS_CODEGEN_X64
 
 #if defined(XP_WIN)
 
@@ -425,7 +425,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!module.containsFunctionPC(pc))
         return false;
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     void *faultingAddress = (void*)record->ExceptionInformation[1];
@@ -484,7 +484,7 @@ ContextToPC(x86_thread_state_t &state)
 # endif
 }
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
 static bool
 SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
                               const AsmJSHeapAccess &heapAccess)
@@ -818,7 +818,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     if (!module.containsFunctionPC(pc))
         return false;
 
-# if defined(JS_CPU_X64)
+# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     void *faultingAddress = info->si_addr;

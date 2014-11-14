@@ -1,0 +1,82 @@
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783213
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for the :active and :hover quirk</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+  <style type="text/css">
+    /* Should apply to all elements: */
+    #content :hover:first-of-type {
+      color: rgb(255, 0, 0);
+    }
+    #content :-moz-any(:hover) {
+      text-transform: lowercase;
+    }
+    #content :hover::after {
+      content: "any element";
+    }
+    #content :hover:first-of-type .child::after {
+      content: "any child";
+    }
+
+    /* Should apply only to links: */
+    #content :hover {
+      color: rgb(0, 255, 0) !important;
+      text-transform: uppercase !important;
+    }
+    #content :hover .child::after {
+      content: "link child" !important;
+    }
+  </style>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+    /** Test for the :active and :hover quirk **/
+    function test(element, isLink) {
+      if (!isLink)
+        var styles = {color: "rgb(255, 0, 0)", textTransform: "lowercase",
+                      childContent: '"any child"'};
+      else
+        var styles = {color: "rgb(0, 255, 0)", textTransform: "uppercase",
+                      childContent: '"link child"'};
+
+      // Trigger the :hover pseudo-class.
+      synthesizeMouseAtCenter(element, {type: "mousemove"});
+
+      var computedStyle = getComputedStyle(element);
+      is(computedStyle.color, styles.color, "Unexpected color value");
+      is(computedStyle.textTransform, styles.textTransform,
+         "Unexpected text-transform value");
+
+      computedStyle = getComputedStyle(element, "::after");
+      is(computedStyle.content, '"any element"',
+         "Unexpected pseudo-element content");
+
+      computedStyle = getComputedStyle(
+          element.getElementsByClassName("child")[0], "::after");
+      is(computedStyle.content, styles.childContent,
+         "Unexpected pseudo-element content for child");
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.waitForFocus(function() {
+      test(document.getElementById("span"), false);
+      test(document.getElementById("label"), false);
+      test(document.getElementById("link"), true);
+      SimpleTest.finish();
+    });
+  </script>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783213">Mozilla Bug 783213</a>
+  <p id="display"></p>
+  <div id="content">
+    <span id="span">Span<span class="child"></span></span><br>
+    <label id="label">Label<span class="child"></span></label><br>
+    <a id="link" href="#">Link<span class="child"></span></a>
+  </div>
+  <pre id="test"></pre>
+</body>
+</html>

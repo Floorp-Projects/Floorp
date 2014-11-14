@@ -17,8 +17,10 @@ add_task(function* () {
 
   info("Removing iframe.");
   yield inspector.walker.removeNode(iframe);
+  yield inspector.selection.once("detached-front");
 
   let body = yield getNodeFront("body", inspector);
+
   is(inspector.selection.nodeFront, body, "Selection is now the body node");
 
   yield inspector.once("inspector-updated");

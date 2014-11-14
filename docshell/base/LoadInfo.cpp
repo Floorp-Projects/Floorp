@@ -14,18 +14,22 @@
 
 namespace mozilla {
 
-LoadInfo::LoadInfo(nsIPrincipal* aPrincipal,
+LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
+                   nsIPrincipal* aTriggeringPrincipal,
                    nsINode* aLoadingContext,
                    nsSecurityFlags aSecurityFlags,
                    nsContentPolicyType aContentPolicyType,
                    nsIURI* aBaseURI)
-  : mPrincipal(aPrincipal)
+  : mLoadingPrincipal(aLoadingPrincipal)
+  , mTriggeringPrincipal(aTriggeringPrincipal ?
+                         aTriggeringPrincipal : aLoadingPrincipal)
   , mLoadingContext(do_GetWeakReference(aLoadingContext))
   , mSecurityFlags(aSecurityFlags)
   , mContentPolicyType(aContentPolicyType)
   , mBaseURI(aBaseURI)
 {
-  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aLoadingPrincipal);
+  MOZ_ASSERT(mTriggeringPrincipal);
   // if the load is sandboxed, we can not also inherit the principal
   if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
     mSecurityFlags ^= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
@@ -39,16 +43,29 @@ LoadInfo::~LoadInfo()
 NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
 
 NS_IMETHODIMP
-LoadInfo::GetLoadingPrincipal(nsIPrincipal** aPrincipal)
+LoadInfo::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal)
 {
-  NS_ADDREF(*aPrincipal = mPrincipal);
+  NS_ADDREF(*aLoadingPrincipal = mLoadingPrincipal);
   return NS_OK;
 }
 
 nsIPrincipal*
 LoadInfo::LoadingPrincipal()
 {
-  return mPrincipal;
+  return mLoadingPrincipal;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetTriggeringPrincipal(nsIPrincipal** aTriggeringPrincipal)
+{
+  NS_ADDREF(*aTriggeringPrincipal = mTriggeringPrincipal);
+  return NS_OK;
+}
+
+nsIPrincipal*
+LoadInfo::TriggeringPrincipal()
+{
+  return mTriggeringPrincipal;
 }
 
 NS_IMETHODIMP
