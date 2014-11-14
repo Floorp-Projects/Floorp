@@ -8,6 +8,9 @@
 #ifdef MOZ_B2G_BT_BLUEDROID
 #include "BluetoothHALInterface.h"
 #endif
+#ifdef MOZ_B2G_BT_DAEMON
+#include "BluetoothDaemonInterface.h"
+#endif
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -124,14 +127,18 @@ BluetoothInterface*
 BluetoothInterface::GetInstance()
 {
   /* Here's where we decide which implementation to use. Currently
-   * there is only Bluedroid, but others are possible. Having multiple
-   * interfaces built-in and selecting the correct one at runtime could
-   * also be an option.
+   * there is only Bluedroid and the Bluetooth daemon, but others are
+   * possible. Having multiple interfaces built-in and selecting the
+   * correct one at runtime could also be an option.
    */
 #ifdef MOZ_B2G_BT_BLUEDROID
   return BluetoothHALInterface::GetInstance();
 #else
+#ifdef MOZ_B2G_BT_DAEMON
+  return BluetoothDaemonInterface::GetInstance();
+#else
   return nullptr;
+#endif
 #endif
 }
 
