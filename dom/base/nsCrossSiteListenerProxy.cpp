@@ -1127,15 +1127,14 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                                loadFlags);
   }
   else {
-    rv = NS_NewChannelInternal(getter_AddRefs(preflightChannel),
-                               uri,
-                               nullptr, // aRequestingNode,
-                               nsContentUtils::GetSystemPrincipal(),
-                               nsILoadInfo::SEC_NORMAL,
-                               nsIContentPolicy::TYPE_OTHER,
-                               loadGroup,
-                               nullptr,   // aCallbacks
-                               loadFlags);
+    rv = NS_NewChannel(getter_AddRefs(preflightChannel),
+                       uri,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER,
+                       loadGroup,
+                       nullptr,   // aCallbacks
+                       loadFlags);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

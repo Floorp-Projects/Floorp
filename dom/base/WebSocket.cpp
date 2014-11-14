@@ -1470,7 +1470,9 @@ WebSocketImpl::InitializeConnection()
   mOriginDocument = nullptr;
 
   nsCOMPtr<nsILoadInfo> loadInfo =
-    new LoadInfo(mPrincipal,
+    new LoadInfo(doc ?
+                   doc->NodePrincipal() : mPrincipal.get(),
+                 mPrincipal,
                  doc,
                  nsILoadInfo::SEC_NORMAL,
                  nsIContentPolicy::TYPE_WEBSOCKET);
