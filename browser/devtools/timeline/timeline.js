@@ -132,7 +132,16 @@ let TimelineController = {
    * updating the UI as needed.
    */
   _stopRecordingAndDiscardData: function*() {
+    // Clear the markers before calling async method _stopRecording to properly
+    // reset the selection if markers were already received. Bug 1092452.
+    this._markers.length = 0;
+
     yield this._stopRecording();
+
+    // Clear the markers after _stopRecording has finished. It's possible that
+    // server sent new markers before it received the request to stop sending
+    // them and client received them while we were waiting for _stopRecording
+    // to finish. Bug 1067287.
     this._markers.length = 0;
   },
 
