@@ -216,11 +216,8 @@ ComputeTouchSensitiveRegion(GeckoContentController* aController,
   // Not sure what rounding option is the most correct here, but if we ever
   // figure it out we can change this. For now I'm rounding in to minimize
   // the chances of getting a complex region.
-  ParentLayerIntRect roundedVisible = RoundedIn(visible);
   nsIntRegion unobscured;
-  unobscured.Sub(nsIntRect(roundedVisible.x, roundedVisible.y,
-                           roundedVisible.width, roundedVisible.height),
-                 aObscured);
+  unobscured.Sub(ParentLayerIntRect::ToUntyped(RoundedIn(visible)), aObscured);
   return unobscured;
 }
 
