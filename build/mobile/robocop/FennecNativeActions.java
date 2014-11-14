@@ -41,7 +41,7 @@ public class FennecNativeActions implements Actions {
     }
 
     class GeckoEventExpecter implements RepeatedEventExpecter {
-        private static final int MAX_WAIT_MS = 90000;
+        private static final int MAX_WAIT_MS = 180000;
 
         private volatile boolean mIsRegistered;
 
