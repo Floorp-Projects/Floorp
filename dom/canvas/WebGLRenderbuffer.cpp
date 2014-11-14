@@ -3,18 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
 #include "WebGLRenderbuffer.h"
-#include "WebGLTexture.h"
-#include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "GLContext.h"
-#include "ScopedGLHelpers.h"
 
-using namespace mozilla;
-using namespace mozilla::gl;
+#include "GLContext.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "ScopedGLHelpers.h"
+#include "WebGLContext.h"
+#include "WebGLTexture.h"
+
+namespace mozilla {
 
 static GLenum
-DepthStencilDepthFormat(GLContext* gl) {
+DepthStencilDepthFormat(gl::GLContext* gl)
+{
     // We might not be able to get 24-bit, so let's pretend!
     if (gl->IsGLES() && !gl->IsExtensionSupported(gl::GLContext::OES_depth24))
         return LOCAL_GL_DEPTH_COMPONENT16;
@@ -23,13 +24,15 @@ DepthStencilDepthFormat(GLContext* gl) {
 }
 
 static bool
-SupportsDepthStencil(GLContext* gl) {
-    return gl->IsExtensionSupported(GLContext::EXT_packed_depth_stencil) ||
-           gl->IsExtensionSupported(GLContext::OES_packed_depth_stencil);
+SupportsDepthStencil(gl::GLContext* gl)
+{
+    return gl->IsExtensionSupported(gl::GLContext::EXT_packed_depth_stencil) ||
+           gl->IsExtensionSupported(gl::GLContext::OES_packed_depth_stencil);
 }
 
 static bool
-NeedsDepthStencilEmu(GLContext* gl, GLenum internalFormat) {
+NeedsDepthStencilEmu(gl::GLContext* gl, GLenum internalFormat)
+{
     MOZ_ASSERT(internalFormat != LOCAL_GL_DEPTH_STENCIL);
     if (internalFormat != LOCAL_GL_DEPTH24_STENCIL8)
         return false;
@@ -38,13 +41,14 @@ NeedsDepthStencilEmu(GLContext* gl, GLenum internalFormat) {
 }
 
 JSObject*
-WebGLRenderbuffer::WrapObject(JSContext *cx) {
+WebGLRenderbuffer::WrapObject(JSContext* cx)
+{
     return dom::WebGLRenderbufferBinding::Wrap(cx, this);
 }
 
-WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* context)
+WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)
     : WebGLBindable<RBTarget>()
-    , WebGLContextBoundObject(context)
+    , WebGLContextBoundObject(webgl)
     , mPrimaryRB(0)
     , mSecondaryRB(0)
     , mInternalFormat(0)
@@ -61,7 +65,8 @@ WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* context)
 }
 
 void
-WebGLRenderbuffer::Delete() {
+WebGLRenderbuffer::Delete()
+{
     mContext->MakeContextCurrent();
 
     mContext->gl->fDeleteRenderbuffers(1, &mPrimaryRB);
@@ -72,14 +77,14 @@ WebGLRenderbuffer::Delete() {
 }
 
 int64_t
-WebGLRenderbuffer::MemoryUsage() const {
+WebGLRenderbuffer::MemoryUsage() const
+{
     int64_t pixels = int64_t(Width()) * int64_t(Height());
 
     GLenum primaryFormat = InternalFormatForGL();
     // If there is no defined format, we're not taking up any memory
-    if (!primaryFormat) {
+    if (!primaryFormat)
         return 0;
-    }
 
     int64_t secondarySize = 0;
     if (mSecondaryRB) {
@@ -133,7 +138,8 @@ WebGLRenderbuffer::MemoryUsage() const {
 }
 
 void
-WebGLRenderbuffer::BindRenderbuffer() const {
+WebGLRenderbuffer::BindRenderbuffer() const
+{
     /* Do this explicitly here, since the meaning changes for depth-stencil emu.
      * Under normal circumstances, there's only one RB: `mPrimaryRB`.
      * `mSecondaryRB` is used when we have to pretend that the renderbuffer is
@@ -151,8 +157,10 @@ WebGLRenderbuffer::BindRenderbuffer() const {
 }
 
 void
-WebGLRenderbuffer::RenderbufferStorage(GLenum internalFormat, GLsizei width, GLsizei height) const {
-    GLContext* gl = mContext->gl;
+WebGLRenderbuffer::RenderbufferStorage(GLenum internalFormat, GLsizei width,
+                                       GLsizei height) const
+{
+    gl::GLContext* gl = mContext->gl;
 
     GLenum primaryFormat = internalFormat;
     GLenum secondaryFormat = 0;
@@ -172,7 +180,7 @@ WebGLRenderbuffer::RenderbufferStorage(GLenum internalFormat, GLsizei width, GLs
     // handle the case where we attach a non-depth-stencil RB to a
     // depth-stencil attachment point, or attach this depth-stencil RB to a
     // non-depth-stencil attachment point.
-    ScopedBindRenderbuffer autoRB(gl, mSecondaryRB);
+    gl::ScopedBindRenderbuffer autoRB(gl, mSecondaryRB);
     if (secondaryFormat) {
         gl->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, secondaryFormat, width, height);
     } else {
@@ -181,63 +189,73 @@ WebGLRenderbuffer::RenderbufferStorage(GLenum internalFormat, GLsizei width, GLs
 }
 
 void
-WebGLRenderbuffer::FramebufferRenderbuffer(FBAttachment attachment) const {
-    GLContext* gl = mContext->gl;
+WebGLRenderbuffer::FramebufferRenderbuffer(FBAttachment attachment) const
+{
+    gl::GLContext* gl = mContext->gl;
     if (attachment != LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachment.get(), LOCAL_GL_RENDERBUFFER, mPrimaryRB);
+        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachment.get(),
+                                     LOCAL_GL_RENDERBUFFER, mPrimaryRB);
         return;
     }
 
     GLuint stencilRB = mPrimaryRB;
     if (NeedsDepthStencilEmu(mContext->gl, InternalFormatForGL())) {
-        printf_stderr("DEV-ONLY: Using secondary buffer to emulate DepthStencil.\n");
         MOZ_ASSERT(mSecondaryRB);
         stencilRB = mSecondaryRB;
     }
-    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,   LOCAL_GL_RENDERBUFFER, mPrimaryRB);
-    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT, LOCAL_GL_RENDERBUFFER, stencilRB);
+    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                 LOCAL_GL_DEPTH_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER, mPrimaryRB);
+    gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER,
+                                 LOCAL_GL_STENCIL_ATTACHMENT,
+                                 LOCAL_GL_RENDERBUFFER, stencilRB);
 }
 
 GLint
-WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target, RBParam pname) const {
-    GLContext* gl = mContext->gl;
+WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target,
+                                            RBParam pname) const
+{
+    gl::GLContext* gl = mContext->gl;
 
     switch (pname.get()) {
-        case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE: {
-            if (NeedsDepthStencilEmu(mContext->gl, InternalFormatForGL())) {
-                if (gl->WorkAroundDriverBugs() &&
-                    gl->Renderer() == GLRenderer::Tegra)
-                {
-                    return 8;
-                }
-
-                ScopedBindRenderbuffer autoRB(gl, mSecondaryRB);
-
-                GLint i = 0;
-                gl->fGetRenderbufferParameteriv(target.get(), pname.get(), &i);
-                return i;
+    case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
+        if (NeedsDepthStencilEmu(mContext->gl, InternalFormatForGL())) {
+            if (gl->WorkAroundDriverBugs() &&
+                gl->Renderer() == gl::GLRenderer::Tegra)
+            {
+                return 8;
             }
-            // Fall through otherwise.
+
+            gl::ScopedBindRenderbuffer autoRB(gl, mSecondaryRB);
+
+            GLint i = 0;
+            gl->fGetRenderbufferParameteriv(target.get(), pname.get(), &i);
+            return i;
         }
-        case LOCAL_GL_RENDERBUFFER_WIDTH:
-        case LOCAL_GL_RENDERBUFFER_HEIGHT:
-        case LOCAL_GL_RENDERBUFFER_RED_SIZE:
-        case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
-        case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
-        case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
-        case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE: {
+        // Fall through otherwise.
+
+    case LOCAL_GL_RENDERBUFFER_WIDTH:
+    case LOCAL_GL_RENDERBUFFER_HEIGHT:
+    case LOCAL_GL_RENDERBUFFER_RED_SIZE:
+    case LOCAL_GL_RENDERBUFFER_GREEN_SIZE:
+    case LOCAL_GL_RENDERBUFFER_BLUE_SIZE:
+    case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
+    case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
+        {
             GLint i = 0;
             gl->fGetRenderbufferParameteriv(target.get(), pname.get(), &i);
             return i;
         }
     }
 
-    MOZ_ASSERT(false, "This function should only be called with valid `pname`.");
+    MOZ_ASSERT(false,
+               "This function should only be called with valid `pname`.");
     return 0;
 }
-
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLRenderbuffer)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLRenderbuffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLRenderbuffer, Release)
+
+} // namespace mozilla

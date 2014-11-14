@@ -180,14 +180,14 @@ class WebGLImageConverter
         const ptrdiff_t srcStrideInElements = mSrcStride / sizeof(SrcType);
         const ptrdiff_t dstStrideInElements = mDstStride / sizeof(DstType);
 
-        const SrcType *srcRowStart = static_cast<const SrcType*>(mSrcStart);
-        DstType *dstRowStart = static_cast<DstType*>(mDstStart);
+        const SrcType* srcRowStart = static_cast<const SrcType*>(mSrcStart);
+        DstType* dstRowStart = static_cast<DstType*>(mDstStart);
 
         // the loop performing the texture format conversion
         for (size_t i = 0; i < mHeight; ++i) {
-            const SrcType *srcRowEnd = srcRowStart + mWidth * NumElementsPerSrcTexel;
-            const SrcType *srcPtr = srcRowStart;
-            DstType *dstPtr = dstRowStart;
+            const SrcType* srcRowEnd = srcRowStart + mWidth * NumElementsPerSrcTexel;
+            const SrcType* srcPtr = srcRowStart;
+            DstType* dstPtr = dstRowStart;
             while (srcPtr != srcRowEnd) {
                 // convert a single texel. We proceed in 3 steps: unpack the source texel
                 // so the corresponding interchange format (e.g. unpack RGB565 to RGBA8),
@@ -327,7 +327,7 @@ public:
 
 bool
 WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t dstStride,
-                           const uint8_t* src, uint8_t *dst,
+                           const uint8_t* src, uint8_t* dst,
                            WebGLTexelFormat srcFormat, bool srcPremultiplied,
                            WebGLTexelFormat dstFormat, bool dstPremultiplied,
                            size_t dstTexelSize)

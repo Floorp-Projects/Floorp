@@ -7,10 +7,10 @@
 
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-WebGLSync::WebGLSync(WebGLContext* context) :
-    WebGLContextBoundObject(context)
+WebGLSync::WebGLSync(WebGLContext* webgl):
+    WebGLContextBoundObject(webgl)
 {
     MOZ_CRASH("Not Implemented.");
 }
@@ -34,7 +34,7 @@ WebGLSync::GetParentObject() const
 // -------------------------------------------------------------------------
 // IMPLEMENT NS
 JSObject*
-WebGLSync::WrapObject(JSContext *cx)
+WebGLSync::WrapObject(JSContext* cx)
 {
     return dom::WebGLSyncBinding::Wrap(cx, this);
 }
@@ -42,3 +42,5 @@ WebGLSync::WrapObject(JSContext *cx)
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLSync)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLSync, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLSync, Release);
+
+} // namespace mozilla
