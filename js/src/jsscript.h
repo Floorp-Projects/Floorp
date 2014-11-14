@@ -1673,6 +1673,10 @@ class JSScript : public js::gc::TenuredCell
     bool hasBreakpointsAt(jsbytecode *pc);
     bool hasAnyBreakpointsOrStepMode() { return hasDebugScript_; }
 
+    // See comment above 'debugMode' in jscompartment.h for explanation of
+    // invariants of debuggee compartments, scripts, and frames.
+    inline bool isDebuggee() const;
+
     js::BreakpointSite *getBreakpointSite(jsbytecode *pc)
     {
         return hasDebugScript_ ? debugScript()->breakpoints[pcToOffset(pc)] : nullptr;

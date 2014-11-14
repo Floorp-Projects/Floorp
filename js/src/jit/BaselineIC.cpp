@@ -8817,6 +8817,20 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
             return true;
         }
 
+        if (fun->native() == intrinsic_IsSuspendedStarGenerator) {
+            // This intrinsic only appears in self-hosted code.
+            MOZ_ASSERT(argc == 1);
+            JitSpew(JitSpew_BaselineIC, "  Generating Call_IsSuspendedStarGenerator stub");
+
+            ICCall_IsSuspendedStarGenerator::Compiler compiler(cx);
+            ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+            if (!newStub)
+                return false;
+
+            stub->addNewStub(newStub);
+            return true;
+        }
+
         RootedNativeObject templateObject(cx);
         if (MOZ_LIKELY(!isSpread)) {
             CallArgs args = CallArgsFromVp(argc, vp);
@@ -9767,6 +9781,48 @@ ICCall_StringSplit::Compiler::generateStubCode(MacroAssembler &masm)
     masm.bind(&failureRestoreArgc);
     masm.move32(Imm32(1), R0.scratchReg());
     EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICCall_IsSuspendedStarGenerator::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    // The IsSuspendedStarGenerator intrinsic is only called in self-hosted
+    // code, so it's safe to assume we have a single argument and the callee
+    // is our intrinsic.
+
+    GeneralRegisterSet regs = availableGeneralRegs(0);
+
+    // Load the argument.
+    Address argAddr(BaselineStackReg, ICStackValueOffset);
+    ValueOperand argVal = regs.takeAnyValue();
+    masm.loadValue(argAddr, argVal);
+
+    // Check if it's an object.
+    Label returnFalse;
+    Register genObj = regs.takeAny();
+    masm.branchTestObject(Assembler::NotEqual, argVal, &returnFalse);
+    masm.unboxObject(argVal, genObj);
+
+    // Check if it's a StarGeneratorObject.
+    Register scratch = regs.takeAny();
+    masm.branchTestObjClass(Assembler::NotEqual, genObj, scratch, &StarGeneratorObject::class_,
+                            &returnFalse);
+
+    // If the yield index slot holds an int32 value < YIELD_INDEX_CLOSING,
+    // the generator is suspended.
+    masm.loadValue(Address(genObj, GeneratorObject::offsetOfYieldIndexSlot()), argVal);
+    masm.branchTestInt32(Assembler::NotEqual, argVal, &returnFalse);
+    masm.unboxInt32(argVal, scratch);
+    masm.branch32(Assembler::AboveOrEqual, scratch, Imm32(StarGeneratorObject::YIELD_INDEX_CLOSING),
+                  &returnFalse);
+
+    masm.moveValue(BooleanValue(true), R0);
+    EmitReturnFromIC(masm);
+
+    masm.bind(&returnFalse);
+    masm.moveValue(BooleanValue(false), R0);
+    EmitReturnFromIC(masm);
     return true;
 }
 

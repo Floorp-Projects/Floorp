@@ -44,8 +44,8 @@ AppleVDADecoder::AppleVDADecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
   MOZ_COUNT_CTOR(AppleVDADecoder);
   // TODO: Verify aConfig.mime_type.
   LOG("Creating AppleVDADecoder for %dx%d h.264 video",
-      mConfig.display_width,
-      mConfig.display_height
+      mConfig.image_width,
+      mConfig.image_height
      );
 }
 
@@ -237,7 +237,7 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
   nsRefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
   // Bounds.
   VideoInfo info;
-  info.mDisplay = nsIntSize(macSurface->GetWidth(), macSurface->GetHeight());
+  info.mDisplay = nsIntSize(mConfig.display_width, mConfig.display_height);
   info.mHasVideo = true;
   gfx::IntRect visible = gfx::IntRect(0,
                                       0,
@@ -411,11 +411,11 @@ AppleVDADecoder::CreateDecoderSpecification()
   AutoCFRelease<CFNumberRef> avc_width  =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,
-                   &mConfig.display_width);
+                   &mConfig.image_width);
   AutoCFRelease<CFNumberRef> avc_height =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,
-                   &mConfig.display_height);
+                   &mConfig.image_height);
   AutoCFRelease<CFNumberRef> avc_format =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt32Type,

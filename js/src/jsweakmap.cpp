@@ -522,9 +522,60 @@ static bool
 WeakMap_construct(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *obj = NewBuiltinClassInstance(cx, &WeakMapObject::class_);
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &WeakMapObject::class_));
     if (!obj)
         return false;
+
+    // ES6 23.3.1.1 steps 5-6, 11.
+    if (args.hasDefined(0)) {
+        // Steps 7d-e.
+        JS::ForOfIterator iter(cx);
+        if (!iter.init(args[0]))
+            return false;
+
+        RootedValue pairVal(cx);
+        RootedObject pairObject(cx);
+        RootedValue keyVal(cx);
+        RootedObject keyObject(cx);
+        RootedValue val(cx);
+        while (true) {
+            // Steps 12a-e.
+            bool done;
+            if (!iter.next(&pairVal, &done))
+                return false;
+            if (done)
+                break;
+
+            // Step 12f.
+            if (!pairVal.isObject()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                                     JSMSG_INVALID_MAP_ITERABLE, "WeakMap");
+                return false;
+            }
+
+            pairObject = &pairVal.toObject();
+            if (!pairObject)
+                return false;
+
+            // Steps 12g-h.
+            if (!JSObject::getElement(cx, pairObject, pairObject, 0, &keyVal))
+                return false;
+
+            // Steps 12i-j.
+            if (!JSObject::getElement(cx, pairObject, pairObject, 1, &val))
+                return false;
+
+            // Steps 12k-l.
+            if (keyVal.isPrimitive()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT);
+                return false;
+            }
+
+            keyObject = &keyVal.toObject();
+            if (!SetWeakMapEntry(cx, obj, keyObject, val))
+                return false;
+        }
+    }
 
     args.rval().setObject(*obj);
     return true;

@@ -358,7 +358,7 @@ struct BidiLineData {
          frame && aNumFramesOnLine--;
          frame = frame->GetNextSibling()) {
       AppendFrame(frame);
-      uint8_t level = nsBidiPresUtils::GetFrameEmbeddingLevel(frame);
+      nsBidiLevel level = nsBidiPresUtils::GetFrameEmbeddingLevel(frame);
       mLevels.AppendElement(level);
       mIndexMap.AppendElement(0);
       if (level & 1) {
@@ -658,7 +658,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
   nsresult rv = aBpd->SetPara();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint8_t embeddingLevel = aBpd->GetParaLevel();
+  nsBidiLevel embeddingLevel = aBpd->GetParaLevel();
 
   rv = aBpd->CountRuns(&runCount);
   NS_ENSURE_SUCCESS(rv, rv);

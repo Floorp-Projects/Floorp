@@ -55,6 +55,14 @@
             android:persistent="false"
             android:title="@string/fxaccount_status_needs_account_enabled" />
 
+        <Preference
+            android:editable="false"
+            android:key="sync_now"
+            android:defaultValue=""
+            android:persistent="false"
+            android:title="Sync now"
+            android:summary="" />
+
         <CheckBoxPreference
             android:key="bookmarks"
             android:persistent="false"

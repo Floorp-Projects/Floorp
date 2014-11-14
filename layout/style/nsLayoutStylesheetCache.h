@@ -67,6 +67,8 @@ private:
                             nsRefPtr<mozilla::CSSStyleSheet>& aSheet);
   static void LoadSheet(nsIURI* aURI, nsRefPtr<mozilla::CSSStyleSheet>& aSheet,
                         bool aEnableUnsafeRules);
+  static void InvalidateSheet(nsRefPtr<mozilla::CSSStyleSheet>& aSheet);
+  static void DependentPrefChanged(const char* aPref, void* aData);
 
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
   static mozilla::css::Loader* gCSSLoader;
