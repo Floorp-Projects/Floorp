@@ -7,6 +7,7 @@
 #include "BluetoothDaemonInterface.h"
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
+#include "BluetoothDaemonSocketInterface.h"
 #include "BluetoothInterfaceHelpers.h"
 #include "mozilla/unused.h"
 
@@ -1454,6 +1455,7 @@ class BluetoothDaemonProtocol MOZ_FINAL
   : public BluetoothDaemonPDUConsumer
   , public BluetoothDaemonSetupModule
   , public BluetoothDaemonCoreModule
+  , public BluetoothDaemonSocketModule
 {
 public:
   BluetoothDaemonProtocol(BluetoothDaemonConnection* aConnection);
@@ -1477,6 +1479,8 @@ private:
                       BluetoothDaemonPDU& aPDU, void* aUserData);
   void HandleCoreSvc(const BluetoothDaemonPDUHeader& aHeader,
                      BluetoothDaemonPDU& aPDU, void* aUserData);
+  void HandleSocketSvc(const BluetoothDaemonPDUHeader& aHeader,
+                       BluetoothDaemonPDU& aPDU, void* aUserData);
 
   BluetoothDaemonConnection* mConnection;
   nsTArray<void*> mUserDataQ;
@@ -1516,6 +1520,14 @@ BluetoothDaemonProtocol::HandleCoreSvc(
 }
 
 void
+BluetoothDaemonProtocol::HandleSocketSvc(
+  const BluetoothDaemonPDUHeader& aHeader, BluetoothDaemonPDU& aPDU,
+  void* aUserData)
+{
+  BluetoothDaemonSocketModule::HandleSvc(aHeader, aPDU, aUserData);
+}
+
+void
 BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
 {
   static void (BluetoothDaemonProtocol::* const HandleSvc[])(
@@ -1523,7 +1535,9 @@ BluetoothDaemonProtocol::Handle(BluetoothDaemonPDU& aPDU)
     INIT_ARRAY_AT(BluetoothDaemonSetupModule::SERVICE_ID,
       &BluetoothDaemonProtocol::HandleSetupSvc),
     INIT_ARRAY_AT(BluetoothDaemonCoreModule::SERVICE_ID,
-      &BluetoothDaemonProtocol::HandleCoreSvc)
+      &BluetoothDaemonProtocol::HandleCoreSvc),
+    INIT_ARRAY_AT(BluetoothDaemonSocketModule::SERVICE_ID,
+      &BluetoothDaemonProtocol::HandleSocketSvc)
   };
 
   BluetoothDaemonPDUHeader header;
@@ -1719,7 +1733,8 @@ public:
     if (!mRegisteredSocketModule) {
       mRegisteredSocketModule = true;
       // Init, step 4: Register Socket module
-      mInterface->mProtocol->RegisterModuleCmd(0x02, 0x00, this);
+      mInterface->mProtocol->RegisterModuleCmd(
+        BluetoothDaemonSocketModule::SERVICE_ID, 0x00, this);
     } else if (mRes) {
       // Init, step 5: Signal success to caller
       mRes->Init();
@@ -1887,7 +1902,8 @@ BluetoothDaemonInterface::Cleanup(BluetoothResultHandler* aRes)
   mResultHandlerQ.AppendElement(aRes);
 
   // Cleanup, step 1: Unregister Socket module
-  mProtocol->UnregisterModuleCmd(0x02, new CleanupResultHandler(this));
+  mProtocol->UnregisterModuleCmd(
+    BluetoothDaemonSocketModule::SERVICE_ID, new CleanupResultHandler(this));
 }
 
 void
@@ -2076,10 +2092,19 @@ BluetoothDaemonInterface::DispatchError(BluetoothResultHandler* aRes,
     ConstantInitOp1<BluetoothStatus>(aStatus));
 }
 
+// Profile Interfaces
+//
+
 BluetoothSocketInterface*
 BluetoothDaemonInterface::GetBluetoothSocketInterface()
 {
-  return nullptr;
+  if (mSocketInterface) {
+    return mSocketInterface;
+  }
+
+  mSocketInterface = new BluetoothDaemonSocketInterface(mProtocol);
+
+  return mSocketInterface;
 }
 
 BluetoothHandsfreeInterface*
