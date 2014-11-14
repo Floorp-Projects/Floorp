@@ -24,7 +24,8 @@ class GMPDecryptorChild : public GMPDecryptorCallback
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPDecryptorChild);
 
-  explicit GMPDecryptorChild(GMPChild* aPlugin);
+  explicit GMPDecryptorChild(GMPChild* aPlugin,
+                             const nsTArray<uint8_t>& aPluginVoucher);
 
   void Init(GMPDecryptor* aSession);
 
@@ -78,10 +79,10 @@ public:
 
   // GMPDecryptorHost
   virtual void GetSandboxVoucher(const uint8_t** aVoucher,
-                                 uint8_t* aVoucherLength) MOZ_OVERRIDE;
+                                 uint32_t* aVoucherLength) MOZ_OVERRIDE;
 
   virtual void GetPluginVoucher(const uint8_t** aVoucher,
-                                uint8_t* aVoucherLength) MOZ_OVERRIDE;
+                                uint32_t* aVoucherLength) MOZ_OVERRIDE;
 private:
   ~GMPDecryptorChild();
 
@@ -120,6 +121,9 @@ private:
   // Only call into this on the (GMP process) main thread.
   GMPDecryptor* mSession;
   GMPChild* mPlugin;
+
+  // Reference to the voucher owned by the GMPChild.
+  const nsTArray<uint8_t>& mPluginVoucher;
 };
 
 } // namespace gmp

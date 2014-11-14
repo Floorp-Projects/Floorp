@@ -19,11 +19,13 @@
 #include "GMPPlatform.h"
 #include "mozilla/dom/CrashReporterChild.h"
 #ifdef XP_WIN
-#include <fstream>
 #include "nsCRT.h"
 #endif
+#include <fstream>
 
 using mozilla::dom::CrashReporterChild;
+
+static const int MAX_PLUGIN_VOUCHER_LENGTH = 50000;
 
 #ifdef XP_WIN
 #include <stdlib.h> // for _exit()
@@ -407,6 +409,7 @@ GMPChild::RecvStartPlugin()
 #if defined(XP_WIN)
   PreLoadLibraries(mPluginPath);
 #endif
+  PreLoadPluginVoucher(mPluginPath);
 
   nsCString libPath;
   if (!GetLibPath(libPath)) {
@@ -538,7 +541,7 @@ GMPChild::DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor)
 PGMPDecryptorChild*
 GMPChild::AllocPGMPDecryptorChild()
 {
-  GMPDecryptorChild* actor = new GMPDecryptorChild(this);
+  GMPDecryptorChild* actor = new GMPDecryptorChild(this, mPluginVoucher);
   actor->AddRef();
   return actor;
 }
@@ -707,6 +710,57 @@ GMPChild::ShutdownComplete()
 {
   MOZ_ASSERT(mGMPMessageLoop == MessageLoop::current());
   SendAsyncShutdownComplete();
+}
+
+static bool
+GetPluginVoucherFile(const std::string& aPluginPath,
+                     nsCOMPtr<nsIFile>& aOutVoucherFile)
+{
+  nsAutoString baseName;
+#if defined(XP_MACOSX)
+  nsCOMPtr<nsIFile> libDir;
+  GetFileBase(aPluginPath, aOutVoucherFile, libDir, baseName);
+#else
+  GetFileBase(aPluginPath, aOutVoucherFile, baseName);
+#endif
+  nsAutoString infoFileName = baseName + NS_LITERAL_STRING(".voucher");
+  aOutVoucherFile->AppendRelativePath(infoFileName);
+  return true;
+}
+
+bool
+GMPChild::PreLoadPluginVoucher(const std::string& aPluginPath)
+{
+  nsCOMPtr<nsIFile> voucherFile;
+  GetPluginVoucherFile(aPluginPath, voucherFile);
+
+  nsString path;
+  voucherFile->GetPath(path);
+
+  std::ifstream stream;
+  stream.open(NS_ConvertUTF16toUTF8(path).get(), std::ios::binary);
+  if (!stream.good()) {
+    return false;
+  }
+
+  std::streampos start = stream.tellg();
+  stream.seekg (0, std::ios::end);
+  std::streampos end = stream.tellg();
+  stream.seekg (0, std::ios::beg);
+  auto length = end - start;
+  if (length > MAX_PLUGIN_VOUCHER_LENGTH) {
+    NS_WARNING("Plugin voucher file too big!");
+    return false;
+  }
+
+  mPluginVoucher.SetLength(length);
+  stream.read((char*)mPluginVoucher.Elements(), length);
+  if (!stream) {
+    NS_WARNING("Failed to read plugin voucher file!");
+    return false;
+  }
+
+  return true;
 }
 
 } // namespace gmp

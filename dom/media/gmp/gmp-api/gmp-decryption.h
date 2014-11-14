@@ -183,10 +183,10 @@ public:
 class GMPDecryptorHost {
 public:
   virtual void GetSandboxVoucher(const uint8_t** aVoucher,
-                                 uint8_t* aVoucherLength) = 0;
+                                 uint32_t* aVoucherLength) = 0;
 
   virtual void GetPluginVoucher(const uint8_t** aVoucher,
-                                uint8_t* aVoucherLength) = 0;
+                                uint32_t* aVoucherLength) = 0;
 };
 
 enum GMPSessionType {
