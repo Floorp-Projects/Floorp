@@ -189,18 +189,19 @@ All of the events in a given block will go to the same APZC instance and will ei
 </li>
 <li value="3">
 Using the first event in the input block, the APZCTreeManager does a hit-test to see which APZC it hits.
+This hit-test uses the event regions populated on the layers, which may be larger than the true hit area of the layer.
 If no APZC is hit, the events are discarded and we jump to step 6.
-Otherwise, the input block is tagged with the APZC and put into a global APZ input queue.
+Otherwise, the input block is tagged with the hit APZC as a tentative target and put into a global APZ input queue.
 </li>
 <li value="4">
  <ol>
   <li value="i">
-   If the input events are not touch events, or if the APZC is for content without touch listeners, any available events in the input block are processed.
+   If the input events landed outside the dispatch-to-content event region for the layer, any available events in the input block are processed.
    These may trigger behaviours like scrolling or tap gestures.
   </li>
   <li value="ii">
-   If the input events are touch events and the APZC is for content with touch listeners, the events are left in the queue and a 300ms timeout is initiated.
-   If the timeout expires before step 9 is completed, the APZ assumes the input block was not cancelled and processes them as part of step 10.
+   If the input events landed inside the dispatch-to-content event region for the layer, the events are left in the queue and a 300ms timeout is initiated.
+   If the timeout expires before step 9 is completed, the APZ assumes the input block was not cancelled and the tentative target is correct, and processes them as part of step 10.
   </li>
  </ol>
 </li>
@@ -214,26 +215,31 @@ This code now has the event in the coordinate space Gecko is expecting, and so c
 <li value="7">
 Gecko performs its own usual hit-testing and event dispatching for the event.
 As part of this, it records whether any touch listeners cancelled the input block by calling preventDefault().
+It also activates inactive scrollframes that were hit by the input events.
 </li>
 <li value="8">
-The call stack unwinds back to the widget code, which sends a notification to the APZ code by calling APZCTreeManager::ContentReceivedTouch on the input thread.
-This happens only once per input block.
+The call stack unwinds back to the widget code, which sends two notifications to the APZ code on the input thread.
+The first notification is via APZCTreeManager::ContentReceivedTouch, and informs the APZ whether the input block was cancelled.
+The second notification is via APZCTreeManager::SetTargetAPZC, and informs the APZ the results of the Gecko hit-test during event dispatch.
+Note that Gecko may report that the input event did not hit any scrollable frame at all.
+These notifications happen only once per input block.
 </li>
 <li value="9">
  <ol>
   <li value="i">
-   If the events were processed as part of step 4(i), the call to ContentReceivedTouch is ignored and step 10 is skipped.
+   If the events were processed as part of step 4(i), the notifications from step 8 are ignored and step 10 is skipped.
   </li>
   <li value="ii">
-   If events were queued as part of step 4(ii), and steps 5-8 take less than 300ms, the ContentReceivedTouch call marks the input block ready for processing.
+   If events were queued as part of step 4(ii), and steps 5-8 take less than 300ms, the arrival of both notifications from step 8 will mark the input block ready for processing.
   </li>
   <li value="iii">
-   If events were queued as part of step 4(ii), but steps 5-8 take longer than 300ms, the ContentReceivedTouch will be ignored and step 10 will already have happened.
+   If events were queued as part of step 4(ii), but steps 5-8 take longer than 300ms, the notifications from step 8 will be ignored and step 10 will already have happened.
   </li>
  </ol>
 </li>
 <li value="10">
-If events were queued as part of step 4(ii) they are now either processed (if the input block was not cancelled, or if the timeout expired) or dropped (if it was cancelled).
+If events were queued as part of step 4(ii) they are now either processed (if the input block was not cancelled and Gecko detected a scrollframe under the input event, or if the timeout expired) or dropped (all other cases).
+Note that the APZC that processes the events may be different at this step than the tentative target from step 3, depending on the SetTargetAPZC notification.
 Processing the events may trigger behaviours like scrolling or tap gestures.
 </li>
 </ol>
@@ -245,7 +251,10 @@ If the CSS touch-action property is enabled, the above steps are modified as fol
 </li>
 <li>
  In step 6, the widget code determines the content element at the point under the input element, and notifies the APZ code of the allowed touch-action behaviours.
- This is done via a call to APZCTreeManager::SetAllowedTouchBehavior on the input thread.
+ This notification is sent via a call to APZCTreeManager::SetAllowedTouchBehavior on the input thread.
+</li>
+<li>
+ In step 9(ii), the input block will only be marked ready for processing once all three notifications arrive.
 </li>
 </ul>
 
@@ -269,14 +278,18 @@ Therefore, scrollframes as designated as either "active" or "inactive".
 Active scrollframes are the ones that do have their contents put on a separate layer (or set of layers), and inactive ones do not.
 
 Consider a page with a scrollframe that is initially inactive.
-When layout generates the layers for this page, it inserts a "scrollinfo" layer into the layer tree to let the APZ know that there is potentially scrollable content there.
-The scrollinfo layer is an empty ContainerLayer, which does not require much extra memory.
-The composition bounds of this scrollinfo layer are used on the compositor for hit-testing, and a "placeholder" APZC is created for this scrollframe.
-When the user starts interacting with that content, the hit-test in the APZ code finds the placeholder APZC and starts routing it the events as usual.
-The APZC eventually sends a repaint request to the main thread, and that repaint request sets a displayport on the scrollframe.
-Setting the displayport activates the scrollframe and causes it to get pushed onto a separate layer (or set of layers).
+When layout generates the layers for this page, the content of the scrollframe will be flattened into some other PaintedLayer (call it P).
+The layout code also adds the area (or bounding region in case of weird shapes) of the scrollframe to the dispatch-to-content region of P.
 
-This model imples that when the user initially attempts to scroll an inactive scrollframe, it will not initially scroll visually.
-(This is because although the APZC is tracking the events and updating scroll position, there is no layer to which it can apply the async scroll offset.)
-Only after the round-trip to the gecko thread is complete is there a layer for async scrolling to actually occur.
-At that point the scrollframe will visually "jump" to the correct scroll offset.
+When the user starts interacting with that content, the hit-test in the APZ code finds the dispatch-to-content region of P.
+The input block therefore has a tentative target of P when it goes into step 4(ii) in the flow above.
+When gecko processes the input event, it must detect the inactive scrollframe and activate it, as part of step 7.
+Finally, the widget code sends the SetTargetAPZC notification in step 8 to notify the APZ that the input block should really apply to this new layer.
+The issue here is that the layer transaction containing the new layer must reach the compositor and APZ before the SetTargetAPZC notification.
+If this does not occur within the 300ms timeout, the APZ code will be unable to update the tentative target, and will continue to use P for that input block.
+Input blocks that start after the layer transaction will get correctly routed to the new layer as there will now be a layer and APZC instance for the active scrollframe.
+
+This model implies that when the user initially attempts to scroll an inactive scrollframe, it may end up scrolling an ancestor scrollframe.
+(This is because in the absence of the SetTargetAPZC notification, the input events will get applied to the closest ancestor scrollframe's APZC.)
+Only after the round-trip to the gecko thread is complete is there a layer for async scrolling to actually occur on the scrollframe itself.
+At that point the scrollframe will start receiving new input blocks and will scroll normally.
