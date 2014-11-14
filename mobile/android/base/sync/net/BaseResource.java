@@ -65,7 +65,7 @@ public class BaseResource implements Resource {
 
   private boolean retryOnFailedRequest = true;
 
-  public static final boolean rewriteLocalhost = true;
+  public static boolean rewriteLocalhost = true;
 
   private static final String LOG_TAG = "BaseResource";
 
