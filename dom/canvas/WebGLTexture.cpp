@@ -19,12 +19,12 @@
 using namespace mozilla;
 
 JSObject*
-WebGLTexture::WrapObject(JSContext* cx) {
+WebGLTexture::WrapObject(JSContext *cx) {
     return dom::WebGLTextureBinding::Wrap(cx, this);
 }
 
-WebGLTexture::WebGLTexture(WebGLContext* context, GLuint tex)
-    : WebGLBindableName<TexTarget>(tex)
+WebGLTexture::WebGLTexture(WebGLContext *context)
+    : WebGLBindableName<TexTarget>()
     , WebGLContextBoundObject(context)
     , mMinFilter(LOCAL_GL_NEAREST_MIPMAP_LINEAR)
     , mMagFilter(LOCAL_GL_LINEAR)
@@ -38,6 +38,8 @@ WebGLTexture::WebGLTexture(WebGLContext* context, GLuint tex)
     , mMaxMipmapLevel(1000)
     , mFakeBlackStatus(WebGLTextureFakeBlackStatus::IncompleteTexture)
 {
+    mContext->MakeContextCurrent();
+    mContext->gl->fGenTextures(1, &mGLName);
     mContext->mTextures.insertBack(this);
 }
 
