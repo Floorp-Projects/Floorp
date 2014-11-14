@@ -2638,70 +2638,6 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static bool
-EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.get(0).isInt32() || !args.get(1).isString()) {
-        JS_ReportError(cx, "Invalid arguments to evalInFrame");
-        return false;
-    }
-
-    uint32_t upCount = args[0].toInt32();
-    RootedString str(cx, args[1].toString());
-    bool saveCurrent = args.get(2).isBoolean() ? args[2].toBoolean() : false;
-
-    if (!cx->compartment()->debugMode()) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
-                                     nullptr, JSMSG_NEED_DEBUG_MODE);
-        return false;
-    }
-
-    /* Debug-mode currently disables Ion compilation. */
-    ScriptFrameIter fi(cx);
-    for (uint32_t i = 0; i < upCount; ++i, ++fi) {
-        ScriptFrameIter next(fi);
-        ++next;
-        if (next.done())
-            break;
-    }
-
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, str))
-        return JSTRAP_ERROR;
-
-    AbstractFramePtr frame = fi.abstractFramePtr();
-    RootedScript fpscript(cx, frame.script());
-
-    RootedObject scope(cx);
-    {
-        RootedObject scopeChain(cx, frame.scopeChain());
-        AutoCompartment ac(cx, scopeChain);
-        scope = GetDebugScopeForFrame(cx, frame, fi.pc());
-    }
-    Rooted<Env*> env(cx, scope);
-    if (!env)
-        return false;
-
-    if (!ComputeThis(cx, frame))
-        return false;
-    RootedValue thisv(cx, frame.thisValue());
-
-    AutoSaveFrameChain sfc(cx);
-    if (saveCurrent) {
-        if (!sfc.save())
-            return false;
-    }
-
-    bool ok;
-    {
-        AutoCompartment ac(cx, env);
-        ok = EvaluateInEnv(cx, env, thisv, frame, stableChars.twoByteRange(), fpscript->filename(),
-                           PCToLineNumber(fpscript, fi.pc()), args.rval());
-    }
-    return ok;
-}
-
 struct WorkerInput
 {
     JSRuntime *runtime;
@@ -4413,11 +4349,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Evaluate s in optional sandbox object o.\n"
 "  if (s == '' && !o) return new o with eager standard classes\n"
 "  if (s == 'lazy' && !o) return new o with lazy standard classes"),
-
-    JS_FN_HELP("evalInFrame", EvalInFrame, 2, 0,
-"evalInFrame(n,str,save)",
-"  Evaluate 'str' in the nth up frame.\n"
-"  If 'save' (default false), save the frame chain."),
 
     JS_FN_HELP("evalInWorker", EvalInWorker, 1, 0,
 "evalInWorker(str)",

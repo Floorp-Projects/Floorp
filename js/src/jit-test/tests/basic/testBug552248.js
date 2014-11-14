@@ -1,5 +1,4 @@
-var global = newGlobal();
-var dbg = new global.Debugger(this);
+load(libdir + "evalInFrame.js");
 
 var a = new Array();
 

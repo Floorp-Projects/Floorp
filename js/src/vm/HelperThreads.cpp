@@ -365,6 +365,12 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
     } else {
         task->activate(cx->runtime());
 
+        if (cx->compartment()->isDebuggee()) {
+            task->cx->compartment()->setIsDebuggee();
+            if (cx->compartment()->debugObservesAllExecution())
+                task->cx->compartment()->setDebugObservesAllExecution();
+        }
+
         AutoLockHelperThreadState lock;
 
         if (!HelperThreadState().parseWorklist().append(task.get()))

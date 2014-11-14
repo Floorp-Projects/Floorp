@@ -58,10 +58,14 @@ public:
 };
 
 TEST(TiledLayerBuffer, TileConstructor) {
+  gfxPlatform::GetPlatform()->ComputeTileSize();
+
   TestTiledLayerBuffer buffer;
 }
 
 TEST(TiledLayerBuffer, TileStart) {
+  gfxPlatform::GetPlatform()->ComputeTileSize();
+
   TestTiledLayerBuffer buffer;
 
   ASSERT_EQ(buffer.RoundDownToTileEdge(10, 256), 0);
@@ -69,6 +73,8 @@ TEST(TiledLayerBuffer, TileStart) {
 }
 
 TEST(TiledLayerBuffer, EmptyUpdate) {
+  gfxPlatform::GetPlatform()->ComputeTileSize();
+
   TestTiledLayerBuffer buffer;
 
   nsIntRegion validRegion(nsIntRect(0, 0, 10, 10));

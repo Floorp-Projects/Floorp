@@ -79,6 +79,10 @@ def set_default_logger(default_logger):
 
     It can then be retrieved with :py:func:`get_default_logger`
 
+    Note that :py:func:`~mozlog.structured.commandline.setup_logging` will
+    set a default logger for you, so there should be no need to call this
+    function if you're using setting up logging that way (recommended).
+
     :param default_logger: The logger to set to default.
     """
     global _default_logger_name

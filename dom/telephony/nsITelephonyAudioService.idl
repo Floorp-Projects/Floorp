@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(a452c565-fbac-4056-a8f4-feee9b33aa6e)]
+interface nsITelephonyAudioService : nsISupports
+{
+  const long PHONE_STATE_NORMAL   = 0;
+  const long PHONE_STATE_RINGTONE = 1;
+  const long PHONE_STATE_IN_CALL  = 2;
+
+  /**
+   * Microphone muted?
+   */
+  attribute boolean microphoneMuted;
+
+  /**
+   * Speaker enabled?
+   */
+  attribute boolean speakerEnabled;
+
+  /**
+   * Set the phone's audio mode.
+   *
+   * @param state
+   *        One of the nsITelephonyAudioService::PHONE_STATE_* values.
+   */
+  void setPhoneState(in long state);
+};

@@ -23,6 +23,7 @@
 #include "mozilla/a11y/DocAccessibleChild.h"
 #endif
 #include "mozilla/Preferences.h"
+#include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -2255,6 +2256,25 @@ ContentChild::RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType)
         sheetService->UnregisterSheet(uri, aType);
     }
 
+    return true;
+}
+
+POfflineCacheUpdateChild*
+ContentChild::AllocPOfflineCacheUpdateChild(const URIParams& manifestURI,
+                                            const URIParams& documentURI,
+                                            const bool& stickDocument,
+                                            const TabId& aTabId)
+{
+    NS_RUNTIMEABORT("unused");
+    return nullptr;
+}
+
+bool
+ContentChild::DeallocPOfflineCacheUpdateChild(POfflineCacheUpdateChild* actor)
+{
+    OfflineCacheUpdateChild* offlineCacheUpdate =
+        static_cast<OfflineCacheUpdateChild*>(actor);
+    NS_RELEASE(offlineCacheUpdate);
     return true;
 }
 

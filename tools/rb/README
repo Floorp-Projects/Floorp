@@ -1,5 +1,6 @@
 This is the Refcount Balancer.  See
-http://www.mozilla.org/performance/refcnt-balancer.html for documentation.
+https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Refcount_tracing_and_balancing
+for documentation.
 
 Previous CVS history for the perl scripts is available at:
 http://www.mozilla.org/webtools/bonsai/cvslog.cgi?file=mozilla-org/html/performance/find-leakers.pl&rev=&root=/cvsroot/

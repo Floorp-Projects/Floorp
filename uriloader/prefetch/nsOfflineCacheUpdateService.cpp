@@ -45,7 +45,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "nsContentUtils.h"
 #include "mozilla/unused.h"
@@ -747,8 +747,7 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIDOMWindow *aWindow,
     nsresult rv;
 
     if (GeckoProcessType_Default != XRE_GetProcessType()) {
-        TabChild* child = TabChild::GetFrom(aWindow);
-        NS_ENSURE_TRUE(child, NS_ERROR_FAILURE);
+        ContentChild* child = ContentChild::GetSingleton();
 
         if (!child->SendSetOfflinePermission(IPC::Principal(aPrincipal))) {
             return NS_ERROR_FAILURE;

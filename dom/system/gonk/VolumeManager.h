@@ -122,11 +122,13 @@ public:
   //-----------------------------------------------------------------------
 
   static void Start();
+  static void Dump(const char* aLabel);
 
   static VolumeArray::size_type NumVolumes();
   static TemporaryRef<Volume> GetVolume(VolumeArray::index_type aIndex);
   static TemporaryRef<Volume> FindVolumeByName(const nsCSubstring& aName);
   static TemporaryRef<Volume> FindAddVolumeByName(const nsCSubstring& aName);
+  static void InitConfig();
 
   static void       PostCommand(VolumeCommand* aCommand);
 

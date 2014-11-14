@@ -298,6 +298,16 @@ public:
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts);
 
+    int GetTileWidth();
+    int GetTileHeight();
+    void SetTileSize(int aWidth, int aHeight);
+    /**
+     * Calling this function will compute and set the ideal tile size for the
+     * platform. This should only be called in the parent process; child processes
+     * should be updated via SetTileSize to match the value computed in the parent.
+     */
+    void ComputeTileSize();
+
     /**
      * Rebuilds the any cached system font lists
      */
@@ -665,6 +675,9 @@ private:
     mozilla::gfx::BackendType mContentBackend;
     // Bitmask of backend types we can use to render content
     uint32_t mContentBackendBitmask;
+
+    int mTileWidth;
+    int mTileHeight;
 
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
 

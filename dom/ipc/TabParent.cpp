@@ -11,7 +11,6 @@
 #include "AppProcessChecker.h"
 #include "mozIApplication.h"
 #include "mozilla/BrowserElementParent.h"
-#include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
@@ -301,14 +300,6 @@ TabParent::Destroy()
   // and auto-cleanup will kick in.  Otherwise, the child side will
   // destroy itself and send back __delete__().
   unused << SendDestroy();
-
-  const InfallibleTArray<POfflineCacheUpdateParent*>& ocuParents =
-    ManagedPOfflineCacheUpdateParent();
-  for (uint32_t i = 0; i < ocuParents.Length(); ++i) {
-    nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> ocuParent =
-      static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(ocuParents[i]);
-    ocuParent->StopSendingMessagesToChild();
-  }
 
   if (RenderFrameParent* frame = GetRenderFrame()) {
     frame->Destroy();
@@ -1938,56 +1929,6 @@ bool
 TabParent::DeallocPRenderFrameParent(PRenderFrameParent* aFrame)
 {
   delete aFrame;
-  return true;
-}
-
-mozilla::docshell::POfflineCacheUpdateParent*
-TabParent::AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
-                                          const URIParams& aDocumentURI,
-                                          const bool& aStickDocument)
-{
-  nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
-    new mozilla::docshell::OfflineCacheUpdateParent(OwnOrContainingAppId(),
-                                                    IsBrowserElement());
-  // Use this reference as the IPDL reference.
-  return update.forget().take();
-}
-
-bool
-TabParent::RecvPOfflineCacheUpdateConstructor(POfflineCacheUpdateParent* aActor,
-                                              const URIParams& aManifestURI,
-                                              const URIParams& aDocumentURI,
-                                              const bool& aStickDocument)
-{
-  MOZ_ASSERT(aActor);
-
-  nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
-    static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(aActor);
-
-  nsresult rv = update->Schedule(aManifestURI, aDocumentURI, aStickDocument);
-  if (NS_FAILED(rv) && !IsDestroyed()) {
-    // Inform the child of failure.
-    unused << update->SendFinish(false, false);
-  }
-
-  return true;
-}
-
-bool
-TabParent::DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor)
-{
-  // Reclaim the IPDL reference.
-  nsRefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
-    dont_AddRef(
-      static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(aActor));
-  return true;
-}
-
-bool
-TabParent::RecvSetOfflinePermission(const IPC::Principal& aPrincipal)
-{
-  nsIPrincipal* principal = aPrincipal;
-  nsContentUtils::MaybeAllowOfflineAppByDefault(principal, nullptr);
   return true;
 }
 
