@@ -25,9 +25,9 @@ interface AudioContext : EventTarget {
     [NewObject, Throws]
     AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
 
-    void decodeAudioData(ArrayBuffer audioData,
-                         DecodeSuccessCallback successCallback,
-                         optional DecodeErrorCallback errorCallback);
+    Promise<AudioBuffer> decodeAudioData(ArrayBuffer audioData,
+                                         optional DecodeSuccessCallback successCallback,
+                                         optional DecodeErrorCallback errorCallback);
 
     // AudioNode creation
     [NewObject]

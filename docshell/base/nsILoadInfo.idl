@@ -17,7 +17,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(b22b8ee7-047a-4351-a749-13c6d39f6b17)]
+[scriptable, builtinclass, uuid(da363267-236d-49bf-83a2-33da8d892728)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -72,6 +72,25 @@ interface nsILoadInfo : nsISupports
   [noscript, notxpcom, nostdcall, binaryname(LoadingPrincipal)]
   nsIPrincipal binaryLoadingPrincipal();
 
+  /**
+   * The triggeringPrincipal is the principal that triggerd the load.
+   * Most likely the triggeringPrincipal and the loadingPrincipal are the same,
+   * in which case triggeringPrincipal returns the loadingPrincipal.
+   * In some cases the loadingPrincipal and the triggeringPrincipal are different
+   * however, e.g. a stylesheet may import a subresource. In that case the
+   * stylesheet principal is the triggeringPrincipal and the document that loads
+   * the stylesheet provides a loadingContext and hence the loadingPrincipal.
+   *
+   * If triggeringPrincipal and loadingPrincipal are the same, then
+   * triggeringPrincipal returns loadingPrincipal.
+   */
+  readonly attribute nsIPrincipal triggeringPrincipal;
+
+  /**
+   * A C++-friendly version of triggeringPrincipal.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(TriggeringPrincipal)]
+  nsIPrincipal binaryTriggeringPrincipal();
 
   /**
    * The loadingDocument of the channel.

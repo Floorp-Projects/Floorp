@@ -1476,11 +1476,8 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   } else {
     aStream << " [not visible]";
   }
-  if (!mEventRegions.mHitRegion.IsEmpty()) {
-    AppendToString(aStream, mEventRegions.mHitRegion, " [hitregion=", "]");
-  }
-  if (!mEventRegions.mDispatchToContentHitRegion.IsEmpty()) {
-    AppendToString(aStream, mEventRegions.mDispatchToContentHitRegion, " [dispatchtocontentregion=", "]");
+  if (!mEventRegions.IsEmpty()) {
+    AppendToString(aStream, mEventRegions, " ", "");
   }
   if (1.0 != mOpacity) {
     aStream << nsPrintfCString(" [opacity=%g]", mOpacity).get();

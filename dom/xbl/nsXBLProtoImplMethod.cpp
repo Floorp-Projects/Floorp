@@ -292,8 +292,6 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
     return NS_OK;
   }
 
-  nsAutoMicroTask mt;
-
   // We are going to run script via JS::Call, so we need a script entry point,
   // but as this is XBL related it does not appear in the HTML spec.
   dom::AutoEntryScript aes(global);

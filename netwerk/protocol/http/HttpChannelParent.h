@@ -110,6 +110,7 @@ protected:
                    const bool&                allowSpdy,
                    const OptionalFileDescriptorSet& aFds,
                    const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
+                   const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
                    const uint32_t&            aSecurityFlags,
                    const uint32_t&            aContentPolicyType);
 
