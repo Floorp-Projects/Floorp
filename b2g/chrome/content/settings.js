@@ -510,10 +510,6 @@ let settingsToObserve = {
     defaultValue: 0
   },
   'app.update.interval': 86400,
-  'apz.force-enable': {
-    prefName: 'dom.browser_frames.useAsyncPanZoom',
-    defaultValue: false
-  },
   'apz.overscroll.enabled': true,
   'debug.fps.enabled': {
     prefName: 'layers.acceleration.draw-fps',

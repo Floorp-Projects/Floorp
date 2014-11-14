@@ -26,7 +26,6 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
-    virtual bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props) const MOZ_OVERRIDE;
 
     /* These two are standard internal methods but aren't implemented to spec yet. */
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
@@ -63,6 +62,8 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                                               AutoIdVector &props) const MOZ_OVERRIDE {
         return BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, proxy, props);
     }
+    virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
+                                           AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) const MOZ_OVERRIDE;
 

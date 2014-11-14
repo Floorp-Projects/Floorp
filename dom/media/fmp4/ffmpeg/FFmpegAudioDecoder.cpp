@@ -22,7 +22,6 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   const mp4_demuxer::AudioDecoderConfig& aConfig)
   : FFmpegDataDecoder(aTaskQueue, GetCodecId(aConfig.mime_type))
   , mCallback(aCallback)
-  , mConfig(aConfig)
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
   mExtraData.append(aConfig.audio_specific_config.begin(),
