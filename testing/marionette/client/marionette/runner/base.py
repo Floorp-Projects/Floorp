@@ -332,7 +332,7 @@ class BaseMarionetteOptions(OptionParser):
                         help='xml output')
         self.add_option('--testvars',
                         dest='testvars',
-                        action='append',
+                        action='store',
                         help='path to a json file with any test data required')
         self.add_option('--tree',
                         dest='tree',
@@ -473,6 +473,7 @@ class BaseMarionetteTestRunner(object):
         self.logcat_stdout = logcat_stdout
         self.xml_output = xml_output
         self.repeat = repeat
+        self.testvars = {}
         self.test_kwargs = kwargs
         self.tree = tree
         self.type = type
@@ -513,27 +514,17 @@ class BaseMarionetteTestRunner(object):
 
         self.result_callbacks.append(gather_debug)
 
-        def update(d, u):
-            """ Update a dictionary that may contain nested dictionaries. """
-            for k, v in u.iteritems():
-                o = d.get(k, {})
-                if isinstance(v, dict) and isinstance(o, dict):
-                    d[k] = update(d.get(k, {}), v)
-                else:
-                    d[k] = u[k]
-            return d
+        if testvars:
+            if not os.path.exists(testvars):
+                raise IOError('--testvars file does not exist')
 
-        self.testvars = {}
-        for path in list(testvars):
-            if not os.path.exists(path):
-                raise IOError('--testvars file %s does not exist' % path)
             try:
-                with open(path) as f:
-                    self.testvars = update(self.testvars, json.loads(f.read()))
+                with open(testvars) as f:
+                    self.testvars = json.loads(f.read())
             except ValueError as e:
+                json_path = os.path.abspath(testvars)
                 raise Exception("JSON file (%s) is not properly "
-                                "formatted: %s" % (os.path.abspath(path),
-                                                   e.message))
+                                "formatted: %s" % (json_path, e.message))
 
         # set up test handlers
         self.test_handlers = []
