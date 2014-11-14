@@ -65,6 +65,8 @@ public class AndroidFxAccount {
 
   protected static final List<String> ANDROID_AUTHORITIES = Collections.unmodifiableList(Arrays.asList(BrowserContract.AUTHORITY));
 
+  private static final String PREF_KEY_LAST_SYNCED_TIMESTAMP = "lastSyncedTimestamp";
+
   protected final Context context;
   protected final AccountManager accountManager;
   protected final Account account;
@@ -564,5 +566,23 @@ public class AndroidFxAccount {
         Long.valueOf(FxAccountConstants.ACCOUNT_DELETED_INTENT_VERSION));
     intent.putExtra(FxAccountConstants.ACCOUNT_DELETED_INTENT_ACCOUNT_KEY, account.name);
     return intent;
+  }
+
+  public void setLastSyncedTimestamp(long now) {
+    try {
+      getSyncPrefs().edit().putLong(PREF_KEY_LAST_SYNCED_TIMESTAMP, now).commit();
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception setting last synced time; ignoring.", e);
+    }
+  }
+
+  public long getLastSyncedTimestamp() {
+    final long neverSynced = -1L;
+    try {
+      return getSyncPrefs().getLong(PREF_KEY_LAST_SYNCED_TIMESTAMP, neverSynced);
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception getting last synced time; ignoring.", e);
+      return neverSynced;
+    }
   }
 }

@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1095234 - Bug 1091260 stopped packaging a devtools file with EXTRA_JS_MODULES while making it require pre-processing.
+Bug 1084498 - Android build tools dependency.

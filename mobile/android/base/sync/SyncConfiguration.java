@@ -37,7 +37,6 @@ public class SyncConfiguration {
       this.editor = config.getEditor();
     }
 
-    @Override
     public void apply() {
       // Android <=r8 SharedPreferences.Editor does not contain apply() for overriding.
       this.editor.commit();
@@ -86,7 +85,6 @@ public class SyncConfiguration {
 
     // Not marking as Override, because Android <= 10 doesn't have
     // putStringSet. Neither can we implement it.
-    @Override
     public Editor putStringSet(String key, Set<String> value) {
       throw new RuntimeException("putStringSet not available.");
     }
@@ -162,7 +160,6 @@ public class SyncConfiguration {
 
     // Not marking as Override, because Android <= 10 doesn't have
     // getStringSet. Neither can we implement it.
-    @Override
     public Set<String> getStringSet(String key, Set<String> defValue) {
       throw new RuntimeException("getStringSet not available.");
     }
