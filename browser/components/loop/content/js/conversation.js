@@ -675,10 +675,10 @@ loop.conversation = (function(mozL10n) {
 
     // XXX Old class creation for the incoming conversation view, whilst
     // we transition across (bug 1072323).
-    var conversation = new sharedModels.ConversationModel(
-      {},                // Model attributes
-      {sdk: window.OT}   // Model dependencies
-    );
+    var conversation = new sharedModels.ConversationModel({}, {
+      sdk: window.OT,
+      mozLoop: navigator.mozLoop
+    });
 
     // Obtain the windowId and pass it through
     var helper = new loop.shared.utils.Helper();
