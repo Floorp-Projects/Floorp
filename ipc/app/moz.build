@@ -33,6 +33,13 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
+# We link GMPLoader into plugin-container on desktop so that its code is
+# covered by the desktop DRM vendor's voucher.
+if CONFIG['OS_TARGET'] != 'Android':
+    SOURCES += [
+        '../../dom/media/gmp/GMPLoader.cpp',
+    ]
+
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [
