@@ -52,43 +52,22 @@ AbstractFile.prototype = {
   /**
    * Read bytes from this file to a new buffer.
    *
-   * @param {number=} bytes If unspecified, read all the remaining bytes from
-   * this file. If specified, read |bytes| bytes, or less if the file does notclone
-   * contain that many bytes.
+   * @param {number=} maybeBytes (deprecated, please use options.bytes)
    * @param {JSON} options
    * @return {Uint8Array} An array containing the bytes read.
    */
-  read: function read(bytes, options = {}) {
-    options = clone(options);
-    options.bytes = bytes == null ? this.stat().size : bytes;
-    let buffer = new Uint8Array(options.bytes);
-    let size = this.readTo(buffer, options);
-    if (size == options.bytes) {
-      return buffer;
+  read: function read(maybeBytes, options = {}) {
+    if (typeof maybeBytes === "object") {
+    // Caller has skipped `maybeBytes` and provided an options object.
+      options = clone(maybeBytes);
+      maybeBytes = null;
     } else {
-      return buffer.subarray(0, size);
+      options = clone(options || {});
     }
-  },
-
-  /**
-   * Read bytes from this file to an existing buffer.
-   *
-   * Note that, by default, this function may perform several I/O
-   * operations to ensure that the buffer is as full as possible.
-   *
-   * @param {Typed Array | C pointer} buffer The buffer in which to
-   * store the bytes. The buffer must be large enough to
-   * accomodate |bytes| bytes.
-   * @param {*=} options Optionally, an object that may contain the
-   * following fields:
-   * - {number} bytes The number of |bytes| to write from the buffer. If
-   * unspecified, this is |buffer.byteLength|. Note that |bytes| is required
-   * if |buffer| is a C pointer.
-   *
-   * @return {number} The number of bytes actually read, which may be
-   * less than |bytes| if the file did not contain that many bytes left.
-   */
-  readTo: function readTo(buffer, options = {}) {
+    if(!("bytes" in options)) {
+      options.bytes = maybeBytes == null ? this.stat().size : maybeBytes;
+    }
+    let buffer = new Uint8Array(options.bytes);
     let {ptr, bytes} = SharedAll.normalizeToPointer(buffer, options.bytes);
     let pos = 0;
     while (pos < bytes) {
@@ -99,8 +78,11 @@ AbstractFile.prototype = {
       pos += chunkSize;
       ptr = SharedAll.offsetBy(ptr, chunkSize);
     }
-
-    return pos;
+    if (pos == options.bytes) {
+      return buffer;
+    } else {
+      return buffer.subarray(0, pos);
+    }
   },
 
   /**
