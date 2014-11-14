@@ -57,6 +57,7 @@ loop.shared.models = (function(l10n) {
      * Constructor.
      *
      * Options:
+     * - {OT} mozLoop: browser mozLoop service object.
      *
      * Required:
      * - {OT} sdk: OT SDK object.
@@ -66,6 +67,7 @@ loop.shared.models = (function(l10n) {
      */
     initialize: function(attributes, options) {
       options = options || {};
+      this.mozLoop = options.mozLoop;
       if (!options.sdk) {
         throw new Error("missing required sdk");
       }
@@ -186,6 +188,13 @@ loop.shared.models = (function(l10n) {
                                   this._sessionDisconnected);
       this.session.connect(this.get("apiKey"), this.get("sessionToken"),
                            this._onConnectCompletion.bind(this));
+
+      // We store the call credentials for debugging purposes.
+      if (this.mozLoop) {
+        this.mozLoop.addConversationContext(this.get("windowId"),
+                                            this.get("sessionId"),
+                                            this.get("callId"));
+      }
     },
 
     /**

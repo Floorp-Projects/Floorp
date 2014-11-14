@@ -38,6 +38,7 @@ describe("loop.store.ConversationStore", function () {
 
     navigator.mozLoop = {
       getLoopPref: sandbox.stub(),
+      addConversationContext: sandbox.stub(),
       calls: {
         setCallInProgress: sandbox.stub(),
         clearCallInProgress: sandbox.stub()
@@ -75,6 +76,7 @@ describe("loop.store.ConversationStore", function () {
       sessionId: "321456",
       sessionToken: "341256",
       websocketToken: "543216",
+      windowId: "28",
       progressURL: "fakeURL"
     };
 
@@ -221,6 +223,17 @@ describe("loop.store.ConversationStore", function () {
           sessionId: "321456",
           sessionToken: "341256"
         });
+      });
+
+      it("should call mozLoop.addConversationContext", function() {
+        store.set(fakeSessionData);
+
+        store.connectionProgress(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
+
+        sinon.assert.calledOnce(navigator.mozLoop.addConversationContext);
+        sinon.assert.calledWithExactly(navigator.mozLoop.addConversationContext,
+                                       "28", "321456", "142536");
       });
     });
   });
