@@ -73,6 +73,8 @@ class IDBFactory MOZ_FINAL
   PRThread* mOwningThread;
 #endif
 
+  uint64_t mInnerWindowID;
+
   bool mBackgroundActorFailed;
   bool mPrivateBrowsingMode;
 
@@ -129,6 +131,17 @@ public:
 
     return mPrincipalInfo;
   }
+
+  uint64_t
+  InnerWindowID() const
+  {
+    AssertIsOnOwningThread();
+
+    return mInnerWindowID;
+  }
+
+  bool
+  IsChrome() const;
 
   already_AddRefed<IDBOpenDBRequest>
   Open(const nsAString& aName,
