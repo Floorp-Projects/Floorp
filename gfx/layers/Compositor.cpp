@@ -17,18 +17,6 @@ class Matrix4x4;
 
 namespace layers {
 
-Compositor::Compositor(PCompositorParent* aParent)
-  : mCompositorID(0)
-  , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
-  , mParent(aParent)
-  , mScreenRotation(ROTATION_0)
-{
-}
-
-Compositor::~Compositor()
-{
-}
-
 /* static */ LayersBackend Compositor::sBackend = LayersBackend::LAYERS_NONE;
 /* static */ LayersBackend
 Compositor::GetBackend()

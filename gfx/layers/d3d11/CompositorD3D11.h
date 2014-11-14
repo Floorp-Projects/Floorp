@@ -142,10 +142,6 @@ public:
 
   ID3D11DeviceContext* GetDC() { return mContext; }
 
-  virtual void SetFinalDestinationTarget() MOZ_OVERRIDE {
-    MOZ_ASSERT(mFinalDestinationTarget);
-    SetRenderTarget(mFinalDestinationTarget);
-  }
 private:
   enum Severity {
     Recoverable,
