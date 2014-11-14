@@ -421,7 +421,7 @@ function unsafeVariableAddressTaken(suppressed, variable)
 
 function computePrintedLines(functionName)
 {
-    assert(!system("xdbfind src_body.xdb '" + functionName + "' > " + tmpfile));
+    assert(!os.system("xdbfind src_body.xdb '" + functionName + "' > " + tmpfile));
     var lines = snarf(tmpfile).split('\n');
 
     for (var body of functionBodies)

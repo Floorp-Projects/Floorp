@@ -3575,30 +3575,6 @@ RedirectOutput(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static bool
-System(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 0) {
-        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
-                             "system");
-        return false;
-    }
-
-    JSString *str = JS::ToString(cx, args[0]);
-    if (!str)
-        return false;
-
-    JSAutoByteString command(cx, str);
-    if (!command)
-        return false;
-
-    int result = system(command.ptr());
-    args.rval().setInt32(result);
-    return true;
-}
-
 static int sArgc;
 static char **sArgv;
 
@@ -4564,10 +4540,6 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "redirect(stdoutFilename[, stderrFilename])",
 "  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
 "   redirecting. Filenames are relative to the current working directory."),
-
-    JS_FN_HELP("system", System, 1, 0,
-"system(command)",
-"  Execute command on the current host, returning result code."),
 
     JS_FN_HELP("nestedShell", NestedShell, 0, 0,
 "nestedShell(shellArgs...)",
