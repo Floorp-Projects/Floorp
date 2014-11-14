@@ -201,7 +201,7 @@ JS_CallHashSetObjectTracer(JSTracer *trc, HashSetEnum &e, JSObject *const &key, 
     trc->setTracingLocation(reinterpret_cast<void *>(&const_cast<JSObject *&>(key)));
     JS_CallUnbarrieredObjectTracer(trc, &updated, name);
     if (updated != key)
-        e.rekeyFront(key, updated);
+        e.rekeyFront(updated);
 }
 
 // Trace an object that is known to always be tenured.  No post barriers are
