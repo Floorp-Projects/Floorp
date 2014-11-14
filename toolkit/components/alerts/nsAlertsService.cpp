@@ -100,10 +100,12 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
   nsresult rv;
   if (sysAlerts) {
-    return sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
-                                            aAlertCookie, aAlertListener, aAlertName,
-                                            aBidi, aLang, aData,
-                                            IPC::Principal(aPrincipal));
+    rv = sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
+                                          aAlertCookie, aAlertListener, aAlertName,
+                                          aBidi, aLang, aData,
+                                          IPC::Principal(aPrincipal));
+    if (NS_SUCCEEDED(rv))
+      return NS_OK;
   }
 
   if (!ShouldShowAlert()) {
