@@ -162,6 +162,15 @@ struct EventRegions {
   nsIntRegion mHitRegion;
   nsIntRegion mDispatchToContentHitRegion;
 
+  EventRegions()
+  {
+  }
+
+  explicit EventRegions(nsIntRegion aHitRegion)
+    : mHitRegion(aHitRegion)
+  {
+  }
+
   bool operator==(const EventRegions& aRegions) const
   {
     return mHitRegion == aRegions.mHitRegion &&
@@ -170,6 +179,12 @@ struct EventRegions {
   bool operator!=(const EventRegions& aRegions) const
   {
     return !(*this == aRegions);
+  }
+
+  void OrWith(const EventRegions& aOther)
+  {
+    mHitRegion.OrWith(aOther.mHitRegion);
+    mDispatchToContentHitRegion.OrWith(aOther.mDispatchToContentHitRegion);
   }
 
   nsCString ToString() const
