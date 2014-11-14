@@ -276,8 +276,7 @@ public:
   enum NotDecodedReason {
     END_OF_STREAM,
     DECODE_ERROR,
-    WAITING_FOR_DATA,
-    CANCELED
+    WAITING_FOR_DATA
   };
 
   // Receives the result of a RequestAudioData() call.
