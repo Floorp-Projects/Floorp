@@ -143,7 +143,7 @@ public:
   }
 
   nsEventStatus ReceiveInputEvent(const InputData& aEvent, uint64_t* aOutInputBlockId) {
-    return GetInputQueue()->ReceiveInputEvent(this, aEvent, aOutInputBlockId);
+    return GetInputQueue()->ReceiveInputEvent(this, true, aEvent, aOutInputBlockId);
   }
 
   void ContentReceivedTouch(uint64_t aInputBlockId, bool aPreventDefault) {

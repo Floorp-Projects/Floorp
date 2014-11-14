@@ -214,6 +214,18 @@ public:
                             bool aPreventDefault);
 
   /**
+   * When the event regions code is enabled, this function should be invoked to
+   * to confirm the target of the input block. This is only needed in cases
+   * where the initial input event of the block hit a dispatch-to-content region
+   * but is safe to call for all input blocks. This function should always be
+   * invoked on the controller thread.
+   * In the case where the input block has no target, or the target is not a
+   * scrollable frame, |aGuid.mScrollId| should be set to FrameMetrics::
+   * NULL_SCROLL_ID.
+   */
+  void SetTargetAPZC(uint64_t aInputBlockId, const ScrollableLayerGuid& aGuid);
+
+  /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
    */
   void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
