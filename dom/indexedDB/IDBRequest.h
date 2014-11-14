@@ -114,7 +114,7 @@ public:
   GetError(ErrorResult& aRv);
 
   void
-  FillScriptErrorEvent(ErrorEventInit& aEventInit) const;
+  GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const;
 
   bool
   IsPending() const
@@ -189,9 +189,6 @@ protected:
 
   void
   ConstructResult();
-
-  void
-  CaptureCaller();
 };
 
 class NS_NO_VTABLE IDBRequest::ResultCallback
