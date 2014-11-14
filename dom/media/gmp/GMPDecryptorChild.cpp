@@ -26,10 +26,9 @@
 namespace mozilla {
 namespace gmp {
 
-GMPDecryptorChild::GMPDecryptorChild(GMPChild* aPlugin, const std::string& aNodeId)
+GMPDecryptorChild::GMPDecryptorChild(GMPChild* aPlugin)
   : mSession(nullptr)
   , mPlugin(aPlugin)
-  , mNodeId(aNodeId)
 {
   MOZ_ASSERT(mPlugin);
 }
@@ -171,14 +170,6 @@ void
 GMPDecryptorChild::SetCapabilities(uint64_t aCaps)
 {
   CALL_ON_GMP_THREAD(SendSetCaps, aCaps);
-}
-
-void
-GMPDecryptorChild::GetNodeId(const char** aOutNodeId,
-                             uint32_t* aOutNodeIdLength)
-{
-  *aOutNodeId = mNodeId.c_str();
-  *aOutNodeIdLength = mNodeId.size();
 }
 
 void
