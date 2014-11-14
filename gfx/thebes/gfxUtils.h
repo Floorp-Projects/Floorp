@@ -96,19 +96,9 @@ public:
     static void ClipToRegion(mozilla::gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
 
     /**
-     * Clip aContext to the region aRegion, snapping the rectangles.
-     */
-    static void ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
-
-    /**
      * Create a path consisting of rectangles in |aRegion|.
      */
     static void PathFromRegion(gfxContext* aContext, const nsIntRegion& aRegion);
-
-    /**
-     * Create a path consisting of rectangles in |aRegion|, snapping the rectangles.
-     */
-    static void PathFromRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
 
     /*
      * Convert image format to depth value
