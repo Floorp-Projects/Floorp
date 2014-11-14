@@ -2150,6 +2150,11 @@ pref("layout.css.overflow-clip-box.enabled", false);
 pref("layout.css.grid.enabled", false);
 
 // Is support for CSS Ruby enabled?
+//
+// When this pref is removed, make sure that the pref callback registration
+// in nsLayoutStylesheetCache::EnsureGlobal and the invalidation of
+// mUASheet in nsLayoutStylesheetCache::DependentPrefChanged (if it's not
+// otherwise needed) are removed.
 pref("layout.css.ruby.enabled", false);
 
 // Is support for CSS box-decoration-break enabled?
@@ -3909,6 +3914,12 @@ pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
+// If this is set the tile size will only be treated as a suggestion.
+// On B2G we will round this to the stride of the underlying allocation.
+// On any platform we may later use the screen size and ignore
+// tile-width/tile-height entirely. Its recommended to turn this off
+// if you change the tile size.
+pref("layers.tiles.adjust", true);
 
 // Set the default values, and then override per-platform as needed
 pref("layers.offmainthreadcomposition.enabled", false);

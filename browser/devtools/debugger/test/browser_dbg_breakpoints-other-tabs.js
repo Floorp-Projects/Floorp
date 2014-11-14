@@ -9,8 +9,8 @@
 const TAB_URL = EXAMPLE_URL + "doc_breakpoints-other-tabs.html";
 
 let test = Task.async(function* () {
-  const [tab1, debuggee1, panel1] = yield initDebugger(TAB_URL);
-  const [tab2, debuggee2, panel2] = yield initDebugger(TAB_URL);
+  const [tab1,, panel1] = yield initDebugger(TAB_URL);
+  const [tab2,, panel2] = yield initDebugger(TAB_URL);
 
   yield ensureSourceIs(panel1, "code_breakpoints-other-tabs.js", true);
 
@@ -22,7 +22,7 @@ let test = Task.async(function* () {
   });
 
   const paused = waitForThreadEvents(panel2, "paused");
-  executeSoon(() => debuggee2.testCase());
+  callInTab(tab2, "testCase");
   const packet = yield paused;
 
   is(packet.why.type, "debuggerStatement",

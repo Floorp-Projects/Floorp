@@ -311,6 +311,23 @@ public:
     virtual bool RecvDeallocateTabId(const TabId& aTabId) MOZ_OVERRIDE;
 
     nsTArray<TabContext> GetManagedTabContext();
+
+    virtual POfflineCacheUpdateParent*
+    AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
+                                   const URIParams& aDocumentURI,
+                                   const bool& aStickDocument,
+                                   const TabId& aTabId) MOZ_OVERRIDE;
+    virtual bool
+    RecvPOfflineCacheUpdateConstructor(POfflineCacheUpdateParent* aActor,
+                                       const URIParams& aManifestURI,
+                                       const URIParams& aDocumentURI,
+                                       const bool& stickDocument,
+                                       const TabId& aTabId) MOZ_OVERRIDE;
+    virtual bool
+    DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor) MOZ_OVERRIDE;
+
+    virtual bool RecvSetOfflinePermission(const IPC::Principal& principal) MOZ_OVERRIDE;
+
 protected:
     void OnChannelConnected(int32_t pid) MOZ_OVERRIDE;
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;

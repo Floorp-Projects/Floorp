@@ -276,6 +276,20 @@ ImageHost::Unlock()
   mLocked = false;
 }
 
+IntSize
+ImageHost::GetImageSize() const
+{
+  if (mHasPictureRect) {
+    return IntSize(mPictureRect.width, mPictureRect.height);
+  }
+
+  if (mFrontBuffer) {
+    return mFrontBuffer->GetSize();
+  }
+
+  return IntSize();
+}
+
 TemporaryRef<TexturedEffect>
 ImageHost::GenEffect(const gfx::Filter& aFilter)
 {

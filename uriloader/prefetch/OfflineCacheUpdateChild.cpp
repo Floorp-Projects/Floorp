@@ -34,6 +34,7 @@
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using mozilla::dom::TabChild;
+using mozilla::dom::ContentChild;
 
 #if defined(PR_LOGGING)
 //
@@ -433,10 +434,11 @@ OfflineCacheUpdateChild::Schedule()
     // Need to addref ourself here, because the IPC stack doesn't hold
     // a reference to us. Will be released in RecvFinish() that identifies 
     // the work has been done.
-    child->SendPOfflineCacheUpdateConstructor(this, manifestURI, documentURI,
-                                              stickDocument);
+    ContentChild::GetSingleton()->SendPOfflineCacheUpdateConstructor(
+        this, manifestURI, documentURI,
+        stickDocument, child->GetTabId());
 
-    // TabChild::DeallocPOfflineCacheUpdate will release this.
+    // ContentChild::DeallocPOfflineCacheUpdate will release this.
     NS_ADDREF_THIS();
 
     return NS_OK;

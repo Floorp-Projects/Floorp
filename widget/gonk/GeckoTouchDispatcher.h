@@ -73,14 +73,11 @@ private:
   // resample
   TimeDuration mMinResampleTime;
 
-  // The time difference between the last two touch move events
-  TimeDuration mTouchTimeDiff;
-
-  // The system time at which the last touch event occured
-  TimeStamp mLastTouchTime;
-
   // Threshold if a vsync event runs too far behind touch events
   TimeDuration mDelayedVsyncThreshold;
+
+  // How far ahead can vsync events get ahead of touch events.
+  TimeDuration mOldTouchThreshold;
 };
 
 } // namespace mozilla

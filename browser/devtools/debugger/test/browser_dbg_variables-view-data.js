@@ -6,13 +6,12 @@
  * when given some raw data.
  */
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gVariablesView, gScope, gVariable;
 
 function test() {
-  initDebugger("about:blank").then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger("about:blank").then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gVariablesView = gDebugger.DebuggerView.Variables;
@@ -602,7 +601,6 @@ function testClearHierarchy() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gVariablesView = null;

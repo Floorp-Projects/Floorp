@@ -149,9 +149,9 @@ struct BaselineScript
         // (rather than call object stored) arguments.
         MODIFIES_ARGUMENTS = 1 << 2,
 
-        // Flag set when compiled for use for debug mode. Handles various
+        // Flag set when compiled for use with Debugger. Handles various
         // Debugger hooks and compiles toggled calls for traps.
-        DEBUG_MODE = 1 << 3,
+        HAS_DEBUG_INSTRUMENTATION = 1 << 3,
 
         // Flag set if this script has ever been Ion compiled, either directly
         // or inlined into another script. This is cleared when the script's
@@ -232,11 +232,11 @@ struct BaselineScript
         return flags_ & MODIFIES_ARGUMENTS;
     }
 
-    void setDebugMode() {
-        flags_ |= DEBUG_MODE;
+    void setHasDebugInstrumentation() {
+        flags_ |= HAS_DEBUG_INSTRUMENTATION;
     }
-    bool debugMode() const {
-        return flags_ & DEBUG_MODE;
+    bool hasDebugInstrumentation() const {
+        return flags_ & HAS_DEBUG_INSTRUMENTATION;
     }
 
     void setIonCompiledOrInlined() {
@@ -461,7 +461,7 @@ void
 MarkActiveBaselineScripts(Zone *zone);
 
 MethodStatus
-BaselineCompile(JSContext *cx, JSScript *script);
+BaselineCompile(JSContext *cx, JSScript *script, bool forceDebugInstrumentation = false);
 
 } // namespace jit
 } // namespace js

@@ -13,6 +13,7 @@ jar.sources += [
     'classloader/IterableJarLoadingURLClassLoader.java',
     'classloader/JarClassIterator.java',
     'CodeGenerator.java',
+    'SDKProcessor.java',
     'utils/AlphabeticAnnotatableEntityComparator.java',
     'utils/GeneratableElementIterator.java',
     'utils/Utils.java',

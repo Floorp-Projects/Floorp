@@ -8,16 +8,20 @@
 #include "GLUploadHelpers.h"
 #include "DecomposeIntoNoRepeatTriangles.h"
 #include "GLContext.h"
+#include "GLTextureImage.h"
 #include "ScopedGLHelpers.h"
 #include "nsRect.h"
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
+#include "CompositorOGL.h"
+
+using namespace mozilla::gl;
 
 namespace mozilla {
-namespace gl {
+namespace layers {
 
-GLBlitTextureImageHelper::GLBlitTextureImageHelper(GLContext* gl)
-    : mGL(gl)
+GLBlitTextureImageHelper::GLBlitTextureImageHelper(CompositorOGL* aCompositor)
+    : mCompositor(aCompositor)
     , mBlitProgram(0)
     , mBlitFramebuffer(0)
 
@@ -26,15 +30,17 @@ GLBlitTextureImageHelper::GLBlitTextureImageHelper(GLContext* gl)
 
 GLBlitTextureImageHelper::~GLBlitTextureImageHelper()
 {
+    GLContext *gl = mCompositor->gl();
     // Likely used by OGL Layers.
-    mGL->fDeleteProgram(mBlitProgram);
-    mGL->fDeleteFramebuffers(1, &mBlitFramebuffer);
+    gl->fDeleteProgram(mBlitProgram);
+    gl->fDeleteFramebuffers(1, &mBlitFramebuffer);
 }
 
 void
 GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& aSrcRect,
                                            TextureImage *aDst, const nsIntRect& aDstRect)
 {
+    GLContext *gl = mCompositor->gl();
     NS_ASSERTION(!aSrc->InUpdate(), "Source texture is in update!");
     NS_ASSERTION(!aDst->InUpdate(), "Destination texture is in update!");
 
@@ -42,10 +48,10 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
         return;
 
     int savedFb = 0;
-    mGL->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
+    gl->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
 
-    ScopedGLState scopedScissorTestState(mGL, LOCAL_GL_SCISSOR_TEST, false);
-    ScopedGLState scopedBlendState(mGL, LOCAL_GL_BLEND, false);
+    ScopedGLState scopedScissorTestState(gl, LOCAL_GL_SCISSOR_TEST, false);
+    ScopedGLState scopedBlendState(gl, LOCAL_GL_BLEND, false);
 
     // 2.0 means scale up by two
     float blitScaleX = float(aDstRect.width) / float(aSrcRect.width);
@@ -113,12 +119,12 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
             float dy0 = 2.0f * float(srcSubInDstRect.y) / float(dstSize.height) - 1.0f;
             float dx1 = 2.0f * float(srcSubInDstRect.x + srcSubInDstRect.width) / float(dstSize.width) - 1.0f;
             float dy1 = 2.0f * float(srcSubInDstRect.y + srcSubInDstRect.height) / float(dstSize.height) - 1.0f;
-            ScopedViewportRect autoViewportRect(mGL, 0, 0, dstSize.width, dstSize.height);
+            ScopedViewportRect autoViewportRect(gl, 0, 0, dstSize.width, dstSize.height);
 
             RectTriangles rects;
 
             nsIntSize realTexSize = srcSize;
-            if (!CanUploadNonPowerOfTwo(mGL)) {
+            if (!CanUploadNonPowerOfTwo(gl)) {
                 realTexSize = nsIntSize(gfx::NextPowerOfTwo(srcSize.width),
                                         gfx::NextPowerOfTwo(srcSize.height));
             }
@@ -144,12 +150,12 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
                 }
             }
 
-            ScopedBindTextureUnit autoTexUnit(mGL, LOCAL_GL_TEXTURE0);
-            ScopedBindTexture autoTex(mGL, aSrc->GetTextureID());
-            ScopedVertexAttribPointer autoAttrib0(mGL, 0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0, rects.vertCoords().Elements());
-            ScopedVertexAttribPointer autoAttrib1(mGL, 1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0, rects.texCoords().Elements());
+            ScopedBindTextureUnit autoTexUnit(gl, LOCAL_GL_TEXTURE0);
+            ScopedBindTexture autoTex(gl, aSrc->GetTextureID());
+            ScopedVertexAttribPointer autoAttrib0(gl, 0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0, rects.vertCoords().Elements());
+            ScopedVertexAttribPointer autoAttrib1(gl, 1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0, rects.texCoords().Elements());
 
-            mGL->fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.elements());
+            gl->fDrawArrays(LOCAL_GL_TRIANGLES, 0, rects.elements());
 
         } while (aSrc->NextTile());
     } while (aDst->NextTile());
@@ -157,24 +163,25 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
     // unbind the previous texture from the framebuffer
     SetBlitFramebufferForDestTexture(0);
 
-    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
 }
 
 void
 GLBlitTextureImageHelper::SetBlitFramebufferForDestTexture(GLuint aTexture)
 {
+    GLContext *gl = mCompositor->gl();
     if (!mBlitFramebuffer) {
-        mGL->fGenFramebuffers(1, &mBlitFramebuffer);
+        gl->fGenFramebuffers(1, &mBlitFramebuffer);
     }
 
-    mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBlitFramebuffer);
-    mGL->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBlitFramebuffer);
+    gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                                LOCAL_GL_COLOR_ATTACHMENT0,
                                LOCAL_GL_TEXTURE_2D,
                                aTexture,
                                0);
 
-    GLenum result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    GLenum result = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (aTexture && (result != LOCAL_GL_FRAMEBUFFER_COMPLETE)) {
         nsAutoCString msg;
         msg.AppendLiteral("Framebuffer not complete -- error 0x");
@@ -190,16 +197,17 @@ GLBlitTextureImageHelper::SetBlitFramebufferForDestTexture(GLuint aTexture)
 void
 GLBlitTextureImageHelper::UseBlitProgram()
 {
+    GLContext *gl = mCompositor->gl();
     if (mBlitProgram) {
-        mGL->fUseProgram(mBlitProgram);
+        gl->fUseProgram(mBlitProgram);
         return;
     }
 
-    mBlitProgram = mGL->fCreateProgram();
+    mBlitProgram = gl->fCreateProgram();
 
     GLuint shaders[2];
-    shaders[0] = mGL->fCreateShader(LOCAL_GL_VERTEX_SHADER);
-    shaders[1] = mGL->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
+    shaders[0] = gl->fCreateShader(LOCAL_GL_VERTEX_SHADER);
+    shaders[1] = gl->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
 
     const char *blitVSSrc =
         "attribute vec2 aVertex;"
@@ -216,53 +224,53 @@ GLBlitTextureImageHelper::UseBlitProgram()
         "  gl_FragColor = texture2D(uSrcTexture, vTexCoord);"
         "}";
 
-    mGL->fShaderSource(shaders[0], 1, (const GLchar**) &blitVSSrc, nullptr);
-    mGL->fShaderSource(shaders[1], 1, (const GLchar**) &blitFSSrc, nullptr);
+    gl->fShaderSource(shaders[0], 1, (const GLchar**) &blitVSSrc, nullptr);
+    gl->fShaderSource(shaders[1], 1, (const GLchar**) &blitFSSrc, nullptr);
 
     for (int i = 0; i < 2; ++i) {
         GLint success, len = 0;
 
-        mGL->fCompileShader(shaders[i]);
-        mGL->fGetShaderiv(shaders[i], LOCAL_GL_COMPILE_STATUS, &success);
+        gl->fCompileShader(shaders[i]);
+        gl->fGetShaderiv(shaders[i], LOCAL_GL_COMPILE_STATUS, &success);
         NS_ASSERTION(success, "Shader compilation failed!");
 
         if (!success) {
             nsAutoCString log;
-            mGL->fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
+            gl->fGetShaderiv(shaders[i], LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
             log.SetCapacity(len);
-            mGL->fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
+            gl->fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
             log.SetLength(len);
 
             printf_stderr("Shader %d compilation failed:\n%s\n", i, log.get());
             return;
         }
 
-        mGL->fAttachShader(mBlitProgram, shaders[i]);
-        mGL->fDeleteShader(shaders[i]);
+        gl->fAttachShader(mBlitProgram, shaders[i]);
+        gl->fDeleteShader(shaders[i]);
     }
 
-    mGL->fBindAttribLocation(mBlitProgram, 0, "aVertex");
-    mGL->fBindAttribLocation(mBlitProgram, 1, "aTexCoord");
+    gl->fBindAttribLocation(mBlitProgram, 0, "aVertex");
+    gl->fBindAttribLocation(mBlitProgram, 1, "aTexCoord");
 
-    mGL->fLinkProgram(mBlitProgram);
+    gl->fLinkProgram(mBlitProgram);
 
     GLint success, len = 0;
-    mGL->fGetProgramiv(mBlitProgram, LOCAL_GL_LINK_STATUS, &success);
+    gl->fGetProgramiv(mBlitProgram, LOCAL_GL_LINK_STATUS, &success);
     NS_ASSERTION(success, "Shader linking failed!");
 
     if (!success) {
         nsAutoCString log;
-        mGL->fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
+        gl->fGetProgramiv(mBlitProgram, LOCAL_GL_INFO_LOG_LENGTH, (GLint*) &len);
         log.SetCapacity(len);
-        mGL->fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
+        gl->fGetProgramInfoLog(mBlitProgram, len, (GLint*) &len, (char*) log.BeginWriting());
         log.SetLength(len);
 
         printf_stderr("Program linking failed:\n%s\n", log.get());
         return;
     }
 
-    mGL->fUseProgram(mBlitProgram);
-    mGL->fUniform1i(mGL->fGetUniformLocation(mBlitProgram, "uSrcTexture"), 0);
+    gl->fUseProgram(mBlitProgram);
+    gl->fUniform1i(gl->fGetUniformLocation(mBlitProgram, "uSrcTexture"), 0);
 }
 
 }

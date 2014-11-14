@@ -449,6 +449,8 @@
 @BINPATH@/components/RadioInterfaceLayer.js
 @BINPATH@/components/RadioInterfaceLayer.manifest
 @BINPATH@/components/RILContentHelper.js
+@BINPATH@/components/TelephonyAudioService.js
+@BINPATH@/components/TelephonyAudioService.manifest
 @BINPATH@/components/TelephonyService.js
 @BINPATH@/components/TelephonyService.manifest
 @BINPATH@/components/VoicemailService.js

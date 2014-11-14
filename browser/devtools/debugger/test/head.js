@@ -970,6 +970,15 @@ function callInTab(tab, name) {
   waitForMessageFromTab(tab, "test:call");
 }
 
+function evalInTab(tab, string) {
+  info("Evalling string " + string + " in tab.");
+
+  sendMessageToTab(tab, "test:eval", {
+    string: string,
+  });
+  waitForMessageFromTab(tab, "test:eval");
+}
+
 function sendMouseClickToTab(tab, target) {
   info("Sending mouse click to tab.");
 

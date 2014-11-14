@@ -10,12 +10,11 @@
 const TAB_URL = EXAMPLE_URL + "doc_breakpoint-move.html";
 
 function test() {
-  let gTab, gDebuggee, gPanel, gDebugger;
+  let gTab, gPanel, gDebugger;
   let gEditor, gSources, gBreakpoints, gBreakpointsAdded, gBreakpointsRemoving;
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gEditor = gDebugger.DebuggerView.editor;
@@ -25,7 +24,7 @@ function test() {
     gBreakpointsRemoving = gBreakpoints._removing;
 
     waitForSourceAndCaretAndScopes(gPanel, ".html", 1).then(performTest);
-    gDebuggee.ermahgerd();
+    callInTab(gTab, "ermahgerd");
   });
 
   function performTest() {
@@ -62,7 +61,7 @@ function test() {
       yield resumeAndTestBreakpoint(20);
       yield doResume(gPanel);
 
-      executeSoon(() => gDebuggee.ermahgerd());
+      callInTab(gTab, "ermahgerd");
       yield waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES);
 
       yield resumeAndTestBreakpoint(20);

@@ -194,8 +194,8 @@ BaselineFrame::initForOsr(InterpreterFrame *fp, uint32_t numStackValues)
     for (uint32_t i = 0; i < numStackValues; i++)
         *valueSlot(i) = fp->slots()[i];
 
-    if (cx->compartment()->debugMode()) {
-        // In debug mode, update any Debugger.Frame objects for the
+    if (fp->isDebuggee()) {
+        // For debuggee frames, update any Debugger.Frame objects for the
         // InterpreterFrame to point to the BaselineFrame.
 
         // The caller pushed a fake return address. ScriptFrameIter, used by the
@@ -209,6 +209,8 @@ BaselineFrame::initForOsr(InterpreterFrame *fp, uint32_t numStackValues)
 
         if (!Debugger::handleBaselineOsr(cx, fp, this))
             return false;
+
+        setIsDebuggee();
     }
 
     return true;

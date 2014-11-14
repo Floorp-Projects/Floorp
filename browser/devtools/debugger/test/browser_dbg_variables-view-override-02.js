@@ -9,7 +9,7 @@ const TAB_URL = EXAMPLE_URL + "doc_scope-variable-2.html";
 
 function test() {
   Task.spawn(function() {
-    let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
+    let [tab,, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
     let events = win.EVENTS;
     let variables = win.DebuggerView.Variables;
@@ -18,8 +18,7 @@ function test() {
     let committedLocalScopeHierarchy = promise.defer();
     variables.oncommit = committedLocalScopeHierarchy.resolve;
 
-    // Allow this generator function to yield first.
-    executeSoon(() => debuggee.test());
+    callInTab(tab, "test");
     yield waitForSourceAndCaretAndScopes(panel, ".html", 23);
     yield committedLocalScopeHierarchy.promise;
 

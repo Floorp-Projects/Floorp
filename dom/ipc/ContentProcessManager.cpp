@@ -207,25 +207,29 @@ ContentProcessManager::DeallocateTabId(const ContentParentId& aChildCpId,
   }
 }
 
-nsTArray<uint64_t>
-ContentProcessManager::GetAppIdsByContentProcess(const ContentParentId& aChildCpId)
+bool
+ContentProcessManager::GetTabContextByProcessAndTabId(const ContentParentId& aChildCpId,
+                                                      const TabId& aChildTabId,
+                                                      /*out*/ TabContext* aTabContext)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aTabContext);
 
-  nsTArray<uint64_t> appIdArray;
   auto iter = mContentParentMap.find(aChildCpId);
   if (NS_WARN_IF(iter == mContentParentMap.end())) {
     ASSERT_UNLESS_FUZZING();
-    return Move(appIdArray);
+    return false;
   }
 
-  for (auto remoteFrameIter = iter->second.mRemoteFrames.begin();
-       remoteFrameIter != iter->second.mRemoteFrames.end();
-       ++remoteFrameIter) {
-    appIdArray.AppendElement(remoteFrameIter->second.mContext.OwnOrContainingAppId());
+  auto remoteFrameIter = iter->second.mRemoteFrames.find(aChildTabId);
+  if (NS_WARN_IF(remoteFrameIter == iter->second.mRemoteFrames.end())) {
+    ASSERT_UNLESS_FUZZING();
+    return false;
   }
 
-  return Move(appIdArray);
+  *aTabContext = remoteFrameIter->second.mContext;
+
+  return true;
 }
 
 nsTArray<TabContext>
