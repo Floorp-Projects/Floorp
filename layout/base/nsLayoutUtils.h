@@ -96,16 +96,11 @@ struct DisplayPortPropertyData {
 
 struct DisplayPortMarginsPropertyData {
   DisplayPortMarginsPropertyData(const ScreenMargin& aMargins,
-                                 uint32_t aAlignmentX, uint32_t aAlignmentY,
                                  uint32_t aPriority)
     : mMargins(aMargins)
-    , mAlignmentX(aAlignmentX)
-    , mAlignmentY(aAlignmentY)
     , mPriority(aPriority)
   {}
   ScreenMargin mMargins;
-  uint32_t mAlignmentX;
-  uint32_t mAlignmentY;
   uint32_t mPriority;
 };
 
@@ -189,8 +184,6 @@ public:
   static void SetDisplayPortMargins(nsIContent* aContent,
                                     nsIPresShell* aPresShell,
                                     const ScreenMargin& aMargins,
-                                    uint32_t aAlignmentX,
-                                    uint32_t aAlignmentY,
                                     uint32_t aPriority = 0,
                                     RepaintMode aRepaintMode = RepaintMode::Repaint);
 

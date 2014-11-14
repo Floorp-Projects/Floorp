@@ -47,8 +47,14 @@ class BaselineFrame
         // See InterpreterFrame::PREV_UP_TO_DATE.
         PREV_UP_TO_DATE  = 1 << 5,
 
+        // Frame has execution observed by a Debugger.
+        //
+        // See comment above 'debugMode' in jscompartment.h for explanation of
+        // invariants of debuggee compartments, scripts, and frames.
+        DEBUGGEE         = 1 << 6,
+
         // Eval frame, see the "eval frames" comment.
-        EVAL             = 1 << 6,
+        EVAL             = 1 << 7,
 
         // Frame has profiler entry pushed.
         HAS_PUSHED_SPS_FRAME = 1 << 8,
@@ -268,6 +274,17 @@ class BaselineFrame
         flags_ |= PREV_UP_TO_DATE;
     }
 
+    bool isDebuggee() const {
+        return flags_ & DEBUGGEE;
+    }
+    void setIsDebuggee() {
+        flags_ |= DEBUGGEE;
+    }
+    void unsetIsDebuggee() {
+        MOZ_ASSERT(!script()->isDebuggee());
+        flags_ &= ~DEBUGGEE;
+    }
+
     JSScript *evalScript() const {
         MOZ_ASSERT(isEvalFrame());
         return evalScript_;
@@ -353,7 +370,7 @@ class BaselineFrame
     bool isNonEvalFunctionFrame() const {
         return isFunctionFrame() && !isEvalFrame();
     }
-    bool isDebuggerFrame() const {
+    bool isDebuggerEvalFrame() const {
         return false;
     }
 

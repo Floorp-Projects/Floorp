@@ -745,6 +745,11 @@ GetIndexFromString(JSString *str)
 bool
 DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn)
 {
+    // Mark the BaselineFrame as a debuggee frame if necessary. This must be
+    // done dynamically, so we might as well do it here.
+    if (frame->script()->isDebuggee())
+        frame->setIsDebuggee();
+
     *mustReturn = false;
 
     switch (Debugger::onEnterFrame(cx, frame)) {
@@ -903,6 +908,16 @@ InterpretResume(JSContext *cx, HandleObject obj, HandleValue val, HandleProperty
 }
 
 bool
+DebugAfterYield(JSContext *cx, BaselineFrame *frame)
+{
+    // The BaselineFrame has just been constructed by JSOP_RESUME in the
+    // caller. We need to set its debuggee flag as necessary.
+    if (frame->script()->isDebuggee())
+        frame->setIsDebuggee();
+    return true;
+}
+
+bool
 StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 {
     return frame->strictEvalPrologue(cx);
@@ -963,7 +978,7 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mus
     RootedScript script(cx, frame->script());
     jsbytecode *pc = script->baselineScript()->icEntryFromReturnAddress(retAddr).pc(script);
 
-    MOZ_ASSERT(cx->compartment()->debugMode());
+    MOZ_ASSERT(frame->isDebuggee());
     MOZ_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
 
     RootedValue rval(cx);
@@ -1006,7 +1021,7 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
     RootedScript script(cx, frame->script());
     RootedValue rval(cx);
 
-    switch (Debugger::onDebuggerStatement(cx, &rval)) {
+    switch (Debugger::onDebuggerStatement(cx, frame, &rval)) {
       case JSTRAP_ERROR:
         return false;
 
@@ -1043,10 +1058,9 @@ PopBlockScope(JSContext *cx, BaselineFrame *frame)
 bool
 DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc)
 {
-    MOZ_ASSERT(frame->script()->baselineScript()->debugMode());
-
-    DebugScopes::onPopBlock(cx, frame, pc);
-
+    MOZ_ASSERT(frame->script()->baselineScript()->hasDebugInstrumentation());
+    if (cx->compartment()->isDebuggee())
+        DebugScopes::onPopBlock(cx, frame, pc);
     return true;
 }
 

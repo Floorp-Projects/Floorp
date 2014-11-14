@@ -608,6 +608,16 @@
                   roomState: ROOM_STATES.FULL, 
                   helper: {isFirefox: returnFalse}})
               )
+            ), 
+
+            Example({summary: "Standalone room conversation (failed)"}, 
+              React.DOM.div({className: "standalone"}, 
+                StandaloneRoomView({
+                  dispatcher: dispatcher, 
+                  activeRoomStore: activeRoomStore, 
+                  roomState: ROOM_STATES.FAILED, 
+                  helper: {isFirefox: returnFalse}})
+              )
             )
           ), 
 

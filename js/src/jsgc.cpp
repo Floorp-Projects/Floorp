@@ -6435,6 +6435,7 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
     // meaningless after merging into the target compartment.
 
     source->clearTables();
+    source->unsetIsDebuggee();
 
     // Fixup compartment pointers in source to refer to target, and make sure
     // type information generations are in sync.

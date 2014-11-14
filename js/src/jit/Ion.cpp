@@ -16,7 +16,6 @@
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/BacktrackingAllocator.h"
-#include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineInspector.h"
 #include "jit/BaselineJIT.h"
@@ -2025,7 +2024,7 @@ static bool
 CheckFrame(BaselineFrame *frame)
 {
     MOZ_ASSERT(!frame->script()->isGenerator());
-    MOZ_ASSERT(!frame->isDebuggerFrame());
+    MOZ_ASSERT(!frame->isDebuggerEvalFrame());
 
     // This check is to not overrun the stack.
     if (frame->isFunctionFrame()) {
@@ -2124,9 +2123,9 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     if (!script->hasBaselineScript())
         return Method_Skipped;
 
-    if (cx->compartment()->debugMode()) {
+    if (script->isDebuggee() || (osrFrame && osrFrame->isDebuggee())) {
         JitSpew(JitSpew_IonAbort, "debugging");
-        return Method_CantCompile;
+        return Method_Skipped;
     }
 
     if (!CheckScript(cx, script, bool(osrPc))) {
@@ -3178,88 +3177,6 @@ jit::TraceIonScripts(JSTracer* trc, JSScript *script)
 
     if (script->hasBaselineScript())
         jit::BaselineScript::Trace(trc, script->baselineScript());
-}
-
-bool
-jit::RematerializeAllFrames(JSContext *cx, JSCompartment *comp)
-{
-    for (JitActivationIterator iter(comp->runtimeFromMainThread()); !iter.done(); ++iter) {
-        if (iter.activation()->compartment() == comp) {
-            for (JitFrameIterator frameIter(iter); !frameIter.done(); ++frameIter) {
-                if (!frameIter.isIonJS())
-                    continue;
-                if (!iter.activation()->asJit()->getRematerializedFrame(cx, frameIter))
-                    return false;
-            }
-        }
-    }
-    return true;
-}
-
-bool
-jit::UpdateForDebugMode(JSContext *maybecx, JSCompartment *comp,
-                     AutoDebugModeInvalidation &invalidate)
-{
-    MOZ_ASSERT(invalidate.isFor(comp));
-
-    // Schedule invalidation of all optimized JIT code since debug mode
-    // invalidates assumptions.
-    invalidate.scheduleInvalidation(comp->debugMode());
-
-    // Recompile on-stack baseline scripts if we have a cx.
-    if (maybecx) {
-        IonContext ictx(maybecx, nullptr);
-        if (!RecompileOnStackBaselineScriptsForDebugMode(maybecx, comp)) {
-            js_ReportOutOfMemory(maybecx);
-            return false;
-        }
-    }
-
-    return true;
-}
-
-AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
-{
-    MOZ_ASSERT(!!comp_ != !!zone_);
-
-    if (needInvalidation_ == NoNeed)
-        return;
-
-    Zone *zone = zone_ ? zone_ : comp_->zone();
-    JSRuntime *rt = zone->runtimeFromMainThread();
-    FreeOp *fop = rt->defaultFreeOp();
-
-    if (comp_) {
-        StopAllOffThreadCompilations(comp_);
-    } else {
-        for (CompartmentsInZoneIter comp(zone_); !comp.done(); comp.next())
-            StopAllOffThreadCompilations(comp);
-    }
-
-    // Don't discard active baseline scripts. They are recompiled for debug
-    // mode.
-    jit::MarkActiveBaselineScripts(zone);
-
-    for (JitActivationIterator iter(rt); !iter.done(); ++iter) {
-        JSCompartment *comp = iter->compartment();
-        if (comp_ == comp || zone_ == comp->zone()) {
-            IonContext ictx(CompileRuntime::get(rt));
-            JitSpew(JitSpew_IonInvalidate, "Invalidating frames for debug mode toggle");
-            InvalidateActivation(fop, iter, true);
-        }
-    }
-
-    for (gc::ZoneCellIter i(zone, gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
-        JSScript *script = i.get<JSScript>();
-        if (script->compartment() == comp_ || zone_) {
-            FinishInvalidation<SequentialExecution>(fop, script);
-            FinishInvalidation<ParallelExecution>(fop, script);
-            FinishDiscardBaselineScript(fop, script);
-            script->resetWarmUpCounter();
-        } else if (script->hasBaselineScript()) {
-            script->baselineScript()->resetActive();
-        }
-    }
 }
 
 bool

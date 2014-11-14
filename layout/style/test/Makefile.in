@@ -23,5 +23,6 @@ css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_
 GARBAGE += css_properties.js
 TEST_FILES := css_properties.js
 TEST_DEST = $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+TEST_TARGET := misc
 INSTALL_TARGETS += TEST
 endif

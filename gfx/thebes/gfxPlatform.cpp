@@ -78,6 +78,10 @@
 #include "TexturePoolOGL.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#include "mozilla/layers/GrallocTextureHost.h"
+#endif
+
 #include "mozilla/Hal.h"
 #ifdef USE_SKIA
 #include "skia/SkGraphics.h"
@@ -282,7 +286,9 @@ static const char *gPrefLangNames[] = {
 };
 
 gfxPlatform::gfxPlatform()
-  : mAzureCanvasBackendCollector(MOZ_THIS_IN_INITIALIZER_LIST(),
+  : mTileWidth(-1)
+  , mTileHeight(-1)
+  , mAzureCanvasBackendCollector(MOZ_THIS_IN_INITIALIZER_LIST(),
                                  &gfxPlatform::GetAzureBackendInfo)
 {
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -855,6 +861,65 @@ gfxPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
     Factory::CreateScaledFontForNativeFont(nativeFont,
                                            aFont->GetAdjustedSize());
   return scaledFont;
+}
+
+int
+gfxPlatform::GetTileWidth()
+{
+  MOZ_ASSERT(mTileWidth != -1);
+  return mTileWidth;
+}
+
+int
+gfxPlatform::GetTileHeight()
+{
+  MOZ_ASSERT(mTileHeight != -1);
+  return mTileHeight;
+}
+
+void
+gfxPlatform::SetTileSize(int aWidth, int aHeight)
+{
+  // Don't allow changing the tile size after we've set it.
+  // Right now the code assumes that the tile size doesn't change.
+  MOZ_ASSERT((mTileWidth == -1 && mTileHeight == -1) ||
+    (mTileWidth == aWidth && mTileHeight == aHeight));
+
+  mTileWidth = aWidth;
+  mTileHeight = aHeight;
+}
+
+void
+gfxPlatform::ComputeTileSize()
+{
+  // The tile size should be picked in the parent processes
+  // and sent to the child processes over IPDL GetTileSize.
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    NS_RUNTIMEABORT("wrong process.");
+  }
+
+  int32_t w = gfxPrefs::LayersTileWidth();
+  int32_t h = gfxPrefs::LayersTileHeight();
+
+  // TODO We may want to take the screen size into consideration here.
+  if (gfxPrefs::LayersTilesAdjust()) {
+#ifdef MOZ_WIDGET_GONK
+    int32_t format = android::PIXEL_FORMAT_RGBA_8888;
+    android::sp<android::GraphicBuffer> alloc =
+      new android::GraphicBuffer(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight(),
+                                 format,
+                                 android::GraphicBuffer::USAGE_SW_READ_OFTEN |
+                                 android::GraphicBuffer::USAGE_SW_WRITE_OFTEN |
+                                 android::GraphicBuffer::USAGE_HW_TEXTURE);
+
+    if (alloc.get()) {
+      w = alloc->getStride(); // We want the tiles to be gralloc stride aligned.
+      // No need to adjust the height here.
+    }
+#endif
+  }
+
+  SetTileSize(w, h);
 }
 
 bool

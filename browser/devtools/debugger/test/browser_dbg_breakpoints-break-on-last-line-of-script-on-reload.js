@@ -15,7 +15,7 @@ function test() {
 
   let gPanel, gDebugger, gThreadClient, gEvents;
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gThreadClient = gDebugger.gThreadClient;

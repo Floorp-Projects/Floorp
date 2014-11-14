@@ -1459,6 +1459,7 @@ if test "$GNU_CC"; then
     # -Wignored-qualifiers - catches returns types with qualifiers like const
     # -Wint-to-pointer-cast - catches cast to pointer from integer of different size
     # -Wmultichar - catches multicharacter integer constants like 'THIS'
+    # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wnonnull - catches NULL used with functions arguments marked as non-null
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
     # -Wpointer-sign - catches mixing pointers to signed and unsigned types
@@ -1493,6 +1494,8 @@ if test "$GNU_CC"; then
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=sequence-point"
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=trigraphs"
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Werror=unknown-pragmas"
+
+        MOZ_C_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_c_has_werror_non_literal_null_conversion)
     fi
 
     # Turn off the following warnings that -Wall turns on:
@@ -1552,6 +1555,7 @@ if test "$GNU_CXX"; then
     # -Wendif-labels - catches `#else FOO` and `#endif FOO` not in comment
     # -Wint-to-pointer-cast - catches cast to pointer from integer of different size
     # -Wmissing-braces - catches aggregate initializers missing nested braces
+    # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Woverloaded-virtual - function declaration hides virtual function from base class
     # -Wparentheses - catches `if (a=b)` and operator precedence bugs
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
@@ -1583,6 +1587,8 @@ if test "$GNU_CXX"; then
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=trigraphs"
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=type-limits"
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Werror=unused-label"
+
+        MOZ_CXX_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_cxx_has_werror_non_literal_null_conversion)
     fi
 
     # Turn off the following warnings that -Wall turns on:

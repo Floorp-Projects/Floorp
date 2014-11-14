@@ -38,7 +38,6 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   : mParentDecoder(aParentDecoder)
   , mType(aType)
   , mLastStartTimestamp(0)
-  , mLastEndTimestamp(0)
 {
   MOZ_COUNT_CTOR(TrackBuffer);
   mParser = ContainerParser::CreateForMIMEType(aType);
@@ -134,9 +133,10 @@ TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
   int64_t start, end;
   if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
     if (mParser->IsMediaSegmentPresent(aData, aLength) &&
-        !mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp)) {
+        mLastEndTimestamp &&
+        !mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp.value())) {
       MSE_DEBUG("TrackBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
-                this, mLastStartTimestamp, mLastEndTimestamp, start, end);
+                this, mLastStartTimestamp, mLastEndTimestamp.value(), start, end);
 
       // This data is earlier in the timeline than data we have already
       // processed, so we must create a new decoder to handle the decoding.
@@ -147,10 +147,12 @@ TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
       const nsTArray<uint8_t>& initData = mParser->InitData();
       AppendDataToCurrentResource(initData.Elements(), initData.Length());
       mLastStartTimestamp = start;
+    } else {
+      MSE_DEBUG("TrackBuffer(%p)::AppendData: Segment last=[%lld, %lld] [%lld, %lld]",
+                this, mLastStartTimestamp, mLastEndTimestamp ? mLastEndTimestamp.value() : 0, start, end);
     }
-    mLastEndTimestamp = end;
-    MSE_DEBUG("TrackBuffer(%p)::AppendData: Segment last=[%lld, %lld] [%lld, %lld]",
-              this, mLastStartTimestamp, mLastEndTimestamp, start, end);
+    mLastEndTimestamp.reset();
+    mLastEndTimestamp.emplace(end);
   }
 
   if (!AppendDataToCurrentResource(aData, aLength)) {
@@ -264,7 +266,7 @@ TrackBuffer::NewDecoder()
   mDecoders.AppendElement(decoder);
 
   mLastStartTimestamp = 0;
-  mLastEndTimestamp = 0;
+  mLastEndTimestamp.reset();
 
   decoder->SetTaskQueue(mTaskQueue);
   return decoder.forget();

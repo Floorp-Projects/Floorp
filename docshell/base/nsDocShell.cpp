@@ -854,7 +854,8 @@ nsDocShell::nsDocShell():
     mDefaultLoadFlags(nsIRequest::LOAD_NORMAL),
     mFrameType(eFrameTypeRegular),
     mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID),
-    mParentCharsetSource(0)
+    mParentCharsetSource(0),
+    mJSRunToCompletionDepth(0)
 {
     mHistoryID = ++gDocshellIDCounter;
     if (gDocShellCount++ == 0) {
@@ -890,6 +891,8 @@ nsDocShell::nsDocShell():
 
 nsDocShell::~nsDocShell()
 {
+    MOZ_ASSERT(!mProfileTimelineRecording);
+
     Destroy();
 
     nsCOMPtr<nsISHistoryInternal>
@@ -2829,14 +2832,15 @@ NS_IMETHODIMP
 nsDocShell::SetRecordProfileTimelineMarkers(bool aValue)
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
-  bool currentValue;
-  GetRecordProfileTimelineMarkers(&currentValue);
+  bool currentValue = nsIDocShell::GetRecordProfileTimelineMarkers();
   if (currentValue != aValue) {
     if (aValue) {
       ++gProfileTimelineRecordingsCount;
+      UseEntryScriptProfiling();
       mProfileTimelineRecording = true;
     } else {
       --gProfileTimelineRecordingsCount;
+      UnuseEntryScriptProfiling();
       mProfileTimelineRecording = false;
       ClearProfileTimelineMarkers();
     }
@@ -4243,15 +4247,17 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
                             int32_t aChildOffset, uint32_t loadType,
                             bool aCloneChildren)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
-    if (mLSHE && loadType != LOAD_PUSHSTATE && !aCloneRef) {
+    if (mLSHE && loadType != LOAD_PUSHSTATE) {
         /* You get here if you are currently building a 
          * hierarchy ie.,you just visited a frameset page
          */
         nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE, &rv));
         if (container) {
-            rv = container->AddChild(aNewEntry, aChildOffset);
+            if (NS_FAILED(container->ReplaceChild(aNewEntry))) {
+                rv = container->AddChild(aNewEntry, aChildOffset);
+            }
         }
     }
     else if (!aCloneRef) {
@@ -4260,8 +4266,22 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
         if (container) {
             rv = container->AddChild(aNewEntry, aChildOffset);
         }
+    } else {
+        rv = AddChildSHEntryInternal(aCloneRef, aNewEntry, aChildOffset,
+                                     loadType, aCloneChildren);
     }
-    else if (mSessionHistory) {
+    return rv;
+}
+
+nsresult
+nsDocShell::AddChildSHEntryInternal(nsISHEntry* aCloneRef,
+                                    nsISHEntry* aNewEntry,
+                                    int32_t aChildOffset,
+                                    uint32_t aLoadType,
+                                    bool aCloneChildren)
+{
+    nsresult rv = NS_OK;
+    if (mSessionHistory) {
         /* You are currently in the rootDocShell.
          * You will get here when a subframe has a new url
          * to load and you have walked up the tree all the 
@@ -4300,16 +4320,17 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
         nsCOMPtr<nsIDocShell> parent =
             do_QueryInterface(GetAsSupports(mParent), &rv);
         if (parent) {
-            rv = parent->AddChildSHEntry(aCloneRef, aNewEntry, aChildOffset,
-                                         loadType, aCloneChildren);
-        }          
+            rv = static_cast<nsDocShell*>(parent.get())->
+              AddChildSHEntryInternal(aCloneRef, aNewEntry, aChildOffset,
+                                      aLoadType, aCloneChildren);
+        }
     }
     return rv;
 }
 
 nsresult
-nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, int32_t aChildOffset,
-                              bool aCloneChildren)
+nsDocShell::AddChildSHEntryToParent(nsISHEntry* aNewEntry, int32_t aChildOffset,
+                                    bool aCloneChildren)
 {
     /* You will get here when you are in a subframe and
      * a new url has been loaded on you. 
@@ -11653,7 +11674,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
         // This is a subframe.
         if (!mOSHE || !LOAD_TYPE_HAS_FLAGS(mLoadType,
                                            LOAD_FLAGS_REPLACE_HISTORY))
-            rv = DoAddChildSHEntry(entry, mChildOffset, aCloneChildren);
+            rv = AddChildSHEntryToParent(entry, mChildOffset, aCloneChildren);
     }
 
     // Return the new SH entry...
@@ -13589,6 +13610,30 @@ URLSearchParams*
 nsDocShell::GetURLSearchParams()
 {
   return mURLSearchParams;
+}
+
+void
+nsDocShell::NotifyJSRunToCompletionStart()
+{
+    bool timelineOn = nsIDocShell::GetRecordProfileTimelineMarkers();
+
+    // If first start, mark interval start.
+    if (timelineOn && mJSRunToCompletionDepth == 0) {
+        AddProfileTimelineMarker("Javascript", TRACING_INTERVAL_START);
+    }
+    mJSRunToCompletionDepth++;
+}
+
+void
+nsDocShell::NotifyJSRunToCompletionStop()
+{
+    bool timelineOn = nsIDocShell::GetRecordProfileTimelineMarkers();
+
+    // If last stop, mark interval end.
+    mJSRunToCompletionDepth--;
+    if (timelineOn && mJSRunToCompletionDepth == 0) {
+        AddProfileTimelineMarker("Javascript", TRACING_INTERVAL_END);
+    }
 }
 
 void
