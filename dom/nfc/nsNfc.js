@@ -237,7 +237,7 @@ MozNFCImpl.prototype = {
     }
 
     if (!this.nfcPeer || this.nfcPeer.session != sessionToken) {
-      this.nfcPeer = this._createNFCPeer();
+      this.nfcPeer = this._createNFCPeer(sessionToken);
     }
 
     return this.nfcPeer;
