@@ -39,7 +39,6 @@ class WrapperOwner : public virtual JavaScriptShared
                         JS::MutableHandle<JSPropertyDescriptor> desc);
     bool ownPropertyKeys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
-    bool enumerate(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool preventExtensions(JSContext *cx, JS::HandleObject proxy, bool *succeeded);
     bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
     bool has(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
@@ -56,6 +55,8 @@ class WrapperOwner : public virtual JavaScriptShared
     bool hasOwn(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::HandleObject proxy,
                                       JS::AutoIdVector &props);
+    bool getEnumerablePropertyKeys(JSContext *cx, JS::HandleObject proxy,
+                                   JS::AutoIdVector &props);
     // We use "iterate" provided by the base class here.
     bool hasInstance(JSContext *cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool *bp);
     bool objectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValue);

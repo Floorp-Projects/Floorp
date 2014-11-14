@@ -54,7 +54,8 @@ DeadObjectProxy::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool 
 }
 
 bool
-DeadObjectProxy::enumerate(JSContext *cx, HandleObject wrapper, AutoIdVector &props) const
+DeadObjectProxy::getEnumerablePropertyKeys(JSContext *cx, HandleObject wrapper,
+                                           AutoIdVector &props) const
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;

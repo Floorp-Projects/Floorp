@@ -268,18 +268,6 @@ DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-BaseDOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
-                               AutoIdVector& props) const
-{
-  JS::Rooted<JSObject*> proto(cx);
-  if (!JS_GetPrototype(cx, proxy, &proto))  {
-    return false;
-  }
-  return getOwnEnumerablePropertyKeys(cx, proxy, props) &&
-         (!proto || js::GetPropertyKeys(cx, proto, 0, &props));
-}
-
-bool
 BaseDOMProxyHandler::watch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                            JS::Handle<JSObject*> callable) const
 {
@@ -306,6 +294,19 @@ BaseDOMProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
                                                   JS::AutoIdVector& props) const
 {
   return ownPropNames(cx, proxy, JSITER_OWNONLY, props);
+}
+
+bool
+BaseDOMProxyHandler::getEnumerablePropertyKeys(JSContext* cx,
+                                               JS::Handle<JSObject*> proxy,
+                                               AutoIdVector& props) const
+{
+  JS::Rooted<JSObject*> proto(cx);
+  if (!JS_GetPrototype(cx, proxy, &proto))  {
+    return false;
+  }
+  return getOwnEnumerablePropertyKeys(cx, proxy, props) &&
+         (!proto || js::GetPropertyKeys(cx, proto, 0, &props));
 }
 
 bool

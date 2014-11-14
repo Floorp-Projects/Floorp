@@ -305,7 +305,7 @@ Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
                             return false;
                     }
                 } else {
-                    if (!Proxy::enumerate(cx, pobj, proxyProps))
+                    if (!Proxy::getEnumerablePropertyKeys(cx, pobj, proxyProps))
                         return false;
                 }
 
