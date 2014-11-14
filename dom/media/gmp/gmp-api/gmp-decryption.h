@@ -182,17 +182,6 @@ public:
 // Host interface, passed to GetAPIFunc(), with "decrypt".
 class GMPDecryptorHost {
 public:
-
-  // Returns an origin specific string uniquely identifying the device.
-  // The node id contains a random component, and is consistent between
-  // plugin instantiations, unless the user clears it.
-  // Different origins have different node ids.
-  // The node id pointer returned here remains valid for the until shutdown
-  // begins.
-  // *aOutNodeId is null terminated.
-  virtual void GetNodeId(const char** aOutNodeId,
-                         uint32_t* aOutNodeIdLength) = 0;
-
   virtual void GetSandboxVoucher(const uint8_t** aVoucher,
                                  uint8_t* aVoucherLength) = 0;
 

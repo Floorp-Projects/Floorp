@@ -24,7 +24,7 @@ class GMPDecryptorChild : public GMPDecryptorCallback
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPDecryptorChild);
 
-  explicit GMPDecryptorChild(GMPChild* aPlugin, const std::string& aNodeId);
+  explicit GMPDecryptorChild(GMPChild* aPlugin);
 
   void Init(GMPDecryptor* aSession);
 
@@ -77,9 +77,6 @@ public:
   virtual void Decrypted(GMPBuffer* aBuffer, GMPErr aResult) MOZ_OVERRIDE;
 
   // GMPDecryptorHost
-  virtual void GetNodeId(const char** aOutNodeId,
-                         uint32_t* aOutNodeIdLength) MOZ_OVERRIDE;
-
   virtual void GetSandboxVoucher(const uint8_t** aVoucher,
                                  uint8_t* aVoucherLength) MOZ_OVERRIDE;
 
@@ -123,8 +120,6 @@ private:
   // Only call into this on the (GMP process) main thread.
   GMPDecryptor* mSession;
   GMPChild* mPlugin;
-
-  const std::string mNodeId;
 };
 
 } // namespace gmp
