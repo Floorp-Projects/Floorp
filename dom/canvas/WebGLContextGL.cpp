@@ -1372,12 +1372,7 @@ WebGLContext::CreateTexture()
 {
     if (IsContextLost())
         return nullptr;
-
-    GLuint tex = 0;
-    MakeContextCurrent();
-    gl->fGenTextures(1, &tex);
-
-    nsRefPtr<WebGLTexture> globj = new WebGLTexture(this, tex);
+    nsRefPtr<WebGLTexture> globj = new WebGLTexture(this);
     return globj.forget();
 }
 
@@ -3103,12 +3098,7 @@ WebGLContext::CreateFramebuffer()
 {
     if (IsContextLost())
         return nullptr;
-
-    GLuint fbo = 0;
-    MakeContextCurrent();
-    gl->fGenFramebuffers(1, &fbo);
-
-    nsRefPtr<WebGLFramebuffer> globj = new WebGLFramebuffer(this, fbo);
+    nsRefPtr<WebGLFramebuffer> globj = new WebGLFramebuffer(this);
     return globj.forget();
 }
 

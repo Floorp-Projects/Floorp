@@ -34,7 +34,7 @@ class WebGLFramebuffer MOZ_FINAL
 public:
     MOZ_DECLARE_REFCOUNTED_TYPENAME(WebGLFramebuffer)
 
-    explicit WebGLFramebuffer(WebGLContext* context, GLuint fbo);
+    explicit WebGLFramebuffer(WebGLContext* context);
 
     struct Attachment
     {
