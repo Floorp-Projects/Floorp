@@ -116,6 +116,9 @@ public:
   int32_t display_width;
   int32_t display_height;
 
+  int32_t image_width;
+  int32_t image_height;
+
   mozilla::Vector<uint8_t> extra_data; // Unparsed AVCDecoderConfig payload.
   mozilla::Vector<uint8_t> annex_b;    // Parsed version for sample prepend.
 
