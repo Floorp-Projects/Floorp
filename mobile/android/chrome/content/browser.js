@@ -3149,6 +3149,8 @@ function Tab(aURL, aParams) {
   this._fixedMarginTop = 0;
   this._fixedMarginRight = 0;
   this._fixedMarginBottom = 0;
+  this._readerEnabled = false;
+  this._readerActive = false;
   this.userScrollPos = { x: 0, y: 0 };
   this.viewportExcludesHorizontalMargins = true;
   this.viewportExcludesVerticalMargins = true;
@@ -3905,8 +3907,6 @@ Tab.prototype = {
           if (contentDocument.body) {
             new AboutReader(contentDocument, this.browser.contentWindow);
           }
-          // Update the page action to show the "reader active" icon.
-          Reader.updatePageAction(this);
         }
 
         break;
@@ -4210,15 +4210,21 @@ Tab.prototype = {
           this.tilesData = null;
         }
 
-        // Don't try to parse the document if reader mode is disabled,
-        // or if the page is already in reader mode.
-        if (!Reader.isEnabledForParseOnLoad || this.readerActive) {
+        if (!Reader.isEnabledForParseOnLoad) {
           return;
         }
 
-        // Reader mode is disabled until proven enabled.
-        this.savedArticle = null;
-        Reader.updatePageAction(this);
+        let resetReaderFlags = currentURL => {
+          // Don't clear the article for about:reader pages since we want to
+          // use the article from the previous page.
+          if (!currentURL.startsWith("about:reader")) {
+            this.savedArticle = null;
+            this.readerEnabled = false;
+            this.readerActive = false;
+          } else {
+            this.readerActive = true;
+          }
+        };
 
         // Once document is fully loaded, parse it
         Reader.parseDocumentFromTab(this).then(article => {
@@ -4228,17 +4234,27 @@ Tab.prototype = {
 
           // Do nothing if there's no article or the page in this tab has changed.
           if (article == null || (article.url != currentURL)) {
+            resetReaderFlags(currentURL);
             return;
           }
 
           this.savedArticle = article;
-          Reader.updatePageAction(this);
 
           Messaging.sendRequest({
             type: "Content:ReaderEnabled",
             tabID: this.id
           });
-        }).catch(e => Cu.reportError("Error parsing document from tab: " + e));
+
+          if (this.readerActive) {
+            this.readerActive = false;
+          }
+          if (!this.readerEnabled) {
+            this.readerEnabled = true;
+          }
+        }).catch(e => {
+          Cu.reportError("Error parsing document from tab: " + e);
+          resetReaderFlags(this.browser.currentURI.specIgnoringRef);
+        });
       }
     }
   },
@@ -4781,6 +4797,26 @@ Tab.prototype = {
           ViewportHandler.updateMetadata(this, false);
         break;
     }
+  },
+
+  set readerEnabled(isReaderEnabled) {
+    this._readerEnabled = isReaderEnabled;
+    if (this.getActive())
+      Reader.updatePageAction(this);
+  },
+
+  get readerEnabled() {
+    return this._readerEnabled;
+  },
+
+  set readerActive(isReaderActive) {
+    this._readerActive = isReaderActive;
+    if (this.getActive())
+      Reader.updatePageAction(this);
+  },
+
+  get readerActive() {
+    return this._readerActive;
   },
 
   // nsIBrowserTab
