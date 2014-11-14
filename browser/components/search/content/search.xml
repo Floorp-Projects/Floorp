@@ -242,9 +242,7 @@
       <method name="offerNewEngine">
         <parameter name="aEngine"/>
         <body><![CDATA[
-          var allbrowsers = getBrowser().mPanelContainer.childNodes;
-          for (var tab = 0; tab < allbrowsers.length; tab++) {
-            var browser = getBrowser().getBrowserAtIndex(tab);
+          for (let browser of gBrowser.browsers) {
             if (browser.hiddenEngines) {
               // XXX This will need to be changed when engines are identified by
               // URL rather than title; see bug 335102.
@@ -269,9 +267,7 @@
       <method name="hideNewEngine">
         <parameter name="aEngine"/>
         <body><![CDATA[
-          var allbrowsers = getBrowser().mPanelContainer.childNodes;
-          for (var tab = 0; tab < allbrowsers.length; tab++) {
-            var browser = getBrowser().getBrowserAtIndex(tab);
+          for (let browser of gBrowser.browsers) {
             if (browser.engines) {
               // XXX This will need to be changed when engines are identified by
               // URL rather than title; see bug 335102.
