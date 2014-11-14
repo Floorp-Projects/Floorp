@@ -402,6 +402,9 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
     if (inlineScript->needsArgsObj())
         return DontInline(inlineScript, "Script that needs an arguments object");
 
+    if (inlineScript->isDebuggee())
+        return DontInline(inlineScript, "Script is debuggee");
+
     types::TypeObjectKey *targetType = types::TypeObjectKey::get(target);
     if (targetType->unknownProperties())
         return DontInline(inlineScript, "Target type has unknown properties");

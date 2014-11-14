@@ -169,6 +169,8 @@ VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   TrackConfig::Update(aMetaData, aMimeType);
   display_width = FindInt32(aMetaData, kKeyDisplayWidth);
   display_height = FindInt32(aMetaData, kKeyDisplayHeight);
+  image_width = FindInt32(aMetaData, kKeyWidth);
+  image_height = FindInt32(aMetaData, kKeyHeight);
 
   if (FindData(aMetaData, kKeyAVCC, &extra_data) && extra_data.length() >= 7) {
     // Set size of the NAL length to 4. The demuxer formats its output with

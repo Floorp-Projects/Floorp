@@ -3,7 +3,7 @@ import sys
 import traceback
 import types
 
-from mozlog.structured import structuredlog, commandline
+from mozlog.structured import commandline, get_default_logger
 
 class TestAssertion(Exception):
     pass
@@ -35,8 +35,8 @@ def test_expected_fail():
     assert_equals(2 + 2, 5)
 
 class TestRunner(object):
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = get_default_logger(component='TestRunner')
 
     def gather_tests(self):
         for item in globals().itervalues():
@@ -81,7 +81,7 @@ def main():
 
     logger = commandline.setup_logging("structured-example", args, {"raw": sys.stdout})
 
-    runner = TestRunner(logger)
+    runner = TestRunner()
     try:
         runner.run()
     except:

@@ -35,6 +35,7 @@ namespace js {
 namespace jit {
 class IonContext;
 class CompileCompartment;
+class DebugModeOSRVolatileJitFrameIterator;
 }
 
 struct CallsiteCloneKey {
@@ -421,6 +422,7 @@ struct JSContext : public js::ExclusiveContext,
 
     friend class js::ExclusiveContext;
     friend class JS::AutoSaveExceptionState;
+    friend class js::jit::DebugModeOSRVolatileJitFrameIterator;
 
   private:
     /* Exception state -- the exception member is a GC root by definition. */
@@ -433,6 +435,10 @@ struct JSContext : public js::ExclusiveContext,
     // True if propagating a forced return from an interrupt handler during
     // debug mode.
     bool                propagatingForcedReturn_;
+
+    // A stack of live iterators that need to be updated in case of debug mode
+    // OSR.
+    js::jit::DebugModeOSRVolatileJitFrameIterator *liveVolatileJitFrameIterators_;
 
   public:
     int32_t             reportGranularity;  /* see vm/Probes.h */
@@ -977,6 +983,8 @@ bool intrinsic_ObjectIsOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp
 bool intrinsic_ObjectIsTypeDescr(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_TypeDescrIsSimpleType(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_TypeDescrIsArrayType(JSContext *cx, unsigned argc, Value *vp);
+
+bool intrinsic_IsSuspendedStarGenerator(JSContext *cx, unsigned argc, Value *vp);
 
 class AutoLockForExclusiveAccess
 {

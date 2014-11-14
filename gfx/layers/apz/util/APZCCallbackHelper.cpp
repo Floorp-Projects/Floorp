@@ -5,7 +5,6 @@
 
 #include "APZCCallbackHelper.h"
 #include "gfxPlatform.h" // For gfxPlatform::UseTiling
-#include "gfxPrefs.h"    // For gfxPrefs::LayersTileWidth/Height
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
@@ -158,16 +157,11 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
         return;
     }
 
-    gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
-        ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
-          gfx::IntSize(0, 0);
     ScreenMargin margins = aMetrics.GetDisplayPortMargins();
     aUtils->SetDisplayPortMarginsForElement(margins.left,
                                             margins.top,
                                             margins.right,
                                             margins.bottom,
-                                            alignment.width,
-                                            alignment.height,
                                             element, 0);
     CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
     nsRect base(baseCSS.x * nsPresContext::AppUnitsPerCSSPixel(),
@@ -207,16 +201,11 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
         } else {
             RecenterDisplayPort(aMetrics);
         }
-        gfx::IntSize alignment = gfxPlatform::GetPlatform()->UseTiling()
-            ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
-              gfx::IntSize(0, 0);
         ScreenMargin margins = aMetrics.GetDisplayPortMargins();
         utils->SetDisplayPortMarginsForElement(margins.left,
                                                margins.top,
                                                margins.right,
                                                margins.bottom,
-                                               alignment.width,
-                                               alignment.height,
                                                element, 0);
         CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
         nsRect base(baseCSS.x * nsPresContext::AppUnitsPerCSSPixel(),

@@ -273,8 +273,9 @@ struct SortComparatorIds
 static bool
 Snapshot(JSContext *cx, HandleObject pobj_, unsigned flags, AutoIdVector *props)
 {
+    // ~90% of the time this table ends up with 3 or fewer elements.
     IdSet ht(cx);
-    if (!ht.init(32))
+    if (!ht.init(3))
         return false;
 
     RootedObject pobj(cx, pobj_);

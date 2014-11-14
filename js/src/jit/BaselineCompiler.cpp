@@ -247,8 +247,8 @@ BaselineCompiler::compile()
 
     baselineScript->copyYieldEntries(script, yieldOffsets_);
 
-    if (script->compartment()->debugMode())
-        baselineScript->setDebugMode();
+    if (compileDebugInstrumentation_)
+        baselineScript->setHasDebugInstrumentation();
 
     // Register a native => bytecode mapping entry for this script if needed.
     if (cx->runtime()->jitRuntime()->isNativeToBytecodeMapEnabled(cx->runtime())) {
@@ -557,7 +557,7 @@ static const VMFunction DebugPrologueInfo = FunctionInfo<DebugPrologueFn>(jit::D
 bool
 BaselineCompiler::emitDebugPrologue()
 {
-    if (debugMode_) {
+    if (compileDebugInstrumentation_) {
         // Load pointer to BaselineFrame in R0.
         masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
@@ -740,7 +740,7 @@ BaselineCompiler::emitArgumentTypeChecks()
 bool
 BaselineCompiler::emitDebugTrap()
 {
-    MOZ_ASSERT(debugMode_);
+    MOZ_ASSERT(compileDebugInstrumentation_);
     MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
 
     bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(pc);
@@ -828,7 +828,7 @@ BaselineCompiler::emitBody()
         }
 
         // Always sync in debug mode.
-        if (debugMode_)
+        if (compileDebugInstrumentation_)
             frame.syncStack(0);
 
         // At the beginning of any op, at most the top 2 stack-values are unsynced.
@@ -850,7 +850,7 @@ BaselineCompiler::emitBody()
             return Method_Error;
 
         // Emit traps for breakpoints and step mode.
-        if (debugMode_ && !emitDebugTrap())
+        if (compileDebugInstrumentation_ && !emitDebugTrap())
             return Method_Error;
 
         switch (op) {
@@ -2151,9 +2151,12 @@ BaselineCompiler::emit_JSOP_GETALIASEDVAR()
     Address address = getScopeCoordinateAddress(R0.scratchReg());
     masm.loadValue(address, R0);
 
-    ICTypeMonitor_Fallback::Compiler compiler(cx, (ICMonitoredFallbackStub *) nullptr);
-    if (!emitOpIC(compiler.getStub(&stubSpace_)))
-        return false;
+    if (ionCompileable_) {
+        // No need to monitor types if we know Ion can't compile this script.
+        ICTypeMonitor_Fallback::Compiler compiler(cx, (ICMonitoredFallbackStub *) nullptr);
+        if (!emitOpIC(compiler.getStub(&stubSpace_)))
+            return false;
+    }
 
     frame.push(R0);
     return true;
@@ -2903,7 +2906,7 @@ static const VMFunction DebugLeaveBlockInfo = FunctionInfo<DebugLeaveBlockFn>(ji
 bool
 BaselineCompiler::emit_JSOP_DEBUGLEAVEBLOCK()
 {
-    if (!debugMode_)
+    if (!compileDebugInstrumentation_)
         return true;
 
     prepareVMCall();
@@ -2974,7 +2977,7 @@ static const VMFunction OnDebuggerStatementInfo =
 bool
 BaselineCompiler::emit_JSOP_DEBUGGER()
 {
-    if (!debugMode_)
+    if (!compileDebugInstrumentation_)
         return true;
 
     prepareVMCall();
@@ -3004,7 +3007,7 @@ static const VMFunction DebugEpilogueInfo =
 bool
 BaselineCompiler::emitReturn()
 {
-    if (debugMode_) {
+    if (compileDebugInstrumentation_) {
         // Move return value into the frame's rval slot.
         masm.storeValue(JSReturnOperand, frame.addressOfReturnValue());
         masm.or32(Imm32(BaselineFrame::HAS_RVAL), frame.addressOfFlags());
@@ -3400,6 +3403,22 @@ BaselineCompiler::emit_JSOP_YIELD()
 
     masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), JSReturnOperand);
     return emitReturn();
+}
+
+typedef bool (*DebugAfterYieldFn)(JSContext *, BaselineFrame *);
+static const VMFunction DebugAfterYieldInfo = FunctionInfo<DebugAfterYieldFn>(jit::DebugAfterYield);
+
+bool
+BaselineCompiler::emit_JSOP_DEBUGAFTERYIELD()
+{
+    if (!compileDebugInstrumentation_)
+        return true;
+
+    frame.assertSyncedStack();
+    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
+    prepareVMCall();
+    pushArg(R0.scratchReg());
+    return callVM(DebugAfterYieldInfo);
 }
 
 typedef bool (*FinalSuspendFn)(JSContext *, HandleObject, BaselineFrame *, jsbytecode *);

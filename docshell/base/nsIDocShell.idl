@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(da8f78f1-8f20-4d6d-be56-fe53e177b630)]
+[scriptable, builtinclass, uuid(4e3de242-0b2a-4cf0-81b5-a5fe8628431c)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1025,6 +1025,14 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   // URLSearchParams for the window.location is owned by the docShell.
   [noscript,notxpcom] URLSearchParams getURLSearchParams();
+
+  /**
+   * Notify DocShell when the browser is about to start executing JS, and after
+   * that execution has stopped.  This only occurs when the Timeline devtool
+   * is collecting information.
+   */
+  [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStart();
+  [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStop();
 
   /**
    * This attribute determines whether a document which is not about:blank has

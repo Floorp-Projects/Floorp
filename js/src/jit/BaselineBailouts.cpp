@@ -445,6 +445,28 @@ GetNextNonLoopEntryPc(jsbytecode *pc)
     return pc;
 }
 
+static bool
+HasLiveIteratorAtStackDepth(JSScript *script, jsbytecode *pc, uint32_t stackDepth)
+{
+    if (!script->hasTrynotes())
+        return false;
+
+    JSTryNote *tn = script->trynotes()->vector;
+    JSTryNote *tnEnd = tn + script->trynotes()->length;
+    uint32_t pcOffset = uint32_t(pc - script->main());
+    for (; tn != tnEnd; ++tn) {
+        if (pcOffset < tn->start)
+            continue;
+        if (pcOffset >= tn->start + tn->length)
+            continue;
+
+        if (tn->kind == JSTRY_ITER && stackDepth == tn->stackDepth)
+            return true;
+    }
+
+    return false;
+}
+
 // For every inline frame, we write out the following data:
 //
 //                      |      ...      |
@@ -606,6 +628,12 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
         }
     }
+
+    // If we are bailing to a script whose execution is observed, mark the
+    // baseline frame as a debuggee frame. This is to cover the case where we
+    // don't rematerialize the Ion frame via the Debugger.
+    if (script->isDebuggee())
+        flags |= BaselineFrame::DEBUGGEE;
 
     // Initialize BaselineFrame's scopeChain and argsObj
     JSObject *scopeChain = nullptr;
@@ -841,10 +869,11 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             //
             // For instance, if calling |f()| pushed an Ion frame which threw,
             // the snapshot expects the return value to be pushed, but it's
-            // possible nothing was pushed before we threw. Iterators might
-            // still be on the stack, so we can't just drop the stack.
-            MOZ_ASSERT(cx->compartment()->debugMode());
-            if (iter.moreFrames())
+            // possible nothing was pushed before we threw. We can't drop
+            // iterators, however, so read them out. They will be closed by
+            // HandleExceptionBaseline.
+            MOZ_ASSERT(cx->compartment()->isDebuggee());
+            if (iter.moreFrames() || HasLiveIteratorAtStackDepth(script, pc, i + 1))
                 v = iter.read();
             else
                 v = MagicValue(JS_OPTIMIZED_OUT);
@@ -1594,8 +1623,14 @@ CopyFromRematerializedFrame(JSContext *cx, JitActivation *act, uint8_t *fp, size
             "  Copied from rematerialized frame at (%p,%u)",
             fp, inlineDepth);
 
-    if (cx->compartment()->debugMode())
+    // Propagate the debuggee frame flag. For the case where the Debugger did
+    // not rematerialize an Ion frame, the baseline frame has its debuggee
+    // flag set iff its script is considered a debuggee. See the debuggee case
+    // in InitFromBailout.
+    if (rematFrame->isDebuggee()) {
+        frame->setIsDebuggee();
         return Debugger::handleIonBailout(cx, rematFrame, frame);
+    }
 
     return true;
 }
