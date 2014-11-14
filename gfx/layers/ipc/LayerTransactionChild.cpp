@@ -18,6 +18,11 @@
 namespace mozilla {
 namespace layers {
 
+bool
+LayerTransactionChild::IPCOpen()
+{
+  return mIPCOpen && !mDestroyed && GetIPCChannel()->Connected();
+}
 
 void
 LayerTransactionChild::Destroy()
