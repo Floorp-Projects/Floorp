@@ -30,8 +30,9 @@ expectNoException(function() {
   p.then(function(data) {
     ok(false, "Promise should not resolve with an invalid source buffer.");
     finish();
-  }).catch(function() {
+  }).catch(function(e) {
     ok(true, "Promise should be rejected with an invalid source buffer.");
+    ok(e.name == "TypeError", "The error should be TypeError");
     finish();
   })
 });
