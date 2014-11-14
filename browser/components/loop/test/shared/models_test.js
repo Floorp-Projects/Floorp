@@ -9,8 +9,8 @@ var expect = chai.expect;
 describe("loop.shared.models", function() {
   "use strict";
 
-  var sharedModels = loop.shared.models,
-      sandbox, fakeXHR, requests = [], fakeSDK, fakeSession, fakeSessionData;
+  var sharedModels = loop.shared.models, sandbox, fakeXHR,
+      requests = [], fakeSDK, fakeMozLoop, fakeSession, fakeSessionData;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -42,6 +42,7 @@ describe("loop.shared.models", function() {
       initPublisher: sandbox.spy(),
       initSession: sandbox.stub().returns(fakeSession)
     };
+    fakeMozLoop = {};
   });
 
   afterEach(function() {
@@ -63,6 +64,7 @@ describe("loop.shared.models", function() {
       beforeEach(function() {
         conversation = new sharedModels.ConversationModel({}, {
           sdk: fakeSDK
+          mozLoop: fakeMozLoop
         });
         conversation.set("loopToken", "fakeToken");
       });
@@ -159,7 +161,8 @@ describe("loop.shared.models", function() {
 
         beforeEach(function() {
           model = new sharedModels.ConversationModel(fakeSessionData, {
-            sdk: fakeSDK
+            sdk: fakeSDK,
+            mozLoop: fakeMozLoop
           });
           model.set({
             publishedStream: true,
@@ -175,6 +178,21 @@ describe("loop.shared.models", function() {
         it("should reset the stream flags", function() {
           expect(model.get("publishedStream")).eql(false);
           expect(model.get("subscribedStream")).eql(false);
+        });
+
+        it("should call addConversationContext", function() {
+          fakeMozLoop.addConversationContext = sandbox.stub();
+
+          model.set({
+            windowId: "28",
+            sessionId: "321456",
+            callId: "142536",
+          });
+          model.startSession();
+
+          sinon.assert.calledOnce(fakeMozLoop.addConversationContext);
+          sinon.assert.calledWithExactly(fakeMozLoop.addConversationContext,
+                                         "28", "321456", "142536");
         });
 
         it("should call connect", function() {
