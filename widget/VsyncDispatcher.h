@@ -21,19 +21,6 @@ namespace layers {
 class CompositorVsyncObserver;
 }
 
-// Controls how and when to enable/disable vsync.
-class VsyncSource
-{
-public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncSource)
-  virtual void EnableVsync() = 0;
-  virtual void DisableVsync() = 0;
-  virtual bool IsVsyncEnabled() = 0;
-
-protected:
-  virtual ~VsyncSource() {}
-}; // VsyncSource
-
 class VsyncObserver
 {
   // Must be destroyed on main thread since the compositor is as well
@@ -47,7 +34,7 @@ public:
 protected:
   VsyncObserver() {}
   virtual ~VsyncObserver() {}
-}; // VsyncObserver
+};
 
 // VsyncDispatcher is used to dispatch vsync events to the registered observers.
 class VsyncDispatcher
@@ -57,13 +44,7 @@ class VsyncDispatcher
 public:
   static VsyncDispatcher* GetInstance();
   // Called on the vsync thread when a hardware vsync occurs
-  // The aVsyncTimestamp can mean different things depending on the platform:
-  // b2g - The vsync timestamp of the previous frame that was just displayed
-  // OSX - The vsync timestamp of the upcoming frame
-  // TODO: Windows / Linux. DOCUMENT THIS WHEN IMPLEMENTING ON THOSE PLATFORMS
-  // Android: TODO
   void NotifyVsync(TimeStamp aVsyncTimestamp);
-  void SetVsyncSource(VsyncSource* aVsyncSource);
 
   // Compositor vsync observers must be added/removed on the compositor thread
   void AddCompositorVsyncObserver(VsyncObserver* aVsyncObserver);
@@ -80,8 +61,7 @@ private:
   // Can have multiple compositors. On desktop, this is 1 compositor per window
   Mutex mCompositorObserverLock;
   nsTArray<nsRefPtr<VsyncObserver>> mCompositorObservers;
-  nsRefPtr<VsyncSource> mVsyncSource;
-}; // VsyncDispatcher
+};
 
 } // namespace mozilla
 
