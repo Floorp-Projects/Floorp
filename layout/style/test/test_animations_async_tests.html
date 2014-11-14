@@ -16,6 +16,10 @@
 
   var gDisplay;
 
+  function advance_clock(milliseconds) {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
+  }
+
   function run() {
     gDisplay = document.getElementById("display");
     setTimeout(test1, 0);
