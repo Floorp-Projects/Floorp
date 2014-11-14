@@ -59,6 +59,7 @@ struct APZCTreeManager::TreeBuildingState {
   // State that is updated as we perform the tree build
   nsTArray< nsRefPtr<AsyncPanZoomController> > mApzcsToDestroy;
   std::map<ScrollableLayerGuid, AsyncPanZoomController*> mApzcMap;
+  nsTArray<EventRegions> mEventRegions;
 };
 
 /*static*/ const ScreenMargin
@@ -178,6 +179,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
                                 Matrix4x4(), nullptr, nullptr, nsIntRegion());
     mApzcTreeLog << "[end]\n";
   }
+  MOZ_ASSERT(state.mEventRegions.Length() == 0);
 
   for (size_t i = 0; i < state.mApzcsToDestroy.Length(); i++) {
     APZCTM_LOG("Destroying APZC at %p\n", state.mApzcsToDestroy[i].get());
@@ -326,7 +328,10 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     apzc->NotifyLayersUpdated(aMetrics,
         aState.mIsFirstPaint && (aLayersId == aState.mOriginatingLayersId));
 
-    nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
+    nsIntRegion unobscured;
+    if (!gfxPrefs::LayoutEventRegionsEnabled()) {
+      unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
+    }
     apzc->SetLayerHitTestData(EventRegions(unobscured), aAncestorTransform);
     APZCTM_LOG("Setting region %s as visible region for APZC %p\n",
         Stringify(unobscured).c_str(), apzc);
@@ -390,9 +395,11 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     // async transform and so we basically assume the same amount of C is always visible
     // on top of B. Fixing this doesn't appear to be very easy so I'm leaving it for
     // now in the hopes that we won't run into this problem a lot.
-    nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
-    apzc->AddHitTestRegions(EventRegions(unobscured));
-    APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(unobscured).c_str(), apzc);
+    if (!gfxPrefs::LayoutEventRegionsEnabled()) {
+      nsIntRegion unobscured = ComputeTouchSensitiveRegion(state->mController, aMetrics, aObscured);
+      apzc->AddHitTestRegions(EventRegions(unobscured));
+      APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(unobscured).c_str(), apzc);
+    }
   }
 
   return apzc;
@@ -460,6 +467,16 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
     next = apzc->GetFirstChild();
   }
 
+  // In our recursive downward traversal, track event regions for layers once
+  // we encounter an APZC. Push a new empty region on the mEventRegions stack
+  // which will accumulate the hit area of descendants of aLayer. In general,
+  // the mEventRegions stack is used to accumulate event regions from descendant
+  // layers because the event regions for a layer don't include those of its
+  // children.
+  if (gfxPrefs::LayoutEventRegionsEnabled() && (apzc || aState.mEventRegions.Length() > 0)) {
+    aState.mEventRegions.AppendElement(EventRegions());
+  }
+
   for (LayerMetricsWrapper child = aLayer.GetLastChild(); child; child = child.GetPrevSibling()) {
     gfx::TreeAutoIndent indent(mApzcTreeLog);
     next = UpdatePanZoomControllerTree(aState, child, childLayersId,
@@ -468,13 +485,89 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
 
     // Each layer obscures its previous siblings, so we augment the obscured
     // region as we loop backwards through the children.
-    nsIntRegion childRegion = child.GetVisibleRegion();
+    nsIntRegion childRegion;
+    if (gfxPrefs::LayoutEventRegionsEnabled()) {
+      childRegion = child.GetEventRegions().mHitRegion;
+    } else {
+      childRegion = child.GetVisibleRegion();
+    }
     childRegion.Transform(gfx::To3DMatrix(child.GetTransform()));
     if (child.GetClipRect()) {
       childRegion.AndWith(*child.GetClipRect());
     }
 
     obscured.OrWith(childRegion);
+  }
+
+  if (gfxPrefs::LayoutEventRegionsEnabled() && aState.mEventRegions.Length() > 0) {
+    // At this point in the code, aState.mEventRegions.LastElement() contains
+    // the accumulated regions of the non-APZC descendants of |aLayer|. This
+    // happened in the loop above while we iterated through the descendants of
+    // |aLayer|. Note that it only includes the non-APZC descendants, because
+    // if a layer has an APZC, we simply store the regions from that subtree on
+    // that APZC and don't propagate them upwards in the tree. Because of the
+    // way we do hit-testing (where the deepest matching APZC is used) it should
+    // still be ok if we did propagate those regions upwards and included them
+    // in all the ancestor APZCs.
+    //
+    // Also at this point in the code the |obscured| region includes the hit
+    // regions of children of |aLayer| as well as the hit regions of |aLayer|'s
+    // younger uncles (i.e. the next-sibling chain of |aLayer|'s parent).
+    // When we compute the unobscured regions below, we subtract off the
+    // |obscured| region, but it would also be ok to do this before the above
+    // loop. At that point |obscured| would only have the uncles' hit regions
+    // and not the children. The reason this is ok is again because of the way
+    // we do hit-testing (where the deepest APZC is used) it doesn't matter if
+    // we count the children as obscuring the parent or not.
+
+    EventRegions unobscured;
+    unobscured.Sub(aLayer.GetEventRegions(), obscured);
+    APZCTM_LOG("Picking up unobscured hit region %s from layer %p\n", Stringify(unobscured).c_str(), aLayer.GetLayer());
+
+    // Take the hit region of the |aLayer|'s subtree (which has already been
+    // transformed into the coordinate space of |aLayer|) and...
+    EventRegions subtreeEventRegions = aState.mEventRegions.LastElement();
+    aState.mEventRegions.RemoveElementAt(aState.mEventRegions.Length() - 1);
+    // ... combine it with the hit region for this layer, and then ...
+    subtreeEventRegions.OrWith(unobscured);
+    // ... transform it up to the parent layer's coordinate space.
+    subtreeEventRegions.Transform(To3DMatrix(aLayer.GetTransform()));
+    if (aLayer.GetClipRect()) {
+      subtreeEventRegions.AndWith(*aLayer.GetClipRect());
+    }
+
+    APZCTM_LOG("After processing layer %p the subtree hit region is %s\n", aLayer.GetLayer(), Stringify(subtreeEventRegions).c_str());
+
+    // If we have an APZC at this level, intersect the subtree hit region with
+    // the touch-sensitive region and add it to the APZ's hit test regions.
+    if (apzc) {
+      APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(subtreeEventRegions).c_str(), apzc);
+      const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
+      MOZ_ASSERT(state);
+      MOZ_ASSERT(state->mController.get());
+      CSSRect touchSensitiveRegion;
+      if (state->mController->GetTouchSensitiveRegion(&touchSensitiveRegion)) {
+        // Here we assume 'touchSensitiveRegion' is in the CSS pixels of the
+        // parent frame. To convert it to ParentLayer pixels, we therefore need
+        // the cumulative resolution of the parent frame. We approximate this as
+        // the quotient of our cumulative resolution and our pres shell
+        // resolution; this approximation may not be accurate in the presence of
+        // a css-driven resolution.
+        LayoutDeviceToParentLayerScale parentCumulativeResolution =
+            aLayer.Metrics().mCumulativeResolution
+            / ParentLayerToLayerScale(aLayer.Metrics().mPresShellResolution);
+        subtreeEventRegions.AndWith(ParentLayerIntRect::ToUntyped(
+            RoundedIn(touchSensitiveRegion
+                    * aLayer.Metrics().mDevPixelsPerCSSPixel
+                    * parentCumulativeResolution)));
+      }
+      apzc->AddHitTestRegions(subtreeEventRegions);
+    } else {
+      // If we don't have an APZC at this level, carry the subtree hit region
+      // up to the parent.
+      MOZ_ASSERT(aState.mEventRegions.Length() > 0);
+      aState.mEventRegions.LastElement().OrWith(subtreeEventRegions);
+    }
   }
 
   // Return the APZC that should be the sibling of other APZCs as we continue
