@@ -920,7 +920,7 @@ void sdp_set_string_debug (sdp_t *sdp_p, const char *debug_str)
 sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
 {
     int i;
-    u16 num_media_levels;
+    uint16_t num_media_levels;
 
     /* Need to validate c= info is specified at session level or
      * at all m= levels.
@@ -978,8 +978,8 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
  */
 sdp_result_e sdp_parse (sdp_t *sdp_p, const char *buf, size_t len)
 {
-    u8           i;
-    u16          cur_level = SDP_SESSION_LEVEL;
+    uint8_t           i;
+    uint16_t          cur_level = SDP_SESSION_LEVEL;
     const char  *ptr;
     const char  *next_ptr = NULL;
     char        *line_end;
@@ -1221,7 +1221,7 @@ sdp_result_e sdp_build (sdp_t *sdp_p, flex_string *fs)
     if (result == SDP_SUCCESS) {
         for (i=1; ((i <= sdp_p->mca_count) &&
                    (result == SDP_SUCCESS)); i++) {
-            result = sdp_token[SDP_TOKEN_M].build_func(sdp_p, (u16)i, fs);
+            result = sdp_token[SDP_TOKEN_M].build_func(sdp_p, (uint16_t)i, fs);
 
             /* ok not to check buffer space (yet) as the for() checks it */
             for (j=SDP_TOKEN_I;
@@ -1233,7 +1233,7 @@ sdp_result_e sdp_build (sdp_t *sdp_p, flex_string *fs)
                     /* These tokens not valid at media level. */
                     continue;
                 }
-                result = sdp_token[j].build_func(sdp_p, (u16)i, fs);
+                result = sdp_token[j].build_func(sdp_p, (uint16_t)i, fs);
                 /* ok not to check buffer space (yet) as the for() checks it */
             }
         }

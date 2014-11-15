@@ -5,7 +5,7 @@
 #include "sdp.h"
 #include "ccapi.h"
 
-int ccsdpAttrGetFmtpInst(void *sdp_ptr, u16 level, u16 payload_num)
+int ccsdpAttrGetFmtpInst(void *sdp_ptr, uint16_t level, uint16_t payload_num)
 {
   cc_sdp_t *sdpp = sdp_ptr;
   if ( sdpp->dest_sdp == NULL ) {
@@ -14,8 +14,8 @@ int ccsdpAttrGetFmtpInst(void *sdp_ptr, u16 level, u16 payload_num)
   return sdp_find_fmtp_inst(sdpp->dest_sdp, level, payload_num);
 }
 
-const char* ccsdpAttrGetFmtpParamSets(void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num)
+const char* ccsdpAttrGetFmtpParamSets(void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -25,8 +25,8 @@ const char* ccsdpAttrGetFmtpParamSets(void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_param_sets(sdpp->dest_sdp, level, cap_num, inst_num);
 }
 
-sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_ptr, u16 level,
-                         u8 cap_num, u16 inst_num, u16 *val)
+sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_ptr, uint16_t level,
+                         uint8_t cap_num, uint16_t inst_num, uint16_t *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -36,8 +36,8 @@ sdp_result_e ccsdpAttrGetFmtpPackMode(void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_pack_mode(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_ptr, u16 level,
-                         u8 cap_num, u16 inst_num, u16 *val)
+sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_ptr, uint16_t level,
+                         uint8_t cap_num, uint16_t inst_num, uint16_t *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -47,8 +47,8 @@ sdp_result_e ccsdpAttrGetFmtpLevelAsymmetryAllowed(void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_level_asymmetry_allowed(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-const char* ccsdpAttrGetFmtpProfileLevelId (void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num)
+const char* ccsdpAttrGetFmtpProfileLevelId (void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -60,8 +60,8 @@ const char* ccsdpAttrGetFmtpProfileLevelId (void *sdp_ptr, u16 level,
 
 
 
-sdp_result_e ccsdpAttrGetFmtpMaxMbps (void *sdp_ptr, u16 level,
-                                u8 cap_num, u16 inst_num, u32 *val)
+sdp_result_e ccsdpAttrGetFmtpMaxMbps (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, uint16_t inst_num, uint32_t *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -71,8 +71,8 @@ sdp_result_e ccsdpAttrGetFmtpMaxMbps (void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_max_mbps(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-sdp_result_e ccsdpAttrGetFmtpMaxFs (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num, u32 *val)
+sdp_result_e ccsdpAttrGetFmtpMaxFs (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num, uint32_t *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -82,8 +82,8 @@ sdp_result_e ccsdpAttrGetFmtpMaxFs (void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_max_fs(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-sdp_result_e ccsdpAttrGetFmtpMaxCpb (void *sdp_ptr, u16 level,
-                                 u8 cap_num, u16 inst_num, u32 *val)
+sdp_result_e ccsdpAttrGetFmtpMaxCpb (void *sdp_ptr, uint16_t level,
+                                 uint8_t cap_num, uint16_t inst_num, uint32_t *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -93,8 +93,8 @@ sdp_result_e ccsdpAttrGetFmtpMaxCpb (void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_max_cpb(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-sdp_result_e ccsdpAttrGetFmtpMaxBr (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num, u32* val)
+sdp_result_e ccsdpAttrGetFmtpMaxBr (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num, uint32_t* val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -104,7 +104,7 @@ sdp_result_e ccsdpAttrGetFmtpMaxBr (void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_max_br(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-int ccsdpGetBandwidthValue (void *sdp_ptr, u16 level, u16 inst_num)
+int ccsdpGetBandwidthValue (void *sdp_ptr, uint16_t level, uint16_t inst_num)
 
 {
   cc_sdp_t *sdpp = sdp_ptr;
@@ -115,8 +115,8 @@ int ccsdpGetBandwidthValue (void *sdp_ptr, u16 level, u16 inst_num)
   return sdp_get_bw_value(sdpp->dest_sdp, level, inst_num);
 }
 
-sdp_result_e ccsdpAttrGetFmtpMaxDpb (void *sdp_ptr, u16 level,
-                               u8 cap_num, u16 inst_num, u32 *val)
+sdp_result_e ccsdpAttrGetFmtpMaxDpb (void *sdp_ptr, uint16_t level,
+                               uint8_t cap_num, uint16_t inst_num, uint32_t *val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -126,8 +126,8 @@ sdp_result_e ccsdpAttrGetFmtpMaxDpb (void *sdp_ptr, u16 level,
   return sdp_attr_get_fmtp_max_dpb(sdpp->dest_sdp, level, cap_num, inst_num, val);
 }
 
-sdp_result_e ccsdpAddNewAttr (void *sdp_ptr, u16 level, u8 cap_num,
-                               sdp_attr_e attr_type, u16 *inst_num)
+sdp_result_e ccsdpAddNewAttr (void *sdp_ptr, uint16_t level, uint8_t cap_num,
+                               sdp_attr_e attr_type, uint16_t *inst_num)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -137,8 +137,8 @@ sdp_result_e ccsdpAddNewAttr (void *sdp_ptr, u16 level, u8 cap_num,
   return sdp_add_new_attr(sdpp->src_sdp, level, cap_num, attr_type, inst_num);
 }
 
-sdp_result_e ccsdpAttrSetFmtpPayloadType (void *sdp_ptr, u16 level,
-                              u8 cap_num, u16 inst_num, u16 payload_num)
+sdp_result_e ccsdpAttrSetFmtpPayloadType (void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, uint16_t inst_num, uint16_t payload_num)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -149,8 +149,8 @@ sdp_result_e ccsdpAttrSetFmtpPayloadType (void *sdp_ptr, u16 level,
 }
 
 
-sdp_result_e ccsdpAttrSetFmtpPackMode (void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num, u16 pack_mode)
+sdp_result_e ccsdpAttrSetFmtpPackMode (void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num, uint16_t pack_mode)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -160,8 +160,8 @@ sdp_result_e ccsdpAttrSetFmtpPackMode (void *sdp_ptr, u16 level,
   return sdp_attr_set_fmtp_pack_mode(sdpp->src_sdp, level, cap_num, inst_num, pack_mode);
 }
 
-sdp_result_e ccsdpAttrSetFmtpLevelAsymmetryAllowed (void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num, u16 asym_allowed)
+sdp_result_e ccsdpAttrSetFmtpLevelAsymmetryAllowed (void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num, uint16_t asym_allowed)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -172,8 +172,8 @@ sdp_result_e ccsdpAttrSetFmtpLevelAsymmetryAllowed (void *sdp_ptr, u16 level,
 }
 
 
-sdp_result_e ccsdpAttrSetFmtpProfileLevelId (void *sdp_ptr, u16 level,
-                               u8 cap_num, u16 inst_num, const char *profile_level_id)
+sdp_result_e ccsdpAttrSetFmtpProfileLevelId (void *sdp_ptr, uint16_t level,
+                               uint8_t cap_num, uint16_t inst_num, const char *profile_level_id)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -184,8 +184,8 @@ sdp_result_e ccsdpAttrSetFmtpProfileLevelId (void *sdp_ptr, u16 level,
 }
 
 
-sdp_result_e ccsdpAttrSetFmtpParameterSets (void *sdp_ptr, u16 level,
-                                     u8 cap_num, u16 inst_num, const char *parameter_sets)
+sdp_result_e ccsdpAttrSetFmtpParameterSets (void *sdp_ptr, uint16_t level,
+                                     uint8_t cap_num, uint16_t inst_num, const char *parameter_sets)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -197,8 +197,8 @@ sdp_result_e ccsdpAttrSetFmtpParameterSets (void *sdp_ptr, u16 level,
 
 
 
-sdp_result_e ccsdpAttrSetFmtpMaxBr (void *sdp_ptr, u16 level,
-                              u8 cap_num, u16 inst_num, u32 max_br)
+sdp_result_e ccsdpAttrSetFmtpMaxBr (void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, uint16_t inst_num, uint32_t max_br)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -209,8 +209,8 @@ sdp_result_e ccsdpAttrSetFmtpMaxBr (void *sdp_ptr, u16 level,
 }
 
 
-sdp_result_e ccsdpAttrSetFmtpMaxMbps (void *sdp_ptr, u16 level,
-                              u8 cap_num, u16 inst_num, u32 max_mbps)
+sdp_result_e ccsdpAttrSetFmtpMaxMbps (void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, uint16_t inst_num, uint32_t max_mbps)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -220,8 +220,8 @@ sdp_result_e ccsdpAttrSetFmtpMaxMbps (void *sdp_ptr, u16 level,
   return sdp_attr_set_fmtp_max_mbps(sdpp->src_sdp, level, cap_num, inst_num, max_mbps);
 }
 
-sdp_result_e ccsdpAttrSetFmtpMaxFs (void *sdp_ptr, u16 level,
-                        u8 cap_num, u16 inst_num, u32 max_fs)
+sdp_result_e ccsdpAttrSetFmtpMaxFs (void *sdp_ptr, uint16_t level,
+                        uint8_t cap_num, uint16_t inst_num, uint32_t max_fs)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -231,8 +231,8 @@ sdp_result_e ccsdpAttrSetFmtpMaxFs (void *sdp_ptr, u16 level,
   return sdp_attr_set_fmtp_max_fs(sdpp->src_sdp, level, cap_num, inst_num, max_fs);
 }
 
-sdp_result_e ccsdpAttrSetFmtpMaxCpb (void *sdp_ptr, u16 level,
-                            u8 cap_num, u16 inst_num, u32 max_cpb)
+sdp_result_e ccsdpAttrSetFmtpMaxCpb (void *sdp_ptr, uint16_t level,
+                            uint8_t cap_num, uint16_t inst_num, uint32_t max_cpb)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -242,8 +242,8 @@ sdp_result_e ccsdpAttrSetFmtpMaxCpb (void *sdp_ptr, u16 level,
   return sdp_attr_set_fmtp_max_cpb(sdpp->src_sdp, level, cap_num, inst_num, max_cpb);
 }
 
-sdp_result_e ccsdpAttrSetFmtpMaxDbp (void *sdp_ptr, u16 level,
-                                  u8 cap_num, u16 inst_num, u32 max_dpb)
+sdp_result_e ccsdpAttrSetFmtpMaxDbp (void *sdp_ptr, uint16_t level,
+                                  uint8_t cap_num, uint16_t inst_num, uint32_t max_dpb)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -254,8 +254,8 @@ sdp_result_e ccsdpAttrSetFmtpMaxDbp (void *sdp_ptr, u16 level,
 }
 
 
-sdp_result_e ccsdpAttrSetFmtpQcif  (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num, u16 qcif)
+sdp_result_e ccsdpAttrSetFmtpQcif  (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num, uint16_t qcif)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -265,8 +265,8 @@ sdp_result_e ccsdpAttrSetFmtpQcif  (void *sdp_ptr, u16 level,
   return sdp_attr_set_fmtp_qcif(sdpp->src_sdp, level, cap_num, inst_num, qcif);
 }
 
-sdp_result_e ccsdpAttrSetFmtpSqcif  (void *sdp_ptr, u16 level,
-                            u8 cap_num, u16 inst_num, u16 sqcif)
+sdp_result_e ccsdpAttrSetFmtpSqcif  (void *sdp_ptr, uint16_t level,
+                            uint8_t cap_num, uint16_t inst_num, uint16_t sqcif)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -276,7 +276,7 @@ sdp_result_e ccsdpAttrSetFmtpSqcif  (void *sdp_ptr, u16 level,
   return sdp_attr_set_fmtp_sqcif(sdpp->src_sdp, level, cap_num, inst_num, sqcif);
 }
 
-sdp_result_e ccsdpAddNewBandwidthLine (void *sdp_ptr, u16 level, sdp_bw_modifier_e bw_modifier, u16 *inst_num)
+sdp_result_e ccsdpAddNewBandwidthLine (void *sdp_ptr, uint16_t level, sdp_bw_modifier_e bw_modifier, uint16_t *inst_num)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 
@@ -287,8 +287,8 @@ sdp_result_e ccsdpAddNewBandwidthLine (void *sdp_ptr, u16 level, sdp_bw_modifier
 }
 
 
-sdp_result_e ccsdpSetBandwidth (void *sdp_ptr, u16 level, u16 inst_num,
-                         sdp_bw_modifier_e bw_modifier, u32 bw_val)
+sdp_result_e ccsdpSetBandwidth (void *sdp_ptr, uint16_t level, uint16_t inst_num,
+                         sdp_bw_modifier_e bw_modifier, uint32_t bw_val)
 {
   cc_sdp_t *sdpp = sdp_ptr;
 

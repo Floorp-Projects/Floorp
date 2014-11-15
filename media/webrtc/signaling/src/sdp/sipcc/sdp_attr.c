@@ -87,10 +87,10 @@ static void sdp_append_name_and_unsigned(flex_string *fs,
  *              level       The level to check for the attribute.
  *              ptr         Pointer to the attribute string to parse.
  */
-sdp_result_e sdp_parse_attribute (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_attribute (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     int           i;
-    u8            xcpar_flag = FALSE;
+    uint8_t            xcpar_flag = FALSE;
     sdp_result_e  result;
     sdp_mca_t    *mca_p=NULL;
     sdp_attr_t   *attr_p;
@@ -200,7 +200,7 @@ sdp_result_e sdp_parse_attribute (sdp_t *sdp_p, u16 level, const char *ptr)
 }
 
 /* Build all of the attributes defined for the specified level. */
-sdp_result_e sdp_build_attribute (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_attribute (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     sdp_attr_t   *attr_p;
     sdp_mca_t    *mca_p=NULL;
@@ -444,11 +444,11 @@ static void sdp_attr_fmtp_invalid_value(sdp_t *sdp, char *param_name,
 sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                   const char *ptr)
 {
-    u16           i;
-    u32           mapword;
-    u32           bmap;
-    u8            low_val;
-    u8            high_val;
+    uint16_t           i;
+    uint32_t           mapword;
+    uint32_t           bmap;
+    uint8_t            low_val;
+    uint8_t            high_val;
     const char    *ptr2;
     const char    *fmtp_ptr;
     sdp_result_e  result1 = SDP_SUCCESS;
@@ -461,13 +461,13 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char          *temp_ptr = NULL;
     char         *tok=NULL;
     char         *temp=NULL;
-    u16          custom_x=0;
-    u16          custom_y=0;
-    u16          custom_mpi=0;
-    u16          par_height=0;
-    u16          par_width=0;
-    u16          cpcf=0;
-    u16          iter=0;
+    uint16_t          custom_x=0;
+    uint16_t          custom_y=0;
+    uint16_t          custom_mpi=0;
+    uint16_t          par_height=0;
+    uint16_t          par_width=0;
+    uint16_t          cpcf=0;
+    uint16_t          iter=0;
 
     ulong        l_val = 0;
     char*        strtok_state;
@@ -475,7 +475,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     char*        strtoul_end;
 
     /* Find the payload type number. */
-    attr_p->attr.fmtp.payload_num = (u16)sdp_getnextnumtok(ptr, &ptr,
+    attr_p->attr.fmtp.payload_num = (uint16_t)sdp_getnextnumtok(ptr, &ptr,
                                                       " \t", &result1);
     if (result1 != SDP_SUCCESS) {
         sdp_attr_fmtp_no_value(sdp_p, "payload type");
@@ -590,7 +590,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->bitrate = (u32) strtoul_result;
+            fmtp_p->bitrate = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
 
          } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[41].name,
@@ -617,7 +617,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_MODE;
-            fmtp_p->mode = (u32) strtoul_result;
+            fmtp_p->mode = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[3].name,
@@ -645,7 +645,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->qcif = (u16) strtoul_result;
+            fmtp_p->qcif = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[4].name,
                                sdp_fmtp_codec_param[4].strlen) == 0) {
@@ -672,7 +672,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
         }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->cif = (u16) strtoul_result;
+            fmtp_p->cif = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[5].name,
                                sdp_fmtp_codec_param[5].strlen) == 0) {
@@ -699,7 +699,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->maxbr = (u16) strtoul_result;
+            fmtp_p->maxbr = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[6].name,
                                sdp_fmtp_codec_param[6].strlen) == 0) {
@@ -726,7 +726,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
         }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->sqcif = (u16) strtoul_result;
+            fmtp_p->sqcif = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[7].name,
                                sdp_fmtp_codec_param[7].strlen) == 0) {
@@ -753,7 +753,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->cif4 = (u16) strtoul_result;
+            fmtp_p->cif4 = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[8].name,
                                sdp_fmtp_codec_param[8].strlen) == 0) {
@@ -780,7 +780,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->cif16 = (u16) strtoul_result;
+            fmtp_p->cif16 = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else  if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[9].name,
                                sdp_fmtp_codec_param[9].strlen) == 0) {
@@ -808,11 +808,11 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 }
 
                 if (iter == 1)
-                    custom_x = (u16) strtoul_result;
+                    custom_x = (uint16_t) strtoul_result;
                 if (iter == 2)
-                    custom_y = (u16) strtoul_result;
+                    custom_y = (uint16_t) strtoul_result;
                 if (iter == 3)
-                    custom_mpi = (u16) strtoul_result;
+                    custom_mpi = (uint16_t) strtoul_result;
 
                 temp=PL_strtok_r(NULL, ",", &strtok_state);
                 iter++;
@@ -856,9 +856,9 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 }
 
                 if (iter == 1)
-                    par_width = (u16) strtoul_result;
+                    par_width = (uint16_t) strtoul_result;
                 else
-                    par_height = (u16) strtoul_result;
+                    par_height = (uint16_t) strtoul_result;
 
                 temp=PL_strtok_r(NULL, ",", &strtok_state);
                 iter++;
@@ -893,7 +893,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             if (errno || temp == strtoul_end || strtoul_result > USHRT_MAX) {
                 cpcf = 0;
             } else {
-                cpcf = (u16) strtoul_result;
+                cpcf = (uint16_t) strtoul_result;
             }
         }
 
@@ -929,7 +929,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-        fmtp_p->bpp = (u16) strtoul_result;
+        fmtp_p->bpp = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else  if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[13].name,
                                sdp_fmtp_codec_param[13].strlen) == 0) {
@@ -955,7 +955,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->hrd = (u16) strtoul_result;
+            fmtp_p->hrd = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[14].name,
                                sdp_fmtp_codec_param[14].strlen) == 0) {
@@ -1073,7 +1073,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->packetization_mode = (int16) strtoul_result;
+            fmtp_p->packetization_mode = (int16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[20].name,
                                sdp_fmtp_codec_param[20].strlen) == 0) {
@@ -1099,7 +1099,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->interleaving_depth = (u16) strtoul_result;
+            fmtp_p->interleaving_depth = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[21].name,
                                sdp_fmtp_codec_param[21].strlen) == 0) {
@@ -1116,7 +1116,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             tok++;
             if (sdp_checkrange(sdp_p, tok, &l_val) == TRUE) {
                 fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-                fmtp_p->deint_buf_req = (u32) l_val;
+                fmtp_p->deint_buf_req = (uint32_t) l_val;
                 fmtp_p->flag |= SDP_DEINT_BUF_REQ_FLAG;
                 codec_info_found = TRUE;
             } else {
@@ -1148,7 +1148,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_don_diff = (u32) strtoul_result;
+            fmtp_p->max_don_diff = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[23].name,
                                sdp_fmtp_codec_param[23].strlen) == 0) {
@@ -1165,7 +1165,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             tok++;
             if (sdp_checkrange(sdp_p, tok, &l_val) == TRUE) {
                 fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-                fmtp_p->init_buf_time = (u32) l_val;
+                fmtp_p->init_buf_time = (uint32_t) l_val;
                 fmtp_p->flag |= SDP_INIT_BUF_TIME_FLAG;
                 codec_info_found = TRUE;
             } else {
@@ -1197,7 +1197,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             }
 
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-        fmtp_p->max_mbps = (u32) strtoul_result;
+        fmtp_p->max_mbps = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[25].name,
                                sdp_fmtp_codec_param[25].strlen) == 0) {
@@ -1222,7 +1222,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_fs = (u32) strtoul_result;
+            fmtp_p->max_fs = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[26].name,
                                sdp_fmtp_codec_param[26].strlen) == 0) {
@@ -1247,7 +1247,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_cpb = (u32) strtoul_result;
+            fmtp_p->max_cpb = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[27].name,
                                sdp_fmtp_codec_param[27].strlen) == 0) {
@@ -1272,7 +1272,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_dpb = (u32) strtoul_result;
+            fmtp_p->max_dpb = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[28].name,
                                sdp_fmtp_codec_param[28].strlen) == 0) {
@@ -1297,7 +1297,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_br = (u32) strtoul_result;
+            fmtp_p->max_br = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[29].name,
                                sdp_fmtp_codec_param[29].strlen) == 0) {
@@ -1338,7 +1338,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             tok++;
             if (sdp_checkrange(sdp_p, tok, &l_val) == TRUE) {
                 fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-                fmtp_p->deint_buf_cap = (u32) l_val;
+                fmtp_p->deint_buf_cap = (uint32_t) l_val;
                 fmtp_p->flag |= SDP_DEINT_BUF_CAP_FLAG;
                 codec_info_found = TRUE;
             } else {
@@ -1361,7 +1361,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             tok++;
             if (sdp_checkrange(sdp_p, tok, &l_val) == TRUE) {
                 fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-                fmtp_p->max_rcmd_nalu_size = (u32) l_val;
+                fmtp_p->max_rcmd_nalu_size = (uint32_t) l_val;
                 fmtp_p->flag |= SDP_MAX_RCMD_NALU_SIZE_FLAG;
                 codec_info_found = TRUE;
             } else {
@@ -1391,7 +1391,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->parameter_add = (u16) strtoul_result;
+            fmtp_p->parameter_add = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[33].name,
                                sdp_fmtp_codec_param[33].strlen) == 0) {
@@ -1441,7 +1441,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                     return SDP_INVALID_PARAMETER;
                 }
                 fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-                fmtp_p->annex_k_val = (u16) strtoul_result;
+                fmtp_p->annex_k_val = (uint16_t) strtoul_result;
                 codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[39].name,
                                sdp_fmtp_codec_param[39].strlen) == 0) {
@@ -1466,7 +1466,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->annex_n_val = (u16) strtoul_result;
+            fmtp_p->annex_n_val = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[40].name,
                                sdp_fmtp_codec_param[40].strlen) == 0) {
@@ -1494,9 +1494,9 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                     }
 
                     if (iter == 1)
-                        fmtp_p->annex_p_val_picture_resize = (u16) strtoul_result;
+                        fmtp_p->annex_p_val_picture_resize = (uint16_t) strtoul_result;
                     else if (iter == 2)
-                        fmtp_p->annex_p_val_warp = (u16) strtoul_result;
+                        fmtp_p->annex_p_val_warp = (uint16_t) strtoul_result;
 
                     temp=PL_strtok_r(NULL, ",", &strtok_state);
                     iter++;
@@ -1552,7 +1552,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->maxaveragebitrate = (u32) strtoul_result;
+            fmtp_p->maxaveragebitrate = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[44].name,
@@ -1577,7 +1577,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->usedtx = (u16) strtoul_result;
+            fmtp_p->usedtx = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[45].name,
@@ -1603,7 +1603,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->stereo = (u16) strtoul_result;
+            fmtp_p->stereo = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[46].name,
@@ -1629,7 +1629,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->useinbandfec = (u16) strtoul_result;
+            fmtp_p->useinbandfec = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
 
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[47].name,
@@ -1673,7 +1673,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->cbr = (u16) strtoul_result;
+            fmtp_p->cbr = (uint16_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[49].name,
                                    sdp_fmtp_codec_param[49].strlen) == 0) {
@@ -1699,7 +1699,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
                 return SDP_INVALID_PARAMETER;
             }
             fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
-            fmtp_p->max_fr = (u32) strtoul_result;
+            fmtp_p->max_fr = (uint32_t) strtoul_result;
             codec_info_found = TRUE;
         } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') {
             temp=PL_strtok_r(tmp, ";", &strtok_state);
@@ -1843,10 +1843,10 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
         }
         /* Now look for '-' separated range */
         ptr2 = tmp;
-        low_val = (u8)sdp_getnextnumtok(ptr2, (const char **)&ptr2,
+        low_val = (uint8_t)sdp_getnextnumtok(ptr2, (const char **)&ptr2,
                                     "- \t", &result1);
         if (*ptr2 == '-') {
-            high_val = (u8)sdp_getnextnumtok(ptr2, (const char **)&ptr2,
+            high_val = (uint8_t)sdp_getnextnumtok(ptr2, (const char **)&ptr2,
                                          "- \t", &result2);
         } else {
             high_val = low_val;
@@ -1892,11 +1892,11 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 sdp_result_e
 sdp_build_attr_fmtp_params (sdp_t *sdp_p, sdp_fmtp_t *fmtp_p, flex_string *fs)
 {
-  u16         event_id;
-  u32         mask;
-  u32         mapword;
-  u8          min = 0;
-  u8          max = 0;
+  uint16_t         event_id;
+  uint32_t         mask;
+  uint32_t         mapword;
+  uint8_t          min = 0;
+  uint8_t          max = 0;
   tinybool    range_start = FALSE;
   tinybool    range_end = FALSE;
   tinybool    semicolon = FALSE;
@@ -2079,9 +2079,9 @@ sdp_build_attr_fmtp_params (sdp_t *sdp_p, sdp_fmtp_t *fmtp_p, flex_string *fs)
         if (fmtp_p->bmap[mapword] & mask) {
             if (!range_start) {
                 range_start = TRUE;
-                min = max = (u8)event_id;
+                min = max = (uint8_t)event_id;
             } else {
-                max = (u8)event_id;
+                max = (uint8_t)event_id;
             }
         range_end = (max == fmtp_p->maxval);
         } else {
@@ -2135,10 +2135,10 @@ sdp_result_e sdp_parse_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
 {
     sdp_result_e result = SDP_SUCCESS;
     char tmp[SDP_MAX_STRING_LEN];
-    u32 streams;
+    uint32_t streams;
 
     /* Find the payload type number. */
-    attr_p->attr.sctpmap.port = (u16)sdp_getnextnumtok(ptr, &ptr,
+    attr_p->attr.sctpmap.port = (uint16_t)sdp_getnextnumtok(ptr, &ptr,
                                                       " \t", &result);
     if (result != SDP_SUCCESS) {
         sdp_parse_error(sdp_p,
@@ -2627,7 +2627,7 @@ sdp_result_e sdp_parse_attr_transport_map (sdp_t *sdp_p, sdp_attr_t *attr_p,
 
     /* Find the payload type number. */
     attr_p->attr.transport_map.payload_num =
-    (u16)sdp_getnextnumtok(ptr, &ptr, " \t", &result);
+    (uint16_t)sdp_getnextnumtok(ptr, &ptr, " \t", &result);
     if (result != SDP_SUCCESS) {
         sdp_parse_error(sdp_p,
             "%s Warning: Invalid payload type specified for %s attribute.",
@@ -2662,7 +2662,7 @@ sdp_result_e sdp_parse_attr_transport_map (sdp_t *sdp_p, sdp_attr_t *attr_p,
     if (*ptr == '/') {
         /* If a '/' exists, expect something valid beyond it. */
         attr_p->attr.transport_map.num_chan =
-            (u16)sdp_getnextnumtok(ptr, &ptr, "/ \t", &result);
+            (uint16_t)sdp_getnextnumtok(ptr, &ptr, "/ \t", &result);
         if (result != SDP_SUCCESS) {
             sdp_parse_error(sdp_p,
                 "%s Warning: Invalid number of channels parameter"
@@ -2934,7 +2934,7 @@ sdp_result_e sdp_build_attr_t38_udpec (sdp_t *sdp_p, sdp_attr_t *attr_p,
 sdp_result_e sdp_parse_attr_pc_codec (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                       const char *ptr)
 {
-    u16 i;
+    uint16_t i;
     sdp_result_e result;
 
     for (i=0; i < SDP_MAX_PAYLOAD_TYPES; i++) {
@@ -2986,7 +2986,7 @@ sdp_result_e sdp_build_attr_pc_codec (sdp_t *sdp_p, sdp_attr_t *attr_p,
 sdp_result_e sdp_parse_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                  const char *ptr)
 {
-    u16           i;
+    uint16_t           i;
     sdp_result_e  result;
     sdp_mca_t    *cap_p;
     char          tmp[SDP_MAX_STRING_LEN];
@@ -3123,7 +3123,7 @@ sdp_result_e sdp_parse_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
 sdp_result_e sdp_build_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                  flex_string *fs)
 {
-    u16                   i, j;
+    uint16_t                   i, j;
     sdp_mca_t            *cap_p;
     sdp_media_profiles_t *profile_p;
 
@@ -3202,7 +3202,7 @@ sdp_result_e sdp_build_attr_cap (sdp_t *sdp_p, sdp_attr_t *attr_p,
 sdp_result_e sdp_parse_attr_cpar (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                   const char *ptr)
 {
-    u16           i;
+    uint16_t           i;
     sdp_result_e  result;
     sdp_mca_t    *cap_p;
     sdp_attr_t   *cap_attr_p = NULL;
@@ -3625,10 +3625,10 @@ sdp_result_e sdp_parse_attr_silencesupp (sdp_t *sdp_p, sdp_attr_t *attr_p,
         return (SDP_INVALID_PARAMETER);
     }
 
-    /* Find silenceTimer -- u16 or "-" */
+    /* Find silenceTimer -- uint16_t or "-" */
 
     attr_p->attr.silencesupp.timer =
-        (u16)sdp_getnextnumtok_or_null(ptr, &ptr, " \t",
+        (uint16_t)sdp_getnextnumtok_or_null(ptr, &ptr, " \t",
                                        &attr_p->attr.silencesupp.timer_null,
                                        &result);
     if (result != SDP_SUCCESS) {
@@ -3687,9 +3687,9 @@ sdp_result_e sdp_parse_attr_silencesupp (sdp_t *sdp_p, sdp_attr_t *attr_p,
         return (SDP_INVALID_PARAMETER);
     }
 
-    /* Find fxnslevel -- u8 or "-" */
+    /* Find fxnslevel -- uint8_t or "-" */
     attr_p->attr.silencesupp.fxnslevel =
-        (u8)sdp_getnextnumtok_or_null(ptr, &ptr, " \t",
+        (uint8_t)sdp_getnextnumtok_or_null(ptr, &ptr, " \t",
                                       &attr_p->attr.silencesupp.fxnslevel_null,
                                       &result);
 
@@ -3843,7 +3843,7 @@ sdp_result_e sdp_parse_attr_mptime (
     sdp_attr_t *attr_p,
     const char *ptr)
 {
-    u16 i;                      /* loop counter for parameters */
+    uint16_t i;                      /* loop counter for parameters */
     sdp_result_e result;        /* value returned by this function */
     tinybool null_ind;          /* true if a parameter is "-" */
 
@@ -4298,7 +4298,7 @@ sdp_result_e sdp_parse_attr_rtcp_unicast (sdp_t *sdp_p, sdp_attr_t *attr_p,
                                           const char *ptr)
 {
     sdp_result_e result;
-    u32 i;
+    uint32_t i;
     char tmp[SDP_MAX_STRING_LEN];
 
     attr_p->attr.u32_val = SDP_RTCP_UNICAST_MODE_NOT_PRESENT;
@@ -4365,7 +4365,7 @@ store_sdescriptions_mki_or_lifetime (char *buf, sdp_attr_t *attr_p)
 {
 
     tinybool  result;
-    u16       mkiLen;
+    uint16_t       mkiLen;
     char      mkiValue[SDP_SRTP_MAX_MKI_SIZE_BYTES];
 
     /* MKI has a colon */
@@ -4929,7 +4929,7 @@ sdp_result_e sdp_parse_attr_rtcp_fb (sdp_t *sdp_p,
         ptr++;
     } else {
         /* If the pt is not '*', parse it out as an integer */
-        rtcp_fb_p->payload_num = (u16)sdp_getnextnumtok(ptr, &ptr,
+        rtcp_fb_p->payload_num = (uint16_t)sdp_getnextnumtok(ptr, &ptr,
                                                         " \t", &result);
         if (result != SDP_SUCCESS) {
             sdp_parse_error(sdp_p,
@@ -5197,7 +5197,7 @@ sdp_result_e sdp_parse_attr_extmap(sdp_t *sdp_p,
 
     /* Find the payload type number. */
     attr_p->attr.extmap.id =
-    (u16)sdp_getnextnumtok(ptr, &ptr, "/ \t", &result);
+    (uint16_t)sdp_getnextnumtok(ptr, &ptr, "/ \t", &result);
     if (result != SDP_SUCCESS) {
         sdp_parse_error(sdp_p,
             "%s Warning: Invalid extmap id specified for %s attribute.",
