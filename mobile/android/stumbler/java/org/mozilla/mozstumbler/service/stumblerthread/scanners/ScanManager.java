@@ -98,6 +98,11 @@ public class ScanManager {
         }
 
         mContext = context.getApplicationContext();
+        if (mContext == null) {
+            Log.w(LOG_TAG, "No app context available.");
+            return;
+        }
+
         if (mGPSScanner == null) {
             mGPSScanner = new GPSScanner(context, this);
             mWifiScanner = new WifiScanner(context);
@@ -156,10 +161,6 @@ public class ScanManager {
 
     public int getCellInfoCount() {
         return (mCellScanner == null)? 0 :mCellScanner.getCellInfoCount();
-    }
-
-    public int getCurrentCellInfoCount() {
-        return (mCellScanner == null)? 0 :mCellScanner.getCurrentCellInfoCount();
     }
 
     public int getLocationCount() {
