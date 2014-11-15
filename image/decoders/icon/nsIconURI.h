@@ -21,7 +21,7 @@
 
 class nsMozIconURI MOZ_FINAL : public nsIMozIconURI
 {
-public:    
+public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIURI
   NS_DECL_NSIMOZICONURI
@@ -32,12 +32,17 @@ public:
 protected:
   virtual ~nsMozIconURI();
   nsCOMPtr<nsIURL> mIconURL; // a URL that we want the icon for
-  uint32_t mSize; // the # of pixels in a row that we want for this image. Typically 16, 32, 128, etc.
-  nsCString mContentType; // optional field explicitly specifying the content type
-  nsCString mFileName; // for if we don't have an actual file path, we're just given a filename with an extension
+  uint32_t mSize; // the # of pixels in a row that we want for this image.
+                  // Typically 16, 32, 128, etc.
+  nsCString mContentType; // optional field explicitly specifying the content
+                          // type
+  nsCString mFileName; // for if we don't have an actual file path, we're just
+                       // given a filename with an extension
   nsCString mStockIcon;
-  int32_t mIconSize;     // -1 if not specified, otherwise index into kSizeStrings
-  int32_t mIconState;    // -1 if not specified, otherwise index into kStateStrings
+  int32_t mIconSize;   // -1 if not specified, otherwise index into
+                       // kSizeStrings
+  int32_t mIconState;  // -1 if not specified, otherwise index into
+                       // kStateStrings
 };
 
 #endif // nsMozIconURI_h__

@@ -35,7 +35,8 @@ public:
 protected:
   ~nsBMPEncoder();
 
-  enum Version {
+  enum Version
+  {
       VERSION_3 = 3,
       VERSION_5 = 5
   };
@@ -70,7 +71,7 @@ protected:
     return static_cast<int32_t>(mImageBufferCurr - mImageBufferStart);
   }
 
-  // These headers will always contain endian independent stuff 
+  // These headers will always contain endian independent stuff
   // They store the BMP headers which will be encoded
   mozilla::image::BMPFILEHEADER mBMPFileHeader;
   mozilla::image::BITMAPV5HEADER mBMPInfoHeader;

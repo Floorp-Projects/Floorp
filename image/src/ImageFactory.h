@@ -12,13 +12,13 @@
 
 class nsCString;
 class nsIRequest;
-class imgStatusTracker;
 
 namespace mozilla {
 namespace image {
 
 class Image;
 class ImageURL;
+class ProgressTracker;
 
 class ImageFactory
 {
@@ -40,15 +40,15 @@ public:
    * Creates a new image with the given properties.
    * Can be called on or off the main thread.
    *
-   * @param aRequest       The associated request.
-   * @param aStatusTracker A status tracker for the image to use.
-   * @param aMimeType      The mimetype of the image.
-   * @param aURI           The URI of the image.
-   * @param aIsMultiPart   Whether the image is part of a multipart request.
-   * @param aInnerWindowId The window this image belongs to.
+   * @param aRequest         The associated request.
+   * @param aProgressTracker A status tracker for the image to use.
+   * @param aMimeType        The mimetype of the image.
+   * @param aURI             The URI of the image.
+   * @param aIsMultiPart     Whether the image is part of a multipart request.
+   * @param aInnerWindowId   The window this image belongs to.
    */
   static already_AddRefed<Image> CreateImage(nsIRequest* aRequest,
-                                             imgStatusTracker* aStatusTracker,
+                                             ProgressTracker* aProgressTracker,
                                              const nsCString& aMimeType,
                                              ImageURL* aURI,
                                              bool aIsMultiPart,
@@ -64,14 +64,14 @@ public:
 private:
   // Factory functions that create specific types of image containers.
   static already_AddRefed<Image> CreateRasterImage(nsIRequest* aRequest,
-                                                   imgStatusTracker* aStatusTracker,
+                                                   ProgressTracker* aProgressTracker,
                                                    const nsCString& aMimeType,
                                                    ImageURL* aURI,
                                                    uint32_t aImageFlags,
                                                    uint32_t aInnerWindowId);
 
   static already_AddRefed<Image> CreateVectorImage(nsIRequest* aRequest,
-                                                   imgStatusTracker* aStatusTracker,
+                                                   ProgressTracker* aProgressTracker,
                                                    const nsCString& aMimeType,
                                                    ImageURL* aURI,
                                                    uint32_t aImageFlags,

@@ -109,5 +109,6 @@ pref(dom.webcomponents.enabled,true) load 1017798-1.html
 load 1028514-1.html
 load 1066089-1.html
 load 1074651-1.html
+pref(dom.webcomponents.enabled,true) load 1089463-1.html
 load large_border_image_width.html
 load border-image-visited-link.html

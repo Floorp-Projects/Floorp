@@ -10,6 +10,7 @@
 #include "nsCSSProps.h"
 #include "nsRuleNode.h"
 #include "nsROCSSPrimitiveValue.h"
+#include "nsStyleStruct.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
@@ -618,6 +619,57 @@ nsStyleUtil::IsFlexBasisMainSize(const nsStyleCoord& aFlexBasis,
 
   return aFlexBasis.GetIntValue() == NS_STYLE_FLEX_BASIS_MAIN_SIZE;
 }
+
+// For a replaced element whose concrete object size is no larger than the
+// element's content-box, this method checks whether the given
+// "object-position" coordinate might cause overflow in its dimension.
+typedef nsStyleBackground::Position::PositionCoord PositionCoord;
+static bool
+ObjectPositionCoordMightCauseOverflow(const PositionCoord& aCoord)
+{
+  // Any nonzero length in "object-position" can push us to overflow
+  // (particularly if our concrete object size is exactly the same size as the
+  // replaced element's content-box).
+  if (aCoord.mLength != 0) {
+    return true;
+  }
+
+  // Percentages are interpreted as a fraction of the extra space. So,
+  // percentages in the 0-100% range are safe, but values outside of that
+  // range could cause overflow.
+  if (aCoord.mHasPercent &&
+      (aCoord.mPercent < 0.0f || aCoord.mPercent > 1.0f)) {
+    return true;
+  }
+  return false;
+}
+
+
+/* static */ bool
+nsStyleUtil::ObjectPropsMightCauseOverflow(const nsStylePosition* aStylePos)
+{
+  auto objectFit = aStylePos->mObjectFit;
+
+  // "object-fit: cover" & "object-fit: none" can give us a render rect that's
+  // larger than our container element's content-box.
+  if (objectFit == NS_STYLE_OBJECT_FIT_COVER ||
+      objectFit == NS_STYLE_OBJECT_FIT_NONE) {
+    return true;
+  }
+  // (All other object-fit values produce a concrete object size that's no larger
+  // than the constraint region.)
+
+  // Check each of our "object-position" coords to see if it could cause
+  // overflow in its dimension:
+  const nsStyleBackground::Position& objectPosistion = aStylePos->mObjectPosition;
+  if (ObjectPositionCoordMightCauseOverflow(objectPosistion.mXPosition) ||
+      ObjectPositionCoordMightCauseOverflow(objectPosistion.mYPosition)) {
+    return true;
+  }
+
+  return false;
+}
+
 
 /* static */ bool
 nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
