@@ -1936,6 +1936,13 @@ ContentParent::ContentParent(mozIApplication* aApp,
     // PID along with the warning.
     nsDebugImpl::SetMultiprocessMode("Parent");
 
+#if defined(XP_WIN) && !defined(MOZ_B2G)
+    // Request Windows message deferral behavior on our side of the PContent
+    // channel. Generally only applies to the situation where we get caught in
+    // a deadlock with the plugin process when sending CPOWs.
+    GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+#endif
+
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     ChildPrivileges privs = aIsNuwaProcess
         ? base::PRIVILEGES_INHERIT
