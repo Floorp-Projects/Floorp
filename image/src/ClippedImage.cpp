@@ -134,8 +134,8 @@ ClippedImage::ShouldClip()
   // available yet, in which case we'll try again later.
   if (mShouldClip.isNothing()) {
     int32_t width, height;
-    nsRefPtr<imgStatusTracker> innerImageStatusTracker =
-      InnerImage()->GetStatusTracker();
+    nsRefPtr<ProgressTracker> progressTracker =
+      InnerImage()->GetProgressTracker();
     if (InnerImage()->HasError()) {
       // If there's a problem with the inner image we'll let it handle everything.
       mShouldClip.emplace(false);
@@ -147,8 +147,7 @@ ClippedImage::ShouldClip()
       // If the clipping region is the same size as the underlying image we
       // don't have to do anything.
       mShouldClip.emplace(!mClip.IsEqualInterior(nsIntRect(0, 0, width, height)));
-    } else if (innerImageStatusTracker &&
-               innerImageStatusTracker->IsLoading()) {
+    } else if (progressTracker && progressTracker->IsLoading()) {
       // The image just hasn't finished loading yet. We don't yet know whether
       // clipping with be needed or not for now. Just return without memoizing
       // anything.

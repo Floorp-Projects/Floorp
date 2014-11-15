@@ -99,7 +99,7 @@ public:
 
   size_t BytesDecoded() const { return mBytesDecoded; }
 
-  ImageStatusDiff GetDiff() const { return mDiff; }
+  Progress GetProgress() const { return mProgress; }
 
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
@@ -227,7 +227,7 @@ protected:
   RasterImage &mImage;
   nsRefPtr<imgFrame> mCurrentFrame;
   ImageMetadata mImageMetadata;
-  ImageStatusDiff mDiff;
+  Progress mProgress;
 
   uint8_t* mImageData;       // Pointer to image data in either Cairo or 8bit format
   uint32_t mImageDataLength;

@@ -43,7 +43,7 @@ SOURCES += [
     'imgLoader.cpp',
     'imgRequest.cpp',
     'imgRequestProxy.cpp',
-    'imgStatusTracker.cpp',
+    'ProgressTracker.cpp',
     'RasterImage.cpp',
 ]
 
