@@ -5,11 +5,29 @@
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
-#include "ccsip_sdp.h"
-#include "rtp_defs.h"
+
 #include "CSFLog.h"
 
 static const char* logTag = "sdp_access";
+
+/* Pulled in from ccsip_sdp.h */
+/* Possible encoding names of static payload types*/
+#define SIPSDP_ATTR_ENCNAME_PCMU      "PCMU"
+#define SIPSDP_ATTR_ENCNAME_PCMA      "PCMA"
+#define SIPSDP_ATTR_ENCNAME_G729      "G729"
+#define SIPSDP_ATTR_ENCNAME_G723      "G723"
+#define SIPSDP_ATTR_ENCNAME_G726      "G726-32"
+#define SIPSDP_ATTR_ENCNAME_G728      "G728"
+#define SIPSDP_ATTR_ENCNAME_GSM       "GSM"
+#define SIPSDP_ATTR_ENCNAME_CN        "CN"
+#define SIPSDP_ATTR_ENCNAME_G722      "G722"
+#define SIPSDP_ATTR_ENCNAME_ILBC      "iLBC"
+#define SIPSDP_ATTR_ENCNAME_H263v2    "H263-1998"
+#define SIPSDP_ATTR_ENCNAME_H264      "H264"
+#define SIPSDP_ATTR_ENCNAME_VP8       "VP8"
+#define SIPSDP_ATTR_ENCNAME_L16_256K  "L16"
+#define SIPSDP_ATTR_ENCNAME_ISAC      "ISAC"
+#define SIPSDP_ATTR_ENCNAME_OPUS      "opus"
 
 /* Function:    sdp_find_media_level
  * Description: Find and return a pointer to the specified media level,
@@ -1275,6 +1293,31 @@ sdp_media_e sdp_get_media_type (void *sdp_ptr, u16 level)
     return (mca_p->media);
 }
 
+/* Function:    sdp_get_media_line_number
+ * Description: Returns the line number in the SDP the media
+ *              section starts on. Only set if SDP has been parsed
+ *              (rather than built).
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to of the m= media line.  Will be 1-n.
+ * Returns:     Line number (0 if not found or if locally built)
+ */
+u32 sdp_get_media_line_number (void *sdp_ptr, u16 level)
+{
+    sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_mca_t  *mca_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return 0;
+    }
+
+    mca_p = sdp_find_media_level(sdp_p, level);
+    if (mca_p == NULL) {
+        return 0;
+    }
+
+    return (mca_p->line_number);
+}
+
 /* Function:    sdp_get_media_port_format
  * Description: Returns the port format type associated with the m=
  *              media token line.  If port format type has not been
@@ -1329,7 +1372,7 @@ int32 sdp_get_media_portnum (void *sdp_ptr, u16 level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Port num not valid for media line %u",
-                      sdp_p->debug_str, level);
+                      sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_VALUE);
@@ -1364,7 +1407,7 @@ int32 sdp_get_media_portcount (void *sdp_ptr, u16 level)
     if (mca_p->port_format != SDP_PORT_NUM_COUNT) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Port count not valid for media line %u",
-                      sdp_p->debug_str, level);
+                      sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_VALUE);
@@ -1401,7 +1444,7 @@ int32 sdp_get_media_vpi (void *sdp_ptr, u16 level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s VPI not valid for media line %u",
-                      sdp_p->debug_str, level);
+                      sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_VALUE);
@@ -1438,7 +1481,7 @@ u32 sdp_get_media_vci (void *sdp_ptr, u16 level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s VCI not valid for media line %u",
-                      sdp_p->debug_str, level);
+                      sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (0);
@@ -1474,7 +1517,7 @@ int32 sdp_get_media_vcci (void *sdp_ptr, u16 level)
         (mca_p->port_format != SDP_PORT_VCCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s VCCI not valid for media line %u",
-                      sdp_p->debug_str, level);
+                      sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_VALUE);
@@ -1510,7 +1553,7 @@ int32 sdp_get_media_cid (void *sdp_ptr, u16 level)
         (mca_p->port_format != SDP_PORT_NUM_VPI_VCI_CID)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s CID not valid for media line %u",
-                      sdp_p->debug_str, level);
+                      sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_VALUE);
@@ -1675,6 +1718,93 @@ u16 sdp_get_media_profile_num_payload_types (void *sdp_ptr, u16 level,
     }
 }
 
+rtp_ptype sdp_get_known_payload_type(void *sdp_ptr,
+                                     u16 level,
+                                     u16 payload_type_raw) {
+  sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+  sdp_attr_t  *attr_p;
+  sdp_transport_map_t *rtpmap;
+  uint16_t    pack_mode = 0; /*default 0, if remote did not provide any */
+  const char *encname = NULL;
+  uint16_t    num_a_lines = 0;
+  int         i;
+
+  if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+    return (RTP_NONE);
+  }
+
+  /*
+   * Get number of RTPMAP attributes for the media line
+   */
+  (void) sdp_attr_num_instances(sdp_p, level, 0, SDP_ATTR_RTPMAP,
+      &num_a_lines);
+
+  /*
+   * Loop through media line RTPMAP attributes.
+   */
+  for (i = 0; i < num_a_lines; i++) {
+    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_RTPMAP, (i + 1));
+    if (attr_p == NULL) {
+      if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+        CSFLogError(logTag, "%s rtpmap attribute, level %u instance %u "
+                            "not found.",
+                            sdp_p->debug_str,
+                            (unsigned)level,
+                            (unsigned)(i + 1));
+      }
+      sdp_p->conf_p->num_invalid_param++;
+      return (RTP_NONE);
+    }
+
+    rtpmap = &(attr_p->attr.transport_map);
+
+    if (rtpmap->payload_num == payload_type_raw) {
+      encname = rtpmap->encname;
+      if (encname) {
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_ILBC) == 0) {
+          return (RTP_ILBC);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_L16_256K) == 0) {
+          return (RTP_L16);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_ISAC) == 0) {
+          return (RTP_ISAC);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_OPUS) == 0) {
+          return (RTP_OPUS);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_PCMU) == 0) {
+          return (RTP_PCMU);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_PCMA) == 0) {
+          return (RTP_PCMA);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_G722) == 0) {
+          return (RTP_G722);
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_H264) == 0) {
+          int fmtp_inst = sdp_find_fmtp_inst(sdp_p, level, rtpmap->payload_num);
+          if (fmtp_inst < 0) {
+            return (RTP_H264_P0);
+          } else {
+            sdp_attr_get_fmtp_pack_mode(sdp_p, level, 0, (uint16_t) fmtp_inst, &pack_mode);
+            if (pack_mode == SDP_DEFAULT_PACKETIZATION_MODE_VALUE) {
+              return (RTP_H264_P0);
+            } else {
+              return (RTP_H264_P1);
+            }
+          }
+        }
+        if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_VP8) == 0) {
+          return (RTP_VP8);
+        }
+      }
+    }
+  }
+
+  return (RTP_NONE);
+}
+
 /* Function:    sdp_get_media_payload_type
  * Description: Returns the payload type of the specified payload for the m=
  *              media token line.  If the media line or payload number is
@@ -1693,12 +1823,7 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
-    uint16_t    num_a_lines = 0;
-    int         i;
-    uint16_t    ptype;
-    uint16_t    pack_mode = 0; /*default 0, if remote did not provide any */
-    const char *encname = NULL;
-
+    rtp_ptype   ptype;
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (0);
     }
@@ -1715,54 +1840,14 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
     *indicator = mca_p->payload_indicator[payload_num-1];
     if ((mca_p->payload_type[payload_num-1] >= SDP_MIN_DYNAMIC_PAYLOAD) &&
         (mca_p->payload_type[payload_num-1] <= SDP_MAX_DYNAMIC_PAYLOAD)) {
-        /*
-         * Get number of RTPMAP attributes for the AUDIO line
-         */
-        (void) sdp_attr_num_instances(sdp_p, level, 0, SDP_ATTR_RTPMAP,
-                                      &num_a_lines);
-        /*
-         * Loop through AUDIO media line RTPMAP attributes.
-         * NET dynamic payload type will be returned.
-         */
-        for (i = 0; i < num_a_lines; i++) {
-            ptype = sdp_attr_get_rtpmap_payload_type(sdp_p, level, 0,
-                                                     (uint16_t) (i + 1));
-            if (ptype == mca_p->payload_type[payload_num-1] ) {
-                encname = sdp_attr_get_rtpmap_encname(sdp_p, level, 0,
-                                                  (uint16_t) (i + 1));
-                if (encname) {
-                    if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_ILBC) == 0) {
-                        return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_ILBC));
-                    }
-                    if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_L16_256K) == 0) {
-                        return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_L16));
-                    }
-                    if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_ISAC) == 0) {
-                        return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_ISAC));
-                    }
-                    if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_OPUS) == 0) {
-                        return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_OPUS));
-                    }
-                    if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_H264) == 0) {
-                      int fmtp_inst = sdp_find_fmtp_inst(sdp_p, level,
+        ptype = sdp_get_known_payload_type(sdp_ptr,
+                                           level,
                                            mca_p->payload_type[payload_num-1]);
-                      if (fmtp_inst < 0) {
-                        return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_H264_P0));
-                      } else {
-                        sdp_attr_get_fmtp_pack_mode(sdp_p, level, 0, (uint16_t) fmtp_inst, &pack_mode);
-                        if (pack_mode == SDP_DEFAULT_PACKETIZATION_MODE_VALUE) {
-                            return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_H264_P0));
-                        } else {
-                            return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_H264_P1));
-                        }
-                      }
-                    }
-                    if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_VP8) == 0) {
-                        return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_VP8));
-                    }
-                }
-            }
+        if (ptype != RTP_NONE) {
+          return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(
+                mca_p->payload_type[payload_num-1], ptype));
         }
+
     }
     return (mca_p->payload_type[payload_num-1]);
 }
@@ -1832,14 +1917,14 @@ sdp_result_e sdp_insert_media_line (void *sdp_ptr, u16 level)
     if ((level < 1) || (level > (sdp_p->mca_count+1))) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Invalid media line (%u) to insert, max is "
-                      "(%u).", sdp_p->debug_str, level, sdp_p->mca_count);
+                      "(%u).", sdp_p->debug_str, (unsigned)level, (unsigned)sdp_p->mca_count);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     }
 
     /* Allocate resource for new media stream. */
-    new_mca_p = sdp_alloc_mca();
+    new_mca_p = sdp_alloc_mca(0);
     if (new_mca_p == NULL) {
         sdp_p->conf_p->num_no_resource++;
         return (SDP_NO_RESOURCE);
@@ -2264,7 +2349,7 @@ sdp_result_e sdp_add_media_profile (void *sdp_ptr, u16 level,
     if (mca_p->media_profiles_p->num_profiles >= SDP_MAX_PROFILES) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Max number of media profiles already specified"
-                      " for media level %u", sdp_p->debug_str, level);
+                      " for media level %u", sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -2307,7 +2392,7 @@ sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, u16 level,
     if (mca_p->num_payloads == SDP_MAX_PAYLOAD_TYPES) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Max number of payload types already defined "
-                      "for media line %u", sdp_p->debug_str, level);
+                      "for media line %u", sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -2352,7 +2437,7 @@ sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, u16 level,
         (prof_num > mca_p->media_profiles_p->num_profiles)) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Invalid profile number (%u) for set profile "
-                      " payload type", sdp_p->debug_str, level);
+                      " payload type", sdp_p->debug_str, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -2363,7 +2448,7 @@ sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, u16 level,
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s Max number of profile payload types already "
                       "defined profile %u on media line %u",
-                      sdp_p->debug_str, prof_num, level);
+                      sdp_p->debug_str, (unsigned)prof_num, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -2464,7 +2549,7 @@ sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
         if (mca_p == NULL) {
             if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 CSFLogError(logTag, "%s Invalid src media level (%u) for copy all "
-                          "attrs ", src_sdp_p->debug_str, src_level);
+                          "attrs ", src_sdp_p->debug_str, (unsigned)src_level);
             }
             return (SDP_INVALID_PARAMETER);
         }
@@ -2479,7 +2564,7 @@ sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
         if (mca_p == NULL) {
             if (src_sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
                 CSFLogError(logTag, "%s Invalid dst media level (%u) for copy all "
-                          "attrs ", src_sdp_p->debug_str, dst_level);
+                          "attrs ", src_sdp_p->debug_str, (unsigned)dst_level);
             }
             return (SDP_INVALID_PARAMETER);
         }
@@ -2759,8 +2844,8 @@ sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
 
     if (bw_data_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
-            CSFLogError(logTag, "%s bw line instance %d not found.",
-                      sdp_p->debug_str, inst_num);
+            CSFLogError(logTag, "%s bw line instance %u not found.",
+                      sdp_p->debug_str, (unsigned)inst_num);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
@@ -2817,7 +2902,7 @@ sdp_result_e sdp_set_bw (void *sdp_ptr, u16 level, u16 inst_num,
     if (bw_data_p == NULL) {
         if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
             CSFLogError(logTag, "%s The %u instance of a b= line was not found at level %u.",
-                      sdp_p->debug_str, inst_num, level);
+                      sdp_p->debug_str, (unsigned)inst_num, (unsigned)level);
         }
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);

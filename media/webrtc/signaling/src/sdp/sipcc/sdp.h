@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _SDP_H_
-#define _SDP_H_
+#ifndef _SIPCC_SDP_H_
+#define _SIPCC_SDP_H_
 
-#include "cc_constants.h"
 #include "sdp_os_defs.h"
 #include "ccsdp.h"
 
@@ -23,6 +22,10 @@
 #define AES_CM_128_HMAC_SHA1_32           "AES_CM_128_HMAC_SHA1_32"
 #define AES_CM_128_HMAC_SHA1_80           "AES_CM_128_HMAC_SHA1_80"
 #define F8_128_HMAC_SHA1_80               "F8_128_HMAC_SHA1_80"
+
+/* Pulled in from rtp_defs.h. */
+#define GET_DYN_PAYLOAD_TYPE_VALUE(a) ((a & 0XFF00) ? ((a & 0XFF00) >> 8) : a)
+#define SET_PAYLOAD_TYPE_WITH_DYNAMIC(a,b) ((a << 8) | b)
 
 /*
  * SDP_SRTP_MAX_KEY_SIZE_BYTES
@@ -179,6 +182,11 @@ typedef enum {
     SDP_TRANSPORT_TCP,
     SDP_TRANSPORT_RTPSAVPF,
     SDP_TRANSPORT_DTLSSCTP,
+    SDP_TRANSPORT_RTPAVPF,
+    SDP_TRANSPORT_UDPTLSRTPSAVP,
+    SDP_TRANSPORT_UDPTLSRTPSAVPF,
+    SDP_TRANSPORT_TCPTLSRTPSAVP,
+    SDP_TRANSPORT_TCPTLSRTPSAVPF,
     SDP_MAX_TRANSPORT_TYPES,
     SDP_TRANSPORT_UNSUPPORTED,
     SDP_TRANSPORT_INVALID
@@ -454,6 +462,7 @@ typedef enum {
     SDP_GROUP_ATTR_FID,
     SDP_GROUP_ATTR_LS,
     SDP_GROUP_ATTR_ANAT,
+    SDP_GROUP_ATTR_BUNDLE,
     SDP_MAX_GROUP_ATTR_VAL,
     SDP_GROUP_ATTR_UNSUPPORTED
 } sdp_group_attr_e;
@@ -542,7 +551,7 @@ typedef enum sdp_srtp_crypto_suite_t_ {
 #define SDP_INVALID_PACKETIZATION_MODE_VALUE 255
 
 #define SDP_MAX_LEVEL_ASYMMETRY_ALLOWED_VALUE 1 /* max level asymmetry allowed value for H.264 */
-#define SDP_DEFAULT_LEVEL_ASYMMETRY_ALLOWED_VALUE 1 /* default level asymmetry allowed value for H.264 */
+#define SDP_DEFAULT_LEVEL_ASYMMETRY_ALLOWED_VALUE 0 /* default level asymmetry allowed value for H.264 */
 #define SDP_INVALID_LEVEL_ASYMMETRY_ALLOWED_VALUE 2 /* invalid value for level-asymmetry-allowed param for H.264 */
 
 
@@ -718,6 +727,12 @@ typedef struct sdp_sctpmap {
     char                      protocol[SDP_MAX_STRING_LEN+1];
 } sdp_sctpmap_t;
 
+#define SDP_MAX_MSID_LEN 64
+
+typedef struct sdp_msid {
+  char                      identifier[SDP_MAX_MSID_LEN+1];
+  char                      appdata[SDP_MAX_MSID_LEN+1];
+} sdp_msid_t;
 
 /* a=qos|secure|X-pc-qos|X-qos info */
 typedef struct sdp_qos {
@@ -823,7 +838,7 @@ typedef struct sdp_stream_data {
     char                      x_confid[SDP_MAX_STRING_LEN+1];
     sdp_group_attr_e          group_attr; /* FID or LS */
     u16                       num_group_id;
-    u16                       group_id_arr[SDP_MAX_GROUP_STREAM_ID];
+    char *                    group_ids[SDP_MAX_GROUP_STREAM_ID];
 } sdp_stream_data_t;
 
 /*
@@ -899,6 +914,7 @@ typedef struct sdp_media_profiles {
 typedef struct sdp_extmap {
     u16              id;
     sdp_direction_e  media_direction;
+    tinybool         media_direction_specified;
     char             uri[SDP_MAX_STRING_LEN+1];
     char             extension_attributes[SDP_MAX_STRING_LEN+1];
 } sdp_extmap_t;
@@ -955,6 +971,7 @@ typedef struct sdp_mca {
     sdp_attr_e                media_direction; /* Either INACTIVE, SENDONLY,
                                                   RECVONLY, or SENDRECV */
     u32                       mid;
+    u32                       line_number;
     struct sdp_attr          *media_attrs_p;
     struct sdp_mca           *next_p;
 } sdp_mca_t;
@@ -963,6 +980,7 @@ typedef struct sdp_mca {
 /* generic a= line info */
 typedef struct sdp_attr {
     sdp_attr_e                type;
+    u32                       line_number;
     union {
         tinybool              boolean_val;
         u32                   u32_val;
@@ -970,6 +988,7 @@ typedef struct sdp_attr {
         char                  ice_attr[SDP_MAX_STRING_LEN+1];
         sdp_fmtp_t            fmtp;
         sdp_sctpmap_t         sctpmap;
+        sdp_msid_t            msid;
         sdp_qos_t             qos;
         sdp_curr_t            curr;
         sdp_des_t             des;
@@ -1002,6 +1021,10 @@ typedef struct sdp_srtp_crypto_suite_list_ {
     unsigned char salt_size_bytes;
 } sdp_srtp_crypto_suite_list;
 
+typedef void (*sdp_parse_error_handler)(void *context,
+                                        uint32_t line,
+                                        const char *message);
+
 /* Application configuration options */
 typedef struct sdp_conf_options {
     u32                       magic_num;
@@ -1023,6 +1046,8 @@ typedef struct sdp_conf_options {
     u32                       num_invalid_param;
     u32                       num_no_resource;
     struct sdp_conf_options  *next_p;
+    sdp_parse_error_handler  error_handler;
+    void                    *error_handler_context;
 } sdp_conf_options_t;
 
 
@@ -1030,7 +1055,6 @@ typedef struct sdp_conf_options {
 /* Elements here that can only be one of are included directly. Elements */
 /* that can be more than one are pointers.                               */
 typedef struct {
-    char                      peerconnection[PC_HANDLE_SIZE];
     u32                       magic_num;
     sdp_conf_options_t       *conf_p;
     tinybool                  debug_flag[SDP_MAX_DEBUG_TYPES];
@@ -1061,6 +1085,9 @@ typedef struct {
     /* Info to help building X-cpar/cpar attrs. */
     sdp_attr_e            last_cap_type;
 
+    /* Facilitates reporting line number for SDP errors */
+    u32                       parse_line;
+
     /* MCA - Media, connection, and attributes */
     sdp_mca_t                *mca_p;
     ushort                    mca_count;
@@ -1088,7 +1115,8 @@ typedef struct {
 /* Prototypes */
 
 /* sdp_config.c */
-extern void *sdp_init_config(void);
+extern sdp_conf_options_t *sdp_init_config(void);
+extern void sdp_free_config(sdp_conf_options_t *config_p);
 extern void sdp_appl_debug(void *config_p, sdp_debug_e debug_type,
                            tinybool debug_flag);
 extern void sdp_require_version(void *config_p, tinybool version_required);
@@ -1106,15 +1134,18 @@ extern void sdp_transport_supported(void *config_p, sdp_transport_e transport,
                              tinybool transport_supported);
 extern void sdp_allow_choose(void *config_p, sdp_choose_param_e param,
                              tinybool choose_allowed);
+extern void sdp_config_set_error_handler(void *config_p,
+                                         sdp_parse_error_handler handler,
+                                         void *context);
 
 /* sdp_main.c */
-extern sdp_t *sdp_init_description(const char *peerconnection, void *config_p);
+extern sdp_t *sdp_init_description(sdp_conf_options_t *config_p);
 extern void sdp_debug(sdp_t *sdp_ptr, sdp_debug_e debug_type, tinybool debug_flag);
 extern void sdp_set_string_debug(sdp_t *sdp_ptr, const char *debug_str);
-extern sdp_result_e sdp_parse(sdp_t *sdp_ptr, char **bufp, u16 len);
+extern sdp_result_e sdp_parse(sdp_t *sdp_ptr, const char *buf, size_t len);
 extern sdp_result_e sdp_build(sdp_t *sdp_ptr, flex_string *fs);
 extern sdp_result_e sdp_free_description(sdp_t *sdp_ptr);
-extern void sdp_parse_error(const char *peerconnection, const char *format, ...);
+extern void sdp_parse_error(sdp_t *sdp, const char *format, ...);
 
 extern const char *sdp_get_result_name(sdp_result_e rc);
 
@@ -1181,6 +1212,7 @@ extern sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, u16 level,
 extern tinybool sdp_media_line_valid(void *sdp_ptr, u16 level);
 extern u16 sdp_get_num_media_lines(void *sdp_ptr);
 extern sdp_media_e sdp_get_media_type(void *sdp_ptr, u16 level);
+extern u32 sdp_get_media_line_number(void *sdp_ptr, u16 level);
 extern sdp_port_format_e sdp_get_media_port_format(void *sdp_ptr, u16 level);
 extern int32 sdp_get_media_portnum(void *sdp_ptr, u16 level);
 extern int32 sdp_get_media_portcount(void *sdp_ptr, u16 level);
@@ -1195,6 +1227,9 @@ extern sdp_transport_e sdp_get_media_profile(void *sdp_ptr, u16 level,
 extern u16 sdp_get_media_num_payload_types(void *sdp_ptr, u16 level);
 extern u16 sdp_get_media_profile_num_payload_types(void *sdp_ptr, u16 level,
                                                     u16 profile_num);
+extern rtp_ptype sdp_get_known_payload_type(void *sdp_ptr,
+                                            u16 level,
+                                            u16 payload_type_raw);
 extern u32 sdp_get_media_payload_type(void *sdp_ptr, u16 level,
                                 u16 payload_num, sdp_payload_ind_e *indicator);
 extern u32 sdp_get_media_profile_payload_type(void *sdp_ptr, u16 level,
@@ -1225,6 +1260,9 @@ extern sdp_result_e sdp_add_media_profile_payload_type(void *sdp_ptr,
                                sdp_payload_ind_e indicator);
 
 /* sdp_attr_access.c */
+extern sdp_attr_t *sdp_find_attr (sdp_t *sdp_p, u16 level, u8 cap_num,
+                                  sdp_attr_e attr_type, u16 inst_num);
+
 extern int sdp_find_fmtp_inst(sdp_t *sdp_ptr, u16 level, u16 payload_num);
 extern sdp_result_e sdp_add_new_attr(void *sdp_ptr, u16 level, u8 cap_num,
                                      sdp_attr_e attr_type, u16 *inst_num);
@@ -1244,6 +1282,8 @@ extern sdp_result_e sdp_delete_attr(void *sdp_ptr, u16 level, u8 cap_num,
                              sdp_attr_e attr_type, u16 inst_num);
 extern sdp_result_e sdp_delete_all_attrs(void *sdp_ptr, u16 level, u8 cap_num);
 extern tinybool sdp_attr_valid(void *sdp_ptr, sdp_attr_e attr_type,
+                                u16 level, u8 cap_num, u16 inst_num);
+extern u32 sdp_attr_line_number(void *sdp_ptr, sdp_attr_e attr_type,
                                 u16 level, u8 cap_num, u16 inst_num);
 extern const char *sdp_attr_get_simple_string(void *sdp_ptr,
                    sdp_attr_e attr_type, u16 level, u8 cap_num, u16 inst_num);
@@ -1333,6 +1373,8 @@ extern sdp_result_e sdp_attr_set_subnet_addr(void *sdp_ptr, u16 level,
 extern sdp_result_e sdp_attr_set_subnet_prefix(void *sdp_ptr, u16 level,
                                                u8 cap_num, u16 inst_num,
                                                int32 prefix);
+extern rtp_ptype sdp_attr_get_rtpmap_known_codec(void *sdp_ptr, u16 level,
+                                                 u8 cap_num, u16 inst_num);
 extern tinybool sdp_attr_rtpmap_payload_valid(void *sdp_ptr, u16 level,
                                   u8 cap_num, u16 *inst_num, u16 payload_type);
 extern u16 sdp_attr_get_rtpmap_payload_type(void *sdp_ptr, u16 level,
@@ -1674,6 +1716,11 @@ extern sdp_result_e sdp_attr_set_sctpmap_streams (void *sdp_ptr, u16 level,
 extern sdp_result_e sdp_attr_get_sctpmap_streams (void *sdp_ptr, u16 level,
                              u8 cap_num, u16 inst_num, u32* val);
 
+extern const char *sdp_attr_get_msid_identifier(sdp_t *sdp_p, u16 level,
+                                                u8 cap_num, u16 inst_num);
+extern const char *sdp_attr_get_msid_appdata(sdp_t *sdp_p, u16 level,
+                                             u8 cap_num, u16 inst_num);
+
 /* H.264 codec specific params */
 
 extern const char *sdp_attr_get_fmtp_profile_id(void *sdp_ptr, u16 level,
@@ -1848,6 +1895,7 @@ extern sdp_result_e sdp_copy_all_bw_lines(void *src_sdp_ptr, void *dst_sdp_ptr,
                                           u16 src_level, u16 dst_level);
 extern sdp_bw_modifier_e sdp_get_bw_modifier(void *sdp_ptr, u16 level,
                                              u16 inst_num);
+extern const char *sdp_get_bw_modifier_name(sdp_bw_modifier_e bw_modifier);
 extern int32 sdp_get_bw_value(void *sdp_ptr, u16 level, u16 inst_num);
 extern int32 sdp_get_num_bw_lines (void *sdp_ptr, u16 level);
 
@@ -1892,10 +1940,10 @@ extern sdp_result_e sdp_set_group_num_id(void *sdp_ptr, u16 level,
                                          u8 cap_num, u16 inst_num,
                                          u16 group_num_id);
 
-extern int32 sdp_get_group_id(void *sdp_ptr, u16 level,
+extern const char* sdp_get_group_id(void *sdp_ptr, u16 level,
                               u8 cap_num, u16 inst_num, u16 id_num);
 extern sdp_result_e sdp_set_group_id (void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num, u16 group_id);
+                                      u8 cap_num, u16 inst_num, char* group_id);
 
 
 extern int32 sdp_get_mid_value(void *sdp_ptr, u16 level);

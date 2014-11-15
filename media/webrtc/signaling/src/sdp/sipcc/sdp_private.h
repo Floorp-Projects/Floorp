@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _SDP_PRIVATE_H_
-#define _SDP_PRIVATE_H_
+#ifndef _SIPCC_SDP_PRIVATE_H_
+#define _SIPCC_SDP_PRIVATE_H_
 
 
 #include "sdp.h"
@@ -49,6 +49,9 @@ extern sdp_mca_t *sdp_find_media_level(sdp_t *sdp_p, u16 level);
 extern sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, u16 level, u16 inst_num);
 
 /* sdp_attr.c */
+extern sdp_result_e
+sdp_build_attr_fmtp_params (sdp_t *sdp_p, sdp_fmtp_t *attr_p, flex_string *fs);
+
 extern sdp_result_e sdp_parse_attribute(sdp_t *sdp_p, u16 level,
                                         const char *ptr);
 extern sdp_result_e sdp_parse_attr_simple_string(sdp_t *sdp_p,
@@ -73,6 +76,10 @@ extern sdp_result_e sdp_parse_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                            const char *ptr);
 extern sdp_result_e sdp_build_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                            flex_string *fs);
+extern sdp_result_e sdp_parse_attr_msid(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                        const char *ptr);
+extern sdp_result_e sdp_build_attr_msid(sdp_t *sdp_p, sdp_attr_t *attr_p,
+                                        flex_string *fs);
 extern sdp_result_e sdp_parse_attr_direction(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                      const char *ptr);
 extern sdp_result_e sdp_build_attr_direction(sdp_t *sdp_p, sdp_attr_t *attr_p,
@@ -217,11 +224,7 @@ extern sdp_result_e sdp_build_attr_simple_flag (
 extern sdp_result_e sdp_parse_attr_simple_flag (
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 
-extern sdp_result_e sdp_build_attr_rtcp_mux_attr (
-        sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
-extern sdp_result_e sdp_parse_attr_rtcp_mux_attr (
-        sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
-extern sdp_result_e sdp_parse_attr_fingerprint_attr (
+extern sdp_result_e sdp_parse_attr_complete_line (
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 
 /* sdp_attr_access.c */
@@ -256,7 +259,6 @@ extern const char *sdp_get_silencesupp_pref_name(sdp_silencesupp_pref_e pref);
 extern const char *sdp_get_silencesupp_siduse_name(sdp_silencesupp_siduse_e
                                                    siduse);
 
-extern const char *sdp_get_bw_modifier_name(sdp_bw_modifier_e bw_modifier);
 extern const char *sdp_get_group_attr_name(sdp_group_attr_e group_attr);
 extern const char *sdp_get_src_filter_mode_name(sdp_src_filter_mode_e type);
 extern const char *sdp_get_rtcp_unicast_mode_name(sdp_rtcp_unicast_mode_e type);
@@ -323,7 +325,7 @@ sdp_build_attr_sdescriptions(sdp_t *sdp_p, sdp_attr_t *attr_p,
 
 
 /* sdp_utils.c */
-extern sdp_mca_t *sdp_alloc_mca(void);
+extern sdp_mca_t *sdp_alloc_mca(u32 line);
 extern tinybool sdp_validate_maxprate(const char *string_parm);
 extern char *sdp_findchar(const char *ptr, char *char_list);
 extern const char *sdp_getnextstrtok(const char *str, char *tokenstr, unsigned tokenstr_len,
