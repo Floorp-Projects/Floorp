@@ -129,11 +129,6 @@ public class GeckoAppShell
     private static boolean restartScheduled;
     private static GeckoEditableListener editableListener;
 
-    public static CrashHandler ensureCrashHandling() {
-        // Crash handling is automatically enabled when GeckoAppShell is loaded.
-        return CRASH_HANDLER;
-    }
-
     private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
     private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
 
