@@ -83,6 +83,7 @@ nsICODecoder::FinishInternal()
   if (mContainedDecoder) {
     mContainedDecoder->FinishSharedDecoder();
     mDecodeDone = mContainedDecoder->GetDecodeDone();
+    mDiff = mContainedDecoder->GetDiff();
   }
 }
 
@@ -339,7 +340,6 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount,
                      PNGSIGNATURESIZE);
     if (mIsPNG) {
       mContainedDecoder = new nsPNGDecoder(mImage);
-      mContainedDecoder->SetObserver(mObserver);
       mContainedDecoder->SetSizeDecode(IsSizeDecode());
       mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
                                            mColormap, mColormapSize,
@@ -418,7 +418,6 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount,
     nsBMPDecoder* bmpDecoder = new nsBMPDecoder(mImage);
     mContainedDecoder = bmpDecoder;
     bmpDecoder->SetUseAlphaData(true);
-    mContainedDecoder->SetObserver(mObserver);
     mContainedDecoder->SetSizeDecode(IsSizeDecode());
     mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
                                          mColormap, mColormapSize,
@@ -588,6 +587,7 @@ nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount,
                                       DecodeStrategy aStrategy)
 {
   mContainedDecoder->Write(aBuffer, aCount, aStrategy);
+  mDiff = mContainedDecoder->GetDiff();
   if (mContainedDecoder->HasDataError()) {
     mDataError = mContainedDecoder->HasDataError();
   }
@@ -632,6 +632,7 @@ nsICODecoder::AllocateFrame()
   if (mContainedDecoder) {
     nsresult rv = mContainedDecoder->AllocateFrame();
     mCurrentFrame = mContainedDecoder->GetCurrentFrame();
+    mDiff = mContainedDecoder->GetDiff();
     return rv;
   }
 

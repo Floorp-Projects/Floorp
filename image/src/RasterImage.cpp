@@ -11,7 +11,6 @@
 #include "base/histogram.h"
 #include "gfxPlatform.h"
 #include "nsComponentManagerUtils.h"
-#include "imgDecoderObserver.h"
 #include "nsError.h"
 #include "Decoder.h"
 #include "nsAutoPtr.h"
@@ -1043,10 +1042,6 @@ RasterImage::EnsureAnimExists()
     // since we didn't kill the source data in the old world either, locking
     // is acceptable for the moment.
     LockImage();
-
-    // Notify our observers that we are starting animation.
-    nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
-    statusTracker->RecordImageIsAnimated();
   }
 }
 
@@ -1696,14 +1691,13 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bo
   if (NS_FAILED(aStatus))
     finalStatus = aStatus;
 
+  ImageStatusDiff diff =
+    ImageStatusDiff::ForOnStopRequest(aLastPart, mError, finalStatus);
+
   // We just recorded OnStopRequest; we need to inform our listeners.
   {
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
-
-    nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
-    statusTracker->GetDecoderObserver()->OnStopRequest(aLastPart, finalStatus);
-
-    FinishedSomeDecoding();
+    FinishedSomeDecoding(eShutdownIntent_Done, nullptr, diff);
   }
 
   return finalStatus;
@@ -1993,9 +1987,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   if (!mDecodeRequest) {
     mDecodeRequest = new DecodeRequest(this);
   }
-  MOZ_ASSERT(mDecodeRequest->mStatusTracker);
-  MOZ_ASSERT(mDecodeRequest->mStatusTracker->GetDecoderObserver());
-  mDecoder->SetObserver(mDecodeRequest->mStatusTracker->GetDecoderObserver());
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
   if (!aDoSizeDecode) {
@@ -2853,8 +2844,7 @@ RasterImage::DoError()
     return;
   }
 
-  // Calling FinishedSomeDecoding and CurrentStatusTracker requires us to be in
-  // the decoding monitor.
+  // Calling FinishedSomeDecoding requires us to be in the decoding monitor.
   ReentrantMonitorAutoEnter lock(mDecodingMonitor);
 
   // If we're mid-decode, shut down the decoder.
@@ -2864,9 +2854,6 @@ RasterImage::DoError()
 
   // Put the container in an error state.
   mError = true;
-
-  nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
-  statusTracker->GetDecoderObserver()->OnError();
 
   // Log our error
   LOG_CONTAINER_ERROR;
@@ -2975,7 +2962,8 @@ RasterImage::RequestDecodeIfNeeded(nsresult aStatus,
 
 nsresult
 RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_Done */,
-                                  DecodeRequest* aRequest /* = nullptr */)
+                                  DecodeRequest* aRequest /* = nullptr */,
+                                  const ImageStatusDiff& aDiff /* = ImageStatusDiff::NoChange() */)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2996,9 +2984,11 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   bool wasSize = false;
   nsIntRect invalidRect;
   nsresult rv = NS_OK;
+  ImageStatusDiff diff = aDiff;
 
   if (image->mDecoder) {
     invalidRect = image->mDecoder->TakeInvalidRect();
+    diff.Combine(image->mDecoder->GetDiff());
 
     if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
@@ -3039,6 +3029,9 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
       if (NS_FAILED(rv)) {
         image->DoError();
       }
+
+      // If there were any final state changes, grab them.
+      diff.Combine(decoder->GetDiff());
     }
   }
 
@@ -3053,9 +3046,7 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
                            : nsIntRect();
   }
 
-  ImageStatusDiff diff =
-    request ? image->mStatusTracker->Difference(request->mStatusTracker)
-            : image->mStatusTracker->DecodeStateAsDifference();
+  diff = image->mStatusTracker->Difference(diff);
   image->mStatusTracker->ApplyDifference(diff);
 
   if (mNotifying) {
