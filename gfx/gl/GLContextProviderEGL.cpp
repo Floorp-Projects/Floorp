@@ -805,7 +805,7 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& size)
 
     // We absolutely don't care, so just pick the first one.
     config = configs[0];
-    if (GLContext::DebugMode())
+    if (GLContext::ShouldSpew())
         sEGLLibrary.DumpEGLConfig(config);
 
     gfxIntSize pbSize(size);

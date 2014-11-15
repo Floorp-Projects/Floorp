@@ -52,7 +52,7 @@ interface imgILoader : nsISupports
    *                           nsIContentPolicy::TYPE_IMAGE
 
 
-   * libpr0n does NOT keep a strong ref to the observer; this prevents
+   * ImageLib does NOT keep a strong ref to the observer; this prevents
    * reference cycles.  This means that callers of loadImage should
    * make sure to Cancel() the resulting request before the observer
    * goes away.
@@ -82,7 +82,7 @@ interface imgILoader : nsISupports
    *        not interested in the data. @aChannel will be canceled for you in
    *        this case.
    *
-   * libpr0n does NOT keep a strong ref to the observer; this prevents
+   * ImageLib does NOT keep a strong ref to the observer; this prevents
    * reference cycles.  This means that callers of loadImageWithChannel should
    * make sure to Cancel() the resulting request before the observer goes away.
    */

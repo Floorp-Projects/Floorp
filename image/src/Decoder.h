@@ -7,7 +7,6 @@
 #define MOZILLA_IMAGELIB_DECODER_H_
 
 #include "RasterImage.h"
-#include "imgDecoderObserver.h"
 #include "mozilla/RefPtr.h"
 #include "DecodeStrategy.h"
 #include "ImageMetadata.h"
@@ -98,13 +97,9 @@ public:
     mSizeDecode = aSizeDecode;
   }
 
-  void SetObserver(imgDecoderObserver* aObserver)
-  {
-    MOZ_ASSERT(aObserver);
-    mObserver = aObserver;
-  }
-
   size_t BytesDecoded() const { return mBytesDecoded; }
+
+  Progress GetProgress() const { return mProgress; }
 
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
@@ -179,7 +174,8 @@ protected:
    * only these methods.
    */
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
+    DecodeStrategy aStrategy);
   virtual void FinishInternal();
 
   /*
@@ -230,8 +226,8 @@ protected:
    */
   RasterImage &mImage;
   nsRefPtr<imgFrame> mCurrentFrame;
-  RefPtr<imgDecoderObserver> mObserver;
   ImageMetadata mImageMetadata;
+  Progress mProgress;
 
   uint8_t* mImageData;       // Pointer to image data in either Cairo or 8bit format
   uint32_t mImageDataLength;

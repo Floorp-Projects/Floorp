@@ -704,12 +704,26 @@ InvalidateScriptsInZone(JSContext *cx, Zone *zone, const Vector<DebugModeOSREntr
     types::RecompileInfoVector invalid;
     for (UniqueScriptOSREntryIter iter(entries); !iter.done(); ++iter) {
         JSScript *script = iter.entry().script;
-        if (script->hasIonScript() && script->compartment()->zone() == zone) {
+        if (script->compartment()->zone() != zone)
+            continue;
+
+        if (script->hasIonScript()) {
             if (!invalid.append(script->ionScript()->recompileInfo()))
                 return false;
         }
+
+        // Cancel off-thread Ion compile for anything that has a
+        // BaselineScript. If we relied on the call to Invalidate below to
+        // cancel off-thread Ion compiles, only those with existing IonScripts
+        // would be cancelled.
+        if (script->hasBaselineScript())
+            CancelOffThreadIonCompile(script->compartment(), script);
     }
-    Invalidate(zone->types, cx->runtime()->defaultFreeOp(), invalid);
+
+    // No need to cancel off-thread Ion compiles again, we already did it
+    // above.
+    Invalidate(zone->types, cx->runtime()->defaultFreeOp(), invalid,
+               /* resetUses = */ true, /* cancelOffThread = */ false);
     return true;
 }
 
