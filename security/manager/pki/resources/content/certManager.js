@@ -386,11 +386,11 @@ function restoreCerts()
     // If this is an X509 user certificate, import it as one.
 
     var isX509FileType = false;
-    var fileTypesList = gFileTypesList.split('; ');
-    for (var type in fileTypesList) {
+    var fileTypesList = gCertFileTypes.slice(1).split('; *');
+    for (var type of fileTypesList) {
       if (fp.file.path.endsWith(type)) {
         isX509FileType = true;
-  	break;
+        break;
       }
     }
 
