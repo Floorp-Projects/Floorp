@@ -968,8 +968,8 @@ js::EnsureSignalHandlersInstalled(JSRuntime *rt)
 #if defined(XP_WIN)
     // Windows uses SuspendThread to stop the main thread from another thread,
     // so the only handler we need is for asm.js out-of-bound faults.
-    if (!AddVectoredExceptionHandler(/* FirstHandler = */true, AsmJSFaultHandler))
-        MOZ_CRASH("unable to install vectored exception handler");
+    if (!AddVectoredExceptionHandler(/* FirstHandler = */ true, AsmJSFaultHandler))
+        return false;
 #else
     // The interrupt handler allows the main thread to be paused from another
     // thread (see InterruptRunningJitCode).
@@ -1039,23 +1039,19 @@ js::InterruptRunningJitCode(JSRuntime *rt)
     // to halt the runtime's main thread first.
 #if defined(XP_WIN)
     // On Windows, we can simply suspend the main thread and work directly on
-    // its context from this thread.
+    // its context from this thread. SuspendThread can sporadically fail if the
+    // thread is in the middle of a syscall. Rather than retrying in a loop,
+    // just wait for the next request for interrupt.
     HANDLE thread = (HANDLE)rt->ownerThreadNative();
-    if (SuspendThread(thread) == -1)
-        MOZ_CRASH("Failed to suspend main thread");
-
-    CONTEXT context;
-    context.ContextFlags = CONTEXT_CONTROL;
-    if (!GetThreadContext(thread, &context))
-        MOZ_CRASH("Failed to get suspended thread context");
-
-    RedirectJitCodeToInterruptCheck(rt, &context);
-
-    if (!SetThreadContext(thread, &context))
-        MOZ_CRASH("Failed to set suspended thread context");
-
-    if (ResumeThread(thread) == -1)
-        MOZ_CRASH("Failed to resume main thread");
+    if (SuspendThread(thread) != -1) {
+        CONTEXT context;
+        context.ContextFlags = CONTEXT_CONTROL;
+        if (GetThreadContext(thread, &context)) {
+            RedirectJitCodeToInterruptCheck(rt, &context);
+            SetThreadContext(thread, &context);
+        }
+        ResumeThread(thread);
+    }
 #else
     // On Unix, we instead deliver an async signal to the main thread which
     // halts the thread and callers our JitInterruptHandler (which has already
