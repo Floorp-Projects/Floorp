@@ -10,35 +10,40 @@ import android.os.Build;
 import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityGsm;
 import android.telephony.CellIdentityLte;
+import android.telephony.CellIdentityWcdma;
 import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
+import android.telephony.CellInfoWcdma;
 import android.telephony.CellLocation;
 import android.telephony.CellSignalStrengthCdma;
 import android.telephony.CellSignalStrengthGsm;
 import android.telephony.CellSignalStrengthLte;
+import android.telephony.CellSignalStrengthWcdma;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
 import org.mozilla.mozstumbler.service.AppGlobals;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-/* Fennec does not yet support the api level for WCDMA import */
-public class CellScannerNoWCDMA implements CellScanner.CellScannerImpl {
+public class CellScannerImplementation implements CellScanner.CellScannerImpl {
 
-    protected static String LOG_TAG = AppGlobals.makeLogTag(CellScannerNoWCDMA.class.getSimpleName());
+    protected static String LOG_TAG = AppGlobals.makeLogTag(CellScannerImplementation.class.getSimpleName());
     protected GetAllCellInfoScannerImpl mGetAllInfoCellScanner;
     protected TelephonyManager mTelephonyManager;
     protected boolean mIsStarted;
     protected int mPhoneType;
     protected final Context mContext;
-    protected volatile int mSignalStrength;
-    protected volatile int mCdmaDbm;
+
+    protected volatile int mSignalStrength = CellInfo.UNKNOWN_SIGNAL;
+    protected volatile int mCdmaDbm = CellInfo.UNKNOWN_SIGNAL;
 
     private PhoneStateListener mPhoneStateListener;
 
@@ -53,13 +58,28 @@ public class CellScannerNoWCDMA implements CellScanner.CellScannerImpl {
         List<CellInfo> getAllCellInfo(TelephonyManager tm);
     }
 
-    public CellScannerNoWCDMA(Context context) {
+    public CellScannerImplementation(Context context) {
         mContext = context;
     }
 
+    public boolean isSupportedOnThisDevice() {
+        TelephonyManager telephonyManager = mTelephonyManager;
+        if (telephonyManager == null) {
+            telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+        }
+        return telephonyManager != null &&
+                (telephonyManager.getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA ||
+                 telephonyManager.getPhoneType() == TelephonyManager.PHONE_TYPE_GSM);
+    }
+
     @Override
-    public void start() {
-        if (mIsStarted) {
+    public synchronized boolean isStarted() {
+        return mIsStarted;
+    }
+
+    @Override
+    public synchronized void start() {
+        if (mIsStarted || !isSupportedOnThisDevice()) {
             return;
         }
         mIsStarted = true;
@@ -72,22 +92,7 @@ public class CellScannerNoWCDMA implements CellScanner.CellScannerImpl {
             }
 
             mTelephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            if (mTelephonyManager == null) {
-                throw new UnsupportedOperationException("TelephonyManager service is not available");
-            }
-
-            mPhoneType = mTelephonyManager.getPhoneType();
-
-            if (mPhoneType != TelephonyManager.PHONE_TYPE_GSM
-                && mPhoneType != TelephonyManager.PHONE_TYPE_CDMA) {
-                throw new UnsupportedOperationException("Unexpected Phone Type: " + mPhoneType);
-            }
-            mSignalStrength = CellInfo.UNKNOWN_SIGNAL;
-            mCdmaDbm = CellInfo.UNKNOWN_SIGNAL;
         }
-
-        mSignalStrength = CellInfo.UNKNOWN_SIGNAL;
-        mCdmaDbm = CellInfo.UNKNOWN_SIGNAL;
 
         mPhoneStateListener = new PhoneStateListener() {
             @Override
@@ -103,9 +108,9 @@ public class CellScannerNoWCDMA implements CellScanner.CellScannerImpl {
     }
 
     @Override
-    public void stop() {
+    public synchronized void stop() {
         mIsStarted = false;
-        if (mTelephonyManager != null) {
+        if (mTelephonyManager != null && mPhoneStateListener != null) {
             mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
         }
         mSignalStrength = CellInfo.UNKNOWN_SIGNAL;
@@ -113,7 +118,7 @@ public class CellScannerNoWCDMA implements CellScanner.CellScannerImpl {
     }
 
     @Override
-    public List<CellInfo> getCellInfo() {
+    public synchronized List<CellInfo> getCellInfo() {
         List<CellInfo> records = new ArrayList<CellInfo>();
 
         List<CellInfo> allCells = mGetAllInfoCellScanner.getAllCellInfo(mTelephonyManager);
@@ -186,10 +191,39 @@ public class CellScannerNoWCDMA implements CellScanner.CellScannerImpl {
         return records;
     }
 
+
+    @TargetApi(18)
+    protected boolean addWCDMACellToList(List<CellInfo> cells,
+                                         android.telephony.CellInfo observedCell,
+                                         TelephonyManager tm) {
+        boolean added = false;
+        if (Build.VERSION.SDK_INT >= 18 &&
+                observedCell instanceof CellInfoWcdma) {
+            CellIdentityWcdma ident = ((CellInfoWcdma) observedCell).getCellIdentity();
+            if (ident.getMnc() != Integer.MAX_VALUE && ident.getMcc() != Integer.MAX_VALUE) {
+                CellInfo cell = new CellInfo(tm.getPhoneType());
+                CellSignalStrengthWcdma strength = ((CellInfoWcdma) observedCell).getCellSignalStrength();
+                cell.setWcmdaCellInfo(ident.getMcc(),
+                        ident.getMnc(),
+                        ident.getLac(),
+                        ident.getCid(),
+                        ident.getPsc(),
+                        strength.getAsuLevel());
+                cells.add(cell);
+                added = true;
+            }
+        }
+        return added;
+    }
+
     @TargetApi(18)
     protected boolean addCellToList(List<CellInfo> cells,
-                                 android.telephony.CellInfo observedCell,
-                                 TelephonyManager tm) {
+                                    android.telephony.CellInfo observedCell,
+                                    TelephonyManager tm) {
+        if (tm.getPhoneType() == 0) {
+            return false;
+        }
+
         boolean added = false;
         if (observedCell instanceof CellInfoGsm) {
             CellIdentityGsm ident = ((CellInfoGsm) observedCell).getCellIdentity();
@@ -226,10 +260,15 @@ public class CellScannerNoWCDMA implements CellScanner.CellScannerImpl {
                         ident.getTac(),
                         strength.getAsuLevel(),
                         strength.getTimingAdvance());
-               cells.add(cell);
-               added = true;
+                cells.add(cell);
+                added = true;
             }
         }
+
+        if (!added && Build.VERSION.SDK_INT >= 18) {
+            added = addWCDMACellToList(cells, observedCell, tm);
+        }
+
         return added;
     }
 
