@@ -1119,7 +1119,6 @@ public abstract class GeckoApp
     @Override
     public void onCreate(Bundle savedInstanceState) {
         GeckoAppShell.registerGlobalExceptionHandler();
-        GeckoAppShell.ensureCrashHandling();
 
         // Enable Android Strict Mode for developers' local builds (the "default" channel).
         if ("default".equals(AppConstants.MOZ_UPDATE_CHANNEL)) {
