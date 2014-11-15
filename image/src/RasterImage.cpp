@@ -2997,9 +2997,6 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
                            : nsIntRect();
   }
 
-  diff = image->mStatusTracker->Difference(diff);
-  image->mStatusTracker->ApplyDifference(diff);
-
   if (mNotifying) {
     // Accumulate the status changes. We don't permit recursive notifications
     // because they cause subtle concurrency bugs, so we'll delay sending out
@@ -3012,6 +3009,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     MOZ_ASSERT(mStatusDiff.IsNoChange(), "Shouldn't have an accumulated change at this point");
     MOZ_ASSERT(mInvalidRect.IsEmpty(), "Shouldn't have an accumulated invalidation rect here");
 
+    diff = image->mStatusTracker->Difference(diff);
+
     while (!diff.IsNoChange() || !invalidRect.IsEmpty()) {
       // Tell the observers what happened.
       mNotifying = true;
@@ -3021,7 +3020,7 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
       // Gather any status changes that may have occurred as a result of sending
       // out the previous notifications. If there were any, we'll send out
       // notifications for them next.
-      diff = mStatusDiff;
+      diff = image->mStatusTracker->Difference(mStatusDiff);
       mStatusDiff = ImageStatusDiff::NoChange();
       invalidRect = mInvalidRect;
       mInvalidRect = nsIntRect();

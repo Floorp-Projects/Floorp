@@ -444,7 +444,6 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
   if (mStatusTracker) {
     ImageStatusDiff diff =
       ImageStatusDiff::ForOnStopRequest(aLastPart, mError, finalStatus);
-    mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff);
   }
   return finalStatus;
@@ -569,7 +568,6 @@ VectorImage::SendInvalidationNotifications()
     SurfaceCache::Discard(this);
     ImageStatusDiff diff;
     diff.diffState = FLAG_FRAME_STOPPED;
-    mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff, nsIntRect::GetMaxSizedIntRect());
   }
 }
@@ -1035,7 +1033,6 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
   if (mStatusTracker) {
     ImageStatusDiff diff;
     diff.diffState |= FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED;
-    mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff);
   }
 
@@ -1118,7 +1115,6 @@ VectorImage::OnSVGDocumentLoaded()
     ImageStatusDiff diff;
     diff.diffState = FLAG_HAS_SIZE | FLAG_FRAME_STOPPED | FLAG_DECODE_STOPPED |
                      FLAG_ONLOAD_UNBLOCKED;
-    mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff, nsIntRect::GetMaxSizedIntRect());
   }
 
@@ -1140,7 +1136,6 @@ VectorImage::OnSVGDocumentError()
     ImageStatusDiff diff;
     diff.diffState |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED |
                       FLAG_HAS_ERROR;
-    mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff);
   }
 }
