@@ -225,13 +225,13 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
   NS_DispatchToCurrentThread(ev);
 }
 
-#define NOTIFY_IMAGE_OBSERVERS(func) \
+#define NOTIFY_IMAGE_OBSERVERS(PROXIES, FUNC) \
   do { \
-    ProxyArray::ForwardIterator iter(aProxies); \
+    ProxyArray::ForwardIterator iter(PROXIES); \
     while (iter.HasMore()) { \
       nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get(); \
       if (proxy && !proxy->NotificationsDeferred()) { \
-        proxy->func; \
+        proxy->FUNC; \
       } \
     } \
   } while (false);
@@ -244,19 +244,19 @@ imgStatusTracker::SyncNotifyState(ProxyArray& aProxies,
   MOZ_ASSERT(NS_IsMainThread());
   // OnStartRequest
   if (aState & FLAG_REQUEST_STARTED)
-    NOTIFY_IMAGE_OBSERVERS(OnStartRequest());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartRequest());
 
   // OnStartContainer
   if (aState & FLAG_HAS_SIZE)
-    NOTIFY_IMAGE_OBSERVERS(OnStartContainer());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartContainer());
 
   // OnStartDecode
   if (aState & FLAG_DECODE_STARTED)
-    NOTIFY_IMAGE_OBSERVERS(OnStartDecode());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartDecode());
 
   // BlockOnload
   if (aState & FLAG_ONLOAD_BLOCKED)
-    NOTIFY_IMAGE_OBSERVERS(BlockOnload());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, BlockOnload());
 
   if (aHasImage) {
     // OnFrameUpdate
@@ -264,30 +264,31 @@ imgStatusTracker::SyncNotifyState(ProxyArray& aProxies,
     // vector images, true for raster images that have decoded at
     // least one frame) then send OnFrameUpdate.
     if (!aDirtyRect.IsEmpty())
-      NOTIFY_IMAGE_OBSERVERS(OnFrameUpdate(&aDirtyRect));
+      NOTIFY_IMAGE_OBSERVERS(aProxies, OnFrameUpdate(&aDirtyRect));
 
     if (aState & FLAG_FRAME_STOPPED)
-      NOTIFY_IMAGE_OBSERVERS(OnStopFrame());
+      NOTIFY_IMAGE_OBSERVERS(aProxies, OnStopFrame());
 
     // OnImageIsAnimated
     if (aState & FLAG_IS_ANIMATED)
-      NOTIFY_IMAGE_OBSERVERS(OnImageIsAnimated());
+      NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageIsAnimated());
   }
 
   // Send UnblockOnload before OnStopDecode and OnStopRequest. This allows
   // observers that can fire events when they receive those notifications to do
   // so then, instead of being forced to wait for UnblockOnload.
   if (aState & FLAG_ONLOAD_UNBLOCKED) {
-    NOTIFY_IMAGE_OBSERVERS(UnblockOnload());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, UnblockOnload());
   }
 
   if (aState & FLAG_DECODE_STOPPED) {
     MOZ_ASSERT(aHasImage, "Stopped decoding without ever having an image?");
-    NOTIFY_IMAGE_OBSERVERS(OnStopDecode());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStopDecode());
   }
 
   if (aState & FLAG_REQUEST_STOPPED) {
-    NOTIFY_IMAGE_OBSERVERS(OnStopRequest(aState & FLAG_MULTIPART_STOPPED));
+    NOTIFY_IMAGE_OBSERVERS(aProxies,
+                           OnStopRequest(aState & FLAG_MULTIPART_STOPPED));
   }
 }
 
@@ -423,83 +424,10 @@ imgStatusTracker::RecordError()
 }
 
 void
-imgStatusTracker::SendStartDecode(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnStartDecode();
-}
-
-void
-imgStatusTracker::SendStartContainer(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnStartContainer();
-}
-
-void
-imgStatusTracker::SendStopFrame(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnStopFrame();
-}
-
-void
-imgStatusTracker::SendStopDecode(imgRequestProxy* aProxy,
-                                 nsresult aStatus)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnStopDecode();
-}
-
-void
-imgStatusTracker::SendDiscard(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnDiscard();
-}
-
-
-void
-imgStatusTracker::SendImageIsAnimated(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnImageIsAnimated();
-}
-
-void
-imgStatusTracker::SendUnlockedDraw(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnUnlockedDraw();
-}
-
-void
 imgStatusTracker::OnUnlockedDraw()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  ProxyArray::ForwardIterator iter(mConsumers);
-  while (iter.HasMore()) {
-    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-    if (proxy) {
-      SendUnlockedDraw(proxy);
-    }
-  }
-}
-
-/* non-virtual sort-of-nsIRequestObserver methods */
-void
-imgStatusTracker::SendStartRequest(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred())
-    aProxy->OnStartRequest();
+  NOTIFY_IMAGE_OBSERVERS(mConsumers, OnUnlockedDraw());
 }
 
 void
@@ -512,39 +440,14 @@ imgStatusTracker::OnStartRequest()
   mState &= FLAG_IS_MULTIPART | FLAG_HAS_ERROR;
   mState |= FLAG_REQUEST_STARTED;
 
-  ProxyArray::ForwardIterator iter(mConsumers);
-  while (iter.HasMore()) {
-    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-    if (proxy) {
-      SendStartRequest(proxy);
-    }
-  }
-}
-
-void
-imgStatusTracker::SendStopRequest(imgRequestProxy* aProxy,
-                                  bool aLastPart,
-                                  nsresult aStatus)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred()) {
-    aProxy->OnStopRequest(aLastPart);
-  }
+  NOTIFY_IMAGE_OBSERVERS(mConsumers, OnStartRequest());
 }
 
 void
 imgStatusTracker::OnDiscard()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  /* notify the kids */
-  ProxyArray::ForwardIterator iter(mConsumers);
-  while (iter.HasMore()) {
-    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-    if (proxy) {
-      SendDiscard(proxy);
-    }
-  }
+  NOTIFY_IMAGE_OBSERVERS(mConsumers, OnDiscard());
 }
 
 void
@@ -558,32 +461,8 @@ imgStatusTracker::OnDataAvailable()
       NS_NewRunnableMethod(this, &imgStatusTracker::OnDataAvailable));
     return;
   }
-  // Notify any imgRequestProxys that are observing us that we have an Image.
-  ProxyArray::ForwardIterator iter(mConsumers);
-  while (iter.HasMore()) {
-    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-    if (proxy) {
-      proxy->SetHasImage();
-    }
-  }
-}
 
-void
-imgStatusTracker::SendBlockOnload(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred()) {
-    aProxy->BlockOnload();
-  }
-}
-
-void
-imgStatusTracker::SendUnblockOnload(imgRequestProxy* aProxy)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!aProxy->NotificationsDeferred()) {
-    aProxy->UnblockOnload();
-  }
+  NOTIFY_IMAGE_OBSERVERS(mConsumers, SetHasImage());
 }
 
 void
@@ -594,19 +473,14 @@ imgStatusTracker::MaybeUnblockOnload()
       NS_NewRunnableMethod(this, &imgStatusTracker::MaybeUnblockOnload));
     return;
   }
+
   if (!(mState & FLAG_ONLOAD_BLOCKED) || (mState & FLAG_ONLOAD_UNBLOCKED)) {
     return;
   }
 
   mState |= FLAG_ONLOAD_UNBLOCKED;
 
-  ProxyArray::ForwardIterator iter(mConsumers);
-  while (iter.HasMore()) {
-    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
-    if (proxy) {
-      SendUnblockOnload(proxy);
-    }
-  }
+  NOTIFY_IMAGE_OBSERVERS(mConsumers, UnblockOnload());
 }
 
 void
