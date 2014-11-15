@@ -545,79 +545,79 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
     /* multicast addr check */
     sstrncpy (mcast_str, conn_p->conn_addr, MCAST_STRING_LEN);
 
-    errno = 0;
-    strtoul_result = strtoul(mcast_str, &strtoul_end, 10);
+        errno = 0;
+        strtoul_result = strtoul(mcast_str, &strtoul_end, 10);
 
-    if (errno || mcast_str == strtoul_end || strtoul_result > 255) {
+        if (errno || mcast_str == strtoul_end || strtoul_result > 255) {
         sdp_parse_error(sdp_p->peerconnection,
-            "%s Error parsing address %s for mcast.",
-            sdp_p->debug_str, mcast_str);
-        sdp_p->conf_p->num_invalid_param++;
-        return SDP_INVALID_PARAMETER;
-    }
+                            "%s Error parsing address %s for mcast.",
+                            sdp_p->debug_str, mcast_str);
+            sdp_p->conf_p->num_invalid_param++;
+            return SDP_INVALID_PARAMETER;
+        }
 
 
-    mcast_bits = (int) strtoul_result;
-    if ((mcast_bits >= SDP_MIN_MCAST_ADDR_HI_BIT_VAL ) &&
-        (mcast_bits <= SDP_MAX_MCAST_ADDR_HI_BIT_VAL)) {
-        SDP_PRINT("%s Parsed to be a multicast address with mcast bits %d",
-                  sdp_p->debug_str, mcast_bits);
-        conn_p->is_multicast = TRUE;
-    }
+        mcast_bits = (int) strtoul_result;
+        if ((mcast_bits >= SDP_MIN_MCAST_ADDR_HI_BIT_VAL ) &&
+            (mcast_bits <= SDP_MAX_MCAST_ADDR_HI_BIT_VAL)) {
+            SDP_PRINT("%s Parsed to be a multicast address with mcast bits %d",
+                      sdp_p->debug_str, mcast_bits);
+            conn_p->is_multicast = TRUE;
+        }
 
     if (conn_p->addrtype != SDP_AT_EPN) {
         slash_ptr = sdp_findchar(conn_p->conn_addr, "/");
         if (slash_ptr[0] != '\0') {
             if (conn_p->is_multicast) {
                 SDP_PRINT("%s A multicast address with slash %s",
-                          sdp_p->debug_str, conn_p->conn_addr);
-                slash_ptr++;
+                      sdp_p->debug_str, conn_p->conn_addr);
+            slash_ptr++;
                 slash_ptr = sdp_getnextstrtok(slash_ptr, tmp, sizeof(tmp), "/", &result);
-                if (result != SDP_SUCCESS) {
+            if (result != SDP_SUCCESS) {
                     sdp_parse_error(sdp_p->peerconnection,
-                        "%s No ttl value specified for this multicast addr with a slash",
-                        sdp_p->debug_str);
-                    sdp_p->conf_p->num_invalid_param++;
-                    return (SDP_INVALID_PARAMETER);
-                }
+                                "%s No ttl value specified for this multicast addr with a slash",
+                                sdp_p->debug_str);
+                sdp_p->conf_p->num_invalid_param++;
+                return (SDP_INVALID_PARAMETER);
+            }
+
+            errno = 0;
+            strtoul_result = strtoul(tmp, &strtoul_end, 10);
+
+            if (errno || tmp == strtoul_end || conn_p->ttl > SDP_MAX_TTL_VALUE) {
+                    sdp_parse_error(sdp_p->peerconnection,
+                                "%s Invalid TTL: Value must be in the range 0-255 ",
+                                sdp_p->debug_str);
+                sdp_p->conf_p->num_invalid_param++;
+                return (SDP_INVALID_PARAMETER);
+            }
+
+            conn_p->ttl = (int) strtoul_result;
+
+            /* search for num of addresses */
+            /*sa_ignore NO_NULL_CHK
+              {ptr is valid since the pointer was checked earlier and the
+              function would have exited if NULL.}*/
+            slash_ptr = sdp_findchar(slash_ptr, "/");
+            if (slash_ptr != NULL &&
+                slash_ptr[0] != '\0') {
+                SDP_PRINT("%s Found a num addr field for multicast addr %s ",
+                          sdp_p->debug_str,slash_ptr);
+                slash_ptr++;
 
                 errno = 0;
-                strtoul_result = strtoul(tmp, &strtoul_end, 10);
+                strtoul_result = strtoul(slash_ptr, &strtoul_end, 10);
 
-                if (errno || tmp == strtoul_end || conn_p->ttl > SDP_MAX_TTL_VALUE) {
-                    sdp_parse_error(sdp_p->peerconnection,
-                        "%s Invalid TTL: Value must be in the range 0-255 ",
-                        sdp_p->debug_str);
-                    sdp_p->conf_p->num_invalid_param++;
-                    return (SDP_INVALID_PARAMETER);
-                }
-
-                conn_p->ttl = (int) strtoul_result;
-
-                /* search for num of addresses */
-                /*sa_ignore NO_NULL_CHK
-                  {ptr is valid since the pointer was checked earlier and the
-                   function would have exited if NULL.}*/
-                slash_ptr = sdp_findchar(slash_ptr, "/");
-                if (slash_ptr != NULL &&
-                      slash_ptr[0] != '\0') {
-                    SDP_PRINT("%s Found a num addr field for multicast addr %s ",
-                              sdp_p->debug_str,slash_ptr);
-                    slash_ptr++;
-
-                    errno = 0;
-                    strtoul_result = strtoul(slash_ptr, &strtoul_end, 10);
-
-                    if (errno || slash_ptr == strtoul_end || strtoul_result == 0) {
+                if (errno || slash_ptr == strtoul_end || strtoul_result == 0) {
                         sdp_parse_error(sdp_p->peerconnection,
-                            "%s Invalid Num of addresses: Value must be > 0 ",
-                            sdp_p->debug_str);
-                        sdp_p->conf_p->num_invalid_param++;
-                        return SDP_INVALID_PARAMETER;
-                    }
-
-                    conn_p->num_of_addresses = (int) strtoul_result;
+                                    "%s Invalid Num of addresses: Value must be > 0 ",
+                                    sdp_p->debug_str);
+                    sdp_p->conf_p->num_invalid_param++;
+                    return SDP_INVALID_PARAMETER;
                 }
+
+                conn_p->num_of_addresses = (int) strtoul_result;
+            }
 	        } else {
                 sdp_p->conf_p->num_invalid_param++;
                 SDP_PRINT("%s Only multicast addresses allowed with slashes",
@@ -814,7 +814,7 @@ sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
     if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
         SDP_PRINT("%s Parsed bw type %s, value %d", sdp_p->debug_str,
                      sdp_get_bw_modifier_name(new_bw_data_p->bw_modifier),
-		     new_bw_data_p->bw_val);
+                     new_bw_data_p->bw_val);
     }
 
     return (SDP_SUCCESS);
@@ -1224,8 +1224,8 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
     switch (num_port_params) {
     case 1:
         if ((mca_p->transport == SDP_TRANSPORT_RTPAVP) ||
-	    (mca_p->transport == SDP_TRANSPORT_RTPSAVP) ||
-	    (mca_p->transport == SDP_TRANSPORT_RTPSAVPF) ||
+            (mca_p->transport == SDP_TRANSPORT_RTPSAVP) ||
+            (mca_p->transport == SDP_TRANSPORT_RTPSAVPF) ||
             (mca_p->transport == SDP_TRANSPORT_UDP) ||
             (mca_p->transport == SDP_TRANSPORT_TCP) ||
             (mca_p->transport == SDP_TRANSPORT_UDPTL) ||
@@ -1263,8 +1263,8 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         break;
     case 2:
         if ((mca_p->transport == SDP_TRANSPORT_RTPAVP) ||
-	    (mca_p->transport == SDP_TRANSPORT_RTPSAVP) ||
-	    (mca_p->transport == SDP_TRANSPORT_RTPSAVPF) ||
+            (mca_p->transport == SDP_TRANSPORT_RTPSAVP) ||
+            (mca_p->transport == SDP_TRANSPORT_RTPSAVPF) ||
             (mca_p->transport == SDP_TRANSPORT_UDP) ||
             (mca_p->transport == SDP_TRANSPORT_LOCAL)) {
             /* Port format is <port>/<num of ports>. Make sure choose
@@ -1392,9 +1392,9 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         port_ptr = port;
 
         if (sdp_getchoosetok(port_ptr, &port_ptr, "/ \t", &result)) {
-            sctp_port = SDP_CHOOSE_PARAM;
+                sctp_port = SDP_CHOOSE_PARAM;
         } else {
-            sctp_port = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
+                sctp_port = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
                                            "/ \t", &result);
             if (result != SDP_SUCCESS) {
                 return (SDP_INVALID_PARAMETER);
@@ -1578,7 +1578,7 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, flex_string *fs)
         }
     } else {
         /* Add port to SDP if transport is DTLS/SCTP */
-    	flex_string_sprintf(fs, " %u", (u32)mca_p->sctpport);
+        flex_string_sprintf(fs, " %u", (u32)mca_p->sctpport);
     }
 
     flex_string_sprintf(fs, "\r\n");
