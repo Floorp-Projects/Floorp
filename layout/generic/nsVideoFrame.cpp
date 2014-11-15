@@ -25,6 +25,7 @@
 #include "ImageContainer.h"
 #include "ImageLayers.h"
 #include "nsContentList.h"
+#include "nsStyleUtil.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -432,10 +433,24 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
-  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
-    clip(aBuilder, this, DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT);
+  const bool shouldDisplayPoster = ShouldDisplayPoster();
 
-  if (HasVideoElement() && !ShouldDisplayPoster()) {
+  // NOTE: If we're displaying a poster image (instead of video data), we can
+  // trust the nsImageFrame to constrain its drawing to its content rect
+  // (which happens to be the same as our content rect).
+  uint32_t clipFlags;
+  if (shouldDisplayPoster ||
+      !nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition())) {
+    clipFlags =
+      DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT;
+  } else {
+    clipFlags = 0;
+  }
+
+  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
+    clip(aBuilder, this, clipFlags);
+
+  if (HasVideoElement() && !shouldDisplayPoster) {
     aLists.Content()->AppendNewToTop(
       new (aBuilder) nsDisplayVideo(aBuilder, this));
   }
@@ -446,7 +461,7 @@ nsVideoFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   for (nsIFrame *child = mFrames.FirstChild();
        child;
        child = child->GetNextSibling()) {
-    if (child->GetContent() != mPosterImage || ShouldDisplayPoster()) {
+    if (child->GetContent() != mPosterImage || shouldDisplayPoster) {
       child->BuildDisplayListForStackingContext(aBuilder,
                                                 aDirtyRect - child->GetOffsetTo(this),
                                                 aLists.Content());
