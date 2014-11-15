@@ -55,12 +55,20 @@ public:
   {
     mInsertedChildren.AppendElement(aChild);
     aChild->SetXBLInsertionParent(GetParent());
+
+    // Appending an inserted child causes the inserted
+    // children to be projected instead of default content.
+    MaybeRemoveDefaultContent();
   }
 
   void InsertInsertedChildAt(nsIContent* aChild, uint32_t aIndex)
   {
     mInsertedChildren.InsertElementAt(aIndex, aChild);
     aChild->SetXBLInsertionParent(GetParent());
+
+    // Inserting an inserted child causes the inserted
+    // children to be projected instead of default content.
+    MaybeRemoveDefaultContent();
   }
 
   void RemoveInsertedChild(nsIContent* aChild)
@@ -70,6 +78,10 @@ public:
     //NS_ASSERTION(mInsertedChildren.Contains(aChild),
     //             "Removing child that's not there");
     mInsertedChildren.RemoveElement(aChild);
+
+    // After removing the inserted child, default content
+    // may be projected into this insertion point.
+    MaybeSetupDefaultContent();
   }
 
   void ClearInsertedChildren()
@@ -78,6 +90,10 @@ public:
       mInsertedChildren[c]->SetXBLInsertionParent(nullptr);
     }
     mInsertedChildren.Clear();
+
+    // After clearing inserted children, default content
+    // will be projected into this insertion point.
+    MaybeSetupDefaultContent();
   }
 
   void MaybeSetupDefaultContent()
