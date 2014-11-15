@@ -31,6 +31,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsStyleCoord.h"
+#include "nsStyleUtil.h"
 #include "nsTransform2D.h"
 #include "nsImageMap.h"
 #include "nsIIOService.h"
@@ -1528,8 +1529,12 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
+  uint32_t clipFlags =
+    nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition()) ?
+    0 : DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT;
+
   DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox
-    clip(aBuilder, this, DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT);
+    clip(aBuilder, this, clipFlags);
 
   if (mComputedSize.width != 0 && mComputedSize.height != 0) {
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
