@@ -1745,7 +1745,7 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
                     }
                     if (cpr_strcasecmp(encname, SIPSDP_ATTR_ENCNAME_H264) == 0) {
                       int fmtp_inst = sdp_find_fmtp_inst(sdp_p, level,
-                                                         mca_p->payload_type[payload_num-1]);
+                                           mca_p->payload_type[payload_num-1]);
                       if (fmtp_inst < 0) {
                         return (SET_PAYLOAD_TYPE_WITH_DYNAMIC(ptype, RTP_H264_P0));
                       } else {
