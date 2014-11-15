@@ -176,8 +176,10 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
       }
       PostDecodeDone();
     } else {
-      mProgress |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED |
-                   FLAG_HAS_ERROR;
+      if (!IsSizeDecode()) {
+        mProgress |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED;
+      }
+      mProgress |= FLAG_HAS_ERROR;
     }
   }
 
@@ -312,8 +314,9 @@ Decoder::PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha /* = FrameBlender::k
                        FrameBlender::FrameBlendMethod aBlendMethod /* = FrameBlender::kBlendOver */)
 {
   // We should be mid-frame
-  NS_ABORT_IF_FALSE(mInFrame, "Stopping frame when we didn't start one!");
-  NS_ABORT_IF_FALSE(mCurrentFrame, "Stopping frame when we don't have one!");
+  MOZ_ASSERT(!IsSizeDecode(), "Stopping frame during a size decode");
+  MOZ_ASSERT(mInFrame, "Stopping frame when we didn't start one");
+  MOZ_ASSERT(mCurrentFrame, "Stopping frame when we don't have one");
 
   // Update our state
   mInFrame = false;
