@@ -5,6 +5,7 @@
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
+
 #include "CSFLog.h"
 
 static const char* logTag = "sdp_config";
@@ -41,7 +42,7 @@ tinybool sdp_verify_conf_ptr (sdp_conf_options_t *conf_p)
  * Parameters:	None.
  * Returns:	A handle for the configuration as a void ptr.
  */
-void *sdp_init_config ()
+sdp_conf_options_t *sdp_init_config ()
 {
     int i;
     sdp_conf_options_t *conf_p;
@@ -101,10 +102,20 @@ void *sdp_init_config ()
     conf_p->num_invalid_param       = 0;
     conf_p->num_no_resource         = 0;
 
+    /* Parse error handler stuff */
+    conf_p->error_handler           = NULL;
+    conf_p->error_handler_context   = NULL;
+
     CSFLogInfo(logTag, "SDP: Initialized config pointer: %p (magic=0x%X)",
                 conf_p, conf_p ? conf_p->magic_num : 0);
 
     return (conf_p);
+}
+
+void sdp_free_config(sdp_conf_options_t* config_p) {
+  if (config_p) {
+    SDP_FREE(config_p);
+  }
 }
 
 /* Function:    void sdp_appl_debug(void *config_p, sdp_debug_e debug_type,
@@ -303,4 +314,14 @@ void sdp_allow_choose (void *config_p, sdp_choose_param_e param, tinybool choose
     if (param < SDP_MAX_CHOOSE_PARAMS) {
         conf_p->allow_choose[param] = choose_allowed;
     }
+}
+
+void sdp_config_set_error_handler(void *config_p,
+                                  sdp_parse_error_handler handler,
+                                  void *context)
+{
+    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
+
+    conf_p->error_handler = handler;
+    conf_p->error_handler_context = context;
 }

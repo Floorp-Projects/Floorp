@@ -54,45 +54,6 @@ typedef uint8_t boolean;
 #endif
 
 /**
- * @def NUL
- *
- * Define NUL for string termination
- */
-#ifndef NUL
-#define NUL '\0'
-#endif
-
-/**
- * @def RESTRICT
- *
- * If suppoprting the ISO/IEC 9899:1999 standard,
- * use the '__restrict' keyword
- */
-#if defined(_POSIX_C_SOURCE) && defined(__GNUC__)
-#define RESTRICT __restrict
-#else
-#define RESTRICT
-#endif
-
-/**
- * @def CONST
- *
- * Define CONST as @c const, if supported
- */
-#define CONST const
-
-/**
- * @def INLINE
- *
- * Define the appropriate setting for inlining functions
- */
-#ifdef __STRICT_ANSI__
-#define INLINE
-#else
-#define INLINE __inline__
-#endif
-
-/**
  * __BEGIN_DECLS and __END_DECLS
  *
  * Define macros for compilation by C++ compiler
@@ -124,13 +85,5 @@ typedef uint8_t boolean;
 #ifndef FALSE
 #define FALSE 0
 #endif
-
-/**
- * @def FIELDOFFSET(struct name, field name)
- *
- * Macro to generate offset from a given field in a structure
- */
-#define FIELDOFFSET(struct_name, field_name) (long)(&(((struct_name *)0)->field_name))
-
 
 #endif
