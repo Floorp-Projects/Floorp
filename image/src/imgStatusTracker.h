@@ -180,37 +180,14 @@ public:
   // Get the current image status (as in imgIRequest).
   uint32_t GetImageStatus() const;
 
-  // Functions with prefix Send- are main thread only, since they contain calls
-  // to imgRequestProxy functions, which are expected on the main thread.
-  void SendStartDecode(imgRequestProxy* aProxy);
-  void SendStartContainer(imgRequestProxy* aProxy);
-  void SendStopFrame(imgRequestProxy* aProxy);
-  void SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus);
-  void SendDiscard(imgRequestProxy* aProxy);
-  void SendUnlockedDraw(imgRequestProxy* aProxy);
-  void SendImageIsAnimated(imgRequestProxy *aProxy);
-
-  /* non-virtual sort-of-nsIRequestObserver methods */
-  // Functions with prefix Send- are main thread only, since they contain calls
-  // to imgRequestProxy functions, which are expected on the main thread.
-  void SendStartRequest(imgRequestProxy* aProxy);
-  void SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsresult aStatus);
-
-  // All main thread only because they call functions (like SendStartRequest)
-  // which are expected to be called on the main thread.
+  // All main thread only because they call functions which are expected to be
+  // called on the main thread.
   void OnStartRequest();
   // OnDataAvailable will dispatch a call to itself onto the main thread if not
   // called there.
   void OnDataAvailable();
   void OnDiscard();
   void OnUnlockedDraw();
-
-  /* non-virtual imgIOnloadBlocker methods */
-  // NB: If UnblockOnload is sent, and then we are asked to replay the
-  // notifications, we will not send a BlockOnload/UnblockOnload pair.  This
-  // is different from all the other notifications.
-  void SendBlockOnload(imgRequestProxy* aProxy);
-  void SendUnblockOnload(imgRequestProxy* aProxy);
 
   // Main thread only because mConsumers is not threadsafe.
   void MaybeUnblockOnload();
