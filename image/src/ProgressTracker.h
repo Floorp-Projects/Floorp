@@ -4,14 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef imgStatusTracker_h__
-#define imgStatusTracker_h__
-
-class imgIContainer;
-class imgStatusNotifyRunnable;
-class imgRequestNotifyRunnable;
-class imgStatusTrackerObserver;
-class nsIRunnable;
+#ifndef ProgressTracker_h__
+#define ProgressTracker_h__
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/WeakPtr.h"
@@ -21,12 +15,17 @@ class nsIRunnable;
 #include "nsRect.h"
 #include "imgRequestProxy.h"
 
+class imgIContainer;
+class nsIRunnable;
+
 namespace mozilla {
 namespace image {
 
+class AsyncNotifyRunnable;
+class AsyncNotifyCurrentStateRunnable;
 class Image;
 
-// Image state bitflags.
+// Image progress bitflags.
 enum {
   FLAG_REQUEST_STARTED    = 1u << 0,
   FLAG_HAS_SIZE           = 1u << 1,  // STATUS_SIZE_AVAILABLE
@@ -42,85 +41,61 @@ enum {
   FLAG_HAS_ERROR          = 1u << 11  // STATUS_ERROR
 };
 
-struct ImageStatusDiff
+typedef uint32_t Progress;
+
+const uint32_t NoProgress = 0;
+
+inline Progress OnStopRequestProgress(bool aLastPart,
+                                      bool aError,
+                                      nsresult aStatus)
 {
-  ImageStatusDiff()
-    : diffState(0)
-  { }
-
-  static ImageStatusDiff NoChange() { return ImageStatusDiff(); }
-  bool IsNoChange() const { return *this == NoChange(); }
-
-  static ImageStatusDiff ForOnStopRequest(bool aLastPart,
-                                          bool aError,
-                                          nsresult aStatus)
-  {
-    ImageStatusDiff diff;
-    diff.diffState |= FLAG_REQUEST_STOPPED;
-    if (aLastPart) {
-      diff.diffState |= FLAG_MULTIPART_STOPPED;
-    }
-    if (NS_FAILED(aStatus) || aError) {
-      diff.diffState |= FLAG_HAS_ERROR;
-    }
-    return diff;
+  Progress progress = FLAG_REQUEST_STOPPED;
+  if (aLastPart) {
+    progress |= FLAG_MULTIPART_STOPPED;
   }
-
-  bool operator!=(const ImageStatusDiff& aOther) const { return !(*this == aOther); }
-  bool operator==(const ImageStatusDiff& aOther) const {
-    return aOther.diffState == diffState;
+  if (NS_FAILED(aStatus) || aError) {
+    progress |= FLAG_HAS_ERROR;
   }
+  return progress;
+}
 
-  void Combine(const ImageStatusDiff& aOther) {
-    diffState |= aOther.diffState;
-  }
-
-  uint32_t diffState;
-};
-
-} // namespace image
-} // namespace mozilla
-
-/*
- * The image status tracker is a class that encapsulates all the loading and
- * decoding status about an Image, and makes it possible to send notifications
- * to imgRequestProxys, both synchronously (i.e., the status now) and
- * asynchronously (the status later).
+/**
+ * ProgressTracker is a class that records an Image's progress through the
+ * loading and decoding process, and makes it possible to send notifications to
+ * imgRequestProxys, both synchronously and asynchronously.
  *
- * When a new proxy needs to be notified of the current state of an image, call
- * the Notify() method on this class with the relevant proxy as its argument,
- * and the notifications will be replayed to the proxy asynchronously.
+ * When a new proxy needs to be notified of the current progress of an image,
+ * call the Notify() method on this class with the relevant proxy as its
+ * argument, and the notifications will be replayed to the proxy asynchronously.
  */
-
-
-class imgStatusTracker : public mozilla::SupportsWeakPtr<imgStatusTracker>
+class ProgressTracker : public mozilla::SupportsWeakPtr<ProgressTracker>
 {
-  virtual ~imgStatusTracker() { }
+  virtual ~ProgressTracker() { }
 
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(imgStatusTracker)
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(imgStatusTracker)
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(ProgressTracker)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProgressTracker)
 
-  // aImage is the image that this status tracker will pass to the
-  // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
-  // alive as long as this instance is, because we hold a weak reference to it.
-  explicit imgStatusTracker(mozilla::image::Image* aImage)
+  // aImage is the image that will be passed to the observers in SyncNotify()
+  // and EmulateRequestFinished(), and must be alive as long as this instance
+  // is, because we hold a weak reference to it.
+  explicit ProgressTracker(Image* aImage)
     : mImage(aImage)
-    , mState(0)
+    , mProgress(NoProgress)
   { }
 
   bool HasImage() const { return mImage; }
-  already_AddRefed<mozilla::image::Image> GetImage() const
+  already_AddRefed<Image> GetImage() const
   {
-    nsRefPtr<mozilla::image::Image> image = mImage;
+    nsRefPtr<Image> image = mImage;
     return image.forget();
   }
 
-  // Inform this status tracker that it is associated with a multipart image.
+  // Informs this ProgressTracker that it's associated with a multipart image.
   void SetIsMultipart();
 
   // Returns whether we are in the process of loading; that is, whether we have
-  // not received OnStopRequest.
+  // not received OnStopRequest from Necko.
   bool IsLoading() const;
 
   // Get the current image status (as in imgIRequest).
@@ -152,7 +127,7 @@ public:
   // are not threadsafe.
   void SyncNotify(imgRequestProxy* proxy);
 
-  // Get this imgStatusTracker ready for a new request. This resets all the
+  // Get this ProgressTracker ready for a new request. This resets all the
   // state that doesn't persist between requests.
   void ResetForNewRequest();
 
@@ -162,17 +137,23 @@ public:
   void OnUnlockedDraw();
   void OnImageAvailable();
 
-  // Compute the difference between this status tracker and aOther.
-  mozilla::image::ImageStatusDiff Difference(const mozilla::image::ImageStatusDiff& aOther) const;
+  // Compute the difference between this our progress and aProgress. This allows
+  // callers to predict whether SyncNotifyProgress will send any notifications.
+  Progress Difference(Progress aProgress) const
+  {
+    return ~mProgress & aProgress;
+  }
 
-  // Notify for the changes captured in an ImageStatusDiff. Because this may
-  // result in recursive notifications, no decoding locks may be held.
-  // Called on the main thread only.
-  void SyncNotifyDifference(const mozilla::image::ImageStatusDiff& aDiff,
-                            const nsIntRect& aInvalidRect = nsIntRect());
+  // Update our state to incorporate the changes in aProgress and synchronously
+  // notify our observers.
+  //
+  // Because this may result in recursive notifications, no decoding locks may
+  // be held.  Called on the main thread only.
+  void SyncNotifyProgress(Progress aProgress,
+                          const nsIntRect& aInvalidRect = nsIntRect());
 
   // We manage a set of consumers that are using an image and thus concerned
-  // with its status. Weak pointers.
+  // with its loading progress. Weak pointers.
   void AddConsumer(imgRequestProxy* aConsumer);
   bool RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus);
   size_t ConsumerCount() const {
@@ -185,7 +166,7 @@ public:
   // be improved, but it's too scary to mess with at the moment.
   bool FirstConsumerIs(imgRequestProxy* aConsumer);
 
-  void AdoptConsumers(imgStatusTracker* aTracker) {
+  void AdoptConsumers(ProgressTracker* aTracker) {
     MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
     MOZ_ASSERT(aTracker);
     mConsumers = aTracker->mConsumers;
@@ -193,18 +174,18 @@ public:
 
 private:
   typedef nsTObserverArray<mozilla::WeakPtr<imgRequestProxy>> ProxyArray;
-  friend class imgStatusNotifyRunnable;
-  friend class imgRequestNotifyRunnable;
-  friend class imgStatusTrackerInit;
+  friend class AsyncNotifyRunnable;
+  friend class AsyncNotifyCurrentStateRunnable;
+  friend class ProgressTrackerInit;
 
-  imgStatusTracker(const imgStatusTracker& aOther) MOZ_DELETE;
+  ProgressTracker(const ProgressTracker& aOther) MOZ_DELETE;
 
-  // This method should only be called once, and only on an imgStatusTracker
-  // that was initialized without an image. imgStatusTrackerInit automates this.
-  void SetImage(mozilla::image::Image* aImage);
+  // This method should only be called once, and only on an ProgressTracker
+  // that was initialized without an image. ProgressTrackerInit automates this.
+  void SetImage(Image* aImage);
 
   // Resets our weak reference to our image, for when mImage is about to go out
-  // of scope.  imgStatusTrackerInit automates this.
+  // of scope.  ProgressTrackerInit automates this.
   void ResetImage();
 
   // Send some notifications that would be necessary to make |aProxy| believe
@@ -217,31 +198,33 @@ private:
 
   // Main thread only, since imgRequestProxy calls are expected on the main
   // thread, and mConsumers is not threadsafe.
-  static void SyncNotifyState(ProxyArray& aProxies,
-                              bool aHasImage, uint32_t aState,
-                              const nsIntRect& aInvalidRect);
+  static void SyncNotifyInternal(ProxyArray& aProxies,
+                                 bool aHasImage, Progress aProgress,
+                                 const nsIntRect& aInvalidRect);
 
-  nsCOMPtr<nsIRunnable> mRequestRunnable;
+  nsCOMPtr<nsIRunnable> mRunnable;
 
   // This weak ref should be set null when the image goes out of scope.
-  mozilla::image::Image* mImage;
+  Image* mImage;
 
   // List of proxies attached to the image. Each proxy represents a consumer
   // using the image. Array and/or individual elements should only be accessed
   // on the main thread.
   ProxyArray mConsumers;
 
-  uint32_t mState;
+  Progress mProgress;
 };
 
-class imgStatusTrackerInit
+class ProgressTrackerInit
 {
 public:
-  imgStatusTrackerInit(mozilla::image::Image* aImage,
-                       imgStatusTracker* aTracker);
-  ~imgStatusTrackerInit();
+  ProgressTrackerInit(Image* aImage, ProgressTracker* aTracker);
+  ~ProgressTrackerInit();
 private:
-  imgStatusTracker* mTracker;
+  ProgressTracker* mTracker;
 };
+
+} // namespace image
+} // namespace mozilla
 
 #endif

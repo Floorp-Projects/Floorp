@@ -513,7 +513,7 @@ private:
 
   nsresult FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
                                 DecodeRequest* request = nullptr,
-                                const ImageStatusDiff& aDiff = ImageStatusDiff::NoChange());
+                                Progress aProgress = NoProgress);
 
   void DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
                                     gfxContext* aContext,
@@ -641,8 +641,8 @@ private: // data
   // END LOCKED MEMBER VARIABLES
 
   // Notification state. Used to avoid recursive notifications.
-  ImageStatusDiff            mStatusDiff;
-  nsIntRect                  mInvalidRect;
+  Progress                   mNotifyProgress;
+  nsIntRect                  mNotifyInvalidRect;
   bool                       mNotifying:1;
 
   // Boolean flags (clustered together to conserve space):
@@ -683,8 +683,8 @@ private: // data
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 
-  // Initializes imgStatusTracker and resets it on RasterImage destruction.
-  nsAutoPtr<imgStatusTrackerInit> mStatusTrackerInit;
+  // Initializes ProgressTracker and resets it on RasterImage destruction.
+  nsAutoPtr<ProgressTrackerInit> mProgressTrackerInit;
 
   nsresult ShutdownDecoder(eShutdownIntent aIntent);
 
@@ -734,7 +734,7 @@ private: // data
   bool StoringSourceData() const;
 
 protected:
-  explicit RasterImage(imgStatusTracker* aStatusTracker = nullptr,
+  explicit RasterImage(ProgressTracker* aProgressTracker = nullptr,
                        ImageURL* aURI = nullptr);
 
   bool ShouldAnimate();

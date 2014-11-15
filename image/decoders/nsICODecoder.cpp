@@ -83,7 +83,7 @@ nsICODecoder::FinishInternal()
   if (mContainedDecoder) {
     mContainedDecoder->FinishSharedDecoder();
     mDecodeDone = mContainedDecoder->GetDecodeDone();
-    mDiff = mContainedDecoder->GetDiff();
+    mProgress = mContainedDecoder->GetProgress();
   }
 }
 
@@ -587,7 +587,7 @@ nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount,
                                       DecodeStrategy aStrategy)
 {
   mContainedDecoder->Write(aBuffer, aCount, aStrategy);
-  mDiff = mContainedDecoder->GetDiff();
+  mProgress = mContainedDecoder->GetProgress();
   if (mContainedDecoder->HasDataError()) {
     mDataError = mContainedDecoder->HasDataError();
   }
@@ -632,7 +632,7 @@ nsICODecoder::AllocateFrame()
   if (mContainedDecoder) {
     nsresult rv = mContainedDecoder->AllocateFrame();
     mCurrentFrame = mContainedDecoder->GetCurrentFrame();
-    mDiff = mContainedDecoder->GetDiff();
+    mProgress = mContainedDecoder->GetProgress();
     return rv;
   }
 
