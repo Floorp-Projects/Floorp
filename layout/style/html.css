@@ -720,6 +720,13 @@ video {
   object-fit: contain;
 }
 
+video > img:-moz-native-anonymous {
+  /* Video poster images should render with the video element's "object-fit" &
+     "object-position" properties */
+  object-fit: inherit !important;
+  object-position: inherit !important;
+}
+
 audio:not([controls]) {
   display: none;
 }
