@@ -286,14 +286,7 @@ private:
 void imgRequest::Cancel(nsresult aStatus)
 {
   /* The Cancel() method here should only be called by this class. */
-
   LOG_SCOPE(GetImgLog(), "imgRequest::Cancel");
-
-  nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
-
-  statusTracker->MaybeUnblockOnload();
-
-  statusTracker->RecordError();
 
   if (NS_IsMainThread()) {
     ContinueCancel(aStatus);
@@ -306,9 +299,15 @@ void imgRequest::ContinueCancel(nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
+
+  ImageStatusDiff diff;
+  diff.diffState |= FLAG_HAS_ERROR | FLAG_ONLOAD_UNBLOCKED;
+  statusTracker->SyncNotifyDifference(diff);
+
+
   RemoveFromCache();
 
-  nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
   if (mRequest && statusTracker->IsLoading()) {
      mRequest->Cancel(aStatus);
   }
@@ -677,7 +676,11 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
   // Note: refreshing statusTracker in case OnNewSourceData changed it.
   statusTracker = GetStatusTracker();
-  statusTracker->OnStartRequest();
+  statusTracker->ResetForNewRequest();
+
+  ImageStatusDiff diff;
+  diff.diffState |= FLAG_REQUEST_STARTED;
+  statusTracker->SyncNotifyDifference(diff);
 
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (channel)
@@ -920,9 +923,8 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
       mStatusTracker = nullptr;
 
       // Notify listeners that we have an image.
-      // XXX(seth): The name of this notification method is pretty misleading.
       nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
-      statusTracker->OnDataAvailable();
+      statusTracker->OnImageAvailable();
 
       if (mImage->HasError() && !mIsMultiPartChannel) { // Probably bad mimetype
         // We allow multipart images to fail to initialize without cancelling the

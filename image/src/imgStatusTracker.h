@@ -109,18 +109,22 @@ public:
     , mState(0)
   { }
 
-  // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
-  // are created before their Image is created.  This method should only
-  // be called once, and only on an imgStatusTracker that was initialized
-  // without an image.
-  void SetImage(mozilla::image::Image* aImage);
-
-  // Image resetter, for when mImage is about to go out of scope. mImage is a
-  // weak reference, and thus must be set to null when it's object is deleted.
-  void ResetImage();
+  bool HasImage() const { return mImage; }
+  already_AddRefed<mozilla::image::Image> GetImage() const
+  {
+    nsRefPtr<mozilla::image::Image> image = mImage;
+    return image.forget();
+  }
 
   // Inform this status tracker that it is associated with a multipart image.
   void SetIsMultipart();
+
+  // Returns whether we are in the process of loading; that is, whether we have
+  // not received OnStopRequest.
+  bool IsLoading() const;
+
+  // Get the current image status (as in imgIRequest).
+  uint32_t GetImageStatus() const;
 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
@@ -148,10 +152,24 @@ public:
   // are not threadsafe.
   void SyncNotify(imgRequestProxy* proxy);
 
-  // Send some notifications that would be necessary to make |proxy| believe
-  // the request is finished downloading and decoding.  We only send
-  // OnStopRequest and UnblockOnload, and only if necessary.
-  void EmulateRequestFinished(imgRequestProxy* proxy, nsresult aStatus);
+  // Get this imgStatusTracker ready for a new request. This resets all the
+  // state that doesn't persist between requests.
+  void ResetForNewRequest();
+
+  // Stateless notifications. These are dispatched and immediately forgotten
+  // about. All except OnImageAvailable are main thread only.
+  void OnDiscard();
+  void OnUnlockedDraw();
+  void OnImageAvailable();
+
+  // Compute the difference between this status tracker and aOther.
+  mozilla::image::ImageStatusDiff Difference(const mozilla::image::ImageStatusDiff& aOther) const;
+
+  // Notify for the changes captured in an ImageStatusDiff. Because this may
+  // result in recursive notifications, no decoding locks may be held.
+  // Called on the main thread only.
+  void SyncNotifyDifference(const mozilla::image::ImageStatusDiff& aDiff,
+                            const nsIntRect& aInvalidRect = nsIntRect());
 
   // We manage a set of consumers that are using an image and thus concerned
   // with its status. Weak pointers.
@@ -173,53 +191,26 @@ public:
     mConsumers = aTracker->mConsumers;
   }
 
-  // Returns whether we are in the process of loading; that is, whether we have
-  // not received OnStopRequest.
-  bool IsLoading() const;
-
-  // Get the current image status (as in imgIRequest).
-  uint32_t GetImageStatus() const;
-
-  // All main thread only because they call functions which are expected to be
-  // called on the main thread.
-  void OnStartRequest();
-  // OnDataAvailable will dispatch a call to itself onto the main thread if not
-  // called there.
-  void OnDataAvailable();
-  void OnDiscard();
-  void OnUnlockedDraw();
-
-  // Main thread only because mConsumers is not threadsafe.
-  void MaybeUnblockOnload();
-
-  void RecordError();
-
-  bool IsMultipart() const { return mState & mozilla::image::FLAG_IS_MULTIPART; }
-
-  // Weak pointer getters - no AddRefs.
-  inline already_AddRefed<mozilla::image::Image> GetImage() const {
-    nsRefPtr<mozilla::image::Image> image = mImage;
-    return image.forget();
-  }
-  inline bool HasImage() { return mImage; }
-
-  // Compute the difference between this status tracker and aOther.
-  mozilla::image::ImageStatusDiff Difference(const mozilla::image::ImageStatusDiff& aOther) const;
-
-  // Notify for the changes captured in an ImageStatusDiff. Because this may
-  // result in recursive notifications, no decoding locks may be held.
-  // Called on the main thread only.
-  void SyncNotifyDifference(const mozilla::image::ImageStatusDiff& aDiff,
-                            const nsIntRect& aInvalidRect = nsIntRect());
-
 private:
   typedef nsTObserverArray<mozilla::WeakPtr<imgRequestProxy>> ProxyArray;
   friend class imgStatusNotifyRunnable;
   friend class imgRequestNotifyRunnable;
-  friend class imgStatusTrackerObserver;
   friend class imgStatusTrackerInit;
 
   imgStatusTracker(const imgStatusTracker& aOther) MOZ_DELETE;
+
+  // This method should only be called once, and only on an imgStatusTracker
+  // that was initialized without an image. imgStatusTrackerInit automates this.
+  void SetImage(mozilla::image::Image* aImage);
+
+  // Resets our weak reference to our image, for when mImage is about to go out
+  // of scope.  imgStatusTrackerInit automates this.
+  void ResetImage();
+
+  // Send some notifications that would be necessary to make |aProxy| believe
+  // the request is finished downloading and decoding.  We only send
+  // FLAG_REQUEST_* and FLAG_ONLOAD_UNBLOCKED, and only if necessary.
+  void EmulateRequestFinished(imgRequestProxy* aProxy, nsresult aStatus);
 
   // Main thread only because it deals with the observer service.
   void FireFailureNotification();
