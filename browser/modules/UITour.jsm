@@ -1303,15 +1303,15 @@ this.UITour = {
 
   addNavBarWidget: function (aTarget, aMessageManager, aCallbackID) {
     if (aTarget.node) {
-      log.error("UITour: can't add a widget already present: " + data.target);
+      log.error("addNavBarWidget: can't add a widget already present:", aTarget);
       return;
     }
     if (!aTarget.allowAdd) {
-      log.error("UITour: not allowed to add this widget: " + data.target);
+      log.error("addNavBarWidget: not allowed to add this widget:", aTarget);
       return;
     }
     if (!aTarget.widgetName) {
-      log.error("UITour: can't add a widget without a widgetName property: " + data.target);
+      log.error("addNavBarWidget: can't add a widget without a widgetName property:", aTarget);
       return;
     }
 
