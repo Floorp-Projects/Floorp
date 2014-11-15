@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1414797849000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1416004676000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -289,6 +289,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i778" id="{f2456568-e603-43db-8838-ffa7c4a685c7}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i52" id="ff-ext@youtube">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -523,6 +529,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i378" id="{a7aae4f0-bc2e-a0dd-fb8d-68ce32c9261f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i784" id="{41e5ef7a-171d-4ab5-8351-951c65a29908}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -876,6 +888,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i262" id="{167d9323-f7cc-48f5-948a-6f012831a69f}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i782" id="safebrowse@safebrowse.co">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -1532,6 +1550,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i764" id="prositez@prz.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i780" id="{b6ef1336-69bb-45b6-8cba-e578fc0e4433}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
