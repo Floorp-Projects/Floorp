@@ -296,20 +296,7 @@ imgStatusTracker::Difference(const ImageStatusDiff& aOther) const
 {
   ImageStatusDiff diff;
   diff.diffState = ~mState & aOther.diffState;
-
-  // Don't unblock onload if we're not blocked.
-  if (!((mState | diff.diffState) & FLAG_ONLOAD_BLOCKED)) {
-    diff.diffState &= ~FLAG_ONLOAD_UNBLOCKED;
-  }
-
   return diff;
-}
-
-void
-imgStatusTracker::ApplyDifference(const ImageStatusDiff& aDiff)
-{
-  LOG_SCOPE(GetImgLog(), "imgStatusTracker::ApplyDifference");
-  mState |= aDiff.diffState;
 }
 
 void
@@ -319,9 +306,19 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& aDiff,
   MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
   LOG_SCOPE(GetImgLog(), "imgStatusTracker::SyncNotifyDifference");
 
-  SyncNotifyState(mConsumers, !!mImage, aDiff.diffState, aInvalidRect);
+  // Don't unblock onload if we're not blocked.
+  ImageStatusDiff diff = Difference(aDiff);
+  if (!((mState | diff.diffState) & FLAG_ONLOAD_BLOCKED)) {
+    diff.diffState &= ~FLAG_ONLOAD_UNBLOCKED;
+  }
 
-  if (aDiff.diffState & FLAG_HAS_ERROR) {
+  // Apply the changes.
+  mState |= diff.diffState;
+
+  // Send notifications.
+  SyncNotifyState(mConsumers, !!mImage, diff.diffState, aInvalidRect);
+
+  if (diff.diffState & FLAG_HAS_ERROR) {
     FireFailureNotification();
   }
 }
