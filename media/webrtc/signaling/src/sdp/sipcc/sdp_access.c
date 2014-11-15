@@ -38,7 +38,7 @@ static const char* logTag = "sdp_access";
  *              level       The media level to find.
  * Returns:     Pointer to the media level or NULL if not found.
  */
-sdp_mca_t *sdp_find_media_level (sdp_t *sdp_p, u16 level)
+sdp_mca_t *sdp_find_media_level (sdp_t *sdp_p, uint16_t level)
 {
     int i;
     sdp_mca_t *mca_p = NULL;
@@ -83,7 +83,7 @@ tinybool sdp_version_valid (void *sdp_ptr)
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Version value.
  */
-int32 sdp_get_version (void *sdp_ptr)
+int32_t sdp_get_version (void *sdp_ptr)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
 
@@ -101,7 +101,7 @@ int32 sdp_get_version (void *sdp_ptr)
  *              version     Version to set.
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_version (void *sdp_ptr, int32 version)
+sdp_result_e sdp_set_version (void *sdp_ptr, int32_t version)
 {
     sdp_t *sdp_p = (sdp_t*)sdp_ptr;
 
@@ -571,7 +571,7 @@ sdp_result_e sdp_set_time_stop (void *sdp_ptr, const char *stop_time)
  *                          media line level.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_encryption_valid (void *sdp_ptr, u16 level)
+tinybool sdp_encryption_valid (void *sdp_ptr, uint16_t level)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_encryptspec_t   *encrypt_p;
@@ -610,7 +610,7 @@ tinybool sdp_encryption_valid (void *sdp_ptr, u16 level)
  *                          media line level.
  * Returns:     Encryption method or SDP_ENCRYPT_INVALID.
  */
-sdp_encrypt_type_e sdp_get_encryption_method (void *sdp_ptr, u16 level)
+sdp_encrypt_type_e sdp_get_encryption_method (void *sdp_ptr, uint16_t level)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_encryptspec_t   *encrypt_p;
@@ -643,7 +643,7 @@ sdp_encrypt_type_e sdp_get_encryption_method (void *sdp_ptr, u16 level)
  *                          media line level.
  * Returns:     Ptr to encryption key or NULL.
  */
-const char *sdp_get_encryption_key (void *sdp_ptr, u16 level)
+const char *sdp_get_encryption_key (void *sdp_ptr, uint16_t level)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_encryptspec_t   *encrypt_p;
@@ -676,7 +676,7 @@ const char *sdp_get_encryption_key (void *sdp_ptr, u16 level)
  *              type        The encryption type.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_encryption_method (void *sdp_ptr, u16 level,
+sdp_result_e sdp_set_encryption_method (void *sdp_ptr, uint16_t level,
                                         sdp_encrypt_type_e type)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
@@ -714,7 +714,7 @@ sdp_result_e sdp_set_encryption_method (void *sdp_ptr, u16 level,
  *              key         Ptr to the encryption key string.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_encryption_key (void *sdp_ptr, u16 level, const char *key)
+sdp_result_e sdp_set_encryption_key (void *sdp_ptr, uint16_t level, const char *key)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_encryptspec_t   *encrypt_p;
@@ -748,7 +748,7 @@ sdp_result_e sdp_set_encryption_key (void *sdp_ptr, u16 level, const char *key)
  *                          media line level.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_connection_valid (void *sdp_ptr, u16 level)
+tinybool sdp_connection_valid (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
@@ -796,7 +796,7 @@ tinybool sdp_connection_valid (void *sdp_ptr, u16 level)
  *                          instance has a inst_num of 1 and so on.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_bandwidth_valid (void *sdp_ptr, u16 level, u16 inst_num)
+tinybool sdp_bandwidth_valid (void *sdp_ptr, uint16_t level, uint16_t inst_num)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_data_t *bw_data_p;
@@ -831,7 +831,7 @@ tinybool sdp_bandwidth_valid (void *sdp_ptr, u16 level, u16 inst_num)
  *                          instance has a inst_num of 1 and so on.
  * Returns:     TRUE or FALSE
  */
-tinybool sdp_bw_line_exists (void *sdp_ptr, u16 level, u16 inst_num)
+tinybool sdp_bw_line_exists (void *sdp_ptr, uint16_t level, uint16_t inst_num)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_data_t *bw_data_p;
@@ -858,7 +858,7 @@ tinybool sdp_bw_line_exists (void *sdp_ptr, u16 level, u16 inst_num)
  *                          media line level.
  * Returns:     Network type or SDP_NT_INVALID.
  */
-sdp_nettype_e sdp_get_conn_nettype (void *sdp_ptr, u16 level)
+sdp_nettype_e sdp_get_conn_nettype (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
@@ -891,7 +891,7 @@ sdp_nettype_e sdp_get_conn_nettype (void *sdp_ptr, u16 level)
  *                          media line level.
  * Returns:     Address type or SDP_AT_INVALID.
  */
-sdp_addrtype_e sdp_get_conn_addrtype (void *sdp_ptr, u16 level)
+sdp_addrtype_e sdp_get_conn_addrtype (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
@@ -924,7 +924,7 @@ sdp_addrtype_e sdp_get_conn_addrtype (void *sdp_ptr, u16 level)
  *                          media line level.
  * Returns:     Ptr to address or NULL.
  */
-const char *sdp_get_conn_address (void *sdp_ptr, u16 level)
+const char *sdp_get_conn_address (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
@@ -957,7 +957,7 @@ const char *sdp_get_conn_address (void *sdp_ptr, u16 level)
  * Returns:     TRUE if the addr is multicast, FALSE if not.
  */
 
-tinybool sdp_is_mcast_addr (void *sdp_ptr, u16 level)
+tinybool sdp_is_mcast_addr (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
@@ -995,12 +995,12 @@ tinybool sdp_is_mcast_addr (void *sdp_ptr, u16 level)
  * Returns:     Multicast address - Time to live (ttl) value
  */
 
-int32 sdp_get_mcast_ttl (void *sdp_ptr, u16 level)
+int32_t sdp_get_mcast_ttl (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
     sdp_mca_t  *mca_p;
-    u16 ttl=0;
+    uint16_t ttl=0;
 
     if (sdp_verify_sdp_ptr(sdp_p) != FALSE) {
         if (level == SDP_SESSION_LEVEL) {
@@ -1033,12 +1033,12 @@ int32 sdp_get_mcast_ttl (void *sdp_ptr, u16 level)
  * Returns:     Multicast address - number of addresses value
  */
 
-int32 sdp_get_mcast_num_of_addresses (void *sdp_ptr, u16 level)
+int32_t sdp_get_mcast_num_of_addresses (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
     sdp_mca_t  *mca_p;
-    u16 num_addr = 0;
+    uint16_t num_addr = 0;
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_VALUE);
@@ -1070,7 +1070,7 @@ int32 sdp_get_mcast_num_of_addresses (void *sdp_ptr, u16 level)
  *                          media line level.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_conn_nettype (void *sdp_ptr, u16 level,
+sdp_result_e sdp_set_conn_nettype (void *sdp_ptr, uint16_t level,
                                    sdp_nettype_e nettype)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1106,7 +1106,7 @@ sdp_result_e sdp_set_conn_nettype (void *sdp_ptr, u16 level,
  *                          media line level.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_conn_addrtype (void *sdp_ptr, u16 level,
+sdp_result_e sdp_set_conn_addrtype (void *sdp_ptr, uint16_t level,
                                     sdp_addrtype_e addrtype)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1144,7 +1144,7 @@ sdp_result_e sdp_set_conn_addrtype (void *sdp_ptr, u16 level,
  *              address     Ptr to the address string.
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_conn_address (void *sdp_ptr, u16 level,
+sdp_result_e sdp_set_conn_address (void *sdp_ptr, uint16_t level,
                                    const char *address)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1182,8 +1182,8 @@ sdp_result_e sdp_set_conn_address (void *sdp_ptr, u16 level,
  .
  * Returns:     SDP_SUCCESS
  */
-sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, u16 level,
-				       u16 ttl, u16 num_of_addresses)
+sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, uint16_t level,
+				       uint16_t ttl, uint16_t num_of_addresses)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_conn_t *conn_p;
@@ -1227,7 +1227,7 @@ sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, u16 level,
  *                          1-n specifying a media line level.
  * Returns:     TRUE or FALSE.
  */
-tinybool sdp_media_line_valid (void *sdp_ptr, u16 level)
+tinybool sdp_media_line_valid (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1257,7 +1257,7 @@ tinybool sdp_media_line_valid (void *sdp_ptr, u16 level)
  * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
  * Returns:     Number of media lines.
  */
-u16 sdp_get_num_media_lines (void *sdp_ptr)
+uint16_t sdp_get_num_media_lines (void *sdp_ptr)
 {
     sdp_t *sdp_p = (sdp_t *)sdp_ptr;
 
@@ -1276,7 +1276,7 @@ u16 sdp_get_num_media_lines (void *sdp_ptr)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     Media type or SDP_MEDIA_INVALID.
  */
-sdp_media_e sdp_get_media_type (void *sdp_ptr, u16 level)
+sdp_media_e sdp_get_media_type (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1301,7 +1301,7 @@ sdp_media_e sdp_get_media_type (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     Line number (0 if not found or if locally built)
  */
-u32 sdp_get_media_line_number (void *sdp_ptr, u16 level)
+uint32_t sdp_get_media_line_number (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1326,7 +1326,7 @@ u32 sdp_get_media_line_number (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     Port format type or SDP_PORT_FORMAT_INVALID.
  */
-sdp_port_format_e sdp_get_media_port_format (void *sdp_ptr, u16 level)
+sdp_port_format_e sdp_get_media_port_format (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1351,7 +1351,7 @@ sdp_port_format_e sdp_get_media_port_format (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     Port number or SDP_INVALID_VALUE.
  */
-int32 sdp_get_media_portnum (void *sdp_ptr, u16 level)
+int32_t sdp_get_media_portnum (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1389,7 +1389,7 @@ int32 sdp_get_media_portnum (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     Port count or SDP_INVALID_VALUE.
  */
-int32 sdp_get_media_portcount (void *sdp_ptr, u16 level)
+int32_t sdp_get_media_portcount (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1424,7 +1424,7 @@ int32 sdp_get_media_portcount (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     VPI or SDP_INVALID_VALUE.
  */
-int32 sdp_get_media_vpi (void *sdp_ptr, u16 level)
+int32_t sdp_get_media_vpi (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1461,7 +1461,7 @@ int32 sdp_get_media_vpi (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     VCI or zero.
  */
-u32 sdp_get_media_vci (void *sdp_ptr, u16 level)
+uint32_t sdp_get_media_vci (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1498,7 +1498,7 @@ u32 sdp_get_media_vci (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     VCCI or SDP_INVALID_VALUE.
  */
-int32 sdp_get_media_vcci (void *sdp_ptr, u16 level)
+int32_t sdp_get_media_vcci (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1534,7 +1534,7 @@ int32 sdp_get_media_vcci (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     CID or SDP_INVALID_VALUE.
  */
-int32 sdp_get_media_cid (void *sdp_ptr, u16 level)
+int32_t sdp_get_media_cid (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1573,7 +1573,7 @@ int32 sdp_get_media_cid (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     CID or SDP_TRANSPORT_INVALID.
  */
-sdp_transport_e sdp_get_media_transport (void *sdp_ptr, u16 level)
+sdp_transport_e sdp_get_media_transport (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1603,7 +1603,7 @@ sdp_transport_e sdp_get_media_transport (void *sdp_ptr, u16 level)
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     Number of profiles or zero.
  */
-u16 sdp_get_media_num_profiles (void *sdp_ptr, u16 level)
+uint16_t sdp_get_media_num_profiles (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1635,8 +1635,8 @@ u16 sdp_get_media_num_profiles (void *sdp_ptr, u16 level)
  *              profile_num The specific profile type number to be retrieved.
  * Returns:     The profile type or SDP_TRANSPORT_INVALID.
  */
-sdp_transport_e sdp_get_media_profile (void *sdp_ptr, u16 level,
-                                       u16 profile_num)
+sdp_transport_e sdp_get_media_profile (void *sdp_ptr, uint16_t level,
+                                       uint16_t profile_num)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1667,7 +1667,7 @@ sdp_transport_e sdp_get_media_profile (void *sdp_ptr, u16 level,
  *              level       The level to of the m= media line.  Will be 1-n.
  * Returns:     Number of payload types or zero.
  */
-u16 sdp_get_media_num_payload_types (void *sdp_ptr, u16 level)
+uint16_t sdp_get_media_num_payload_types (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1695,8 +1695,8 @@ u16 sdp_get_media_num_payload_types (void *sdp_ptr, u16 level)
  *              profile_num The specific profile number. Will be 1-n.
  * Returns:     Number of payload types or zero.
  */
-u16 sdp_get_media_profile_num_payload_types (void *sdp_ptr, u16 level,
-                                             u16 profile_num)
+uint16_t sdp_get_media_profile_num_payload_types (void *sdp_ptr, uint16_t level,
+                                             uint16_t profile_num)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1719,8 +1719,8 @@ u16 sdp_get_media_profile_num_payload_types (void *sdp_ptr, u16 level,
 }
 
 rtp_ptype sdp_get_known_payload_type(void *sdp_ptr,
-                                     u16 level,
-                                     u16 payload_type_raw) {
+                                     uint16_t level,
+                                     uint16_t payload_type_raw) {
   sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
   sdp_attr_t  *attr_p;
   sdp_transport_map_t *rtpmap;
@@ -1818,7 +1818,7 @@ rtp_ptype sdp_get_known_payload_type(void *sdp_ptr,
  *                          NUMERIC or ENUM.
  * Returns:     Payload type or zero.
  */
-u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
+uint32_t sdp_get_media_payload_type (void *sdp_ptr, uint16_t level, uint16_t payload_num,
                                 sdp_payload_ind_e *indicator)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -1865,8 +1865,8 @@ u32 sdp_get_media_payload_type (void *sdp_ptr, u16 level, u16 payload_num,
  *                          NUMERIC or ENUM.
  * Returns:     Payload type or zero.
  */
-u32 sdp_get_media_profile_payload_type (void *sdp_ptr, u16 level, u16 prof_num,
-                                        u16 payload_num,
+uint32_t sdp_get_media_profile_payload_type (void *sdp_ptr, uint16_t level, uint16_t prof_num,
+                                        uint16_t payload_num,
                                         sdp_payload_ind_e *indicator)
 {
     sdp_t                *sdp_p = (sdp_t *)sdp_ptr;
@@ -1904,7 +1904,7 @@ u32 sdp_get_media_profile_payload_type (void *sdp_ptr, u16 level, u16 prof_num,
  *              level       The new media level to insert.  Will be 1-n.
  * Returns:     SDP_SUCCESS, SDP_NO_RESOURCE, or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_insert_media_line (void *sdp_ptr, u16 level)
+sdp_result_e sdp_insert_media_line (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1938,7 +1938,7 @@ sdp_result_e sdp_insert_media_line (void *sdp_ptr, u16 level)
         /* Find the pointer to the media stream just prior to where
          * we want to insert the new stream.
          */
-        mca_p = sdp_find_media_level(sdp_p, (u16)(level-1));
+        mca_p = sdp_find_media_level(sdp_p, (uint16_t)(level-1));
         if (mca_p == NULL) {
             SDP_FREE(new_mca_p);
             sdp_p->conf_p->num_invalid_param++;
@@ -1960,7 +1960,7 @@ sdp_result_e sdp_insert_media_line (void *sdp_ptr, u16 level)
  *              level       The media level to delete.  Will be 1-n.
  * Returns:     SDP_SUCCESS, SDP_NO_RESOURCE, or SDP_INVALID_PARAMETER
  */
-void sdp_delete_media_line (void *sdp_ptr, u16 level)
+void sdp_delete_media_line (void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -1979,7 +1979,7 @@ void sdp_delete_media_line (void *sdp_ptr, u16 level)
     if (level == 1) {
         mca_p = sdp_find_media_level(sdp_p, level);
     } else {
-        prev_mca_p = sdp_find_media_level(sdp_p, (u16)(level-1));
+        prev_mca_p = sdp_find_media_level(sdp_p, (uint16_t)(level-1));
         if (prev_mca_p == NULL) {
             sdp_p->conf_p->num_invalid_param++;
             return;
@@ -2026,7 +2026,7 @@ void sdp_delete_media_line (void *sdp_ptr, u16 level)
  *              media       Media type for the media line.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_type (void *sdp_ptr, u16 level, sdp_media_e media)
+sdp_result_e sdp_set_media_type (void *sdp_ptr, uint16_t level, sdp_media_e media)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2056,7 +2056,7 @@ sdp_result_e sdp_set_media_type (void *sdp_ptr, u16 level, sdp_media_e media)
  *              port_format Media type for the media line.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_port_format (void *sdp_ptr, u16 level,
+sdp_result_e sdp_set_media_port_format (void *sdp_ptr, uint16_t level,
                                         sdp_port_format_e port_format)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -2087,7 +2087,7 @@ sdp_result_e sdp_set_media_port_format (void *sdp_ptr, u16 level,
  *              sctpport    sctp port for application m= line
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_portnum (void *sdp_ptr, u16 level, int32 portnum, int32 sctp_port)
+sdp_result_e sdp_set_media_portnum (void *sdp_ptr, uint16_t level, int32_t portnum, int32_t sctp_port)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2114,7 +2114,7 @@ sdp_result_e sdp_set_media_portnum (void *sdp_ptr, u16 level, int32 portnum, int
  *              level       The media level to set the param.  Will be 1-n.
  * Returns:     sctp_port or -1 on failure
  */
-int32 sdp_get_media_sctp_port(void *sdp_ptr, u16 level)
+int32_t sdp_get_media_sctp_port(void *sdp_ptr, uint16_t level)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2142,8 +2142,8 @@ int32 sdp_get_media_sctp_port(void *sdp_ptr, u16 level)
  *              num_ports   Port count to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_portcount (void *sdp_ptr, u16 level,
-                                      int32 num_ports)
+sdp_result_e sdp_set_media_portcount (void *sdp_ptr, uint16_t level,
+                                      int32_t num_ports)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2172,7 +2172,7 @@ sdp_result_e sdp_set_media_portcount (void *sdp_ptr, u16 level,
  *              vpi         The VPI value to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_vpi (void *sdp_ptr, u16 level, int32 vpi)
+sdp_result_e sdp_set_media_vpi (void *sdp_ptr, uint16_t level, int32_t vpi)
 {
     sdp_t      *sdp_p = (sdp_t*)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2201,7 +2201,7 @@ sdp_result_e sdp_set_media_vpi (void *sdp_ptr, u16 level, int32 vpi)
  *              vci         The VCI value to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_vci (void *sdp_ptr, u16 level, u32 vci)
+sdp_result_e sdp_set_media_vci (void *sdp_ptr, uint16_t level, uint32_t vci)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2230,7 +2230,7 @@ sdp_result_e sdp_set_media_vci (void *sdp_ptr, u16 level, u32 vci)
  *              vcci        The VCCI value to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_vcci (void *sdp_ptr, u16 level, int32 vcci)
+sdp_result_e sdp_set_media_vcci (void *sdp_ptr, uint16_t level, int32_t vcci)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2259,7 +2259,7 @@ sdp_result_e sdp_set_media_vcci (void *sdp_ptr, u16 level, int32 vcci)
  *              cid         The CID value to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_cid (void *sdp_ptr, u16 level, int32 cid)
+sdp_result_e sdp_set_media_cid (void *sdp_ptr, uint16_t level, int32_t cid)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
@@ -2286,7 +2286,7 @@ sdp_result_e sdp_set_media_cid (void *sdp_ptr, u16 level, int32 cid)
  *              transport   The transport type to set.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_set_media_transport (void *sdp_ptr, u16 level,
+sdp_result_e sdp_set_media_transport (void *sdp_ptr, uint16_t level,
                                       sdp_transport_e transport)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -2316,10 +2316,10 @@ sdp_result_e sdp_set_media_transport (void *sdp_ptr, u16 level,
  *              profile     The profile type to add.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_add_media_profile (void *sdp_ptr, u16 level,
+sdp_result_e sdp_add_media_profile (void *sdp_ptr, uint16_t level,
                                     sdp_transport_e profile)
 {
-    u16         prof_num;
+    uint16_t         prof_num;
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
 
@@ -2372,8 +2372,8 @@ sdp_result_e sdp_add_media_profile (void *sdp_ptr, u16 level,
  *                           NUMERIC or ENUM.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, u16 level,
-                                         u16 payload_type,
+sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, uint16_t level,
+                                         uint16_t payload_type,
                                          sdp_payload_ind_e indicator)
 {
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
@@ -2415,11 +2415,11 @@ sdp_result_e sdp_add_media_payload_type (void *sdp_ptr, u16 level,
  *                           NUMERIC or ENUM.
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
  */
-sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, u16 level,
-                                                u16 prof_num, u16 payload_type,
+sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, uint16_t level,
+                                                uint16_t prof_num, uint16_t payload_type,
                                                 sdp_payload_ind_e indicator)
 {
-    u16         num_payloads;
+    uint16_t         num_payloads;
     sdp_t      *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t  *mca_p;
 
@@ -2472,7 +2472,7 @@ sdp_result_e sdp_add_media_profile_payload_type (void *sdp_ptr, u16 level,
  *
  * Returns: Pointer to the sdp_bw_data_t instance, or NULL.
  */
-sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
+sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, uint16_t level, uint16_t inst_num)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_t            *bw_p;
@@ -2522,7 +2522,7 @@ sdp_bw_data_t* sdp_find_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
  * Returns:     SDP_SUCCESS Attributes were successfully copied.
  */
 sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
-                                    u16 src_level, u16 dst_level)
+                                    uint16_t src_level, uint16_t dst_level)
 {
     sdp_t                *src_sdp_p = (sdp_t *)src_sdp_ptr;
     sdp_t                *dst_sdp_p = (sdp_t *)dst_sdp_ptr;
@@ -2617,7 +2617,7 @@ sdp_result_e sdp_copy_all_bw_lines (void *src_sdp_ptr, void *dst_sdp_ptr,
  *                          instance has a inst_num of 1 and so on.
  * Returns:     Valid modifer value or SDP_BW_MODIFIER_UNSUPPORTED.
  */
-sdp_bw_modifier_e sdp_get_bw_modifier (void *sdp_ptr, u16 level, u16 inst_num)
+sdp_bw_modifier_e sdp_get_bw_modifier (void *sdp_ptr, uint16_t level, uint16_t inst_num)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_data_t       *bw_data_p;
@@ -2644,7 +2644,7 @@ sdp_bw_modifier_e sdp_get_bw_modifier (void *sdp_ptr, u16 level, u16 inst_num)
  *                          instance has a inst_num of 1 and so on.
  * Returns:     A valid numerical bw value or SDP_INVALID_VALUE.
  */
-int32 sdp_get_bw_value (void *sdp_ptr, u16 level, u16 inst_num)
+int32_t sdp_get_bw_value (void *sdp_ptr, uint16_t level, uint16_t inst_num)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_data_t       *bw_data_p;
@@ -2672,7 +2672,7 @@ int32 sdp_get_bw_value (void *sdp_ptr, u16 level, u16 inst_num)
  *
  * Returns: A valid count or SDP_INVALID_VALUE
  */
-int32 sdp_get_num_bw_lines (void *sdp_ptr, u16 level)
+int32_t sdp_get_num_bw_lines (void *sdp_ptr, uint16_t level)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_t            *bw_p;
@@ -2730,7 +2730,7 @@ int32 sdp_get_num_bw_lines (void *sdp_ptr, u16 level)
  * *inst_num   This memory is set with the instance number of the newly
  *             created bw line instance.
  */
-sdp_result_e sdp_add_new_bw_line (void *sdp_ptr, u16 level, sdp_bw_modifier_e bw_modifier, u16 *inst_num)
+sdp_result_e sdp_add_new_bw_line (void *sdp_ptr, uint16_t level, sdp_bw_modifier_e bw_modifier, uint16_t *inst_num)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_t            *bw_p;
@@ -2807,7 +2807,7 @@ sdp_result_e sdp_add_new_bw_line (void *sdp_ptr, u16 level, sdp_bw_modifier_e bw
  * level       The level to delete the bw line.
  * inst_num   The instance of the bw line to delete.
  */
-sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
+sdp_result_e sdp_delete_bw_line (void *sdp_ptr, uint16_t level, uint16_t inst_num)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_t            *bw_p;
@@ -2878,8 +2878,8 @@ sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num)
  * NOTE: Before calling this function to set the bw line, the bw line must
  * be added using sdp_add_new_bw_line at the required level.
  */
-sdp_result_e sdp_set_bw (void *sdp_ptr, u16 level, u16 inst_num,
-                         sdp_bw_modifier_e bw_modifier, u32 bw_val)
+sdp_result_e sdp_set_bw (void *sdp_ptr, uint16_t level, uint16_t inst_num,
+                         sdp_bw_modifier_e bw_modifier, uint32_t bw_val)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_bw_data_t       *bw_data_p;
@@ -2919,7 +2919,7 @@ sdp_result_e sdp_set_bw (void *sdp_ptr, u16 level, u16 inst_num,
  *              level       SDP_MEDIA_LEVEL
  * Returns:     mid value.
  */
-int32 sdp_get_mid_value (void *sdp_ptr, u16 level)
+int32_t sdp_get_mid_value (void *sdp_ptr, uint16_t level)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t           *mca_p;
@@ -2944,7 +2944,7 @@ int32 sdp_get_mid_value (void *sdp_ptr, u16 level)
  *              mid_val     mid value .
  * Returns:     SDP_SUCCESS or SDP_INVALID_PARAMETER
 */
-sdp_result_e sdp_set_mid_value (void *sdp_ptr, u16 level, u32 mid_val)
+sdp_result_e sdp_set_mid_value (void *sdp_ptr, uint16_t level, uint32_t mid_val)
 {
     sdp_t               *sdp_p = (sdp_t *)sdp_ptr;
     sdp_mca_t           *mca_p;
