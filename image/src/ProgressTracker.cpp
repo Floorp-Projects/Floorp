@@ -41,6 +41,56 @@ ProgressTrackerInit::~ProgressTrackerInit()
   mTracker->ResetImage();
 }
 
+static void
+CheckProgressConsistency(Progress aProgress)
+{
+  // Check preconditions for every progress bit.
+
+  if (aProgress & FLAG_REQUEST_STARTED) {
+    // No preconditions.
+  }
+  if (aProgress & FLAG_HAS_SIZE) {
+    MOZ_ASSERT(aProgress & FLAG_REQUEST_STARTED);
+  }
+  if (aProgress & FLAG_DECODE_STARTED) {
+    MOZ_ASSERT(aProgress & FLAG_REQUEST_STARTED);
+  }
+  if (aProgress & FLAG_DECODE_STOPPED) {
+    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+  }
+  if (aProgress & FLAG_FRAME_STOPPED) {
+    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+  }
+  if (aProgress & FLAG_REQUEST_STOPPED) {
+    MOZ_ASSERT(aProgress & FLAG_REQUEST_STARTED);
+  }
+  if (aProgress & FLAG_ONLOAD_BLOCKED) {
+    if (aProgress & FLAG_IS_MULTIPART) {
+      MOZ_ASSERT(aProgress & FLAG_ONLOAD_UNBLOCKED);
+    } else {
+      MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+    }
+  }
+  if (aProgress & FLAG_ONLOAD_UNBLOCKED) {
+    MOZ_ASSERT(aProgress & FLAG_ONLOAD_BLOCKED);
+    MOZ_ASSERT(aProgress & (FLAG_FRAME_STOPPED |
+                            FLAG_IS_MULTIPART |
+                            FLAG_HAS_ERROR));
+  }
+  if (aProgress & FLAG_IS_ANIMATED) {
+    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+  }
+  if (aProgress & FLAG_IS_MULTIPART) {
+    // No preconditions.
+  }
+  if (aProgress & FLAG_MULTIPART_STOPPED) {
+    MOZ_ASSERT(aProgress & FLAG_REQUEST_STOPPED);
+  }
+  if (aProgress & FLAG_HAS_ERROR) {
+    // No preconditions.
+  }
+}
+
 void
 ProgressTracker::SetImage(Image* aImage)
 {
@@ -67,6 +117,8 @@ void ProgressTracker::SetIsMultipart()
 
   // Set the MULTIPART flag and ensure that we never block onload.
   mProgress |= FLAG_IS_MULTIPART | FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
+
+  CheckProgressConsistency(mProgress);
 }
 
 bool
@@ -316,6 +368,8 @@ ProgressTracker::SyncNotifyProgress(Progress aProgress,
   // Apply the changes.
   mProgress |= progress;
 
+  CheckProgressConsistency(mProgress);
+
   // Send notifications.
   SyncNotifyInternal(mConsumers, !!mImage, progress, aInvalidRect);
 
@@ -435,6 +489,8 @@ ProgressTracker::ResetForNewRequest()
   // multipart request) so keep only the bits that carry over between loads.
   mProgress &= FLAG_IS_MULTIPART | FLAG_HAS_ERROR |
                FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
+
+  CheckProgressConsistency(mProgress);
 }
 
 void
