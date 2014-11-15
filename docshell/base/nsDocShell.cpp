@@ -4869,7 +4869,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
              NS_ERROR_CSP_FORM_ACTION_VIOLATION == aError) {
         // CSP error
         cssClass.AssignLiteral("neterror");
-        error.AssignLiteral("cspFrameAncestorBlocked");
+        error.AssignLiteral("cspBlocked");
     }
     else if (NS_ERROR_GET_MODULE(aError) == NS_ERROR_MODULE_SECURITY) {
         nsCOMPtr<nsINSSErrorsService> nsserr =
