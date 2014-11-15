@@ -4,16 +4,18 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <ctype.h>
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
+
 #include "CSFLog.h"
 
 #define MKI_BUF_LEN 4
 
 static const char* logTag = "sdp_utils";
 
-sdp_mca_t *sdp_alloc_mca () {
+sdp_mca_t *sdp_alloc_mca (u32 line) {
     sdp_mca_t           *mca_p;
 
     /* Allocate resource for new media stream. */
@@ -44,6 +46,7 @@ sdp_mca_t *sdp_alloc_mca () {
     mca_p->mid                = 0;
     mca_p->bw.bw_data_count   = 0;
     mca_p->bw.bw_data_list    = NULL;
+    mca_p->line_number        = line;
 
     return (mca_p);
 }
@@ -83,7 +86,7 @@ static sdp_result_e next_token(const char **string_of_tokens, char *token, unsig
 
   /* Make sure there's really a token present. */
   if ((*str == '\0') || (*str == '\n') || (*str == '\r')) {
-    return SDP_FAILURE;
+    return SDP_EMPTY_TOKEN;
   }
 
   /* Now locate end of token */

@@ -5,7 +5,7 @@
 #include "sdp_os_defs.h"
 #include "sdp.h"
 #include "sdp_private.h"
-#include "vcm.h"
+
 #include "CSFLog.h"
 
 static const char* logTag = "sdp_main";
@@ -137,7 +137,7 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
     {"group", sizeof("group"),
       sdp_parse_attr_group, sdp_build_attr_group },
     {"mid", sizeof("mid"),
-      sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32 },
+      sdp_parse_attr_simple_string, sdp_build_attr_simple_string },
     {"source-filter", sizeof("source-filter"),
       sdp_parse_attr_source_filter, sdp_build_source_filter},
     {"rtcp-unicast", sizeof("rtcp-unicast"),
@@ -167,9 +167,9 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
     {"ice-lite", sizeof("ice-lite"),
       sdp_parse_attr_simple_flag, sdp_build_attr_simple_flag},
     {"rtcp-mux", sizeof("rtcp-mux"),
-      sdp_parse_attr_rtcp_mux_attr, sdp_build_attr_rtcp_mux_attr},
+      sdp_parse_attr_simple_flag, sdp_build_attr_simple_flag},
     {"fingerprint", sizeof("fingerprint"),
-      sdp_parse_attr_fingerprint_attr, sdp_build_attr_simple_string},
+      sdp_parse_attr_complete_line, sdp_build_attr_simple_string},
     {"maxptime", sizeof("maxptime"),
       sdp_parse_attr_simple_u32, sdp_build_attr_simple_u32},
     {"rtcp-fb", sizeof("rtcp-fb"),
@@ -182,7 +182,18 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
       sdp_parse_attr_extmap, sdp_build_attr_extmap},
     {"identity", sizeof("identity"),
       sdp_parse_attr_simple_string, sdp_build_attr_simple_string},
+    {"msid", sizeof("msid"),
+      sdp_parse_attr_msid, sdp_build_attr_msid},
+    {"msid-semantic", sizeof("msid-semantic"),
+      sdp_parse_attr_simple_string, sdp_build_attr_simple_string},
+    {"bundle-only", sizeof("bundle-only"),
+      sdp_parse_attr_simple_flag, sdp_build_attr_simple_flag},
+    {"end-of-candidates", sizeof("end-of-candidates"),
+      sdp_parse_attr_simple_flag, sdp_build_attr_simple_flag},
+    {"ice-options", sizeof("ice-options"),
+      sdp_parse_attr_complete_line, sdp_build_attr_simple_string},
 };
+
 /* Note: These *must* be in the same order as the enum types. */
 const sdp_namearray_t sdp_media[SDP_MAX_MEDIA_TYPES] =
 {
@@ -240,7 +251,12 @@ const sdp_namearray_t sdp_transport[SDP_MAX_TRANSPORT_TYPES] =
     {"RTP/SAVP",     sizeof("RTP/SAVP")},
     {"tcp",          sizeof("tcp")},
     {"RTP/SAVPF",    sizeof("RTP/SAVPF")},
-    {"DTLS/SCTP",    sizeof("DTLS/SCTP")}
+    {"DTLS/SCTP",    sizeof("DTLS/SCTP")},
+    {"RTP/AVPF",     sizeof("RTP/AVPF")},
+    {"UDP/TLS/RTP/SAVP", sizeof("UDP/TLS/RTP/SAVP")},
+    {"UDP/TLS/RTP/SAVPF", sizeof("UDP/TLS/RTP/SAVPF")},
+    {"TCP/TLS/RTP/SAVP", sizeof("TCP/TLS/RTP/SAVP")},
+    {"TCP/TLS/RTP/SAVPF", sizeof("TCP/TLS/RTP/SAVPF")},
 };
 
 /* Note: These *must* be in the same order as the enum type. */
@@ -427,7 +443,8 @@ const sdp_namearray_t sdp_group_attr_val[SDP_MAX_GROUP_ATTR_VAL] =
 {
     {"FID",                 sizeof("FID")},
     {"LS",                  sizeof("LS")},
-    {"ANAT",                sizeof("ANAT")}
+    {"ANAT",                sizeof("ANAT")},
+    {"BUNDLE",              sizeof("BUNDLE")}
 };
 
 const sdp_namearray_t sdp_srtp_context_crypto_suite[SDP_SRTP_MAX_NUM_CRYPTO_SUITES] =
@@ -535,7 +552,8 @@ const char* sdp_result_name[SDP_MAX_RC] =
      "SDP_NO_RESOURCE",
      "SDP_UNRECOGNIZED_TOKEN",
      "SDP_NULL_BUF_PTR",
-     "SDP_POTENTIAL_SDP_OVERFLOW"};
+     "SDP_POTENTIAL_SDP_OVERFLOW",
+     "SDP_EMPTY_TOKEN"};
 
 const char *sdp_get_result_name ( sdp_result_e rc )
 {
@@ -775,7 +793,7 @@ const char *sdp_get_rtcp_unicast_mode_name (sdp_rtcp_unicast_mode_e type)
  * Parameters:	sdp_p    The SDP structure handle.
  * Returns:	TRUE or FALSE.
  */
-inline tinybool sdp_verify_sdp_ptr (sdp_t *sdp_p)
+tinybool sdp_verify_sdp_ptr (sdp_t *sdp_p)
 {
     if ((sdp_p != NULL) && (sdp_p->magic_num == SDP_MAGIC_NUM)) {
         return (TRUE);
@@ -795,11 +813,10 @@ inline tinybool sdp_verify_sdp_ptr (sdp_t *sdp_p)
  * Parameters:  config_p     The config handle returned by sdp_init_config
  * Returns:     A handle for a new SDP structure as a void ptr.
 */
-sdp_t *sdp_init_description (const char *peerconnection, void *config_p)
+sdp_t *sdp_init_description (sdp_conf_options_t *conf_p)
 {
     int i;
     sdp_t *sdp_p;
-    sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
 
     if (sdp_verify_conf_ptr(conf_p) == FALSE) {
         return (NULL);
@@ -809,8 +826,6 @@ sdp_t *sdp_init_description (const char *peerconnection, void *config_p)
     if (sdp_p == NULL) {
         return (NULL);
     }
-
-    sstrncpy(sdp_p->peerconnection, peerconnection, sizeof(sdp_p->peerconnection));
 
     /* Initialize magic number. */
     sdp_p->magic_num = SDP_MAGIC_NUM;
@@ -914,7 +929,7 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
         num_media_levels = sdp_get_num_media_lines((void *)sdp_p);
         for (i=1; i <= num_media_levels; i++) {
             if (sdp_connection_valid((void *)sdp_p, (unsigned short)i) == FALSE) {
-                sdp_parse_error(sdp_p->peerconnection,
+                sdp_parse_error(sdp_p,
                     "%s c= connection line not specified for "
                     "every media level, validation failed.",
                     sdp_p->debug_str);
@@ -926,7 +941,7 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
     /* Validate required lines were specified */
     if ((sdp_owner_valid((void *)sdp_p) == FALSE) &&
         (sdp_p->conf_p->owner_reqd == TRUE)) {
-        sdp_parse_error(sdp_p->peerconnection,
+        sdp_parse_error(sdp_p,
             "%s o= owner line not specified, validation failed.",
             sdp_p->debug_str);
         return (SDP_FAILURE);
@@ -934,7 +949,7 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
 
     if ((sdp_session_name_valid((void *)sdp_p) == FALSE) &&
         (sdp_p->conf_p->session_name_reqd == TRUE)) {
-        sdp_parse_error(sdp_p->peerconnection,
+        sdp_parse_error(sdp_p,
             "%s s= session name line not specified, validation failed.",
             sdp_p->debug_str);
         return (SDP_FAILURE);
@@ -942,7 +957,7 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
 
     if ((sdp_timespec_valid((void *)sdp_p) == FALSE) &&
         (sdp_p->conf_p->timespec_reqd == TRUE)) {
-        sdp_parse_error(sdp_p->peerconnection,
+        sdp_parse_error(sdp_p,
             "%s t= timespec line not specified, validation failed.",
             sdp_p->debug_str);
         return (SDP_FAILURE);
@@ -961,12 +976,12 @@ sdp_result_e sdp_validate_sdp (sdp_t *sdp_p)
  *              if not, what type of error was encountered.  The
  *              information from the parse is stored in the sdp_p structure.
  */
-sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
+sdp_result_e sdp_parse (sdp_t *sdp_p, const char *buf, size_t len)
 {
     u8           i;
     u16          cur_level = SDP_SESSION_LEVEL;
-    char        *ptr;
-    char        *next_ptr = NULL;
+    const char  *ptr;
+    const char  *next_ptr = NULL;
     char        *line_end;
     sdp_token_e  last_token = SDP_TOKEN_V;
     sdp_result_e result = SDP_SUCCESS;
@@ -974,6 +989,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
     tinybool     end_found = FALSE;
     tinybool     first_line = TRUE;
     tinybool     unrec_token = FALSE;
+    const char   **bufp = &buf;
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
         return (SDP_INVALID_SDP_PTR);
@@ -995,6 +1011,8 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
     sdp_p->cap_valid = FALSE;
     sdp_p->last_cap_inst = 0;
 
+    sdp_p->parse_line = 0;
+
     /* We want to try to find the end of the SDP description, even if
      * we find a parsing error.
      */
@@ -1003,6 +1021,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
          * we don't parse it.
          */
         ptr = next_ptr;
+        sdp_p->parse_line++;
         line_end = sdp_findchar(ptr, "\n");
         if ((line_end >= (*bufp + len)) ||
            (*line_end == '\0')) {
@@ -1010,10 +1029,11 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
              * is still accept as valid. So encountering this is not treated as
              * an error.
              */
-            sdp_parse_error(sdp_p->peerconnection,
+            sdp_parse_error(sdp_p,
                 "%s End of line beyond end of buffer.",
                 sdp_p->debug_str);
-            CSFLogError(logTag, "SDP: Invalid SDP, no \\n (len %u): %*s", len, len, *bufp);
+            CSFLogError(logTag, "SDP: Invalid SDP, no \\n (len %u): %*s",
+                        (unsigned)len, (int)len, *bufp);
             end_found = TRUE;
             break;
         }
@@ -1040,7 +1060,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
                 unrec_token = TRUE;
             }
             if (first_line == TRUE) {
-                sdp_parse_error(sdp_p->peerconnection,
+                sdp_parse_error(sdp_p,
                     "%s Attempt to parse text not recognized as "
                     "SDP text, parse fails.", sdp_p->debug_str);
                     /* If we haven't already printed out the line we
@@ -1083,7 +1103,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
                 (i != SDP_TOKEN_B) && (i != SDP_TOKEN_K) &&
                 (i != SDP_TOKEN_A) && (i != SDP_TOKEN_M)) {
                 sdp_p->conf_p->num_invalid_token_order++;
-                sdp_parse_error(sdp_p->peerconnection,
+                sdp_parse_error(sdp_p,
                     "%s Warning: Invalid token %s found at media level",
                     sdp_p->debug_str, sdp_token[i].name);
                 continue;
@@ -1094,7 +1114,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
         if (first_line == TRUE) {
             if (i != SDP_TOKEN_V) {
                 if (sdp_p->conf_p->version_reqd == TRUE) {
-                    sdp_parse_error(sdp_p->peerconnection,
+                    sdp_parse_error(sdp_p,
                         "%s First line not v=, parse fails",
                         sdp_p->debug_str);
                     sdp_p->conf_p->num_invalid_token_order++;
@@ -1110,7 +1130,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
         } else {
             if (i < last_token) {
                 sdp_p->conf_p->num_invalid_token_order++;
-                sdp_parse_error(sdp_p->peerconnection,
+                sdp_parse_error(sdp_p,
                     "%s Warning: Invalid token ordering detected, "
                     "token %s found after token %s", sdp_p->debug_str,
                     sdp_token[i].name, sdp_token[last_token].name);
@@ -1242,9 +1262,7 @@ sdp_result_e sdp_free_description (sdp_t *sdp_p)
     }
 
     /* Free the config structure */
-    if (sdp_p->conf_p) {
-        SDP_FREE(sdp_p->conf_p);
-    }
+    sdp_free_config(sdp_p->conf_p);
 
     /* Free any timespec structures - should be only one since
      * this is all we currently support.
@@ -1311,7 +1329,7 @@ sdp_result_e sdp_free_description (sdp_t *sdp_p)
  * sdp_parse_error
  * Send SDP parsing errors to log and up to peerconnection
  */
-void sdp_parse_error(const char *peerconnection, const char *format, ...) {
+void sdp_parse_error(sdp_t* sdp, const char *format, ...) {
     flex_string fs;
     va_list ap;
 
@@ -1321,8 +1339,14 @@ void sdp_parse_error(const char *peerconnection, const char *format, ...) {
     flex_string_vsprintf(&fs, format, ap);
     va_end(ap);
 
-    CSFLogError("SDP Parse", "SDP Parse Error %s, pc %s", fs.buffer, peerconnection);
-    vcmOnSdpParseError(peerconnection, fs.buffer);
+    CSFLogError("SDP Parse", "SDP Parse Error %s, line %u", fs.buffer,
+                sdp->parse_line);
+
+    if (sdp->conf_p->error_handler) {
+        sdp->conf_p->error_handler(sdp->conf_p->error_handler_context,
+                                   sdp->parse_line,
+                                   fs.buffer);
+    }
 
     flex_string_free(&fs);
 }

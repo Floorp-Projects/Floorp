@@ -6,11 +6,11 @@
 #define _CPR_TYPES_H_
 
 #if defined SIP_OS_LINUX
-#include "../linux/cpr_linux_types.h"
+#include "cpr_linux_types.h"
 #elif defined SIP_OS_WINDOWS
-#include "../win32/cpr_win_types.h"
+#include "cpr_win_types.h"
 #elif defined SIP_OS_OSX
-#include "../darwin/cpr_darwin_types.h"
+#include "cpr_darwin_types.h"
 #endif
 
 __BEGIN_DECLS

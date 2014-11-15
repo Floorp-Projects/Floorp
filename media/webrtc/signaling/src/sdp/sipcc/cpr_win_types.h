@@ -101,32 +101,6 @@ typedef int pid_t;
 /* DONE defined in windef.h */
 
 /*
- * Define NUL
- */
-#ifndef NUL
-#define NUL '\0'
-#endif
-
-/*
- * Define RESTRICT
- *
- * If supporting the ISO/IEC 9899:1999 standard,
- * use the 'restrict' keyword
- */
-#if defined(_POSIX_C_SOURCE)
-#define RESTRICT restrict
-#else
-#define RESTRICT
-#endif
-
-/*
- * Define CONST
- */
-#ifndef CONST
-#define CONST const
-#endif
-
-/*
  * Define __BEGIN_DECLS and __END_DECLS
  */
 #ifdef __cplusplus
@@ -137,16 +111,5 @@ typedef int pid_t;
 #define __END_DECLS
 #endif
 
-/* Not sure what this is, but we need it */
-#define MSG_ECHO_EVENT 0xF001
+#endif // _CPR_WIN_TYPES_H_
 
-/*
- * Define alternate punctuation token spellings
- * Added 'equals' which is not part of the standard iso646.h
- */
-#ifndef __cplusplus
-#include "iso646.h"
-#endif
-#define equals ==
-
-#endif
