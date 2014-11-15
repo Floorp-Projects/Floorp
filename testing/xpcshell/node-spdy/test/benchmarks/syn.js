@@ -17,7 +17,10 @@ frames.createSynStream(host, url, function(syn_stream) {
 });
 
 function request(port, host, data, callback) {
-  var socket = tls.connect(port, host, {NPNProtocols: ['spdy/2']}, function() {
+  var socket = tls.connect(port, host, {
+    NPNProtocols: ['spdy/2'],
+    ALPNProtocols: ['spdy/2']
+  }, function() {
     socket.write(data);
     socket.once('data', function() {
       socket.destroy();
