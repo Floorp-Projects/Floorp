@@ -57,40 +57,4 @@ static_assert(SDP_MAX_RTCP_FB_NACK +
               "rtcp-fb Bitmap is larger than 32 bits");
 #endif
 
-static int32_t
-sdp_rtcp_fb_nack_to_bitmap(sdp_rtcp_fb_nack_type_e type)
-{
-  int bitnumber = type;
-
-  if (type < 0 || type >= SDP_MAX_RTCP_FB_NACK) {
-    return 0;
-  }
-
-  return (1 << bitnumber);
-}
-
-static int32_t
-sdp_rtcp_fb_ack_to_bitmap(sdp_rtcp_fb_ack_type_e type)
-{
-  int bitnumber = type + SDP_MAX_RTCP_FB_NACK;
-
-  if (type < 0 || type >= SDP_MAX_RTCP_FB_ACK) {
-    return 0;
-  }
-
-  return (1 << bitnumber);
-}
-
-static int32_t
-sdp_rtcp_fb_ccm_to_bitmap(sdp_rtcp_fb_ccm_type_e type)
-{
-  int bitnumber = type + SDP_MAX_RTCP_FB_NACK + SDP_MAX_RTCP_FB_ACK;
-
-  if (type < 0 || type >= SDP_MAX_RTCP_FB_CCM) {
-    return 0;
-  }
-
-  return (1 << bitnumber);
-}
-
 #endif
