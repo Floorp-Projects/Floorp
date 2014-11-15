@@ -800,7 +800,6 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
       ImageStatusDiff::ForOnStopRequest(lastPart, /* aError = */ false, status);
 
     nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
-    statusTracker->ApplyDifference(diff);
     statusTracker->SyncNotifyDifference(diff);
   }
 

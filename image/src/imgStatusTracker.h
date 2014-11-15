@@ -229,9 +229,6 @@ public:
   // Compute the difference between this status tracker and aOther.
   mozilla::image::ImageStatusDiff Difference(const mozilla::image::ImageStatusDiff& aOther) const;
 
-  // Update our state to incorporate the changes in aDiff.
-  void ApplyDifference(const mozilla::image::ImageStatusDiff& aDiff);
-
   // Notify for the changes captured in an ImageStatusDiff. Because this may
   // result in recursive notifications, no decoding locks may be held.
   // Called on the main thread only.
