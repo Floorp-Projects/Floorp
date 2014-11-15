@@ -10,7 +10,6 @@
 #include "gfxDrawable.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
-#include "imgDecoderObserver.h"
 #include "imgFrame.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/MemoryReporting.h"
@@ -443,11 +442,8 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
 
   // Actually fire OnStopRequest.
   if (mStatusTracker) {
-    // XXX(seth): Is this seriously the least insane way to do this?
-    nsRefPtr<imgStatusTracker> clone = mStatusTracker->CloneForRecording();
-    imgDecoderObserver* observer = clone->GetDecoderObserver();
-    observer->OnStopRequest(aLastPart, finalStatus);
-    ImageStatusDiff diff = mStatusTracker->Difference(clone);
+    ImageStatusDiff diff =
+      ImageStatusDiff::ForOnStopRequest(aLastPart, mError, finalStatus);
     mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff);
   }
@@ -1037,10 +1033,8 @@ VectorImage::OnStartRequest(nsIRequest* aRequest, nsISupports* aCtxt)
   // unblock it by sending StopDecode in OnSVGDocumentLoaded or
   // OnSVGDocumentError.)
   if (mStatusTracker) {
-    nsRefPtr<imgStatusTracker> clone = mStatusTracker->CloneForRecording();
-    imgDecoderObserver* observer = clone->GetDecoderObserver();
-    observer->OnStartDecode();
-    ImageStatusDiff diff = mStatusTracker->Difference(clone);
+    ImageStatusDiff diff;
+    diff.diffState |= FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED;
     mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff);
   }
@@ -1142,12 +1136,10 @@ VectorImage::OnSVGDocumentError()
   mError = true;
 
   if (mStatusTracker) {
-    nsRefPtr<imgStatusTracker> clone = mStatusTracker->CloneForRecording();
-    imgDecoderObserver* observer = clone->GetDecoderObserver();
-
     // Unblock page load.
-    observer->OnStopDecode(NS_ERROR_FAILURE);
-    ImageStatusDiff diff = mStatusTracker->Difference(clone);
+    ImageStatusDiff diff;
+    diff.diffState |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED |
+                      FLAG_HAS_ERROR;
     mStatusTracker->ApplyDifference(diff);
     mStatusTracker->SyncNotifyDifference(diff);
   }

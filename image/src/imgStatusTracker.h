@@ -7,7 +7,6 @@
 #ifndef imgStatusTracker_h__
 #define imgStatusTracker_h__
 
-class imgDecoderObserver;
 class imgIContainer;
 class imgStatusNotifyRunnable;
 class imgRequestNotifyRunnable;
@@ -52,6 +51,21 @@ struct ImageStatusDiff
   static ImageStatusDiff NoChange() { return ImageStatusDiff(); }
   bool IsNoChange() const { return *this == NoChange(); }
 
+  static ImageStatusDiff ForOnStopRequest(bool aLastPart,
+                                          bool aError,
+                                          nsresult aStatus)
+  {
+    ImageStatusDiff diff;
+    diff.diffState |= FLAG_REQUEST_STOPPED;
+    if (aLastPart) {
+      diff.diffState |= FLAG_MULTIPART_STOPPED;
+    }
+    if (NS_FAILED(aStatus) || aError) {
+      diff.diffState |= FLAG_HAS_ERROR;
+    }
+    return diff;
+  }
+
   bool operator!=(const ImageStatusDiff& aOther) const { return !(*this == aOther); }
   bool operator==(const ImageStatusDiff& aOther) const {
     return aOther.diffState == diffState;
@@ -81,7 +95,7 @@ struct ImageStatusDiff
 
 class imgStatusTracker : public mozilla::SupportsWeakPtr<imgStatusTracker>
 {
-  virtual ~imgStatusTracker();
+  virtual ~imgStatusTracker() { }
 
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(imgStatusTracker)
@@ -90,7 +104,10 @@ public:
   // aImage is the image that this status tracker will pass to the
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
-  explicit imgStatusTracker(mozilla::image::Image* aImage);
+  explicit imgStatusTracker(mozilla::image::Image* aImage)
+    : mImage(aImage)
+    , mState(0)
+  { }
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
   // are created before their Image is created.  This method should only
@@ -163,44 +180,20 @@ public:
   // Get the current image status (as in imgIRequest).
   uint32_t GetImageStatus() const;
 
-  // Following are all the notification methods. You must call the Record
-  // variant on this status tracker, then call the Send variant for each proxy
-  // you want to notify.
-
-  // Call when the request is being cancelled.
-  void RecordCancel();
-
-  // Shorthand for recording all the load notifications: StartRequest,
-  // StartContainer, StopRequest.
-  void RecordLoaded();
-
-  // Shorthand for recording all the decode notifications: StartDecode,
-  // DataAvailable, StopFrame, StopDecode.
-  void RecordDecoded();
-
-  /* non-virtual imgDecoderObserver methods */
   // Functions with prefix Send- are main thread only, since they contain calls
   // to imgRequestProxy functions, which are expected on the main thread.
-  void RecordStartDecode();
   void SendStartDecode(imgRequestProxy* aProxy);
-  void RecordStartContainer(imgIContainer* aContainer);
   void SendStartContainer(imgRequestProxy* aProxy);
-  void RecordStopFrame();
   void SendStopFrame(imgRequestProxy* aProxy);
-  void RecordStopDecode(nsresult statusg);
   void SendStopDecode(imgRequestProxy* aProxy, nsresult aStatus);
   void SendDiscard(imgRequestProxy* aProxy);
-  void RecordUnlockedDraw();
   void SendUnlockedDraw(imgRequestProxy* aProxy);
-  void RecordImageIsAnimated();
   void SendImageIsAnimated(imgRequestProxy *aProxy);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   // Functions with prefix Send- are main thread only, since they contain calls
   // to imgRequestProxy functions, which are expected on the main thread.
-  void RecordStartRequest();
   void SendStartRequest(imgRequestProxy* aProxy);
-  void RecordStopRequest(bool aLastPart, nsresult aStatus);
   void SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsresult aStatus);
 
   // All main thread only because they call functions (like SendStartRequest)
@@ -209,20 +202,14 @@ public:
   // OnDataAvailable will dispatch a call to itself onto the main thread if not
   // called there.
   void OnDataAvailable();
-  void OnStopRequest(bool aLastPart, nsresult aStatus);
   void OnDiscard();
   void OnUnlockedDraw();
-  // This is called only by VectorImage, and only to ensure tests work
-  // properly. Do not use it.
-  void OnStopFrame();
 
   /* non-virtual imgIOnloadBlocker methods */
   // NB: If UnblockOnload is sent, and then we are asked to replay the
   // notifications, we will not send a BlockOnload/UnblockOnload pair.  This
   // is different from all the other notifications.
-  void RecordBlockOnload();
   void SendBlockOnload(imgRequestProxy* aProxy);
-  void RecordUnblockOnload();
   void SendUnblockOnload(imgRequestProxy* aProxy);
 
   // Main thread only because mConsumers is not threadsafe.
@@ -239,16 +226,8 @@ public:
   }
   inline bool HasImage() { return mImage; }
 
-  inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
-
-  already_AddRefed<imgStatusTracker> CloneForRecording();
-
   // Compute the difference between this status tracker and aOther.
-  mozilla::image::ImageStatusDiff Difference(imgStatusTracker* aOther) const;
-
-  // Captures all of the decode notifications (i.e., not OnStartRequest /
-  // OnStopRequest) so far as an ImageStatusDiff.
-  mozilla::image::ImageStatusDiff DecodeStateAsDifference() const;
+  mozilla::image::ImageStatusDiff Difference(const mozilla::image::ImageStatusDiff& aOther) const;
 
   // Update our state to incorporate the changes in aDiff.
   void ApplyDifference(const mozilla::image::ImageStatusDiff& aDiff);
@@ -265,7 +244,8 @@ private:
   friend class imgRequestNotifyRunnable;
   friend class imgStatusTrackerObserver;
   friend class imgStatusTrackerInit;
-  imgStatusTracker(const imgStatusTracker& aOther);
+
+  imgStatusTracker(const imgStatusTracker& aOther) MOZ_DELETE;
 
   // Main thread only because it deals with the observer service.
   void FireFailureNotification();
@@ -285,8 +265,6 @@ private:
   // using the image. Array and/or individual elements should only be accessed
   // on the main thread.
   ProxyArray mConsumers;
-
-  mozilla::RefPtr<imgDecoderObserver> mTrackerObserver;
 
   uint32_t mState;
 };
