@@ -321,7 +321,11 @@ enum { REG_EIP = 14 };
 static uint8_t **
 ContextToPC(CONTEXT *context)
 {
-    return reinterpret_cast<uint8_t**>(&PC_sig(context));
+#ifdef JS_CODEGEN_NONE
+    MOZ_CRASH();
+#else
+     return reinterpret_cast<uint8_t**>(&PC_sig(context));
+#endif
 }
 
 #if defined(JS_CODEGEN_X64)
