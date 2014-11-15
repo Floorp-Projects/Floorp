@@ -6,9 +6,17 @@
 
 #include "mozilla/Assertions.h"
 #include "cpr_types.h"
-#include "cpr_stdlib.h"
 #include "cpr_string.h"
 #include "cpr_strings.h"
+
+/* From cpr_stdlib.h */
+#include "mozilla/mozalloc.h"
+
+#define cpr_malloc(a) moz_xmalloc(a)
+#define cpr_calloc(a, b) moz_xcalloc(a, b)
+#define cpr_realloc(a, b) moz_xrealloc(a, b)
+#define cpr_free(a) moz_free(a)
+
 
 /**
  * sstrncpy
@@ -222,3 +230,43 @@ void flex_string_sprintf(flex_string *fs, const char *format, ...) {
   va_end(ap);
 }
 
+
+
+/* From cpr_linux_string.c */
+/**
+ * cpr_strdup
+ *
+ * @brief The CPR wrapper for strdup
+
+ * The cpr_strdup shall return a pointer to a new string, which is a duplicate
+ * of the string pointed to by "str" argument. A null pointer is returned if the
+ * new string cannot be created.
+ *
+ * @param[in] str  - The string that needs to be duplicated
+ *
+ * @return The duplicated string or NULL in case of no memory
+ *
+ */
+char *
+cpr_strdup (const char *str)
+{
+    char *dup;
+    size_t len;
+
+    if (!str) {
+        return (char *) NULL;
+    }
+
+    len = strlen(str);
+    if (len == 0) {
+        return (char *) NULL;
+    }
+    len++;
+
+    dup = cpr_malloc(len * sizeof(char));
+    if (!dup) {
+        return (char *) NULL;
+    }
+    (void) memcpy(dup, str, len);
+    return dup;
+}
