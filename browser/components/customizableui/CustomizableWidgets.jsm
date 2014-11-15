@@ -399,8 +399,6 @@ const CustomizableWidgets = [
     }
   }, {
     id: "social-share-button",
-    tooltiptext: "social-share-button.label",
-    label: "social-share-button.tooltiptext",
     // custom build our button so we can attach to the share command
     type: "custom",
     onBuild: function(aDocument) {
