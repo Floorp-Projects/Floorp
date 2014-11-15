@@ -4,7 +4,6 @@
 
 package org.mozilla.search;
 
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.LocaleAware;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
@@ -93,8 +92,6 @@ public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        GeckoAppShell.ensureCrashHandling();
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_activity_main);
 
