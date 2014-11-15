@@ -721,8 +721,6 @@ NS_IMETHODIMP imgRequestProxy::GetHasTransferredData(bool* hasData)
   return NS_OK;
 }
 
-/** imgDecoderObserver methods **/
-
 void imgRequestProxy::OnStartDecode()
 {
   // This notification is deliberately not propagated since there are no

@@ -309,16 +309,6 @@ public:
   // Decode strategy
 
 private:
-  already_AddRefed<imgStatusTracker> CurrentStatusTracker()
-  {
-    mDecodingMonitor.AssertCurrentThreadIn();
-    nsRefPtr<imgStatusTracker> statusTracker;
-    statusTracker = mDecodeRequest ? mDecodeRequest->mStatusTracker
-                                   : mStatusTracker;
-    MOZ_ASSERT(statusTracker);
-    return statusTracker.forget();
-  }
-
   nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
 
   /**
@@ -333,18 +323,9 @@ private:
       , mRequestStatus(REQUEST_INACTIVE)
       , mChunkCount(0)
       , mAllocatedNewFrame(false)
-    {
-      MOZ_ASSERT(aImage, "aImage cannot be null");
-      MOZ_ASSERT(aImage->mStatusTracker,
-                 "aImage should have an imgStatusTracker");
-      mStatusTracker = aImage->mStatusTracker->CloneForRecording();
-    }
+    { }
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodeRequest)
-
-    // The status tracker that is associated with a given decode request, to
-    // ensure their lifetimes are linked.
-    nsRefPtr<imgStatusTracker> mStatusTracker;
 
     RasterImage* mImage;
 
@@ -531,7 +512,8 @@ private:
   };
 
   nsresult FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
-                                DecodeRequest* request = nullptr);
+                                DecodeRequest* request = nullptr,
+                                const ImageStatusDiff& aDiff = ImageStatusDiff::NoChange());
 
   void DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
                                     gfxContext* aContext,

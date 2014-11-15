@@ -293,7 +293,7 @@ void imgRequest::Cancel(nsresult aStatus)
 
   statusTracker->MaybeUnblockOnload();
 
-  statusTracker->RecordCancel();
+  statusTracker->RecordError();
 
   if (NS_IsMainThread()) {
     ContinueCancel(aStatus);
@@ -732,6 +732,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
 {
   LOG_FUNC(GetImgLog(), "imgRequest::OnStopRequest");
+  MOZ_ASSERT(NS_IsMainThread(), "Can't send notifications off-main-thread");
 
   // XXXldb What if this is a non-last part of a multipart request?
   // xxx before we release our reference to mRequest, lets
@@ -795,8 +796,12 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   if (!mImage) {
     // We have to fire imgStatusTracker::OnStopRequest ourselves because there's
     // no image capable of doing so.
+    ImageStatusDiff diff =
+      ImageStatusDiff::ForOnStopRequest(lastPart, /* aError = */ false, status);
+
     nsRefPtr<imgStatusTracker> statusTracker = GetStatusTracker();
-    statusTracker->OnStopRequest(lastPart, status);
+    statusTracker->ApplyDifference(diff);
+    statusTracker->SyncNotifyDifference(diff);
   }
 
   mTimedChannel = nullptr;

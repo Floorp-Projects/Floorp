@@ -30,8 +30,7 @@ Decoder::Decoder(RasterImage &aImage)
   , mSizeDecode(false)
   , mInFrame(false)
   , mIsAnimated(false)
-{
-}
+{ }
 
 Decoder::~Decoder()
 {
@@ -47,11 +46,11 @@ Decoder::Init()
 {
   // No re-initializing
   NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
-  NS_ABORT_IF_FALSE(mObserver, "Need an observer!");
 
   // Fire OnStartDecode at init time to support bug 512435.
-  if (!IsSizeDecode())
-      mObserver->OnStartDecode();
+  if (!IsSizeDecode()) {
+      mDiff.diffState |= FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED;
+  }
 
   // Implementation-specific initialization
   InitInternal();
@@ -68,7 +67,6 @@ Decoder::InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
 {
   // No re-initializing
   NS_ABORT_IF_FALSE(!mInitialized, "Can't re-initialize a decoder!");
-  NS_ABORT_IF_FALSE(mObserver, "Need an observer!");
 
   mImageData = imageData;
   mImageDataLength = imageDataLength;
@@ -177,9 +175,8 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
       }
       PostDecodeDone();
     } else {
-      if (mObserver) {
-        mObserver->OnStopDecode(NS_ERROR_FAILURE);
-      }
+      mDiff.diffState |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED |
+                         FLAG_HAS_ERROR;
     }
   }
 
@@ -280,9 +277,8 @@ Decoder::PostSize(int32_t aWidth,
   // Tell the image
   mImageMetadata.SetSize(aWidth, aHeight, aOrientation);
 
-  // Notify the observer
-  if (mObserver)
-    mObserver->OnStartContainer();
+  // Record this notification.
+  mDiff.diffState |= FLAG_HAS_SIZE;
 }
 
 void
@@ -294,6 +290,12 @@ Decoder::PostFrameStart()
   // Update our state to reflect the new frame
   mFrameCount++;
   mInFrame = true;
+
+  // If we just became animated, record that fact.
+  if (mFrameCount > 1) {
+    mIsAnimated = true;
+    mDiff.diffState |= FLAG_IS_ANIMATED;
+  }
 
   // Decoder implementations should only call this method if they successfully
   // appended the frame to the image. So mFrameCount should always match that
@@ -324,14 +326,7 @@ Decoder::PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha /* = FrameBlender::k
   mCurrentFrame->SetBlendMethod(aBlendMethod);
   mCurrentFrame->ImageUpdated(mCurrentFrame->GetRect());
 
-  // Fire notifications
-  if (mObserver) {
-    mObserver->OnStopFrame();
-    if (mFrameCount > 1 && !mIsAnimated) {
-      mIsAnimated = true;
-      mObserver->OnImageIsAnimated();
-    }
-  }
+  mDiff.diffState |= FLAG_FRAME_STOPPED | FLAG_ONLOAD_UNBLOCKED;
 }
 
 void
@@ -357,9 +352,7 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
   mImageMetadata.SetLoopCount(aLoopCount);
   mImageMetadata.SetIsNonPremultiplied(GetDecodeFlags() & DECODER_NO_PREMULTIPLY_ALPHA);
 
-  if (mObserver) {
-    mObserver->OnStopDecode(NS_OK);
-  }
+  mDiff.diffState |= FLAG_DECODE_STOPPED;
 }
 
 void

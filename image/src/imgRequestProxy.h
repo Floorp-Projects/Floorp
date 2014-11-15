@@ -145,7 +145,6 @@ protected:
   // class) imgStatusTracker is the only class allowed to send us
   // notifications.
 
-  /* non-virtual imgDecoderObserver methods */
   void OnStartDecode     ();
   void OnStartContainer  ();
   void OnFrameUpdate     (const nsIntRect * aRect);
