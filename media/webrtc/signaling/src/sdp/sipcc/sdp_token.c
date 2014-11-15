@@ -16,11 +16,11 @@ static const char *logTag = "sdp_token";
 #define MCAST_STRING_LEN 4
 
 
-sdp_result_e sdp_parse_version (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_version (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     sdp_result_e result = SDP_FAILURE;
 
-    sdp_p->version = (u16)sdp_getnextnumtok(ptr, &ptr, " \t", &result);
+    sdp_p->version = (uint16_t)sdp_getnextnumtok(ptr, &ptr, " \t", &result);
     if ((result != SDP_SUCCESS) || (sdp_p->version != SDP_CURRENT_VERSION)) {
         sdp_parse_error(sdp_p,
             "%s Invalid version (%u) found, parse failed.",
@@ -36,7 +36,7 @@ sdp_result_e sdp_parse_version (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_version (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_version (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     if (sdp_p->version == SDP_INVALID_VALUE) {
         if (sdp_p->conf_p->version_reqd == TRUE) {
@@ -77,7 +77,7 @@ static sdp_result_e sdp_verify_unsigned(const char *ptr, uint64_t max_value)
     return SDP_SUCCESS;
 }
 
-sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_owner (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     int          i;
     sdp_result_e result;
@@ -220,7 +220,7 @@ sdp_result_e sdp_parse_owner (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_owner (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     if ((sdp_p->owner_name[0] == '\0') ||
         (sdp_p->owner_network_type >= SDP_MAX_NETWORK_TYPES) ||
@@ -259,7 +259,7 @@ sdp_result_e sdp_build_owner (sdp_t *sdp_p, u16 level, flex_string *fs)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_sessname (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_sessname (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     int   str_len;
     char *endptr;
@@ -287,7 +287,7 @@ sdp_result_e sdp_parse_sessname (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_sessname (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_sessname (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     if (sdp_p->sessname[0] == '\0') {
         if (sdp_p->conf_p->session_name_reqd == TRUE) {
@@ -313,7 +313,7 @@ sdp_result_e sdp_build_sessname (sdp_t *sdp_p, u16 level, flex_string *fs)
  * that at most one i= line exists at each level and if the line exists
  * there should be a parameter.
  */
-sdp_result_e sdp_parse_sessinfo (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_sessinfo (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     char *endptr;
     sdp_mca_t *mca_p;
@@ -353,13 +353,13 @@ sdp_result_e sdp_parse_sessinfo (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_sessinfo (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_sessinfo (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     /* Build session info line not supported. */
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_uri (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_uri (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     char *endptr;
 
@@ -383,13 +383,13 @@ sdp_result_e sdp_parse_uri (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_uri (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_uri (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     /* Build URI line not supported. */
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_email (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_email (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     char *endptr;
 
@@ -405,13 +405,13 @@ sdp_result_e sdp_parse_email (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_email (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_email (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     /* Build email line not supported. */
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_phonenum (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_phonenum (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     char *endptr;
 
@@ -428,13 +428,13 @@ sdp_result_e sdp_parse_phonenum (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_phonenum (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_phonenum (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     /* Build phone number line not supported. */
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_connection (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     int           i;
     const char   *slash_ptr;
@@ -643,7 +643,7 @@ sdp_result_e sdp_parse_connection (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_connection (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     sdp_mca_t  *mca_p;
     sdp_conn_t *conn_p;
@@ -714,7 +714,7 @@ sdp_result_e sdp_build_connection (sdp_t *sdp_p, u16 level, flex_string *fs)
  *
  * It currently supports three types of valid bwtypes - AS, CT and TIAS
  */
-sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     int                  i;
     sdp_mca_t            *mca_p;
@@ -824,7 +824,7 @@ sdp_result_e sdp_parse_bandwidth (sdp_t *sdp_p, u16 level, const char *ptr)
  *
  * Builds *all* the bandwith lines for the specified level.
  */
-sdp_result_e sdp_build_bandwidth (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_bandwidth (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     sdp_bw_t            *bw_p;
     sdp_bw_data_t       *bw_data_p;
@@ -858,7 +858,7 @@ sdp_result_e sdp_build_bandwidth (sdp_t *sdp_p, u16 level, flex_string *fs)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_timespec (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_timespec (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     char            *tmpptr;
     sdp_result_e     result;
@@ -923,7 +923,7 @@ sdp_result_e sdp_parse_timespec (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_timespec (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_timespec (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     if ((sdp_p->timespec_p == NULL) ||
         (sdp_p->timespec_p->start_time == '\0') ||
@@ -949,7 +949,7 @@ sdp_result_e sdp_build_timespec (sdp_t *sdp_p, u16 level, flex_string *fs)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_repeat_time (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_repeat_time (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     char *endptr;
 
@@ -966,13 +966,13 @@ sdp_result_e sdp_parse_repeat_time (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_repeat_time (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_repeat_time (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     /* Build repeat time line not supported. */
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_timezone_adj (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_timezone_adj (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     char *endptr;
 
@@ -989,13 +989,13 @@ sdp_result_e sdp_parse_timezone_adj (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_timezone_adj (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_timezone_adj (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     /* Build timezone adjustment line not supported. */
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_encryption (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_encryption (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
     int                  i;
     sdp_result_e         result;
@@ -1067,7 +1067,7 @@ sdp_result_e sdp_parse_encryption (sdp_t *sdp_p, u16 level, const char *ptr)
 }
 
 /* If the encryption info is valid, we build it.  Else skip it. */
-sdp_result_e sdp_build_encryption (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_encryption (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     sdp_encryptspec_t   *encrypt_p;
     sdp_mca_t           *mca_p;
@@ -1105,11 +1105,11 @@ sdp_result_e sdp_build_encryption (sdp_t *sdp_p, u16 level, flex_string *fs)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
+sdp_result_e sdp_parse_media (sdp_t *sdp_p, uint16_t level, const char *ptr)
 {
-    u16                   i;
-    u16                   num_port_params=0;
-    int32                 num[SDP_MAX_PORT_PARAMS];
+    uint16_t                   i;
+    uint16_t                   num_port_params=0;
+    int32_t                 num[SDP_MAX_PORT_PARAMS];
     tinybool              valid_param = FALSE;
     sdp_result_e          result;
     sdp_mca_t            *mca_p;
@@ -1117,7 +1117,7 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
     char                  tmp[SDP_MAX_STRING_LEN];
     char                  port[SDP_MAX_STRING_LEN];
     const char           *port_ptr;
-    int32                 sctp_port;
+    int32_t                 sctp_port;
 
     /* Allocate resource for new media stream. */
     mca_p = sdp_alloc_mca(sdp_p->parse_line);
@@ -1483,7 +1483,7 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
     return (SDP_SUCCESS);
 }
 
-sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, flex_string *fs)
+sdp_result_e sdp_build_media (sdp_t *sdp_p, uint16_t level, flex_string *fs)
 {
     int                   i, j;
     sdp_mca_t            *mca_p;
@@ -1613,8 +1613,8 @@ sdp_result_e sdp_build_media (sdp_t *sdp_p, u16 level, flex_string *fs)
  */
 void sdp_parse_payload_types (sdp_t *sdp_p, sdp_mca_t *mca_p, const char *ptr)
 {
-    u16           i;
-    u16           num_payloads;
+    uint16_t           i;
+    uint16_t           num_payloads;
     sdp_result_e  result;
     tinybool      valid_payload;
     char          tmp[SDP_MAX_STRING_LEN];
@@ -1626,7 +1626,7 @@ void sdp_parse_payload_types (sdp_t *sdp_p, sdp_mca_t *mca_p, const char *ptr)
             /* If there are no more payload types, we're finished */
             break;
         }
-        mca_p->payload_type[num_payloads] = (u16)sdp_getnextnumtok(tmp,
+        mca_p->payload_type[num_payloads] = (uint16_t)sdp_getnextnumtok(tmp,
                                                         (const char **)&tmp2,
                                                         " \t", &result);
         if (result == SDP_SUCCESS) {
@@ -1714,9 +1714,9 @@ sdp_result_e sdp_parse_multiple_profile_payload_types (sdp_t *sdp_p,
                                                  sdp_mca_t *mca_p,
                                                  const char *ptr)
 {
-    u16                   i;
-    u16                   prof;
-    u16                   payload;
+    uint16_t                   i;
+    uint16_t                   prof;
+    uint16_t                   payload;
     sdp_result_e          result;
     sdp_media_profiles_t *profile_p;
     char                  tmp[SDP_MAX_STRING_LEN];
@@ -1784,7 +1784,7 @@ sdp_result_e sdp_parse_multiple_profile_payload_types (sdp_t *sdp_p,
 
         /* See if the payload type is numeric. */
         if (prof < SDP_MAX_PROFILES && payload < SDP_MAX_PAYLOAD_TYPES) {
-            profile_p->payload_type[prof][payload] = (u16)sdp_getnextnumtok(tmp,
+            profile_p->payload_type[prof][payload] = (uint16_t)sdp_getnextnumtok(tmp,
                                                              (const char **)&tmp2,
                                                              " \t", &result);
             if (result == SDP_SUCCESS) {
