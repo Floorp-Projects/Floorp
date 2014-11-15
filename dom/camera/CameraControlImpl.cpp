@@ -84,7 +84,7 @@ CameraControlImpl::OnHardwareStateChange(CameraControlListener::HardwareState aN
   }
 
 #ifdef PR_LOGGING
-  const char* state[] = { "open", "closed", "failed" };
+  const char* state[] = { "closed", "open", "failed" };
   MOZ_ASSERT(aNewState >= 0);
   if (static_cast<unsigned int>(aNewState) < sizeof(state) / sizeof(state[0])) {
     DOM_CAMERA_LOGI("New hardware state is '%s'\n", state[aNewState]);
