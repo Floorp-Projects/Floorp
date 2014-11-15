@@ -12,8 +12,8 @@
 
 /* The following defines are used to indicate params that are specified
  * as the choose parameter or parameters that are invalid.  These can
- * be used where the value required is really a u16, but is represented
- * by an int32.
+ * be used where the value required is really a uint16_t, but is represented
+ * by an int32_t.
  */
 #define SDP_CHOOSE_PARAM           (-1)
 #define SDP_SESSION_LEVEL        0xFFFF
@@ -585,7 +585,7 @@ typedef enum {
 /* String names of varios tokens */
 typedef struct {
     char                     *name;
-    u8                        strlen;
+    uint8_t                        strlen;
 } sdp_namearray_t;
 
 /* c= line info */
@@ -594,8 +594,8 @@ typedef struct {
     sdp_addrtype_e            addrtype;
     char                      conn_addr[SDP_MAX_STRING_LEN+1];
     tinybool                  is_multicast;
-    u16                       ttl;
-    u16                       num_of_addresses;
+    uint16_t                       ttl;
+    uint16_t                       num_of_addresses;
 } sdp_conn_t;
 
 /* t= line info */
@@ -617,7 +617,7 @@ typedef struct sdp_encryptspec {
  * defined in RFC 2833 */
 #define SDP_MIN_NE_VALUE      0
 #define SDP_MAX_NE_VALUES     256
-#define SDP_NE_BITS_PER_WORD  ( sizeof(u32) * 8 )
+#define SDP_NE_BITS_PER_WORD  ( sizeof(uint32_t) * 8 )
 #define SDP_NE_NUM_BMAP_WORDS ((SDP_MAX_NE_VALUES + SDP_NE_BITS_PER_WORD - 1)/SDP_NE_BITS_PER_WORD )
 #define SDP_NE_BIT_0          ( 0x00000001 )
 #define SDP_NE_ALL_BITS       ( 0xFFFFFFFF )
@@ -630,9 +630,9 @@ typedef struct sdp_encryptspec {
 #define SDP_FMTP_UNUSED          0xFFFF
 
 typedef struct sdp_fmtp {
-    u16                       payload_num;
-    u32                       maxval;  /* maxval optimizes bmap search */
-    u32                       bmap[ SDP_NE_NUM_BMAP_WORDS ];
+    uint16_t                       payload_num;
+    uint32_t                       maxval;  /* maxval optimizes bmap search */
+    uint32_t                       bmap[ SDP_NE_NUM_BMAP_WORDS ];
     sdp_fmtp_format_type_e    fmtp_format; /* Gives the format type
                                               for FMTP attribute*/
     tinybool                  annexb_required;
@@ -640,64 +640,64 @@ typedef struct sdp_fmtp {
 
     tinybool                  annexa;
     tinybool                  annexb;
-    u32                       bitrate;
-    u32                       mode;
+    uint32_t                       bitrate;
+    uint32_t                       mode;
 
     /* some OPUS specific fmtp params */
-    u32                       maxaveragebitrate;
-    u16                       usedtx;
-    u16                       stereo;
-    u16                       useinbandfec;
+    uint32_t                       maxaveragebitrate;
+    uint16_t                       usedtx;
+    uint16_t                       stereo;
+    uint16_t                       useinbandfec;
     char                      maxcodedaudiobandwidth[SDP_MAX_STRING_LEN+1];
-    u16                       cbr;
+    uint16_t                       cbr;
 
     /* BEGIN - All Video related FMTP parameters */
-    u16                       qcif;
-    u16                       cif;
-    u16                       maxbr;
-    u16                       sqcif;
-    u16                       cif4;
-    u16                       cif16;
+    uint16_t                       qcif;
+    uint16_t                       cif;
+    uint16_t                       maxbr;
+    uint16_t                       sqcif;
+    uint16_t                       cif4;
+    uint16_t                       cif16;
 
-    u16                       custom_x;
-    u16                       custom_y;
-    u16                       custom_mpi;
+    uint16_t                       custom_x;
+    uint16_t                       custom_y;
+    uint16_t                       custom_mpi;
     /* CUSTOM=360,240,4 implies X-AXIS=360, Y-AXIS=240; MPI=4 */
-    u16                       par_width;
-    u16                       par_height;
+    uint16_t                       par_width;
+    uint16_t                       par_height;
     /* PAR=12:11 implies par_width=12, par_height=11 */
 
-    /* CPCF should be a float. IOS does not support float and so it is u16 */
+    /* CPCF should be a float. IOS does not support float and so it is uint16_t */
     /* For portable stack, CPCF should be defined as float and the parsing should
      * be modified accordingly */
-    u16                       cpcf;
-    u16                       bpp;
-    u16                       hrd;
+    uint16_t                       cpcf;
+    uint16_t                       bpp;
+    uint16_t                       hrd;
 
-    int16                     profile;
-    int16                     level;
+    int16_t                     profile;
+    int16_t                     level;
     tinybool                  is_interlace;
 
     /* some more H.264 specific fmtp params */
     char              profile_level_id[SDP_MAX_STRING_LEN+1];
     char                      parameter_sets[SDP_MAX_STRING_LEN+1];
-    u16                       packetization_mode;
-    u16                       level_asymmetry_allowed;
-    u16                       interleaving_depth;
-    u32                       deint_buf_req;
-    u32                       max_don_diff;
-    u32                       init_buf_time;
+    uint16_t                       packetization_mode;
+    uint16_t                       level_asymmetry_allowed;
+    uint16_t                       interleaving_depth;
+    uint32_t                       deint_buf_req;
+    uint32_t                       max_don_diff;
+    uint32_t                       init_buf_time;
 
-    u32                       max_mbps;
-    u32                       max_fs;
-    u32                       max_fr;
-    u32                       max_cpb;
-    u32                       max_dpb;
-    u32                       max_br;
+    uint32_t                       max_mbps;
+    uint32_t                       max_fs;
+    uint32_t                       max_fr;
+    uint32_t                       max_cpb;
+    uint32_t                       max_dpb;
+    uint32_t                       max_br;
     tinybool                  redundant_pic_cap;
-    u32                       deint_buf_cap;
-    u32                       max_rcmd_nalu_size;
-    u16                       parameter_add;
+    uint32_t                       deint_buf_cap;
+    uint32_t                       max_rcmd_nalu_size;
+    uint16_t                       parameter_add;
 
     tinybool                  annex_d;
 
@@ -707,14 +707,14 @@ typedef struct sdp_fmtp {
     tinybool                  annex_t;
 
     /* H.263 codec requires annex K,N and P to have values */
-    u16                       annex_k_val;
-    u16                       annex_n_val;
+    uint16_t                       annex_k_val;
+    uint16_t                       annex_n_val;
 
     /* Annex P can take one or more values in the range 1-4 . e.g P=1,3 */
-    u16                       annex_p_val_picture_resize; /* 1 = four; 2 = sixteenth */
-    u16                       annex_p_val_warp; /* 3 = half; 4=sixteenth */
+    uint16_t                       annex_p_val_picture_resize; /* 1 = four; 2 = sixteenth */
+    uint16_t                       annex_p_val_warp; /* 3 = half; 4=sixteenth */
 
-    u8                        flag;
+    uint8_t                        flag;
 
   /* END - All Video related FMTP parameters */
 
@@ -722,8 +722,8 @@ typedef struct sdp_fmtp {
 
 /* a=sctpmap line used for Datachannels */
 typedef struct sdp_sctpmap {
-    u16                       port;
-    u32                       streams;   /* Num streams per Datachannel */
+    uint16_t                       port;
+    uint32_t                       streams;   /* Num streams per Datachannel */
     char                      protocol[SDP_MAX_STRING_LEN+1];
 } sdp_sctpmap_t;
 
@@ -767,10 +767,10 @@ typedef struct sdp_conf {
 
 /* a=rtpmap or a=sprtmap info */
 typedef struct sdp_transport_map {
-    u16                       payload_num;
+    uint16_t                       payload_num;
     char                      encname[SDP_MAX_STRING_LEN+1];
-    u32                       clockrate;
-    u16                       num_chan;
+    uint32_t                       clockrate;
+    uint16_t                       num_chan;
 } sdp_transport_map_t;
 
 
@@ -784,13 +784,13 @@ typedef struct sdp_subnet {
     sdp_nettype_e             nettype;
     sdp_addrtype_e            addrtype;
     char                      addr[SDP_MAX_STRING_LEN+1];
-    int32                     prefix;
+    int32_t                     prefix;
 } sdp_subnet_t;
 
 
 /* a=X-pc-codec info */
 typedef struct sdp_pccodec {
-    u16                       num_payloads;
+    uint16_t                       num_payloads;
     ushort                    payload_type[SDP_MAX_PAYLOAD_TYPES];
 } sdp_pccodec_t;
 
@@ -799,7 +799,7 @@ typedef struct sdp_comediadir {
     sdp_mediadir_role_e      role;
     tinybool                 conn_info_present;
     sdp_conn_t               conn_info;
-    u32                      src_port;
+    uint32_t                      src_port;
 } sdp_comediadir_t;
 
 
@@ -808,11 +808,11 @@ typedef struct sdp_comediadir {
 typedef struct sdp_silencesupp {
     tinybool                  enabled;
     tinybool                  timer_null;
-    u16                       timer;
+    uint16_t                       timer;
     sdp_silencesupp_pref_e    pref;
     sdp_silencesupp_siduse_e  siduse;
     tinybool                  fxnslevel_null;
-    u8                        fxnslevel;
+    uint8_t                        fxnslevel;
 } sdp_silencesupp_t;
 
 
@@ -822,7 +822,7 @@ typedef struct sdp_silencesupp {
  * the "-" syntax on the a= line.
  */
 typedef struct sdp_mptime {
-    u16                       num_intervals;
+    uint16_t                       num_intervals;
     ushort                    intervals[SDP_MAX_PAYLOAD_TYPES];
 } sdp_mptime_t;
 
@@ -837,7 +837,7 @@ typedef struct sdp_stream_data {
     char                      x_sidout[SDP_MAX_STRING_LEN+1];
     char                      x_confid[SDP_MAX_STRING_LEN+1];
     sdp_group_attr_e          group_attr; /* FID or LS */
-    u16                       num_group_id;
+    uint16_t                       num_group_id;
     char *                    group_ids[SDP_MAX_GROUP_STREAM_ID];
 } sdp_stream_data_t;
 
@@ -852,7 +852,7 @@ typedef struct sdp_source_filter {
    sdp_nettype_e     nettype;
    sdp_addrtype_e    addrtype;
    char              dest_addr[SDP_MAX_STRING_LEN+1];
-   u16               num_src_addr;
+   uint16_t               num_src_addr;
    char              src_list[SDP_MAX_SRC_ADDR_LIST+1][SDP_MAX_STRING_LEN+1];
 } sdp_source_filter_t;
 
@@ -862,13 +862,13 @@ typedef struct sdp_source_filter {
  */
 #define SDP_ALL_PAYLOADS         0xFFFF
 typedef struct sdp_fmtp_fb {
-    u16                          payload_num;    /* can be SDP_ALL_PAYLOADS */
+    uint16_t                          payload_num;    /* can be SDP_ALL_PAYLOADS */
     sdp_rtcp_fb_type_e           feedback_type;
     union {
         sdp_rtcp_fb_ack_type_e   ack;
         sdp_rtcp_fb_ccm_type_e   ccm;
         sdp_rtcp_fb_nack_type_e  nack;
-        u32                      trr_int;
+        uint32_t                      trr_int;
     } param;
     char extra[SDP_MAX_STRING_LEN + 1]; /* Holds any trailing information that
                                            cannot be represented by preceding
@@ -890,7 +890,7 @@ typedef struct sdp_bw_data {
  * sdp_bw_data_t instance represents one b= line.
  */
 typedef struct sdp_bw {
-    u16                      bw_data_count;
+    uint16_t                      bw_data_count;
     sdp_bw_data_t            *bw_data_list;
 } sdp_bw_t;
 
@@ -901,18 +901,18 @@ typedef struct sdp_bw {
  * field is needed because of the way parsing is done.  This is not an
  * error. */
 typedef struct sdp_media_profiles {
-    u16             num_profiles;
+    uint16_t             num_profiles;
     sdp_transport_e profile[SDP_MAX_PROFILES+1];
-    u16             num_payloads[SDP_MAX_PROFILES];
+    uint16_t             num_payloads[SDP_MAX_PROFILES];
     sdp_payload_ind_e payload_indicator[SDP_MAX_PROFILES][SDP_MAX_PAYLOAD_TYPES];
-    u16             payload_type[SDP_MAX_PROFILES][SDP_MAX_PAYLOAD_TYPES];
+    uint16_t             payload_type[SDP_MAX_PROFILES][SDP_MAX_PAYLOAD_TYPES];
 } sdp_media_profiles_t;
 /*
  * a=extmap:<value>["/"<direction>] <URI> <extensionattributes>
  *
  */
 typedef struct sdp_extmap {
-    u16              id;
+    uint16_t              id;
     sdp_direction_e  media_direction;
     tinybool         media_direction_specified;
     char             uri[SDP_MAX_STRING_LEN+1];
@@ -926,7 +926,7 @@ typedef struct sdp_extmap {
  *
  */
 typedef struct sdp_srtp_crypto_context_t_ {
-    int32                   tag;
+    int32_t                   tag;
     unsigned long           selection_flags;
     sdp_srtp_crypto_suite_t suite;
     unsigned char           master_key[SDP_SRTP_MAX_KEY_SIZE_BYTES];
@@ -940,38 +940,38 @@ typedef struct sdp_srtp_crypto_context_t_ {
     sdp_srtp_fec_order_t    fec_order; /* not used */
     unsigned char           master_key_lifetime[SDP_SRTP_MAX_LIFETIME_BYTES];
     unsigned char           mki[SDP_SRTP_MAX_MKI_SIZE_BYTES];
-    u16                     mki_size_bytes;
+    uint16_t                     mki_size_bytes;
     char*                   session_parameters;
 } sdp_srtp_crypto_context_t;
 
 
 /* m= line info and associated attribute list */
 /* Note: Most of the port parameter values are 16-bit values.  We set
- * the type to int32 so we can return either a 16-bit value or the
+ * the type to int32_t so we can return either a 16-bit value or the
  * choose value. */
 typedef struct sdp_mca {
     sdp_media_e               media;
     sdp_conn_t                conn;
     sdp_transport_e           transport;
     sdp_port_format_e         port_format;
-    int32                     port;
-    int32                     sctpport;
-    int32                     num_ports;
-    int32                     vpi;
-    u32                       vci;  /* VCI needs to be 32-bit */
-    int32                     vcci;
-    int32                     cid;
-    u16                       num_payloads;
+    int32_t                     port;
+    int32_t                     sctpport;
+    int32_t                     num_ports;
+    int32_t                     vpi;
+    uint32_t                       vci;  /* VCI needs to be 32-bit */
+    int32_t                     vcci;
+    int32_t                     cid;
+    uint16_t                       num_payloads;
     sdp_payload_ind_e         payload_indicator[SDP_MAX_PAYLOAD_TYPES];
-    u16                       payload_type[SDP_MAX_PAYLOAD_TYPES];
+    uint16_t                       payload_type[SDP_MAX_PAYLOAD_TYPES];
     sdp_media_profiles_t     *media_profiles_p;
     tinybool                  sessinfo_found;
     sdp_encryptspec_t         encrypt;
     sdp_bw_t                  bw;
     sdp_attr_e                media_direction; /* Either INACTIVE, SENDONLY,
                                                   RECVONLY, or SENDRECV */
-    u32                       mid;
-    u32                       line_number;
+    uint32_t                       mid;
+    uint32_t                       line_number;
     struct sdp_attr          *media_attrs_p;
     struct sdp_mca           *next_p;
 } sdp_mca_t;
@@ -980,10 +980,10 @@ typedef struct sdp_mca {
 /* generic a= line info */
 typedef struct sdp_attr {
     sdp_attr_e                type;
-    u32                       line_number;
+    uint32_t                       line_number;
     union {
         tinybool              boolean_val;
-        u32                   u32_val;
+        uint32_t                   u32_val;
         char                  string_val[SDP_MAX_STRING_LEN+1];
         char                  ice_attr[SDP_MAX_STRING_LEN+1];
         sdp_fmtp_t            fmtp;
@@ -1027,7 +1027,7 @@ typedef void (*sdp_parse_error_handler)(void *context,
 
 /* Application configuration options */
 typedef struct sdp_conf_options {
-    u32                       magic_num;
+    uint32_t                       magic_num;
     tinybool                  debug_flag[SDP_MAX_DEBUG_TYPES];
     tinybool                  version_reqd;
     tinybool                  owner_reqd;
@@ -1039,12 +1039,12 @@ typedef struct sdp_conf_options {
     tinybool                  transport_supported[SDP_MAX_TRANSPORT_TYPES];
     tinybool                  allow_choose[SDP_MAX_CHOOSE_PARAMS];
     /* Statistics counts */
-    u32                       num_builds;
-    u32                       num_parses;
-    u32                       num_not_sdp_desc;
-    u32                       num_invalid_token_order;
-    u32                       num_invalid_param;
-    u32                       num_no_resource;
+    uint32_t                       num_builds;
+    uint32_t                       num_parses;
+    uint32_t                       num_not_sdp_desc;
+    uint32_t                       num_invalid_token_order;
+    uint32_t                       num_invalid_param;
+    uint32_t                       num_no_resource;
     struct sdp_conf_options  *next_p;
     sdp_parse_error_handler  error_handler;
     void                    *error_handler_context;
@@ -1055,12 +1055,12 @@ typedef struct sdp_conf_options {
 /* Elements here that can only be one of are included directly. Elements */
 /* that can be more than one are pointers.                               */
 typedef struct {
-    u32                       magic_num;
+    uint32_t                       magic_num;
     sdp_conf_options_t       *conf_p;
     tinybool                  debug_flag[SDP_MAX_DEBUG_TYPES];
     char                      debug_str[SDP_MAX_STRING_LEN+1];
-    u32                       debug_id;
-    int32                     version; /* version is really a u16 */
+    uint32_t                       debug_id;
+    int32_t                     version; /* version is really a uint16_t */
     char                      owner_name[SDP_MAX_STRING_LEN+1];
     char                      owner_sessid[SDP_MAX_STRING_LEN+1];
     char                      owner_version[SDP_MAX_STRING_LEN+1];
@@ -1077,16 +1077,16 @@ typedef struct {
     sdp_attr_t               *sess_attrs_p;
 
     /* Info to help with building capability attributes. */
-    u16                       cur_cap_num;
+    uint16_t                       cur_cap_num;
     sdp_mca_t                *cur_cap_p;
     /* Info to help parsing X-cpar attrs. */
-    u16                       cap_valid;
-    u16                       last_cap_inst;
+    uint16_t                       cap_valid;
+    uint16_t                       last_cap_inst;
     /* Info to help building X-cpar/cpar attrs. */
     sdp_attr_e            last_cap_type;
 
     /* Facilitates reporting line number for SDP errors */
-    u32                       parse_line;
+    uint32_t                       parse_line;
 
     /* MCA - Media, connection, and attributes */
     sdp_mca_t                *mca_p;
@@ -1097,14 +1097,14 @@ typedef struct {
 /* Token processing table. */
 typedef struct {
     char *name;
-    sdp_result_e (*parse_func)(sdp_t *sdp_p, u16 level, const char *ptr);
-    sdp_result_e (*build_func)(sdp_t *sdp_p, u16 level, flex_string *fs);
+    sdp_result_e (*parse_func)(sdp_t *sdp_p, uint16_t level, const char *ptr);
+    sdp_result_e (*build_func)(sdp_t *sdp_p, uint16_t level, flex_string *fs);
 } sdp_tokenarray_t;
 
 /* Attribute processing table. */
 typedef struct {
     char *name;
-    u16 strlen;
+    uint16_t strlen;
     sdp_result_e (*parse_func)(sdp_t *sdp_p, sdp_attr_t *attr_p,
                                const char *ptr);
     sdp_result_e (*build_func)(sdp_t *sdp_p, sdp_attr_t *attr_p,
@@ -1152,8 +1152,8 @@ extern const char *sdp_get_result_name(sdp_result_e rc);
 
 /* sdp_access.c */
 extern tinybool sdp_version_valid(void *sdp_p);
-extern int32 sdp_get_version(void *sdp_p);
-extern sdp_result_e sdp_set_version(void *sdp_p, int32 version);
+extern int32_t sdp_get_version(void *sdp_p);
+extern sdp_result_e sdp_set_version(void *sdp_p, int32_t version);
 
 extern tinybool sdp_owner_valid(void *sdp_p);
 extern const char *sdp_get_owner_username(void *sdp_p);
@@ -1181,994 +1181,994 @@ extern const char *sdp_get_time_stop(void *sdp_ptr);
 sdp_result_e sdp_set_time_start(void *sdp_ptr, const char *start_time);
 sdp_result_e sdp_set_time_stop(void *sdp_ptr, const char *stop_time);
 
-extern tinybool sdp_encryption_valid(void *sdp_ptr, u16 level);
-extern sdp_encrypt_type_e sdp_get_encryption_method(void *sdp_ptr, u16 level);
-extern const char *sdp_get_encryption_key(void *sdp_ptr, u16 level);
-extern sdp_result_e sdp_set_encryption_method(void *sdp_ptr, u16 level,
+extern tinybool sdp_encryption_valid(void *sdp_ptr, uint16_t level);
+extern sdp_encrypt_type_e sdp_get_encryption_method(void *sdp_ptr, uint16_t level);
+extern const char *sdp_get_encryption_key(void *sdp_ptr, uint16_t level);
+extern sdp_result_e sdp_set_encryption_method(void *sdp_ptr, uint16_t level,
                                               sdp_encrypt_type_e method);
-extern sdp_result_e sdp_set_encryption_key(void *sdp_ptr, u16 level,
+extern sdp_result_e sdp_set_encryption_key(void *sdp_ptr, uint16_t level,
                                            const char *key);
 
-extern tinybool sdp_connection_valid(void *sdp_p, u16 level);
-extern tinybool sdp_bw_line_exists(void *sdp_ptr, u16 level, u16 inst_num);
-extern tinybool sdp_bandwidth_valid(void *sdp_p, u16 level, u16 inst_num);
-extern sdp_nettype_e sdp_get_conn_nettype(void *sdp_p, u16 level);
-extern sdp_addrtype_e sdp_get_conn_addrtype(void *sdp_p, u16 level);
-extern const char *sdp_get_conn_address(void *sdp_p, u16 level);
+extern tinybool sdp_connection_valid(void *sdp_p, uint16_t level);
+extern tinybool sdp_bw_line_exists(void *sdp_ptr, uint16_t level, uint16_t inst_num);
+extern tinybool sdp_bandwidth_valid(void *sdp_p, uint16_t level, uint16_t inst_num);
+extern sdp_nettype_e sdp_get_conn_nettype(void *sdp_p, uint16_t level);
+extern sdp_addrtype_e sdp_get_conn_addrtype(void *sdp_p, uint16_t level);
+extern const char *sdp_get_conn_address(void *sdp_p, uint16_t level);
 
-extern tinybool sdp_is_mcast_addr (void *sdp_ptr, u16 level);
-extern int32 sdp_get_mcast_ttl(void *sdp_ptr, u16 level);
-extern int32 sdp_get_mcast_num_of_addresses(void *sdp_ptr, u16 level);
+extern tinybool sdp_is_mcast_addr (void *sdp_ptr, uint16_t level);
+extern int32_t sdp_get_mcast_ttl(void *sdp_ptr, uint16_t level);
+extern int32_t sdp_get_mcast_num_of_addresses(void *sdp_ptr, uint16_t level);
 
-extern sdp_result_e sdp_set_conn_nettype(void *sdp_p, u16 level,
+extern sdp_result_e sdp_set_conn_nettype(void *sdp_p, uint16_t level,
                                   sdp_nettype_e nettype);
-extern sdp_result_e sdp_set_conn_addrtype(void *sdp_p, u16 level,
+extern sdp_result_e sdp_set_conn_addrtype(void *sdp_p, uint16_t level,
                                    sdp_addrtype_e addrtype);
-extern sdp_result_e sdp_set_conn_address(void *sdp_p, u16 level,
+extern sdp_result_e sdp_set_conn_address(void *sdp_p, uint16_t level,
                                          const char *address);
-extern sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, u16 level,
-                                             u16 ttl, u16 num_addr);
+extern sdp_result_e sdp_set_mcast_addr_fields(void *sdp_ptr, uint16_t level,
+                                             uint16_t ttl, uint16_t num_addr);
 
-extern tinybool sdp_media_line_valid(void *sdp_ptr, u16 level);
-extern u16 sdp_get_num_media_lines(void *sdp_ptr);
-extern sdp_media_e sdp_get_media_type(void *sdp_ptr, u16 level);
-extern u32 sdp_get_media_line_number(void *sdp_ptr, u16 level);
-extern sdp_port_format_e sdp_get_media_port_format(void *sdp_ptr, u16 level);
-extern int32 sdp_get_media_portnum(void *sdp_ptr, u16 level);
-extern int32 sdp_get_media_portcount(void *sdp_ptr, u16 level);
-extern int32 sdp_get_media_vpi(void *sdp_ptr, u16 level);
-extern u32 sdp_get_media_vci(void *sdp_ptr, u16 level);
-extern int32 sdp_get_media_vcci(void *sdp_ptr, u16 level);
-extern int32 sdp_get_media_cid(void *sdp_ptr, u16 level);
-extern sdp_transport_e sdp_get_media_transport(void *sdp_ptr, u16 level);
-extern u16 sdp_get_media_num_profiles(void *sdp_ptr, u16 level);
-extern sdp_transport_e sdp_get_media_profile(void *sdp_ptr, u16 level,
-                                              u16 profile_num);
-extern u16 sdp_get_media_num_payload_types(void *sdp_ptr, u16 level);
-extern u16 sdp_get_media_profile_num_payload_types(void *sdp_ptr, u16 level,
-                                                    u16 profile_num);
+extern tinybool sdp_media_line_valid(void *sdp_ptr, uint16_t level);
+extern uint16_t sdp_get_num_media_lines(void *sdp_ptr);
+extern sdp_media_e sdp_get_media_type(void *sdp_ptr, uint16_t level);
+extern uint32_t sdp_get_media_line_number(void *sdp_ptr, uint16_t level);
+extern sdp_port_format_e sdp_get_media_port_format(void *sdp_ptr, uint16_t level);
+extern int32_t sdp_get_media_portnum(void *sdp_ptr, uint16_t level);
+extern int32_t sdp_get_media_portcount(void *sdp_ptr, uint16_t level);
+extern int32_t sdp_get_media_vpi(void *sdp_ptr, uint16_t level);
+extern uint32_t sdp_get_media_vci(void *sdp_ptr, uint16_t level);
+extern int32_t sdp_get_media_vcci(void *sdp_ptr, uint16_t level);
+extern int32_t sdp_get_media_cid(void *sdp_ptr, uint16_t level);
+extern sdp_transport_e sdp_get_media_transport(void *sdp_ptr, uint16_t level);
+extern uint16_t sdp_get_media_num_profiles(void *sdp_ptr, uint16_t level);
+extern sdp_transport_e sdp_get_media_profile(void *sdp_ptr, uint16_t level,
+                                              uint16_t profile_num);
+extern uint16_t sdp_get_media_num_payload_types(void *sdp_ptr, uint16_t level);
+extern uint16_t sdp_get_media_profile_num_payload_types(void *sdp_ptr, uint16_t level,
+                                                    uint16_t profile_num);
 extern rtp_ptype sdp_get_known_payload_type(void *sdp_ptr,
-                                            u16 level,
-                                            u16 payload_type_raw);
-extern u32 sdp_get_media_payload_type(void *sdp_ptr, u16 level,
-                                u16 payload_num, sdp_payload_ind_e *indicator);
-extern u32 sdp_get_media_profile_payload_type(void *sdp_ptr, u16 level,
-                  u16 prof_num, u16 payload_num, sdp_payload_ind_e *indicator);
-extern sdp_result_e sdp_insert_media_line(void *sdp_ptr, u16 level);
-extern void sdp_delete_media_line(void *sdp_ptr, u16 level);
-extern sdp_result_e sdp_set_media_type(void *sdp_ptr, u16 level,
+                                            uint16_t level,
+                                            uint16_t payload_type_raw);
+extern uint32_t sdp_get_media_payload_type(void *sdp_ptr, uint16_t level,
+                                uint16_t payload_num, sdp_payload_ind_e *indicator);
+extern uint32_t sdp_get_media_profile_payload_type(void *sdp_ptr, uint16_t level,
+                  uint16_t prof_num, uint16_t payload_num, sdp_payload_ind_e *indicator);
+extern sdp_result_e sdp_insert_media_line(void *sdp_ptr, uint16_t level);
+extern void sdp_delete_media_line(void *sdp_ptr, uint16_t level);
+extern sdp_result_e sdp_set_media_type(void *sdp_ptr, uint16_t level,
                                        sdp_media_e media);
-extern sdp_result_e sdp_set_media_port_format(void *sdp_ptr, u16 level,
+extern sdp_result_e sdp_set_media_port_format(void *sdp_ptr, uint16_t level,
                                        sdp_port_format_e port_format);
-extern sdp_result_e sdp_set_media_portnum(void *sdp_ptr, u16 level,
-                                          int32 portnum, int32 sctpport);
-extern int32 sdp_get_media_sctp_port(void *sdp_ptr, u16 level);
-extern sdp_result_e sdp_set_media_portcount(void *sdp_ptr, u16 level,
-                                            int32 num_ports);
-extern sdp_result_e sdp_set_media_vpi(void *sdp_ptr, u16 level, int32 vpi);
-extern sdp_result_e sdp_set_media_vci(void *sdp_ptr, u16 level, u32 vci);
-extern sdp_result_e sdp_set_media_vcci(void *sdp_ptr, u16 level, int32 vcci);
-extern sdp_result_e sdp_set_media_cid(void *sdp_ptr, u16 level, int32 cid);
-extern sdp_result_e sdp_set_media_transport(void *sdp_ptr, u16 level,
+extern sdp_result_e sdp_set_media_portnum(void *sdp_ptr, uint16_t level,
+                                          int32_t portnum, int32_t sctpport);
+extern int32_t sdp_get_media_sctp_port(void *sdp_ptr, uint16_t level);
+extern sdp_result_e sdp_set_media_portcount(void *sdp_ptr, uint16_t level,
+                                            int32_t num_ports);
+extern sdp_result_e sdp_set_media_vpi(void *sdp_ptr, uint16_t level, int32_t vpi);
+extern sdp_result_e sdp_set_media_vci(void *sdp_ptr, uint16_t level, uint32_t vci);
+extern sdp_result_e sdp_set_media_vcci(void *sdp_ptr, uint16_t level, int32_t vcci);
+extern sdp_result_e sdp_set_media_cid(void *sdp_ptr, uint16_t level, int32_t cid);
+extern sdp_result_e sdp_set_media_transport(void *sdp_ptr, uint16_t level,
                                             sdp_transport_e transport);
-extern sdp_result_e sdp_add_media_profile(void *sdp_ptr, u16 level,
+extern sdp_result_e sdp_add_media_profile(void *sdp_ptr, uint16_t level,
                                            sdp_transport_e profile);
-extern sdp_result_e sdp_add_media_payload_type(void *sdp_ptr, u16 level,
-                               u16 payload_type, sdp_payload_ind_e indicator);
+extern sdp_result_e sdp_add_media_payload_type(void *sdp_ptr, uint16_t level,
+                               uint16_t payload_type, sdp_payload_ind_e indicator);
 extern sdp_result_e sdp_add_media_profile_payload_type(void *sdp_ptr,
-                               u16 level, u16 prof_num, u16 payload_type,
+                               uint16_t level, uint16_t prof_num, uint16_t payload_type,
                                sdp_payload_ind_e indicator);
 
 /* sdp_attr_access.c */
-extern sdp_attr_t *sdp_find_attr (sdp_t *sdp_p, u16 level, u8 cap_num,
-                                  sdp_attr_e attr_type, u16 inst_num);
+extern sdp_attr_t *sdp_find_attr (sdp_t *sdp_p, uint16_t level, uint8_t cap_num,
+                                  sdp_attr_e attr_type, uint16_t inst_num);
 
-extern int sdp_find_fmtp_inst(sdp_t *sdp_ptr, u16 level, u16 payload_num);
-extern sdp_result_e sdp_add_new_attr(void *sdp_ptr, u16 level, u8 cap_num,
-                                     sdp_attr_e attr_type, u16 *inst_num);
+extern int sdp_find_fmtp_inst(sdp_t *sdp_ptr, uint16_t level, uint16_t payload_num);
+extern sdp_result_e sdp_add_new_attr(void *sdp_ptr, uint16_t level, uint8_t cap_num,
+                                     sdp_attr_e attr_type, uint16_t *inst_num);
 extern sdp_result_e sdp_copy_attr (void *src_sdp_ptr, void *dst_sdp_ptr,
-                                   u16 src_level, u16 dst_level,
-                                   u8 src_cap_num, u8 dst_cap_num,
-                                   sdp_attr_e src_attr_type, u16 src_inst_num);
+                                   uint16_t src_level, uint16_t dst_level,
+                                   uint8_t src_cap_num, uint8_t dst_cap_num,
+                                   sdp_attr_e src_attr_type, uint16_t src_inst_num);
 extern sdp_result_e sdp_copy_all_attrs(void *src_sdp_ptr, void *dst_sdp_ptr,
-                                       u16 src_level, u16 dst_level);
-extern sdp_result_e sdp_attr_num_instances(void *sdp_ptr, u16 level,
-                         u8 cap_num, sdp_attr_e attr_type, u16 *num_attr_inst);
-extern sdp_result_e sdp_get_total_attrs(void *sdp_ptr, u16 level, u8 cap_num,
-                                        u16 *num_attrs);
-extern sdp_result_e sdp_get_attr_type(void *sdp_ptr, u16 level, u8 cap_num,
-                          u16 attr_num, sdp_attr_e *attr_type, u16 *inst_num);
-extern sdp_result_e sdp_delete_attr(void *sdp_ptr, u16 level, u8 cap_num,
-                             sdp_attr_e attr_type, u16 inst_num);
-extern sdp_result_e sdp_delete_all_attrs(void *sdp_ptr, u16 level, u8 cap_num);
+                                       uint16_t src_level, uint16_t dst_level);
+extern sdp_result_e sdp_attr_num_instances(void *sdp_ptr, uint16_t level,
+                         uint8_t cap_num, sdp_attr_e attr_type, uint16_t *num_attr_inst);
+extern sdp_result_e sdp_get_total_attrs(void *sdp_ptr, uint16_t level, uint8_t cap_num,
+                                        uint16_t *num_attrs);
+extern sdp_result_e sdp_get_attr_type(void *sdp_ptr, uint16_t level, uint8_t cap_num,
+                          uint16_t attr_num, sdp_attr_e *attr_type, uint16_t *inst_num);
+extern sdp_result_e sdp_delete_attr(void *sdp_ptr, uint16_t level, uint8_t cap_num,
+                             sdp_attr_e attr_type, uint16_t inst_num);
+extern sdp_result_e sdp_delete_all_attrs(void *sdp_ptr, uint16_t level, uint8_t cap_num);
 extern tinybool sdp_attr_valid(void *sdp_ptr, sdp_attr_e attr_type,
-                                u16 level, u8 cap_num, u16 inst_num);
-extern u32 sdp_attr_line_number(void *sdp_ptr, sdp_attr_e attr_type,
-                                u16 level, u8 cap_num, u16 inst_num);
+                                uint16_t level, uint8_t cap_num, uint16_t inst_num);
+extern uint32_t sdp_attr_line_number(void *sdp_ptr, sdp_attr_e attr_type,
+                                uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern const char *sdp_attr_get_simple_string(void *sdp_ptr,
-                   sdp_attr_e attr_type, u16 level, u8 cap_num, u16 inst_num);
+                   sdp_attr_e attr_type, uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern sdp_result_e sdp_attr_set_simple_string(void *sdp_ptr,
-                   sdp_attr_e attr_type, u16 level,
-                   u8 cap_num, u16 inst_num, const char *string_parm);
-extern u32 sdp_attr_get_simple_u32(void *sdp_ptr, sdp_attr_e attr_type,
-                                    u16 level, u8 cap_num, u16 inst_num);
+                   sdp_attr_e attr_type, uint16_t level,
+                   uint8_t cap_num, uint16_t inst_num, const char *string_parm);
+extern uint32_t sdp_attr_get_simple_u32(void *sdp_ptr, sdp_attr_e attr_type,
+                                    uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern sdp_result_e sdp_attr_set_simple_u32(void *sdp_ptr,
-                                      sdp_attr_e attr_type, u16 level,
-                                      u8 cap_num, u16 inst_num, u32 num_parm);
+                                      sdp_attr_e attr_type, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num, uint32_t num_parm);
 extern tinybool sdp_attr_get_simple_boolean(void *sdp_ptr,
-                   sdp_attr_e attr_type, u16 level, u8 cap_num, u16 inst_num);
+                   sdp_attr_e attr_type, uint16_t level, uint8_t cap_num, uint16_t inst_num);
 extern sdp_result_e sdp_attr_set_simple_boolean(void *sdp_ptr,
-                   sdp_attr_e attr_type, u16 level, u8 cap_num,
-                   u16 inst_num, u32 bool_parm);
+                   sdp_attr_e attr_type, uint16_t level, uint8_t cap_num,
+                   uint16_t inst_num, uint32_t bool_parm);
 extern tinybool sdp_attr_is_present (void *sdp_ptr, sdp_attr_e attr_type,
-                                     u16 level, u8 cap_num);
-extern const char* sdp_attr_get_maxprate(void *sdp_ptr, u16 level,
-                                         u16 inst_num);
-extern sdp_result_e sdp_attr_set_maxprate(void *sdp_ptr, u16 level,
-                                       u16 inst_num, const char *string_parm);
-extern sdp_t38_ratemgmt_e sdp_attr_get_t38ratemgmt(void *sdp_ptr, u16 level,
-                                                   u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_set_t38ratemgmt(void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num,
+                                     uint16_t level, uint8_t cap_num);
+extern const char* sdp_attr_get_maxprate(void *sdp_ptr, uint16_t level,
+                                         uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_maxprate(void *sdp_ptr, uint16_t level,
+                                       uint16_t inst_num, const char *string_parm);
+extern sdp_t38_ratemgmt_e sdp_attr_get_t38ratemgmt(void *sdp_ptr, uint16_t level,
+                                                   uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_t38ratemgmt(void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num,
                                              sdp_t38_ratemgmt_e t38ratemgmt);
-extern sdp_t38_udpec_e sdp_attr_get_t38udpec(void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_set_t38udpec(void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num,
+extern sdp_t38_udpec_e sdp_attr_get_t38udpec(void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_t38udpec(void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num,
                                           sdp_t38_udpec_e t38udpec);
-extern sdp_direction_e sdp_get_media_direction(void *sdp_ptr, u16 level,
-                                               u8 cap_num);
-extern sdp_qos_strength_e sdp_attr_get_qos_strength(void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num);
-extern sdp_qos_status_types_e sdp_attr_get_qos_status_type (void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num);
-extern sdp_qos_dir_e sdp_attr_get_qos_direction(void *sdp_ptr, u16 level,
-                               u8 cap_num, sdp_attr_e qos_attr, u16 inst_num);
-extern tinybool sdp_attr_get_qos_confirm(void *sdp_ptr, u16 level,
-                               u8 cap_num, sdp_attr_e qos_attr, u16 inst_num);
-extern sdp_curr_type_e sdp_attr_get_curr_type (void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num);
-extern sdp_des_type_e sdp_attr_get_des_type (void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num);
-extern sdp_conf_type_e sdp_attr_get_conf_type (void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num);
-extern sdp_result_e sdp_attr_set_conf_type (void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num,
+extern sdp_direction_e sdp_get_media_direction(void *sdp_ptr, uint16_t level,
+                                               uint8_t cap_num);
+extern sdp_qos_strength_e sdp_attr_get_qos_strength(void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num);
+extern sdp_qos_status_types_e sdp_attr_get_qos_status_type (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num);
+extern sdp_qos_dir_e sdp_attr_get_qos_direction(void *sdp_ptr, uint16_t level,
+                               uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num);
+extern tinybool sdp_attr_get_qos_confirm(void *sdp_ptr, uint16_t level,
+                               uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num);
+extern sdp_curr_type_e sdp_attr_get_curr_type (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num);
+extern sdp_des_type_e sdp_attr_get_des_type (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num);
+extern sdp_conf_type_e sdp_attr_get_conf_type (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_conf_type (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num,
                                 sdp_conf_type_e conf_type);
-extern sdp_result_e sdp_attr_set_des_type (void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num,
+extern sdp_result_e sdp_attr_set_des_type (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num,
                                 sdp_des_type_e des_type);
-extern sdp_result_e sdp_attr_set_curr_type (void *sdp_ptr, u16 level,
-                                u8 cap_num, sdp_attr_e qos_attr, u16 inst_num,
+extern sdp_result_e sdp_attr_set_curr_type (void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num,
                                 sdp_curr_type_e curr_type);
-extern sdp_result_e sdp_attr_set_qos_strength(void *sdp_ptr, u16 level,
-                                 u8 cap_num, sdp_attr_e qos_attr, u16 inst_num,
+extern sdp_result_e sdp_attr_set_qos_strength(void *sdp_ptr, uint16_t level,
+                                 uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num,
                                  sdp_qos_strength_e strength);
-extern sdp_result_e sdp_attr_set_qos_direction(void *sdp_ptr, u16 level,
-                                 u8 cap_num, sdp_attr_e qos_attr, u16 inst_num,
+extern sdp_result_e sdp_attr_set_qos_direction(void *sdp_ptr, uint16_t level,
+                                 uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num,
                                  sdp_qos_dir_e direction);
-extern sdp_result_e sdp_attr_set_qos_status_type(void *sdp_ptr, u16 level,
-                                 u8 cap_num, sdp_attr_e qos_attr, u16 inst_num,
+extern sdp_result_e sdp_attr_set_qos_status_type(void *sdp_ptr, uint16_t level,
+                                 uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num,
                                  sdp_qos_status_types_e status_type);
-extern sdp_result_e sdp_attr_set_qos_confirm(void *sdp_ptr, u16 level,
-                                 u8 cap_num, sdp_attr_e qos_attr, u16 inst_num,
+extern sdp_result_e sdp_attr_set_qos_confirm(void *sdp_ptr, uint16_t level,
+                                 uint8_t cap_num, sdp_attr_e qos_attr, uint16_t inst_num,
                                  tinybool confirm);
-extern sdp_nettype_e sdp_attr_get_subnet_nettype(void *sdp_ptr, u16 level,
-                                                 u8 cap_num, u16 inst_num);
-extern sdp_addrtype_e sdp_attr_get_subnet_addrtype(void *sdp_ptr, u16 level,
-                                                   u8 cap_num, u16 inst_num);
-extern const char *sdp_attr_get_subnet_addr(void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_subnet_prefix(void *sdp_ptr, u16 level,
-                                        u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_set_subnet_nettype(void *sdp_ptr, u16 level,
-                                                u8 cap_num, u16 inst_num,
+extern sdp_nettype_e sdp_attr_get_subnet_nettype(void *sdp_ptr, uint16_t level,
+                                                 uint8_t cap_num, uint16_t inst_num);
+extern sdp_addrtype_e sdp_attr_get_subnet_addrtype(void *sdp_ptr, uint16_t level,
+                                                   uint8_t cap_num, uint16_t inst_num);
+extern const char *sdp_attr_get_subnet_addr(void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_subnet_prefix(void *sdp_ptr, uint16_t level,
+                                        uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_subnet_nettype(void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num,
                                                 sdp_nettype_e nettype);
-extern sdp_result_e sdp_attr_set_subnet_addrtype(void *sdp_ptr, u16 level,
-                                                 u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_subnet_addrtype(void *sdp_ptr, uint16_t level,
+                                                 uint8_t cap_num, uint16_t inst_num,
                                                  sdp_addrtype_e addrtype);
-extern sdp_result_e sdp_attr_set_subnet_addr(void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_subnet_addr(void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num,
                                              const char *addr);
-extern sdp_result_e sdp_attr_set_subnet_prefix(void *sdp_ptr, u16 level,
-                                               u8 cap_num, u16 inst_num,
-                                               int32 prefix);
-extern rtp_ptype sdp_attr_get_rtpmap_known_codec(void *sdp_ptr, u16 level,
-                                                 u8 cap_num, u16 inst_num);
-extern tinybool sdp_attr_rtpmap_payload_valid(void *sdp_ptr, u16 level,
-                                  u8 cap_num, u16 *inst_num, u16 payload_type);
-extern u16 sdp_attr_get_rtpmap_payload_type(void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num);
-extern const char *sdp_attr_get_rtpmap_encname(void *sdp_ptr, u16 level,
-                                               u8 cap_num, u16 inst_num);
-extern u32 sdp_attr_get_rtpmap_clockrate(void *sdp_ptr, u16 level,
-                                         u8 cap_num, u16 inst_num);
-extern u16 sdp_attr_get_rtpmap_num_chan(void *sdp_ptr, u16 level,
-                                        u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_set_rtpmap_payload_type(void *sdp_ptr, u16 level,
-                                                     u8 cap_num, u16 inst_num,
-                                                     u16 payload_num);
-extern sdp_result_e sdp_attr_set_rtpmap_encname(void *sdp_ptr, u16 level,
-                              u8 cap_num, u16 inst_num, const char *encname);
-extern sdp_result_e sdp_attr_set_rtpmap_clockrate(void *sdp_ptr, u16 level,
-                                                  u8 cap_num, u16 inst_num,
-                                                  u32 clockrate);
-extern sdp_result_e sdp_attr_set_rtpmap_num_chan(void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num, u16 num_chan);
-extern tinybool sdp_attr_sprtmap_payload_valid(void *sdp_ptr, u16 level,
-                                  u8 cap_num, u16 *inst_num, u16 payload_type);
-extern u16 sdp_attr_get_sprtmap_payload_type(void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num);
-extern const char *sdp_attr_get_sprtmap_encname(void *sdp_ptr, u16 level,
-                                               u8 cap_num, u16 inst_num);
-extern u32 sdp_attr_get_sprtmap_clockrate(void *sdp_ptr, u16 level,
-                                         u8 cap_num, u16 inst_num);
-extern u16 sdp_attr_get_sprtmap_num_chan(void *sdp_ptr, u16 level,
-                                        u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_set_sprtmap_payload_type(void *sdp_ptr, u16 level,
-                                                     u8 cap_num, u16 inst_num,
-                                                     u16 payload_num);
-extern sdp_result_e sdp_attr_set_sprtmap_encname(void *sdp_ptr, u16 level,
-                              u8 cap_num, u16 inst_num, const char *encname);
-extern sdp_result_e sdp_attr_set_sprtmap_clockrate(void *sdp_ptr, u16 level,
-                                                  u8 cap_num, u16 inst_num,
-                                                  u16 clockrate);
-extern sdp_result_e sdp_attr_set_sprtmap_num_chan(void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num, u16 num_chan);
-extern tinybool sdp_attr_fmtp_payload_valid(void *sdp_ptr, u16 level,
-                                  u8 cap_num, u16 *inst_num, u16 payload_type);
-extern u16 sdp_attr_get_fmtp_payload_type(void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num);
-extern sdp_ne_res_e sdp_attr_fmtp_is_range_set(void *sdp_ptr, u16 level,
-                           u8 cap_num, u16 inst_num, u8 low_val, u8 high_val);
-extern tinybool sdp_attr_fmtp_valid(void *sdp_ptr, u16 level, u8 cap_num,
-                                    u16 inst_num, u16 appl_maxval, u32* evt_array);
-extern sdp_result_e sdp_attr_set_fmtp_payload_type(void *sdp_ptr, u16 level,
-                                                   u8 cap_num, u16 inst_num,
-                                                   u16 payload_num);
-extern sdp_result_e sdp_attr_get_fmtp_range(void *sdp_ptr, u16 level,
-                           u8 cap_num, u16 inst_num, u32 *bmap);
-extern sdp_result_e sdp_attr_set_fmtp_range(void *sdp_ptr, u16 level,
-                           u8 cap_num, u16 inst_num, u8 low_val, u8 high_val);
-extern sdp_result_e sdp_attr_set_fmtp_bitmap(void *sdp_ptr, u16 level,
-                           u8 cap_num, u16 inst_num, u32 *bmap, u32 maxval);
-extern sdp_result_e sdp_attr_clear_fmtp_range(void *sdp_ptr, u16 level,
-                           u8 cap_num, u16 inst_num, u8 low_val, u8 high_val);
+extern sdp_result_e sdp_attr_set_subnet_prefix(void *sdp_ptr, uint16_t level,
+                                               uint8_t cap_num, uint16_t inst_num,
+                                               int32_t prefix);
+extern rtp_ptype sdp_attr_get_rtpmap_known_codec(void *sdp_ptr, uint16_t level,
+                                                 uint8_t cap_num, uint16_t inst_num);
+extern tinybool sdp_attr_rtpmap_payload_valid(void *sdp_ptr, uint16_t level,
+                                  uint8_t cap_num, uint16_t *inst_num, uint16_t payload_type);
+extern uint16_t sdp_attr_get_rtpmap_payload_type(void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num);
+extern const char *sdp_attr_get_rtpmap_encname(void *sdp_ptr, uint16_t level,
+                                               uint8_t cap_num, uint16_t inst_num);
+extern uint32_t sdp_attr_get_rtpmap_clockrate(void *sdp_ptr, uint16_t level,
+                                         uint8_t cap_num, uint16_t inst_num);
+extern uint16_t sdp_attr_get_rtpmap_num_chan(void *sdp_ptr, uint16_t level,
+                                        uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_rtpmap_payload_type(void *sdp_ptr, uint16_t level,
+                                                     uint8_t cap_num, uint16_t inst_num,
+                                                     uint16_t payload_num);
+extern sdp_result_e sdp_attr_set_rtpmap_encname(void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, uint16_t inst_num, const char *encname);
+extern sdp_result_e sdp_attr_set_rtpmap_clockrate(void *sdp_ptr, uint16_t level,
+                                                  uint8_t cap_num, uint16_t inst_num,
+                                                  uint32_t clockrate);
+extern sdp_result_e sdp_attr_set_rtpmap_num_chan(void *sdp_ptr, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num, uint16_t num_chan);
+extern tinybool sdp_attr_sprtmap_payload_valid(void *sdp_ptr, uint16_t level,
+                                  uint8_t cap_num, uint16_t *inst_num, uint16_t payload_type);
+extern uint16_t sdp_attr_get_sprtmap_payload_type(void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num);
+extern const char *sdp_attr_get_sprtmap_encname(void *sdp_ptr, uint16_t level,
+                                               uint8_t cap_num, uint16_t inst_num);
+extern uint32_t sdp_attr_get_sprtmap_clockrate(void *sdp_ptr, uint16_t level,
+                                         uint8_t cap_num, uint16_t inst_num);
+extern uint16_t sdp_attr_get_sprtmap_num_chan(void *sdp_ptr, uint16_t level,
+                                        uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_sprtmap_payload_type(void *sdp_ptr, uint16_t level,
+                                                     uint8_t cap_num, uint16_t inst_num,
+                                                     uint16_t payload_num);
+extern sdp_result_e sdp_attr_set_sprtmap_encname(void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, uint16_t inst_num, const char *encname);
+extern sdp_result_e sdp_attr_set_sprtmap_clockrate(void *sdp_ptr, uint16_t level,
+                                                  uint8_t cap_num, uint16_t inst_num,
+                                                  uint16_t clockrate);
+extern sdp_result_e sdp_attr_set_sprtmap_num_chan(void *sdp_ptr, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num, uint16_t num_chan);
+extern tinybool sdp_attr_fmtp_payload_valid(void *sdp_ptr, uint16_t level,
+                                  uint8_t cap_num, uint16_t *inst_num, uint16_t payload_type);
+extern uint16_t sdp_attr_get_fmtp_payload_type(void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num);
+extern sdp_ne_res_e sdp_attr_fmtp_is_range_set(void *sdp_ptr, uint16_t level,
+                           uint8_t cap_num, uint16_t inst_num, uint8_t low_val, uint8_t high_val);
+extern tinybool sdp_attr_fmtp_valid(void *sdp_ptr, uint16_t level, uint8_t cap_num,
+                                    uint16_t inst_num, uint16_t appl_maxval, uint32_t* evt_array);
+extern sdp_result_e sdp_attr_set_fmtp_payload_type(void *sdp_ptr, uint16_t level,
+                                                   uint8_t cap_num, uint16_t inst_num,
+                                                   uint16_t payload_num);
+extern sdp_result_e sdp_attr_get_fmtp_range(void *sdp_ptr, uint16_t level,
+                           uint8_t cap_num, uint16_t inst_num, uint32_t *bmap);
+extern sdp_result_e sdp_attr_set_fmtp_range(void *sdp_ptr, uint16_t level,
+                           uint8_t cap_num, uint16_t inst_num, uint8_t low_val, uint8_t high_val);
+extern sdp_result_e sdp_attr_set_fmtp_bitmap(void *sdp_ptr, uint16_t level,
+                           uint8_t cap_num, uint16_t inst_num, uint32_t *bmap, uint32_t maxval);
+extern sdp_result_e sdp_attr_clear_fmtp_range(void *sdp_ptr, uint16_t level,
+                           uint8_t cap_num, uint16_t inst_num, uint8_t low_val, uint8_t high_val);
 extern sdp_ne_res_e sdp_attr_compare_fmtp_ranges(void *src_sdp_ptr,
-                           void *dst_sdp_ptr, u16 src_level, u16 dst_level,
-                           u8 src_cap_num, u8 dst_cap_num, u16 src_inst_num,
-                           u16 dst_inst_num);
+                           void *dst_sdp_ptr, uint16_t src_level, uint16_t dst_level,
+                           uint8_t src_cap_num, uint8_t dst_cap_num, uint16_t src_inst_num,
+                           uint16_t dst_inst_num);
 extern sdp_result_e sdp_attr_copy_fmtp_ranges(void *src_sdp_ptr,
-                           void *dst_sdp_ptr, u16 src_level, u16 dst_level,
-                           u8 src_cap_num, u8 dst_cap_num, u16 src_inst_num,
-                           u16 dst_inst_num);
-extern sdp_result_e sdp_attr_set_fmtp_annexa (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
+                           void *dst_sdp_ptr, uint16_t src_level, uint16_t dst_level,
+                           uint8_t src_cap_num, uint8_t dst_cap_num, uint16_t src_inst_num,
+                           uint16_t dst_inst_num);
+extern sdp_result_e sdp_attr_set_fmtp_annexa (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
                                               tinybool annexa);
-extern sdp_result_e sdp_attr_set_fmtp_mode(void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num,
-                                           u32 mode);
-extern u32 sdp_attr_get_fmtp_mode_for_payload_type (void *sdp_ptr, u16 level,
-                                             u8 cap_num, u32 payload_type);
+extern sdp_result_e sdp_attr_set_fmtp_mode(void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num,
+                                           uint32_t mode);
+extern uint32_t sdp_attr_get_fmtp_mode_for_payload_type (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint32_t payload_type);
 
-extern sdp_result_e sdp_attr_set_fmtp_annexb (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_fmtp_annexb (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
                                               tinybool annexb);
 
-extern sdp_result_e sdp_attr_set_fmtp_bitrate_type  (void *sdp_ptr, u16 level,
-                                                     u8 cap_num, u16 inst_num,
-                                                     u32 bitrate);
-extern sdp_result_e sdp_attr_set_fmtp_cif  (void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num,
-                                            u16 cif);
-extern sdp_result_e sdp_attr_set_fmtp_qcif  (void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num,
-                                             u16 qcif);
-extern sdp_result_e sdp_attr_set_fmtp_sqcif  (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
-                                              u16 sqcif);
-extern sdp_result_e sdp_attr_set_fmtp_cif4  (void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num,
-                                             u16 cif4);
-extern sdp_result_e sdp_attr_set_fmtp_cif16  (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
-                                              u16 cif16);
-extern sdp_result_e sdp_attr_set_fmtp_maxbr  (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
-                                              u16 maxbr);
-extern sdp_result_e sdp_attr_set_fmtp_max_average_bitrate (void *sdp_ptr, u16 level,
-                                                           u8 cap_num, u16 inst_num,
-                                                           u32 maxaveragebitrate);
-extern sdp_result_e sdp_attr_set_fmtp_usedtx (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_fmtp_bitrate_type  (void *sdp_ptr, uint16_t level,
+                                                     uint8_t cap_num, uint16_t inst_num,
+                                                     uint32_t bitrate);
+extern sdp_result_e sdp_attr_set_fmtp_cif  (void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num,
+                                            uint16_t cif);
+extern sdp_result_e sdp_attr_set_fmtp_qcif  (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num,
+                                             uint16_t qcif);
+extern sdp_result_e sdp_attr_set_fmtp_sqcif  (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
+                                              uint16_t sqcif);
+extern sdp_result_e sdp_attr_set_fmtp_cif4  (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num,
+                                             uint16_t cif4);
+extern sdp_result_e sdp_attr_set_fmtp_cif16  (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
+                                              uint16_t cif16);
+extern sdp_result_e sdp_attr_set_fmtp_maxbr  (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
+                                              uint16_t maxbr);
+extern sdp_result_e sdp_attr_set_fmtp_max_average_bitrate (void *sdp_ptr, uint16_t level,
+                                                           uint8_t cap_num, uint16_t inst_num,
+                                                           uint32_t maxaveragebitrate);
+extern sdp_result_e sdp_attr_set_fmtp_usedtx (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
                                               tinybool usedtx);
-extern sdp_result_e sdp_attr_set_fmtp_stereo (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_fmtp_stereo (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
                                               tinybool stereo);
-extern sdp_result_e sdp_attr_set_fmtp_useinbandfec (void *sdp_ptr, u16 level,
-                                                    u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_fmtp_useinbandfec (void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num, uint16_t inst_num,
                                                     tinybool useinbandfec);
-extern sdp_result_e sdp_attr_set_fmtp_maxcodedaudiobandwidth (void *sdp_ptr, u16 level,
-                                                              u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_fmtp_maxcodedaudiobandwidth (void *sdp_ptr, uint16_t level,
+                                                              uint8_t cap_num, uint16_t inst_num,
                                                               const char *maxcodedaudiobandwidth);
-extern sdp_result_e sdp_attr_set_fmtp_cbr (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_fmtp_cbr (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num,
                                            tinybool cbr);
-extern sdp_result_e sdp_attr_set_fmtp_custom (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
-                                              u16 custom_x, u16 custom_y,
-                                              u16 custom_mpi);
-extern sdp_result_e sdp_attr_set_fmtp_par (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num,
-                                           u16 par_width, u16 par_height);
-extern sdp_result_e sdp_attr_set_fmtp_bpp  (void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num,
-                                            u16 bpp);
-extern sdp_result_e sdp_attr_set_fmtp_hrd  (void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num,
-                                            u16 hrd);
+extern sdp_result_e sdp_attr_set_fmtp_custom (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
+                                              uint16_t custom_x, uint16_t custom_y,
+                                              uint16_t custom_mpi);
+extern sdp_result_e sdp_attr_set_fmtp_par (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num,
+                                           uint16_t par_width, uint16_t par_height);
+extern sdp_result_e sdp_attr_set_fmtp_bpp  (void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num,
+                                            uint16_t bpp);
+extern sdp_result_e sdp_attr_set_fmtp_hrd  (void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num,
+                                            uint16_t hrd);
 
 extern sdp_result_e sdp_attr_set_fmtp_h263_num_params (void *sdp_ptr,
-                                                       int16 level,
-                                                       u8 cap_num,
-                                                       u16 inst_num,
-                                                       int16 profile,
-                                                       u16 h263_level,
+                                                       int16_t level,
+                                                       uint8_t cap_num,
+                                                       uint16_t inst_num,
+                                                       int16_t profile,
+                                                       uint16_t h263_level,
                                                        tinybool interlace);
 
 extern sdp_result_e sdp_attr_set_fmtp_profile_level_id (void *sdp_ptr,
-                                                       u16 level,
-                                                       u8 cap_num,
-                                                       u16 inst_num,
+                                                       uint16_t level,
+                                                       uint8_t cap_num,
+                                                       uint16_t inst_num,
                                                        const char *prof_id);
 
 extern sdp_result_e sdp_attr_set_fmtp_parameter_sets (void *sdp_ptr,
-                                                      u16 level,
-                                                      u8 cap_num,
-                                                      u16 inst_num,
+                                                      uint16_t level,
+                                                      uint8_t cap_num,
+                                                      uint16_t inst_num,
                                                       const char *parameter_sets);
 
-extern sdp_result_e sdp_attr_set_fmtp_deint_buf_req (void *sdp_ptr, u16 level,
-                                                u8 cap_num, u16 inst_num,
-                                                u32 deint_buf_req);
+extern sdp_result_e sdp_attr_set_fmtp_deint_buf_req (void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num,
+                                                uint32_t deint_buf_req);
 
-extern sdp_result_e sdp_attr_set_fmtp_init_buf_time (void *sdp_ptr, u16 level,
-                                                u8 cap_num, u16 inst_num,
-                                                u32 init_buf_time);
+extern sdp_result_e sdp_attr_set_fmtp_init_buf_time (void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num,
+                                                uint32_t init_buf_time);
 
-extern sdp_result_e sdp_attr_set_fmtp_max_don_diff (void *sdp_ptr, u16 level,
-                                                u8 cap_num, u16 inst_num,
-                                                u32 max_don_diff);
+extern sdp_result_e sdp_attr_set_fmtp_max_don_diff (void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num,
+                                                uint32_t max_don_diff);
 
-extern sdp_result_e sdp_attr_set_fmtp_interleaving_depth (void *sdp_ptr, u16 level,
-                                                u8 cap_num, u16 inst_num,
-                                                u16 interleaving_depth);
+extern sdp_result_e sdp_attr_set_fmtp_interleaving_depth (void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num,
+                                                uint16_t interleaving_depth);
 
 extern sdp_result_e sdp_attr_set_fmtp_pack_mode (void *sdp_ptr,
-                                                u16 level,
-                                                u8 cap_num,
-                                                u16 inst_num,
-                                                u16 pack_mode);
+                                                uint16_t level,
+                                                uint8_t cap_num,
+                                                uint16_t inst_num,
+                                                uint16_t pack_mode);
 
 extern sdp_result_e sdp_attr_set_fmtp_level_asymmetry_allowed (void *sdp_ptr,
-                                                u16 level,
-                                                u8 cap_num,
-                                                u16 inst_num,
-                                                u16 level_asymmetry_allowed);
+                                                uint16_t level,
+                                                uint8_t cap_num,
+                                                uint16_t inst_num,
+                                                uint16_t level_asymmetry_allowed);
 
 extern sdp_result_e sdp_attr_set_fmtp_redundant_pic_cap (void *sdp_ptr,
-                                                   u16 level,
-                                                   u8 cap_num,
-                                                   u16 inst_num,
+                                                   uint16_t level,
+                                                   uint8_t cap_num,
+                                                   uint16_t inst_num,
                                                    tinybool redundant_pic_cap);
 
 extern sdp_result_e sdp_attr_set_fmtp_max_mbps (void *sdp_ptr,
-                                                   u16 level,
-                                                   u8 cap_num,
-                                                   u16 inst_num,
-                                                   u32 max_mbps);
+                                                   uint16_t level,
+                                                   uint8_t cap_num,
+                                                   uint16_t inst_num,
+                                                   uint32_t max_mbps);
 
 extern sdp_result_e sdp_attr_set_fmtp_max_fs (void *sdp_ptr,
-                                              u16 level,
-                                              u8 cap_num,
-                                              u16 inst_num,
-                                              u32 max_fs);
+                                              uint16_t level,
+                                              uint8_t cap_num,
+                                              uint16_t inst_num,
+                                              uint32_t max_fs);
 
 extern sdp_result_e sdp_attr_set_fmtp_max_fr (void *sdp_ptr,
-                                              u16 level,
-                                              u8 cap_num,
-                                              u16 inst_num,
-                                              u32 max_fr);
+                                              uint16_t level,
+                                              uint8_t cap_num,
+                                              uint16_t inst_num,
+                                              uint32_t max_fr);
 
 extern sdp_result_e sdp_attr_set_fmtp_max_cpb (void *sdp_ptr,
-                                              u16 level,
-                                              u8 cap_num,
-                                              u16 inst_num,
-                                              u32 max_cpb);
+                                              uint16_t level,
+                                              uint8_t cap_num,
+                                              uint16_t inst_num,
+                                              uint32_t max_cpb);
 
 extern sdp_result_e sdp_attr_set_fmtp_max_dpb (void *sdp_ptr,
-                                              u16 level,
-                                              u8 cap_num,
-                                              u16 inst_num,
-                                              u32 max_dpb);
+                                              uint16_t level,
+                                              uint8_t cap_num,
+                                              uint16_t inst_num,
+                                              uint32_t max_dpb);
 
 extern sdp_result_e sdp_attr_set_fmtp_max_br (void *sdp_ptr,
-                                              u16 level,
-                                              u8 cap_num,
-                                              u16 inst_num,
-                                              u32 max_br);
+                                              uint16_t level,
+                                              uint8_t cap_num,
+                                              uint16_t inst_num,
+                                              uint32_t max_br);
 
-extern sdp_result_e sdp_attr_set_fmtp_max_rcmd_nalu_size (void *sdp_ptr, u16 level,
-                                               u8 cap_num, u16 inst_num,
-                                               u32 max_rcmd_nalu_size);
+extern sdp_result_e sdp_attr_set_fmtp_max_rcmd_nalu_size (void *sdp_ptr, uint16_t level,
+                                               uint8_t cap_num, uint16_t inst_num,
+                                               uint32_t max_rcmd_nalu_size);
 
-extern sdp_result_e sdp_attr_set_fmtp_deint_buf_cap (void *sdp_ptr, u16 level,
-                                               u8 cap_num, u16 inst_num,
-                                               u32 deint_buf_cap);
+extern sdp_result_e sdp_attr_set_fmtp_deint_buf_cap (void *sdp_ptr, uint16_t level,
+                                               uint8_t cap_num, uint16_t inst_num,
+                                               uint32_t deint_buf_cap);
 
 extern sdp_result_e sdp_attr_set_fmtp_h264_parameter_add (void *sdp_ptr,
-                                                          u16 level,
-                                                          u8 cap_num,
-                                                          u16 inst_num,
-                                                          u16 parameter_add);
+                                                          uint16_t level,
+                                                          uint8_t cap_num,
+                                                          uint16_t inst_num,
+                                                          uint16_t parameter_add);
 
 extern sdp_result_e sdp_attr_set_fmtp_h261_annex_params (void *sdp_ptr,
-                                                         u16 level,
-                                                         u8 cap_num,
-                                                         u16 inst_num,
+                                                         uint16_t level,
+                                                         uint8_t cap_num,
+                                                         uint16_t inst_num,
                                                          tinybool annex_d);
 
 extern sdp_result_e sdp_attr_set_fmtp_h263_annex_params (void *sdp_ptr,
-                                                         u16 level,
-                                                         u8 cap_num,
-                                                         u16 inst_num,
+                                                         uint16_t level,
+                                                         uint8_t cap_num,
+                                                         uint16_t inst_num,
                                                          tinybool annex_f,
                                                          tinybool annex_i,
                                                          tinybool annex_j,
                                                          tinybool annex_t,
-                                                         u16 annex_k_val,
-                                                         u16 annex_n_val,
-                                               u16 annex_p_val_picture_resize,
-                                               u16 annex_p_val_warp);
+                                                         uint16_t annex_k_val,
+                                                         uint16_t annex_n_val,
+                                               uint16_t annex_p_val_picture_resize,
+                                               uint16_t annex_p_val_warp);
 
 
 /* get routines */
-extern int32 sdp_attr_get_fmtp_bitrate_type (void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num);
+extern int32_t sdp_attr_get_fmtp_bitrate_type (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num);
 
-extern int32 sdp_attr_get_fmtp_cif (void *sdp_ptr, u16 level,
-                                    u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_qcif (void *sdp_ptr, u16 level,
-                                     u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_sqcif (void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_cif4 (void *sdp_ptr, u16 level,
-                                     u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_cif16 (void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_maxbr (void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_get_fmtp_max_average_bitrate (void *sdp_ptr, u16 level,
-                                                           u8 cap_num, u16 inst_num, u32* val);
-extern sdp_result_e sdp_attr_get_fmtp_usedtx (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num, tinybool* val);
-extern sdp_result_e sdp_attr_get_fmtp_stereo (void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num, tinybool* val);
-extern sdp_result_e sdp_attr_get_fmtp_useinbandfec (void *sdp_ptr, u16 level,
-                                                    u8 cap_num, u16 inst_num, tinybool* val);
-extern char* sdp_attr_get_fmtp_maxcodedaudiobandwidth (void *sdp_ptr, u16 level,
-                                                             u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_get_fmtp_cbr (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num, tinybool* val);
-extern int32 sdp_attr_get_fmtp_custom_x (void *sdp_ptr, u16 level,
-                                         u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_custom_y (void *sdp_ptr, u16 level,
-                                         u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_custom_mpi (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_par_width (void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_par_height (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_bpp (void *sdp_ptr, u16 level,
-                                    u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_hrd (void *sdp_ptr, u16 level,
-                                    u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_profile (void *sdp_ptr, u16 level,
-                                        u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_level (void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num);
-extern tinybool sdp_attr_get_fmtp_interlace (void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num);
-extern tinybool sdp_attr_get_fmtp_annex_d (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern tinybool sdp_attr_get_fmtp_annex_f (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern tinybool sdp_attr_get_fmtp_annex_i (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern tinybool sdp_attr_get_fmtp_annex_j (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern tinybool sdp_attr_get_fmtp_annex_t (void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_annex_k_val (void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_annex_n_val (void *sdp_ptr, u16 level,
-                                            u8 cap_num, u16 inst_num);
+extern int32_t sdp_attr_get_fmtp_cif (void *sdp_ptr, uint16_t level,
+                                    uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_qcif (void *sdp_ptr, uint16_t level,
+                                     uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_sqcif (void *sdp_ptr, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_cif4 (void *sdp_ptr, uint16_t level,
+                                     uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_cif16 (void *sdp_ptr, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_maxbr (void *sdp_ptr, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_get_fmtp_max_average_bitrate (void *sdp_ptr, uint16_t level,
+                                                           uint8_t cap_num, uint16_t inst_num, uint32_t* val);
+extern sdp_result_e sdp_attr_get_fmtp_usedtx (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num, tinybool* val);
+extern sdp_result_e sdp_attr_get_fmtp_stereo (void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num, tinybool* val);
+extern sdp_result_e sdp_attr_get_fmtp_useinbandfec (void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num, uint16_t inst_num, tinybool* val);
+extern char* sdp_attr_get_fmtp_maxcodedaudiobandwidth (void *sdp_ptr, uint16_t level,
+                                                             uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_get_fmtp_cbr (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num, tinybool* val);
+extern int32_t sdp_attr_get_fmtp_custom_x (void *sdp_ptr, uint16_t level,
+                                         uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_custom_y (void *sdp_ptr, uint16_t level,
+                                         uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_custom_mpi (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_par_width (void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_par_height (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_bpp (void *sdp_ptr, uint16_t level,
+                                    uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_hrd (void *sdp_ptr, uint16_t level,
+                                    uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_profile (void *sdp_ptr, uint16_t level,
+                                        uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_level (void *sdp_ptr, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num);
+extern tinybool sdp_attr_get_fmtp_interlace (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num);
+extern tinybool sdp_attr_get_fmtp_annex_d (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern tinybool sdp_attr_get_fmtp_annex_f (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern tinybool sdp_attr_get_fmtp_annex_i (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern tinybool sdp_attr_get_fmtp_annex_j (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern tinybool sdp_attr_get_fmtp_annex_t (void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_annex_k_val (void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_annex_n_val (void *sdp_ptr, uint16_t level,
+                                            uint8_t cap_num, uint16_t inst_num);
 
-extern int32 sdp_attr_get_fmtp_annex_p_picture_resize (void *sdp_ptr, u16 level,
-                                                       u8 cap_num, u16 inst_num);
-extern int32 sdp_attr_get_fmtp_annex_p_warp (void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num);
+extern int32_t sdp_attr_get_fmtp_annex_p_picture_resize (void *sdp_ptr, uint16_t level,
+                                                       uint8_t cap_num, uint16_t inst_num);
+extern int32_t sdp_attr_get_fmtp_annex_p_warp (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num);
 
 /* sctpmap params */
-extern u16 sdp_attr_get_sctpmap_port(void *sdp_ptr, u16 level,
-                                     u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_set_sctpmap_port(void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
-                                              u16 port);
-extern sdp_result_e sdp_attr_get_sctpmap_protocol (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num, char* protocol);
-extern sdp_result_e sdp_attr_set_sctpmap_protocol (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num,
+extern uint16_t sdp_attr_get_sctpmap_port(void *sdp_ptr, uint16_t level,
+                                     uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_sctpmap_port(void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
+                                              uint16_t port);
+extern sdp_result_e sdp_attr_get_sctpmap_protocol (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num, char* protocol);
+extern sdp_result_e sdp_attr_set_sctpmap_protocol (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num,
                              const char *protocol);
-extern sdp_result_e sdp_attr_set_sctpmap_streams (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num, u32 streams);
-extern sdp_result_e sdp_attr_get_sctpmap_streams (void *sdp_ptr, u16 level,
-                             u8 cap_num, u16 inst_num, u32* val);
+extern sdp_result_e sdp_attr_set_sctpmap_streams (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num, uint32_t streams);
+extern sdp_result_e sdp_attr_get_sctpmap_streams (void *sdp_ptr, uint16_t level,
+                             uint8_t cap_num, uint16_t inst_num, uint32_t* val);
 
-extern const char *sdp_attr_get_msid_identifier(sdp_t *sdp_p, u16 level,
-                                                u8 cap_num, u16 inst_num);
-extern const char *sdp_attr_get_msid_appdata(sdp_t *sdp_p, u16 level,
-                                             u8 cap_num, u16 inst_num);
+extern const char *sdp_attr_get_msid_identifier(sdp_t *sdp_p, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num);
+extern const char *sdp_attr_get_msid_appdata(sdp_t *sdp_p, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num);
 
 /* H.264 codec specific params */
 
-extern const char *sdp_attr_get_fmtp_profile_id(void *sdp_ptr, u16 level,
-                                                u8 cap_num, u16 inst_num);
-extern const char *sdp_attr_get_fmtp_param_sets(void *sdp_ptr, u16 level,
-                                                u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_attr_get_fmtp_pack_mode (void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num, u16 *val);
+extern const char *sdp_attr_get_fmtp_profile_id(void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num);
+extern const char *sdp_attr_get_fmtp_param_sets(void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_attr_get_fmtp_pack_mode (void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num, uint16_t *val);
 
-extern sdp_result_e sdp_attr_get_fmtp_level_asymmetry_allowed (void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num, u16 *val);
+extern sdp_result_e sdp_attr_get_fmtp_level_asymmetry_allowed (void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num, uint16_t *val);
 
-extern sdp_result_e sdp_attr_get_fmtp_interleaving_depth (void *sdp_ptr, u16 level,
-                                                   u8 cap_num, u16 inst_num,
-                                                   u16 *val);
-extern sdp_result_e sdp_attr_get_fmtp_max_don_diff (void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num,
-                                             u32 *val);
+extern sdp_result_e sdp_attr_get_fmtp_interleaving_depth (void *sdp_ptr, uint16_t level,
+                                                   uint8_t cap_num, uint16_t inst_num,
+                                                   uint16_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_max_don_diff (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num,
+                                             uint32_t *val);
 
 /* The following four H.264 parameters that require special handling as
  * the values range from 0 - 4294967295
  */
-extern sdp_result_e sdp_attr_get_fmtp_deint_buf_req (void *sdp_ptr, u16 level,
-                                                    u8 cap_num, u16 inst_num,
-                                                    u32 *val);
-extern sdp_result_e sdp_attr_get_fmtp_deint_buf_cap (void *sdp_ptr, u16 level,
-                                                    u8 cap_num, u16 inst_num,
-                                                    u32 *val);
-extern sdp_result_e sdp_attr_get_fmtp_init_buf_time (void *sdp_ptr, u16 level,
-                                                    u8 cap_num, u16 inst_num,
-                                                    u32 *val);
+extern sdp_result_e sdp_attr_get_fmtp_deint_buf_req (void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num, uint16_t inst_num,
+                                                    uint32_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_deint_buf_cap (void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num, uint16_t inst_num,
+                                                    uint32_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_init_buf_time (void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num, uint16_t inst_num,
+                                                    uint32_t *val);
 extern sdp_result_e sdp_attr_get_fmtp_max_rcmd_nalu_size (void *sdp_ptr,
-                                                    u16 level, u8 cap_num,
-                                                    u16 inst_num, u32 *val);
+                                                    uint16_t level, uint8_t cap_num,
+                                                    uint16_t inst_num, uint32_t *val);
 
 
-extern sdp_result_e sdp_attr_get_fmtp_max_mbps (void *sdp_ptr, u16 level,
-                                         u8 cap_num, u16 inst_num, u32 *val);
-extern sdp_result_e sdp_attr_get_fmtp_max_fs (void *sdp_ptr, u16 level,
-                                       u8 cap_num, u16 inst_num, u32 *val);
-extern sdp_result_e sdp_attr_get_fmtp_max_fr (void *sdp_ptr, u16 level,
-                                       u8 cap_num, u16 inst_num, u32 *val);
-extern sdp_result_e sdp_attr_get_fmtp_max_cpb (void *sdp_ptr, u16 level,
-                                        u8 cap_num, u16 inst_num, u32 *val);
-extern sdp_result_e sdp_attr_get_fmtp_max_dpb (void *sdp_ptr, u16 level,
-                                        u8 cap_num, u16 inst_num, u32 *val);
-extern sdp_result_e sdp_attr_get_fmtp_max_br (void *sdp_ptr, u16 level,
-                                       u8 cap_num, u16 inst_num, u32 *val);
-extern tinybool sdp_attr_fmtp_is_redundant_pic_cap (void *sdp_ptr, u16 level,
-                                                    u8 cap_num,
-                                                    u16 inst_num);
-extern tinybool sdp_attr_fmtp_is_parameter_add (void *sdp_ptr, u16 level,
-                                                u8 cap_num,
-                                                u16 inst_num);
-extern tinybool sdp_attr_fmtp_is_annexa_set (void *sdp_ptr, u16 level,
-                                             u8 cap_num,
-                                             u16 inst_num);
+extern sdp_result_e sdp_attr_get_fmtp_max_mbps (void *sdp_ptr, uint16_t level,
+                                         uint8_t cap_num, uint16_t inst_num, uint32_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_max_fs (void *sdp_ptr, uint16_t level,
+                                       uint8_t cap_num, uint16_t inst_num, uint32_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_max_fr (void *sdp_ptr, uint16_t level,
+                                       uint8_t cap_num, uint16_t inst_num, uint32_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_max_cpb (void *sdp_ptr, uint16_t level,
+                                        uint8_t cap_num, uint16_t inst_num, uint32_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_max_dpb (void *sdp_ptr, uint16_t level,
+                                        uint8_t cap_num, uint16_t inst_num, uint32_t *val);
+extern sdp_result_e sdp_attr_get_fmtp_max_br (void *sdp_ptr, uint16_t level,
+                                       uint8_t cap_num, uint16_t inst_num, uint32_t *val);
+extern tinybool sdp_attr_fmtp_is_redundant_pic_cap (void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num,
+                                                    uint16_t inst_num);
+extern tinybool sdp_attr_fmtp_is_parameter_add (void *sdp_ptr, uint16_t level,
+                                                uint8_t cap_num,
+                                                uint16_t inst_num);
+extern tinybool sdp_attr_fmtp_is_annexa_set (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num,
+                                             uint16_t inst_num);
 
-extern tinybool sdp_attr_fmtp_is_annexb_set (void *sdp_ptr, u16 level,
-                                             u8 cap_num,
-                                             u16 inst_num);
+extern tinybool sdp_attr_fmtp_is_annexb_set (void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num,
+                                             uint16_t inst_num);
 
-extern sdp_fmtp_format_type_e  sdp_attr_fmtp_get_fmtp_format (void *sdp_ptr, u16 level, u8 cap_num,
-                                                              u16 inst_num);
+extern sdp_fmtp_format_type_e  sdp_attr_fmtp_get_fmtp_format (void *sdp_ptr, uint16_t level, uint8_t cap_num,
+                                                              uint16_t inst_num);
 
-extern u16 sdp_attr_get_pccodec_num_payload_types(void *sdp_ptr, u16 level,
-                                                  u8 cap_num, u16 inst_num);
-extern u16 sdp_attr_get_pccodec_payload_type(void *sdp_ptr, u16 level,
-                                   u8 cap_num, u16 inst_num, u16 payload_num);
+extern uint16_t sdp_attr_get_pccodec_num_payload_types(void *sdp_ptr, uint16_t level,
+                                                  uint8_t cap_num, uint16_t inst_num);
+extern uint16_t sdp_attr_get_pccodec_payload_type(void *sdp_ptr, uint16_t level,
+                                   uint8_t cap_num, uint16_t inst_num, uint16_t payload_num);
 extern sdp_result_e sdp_attr_add_pccodec_payload_type(void *sdp_ptr,
-                                               u16 level, u8 cap_num,
-                                               u16 inst_num, u16 payload_type);
-extern u16 sdp_attr_get_xcap_first_cap_num(void *sdp_ptr, u16 level,
-                                            u16 inst_num);
-extern sdp_media_e sdp_attr_get_xcap_media_type(void *sdp_ptr, u16 level,
-                                                u16 inst_num);
+                                               uint16_t level, uint8_t cap_num,
+                                               uint16_t inst_num, uint16_t payload_type);
+extern uint16_t sdp_attr_get_xcap_first_cap_num(void *sdp_ptr, uint16_t level,
+                                            uint16_t inst_num);
+extern sdp_media_e sdp_attr_get_xcap_media_type(void *sdp_ptr, uint16_t level,
+                                                uint16_t inst_num);
 extern sdp_transport_e sdp_attr_get_xcap_transport_type(void *sdp_ptr,
-                                         u16 level, u16 inst_num);
-extern u16 sdp_attr_get_xcap_num_payload_types(void *sdp_ptr, u16 level,
-                                               u16 inst_num);
-extern u16 sdp_attr_get_xcap_payload_type(void *sdp_ptr, u16 level,
-                                          u16 inst_num, u16 payload_num,
+                                         uint16_t level, uint16_t inst_num);
+extern uint16_t sdp_attr_get_xcap_num_payload_types(void *sdp_ptr, uint16_t level,
+                                               uint16_t inst_num);
+extern uint16_t sdp_attr_get_xcap_payload_type(void *sdp_ptr, uint16_t level,
+                                          uint16_t inst_num, uint16_t payload_num,
                                           sdp_payload_ind_e *indicator);
-extern sdp_result_e sdp_attr_set_xcap_media_type(void *sdp_ptr, u16 level,
-                                          u16 inst_num, sdp_media_e media);
-extern sdp_result_e sdp_attr_set_xcap_transport_type(void *sdp_ptr, u16 level,
-                                      u16 inst_num, sdp_transport_e transport);
-extern sdp_result_e sdp_attr_add_xcap_payload_type(void *sdp_ptr, u16 level,
-                                      u16 inst_num, u16 payload_type,
+extern sdp_result_e sdp_attr_set_xcap_media_type(void *sdp_ptr, uint16_t level,
+                                          uint16_t inst_num, sdp_media_e media);
+extern sdp_result_e sdp_attr_set_xcap_transport_type(void *sdp_ptr, uint16_t level,
+                                      uint16_t inst_num, sdp_transport_e transport);
+extern sdp_result_e sdp_attr_add_xcap_payload_type(void *sdp_ptr, uint16_t level,
+                                      uint16_t inst_num, uint16_t payload_type,
                                       sdp_payload_ind_e indicator);
-extern u16 sdp_attr_get_cdsc_first_cap_num(void *sdp_ptr, u16 level,
-                                            u16 inst_num);
-extern sdp_media_e sdp_attr_get_cdsc_media_type(void *sdp_ptr, u16 level,
-                                                u16 inst_num);
+extern uint16_t sdp_attr_get_cdsc_first_cap_num(void *sdp_ptr, uint16_t level,
+                                            uint16_t inst_num);
+extern sdp_media_e sdp_attr_get_cdsc_media_type(void *sdp_ptr, uint16_t level,
+                                                uint16_t inst_num);
 extern sdp_transport_e sdp_attr_get_cdsc_transport_type(void *sdp_ptr,
-                                         u16 level, u16 inst_num);
-extern u16 sdp_attr_get_cdsc_num_payload_types(void *sdp_ptr, u16 level,
-                                               u16 inst_num);
-extern u16 sdp_attr_get_cdsc_payload_type(void *sdp_ptr, u16 level,
-                                          u16 inst_num, u16 payload_num,
+                                         uint16_t level, uint16_t inst_num);
+extern uint16_t sdp_attr_get_cdsc_num_payload_types(void *sdp_ptr, uint16_t level,
+                                               uint16_t inst_num);
+extern uint16_t sdp_attr_get_cdsc_payload_type(void *sdp_ptr, uint16_t level,
+                                          uint16_t inst_num, uint16_t payload_num,
                                           sdp_payload_ind_e *indicator);
-extern sdp_result_e sdp_attr_set_cdsc_media_type(void *sdp_ptr, u16 level,
-                                          u16 inst_num, sdp_media_e media);
-extern sdp_result_e sdp_attr_set_cdsc_transport_type(void *sdp_ptr, u16 level,
-                                      u16 inst_num, sdp_transport_e transport);
-extern sdp_result_e sdp_attr_add_cdsc_payload_type(void *sdp_ptr, u16 level,
-                                      u16 inst_num, u16 payload_type,
+extern sdp_result_e sdp_attr_set_cdsc_media_type(void *sdp_ptr, uint16_t level,
+                                          uint16_t inst_num, sdp_media_e media);
+extern sdp_result_e sdp_attr_set_cdsc_transport_type(void *sdp_ptr, uint16_t level,
+                                      uint16_t inst_num, sdp_transport_e transport);
+extern sdp_result_e sdp_attr_add_cdsc_payload_type(void *sdp_ptr, uint16_t level,
+                                      uint16_t inst_num, uint16_t payload_type,
                                       sdp_payload_ind_e indicator);
-extern tinybool sdp_media_dynamic_payload_valid (void *sdp_ptr, u16 payload_type,
-                                                 u16 m_line);
+extern tinybool sdp_media_dynamic_payload_valid (void *sdp_ptr, uint16_t payload_type,
+                                                 uint16_t m_line);
 
-extern sdp_result_e sdp_attr_set_rtr_confirm (void *, u16 , \
-                                              u8 ,u16 ,tinybool );
-extern tinybool sdp_attr_get_rtr_confirm (void *, u16, u8, u16);
+extern sdp_result_e sdp_attr_set_rtr_confirm (void *, uint16_t , \
+                                              uint8_t ,uint16_t ,tinybool );
+extern tinybool sdp_attr_get_rtr_confirm (void *, uint16_t, uint8_t, uint16_t);
 
-extern tinybool sdp_attr_get_silencesupp_enabled(void *sdp_ptr, u16 level,
-                                                 u8 cap_num, u16 inst_num);
-extern u16 sdp_attr_get_silencesupp_timer(void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num,
+extern tinybool sdp_attr_get_silencesupp_enabled(void *sdp_ptr, uint16_t level,
+                                                 uint8_t cap_num, uint16_t inst_num);
+extern uint16_t sdp_attr_get_silencesupp_timer(void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num,
                                           tinybool *null_ind);
 extern sdp_silencesupp_pref_e sdp_attr_get_silencesupp_pref(void *sdp_ptr,
-                                                            u16 level,
-                                                            u8 cap_num,
-                                                            u16 inst_num);
+                                                            uint16_t level,
+                                                            uint8_t cap_num,
+                                                            uint16_t inst_num);
 extern sdp_silencesupp_siduse_e sdp_attr_get_silencesupp_siduse(void *sdp_ptr,
-                                                                u16 level,
-                                                                u8 cap_num,
-                                                                u16 inst_num);
-extern u8 sdp_attr_get_silencesupp_fxnslevel(void *sdp_ptr, u16 level,
-                                             u8 cap_num, u16 inst_num,
+                                                                uint16_t level,
+                                                                uint8_t cap_num,
+                                                                uint16_t inst_num);
+extern uint8_t sdp_attr_get_silencesupp_fxnslevel(void *sdp_ptr, uint16_t level,
+                                             uint8_t cap_num, uint16_t inst_num,
                                              tinybool *null_ind);
-extern sdp_result_e sdp_attr_set_silencesupp_enabled(void *sdp_ptr, u16 level,
-                                                     u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_silencesupp_enabled(void *sdp_ptr, uint16_t level,
+                                                     uint8_t cap_num, uint16_t inst_num,
                                                      tinybool enable);
-extern sdp_result_e sdp_attr_set_silencesupp_timer(void *sdp_ptr, u16 level,
-                                                   u8 cap_num, u16 inst_num,
-                                                   u16 value,
+extern sdp_result_e sdp_attr_set_silencesupp_timer(void *sdp_ptr, uint16_t level,
+                                                   uint8_t cap_num, uint16_t inst_num,
+                                                   uint16_t value,
                                                    tinybool null_ind);
-extern sdp_result_e sdp_attr_set_silencesupp_pref(void *sdp_ptr, u16 level,
-                                                  u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_silencesupp_pref(void *sdp_ptr, uint16_t level,
+                                                  uint8_t cap_num, uint16_t inst_num,
                                                   sdp_silencesupp_pref_e pref);
-extern sdp_result_e sdp_attr_set_silencesupp_siduse(void *sdp_ptr, u16 level,
-                                                    u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_silencesupp_siduse(void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num, uint16_t inst_num,
                                                     sdp_silencesupp_siduse_e siduse);
 extern sdp_result_e sdp_attr_set_silencesupp_fxnslevel(void *sdp_ptr,
-                                                       u16 level,
-                                                       u8 cap_num,
-                                                       u16 inst_num,
-                                                       u16 value,
+                                                       uint16_t level,
+                                                       uint8_t cap_num,
+                                                       uint16_t inst_num,
+                                                       uint16_t value,
                                                        tinybool null_ind);
 
 extern sdp_mediadir_role_e sdp_attr_get_comediadir_role(void *sdp_ptr,
-                                                        u16 level, u8 cap_num,
-                                                        u16 inst_num);
-extern sdp_result_e sdp_attr_set_comediadir_role(void *sdp_ptr, u16 level,
-                                                 u8 cap_num, u16 inst_num,
+                                                        uint16_t level, uint8_t cap_num,
+                                                        uint16_t inst_num);
+extern sdp_result_e sdp_attr_set_comediadir_role(void *sdp_ptr, uint16_t level,
+                                                 uint8_t cap_num, uint16_t inst_num,
                                                 sdp_mediadir_role_e role);
 
 extern sdp_result_e sdp_delete_all_media_direction_attrs (void *sdp_ptr,
-                                                          u16 level);
+                                                          uint16_t level);
 
-extern u16 sdp_attr_get_mptime_num_intervals(
-    void *sdp_ptr, u16 level, u8 cap_num, u16 inst_num);
-extern u16 sdp_attr_get_mptime_interval(
-    void *sdp_ptr, u16 level, u8 cap_num, u16 inst_num, u16 interval_num);
+extern uint16_t sdp_attr_get_mptime_num_intervals(
+    void *sdp_ptr, uint16_t level, uint8_t cap_num, uint16_t inst_num);
+extern uint16_t sdp_attr_get_mptime_interval(
+    void *sdp_ptr, uint16_t level, uint8_t cap_num, uint16_t inst_num, uint16_t interval_num);
 extern sdp_result_e sdp_attr_add_mptime_interval(
-    void *sdp_ptr, u16 level, u8 cap_num, u16 inst_num, u16 interval);
+    void *sdp_ptr, uint16_t level, uint8_t cap_num, uint16_t inst_num, uint16_t interval);
 
 
-extern sdp_result_e sdp_delete_bw_line (void *sdp_ptr, u16 level, u16 inst_num);
+extern sdp_result_e sdp_delete_bw_line (void *sdp_ptr, uint16_t level, uint16_t inst_num);
 extern sdp_result_e sdp_copy_all_bw_lines(void *src_sdp_ptr, void *dst_sdp_ptr,
-                                          u16 src_level, u16 dst_level);
-extern sdp_bw_modifier_e sdp_get_bw_modifier(void *sdp_ptr, u16 level,
-                                             u16 inst_num);
+                                          uint16_t src_level, uint16_t dst_level);
+extern sdp_bw_modifier_e sdp_get_bw_modifier(void *sdp_ptr, uint16_t level,
+                                             uint16_t inst_num);
 extern const char *sdp_get_bw_modifier_name(sdp_bw_modifier_e bw_modifier);
-extern int32 sdp_get_bw_value(void *sdp_ptr, u16 level, u16 inst_num);
-extern int32 sdp_get_num_bw_lines (void *sdp_ptr, u16 level);
+extern int32_t sdp_get_bw_value(void *sdp_ptr, uint16_t level, uint16_t inst_num);
+extern int32_t sdp_get_num_bw_lines (void *sdp_ptr, uint16_t level);
 
-extern sdp_result_e sdp_add_new_bw_line(void *sdp_ptr, u16 level,
-                                         sdp_bw_modifier_e bw_modifier, u16 *inst_num);
-extern sdp_result_e sdp_set_bw(void *sdp_ptr, u16 level, u16 inst_num,
-                               sdp_bw_modifier_e value, u32 bw_val);
+extern sdp_result_e sdp_add_new_bw_line(void *sdp_ptr, uint16_t level,
+                                         sdp_bw_modifier_e bw_modifier, uint16_t *inst_num);
+extern sdp_result_e sdp_set_bw(void *sdp_ptr, uint16_t level, uint16_t inst_num,
+                               sdp_bw_modifier_e value, uint32_t bw_val);
 
-extern sdp_group_attr_e sdp_get_group_attr(void *sdp_ptr, u16 level,
-                                           u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_set_group_attr(void *sdp_ptr, u16 level,
-                                       u8 cap_num, u16 inst_num,
+extern sdp_group_attr_e sdp_get_group_attr(void *sdp_ptr, uint16_t level,
+                                           uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_set_group_attr(void *sdp_ptr, uint16_t level,
+                                       uint8_t cap_num, uint16_t inst_num,
                                        sdp_group_attr_e value);
 
-extern const char* sdp_attr_get_x_sidout (void *sdp_ptr, u16 level,
-                                     u8 cap_num, u16 inst_num);
+extern const char* sdp_attr_get_x_sidout (void *sdp_ptr, uint16_t level,
+                                     uint8_t cap_num, uint16_t inst_num);
 
-extern sdp_result_e sdp_attr_set_x_sidout (void *sdp_ptr, u16 level,
-                                   u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_x_sidout (void *sdp_ptr, uint16_t level,
+                                   uint8_t cap_num, uint16_t inst_num,
                                    const char *sidout);
 
-extern const char* sdp_attr_get_x_sidin (void *sdp_ptr, u16 level,
-                                     u8 cap_num, u16 inst_num);
+extern const char* sdp_attr_get_x_sidin (void *sdp_ptr, uint16_t level,
+                                     uint8_t cap_num, uint16_t inst_num);
 
-extern sdp_result_e sdp_attr_set_x_sidin (void *sdp_ptr, u16 level,
-                                   u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_x_sidin (void *sdp_ptr, uint16_t level,
+                                   uint8_t cap_num, uint16_t inst_num,
                                    const char *sidin);
 
-extern const char* sdp_attr_get_x_confid (void *sdp_ptr, u16 level,
-                                     u8 cap_num, u16 inst_num);
+extern const char* sdp_attr_get_x_confid (void *sdp_ptr, uint16_t level,
+                                     uint8_t cap_num, uint16_t inst_num);
 
-extern sdp_result_e sdp_attr_set_x_confid (void *sdp_ptr, u16 level,
-                                   u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_attr_set_x_confid (void *sdp_ptr, uint16_t level,
+                                   uint8_t cap_num, uint16_t inst_num,
                                    const char *confid);
 
-extern sdp_result_e sdp_attr_set_ice_candidate(void *sdp_ptr, u16 level,
-                              u8 cap_num, u16 inst_num, const char *ice_candidate);
+extern sdp_result_e sdp_attr_set_ice_candidate(void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, uint16_t inst_num, const char *ice_candidate);
 
-extern u16 sdp_get_group_num_id(void *sdp_ptr, u16 level,
-                                u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_set_group_num_id(void *sdp_ptr, u16 level,
-                                         u8 cap_num, u16 inst_num,
-                                         u16 group_num_id);
+extern uint16_t sdp_get_group_num_id(void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_set_group_num_id(void *sdp_ptr, uint16_t level,
+                                         uint8_t cap_num, uint16_t inst_num,
+                                         uint16_t group_num_id);
 
-extern const char* sdp_get_group_id(void *sdp_ptr, u16 level,
-                              u8 cap_num, u16 inst_num, u16 id_num);
-extern sdp_result_e sdp_set_group_id (void *sdp_ptr, u16 level,
-                                      u8 cap_num, u16 inst_num, char* group_id);
+extern const char* sdp_get_group_id(void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, uint16_t inst_num, uint16_t id_num);
+extern sdp_result_e sdp_set_group_id (void *sdp_ptr, uint16_t level,
+                                      uint8_t cap_num, uint16_t inst_num, char* group_id);
 
 
-extern int32 sdp_get_mid_value(void *sdp_ptr, u16 level);
-extern sdp_result_e sdp_set_mid_value(void *sdp_ptr, u16 level, u32 mid_val);
+extern int32_t sdp_get_mid_value(void *sdp_ptr, uint16_t level);
+extern sdp_result_e sdp_set_mid_value(void *sdp_ptr, uint16_t level, uint32_t mid_val);
 
-extern sdp_result_e sdp_set_source_filter(void *sdp_ptr, u16 level,
-                                          u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_set_source_filter(void *sdp_ptr, uint16_t level,
+                                          uint8_t cap_num, uint16_t inst_num,
                                           sdp_src_filter_mode_e mode,
                                           sdp_nettype_e nettype,
                                           sdp_addrtype_e addrtype,
                                           const char *dest_addr,
                                           const char *src_addr);
-extern sdp_result_e sdp_include_new_filter_src_addr(void *sdp_ptr, u16 level,
-                                                    u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_include_new_filter_src_addr(void *sdp_ptr, uint16_t level,
+                                                    uint8_t cap_num, uint16_t inst_num,
                                                     const char *src_addr);
 extern sdp_src_filter_mode_e sdp_get_source_filter_mode(void *sdp_ptr,
-                                                  u16 level, u8 cap_num,
-                                                  u16 inst_num);
+                                                  uint16_t level, uint8_t cap_num,
+                                                  uint16_t inst_num);
 extern sdp_result_e sdp_get_filter_destination_attributes(void *sdp_ptr,
-                                                  u16 level, u8 cap_num,
-                                                  u16 inst_num,
+                                                  uint16_t level, uint8_t cap_num,
+                                                  uint16_t inst_num,
                                                   sdp_nettype_e *nettype,
                                                   sdp_addrtype_e *addrtype,
                                                   char *dest_addr);
-extern int32 sdp_get_filter_source_address_count(void *sdp_ptr, u16 level,
-                                                 u8 cap_num, u16 inst_num);
-extern sdp_result_e sdp_get_filter_source_address (void *sdp_ptr, u16 level,
-                                                   u8 cap_num, u16 inst_num,
-                                                   u16 src_addr_id,
+extern int32_t sdp_get_filter_source_address_count(void *sdp_ptr, uint16_t level,
+                                                 uint8_t cap_num, uint16_t inst_num);
+extern sdp_result_e sdp_get_filter_source_address (void *sdp_ptr, uint16_t level,
+                                                   uint8_t cap_num, uint16_t inst_num,
+                                                   uint16_t src_addr_id,
                                                    char *src_addr);
 
-extern sdp_result_e sdp_set_rtcp_unicast_mode(void *sdp_ptr, u16 level,
-                                              u8 cap_num, u16 inst_num,
+extern sdp_result_e sdp_set_rtcp_unicast_mode(void *sdp_ptr, uint16_t level,
+                                              uint8_t cap_num, uint16_t inst_num,
                                               sdp_rtcp_unicast_mode_e mode);
 extern sdp_rtcp_unicast_mode_e sdp_get_rtcp_unicast_mode(void *sdp_ptr,
-                                              u16 level, u8 cap_num,
-                                              u16 inst_num);
+                                              uint16_t level, uint8_t cap_num,
+                                              uint16_t inst_num);
 
 void sdp_crypto_debug(char *buffer, ulong length_bytes);
 char * sdp_debug_msg_filter(char *buffer, ulong length_bytes);
 
-extern int32
+extern int32_t
 sdp_attr_get_sdescriptions_tag(void *sdp_ptr,
-                               u16 level,
-                               u8 cap_num,
-                               u16 inst_num);
+                               uint16_t level,
+                               uint8_t cap_num,
+                               uint16_t inst_num);
 
 extern sdp_srtp_crypto_suite_t
 sdp_attr_get_sdescriptions_crypto_suite(void *sdp_ptr,
-                                        u16 level,
-                                        u8 cap_num,
-                                        u16 inst_num);
+                                        uint16_t level,
+                                        uint8_t cap_num,
+                                        uint16_t inst_num);
 
 extern const char*
 sdp_attr_get_sdescriptions_key(void *sdp_ptr,
-                               u16 level,
-                               u8 cap_num,
-                               u16 inst_num);
+                               uint16_t level,
+                               uint8_t cap_num,
+                               uint16_t inst_num);
 
 extern const char*
 sdp_attr_get_sdescriptions_salt(void *sdp_ptr,
-                                u16 level,
-                                u8 cap_num,
-                                u16 inst_num);
+                                uint16_t level,
+                                uint8_t cap_num,
+                                uint16_t inst_num);
 
 extern const char*
 sdp_attr_get_sdescriptions_lifetime(void *sdp_ptr,
-                                    u16 level,
-                                    u8 cap_num,
-                                    u16 inst_num);
+                                    uint16_t level,
+                                    uint8_t cap_num,
+                                    uint16_t inst_num);
 
 extern sdp_result_e
 sdp_attr_get_sdescriptions_mki(void *sdp_ptr,
-                               u16 level,
-                               u8 cap_num,
-                               u16 inst_num,
+                               uint16_t level,
+                               uint8_t cap_num,
+                               uint16_t inst_num,
                                const char **mki_value,
-                               u16 *mki_length);
+                               uint16_t *mki_length);
 
 extern const char*
 sdp_attr_get_sdescriptions_session_params(void *sdp_ptr,
-                                          u16 level,
-                                          u8 cap_num,
-                                          u16 inst_num);
+                                          uint16_t level,
+                                          uint8_t cap_num,
+                                          uint16_t inst_num);
 
 extern unsigned char
 sdp_attr_get_sdescriptions_key_size(void *sdp_ptr,
-                                    u16 level,
-                                    u8 cap_num,
-                                    u16 inst_num);
+                                    uint16_t level,
+                                    uint8_t cap_num,
+                                    uint16_t inst_num);
 
 extern unsigned char
 sdp_attr_get_sdescriptions_salt_size(void *sdp_ptr,
-                                     u16 level,
-                                     u8 cap_num,
-                                     u16 inst_num);
+                                     uint16_t level,
+                                     uint8_t cap_num,
+                                     uint16_t inst_num);
 
 extern unsigned long
 sdp_attr_get_srtp_crypto_selection_flags(void *sdp_ptr,
-                                         u16 level,
-                                         u8 cap_num,
-                                         u16 inst_num);
+                                         uint16_t level,
+                                         uint8_t cap_num,
+                                         uint16_t inst_num);
 
 extern sdp_result_e
-sdp_attr_set_sdescriptions_tag(void *sdp_ptr, u16 level,
-                               u8 cap_num, u16 inst_num,
-                               int32 tag_num);
+sdp_attr_set_sdescriptions_tag(void *sdp_ptr, uint16_t level,
+                               uint8_t cap_num, uint16_t inst_num,
+                               int32_t tag_num);
 
 extern sdp_result_e
-sdp_attr_set_sdescriptions_crypto_suite(void *sdp_ptr, u16 level,
-                                        u8 cap_num, u16 inst_num,
+sdp_attr_set_sdescriptions_crypto_suite(void *sdp_ptr, uint16_t level,
+                                        uint8_t cap_num, uint16_t inst_num,
                                         sdp_srtp_crypto_suite_t crypto_suite);
 
 extern sdp_result_e
-sdp_attr_set_sdescriptions_key(void *sdp_ptr, u16 level,
-                               u8 cap_num, u16 inst_num,
+sdp_attr_set_sdescriptions_key(void *sdp_ptr, uint16_t level,
+                               uint8_t cap_num, uint16_t inst_num,
                                char *key);
 
 extern sdp_result_e
-sdp_attr_set_sdescriptions_salt(void *sdp_ptr, u16 level,
-                                u8 cap_num, u16 inst_num,
+sdp_attr_set_sdescriptions_salt(void *sdp_ptr, uint16_t level,
+                                uint8_t cap_num, uint16_t inst_num,
                                 char *salt);
 
 extern sdp_result_e
-sdp_attr_set_sdescriptions_lifetime(void *sdp_ptr, u16 level,
-                                    u8 cap_num, u16 inst_num,
+sdp_attr_set_sdescriptions_lifetime(void *sdp_ptr, uint16_t level,
+                                    uint8_t cap_num, uint16_t inst_num,
                                     char *lifetime);
 
 extern sdp_result_e
-sdp_attr_set_sdescriptions_mki(void *sdp_ptr, u16 level,
-                               u8 cap_num, u16 inst_num,
+sdp_attr_set_sdescriptions_mki(void *sdp_ptr, uint16_t level,
+                               uint8_t cap_num, uint16_t inst_num,
                                char *mki_value,
-                               u16 mki_length);
+                               uint16_t mki_length);
 
 extern sdp_result_e
 sdp_attr_set_sdescriptions_key_size(void *sdp_ptr,
-                                     u16 level,
-                                     u8 cap_num,
-                                     u16 inst_num,
+                                     uint16_t level,
+                                     uint8_t cap_num,
+                                     uint16_t inst_num,
                                      unsigned char key_size);
 
 extern sdp_result_e
 sdp_attr_set_sdescriptions_salt_size(void *sdp_ptr,
-                                     u16 level,
-                                     u8 cap_num,
-                                     u16 inst_num,
+                                     uint16_t level,
+                                     uint8_t cap_num,
+                                     uint16_t inst_num,
                                      unsigned char salt_size);
 
 sdp_result_e
-sdp_attr_get_ice_attribute (void *sdp_ptr, u16 level,
-                           u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num,
+sdp_attr_get_ice_attribute (void *sdp_ptr, uint16_t level,
+                           uint8_t cap_num, sdp_attr_e sdp_attr, uint16_t inst_num,
                            char **out);
 sdp_result_e
-sdp_attr_set_ice_attribute(void *sdp_ptr, u16 level,
-                           u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num, const char *ice_attrib);
+sdp_attr_set_ice_attribute(void *sdp_ptr, uint16_t level,
+                           uint8_t cap_num, sdp_attr_e sdp_attr, uint16_t inst_num, const char *ice_attrib);
 
 sdp_result_e
-sdp_attr_get_rtcp_mux_attribute (void *sdp_ptr, u16 level,
-                                  u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num,
+sdp_attr_get_rtcp_mux_attribute (void *sdp_ptr, uint16_t level,
+                                  uint8_t cap_num, sdp_attr_e sdp_attr, uint16_t inst_num,
                                   tinybool *rtcp_mux);
 
 sdp_result_e
-sdp_attr_set_rtcp_mux_attribute(void *sdp_ptr, u16 level,
-                              u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num, const tinybool rtcp_mux);
+sdp_attr_set_rtcp_mux_attribute(void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, sdp_attr_e sdp_attr, uint16_t inst_num, const tinybool rtcp_mux);
 
 
 sdp_result_e
-sdp_attr_get_setup_attribute (void *sdp_ptr, u16 level,
-    u8 cap_num, u16 inst_num, sdp_setup_type_e *setup_type);
+sdp_attr_get_setup_attribute (void *sdp_ptr, uint16_t level,
+    uint8_t cap_num, uint16_t inst_num, sdp_setup_type_e *setup_type);
 
 sdp_result_e
-sdp_attr_set_setup_attribute(void *sdp_ptr, u16 level,
-    u8 cap_num, u16 inst_num, sdp_setup_type_e setup_type);
+sdp_attr_set_setup_attribute(void *sdp_ptr, uint16_t level,
+    uint8_t cap_num, uint16_t inst_num, sdp_setup_type_e setup_type);
 
 sdp_result_e
-sdp_attr_get_connection_attribute (void *sdp_ptr, u16 level,
-    u8 cap_num, u16 inst_num, sdp_connection_type_e *connection_type);
+sdp_attr_get_connection_attribute (void *sdp_ptr, uint16_t level,
+    uint8_t cap_num, uint16_t inst_num, sdp_connection_type_e *connection_type);
 
 sdp_result_e
-sdp_attr_set_connection_attribute(void *sdp_ptr, u16 level,
-    u8 cap_num, u16 inst_num, sdp_connection_type_e connection_type);
+sdp_attr_set_connection_attribute(void *sdp_ptr, uint16_t level,
+    uint8_t cap_num, uint16_t inst_num, sdp_connection_type_e connection_type);
 
 sdp_result_e
-sdp_attr_get_dtls_fingerprint_attribute (void *sdp_ptr, u16 level,
-                                  u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num,
+sdp_attr_get_dtls_fingerprint_attribute (void *sdp_ptr, uint16_t level,
+                                  uint8_t cap_num, sdp_attr_e sdp_attr, uint16_t inst_num,
                                   char **out);
 
 sdp_result_e
-sdp_attr_set_dtls_fingerprint_attribute(void *sdp_ptr, u16 level,
-                              u8 cap_num, sdp_attr_e sdp_attr, u16 inst_num, const char *dtls_fingerprint);
+sdp_attr_set_dtls_fingerprint_attribute(void *sdp_ptr, uint16_t level,
+                              uint8_t cap_num, sdp_attr_e sdp_attr, uint16_t inst_num, const char *dtls_fingerprint);
 
 sdp_rtcp_fb_ack_type_e
-sdp_attr_get_rtcp_fb_ack(void *sdp_ptr, u16 level, u16 payload_type, u16 inst);
+sdp_attr_get_rtcp_fb_ack(void *sdp_ptr, uint16_t level, uint16_t payload_type, uint16_t inst);
 
 sdp_rtcp_fb_nack_type_e
-sdp_attr_get_rtcp_fb_nack(void *sdp_ptr, u16 level, u16 payload_type, u16 inst);
+sdp_attr_get_rtcp_fb_nack(void *sdp_ptr, uint16_t level, uint16_t payload_type, uint16_t inst);
 
-u32
-sdp_attr_get_rtcp_fb_trr_int(void *sdp_ptr, u16 level, u16 payload_type,
-                             u16 inst);
+uint32_t
+sdp_attr_get_rtcp_fb_trr_int(void *sdp_ptr, uint16_t level, uint16_t payload_type,
+                             uint16_t inst);
 
 sdp_rtcp_fb_ccm_type_e
-sdp_attr_get_rtcp_fb_ccm(void *sdp_ptr, u16 level, u16 payload_type, u16 inst);
+sdp_attr_get_rtcp_fb_ccm(void *sdp_ptr, uint16_t level, uint16_t payload_type, uint16_t inst);
 
 sdp_result_e
-sdp_attr_set_rtcp_fb_ack(void *sdp_ptr, u16 level, u16 payload_type, u16 inst,
+sdp_attr_set_rtcp_fb_ack(void *sdp_ptr, uint16_t level, uint16_t payload_type, uint16_t inst,
                          sdp_rtcp_fb_ack_type_e type);
 
 sdp_result_e
-sdp_attr_set_rtcp_fb_nack(void *sdp_ptr, u16 level, u16 payload_type, u16 inst,
+sdp_attr_set_rtcp_fb_nack(void *sdp_ptr, uint16_t level, uint16_t payload_type, uint16_t inst,
                           sdp_rtcp_fb_nack_type_e);
 
 sdp_result_e
-sdp_attr_set_rtcp_fb_trr_int(void *sdp_ptr, u16 level, u16 payload_type,
-                             u16 inst, u32 interval);
+sdp_attr_set_rtcp_fb_trr_int(void *sdp_ptr, uint16_t level, uint16_t payload_type,
+                             uint16_t inst, uint32_t interval);
 sdp_result_e
-sdp_attr_set_rtcp_fb_ccm(void *sdp_ptr, u16 level, u16 payload_type, u16 inst,
+sdp_attr_set_rtcp_fb_ccm(void *sdp_ptr, uint16_t level, uint16_t payload_type, uint16_t inst,
                          sdp_rtcp_fb_ccm_type_e);
 const char *
-sdp_attr_get_extmap_uri(void *sdp_ptr, u16 level, u16 inst);
+sdp_attr_get_extmap_uri(void *sdp_ptr, uint16_t level, uint16_t inst);
 
-u16
-sdp_attr_get_extmap_id(void *sdp_ptr, u16 level, u16 inst);
+uint16_t
+sdp_attr_get_extmap_id(void *sdp_ptr, uint16_t level, uint16_t inst);
 
 sdp_result_e
-sdp_attr_set_extmap(void *sdp_ptr, u16 level, u16 id, const char* uri, u16 inst);
+sdp_attr_set_extmap(void *sdp_ptr, uint16_t level, uint16_t id, const char* uri, uint16_t inst);
 
 #endif /* _SDP_H_ */
