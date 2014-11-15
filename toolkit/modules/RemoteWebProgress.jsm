@@ -139,11 +139,20 @@ RemoteWebProgressManager.prototype = {
     let json = aMessage.json;
     let objects = aMessage.objects;
 
+    let webProgress = null;
+    let isTopLevel = json.webProgress && json.webProgress.isTopLevel;
     // The top-level WebProgress is always the same, but because we don't
-    // really have a concept of subframes/content we always creat a new object
+    // really have a concept of subframes/content we always create a new object
     // for those.
-    let webProgress = json.isTopLevel ? this._topLevelWebProgress
-                                      : new RemoteWebProgress(this, false);
+    if (json.webProgress) {
+      webProgress = isTopLevel ? this._topLevelWebProgress
+                               : new RemoteWebProgress(this, false);
+
+      // Update the actual WebProgress fields.
+      webProgress._isLoadingDocument = json.webProgress.isLoadingDocument;
+      webProgress._DOMWindow = objects.DOMWindow;
+      webProgress._loadType = json.webProgress.loadType;
+    }
 
     // The WebProgressRequest object however is always dynamic.
     let request = null;
@@ -152,12 +161,7 @@ RemoteWebProgressManager.prototype = {
                                              json.originalRequestURI);
     }
 
-    // Update the actual WebProgress fields.
-    webProgress._isLoadingDocument = json.isLoadingDocument;
-    webProgress._DOMWindow = objects.DOMWindow;
-    webProgress._loadType = json.loadType;
-
-    if (json.isTopLevel) {
+    if (isTopLevel) {
       this._browser._contentWindow = objects.contentWindow;
       this._browser._documentContentType = json.documentContentType;
     }
@@ -175,7 +179,7 @@ RemoteWebProgressManager.prototype = {
       this._browser.webNavigation.canGoBack = json.canGoBack;
       this._browser.webNavigation.canGoForward = json.canGoForward;
 
-      if (json.isTopLevel) {
+      if (isTopLevel) {
         this._browser.webNavigation._currentURI = location;
         this._browser._characterSet = json.charset;
         this._browser._documentURI = newURI(json.documentURI);
@@ -190,7 +194,7 @@ RemoteWebProgressManager.prototype = {
     case "Content:SecurityChange":
       let [status, state] = this._fixSSLStatusAndState(json.status, json.state);
 
-      if (json.isTopLevel) {
+      if (isTopLevel) {
         // Invoking this getter triggers the generation of the underlying object,
         // which we need to access with ._securityUI, because .securityUI returns
         // a wrapper that makes _update inaccessible.
