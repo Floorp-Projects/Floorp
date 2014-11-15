@@ -558,8 +558,6 @@ private:
   already_AddRefed<layers::Image> GetCurrentImage();
   void UpdateImageContainer();
 
-  void SetInUpdateImageContainer(bool aInUpdate) { mInUpdateImageContainer = aInUpdate; }
-  bool IsInUpdateImageContainer() { return mInUpdateImageContainer; }
   enum RequestDecodeType {
       ASYNCHRONOUS,
       SYNCHRONOUS_NOTIFY,
@@ -640,8 +638,6 @@ private: // data
   // Decoder and friends
   nsRefPtr<Decoder>          mDecoder;
   nsRefPtr<DecodeRequest>    mDecodeRequest;
-
-  bool                       mInDecoder;
   // END LOCKED MEMBER VARIABLES
 
   // Notification state. Used to avoid recursive notifications.
@@ -664,11 +660,6 @@ private: // data
   // Whether the animation can stop, due to running out
   // of frames, or no more owning request
   bool                       mAnimationFinished:1;
-
-  // Whether we're calling Decoder::Finish() from ShutdownDecoder.
-  bool                       mFinishing:1;
-
-  bool                       mInUpdateImageContainer:1;
 
   // Whether, once we are done doing a size decode, we should immediately kick
   // off a full decode.
@@ -754,28 +745,6 @@ protected:
 inline NS_IMETHODIMP RasterImage::GetAnimationMode(uint16_t *aAnimationMode) {
   return GetAnimationModeInternal(aAnimationMode);
 }
-
-// Asynchronous Decode Requestor
-//
-// We use this class when someone calls requestDecode() from within a decode
-// notification. Since requestDecode() involves modifying the decoder's state
-// (for example, possibly shutting down a header-only decode and starting a
-// full decode), we don't want to do this from inside a decoder.
-class imgDecodeRequestor : public nsRunnable
-{
-  public:
-    explicit imgDecodeRequestor(RasterImage &aContainer) {
-      mContainer = &aContainer;
-    }
-    NS_IMETHOD Run() {
-      if (mContainer)
-        mContainer->StartDecoding();
-      return NS_OK;
-    }
-
-  private:
-    WeakPtr<RasterImage> mContainer;
-};
 
 } // namespace image
 } // namespace mozilla
