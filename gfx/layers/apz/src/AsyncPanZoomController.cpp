@@ -2011,7 +2011,7 @@ void AsyncPanZoomController::HandleFlingOverscroll(const ParentLayerPoint& aVelo
                                                             true /* handoff */))) {
     // No one wanted the fling, so we "take it" ourselves by entering an
     // overscroll animation starting with the fling's velocity.
-    if (IsPannable()) {
+    if (IsPannable() && gfxPrefs::APZOverscrollEnabled()) {
       StartOverscrollAnimation(aVelocity);
     }
   }
