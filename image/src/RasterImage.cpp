@@ -320,7 +320,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
 #endif
   mDecodingMonitor("RasterImage Decoding Monitor"),
   mDecoder(nullptr),
-  mInDecoder(false),
   mStatusDiff(ImageStatusDiff::NoChange()),
   mNotifying(false),
   mHasSize(false),
@@ -331,8 +330,6 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mDecoded(false),
   mHasBeenDecoded(false),
   mAnimationFinished(false),
-  mFinishing(false),
-  mInUpdateImageContainer(false),
   mWantFullDecode(false),
   mPendingError(false)
 {
@@ -778,10 +775,6 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
   if (mError)
     return nullptr;
 
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
-    return nullptr;
-
   if (!ApplyDecodeFlags(aFlags, aWhichFrame))
     return nullptr;
 
@@ -857,10 +850,6 @@ RasterImage::GetFrameInternal(uint32_t aWhichFrame,
     return nullptr;
 
   if (mError)
-    return nullptr;
-
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
     return nullptr;
 
   if (!ApplyDecodeFlags(aFlags, aWhichFrame))
@@ -968,18 +957,16 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
 void
 RasterImage::UpdateImageContainer()
 {
-  if (!mImageContainer || IsInUpdateImageContainer()) {
+  if (!mImageContainer) {
     return;
   }
-
-  SetInUpdateImageContainer(true);
 
   nsRefPtr<layers::Image> image = GetCurrentImage();
   if (!image) {
     return;
   }
+
   mImageContainer->SetCurrentImage(image);
-  SetInUpdateImageContainer(false);
 }
 
 size_t
@@ -1530,9 +1517,6 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   NS_ABORT_IF_FALSE(!mHasSourceData, "Calling AddSourceData() after calling "
                                      "sourceDataComplete()!");
 
-  // This call should come straight from necko - no reentrancy allowed
-  NS_ABORT_IF_FALSE(!mInDecoder, "Re-entrant call to AddSourceData!");
-
   // Image is already decoded, we shouldn't be getting data, but it could
   // be extra garbage data at the end of a file.
   if (mDecoded) {
@@ -2049,11 +2033,7 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   nsRefPtr<Decoder> decoder = mDecoder;
   mDecoder = nullptr;
 
-  mFinishing = true;
-  mInDecoder = true;
   decoder->Finish(aIntent);
-  mInDecoder = false;
-  mFinishing = false;
 
   // Unlock the last frame (if we have any). Our invariant is that, while we
   // have a decoder open, the last frame is always locked.
@@ -2104,9 +2084,7 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy
 
   // Write
   nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
-  mInDecoder = true;
   mDecoder->Write(aBuffer, aCount, aStrategy);
-  mInDecoder = false;
 
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
@@ -2186,27 +2164,10 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mDecoded)
     return NS_OK;
 
-  // mFinishing protects against the case when we enter RequestDecode from
-  // ShutdownDecoder -- in that case, we're done with the decode, we're just
-  // not quite ready to admit it.  See bug 744309.
-  if (mFinishing)
-    return NS_OK;
-
   // If we're currently waiting for a new frame, we can't do anything until
   // that frame is allocated.
   if (mDecoder && mDecoder->NeedsNewFrame())
     return NS_OK;
-
-  // If our callstack goes through a size decoder, we have a problem.
-  // We need to shutdown the size decode and replace it with  a full
-  // decoder, but can't do that from within the decoder itself. Thus, we post
-  // an asynchronous event to the event loop to do it later. Since
-  // RequestDecode() is an asynchronous function this works fine (though it's
-  // a little slower).
-  if (mInDecoder) {
-    nsRefPtr<imgDecodeRequestor> requestor = new imgDecodeRequestor(*this);
-    return NS_DispatchToCurrentThread(requestor);
-  }
 
   // If we have a size decoder open, make sure we get the size
   if (mDecoder && mDecoder->IsSizeDecode()) {
@@ -2306,7 +2267,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   // If we can do decoding now, do so.  Small images will decode completely,
   // large images will decode a bit and post themselves to the event loop
   // to finish decoding.
-  if (!mDecoded && !mInDecoder && mHasSourceData && aDecodeType == SYNCHRONOUS_NOTIFY_AND_SOME_DECODE) {
+  if (!mDecoded && mHasSourceData && aDecodeType == SYNCHRONOUS_NOTIFY_AND_SOME_DECODE) {
     PROFILER_LABEL_PRINTF("RasterImage", "DecodeABitOf",
       js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
 
@@ -2345,12 +2306,6 @@ RasterImage::SyncDecode()
   }
 
   ReentrantMonitorAutoEnter lock(mDecodingMonitor);
-
-  // We really have no good way of forcing a synchronous decode if we're being
-  // called in a re-entrant manner (ie, from an event listener fired by a
-  // decoder), because the decoding machinery is already tied up. We thus explicitly
-  // disallow this type of call in the API, and check for it in API methods.
-  NS_ABORT_IF_FALSE(!mInDecoder, "Yikes, forcing sync in reentrant call!");
 
   if (mDecodeRequest) {
     // If the image is waiting for decode work to be notified, go ahead and do that.
@@ -2600,10 +2555,6 @@ RasterImage::Draw(gfxContext* aContext,
     return NS_ERROR_INVALID_ARG;
 
   if (mError)
-    return NS_ERROR_FAILURE;
-
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
     return NS_ERROR_FAILURE;
 
   // Illegal -- you can't draw with non-default decode flags.
