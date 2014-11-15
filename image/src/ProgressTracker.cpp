@@ -58,12 +58,15 @@ ProgressTracker::ResetImage()
 
 void ProgressTracker::SetIsMultipart()
 {
-  mProgress |= FLAG_IS_MULTIPART;
-
-  // If we haven't already blocked onload, make sure we never do.
-  if (!(mProgress & FLAG_ONLOAD_BLOCKED)) {
-    mProgress |= FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
+  if (mProgress & FLAG_IS_MULTIPART) {
+    return;
   }
+
+  MOZ_ASSERT(!(mProgress & FLAG_ONLOAD_BLOCKED),
+             "Blocked onload before we knew we were multipart?");
+
+  // Set the MULTIPART flag and ensure that we never block onload.
+  mProgress |= FLAG_IS_MULTIPART | FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
 }
 
 bool
@@ -430,7 +433,8 @@ ProgressTracker::ResetForNewRequest()
 
   // We're starting a new load (and if this is called more than once, this is a
   // multipart request) so keep only the bits that carry over between loads.
-  mProgress &= FLAG_IS_MULTIPART | FLAG_HAS_ERROR;
+  mProgress &= FLAG_IS_MULTIPART | FLAG_HAS_ERROR |
+               FLAG_ONLOAD_BLOCKED | FLAG_ONLOAD_UNBLOCKED;
 }
 
 void
