@@ -24,11 +24,12 @@ class RasterImage;
 class nsPNGDecoder : public Decoder
 {
 public:
-  explicit nsPNGDecoder(RasterImage &aImage);
+  explicit nsPNGDecoder(RasterImage& aImage);
   virtual ~nsPNGDecoder();
 
   virtual void InitInternal();
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount,
+                             DecodeStrategy aStrategy) MOZ_OVERRIDE;
   virtual Telemetry::ID SpeedHistogram();
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
@@ -71,10 +72,10 @@ public:
   png_structp mPNG;
   png_infop mInfo;
   nsIntRect mFrameRect;
-  uint8_t *mCMSLine;
-  uint8_t *interlacebuf;
-  qcms_profile *mInProfile;
-  qcms_transform *mTransform;
+  uint8_t* mCMSLine;
+  uint8_t* interlacebuf;
+  qcms_profile* mInProfile;
+  qcms_transform* mTransform;
 
   gfx::SurfaceFormat format;
 
@@ -106,12 +107,9 @@ public:
 
   // The number of frames we've finished.
   uint32_t mNumFrames;
-  
-  /*
-   * libpng callbacks
-   *
-   * We put these in the class so that they can access protected members.
-   */
+
+  // libpng callbacks
+  // We put these in the class so that they can access protected members.
   static void PNGAPI info_callback(png_structp png_ptr, png_infop info_ptr);
   static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row,
                                   png_uint_32 row_num, int pass);

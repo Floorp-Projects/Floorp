@@ -117,6 +117,7 @@ class nsLayoutUtils
   typedef mozilla::dom::DOMRectList DOMRectList;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
+  typedef mozilla::IntrinsicSize IntrinsicSize;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -1078,6 +1079,32 @@ public:
   static nsRect GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
                                         nsIFrame* aFrame,
                                         uint32_t aFlags = 0);
+
+  /**
+   * Computes the destination rect that a given replaced element should render
+   * into, based on its CSS 'object-fit' and 'object-position' properties.
+   *
+   * @param aConstraintRect The constraint rect that we have at our disposal,
+   *                        which would e.g. be exactly filled by the image
+   *                        if we had "object-fit: fill".
+   * @param aIntrinsicSize The replaced content's intrinsic size, as reported
+   *                       by nsIFrame::GetIntrinsicSize().
+   * @param aIntrinsicRatio The replaced content's intrinsic ratio, as reported
+   *                        by nsIFrame::GetIntrinsicRatio().
+   * @param aStylePos The nsStylePosition struct that contains the 'object-fit'
+   *                  and 'object-position' values that we should rely on.
+   *                  (This should usually be the nsStylePosition for the
+   *                  replaced element in question, but not always. For
+   *                  example, a <video>'s poster-image has a dedicated
+   *                  anonymous element & child-frame, but we should still use
+   *                  the <video>'s 'object-fit' and 'object-position' values.)
+   * @return The nsRect into which we should render the replaced content (using
+   *         the same coordinate space as the passed-in aConstraintRect).
+   */
+  static nsRect ComputeObjectDestRect(const nsRect& aConstraintRect,
+                                      const IntrinsicSize& aIntrinsicSize,
+                                      const nsSize& aIntrinsicRatio,
+                                      const nsStylePosition* aStylePos);
 
   /**
    * Get the font metrics corresponding to the frame's style data.

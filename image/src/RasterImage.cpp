@@ -11,7 +11,6 @@
 #include "base/histogram.h"
 #include "gfxPlatform.h"
 #include "nsComponentManagerUtils.h"
-#include "imgDecoderObserver.h"
 #include "nsError.h"
 #include "Decoder.h"
 #include "nsAutoPtr.h"
@@ -308,7 +307,7 @@ NS_IMPL_ISUPPORTS(RasterImage, imgIContainer, nsIProperties,
 #endif
 
 //******************************************************************************
-RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
+RasterImage::RasterImage(ProgressTracker* aProgressTracker,
                          ImageURL* aURI /* = nullptr */) :
   ImageResource(aURI), // invoke superclass's constructor
   mSize(0,0),
@@ -321,8 +320,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
 #endif
   mDecodingMonitor("RasterImage Decoding Monitor"),
   mDecoder(nullptr),
-  mInDecoder(false),
-  mStatusDiff(ImageStatusDiff::NoChange()),
+  mNotifyProgress(NoProgress),
   mNotifying(false),
   mHasSize(false),
   mDecodeOnDraw(false),
@@ -332,12 +330,10 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mDecoded(false),
   mHasBeenDecoded(false),
   mAnimationFinished(false),
-  mFinishing(false),
-  mInUpdateImageContainer(false),
   mWantFullDecode(false),
   mPendingError(false)
 {
-  mStatusTrackerInit = new imgStatusTrackerInit(this, aStatusTracker);
+  mProgressTrackerInit = new ProgressTrackerInit(this, aProgressTracker);
 
   // Set up the discard tracker node.
   mDiscardTrackerNode.img = this;
@@ -484,9 +480,8 @@ RasterImage::RequestRefresh(const TimeStamp& aTime)
 
     UpdateImageContainer();
 
-    if (mStatusTracker) {
-      mStatusTracker->SyncNotifyDifference(ImageStatusDiff::NoChange(),
-                                           res.dirtyRect);
+    if (mProgressTracker) {
+      mProgressTracker->SyncNotifyProgress(NoProgress, res.dirtyRect);
     }
   }
 
@@ -714,7 +709,7 @@ RasterImage::FrameRect(uint32_t aWhichFrame)
 
   // If the frame doesn't exist, we return the empty rectangle. It's not clear
   // whether this is appropriate in general, but at the moment the only
-  // consumer of this method is imgStatusTracker (when it wants to figure out
+  // consumer of this method is ProgressTracker (when it wants to figure out
   // dirty rectangles to send out batched observer updates). This should
   // probably be revisited when we fix bug 503973.
   return nsIntRect();
@@ -777,10 +772,6 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
     return nullptr;
 
   if (mError)
-    return nullptr;
-
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
     return nullptr;
 
   if (!ApplyDecodeFlags(aFlags, aWhichFrame))
@@ -860,10 +851,6 @@ RasterImage::GetFrameInternal(uint32_t aWhichFrame,
   if (mError)
     return nullptr;
 
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
-    return nullptr;
-
   if (!ApplyDecodeFlags(aFlags, aWhichFrame))
     return nullptr;
 
@@ -934,8 +921,8 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
     return NS_OK;
   }
 
-  if (IsUnlocked() && mStatusTracker) {
-    mStatusTracker->OnUnlockedDraw();
+  if (IsUnlocked() && mProgressTracker) {
+    mProgressTracker->OnUnlockedDraw();
   }
 
   if (!mImageContainer) {
@@ -969,18 +956,16 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
 void
 RasterImage::UpdateImageContainer()
 {
-  if (!mImageContainer || IsInUpdateImageContainer()) {
+  if (!mImageContainer) {
     return;
   }
-
-  SetInUpdateImageContainer(true);
 
   nsRefPtr<layers::Image> image = GetCurrentImage();
   if (!image) {
     return;
   }
+
   mImageContainer->SetCurrentImage(image);
-  SetInUpdateImageContainer(false);
 }
 
 size_t
@@ -1043,10 +1028,6 @@ RasterImage::EnsureAnimExists()
     // since we didn't kill the source data in the old world either, locking
     // is acceptable for the moment.
     LockImage();
-
-    // Notify our observers that we are starting animation.
-    nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
-    statusTracker->RecordImageIsAnimated();
   }
 }
 
@@ -1466,9 +1447,9 @@ RasterImage::ResetAnimation()
   // we fix bug 500402.
 
   // Update display
-  if (mStatusTracker) {
+  if (mProgressTracker) {
     nsIntRect rect = mAnim->GetFirstFrameRefreshArea();
-    mStatusTracker->SyncNotifyDifference(ImageStatusDiff::NoChange(), rect);
+    mProgressTracker->SyncNotifyProgress(NoProgress, rect);
   }
 
   // Start the animation again. It may not have been running before, if
@@ -1534,9 +1515,6 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   // We should not call this if we're already finished adding source data
   NS_ABORT_IF_FALSE(!mHasSourceData, "Calling AddSourceData() after calling "
                                      "sourceDataComplete()!");
-
-  // This call should come straight from necko - no reentrancy allowed
-  NS_ABORT_IF_FALSE(!mInDecoder, "Re-entrant call to AddSourceData!");
 
   // Image is already decoded, we shouldn't be getting data, but it could
   // be extra garbage data at the end of a file.
@@ -1699,11 +1677,9 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bo
   // We just recorded OnStopRequest; we need to inform our listeners.
   {
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
-
-    nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
-    statusTracker->GetDecoderObserver()->OnStopRequest(aLastPart, finalStatus);
-
-    FinishedSomeDecoding();
+    FinishedSomeDecoding(eShutdownIntent_Done,
+                         nullptr,
+                         OnStopRequestProgress(aLastPart, mError, finalStatus));
   }
 
   return finalStatus;
@@ -1867,8 +1843,8 @@ RasterImage::Discard(bool force)
   mDecoded = false;
 
   // Notify that we discarded
-  if (mStatusTracker)
-    mStatusTracker->OnDiscard();
+  if (mProgressTracker)
+    mProgressTracker->OnDiscard();
 
   mDecodeRequest = nullptr;
 
@@ -1993,9 +1969,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
   if (!mDecodeRequest) {
     mDecodeRequest = new DecodeRequest(this);
   }
-  MOZ_ASSERT(mDecodeRequest->mStatusTracker);
-  MOZ_ASSERT(mDecodeRequest->mStatusTracker->GetDecoderObserver());
-  mDecoder->SetObserver(mDecodeRequest->mStatusTracker->GetDecoderObserver());
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
   if (!aDoSizeDecode) {
@@ -2058,11 +2031,7 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   nsRefPtr<Decoder> decoder = mDecoder;
   mDecoder = nullptr;
 
-  mFinishing = true;
-  mInDecoder = true;
   decoder->Finish(aIntent);
-  mInDecoder = false;
-  mFinishing = false;
 
   // Unlock the last frame (if we have any). Our invariant is that, while we
   // have a decoder open, the last frame is always locked.
@@ -2113,9 +2082,7 @@ RasterImage::WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy
 
   // Write
   nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
-  mInDecoder = true;
   mDecoder->Write(aBuffer, aCount, aStrategy);
-  mInDecoder = false;
 
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
@@ -2195,27 +2162,10 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mDecoded)
     return NS_OK;
 
-  // mFinishing protects against the case when we enter RequestDecode from
-  // ShutdownDecoder -- in that case, we're done with the decode, we're just
-  // not quite ready to admit it.  See bug 744309.
-  if (mFinishing)
-    return NS_OK;
-
   // If we're currently waiting for a new frame, we can't do anything until
   // that frame is allocated.
   if (mDecoder && mDecoder->NeedsNewFrame())
     return NS_OK;
-
-  // If our callstack goes through a size decoder, we have a problem.
-  // We need to shutdown the size decode and replace it with  a full
-  // decoder, but can't do that from within the decoder itself. Thus, we post
-  // an asynchronous event to the event loop to do it later. Since
-  // RequestDecode() is an asynchronous function this works fine (though it's
-  // a little slower).
-  if (mInDecoder) {
-    nsRefPtr<imgDecodeRequestor> requestor = new imgDecodeRequestor(*this);
-    return NS_DispatchToCurrentThread(requestor);
-  }
 
   // If we have a size decoder open, make sure we get the size
   if (mDecoder && mDecoder->IsSizeDecode()) {
@@ -2315,7 +2265,7 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   // If we can do decoding now, do so.  Small images will decode completely,
   // large images will decode a bit and post themselves to the event loop
   // to finish decoding.
-  if (!mDecoded && !mInDecoder && mHasSourceData && aDecodeType == SYNCHRONOUS_NOTIFY_AND_SOME_DECODE) {
+  if (!mDecoded && mHasSourceData && aDecodeType == SYNCHRONOUS_NOTIFY_AND_SOME_DECODE) {
     PROFILER_LABEL_PRINTF("RasterImage", "DecodeABitOf",
       js::ProfileEntry::Category::GRAPHICS, "%s", GetURIString().get());
 
@@ -2354,12 +2304,6 @@ RasterImage::SyncDecode()
   }
 
   ReentrantMonitorAutoEnter lock(mDecodingMonitor);
-
-  // We really have no good way of forcing a synchronous decode if we're being
-  // called in a re-entrant manner (ie, from an event listener fired by a
-  // decoder), because the decoding machinery is already tied up. We thus explicitly
-  // disallow this type of call in the API, and check for it in API methods.
-  NS_ABORT_IF_FALSE(!mInDecoder, "Yikes, forcing sync in reentrant call!");
 
   if (mDecodeRequest) {
     // If the image is waiting for decode work to be notified, go ahead and do that.
@@ -2489,11 +2433,11 @@ RasterImage::CanScale(GraphicsFilter aFilter,
 void
 RasterImage::NotifyNewScaledFrame()
 {
-  if (mStatusTracker) {
+  if (mProgressTracker) {
     // Send an invalidation so observers will repaint and can take advantage of
     // the new scaled frame if possible.
     nsIntRect rect(0, 0, mSize.width, mSize.height);
-    mStatusTracker->SyncNotifyDifference(ImageStatusDiff::NoChange(), rect);
+    mProgressTracker->SyncNotifyProgress(NoProgress, rect);
   }
 }
 
@@ -2611,10 +2555,6 @@ RasterImage::Draw(gfxContext* aContext,
   if (mError)
     return NS_ERROR_FAILURE;
 
-  // Disallowed in the API
-  if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
-    return NS_ERROR_FAILURE;
-
   // Illegal -- you can't draw with non-default decode flags.
   // (Disabling colorspace conversion might make sense to allow, but
   // we don't currently.)
@@ -2651,8 +2591,8 @@ RasterImage::Draw(gfxContext* aContext,
   }
 
 
-  if (IsUnlocked() && mStatusTracker) {
-    mStatusTracker->OnUnlockedDraw();
+  if (IsUnlocked() && mProgressTracker) {
+    mProgressTracker->OnUnlockedDraw();
   }
 
   // We use !mDecoded && mHasSourceData to mean discarded.
@@ -2853,8 +2793,7 @@ RasterImage::DoError()
     return;
   }
 
-  // Calling FinishedSomeDecoding and CurrentStatusTracker requires us to be in
-  // the decoding monitor.
+  // Calling FinishedSomeDecoding requires us to be in the decoding monitor.
   ReentrantMonitorAutoEnter lock(mDecodingMonitor);
 
   // If we're mid-decode, shut down the decoder.
@@ -2864,9 +2803,6 @@ RasterImage::DoError()
 
   // Put the container in an error state.
   mError = true;
-
-  nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
-  statusTracker->GetDecoderObserver()->OnError();
 
   // Log our error
   LOG_CONTAINER_ERROR;
@@ -2975,7 +2911,8 @@ RasterImage::RequestDecodeIfNeeded(nsresult aStatus,
 
 nsresult
 RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_Done */,
-                                  DecodeRequest* aRequest /* = nullptr */)
+                                  DecodeRequest* aRequest /* = nullptr */,
+                                  Progress aProgress /* = NoProgress */)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2996,9 +2933,11 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
   bool wasSize = false;
   nsIntRect invalidRect;
   nsresult rv = NS_OK;
+  Progress progress = aProgress;
 
   if (image->mDecoder) {
     invalidRect = image->mDecoder->TakeInvalidRect();
+    progress |= image->mDecoder->GetProgress();
 
     if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
@@ -3039,6 +2978,9 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
       if (NS_FAILED(rv)) {
         image->DoError();
       }
+
+      // If there were any final progress changes, grab them.
+      progress |= decoder->GetProgress();
     }
   }
 
@@ -3053,36 +2995,34 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
                            : nsIntRect();
   }
 
-  ImageStatusDiff diff =
-    request ? image->mStatusTracker->Difference(request->mStatusTracker)
-            : image->mStatusTracker->DecodeStateAsDifference();
-  image->mStatusTracker->ApplyDifference(diff);
-
   if (mNotifying) {
-    // Accumulate the status changes. We don't permit recursive notifications
+    // Accumulate the progress changes. We don't permit recursive notifications
     // because they cause subtle concurrency bugs, so we'll delay sending out
     // the notifications until we pop back to the lowest invocation of
     // FinishedSomeDecoding on the stack.
     NS_WARNING("Recursively notifying in RasterImage::FinishedSomeDecoding!");
-    mStatusDiff.Combine(diff);
-    mInvalidRect.Union(invalidRect);
+    mNotifyProgress |= progress;
+    mNotifyInvalidRect.Union(invalidRect);
   } else {
-    MOZ_ASSERT(mStatusDiff.IsNoChange(), "Shouldn't have an accumulated change at this point");
-    MOZ_ASSERT(mInvalidRect.IsEmpty(), "Shouldn't have an accumulated invalidation rect here");
+    MOZ_ASSERT(mNotifyProgress == NoProgress && mNotifyInvalidRect.IsEmpty(),
+               "Shouldn't have an accumulated change at this point");
 
-    while (!diff.IsNoChange() || !invalidRect.IsEmpty()) {
+    progress = image->mProgressTracker->Difference(progress);
+
+    while (progress != NoProgress || !invalidRect.IsEmpty()) {
       // Tell the observers what happened.
       mNotifying = true;
-      image->mStatusTracker->SyncNotifyDifference(diff, invalidRect);
+      image->mProgressTracker->SyncNotifyProgress(progress, invalidRect);
       mNotifying = false;
 
-      // Gather any status changes that may have occurred as a result of sending
+      // Gather any progress changes that may have occurred as a result of sending
       // out the previous notifications. If there were any, we'll send out
       // notifications for them next.
-      diff = mStatusDiff;
-      mStatusDiff = ImageStatusDiff::NoChange();
-      invalidRect = mInvalidRect;
-      mInvalidRect = nsIntRect();
+      progress = image->mProgressTracker->Difference(mNotifyProgress);
+      mNotifyProgress = NoProgress;
+
+      invalidRect = mNotifyInvalidRect;
+      mNotifyInvalidRect = nsIntRect();
     }
   }
 

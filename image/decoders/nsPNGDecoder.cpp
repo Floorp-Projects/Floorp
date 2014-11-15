@@ -22,21 +22,23 @@ namespace mozilla {
 namespace image {
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo *
+static PRLogModuleInfo*
 GetPNGLog()
 {
-  static PRLogModuleInfo *sPNGLog;
-  if (!sPNGLog)
+  static PRLogModuleInfo* sPNGLog;
+  if (!sPNGLog) {
     sPNGLog = PR_NewLogModule("PNGDecoder");
+  }
   return sPNGLog;
 }
 
-static PRLogModuleInfo *
+static PRLogModuleInfo*
 GetPNGDecoderAccountingLog()
 {
-  static PRLogModuleInfo *sPNGDecoderAccountingLog;
-  if (!sPNGDecoderAccountingLog)
+  static PRLogModuleInfo* sPNGDecoderAccountingLog;
+  if (!sPNGDecoderAccountingLog) {
     sPNGDecoderAccountingLog = PR_NewLogModule("PNGDecoderAccounting");
+  }
   return sPNGDecoderAccountingLog;
 }
 #endif
@@ -55,7 +57,7 @@ nsPNGDecoder::AnimFrameInfo::AnimFrameInfo()
  : mDispose(FrameBlender::kDisposeKeep)
  , mBlend(FrameBlender::kBlendOver)
  , mTimeout(0)
-{}
+{ }
 
 #ifdef PNG_APNG_SUPPORTED
 nsPNGDecoder::AnimFrameInfo::AnimFrameInfo(png_structp aPNG, png_infop aInfo)
@@ -75,8 +77,9 @@ nsPNGDecoder::AnimFrameInfo::AnimFrameInfo(png_structp aPNG, png_infop aInfo)
   if (delay_num == 0) {
     mTimeout = 0; // SetFrameTimeout() will set to a minimum
   } else {
-    if (delay_den == 0)
+    if (delay_den == 0) {
       delay_den = 100; // so says the APNG spec
+    }
 
     // Need to cast delay_num to float to have a proper division and
     // the result to int to avoid compiler warning
@@ -104,7 +107,7 @@ nsPNGDecoder::AnimFrameInfo::AnimFrameInfo(png_structp aPNG, png_infop aInfo)
 const uint8_t
 nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-nsPNGDecoder::nsPNGDecoder(RasterImage &aImage)
+nsPNGDecoder::nsPNGDecoder(RasterImage& aImage)
  : Decoder(aImage),
    mPNG(nullptr), mInfo(nullptr),
    mCMSLine(nullptr), interlacebuf(nullptr),
@@ -118,18 +121,22 @@ nsPNGDecoder::nsPNGDecoder(RasterImage &aImage)
 
 nsPNGDecoder::~nsPNGDecoder()
 {
-  if (mPNG)
+  if (mPNG) {
     png_destroy_read_struct(&mPNG, mInfo ? &mInfo : nullptr, nullptr);
-  if (mCMSLine)
+  }
+  if (mCMSLine) {
     nsMemory::Free(mCMSLine);
-  if (interlacebuf)
+  }
+  if (interlacebuf) {
     nsMemory::Free(interlacebuf);
+  }
   if (mInProfile) {
     qcms_profile_release(mInProfile);
 
     // mTransform belongs to us only if mInProfile is non-null
-    if (mTransform)
+    if (mTransform) {
       qcms_transform_release(mTransform);
+    }
   }
 }
 
@@ -169,18 +176,21 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
 }
 
 // set timeout and frame disposal method for the current frame
-void nsPNGDecoder::EndImageFrame()
+void
+nsPNGDecoder::EndImageFrame()
 {
-  if (mFrameIsHidden)
+  if (mFrameIsHidden) {
     return;
+  }
 
   mNumFrames++;
 
   FrameBlender::FrameAlpha alpha;
-  if (mFrameHasNoAlpha)
+  if (mFrameHasNoAlpha) {
     alpha = FrameBlender::kFrameOpaque;
-  else
+  } else {
     alpha = FrameBlender::kFrameHasAlpha;
+  }
 
 #ifdef PNG_APNG_SUPPORTED
   uint32_t numFrames = GetFrameCount();
@@ -204,8 +214,9 @@ nsPNGDecoder::InitInternal()
   }
 
   mCMSMode = gfxPlatform::GetCMSMode();
-  if ((mDecodeFlags & DECODER_NO_COLORSPACE_CONVERSION) != 0)
+  if ((mDecodeFlags & DECODER_NO_COLORSPACE_CONVERSION) != 0) {
     mCMSMode = eCMSMode_Off;
+  }
   mDisablePremultipliedAlpha = (mDecodeFlags & DECODER_NO_PREMULTIPLY_ALPHA)
                                 != 0;
 
@@ -250,16 +261,18 @@ nsPNGDecoder::InitInternal()
 
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
   // Ignore unused chunks
-  if (mCMSMode == eCMSMode_Off)
+  if (mCMSMode == eCMSMode_Off) {
     png_set_keep_unknown_chunks(mPNG, 1, color_chunks, 2);
+  }
 
   png_set_keep_unknown_chunks(mPNG, 1, unused_chunks,
                               (int)sizeof(unused_chunks)/5);
 #endif
 
 #ifdef PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED
-  if (mCMSMode != eCMSMode_Off)
+  if (mCMSMode != eCMSMode_Off) {
     png_set_chunk_malloc_max(mPNG, 4000000L);
+  }
 #endif
 
 #ifdef PNG_READ_CHECK_FOR_INVALID_INDEX_SUPPORTED
@@ -288,7 +301,7 @@ nsPNGDecoder::InitInternal()
 }
 
 void
-nsPNGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount,
+nsPNGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount,
                             DecodeStrategy)
 {
   NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
@@ -297,12 +310,13 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount,
   if (IsSizeDecode()) {
 
     // Are we done?
-    if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS)
+    if (mHeaderBytesRead == BYTES_NEEDED_FOR_DIMENSIONS) {
       return;
+    }
 
     // Scan the header for the width and height bytes
     uint32_t pos = 0;
-    const uint8_t *bptr = (uint8_t *)aBuffer;
+    const uint8_t* bptr = (uint8_t*)aBuffer;
 
     while (pos < aCount && mHeaderBytesRead < BYTES_NEEDED_FOR_DIMENSIONS) {
       // Verify the signature bytes
@@ -338,25 +352,25 @@ nsPNGDecoder::WriteInternal(const char *aBuffer, uint32_t aCount,
       // Post our size to the superclass
       PostSize(width, height);
     }
-  }
 
   // Otherwise, we're doing a standard decode
-  else {
+  } else {
 
     // libpng uses setjmp/longjmp for error handling - set the buffer
     if (setjmp(png_jmpbuf(mPNG))) {
 
       // We might not really know what caused the error, but it makes more
       // sense to blame the data.
-      if (!HasError())
+      if (!HasError()) {
         PostDataError();
+      }
 
       png_destroy_read_struct(&mPNG, &mInfo, nullptr);
       return;
     }
 
     // Pass the data off to libpng
-    png_process_data(mPNG, mInfo, (unsigned char *)aBuffer, aCount);
+    png_process_data(mPNG, mInfo, (unsigned char*)aBuffer, aCount);
 
   }
 }
@@ -374,18 +388,17 @@ PNGDoGammaCorrection(png_structp png_ptr, png_infop info_ptr)
       png_set_gAMA(png_ptr, info_ptr, aGamma);
     }
     png_set_gamma(png_ptr, 2.2, aGamma);
-  }
-  else
+  } else {
     png_set_gamma(png_ptr, 2.2, 0.45455);
-
+  }
 }
 
 // Adapted from http://www.littlecms.com/pngchrm.c example code
-static qcms_profile *
+static qcms_profile*
 PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
-                   int color_type, qcms_data_type *inType, uint32_t *intent)
+                   int color_type, qcms_data_type* inType, uint32_t* intent)
 {
-  qcms_profile *profile = nullptr;
+  qcms_profile* profile = nullptr;
   *intent = QCMS_INTENT_PERCEPTUAL; // Our default
 
   // First try to see if iCCP chunk is present
@@ -398,19 +411,21 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
     png_get_iCCP(png_ptr, info_ptr, &profileName, &compression,
                  &profileData, &profileLen);
 
-    profile = qcms_profile_from_memory((char *)profileData, profileLen);
+    profile = qcms_profile_from_memory((char*)profileData, profileLen);
     if (profile) {
       uint32_t profileSpace = qcms_profile_get_color_space(profile);
 
       bool mismatch = false;
       if (color_type & PNG_COLOR_MASK_COLOR) {
-        if (profileSpace != icSigRgbData)
+        if (profileSpace != icSigRgbData) {
           mismatch = true;
+        }
       } else {
-        if (profileSpace == icSigRgbData)
+        if (profileSpace == icSigRgbData) {
           png_set_gray_to_rgb(png_ptr);
-        else if (profileSpace != icSigGrayData)
+        } else if (profileSpace != icSigGrayData) {
           mismatch = true;
+        }
       }
 
       if (mismatch) {
@@ -460,23 +475,26 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
     profile = qcms_profile_create_rgb_with_gamma(whitePoint, primaries,
                                                  1.0/gammaOfFile);
 
-    if (profile)
+    if (profile) {
       png_set_gray_to_rgb(png_ptr);
+    }
   }
 
   if (profile) {
     uint32_t profileSpace = qcms_profile_get_color_space(profile);
     if (profileSpace == icSigGrayData) {
-      if (color_type & PNG_COLOR_MASK_ALPHA)
+      if (color_type & PNG_COLOR_MASK_ALPHA) {
         *inType = QCMS_DATA_GRAYA_8;
-      else
+      } else {
         *inType = QCMS_DATA_GRAY_8;
+      }
     } else {
       if (color_type & PNG_COLOR_MASK_ALPHA ||
-          png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+          png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
         *inType = QCMS_DATA_RGBA_8;
-      else
+      } else {
         *inType = QCMS_DATA_RGB_8;
+      }
     }
   }
 
@@ -494,7 +512,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   png_bytep trans = nullptr;
   int num_trans = 0;
 
-  nsPNGDecoder *decoder =
+  nsPNGDecoder* decoder =
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // Always decode to 24-bit RGB or 32-bit RGBA
@@ -502,8 +520,9 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
                &interlace_type, &compression_type, &filter_type);
 
   // Are we too big?
-  if (width > MOZ_PNG_MAX_DIMENSION || height > MOZ_PNG_MAX_DIMENSION)
+  if (width > MOZ_PNG_MAX_DIMENSION || height > MOZ_PNG_MAX_DIMENSION) {
     png_longjmp(decoder->mPNG, 1);
+  }
 
   // Post our size to the superclass
   decoder->PostSize(width, height);
@@ -512,11 +531,13 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     png_longjmp(decoder->mPNG, 1);
   }
 
-  if (color_type == PNG_COLOR_TYPE_PALETTE)
+  if (color_type == PNG_COLOR_TYPE_PALETTE) {
     png_set_expand(png_ptr);
+  }
 
-  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
+  if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) {
     png_set_expand(png_ptr);
+  }
 
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
     int sample_max = (1 << bit_depth);
@@ -527,21 +548,21 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     // channel or producing unexpected transparent pixels when using
     // libpng-1.2.19 through 1.2.26 (bug #428045)
     if ((color_type == PNG_COLOR_TYPE_GRAY &&
-       (int)trans_values->gray > sample_max) ||
-       (color_type == PNG_COLOR_TYPE_RGB &&
-       ((int)trans_values->red > sample_max ||
-       (int)trans_values->green > sample_max ||
-       (int)trans_values->blue > sample_max)))
-      {
-        // clear the tRNS valid flag and release tRNS memory
-        png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
-      }
-    else
+         (int)trans_values->gray > sample_max) ||
+         (color_type == PNG_COLOR_TYPE_RGB &&
+         ((int)trans_values->red > sample_max ||
+         (int)trans_values->green > sample_max ||
+         (int)trans_values->blue > sample_max))) {
+      // clear the tRNS valid flag and release tRNS memory
+      png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
+    } else {
       png_set_expand(png_ptr);
+    }
   }
 
-  if (bit_depth == 16)
+  if (bit_depth == 16) {
     png_set_scale_16(png_ptr);
+  }
 
   qcms_data_type inType = QCMS_DATA_RGBA_8;
   uint32_t intent = -1;
@@ -551,16 +572,18 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
                                              color_type, &inType, &pIntent);
     // If we're not mandating an intent, use the one from the image.
-    if (intent == uint32_t(-1))
+    if (intent == uint32_t(-1)) {
       intent = pIntent;
+    }
   }
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
     qcms_data_type outType;
 
-    if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
+    if (color_type & PNG_COLOR_MASK_ALPHA || num_trans) {
       outType = QCMS_DATA_RGBA_8;
-    else
+    } else {
       outType = QCMS_DATA_RGB_8;
+    }
 
     decoder->mTransform = qcms_transform_create(decoder->mInProfile,
                                            inType,
@@ -571,14 +594,16 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     png_set_gray_to_rgb(png_ptr);
 
     // only do gamma correction if CMS isn't entirely disabled
-    if (decoder->mCMSMode != eCMSMode_Off)
+    if (decoder->mCMSMode != eCMSMode_Off) {
       PNGDoGammaCorrection(png_ptr, info_ptr);
+    }
 
     if (decoder->mCMSMode == eCMSMode_All) {
-      if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
+      if (color_type & PNG_COLOR_MASK_ALPHA || num_trans) {
         decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
-      else
+      } else {
         decoder->mTransform = gfxPlatform::GetCMSRGBTransform();
+      }
     }
   }
 
@@ -597,15 +622,17 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   // copy PNG info into imagelib structs (formerly png_set_dims()) //
   //---------------------------------------------------------------//
 
-  if (channels == 1 || channels == 3)
+  if (channels == 1 || channels == 3) {
     decoder->format = gfx::SurfaceFormat::B8G8R8X8;
-  else if (channels == 2 || channels == 4)
+  } else if (channels == 2 || channels == 4) {
     decoder->format = gfx::SurfaceFormat::B8G8R8A8;
+  }
 
 #ifdef PNG_APNG_SUPPORTED
-  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL))
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL)) {
     png_set_progressive_frame_fn(png_ptr, nsPNGDecoder::frame_info_callback,
                                  nullptr);
+  }
 
   if (png_get_first_frame_is_hidden(png_ptr, info_ptr)) {
     decoder->mFrameIsHidden = true;
@@ -620,15 +647,16 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
       (channels <= 2 || interlace_type == PNG_INTERLACE_ADAM7)) {
     uint32_t bpp[] = { 0, 3, 4, 3, 4 };
     decoder->mCMSLine =
-      (uint8_t *)moz_malloc(bpp[channels] * width);
+      (uint8_t*)moz_malloc(bpp[channels] * width);
     if (!decoder->mCMSLine) {
       png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
     }
   }
 
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-    if (height < INT32_MAX / (width * channels))
-      decoder->interlacebuf = (uint8_t *)moz_malloc(channels * width * height);
+    if (height < INT32_MAX / (width * channels)) {
+      decoder->interlacebuf = (uint8_t*)moz_malloc(channels * width * height);
+    }
     if (!decoder->interlacebuf) {
       png_longjmp(decoder->mPNG, 5); // NS_ERROR_OUT_OF_MEMORY
     }
@@ -672,15 +700,17 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
    * to pass the current row, and the function will combine the
    * old row and the new row.
    */
-  nsPNGDecoder *decoder =
+  nsPNGDecoder* decoder =
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // skip this frame
-  if (decoder->mFrameIsHidden)
+  if (decoder->mFrameIsHidden) {
     return;
+  }
 
-  if (row_num >= (png_uint_32) decoder->mFrameRect.height)
+  if (row_num >= (png_uint_32) decoder->mFrameRect.height) {
     return;
+  }
 
   if (new_row) {
     int32_t width = decoder->mFrameRect.width;
@@ -693,7 +723,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     }
 
     uint32_t bpr = width * sizeof(uint32_t);
-    uint32_t *cptr32 = (uint32_t*)(decoder->mImageData + (row_num*bpr));
+    uint32_t* cptr32 = (uint32_t*)(decoder->mImageData + (row_num*bpr));
     bool rowHasNoAlpha = true;
 
     if (decoder->mTransform) {
@@ -709,12 +739,11 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         line = decoder->mCMSLine;
       } else {
         qcms_transform_data(decoder->mTransform, line, line, iwidth);
-       }
-     }
+      }
+    }
 
     switch (decoder->format) {
-      case gfx::SurfaceFormat::B8G8R8X8:
-      {
+      case gfx::SurfaceFormat::B8G8R8X8: {
         // counter for while() loops below
         uint32_t idx = iwidth;
 
@@ -740,21 +769,22 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         }
       }
       break;
-      case gfx::SurfaceFormat::B8G8R8A8:
-      {
+      case gfx::SurfaceFormat::B8G8R8A8: {
         if (!decoder->mDisablePremultipliedAlpha) {
           for (uint32_t x=width; x>0; --x) {
             *cptr32++ = gfxPackedPixel(line[3], line[0], line[1], line[2]);
-            if (line[3] != 0xff)
+            if (line[3] != 0xff) {
               rowHasNoAlpha = false;
+            }
             line += 4;
           }
         } else {
           for (uint32_t x=width; x>0; --x) {
             *cptr32++ = gfxPackedPixelNoPreMultiply(line[3], line[0], line[1],
                                                     line[2]);
-            if (line[3] != 0xff)
+            if (line[3] != 0xff) {
               rowHasNoAlpha = false;
+            }
             line += 4;
           }
         }
@@ -764,8 +794,9 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         png_longjmp(decoder->mPNG, 1);
     }
 
-    if (!rowHasNoAlpha)
+    if (!rowHasNoAlpha) {
       decoder->mFrameHasNoAlpha = false;
+    }
 
     if (decoder->mNumFrames <= 1) {
       // Only do incremental image display for the first frame
@@ -784,7 +815,7 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   png_uint_32 x_offset, y_offset;
   int32_t width, height;
 
-  nsPNGDecoder *decoder =
+  nsPNGDecoder* decoder =
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // old frame is done
@@ -823,7 +854,7 @@ nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
    * marks the image as finished.
    */
 
-  nsPNGDecoder *decoder =
+  nsPNGDecoder* decoder =
                static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   // We shouldn't get here if we've hit an error

@@ -2527,11 +2527,14 @@ let E10SUINotification = {
       } catch(e) {}
 
       let isHardwareAccelerated = true;
+      // Linux and Windows are currently ok, mac not so much.
+#ifdef XP_MACOSX
       try {
         let win = RecentWindow.getMostRecentBrowserWindow();
         let winutils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         isHardwareAccelerated = winutils.layerManagerType != "Basic";
       } catch (e) {}
+#endif
 
       if (!Services.appinfo.inSafeMode &&
           !Services.appinfo.accessibilityEnabled &&
