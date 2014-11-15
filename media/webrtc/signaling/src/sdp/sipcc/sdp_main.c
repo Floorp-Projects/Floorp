@@ -969,7 +969,7 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
     char        *next_ptr = NULL;
     char        *line_end;
     sdp_token_e  last_token = SDP_TOKEN_V;
-    sdp_result_e result=SDP_SUCCESS;
+    sdp_result_e result = SDP_SUCCESS;
     tinybool     parse_done = FALSE;
     tinybool     end_found = FALSE;
     tinybool     first_line = TRUE;

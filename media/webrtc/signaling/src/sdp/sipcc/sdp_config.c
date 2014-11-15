@@ -199,7 +199,7 @@ void sdp_require_timespec (void *config_p, tinybool timespec_required)
  * Returns:     Nothing.
  */
 void sdp_media_supported (void *config_p, sdp_media_e media_type,
-			 tinybool media_supported)
+                         tinybool media_supported)
 {
     sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
 
@@ -223,7 +223,7 @@ void sdp_media_supported (void *config_p, sdp_media_e media_type,
  * Returns:     Nothing.
  */
 void sdp_nettype_supported (void *config_p, sdp_nettype_e nettype,
-			    tinybool nettype_supported)
+                            tinybool nettype_supported)
 {
     sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
 
@@ -247,7 +247,7 @@ void sdp_nettype_supported (void *config_p, sdp_nettype_e nettype,
  * Returns:     Nothing.
  */
 void sdp_addrtype_supported (void *config_p, sdp_addrtype_e addrtype,
-			     tinybool addrtype_supported)
+                             tinybool addrtype_supported)
 {
     sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
 
@@ -271,7 +271,7 @@ void sdp_addrtype_supported (void *config_p, sdp_addrtype_e addrtype,
  * Returns:     Nothing.
  */
 void sdp_transport_supported (void *config_p, sdp_transport_e transport,
-			      tinybool transport_supported)
+                              tinybool transport_supported)
 {
     sdp_conf_options_t *conf_p = (sdp_conf_options_t *)config_p;
 
