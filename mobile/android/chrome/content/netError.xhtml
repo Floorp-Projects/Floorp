@@ -154,8 +154,8 @@
           document.getElementById("errorTryAgain").style.display = "none";
         }
 
-        if (err == "cspFrameAncestorBlocked") {
-          // Remove the "Try again" button for CSP frame ancestors violation, since it's
+        if (err == "cspBlocked") {
+          // Remove the "Try again" button for CSP violations, since it's
           // almost certainly useless. (Bug 553180)
           document.getElementById("errorTryAgain").style.display = "none";
         }
@@ -293,7 +293,7 @@
         <h1 id="et_unsafeContentType">&unsafeContentType.title;</h1>
         <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
         <h1 id="et_nssBadCert">&nssBadCert.title;</h1>
-        <h1 id="et_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.title;</h1>
+        <h1 id="et_cspBlocked">&cspBlocked.title;</h1>
         <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
         <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
       </div>
@@ -322,7 +322,7 @@
         <div id="ed_unsafeContentType">&unsafeContentType.longDesc;</div>
         <div id="ed_nssFailure2">&nssFailure2.longDesc2;</div>
         <div id="ed_nssBadCert">&nssBadCert.longDesc2;</div>
-        <div id="ed_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.longDesc;</div>
+        <div id="ed_cspBlocked">&cspBlocked.longDesc;</div>
         <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
         <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
       </div>
