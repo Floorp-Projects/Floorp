@@ -507,17 +507,9 @@ imgStatusTracker::OnStartRequest()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // We're starting a new load, so clear any status and state bits indicating
-  // load/decode.
-  // XXX(seth): Are these really the only flags we want to clear?
-  mState &= ~FLAG_REQUEST_STARTED;
-  mState &= ~FLAG_DECODE_STARTED;
-  mState &= ~FLAG_DECODE_STOPPED;
-  mState &= ~FLAG_REQUEST_STOPPED;
-  mState &= ~FLAG_ONLOAD_BLOCKED;
-  mState &= ~FLAG_ONLOAD_UNBLOCKED;
-  mState &= ~FLAG_IS_ANIMATED;
-
+  // We're starting a new load (and if this is called more than once, this is a
+  // multipart request) so keep only the bits that carry over between loads.
+  mState &= FLAG_IS_MULTIPART | FLAG_HAS_ERROR;
   mState |= FLAG_REQUEST_STARTED;
 
   ProxyArray::ForwardIterator iter(mConsumers);
