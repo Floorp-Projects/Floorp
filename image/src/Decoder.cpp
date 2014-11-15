@@ -17,6 +17,7 @@ namespace image {
 Decoder::Decoder(RasterImage &aImage)
   : mImage(aImage)
   , mCurrentFrame(nullptr)
+  , mProgress(NoProgress)
   , mImageData(nullptr)
   , mColormap(nullptr)
   , mDecodeFlags(0)
@@ -49,7 +50,7 @@ Decoder::Init()
 
   // Fire OnStartDecode at init time to support bug 512435.
   if (!IsSizeDecode()) {
-      mDiff.diffState |= FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED;
+      mProgress |= FLAG_DECODE_STARTED | FLAG_ONLOAD_BLOCKED;
   }
 
   // Implementation-specific initialization
@@ -175,8 +176,8 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
       }
       PostDecodeDone();
     } else {
-      mDiff.diffState |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED |
-                         FLAG_HAS_ERROR;
+      mProgress |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED |
+                   FLAG_HAS_ERROR;
     }
   }
 
@@ -278,7 +279,7 @@ Decoder::PostSize(int32_t aWidth,
   mImageMetadata.SetSize(aWidth, aHeight, aOrientation);
 
   // Record this notification.
-  mDiff.diffState |= FLAG_HAS_SIZE;
+  mProgress |= FLAG_HAS_SIZE;
 }
 
 void
@@ -294,7 +295,7 @@ Decoder::PostFrameStart()
   // If we just became animated, record that fact.
   if (mFrameCount > 1) {
     mIsAnimated = true;
-    mDiff.diffState |= FLAG_IS_ANIMATED;
+    mProgress |= FLAG_IS_ANIMATED;
   }
 
   // Decoder implementations should only call this method if they successfully
@@ -326,7 +327,7 @@ Decoder::PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha /* = FrameBlender::k
   mCurrentFrame->SetBlendMethod(aBlendMethod);
   mCurrentFrame->ImageUpdated(mCurrentFrame->GetRect());
 
-  mDiff.diffState |= FLAG_FRAME_STOPPED | FLAG_ONLOAD_UNBLOCKED;
+  mProgress |= FLAG_FRAME_STOPPED | FLAG_ONLOAD_UNBLOCKED;
 }
 
 void
@@ -352,7 +353,7 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
   mImageMetadata.SetLoopCount(aLoopCount);
   mImageMetadata.SetIsNonPremultiplied(GetDecodeFlags() & DECODER_NO_PREMULTIPLY_ALPHA);
 
-  mDiff.diffState |= FLAG_DECODE_STOPPED;
+  mProgress |= FLAG_DECODE_STOPPED;
 }
 
 void
