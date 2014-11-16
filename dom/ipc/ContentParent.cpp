@@ -1024,6 +1024,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
             }
             nsRefPtr<TabParent> tp(new TabParent(constructorSender, tabId,
                                                  aContext, chromeFlags));
+            tp->SetInitedByParent();
             tp->SetOwnerElement(aFrameElement);
 
             PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
@@ -1135,6 +1136,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     uint32_t chromeFlags = 0;
 
     nsRefPtr<TabParent> tp = new TabParent(parent, tabId, aContext, chromeFlags);
+    tp->SetInitedByParent();
     tp->SetOwnerElement(aFrameElement);
     PBrowserParent* browser = parent->SendPBrowserConstructor(
         // DeallocPBrowserParent() releases this ref.
