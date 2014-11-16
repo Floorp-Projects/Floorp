@@ -514,6 +514,8 @@ Parser<ParseHandler>::Parser(ExclusiveContext *cx, LifoAlloc *alloc,
     sawDeprecatedDestructuringForIn(false),
     sawDeprecatedLegacyGenerator(false),
     sawDeprecatedExpressionClosure(false),
+    sawDeprecatedLetBlock(false),
+    sawDeprecatedLetExpression(false),
     handler(cx, *alloc, tokenStream, foldConstants, syntaxParser, lazyOuterFunction)
 {
     {
@@ -3657,11 +3659,13 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
         if (!expr)
             return null();
         MUST_MATCH_TOKEN(TOK_RC, JSMSG_CURLY_AFTER_LET);
+        sawDeprecatedLetBlock = true;
     } else {
         MOZ_ASSERT(letContext == LetExpression);
         expr = assignExpr();
         if (!expr)
             return null();
+        sawDeprecatedLetExpression = true;
     }
     handler.setLexicalScopeBody(block, expr);
     PopStatementPC(tokenStream, pc);
@@ -8334,6 +8338,8 @@ Parser<ParseHandler>::accumulateTelemetry()
         DeprecatedDestructuringForIn = 1, // JS 1.7 only
         DeprecatedLegacyGenerator = 2,    // JS 1.7+
         DeprecatedExpressionClosure = 3,  // Added in JS 1.8, but not version-gated
+        DeprecatedLetBlock = 4,           // Added in JS 1.7, but not version-gated
+        DeprecatedLetExpression = 5,      // Added in JS 1.7, but not version-gated
     };
 
     // Hazard analysis can't tell that the telemetry callbacks don't GC.
@@ -8348,6 +8354,10 @@ Parser<ParseHandler>::accumulateTelemetry()
         (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLegacyGenerator);
     if (sawDeprecatedExpressionClosure)
         (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedExpressionClosure);
+    if (sawDeprecatedLetBlock)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLetBlock);
+    if (sawDeprecatedLetExpression)
+        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLetExpression);
 }
 
 template class Parser<FullParseHandler>;
