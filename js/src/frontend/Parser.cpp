@@ -3665,7 +3665,10 @@ Parser<ParseHandler>::letBlock(LetContext letContext)
         expr = assignExpr();
         if (!expr)
             return null();
+
         sawDeprecatedLetExpression = true;
+        if (!report(ParseWarning, pc->sc->strict, expr, JSMSG_DEPRECATED_LET_EXPRESSION))
+            return null();
     }
     handler.setLexicalScopeBody(block, expr);
     PopStatementPC(tokenStream, pc);
