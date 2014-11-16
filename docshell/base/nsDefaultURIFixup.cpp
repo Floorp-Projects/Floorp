@@ -34,6 +34,7 @@ NS_IMPL_ISUPPORTS(nsDefaultURIFixup, nsIURIFixup)
 
 static bool sInitializedPrefCaches = false;
 static bool sFixTypos = true;
+static bool sDNSFirstForSingleWords = false;
 static bool sFixupKeywords = true;
 
 nsDefaultURIFixup::nsDefaultURIFixup()
@@ -243,6 +244,11 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI, uint32_t aFixup
                                         sFixTypos);
       MOZ_ASSERT(NS_SUCCEEDED(rv),
                 "Failed to observe \"browser.fixup.typo.scheme\"");
+
+      rv = Preferences::AddBoolVarCache(&sDNSFirstForSingleWords,
+                                        "browser.fixup.dns_first_for_single_words",
+                                        sDNSFirstForSingleWords);
+      MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to observe \"browser.fixup.dns_first_for_single_words\"");
 
       rv = Preferences::AddBoolVarCache(&sFixupKeywords, "keyword.enabled",
                                         sFixupKeywords);
@@ -1067,16 +1073,18 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
 
     nsresult rv = NS_OK;
     // We do keyword lookups if a space or quote preceded the dot, colon
-    // or question mark (or if the latter were not found)
-    // or when the host is the same as asciiHost and there are no
-    // characters from [a-z][A-Z]
+    // or question mark (or if the latter is not found, or if the input starts with a question mark)
     if (((firstSpaceLoc < firstDotLoc || firstQuoteLoc < firstDotLoc) &&
          (firstSpaceLoc < firstColonLoc || firstQuoteLoc < firstColonLoc) &&
-         (firstSpaceLoc < firstQMarkLoc || firstQuoteLoc < firstQMarkLoc)) || firstQMarkLoc == 0 ||
-        (isValidAsciiHost && isValidHost && !hasAsciiAlpha &&
-         host.EqualsIgnoreCase(asciiHost.get()))) {
-
+         (firstSpaceLoc < firstQMarkLoc || firstQuoteLoc < firstQMarkLoc)) || firstQMarkLoc == 0) {
         rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo, aPostData);
+    // ... or when the host is the same as asciiHost and there are no
+    // characters from [a-z][A-Z]
+    } else if (isValidAsciiHost && isValidHost && !hasAsciiAlpha &&
+               host.EqualsIgnoreCase(asciiHost.get())) {
+        if (!sDNSFirstForSingleWords) {
+            rv = TryKeywordFixupForURIInfo(aFixupInfo->mOriginalInput, aFixupInfo, aPostData);
+        }
     }
     // ... or if there is no question mark or colon, and there is either no
     // dot, or exactly 1 and it is the first or last character of the input:
@@ -1098,6 +1106,9 @@ nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
 bool nsDefaultURIFixup::IsDomainWhitelisted(const nsAutoCString aAsciiHost,
                                             const uint32_t aDotLoc)
 {
+    if (sDNSFirstForSingleWords) {
+        return true;
+    }
     // Check if this domain is whitelisted as an actual
     // domain (which will prevent a keyword query)
     // NB: any processing of the host here should stay in sync with
