@@ -316,7 +316,7 @@ SelectionCarets::SetEndFrameVisibility(bool aVisible)
 {
   mEndCaretVisible = aVisible;
   SELECTIONCARETS_LOG("Set end frame visibility %s",
-                      (mStartCaretVisible ? "shown" : "hidden"));
+                      (mEndCaretVisible ? "shown" : "hidden"));
 
   dom::Element* element = mPresShell->GetSelectionCaretsEndElement();
   SetElementVisibility(element, mVisible && mEndCaretVisible);
