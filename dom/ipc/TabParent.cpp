@@ -248,6 +248,7 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mAppPackageFileDescriptorSent(false)
   , mSendOfflineStatus(true)
   , mChromeFlags(aChromeFlags)
+  , mInitedByParent(false)
   , mTabId(aTabId)
 {
   MOZ_ASSERT(aManager);
@@ -573,9 +574,33 @@ TabParent::Show(const nsIntSize& size)
     // sigh
     mShown = true;
     mDimensions = size;
-    if (!mIsDestroyed) {
-      unused << SendShow(size);
+    if (mIsDestroyed) {
+        return;
     }
+
+    ScrollingBehavior scrolling = UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
+    TextureFactoryIdentifier textureFactoryIdentifier;
+    uint64_t layersId = 0;
+    bool success = false;
+    RenderFrameParent* renderFrame = nullptr;
+    // If TabParent is initialized by parent side then the RenderFrame must also
+    // be created here. If TabParent is initialized by child side,
+    // child side will create RenderFrame.
+    MOZ_ASSERT(!GetRenderFrame());
+    if (IsInitedByParent()) {
+        nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+        if (frameLoader) {
+          renderFrame =
+              new RenderFrameParent(frameLoader,
+                                    scrolling,
+                                    &textureFactoryIdentifier,
+                                    &layersId,
+                                    &success);
+          MOZ_ASSERT(success);
+          unused << SendPRenderFrameConstructor(renderFrame);
+        }
+    }
+    unused << SendShow(size, scrolling, textureFactoryIdentifier, layersId, renderFrame);
 }
 
 void
@@ -1911,24 +1936,45 @@ TabParent::DeallocPColorPickerParent(PColorPickerParent* actor)
 }
 
 PRenderFrameParent*
-TabParent::AllocPRenderFrameParent(ScrollingBehavior* aScrolling,
-                                   TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                   uint64_t* aLayersId, bool* aSuccess)
+TabParent::AllocPRenderFrameParent()
 {
   MOZ_ASSERT(ManagedPRenderFrameParent().IsEmpty());
-
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  *aScrolling = UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
-  return new RenderFrameParent(frameLoader,
-                               *aScrolling,
-                               aTextureFactoryIdentifier, aLayersId,
-                               aSuccess);
+  ScrollingBehavior scrolling = UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
+  TextureFactoryIdentifier textureFactoryIdentifier;
+  uint64_t layersId = 0;
+  bool success = false;
+  if(frameLoader) {
+    PRenderFrameParent* renderFrame = 
+      new RenderFrameParent(frameLoader,
+                            scrolling,
+                            &textureFactoryIdentifier,
+                            &layersId,
+                            &success);
+    MOZ_ASSERT(success);
+    return renderFrame;
+  } else {
+    return nullptr;
+  }
 }
 
 bool
 TabParent::DeallocPRenderFrameParent(PRenderFrameParent* aFrame)
 {
   delete aFrame;
+  return true;
+}
+
+bool
+TabParent::RecvGetRenderFrameInfo(PRenderFrameParent* aRenderFrame,
+                                  ScrollingBehavior* aScrolling,
+                                  TextureFactoryIdentifier* aTextureFactoryIdentifier,
+                                  uint64_t* aLayersId)
+{
+  RenderFrameParent* renderFrame = static_cast<RenderFrameParent*>(aRenderFrame);
+  *aScrolling = renderFrame->UseAsyncPanZoom() ? ASYNC_PAN_ZOOM : DEFAULT_SCROLLING;
+  renderFrame->GetTextureFactoryIdentifier(aTextureFactoryIdentifier);
+  *aLayersId = renderFrame->GetLayersId();
   return true;
 }
 
@@ -2018,16 +2064,6 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
     BrowserElementParent::OpenWindowOOP(static_cast<TabParent*>(aOpener),
                                         this, aURL, aName, aFeatures);
   *aOutWindowOpened = (opened != BrowserElementParent::OPEN_WINDOW_CANCELLED);
-  return true;
-}
-
-bool
-TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* aActor,
-                                       ScrollingBehavior* aScrolling,
-                                       TextureFactoryIdentifier* aFactoryIdentifier,
-                                       uint64_t* aLayersId,
-                                       bool* aSuccess)
-{
   return true;
 }
 

@@ -316,7 +316,11 @@ public:
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
                                          const FileDescriptor& aFileDescriptor)
                                          MOZ_OVERRIDE;
-    virtual bool RecvShow(const nsIntSize& size) MOZ_OVERRIDE;
+    virtual bool RecvShow(const nsIntSize& aSize,
+                          const ScrollingBehavior& aScrolling,
+                          const TextureFactoryIdentifier& aTextureFactoryIdentifier,
+                          const uint64_t& aLayersId,
+                          PRenderFrameChild* aRenderFrame) MOZ_OVERRIDE;
     virtual bool RecvUpdateDimensions(const nsIntRect& rect,
                                       const nsIntSize& size,
                                       const ScreenOrientation& orientation) MOZ_OVERRIDE;
@@ -491,10 +495,7 @@ public:
 protected:
     virtual ~TabChild();
 
-    virtual PRenderFrameChild* AllocPRenderFrameChild(ScrollingBehavior* aScrolling,
-                                                      TextureFactoryIdentifier* aTextureFactoryIdentifier,
-                                                      uint64_t* aLayersId,
-                                                      bool* aSuccess) MOZ_OVERRIDE;
+    virtual PRenderFrameChild* AllocPRenderFrameChild() MOZ_OVERRIDE;
     virtual bool DeallocPRenderFrameChild(PRenderFrameChild* aFrame) MOZ_OVERRIDE;
     virtual bool RecvDestroy() MOZ_OVERRIDE;
     virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) MOZ_OVERRIDE;
@@ -536,12 +537,18 @@ private:
 
     enum FrameScriptLoading { DONT_LOAD_SCRIPTS, DEFAULT_LOAD_SCRIPTS };
     bool InitTabChildGlobal(FrameScriptLoading aScriptLoading = DEFAULT_LOAD_SCRIPTS);
-    bool InitRenderingState();
+    bool InitRenderingState(const ScrollingBehavior& aScrolling,
+                            const TextureFactoryIdentifier& aTextureFactoryIdentifier,
+                            const uint64_t& aLayersId,
+                            PRenderFrameChild* aRenderFrame);
     void DestroyWindow();
     void SetProcessNameToAppName();
 
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
-    void DoFakeShow();
+    void DoFakeShow(const ScrollingBehavior& aScrolling,
+                    const TextureFactoryIdentifier& aTextureFactoryIdentifier,
+                    const uint64_t& aLayersId,
+                    PRenderFrameChild* aRenderFrame);
 
     // These methods are used for tracking synthetic mouse events
     // dispatched for compatibility.  On each touch event, we
