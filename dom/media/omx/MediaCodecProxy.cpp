@@ -504,6 +504,21 @@ bool MediaCodecProxy::Prepare()
   return true;
 }
 
+bool MediaCodecProxy::UpdateOutputBuffers()
+{
+  if (mCodec == nullptr) {
+    ALOG("MediaCodec has not been inited from input!");
+    return false;
+  }
+
+  status_t err = getOutputBuffers(&mOutputBuffers);
+  if (err != OK){
+    ALOG("Couldn't update output buffers from MediaCodec");
+    return false;
+  }
+  return true;
+}
+
 status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
                                 int64_t aTimestampUsecs, uint64_t aflags)
 {
@@ -540,7 +555,6 @@ status_t MediaCodecProxy::Input(const uint8_t* aData, uint32_t aDataSize,
 
 status_t MediaCodecProxy::Output(MediaBuffer** aBuffer, int64_t aTimeoutUs)
 {
-
   if (mCodec == nullptr) {
     ALOG("MediaCodec has not been inited from output!");
     return NO_INIT;
