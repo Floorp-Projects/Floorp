@@ -325,7 +325,7 @@ struct BindData;
 
 class CompExprTransplanter;
 
-enum LetContext { LetExpresion, LetStatement };
+enum LetContext { LetExpression, LetStatement };
 enum VarContext { HoistVars, DontHoistVars };
 enum FunctionType { Getter, Setter, Normal };
 
