@@ -122,6 +122,8 @@ public:
 
   virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
 
+  virtual bool SupportsRegionClipping() const { return false; }
+
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return nullptr; }
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
