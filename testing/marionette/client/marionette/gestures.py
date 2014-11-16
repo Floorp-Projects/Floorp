@@ -69,3 +69,15 @@ def pinch(marionette_session, element, x1, y1, x2, y2, x3, y3, x4, y4, duration=
     action1.release()
     action2.release()
     multiAction.add(action1).add(action2).perform()
+
+#element: The element to press.
+#time_in_seconds: Time in seconds to wait before releasing the press.
+#x: Optional, x-coordinate to tap, relative to the top-left corner of the element.
+#y: Optional, y-coordinate to tap, relative to the top-leftcorner of the element.
+def long_press_without_contextmenu(marionette_session, element, time_in_seconds, x=None, y=None):
+    action = Actions(marionette_session)
+    action.press(element, x, y)
+    action.move_by_offset(0, 0)
+    action.wait(time_in_seconds)
+    action.release()
+    action.perform()
