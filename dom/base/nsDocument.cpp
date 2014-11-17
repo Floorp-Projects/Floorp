@@ -6032,18 +6032,29 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
       return;
     }
   } else {
-    // If a prototype is provided, we must check to ensure that it is from the
-    // same browsing context as us.
     protoObject = aOptions.mPrototype;
-    if (JS_GetGlobalForObject(aCx, protoObject) != global) {
+
+    // We are already operating on the document's (/global's) compartment. Let's
+    // get a view of the passed in proto from this compartment.
+    if (!JS_WrapObject(aCx, &protoObject)) {
       rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+      return;
+    }
+
+    // We also need an unwrapped version of it for various checks.
+    JS::Rooted<JSObject*> protoObjectUnwrapped(aCx,
+      js::CheckedUnwrap(protoObject));
+    if (!protoObjectUnwrapped) {
+      // If the documents compartment does not have same origin access
+      // to the compartment of the proto we should just throw.
+      rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return;
     }
 
     // If PROTOTYPE is already an interface prototype object for any interface
     // object or PROTOTYPE has a non-configurable property named constructor,
     // throw a NotSupportedError and stop.
-    const js::Class* clasp = js::GetObjectClass(protoObject);
+    const js::Class* clasp = js::GetObjectClass(protoObjectUnwrapped);
     if (IsDOMIfaceAndProtoClass(clasp)) {
       rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
@@ -6051,6 +6062,9 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
 
     JS::Rooted<JSPropertyDescriptor> descRoot(aCx);
     JS::MutableHandle<JSPropertyDescriptor> desc(&descRoot);
+    // This check will go through a wrapper, but as we checked above
+    // it should be transparent or an xray. This should be fine for now,
+    // until the spec is sorted out.
     if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
       rv.Throw(NS_ERROR_UNEXPECTED);
       return;
