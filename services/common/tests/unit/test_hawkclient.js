@@ -66,9 +66,7 @@ add_task(function test_authenticated_get_request() {
   yield deferredStop(server);
 });
 
-add_task(function test_authenticated_post_request() {
-  let method = "POST";
-
+function check_authenticated_request(method) {
   let server = httpd_setup({"/foo": (request, response) => {
       do_check_true(request.hasHeader("Authorization"));
 
@@ -86,6 +84,18 @@ add_task(function test_authenticated_post_request() {
   do_check_eq("bar", result.foo);
 
   yield deferredStop(server);
+}
+
+add_task(function test_authenticated_post_request() {
+  check_authenticated_request("POST");
+});
+
+add_task(function test_authenticated_put_request() {
+  check_authenticated_request("PUT");
+});
+
+add_task(function test_authenticated_patch_request() {
+  check_authenticated_request("PATCH");
 });
 
 add_task(function test_credentials_optional() {
