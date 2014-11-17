@@ -1679,7 +1679,7 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bo
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
     FinishedSomeDecoding(eShutdownIntent_Done,
                          nullptr,
-                         OnStopRequestProgress(aLastPart, mError, finalStatus));
+                         LoadCompleteProgress(aLastPart, mError, finalStatus));
   }
 
   return finalStatus;
