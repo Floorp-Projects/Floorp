@@ -66,6 +66,9 @@ public:
   virtual void Play(UpdateFlags aUpdateFlags) MOZ_OVERRIDE;
   virtual void Pause(UpdateFlags aUpdateFlags) MOZ_OVERRIDE;
 
+  virtual dom::AnimationPlayState PlayStateFromJS() const MOZ_OVERRIDE;
+  virtual void PlayFromJS() MOZ_OVERRIDE;
+
   void PlayFromStyle();
   void PauseFromStyle();
 

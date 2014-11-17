@@ -41,6 +41,24 @@ CSSAnimationPlayer::Pause(UpdateFlags aUpdateFlags)
   AnimationPlayer::Pause(aUpdateFlags);
 }
 
+mozilla::dom::AnimationPlayState
+CSSAnimationPlayer::PlayStateFromJS() const
+{
+  // Flush style to ensure that any properties controlling animation state
+  // (e.g. animation-play-state) are fully updated.
+  FlushStyle();
+  return AnimationPlayer::PlayStateFromJS();
+}
+
+void
+CSSAnimationPlayer::PlayFromJS()
+{
+  // Note that flushing style below might trigger calls to
+  // PlayFromStyle()/PauseFromStyle() on this object.
+  FlushStyle();
+  AnimationPlayer::PlayFromJS();
+}
+
 void
 CSSAnimationPlayer::PlayFromStyle()
 {
