@@ -1542,16 +1542,16 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
+  const WorkerThreadFriendKey friendKey;
+
   if (!thread) {
-    thread = WorkerThread::Create();
+    thread = WorkerThread::Create(friendKey);
     if (!thread) {
       UnregisterWorker(aCx, aWorkerPrivate);
       JS_ReportError(aCx, "Could not create new thread!");
       return false;
     }
   }
-
-  MOZ_ASSERT(thread->IsAcceptingNonWorkerRunnables());
 
   int32_t priority = aWorkerPrivate->IsChromeWorker() ?
                      nsISupportsPriority::PRIORITY_NORMAL :
@@ -1563,7 +1563,7 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   nsCOMPtr<nsIRunnable> runnable =
     new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread, JS_GetParentRuntime(aCx));
-  if (NS_FAILED(thread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+  if (NS_FAILED(thread->DispatchPrimaryRunnable(friendKey, runnable))) {
     UnregisterWorker(aCx, aWorkerPrivate);
     JS_ReportError(aCx, "Could not dispatch to thread!");
     return false;
@@ -2315,10 +2315,6 @@ RuntimeService::NoteIdleThread(WorkerThread* aThread)
   AssertIsOnMainThread();
   MOZ_ASSERT(aThread);
 
-#ifdef DEBUG
-  aThread->SetAcceptingNonWorkerRunnables(true);
-#endif
-
   static TimeDuration timeout =
     TimeDuration::FromSeconds(IDLE_THREAD_TIMEOUT_SEC);
 
@@ -2566,15 +2562,17 @@ WorkerThreadPrimaryRunnable::Run()
 
   char stackBaseGuess;
 
+  PR_SetCurrentThreadName("DOM Worker");
+
   nsAutoCString threadName;
-  threadName.AssignLiteral("WebWorker '");
+  threadName.AssignLiteral("DOM Worker '");
   threadName.Append(NS_LossyConvertUTF16toASCII(mWorkerPrivate->ScriptURL()));
   threadName.Append('\'');
 
   profiler_register_thread(threadName.get(), &stackBaseGuess);
 
   // Note: SynchronouslyCreatePBackground() must be called prior to
-  //       mThread->SetWorker() in order to avoid accidentally consuming
+  //       mWorkerPrivate->SetThread() in order to avoid accidentally consuming
   //       worker messages here.
   nsresult rv = SynchronouslyCreatePBackground();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2582,7 +2580,7 @@ WorkerThreadPrimaryRunnable::Run()
     return rv;
   }
 
-  mThread->SetWorker(mWorkerPrivate);
+  mWorkerPrivate->SetThread(mThread);
 
 #ifdef ENABLE_TESTS
   TestPBackground();
@@ -2643,7 +2641,7 @@ WorkerThreadPrimaryRunnable::Run()
     // participating.
   }
 
-  mThread->SetWorker(nullptr);
+  mWorkerPrivate->SetThread(nullptr);
 
   mWorkerPrivate->ScheduleDeletion(WorkerPrivate::WorkerRan);
 
@@ -2687,10 +2685,6 @@ WorkerThreadPrimaryRunnable::SynchronouslyCreatePBackground()
   if (NS_WARN_IF(!BackgroundChild::GetForCurrentThread())) {
     return NS_ERROR_FAILURE;
   }
-
-#ifdef DEBUG
-  mThread->SetAcceptingNonWorkerRunnables(false);
-#endif
 
   return NS_OK;
 }

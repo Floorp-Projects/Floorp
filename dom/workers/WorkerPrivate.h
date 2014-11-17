@@ -49,9 +49,7 @@ class Function;
 }
 }
 
-#ifdef DEBUG
 struct PRThread;
-#endif
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -59,10 +57,11 @@ class AutoSyncLoopHolder;
 class MessagePort;
 class SharedWorker;
 class WorkerControlRunnable;
+class WorkerDebugger;
 class WorkerGlobalScope;
 class WorkerPrivate;
 class WorkerRunnable;
-class WorkerDebugger;
+class WorkerThread;
 
 // If you change this, the corresponding list in nsIWorkerDebugger.idl needs to
 // be updated too.
@@ -779,6 +778,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   class MemoryReporter;
   friend class MemoryReporter;
 
+  friend class WorkerThread;
+
   enum GCTimerMode
   {
     PeriodicTimer = 0,
@@ -794,7 +795,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   JSContext* mJSContext;
   nsRefPtr<WorkerCrossThreadDispatcher> mCrossThreadDispatcher;
   nsTArray<nsCOMPtr<nsIRunnable>> mUndispatchedRunnablesForSyncLoop;
-  nsCOMPtr<nsIThread> mThread;
+  nsRefPtr<WorkerThread> mThread;
+  PRThread* mPRThread;
 
   // Things touched on worker thread only.
   nsRefPtr<WorkerGlobalScope> mScope;
@@ -844,11 +846,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   bool mPeriodicGCTimerRunning;
   bool mIdleGCTimerRunning;
   bool mWorkerScriptExecutedSuccessfully;
-
-#ifdef DEBUG
-  PRThread* mPRThread;
-#endif
-
   bool mPreferences[WORKERPREF_COUNT];
   bool mOnLine;
 
@@ -1045,7 +1042,7 @@ public:
   }
 
   void
-  SetThread(nsIThread* aThread);
+  SetThread(WorkerThread* aThread);
 
   void
   AssertIsOnWorkerThread() const

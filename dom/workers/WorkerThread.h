@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_WorkerThread_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CondVar.h"
 #include "mozilla/DebugOnly.h"
 #include "nsISupportsImpl.h"
 #include "nsRefPtr.h"
@@ -19,54 +20,70 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
+class RuntimeService;
 class WorkerPrivate;
+template <class> class WorkerPrivateParent;
 class WorkerRunnable;
+
+// This class lets us restrict the public methods that can be called on
+// WorkerThread to RuntimeService and WorkerPrivate without letting them gain
+// full access to private methods (as would happen if they were simply friends).
+class WorkerThreadFriendKey
+{
+  friend class RuntimeService;
+  friend class WorkerPrivate;
+  friend class WorkerPrivateParent<WorkerPrivate>;
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  WorkerThreadFriendKey();
+  ~WorkerThreadFriendKey();
+#endif
+};
 
 class WorkerThread MOZ_FINAL
   : public nsThread
 {
   class Observer;
 
+  CondVar mWorkerPrivateCondVar;
+
+  // Protected by nsThread::mLock.
   WorkerPrivate* mWorkerPrivate;
+
+  // Only touched on the target thread.
   nsRefPtr<Observer> mObserver;
 
-#ifdef DEBUG
+  // Protected by nsThread::mLock and waited on with mWorkerPrivateCondVar.
+  bool mOtherThreadDispatchingViaEventTarget;
+
   // Protected by nsThread::mLock.
-  bool mAcceptingNonWorkerRunnables;
-#endif
+  DebugOnly<bool> mAcceptingNonWorkerRunnables;
 
 public:
   static already_AddRefed<WorkerThread>
-  Create();
+  Create(const WorkerThreadFriendKey& aKey);
 
   void
-  SetWorker(WorkerPrivate* aWorkerPrivate);
+  SetWorker(const WorkerThreadFriendKey& aKey, WorkerPrivate* aWorkerPrivate);
+
+  nsresult
+  DispatchPrimaryRunnable(const WorkerThreadFriendKey& aKey,
+                          nsIRunnable* aRunnable);
+
+  nsresult
+  Dispatch(const WorkerThreadFriendKey& aKey,
+           WorkerRunnable* aWorkerRunnable);
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD
-  Dispatch(nsIRunnable* aRunnable, uint32_t aFlags) MOZ_OVERRIDE;
-
-#ifdef DEBUG
-  bool
-  IsAcceptingNonWorkerRunnables()
-  {
-    MutexAutoLock lock(mLock);
-    return mAcceptingNonWorkerRunnables;
-  }
-
-  void
-  SetAcceptingNonWorkerRunnables(bool aAcceptingNonWorkerRunnables)
-  {
-    MutexAutoLock lock(mLock);
-    mAcceptingNonWorkerRunnables = aAcceptingNonWorkerRunnables;
-  }
-#endif
-
 private:
   WorkerThread();
-
   ~WorkerThread();
+
+  // This should only be called by consumers that have an
+  // nsIEventTarget/nsIThread pointer.
+  NS_IMETHOD
+  Dispatch(nsIRunnable* aRunnable, uint32_t aFlags) MOZ_OVERRIDE;
 };
 
 } // namespace workers
