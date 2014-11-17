@@ -84,6 +84,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
         state = "active";
       } else if (MozLoopService.doNotDisturb) {
         state = "disabled";
+      } else if (MozLoopService.roomsParticipantsCount > 0) {
+        state = "active";
       }
       this.toolbarButton.node.setAttribute("state", state);
     },
