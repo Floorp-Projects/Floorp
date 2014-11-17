@@ -242,7 +242,7 @@ pref("media.windows-media-foundation.use-dxva", true);
 pref("media.directshow.enabled", true);
 #endif
 #ifdef MOZ_FMP4
-pref("media.fragmented-mp4.enabled", true);
+pref("media.fragmented-mp4.enabled", false);
 pref("media.fragmented-mp4.ffmpeg.enabled", false);
 #if defined(XP_WIN) && defined(MOZ_WMF) || defined(XP_MACOSX)
 // Denotes that the fragmented MP4 parser can be created by <video> elements.
