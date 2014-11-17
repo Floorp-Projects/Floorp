@@ -50,6 +50,17 @@ let DevEdition = {
     }
   },
 
+  _inferBrightness: function() {
+    ToolbarIconColor.inferFromText();
+    // Get an inverted full screen button if the dark theme is applied.
+    if (this.styleSheet &&
+        document.documentElement.getAttribute("devtoolstheme") == "dark") {
+      document.documentElement.setAttribute("brighttitlebarforeground", "true");
+    } else {
+      document.documentElement.removeAttribute("brighttitlebarforeground");
+    }
+  },
+
   _updateDevtoolsThemeAttribute: function() {
     // Set an attribute on root element to make it possible
     // to change colors based on the selected devtools theme.
@@ -58,7 +69,7 @@ let DevEdition = {
       devtoolsTheme = "light";
     }
     document.documentElement.setAttribute("devtoolstheme", devtoolsTheme);
-    ToolbarIconColor.inferFromText();
+    this._inferBrightness();
     this._updateStyleSheetFromPrefs();
   },
 
@@ -83,7 +94,7 @@ let DevEdition = {
     if (e.type === "load") {
       this.styleSheet.removeEventListener("load", this);
       gBrowser.tabContainer._positionPinnedTabs();
-      ToolbarIconColor.inferFromText();
+      this._inferBrightness();
       Services.obs.notifyObservers(window, "devedition-theme-state-changed", true);
     }
   },
@@ -102,7 +113,7 @@ let DevEdition = {
       this.styleSheet.remove();
       this.styleSheet = null;
       gBrowser.tabContainer._positionPinnedTabs();
-      ToolbarIconColor.inferFromText();
+      this._inferBrightness();
       Services.obs.notifyObservers(window, "devedition-theme-state-changed", false);
     }
   },
