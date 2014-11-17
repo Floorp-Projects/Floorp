@@ -282,10 +282,6 @@ void
 MediaCodecReader::ProcessCachedDataTask::Run()
 {
   mReader->ProcessCachedData(mOffset, nullptr);
-  nsRefPtr<ReferenceKeeperRunnable<MediaCodecReader>> runnable(
-      new ReferenceKeeperRunnable<MediaCodecReader>(mReader));
-  mReader = nullptr;
-  NS_DispatchToMainThread(runnable.get());
 }
 
 MediaCodecReader::MediaCodecReader(AbstractMediaDecoder* aDecoder)
@@ -305,7 +301,6 @@ MediaCodecReader::MediaCodecReader(AbstractMediaDecoder* aDecoder)
 
 MediaCodecReader::~MediaCodecReader()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
 }
 
 nsresult
