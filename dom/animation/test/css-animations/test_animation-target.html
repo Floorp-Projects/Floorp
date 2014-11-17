@@ -24,18 +24,4 @@ test(function() {
   div.remove();
 }, 'Returned CSS animations have the correct Animation.target');
 
-test(function() {
-  var div = addDiv();
-
-  div.style.left = '0px';
-  window.getComputedStyle(div).transitionProperty;
-  div.style.transition = 'left 100s';
-  div.style.left = '100px';
-
-  var players = div.getAnimationPlayers();
-  assert_equals(players[0].source.target, div,
-    'Animation.target is the animatable div');
-  div.remove();
-}, 'Returned CSS transitions have the correct Animation.target');
-
 </script>
