@@ -1560,7 +1560,7 @@ RestyleManager::ProcessPendingRestyles()
   // correct old style for starting the transition.
   if (nsLayoutUtils::AreAsyncAnimationsEnabled() &&
       mPendingRestyles.Count() > 0) {
-    ++mAnimationGeneration;
+    IncrementAnimationGeneration();
     UpdateOnlyAnimationStyles();
   }
 
