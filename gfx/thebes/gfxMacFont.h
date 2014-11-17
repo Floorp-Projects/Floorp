@@ -37,6 +37,15 @@ public:
                                gfxContext *aContextForTightBoundingBox,
                                Spacing *aSpacing, uint16_t aOrientation);
 
+    // We need to provide hinted (non-linear) glyph widths if using a font
+    // with embedded color bitmaps (Apple Color Emoji), as Core Text renders
+    // the glyphs with non-linear scaling at small pixel sizes.
+    virtual bool ProvidesGlyphWidths() const {
+        return mFontEntry->HasFontTable(TRUETYPE_TAG('s','b','i','x'));
+    }
+
+    virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID);
+
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont> GetScaledFont(mozilla::gfx::DrawTarget *aTarget);
 
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
@@ -74,6 +83,10 @@ protected:
     // a weak reference to the CoreGraphics font: this is owned by the
     // MacOSFontEntry, it is not retained or released by gfxMacFont
     CGFontRef             mCGFont;
+
+    // a Core Text font reference, created only if we're using CT to measure
+    // glyph widths; otherwise null.
+    CTFontRef             mCTFont;
 
     cairo_font_face_t    *mFontFace;
 
