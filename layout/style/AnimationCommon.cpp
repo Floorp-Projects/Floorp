@@ -604,7 +604,8 @@ AnimationPlayerCollection::CanThrottleTransformChanges(TimeStamp aTime)
   }
 
   // If this animation can cause overflow, we can throttle some of the ticks.
-  if ((aTime - mStyleRuleRefreshTime) < TimeDuration::FromMilliseconds(200)) {
+  if (!mStyleRuleRefreshTime.IsNull() &&
+      (aTime - mStyleRuleRefreshTime) < TimeDuration::FromMilliseconds(200)) {
     return true;
   }
 
