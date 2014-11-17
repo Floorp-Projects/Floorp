@@ -100,6 +100,7 @@ browser.jar:
   skin/classic/browser/searchbar.css
   skin/classic/browser/Search.png
   skin/classic/browser/Search@2x.png
+  skin/classic/browser/search-pref.png                             (../shared/search-pref.png)
   skin/classic/browser/Secure-Glyph.png
   skin/classic/browser/Secure-Glyph@2x.png
   skin/classic/browser/slowStartup-16.png

@@ -16,6 +16,7 @@
    -->
 <?xml-stylesheet href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/search.css"?>
 
 <!DOCTYPE prefwindow [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -66,6 +67,8 @@
               src="chrome://browser/content/preferences/main.xul"/>
     <prefpane id="paneTabs" label="&paneTabs.title;"
               src="chrome://browser/content/preferences/tabs.xul"/>
+    <prefpane id="paneSearch" label="Search"
+              src="chrome://browser/content/preferences/search.xul"/>
     <prefpane id="paneContent" label="&paneContent.title;"
               src="chrome://browser/content/preferences/content.xul"/>
     <prefpane id="paneApplications" label="&paneApplications.title;"
@@ -81,6 +84,8 @@
     <prefpane id="paneAdvanced" label="&paneAdvanced.title;"
               src="chrome://browser/content/preferences/advanced.xul"/>
 
+    <script type="application/javascript"
+            src="chrome://browser/content/preferences/preferences.js"/>
 #ifdef XP_MACOSX
 #include ../../base/content/browserMountPoints.inc
 #endif
