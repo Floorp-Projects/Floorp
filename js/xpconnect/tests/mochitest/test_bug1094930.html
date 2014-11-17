@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1094930
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1094930</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <iframe id="ifr"></iframe>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1094930">Mozilla Bug 1094930</a>
+<p id="display"></p>
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  var proto = { 
+    createdCallback: function() {
+      ok(true, "createdCallback was called");
+      SimpleTest.finish()
+    }
+  };
+
+  var f = document.registerElement.call(frames[0].document, "x-foo", { prototype: proto });
+  var inst = new f();
+</script>
+</body>
+</html>
