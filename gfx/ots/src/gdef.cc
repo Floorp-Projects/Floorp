@@ -231,9 +231,9 @@ bool ParseMarkGlyphSetsDefTable(ots::OpenTypeFile *file, const uint8_t *data,
 
 #define DROP_THIS_TABLE(msg_) \
   do { \
+    OTS_FAILURE_MSG(msg_ ", table discarded"); \
     file->gdef->data = 0; \
     file->gdef->length = 0; \
-    OTS_FAILURE_MSG(msg_ ", table discarded"); \
   } while (0)
 
 namespace ots {
