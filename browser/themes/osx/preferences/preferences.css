@@ -32,6 +32,12 @@ radio[pane=paneTabs] {
   -moz-image-region: rect(0px, 64px, 32px, 32px);
 }
 
+/* ----- SEARCH BUTTON ----- */
+
+radio[pane=paneSearch] {
+  list-style-image: url("chrome://browser/skin/search-pref.png");
+}
+
 /* ----- CONTENT BUTTON ----- */
 
 radio[pane=paneContent] {
