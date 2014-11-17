@@ -179,7 +179,6 @@ nsHttpHandler::nsHttpHandler()
     , mAllowExperiments(true)
     , mHandlerActive(false)
     , mEnableSpdy(false)
-    , mSpdyV3(true)
     , mSpdyV31(true)
     , mHttp2DraftEnabled(true)
     , mHttp2Enabled(true)
@@ -1175,12 +1174,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled"), &cVar);
         if (NS_SUCCEEDED(rv))
             mEnableSpdy = cVar;
-    }
-
-    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v3"))) {
-        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.v3"), &cVar);
-        if (NS_SUCCEEDED(rv))
-            mSpdyV3 = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enabled.v3-1"))) {
