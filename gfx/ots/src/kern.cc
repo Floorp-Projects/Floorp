@@ -11,9 +11,9 @@
 
 #define DROP_THIS_TABLE(msg_) \
   do { \
+    OTS_FAILURE_MSG(msg_ ", table discarded"); \
     delete file->kern; \
     file->kern = 0; \
-    OTS_FAILURE_MSG(msg_ ", table discarded"); \
   } while (0)
 
 namespace ots {

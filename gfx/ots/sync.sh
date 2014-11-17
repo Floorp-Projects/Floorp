@@ -26,6 +26,3 @@ sed -e "s/\(Current revision: \).*/\1$REVISION/" -i "" README.mozilla
 
 echo "Applying ots-visibility.patch..."
 patch -p3 < ots-visibility.patch
-
-echo "Applying ots-brotli-path.patch..."
-patch -p3 < ots-brotli-path.patch
