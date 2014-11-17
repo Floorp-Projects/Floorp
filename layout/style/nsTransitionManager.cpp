@@ -172,7 +172,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
   AnimationPlayerCollection* collection =
-    GetElementTransitions(aElement, pseudoType, false);
+    GetAnimationPlayers(aElement, pseudoType, false);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetDelay() == 0.0f &&
@@ -544,8 +544,7 @@ nsTransitionManager::ConsiderStartingTransition(
 
   if (!aElementTransitions) {
     aElementTransitions =
-      GetElementTransitions(aElement, aNewStyleContext->GetPseudoType(),
-                            true);
+      GetAnimationPlayers(aElement, aNewStyleContext->GetPseudoType(), true);
     if (!aElementTransitions) {
       NS_WARNING("allocating CommonAnimationManager failed");
       return;
@@ -581,7 +580,7 @@ nsTransitionManager::ConsiderStartingTransition(
 }
 
 AnimationPlayerCollection*
-nsTransitionManager::GetElementTransitions(
+nsTransitionManager::GetAnimationPlayers(
   dom::Element *aElement,
   nsCSSPseudoElements::Type aPseudoType,
   bool aCreateIfNeeded)
@@ -637,7 +636,7 @@ nsTransitionManager::WalkTransitionRule(dom::Element* aElement,
                                         nsRuleWalker* aRuleWalker)
 {
   AnimationPlayerCollection* collection =
-    GetElementTransitions(aElement, aPseudoType, false);
+    GetAnimationPlayers(aElement, aPseudoType, false);
   if (!collection) {
     return;
   }

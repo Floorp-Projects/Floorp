@@ -165,10 +165,10 @@ public:
 
   void FlushTransitions(FlushFlags aFlags);
 
-  AnimationPlayerCollection* GetElementTransitions(
-    mozilla::dom::Element *aElement,
-    nsCSSPseudoElements::Type aPseudoType,
-    bool aCreateIfNeeded);
+  virtual AnimationPlayerCollection*
+  GetAnimationPlayers(mozilla::dom::Element *aElement,
+                      nsCSSPseudoElements::Type aPseudoType,
+                      bool aCreateIfNeeded) MOZ_OVERRIDE;
   void WalkTransitionRule(mozilla::dom::Element* aElement,
                           nsCSSPseudoElements::Type aPseudoType,
                           nsRuleWalker* aRuleWalker);
