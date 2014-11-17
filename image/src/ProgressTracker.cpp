@@ -306,15 +306,12 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // OnStartContainer
   if (aProgress & FLAG_HAS_SIZE)
-    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartContainer());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, OnSizeAvailable());
 
-  // OnStartDecode
   if (aProgress & FLAG_DECODE_STARTED)
     NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartDecode());
 
-  // BlockOnload
   if (aProgress & FLAG_ONLOAD_BLOCKED)
     NOTIFY_IMAGE_OBSERVERS(aProxies, BlockOnload());
 
@@ -327,7 +324,7 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnFrameUpdate(&aDirtyRect));
 
     if (aProgress & FLAG_FRAME_STOPPED)
-      NOTIFY_IMAGE_OBSERVERS(aProxies, OnStopFrame());
+      NOTIFY_IMAGE_OBSERVERS(aProxies, OnFrameComplete());
 
     if (aProgress & FLAG_HAS_TRANSPARENCY)
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageHasTransparency());
@@ -345,12 +342,12 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
 
   if (aProgress & FLAG_DECODE_STOPPED) {
     MOZ_ASSERT(aHasImage, "Stopped decoding without ever having an image?");
-    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStopDecode());
+    NOTIFY_IMAGE_OBSERVERS(aProxies, OnDecodeComplete());
   }
 
   if (aProgress & FLAG_REQUEST_STOPPED) {
     NOTIFY_IMAGE_OBSERVERS(aProxies,
-                           OnStopRequest(aProgress & FLAG_MULTIPART_STOPPED));
+                           OnLoadComplete(aProgress & FLAG_MULTIPART_STOPPED));
   }
 }
 
@@ -416,7 +413,7 @@ ProgressTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
   }
 
   if (!(mProgress & FLAG_REQUEST_STOPPED)) {
-    aProxy->OnStopRequest(true);
+    aProxy->OnLoadComplete(true);
   }
 }
 

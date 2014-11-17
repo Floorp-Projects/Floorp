@@ -734,7 +734,7 @@ void imgRequestProxy::OnStartDecode()
   }
 }
 
-void imgRequestProxy::OnStartContainer()
+void imgRequestProxy::OnSizeAvailable()
 {
   LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStartContainer");
 
@@ -747,7 +747,7 @@ void imgRequestProxy::OnStartContainer()
 
 void imgRequestProxy::OnFrameUpdate(const nsIntRect * rect)
 {
-  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnDataAvailable");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnFrameUpdate");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -756,9 +756,9 @@ void imgRequestProxy::OnFrameUpdate(const nsIntRect * rect)
   }
 }
 
-void imgRequestProxy::OnStopFrame()
+void imgRequestProxy::OnFrameComplete()
 {
-  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStopFrame");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnFrameComplete");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -767,9 +767,9 @@ void imgRequestProxy::OnStopFrame()
   }
 }
 
-void imgRequestProxy::OnStopDecode()
+void imgRequestProxy::OnDecodeComplete()
 {
-  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStopDecode");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnDecodeComplete");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -830,7 +830,7 @@ void imgRequestProxy::OnImageIsAnimated()
   }
 }
 
-void imgRequestProxy::OnStopRequest(bool lastPart)
+void imgRequestProxy::OnLoadComplete(bool aLastPart)
 {
 #ifdef PR_LOGGING
   nsAutoCString name;
@@ -852,17 +852,17 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
   // to the loadgroup so that the document doesn't lose track of the load.
   // If the request is already a background request and there's more data
   // coming, we can just leave the request in the loadgroup as-is.
-  if (lastPart || (mLoadFlags & nsIRequest::LOAD_BACKGROUND) == 0) {
-    RemoveFromLoadGroup(lastPart);
+  if (aLastPart || (mLoadFlags & nsIRequest::LOAD_BACKGROUND) == 0) {
+    RemoveFromLoadGroup(aLastPart);
     // More data is coming, so change the request to be a background request
     // and put it back in the loadgroup.
-    if (!lastPart) {
+    if (!aLastPart) {
       mLoadFlags |= nsIRequest::LOAD_BACKGROUND;
       AddToLoadGroup();
     }
   }
 
-  if (mListenerIsStrongRef && lastPart) {
+  if (mListenerIsStrongRef && aLastPart) {
     NS_PRECONDITION(mListener, "How did that happen?");
     // Drop our strong ref to the listener now that we're done with
     // everything.  Note that this can cancel us and other fun things
