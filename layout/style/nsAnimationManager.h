@@ -78,6 +78,7 @@ public:
 
 protected:
   virtual ~CSSAnimationPlayer() { }
+  virtual css::CommonAnimationManager* GetAnimationManager() const MOZ_OVERRIDE;
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 

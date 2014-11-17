@@ -81,6 +81,8 @@ public:
 
 protected:
   virtual ~CSSTransitionPlayer() { }
+
+  virtual css::CommonAnimationManager* GetAnimationManager() const MOZ_OVERRIDE;
 };
 
 } // namespace mozilla
