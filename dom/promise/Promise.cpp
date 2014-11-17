@@ -1117,19 +1117,19 @@ Promise::RejectInternal(JSContext* aCx,
 }
 
 void
-Promise::MaybeSettle(JS::Handle<JS::Value> aValue,
-                     PromiseState aState)
+Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
 {
-  // Promise.all() or Promise.race() implementations will repeatedly call
-  // Resolve/RejectInternal rather than using the Maybe... forms. Stop SetState
-  // from asserting.
-  if (mState != Pending) {
-    return;
-  }
-
+  mSettlementTimestamp = TimeStamp::Now();
   SetResult(aValue);
   SetState(aState);
-  mSettlementTimestamp = TimeStamp::Now();
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
+  JS::RootedObject wrapper(cx, GetWrapper());
+  MOZ_ASSERT(wrapper); // We preserved it
+  JSAutoCompartment ac(cx, wrapper);
+  JS::dbg::onPromiseSettled(cx, wrapper);
 
   // If the Promise was rejected, and there is no reject handler already setup,
   // watch for thread shutdown.
@@ -1151,6 +1151,20 @@ Promise::MaybeSettle(JS::Handle<JS::Value> aValue,
   }
 
   EnqueueCallbackTasks();
+}
+
+void
+Promise::MaybeSettle(JS::Handle<JS::Value> aValue,
+                     PromiseState aState)
+{
+  // Promise.all() or Promise.race() implementations will repeatedly call
+  // Resolve/RejectInternal rather than using the Maybe... forms. Stop SetState
+  // from asserting.
+  if (mState != Pending) {
+    return;
+  }
+
+  Settle(aValue, aState);
 }
 
 void

@@ -225,8 +225,8 @@ private:
   // appended by then(), catch() or done().
   void EnqueueCallbackTasks();
 
-  void MaybeSettle(JS::Handle<JS::Value> aValue,
-                   Promise::PromiseState aState);
+  void Settle(JS::Handle<JS::Value> aValue, Promise::PromiseState aState);
+  void MaybeSettle(JS::Handle<JS::Value> aValue, Promise::PromiseState aState);
 
   void AppendCallbacks(PromiseCallback* aResolveCallback,
                        PromiseCallback* aRejectCallback);
