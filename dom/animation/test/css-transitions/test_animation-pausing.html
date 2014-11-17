@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+'use strict';
+
+function addDiv() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  return div;
+}
+
+function waitForFrame() {
+  return new Promise(function(resolve, reject) {
+    window.requestAnimationFrame(resolve);
+  });
+}
+
+function getMarginLeft(cs) {
+  return parseFloat(cs.marginLeft);
+}
+
+async_test(function(t) {
+  var div = addDiv();
+  var cs = window.getComputedStyle(div);
+
+  div.style.marginLeft = '0px';
+  cs.marginLeft; // Flush style to set up transition start point
+  div.style.transition = 'margin-left 100s';
+  div.style.marginLeft = '10000px';
+  cs.marginLeft;
+
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(getMarginLeft(cs), 0,
+                'Initial value of margin-left is zero');
+  var previousAnimVal = getMarginLeft(cs);
+
+  waitForFrame().then(function() {
+    t.step(function() {
+      assert_true(getMarginLeft(cs) > previousAnimVal,
+                  'margin-left is initially increasing');
+      previousAnimVal = getMarginLeft(cs);
+      player.pause();
+    });
+    return waitForFrame();
+  }).then(function() {
+    t.step(function() {
+      assert_equals(getMarginLeft(cs), previousAnimVal,
+                    'margin-left does not increase after calling pause()');
+      previousAnimVal = getMarginLeft(cs);
+      player.play();
+    });
+    return waitForFrame();
+  }).then(function() {
+    t.step(function() {
+      assert_true(getMarginLeft(cs) > previousAnimVal,
+                  'margin-left increases after calling play()');
+    });
+    div.remove();
+    t.done();
+  });
+}, 'pause() and play() a transition');
+
+</script>

@@ -42,17 +42,4 @@ test(function() {
   div.remove();
 }, 'Animation name with hex-escape');
 
-test(function() {
-  var div = addDiv();
-
-  // Add a transition
-  div.style.left = '0px';
-  window.getComputedStyle(div).transitionProperty;
-  div.style.transition = 'all 100s';
-  div.style.left = '100px';
-
-  assert_equals(div.getAnimationPlayers()[0].source.effect.name, '',
-                'Animation effects for transitions have an empty name');
-  div.remove();
-}, 'Effect name for transitions');
 </script>
