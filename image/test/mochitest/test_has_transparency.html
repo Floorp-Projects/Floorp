@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1089880
+-->
+<head>
+  <title>Test for Bug 1089880</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="application/javascript" src="imgutils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1089880">Mozilla Bug 1089880</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+/** Test for Bug 1089880 **/
+
+SimpleTest.waitForExplicitFinish();
+
+const FAILURE_TIMEOUT = 120000; // Fail early after 120 seconds (2 minutes)
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const gContent = document.getElementById("content");
+
+var gImg;
+var gMyDecoderObserver;
+var gIsTestFinished = false;
+var gFiles;
+var gCurrentFileIsTransparent = false;
+var gHasTransparencyWasCalled = false;
+
+function testFiles() {
+  // [A, B] where 'A' is the image and 'B' is whether it's transparent.
+
+  // PNGs and GIFs may be transparent or not.
+  yield ["red.png", false];
+  yield ["transparent.png", true];
+  yield ["red.gif", false];
+  yield ["transparent.gif", true];
+
+  // GIFs with padding on the first frame are always transparent.
+  yield ["first-frame-padding.gif", true];
+
+  // JPEGs and BMPs are never transparent.
+  yield ["damon.jpg", false];
+  yield ["opaque.bmp", false];
+
+  // ICO files which contain BMPs have an additional type of transparency - the
+  // AND mask - that warrants separate testing.
+  yield ["ico-bmp-opaque.ico", false];
+  yield ["ico-bmp-transparent.ico", true];
+
+  // SVGs are always transparent.
+  yield ["lime100x100.svg", true];
+}
+
+function loadNext() {
+  var currentFile = "";
+  try {
+    gHasTransparencyWasCalled = false;
+    [currentFile, gCurrentFileIsTransparent] = gFiles.next();
+    gImg.setAttribute("src", currentFile);
+  } catch (e) {
+    // We ran out of test files.
+    cleanUpAndFinish();
+  }
+}
+
+function onHasTransparency(aRequest) {
+  gHasTransparencyWasCalled = true;
+}
+
+function onDecodeComplete(aRequest) {
+  if (!gCurrentFileIsTransparent) {
+    ok(!gHasTransparencyWasCalled,
+       "onHasTransparency was not called for non-transparent file " + gImg.src);
+  } else {
+    ok(gHasTransparencyWasCalled,
+       "onHasTransparency was called for transparent file " + gImg.src);
+  }
+  loadNext();
+}
+
+function onError() {
+  if (gIsTestFinished) {
+    return;
+  }
+  ok(false, "Should successfully load " + gImg.src);
+  loadNext();
+}
+
+function onLoad() {
+  if (gIsTestFinished) {
+    return;
+  }
+  ok(true, "Should successfully load " + gImg.src);
+}
+
+function failTest() {
+  ok(false, "timing out after " + FAILURE_TIMEOUT + "ms.  " +
+            "currently displaying " + gImg.src);
+  cleanUpAndFinish();
+}
+
+function cleanUpAndFinish() {
+  if (gIsTestFinished) {
+    return;
+  }
+  gIsTestFinished = true;
+  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.removeObserver(gMyDecoderObserver);
+  SimpleTest.finish();
+}
+
+function main() {
+  gFiles = testFiles();
+  gImg = new Image();
+  gImg.onload = onLoad;
+  gImg.onerror = onError;
+
+  // Create, customize & attach decoder observer.
+  observer = new ImageDecoderObserverStub();
+  observer.hasTransparency = onHasTransparency;
+  observer.decodeComplete = onDecodeComplete;
+  gMyDecoderObserver =
+    Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+      .createScriptedObserver(observer);
+  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
+  imgLoadingContent.addObserver(gMyDecoderObserver);
+
+  // We want to test the cold loading behavior, so clear cache in case an
+  // earlier test got our image in there already.
+  clearImageCache();
+
+  // Load the first image.
+  loadNext();
+
+  // In case something goes wrong, fail earlier than mochitest timeout,
+  // and with more information.
+  setTimeout(failTest, FAILURE_TIMEOUT);
+}
+
+window.onload = main;
+
+</script>
+</pre>
+</body>
+</html>
