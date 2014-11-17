@@ -29,24 +29,17 @@ class ISurfaceAllocator;
 
 ImageHost::ImageHost(const TextureInfo& aTextureInfo)
   : CompositableHost(aTextureInfo)
-  , mFrontBuffer(nullptr)
   , mHasPictureRect(false)
   , mLocked(false)
 {}
 
 ImageHost::~ImageHost()
 {
-  if (mFrontBuffer) {
-    mFrontBuffer->UnbindTextureSource();
-  }
 }
 
 void
 ImageHost::UseTextureHost(TextureHost* aTexture)
 {
-  if (mFrontBuffer && mFrontBuffer != aTexture) {
-    mFrontBuffer->UnbindTextureSource();
-  }
   CompositableHost::UseTextureHost(aTexture);
   mFrontBuffer = aTexture;
   if (mFrontBuffer) {
