@@ -30,12 +30,13 @@ class GeckoInstance(object):
                       "browser.tabs.remote.autostart.1": False,
                       "browser.tabs.remote.autostart.2": False}
 
-    def __init__(self, host, port, bin, profile, app_args=None, symbols_path=None,
-                  gecko_log=None, prefs=None):
+    def __init__(self, host, port, bin, profile_path=None, app_args=None, symbols_path=None,
+                  gecko_log=None, prefs=None, profile=None):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
-        self.profile_path = profile
+        self.profile_path = profile_path
+        self.profile = None
         self.prefs = prefs
         self.app_args = app_args or []
         self.runner = None
@@ -46,12 +47,14 @@ class GeckoInstance(object):
         profile_args = {"preferences": deepcopy(self.required_prefs)}
         if self.prefs:
             profile_args["preferences"].update(self.prefs)
-        if not self.profile_path:
-            profile_args["restore"] = False
-            profile = Profile(**profile_args)
-        else:
-            profile_args["path_from"] = self.profile_path
-            profile = Profile.clone(**profile_args)
+
+        if not self.profile:
+            if not self.profile_path:
+                profile_args["restore"] = False
+                self.profile = Profile(**profile_args)
+            else:
+                profile_args["path_from"] = self.profile_path
+                self.profile = Profile.clone(**profile_args)
 
         if self.gecko_log is None:
             self.gecko_log = 'gecko.log'
@@ -91,7 +94,7 @@ class GeckoInstance(object):
                      'MOZ_CRASHREPORTER_NO_REPORT': '1', })
         self.runner = Runner(
             binary=self.bin,
-            profile=profile,
+            profile=self.profile,
             cmdargs=['-no-remote', '-marionette'] + self.app_args,
             env=env,
             symbols_path=self.symbols_path,
@@ -105,7 +108,11 @@ class GeckoInstance(object):
             self.runner.stop()
             self.runner.cleanup()
 
-    def restart(self, prefs=None):
+    def restart(self, prefs=None, clean=True):
+        if clean:
+            self.profile.cleanup()
+            self.profile = None
+
         self.close()
         if prefs:
             self.prefs = prefs
