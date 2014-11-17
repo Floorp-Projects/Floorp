@@ -174,6 +174,7 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd)
     reader->DiscardRemaining();
     return;
   }
+  uint8_t version = flags >> 24;
 
   uint32_t sampleCount = reader->ReadU32();
   if (sampleCount == 0) {
@@ -194,7 +195,14 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd)
       flags & 0x400 ? reader->ReadU32() : hasFirstSampleFlags && i == 0
                                             ? firstSampleFlags
                                             : aTfhd.mDefaultSampleFlags;
-    uint32_t ctsOffset = flags & 0x800 ? reader->ReadU32() : 0;
+    int64_t ctsOffset = 0;
+    if (flags & 0x800) {
+      if (version == 0) {
+        ctsOffset = reader->ReadU32();
+      } else {
+        ctsOffset = reader->Read32();
+      }
+    }
 
     Sample sample;
     sample.mByteRange = MediaByteRange(offset, offset + sampleSize);

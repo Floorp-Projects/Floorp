@@ -132,6 +132,8 @@ public:
   bool IsWaitingResources();
   bool IsDormantNeeded();
   void ReleaseMediaResources();
+  // This updates mOutputBuffer when receiving INFO_OUTPUT_BUFFERS_CHANGED event.
+  bool UpdateOutputBuffers();
 
   void ReleaseMediaBuffer(MediaBuffer* abuffer);
 

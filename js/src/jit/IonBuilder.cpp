@@ -11321,9 +11321,6 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition *typedObj,
                                            ReferenceTypeDescr::Type type,
                                            MDefinition *value)
 {
-    if (NeedsPostBarrier(info(), value))
-        current->add(MPostWriteBarrier::New(alloc(), typedObj, value));
-
     // Find location within the owner object.
     MDefinition *elements, *scaledOffset;
     size_t alignment = ReferenceTypeDescr::alignment(type);
@@ -11332,12 +11329,20 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition *typedObj,
     MInstruction *store;
     switch (type) {
       case ReferenceTypeDescr::TYPE_ANY:
+        if (NeedsPostBarrier(info(), value))
+            current->add(MPostWriteBarrier::New(alloc(), typedObj, value));
         store = MStoreElement::New(alloc(), elements, scaledOffset, value, false);
         break;
       case ReferenceTypeDescr::TYPE_OBJECT:
-        store = MStoreUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, value);
+        // Note: We cannot necessarily tell at this point whether a post
+        // barrier is needed, because the type policy may insert ToObjectOrNull
+        // instructions later, and those may require a post barrier. Therefore,
+        // defer the insertion of post barriers to the type policy.
+        store = MStoreUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, value, typedObj);
         break;
       case ReferenceTypeDescr::TYPE_STRING:
+        // Strings are not nursery allocated, so these writes do not need post
+        // barriers.
         store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value);
         break;
     }

@@ -210,6 +210,9 @@ class Configuration:
             elif key == 'isExposedInSystemGlobals':
                 getter = lambda x: (not x.interface.isExternal() and
                                     x.interface.isExposedInSystemGlobals())
+            elif key == 'isExposedInWindow':
+                getter = lambda x: (not x.interface.isExternal() and
+                                    x.interface.isExposedInWindow())
             else:
                 # Have to watch out: just closing over "key" is not enough,
                 # since we're about to mutate its value
@@ -654,12 +657,13 @@ class Descriptor(DescriptorProvider):
                 in self.interface.members))
 
     def hasThreadChecks(self):
-        return ((not self.workers and not self.interface.isExposedInWindow()) or
-                (self.interface.isExposedInAnyWorker() and
-                 self.interface.isExposedOnlyInSomeWorkers()))
+        return ((self.isExposedConditionally() and
+                 not self.interface.isExposedInWindow()) or
+                self.interface.isExposedInSomeButNotAllWorkers())
 
     def isExposedConditionally(self):
-        return self.interface.isExposedConditionally() or self.hasThreadChecks()
+        return (self.interface.isExposedConditionally() or
+                self.interface.isExposedInSomeButNotAllWorkers())
 
     def needsXrayResolveHooks(self):
         """

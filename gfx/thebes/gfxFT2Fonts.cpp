@@ -174,52 +174,6 @@ gfxFT2Font::~gfxFT2Font()
 {
 }
 
-/**
- * Look up the font in the gfxFont cache. If we don't find it, create one.
- * In either case, add a ref, append it to the aFonts array, and return it ---
- * except for OOM in which case we do nothing and return null.
- */
-already_AddRefed<gfxFT2Font>
-gfxFT2Font::GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
-                          bool aNeedsBold)
-{
-#ifdef ANDROID
-    FT2FontEntry *fe = static_cast<FT2FontEntry*>
-        (gfxPlatformFontList::PlatformFontList()->
-            FindFontForFamily(aName, aStyle, aNeedsBold));
-#else
-    FT2FontEntry *fe = static_cast<FT2FontEntry*>
-        (gfxToolkitPlatform::GetPlatform()->FindFontEntry(aName, *aStyle));
-#endif
-    if (!fe) {
-        NS_WARNING("Failed to find font entry for font!");
-        return nullptr;
-    }
-
-    nsRefPtr<gfxFT2Font> font = GetOrMakeFont(fe, aStyle, aNeedsBold);
-    return font.forget();
-}
-
-already_AddRefed<gfxFT2Font>
-gfxFT2Font::GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
-                          bool aNeedsBold)
-{
-    nsRefPtr<gfxFont> font = gfxFontCache::GetCache()->Lookup(aFontEntry, aStyle);
-    if (!font) {
-        cairo_scaled_font_t *scaledFont = aFontEntry->CreateScaledFont(aStyle);
-        if (!scaledFont) {
-            return nullptr;
-        }
-        font = new gfxFT2Font(scaledFont, aFontEntry, aStyle, aNeedsBold);
-        cairo_scaled_font_destroy(scaledFont);
-        if (!font) {
-            return nullptr;
-        }
-        gfxFontCache::GetCache()->AddNew(font);
-    }
-    return font.forget().downcast<gfxFT2Font>();
-}
-
 void
 gfxFT2Font::FillGlyphDataForChar(uint32_t ch, CachedGlyphData *gd)
 {

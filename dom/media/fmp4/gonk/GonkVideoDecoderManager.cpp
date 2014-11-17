@@ -329,15 +329,20 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
       return NS_OK;
     }
     case android::INFO_FORMAT_CHANGED:
-    case android::INFO_OUTPUT_BUFFERS_CHANGED:
     {
       // If the format changed, update our cached info.
       ALOG("Decoder format changed");
       if (!SetVideoFormat()) {
         return NS_ERROR_UNEXPECTED;
       }
-      else
+      return Output(aStreamOffset, aOutData);
+    }
+    case android::INFO_OUTPUT_BUFFERS_CHANGED:
+    {
+      if (mDecoder->UpdateOutputBuffers()) {
         return Output(aStreamOffset, aOutData);
+      }
+      return NS_ERROR_FAILURE;
     }
     case -EAGAIN:
     {
@@ -420,7 +425,6 @@ GonkVideoDecoderManager::codecReserved()
   }
   status_t err = mDecoder->configure(format, surface, nullptr, 0);
   mDecoder->Prepare();
-  SetVideoFormat();
 
   if (mHandler != nullptr) {
     // post kNotifyCodecReserved to Looper thread.

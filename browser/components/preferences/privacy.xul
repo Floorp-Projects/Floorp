@@ -259,7 +259,7 @@
     <groupbox id="locationBarGroup">
       <caption label="&locationBar.label;"/>
 
-      <label id="locationBarSuggestionLabel">&locbar.pre.label;</label>
+      <label id="locationBarSuggestionLabel">&locbar.suggest.label;</label>
 
       <vbox id="tabPrefsBox" align="start" flex="1">
         <checkbox id="historySuggestion" label="&locbar.history.label;"
