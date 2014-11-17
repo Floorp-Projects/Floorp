@@ -23,6 +23,7 @@
 struct JSContext;
 class nsCSSPropertySet;
 class nsIDocument;
+class nsPresContext;
 
 namespace mozilla {
 namespace css {
@@ -128,6 +129,7 @@ protected:
   StickyTimeDuration SourceContentEnd() const;
 
   nsIDocument* GetRenderedDocument() const;
+  nsPresContext* GetPresContext() const;
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
