@@ -5405,7 +5405,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
     ClearOverflowRects();
     aMetrics.ClearSize();
     aMetrics.SetBlockStartAscent(0);
-    aMetrics.mCarriedOutBottomMargin.Zero();
+    aMetrics.mCarriedOutBEndMargin.Zero();
     aMetrics.mOverflowAreas.Clear();
 
     if (GetNextInFlow()) {
