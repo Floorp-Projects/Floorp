@@ -115,31 +115,9 @@ AnimationPlayer::GetCurrentTimeAsDouble() const
   return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
 }
 
-AnimationPlayState
-AnimationPlayer::PlayStateFromJS() const
-{
-  // FIXME: Once we introduce CSSTransitionPlayer, this should move to an
-  // override of PlayStateFromJS in CSSAnimationPlayer and CSSTransitionPlayer
-  // and we should skip it in the general case.
-  FlushStyle();
-
-  return PlayState();
-}
-
 void
 AnimationPlayer::PlayFromJS()
 {
-  // Flush style to ensure that any properties controlling animation state
-  // (e.g. animation-play-state) are fully updated before we proceed.
-  //
-  // Note that this might trigger PlayFromStyle()/PauseFromStyle() on this
-  // object.
-  //
-  // FIXME: Once we introduce CSSTransitionPlayer, this should move to an
-  // override of PlayFromJS in CSSAnimationPlayer and CSSTransitionPlayer and
-  // we should skip it in the general case.
-  FlushStyle();
-
   Play(eUpdateStyle);
 }
 
