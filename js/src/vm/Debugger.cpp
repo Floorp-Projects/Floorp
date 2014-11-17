@@ -20,7 +20,6 @@
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineJIT.h"
-#include "js/Debug.h"
 #include "js/GCAPI.h"
 #include "js/UbiNodeTraverse.h"
 #include "js/Vector.h"
@@ -691,7 +690,7 @@ JSTrapStatus
 Debugger::slowPathOnExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
 {
     RootedValue rval(cx);
-    JSTrapStatus status = dispatchHook(cx, &rval, OnExceptionUnwind);
+    JSTrapStatus status = dispatchHook(cx, &rval, OnExceptionUnwind, NullPtr());
 
     switch (status) {
       case JSTRAP_CONTINUE:
@@ -1197,9 +1196,11 @@ Debugger::fireNewScript(JSContext *cx, HandleScript script)
 }
 
 /* static */ JSTrapStatus
-Debugger::dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which)
+Debugger::dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which, HandleObject payload)
 {
-    MOZ_ASSERT(which == OnDebuggerStatement || which == OnExceptionUnwind);
+    MOZ_ASSERT(which == OnDebuggerStatement ||
+               which == OnExceptionUnwind ||
+               which == OnNewPromise);
 
     /*
      * Determine which debuggers will receive this event, and in what order.
@@ -1228,9 +1229,20 @@ Debugger::dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which)
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debugger *dbg = Debugger::fromJSObject(&p->toObject());
         if (dbg->debuggees.has(global) && dbg->enabled && dbg->getHook(which)) {
-            JSTrapStatus st = (which == OnDebuggerStatement)
-                              ? dbg->fireDebuggerStatement(cx, vp)
-                              : dbg->fireExceptionUnwind(cx, vp);
+            JSTrapStatus st;
+            switch (which) {
+              case OnDebuggerStatement:
+                st = dbg->fireDebuggerStatement(cx, vp);
+                break;
+              case OnExceptionUnwind:
+                st = dbg->fireExceptionUnwind(cx, vp);
+                break;
+              case OnNewPromise:
+                st = dbg->fireNewPromise(cx, payload, vp);
+                break;
+              default:
+                MOZ_ASSERT_UNREACHABLE("Unexpected debugger hook");
+            }
             if (st != JSTRAP_CONTINUE)
                 return st;
         }
@@ -1585,6 +1597,47 @@ Debugger::emptyAllocationsLog()
         js_delete(allocationsLog.getFirst());
     allocationsLogLength = 0;
 }
+
+/* static */ void
+Debugger::slowPathOnNewPromise(JSContext *cx, HandleObject promise)
+{
+    RootedValue rval(cx);
+    JSTrapStatus status = dispatchHook(cx, &rval, OnNewPromise, promise);
+    MOZ_ASSERT(status == JSTRAP_CONTINUE);
+    MOZ_ASSERT(!cx->isExceptionPending());
+}
+
+JSTrapStatus
+Debugger::fireNewPromise(JSContext *cx, HandleObject promise, MutableHandleValue vp)
+{
+    RootedObject hook(cx, getHook(OnNewPromise));
+    MOZ_ASSERT(hook);
+    MOZ_ASSERT(hook->isCallable());
+
+    Maybe<AutoCompartment> ac;
+    ac.emplace(cx, object);
+
+    RootedValue dbgObj(cx, ObjectValue(*promise));
+    if (!wrapDebuggeeValue(cx, &dbgObj))
+        return handleUncaughtException(ac, false);
+
+    // Like onNewGlobalObject, onNewPromise is infallible and the comments in
+    // |Debugger::fireNewGlobalObject| apply here as well.
+
+    RootedValue rv(cx);
+    bool ok = Invoke(cx, ObjectValue(*object), ObjectValue(*hook), 1, dbgObj.address(), &rv);
+    if (ok && !rv.isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                             JSMSG_DEBUG_RESUMPTION_VALUE_DISALLOWED);
+        ok = false;
+    }
+
+    JSTrapStatus status = ok ? JSTRAP_CONTINUE
+                             : handleUncaughtException(ac, vp, true);
+    MOZ_ASSERT(!cx->isExceptionPending());
+    return status;
+}
+
 
 
 /*** Debugger code invalidation for observing execution ******************************************/
@@ -1978,6 +2031,7 @@ Debugger::setObservesAllExecution(JSContext *cx, IsObserving observing)
 
     return updateExecutionObservability(cx, obs, observing);
 }
+
 
 
 /*** Debugger JSObjects **************************************************************************/
@@ -2428,6 +2482,18 @@ Debugger::getOnNewScript(JSContext *cx, unsigned argc, Value *vp)
 Debugger::setOnNewScript(JSContext *cx, unsigned argc, Value *vp)
 {
     return setHookImpl(cx, argc, vp, OnNewScript);
+}
+
+/* static */ bool
+Debugger::getOnNewPromise(JSContext *cx, unsigned argc, Value *vp)
+{
+    return getHookImpl(cx, argc, vp, OnNewPromise);
+}
+
+/* static */ bool
+Debugger::setOnNewPromise(JSContext *cx, unsigned argc, Value *vp)
+{
+    return setHookImpl(cx, argc, vp, OnNewPromise);
 }
 
 /* static */ bool
@@ -3662,6 +3728,7 @@ const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("onExceptionUnwind", Debugger::getOnExceptionUnwind,
             Debugger::setOnExceptionUnwind, 0),
     JS_PSGS("onNewScript", Debugger::getOnNewScript, Debugger::setOnNewScript, 0),
+    JS_PSGS("onNewPromise", Debugger::getOnNewPromise, Debugger::setOnNewPromise, 0),
     JS_PSGS("onEnterFrame", Debugger::getOnEnterFrame, Debugger::setOnEnterFrame, 0),
     JS_PSGS("onNewGlobalObject", Debugger::getOnNewGlobalObject, Debugger::setOnNewGlobalObject, 0),
     JS_PSGS("uncaughtExceptionHook", Debugger::getUncaughtExceptionHook,
@@ -7115,4 +7182,14 @@ JS_DefineDebuggerObject(JSContext *cx, HandleObject obj)
     debugProto->setReservedSlot(Debugger::JSSLOT_DEBUG_ENV_PROTO, ObjectValue(*envProto));
     debugProto->setReservedSlot(Debugger::JSSLOT_DEBUG_MEMORY_PROTO, ObjectValue(*memoryProto));
     return true;
+}
+
+JS_PUBLIC_API(void)
+JS::dbg::onNewPromise(JSContext *cx, HandleObject promise)
+{
+    MOZ_ASSERT(!!promise);
+    assertSameCompartment(cx, promise);
+    MOZ_ASSERT(strcmp(promise->getClass()->name, "Promise") == 0 ||
+               strcmp(promise->getClass()->name, "MozAbortablePromise") == 0);
+    Debugger::slowPathOnNewPromise(cx, promise);
 }
