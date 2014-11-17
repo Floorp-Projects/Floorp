@@ -970,6 +970,10 @@ this.MozLoopService = {
     gInitializeTimerFunc = value;
   },
 
+  get roomsParticipantsCount() {
+    return LoopRooms.participantsCount;
+  },
+
   /**
    * Initialized the loop service, and starts registration with the
    * push and loop servers.
@@ -996,6 +1000,14 @@ this.MozLoopService = {
         yield this.logOutFromFxA();
       }
     }
+
+    // The Loop toolbar button should change icon when the room participant count
+    // changes from 0 to something.
+    const onRoomsChange = () => {
+      MozLoopServiceInternal.notifyStatusChanged();
+    };
+    LoopRooms.on("add", onRoomsChange);
+    LoopRooms.on("update", onRoomsChange);
 
     // If expiresTime is not in the future and the user hasn't
     // previously authenticated then skip registration.
