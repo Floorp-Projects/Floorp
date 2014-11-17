@@ -1,7 +1,6 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
 ac_add_options --enable-profiling
-ac_add_options --disable-elf-hack # --enable-elf-hack conflicts with --enable-profiling
 
 # Android
 ac_add_options --target=arm-linux-androideabi
