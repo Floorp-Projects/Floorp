@@ -79,6 +79,11 @@ CheckProgressConsistency(Progress aProgress)
   }
   if (aProgress & FLAG_IS_ANIMATED) {
     MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+    MOZ_ASSERT(aProgress & FLAG_HAS_SIZE);
+  }
+  if (aProgress & FLAG_HAS_TRANSPARENCY) {
+    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
+    MOZ_ASSERT(aProgress & FLAG_HAS_SIZE);
   }
   if (aProgress & FLAG_IS_MULTIPART) {
     // No preconditions.
@@ -330,7 +335,9 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
     if (aProgress & FLAG_FRAME_STOPPED)
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnStopFrame());
 
-    // OnImageIsAnimated
+    if (aProgress & FLAG_HAS_TRANSPARENCY)
+      NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageHasTransparency());
+
     if (aProgress & FLAG_IS_ANIMATED)
       NOTIFY_IMAGE_OBSERVERS(aProxies, OnImageIsAnimated());
   }

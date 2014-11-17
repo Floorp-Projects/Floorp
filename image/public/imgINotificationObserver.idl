@@ -14,7 +14,7 @@ interface imgIRequest;
 
 [ptr] native nsIntRect(nsIntRect);
 
-[scriptable, builtinclass, uuid(ac65c702-7771-4f6d-b18b-1c7d806ce3c1)]
+[scriptable, builtinclass, uuid(03da5641-a333-454a-a859-036d0bb683b7)]
 interface imgINotificationObserver : nsISupports
 {
   const long SIZE_AVAILABLE = 1;
@@ -25,6 +25,7 @@ interface imgINotificationObserver : nsISupports
   const long DISCARD = 6;
   const long UNLOCKED_DRAW = 7;
   const long IS_ANIMATED = 8;
+  const long HAS_TRANSPARENCY = 9;
 
   [noscript] void notify(in imgIRequest aProxy, in long aType, [const] in nsIntRect aRect);
 };

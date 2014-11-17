@@ -285,6 +285,12 @@ Decoder::PostSize(int32_t aWidth,
 }
 
 void
+Decoder::PostHasTransparency()
+{
+  mProgress |= FLAG_HAS_TRANSPARENCY;
+}
+
+void
 Decoder::PostFrameStart()
 {
   // We shouldn't already be mid-frame

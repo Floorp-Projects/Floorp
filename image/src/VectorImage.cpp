@@ -1111,6 +1111,7 @@ VectorImage::OnSVGDocumentLoaded()
   // Tell *our* observers that we're done loading.
   if (mProgressTracker) {
     mProgressTracker->SyncNotifyProgress(FLAG_HAS_SIZE |
+                                         FLAG_HAS_TRANSPARENCY |
                                          FLAG_FRAME_STOPPED |
                                          FLAG_DECODE_STOPPED |
                                          FLAG_ONLOAD_UNBLOCKED,

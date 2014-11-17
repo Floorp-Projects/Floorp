@@ -816,6 +816,16 @@ void imgRequestProxy::OnUnlockedDraw()
   }
 }
 
+void imgRequestProxy::OnImageHasTransparency()
+{
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnImageHasTransparency");
+  if (mListener && !mCanceled) {
+    // Hold a ref to the listener while we call it, just in case.
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::HAS_TRANSPARENCY, nullptr);
+  }
+}
+
 void imgRequestProxy::OnImageIsAnimated()
 {
   LOG_FUNC(GetImgLog(), "imgRequestProxy::OnImageIsAnimated");

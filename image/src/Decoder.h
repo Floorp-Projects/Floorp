@@ -188,6 +188,9 @@ protected:
                 int32_t aHeight,
                 Orientation aOrientation = Orientation());
 
+  // Called by decoders if they determine that the image has transparency.
+  void PostHasTransparency();
+
   // Called by decoders when they begin a frame. Informs the image, sends
   // notifications, and does internal book-keeping.
   void PostFrameStart();
