@@ -419,37 +419,63 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
                                        nsHTMLReflowMetrics* aMetrics,
                                        bool aFirstPass)
 {
+  WritingMode wm = mHelper.mScrolledFrame->GetWritingMode();
+
   // these could be NS_UNCONSTRAINEDSIZE ... std::min arithmetic should
   // be OK
-  const nsMargin& padding = aState->mReflowState.ComputedPhysicalPadding();
-  nscoord availWidth = aState->mReflowState.ComputedWidth() + padding.LeftRight();
+  LogicalMargin padding = aState->mReflowState.ComputedLogicalPadding();
+  nscoord availISize =
+    aState->mReflowState.ComputedISize() + padding.IStartEnd(wm);
 
-  nscoord computedHeight = aState->mReflowState.ComputedHeight();
-  nscoord computedMinHeight = aState->mReflowState.ComputedMinHeight();
-  nscoord computedMaxHeight = aState->mReflowState.ComputedMaxHeight();
+  nscoord computedBSize = aState->mReflowState.ComputedBSize();
+  nscoord computedMinBSize = aState->mReflowState.ComputedMinBSize();
+  nscoord computedMaxBSize = aState->mReflowState.ComputedMaxBSize();
   if (!ShouldPropagateComputedHeightToScrolledContent()) {
-    computedHeight = NS_UNCONSTRAINEDSIZE;
-    computedMinHeight = 0;
-    computedMaxHeight = NS_UNCONSTRAINEDSIZE;
-  }
-  if (aAssumeHScroll) {
-    nsSize hScrollbarPrefSize;
-    GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
-                        nullptr, &hScrollbarPrefSize, false);
-    if (computedHeight != NS_UNCONSTRAINEDSIZE) {
-      computedHeight = std::max(0, computedHeight - hScrollbarPrefSize.height);
-    }
-    computedMinHeight = std::max(0, computedMinHeight - hScrollbarPrefSize.height);
-    if (computedMaxHeight != NS_UNCONSTRAINEDSIZE) {
-      computedMaxHeight = std::max(0, computedMaxHeight - hScrollbarPrefSize.height);
-    }
+    computedBSize = NS_UNCONSTRAINEDSIZE;
+    computedMinBSize = 0;
+    computedMaxBSize = NS_UNCONSTRAINEDSIZE;
   }
 
-  if (aAssumeVScroll) {
-    nsSize vScrollbarPrefSize;
-    GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
-                        nullptr, &vScrollbarPrefSize, true);
-    availWidth = std::max(0, availWidth - vScrollbarPrefSize.width);
+  if (wm.IsVertical()) {
+    if (aAssumeVScroll) {
+      nsSize vScrollbarPrefSize;
+      GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
+                          nullptr, &vScrollbarPrefSize, false);
+      if (computedBSize != NS_UNCONSTRAINEDSIZE) {
+        computedBSize = std::max(0, computedBSize - vScrollbarPrefSize.width);
+      }
+      computedMinBSize = std::max(0, computedMinBSize - vScrollbarPrefSize.width);
+      if (computedMaxBSize != NS_UNCONSTRAINEDSIZE) {
+        computedMaxBSize = std::max(0, computedMaxBSize - vScrollbarPrefSize.width);
+      }
+    }
+
+    if (aAssumeHScroll) {
+      nsSize hScrollbarPrefSize;
+      GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
+                          nullptr, &hScrollbarPrefSize, true);
+      availISize = std::max(0, availISize - hScrollbarPrefSize.height);
+    }
+  } else {
+    if (aAssumeHScroll) {
+      nsSize hScrollbarPrefSize;
+      GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
+                          nullptr, &hScrollbarPrefSize, false);
+      if (computedBSize != NS_UNCONSTRAINEDSIZE) {
+        computedBSize = std::max(0, computedBSize - hScrollbarPrefSize.height);
+      }
+      computedMinBSize = std::max(0, computedMinBSize - hScrollbarPrefSize.height);
+      if (computedMaxBSize != NS_UNCONSTRAINEDSIZE) {
+        computedMaxBSize = std::max(0, computedMaxBSize - hScrollbarPrefSize.height);
+      }
+    }
+
+    if (aAssumeVScroll) {
+      nsSize vScrollbarPrefSize;
+      GetScrollbarMetrics(aState->mBoxState, mHelper.mVScrollbarBox,
+                          nullptr, &vScrollbarPrefSize, true);
+      availISize = std::max(0, availISize - vScrollbarPrefSize.width);
+    }
   }
 
   nsPresContext* presContext = PresContext();
@@ -458,16 +484,16 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   nsHTMLReflowState
     kidReflowState(presContext, aState->mReflowState,
                    mHelper.mScrolledFrame,
-                   LogicalSize(mHelper.mScrolledFrame->GetWritingMode(),
-                               nsSize(availWidth, NS_UNCONSTRAINEDSIZE)),
+                   LogicalSize(wm, availISize, NS_UNCONSTRAINEDSIZE),
                    -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
+  const nsMargin physicalPadding = padding.GetPhysicalMargin(wm);
   kidReflowState.Init(presContext, -1, -1, nullptr,
-                      &padding);
+                      &physicalPadding);
   kidReflowState.mFlags.mAssumingHScrollbar = aAssumeHScroll;
   kidReflowState.mFlags.mAssumingVScrollbar = aAssumeVScroll;
-  kidReflowState.SetComputedHeight(computedHeight);
-  kidReflowState.ComputedMinHeight() = computedMinHeight;
-  kidReflowState.ComputedMaxHeight() = computedMaxHeight;
+  kidReflowState.SetComputedBSize(computedBSize);
+  kidReflowState.ComputedMinBSize() = computedMinBSize;
+  kidReflowState.ComputedMaxBSize() = computedMaxBSize;
 
   // Temporarily set mHasHorizontalScrollbar/mHasVerticalScrollbar to
   // reflect our assumptions while we reflow the child.
@@ -507,8 +533,10 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
     nsOverflowAreas childOverflow;
     nsLayoutUtils::UnionChildOverflow(mHelper.mScrolledFrame, childOverflow);
     nsRect childScrollableOverflow = childOverflow.ScrollableOverflow();
-    childScrollableOverflow.Inflate(padding);
-    nsRect contentArea = nsRect(0, 0, availWidth, computedHeight);
+    childScrollableOverflow.Inflate(padding.GetPhysicalMargin(wm));
+    nsRect contentArea =
+      wm.IsVertical() ? nsRect(0, 0, computedBSize, availISize)
+                      : nsRect(0, 0, availISize, computedBSize);
     if (!contentArea.Contains(childScrollableOverflow)) {
       aMetrics->mOverflowAreas.ScrollableOverflow() = childScrollableOverflow;
     }
@@ -4128,7 +4156,8 @@ ScrollFrameHelper::IsLTR() const
     }
   }
 
-  return frame->StyleVisibility()->mDirection != NS_STYLE_DIRECTION_RTL;
+  WritingMode wm = frame->GetWritingMode();
+  return wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR();
 }
 
 bool
@@ -4584,13 +4613,21 @@ ScrollFrameHelper::AdjustScrollbarRectForResizer(
                          aPresContext->DevPixelsToAppUnits(widgetRect.height));
   }
 
-  if (!resizerRect.Contains(aRect.BottomRight() - nsPoint(1, 1)))
-    return;
-
-  if (aVertical)
-    aRect.height = std::max(0, resizerRect.y - aRect.y);
-  else
-    aRect.width = std::max(0, resizerRect.x - aRect.x);
+  if (resizerRect.Contains(aRect.BottomRight() - nsPoint(1, 1))) {
+    if (aVertical) {
+      aRect.height = std::max(0, resizerRect.y - aRect.y);
+    } else {
+      aRect.width = std::max(0, resizerRect.x - aRect.x);
+    }
+  } else if (resizerRect.Contains(aRect.BottomLeft() + nsPoint(1, -1))) {
+    if (aVertical) {
+      aRect.height = std::max(0, resizerRect.y - aRect.y);
+    } else {
+      nscoord xmost = aRect.XMost();
+      aRect.x = std::max(aRect.x, resizerRect.XMost());
+      aRect.width = xmost - aRect.x;
+    }
+  }
 }
 
 static void
