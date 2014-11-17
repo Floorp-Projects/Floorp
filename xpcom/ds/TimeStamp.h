@@ -508,17 +508,13 @@ public:
   }
   bool operator==(const TimeStamp& aOther) const
   {
-    // Maybe it's ok to check == with null timestamps?
-    MOZ_ASSERT(!IsNull() && "Cannot compute with a null value");
-    MOZ_ASSERT(!aOther.IsNull(), "Cannot compute with aOther null value");
-    return mValue == aOther.mValue;
+    return IsNull()
+           ? aOther.IsNull()
+           : !aOther.IsNull() && mValue == aOther.mValue;
   }
   bool operator!=(const TimeStamp& aOther) const
   {
-    // Maybe it's ok to check != with null timestamps?
-    MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
-    MOZ_ASSERT(!aOther.IsNull(), "Cannot compute with aOther null value");
-    return mValue != aOther.mValue;
+    return !(*this == aOther);
   }
 
   // Comparing TimeStamps for equality should be discouraged. Adding
