@@ -113,8 +113,7 @@ imgRequestProxy::imgRequestProxy() :
   mIsInLoadGroup(false),
   mListenerIsStrongRef(false),
   mDecodeRequested(false),
-  mDeferNotifications(false),
-  mSentStartContainer(false)
+  mDeferNotifications(false)
 {
   /* member initializers and constructor code */
 
@@ -739,11 +738,10 @@ void imgRequestProxy::OnStartContainer()
 {
   LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStartContainer");
 
-  if (mListener && !mCanceled && !mSentStartContainer) {
+  if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
     mListener->Notify(this, imgINotificationObserver::SIZE_AVAILABLE, nullptr);
-    mSentStartContainer = true;
   }
 }
 
@@ -783,10 +781,6 @@ void imgRequestProxy::OnStopDecode()
     // We finished the decode, and thus have the decoded frames. Update the cache
     // entry size to take this into account.
     GetOwner()->UpdateCacheEntrySize();
-
-    // Multipart needs reset for next OnStartContainer.
-    if (GetOwner()->GetMultipart())
-      mSentStartContainer = false;
   }
 }
 

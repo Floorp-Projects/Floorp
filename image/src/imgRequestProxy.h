@@ -228,10 +228,6 @@ private:
   // Whether we want to defer our notifications by the non-virtual Observer
   // interfaces as image loads proceed.
   bool mDeferNotifications;
-
-  // We only want to send OnStartContainer once for each proxy, but we might
-  // get multiple OnStartContainer calls.
-  bool mSentStartContainer;
 };
 
 // Used for static image proxies for which no requests are available, so
