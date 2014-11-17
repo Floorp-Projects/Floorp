@@ -2,6 +2,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
@@ -55,11 +56,19 @@ public class StartPane extends DialogFragment {
         return view;
     }
 
+    @Override
+    public void onCancel(DialogInterface dialog) {
+        // StartPane is closed by touching outside the dialog.
+        Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.DIALOG, "firstrun-pane");
+        super.onCancel(dialog);
+    }
+
     // Add handler for dismissing the StartPane on a single click.
     private void addDismissHandler(View view) {
         final GestureDetector gestureDetector = new GestureDetector(getActivity(), new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onSingleTapUp(MotionEvent e) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.DIALOG, "firstrun-pane");
                 StartPane.this.dismiss();
                 return true;
             }
