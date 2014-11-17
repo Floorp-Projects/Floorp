@@ -3263,7 +3263,7 @@ this.DOMApplicationRegistry = {
       // can proceed to access the app. We also throw an error to alert
       // the caller that the package wasn't downloaded.
       this._sendAppliedEvent(aOldApp);
-      throw new Error("PACKAGE_UNCHANGED");
+      throw "PACKAGE_UNCHANGED";
     }
 
     let newManifest = yield this._openAndReadPackage(zipFile, aOldApp, aNewApp,
@@ -3919,6 +3919,13 @@ this.DOMApplicationRegistry = {
     // notification.
     if (aOldApp.isCanceling) {
       delete aOldApp.isCanceling;
+      return;
+    }
+
+    // If the error that got us here was that the package hasn't changed,
+    // since we already sent a success and an applied, let's not confuse
+    // the clients...
+    if (aError == "PACKAGE_UNCHANGED") {
       return;
     }
 
