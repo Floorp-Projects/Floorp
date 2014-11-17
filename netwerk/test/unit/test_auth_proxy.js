@@ -172,6 +172,12 @@ var listener = {
       // If we expect 200, the request should have succeeded
       do_check_eq(this.expectedCode == 200, request.requestSucceeded);
 
+      var cookie = "";
+      try {
+        cookie = request.getRequestHeader("Cookie");
+      } catch (e) { }
+      do_check_eq(cookie, "");
+
     } catch (e) {
       do_throw("Unexpected exception: " + e);
     }
@@ -261,6 +267,25 @@ function test_all_ok() {
   do_test_pending();
 }
 
+function test_proxy_407_cookie() {
+  var chan = makeChan();
+  chan.notificationCallbacks = new Requestor(FLAG_RETURN_FALSE, 0);
+  chan.setRequestHeader("X-Set-407-Cookie", "1", false);
+  listener.expectedCode = 407; // Proxy Unauthorized
+  chan.asyncOpen(listener, null);
+
+  do_test_pending();
+}
+
+function test_proxy_200_cookie() {
+  var chan = makeChan();
+  chan.notificationCallbacks = new Requestor(0, 0);
+  chan.setRequestHeader("X-Set-407-Cookie", "1", false);
+  listener.expectedCode = 200; // OK
+  chan.asyncOpen(listener, null);
+  do_test_pending();
+}
+
 function test_host_returnfalse() {
   dump("\ntest: host returnfalse\n");
   var chan = makeChan();
@@ -301,6 +326,7 @@ function test_proxy_wrongpw_host_returnfalse() {
 }
 
 var tests = [test_proxy_returnfalse, test_proxy_wrongpw, test_all_ok,
+        test_proxy_407_cookie, test_proxy_200_cookie,
         test_host_returnfalse, test_host_wrongpw,
         test_proxy_wrongpw_host_wrongpw, test_proxy_wrongpw_host_returnfalse];
 
@@ -331,6 +357,9 @@ function proxyAuthHandler(metadata, response) {
           "Unauthorized by HTTP proxy");
       response.setHeader("Proxy-Authenticate",
           'Basic realm="' + realm + '"', false);
+      if (metadata.hasHeader("X-Set-407-Cookie")) {
+          response.setHeader("Set-Cookie", "chewy", false);
+      }
       body = "failed";
       response.bodyOutputStream.write(body, body.length);
     }
