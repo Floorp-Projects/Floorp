@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+'use strict';
+
+test(function() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'left 100s';
+  div.style.left = '100px';
+
+  var players = div.getAnimationPlayers();
+  assert_equals(players[0].source.target, div,
+    'Animation.target is the animatable div');
+  div.remove();
+}, 'Returned CSS transitions have the correct Animation.target');
+
+</script>
