@@ -1024,6 +1024,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
             }
             nsRefPtr<TabParent> tp(new TabParent(constructorSender, tabId,
                                                  aContext, chromeFlags));
+            tp->SetInitedByParent();
             tp->SetOwnerElement(aFrameElement);
 
             PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
@@ -1135,6 +1136,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     uint32_t chromeFlags = 0;
 
     nsRefPtr<TabParent> tp = new TabParent(parent, tabId, aContext, chromeFlags);
+    tp->SetInitedByParent();
     tp->SetOwnerElement(aFrameElement);
     PBrowserParent* browser = parent->SendPBrowserConstructor(
         // DeallocPBrowserParent() releases this ref.
@@ -1933,6 +1935,13 @@ ContentParent::ContentParent(mozIApplication* aApp,
     // From this point on, NS_WARNING, NS_ASSERTION, etc. should print out the
     // PID along with the warning.
     nsDebugImpl::SetMultiprocessMode("Parent");
+
+#if defined(XP_WIN) && !defined(MOZ_B2G)
+    // Request Windows message deferral behavior on our side of the PContent
+    // channel. Generally only applies to the situation where we get caught in
+    // a deadlock with the plugin process when sending CPOWs.
+    GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+#endif
 
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     ChildPrivileges privs = aIsNuwaProcess

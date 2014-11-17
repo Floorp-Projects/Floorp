@@ -109,6 +109,11 @@ public:
 
   bool HitTest(const nsRect& aRect);
 
+  bool UseAsyncPanZoom() { return !!mContentController; }
+
+  void GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier);
+
+  inline uint64_t GetLayersId() { return mLayersId; }
 protected:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 

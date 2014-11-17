@@ -192,7 +192,8 @@ RValueAllocation::layoutFromMode(Mode mode)
       case UNTYPED_STACK_REG: {
         static const RValueAllocation::Layout layout = {
             PAYLOAD_STACK_OFFSET,
-            PAYLOAD_GPR
+            PAYLOAD_GPR,
+            "value"
         };
         return layout;
       }
