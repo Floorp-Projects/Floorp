@@ -50,10 +50,12 @@ this.SearchSuggestionController.prototype = {
    * The maximum number of local form history results to return. This limit is
    * only enforced if remote results are also returned.
    */
-  maxLocalResults: 7,
+  maxLocalResults: 5,
 
   /**
    * The maximum number of remote search engine results to return.
+   * We'll actually only display at most
+   * maxRemoteResults - <displayed local results count> remote results.
    */
   maxRemoteResults: 10,
 
@@ -353,7 +355,8 @@ this.SearchSuggestionController.prototype = {
     }
 
     // Trim the number of results to the maximum requested (now that we've pruned dupes).
-    results.remote = results.remote.slice(0, this.maxRemoteResults);
+    results.remote =
+      results.remote.slice(0, this.maxRemoteResults - results.local.length);
 
     if (this._callback) {
       this._callback(results);

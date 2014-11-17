@@ -221,8 +221,13 @@ let tests = [
     gContentAPI.showHighlight("urlbar");
     waitForElementToBeVisible(highlight, () => {
 
+      let searchbar = document.getElementById("searchbar");
+      if (searchbar.getAttribute("oneoffui")) {
+        done();
+        return; // The oneoffui removes the menu that's being tested here.
+      }
+
       gContentAPI.showMenu("searchEngines", function() {
-        let searchbar = document.getElementById("searchbar");
         isnot(searchbar, null, "Should have found searchbar");
         let searchPopup = document.getAnonymousElementByAttribute(searchbar,
                                                                    "anonid",
