@@ -16,8 +16,8 @@
 namespace mozilla {
 
 class WebGLSampler MOZ_FINAL
-    : public WebGLBindableName<GLenum>
-    , public nsWrapperCache
+    : public nsWrapperCache
+    , public WebGLBindableName<GLenum>
     , public WebGLRefCountedObject<WebGLSampler>
     , public LinkedListElement<WebGLSampler>
     , public WebGLContextBoundObject

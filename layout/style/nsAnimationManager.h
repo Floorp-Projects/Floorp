@@ -63,8 +63,11 @@ public:
   virtual CSSAnimationPlayer*
   AsCSSAnimationPlayer() MOZ_OVERRIDE { return this; }
 
-  virtual void Play(UpdateFlags aUpdateFlags) MOZ_OVERRIDE;
-  virtual void Pause(UpdateFlags aUpdateFlags) MOZ_OVERRIDE;
+  virtual void Play() MOZ_OVERRIDE;
+  virtual void Pause() MOZ_OVERRIDE;
+
+  virtual dom::AnimationPlayState PlayStateFromJS() const MOZ_OVERRIDE;
+  virtual void PlayFromJS() MOZ_OVERRIDE;
 
   void PlayFromStyle();
   void PauseFromStyle();
@@ -75,6 +78,7 @@ public:
 
 protected:
   virtual ~CSSAnimationPlayer() { }
+  virtual css::CommonAnimationManager* GetAnimationManager() const MOZ_OVERRIDE;
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
@@ -147,7 +151,6 @@ class nsAnimationManager MOZ_FINAL
 public:
   explicit nsAnimationManager(nsPresContext *aPresContext)
     : mozilla::css::CommonAnimationManager(aPresContext)
-    , mObservingRefreshDriver(false)
   {
   }
 
@@ -220,25 +223,12 @@ public:
     }
   }
 
-  mozilla::AnimationPlayerCollection*
+  virtual mozilla::AnimationPlayerCollection*
   GetAnimationPlayers(mozilla::dom::Element *aElement,
                       nsCSSPseudoElements::Type aPseudoType,
-                      bool aCreateIfNeeded);
+                      bool aCreateIfNeeded) MOZ_OVERRIDE;
   nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
-
-protected:
-  virtual void ElementCollectionRemoved() MOZ_OVERRIDE
-  {
-    CheckNeedsRefresh();
-  }
-  virtual void
-  AddElementCollection(mozilla::AnimationPlayerCollection* aData) MOZ_OVERRIDE;
-
-  /**
-   * Check to see if we should stop or start observing the refresh driver
-   */
-  void CheckNeedsRefresh();
 
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
@@ -257,8 +247,6 @@ private:
   void DoDispatchEvents();
 
   mozilla::EventArray mPendingEvents;
-
-  bool mObservingRefreshDriver;
 };
 
 #endif /* !defined(nsAnimationManager_h_) */

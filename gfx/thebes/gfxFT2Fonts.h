@@ -27,14 +27,6 @@ public: // new functions
 
     FT2FontEntry *GetFontEntry();
 
-    static already_AddRefed<gfxFT2Font>
-    GetOrMakeFont(const nsAString& aName, const gfxFontStyle *aStyle,
-                  bool aNeedsBold = false);
-
-    static already_AddRefed<gfxFT2Font>
-    GetOrMakeFont(FT2FontEntry *aFontEntry, const gfxFontStyle *aStyle,
-                  bool aNeedsBold = false);
-
     struct CachedGlyphData {
         CachedGlyphData()
             : glyphIndex(0xffffffffU) { }
