@@ -72,7 +72,7 @@ add_test(function test_notification() {
     do_check_eq(postedMessage.callIndex, resultCallIndex);
 
     // Clear all existed calls.
-    context.RIL._processCalls(null);
+    context.RIL._processCalls({});
   }
 
   testNotification(oneCall, SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD, null,
