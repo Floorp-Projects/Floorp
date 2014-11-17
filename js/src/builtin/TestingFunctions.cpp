@@ -957,7 +957,7 @@ OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
 }
 #endif
 
-static const JSClass FakePromiseClass = {
+static const js::Class FakePromiseClass = {
     "Promise", JSCLASS_IS_ANONYMOUS,
     JS_PropertyStub,       /* addProperty */
     JS_DeletePropertyStub, /* delProperty */
@@ -976,12 +976,28 @@ MakeFakePromise(JSContext *cx, unsigned argc, jsval *vp)
     if (!scope)
         return false;
 
-    RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, &FakePromiseClass, JS::NullPtr(), scope));
+    RootedObject obj(cx, NewObjectWithGivenProto(cx, &FakePromiseClass, nullptr, scope));
     if (!obj)
         return false;
 
     JS::dbg::onNewPromise(cx, obj);
     args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+SettleFakePromise(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!args.requireAtLeast(cx, "settleFakePromise", 1))
+        return false;
+    if (!args[0].isObject() || args[0].toObject().getClass() != &FakePromiseClass) {
+        JS_ReportError(cx, "first argument must be a (fake) Promise object");
+        return false;
+    }
+
+    RootedObject promise(cx, &args[0].toObject());
+    JS::dbg::onPromiseSettled(cx, promise);
     return true;
 }
 
@@ -2269,6 +2285,13 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Create an object whose [[Class]] name is 'Promise' and call\n"
 "  JS::dbg::onNewPromise on it before returning it. It doesn't actually have\n"
 "  any of the other behavior associated with promises."),
+
+    JS_FN_HELP("settleFakePromise", SettleFakePromise, 1, 0,
+"settleFakePromise(promise)",
+"  'Settle' a 'promise' created by makeFakePromise(). This doesn't have any\n"
+"  observable effects outside of firing any onPromiseSettled hooks set on\n"
+"  Debugger instances that are observing the given promise's global as a\n"
+"  debuggee."),
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
 "makeFinalizeObserver()",
