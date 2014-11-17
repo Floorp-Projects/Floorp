@@ -6,6 +6,7 @@
 #include "AnimationPlayer.h"
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationPlayerBinding.h"
+#include "nsIDocument.h" // For nsIDocument
 #include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
 
 namespace mozilla {
@@ -205,18 +206,7 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
 void
 AnimationPlayer::FlushStyle() const
 {
-  if (!mSource) {
-    return;
-  }
-
-  Element* targetElement;
-  nsCSSPseudoElements::Type pseudoType;
-  mSource->GetTarget(targetElement, pseudoType);
-  if (!targetElement) {
-    return;
-  }
-
-  nsIDocument* doc = targetElement->GetComposedDoc();
+  nsIDocument* doc = GetRenderedDocument();
   if (doc) {
     doc->FlushPendingNotifications(Flush_Style);
   }
@@ -252,6 +242,23 @@ AnimationPlayer::SourceContentEnd() const
 
   return mSource->Timing().mDelay
          + mSource->GetComputedTiming().mActiveDuration;
+}
+
+nsIDocument*
+AnimationPlayer::GetRenderedDocument() const
+{
+  if (!mSource) {
+    return nullptr;
+  }
+
+  Element* targetElement;
+  nsCSSPseudoElements::Type pseudoType;
+  mSource->GetTarget(targetElement, pseudoType);
+  if (!targetElement) {
+    return nullptr;
+  }
+
+  return targetElement->GetComposedDoc();
 }
 
 } // namespace dom

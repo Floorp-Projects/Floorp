@@ -22,6 +22,7 @@
 
 struct JSContext;
 class nsCSSPropertySet;
+class nsIDocument;
 
 namespace mozilla {
 namespace css {
@@ -125,6 +126,8 @@ protected:
   void FlushStyle() const;
   void MaybePostRestyle() const;
   StickyTimeDuration SourceContentEnd() const;
+
+  nsIDocument* GetRenderedDocument() const;
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
