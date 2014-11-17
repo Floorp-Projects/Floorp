@@ -60,8 +60,6 @@ public:
   virtual CSSAnimationPlayer* AsCSSAnimationPlayer() { return nullptr; }
   virtual CSSTransitionPlayer* AsCSSTransitionPlayer() { return nullptr; }
 
-  // Temporary flags to control restyle behavior until bug 1073336
-  // provides a better solution.
   enum UpdateFlags {
     eNoUpdate,
     eUpdateStyle
@@ -83,8 +81,8 @@ public:
   // as flushing style or converting the return type.
   Nullable<double> GetCurrentTimeAsDouble() const;
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
-  virtual void PlayFromJS();
-  void PauseFromJS();
+  virtual void PlayFromJS() { Play(eUpdateStyle); }
+  void PauseFromJS() { Pause(eUpdateStyle); }
 
   void SetSource(Animation* aSource);
   void Tick();
@@ -127,7 +125,6 @@ public:
 
 protected:
   void FlushStyle() const;
-  void MaybePostRestyle() const;
   void PostUpdate();
   StickyTimeDuration SourceContentEnd() const;
 
