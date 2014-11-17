@@ -60,29 +60,27 @@ public:
   virtual CSSAnimationPlayer* AsCSSAnimationPlayer() { return nullptr; }
   virtual CSSTransitionPlayer* AsCSSTransitionPlayer() { return nullptr; }
 
-  enum UpdateFlags {
-    eNoUpdate,
-    eUpdateStyle
-  };
-
   // AnimationPlayer methods
   Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
   Nullable<double> GetStartTime() const;
   Nullable<TimeDuration> GetCurrentTime() const;
   AnimationPlayState PlayState() const;
-  virtual void Play(UpdateFlags aUpdateFlags);
-  virtual void Pause(UpdateFlags aUpdateFlags);
+  virtual void Play();
+  virtual void Pause();
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
   // Wrapper functions for AnimationPlayer DOM methods when called
   // from script. We often use the same methods internally and from
-  // script but when called from script we perform extra steps such
-  // as flushing style or converting the return type.
+  // script but when called from script we (or one of our subclasses) perform
+  // extra steps such as flushing style or converting the return type.
   Nullable<double> GetCurrentTimeAsDouble() const;
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
-  virtual void PlayFromJS() { Play(eUpdateStyle); }
-  void PauseFromJS() { Pause(eUpdateStyle); }
+  virtual void PlayFromJS() { Play(); }
+  // PauseFromJS is currently only here for symmetry with PlayFromJS but
+  // in future we will likely have to flush style in
+  // CSSAnimationPlayer::PauseFromJS so we leave it for now.
+  void PauseFromJS() { Pause(); }
 
   void SetSource(Animation* aSource);
   void Tick();
@@ -124,6 +122,9 @@ public:
   Nullable<TimeDuration> mStartTime; // Timeline timescale
 
 protected:
+  void DoPlay();
+  void DoPause();
+
   void FlushStyle() const;
   void PostUpdate();
   StickyTimeDuration SourceContentEnd() const;

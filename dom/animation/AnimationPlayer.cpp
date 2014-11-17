@@ -67,50 +67,17 @@ AnimationPlayer::PlayState() const
 }
 
 void
-AnimationPlayer::Play(UpdateFlags aUpdateFlags)
+AnimationPlayer::Play()
 {
-  // FIXME: When we implement finishing behavior (bug 1074630) we should
-  // not return early if mIsPaused is false since we may still need to seek.
-  // (However, we will need to pass a flag so that when we start playing due to
-  //  a change in animation-play-state we *don't* trigger finishing behavior.)
-  if (!mIsPaused) {
-    return;
-  }
-  mIsPaused = false;
-
-  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
-  if (timelineTime.IsNull()) {
-    // FIXME: We should just sit in the pending state in this case.
-    // We will introduce the pending state in Bug 927349.
-    return;
-  }
-
-  // Update start time to an appropriate offset from the current timeline time
-  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should not be null when paused");
-  mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
-  mHoldTime.SetNull();
-
-  if (aUpdateFlags == eUpdateStyle) {
-    PostUpdate();
-  }
+  DoPlay();
+  PostUpdate();
 }
 
 void
-AnimationPlayer::Pause(UpdateFlags aUpdateFlags)
+AnimationPlayer::Pause()
 {
-  if (mIsPaused) {
-    return;
-  }
-  mIsPaused = true;
-  mIsRunningOnCompositor = false;
-
-  // Bug 927349 - check for null result here and go to pending state
-  mHoldTime = GetCurrentTime();
-  mStartTime.SetNull();
-
-  if (aUpdateFlags == eUpdateStyle) {
-    PostUpdate();
-  }
+  DoPause();
+  PostUpdate();
 }
 
 Nullable<double>
@@ -192,6 +159,45 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
   mSource->ComposeStyle(aStyleRule, aSetProperties);
 
   mIsPreviousStateFinished = (playState == AnimationPlayState::Finished);
+}
+
+void
+AnimationPlayer::DoPlay()
+{
+  // FIXME: When we implement finishing behavior (bug 1074630) we should
+  // not return early if mIsPaused is false since we may still need to seek.
+  // (However, we will need to pass a flag so that when we start playing due to
+  //  a change in animation-play-state we *don't* trigger finishing behavior.)
+  if (!mIsPaused) {
+    return;
+  }
+  mIsPaused = false;
+
+  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
+  if (timelineTime.IsNull()) {
+    // FIXME: We should just sit in the pending state in this case.
+    // We will introduce the pending state in Bug 927349.
+    return;
+  }
+
+  // Update start time to an appropriate offset from the current timeline time
+  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should not be null when paused");
+  mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
+  mHoldTime.SetNull();
+}
+
+void
+AnimationPlayer::DoPause()
+{
+  if (mIsPaused) {
+    return;
+  }
+  mIsPaused = true;
+  mIsRunningOnCompositor = false;
+
+  // Bug 927349 - check for null result here and go to pending state
+  mHoldTime = GetCurrentTime();
+  mStartTime.SetNull();
 }
 
 void
