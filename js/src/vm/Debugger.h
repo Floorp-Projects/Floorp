@@ -179,6 +179,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     friend bool (::JS_DefineDebuggerObject)(JSContext *cx, JS::HandleObject obj);
     friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
     friend void JS::dbg::onNewPromise(JSContext *cx, HandleObject promise);
+    friend void JS::dbg::onPromiseSettled(JSContext *cx, HandleObject promise);
 
   public:
     enum Hook {
@@ -188,6 +189,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         OnEnterFrame,
         OnNewGlobalObject,
         OnNewPromise,
+        OnPromiseSettled,
         HookCount
     };
     enum {
@@ -374,6 +376,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool setOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp);
     static bool getOnNewPromise(JSContext *cx, unsigned argc, Value *vp);
     static bool setOnNewPromise(JSContext *cx, unsigned argc, Value *vp);
+    static bool getOnPromiseSettled(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnPromiseSettled(JSContext *cx, unsigned argc, Value *vp);
     static bool getUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
     static bool setUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
     static bool getMemory(JSContext *cx, unsigned argc, Value *vp);
@@ -425,7 +429,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static bool slowPathOnLogAllocationSite(JSContext *cx, HandleSavedFrame frame,
                                             int64_t when, GlobalObject::DebuggerVector &dbgs);
-    static void slowPathOnNewPromise(JSContext *cx, HandleObject promise);
+    static void slowPathPromiseHook(JSContext *cx, Hook hook, HandleObject promise);
     static JSTrapStatus dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which,
                                      HandleObject payload);
 
@@ -433,7 +437,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     JSTrapStatus fireExceptionUnwind(JSContext *cx, MutableHandleValue vp);
     JSTrapStatus fireEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp);
     JSTrapStatus fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, MutableHandleValue vp);
-    JSTrapStatus fireNewPromise(JSContext *cx, HandleObject promise, MutableHandleValue vp);
+    JSTrapStatus firePromiseHook(JSContext *cx, Hook hook, HandleObject promise, MutableHandleValue vp);
 
     /*
      * Allocate and initialize a Debugger.Script instance whose referent is
