@@ -128,6 +128,7 @@ public:
 protected:
   void FlushStyle() const;
   void MaybePostRestyle() const;
+  void PostUpdate();
   StickyTimeDuration SourceContentEnd() const;
 
   nsIDocument* GetRenderedDocument() const;

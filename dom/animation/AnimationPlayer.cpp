@@ -236,6 +236,15 @@ AnimationPlayer::MaybePostRestyle() const
                                   nsChangeHint_AllReflowHints);
 }
 
+void
+AnimationPlayer::PostUpdate()
+{
+  AnimationPlayerCollection* collection = GetCollection();
+  if (collection) {
+    collection->NotifyPlayerUpdated();
+  }
+}
+
 StickyTimeDuration
 AnimationPlayer::SourceContentEnd() const
 {
