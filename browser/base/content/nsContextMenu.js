@@ -528,17 +528,16 @@ nsContextMenu.prototype = {
 
   // Set various context menu attributes based on the state of the world.
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
-    // If gContextMenuContentData is not null, this event was forwarded from a
-    // child process, so use that information instead.
+    // gContextMenuContentData.isRemote tells us if the event came from a remote
+    // process. gContextMenuContentData can be null if something (like tests)
+    // opens the context menu directly.
     let editFlags;
-    if (gContextMenuContentData) {
-      this.isRemote = true;
+    this.isRemote = gContextMenuContentData && gContextMenuContentData.isRemote;
+    if (this.isRemote) {
       aNode = gContextMenuContentData.event.target;
       aRangeParent = gContextMenuContentData.event.rangeParent;
       aRangeOffset = gContextMenuContentData.event.rangeOffset;
       editFlags = gContextMenuContentData.editFlags;
-    } else {
-      this.isRemote = false;
     }
 
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -647,7 +646,7 @@ nsContextMenu.prototype = {
         this.onTextInput = (editFlags & SpellCheckHelper.TEXTINPUT) !== 0;
         this.onEditableArea = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
         if (this.onEditableArea) {
-          if (gContextMenuContentData) {
+          if (this.isRemote) {
             InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
           }
           else {
@@ -772,7 +771,7 @@ nsContextMenu.prototype = {
         this.hasBGImage        = false;
         this.isDesignMode      = true;
         this.onEditableArea = true;
-        if (gContextMenuContentData) {
+        if (this.isRemote) {
           InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
         }
         else {
