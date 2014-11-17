@@ -16,12 +16,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_DEVTOOLS_THEME);
 });
 
-function test() {
-  waitForExplicitFinish();
-  startTests();
-}
-
-function startTests() {
+add_task(function* startTests() {
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
 
   info ("Setting browser.devedition.theme.enabled to false.");
@@ -37,40 +32,54 @@ function startTests() {
   ok (!DevEdition.styleSheet, "The devedition stylesheet has been removed when a lightweight theme is applied.");
 
   info ("Removing a lightweight theme.");
+  let onAttributeAdded = waitForBrightTitlebarAttribute();
   Services.prefs.setBoolPref(PREF_LWTHEME, false);
   ok (DevEdition.styleSheet, "The devedition stylesheet has been added when a lightweight theme is removed.");
+  yield onAttributeAdded;
+
+  is (document.documentElement.getAttribute("brighttitlebarforeground"), "true",
+     "The brighttitlebarforeground attribute is set on the window.");
 
   info ("Setting browser.devedition.theme.enabled to false.");
   Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, false);
   ok (!DevEdition.styleSheet, "The devedition stylesheet has been removed.");
 
-  testDevtoolsTheme();
-  testLightweightThemePreview();
-  finish();
-}
+  ok (!document.documentElement.hasAttribute("brighttitlebarforeground"),
+     "The brighttitlebarforeground attribute is not set on the window after devedition.theme is false.");
+});
 
-function testDevtoolsTheme() {
+add_task(function* testDevtoolsTheme() {
   info ("Checking that Australis is shown when the light devtools theme is applied.");
 
+  let onAttributeAdded = waitForBrightTitlebarAttribute();
   Services.prefs.setBoolPref(PREF_DEVEDITION_THEME, true);
   ok (DevEdition.styleSheet, "The devedition stylesheet exists.");
+  yield onAttributeAdded;
+  ok (document.documentElement.hasAttribute("brighttitlebarforeground"),
+     "The brighttitlebarforeground attribute is set on the window with dark devtools theme.");
 
   info ("Checking stylesheet and :root attributes based on devtools theme.");
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "light");
   is (document.documentElement.getAttribute("devtoolstheme"), "light",
     "The documentElement has an attribute based on devtools theme.");
   ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the light devtools theme.");
+  ok (!document.documentElement.hasAttribute("brighttitlebarforeground"),
+     "The brighttitlebarforeground attribute is not set on the window with light devtools theme.");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "dark");
   is (document.documentElement.getAttribute("devtoolstheme"), "dark",
     "The documentElement has an attribute based on devtools theme.");
   ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the dark devtools theme.");
+  is (document.documentElement.getAttribute("brighttitlebarforeground"), "true",
+     "The brighttitlebarforeground attribute is set on the window with dark devtools theme.");
 
   Services.prefs.setCharPref(PREF_DEVTOOLS_THEME, "foobar");
   is (document.documentElement.getAttribute("devtoolstheme"), "light",
     "The documentElement has 'light' as a default for the devtoolstheme attribute");
   ok (DevEdition.styleSheet, "The devedition stylesheet is still there with the foobar devtools theme.");
-}
+  ok (!document.documentElement.hasAttribute("brighttitlebarforeground"),
+     "The brighttitlebarforeground attribute is not set on the window with light devtools theme.");
+});
 
 function dummyLightweightTheme(id) {
   return {
@@ -83,7 +92,7 @@ function dummyLightweightTheme(id) {
   };
 }
 
-function testLightweightThemePreview() {
+add_task(function* testLightweightThemePreview() {
   let {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
   info ("Turning the pref on, then previewing lightweight themes");
@@ -114,4 +123,21 @@ function testLightweightThemePreview() {
   ok (DevEdition.styleSheet, "The devedition stylesheet is still enabled after the default theme is applied.");
   LightweightThemeManager.resetPreview();
   ok (DevEdition.styleSheet, "The devedition stylesheet is still enabled after resetting the preview.");
+});
+
+// Use a mutation observer to wait for the brighttitlebarforeground
+// attribute to change.  Using this instead of waiting for the load
+// event on the DevEdition styleSheet.
+function waitForBrightTitlebarAttribute() {
+  return new Promise((resolve, reject) => {
+    let mutationObserver = new MutationObserver(function (mutations) {
+      for (let mutation of mutations) {
+        if (mutation.attributeName == "brighttitlebarforeground") {
+          mutationObserver.disconnect();
+          resolve();
+        }
+      }
+    });
+    mutationObserver.observe(document.documentElement, { attributes: true });
+  });
 }

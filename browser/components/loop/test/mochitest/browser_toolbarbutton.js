@@ -8,6 +8,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
+const {LoopRoomsInternal} = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
 
 registerCleanupFunction(function*() {
   MozLoopService.doNotDisturb = false;
@@ -77,5 +78,16 @@ add_task(function* test_active() {
   MozLoopServiceInternal.fxAOAuthTokenData = null;
   MozLoopServiceInternal.notifyStatusChanged();
   Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
+});
+
+add_task(function* test_room_participants() {
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
+  LoopRoomsInternal.rooms.set("test_room", {participants: [{displayName: "hugh", id: "008"}]});
+  MozLoopServiceInternal.notifyStatusChanged();
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "active", "Check button is in active state");
+  LoopRoomsInternal.rooms.set("test_room", {participants: []});
+  MozLoopServiceInternal.notifyStatusChanged();
+  Assert.strictEqual(LoopUI.toolbarButton.node.getAttribute("state"), "", "Check button is in default state");
+  LoopRoomsInternal.rooms.delete("test_room");
 });
 
