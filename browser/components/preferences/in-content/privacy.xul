@@ -241,7 +241,7 @@
           data-category="panePrivacy"
           hidden="true">
   <caption><label>&locationBar.label;</label></caption>
-  <label id="locationBarSuggestionLabel">&locbar.pre.label;</label>
+  <label id="locationBarSuggestionLabel">&locbar.suggest.label;</label>
   <checkbox id="historySuggestion" label="&locbar.history.label;"
             onsyncfrompreference="return gPrivacyPane.writeSuggestionPref();"
             accesskey="&locbar.history.accesskey;"
