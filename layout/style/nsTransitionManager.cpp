@@ -88,6 +88,17 @@ CSSTransitionPlayer::PlayFromJS()
   AnimationPlayer::PlayFromJS();
 }
 
+CommonAnimationManager*
+CSSTransitionPlayer::GetAnimationManager() const
+{
+  nsPresContext* context = GetPresContext();
+  if (!context) {
+    return nullptr;
+  }
+
+  return context->TransitionManager();
+}
+
 /*****************************************************************************
  * nsTransitionManager                                                       *
  *****************************************************************************/

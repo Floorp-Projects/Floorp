@@ -28,6 +28,7 @@ class nsPresContext;
 namespace mozilla {
 namespace css {
 class AnimValuesStyleRule;
+class CommonAnimationManager;
 } // namespace css
 
 class CSSAnimationPlayer;
@@ -130,6 +131,7 @@ protected:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
+  virtual css::CommonAnimationManager* GetAnimationManager() const = 0;
 
   nsRefPtr<AnimationTimeline> mTimeline;
   nsRefPtr<Animation> mSource;
