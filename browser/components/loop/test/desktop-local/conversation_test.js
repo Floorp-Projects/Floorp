@@ -917,6 +917,7 @@ describe("loop.conversation", function() {
         pause: sinon.spy(),
         removeAttribute: sinon.spy()
       };
+      navigator.mozLoop.doNotDisturb = false;
       sandbox.stub(window, "Audio").returns(fakeAudio);
 
       view = TestUtils.renderIntoDocument(

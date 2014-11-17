@@ -86,6 +86,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gWM",
+                                   "@mozilla.org/appshell/window-mediator;1",
+                                   "nsIWindowMediator");
+
 // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let ConsoleAPI = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).ConsoleAPI;
@@ -1008,6 +1012,18 @@ this.MozLoopService = {
     };
     LoopRooms.on("add", onRoomsChange);
     LoopRooms.on("update", onRoomsChange);
+    LoopRooms.on("joined", (e, roomToken, participant) => {
+      // Don't alert if we're in the doNotDisturb mode, or the participant
+      // is the owner - the content code deals with the rest of the sounds.
+      if (MozLoopServiceInternal.doNotDisturb || participant.owner) {
+        return;
+      }
+
+      let window = gWM.getMostRecentWindow("navigator:browser");
+      if (window) {
+        window.LoopUI.playSound("room-joined");
+      }
+    });
 
     // If expiresTime is not in the future and the user hasn't
     // previously authenticated then skip registration.

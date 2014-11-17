@@ -86,6 +86,7 @@ browser.jar:
   content/browser/loop/shared/sounds/connecting.ogg   (content/shared/sounds/connecting.ogg)
   content/browser/loop/shared/sounds/connected.ogg    (content/shared/sounds/connected.ogg)
   content/browser/loop/shared/sounds/terminated.ogg   (content/shared/sounds/terminated.ogg)
+  content/browser/loop/shared/sounds/room-joined.ogg  (content/shared/sounds/room-joined.ogg)
   content/browser/loop/shared/sounds/failure.ogg      (content/shared/sounds/failure.ogg)
 
   # Partner SDK assets
