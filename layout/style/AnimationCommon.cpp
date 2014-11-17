@@ -225,6 +225,15 @@ CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
   }
 }
 
+void
+CommonAnimationManager::NotifyCollectionUpdated(AnimationPlayerCollection&
+                                                  aCollection)
+{
+  CheckNeedsRefresh();
+  mPresContext->ClearLastStyleUpdateForAllAnimations();
+  aCollection.PostRestyleForAnimation(mPresContext);
+}
+
 /* static */ bool
 CommonAnimationManager::ExtractComputedValueForTransition(
                           nsCSSProperty aProperty,
