@@ -223,10 +223,10 @@ public:
     }
   }
 
-  mozilla::AnimationPlayerCollection*
+  virtual mozilla::AnimationPlayerCollection*
   GetAnimationPlayers(mozilla::dom::Element *aElement,
                       nsCSSPseudoElements::Type aPseudoType,
-                      bool aCreateIfNeeded);
+                      bool aCreateIfNeeded) MOZ_OVERRIDE;
   nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
 

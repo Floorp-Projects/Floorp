@@ -66,6 +66,11 @@ public:
   // elements.
   void AddStyleUpdatesTo(mozilla::RestyleTracker& aTracker);
 
+  virtual AnimationPlayerCollection*
+  GetAnimationPlayers(dom::Element *aElement,
+                      nsCSSPseudoElements::Type aPseudoType,
+                      bool aCreateIfNeeded) = 0;
+
   // Notify this manager that one of its collections of animation players,
   // has been updated.
   void NotifyCollectionUpdated(AnimationPlayerCollection& aCollection);
