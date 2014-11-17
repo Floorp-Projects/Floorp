@@ -28,17 +28,17 @@ using mozilla::dom::AnimationPlayer;
 using mozilla::CSSAnimationPlayer;
 
 void
-CSSAnimationPlayer::Play(UpdateFlags aUpdateFlags)
+CSSAnimationPlayer::Play()
 {
   mPauseShouldStick = false;
-  AnimationPlayer::Play(aUpdateFlags);
+  AnimationPlayer::Play();
 }
 
 void
-CSSAnimationPlayer::Pause(UpdateFlags aUpdateFlags)
+CSSAnimationPlayer::Pause()
 {
   mPauseShouldStick = true;
-  AnimationPlayer::Pause(aUpdateFlags);
+  AnimationPlayer::Pause();
 }
 
 mozilla::dom::AnimationPlayState
@@ -64,7 +64,7 @@ CSSAnimationPlayer::PlayFromStyle()
 {
   mIsStylePaused = false;
   if (!mPauseShouldStick) {
-    AnimationPlayer::Play(eNoUpdate);
+    DoPlay();
   }
 }
 
@@ -77,7 +77,7 @@ CSSAnimationPlayer::PauseFromStyle()
   }
 
   mIsStylePaused = true;
-  AnimationPlayer::Pause(eNoUpdate);
+  DoPause();
 }
 
 void
