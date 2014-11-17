@@ -409,7 +409,7 @@ bool ProcessWOFF2(ots::OpenTypeFile *header,
   }
 
   std::vector<uint8_t> decompressed_buffer(decompressed_size);
-  if (!ots::ConvertWOFF2ToTTF(&decompressed_buffer[0], decompressed_size,
+  if (!ots::ConvertWOFF2ToTTF(header, &decompressed_buffer[0], decompressed_size,
                               data, length)) {
     return OTS_FAILURE();
   }
