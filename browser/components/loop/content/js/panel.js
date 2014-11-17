@@ -31,13 +31,19 @@ loop.panel = (function(_, mozL10n) {
 
     getDefaultProps: function() {
       return {
-        buttonsHidden: false,
-        selectedTab: "call"
+        buttonsHidden: false
       };
     },
 
     getInitialState: function() {
-      return {selectedTab: this.props.selectedTab};
+      // XXX Work around props.selectedTab being undefined initially.
+      // When we don't need to rely on the pref, this can move back to
+      // getDefaultProps (bug 1100258).
+      return {
+        selectedTab: this.props.selectedTab ||
+          (navigator.mozLoop.getLoopBoolPref("rooms.enabled") ?
+            "rooms" : "call")
+      };
     },
 
     handleSelectTab: function(event) {
@@ -678,13 +684,17 @@ loop.panel = (function(_, mozL10n) {
       }
     },
 
+    _roomsEnabled: function() {
+      return navigator.mozLoop.getLoopBoolPref("rooms.enabled");
+    },
+
     _onStatusChanged: function() {
       var profile = navigator.mozLoop.userProfile;
       var currUid = this.state.userProfile ? this.state.userProfile.uid : null;
       var newUid = profile ? profile.uid : null;
       if (currUid != newUid) {
         // On profile change (login, logout), switch back to the default tab.
-        this.selectTab("call");
+        this.selectTab(this._roomsEnabled() ? "rooms" : "call");
         this.setState({userProfile: profile});
       }
       this.updateServiceErrors();
@@ -692,17 +702,28 @@ loop.panel = (function(_, mozL10n) {
 
     /**
      * The rooms feature is hidden by default for now. Once it gets mainstream,
-     * this method can be safely removed.
+     * this method can be simplified.
      */
-    _renderRoomsTab: function() {
-      if (!navigator.mozLoop.getLoopBoolPref("rooms.enabled")) {
-        return null;
+    _renderRoomsOrCallTab: function() {
+      if (!this._roomsEnabled()) {
+        return (
+          Tab({name: "call"}, 
+            React.DOM.div({className: "content-area"}, 
+              CallUrlResult({client: this.props.client, 
+                             notifications: this.props.notifications, 
+                             callUrl: this.props.callUrl}), 
+              ToSView(null)
+            )
+          )
+        );
       }
+
       return (
         Tab({name: "rooms"}, 
           RoomList({dispatcher: this.props.dispatcher, 
                     store: this.props.roomStore, 
-                    userDisplayName: this._getUserDisplayName()})
+                    userDisplayName: this._getUserDisplayName()}), 
+          ToSView(null)
         )
       );
     },
@@ -735,21 +756,14 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
+
       return (
         React.DOM.div(null, 
           NotificationListView({notifications: this.props.notifications, 
                                 clearOnDocumentHidden: true}), 
           TabView({ref: "tabView", selectedTab: this.props.selectedTab, 
             buttonsHidden: !this.state.userProfile && !this.props.showTabButtons}, 
-            Tab({name: "call"}, 
-              React.DOM.div({className: "content-area"}, 
-                CallUrlResult({client: this.props.client, 
-                               notifications: this.props.notifications, 
-                               callUrl: this.props.callUrl}), 
-                ToSView(null)
-              )
-            ), 
-            this._renderRoomsTab(), 
+            this._renderRoomsOrCallTab(), 
             Tab({name: "contacts"}, 
               ContactsList({selectTab: this.selectTab, 
                             startForm: this.startForm})
