@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE overlay [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+%brandDTD;
+]>
+
+<overlay id="SearchPaneOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+         xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <prefpane id="paneSearch" helpTopic="prefs-search"
+            onpaneload="gSearchPane.init();">
+
+    <preferences id="searchPreferences">
+
+      <!-- Suggest -->
+      <preference id="browser.search.suggest.enabled"
+                  name="browser.search.suggest.enabled"
+                  type="bool"/>
+
+      <!-- One off providers -->
+      <preference id="browser.search.hiddenOneOffs"
+                  name="browser.search.hiddenOneOffs"
+                  type="string"/>
+
+    </preferences>
+
+    <script type="application/javascript" src="chrome://browser/content/preferences/search.js"/>
+
+    <!-- Default Search Engine -->
+    <groupbox id="defaultEngineGroup" align="start">
+      <caption label="Default Search Engine"/>
+      <label>Choose your default search engine. &brandShortName; uses it in the location bar, search bar, and start pages.</label>
+      <menulist id="defaultEngine" oncommand="gSearchPane.setDefaultEngine();">
+        <menupopup/>
+      </menulist>
+      <checkbox id="suggestionsInSearchFieldsCheckbox"
+                label="Provide search suggestions"
+                accesskey="s"
+                preference="browser.search.suggest.enabled"/>
+    </groupbox>
+
+    <groupbox id="oneClickSearchProvidersGroup">
+      <caption label="One-click search engines"/>
+      <label>The search bar lets you search alternate engines directly. Choose which ones to display.</label>
+
+      <richlistbox id="oneClickProvidersList" style="min-height: 50px;"/>
+      <hbox pack="end" style="margin-bottom: 2em">
+        <label id="addEngines" class="text-link" value="Add more search providers…"
+               onclick="if (event.button == 0) { Services.wm.getMostRecentWindow('navigator:browser').BrowserSearch.loadAddEngines(); }"/>
+      </hbox>
+    </groupbox>
+
+  </prefpane>
+
+</overlay>
