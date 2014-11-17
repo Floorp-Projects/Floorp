@@ -67,7 +67,7 @@ AnimationPlayer::PlayState() const
 }
 
 void
-AnimationPlayer::Play(UpdateFlags aFlags)
+AnimationPlayer::Play(UpdateFlags aUpdateFlags)
 {
   // FIXME: When we implement finishing behavior (bug 1074630) we should
   // not return early if mIsPaused is false since we may still need to seek.
@@ -90,13 +90,13 @@ AnimationPlayer::Play(UpdateFlags aFlags)
   mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
   mHoldTime.SetNull();
 
-  if (aFlags == eUpdateStyle) {
-    MaybePostRestyle();
+  if (aUpdateFlags == eUpdateStyle) {
+    PostUpdate();
   }
 }
 
 void
-AnimationPlayer::Pause(UpdateFlags aFlags)
+AnimationPlayer::Pause(UpdateFlags aUpdateFlags)
 {
   if (mIsPaused) {
     return;
@@ -108,8 +108,8 @@ AnimationPlayer::Pause(UpdateFlags aFlags)
   mHoldTime = GetCurrentTime();
   mStartTime.SetNull();
 
-  if (aFlags == eUpdateStyle) {
-    MaybePostRestyle();
+  if (aUpdateFlags == eUpdateStyle) {
+    PostUpdate();
   }
 }
 
@@ -117,18 +117,6 @@ Nullable<double>
 AnimationPlayer::GetCurrentTimeAsDouble() const
 {
   return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
-}
-
-void
-AnimationPlayer::PlayFromJS()
-{
-  Play(eUpdateStyle);
-}
-
-void
-AnimationPlayer::PauseFromJS()
-{
-  Pause(eUpdateStyle);
 }
 
 void
@@ -213,27 +201,6 @@ AnimationPlayer::FlushStyle() const
   if (doc) {
     doc->FlushPendingNotifications(Flush_Style);
   }
-}
-
-void
-AnimationPlayer::MaybePostRestyle() const
-{
-  if (!mSource) {
-    return;
-  }
-
-  Element* targetElement;
-  nsCSSPseudoElements::Type pseudoType;
-  mSource->GetTarget(targetElement, pseudoType);
-  if (!targetElement) {
-    return;
-  }
-
-  // FIXME: This is a bit heavy-handed but in bug 1073336 we hope to
-  // introduce a better means for players to update style.
-  nsLayoutUtils::PostRestyleEvent(targetElement,
-                                  eRestyle_Self,
-                                  nsChangeHint_AllReflowHints);
 }
 
 void
