@@ -2129,7 +2129,7 @@ size_t ArenaList::countUsedCells()
 }
 
 ArenaHeader *
-ArenaList::removeRemainingArenas(ArenaHeader **arenap)
+ArenaList::removeRemainingArenas(ArenaHeader **arenap, const AutoLockGC &lock)
 {
     // This is only ever called to remove arenas that are after the cursor, so
     // we don't need to update it.
@@ -2148,8 +2148,10 @@ ArenaList::removeRemainingArenas(ArenaHeader **arenap)
  * arena list. Return the head of a list of arenas to relocate.
  */
 ArenaHeader *
-ArenaList::pickArenasToRelocate()
+ArenaList::pickArenasToRelocate(JSRuntime *runtime)
 {
+    AutoLockGC lock(runtime);
+
     check();
     if (isEmpty())
         return nullptr;
@@ -2157,7 +2159,7 @@ ArenaList::pickArenasToRelocate()
     // In zeal mode and in debug builds on 64 bit architectures, we relocate all
     // arenas. The purpose of this is to balance test coverage of object moving
     // with test coverage of the arena selection routine below.
-    bool relocateAll = head()->zone->runtimeFromMainThread()->gc.zeal() == ZealCompactValue;
+    bool relocateAll = runtime->gc.zeal() == ZealCompactValue;
 #if defined(DEBUG) && defined(JS_PUNBOX64)
     relocateAll = true;
 #endif
@@ -2190,7 +2192,7 @@ ArenaList::pickArenasToRelocate()
     while (*arenap) {
         ArenaHeader *arena = *arenap;
         if (followingUsedCells <= previousFreeCells)
-            return removeRemainingArenas(arenap);
+            return removeRemainingArenas(arenap, lock);
         size_t freeCells = arena->countFreeCells();
         size_t usedCells = cellsPerArena - freeCells;
         followingUsedCells -= usedCells;
@@ -2311,7 +2313,7 @@ ArenaLists::relocateArenas(ArenaHeader *relocatedList)
     for (size_t i = 0; i < FINALIZE_LIMIT; i++) {
         if (CanRelocateAllocKind(AllocKind(i))) {
             ArenaList &al = arenaLists[i];
-            ArenaHeader *toRelocate = al.pickArenasToRelocate();
+            ArenaHeader *toRelocate = al.pickArenasToRelocate(runtime_);
             if (toRelocate)
                 relocatedList = al.relocateArenas(toRelocate, relocatedList);
         }

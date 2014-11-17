@@ -29,10 +29,6 @@
 
 using namespace mozilla;
 
-extern "C" MFBT_API int tgkill(pid_t tgid, pid_t tid, int signalno) {
-  return syscall(__NR_tgkill, tgid, tid, signalno);
-}
-
 /**
  * Provides the wrappers to a selected set of pthread and system-level functions
  * as the basis for implementing Zygote-like preforking mechanism.
@@ -121,6 +117,22 @@ static size_t getPageSize(void) {
 
 #define NATIVE_THREAD_NAME_LENGTH 16
 
+typedef struct nuwa_construct {
+  typedef void(*construct_t)(void*);
+
+  construct_t construct;
+  void *arg;
+
+  nuwa_construct(construct_t aConstruct, void *aArg)
+    : construct(aConstruct)
+    , arg(aArg)
+  { }
+
+  nuwa_construct(const nuwa_construct&) = default;
+  nuwa_construct& operator=(const nuwa_construct&) = default;
+
+} nuwa_construct_t;
+
 struct thread_info : public mozilla::LinkedListElement<thread_info> {
   pthread_t origThreadID;
   pthread_t recreatedThreadID;
@@ -135,8 +147,15 @@ struct thread_info : public mozilla::LinkedListElement<thread_info> {
 
   // The thread specific function to recreate the new thread. It's executed
   // after the thread is recreated.
-  void (*recrFunc)(void *arg);
-  void *recrArg;
+
+  std::vector<nuwa_construct_t> *recrFunctions;
+  void addThreadConstructor(const nuwa_construct_t *construct) {
+    if (!recrFunctions) {
+      recrFunctions = new std::vector<nuwa_construct_t>();
+    }
+
+    recrFunctions->push_back(*construct);
+  }
 
   TLSInfoList tlsInfo;
 
@@ -173,8 +192,12 @@ static thread_info_t *sCurrentRecreatingThread = nullptr;
 static void
 RunCustomRecreation() {
   thread_info_t *tinfo = sCurrentRecreatingThread;
-  if (tinfo->recrFunc != nullptr) {
-    tinfo->recrFunc(tinfo->recrArg);
+  if (tinfo->recrFunctions) {
+    for (auto iter = tinfo->recrFunctions->begin();
+         iter != tinfo->recrFunctions->end();
+         iter++) {
+      iter->construct(iter->arg);
+    }
   }
 }
 
@@ -192,11 +215,6 @@ RunCustomRecreation() {
 #define TINFO_FLAG_NUWA_SUPPORT 0x1
 #define TINFO_FLAG_NUWA_SKIP 0x2
 #define TINFO_FLAG_NUWA_EXPLICIT_CHECKPOINT 0x4
-
-typedef struct nuwa_construct {
-  void (*construct)(void *);
-  void *arg;
-} nuwa_construct_t;
 
 static std::vector<nuwa_construct_t> sConstructors;
 static std::vector<nuwa_construct_t> sFinalConstructors;
@@ -511,8 +529,7 @@ thread_info_new(void) {
   /* link tinfo to sAllThreads */
   thread_info_t *tinfo = new thread_info_t();
   tinfo->flags = 0;
-  tinfo->recrFunc = nullptr;
-  tinfo->recrArg = nullptr;
+  tinfo->recrFunctions = nullptr;
   tinfo->recreatedThreadID = 0;
   tinfo->recreatedNativeThreadID = 0;
   tinfo->condMutex = nullptr;
@@ -559,6 +576,10 @@ thread_info_cleanup(void *arg) {
   /* unlink tinfo from sAllThreads */
   tinfo->remove();
   pthread_mutex_unlock(&sThreadCountLock);
+
+  if (tinfo->recrFunctions) {
+    delete tinfo->recrFunctions;
+  }
 
   // while sThreadCountLock is held, since delete calls wrapped functions
   // which try to lock sThreadCountLock. This results in deadlock. And we
@@ -1350,27 +1371,6 @@ __wrap_close(int aFd) {
   return rv;
 }
 
-extern "C" MFBT_API int
-__wrap_tgkill(pid_t tgid, pid_t tid, int signalno)
-{
-  if (sIsNuwaProcess) {
-    return tgkill(tgid, tid, signalno);
-  }
-
-  if (tid == sMainThread.origNativeThreadID) {
-    return tgkill(tgid, sMainThread.recreatedNativeThreadID, signalno);
-  }
-
-  thread_info_t *tinfo = (tid == sMainThread.origNativeThreadID ?
-      &sMainThread :
-      GetThreadInfo(tid));
-  if (!tinfo) {
-    return tgkill(tgid, tid, signalno);
-  }
-
-  return tgkill(tgid, tinfo->recreatedNativeThreadID, signalno);
-}
-
 static void *
 thread_recreate_startup(void *arg) {
   /*
@@ -1790,8 +1790,10 @@ NuwaMarkCurrentThread(void (*recreate)(void *), void *arg) {
   }
 
   tinfo->flags |= TINFO_FLAG_NUWA_SUPPORT;
-  tinfo->recrFunc = recreate;
-  tinfo->recrArg = arg;
+  if (recreate) {
+    nuwa_construct_t construct(recreate, arg);
+    tinfo->addThreadConstructor(&construct);
+  }
 
   // XXX Thread name might be set later than this call. If this is the case, we
   // might need to delay getting the thread name.
@@ -1898,9 +1900,7 @@ NuwaCheckpointCurrentThread2(int setjmpCond) {
  */
 MFBT_API void
 NuwaAddConstructor(void (*construct)(void *), void *arg) {
-  nuwa_construct_t ctr;
-  ctr.construct = construct;
-  ctr.arg = arg;
+  nuwa_construct_t ctr(construct, arg);
   sConstructors.push_back(ctr);
 }
 
@@ -1910,10 +1910,19 @@ NuwaAddConstructor(void (*construct)(void *), void *arg) {
  */
 MFBT_API void
 NuwaAddFinalConstructor(void (*construct)(void *), void *arg) {
-  nuwa_construct_t ctr;
-  ctr.construct = construct;
-  ctr.arg = arg;
+  nuwa_construct_t ctr(construct, arg);
   sFinalConstructors.push_back(ctr);
+}
+
+MFBT_API void
+NuwaAddThreadConstructor(void (*aConstruct)(void *), void *aArg) {
+  thread_info *tinfo = CUR_THREAD_INFO;
+  if (!tinfo || !aConstruct) {
+    return;
+  }
+
+  nuwa_construct_t construct(aConstruct, aArg);
+  tinfo->addThreadConstructor(&construct);
 }
 
 /**
