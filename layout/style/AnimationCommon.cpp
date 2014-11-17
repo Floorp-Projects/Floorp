@@ -483,6 +483,16 @@ AnimationPlayerCollection::GetElementToRestyle() const
   return pseudoFrame->GetContent()->AsElement();
 }
 
+void
+AnimationPlayerCollection::NotifyPlayerUpdated()
+{
+  // On the next flush, force us to update the style rule
+  mNeedsRefreshes = true;
+  mStyleRuleRefreshTime = TimeStamp();
+
+  mManager->NotifyCollectionUpdated(*this);
+}
+
 /* static */ void
 AnimationPlayerCollection::LogAsyncAnimationFailure(nsCString& aMessage,
                                                      const nsIContent* aContent)
