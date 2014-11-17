@@ -1389,7 +1389,15 @@ nsHttpChannel::ProcessResponse()
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
 
-    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+    // Cookies and Alt-Service should not be handled on proxy failure either.
+    // This would be consolidated with ProcessSecurityHeaders but it should
+    // happen after OnExamineResponse.
+    if (!mTransaction->ProxyConnectFailed() && (httpStatus != 407)) {
+        SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+        if (httpStatus < 500) {
+            ProcessAltService();
+        }
+    }
 
     // handle unused username and password in url (see bug 232567)
     if (httpStatus != 401 && httpStatus != 407) {
@@ -1403,10 +1411,6 @@ nsHttpChannel::ProcessResponse()
         mAuthProvider->Disconnect(NS_ERROR_ABORT);
         mAuthProvider = nullptr;
         LOG(("  continuation state has been reset"));
-    }
-
-    if (httpStatus < 500) {
-        ProcessAltService();
     }
 
     bool successfulReval = false;
