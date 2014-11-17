@@ -278,6 +278,8 @@ struct AnimationPlayerCollection : public PRCList
     }
   }
 
+  void NotifyPlayerUpdated();
+
   static void LogAsyncAnimationFailure(nsCString& aMessage,
                                        const nsIContent* aContent = nullptr);
 
