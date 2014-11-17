@@ -563,8 +563,9 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                                         mNeedsRefreshes);
     }
   }
-}
 
+  mManager->CheckNeedsRefresh();
+}
 
 bool
 AnimationPlayerCollection::CanThrottleTransformChanges(TimeStamp aTime)

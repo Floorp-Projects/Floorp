@@ -188,9 +188,6 @@ struct AnimationPlayerCollection : public PRCList
 
   void Tick();
 
-  // This updates mNeedsRefreshes so the caller may need to check
-  // for changes to values (for example, calling CheckNeedsRefresh to register
-  // or unregister from observing the refresh driver when this value changes).
   void EnsureStyleRuleFor(TimeStamp aRefreshTime, EnsureStyleRuleFlags aFlags);
 
   bool CanThrottleTransformChanges(mozilla::TimeStamp aTime);
