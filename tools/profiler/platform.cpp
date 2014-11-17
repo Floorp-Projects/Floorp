@@ -238,11 +238,6 @@ bool sps_version2()
 
     bool req2 = PR_GetEnv("MOZ_PROFILER_NEW") != nullptr; // Has v2 been requested?
 
-    bool elfhackd = false;
-#   if defined(USE_ELF_HACK)
-    bool elfhackd = true;
-#   endif
-
     if (req2 && allow2) {
       version = 2;
       LOG("------------------- MOZ_PROFILER_NEW set -------------------");
@@ -250,10 +245,6 @@ bool sps_version2()
       version = 1;
       LOG("--------------- MOZ_PROFILER_NEW requested, ----------------");
       LOG("---------- but is not available on this platform -----------");
-    } else if (req2 && elfhackd) {
-      version = 1;
-      LOG("--------------- MOZ_PROFILER_NEW requested, ----------------");
-      LOG("--- but this build was not done with --disable-elf-hack ----");
     } else {
       version = 1;
       LOG("----------------- MOZ_PROFILER_NEW not set -----------------");
