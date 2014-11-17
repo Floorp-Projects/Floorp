@@ -8004,15 +8004,18 @@ class MStoreElementHole
 
 // Store an unboxed object or null pointer to a vector.
 class MStoreUnboxedObjectOrNull
-  : public MAryInstruction<3>,
-    public ConvertToObjectOrNullPolicy<2>::Data
+  : public MAryInstruction<4>,
+    public StoreUnboxedObjectOrNullPolicy::Data
 {
-    MStoreUnboxedObjectOrNull(MDefinition *elements, MDefinition *index, MDefinition *value) {
+    MStoreUnboxedObjectOrNull(MDefinition *elements, MDefinition *index,
+                              MDefinition *value, MDefinition *typedObj) {
         initOperand(0, elements);
         initOperand(1, index);
         initOperand(2, value);
+        initOperand(3, typedObj);
         MOZ_ASSERT(elements->type() == MIRType_Elements);
         MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(typedObj->type() == MIRType_Object);
     }
 
   public:
@@ -8020,8 +8023,8 @@ class MStoreUnboxedObjectOrNull
 
     static MStoreUnboxedObjectOrNull *New(TempAllocator &alloc,
                                           MDefinition *elements, MDefinition *index,
-                                          MDefinition *value) {
-        return new(alloc) MStoreUnboxedObjectOrNull(elements, index, value);
+                                          MDefinition *value, MDefinition *typedObj) {
+        return new(alloc) MStoreUnboxedObjectOrNull(elements, index, value, typedObj);
     }
     MDefinition *elements() const {
         return getOperand(0);
@@ -8032,9 +8035,17 @@ class MStoreUnboxedObjectOrNull
     MDefinition *value() const {
         return getOperand(2);
     }
+    MDefinition *typedObj() const {
+        return getOperand(3);
+    }
     AliasSet getAliasSet() const {
         // Use AliasSet::Element for reference typed object fields.
         return AliasSet::Store(AliasSet::Element);
+    }
+
+    // For StoreUnboxedObjectOrNullPolicy.
+    void setValue(MDefinition *def) {
+        replaceOperand(2, def);
     }
 
     ALLOW_CLONE(MStoreUnboxedObjectOrNull)
