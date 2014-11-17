@@ -177,7 +177,7 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
       PostDecodeDone();
     } else {
       if (!IsSizeDecode()) {
-        mProgress |= FLAG_DECODE_STOPPED | FLAG_ONLOAD_UNBLOCKED;
+        mProgress |= FLAG_DECODE_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
       }
       mProgress |= FLAG_HAS_ERROR;
     }
@@ -281,7 +281,7 @@ Decoder::PostSize(int32_t aWidth,
   mImageMetadata.SetSize(aWidth, aHeight, aOrientation);
 
   // Record this notification.
-  mProgress |= FLAG_HAS_SIZE;
+  mProgress |= FLAG_SIZE_AVAILABLE;
 }
 
 void
@@ -336,7 +336,7 @@ Decoder::PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha /* = FrameBlender::k
   mCurrentFrame->SetBlendMethod(aBlendMethod);
   mCurrentFrame->ImageUpdated(mCurrentFrame->GetRect());
 
-  mProgress |= FLAG_FRAME_STOPPED | FLAG_ONLOAD_UNBLOCKED;
+  mProgress |= FLAG_FRAME_COMPLETE | FLAG_ONLOAD_UNBLOCKED;
 }
 
 void
@@ -362,7 +362,7 @@ Decoder::PostDecodeDone(int32_t aLoopCount /* = 0 */)
   mImageMetadata.SetLoopCount(aLoopCount);
   mImageMetadata.SetIsNonPremultiplied(GetDecodeFlags() & DECODER_NO_PREMULTIPLY_ALPHA);
 
-  mProgress |= FLAG_DECODE_STOPPED;
+  mProgress |= FLAG_DECODE_COMPLETE;
 }
 
 void

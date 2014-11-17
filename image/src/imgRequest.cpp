@@ -792,7 +792,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     // We have to fire the OnStopRequest notifications ourselves because there's
     // no image capable of doing so.
     Progress progress =
-      OnStopRequestProgress(lastPart, /* aError = */ false, status);
+      LoadCompleteProgress(lastPart, /* aError = */ false, status);
 
     nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
     progressTracker->SyncNotifyProgress(progress);
