@@ -52,6 +52,7 @@ namespace css {
 
 CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
+  , mIsObservingRefreshDriver(false)
 {
   PR_INIT_CLIST(&mElementCollections);
 }
@@ -71,6 +72,21 @@ CommonAnimationManager::Disconnect()
 }
 
 void
+CommonAnimationManager::AddElementCollection(AnimationPlayerCollection*
+                                               aCollection)
+{
+  if (!mIsObservingRefreshDriver) {
+    NS_ASSERTION(aCollection->mNeedsRefreshes,
+      "Added data which doesn't need refreshing?");
+    // We need to observe the refresh driver.
+    mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+    mIsObservingRefreshDriver = true;
+  }
+
+  PR_INSERT_BEFORE(aCollection, &mElementCollections);
+}
+
+void
 CommonAnimationManager::RemoveAllElementCollections()
 {
   while (!PR_CLIST_IS_EMPTY(&mElementCollections)) {
@@ -78,6 +94,26 @@ CommonAnimationManager::RemoveAllElementCollections()
       static_cast<AnimationPlayerCollection*>(
         PR_LIST_HEAD(&mElementCollections));
     head->Destroy();
+  }
+}
+
+void
+CommonAnimationManager::CheckNeedsRefresh()
+{
+  for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
+       l != &mElementCollections;
+       l = PR_NEXT_LINK(l)) {
+    if (static_cast<AnimationPlayerCollection*>(l)->mNeedsRefreshes) {
+      if (!mIsObservingRefreshDriver) {
+        mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+        mIsObservingRefreshDriver = true;
+      }
+      return;
+    }
+  }
+  if (mIsObservingRefreshDriver) {
+    mIsObservingRefreshDriver = false;
+    mPresContext->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
   }
 }
 

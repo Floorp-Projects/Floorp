@@ -75,16 +75,19 @@ public:
                   nsCSSProperty aProperty,
                   nsStyleContext* aStyleContext,
                   mozilla::StyleAnimationValue& aComputedValue);
+
 protected:
   virtual ~CommonAnimationManager();
 
   // For ElementCollectionRemoved
   friend struct mozilla::AnimationPlayerCollection;
 
-  virtual void
-  AddElementCollection(AnimationPlayerCollection* aCollection) = 0;
-  virtual void ElementCollectionRemoved() = 0;
+  void AddElementCollection(AnimationPlayerCollection* aCollection);
+  void ElementCollectionRemoved() { CheckNeedsRefresh(); }
   void RemoveAllElementCollections();
+
+  // Check to see if we should stop or start observing the refresh driver
+  void CheckNeedsRefresh();
 
   // When this returns a value other than nullptr, it also,
   // as a side-effect, notifies the ActiveLayerTracker.
@@ -95,6 +98,7 @@ protected:
 
   PRCList mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
+  bool mIsObservingRefreshDriver;
 };
 
 /**
@@ -185,9 +189,8 @@ struct AnimationPlayerCollection : public PRCList
   void Tick();
 
   // This updates mNeedsRefreshes so the caller may need to check
-  // for changes to values (for example, nsAnimationManager provides
-  // CheckNeedsRefresh to register or unregister from observing the refresh
-  // driver when this value changes).
+  // for changes to values (for example, calling CheckNeedsRefresh to register
+  // or unregister from observing the refresh driver when this value changes).
   void EnsureStyleRuleFor(TimeStamp aRefreshTime, EnsureStyleRuleFlags aFlags);
 
   bool CanThrottleTransformChanges(mozilla::TimeStamp aTime);

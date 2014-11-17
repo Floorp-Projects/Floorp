@@ -74,29 +74,6 @@ ElementPropertyTransition::CurrentValuePortion() const
  * nsTransitionManager                                                       *
  *****************************************************************************/
 
-void
-nsTransitionManager::ElementCollectionRemoved()
-{
-  // If we have no transitions or animations left, remove ourselves from
-  // the refresh driver.
-  if (PR_CLIST_IS_EMPTY(&mElementCollections)) {
-    mPresContext->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
-  }
-}
-
-void
-nsTransitionManager::AddElementCollection(
-  AnimationPlayerCollection* aCollection)
-{
-  if (PR_CLIST_IS_EMPTY(&mElementCollections)) {
-    // We need to observe the refresh driver.
-    nsRefreshDriver *rd = mPresContext->RefreshDriver();
-    rd->AddRefreshObserver(this, Flush_Style);
-  }
-
-  PR_INSERT_BEFORE(aCollection, &mElementCollections);
-}
-
 already_AddRefed<nsIStyleRule>
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                          nsStyleContext *aOldStyleContext,

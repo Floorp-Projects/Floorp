@@ -152,11 +152,6 @@ public:
                           nsCSSPseudoElements::Type aPseudoType,
                           nsRuleWalker* aRuleWalker);
 
-protected:
-  virtual void ElementCollectionRemoved() MOZ_OVERRIDE;
-  virtual void
-  AddElementCollection(AnimationPlayerCollection* aCollection) MOZ_OVERRIDE;
-
 private:
   void
   ConsiderStartingTransition(nsCSSProperty aProperty,
