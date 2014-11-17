@@ -462,17 +462,11 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
     return OnStartContainer(aRequest, image);
   }
 
-  // Do these two off a script runner because decode complete notifications often
-  // come during painting and these will trigger invalidation.
-  if (aType == imgINotificationObserver::DECODE_COMPLETE) {
+  // Run this using a script runner because HAS_TRANSPARENCY notifications can
+  // come during painting and this will trigger invalidation.
+  if (aType == imgINotificationObserver::HAS_TRANSPARENCY) {
     nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &ImageDocument::AddDecodedClass);
-    nsContentUtils::AddScriptRunner(runnable);
-  }
-
-  if (aType == imgINotificationObserver::DISCARD) {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &ImageDocument::RemoveDecodedClass);
+      NS_NewRunnableMethod(this, &ImageDocument::OnHasTransparency);
     nsContentUtils::AddScriptRunner(runnable);
   }
 
@@ -488,7 +482,7 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
 }
 
 void
-ImageDocument::AddDecodedClass()
+ImageDocument::OnHasTransparency()
 {
   if (!mImageContent || nsContentUtils::IsChildOfSameType(this)) {
     return;
@@ -496,23 +490,7 @@ ImageDocument::AddDecodedClass()
 
   nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
   mozilla::ErrorResult rv;
-  // Update the background-color of the image only after the
-  // image has been decoded to prevent flashes of just the
-  // background-color.
-  classList->Add(NS_LITERAL_STRING("decoded"), rv);
-}
-
-void
-ImageDocument::RemoveDecodedClass()
-{
-  if (!mImageContent || nsContentUtils::IsChildOfSameType(this)) {
-    return;
-  }
-
-  nsDOMTokenList* classList = mImageContent->AsElement()->ClassList();
-  mozilla::ErrorResult rv;
-  // Remove any decoded-related styling when the image is unloaded.
-  classList->Remove(NS_LITERAL_STRING("decoded"), rv);
+  classList->Add(NS_LITERAL_STRING("transparent"), rv);
 }
 
 void
