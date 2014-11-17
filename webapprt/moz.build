@@ -37,7 +37,7 @@ MOCHITEST_WEBAPPRT_CHROME_MANIFESTS += [
     'test/chrome/downloads/webapprt.ini',
     'test/chrome/webapprt.ini',
 ]
-MOCHITEST_MANIFESTS += ['test/content/mochitest.ini']
+MOCHITEST_WEBAPPRT_CONTENT_MANIFESTS += ['test/content/webapprt.ini']
 
 # Place webapprt resources in a separate app dir
 DIST_SUBDIR = 'webapprt'

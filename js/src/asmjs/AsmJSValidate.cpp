@@ -3358,7 +3358,7 @@ class FunctionCompiler
   private:
     void noteBasicBlockPosition(MBasicBlock *blk, ParseNode *pn)
     {
-#if defined(JS_ION_PERF)
+#if defined(JS_ION_PERF) || defined(DEBUG)
         if (pn) {
             unsigned line = 0U, column = 0U;
             m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
