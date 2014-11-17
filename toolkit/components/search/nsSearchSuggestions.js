@@ -73,6 +73,12 @@ SuggestAutoComplete.prototype = {
       finalComments = finalComments.concat(comments);
     }
 
+    // If no result, add the search term so that the panel is shown anyway.
+    if (!finalResults.length) {
+      finalResults.push(results.term);
+      finalComments.push("");
+    }
+
     // Notify the FE of our new results
     this.onResultsReady(results.term, finalResults, finalComments, results.formHistoryResult);
   },
