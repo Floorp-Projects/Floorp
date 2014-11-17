@@ -36,9 +36,10 @@ enum {
   FLAG_ONLOAD_BLOCKED     = 1u << 6,
   FLAG_ONLOAD_UNBLOCKED   = 1u << 7,
   FLAG_IS_ANIMATED        = 1u << 8,
-  FLAG_IS_MULTIPART       = 1u << 9,
-  FLAG_MULTIPART_STOPPED  = 1u << 10,
-  FLAG_HAS_ERROR          = 1u << 11  // STATUS_ERROR
+  FLAG_HAS_TRANSPARENCY   = 1u << 9,
+  FLAG_IS_MULTIPART       = 1u << 10,
+  FLAG_MULTIPART_STOPPED  = 1u << 11,
+  FLAG_HAS_ERROR          = 1u << 12  // STATUS_ERROR
 };
 
 typedef uint32_t Progress;
