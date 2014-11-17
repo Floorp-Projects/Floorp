@@ -9,3 +9,6 @@ contract @mozilla.org/nfc/NFCPeer;1 {c1b2bcf0-35eb-11e3-aa6e-0800200c9a66}
 
 component {c5063a5c-8cb9-41d2-baf5-56062a2e30e9} nsNfc.js
 contract @mozilla.org/dom/system-messages/wrapper/nfc-manager-send-file;1 {c5063a5c-8cb9-41d2-baf5-56062a2e30e9}
+
+component {2e7f9285-3c72-4e1f-b985-141a00a23a75} nsNfc.js
+contract @mozilla.org/dom/system-messages/wrapper/nfc-manager-tech-discovered;1 {2e7f9285-3c72-4e1f-b985-141a00a23a75}

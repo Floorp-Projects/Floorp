@@ -573,5 +573,25 @@ NFCSendFileWrapper.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesWrapper])
 };
 
+function NFCTechDiscoveredWrapper() {
+}
+NFCTechDiscoveredWrapper.prototype = {
+  // nsISystemMessagesWrapper implementation.
+  wrapMessage: function wrapMessage(aMessage, aWindow) {
+    aMessage = Cu.cloneInto(aMessage, aWindow);
+    if (aMessage.techList.indexOf("P2P") != -1) {
+      let peerImpl = new MozNFCPeerImpl(aWindow, aMessage.sessionToken);
+      let peer = aWindow.MozNFCPeer._create(aWindow, peerImpl);
+      aMessage.peer = peer;
+    }
+    return aMessage;
+  },
+
+  classDescription: "NFCTechDiscoveredWrapper",
+  classID: Components.ID("{2e7f9285-3c72-4e1f-b985-141a00a23a75}"),
+  contractID: "@mozilla.org/dom/system-messages/wrapper/nfc-manager-tech-discovered;1",
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesWrapper])
+};
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozNFCTagImpl,
-  MozNFCPeerImpl, MozNFCImpl, NFCSendFileWrapper]);
+  MozNFCPeerImpl, MozNFCImpl, NFCSendFileWrapper, NFCTechDiscoveredWrapper]);
