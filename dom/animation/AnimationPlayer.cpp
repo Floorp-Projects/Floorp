@@ -7,6 +7,7 @@
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationPlayerBinding.h"
 #include "nsIDocument.h" // For nsIDocument
+#include "nsIPresShell.h" // For nsIPresShell
 #include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
 
 namespace mozilla {
@@ -259,6 +260,20 @@ AnimationPlayer::GetRenderedDocument() const
   }
 
   return targetElement->GetComposedDoc();
+}
+
+nsPresContext*
+AnimationPlayer::GetPresContext() const
+{
+  nsIDocument* doc = GetRenderedDocument();
+  if (!doc) {
+    return nullptr;
+  }
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+  return shell->GetPresContext();
 }
 
 } // namespace dom
