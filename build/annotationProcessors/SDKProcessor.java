@@ -58,10 +58,6 @@ public class SDKProcessor {
         String generatedFilePrefix = args[3];
         sMaxSdkVersion = Integer.parseInt(args[4]);
 
-        Properties props = System.getProperties();
-        props.setProperty("com.android.tools.lint.bindir",
-            new File(new File(sdkJar).getParentFile(), "../../tools").toString());
-
         LintCliClient lintClient = new LintCliClient();
         sApiLookup = ApiLookup.get(lintClient);
 
