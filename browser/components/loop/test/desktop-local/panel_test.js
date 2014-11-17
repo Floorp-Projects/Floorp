@@ -184,7 +184,7 @@ describe("loop.panel", function() {
 
           view = createTestPanelView();
 
-          [callTab, roomsTab, contactsTab] =
+          [roomsTab, contactsTab] =
             TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
         });
 
@@ -201,14 +201,6 @@ describe("loop.panel", function() {
             view.getDOMNode().querySelector("li[data-tab-name=\"rooms\"]"));
 
           expect(roomsTab.getDOMNode().classList.contains("selected"))
-            .to.be.true;
-        });
-
-        it("should select call tab when clicking tab button", function() {
-          TestUtils.Simulate.click(
-            view.getDOMNode().querySelector("li[data-tab-name=\"call\"]"));
-
-          expect(callTab.getDOMNode().classList.contains("selected"))
             .to.be.true;
         });
       });
