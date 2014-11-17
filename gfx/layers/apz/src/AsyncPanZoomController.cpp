@@ -533,21 +533,9 @@ public:
    * frame. Returns true if the fling animation should be advanced by one frame,
    * or false if there is no fling or the fling has ended.
    */
-  virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta) MOZ_OVERRIDE
+  virtual bool DoSample(FrameMetrics& aFrameMetrics,
+                        const TimeDuration& aDelta) MOZ_OVERRIDE
   {
-    // If the fling is handed off to our APZC from a child, on the first call to
-    // Sample() aDelta might be negative because it's computed as the sample time
-    // from SampleContentTransformForFrame() minus our APZC's mLastSampleTime
-    // which is the time the child handed off the fling from its call to
-    // SampleContentTransformForFrame() with the same sample time. If we allow
-    // the negative aDelta to be processed, it will yield a displacement in the
-    // direction opposite to the fling, which can cause us to overscroll and
-    // hand off the fling to _our_ parent, which effectively kills the fling.
-    if (aDelta.ToMilliseconds() <= 0) {
-      return true;
-    }
-
     float friction = gfxPrefs::APZFlingFriction();
     float threshold = gfxPrefs::APZFlingStoppedThreshold();
 
@@ -655,8 +643,8 @@ public:
     , mEndZoom(aEndZoom)
   {}
 
-  virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta) MOZ_OVERRIDE
+  virtual bool DoSample(FrameMetrics& aFrameMetrics,
+                        const TimeDuration& aDelta) MOZ_OVERRIDE
   {
     mDuration += aDelta;
     double animPosition = mDuration / mTotalDuration;
@@ -712,8 +700,8 @@ public:
     mApzc.mY.SetVelocity(aVelocity.y);
   }
 
-  virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta) MOZ_OVERRIDE
+  virtual bool DoSample(FrameMetrics& aFrameMetrics,
+                        const TimeDuration& aDelta) MOZ_OVERRIDE
   {
     // Can't inline these variables due to short-circuit evaluation.
     bool continueX = mApzc.mX.SampleOverscrollAnimation(aDelta);
@@ -747,12 +735,7 @@ public:
    * frame. Returns true if the smooth scroll should be advanced by one frame,
    * or false if the smooth scroll has ended.
    */
-  bool Sample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) {
-
-    if (aDelta.ToMilliseconds() <= 0) {
-      return true;
-    }
-
+  bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) {
     if (mXAxisModel.IsFinished() && mYAxisModel.IsFinished()) {
       return false;
     }
