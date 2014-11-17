@@ -8,4 +8,4 @@
 # location of the SDK. This is only used by Ant
 # For customization when using a Version Control System, please read the
 # header note.
-sdk.dir=@ANDROID_SDK@/../../
+sdk.dir=@ANDROID_SDK_ROOT@
