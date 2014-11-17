@@ -377,6 +377,9 @@ case "$target" in
     ANDROID_BUILD_TOOLS="${android_build_tools}"
     AC_SUBST(ANDROID_SDK_ROOT)
     AC_SUBST(ANDROID_SDK)
+    AC_SUBST(ANDROID_TOOLS)
+    AC_SUBST(ANDROID_PLATFORM_TOOLS)
+    AC_SUBST(ANDROID_BUILD_TOOLS)
 
     ANDROID_COMPAT_LIB=$ANDROID_COMPAT_DIR_BASE/v4/android-support-v4.jar
     AC_MSG_CHECKING([for v4 compat library])

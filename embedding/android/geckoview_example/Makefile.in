@@ -25,7 +25,7 @@ GARBAGE_DIRS = \
 	binaries \
 	$(NULL)
 
-ANDROID=$(ANDROID_SDK)/../../tools/android
+ANDROID=$(ANDROID_TOOLS)/android
 
 TARGET="android-$(ANDROID_TARGET_SDK)"
 
