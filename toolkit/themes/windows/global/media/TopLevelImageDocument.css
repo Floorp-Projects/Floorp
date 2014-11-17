@@ -10,7 +10,7 @@
     background-image: url("chrome://global/skin/media/imagedoc-darknoise.png");
   }
 
-  img.decoded {
+  img.transparent {
     background: hsl(0,0%,90%) url("chrome://global/skin/media/imagedoc-lightnoise.png");
     color: #222;
   }
