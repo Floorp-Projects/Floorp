@@ -74,7 +74,7 @@ public:
   SpdyInformation();
   ~SpdyInformation() {}
 
-  static const uint32_t kCount = 5;
+  static const uint32_t kCount = 4;
 
   // determine the index (0..kCount-1) of the spdy information that
   // correlates to the npn string. NS_FAILED() if no match is found.

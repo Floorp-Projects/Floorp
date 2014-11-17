@@ -778,9 +778,7 @@ HttpConnInfo::SetHTTP1ProtocolVersion(uint8_t pv)
 void
 HttpConnInfo::SetHTTP2ProtocolVersion(uint8_t pv)
 {
-    if (pv == SPDY_VERSION_3) {
-        protocolVersion.AssignLiteral(MOZ_UTF16("spdy/3"));
-    } else if (pv == SPDY_VERSION_31) {
+    if (pv == SPDY_VERSION_31) {
         protocolVersion.AssignLiteral(MOZ_UTF16("spdy/3.1"));
     } else if (pv == NS_HTTP2_DRAFT_VERSION) {
         MOZ_ASSERT (pv == NS_HTTP2_DRAFT_VERSION);
