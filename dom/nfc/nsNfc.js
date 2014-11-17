@@ -553,5 +553,25 @@ MozNFCImpl.prototype = {
                                          Ci.nsIDOMEventListener]),
 };
 
+function NFCSendFileWrapper() {
+}
+NFCSendFileWrapper.prototype = {
+  // nsISystemMessagesWrapper implementation.
+  wrapMessage: function wrapMessage(aMessage, aWindow) {
+    let peerImpl = new MozNFCPeerImpl(aWindow, aMessage.sessionToken);
+    let peer = aWindow.MozNFCPeer._create(aWindow, peerImpl);
+
+    delete aMessage.sessionToken;
+    aMessage = Cu.cloneInto(aMessage, aWindow);
+    aMessage.peer = peer;
+    return aMessage;
+  },
+
+  classDescription: "NFCSendFileWrapper",
+  classID: Components.ID("{c5063a5c-8cb9-41d2-baf5-56062a2e30e9}"),
+  contractID: "@mozilla.org/dom/system-messages/wrapper/nfc-manager-send-file;1",
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesWrapper])
+};
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozNFCTagImpl,
-  MozNFCPeerImpl, MozNFCImpl]);
+  MozNFCPeerImpl, MozNFCImpl, NFCSendFileWrapper]);
