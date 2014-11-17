@@ -42,9 +42,9 @@ WebGL1Context::WrapObject(JSContext* cx)
 nsresult
 NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** out_result)
 {
-    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::CANVAS_WEBGL_USED, 1);
 
-    nsIDOMWebGLRenderingContext* ctx = WebGL1Context::Create();
+    nsIDOMWebGLRenderingContext* ctx = mozilla::WebGL1Context::Create();
 
     NS_ADDREF(*out_result = ctx);
     return NS_OK;
