@@ -3000,7 +3000,6 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     // because they cause subtle concurrency bugs, so we'll delay sending out
     // the notifications until we pop back to the lowest invocation of
     // FinishedSomeDecoding on the stack.
-    NS_WARNING("Recursively notifying in RasterImage::FinishedSomeDecoding!");
     mNotifyProgress |= progress;
     mNotifyInvalidRect.Union(invalidRect);
   } else {
