@@ -1444,7 +1444,7 @@ nsCSSBorderRenderer::DrawBorders()
     strokeOptions.mDashOffset = 0.5f;
     DrawOptions drawOptions;
     drawOptions.mAntialiasMode = AntialiasMode::NONE;
-    mDrawTarget->StrokeRect(rect, color, strokeOptions);
+    mDrawTarget->StrokeRect(rect, color, strokeOptions, drawOptions);
     return;
   }
 

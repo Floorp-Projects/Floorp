@@ -28,17 +28,35 @@ using mozilla::dom::AnimationPlayer;
 using mozilla::CSSAnimationPlayer;
 
 void
-CSSAnimationPlayer::Play(UpdateFlags aUpdateFlags)
+CSSAnimationPlayer::Play()
 {
   mPauseShouldStick = false;
-  AnimationPlayer::Play(aUpdateFlags);
+  AnimationPlayer::Play();
 }
 
 void
-CSSAnimationPlayer::Pause(UpdateFlags aUpdateFlags)
+CSSAnimationPlayer::Pause()
 {
   mPauseShouldStick = true;
-  AnimationPlayer::Pause(aUpdateFlags);
+  AnimationPlayer::Pause();
+}
+
+mozilla::dom::AnimationPlayState
+CSSAnimationPlayer::PlayStateFromJS() const
+{
+  // Flush style to ensure that any properties controlling animation state
+  // (e.g. animation-play-state) are fully updated.
+  FlushStyle();
+  return AnimationPlayer::PlayStateFromJS();
+}
+
+void
+CSSAnimationPlayer::PlayFromJS()
+{
+  // Note that flushing style below might trigger calls to
+  // PlayFromStyle()/PauseFromStyle() on this object.
+  FlushStyle();
+  AnimationPlayer::PlayFromJS();
 }
 
 void
@@ -46,7 +64,7 @@ CSSAnimationPlayer::PlayFromStyle()
 {
   mIsStylePaused = false;
   if (!mPauseShouldStick) {
-    AnimationPlayer::Play(eNoUpdate);
+    DoPlay();
   }
 }
 
@@ -59,7 +77,7 @@ CSSAnimationPlayer::PauseFromStyle()
   }
 
   mIsStylePaused = true;
-  AnimationPlayer::Pause(eNoUpdate);
+  DoPause();
 }
 
 void
@@ -134,6 +152,17 @@ CSSAnimationPlayer::QueueEvents(EventArray& aEventsToDispatch)
   }
 }
 
+CommonAnimationManager*
+CSSAnimationPlayer::GetAnimationManager() const
+{
+  nsPresContext* context = GetPresContext();
+  if (!context) {
+    return nullptr;
+  }
+
+  return context->AnimationManager();
+}
+
 /* static */ nsString
 CSSAnimationPlayer::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
 {
@@ -155,7 +184,6 @@ nsAnimationManager::UpdateStyleAndEvents(AnimationPlayerCollection*
 {
   aCollection->EnsureStyleRuleFor(aRefreshTime, aFlags);
   QueueEvents(aCollection, mPendingEvents);
-  CheckNeedsRefresh();
 }
 
 void
@@ -758,42 +786,6 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
   }
 
   FlushAnimations(Can_Throttle);
-}
-
-void
-nsAnimationManager::AddElementCollection(
-  AnimationPlayerCollection* aCollection)
-{
-  if (!mObservingRefreshDriver) {
-    NS_ASSERTION(
-      static_cast<AnimationPlayerCollection*>(aCollection)->mNeedsRefreshes,
-      "Added data which doesn't need refreshing?");
-    // We need to observe the refresh driver.
-    mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
-    mObservingRefreshDriver = true;
-  }
-
-  PR_INSERT_BEFORE(aCollection, &mElementCollections);
-}
-
-void
-nsAnimationManager::CheckNeedsRefresh()
-{
-  for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
-       l != &mElementCollections;
-       l = PR_NEXT_LINK(l)) {
-    if (static_cast<AnimationPlayerCollection*>(l)->mNeedsRefreshes) {
-      if (!mObservingRefreshDriver) {
-        mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
-        mObservingRefreshDriver = true;
-      }
-      return;
-    }
-  }
-  if (mObservingRefreshDriver) {
-    mObservingRefreshDriver = false;
-    mPresContext->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
-  }
 }
 
 void

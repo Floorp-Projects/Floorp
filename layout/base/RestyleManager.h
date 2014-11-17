@@ -92,6 +92,19 @@ public:
   // track whether off-main-thread animations are up-to-date.
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
 
+  // A workaround until bug 847286 lands that gets the maximum of the animation
+  // generation counters stored on the set of animations and transitions
+  // respectively for |aFrame|.
+  static uint64_t GetMaxAnimationGenerationForFrame(nsIFrame* aFrame);
+
+  // Update the animation generation count to mark that animation state
+  // has changed.
+  //
+  // This is normally performed automatically by ProcessPendingRestyles
+  // but it is also called when we have out-of-band changes to animations
+  // such as changes made through the Web Animations API.
+  void IncrementAnimationGeneration() { ++mAnimationGeneration; }
+
   // Whether rule matching should skip styles associated with animation
   bool SkipAnimationRules() const {
     MOZ_ASSERT(mSkipAnimationRules || !mPostAnimationRestyles,
@@ -592,6 +605,11 @@ private:
    * Second half of Restyle().
    */
   void RestyleChildren(nsRestyleHint aChildRestyleHint);
+
+  /**
+   * Helpers for Restyle().
+   */
+  void AddLayerChangesForAnimation();
 
   /**
    * Helpers for RestyleSelf().

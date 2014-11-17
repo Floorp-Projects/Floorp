@@ -76,6 +76,16 @@ public:
     return mozilla::BigEndian::readUint32(ptr);
   }
 
+  int64_t Read32()
+  {
+    auto ptr = Read(4);
+    if (!ptr) {
+      MOZ_ASSERT(false);
+      return 0;
+    }
+    return mozilla::BigEndian::readInt32(ptr);
+  }
+
   uint64_t ReadU64()
   {
     auto ptr = Read(8);
