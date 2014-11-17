@@ -56,7 +56,11 @@ const extend = function(target, source) {
  */
 const containsParticipant = function(room, participant) {
   for (let user of room.participants) {
-    if (user.roomConnectionId == participant.roomConnectionId) {
+    // XXX until a bug 1100318 is implemented and deployed,
+    // we need to check the "id" field here as well - roomConnectionId is the
+    // official value for the interface.
+    if (user.roomConnectionId == participant.roomConnectionId &&
+        user.id == participant.id) {
       return true;
     }
   }
@@ -175,6 +179,10 @@ let LoopRoomsInternal = {
         if (orig) {
           checkForParticipantsUpdate(orig, room);
         }
+        // Remove the `currSize` for posterity.
+        if ("currSize" in room) {
+          delete room.currSize;
+        }
         this.rooms.set(room.roomToken, room);
         // When a version is specified, all the data is already provided by this
         // request.
@@ -224,11 +232,6 @@ let LoopRoomsInternal = {
         room.roomToken = roomToken;
         checkForParticipantsUpdate(room, data);
         extend(room, data);
-
-        // Remove the `currSize` for posterity.
-        if ("currSize" in room) {
-          delete room.currSize;
-        }
         this.rooms.set(roomToken, room);
 
         let eventName = !needsUpdate ? "update" : "add";

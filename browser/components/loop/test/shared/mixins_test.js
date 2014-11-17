@@ -166,4 +166,52 @@ describe("loop.shared.mixins", function() {
         sinon.assert.calledOnce(onDocumentHiddenStub);
       });
   });
+
+  describe("loop.shared.mixins.AudioMixin", function() {
+    var view, fakeAudio, TestComp;
+
+    beforeEach(function() {
+      navigator.mozLoop = {
+        doNotDisturb: true,
+        getAudioBlob: sinon.spy(function(name, callback) {
+          callback(null, new Blob([new ArrayBuffer(10)], {type: 'audio/ogg'}));
+        })
+      };
+
+      fakeAudio = {
+        play: sinon.spy(),
+        pause: sinon.spy(),
+        removeAttribute: sinon.spy()
+      };
+      sandbox.stub(window, "Audio").returns(fakeAudio);
+
+      TestComp = React.createClass({
+        mixins: [loop.shared.mixins.AudioMixin],
+        componentDidMount: function() {
+          this.play("failure");
+        },
+        render: function() {
+          return React.DOM.div();
+        }
+      });
+
+    });
+
+    it("should not play a failure sound when doNotDisturb true", function() {
+      view = TestUtils.renderIntoDocument(TestComp());
+      sinon.assert.notCalled(navigator.mozLoop.getAudioBlob);
+      sinon.assert.notCalled(fakeAudio.play);
+    });
+
+    it("should play a failure sound, once", function() {
+      navigator.mozLoop.doNotDisturb = false;
+      view = TestUtils.renderIntoDocument(TestComp());
+      sinon.assert.calledOnce(navigator.mozLoop.getAudioBlob);
+      sinon.assert.calledWithExactly(navigator.mozLoop.getAudioBlob,
+                                     "failure", sinon.match.func);
+      sinon.assert.calledOnce(fakeAudio.play);
+      expect(fakeAudio.loop).to.equal(false);
+    });
+  });
+
 });
