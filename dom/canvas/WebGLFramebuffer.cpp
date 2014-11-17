@@ -26,16 +26,14 @@ WebGLFramebuffer::WrapObject(JSContext* cx)
     return dom::WebGLFramebufferBinding::Wrap(cx, this);
 }
 
-WebGLFramebuffer::WebGLFramebuffer(WebGLContext* context)
-    : WebGLBindableName<FBTarget>()
+WebGLFramebuffer::WebGLFramebuffer(WebGLContext* context, GLuint fbo)
+    : WebGLBindableName<FBTarget>(fbo)
     , WebGLContextBoundObject(context)
     , mStatus(0)
     , mDepthAttachment(LOCAL_GL_DEPTH_ATTACHMENT)
     , mStencilAttachment(LOCAL_GL_STENCIL_ATTACHMENT)
     , mDepthStencilAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
 {
-    mContext->MakeContextCurrent();
-    mContext->gl->fGenFramebuffers(1, &mGLName);
     mContext->mFramebuffers.insertBack(this);
 
     mColorAttachments.SetLength(1);
