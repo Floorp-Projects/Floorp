@@ -78,8 +78,8 @@ public:
   // script but when called from script we perform extra steps such
   // as flushing style or converting the return type.
   Nullable<double> GetCurrentTimeAsDouble() const;
-  AnimationPlayState PlayStateFromJS() const;
-  void PlayFromJS();
+  virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
+  virtual void PlayFromJS();
   void PauseFromJS();
 
   void SetSource(Animation* aSource);

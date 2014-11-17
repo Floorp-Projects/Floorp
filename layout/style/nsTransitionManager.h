@@ -76,6 +76,9 @@ public:
   virtual CSSTransitionPlayer*
   AsCSSTransitionPlayer() MOZ_OVERRIDE { return this; }
 
+  virtual dom::AnimationPlayState PlayStateFromJS() const MOZ_OVERRIDE;
+  virtual void PlayFromJS() MOZ_OVERRIDE;
+
 protected:
   virtual ~CSSTransitionPlayer() { }
 };

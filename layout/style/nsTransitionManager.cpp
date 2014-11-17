@@ -71,6 +71,24 @@ ElementPropertyTransition::CurrentValuePortion() const
 }
 
 /*****************************************************************************
+ * CSSTransitionPlayer                                                       *
+ *****************************************************************************/
+
+mozilla::dom::AnimationPlayState
+CSSTransitionPlayer::PlayStateFromJS() const
+{
+  FlushStyle();
+  return AnimationPlayer::PlayStateFromJS();
+}
+
+void
+CSSTransitionPlayer::PlayFromJS()
+{
+  FlushStyle();
+  AnimationPlayer::PlayFromJS();
+}
+
+/*****************************************************************************
  * nsTransitionManager                                                       *
  *****************************************************************************/
 
