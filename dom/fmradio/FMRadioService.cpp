@@ -10,6 +10,7 @@
 #include "nsIAudioManager.h"
 #include "AudioManager.h"
 #include "nsDOMClassInfo.h"
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioChild.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -18,6 +19,8 @@
 #include "nsJSUtils.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/SettingChangeNotificationBinding.h"
+
+#define TUNE_THREAD_TIMEOUT_MS  5000
 
 #define BAND_87500_108000_kHz 1
 #define BAND_76000_108000_kHz 2
@@ -161,9 +164,10 @@ public:
 
     FMRadioService* fmRadioService = FMRadioService::Singleton();
     if (!fmRadioService->mTuneThread) {
-      // SeekRunnable and SetFrequencyRunnable run on this thread.
-      // These call ioctls that can stall the main thread, so we run them here.
-      NS_NewNamedThread("FM Tuning", getter_AddRefs(fmRadioService->mTuneThread));
+      // SeekRunnable and SetFrequencyRunnable run on this thread. These
+      // call ioctls that can stall the main thread, so we run them here.
+      fmRadioService->mTuneThread = new LazyIdleThread(
+        TUNE_THREAD_TIMEOUT_MS, NS_LITERAL_CSTRING("FM Tuning"));
     }
 
     return NS_OK;
