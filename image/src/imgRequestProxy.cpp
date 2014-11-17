@@ -830,15 +830,6 @@ void imgRequestProxy::OnImageIsAnimated()
   }
 }
 
-void imgRequestProxy::OnStartRequest()
-{
-#ifdef PR_LOGGING
-  nsAutoCString name;
-  GetName(name);
-  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::OnStartRequest", "name", name.get());
-#endif
-}
-
 void imgRequestProxy::OnStopRequest(bool lastPart)
 {
 #ifdef PR_LOGGING

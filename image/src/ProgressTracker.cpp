@@ -46,14 +46,11 @@ CheckProgressConsistency(Progress aProgress)
 {
   // Check preconditions for every progress bit.
 
-  if (aProgress & FLAG_REQUEST_STARTED) {
+  if (aProgress & FLAG_HAS_SIZE) {
     // No preconditions.
   }
-  if (aProgress & FLAG_HAS_SIZE) {
-    MOZ_ASSERT(aProgress & FLAG_REQUEST_STARTED);
-  }
   if (aProgress & FLAG_DECODE_STARTED) {
-    MOZ_ASSERT(aProgress & FLAG_REQUEST_STARTED);
+    // No preconditions.
   }
   if (aProgress & FLAG_DECODE_STOPPED) {
     MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
@@ -62,7 +59,7 @@ CheckProgressConsistency(Progress aProgress)
     MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
   }
   if (aProgress & FLAG_REQUEST_STOPPED) {
-    MOZ_ASSERT(aProgress & FLAG_REQUEST_STARTED);
+    // No preconditions.
   }
   if (aProgress & FLAG_ONLOAD_BLOCKED) {
     if (aProgress & FLAG_IS_MULTIPART) {
@@ -308,9 +305,6 @@ ProgressTracker::SyncNotifyInternal(ProxyArray& aProxies,
                                     const nsIntRect& aDirtyRect)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // OnStartRequest
-  if (aProgress & FLAG_REQUEST_STARTED)
-    NOTIFY_IMAGE_OBSERVERS(aProxies, OnStartRequest());
 
   // OnStartContainer
   if (aProgress & FLAG_HAS_SIZE)
@@ -416,12 +410,6 @@ ProgressTracker::EmulateRequestFinished(imgRequestProxy* aProxy,
   MOZ_ASSERT(NS_IsMainThread(),
              "SyncNotifyState and mConsumers are not threadsafe");
   nsCOMPtr<imgIRequest> kungFuDeathGrip(aProxy);
-
-  // In certain cases the request might not have started yet.
-  // We still need to fulfill the contract.
-  if (!(mProgress & FLAG_REQUEST_STARTED)) {
-    aProxy->OnStartRequest();
-  }
 
   if (mProgress & FLAG_ONLOAD_BLOCKED && !(mProgress & FLAG_ONLOAD_UNBLOCKED)) {
     aProxy->UnblockOnload();
