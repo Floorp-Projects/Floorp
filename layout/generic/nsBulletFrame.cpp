@@ -659,7 +659,7 @@ nsBulletFrame::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aDa
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
-    return OnStartContainer(aRequest, image);
+    return OnSizeAvailable(aRequest, image);
   }
 
   if (aType == imgINotificationObserver::FRAME_UPDATE) {
@@ -734,8 +734,8 @@ nsBulletFrame::GetOurCurrentDoc() const
                        : nullptr;
 }
 
-nsresult nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
-                                         imgIContainer *aImage)
+nsresult
+nsBulletFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
   if (!aRequest) return NS_ERROR_INVALID_ARG;

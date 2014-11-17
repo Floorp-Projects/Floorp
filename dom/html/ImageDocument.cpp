@@ -459,7 +459,7 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
     aRequest->GetImage(getter_AddRefs(image));
-    return OnStartContainer(aRequest, image);
+    return OnSizeAvailable(aRequest, image);
   }
 
   // Run this using a script runner because HAS_TRANSPARENCY notifications can
@@ -475,7 +475,7 @@ ImageDocument::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aDa
     aRequest->GetImageStatus(&reqStatus);
     nsresult status =
         reqStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
-    return OnStopRequest(aRequest, status);
+    return OnLoadComplete(aRequest, status);
   }
 
   return NS_OK;
@@ -513,7 +513,7 @@ ImageDocument::SetModeClass(eModeClasses mode)
 }
 
 nsresult
-ImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
+ImageDocument::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
 {
   // Styles have not yet been applied, so we don't know the final size. For now,
   // default to the image's intrinsic size.
@@ -529,8 +529,7 @@ ImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
 }
 
 nsresult
-ImageDocument::OnStopRequest(imgIRequest *aRequest,
-                             nsresult aStatus)
+ImageDocument::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 {
   UpdateTitleAndCharset();
 

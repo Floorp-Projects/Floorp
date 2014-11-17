@@ -209,7 +209,7 @@ protected:
                   nsIContent* aBindingParent, bool aCompileEventHandlers);
   void UnbindFromTree(bool aDeep, bool aNullParent);
 
-  nsresult OnStopRequest(imgIRequest* aRequest, nsresult aStatus);
+  nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnUnlockedDraw();
   nsresult OnImageIsAnimated(imgIRequest *aRequest);
 

@@ -325,10 +325,12 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
 //
 
 NS_IMETHODIMP
-nsMenuItemIconX::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
+nsMenuItemIconX::Notify(imgIRequest* aRequest,
+                        int32_t aType,
+                        const nsIntRect* aData)
 {
   if (aType == imgINotificationObserver::FRAME_COMPLETE) {
-    return OnStopFrame(aRequest);
+    return OnFrameComplete(aRequest);
   }
 
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
@@ -342,7 +344,7 @@ nsMenuItemIconX::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* a
 }
 
 nsresult
-nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
+nsMenuItemIconX::OnFrameComplete(imgIRequest* aRequest)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
