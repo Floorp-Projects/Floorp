@@ -247,8 +247,6 @@ public:
       return false;
     }
 
-    virtual void FenceContentDrawing() {}
-    virtual void WaitContentDrawing() {}
     /**
      * Returns true if we should use Azure to render content with aTarget. For
      * example, it is possible that we are using Direct2D for rendering and thus

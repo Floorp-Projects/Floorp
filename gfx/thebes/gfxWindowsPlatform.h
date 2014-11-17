@@ -55,7 +55,6 @@ class ReadbackManagerD3D11;
 struct IDirect3DDevice9;
 struct ID3D11Device;
 struct IDXGIAdapter1;
-struct ID3D11Texture2D;
 
 class nsIMemoryReporter;
 
@@ -256,13 +255,6 @@ public:
     ID3D11Device *GetD3D11Device();
     ID3D11Device *GetD3D11ContentDevice();
 
-    ID3D10Texture2D* GetD3D10Texture();
-    ID3D11Texture2D* GetD3D11Texture();
-    ID3D11Texture2D* GetD3D11ContentTexture();
-
-    virtual void FenceContentDrawing();
-    virtual void WaitContentDrawing();
-
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
 
     static bool IsOptimus();
@@ -296,11 +288,6 @@ private:
     mozilla::RefPtr<ID3D11Device> mD3D11ContentDevice;
     bool mD3D11DeviceInitialized;
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
-
-    mozilla::RefPtr<ID3D10Texture2D> mD3D10Texture;
-    mozilla::RefPtr<ID3D11Texture2D> mD3D11Texture;
-    mozilla::RefPtr<ID3D11Texture2D> mD3D11ContentTexture;
-
 
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
 
