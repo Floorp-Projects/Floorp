@@ -30,6 +30,20 @@ const uint32_t kWorkerStackSize = 256 * sizeof(size_t) * 1024;
 
 } // anonymous namespace
 
+#ifdef NS_BUILD_REFCNT_LOGGING
+
+WorkerThreadFriendKey::WorkerThreadFriendKey()
+{
+  MOZ_COUNT_CTOR(WorkerThreadFriendKey);
+}
+
+WorkerThreadFriendKey::~WorkerThreadFriendKey()
+{
+  MOZ_COUNT_DTOR(WorkerThreadFriendKey);
+}
+
+#endif
+
 class WorkerThread::Observer MOZ_FINAL
   : public nsIThreadObserver
 {
@@ -55,21 +69,24 @@ private:
 };
 
 WorkerThread::WorkerThread()
-: nsThread(nsThread::NOT_MAIN_THREAD, kWorkerStackSize),
-  mWorkerPrivate(nullptr)
-#ifdef DEBUG
+  : nsThread(nsThread::NOT_MAIN_THREAD, kWorkerStackSize)
+  , mWorkerPrivateCondVar(mLock, "WorkerThread::mWorkerPrivateCondVar")
+  , mWorkerPrivate(nullptr)
+  , mOtherThreadDispatchingViaEventTarget(false)
   , mAcceptingNonWorkerRunnables(true)
-#endif
 {
 }
 
 WorkerThread::~WorkerThread()
 {
+  MOZ_ASSERT(!mWorkerPrivate);
+  MOZ_ASSERT(!mOtherThreadDispatchingViaEventTarget);
+  MOZ_ASSERT(mAcceptingNonWorkerRunnables);
 }
 
 // static
 already_AddRefed<WorkerThread>
-WorkerThread::Create()
+WorkerThread::Create(const WorkerThreadFriendKey& /* aKey */)
 {
   MOZ_ASSERT(nsThreadManager::get());
 
@@ -79,40 +96,106 @@ WorkerThread::Create()
     return nullptr;
   }
 
-  NS_SetThreadName(thread, "DOM Worker");
-
   return thread.forget();
 }
 
 void
-WorkerThread::SetWorker(WorkerPrivate* aWorkerPrivate)
+WorkerThread::SetWorker(const WorkerThreadFriendKey& /* aKey */,
+                        WorkerPrivate* aWorkerPrivate)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == mThread);
-  MOZ_ASSERT_IF(aWorkerPrivate, !mWorkerPrivate);
-  MOZ_ASSERT_IF(!aWorkerPrivate, mWorkerPrivate);
 
-  // No need to lock here because mWorkerPrivate is only modified on mThread.
+  if (aWorkerPrivate) {
+    {
+      MutexAutoLock lock(mLock);
 
-  if (mWorkerPrivate) {
-    MOZ_ASSERT(mObserver);
+      MOZ_ASSERT(!mWorkerPrivate);
+      MOZ_ASSERT(mAcceptingNonWorkerRunnables);
 
+      mWorkerPrivate = aWorkerPrivate;
+      mAcceptingNonWorkerRunnables = false;
+    }
+
+    mObserver = new Observer(aWorkerPrivate);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(AddObserver(mObserver)));
+  } else {
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(RemoveObserver(mObserver)));
-
     mObserver = nullptr;
-    mWorkerPrivate->SetThread(nullptr);
+
+    {
+      MutexAutoLock lock(mLock);
+
+      MOZ_ASSERT(mWorkerPrivate);
+      MOZ_ASSERT(!mAcceptingNonWorkerRunnables);
+      MOZ_ASSERT(!mOtherThreadDispatchingViaEventTarget,
+                 "XPCOM Dispatch hapenning at the same time our thread is "
+                 "being unset! This should not be possible!");
+
+      while (mOtherThreadDispatchingViaEventTarget) {
+        mWorkerPrivateCondVar.Wait();
+      }
+
+      mAcceptingNonWorkerRunnables = true;
+      mWorkerPrivate = nullptr;
+    }
+  }
+}
+
+nsresult
+WorkerThread::DispatchPrimaryRunnable(const WorkerThreadFriendKey& /* aKey */,
+                                      nsIRunnable* aRunnable)
+{
+#ifdef DEBUG
+  MOZ_ASSERT(PR_GetCurrentThread() != mThread);
+  MOZ_ASSERT(aRunnable);
+  {
+    MutexAutoLock lock(mLock);
+
+    MOZ_ASSERT(!mWorkerPrivate);
+    MOZ_ASSERT(mAcceptingNonWorkerRunnables);
+  }
+#endif
+
+  nsresult rv = nsThread::Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  mWorkerPrivate = aWorkerPrivate;
+  return NS_OK;
+}
 
-  if (mWorkerPrivate) {
-    mWorkerPrivate->SetThread(this);
+nsresult
+WorkerThread::Dispatch(const WorkerThreadFriendKey& /* aKey */,
+                       WorkerRunnable* aWorkerRunnable)
+{
+  // May be called on any thread!
 
-    nsRefPtr<Observer> observer = new Observer(mWorkerPrivate);
+#ifdef DEBUG
+  {
+    const bool onWorkerThread = PR_GetCurrentThread() == mThread;
+    {
+      MutexAutoLock lock(mLock);
 
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(AddObserver(observer)));
+      MOZ_ASSERT(mWorkerPrivate);
+      MOZ_ASSERT(!mAcceptingNonWorkerRunnables);
 
-    mObserver.swap(observer);
+      if (onWorkerThread) {
+        mWorkerPrivate->AssertIsOnWorkerThread();
+      }
+    }
   }
+#endif
+
+  nsresult rv = nsThread::Dispatch(aWorkerRunnable, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // We don't need to notify the worker's condition variable here because we're
+  // being called from worker-controlled code and it will make sure to wake up
+  // the worker thread if needed.
+
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerThread, nsThread)
@@ -122,37 +205,82 @@ WorkerThread::Dispatch(nsIRunnable* aRunnable, uint32_t aFlags)
 {
   // May be called on any thread!
 
-#ifdef DEBUG
-  if (PR_GetCurrentThread() == mThread) {
-    MOZ_ASSERT(mWorkerPrivate);
-    mWorkerPrivate->AssertIsOnWorkerThread();
+  // Workers only support asynchronous dispatch.
+  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
+    return NS_ERROR_UNEXPECTED;
   }
-  else if (aRunnable && !IsAcceptingNonWorkerRunnables()) {
-    // Only enforce cancelable runnables after we've started the worker loop.
+
+  const bool onWorkerThread = PR_GetCurrentThread() == mThread;
+
+#ifdef DEBUG
+  if (aRunnable && !onWorkerThread) {
     nsCOMPtr<nsICancelableRunnable> cancelable = do_QueryInterface(aRunnable);
-    MOZ_ASSERT(cancelable,
-               "Should have been wrapped by the worker's event target!");
+
+    {
+      MutexAutoLock lock(mLock);
+
+      // Only enforce cancelable runnables after we've started the worker loop.
+      if (!mAcceptingNonWorkerRunnables) {
+        MOZ_ASSERT(cancelable,
+                   "Only nsICancelableRunnable may be dispatched to a worker!");
+      }
+    }
   }
 #endif
 
-  // Workers only support asynchronous dispatch for now.
-  if (NS_WARN_IF(aFlags != NS_DISPATCH_NORMAL)) {
-    return NS_ERROR_UNEXPECTED;
+  WorkerPrivate* workerPrivate = nullptr;
+  if (onWorkerThread) {
+    // No need to lock here because it is only modified on this thread.
+    MOZ_ASSERT(mWorkerPrivate);
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    workerPrivate = mWorkerPrivate;
+  } else {
+    MutexAutoLock lock(mLock);
+
+    MOZ_ASSERT(!mOtherThreadDispatchingViaEventTarget);
+
+    if (mWorkerPrivate) {
+      workerPrivate = mWorkerPrivate;
+
+      // Setting this flag will make the worker thread sleep if it somehow tries
+      // to unset mWorkerPrivate while we're using it.
+      mOtherThreadDispatchingViaEventTarget = true;
+    }
   }
 
   nsIRunnable* runnableToDispatch;
   nsRefPtr<WorkerRunnable> workerRunnable;
 
-  if (aRunnable && PR_GetCurrentThread() == mThread) {
-    // No need to lock here because mWorkerPrivate is only modified on mThread.
-    workerRunnable = mWorkerPrivate->MaybeWrapAsWorkerRunnable(aRunnable);
+  if (aRunnable && onWorkerThread) {
+    workerRunnable = workerPrivate->MaybeWrapAsWorkerRunnable(aRunnable);
     runnableToDispatch = workerRunnable;
-  }
-  else {
+  } else {
     runnableToDispatch = aRunnable;
   }
 
   nsresult rv = nsThread::Dispatch(runnableToDispatch, NS_DISPATCH_NORMAL);
+
+  if (!onWorkerThread && workerPrivate) {
+    // We need to wake the worker thread if we're not already on the right
+    // thread and the dispatch succeeded.
+    if (NS_SUCCEEDED(rv)) {
+      MutexAutoLock workerLock(workerPrivate->mMutex);
+
+      workerPrivate->mCondVar.Notify();
+    }
+
+    // Now unset our waiting flag.
+    {
+      MutexAutoLock lock(mLock);
+
+      MOZ_ASSERT(mOtherThreadDispatchingViaEventTarget);
+      mOtherThreadDispatchingViaEventTarget = false;
+
+      mWorkerPrivateCondVar.Notify();
+    }
+  }
+
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
