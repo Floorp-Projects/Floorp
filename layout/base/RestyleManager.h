@@ -92,6 +92,11 @@ public:
   // track whether off-main-thread animations are up-to-date.
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
 
+  // A workaround until bug 847286 lands that gets the maximum of the animation
+  // generation counters stored on the set of animations and transitions
+  // respectively for |aFrame|.
+  static uint64_t GetMaxAnimationGenerationForFrame(nsIFrame* aFrame);
+
   // Update the animation generation count to mark that animation state
   // has changed.
   //
@@ -600,6 +605,11 @@ private:
    * Second half of Restyle().
    */
   void RestyleChildren(nsRestyleHint aChildRestyleHint);
+
+  /**
+   * Helpers for Restyle().
+   */
+  void AddLayerChangesForAnimation();
 
   /**
    * Helpers for RestyleSelf().

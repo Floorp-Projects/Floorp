@@ -8,9 +8,11 @@
  * changes need to happen, scheduling them, and doing them.
  */
 
+#include <algorithm> // For std::max
 #include "RestyleManager.h"
 #include "mozilla/EventStates.h"
 #include "nsLayoutUtils.h"
+#include "FrameLayerBuilder.h"
 #include "GeckoProfiler.h"
 #include "nsStyleChangeList.h"
 #include "nsRuleProcessorData.h"
@@ -1147,6 +1149,27 @@ RestyleManager::AttributeChanged(Element* aElement,
                                                          true);
 
   PostRestyleEvent(aElement, rshint, hint);
+}
+
+/* static */ uint64_t
+RestyleManager::GetMaxAnimationGenerationForFrame(nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content || !content->IsElement()) {
+    return 0;
+  }
+
+  nsCSSPseudoElements::Type pseudoType =
+    aFrame->StyleContext()->GetPseudoType();
+  AnimationPlayerCollection* transitions =
+    aFrame->PresContext()->TransitionManager()->GetAnimationPlayers(
+      content->AsElement(), pseudoType, false /* don't create */);
+  AnimationPlayerCollection* animations =
+    aFrame->PresContext()->AnimationManager()->GetAnimationPlayers(
+      content->AsElement(), pseudoType, false /* don't create */);
+
+  return std::max(transitions ? transitions->mAnimationGeneration : 0,
+                  animations ? animations->mAnimationGeneration : 0);
 }
 
 void
@@ -2409,6 +2432,47 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
 }
 
 void
+ElementRestyler::AddLayerChangesForAnimation()
+{
+  static const nsDisplayItem::Type sLayerTypes[] =
+                                       { nsDisplayItem::TYPE_TRANSFORM,
+                                         nsDisplayItem::TYPE_OPACITY };
+  static const nsChangeHint sHints[] = { nsChangeHint_UpdateTransformLayer,
+                                         nsChangeHint_UpdateOpacityLayer };
+  static_assert(MOZ_ARRAY_LENGTH(sLayerTypes) == MOZ_ARRAY_LENGTH(sHints),
+                "Parallel layer type and hint arrays should have same length");
+
+  // Bug 847286 - We should have separate animation generation counters
+  // on layers for transitions and animations and use != comparison below
+  // rather than a > comparison.
+  uint64_t frameGeneration =
+    RestyleManager::GetMaxAnimationGenerationForFrame(mFrame);
+
+  nsChangeHint hint = nsChangeHint(0);
+  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sLayerTypes); i++) {
+    Layer* layer =
+      FrameLayerBuilder::GetDedicatedLayer(mFrame, sLayerTypes[i]);
+    if (layer && frameGeneration > layer->GetAnimationGeneration()) {
+      // If we have a transform layer but don't have any transform style, we
+      // probably just removed the transform but haven't destroyed the layer
+      // yet. In this case we will add the appropriate change hint
+      // (nsChangeHint_AddOrRemoveTransform) when we compare style contexts
+      // so we can skip adding any change hint here. (If we *were* to add
+      // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
+      // complain that we're updating a transform layer without a transform).
+      if (sLayerTypes[i] == nsDisplayItem::TYPE_TRANSFORM &&
+          !mFrame->StyleDisplay()->HasTransformStyle()) {
+        continue;
+      }
+      NS_UpdateHint(hint, sHints[i]);
+    }
+  }
+  if (hint) {
+    mChangeList->AppendChange(mFrame, mContent, hint);
+  }
+}
+
+void
 ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
                                nsStyleContext* aNewContext,
                                nsChangeHint aChangeToAssume,
@@ -2521,6 +2585,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       descendants.SwapElements(restyleData->mDescendants);
     }
   }
+
+  // Some changes to animations don't affect the computed style and yet still
+  // require the layer to be updated. For example, pausing an animation via
+  // the Web Animations API won't affect an element's style but still
+  // requires us to pull the animation off the layer.
+  AddLayerChangesForAnimation();
 
   // If we are restyling this frame with eRestyle_Self or weaker hints,
   // we restyle children with nsRestyleHint(0).  But we pass the
