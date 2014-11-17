@@ -21,6 +21,7 @@
 
 #include "asmjs/AsmJSLink.h"
 #include "asmjs/AsmJSValidate.h"
+#include "js/Debug.h"
 #include "js/HashTable.h"
 #include "js/StructuredClone.h"
 #include "js/UbiNode.h"
@@ -955,6 +956,34 @@ OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 #endif
+
+static const JSClass FakePromiseClass = {
+    "Promise", JSCLASS_IS_ANONYMOUS,
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
+};
+
+static bool
+MakeFakePromise(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject scope(cx, cx->global());
+    if (!scope)
+        return false;
+
+    RootedObject obj(cx, JS_NewObjectWithGivenProto(cx, &FakePromiseClass, JS::NullPtr(), scope));
+    if (!obj)
+        return false;
+
+    JS::dbg::onNewPromise(cx, obj);
+    args.rval().setObject(*obj);
+    return true;
+}
 
 static unsigned finalizeCount = 0;
 
@@ -2234,6 +2263,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  After 'count' js_malloc memory allocations, fail every following allocation\n"
 "  (return NULL)."),
 #endif
+
+    JS_FN_HELP("makeFakePromise", MakeFakePromise, 0, 0,
+"makeFakePromise()",
+"  Create an object whose [[Class]] name is 'Promise' and call\n"
+"  JS::dbg::onNewPromise on it before returning it. It doesn't actually have\n"
+"  any of the other behavior associated with promises."),
 
     JS_FN_HELP("makeFinalizeObserver", MakeFinalizeObserver, 0, 0,
 "makeFinalizeObserver()",

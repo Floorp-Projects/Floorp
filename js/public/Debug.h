@@ -263,6 +263,23 @@ class BuilderOrigin : public Builder {
 // malloc'd blocks.
 void SetDebuggerMallocSizeOf(JSRuntime *runtime, mozilla::MallocSizeOf mallocSizeOf);
 
+
+// Handlers for observing Promises
+// -------------------------------
+//
+// The Debugger wants to observe behavior of promises, which are implemented by
+// Gecko with webidl and which SpiderMonkey knows nothing about. On the other
+// hand, Gecko knows nothing about which (if any) debuggers are observing a
+// promise's global. The compromise is that Gecko is responsible for calling
+// these handlers at the appropriate times, and SpiderMonkey will handle
+// notifying any Debugger instances that are observing the given promise's
+// global.
+
+// Notify any Debugger instances observing this promise's global that a new
+// promise was allocated.
+JS_PUBLIC_API(void)
+onNewPromise(JSContext *cx, HandleObject promise);
+
 } // namespace dbg
 } // namespace JS
 
