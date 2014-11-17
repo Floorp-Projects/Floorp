@@ -170,7 +170,13 @@ loop.StandaloneMozLoop = (function(mozL10n) {
         action: "leave",
         sessionToken: sessionToken
       }, null, callback);
-    }
+    },
+
+    // Dummy functions to reflect those in the desktop mozLoop.rooms that we
+    // don't currently use.
+    on: function() {},
+    once: function() {},
+    off: function() {}
   };
 
   var StandaloneMozLoop = function(options) {
