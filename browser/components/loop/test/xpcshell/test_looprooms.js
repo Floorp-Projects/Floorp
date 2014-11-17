@@ -209,16 +209,22 @@ add_task(function* setup_server() {
     res.finish();
   }
 
+  function getJSONData(body) {
+    return JSON.parse(CommonUtils.readBytesFromInputStream(body));
+  }
+
   // Add a request handler for each room in the list.
   [...kRooms.values()].forEach(function(room) {
     loopServer.registerPathHandler("/rooms/" + encodeURIComponent(room.roomToken), (req, res) => {
       if (req.method == "POST") {
-        let body = CommonUtils.readBytesFromInputStream(req.bodyInputStream);
-        let data = JSON.parse(body);
+        let data = getJSONData(req.bodyInputStream);
         res.setStatusLine(null, 200, "OK");
         res.write(JSON.stringify(data));
         res.processAsync();
         res.finish();
+      } else if (req.method == "PATCH") {
+        let data = getJSONData(req.bodyInputStream);
+        returnRoomDetails(res, data.roomName);
       } else {
         returnRoomDetails(res, room.roomName);
       }
@@ -362,6 +368,13 @@ add_task(function* test_leaveRoom() {
   let leaveData = yield LoopRooms.promise("leave", roomToken, "fakeLeaveSessionToken");
   Assert.equal(leaveData.action, "leave");
   Assert.equal(leaveData.sessionToken, "fakeLeaveSessionToken");
+});
+
+// Test if renaming a room works as expected.
+add_task(function* test_renameRoom() {
+  let roomToken = "_nxD4V4FflQ";
+  let renameData = yield LoopRooms.promise("rename", roomToken, "fakeName");
+  Assert.equal(renameData.roomName, "fakeName");
 });
 
 // Test if the event emitter implementation doesn't leak and is working as expected.

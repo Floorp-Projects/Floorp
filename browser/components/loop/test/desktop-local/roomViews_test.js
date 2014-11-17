@@ -119,6 +119,48 @@ describe("loop.roomViews", function () {
           new sharedActions.EmailRoomUrl({roomUrl: "http://invalid"}));
       });
 
+    describe("Rename Room", function() {
+      var roomNameBox;
+
+      beforeEach(function() {
+        view = mountTestComponent();
+        view.setState({
+          roomToken: "fakeToken",
+          roomName: "fakeName"
+        });
+
+        roomNameBox = view.getDOMNode().querySelector('.input-room-name');
+
+        React.addons.TestUtils.Simulate.change(roomNameBox, { target: {
+          value: "reallyFake"
+        }});
+      });
+
+      it("should dispatch a RenameRoom action when the focus is lost",
+        function() {
+          React.addons.TestUtils.Simulate.blur(roomNameBox);
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.RenameRoom({
+              roomToken: "fakeToken",
+              newRoomName: "reallyFake"
+            }));
+        });
+
+      it("should dispatch a RenameRoom action when enter is pressed",
+        function() {
+          React.addons.TestUtils.Simulate.submit(roomNameBox);
+
+          sinon.assert.calledOnce(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.RenameRoom({
+              roomToken: "fakeToken",
+              newRoomName: "reallyFake"
+            }));
+        });
+    });
+
     describe("Copy Button", function() {
       beforeEach(function() {
         view = mountTestComponent();
