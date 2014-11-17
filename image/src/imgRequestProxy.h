@@ -160,7 +160,6 @@ protected:
   void OnImageIsAnimated();
 
   /* non-virtual sort-of-nsIRequestObserver methods */
-  void OnStartRequest();
   void OnStopRequest(bool aLastPart);
 
   /* non-virtual imgIOnloadBlocker methods */

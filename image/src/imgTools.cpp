@@ -87,7 +87,6 @@ NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
   NS_ENSURE_TRUE(length <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   // Send the source data to the Image.
-  tracker->SyncNotifyProgress(FLAG_REQUEST_STARTED);
   rv = image->OnImageDataAvailable(nullptr, nullptr, inStream, 0, uint32_t(length));
   NS_ENSURE_SUCCESS(rv, rv);
 
