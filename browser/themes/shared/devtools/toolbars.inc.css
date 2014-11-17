@@ -771,8 +771,8 @@
               0 -2px 0 rgba(0,0,0,.06) inset;
 }
 
-#toolbox-tabs .devtools-tab[selected]:not(:first-child),
-#toolbox-tabs .devtools-tab[highlighted]:not(:first-child) {
+#toolbox-tabs .devtools-tab[selected],
+#toolbox-tabs .devtools-tab[highlighted] {
   border-width: 0;
   -moz-padding-start: 1px;
 }
