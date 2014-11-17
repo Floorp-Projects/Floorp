@@ -3139,20 +3139,19 @@ NS_METHOD nsWindow::EnableDragDrop(bool aEnable)
 
 NS_METHOD nsWindow::CaptureMouse(bool aCapture)
 {
-  TRACKMOUSEEVENT mTrack;
-  mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
-  mTrack.dwFlags = TME_LEAVE;
-  mTrack.dwHoverTime = 0;
+  if (!nsToolkit::gMouseTrailer) {
+    NS_ERROR("nsWindow::CaptureMouse called after nsToolkit destroyed");
+    return NS_OK;
+  }
+
   if (aCapture) {
-    mTrack.hwndTrack = mWnd;
+    nsToolkit::gMouseTrailer->SetCaptureWindow(mWnd);
     ::SetCapture(mWnd);
   } else {
-    mTrack.hwndTrack = nullptr;
+    nsToolkit::gMouseTrailer->SetCaptureWindow(nullptr);
     ::ReleaseCapture();
   }
   sIsInMouseCapture = aCapture;
-  // Requests WM_MOUSELEAVE events for this window.
-  TrackMouseEvent(&mTrack);
   return NS_OK;
 }
 
@@ -4018,7 +4017,12 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
 
   // call the event callback
   if (mWidgetListener) {
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Disable();
     if (aEventType == NS_MOUSE_MOVE) {
+      if (nsToolkit::gMouseTrailer && !sIsInMouseCapture) {
+        nsToolkit::gMouseTrailer->SetMouseTrailerWindow(mWnd);
+      }
       nsIntRect rect;
       GetBounds(rect);
       rect.x = 0;
@@ -4048,6 +4052,9 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
     }
 
     result = DispatchWindowEvent(&event);
+
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Enable();
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in EventListenerManager::HandleEvent()
@@ -6583,6 +6590,16 @@ void nsWindow::OnDestroy()
   }
 
   IMEHandler::OnDestroyWindow(this);
+
+  // Turn off mouse trails if enabled.
+  MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
+  if (mtrailer) {
+    if (mtrailer->GetMouseTrailerWindow() == mWnd)
+      mtrailer->DestroyTimer();
+
+    if (mtrailer->GetCaptureWindow() == mWnd)
+      mtrailer->SetCaptureWindow(nullptr);
+  }
 
   // Free GDI window class objects
   if (mBrush) {
