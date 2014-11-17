@@ -10,7 +10,9 @@
 #include "nsIStyleRule.h"
 #include "nsRefreshDriver.h"
 #include "prclist.h"
+#include "nsChangeHint.h"
 #include "nsCSSProperty.h"
+#include "nsDisplayList.h" // For nsDisplayItem::Type
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/AnimationPlayer.h"
@@ -66,6 +68,15 @@ public:
   // elements.
   void AddStyleUpdatesTo(mozilla::RestyleTracker& aTracker);
 
+  virtual AnimationPlayerCollection*
+  GetAnimationPlayers(dom::Element *aElement,
+                      nsCSSPseudoElements::Type aPseudoType,
+                      bool aCreateIfNeeded) = 0;
+
+  // Notify this manager that one of its collections of animation players,
+  // has been updated.
+  void NotifyCollectionUpdated(AnimationPlayerCollection& aCollection);
+
   enum FlushFlags {
     Can_Throttle,
     Cannot_Throttle
@@ -75,16 +86,33 @@ public:
                   nsCSSProperty aProperty,
                   nsStyleContext* aStyleContext,
                   mozilla::StyleAnimationValue& aComputedValue);
+
+  // For CSS properties that may be animated on a separate layer, represents
+  // a record of the corresponding layer type and change hint.
+  struct LayerAnimationRecord {
+    nsCSSProperty mProperty;
+    nsDisplayItem::Type mLayerType;
+    nsChangeHint mChangeHint;
+  };
+
+protected:
+  static const size_t kLayerRecords = 2;
+
+public:
+  static const LayerAnimationRecord sLayerAnimationInfo[kLayerRecords];
+
 protected:
   virtual ~CommonAnimationManager();
 
   // For ElementCollectionRemoved
   friend struct mozilla::AnimationPlayerCollection;
 
-  virtual void
-  AddElementCollection(AnimationPlayerCollection* aCollection) = 0;
-  virtual void ElementCollectionRemoved() = 0;
+  void AddElementCollection(AnimationPlayerCollection* aCollection);
+  void ElementCollectionRemoved() { CheckNeedsRefresh(); }
   void RemoveAllElementCollections();
+
+  // Check to see if we should stop or start observing the refresh driver
+  void CheckNeedsRefresh();
 
   // When this returns a value other than nullptr, it also,
   // as a side-effect, notifies the ActiveLayerTracker.
@@ -95,6 +123,7 @@ protected:
 
   PRCList mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
+  bool mIsObservingRefreshDriver;
 };
 
 /**
@@ -184,10 +213,6 @@ struct AnimationPlayerCollection : public PRCList
 
   void Tick();
 
-  // This updates mNeedsRefreshes so the caller may need to check
-  // for changes to values (for example, nsAnimationManager provides
-  // CheckNeedsRefresh to register or unregister from observing the refresh
-  // driver when this value changes).
   void EnsureStyleRuleFor(TimeStamp aRefreshTime, EnsureStyleRuleFlags aFlags);
 
   bool CanThrottleTransformChanges(mozilla::TimeStamp aTime);
@@ -273,6 +298,8 @@ struct AnimationPlayerCollection : public PRCList
       aPresContext->PresShell()->RestyleForAnimation(element, eRestyle_Self);
     }
   }
+
+  void NotifyPlayerUpdated();
 
   static void LogAsyncAnimationFailure(nsCString& aMessage,
                                        const nsIContent* aContent = nullptr);

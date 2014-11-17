@@ -148,19 +148,6 @@ class ConvertToStringPolicy : public TypePolicy
     }
 };
 
-// Expect an object or null value for operand Op. Else a ToObjectOrNull
-// instruction is inserted.
-template <unsigned Op>
-class ConvertToObjectOrNullPolicy : public TypePolicy
-{
-  public:
-    EMPTY_DATA_;
-    static bool staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
-    bool adjustInputs(TempAllocator &alloc, MInstruction *def) {
-        return staticAdjustInputs(alloc, def);
-    }
-};
-
 // Expect an Int for operand Op. If the input is a Value, it is unboxed.
 template <unsigned Op>
 class IntPolicy : public BoxInputsPolicy
@@ -395,6 +382,13 @@ class StoreTypedArrayElementStaticPolicy : public StoreTypedArrayPolicy
   public:
     EMPTY_DATA_;
     bool adjustInputs(TempAllocator &alloc, MInstruction *ins);
+};
+
+class StoreUnboxedObjectOrNullPolicy : public TypePolicy
+{
+  public:
+    EMPTY_DATA_;
+    bool adjustInputs(TempAllocator &alloc, MInstruction *def);
 };
 
 // Accepts integers and doubles. Everything else is boxed.
