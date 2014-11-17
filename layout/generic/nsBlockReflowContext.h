@@ -46,7 +46,7 @@ public:
                   nsReflowStatus           aReflowStatus);
 
   nsCollapsingMargin& GetCarriedOutBEndMargin() {
-    return mMetrics.mCarriedOutBottomMargin;
+    return mMetrics.mCarriedOutBEndMargin;
   }
 
   const nsHTMLReflowMetrics& GetMetrics() const {
