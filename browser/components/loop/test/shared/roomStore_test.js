@@ -437,4 +437,31 @@ describe("loop.store.RoomStore", function () {
       sinon.assert.calledWithExactly(fakeMozLoop.rooms.open, "42abc");
     });
   });
+
+  describe("#renameRoom", function() {
+    var store, fakeMozLoop;
+
+    beforeEach(function() {
+      fakeMozLoop = {
+        rooms: {
+          rename: sinon.spy()
+        }
+      };
+      store = new loop.store.RoomStore({
+        dispatcher: dispatcher,
+        mozLoop: fakeMozLoop
+      });
+    });
+
+    it("should rename the room via mozLoop", function() {
+      dispatcher.dispatch(new sharedActions.RenameRoom({
+        roomToken: "42abc",
+        newRoomName: "silly name"
+      }));
+
+      sinon.assert.calledOnce(fakeMozLoop.rooms.rename);
+      sinon.assert.calledWith(fakeMozLoop.rooms.rename, "42abc",
+        "silly name");
+    });
+  });
 });

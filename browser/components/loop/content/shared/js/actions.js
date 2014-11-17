@@ -243,6 +243,15 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Renames a room.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    RenameRoom: Action.define("renameRoom", {
+      roomToken: String,
+      newRoomName: String
+    }),
+
+    /**
      * Copy a room url into the user's clipboard.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
@@ -266,6 +275,19 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Sets up the room information when it is received.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     *
+     * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
+     */
+    SetupRoomInfo: Action.define("setupRoomInfo", {
+      roomName: String,
+      roomOwner: String,
+      roomToken: String,
+      roomUrl: String
+    }),
+
+    /**
      * Updates the room information when it is received.
      * XXX: should move to some roomActions module - refs bug 1079284
      *
@@ -274,7 +296,6 @@ loop.shared.actions = (function() {
     UpdateRoomInfo: Action.define("updateRoomInfo", {
       roomName: String,
       roomOwner: String,
-      roomToken: String,
       roomUrl: String
     }),
 
