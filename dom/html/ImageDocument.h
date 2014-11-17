@@ -104,8 +104,8 @@ protected:
   };
   void SetModeClass(eModeClasses mode);
 
-  nsresult OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage);
-  nsresult OnStopRequest(imgIRequest *aRequest, nsresult aStatus);
+  nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
+  nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   void OnHasTransparency();
 
   nsCOMPtr<nsIContent>          mImageContent;
