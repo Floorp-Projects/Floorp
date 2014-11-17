@@ -15,7 +15,7 @@
 
 <!ENTITY  locationBar.label             "Location Bar">
 
-<!ENTITY  locbar.pre.label              "When using the location bar, suggest:">
+<!ENTITY  locbar.suggest.label          "When using the location bar, suggest:">
 <!ENTITY  locbar.history.label          "History">
 <!ENTITY  locbar.history.accesskey      "i">
 <!ENTITY  locbar.bookmarks.label        "Bookmarks">
