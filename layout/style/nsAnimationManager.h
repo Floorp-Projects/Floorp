@@ -147,7 +147,6 @@ class nsAnimationManager MOZ_FINAL
 public:
   explicit nsAnimationManager(nsPresContext *aPresContext)
     : mozilla::css::CommonAnimationManager(aPresContext)
-    , mObservingRefreshDriver(false)
   {
   }
 
@@ -227,19 +226,6 @@ public:
   nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
 
-protected:
-  virtual void ElementCollectionRemoved() MOZ_OVERRIDE
-  {
-    CheckNeedsRefresh();
-  }
-  virtual void
-  AddElementCollection(mozilla::AnimationPlayerCollection* aData) MOZ_OVERRIDE;
-
-  /**
-   * Check to see if we should stop or start observing the refresh driver
-   */
-  void CheckNeedsRefresh();
-
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
                        mozilla::dom::Element* aTarget,
@@ -257,8 +243,6 @@ private:
   void DoDispatchEvents();
 
   mozilla::EventArray mPendingEvents;
-
-  bool mObservingRefreshDriver;
 };
 
 #endif /* !defined(nsAnimationManager_h_) */
