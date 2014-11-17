@@ -6012,126 +6012,146 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     rv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
+
   JS::Rooted<JSObject*> global(aCx, sgo->GetGlobalJSObject());
-
-  JSAutoCompartment ac(aCx, global);
-
-  JS::Handle<JSObject*> htmlProto(
-    HTMLElementBinding::GetProtoObjectHandle(aCx, global));
-  if (!htmlProto) {
-    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return;
-  }
-
+  nsCOMPtr<nsIAtom> nameAtom;;
   int32_t namespaceID = kNameSpaceID_XHTML;
   JS::Rooted<JSObject*> protoObject(aCx);
-  if (!aOptions.mPrototype) {
-    protoObject = JS_NewObject(aCx, nullptr, htmlProto, JS::NullPtr());
-    if (!protoObject) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-  } else {
-    // If a prototype is provided, we must check to ensure that it is from the
-    // same browsing context as us.
-    protoObject = aOptions.mPrototype;
-    if (JS_GetGlobalForObject(aCx, protoObject) != global) {
-      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
-    }
+  {
+    JSAutoCompartment ac(aCx, global);
 
-    // If PROTOTYPE is already an interface prototype object for any interface
-    // object or PROTOTYPE has a non-configurable property named constructor,
-    // throw a NotSupportedError and stop.
-    const js::Class* clasp = js::GetObjectClass(protoObject);
-    if (IsDOMIfaceAndProtoClass(clasp)) {
-      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
-    }
-
-    JS::Rooted<JSPropertyDescriptor> descRoot(aCx);
-    JS::MutableHandle<JSPropertyDescriptor> desc(&descRoot);
-    if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    // Check if non-configurable
-    if (desc.isPermanent()) {
-      rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
-    }
-
-    JS::Handle<JSObject*> svgProto(
-      SVGElementBinding::GetProtoObjectHandle(aCx, global));
-    if (!svgProto) {
+    JS::Handle<JSObject*> htmlProto(
+      HTMLElementBinding::GetProtoObjectHandle(aCx, global));
+    if (!htmlProto) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
 
-    JS::Rooted<JSObject*> protoProto(aCx, protoObject);
-
-    // If PROTOTYPE's interface inherits from SVGElement, set NAMESPACE to SVG
-    // Namespace.
-    while (protoProto) {
-      if (protoProto == htmlProto) {
-        break;
-      }
-
-      if (protoProto == svgProto) {
-        namespaceID = kNameSpaceID_SVG;
-        break;
-      }
-
-      if (!JS_GetPrototype(aCx, protoProto, &protoProto)) {
+    if (!aOptions.mPrototype) {
+      protoObject = JS_NewObject(aCx, nullptr, htmlProto, JS::NullPtr());
+      if (!protoObject) {
         rv.Throw(NS_ERROR_UNEXPECTED);
         return;
       }
-    }
-  }
-
-  // If name was provided and not null...
-  nsCOMPtr<nsIAtom> nameAtom;
-  if (!lcName.IsEmpty()) {
-    // Let BASE be the element interface for NAME and NAMESPACE.
-    bool known = false;
-    nameAtom = do_GetAtom(lcName);
-    if (namespaceID == kNameSpaceID_XHTML) {
-      nsIParserService* ps = nsContentUtils::GetParserService();
-      if (!ps) {
-        rv.Throw(NS_ERROR_UNEXPECTED);
-        return;
-      }
-
-      known =
-        ps->HTMLCaseSensitiveAtomTagToId(nameAtom) != eHTMLTag_userdefined;
     } else {
-      known = SVGElementFactory::Exists(nameAtom);
+      protoObject = aOptions.mPrototype;
+
+      // We are already operating on the document's (/global's) compartment. Let's
+      // get a view of the passed in proto from this compartment.
+      if (!JS_WrapObject(aCx, &protoObject)) {
+        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        return;
+      }
+
+      // We also need an unwrapped version of it for various checks.
+      JS::Rooted<JSObject*> protoObjectUnwrapped(aCx,
+        js::CheckedUnwrap(protoObject));
+      if (!protoObjectUnwrapped) {
+        // If the documents compartment does not have same origin access
+        // to the compartment of the proto we should just throw.
+        rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return;
+      }
+
+      // If PROTOTYPE is already an interface prototype object for any interface
+      // object or PROTOTYPE has a non-configurable property named constructor,
+      // throw a NotSupportedError and stop.
+      const js::Class* clasp = js::GetObjectClass(protoObjectUnwrapped);
+      if (IsDOMIfaceAndProtoClass(clasp)) {
+        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        return;
+      }
+
+      JS::Rooted<JSPropertyDescriptor> descRoot(aCx);
+      JS::MutableHandle<JSPropertyDescriptor> desc(&descRoot);
+      // This check will go through a wrapper, but as we checked above
+      // it should be transparent or an xray. This should be fine for now,
+      // until the spec is sorted out.
+      if (!JS_GetPropertyDescriptor(aCx, protoObject, "constructor", desc)) {
+        rv.Throw(NS_ERROR_UNEXPECTED);
+        return;
+      }
+
+      // Check if non-configurable
+      if (desc.isPermanent()) {
+        rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+        return;
+      }
+
+      JS::Handle<JSObject*> svgProto(
+        SVGElementBinding::GetProtoObjectHandle(aCx, global));
+      if (!svgProto) {
+        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+
+      JS::Rooted<JSObject*> protoProto(aCx, protoObject);
+
+      // If PROTOTYPE's interface inherits from SVGElement, set NAMESPACE to SVG
+      // Namespace.
+      while (protoProto) {
+        if (protoProto == htmlProto) {
+          break;
+        }
+
+        if (protoProto == svgProto) {
+          namespaceID = kNameSpaceID_SVG;
+          break;
+        }
+
+        if (!JS_GetPrototype(aCx, protoProto, &protoProto)) {
+          rv.Throw(NS_ERROR_UNEXPECTED);
+          return;
+        }
+      }
     }
 
-    // If BASE does not exist or is an interface for a custom element, set ERROR
-    // to InvalidName and stop.
-    // If BASE exists, then it cannot be an interface for a custom element.
-    if (!known) {
-      rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-      return;
-    }
-  } else {
-    // If NAMESPACE is SVG Namespace, set ERROR to InvalidName and stop.
-    if (namespaceID == kNameSpaceID_SVG) {
-      rv.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
+    // If name was provided and not null...
+    if (!lcName.IsEmpty()) {
+      // Let BASE be the element interface for NAME and NAMESPACE.
+      bool known = false;
+      nameAtom = do_GetAtom(lcName);
+      if (namespaceID == kNameSpaceID_XHTML) {
+        nsIParserService* ps = nsContentUtils::GetParserService();
+        if (!ps) {
+          rv.Throw(NS_ERROR_UNEXPECTED);
+          return;
+        }
 
-    nameAtom = typeAtom;
-  }
+        known =
+          ps->HTMLCaseSensitiveAtomTagToId(nameAtom) != eHTMLTag_userdefined;
+      } else {
+        known = SVGElementFactory::Exists(nameAtom);
+      }
 
+      // If BASE does not exist or is an interface for a custom element, set ERROR
+      // to InvalidName and stop.
+      // If BASE exists, then it cannot be an interface for a custom element.
+      if (!known) {
+        rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return;
+      }
+    } else {
+      // If NAMESPACE is SVG Namespace, set ERROR to InvalidName and stop.
+      if (namespaceID == kNameSpaceID_SVG) {
+        rv.Throw(NS_ERROR_UNEXPECTED);
+        return;
+      }
+
+      nameAtom = typeAtom;
+    }
+  } // Leaving the document's compartment for the LifecycleCallbacks init
+
+  // Note: We call the init from the caller compartment here
   nsAutoPtr<LifecycleCallbacks> callbacksHolder(new LifecycleCallbacks());
   JS::RootedValue rootedv(aCx, JS::ObjectValue(*protoObject));
-  if (!callbacksHolder->Init(aCx, rootedv)) {
+  if (!JS_WrapValue(aCx, &rootedv) || !callbacksHolder->Init(aCx, rootedv)) {
     rv.Throw(NS_ERROR_FAILURE);
     return;
   }
+
+  // Entering the global's compartment again
+  JSAutoCompartment ac(aCx, global);
 
   // Associate the definition with the custom element.
   CustomElementHashKey key(namespaceID, typeAtom);

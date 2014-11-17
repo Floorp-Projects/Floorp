@@ -1529,7 +1529,7 @@ WebGLContext::InitAndValidateGL()
 
     mMinCapability = Preferences::GetBool("webgl.min_capability_mode", false);
     mDisableExtensions = Preferences::GetBool("webgl.disable-extensions", false);
-    mLoseContextOnMemoryPressure = Preferences::GetBool("webgl.lose-context-on-memory-preasure", false);
+    mLoseContextOnMemoryPressure = Preferences::GetBool("webgl.lose-context-on-memory-pressure", false);
     mCanLoseContextInForeground = Preferences::GetBool("webgl.can-lose-context-in-foreground", true);
     mRestoreWhenVisible = Preferences::GetBool("webgl.restore-context-when-visible", true);
 

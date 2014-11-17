@@ -173,8 +173,8 @@ public:
   virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
 
 protected:
-  RefPtr<TextureHost> mTextureHost;
-  RefPtr<TextureHost> mTextureHostOnWhite;
+  CompositableTextureHostRef mTextureHost;
+  CompositableTextureHostRef mTextureHostOnWhite;
   CompositableTextureSourceRef mTextureSource;
   CompositableTextureSourceRef mTextureSourceOnWhite;
   bool mLocked;

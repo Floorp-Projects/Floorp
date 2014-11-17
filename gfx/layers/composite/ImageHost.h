@@ -88,7 +88,7 @@ public:
 
 protected:
 
-  RefPtr<TextureHost> mFrontBuffer;
+  CompositableTextureHostRef mFrontBuffer;
   CompositableTextureSourceRef mTextureSource;
   nsIntRect mPictureRect;
   bool mHasPictureRect;
