@@ -29,6 +29,7 @@ class AnimValuesStyleRule;
 } // namespace css
 
 class CSSAnimationPlayer;
+class CSSTransitionPlayer;
 
 namespace dom {
 
@@ -53,6 +54,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   virtual CSSAnimationPlayer* AsCSSAnimationPlayer() { return nullptr; }
+  virtual CSSTransitionPlayer* AsCSSTransitionPlayer() { return nullptr; }
 
   // Temporary flags to control restyle behavior until bug 1073336
   // provides a better solution.
