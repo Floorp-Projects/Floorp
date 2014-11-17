@@ -127,7 +127,7 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 
 menubar > menu:-moz-lwtheme {
   -moz-appearance: none;
-  border-style: none;
+  border-color: transparent;
 }
 
 menubar > menu:-moz-lwtheme:not([disabled="true"]) {

@@ -14,7 +14,7 @@ menubar:-moz-lwtheme,
 toolbar:-moz-lwtheme {
   -moz-appearance: none;
   background: none;
-  border-style: none;
+  border-color: transparent;
 }
 
 menubar {
