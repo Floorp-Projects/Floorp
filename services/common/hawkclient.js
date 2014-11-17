@@ -262,7 +262,7 @@ this.HawkClient.prototype = {
     };
 
     let request = this.newHAWKAuthenticatedRESTRequest(uri, credentials, extra);
-    if (method == "post" || method == "put") {
+    if (method == "post" || method == "put" || method == "patch") {
       request[method](payloadObj, onComplete);
     } else {
       request[method](onComplete);
