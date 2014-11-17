@@ -3611,7 +3611,7 @@ status_t MPEG4Source::fragmentedRead(
 
                     // If we're pointing to a segment type or sidx box then we skip them.
                     if (chunk_type != FOURCC('m', 'o', 'o', 'f')) {
-                        moofOffset += chunk_size;
+                        mNextMoofOffset += chunk_size;
                         continue;
                     }
                     mCurrentMoofOffset = moofOffset;
