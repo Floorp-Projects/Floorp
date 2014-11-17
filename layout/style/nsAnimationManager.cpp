@@ -155,7 +155,6 @@ nsAnimationManager::UpdateStyleAndEvents(AnimationPlayerCollection*
 {
   aCollection->EnsureStyleRuleFor(aRefreshTime, aFlags);
   QueueEvents(aCollection, mPendingEvents);
-  CheckNeedsRefresh();
 }
 
 void
