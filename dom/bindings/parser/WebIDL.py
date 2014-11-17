@@ -1072,8 +1072,15 @@ class IDLInterface(IDLObjectWithScope):
     def isExposedInSystemGlobals(self):
         return 'BackstagePass' in self.exposureSet
 
-    def isExposedOnlyInSomeWorkers(self):
-        assert self.isExposedInAnyWorker()
+    def isExposedInSomeButNotAllWorkers(self):
+        """
+        Returns true if the Exposed extended attribute for this interface
+        exposes it in some worker globals but not others.  The return value does
+        not depend on whether the interface is exposed in Window or System
+        globals.
+        """
+        if not self.isExposedInAnyWorker():
+            return False
         workerScopes = self.parentScope.globalNameMapping["Worker"]
         return len(workerScopes.difference(self.exposureSet)) > 0
 
@@ -5695,6 +5702,7 @@ class Parser(Tokenizer):
     # Builtin IDL defined by WebIDL
     _builtins = """
         typedef unsigned long long DOMTimeStamp;
+        typedef (ArrayBufferView or ArrayBuffer) BufferSource;
     """
 
 def main():

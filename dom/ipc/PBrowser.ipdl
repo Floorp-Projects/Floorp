@@ -85,6 +85,12 @@ both:
     AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
                  Principal aPrincipal);
 
+    /**
+     * Create a layout frame (encapsulating a remote layer tree) for
+     * the page that is currently loaded in the <browser>.
+     */
+    PRenderFrame();
+
 parent:
     /*
      * Creates a new remoted nsIWidget connection for windowed plugins
@@ -318,16 +324,6 @@ parent:
     PIndexedDBPermissionRequest(Principal principal);
 
     /**
-     * Create a layout frame (encapsulating a remote layer tree) for
-     * the page that is currently loaded in the <browser>.
-     */
-    sync PRenderFrame()
-        returns (ScrollingBehavior scrolling,
-                 TextureFactoryIdentifier textureFactoryIdentifier, uint64_t layersId,
-                 bool success);
-
-
-    /**
      * window.open from inside <iframe mozbrowser> is special.  When the child
      * process calls window.open, it creates a new PBrowser (in its own
      * process), then calls BrowserFrameOpenWindow on it.
@@ -392,6 +388,11 @@ parent:
      */
     async RemotePaintIsReady();
 
+    sync GetRenderFrameInfo(PRenderFrame aRenderFrame)
+        returns (ScrollingBehavior scrolling,
+                 TextureFactoryIdentifier textureFactoryIdentifier,
+                 uint64_t layersId);
+
 child:
     /**
      * Notify the remote browser that it has been Show()n on this
@@ -402,7 +403,11 @@ child:
      * content processes always render to a virtual <0, 0> top-left
      * point.
      */
-    Show(nsIntSize size);
+    Show(nsIntSize size,
+         ScrollingBehavior scrolling,
+         TextureFactoryIdentifier textureFactoryIdentifier,
+         uint64_t layersId,
+         nullable PRenderFrame renderFrame);
 
     LoadURL(nsCString uri);
 

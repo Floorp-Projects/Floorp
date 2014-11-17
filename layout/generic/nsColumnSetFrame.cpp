@@ -572,12 +572,12 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 #ifdef DEBUG_roc
       printf("*** Reflowed child #%d %p: status = %d, desiredSize=%d,%d CarriedOutBottomMargin=%d\n",
              columnCount, (void*)child, aStatus, kidDesiredSize.Width(), kidDesiredSize.Height(),
-             kidDesiredSize.mCarriedOutBottomMargin.get());
+             kidDesiredSize.mCarriedOutBEndMargin.get());
 #endif
 
       NS_FRAME_TRACE_REFLOW_OUT("Column::Reflow", aStatus);
 
-      *aBottomMarginCarriedOut = kidDesiredSize.mCarriedOutBottomMargin;
+      *aBottomMarginCarriedOut = kidDesiredSize.mCarriedOutBEndMargin;
       
       FinishReflowChild(child, PresContext(), kidDesiredSize,
                         &kidReflowState, childOrigin.x, childOrigin.y, 0);
@@ -1030,7 +1030,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus, false);
 
-  aDesiredSize.mCarriedOutBottomMargin = carriedOutBottomMargin;
+  aDesiredSize.mCarriedOutBEndMargin = carriedOutBottomMargin;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 }

@@ -16,6 +16,7 @@
 /**************************************************************************/
 
 math {
+  writing-mode: horizontal-tb !important;
   direction: ltr;
   unicode-bidi: embed;
   display: inline;

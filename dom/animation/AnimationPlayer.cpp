@@ -6,6 +6,10 @@
 #include "AnimationPlayer.h"
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationPlayerBinding.h"
+#include "AnimationCommon.h" // For AnimationPlayerCollection,
+                             // CommonAnimationManager
+#include "nsIDocument.h" // For nsIDocument
+#include "nsIPresShell.h" // For nsIPresShell
 #include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
 
 namespace mozilla {
@@ -63,90 +67,23 @@ AnimationPlayer::PlayState() const
 }
 
 void
-AnimationPlayer::Play(UpdateFlags aFlags)
+AnimationPlayer::Play()
 {
-  // FIXME: When we implement finishing behavior (bug 1074630) we should
-  // not return early if mIsPaused is false since we may still need to seek.
-  // (However, we will need to pass a flag so that when we start playing due to
-  //  a change in animation-play-state we *don't* trigger finishing behavior.)
-  if (!mIsPaused) {
-    return;
-  }
-  mIsPaused = false;
-
-  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
-  if (timelineTime.IsNull()) {
-    // FIXME: We should just sit in the pending state in this case.
-    // We will introduce the pending state in Bug 927349.
-    return;
-  }
-
-  // Update start time to an appropriate offset from the current timeline time
-  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should not be null when paused");
-  mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
-  mHoldTime.SetNull();
-
-  if (aFlags == eUpdateStyle) {
-    MaybePostRestyle();
-  }
+  DoPlay();
+  PostUpdate();
 }
 
 void
-AnimationPlayer::Pause(UpdateFlags aFlags)
+AnimationPlayer::Pause()
 {
-  if (mIsPaused) {
-    return;
-  }
-  mIsPaused = true;
-  mIsRunningOnCompositor = false;
-
-  // Bug 927349 - check for null result here and go to pending state
-  mHoldTime = GetCurrentTime();
-  mStartTime.SetNull();
-
-  if (aFlags == eUpdateStyle) {
-    MaybePostRestyle();
-  }
+  DoPause();
+  PostUpdate();
 }
 
 Nullable<double>
 AnimationPlayer::GetCurrentTimeAsDouble() const
 {
   return AnimationUtils::TimeDurationToDouble(GetCurrentTime());
-}
-
-AnimationPlayState
-AnimationPlayer::PlayStateFromJS() const
-{
-  // FIXME: Once we introduce CSSTransitionPlayer, this should move to an
-  // override of PlayStateFromJS in CSSAnimationPlayer and CSSTransitionPlayer
-  // and we should skip it in the general case.
-  FlushStyle();
-
-  return PlayState();
-}
-
-void
-AnimationPlayer::PlayFromJS()
-{
-  // Flush style to ensure that any properties controlling animation state
-  // (e.g. animation-play-state) are fully updated before we proceed.
-  //
-  // Note that this might trigger PlayFromStyle()/PauseFromStyle() on this
-  // object.
-  //
-  // FIXME: Once we introduce CSSTransitionPlayer, this should move to an
-  // override of PlayFromJS in CSSAnimationPlayer and CSSTransitionPlayer and
-  // we should skip it in the general case.
-  FlushStyle();
-
-  Play(eUpdateStyle);
-}
-
-void
-AnimationPlayer::PauseFromJS()
-{
-  Pause(eUpdateStyle);
 }
 
 void
@@ -225,44 +162,60 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
 }
 
 void
+AnimationPlayer::DoPlay()
+{
+  // FIXME: When we implement finishing behavior (bug 1074630) we should
+  // not return early if mIsPaused is false since we may still need to seek.
+  // (However, we will need to pass a flag so that when we start playing due to
+  //  a change in animation-play-state we *don't* trigger finishing behavior.)
+  if (!mIsPaused) {
+    return;
+  }
+  mIsPaused = false;
+
+  Nullable<TimeDuration> timelineTime = mTimeline->GetCurrentTime();
+  if (timelineTime.IsNull()) {
+    // FIXME: We should just sit in the pending state in this case.
+    // We will introduce the pending state in Bug 927349.
+    return;
+  }
+
+  // Update start time to an appropriate offset from the current timeline time
+  MOZ_ASSERT(!mHoldTime.IsNull(), "Hold time should not be null when paused");
+  mStartTime.SetValue(timelineTime.Value() - mHoldTime.Value());
+  mHoldTime.SetNull();
+}
+
+void
+AnimationPlayer::DoPause()
+{
+  if (mIsPaused) {
+    return;
+  }
+  mIsPaused = true;
+  mIsRunningOnCompositor = false;
+
+  // Bug 927349 - check for null result here and go to pending state
+  mHoldTime = GetCurrentTime();
+  mStartTime.SetNull();
+}
+
+void
 AnimationPlayer::FlushStyle() const
 {
-  if (!mSource) {
-    return;
-  }
-
-  Element* targetElement;
-  nsCSSPseudoElements::Type pseudoType;
-  mSource->GetTarget(targetElement, pseudoType);
-  if (!targetElement) {
-    return;
-  }
-
-  nsIDocument* doc = targetElement->GetComposedDoc();
+  nsIDocument* doc = GetRenderedDocument();
   if (doc) {
     doc->FlushPendingNotifications(Flush_Style);
   }
 }
 
 void
-AnimationPlayer::MaybePostRestyle() const
+AnimationPlayer::PostUpdate()
 {
-  if (!mSource) {
-    return;
+  AnimationPlayerCollection* collection = GetCollection();
+  if (collection) {
+    collection->NotifyPlayerUpdated();
   }
-
-  Element* targetElement;
-  nsCSSPseudoElements::Type pseudoType;
-  mSource->GetTarget(targetElement, pseudoType);
-  if (!targetElement) {
-    return;
-  }
-
-  // FIXME: This is a bit heavy-handed but in bug 1073336 we hope to
-  // introduce a better means for players to update style.
-  nsLayoutUtils::PostRestyleEvent(targetElement,
-                                  eRestyle_Self,
-                                  nsChangeHint_AllReflowHints);
 }
 
 StickyTimeDuration
@@ -274,6 +227,55 @@ AnimationPlayer::SourceContentEnd() const
 
   return mSource->Timing().mDelay
          + mSource->GetComputedTiming().mActiveDuration;
+}
+
+nsIDocument*
+AnimationPlayer::GetRenderedDocument() const
+{
+  if (!mSource) {
+    return nullptr;
+  }
+
+  Element* targetElement;
+  nsCSSPseudoElements::Type pseudoType;
+  mSource->GetTarget(targetElement, pseudoType);
+  if (!targetElement) {
+    return nullptr;
+  }
+
+  return targetElement->GetComposedDoc();
+}
+
+nsPresContext*
+AnimationPlayer::GetPresContext() const
+{
+  nsIDocument* doc = GetRenderedDocument();
+  if (!doc) {
+    return nullptr;
+  }
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+  return shell->GetPresContext();
+}
+
+AnimationPlayerCollection*
+AnimationPlayer::GetCollection() const
+{
+  css::CommonAnimationManager* manager = GetAnimationManager();
+  if (!manager) {
+    return nullptr;
+  }
+  MOZ_ASSERT(mSource, "A player with an animation manager must have a source");
+
+  Element* targetElement;
+  nsCSSPseudoElements::Type targetPseudoType;
+  mSource->GetTarget(targetElement, targetPseudoType);
+  MOZ_ASSERT(targetElement,
+             "A player with an animation manager must have a target");
+
+  return manager->GetAnimationPlayers(targetElement, targetPseudoType, false);
 }
 
 } // namespace dom
