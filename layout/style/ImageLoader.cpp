@@ -407,7 +407,7 @@ ImageLoader::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData
     return OnImageIsAnimated(aRequest);
   }
 
-  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+  if (aType == imgINotificationObserver::FRAME_COMPLETE) {
     return OnStopFrame(aRequest);
   }
 
