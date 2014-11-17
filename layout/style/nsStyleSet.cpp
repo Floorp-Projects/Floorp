@@ -1524,6 +1524,10 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
     }
   }
 
+  NS_ASSERTION(rulesIndex == 0,
+               "rules are in incorrect cascading order, "
+               "which means we replaced them incorrectly");
+
   return ruleWalker.CurrentNode();
 }
 
