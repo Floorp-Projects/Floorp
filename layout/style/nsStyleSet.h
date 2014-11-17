@@ -115,6 +115,17 @@ class nsStyleSet
   // Get a style context that represents aBaseContext, but as though
   // it additionally matched the rules in the aRules array (in that
   // order, as more specific than any other rules).
+  //
+  // One of the following must hold:
+  // 1. The resulting style context must be used only on a temporary
+  //    basis, and it must never be put into the style context tree
+  //    (and, in particular, we must never call
+  //    ResolveStyleWithReplacement with it as the old context, which
+  //    might happen if it is put in the style context tree), or
+  // 2. The additional rules must be appropriate for the transitions
+  //    level of the cascade, which is the highest level of the cascade.
+  //    (This is the case for one current caller, the cover rule used
+  //    for CSS transitions.)
   already_AddRefed<nsStyleContext>
   ResolveStyleByAddingRules(nsStyleContext* aBaseContext,
                             const nsCOMArray<nsIStyleRule> &aRules);
