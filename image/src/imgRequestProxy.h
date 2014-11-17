@@ -149,14 +149,15 @@ protected:
   // class) ProgressTracker is the only class allowed to send us
   // notifications.
 
-  void OnStartDecode     ();
-  void OnStartContainer  ();
-  void OnFrameUpdate     (const nsIntRect * aRect);
-  void OnStopFrame       ();
-  void OnStopDecode      ();
-  void OnDiscard         ();
-  void OnUnlockedDraw    ();
-  void OnImageIsAnimated ();
+  void OnStartDecode();
+  void OnStartContainer();
+  void OnFrameUpdate(const nsIntRect* aRect);
+  void OnStopFrame();
+  void OnStopDecode();
+  void OnDiscard();
+  void OnUnlockedDraw();
+  void OnImageHasTransparency();
+  void OnImageIsAnimated();
 
   /* non-virtual sort-of-nsIRequestObserver methods */
   void OnStartRequest();
