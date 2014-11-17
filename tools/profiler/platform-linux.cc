@@ -252,15 +252,9 @@ static void ProfilerSignalThread(ThreadProfile *profile,
   }
 }
 
-// If the Nuwa process is enabled, we need to use the wrapper of tgkill() to
-// perform the mapping of thread ID.
-#ifdef MOZ_NUWA_PROCESS
-extern "C" MFBT_API int tgkill(pid_t tgid, pid_t tid, int signalno);
-#else
 int tgkill(pid_t tgid, pid_t tid, int signalno) {
   return syscall(SYS_tgkill, tgid, tid, signalno);
 }
-#endif
 
 class PlatformData : public Malloced {
  public:
@@ -447,6 +441,18 @@ void Sampler::Stop() {
   }
 }
 
+#ifdef MOZ_NUWA_PROCESS
+static void
+UpdateThreadId(void* aThreadInfo) {
+  ThreadInfo* info = static_cast<ThreadInfo*>(aThreadInfo);
+  // Note that this function is called during thread recreation. Only the thread
+  // calling this method is running. We can't try to acquire
+  // Sampler::sRegisteredThreadsMutex because it could be held by another
+  // thread.
+  info->SetThreadId(gettid());
+}
+#endif
+
 bool Sampler::RegisterCurrentThread(const char* aName,
                                     PseudoStack* aPseudoStack,
                                     bool aIsMainThread, void* stackTop)
@@ -477,6 +483,20 @@ bool Sampler::RegisterCurrentThread(const char* aName,
   }
 
   sRegisteredThreads->push_back(info);
+
+#ifdef MOZ_NUWA_PROCESS
+  if (IsNuwaProcess()) {
+    if (info->IsMainThread()) {
+      // Main thread isn't a marked thread. Register UpdateThreadId() to
+      // NuwaAddConstructor(), which runs before all other threads are
+      // recreated.
+      NuwaAddConstructor(UpdateThreadId, info);
+    } else {
+      // Register UpdateThreadInfo() to be run when the thread is recreated.
+      NuwaAddThreadConstructor(UpdateThreadId, info);
+    }
+  }
+#endif
 
   uwt__register_thread_for_profiling(stackTop);
   return true;

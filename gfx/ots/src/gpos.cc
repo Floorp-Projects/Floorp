@@ -677,9 +677,9 @@ bool ParseExtensionPositioning(const ots::OpenTypeFile *file,
 
 #define DROP_THIS_TABLE(msg_) \
   do { \
+    OTS_FAILURE_MSG(msg_ ", table discarded"); \
     file->gpos->data = 0; \
     file->gpos->length = 0; \
-    OTS_FAILURE_MSG(msg_ ", table discarded"); \
   } while (0)
 
 namespace ots {

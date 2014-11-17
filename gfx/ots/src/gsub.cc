@@ -530,9 +530,9 @@ bool ParseReverseChainingContextSingleSubstitution(
 
 #define DROP_THIS_TABLE(msg_) \
   do { \
+    OTS_FAILURE_MSG(msg_ ", table discarded"); \
     file->gsub->data = 0; \
     file->gsub->length = 0; \
-    OTS_FAILURE_MSG(msg_ ", table discarded"); \
   } while (0)
 
 namespace ots {

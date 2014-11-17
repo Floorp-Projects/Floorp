@@ -21,21 +21,23 @@ public:
     uint32_t GetGlyph(uint32_t aCharCode);
     void GetGlyphExtents(uint32_t aGlyph,
                          cairo_text_extents_t* aExtents);
-    virtual uint32_t GetSpaceGlyph();
-    virtual bool ProvidesGetGlyph() const { return true; }
-    virtual uint32_t GetGlyph(uint32_t unicode, uint32_t variation_selector);
-    virtual bool ProvidesGlyphWidths() const { return true; }
-    virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID);
+    virtual uint32_t GetSpaceGlyph() MOZ_OVERRIDE;
+    virtual bool ProvidesGetGlyph() const MOZ_OVERRIDE { return true; }
+    virtual uint32_t GetGlyph(uint32_t unicode,
+                              uint32_t variation_selector) MOZ_OVERRIDE;
+    virtual bool ProvidesGlyphWidths() const MOZ_OVERRIDE { return true; }
+    virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
+                                  uint16_t aGID) MOZ_OVERRIDE;
 
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
-    virtual bool SetupCairoFont(gfxContext *aContext);
+    virtual bool SetupCairoFont(gfxContext *aContext) MOZ_OVERRIDE;
 
-    virtual FontType GetType() const { return FONT_TYPE_FT2; }
+    virtual FontType GetType() const MOZ_OVERRIDE { return FONT_TYPE_FT2; }
 
     mozilla::gfx::FontOptions* GetFontOptions() { return &mFontOptions; }
 
 protected:
-    virtual const Metrics& GetHorizontalMetrics();
+    virtual const Metrics& GetHorizontalMetrics() MOZ_OVERRIDE;
 
     uint32_t mSpaceGlyph;
     bool mHasMetrics;

@@ -420,6 +420,9 @@ class ThreadInfo {
   void SetPendingDelete();
   bool IsPendingDelete() const { return mPendingDelete; }
 
+#ifdef MOZ_NUWA_PROCESS
+  void SetThreadId(int aThreadId) { mThreadId = aThreadId; }
+#endif
 
   /**
    * May be null for the main thread if the profiler was started during startup
