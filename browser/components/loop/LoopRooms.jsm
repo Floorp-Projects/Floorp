@@ -107,11 +107,32 @@ const checkForParticipantsUpdate = function(room, updatedRoom) {
  * violated. You'll notice this as well in the documentation for each method.
  */
 let LoopRoomsInternal = {
+  /**
+   * @var {Map} rooms Collection of rooms currently in cache.
+   */
   rooms: new Map(),
 
+  /**
+   * @var {String} sessionType The type of user session. May be 'FXA' or 'GUEST'.
+   */
   get sessionType() {
     return MozLoopService.userProfile ? LOOP_SESSION_TYPE.FXA :
                                         LOOP_SESSION_TYPE.GUEST;
+  },
+
+  /**
+   * @var {Number} participantsCount The total amount of participants currently
+   *                                 inside all rooms.
+   */
+  get participantsCount() {
+    let count = 0;
+    for (let room of this.rooms.values()) {
+      if (!("participants" in room)) {
+        continue;
+      }
+      count += room.participants.length;
+    }
+    return count;
   },
 
   /**
@@ -382,6 +403,10 @@ Object.freeze(LoopRoomsInternal);
  * See the internal code for the API documentation.
  */
 this.LoopRooms = {
+  get participantsCount() {
+    return LoopRoomsInternal.participantsCount;
+  },
+
   getAll: function(version, callback) {
     return LoopRoomsInternal.getAll(version, callback);
   },
