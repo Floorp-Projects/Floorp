@@ -1,0 +1,103 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIPresentationDevice;
+
+[scriptable, uuid(b0dc6b1f-5f6f-455d-a917-90d0ad37186b)]
+interface nsITCPPresentationServerListener: nsISupports
+{
+  /**
+   * Callback while the server socket stops listening.
+   * @param   aReason
+   *          The reason of the socket close. NS_OK for manually |close|.
+   *          <other-error> on failure.
+   */
+  void onClose(in nsresult aReason);
+};
+
+/**
+ * TCP presentation server which can be used by discovery services.
+ */
+[scriptable, uuid(4fc57682-33d5-4793-b149-e2cc4714d70f)]
+interface nsITCPPresentationServer: nsISupports
+{
+  /**
+   * This method initializes a TCP presentation server.
+   * @param   aId
+   *          The unique Id for the device within the discovery scope. If aId
+   *          is null, empty string or opt-out, the TCP presentation server
+   *          should not work until the |id| is set appropriately.
+   * @param   aPort
+   *          The port of the server socket.  Pass 0 or opt-out to indicate no
+   *          preference, and a port will be selected automatically.
+   * @throws  NS_ERROR_FAILURE if the server socket has been inited or the
+   *          server socket can not be inited.
+   */
+  void init([optional] in AUTF8String aId, [optional] in uint16_t aPort);
+
+  /**
+   * Close server socket and call |listener.onClose(NS_OK)|
+   */
+  void close();
+
+  /**
+   * Create TCPDevice for this server.
+   * @param   aId
+   *          The unique Id for the discovered device
+   * @param   aName
+   *          The human-readable name of the discovered device
+   * @param   aType
+   *          The category of the discovered device
+   * @param   aHost
+   *          The host of the provided control channel of the discovered device
+   * @param   aPort
+   *          The port of the provided control channel of the discovered device
+   * @returns The created device
+   * @throws  NS_ERROR_INVALID_ARG if a TCPDevice with |aId| have existed.
+   */
+  nsIPresentationDevice createTCPDevice(in AUTF8String aId,
+                                        in AUTF8String aName,
+                                        in AUTF8String aType,
+                                        in AUTF8String aHost,
+                                        in uint16_t aPort);
+
+  /**
+   * Get TCPDevice with |aID|.
+   * @param   aId
+   *          The unique Id for the query device
+   * @returns The queried device; return |undefined|
+   * @throws  NS_ERROR_INVALID_ARG if a TCPDevice with |aId| does not exist.
+   */
+  nsIPresentationDevice getTCPDevice(in AUTF8String aId);
+
+  /**
+   * Remove TCPDevice with |aID|.
+   * @param   aId
+   *          The unique Id for the device which needs to be removed
+   * @throws  NS_ERROR_INVALID_ARG if a TCPDevice with |aId| does not exist.
+   */
+  void removeTCPDevice(in AUTF8String aId);
+
+  /**
+   * Get the listen port of the TCP socket, valid after |init|. 0 indicates
+   * the server socket is not inited or closed.
+   */
+  readonly attribute uint16_t port;
+
+  /**
+   * The id of the TCP presentation server. The setter should be use if the |id|
+   * is not set by the |init|. Moreover, if the |id| is not set by |init|, the
+   * TCP presentation server should not work until the |id| is set.
+   * @throws  NS_ERROR_FAILURE if the non-null id has been set by |init| or this
+   *          setter
+   */
+  attribute AUTF8String id;
+
+  /**
+   * the listener for handling events of this TCP presentation server
+   */
+  attribute nsITCPPresentationServerListener listener;
+};

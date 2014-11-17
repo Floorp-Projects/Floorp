@@ -74,6 +74,7 @@ interface nsIPresentationControlChannel: nsISupports
    * Send offer to remote endpiont. |onOffer| should be invoked
    * on remote endpoint.
    * @param offer The offer to send.
+   * @throws  NS_ERROR_FAILURE on failure
    */
   void sendOffer(in nsIPresentationChannelDescription offer);
 
@@ -81,6 +82,7 @@ interface nsIPresentationControlChannel: nsISupports
    * Send answer to remote endpiont. |onAnswer| should
    * be invoked on remote endpoint.
    * @param answer The answer to send.
+   * @throws  NS_ERROR_FAILURE on failure
    */
   void sendAnswer(in nsIPresentationChannelDescription answer);
 
