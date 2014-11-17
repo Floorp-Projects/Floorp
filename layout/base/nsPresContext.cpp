@@ -1558,7 +1558,7 @@ nsPresContext::Detach()
 }
 
 bool
-nsPresContext::StyleUpdateForAllAnimationsIsUpToDate()
+nsPresContext::StyleUpdateForAllAnimationsIsUpToDate() const
 {
   return mLastStyleUpdateForAllAnimations == mRefreshDriver->MostRecentRefresh();
 }
@@ -1567,6 +1567,12 @@ void
 nsPresContext::TickLastStyleUpdateForAllAnimations()
 {
   mLastStyleUpdateForAllAnimations = mRefreshDriver->MostRecentRefresh();
+}
+
+void
+nsPresContext::ClearLastStyleUpdateForAllAnimations()
+{
+  mLastStyleUpdateForAllAnimations = TimeStamp();
 }
 
 bool
