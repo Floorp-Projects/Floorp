@@ -12,6 +12,7 @@
 #include "RestyleManager.h"
 #include "mozilla/EventStates.h"
 #include "nsLayoutUtils.h"
+#include "AnimationCommon.h" // For GetLayerAnimationInfo
 #include "FrameLayerBuilder.h"
 #include "GeckoProfiler.h"
 #include "nsStyleChangeList.h"
@@ -2434,14 +2435,6 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
 void
 ElementRestyler::AddLayerChangesForAnimation()
 {
-  static const nsDisplayItem::Type sLayerTypes[] =
-                                       { nsDisplayItem::TYPE_TRANSFORM,
-                                         nsDisplayItem::TYPE_OPACITY };
-  static const nsChangeHint sHints[] = { nsChangeHint_UpdateTransformLayer,
-                                         nsChangeHint_UpdateOpacityLayer };
-  static_assert(MOZ_ARRAY_LENGTH(sLayerTypes) == MOZ_ARRAY_LENGTH(sHints),
-                "Parallel layer type and hint arrays should have same length");
-
   // Bug 847286 - We should have separate animation generation counters
   // on layers for transitions and animations and use != comparison below
   // rather than a > comparison.
@@ -2449,9 +2442,10 @@ ElementRestyler::AddLayerChangesForAnimation()
     RestyleManager::GetMaxAnimationGenerationForFrame(mFrame);
 
   nsChangeHint hint = nsChangeHint(0);
-  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sLayerTypes); i++) {
+  const auto& layerInfo = css::CommonAnimationManager::sLayerAnimationInfo;
+  for (size_t i = 0; i < ArrayLength(layerInfo); i++) {
     Layer* layer =
-      FrameLayerBuilder::GetDedicatedLayer(mFrame, sLayerTypes[i]);
+      FrameLayerBuilder::GetDedicatedLayer(mFrame, layerInfo[i].mLayerType);
     if (layer && frameGeneration > layer->GetAnimationGeneration()) {
       // If we have a transform layer but don't have any transform style, we
       // probably just removed the transform but haven't destroyed the layer
@@ -2460,11 +2454,11 @@ ElementRestyler::AddLayerChangesForAnimation()
       // so we can skip adding any change hint here. (If we *were* to add
       // nsChangeHint_UpdateTransformLayer, ApplyRenderingChangeToTree would
       // complain that we're updating a transform layer without a transform).
-      if (sLayerTypes[i] == nsDisplayItem::TYPE_TRANSFORM &&
+      if (layerInfo[i].mLayerType == nsDisplayItem::TYPE_TRANSFORM &&
           !mFrame->StyleDisplay()->HasTransformStyle()) {
         continue;
       }
-      NS_UpdateHint(hint, sHints[i]);
+      NS_UpdateHint(hint, layerInfo[i].mChangeHint);
     }
   }
   if (hint) {

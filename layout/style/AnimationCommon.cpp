@@ -138,10 +138,12 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
   // Mark the frame as active, in case we are able to throttle this animation.
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(collection->mElement);
   if (frame) {
-    if (aProperty == eCSSProperty_opacity) {
-      ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_opacity);
-    } else if (aProperty == eCSSProperty_transform) {
-      ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_transform);
+    const auto& info = sLayerAnimationInfo;
+    for (size_t i = 0; i < ArrayLength(info); i++) {
+      if (aProperty == info[i].mProperty) {
+        ActiveLayerTracker::NotifyAnimated(frame, aProperty);
+        break;
+      }
     }
   }
 
@@ -254,6 +256,15 @@ CommonAnimationManager::ExtractComputedValueForTransition(
   }
   return result;
 }
+
+/* static */ const CommonAnimationManager::LayerAnimationRecord
+  CommonAnimationManager::sLayerAnimationInfo[] =
+    { { eCSSProperty_transform,
+        nsDisplayItem::TYPE_TRANSFORM,
+        nsChangeHint_UpdateTransformLayer },
+      { eCSSProperty_opacity,
+        nsDisplayItem::TYPE_OPACITY,
+        nsChangeHint_UpdateOpacityLayer } };
 
 NS_IMPL_ISUPPORTS(AnimValuesStyleRule, nsIStyleRule)
 
@@ -635,27 +646,27 @@ AnimationPlayerCollection::CanThrottleAnimation(TimeStamp aTime)
     return false;
   }
 
-  bool hasTransform = HasAnimationOfProperty(eCSSProperty_transform);
-  bool hasOpacity = HasAnimationOfProperty(eCSSProperty_opacity);
-  if (hasOpacity) {
+
+  const auto& info = css::CommonAnimationManager::sLayerAnimationInfo;
+  for (size_t i = 0; i < ArrayLength(info); i++) {
+    auto record = info[i];
+    if (!HasAnimationOfProperty(record.mProperty)) {
+      continue;
+    }
+
     Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
-                     frame, nsDisplayItem::TYPE_OPACITY);
+                     frame, record.mLayerType);
     if (!layer || mAnimationGeneration > layer->GetAnimationGeneration()) {
+      return false;
+    }
+
+    if (record.mProperty == eCSSProperty_transform &&
+        !CanThrottleTransformChanges(aTime)) {
       return false;
     }
   }
 
-  if (!hasTransform) {
-    return true;
-  }
-
-  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
-                   frame, nsDisplayItem::TYPE_TRANSFORM);
-  if (!layer || mAnimationGeneration > layer->GetAnimationGeneration()) {
-    return false;
-  }
-
-  return CanThrottleTransformChanges(aTime);
+  return true;
 }
 
 void
