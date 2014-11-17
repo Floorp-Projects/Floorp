@@ -92,6 +92,14 @@ public:
   // track whether off-main-thread animations are up-to-date.
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
 
+  // Update the animation generation count to mark that animation state
+  // has changed.
+  //
+  // This is normally performed automatically by ProcessPendingRestyles
+  // but it is also called when we have out-of-band changes to animations
+  // such as changes made through the Web Animations API.
+  void IncrementAnimationGeneration() { ++mAnimationGeneration; }
+
   // Whether rule matching should skip styles associated with animation
   bool SkipAnimationRules() const {
     MOZ_ASSERT(mSkipAnimationRules || !mPostAnimationRestyles,

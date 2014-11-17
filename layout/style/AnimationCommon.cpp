@@ -231,6 +231,8 @@ CommonAnimationManager::NotifyCollectionUpdated(AnimationPlayerCollection&
 {
   CheckNeedsRefresh();
   mPresContext->ClearLastStyleUpdateForAllAnimations();
+  mPresContext->RestyleManager()->IncrementAnimationGeneration();
+  aCollection.UpdateAnimationGeneration(mPresContext);
   aCollection.PostRestyleForAnimation(mPresContext);
 }
 
