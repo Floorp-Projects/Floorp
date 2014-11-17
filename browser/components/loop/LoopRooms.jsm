@@ -377,6 +377,34 @@ let LoopRoomsInternal = {
   },
 
   /**
+   * Renames a room.
+   *
+   * @param {String} roomToken   The room token
+   * @param {String} newRoomName The new name for the room
+   * @param {Function} callback   Function that will be invoked once the operation
+   *                              finished. The first argument passed will be an
+   *                              `Error` object or `null`.
+   */
+  rename: function(roomToken, newRoomName, callback) {
+    let room = this.rooms.get(roomToken);
+    let url = "/rooms/" + encodeURIComponent(roomToken);
+
+    let origRoom = this.rooms.get(roomToken);
+    let patchData = {
+      roomName: newRoomName,
+      // XXX We have to supply the max size and room owner due to bug 1099063.
+      maxSize: origRoom.maxSize,
+      roomOwner: origRoom.roomOwner
+    };
+    MozLoopService.hawkRequest(this.sessionType, url, "PATCH", patchData)
+      .then(response => {
+        let data = JSON.parse(response.body);
+        extend(room, data);
+        callback(null, room);
+      }, error => callback(error)).catch(error => callback(error));
+  },
+
+  /**
    * Callback used to indicate changes to rooms data on the LoopServer.
    *
    * @param {String} version   Version number assigned to this change set.
@@ -441,6 +469,10 @@ this.LoopRooms = {
 
   leave: function(roomToken, sessionToken, callback) {
     return LoopRoomsInternal.leave(roomToken, sessionToken, callback);
+  },
+
+  rename: function(roomToken, newRoomName, callback) {
+    return LoopRoomsInternal.rename(roomToken, newRoomName, callback);
   },
 
   promise: function(method, ...params) {
