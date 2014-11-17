@@ -11,7 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
 
 
 (function() {
-
   LoopUI = {
     get toolbarButton() {
       delete this.toolbarButton;
@@ -88,6 +87,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/Panel
         state = "active";
       }
       this.toolbarButton.node.setAttribute("state", state);
+    },
+
+    /**
+     * Play a sound in this window IF there's no sound playing yet.
+     *
+     * @param {String} name Name of the sound, like 'ringtone' or 'room-joined'
+     */
+    playSound: function(name) {
+      if (this.ActiveSound || MozLoopService.doNotDisturb) {
+        return;
+      }
+
+      this.activeSound = new window.Audio();
+      this.activeSound.src = `chrome://browser/content/loop/shared/sounds/${name}.ogg`;
+      this.activeSound.load();
+      this.activeSound.play();
+
+      this.activeSound.addEventListener("ended", () => this.activeSound = undefined, false);
     },
   };
 })();
