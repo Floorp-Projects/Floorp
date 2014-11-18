@@ -2966,7 +2966,8 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
         image->DoError();
       }
 
-      // If there were any final progress changes, grab them.
+      // If there were any final changes, grab them.
+      invalidRect.Union(decoder->TakeInvalidRect());
       progress |= decoder->GetProgress();
     }
   }
