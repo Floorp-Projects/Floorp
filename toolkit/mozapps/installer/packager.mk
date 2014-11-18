@@ -39,7 +39,7 @@ ifndef _APPNAME
 _APPNAME = $(MOZ_MACBUNDLE_NAME)
 endif
 ifndef _BINPATH
-_BINPATH = /$(_APPNAME)/Contents/MacOS
+_BINPATH = /$(_APPNAME)/Contents/Resources
 endif # _BINPATH
 ifdef UNIVERSAL_BINARY
 STAGEPATH = universal/
