@@ -22,7 +22,7 @@ function test() {
     executeSoon(function () {
       document.addEventListener("popupshown", contextMenuOpened);
 
-      var img = gBrowser.contentDocument.getElementsByClassName("decoded")[0];
+      var img = gBrowser.contentDocument.getElementsByTagName("img")[0];
       EventUtils.synthesizeMouseAtCenter(img,
                                          { type: "contextmenu", button: 2 },
                                          gBrowser.contentWindow);

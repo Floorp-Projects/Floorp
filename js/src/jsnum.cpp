@@ -542,9 +542,11 @@ num_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
-ToCStringBuf::ToCStringBuf() :dbuf(nullptr)
+ToCStringBuf::ToCStringBuf() : dbuf(nullptr)
 {
-    JS_STATIC_ASSERT(sbufSize >= DTOSTR_STANDARD_BUFFER_SIZE);
+    static_assert(sbufSize >= DTOSTR_STANDARD_BUFFER_SIZE,
+                  "builtin space must be large enough to store even the "
+                  "longest string produced by a conversion");
 }
 
 ToCStringBuf::~ToCStringBuf()

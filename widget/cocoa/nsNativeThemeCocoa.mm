@@ -1095,10 +1095,7 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
   // On 10.6 and at least on 10.7.0, Apple doesn’t seem to have implemented all
   // keys and values used on 10.7.5 and later. We can however draw menu icons
   // on earlier OS versions by using different keys/values.
-  BOOL otherKeysAndValues = !nsCocoaFeatures::OnLionOrLater() ||
-                            (nsCocoaFeatures::OSXVersionMajor() == 10 &&
-                             nsCocoaFeatures::OSXVersionMinor() == 7 &&
-                             nsCocoaFeatures::OSXVersionBugFix() < 5);
+  BOOL otherKeysAndValues = !nsCocoaFeatures::IsAtLeastVersion(10,7,5);
 
   // 2 states combined with 2 different backgroundTypeKeys on earlier versions.
   NSString* state = isDisabled ? @"disabled" :

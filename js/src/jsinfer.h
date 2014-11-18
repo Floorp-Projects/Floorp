@@ -1201,13 +1201,7 @@ struct TypeObject : public gc::TenuredCell
     gc::InitialHeap initialHeap(CompilerConstraintList *constraints);
 
     bool canPreTenure() {
-        // Only types associated with particular allocation sites or 'new'
-        // scripts can be marked as needing pretenuring. Other types can be
-        // used for different purposes across the compartment and can't use
-        // this bit reliably.
-        if (unknownProperties())
-            return false;
-        return fromAllocationSite() || newScript();
+        return !unknownProperties();
     }
 
     bool fromAllocationSite() {

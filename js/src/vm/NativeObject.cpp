@@ -26,9 +26,6 @@ using JS::GenericNaN;
 using mozilla::DebugOnly;
 using mozilla::RoundUpPow2;
 
-JS_STATIC_ASSERT(int32_t((NativeObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) ==
-                 int64_t((NativeObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
-
 PropDesc::PropDesc()
 {
     setUndefined();
@@ -122,9 +119,9 @@ ObjectElements::ConvertElementsToDoubles(JSContext *cx, uintptr_t elementsPtr)
 /* static */ bool
 ObjectElements::MakeElementsCopyOnWrite(ExclusiveContext *cx, NativeObject *obj)
 {
-    // Make sure there is enough room for the owner object pointer at the end
-    // of the elements.
-    JS_STATIC_ASSERT(sizeof(HeapSlot) >= sizeof(HeapPtrObject));
+    static_assert(sizeof(HeapSlot) >= sizeof(HeapPtrObject),
+                  "there must be enough room for the owner object pointer at "
+                  "the end of the elements");
     if (!obj->ensureElements(cx, obj->getDenseInitializedLength() + 1))
         return false;
 
@@ -461,6 +458,7 @@ NativeObject::growSlots(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t 
      * the limited number of bits to store shape slots, object growth is
      * throttled well before the slot capacity can overflow.
      */
+    NativeObject::slotsSizeMustNotOverflow();
     MOZ_ASSERT(newCount < NELEMENTS_LIMIT);
 
     if (!oldCount) {

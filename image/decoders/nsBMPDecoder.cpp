@@ -12,6 +12,7 @@
 
 #include "ImageLogging.h"
 #include "mozilla/Endian.h"
+#include "mozilla/Likely.h"
 #include "nsBMPDecoder.h"
 
 #include "nsIInputStream.h"
@@ -658,10 +659,10 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount,
 
                     memset(start, 0, pixelCount * sizeof(uint32_t));
 
+                    PostHasTransparency();
                     mHaveAlphaData = true;
                   }
-                  SetPixel(d, p[2], p[1], p[0], mHaveAlphaData ?
-                           p[3] : 0xFF);
+                  SetPixel(d, p[2], p[1], p[0], mHaveAlphaData ?  p[3] : 0xFF);
                 } else {
                   SetPixel(d, p[2], p[1], p[0]);
                 }
@@ -789,6 +790,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount,
             mCurPos += byte;
             // Delta encoding makes it possible to skip pixels
             // making the image transparent.
+            if (MOZ_UNLIKELY(!mHaveAlphaData)) {
+                PostHasTransparency();
+            }
             mUseAlphaData = mHaveAlphaData = true;
             if (mCurPos > mBIH.width) {
                 mCurPos = mBIH.width;
@@ -804,6 +808,9 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount,
             mState = eRLEStateInitial;
             // Delta encoding makes it possible to skip pixels
             // making the image transparent.
+            if (MOZ_UNLIKELY(!mHaveAlphaData)) {
+                PostHasTransparency();
+            }
             mUseAlphaData = mHaveAlphaData = true;
             mCurLine -= std::min<int32_t>(byte, mCurLine);
             break;
