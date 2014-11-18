@@ -4465,10 +4465,7 @@
 !macroend
 
 /**
- * Parses the precomplete file to remove an installation's files.
- *
- * When modifying this macro be aware that LineFind uses all registers except
- * $R0-$R3 so be cautious. Callers of this macro are not affected.
+ * Parses the precomplete file to remove an installation's files and directories.
  *
  * @param   _PROGRESSBAR
  *          The progress bar to update using PBM_STEPIT. Can also be "false" if
@@ -4477,16 +4474,21 @@
  *          The install step counter to increment. The variable specified in
  *          this parameter is also updated. Can also be "false" if a counter
  *          isn't needed.
- *
- * $R2 = _PROGRESSBAR
- * $R3 = _INSTALL_STEP_COUNTER
+ * $R2 = false if all files were deleted or moved to the tobedeleted directory.
+ *       true if file(s) could not be moved to the tobedeleted directory.
+ * $R3 = Path to temporary precomplete file.
+ * $R4 = File handle for the temporary precomplete file.
+ * $R5 = String returned from FileRead.
+ * $R6 = First seven characters of the string returned from FileRead.
+ * $R7 = Temporary file path used to rename files that are in use.
+ * $R8 = _PROGRESSBAR
+ * $R9 = _INSTALL_STEP_COUNTER
  */
 !macro RemovePrecompleteEntries
 
   !ifndef ${_MOZFUNC_UN}RemovePrecompleteEntries
     !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
     !insertmacro ${_MOZFUNC_UN_TMP}GetParent
-    !insertmacro ${_MOZFUNC_UN_TMP}LineFind
     !insertmacro ${_MOZFUNC_UN_TMP}TrimNewLines
     !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
     !undef _MOZFUNC_UN
@@ -4498,86 +4500,110 @@
     !define ${_MOZFUNC_UN}RemovePrecompleteEntries "!insertmacro ${_MOZFUNC_UN}RemovePrecompleteEntriesCall"
 
     Function ${_MOZFUNC_UN}RemovePrecompleteEntries
-      Exch $R3
+      Exch $R9
       Exch 1
-      Exch $R2
-      Push $R1
-      Push $R0
-      Push $TmpVal
+      Exch $R8
+      Push $R7
+      Push $R6
+      Push $R5
+      Push $R4
+      Push $R3
+      Push $R2
 
       ${If} ${FileExists} "$INSTDIR\precomplete"
-        ; Copy the uninstall log file to a temporary file
-        GetTempFileName $TmpVal
-        CopyFiles /SILENT /FILESONLY "$INSTDIR\precomplete" "$TmpVal"
+        StrCpy $R2 "false"
 
+        RmDir /r "$INSTDIR\${TO_BE_DELETED}"
         CreateDirectory "$INSTDIR\${TO_BE_DELETED}"
+        GetTempFileName $R3 "$INSTDIR\${TO_BE_DELETED}"
+        Delete "$R3"
+        Rename "$INSTDIR\precomplete" "$R3"
 
+        ClearErrors
         ; Rename and then remove files
-        ${${_MOZFUNC_UN}LineFind} "$TmpVal" "/NUL" "1:-1" "${_MOZFUNC_UN}RemovePrecompleteEntriesCallback"
-
-        ; Delete the temporary precomplete file
-        Delete /REBOOTOK "$TmpVal"
-      ${EndIf}
-
-      ClearErrors
-
-      Pop $TmpVal
-      Pop $R0
-      Pop $R1
-      Exch $R2
-      Exch 1
-      Exch $R3
-    FunctionEnd
-
-    Function ${_MOZFUNC_UN}RemovePrecompleteEntriesCallback
-      ${${_MOZFUNC_UN}TrimNewLines} "$R9" $R9
-      ; Replace all occurrences of "/" with "\".
-      ${${_MOZFUNC_UN}WordReplace} "$R9" "/" "\" "+" $R9
-
-      ; Copy the first 7 chars
-      StrCpy $R1 "$R9" 7
-      ${If} "$R1" == "remove "
-        ; Copy the string starting after the 8th char
-        StrCpy $R9 "$R9" "" 8
-        ; Copy all but the last char to remove the double quote.
-        StrCpy $R9 "$R9" -1
-        ${If} ${FileExists} "$INSTDIR\$R9"
-          ${Unless} "$R3" == "false"
-            IntOp $R3 $R3 + 2
-          ${EndUnless}
-          ${Unless} "$R2" == "false"
-            SendMessage $R2 ${PBM_STEPIT} 0 0
-            SendMessage $R2 ${PBM_STEPIT} 0 0
-          ${EndUnless}
-
-          ClearErrors
-          Delete "$INSTDIR\$R9"
+        FileOpen $R4 "$R3" r
+        ${Do}
+          FileRead $R4 $R5
           ${If} ${Errors}
-            GetTempFileName $R0 "$INSTDIR\${TO_BE_DELETED}"
-            Delete "$R0"
-            ClearErrors
-            Rename "$INSTDIR\$R9" "$R0"
-!ifdef __UNINSTALL__
-            ${If} ${Errors}
-              Delete /REBOOTOK "$INSTDIR\$R9"
-            ${EndIf}
-!endif
+            ${Break}
           ${EndIf}
+
+          ${${_MOZFUNC_UN}TrimNewLines} "$R5" $R5
+          ; Replace all occurrences of "/" with "\".
+          ${${_MOZFUNC_UN}WordReplace} "$R5" "/" "\" "+" $R5
+
+          ; Copy the first 7 chars
+          StrCpy $R6 "$R5" 7
+          ${If} "$R6" == "remove "
+            ; Copy the string starting after the 8th char
+            StrCpy $R5 "$R5" "" 8
+            ; Copy all but the last char to remove the double quote.
+            StrCpy $R5 "$R5" -1
+            ${If} ${FileExists} "$INSTDIR\$R5"
+              ${Unless} "$R9" == "false"
+                IntOp $R9 $R9 + 2
+              ${EndUnless}
+              ${Unless} "$R8" == "false"
+                SendMessage $R8 ${PBM_STEPIT} 0 0
+                SendMessage $R8 ${PBM_STEPIT} 0 0
+              ${EndUnless}
+
+              ClearErrors
+              Delete "$INSTDIR\$R5"
+              ${If} ${Errors}
+                GetTempFileName $R7 "$INSTDIR\${TO_BE_DELETED}"
+                Delete "$R7"
+                ClearErrors
+                Rename "$INSTDIR\$R5" "$R7"
+                ${Unless} ${Errors}
+                  Delete /REBOOTOK "$R7"
+
+                  ClearErrors
+                ${EndUnless}
+!ifdef __UNINSTALL__
+                ${If} ${Errors}
+                  Delete /REBOOTOK "$INSTDIR\$R5"
+                  StrCpy $R2 "true"
+                  ClearErrors
+                ${EndIf}
+!endif
+              ${EndIf}
+            ${EndIf}
+          ${ElseIf} "$R6" == "rmdir $\""
+            ; Copy the string starting after the 7th char.
+            StrCpy $R5 "$R5" "" 7
+            ; Copy all but the last two chars to remove the slash and the double quote.
+            StrCpy $R5 "$R5" -2
+            ${If} ${FileExists} "$INSTDIR\$R5"
+              ; Ignore directory removal errors
+              RmDir "$INSTDIR\$R5"
+              ClearErrors
+            ${EndIf}
+          ${EndIf}
+        ${Loop}
+        FileClose $R4
+
+        ${If} ${RebootFlag}
+        ${AndIf} "$R2" == "false"
+          ; Clear the reboot flag if all files were deleted or moved to the
+          ; tobedeleted directory.
+          SetRebootFlag false
         ${EndIf}
-      ${ElseIf} "$R1" == "rmdir $\""
-        ; Copy the string starting after the 7th char.
-        StrCpy $R9 "$R9" "" 7
-        ; Copy all but the last two chars to remove the slash and the double quote.
-        StrCpy $R9 "$R9" -2
-        ${If} ${FileExists} "$INSTDIR\$R9"
-          ; Ignore directory removal errors
-          RmDir "$INSTDIR\$R9"
-        ${EndIf}
+        ; Delete the temporary precomplete file
+        Delete /REBOOTOK "$R3"
       ${EndIf}
 
       ClearErrors
 
-      Push 0
+      Pop $R2
+      Pop $R3
+      Pop $R4
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Exch $R8
+      Exch 1
+      Exch $R9
     FunctionEnd
 
     !verbose pop
