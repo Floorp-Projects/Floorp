@@ -280,6 +280,13 @@ TabTarget.prototype = {
     if (!this.client) {
       throw new Error("TabTarget#getTrait() can only be called on remote tabs.");
     }
+
+    // If the targeted actor exposes traits and has a defined value for this traits,
+    // override the root actor traits
+    if (this.form.traits && traitName in this.form.traits) {
+      return this.form.traits[traitName];
+    }
+
     return this.client.traits[traitName];
   },
 
@@ -323,9 +330,13 @@ TabTarget.prototype = {
   },
 
   get name() {
-    return this._tab && this._tab.linkedBrowser.contentDocument ?
-           this._tab.linkedBrowser.contentDocument.title :
-           this._form.title;
+    if (this._tab && this._tab.linkedBrowser.contentDocument) {
+      return this._tab.linkedBrowser.contentDocument.title
+    } else if (this.isAddon) {
+      return this._form.name;
+    } else {
+      return this._form.title;
+    }
   },
 
   get url() {
@@ -338,7 +349,8 @@ TabTarget.prototype = {
   },
 
   get isAddon() {
-    return !!(this._form && this._form.addonActor);
+    return !!(this._form && this._form.actor &&
+              this._form.actor.match(/conn\d+\.addon\d+/));
   },
 
   get isLocalTab() {

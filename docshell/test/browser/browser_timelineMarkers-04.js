@@ -43,13 +43,13 @@ let test = Task.async(function*() {
     docShell.popProfileTimelineMarkers();
 
     info("Running the test setup function");
-    let onMarkers = waitForMarkers(docShell);
+    let onMarkers = waitForDOMMarkers(docShell, 5);
     setup();
     info("Waiting for new markers on the docShell");
     let markers = yield onMarkers;
 
     info("Running the test check function");
-    check(markers.filter(m => m.name == "DOMEvent"));
+    check(markers);
   }
 
   info("Stop recording");
@@ -73,20 +73,19 @@ function openUrl(url) {
   });
 }
 
-function waitForMarkers(docshell) {
+function waitForDOMMarkers(docshell, numExpected) {
   return new Promise(function(resolve, reject) {
     let waitIterationCount = 0;
     let maxWaitIterationCount = 10; // Wait for 2sec maximum
+    let markers = [];
 
     let interval = setInterval(() => {
-      let markers = docshell.popProfileTimelineMarkers();
-      if (markers.length > 0) {
+      let newMarkers = docshell.popProfileTimelineMarkers();
+      markers = [...markers, ...newMarkers.filter(m => m.name == "DOMEvent")];
+      if (markers.length >= numExpected
+          || waitIterationCount > maxWaitIterationCount) {
         clearInterval(interval);
         resolve(markers);
-      }
-      if (waitIterationCount > maxWaitIterationCount) {
-        clearInterval(interval);
-        resolve([]);
       }
       waitIterationCount++;
     }, 200);

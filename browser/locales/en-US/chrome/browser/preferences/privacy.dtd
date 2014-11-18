@@ -17,11 +17,11 @@
 
 <!ENTITY  locbar.suggest.label          "When using the location bar, suggest:">
 <!ENTITY  locbar.history.label          "History">
-<!ENTITY  locbar.history.accesskey      "i">
+<!ENTITY  locbar.history.accesskey      "H">
 <!ENTITY  locbar.bookmarks.label        "Bookmarks">
-<!ENTITY  locbar.bookmarks.accesskey    "d">
+<!ENTITY  locbar.bookmarks.accesskey    "k">
 <!ENTITY  locbar.openpage.label         "Open tabs">
-<!ENTITY  locbar.openpage.accesskey     "g">
+<!ENTITY  locbar.openpage.accesskey     "O">
 
 <!ENTITY  acceptCookies.label           "Accept cookies from sites">
 <!ENTITY  acceptCookies.accesskey       "A">
@@ -33,7 +33,7 @@
 <!ENTITY  acceptThirdParty.visited.label  "From visited">
 
 <!ENTITY  keepUntil.label               "Keep until:">
-<!ENTITY  keepUntil.accesskey           "K">
+<!ENTITY  keepUntil.accesskey           "u">
 
 <!ENTITY  expire.label                  "they expire">
 <!ENTITY  close.label                   "I close &brandShortName;">
