@@ -205,6 +205,16 @@ class Nursery
     typedef HashSet<HeapSlot *, PointerHasher<HeapSlot *, 3>, SystemAllocPolicy> HugeSlotsSet;
     HugeSlotsSet hugeSlots;
 
+    /*
+     * During a collection most hoisted slot and element buffers indicate their
+     * new location with a forwarding pointer at the base. This does not work
+     * for buffers whose length is less than pointer width, or when different
+     * buffers might overlap each other. For these, an entry in the following
+     * table is used.
+     */
+    typedef HashMap<void *, void *, PointerHasher<void *, 1>, SystemAllocPolicy> ForwardedBufferMap;
+    ForwardedBufferMap forwardedBuffers;
+
     /* The maximum number of slots allowed to reside inline in the nursery. */
     static const size_t MaxNurserySlots = 128;
 
