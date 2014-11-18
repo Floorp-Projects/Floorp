@@ -5,10 +5,9 @@
 #ifndef MP4_DEMUXER_ANNEX_B_H_
 #define MP4_DEMUXER_ANNEX_B_H_
 
-#include "mozilla/Vector.h"
+#include "mp4_demuxer/DecoderData.h"
 
 template <class T> struct already_AddRefed;
-template <class T> class nsRcTArray;
 
 namespace mp4_demuxer
 {
