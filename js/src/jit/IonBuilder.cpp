@@ -4970,15 +4970,15 @@ IonBuilder::inlineCalls(CallInfo &callInfo, ObjectVector &targets,
     // Inline each of the inlineable targets.
     MOZ_ASSERT(targets.length() == originals.length());
     for (uint32_t i = 0; i < targets.length(); i++) {
+        // Target must be inlineable.
+        if (!choiceSet[i])
+            continue;
+
         // When original != target, the target is a callsite clone. The
         // original should be used for guards, and the target should be the
         // actual function inlined.
         JSFunction *original = &originals[i]->as<JSFunction>();
         JSFunction *target = &targets[i]->as<JSFunction>();
-
-        // Target must be inlineable.
-        if (!choiceSet[i])
-            continue;
 
         // Target must be reachable by the MDispatchInstruction.
         if (maybeCache && !maybeCache->propTable()->hasFunction(original)) {
