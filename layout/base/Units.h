@@ -236,6 +236,12 @@ struct LayoutDevicePixel {
     return FromUntyped(aRect.ToNearestPixels(aAppUnitsPerDevPixel));
   }
 
+  static LayoutDeviceIntSize FromAppUnitsRounded(const nsSize& aSize, nscoord aAppUnitsPerDevPixel) {
+    return LayoutDeviceIntSize(
+      NSAppUnitsToIntPixels(aSize.width, aAppUnitsPerDevPixel),
+      NSAppUnitsToIntPixels(aSize.height, aAppUnitsPerDevPixel));
+  }
+
   static nsSize ToAppUnits(const LayoutDeviceIntSize& aSize, nscoord aAppUnitsPerDevPixel) {
     return nsSize(aSize.width * aAppUnitsPerDevPixel,
                   aSize.height * aAppUnitsPerDevPixel);

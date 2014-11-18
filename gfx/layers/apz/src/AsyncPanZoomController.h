@@ -415,6 +415,11 @@ protected:
   nsEventStatus OnPanMomentumEnd(const PanGestureInput& aEvent);
 
   /**
+   * Helper methods for handling scroll wheel events.
+   */
+  nsEventStatus OnScrollWheel(const ScrollWheelInput& aEvent);
+
+  /**
    * Helper methods for long press gestures.
    */
   nsEventStatus OnLongPress(const TapGestureInput& aEvent);

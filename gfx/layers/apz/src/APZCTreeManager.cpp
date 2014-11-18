@@ -611,6 +611,29 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
       result = ProcessTouchInput(touchInput, aOutTargetGuid, aOutInputBlockId);
       break;
+    } case SCROLLWHEEL_INPUT: {
+      ScrollWheelInput& wheelInput = aEvent.AsScrollWheelInput();
+      nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(wheelInput.mOrigin,
+                                                            &hitResult);
+      if (apzc) {
+        MOZ_ASSERT(hitResult == ApzcHitRegion || hitResult == ApzcContentRegion);
+
+        transformToApzc = GetScreenToApzcTransform(apzc);
+        wheelInput.mLocalOrigin =
+          TransformTo<ParentLayerPixel>(transformToApzc, wheelInput.mOrigin);
+
+        result = mInputQueue->ReceiveInputEvent(
+          apzc,
+          /* aTargetConfirmed = */ hitResult,
+          wheelInput, aOutInputBlockId);
+
+        // Update the out-parameters so they are what the caller expects.
+        apzc->GetGuid(aOutTargetGuid);
+        Matrix4x4 transformToGecko = transformToApzc * GetApzcToGeckoTransform(apzc);
+        wheelInput.mOrigin =
+          TransformTo<ScreenPixel>(transformToGecko, wheelInput.mLocalOrigin);
+      }
+      break;
     } case PANGESTURE_INPUT: {
       PanGestureInput& panInput = aEvent.AsPanGestureInput();
       nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
