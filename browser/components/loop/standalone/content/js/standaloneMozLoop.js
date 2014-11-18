@@ -190,5 +190,33 @@ loop.StandaloneMozLoop = (function(mozL10n) {
     this.rooms = new StandaloneMozLoopRooms(options);
   };
 
+  StandaloneMozLoop.prototype = {
+    /**
+     * Stores a preference in the local storage for standalone.
+     * Note: Some prefs are filtered out as they are not applicable
+     * to the standalone UI.
+     *
+     * @param {String} prefName The name of the pref
+     * @param {String} value The value to set.
+     */
+    setLoopCharPref: function(prefName, value) {
+      if (prefName === "seenToS") {
+        return;
+      }
+
+      localStorage.setItem(prefName, value);
+    },
+
+    /**
+     * Gets a preference from the local storage for standalone.
+     *
+     * @param {String} prefName The name of the pref
+     * @param {String} value The value to set.
+     */
+    getLoopCharPref: function(prefName) {
+      return localStorage.getItem(prefName);
+    }
+  };
+
   return StandaloneMozLoop;
 })(navigator.mozL10n);
