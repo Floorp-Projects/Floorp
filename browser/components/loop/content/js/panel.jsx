@@ -20,7 +20,6 @@ loop.panel = (function(_, mozL10n) {
   var ButtonGroup = sharedViews.ButtonGroup;
   var ContactsList = loop.contacts.ContactsList;
   var ContactDetailsForm = loop.contacts.ContactDetailsForm;
-  var __ = mozL10n.get; // aliasing translation function as __ for concision
 
   var TabView = React.createClass({
     propTypes: {
@@ -138,8 +137,8 @@ loop.panel = (function(_, mozL10n) {
         'hide': !this.state.showMenu
       });
       var availabilityText = this.state.doNotDisturb ?
-                              __("display_name_dnd_status") :
-                              __("display_name_available_status");
+                              mozL10n.get("display_name_dnd_status") :
+                              mozL10n.get("display_name_available_status");
 
       return (
         <div className="dropdown">
@@ -152,12 +151,12 @@ loop.panel = (function(_, mozL10n) {
             <li onClick={this.changeAvailability("available")}
                 className="dropdown-menu-item dnd-make-available">
               <i className="status status-available"></i>
-              <span>{__("display_name_available_status")}</span>
+              <span>{mozL10n.get("display_name_available_status")}</span>
             </li>
             <li onClick={this.changeAvailability("do-not-disturb")}
                 className="dropdown-menu-item dnd-make-unavailable">
               <i className="status status-dnd"></i>
-              <span>{__("display_name_dnd_status")}</span>
+              <span>{mozL10n.get("display_name_dnd_status")}</span>
             </li>
           </ul>
         </div>
@@ -298,20 +297,20 @@ loop.panel = (function(_, mozL10n) {
       return (
         <div className="settings-menu dropdown">
           <a className="button-settings" onClick={this.showDropdownMenu}
-             title={__("settings_menu_button_tooltip")} />
+             title={mozL10n.get("settings_menu_button_tooltip")} />
           <ul className={cx({"dropdown-menu": true, hide: !this.state.showMenu})}
               onMouseLeave={this.hideDropdownMenu}>
-            <SettingsDropdownEntry label={__("settings_menu_item_settings")}
+            <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_settings")}
                                    onClick={this.handleClickSettingsEntry}
                                    displayed={false}
                                    icon="settings" />
-            <SettingsDropdownEntry label={__("settings_menu_item_account")}
+            <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_account")}
                                    onClick={this.handleClickAccountEntry}
                                    icon="account"
                                    displayed={this._isSignedIn()} />
             <SettingsDropdownEntry label={this._isSignedIn() ?
-                                          __("settings_menu_item_signout") :
-                                          __("settings_menu_item_signin")}
+                                          mozL10n.get("settings_menu_item_signout") :
+                                          mozL10n.get("settings_menu_item_signin")}
                                    onClick={this.handleClickAuthEntry}
                                    displayed={navigator.mozLoop.fxAEnabled}
                                    icon={this._isSignedIn() ? "signout" : "signin"} />
@@ -487,7 +486,7 @@ loop.panel = (function(_, mozL10n) {
       return (
         <p className="signin-link">
           <a href="#" onClick={this.handleSignUpLinkClick}>
-            {__("panel_footer_signin_or_signup_link")}
+            {mozL10n.get("panel_footer_signin_or_signup_link")}
           </a>
         </p>
       );
@@ -789,7 +788,7 @@ loop.panel = (function(_, mozL10n) {
 
     _getUserDisplayName: function() {
       return this.state.userProfile && this.state.userProfile.email ||
-             __("display_name_guest");
+             mozL10n.get("display_name_guest");
     },
 
     render: function() {
