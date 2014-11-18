@@ -21,6 +21,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 class nsIAtom;
 class nsICSSLoaderObserver;
@@ -40,41 +41,52 @@ class Element;
 
 namespace mozilla {
 
-class URIPrincipalAndCORSModeHashKey : public nsURIHashKey
+class URIPrincipalReferrerPolicyAndCORSModeHashKey : public nsURIHashKey
 {
 public:
-  typedef URIPrincipalAndCORSModeHashKey* KeyType;
-  typedef const URIPrincipalAndCORSModeHashKey* KeyTypePointer;
+  typedef URIPrincipalReferrerPolicyAndCORSModeHashKey* KeyType;
+  typedef const URIPrincipalReferrerPolicyAndCORSModeHashKey* KeyTypePointer;
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
-  explicit URIPrincipalAndCORSModeHashKey(const URIPrincipalAndCORSModeHashKey* aKey)
-    : nsURIHashKey(aKey->mKey), mPrincipal(aKey->mPrincipal),
-      mCORSMode(aKey->mCORSMode)
+  explicit URIPrincipalReferrerPolicyAndCORSModeHashKey(const URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey)
+    : nsURIHashKey(aKey->mKey),
+      mPrincipal(aKey->mPrincipal),
+      mCORSMode(aKey->mCORSMode),
+      mReferrerPolicy(aKey->mReferrerPolicy)
   {
-    MOZ_COUNT_CTOR(URIPrincipalAndCORSModeHashKey);
-  }
-  URIPrincipalAndCORSModeHashKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                                 CORSMode aCORSMode)
-    : nsURIHashKey(aURI), mPrincipal(aPrincipal), mCORSMode(aCORSMode)
-  {
-    MOZ_COUNT_CTOR(URIPrincipalAndCORSModeHashKey);
-  }
-  URIPrincipalAndCORSModeHashKey(const URIPrincipalAndCORSModeHashKey& toCopy)
-    : nsURIHashKey(toCopy), mPrincipal(toCopy.mPrincipal),
-      mCORSMode(toCopy.mCORSMode)
-  {
-    MOZ_COUNT_CTOR(URIPrincipalAndCORSModeHashKey);
-  }
-  ~URIPrincipalAndCORSModeHashKey()
-  {
-    MOZ_COUNT_DTOR(URIPrincipalAndCORSModeHashKey);
+    MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
 
-  URIPrincipalAndCORSModeHashKey* GetKey() const {
-    return const_cast<URIPrincipalAndCORSModeHashKey*>(this);
+  URIPrincipalReferrerPolicyAndCORSModeHashKey(nsIURI* aURI,
+                                               nsIPrincipal* aPrincipal,
+                                               CORSMode aCORSMode,
+                                               ReferrerPolicy aReferrerPolicy)
+    : nsURIHashKey(aURI),
+      mPrincipal(aPrincipal),
+      mCORSMode(aCORSMode),
+      mReferrerPolicy(aReferrerPolicy)
+  {
+    MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
   }
-  const URIPrincipalAndCORSModeHashKey* GetKeyPointer() const { return this; }
+  URIPrincipalReferrerPolicyAndCORSModeHashKey(const URIPrincipalReferrerPolicyAndCORSModeHashKey& toCopy)
+    : nsURIHashKey(toCopy),
+      mPrincipal(toCopy.mPrincipal),
+      mCORSMode(toCopy.mCORSMode),
+      mReferrerPolicy(toCopy.mReferrerPolicy)
+  {
+    MOZ_COUNT_CTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
+  }
+  ~URIPrincipalReferrerPolicyAndCORSModeHashKey()
+  {
+    MOZ_COUNT_DTOR(URIPrincipalReferrerPolicyAndCORSModeHashKey);
+  }
 
-  bool KeyEquals(const URIPrincipalAndCORSModeHashKey* aKey) const {
+  URIPrincipalReferrerPolicyAndCORSModeHashKey* GetKey() const {
+    return const_cast<URIPrincipalReferrerPolicyAndCORSModeHashKey*>(this);
+  }
+  const URIPrincipalReferrerPolicyAndCORSModeHashKey* GetKeyPointer() const { return this; }
+
+  bool KeyEquals(const URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey) const {
     if (!nsURIHashKey::KeyEquals(aKey->mKey)) {
       return false;
     }
@@ -89,14 +101,19 @@ public:
       return false;
     }
 
+    if (mReferrerPolicy != aKey->mReferrerPolicy) {
+      // Different ReferrerPolicy; we don't match
+      return false;
+    }
+
     bool eq;
     return !mPrincipal ||
       (NS_SUCCEEDED(mPrincipal->Equals(aKey->mPrincipal, &eq)) && eq);
   }
 
-  static const URIPrincipalAndCORSModeHashKey*
-  KeyToPointer(URIPrincipalAndCORSModeHashKey* aKey) { return aKey; }
-  static PLDHashNumber HashKey(const URIPrincipalAndCORSModeHashKey* aKey) {
+  static const URIPrincipalReferrerPolicyAndCORSModeHashKey*
+  KeyToPointer(URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey) { return aKey; }
+  static PLDHashNumber HashKey(const URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey) {
     return nsURIHashKey::HashKey(aKey->mKey);
   }
 
@@ -107,6 +124,7 @@ public:
 protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   CORSMode mCORSMode;
+  ReferrerPolicy mReferrerPolicy;
 };
 
 
@@ -128,6 +146,8 @@ enum StyleSheetState {
 };
 
 class Loader MOZ_FINAL {
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+
 public:
   Loader();
   explicit Loader(nsIDocument*);
@@ -205,6 +225,7 @@ public:
                          const nsAString& aMedia,
                          bool aHasAlternateRel,
                          CORSMode aCORSMode,
+                         ReferrerPolicy aReferrerPolicy,
                          nsICSSLoaderObserver* aObserver,
                          bool* aIsAlternate);
 
@@ -301,7 +322,8 @@ public:
                      nsIPrincipal* aOriginPrincipal,
                      const nsCString& aCharset,
                      nsICSSLoaderObserver* aObserver,
-                     CORSMode aCORSMode = CORS_NONE);
+                     CORSMode aCORSMode = CORS_NONE,
+                     ReferrerPolicy aReferrerPolicy = mozilla::net::RP_Default);
 
   /**
    * Stop loading all sheets.  All nsICSSLoaderObservers involved will be
@@ -378,7 +400,7 @@ private:
   friend class SheetLoadData;
 
   static PLDHashOperator
-  RemoveEntriesWithURI(URIPrincipalAndCORSModeHashKey* aKey,
+  RemoveEntriesWithURI(URIPrincipalReferrerPolicyAndCORSModeHashKey* aKey,
                        nsRefPtr<CSSStyleSheet>& aSheet,
                        void* aUserData);
 
@@ -397,6 +419,7 @@ private:
                        nsIContent* aLinkingContent,
                        nsIPrincipal* aLoaderPrincipal,
                        CORSMode aCORSMode,
+                       ReferrerPolicy aReferrerPolicy,
                        bool aSyncLoad,
                        bool aHasAlternateRel,
                        const nsAString& aTitle,
@@ -429,7 +452,8 @@ private:
                                         const nsCString& aCharset,
                                         CSSStyleSheet** aSheet,
                                         nsICSSLoaderObserver* aObserver,
-                                        CORSMode aCORSMode = CORS_NONE);
+                                        CORSMode aCORSMode = CORS_NONE,
+                                        ReferrerPolicy aReferrerPolicy = mozilla::net::RP_Default);
 
   // Post a load event for aObserver to be notified about aSheet.  The
   // notification will be sent with status NS_OK unless the load event is
@@ -473,11 +497,11 @@ private:
                        LoadDataArray& aDatasToNotify);
 
   struct Sheets {
-    nsRefPtrHashtable<URIPrincipalAndCORSModeHashKey, CSSStyleSheet>
+    nsRefPtrHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey, CSSStyleSheet>
                       mCompleteSheets;
-    nsDataHashtable<URIPrincipalAndCORSModeHashKey, SheetLoadData*>
+    nsDataHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey, SheetLoadData*>
                       mLoadingDatas; // weak refs
-    nsDataHashtable<URIPrincipalAndCORSModeHashKey, SheetLoadData*>
+    nsDataHashtable<URIPrincipalReferrerPolicyAndCORSModeHashKey, SheetLoadData*>
                       mPendingDatas; // weak refs
   };
   nsAutoPtr<Sheets> mSheets;
