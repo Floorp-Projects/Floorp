@@ -591,8 +591,7 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
             // off-thread helper too late (i.e., the ForkJoin finished with
             // warmup doing all the work), remove it.
             if (!script->hasParallelIonScript() ||
-                !script->parallelIonScript()->isParallelEntryScript() ||
-                trc->runtime()->gc.shouldCleanUpEverything())
+                !script->parallelIonScript()->isParallelEntryScript())
             {
                 e.removeFront();
                 continue;
@@ -604,7 +603,9 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
             // Subtlety: We depend on the tracing of the parallel IonScript's
             // callTargetEntries to propagate the parallel age to the entire
             // call graph.
-            if (script->parallelIonScript()->shouldPreserveParallelCode(IonScript::IncreaseAge)) {
+            if (!trc->runtime()->gc.shouldCleanUpEverything() &&
+                script->parallelIonScript()->shouldPreserveParallelCode(IonScript::IncreaseAge))
+            {
                 MarkScript(trc, const_cast<PreBarrieredScript *>(&e.front()), "par-script");
                 MOZ_ASSERT(script == e.front());
             } else {
