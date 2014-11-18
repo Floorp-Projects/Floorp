@@ -102,10 +102,36 @@ body {
 
 .content-area header {
   font-weight: 700;
-  -moz-padding-start: 20px;
 }
 
-.tab-view + .tab .content-area header {
+#fte-getstarted {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 1em;
+}
+
+#fte-title {
+  text-align: center;
+  margin-bottom: .5em;
+}
+
+#fte-button {
+  width: 50%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1rem;
+  padding: .5rem 1rem;
+  height: auto; /* Needed to override .button's height:26px; */
+}
+
+/* Need to remove when these rules when the Beta tag is removed */
+#share-link-header {
+  -moz-padding-start: 20px;
+}
+#fte-getstarted + .generate-url > #share-link-header,
+.tab-view + .tab .content-area > .generate-url > #share-link-header {
   /* The header shouldn't be indented if the tabs are present. */
   -moz-padding-start: 0;
 }
@@ -434,6 +460,7 @@ body[dir=rtl] .generate-url-spinner {
   right: auto;
 }
 
+#fte-button,
 .generate-url .button {
   background-color: #0096dd;
   border-color: #0096dd;

@@ -452,6 +452,23 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Set any boolean preference under "loop."
+     *
+     * @param {String} prefName The name of the pref without the preceding "loop."
+     * @param {bool} value The value to set.
+     *
+     * Any errors thrown by the Mozilla pref API are logged to the console
+     * and cause false to be returned.
+     */
+    setLoopBoolPref: {
+      enumerable: true,
+      writable: true,
+      value: function(prefName, value) {
+        MozLoopService.setLoopBoolPref(prefName, value);
+      }
+    },
+
+    /**
      * Return any preference under "loop." that's coercible to a boolean
      * preference.
      *
@@ -593,6 +610,17 @@ function injectLoopAPI(targetWindow) {
       writable: true,
       value: function() {
         return MozLoopService.openFxASettings();
+      },
+    },
+
+    /**
+     * Opens the Getting Started tour in the browser.
+     */
+    openGettingStartedTour: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        return MozLoopService.openGettingStartedTour();
       },
     },
 
