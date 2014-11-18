@@ -3147,42 +3147,27 @@ nsComputedDOMStyle::DoGetTextDecoration()
 {
   const nsStyleTextReset* textReset = StyleTextReset();
 
-  // If decoration style or color wasn't initial value, the author knew the
-  // text-decoration is a shorthand property in CSS 3.
-  // Return nullptr in such cases.
-  if (textReset->GetDecorationStyle() != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
-    return nullptr;
-  }
-
+  bool isInitialStyle =
+    textReset->GetDecorationStyle() == NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
   nscolor color;
   bool isForegroundColor;
   textReset->GetDecorationColor(color, isForegroundColor);
+
+  if (isInitialStyle && isForegroundColor) {
+    return DoGetTextDecorationLine();
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(false);
+
+  valueList->AppendCSSValue(DoGetTextDecorationLine());
+  if (!isInitialStyle) {
+    valueList->AppendCSSValue(DoGetTextDecorationStyle());
+  }
   if (!isForegroundColor) {
-    return nullptr;
+    valueList->AppendCSSValue(DoGetTextDecorationColor());
   }
 
-  // Otherwise, the web pages may have been written for CSS 2.1 or earlier,
-  // i.e., text-decoration was assumed as a longhand property.  In that case,
-  // we should return computed value same as CSS 2.1 for backward compatibility.
-
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  uint8_t line = textReset->mTextDecorationLine;
-  // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
-  // don't want these to appear in the computed style.
-  line &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
-            NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
-
-  if (line == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
-    val->SetIdent(eCSSKeyword_none);
-  } else {
-    nsAutoString str;
-    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
-      line, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-      NS_STYLE_TEXT_DECORATION_LINE_BLINK, str);
-    val->SetString(str);
-  }
-
-  return val;
+  return valueList;
 }
 
 CSSValue*

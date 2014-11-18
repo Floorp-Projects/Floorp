@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test parsing of text-decoration shorthands</title>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel='stylesheet' href='/resources/testharness.css'>
+</head>
+<body>
+
+<script>
+
+var initial_values = {
+    textDecorationColor: "rgb(255, 0, 255)",
+    textDecorationLine: "none",
+    textDecorationStyle: "solid",
+};
+
+// For various specified values of the text-decoration shorthand,
+// test the computed values of the corresponding longhands.
+var text_decoration_test_cases = [
+    {
+        specified: "none",
+    },
+    {
+        specified: "red",
+        textDecorationColor: "rgb(255, 0, 0)",
+    },
+    {
+        specified: "line-through",
+        textDecorationLine: "line-through",
+    },
+    {
+        specified: "dotted",
+        textDecorationStyle: "dotted",
+    },
+    {
+        specified: "#00ff00 underline",
+        textDecorationColor: "rgb(0, 255, 0)",
+        textDecorationLine: "underline",
+    },
+    {
+        specified: "#ffff00 wavy",
+        textDecorationColor: "rgb(255, 255, 0)",
+        textDecorationStyle: "wavy",
+    },
+    {
+        specified: "overline double",
+        textDecorationLine: "overline",
+        textDecorationStyle: "double",
+    },
+    {
+        specified: "red underline solid",
+        textDecorationColor: "rgb(255, 0, 0)",
+        textDecorationLine: "underline",
+        textDecorationStyle: "solid",
+    },
+    {
+        specified: "double overline blue",
+        textDecorationColor: "rgb(0, 0, 255)",
+        textDecorationLine: "overline",
+        textDecorationStyle: "double",
+    },
+];
+
+function run_tests(test_cases, shorthand, subproperties) {
+    test_cases.forEach(function(test_case) {
+        test(function() {
+            var element = document.createElement('div');
+            document.body.appendChild(element);
+            // Set text color to test initial value of text-decoration-color
+            // (currentColor).
+            element.style.color = "#ff00ff";
+            element.style[shorthand] = test_case.specified;
+            var computed = window.getComputedStyle(element);
+            subproperties.forEach(function(longhand) {
+                assert_equals(
+                    computed[longhand],
+                    test_case[longhand] || initial_values[longhand],
+                    longhand
+                );
+            });
+        }, "test parsing of 'text-decoration: " + test_case.specified + "'");
+    });
+}
+
+run_tests(text_decoration_test_cases, "textDecoration", [
+    "textDecorationColor", "textDecorationLine", "textDecorationStyle"]);
+
+</script>
+</body>
+</html>
