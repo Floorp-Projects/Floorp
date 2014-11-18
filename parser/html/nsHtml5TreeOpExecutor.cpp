@@ -905,7 +905,8 @@ nsHtml5TreeOpExecutor::PreloadScript(const nsAString& aURL,
     return;
   }
   mDocument->ScriptLoader()->PreloadURI(uri, aCharset, aType, aCrossOrigin,
-                                        aScriptFromHead);
+                                        aScriptFromHead,
+                                        mSpeculationReferrerPolicy);
 }
 
 void
