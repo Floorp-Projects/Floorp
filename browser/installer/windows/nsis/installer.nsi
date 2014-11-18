@@ -274,18 +274,6 @@ Section "-Application" APP_IDX
     ${LogMsg} "Registered: $INSTDIR\AccessibleMarshal.dll"
   ${EndIf}
 
-  ; Write extra files created by the application to the uninstall log so they
-  ; will be removed when the application is uninstalled. To remove an empty
-  ; directory write a bogus filename to the deepest directory and all empty
-  ; parent directories will be removed.
-  ${LogUninstall} "File: \components\compreg.dat"
-  ${LogUninstall} "File: \components\xpti.dat"
-  ${LogUninstall} "File: \active-update.xml"
-  ${LogUninstall} "File: \install.log"
-  ${LogUninstall} "File: \install_status.log"
-  ${LogUninstall} "File: \install_wizard.log"
-  ${LogUninstall} "File: \updates.xml"
-
   ClearErrors
 
   ; Default for creating Start Menu shortcut
