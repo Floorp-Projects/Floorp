@@ -6,6 +6,7 @@
 #define nsHtml5SpeculativeLoad_h
 
 #include "nsString.h"
+#include "nsContentUtils.h"
 
 class nsHtml5TreeOpExecutor;
 
@@ -14,6 +15,7 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadUninitialized,
 #endif
   eSpeculativeLoadBase,
+  eSpeculativeLoadMetaReferrer,
   eSpeculativeLoadImage,
   eSpeculativeLoadScript,
   eSpeculativeLoadScriptFromHead,
@@ -33,6 +35,14 @@ class nsHtml5SpeculativeLoad {
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadBase;
       mUrl.Assign(aUrl);
+    }
+
+    inline void InitMetaReferrerPolicy(const nsAString& aReferrerPolicy) {
+      NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
+                      "Trying to reinitialize a speculative load!");
+      mOpCode = eSpeculativeLoadMetaReferrer;
+      mMetaReferrerPolicy.Assign(
+        nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aReferrerPolicy));
     }
 
     inline void InitImage(const nsAString& aUrl,
@@ -116,6 +126,7 @@ class nsHtml5SpeculativeLoad {
   private:
     eHtml5SpeculativeLoad mOpCode;
     nsString mUrl;
+    nsString mMetaReferrerPolicy;
     /**
      * If mOpCode is eSpeculativeLoadStyle or eSpeculativeLoadScript[FromHead]
      * then this is the value of the "charset" attribute. For

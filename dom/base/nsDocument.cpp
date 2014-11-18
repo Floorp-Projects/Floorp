@@ -1539,6 +1539,8 @@ static already_AddRefed<mozilla::dom::NodeInfo> nullNodeInfo;
 // ==================================================================
 nsIDocument::nsIDocument()
   : nsINode(nullNodeInfo),
+    mReferrerPolicySet(false),
+    mReferrerPolicy(mozilla::net::RP_Default),
     mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
     mNodeInfoManager(nullptr),
     mCompatMode(eCompatibility_FullStandards),
@@ -3700,6 +3702,20 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       aHeaderField == nsGkAtoms::viewport_width ||
       aHeaderField ==  nsGkAtoms::viewport_user_scalable) {
     mViewportType = Unknown;
+  }
+
+  // Referrer policy spec says to ignore any empty referrer policies.
+  if (aHeaderField == nsGkAtoms::referrer && !aData.IsEmpty()) {
+    ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aData);
+
+    // Referrer policy spec (section 6.1) says that once the referrer policy
+    // is set, any future attempts to change it result in No-Referrer.
+    if (!mReferrerPolicySet) {
+      mReferrerPolicy = policy;
+      mReferrerPolicySet = true;
+    } else if (mReferrerPolicy != policy) {
+      mReferrerPolicy = mozilla::net::RP_No_Referrer;
+    }
   }
 }
 
