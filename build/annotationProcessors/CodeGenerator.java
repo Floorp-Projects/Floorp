@@ -12,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -231,6 +232,27 @@ public class CodeGenerator {
 
         if (theCtor.getParameterTypes().length == 0) {
             mHasEncounteredDefaultConstructor = true;
+        }
+    }
+
+    public void generateMembers(Member[] members) {
+        for (Member m : members) {
+            if (!Modifier.isPublic(m.getModifiers())) {
+                continue;
+            }
+
+            String name = m.getName();
+            name = name.substring(0, 1).toUpperCase() + name.substring(1);
+
+            AnnotationInfo info = new AnnotationInfo(name, true, true, true);
+            AnnotatableEntity entity = new AnnotatableEntity(m, info);
+            if (m instanceof Constructor) {
+                generateConstructor(entity);
+            } else if (m instanceof Method) {
+                generateMethod(entity);
+            } else if (m instanceof Field) {
+                generateField(entity);
+            }
         }
     }
 
