@@ -394,8 +394,11 @@ this.DOMApplicationRegistry = {
 
   _saveWidgetsFullPath: function(aManifest, aDestApp) {
     if (aManifest.widgetPages) {
-      aDestApp.widgetPages = aManifest.widgetPages.map(aManifest.resolveURL,
-                                                       aManifest/* thisArg */);
+      let resolve = (aPage)=>{
+        let filepath = AppsUtils.getFilePath(aPage);
+        return Services.io.newURI(aManifest.resolveURL(filepath), null, null);
+      };
+      aDestApp.widgetPages = aManifest.widgetPages.map(resolve);
     } else {
       aDestApp.widgetPages = [];
     }
