@@ -55,6 +55,14 @@ browser.jar:
   content/browser/loop/shared/img/icons-10x10.svg               (content/shared/img/icons-10x10.svg)
   content/browser/loop/shared/img/icons-14x14.svg               (content/shared/img/icons-14x14.svg)
   content/browser/loop/shared/img/icons-16x16.svg               (content/shared/img/icons-16x16.svg)
+  content/browser/loop/shared/img/movistar.png                  (content/shared/img/movistar.png)
+  content/browser/loop/shared/img/movistar@2x.png               (content/shared/img/movistar@2x.png)
+  content/browser/loop/shared/img/vivo.png                      (content/shared/img/vivo.png)
+  content/browser/loop/shared/img/vivo@2x.png                   (content/shared/img/vivo@2x.png)
+  content/browser/loop/shared/img/02.png                        (content/shared/img/02.png)
+  content/browser/loop/shared/img/02@2x.png                     (content/shared/img/02@2x.png)
+  content/browser/loop/shared/img/telefonica.png                (content/shared/img/telefonica.png)
+  content/browser/loop/shared/img/telefonica@2x.png             (content/shared/img/telefonica@2x.png)
 
   # Shared scripts
   content/browser/loop/shared/js/actions.js           (content/shared/js/actions.js)
