@@ -68,13 +68,11 @@ public:
   struct MOZ_STACK_CLASS EvaluateOptions {
     bool coerceToString;
     bool reportUncaught;
-    bool needResult;
     JS::AutoObjectVector scopeChain;
 
     explicit EvaluateOptions(JSContext* cx)
       : coerceToString(false)
       , reportUncaught(true)
-      , needResult(true)
       , scopeChain(cx)
     {}
 
@@ -85,11 +83,6 @@ public:
 
     EvaluateOptions& setReportUncaught(bool aReport) {
       reportUncaught = aReport;
-      return *this;
-    }
-
-    EvaluateOptions& setNeedResult(bool aNeedResult) {
-      needResult = aNeedResult;
       return *this;
     }
   };
