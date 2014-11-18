@@ -24,6 +24,17 @@ function dumpSdp(test) {
     dump("ERROR: SDP answer: " + test._remote_answer.sdp.replace(/[\r]/g, ''));
   }
 
+  if ((test.pcLocal) && (typeof test.pcLocal._local_ice_candidates !== 'undefined')) {
+    dump("pcLocal._local_ice_candidates: " + JSON.stringify(test.pcLocal._local_ice_candidates) + "\n");
+    dump("pcLocal._remote_ice_candidates: " + JSON.stringify(test.pcLocal._remote_ice_candidates) + "\n");
+    dump("pcLocal._ice_candidates_to_add: " + JSON.stringify(test.pcLocal._ice_candidates_to_add) + "\n");
+  }
+  if ((test.pcRemote) && (typeof test.pcRemote._local_ice_candidates !== 'undefined')) {
+    dump("pcRemote._local_ice_candidates: " + JSON.stringify(test.pcRemote._local_ice_candidates) + "\n");
+    dump("pcRemote._remote_ice_candidates: " + JSON.stringify(test.pcRemote._remote_ice_candidates) + "\n");
+    dump("pcRemote._ice_candidates_to_add: " + JSON.stringify(test.pcRemote._ice_candidates_to_add) + "\n");
+  }
+
   if ((test.pcLocal) && (typeof test.pcLocal.iceConnectionLog !== 'undefined')) {
     dump("pcLocal ICE connection state log: " + test.pcLocal.iceConnectionLog + "\n");
   }
@@ -488,6 +499,24 @@ var commandsPeerConnection = [
     function (test) {
       test.pcRemote.getStats(null, function(stats) {
         test.pcRemote.checkStats(stats, test.steeplechase);
+        test.next();
+      });
+    }
+  ],
+  [
+    'PC_LOCAL_CHECK_ICE_CONNECTION_TYPE',
+    function (test) {
+      test.pcLocal.getStats(null, function(stats) {
+        test.pcLocal.checkStatsIceConnectionType(stats);
+        test.next();
+      });
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_ICE_CONNECTION_TYPE',
+    function (test) {
+      test.pcRemote.getStats(null, function(stats) {
+        test.pcRemote.checkStatsIceConnectionType(stats);
         test.next();
       });
     }

@@ -108,7 +108,7 @@ public:
   already_AddRefed<imgIContainer> GetImage() const;
 
 protected:
-  nsresult OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
 
   void AppendSpacingToPadding(nsFontMetrics* aFontMetrics);
   void GetDesiredSize(nsPresContext* aPresContext,

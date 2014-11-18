@@ -58,6 +58,15 @@
  * are taken care of by memory/replace/defs.mk.
  */
 
+#ifdef replace_malloc_bridge_h
+#error Do not include replace_malloc_bridge.h before replace_malloc.h. \
+  In fact, you only need the latter.
+#endif
+
+#define REPLACE_MALLOC_IMPL
+
+#include "replace_malloc_bridge.h"
+
 /* Implementing a replace-malloc library is incompatible with using mozalloc. */
 #define MOZ_NO_MOZALLOC 1
 

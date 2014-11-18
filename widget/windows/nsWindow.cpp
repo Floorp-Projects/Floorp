@@ -186,6 +186,9 @@
 #define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
 
+#include "mozilla/layers/CompositorParent.h"
+#include "InputData.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -3139,20 +3142,19 @@ NS_METHOD nsWindow::EnableDragDrop(bool aEnable)
 
 NS_METHOD nsWindow::CaptureMouse(bool aCapture)
 {
-  TRACKMOUSEEVENT mTrack;
-  mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
-  mTrack.dwFlags = TME_LEAVE;
-  mTrack.dwHoverTime = 0;
+  if (!nsToolkit::gMouseTrailer) {
+    NS_ERROR("nsWindow::CaptureMouse called after nsToolkit destroyed");
+    return NS_OK;
+  }
+
   if (aCapture) {
-    mTrack.hwndTrack = mWnd;
+    nsToolkit::gMouseTrailer->SetCaptureWindow(mWnd);
     ::SetCapture(mWnd);
   } else {
-    mTrack.hwndTrack = nullptr;
+    nsToolkit::gMouseTrailer->SetCaptureWindow(nullptr);
     ::ReleaseCapture();
   }
   sIsInMouseCapture = aCapture;
-  // Requests WM_MOUSELEAVE events for this window.
-  TrackMouseEvent(&mTrack);
   return NS_OK;
 }
 
@@ -3737,10 +3739,50 @@ bool nsWindow::DispatchKeyboardEvent(WidgetGUIEvent* event)
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchScrollEvent(WidgetGUIEvent* event)
+nsEventStatus nsWindow::MaybeDispatchAsyncWheelEvent(WidgetGUIEvent* aEvent)
 {
+  if (aEvent->mClass != eWheelEventClass) {
+    return nsEventStatus_eIgnore;
+  }
+
+  WidgetWheelEvent* event = aEvent->AsWheelEvent();
+
+  // Otherwise, scroll-zoom won't work.
+  if (event->IsControl()) {
+    return nsEventStatus_eIgnore;
+  }
+
+
+  // Other scrolling modes aren't supported yet.
+  if (event->deltaMode != nsIDOMWheelEvent::DOM_DELTA_LINE) {
+    return nsEventStatus_eIgnore;
+  }
+
+  ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
+  if (Preferences::GetBool("general.smoothScroll"))
+    scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
+
+  ScreenPoint origin(event->refPoint.x, event->refPoint.y);
+  ScrollWheelInput input(event->time, event->timeStamp, 0,
+                         scrollMode,
+                         ScrollWheelInput::SCROLLDELTA_LINE,
+                         origin,
+                         event->lineOrPageDeltaX,
+                         event->lineOrPageDeltaY);
+
+  ScrollableLayerGuid ignoreGuid;
+  return mAPZC->ReceiveInputEvent(input, &ignoreGuid, nullptr);
+}
+
+bool nsWindow::DispatchScrollEvent(WidgetGUIEvent* aEvent)
+{
+  if (mAPZC) {
+    if (MaybeDispatchAsyncWheelEvent(aEvent) == nsEventStatus_eConsumeNoDefault)
+      return true;
+  }
+
   nsEventStatus status;
-  DispatchEvent(event, status);
+  DispatchEvent(aEvent, status);
   return ConvertStatus(status);
 }
 
@@ -4018,7 +4060,12 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
 
   // call the event callback
   if (mWidgetListener) {
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Disable();
     if (aEventType == NS_MOUSE_MOVE) {
+      if (nsToolkit::gMouseTrailer && !sIsInMouseCapture) {
+        nsToolkit::gMouseTrailer->SetMouseTrailerWindow(mWnd);
+      }
       nsIntRect rect;
       GetBounds(rect);
       rect.x = 0;
@@ -4048,6 +4095,9 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
     }
 
     result = DispatchWindowEvent(&event);
+
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Enable();
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in EventListenerManager::HandleEvent()
@@ -6584,6 +6634,16 @@ void nsWindow::OnDestroy()
 
   IMEHandler::OnDestroyWindow(this);
 
+  // Turn off mouse trails if enabled.
+  MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
+  if (mtrailer) {
+    if (mtrailer->GetMouseTrailerWindow() == mWnd)
+      mtrailer->DestroyTimer();
+
+    if (mtrailer->GetCaptureWindow() == mWnd)
+      mtrailer->SetCaptureWindow(nullptr);
+  }
+
   // Free GDI window class objects
   if (mBrush) {
     VERIFY(::DeleteObject(mBrush));
@@ -7653,6 +7713,19 @@ void nsWindow::PickerClosed()
   if (!mPickerDisplayCount && mDestroyCalled) {
     Destroy();
   }
+}
+
+CompositorParent* nsWindow::NewCompositorParent(int aSurfaceWidth,
+                                                int aSurfaceHeight)
+{
+  CompositorParent *compositor = new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
+
+  if (gfxPrefs::AsyncPanZoomEnabled()) {
+    mAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
+    APZCTreeManager::SetDPI(GetDPI());
+  }
+
+  return compositor;
 }
 
 /**************************************************************

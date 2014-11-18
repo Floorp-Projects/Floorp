@@ -113,8 +113,7 @@ imgRequestProxy::imgRequestProxy() :
   mIsInLoadGroup(false),
   mListenerIsStrongRef(false),
   mDecodeRequested(false),
-  mDeferNotifications(false),
-  mSentStartContainer(false)
+  mDeferNotifications(false)
 {
   /* member initializers and constructor code */
 
@@ -735,21 +734,20 @@ void imgRequestProxy::OnStartDecode()
   }
 }
 
-void imgRequestProxy::OnStartContainer()
+void imgRequestProxy::OnSizeAvailable()
 {
   LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStartContainer");
 
-  if (mListener && !mCanceled && !mSentStartContainer) {
+  if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
     mListener->Notify(this, imgINotificationObserver::SIZE_AVAILABLE, nullptr);
-    mSentStartContainer = true;
   }
 }
 
 void imgRequestProxy::OnFrameUpdate(const nsIntRect * rect)
 {
-  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnDataAvailable");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnFrameUpdate");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -758,9 +756,9 @@ void imgRequestProxy::OnFrameUpdate(const nsIntRect * rect)
   }
 }
 
-void imgRequestProxy::OnStopFrame()
+void imgRequestProxy::OnFrameComplete()
 {
-  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStopFrame");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnFrameComplete");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -769,9 +767,9 @@ void imgRequestProxy::OnStopFrame()
   }
 }
 
-void imgRequestProxy::OnStopDecode()
+void imgRequestProxy::OnDecodeComplete()
 {
-  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnStopDecode");
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnDecodeComplete");
 
   if (mListener && !mCanceled) {
     // Hold a ref to the listener while we call it, just in case.
@@ -783,10 +781,6 @@ void imgRequestProxy::OnStopDecode()
     // We finished the decode, and thus have the decoded frames. Update the cache
     // entry size to take this into account.
     GetOwner()->UpdateCacheEntrySize();
-
-    // Multipart needs reset for next OnStartContainer.
-    if (GetOwner()->GetMultipart())
-      mSentStartContainer = false;
   }
 }
 
@@ -816,6 +810,16 @@ void imgRequestProxy::OnUnlockedDraw()
   }
 }
 
+void imgRequestProxy::OnImageHasTransparency()
+{
+  LOG_FUNC(GetImgLog(), "imgRequestProxy::OnImageHasTransparency");
+  if (mListener && !mCanceled) {
+    // Hold a ref to the listener while we call it, just in case.
+    nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
+    mListener->Notify(this, imgINotificationObserver::HAS_TRANSPARENCY, nullptr);
+  }
+}
+
 void imgRequestProxy::OnImageIsAnimated()
 {
   LOG_FUNC(GetImgLog(), "imgRequestProxy::OnImageIsAnimated");
@@ -826,16 +830,7 @@ void imgRequestProxy::OnImageIsAnimated()
   }
 }
 
-void imgRequestProxy::OnStartRequest()
-{
-#ifdef PR_LOGGING
-  nsAutoCString name;
-  GetName(name);
-  LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequestProxy::OnStartRequest", "name", name.get());
-#endif
-}
-
-void imgRequestProxy::OnStopRequest(bool lastPart)
+void imgRequestProxy::OnLoadComplete(bool aLastPart)
 {
 #ifdef PR_LOGGING
   nsAutoCString name;
@@ -857,17 +852,17 @@ void imgRequestProxy::OnStopRequest(bool lastPart)
   // to the loadgroup so that the document doesn't lose track of the load.
   // If the request is already a background request and there's more data
   // coming, we can just leave the request in the loadgroup as-is.
-  if (lastPart || (mLoadFlags & nsIRequest::LOAD_BACKGROUND) == 0) {
-    RemoveFromLoadGroup(lastPart);
+  if (aLastPart || (mLoadFlags & nsIRequest::LOAD_BACKGROUND) == 0) {
+    RemoveFromLoadGroup(aLastPart);
     // More data is coming, so change the request to be a background request
     // and put it back in the loadgroup.
-    if (!lastPart) {
+    if (!aLastPart) {
       mLoadFlags |= nsIRequest::LOAD_BACKGROUND;
       AddToLoadGroup();
     }
   }
 
-  if (mListenerIsStrongRef && lastPart) {
+  if (mListenerIsStrongRef && aLastPart) {
     NS_PRECONDITION(mListener, "How did that happen?");
     // Drop our strong ref to the listener now that we're done with
     // everything.  Note that this can cancel us and other fun things

@@ -3580,6 +3580,7 @@ BaselineCompiler::emit_JSOP_RESUME()
         }
         masm.bind(&loopDone);
 
+        masm.patchableCallPreBarrier(exprStackSlot, MIRType_Value);
         masm.storeValue(NullValue(), exprStackSlot);
         regs.add(initLength);
     }

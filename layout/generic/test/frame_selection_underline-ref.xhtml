@@ -32,8 +32,8 @@ function init(aTest)
   target.style.fontFamily = aTest.font.family;
   target.style.fontSize = aTest.font.defaultSize;
 
-  decoration.style.MozTextDecorationStyle = aTest.decoration.styleName;
-  decoration.style.MozTextDecorationColor = aTest.selection.decorationColor;
+  decoration.style.textDecorationStyle = aTest.decoration.styleName;
+  decoration.style.textDecorationColor = aTest.selection.decorationColor;
 
   document.documentElement.removeAttribute("class");
   setTimeout(function () {

@@ -8,9 +8,14 @@
 #define DMD_h___
 
 #include <string.h>
+#include <stdarg.h>
 
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Move.h"
 #include "mozilla/Types.h"
 #include "mozilla/UniquePtr.h"
+
+#include "replace_malloc_bridge.h"
 
 namespace mozilla {
 
@@ -18,13 +23,102 @@ class JSONWriteFunc;
 
 namespace dmd {
 
+struct Sizes
+{
+  size_t mStackTracesUsed;
+  size_t mStackTracesUnused;
+  size_t mStackTraceTable;
+  size_t mBlockTable;
+
+  Sizes() { Clear(); }
+  void Clear() { memset(this, 0, sizeof(Sizes)); }
+};
+
+// See further below for a description of each method. The DMDFuncs class
+// should contain a virtual method for each of them (except IsRunning,
+// which can be inferred from the DMDFuncs singleton existing).
+struct DMDFuncs
+{
+  virtual void Report(const void*);
+
+  virtual void ReportOnAlloc(const void*);
+
+  virtual void ClearReports();
+
+  virtual void AnalyzeReports(UniquePtr<JSONWriteFunc>);
+
+  virtual void SizeOf(Sizes*);
+
+  virtual void StatusMsg(const char*, va_list);
+
+  virtual void SetSampleBelowSize(size_t);
+
+  virtual void ClearBlocks();
+
+#ifndef REPLACE_MALLOC_IMPL
+  // We deliberately don't use ReplaceMalloc::GetDMDFuncs here, because if we
+  // did, the following would happen.
+  // - The code footprint of each call to Get() larger as GetDMDFuncs ends
+  //   up inlined.
+  // - When no replace-malloc library is loaded, the number of instructions
+  //   executed is equivalent, but don't necessarily fit in the same cache
+  //   line.
+  // - When a non-DMD replace-malloc library is loaded, the overhead is
+  //   higher because there is first a check for the replace malloc bridge
+  //   and then for the DMDFuncs singleton.
+  // Initializing the DMDFuncs singleton on the first access makes the
+  // overhead even worse. Either Get() is inlined and massive, or it isn't
+  // and a simple value check becomes a function call.
+  static DMDFuncs* Get() { return sSingleton.Get(); }
+
+private:
+  // Wrapper class keeping a pointer to the DMD functions. It is statically
+  // initialized because it needs to be set early enough.
+  // Debug builds also check that it's never accessed before the static
+  // initialization actually occured, which could be the case if some other
+  // static initializer ended up calling into DMD.
+  class Singleton
+  {
+  public:
+    Singleton() : mValue(ReplaceMalloc::GetDMDFuncs()), mInitialized(true) {}
+
+    DMDFuncs* Get()
+    {
+      MOZ_ASSERT(mInitialized);
+      return mValue;
+    }
+
+  private:
+    DMDFuncs* mValue;
+    DebugOnly<bool> mInitialized;
+  };
+
+  // This singleton pointer must be defined on the program side. In Gecko,
+  // this is done in xpcom/base/nsMemoryInfoDumper.cpp.
+  static /* DMDFuncs:: */Singleton sSingleton;
+#endif
+};
+
+#ifndef REPLACE_MALLOC_IMPL
 // Mark a heap block as reported by a memory reporter.
-MOZ_EXPORT void
-Report(const void* aPtr);
+inline void
+Report(const void* aPtr)
+{
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    funcs->Report(aPtr);
+  }
+}
 
 // Mark a heap block as reported immediately on allocation.
-MOZ_EXPORT void
-ReportOnAlloc(const void* aPtr);
+inline void
+ReportOnAlloc(const void* aPtr)
+{
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    funcs->ReportOnAlloc(aPtr);
+  }
+}
 
 // Clears existing reportedness data from any prior runs of the memory
 // reporters.  The following sequence should be used.
@@ -32,8 +126,14 @@ ReportOnAlloc(const void* aPtr);
 // - run the memory reporters
 // - AnalyzeReports()
 // This sequence avoids spurious twice-reported warnings.
-MOZ_EXPORT void
-ClearReports();
+inline void
+ClearReports()
+{
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    funcs->ClearReports();
+  }
+}
 
 // Determines which heap blocks have been reported, and dumps JSON output
 // (via |aWriter|) describing the heap.
@@ -121,42 +221,74 @@ ClearReports();
 //     "H": "#00: quuux (Quux.cpp:567)"
 //   }
 // }
-MOZ_EXPORT void
-AnalyzeReports(mozilla::UniquePtr<mozilla::JSONWriteFunc>);
-
-struct Sizes
+// Implementation note: normally, this wouldn't be templated, but in that case,
+// the function is compiled, which makes the destructor for the UniquePtr fire up,
+// and that needs JSONWriteFunc to be fully defined. That, in turn, requires to
+// include JSONWriter.h, which includes double-conversion.h, which ends up breaking
+// various things built with -Werror for various reasons.
+template <typename JSONWriteFunc>
+inline void
+AnalyzeReports(UniquePtr<JSONWriteFunc> aWriteFunc)
 {
-  size_t mStackTracesUsed;
-  size_t mStackTracesUnused;
-  size_t mStackTraceTable;
-  size_t mBlockTable;
-
-  Sizes() { Clear(); }
-  void Clear() { memset(this, 0, sizeof(Sizes)); }
-};
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    funcs->AnalyzeReports(Move(aWriteFunc));
+  }
+}
 
 // Gets the size of various data structures.  Used to implement a memory
 // reporter for DMD.
-MOZ_EXPORT void
-SizeOf(Sizes* aSizes);
+inline void
+SizeOf(Sizes* aSizes)
+{
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    funcs->SizeOf(aSizes);
+  }
+}
 
 // Prints a status message prefixed with "DMD[<pid>]". Use sparingly.
-MOZ_EXPORT void
-StatusMsg(const char* aFmt, ...);
+inline void
+StatusMsg(const char* aFmt, ...)
+{
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    va_list ap;
+    va_start(ap, aFmt);
+    funcs->StatusMsg(aFmt, ap);
+    va_end(ap);
+  }
+}
 
 // Indicates whether or not DMD is running.
-MOZ_EXPORT bool
-IsRunning();
+inline bool
+IsRunning()
+{
+  return !!DMDFuncs::Get();
+}
 
 // Sets the sample-below size. Only used for testing purposes.
-MOZ_EXPORT void
-SetSampleBelowSize(size_t aSize);
+inline void
+SetSampleBelowSize(size_t aSize)
+{
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    funcs->SetSampleBelowSize(aSize);
+  }
+}
 
 // Clears all records of live allocations. Only used for testing purposes.
-MOZ_EXPORT void
-ClearBlocks();
+inline void
+ClearBlocks()
+{
+  DMDFuncs* funcs = DMDFuncs::Get();
+  if (funcs) {
+    funcs->ClearBlocks();
+  }
+}
+#endif
 
-} // namespace mozilla
 } // namespace dmd
+} // namespace mozilla
 
 #endif /* DMD_h___ */

@@ -789,8 +789,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       break;
     }
     case eCSSProperty_text_decoration: {
-      // If text-decoration-color or text-decoration-style isn't initial value,
-      // we cannot serialize the text-decoration shorthand value.
       const nsCSSValue *decorationColor =
         data->ValueFor(eCSSProperty_text_decoration_color);
       const nsCSSValue *decorationStyle =
@@ -800,15 +798,20 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
                         nsPrintfCString("bad text-decoration-style unit %d",
                                         decorationStyle->GetUnit()).get());
 
-      if (decorationColor->GetUnit() != eCSSUnit_Enumerated ||
-          decorationColor->GetIntValue() != NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR ||
-          decorationStyle->GetIntValue() !=
-            NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
-        return;
-      }
-
       AppendValueToString(eCSSProperty_text_decoration_line, aValue,
                           aSerialization);
+      if (decorationStyle->GetIntValue() !=
+            NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+        aValue.Append(char16_t(' '));
+        AppendValueToString(eCSSProperty_text_decoration_style, aValue,
+                            aSerialization);
+      }
+      if (decorationColor->GetUnit() != eCSSUnit_Enumerated ||
+          decorationColor->GetIntValue() != NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR) {
+        aValue.Append(char16_t(' '));
+        AppendValueToString(eCSSProperty_text_decoration_color, aValue,
+                            aSerialization);
+      }
       break;
     }
     case eCSSProperty_transition: {

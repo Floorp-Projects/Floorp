@@ -37,6 +37,11 @@ class MarkingValidator;
 struct AutoPrepareForTracing;
 class AutoTraceSession;
 
+#ifdef JSGC_COMPACTING
+struct ArenasToUpdate;
+struct MovingTracer;
+#endif
+
 class ChunkPool
 {
     Chunk *head_;
@@ -559,6 +564,8 @@ class GCRuntime
     void sweepZoneAfterCompacting(Zone *zone);
     void compactPhase(bool lastGC);
     ArenaHeader *relocateArenas();
+    void updateAllCellPointersParallel(ArenasToUpdate &source);
+    void updateAllCellPointersSerial(MovingTracer *trc, ArenasToUpdate &source);
     void updatePointersToRelocatedCells();
     void releaseRelocatedArenas(ArenaHeader *relocatedList);
 #ifdef DEBUG
