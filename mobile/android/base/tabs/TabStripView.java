@@ -124,7 +124,6 @@ public class TabStripView extends TwoWayView {
                 for (int i = removedPosition - firstPosition; i < childCount; i++) {
                     final View child = getChildAt(i);
 
-                    // TODO: optimize with Valueresolver
                     final ObjectAnimator animator =
                             ObjectAnimator.ofFloat(child, "translationX", removedSize, 0);
                     childAnimators.add(animator);
