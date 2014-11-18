@@ -200,23 +200,31 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       if (this.state.seenToS == "unseen") {
+        var locale = mozL10n.getLanguage();
         var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
-        var tosHTML = __("legal_text_and_links3", {
-          "clientShortname": __("clientShortname2"),
+        var tosHTML = mozL10n.get("legal_text_and_links3", {
+          "clientShortname": mozL10n.get("clientShortname2"),
           "terms_of_use": React.renderComponentToStaticMarkup(
             React.DOM.a({href: terms_of_use_url, target: "_blank"}, 
-              __("legal_text_tos")
+              mozL10n.get("legal_text_tos")
             )
           ),
           "privacy_notice": React.renderComponentToStaticMarkup(
             React.DOM.a({href: privacy_notice_url, target: "_blank"}, 
-              __("legal_text_privacy")
+              mozL10n.get("legal_text_privacy")
             )
           ),
         });
-        return React.DOM.p({className: "terms-service", 
-                  dangerouslySetInnerHTML: {__html: tosHTML}});
+        return React.DOM.div(null, 
+          React.DOM.p({id: "powered-by"}, 
+            mozL10n.get("powered_by_beforeLogo"), 
+            React.DOM.img({id: "powered-by-logo", className: locale}), 
+            mozL10n.get("powered_by_afterLogo")
+          ), 
+          React.DOM.p({className: "terms-service", 
+             dangerouslySetInnerHTML: {__html: tosHTML}})
+         );
       } else {
         return React.DOM.div(null);
       }
