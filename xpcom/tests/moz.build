@@ -122,8 +122,3 @@ LOCAL_INCLUDES += [
 RESOURCE_FILES += [
     'test.properties',
 ]
-
-if CONFIG['MOZ_DMD']:
-    USE_LIBS += [
-        'dmd'
-    ]

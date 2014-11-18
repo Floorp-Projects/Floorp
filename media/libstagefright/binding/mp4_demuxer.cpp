@@ -191,6 +191,7 @@ MP4Demuxer::DemuxVideoSample()
   }
 
   sample->Update();
+  sample->prefix_data = mVideoConfig.annex_b;
 
   return sample.forget();
 }

@@ -1,5 +1,7 @@
 var spdy = require('../spdy'),
+    utils = spdy.utils,
     http = require('http'),
+    Stream = require('stream').Stream,
     res = http.ServerResponse.prototype;
 
 //
@@ -7,10 +9,9 @@ var spdy = require('../spdy'),
 // Copy pasted from lib/http.js
 // (added lowercase)
 //
-exports._renderHeaders = function() {
-  if (this._header) {
+exports._renderHeaders = function renderHeaders() {
+  if (this._header)
     throw new Error("Can't render headers after they are sent to the client.");
-  }
 
   var keys = Object.keys(this._headerNames);
   for (var i = 0, l = keys.length; i < l; i++) {
@@ -27,11 +28,12 @@ exports._renderHeaders = function() {
 // .writeHead() wrapper
 // (Sorry, copy pasted from lib/http.js)
 //
-exports.writeHead = function(statusCode) {
-  if (this._headerSent) return;
+exports.writeHead = function writeHead(statusCode) {
+  if (this._headerSent)
+    return;
   this._headerSent = true;
 
-  var reasonPhrase, headers, headerIndex;
+  var reasonPhrase, headers = {}, headerIndex;
 
   if (typeof arguments[1] == 'string') {
     reasonPhrase = arguments[1];
@@ -52,7 +54,8 @@ exports.writeHead = function(statusCode) {
     var keys = Object.keys(obj);
     for (var i = 0; i < keys.length; i++) {
       var k = keys[i];
-      if (k) headers[k] = obj[k];
+      if (k)
+        headers[k] = obj[k];
     }
   } else if (this._headers) {
     // only progressive api is used
@@ -66,23 +69,55 @@ exports.writeHead = function(statusCode) {
   this._header = '';
 
   // Do not send data to new connections after GOAWAY
-  if (this.socket._isGoaway()) return;
+  if (this.socket._isGoaway())
+    return;
+
+  // Date header
+  if (this.sendDate === true) {
+    if (headers === undefined)
+      headers = {};
+    if (headers.date === undefined)
+      headers.date = new Date().toUTCString();
+  }
 
   this.socket._lock(function() {
     var socket = this;
 
-    this._framer.replyFrame(
-      this.id,
+    this._spdyState.framer.replyFrame(
+      this._spdyState.id,
       statusCode,
       reasonPhrase,
       headers,
       function (err, frame) {
-        // TODO: Handle err
+        if (err) {
+          socket._unlock();
+          socket.emit('error', err);
+          return;
+        }
+
+        socket.connection.cork();
         socket.connection.write(frame);
+        utils.nextTick(function() {
+          socket.connection.uncork();
+        });
         socket._unlock();
       }
     );
   });
+};
+
+//
+// ### function end (data, encoding, cb)
+// #### @data {Buffer|String} (optional) data
+// #### @encoding {String} (optional) string encoding
+// #### @cb {Function}
+// Send final data
+//
+exports.end = function end(data, encoding, cb) {
+  if (this.socket)
+    this.socket._spdyState.ending = true;
+
+  this.constructor.prototype.end.call(this, data, encoding, cb);
 };
 
 //
@@ -93,27 +128,49 @@ exports.writeHead = function(statusCode) {
 // Initiates push stream
 //
 exports.push = function push(url, headers, priority, callback) {
-  if (this.socket._destroyed) {
-    return callback(Error('Can\'t open push stream, parent socket destroyed'));
-  }
+  var socket = this.socket;
 
   if (!callback && typeof priority === 'function') {
     callback = priority;
-    priority = 0;
+    priority = null;
+  }
+  if (!priority && typeof priority !== 'number')
+    priority = 7;
+
+  if (!callback)
+    callback = function() {};
+
+  if (!socket || socket._destroyed) {
+    var stub = new Stream();
+    var err = Error('Can\'t open push stream, parent socket destroyed');
+    utils.nextTick(function() {
+      if (stub.listeners('error').length !== 0)
+        stub.emit('error', err);
+      callback(err);
+    });
+    return stub;
   }
 
-  if (!callback) callback = function() {};
+  var id = socket.connection._spdyState.pushId += 2,
+      scheme = socket._spdyState.scheme,
+      host = headers.host || socket._spdyState.host || 'localhost',
+      fullUrl = /^\//.test(url) ? scheme + '://' + host + url : url;
 
-  this.socket._lock(function() {
-    var socket = this,
-        id = socket.connection.pushId += 2,
-        scheme = this._frame.headers.scheme,
-        host = this._frame.headers.host || 'localhost',
-        fullUrl = /^\//.test(url) ? scheme + '://' + host + url : url;
+  var stream = new spdy.Stream(socket.connection, {
+    type: 'SYN_STREAM',
+    id: id,
+    associated: socket._spdyState.id,
+    priority: priority,
+    headers: {}
+  });
 
-    this._framer.streamFrame(
+  stream.associated = socket;
+  socket.connection._addStream(stream);
+
+  socket._lock(function() {
+    this._spdyState.framer.streamFrame(
       id,
-      this.id,
+      this._spdyState.id,
       {
         method: 'GET',
         path: url,
@@ -121,32 +178,32 @@ exports.push = function push(url, headers, priority, callback) {
         scheme: scheme,
         host: host,
         version: 'HTTP/1.1',
-        priority: priority || 0
+        priority: priority,
+        status: 200
       },
       headers,
       function(err, frame) {
         if (err) {
           socket._unlock();
-          callback(err);
+          if (callback)
+            callback(err);
+          stream.destroy(err);
+          return;
         } else {
+          socket.connection.cork();
           socket.connection.write(frame);
-          socket._unlock();
-
-          var stream = new spdy.server.Stream(socket.connection, {
-            type: 'SYN_STREAM',
-            push: true,
-            id: id,
-            assoc: socket.id,
-            priority: 0,
-            headers: {}
+          utils.nextTick(function() {
+            socket.connection.uncork();
           });
-
-          socket.connection.streams[id] = stream;
-          socket.pushes.push(stream);
-
-          callback(null, stream);
+          socket._unlock();
         }
+
+        stream.emit('acknowledge');
+        if (callback)
+          callback(null, stream);
       }
     );
   });
+
+  return stream;
 };

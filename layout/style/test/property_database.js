@@ -3284,14 +3284,14 @@ var gCSSProperties = {
     domProp: "textDecoration",
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    subproperties: [ "-moz-text-decoration-color", "-moz-text-decoration-line", "-moz-text-decoration-style" ],
+    subproperties: [ "text-decoration-color", "text-decoration-line", "text-decoration-style" ],
     initial_values: [ "none" ],
-    other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
-    invalid_values: [ "none none", "underline none", "none underline", "blink none", "none blink", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink",
-                      "underline red solid", "underline #ff0000", "solid underline", "red underline", "#ff0000 underline" ]
+    other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration",
+                    "underline red solid", "underline #ff0000", "solid underline", "red underline", "#ff0000 underline", "dotted underline" ],
+    invalid_values: [ "none none", "underline none", "none underline", "blink none", "none blink", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink" ]
   },
-  "-moz-text-decoration-color": {
-    domProp: "MozTextDecorationColor",
+  "text-decoration-color": {
+    domProp: "textDecorationColor",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "color": "black" },
@@ -3299,18 +3299,46 @@ var gCSSProperties = {
     other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff" ]
   },
-  "-moz-text-decoration-line": {
-    domProp: "MozTextDecorationLine",
+  "-moz-text-decoration-color": {
+    domProp: "MozTextDecorationColor",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "text-decoration-color",
+    prerequisites: { "color": "black" },
+    initial_values: [ "currentColor", "-moz-use-text-color" ],
+    other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+    invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff" ]
+  },
+  "text-decoration-line": {
+    domProp: "textDecorationLine",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
     other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
     invalid_values: [ "none none", "underline none", "none underline", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink" ]
   },
+  "-moz-text-decoration-line": {
+    domProp: "MozTextDecorationLine",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "text-decoration-line",
+    initial_values: [ "none" ],
+    other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
+    invalid_values: [ "none none", "underline none", "none underline", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink" ]
+  },
+  "text-decoration-style": {
+    domProp: "textDecorationStyle",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "solid" ],
+    other_values: [ "double", "dotted", "dashed", "wavy", "-moz-none" ],
+    invalid_values: [ "none", "groove", "ridge", "inset", "outset", "solid dashed", "wave" ]
+  },
   "-moz-text-decoration-style": {
     domProp: "MozTextDecorationStyle",
     inherited: false,
-    type: CSS_TYPE_LONGHAND,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "text-decoration-style",
     initial_values: [ "solid" ],
     other_values: [ "double", "dotted", "dashed", "wavy", "-moz-none" ],
     invalid_values: [ "none", "groove", "ridge", "inset", "outset", "solid dashed", "wave" ]

@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
   transition: 500ms color;
   border-color: black; /* don't derive from color */
   -moz-column-rule-color: black; /* don't derive from color */
-  -moz-text-decoration-color: black; /* don't derive from color */
+  text-decoration-color: black; /* don't derive from color */
 }
 
 #four {
@@ -177,9 +177,9 @@ $("one").addEventListener("transitionend",
         got_one_target_columnrule = true;
         event.stopPropagation();
         break;
-      case "-moz-text-decoration-color":
+      case "text-decoration-color":
         ok(!got_one_target_textdecorationcolor,
-           "transitionend on one on target (-moz-text-decoration-color)");
+           "transitionend on one on target (text-decoration-color)");
         got_one_target_textdecorationcolor = true;
         event.stopPropagation();
         break;

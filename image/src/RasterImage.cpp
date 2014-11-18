@@ -1626,19 +1626,6 @@ RasterImage::DoImageDataComplete()
   {
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
 
-    // If we're not storing any source data, then there's nothing more we can do
-    // once we've tried decoding for size.
-    if (!StoringSourceData() && mDecoder) {
-      nsresult rv = ShutdownDecoder(eShutdownIntent_Done);
-      CONTAINER_ENSURE_SUCCESS(rv);
-    }
-
-    // If DecodeUntilSizeAvailable didn't finish the decode, let the decode worker
-    // finish decoding this image.
-    if (mDecoder) {
-      DecodePool::Singleton()->RequestDecode(this);
-    }
-
     // Free up any extra space in the backing buffer
     mSourceData.Compact();
   }
@@ -1679,7 +1666,7 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bo
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
     FinishedSomeDecoding(eShutdownIntent_Done,
                          nullptr,
-                         OnStopRequestProgress(aLastPart, mError, finalStatus));
+                         LoadCompleteProgress(aLastPart, mError, finalStatus));
   }
 
   return finalStatus;
@@ -2937,7 +2924,7 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
 
   if (image->mDecoder) {
     invalidRect = image->mDecoder->TakeInvalidRect();
-    progress |= image->mDecoder->GetProgress();
+    progress |= image->mDecoder->TakeProgress();
 
     if (request && request->mChunkCount && !image->mDecoder->IsSizeDecode()) {
       Telemetry::Accumulate(Telemetry::IMAGE_DECODE_CHUNKS, request->mChunkCount);
@@ -2979,8 +2966,9 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
         image->DoError();
       }
 
-      // If there were any final progress changes, grab them.
-      progress |= decoder->GetProgress();
+      // If there were any final changes, grab them.
+      invalidRect.Union(decoder->TakeInvalidRect());
+      progress |= decoder->TakeProgress();
     }
   }
 
@@ -3000,7 +2988,6 @@ RasterImage::FinishedSomeDecoding(eShutdownIntent aIntent /* = eShutdownIntent_D
     // because they cause subtle concurrency bugs, so we'll delay sending out
     // the notifications until we pop back to the lowest invocation of
     // FinishedSomeDecoding on the stack.
-    NS_WARNING("Recursively notifying in RasterImage::FinishedSomeDecoding!");
     mNotifyProgress |= progress;
     mNotifyInvalidRect.Union(invalidRect);
   } else {

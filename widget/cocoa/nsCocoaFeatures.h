@@ -21,12 +21,11 @@ public:
   static bool SupportCoreAnimationPlugins();
   static bool AccelerateByDefault();
 
+  static bool IsAtLeastVersion(int32_t aMajor, int32_t aMinor, int32_t aBugFix=0);
+
 private:
   static void InitializeVersionNumbers();
 
   static int32_t mOSXVersion;
-  static int32_t mOSXVersionMajor;
-  static int32_t mOSXVersionMinor;
-  static int32_t mOSXVersionBugFix;
 };
 #endif // nsCocoaFeatures_h_

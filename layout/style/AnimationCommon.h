@@ -295,7 +295,10 @@ struct AnimationPlayerCollection : public PRCList
   void PostRestyleForAnimation(nsPresContext *aPresContext) {
     mozilla::dom::Element* element = GetElementToRestyle();
     if (element) {
-      aPresContext->PresShell()->RestyleForAnimation(element, eRestyle_Self);
+      nsRestyleHint hint = IsForTransitions() ? eRestyle_CSSTransitions
+                                              : eRestyle_CSSAnimations;
+      hint |= eRestyle_ChangeAnimationPhase;
+      aPresContext->PresShell()->RestyleForAnimation(element, hint);
     }
   }
 

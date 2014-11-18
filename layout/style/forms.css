@@ -132,8 +132,8 @@ textarea::-moz-placeholder {
   padding: inherit !important;
   margin: 0px;
   text-decoration: inherit;
-  -moz-text-decoration-color: inherit;
-  -moz-text-decoration-style: inherit;
+  text-decoration-color: inherit;
+  text-decoration-style: inherit;
   display: inline-block;
   ime-mode: inherit;
   resize: inherit;

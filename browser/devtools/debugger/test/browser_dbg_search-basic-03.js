@@ -8,13 +8,12 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gSources, gSearchBox;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
@@ -37,7 +36,7 @@ function test() {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
       });
 
-    gDebuggee.firstCall();
+    callInTab(gTab, "firstCall");
   });
 }
 
@@ -112,7 +111,6 @@ function verifySourceAndCaret(aUrl, aLine, aColumn) {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gSources = null;

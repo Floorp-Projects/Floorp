@@ -50,6 +50,7 @@
 
 using namespace js;
 
+using mozilla::BitwiseCast;
 using mozilla::IsNaN;
 using mozilla::LittleEndian;
 using mozilla::NativeEndian;
@@ -204,7 +205,6 @@ class SCInput {
     void staticAssertions() {
         JS_STATIC_ASSERT(sizeof(char16_t) == 2);
         JS_STATIC_ASSERT(sizeof(uint32_t) == 4);
-        JS_STATIC_ASSERT(sizeof(double) == 8);
     }
 
     JSContext *cx;
@@ -634,38 +634,16 @@ SCOutput::writePair(uint32_t tag, uint32_t data)
     return write(PairToUInt64(tag, data));
 }
 
-static inline uint64_t
-ReinterpretDoubleAsUInt64(double d)
-{
-    union {
-        double d;
-        uint64_t u;
-    } pun;
-    pun.d = d;
-    return pun.u;
-}
-
-static inline double
-ReinterpretUInt64AsDouble(uint64_t u)
-{
-    union {
-        uint64_t u;
-        double d;
-    } pun;
-    pun.u = u;
-    return pun.d;
-}
-
 static inline double
 ReinterpretPairAsDouble(uint32_t tag, uint32_t data)
 {
-    return ReinterpretUInt64AsDouble(PairToUInt64(tag, data));
+    return BitwiseCast<double>(PairToUInt64(tag, data));
 }
 
 bool
 SCOutput::writeDouble(double d)
 {
-    return write(ReinterpretDoubleAsUInt64(CanonicalizeNaN(d)));
+    return write(BitwiseCast<uint64_t>(CanonicalizeNaN(d)));
 }
 
 template <typename T>
@@ -718,7 +696,9 @@ SCOutput::writeBytes(const void *p, size_t nbytes)
 bool
 SCOutput::writeChars(const char16_t *p, size_t nchars)
 {
-    MOZ_ASSERT(sizeof(char16_t) == sizeof(uint16_t));
+    static_assert(sizeof(char16_t) == sizeof(uint16_t),
+                  "required so that treating char16_t[] memory as uint16_t[] "
+                  "memory is permissible");
     return writeArray((const uint16_t *) p, nchars);
 }
 

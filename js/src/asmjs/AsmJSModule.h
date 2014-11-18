@@ -387,7 +387,7 @@ class AsmJSModule
         uint64_t lo;
         uint64_t hi;
     };
-    JS_STATIC_ASSERT(sizeof(EntryArg) >= jit::Simd128DataSize);
+
     typedef int32_t (*CodePtr)(EntryArg *args, uint8_t *global);
 
     // An Exit holds bookkeeping information about an exit; the ExitDatum

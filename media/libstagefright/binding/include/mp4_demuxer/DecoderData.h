@@ -22,6 +22,14 @@ namespace mp4_demuxer
 
 class MP4Demuxer;
 
+template <typename T>
+class nsRcTArray : public nsTArray<T> {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsRcTArray);
+
+private:
+  ~nsRcTArray() {}
+};
+
 struct PsshInfo
 {
   PsshInfo() {}
@@ -119,8 +127,8 @@ public:
   int32_t image_width;
   int32_t image_height;
 
-  mozilla::Vector<uint8_t> extra_data; // Unparsed AVCDecoderConfig payload.
-  mozilla::Vector<uint8_t> annex_b;    // Parsed version for sample prepend.
+  mozilla::Vector<uint8_t> extra_data;   // Unparsed AVCDecoderConfig payload.
+  nsRefPtr<nsRcTArray<uint8_t>> annex_b; // Parsed version for sample prepend.
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
               const char* aMimeType);
@@ -149,6 +157,7 @@ public:
   size_t size;
 
   CryptoSample crypto;
+  nsRefPtr<nsRcTArray<uint8_t>> prefix_data;
 
   void Prepend(const uint8_t* aData, size_t aSize);
 
