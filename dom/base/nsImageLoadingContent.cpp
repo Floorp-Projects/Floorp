@@ -182,7 +182,7 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
     }
     nsresult status =
         reqStatus & imgIRequest::STATUS_ERROR ? NS_ERROR_FAILURE : NS_OK;
-    return OnStopRequest(aRequest, status);
+    return OnLoadComplete(aRequest, status);
   }
 
   if (aType == imgINotificationObserver::DECODE_COMPLETE) {
@@ -205,8 +205,7 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest,
 }
 
 nsresult
-nsImageLoadingContent::OnStopRequest(imgIRequest* aRequest,
-                                     nsresult aStatus)
+nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
 {
   uint32_t oldStatus;
   aRequest->GetImageStatus(&oldStatus);

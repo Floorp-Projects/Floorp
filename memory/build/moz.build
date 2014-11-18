@@ -15,8 +15,8 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
     EXPORTS += [
         'malloc_decls.h',
         'replace_malloc.h',
+        'replace_malloc_bridge.h',
     ]
-    DEFINES['MOZ_REPLACE_MALLOC'] = True
 
 SOURCES += [
     'jemalloc_config.c',

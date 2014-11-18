@@ -1,0 +1,45 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!--
+Bug 1083210 - Sanity test for interaction between DOM promises and
+Debugger.prototype.onNewPromise.
+-->
+
+<html>
+<head>
+  <title>Test for interaction with SpiderMonkey's Debugger.prototype.onNewPromise</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+  is(Object.prototype.toString.call(new Promise(function () {})),
+     "[object Promise]",
+     "We should have the native DOM promise implementation.");
+
+  var Cu = Components.utils;
+  Cu.import("resource://gre/modules/jsdebugger.jsm");
+  var dbgGlobal = new Cu.Sandbox(document.nodePrincipal);
+  addDebuggerToGlobal(dbgGlobal);
+  var dbg = new dbgGlobal.Debugger(this);
+
+  var wrappedPromise;
+  dbg.onNewPromise = function (wp) { wrappedPromise = wp; };
+
+  var promise = new Promise(function () {});
+  debugger;
+  ok(wrappedPromise);
+  is(wrappedPromise.unsafeDereference(), promise);
+  </script>
+</pre>
+</body>
+</html>
+

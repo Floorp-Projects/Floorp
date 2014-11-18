@@ -1,0 +1,59 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!--
+Bug 1084065 - Test that Debugger.prototype.onPromiseResolved doesn't get dupes.
+-->
+
+<html>
+<head>
+  <title>Test for interaction with SpiderMonkey's Debugger.prototype.onNewPromise</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  is(Object.prototype.toString.call(new Promise(function () {})),
+     "[object Promise]",
+     "We should have the native DOM promise implementation.");
+
+  var Cu = Components.utils;
+  Cu.import("resource://gre/modules/jsdebugger.jsm");
+  var dbgGlobal = new Cu.Sandbox(document.nodePrincipal);
+  addDebuggerToGlobal(dbgGlobal);
+  var dbg = new dbgGlobal.Debugger(this);
+
+  var seen = new Set();
+  dbg.onPromiseSettled = function (wp) {
+    is(seen.has(wp), false);
+    seen.add(wp);
+  };
+
+  var promise = new Promise(function (fulfill, reject) {
+    fulfill(1);
+    fulfill(2);
+    fulfill(3);
+  });
+
+  promise
+    .then(function () {
+      dbg.onPromiseSettled = undefined;
+    })
+    .then(null, function (e) {
+      ok(false, "Got an unexpected error: " + e);
+    })
+    .then(SimpleTest.finish);
+  </script>
+</pre>
+</body>
+</html>
+

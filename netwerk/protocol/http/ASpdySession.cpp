@@ -8,7 +8,7 @@
 #include "HttpLog.h"
 
 /*
-  Currently supported are HTTP-draft-[see nshttp.h]/2.0 spdy/3.1 and spdy/3
+  Currently supported are HTTP-draft-[see nshttp.h]/2.0 spdy/3.1
 */
 
 #include "nsHttp.h"
@@ -16,10 +16,8 @@
 
 #include "ASpdySession.h"
 #include "PSpdyPush.h"
-#include "SpdyPush3.h"
 #include "SpdyPush31.h"
 #include "Http2Push.h"
-#include "SpdySession3.h"
 #include "SpdySession31.h"
 #include "Http2Session.h"
 
@@ -42,8 +40,7 @@ ASpdySession::NewSpdySession(uint32_t version,
 {
   // This is a necko only interface, so we can enforce version
   // requests as a precondition
-  MOZ_ASSERT(version == SPDY_VERSION_3 ||
-             version == SPDY_VERSION_31 ||
+  MOZ_ASSERT(version == SPDY_VERSION_31 ||
              version == HTTP_VERSION_2 ||
              version == NS_HTTP2_DRAFT_VERSION,
              "Unsupported spdy version");
@@ -55,11 +52,9 @@ ASpdySession::NewSpdySession(uint32_t version,
 
   Telemetry::Accumulate(Telemetry::SPDY_VERSION2, version);
 
-  if (version == SPDY_VERSION_3) {
-    return new SpdySession3(aTransport);
-  } else  if (version == SPDY_VERSION_31) {
+  if (version == SPDY_VERSION_31) {
     return new SpdySession31(aTransport);
-  } else  if (version == NS_HTTP2_DRAFT_VERSION || version == HTTP_VERSION_2) {
+  } else if (version == NS_HTTP2_DRAFT_VERSION || version == HTTP_VERSION_2) {
     return new Http2Session(aTransport);
   }
 
@@ -74,25 +69,21 @@ SpdyInformation::SpdyInformation()
 {
   // highest index of enabled protocols is the
   // most preferred for ALPN negotiaton
-  Version[0] = SPDY_VERSION_3;
-  VersionString[0] = NS_LITERAL_CSTRING("spdy/3");
+  Version[0] = SPDY_VERSION_31;
+  VersionString[0] = NS_LITERAL_CSTRING("spdy/3.1");
   ALPNCallbacks[0] = SpdySessionTrue;
 
-  Version[1] = SPDY_VERSION_31;
-  VersionString[1] = NS_LITERAL_CSTRING("spdy/3.1");
-  ALPNCallbacks[1] = SpdySessionTrue;
+  Version[1] = HTTP_VERSION_2;
+  VersionString[1] = NS_LITERAL_CSTRING("h2");
+  ALPNCallbacks[1] = Http2Session::ALPNCallback;
 
-  Version[2] = HTTP_VERSION_2;
-  VersionString[2] = NS_LITERAL_CSTRING("h2");
+  Version[2] = NS_HTTP2_DRAFT_VERSION;
+  VersionString[2] = NS_LITERAL_CSTRING("h2-14");
   ALPNCallbacks[2] = Http2Session::ALPNCallback;
 
   Version[3] = NS_HTTP2_DRAFT_VERSION;
-  VersionString[3] = NS_LITERAL_CSTRING("h2-14");
+  VersionString[3] = NS_LITERAL_CSTRING(NS_HTTP2_DRAFT_TOKEN);
   ALPNCallbacks[3] = Http2Session::ALPNCallback;
-
-  Version[4] = NS_HTTP2_DRAFT_VERSION;
-  VersionString[4] = NS_LITERAL_CSTRING(NS_HTTP2_DRAFT_TOKEN);
-  ALPNCallbacks[4] = Http2Session::ALPNCallback;
 }
 
 bool
@@ -102,13 +93,11 @@ SpdyInformation::ProtocolEnabled(uint32_t index) const
 
   switch (index) {
   case 0:
-    return gHttpHandler->IsSpdyV3Enabled();
-  case 1:
     return gHttpHandler->IsSpdyV31Enabled();
-  case 2:
+  case 1:
     return gHttpHandler->IsHttp2Enabled();
+  case 2:
   case 3:
-  case 4:
     return gHttpHandler->IsHttp2DraftEnabled();
   }
   return false;
@@ -141,35 +130,8 @@ SpdyPushCache::SpdyPushCache()
 
 SpdyPushCache::~SpdyPushCache()
 {
-  mHashSpdy3.Clear();
   mHashSpdy31.Clear();
   mHashHttp2.Clear();
-}
-
-bool
-SpdyPushCache::RegisterPushedStreamSpdy3(nsCString key,
-                                         SpdyPushedStream3 *stream)
-{
-  LOG3(("SpdyPushCache::RegisterPushedStreamSpdy3 %s 0x%X\n",
-        key.get(), stream->StreamID()));
-  if(mHashSpdy3.Get(key)) {
-    LOG3(("SpdyPushCache::RegisterPushedStreamSpdy3 %s 0x%X duplicate key\n",
-          key.get(), stream->StreamID()));
-    return false;
-  }
-  mHashSpdy3.Put(key, stream);
-  return true;
-}
-
-SpdyPushedStream3 *
-SpdyPushCache::RemovePushedStreamSpdy3(nsCString key)
-{
-  SpdyPushedStream3 *rv = mHashSpdy3.Get(key);
-  LOG3(("SpdyPushCache::RemovePushedStream %s 0x%X\n",
-        key.get(), rv ? rv->StreamID() : 0));
-  if (rv)
-    mHashSpdy3.Remove(key);
-  return rv;
 }
 
 bool

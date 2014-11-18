@@ -62,7 +62,6 @@ EventSource::EventSource(nsPIDOMWindow* aOwnerWindow) :
   mGoingToDispatchAllMessages(false),
   mWithCredentials(false),
   mWaitingForOnStopRequest(false),
-  mInterrupted(false),
   mLastConvertionResult(NS_OK),
   mReadyState(CONNECTING),
   mScriptLine(0),
@@ -341,21 +340,14 @@ EventSource::OnStartRequest(nsIRequest *aRequest,
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool requestSucceeded;
-  rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString contentType;
-  rv = httpChannel->GetContentType(contentType);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsresult status;
-  aRequest->GetStatus(&status);
+  rv = aRequest->GetStatus(&status);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_FAILED(status) || !requestSucceeded ||
-      !contentType.EqualsLiteral(TEXT_EVENT_STREAM)) {
-    DispatchFailConnection();
-    return NS_ERROR_NOT_AVAILABLE;
+  if (NS_FAILED(status)) {
+    // EventSource::OnStopRequest will evaluate if it shall either reestablish
+    // or fail the connection
+    return NS_ERROR_ABORT;
   }
 
   uint32_t httpStatus;
@@ -363,7 +355,15 @@ EventSource::OnStartRequest(nsIRequest *aRequest,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (httpStatus != 200) {
-    mInterrupted = true;
+    DispatchFailConnection();
+    return NS_ERROR_ABORT;
+  }
+
+  nsAutoCString contentType;
+  rv = httpChannel->GetContentType(contentType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!contentType.EqualsLiteral(TEXT_EVENT_STREAM)) {
     DispatchFailConnection();
     return NS_ERROR_ABORT;
   }
@@ -454,19 +454,27 @@ EventSource::OnStopRequest(nsIRequest *aRequest,
     return NS_ERROR_ABORT;
   }
 
-  if (NS_FAILED(aStatusCode)) {
+  // "Network errors that prevents the connection from being established in the
+  //  first place (e.g. DNS errors), must cause the user agent to asynchronously
+  //  reestablish the connection.
+  //
+  //  (...) the cancelation of the fetch algorithm by the user agent (e.g. in
+  //  response to window.stop() or the user canceling the network connection
+  //  manually) must cause the user agent to fail the connection.
+
+  if (NS_FAILED(aStatusCode) &&
+      aStatusCode != NS_ERROR_CONNECTION_REFUSED &&
+      aStatusCode != NS_ERROR_NET_TIMEOUT &&
+      aStatusCode != NS_ERROR_NET_RESET &&
+      aStatusCode != NS_ERROR_NET_INTERRUPT &&
+      aStatusCode != NS_ERROR_PROXY_CONNECTION_REFUSED &&
+      aStatusCode != NS_ERROR_DNS_LOOKUP_QUEUE_FULL) {
     DispatchFailConnection();
-    return aStatusCode;
+    return NS_ERROR_ABORT;
   }
 
-  nsresult rv;
-  nsresult healthOfRequestResult = CheckHealthOfRequestCallback(aRequest);
-  if (NS_SUCCEEDED(healthOfRequestResult) &&
-      mLastConvertionResult == NS_PARTIAL_MORE_INPUT) {
-    // we had an incomplete UTF8 char at the end of the stream
-    rv = ParseCharacter(REPLACEMENT_CHAR);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv = CheckHealthOfRequestCallback(aRequest);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   ClearFields();
 
@@ -477,7 +485,7 @@ EventSource::OnStopRequest(nsIRequest *aRequest,
   rv = NS_DispatchToMainThread(event);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return healthOfRequestResult;
+  return NS_OK;
 }
 
 /**
@@ -869,11 +877,6 @@ EventSource::ReestablishConnection()
     return;
   }
 
-  if (mReadyState != OPEN) {
-    NS_WARNING("Unexpected mReadyState!!!");
-    return;
-  }
-
   nsresult rv = ResetConnection();
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to reset the connection!!!");
@@ -994,7 +997,7 @@ EventSource::ConsoleError()
   NS_ConvertUTF8toUTF16 specUTF16(targetSpec);
   const char16_t *formatStrings[] = { specUTF16.get() };
 
-  if (mReadyState == CONNECTING && !mInterrupted) {
+  if (mReadyState == CONNECTING) {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
                              MOZ_UTF16("connectionFailure"),
                              formatStrings, ArrayLength(formatStrings));

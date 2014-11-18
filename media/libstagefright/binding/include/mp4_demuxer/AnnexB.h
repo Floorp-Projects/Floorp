@@ -5,7 +5,9 @@
 #ifndef MP4_DEMUXER_ANNEX_B_H_
 #define MP4_DEMUXER_ANNEX_B_H_
 
-#include "mozilla/Vector.h"
+#include "mp4_demuxer/DecoderData.h"
+
+template <class T> struct already_AddRefed;
 
 namespace mp4_demuxer
 {
@@ -17,17 +19,16 @@ class AnnexB
 public:
   // Convert a sample from NAL unit syntax to Annex B.
   // Assumes size of NAL length field is 4 bytes.
-  static void ConvertSample(MP4Sample* aSample,
-                            const mozilla::Vector<uint8_t>& annexB);
+  static void ConvertSample(MP4Sample* aSample);
 
   // Parse an AVCC box and construct the Annex B sample header.
-  static mozilla::Vector<uint8_t> ConvertExtraDataToAnnexB(
+  static already_AddRefed<nsRcTArray<uint8_t>> ConvertExtraDataToAnnexB(
     mozilla::Vector<uint8_t>& aExtraData);
 
 private:
   // AVCC box parser helper.
   static void ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
-                              mozilla::Vector<uint8_t>* aAnnexB);
+                              nsTArray<uint8_t>* aAnnexB);
 };
 
 } // namespace mp4_demuxer

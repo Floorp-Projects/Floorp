@@ -145,9 +145,14 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                                int32_t width, int32_t height,
                                gfx::SurfaceFormat format)
 {
+  MOZ_ASSERT(HasSize());
+
+  if (format == gfx::SurfaceFormat::B8G8R8A8) {
+    PostHasTransparency();
+  }
+
   // Our first full frame is automatically created by the image decoding
   // infrastructure. Just use it as long as it matches up.
-  MOZ_ASSERT(HasSize());
   nsIntRect neededRect(x_offset, y_offset, width, height);
   nsRefPtr<imgFrame> currentFrame = GetCurrentFrame();
   if (mNumFrames != 0 || !currentFrame->GetRect().IsEqualEdges(neededRect)) {

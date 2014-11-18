@@ -4,19 +4,7 @@ var spdy = exports;
 spdy.utils = require('./spdy/utils');
 
 // Export parser&framer
-spdy.protocol = {};
-
-try {
-  spdy.protocol.generic = require('./spdy/protocol/generic.node');
-} catch (e) {
-  spdy.protocol.generic = require('./spdy/protocol/generic.js');
-}
-
-// Supported SPDY versions
-spdy.protocol[2] = require('./spdy/protocol/v2');
-spdy.protocol[3] = require('./spdy/protocol/v3');
-
-spdy.parser = require('./spdy/parser');
+spdy.protocol = require('./spdy/protocol');
 
 // Export ServerResponse
 spdy.response = require('./spdy/response');
@@ -27,6 +15,15 @@ spdy.scheduler = require('./spdy/scheduler');
 // Export ZlibPool
 spdy.zlibpool = require('./spdy/zlib-pool');
 
+// Export Connection and Stream
+spdy.Stream = require('./spdy/stream').Stream;
+spdy.Connection = require('./spdy/connection').Connection;
+
 // Export server
 spdy.server = require('./spdy/server');
+spdy.Server = spdy.server.Server;
 spdy.createServer = spdy.server.create;
+
+// Export client
+spdy.Agent = require('./spdy/client').Agent;
+spdy.createAgent = require('./spdy/client').create;
