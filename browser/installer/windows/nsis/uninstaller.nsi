@@ -403,9 +403,6 @@ Section "Uninstall"
   ${If} ${FileExists} "$INSTDIR\distribution"
     RmDir /r /REBOOTOK "$INSTDIR\distribution"
   ${EndIf}
-  ${If} ${FileExists} "$INSTDIR\removed-files"
-    Delete /REBOOTOK "$INSTDIR\removed-files"
-  ${EndIf}
 
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
