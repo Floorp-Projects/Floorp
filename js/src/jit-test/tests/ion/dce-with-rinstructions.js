@@ -986,6 +986,28 @@ function rtofloat32_object(i) {
     return i;
 }
 
+var uceFault_hypot_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_number'));
+function rhypot_number(i) {
+    var x = Math.hypot(i, i + 1);
+    if (uceFault_hypot_number(i) || uceFault_hypot_number(i))
+        assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1)));
+    return i;
+}
+
+var uceFault_hypot_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_hypot_object'));
+function rhypot_object(i) {
+    var t0 = i;
+    var t1 = i + 1;
+    var o0 = { valueOf: function () { return t0; } };
+    var o1 = { valueOf: function () { return t1; } };
+    var x = Math.hypot(o0, o1);
+    t0 = 1000;
+    t1 = 2000;
+    if (uceFault_hypot_object(i) || uceFault_hypot_object(i) )
+        assertEq(x, Math.sqrt(i * i + (i + 1) * (i + 1)));
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -1081,6 +1103,8 @@ for (i = 0; i < 100; i++) {
     rtodouble_number(i);
     rtofloat32_number(i);
     rtofloat32_object(i);
+    rhypot_number(i);
+    rhypot_object(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
