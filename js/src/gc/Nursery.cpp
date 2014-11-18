@@ -430,14 +430,15 @@ void
 js::Nursery::setElementsForwardingPointer(ObjectElements *oldHeader, ObjectElements *newHeader,
                                           uint32_t nelems)
 {
-    /*
-     * If the JIT has hoisted a zero length pointer, then we do not need to
-     * relocate it because reads and writes to/from this pointer are invalid.
-     */
-    if (nelems - ObjectElements::VALUES_PER_HEADER < 1)
-        return;
     MOZ_ASSERT(isInside(oldHeader));
     MOZ_ASSERT(!isInside(newHeader));
+    if (nelems - ObjectElements::VALUES_PER_HEADER < 1) {
+        if (!forwardedBuffers.initialized() && !forwardedBuffers.init())
+            CrashAtUnhandlableOOM("Nursery::setElementsForwardingPointer");
+        if (!forwardedBuffers.put(oldHeader->elements(), newHeader->elements()))
+            CrashAtUnhandlableOOM("Nursery::setElementsForwardingPointer");
+        return;
+    }
     *reinterpret_cast<HeapSlot **>(oldHeader->elements()) = newHeader->elements();
 }
 
@@ -458,15 +459,19 @@ js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
     if (!isInside(old))
         return;
 
-    /*
-     * If the elements buffer is zero length, the "first" item could be inside
-     * of the next object or past the end of the allocable area.  However,
-     * since we always store the runtime as the last word in the nursery,
-     * isInside will still be true, even if this zero-size allocation abuts the
-     * end of the allocable area. Thus, it is always safe to read the first
-     * word of |old| here.
-     */
-    *pSlotsElems = *reinterpret_cast<HeapSlot **>(old);
+    // The new location for this buffer is either stored inline with it or in
+    // the forwardedBuffers table.
+    do {
+        if (forwardedBuffers.initialized()) {
+            if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(old)) {
+                *pSlotsElems = reinterpret_cast<HeapSlot *>(p->value());
+                break;
+            }
+        }
+
+        *pSlotsElems = *reinterpret_cast<HeapSlot **>(old);
+    } while (false);
+
     MOZ_ASSERT(!isInside(*pSlotsElems));
     MOZ_ASSERT(IsWriteableAddress(*pSlotsElems));
 }
@@ -831,6 +836,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     // Update any slot or element pointers whose destination has been tenured.
     TIME_START(updateJitActivations);
     js::jit::UpdateJitActivationsForMinorGC<Nursery>(&rt->mainThread, &trc);
+    forwardedBuffers.finish();
     TIME_END(updateJitActivations);
 
     // Resize the nursery.
