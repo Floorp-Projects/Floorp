@@ -760,6 +760,8 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
 }
 
 #ifdef MOZ_DMD
+dmd::DMDFuncs::Singleton dmd::DMDFuncs::sSingleton;
+
 nsresult
 nsMemoryInfoDumper::OpenDMDFile(const nsAString& aIdentifier, int aPid,
                                 FILE** aOutFile)

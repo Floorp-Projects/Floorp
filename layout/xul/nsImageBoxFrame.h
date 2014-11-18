@@ -101,11 +101,11 @@ protected:
   virtual void GetImageSize();
 
 private:
-  nsresult OnStartContainer(imgIRequest *request, imgIContainer *image);
-  nsresult OnStopDecode(imgIRequest *request);
-  nsresult OnStopRequest(imgIRequest *request, nsresult status);
+  nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
+  nsresult OnDecodeComplete(imgIRequest* aRequest);
+  nsresult OnLoadComplete(imgIRequest* aRequest, nsresult aStatus);
   nsresult OnImageIsAnimated(imgIRequest* aRequest);
-  nsresult FrameChanged(imgIRequest *aRequest);
+  nsresult OnFrameUpdate(imgIRequest* aRequest);
 
   nsRect mSubRect; ///< If set, indicates that only the portion of the image specified by the rect should be used.
   nsSize mIntrinsicSize;

@@ -1,35 +1,90 @@
 <!DOCTYPE HTML>
-<title>WebGL test: Mismatched 'webgl' and 'experimental-webgl' context requests</title>
+<html>
+<head>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
 <body>
-<canvas id="c1"></canvas>
-<canvas id="c2"></canvas>
-<canvas id="c3"></canvas>
-<canvas id="c4"></canvas>
 <script>
 
-function testContextRetrieval(canvasId, creationId, requestId) {
-  var canvas = document.getElementById(canvasId);
-  ok(canvas, 'Invalid `canvasId`: ' + canvasId);
+WEBGL_TYPES = {};
+WEBGL_TYPES['experimental-webgl'] = true;
+WEBGL_TYPES['webgl'] = true;
 
-  var createdGL = canvas.getContext(creationId);
-  if (!createdGL)
-    return; // No WebGL on this machine?
-
-  var requestedGL = canvas.getContext(requestId);
-  if (creationId == requestId) {
-    ok(requestedGL, 'Request for \'' + requestId + '\' on from \'' + creationId + '\' should succeed.');
-    ok(requestedGL == createdGL, 'Request for \'' + requestId + '\' on from \'' + creationId + '\' should match.');
-  } else {
-    ok(!requestedGL, 'Request for \'' + requestId + '\' on from \'' + creationId + '\' should fail.');
-  }
+function AreBothIn(a, b, set) {
+    return (a in set) && (b in set);
 }
 
-testContextRetrieval('c1', 'experimental-webgl', 'webgl');
-testContextRetrieval('c2', 'webgl', 'experimental-webgl');
-testContextRetrieval('c3', 'experimental-webgl', 'experimental-webgl');
-testContextRetrieval('c4', 'webgl', 'webgl');
+function IsAlias(typeA, typeB) {
+    if (typeA == typeB)
+        return true;
+
+    if (AreBothIn(typeA, typeB, WEBGL_TYPES))
+        return true;
+
+    return false;
+}
+
+function TestContextRetrieval(creationType, requestType, functionalTypeSet) {
+    var canvas = document.createElement('canvas');
+    var createdGL = canvas.getContext(creationType);
+
+    var didCreationSucceed = (createdGL != null);
+    if (creationType in functionalTypeSet) {
+        ok(createdGL, 'Context creation should succeed for type \'' +
+                      creationType + '\'');
+    } else {
+        ok(!createdGL, 'Context creation should fail for type \'' +
+                       creationType + '\'');
+        return;
+    }
+
+    var requestedGL = canvas.getContext(requestType);
+
+    if (requestType in functionalTypeSet &&
+        IsAlias(creationType, requestType))
+    {
+        ok(requestedGL, 'Request for \'' + requestType + '\' from \'' +
+                        creationType + '\' should succeed.');
+        ok(requestedGL == createdGL, 'Request for \'' + requestType +
+                                     '\' from \'' + creationType +
+                                     '\' should match.');
+    } else {
+        ok(!requestedGL, 'Request for \'' + requestType + '\' from \'' +
+                         creationType + '\' should fail.');
+    }
+}
+
+function IsWebGLFunctional() {
+    var canvas = document.createElement('canvas');
+    return canvas.getContext('experimental-webgl') != null;
+}
+
+function IsWebGLConformant() {
+    var canvas = document.createElement('canvas');
+    return canvas.getContext('webgl') != null;
+}
+
+var typeList = ['2d', 'experimental-webgl', 'webgl'];
+var functionalTypeSet = {};
+functionalTypeSet['2d'] = true;
+
+if (IsWebGLFunctional())
+    functionalTypeSet['experimental-webgl'] = true;
+
+if (IsWebGLConformant())
+    functionalTypeSet['webgl'] = true;
+
+for (var i in typeList) {
+    var creationType = typeList[i];
+
+    for (var j in typeList) {
+        var requestType = typeList[j];
+
+        TestContextRetrieval(creationType, requestType, functionalTypeSet);
+    }
+}
 
 </script>
-
+</body>
+</html>

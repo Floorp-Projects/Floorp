@@ -179,14 +179,39 @@ class MediaRecorder::Session: public nsIObserver
         return NS_OK;
       }
 
-      if (mSession->IsEncoderError()) {
-        recorder->NotifyError(NS_ERROR_UNEXPECTED);
-      }
       nsresult rv = recorder->CreateAndDispatchBlobEvent(mSession->GetEncodedData());
       if (NS_FAILED(rv)) {
         recorder->NotifyError(rv);
       }
 
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<Session> mSession;
+  };
+
+  // Notify encoder error, run in main thread task. (Bug 1095381)
+  class EncoderErrorNotifierRunnable : public nsRunnable
+  {
+  public:
+    explicit EncoderErrorNotifierRunnable(Session* aSession)
+      : mSession(aSession)
+    { }
+
+    NS_IMETHODIMP Run()
+    {
+      LOG(PR_LOG_DEBUG, ("Session.ErrorNotifyRunnable s=(%p)", mSession.get()));
+      MOZ_ASSERT(NS_IsMainThread());
+
+      nsRefPtr<MediaRecorder> recorder = mSession->mRecorder;
+      if (!recorder) {
+        return NS_OK;
+      }
+
+      if (mSession->IsEncoderError()) {
+        recorder->NotifyError(NS_ERROR_UNEXPECTED);
+      }
       return NS_OK;
     }
 
@@ -336,6 +361,7 @@ class MediaRecorder::Session: public nsIObserver
     nsRefPtr<Session> mSession;
   };
 
+  friend class EncoderErrorNotifierRunnable;
   friend class PushBlobRunnable;
   friend class ExtractRunnable;
   friend class DestroyRunnable;
@@ -399,7 +425,8 @@ public:
     LOG(PR_LOG_DEBUG, ("Session.RequestData"));
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
+    if (NS_FAILED(NS_DispatchToMainThread(new EncoderErrorNotifierRunnable(this))) ||
+        NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
       MOZ_ASSERT(false, "RequestData NS_DispatchToMainThread failed");
       return NS_ERROR_FAILURE;
     }
@@ -480,6 +507,9 @@ private:
       pushBlob = true;
     }
     if (pushBlob || aForceFlush) {
+      if (NS_FAILED(NS_DispatchToMainThread(new EncoderErrorNotifierRunnable(this)))) {
+        MOZ_ASSERT(false, "NS_DispatchToMainThread EncoderErrorNotifierRunnable failed");
+      }
       if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
         MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
       } else {
@@ -576,6 +606,9 @@ private:
     }
 
     CleanupStreams();
+    if (NS_FAILED(NS_DispatchToMainThread(new EncoderErrorNotifierRunnable(this)))) {
+      MOZ_ASSERT(false, "NS_DispatchToMainThread EncoderErrorNotifierRunnable failed");
+    }
     if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
       MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
     }

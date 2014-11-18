@@ -111,11 +111,6 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         'sandboxbroker',
     ]
 
-if CONFIG['MOZ_DMD']:
-    USE_LIBS += [
-        'dmd',
-    ]
-
 USE_LIBS += [
     'gkmedias',
     'mozalloc',

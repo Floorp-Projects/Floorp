@@ -610,7 +610,7 @@ var loadGroup;
 
 function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.enabled", spdypref);
-  prefs.setBoolPref("network.http.spdy.enabled.v3", spdy3pref);
+  prefs.setBoolPref("network.http.spdy.enabled.v3-1", spdy3pref);
   prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
   prefs.setBoolPref("network.http.spdy.enabled.http2draft", http2pref);
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", tlspref);
@@ -634,7 +634,7 @@ function run_test() {
 
   // Enable all versions of spdy to see that we auto negotiate http/2
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");
-  spdy3pref = prefs.getBoolPref("network.http.spdy.enabled.v3");
+  spdy3pref = prefs.getBoolPref("network.http.spdy.enabled.v3-1");
   spdypush = prefs.getBoolPref("network.http.spdy.allow-push");
   http2pref = prefs.getBoolPref("network.http.spdy.enabled.http2draft");
   tlspref = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");
@@ -642,7 +642,7 @@ function run_test() {
   altsvcpref2 = prefs.getBoolPref("network.http.altsvc.oe", true);
 
   prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.enabled.v3", true);
+  prefs.setBoolPref("network.http.spdy.enabled.v3-1", true);
   prefs.setBoolPref("network.http.spdy.allow-push", true);
   prefs.setBoolPref("network.http.spdy.enabled.http2draft", true);
   prefs.setBoolPref("network.http.spdy.enforce-tls-profile", false);
