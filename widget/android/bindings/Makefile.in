@@ -2,15 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-annotation_processor_jar_files := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar
+annotation_processor_jar_files := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar:$(ANDROID_SDK)/../../tools/lib/lint.jar:$(ANDROID_SDK)/../../tools/lib/lint-checks.jar
 
 MediaCodec.cpp: $(ANDROID_SDK)/android.jar mediacodec-classes.txt
-	$(JAVA) -classpath $(annotation_processor_jar_files) org.mozilla.gecko.annotationProcessors.SDKProcessor $(ANDROID_SDK)/android.jar $(srcdir)/mediacodec-classes.txt $(CURDIR) MediaCodec
+	$(JAVA) -classpath $(annotation_processor_jar_files) org.mozilla.gecko.annotationProcessors.SDKProcessor $(ANDROID_SDK)/android.jar $(srcdir)/mediacodec-classes.txt $(CURDIR) MediaCodec 16
 
 MediaCodec.h: MediaCodec.cpp
 
 SurfaceTexture.cpp: $(ANDROID_SDK)/android.jar surfacetexture-classes.txt
-	$(JAVA) -classpath $(annotation_processor_jar_files) org.mozilla.gecko.annotationProcessors.SDKProcessor $(ANDROID_SDK)/android.jar $(srcdir)/surfacetexture-classes.txt $(CURDIR) SurfaceTexture
+	$(JAVA) -classpath $(annotation_processor_jar_files) org.mozilla.gecko.annotationProcessors.SDKProcessor $(ANDROID_SDK)/android.jar $(srcdir)/surfacetexture-classes.txt $(CURDIR) SurfaceTexture 16
 
 SurfaceTexture.h: SurfaceTexture.cpp
 
