@@ -97,7 +97,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
   {
     const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
     return DoAsyncOpen(a.uri(), a.original(), a.doc(), a.referrer(),
-                       a.apiRedirectTo(), a.topWindowURI(),
+                       a.referrerPolicy(), a.apiRedirectTo(), a.topWindowURI(),
                        a.loadFlags(), a.requestHeaders(),
                        a.requestMethod(), a.uploadStream(),
                        a.uploadStreamHasHeaders(), a.priority(),
@@ -172,6 +172,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalURIParams&   aOriginalURI,
                                  const OptionalURIParams&   aDocURI,
                                  const OptionalURIParams&   aReferrerURI,
+                                 const uint32_t&            aReferrerPolicy,
                                  const OptionalURIParams&   aAPIRedirectToURI,
                                  const OptionalURIParams&   aTopWindowURI,
                                  const uint32_t&            aLoadFlags,
@@ -273,8 +274,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   if (docUri)
     mChannel->SetDocumentURI(docUri);
   if (referrerUri)
-    mChannel->SetReferrerInternal(referrerUri);
-    //TODO set referrer policy too (in patch 5)
+    mChannel->SetReferrerWithPolicyInternal(referrerUri, aReferrerPolicy);
   if (apiRedirectToUri)
     mChannel->RedirectTo(apiRedirectToUri);
   if (topWindowUri)
