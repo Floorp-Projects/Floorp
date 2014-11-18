@@ -164,14 +164,15 @@ nsGIFDecoder2::BeginGIF()
 void
 nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 {
+  MOZ_ASSERT(HasSize());
+
   gfx::SurfaceFormat format;
   if (mGIFStruct.is_transparent) {
     format = gfx::SurfaceFormat::B8G8R8A8;
+    PostHasTransparency();
   } else {
     format = gfx::SurfaceFormat::B8G8R8X8;
   }
-
-  MOZ_ASSERT(HasSize());
 
   // Use correct format, RGB for first frame, PAL for following frames
   // and include transparency to allow for optimization of opaque images
@@ -189,6 +190,11 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
                                                         mGIFStruct.y_offset,
                                                         mGIFStruct.width,
                                                         mGIFStruct.height))) {
+
+      // We need padding on the first frame, which means that we don't draw into
+      // part of the image at all. Report that as transparency.
+      PostHasTransparency();
+
       // Regardless of depth of input, image is decoded into 24bit RGB
       NeedNewFrame(mGIFStruct.images_decoded, mGIFStruct.x_offset,
                    mGIFStruct.y_offset, mGIFStruct.width, mGIFStruct.height,

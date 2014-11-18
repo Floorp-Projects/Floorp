@@ -6,23 +6,27 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/UniquePtr.h"
 
 #include <algorithm>
-#include <vector>
 
 #include "PoisonIOInterposer.h"
+
+#ifdef MOZ_REPLACE_MALLOC
+#include "replace_malloc_bridge.h"
+#endif
 
 // Auxiliary method to convert file descriptors to ids
 #if defined(XP_WIN32)
 #include <io.h>
 inline intptr_t
-FileDescriptorToID(int aFd)
+FileDescriptorToHandle(int aFd)
 {
   return _get_osfhandle(aFd);
 }
 #else
 inline intptr_t
-FileDescriptorToID(int aFd)
+FileDescriptorToHandle(int aFd)
 {
   return aFd;
 }
@@ -75,17 +79,132 @@ DebugFilesAutoLock::Clear()
   Lock = nullptr;
 }
 
-// Return a vector used to hold the IDs of the current debug files. On unix
+// The ChunkedList<T> class implements, at the high level, a non-iterable
+// list of instances of T. Its goal is to be somehow minimalist for the
+// use case of storing the debug files handles here, with the property of
+// not requiring a lock to look up whether it contains a specific value.
+// It is also chunked in blocks of chunk_size bytes so that its
+// initialization doesn't require a memory allocation, while keeping the
+// possibility to increase its size as necessary. Note that chunks are
+// never deallocated (except in the destructor).
+// All operations are essentially O(N) but N is not expected to be large
+// enough to matter.
+template <typename T, size_t chunk_size=64>
+class ChunkedList {
+  struct ListChunk {
+    static const size_t kLength = \
+      (chunk_size - sizeof(ListChunk*)) / sizeof(mozilla::Atomic<T>);
+
+    mozilla::Atomic<T> mElements[kLength];
+    mozilla::UniquePtr<ListChunk> mNext;
+
+    ListChunk() : mNext(nullptr) {}
+  };
+
+  ListChunk mList;
+  mozilla::Atomic<size_t> mLength;
+
+public:
+  ChunkedList() : mLength(0) {}
+
+  ~ChunkedList() {
+    // There can be writes happening after this destructor runs, so keep
+    // the list contents and don't reset mLength. But if there are more
+    // elements left than the first chunk can hold, then all hell breaks
+    // loose for any write that would happen after that because any extra
+    // chunk would be deallocated, so just crash in that case.
+    MOZ_RELEASE_ASSERT(mLength <= ListChunk::kLength);
+  }
+
+  // Add an element at the end of the last chunk of the list. Create a new
+  // chunk if there is not enough room.
+  // This is not thread-safe with another thread calling Add or Remove.
+  void Add(T aValue)
+  {
+    ListChunk *list = &mList;
+    size_t position = mLength;
+    for (; position >= ListChunk::kLength; position -= ListChunk::kLength) {
+      if (!list->mNext) {
+        list->mNext.reset(new ListChunk());
+      }
+      list = list->mNext.get();
+    }
+    // Use an order of operations that ensures any racing Contains call
+    // can't be hurt.
+    list->mElements[position] = aValue;
+    mLength++;
+  }
+
+  // Remove an element from the list by replacing it with the last element
+  // of the list, and then shrinking the list.
+  // This is not thread-safe with another thread calling Add or Remove.
+  void Remove(T aValue)
+  {
+    if (!mLength) {
+      return;
+    }
+    ListChunk *list = &mList;
+    size_t last = mLength - 1;
+    do {
+      size_t position = 0;
+      // Look for an element matching the given value.
+      for (; position < ListChunk::kLength; position++) {
+        if (aValue == list->mElements[position]) {
+          ListChunk *last_list = list;
+          // Look for the last element in the list, starting from where we are
+          // instead of starting over.
+          for (; last >= ListChunk::kLength; last -= ListChunk::kLength) {
+            last_list = last_list->mNext.get();
+          }
+          // Use an order of operations that ensures any racing Contains call
+          // can't be hurt.
+          T value = last_list->mElements[last];
+          list->mElements[position] = value;
+          mLength--;
+          return;
+        }
+      }
+      last -= ListChunk::kLength;
+      list = list->mNext.get();
+    } while (list);
+  }
+
+  // Returns whether the list contains the given value. It is meant to be safe
+  // to use without locking, with the tradeoff of being not entirely accurate
+  // if another thread adds or removes an element while this function runs.
+  bool Contains(T aValue)
+  {
+    ListChunk *list = &mList;
+    // Fix the range of the lookup to whatever the list length is when the
+    // function is called.
+    size_t length = mLength;
+    do {
+      size_t list_length = ListChunk::kLength;
+      list_length = std::min(list_length, length);
+      for (size_t position = 0; position < list_length; position++) {
+        if (aValue == list->mElements[position]) {
+          return true;
+        }
+      }
+      length -= ListChunk::kLength;
+      list = list->mNext.get();
+    } while (list);
+
+    return false;
+  }
+};
+
+typedef ChunkedList<intptr_t> FdList;
+
+// Return a list used to hold the IDs of the current debug files. On unix
 // an ID is a file descriptor. On Windows it is a file HANDLE.
-std::vector<intptr_t>*
+FdList&
 getDebugFileIDs()
 {
-  PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(DebugFilesAutoLock::getDebugFileIDsLock());
-  // We have to use new as some write happen during static destructors
-  // so an static std::vector might be destroyed while we still need it.
-  static std::vector<intptr_t>* DebugFileIDs = new std::vector<intptr_t>();
+  static FdList DebugFileIDs;
   return DebugFileIDs;
 }
+
 
 } // anonymous namespace
 
@@ -96,40 +215,26 @@ namespace mozilla {
 bool
 IsDebugFile(intptr_t aFileID)
 {
-  DebugFilesAutoLock lockedScope;
-
-  std::vector<intptr_t>& Vec = *getDebugFileIDs();
-  return std::find(Vec.begin(), Vec.end(), aFileID) != Vec.end();
+  return getDebugFileIDs().Contains(aFileID);
 }
-
-// Clean-up for the registered debug files.
-// We should probably make sure all debug files are unregistered instead.
-// But as the poison IO interposer is used for late-write checks we're not
-// disabling it at any point yet. So Really no need for this.
-//
-// void ClearDebugFileRegister() {
-//   PRLock *Lock;
-//   {
-//     DebugFilesAutoLock lockedScope;
-//     delete getDebugFileIDs();
-//     Lock = DebugFilesAutoLock::getDebugFileIDsLock();
-//     DebugFilesAutoLock::Clear();
-//   }
-//   PR_DestroyLock(Lock);
-// }
 
 } // namespace mozilla
 
 extern "C" {
 
 void
+MozillaRegisterDebugHandle(intptr_t aHandle)
+{
+  DebugFilesAutoLock lockedScope;
+  FdList& DebugFileIDs = getDebugFileIDs();
+  MOZ_ASSERT(!DebugFileIDs.Contains(aHandle));
+  DebugFileIDs.Add(aHandle);
+}
+
+void
 MozillaRegisterDebugFD(int aFd)
 {
-  intptr_t fileId = FileDescriptorToID(aFd);
-  DebugFilesAutoLock lockedScope;
-  std::vector<intptr_t>& Vec = *getDebugFileIDs();
-  MOZ_ASSERT(std::find(Vec.begin(), Vec.end(), fileId) == Vec.end());
-  Vec.push_back(fileId);
+  MozillaRegisterDebugHandle(FileDescriptorToHandle(aFd));
 }
 
 void
@@ -143,15 +248,18 @@ MozillaRegisterDebugFILE(FILE* aFile)
 }
 
 void
-MozillaUnRegisterDebugFD(int aFd)
+MozillaUnRegisterDebugHandle(intptr_t aHandle)
 {
   DebugFilesAutoLock lockedScope;
-  intptr_t fileId = FileDescriptorToID(aFd);
-  std::vector<intptr_t>& Vec = *getDebugFileIDs();
-  std::vector<intptr_t>::iterator i =
-    std::find(Vec.begin(), Vec.end(), fileId);
-  MOZ_ASSERT(i != Vec.end());
-  Vec.erase(i);
+  FdList& DebugFileIDs = getDebugFileIDs();
+  MOZ_ASSERT(DebugFileIDs.Contains(aHandle));
+  DebugFileIDs.Remove(aHandle);
+}
+
+void
+MozillaUnRegisterDebugFD(int aFd)
+{
+  MozillaUnRegisterDebugHandle(FileDescriptorToHandle(aFd));
 }
 
 void
@@ -166,3 +274,17 @@ MozillaUnRegisterDebugFILE(FILE* aFile)
 }
 
 }  // extern "C"
+
+#ifdef MOZ_REPLACE_MALLOC
+void
+DebugFdRegistry::RegisterHandle(intptr_t aHandle)
+{
+  MozillaRegisterDebugHandle(aHandle);
+}
+
+void
+DebugFdRegistry::UnRegisterHandle(intptr_t aHandle)
+{
+  MozillaUnRegisterDebugHandle(aHandle);
+}
+#endif

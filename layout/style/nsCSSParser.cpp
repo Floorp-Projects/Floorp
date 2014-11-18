@@ -13144,82 +13144,36 @@ CSSParserImpl::ParseSize()
 bool
 CSSParserImpl::ParseTextDecoration()
 {
-  enum {
-    eDecorationNone         = NS_STYLE_TEXT_DECORATION_LINE_NONE,
-    eDecorationUnderline    = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-    eDecorationOverline     = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE,
-    eDecorationLineThrough  = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
-    eDecorationBlink        = NS_STYLE_TEXT_DECORATION_LINE_BLINK,
-    eDecorationPrefAnchors  = NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS
+  static const nsCSSProperty kTextDecorationIDs[] = {
+    eCSSProperty_text_decoration_line,
+    eCSSProperty_text_decoration_style,
+    eCSSProperty_text_decoration_color
   };
-  static_assert((eDecorationNone ^ eDecorationUnderline ^
-                 eDecorationOverline ^ eDecorationLineThrough ^
-                 eDecorationBlink ^ eDecorationPrefAnchors) ==
-                (eDecorationNone | eDecorationUnderline |
-                 eDecorationOverline | eDecorationLineThrough |
-                 eDecorationBlink | eDecorationPrefAnchors),
-                "text decoration constants need to be bitmasks");
+  const int32_t numProps = MOZ_ARRAY_LENGTH(kTextDecorationIDs);
+  nsCSSValue values[numProps];
 
-  static const KTableValue kTextDecorationKTable[] = {
-    eCSSKeyword_none,                   eDecorationNone,
-    eCSSKeyword_underline,              eDecorationUnderline,
-    eCSSKeyword_overline,               eDecorationOverline,
-    eCSSKeyword_line_through,           eDecorationLineThrough,
-    eCSSKeyword_blink,                  eDecorationBlink,
-    eCSSKeyword__moz_anchor_decoration, eDecorationPrefAnchors,
-    eCSSKeyword_UNKNOWN,-1
-  };
-
-  nsCSSValue value;
-  if (!ParseVariant(value, VARIANT_HK, kTextDecorationKTable)) {
+  int32_t found = ParseChoice(values, kTextDecorationIDs, numProps);
+  if (found < 1) {
     return false;
   }
 
-  nsCSSValue line, style, color;
-  switch (value.GetUnit()) {
-    case eCSSUnit_Enumerated: {
-      // We shouldn't accept decoration line style and color via
-      // text-decoration.
-      color.SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
-                        eCSSUnit_Enumerated);
-      style.SetIntValue(NS_STYLE_TEXT_DECORATION_STYLE_SOLID,
-                        eCSSUnit_Enumerated);
-
-      int32_t intValue = value.GetIntValue();
-      if (intValue == eDecorationNone) {
-        line.SetIntValue(NS_STYLE_TEXT_DECORATION_LINE_NONE,
-                         eCSSUnit_Enumerated);
-        break;
-      }
-
-      // look for more keywords
-      nsCSSValue keyword;
-      int32_t index;
-      for (index = 0; index < 3; index++) {
-        if (!ParseEnum(keyword, kTextDecorationKTable)) {
-          break;
-        }
-        int32_t newValue = keyword.GetIntValue();
-        if (newValue == eDecorationNone || newValue & intValue) {
-          // 'none' keyword in conjuction with others is not allowed, and
-          // duplicate keyword is not allowed.
-          return false;
-        }
-        intValue |= newValue;
-      }
-
-      line.SetIntValue(intValue, eCSSUnit_Enumerated);
-      break;
-    }
-    default:
-      line = color = style = value;
-      break;
+  // Provide default values
+  if ((found & 1) == 0) { // Provide default text-decoration-line
+    values[0].SetIntValue(NS_STYLE_TEXT_DECORATION_LINE_NONE,
+                          eCSSUnit_Enumerated);
+  }
+  if ((found & 2) == 0) { // Provide default text-decoration-style
+    values[1].SetIntValue(NS_STYLE_TEXT_DECORATION_STYLE_SOLID,
+                          eCSSUnit_Enumerated);
+  }
+  if ((found & 4) == 0) { // Provide default text-decoration-color
+    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR,
+                          eCSSUnit_Enumerated);
   }
 
-  AppendValue(eCSSProperty_text_decoration_line, line);
-  AppendValue(eCSSProperty_text_decoration_color, color);
-  AppendValue(eCSSProperty_text_decoration_style, style);
-
+  for (int32_t index = 0; index < numProps; index++) {
+    AppendValue(kTextDecorationIDs[index], values[index]);
+  }
   return true;
 }
 
@@ -13274,6 +13228,19 @@ CSSParserImpl::ParseTextAlignLast(nsCSSValue& aValue)
 bool
 CSSParserImpl::ParseTextDecorationLine(nsCSSValue& aValue)
 {
+  static_assert((NS_STYLE_TEXT_DECORATION_LINE_NONE ^
+                 NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE ^
+                 NS_STYLE_TEXT_DECORATION_LINE_OVERLINE ^
+                 NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH ^
+                 NS_STYLE_TEXT_DECORATION_LINE_BLINK ^
+                 NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS) ==
+                (NS_STYLE_TEXT_DECORATION_LINE_NONE |
+                 NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
+                 NS_STYLE_TEXT_DECORATION_LINE_OVERLINE |
+                 NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH |
+                 NS_STYLE_TEXT_DECORATION_LINE_BLINK |
+                 NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS),
+                "text decoration constants need to be bitmasks");
   if (ParseVariant(aValue, VARIANT_HK, nsCSSProps::kTextDecorationLineKTable)) {
     if (eCSSUnit_Enumerated == aValue.GetUnit()) {
       int32_t intValue = aValue.GetIntValue();

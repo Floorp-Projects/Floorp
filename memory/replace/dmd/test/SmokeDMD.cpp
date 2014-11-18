@@ -26,6 +26,8 @@ using mozilla::JSONWriter;
 using mozilla::MakeUnique;
 using namespace mozilla::dmd;
 
+DMDFuncs::Singleton DMDFuncs::sSingleton;
+
 class FpWriteFunc : public mozilla::JSONWriteFunc
 {
 public:

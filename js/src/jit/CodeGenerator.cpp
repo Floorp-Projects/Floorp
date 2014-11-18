@@ -2097,10 +2097,12 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
     }
 #endif
 
-    // Allocate the full frame for this function.
-    uint32_t size = frameSize();
-    if (size != 0)
-        masm.subPtr(Imm32(size), StackPointer);
+    // Allocate the full frame for this function
+    // Note we have a new entry here. So we reset MacroAssembler::framePushed()
+    // to 0, before reserving the stack.
+    MOZ_ASSERT(masm.framePushed() == frameSize());
+    masm.setFramePushed(0);
+    masm.reserveStack(frameSize());
     return true;
 }
 
@@ -3278,9 +3280,9 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
         Label loop;
         masm.bind(&loop);
 
-        // We remove sizeof(void*) from argvOffset because withtout it we target
+        // We remove sizeof(void*) from argvOffset because without it we target
         // the address after the memory area that we want to copy.
-        BaseIndex disp(StackPointer, argcreg, ScaleFromElemWidth(sizeof(Value)), argvOffset - sizeof(void*));
+        BaseValueIndex disp(StackPointer, argcreg, argvOffset - sizeof(void*));
 
         // Do not use Push here because other this account to 1 in the framePushed
         // instead of 0.  These push are only counted by argcreg.
@@ -3298,7 +3300,8 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
 
     // Compute the stack usage.
     masm.movePtr(argcreg, extraStackSpace);
-    masm.lshiftPtr(Imm32::ShiftOf(ScaleFromElemWidth(sizeof(Value))), extraStackSpace);
+    NativeObject::elementsSizeMustNotOverflow();
+    masm.lshiftPtr(Imm32(ValueShift), extraStackSpace);
 
     // Join with all arguments copied and the extra stack usage computed.
     masm.bind(&end);
@@ -3593,23 +3596,6 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
     MIRGraph &mir = gen->graph();
     MResumePoint *rp = mir.entryResumePoint();
 
-    // Reserve the amount of stack the actual frame will use. We have to undo
-    // this before falling through to the method proper though, because the
-    // monomorphic call case will bypass this entire path.
-
-    // On windows, we cannot skip very far down the stack without touching the
-    // memory pages in-between.  This is a corner-case code for situations where the
-    // Ion frame data for a piece of code is very large.  To handle this special case,
-    // for frames over 1k in size we allocate memory on the stack incrementally, touching
-    // it as we go.
-    uint32_t frameSizeLeft = frameSize();
-    while (frameSizeLeft > 4096) {
-        masm.reserveStack(4096);
-        masm.store32(Imm32(0), Address(StackPointer, 0));
-        frameSizeLeft -= 4096;
-    }
-    masm.reserveStack(frameSizeLeft);
-
     // No registers are allocated yet, so it's safe to grab anything.
     Register temp = GeneralRegisterSet(EntryTempMask).getAny();
 
@@ -3643,8 +3629,6 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
             masm.bind(&success);
         }
     }
-
-    masm.freeStack(frameSize());
 
     return true;
 }
@@ -7238,7 +7222,7 @@ CodeGenerator::visitGetFrameArgument(LGetFrameArgument *lir)
         masm.loadValue(argPtr, result);
     } else {
         Register i = ToRegister(index);
-        BaseIndex argPtr(StackPointer, i, ScaleFromElemWidth(sizeof(Value)), argvOffset);
+        BaseValueIndex argPtr(StackPointer, i, argvOffset);
         masm.loadValue(argPtr, result);
     }
     return true;
@@ -7455,14 +7439,8 @@ CodeGenerator::generate()
     if (!safepoints_.init(gen->alloc(), graph.totalSlotCount()))
         return false;
 
-#ifdef JS_TRACE_LOGGING
-    if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
-        if (!emitTracelogScriptStart())
-            return false;
-        if (!emitTracelogStartEvent(TraceLogger::IonMonkey))
-            return false;
-    }
-#endif
+    if (!generatePrologue())
+        return false;
 
     // Before generating any code, we generate type checks for all parameters.
     // This comes before deoptTable_, because we can't use deopt tables without
@@ -7476,14 +7454,19 @@ CodeGenerator::generate()
             return false;
     }
 
-#ifdef JS_TRACE_LOGGING
-    Label skip;
-    masm.jump(&skip);
-#endif
+    // Skip over the alternative entry to IonScript code.
+    Label skipPrologue;
+    masm.jump(&skipPrologue);
 
-    // Remember the entry offset to skip the argument check.
+    // An alternative entry to the IonScript code, which doesn't test the
+    // arguments.
     masm.flushBuffer();
     setSkipArgCheckEntryOffset(masm.size());
+    masm.setFramePushed(0);
+    if (!generatePrologue())
+        return false;
+
+    masm.bind(&skipPrologue);
 
 #ifdef JS_TRACE_LOGGING
     if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
@@ -7492,7 +7475,6 @@ CodeGenerator::generate()
         if (!emitTracelogStartEvent(TraceLogger::IonMonkey))
             return false;
     }
-    masm.bind(&skip);
 #endif
 
 #ifdef DEBUG
@@ -7500,9 +7482,6 @@ CodeGenerator::generate()
     if (!generateArgumentsChecks(/* bailout = */ false))
         return false;
 #endif
-
-    if (!generatePrologue())
-        return false;
 
     // Reset native => bytecode map table with top-level script and startPc.
     if (!addNativeToBytecodeEntry(startSite))
@@ -8847,10 +8826,12 @@ CodeGenerator::visitLoadElementV(LLoadElementV *load)
     Register elements = ToRegister(load->elements());
     const ValueOperand out = ToOutValue(load);
 
-    if (load->index()->isConstant())
+    if (load->index()->isConstant()) {
+        NativeObject::elementsSizeMustNotOverflow();
         masm.loadValue(Address(elements, ToInt32(load->index()) * sizeof(Value)), out);
-    else
-        masm.loadValue(BaseIndex(elements, ToRegister(load->index()), TimesEight), out);
+    } else {
+        masm.loadValue(BaseObjectElementIndex(elements, ToRegister(load->index())), out);
+    }
 
     if (load->mir()->needsHoleCheck()) {
         Label testMagic;
@@ -8876,10 +8857,11 @@ CodeGenerator::visitLoadElementHole(LLoadElementHole *lir)
     Label undefined, done;
     if (lir->index()->isConstant()) {
         masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(ToInt32(lir->index())), &undefined);
+        NativeObject::elementsSizeMustNotOverflow();
         masm.loadValue(Address(elements, ToInt32(lir->index()) * sizeof(Value)), out);
     } else {
         masm.branch32(Assembler::BelowOrEqual, initLength, ToRegister(lir->index()), &undefined);
-        masm.loadValue(BaseIndex(elements, ToRegister(lir->index()), TimesEight), out);
+        masm.loadValue(BaseObjectElementIndex(elements, ToRegister(lir->index())), out);
     }
 
     // If a hole check is needed, and the value wasn't a hole, we're done.
@@ -9241,6 +9223,7 @@ CodeGenerator::visitInArray(LInArray *lir)
 
         masm.branch32(Assembler::BelowOrEqual, initLength, Imm32(index), failedInitLength);
         if (mir->needsHoleCheck()) {
+            NativeObject::elementsSizeMustNotOverflow();
             Address address = Address(elements, index * sizeof(Value));
             masm.branchTestMagic(Assembler::Equal, address, &falseBranch);
         }

@@ -442,9 +442,9 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
 
   // Actually fire OnStopRequest.
   if (mProgressTracker) {
-    mProgressTracker->SyncNotifyProgress(OnStopRequestProgress(aLastPart,
-                                                               mError,
-                                                               finalStatus));
+    mProgressTracker->SyncNotifyProgress(LoadCompleteProgress(aLastPart,
+                                                              mError,
+                                                              finalStatus));
   }
   return finalStatus;
 }
@@ -566,7 +566,7 @@ VectorImage::SendInvalidationNotifications()
 
   if (mProgressTracker) {
     SurfaceCache::Discard(this);
-    mProgressTracker->SyncNotifyProgress(FLAG_FRAME_STOPPED,
+    mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
                                          nsIntRect::GetMaxSizedIntRect());
   }
 }
@@ -1110,9 +1110,10 @@ VectorImage::OnSVGDocumentLoaded()
 
   // Tell *our* observers that we're done loading.
   if (mProgressTracker) {
-    mProgressTracker->SyncNotifyProgress(FLAG_HAS_SIZE |
-                                         FLAG_FRAME_STOPPED |
-                                         FLAG_DECODE_STOPPED |
+    mProgressTracker->SyncNotifyProgress(FLAG_SIZE_AVAILABLE |
+                                         FLAG_HAS_TRANSPARENCY |
+                                         FLAG_FRAME_COMPLETE |
+                                         FLAG_DECODE_COMPLETE |
                                          FLAG_ONLOAD_UNBLOCKED,
                                          nsIntRect::GetMaxSizedIntRect());
   }
@@ -1132,7 +1133,7 @@ VectorImage::OnSVGDocumentError()
 
   if (mProgressTracker) {
     // Unblock page load.
-    mProgressTracker->SyncNotifyProgress(FLAG_DECODE_STOPPED |
+    mProgressTracker->SyncNotifyProgress(FLAG_DECODE_COMPLETE |
                                          FLAG_ONLOAD_UNBLOCKED |
                                          FLAG_HAS_ERROR);
   }

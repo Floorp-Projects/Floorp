@@ -357,7 +357,7 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
                                   aSize.width, aSize.height, 1, 1,
                                   D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 
-    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
     hr = d3d11device->CreateTexture2D(&newDesc, nullptr, byRef(mTexture));
   } else
@@ -369,7 +369,7 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
       aSize.width, aSize.height, 1, 1,
       D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE);
 
-    newDesc.MiscFlags = D3D10_RESOURCE_MISC_SHARED;
+    newDesc.MiscFlags = D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
     hr = device->CreateTexture2D(&newDesc, nullptr, byRef(mTexture10));
   }

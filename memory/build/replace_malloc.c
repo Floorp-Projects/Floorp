@@ -22,6 +22,7 @@
 #include "malloc_decls.h"
 
 #include "mozilla/Likely.h"
+
 /*
  * Windows doesn't come with weak imports as they are possible with
  * LD_PRELOAD or DYLD_INSERT_LIBRARIES on Linux/OSX. On this platform,
@@ -129,6 +130,16 @@ init()
   replace_malloc_initialized = 1;
   if (replace_init)
     replace_init(&malloc_table);
+}
+
+MFBT_API struct ReplaceMallocBridge*
+get_bridge(void)
+{
+  if (MOZ_UNLIKELY(!replace_malloc_initialized))
+    init();
+  if (MOZ_LIKELY(!replace_get_bridge))
+    return NULL;
+  return replace_get_bridge();
 }
 
 void*
