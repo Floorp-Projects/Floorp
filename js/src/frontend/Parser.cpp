@@ -2438,6 +2438,11 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
     if (!pn)
         return null();
 
+    // Our tokenStream has no current token, so pn's position is garbage.
+    // Substitute the position of the first token in our source.
+    if (!tokenStream.peekTokenPos(&pn->pn_pos))
+        return null();
+
     Directives directives(/* strict = */ strict);
     FunctionBox *funbox = newFunctionBox(pn, fun, /* outerpc = */ nullptr, directives,
                                          generatorKind);
