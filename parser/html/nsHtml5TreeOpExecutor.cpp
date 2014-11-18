@@ -918,7 +918,8 @@ nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
   if (!uri) {
     return;
   }
-  mDocument->PreloadStyle(uri, aCharset, aCrossOrigin);
+  mDocument->PreloadStyle(uri, aCharset, aCrossOrigin,
+                          mSpeculationReferrerPolicy);
 }
 
 void

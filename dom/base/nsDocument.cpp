@@ -9590,7 +9590,8 @@ NS_IMPL_ISUPPORTS(StubCSSLoaderObserver, nsICSSLoaderObserver)
 
 void
 nsDocument::PreloadStyle(nsIURI* uri, const nsAString& charset,
-                         const nsAString& aCrossOriginAttr)
+                         const nsAString& aCrossOriginAttr,
+                         const ReferrerPolicy aReferrerPolicy)
 {
   // The CSSLoader will retain this object after we return.
   nsCOMPtr<nsICSSLoaderObserver> obs = new StubCSSLoaderObserver();
@@ -9599,7 +9600,8 @@ nsDocument::PreloadStyle(nsIURI* uri, const nsAString& charset,
   CSSLoader()->LoadSheet(uri, NodePrincipal(),
                          NS_LossyConvertUTF16toASCII(charset),
                          obs,
-                         Element::StringToCORSMode(aCrossOriginAttr));
+                         Element::StringToCORSMode(aCrossOriginAttr),
+                         aReferrerPolicy);
 }
 
 nsresult

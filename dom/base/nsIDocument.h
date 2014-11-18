@@ -1905,7 +1905,8 @@ public:
    * should be a void string if the attr is not present.
    */
   virtual void PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
-                            const nsAString& aCrossOriginAttr) = 0;
+                            const nsAString& aCrossOriginAttr,
+                            ReferrerPolicy aReferrerPolicy) = 0;
 
   /**
    * Called by the chrome registry to load style sheets.  Can be put

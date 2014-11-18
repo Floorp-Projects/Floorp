@@ -1095,7 +1095,8 @@ public:
                                  const nsAString &aCrossOriginAttr) MOZ_OVERRIDE;
 
   virtual void PreloadStyle(nsIURI* uri, const nsAString& charset,
-                            const nsAString& aCrossOriginAttr) MOZ_OVERRIDE;
+                            const nsAString& aCrossOriginAttr,
+                            ReferrerPolicy aReferrerPolicy) MOZ_OVERRIDE;
 
   virtual nsresult LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
                                        mozilla::CSSStyleSheet** sheet) MOZ_OVERRIDE;
