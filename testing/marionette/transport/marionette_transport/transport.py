@@ -2,9 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import errno
 import json
 import socket
+import time
 
 
 class MarionetteTransport(object):
@@ -107,3 +109,25 @@ class MarionetteTransport(object):
         if self.sock:
             self.sock.close()
         self.sock = None
+
+    @staticmethod
+    def wait_for_port(host, port, timeout=60):
+        """ Wait for the specified Marionette host/port to be available."""
+        starttime = datetime.datetime.now()
+        poll_interval = 0.1
+        while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
+            sock = None
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((host, port))
+                data = sock.recv(16)
+                sock.close()
+                if ':' in data:
+                    return True
+            except socket.error:
+                pass
+            finally:
+                if sock:
+                    sock.close()
+            time.sleep(poll_interval)
+        return False
