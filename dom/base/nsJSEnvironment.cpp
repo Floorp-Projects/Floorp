@@ -2412,14 +2412,6 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
 }
 
 void
-nsJSContext::ReportPendingException()
-{
-  if (mIsInitialized) {
-    nsJSUtils::ReportPendingException(mContext);
-  }
-}
-
-void
 nsJSContext::SetWindowProxy(JS::Handle<JSObject*> aWindowProxy)
 {
   mWindowProxy = aWindowProxy;

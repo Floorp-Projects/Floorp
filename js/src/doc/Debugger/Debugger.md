@@ -81,11 +81,19 @@ compartment.
 
 <code>onNewScript(<i>script</i>, <i>global</i>)</code>
 :   New code, represented by the [`Debugger.Script`][script] instance
-    <i>script</i>, has been loaded in the scope of the debuggee global
-    object <i>global</i>. <i>global</i> is a [`Debugger.Object`][object]
-    instance whose referent is the global object.
+    <i>script</i>, has been loaded in the scope of the debuggees.
 
     This method's return value is ignored.
+
+<code>onNewPromise(<i>promise</i>)</code>
+:   A new Promise object, referenced by the [`Debugger.Object`][object] instance
+    *promise*, has been allocated in the scope of the debuggees.
+
+    This handler method should return a [resumption value][rv] specifying how
+    the debuggee's execution should proceed. However, note that a <code>{ return:
+    <i>value</i> }</code> resumption value is treated like `undefined` ("continue
+    normally"); <i>value</i> is ignored. (Allowing the handler to substitute
+    its own value for the new global object doesn't seem useful.)
 
 <code>onDebuggerStatement(<i>frame</i>)</code>
 :   Debuggee code has executed a <i>debugger</i> statement in <i>frame</i>.

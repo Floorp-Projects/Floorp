@@ -23,6 +23,10 @@
 #include "nsWindowsDllInterceptor.h"
 #include "plstr.h"
 
+#ifdef MOZ_REPLACE_MALLOC
+#include "replace_malloc_bridge.h"
+#endif
+
 using namespace mozilla;
 
 namespace {
@@ -442,6 +446,14 @@ InitPoisonIOInterposer()
   // Stdout and Stderr are OK.
   MozillaRegisterDebugFD(1);
   MozillaRegisterDebugFD(2);
+
+#ifdef MOZ_REPLACE_MALLOC
+  // The contract with InitDebugFd is that the given registry can be used
+  // at any moment, so the instance needs to persist longer than the scope
+  // of this functions.
+  static DebugFdRegistry registry;
+  ReplaceMalloc::InitDebugFd(registry);
+#endif
 
   // Initialize dll interceptor and add hooks
   sNtDllInterceptor.Init("ntdll.dll");

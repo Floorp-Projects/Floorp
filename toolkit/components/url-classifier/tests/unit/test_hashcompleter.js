@@ -220,8 +220,8 @@ function run_test() {
   server = new HttpServer();
   server.registerPathHandler(SERVER_PATH, hashCompleterServer);
 
-  const SERVER_PORT = 8080;
-  server.start(SERVER_PORT);
+  server.start(-1);
+  const SERVER_PORT = server.identity.primaryPort;
 
   gethashUrl = "http://localhost:" + SERVER_PORT + SERVER_PATH;
 

@@ -4676,7 +4676,7 @@ EnsureHasAutoClearTypeInferenceStateOnOOM(AutoClearTypeInferenceStateOnOOM *&oom
 void
 TypeObject::maybeSweep(AutoClearTypeInferenceStateOnOOM *oom)
 {
-    if (generation() == zone()->types.generation) {
+    if (generation() == zoneFromAnyThread()->types.generation) {
         // No sweeping required.
         return;
     }
