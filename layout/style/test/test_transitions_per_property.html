@@ -82,8 +82,6 @@ var supported_properties = {
     "-moz-outline-radius-bottomright": [ test_radius_transition ],
     "-moz-outline-radius-topleft": [ test_radius_transition ],
     "-moz-outline-radius-topright": [ test_radius_transition ],
-    "-moz-text-decoration-color": [ test_color_transition,
-                                    test_border_color_transition ],
     "background-color": [ test_color_transition ],
     "background-position": [ test_background_position_transition,
                              // FIXME: We don't currently test clamping,
@@ -231,6 +229,8 @@ var supported_properties = {
     // test_length_percent_calc_transition.
     "stroke-width": [ test_length_transition_svg, test_percent_transition,
                       test_length_clamped_svg, test_percent_clamped ],
+    "text-decoration-color": [ test_color_transition,
+                               test_border_color_transition ],
     "text-indent": [ test_length_transition, test_percent_transition,
                      test_length_percent_calc_transition,
                      test_length_unclamped, test_percent_unclamped ],
