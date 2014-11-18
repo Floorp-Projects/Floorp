@@ -10,16 +10,24 @@
  * W3C liability, trademark and document use rules apply.
  */
 
-enum IsTypeSupportedResult { "" /* empty string */, "maybe", "probably" };
-enum SessionType { "temporary", "persistent" };
+enum MediaKeysRequirement {
+  "required",
+  "optional",
+  "disallowed"
+};
 
-[Pref="media.eme.enabled"]
-interface MediaKeys {
-  readonly attribute DOMString keySystem;
+dictionary MediaKeySystemOptions {
+  DOMString            initDataType = "";
+  DOMString            audioType = "";
+  DOMString            audioCapability = "";
+  DOMString            videoType = "";
+  DOMString            videoCapability = "";
+  MediaKeysRequirement uniqueidentifier = "optional";
+  MediaKeysRequirement stateful = "optional";
+};
 
+interface MediaKeySystemAccess {
+  readonly    attribute DOMString keySystem;
   [NewObject, Throws]
-  MediaKeySession createSession(optional SessionType sessionType = "temporary");
-
-  [NewObject, Throws]
-  Promise<void> setServerCertificate((ArrayBufferView or ArrayBuffer) serverCertificate);
+  Promise<MediaKeys> createMediaKeys();
 };

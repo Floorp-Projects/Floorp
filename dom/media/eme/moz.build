@@ -10,6 +10,7 @@ EXPORTS.mozilla.dom += [
     'MediaKeyMessageEvent.h',
     'MediaKeys.h',
     'MediaKeySession.h',
+    'MediaKeySystemAccess.h',
 ]
 
 EXPORTS.mozilla += [
@@ -29,6 +30,7 @@ UNIFIED_SOURCES += [
     'MediaKeyMessageEvent.cpp',
     'MediaKeys.cpp',
     'MediaKeySession.cpp',
+    'MediaKeySystemAccess.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
