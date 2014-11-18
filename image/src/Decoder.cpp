@@ -35,6 +35,10 @@ Decoder::Decoder(RasterImage &aImage)
 
 Decoder::~Decoder()
 {
+  MOZ_ASSERT(mProgress == NoProgress,
+             "Destroying Decoder without taking all its progress changes");
+  MOZ_ASSERT(mInvalidRect.IsEmpty(),
+             "Destroying Decoder without taking all its invalidations");
   mInitialized = false;
 }
 

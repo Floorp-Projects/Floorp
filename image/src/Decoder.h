@@ -80,6 +80,18 @@ public:
     return invalidRect;
   }
 
+  /**
+   * Gets the progress changes accumulated by the decoder so far, and clears
+   * them. This means that each call to TakeProgress() returns only the changes
+   * accumulated since the last call to TakeProgress().
+   */
+  Progress TakeProgress()
+  {
+    Progress progress = mProgress;
+    mProgress = NoProgress;
+    return progress;
+  }
+
   // We're not COM-y, so we don't get refcounts by default
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Decoder)
 
@@ -98,8 +110,6 @@ public:
   }
 
   size_t BytesDecoded() const { return mBytesDecoded; }
-
-  Progress GetProgress() const { return mProgress; }
 
   // The number of frames we have, including anything in-progress. Thus, this
   // is only 0 if we haven't begun any frames.
