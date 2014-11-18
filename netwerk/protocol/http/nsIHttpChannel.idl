@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[scriptable, uuid(1bc753ad-5b88-454d-b4c0-4fd34cce6d96)]
+[scriptable, uuid(82083578-fb78-4f9a-953c-cecbae500697)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -54,6 +54,33 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_IN_PROGRESS if set after the channel has been opened.
      */
     attribute nsIURI referrer;
+
+    /**
+     * Referrer policies. See ReferrerPolicy.h for more details.
+     */
+
+    /*   default state, doesn't send referrer from https->http          */
+    const unsigned long REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE = 0;
+    /*   sends no referrer                                              */
+    const unsigned long REFERRER_POLICY_NO_REFERRER                = 1;
+    /*   only sends the origin of the referring URL                     */
+    const unsigned long REFERRER_POLICY_ORIGIN                     = 2;
+    /*   same as default, but reduced to ORIGIN when cross-origin.      */
+    const unsigned long REFERRER_POLICY_ORIGIN_WHEN_XORIGIN        = 3;
+    /*   always sends the referrer, even on downgrade.                  */
+    const unsigned long REFERRER_POLICY_UNSAFE_URL                 = 4;
+
+    /**
+     * Get the HTTP referrer policy.  The policy is retrieved from the meta
+     * referrer tag, which can be one of many values (see ReferrerPolicy.h for
+     * more details).
+     */
+    readonly attribute unsigned long referrerPolicy;
+
+    /**
+     * Set the HTTP referrer URI with a referrer policy.
+     */
+    void setReferrerWithPolicy(in nsIURI referrer, in unsigned long referrerPolicy);
 
     /**
      * Get the value of a particular request header.

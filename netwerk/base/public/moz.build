@@ -144,6 +144,10 @@ EXPORTS += [
     'nsURIHashKey.h',
 ]
 
+EXPORTS.mozilla.net += [
+    'ReferrerPolicy.h',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXPORTS += [
         'NetStatistics.h',
