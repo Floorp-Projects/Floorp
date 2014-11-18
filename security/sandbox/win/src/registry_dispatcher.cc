@@ -20,8 +20,8 @@
 namespace {
 
 // Builds a path using the root directory and the name.
-bool GetCompletePath(HANDLE root, const std::wstring& name,
-                     std::wstring* complete_name) {
+bool GetCompletePath(HANDLE root, const base::string16& name,
+                     base::string16* complete_name) {
   if (root) {
     if (!sandbox::GetPathFromHandle(root, complete_name))
       return false;
@@ -63,7 +63,10 @@ bool RegistryDispatcher::SetupService(InterceptionManager* manager,
 
   if (IPC_NTOPENKEY_TAG == service) {
     bool result = INTERCEPT_NT(manager, NtOpenKey, OPEN_KEY_ID, 16);
-    if (base::win::GetVersion() >= base::win::VERSION_WIN7)
+    if (base::win::GetVersion() >= base::win::VERSION_WIN7 ||
+        (base::win::GetVersion() == base::win::VERSION_VISTA &&
+         base::win::OSInfo::GetInstance()->version_type() ==
+             base::win::SUITE_SERVER))
       result &= INTERCEPT_NT(manager, NtOpenKeyEx, OPEN_KEY_EX_ID, 20);
     return result;
   }
@@ -72,10 +75,10 @@ bool RegistryDispatcher::SetupService(InterceptionManager* manager,
 }
 
 bool RegistryDispatcher::NtCreateKey(
-    IPCInfo* ipc, std::wstring* name, DWORD attributes, HANDLE root,
+    IPCInfo* ipc, base::string16* name, DWORD attributes, HANDLE root,
     DWORD desired_access, DWORD title_index, DWORD create_options) {
   base::win::ScopedHandle root_handle;
-  std::wstring real_path = *name;
+  base::string16 real_path = *name;
 
   // If there is a root directory, we need to duplicate the handle to make
   // it valid in this process.
@@ -117,11 +120,11 @@ bool RegistryDispatcher::NtCreateKey(
   return true;
 }
 
-bool RegistryDispatcher::NtOpenKey(IPCInfo* ipc, std::wstring* name,
+bool RegistryDispatcher::NtOpenKey(IPCInfo* ipc, base::string16* name,
                                    DWORD attributes, HANDLE root,
                                    DWORD desired_access) {
   base::win::ScopedHandle root_handle;
-  std::wstring real_path = *name;
+  base::string16 real_path = *name;
 
   // If there is a root directory, we need to duplicate the handle to make
   // it valid in this process.

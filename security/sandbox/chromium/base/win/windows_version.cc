@@ -10,6 +10,10 @@
 #include "base/strings/utf_string_conversions.h"
 #include "base/win/registry.h"
 
+namespace {
+typedef BOOL (WINAPI *GetProductInfoPtr)(DWORD, DWORD, DWORD, DWORD, PDWORD);
+}
+
 namespace base {
 namespace win {
 
@@ -34,7 +38,7 @@ OSInfo::OSInfo()
       architecture_(OTHER_ARCHITECTURE),
       wow64_status_(GetWOW64StatusForProcess(GetCurrentProcess())) {
   OSVERSIONINFOEX version_info = { sizeof version_info };
-  GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&version_info));
+  ::GetVersionEx(reinterpret_cast<OSVERSIONINFO*>(&version_info));
   version_number_.major = version_info.dwMajorVersion;
   version_number_.minor = version_info.dwMinorVersion;
   version_number_.build = version_info.dwBuildNumber;
@@ -68,7 +72,7 @@ OSInfo::OSInfo()
   service_pack_.minor = version_info.wServicePackMinor;
 
   SYSTEM_INFO system_info = { 0 };
-  GetNativeSystemInfo(&system_info);
+  ::GetNativeSystemInfo(&system_info);
   switch (system_info.wProcessorArchitecture) {
     case PROCESSOR_ARCHITECTURE_INTEL: architecture_ = X86_ARCHITECTURE; break;
     case PROCESSOR_ARCHITECTURE_AMD64: architecture_ = X64_ARCHITECTURE; break;
@@ -76,6 +80,64 @@ OSInfo::OSInfo()
   }
   processors_ = system_info.dwNumberOfProcessors;
   allocation_granularity_ = system_info.dwAllocationGranularity;
+
+  GetProductInfoPtr get_product_info;
+  DWORD os_type;
+
+  if (version_info.dwMajorVersion == 6) {
+    // Only present on Vista+.
+    get_product_info = reinterpret_cast<GetProductInfoPtr>(
+        ::GetProcAddress(::GetModuleHandle(L"kernel32.dll"), "GetProductInfo"));
+
+    get_product_info(version_info.dwMajorVersion, version_info.dwMinorVersion,
+                     0, 0, &os_type);
+    switch (os_type) {
+      case PRODUCT_CLUSTER_SERVER:
+      case PRODUCT_DATACENTER_SERVER:
+      case PRODUCT_DATACENTER_SERVER_CORE:
+      case PRODUCT_ENTERPRISE_SERVER:
+      case PRODUCT_ENTERPRISE_SERVER_CORE:
+      case PRODUCT_ENTERPRISE_SERVER_IA64:
+      case PRODUCT_SMALLBUSINESS_SERVER:
+      case PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
+      case PRODUCT_STANDARD_SERVER:
+      case PRODUCT_STANDARD_SERVER_CORE:
+      case PRODUCT_WEB_SERVER:
+        version_type_ = SUITE_SERVER;
+        break;
+      case PRODUCT_PROFESSIONAL:
+      case PRODUCT_ULTIMATE:
+      case PRODUCT_ENTERPRISE:
+      case PRODUCT_BUSINESS:
+        version_type_ = SUITE_PROFESSIONAL;
+        break;
+      case PRODUCT_HOME_BASIC:
+      case PRODUCT_HOME_PREMIUM:
+      case PRODUCT_STARTER:
+      default:
+        version_type_ = SUITE_HOME;
+        break;
+    }
+  } else if (version_info.dwMajorVersion == 5 &&
+             version_info.dwMinorVersion == 2) {
+    if (version_info.wProductType == VER_NT_WORKSTATION &&
+        system_info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
+      version_type_ = SUITE_PROFESSIONAL;
+    } else if (version_info.wSuiteMask & VER_SUITE_WH_SERVER ) {
+      version_type_ = SUITE_HOME;
+    } else {
+      version_type_ = SUITE_SERVER;
+    }
+  } else if (version_info.dwMajorVersion == 5 &&
+             version_info.dwMinorVersion == 1) {
+    if(version_info.wSuiteMask & VER_SUITE_PERSONAL)
+      version_type_ = SUITE_HOME;
+    else
+      version_type_ = SUITE_PROFESSIONAL;
+  } else {
+    // Windows is pre XP so we don't care but pick a safe default.
+    version_type_ = SUITE_HOME;
+  }
 }
 
 OSInfo::~OSInfo() {

@@ -22,22 +22,22 @@ bool CompareHandleEntries(const SYSTEM_HANDLE_INFORMATION& a,
 
 namespace sandbox {
 
-const char16* HandleTable::kTypeProcess = L"Process";
-const char16* HandleTable::kTypeThread = L"Thread";
-const char16* HandleTable::kTypeFile = L"File";
-const char16* HandleTable::kTypeDirectory = L"Directory";
-const char16* HandleTable::kTypeKey = L"Key";
-const char16* HandleTable::kTypeWindowStation = L"WindowStation";
-const char16* HandleTable::kTypeDesktop = L"Desktop";
-const char16* HandleTable::kTypeService = L"Service";
-const char16* HandleTable::kTypeMutex = L"Mutex";
-const char16* HandleTable::kTypeSemaphore = L"Semaphore";
-const char16* HandleTable::kTypeEvent = L"Event";
-const char16* HandleTable::kTypeTimer = L"Timer";
-const char16* HandleTable::kTypeNamedPipe = L"NamedPipe";
-const char16* HandleTable::kTypeJobObject = L"JobObject";
-const char16* HandleTable::kTypeFileMap = L"FileMap";
-const char16* HandleTable::kTypeAlpcPort = L"ALPC Port";
+const base::char16* HandleTable::kTypeProcess = L"Process";
+const base::char16* HandleTable::kTypeThread = L"Thread";
+const base::char16* HandleTable::kTypeFile = L"File";
+const base::char16* HandleTable::kTypeDirectory = L"Directory";
+const base::char16* HandleTable::kTypeKey = L"Key";
+const base::char16* HandleTable::kTypeWindowStation = L"WindowStation";
+const base::char16* HandleTable::kTypeDesktop = L"Desktop";
+const base::char16* HandleTable::kTypeService = L"Service";
+const base::char16* HandleTable::kTypeMutex = L"Mutex";
+const base::char16* HandleTable::kTypeSemaphore = L"Semaphore";
+const base::char16* HandleTable::kTypeEvent = L"Event";
+const base::char16* HandleTable::kTypeTimer = L"Timer";
+const base::char16* HandleTable::kTypeNamedPipe = L"NamedPipe";
+const base::char16* HandleTable::kTypeJobObject = L"JobObject";
+const base::char16* HandleTable::kTypeFileMap = L"FileMap";
+const base::char16* HandleTable::kTypeAlpcPort = L"ALPC Port";
 
 HandleTable::HandleTable() {
   static NtQuerySystemInformation QuerySystemInformation = NULL;
@@ -151,17 +151,17 @@ const OBJECT_TYPE_INFORMATION* HandleTable::HandleEntry::TypeInfo() {
   return type_info_buffer_.empty() ? NULL : type_info_internal();
 }
 
-const string16& HandleTable::HandleEntry::Name() {
+const base::string16& HandleTable::HandleEntry::Name() {
   UpdateInfo(UPDATE_INFO_AND_NAME);
   return handle_name_;
 }
 
-const string16& HandleTable::HandleEntry::Type() {
+const base::string16& HandleTable::HandleEntry::Type() {
   UpdateInfo(UPDATE_INFO_AND_TYPE_NAME);
   return type_name_;
 }
 
-bool HandleTable::HandleEntry::IsType(const string16& type_string) {
+bool HandleTable::HandleEntry::IsType(const base::string16& type_string) {
   UpdateInfo(UPDATE_INFO_ONLY);
   if (type_info_buffer_.empty())
     return false;

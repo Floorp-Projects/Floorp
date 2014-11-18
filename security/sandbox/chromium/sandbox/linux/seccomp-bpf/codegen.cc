@@ -106,6 +106,8 @@ void CodeGen::PrintProgram(const SandboxBPF::Program& program) {
           fprintf(stderr, "Trap #%d\n", iter->k & SECCOMP_RET_DATA);
         } else if ((iter->k & SECCOMP_RET_ACTION) == SECCOMP_RET_ERRNO) {
           fprintf(stderr, "errno = %d\n", iter->k & SECCOMP_RET_DATA);
+        } else if ((iter->k & SECCOMP_RET_ACTION) == SECCOMP_RET_TRACE) {
+          fprintf(stderr, "Trace #%d\n", iter->k & SECCOMP_RET_DATA);
         } else if (iter->k == SECCOMP_RET_ALLOW) {
           fprintf(stderr, "Allowed\n");
         } else {
@@ -443,80 +445,74 @@ static int PointerCompare(const BasicBlock* block1,
     // If we have reached the end of the sequence of instructions in one or
     // both basic blocks, we know the relative ordering between the two blocks
     // and can return.
-    if (iter1 == insns1.end()) {
-      if (iter2 == insns2.end()) {
-        // If the two blocks are the same length (and have elementwise-equal
-        // code and k fields, which is the only way we can reach this point),
-        // and the last instruction isn't a JMP or a RET, then we must compare
-        // their successors.
-        Instruction* const insns1_last = insns1.back();
-        Instruction* const insns2_last = insns2.back();
-        if (BPF_CLASS(insns1_last->code) != BPF_JMP &&
-            BPF_CLASS(insns1_last->code) != BPF_RET) {
-          // Non jumping instructions will always have a valid next instruction.
-          CHECK(insns1_last->next);
-          CHECK(insns2_last->next);
-          return PointerCompare(blocks.find(insns1_last->next)->second,
-                                blocks.find(insns2_last->next)->second,
-                                blocks);
-        } else {
-          return 0;
-        }
+    if (iter1 == insns1.end() || iter2 == insns2.end()) {
+      if (iter1 != insns1.end()) {
+        return 1;
       }
-      return -1;
-    } else if (iter2 == insns2.end()) {
-      return 1;
+      if (iter2 != insns2.end()) {
+        return -1;
+      }
+
+      // If the two blocks are the same length (and have elementwise-equal code
+      // and k fields) and their last instructions are neither a JMP nor a RET
+      // (which is the only way we can reach this point), then we must compare
+      // their successors.
+      Instruction* const insns1_last = insns1.back();
+      Instruction* const insns2_last = insns2.back();
+      CHECK(BPF_CLASS(insns1_last->code) != BPF_JMP &&
+            BPF_CLASS(insns1_last->code) != BPF_RET);
+
+      // Non jumping instructions will always have a valid next instruction.
+      CHECK(insns1_last->next);
+      CHECK(insns2_last->next);
+      return PointerCompare(blocks.find(insns1_last->next)->second,
+                            blocks.find(insns2_last->next)->second,
+                            blocks);
     }
 
     // Compare the individual fields for both instructions.
     const Instruction& insn1 = **iter1;
     const Instruction& insn2 = **iter2;
-    if (insn1.code == insn2.code) {
-      if (insn1.k == insn2.k) {
-        // Only conditional jump instructions use the jt_ptr and jf_ptr
-        // fields.
-        if (BPF_CLASS(insn1.code) == BPF_JMP) {
-          if (BPF_OP(insn1.code) != BPF_JA) {
-            // Recursively compare the "true" and "false" branches.
-            // A well-formed BPF program can't have any cycles, so we know
-            // that our recursive algorithm will ultimately terminate.
-            // In the unlikely event that the programmer made a mistake and
-            // went out of the way to give us a cyclic program, we will crash
-            // with a stack overflow. We are OK with that.
-            int c = PointerCompare(blocks.find(insn1.jt_ptr)->second,
-                                   blocks.find(insn2.jt_ptr)->second,
-                                   blocks);
-            if (c == 0) {
-              c = PointerCompare(blocks.find(insn1.jf_ptr)->second,
-                                 blocks.find(insn2.jf_ptr)->second,
-                                 blocks);
-              if (c == 0) {
-                continue;
-              } else {
-                return c;
-              }
-            } else {
-              return c;
-            }
-          } else {
-            int c = PointerCompare(blocks.find(insn1.jt_ptr)->second,
-                                   blocks.find(insn2.jt_ptr)->second,
-                                   blocks);
-            if (c == 0) {
-              continue;
-            } else {
-              return c;
-            }
-          }
-        } else {
-          continue;
-        }
-      } else {
-        return insn1.k - insn2.k;
-      }
-    } else {
+    if (insn1.code != insn2.code) {
       return insn1.code - insn2.code;
     }
+    if (insn1.k != insn2.k) {
+      return insn1.k - insn2.k;
+    }
+
+    // Sanity check: If we're looking at a JMP or RET instruction, by definition
+    // it should be the last instruction of the basic block.
+    if (BPF_CLASS(insn1.code) == BPF_JMP || BPF_CLASS(insn1.code) == BPF_RET) {
+      CHECK_EQ(insns1.back(), &insn1);
+      CHECK_EQ(insns2.back(), &insn2);
+    }
+
+    // RET instructions terminate execution, and only JMP instructions use the
+    // jt_ptr and jf_ptr fields.  Anything else can continue to the next
+    // instruction in the basic block.
+    if (BPF_CLASS(insn1.code) == BPF_RET) {
+      return 0;
+    } else if (BPF_CLASS(insn1.code) != BPF_JMP) {
+      continue;
+    }
+
+    // Recursively compare the "true" and "false" branches.
+    // A well-formed BPF program can't have any cycles, so we know
+    // that our recursive algorithm will ultimately terminate.
+    // In the unlikely event that the programmer made a mistake and
+    // went out of the way to give us a cyclic program, we will crash
+    // with a stack overflow. We are OK with that.
+    if (BPF_OP(insn1.code) != BPF_JA) {
+      int c = PointerCompare(blocks.find(insn1.jf_ptr)->second,
+                             blocks.find(insn2.jf_ptr)->second,
+                             blocks);
+      if (c != 0) {
+        return c;
+      }
+    }
+    return PointerCompare(blocks.find(insn1.jt_ptr)->second,
+                          blocks.find(insn2.jt_ptr)->second,
+                          blocks);
   }
 }
 

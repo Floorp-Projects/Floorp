@@ -5,9 +5,9 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_ERRORCODE_H__
 #define SANDBOX_LINUX_SECCOMP_BPF_ERRORCODE_H__
 
-#include "sandbox/linux/sandbox_export.h"
 #include "sandbox/linux/seccomp-bpf/linux_seccomp.h"
 #include "sandbox/linux/seccomp-bpf/trap.h"
+#include "sandbox/sandbox_export.h"
 
 namespace sandbox {
 
@@ -29,6 +29,12 @@ class SANDBOX_EXPORT ErrorCode {
     // to be passed in accidentally, when the user intended to return an
     // "errno" (see below) value instead.
     ERR_ALLOWED = 0x04000000,
+
+    // If the progress is being ptraced with PTRACE_O_TRACESECCOMP, then the
+    // tracer will be notified of a PTRACE_EVENT_SECCOMP and allowed to change
+    // or skip the system call.  The lower 16 bits of err will be available to
+    // the tracer via PTRACE_GETEVENTMSG.
+    ERR_TRACE   = 0x08000000,
 
     // Deny the system call with a particular "errno" value.
     // N.B.: It is also possible to return "0" here. That would normally
