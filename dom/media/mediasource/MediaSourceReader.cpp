@@ -643,6 +643,29 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 }
 
 void
+MediaSourceReader::ReadUpdatedMetadata(MediaInfo* aInfo)
+{
+  if (mAudioTrack) {
+    MOZ_ASSERT(mAudioTrack->IsReady());
+    mAudioReader = mAudioTrack->Decoders()[0]->GetReader();
+
+    const MediaInfo& info = mAudioReader->GetMediaInfo();
+    MOZ_ASSERT(info.HasAudio());
+    mInfo.mAudio = info.mAudio;
+  }
+
+  if (mVideoTrack) {
+    MOZ_ASSERT(mVideoTrack->IsReady());
+    mVideoReader = mVideoTrack->Decoders()[0]->GetReader();
+
+    const MediaInfo& info = mVideoReader->GetMediaInfo();
+    MOZ_ASSERT(info.HasVideo());
+    mInfo.mVideo = info.mVideo;
+  }
+  *aInfo = mInfo;
+}
+
+void
 MediaSourceReader::Ended()
 {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
