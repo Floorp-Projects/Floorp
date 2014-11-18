@@ -5324,6 +5324,11 @@ class MHypot
         return true;
     }
 
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
+
     ALLOW_CLONE(MHypot)
 };
 
