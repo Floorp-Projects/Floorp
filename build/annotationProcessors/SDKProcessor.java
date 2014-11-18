@@ -108,7 +108,7 @@ public class SDKProcessor {
 
         for (Iterator<String> i = classes.iterator(); i.hasNext(); ) {
             String className = i.next();
-            System.out.println("looking up: " + className);
+            System.out.println("Looking up: " + className);
 
             try {
                 Class<?> c = Class.forName(className, true, loader);
@@ -183,7 +183,7 @@ public class SDKProcessor {
                                       StringBuilder headerFile) {
         String generatedName = clazz.getSimpleName();
 
-        CodeGenerator generator = new CodeGenerator(clazz, generatedName);
+        CodeGenerator generator = new CodeGenerator(clazz, generatedName, true);
         stubInitializer.append("    ").append(generatedName).append("::InitStubs(jEnv);\n");
 
         generator.generateMembers(sortAndFilterMembers(clazz.getDeclaredConstructors()));

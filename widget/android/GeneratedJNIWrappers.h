@@ -12,11 +12,11 @@
 namespace mozilla {
 namespace widget {
 namespace android {
-void InitStubs(JNIEnv *jEnv);
+void InitStubs(JNIEnv *env);
 
 class GeckoAppShell : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static GeckoAppShell* Wrap(jobject obj);
     GeckoAppShell(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     static void AcknowledgeEvent();
@@ -196,7 +196,7 @@ protected:
 
 class JavaDomKeyLocation : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static JavaDomKeyLocation* Wrap(jobject obj);
     JavaDomKeyLocation(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     static jobject valueOf(const nsAString& a0);
@@ -224,7 +224,7 @@ protected:
 
 class GeckoJavaSampler : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static GeckoJavaSampler* Wrap(jobject obj);
     GeckoJavaSampler(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     static jstring GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a1, int32_t a2);
@@ -248,7 +248,7 @@ protected:
 
 class SurfaceBits : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static SurfaceBits* Wrap(jobject obj);
     SurfaceBits(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     SurfaceBits();
@@ -271,7 +271,7 @@ protected:
 
 class ThumbnailHelper : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static ThumbnailHelper* Wrap(jobject obj);
     ThumbnailHelper(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     static void SendThumbnail(jobject a0, int32_t a1, bool a2, bool a3);
@@ -283,7 +283,7 @@ protected:
 
 class DisplayPortMetrics : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static DisplayPortMetrics* Wrap(jobject obj);
     DisplayPortMetrics(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     DisplayPortMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4);
@@ -299,7 +299,7 @@ protected:
 
 class GLController : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static GLController* Wrap(jobject obj);
     GLController(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     jobject CreateEGLSurfaceForCompositorWrapper();
@@ -311,7 +311,7 @@ protected:
 
 class GeckoLayerClient : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static GeckoLayerClient* Wrap(jobject obj);
     GeckoLayerClient(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     void ActivateProgram();
@@ -343,7 +343,7 @@ protected:
 
 class ImmutableViewportMetrics : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static ImmutableViewportMetrics* Wrap(jobject obj);
     ImmutableViewportMetrics(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     ImmutableViewportMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6, jfloat a7, jfloat a8, jfloat a9, jfloat a10, jfloat a11, jfloat a12);
@@ -355,7 +355,7 @@ protected:
 
 class LayerView : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static LayerView* Wrap(jobject obj);
     LayerView(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     static jobject RegisterCompositorWrapper();
@@ -367,7 +367,7 @@ protected:
 
 class NativePanZoomController : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static NativePanZoomController* Wrap(jobject obj);
     NativePanZoomController(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     void RequestContentRepaintWrapper(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4);
@@ -379,7 +379,7 @@ protected:
 
 class ProgressiveUpdateData : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static ProgressiveUpdateData* Wrap(jobject obj);
     ProgressiveUpdateData(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     ProgressiveUpdateData();
@@ -404,7 +404,7 @@ protected:
 
 class ViewTransform : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static ViewTransform* Wrap(jobject obj);
     ViewTransform(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     ViewTransform(jfloat a0, jfloat a1, jfloat a2);
@@ -443,7 +443,7 @@ protected:
 
 class NativeZip : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static NativeZip* Wrap(jobject obj);
     NativeZip(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     jobject CreateInputStream(jobject a0, int32_t a1);
@@ -455,7 +455,7 @@ protected:
 
 class MatrixBlobCursor : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static MatrixBlobCursor* Wrap(jobject obj);
     MatrixBlobCursor(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     MatrixBlobCursor(jobjectArray a0);
@@ -475,7 +475,7 @@ protected:
 
 class SQLiteBridgeException : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static SQLiteBridgeException* Wrap(jobject obj);
     SQLiteBridgeException(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     SQLiteBridgeException();
@@ -490,7 +490,7 @@ protected:
 
 class Clipboard : public AutoGlobalWrappedJavaObject {
 public:
-    static void InitStubs(JNIEnv *jEnv);
+    static void InitStubs(JNIEnv *env);
     static Clipboard* Wrap(jobject obj);
     Clipboard(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
     static void ClearText();
