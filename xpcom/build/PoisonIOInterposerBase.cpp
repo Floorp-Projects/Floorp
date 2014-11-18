@@ -12,17 +12,21 @@
 
 #include "PoisonIOInterposer.h"
 
+#ifdef MOZ_REPLACE_MALLOC
+#include "replace_malloc_bridge.h"
+#endif
+
 // Auxiliary method to convert file descriptors to ids
 #if defined(XP_WIN32)
 #include <io.h>
 inline intptr_t
-FileDescriptorToID(int aFd)
+FileDescriptorToHandle(int aFd)
 {
   return _get_osfhandle(aFd);
 }
 #else
 inline intptr_t
-FileDescriptorToID(int aFd)
+FileDescriptorToHandle(int aFd)
 {
   return aFd;
 }
@@ -123,13 +127,18 @@ IsDebugFile(intptr_t aFileID)
 extern "C" {
 
 void
-MozillaRegisterDebugFD(int aFd)
+MozillaRegisterDebugHandle(intptr_t aHandle)
 {
-  intptr_t fileId = FileDescriptorToID(aFd);
   DebugFilesAutoLock lockedScope;
   std::vector<intptr_t>& Vec = *getDebugFileIDs();
-  MOZ_ASSERT(std::find(Vec.begin(), Vec.end(), fileId) == Vec.end());
-  Vec.push_back(fileId);
+  MOZ_ASSERT(std::find(Vec.begin(), Vec.end(), aHandle) == Vec.end());
+  Vec.push_back(aHandle);
+}
+
+void
+MozillaRegisterDebugFD(int aFd)
+{
+  MozillaRegisterDebugHandle(FileDescriptorToHandle(aFd));
 }
 
 void
@@ -143,15 +152,20 @@ MozillaRegisterDebugFILE(FILE* aFile)
 }
 
 void
-MozillaUnRegisterDebugFD(int aFd)
+MozillaUnRegisterDebugHandle(intptr_t aHandle)
 {
   DebugFilesAutoLock lockedScope;
-  intptr_t fileId = FileDescriptorToID(aFd);
   std::vector<intptr_t>& Vec = *getDebugFileIDs();
   std::vector<intptr_t>::iterator i =
-    std::find(Vec.begin(), Vec.end(), fileId);
+    std::find(Vec.begin(), Vec.end(), aHandle);
   MOZ_ASSERT(i != Vec.end());
   Vec.erase(i);
+}
+
+void
+MozillaUnRegisterDebugFD(int aFd)
+{
+  MozillaUnRegisterDebugHandle(FileDescriptorToHandle(aFd));
 }
 
 void
@@ -166,3 +180,17 @@ MozillaUnRegisterDebugFILE(FILE* aFile)
 }
 
 }  // extern "C"
+
+#ifdef MOZ_REPLACE_MALLOC
+void
+DebugFdRegistry::RegisterHandle(intptr_t aHandle)
+{
+  MozillaRegisterDebugHandle(aHandle);
+}
+
+void
+DebugFdRegistry::UnRegisterHandle(intptr_t aHandle)
+{
+  MozillaUnRegisterDebugHandle(aHandle);
+}
+#endif

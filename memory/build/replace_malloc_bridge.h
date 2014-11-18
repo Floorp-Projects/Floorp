@@ -62,14 +62,30 @@ namespace mozilla {
 namespace dmd {
 struct DMDFuncs;
 }
-}
+
+/* Callbacks to register debug file handles for Poison IO interpose.
+ * See Mozilla(|Un)RegisterDebugHandle in xpcom/build/PoisonIOInterposer.h */
+struct DebugFdRegistry
+{
+  virtual void RegisterHandle(intptr_t aFd);
+
+  virtual void UnRegisterHandle(intptr_t aFd);
+};
+
+} // namespace mozilla
 
 struct ReplaceMallocBridge
 {
-  ReplaceMallocBridge() : mVersion(1) {}
+  ReplaceMallocBridge() : mVersion(2) {}
 
   /* This method was added in version 1 of the bridge. */
   virtual mozilla::dmd::DMDFuncs* GetDMDFuncs() { return nullptr; }
+
+  /* Send a DebugFdRegistry instance to the replace-malloc library so that
+   * it can register/unregister file descriptors whenever needed. The
+   * instance is valid until the process dies.
+   * This method was added in version 2 of the bridge. */
+  virtual void InitDebugFd(mozilla::DebugFdRegistry&) {}
 
 #ifndef REPLACE_MALLOC_IMPL
   /* Returns the replace-malloc bridge if its version is at least the
@@ -100,6 +116,14 @@ struct ReplaceMalloc
   {
     auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 1);
     return singleton ? singleton->GetDMDFuncs() : nullptr;
+  }
+
+  static void InitDebugFd(mozilla::DebugFdRegistry& aRegistry)
+  {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 2);
+    if (singleton) {
+      singleton->InitDebugFd(aRegistry);
+    }
   }
 };
 #endif
