@@ -320,7 +320,6 @@ private:
     explicit DecodeRequest(RasterImage* aImage)
       : mImage(aImage)
       , mRequestStatus(REQUEST_INACTIVE)
-      , mAllocatedNewFrame(false)
     { }
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodeRequest)
@@ -335,10 +334,6 @@ private:
       REQUEST_WORK_DONE,
       REQUEST_STOPPED
     } mRequestStatus;
-
-    /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
-     * been called to flush data to it */
-    bool mAllocatedNewFrame;
 
   private:
     ~DecodeRequest() {}
