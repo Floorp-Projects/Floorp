@@ -10,7 +10,6 @@
 #include "sandbox/win/src/process_mitigations.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
-#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/target_services.h"
 #include "sandbox/win/src/win_utils.h"
 #include "sandbox/win/tests/common/controller.h"
@@ -89,7 +88,6 @@ SBOX_TESTS_COMMAND int CheckWin8(int argc, wchar_t **argv) {
       reinterpret_cast<GetProcessMitigationPolicyFunction>(
           ::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"),
                            "GetProcessMitigationPolicy"));
-
   if (!get_process_mitigation_policy)
     return SBOX_TEST_NOT_FOUND;
 
@@ -103,9 +101,6 @@ SBOX_TESTS_COMMAND int CheckWin8(int argc, wchar_t **argv) {
 
   if (!CheckWin8StrictHandlePolicy())
     return SBOX_TEST_THIRD_ERROR;
-
-  if (!CheckWin8Win32CallPolicy())
-    return SBOX_TEST_FOURTH_ERROR;
 
   if (!CheckWin8DllExtensionPolicy())
     return SBOX_TEST_FIFTH_ERROR;
@@ -130,8 +125,7 @@ TEST(ProcessMitigationsTest, CheckWin8) {
 
   EXPECT_EQ(policy->SetProcessMitigations(mitigations), SBOX_ALL_OK);
 
-  mitigations |= MITIGATION_STRICT_HANDLE_CHECKS |
-                 MITIGATION_WIN32K_DISABLE;
+  mitigations |= MITIGATION_STRICT_HANDLE_CHECKS;
 
   EXPECT_EQ(policy->SetDelayedProcessMitigations(mitigations), SBOX_ALL_OK);
 
@@ -188,7 +182,7 @@ SBOX_TESTS_COMMAND int CheckDep(int argc, wchar_t **argv) {
 
 #if !defined(_WIN64)  // DEP is always enabled on 64-bit.
 TEST(ProcessMitigationsTest, CheckDep) {
-  if (!IsXPSP2OrLater() || base::win::GetVersion() > base::win::VERSION_WIN7)
+  if (base::win::GetVersion() > base::win::VERSION_WIN7)
     return;
 
   TestRunner runner;
@@ -202,6 +196,53 @@ TEST(ProcessMitigationsTest, CheckDep) {
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"CheckDep"));
 }
 #endif
+
+SBOX_TESTS_COMMAND int CheckWin8Lockdown(int argc, wchar_t **argv) {
+  get_process_mitigation_policy =
+      reinterpret_cast<GetProcessMitigationPolicyFunction>(
+          ::GetProcAddress(::GetModuleHandleW(L"kernel32.dll"),
+                           "GetProcessMitigationPolicy"));
+  if (!get_process_mitigation_policy)
+    return SBOX_TEST_NOT_FOUND;
+
+  if (!CheckWin8Win32CallPolicy())
+    return SBOX_TEST_FIRST_ERROR;
+  return SBOX_TEST_SUCCEEDED;
+}
+
+// This test validates that setting the MITIGATION_WIN32K_DISABLE mitigation on
+// the target process causes the launch to fail in process initialization.
+// The test process itself links against user32/gdi32.
+TEST(ProcessMitigationsTest, CheckWin8Win32KLockDownFailure) {
+  if (base::win::GetVersion() < base::win::VERSION_WIN8)
+    return;
+
+  TestRunner runner;
+  sandbox::TargetPolicy* policy = runner.GetPolicy();
+
+  EXPECT_EQ(policy->SetProcessMitigations(MITIGATION_WIN32K_DISABLE),
+            SBOX_ALL_OK);
+  EXPECT_NE(SBOX_TEST_SUCCEEDED, runner.RunTest(L"CheckWin8Lockdown"));
+}
+
+// This test validates that setting the MITIGATION_WIN32K_DISABLE mitigation
+// along with the policy to fake user32 and gdi32 initialization successfully
+// launches the target process.
+// The test process itself links against user32/gdi32.
+TEST(ProcessMitigationsTest, CheckWin8Win32KLockDownSuccess) {
+  if (base::win::GetVersion() < base::win::VERSION_WIN8)
+    return;
+
+  TestRunner runner;
+  sandbox::TargetPolicy* policy = runner.GetPolicy();
+
+  EXPECT_EQ(policy->SetProcessMitigations(MITIGATION_WIN32K_DISABLE),
+            SBOX_ALL_OK);
+  EXPECT_EQ(policy->AddRule(sandbox::TargetPolicy::SUBSYS_WIN32K_LOCKDOWN,
+                            sandbox::TargetPolicy::FAKE_USER_GDI_INIT, NULL),
+            sandbox::SBOX_ALL_OK);
+  EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"CheckWin8Lockdown"));
+}
 
 }  // namespace sandbox
 

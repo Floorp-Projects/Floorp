@@ -16,7 +16,8 @@ namespace base {
 // AssertAcquired() method.
 class BASE_EXPORT Lock {
  public:
-#if defined(NDEBUG)             // Optimized wrapper implementation
+#if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
+   // Optimized wrapper implementation
   Lock() : lock_() {}
   ~Lock() {}
   void Acquire() { lock_.Lock(); }
@@ -55,7 +56,7 @@ class BASE_EXPORT Lock {
   }
 
   void AssertAcquired() const;
-#endif                          // NDEBUG
+#endif  // NDEBUG && !DCHECK_ALWAYS_ON
 
 #if defined(OS_POSIX)
   // The posix implementation of ConditionVariable needs to be able
@@ -69,7 +70,7 @@ class BASE_EXPORT Lock {
 #endif
 
  private:
-#if !defined(NDEBUG)
+#if !defined(NDEBUG) || defined(DCHECK_ALWAYS_ON)
   // Members and routines taking care of locks assertions.
   // Note that this checks for recursive locks and allows them
   // if the variable is set.  This is allowed by the underlying implementation
@@ -80,12 +81,8 @@ class BASE_EXPORT Lock {
 
   // All private data is implicitly protected by lock_.
   // Be VERY careful to only access members under that lock.
-
-  // Determines validity of owning_thread_id_.  Needed as we don't have
-  // a null owning_thread_id_ value.
-  bool owned_by_thread_;
-  base::PlatformThreadId owning_thread_id_;
-#endif  // NDEBUG
+  base::PlatformThreadRef owning_thread_ref_;
+#endif  // !NDEBUG || DCHECK_ALWAYS_ON
 
   // Platform specific underlying lock implementation.
   internal::LockImpl lock_;

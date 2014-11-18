@@ -11,7 +11,7 @@
 namespace sandbox {
 
 // This is the list of all imported symbols from ntdll.dll.
-SANDBOX_INTERCEPT NtExports g_nt = { NULL };
+SANDBOX_INTERCEPT NtExports g_nt;
 
 }  // namespace sandbox
 
@@ -208,15 +208,7 @@ bool ValidParameter(void* buffer, size_t size, RequiredAccess intent) {
 NTSTATUS CopyData(void* destination, const void* source, size_t bytes) {
   NTSTATUS ret = STATUS_SUCCESS;
   __try {
-    if (SandboxFactory::GetTargetServices()->GetState()->InitCalled()) {
-      memcpy(destination, source, bytes);
-    } else {
-      const char* from = reinterpret_cast<const char*>(source);
-      char* to = reinterpret_cast<char*>(destination);
-      for (size_t i = 0; i < bytes; i++) {
-        to[i] = from[i];
-      }
-    }
+    g_nt.memcpy(destination, source, bytes);
   } __except(EXCEPTION_EXECUTE_HANDLER) {
     ret = GetExceptionCode();
   }
@@ -533,14 +525,17 @@ bool IsSupportedRenameCall(FILE_RENAME_INFORMATION* file_info, DWORD length,
   if (file_info->RootDirectory)
     return false;
 
+  static const wchar_t kPathPrefix[] = { L'\\', L'?', L'?', L'\\'};
+
   // Check if it starts with \\??\\. We don't support relative paths.
-  if (file_info->FileNameLength < 4 || file_info->FileNameLength > kuint16max)
+  if (file_info->FileNameLength < sizeof(kPathPrefix) ||
+      file_info->FileNameLength > kuint16max)
     return false;
 
-  if (file_info->FileName[0] != L'\\' ||
-      file_info->FileName[1] != L'?' ||
-      file_info->FileName[2] != L'?' ||
-      file_info->FileName[3] != L'\\')
+  if (file_info->FileName[0] != kPathPrefix[0] ||
+      file_info->FileName[1] != kPathPrefix[1] ||
+      file_info->FileName[2] != kPathPrefix[2] ||
+      file_info->FileName[3] != kPathPrefix[3])
     return false;
 
   return true;

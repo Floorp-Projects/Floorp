@@ -39,10 +39,11 @@ BASE_EXPORT double BitsToOpenEndedUnitInterval(uint64 bits);
 // See crypto/ for cryptographically secure random number generation APIs.
 BASE_EXPORT void RandBytes(void* output, size_t output_length);
 
-// Fills a string of length |length| with with random data and returns it.
+// Fills a string of length |length| with random data and returns it.
 // |length| should be nonzero.
 //
 // Note that this is a variation of |RandBytes| with a different return type.
+// The returned string is likely not ASCII/UTF-8. Use with care.
 //
 // WARNING:
 // Do not use for security-sensitive purposes.

@@ -9,10 +9,10 @@
 #include <set>
 #include <vector>
 
-#include "sandbox/linux/sandbox_export.h"
 #include "sandbox/linux/seccomp-bpf/basicblock.h"
 #include "sandbox/linux/seccomp-bpf/instruction.h"
 #include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
+#include "sandbox/sandbox_export.h"
 
 namespace sandbox {
 

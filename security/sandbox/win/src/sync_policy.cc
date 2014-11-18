@@ -7,18 +7,133 @@
 #include "sandbox/win/src/sync_policy.h"
 
 #include "base/logging.h"
+#include "base/strings/stringprintf.h"
 #include "sandbox/win/src/ipc_tags.h"
+#include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/policy_engine_opcodes.h"
 #include "sandbox/win/src/policy_params.h"
 #include "sandbox/win/src/sandbox_types.h"
 #include "sandbox/win/src/sandbox_utils.h"
+#include "sandbox/win/src/sync_interception.h"
+#include "sandbox/win/src/win_utils.h"
 
 namespace sandbox {
+
+// Provides functionality to resolve a symbolic link within the object
+// directory passed in.
+NTSTATUS ResolveSymbolicLink(const base::string16& directory_name,
+                             const base::string16& name,
+                             base::string16* target) {
+  NtOpenDirectoryObjectFunction NtOpenDirectoryObject = NULL;
+  ResolveNTFunctionPtr("NtOpenDirectoryObject", &NtOpenDirectoryObject);
+
+  NtQuerySymbolicLinkObjectFunction NtQuerySymbolicLinkObject = NULL;
+  ResolveNTFunctionPtr("NtQuerySymbolicLinkObject",
+                       &NtQuerySymbolicLinkObject);
+
+  NtOpenSymbolicLinkObjectFunction NtOpenSymbolicLinkObject = NULL;
+  ResolveNTFunctionPtr("NtOpenSymbolicLinkObject", &NtOpenSymbolicLinkObject);
+
+  NtCloseFunction NtClose = NULL;
+  ResolveNTFunctionPtr("NtClose", &NtClose);
+
+  OBJECT_ATTRIBUTES symbolic_link_directory_attributes = {};
+  UNICODE_STRING symbolic_link_directory_string = {};
+  InitObjectAttribs(directory_name, OBJ_CASE_INSENSITIVE, NULL,
+                    &symbolic_link_directory_attributes,
+                    &symbolic_link_directory_string);
+
+  HANDLE symbolic_link_directory = NULL;
+  NTSTATUS status = NtOpenDirectoryObject(&symbolic_link_directory,
+                                          DIRECTORY_QUERY,
+                                          &symbolic_link_directory_attributes);
+  if (status != STATUS_SUCCESS) {
+    DLOG(ERROR) << "Failed to open symbolic link directory. Error: "
+                << status;
+    return status;
+  }
+
+  OBJECT_ATTRIBUTES symbolic_link_attributes = {};
+  UNICODE_STRING name_string = {};
+  InitObjectAttribs(name, OBJ_CASE_INSENSITIVE, symbolic_link_directory,
+                    &symbolic_link_attributes, &name_string);
+
+  HANDLE symbolic_link = NULL;
+  status = NtOpenSymbolicLinkObject(&symbolic_link, GENERIC_READ,
+                                    &symbolic_link_attributes);
+  NtClose(symbolic_link_directory);
+  if (status != STATUS_SUCCESS) {
+    DLOG(ERROR) << "Failed to open symbolic link Error: " << status;
+    return status;
+  }
+
+  UNICODE_STRING target_path = {};
+  unsigned long target_length = 0;
+  status = NtQuerySymbolicLinkObject(symbolic_link, &target_path,
+                                     &target_length);
+  if (status != STATUS_BUFFER_TOO_SMALL) {
+    NtClose(symbolic_link);
+    DLOG(ERROR) << "Failed to get length for symbolic link target. Error: "
+                << status;
+    return status;
+  }
+
+  target_path.Buffer = new wchar_t[target_length + 1];
+  target_path.Length = 0;
+  target_path.MaximumLength = target_length;
+  status = NtQuerySymbolicLinkObject(symbolic_link, &target_path,
+                                     &target_length);
+  if (status == STATUS_SUCCESS) {
+    target->assign(target_path.Buffer, target_length);
+  } else {
+    DLOG(ERROR) << "Failed to resolve symbolic link. Error: " << status;
+  }
+
+  NtClose(symbolic_link);
+  delete[] target_path.Buffer;
+  return status;
+}
+
+NTSTATUS GetBaseNamedObjectsDirectory(HANDLE* directory) {
+  static HANDLE base_named_objects_handle = NULL;
+  if (base_named_objects_handle) {
+    *directory = base_named_objects_handle;
+    return STATUS_SUCCESS;
+  }
+
+  NtOpenDirectoryObjectFunction NtOpenDirectoryObject = NULL;
+  ResolveNTFunctionPtr("NtOpenDirectoryObject", &NtOpenDirectoryObject);
+
+  DWORD session_id = 0;
+  ProcessIdToSessionId(::GetCurrentProcessId(), &session_id);
+
+  base::string16 base_named_objects_path;
+
+  NTSTATUS status = ResolveSymbolicLink(L"\\Sessions\\BNOLINKS",
+                                        base::StringPrintf(L"%d", session_id),
+                                        &base_named_objects_path);
+  if (status != STATUS_SUCCESS) {
+    DLOG(ERROR) << "Failed to resolve BaseNamedObjects path. Error: "
+                << status;
+    return status;
+  }
+
+  UNICODE_STRING directory_name = {};
+  OBJECT_ATTRIBUTES object_attributes = {};
+  InitObjectAttribs(base_named_objects_path, OBJ_CASE_INSENSITIVE, NULL,
+                    &object_attributes, &directory_name);
+  status = NtOpenDirectoryObject(&base_named_objects_handle,
+                                 DIRECTORY_ALL_ACCESS,
+                                 &object_attributes);
+  if (status == STATUS_SUCCESS)
+    *directory = base_named_objects_handle;
+  return status;
+}
 
 bool SyncPolicy::GenerateRules(const wchar_t* name,
                                TargetPolicy::Semantics semantics,
                                LowLevelPolicy* policy) {
-  std::wstring mod_name(name);
+  base::string16 mod_name(name);
   if (mod_name.empty()) {
     return false;
   }
@@ -61,52 +176,78 @@ bool SyncPolicy::GenerateRules(const wchar_t* name,
   return true;
 }
 
-DWORD SyncPolicy::CreateEventAction(EvalResult eval_result,
-                                    const ClientInfo& client_info,
-                                    const std::wstring &event_name,
-                                    uint32 manual_reset,
-                                    uint32 initial_state,
-                                    HANDLE *handle) {
+NTSTATUS SyncPolicy::CreateEventAction(EvalResult eval_result,
+                                       const ClientInfo& client_info,
+                                       const base::string16 &event_name,
+                                       uint32 event_type,
+                                       uint32 initial_state,
+                                       HANDLE *handle) {
+  NtCreateEventFunction NtCreateEvent = NULL;
+  ResolveNTFunctionPtr("NtCreateEvent", &NtCreateEvent);
+
   // The only action supported is ASK_BROKER which means create the requested
   // file as specified.
   if (ASK_BROKER != eval_result)
     return false;
 
-  HANDLE local_handle = ::CreateEvent(NULL, manual_reset, initial_state,
-                                     event_name.c_str());
+  HANDLE object_directory = NULL;
+  NTSTATUS status = GetBaseNamedObjectsDirectory(&object_directory);
+  if (status != STATUS_SUCCESS)
+    return status;
+
+  UNICODE_STRING unicode_event_name = {};
+  OBJECT_ATTRIBUTES object_attributes = {};
+  InitObjectAttribs(event_name, OBJ_CASE_INSENSITIVE, object_directory,
+                    &object_attributes, &unicode_event_name);
+
+  HANDLE local_handle = NULL;
+  status = NtCreateEvent(&local_handle, EVENT_ALL_ACCESS, &object_attributes,
+                         static_cast<EVENT_TYPE>(event_type), initial_state);
   if (NULL == local_handle)
-    return ::GetLastError();
+    return status;
 
   if (!::DuplicateHandle(::GetCurrentProcess(), local_handle,
                          client_info.process, handle, 0, FALSE,
                          DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
-    return ERROR_ACCESS_DENIED;
+    return STATUS_ACCESS_DENIED;
   }
-  return ERROR_SUCCESS;
+  return status;
 }
 
-DWORD SyncPolicy::OpenEventAction(EvalResult eval_result,
-                                  const ClientInfo& client_info,
-                                  const std::wstring &event_name,
-                                  uint32 desired_access,
-                                  uint32 inherit_handle,
-                                  HANDLE *handle) {
+NTSTATUS SyncPolicy::OpenEventAction(EvalResult eval_result,
+                                     const ClientInfo& client_info,
+                                     const base::string16 &event_name,
+                                     uint32 desired_access,
+                                     HANDLE *handle) {
+  NtOpenEventFunction NtOpenEvent = NULL;
+  ResolveNTFunctionPtr("NtOpenEvent", &NtOpenEvent);
+
   // The only action supported is ASK_BROKER which means create the requested
-  // file as specified.
+  // event as specified.
   if (ASK_BROKER != eval_result)
     return false;
 
-  HANDLE local_handle = ::OpenEvent(desired_access, FALSE,
-                                    event_name.c_str());
+  HANDLE object_directory = NULL;
+  NTSTATUS status = GetBaseNamedObjectsDirectory(&object_directory);
+  if (status != STATUS_SUCCESS)
+    return status;
+
+  UNICODE_STRING unicode_event_name = {};
+  OBJECT_ATTRIBUTES object_attributes = {};
+  InitObjectAttribs(event_name, OBJ_CASE_INSENSITIVE, object_directory,
+                    &object_attributes, &unicode_event_name);
+
+  HANDLE local_handle = NULL;
+  status = NtOpenEvent(&local_handle, desired_access, &object_attributes);
   if (NULL == local_handle)
-    return ::GetLastError();
+    return status;
 
   if (!::DuplicateHandle(::GetCurrentProcess(), local_handle,
-                         client_info.process, handle, 0, inherit_handle,
+                         client_info.process, handle, 0, FALSE,
                          DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) {
-    return ERROR_ACCESS_DENIED;
+    return STATUS_ACCESS_DENIED;
   }
-  return ERROR_SUCCESS;
+  return status;
 }
 
 }  // namespace sandbox

@@ -5,8 +5,6 @@
 #ifndef BASE_SEQUENCE_CHECKER_H_
 #define BASE_SEQUENCE_CHECKER_H_
 
-#include "base/memory/ref_counted.h"
-
 // See comments for the similar block in thread_checker.h.
 #if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
 #define ENABLE_SEQUENCE_CHECKER 1
@@ -14,13 +12,9 @@
 #define ENABLE_SEQUENCE_CHECKER 0
 #endif
 
-#if ENABLE_SEQUENCE_CHECKER
 #include "base/sequence_checker_impl.h"
-#endif
 
 namespace base {
-
-class SequencedTaskRunner;
 
 // Do nothing implementation, for use in release mode.
 //
@@ -44,7 +38,7 @@ class SequenceCheckerDoNothing {
 // class MyClass {
 //  public:
 //   void Foo() {
-//     DCHECK(sequence_checker_.CalledOnValidSequence());
+//     DCHECK(sequence_checker_.CalledOnValidSequencedThread());
 //     ... (do stuff) ...
 //   }
 //
@@ -52,7 +46,7 @@ class SequenceCheckerDoNothing {
 //   SequenceChecker sequence_checker_;
 // }
 //
-// In Release mode, CalledOnValidSequence will always return true.
+// In Release mode, CalledOnValidSequencedThread() will always return true.
 #if ENABLE_SEQUENCE_CHECKER
 class SequenceChecker : public SequenceCheckerImpl {
 };

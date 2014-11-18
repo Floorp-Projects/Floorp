@@ -182,4 +182,9 @@ string16 ASCIIToUTF16(const StringPiece& ascii) {
   return string16(ascii.begin(), ascii.end());
 }
 
+std::string UTF16ToASCII(const string16& utf16) {
+  DCHECK(IsStringASCII(utf16)) << UTF16ToUTF8(utf16);
+  return std::string(utf16.begin(), utf16.end());
+}
+
 }  // namespace base
