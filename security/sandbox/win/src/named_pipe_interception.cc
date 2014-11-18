@@ -12,6 +12,9 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
+#ifdef MOZ_CONTENT_SANDBOX
+#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
+#endif
 
 namespace sandbox {
 
@@ -26,6 +29,10 @@ HANDLE WINAPI TargetCreateNamedPipeW(
                                       security_attributes);
   if (INVALID_HANDLE_VALUE != pipe)
     return pipe;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("CreateNamedPipeW", pipe_name);
+#endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
@@ -62,6 +69,9 @@ HANDLE WINAPI TargetCreateNamedPipeW(
     if (ERROR_SUCCESS != answer.win32_result)
       return INVALID_HANDLE_VALUE;
 
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("CreateNamedPipeW", pipe_name);
+#endif
     return answer.handle;
   } while (false);
 
