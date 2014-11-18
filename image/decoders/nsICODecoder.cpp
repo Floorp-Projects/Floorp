@@ -84,6 +84,7 @@ nsICODecoder::FinishInternal()
     mContainedDecoder->FinishSharedDecoder();
     mDecodeDone = mContainedDecoder->GetDecodeDone();
     mProgress |= mContainedDecoder->GetProgress();
+    mInvalidRect.Union(mContainedDecoder->TakeInvalidRect());
   }
 }
 
@@ -597,6 +598,7 @@ nsICODecoder::WriteToContainedDecoder(const char* aBuffer, uint32_t aCount,
 {
   mContainedDecoder->Write(aBuffer, aCount, aStrategy);
   mProgress |= mContainedDecoder->GetProgress();
+  mInvalidRect.Union(mContainedDecoder->TakeInvalidRect());
   if (mContainedDecoder->HasDataError()) {
     mDataError = mContainedDecoder->HasDataError();
   }
@@ -642,6 +644,7 @@ nsICODecoder::AllocateFrame()
     nsresult rv = mContainedDecoder->AllocateFrame();
     mCurrentFrame = mContainedDecoder->GetCurrentFrame();
     mProgress |= mContainedDecoder->GetProgress();
+    mInvalidRect.Union(mContainedDecoder->TakeInvalidRect());
     return rv;
   }
 

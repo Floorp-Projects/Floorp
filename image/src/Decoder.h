@@ -230,6 +230,7 @@ protected:
   RasterImage &mImage;
   nsRefPtr<imgFrame> mCurrentFrame;
   ImageMetadata mImageMetadata;
+  nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
   Progress mProgress;
 
   uint8_t* mImageData;       // Pointer to image data in either Cairo or 8bit format
@@ -244,8 +245,6 @@ protected:
 
 private:
   uint32_t mFrameCount; // Number of frames, including anything in-progress
-
-  nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
 
   nsresult mFailCode;
 
