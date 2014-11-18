@@ -162,6 +162,22 @@ function createIframedWindowLocationTest(schemeFrom, schemeTo, policy) {
          </html>';
 }
 
+function createPolicyTest(refpol) {
+  return '<!DOCTYPE HTML>\n\
+          <html>\n\
+          <head>\n\
+            <meta name="referrer" content="' + refpol + '">\n\
+            <script type="text/javascript" src="/tests/dom/base/test/file_bug704320_preload_common.js"></script>\n\
+          </head>\n\
+          <body>\n\
+            <img src="/tests/dom/base/test/bug704320_counter.sjs?type=img"\n\
+                    onload="incrementLoad2(\'img\', 2);">\n\
+            <img src="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=img"\n\
+                    onload="incrementLoad2(\'img\', 2);">\n\
+          </body>\n\
+          </html>';
+}
+
 function handleRequest(request, response) {
   var sharedKey = 'bug704320.sjs';
   var params = request.queryString.split('&');
@@ -242,5 +258,12 @@ function handleRequest(request, response) {
     response.setHeader('Cache-Control', 'no-cache', false);
     response.setHeader('Content-Type', 'text/plain', false);
     response.write(getSharedState(sharedKey));
+  }
+  else if (action === 'generate-policy-test') {
+    // ?action=generate-policy-test&policy=b64-encoded-string
+    response.setHeader('Cache-Control', 'no-cache', false);
+    response.setHeader('Content-Type', 'text/html', false);
+    var refpol = unescape(params[1].split('=')[1]);
+    response.write(createPolicyTest(refpol));
   }
 }
