@@ -45,6 +45,7 @@ function check_mp4(v, enabled) {
   check("video/mp4; codecs=\"avc1.58A01E, mp4a.40.2\"", "probably");
   
   const ProbablyIfNotLinux = !IsLinuxGStreamer() ? "probably" : "";
+  const ProbablyIfMP4Reader = IsMP4ReaderAvailable() ? "probably" : "";
   
   // H.264 Main Profile Level 3.0, AAC-LC
   check("video/mp4; codecs=\"avc1.4D401E, mp4a.40.2\"", "probably");
@@ -70,10 +71,10 @@ function check_mp4(v, enabled) {
   check("audio/x-m4a; codecs=mp4a.40.2", "probably");
 
   // HE-AAC v1
-  check("audio/mp4; codecs=\"mp4a.40.5\"", ProbablyIfNotLinux);
-  check("audio/mp4; codecs=mp4a.40.5", ProbablyIfNotLinux);
-  check("audio/x-m4a; codecs=\"mp4a.40.5\"", ProbablyIfNotLinux);
-  check("audio/x-m4a; codecs=mp4a.40.5", ProbablyIfNotLinux);
+  check("audio/mp4; codecs=\"mp4a.40.5\"", ProbablyIfMP4Reader);
+  check("audio/mp4; codecs=mp4a.40.5", ProbablyIfMP4Reader);
+  check("audio/x-m4a; codecs=\"mp4a.40.5\"", ProbablyIfMP4Reader);
+  check("audio/x-m4a; codecs=mp4a.40.5", ProbablyIfMP4Reader);
   
 }
 
