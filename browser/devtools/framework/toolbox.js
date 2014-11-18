@@ -53,11 +53,12 @@ loader.lazyGetter(this, "InspectorFront", () => require("devtools/server/actors/
 // (By default, supported target is only local tab)
 const ToolboxButtons = [
   { id: "command-button-pick",
-    isTargetSupported: target => !target.isAddon },
+    isTargetSupported: target =>
+      target.getTrait("highlightable")
+  },
   { id: "command-button-frames",
-    isTargetSupported: target => (
-      !target.isAddon && target.activeTab && target.activeTab.traits.frames
-    )
+    isTargetSupported: target =>
+      ( target.activeTab && target.activeTab.traits.frames )
   },
   { id: "command-button-splitconsole",
     isTargetSupported: target => !target.isAddon },
@@ -1249,12 +1250,15 @@ Toolbox.prototype = {
       toolName = toolboxStrings("toolbox.defaultTitle");
     }
     let title = toolboxStrings("toolbox.titleTemplate",
-                               toolName, this.target.url || this.target.name);
+                               toolName,
+                               this.target.isAddon ?
+                               this.target.name :
+                               this.target.url || this.target.name);
     this._host.setTitle(title);
   },
 
   _listFrames: function (event) {
-    if (!this._target.form || !this._target.form.actor) {
+    if (!this._target.activeTab || !this._target.activeTab.traits.frames) {
       // We are not targetting a regular TabActor
       // it can be either an addon or browser toolbox actor
       return promise.resolve();

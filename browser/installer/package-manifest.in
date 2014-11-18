@@ -177,7 +177,6 @@
 @BINPATH@/components/appstartup.xpt
 @BINPATH@/components/autocomplete.xpt
 @BINPATH@/components/autoconfig.xpt
-@BINPATH@/components/browser-element.xpt
 @BINPATH@/browser/components/browsercompsbase.xpt
 @BINPATH@/browser/components/browser-feeds.xpt
 @BINPATH@/components/caps.xpt

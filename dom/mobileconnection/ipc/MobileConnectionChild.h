@@ -117,7 +117,7 @@ private:
   nsString mLastNetwork;
   nsString mLastHomeNetwork;
   int32_t mNetworkSelectionMode;
-  nsTArray<nsString> mSupportedNetworkTypes;
+  nsTArray<int32_t> mSupportedNetworkTypes;
 };
 
 /******************************************************************************

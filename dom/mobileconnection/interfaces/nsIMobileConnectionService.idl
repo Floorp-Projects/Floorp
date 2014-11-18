@@ -235,7 +235,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(5250a0ba-19a2-4e5b-a5ee-1e69ba2897a9)]
+[scriptable, uuid(99e43353-5fc4-497e-88a2-5fa6862ee64c)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -335,6 +335,15 @@ interface nsIMobileConnection : nsISupports
   const long CDMA_ROAMING_PREFERENCE_AFFILIATED = 1;
   const long CDMA_ROAMING_PREFERENCE_ANY        = 2;
 
+  /**
+   * Supported network type.
+   */
+  const long MOBILE_NETWORK_TYPE_GSM   = 0;
+  const long MOBILE_NETWORK_TYPE_WCDMA = 1;
+  const long MOBILE_NETWORK_TYPE_CDMA  = 2;
+  const long MOBILE_NETWORK_TYPE_EVDO  = 3;
+  const long MOBILE_NETWORK_TYPE_LTE   = 4;
+
   readonly attribute unsigned long serviceId;
 
   /**
@@ -386,10 +395,9 @@ interface nsIMobileConnection : nsISupports
   /**
    * The network types supported by this radio.
    *
-   * @return an array of DOMString
-   *         Possible values: 'gsm', 'wcdma', 'cdma', 'evdo', 'lte'.
+   * @return an array of nsIMobileConnection.MOBILE_NETWORK_TYPE_* values.
    */
-  void getSupportedNetworkTypes([array, size_is(length)] out wstring types,
+  void getSupportedNetworkTypes([array, size_is(length)] out long types,
                                 [retval] out unsigned long length);
 
   /**

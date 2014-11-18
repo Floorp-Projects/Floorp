@@ -51,7 +51,7 @@ parent:
     returns (nsMobileConnectionInfo aVoice, nsMobileConnectionInfo aData,
              nsString aLastKnownNetwork, nsString aLastKnownHomeNetwork,
              nsString aIccId, int32_t aNetworkSelectionMode,
-             int32_t aRadioState, nsString[] aSupportedNetworkTypes);
+             int32_t aRadioState, int32_t[] aSupportedNetworkTypes);
 };
 
 /**

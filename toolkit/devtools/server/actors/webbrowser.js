@@ -1801,6 +1801,11 @@ BrowserAddonActor.prototype = {
       url: this.url,
       debuggable: this._addon.isDebuggable,
       consoleActor: this._consoleActor.actorID,
+
+      traits: {
+        highlightable: false,
+        networkMonitor: false,
+      },
     };
   },
 

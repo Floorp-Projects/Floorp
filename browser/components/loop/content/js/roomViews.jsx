@@ -59,7 +59,7 @@ loop.roomViews = (function(mozL10n) {
    * Desktop room invitation view (overlay).
    */
   var DesktopRoomInvitationView = React.createClass({
-    mixins: [ActiveRoomStoreMixin],
+    mixins: [ActiveRoomStoreMixin, React.addons.LinkedStateMixin],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
@@ -67,13 +67,23 @@ loop.roomViews = (function(mozL10n) {
 
     getInitialState: function() {
       return {
-        copiedUrl: false
+        copiedUrl: false,
+        newRoomName: ""
       }
     },
 
     handleFormSubmit: function(event) {
       event.preventDefault();
-      // XXX
+
+      var newRoomName = this.state.newRoomName;
+
+      if (newRoomName && this.state.roomName != newRoomName) {
+        this.props.dispatcher.dispatch(
+          new sharedActions.RenameRoom({
+            roomToken: this.state.roomToken,
+            newRoomName: newRoomName
+          }));
+      }
     },
 
     handleEmailButtonClick: function(event) {
@@ -96,7 +106,9 @@ loop.roomViews = (function(mozL10n) {
       return (
         <div className="room-invitation-overlay">
           <form onSubmit={this.handleFormSubmit}>
-            <input type="text" ref="roomName"
+            <input type="text" className="input-room-name"
+              valueLink={this.linkState("newRoomName")}
+              onBlur={this.handleFormSubmit}
               placeholder={mozL10n.get("rooms_name_this_room_label")} />
           </form>
           <p>{mozL10n.get("invite_header_text")}</p>
