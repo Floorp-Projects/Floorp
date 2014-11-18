@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "base/basictypes.h"
-#include "sandbox/linux/sandbox_export.h"
+#include "sandbox/sandbox_export.h"
 
 namespace sandbox {
 
@@ -63,10 +63,6 @@ class SANDBOX_EXPORT Trap {
   static ErrorCode ErrorCodeFromTrapId(uint16_t id);
 
  private:
-  // The destructor is unimplemented. Don't ever attempt to destruct this
-  // object. It'll break subsequent system calls that trigger a SIGSYS.
-  ~Trap();
-
   struct TrapKey {
     TrapKey(TrapFnc f, const void* a, bool s) : fnc(f), aux(a), safe(s) {}
     TrapFnc fnc;
@@ -75,6 +71,14 @@ class SANDBOX_EXPORT Trap {
     bool operator<(const TrapKey&) const;
   };
   typedef std::map<TrapKey, uint16_t> TrapIds;
+
+  // Our constructor is private. A shared global instance is created
+  // automatically as needed.
+  Trap();
+
+  // The destructor is unimplemented. Don't ever attempt to destruct this
+  // object. It'll break subsequent system calls that trigger a SIGSYS.
+  ~Trap();
 
   // We only have a very small number of methods. We opt to make them static
   // and have them internally call GetInstance(). This is a little more
@@ -105,11 +109,9 @@ class SANDBOX_EXPORT Trap {
   size_t trap_array_capacity_;  // Currently allocated capacity of array
   bool has_unsafe_traps_;       // Whether unsafe traps have been enabled
 
-  // Our constructor is private. A shared global instance is created
-  // automatically as needed.
   // Copying and assigning is unimplemented. It doesn't make sense for a
   // singleton.
-  DISALLOW_IMPLICIT_CONSTRUCTORS(Trap);
+  DISALLOW_COPY_AND_ASSIGN(Trap);
 };
 
 }  // namespace sandbox

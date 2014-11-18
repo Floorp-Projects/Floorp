@@ -5,40 +5,30 @@
 #ifndef BASE_DEBUG_LEAK_ANNOTATIONS_H_
 #define BASE_DEBUG_LEAK_ANNOTATIONS_H_
 
+#include "base/basictypes.h"
 #include "build/build_config.h"
 
 // This file defines macros which can be used to annotate intentional memory
-// leaks. Support for annotations is implemented in HeapChecker and
-// LeakSanitizer. Annotated objects will be treated as a source of live
-// pointers, i.e. any heap objects reachable by following pointers from an
-// annotated object will not be reported as leaks.
+// leaks. Support for annotations is implemented in LeakSanitizer. Annotated
+// objects will be treated as a source of live pointers, i.e. any heap objects
+// reachable by following pointers from an annotated object will not be
+// reported as leaks.
 //
 // ANNOTATE_SCOPED_MEMORY_LEAK: all allocations made in the current scope
 // will be annotated as leaks.
 // ANNOTATE_LEAKING_OBJECT_PTR(X): the heap object referenced by pointer X will
 // be annotated as a leak.
-//
-// Note that HeapChecker will report a fatal error if an object which has been
-// annotated with ANNOTATE_LEAKING_OBJECT_PTR is later deleted (but
-// LeakSanitizer won't).
 
-#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_NACL) && \
-    defined(USE_HEAPCHECKER)
+#if defined(LEAK_SANITIZER) && !defined(OS_NACL)
 
-#include "third_party/tcmalloc/chromium/src/gperftools/heap-checker.h"
-
-#define ANNOTATE_SCOPED_MEMORY_LEAK \
-    HeapLeakChecker::Disabler heap_leak_checker_disabler; static_cast<void>(0)
-
-#define ANNOTATE_LEAKING_OBJECT_PTR(X) \
-    HeapLeakChecker::IgnoreObject(X)
-
-#elif defined(LEAK_SANITIZER) && !defined(OS_NACL)
-
+// Public LSan API from <sanitizer/lsan_interface.h>.
 extern "C" {
 void __lsan_disable();
 void __lsan_enable();
 void __lsan_ignore_object(const void *p);
+
+// Invoke leak detection immediately. If leaks are found, the process will exit.
+void __lsan_do_leak_check();
 }  // extern "C"
 
 class ScopedLeakSanitizerDisabler {

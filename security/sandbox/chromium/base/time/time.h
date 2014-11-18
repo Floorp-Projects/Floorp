@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Time represents an absolute point in time, internally represented as
-// microseconds (s/1,000,000) since the Windows epoch (1601-01-01 00:00:00 UTC)
-// (See http://crbug.com/14734).  System-dependent clock interface routines are
-// defined in time_PLATFORM.cc.
+// Time represents an absolute point in coordinated universal time (UTC),
+// internally represented as microseconds (s/1,000,000) since the Windows epoch
+// (1601-01-01 00:00:00 UTC) (See http://crbug.com/14734).  System-dependent
+// clock interface routines are defined in time_PLATFORM.cc.
 //
 // TimeDelta represents a duration of time, internally represented in
 // microseconds.
@@ -61,11 +61,13 @@ class BASE_EXPORT TimeDelta {
   }
 
   // Converts units of time to TimeDeltas.
-  static TimeDelta FromDays(int64 days);
-  static TimeDelta FromHours(int64 hours);
-  static TimeDelta FromMinutes(int64 minutes);
+  static TimeDelta FromDays(int days);
+  static TimeDelta FromHours(int hours);
+  static TimeDelta FromMinutes(int minutes);
   static TimeDelta FromSeconds(int64 secs);
   static TimeDelta FromMilliseconds(int64 ms);
+  static TimeDelta FromSecondsD(double secs);
+  static TimeDelta FromMillisecondsD(double ms);
   static TimeDelta FromMicroseconds(int64 us);
 #if defined(OS_WIN)
   static TimeDelta FromQPCValue(LONGLONG qpc_value);
@@ -79,12 +81,22 @@ class BASE_EXPORT TimeDelta {
     return TimeDelta(delta);
   }
 
+  // Returns the maximum time delta, which should be greater than any reasonable
+  // time delta we might compare it to. Adding or subtracting the maximum time
+  // delta to a time or another time delta has an undefined result.
+  static TimeDelta Max();
+
   // Returns the internal numeric value of the TimeDelta object. Please don't
   // use this and do arithmetic on it, as it is more error prone than using the
   // provided operators.
   // For serializing, use FromInternalValue to reconstitute.
   int64 ToInternalValue() const {
     return delta_;
+  }
+
+  // Returns true if the time delta is the maximum time delta.
+  bool is_max() const {
+    return delta_ == std::numeric_limits<int64>::max();
   }
 
 #if defined(OS_POSIX)
@@ -196,7 +208,7 @@ inline TimeDelta operator*(int64 a, TimeDelta td) {
 
 // Time -----------------------------------------------------------------------
 
-// Represents a wall clock time.
+// Represents a wall clock time in UTC.
 class BASE_EXPORT Time {
  public:
   static const int64 kMillisecondsPerSecond = 1000;
@@ -493,32 +505,66 @@ class BASE_EXPORT Time {
 // Inline the TimeDelta factory methods, for fast TimeDelta construction.
 
 // static
-inline TimeDelta TimeDelta::FromDays(int64 days) {
+inline TimeDelta TimeDelta::FromDays(int days) {
+  // Preserve max to prevent overflow.
+  if (days == std::numeric_limits<int>::max())
+    return Max();
   return TimeDelta(days * Time::kMicrosecondsPerDay);
 }
 
 // static
-inline TimeDelta TimeDelta::FromHours(int64 hours) {
+inline TimeDelta TimeDelta::FromHours(int hours) {
+  // Preserve max to prevent overflow.
+  if (hours == std::numeric_limits<int>::max())
+    return Max();
   return TimeDelta(hours * Time::kMicrosecondsPerHour);
 }
 
 // static
-inline TimeDelta TimeDelta::FromMinutes(int64 minutes) {
+inline TimeDelta TimeDelta::FromMinutes(int minutes) {
+  // Preserve max to prevent overflow.
+  if (minutes == std::numeric_limits<int>::max())
+    return Max();
   return TimeDelta(minutes * Time::kMicrosecondsPerMinute);
 }
 
 // static
 inline TimeDelta TimeDelta::FromSeconds(int64 secs) {
+  // Preserve max to prevent overflow.
+  if (secs == std::numeric_limits<int64>::max())
+    return Max();
   return TimeDelta(secs * Time::kMicrosecondsPerSecond);
 }
 
 // static
 inline TimeDelta TimeDelta::FromMilliseconds(int64 ms) {
+  // Preserve max to prevent overflow.
+  if (ms == std::numeric_limits<int64>::max())
+    return Max();
+  return TimeDelta(ms * Time::kMicrosecondsPerMillisecond);
+}
+
+// static
+inline TimeDelta TimeDelta::FromSecondsD(double secs) {
+  // Preserve max to prevent overflow.
+  if (secs == std::numeric_limits<double>::infinity())
+    return Max();
+  return TimeDelta(secs * Time::kMicrosecondsPerSecond);
+}
+
+// static
+inline TimeDelta TimeDelta::FromMillisecondsD(double ms) {
+  // Preserve max to prevent overflow.
+  if (ms == std::numeric_limits<double>::infinity())
+    return Max();
   return TimeDelta(ms * Time::kMicrosecondsPerMillisecond);
 }
 
 // static
 inline TimeDelta TimeDelta::FromMicroseconds(int64 us) {
+  // Preserve max to prevent overflow.
+  if (us == std::numeric_limits<int64>::max())
+    return Max();
   return TimeDelta(us);
 }
 
@@ -530,6 +576,14 @@ inline Time TimeDelta::operator+(Time t) const {
 
 class BASE_EXPORT TimeTicks {
  public:
+  // We define this even without OS_CHROMEOS for seccomp sandbox testing.
+#if defined(OS_LINUX)
+  // Force definition of the system trace clock; it is a chromeos-only api
+  // at the moment and surfacing it in the right place requires mucking
+  // with glibc et al.
+  static const clockid_t kClockSystemTrace = 11;
+#endif
+
   TimeTicks() : ticks_(0) {
   }
 
@@ -544,9 +598,12 @@ class BASE_EXPORT TimeTicks {
   // SHOULD ONLY BE USED WHEN IT IS REALLY NEEDED.
   static TimeTicks HighResNow();
 
+  static bool IsHighResNowFastAndReliable();
+
   // Returns true if ThreadNow() is supported on this system.
   static bool IsThreadNowSupported() {
-#if defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0)
+#if (defined(_POSIX_THREAD_CPUTIME) && (_POSIX_THREAD_CPUTIME >= 0)) || \
+    (defined(OS_MACOSX) && !defined(OS_IOS)) || defined(OS_ANDROID)
     return true;
 #else
     return false;
@@ -601,6 +658,14 @@ class BASE_EXPORT TimeTicks {
   static TimeTicks FromInternalValue(int64 ticks) {
     return TimeTicks(ticks);
   }
+
+  // Get the TimeTick value at the time of the UnixEpoch. This is useful when
+  // you need to relate the value of TimeTicks to a real time and date.
+  // Note: Upon first invocation, this function takes a snapshot of the realtime
+  // clock to establish a reference point.  This function will return the same
+  // value for the duration of the application, but will be different in future
+  // application runs.
+  static TimeTicks UnixEpoch();
 
   // Returns the internal numeric value of the TimeTicks object.
   // For serializing, use FromInternalValue to reconstitute.
