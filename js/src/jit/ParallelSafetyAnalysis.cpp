@@ -325,6 +325,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     UNSAFE_OP(CallInstanceOf)
     UNSAFE_OP(ProfilerStackOp)
     UNSAFE_OP(GuardString)
+    UNSAFE_OP(Substr)
     UNSAFE_OP(NewDeclEnvObject)
     UNSAFE_OP(In)
     UNSAFE_OP(InArray)

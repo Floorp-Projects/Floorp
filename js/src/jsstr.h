@@ -250,6 +250,14 @@ EqualChars(const Char1 *s1, const Char2 *s2, size_t len)
 }
 
 /*
+ * Computes |str|'s substring for the range [beginInt, beginInt + lengthInt).
+ * Negative, overlarge, swapped, etc. |beginInt| and |lengthInt| are forbidden
+ * and constitute API misuse.
+ */
+JSString *
+SubstringKernel(JSContext *cx, HandleString str, int32_t beginInt, int32_t lengthInt);
+
+/*
  * Inflate bytes in ASCII encoding to char16_t code units. Return null on error,
  * otherwise return the char16_t buffer that was malloc'ed. length is updated to
  * the length of the new string (in char16_t code units). A null char is
@@ -310,9 +318,6 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
 str_startsWith(JSContext *cx, unsigned argc, Value *vp);
-
-extern bool
-str_substring(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
 str_toLowerCase(JSContext *cx, unsigned argc, Value *vp);
