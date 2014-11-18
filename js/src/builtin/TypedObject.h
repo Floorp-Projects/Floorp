@@ -984,6 +984,20 @@ IsOpaqueTypedObjectClass(const Class *class_)
            class_ == &InlineOpaqueTypedObject::class_;
 }
 
+inline bool
+IsOutlineTypedObjectClass(const Class *class_)
+{
+    return class_ == &OutlineOpaqueTypedObject::class_ ||
+           class_ == &OutlineTransparentTypedObject::class_;
+}
+
+inline bool
+IsInlineTypedObjectClass(const Class *class_)
+{
+    return class_ == &InlineOpaqueTypedObject::class_ ||
+           class_ == &InlineTransparentTypedObject::class_;
+}
+
 inline const Class *
 GetOutlineTypedObjectClass(bool opaque)
 {
