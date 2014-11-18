@@ -169,14 +169,13 @@ nsJSUtils::EvaluateString(JSContext* aCx,
                           JS::Handle<JSObject*> aEvaluationGlobal,
                           JS::CompileOptions& aCompileOptions,
                           const EvaluateOptions& aEvaluateOptions,
-                          JS::MutableHandle<JS::Value> aRetValue,
-                          void **aOffThreadToken)
+                          JS::MutableHandle<JS::Value> aRetValue)
 {
   const nsPromiseFlatString& flatScript = PromiseFlatString(aScript);
   JS::SourceBufferHolder srcBuf(flatScript.get(), aScript.Length(),
                                 JS::SourceBufferHolder::NoOwnership);
   return EvaluateString(aCx, srcBuf, aEvaluationGlobal, aCompileOptions,
-                        aEvaluateOptions, aRetValue, aOffThreadToken);
+                        aEvaluateOptions, aRetValue, nullptr);
 }
 
 nsresult
@@ -199,6 +198,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   MOZ_ASSERT(aSrcBuf.get());
   MOZ_ASSERT(js::GetGlobalForObjectCrossCompartment(aEvaluationGlobal) ==
              aEvaluationGlobal);
+  MOZ_ASSERT_IF(aOffThreadToken, !aEvaluateOptions.needResult);
 
   // Unfortunately, the JS engine actually compiles scripts with a return value
   // in a different, less efficient way.  Furthermore, it can't JIT them in many
@@ -246,11 +246,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
         script(aCx, JS::FinishOffThreadScript(aCx, JS_GetRuntime(aCx), *aOffThreadToken));
       *aOffThreadToken = nullptr; // Mark the token as having been finished.
       if (script) {
-        if (aEvaluateOptions.needResult) {
-          ok = JS_ExecuteScript(aCx, scopeChain, script, aRetValue);
-        } else {
-          ok = JS_ExecuteScript(aCx, scopeChain, script);
-        }
+        ok = JS_ExecuteScript(aCx, scopeChain, script);
       } else {
         ok = false;
       }
@@ -301,16 +297,27 @@ nsJSUtils::EvaluateString(JSContext* aCx,
 
 nsresult
 nsJSUtils::EvaluateString(JSContext* aCx,
-                          const nsAString& aScript,
+                          JS::SourceBufferHolder& aSrcBuf,
                           JS::Handle<JSObject*> aEvaluationGlobal,
                           JS::CompileOptions& aCompileOptions,
-                          void **aOffThreadToken)
+                          const EvaluateOptions& aEvaluateOptions,
+                          JS::MutableHandle<JS::Value> aRetValue)
+{
+  return EvaluateString(aCx, aSrcBuf, aEvaluationGlobal, aCompileOptions,
+                        aEvaluateOptions, aRetValue, nullptr);
+}
+
+nsresult
+nsJSUtils::EvaluateString(JSContext* aCx,
+                          const nsAString& aScript,
+                          JS::Handle<JSObject*> aEvaluationGlobal,
+                          JS::CompileOptions& aCompileOptions)
 {
   EvaluateOptions options(aCx);
   options.setNeedResult(false);
   JS::RootedValue unused(aCx);
   return EvaluateString(aCx, aScript, aEvaluationGlobal, aCompileOptions,
-                        options, &unused, aOffThreadToken);
+                        options, &unused);
 }
 
 nsresult
