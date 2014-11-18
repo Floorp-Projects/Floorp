@@ -5831,8 +5831,6 @@
       Delete "$INSTDIR\updates.xml"
       Delete "$INSTDIR\active-update.xml"
 
-      RmDir /r "$INSTDIR\distribution"
-
       ; Remove files from the uninstall directory.
       ${If} ${FileExists} "$INSTDIR\uninstall"
         Delete "$INSTDIR\uninstall\*wizard*"
