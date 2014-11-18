@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 
+#include "gc/Statistics.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 
@@ -181,7 +182,10 @@ StoreBuffer::markAll(JSTracer *trc)
 void
 StoreBuffer::setAboutToOverflow()
 {
-    aboutToOverflow_ = true;
+    if (!aboutToOverflow_) {
+        aboutToOverflow_ = true;
+        runtime_->gc.stats.count(gcstats::STAT_STOREBUFFER_OVERFLOW);
+    }
     runtime_->gc.requestMinorGC(JS::gcreason::FULL_STORE_BUFFER);
 }
 
