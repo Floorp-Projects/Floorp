@@ -318,6 +318,10 @@ public class Utils {
         }
     }
 
+    public static String getTypeSignatureStringForClass(Class<?> clazz) {
+        return clazz.getCanonicalName().replace('.', '/');
+    }
+
     public static String getTypeSignatureString(Constructor<?> aConstructor) {
         Class<?>[] arguments = aConstructor.getParameterTypes();
         StringBuilder sb = new StringBuilder();
@@ -341,7 +345,7 @@ public class Utils {
      * @param c  The type of the element to write the subsignature of.
      */
     private static void writeTypeSignature(StringBuilder sb, Class<?> c) {
-        String name = c.getCanonicalName().replaceAll("\\.", "/");
+        String name = Utils.getTypeSignatureStringForClass(c);
 
         // Determine if this is an array type and, if so, peel away the array operators..
         int len = name.length();
@@ -589,7 +593,7 @@ public class Utils {
         sb.append(getClassReferenceName(aClass));
         sb.append(" = getClassGlobalRef(\"");
 
-        String name = aClass.getCanonicalName().replaceAll("\\.", "/");
+        String name = Utils.getTypeSignatureStringForClass(aClass);
         Class<?> containerClass = aClass.getDeclaringClass();
         if (containerClass != null) {
             // Is an inner class. Add the $ symbol.
