@@ -91,6 +91,15 @@ static void DrawLayerInfo(const RenderTargetIntRect& aClipRect,
                                           maxWidth);
 }
 
+template<class ContainerT>
+static gfx::IntRect ContainerVisibleRect(ContainerT* aContainer)
+{
+  nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
+  gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
+                                          visibleRect.width, visibleRect.height);
+  return surfaceRect;
+}
+
 static void PrintUniformityInfo(Layer* aLayer)
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -179,14 +188,28 @@ ContainerPrepare(ContainerT* aContainer,
   // DefaultComputeSupportsComponentAlphaChildren can mutate aContainer so call it unconditionally
   aContainer->DefaultComputeSupportsComponentAlphaChildren(&surfaceCopyNeeded);
   if (aContainer->UseIntermediateSurface()) {
-    MOZ_PERFORMANCE_WARNING("gfx", "[%p] Container layer requires intermediate surface\n", aContainer);
     if (!surfaceCopyNeeded) {
-      // If we don't need a copy we can render to the intermediate now to avoid
-      // unecessary render target switching. This brings a big perf boost on mobile gpus.
-      RefPtr<CompositingRenderTarget> surface = CreateTemporaryTarget(aContainer, aManager);
-      RenderIntermediate(aContainer, aManager, RenderTargetPixel::ToUntyped(aClipRect), surface);
+      RefPtr<CompositingRenderTarget> surface = nullptr;
+
+      RefPtr<CompositingRenderTarget>& lastSurf = aContainer->mLastIntermediateSurface;
+      gfx::IntRect surfaceRect = ContainerVisibleRect(aContainer);
+      if (lastSurf && !aContainer->mChildrenChanged && lastSurf->GetRect().IsEqualEdges(surfaceRect)) {
+        surface = lastSurf;
+      }
+
+      if (!surface) {
+        // If we don't need a copy we can render to the intermediate now to avoid
+        // unecessary render target switching. This brings a big perf boost on mobile gpus.
+        surface = CreateOrRecycleTarget(aContainer, aManager);
+
+        MOZ_PERFORMANCE_WARNING("gfx", "[%p] Container layer requires intermediate surface rendering\n", aContainer);
+        RenderIntermediate(aContainer, aManager, RenderTargetPixel::ToUntyped(aClipRect), surface);
+        aContainer->SetChildrenChanged(false);
+      }
+
       aContainer->mPrepared->mTmpTarget = surface;
     } else {
+      MOZ_PERFORMANCE_WARNING("gfx", "[%p] Container layer requires intermediate surface copy\n", aContainer);
       aContainer->mPrepared->mNeedsSurfaceCopy = true;
       aContainer->mLastIntermediateSurface = nullptr;
     }
@@ -269,14 +292,12 @@ RenderLayers(ContainerT* aContainer,
 }
 
 template<class ContainerT> RefPtr<CompositingRenderTarget>
-CreateTemporaryTarget(ContainerT* aContainer,
+CreateOrRecycleTarget(ContainerT* aContainer,
                       LayerManagerComposite* aManager)
 {
   Compositor* compositor = aManager->GetCompositor();
-  nsIntRect visibleRect = aContainer->GetEffectiveVisibleRegion().GetBounds();
   SurfaceInitMode mode = INIT_MODE_CLEAR;
-  gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
-                                          visibleRect.width, visibleRect.height);
+  gfx::IntRect surfaceRect = ContainerVisibleRect(aContainer);
   if (aContainer->GetEffectiveVisibleRegion().GetNumRects() == 1 &&
       (aContainer->GetContentFlags() & Layer::CONTENT_OPAQUE))
   {
@@ -534,3 +555,4 @@ RefLayerComposite::CleanupResources()
 
 } /* layers */
 } /* mozilla */
+
