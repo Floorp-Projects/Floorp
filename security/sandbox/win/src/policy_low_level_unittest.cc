@@ -62,7 +62,7 @@ TEST(PolicyEngineTest, SimpleStrMatch) {
   EXPECT_TRUE(policyGen.AddRule(kFakeService, &pr));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* filename = L"Z:\\Directory\\domo.txt";
+  const wchar_t* filename = L"Z:\\Directory\\domo.txt";
 
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)                // Argument 0
@@ -95,7 +95,7 @@ TEST(PolicyEngineTest, SimpleIfNotStrMatch) {
   EXPECT_TRUE(policyGen.AddRule(kFakeService, &pr));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* filename = NULL;
+  const wchar_t* filename = NULL;
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)                // Argument 0
   POLPARAMS_END;
@@ -133,7 +133,7 @@ TEST(PolicyEngineTest, SimpleIfNotStrMatchWild1) {
   EXPECT_TRUE(policyGen.AddRule(kFakeService, &pr));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* filename = NULL;
+  const wchar_t* filename = NULL;
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)                // Argument 0
   POLPARAMS_END;
@@ -166,7 +166,7 @@ TEST(PolicyEngineTest, SimpleIfNotStrMatchWild2) {
   EXPECT_TRUE(policyGen.AddRule(kFakeService, &pr));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* filename = NULL;
+  const wchar_t* filename = NULL;
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)                // Argument 0
   POLPARAMS_END;
@@ -205,7 +205,7 @@ TEST(PolicyEngineTest, IfNotStrMatchTwoRulesWild1) {
   EXPECT_TRUE(policyGen.AddRule(kFakeService, &pr));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* filename = NULL;
+  const wchar_t* filename = NULL;
   unsigned long access = 0;
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(filename)                // Argument 0
@@ -254,7 +254,7 @@ TEST(PolicyEngineTest, IfNotStrMatchTwoRulesWild2) {
   EXPECT_TRUE(policyGen.AddRule(kFakeService, &pr));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* filename = NULL;
+  const wchar_t* filename = NULL;
   unsigned long access = 0;
   unsigned long sharing = 66;
 
@@ -328,7 +328,7 @@ TEST(PolicyEngineTest, OneRuleTest) {
   EXPECT_TRUE(policyGen.AddRule(kNtFakeCreateFile, &pr));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
+  const wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
   unsigned long creation_mode = OPEN_EXISTING;
   unsigned long flags = FILE_ATTRIBUTE_NORMAL;
   void* security_descriptor = NULL;
@@ -484,7 +484,7 @@ TEST(PolicyEngineTest, ThreeRulesTest) {
 
   // Test the policy evaluation.
 
-  wchar_t* filename = L"";
+  const wchar_t* filename = L"";
   unsigned long creation_mode = OPEN_EXISTING;
   unsigned long flags = FILE_ATTRIBUTE_NORMAL;
   void* security_descriptor = NULL;
@@ -588,7 +588,7 @@ TEST(PolicyEngineTest, PolicyRuleCopyConstructorTwoStrings) {
   EXPECT_TRUE(policyGen.AddRule(2, &pr_copy));
   EXPECT_TRUE(policyGen.Done());
 
-  wchar_t* name = NULL;
+  const wchar_t* name = NULL;
   POLPARAMS_BEGIN(eval_params)
     POLPARAM(name)
   POLPARAMS_END;

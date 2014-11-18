@@ -8,7 +8,6 @@
 
 #include "base/win/windows_version.h"
 #include "sandbox/win/src/nt_internals.h"
-#include "sandbox/win/src/sandbox_utils.h"
 #include "sandbox/win/src/win_utils.h"
 
 namespace {
@@ -31,10 +30,6 @@ namespace sandbox {
 bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
   if (!CanSetProcessMitigationsPostStartup(flags))
     return false;
-
-  // We can't apply anything before Win XP, so just return cleanly.
-  if (!IsXPSP2OrLater())
-    return true;
 
   base::win::Version version = base::win::GetVersion();
   HMODULE module = ::GetModuleHandleA("kernel32.dll");
@@ -250,28 +245,23 @@ void ConvertProcessMitigationsToPolicy(MitigationFlags flags,
 }
 
 MitigationFlags FilterPostStartupProcessMitigations(MitigationFlags flags) {
-  // Anything prior to XP SP2.
-  if (!IsXPSP2OrLater())
-    return 0;
-
   base::win::Version version = base::win::GetVersion();
 
   // Windows XP SP2+.
   if (version < base::win::VERSION_VISTA) {
     return flags & (MITIGATION_DEP |
                     MITIGATION_DEP_NO_ATL_THUNK);
+  }
 
   // Windows Vista
   if (version < base::win::VERSION_WIN7) {
-    return flags & (MITIGATION_DEP |
-                    MITIGATION_DEP_NO_ATL_THUNK |
-                    MITIGATION_BOTTOM_UP_ASLR |
+    return flags & (MITIGATION_BOTTOM_UP_ASLR |
                     MITIGATION_DLL_SEARCH_ORDER |
                     MITIGATION_HEAP_TERMINATE);
   }
 
-  // Windows 7 and Vista.
-  } else if (version < base::win::VERSION_WIN8) {
+  // Windows 7.
+  if (version < base::win::VERSION_WIN8) {
     return flags & (MITIGATION_BOTTOM_UP_ASLR |
                     MITIGATION_DLL_SEARCH_ORDER |
                     MITIGATION_HEAP_TERMINATE);
@@ -318,7 +308,6 @@ bool CanSetProcessMitigationsPostStartup(MitigationFlags flags) {
                      MITIGATION_RELOCATE_IMAGE_REQUIRED |
                      MITIGATION_BOTTOM_UP_ASLR |
                      MITIGATION_STRICT_HANDLE_CHECKS |
-                     MITIGATION_WIN32K_DISABLE |
                      MITIGATION_EXTENSION_DLL_DISABLE |
                      MITIGATION_DLL_SEARCH_ORDER));
 }
@@ -326,7 +315,6 @@ bool CanSetProcessMitigationsPostStartup(MitigationFlags flags) {
 bool CanSetProcessMitigationsPreStartup(MitigationFlags flags) {
   // These mitigations cannot be enabled prior to startup.
   return !(flags & (MITIGATION_STRICT_HANDLE_CHECKS |
-                    MITIGATION_WIN32K_DISABLE |
                     MITIGATION_DLL_SEARCH_ORDER));
 }
 

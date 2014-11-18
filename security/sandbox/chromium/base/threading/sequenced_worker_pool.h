@@ -69,6 +69,9 @@ class SequencedTaskRunner;
 //
 // Note that SequencedWorkerPool is RefCountedThreadSafe (inherited
 // from TaskRunner).
+//
+// Test-only code should wrap this in a base::SequencedWorkerPoolOwner to avoid
+// memory leaks. See http://crbug.com/273800
 class BASE_EXPORT SequencedWorkerPool : public TaskRunner {
  public:
   // Defines what should happen to a task posted to the worker pool on

@@ -29,8 +29,8 @@ class AppContainerAttributes {
   ~AppContainerAttributes();
 
   // Sets the AppContainer and capabilities to be used with the new process.
-  ResultCode SetAppContainer(const string16& app_container_sid,
-                             const std::vector<string16>&  capabilities);
+  ResultCode SetAppContainer(const base::string16& app_container_sid,
+                             const std::vector<base::string16>& capabilities);
 
   // Updates the proc_thred attribute list of the provided startup_information
   // with the app container related data.
@@ -53,15 +53,16 @@ class AppContainerAttributes {
 // AppContainer, and |name| will be used as both the display name and moniker.
 // This function fails if the OS doesn't support AppContainers, or if there is
 // an AppContainer registered with the same id.
-ResultCode CreateAppContainer(const string16& sid, const string16& name);
+ResultCode CreateAppContainer(const base::string16& sid,
+                              const base::string16& name);
 
 // Deletes an AppContainer previously created with a successfull call to
 // CreateAppContainer.
-ResultCode DeleteAppContainer(const string16& sid);
+ResultCode DeleteAppContainer(const base::string16& sid);
 
 // Retrieves the name associated with the provided AppContainer sid. Returns an
 // empty string if the AppContainer is not registered with the system.
-string16 LookupAppContainer(const string16& sid);
+base::string16 LookupAppContainer(const base::string16& sid);
 
 }  // namespace sandbox
 

@@ -66,19 +66,17 @@ static void StringAppendVT(StringType* dst,
   int mem_length = arraysize(stack_buf);
   while (true) {
     if (result < 0) {
-#if !defined(OS_WIN)
+#if defined(OS_WIN)
       // On Windows, vsnprintfT always returns the number of characters in a
       // fully-formatted string, so if we reach this point, something else is
       // wrong and no amount of buffer-doubling is going to fix it.
+      return;
+#else
       if (errno != 0 && errno != EOVERFLOW)
-#endif
-      {
-        // If an error other than overflow occurred, it's never going to work.
-        DLOG(WARNING) << "Unable to printf the requested string due to error.";
         return;
-      }
       // Try doubling the buffer size.
       mem_length *= 2;
+#endif
     } else {
       // We need exactly "result + 1" characters.
       mem_length = result + 1;

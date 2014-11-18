@@ -61,7 +61,7 @@ namespace sandbox {
 bool FileSystemPolicy::GenerateRules(const wchar_t* name,
                                      TargetPolicy::Semantics semantics,
                                      LowLevelPolicy* policy) {
-  std::wstring mod_name(name);
+  base::string16 mod_name(name);
   if (mod_name.empty()) {
     return false;
   }
@@ -229,7 +229,7 @@ bool FileSystemPolicy::SetInitialRules(LowLevelPolicy* policy) {
 
 bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
                                         const ClientInfo& client_info,
-                                        const std::wstring &file,
+                                        const base::string16 &file,
                                         uint32 attributes,
                                         uint32 desired_access,
                                         uint32 file_attributes,
@@ -260,7 +260,7 @@ bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
 
 bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
                                       const ClientInfo& client_info,
-                                      const std::wstring &file,
+                                      const base::string16 &file,
                                       uint32 attributes,
                                       uint32 desired_access,
                                       uint32 share_access,
@@ -292,7 +292,7 @@ bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
 bool FileSystemPolicy::QueryAttributesFileAction(
     EvalResult eval_result,
     const ClientInfo& client_info,
-    const std::wstring &file,
+    const base::string16 &file,
     uint32 attributes,
     FILE_BASIC_INFORMATION* file_info,
     NTSTATUS* nt_status) {
@@ -317,7 +317,7 @@ bool FileSystemPolicy::QueryAttributesFileAction(
 bool FileSystemPolicy::QueryFullAttributesFileAction(
     EvalResult eval_result,
     const ClientInfo& client_info,
-    const std::wstring &file,
+    const base::string16 &file,
     uint32 attributes,
     FILE_NETWORK_OPEN_INFORMATION* file_info,
     NTSTATUS* nt_status) {
@@ -372,7 +372,7 @@ bool FileSystemPolicy::SetInformationFileAction(
   return true;
 }
 
-bool PreProcessName(const std::wstring& path, std::wstring* new_path) {
+bool PreProcessName(const base::string16& path, base::string16* new_path) {
   ConvertToLongPath(path, new_path);
 
   bool reparsed = false;

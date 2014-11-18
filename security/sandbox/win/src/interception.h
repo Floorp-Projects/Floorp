@@ -14,6 +14,7 @@
 
 #include "base/basictypes.h"
 #include "base/gtest_prod_util.h"
+#include "base/strings/string16.h"
 #include "sandbox/win/src/sandbox_types.h"
 
 namespace sandbox {
@@ -135,7 +136,7 @@ class InterceptionManager {
   struct InterceptionData {
     InterceptionType type;            // Interception type.
     InterceptorId id;                 // Interceptor id.
-    std::wstring dll;                 // Name of dll to intercept.
+    base::string16 dll;               // Name of dll to intercept.
     std::string function;             // Name of function to intercept.
     std::string interceptor;          // Name of interceptor function.
     const void* interceptor_address;  // Interceptor's entry point.
@@ -241,6 +242,10 @@ class InterceptionManager {
   ((&Target##service) ? \
     manager->ADD_NT_INTERCEPTION(service, id, num_params) : false)
 
+// When intercepting the EAT it is important that the patched version of the
+// function not call any functions imported from system libraries unless
+// |TargetServices::InitCalled()| returns true, because it is only then that
+// we are guaranteed that our IAT has been initialized.
 #define INTERCEPT_EAT(manager, dll, function, id, num_params) \
   ((&Target##function) ? \
     manager->AddToPatchedFunctions(dll, #function, sandbox::INTERCEPTION_EAT, \
@@ -262,6 +267,10 @@ class InterceptionManager {
 #define INTERCEPT_NT(manager, service, id, num_params) \
   manager->ADD_NT_INTERCEPTION(service, id, num_params)
 
+// When intercepting the EAT it is important that the patched version of the
+// function not call any functions imported from system libraries unless
+// |TargetServices::InitCalled()| returns true, because it is only then that
+// we are guaranteed that our IAT has been initialized.
 #define INTERCEPT_EAT(manager, dll, function, id, num_params) \
   manager->AddToPatchedFunctions(dll, #function, sandbox::INTERCEPTION_EAT, \
                                  MAKE_SERVICE_NAME(function), id)

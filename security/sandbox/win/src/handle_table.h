@@ -18,22 +18,22 @@ namespace sandbox {
 // for iterating through the table and retrieving handle info.
 class HandleTable {
  public:
-  static const char16* HandleTable::kTypeProcess;
-  static const char16* HandleTable::kTypeThread;
-  static const char16* HandleTable::kTypeFile;
-  static const char16* HandleTable::kTypeDirectory;
-  static const char16* HandleTable::kTypeKey;
-  static const char16* HandleTable::kTypeWindowStation;
-  static const char16* HandleTable::kTypeDesktop;
-  static const char16* HandleTable::kTypeService;
-  static const char16* HandleTable::kTypeMutex;
-  static const char16* HandleTable::kTypeSemaphore;
-  static const char16* HandleTable::kTypeEvent;
-  static const char16* HandleTable::kTypeTimer;
-  static const char16* HandleTable::kTypeNamedPipe;
-  static const char16* HandleTable::kTypeJobObject;
-  static const char16* HandleTable::kTypeFileMap;
-  static const char16* HandleTable::kTypeAlpcPort;
+  static const base::char16* HandleTable::kTypeProcess;
+  static const base::char16* HandleTable::kTypeThread;
+  static const base::char16* HandleTable::kTypeFile;
+  static const base::char16* HandleTable::kTypeDirectory;
+  static const base::char16* HandleTable::kTypeKey;
+  static const base::char16* HandleTable::kTypeWindowStation;
+  static const base::char16* HandleTable::kTypeDesktop;
+  static const base::char16* HandleTable::kTypeService;
+  static const base::char16* HandleTable::kTypeMutex;
+  static const base::char16* HandleTable::kTypeSemaphore;
+  static const base::char16* HandleTable::kTypeEvent;
+  static const base::char16* HandleTable::kTypeTimer;
+  static const base::char16* HandleTable::kTypeNamedPipe;
+  static const base::char16* HandleTable::kTypeJobObject;
+  static const base::char16* HandleTable::kTypeFileMap;
+  static const base::char16* HandleTable::kTypeAlpcPort;
 
   class Iterator;
 
@@ -54,11 +54,11 @@ class HandleTable {
 
     const OBJECT_TYPE_INFORMATION* TypeInfo();
 
-    const string16& Name();
+    const base::string16& Name();
 
-    const string16& Type();
+    const base::string16& Type();
 
-    bool IsType(const string16& type_string);
+    bool IsType(const base::string16& type_string);
 
    private:
     friend class Iterator;
@@ -84,8 +84,8 @@ class HandleTable {
     const SYSTEM_HANDLE_INFORMATION* handle_entry_;
     const SYSTEM_HANDLE_INFORMATION* last_entry_;
     std::vector<BYTE> type_info_buffer_;
-    string16 handle_name_;
-    string16 type_name_;
+    base::string16 handle_name_;
+    base::string16 type_name_;
 
     DISALLOW_COPY_AND_ASSIGN(HandleEntry);
   };

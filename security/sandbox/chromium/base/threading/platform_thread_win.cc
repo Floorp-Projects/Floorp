@@ -10,7 +10,7 @@
 #include "base/threading/thread_id_name_manager.h"
 #include "base/threading/thread_restrictions.h"
 #include "base/tracked_objects.h"
-
+#include "base/win/scoped_handle.h"
 #include "base/win/windows_version.h"
 
 namespace base {
@@ -54,28 +54,35 @@ DWORD __stdcall ThreadFunc(void* params) {
   if (!thread_params->joinable)
     base::ThreadRestrictions::SetSingletonAllowed(false);
 
-  /* Retrieve a copy of the thread handle to use as the key in the
-   * thread name mapping. */
+  // Retrieve a copy of the thread handle to use as the key in the
+  // thread name mapping.
   PlatformThreadHandle::Handle platform_handle;
-  DuplicateHandle(
-      GetCurrentProcess(),
-      GetCurrentThread(),
-      GetCurrentProcess(),
-      &platform_handle,
-      0,
-      FALSE,
-      DUPLICATE_SAME_ACCESS);
+  BOOL did_dup = DuplicateHandle(GetCurrentProcess(),
+                                GetCurrentThread(),
+                                GetCurrentProcess(),
+                                &platform_handle,
+                                0,
+                                FALSE,
+                                DUPLICATE_SAME_ACCESS);
 
-  ThreadIdNameManager::GetInstance()->RegisterThread(
-      platform_handle,
-      PlatformThread::CurrentId());
+  win::ScopedHandle scoped_platform_handle;
+
+  if (did_dup) {
+    scoped_platform_handle.Set(platform_handle);
+    ThreadIdNameManager::GetInstance()->RegisterThread(
+        scoped_platform_handle.Get(),
+        PlatformThread::CurrentId());
+  }
 
   delete thread_params;
   delegate->ThreadMain();
 
-  ThreadIdNameManager::GetInstance()->RemoveName(
-      platform_handle,
-      PlatformThread::CurrentId());
+  if (did_dup) {
+    ThreadIdNameManager::GetInstance()->RemoveName(
+        scoped_platform_handle.Get(),
+        PlatformThread::CurrentId());
+  }
+
   return NULL;
 }
 
@@ -120,6 +127,11 @@ bool CreateThreadInternal(size_t stack_size,
 // static
 PlatformThreadId PlatformThread::CurrentId() {
   return GetCurrentThreadId();
+}
+
+// static
+PlatformThreadRef PlatformThread::CurrentRef() {
+  return PlatformThreadRef(GetCurrentThreadId());
 }
 
 // static

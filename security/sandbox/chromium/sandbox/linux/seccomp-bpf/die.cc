@@ -22,7 +22,7 @@ void Die::ExitGroup() {
   // Especially, since we are dealing with system call filters. Continuing
   // execution would be very bad in most cases where ExitGroup() gets called.
   // So, we'll try a few other strategies too.
-  SandboxSyscall(__NR_exit_group, 1);
+  Syscall::Call(__NR_exit_group, 1);
 
   // We have no idea what our run-time environment looks like. So, signal
   // handlers might or might not do the right thing. Try to reset settings
@@ -30,7 +30,7 @@ void Die::ExitGroup() {
   // succeeded in doing so. Nonetheless, triggering a fatal signal could help
   // us terminate.
   signal(SIGSEGV, SIG_DFL);
-  SandboxSyscall(__NR_prctl, PR_SET_DUMPABLE, (void*)0, (void*)0, (void*)0);
+  Syscall::Call(__NR_prctl, PR_SET_DUMPABLE, (void*)0, (void*)0, (void*)0);
   if (*(volatile char*)0) {
   }
 
@@ -40,7 +40,7 @@ void Die::ExitGroup() {
   // We in fact retry the system call inside of our loop so that it will
   // stand out when somebody tries to diagnose the problem by using "strace".
   for (;;) {
-    SandboxSyscall(__NR_exit_group, 1);
+    Syscall::Call(__NR_exit_group, 1);
   }
 }
 
@@ -75,7 +75,7 @@ void Die::LogToStderr(const char* msg, const char* file, int line) {
     // No need to loop. Short write()s are unlikely and if they happen we
     // probably prefer them over a loop that blocks.
     ignore_result(
-        HANDLE_EINTR(SandboxSyscall(__NR_write, 2, s.c_str(), s.length())));
+        HANDLE_EINTR(Syscall::Call(__NR_write, 2, s.c_str(), s.length())));
   }
 }
 

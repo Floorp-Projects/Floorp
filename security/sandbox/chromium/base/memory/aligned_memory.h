@@ -26,9 +26,9 @@
 //   // ... later, to release the memory:
 //   AlignedFree(my_array);
 //
-// Or using scoped_ptr_malloc:
+// Or using scoped_ptr:
 //
-//   scoped_ptr_malloc<float, ScopedPtrAlignedFree> my_array(
+//   scoped_ptr<float, AlignedFreeDeleter> my_array(
 //       static_cast<float*>(AlignedAlloc(size, alignment)));
 
 #ifndef BASE_MEMORY_ALIGNED_MEMORY_H_
@@ -101,9 +101,9 @@ inline void AlignedFree(void* ptr) {
 #endif
 }
 
-// Helper class for use with scoped_ptr_malloc.
-class BASE_EXPORT ScopedPtrAlignedFree {
- public:
+// Deleter for use with scoped_ptr. E.g., use as
+//   scoped_ptr<Foo, base::AlignedFreeDeleter> foo;
+struct AlignedFreeDeleter {
   inline void operator()(void* ptr) const {
     AlignedFree(ptr);
   }

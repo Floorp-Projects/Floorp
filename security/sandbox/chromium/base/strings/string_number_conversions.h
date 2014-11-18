@@ -41,6 +41,9 @@ BASE_EXPORT string16 Int64ToString16(int64 value);
 BASE_EXPORT std::string Uint64ToString(uint64 value);
 BASE_EXPORT string16 Uint64ToString16(uint64 value);
 
+BASE_EXPORT std::string SizeTToString(size_t value);
+BASE_EXPORT string16 SizeTToString16(size_t value);
+
 // DoubleToString converts the double to a string format that ignores the
 // locale. If you want to use locale specific formatting, use ICU.
 BASE_EXPORT std::string DoubleToString(double value);
@@ -98,6 +101,12 @@ BASE_EXPORT std::string HexEncode(const void* bytes, size_t size);
 // Will only successful parse hex values that will fit into |output|, i.e.
 // -0x80000000 < |input| < 0x7FFFFFFF.
 BASE_EXPORT bool HexStringToInt(const StringPiece& input, int* output);
+
+// Best effort conversion, see StringToInt above for restrictions.
+// Will only successful parse hex values that will fit into |output|, i.e.
+// 0x00000000 < |input| < 0xFFFFFFFF.
+// The string is not required to start with 0x.
+BASE_EXPORT bool HexStringToUInt(const StringPiece& input, uint32* output);
 
 // Best effort conversion, see StringToInt above for restrictions.
 // Will only successful parse hex values that will fit into |output|, i.e.

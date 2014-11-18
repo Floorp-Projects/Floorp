@@ -189,6 +189,13 @@ class BASE_EXPORT FilePath {
   // Returns a vector of all of the components of the provided path. It is
   // equivalent to calling DirName().value() on the path's root component,
   // and BaseName().value() on each child component.
+  //
+  // To make sure this is lossless so we can differentiate absolute and
+  // relative paths, the root slash will be included even though no other
+  // slashes will be. The precise behavior is:
+  //
+  // Posix:  "/foo/bar"  ->  [ "/", "foo", "bar" ]
+  // Windows:  "C:\foo\bar"  ->  [ "C:", "\\", "foo", "bar" ]
   void GetComponents(std::vector<FilePath::StringType>* components) const;
 
   // Returns true if this FilePath is a strict parent of the |child|. Absolute
@@ -224,17 +231,32 @@ class BASE_EXPORT FilePath {
   // Returns ".jpg" for path "C:\pics\jojo.jpg", or an empty string if
   // the file has no extension.  If non-empty, Extension() will always start
   // with precisely one ".".  The following code should always work regardless
-  // of the value of path.
+  // of the value of path.  For common double-extensions like .tar.gz and
+  // .user.js, this method returns the combined extension.  For a single
+  // component, use FinalExtension().
   // new_path = path.RemoveExtension().value().append(path.Extension());
   // ASSERT(new_path == path.value());
   // NOTE: this is different from the original file_util implementation which
   // returned the extension without a leading "." ("jpg" instead of ".jpg")
   StringType Extension() const;
 
+  // Returns the path's file extension, as in Extension(), but will
+  // never return a double extension.
+  //
+  // TODO(davidben): Check all our extension-sensitive code to see if
+  // we can rename this to Extension() and the other to something like
+  // LongExtension(), defaulting to short extensions and leaving the
+  // long "extensions" to logic like base::GetUniquePathNumber().
+  StringType FinalExtension() const;
+
   // Returns "C:\pics\jojo" for path "C:\pics\jojo.jpg"
   // NOTE: this is slightly different from the similar file_util implementation
   // which returned simply 'jojo'.
   FilePath RemoveExtension() const WARN_UNUSED_RESULT;
+
+  // Removes the path's file extension, as in RemoveExtension(), but
+  // ignores double extensions.
+  FilePath RemoveFinalExtension() const WARN_UNUSED_RESULT;
 
   // Inserts |suffix| after the file name portion of |path| but before the
   // extension.  Returns "" if BaseName() == "." or "..".
@@ -299,8 +321,8 @@ class BASE_EXPORT FilePath {
   // separator.
   FilePath StripTrailingSeparators() const WARN_UNUSED_RESULT;
 
-  // Returns true if this FilePath contains any attempt to reference a parent
-  // directory (i.e. has a path component that is ".."
+  // Returns true if this FilePath contains an attempt to reference a parent
+  // directory (e.g. has a path component that is "..").
   bool ReferencesParent() const;
 
   // Return a Unicode human-readable version of this path.
@@ -332,24 +354,6 @@ class BASE_EXPORT FilePath {
   // Similar to AsUTF8Unsafe, but returns UTF-16 instead.
   string16 AsUTF16Unsafe() const;
 
-  // Older Chromium code assumes that paths are always wstrings.
-  // This function converts wstrings to FilePaths, and is
-  // useful to smooth porting that old code to the FilePath API.
-  // It has "Hack" its name so people feel bad about using it.
-  // http://code.google.com/p/chromium/issues/detail?id=24672
-  //
-  // If you are trying to be a good citizen and remove these, ask yourself:
-  // - Am I interacting with other Chrome code that deals with files?  Then
-  //   try to convert the API into using FilePath.
-  // - Am I interacting with OS-native calls?  Then use value() to get at an
-  //   OS-native string format.
-  // - Am I using well-known file names, like "config.ini"?  Then use the
-  //   ASCII functions (we require paths to always be supersets of ASCII).
-  // - Am I displaying a string to the user in some UI?  Then use the
-  //   LossyDisplayName() function, but keep in mind that you can't
-  //   ever use the result of that again as a path.
-  static FilePath FromWStringHack(const std::wstring& wstring);
-
   // Returns a FilePath object from a path name in UTF-8. This function
   // should only be used for cases where you are sure that the input
   // string is UTF-8.
@@ -369,6 +373,10 @@ class BASE_EXPORT FilePath {
   // Normalize all path separators to backslash on Windows
   // (if FILE_PATH_USES_WIN_SEPARATORS is true), or do nothing on POSIX systems.
   FilePath NormalizePathSeparators() const;
+
+  // Normalize all path separattors to given type on Windows
+  // (if FILE_PATH_USES_WIN_SEPARATORS is true), or do nothing on POSIX systems.
+  FilePath NormalizePathSeparatorsTo(CharType separator) const;
 
   // Compare two strings in the same way the file system does.
   // Note that these always ignore case, even on file systems that are case-
@@ -403,6 +411,15 @@ class BASE_EXPORT FilePath {
   // (cf. above GetHFSDecomposedForm method)
   static int HFSFastUnicodeCompare(const StringType& string1,
                                    const StringType& string2);
+#endif
+
+#if defined(OS_ANDROID)
+  // On android, file selection dialog can return a file with content uri
+  // scheme(starting with content://). Content uri needs to be opened with
+  // ContentResolver to guarantee that the app has appropriate permissions
+  // to access it.
+  // Returns true if the path is a content uri, or false otherwise.
+  bool IsContentUri() const;
 #endif
 
  private:

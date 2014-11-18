@@ -41,13 +41,17 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   virtual void Release() OVERRIDE;
   virtual ResultCode SetTokenLevel(TokenLevel initial,
                                    TokenLevel lockdown) OVERRIDE;
+  virtual TokenLevel GetInitialTokenLevel() const OVERRIDE;
+  virtual TokenLevel GetLockdownTokenLevel() const OVERRIDE;
   virtual ResultCode SetJobLevel(JobLevel job_level,
                                  uint32 ui_exceptions) OVERRIDE;
+  virtual ResultCode SetJobMemoryLimit(size_t memory_limit) OVERRIDE;
   virtual ResultCode SetAlternateDesktop(bool alternate_winstation) OVERRIDE;
-  virtual string16 GetAlternateDesktop() const OVERRIDE;
+  virtual base::string16 GetAlternateDesktop() const OVERRIDE;
   virtual ResultCode CreateAlternateDesktop(bool alternate_winstation) OVERRIDE;
   virtual void DestroyAlternateDesktop() OVERRIDE;
   virtual ResultCode SetIntegrityLevel(IntegrityLevel integrity_level) OVERRIDE;
+  virtual IntegrityLevel GetIntegrityLevel() const OVERRIDE;
   virtual ResultCode SetDelayedIntegrityLevel(
       IntegrityLevel integrity_level) OVERRIDE;
   virtual ResultCode SetAppContainer(const wchar_t* sid) OVERRIDE;
@@ -56,15 +60,16 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   virtual MitigationFlags GetProcessMitigations() OVERRIDE;
   virtual ResultCode SetDelayedProcessMitigations(
       MitigationFlags flags) OVERRIDE;
-  virtual MitigationFlags GetDelayedProcessMitigations() OVERRIDE;
+  virtual MitigationFlags GetDelayedProcessMitigations() const OVERRIDE;
   virtual void SetStrictInterceptions() OVERRIDE;
   virtual ResultCode SetStdoutHandle(HANDLE handle) OVERRIDE;
   virtual ResultCode SetStderrHandle(HANDLE handle) OVERRIDE;
   virtual ResultCode AddRule(SubSystem subsystem, Semantics semantics,
                              const wchar_t* pattern) OVERRIDE;
   virtual ResultCode AddDllToUnload(const wchar_t* dll_name);
-  virtual ResultCode AddKernelObjectToClose(const char16* handle_type,
-                                            const char16* handle_name) OVERRIDE;
+  virtual ResultCode AddKernelObjectToClose(
+      const base::char16* handle_type,
+      const base::char16* handle_name) OVERRIDE;
 
   // Dispatcher:
   virtual Dispatcher* OnMessageReady(IPCParams* ipc,
@@ -123,6 +128,7 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   TokenLevel initial_level_;
   JobLevel job_level_;
   uint32 ui_exceptions_;
+  size_t memory_limit_;
   bool use_alternate_desktop_;
   bool use_alternate_winstation_;
   // Helps the file system policy initialization.
@@ -141,16 +147,17 @@ class PolicyBase : public Dispatcher, public TargetPolicy {
   // Memory structure that stores the low level policy.
   PolicyGlobal* policy_;
   // The list of dlls to unload in the target process.
-  std::vector<string16> blacklisted_dlls_;
+  std::vector<base::string16> blacklisted_dlls_;
   // This is a map of handle-types to names that we need to close in the
   // target process. A null set means we need to close all handles of the
   // given type.
   HandleCloser handle_closer_;
-  std::vector<string16> capabilities_;
+  std::vector<base::string16> capabilities_;
   scoped_ptr<AppContainerAttributes> appcontainer_list_;
 
   static HDESK alternate_desktop_handle_;
   static HWINSTA alternate_winstation_handle_;
+  static IntegrityLevel alternate_desktop_integrity_level_label_;
 
   DISALLOW_COPY_AND_ASSIGN(PolicyBase);
 };

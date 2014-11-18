@@ -387,7 +387,9 @@ bool Verifier::VerifyBPF(SandboxBPF* sandbox,
     }
 #endif
 #endif
-    ErrorCode code = policy.EvaluateSyscall(sandbox, sysnum);
+    ErrorCode code = iter.IsValid(sysnum)
+                         ? policy.EvaluateSyscall(sandbox, sysnum)
+                         : policy.InvalidSyscall(sandbox);
     if (!VerifyErrorCode(sandbox, program, &data, code, code, err)) {
       return false;
     }
@@ -421,10 +423,10 @@ uint32_t Verifier::EvaluateBPF(const std::vector<struct sock_filter>& program,
         switch (r & SECCOMP_RET_ACTION) {
           case SECCOMP_RET_TRAP:
           case SECCOMP_RET_ERRNO:
+          case SECCOMP_RET_TRACE:
           case SECCOMP_RET_ALLOW:
             break;
           case SECCOMP_RET_KILL:     // We don't ever generate this
-          case SECCOMP_RET_TRACE:    // We don't ever generate this
           case SECCOMP_RET_INVALID:  // Should never show up in BPF program
           default:
             *err = "Unexpected return code found in BPF program";

@@ -10,9 +10,9 @@
 
 
 #define INIT_GLOBAL_RTL(member) \
-  g_nt.##member = reinterpret_cast<##member##Function>( \
+  g_nt.member = reinterpret_cast<member##Function>( \
   ::GetProcAddress(ntdll, #member)); \
-  if (NULL == g_nt.##member) \
+  if (NULL == g_nt.member) \
   return false
 
 namespace sandbox {
@@ -185,8 +185,7 @@ TEST(PolicyEngineTest, IntegerOpcodes) {
   OpcodeFactory opcode_maker(memory, sizeof(memory));
 
   // Test basic match for unsigned longs 42 == 42 and 42 != 113377.
-  PolicyOpcode* op_m42 = opcode_maker.MakeOpNumberMatch(0, unsigned long(42),
-                                                        kPolNone);
+  PolicyOpcode* op_m42 = opcode_maker.MakeOpNumberMatch(0, 42UL, kPolNone);
   EXPECT_EQ(EVAL_TRUE, op_m42->Evaluate(&pp_num1, 1, NULL));
   EXPECT_EQ(EVAL_FALSE, op_m42->Evaluate(&pp_num2, 1, NULL));
   EXPECT_EQ(EVAL_ERROR, op_m42->Evaluate(&pp_wrong1, 1, NULL));

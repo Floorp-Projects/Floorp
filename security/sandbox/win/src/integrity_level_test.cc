@@ -52,6 +52,7 @@ TEST(IntegrityLevelTest, TestLowILReal) {
 
   runner.SetTimeout(INFINITE);
 
+  runner.GetPolicy()->SetAlternateDesktop(true);
   runner.GetPolicy()->SetIntegrityLevel(INTEGRITY_LEVEL_LOW);
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED, runner.RunTest(L"CheckIntegrityLevel"));

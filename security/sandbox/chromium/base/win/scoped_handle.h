@@ -27,33 +27,15 @@ namespace win {
 
 // Generic wrapper for raw handles that takes care of closing handles
 // automatically. The class interface follows the style of
-// the ScopedStdioHandle class with a few additions:
+// the ScopedFILE class with one addition:
 //   - IsValid() method can tolerate multiple invalid handle values such as NULL
 //     and INVALID_HANDLE_VALUE (-1) for Win32 handles.
-//   - Receive() method allows to receive a handle value from a function that
-//     takes a raw handle pointer only.
 template <class Traits, class Verifier>
 class GenericScopedHandle {
   MOVE_ONLY_TYPE_FOR_CPP_03(GenericScopedHandle, RValue)
 
  public:
   typedef typename Traits::Handle Handle;
-
-  // Helper object to contain the effect of Receive() to the function that needs
-  // a pointer, and allow proper tracking of the handle.
-  class Receiver {
-   public:
-    explicit Receiver(GenericScopedHandle* owner)
-        : handle_(Traits::NullHandle()),
-          owner_(owner) {}
-    ~Receiver() { owner_->Set(handle_); }
-
-    operator Handle*() { return &handle_; }
-
-   private:
-    Handle handle_;
-    GenericScopedHandle* owner_;
-  };
 
   GenericScopedHandle() : handle_(Traits::NullHandle()) {}
 
@@ -100,16 +82,6 @@ class GenericScopedHandle {
 
   operator Handle() const {
     return handle_;
-  }
-
-  // This method is intended to be used with functions that require a pointer to
-  // a destination handle, like so:
-  //    void CreateRequiredHandle(Handle* out_handle);
-  //    ScopedHandle a;
-  //    CreateRequiredHandle(a.Receive());
-  Receiver Receive() {
-    DCHECK(!Traits::IsHandleValid(handle_)) << "Handle must be NULL";
-    return Receiver(this);
   }
 
   // Transfers ownership away from this object.

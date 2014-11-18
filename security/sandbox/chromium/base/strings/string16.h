@@ -181,9 +181,4 @@ class BASE_EXPORT std::basic_string<base::char16, base::string16_char_traits>;
 
 #endif  // WCHAR_T_IS_UTF32
 
-// TODO(brettw) update users of string16 to use the namespace and remove
-// this "using".
-using base::char16;
-using base::string16;
-
 #endif  // BASE_STRINGS_STRING16_H_
