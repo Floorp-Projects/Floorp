@@ -10,7 +10,7 @@
 function test() {
   const TAB_URL = EXAMPLE_URL + "doc_function-search.html";
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     let Source = 'code_function-search-01.js';
     let Debugger = aPanel.panelWin;
     let Editor = Debugger.DebuggerView.editor;
