@@ -1048,6 +1048,9 @@ nsScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI &jsapi,
   aOptions->setFileAndLine(aRequest->mURL.get(), aRequest->mLineNo);
   aOptions->setVersion(JSVersion(aRequest->mJSVersion));
   aOptions->setCompileAndGo(JS_IsGlobalObject(aScopeChain));
+  // We only need the setNoScriptRval bit when compiling off-thread here, since
+  // otherwise nsJSUtils::EvaluateString will set it up for us.
+  aOptions->setNoScriptRval(true);
   if (aRequest->mHasSourceMapURL) {
     aOptions->setSourceMapURL(aRequest->mSourceMapURL.get());
   }
