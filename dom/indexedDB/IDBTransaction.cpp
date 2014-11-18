@@ -48,7 +48,6 @@ IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,
   , mNextIndexId(0)
   , mAbortCode(NS_OK)
   , mPendingRequestCount(0)
-  , mLineNo(0)
   , mReadyState(IDBTransaction::INITIAL)
   , mMode(aMode)
   , mCreating(false)
@@ -128,14 +127,12 @@ already_AddRefed<IDBTransaction>
 IDBTransaction::CreateVersionChange(
                                 IDBDatabase* aDatabase,
                                 BackgroundVersionChangeTransactionChild* aActor,
-                                IDBOpenDBRequest* aOpenRequest,
                                 int64_t aNextObjectStoreId,
                                 int64_t aNextIndexId)
 {
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aOpenRequest);
   MOZ_ASSERT(aNextObjectStoreId > 0);
   MOZ_ASSERT(aNextIndexId > 0);
 
@@ -143,8 +140,6 @@ IDBTransaction::CreateVersionChange(
 
   nsRefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase, emptyObjectStoreNames, VERSION_CHANGE);
-  aOpenRequest->GetCallerLocation(transaction->mFilename,
-                                  &transaction->mLineNo);
 
   transaction->SetScriptOwner(aDatabase->GetScriptOwner());
   transaction->mBackgroundActor.mVersionChangeBackgroundActor = aActor;
@@ -180,7 +175,6 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
 
   nsRefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase, aObjectStoreNames, aMode);
-  IDBRequest::CaptureCaller(transaction->mFilename, &transaction->mLineNo);
 
   transaction->SetScriptOwner(aDatabase->GetScriptOwner());
 
@@ -395,16 +389,6 @@ IDBTransaction::IsOpen() const
   }
 
   return false;
-}
-
-void
-IDBTransaction::GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aLineNo);
-
-  aFilename = mFilename;
-  *aLineNo = mLineNo;
 }
 
 already_AddRefed<IDBObjectStore>
