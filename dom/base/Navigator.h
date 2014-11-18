@@ -18,6 +18,9 @@
 #include "nsInterfaceHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#ifdef MOZ_EME
+#include "mozilla/dom/MediaKeySystemAccess.h"
+#endif
 
 class nsPluginArray;
 class nsMimeTypeArray;
@@ -315,6 +318,13 @@ public:
   }
 
   virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
+
+#ifdef MOZ_EME
+  already_AddRefed<Promise>
+  RequestMediaKeySystemAccess(const nsAString& aKeySystem,
+                              const Optional<Sequence<MediaKeySystemOptions>>& aOptions,
+                              ErrorResult& aRv);
+#endif
 
 private:
   virtual ~Navigator();
