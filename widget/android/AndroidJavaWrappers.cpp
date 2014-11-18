@@ -11,7 +11,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
-#include "GeneratedSDKWrappers.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
