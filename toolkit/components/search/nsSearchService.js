@@ -3792,16 +3792,23 @@ SearchService.prototype = {
       }
     }
 
-    // Array for the remaining engines, alphabetically sorted
-    var alphaEngines = [];
+    // Array for the remaining engines, alphabetically sorted.
+    let alphaEngines = [];
 
     for each (engine in this._engines) {
       if (!(engine.name in addedEngines))
         alphaEngines.push(this._engines[engine.name]);
     }
-    alphaEngines = alphaEngines.sort(function (a, b) {
-                                       return a.name.localeCompare(b.name);
-                                     });
+
+    let locale = Cc["@mozilla.org/intl/nslocaleservice;1"]
+                   .getService(Ci.nsILocaleService)
+                   .newLocale(getLocale());
+    let collation = Cc["@mozilla.org/intl/collation-factory;1"]
+                      .createInstance(Ci.nsICollationFactory)
+                      .CreateCollation(locale);
+    const strength = Ci.nsICollation.kCollationCaseInsensitiveAscii;
+    let comparator = (a, b) => collation.compareString(strength, a.name, b.name);
+    alphaEngines.sort(comparator);
     return this.__sortedEngines = this.__sortedEngines.concat(alphaEngines);
   },
 
