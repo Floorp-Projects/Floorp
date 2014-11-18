@@ -120,6 +120,7 @@ class nsIdentifierMapEntry : public nsStringHashKey
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
   explicit nsIdentifierMapEntry(const nsAString& aKey) :
     nsStringHashKey(&aKey), mNameContentList(nullptr)
