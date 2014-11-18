@@ -259,7 +259,8 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     // Get a platform-native handle for the owner thread, used by
     // js::InterruptRunningJitCode to halt the runtime's main thread.
 #ifdef XP_WIN
-    size_t openFlags = THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME;
+    size_t openFlags = THREAD_GET_CONTEXT | THREAD_SET_CONTEXT | THREAD_SUSPEND_RESUME |
+                       THREAD_QUERY_INFORMATION;
     HANDLE self = OpenThread(openFlags, false, GetCurrentThreadId());
     if (!self)
         return false;
