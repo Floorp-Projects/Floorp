@@ -339,6 +339,8 @@ RTCPeerConnection.prototype = {
       rtcConfig.iceServers =
         JSON.parse(Services.prefs.getCharPref("media.peerconnection.default_iceservers"));
     }
+    this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
     this._mustValidateRTCConfiguration(rtcConfig,
         "RTCPeerConnection constructor passed invalid RTCConfiguration");
     if (_globalPCList._networkdown || !this._win.navigator.onLine) {
@@ -365,8 +367,6 @@ RTCPeerConnection.prototype = {
     this._observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
 
     // Add a reference to the PeerConnection to global list (before init).
-    this._winID = this._win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
     _globalPCList.addPC(this);
 
     this._queueOrRun({
@@ -461,6 +461,7 @@ RTCPeerConnection.prototype = {
    */
   _mustValidateRTCConfiguration: function(rtcConfig, errorMsg) {
     var errorCtor = this._win.DOMError;
+    var warningFunc = this.logWarning.bind(this);
     function nicerNewURI(uriStr, errorMsg) {
       let ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
       try {
@@ -485,6 +486,9 @@ RTCPeerConnection.prototype = {
       }
       else if (!(url.scheme in { stun:1, stuns:1 })) {
         throw new errorCtor("", errorMsg + " - improper scheme: " + url.scheme);
+      }
+      if (url.scheme in { stuns:1, turns:1 }) {
+        warningFunc(url.scheme.toUpperCase() + " is not yet supported.", null, 0);
       }
     }
     if (rtcConfig.iceServers) {
