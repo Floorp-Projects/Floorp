@@ -108,7 +108,7 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                            uint32_t aFlags)
 {
   // According to spec, number of outputs is always 1.
-  mLastChunks.SetLength(1);
+  MOZ_ASSERT(mLastChunks.Length() == 1);
 
   // GC stuff can result in our input stream being destroyed before this stream.
   // Handle that.
