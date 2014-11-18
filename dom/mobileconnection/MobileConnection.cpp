@@ -378,23 +378,20 @@ MobileConnection::GetSupportedNetworkTypes(nsTArray<MobileNetworkType>& aTypes) 
     return;
   }
 
-  char16_t** types = nullptr;
+  int32_t* types = nullptr;
   uint32_t length = 0;
 
   nsresult rv = mMobileConnection->GetSupportedNetworkTypes(&types, &length);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   for (uint32_t i = 0; i < length; ++i) {
-    nsDependentString rawType(types[i]);
-    Nullable<MobileNetworkType> type = Nullable<MobileNetworkType>();
-    CONVERT_STRING_TO_NULLABLE_ENUM(rawType, MobileNetworkType, type);
+    int32_t type = types[i];
 
-    if (!type.IsNull()) {
-      aTypes.AppendElement(type.Value());
-    }
+    MOZ_ASSERT(type < static_cast<int32_t>(MobileNetworkType::EndGuard_));
+    aTypes.AppendElement(static_cast<MobileNetworkType>(type));
   }
 
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(length, types);
+  nsMemory::Free(types);
 }
 
 already_AddRefed<DOMRequest>
