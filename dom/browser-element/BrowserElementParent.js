@@ -14,6 +14,8 @@ let Cr = Components.results;
  * appropriate action here in the parent.
  */
 
+this.EXPORTED_SYMBOLS = ["BrowserElementParent"];
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/BrowserElementPromptService.jsm");
@@ -718,7 +720,7 @@ BrowserElementParent.prototype = {
         this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
                                          aOffset, aCount);
       },
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener,
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener, 
                                              Ci.nsIRequestObserver])
     };
 
@@ -909,5 +911,3 @@ BrowserElementParent.prototype = {
     };
   },
 };
-
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([BrowserElementParent]);
