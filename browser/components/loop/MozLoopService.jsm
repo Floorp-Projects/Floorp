@@ -1356,6 +1356,23 @@ this.MozLoopService = {
   },
 
   /**
+   * Set any boolean preference under "loop.".
+   *
+   * @param {String} prefName The name of the pref without the preceding "loop."
+   * @param {boolean} value The value to set.
+   *
+   * Any errors thrown by the Mozilla pref API are logged to the console.
+   */
+  setLoopBoolPref: function(prefName, value) {
+    try {
+      Services.prefs.setBoolPref("loop." + prefName, value);
+    } catch (ex) {
+      log.error("setLoopCharPref had trouble setting " + prefName +
+        "; exception: " + ex);
+    }
+  },
+
+  /**
    * Return any preference under "loop." that's coercible to a character
    * preference.
    *
@@ -1480,6 +1497,19 @@ this.MozLoopService = {
       win.switchToTabHavingURI(url.toString(), true);
     } catch (ex) {
       log.error("Error opening FxA settings", ex);
+    }
+  }),
+
+  /**
+   * Opens the Getting Started tour in the browser.
+   */
+  openGettingStartedTour: Task.async(function() {
+    try {
+      let url = Services.prefs.getCharPref("loop.gettingStarted.url");
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      win.switchToTabHavingURI(url, true);
+    } catch (ex) {
+      log.error("Error opening Getting Started tour", ex);
     }
   }),
 

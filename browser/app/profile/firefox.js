@@ -1642,6 +1642,8 @@ pref("loop.soft_start_hostname", "soft-start.loop.services.mozilla.com");
 
 pref("loop.server", "https://loop.services.mozilla.com");
 pref("loop.seenToS", "unseen");
+pref("loop.gettingStarted.seen", false);
+pref("loop.gettingStarted.url", "https://bugzilla.mozilla.org/show_bug.cgi?id=1099462");
 pref("loop.learnMoreUrl", "https://www.firefox.com/hello/");
 pref("loop.legal.ToS_url", "https://hello.firefox.com/legal/terms/");
 pref("loop.legal.privacy_url", "https://www.mozilla.org/privacy/");

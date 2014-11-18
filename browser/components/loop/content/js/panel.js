@@ -165,6 +165,34 @@ loop.panel = (function(_, mozL10n) {
     }
   });
 
+  var GettingStartedView = React.createClass({displayName: 'GettingStartedView',
+    componentDidMount: function() {
+      navigator.mozLoop.setLoopBoolPref("gettingStarted.seen", true);
+    },
+
+    handleButtonClick: function() {
+      navigator.mozLoop.openGettingStartedTour();
+    },
+
+    render: function() {
+      if (navigator.mozLoop.getLoopBoolPref("gettingStarted.seen")) {
+        return null;
+      }
+      return (
+        React.DOM.div({id: "fte-getstarted"}, 
+          React.DOM.header({id: "fte-title"}, 
+            mozL10n.get("first_time_experience_title", {
+              "clientShortname": mozL10n.get("clientShortname2")
+            })
+          ), 
+          Button({htmlId: "fte-button", 
+                  onClick: this.handleButtonClick, 
+                  caption: mozL10n.get("first_time_experience_button_label")})
+        )
+      );
+    }
+  });
+
   var ToSView = React.createClass({displayName: 'ToSView',
     getInitialState: function() {
       return {seenToS: navigator.mozLoop.getLoopCharPref('seenToS')};
@@ -407,7 +435,7 @@ loop.panel = (function(_, mozL10n) {
       var cx = React.addons.classSet;
       return (
         React.DOM.div({className: "generate-url"}, 
-          React.DOM.header(null, __("share_link_header_text")), 
+          React.DOM.header({id: "share-link-header"}, mozL10n.get("share_link_header_text")), 
           React.DOM.div({className: "generate-url-stack"}, 
             React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
                    onCopy: this.handleLinkExfiltration, 
@@ -709,6 +737,7 @@ loop.panel = (function(_, mozL10n) {
         return (
           Tab({name: "call"}, 
             React.DOM.div({className: "content-area"}, 
+              GettingStartedView(null), 
               CallUrlResult({client: this.props.client, 
                              notifications: this.props.notifications, 
                              callUrl: this.props.callUrl}), 
@@ -720,6 +749,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         Tab({name: "rooms"}, 
+          GettingStartedView(null), 
           RoomList({dispatcher: this.props.dispatcher, 
                     store: this.props.roomStore, 
                     userDisplayName: this._getUserDisplayName()}), 
@@ -830,15 +860,16 @@ loop.panel = (function(_, mozL10n) {
 
   return {
     init: init,
-    UserIdentity: UserIdentity,
     AuthLink: AuthLink,
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
+    GettingStartedView: GettingStartedView,
     PanelView: PanelView,
     RoomEntry: RoomEntry,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
-    ToSView: ToSView
+    ToSView: ToSView,
+    UserIdentity: UserIdentity,
   };
 })(_, document.mozL10n);
 
