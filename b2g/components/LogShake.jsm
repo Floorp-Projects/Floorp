@@ -79,7 +79,6 @@ let LogShake = {
    * Map of files which have log-type information to their parsers
    */
   LOGS_WITH_PARSERS: {
-    '/dev/__properties__': LogParser.prettyPrintPropertiesArray,
     '/dev/log/main': LogParser.prettyPrintLogArray,
     '/dev/log/system': LogParser.prettyPrintLogArray,
     '/dev/log/radio': LogParser.prettyPrintLogArray,
@@ -210,6 +209,14 @@ let LogShake = {
    */
   readLogs: function() {
     let logArrays = {};
+
+    try {
+      logArrays["properties"] =
+        LogParser.prettyPrintPropertiesArray(LogCapture.readProperties());
+    } catch (ex) {
+      Cu.reportError("Unable to get device properties: " + ex);
+    }
+
     for (let loc in this.LOGS_WITH_PARSERS) {
       let logArray;
       try {

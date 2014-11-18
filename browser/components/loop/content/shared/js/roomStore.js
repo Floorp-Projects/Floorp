@@ -87,6 +87,7 @@ loop.store = loop.store || {};
       "getAllRooms",
       "getAllRoomsError",
       "openRoom",
+      "renameRoom",
       "updateRoomList"
     ]);
   }
@@ -411,6 +412,21 @@ loop.store = loop.store || {};
      */
     openRoom: function(actionData) {
       this._mozLoop.rooms.open(actionData.roomToken);
+    },
+
+    /**
+     * Renames a room.
+     *
+     * @param {sharedActions.RenameRoom} actionData
+     */
+    renameRoom: function(actionData) {
+      this._mozLoop.rooms.rename(actionData.roomToken, actionData.newRoomName,
+        function(err) {
+          if (err) {
+            // XXX Give this a proper UI - bug 1100595.
+            console.error("Failed to rename the room", err);
+          }
+        });
     }
   }, Backbone.Events);
 

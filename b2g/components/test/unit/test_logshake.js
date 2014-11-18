@@ -8,19 +8,19 @@
 
 /* disable use strict warning */
 /* jshint -W097 */
-'use strict';
+"use strict";
 
 const Cu = Components.utils;
 
-Cu.import('resource://gre/modules/LogCapture.jsm');
-Cu.import('resource://gre/modules/LogShake.jsm');
+Cu.import("resource://gre/modules/LogCapture.jsm");
+Cu.import("resource://gre/modules/LogShake.jsm");
 
 // Force logshake to handle a device motion event with given components
 // Does not use SystemAppProxy because event needs special
 // accelerationIncludingGravity property
 function sendDeviceMotionEvent(x, y, z) {
   let event = {
-    type: 'devicemotion',
+    type: "devicemotion",
     accelerationIncludingGravity: {
       x: x,
       y: y,
@@ -34,7 +34,7 @@ function sendDeviceMotionEvent(x, y, z) {
 // conditions.
 function sendScreenChangeEvent(screenEnabled) {
   let event = {
-    type: 'screenchange',
+    type: "screenchange",
     detail: {
       screenEnabled: screenEnabled
     }
@@ -44,7 +44,7 @@ function sendScreenChangeEvent(screenEnabled) {
 
 function debug(msg) {
   var timestamp = Date.now();
-  dump('LogShake: ' + timestamp + ': ' + msg);
+  dump("LogShake: " + timestamp + ": " + msg);
 }
 
 add_test(function test_do_log_capture_after_shaking() {
@@ -61,7 +61,7 @@ add_test(function test_do_log_capture_after_shaking() {
   sendDeviceMotionEvent(9001, 9001, 9001);
 
   ok(readLocations.length > 0,
-      'LogShake should attempt to read at least one log');
+      "LogShake should attempt to read at least one log");
 
   LogShake.uninit();
   run_next_test();
@@ -81,15 +81,15 @@ add_test(function test_do_nothing_when_resting() {
   sendDeviceMotionEvent(0, 9.8, 9.8);
 
   ok(readLocations.length === 0,
-      'LogShake should not read any logs');
+      "LogShake should not read any logs");
 
-  debug('test_do_nothing_when_resting: stop');
+  debug("test_do_nothing_when_resting: stop");
   LogShake.uninit();
   run_next_test();
 });
 
 add_test(function test_do_nothing_when_disabled() {
-  debug('test_do_nothing_when_disabled: start');
+  debug("test_do_nothing_when_disabled: start");
   // Disable LogShake
   LogShake.uninit();
 
@@ -103,7 +103,7 @@ add_test(function test_do_nothing_when_disabled() {
   sendDeviceMotionEvent(0, 9001, 9001);
 
   ok(readLocations.length === 0,
-      'LogShake should not read any logs');
+      "LogShake should not read any logs");
 
   run_next_test();
 });
@@ -126,7 +126,7 @@ add_test(function test_do_nothing_when_screen_off() {
   sendDeviceMotionEvent(0, 9001, 9001);
 
   ok(readLocations.length === 0,
-      'LogShake should not read any logs');
+      "LogShake should not read any logs");
 
   // Restore the screen
   sendScreenChangeEvent(true);
@@ -149,7 +149,7 @@ add_test(function test_do_log_capture_resilient_readLogFile() {
   sendDeviceMotionEvent(9001, 9001, 9001);
 
   ok(readLocations.length > 0,
-      'LogShake should attempt to read at least one log');
+      "LogShake should attempt to read at least one log");
 
   LogShake.uninit();
   run_next_test();
@@ -172,13 +172,13 @@ add_test(function test_do_log_capture_resilient_parseLog() {
   sendDeviceMotionEvent(9001, 9001, 9001);
 
   ok(readLocations.length > 0,
-      'LogShake should attempt to read at least one log');
+      "LogShake should attempt to read at least one log");
 
   LogShake.uninit();
   run_next_test();
 });
 
 function run_test() {
-  debug('Starting');
+  debug("Starting");
   run_next_test();
 }

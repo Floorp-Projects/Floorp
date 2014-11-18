@@ -314,29 +314,26 @@ PopupNotifications.prototype = {
     let notifications = this._getNotificationsForBrowser(browser);
     notifications.push(notification);
 
-    let isActive = this._isActiveBrowser(browser);
+    let isActiveBrowser = this._isActiveBrowser(browser);
     let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-    if (isActive && fm.activeWindow == this.window) {
-      // show panel now
-      this._update(notifications, notification.anchorElement, true);
-    } else {
-      // Otherwise, update() will display the notification the next time the
-      // relevant tab/window is selected.
+    let isActiveWindow = fm.activeWindow == this.window;
 
-      // If the tab is selected but the window is in the background, let the OS
-      // tell the user that there's a notification waiting in that window.
-      // At some point we might want to do something about background tabs here
-      // too. When the user switches to this window, we'll show the panel if
-      // this browser is a tab (thus showing the anchor icon). For
-      // non-tabbrowser browsers, we need to make the icon visible now or the
-      // user will not be able to open the panel.
-      if (!notification.dismissed && isActive) {
-        this.window.getAttention();
+    if (isActiveBrowser) {
+      if (isActiveWindow) {
+        // show panel now
+        this._update(notifications, notification.anchorElement, true);
+      } else {
+        // indicate attention and update the icon if necessary
+        if (!notification.dismissed) {
+          this.window.getAttention();
+        }
         if (notification.anchorElement.parentNode != this.iconBox) {
           this._updateAnchorIcon(notifications, notification.anchorElement);
         }
+        this._notify("backgroundShow");
       }
 
+    } else {
       // Notify observers that we're not showing the popup (useful for testing)
       this._notify("backgroundShow");
     }

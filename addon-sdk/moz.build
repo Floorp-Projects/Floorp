@@ -171,6 +171,7 @@ EXTRA_JS_MODULES.commonjs.diffpatcher.test += [
 ]
 
 EXTRA_JS_MODULES.commonjs.framescript += [
+    'source/lib/framescript/contextmenu-events.js',
     'source/lib/framescript/FrameScriptManager.jsm',
     'source/lib/framescript/LoaderHelper.jsm',
     'source/lib/framescript/tab-events.js',
@@ -235,6 +236,7 @@ EXTRA_JS_MODULES.commonjs.sdk.console += [
 EXTRA_JS_MODULES.commonjs.sdk.content += [
     'source/lib/sdk/content/content-worker.js',
     'source/lib/sdk/content/content.js',
+    'source/lib/sdk/content/context-menu.js',
     'source/lib/sdk/content/events.js',
     'source/lib/sdk/content/loader.js',
     'source/lib/sdk/content/mod.js',

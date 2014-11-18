@@ -215,71 +215,14 @@ function prettyPrintLogArray(array) {
 }
 
 /**
- * Parse an array of bytes as a properties file. The structure of the
- * properties file is derived from bionic/libc/bionic/system_properties.c
- * @param array {Uint8Array} Array containing property data
- * @return {Object} Map from property name to property value, both strings
- */
-function parsePropertiesArray(array) {
-  let data = new DataView(array.buffer);
-  let byteString = String.fromCharCode.apply(null, array);
-
-  let properties = {};
-
-  let propIndex = 0;
-  let propCount = data.getUint32(0, true);
-
-  // first TOC entry is at 32
-  let tocOffset = 32;
-
-  const PROP_NAME_MAX = 32;
-  const PROP_VALUE_MAX = 92;
-
-  while (propIndex < propCount) {
-    // Retrieve offset from file start
-    let infoOffset = data.getUint32(tocOffset, true) & 0xffffff;
-
-    // Now read the name, integer serial, and value
-    let propName = "";
-    let nameOffset = infoOffset;
-    while (byteString[nameOffset] != "\0" &&
-           (nameOffset - infoOffset) < PROP_NAME_MAX) {
-      propName += byteString[nameOffset];
-      nameOffset ++;
-    }
-
-    infoOffset += PROP_NAME_MAX;
-    // Skip serial number
-    infoOffset += 4;
-
-    let propValue = "";
-    nameOffset = infoOffset;
-    while (byteString[nameOffset] != "\0" &&
-           (nameOffset - infoOffset) < PROP_VALUE_MAX) {
-      propValue += byteString[nameOffset];
-      nameOffset ++;
-    }
-
-    // Move to next table of contents entry
-    tocOffset += 4;
-
-    properties[propName] = propValue;
-    propIndex += 1;
-  }
-
-  return properties;
-}
-
-/**
- * Pretty-print an array read from the /dev/__properties__ file.
- * @param array {Uint8Array} File data array
+ * Pretty-print an array read from the list of propreties.
+ * @param {Object} Object representing the properties
  * @return {String} Human-readable string of property name: property value
  */
-function prettyPrintPropertiesArray(array) {
-  let properties = parsePropertiesArray(array);
+function prettyPrintPropertiesArray(properties) {
   let propertiesString = "";
   for(let propName in properties) {
-    propertiesString += propName + ": " + properties[propName] + "\n";
+    propertiesString += "[" + propName + "]: [" + properties[propName] + "]\n";
   }
   return propertiesString;
 }
@@ -294,7 +237,6 @@ function prettyPrintArray(array) {
 
 this.LogParser = {
   parseLogArray: parseLogArray,
-  parsePropertiesArray: parsePropertiesArray,
   prettyPrintArray: prettyPrintArray,
   prettyPrintLogArray: prettyPrintLogArray,
   prettyPrintPropertiesArray: prettyPrintPropertiesArray

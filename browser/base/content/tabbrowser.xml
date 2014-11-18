@@ -5369,7 +5369,10 @@
           }, () => {
             // If the promise rejected, that means we don't want to actually
             // flip the deck, so we cancel the tab switch.
-            gBrowser._cancelTabSwitch(toTab);
+            // We need to nullcheck the method we're about to call because
+            // the binding might be dead at this point.
+            if (gBrowser._cancelTabSwitch)
+              gBrowser._cancelTabSwitch(toTab);
           });
 
           return val;
