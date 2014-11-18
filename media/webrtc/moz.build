@@ -51,56 +51,36 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         build_for_test=0
     )
     GYP_DIRS['signaling'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
-    # Excluded because of name clash in the logTag variable
+    # Excluded for various symbol conflicts
     signaling_non_unified_sources = [
+        'signaling/src/common/browser_logging/CSFLog.cpp',
+        'signaling/src/jsep/JsepSessionImpl.cpp',
         'signaling/src/media-conduit/AudioConduit.cpp',
         'signaling/src/media-conduit/CodecStatistics.cpp',
         'signaling/src/media-conduit/VideoConduit.cpp',
-        'signaling/src/media/CSFAudioControlWrapper.cpp',
-        'signaling/src/media/CSFVideoControlWrapper.cpp',
-        'signaling/src/media/VcmSIPCCBinding.cpp',
+        'signaling/src/mediapipeline/MediaPipeline.cpp',
+        'signaling/src/mediapipeline/MediaPipelineFilter.cpp',
+        'signaling/src/mediapipeline/SrtpFlow.cpp',
+        'signaling/src/peerconnection/MediaPipelineFactory.cpp',
+        'signaling/src/peerconnection/MediaStreamList.cpp',
         'signaling/src/peerconnection/PeerConnectionCtx.cpp',
         'signaling/src/peerconnection/PeerConnectionImpl.cpp',
         'signaling/src/peerconnection/PeerConnectionMedia.cpp',
         'signaling/src/peerconnection/WebrtcGlobalInformation.cpp',
-        'signaling/src/sipcc/core/ccapp/ccapi_device_info.c',
-        'signaling/src/sipcc/core/gsm/fim.c',
-        'signaling/src/sipcc/core/gsm/gsm_sdp.c',
-        'signaling/src/sipcc/core/gsm/lsm.c',
-        'signaling/src/sipcc/core/sdp/sdp_access.c',
-        'signaling/src/sipcc/core/sdp/sdp_attr.c',
-        'signaling/src/sipcc/core/sdp/sdp_attr_access.c',
-        'signaling/src/sipcc/core/sdp/sdp_config.c',
-        'signaling/src/sipcc/core/sdp/sdp_main.c',
-        'signaling/src/sipcc/core/sdp/sdp_token.c',
-        'signaling/src/sipcc/core/sdp/sdp_utils.c',
-        'signaling/src/softphonewrapper/CC_SIPCCCall.cpp',
-        'signaling/src/softphonewrapper/CC_SIPCCCallInfo.cpp',
-        'signaling/src/softphonewrapper/CC_SIPCCService.cpp',
-        'signaling/src/softphonewrapper/ccapi_plat_api_impl.cpp',
-    ]
-
-    # Excluded for various symbol conflicts
-    signaling_non_unified_sources_2 = [
-        'signaling/src/mediapipeline/MediaPipelineFilter.cpp',
-        'signaling/src/mediapipeline/SrtpFlow.cpp',
-        'signaling/src/sipcc/core/ccapp/ccapi_call_info.c',
-        'signaling/src/sipcc/core/ccapp/ccprovider.c',
-        'signaling/src/sipcc/core/common/platform_api.c',
-        'signaling/src/sipcc/core/common/ui.c',
-        'signaling/src/sipcc/core/gsm/ccapi_strings.c',
-        'signaling/src/sipcc/core/gsm/fsm.c',
-        'signaling/src/sipcc/core/gsm/fsmcac.c',
-        'signaling/src/sipcc/core/gsm/fsmdef.c',
-        'signaling/src/sipcc/core/sdp/sdp_base64.c',      # Because of name clash with the macro PADDING
-        'signaling/src/sipcc/core/sipstack/ccsip_cc.c',
-        'signaling/src/sipcc/core/sipstack/sip_common_transport.c',
-        'signaling/src/sipcc/core/sipstack/sip_platform_task.c',
-        'signaling/src/sipcc/core/src-common/string_lib.c',
+        'signaling/src/sdp/sipcc/ccsdp.c',
+        'signaling/src/sdp/sipcc/cpr_string.c',
+        'signaling/src/sdp/sipcc/sdp_access.c',
+        'signaling/src/sdp/sipcc/sdp_attr.c',
+        'signaling/src/sdp/sipcc/sdp_attr_access.c',
+        'signaling/src/sdp/sipcc/sdp_base64.c',
+        'signaling/src/sdp/sipcc/sdp_config.c',
+        'signaling/src/sdp/sipcc/sdp_main.c',
+        'signaling/src/sdp/sipcc/sdp_services_unix.c',
+        'signaling/src/sdp/sipcc/sdp_token.c',
+        'signaling/src/sdp/sipcc/sdp_utils.c',
     ]
 
     GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources
-    GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources_2
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GYP_DIRS += ['trunk/testing']
@@ -116,5 +96,4 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             build_for_test=1
         )
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
-        GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources_2
 
