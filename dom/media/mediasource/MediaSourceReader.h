@@ -175,7 +175,6 @@ private:
   bool mVideoIsSeeking;
 
   bool mHasEssentialTrackBuffers;
-  nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 };
 
 } // namespace mozilla
