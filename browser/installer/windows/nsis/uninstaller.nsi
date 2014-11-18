@@ -418,8 +418,6 @@ Section "Uninstall"
   StrCpy $R3 "false"
   ${un.RemovePrecompleteEntries} "$R2" "$R3"
 
-  RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
-
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete /REBOOTOK "$INSTDIR\defaults\pref\channel-prefs.js"
   ${EndIf}
@@ -451,20 +449,19 @@ Section "Uninstall"
   ; remove other files create a dummy firefox.exe.moz-delete to prevent the
   ; installer from allowing an install without restart when it is required
   ; to complete an uninstall.
-
-  ; Admin is required to delete files on reboot so only add the moz-delete if
-  ; the user is an admin. After calling UAC::IsAdmin $0 will equal 1 if the user
-  ; is an admin.
-  UAC::IsAdmin
-
   ${If} ${RebootFlag}
-  ${AndIf} "$0" == "1"
-    ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-delete"
-      FileOpen $0 "$INSTDIR\${FileMainEXE}.moz-delete" w
-      FileWrite $0 "Will be deleted on restart"
-      Delete /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-delete"
-      FileClose $0
-    ${EndUnless}
+    ; Admin is required to delete files on reboot so only add the moz-delete if
+    ; the user is an admin. After calling UAC::IsAdmin $0 will equal 1 if the
+    ; user is an admin.
+    UAC::IsAdmin
+    ${If} "$0" == "1"
+      ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-delete"
+        FileOpen $0 "$INSTDIR\${FileMainEXE}.moz-delete" w
+        FileWrite $0 "Will be deleted on restart"
+        Delete /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-delete"
+        FileClose $0
+      ${EndUnless}
+    ${EndIf}
   ${EndIf}
 
   ; Refresh desktop icons otherwise the start menu internet item won't be
