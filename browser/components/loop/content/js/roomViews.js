@@ -12,6 +12,7 @@ loop.roomViews = (function(mozL10n) {
   "use strict";
 
   var sharedActions = loop.shared.actions;
+  var sharedMixins = loop.shared.mixins;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedViews = loop.shared.views;
 
@@ -132,7 +133,11 @@ loop.roomViews = (function(mozL10n) {
    * Desktop room conversation view.
    */
   var DesktopRoomConversationView = React.createClass({displayName: 'DesktopRoomConversationView',
-    mixins: [ActiveRoomStoreMixin, loop.shared.mixins.DocumentTitleMixin],
+    mixins: [
+      ActiveRoomStoreMixin,
+      sharedMixins.DocumentTitleMixin,
+      sharedMixins.RoomsAudioMixin
+    ],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
