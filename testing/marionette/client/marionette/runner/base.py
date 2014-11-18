@@ -379,7 +379,8 @@ class BaseMarionetteOptions(OptionParser):
                         help="Define the path to store log file. If the path is"
                              " a directory, the real log file will be created"
                              " given the format gecko-(timestamp).log. If it is"
-                             " a file, if will be used directly. Default: 'gecko.log'")
+                             " a file, if will be used directly. '-' may be passed"
+                             " to write to stdout. Default: './gecko.log'")
         self.add_option('--logger-name',
                         dest='logger_name',
                         action='store',
