@@ -40,7 +40,6 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   : mVideoStride(0)
   , mVideoWidth(0)
   , mVideoHeight(0)
-  , mConfig(aConfig)
   , mImageContainer(aImageContainer)
   , mDXVAEnabled(aDXVAEnabled)
   , mLayersBackend(aLayersBackend)
@@ -147,7 +146,7 @@ HRESULT
 WMFVideoMFTManager::Input(mp4_demuxer::MP4Sample* aSample)
 {
   // We must prepare samples in AVC Annex B.
-  mp4_demuxer::AnnexB::ConvertSample(aSample, mConfig.annex_b);
+  mp4_demuxer::AnnexB::ConvertSample(aSample);
   // Forward sample data to the decoder.
   const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
   uint32_t length = aSample->size;

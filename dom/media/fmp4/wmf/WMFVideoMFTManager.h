@@ -56,8 +56,6 @@ private:
   uint32_t mVideoHeight;
   nsIntRect mPictureRegion;
 
-  const mp4_demuxer::VideoDecoderConfig& mConfig;
-
   RefPtr<MFTDecoder> mDecoder;
   RefPtr<layers::ImageContainer> mImageContainer;
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
