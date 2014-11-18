@@ -24,6 +24,17 @@ SANDBOX_TEST(ErrorCode, ErrnoConstructor) {
   SandboxBPF sandbox;
   ErrorCode e3 = sandbox.Trap(NULL, NULL);
   SANDBOX_ASSERT((e3.err() & SECCOMP_RET_ACTION)  == SECCOMP_RET_TRAP);
+
+  uint16_t data = 0xdead;
+  ErrorCode e4(ErrorCode::ERR_TRACE + data);
+  SANDBOX_ASSERT(e4.err() == SECCOMP_RET_TRACE + data);
+}
+
+SANDBOX_DEATH_TEST(ErrorCode,
+                   InvalidSeccompRetTrace,
+                   DEATH_MESSAGE("Invalid use of ErrorCode object")) {
+  // Should die if the trace data does not fit in 16 bits.
+  ErrorCode e(ErrorCode::ERR_TRACE + (1 << 16));
 }
 
 SANDBOX_TEST(ErrorCode, Trap) {

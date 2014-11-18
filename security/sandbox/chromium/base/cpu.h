@@ -46,6 +46,13 @@ class BASE_EXPORT CPU {
   bool has_sse41() const { return has_sse41_; }
   bool has_sse42() const { return has_sse42_; }
   bool has_avx() const { return has_avx_; }
+  // has_avx_hardware returns true when AVX is present in the CPU. This might
+  // differ from the value of |has_avx()| because |has_avx()| also tests for
+  // operating system support needed to actually call AVX instuctions.
+  // Note: you should never need to call this function. It was added in order
+  // to workaround a bug in NSS but |has_avx()| is what you want.
+  bool has_avx_hardware() const { return has_avx_hardware_; }
+  bool has_aesni() const { return has_aesni_; }
   bool has_non_stop_time_stamp_counter() const {
     return has_non_stop_time_stamp_counter_;
   }
@@ -71,6 +78,8 @@ class BASE_EXPORT CPU {
   bool has_sse41_;
   bool has_sse42_;
   bool has_avx_;
+  bool has_avx_hardware_;
+  bool has_aesni_;
   bool has_non_stop_time_stamp_counter_;
   std::string cpu_vendor_;
   std::string cpu_brand_;

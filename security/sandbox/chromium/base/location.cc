@@ -5,7 +5,10 @@
 #include "build/build_config.h"
 
 #if defined(COMPILER_MSVC)
-#include <intrin.h>
+// MSDN says to #include <intrin.h>, but that breaks the VS2005 build.
+extern "C" {
+  void* _ReturnAddress();
+}
 #endif
 
 #include "base/location.h"
@@ -89,11 +92,11 @@ __declspec(noinline)
 BASE_EXPORT const void* GetProgramCounter() {
 #if defined(COMPILER_MSVC)
   return _ReturnAddress();
-#elif defined(COMPILER_GCC)
+#elif defined(COMPILER_GCC) && !defined(OS_NACL)
   return __builtin_extract_return_addr(__builtin_return_address(0));
-#endif  // COMPILER_GCC
-
+#else
   return NULL;
+#endif
 }
 
 }  // namespace tracked_objects

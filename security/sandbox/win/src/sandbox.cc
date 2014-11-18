@@ -11,9 +11,8 @@
 
 namespace sandbox {
 // The section for IPC and policy.
-SANDBOX_INTERCEPT HANDLE  g_shared_section = NULL;
-
-static bool               s_is_broker =  false;
+SANDBOX_INTERCEPT HANDLE  g_shared_section;
+static bool               s_is_broker = false;
 
 // GetBrokerServices: the current implementation relies on a shared section
 // that is created by the broker and opened by the target.
@@ -42,3 +41,8 @@ TargetServices* SandboxFactory::GetTargetServices() {
 }
 
 }  // namespace sandbox
+
+// Allows querying for whether the current process has been sandboxed.
+extern "C" bool __declspec(dllexport) IsSandboxedProcess() {
+  return sandbox::g_shared_section != NULL;
+}

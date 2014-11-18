@@ -6,6 +6,7 @@
 #define SANDBOX_SRC_FILESYSTEM_DISPATCHER_H__
 
 #include "base/basictypes.h"
+#include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
 
@@ -22,29 +23,31 @@ class FilesystemDispatcher : public Dispatcher {
 
  private:
   // Processes IPC requests coming from calls to NtCreateFile in the target.
-  bool NtCreateFile(IPCInfo* ipc, std::wstring* name, DWORD attributes,
+  bool NtCreateFile(IPCInfo* ipc, base::string16* name, DWORD attributes,
                     DWORD desired_access, DWORD file_attributes,
                     DWORD share_access, DWORD create_disposition,
                     DWORD create_options);
 
   // Processes IPC requests coming from calls to NtOpenFile in the target.
-  bool NtOpenFile(IPCInfo* ipc, std::wstring* name, DWORD attributes,
+  bool NtOpenFile(IPCInfo* ipc, base::string16* name, DWORD attributes,
                   DWORD desired_access, DWORD share_access,
                   DWORD create_options);
 
     // Processes IPC requests coming from calls to NtQueryAttributesFile in the
   // target.
-  bool NtQueryAttributesFile(IPCInfo* ipc, std::wstring* name, DWORD attributes,
+  bool NtQueryAttributesFile(IPCInfo* ipc, base::string16* name,
+                             DWORD attributes,
                              CountedBuffer* info);
 
   // Processes IPC requests coming from calls to NtQueryFullAttributesFile in
   // the target.
-  bool NtQueryFullAttributesFile(IPCInfo* ipc, std::wstring* name,
+  bool NtQueryFullAttributesFile(IPCInfo* ipc, base::string16* name,
                                  DWORD attributes, CountedBuffer* info);
 
   // Processes IPC requests coming from calls to NtSetInformationFile with the
   // rename information class.
-  bool NtSetInformationFile(IPCInfo* ipc, HANDLE handle, CountedBuffer* status,
+  bool NtSetInformationFile(IPCInfo* ipc, HANDLE handle,
+                            CountedBuffer* status,
                             CountedBuffer* info, DWORD length,
                             DWORD info_class);
 

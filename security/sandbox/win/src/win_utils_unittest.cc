@@ -27,10 +27,10 @@ TEST(WinUtils, IsReparsePoint) {
   EXPECT_FALSE(result);
 
   // We have to fix Bug 32224 to pass this test.
-  std::wstring not_found = std::wstring(my_folder) + L"\\foo\\bar";
+  base::string16 not_found = base::string16(my_folder) + L"\\foo\\bar";
   // EXPECT_EQ(ERROR_PATH_NOT_FOUND, IsReparsePoint(not_found, &result));
 
-  std::wstring new_file = std::wstring(my_folder) + L"\\foo";
+  base::string16 new_file = base::string16(my_folder) + L"\\foo";
   EXPECT_EQ(ERROR_SUCCESS, IsReparsePoint(new_file, &result));
   EXPECT_FALSE(result);
 
@@ -40,7 +40,7 @@ TEST(WinUtils, IsReparsePoint) {
                             OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
   EXPECT_NE(INVALID_HANDLE_VALUE, dir);
 
-  std::wstring temp_dir_nt = std::wstring(L"\\??\\") + temp_directory;
+  base::string16 temp_dir_nt = base::string16(L"\\??\\") + temp_directory;
   EXPECT_TRUE(SetReparsePoint(dir, temp_dir_nt.c_str()));
 
   EXPECT_EQ(ERROR_SUCCESS, IsReparsePoint(new_file, &result));
@@ -64,16 +64,17 @@ TEST(WinUtils, SameObject) {
   ASSERT_TRUE(::DeleteFile(my_folder));
   ASSERT_TRUE(::CreateDirectory(my_folder, NULL));
 
-  std::wstring folder(my_folder);
-  std::wstring file_name = folder + L"\\foo.txt";
+  base::string16 folder(my_folder);
+  base::string16 file_name = folder + L"\\foo.txt";
   const ULONG kSharing = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
   base::win::ScopedHandle file(CreateFile(
       file_name.c_str(), GENERIC_WRITE, kSharing, NULL, CREATE_ALWAYS,
       FILE_FLAG_DELETE_ON_CLOSE, NULL));
 
   EXPECT_TRUE(file.IsValid());
-  std::wstring file_name_nt1 = std::wstring(L"\\??\\") + file_name;
-  std::wstring file_name_nt2 = std::wstring(L"\\??\\") + folder + L"\\FOO.txT";
+  base::string16 file_name_nt1 = base::string16(L"\\??\\") + file_name;
+  base::string16 file_name_nt2 =
+      base::string16(L"\\??\\") + folder + L"\\FOO.txT";
   EXPECT_TRUE(SameObject(file.Get(), file_name_nt1.c_str()));
   EXPECT_TRUE(SameObject(file.Get(), file_name_nt2.c_str()));
 

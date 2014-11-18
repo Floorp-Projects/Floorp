@@ -143,8 +143,8 @@
 //
 //   base::Bind(&MyClass::Foo, GetWeakPtr());
 //
-//   The callback will not be issued if the object is destroyed at the time
-//   it's issued. DANGER: weak pointers are not threadsafe, so don't use this
+//   The callback will not be run if the object has already been destroyed.
+//   DANGER: weak pointers are not threadsafe, so don't use this
 //   when passing between threads!
 //
 // BINDING A CLASS METHOD WITH MANUAL LIFETIME MANAGEMENT
@@ -214,11 +214,16 @@
 //
 // PASSING PARAMETERS BY REFERENCE
 //
-//   void foo(int arg) { cout << arg << endl }
+//   Const references are *copied* unless ConstRef is used. Example:
+//
+//   void foo(const int& arg) { printf("%d %p\n", arg, &arg); }
 //   int n = 1;
+//   base::Closure has_copy = base::Bind(&foo, n);
 //   base::Closure has_ref = base::Bind(&foo, base::ConstRef(n));
 //   n = 2;
-//   has_ref.Run();  // Prints "2"
+//   foo(n);                        // Prints "2 0xaaaaaaaaaaaa"
+//   has_copy.Run();                // Prints "1 0xbbbbbbbbbbbb"
+//   has_ref.Run();                 // Prints "2 0xaaaaaaaaaaaa"
 //
 //   Normally parameters are copied in the closure. DANGER: ConstRef stores a
 //   const reference instead, referencing the original parameter. This means
@@ -756,7 +761,7 @@ class Callback<R(A1, A2, A3, A4, A5, A6, A7)> : public internal::CallbackBase {
 };
 
 
-// Syntactic sugar to make Callbacks<void(void)> easier to declare since it
+// Syntactic sugar to make Callback<void(void)> easier to declare since it
 // will be used in a lot of APIs with delayed execution.
 typedef Callback<void(void)> Closure;
 
