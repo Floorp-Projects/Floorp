@@ -255,6 +255,9 @@ class MNode : public TempObject
     virtual void dump() const = 0;
 
   protected:
+    // Need visibility on getUseFor to avoid O(n^2) complexity.
+    friend void AssertBasicGraphCoherency(MIRGraph &graph);
+
     // Gets the MUse corresponding to given operand.
     virtual MUse *getUseFor(size_t index) = 0;
     virtual const MUse *getUseFor(size_t index) const = 0;
