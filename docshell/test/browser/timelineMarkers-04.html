@@ -14,7 +14,7 @@
 
       xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
-        // Nothing.
+        dump("ReadyState = " + xhr.readyState + "\n");
       };
       xhr.open("get", theURL, true);
       xhr.send();
