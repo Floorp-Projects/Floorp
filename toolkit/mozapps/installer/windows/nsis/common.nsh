@@ -4583,14 +4583,17 @@
         ${Loop}
         FileClose $R4
 
+        ; Delete the temporary precomplete file
+        Delete /REBOOTOK "$R3"
+
+        RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
+
         ${If} ${RebootFlag}
         ${AndIf} "$R2" == "false"
           ; Clear the reboot flag if all files were deleted or moved to the
           ; tobedeleted directory.
           SetRebootFlag false
         ${EndIf}
-        ; Delete the temporary precomplete file
-        Delete /REBOOTOK "$R3"
       ${EndIf}
 
       ClearErrors
