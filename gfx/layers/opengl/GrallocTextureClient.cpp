@@ -348,7 +348,7 @@ GrallocTextureClientOGL::FromSharedSurface(gl::SharedSurface* abstractSurf,
 
   RefPtr<TextureClient> ret = surf->GetTextureClient();
 
-  TextureFlags mask = TextureFlags::NEEDS_Y_FLIP |
+  TextureFlags mask = TextureFlags::ORIGIN_BOTTOM_LEFT |
                       TextureFlags::RB_SWAPPED |
                       TextureFlags::NON_PREMULTIPLIED;
   TextureFlags required = flags & mask;

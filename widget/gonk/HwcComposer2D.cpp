@@ -426,13 +426,16 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return false;
     }
 
+    const bool needsYFlip = state.OriginBottomLeft() ? true
+                                                     : false;
+
     hwc_rect_t sourceCrop, displayFrame;
     if(!HwcUtils::PrepareLayerRects(visibleRect,
                           layerTransform,
                           layerBufferTransform,
                           clip,
                           bufferRect,
-                          state.YFlipped(),
+                          needsYFlip,
                           &(sourceCrop),
                           &(displayFrame)))
     {
@@ -609,7 +612,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             }
         }
 
-        if (state.YFlipped()) {
+        const bool needsYFlip = state.OriginBottomLeft() ? true
+                                                         : false;
+
+        if (needsYFlip) {
            // Invert vertical reflection flag if it was already set
            hwcLayer.transform ^= HWC_TRANSFORM_FLIP_V;
         }

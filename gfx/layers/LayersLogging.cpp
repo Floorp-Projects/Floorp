@@ -289,7 +289,7 @@ AppendToString(std::stringstream& aStream, TextureFlags flags,
 }
     bool previous = false;
     AppendFlag(TextureFlags::USE_NEAREST_FILTER);
-    AppendFlag(TextureFlags::NEEDS_Y_FLIP);
+    AppendFlag(TextureFlags::ORIGIN_BOTTOM_LEFT);
     AppendFlag(TextureFlags::DISALLOW_BIGIMAGE);
 
 #undef AppendFlag

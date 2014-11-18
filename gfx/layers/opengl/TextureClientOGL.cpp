@@ -34,8 +34,8 @@ EGLImageTextureClient::EGLImageTextureClient(ISurfaceAllocator* aAllocator,
 
   AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 
-  if (aImage->GetData()->mInverted) {
-    AddFlags(TextureFlags::NEEDS_Y_FLIP);
+  if (aImage->GetData()->mOriginPos == gl::OriginPos::BottomLeft) {
+    AddFlags(TextureFlags::ORIGIN_BOTTOM_LEFT);
   }
 }
 
@@ -77,7 +77,7 @@ SurfaceTextureClient::SurfaceTextureClient(ISurfaceAllocator* aAllocator,
                                            TextureFlags aFlags,
                                            AndroidSurfaceTexture* aSurfTex,
                                            gfx::IntSize aSize,
-                                           bool aInverted)
+                                           gl::OriginPos aOriginPos)
   : TextureClient(aAllocator, aFlags)
   , mSurfTex(aSurfTex)
   , mSize(aSize)
@@ -89,8 +89,8 @@ SurfaceTextureClient::SurfaceTextureClient(ISurfaceAllocator* aAllocator,
   // Our data is always owned externally.
   AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 
-  if (aInverted) {
-    AddFlags(TextureFlags::NEEDS_Y_FLIP);
+  if (aOriginPos == gl::OriginPos::BottomLeft) {
+    AddFlags(TextureFlags::ORIGIN_BOTTOM_LEFT);
   }
 }
 
