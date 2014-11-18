@@ -29,7 +29,7 @@
 #include "ActorsChild.h"
 
 #ifdef DEBUG
-#include "nsContentUtils.h" // For assertions.
+#include "nsContentUtils.h" // For IsCallerChrome assertions.
 #endif
 
 namespace mozilla {
@@ -110,7 +110,6 @@ struct IDBFactory::PendingRequestInfo
 IDBFactory::IDBFactory()
   : mOwningObject(nullptr)
   , mBackgroundActor(nullptr)
-  , mInnerWindowID(0)
   , mBackgroundActorFailed(false)
   , mPrivateBrowsingMode(false)
 {
@@ -184,7 +183,6 @@ IDBFactory::CreateForWindow(nsPIDOMWindow* aWindow,
   factory->mPrincipalInfo = Move(principalInfo);
   factory->mWindow = aWindow;
   factory->mTabChild = TabChild::GetFrom(aWindow);
-  factory->mInnerWindowID = aWindow->WindowID();
   factory->mPrivateBrowsingMode = privateBrowsingMode;
 
   factory.forget(aFactory);
@@ -286,15 +284,6 @@ IDBFactory::AssertIsOnOwningThread() const
 }
 
 #endif // DEBUG
-
-bool
-IDBFactory::IsChrome() const
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mPrincipalInfo);
-
-  return mPrincipalInfo->type() == PrincipalInfo::TSystemPrincipalInfo;
-}
 
 void
 IDBFactory::SetBackgroundActor(BackgroundFactoryChild* aBackgroundActor)
@@ -535,20 +524,19 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
   nsRefPtr<IDBOpenDBRequest> request;
 
   if (mWindow) {
-    AutoJSContext cx;
-    if (NS_WARN_IF(!autoJS.Init(mWindow, cx))) {
+    if (NS_WARN_IF(!autoJS.Init(mWindow))) {
       IDB_REPORT_INTERNAL_ERR();
       aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return nullptr;
     }
 
-    JS::Rooted<JSObject*> scriptOwner(cx,
+    JS::Rooted<JSObject*> scriptOwner(autoJS.cx(),
       static_cast<nsGlobalWindow*>(mWindow.get())->FastGetGlobalJSObject());
     MOZ_ASSERT(scriptOwner);
 
     request = IDBOpenDBRequest::CreateForWindow(this, mWindow, scriptOwner);
   } else {
-    autoJS.Init(mOwningObject.get());
+    autoJS.Init();
     JS::Rooted<JSObject*> scriptOwner(autoJS.cx(), mOwningObject);
 
     request = IDBOpenDBRequest::CreateForJS(this, scriptOwner);
