@@ -401,7 +401,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
 
     // Invoke the prewrap callback. We're a bit worried about infinite
     // recursion here, so we do a check - see bug 809295.
-    JS_CHECK_CHROME_RECURSION(cx, return false);
+    JS_CHECK_SYSTEM_RECURSION(cx, return false);
     if (cb->preWrap) {
         obj.set(cb->preWrap(cx, global, obj, objectPassedToWrap));
         if (!obj)

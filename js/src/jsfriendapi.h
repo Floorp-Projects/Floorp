@@ -20,26 +20,11 @@
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
 
-/*
- * This macro checks if the stack pointer has exceeded a given limit. If
- * |tolerance| is non-zero, it returns true only if the stack pointer has
- * exceeded the limit by more than |tolerance| bytes. The WITH_INTOLERANCE
- * versions use a negative tolerance (i.e., the limit is reduced by
- * |intolerance| bytes).
- */
 #if JS_STACK_GROWTH_DIRECTION > 0
-# define JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, sp, tolerance)  \
-    ((uintptr_t)(sp) < (limit)+(tolerance))
-# define JS_CHECK_STACK_SIZE_WITH_INTOLERANCE(limit, sp, intolerance)  \
-    ((uintptr_t)(sp) < (limit)-(intolerance))
+# define JS_CHECK_STACK_SIZE(limit, sp) ((uintptr_t)(sp) < (limit))
 #else
-# define JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, sp, tolerance)  \
-    ((uintptr_t)(sp) > (limit)-(tolerance))
-# define JS_CHECK_STACK_SIZE_WITH_INTOLERANCE(limit, sp, intolerance)  \
-    ((uintptr_t)(sp) > (limit)+(intolerance))
+# define JS_CHECK_STACK_SIZE(limit, sp) ((uintptr_t)(sp) > (limit))
 #endif
-
-#define JS_CHECK_STACK_SIZE(limit, lval) JS_CHECK_STACK_SIZE_WITH_TOLERANCE(limit, lval, 0)
 
 class JSAtom;
 struct JSErrorFormatString;
@@ -1005,30 +990,47 @@ JS_FRIEND_API(bool)
 RunningWithTrustedPrincipals(JSContext *cx);
 
 inline uintptr_t
-GetNativeStackLimit(JSContext *cx)
+GetNativeStackLimit(JSContext *cx, StackKind kind, int extraAllowance = 0)
+{
+    PerThreadDataFriendFields *mainThread =
+      PerThreadDataFriendFields::getMainThread(GetRuntime(cx));
+    uintptr_t limit = mainThread->nativeStackLimit[kind];
+#if JS_STACK_GROWTH_DIRECTION > 0
+    limit += extraAllowance;
+#else
+    limit -= extraAllowance;
+#endif
+    return limit;
+}
+
+inline uintptr_t
+GetNativeStackLimit(JSContext *cx, int extraAllowance = 0)
 {
     StackKind kind = RunningWithTrustedPrincipals(cx) ? StackForTrustedScript
                                                       : StackForUntrustedScript;
-    PerThreadDataFriendFields *mainThread =
-      PerThreadDataFriendFields::getMainThread(GetRuntime(cx));
-    return mainThread->nativeStackLimit[kind];
+    return GetNativeStackLimit(cx, kind, extraAllowance);
 }
 
 /*
  * These macros report a stack overflow and run |onerror| if we are close to
- * using up the C stack. The JS_CHECK_CHROME_RECURSION variant gives us a little
- * extra space so that we can ensure that crucial code is able to run.
- * JS_CHECK_RECURSION_CONSERVATIVE gives us a little less space.
+ * using up the C stack. The JS_CHECK_CHROME_RECURSION variant gives us a
+ * little extra space so that we can ensure that crucial code is able to run.
+ * JS_CHECK_RECURSION_CONSERVATIVE allows less space than any other check,
+ * including a safety buffer (as in, it uses the untrusted limit and subtracts
+ * a little more from it).
  */
 
-#define JS_CHECK_RECURSION(cx, onerror)                                         \
+#define JS_CHECK_RECURSION_LIMIT(cx, limit, onerror)                            \
     JS_BEGIN_MACRO                                                              \
         int stackDummy_;                                                        \
-        if (!JS_CHECK_STACK_SIZE(js::GetNativeStackLimit(cx), &stackDummy_)) {  \
+        if (!JS_CHECK_STACK_SIZE(limit, &stackDummy_)) {                        \
             js_ReportOverRecursed(cx);                                          \
             onerror;                                                            \
         }                                                                       \
     JS_END_MACRO
+
+#define JS_CHECK_RECURSION(cx, onerror)                                         \
+    JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx), onerror)
 
 #define JS_CHECK_RECURSION_DONT_REPORT(cx, onerror)                             \
     JS_BEGIN_MACRO                                                              \
@@ -1053,29 +1055,11 @@ GetNativeStackLimit(JSContext *cx)
         }                                                                       \
     JS_END_MACRO
 
-#define JS_CHECK_CHROME_RECURSION(cx, onerror)                                  \
-    JS_BEGIN_MACRO                                                              \
-        int stackDummy_;                                                        \
-        if (!JS_CHECK_STACK_SIZE_WITH_TOLERANCE(js::GetNativeStackLimit(cx),    \
-                                                &stackDummy_,                   \
-                                                1024 * sizeof(size_t)))         \
-        {                                                                       \
-            js_ReportOverRecursed(cx);                                          \
-            onerror;                                                            \
-        }                                                                       \
-    JS_END_MACRO
+#define JS_CHECK_SYSTEM_RECURSION(cx, onerror)                                  \
+    JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx, js::StackForSystemCode), onerror)
 
 #define JS_CHECK_RECURSION_CONSERVATIVE(cx, onerror)                            \
-    JS_BEGIN_MACRO                                                              \
-        int stackDummy_;                                                        \
-        if (!JS_CHECK_STACK_SIZE_WITH_INTOLERANCE(js::GetNativeStackLimit(cx),  \
-                                                  &stackDummy_,                 \
-                                                  1024 * sizeof(size_t)))       \
-        {                                                                       \
-            js_ReportOverRecursed(cx);                                          \
-            onerror;                                                            \
-        }                                                                       \
-    JS_END_MACRO
+    JS_CHECK_RECURSION_LIMIT(cx, js::GetNativeStackLimit(cx, js::StackForUntrustedScript, -1024 * int(sizeof(size_t))), onerror)
 
 JS_FRIEND_API(void)
 StartPCCountProfiling(JSContext *cx);
