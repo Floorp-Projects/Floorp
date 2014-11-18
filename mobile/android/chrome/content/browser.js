@@ -2945,8 +2945,6 @@ var LightWeightThemeWebInstaller = {
 
 var DesktopUserAgent = {
   DESKTOP_UA: null,
-  TCO_DOMAIN: "t.co",
-  TCO_REPLACE: / Gecko.*/,
 
   init: function ua_init() {
     Services.obs.addObserver(this, "DesktopMode:Change", false);
@@ -2962,38 +2960,24 @@ var DesktopUserAgent = {
   onRequest: function(channel, defaultUA) {
     let channelWindow = this._getWindowForRequest(channel);
     let tab = BrowserApp.getTabForWindow(channelWindow);
-    if (tab) {
-      defaultUA = this.getUserAgentForTab(tab) || defaultUA;
-    }
+    if (tab == null)
+      return null;
 
-#ifdef NIGHTLY_BUILD
-    if (this.TCO_DOMAIN == channel.URI.host) {
-      // Force the referrer
-      channel.referrer = channel.URI;
-
-      // Send a bot-like UA to t.co to get a real redirect. We strip off the
-      // "Gecko/x.y Firefox/x.y" part
-      return defaultUA.replace(this.TCO_REPLACE, "");
-    }
-#endif
-
-    return defaultUA;
+    return this.getUserAgentForTab(tab);
   },
 
   getUserAgentForWindow: function ua_getUserAgentForWindow(aWindow) {
     let tab = BrowserApp.getTabForWindow(aWindow.top);
-    if (tab) {
+    if (tab)
       return this.getUserAgentForTab(tab);
-    }
 
     return null;
   },
 
   getUserAgentForTab: function ua_getUserAgentForTab(aTab) {
     // Send desktop UA if "Request Desktop Site" is enabled.
-    if (aTab.desktopMode) {
+    if (aTab.desktopMode)
       return this.DESKTOP_UA;
-    }
 
     return null;
   },
@@ -3030,9 +3014,8 @@ var DesktopUserAgent = {
     if (aTopic === "DesktopMode:Change") {
       let args = JSON.parse(aData);
       let tab = BrowserApp.getTabForId(args.tabId);
-      if (tab) {
+      if (tab != null)
         tab.reloadWithMode(args.desktopMode);
-      }
     }
   }
 };
