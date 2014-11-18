@@ -7161,6 +7161,7 @@ if test -n "$MOZ_REPLACE_MALLOC" -a -z "$MOZ_MEMORY"; then
     dnl deliberate choice not to enable it (bug 702250, for instance)
     AC_MSG_ERROR([--enable-replace-malloc requires --enable-jemalloc])
 elif test -n "$MOZ_REPLACE_MALLOC"; then
+    AC_DEFINE(MOZ_REPLACE_MALLOC)
     MOZ_NATIVE_JEMALLOC=
 
     dnl Replace-malloc Mac linkage quirks
