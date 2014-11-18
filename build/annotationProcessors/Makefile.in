@@ -9,4 +9,4 @@ JAVA_CLASSPATH := $(ANDROID_SDK)/android.jar
 # Include Android specific java flags, instead of what's in rules.mk.
 include $(topsrcdir)/config/android-common.mk
 
-libs:: annotationProcessors.jar
+export:: annotationProcessors.jar
