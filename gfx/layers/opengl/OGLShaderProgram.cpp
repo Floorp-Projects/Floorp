@@ -548,7 +548,7 @@ ShaderProgramOGL::GetProgram()
       NS_WARNING("Shader could not be initialised");
     }
   }
-  MOZ_ASSERT(HasInitialized(), "Attempting to activate a program that's not in use!");
+  MOZ_ASSERT(HasInitialized(), "Attempting to get a program that's not been initialized!");
   return mProgram;
 }
 
