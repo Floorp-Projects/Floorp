@@ -469,10 +469,12 @@ class CodeGenerator : public CodeGeneratorSpecific
     Label *getJumpLabelForBranch(MBasicBlock *block);
 
     void emitStoreElementTyped(const LAllocation *value, MIRType valueType, MIRType elementType,
-                               Register elements, const LAllocation *index);
+                               Register elements, const LAllocation *index,
+                               int32_t offsetAdjustment);
 
     // Bailout if an element about to be written to is a hole.
-    bool emitStoreHoleCheck(Register elements, const LAllocation *index, LSnapshot *snapshot);
+    bool emitStoreHoleCheck(Register elements, const LAllocation *index, int32_t offsetAdjustment,
+                            LSnapshot *snapshot);
 
     bool emitAssertRangeI(const Range *r, Register input);
     bool emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp);

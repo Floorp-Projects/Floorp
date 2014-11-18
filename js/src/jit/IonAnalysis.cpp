@@ -2508,6 +2508,25 @@ LinearSum::multiply(int32_t scale)
 }
 
 bool
+LinearSum::divide(int32_t scale)
+{
+    MOZ_ASSERT(scale > 0);
+
+    for (size_t i = 0; i < terms_.length(); i++) {
+        if (terms_[i].scale % scale != 0)
+            return false;
+    }
+    if (constant_ % scale != 0)
+        return false;
+
+    for (size_t i = 0; i < terms_.length(); i++)
+        terms_[i].scale /= scale;
+    constant_ /= scale;
+
+    return true;
+}
+
+bool
 LinearSum::add(const LinearSum &other, int32_t scale /* = 1 */)
 {
     for (size_t i = 0; i < other.terms_.length(); i++) {
@@ -2521,6 +2540,19 @@ LinearSum::add(const LinearSum &other, int32_t scale /* = 1 */)
     if (!SafeMul(scale, other.constant_, &newConstant))
         return false;
     return add(newConstant);
+}
+
+bool
+LinearSum::add(SimpleLinearSum other, int32_t scale)
+{
+    if (other.term && !add(other.term, scale))
+        return false;
+
+    int32_t constant;
+    if (!SafeMul(other.constant, scale, &constant))
+        return false;
+
+    return add(constant);
 }
 
 bool
@@ -2550,7 +2582,9 @@ LinearSum::add(MDefinition *term, int32_t scale)
         }
     }
 
-    terms_.append(LinearTerm(term, scale));
+    if (!terms_.append(LinearTerm(term, scale)))
+        CrashAtUnhandlableOOM("LinearSum::add");
+
     return true;
 }
 
@@ -2602,7 +2636,7 @@ LinearSum::dump() const
 }
 
 MDefinition *
-jit::ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum)
+jit::ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum, bool convertConstant)
 {
     MDefinition *def = nullptr;
 
@@ -2647,7 +2681,20 @@ jit::ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum 
         }
     }
 
-    // Note: The constant component of the term is not converted.
+    if (convertConstant && sum.constant()) {
+        MConstant *constant = MConstant::New(alloc, Int32Value(sum.constant()));
+        block->insertAtEnd(constant);
+        constant->computeRange(alloc);
+        if (def) {
+            def = MAdd::New(alloc, def, constant);
+            def->toAdd()->setInt32();
+            block->insertAtEnd(def->toInstruction());
+            def->computeRange(alloc);
+        } else {
+            def = constant;
+        }
+    }
+
     if (!def) {
         def = MConstant::New(alloc, Int32Value(0));
         block->insertAtEnd(def->toInstruction());

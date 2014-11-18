@@ -2676,7 +2676,7 @@ LIRGenerator::visitInArray(MInArray *ins)
 bool
 LIRGenerator::visitLoadElement(MLoadElement *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
 
     switch (ins->type()) {
@@ -2722,7 +2722,7 @@ LIRGenerator::visitLoadElementHole(MLoadElementHole *ins)
 bool
 LIRGenerator::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
     MOZ_ASSERT(ins->type() == MIRType_Value);
 
@@ -2734,7 +2734,7 @@ LIRGenerator::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *ins)
 bool
 LIRGenerator::visitLoadUnboxedString(MLoadUnboxedString *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
     MOZ_ASSERT(ins->type() == MIRType_String);
 
@@ -2746,7 +2746,7 @@ LIRGenerator::visitLoadUnboxedString(MLoadUnboxedString *ins)
 bool
 LIRGenerator::visitStoreElement(MStoreElement *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
 
     const LUse elements = useRegister(ins->elements());
@@ -2806,7 +2806,7 @@ LIRGenerator::visitStoreElementHole(MStoreElementHole *ins)
 bool
 LIRGenerator::visitStoreUnboxedObjectOrNull(MStoreUnboxedObjectOrNull *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
     MOZ_ASSERT(ins->value()->type() == MIRType_Object ||
                ins->value()->type() == MIRType_Null ||
@@ -2823,7 +2823,7 @@ LIRGenerator::visitStoreUnboxedObjectOrNull(MStoreUnboxedObjectOrNull *ins)
 bool
 LIRGenerator::visitStoreUnboxedString(MStoreUnboxedString *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
     MOZ_ASSERT(ins->value()->type() == MIRType_String);
 
@@ -2930,7 +2930,7 @@ LIRGenerator::visitStringSplit(MStringSplit *ins)
 bool
 LIRGenerator::visitLoadTypedArrayElement(MLoadTypedArrayElement *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
 
     const LUse elements = useRegister(ins->elements());
@@ -3023,7 +3023,7 @@ LIRGenerator::visitLoadTypedArrayElementStatic(MLoadTypedArrayElementStatic *ins
 bool
 LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
 {
-    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
 
     if (ins->isFloatArray()) {
