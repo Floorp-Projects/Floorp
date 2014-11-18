@@ -32,6 +32,7 @@ struct HttpChannelOpenArgs
   OptionalURIParams           original;
   OptionalURIParams           doc;
   OptionalURIParams           referrer;
+  uint32_t                    referrerPolicy;
   OptionalURIParams           apiRedirectTo;
   OptionalURIParams           topWindowURI;
   uint32_t                    loadFlags;
