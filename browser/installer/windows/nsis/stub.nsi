@@ -256,7 +256,7 @@ Var ControlRightPX
 !insertmacro GetSingleInstallPath
 !insertmacro GetTextWidthHeight
 !insertmacro IsUserAdmin
-!insertmacro OnStubInstallUninstall
+!insertmacro RemovePrecompleteEntries
 !insertmacro SetBrandNameVars
 !insertmacro UnloadUAC
 
@@ -1540,15 +1540,17 @@ Function OnDownload
         WriteIniStr "$0" "TASKBAR" "Migrated" "true"
       ${EndIf}
 
-      ${OnStubInstallUninstall} $Progressbar $InstallCounterStep
+      ${RemovePrecompleteEntries} $Progressbar $InstallCounterStep
 
       ; Delete the install.log and let the full installer create it. When the
       ; installer closes it we can detect that it has completed.
       Delete "$INSTDIR\install.log"
 
-      ; Delete firefox.exe.moz-upgrade if it exists since it being present will
-      ; require an OS restart for the full installer.
+      ; Delete firefox.exe.moz-upgrade and firefox.exe.moz-delete if it exists
+      ; since it being present will require an OS restart for the full
+      ; installer.
       Delete "$INSTDIR\${FileMainEXE}.moz-upgrade"
+      Delete "$INSTDIR\${FileMainEXE}.moz-delete"
 
       System::Call "kernel32::GetTickCount()l .s"
       Pop $EndPreInstallPhaseTickCount
