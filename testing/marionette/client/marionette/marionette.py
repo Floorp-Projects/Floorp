@@ -4,12 +4,10 @@
 
 import base64
 import ConfigParser
-import datetime
 import json
 import os
 import socket
 import StringIO
-import time
 import traceback
 import warnings
 
@@ -587,24 +585,9 @@ class Marionette(object):
             s.close()
 
     def wait_for_port(self, timeout=60):
-        starttime = datetime.datetime.now()
-        poll_interval = 0.1
-        while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
-            sock = None
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.connect((self.host, self.port))
-                data = sock.recv(16)
-                sock.close()
-                if ':' in data:
-                    return True
-            except socket.error:
-                pass
-            finally:
-                if sock:
-                    sock.close()
-            time.sleep(poll_interval)
-        return False
+        return MarionetteTransport.wait_for_port(self.host,
+                                                 self.port,
+                                                 timeout=timeout)
 
     @do_crash_check
     def _send_message(self, command, response_key="ok", **kwargs):
@@ -814,15 +797,17 @@ class Marionette(object):
         '''
         return "%s%s" % (self.baseurl, relative_url)
 
-    def start_session(self, desired_capabilities=None, session_id=None):
+    def start_session(self, desired_capabilities=None, session_id=None, timeout=60):
         """Create a new Marionette session.
 
         This method must be called before performing any other action.
 
-        :params desired_capabilities: An optional dict of desired
+        :param desired_capabilities: An optional dict of desired
             capabilities.  This is currently ignored.
+        :param timeout: Timeout in seconds for the server to be ready.
 
         :returns: A dict of the capabilities offered."""
+        self.wait_for_port(timeout=timeout)
         self.session = self._send_message('newSession', 'value', capabilities=desired_capabilities, session_id=session_id)
         self.b2g = 'b2g' in self.session
         return self.session
