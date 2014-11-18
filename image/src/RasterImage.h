@@ -319,7 +319,6 @@ private:
   {
     explicit DecodeRequest(RasterImage* aImage)
       : mImage(aImage)
-      , mBytesToDecode(0)
       , mRequestStatus(REQUEST_INACTIVE)
       , mAllocatedNewFrame(false)
     { }
@@ -327,8 +326,6 @@ private:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodeRequest)
 
     RasterImage* mImage;
-
-    size_t mBytesToDecode;
 
     enum DecodeRequestStatus
     {
