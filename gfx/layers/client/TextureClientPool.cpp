@@ -32,6 +32,9 @@ TextureClientPool::TextureClientPool(gfx::SurfaceFormat aFormat, gfx::IntSize aS
   , mSurfaceAllocator(aAllocator)
 {
   mTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (aFormat == gfx::SurfaceFormat::UNKNOWN) {
+    gfxWarning() << "Creating texture pool for SurfaceFormat::UNKNOWN format";
+  }
 }
 
 TextureClientPool::~TextureClientPool()
