@@ -21,15 +21,10 @@ var gSetDefault;
 var gResetToAutomatic;
 var gResetToManual;
 
-// Remember and restore preferences for this test, and make sure
-// we don't accidentally start a background update while the prefs
+// Make sure we don't accidentally start a background update while the prefs
 // are enabled.
 disableBackgroundUpdateTimer();
-var updatesEnabled = Services.prefs.getBoolPref(PREF_UPDATE_ENABLED);
-var autoDefault = Services.prefs.getBoolPref(PREF_AUTOUPDATE_DEFAULT);
 registerCleanupFunction(() => {
-  Services.prefs.setBoolPref(PREF_UPDATE_ENABLED, updatesEnabled);
-  Services.prefs.setBoolPref(PREF_AUTOUPDATE_DEFAULT, autoDefault);
   enableBackgroundUpdateTimer();
 });
 
