@@ -186,6 +186,9 @@
 #define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
 
+#include "mozilla/layers/CompositorParent.h"
+#include "InputData.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
@@ -3736,10 +3739,50 @@ bool nsWindow::DispatchKeyboardEvent(WidgetGUIEvent* event)
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchScrollEvent(WidgetGUIEvent* event)
+nsEventStatus nsWindow::MaybeDispatchAsyncWheelEvent(WidgetGUIEvent* aEvent)
 {
+  if (aEvent->mClass != eWheelEventClass) {
+    return nsEventStatus_eIgnore;
+  }
+
+  WidgetWheelEvent* event = aEvent->AsWheelEvent();
+
+  // Otherwise, scroll-zoom won't work.
+  if (event->IsControl()) {
+    return nsEventStatus_eIgnore;
+  }
+
+
+  // Other scrolling modes aren't supported yet.
+  if (event->deltaMode != nsIDOMWheelEvent::DOM_DELTA_LINE) {
+    return nsEventStatus_eIgnore;
+  }
+
+  ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
+  if (Preferences::GetBool("general.smoothScroll"))
+    scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
+
+  ScreenPoint origin(event->refPoint.x, event->refPoint.y);
+  ScrollWheelInput input(event->time, event->timeStamp, 0,
+                         scrollMode,
+                         ScrollWheelInput::SCROLLDELTA_LINE,
+                         origin,
+                         event->lineOrPageDeltaX,
+                         event->lineOrPageDeltaY);
+
+  ScrollableLayerGuid ignoreGuid;
+  return mAPZC->ReceiveInputEvent(input, &ignoreGuid, nullptr);
+}
+
+bool nsWindow::DispatchScrollEvent(WidgetGUIEvent* aEvent)
+{
+  if (mAPZC) {
+    if (MaybeDispatchAsyncWheelEvent(aEvent) == nsEventStatus_eConsumeNoDefault)
+      return true;
+  }
+
   nsEventStatus status;
-  DispatchEvent(event, status);
+  DispatchEvent(aEvent, status);
   return ConvertStatus(status);
 }
 
@@ -7670,6 +7713,19 @@ void nsWindow::PickerClosed()
   if (!mPickerDisplayCount && mDestroyCalled) {
     Destroy();
   }
+}
+
+CompositorParent* nsWindow::NewCompositorParent(int aSurfaceWidth,
+                                                int aSurfaceHeight)
+{
+  CompositorParent *compositor = new CompositorParent(this, false, aSurfaceWidth, aSurfaceHeight);
+
+  if (gfxPrefs::AsyncPanZoomEnabled()) {
+    mAPZC = CompositorParent::GetAPZCTreeManager(compositor->RootLayerTreeId());
+    APZCTreeManager::SetDPI(GetDPI());
+  }
+
+  return compositor;
 }
 
 /**************************************************************
