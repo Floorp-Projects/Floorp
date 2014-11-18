@@ -29,12 +29,6 @@
 #include "mozilla/StaticPtr.h"
 #include "cutils/properties.h"
 #include "gfx2DGlue.h"
-#include "GeckoTouchDispatcher.h"
-
-#ifdef MOZ_ENABLE_PROFILER_SPS
-#include "GeckoProfiler.h"
-#include "ProfilerMarkers.h"
-#endif
 
 #if ANDROID_VERSION >= 17
 #include "libdisplay/FramebufferSurface.h"
@@ -243,13 +237,6 @@ HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
       LOGE("Non-uniform vsync interval: %lld\n", vsyncInterval);
     }
     mLastVsyncTime = aVsyncTimestamp;
-
-#ifdef MOZ_ENABLE_PROFILER_SPS
-    if (profiler_is_active()) {
-        CompositorParent::PostInsertVsyncProfilerMarker(vsyncTime);
-    }
-#endif
-
     VsyncDispatcher::GetInstance()->NotifyVsync(vsyncTime);
 }
 

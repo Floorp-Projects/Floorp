@@ -8,6 +8,11 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "gfxPrefs.h"
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
+#include "GeckoProfiler.h"
+#include "ProfilerMarkers.h"
+#endif
+
 #ifdef MOZ_WIDGET_GONK
 #include "GeckoTouchDispatcher.h"
 #endif
@@ -63,6 +68,12 @@ void
 VsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
   bool notifiedCompositors = false;
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    if (profiler_is_active()) {
+        CompositorParent::PostInsertVsyncProfilerMarker(aVsyncTimestamp);
+    }
+#endif
+
   if (gfxPrefs::VsyncAlignedCompositor()) {
     MutexAutoLock lock(mCompositorObserverLock);
     notifiedCompositors = NotifyVsyncObservers(aVsyncTimestamp, mCompositorObservers);
