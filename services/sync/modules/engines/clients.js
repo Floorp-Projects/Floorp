@@ -29,7 +29,11 @@ ClientsRec.prototype = {
   ttl: CLIENTS_TTL
 };
 
-Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands", "version", "protocols"]);
+Utils.deferGetSet(ClientsRec,
+                  "cleartext",
+                  ["name", "type", "commands",
+                   "version", "protocols",
+                   "formfactor", "os", "appPackage", "application", "device"]);
 
 
 this.ClientEngine = function ClientEngine(service) {
@@ -100,6 +104,11 @@ ClientEngine.prototype = {
   },
   set localID(value) Svc.Prefs.set("client.GUID", value),
 
+  get brandName() {
+    let brand = new StringBundle("chrome://branding/locale/brand.properties");
+    return brand.get("brandShortName");
+  },
+
   get localName() {
     let localName = Svc.Prefs.get("client.name", "");
     if (localName != "")
@@ -111,9 +120,8 @@ ClientEngine.prototype = {
     let user = env.get("USER") || env.get("USERNAME") ||
                Svc.Prefs.get("account") || Svc.Prefs.get("username");
 
+    let brandName = this.brandName;
     let appName;
-    let brand = new StringBundle("chrome://branding/locale/brand.properties");
-    let brandName = brand.get("brandShortName");
     try {
       let syncStrings = new StringBundle("chrome://browser/locale/sync.properties");
       appName = syncStrings.getFormattedString("sync.defaultAccountApplication", [brandName]);
@@ -412,9 +420,18 @@ ClientStore.prototype = {
       record.commands = this.engine.localCommands;
       record.version = Services.appinfo.version;
       record.protocols = SUPPORTED_PROTOCOL_VERSIONS;
-    }
-    else
+
+      // Optional fields.
+      record.os = Services.appinfo.OS;             // "Darwin"
+      record.appPackage = Services.appinfo.ID;
+      record.application = this.engine.brandName   // "Nightly"
+
+      // We can't compute these yet.
+      // record.device = "";            // Bug 1100723
+      // record.formfactor = "";        // Bug 1100722
+    } else {
       record.cleartext = this._remoteClients[id];
+    }
 
     return record;
   },
