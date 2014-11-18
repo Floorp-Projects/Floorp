@@ -140,13 +140,13 @@ function makeDeclaration(aTest)
     str += "text-decoration: " + aTest.decoration + "; ";
   }
   if (aTest.color) {
-    str += "-moz-text-decoration-color: " + aTest.color + "; ";
+    str += "text-decoration-color: " + aTest.color + "; ";
   }
   if (aTest.line) {
-    str += "-moz-text-decoration-line: " + aTest.line + "; ";
+    str += "text-decoration-line: " + aTest.line + "; ";
   }
   if (aTest.style) {
-    str += "-moz-text-decoration-style: " + aTest.style + "; ";
+    str += "text-decoration-style: " + aTest.style + "; ";
   }
   return str;
 }
@@ -162,13 +162,13 @@ for (var i = 0; i < tests.length; ++i) {
     $('t').style.textDecoration = test.decoration;
   }
   if (test.color) {
-    $('t').style.MozTextDecorationColor = test.color;
+    $('t').style.textDecorationColor = test.color;
   }
   if (test.line) {
-    $('t').style.MozTextDecorationLine = test.line;
+    $('t').style.textDecorationLine = test.line;
   }
   if (test.style) {
-    $('t').style.MozTextDecorationStyle = test.style;
+    $('t').style.textDecorationStyle = test.style;
   }
 
   var dec = makeDeclaration(test);
