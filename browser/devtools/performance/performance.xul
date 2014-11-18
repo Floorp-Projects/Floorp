@@ -16,6 +16,7 @@
   <script src="chrome://browser/content/devtools/theme-switching.js"/>
   <script type="application/javascript" src="performance/controller.js"/>
   <script type="application/javascript" src="performance/views/main.js"/>
+  <script type="application/javascript" src="performance/views/overview.js"/>
 
   <vbox class="theme-body" flex="1">
     <toolbar id="performance-toolbar" class="devtools-toolbar">
@@ -38,6 +39,7 @@
     <box id="overview-pane"
          class="devtools-responsive-container"
          flex="1">
+      <vbox id="time-framerate" flex="1"/>
     </box>
     <splitter class="devtools-horizontal-splitter" />
     <box id="details-pane"
