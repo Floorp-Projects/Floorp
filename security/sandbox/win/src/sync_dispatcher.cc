@@ -1,9 +1,10 @@
-// Copyright (c) 2006-2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "sandbox/win/src/sync_dispatcher.h"
 
+#include "base/win/windows_version.h"
 #include "sandbox/win/src/crosscall_client.h"
 #include "sandbox/win/src/interception.h"
 #include "sandbox/win/src/interceptors.h"
@@ -24,7 +25,7 @@ SyncDispatcher::SyncDispatcher(PolicyBase* policy_base)
   };
 
   static const IPCCall open_params = {
-    {IPC_OPENEVENT_TAG, WCHAR_TYPE, ULONG_TYPE, ULONG_TYPE},
+    {IPC_OPENEVENT_TAG, WCHAR_TYPE, ULONG_TYPE},
     reinterpret_cast<CallbackGeneric>(&SyncDispatcher::OpenEvent)
   };
 
@@ -34,19 +35,15 @@ SyncDispatcher::SyncDispatcher(PolicyBase* policy_base)
 
 bool SyncDispatcher::SetupService(InterceptionManager* manager,
                                   int service) {
-  if (IPC_CREATEEVENT_TAG == service)
-      return INTERCEPT_EAT(manager, L"kernel32.dll", CreateEventW,
-                           CREATE_EVENT_ID, 20);
-
-  if (IPC_OPENEVENT_TAG == service)
-    return INTERCEPT_EAT(manager, L"kernel32.dll", OpenEventW,
-                         OPEN_EVENT_ID, 16);
-
-  return false;
+  if (service == IPC_CREATEEVENT_TAG) {
+    return INTERCEPT_NT(manager, NtCreateEvent, CREATE_EVENT_ID, 24);
+  }
+  return (service == IPC_OPENEVENT_TAG) &&
+      INTERCEPT_NT(manager, NtOpenEvent, OPEN_EVENT_ID, 16);
 }
 
-bool SyncDispatcher::CreateEvent(IPCInfo* ipc, std::wstring* name,
-                                 DWORD manual_reset, DWORD initial_state) {
+bool SyncDispatcher::CreateEvent(IPCInfo* ipc, base::string16* name,
+                                 DWORD event_type, DWORD initial_state) {
   const wchar_t* event_name = name->c_str();
   CountedParameterSet<NameBased> params;
   params[NameBased::NAME] = ParamPickerMake(event_name);
@@ -54,17 +51,15 @@ bool SyncDispatcher::CreateEvent(IPCInfo* ipc, std::wstring* name,
   EvalResult result = policy_base_->EvalPolicy(IPC_CREATEEVENT_TAG,
                                                params.GetBase());
   HANDLE handle = NULL;
-  DWORD ret = SyncPolicy::CreateEventAction(result, *ipc->client_info, *name,
-                                            manual_reset, initial_state,
-                                            &handle);
   // Return operation status on the IPC.
-  ipc->return_info.win32_result = ret;
+  ipc->return_info.nt_status = SyncPolicy::CreateEventAction(
+      result, *ipc->client_info, *name, event_type, initial_state, &handle);
   ipc->return_info.handle = handle;
   return true;
 }
 
-bool SyncDispatcher::OpenEvent(IPCInfo* ipc, std::wstring* name,
-                               DWORD desired_access, DWORD inherit_handle) {
+bool SyncDispatcher::OpenEvent(IPCInfo* ipc, base::string16* name,
+                               DWORD desired_access) {
   const wchar_t* event_name = name->c_str();
 
   CountedParameterSet<OpenEventParams> params;
@@ -74,11 +69,9 @@ bool SyncDispatcher::OpenEvent(IPCInfo* ipc, std::wstring* name,
   EvalResult result = policy_base_->EvalPolicy(IPC_OPENEVENT_TAG,
                                                params.GetBase());
   HANDLE handle = NULL;
-  DWORD ret = SyncPolicy::OpenEventAction(result, *ipc->client_info, *name,
-                                          desired_access, inherit_handle,
-                                          &handle);
   // Return operation status on the IPC.
-  ipc->return_info.win32_result = ret;
+  ipc->return_info.nt_status = SyncPolicy::OpenEventAction(
+      result, *ipc->client_info, *name, desired_access, &handle);
   ipc->return_info.handle = handle;
   return true;
 }

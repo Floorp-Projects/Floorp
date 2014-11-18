@@ -4,34 +4,34 @@
 
 #include "base/strings/string_util.h"
 
+namespace base {
+
 #define WHITESPACE_UNICODE \
-  0x0009, /* <control-0009> to <control-000D> */ \
-  0x000A,                                        \
-  0x000B,                                        \
-  0x000C,                                        \
-  0x000D,                                        \
-  0x0020, /* Space */                            \
-  0x0085, /* <control-0085> */                   \
-  0x00A0, /* No-Break Space */                   \
-  0x1680, /* Ogham Space Mark */                 \
-  0x180E, /* Mongolian Vowel Separator */        \
-  0x2000, /* En Quad to Hair Space */            \
-  0x2001,                                        \
-  0x2002,                                        \
-  0x2003,                                        \
-  0x2004,                                        \
-  0x2005,                                        \
-  0x2006,                                        \
-  0x2007,                                        \
-  0x2008,                                        \
-  0x2009,                                        \
-  0x200A,                                        \
-  0x200C, /* Zero Width Non-Joiner */            \
-  0x2028, /* Line Separator */                   \
-  0x2029, /* Paragraph Separator */              \
-  0x202F, /* Narrow No-Break Space */            \
-  0x205F, /* Medium Mathematical Space */        \
-  0x3000, /* Ideographic Space */                \
+  0x0009, /* CHARACTER TABULATION */      \
+  0x000A, /* LINE FEED (LF) */            \
+  0x000B, /* LINE TABULATION */           \
+  0x000C, /* FORM FEED (FF) */            \
+  0x000D, /* CARRIAGE RETURN (CR) */      \
+  0x0020, /* SPACE */                     \
+  0x0085, /* NEXT LINE (NEL) */           \
+  0x00A0, /* NO-BREAK SPACE */            \
+  0x1680, /* OGHAM SPACE MARK */          \
+  0x2000, /* EN QUAD */                   \
+  0x2001, /* EM QUAD */                   \
+  0x2002, /* EN SPACE */                  \
+  0x2003, /* EM SPACE */                  \
+  0x2004, /* THREE-PER-EM SPACE */        \
+  0x2005, /* FOUR-PER-EM SPACE */         \
+  0x2006, /* SIX-PER-EM SPACE */          \
+  0x2007, /* FIGURE SPACE */              \
+  0x2008, /* PUNCTUATION SPACE */         \
+  0x2009, /* THIN SPACE */                \
+  0x200A, /* HAIR SPACE */                \
+  0x2028, /* LINE SEPARATOR */            \
+  0x2029, /* PARAGRAPH SEPARATOR */       \
+  0x202F, /* NARROW NO-BREAK SPACE */     \
+  0x205F, /* MEDIUM MATHEMATICAL SPACE */ \
+  0x3000, /* IDEOGRAPHIC SPACE */         \
   0
 
 const wchar_t kWhitespaceWide[] = {
@@ -43,13 +43,15 @@ const char16 kWhitespaceUTF16[] = {
 };
 
 const char kWhitespaceASCII[] = {
-  0x09,    // <control-0009> to <control-000D>
-  0x0A,
-  0x0B,
-  0x0C,
-  0x0D,
-  0x20,    // Space
+  0x09,    // CHARACTER TABULATION
+  0x0A,    // LINE FEED (LF)
+  0x0B,    // LINE TABULATION
+  0x0C,    // FORM FEED (FF)
+  0x0D,    // CARRIAGE RETURN (CR)
+  0x20,    // SPACE
   0
 };
 
 const char kUtf8ByteOrderMark[] = "\xEF\xBB\xBF";
+
+}  // namespace base

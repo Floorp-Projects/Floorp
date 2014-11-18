@@ -7,7 +7,9 @@
 
 #include <windows.h>
 #include <string>
+
 #include "base/basictypes.h"
+#include "base/strings/string16.h"
 
 namespace sandbox {
 
@@ -65,35 +67,37 @@ class SingletonBase {
 // Convert a short path (C:\path~1 or \\??\\c:\path~1) to the long version of
 // the path. If the path is not a valid filesystem path, the function returns
 // false and the output parameter is not modified.
-bool ConvertToLongPath(const std::wstring& short_path, std::wstring* long_path);
+bool ConvertToLongPath(const base::string16& short_path,
+                       base::string16* long_path);
 
 // Sets result to true if the path contains a reparse point. The return value
 // is ERROR_SUCCESS when the function succeeds or the appropriate error code
 // when the function fails.
 // This function is not smart. It looks for each element in the path and
 // returns true if any of them is a reparse point.
-DWORD IsReparsePoint(const std::wstring& full_path, bool* result);
+DWORD IsReparsePoint(const base::string16& full_path, bool* result);
 
 // Returns true if the handle corresponds to the object pointed by this path.
 bool SameObject(HANDLE handle, const wchar_t* full_path);
 
 // Resolves a handle to an nt path. Returns true if the handle can be resolved.
-bool GetPathFromHandle(HANDLE handle, std::wstring* path);
+bool GetPathFromHandle(HANDLE handle, base::string16* path);
 
 // Resolves a win32 path to an nt path using GetPathFromHandle. The path must
 // exist. Returs true if the translation was succesful.
-bool GetNtPathFromWin32Path(const std::wstring& path, std::wstring* nt_path);
+bool GetNtPathFromWin32Path(const base::string16& path,
+                            base::string16* nt_path);
 
 // Translates a reserved key name to its handle.
 // For example "HKEY_LOCAL_MACHINE" returns HKEY_LOCAL_MACHINE.
 // Returns NULL if the name does not represent any reserved key name.
-HKEY GetReservedKeyFromName(const std::wstring& name);
+HKEY GetReservedKeyFromName(const base::string16& name);
 
 // Resolves a user-readable registry path to a system-readable registry path.
 // For example, HKEY_LOCAL_MACHINE\\Software\\microsoft is translated to
 // \\registry\\machine\\software\\microsoft. Returns false if the path
 // cannot be resolved.
-bool ResolveRegistryName(std::wstring name, std::wstring* resolved_name);
+bool ResolveRegistryName(base::string16 name, base::string16* resolved_name);
 
 // Writes |length| bytes from the provided |buffer| into the address space of
 // |child_process|, at the specified |address|, preserving the original write

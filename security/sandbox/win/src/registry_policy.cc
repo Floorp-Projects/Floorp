@@ -117,7 +117,7 @@ namespace sandbox {
 bool RegistryPolicy::GenerateRules(const wchar_t* name,
                                    TargetPolicy::Semantics semantics,
                                    LowLevelPolicy* policy) {
-  std::wstring resovled_name(name);
+  base::string16 resovled_name(name);
   if (resovled_name.empty()) {
     return false;
   }
@@ -166,7 +166,7 @@ bool RegistryPolicy::GenerateRules(const wchar_t* name,
 
 bool RegistryPolicy::CreateKeyAction(EvalResult eval_result,
                                      const ClientInfo& client_info,
-                                     const std::wstring &key,
+                                     const base::string16 &key,
                                      uint32 attributes,
                                      HANDLE root_directory,
                                      uint32 desired_access,
@@ -200,7 +200,7 @@ bool RegistryPolicy::CreateKeyAction(EvalResult eval_result,
 
 bool RegistryPolicy::OpenKeyAction(EvalResult eval_result,
                                    const ClientInfo& client_info,
-                                   const std::wstring &key,
+                                   const base::string16 &key,
                                    uint32 attributes,
                                    HANDLE root_directory,
                                    uint32 desired_access,

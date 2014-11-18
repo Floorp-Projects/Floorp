@@ -83,7 +83,7 @@ bool FilesystemDispatcher::SetupService(InterceptionManager* manager,
 }
 
 bool FilesystemDispatcher::NtCreateFile(
-    IPCInfo* ipc, std::wstring* name, DWORD attributes, DWORD desired_access,
+    IPCInfo* ipc, base::string16* name, DWORD attributes, DWORD desired_access,
     DWORD file_attributes, DWORD share_access, DWORD create_disposition,
     DWORD create_options) {
   if (!PreProcessName(*name, name)) {
@@ -126,7 +126,7 @@ bool FilesystemDispatcher::NtCreateFile(
 }
 
 bool FilesystemDispatcher::NtOpenFile(
-    IPCInfo* ipc, std::wstring* name, DWORD attributes, DWORD desired_access,
+    IPCInfo* ipc, base::string16* name, DWORD attributes, DWORD desired_access,
     DWORD share_access, DWORD open_options) {
   if (!PreProcessName(*name, name)) {
     // The path requested might contain a reparse point.
@@ -166,7 +166,7 @@ bool FilesystemDispatcher::NtOpenFile(
 }
 
 bool FilesystemDispatcher::NtQueryAttributesFile(
-    IPCInfo* ipc, std::wstring* name, DWORD attributes, CountedBuffer* info) {
+    IPCInfo* ipc, base::string16* name, DWORD attributes, CountedBuffer* info) {
   if (sizeof(FILE_BASIC_INFORMATION) != info->Size())
     return false;
 
@@ -204,7 +204,7 @@ bool FilesystemDispatcher::NtQueryAttributesFile(
 }
 
 bool FilesystemDispatcher::NtQueryFullAttributesFile(
-    IPCInfo* ipc, std::wstring* name, DWORD attributes, CountedBuffer* info) {
+    IPCInfo* ipc, base::string16* name, DWORD attributes, CountedBuffer* info) {
   if (sizeof(FILE_NETWORK_OPEN_INFORMATION) != info->Size())
     return false;
 
@@ -257,7 +257,7 @@ bool FilesystemDispatcher::NtSetInformationFile(
   if (!IsSupportedRenameCall(rename_info, length, info_class))
     return false;
 
-  std::wstring name;
+  base::string16 name;
   name.assign(rename_info->FileName, rename_info->FileNameLength /
                                      sizeof(rename_info->FileName[0]));
   if (!PreProcessName(name, &name)) {

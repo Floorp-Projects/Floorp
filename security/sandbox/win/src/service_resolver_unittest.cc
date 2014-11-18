@@ -44,7 +44,7 @@ class ResolverThunkTest : public T {
     EXPECT_EQ(STATUS_SUCCESS, ret);
 
     target_ = fake_target_;
-    ntdll_base_ = ::GetModuleHandle(L"ntdll.dll");
+
     return ret;
   };
 
@@ -58,7 +58,6 @@ class ResolverThunkTest : public T {
 typedef ResolverThunkTest<sandbox::ServiceResolverThunk> WinXpResolverTest;
 
 #if !defined(_WIN64)
-typedef ResolverThunkTest<sandbox::Win2kResolverThunk> Win2kResolverTest;
 typedef ResolverThunkTest<sandbox::Win8ResolverThunk> Win8ResolverTest;
 typedef ResolverThunkTest<sandbox::Wow64ResolverThunk> Wow64ResolverTest;
 typedef ResolverThunkTest<sandbox::Wow64W8ResolverThunk> Wow64W8ResolverTest;
@@ -108,6 +107,8 @@ NTSTATUS PatchNtdllWithResolver(const char* function, bool relaxed,
   scoped_ptr<char[]> thunk(new char[thunk_size]);
   size_t used;
 
+  resolver->AllowLocalPatches();
+
   NTSTATUS ret = resolver->Setup(ntdll_base, NULL, function, NULL,
                                  function_entry, thunk.get(), thunk_size,
                                  &used);
@@ -138,9 +139,6 @@ sandbox::ServiceResolverThunk* GetTestResolver(bool relaxed) {
       return new Wow64W8ResolverTest(relaxed);
     return new Wow64ResolverTest(relaxed);
   }
-
-  if (!sandbox::IsXPSP2OrLater())
-    return new Win2kResolverTest(relaxed);
 
   if (os_info->version() >= base::win::VERSION_WIN8)
     return new Win8ResolverTest(relaxed);
@@ -222,6 +220,43 @@ TEST(ServiceResolverTest, MultiplePatchedServices) {
     ::GetLastError();
   delete resolver;
 #endif
+}
+
+TEST(ServiceResolverTest, LocalPatchesAllowed) {
+  sandbox::ServiceResolverThunk* resolver = GetTestResolver(true);
+
+  HMODULE ntdll_base = ::GetModuleHandle(L"ntdll.dll");
+  ASSERT_TRUE(NULL != ntdll_base);
+
+  const char kFunctionName[] = "NtClose";
+
+  void* target = ::GetProcAddress(ntdll_base, kFunctionName);
+  ASSERT_TRUE(NULL != target);
+
+  BYTE service[50];
+  memcpy(service, target, sizeof(service));
+  static_cast<WinXpResolverTest*>(resolver)->set_target(service);
+
+  // Any pointer will do as an interception_entry_point
+  void* function_entry = resolver;
+  size_t thunk_size = resolver->GetThunkSize();
+  scoped_ptr<char[]> thunk(new char[thunk_size]);
+  size_t used;
+
+  NTSTATUS ret = STATUS_UNSUCCESSFUL;
+
+  // First try patching without having allowed local patches.
+  ret = resolver->Setup(ntdll_base, NULL, kFunctionName, NULL,
+                        function_entry, thunk.get(), thunk_size,
+                        &used);
+  EXPECT_FALSE(NT_SUCCESS(ret));
+
+  // Now allow local patches and check that things work.
+  resolver->AllowLocalPatches();
+  ret = resolver->Setup(ntdll_base, NULL, kFunctionName, NULL,
+                        function_entry, thunk.get(), thunk_size,
+                        &used);
+  EXPECT_EQ(STATUS_SUCCESS, ret);
 }
 
 }  // namespace

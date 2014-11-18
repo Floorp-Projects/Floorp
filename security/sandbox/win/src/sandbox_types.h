@@ -58,6 +58,7 @@ enum TerminationCodes {
   SBOX_FATAL_CACHEDISABLE = 7009,    // Failed to forbid HCKU caching.
   SBOX_FATAL_CLOSEHANDLES = 7010,    // Failed to close pending handles.
   SBOX_FATAL_MITIGATION = 7011,      // Could not set the mitigation policy.
+  SBOX_FATAL_MEMORY_EXCEEDED = 7012, // Exceeded the job memory limit.
   SBOX_FATAL_LAST
 };
 

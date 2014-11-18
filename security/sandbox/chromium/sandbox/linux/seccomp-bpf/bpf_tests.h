@@ -5,110 +5,118 @@
 #ifndef SANDBOX_LINUX_SECCOMP_BPF_BPF_TESTS_H__
 #define SANDBOX_LINUX_SECCOMP_BPF_BPF_TESTS_H__
 
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
+#include "base/basictypes.h"
 #include "build/build_config.h"
+#include "sandbox/linux/seccomp-bpf/bpf_tester_compatibility_delegate.h"
 #include "sandbox/linux/tests/unit_tests.h"
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
 
 namespace sandbox {
 
-// A BPF_DEATH_TEST is just the same as a BPF_TEST, but it assumes that the
-// test will fail with a particular known error condition. Use the DEATH_XXX()
-// macros from unit_tests.h to specify the expected error condition.
-// A BPF_DEATH_TEST is always disabled under ThreadSanitizer, see
-// crbug.com/243968.
-#define BPF_DEATH_TEST(test_case_name, test_name, death, policy, aux...) \
-  void BPF_TEST_##test_name(sandbox::BPFTests<aux>::AuxType& BPF_AUX);   \
-  TEST(test_case_name, DISABLE_ON_TSAN(test_name)) {                     \
-    sandbox::BPFTests<aux>::TestArgs arg(BPF_TEST_##test_name, policy);  \
-    sandbox::BPFTests<aux>::RunTestInProcess(                            \
-        sandbox::BPFTests<aux>::TestWrapper, &arg, death);               \
-  }                                                                      \
-  void BPF_TEST_##test_name(sandbox::BPFTests<aux>::AuxType& BPF_AUX)
+// BPF_TEST_C() is a special version of SANDBOX_TEST(). It runs a test function
+// in a sub-process, under a seccomp-bpf policy specified in
+// |bpf_policy_class_name| without failing on configurations that are allowed
+// to not support seccomp-bpf in their kernels.
+// This is the preferred format for new BPF tests. |bpf_policy_class_name| is a
+// class name  (which will be default-constructed) that implements the
+// SandboxBPFPolicy interface.
+// The test function's body can simply follow. Test functions should use
+// the BPF_ASSERT macros defined below, not GTEST's macros. The use of
+// CHECK* macros is supported but less robust.
+#define BPF_TEST_C(test_case_name, test_name, bpf_policy_class_name)     \
+  BPF_DEATH_TEST_C(                                                      \
+      test_case_name, test_name, DEATH_SUCCESS(), bpf_policy_class_name)
 
-// BPF_TEST() is a special version of SANDBOX_TEST(). It turns into a no-op,
-// if the host does not have kernel support for running BPF filters.
-// Also, it takes advantage of the Die class to avoid calling LOG(FATAL), from
-// inside our tests, as we don't need or even want all the error handling that
-// LOG(FATAL) would do.
+// Identical to BPF_TEST_C but allows to specify the nature of death.
+#define BPF_DEATH_TEST_C(                                            \
+    test_case_name, test_name, death, bpf_policy_class_name)         \
+  void BPF_TEST_C_##test_name();                                     \
+  TEST(test_case_name, DISABLE_ON_TSAN(test_name)) {                 \
+    sandbox::SandboxBPFTestRunner bpf_test_runner(                   \
+        new sandbox::BPFTesterSimpleDelegate<bpf_policy_class_name>( \
+            BPF_TEST_C_##test_name));                                \
+    sandbox::UnitTests::RunTestInProcess(&bpf_test_runner, death);   \
+  }                                                                  \
+  void BPF_TEST_C_##test_name()
+
+// This form of BPF_TEST is a little verbose and should be reserved for complex
+// tests where a lot of control is required.
+// |bpf_tester_delegate_class| must be a classname implementing the
+// BPFTesterDelegate interface.
+#define BPF_TEST_D(test_case_name, test_name, bpf_tester_delegate_class)     \
+  BPF_DEATH_TEST_D(                                                          \
+      test_case_name, test_name, DEATH_SUCCESS(), bpf_tester_delegate_class)
+
+// Identical to BPF_TEST_D but allows to specify the nature of death.
+#define BPF_DEATH_TEST_D(                                          \
+    test_case_name, test_name, death, bpf_tester_delegate_class)   \
+  TEST(test_case_name, DISABLE_ON_TSAN(test_name)) {               \
+    sandbox::SandboxBPFTestRunner bpf_test_runner(                 \
+        new bpf_tester_delegate_class());                          \
+    sandbox::UnitTests::RunTestInProcess(&bpf_test_runner, death); \
+  }
+
+// Assertions are handled exactly the same as with a normal SANDBOX_TEST()
+#define BPF_ASSERT SANDBOX_ASSERT
+#define BPF_ASSERT_EQ(x, y) BPF_ASSERT((x) == (y))
+#define BPF_ASSERT_NE(x, y) BPF_ASSERT((x) != (y))
+#define BPF_ASSERT_LT(x, y) BPF_ASSERT((x) < (y))
+#define BPF_ASSERT_GT(x, y) BPF_ASSERT((x) > (y))
+#define BPF_ASSERT_LE(x, y) BPF_ASSERT((x) <= (y))
+#define BPF_ASSERT_GE(x, y) BPF_ASSERT((x) >= (y))
+
+// This form of BPF_TEST is now discouraged (but still allowed) in favor of
+// BPF_TEST_D and BPF_TEST_C.
+// The |policy| parameter should be a SyscallEvaluator function pointer
+// (which is now a deprecated way of expressing policies).
 // BPF_TEST() takes a C++ data type as an optional fourth parameter. If
 // present, this sets up a variable that can be accessed as "BPF_AUX". This
 // variable will be passed as an argument to the "policy" function. Policies
 // would typically use it as an argument to SandboxBPF::Trap(), if they want to
-// communicate data between the BPF_TEST() and a Trap() function.
-#define BPF_TEST(test_case_name, test_name, policy, aux...) \
+// communicate data between the BPF_TEST() and a Trap() function. The life-time
+// of this object is the same as the life-time of the process running under the
+// seccomp-bpf policy.
+// The type specified in |aux| and the last parameter of the policy function
+// must be compatible. |aux| must not be void.
+#define BPF_TEST(test_case_name, test_name, policy, aux) \
   BPF_DEATH_TEST(test_case_name, test_name, DEATH_SUCCESS(), policy, aux)
 
-// Assertions are handled exactly the same as with a normal SANDBOX_TEST()
-#define BPF_ASSERT SANDBOX_ASSERT
+// A BPF_DEATH_TEST is just the same as a BPF_TEST, but it assumes that the
+// test will fail with a particular known error condition. Use the DEATH_XXX()
+// macros from unit_tests.h to specify the expected error condition.
+#define BPF_DEATH_TEST(test_case_name, test_name, death, policy, aux)          \
+  void BPF_TEST_##test_name(                                                   \
+      sandbox::BPFTesterCompatibilityDelegate<aux>::AuxType* BPF_AUX);         \
+  TEST(test_case_name, DISABLE_ON_TSAN(test_name)) {                           \
+    sandbox::SandboxBPFTestRunner bpf_test_runner(                             \
+        new sandbox::BPFTesterCompatibilityDelegate<aux>(BPF_TEST_##test_name, \
+                                                         policy));             \
+    sandbox::UnitTests::RunTestInProcess(&bpf_test_runner, death);             \
+  }                                                                            \
+  void BPF_TEST_##test_name(                                                   \
+      sandbox::BPFTesterCompatibilityDelegate<aux>::AuxType* BPF_AUX)
 
-// The "Aux" type is optional. We use an "empty" type by default, so that if
-// the caller doesn't provide any type, all the BPF_AUX related data compiles
-// to nothing.
-template <class Aux = int[0]>
-class BPFTests : public UnitTests {
+// This class takes a simple function pointer as a constructor parameter and a
+// class name as a template parameter to implement the BPFTesterDelegate
+// interface which can be used to build BPF unittests with
+// the SandboxBPFTestRunner class.
+template <class PolicyClass>
+class BPFTesterSimpleDelegate : public BPFTesterDelegate {
  public:
-  typedef Aux AuxType;
+  explicit BPFTesterSimpleDelegate(void (*test_function)(void))
+      : test_function_(test_function) {}
+  virtual ~BPFTesterSimpleDelegate() {}
 
-  class TestArgs {
-   public:
-    TestArgs(void (*t)(AuxType&), sandbox::SandboxBPF::EvaluateSyscall p)
-        : test_(t), policy_(p), aux_() {}
-
-    void (*test() const)(AuxType&) { return test_; }
-    sandbox::SandboxBPF::EvaluateSyscall policy() const { return policy_; }
-
-   private:
-    friend class BPFTests;
-
-    void (*test_)(AuxType&);
-    sandbox::SandboxBPF::EvaluateSyscall policy_;
-    AuxType aux_;
-  };
-
-  static void TestWrapper(void* void_arg) {
-    TestArgs* arg = reinterpret_cast<TestArgs*>(void_arg);
-    sandbox::Die::EnableSimpleExit();
-    if (sandbox::SandboxBPF::SupportsSeccompSandbox(-1) ==
-        sandbox::SandboxBPF::STATUS_AVAILABLE) {
-      // Ensure the the sandbox is actually available at this time
-      int proc_fd;
-      BPF_ASSERT((proc_fd = open("/proc", O_RDONLY | O_DIRECTORY)) >= 0);
-      BPF_ASSERT(sandbox::SandboxBPF::SupportsSeccompSandbox(proc_fd) ==
-                 sandbox::SandboxBPF::STATUS_AVAILABLE);
-
-      // Initialize and then start the sandbox with our custom policy
-      sandbox::SandboxBPF sandbox;
-      sandbox.set_proc_fd(proc_fd);
-      sandbox.SetSandboxPolicyDeprecated(arg->policy(), &arg->aux_);
-      BPF_ASSERT(sandbox.StartSandbox(
-          sandbox::SandboxBPF::PROCESS_SINGLE_THREADED));
-
-      arg->test()(arg->aux_);
-    } else {
-      printf("This BPF test is not fully running in this configuration!\n");
-      // Android and Valgrind are the only configurations where we accept not
-      // having kernel BPF support.
-      if (!IsAndroid() && !IsRunningOnValgrind()) {
-        const bool seccomp_bpf_is_supported = false;
-        BPF_ASSERT(seccomp_bpf_is_supported);
-      }
-      // Call the compiler and verify the policy. That's the least we can do,
-      // if we don't have kernel support.
-      sandbox::SandboxBPF sandbox;
-      sandbox.SetSandboxPolicyDeprecated(arg->policy(), &arg->aux_);
-      sandbox::SandboxBPF::Program* program =
-          sandbox.AssembleFilter(true /* force_verification */);
-      delete program;
-      sandbox::UnitTests::IgnoreThisTest();
-    }
+  virtual scoped_ptr<SandboxBPFPolicy> GetSandboxBPFPolicy() OVERRIDE {
+    return scoped_ptr<SandboxBPFPolicy>(new PolicyClass());
+  }
+  virtual void RunTestFunction() OVERRIDE {
+    DCHECK(test_function_);
+    test_function_();
   }
 
  private:
-  DISALLOW_IMPLICIT_CONSTRUCTORS(BPFTests);
+  void (*test_function_)(void);
+  DISALLOW_COPY_AND_ASSIGN(BPFTesterSimpleDelegate);
 };
 
 }  // namespace sandbox

@@ -142,25 +142,27 @@ bool Wow64::RunWowHelper(void* buffer) {
   // Get the path to the helper (beside the exe).
   wchar_t prog_name[MAX_PATH];
   GetModuleFileNameW(NULL, prog_name, MAX_PATH);
-  std::wstring path(prog_name);
+  base::string16 path(prog_name);
   size_t name_pos = path.find_last_of(L"\\");
-  if (std::wstring::npos == name_pos)
+  if (base::string16::npos == name_pos)
     return false;
   path.resize(name_pos + 1);
 
-  std::wstringstream command;
+  std::basic_stringstream<base::char16> command;
   command << std::hex << std::showbase << L"\"" << path <<
                L"wow_helper.exe\" " << child_->ProcessId() << " " <<
                bit_cast<ULONG>(buffer);
 
-  scoped_ptr_malloc<wchar_t> writable_command(_wcsdup(command.str().c_str()));
+  scoped_ptr<wchar_t, base::FreeDeleter>
+      writable_command(_wcsdup(command.str().c_str()));
 
   STARTUPINFO startup_info = {0};
   startup_info.cb = sizeof(startup_info);
-  base::win::ScopedProcessInformation process_info;
+  PROCESS_INFORMATION temp_process_info = {};
   if (!::CreateProcess(NULL, writable_command.get(), NULL, NULL, FALSE, 0, NULL,
-                       NULL, &startup_info, process_info.Receive()))
+                       NULL, &startup_info, &temp_process_info))
     return false;
+  base::win::ScopedProcessInformation process_info(temp_process_info);
 
   DWORD reason = ::WaitForSingleObject(process_info.process_handle(), INFINITE);
 

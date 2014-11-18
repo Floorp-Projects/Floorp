@@ -14,10 +14,6 @@
 namespace base {
 namespace debug {
 
-// Starts the registered system-wide JIT debugger to attach it to specified
-// process.
-BASE_EXPORT bool SpawnDebuggerOnProcess(unsigned process_id);
-
 // Waits wait_seconds seconds for a debugger to attach to the current process.
 // When silent is false, an exception is thrown when a debugger is detected.
 BASE_EXPORT bool WaitForDebugger(int wait_seconds, bool silent);

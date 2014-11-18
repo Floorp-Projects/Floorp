@@ -10,9 +10,6 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#ifdef MOZ_CONTENT_SANDBOX // For upstream merging, use patch in bug 1018966 to reapply warn only sandbox code
-#include "mozilla/warnonlysandbox/warnOnlySandbox.h"
-#endif
 
 namespace sandbox {
 
@@ -36,17 +33,11 @@ ResultCode DuplicateHandleProxy(HANDLE source_handle,
     return code;
 
   if (answer.win32_result) {
-    ::SetLastError(answer.nt_status);
-#ifdef MOZ_CONTENT_SANDBOX
-    mozilla::warnonlysandbox::LogBlocked("DuplicateHandle");
-#endif
+    ::SetLastError(answer.win32_result);
     return SBOX_ERROR_GENERIC;
   }
 
   *target_handle = answer.handle;
-#ifdef MOZ_CONTENT_SANDBOX
-  mozilla::warnonlysandbox::LogAllowed("DuplicateHandle");
-#endif
   return SBOX_ALL_OK;
 }
 

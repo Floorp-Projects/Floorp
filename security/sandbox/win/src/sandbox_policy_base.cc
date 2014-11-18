@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/sandbox_policy_base.h"
 
+#include <sddl.h>
+
 #include "base/basictypes.h"
 #include "base/callback.h"
 #include "base/logging.h"
@@ -21,6 +23,8 @@
 #include "sandbox/win/src/policy_broker.h"
 #include "sandbox/win/src/policy_engine_processor.h"
 #include "sandbox/win/src/policy_low_level.h"
+#include "sandbox/win/src/process_mitigations_win32k_dispatcher.h"
+#include "sandbox/win/src/process_mitigations_win32k_policy.h"
 #include "sandbox/win/src/process_thread_dispatcher.h"
 #include "sandbox/win/src/process_thread_policy.h"
 #include "sandbox/win/src/registry_dispatcher.h"
@@ -73,6 +77,8 @@ SANDBOX_INTERCEPT MitigationFlags g_shared_delayed_mitigations;
 // Initializes static members.
 HWINSTA PolicyBase::alternate_winstation_handle_ = NULL;
 HDESK PolicyBase::alternate_desktop_handle_ = NULL;
+IntegrityLevel PolicyBase::alternate_desktop_integrity_level_label_ =
+    INTEGRITY_LEVEL_SYSTEM;
 
 PolicyBase::PolicyBase()
     : ref_count(1),
@@ -80,6 +86,7 @@ PolicyBase::PolicyBase()
       initial_level_(USER_LOCKDOWN),
       job_level_(JOB_LOCKDOWN),
       ui_exceptions_(0),
+      memory_limit_(0),
       use_alternate_desktop_(false),
       use_alternate_winstation_(false),
       file_system_init_(false),
@@ -124,6 +131,11 @@ PolicyBase::PolicyBase()
 
   dispatcher = new HandleDispatcher(this);
   ipc_targets_[IPC_DUPLICATEHANDLEPROXY_TAG] = dispatcher;
+
+  dispatcher = new ProcessMitigationsWin32KDispatcher(this);
+  ipc_targets_[IPC_GDI_GDIDLLINITIALIZE_TAG] = dispatcher;
+  ipc_targets_[IPC_GDI_GETSTOCKOBJECT_TAG] = dispatcher;
+  ipc_targets_[IPC_USER_REGISTERCLASSW_TAG] = dispatcher;
 }
 
 PolicyBase::~PolicyBase() {
@@ -161,9 +173,28 @@ ResultCode PolicyBase::SetTokenLevel(TokenLevel initial, TokenLevel lockdown) {
   return SBOX_ALL_OK;
 }
 
+TokenLevel PolicyBase::GetInitialTokenLevel() const {
+  return initial_level_;
+}
+
+TokenLevel PolicyBase::GetLockdownTokenLevel() const{
+  return lockdown_level_;
+}
+
 ResultCode PolicyBase::SetJobLevel(JobLevel job_level, uint32 ui_exceptions) {
+  if (memory_limit_ && job_level == JOB_NONE) {
+    return SBOX_ERROR_BAD_PARAMS;
+  }
   job_level_ = job_level;
   ui_exceptions_ = ui_exceptions;
+  return SBOX_ALL_OK;
+}
+
+ResultCode PolicyBase::SetJobMemoryLimit(size_t memory_limit) {
+  if (memory_limit && job_level_ == JOB_NONE) {
+    return SBOX_ERROR_BAD_PARAMS;
+  }
+  memory_limit_ = memory_limit;
   return SBOX_ALL_OK;
 }
 
@@ -173,21 +204,21 @@ ResultCode PolicyBase::SetAlternateDesktop(bool alternate_winstation) {
   return CreateAlternateDesktop(alternate_winstation);
 }
 
-string16 PolicyBase::GetAlternateDesktop() const {
+base::string16 PolicyBase::GetAlternateDesktop() const {
   // No alternate desktop or winstation. Return an empty string.
   if (!use_alternate_desktop_ && !use_alternate_winstation_) {
-    return string16();
+    return base::string16();
   }
 
   // The desktop and winstation should have been created by now.
   // If we hit this scenario, it means that the user ignored the failure
   // during SetAlternateDesktop, so we ignore it here too.
   if (use_alternate_desktop_ && !alternate_desktop_handle_) {
-    return string16();
+    return base::string16();
   }
   if (use_alternate_winstation_ && (!alternate_desktop_handle_ ||
                                     !alternate_winstation_handle_)) {
-    return string16();
+    return base::string16();
   }
 
   return GetFullDesktopName(alternate_winstation_handle_,
@@ -265,6 +296,10 @@ ResultCode PolicyBase::SetIntegrityLevel(IntegrityLevel integrity_level) {
   return SBOX_ALL_OK;
 }
 
+IntegrityLevel PolicyBase::GetIntegrityLevel() const {
+  return integrity_level_;
+}
+
 ResultCode PolicyBase::SetDelayedIntegrityLevel(
     IntegrityLevel integrity_level) {
   delayed_integrity_level_ = integrity_level;
@@ -316,7 +351,7 @@ ResultCode PolicyBase::SetDelayedProcessMitigations(
   return SBOX_ALL_OK;
 }
 
-MitigationFlags PolicyBase::GetDelayedProcessMitigations() {
+MitigationFlags PolicyBase::GetDelayedProcessMitigations() const {
   return delayed_mitigations_;
 }
 
@@ -401,6 +436,16 @@ ResultCode PolicyBase::AddRule(SubSystem subsystem, Semantics semantics,
       }
       break;
     }
+
+    case SUBSYS_WIN32K_LOCKDOWN: {
+      if (!ProcessMitigationsWin32KLockdownPolicy::GenerateRules(
+              pattern, semantics,policy_maker_)) {
+        NOTREACHED();
+        return SBOX_ERROR_BAD_PARAMS;
+      }
+      break;
+    }
+
     default: {
       return SBOX_ERROR_UNSUPPORTED;
     }
@@ -414,8 +459,8 @@ ResultCode PolicyBase::AddDllToUnload(const wchar_t* dll_name) {
   return SBOX_ALL_OK;
 }
 
-ResultCode PolicyBase::AddKernelObjectToClose(const char16* handle_type,
-                                              const char16* handle_name) {
+ResultCode PolicyBase::AddKernelObjectToClose(const base::char16* handle_type,
+                                              const base::char16* handle_name) {
   return handle_closer_.AddHandle(handle_type, handle_name);
 }
 
@@ -459,7 +504,8 @@ ResultCode PolicyBase::MakeJobObject(HANDLE* job) {
   if (job_level_ != JOB_NONE) {
     // Create the windows job object.
     Job job_obj;
-    DWORD result = job_obj.Init(job_level_, NULL, ui_exceptions_);
+    DWORD result = job_obj.Init(job_level_, NULL, ui_exceptions_,
+                                memory_limit_);
     if (ERROR_SUCCESS != result) {
       return SBOX_ERROR_GENERIC;
     }
@@ -475,8 +521,28 @@ ResultCode PolicyBase::MakeTokens(HANDLE* initial, HANDLE* lockdown) {
   // with the process and therefore with any thread that is not impersonating.
   DWORD result = CreateRestrictedToken(lockdown, lockdown_level_,
                                        integrity_level_, PRIMARY);
-  if (ERROR_SUCCESS != result) {
+  if (ERROR_SUCCESS != result)
     return SBOX_ERROR_GENERIC;
+
+  // If we're launching on the alternate desktop we need to make sure the
+  // integrity label on the object is no higher than the sandboxed process's
+  // integrity level. So, we lower the label on the desktop process if it's
+  // not already low enough for our process.
+  if (use_alternate_desktop_ &&
+      integrity_level_ != INTEGRITY_LEVEL_LAST &&
+      alternate_desktop_integrity_level_label_ < integrity_level_ &&
+      base::win::OSInfo::GetInstance()->version() >= base::win::VERSION_VISTA) {
+    // Integrity label enum is reversed (higher level is a lower value).
+    static_assert(INTEGRITY_LEVEL_SYSTEM < INTEGRITY_LEVEL_UNTRUSTED,
+                  "Integrity level ordering reversed.");
+    result = SetObjectIntegrityLabel(alternate_desktop_handle_,
+                                     SE_WINDOW_OBJECT,
+                                     L"",
+                                     GetIntegrityLevelString(integrity_level_));
+    if (ERROR_SUCCESS != result)
+      return SBOX_ERROR_GENERIC;
+
+    alternate_desktop_integrity_level_label_ = integrity_level_;
   }
 
   if (appcontainer_list_.get() && appcontainer_list_->HasAppContainer()) {
@@ -649,14 +715,11 @@ bool PolicyBase::SetupAllInterceptions(TargetProcess* target) {
   }
 
   if (!blacklisted_dlls_.empty()) {
-    std::vector<string16>::iterator it = blacklisted_dlls_.begin();
+    std::vector<base::string16>::iterator it = blacklisted_dlls_.begin();
     for (; it != blacklisted_dlls_.end(); ++it) {
       manager.AddToUnloadModules(it->c_str());
     }
   }
-
-  if (!handle_closer_.SetupHandleInterceptions(&manager))
-    return false;
 
   if (!SetupBasicInterceptions(&manager))
     return false;

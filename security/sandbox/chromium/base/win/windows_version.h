@@ -30,6 +30,16 @@ enum Version {
   VERSION_WIN_LAST,    // Indicates error condition.
 };
 
+// A rough bucketing of the available types of versions of Windows. This is used
+// to distinguish enterprise enabled versions from home versions and potentially
+// server versions.
+enum VersionType {
+  SUITE_HOME,
+  SUITE_PROFESSIONAL,
+  SUITE_SERVER,
+  SUITE_LAST,
+};
+
 // A singleton that can be used to query various pieces of information about the
 // OS and process state. Note that this doesn't use the base Singleton class, so
 // it can be used without an AtExitManager.
@@ -74,6 +84,7 @@ class BASE_EXPORT OSInfo {
   Version version() const { return version_; }
   // The next two functions return arrays of values, [major, minor(, build)].
   VersionNumber version_number() const { return version_number_; }
+  VersionType version_type() const { return version_type_; }
   ServicePack service_pack() const { return service_pack_; }
   WindowsArchitecture architecture() const { return architecture_; }
   int processors() const { return processors_; }
@@ -91,6 +102,7 @@ class BASE_EXPORT OSInfo {
 
   Version version_;
   VersionNumber version_number_;
+  VersionType version_type_;
   ServicePack service_pack_;
   WindowsArchitecture architecture_;
   int processors_;

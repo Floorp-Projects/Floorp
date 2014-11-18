@@ -15,7 +15,7 @@ namespace {
 // Duplicates source into target, returning true upon success. |target| is
 // guaranteed to be untouched in case of failure. Succeeds with no side-effects
 // if source is NULL.
-bool CheckAndDuplicateHandle(HANDLE source, HANDLE* target) {
+bool CheckAndDuplicateHandle(HANDLE source, ScopedHandle* target) {
   if (!source)
     return true;
 
@@ -26,7 +26,7 @@ bool CheckAndDuplicateHandle(HANDLE source, HANDLE* target) {
     DPLOG(ERROR) << "Failed to duplicate a handle.";
     return false;
   }
-  *target = temp;
+  target->Set(temp);
   return true;
 }
 
@@ -36,13 +36,13 @@ ScopedProcessInformation::ScopedProcessInformation()
     : process_id_(0), thread_id_(0) {
 }
 
-ScopedProcessInformation::~ScopedProcessInformation() {
-  Close();
+ScopedProcessInformation::ScopedProcessInformation(
+    const PROCESS_INFORMATION& process_info) : process_id_(0), thread_id_(0) {
+  Set(process_info);
 }
 
-ScopedProcessInformation::Receiver ScopedProcessInformation::Receive() {
-  DCHECK(!IsValid()) << "process_information_ must be NULL";
-  return Receiver(this);
+ScopedProcessInformation::~ScopedProcessInformation() {
+  Close();
 }
 
 bool ScopedProcessInformation::IsValid() const {
@@ -72,10 +72,8 @@ bool ScopedProcessInformation::DuplicateFrom(
   DCHECK(!IsValid()) << "target ScopedProcessInformation must be NULL";
   DCHECK(other.IsValid()) << "source ScopedProcessInformation must be valid";
 
-  if (CheckAndDuplicateHandle(other.process_handle(),
-                              process_handle_.Receive()) &&
-      CheckAndDuplicateHandle(other.thread_handle(),
-                              thread_handle_.Receive())) {
+  if (CheckAndDuplicateHandle(other.process_handle(), &process_handle_) &&
+      CheckAndDuplicateHandle(other.thread_handle(), &thread_handle_)) {
     process_id_ = other.process_id();
     thread_id_ = other.thread_id();
     return true;

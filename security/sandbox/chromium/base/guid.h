@@ -27,6 +27,6 @@ BASE_EXPORT bool IsValidGUID(const std::string& guid);
 BASE_EXPORT std::string RandomDataToGUIDString(const uint64 bytes[2]);
 #endif
 
-}  // namespace guid
+}  // namespace base
 
 #endif  // BASE_GUID_H_

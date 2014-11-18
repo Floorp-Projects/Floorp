@@ -73,6 +73,10 @@ DWORD SetObjectIntegrityLabel(HANDLE handle, SE_OBJECT_TYPE type,
 // than the current integrity level, the function will fail.
 DWORD SetTokenIntegrityLevel(HANDLE token, IntegrityLevel integrity_level);
 
+// Returns the integrity level SDDL string associated with a given
+// IntegrityLevel value.
+const wchar_t* GetIntegrityLevelString(IntegrityLevel integrity_level);
+
 // Sets the integrity level on the current process on Vista. It returns without
 // failing on XP. If the integrity level that you specify is greater than the
 // current integrity level, the function will fail.

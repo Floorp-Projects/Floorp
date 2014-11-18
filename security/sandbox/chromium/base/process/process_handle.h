@@ -81,12 +81,10 @@ BASE_EXPORT bool GetProcessIntegrityLevel(ProcessHandle process,
                                           IntegrityLevel* level);
 #endif
 
-#if defined(OS_LINUX) || defined(OS_ANDROID) || defined(OS_BSD)
+#if defined(OS_POSIX)
 // Returns the path to the executable of the given process.
 BASE_EXPORT FilePath GetProcessExecutablePath(ProcessHandle process);
-#endif
 
-#if defined(OS_POSIX)
 // Returns the ID for the parent of the given process.
 BASE_EXPORT ProcessId GetParentProcessId(ProcessHandle process);
 #endif

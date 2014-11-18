@@ -44,15 +44,6 @@ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenThreadTokenEx64(
     HANDLE thread, ACCESS_MASK desired_access, BOOLEAN open_as_self,
     ULONG handle_attributes, PHANDLE token);
 
-// Interception of CreateThread on the child process.
-SANDBOX_INTERCEPT HANDLE WINAPI TargetCreateThread64(
-    LPSECURITY_ATTRIBUTES thread_attributes, SIZE_T stack_size,
-    LPTHREAD_START_ROUTINE start_address, PVOID parameter,
-    DWORD creation_flags, LPDWORD thread_id);
-
-// Interception of GetUserDefaultLCID on the child process.
-SANDBOX_INTERCEPT LCID WINAPI TargetGetUserDefaultLCID64();
-
 // -----------------------------------------------------------------------
 // Interceptors handled by the file system dispatcher.
 
@@ -153,14 +144,29 @@ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenKeyEx64(
 // -----------------------------------------------------------------------
 // Interceptors handled by the sync dispatcher.
 
-// Interception of CreateEventW on the child process.
-SANDBOX_INTERCEPT HANDLE WINAPI TargetCreateEventW64(
-    LPSECURITY_ATTRIBUTES security_attributes, BOOL manual_reset,
-    BOOL initial_state, LPCWSTR name);
+// Interception of NtCreateEvent/NtOpenEvent on the child process.
+SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtCreateEvent64(
+    PHANDLE event_handle, ACCESS_MASK desired_access,
+    POBJECT_ATTRIBUTES object_attributes, EVENT_TYPE event_type,
+    BOOLEAN initial_state);
 
-// Interception of OpenEventW on the child process.
-SANDBOX_INTERCEPT HANDLE WINAPI TargetOpenEventW64(
-    ACCESS_MASK desired_access, BOOL inherit_handle, LPCWSTR name);
+SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenEvent64(
+    PHANDLE event_handle, ACCESS_MASK desired_access,
+    POBJECT_ATTRIBUTES object_attributes);
+
+// -----------------------------------------------------------------------
+// Interceptors handled by the process mitigations win32k lockdown code.
+
+// Interceptor for the GdiDllInitialize function.
+SANDBOX_INTERCEPT BOOL WINAPI TargetGdiDllInitialize64(
+    HANDLE dll,
+    DWORD reason);
+
+// Interceptor for the GetStockObject function.
+SANDBOX_INTERCEPT HGDIOBJ WINAPI TargetGetStockObject64(int object);
+
+// Interceptor for the RegisterClassW function.
+SANDBOX_INTERCEPT ATOM WINAPI TargetRegisterClassW64(const WNDCLASS* wnd_class);
 
 }  // extern "C"
 
