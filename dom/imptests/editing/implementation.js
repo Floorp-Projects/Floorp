@@ -1973,9 +1973,9 @@ function isSimpleModifiableElement(node) {
 	&& (node.style.length == 1
 	|| (node.style.length == 4
 		&& "MozTextBlink" in node.style
-		&& "MozTextDecorationColor" in node.style
-		&& "MozTextDecorationLine" in node.style
-		&& "MozTextDecorationStyle" in node.style)
+		&& "textDecorationColor" in node.style
+		&& "textDecorationLine" in node.style
+		&& "textDecorationStyle" in node.style)
 	)
 	&& (node.style.textDecoration == "line-through"
 	|| node.style.textDecoration == "underline"

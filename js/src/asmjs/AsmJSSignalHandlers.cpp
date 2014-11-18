@@ -480,10 +480,12 @@ static uint8_t **
 ContextToPC(x86_thread_state_t &state)
 {
 # if defined(JS_CPU_X64)
-    JS_STATIC_ASSERT(sizeof(state.uts.ts64.__rip) == sizeof(void*));
+    static_assert(sizeof(state.uts.ts64.__rip) == sizeof(void*),
+                  "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&state.uts.ts64.__rip);
 # else
-    JS_STATIC_ASSERT(sizeof(state.uts.ts32.__eip) == sizeof(void*));
+    static_assert(sizeof(state.uts.ts32.__eip) == sizeof(void*),
+                  "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&state.uts.ts32.__eip);
 # endif
 }

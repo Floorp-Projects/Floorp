@@ -17,6 +17,7 @@
 #include "jswrapper.h"
 
 #include "gc/Barrier.h"
+#include "js/Debug.h"
 #include "js/HashTable.h"
 #include "vm/GlobalObject.h"
 #include "vm/SavedStacks.h"
@@ -177,6 +178,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     friend class mozilla::LinkedListElement<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext *cx, JS::HandleObject obj);
     friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+    friend void JS::dbg::onNewPromise(JSContext *cx, HandleObject promise);
+    friend void JS::dbg::onPromiseSettled(JSContext *cx, HandleObject promise);
 
   public:
     enum Hook {
@@ -185,6 +188,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         OnNewScript,
         OnEnterFrame,
         OnNewGlobalObject,
+        OnNewPromise,
+        OnPromiseSettled,
         HookCount
     };
     enum {
@@ -369,6 +374,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool setOnEnterFrame(JSContext *cx, unsigned argc, Value *vp);
     static bool getOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp);
     static bool setOnNewGlobalObject(JSContext *cx, unsigned argc, Value *vp);
+    static bool getOnNewPromise(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnNewPromise(JSContext *cx, unsigned argc, Value *vp);
+    static bool getOnPromiseSettled(JSContext *cx, unsigned argc, Value *vp);
+    static bool setOnPromiseSettled(JSContext *cx, unsigned argc, Value *vp);
     static bool getUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
     static bool setUncaughtExceptionHook(JSContext *cx, unsigned argc, Value *vp);
     static bool getMemory(JSContext *cx, unsigned argc, Value *vp);
@@ -420,12 +429,15 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static void slowPathOnNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static bool slowPathOnLogAllocationSite(JSContext *cx, HandleSavedFrame frame,
                                             int64_t when, GlobalObject::DebuggerVector &dbgs);
-    static JSTrapStatus dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which);
+    static void slowPathPromiseHook(JSContext *cx, Hook hook, HandleObject promise);
+    static JSTrapStatus dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which,
+                                     HandleObject payload);
 
     JSTrapStatus fireDebuggerStatement(JSContext *cx, MutableHandleValue vp);
     JSTrapStatus fireExceptionUnwind(JSContext *cx, MutableHandleValue vp);
     JSTrapStatus fireEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp);
     JSTrapStatus fireNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global, MutableHandleValue vp);
+    JSTrapStatus firePromiseHook(JSContext *cx, Hook hook, HandleObject promise, MutableHandleValue vp);
 
     /*
      * Allocate and initialize a Debugger.Script instance whose referent is
@@ -826,7 +838,7 @@ Debugger::observesGlobal(GlobalObject *global) const
     return debuggees.has(global);
 }
 
-void
+/* static */ void
 Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal)
 {
     MOZ_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal);

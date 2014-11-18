@@ -723,6 +723,11 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
     if (lastSmoothScrollOrigin) {
       metrics.SetSmoothScrollOffsetUpdated(scrollableFrame->CurrentScrollGeneration());
     }
+
+    nsSize lineScrollAmount = scrollableFrame->GetLineScrollAmount();
+    LayoutDeviceIntSize lineScrollAmountInDevPixels =
+      LayoutDeviceIntSize::FromAppUnitsRounded(lineScrollAmount, presContext->AppUnitsPerDevPixel());
+    metrics.SetLineScrollAmount(lineScrollAmountInDevPixels);
   }
 
   metrics.SetScrollId(scrollId);

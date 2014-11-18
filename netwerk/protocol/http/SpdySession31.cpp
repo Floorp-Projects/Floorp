@@ -1460,7 +1460,7 @@ SpdySession31::HandleNoop(SpdySession31 *self)
 {
   MOZ_ASSERT(self->mFrameControlType == CONTROL_TYPE_NOOP);
 
-  // Should not be receiving noop frames in spdy/3, so we'll just
+  // Should not be receiving noop frames in spdy/3.1, so we'll just
   // make a log and ignore it
 
   LOG3(("SpdySession31::HandleNoop %p NOP.", self));

@@ -533,21 +533,9 @@ public:
    * frame. Returns true if the fling animation should be advanced by one frame,
    * or false if there is no fling or the fling has ended.
    */
-  virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta) MOZ_OVERRIDE
+  virtual bool DoSample(FrameMetrics& aFrameMetrics,
+                        const TimeDuration& aDelta) MOZ_OVERRIDE
   {
-    // If the fling is handed off to our APZC from a child, on the first call to
-    // Sample() aDelta might be negative because it's computed as the sample time
-    // from SampleContentTransformForFrame() minus our APZC's mLastSampleTime
-    // which is the time the child handed off the fling from its call to
-    // SampleContentTransformForFrame() with the same sample time. If we allow
-    // the negative aDelta to be processed, it will yield a displacement in the
-    // direction opposite to the fling, which can cause us to overscroll and
-    // hand off the fling to _our_ parent, which effectively kills the fling.
-    if (aDelta.ToMilliseconds() <= 0) {
-      return true;
-    }
-
     float friction = gfxPrefs::APZFlingFriction();
     float threshold = gfxPrefs::APZFlingStoppedThreshold();
 
@@ -655,8 +643,8 @@ public:
     , mEndZoom(aEndZoom)
   {}
 
-  virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta) MOZ_OVERRIDE
+  virtual bool DoSample(FrameMetrics& aFrameMetrics,
+                        const TimeDuration& aDelta) MOZ_OVERRIDE
   {
     mDuration += aDelta;
     double animPosition = mDuration / mTotalDuration;
@@ -712,8 +700,8 @@ public:
     mApzc.mY.SetVelocity(aVelocity.y);
   }
 
-  virtual bool Sample(FrameMetrics& aFrameMetrics,
-                      const TimeDuration& aDelta) MOZ_OVERRIDE
+  virtual bool DoSample(FrameMetrics& aFrameMetrics,
+                        const TimeDuration& aDelta) MOZ_OVERRIDE
   {
     // Can't inline these variables due to short-circuit evaluation.
     bool continueX = mApzc.mX.SampleOverscrollAnimation(aDelta);
@@ -747,12 +735,7 @@ public:
    * frame. Returns true if the smooth scroll should be advanced by one frame,
    * or false if the smooth scroll has ended.
    */
-  bool Sample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) {
-
-    if (aDelta.ToMilliseconds() <= 0) {
-      return true;
-    }
-
+  bool DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& aDelta) {
     if (mXAxisModel.IsFinished() && mYAxisModel.IsFinished()) {
       return false;
     }
@@ -1085,6 +1068,11 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
       case PanGestureInput::PANGESTURE_MOMENTUMEND: rv = OnPanMomentumEnd(panGestureInput); break;
       default: NS_WARNING("Unhandled pan gesture"); break;
     }
+    break;
+  }
+  case SCROLLWHEEL_INPUT: {
+    const ScrollWheelInput& scrollInput = aEvent.AsScrollWheelInput();
+    rv = OnScrollWheel(scrollInput);
     break;
   }
   default: return HandleGestureEvent(aEvent);
@@ -1468,6 +1456,72 @@ AsyncPanZoomController::ConvertToGecko(const ParentLayerPoint& aPoint, CSSPoint*
     return true;
   }
   return false;
+}
+
+nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
+{
+  double deltaX = aEvent.mDeltaX;
+  double deltaY = aEvent.mDeltaY;
+  switch (aEvent.mDeltaType) {
+    case ScrollWheelInput::SCROLLDELTA_LINE: {
+      LayoutDeviceIntSize scrollAmount = mFrameMetrics.GetLineScrollAmount();
+      deltaX *= scrollAmount.width;
+      deltaY *= scrollAmount.height;
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
+      return nsEventStatus_eConsumeNoDefault;
+  }
+
+  switch (aEvent.mScrollMode) {
+    case ScrollWheelInput::SCROLLMODE_INSTANT: {
+      // Decompose into pan events for simplicity.
+      PanGestureInput start(PanGestureInput::PANGESTURE_START, aEvent.mTime, aEvent.mTimeStamp,
+                            aEvent.mOrigin, ScreenPoint(0, 0), aEvent.modifiers);
+      start.mLocalPanStartPoint = aEvent.mLocalOrigin;
+      OnPanBegin(start);
+
+      // Pan gestures use natural directions which are inverted from scroll
+      // wheel and touchpad scroll gestures, so we invert x/y here. Since the
+      // zoom includes any device : css pixel zoom, we convert to CSS pixels
+      // before applying the zoom.
+      LayoutDevicePoint devicePixelDelta(-deltaX, -deltaY);
+      ParentLayerPoint delta = (devicePixelDelta / mFrameMetrics.mDevPixelsPerCSSPixel) *
+                               mFrameMetrics.GetZoom();
+
+      PanGestureInput move(PanGestureInput::PANGESTURE_PAN, aEvent.mTime, aEvent.mTimeStamp,
+                           aEvent.mOrigin,
+                           ToScreenCoordinates(delta, aEvent.mLocalOrigin),
+                           aEvent.modifiers);
+      move.mLocalPanStartPoint = aEvent.mLocalOrigin;
+      move.mLocalPanDisplacement = delta;
+      OnPan(move, false);
+
+      PanGestureInput end(PanGestureInput::PANGESTURE_END, aEvent.mTime, aEvent.mTimeStamp,
+                            aEvent.mOrigin, ScreenPoint(0, 0), aEvent.modifiers);
+      end.mLocalPanStartPoint = aEvent.mLocalOrigin;
+      OnPanEnd(start);
+      break;
+    }
+
+    case ScrollWheelInput::SCROLLMODE_SMOOTH: {
+      CSSPoint delta = LayoutDevicePoint(deltaX, deltaY) / mFrameMetrics.mDevPixelsPerCSSPixel;
+
+      // If we're already in a smooth scroll animation, don't cancel it. This
+      // lets us preserve the existing scrolling velocity.
+      if (mState != SMOOTH_SCROLL) {
+        CancelAnimation();
+        mFrameMetrics.SetSmoothScrollOffset(mFrameMetrics.GetScrollOffset() + delta);
+      } else {
+        mFrameMetrics.SetSmoothScrollOffset(mFrameMetrics.GetSmoothScrollOffset() + delta);
+      }
+      StartSmoothScroll();
+      break;
+    }
+  }
+
+  return nsEventStatus_eConsumeNoDefault;
 }
 
 nsEventStatus AsyncPanZoomController::OnPanMayBegin(const PanGestureInput& aEvent) {

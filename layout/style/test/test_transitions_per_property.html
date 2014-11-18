@@ -82,8 +82,6 @@ var supported_properties = {
     "-moz-outline-radius-bottomright": [ test_radius_transition ],
     "-moz-outline-radius-topleft": [ test_radius_transition ],
     "-moz-outline-radius-topright": [ test_radius_transition ],
-    "-moz-text-decoration-color": [ test_color_transition,
-                                    test_border_color_transition ],
     "background-color": [ test_color_transition ],
     "background-position": [ test_background_position_transition,
                              // FIXME: We don't currently test clamping,
@@ -231,6 +229,10 @@ var supported_properties = {
     // test_length_percent_calc_transition.
     "stroke-width": [ test_length_transition_svg, test_percent_transition,
                       test_length_clamped_svg, test_percent_clamped ],
+    "text-decoration": [ test_color_shorthand_transition,
+                         test_border_color_shorthand_transition ],
+    "text-decoration-color": [ test_color_transition,
+                               test_border_color_transition ],
     "text-indent": [ test_length_transition, test_percent_transition,
                      test_length_percent_calc_transition,
                      test_length_unclamped, test_percent_unclamped ],
@@ -1081,30 +1083,33 @@ function test_length_percent_calc_transition(prop) {
                        "calc(50% + 50px)");
 }
 
-function test_color_transition(prop) {
+function test_color_transition(prop, get_color=(x => x), is_shorthand=false) {
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "rgb(255, 28, 0)", "");
-  is(cs.getPropertyValue(prop), "rgb(255, 28, 0)",
+  is(get_color(cs.getPropertyValue(prop)), "rgb(255, 28, 0)",
      "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "rgb(75, 84, 128)", "");
-  is(cs.getPropertyValue(prop), "rgb(210, 42, 32)",
+  is(get_color(cs.getPropertyValue(prop)), "rgb(210, 42, 32)",
      "color-valued property " + prop + ": interpolation of colors");
 
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "rgb(128, 64, 0)", "");
   (prop == "color" ? div.parentNode : div).style.
     setProperty("color", "rgb(0, 0, 128)", "");
-  is(cs.getPropertyValue(prop), "rgb(128, 64, 0)",
+  is(get_color(cs.getPropertyValue(prop)), "rgb(128, 64, 0)",
      "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "currentColor", "");
-  is(cs.getPropertyValue(prop), "rgb(96, 48, 32)",
+  is(get_color(cs.getPropertyValue(prop)), "rgb(96, 48, 32)",
      "color-valued property " + prop + ": interpolation of currentColor");
 
-  check_distance(prop, "rgb(255, 28, 0)", "rgb(210, 42, 32)",
-                       "rgb(75, 84, 128)");
-  check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "currentColor");
+  if (!is_shorthand) {
+    check_distance(prop, "rgb(255, 28, 0)", "rgb(210, 42, 32)",
+                         "rgb(75, 84, 128)");
+    check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)",
+                         "currentColor");
+  }
 
   (prop == "color" ? div.parentNode : div).style.removeProperty("color");
 
@@ -1135,20 +1140,36 @@ function test_color_transition(prop) {
   div.style.setProperty("transition-timing-function", "linear", "");
 }
 
-function test_border_color_transition(prop) {
+function test_border_color_transition(prop, get_color=(x => x), is_shorthand=false) {
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "rgb(128, 64, 0)", "");
   div.style.setProperty("color", "rgb(0, 0, 128)", "");
-  is(cs.getPropertyValue(prop), "rgb(128, 64, 0)",
+  is(get_color(cs.getPropertyValue(prop)), "rgb(128, 64, 0)",
      "color-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.removeProperty(prop);
-  is(cs.getPropertyValue(prop), "rgb(96, 48, 32)",
+  is(get_color(cs.getPropertyValue(prop)), "rgb(96, 48, 32)",
      "color-valued property " + prop + ": interpolation of initial value");
 
-  check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "initial");
+  if (!is_shorthand) {
+    check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "initial");
+  }
 
   div.style.removeProperty("color");
+}
+
+function get_color_from_shorthand_value(value) {
+  var m = value.match(/rgb\([^, ]*, [^, ]*, [^, ]*\)/);
+  isnot(m, null, "shorthand property value should contain color");
+  return m[0];
+}
+
+function test_color_shorthand_transition(prop) {
+  test_color_transition(prop, get_color_from_shorthand_value, true);
+}
+
+function test_border_color_shorthand_transition(prop) {
+  test_border_color_transition(prop, get_color_from_shorthand_value, true);
 }
 
 function filter_function_list_equals(computedValStr, expectedList)
