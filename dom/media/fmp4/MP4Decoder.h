@@ -30,13 +30,9 @@ public:
 
   // Returns true if aMIMEType is a type that we think we can render with the
   // a MP4 platform decoder backend. If aCodecs is non emtpy, it is filled
-  // with a comma-delimited list of codecs to check support for. Notes in
-  // out params wether the codecs string contains AAC or H.264.
+  // with a comma-delimited list of codecs to check support for.
   static bool CanHandleMediaType(const nsACString& aMIMEType,
-                                 const nsAString& aCodecs,
-                                 bool& aOutContainsAAC,
-                                 bool& aOutContainsH264,
-                                 bool& aOutContainsMP3);
+                                 const nsAString& aCodecs = EmptyString());
 
   // Returns true if the MP4 backend is preffed on, and we're running on a
   // platform that is likely to have decoders for the contained formats.

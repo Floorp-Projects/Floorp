@@ -192,37 +192,23 @@ function SetupEME(test, token, params)
 
   v.addEventListener("encrypted", function(ev) {
     Log(token, "got encrypted event");
-    var options = [
-      {
-        initDataType: ev.initDataType,
-        videoType: test.type,
-      }
-    ];
-    navigator.requestMediaKeySystemAccess(KEYSYSTEM_TYPE, options)
-      .then(function(keySystemAccess) {
-        return keySystemAccess.createMediaKeys();
-      }, bail(token + " Failed to request key system access."))
-      
-      .then(function(mediaKeys) {
-        Log(token, "created MediaKeys object ok");
-        mediaKeys.sessions = [];
-        return v.setMediaKeys(mediaKeys);
-      }, bail("failed to create MediaKeys object"))
-      
-      .then(function() {
-        Log(token, "set MediaKeys on <video> element ok");
+    MediaKeys.create(KEYSYSTEM_TYPE).then(function(mediaKeys) {
+      Log(token, "created MediaKeys object ok");
+      mediaKeys.sessions = [];
+      return v.setMediaKeys(mediaKeys);
+    }, bail("failed to create MediaKeys object")).then(function() {
+      Log(token, "set MediaKeys on <video> element ok");
 
-        var session = v.mediaKeys.createSession(test.sessionType);
-        if (params && params.onsessioncreated) {
-          params.onsessioncreated(session);
-        }
-        session.addEventListener("message", UpdateSessionFunc(test, token));
-        return session.generateRequest(ev.initDataType, ev.initData);
-      }, onSetKeysFail)
-      
-      .then(function() {
-        Log(token, "generated request");
-      }, bail(token + " Failed to request key system access2."));
+      var session = v.mediaKeys.createSession(test.sessionType);
+      if (params && params.onsessioncreated) {
+        params.onsessioncreated(session);
+      }
+      session.addEventListener("message", UpdateSessionFunc(test, token));
+      session.generateRequest(ev.initDataType, ev.initData).then(function() {
+      }, bail(token + " Failed to initialise MediaKeySession"));
+
+    }, onSetKeysFail);
   });
+
   return v;
 }
