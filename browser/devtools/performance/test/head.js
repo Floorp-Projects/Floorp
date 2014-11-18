@@ -219,7 +219,7 @@ function* startRecording(panel) {
   ok(!button.hasAttribute("locked"),
     "The record button should not be locked yet.");
 
-  EventUtils.synthesizeMouseAtCenter(button, {}, win);
+  EventUtils.sendMouseEvent({ type: "click" }, button, win);
 
   yield clicked;
 
@@ -247,7 +247,7 @@ function* stopRecording(panel) {
   ok(!button.hasAttribute("locked"),
     "The record button should not be locked yet.");
 
-  EventUtils.synthesizeMouseAtCenter(button, {}, win);
+  EventUtils.sendMouseEvent({ type: "click" }, button, win);
 
   yield clicked;
 
@@ -262,4 +262,23 @@ function* stopRecording(panel) {
     "The record button should not be checked.");
   ok(!button.hasAttribute("locked"),
     "The record button should not be locked.");
+}
+
+/**
+ * Waits until a predicate returns true.
+ *
+ * @param function predicate
+ *        Invoked once in a while until it returns true.
+ * @param number interval [optional]
+ *        How often the predicate is invoked, in milliseconds.
+ */
+function waitUntil(predicate, interval = 10) {
+  if (predicate()) {
+    return Promise.resolve(true);
+  }
+  let deferred = Promise.defer();
+  setTimeout(function() {
+    waitUntil(predicate).then(() => deferred.resolve(true));
+  }, interval);
+  return deferred.promise;
 }
