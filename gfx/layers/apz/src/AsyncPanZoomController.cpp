@@ -1070,6 +1070,11 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
     }
     break;
   }
+  case SCROLLWHEEL_INPUT: {
+    const ScrollWheelInput& scrollInput = aEvent.AsScrollWheelInput();
+    rv = OnScrollWheel(scrollInput);
+    break;
+  }
   default: return HandleGestureEvent(aEvent);
   }
 
@@ -1451,6 +1456,72 @@ AsyncPanZoomController::ConvertToGecko(const ParentLayerPoint& aPoint, CSSPoint*
     return true;
   }
   return false;
+}
+
+nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
+{
+  double deltaX = aEvent.mDeltaX;
+  double deltaY = aEvent.mDeltaY;
+  switch (aEvent.mDeltaType) {
+    case ScrollWheelInput::SCROLLDELTA_LINE: {
+      LayoutDeviceIntSize scrollAmount = mFrameMetrics.GetLineScrollAmount();
+      deltaX *= scrollAmount.width;
+      deltaY *= scrollAmount.height;
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
+      return nsEventStatus_eConsumeNoDefault;
+  }
+
+  switch (aEvent.mScrollMode) {
+    case ScrollWheelInput::SCROLLMODE_INSTANT: {
+      // Decompose into pan events for simplicity.
+      PanGestureInput start(PanGestureInput::PANGESTURE_START, aEvent.mTime, aEvent.mTimeStamp,
+                            aEvent.mOrigin, ScreenPoint(0, 0), aEvent.modifiers);
+      start.mLocalPanStartPoint = aEvent.mLocalOrigin;
+      OnPanBegin(start);
+
+      // Pan gestures use natural directions which are inverted from scroll
+      // wheel and touchpad scroll gestures, so we invert x/y here. Since the
+      // zoom includes any device : css pixel zoom, we convert to CSS pixels
+      // before applying the zoom.
+      LayoutDevicePoint devicePixelDelta(-deltaX, -deltaY);
+      ParentLayerPoint delta = (devicePixelDelta / mFrameMetrics.mDevPixelsPerCSSPixel) *
+                               mFrameMetrics.GetZoom();
+
+      PanGestureInput move(PanGestureInput::PANGESTURE_PAN, aEvent.mTime, aEvent.mTimeStamp,
+                           aEvent.mOrigin,
+                           ToScreenCoordinates(delta, aEvent.mLocalOrigin),
+                           aEvent.modifiers);
+      move.mLocalPanStartPoint = aEvent.mLocalOrigin;
+      move.mLocalPanDisplacement = delta;
+      OnPan(move, false);
+
+      PanGestureInput end(PanGestureInput::PANGESTURE_END, aEvent.mTime, aEvent.mTimeStamp,
+                            aEvent.mOrigin, ScreenPoint(0, 0), aEvent.modifiers);
+      end.mLocalPanStartPoint = aEvent.mLocalOrigin;
+      OnPanEnd(start);
+      break;
+    }
+
+    case ScrollWheelInput::SCROLLMODE_SMOOTH: {
+      CSSPoint delta = LayoutDevicePoint(deltaX, deltaY) / mFrameMetrics.mDevPixelsPerCSSPixel;
+
+      // If we're already in a smooth scroll animation, don't cancel it. This
+      // lets us preserve the existing scrolling velocity.
+      if (mState != SMOOTH_SCROLL) {
+        CancelAnimation();
+        mFrameMetrics.SetSmoothScrollOffset(mFrameMetrics.GetScrollOffset() + delta);
+      } else {
+        mFrameMetrics.SetSmoothScrollOffset(mFrameMetrics.GetSmoothScrollOffset() + delta);
+      }
+      StartSmoothScroll();
+      break;
+    }
+  }
+
+  return nsEventStatus_eConsumeNoDefault;
 }
 
 nsEventStatus AsyncPanZoomController::OnPanMayBegin(const PanGestureInput& aEvent) {
