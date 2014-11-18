@@ -114,16 +114,6 @@ nsBrowserElement::IsBrowserElementOrThrow(ErrorResult& aRv)
   return false;
 }
 
-bool
-nsBrowserElement::IsNotWidgetOrThrow(ErrorResult& aRv)
-{
-  if (!mOwnerIsWidget) {
-    return true;
-  }
-  aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
-  return false;
-}
-
 void
 nsBrowserElement::InitBrowserElementAPI()
 {
@@ -131,8 +121,6 @@ nsBrowserElement::InitBrowserElementAPI()
   nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
   NS_ENSURE_TRUE_VOID(frameLoader);
   nsresult rv = frameLoader->GetOwnerIsBrowserOrAppFrame(&isBrowserOrApp);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  rv = frameLoader->GetOwnerIsWidget(&mOwnerIsWidget);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (!isBrowserOrApp) {
@@ -146,7 +134,6 @@ nsBrowserElement::InitBrowserElementAPI()
 }
 
 nsBrowserElement::nsBrowserElement()
-  : mOwnerIsWidget(false)
 {
   mObserver = new BrowserShownObserver(this);
   mObserver->AddObserver();
@@ -223,7 +210,6 @@ nsBrowserElement::SendMouseEvent(const nsAString& aType,
                                  ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->SendMouseEvent(aType,
                                                    aX,
@@ -251,7 +237,6 @@ nsBrowserElement::SendTouchEvent(const nsAString& aType,
                                  ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
 
   if (aIdentifiers.Length() != aCount ||
       aXs.Length() != aCount ||
@@ -284,7 +269,6 @@ void
 nsBrowserElement::GoBack(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->GoBack();
 
@@ -297,7 +281,6 @@ void
 nsBrowserElement::GoForward(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->GoForward();
 
@@ -310,7 +293,6 @@ void
 nsBrowserElement::Reload(bool aHardReload, ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->Reload(aHardReload);
 
@@ -323,7 +305,6 @@ void
 nsBrowserElement::Stop(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
 
   nsresult rv = mBrowserElementAPI->Stop();
 
@@ -338,7 +319,6 @@ nsBrowserElement::Download(const nsAString& aUrl,
                            ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
   nsCOMPtr<nsIDOMDOMRequest> req;
   AutoJSAPI jsapi;
@@ -362,7 +342,6 @@ already_AddRefed<DOMRequest>
 nsBrowserElement::PurgeHistory(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
   nsCOMPtr<nsIDOMDOMRequest> req;
   nsresult rv = mBrowserElementAPI->PurgeHistory(getter_AddRefs(req));
@@ -382,7 +361,6 @@ nsBrowserElement::GetScreenshot(uint32_t aWidth,
                                 ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
   nsCOMPtr<nsIDOMDOMRequest> req;
   nsresult rv = mBrowserElementAPI->GetScreenshot(aWidth, aHeight, aMimeType,
@@ -404,8 +382,6 @@ void
 nsBrowserElement::Zoom(float aZoom, ErrorResult& aRv)
 {
   NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
-  NS_ENSURE_TRUE_VOID(IsNotWidgetOrThrow(aRv));
-
   nsresult rv = mBrowserElementAPI->Zoom(aZoom);
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -417,7 +393,6 @@ already_AddRefed<DOMRequest>
 nsBrowserElement::GetCanGoBack(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
   nsCOMPtr<nsIDOMDOMRequest> req;
   nsresult rv = mBrowserElementAPI->GetCanGoBack(getter_AddRefs(req));
@@ -434,7 +409,6 @@ already_AddRefed<DOMRequest>
 nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
   nsCOMPtr<nsIDOMDOMRequest> req;
   nsresult rv = mBrowserElementAPI->GetCanGoForward(getter_AddRefs(req));
@@ -451,7 +425,6 @@ already_AddRefed<DOMRequest>
 nsBrowserElement::GetContentDimensions(ErrorResult& aRv)
 {
   NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
-  NS_ENSURE_TRUE(IsNotWidgetOrThrow(aRv), nullptr);
 
   nsCOMPtr<nsIDOMDOMRequest> req;
   nsresult rv = mBrowserElementAPI->GetContentDimensions(getter_AddRefs(req));
