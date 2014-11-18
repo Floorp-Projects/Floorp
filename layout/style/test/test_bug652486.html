@@ -2,14 +2,16 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=652486
+https://bugzilla.mozilla.org/show_bug.cgi?id=1039488
 -->
 <head>
-  <title>Test for Bug 652486</title>
+  <title>Test for Bug 652486 and Bug 1039488</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=652486">Mozilla Bug 652486</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1039488">Mozilla Bug 1039488</a>
 
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -18,17 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=652486
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for Bug 652486 **/
+/** Test for Bug 652486 and Bug 1039488 **/
 
 function c() {
   return document.defaultView.getComputedStyle($('t'), "").
            getPropertyValue("text-decoration");
-}
-
-function cval() {
-  var val = document.defaultView.getComputedStyle($('t'), "").
-              getPropertyCSSValue("text-decoration");
-  return val ? val.getStringValue() : val;
 }
 
 var tests = [
@@ -88,13 +84,13 @@ var tests = [
   // text-decoration should be a shorthand property.
   { decoration: "blink",
     line: null, color: "rgb(0, 0, 0)", style: null,
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "blink rgb(0, 0, 0)", expectedCSSValue: [ "blink", [0, 0, 0] ] },
   { decoration: "underline",
     line: null, color: "black", style: null,
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "underline rgb(0, 0, 0)", expectedCSSValue: [ "underline", [0, 0, 0] ] },
   { decoration: "overline",
     line: null, color: "#ff0000", style: null,
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "overline rgb(255, 0, 0)", expectedCSSValue: [ "overline", [255, 0, 0] ] },
   { decoration: "line-through",
     line: null, color: "initial", style: null,
     expectedValue: "line-through", expectedCSSValue: "line-through" },
@@ -110,19 +106,19 @@ var tests = [
   // text-decoration should be a shorthand property.
   { decoration: "blink",
     line: null, color: null, style: "-moz-none",
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "blink -moz-none", expectedCSSValue: [ "blink", "-moz-none" ] },
   { decoration: "underline",
     line: null, color: null, style: "dotted",
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "underline dotted", expectedCSSValue: [ "underline", "dotted" ] },
   { decoration: "overline",
     line: null, color: null, style: "dashed",
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "overline dashed", expectedCSSValue: [ "overline", "dashed" ] },
   { decoration: "line-through",
     line: null, color: null, style: "double",
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "line-through double", expectedCSSValue: [ "line-through", "double" ] },
   { decoration: "blink underline",
     line: null, color: null, style: "wavy",
-    expectedValue: "", expectedCSSValue: null },
+    expectedValue: "underline blink wavy", expectedCSSValue: [ "underline blink", "wavy" ] },
   { decoration: "underline blink overline line-through",
     line: null, color: null, style: "solid",
     expectedValue: "underline overline line-through blink",
@@ -140,13 +136,13 @@ function makeDeclaration(aTest)
     str += "text-decoration: " + aTest.decoration + "; ";
   }
   if (aTest.color) {
-    str += "-moz-text-decoration-color: " + aTest.color + "; ";
+    str += "text-decoration-color: " + aTest.color + "; ";
   }
   if (aTest.line) {
-    str += "-moz-text-decoration-line: " + aTest.line + "; ";
+    str += "text-decoration-line: " + aTest.line + "; ";
   }
   if (aTest.style) {
-    str += "-moz-text-decoration-style: " + aTest.style + "; ";
+    str += "text-decoration-style: " + aTest.style + "; ";
   }
   return str;
 }
@@ -156,31 +152,56 @@ function clearStyleObject()
   $('t').style.textDecoration = null;
 }
 
+function testCSSValue(testname, test, dec) {
+  var val = document.defaultView.getComputedStyle($('t'), "").
+              getPropertyCSSValue("text-decoration");
+  isnot(val, null, testname + " (CSS value): " + dec);
+
+  if (typeof test.expectedCSSValue == "string") {
+    is(val.getStringValue(), test.expectedCSSValue, testname + " (CSS value): " + dec);
+    return;
+  }
+
+  is(val.length, test.expectedCSSValue.length, testname + " (CSS value length): " + dec);
+  for (var i = 0; i < val.length; i ++) {
+    var actual = val[i];
+    var expected = test.expectedCSSValue[i];
+    if (typeof expected == "string") {
+      is(actual.getStringValue(), expected, testname + " (CSS value [" + i + "] value): " + dec);
+    } else if (typeof expected == "object") {
+      var rgb = actual.getRGBColorValue();
+      is(rgb.red.getFloatValue(CSSPrimitiveValue.CSS_NUMBER), expected[0], testname + " (CSS value [" + i + "] red): " + dec);
+      is(rgb.green.getFloatValue(CSSPrimitiveValue.CSS_NUMBER), expected[1], testname + " (CSS value [" + i + "] green): " + dec);
+      is(rgb.blue.getFloatValue(CSSPrimitiveValue.CSS_NUMBER), expected[2], testname + " (CSS value [" + i + "] blue): " + dec);
+    }
+  }
+}
+
 for (var i = 0; i < tests.length; ++i) {
   var test = tests[i];
   if (test.decoration) {
     $('t').style.textDecoration = test.decoration;
   }
   if (test.color) {
-    $('t').style.MozTextDecorationColor = test.color;
+    $('t').style.textDecorationColor = test.color;
   }
   if (test.line) {
-    $('t').style.MozTextDecorationLine = test.line;
+    $('t').style.textDecorationLine = test.line;
   }
   if (test.style) {
-    $('t').style.MozTextDecorationStyle = test.style;
+    $('t').style.textDecorationStyle = test.style;
   }
 
   var dec = makeDeclaration(test);
   is(c(), test.expectedValue, "Test1 (computed value): " + dec);
-  is(cval(), test.expectedCSSValue, "Test1 (CSS value): " + dec);
+  testCSSValue("Test1", test, dec);
 
   clearStyleObject();
 
   $('t').setAttribute("style", dec);
 
   is(c(), test.expectedValue, "Test2 (computed value): " + dec);
-  is(cval(), test.expectedCSSValue, "Test2 (CSS value): " + dec);
+  testCSSValue("Test2", test, dec);
 
   $('t').removeAttribute("style");
 }

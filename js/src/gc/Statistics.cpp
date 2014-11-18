@@ -324,7 +324,7 @@ static const PhaseInfo phases[] = {
     { PHASE_COMPACT, "Compact", PHASE_NO_PARENT },
         { PHASE_COMPACT_MOVE, "Compact Move", PHASE_COMPACT },
         { PHASE_COMPACT_UPDATE, "Compact Update", PHASE_COMPACT, },
-            { PHASE_COMPACT_UPDATE_GRAY, "Compact Update Gray", PHASE_COMPACT_UPDATE, },
+            { PHASE_COMPACT_UPDATE_CELLS, "Compact Update Cells", PHASE_COMPACT_UPDATE, },
     { PHASE_GC_END, "End Callback", PHASE_NO_PARENT },
     { PHASE_LIMIT, nullptr, PHASE_NO_PARENT }
 };

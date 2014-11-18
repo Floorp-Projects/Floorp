@@ -41,11 +41,11 @@ CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *grap
 bool
 CodeGeneratorX86Shared::generatePrologue()
 {
+    MOZ_ASSERT(masm.framePushed() == 0);
     MOZ_ASSERT(!gen->compilingAsmJS());
 
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
-
     return true;
 }
 

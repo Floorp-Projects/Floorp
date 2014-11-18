@@ -2359,7 +2359,6 @@ MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
         MOZ_ASSERT(!IsForwarded(thing));
         return;
     }
-    MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
 
     if (IsForwarded(thing)) {
         Cell *dst = Forwarded(thing);
@@ -2415,21 +2414,250 @@ GCRuntime::sweepZoneAfterCompacting(Zone *zone)
     }
 }
 
-/*
- * Update the interal pointers for all cells of the specified kind in a zone.
- */
 template <typename T>
 static void
-UpdateCellPointersByKind(MovingTracer *trc, ArenaLists &al, AllocKind thingKind) {
-    JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
-    MOZ_ASSERT(MapTypeToTraceKind<T>::kind == traceKind);
-    for (ArenaHeader *arena = al.getFirstArena(thingKind); arena; arena = arena->next) {
-        for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-            T *cell = reinterpret_cast<T*>(i.getCell());
-            cell->fixupAfterMovingGC();
-            TraceChildren(trc, cell, traceKind);
+UpdateCellPointersTyped(MovingTracer *trc, ArenaHeader *arena, JSGCTraceKind traceKind)
+{
+    for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
+        T *cell = reinterpret_cast<T*>(i.getCell());
+        cell->fixupAfterMovingGC();
+        TraceChildren(trc, cell, traceKind);
+    }
+}
+
+/*
+ * Update the interal pointers for all cells in an arena.
+ */
+static void
+UpdateCellPointers(MovingTracer *trc, ArenaHeader *arena)
+{
+    AllocKind kind = arena->getAllocKind();
+    JSGCTraceKind traceKind = MapAllocToTraceKind(kind);
+
+    switch (kind) {
+      case FINALIZE_OBJECT0:
+      case FINALIZE_OBJECT0_BACKGROUND:
+      case FINALIZE_OBJECT2:
+      case FINALIZE_OBJECT2_BACKGROUND:
+      case FINALIZE_OBJECT4:
+      case FINALIZE_OBJECT4_BACKGROUND:
+      case FINALIZE_OBJECT8:
+      case FINALIZE_OBJECT8_BACKGROUND:
+      case FINALIZE_OBJECT12:
+      case FINALIZE_OBJECT12_BACKGROUND:
+      case FINALIZE_OBJECT16:
+      case FINALIZE_OBJECT16_BACKGROUND:
+        UpdateCellPointersTyped<JSObject>(trc, arena, traceKind);
+        return;
+      case FINALIZE_SCRIPT:
+        UpdateCellPointersTyped<JSScript>(trc, arena, traceKind);
+        return;
+      case FINALIZE_LAZY_SCRIPT:
+        UpdateCellPointersTyped<LazyScript>(trc, arena, traceKind);
+        return;
+      case FINALIZE_SHAPE:
+        UpdateCellPointersTyped<Shape>(trc, arena, traceKind);
+        return;
+      case FINALIZE_ACCESSOR_SHAPE:
+        UpdateCellPointersTyped<AccessorShape>(trc, arena, traceKind);
+        return;
+      case FINALIZE_BASE_SHAPE:
+        UpdateCellPointersTyped<BaseShape>(trc, arena, traceKind);
+        return;
+      case FINALIZE_TYPE_OBJECT:
+        UpdateCellPointersTyped<types::TypeObject>(trc, arena, traceKind);
+        return;
+      case FINALIZE_JITCODE:
+        UpdateCellPointersTyped<jit::JitCode>(trc, arena, traceKind);
+        return;
+      default:
+        MOZ_CRASH("Invalid alloc kind for UpdateCellPointers");
+    }
+}
+
+namespace js {
+namespace gc {
+
+struct ArenasToUpdate
+{
+    ArenasToUpdate(JSRuntime *rt);
+    bool done() { return initialized && arena == nullptr; }
+    ArenaHeader* next();
+    ArenaHeader *getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned max);
+
+  private:
+    bool initialized;
+    GCZonesIter zone;    // Current zone to process, unless zone.done()
+    unsigned kind;       // Current alloc kind to process
+    ArenaHeader *arena;  // Next arena to process
+
+    bool shouldProcessKind(unsigned kind);
+};
+
+bool ArenasToUpdate::shouldProcessKind(unsigned kind)
+{
+    MOZ_ASSERT(kind >= 0 && kind < FINALIZE_LIMIT);
+    return
+        kind != FINALIZE_FAT_INLINE_STRING &&
+        kind != FINALIZE_STRING &&
+        kind != FINALIZE_EXTERNAL_STRING &&
+        kind != FINALIZE_SYMBOL;
+}
+
+ArenasToUpdate::ArenasToUpdate(JSRuntime *rt)
+  : initialized(false), zone(rt, SkipAtoms)
+{}
+
+ArenaHeader *
+ArenasToUpdate::next()
+{
+    // Find the next arena to update.
+    //
+    // Note that this uses a generator-like arrangement. The first time this is
+    // called, |initialized| is false and the for-loops below are entered in the
+    // normal way, returning the first arena found. In subsequent invocations we
+    // jump directly into the body of the for loops just after the previous
+    // return. All state is stored in class members and so preserved between
+    // invocations.
+
+    if (initialized) {
+        MOZ_ASSERT(arena);
+        MOZ_ASSERT(shouldProcessKind(kind));
+        MOZ_ASSERT(!zone.done());
+        goto resumePoint;
+    }
+
+    initialized = true;
+    for (; !zone.done(); zone.next()) {
+        for (kind = 0; kind < FINALIZE_LIMIT; ++kind) {
+            if (shouldProcessKind(kind)) {
+                for (arena = zone.get()->allocator.arenas.getFirstArena(AllocKind(kind));
+                     arena;
+                     arena = arena->next)
+                {
+                    return arena;
+                    resumePoint:;
+                }
+            }
         }
     }
+    return nullptr;
+}
+
+ArenaHeader *
+ArenasToUpdate::getArenasToUpdate(AutoLockHelperThreadState& lock, unsigned count)
+{
+    if (zone.done())
+        return nullptr;
+
+    ArenaHeader *head = nullptr;
+    ArenaHeader *tail = nullptr;
+
+    for (unsigned i = 0; i < count; ++i) {
+        ArenaHeader *arena = next();
+        if (!arena)
+            break;
+
+        if (tail)
+            tail->setNextArenaToUpdate(arena);
+        else
+            head = arena;
+        tail = arena;
+    }
+
+    return head;
+}
+
+struct UpdateCellPointersTask : public GCParallelTask
+{
+    // Number of arenas to update in one block.
+#ifdef DEBUG
+    static const unsigned ArenasToProcess = 16;
+#else
+    static const unsigned ArenasToProcess = 256;
+#endif
+
+    UpdateCellPointersTask() : rt_(nullptr), source_(nullptr), arenaList_(nullptr) {}
+    void init(JSRuntime *rt, ArenasToUpdate *source, AutoLockHelperThreadState& lock);
+
+  private:
+    JSRuntime *rt_;
+    ArenasToUpdate *source_;
+    ArenaHeader *arenaList_;
+
+    virtual void run() MOZ_OVERRIDE;
+    void getArenasToUpdate(AutoLockHelperThreadState& lock);
+    void updateArenas();
+};
+
+void
+UpdateCellPointersTask::init(JSRuntime *rt, ArenasToUpdate *source, AutoLockHelperThreadState& lock)
+{
+    rt_ = rt;
+    source_ = source;
+    getArenasToUpdate(lock);
+}
+
+void
+UpdateCellPointersTask::getArenasToUpdate(AutoLockHelperThreadState& lock)
+{
+    arenaList_ = source_->getArenasToUpdate(lock, ArenasToProcess);
+}
+
+void
+UpdateCellPointersTask::updateArenas()
+{
+    MovingTracer trc(rt_);
+    for (ArenaHeader *arena = arenaList_;
+         arena;
+         arena = arena->getNextArenaToUpdateAndUnlink())
+    {
+        UpdateCellPointers(&trc, arena);
+    }
+    arenaList_ = nullptr;
+}
+
+/* virtual */ void
+UpdateCellPointersTask::run()
+{
+    while (arenaList_) {
+        updateArenas();
+        {
+            AutoLockHelperThreadState lock;
+            getArenasToUpdate(lock);
+        }
+    }
+}
+
+} // namespace gc
+} // namespace js
+
+void
+GCRuntime::updateAllCellPointersParallel(ArenasToUpdate &source)
+{
+    AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
+
+    const size_t maxTasks = 8;
+    unsigned taskCount = Min(HelperThreadState().cpuCount, maxTasks);
+    UpdateCellPointersTask updateTasks[maxTasks];
+
+    AutoLockHelperThreadState lock;
+    unsigned i;
+    for (i = 0; i < taskCount && !source.done(); ++i) {
+        updateTasks[i].init(rt, &source, lock);
+        startTask(updateTasks[i], gcstats::PHASE_COMPACT_UPDATE_CELLS);
+    }
+    unsigned tasksStarted = i;
+
+    for (i = 0; i < tasksStarted; ++i)
+        joinTask(updateTasks[i], gcstats::PHASE_COMPACT_UPDATE_CELLS);
+}
+
+void
+GCRuntime::updateAllCellPointersSerial(MovingTracer *trc, ArenasToUpdate &source)
+{
+    while (ArenaHeader *arena = source.next())
+        UpdateCellPointers(trc, arena);
 }
 
 /*
@@ -2454,19 +2682,14 @@ GCRuntime::updatePointersToRelocatedCells()
     for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
         comp->sweepCrossCompartmentWrappers();
 
-    // Iterate through all cells that can contain JSObject pointers to update them.
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        ArenaLists &al = zone->allocator.arenas;
-        for (unsigned i = 0; i < FINALIZE_OBJECT_LIMIT; ++i)
-            UpdateCellPointersByKind<JSObject>(&trc, al, AllocKind(i));
-        UpdateCellPointersByKind<JSScript>(&trc, al, FINALIZE_SCRIPT);
-        UpdateCellPointersByKind<LazyScript>(&trc, al, FINALIZE_LAZY_SCRIPT);
-        UpdateCellPointersByKind<Shape>(&trc, al, FINALIZE_SHAPE);
-        UpdateCellPointersByKind<AccessorShape>(&trc, al, FINALIZE_ACCESSOR_SHAPE);
-        UpdateCellPointersByKind<BaseShape>(&trc, al, FINALIZE_BASE_SHAPE);
-        UpdateCellPointersByKind<types::TypeObject>(&trc, al, FINALIZE_TYPE_OBJECT);
-        UpdateCellPointersByKind<jit::JitCode>(&trc, al, FINALIZE_JITCODE);
-    }
+    // Iterate through all cells that can contain JSObject pointers to update
+    // them. Since updating each cell is independent we try to parallelize this
+    // as much as possible.
+    ArenasToUpdate source(rt);
+    if (CanUseExtraThreads())
+        updateAllCellPointersParallel(source);
+    else
+        updateAllCellPointersSerial(&trc, source);
 
     // Mark roots to update them.
     markRuntime(&trc, MarkRuntime);

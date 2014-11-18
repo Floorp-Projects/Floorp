@@ -42,8 +42,8 @@ public:
 protected:
   virtual ~nsAlertsIconListener();
 
-  nsresult OnStopRequest(imgIRequest* aRequest);
-  nsresult OnStopFrame(imgIRequest* aRequest);
+  nsresult OnLoadComplete(imgIRequest* aRequest);
+  nsresult OnFrameComplete(imgIRequest* aRequest);
 
   /**
    * The only difference between libnotify.so.4 and libnotify.so.1 for these symbols

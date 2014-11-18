@@ -338,37 +338,6 @@ private:
   };
   friend class ProcessCachedDataTask;
 
-  // This class is used to keep one reference count of T in it. And this class
-  // can make sure the stored reference count will be released on the dispatched
-  // thread. By using this class properly (ex. passing the pointer into this
-  // runnable first, then releasing the original pointer held by ourselves, and
-  // then dispatching this runnable onto the desired thread), we can avoid
-  // running the destructor of the referenced object on any other threads
-  // unexpectedly before this runnable has been executed.
-  template<class T>
-  class ReferenceKeeperRunnable : public nsRunnable
-  {
-  public:
-    ReferenceKeeperRunnable(nsRefPtr<T> aPointer)
-      : mPointer(aPointer)
-    {
-    }
-
-    NS_IMETHOD Run() MOZ_OVERRIDE
-    {
-      mPointer = nullptr;
-      return NS_OK;
-    }
-
-  private:
-    // Forbidden
-    ReferenceKeeperRunnable() MOZ_DELETE;
-    ReferenceKeeperRunnable(const ReferenceKeeperRunnable &rhs) MOZ_DELETE;
-    const ReferenceKeeperRunnable &operator=(const ReferenceKeeperRunnable &rhs) MOZ_DELETE;
-
-    nsRefPtr<T> mPointer;
-  };
-
   // Forbidden
   MediaCodecReader() MOZ_DELETE;
   const MediaCodecReader& operator=(const MediaCodecReader& rhs) MOZ_DELETE;
