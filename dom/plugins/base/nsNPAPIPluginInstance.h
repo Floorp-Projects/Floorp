@@ -207,7 +207,7 @@ public:
       mSurfaceTexture = nullptr;
     }
 
-    nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
+    mozilla::RefPtr<mozilla::gl::AndroidSurfaceTexture> mSurfaceTexture;
     gfxRect mDimensions;
   };
 
@@ -333,8 +333,8 @@ protected:
   bool mFullScreen;
   bool mInverted;
 
-  nsRefPtr<SharedPluginTexture> mContentTexture;
-  nsRefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
+  mozilla::RefPtr<SharedPluginTexture> mContentTexture;
+  mozilla::RefPtr<mozilla::gl::AndroidSurfaceTexture> mContentSurface;
 #endif
 
   enum {
@@ -383,7 +383,7 @@ private:
 
 #ifdef MOZ_WIDGET_ANDROID
   void EnsureSharedTexture();
-  mozilla::gl::AndroidSurfaceTexture* CreateSurfaceTexture();
+  mozilla::TemporaryRef<mozilla::gl::AndroidSurfaceTexture> CreateSurfaceTexture();
 
   std::map<void*, VideoInfo*> mVideos;
   bool mOnScreen;
