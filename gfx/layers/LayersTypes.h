@@ -79,7 +79,7 @@ MOZ_END_ENUM_CLASS(SurfaceMode)
 // by other surfaces we will need a more generic LayerRenderState.
 MOZ_BEGIN_ENUM_CLASS(LayerRenderStateFlags, int8_t)
   LAYER_RENDER_STATE_DEFAULT = 0,
-  Y_FLIPPED = 1 << 0,
+  ORIGIN_BOTTOM_LEFT = 1 << 0,
   BUFFER_ROTATION = 1 << 1,
   // Notify Composer2D to swap the RB pixels of gralloc buffer
   FORMAT_RB_SWAP = 1 << 2,
@@ -116,8 +116,8 @@ struct LayerRenderState {
     , mTexture(aTexture)
   {}
 
-  bool YFlipped() const
-  { return bool(mFlags & LayerRenderStateFlags::Y_FLIPPED); }
+  bool OriginBottomLeft() const
+  { return bool(mFlags & LayerRenderStateFlags::ORIGIN_BOTTOM_LEFT); }
 
   bool BufferRotated() const
   { return bool(mFlags & LayerRenderStateFlags::BUFFER_ROTATION); }

@@ -176,7 +176,7 @@ AttachToContainerAsEGLImage(ImageContainer* container,
   EGLImageImage::Data data;
   data.mImage = image;
   data.mSize = gfx::IntSize(rect.width, rect.height);
-  data.mInverted = instance->Inverted();
+  data.mOriginPos = instance->OriginPos();
 
   EGLImageImage* typedImg = static_cast<EGLImageImage*>(img.get());
   typedImg->SetData(data);
@@ -203,7 +203,7 @@ AttachToContainerAsSurfaceTexture(ImageContainer* container,
   SurfaceTextureImage::Data data;
   data.mSurfTex = surfTex;
   data.mSize = gfx::IntSize(rect.width, rect.height);
-  data.mInverted = instance->Inverted();
+  data.mOriginPos = instance->OriginPos();
 
   SurfaceTextureImage* typedImg = static_cast<SurfaceTextureImage*>(img.get());
   typedImg->SetData(data);
@@ -1386,7 +1386,8 @@ nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInf
 
   // The logic below for Honeycomb is just a guess, but seems to work. We don't have a separate
   // inverted flag for video.
-  data.mInverted = AndroidBridge::Bridge()->IsHoneycomb() ? true : mInstance->Inverted();
+  data.mOriginPos = AndroidBridge::Bridge()->IsHoneycomb() ? gl::OriginPos::BottomLeft
+                                                           : mInstance->OriginPos();
   data.mSize = gfx::IntSize(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height);
 
   SurfaceTextureImage* typedImg = static_cast<SurfaceTextureImage*>(img.get());

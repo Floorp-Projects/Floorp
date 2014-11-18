@@ -212,8 +212,8 @@ GrallocTextureHostOGL::GetRenderState()
     if (mIsOpaque) {
       flags |= LayerRenderStateFlags::OPAQUE;
     }
-    if (mFlags & TextureFlags::NEEDS_Y_FLIP) {
-      flags |= LayerRenderStateFlags::Y_FLIPPED;
+    if (mFlags & TextureFlags::ORIGIN_BOTTOM_LEFT) {
+      flags |= LayerRenderStateFlags::ORIGIN_BOTTOM_LEFT;
     }
     if (mFlags & TextureFlags::RB_SWAPPED) {
       flags |= LayerRenderStateFlags::FORMAT_RB_SWAP;

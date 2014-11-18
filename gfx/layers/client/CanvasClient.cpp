@@ -72,8 +72,8 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     gfxImageFormat format
       = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
     TextureFlags flags = TextureFlags::DEFAULT;
-    if (mTextureFlags & TextureFlags::NEEDS_Y_FLIP) {
-      flags |= TextureFlags::NEEDS_Y_FLIP;
+    if (mTextureFlags & TextureFlags::ORIGIN_BOTTOM_LEFT) {
+      flags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
     }
 
     gfx::SurfaceFormat surfaceFormat = gfx::ImageFormatToSurfaceFormat(format);
