@@ -12,6 +12,7 @@ describe("loop.shared.mixins", function() {
 
   var sandbox;
   var sharedMixins = loop.shared.mixins;
+  var ROOM_STATES = loop.store.ROOM_STATES;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -214,4 +215,81 @@ describe("loop.shared.mixins", function() {
     });
   });
 
+  describe("loop.shared.mixins.RoomsAudioMixin", function() {
+    var view, fakeAudioMixin, TestComp, comp;
+
+    function createTestComponent(initialState) {
+      var TestComp = React.createClass({
+        mixins: [loop.shared.mixins.RoomsAudioMixin],
+        render: function() {
+          return React.DOM.div();
+        },
+
+        getInitialState: function() {
+          return { roomState: initialState};
+        }
+      });
+
+      var renderedComp = TestUtils.renderIntoDocument(TestComp());
+      sandbox.stub(renderedComp, "play");
+      return renderedComp;
+    }
+
+    beforeEach(function() {
+    });
+
+    it("should play a sound when the local user joins the room", function() {
+      comp = createTestComponent(ROOM_STATES.INIT);
+
+      comp.setState({roomState: ROOM_STATES.SESSION_CONNECTED});
+
+      sinon.assert.calledOnce(comp.play);
+      sinon.assert.calledWithExactly(comp.play, "room-joined");
+    });
+
+    it("should play a sound when another user joins the room", function() {
+      comp = createTestComponent(ROOM_STATES.SESSION_CONNECTED);
+
+      comp.setState({roomState: ROOM_STATES.HAS_PARTICIPANTS});
+
+      sinon.assert.calledOnce(comp.play);
+      sinon.assert.calledWithExactly(comp.play, "room-joined-in");
+    });
+
+    it("should play a sound when another user leaves the room", function() {
+      comp = createTestComponent(ROOM_STATES.HAS_PARTICIPANTS);
+
+      comp.setState({roomState: ROOM_STATES.SESSION_CONNECTED});
+
+      sinon.assert.calledOnce(comp.play);
+      sinon.assert.calledWithExactly(comp.play, "room-left");
+    });
+
+    it("should play a sound when the local user leaves the room", function() {
+      comp = createTestComponent(ROOM_STATES.HAS_PARTICIPANTS);
+
+      comp.setState({roomState: ROOM_STATES.READY});
+
+      sinon.assert.calledOnce(comp.play);
+      sinon.assert.calledWithExactly(comp.play, "room-left");
+    });
+
+    it("should play a sound when if there is a failure", function() {
+      comp = createTestComponent(ROOM_STATES.HAS_PARTICIPANTS);
+
+      comp.setState({roomState: ROOM_STATES.FAILED});
+
+      sinon.assert.calledOnce(comp.play);
+      sinon.assert.calledWithExactly(comp.play, "failure");
+    });
+
+    it("should play a sound when if the room is full", function() {
+      comp = createTestComponent(ROOM_STATES.READY);
+
+      comp.setState({roomState: ROOM_STATES.FULL});
+
+      sinon.assert.calledOnce(comp.play);
+      sinon.assert.calledWithExactly(comp.play, "failure");
+    });
+  });
 });
