@@ -262,8 +262,6 @@ Section "-InstallStartCleanup"
   StrCpy $R3 "false"
   ${RemovePrecompleteEntries} "$R2" "$R3"
 
-  RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
-
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete "$INSTDIR\defaults\pref\channel-prefs.js"
   ${EndIf}
@@ -294,8 +292,6 @@ Section "-Application" APP_IDX
   SetDetailsPrint both
   DetailPrint $(STATUS_INSTALL_APP)
   SetDetailsPrint none
-
-  RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
 
   ${LogHeader} "Installing Main Files"
   ${CopyFilesFromDir} "$EXEDIR\core" "$INSTDIR" \
@@ -638,32 +634,38 @@ Section "-InstallEndCleanup"
   ${EndIf}
 
   ${If} ${RebootFlag}
-    ; When a reboot is required give SHChangeNotify time to finish the
-    ; refreshing the icons so the OS doesn't display the icons from helper.exe
-    Sleep 10000
-    ${LogHeader} "Reboot Required To Finish Installation"
-    ; ${FileMainEXE}.moz-upgrade should never exist but just in case...
-    ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-upgrade"
-      Rename "$INSTDIR\${FileMainEXE}" "$INSTDIR\${FileMainEXE}.moz-upgrade"
-    ${EndUnless}
+    ; Admin is required to delete files on reboot so only add the moz-delete if
+    ; the user is an admin. After calling UAC::IsAdmin $0 will equal 1 if the
+    ; user is an admin.
+    UAC::IsAdmin
+    ${If} "$0" == "1"
+      ; When a reboot is required give SHChangeNotify time to finish the
+      ; refreshing the icons so the OS doesn't display the icons from helper.exe
+      Sleep 10000
+      ${LogHeader} "Reboot Required To Finish Installation"
+      ; ${FileMainEXE}.moz-upgrade should never exist but just in case...
+      ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-upgrade"
+        Rename "$INSTDIR\${FileMainEXE}" "$INSTDIR\${FileMainEXE}.moz-upgrade"
+      ${EndUnless}
 
-    ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-      ClearErrors
-      Rename "$INSTDIR\${FileMainEXE}" "$INSTDIR\${FileMainEXE}.moz-delete"
-      ${Unless} ${Errors}
-        Delete /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-delete"
+      ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+        ClearErrors
+        Rename "$INSTDIR\${FileMainEXE}" "$INSTDIR\${FileMainEXE}.moz-delete"
+        ${Unless} ${Errors}
+          Delete /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-delete"
+        ${EndUnless}
+      ${EndIf}
+
+      ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
+        CopyFiles /SILENT "$INSTDIR\uninstall\helper.exe" "$INSTDIR"
+        FileOpen $0 "$INSTDIR\${FileMainEXE}" w
+        FileWrite $0 "Will be deleted on restart"
+        Rename /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-upgrade" "$INSTDIR\${FileMainEXE}"
+        FileClose $0
+        Delete "$INSTDIR\${FileMainEXE}"
+        Rename "$INSTDIR\helper.exe" "$INSTDIR\${FileMainEXE}"
       ${EndUnless}
     ${EndIf}
-
-    ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
-      CopyFiles /SILENT "$INSTDIR\uninstall\helper.exe" "$INSTDIR"
-      FileOpen $0 "$INSTDIR\${FileMainEXE}" w
-      FileWrite $0 "Will be deleted on restart"
-      Rename /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-upgrade" "$INSTDIR\${FileMainEXE}"
-      FileClose $0
-      Delete "$INSTDIR\${FileMainEXE}"
-      Rename "$INSTDIR\helper.exe" "$INSTDIR\${FileMainEXE}"
-    ${EndUnless}
   ${EndIf}
 SectionEnd
 
