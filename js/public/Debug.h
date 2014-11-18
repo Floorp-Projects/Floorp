@@ -289,7 +289,8 @@ onNewPromise(JSContext *cx, HandleObject promise);
 // It is Gecko's responsibility to ensure that this is never called on the same
 // promise more than once (because a promise can only make the transition from
 // unsettled to settled once).
-void onPromiseSettled(JSContext *cx, HandleObject promise);
+JS_PUBLIC_API(void)
+onPromiseSettled(JSContext *cx, HandleObject promise);
 
 } // namespace dbg
 } // namespace JS
