@@ -639,7 +639,7 @@ SkiaTransform(const gfxImageSurface* aDest,
   SkBitmap destBitmap;
   destBitmap.setInfo(destInfo, aDest->Stride());
   destBitmap.setPixels((uint32_t*)aDest->Data());
-  SkCanvas destCanvas(new SkBitmapDevice(destBitmap));
+  SkCanvas destCanvas(destBitmap);
 
   IntSize srcSize = aSrc->GetSize();
   SkImageInfo srcInfo = SkImageInfo::Make(srcSize.width,

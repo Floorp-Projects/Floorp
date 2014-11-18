@@ -203,7 +203,7 @@ SkiaTransform(DataSourceSurface* aDest,
   SkBitmap destBitmap;
   destBitmap.setInfo(destInfo, aDest->Stride());
   destBitmap.setPixels((uint32_t*)aDest->GetData());
-  SkCanvas destCanvas(new SkBitmapDevice(destBitmap));
+  SkCanvas destCanvas(destBitmap);
 
   IntSize srcSize = aSource->GetSize();
   SkImageInfo srcInfo = SkImageInfo::Make(srcSize.width,
