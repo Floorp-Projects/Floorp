@@ -1547,6 +1547,9 @@ function PeerConnectionWrapper(label, configuration, h264) {
   this.onAddStreamFired = false;
   this.addStreamCallbacks = {};
 
+  this._local_ice_candidates = [];
+  this._remote_ice_candidates = [];
+  this._ice_candidates_to_add = [];
   this.holdIceCandidates = true;
   this.endOfTrickleIce = false;
   this.localRequiresTrickleIce = false;
@@ -2133,9 +2136,6 @@ PeerConnectionWrapper.prototype = {
   setupIceCandidateHandler : function
     PCW_setupIceCandidateHandler(test, candidateHandler, endHandler) {
     var self = this;
-    self._local_ice_candidates = [];
-    self._remote_ice_candidates = [];
-    self._ice_candidates_to_add = [];
 
     candidateHandler = candidateHandler || test.iceCandidateHandler.bind(test);
     endHandler = endHandler || test.signalEndOfTrickleIce.bind(test);
