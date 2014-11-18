@@ -4424,11 +4424,11 @@
 
       ${Unless} "$R2" == "false"
         IntOp $R2 $R2 + 2
-      ${EndIf}
+      ${EndUnless}
       ${Unless} "$R3" == "false"
         SendMessage $R3 ${PBM_STEPIT} 0 0
         SendMessage $R3 ${PBM_STEPIT} 0 0
-      ${EndIf}
+      ${EndUnless}
 
       ClearErrors
       Delete "$R1"
@@ -4462,6 +4462,162 @@
   Call OnStubInstallUninstall
   Pop ${_INSTALL_STEP_COUNTER}
   !verbose pop
+!macroend
+
+/**
+ * Parses the precomplete file to remove an installation's files.
+ *
+ * When modifying this macro be aware that LineFind uses all registers except
+ * $R0-$R3 so be cautious. Callers of this macro are not affected.
+ *
+ * @param   _PROGRESSBAR
+ *          The progress bar to update using PBM_STEPIT. Can also be "false" if
+ *          updating a progressbar isn't needed.
+ * @param   _INSTALL_STEP_COUNTER
+ *          The install step counter to increment. The variable specified in
+ *          this parameter is also updated. Can also be "false" if a counter
+ *          isn't needed.
+ *
+ * $R2 = _PROGRESSBAR
+ * $R3 = _INSTALL_STEP_COUNTER
+ */
+!macro RemovePrecompleteEntries
+
+  !ifndef ${_MOZFUNC_UN}RemovePrecompleteEntries
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParent
+    !insertmacro ${_MOZFUNC_UN_TMP}LineFind
+    !insertmacro ${_MOZFUNC_UN_TMP}TrimNewLines
+    !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}RemovePrecompleteEntries "!insertmacro ${_MOZFUNC_UN}RemovePrecompleteEntriesCall"
+
+    Function ${_MOZFUNC_UN}RemovePrecompleteEntries
+      Exch $R3
+      Exch 1
+      Exch $R2
+      Push $R1
+      Push $R0
+      Push $TmpVal
+
+      ${If} ${FileExists} "$INSTDIR\precomplete"
+        ; Copy the uninstall log file to a temporary file
+        GetTempFileName $TmpVal
+        CopyFiles /SILENT /FILESONLY "$INSTDIR\precomplete" "$TmpVal"
+
+        CreateDirectory "$INSTDIR\${TO_BE_DELETED}"
+
+        ; Rename and then remove files
+        ${${_MOZFUNC_UN}LineFind} "$TmpVal" "/NUL" "1:-1" "${_MOZFUNC_UN}RemovePrecompleteEntriesCallback"
+
+        ; Delete the temporary precomplete file
+        Delete /REBOOTOK "$TmpVal"
+      ${EndIf}
+
+      ClearErrors
+
+      Pop $TmpVal
+      Pop $R0
+      Pop $R1
+      Exch $R2
+      Exch 1
+      Exch $R3
+    FunctionEnd
+
+    Function ${_MOZFUNC_UN}RemovePrecompleteEntriesCallback
+      ${${_MOZFUNC_UN}TrimNewLines} "$R9" $R9
+      ; Replace all occurrences of "/" with "\".
+      ${${_MOZFUNC_UN}WordReplace} "$R9" "/" "\" "+" $R9
+
+      ; Copy the first 7 chars
+      StrCpy $R1 "$R9" 7
+      ${If} "$R1" == "remove "
+        ; Copy the string starting after the 8th char
+        StrCpy $R9 "$R9" "" 8
+        ; Copy all but the last char to remove the double quote.
+        StrCpy $R9 "$R9" -1
+        ${If} ${FileExists} "$INSTDIR\$R9"
+          ${Unless} "$R3" == "false"
+            IntOp $R3 $R3 + 2
+          ${EndUnless}
+          ${Unless} "$R2" == "false"
+            SendMessage $R2 ${PBM_STEPIT} 0 0
+            SendMessage $R2 ${PBM_STEPIT} 0 0
+          ${EndUnless}
+
+          ClearErrors
+          Delete "$INSTDIR\$R9"
+          ${If} ${Errors}
+            GetTempFileName $R0 "$INSTDIR\${TO_BE_DELETED}"
+            Delete "$R0"
+            ClearErrors
+            Rename "$INSTDIR\$R9" "$R0"
+!ifdef __UNINSTALL__
+            ${If} ${Errors}
+              Delete /REBOOTOK "$INSTDIR\$R9"
+            ${EndIf}
+!endif
+          ${EndIf}
+        ${EndIf}
+      ${ElseIf} "$R1" == "rmdir $\""
+        ; Copy the string starting after the 7th char.
+        StrCpy $R9 "$R9" "" 7
+        ; Copy all but the last two chars to remove the slash and the double quote.
+        StrCpy $R9 "$R9" -2
+        ${If} ${FileExists} "$INSTDIR\$R9"
+          ; Ignore directory removal errors
+          RmDir "$INSTDIR\$R9"
+        ${EndIf}
+      ${EndIf}
+
+      ClearErrors
+
+      Push 0
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro RemovePrecompleteEntriesCall _PROGRESSBAR _INSTALL_STEP_COUNTER
+  !verbose push
+  Push "${_PROGRESSBAR}"
+  Push "${_INSTALL_STEP_COUNTER}"
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call RemovePrecompleteEntries
+  Pop ${_INSTALL_STEP_COUNTER}
+  !verbose pop
+!macroend
+
+!macro un.RemovePrecompleteEntriesCall _PROGRESSBAR _INSTALL_STEP_COUNTER
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PROGRESSBAR}"
+  Push "${_INSTALL_STEP_COUNTER}"
+  Call un.RemovePrecompleteEntries
+  Pop ${_INSTALL_STEP_COUNTER}
+  Pop $0
+  !verbose pop
+!macroend
+
+!macro un.RemovePrecompleteEntries
+  !ifndef un.RemovePrecompleteEntries
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro RemovePrecompleteEntries
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
 !macroend
 
 /**
@@ -7717,8 +7873,8 @@
  * System::Call "kernel32::GetTickCount()l .s"
  * Pop $varname
  *
- * _START_TICK_COUNT    
- * _FINISH_TICK_COUNT   
+ * _START_TICK_COUNT
+ * _FINISH_TICK_COUNT
  * _RES_ELAPSED_SECONDS return value - elapsed time between _START_TICK_COUNT
  *                      and _FINISH_TICK_COUNT in seconds.
  */
