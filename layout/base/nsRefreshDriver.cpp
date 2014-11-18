@@ -51,6 +51,8 @@
 #include "nsDocShell.h"
 #include "nsISimpleEnumerator.h"
 
+#include "mozilla/Telemetry.h"
+
 using namespace mozilla;
 using namespace mozilla::widget;
 
@@ -296,6 +298,7 @@ protected:
         this,
         (aNowTime - mTargetTime).ToMilliseconds(),
         delay);
+    Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_FRAME_DELAY_MS, (aNowTime - mTargetTime).ToMilliseconds());
 
     // then schedule the timer
     LOG("[%p] scheduling callback for %d ms (2)", this, delay);
@@ -410,6 +413,7 @@ protected:
         this,
         (aNowTime - mTargetTime).ToMilliseconds(),
         delay);
+    Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_FRAME_DELAY_MS, (aNowTime - mTargetTime).ToMilliseconds());
 
     // then schedule the timer
     LOG("[%p] scheduling callback for %d ms (2)", this, delay);
