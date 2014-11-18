@@ -58,9 +58,18 @@ struct ReplaceMallocBridge;
 extern "C" MFBT_API ReplaceMallocBridge* get_bridge();
 #endif
 
+namespace mozilla {
+namespace dmd {
+struct DMDFuncs;
+}
+}
+
 struct ReplaceMallocBridge
 {
-  ReplaceMallocBridge() : mVersion(0) {}
+  ReplaceMallocBridge() : mVersion(1) {}
+
+  /* This method was added in version 1 of the bridge. */
+  virtual mozilla::dmd::DMDFuncs* GetDMDFuncs() { return nullptr; }
 
 #ifndef REPLACE_MALLOC_IMPL
   /* Returns the replace-malloc bridge if its version is at least the
@@ -85,6 +94,13 @@ protected:
  * names to be identical. */
 struct ReplaceMalloc
 {
+  /* Don't call this method from performance critical code. Use
+   * mozilla::dmd::DMDFuncs::Get() instead, it has less overhead. */
+  static mozilla::dmd::DMDFuncs* GetDMDFuncs()
+  {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 1);
+    return singleton ? singleton->GetDMDFuncs() : nullptr;
+  }
 };
 #endif
 

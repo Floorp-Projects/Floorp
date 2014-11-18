@@ -18,8 +18,6 @@ DEFINES['MOZ_NO_MOZALLOC'] = True
 
 DISABLE_STL_WRAPPING = True
 
-USE_LIBS += ['dmd']
-
 XPCSHELL_TESTS_MANIFESTS += [
     'xpcshell.ini',
 ]
