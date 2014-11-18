@@ -1897,7 +1897,8 @@ public:
    * be a void string if the attr is not present.
    */
   virtual void MaybePreLoadImage(nsIURI* uri,
-                                 const nsAString& aCrossOriginAttr) = 0;
+                                 const nsAString& aCrossOriginAttr,
+                                 ReferrerPolicy aReferrerPolicy) = 0;
 
   /**
    * Called by nsParser to preload style sheets.  Can also be merged into the

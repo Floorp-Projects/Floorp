@@ -930,7 +930,7 @@ nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL,
   if (!uri) {
     return;
   }
-  mDocument->MaybePreLoadImage(uri, aCrossOrigin);
+  mDocument->MaybePreLoadImage(uri, aCrossOrigin, mSpeculationReferrerPolicy);
 }
 
 void

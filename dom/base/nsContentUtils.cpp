@@ -2985,6 +2985,7 @@ nsContentUtils::IsImageInCache(nsIURI* aURI, nsIDocument* aDocument)
 nsresult
 nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                           nsIPrincipal* aLoadingPrincipal, nsIURI* aReferrer,
+                          net::ReferrerPolicy aReferrerPolicy,
                           imgINotificationObserver* aObserver, int32_t aLoadFlags,
                           const nsAString& initiatorType,
                           imgRequestProxy** aRequest,
@@ -3016,6 +3017,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   return imgLoader->LoadImage(aURI,                 /* uri to load */
                               documentURI,          /* initialDocumentURI */
                               aReferrer,            /* referrer */
+                              aReferrerPolicy,      /* referrer policy */
                               aLoadingPrincipal,    /* loading principal */
                               loadGroup,            /* loadgroup */
                               aObserver,            /* imgINotificationObserver */
