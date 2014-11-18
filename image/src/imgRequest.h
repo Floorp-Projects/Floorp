@@ -19,6 +19,7 @@
 #include "nsStringGlue.h"
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 class imgCacheValidator;
 class imgLoader;
@@ -52,6 +53,7 @@ public:
   typedef mozilla::image::Image Image;
   typedef mozilla::image::ImageURL ImageURL;
   typedef mozilla::image::ProgressTracker ProgressTracker;
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
   explicit imgRequest(imgLoader* aLoader);
 
@@ -64,7 +66,8 @@ public:
                 imgCacheEntry *aCacheEntry,
                 void *aLoadId,
                 nsIPrincipal* aLoadingPrincipal,
-                int32_t aCORSMode);
+                int32_t aCORSMode,
+                ReferrerPolicy aReferrerPolicy);
 
   void ClearLoader();
 
@@ -115,6 +118,9 @@ public:
 
   // The CORS mode for which we loaded this image.
   int32_t GetCORSMode() const { return mCORSMode; }
+
+  // The Referrer Policy in effect when loading this image.
+  ReferrerPolicy GetReferrerPolicy() const { return mReferrerPolicy; }
 
   // The principal for the document that loaded this image. Used when trying to
   // validate a CORS image load.
@@ -252,6 +258,9 @@ private:
   // The CORS mode (defined in imgIRequest) this image was loaded with. By
   // default, imgIRequest::CORS_NONE.
   int32_t mCORSMode;
+
+  // The Referrer Policy (defined in ReferrerPolicy.h) used for this image.
+  ReferrerPolicy mReferrerPolicy;
 
   nsresult mImageErrorCode;
 

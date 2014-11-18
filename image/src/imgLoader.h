@@ -22,6 +22,7 @@
 #include "nsIChannel.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "imgIRequest.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 class imgLoader;
 class imgRequestProxy;
@@ -217,6 +218,7 @@ public:
   typedef mozilla::image::ImageURL ImageURL;
   typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
   typedef nsTHashtable<nsPtrHashKey<imgRequest>> imgSet;
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
   typedef mozilla::Mutex Mutex;
 
   NS_DECL_ISUPPORTS
@@ -251,6 +253,7 @@ public:
   nsresult LoadImage(nsIURI *aURI,
                      nsIURI *aInitialDocumentURI,
                      nsIURI *aReferrerURI,
+                     ReferrerPolicy aReferrerPolicy,
                      nsIPrincipal* aLoadingPrincipal,
                      nsILoadGroup *aLoadGroup,
                      imgINotificationObserver *aObserver,
@@ -336,6 +339,7 @@ private: // methods
 
   bool ValidateEntry(imgCacheEntry *aEntry, nsIURI *aKey,
                        nsIURI *aInitialDocumentURI, nsIURI *aReferrerURI,
+                       ReferrerPolicy aReferrerPolicy,
                        nsILoadGroup *aLoadGroup,
                        imgINotificationObserver *aObserver, nsISupports *aCX,
                        nsLoadFlags aLoadFlags,
@@ -348,6 +352,7 @@ private: // methods
   bool ValidateRequestWithNewChannel(imgRequest *request, nsIURI *aURI,
                                        nsIURI *aInitialDocumentURI,
                                        nsIURI *aReferrerURI,
+                                       ReferrerPolicy aReferrerPolicy,
                                        nsILoadGroup *aLoadGroup,
                                        imgINotificationObserver *aObserver,
                                        nsISupports *aCX, nsLoadFlags aLoadFlags,
