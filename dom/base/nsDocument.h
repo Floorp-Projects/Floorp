@@ -1092,7 +1092,8 @@ public:
   void MaybeEndOutermostXBLUpdate();
 
   virtual void MaybePreLoadImage(nsIURI* uri,
-                                 const nsAString &aCrossOriginAttr) MOZ_OVERRIDE;
+                                 const nsAString &aCrossOriginAttr,
+                                 ReferrerPolicy aReferrerPolicy) MOZ_OVERRIDE;
 
   virtual void PreloadStyle(nsIURI* uri, const nsAString& charset,
                             const nsAString& aCrossOriginAttr,

@@ -30,6 +30,7 @@
 #include "mozilla/dom/AutocompleteInfoBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/net/ReferrerPolicy.h"
 #include "nsIContentPolicy.h"
 
 #if defined(XP_WIN)
@@ -619,6 +620,8 @@ public:
    * @param aLoadingDocument the document we belong to
    * @param aLoadingPrincipal the principal doing the load
    * @param aReferrer the referrer URI
+   * @param aReferrerPolicy the referrer-sending policy to use on channel
+   *         creation
    * @param aObserver the observer for the image load
    * @param aLoadFlags the load flags to use.  See nsIRequest
    * @param [aContentPolicyType=nsIContentPolicy::TYPE_IMAGE] (Optional)
@@ -629,6 +632,7 @@ public:
                             nsIDocument* aLoadingDocument,
                             nsIPrincipal* aLoadingPrincipal,
                             nsIURI* aReferrer,
+                            mozilla::net::ReferrerPolicy aReferrerPolicy,
                             imgINotificationObserver* aObserver,
                             int32_t aLoadFlags,
                             const nsAString& initiatorType,
