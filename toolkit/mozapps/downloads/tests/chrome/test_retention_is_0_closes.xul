@@ -135,7 +135,7 @@ function test()
     tr.init(src, target, "test download", null, Math.round(Date.now() * 1000),
             null, persist, false);
     persist.progressListener = tr;
-    persist.saveURI(src, null, null, null, null, destFile);
+    persist.saveURI(src, null, null, 0, null, null, destFile);
   }
 
   // First, we clear out the database

@@ -391,7 +391,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
     persist.progressListener = transfer;
 
     // Start the actual download process.
-    persist.savePrivacyAwareURI(sourceURI, null, null, null, null, targetFile,
+    persist.savePrivacyAwareURI(sourceURI, null, null, 0, null, null, targetFile,
                                 isPrivate);
   }.bind(this)).then(null, do_report_unexpected_exception);
 

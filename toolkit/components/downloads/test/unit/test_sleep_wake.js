@@ -152,7 +152,7 @@ function run_test()
                           createURI(destFile), null, null,
                           Math.round(Date.now() * 1000), null, persist, false);
   persist.progressListener = dl.QueryInterface(nsIWPL);
-  persist.saveURI(dl.source, null, null, null, null, dl.targetFile, null);
+  persist.saveURI(dl.source, null, null, 0, null, null, dl.targetFile, null);
 
   // Mark as pending, so clear this when we actually finish the download
   do_test_pending();
