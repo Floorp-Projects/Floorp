@@ -16,6 +16,8 @@ let TESTS = [{
   },
   check: function(markers) {
     is(markers.length, 1, "Got 1 marker");
+    is(markers[0].type, "dog", "Got dog event name");
+    is(markers[0].eventPhase, 2, "Got phase 2");
   }
 }, {
   desc: "Event dispatch with a second handler",
@@ -27,6 +29,18 @@ let TESTS = [{
   },
   check: function(markers) {
     is(markers.length, 2, "Got 2 markers");
+  }
+}, {
+  desc: "Event targeted at child",
+  setup: function() {
+    let child = content.document.body.firstElementChild;
+    child.addEventListener("dog", function(e) { });
+    child.dispatchEvent(new Event("dog"));
+  },
+  check: function(markers) {
+    is(markers.length, 2, "Got 2 markers");
+    is(markers[0].eventPhase, 1, "Got phase 1 marker");
+    is(markers[1].eventPhase, 2, "Got phase 2 marker");
   }
 }, {
   desc: "Event dispatch on a new document",
@@ -59,7 +73,7 @@ let TESTS = [{
 let test = Task.async(function*() {
   waitForExplicitFinish();
 
-  yield openUrl("data:text/html;charset=utf-8,Test page");
+  yield openUrl("data:text/html;charset=utf-8,<p>Test page</p>");
 
   let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebNavigation)

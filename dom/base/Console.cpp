@@ -805,6 +805,31 @@ ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
   return NS_OK;
 }
 
+class ConsoleTimelineMarker : public nsDocShell::TimelineMarker
+{
+public:
+  ConsoleTimelineMarker(nsDocShell* aDocShell,
+                        TracingMetadata aMetaData,
+                        const nsAString& aCause)
+    : nsDocShell::TimelineMarker(aDocShell, "ConsoleTime", aMetaData, aCause)
+  {
+  }
+
+  virtual bool Equals(const nsDocShell::TimelineMarker* aOther)
+  {
+    if (!nsDocShell::TimelineMarker::Equals(aOther)) {
+      return false;
+    }
+    // Console markers must have matching causes as well.
+    return GetCause() == aOther->GetCause();
+  }
+
+  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker)
+  {
+    aMarker.mCauseName.Construct(GetCause());
+  }
+};
+
 // Queue a call to a console method. See the CALL_DELAY constant.
 void
 Console::Method(JSContext* aCx, MethodName aMethodName,
@@ -925,7 +950,6 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
       callData->mMonotonicTimer = performance->Now();
 
       // 'time' and 'timeEnd' are displayed in the devtools timeline if active.
-      // Marked as "ConsoleTime:ARG1".
       bool isTimelineRecording = false;
       nsDocShell* docShell = static_cast<nsDocShell*>(mWindow->GetDocShell());
       if (docShell) {
@@ -938,10 +962,11 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
         if (jsString) {
           nsAutoJSString key;
           if (key.init(aCx, jsString)) {
-            nsCString str("ConsoleTime:");
-            AppendUTF16toUTF8(key, str);
-            docShell->AddProfileTimelineMarker(str.get(),
-              aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END);
+            mozilla::UniquePtr<nsDocShell::TimelineMarker> marker =
+              MakeUnique<ConsoleTimelineMarker>(docShell,
+                                                aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END,
+                                                key);
+            docShell->AddProfileTimelineMarker(marker);
           }
         }
       }
