@@ -114,10 +114,15 @@
   -  for the target of the toolbox. -->
 <!ENTITY options.toolNotSupported.label  "* Not supported for current toolbox target">
 
-<!-- LOCALIZATION NOTE (options.selectDevToolsTheme.label): This is the label for
+<!-- LOCALIZATION NOTE (options.selectDevToolsTheme.label2): This is the label for
   -  the heading of the radiobox corresponding to the theme of the developer
   -  tools. -->
-<!ENTITY options.selectDevToolsTheme.label   "Choose DevTools theme:">
+<!ENTITY options.selectDevToolsTheme.label2   "Themes">
+
+<!-- LOCALIZATION NOTE (options.usedeveditiontheme.*) Options under the
+  -  toolbox for enabling and disabling the Developer Edition browser theme. -->
+<!ENTITY options.usedeveditiontheme.label   "Use Developer Edition browser theme">
+<!ENTITY options.usedeveditiontheme.tooltip "Toggles the Developer Edition browser theme.">
 
 <!-- LOCALIZATION NOTE (options.webconsole.label): This is the label for the
   -  heading of the group of Web Console preferences in the options panel. -->
@@ -183,3 +188,4 @@ Gecko platform symbols">
 <!ENTITY options.sourceeditor.keybinding.label          "Keybindings">
 <!ENTITY options.sourceeditor.keybinding.accesskey      "K">
 <!ENTITY options.sourceeditor.keybinding.default.label  "Default">
+
