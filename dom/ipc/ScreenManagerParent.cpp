@@ -121,6 +121,11 @@ ScreenManagerParent::RecvScreenForBrowser(PBrowserParent* aBrowser,
                                           bool* aSuccess)
 {
   *aSuccess = false;
+#ifdef MOZ_VALGRIND
+  // Zero this so that Valgrind doesn't complain when we send it to another
+  // process.
+  memset(aRetVal, 0, sizeof(ScreenDetails));
+#endif
 
   // Find the mWidget associated with the tabparent, and then return
   // the nsIScreen it's on.
