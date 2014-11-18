@@ -1666,6 +1666,7 @@ MediaCache::NoteSeek(MediaCacheStream* aStream, int64_t aOldOffset)
       std::min<int64_t>((aOldOffset + BLOCK_SIZE - 1)/BLOCK_SIZE,
              aStream->mBlocks.Length());
     while (blockIndex < endIndex) {
+      MOZ_ASSERT(endIndex > 0);
       int32_t cacheBlockIndex = aStream->mBlocks[endIndex - 1];
       if (cacheBlockIndex >= 0) {
         BlockOwner* bo = GetBlockOwner(cacheBlockIndex, aStream);
