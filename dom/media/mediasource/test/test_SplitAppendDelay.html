@@ -12,20 +12,22 @@
 
 SimpleTest.waitForExplicitFinish();
 
+var updateCount = 0;
+
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
 
     fetchWithXHR("seek.webm", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 318));
-      var first = true;
       sb.addEventListener("updateend", function () {
-        if (first) {
+        updateCount++;
+        if (updateCount == 1) {
           window.setTimeout(function () {
             sb.appendBuffer(new Uint8Array(arrayBuffer, 318));
-            first = false;
           }, 1000);
-        } else {
+        }
+        else if (updateCount == 2) {
           ms.endOfStream();
         }
       });
