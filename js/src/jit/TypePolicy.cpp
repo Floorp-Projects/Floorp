@@ -736,8 +736,6 @@ bool
 StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins, int arrayType,
                                         MDefinition *value, int valueOperand)
 {
-    SingleObjectPolicy::staticAdjustInputs(alloc, ins);
-
     MDefinition *curValue = value;
     // First, ensure the value is int32, boolean, double or Value.
     // The conversion is based on TypedArrayObjectTemplate::setElementTail.
@@ -819,6 +817,8 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
 bool
 StoreTypedArrayPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
+    SingleObjectPolicy::staticAdjustInputs(alloc, ins);
+
     MStoreTypedArrayElement *store = ins->toStoreTypedArrayElement();
     MOZ_ASSERT(IsValidElementsType(store->elements(), store->offsetAdjustment()));
     MOZ_ASSERT(store->index()->type() == MIRType_Int32);
