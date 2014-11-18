@@ -36,8 +36,6 @@
 !endif
 !define BrandFullName         "${BrandFullNameInternal}"
 
-!define NO_UNINSTALL_SURVEY
-
 !define CERTIFICATE_NAME      "Mozilla Corporation"
 !define CERTIFICATE_ISSUER    "DigiCert Assured ID Code Signing CA-1"
 

@@ -93,7 +93,6 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro UnloadUAC
 !insertmacro WriteRegDWORD2
 !insertmacro WriteRegStr2
-!insertmacro CheckIfRegistryKeyExists
 
 !insertmacro un.ChangeMUIHeaderImage
 !insertmacro un.CheckForFilesInUse
@@ -104,7 +103,6 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro un.GetSecondInstallPath
 !insertmacro un.InitHashAppModelId
 !insertmacro un.ManualCloseAppPrompt
-!insertmacro un.ParseUninstallLog
 !insertmacro un.RegCleanAppHandler
 !insertmacro un.RegCleanFileHandler
 !insertmacro un.RegCleanMain
@@ -114,6 +112,7 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro un.RemoveDEHRegistrationIfMatching
 !endif
 !insertmacro un.RemoveQuotesFromPath
+!insertmacro un.RemovePrecompleteEntries
 !insertmacro un.SetAppLSPCategories
 !insertmacro un.SetBrandNameVars
 
@@ -162,27 +161,20 @@ ShowUnInstDetails nevershow
 !insertmacro MUI_UNPAGE_WELCOME
 
 ; Custom Uninstall Confirm Page
-UninstPage custom un.preConfirm un.leaveConfirm
+UninstPage custom un.preConfirm
 
 ; Remove Files Page
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ; Finish Page
 
-; Don't setup the survey controls, functions, etc. when the application has
-; defined NO_UNINSTALL_SURVEY
-!ifndef NO_UNINSTALL_SURVEY
-!define MUI_PAGE_CUSTOMFUNCTION_PRE un.preFinish
-!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-!define MUI_FINISHPAGE_SHOWREADME ""
-!define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
-!define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.Survey
-!endif
-
 !insertmacro MUI_UNPAGE_FINISH
 
 ; Use the default dialog for IDD_VERIFY for a simple Banner
 ChangeUI IDD_VERIFY "${NSISDIR}\Contrib\UIs\default.exe"
+
+################################################################################
+# Helper Functions
 
 ; This function is used to uninstall the maintenance service if the
 ; application currently being uninstalled is the last application to use the 
@@ -201,12 +193,14 @@ Function un.UninstallServiceIfNotUsed
 
   ; Figure out the number of subkeys
   StrCpy $0 0
-loop:
-  EnumRegKey $1 HKLM "Software\Mozilla\MaintenanceService" $0
-  StrCmp $1 "" doneCount
-  IntOp $0 $0 + 1
-  goto loop
-doneCount:
+  ${Do}
+    EnumRegKey $1 HKLM "Software\Mozilla\MaintenanceService" $0
+    ${If} "$1" == ""
+      ${ExitDo}
+    ${EndIf}
+    IntOp $0 $0 + 1
+  ${Loop}
+
   ; Restore back the registry view
   ${If} ${RunningX64}
     SetRegView lastUsed
@@ -417,28 +411,57 @@ Section "Uninstall"
   ; VirtualStore directory.
   ${un.CleanVirtualStore}
 
-  ; Parse the uninstall log to unregister dll's and remove all installed
-  ; files / directories this install is responsible for.
-  ${un.ParseUninstallLog}
+  ; Only unregister the dll if the registration points to this installation
+  ReadRegStr $R1 HKCR "CLSID\{0D68D6D0-D93D-4D08-A30D-F00DD1F45B24}\InProcServer32" ""
+  ${If} "$INSTDIR\AccessibleMarshal.dll" == "$R1"
+    ${UnregisterDLL} "$INSTDIR\AccessibleMarshal.dll"
+  ${EndIf}
 
-  ; Remove the uninstall directory that we control
-  RmDir /r /REBOOTOK "$INSTDIR\uninstall"
-
-  ; Explictly remove empty webapprt dir in case it exists
-  ; See bug 757978
-  RmDir "$INSTDIR\webapprt\components"
-  RmDir "$INSTDIR\webapprt"
+  StrCpy $R2 "false"
+  StrCpy $R3 "false"
+  ${un.RemovePrecompleteEntries} "$R2" "$R3"
 
   RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
 
+  ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
+    Delete /REBOOTOK "$INSTDIR\defaults\pref\channel-prefs.js"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\defaults\pref"
+    RmDir /REBOOTOK "$INSTDIR\defaults\pref"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\defaults"
+    RmDir /REBOOTOK "$INSTDIR\defaults"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\uninstall"
+    ; Remove the uninstall directory that we control
+    RmDir /r /REBOOTOK "$INSTDIR\uninstall"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\install.log"
+    Delete /REBOOTOK "$INSTDIR\install.log"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\update-settings.ini"
+    Delete /REBOOTOK "$INSTDIR\update-settings.ini"
+  ${EndIf}
+
+  ; Explictly remove empty webapprt dir in case it exists (bug 757978).
+  RmDir "$INSTDIR\webapprt\components"
+  RmDir "$INSTDIR\webapprt"
+
   ; Remove the installation directory if it is empty
-  ${RemoveDir} "$INSTDIR"
+  RmDir "$INSTDIR"
 
   ; If firefox.exe was successfully deleted yet we still need to restart to
   ; remove other files create a dummy firefox.exe.moz-delete to prevent the
   ; installer from allowing an install without restart when it is required
   ; to complete an uninstall.
+
+  ; Admin is required to delete files on reboot so only add the moz-delete if
+  ; the user is an admin. After calling UAC::IsAdmin $0 will equal 1 if the user
+  ; is an admin.
+  UAC::IsAdmin
+
   ${If} ${RebootFlag}
+  ${AndIf} "$0" == "1"
     ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-delete"
       FileOpen $0 "$INSTDIR\${FileMainEXE}.moz-delete" w
       FileWrite $0 "Will be deleted on restart"
@@ -458,7 +481,7 @@ Section "Uninstall"
   ServicesHelper::PathToUniqueRegistryPath "$INSTDIR"
   Pop $MaintCertKey
   ${If} $MaintCertKey != ""
-    ; We always use the 64bit registry for certs
+    ; Always use the 64bit registry for certs on 64bit systems.
     ${If} ${RunningX64}
       SetRegView 64
     ${EndIf}
@@ -471,17 +494,6 @@ Section "Uninstall"
 !endif
 
 SectionEnd
-
-################################################################################
-# Helper Functions
-
-; Don't setup the survey controls, functions, etc. when the application has
-; defined NO_UNINSTALL_SURVEY
-!ifndef NO_UNINSTALL_SURVEY
-Function un.Survey
-  Exec "$\"$TmpVal$\" $\"${SurveyURL}$\""
-FunctionEnd
-!endif
 
 ################################################################################
 # Language
@@ -593,50 +605,6 @@ Function un.preConfirm
   SendMessage $1 ${WM_SETTEXT} 0 "STR:$INSTDIR"
   !insertmacro MUI_INSTALLOPTIONS_SHOW
 FunctionEnd
-
-Function un.leaveConfirm
-  ; Try to delete the app executable and if we can't delete it try to find the
-  ; app's message window and prompt the user to close the app. This allows
-  ; running an instance that is located in another directory. If for whatever
-  ; reason there is no message window we will just rename the app's files and
-  ; then remove them on restart if they are in use.
-  ClearErrors
-  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-  ${If} ${Errors}
-    ${un.ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_UNINSTALL)"
-  ${EndIf}
-FunctionEnd
-
-!ifndef NO_UNINSTALL_SURVEY
-Function un.preFinish
-  ; Do not modify the finish page if there is a reboot pending
-  ${Unless} ${RebootFlag}
-    ; Setup the survey controls, functions, etc.
-    StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
-    ClearErrors
-    ReadRegStr $0 HKLM $TmpVal "Path"
-    ${If} ${Errors}
-      !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-    ${Else}
-      ExpandEnvStrings $0 "$0" ; this value will usually contain %programfiles%
-      ${If} $0 != "\"
-        StrCpy $0 "$0\"
-      ${EndIf}
-      StrCpy $0 "$0\iexplore.exe"
-      ClearErrors
-      GetFullPathName $TmpVal $0
-      ${If} ${Errors}
-        !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-      ${Else}
-        ; When we add an optional action to the finish page the cancel button
-        ; is enabled. This disables it and leaves the finish button as the
-        ; only choice.
-        !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
-      ${EndIf}
-    ${EndIf}
-  ${EndUnless}
-FunctionEnd
-!endif
 
 ################################################################################
 # Initialization Functions
