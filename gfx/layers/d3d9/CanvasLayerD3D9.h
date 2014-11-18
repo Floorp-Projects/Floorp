@@ -6,8 +6,8 @@
 #ifndef GFX_CANVASLAYERD3D9_H
 #define GFX_CANVASLAYERD3D9_H
 
-#include "LayerManagerD3D9.h"
 #include "GLContextTypes.h"
+#include "LayerManagerD3D9.h"
 
 namespace mozilla {
 namespace layers {
@@ -42,7 +42,7 @@ protected:
   RefPtr<gfx::DrawTarget> mDrawTarget;
 
   bool mDataIsPremultiplied;
-  bool mNeedsYFlip;
+  gl::OriginPos mOriginPos;
   bool mHasAlpha;
 
   nsAutoArrayPtr<uint8_t> mCachedTempBlob;

@@ -22,6 +22,11 @@ MOZ_BEGIN_ENUM_CLASS(GLContextType)
     EGL
 MOZ_END_ENUM_CLASS(GLContextType)
 
+MOZ_BEGIN_ENUM_CLASS(OriginPos, uint8_t)
+  TopLeft,
+  BottomLeft
+MOZ_END_ENUM_CLASS(OriginPos)
+
 struct GLFormats
 {
     // Constructs a zeroed object:
@@ -39,7 +44,6 @@ struct GLFormats
     GLsizei samples;
 };
 
-
 struct PixelBufferFormat
 {
     // Constructs a zeroed object:
@@ -52,7 +56,6 @@ struct PixelBufferFormat
 
     int ColorBits() const { return red + green + blue; }
 };
-
 
 } /* namespace gl */
 } /* namespace mozilla */
