@@ -1407,7 +1407,10 @@ gfxWindowsPlatform::GetD3D11Device()
   }
 
   HRESULT hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                                 D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                                 // Use
+                                 // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+                                 // to prevent bug 1092260. IE 11 also uses this flag.
+                                 D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
                                  featureLevels.Elements(), featureLevels.Length(),
                                  D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
 
