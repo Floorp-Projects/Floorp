@@ -323,6 +323,10 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
     if (XRE_GetProcessType() == GeckoProcessType_Plugin) {
       // TODO Add the proper plugin name
       b.NameValue("name", "Plugin");
+    } else if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      // This isn't going to really help once we have multiple content
+      // processes, but it'll do for now.
+      b.NameValue("name", "Content");
     } else {
       b.NameValue("name", Name());
     }
