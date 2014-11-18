@@ -1626,19 +1626,6 @@ RasterImage::DoImageDataComplete()
   {
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
 
-    // If we're not storing any source data, then there's nothing more we can do
-    // once we've tried decoding for size.
-    if (!StoringSourceData() && mDecoder) {
-      nsresult rv = ShutdownDecoder(eShutdownIntent_Done);
-      CONTAINER_ENSURE_SUCCESS(rv);
-    }
-
-    // If DecodeUntilSizeAvailable didn't finish the decode, let the decode worker
-    // finish decoding this image.
-    if (mDecoder) {
-      DecodePool::Singleton()->RequestDecode(this);
-    }
-
     // Free up any extra space in the backing buffer
     mSourceData.Compact();
   }
