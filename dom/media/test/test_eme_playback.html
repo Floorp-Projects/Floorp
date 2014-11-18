@@ -51,8 +51,6 @@ function startTest(test, token)
   var gotPlaying = false;
 
   v.addEventListener("encrypted", function(ev) {
-    ok(MediaKeys.isTypeSupported(KEYSYSTEM_TYPE, ev.initDataType, test.type),
-       TimeStamp(token) + " MediaKeys should support this keysystem");
     gotEncrypted = true;
   });
 
@@ -88,23 +86,7 @@ function startTest(test, token)
   LoadTest(test, v, token).then(function(){v.play();}, bail(token + " failed to load"));
 }
 
-function testIsTypeSupported()
-{
-  var t = MediaKeys.isTypeSupported;
-  const clearkey = "org.w3.clearkey";
-  ok(!t("bogus", "bogon", "video/bogus"), "Invalid type.");
-  ok(t(clearkey), "ClearKey supported.");
-  ok(!t(clearkey, "bogus"), "ClearKey bogus initDataType not supported.");
-  ok(t(clearkey, "cenc"), "ClearKey/cenc should be supported.");
-  ok(!t(clearkey, "cenc", "bogus"), "ClearKey/cenc bogus content type should be supported.");
-  ok(t(clearkey, "cenc", 'video/mp4'), "ClearKey/cenc video/mp4 supported.");
-  ok(t(clearkey, "cenc", 'video/mp4; codecs="avc1.4d4015,mp4a.40.2"'), "ClearKey/cenc H.264/AAC supported.");
-  ok(t(clearkey, "cenc", 'audio/mp4'), "ClearKey/cenc audio/mp4 supported.");
-  ok(t(clearkey, "cenc", 'audio/mp4; codecs="mp4a.40.2"'), "ClearKey/cenc AAC LC supported.");
-}
-
 function beginTest() {
-  testIsTypeSupported();
   manager.runTests(gEMETests, startTest);
 }
 
