@@ -96,8 +96,6 @@ protected:
 private:
   void InitBrowserElementAPI();
   bool IsBrowserElementOrThrow(ErrorResult& aRv);
-  bool IsNotWidgetOrThrow(ErrorResult& aRv);
-  bool mOwnerIsWidget;
 
   class BrowserShownObserver;
   friend class BrowserShownObserver;
