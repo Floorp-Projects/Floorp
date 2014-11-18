@@ -92,6 +92,8 @@ private:
   int64_t mLastStreamOffset;
   // Set it ture when there is no input data
   bool mSignaledEOS;
+  // Set if there is no more output data from decoder
+  bool mDrainComplete;
 };
 
 } // namespace mozilla
