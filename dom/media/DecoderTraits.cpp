@@ -335,9 +335,8 @@ IsMP4SupportedType(const nsACString& aType,
 #ifdef MOZ_OMX_DECODER
   return false;
 #else
-  bool haveAAC, haveMP3, haveH264;
   return Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
-         MP4Decoder::CanHandleMediaType(aType, aCodecs, haveAAC, haveH264, haveMP3);
+         MP4Decoder::CanHandleMediaType(aType, aCodecs);
 #endif
 }
 #endif
