@@ -14,6 +14,7 @@
 #include "nsAutoPtr.h"
 #include "txStylesheet.h"
 #include "nsTArray.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 extern bool
 TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID);
@@ -50,6 +51,7 @@ public:
 
     virtual nsresult loadURI(const nsAString& aUri,
                              const nsAString& aReferrerUri,
+                             mozilla::net::ReferrerPolicy aReferrerPolicy,
                              txStylesheetCompiler* aCompiler) = 0;
     virtual void onDoneCompiling(txStylesheetCompiler* aCompiler,
                                  nsresult aResult,
@@ -59,6 +61,7 @@ public:
 
 #define TX_DECL_ACOMPILEOBSERVER \
   nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri, \
+                   mozilla::net::ReferrerPolicy aReferrerPolicy, \
                    txStylesheetCompiler* aCompiler); \
   void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
                        const char16_t *aErrorText = nullptr, \
@@ -70,8 +73,9 @@ public:
     explicit txStylesheetCompilerState(txACompileObserver* aObserver);
     ~txStylesheetCompilerState();
     
-    nsresult init(const nsAString& aStylesheetURI, txStylesheet* aStylesheet,
-                  txListIterator* aInsertPosition);
+    nsresult init(const nsAString& aStylesheetURI,
+                  mozilla::net::ReferrerPolicy aReferrerPolicy,
+                  txStylesheet* aStylesheet, txListIterator* aInsertPosition);
 
     // Embedded stylesheets state
     bool handleEmbeddedSheet()
@@ -171,6 +175,7 @@ private:
     txInstruction** mNextInstrPtr;
     txListIterator mToplevelIterator;
     nsTArray<txInstruction**> mGotoTargetPointers;
+    mozilla::net::ReferrerPolicy mReferrerPolicy;
 };
 
 struct txStylesheetAttr
@@ -189,10 +194,12 @@ public:
     friend bool TX_XSLTFunctionAvailable(nsIAtom* aName,
                                            int32_t aNameSpaceID);
     txStylesheetCompiler(const nsAString& aStylesheetURI,
+                         mozilla::net::ReferrerPolicy  aReferrerPolicy,
                          txACompileObserver* aObserver);
     txStylesheetCompiler(const nsAString& aStylesheetURI,
                          txStylesheet* aStylesheet,
                          txListIterator* aInsertPosition,
+                         mozilla::net::ReferrerPolicy aReferrerPolicy,
                          txACompileObserver* aObserver);
 
     void setBaseURI(const nsString& aBaseURI);
