@@ -1666,7 +1666,7 @@ pref("loop.CSP", "default-src 'self' about: file: chrome:; img-src 'self' data: 
 #endif
 pref("loop.oauth.google.redirect_uri", "urn:ietf:wg:oauth:2.0:oob:auto");
 pref("loop.oauth.google.scope", "https://www.google.com/m8/feeds");
-pref("loop.rooms.enabled", false);
+pref("loop.rooms.enabled", true);
 pref("loop.fxa_oauth.tokendata", "");
 pref("loop.fxa_oauth.profile", "");
 

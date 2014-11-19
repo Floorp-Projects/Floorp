@@ -2886,12 +2886,11 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
   // If we see an unpaired START, we keep it around for the next call
   // to PopProfileTimelineMarkers.  We store the kept START objects in
   // this array.
-  nsTArray<InternalProfileTimelineMarker*> keptMarkers;
+  nsTArray<TimelineMarker*> keptMarkers;
 
   for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
-    ProfilerMarkerTracing* startPayload = static_cast<ProfilerMarkerTracing*>(
-      mProfileTimelineMarkers[i]->mPayload);
-    const char* startMarkerName = mProfileTimelineMarkers[i]->mName.get();
+    TimelineMarker* startPayload = mProfileTimelineMarkers[i];
+    const char* startMarkerName = startPayload->GetName();
 
     bool hasSeenPaintedLayer = false;
 
@@ -2907,16 +2906,15 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
       // enough for the amount of markers to always be small enough that the
       // nested for loop isn't going to be a performance problem.
       for (uint32_t j = i + 1; j < mProfileTimelineMarkers.Length(); ++j) {
-        ProfilerMarkerTracing* endPayload = static_cast<ProfilerMarkerTracing*>(
-          mProfileTimelineMarkers[j]->mPayload);
-        const char* endMarkerName = mProfileTimelineMarkers[j]->mName.get();
+        TimelineMarker* endPayload = mProfileTimelineMarkers[j];
+        const char* endMarkerName = endPayload->GetName();
 
         // Look for Layer markers to stream out paint markers.
         if (strcmp(endMarkerName, "Layer") == 0) {
           hasSeenPaintedLayer = true;
         }
 
-        if (strcmp(startMarkerName, endMarkerName) != 0) {
+        if (!startPayload->Equals(endPayload)) {
           continue;
         }
         bool isPaint = strcmp(startMarkerName, "Paint") == 0;
@@ -2931,9 +2929,11 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
             // But ignore paint start/end if no layer has been painted.
             if (!isPaint || (isPaint && hasSeenPaintedLayer)) {
               mozilla::dom::ProfileTimelineMarker marker;
-              marker.mName = NS_ConvertUTF8toUTF16(startMarkerName);
-              marker.mStart = mProfileTimelineMarkers[i]->mTime;
-              marker.mEnd = mProfileTimelineMarkers[j]->mTime;
+
+              marker.mName = NS_ConvertUTF8toUTF16(startPayload->GetName());
+              marker.mStart = startPayload->GetTime();
+              marker.mEnd = endPayload->GetTime();
+              startPayload->AddDetails(marker);
               profileTimelineMarkers.AppendElement(marker);
             }
 
@@ -2982,30 +2982,18 @@ nsDocShell::AddProfileTimelineMarker(const char* aName,
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
   if (mProfileTimelineRecording) {
-    DOMHighResTimeStamp delta;
-    Now(&delta);
-    ProfilerMarkerTracing* payload = new ProfilerMarkerTracing("Timeline",
-                                                               aMetaData);
-    mProfileTimelineMarkers.AppendElement(
-      new InternalProfileTimelineMarker(aName, payload, delta));
+    TimelineMarker* marker = new TimelineMarker(this, aName, aMetaData);
+    mProfileTimelineMarkers.AppendElement(marker);
   }
 #endif
 }
 
 void
-nsDocShell::AddProfileTimelineMarker(const char* aName,
-                                     ProfilerBacktrace* aCause,
-                                     TracingMetadata aMetaData)
+nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>& aMarker)
 {
 #ifdef MOZ_ENABLE_PROFILER_SPS
   if (mProfileTimelineRecording) {
-    DOMHighResTimeStamp delta;
-    Now(&delta);
-    ProfilerMarkerTracing* payload = new ProfilerMarkerTracing("Timeline",
-                                                               aMetaData,
-                                                               aCause);
-    mProfileTimelineMarkers.AppendElement(
-      new InternalProfileTimelineMarker(aName, payload, delta));
+    mProfileTimelineMarkers.AppendElement(aMarker.release());
   }
 #endif
 }
