@@ -71,10 +71,20 @@ let WebProgressListener = {
   },
 
   _setupObjects: function setupObjects(aWebProgress) {
+    let domWindow;
+    try {
+      domWindow = aWebProgress && aWebProgress.DOMWindow;
+    } catch (e) {
+      // If nsDocShell::Destroy has already been called, then we'll
+      // get NS_NOINTERFACE when trying to get the DOM window. Ignore
+      // that here.
+      domWindow = null;
+    }
+
     return {
       contentWindow: content,
       // DOMWindow is not necessarily the content-window with subframes.
-      DOMWindow: aWebProgress && aWebProgress.DOMWindow
+      DOMWindow: domWindow
     };
   },
 
