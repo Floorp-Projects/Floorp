@@ -327,5 +327,14 @@
     var u = new URL(url);
     ok(u.origin, 'http://mochi.test:8888', "The URL generated from a blob URI has an origin");
   </script>
+
+  <script>
+    var blob = new Blob(['a']);
+    var url = URL.createObjectURL(blob);
+
+    var a = document.createElement('A');
+    a.href = url;
+    ok(a.origin, 'http://mochi.test:8888', "The 'a' element has the correct origin");
+  </script>
 </body>
 </html>
