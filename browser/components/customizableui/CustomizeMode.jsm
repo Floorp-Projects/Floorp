@@ -1545,19 +1545,19 @@ CustomizeMode.prototype = {
       button.setAttribute("hidden", "true");
     }
   },
-  toggleDevEditionTheme: function() {
+
+  toggleDevEditionTheme: function(shouldEnable) {
     const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
-    let button = this.document.getElementById("customization-devedition-theme-button");
-    let shouldEnable = button.hasAttribute("checked");
 
     Services.prefs.setBoolPref(kDeveditionThemePref, shouldEnable);
+
     let currentLWT = LightweightThemeManager.currentTheme;
     if (currentLWT && shouldEnable) {
       this._lastLightweightTheme = currentLWT;
       AddonManager.getAddonByID(DEFAULT_THEME_ID, function(aDefaultTheme) {
         // Theoretically, this could race if people are /very/ quick in switching
         // something else here, so doublecheck:
-        if (button.hasAttribute("checked")) {
+        if (Services.prefs.getBoolPref(kDeveditionThemePref)) {
           aDefaultTheme.userDisabled = false;
         }
       });

@@ -12,6 +12,7 @@ public interface ClientsDataDelegate {
   public void setClientsCount(int clientsCount);
   public int getClientsCount();
   public boolean isLocalGUID(String guid);
+  public String getFormFactor();
 
   /**
    * The last time the client's data was modified in a way that should be

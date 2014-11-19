@@ -33,35 +33,44 @@ function RegisteredActorFactory(options, prefix) {
   // By default the actor name will also be used for the actorID prefix.
   this._prefix = prefix;
   if (typeof(options) != "function") {
-    // Lazy actor definition, where options contains all the information
-    // required to load the actor lazily.
-    this._getConstructor = function () {
-      // Load the module
-      let mod;
-      try {
-        mod = require(options.id);
-      } catch(e) {
-        throw new Error("Unable to load actor module '" + options.id + "'.\n" +
-                        e.message + "\n" + e.stack + "\n");
-      }
-      // Fetch the actor constructor
-      let c = mod[options.constructorName];
-      if (!c) {
-        throw new Error("Unable to find actor constructor named '" +
-                        options.constructorName + "'. (Is it exported?)");
-      }
-      return c;
-    };
+    // actors definition registered by actorRegistryActor
+    if (options.constructorFun) {
+      this._getConstructor = () => options.constructorFun;
+    } else {
+      // Lazy actor definition, where options contains all the information
+      // required to load the actor lazily.
+      this._getConstructor = function () {
+        // Load the module
+        let mod;
+        try {
+          mod = require(options.id);
+        } catch(e) {
+          throw new Error("Unable to load actor module '" + options.id + "'.\n" +
+                          e.message + "\n" + e.stack + "\n");
+        }
+        // Fetch the actor constructor
+        let c = mod[options.constructorName];
+        if (!c) {
+          throw new Error("Unable to find actor constructor named '" +
+                          options.constructorName + "'. (Is it exported?)");
+        }
+        return c;
+      };
+    }
+    // Exposes `name` attribute in order to allow removeXXXActor to match
+    // the actor by its actor constructor name.
+    this.name = options.constructorName;
   } else {
     // Old actor case, where options is a function that is the actor constructor.
     this._getConstructor = () => options;
     // Exposes `name` attribute in order to allow removeXXXActor to match
-    // the actor by its actor contructor name.
+    // the actor by its actor constructor name.
     this.name = options.name;
+
     // For old actors, we allow the use of a different prefix for actorID
     // than for listTabs actor names, by fetching a prefix on the actor prototype.
     // (Used by ChromeDebuggerActor)
-    if (options.prototype.actorPrefix) {
+    if (options.prototype && options.prototype.actorPrefix) {
       this._prefix = options.prototype.actorPrefix;
     }
   }
@@ -79,9 +88,9 @@ exports.RegisteredActorFactory = RegisteredActorFactory;
  *
  * ObservedActorFactory fakes the following actors attributes:
  *   actorPrefix (string) Used by ActorPool.addActor to compute the actor id
- *   actorID (string) Set by ActorPool.addActor just after being instanciated
+ *   actorID (string) Set by ActorPool.addActor just after being instantiated
  *   registeredPool (object) Set by ActorPool.addActor just after being
- *                           instanciated
+ *                           instantiated
  * And exposes the following method:
  *   createActor (function) Instantiate an actor that is going to replace
  *                          this factory in the actor pool.
@@ -123,7 +132,7 @@ exports.ObservedActorFactory = ObservedActorFactory;
  * |aPool|.
  *
  * The root actor and the tab actor use this to instantiate actors that other
- * parts of the browser have specified with DebuggerServer.addTabActor antd
+ * parts of the browser have specified with DebuggerServer.addTabActor and
  * DebuggerServer.addGlobalActor.
  *
  * @param aFactories
@@ -158,11 +167,16 @@ exports.createExtraActors = function createExtraActors(aFactories, aPool) {
       // Register another factory, but this time specific to this connection.
       // It creates a fake actor that looks like an regular actor in the pool,
       // but without actually instantiating the actor.
-      // It will only be instanciated on the first request made to the actor.
+      // It will only be instantiated on the first request made to the actor.
       actor = aFactories[name].createObservedActorFactory(this.conn, this);
       this._extraActors[name] = actor;
     }
-    aPool.addActor(actor);
+
+    // If the actor already exists in the pool, it may have been instantiated,
+    // so make sure not to overwrite it by a non-instantiated version.
+    if (!aPool.has(actor.actorID)) {
+      aPool.addActor(actor);
+    }
   }
 }
 
@@ -270,7 +284,13 @@ ActorPool.prototype = {
       actor.disconnect();
     }
     this._cleanups = {};
-  }
+  },
+
+  forEach: function(callback) {
+    for (let name in this._actors) {
+      callback(this._actors[name]);
+    }
+  },
 }
 
 exports.ActorPool = ActorPool;
