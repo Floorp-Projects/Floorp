@@ -156,8 +156,31 @@ HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 namespace mozilla {
 namespace gfx {
 
-// XXX - Need to define an API to set this.
-GFX2D_API int sGfxLogLevel = LOG_DEBUG;
+// These values we initialize with should match those in
+// PreferenceAccess::RegisterAll method.
+int32_t PreferenceAccess::sGfxLogLevel = LOG_DEFAULT;
+
+PreferenceAccess* PreferenceAccess::sAccess = nullptr;
+PreferenceAccess::~PreferenceAccess()
+{
+}
+
+// Just a placeholder, the derived class will set the variable to default
+// if the preference doesn't exist.
+void PreferenceAccess::LivePref(const char* aName, int32_t* aVar, int32_t aDef)
+{
+  *aVar = aDef;
+}
+
+// This will be called with the derived class, so we will want to register
+// the callbacks with it.
+void PreferenceAccess::SetAccess(PreferenceAccess* aAccess) {
+  sAccess = aAccess;
+  if (sAccess) {
+    RegisterAll();
+  }
+}
+
 
 #ifdef WIN32
 ID3D10Device1 *Factory::mD3D10Device;
@@ -795,13 +818,14 @@ Factory::SetLogForwarder(LogForwarder* aLogFwd) {
 
 // static
 void
-CriticalLogger::OutputMessage(const std::string &aString, int aLevel)
+CriticalLogger::OutputMessage(const std::string &aString,
+                              int aLevel, bool aNoNewline)
 {
   if (Factory::GetLogForwarder()) {
     Factory::GetLogForwarder()->Log(aString);
   }
 
-  BasicLogger::OutputMessage(aString, aLevel);
+  BasicLogger::OutputMessage(aString, aLevel, aNoNewline);
 }
 
 }

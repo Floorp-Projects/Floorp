@@ -340,7 +340,8 @@
     _(AssertRangeF)                 \
     _(AssertRangeV)                 \
     _(LexicalCheck)                 \
-    _(ThrowUninitializedLexical)
+    _(ThrowUninitializedLexical)    \
+    _(Debugger)
 
 #if defined(JS_CODEGEN_X86)
 # include "jit/x86/LOpcodes-x86.h"

@@ -474,6 +474,8 @@ substitution variables.  If it is difficult to translate the sense of the string
 with that structure, consider a translation which ignores the preceding domain and
 just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY identity_run_by "which is run by">
+<!ENTITY identity_no_info "This website does not supply identity information.">
+<!ENTITY identity_not_encrypted "Your connection to this website is not encrypted.">
 
 <!-- Mixed content notifications in site identity popup -->
 <!ENTITY loaded_mixed_content_message "This page is displaying content that isn\'t secure.">
