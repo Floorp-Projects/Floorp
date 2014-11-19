@@ -72,7 +72,7 @@ tests.h:
 
     EXEC(const char *code);
 
-        Execute some JS code in global scope, using JS_EvaluateScript. Return
+        Execute some JS code in global scope, using JS::Evaluate. Return
         false if that fails. (This means that if the code throws an uncaught JS
         exception, the test fails.)
 
