@@ -4153,7 +4153,7 @@ js_DumpBacktrace(JSContext *cx)
     Sprinter sprinter(cx);
     sprinter.init();
     size_t depth = 0;
-    for (ScriptFrameIter i(cx); !i.done(); ++i, ++depth) {
+    for (AllFramesIter i(cx); !i.done(); ++i, ++depth) {
         const char *filename = JS_GetScriptFilename(i.script());
         unsigned line = PCToLineNumber(i.script(), i.pc());
         JSScript *script = i.script();
