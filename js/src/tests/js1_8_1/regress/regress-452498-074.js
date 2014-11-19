@@ -24,7 +24,7 @@ function test()
 
 // ------- Comment #74 From Jesse Ruderman
 
-  const [d] = [1]; [d] = [2]; print(actual = d);
+  const [d] = [1]; print(actual = d);
 
   actual = String(actual);
 
