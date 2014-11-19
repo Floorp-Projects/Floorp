@@ -192,10 +192,6 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
     env->DeleteLocalRef(buffer);
   }
 
-  if (strcmp(aConfig.mime_type, "audio/mp4a-latm") == 0) {
-    format->SetInteger(NS_LITERAL_CSTRING("is-adts"), 1);
-  }
-
   nsRefPtr<MediaDataDecoder> decoder =
     new AudioDataDecoder(aConfig.mime_type, format, aCallback);
 
