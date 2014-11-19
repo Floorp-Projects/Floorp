@@ -442,7 +442,7 @@ class XrayWrapper : public Base {
     virtual bool getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
-                         JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+                         JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
 
     virtual const char *className(JSContext *cx, JS::HandleObject proxy) const MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, JS::HandleObject wrapper,
@@ -513,7 +513,7 @@ public:
     virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> proxy,
                                               JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> proxy, unsigned flags,
-                         JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+                         JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
 };
 
 extern const SandboxProxyHandler sandboxProxyHandler;

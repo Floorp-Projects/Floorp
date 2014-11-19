@@ -41,6 +41,16 @@ public class ClientRecord extends Record {
   public JSONArray commands;
   public JSONArray protocols;
 
+  // Optional fields.
+  // See <https://github.com/mozilla-services/docs/blob/master/source/sync/objectformats.rst#user-content-clients>
+  // for full formats.
+  // If a value isn't known, the field is omitted.
+  public String formfactor;          // "phone", "largetablet", "smalltablet", "desktop", "laptop", "tv".
+  public String os;                  // One of "Android", "Darwin", "WINNT", "Linux", "iOS", "Firefox OS".
+  public String application;         // Display name, E.g., "Firefox Beta"
+  public String appPackage;          // E.g., "org.mozilla.firefox_beta"
+  public String device;              // E.g., "HTC One"
+
   public ClientRecord(String guid, String collection, long lastModified, boolean deleted) {
     super(guid, collection, lastModified, deleted);
     this.ttl = CLIENTS_TTL;
@@ -85,6 +95,26 @@ public class ClientRecord extends Record {
       Logger.debug(LOG_TAG, "Got non-array protocols in client record " + guid, e);
       protocols = null;
     }
+
+    if (payload.containsKey("formfactor")) {
+      this.formfactor = payload.getString("formfactor");
+    }
+
+    if (payload.containsKey("os")) {
+      this.os = payload.getString("os");
+    }
+
+    if (payload.containsKey("application")) {
+      this.application = payload.getString("application");
+    }
+
+    if (payload.containsKey("appPackage")) {
+      this.appPackage = payload.getString("appPackage");
+    }
+
+    if (payload.containsKey("device")) {
+      this.device = payload.getString("device");
+    }
   }
 
   @Override
@@ -100,6 +130,27 @@ public class ClientRecord extends Record {
 
     if (this.protocols != null) {
       payload.put("protocols",  this.protocols);
+    }
+
+
+    if (this.formfactor != null) {
+      payload.put("formfactor", this.formfactor);
+    }
+
+    if (this.os != null) {
+      payload.put("os", this.os);
+    }
+
+    if (this.application != null) {
+      payload.put("application", this.application);
+    }
+
+    if (this.appPackage != null) {
+      payload.put("appPackage", this.appPackage);
+    }
+
+    if (this.device != null) {
+      payload.put("device", this.device);
     }
   }
 
@@ -123,7 +174,7 @@ public class ClientRecord extends Record {
       return false;
     }
 
-    // Don't compare versions or protocols, no matter how much we might want to.
+    // Don't compare versions, protocols, or other optional fields, no matter how much we might want to.
     // They're not required by the spec.
     ClientRecord other = (ClientRecord) o;
     if (!RepoUtils.stringsEqual(other.name, this.name) ||
@@ -144,6 +195,13 @@ public class ClientRecord extends Record {
     out.type = this.type;
     out.version = this.version;
     out.protocols = this.protocols;
+
+    out.formfactor = this.formfactor;
+    out.os = this.os;
+    out.application = this.application;
+    out.appPackage = this.appPackage;
+    out.device = this.device;
+
     return out;
   }
 

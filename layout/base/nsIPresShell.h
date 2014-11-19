@@ -1253,9 +1253,10 @@ public:
     nsCOMPtr<nsIContent> mPendingContent;
     nsCOMPtr<nsIContent> mOverrideContent;
     bool                 mReleaseContent;
+    bool                 mPrimaryState;
     
-    explicit PointerCaptureInfo(nsIContent* aPendingContent) :
-      mPendingContent(aPendingContent), mReleaseContent(false)
+    explicit PointerCaptureInfo(nsIContent* aPendingContent, bool aPrimaryState) :
+      mPendingContent(aPendingContent), mReleaseContent(false), mPrimaryState(aPrimaryState)
     {
       MOZ_COUNT_CTOR(PointerCaptureInfo);
     }
@@ -1273,27 +1274,29 @@ public:
   // Keeps a map between pointerId and element that currently capturing pointer
   // with such pointerId. If pointerId is absent in this map then nobody is
   // capturing it. Additionally keep information about pending capturing content.
+  // Additionally keep information about primaryState of pointer event.
   static nsClassHashtable<nsUint32HashKey, PointerCaptureInfo>* gPointerCaptureList;
 
   struct PointerInfo
   {
     bool      mActiveState;
     uint16_t  mPointerType;
-    PointerInfo(bool aActiveState, uint16_t aPointerType) :
-      mActiveState(aActiveState), mPointerType(aPointerType) {}
+    bool      mPrimaryState;
+    PointerInfo(bool aActiveState, uint16_t aPointerType, bool aPrimaryState) :
+      mActiveState(aActiveState), mPointerType(aPointerType), mPrimaryState(aPrimaryState) {}
   };
-  // Keeps information about pointers such as pointerId, activeState, pointerType
+  // Keeps information about pointers such as pointerId, activeState, pointerType, primaryState
   static nsClassHashtable<nsUint32HashKey, PointerInfo>* gActivePointersIds;
 
   static void DispatchGotOrLostPointerCaptureEvent(bool aIsGotCapture,
                                                    uint32_t aPointerId,
                                                    uint16_t aPointerType,
+                                                   bool aIsPrimary,
                                                    nsIContent* aCaptureTarget);
   static void SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static void ReleasePointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
-  static uint16_t GetPointerType(uint32_t aPointerId);
-  
+
   // CheckPointerCaptureState checks cases, when got/lostpointercapture events should be fired.
   // Function returns true, if any of events was fired; false, if no one event was fired.
   static bool CheckPointerCaptureState(uint32_t aPointerId);
@@ -1301,6 +1304,12 @@ public:
   // GetPointerInfo returns true if pointer with aPointerId is situated in device, false otherwise.
   // aActiveState is additional information, which shows state of pointer like button state for mouse.
   static bool GetPointerInfo(uint32_t aPointerId, bool& aActiveState);
+
+  // GetPointerType returns pointer type like mouse, pen or touch for pointer event with pointerId
+  static uint16_t GetPointerType(uint32_t aPointerId);
+
+  // GetPointerPrimaryState returns state of attribute isPrimary for pointer event with pointerId
+  static bool GetPointerPrimaryState(uint32_t aPointerId);
 
   /**
    * When capturing content is set, it traps all mouse events and retargets

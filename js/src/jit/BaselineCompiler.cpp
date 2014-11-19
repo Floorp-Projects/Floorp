@@ -2980,12 +2980,10 @@ static const VMFunction OnDebuggerStatementInfo =
 bool
 BaselineCompiler::emit_JSOP_DEBUGGER()
 {
-    if (!compileDebugInstrumentation_)
-        return true;
-
     prepareVMCall();
     pushArg(ImmPtr(pc));
 
+    frame.assertSyncedStack();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
     pushArg(R0.scratchReg());
 
@@ -3451,8 +3449,8 @@ typedef bool (*InterpretResumeFn)(JSContext *, HandleObject, HandleValue, Handle
                                   MutableHandleValue);
 static const VMFunction InterpretResumeInfo = FunctionInfo<InterpretResumeFn>(jit::InterpretResume);
 
-typedef bool (*GeneratorThrowFn)(JSContext *, HandleObject, HandleValue, uint32_t);
-static const VMFunction GeneratorThrowInfo = FunctionInfo<GeneratorThrowFn>(js::GeneratorThrowOrClose);
+typedef bool (*GeneratorThrowFn)(JSContext *, BaselineFrame *, HandleObject, HandleValue, uint32_t);
+static const VMFunction GeneratorThrowInfo = FunctionInfo<GeneratorThrowFn>(jit::GeneratorThrowOrClose);
 
 bool
 BaselineCompiler::emit_JSOP_RESUME()
@@ -3603,11 +3601,13 @@ BaselineCompiler::emit_JSOP_RESUME()
         masm.movePtr(scratch2, scratch3);
         masm.subPtr(BaselineStackReg, scratch2);
         masm.store32(scratch2, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
+        masm.loadBaselineFramePtr(BaselineFrameReg, scratch2);
 
         prepareVMCall();
         pushArg(Imm32(resumeKind));
         pushArg(retVal);
         pushArg(genObj);
+        pushArg(scratch2);
 
         JitCode *code = cx->runtime()->jitRuntime()->getVMWrapper(GeneratorThrowInfo);
         if (!code)

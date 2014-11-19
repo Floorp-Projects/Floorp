@@ -1298,7 +1298,7 @@ class Marionette(object):
         :param method: The method to use to locate the element; one of: "id",
                        "name", "class name", "tag name", "css selector", "link text",
                        "partial link text", "xpath", "anon" and "anon attribute".
-                       Note that the "name", "css selector", "link text" and
+                       Note that the "name", "link text" and
                        "partial link test" methods are not supported in the chrome dom.
         :param target: The target of the search.  For example, if method =
                        "tag", target might equal "div".  If method = "id", target would be
@@ -1325,7 +1325,7 @@ class Marionette(object):
         :param method: The method to use to locate the elements; one of:
                        "id", "name", "class name", "tag name", "css selector", "link text",
                        "partial link text", "xpath", "anon" and "anon attribute".
-                       Note that the "name", "css selector", "link text" and
+                       Note that the "name", "link text" and
                        "partial link test" methods are not supported in the chrome dom.
         :param target: The target of the search.  For example, if method =
                        "tag", target might equal "div".  If method = "id", target would be

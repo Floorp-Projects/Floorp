@@ -158,7 +158,6 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     }
 
     if (markers.length > 0) {
-      this._postProcessMarkers(markers);
       events.emit(this, "markers", markers, endTime);
     }
     if (this._memoryActor) {
@@ -171,25 +170,6 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     this._dataPullTimeout = setTimeout(() => {
       this._pullTimelineData();
     }, DEFAULT_TIMELINE_DATA_PULL_TIMEOUT);
-  },
-
-  /**
-   * Some markers need post processing.
-   * We will eventually do that platform side: bug 1069661
-   */
-  _postProcessMarkers: function(m) {
-    m.forEach(m => {
-      // A marker named "ConsoleTime:foobar" needs
-      // to be renamed "ConsoleTime".
-      let split = m.name.match(/ConsoleTime:(.*)/);
-      if (split && split.length > 0) {
-        if (!m.detail) {
-          m.detail = {}
-        }
-        m.detail.causeName = split[1];
-        m.name = "ConsoleTime";
-      }
-    });
   },
 
   /**

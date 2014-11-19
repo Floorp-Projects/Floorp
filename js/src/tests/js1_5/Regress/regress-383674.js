@@ -19,7 +19,7 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
-    
+
   options("strict");
   options("werror");
 
@@ -27,11 +27,11 @@ function test()
   actual = 'toString not called';
   try
   {
-    var x = {toString: function() { 
-        actual = 'toString called'; 
-        print(actual); 
-      } 
-    }; 
+    var x = {toString: function() {
+        actual = 'toString called';
+        print(actual);
+      }
+    };
     var f = function() { var j = x; j + ""; }
     f();
     reportCompare(expect, actual, summary + ': 1');
@@ -44,7 +44,7 @@ function test()
   actual = 'toString not called';
   try
   {
-    (function() { const a = 
+    (function() { var a =
          ({toString: function(){
              actual = 'toString called'; print(actual)} }); a += ""; })();
     reportCompare(expect, actual, summary + ': 2');

@@ -33,6 +33,7 @@ EXTRA_JS_MODULES.devtools.server += [
 ]
 
 EXTRA_JS_MODULES.devtools.server.actors += [
+    'actors/actor-registry.js',
     'actors/call-watcher.js',
     'actors/canvas.js',
     'actors/child-process.js',

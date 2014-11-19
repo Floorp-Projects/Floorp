@@ -230,8 +230,8 @@ public:
   virtual bool IsDormantNeeded() {
     return false;
   };
-  virtual void ReleaseMediaResources() {};
-  virtual void ReleaseDecoder() {};
+  virtual void ReleaseMediaResources() {}
+  virtual void ReleaseDecoder() {}
 };
 
 } // namespace mozilla

@@ -397,3 +397,12 @@ partial interface Navigator {
   [Pref="dom.tv.enabled", CheckPermissions="tv", Func="Navigator::HasTVSupport"]
   readonly attribute TVManager? tv;
 };
+
+#ifdef MOZ_EME
+partial interface Navigator {
+  [Pref="media.eme.enabled", Throws, NewObject]
+  Promise<MediaKeySystemAccess>
+  requestMediaKeySystemAccess(DOMString keySystem,
+                              optional sequence<MediaKeySystemOptions> supportedConfigurations);
+};
+#endif

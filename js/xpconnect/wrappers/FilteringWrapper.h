@@ -42,7 +42,7 @@ class FilteringWrapper : public Base {
     virtual bool getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                            JS::AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> wrapper, unsigned flags,
-                         JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+                         JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
 
     virtual bool call(JSContext *cx, JS::Handle<JSObject*> wrapper,
                       const JS::CallArgs &args) const MOZ_OVERRIDE;

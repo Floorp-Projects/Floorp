@@ -62,9 +62,12 @@ public:
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
 
   // For Media Resource Management
+  virtual void SetIdle() MOZ_OVERRIDE;
   virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
   virtual bool IsDormantNeeded() MOZ_OVERRIDE;
   virtual void ReleaseMediaResources() MOZ_OVERRIDE;
+  virtual void SetSharedDecoderManager(SharedDecoderManager* aManager)
+    MOZ_OVERRIDE;
 
   virtual nsresult ResetDecode() MOZ_OVERRIDE;
 
@@ -179,7 +182,6 @@ private:
   uint64_t mLastReportedNumDecodedFrames;
 
   DecoderData& GetDecoderData(mp4_demuxer::TrackType aTrack);
-  MediaDataDecoder* Decoder(mp4_demuxer::TrackType aTrack);
 
   layers::LayersBackend mLayersBackendType;
 
@@ -193,6 +195,7 @@ private:
 
   bool mIndexReady;
   Monitor mIndexMonitor;
+  nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 };
 
 } // namespace mozilla

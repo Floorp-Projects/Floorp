@@ -72,9 +72,11 @@ protected:
 
     virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
 
+    virtual bool RecvSettingChanged(const PluginSettings& aSettings) MOZ_OVERRIDE;
+
     // Implement the PPluginModuleChild interface
     virtual bool AnswerNP_GetEntryPoints(NPError* rv) MOZ_OVERRIDE;
-    virtual bool AnswerNP_Initialize(NPError* rv) MOZ_OVERRIDE;
+    virtual bool AnswerNP_Initialize(const PluginSettings& aSettings, NPError* rv) MOZ_OVERRIDE;
 
     virtual PPluginModuleChild*
     AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
@@ -226,9 +228,7 @@ public:
     }
 
     bool GetNativeCursorsSupported() {
-        bool supported = false;
-        SendGetNativeCursorsSupported(&supported);
-        return supported;
+        return Settings().nativeCursorsSupported();
     }
 #endif
 
@@ -278,6 +278,8 @@ public:
 
     int GetQuirks() { return mQuirks; }
 
+    const PluginSettings& Settings() const { return mCachedSettings; }
+
 private:
     void AddQuirk(PluginQuirks quirk) {
       if (mQuirks == QUIRKS_NOT_INITIALIZED)
@@ -317,6 +319,8 @@ private:
 #endif
 
     NPPluginFuncs mFunctions;
+
+    PluginSettings mCachedSettings;
 
 #if defined(MOZ_WIDGET_GTK)
     // If a plugin spins a nested glib event loop in response to a

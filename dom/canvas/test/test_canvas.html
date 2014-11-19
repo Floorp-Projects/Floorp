@@ -19182,6 +19182,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 
 
 }
+
 </script>
 
 <!-- [[[ test_2d.transformation.transform.multiply.html ]]] -->
@@ -19557,6 +19558,9 @@ if (ctx.transform) { // (avoid spurious failures, since the aim here is not to t
 }
 if (ctx.setTransform) {
     ok(ctx.setTransform(1, 0, 0, 1, 0, 0) === undefined, "ctx.setTransform(1, 0, 0, 1, 0, 0) === undefined");
+}
+if (ctx.resetTransform) {
+    ok(ctx.resetTransform() === undefined, "ctx.resetTransform() === undefined");
 }
 ok(ctx.clearRect(0, 0, 0, 0) === undefined, "ctx.clearRect(0, 0, 0, 0) === undefined");
 ok(ctx.fillRect(0, 0, 0, 0) === undefined, "ctx.fillRect(0, 0, 0, 0) === undefined");
@@ -21550,6 +21554,31 @@ function test_opaque() {
   isPixel(ctx, 5, 5, 0, 128, 0, 255, 0);
   isPixel(ctx, 15, 5, 128, 0, 0, 255, 0);
 }
+</script>
+
+<p>Canvas test: 2d.transformation.transform.identity</p>
+<!-- Testing: resetTransform() changes to the identity matrix -->
+<canvas id="c689" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_transformation_reset_transform() {
+
+var canvas = document.getElementById('c689');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+
+ctx.setTransform(0.1, 0.0, 0.0, 0.1, 80.0, 30.0);
+ctx.resetTransform();
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+isPixel(ctx, 50,25, 0,255,0,255, 0);
+
+
+}
+
 </script>
 
 <script>
@@ -24843,6 +24872,11 @@ try {
  } catch(e) {
   throw e;
   ok(false, "unexpected exception thrown in: test_opaque");
+ }
+ try {
+  test_2d_transformation_reset_transform();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_transformation_reset_transform");
  }
  try {
   // run this test last since it replaces the getContext method

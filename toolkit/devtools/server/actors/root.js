@@ -280,14 +280,12 @@ RootActor.prototype = {
         newActorPool.addActor(tabActor);
         tabActorList.push(tabActor);
       }
-
       /* DebuggerServer.addGlobalActor support: create actors. */
       if (!this._globalActorPool) {
         this._globalActorPool = new ActorPool(this.conn);
-        this._createExtraActors(this._parameters.globalActorFactories, this._globalActorPool);
         this.conn.addActorPool(this._globalActorPool);
       }
-
+      this._createExtraActors(this._parameters.globalActorFactories, this._globalActorPool);
       /*
        * Drop the old actorID -> actor map. Actors that still mattered were
        * added to the new map; others will go away.
@@ -436,7 +434,7 @@ RootActor.prototype = {
    * is here because the Style Editor and Inspector share style sheet actors.
    *
    * @param DOMStyleSheet styleSheet
-   *        The style sheet to creat an actor for.
+   *        The style sheet to create an actor for.
    * @return StyleSheetActor actor
    *         The actor for this style sheet.
    *
@@ -451,7 +449,28 @@ RootActor.prototype = {
     this._globalActorPool.addActor(actor);
 
     return actor;
-  }
+  },
+
+  /**
+   * Remove the extra actor (added by DebuggerServer.addGlobalActor or
+   * DebuggerServer.addTabActor) name |aName|.
+   */
+  removeActorByName: function(aName) {
+    if (aName in this._extraActors) {
+      const actor = this._extraActors[aName];
+      if (this._globalActorPool.has(actor)) {
+        this._globalActorPool.removeActor(actor);
+      }
+      if (this._tabActorPool) {
+        // Iterate over TabActor instances to also remove tab actors
+        // created during listTabs for each document.
+        this._tabActorPool.forEach(tab => {
+          tab.removeActorByName(aName);
+        });
+      }
+      delete this._extraActors[aName];
+    }
+   }
 };
 
 RootActor.prototype.requestTypes = {

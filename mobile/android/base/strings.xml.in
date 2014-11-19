@@ -411,6 +411,8 @@
   <!-- Site identity popup -->
   <string name="identity_connected_to">&identity_connected_to;</string>
   <string name="identity_run_by">&identity_run_by;</string>
+  <string name="identity_no_info">&identity_no_info;</string>
+  <string name="identity_not_encrypted">&identity_not_encrypted;</string>
   <string name="loaded_mixed_content_message">&loaded_mixed_content_message;</string>
   <string name="blocked_mixed_content_message_top">&blocked_mixed_content_message_top;</string>
   <string name="blocked_mixed_content_message_bottom">&blocked_mixed_content_message_bottom;</string>

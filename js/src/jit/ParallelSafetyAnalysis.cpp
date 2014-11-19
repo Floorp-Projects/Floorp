@@ -360,6 +360,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     UNSAFE_OP(UnknownValue)
     UNSAFE_OP(LexicalCheck)
     UNSAFE_OP(ThrowUninitializedLexical)
+    UNSAFE_OP(Debugger)
 
     // It looks like these could easily be made safe:
     UNSAFE_OP(ConvertElementsToDoubles)

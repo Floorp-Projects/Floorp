@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'SyntaxError: invalid for/in left-hand side';
+  expect = 'SyntaxError: invalid assignment to const x';
   try
   {
     eval('(function() { const x = 1; for (x in null); })();');
