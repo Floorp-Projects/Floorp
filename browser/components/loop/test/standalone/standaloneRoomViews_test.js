@@ -18,8 +18,7 @@ describe("loop.standaloneRoomViews", function() {
     sandbox = sinon.sandbox.create();
     dispatcher = new loop.Dispatcher();
     dispatch = sandbox.stub(dispatcher, "dispatch");
-    activeRoomStore = new loop.store.ActiveRoomStore({
-      dispatcher: dispatcher,
+    activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
       mozLoop: {},
       sdkDriver: {}
     });
