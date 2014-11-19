@@ -2980,12 +2980,10 @@ static const VMFunction OnDebuggerStatementInfo =
 bool
 BaselineCompiler::emit_JSOP_DEBUGGER()
 {
-    if (!compileDebugInstrumentation_)
-        return true;
-
     prepareVMCall();
     pushArg(ImmPtr(pc));
 
+    frame.assertSyncedStack();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
     pushArg(R0.scratchReg());
 
