@@ -528,6 +528,28 @@ this.UITour = {
         break;
       }
 
+      case "setTreatmentTag": {
+        let name = data.name;
+        let value = data.value;
+        let string = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+        string.data = value;
+        Services.prefs.setComplexValue("browser.uitour.treatment." + name,
+                                       Ci.nsISupportsString, string);
+        UITourHealthReport.recordTreatmentTag(name, value);
+        break;
+      }
+
+      case "getTreatmentTag": {
+        let name = data.name;
+        let value;
+        try {
+          value = Services.prefs.getComplexValue("browser.uitour.treatment." + name,
+                                                 Ci.nsISupportsString).data;
+        } catch (ex) {}
+        this.sendPageCallback(messageManager, data.callbackID, { value: value });
+        break;
+      }
+
       case "setSearchTerm": {
         let targetPromise = this.getTarget(window, "search");
         targetPromise.then(target => {
