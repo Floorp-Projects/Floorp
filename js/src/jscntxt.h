@@ -423,6 +423,7 @@ struct JSContext : public js::ExclusiveContext,
     friend class js::ExclusiveContext;
     friend class JS::AutoSaveExceptionState;
     friend class js::jit::DebugModeOSRVolatileJitFrameIterator;
+    friend void js_ReportOverRecursed(JSContext *);
 
   private:
     /* Exception state -- the exception member is a GC root by definition. */
@@ -431,6 +432,10 @@ struct JSContext : public js::ExclusiveContext,
 
     /* Per-context options. */
     JS::ContextOptions  options_;
+
+    // True if the exception currently being thrown is by result of
+    // js_ReportOverRecursed. See Debugger::slowPathOnExceptionUnwind.
+    bool                overRecursed_;
 
     // True if propagating a forced return from an interrupt handler during
     // debug mode.
@@ -571,9 +576,11 @@ struct JSContext : public js::ExclusiveContext,
 
     void clearPendingException() {
         throwing = false;
+        overRecursed_ = false;
         unwrappedException_.setUndefined();
     }
 
+    bool isThrowingOverRecursed() const { return throwing && overRecursed_; }
     bool isPropagatingForcedReturn() const { return propagatingForcedReturn_; }
     void setPropagatingForcedReturn() { propagatingForcedReturn_ = true; }
     void clearPropagatingForcedReturn() { propagatingForcedReturn_ = false; }
