@@ -47,6 +47,8 @@ const COMPLETE =        1 << 12;
 const DONTFILL =        1 << 13;
 // Used in combination with METAONLY, don't call setValid() on the entry after metadata has been set
 const DONTSETVALID =    1 << 14;
+// Notify before checking the data, useful for proper callback ordering checks
+const NOTIFYBEFOREREAD = 1 << 15;
 
 var log_c2 = true;
 function LOG_C2(o, m)
@@ -237,6 +239,8 @@ OpenCallback.prototype =
       do_check_eq(entry.getMetaDataElement("meto"), this.workingMetadata);
       if (this.behavior & THROWAVAIL)
         this.throwAndNotify(entry);
+      if (this.behavior & NOTIFYBEFOREREAD)
+        this.goon(entry, true);
 
       var wrapper = Cc["@mozilla.org/scriptableinputstream;1"].
                     createInstance(Ci.nsIScriptableInputStream);
