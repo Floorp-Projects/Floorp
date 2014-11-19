@@ -6099,6 +6099,7 @@ JS_ReportPendingException(JSContext *cx)
 JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext *cx)
   : context(cx),
     wasPropagatingForcedReturn(cx->propagatingForcedReturn_),
+    wasOverRecursed(cx->overRecursed_),
     wasThrowing(cx->throwing),
     exceptionValue(cx)
 {
@@ -6106,6 +6107,8 @@ JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext *cx)
     CHECK_REQUEST(cx);
     if (wasPropagatingForcedReturn)
         cx->clearPropagatingForcedReturn();
+    if (wasOverRecursed)
+        cx->overRecursed_ = false;
     if (wasThrowing) {
         exceptionValue = cx->unwrappedException_;
         cx->clearPendingException();
@@ -6116,6 +6119,7 @@ void
 JS::AutoSaveExceptionState::restore()
 {
     context->propagatingForcedReturn_ = wasPropagatingForcedReturn;
+    context->overRecursed_ = wasOverRecursed;
     context->throwing = wasThrowing;
     context->unwrappedException_ = exceptionValue;
     drop();
@@ -6127,6 +6131,7 @@ JS::AutoSaveExceptionState::~AutoSaveExceptionState()
         if (wasPropagatingForcedReturn)
             context->setPropagatingForcedReturn();
         if (wasThrowing) {
+            context->overRecursed_ = wasOverRecursed;
             context->throwing = true;
             context->unwrappedException_ = exceptionValue;
         }

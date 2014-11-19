@@ -416,8 +416,10 @@ js_ReportOverRecursed(JSContext *maybecx)
      */
     fprintf(stderr, "js_ReportOverRecursed called\n");
 #endif
-    if (maybecx)
+    if (maybecx) {
         JS_ReportErrorNumber(maybecx, js_GetErrorMessage, nullptr, JSMSG_OVER_RECURSED);
+        maybecx->overRecursed_ = true;
+    }
 }
 
 void
@@ -1010,6 +1012,7 @@ JSContext::JSContext(JSRuntime *rt)
     throwing(false),
     unwrappedException_(UndefinedValue()),
     options_(),
+    overRecursed_(false),
     propagatingForcedReturn_(false),
     liveVolatileJitFrameIterators_(nullptr),
     reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
@@ -1042,11 +1045,13 @@ JSContext::getPendingException(MutableHandleValue rval)
     rval.set(unwrappedException_);
     if (IsAtomsCompartment(compartment()))
         return true;
+    bool wasOverRecursed = overRecursed_;
     clearPendingException();
     if (!compartment()->wrap(this, rval))
         return false;
     assertSameCompartment(this, rval);
     setPendingException(rval);
+    overRecursed_ = wasOverRecursed;
     return true;
 }
 

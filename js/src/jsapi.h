@@ -4989,6 +4989,7 @@ class JS_PUBLIC_API(AutoSaveExceptionState)
   private:
     JSContext *context;
     bool wasPropagatingForcedReturn;
+    bool wasOverRecursed;
     bool wasThrowing;
     RootedValue exceptionValue;
 
@@ -5011,6 +5012,7 @@ class JS_PUBLIC_API(AutoSaveExceptionState)
      */
     void drop() {
         wasPropagatingForcedReturn = false;
+        wasOverRecursed = false;
         wasThrowing = false;
         exceptionValue.setUndefined();
     }
