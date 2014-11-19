@@ -999,8 +999,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       helper: helper,
       sdk: OT
     });
-    var activeRoomStore = new loop.store.ActiveRoomStore({
-      dispatcher: dispatcher,
+    var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
       mozLoop: standaloneMozLoop,
       sdkDriver: sdkDriver
     });
