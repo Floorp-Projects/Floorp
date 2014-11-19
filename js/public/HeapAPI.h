@@ -98,7 +98,7 @@ namespace JS {
 struct Zone;
 
 /* Default size for the generational nursery in bytes. */
-const uint32_t DefaultNurseryBytes = 16 * 1024 * 1024;
+const uint32_t DefaultNurseryBytes = 16 * js::gc::ChunkSize;
 
 /* Default maximum heap size in bytes to pass to JS_NewRuntime(). */
 const uint32_t DefaultHeapMaxBytes = 32 * 1024 * 1024;
