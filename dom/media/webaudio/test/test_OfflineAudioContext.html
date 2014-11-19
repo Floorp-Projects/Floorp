@@ -10,6 +10,25 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+var renderedBuffer = null;
+var finished = 0;
+
+function finish() {
+  finished++;
+  if (finished == 2) {
+    SimpleTest.finish();
+  }
+}
+
+function setOrCompareRenderedBuffer(aRenderedBuffer) {
+  if (renderedBuffer) {
+    is(renderedBuffer, aRenderedBuffer, "Rendered buffers from the event and the promise should be the same");
+    finish();
+  } else {
+    renderedBuffer = aRenderedBuffer;
+  }
+}
+
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var ctx = new OfflineAudioContext(2, 100, 22050);
@@ -47,18 +66,33 @@ addLoadEvent(function() {
   src.buffer = buf;
   src.start(0);
   src.connect(ctx.destination);
-  ctx.startRendering();
+
   ctx.addEventListener("complete", function(e) {
     ok(e instanceof OfflineAudioCompletionEvent, "Correct event received");
     is(e.renderedBuffer.numberOfChannels, 2, "Correct expected number of buffers");
+    ok(renderedBuffer != null, "The event should be fired after the promise callback.");
+    expectNoException(function() {
+      ctx.startRendering().then(function() {
+        ok(false, "Promise should not resolve when startRendering is called a second time on an OfflineAudioContext")
+        finish();
+      }).catch(function(err) {
+        ok(true, "Promise should reject when startRendering is called a second time on an OfflineAudioContext")
+        finish();
+      });
+    });
     compareBuffers(e.renderedBuffer, buf);
+    setOrCompareRenderedBuffer(e.renderedBuffer);
 
-    expectException(function() {
-      ctx.startRendering();
-    }, DOMException.INVALID_STATE_ERR);
-
-    SimpleTest.finish();
   }, false);
+
+  expectNoException(function() {
+    ctx.startRendering().then(function(b) {
+      is(renderedBuffer, null, "The promise callback should be called first.");
+      setOrCompareRenderedBuffer(b);
+    }).catch(function (error) {
+       ok(false, "The promise from OfflineAudioContext.startRendering should never be rejected");
+    });
+  });
 });
 
 </script>
