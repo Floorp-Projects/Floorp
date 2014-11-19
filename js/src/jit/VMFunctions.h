@@ -713,6 +713,8 @@ bool FinalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytec
 bool InterpretResume(JSContext *cx, HandleObject obj, HandleValue val, HandlePropertyName kind,
                      MutableHandleValue rval);
 bool DebugAfterYield(JSContext *cx, BaselineFrame *frame);
+bool GeneratorThrowOrClose(JSContext *cx, BaselineFrame *frame, HandleObject obj, HandleValue arg,
+                           uint32_t resumeKind);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
 bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);
