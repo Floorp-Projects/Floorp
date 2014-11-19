@@ -82,6 +82,12 @@ interface DeviceStorage : EventTarget {
   // for storing new files.
   readonly attribute boolean default;
 
+  // Indicates if the storage area denoted by storageName is removable
+  readonly attribute boolean isRemovable;
+
+  // Indicates if the storage area denoted by storageName is hot-swappable
+  readonly attribute boolean isHotSwappable;
+
   [NewObject, Throws]
   // XXXbz what type does this really return?
   Promise<any> getRoot();
