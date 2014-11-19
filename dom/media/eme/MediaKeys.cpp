@@ -114,111 +114,6 @@ MediaKeys::SetServerCertificate(const ArrayBufferViewOrArrayBuffer& aCert, Error
   return promise.forget();
 }
 
-static bool
-HaveGMPFor(const nsCString& aKeySystem,
-           const nsCString& aAPI,
-           const nsCString& aTag = EmptyCString())
-{
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    return false;
-  }
-
-  nsTArray<nsCString> tags;
-  tags.AppendElement(aKeySystem);
-  if (!aTag.IsEmpty()) {
-    tags.AppendElement(aTag);
-  }
-  // Note: EME plugins need a non-null nodeId here, as they must
-  // not be shared across origins.
-  bool hasPlugin = false;
-  if (NS_FAILED(mps->HasPluginForAPI(aAPI,
-                                     &tags,
-                                     &hasPlugin))) {
-    return false;
-  }
-  return hasPlugin;
-}
-
-static bool
-IsPlayableMP4Type(const nsAString& aContentType)
-{
-#ifdef MOZ_FMP4
-  nsContentTypeParser parser(aContentType);
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  nsAutoString codecs;
-  parser.GetParameter("codecs", codecs);
-
-  NS_ConvertUTF16toUTF8 mimeTypeUTF8(mimeType);
-  return MP4Decoder::CanHandleMediaType(mimeTypeUTF8, codecs);
-#else
-  return false;
-#endif
-}
-
-bool
-MediaKeys::IsTypeSupported(const nsAString& aKeySystem,
-                           const Optional<nsAString>& aInitDataType,
-                           const Optional<nsAString>& aContentType)
-{
-  if (aKeySystem.EqualsLiteral("org.w3.clearkey") &&
-      (!aInitDataType.WasPassed() || aInitDataType.Value().EqualsLiteral("cenc")) &&
-      (!aContentType.WasPassed() || IsPlayableMP4Type(aContentType.Value())) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("org.w3.clearkey"),
-                 NS_LITERAL_CSTRING("eme-decrypt"))) {
-    return true;
-  }
-
-#ifdef XP_WIN
-  // Note: Adobe Access's GMP uses WMF to decode, so anything our MP4Reader
-  // thinks it can play on Windows, the Access GMP should be able to play.
-  if (aKeySystem.EqualsLiteral("com.adobe.access") &&
-      Preferences::GetBool("media.eme.adobe-access.enabled", false) &&
-      IsVistaOrLater() && // Win Vista and later only.
-      (!aInitDataType.WasPassed() || aInitDataType.Value().EqualsLiteral("cenc")) &&
-      (!aContentType.WasPassed() || IsPlayableMP4Type(aContentType.Value())) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("com.adobe.access"),
-                 NS_LITERAL_CSTRING("eme-decrypt")) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("com.adobe.access"),
-                 NS_LITERAL_CSTRING("decode-video"),
-                 NS_LITERAL_CSTRING("h264")) &&
-      HaveGMPFor(NS_LITERAL_CSTRING("com.adobe.access"),
-                 NS_LITERAL_CSTRING("decode-audio"),
-                 NS_LITERAL_CSTRING("aac"))) {
-      return true;
-  }
-#endif
-
-  return false;
-}
-
-/* static */
-IsTypeSupportedResult
-MediaKeys::IsTypeSupported(const GlobalObject& aGlobal,
-                           const nsAString& aKeySystem,
-                           const Optional<nsAString>& aInitDataType,
-                           const Optional<nsAString>& aContentType,
-                           const Optional<nsAString>& aCapability)
-{
-  // TODO: Should really get spec changed to this is async, so we can wait
-  //       for user to consent to running plugin.
-  bool supported = IsTypeSupported(aKeySystem, aInitDataType, aContentType);
-
-  EME_LOG("MediaKeys::IsTypeSupported keySystem='%s' initDataType='%s' contentType='%s' supported=%d",
-          NS_ConvertUTF16toUTF8(aKeySystem).get(),
-          (aInitDataType.WasPassed() ? NS_ConvertUTF16toUTF8(aInitDataType.Value()).get() : ""),
-          (aContentType.WasPassed() ? NS_ConvertUTF16toUTF8(aContentType.Value()).get() : ""),
-          supported);
-
-  return supported ? IsTypeSupportedResult::Probably
-                   : IsTypeSupportedResult::_empty;
-}
-
 already_AddRefed<Promise>
 MediaKeys::MakePromise(ErrorResult& aRv)
 {
@@ -303,35 +198,12 @@ MediaKeys::ResolvePromise(PromiseId aId)
   }
 }
 
-/* static */
-already_AddRefed<Promise>
-MediaKeys::Create(const GlobalObject& aGlobal,
-                  const nsAString& aKeySystem,
-                  ErrorResult& aRv)
-{
-  // CDMProxy keeps MediaKeys alive until it resolves the promise and thus
-  // returns the MediaKeys object to JS.
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window || !window->GetExtantDoc()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  nsRefPtr<MediaKeys> keys = new MediaKeys(window, aKeySystem);
-  return keys->Init(aRv);
-}
-
 already_AddRefed<Promise>
 MediaKeys::Init(ErrorResult& aRv)
 {
   nsRefPtr<Promise> promise(MakePromise(aRv));
   if (aRv.Failed()) {
     return nullptr;
-  }
-
-  if (!IsTypeSupported(mKeySystem)) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return promise.forget();
   }
 
   mProxy = new CDMProxy(this, mKeySystem);

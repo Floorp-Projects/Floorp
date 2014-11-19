@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEFINES['ANDROID_SMP'] = 0
-DEFINES['LOG_NDEBUG'] = 0
+DEFINES['LOG_NDEBUG'] = 1
 
 if CONFIG['OS_TARGET'] != 'WINNT':
    DEFINES['_GLIBCXX_OS_DEFINES'] = True

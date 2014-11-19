@@ -5094,14 +5094,13 @@ class LClampIToUint8 : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LClampDToUint8 : public LInstructionHelper<1, 1, 1>
+class LClampDToUint8 : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(ClampDToUint8)
 
-    LClampDToUint8(const LAllocation &in, const LDefinition &temp) {
+    explicit LClampDToUint8(const LAllocation &in) {
         setOperand(0, in);
-        setTemp(0, temp);
     }
 };
 
@@ -6862,6 +6861,17 @@ class LMemoryBarrier : public LInstructionHelper<0, 0, 0>
 
     const MMemoryBarrier *mir() const {
         return mir_->toMemoryBarrier();
+    }
+};
+
+class LDebugger : public LCallInstructionHelper<0, 0, 2>
+{
+  public:
+    LIR_HEADER(Debugger)
+
+    LDebugger(const LDefinition &temp1, const LDefinition &temp2) {
+        setTemp(0, temp1);
+        setTemp(1, temp2);
     }
 };
 

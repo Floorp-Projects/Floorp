@@ -918,6 +918,14 @@ DebugAfterYield(JSContext *cx, BaselineFrame *frame)
 }
 
 bool
+GeneratorThrowOrClose(JSContext *cx, BaselineFrame *frame, HandleObject obj, HandleValue arg,
+                      uint32_t resumeKind)
+{
+    MOZ_ALWAYS_TRUE(DebugAfterYield(cx, frame));
+    return js::GeneratorThrowOrClose(cx, obj, arg, resumeKind);
+}
+
+bool
 StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 {
     return frame->strictEvalPrologue(cx);
@@ -1018,10 +1026,7 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
 {
     *mustReturn = false;
 
-    RootedScript script(cx, frame->script());
-    RootedValue rval(cx);
-
-    switch (Debugger::onDebuggerStatement(cx, frame, &rval)) {
+    switch (Debugger::onDebuggerStatement(cx, frame)) {
       case JSTRAP_ERROR:
         return false;
 
@@ -1029,17 +1034,21 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
         return true;
 
       case JSTRAP_RETURN:
-        frame->setReturnValue(rval);
         *mustReturn = true;
         return jit::DebugEpilogue(cx, frame, pc, true);
 
       case JSTRAP_THROW:
-        cx->setPendingException(rval);
         return false;
 
       default:
         MOZ_CRASH("Invalid trap status");
     }
+}
+
+bool
+IsCompartmentDebuggee(JSContext *cx)
+{
+    return cx->compartment()->isDebuggee();
 }
 
 bool

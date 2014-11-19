@@ -87,7 +87,7 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     // increment the reference counter for each activation that appear on the
     // stack. As the bailed frame is one of them, we have to decrement it now.
     if (iter.ionScript()->invalidated())
-        iter.ionScript()->decref(cx->runtime()->defaultFreeOp());
+        iter.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
 
     return retval;
 }
@@ -159,7 +159,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
         JitSpew(JitSpew_IonInvalidate, "   new  ra %p", (void *) frame->returnAddress());
     }
 
-    iter.ionScript()->decref(cx->runtime()->defaultFreeOp());
+    iter.ionScript()->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
 
     return retval;
 }

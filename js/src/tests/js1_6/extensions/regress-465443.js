@@ -19,8 +19,8 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  expect = 'SyntaxError: invalid for/in left-hand side';
+
+  expect = 'SyntaxError: invalid assignment to const b';
 
   jit(true);
 

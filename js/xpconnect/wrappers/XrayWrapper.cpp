@@ -2127,10 +2127,10 @@ XrayWrapper<Base, Traits>::getEnumerablePropertyKeys(JSContext *cx, HandleObject
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::iterate(JSContext *cx, HandleObject wrapper,
-                                   unsigned flags, MutableHandleValue vp) const
+                                   unsigned flags, MutableHandleObject objp) const
 {
     // Skip our Base if it isn't already ProxyHandler.
-    return js::BaseProxyHandler::iterate(cx, wrapper, flags, vp);
+    return js::BaseProxyHandler::iterate(cx, wrapper, flags, objp);
 }
 
 template <typename Base, typename Traits>
