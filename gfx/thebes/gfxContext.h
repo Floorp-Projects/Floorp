@@ -156,16 +156,6 @@ public:
      */
     void LineTo(const gfxPoint& pt);
 
-    /**
-     * Draws a cubic Bézier curve with control points pt1, pt2 and pt3.
-     */
-    void CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt3);
-
-    /**
-     * Draws a quadratic Bézier curve with control points pt1, pt2 and pt3.
-     */
-    void QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2);
-
     // path helpers
     /**
      * Draws a line from start to end.
