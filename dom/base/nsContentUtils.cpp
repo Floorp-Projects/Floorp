@@ -5751,6 +5751,20 @@ nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsCString& aOrigin)
 {
   NS_PRECONDITION(aURI, "missing uri");
 
+  nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(aURI);
+  if (uriWithPrincipal) {
+    nsCOMPtr<nsIPrincipal> principal;
+    uriWithPrincipal->GetPrincipal(getter_AddRefs(principal));
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = principal->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (uri != aURI) {
+      return GetASCIIOrigin(uri, aOrigin);
+    }
+  }
+
   aOrigin.Truncate();
 
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
@@ -5808,6 +5822,20 @@ nsresult
 nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsString& aOrigin)
 {
   NS_PRECONDITION(aURI, "missing uri");
+
+  nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(aURI);
+  if (uriWithPrincipal) {
+    nsCOMPtr<nsIPrincipal> principal;
+    uriWithPrincipal->GetPrincipal(getter_AddRefs(principal));
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = principal->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (uri != aURI) {
+      return GetUTFOrigin(uri, aOrigin);
+    }
+  }
 
   aOrigin.Truncate();
 
