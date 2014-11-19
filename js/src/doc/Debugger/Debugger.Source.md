@@ -85,6 +85,11 @@ from its prototype:
     specially formatted comment in the JavaScript source code, or via a
     header in the HTTP reply that carried the generated JavaScript.)
 
+    This property is writable, so you can change the source map URL by
+    setting it. All Debugger.Source objects referencing the same
+    source will see the change. Setting an empty string has no affect
+    and will not change existing value.
+
 `element`
 :   The [`Debugger.Object`][object] instance referring to the DOM element to which
     this source code belongs, if any, or `undefined` if it belongs to no DOM
