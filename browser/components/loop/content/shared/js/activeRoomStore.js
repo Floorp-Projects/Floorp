@@ -338,7 +338,7 @@ loop.store.ActiveRoomStore = (function() {
       });
 
       // We've connected with a third-party, therefore stop displaying the ToS etc.
-      this._mozLoop.setLoopCharPref("seenToS", "seen");
+      this._mozLoop.setLoopPref("seenToS", "seen");
     },
 
     /**

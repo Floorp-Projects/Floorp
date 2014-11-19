@@ -34,10 +34,8 @@ describe("loop.panel", function() {
       get locale() {
         return "en-US";
       },
-      setLoopCharPref: sandbox.stub(),
-      getLoopCharPref: sandbox.stub().returns("unseen"),
-      getLoopBoolPref: sandbox.stub(),
-      setLoopBoolPref: sandbox.stub(),
+      setLoopPref: sandbox.stub(),
+      getLoopPref: sandbox.stub().returns("unseen"),
       getPluralForm: function() {
         return "fakeText";
       },
@@ -176,7 +174,7 @@ describe("loop.panel", function() {
 
       describe("loop.rooms.enabled on", function() {
         beforeEach(function() {
-          navigator.mozLoop.getLoopBoolPref = function(pref) {
+          navigator.mozLoop.getLoopPref = function(pref) {
             if (pref === "rooms.enabled") {
               return true;
             }
@@ -207,7 +205,7 @@ describe("loop.panel", function() {
 
       describe("loop.rooms.enabled off", function() {
         beforeEach(function() {
-          navigator.mozLoop.getLoopBoolPref = function(pref) {
+          navigator.mozLoop.getLoopPref = function(pref) {
             if (pref === "rooms.enabled") {
               return false;
             }
@@ -363,7 +361,7 @@ describe("loop.panel", function() {
       });
 
       it("should not render a ToSView when the view has been 'seen'", function() {
-        navigator.mozLoop.getLoopCharPref = function() {
+        navigator.mozLoop.getLoopPref = function() {
           return "seen";
         };
         var view = createTestPanelView();
@@ -381,7 +379,7 @@ describe("loop.panel", function() {
       });
 
       it("should not render a GettingStartedView when the view has been seen", function() {
-        navigator.mozLoop.getLoopBoolPref = function() {
+        navigator.mozLoop.getLoopPref = function() {
           return true;
         };
         var view = createTestPanelView();
@@ -863,7 +861,7 @@ describe("loop.panel", function() {
 
     it("should not render when the value of loop.seenToS is set to 'seen'",
       function(done) {
-        navigator.mozLoop.getLoopCharPref = function() {
+        navigator.mozLoop.getLoopPref = function() {
           return "seen";
         };
 

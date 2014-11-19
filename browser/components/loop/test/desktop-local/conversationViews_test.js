@@ -44,7 +44,7 @@ describe("loop.conversationViews", function () {
     };
 
     navigator.mozLoop = {
-      getLoopCharPref: sinon.stub().returns("http://fakeurl"),
+      getLoopPref: sinon.stub().returns("http://fakeurl"),
       composeEmail: sinon.spy(),
       get appVersionInfo() {
         return {
