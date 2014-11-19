@@ -218,6 +218,8 @@ public:
 
   virtual TextureSourceD3D11* AsSourceD3D11() MOZ_OVERRIDE { return this; }
 
+  void BindRenderTarget(ID3D11DeviceContext* aContext);
+
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
   void SetSize(const gfx::IntSize& aSize) { mSize = aSize; }

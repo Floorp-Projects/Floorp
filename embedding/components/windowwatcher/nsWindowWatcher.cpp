@@ -908,6 +908,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow *aParent,
       if (doc) {
         // Set the referrer
         loadInfo->SetReferrer(doc->GetDocumentURI());
+        loadInfo->SetReferrerPolicy(doc->GetReferrerPolicy());
       }
     }
   }
