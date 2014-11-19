@@ -17,6 +17,21 @@ using struct nsID from "nsID.h";
 namespace mozilla {
 namespace plugins {
 
+struct PluginSettings
+{
+  // These settings correspond to NPNVariable. They are fetched from
+  // mozilla::plugins::parent::_getvalue.
+  bool javascriptEnabled;
+  bool asdEnabled;
+  bool isOffline;
+  bool supportsXembed;
+  bool supportsWindowless;
+
+  // These settings come from elsewhere.
+  nsCString userAgent;
+  bool nativeCursorsSupported;
+};
+
 intr protocol PPluginModule
 {
   bridges PContent, PPluginModule;
@@ -34,7 +49,7 @@ child:
   intr NP_GetEntryPoints()
     returns (NPError rv);
 
-  intr NP_Initialize()
+  intr NP_Initialize(PluginSettings settings)
     returns (NPError rv);
 
   intr PPluginInstance(nsCString aMimeType,
@@ -69,6 +84,8 @@ child:
   intr GeckoGetProfile()
     returns (nsCString aProfile);
 
+  async SettingChanged(PluginSettings settings);
+
 parent:
   /**
    * This message is only used on X11 platforms.
@@ -82,13 +99,6 @@ parent:
    * use the newly-invalid surface.
    */
   async BackUpXResources(FileDescriptor aXSocketFd);
-
-  intr NPN_UserAgent()
-    returns (nsCString userAgent);
-
-  intr NPN_GetValue_WithBoolReturn(NPNVariable aVariable)
-    returns (NPError aError,
-             bool aBoolVal);
 
   // Wake up and process a few native events.  Periodically called by
   // Gtk-specific code upon detecting that the plugin process has
@@ -108,7 +118,6 @@ parent:
   async ShowCursor(bool show);
   async PushCursor(NSCursorInfo cursorInfo);
   async PopCursor();
-  sync GetNativeCursorsSupported() returns (bool supported);
 
   sync NPN_SetException(nsCString message);
 
