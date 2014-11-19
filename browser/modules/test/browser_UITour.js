@@ -402,6 +402,13 @@ let tests = [
       });
     });
   },
+  function test_treatment_tag(done) {
+    gContentAPI.setTreatmentTag("foobar", "baz");
+    gContentAPI.getTreatmentTag("foobar", (data) => {
+      is(data.value, "baz", "set and retrieved treatmentTag");
+      done();
+    });
+  },  
 
   // Make sure this test is last in the file so the appMenu gets left open and done will confirm it got tore down.
   function cleanupMenus(done) {
