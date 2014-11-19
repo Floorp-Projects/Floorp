@@ -12,8 +12,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var updateCount = 0;
-
 runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
@@ -36,13 +34,13 @@ runWithMSE(function (ms, v) {
       fetchWithXHR("seek_lowres.webm", function (arrayBuffer) {
         // Append initialization segment.
         sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 438));
+        var first = true;
         sb.addEventListener("updateend", function () {
-          updateCount++;
-          if (updateCount == 1) {
+          if (first) {
             // Append media segment covering range [2, 4].
             sb.appendBuffer(new Uint8Array(arrayBuffer, 51003));
-          }
-          else if (updateCount == 2) {
+            first = false;
+          } else {
             ms.endOfStream();
             target = targets.shift();
             v.currentTime = target.currentTime;
