@@ -686,7 +686,33 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
     }
 }
 
-JSTrapStatus
+/* static */ JSTrapStatus
+Debugger::slowPathOnDebuggerStatement(JSContext *cx, AbstractFramePtr frame)
+{
+    RootedValue rval(cx);
+    JSTrapStatus status = dispatchHook(cx, &rval, OnDebuggerStatement, NullPtr());
+
+    switch (status) {
+      case JSTRAP_CONTINUE:
+      case JSTRAP_ERROR:
+        break;
+
+      case JSTRAP_RETURN:
+        frame.setReturnValue(rval);
+        break;
+
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        break;
+
+      default:
+        MOZ_CRASH("Invalid onDebuggerStatement trap status");
+    }
+
+    return status;
+}
+
+/* static */ JSTrapStatus
 Debugger::slowPathOnExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
 {
     RootedValue rval(cx);
@@ -710,7 +736,7 @@ Debugger::slowPathOnExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
         break;
 
       default:
-        MOZ_CRASH("Invalid trap status");
+        MOZ_CRASH("Invalid onExceptionUnwind trap status");
     }
 
     return status;
@@ -1113,7 +1139,6 @@ Debugger::fireDebuggerStatement(JSContext *cx, MutableHandleValue vp)
     ac.emplace(cx, object);
 
     ScriptFrameIter iter(cx);
-
     RootedValue scriptFrame(cx);
     if (!getScriptFrame(cx, iter, &scriptFrame))
         return handleUncaughtException(ac, false);
@@ -1788,7 +1813,11 @@ Debugger::updateExecutionObservabilityOfFrames(JSContext *cx, const ExecutionObs
         }
     }
 
-    for (ScriptFrameIter iter(cx); !iter.done(); ++iter) {
+    for (ScriptFrameIter iter(cx, ScriptFrameIter::ALL_CONTEXTS,
+                              ScriptFrameIter::GO_THROUGH_SAVED);
+         !iter.done();
+         ++iter)
+    {
         if (obs.shouldMarkAsDebuggee(iter)) {
             if (observing) {
                 iter.abstractFramePtr().setIsDebuggee();
@@ -1958,18 +1987,10 @@ Debugger::ensureExecutionObservabilityOfCompartment(JSContext *cx, JSCompartment
     return updateExecutionObservability(cx, obs, Observing);
 }
 
-static const Debugger::Hook ObserveAllExecutionHooks[] = { Debugger::OnDebuggerStatement,
-                                                           Debugger::OnEnterFrame,
-                                                           Debugger::HookCount };
-
 /* static */ bool
 Debugger::hookObservesAllExecution(Hook which)
 {
-    for (const Hook *hook = ObserveAllExecutionHooks; *hook != HookCount; hook++) {
-        if (*hook == which)
-            return true;
-    }
-    return false;
+    return which == OnEnterFrame;
 }
 
 bool
@@ -1983,11 +2004,7 @@ Debugger::hasAnyLiveHooksThatObserveAllExecution() const
 bool
 Debugger::hasAnyHooksThatObserveAllExecution() const
 {
-    for (const Hook *hook = ObserveAllExecutionHooks; *hook != HookCount; hook++) {
-        if (getHook(*hook))
-            return true;
-    }
-    return false;
+    return !!getHook(OnEnterFrame);
 }
 
 /* static */ bool

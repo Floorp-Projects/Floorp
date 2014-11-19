@@ -4109,6 +4109,13 @@ LIRGenerator::visitThrowUninitializedLexical(MThrowUninitializedLexical *ins)
     return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
+bool
+LIRGenerator::visitDebugger(MDebugger *ins)
+{
+    LDebugger *lir = new(alloc()) LDebugger(tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+    return assignSnapshot(lir, Bailout_Debugger) && add(lir, ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {
