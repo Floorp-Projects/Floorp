@@ -4,12 +4,13 @@
 
 #include "nsThreadUtils.h"
 #include "nsAndroidHistory.h"
+#include "nsComponentManagerUtils.h"
 #include "AndroidBridge.h"
 #include "Link.h"
 #include "nsIURI.h"
-#include "mozilla/Services.h"
 #include "nsIObserverService.h"
 
+#include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 
 #define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
@@ -18,10 +19,13 @@
 // Note that we don't yet observe this pref at runtime.
 #define PREF_HISTORY_ENABLED "places.history.enabled"
 
+// Time we wait to see if a pending visit is really a redirect
+#define PENDING_REDIRECT_TIMEOUT 3000
+
 using namespace mozilla;
 using mozilla::dom::Link;
 
-NS_IMPL_ISUPPORTS(nsAndroidHistory, IHistory, nsIRunnable)
+NS_IMPL_ISUPPORTS(nsAndroidHistory, IHistory, nsIRunnable, nsITimerCallback)
 
 nsAndroidHistory* nsAndroidHistory::sHistory = nullptr;
 
@@ -42,6 +46,8 @@ nsAndroidHistory::nsAndroidHistory()
   : mHistoryEnabled(true)
 {
   LoadPrefs();
+
+  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
 }
 
 NS_IMETHODIMP
@@ -158,11 +164,76 @@ nsAndroidHistory::IsEmbedURI(nsIURI* aURI) {
   return equals;
 }
 
+inline bool
+nsAndroidHistory::RemovePendingVisitURI(nsIURI* aURI) {
+  // Remove the first pending URI that matches. Return a boolean to
+  // let the caller know if we removed a URI or not.
+  bool equals = false;
+  PendingVisitArray::index_type i;
+  for (i = 0; i < mPendingVisitURIs.Length(); ++i) {
+    aURI->Equals(mPendingVisitURIs.ElementAt(i), &equals);
+    if (equals) {
+      mPendingVisitURIs.RemoveElementAt(i);
+      return true;
+    }
+  }
+  return false;
+}
+
+NS_IMETHODIMP
+nsAndroidHistory::Notify(nsITimer *timer)
+{
+  // Any pending visits left in the queue have exceeded our threshold for
+  // redirects, so save them
+  PendingVisitArray::index_type i;
+  for (i = 0; i < mPendingVisitURIs.Length(); ++i) {
+    SaveVisitURI(mPendingVisitURIs.ElementAt(i));
+  }
+  mPendingVisitURIs.Clear();
+
+  return NS_OK;
+}
+
+void
+nsAndroidHistory::SaveVisitURI(nsIURI* aURI) {
+  // Add the URI to our cache so we can take a fast path later
+  AppendToRecentlyVisitedURIs(aURI);
+
+  if (AndroidBridge::HasEnv()) {
+    // Save this URI in our history
+    nsAutoCString spec;
+    (void)aURI->GetSpec(spec);
+    mozilla::widget::android::GeckoAppShell::MarkURIVisited(NS_ConvertUTF8toUTF16(spec));
+  }
+
+  // Finally, notify that we've been visited.
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
+  }
+}
+
 NS_IMETHODIMP
 nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlags)
 {
-  if (!aURI)
+  if (!aURI) {
     return NS_OK;
+  }
+
+  if (!(aFlags & VisitFlags::TOP_LEVEL)) {
+    return NS_OK;
+  }
+
+  if (aFlags & VisitFlags::UNRECOVERABLE_ERROR) {
+    return NS_OK;
+  }
+
+  if (aFlags & VisitFlags::REDIRECT_SOURCE || aFlags & VisitFlags::REDIRECT_PERMANENT || aFlags & VisitFlags::REDIRECT_TEMPORARY) {
+    // aLastVisitedURI redirected to aURI. We want to ignore aLastVisitedURI,
+    // so remove the pending visit. We want to give aURI a chance to be saved,
+    // so don't return early.
+    RemovePendingVisitURI(aLastVisitedURI);
+  }
 
   // Silently return if URI is something we shouldn't add to DB.
   bool canAdd;
@@ -180,35 +251,17 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
       // Do not save refresh visits if we have visited this URI recently.
       return NS_OK;
     }
+
+    // Since we have a last visited URI and we were not redirected, it is
+    // safe to save the visit if it's still pending.
+    if (RemovePendingVisitURI(aLastVisitedURI)) {
+      SaveVisitURI(aLastVisitedURI);
+    }
   }
 
-  if (!(aFlags & VisitFlags::TOP_LEVEL)) {
-    AppendToEmbedURIs(aURI);
-    return NS_OK;
-  }
-
-  if (aFlags & VisitFlags::REDIRECT_SOURCE)
-    return NS_OK;
-
-  if (aFlags & VisitFlags::UNRECOVERABLE_ERROR)
-    return NS_OK;
-
-  if (AndroidBridge::HasEnv()) {
-    nsAutoCString uri;
-    rv = aURI->GetSpec(uri);
-    if (NS_FAILED(rv)) return rv;
-    NS_ConvertUTF8toUTF16 uriString(uri);
-    mozilla::widget::android::GeckoAppShell::MarkURIVisited(uriString);
-  }
-
-  AppendToRecentlyVisitedURIs(aURI);
-
-  // Finally, notify that we've been visited.
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (obsService) {
-    obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
-  }
+  // Let's wait and see if this visit is not a redirect.
+  mPendingVisitURIs.AppendElement(aURI);
+  mTimer->InitWithCallback(this, PENDING_REDIRECT_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
 
   return NS_OK;
 }
@@ -244,7 +297,7 @@ nsAndroidHistory::NotifyVisited(nsIURI *aURI)
   if (aURI && sHistory) {
     nsAutoCString spec;
     (void)aURI->GetSpec(spec);
-    sHistory->mPendingURIs.Push(NS_ConvertUTF8toUTF16(spec));
+    sHistory->mPendingLinkURIs.Push(NS_ConvertUTF8toUTF16(spec));
     NS_DispatchToMainThread(sHistory);
   }
   return NS_OK;
@@ -253,8 +306,8 @@ nsAndroidHistory::NotifyVisited(nsIURI *aURI)
 NS_IMETHODIMP
 nsAndroidHistory::Run()
 {
-  while (! mPendingURIs.IsEmpty()) {
-    nsString uriString = mPendingURIs.Pop();
+  while (! mPendingLinkURIs.IsEmpty()) {
+    nsString uriString = mPendingLinkURIs.Pop();
     nsTArray<Link*>* list = sHistory->mListeners.Get(uriString);
     if (list) {
       for (unsigned int i = 0; i < list->Length(); i++) {
