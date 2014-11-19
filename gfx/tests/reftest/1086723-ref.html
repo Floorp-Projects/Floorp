@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Testcase for bug 1086723</title>
+  <style type="text/css">
+    .test_div {
+      position: fixed;
+      overflow: hidden;
+      background: blue;
+      width: 50%;
+      height: 50%;
+      border-radius: 0px 50% 50% 0px;
+    }
+    .filler {
+      height: 5000px;
+    }
+    body,html {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="test_div"></div>
+  <div class="filler"></div>
+</body>
+</html>
