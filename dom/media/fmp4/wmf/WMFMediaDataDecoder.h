@@ -42,7 +42,7 @@ public:
   // than MF_E_TRANSFORM_NEED_MORE_INPUT, an error will be reported to the
   // MP4Reader.
   virtual HRESULT Output(int64_t aStreamOffset,
-                         nsAutoPtr<MediaData>& aOutput) = 0;
+                         nsRefPtr<MediaData>& aOutput) = 0;
 
   // Destroys all resources.
   virtual void Shutdown() = 0;

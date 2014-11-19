@@ -194,7 +194,7 @@ MediaDecoderReader::RequestVideoData(bool aSkipToNextKeyframe,
     }
   }
   if (VideoQueue().GetSize() > 0) {
-    VideoData* v = VideoQueue().PopFront();
+    nsRefPtr<VideoData> v = VideoQueue().PopFront();
     if (v && mVideoDiscontinuity) {
       v->mDiscontinuity = true;
       mVideoDiscontinuity = false;
@@ -226,7 +226,7 @@ MediaDecoderReader::RequestAudioData()
     }
   }
   if (AudioQueue().GetSize() > 0) {
-    AudioData* a = AudioQueue().PopFront();
+    nsRefPtr<AudioData> a = AudioQueue().PopFront();
     if (mAudioDiscontinuity) {
       a->mDiscontinuity = true;
       mAudioDiscontinuity = false;
@@ -308,7 +308,7 @@ AudioDecodeRendezvous::Reset()
 }
 
 nsresult
-AudioDecodeRendezvous::Await(nsAutoPtr<AudioData>& aSample)
+AudioDecodeRendezvous::Await(nsRefPtr<AudioData>& aSample)
 {
   MonitorAutoLock mon(mMonitor);
   while (!mHaveResult) {

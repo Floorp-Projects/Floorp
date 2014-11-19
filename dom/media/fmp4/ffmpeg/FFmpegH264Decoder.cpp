@@ -103,15 +103,15 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
     b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
     b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
 
-    VideoData *v = VideoData::Create(info,
-                                     mImageContainer,
-                                     aSample->byte_offset,
-                                     mFrame->pkt_pts,
-                                     aSample->duration,
-                                     b,
-                                     aSample->is_sync_point,
-                                     -1,
-                                     gfx::IntRect(0, 0, mCodecContext->width, mCodecContext->height));
+    nsRefPtr<VideoData> v = VideoData::Create(info,
+                                              mImageContainer,
+                                              aSample->byte_offset,
+                                              mFrame->pkt_pts,
+                                              aSample->duration,
+                                              b,
+                                              aSample->is_sync_point,
+                                              -1,
+                                              gfx::IntRect(0, 0, mCodecContext->width, mCodecContext->height));
     if (!v) {
       NS_WARNING("image allocation error.");
       mCallback->Error();

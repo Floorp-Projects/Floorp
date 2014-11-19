@@ -31,7 +31,7 @@ public:
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
   virtual nsresult Output(int64_t aStreamOffset,
-                          nsAutoPtr<MediaData>& aOutput) MOZ_OVERRIDE;
+                          nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 private:
 
   nsresult CreateAudioData(int64_t aStreamOffset,
