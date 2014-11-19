@@ -774,6 +774,7 @@ class ScopeIterKey
 
     void updateCur(JSObject *obj) { cur_ = obj; }
     void updateStaticScope(NestedScopeObject *obj) { staticScope_ = obj; }
+    void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
 
     /* For use as hash policy */
     typedef ScopeIterKey Lookup;
@@ -940,6 +941,8 @@ class DebugScopes
 
     static bool updateLiveScopes(JSContext *cx);
     static ScopeIterVal *hasLiveScope(ScopeObject &scope);
+
+    static void rekeyMissingScopes(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to);
 
     // In debug-mode, these must be called whenever exiting a scope that might
     // have stack-allocated locals.
