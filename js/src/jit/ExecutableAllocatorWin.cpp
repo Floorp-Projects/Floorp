@@ -159,7 +159,7 @@ RegisterExecutableMemory(void *p, size_t bytes, size_t pageSize)
     // mov imm64, rax
     r->thunk[0]  = 0x48;
     r->thunk[1]  = 0xb8;
-    void *handler = &ExceptionHandler;
+    void *handler = JS_FUNC_TO_DATA_PTR(void *, ExceptionHandler);
     memcpy(&r->thunk[2], &handler, 8);
 
     // jmp rax
