@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1098628
+-->
+<head>
+  <title>Test for Bug 1098628</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test">
+      <implementation>
+        <constructor><![CDATA[
+          throw "flimfniffle";
+        ]]></constructor>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1098628">Mozilla Bug 1098628</a>
+<p id="display" style="-moz-binding: url(#test)"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 1098628 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.expectUncaughtException();
+SimpleTest.monitorConsole(SimpleTest.finish, [{errorMessage: new RegExp('flimfniffle')}]);
+addLoadEvent(function() {
+  SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
+});
+]]>
+</script>
+</pre>
+</body>
+</html>
+

@@ -425,7 +425,8 @@ FontFaceSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if (httpChannel) {
-    httpChannel->SetReferrer(aFontFaceSrc->mReferrer);
+    httpChannel->SetReferrerWithPolicy(aFontFaceSrc->mReferrer,
+                                       ps->GetDocument()->GetReferrerPolicy());
     nsAutoCString accept("application/font-woff;q=0.9,*/*;q=0.8");
     if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED)) {
       accept.Insert(NS_LITERAL_CSTRING("application/font-woff2;q=1.0,"), 0);

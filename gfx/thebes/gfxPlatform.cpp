@@ -460,6 +460,10 @@ gfxPlatform::Init()
     }
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
+
+    if (gfxPrefs::HardwareVsyncEnabled() && gfxPrefs::VsyncAlignedCompositor()) {
+      gPlatform->InitHardwareVsync();
+    }
 }
 
 static bool sLayersIPCIsUp = false;

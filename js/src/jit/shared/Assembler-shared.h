@@ -331,8 +331,8 @@ struct BaseValueIndex : BaseIndex
 // base.  The index must not already be scaled by sizeof(Value)!
 struct BaseObjectElementIndex : BaseValueIndex
 {
-    BaseObjectElementIndex(Register base, Register index)
-      : BaseValueIndex(base, index)
+    BaseObjectElementIndex(Register base, Register index, int32_t offset = 0)
+      : BaseValueIndex(base, index, offset)
     {
         NativeObject::elementsSizeMustNotOverflow();
     }
