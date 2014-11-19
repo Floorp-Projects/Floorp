@@ -2393,9 +2393,6 @@ js::GetPCCountScriptContents(JSContext *cx, size_t index)
 
     StringBuffer buf(cx);
 
-    if (!script->functionNonDelazifying() && !script->compileAndGo())
-        return buf.finishString();
-
     {
         AutoCompartment ac(cx, &script->global());
         if (!GetPCCountJSON(cx, sac, buf))
