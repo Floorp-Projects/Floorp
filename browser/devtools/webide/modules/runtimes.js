@@ -359,7 +359,13 @@ let StaticScanner = {
   enable() {},
   disable() {},
   scan() { return promise.resolve(); },
-  listRuntimes() { return [gRemoteRuntime, gLocalRuntime]; }
+  listRuntimes() {
+    let runtimes = [gRemoteRuntime];
+    if (Services.prefs.getBoolPref("devtools.webide.enableLocalRuntime")) {
+      runtimes.push(gLocalRuntime);
+    }
+    return runtimes;
+  }
 };
 
 EventEmitter.decorate(StaticScanner);
