@@ -70,7 +70,7 @@ loop.roomViews = (function(mozL10n) {
       return {
         copiedUrl: false,
         newRoomName: ""
-      }
+      };
     },
 
     handleFormSubmit: function(event) {

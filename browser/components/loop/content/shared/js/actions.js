@@ -30,6 +30,8 @@ loop.shared.actions = (function() {
   };
 
   return {
+    Action: Action,
+
     /**
      * Get the window data for the provided window id
      */

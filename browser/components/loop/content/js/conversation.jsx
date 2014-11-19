@@ -641,13 +641,11 @@ loop.conversation = (function(mozL10n) {
       dispatcher: dispatcher,
       sdkDriver: sdkDriver
     });
-    var activeRoomStore = new loop.store.ActiveRoomStore({
-      dispatcher: dispatcher,
+    var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
       mozLoop: navigator.mozLoop,
       sdkDriver: sdkDriver
     });
-    var roomStore = new loop.store.RoomStore({
-      dispatcher: dispatcher,
+    var roomStore = new loop.store.RoomStore(dispatcher, {
       mozLoop: navigator.mozLoop,
       activeRoomStore: activeRoomStore
     });

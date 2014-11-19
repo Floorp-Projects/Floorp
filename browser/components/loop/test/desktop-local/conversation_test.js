@@ -169,9 +169,8 @@ describe("loop.conversation", function() {
         dispatcher: dispatcher,
         sdkDriver: {}
       });
-      roomStore = new loop.store.RoomStore({
+      roomStore = new loop.store.RoomStore(dispatcher, {
         mozLoop: navigator.mozLoop,
-        dispatcher: dispatcher
       });
       conversationAppStore = new loop.store.ConversationAppStore({
         dispatcher: dispatcher,

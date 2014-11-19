@@ -56,15 +56,9 @@ describe("loop.store.RoomStore", function () {
   });
 
   describe("#constructor", function() {
-    it("should throw an error if the dispatcher is missing", function() {
-      expect(function() {
-        new loop.store.RoomStore({mozLoop: {}});
-      }).to.Throw(/dispatcher/);
-    });
-
     it("should throw an error if mozLoop is missing", function() {
       expect(function() {
-        new loop.store.RoomStore({dispatcher: dispatcher});
+        new loop.store.RoomStore(dispatcher);
       }).to.Throw(/mozLoop/);
     });
   });
@@ -89,10 +83,7 @@ describe("loop.store.RoomStore", function () {
           on: sandbox.stub()
         }
       };
-      store = new loop.store.RoomStore({
-        dispatcher: dispatcher,
-        mozLoop: fakeMozLoop
-      });
+      store = new loop.store.RoomStore(dispatcher, {mozLoop: fakeMozLoop});
       store.setStoreState(defaultStoreState);
     });
 
@@ -151,19 +142,6 @@ describe("loop.store.RoomStore", function () {
             return room.roomToken === "_nxD4V4FflQ";
           })).eql(false);
         });
-      });
-    });
-
-    describe("#getStoreState", function() {
-      it("should retrieve the whole state by default", function() {
-        expect(store.getStoreState()).eql(defaultStoreState);
-      });
-
-      it("should retrieve a given property state", function() {
-        var fakeActiveRoom = {fake: true};
-        store.setStoreState({activeRoom: fakeActiveRoom});
-
-        expect(store.getStoreState().activeRoom).eql(fakeActiveRoom);
       });
     });
 
@@ -383,13 +361,11 @@ describe("loop.store.RoomStore", function () {
       var store, activeRoomStore;
 
       beforeEach(function() {
-        activeRoomStore = new loop.store.ActiveRoomStore({
-          dispatcher: dispatcher,
+        activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
           mozLoop: fakeMozLoop,
           sdkDriver: {}
         });
-        store = new loop.store.RoomStore({
-          dispatcher: dispatcher,
+        store = new loop.store.RoomStore(dispatcher, {
           mozLoop: fakeMozLoop,
           activeRoomStore: activeRoomStore
         });
@@ -424,10 +400,7 @@ describe("loop.store.RoomStore", function () {
           open: sinon.spy()
         }
       };
-      store = new loop.store.RoomStore({
-        dispatcher: dispatcher,
-        mozLoop: fakeMozLoop
-      });
+      store = new loop.store.RoomStore(dispatcher, {mozLoop: fakeMozLoop});
     });
 
     it("should open the room via mozLoop", function() {
@@ -447,10 +420,7 @@ describe("loop.store.RoomStore", function () {
           rename: sinon.spy()
         }
       };
-      store = new loop.store.RoomStore({
-        dispatcher: dispatcher,
-        mozLoop: fakeMozLoop
-      });
+      store = new loop.store.RoomStore(dispatcher, {mozLoop: fakeMozLoop});
     });
 
     it("should rename the room via mozLoop", function() {
