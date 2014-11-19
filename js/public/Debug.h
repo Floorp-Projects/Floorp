@@ -250,7 +250,6 @@ class BuilderOrigin : public Builder {
     JSObject *unwrap(Object &object) { return unwrapAny(object); }
 };
 
-
 
 // Finding the size of blocks allocated with malloc
 // ------------------------------------------------
@@ -263,7 +262,6 @@ class BuilderOrigin : public Builder {
 // Tell Debuggers in |runtime| to use |mallocSizeOf| to find the size of
 // malloc'd blocks.
 void SetDebuggerMallocSizeOf(JSRuntime *runtime, mozilla::MallocSizeOf mallocSizeOf);
-
 
 
 // Handlers for observing Promises
@@ -293,12 +291,6 @@ onNewPromise(JSContext *cx, HandleObject promise);
 // unsettled to settled once).
 JS_PUBLIC_API(void)
 onPromiseSettled(JSContext *cx, HandleObject promise);
-
-
-
-// Return true if the given value is a Debugger object, false otherwise.
-JS_PUBLIC_API(bool)
-IsDebugger(JS::Value val);
 
 } // namespace dbg
 } // namespace JS
