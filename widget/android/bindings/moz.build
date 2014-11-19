@@ -4,17 +4,28 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-GENERATED_SOURCES += [
-    'MediaCodec.cpp',
-    'SurfaceTexture.cpp',
+# List of stems to generate .cpp and .h files for.  To add a stem, add it to
+# this list and ensure that $(stem)-classes.txt exists in this directory.
+generated = [
+    'MediaCodec',
+    'SurfaceTexture',
 ]
+
+GENERATED_SOURCES += [stem + '.cpp' for stem in generated]
 
 # We'd like to add these to a future GENERATED_EXPORTS list, but for now we mark
 # them as generated here and manually install them in Makefile.in.
-GENERATED_FILES += [
-    'MediaCodec.h',
-    'SurfaceTexture.h',
-]
+GENERATED_FILES += [stem + '.h' for stem in generated]
+
+# There is an unfortunate race condition when using GENERATED_SOURCES and
+# pattern rules (see Makefile.in) that manifests itself as a VPATH resolution
+# conflict: MediaCodec.o looks for MediaCodec.cpp and $(CURDIR)/MediaCodec.cpp,
+# and the pattern rule is matched but doesn't resolve both sources, causing a
+# failure.  Adding the GENERATED_SOURCES to GENERATED_FILES causes the sources
+# to be built at export time, which is before MediaCodec.o needs them; and by
+# the time MediaCodec.o is built, the source is in place and the VPATH
+# resolution works as expected.
+GENERATED_FILES += GENERATED_SOURCES
 
 FAIL_ON_WARNINGS = True
 FINAL_LIBRARY = 'xul'
