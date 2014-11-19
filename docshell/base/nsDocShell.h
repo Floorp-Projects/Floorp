@@ -310,6 +310,7 @@ protected:
     virtual nsresult DoURILoad(nsIURI * aURI,
                                nsIURI * aReferrer,
                                bool aSendReferrer,
+                               uint32_t aReferrerPolicy,
                                nsISupports * aOwner,
                                const char * aTypeHint,
                                const nsAString & aFileName,
@@ -358,6 +359,7 @@ protected:
                     bool aCloneSHChildren);
 
     virtual void SetReferrerURI(nsIURI * aURI);
+    virtual void SetReferrerPolicy(uint32_t referrerPolicy);
 
     // Session History
     virtual bool ShouldAddToSessionHistory(nsIURI * aURI);
@@ -752,6 +754,7 @@ protected:
     // mCurrentURI should be marked immutable on set if possible.
     nsCOMPtr<nsIURI>           mCurrentURI;
     nsCOMPtr<nsIURI>           mReferrerURI;
+    uint32_t                   mReferrerPolicy;
     nsRefPtr<nsGlobalWindow>   mScriptGlobal;
     nsCOMPtr<nsISHistory>      mSessionHistory;
     nsCOMPtr<nsIGlobalHistory2> mGlobalHistory;

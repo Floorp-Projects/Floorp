@@ -207,6 +207,15 @@ interface nsIContentSecurityPolicy : nsISerializable
   boolean permitsBaseURI(in nsIURI aURI);
 
   /**
+   * Whether this policy allows submitting HTML forms to a given URI.
+   *
+   * @return
+   *    Whether or not the provided URI is allowed to be used as a
+   *    form's action URI.
+   */
+  boolean permitsFormAction(in nsIURI aURI);
+
+  /**
    * Delegate method called by the service when sub-elements of the protected
    * document are being loaded.  Given a bit of information about the request,
    * decides whether or not the policy is satisfied.

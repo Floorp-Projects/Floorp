@@ -736,7 +736,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   // We don't support CORS for processing instructions
   bool isAlternate;
   rv = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, aAlternate,
-                                 CORS_NONE,
+                                 CORS_NONE, mDocument->GetReferrerPolicy(),
                                  mRunsToCompletion ? nullptr : this, &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
   

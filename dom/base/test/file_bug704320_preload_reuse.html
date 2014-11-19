@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This is a spot check for whether the speculative parser reuses style, script or image loads after the referrer policy has changed.
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+-->
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="origin">
+  <script type="text/javascript" src="file_bug704320_preload_common.js"></script>
+  <script language="javascript" type="text/javascript">
+    // mess with parser speculation -- the loads here MAY be reused because the
+    // referrer policy did not change.
+    document.write("<meta name='referrer' content='origin'>");
+  </script>
+
+  <script src="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=js"
+          onload="incrementLoad('script');"></script>
+
+  <link rel="stylesheet"
+        href="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=css"
+        onload="incrementLoad('link');"/>
+
+</head>
+<body>
+
+<img src="http://example.com/tests/dom/base/test/bug704320_counter.sjs?type=img"
+     onload="incrementLoad('img');"
+     onerror="postfail('image load caused an error in reuse test');"/>
+</body>
+</html>

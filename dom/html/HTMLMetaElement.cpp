@@ -77,7 +77,21 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     nsAutoString content;
     rv = GetContent(content);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsContentUtils::ProcessViewportInfo(aDocument, content);  
+    nsContentUtils::ProcessViewportInfo(aDocument, content);
+  }
+  if (aDocument &&
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::referrer, eIgnoreCase)) {
+    nsAutoString content;
+    rv = GetContent(content);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Referrer Policy spec requires a <meta name="referrer" tag to be in the
+    // <head> element.
+    Element* headElt = aDocument->GetHeadElement();
+    if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
+      content = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(content);
+      aDocument->SetHeaderData(nsGkAtoms::referrer, content);
+    }
   }
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMMetaAdded"));
   return rv;

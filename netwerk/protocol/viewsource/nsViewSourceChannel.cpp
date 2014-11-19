@@ -608,6 +608,21 @@ nsViewSourceChannel::SetReferrer(nsIURI * aReferrer)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetReferrerPolicy(uint32_t *aReferrerPolicy)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetReferrerPolicy(aReferrerPolicy);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetReferrerWithPolicy(nsIURI * aReferrer,
+                                           uint32_t aReferrerPolicy)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetReferrerWithPolicy(aReferrer, aReferrerPolicy);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetRequestHeader(const nsACString & aHeader,
                                       nsACString & aValue)
 {
