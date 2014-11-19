@@ -10,15 +10,13 @@ sdk_processor := \
   -classpath $(annotation_processor_jar_files) \
   org.mozilla.gecko.annotationProcessors.SDKProcessor
 
-MediaCodec.cpp: $(ANDROID_SDK)/android.jar mediacodec-classes.txt
-	$(sdk_processor) $(ANDROID_SDK)/android.jar $(srcdir)/mediacodec-classes.txt $(CURDIR) MediaCodec 16
+# For the benefit of readers: the following pattern rule says that,
+# for example, MediaCodec.cpp and MediaCodec.h can be produced from
+# MediaCodec-classes.txt.  This formulation invokes the SDK processor
+# at most once.
 
-MediaCodec.h: MediaCodec.cpp
-
-SurfaceTexture.cpp: $(ANDROID_SDK)/android.jar surfacetexture-classes.txt
-	$(sdk_processor) $(ANDROID_SDK)/android.jar $(srcdir)/surfacetexture-classes.txt $(CURDIR) SurfaceTexture 16
-
-SurfaceTexture.h: SurfaceTexture.cpp
+%.cpp %.h: $(ANDROID_SDK)/android.jar %-classes.txt
+	$(sdk_processor) $(ANDROID_SDK)/android.jar $(srcdir)/$*-classes.txt $(CURDIR) $* 16
 
 # We'd like these to be defined in a future GENERATED_EXPORTS list.
 bindings_exports_FILES := \
