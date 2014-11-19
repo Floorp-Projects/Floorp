@@ -242,6 +242,7 @@ MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
   , mInputBuffers(nullptr)
   , mOutputBuffers(nullptr)
   , mMonitor("MediaCodecDataDecoder::mMonitor")
+  , mFlushing(false)
   , mDraining(false)
   , mStopping(false)
 {
@@ -313,6 +314,9 @@ void MediaCodecDataDecoder::DecoderLoop()
 {
   bool outputDone = false;
 
+  bool draining = false;
+  bool waitingEOF = false;
+
   JNIEnv* env = GetJNIForThread();
   mp4_demuxer::MP4Sample* sample = nullptr;
 
@@ -322,7 +326,7 @@ void MediaCodecDataDecoder::DecoderLoop()
   for (;;) {
     {
       MonitorAutoLock lock(mMonitor);
-      while (!mStopping && !mDraining && mQueue.empty()) {
+      while (!mStopping && !mDraining && !mFlushing && mQueue.empty()) {
         if (mQueue.empty()) {
           // We could be waiting here forever if we don't signal that we need more input
           mCallback->InputExhausted();
@@ -335,17 +339,37 @@ void MediaCodecDataDecoder::DecoderLoop()
         break;
       }
 
-      if (mDraining) {
+      if (mFlushing) {
         mDecoder->Flush();
         ClearQueue();
-        mDraining =  false;
+        mFlushing =  false;
         lock.Notify();
         continue;
+      }
+
+      if (mDraining && !sample && !waitingEOF) {
+        draining = true;
       }
 
       // We're not stopping or draining, so try to get a sample
       if (!mQueue.empty()) {
         sample = mQueue.front();
+      }
+    }
+
+    if (draining && !waitingEOF) {
+      MOZ_ASSERT(!sample, "Shouldn't have a sample when pushing EOF frame");
+
+      int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
+      if (NS_FAILED(res)) {
+        NS_WARNING("exiting decoder loop due to exception while dequeuing input\n");
+        mCallback->Error();
+        break;
+      }
+
+      if (inputIndex >= 0) {
+        mDecoder->QueueInputBuffer(inputIndex, 0, 0, 0, MediaCodec::getBUFFER_FLAG_END_OF_STREAM(), &res);
+        waitingEOF = true;
       }
     }
 
@@ -417,7 +441,23 @@ void MediaCodecDataDecoder::DecoderLoop()
       } else {
         // We have a valid buffer index >= 0 here
         if (bufferInfo.getFlags() & MediaCodec::getBUFFER_FLAG_END_OF_STREAM()) {
+          if (draining) {
+            draining = false;
+            waitingEOF = false;
+
+            mMonitor.Lock();
+            mDraining = false;
+            mMonitor.Notify();
+            mMonitor.Unlock();
+
+            mCallback->DrainComplete();
+          }
+
+          mDecoder->ReleaseOutputBuffer(outputStatus, false);
           outputDone = true;
+
+          // We only queue empty EOF frames, so we're done for now
+          continue;
         }
 
         MOZ_ASSERT(!mDurations.empty(), "Should have had a duration queued");
@@ -509,20 +549,26 @@ nsresult MediaCodecDataDecoder::ResetOutputBuffers()
 }
 
 nsresult MediaCodecDataDecoder::Flush() {
-  Drain();
+  MonitorAutoLock lock(mMonitor);
+  mFlushing = true;
+  lock.Notify();
+
+  while (mFlushing) {
+    lock.Wait();
+  }
+
   return NS_OK;
 }
 
 nsresult MediaCodecDataDecoder::Drain() {
   MonitorAutoLock lock(mMonitor);
+  if (mDraining) {
+    return NS_OK;
+  }
+
   mDraining = true;
   lock.Notify();
 
-  while (mDraining) {
-    lock.Wait();
-  }
-
-  mCallback->DrainComplete();
   return NS_OK;
 }
 
