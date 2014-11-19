@@ -676,14 +676,12 @@ void
 ChunkPool::push(Chunk *chunk)
 {
     MOZ_ASSERT(!chunk->info.next);
-    MOZ_ASSERT(!chunk->info.prevp);
-    MOZ_ASSERT_IF(head_, head_->info.prevp == &head_);
+    MOZ_ASSERT(!chunk->info.prev);
 
     chunk->info.age = 0;
     chunk->info.next = head_;
-    chunk->info.prevp = &head_;
     if (head_)
-        head_->info.prevp = &chunk->info.next;
+        head_->info.prev = chunk;
     head_ = chunk;
     ++count_;
 
@@ -696,16 +694,15 @@ ChunkPool::remove(Chunk *chunk)
     MOZ_ASSERT(count_ > 0);
     MOZ_ASSERT(contains(chunk));
 
-    *chunk->info.prevp = chunk->info.next;
-    if (chunk->info.next) {
-        MOZ_ASSERT(chunk->info.next->info.prevp == &chunk->info.next);
-        chunk->info.next->info.prevp = chunk->info.prevp;
-    }
-    chunk->info.next = nullptr;
-    chunk->info.prevp = nullptr;
+    if (head_ == chunk)
+        head_ = chunk->info.next;
+    if (chunk->info.prev)
+        chunk->info.prev->info.next = chunk->info.next;
+    if (chunk->info.next)
+        chunk->info.next->info.prev = chunk->info.prev;
+    chunk->info.next = chunk->info.prev = nullptr;
     --count_;
 
-    MOZ_ASSERT(count_ >= 0);
     MOZ_ASSERT(verify());
     return chunk;
 }
@@ -714,14 +711,10 @@ ChunkPool::remove(Chunk *chunk)
 bool
 ChunkPool::contains(Chunk *chunk) const
 {
-    Chunk *const *prevp = &head_;
-    Chunk *cursor = head_;
-    while (cursor) {
-        MOZ_ASSERT(cursor->info.prevp == prevp);
+    verify();
+    for (Chunk *cursor = head_; cursor; cursor = cursor->info.next) {
         if (cursor == chunk)
             return true;
-        prevp = &cursor->info.next;
-        cursor = cursor->info.next;
     }
     return false;
 }
@@ -729,17 +722,11 @@ ChunkPool::contains(Chunk *chunk) const
 bool
 ChunkPool::verify() const
 {
+    MOZ_ASSERT(bool(head_) == bool(count_));
     uint32_t count = 0;
-    Chunk *const *expected_prevp = &head_;
-    Chunk *cursor = head_;
-    while (cursor) {
-        MOZ_ASSERT(cursor->info.prevp);
-        MOZ_ASSERT(cursor->info.prevp == expected_prevp);
-        MOZ_ASSERT(*cursor->info.prevp == cursor);
-        MOZ_ASSERT_IF(cursor->info.next, cursor->info.next->info.prevp == &cursor->info.next);
-        expected_prevp = &cursor->info.next;
-        cursor = cursor->info.next;
-        ++count;
+    for (Chunk *cursor = head_; cursor; cursor = cursor->info.next, ++count) {
+        MOZ_ASSERT_IF(cursor->info.prev, cursor->info.prev->info.next == cursor);
+        MOZ_ASSERT_IF(cursor->info.next, cursor->info.next->info.prev == cursor);
     }
     MOZ_ASSERT(count_ == count);
     return true;
@@ -884,7 +871,7 @@ Chunk::init(JSRuntime *rt)
     /* Initialize the chunk info. */
     info.age = 0;
     info.next = nullptr;
-    info.prevp = nullptr;
+    info.prev = nullptr;
     info.trailer.storeBuffer = nullptr;
     info.trailer.location = ChunkLocationBitTenuredHeap;
     info.trailer.runtime = rt;
@@ -1010,11 +997,11 @@ Chunk::releaseArena(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock,
     }
 
     if (info.numArenasFree == 1) {
-        MOZ_ASSERT(!info.prevp);
+        MOZ_ASSERT(!info.prev);
         MOZ_ASSERT(!info.next);
         rt->gc.availableChunks(lock).push(this);
     } else if (!unused()) {
-        MOZ_ASSERT(info.prevp);
+        MOZ_ASSERT(rt->gc.availableChunks(lock).contains(this));
     } else {
         MOZ_ASSERT(unused());
         rt->gc.availableChunks(lock).remove(this);
