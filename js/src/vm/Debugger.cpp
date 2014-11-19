@@ -7254,4 +7254,16 @@ JS::dbg::onPromiseSettled(JSContext *cx, HandleObject promise)
 {
     AssertIsPromise(cx, promise);
     Debugger::slowPathPromiseHook(cx, Debugger::OnPromiseSettled, promise);
+
+JS_PUBLIC_API(bool)
+JS::dbg::IsDebugger(JS::Value val)
+{
+    if (!val.isObject())
+        return false;
+
+    JSObject &obj = val.toObject();
+    if (obj.getClass() != &Debugger::jsclass)
+        return false;
+
+    return js::Debugger::fromJSObject(&obj) != nullptr;
 }
