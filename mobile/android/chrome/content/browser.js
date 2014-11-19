@@ -476,36 +476,6 @@ var BrowserApp = {
       Services.prefs.setBoolPref("xpinstall.enabled", false);
     }
 
-    // Fix fallout from Bug 1091803.
-    if (Services.prefs.prefHasUserValue("intl.locale.os")) {
-      try {
-        let currentAcceptLang = Services.prefs.getCharPref("intl.accept_languages");
-
-        // The trailing comma is very important. This means we've set it to a
-        // real char pref, and it's something like "chrome://...,en-US,en".
-        if (currentAcceptLang.startsWith("chrome://global/locale/intl.properties,")) {
-          // If general.useragent.locale was set to a plain string, we ought to fix it, too.
-          try {
-            let currentUALocale = Services.prefs.getCharPref("general.useragent.locale");
-            if (currentUALocale.startsWith("chrome://")) {
-              // We're fine. This is what happens when you read a localized string as a char pref.
-            } else {
-              // Turn it into a localized string.
-              this.setLocalizedPref("general.useragent.locale", currentUALocale);
-            }
-          } catch (ee) {
-          }
-
-          // Now compute and save a valid Accept-Languages header from the clean strings.
-          let osLocale = this.getOSLocalePref();
-          let uaLocale = this.getUALocalePref();
-          this.computeAcceptLanguages(osLocale, uaLocale);
-        }
-      } catch (e) {
-        // Phew.
-      }
-    }
-
     try {
       // Set the tiles click observer only if tiles reporting is enabled (that
       // is, a report URL is set in prefs).
