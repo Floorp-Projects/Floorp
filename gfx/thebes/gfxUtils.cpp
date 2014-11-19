@@ -1199,6 +1199,9 @@ gfxUtils::EncodeSourceSurface(SourceSurface* aSurface,
                                bufSize - imgSize,
                                &numReadThisTime)) == NS_OK && numReadThisTime > 0)
   {
+    // Update the length of the vector without overwriting the new data.
+    imgData.growByUninitialized(numReadThisTime);
+
     imgSize += numReadThisTime;
     if (imgSize == bufSize) {
       // need a bigger buffer, just double
