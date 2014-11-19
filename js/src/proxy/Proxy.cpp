@@ -396,9 +396,8 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
         // If the policy denies access but wants us to return true, we need
         // to hand a valid (empty) iterator object to the caller.
         if (!policy.allowed()) {
-            AutoIdVector props(cx);
             return policy.returnValue() &&
-                   EnumeratedIdVectorToIterator(cx, proxy, flags, props, vp);
+                   NewEmptyPropertyIterator(cx, flags, vp);
         }
         return handler->iterate(cx, proxy, flags, vp);
     }

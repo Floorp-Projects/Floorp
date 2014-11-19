@@ -566,11 +566,9 @@ VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVecto
 {
     MOZ_ASSERT(!(flags & JSITER_FOREACH));
 
-    if (obj) {
-        if (obj->hasSingletonType() && !obj->setIteratedSingleton(cx))
-            return false;
-        types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
-    }
+    if (obj->hasSingletonType() && !obj->setIteratedSingleton(cx))
+        return false;
+    types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
 
     Rooted<PropertyIteratorObject *> iterobj(cx, NewPropertyIteratorObject(cx, flags));
     if (!iterobj)
@@ -618,11 +616,9 @@ js::VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoI
 {
     MOZ_ASSERT(flags & JSITER_FOREACH);
 
-    if (obj) {
-        if (obj->hasSingletonType() && !obj->setIteratedSingleton(cx))
-            return false;
-        types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
-    }
+    if (obj->hasSingletonType() && !obj->setIteratedSingleton(cx))
+        return false;
+    types::MarkTypeObjectFlags(cx, obj, types::OBJECT_FLAG_ITERATED);
 
     Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx, flags));
     if (!iterobj)
@@ -650,6 +646,27 @@ js::EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags
     return VectorToValueIterator(cx, obj, flags, props, vp);
 }
 
+// Mainly used for .. in over null/undefined
+bool
+js::NewEmptyPropertyIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
+{
+    Rooted<PropertyIteratorObject*> iterobj(cx, NewPropertyIteratorObject(cx, flags));
+    if (!iterobj)
+        return false;
+
+    AutoIdVector keys(cx); // Empty
+    NativeIterator *ni = NativeIterator::allocateIterator(cx, 0, keys);
+    if (!ni)
+        return false;
+    ni->init(nullptr, iterobj, flags, 0, 0);
+
+    iterobj->setNativeIterator(ni);
+    vp.setObject(*iterobj);
+
+    RegisterEnumerator(cx, iterobj, ni);
+    return true;
+}
+
 static inline void
 UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
 {
@@ -661,113 +678,107 @@ UpdateNativeIterator(NativeIterator *ni, JSObject *obj)
 bool
 js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue vp)
 {
+    if (obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()) {
+        vp.setObject(*obj);
+        return true;
+    }
+
     Vector<Shape *, 8> shapes(cx);
     uint32_t key = 0;
-
-    bool keysOnly = (flags == JSITER_ENUMERATE);
-
-    if (obj) {
-        if (obj->is<PropertyIteratorObject>() || obj->is<LegacyGeneratorObject>()) {
-            vp.setObject(*obj);
-            return true;
-        }
-
-        if (keysOnly) {
-            /*
-             * Check to see if this is the same as the most recent object which
-             * was iterated over.  We don't explicitly check for shapeless
-             * objects here, as they are not inserted into the cache and
-             * will result in a miss.
-             */
-            PropertyIteratorObject *last = cx->runtime()->nativeIterCache.last;
-            if (last) {
-                NativeIterator *lastni = last->getNativeIterator();
-                if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                    obj->isNative() &&
-                    obj->as<NativeObject>().hasEmptyElements() &&
-                    obj->lastProperty() == lastni->shapes_array[0])
-                {
-                    JSObject *proto = obj->getProto();
-                    if (proto->isNative() &&
-                        proto->as<NativeObject>().hasEmptyElements() &&
-                        proto->lastProperty() == lastni->shapes_array[1] &&
-                        !proto->getProto())
-                    {
-                        vp.setObject(*last);
-                        UpdateNativeIterator(lastni, obj);
-                        RegisterEnumerator(cx, last, lastni);
-                        return true;
-                    }
-                }
-            }
-
-            /*
-             * The iterator object for JSITER_ENUMERATE never escapes, so we
-             * don't care for the proper parent/proto to be set. This also
-             * allows us to re-use a previous iterator object that is not
-             * currently active.
-             */
+    if (flags == JSITER_ENUMERATE) {
+        /*
+         * Check to see if this is the same as the most recent object which
+         * was iterated over.  We don't explicitly check for shapeless
+         * objects here, as they are not inserted into the cache and
+         * will result in a miss.
+         */
+        PropertyIteratorObject *last = cx->runtime()->nativeIterCache.last;
+        if (last) {
+            NativeIterator *lastni = last->getNativeIterator();
+            if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
+                obj->isNative() &&
+                obj->as<NativeObject>().hasEmptyElements() &&
+                obj->lastProperty() == lastni->shapes_array[0])
             {
-                JSObject *pobj = obj;
-                do {
-                    if (!pobj->isNative() ||
-                        !pobj->as<NativeObject>().hasEmptyElements() ||
-                        IsAnyTypedArray(pobj) ||
-                        pobj->hasUncacheableProto() ||
-                        pobj->getOps()->enumerate ||
-                        pobj->getClass()->enumerate != JS_EnumerateStub ||
-                        pobj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
-                    {
-                        shapes.clear();
-                        goto miss;
-                    }
-                    Shape *shape = pobj->lastProperty();
-                    key = (key + (key << 16)) ^ (uintptr_t(shape) >> 3);
-                    if (!shapes.append(shape))
-                        return false;
-                    pobj = pobj->getProto();
-                } while (pobj);
-            }
-
-            PropertyIteratorObject *iterobj = cx->runtime()->nativeIterCache.get(key);
-            if (iterobj) {
-                NativeIterator *ni = iterobj->getNativeIterator();
-                if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                    ni->shapes_key == key &&
-                    ni->shapes_length == shapes.length() &&
-                    Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
-                    vp.setObject(*iterobj);
-
-                    UpdateNativeIterator(ni, obj);
-                    RegisterEnumerator(cx, iterobj, ni);
-                    if (shapes.length() == 2)
-                        cx->runtime()->nativeIterCache.last = iterobj;
+                JSObject *proto = obj->getProto();
+                if (proto->isNative() &&
+                    proto->as<NativeObject>().hasEmptyElements() &&
+                    proto->lastProperty() == lastni->shapes_array[1] &&
+                    !proto->getProto())
+                {
+                    vp.setObject(*last);
+                    UpdateNativeIterator(lastni, obj);
+                    RegisterEnumerator(cx, last, lastni);
                     return true;
                 }
             }
         }
 
-      miss:
-        if (obj->is<ProxyObject>())
-            return Proxy::iterate(cx, obj, flags, vp);
+        /*
+         * The iterator object for JSITER_ENUMERATE never escapes, so we
+         * don't care for the proper parent/proto to be set. This also
+         * allows us to re-use a previous iterator object that is not
+         * currently active.
+         */
+        {
+            JSObject *pobj = obj;
+            do {
+                if (!pobj->isNative() ||
+                    !pobj->as<NativeObject>().hasEmptyElements() ||
+                    IsAnyTypedArray(pobj) ||
+                    pobj->hasUncacheableProto() ||
+                    pobj->getOps()->enumerate ||
+                    pobj->getClass()->enumerate != JS_EnumerateStub ||
+                    pobj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
+                {
+                    shapes.clear();
+                    goto miss;
+                }
+                Shape *shape = pobj->lastProperty();
+                key = (key + (key << 16)) ^ (uintptr_t(shape) >> 3);
+                if (!shapes.append(shape))
+                    return false;
+                pobj = pobj->getProto();
+            } while (pobj);
+        }
 
-        if (!GetCustomIterator(cx, obj, flags, vp))
-            return false;
-        if (!vp.isUndefined())
-            return true;
+        PropertyIteratorObject *iterobj = cx->runtime()->nativeIterCache.get(key);
+        if (iterobj) {
+            NativeIterator *ni = iterobj->getNativeIterator();
+            if (!(ni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
+                ni->shapes_key == key &&
+                ni->shapes_length == shapes.length() &&
+                Compare(ni->shapes_array, shapes.begin(), ni->shapes_length)) {
+                vp.setObject(*iterobj);
+
+                UpdateNativeIterator(ni, obj);
+                RegisterEnumerator(cx, iterobj, ni);
+                if (shapes.length() == 2)
+                    cx->runtime()->nativeIterCache.last = iterobj;
+                return true;
+            }
+        }
     }
 
-    /* NB: for (var p in null) succeeds by iterating over no properties. */
+  miss:
+    if (obj->is<ProxyObject>())
+        return Proxy::iterate(cx, obj, flags, vp);
+
+    if (!GetCustomIterator(cx, obj, flags, vp))
+        return false;
+    if (!vp.isUndefined())
+        return true;
 
     AutoIdVector keys(cx);
     if (flags & JSITER_FOREACH) {
-        if (MOZ_LIKELY(obj != nullptr) && !Snapshot(cx, obj, flags, &keys))
-            return false;
         MOZ_ASSERT(shapes.empty());
+
+        if (!Snapshot(cx, obj, flags, &keys))
+            return false;
         if (!VectorToValueIterator(cx, obj, flags, keys, vp))
             return false;
     } else {
-        if (MOZ_LIKELY(obj != nullptr) && !Snapshot(cx, obj, flags, &keys))
+        if (!Snapshot(cx, obj, flags, &keys))
             return false;
         if (!VectorToKeyIterator(cx, obj, flags, keys, shapes.length(), key, vp))
             return false;
@@ -1005,17 +1016,17 @@ js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
     if (vp.isObject()) {
         /* Common case. */
         obj = &vp.toObject();
-    } else {
+    } else if ((flags & JSITER_ENUMERATE) && vp.isNullOrUndefined()) {
         /*
          * Enumerating over null and undefined gives an empty enumerator, so
          * that |for (var p in <null or undefined>) <loop>;| never executes
          * <loop>, per ES5 12.6.4.
          */
-        if (!(flags & JSITER_ENUMERATE) || !vp.isNullOrUndefined()) {
-            obj = ToObject(cx, vp);
-            if (!obj)
-                return false;
-        }
+         return NewEmptyPropertyIterator(cx, flags, vp);
+    } else {
+        obj = ToObject(cx, vp);
+        if (!obj)
+            return false;
     }
 
     return GetIterator(cx, obj, flags, vp);
