@@ -15,45 +15,53 @@
                android:src="@drawable/larry"
                android:paddingRight="@dimen/doorhanger_padding"/>
 
-    <LinearLayout android:layout_width="0dip"
-                  android:layout_height="wrap_content"
-                  android:layout_weight="1.0"
-                  android:orientation="vertical">
+    <FrameLayout android:layout_width="0dip"
+                 android:layout_height="wrap_content"
+                 android:layout_weight="1.0">
 
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textSize="14sp"
-                  android:textColor="@color/doorhanger_text"
-                  android:text="@string/identity_connected_to"/>
+        <include layout="@layout/site_identity_unknown" />
 
-        <TextView android:id="@+id/host"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textSize="20sp"
-                  android:textColor="@color/doorhanger_text"
-                  android:textStyle="bold"/>
+        <LinearLayout android:id="@+id/site_identity_known_container"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical">
 
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textSize="14sp"
-                  android:textColor="@color/doorhanger_text"
-                  android:text="@string/identity_run_by"
-                  android:paddingTop="12dip"/>
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="14sp"
+                      android:textColor="@color/doorhanger_text"
+                      android:text="@string/identity_connected_to"/>
 
-        <TextView android:id="@+id/owner"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textColor="@color/doorhanger_text"
-                  android:textSize="16sp"
-                  android:textStyle="bold"/>
+            <TextView android:id="@+id/host"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="20sp"
+                      android:textColor="@color/doorhanger_text"
+                      android:textStyle="bold"/>
 
-        <TextView android:id="@+id/verifier"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textSize="14sp"
-                  android:textColor="@color/doorhanger_text"
-                  android:paddingTop="12dip"/>
+            <TextView android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="14sp"
+                      android:textColor="@color/doorhanger_text"
+                      android:text="@string/identity_run_by"
+                      android:paddingTop="12dip"/>
 
-    </LinearLayout>
+            <TextView android:id="@+id/owner"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textColor="@color/doorhanger_text"
+                      android:textSize="16sp"
+                      android:textStyle="bold"/>
+
+            <TextView android:id="@+id/verifier"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      android:textSize="14sp"
+                      android:textColor="@color/doorhanger_text"
+                      android:paddingTop="12dip"/>
+
+        </LinearLayout>
+
+     </FrameLayout>
 
 </LinearLayout>
