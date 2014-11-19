@@ -20,10 +20,14 @@ namespace dom {
 class Promise;
 struct PromiseDebuggingStateHolder;
 class GlobalObject;
+class UncaughtRejectionObserver;
 
 class PromiseDebugging
 {
 public:
+  static void Init();
+  static void Shutdown();
+
   static void GetState(GlobalObject&, Promise& aPromise,
                        PromiseDebuggingStateHolder& aState);
 
@@ -38,6 +42,32 @@ public:
   static double GetPromiseLifetime(GlobalObject&, Promise& aPromise);
   static double GetTimeToSettle(GlobalObject&, Promise& aPromise,
                                 ErrorResult& aRv);
+
+  static void GetPromiseID(GlobalObject&, Promise&, nsString&);
+
+  // Mechanism for watching uncaught instances of Promise.
+  static void AddUncaughtRejectionObserver(GlobalObject&,
+                                           UncaughtRejectionObserver& aObserver);
+  static void RemoveUncaughtRejectionObserver(GlobalObject&,
+                                              UncaughtRejectionObserver& aObserver);
+
+  // Mark a Promise as having been left uncaught at script completion.
+  static void AddUncaughtRejection(Promise&);
+  // Mark a Promise previously added with `AddUncaughtRejection` as
+  // eventually consumed.
+  static void AddConsumedRejection(Promise&);
+  // Propagate the informations from AddUncaughtRejection
+  // and AddConsumedRejection to observers.
+  static void FlushUncaughtRejections();
+private:
+  // Identity of the process.
+  // This property is:
+  // - set during initialization of the layout module,
+  // prior to any Worker using it;
+  // - read by both the main thread and the Workers;
+  // - unset during shutdown of the layout module,
+  // after any Worker has been shutdown.
+  static nsString sIDPrefix;
 };
 
 } // namespace dom
