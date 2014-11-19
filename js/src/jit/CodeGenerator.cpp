@@ -3899,9 +3899,9 @@ CodeGenerator::branchIfInvalidated(Register temp, Label *invalidated)
     if (!ionScriptLabels_.append(label))
         return false;
 
-    // If IonScript::refcount != 0, the script has been invalidated.
+    // If IonScript::invalidationCount_ != 0, the script has been invalidated.
     masm.branch32(Assembler::NotEqual,
-                  Address(temp, IonScript::offsetOfRefcount()),
+                  Address(temp, IonScript::offsetOfInvalidationCount()),
                   Imm32(0),
                   invalidated);
     return true;

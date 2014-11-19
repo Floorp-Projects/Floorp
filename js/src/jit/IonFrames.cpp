@@ -731,7 +731,7 @@ HandleException(ResumeFromException *rfe)
 
                 if (rfe->kind == ResumeFromException::RESUME_BAILOUT) {
                     if (invalidated)
-                        ionScript->decref(cx->runtime()->defaultFreeOp());
+                        ionScript->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
                     return;
                 }
 
@@ -764,7 +764,7 @@ HandleException(ResumeFromException *rfe)
             }
 
             if (invalidated)
-                ionScript->decref(cx->runtime()->defaultFreeOp());
+                ionScript->decrementInvalidationCount(cx->runtime()->defaultFreeOp());
 
         } else if (iter.isBaselineJS()) {
             // It's invalid to call DebugEpilogue twice for the same frame.
