@@ -52,8 +52,11 @@ TestTabList.prototype = {
 
 function createRootActor(aConnection)
 {
-  let root = new RootActor(aConnection,
-                           { tabList: new TestTabList(aConnection) });
+  let root = new RootActor(aConnection, {
+    tabList: new TestTabList(aConnection),
+    globalActorFactories: DebuggerServer.globalActorFactories,
+  });
+
   root.applicationType = "xpcshell-tests";
   return root;
 }
@@ -124,6 +127,14 @@ TestTabActor.prototype = {
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
     return {};
+  },
+
+  removeActorByName: function(aName) {
+    const actor = this._extraActors[aName];
+    if (this._tabActorPool) {
+      this._tabActorPool.removeActor(actor);
+    }
+    delete this._extraActors[aName];
   },
 
   /* Support for DebuggerServer.addTabActor. */

@@ -856,7 +856,7 @@ TabActor.prototype = {
   _appendExtraActors: appendExtraActors,
 
   /**
-   * Does the actual work of attching to a tab.
+   * Does the actual work of attaching to a tab.
    */
   _attach: function BTA_attach() {
     if (this._attached) {
@@ -1512,7 +1512,7 @@ TabActor.prototype = {
    * is here because the Style Editor and Inspector share style sheet actors.
    *
    * @param DOMStyleSheet styleSheet
-   *        The style sheet to creat an actor for.
+   *        The style sheet to create an actor for.
    * @return StyleSheetActor actor
    *         The actor for this style sheet.
    *
@@ -1527,7 +1527,17 @@ TabActor.prototype = {
     this._tabPool.addActor(actor);
 
     return actor;
-  }
+  },
+
+  removeActorByName: function BTA_removeActor(aName) {
+    if (aName in this._extraActors) {
+      const actor = this._extraActors[aName];
+      if (this._tabActorPool.has(actor)) {
+        this._tabActorPool.removeActor(actor);
+      }
+      delete this._extraActors[aName];
+    }
+  },
 };
 
 /**
@@ -1550,7 +1560,7 @@ exports.TabActor = TabActor;
  * <browser> tab. Most of the implementation comes from TabActor.
  *
  * @param aConnection DebuggerServerConnection
- *        The conection to the client.
+ *        The connection to the client.
  * @param aBrowser browser
  *        The browser instance that contains this tab.
  * @param aTabBrowser tabbrowser

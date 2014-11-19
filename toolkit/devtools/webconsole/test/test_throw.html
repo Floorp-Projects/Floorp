@@ -55,6 +55,9 @@ function onAttach(aState, aResponse)
       is(aResponse.exception.initial, shortedString,
         "exception.initial for throw longString"
       );
+      is(aResponse.exceptionMessage.initial, shortedString,
+        "exceptionMessage.initial for throw longString"
+      );
       nextTest();
     });
   });

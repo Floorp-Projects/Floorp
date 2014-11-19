@@ -9,22 +9,34 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
+let require = devtools.require;
 devtools.lazyRequireGetter(this, "Services");
 devtools.lazyRequireGetter(this, "promise");
 devtools.lazyRequireGetter(this, "EventEmitter",
   "devtools/toolkit/event-emitter");
 devtools.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
+devtools.lazyRequireGetter(this, "FramerateFront",
+  "devtools/server/actors/framerate", true);
+devtools.lazyRequireGetter(this, "L10N",
+  "devtools/profiler/global", true);
+devtools.lazyImporter(this, "LineGraphWidget",
+  "resource:///modules/devtools/Graphs.jsm");
 
 // Events emitted by the `PerformanceController`
 const EVENTS = {
   // When a recording is started or stopped via the controller
   RECORDING_STARTED: "Performance:RecordingStarted",
   RECORDING_STOPPED: "Performance:RecordingStopped",
+  // When the PerformanceActor front emits `framerate` data
+  TIMELINE_DATA: "Performance:TimelineData",
 
   // Emitted by the PerformanceView on record button click
   UI_START_RECORDING: "Performance:UI:StartRecording",
-  UI_STOP_RECORDING: "Performance:UI:StopRecording"
+  UI_STOP_RECORDING: "Performance:UI:StopRecording",
+
+  // Emitted by the OverviewView when more data has been rendered
+  OVERVIEW_RENDERED: "Performance:UI:OverviewRendered"
 };
 
 /**
@@ -39,7 +51,8 @@ let startupPerformance = Task.async(function*() {
   yield promise.all([
     PrefObserver.register(),
     PerformanceController.initialize(),
-    PerformanceView.initialize()
+    PerformanceView.initialize(),
+    OverviewView.initialize()
   ]);
 });
 
@@ -50,7 +63,8 @@ let shutdownPerformance = Task.async(function*() {
   yield promise.all([
     PrefObserver.unregister(),
     PerformanceController.destroy(),
-    PerformanceView.destroy()
+    PerformanceView.destroy(),
+    OverviewView.destroy()
   ]);
 });
 
@@ -83,9 +97,11 @@ let PerformanceController = {
   initialize: function() {
     this.startRecording = this.startRecording.bind(this);
     this.stopRecording = this.stopRecording.bind(this);
+    this._onTimelineData = this._onTimelineData.bind(this);
 
     PerformanceView.on(EVENTS.UI_START_RECORDING, this.startRecording);
     PerformanceView.on(EVENTS.UI_STOP_RECORDING, this.stopRecording);
+    gFront.on("ticks", this._onTimelineData);
   },
 
   /**
@@ -112,7 +128,14 @@ let PerformanceController = {
   stopRecording: Task.async(function *() {
     let results = yield gFront.stopRecording();
     this.emit(EVENTS.RECORDING_STOPPED, results);
-  })
+  }),
+
+  /**
+   * Fired whenever the gFront emits a ticks, memory, or markers event.
+   */
+  _onTimelineData: function (eventName, ...data) {
+    this.emit(EVENTS.TIMELINE_DATA, eventName, ...data);
+  }
 };
 
 /**
