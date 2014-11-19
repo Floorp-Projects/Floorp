@@ -1460,9 +1460,6 @@ FilterNodeColorMatrixSoftware::RequestFromInputsForRect(const IntRect &aRect)
 IntRect
 FilterNodeColorMatrixSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
-  if (mMatrix._54 > 0.0f) {
-    return aRect;
-  }
   return GetInputRectInRect(IN_COLOR_MATRIX_IN, aRect);
 }
 
@@ -1811,10 +1808,7 @@ FilterNodeComponentTransferSoftware::RequestFromInputsForRect(const IntRect &aRe
 IntRect
 FilterNodeComponentTransferSoftware::GetOutputRectInRect(const IntRect& aRect)
 {
-  if (mDisableA) {
-    return GetInputRectInRect(IN_TRANSFER_IN, aRect);
-  }
-  return aRect;
+  return GetInputRectInRect(IN_TRANSFER_IN, aRect);
 }
 
 int32_t
