@@ -4106,26 +4106,6 @@ extern JS_PUBLIC_API(bool)
 Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
          const char *filename, JS::MutableHandleValue rval);
 
-extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-         SourceBufferHolder &srcBuf);
-
-extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, AutoObjectVector &scopeChain,
-         const ReadOnlyCompileOptions &options, SourceBufferHolder &srcBuf);
-
-extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-         const char16_t *chars, size_t length);
-
-extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-         const char *bytes, size_t length);
-
-extern JS_PUBLIC_API(bool)
-Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &options,
-         const char *filename);
-
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
