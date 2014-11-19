@@ -5004,6 +5004,26 @@ DebuggerSource_getIntroductionType(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerSource_setSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "sourceMapURL", args, obj, sourceObject);
+    ScriptSource *ss = sourceObject->source();
+    MOZ_ASSERT(ss);
+
+    JSString *str = ToString<CanGC>(cx, args[0]);
+    if (!str)
+        return false;
+
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, str))
+        return false;
+
+    ss->setSourceMapURL(cx, stableChars.twoByteChars());
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 DebuggerSource_getSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get sourceMapURL)", args, obj, sourceObject);
@@ -5032,7 +5052,7 @@ static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("introductionOffset", DebuggerSource_getIntroductionOffset, 0),
     JS_PSG("introductionType", DebuggerSource_getIntroductionType, 0),
     JS_PSG("elementAttributeName", DebuggerSource_getElementProperty, 0),
-    JS_PSG("sourceMapURL", DebuggerSource_getSourceMapUrl, 0),
+    JS_PSGS("sourceMapURL", DebuggerSource_getSourceMapUrl, DebuggerSource_setSourceMapUrl, 0),
     JS_PS_END
 };
 
