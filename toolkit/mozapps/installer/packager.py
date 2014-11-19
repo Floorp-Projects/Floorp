@@ -32,6 +32,7 @@ import os
 from StringIO import StringIO
 import subprocess
 import platform
+import mozinfo
 
 # List of libraries to shlibsign.
 SIGN_LIBS = [
@@ -294,11 +295,11 @@ def main():
     elif 'MOZ_OMNIJAR' in defines:
         del defines['MOZ_OMNIJAR']
 
-    binpath = ''
-    if 'BINPATH' in defines:
-        binpath = SimpleManifestSink.normalize_path(defines['BINPATH'])
-    while binpath.startswith('/'):
-        binpath = binpath[1:]
+    respath = ''
+    if 'RESPATH' in defines:
+        respath = SimpleManifestSink.normalize_path(defines['RESPATH'])
+    while respath.startswith('/'):
+        respath = respath[1:]
 
     if args.unify:
         def is_native(path):
@@ -349,18 +350,19 @@ def main():
             removals_in.name = args.removals
             removals = RemovedFiles(copier)
             preprocess(removals_in, removals, defines)
-            copier.add(mozpack.path.join(binpath, 'removed-files'), removals)
+            copier.add(mozpack.path.join(respath, 'removed-files'), removals)
 
     # shlibsign libraries
     if launcher.can_launch():
-        for lib in SIGN_LIBS:
-            libbase = mozpack.path.join(binpath, '%s%s') \
-                % (buildconfig.substs['DLL_PREFIX'], lib)
-            libname = '%s%s' % (libbase, buildconfig.substs['DLL_SUFFIX'])
-            if copier.contains(libname):
-                copier.add(libbase + '.chk',
-                           LibSignFile(os.path.join(args.destination,
-                                                    libname)))
+        if not mozinfo.isMac:
+            for lib in SIGN_LIBS:
+                libbase = mozpack.path.join(respath, '%s%s') \
+                    % (buildconfig.substs['DLL_PREFIX'], lib)
+                libname = '%s%s' % (libbase, buildconfig.substs['DLL_SUFFIX'])
+                if copier.contains(libname):
+                    copier.add(libbase + '.chk',
+                               LibSignFile(os.path.join(args.destination,
+                                                        libname)))
 
     # Setup preloading
     if args.jarlog and os.path.exists(args.jarlog):
@@ -393,7 +395,7 @@ def main():
 
     copier.copy(args.destination)
     generate_precomplete(os.path.normpath(os.path.join(args.destination,
-                                                       binpath)))
+                                                       respath)))
 
 
 if __name__ == '__main__':

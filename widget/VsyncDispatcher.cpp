@@ -8,6 +8,11 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "gfxPrefs.h"
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
+#include "GeckoProfiler.h"
+#include "ProfilerMarkers.h"
+#endif
+
 #ifdef MOZ_WIDGET_GONK
 #include "GeckoTouchDispatcher.h"
 #endif
@@ -42,6 +47,12 @@ VsyncDispatcher::~VsyncDispatcher()
 }
 
 void
+VsyncDispatcher::SetVsyncSource(VsyncSource* aVsyncSource)
+{
+  mVsyncSource = aVsyncSource;
+}
+
+void
 VsyncDispatcher::DispatchTouchEvents(bool aNotifiedCompositors, TimeStamp aVsyncTime)
 {
   // Touch events can sometimes start a composite, so make sure we dispatch touches
@@ -57,6 +68,12 @@ void
 VsyncDispatcher::NotifyVsync(TimeStamp aVsyncTimestamp)
 {
   bool notifiedCompositors = false;
+#ifdef MOZ_ENABLE_PROFILER_SPS
+    if (profiler_is_active()) {
+        CompositorParent::PostInsertVsyncProfilerMarker(aVsyncTimestamp);
+    }
+#endif
+
   if (gfxPrefs::VsyncAlignedCompositor()) {
     MutexAutoLock lock(mCompositorObserverLock);
     notifiedCompositors = NotifyVsyncObservers(aVsyncTimestamp, mCompositorObservers);
@@ -88,7 +105,7 @@ VsyncDispatcher::AddCompositorVsyncObserver(VsyncObserver* aVsyncObserver)
 void
 VsyncDispatcher::RemoveCompositorVsyncObserver(VsyncObserver* aVsyncObserver)
 {
-  MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+  MOZ_ASSERT(CompositorParent::IsInCompositorThread() || NS_IsMainThread());
   MutexAutoLock lock(mCompositorObserverLock);
   if (mCompositorObservers.Contains(aVsyncObserver)) {
     mCompositorObservers.RemoveElement(aVsyncObserver);

@@ -11,6 +11,7 @@
 #define nsSyncLoadService_h__
 
 #include "nscore.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 class nsIInputStream;
 class nsILoadGroup;
@@ -33,10 +34,12 @@ public:
      * @param aLoadGroup The loadgroup to use for loading the document.
      * @param aForceToXML Whether to parse the document as XML, regardless of
      *                    content type.
+     * @param referrerPolicy Referrer policy.
      * @param aResult [out] The document loaded from the URI.
      */
     static nsresult LoadDocument(nsIURI *aURI, nsIPrincipal *aLoaderPrincipal,
                                  nsILoadGroup *aLoadGroup, bool aForceToXML,
+                                 mozilla::net::ReferrerPolicy aReferrerPolicy,
                                  nsIDOMDocument** aResult);
 
     /**

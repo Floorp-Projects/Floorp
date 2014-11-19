@@ -54,7 +54,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(4e3de242-0b2a-4cf0-81b5-a5fe8628431c)]
+[scriptable, builtinclass, uuid(c2756385-bc54-417b-9ae4-c5a40053a2a3)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -132,6 +132,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    *
    * @param aURI            - The URI to load.
    * @param aReferrer       - Referring URI
+   * @param aReferrerPolicy - Referrer policy
    * @param aOwner          - Owner (security principal) 
    * @param aInheritOwner   - Flag indicating whether the owner of the current
    *                          document should be inherited if aOwner is null.
@@ -157,6 +158,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aReferrer,
+                              in unsigned long aReferrerPolicy,
                               in nsISupports aOwner,
                               in uint32_t aFlags,
                               in wstring aWindowTarget,

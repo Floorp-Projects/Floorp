@@ -1474,6 +1474,7 @@ HttpChannelChild::ContinueAsyncOpen()
   SerializeURI(mOriginalURI, openArgs.original());
   SerializeURI(mDocumentURI, openArgs.doc());
   SerializeURI(mReferrer, openArgs.referrer());
+  openArgs.referrerPolicy() = mReferrerPolicy;
   SerializeURI(mAPIRedirectToURI, openArgs.apiRedirectTo());
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;

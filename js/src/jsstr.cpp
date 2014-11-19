@@ -575,9 +575,17 @@ ValueToIntegerRange(JSContext *cx, HandleValue v, int32_t *out)
     return true;
 }
 
-static JSString *
-DoSubstr(JSContext *cx, JSString *str, size_t begin, size_t len)
+JSString *
+js::SubstringKernel(JSContext *cx, HandleString str, int32_t beginInt, int32_t lengthInt)
 {
+    MOZ_ASSERT(0 <= beginInt);
+    MOZ_ASSERT(0 <= lengthInt);
+    MOZ_ASSERT(uint32_t(beginInt) <= str->length());
+    MOZ_ASSERT(uint32_t(lengthInt) <= str->length() - beginInt);
+
+    uint32_t begin = beginInt;
+    uint32_t len = lengthInt;
+
     /*
      * Optimization for one level deep ropes.
      * This is common for the following pattern:
@@ -591,16 +599,13 @@ DoSubstr(JSContext *cx, JSString *str, size_t begin, size_t len)
         JSRope *rope = &str->asRope();
 
         /* Substring is totally in leftChild of rope. */
-        if (begin + len <= rope->leftChild()->length()) {
-            str = rope->leftChild();
-            return NewDependentString(cx, str, begin, len);
-        }
+        if (begin + len <= rope->leftChild()->length())
+            return NewDependentString(cx, rope->leftChild(), begin, len);
 
         /* Substring is totally in rightChild of rope. */
         if (begin >= rope->leftChild()->length()) {
-            str = rope->rightChild();
             begin -= rope->leftChild()->length();
-            return NewDependentString(cx, str, begin, len);
+            return NewDependentString(cx, rope->rightChild(), begin, len);
         }
 
         /*
@@ -626,65 +631,6 @@ DoSubstr(JSContext *cx, JSString *str, size_t begin, size_t len)
     }
 
     return NewDependentString(cx, str, begin, len);
-}
-
-bool
-js::str_substring(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    JSString *str = ThisToStringForStringProto(cx, args);
-    if (!str)
-        return false;
-
-    int32_t length, begin, end;
-    if (args.length() > 0) {
-        end = length = int32_t(str->length());
-
-        if (args[0].isInt32()) {
-            begin = args[0].toInt32();
-        } else {
-            RootedString strRoot(cx, str);
-            if (!ValueToIntegerRange(cx, args[0], &begin))
-                return false;
-            str = strRoot;
-        }
-
-        if (begin < 0)
-            begin = 0;
-        else if (begin > length)
-            begin = length;
-
-        if (args.hasDefined(1)) {
-            if (args[1].isInt32()) {
-                end = args[1].toInt32();
-            } else {
-                RootedString strRoot(cx, str);
-                if (!ValueToIntegerRange(cx, args[1], &end))
-                    return false;
-                str = strRoot;
-            }
-
-            if (end > length) {
-                end = length;
-            } else {
-                if (end < 0)
-                    end = 0;
-                if (end < begin) {
-                    int32_t tmp = begin;
-                    begin = end;
-                    end = tmp;
-                }
-            }
-        }
-
-        str = DoSubstr(cx, str, size_t(begin), size_t(end - begin));
-        if (!str)
-            return false;
-    }
-
-    args.rval().setString(str);
-    return true;
 }
 
 template <typename CharT>
@@ -3992,54 +3938,6 @@ js::str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, Han
     return aobj;
 }
 
-static bool
-str_substr(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
-    if (!str)
-        return false;
-
-    int32_t length, len, begin;
-    if (args.length() > 0) {
-        length = int32_t(str->length());
-        if (!ValueToIntegerRange(cx, args[0], &begin))
-            return false;
-
-        if (begin >= length) {
-            args.rval().setString(cx->runtime()->emptyString);
-            return true;
-        }
-        if (begin < 0) {
-            begin += length; /* length + INT_MIN will always be less than 0 */
-            if (begin < 0)
-                begin = 0;
-        }
-
-        if (args.hasDefined(1)) {
-            if (!ValueToIntegerRange(cx, args[1], &len))
-                return false;
-
-            if (len <= 0) {
-                args.rval().setString(cx->runtime()->emptyString);
-                return true;
-            }
-
-            if (uint32_t(length) < uint32_t(begin + len))
-                len = length - begin;
-        } else {
-            len = length - begin;
-        }
-
-        str = DoSubstr(cx, str, size_t(begin), size_t(len));
-        if (!str)
-            return false;
-    }
-
-    args.rval().setString(str);
-    return true;
-}
-
 /*
  * Python-esque sequence operations.
  */
@@ -4076,73 +3974,6 @@ str_concat(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-str_slice(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() == 1 && args.thisv().isString() && args[0].isInt32()) {
-        JSString *str = args.thisv().toString();
-        size_t begin = args[0].toInt32();
-        size_t end = str->length();
-        if (begin <= end) {
-            size_t length = end - begin;
-            if (length == 0) {
-                str = cx->runtime()->emptyString;
-            } else {
-                str = (length == 1)
-                      ? cx->staticStrings().getUnitStringForElement(cx, str, begin)
-                      : NewDependentString(cx, str, begin, length);
-                if (!str)
-                    return false;
-            }
-            args.rval().setString(str);
-            return true;
-        }
-    }
-
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
-    if (!str)
-        return false;
-
-    if (args.length() != 0) {
-        double begin, end, length;
-
-        if (!ToInteger(cx, args[0], &begin))
-            return false;
-        length = str->length();
-        if (begin < 0) {
-            begin += length;
-            if (begin < 0)
-                begin = 0;
-        } else if (begin > length) {
-            begin = length;
-        }
-
-        if (args.hasDefined(1)) {
-            if (!ToInteger(cx, args[1], &end))
-                return false;
-            if (end < 0) {
-                end += length;
-                if (end < 0)
-                    end = 0;
-            } else if (end > length) {
-                end = length;
-            }
-            if (end < begin)
-                end = begin;
-        } else {
-            end = length;
-        }
-
-        str = NewDependentString(cx, str, size_t(begin), size_t(end - begin));
-        if (!str)
-            return false;
-    }
-    args.rval().setString(str);
-    return true;
-}
-
 static const JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN("quote",             str_quote,             0,JSFUN_GENERIC_NATIVE),
@@ -4152,11 +3983,11 @@ static const JSFunctionSpec string_methods[] = {
     /* Java-like methods. */
     JS_FN(js_toString_str,     js_str_toString,       0,0),
     JS_FN(js_valueOf_str,      js_str_toString,       0,0),
-    JS_FN("substring",         str_substring,         2,JSFUN_GENERIC_NATIVE),
     JS_FN("toLowerCase",       str_toLowerCase,       0,JSFUN_GENERIC_NATIVE),
     JS_FN("toUpperCase",       str_toUpperCase,       0,JSFUN_GENERIC_NATIVE),
     JS_FN("charAt",            js_str_charAt,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("charCodeAt",        js_str_charCodeAt,     1,JSFUN_GENERIC_NATIVE),
+    JS_SELF_HOSTED_FN("substring", "String_substring", 2,0),
     JS_SELF_HOSTED_FN("codePointAt", "String_codePointAt", 1,0),
     JS_FN("contains",          str_contains,          1,JSFUN_GENERIC_NATIVE),
     JS_FN("indexOf",           str_indexOf,           1,JSFUN_GENERIC_NATIVE),
@@ -4183,11 +4014,11 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("search",            str_search,            1,JSFUN_GENERIC_NATIVE),
     JS_FN("replace",           str_replace,           2,JSFUN_GENERIC_NATIVE),
     JS_FN("split",             str_split,             2,JSFUN_GENERIC_NATIVE),
-    JS_FN("substr",            str_substr,            2,JSFUN_GENERIC_NATIVE),
+    JS_SELF_HOSTED_FN("substr", "String_substr",      2,0),
 
     /* Python-esque sequence methods. */
     JS_FN("concat",            str_concat,            1,JSFUN_GENERIC_NATIVE),
-    JS_FN("slice",             str_slice,             2,JSFUN_GENERIC_NATIVE),
+    JS_SELF_HOSTED_FN("slice", "String_slice",        2,0),
 
     /* HTML string methods. */
     JS_SELF_HOSTED_FN("bold",     "String_bold",       0,0),
@@ -4293,13 +4124,17 @@ js::str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue
 
 static const JSFunctionSpec string_static_methods[] = {
     JS_FN("fromCharCode", js::str_fromCharCode, 1, 0),
-    JS_SELF_HOSTED_FN("fromCodePoint", "String_static_fromCodePoint", 1, 0),
-    JS_SELF_HOSTED_FN("raw", "String_static_raw", 2, 0),
+
+    JS_SELF_HOSTED_FN("fromCodePoint",   "String_static_fromCodePoint", 1,0),
+    JS_SELF_HOSTED_FN("raw",             "String_static_raw",           2,0),
+    JS_SELF_HOSTED_FN("substring",       "String_static_substring",     3,0),
+    JS_SELF_HOSTED_FN("substr",          "String_static_substr",        3,0),
+    JS_SELF_HOSTED_FN("slice",           "String_static_slice",         3,0),
 
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.
 #if EXPOSE_INTL_API
-    JS_SELF_HOSTED_FN("localeCompare", "String_static_localeCompare", 2,0),
+    JS_SELF_HOSTED_FN("localeCompare",   "String_static_localeCompare", 2,0),
 #endif
     JS_FS_END
 };

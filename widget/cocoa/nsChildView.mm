@@ -375,6 +375,10 @@ public:
   {
     return mProjMatrix;
   }
+  virtual void ActivateProgram(ShaderProgramOGL *aProg) MOZ_OVERRIDE
+  {
+    mGLContext->fUseProgram(aProg->GetProgram());
+  }
   virtual void BindAndDrawQuad(ShaderProgramOGL *aProg,
                                const gfx::Rect& aLayerRect,
                                const gfx::Rect& aTextureRect) MOZ_OVERRIDE;
@@ -2956,7 +2960,7 @@ RectTextureImage::Draw(GLManager* aManager,
 
   aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTexture);
 
-  program->Activate();
+  aManager->ActivateProgram(program);
   program->SetProjectionMatrix(aManager->GetProjMatrix());
   program->SetLayerTransform(Matrix4x4(aTransform).PostTranslate(aLocation.x, aLocation.y, 0));
   program->SetTextureTransform(gfx::Matrix4x4());
