@@ -243,7 +243,6 @@ Reify(JSContext *cx, JSCompartment *origin, MutableHandleValue vp)
      * implicit cx->enumerators state.
      */
     size_t length = ni->numKeys();
-    bool isKeyIter = ni->isKeyIter();
     AutoIdVector keys(cx);
     if (length > 0) {
         if (!keys.reserve(length))
@@ -261,14 +260,7 @@ Reify(JSContext *cx, JSCompartment *origin, MutableHandleValue vp)
     if (!CloseIterator(cx, iterObj))
         return false;
 
-    if (isKeyIter) {
-        if (!VectorToKeyIterator(cx, obj, ni->flags, keys, vp))
-            return false;
-    } else {
-        if (!VectorToValueIterator(cx, obj, ni->flags, keys, vp))
-            return false;
-    }
-    return true;
+    return EnumeratedIdVectorToIterator(cx, obj, ni->flags, keys, vp);
 }
 
 bool
