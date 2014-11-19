@@ -366,7 +366,7 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
 
   ThreadsafeAutoJSContext cx;
   RootedDictionary<ErrorEventInit> init(cx);
-  request->FillScriptErrorEvent(init);
+  request->GetCallerLocation(init.mFilename, &init.mLineno);
 
   init.mMessage = errorName;
   init.mCancelable = true;

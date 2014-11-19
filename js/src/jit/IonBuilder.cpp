@@ -1825,6 +1825,9 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_DEBUGLEAVEBLOCK:
         return true;
 
+      case JSOP_DEBUGGER:
+        return jsop_debugger();
+
       default:
 #ifdef DEBUG
         return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(pc));
@@ -11068,6 +11071,18 @@ IonBuilder::jsop_instanceof()
     current->push(ins);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_debugger()
+{
+    MDebugger *debugger = MDebugger::New(alloc());
+    current->add(debugger);
+
+    // The |debugger;| statement will always bail out to baseline if
+    // cx->compartment()->isDebuggee(). Resume in-place and have baseline
+    // handle the details.
+    return resumeAt(debugger, pc);
 }
 
 MInstruction *

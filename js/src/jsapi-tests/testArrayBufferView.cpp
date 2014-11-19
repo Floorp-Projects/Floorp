@@ -93,7 +93,9 @@ CreateDataView(JSContext *cx)
     static const char code[] = "new DataView(new ArrayBuffer(8))";
 
     JS::Rooted<JS::Value> val(cx);
-    if (!JS_EvaluateScript(cx, global, code, strlen(code), __FILE__, __LINE__, &val))
+    JS::CompileOptions opts(cx);
+    if (!JS::Evaluate(cx, global, opts.setFileAndLine(__FILE__, __LINE__),
+                      code, strlen(code), &val))
         return nullptr;
 
     JS::Rooted<JSObject*> dv(cx, &val.toObject());

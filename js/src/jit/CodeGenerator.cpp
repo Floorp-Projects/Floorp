@@ -3899,9 +3899,9 @@ CodeGenerator::branchIfInvalidated(Register temp, Label *invalidated)
     if (!ionScriptLabels_.append(label))
         return false;
 
-    // If IonScript::refcount != 0, the script has been invalidated.
+    // If IonScript::invalidationCount_ != 0, the script has been invalidated.
     masm.branch32(Assembler::NotEqual,
-                  Address(temp, IonScript::offsetOfRefcount()),
+                  Address(temp, IonScript::offsetOfInvalidationCount()),
                   Imm32(0),
                   invalidated);
     return true;
@@ -10173,6 +10173,24 @@ bool
 CodeGenerator::visitThrowUninitializedLexical(LThrowUninitializedLexical *ins)
 {
     return callVM(ThrowUninitializedLexicalInfo, ins);
+}
+
+bool
+CodeGenerator::visitDebugger(LDebugger *ins)
+{
+    Register cx = ToRegister(ins->getTemp(0));
+    Register temp = ToRegister(ins->getTemp(1));
+
+    // The check for cx->compartment()->isDebuggee() could be inlined, but the
+    // performance of |debugger;| does not matter.
+    masm.loadJSContext(cx);
+    masm.setupUnalignedABICall(1, temp);
+    masm.passABIArg(cx);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, IsCompartmentDebuggee));
+
+    Label bail;
+    masm.branchIfTrueBool(ReturnReg, &bail);
+    return bailoutFrom(&bail, ins->snapshot());
 }
 
 } // namespace jit
