@@ -20,7 +20,7 @@ describe("loop.store.ActiveRoomStore", function () {
     sandbox.stub(dispatcher, "dispatch");
 
     fakeMozLoop = {
-      setLoopCharPref: sandbox.stub(),
+      setLoopPref: sandbox.stub(),
       rooms: {
         get: sinon.stub(),
         join: sinon.stub(),
@@ -522,8 +522,8 @@ describe("loop.store.ActiveRoomStore", function () {
     it("should set the pref for ToS to `seen`", function() {
       store.remotePeerConnected();
 
-      sinon.assert.calledOnce(fakeMozLoop.setLoopCharPref);
-      sinon.assert.calledWithExactly(fakeMozLoop.setLoopCharPref,
+      sinon.assert.calledOnce(fakeMozLoop.setLoopPref);
+      sinon.assert.calledWithExactly(fakeMozLoop.setLoopPref,
         "seenToS", "seen");
     });
   });

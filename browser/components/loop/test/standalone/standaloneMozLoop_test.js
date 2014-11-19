@@ -46,25 +46,25 @@ describe("loop.StandaloneMozLoop", function() {
     });
   });
 
-  describe("#setLoopCharPref", function() {
+  describe("#setLoopPref", function() {
     afterEach(function() {
       localStorage.removeItem("fakePref");
     });
 
     it("should store the value of the preference", function() {
-      mozLoop.setLoopCharPref("fakePref", "fakeValue");
+      mozLoop.setLoopPref("fakePref", "fakeValue");
 
       expect(localStorage.getItem("fakePref")).eql("fakeValue");
     });
 
     it("should not store the value of seenToS", function() {
-      mozLoop.setLoopCharPref("seenToS", "fakeValue1");
+      mozLoop.setLoopPref("seenToS", "fakeValue1");
 
       expect(localStorage.getItem("seenToS")).eql(null);
     });
   });
 
-  describe("#getLoopCharPref", function() {
+  describe("#getLoopPref", function() {
     afterEach(function() {
       localStorage.removeItem("fakePref");
     });
@@ -72,7 +72,7 @@ describe("loop.StandaloneMozLoop", function() {
     it("should return the value of the preference", function() {
       localStorage.setItem("fakePref", "fakeValue");
 
-      expect(mozLoop.getLoopCharPref("fakePref")).eql("fakeValue");
+      expect(mozLoop.getLoopPref("fakePref")).eql("fakeValue");
     });
   });
 

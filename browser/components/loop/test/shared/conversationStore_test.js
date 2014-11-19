@@ -37,7 +37,7 @@ describe("loop.store.ConversationStore", function () {
     };
 
     navigator.mozLoop = {
-      getLoopBoolPref: sandbox.stub(),
+      getLoopPref: sandbox.stub(),
       calls: {
         setCallInProgress: sandbox.stub(),
         clearCallInProgress: sandbox.stub()
