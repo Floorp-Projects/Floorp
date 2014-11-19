@@ -32,7 +32,7 @@ public:
   // MP4Reader.
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) = 0;
   virtual nsresult Output(int64_t aStreamOffset,
-                          nsAutoPtr<MediaData>& aOutput) = 0;
+                          nsRefPtr<MediaData>& aOutput) = 0;
 
 };
 

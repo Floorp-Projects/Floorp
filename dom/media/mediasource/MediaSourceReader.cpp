@@ -115,7 +115,6 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnAudioDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      delete aSample;
       mAudioReader->RequestAudioData();
       return;
     }
@@ -160,7 +159,6 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnVideoDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      delete aSample;
       mVideoReader->RequestVideoData(false, 0);
       return;
     }
