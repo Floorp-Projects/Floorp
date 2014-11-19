@@ -2265,6 +2265,10 @@ nsNavHistory::GetObservers(uint32_t* _count,
   *_count = 0;
   *_observers = nullptr;
 
+  // Clear any cached value, cause it's very likely the consumer has made
+  // changes to history and is now trying to notify them.
+  mDaysOfHistory = -1;
+
   if (!mCanNotify)
     return NS_OK;
 
