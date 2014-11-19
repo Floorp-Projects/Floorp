@@ -160,9 +160,16 @@ class ElementSpecific
             return true;
         }
 
+#ifdef __arm__
+#  define JS_VOLATILE_ARM volatile // Inhibit unaligned accesses on ARM.
+#else
+#  define JS_VOLATILE_ARM /* nothing */
+#endif
+
         void *data = source->viewData();
         switch (source->type()) {
           case Scalar::Int8: {
+            JS_VOLATILE_ARM
             int8_t *src = static_cast<int8_t*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
@@ -170,42 +177,49 @@ class ElementSpecific
           }
           case Scalar::Uint8:
           case Scalar::Uint8Clamped: {
+            JS_VOLATILE_ARM
             uint8_t *src = static_cast<uint8_t*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
             break;
           }
           case Scalar::Int16: {
+            JS_VOLATILE_ARM
             int16_t *src = static_cast<int16_t*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
             break;
           }
           case Scalar::Uint16: {
+            JS_VOLATILE_ARM
             uint16_t *src = static_cast<uint16_t*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
             break;
           }
           case Scalar::Int32: {
+            JS_VOLATILE_ARM
             int32_t *src = static_cast<int32_t*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
             break;
           }
           case Scalar::Uint32: {
+            JS_VOLATILE_ARM
             uint32_t *src = static_cast<uint32_t*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
             break;
           }
           case Scalar::Float32: {
+            JS_VOLATILE_ARM
             float *src = static_cast<float*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
             break;
           }
           case Scalar::Float64: {
+            JS_VOLATILE_ARM
             double *src = static_cast<double*>(data);
             for (uint32_t i = 0; i < count; ++i)
                 *dest++ = T(*src++);
@@ -214,6 +228,8 @@ class ElementSpecific
           default:
             MOZ_CRASH("setFromTypedArray with a typed array with bogus type");
         }
+
+#undef JS_VOLATILE_ARM
 
         return true;
     }
