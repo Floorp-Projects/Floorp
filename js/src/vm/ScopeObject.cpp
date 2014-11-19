@@ -2380,6 +2380,22 @@ DebugScopes::hasLiveScope(ScopeObject &scope)
     return nullptr;
 }
 
+/* static */ void
+DebugScopes::rekeyMissingScopes(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to)
+{
+    DebugScopes *scopes = cx->compartment()->debugScopes;
+    if (!scopes)
+        return;
+
+    for (MissingScopeMap::Enum e(scopes->missingScopes); !e.empty(); e.popFront()) {
+        ScopeIterKey key = e.front().key();
+        if (key.frame() == from) {
+            key.updateFrame(to);
+            e.rekeyFront(key);
+        }
+    }
+}
+
 /*****************************************************************************/
 
 static JSObject *

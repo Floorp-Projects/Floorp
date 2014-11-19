@@ -12004,6 +12004,16 @@ class MAtomicTypedArrayElementBinop
     }
 };
 
+class MDebugger : public MNullaryInstruction
+{
+  public:
+    INSTRUCTION_HEADER(Debugger);
+
+    static MDebugger *New(TempAllocator &alloc) {
+        return new(alloc) MDebugger();
+    }
+};
+
 class MAsmJSNeg : public MUnaryInstruction
 {
     MAsmJSNeg(MDefinition *op, MIRType type)
