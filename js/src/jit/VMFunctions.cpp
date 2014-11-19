@@ -918,6 +918,14 @@ DebugAfterYield(JSContext *cx, BaselineFrame *frame)
 }
 
 bool
+GeneratorThrowOrClose(JSContext *cx, BaselineFrame *frame, HandleObject obj, HandleValue arg,
+                      uint32_t resumeKind)
+{
+    MOZ_ALWAYS_TRUE(DebugAfterYield(cx, frame));
+    return js::GeneratorThrowOrClose(cx, obj, arg, resumeKind);
+}
+
+bool
 StrictEvalPrologue(JSContext *cx, BaselineFrame *frame)
 {
     return frame->strictEvalPrologue(cx);
