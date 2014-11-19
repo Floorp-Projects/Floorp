@@ -2649,6 +2649,50 @@ class MNewArrayCopyOnWrite : public MNullaryInstruction
     }
 };
 
+class MNewArrayDynamicLength
+  : public MUnaryInstruction,
+    public IntPolicy<0>::Data
+{
+    AlwaysTenured<ArrayObject*> templateObject_;
+    gc::InitialHeap initialHeap_;
+
+    MNewArrayDynamicLength(types::CompilerConstraintList *constraints, ArrayObject *templateObject,
+                           gc::InitialHeap initialHeap, MDefinition *length)
+      : MUnaryInstruction(length),
+        templateObject_(templateObject),
+        initialHeap_(initialHeap)
+    {
+        setGuard(); // Need to throw if length is negative.
+        setResultType(MIRType_Object);
+        if (!templateObject->hasSingletonType())
+            setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+    }
+
+  public:
+    INSTRUCTION_HEADER(NewArrayDynamicLength)
+
+    static MNewArrayDynamicLength *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
+                                       ArrayObject *templateObject, gc::InitialHeap initialHeap,
+                                       MDefinition *length)
+    {
+        return new(alloc) MNewArrayDynamicLength(constraints, templateObject, initialHeap, length);
+    }
+
+    MDefinition *length() const {
+        return getOperand(0);
+    }
+    ArrayObject *templateObject() const {
+        return templateObject_;
+    }
+    gc::InitialHeap initialHeap() const {
+        return initialHeap_;
+    }
+
+    virtual AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MNewObject : public MUnaryInstruction
 {
     gc::InitialHeap initialHeap_;

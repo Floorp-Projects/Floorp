@@ -726,6 +726,28 @@ class LNewArrayCopyOnWrite : public LInstructionHelper<1, 0, 1>
     }
 };
 
+class LNewArrayDynamicLength : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(NewArrayDynamicLength)
+
+    explicit LNewArrayDynamicLength(const LAllocation &length, const LDefinition &temp) {
+        setOperand(0, length);
+        setTemp(0, temp);
+    }
+
+    const LAllocation *length() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    MNewArrayDynamicLength *mir() const {
+        return mir_->toNewArrayDynamicLength();
+    }
+};
+
 class LNewObject : public LInstructionHelper<1, 0, 1>
 {
   public:
