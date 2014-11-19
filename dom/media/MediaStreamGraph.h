@@ -1191,7 +1191,7 @@ public:
   /**
    * Start processing non-realtime for a specific number of ticks.
    */
-  void StartNonRealtimeProcessing(TrackRate aRate, uint32_t aTicksToProcess);
+  void StartNonRealtimeProcessing(uint32_t aTicksToProcess);
 
   /**
    * Media graph thread only.
