@@ -505,6 +505,14 @@ Tester.prototype = {
           BackgroundPageThumbs._destroy();
 
           BrowserNewTabPreloader.uninit();
+
+          // Destroy preloaded browsers.
+          if (gBrowser._preloadedBrowser) {
+            let browser = gBrowser._preloadedBrowser;
+            gBrowser._preloadedBrowser = null;
+            gBrowser.getNotificationBox(browser).remove();
+          }
+
           CustomizationTabPreloader.uninit();
           SocialFlyout.unload();
           SocialShare.uninit();
