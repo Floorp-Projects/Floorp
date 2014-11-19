@@ -38,9 +38,14 @@ describe("loop.conversation", function() {
       get locale() {
         return "en-US";
       },
-      setLoopCharPref: sinon.stub(),
-      getLoopCharPref: sinon.stub().returns("http://fakeurl"),
-      getLoopBoolPref: sinon.stub(),
+      setLoopPref: sinon.stub(),
+      getLoopPref: function(prefName) {
+        if (prefName == "debug.sdk") {
+          return false;
+        }
+
+        return "http://fake";
+      },
       calls: {
         clearCallInProgress: sinon.stub()
       },
@@ -646,7 +651,6 @@ describe("loop.conversation", function() {
         icView = mountTestComponent();
 
         conversation.set("loopToken", "fakeToken");
-        navigator.mozLoop.getLoopCharPref.returns("http://fake");
         stubComponent(sharedView, "ConversationView");
       });
 
