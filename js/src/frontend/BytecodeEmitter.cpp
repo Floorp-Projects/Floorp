@@ -1679,30 +1679,18 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         return true;
     }
 
-    /*
-     * Turn attempts to mutate const-declared bindings into get ops (for
-     * pre-increment and pre-decrement ops, our caller will have to emit
-     * JSOP_POS, JSOP_ONE, and JSOP_ADD as well).
-     *
-     * Turn JSOP_DELNAME into JSOP_FALSE if dn is known, as all declared
-     * bindings visible to the compiler are permanent in JS unless the
-     * declaration originates at top level in eval code.
-     */
+    // Throw an error on attempts to mutate const-declared bindings.
     switch (op) {
       case JSOP_NAME:
       case JSOP_SETCONST:
         break;
       default:
         if (pn->isConst()) {
-            if (bce->sc->needStrictChecks()) {
-                JSAutoByteString name;
-                if (!AtomToPrintableString(cx, pn->pn_atom, &name) ||
-                    !bce->reportStrictModeError(pn, JSMSG_READ_ONLY, name.ptr()))
-                {
-                    return false;
-                }
-            }
-            pn->setOp(op = JSOP_NAME);
+            JSAutoByteString name;
+            if (!AtomToPrintableString(cx, pn->pn_atom, &name))
+                return false;
+            bce->reportError(pn, JSMSG_BAD_CONST_ASSIGN, name.ptr());
+            return false;
         }
     }
 
@@ -3317,10 +3305,6 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
             if (!BindNameToSlot(cx, bce, pn))
                 return false;
 
-            // Allow 'const [x,y] = o', make 'const x,y; [x,y] = o' a nop.
-            if (pn->isConst() && !pn->isDefn())
-                return Emit1(cx, bce, JSOP_POP) >= 0;
-
             switch (pn->getOp()) {
               case JSOP_SETNAME:
               case JSOP_SETGNAME:
@@ -4086,13 +4070,6 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
     /* Finally, emit the specialized assignment bytecode. */
     switch (lhs->getKind()) {
       case PNK_NAME:
-        if (lhs->isConst()) {
-            if (!rhs) {
-                bce->reportError(lhs, JSMSG_BAD_FOR_LEFTSIDE);
-                return false;
-            }
-            break;
-        }
         if (lhs->isOp(JSOP_SETARG) || lhs->isOp(JSOP_SETLOCAL) || lhs->isOp(JSOP_SETALIASEDVAR)) {
             if (!EmitVarOp(cx, lhs, lhs->getOp(), bce))
                 return false;
