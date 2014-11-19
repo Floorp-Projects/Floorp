@@ -713,6 +713,8 @@ bool FinalSuspend(JSContext *cx, HandleObject obj, BaselineFrame *frame, jsbytec
 bool InterpretResume(JSContext *cx, HandleObject obj, HandleValue val, HandlePropertyName kind,
                      MutableHandleValue rval);
 bool DebugAfterYield(JSContext *cx, BaselineFrame *frame);
+bool GeneratorThrowOrClose(JSContext *cx, BaselineFrame *frame, HandleObject obj, HandleValue arg,
+                           uint32_t resumeKind);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
 bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);
@@ -724,6 +726,7 @@ JSObject *InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleO
 
 bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mustReturn);
 bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn);
+bool IsCompartmentDebuggee(JSContext *cx);
 
 bool EnterWith(JSContext *cx, BaselineFrame *frame, HandleValue val,
                Handle<StaticWithObject *> templ);

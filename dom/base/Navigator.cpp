@@ -2533,5 +2533,43 @@ Navigator::GetUserAgent(nsPIDOMWindow* aWindow, nsIURI* aURI,
   return siteSpecificUA->GetUserAgentForURIAndWindow(aURI, aWindow, aUserAgent);
 }
 
+#ifdef MOZ_EME
+already_AddRefed<Promise>
+Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
+                                       const Optional<Sequence<MediaKeySystemOptions>>& aOptions,
+                                       ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
+  nsRefPtr<Promise> p = Promise::Create(go, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (aKeySystem.IsEmpty() ||
+      (aOptions.WasPassed() && aOptions.Value().IsEmpty())) {
+    p->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return p.forget();
+  }
+
+  if (!MediaKeySystemAccess::IsKeySystemSupported(aKeySystem)) {
+    p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return p.forget();
+  }
+
+  // TODO: Wait (async) until the CDM is downloaded, if it's not already.
+
+  if (!aOptions.WasPassed() ||
+      MediaKeySystemAccess::IsSupported(aKeySystem, aOptions.Value())) {
+    nsRefPtr<MediaKeySystemAccess> access(new MediaKeySystemAccess(mWindow, aKeySystem));
+    p->MaybeResolve(access);
+    return p.forget();
+  }
+
+  p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+  return p.forget();
+}
+#endif
+
 } // namespace dom
 } // namespace mozilla

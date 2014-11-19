@@ -8,20 +8,6 @@ assertEq((function() { function f() { return 3 }; assertEq(f(), 3); return (func
 assertEq((function() { function f() { return 3 }; assertEq(f(), 3); return eval('f()') })(), 3);
 assertEq((function() { function f() { return 3 }; (function() f())(); return f() })(), 3);
 
-assertEq((function() { const x = 3; (function() x++)(); return x })(), 3);
-assertEq((function() { const x = 3; (function() x++)(); return x++ })(), 3);
-assertEq((function() { const x = 2; (function() x++)(); return ++x })(), 3);
-assertEq((function() { const x = 2; (function() x++)(); return x += 1 })(), 3);
-
-assertEq((function() { const x = 3; x = 1; return (function() { return x})() })(), 3);
-assertEq((function() { const x = 3; x = 1; return (function() { return x})() })(), 3);
-assertEq((function() { const x = 3; x++; return (function() { return x})() })(), 3);
-assertEq((function() { const x = 3; ++x; return (function() { return x})() })(), 3);
-assertEq((function() { const x = 3; x--; return (function() { return x})() })(), 3);
-assertEq((function() { const x = 3; --x; return (function() { return x})() })(), 3);
-assertEq((function() { const x = 3; x += 1; return (function() { return x})() })(), 3);
-assertEq((function() { const x = 3; x -= 1; return (function() { return x})() })(), 3);
-
 assertEq((function() { var x = 3; return eval("x") })(), 3);
 assertEq((function() { var x; x = 3; return eval("x") })(), 3);
 assertEq((function() { x = 3; var x; return eval("x") })(), 3);

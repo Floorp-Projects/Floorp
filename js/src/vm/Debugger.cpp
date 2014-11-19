@@ -592,51 +592,57 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
     RootedValue value(cx);
     Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &status, &value);
 
-    /* Build a list of the recipients. */
-    AutoObjectVector frames(cx);
-    for (FrameRange r(frame, global); !r.empty(); r.popFront()) {
-        if (!frames.append(r.frontFrame())) {
-            cx->clearPendingException();
-            return false;
-        }
-    }
-
-    /* For each Debugger.Frame, fire its onPop handler, if any. */
-    for (JSObject **p = frames.begin(); p != frames.end(); p++) {
-        RootedNativeObject frameobj(cx, &(*p)->as<NativeObject>());
-        Debugger *dbg = Debugger::fromChildJSObject(frameobj);
-
-        if (dbg->enabled &&
-            !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined()) {
-            RootedValue handler(cx, frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER));
-
-            Maybe<AutoCompartment> ac;
-            ac.emplace(cx, dbg->object);
-
-            RootedValue completion(cx);
-            if (!dbg->newCompletionValue(cx, status, value, &completion)) {
-                status = dbg->handleUncaughtException(ac, false);
-                break;
+    // This path can be hit via unwinding the stack due to
+    // over-recursion. Only fire the frames' onPop handlers if we haven't
+    // over-recursed, because invoking more JS will only result in more
+    // over-recursion errors. See slowPathOnExceptionUnwind.
+    if (!cx->isThrowingOverRecursed()) {
+        /* Build a list of the recipients. */
+        AutoObjectVector frames(cx);
+        for (FrameRange r(frame, global); !r.empty(); r.popFront()) {
+            if (!frames.append(r.frontFrame())) {
+                cx->clearPendingException();
+                return false;
             }
+        }
 
-            /* Call the onPop handler. */
-            RootedValue rval(cx);
-            bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, completion.address(),
-                                 &rval);
-            RootedValue nextValue(cx);
-            JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
+        /* For each Debugger.Frame, fire its onPop handler, if any. */
+        for (JSObject **p = frames.begin(); p != frames.end(); p++) {
+            RootedNativeObject frameobj(cx, &(*p)->as<NativeObject>());
+            Debugger *dbg = Debugger::fromChildJSObject(frameobj);
 
-            /*
-             * At this point, we are back in the debuggee compartment, and any error has
-             * been wrapped up as a completion value.
-             */
-            MOZ_ASSERT(cx->compartment() == global->compartment());
-            MOZ_ASSERT(!cx->isExceptionPending());
+            if (dbg->enabled &&
+                !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined()) {
+                RootedValue handler(cx, frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER));
 
-            /* JSTRAP_CONTINUE means "make no change". */
-            if (nextStatus != JSTRAP_CONTINUE) {
-                status = nextStatus;
-                value = nextValue;
+                Maybe<AutoCompartment> ac;
+                ac.emplace(cx, dbg->object);
+
+                RootedValue completion(cx);
+                if (!dbg->newCompletionValue(cx, status, value, &completion)) {
+                    status = dbg->handleUncaughtException(ac, false);
+                    break;
+                }
+
+                /* Call the onPop handler. */
+                RootedValue rval(cx);
+                bool hookOk = Invoke(cx, ObjectValue(*frameobj), handler, 1, completion.address(),
+                                     &rval);
+                RootedValue nextValue(cx);
+                JSTrapStatus nextStatus = dbg->parseResumptionValue(ac, hookOk, rval, &nextValue);
+
+                /*
+                 * At this point, we are back in the debuggee compartment, and any error has
+                 * been wrapped up as a completion value.
+                 */
+                MOZ_ASSERT(cx->compartment() == global->compartment());
+                MOZ_ASSERT(!cx->isExceptionPending());
+
+                /* JSTRAP_CONTINUE means "make no change". */
+                if (nextStatus != JSTRAP_CONTINUE) {
+                    status = nextStatus;
+                    value = nextValue;
+                }
             }
         }
     }
@@ -686,9 +692,40 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
     }
 }
 
-JSTrapStatus
+/* static */ JSTrapStatus
+Debugger::slowPathOnDebuggerStatement(JSContext *cx, AbstractFramePtr frame)
+{
+    RootedValue rval(cx);
+    JSTrapStatus status = dispatchHook(cx, &rval, OnDebuggerStatement, NullPtr());
+
+    switch (status) {
+      case JSTRAP_CONTINUE:
+      case JSTRAP_ERROR:
+        break;
+
+      case JSTRAP_RETURN:
+        frame.setReturnValue(rval);
+        break;
+
+      case JSTRAP_THROW:
+        cx->setPendingException(rval);
+        break;
+
+      default:
+        MOZ_CRASH("Invalid onDebuggerStatement trap status");
+    }
+
+    return status;
+}
+
+/* static */ JSTrapStatus
 Debugger::slowPathOnExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
 {
+    // Invoking more JS on an over-recursed stack is only going to result in
+    // more over-recursion errors.
+    if (cx->isThrowingOverRecursed())
+        return JSTRAP_CONTINUE;
+
     RootedValue rval(cx);
     JSTrapStatus status = dispatchHook(cx, &rval, OnExceptionUnwind, NullPtr());
 
@@ -710,7 +747,7 @@ Debugger::slowPathOnExceptionUnwind(JSContext *cx, AbstractFramePtr frame)
         break;
 
       default:
-        MOZ_CRASH("Invalid trap status");
+        MOZ_CRASH("Invalid onExceptionUnwind trap status");
     }
 
     return status;
@@ -1113,7 +1150,6 @@ Debugger::fireDebuggerStatement(JSContext *cx, MutableHandleValue vp)
     ac.emplace(cx, object);
 
     ScriptFrameIter iter(cx);
-
     RootedValue scriptFrame(cx);
     if (!getScriptFrame(cx, iter, &scriptFrame))
         return handleUncaughtException(ac, false);
@@ -1788,7 +1824,11 @@ Debugger::updateExecutionObservabilityOfFrames(JSContext *cx, const ExecutionObs
         }
     }
 
-    for (ScriptFrameIter iter(cx); !iter.done(); ++iter) {
+    for (ScriptFrameIter iter(cx, ScriptFrameIter::ALL_CONTEXTS,
+                              ScriptFrameIter::GO_THROUGH_SAVED);
+         !iter.done();
+         ++iter)
+    {
         if (obs.shouldMarkAsDebuggee(iter)) {
             if (observing) {
                 iter.abstractFramePtr().setIsDebuggee();
@@ -1958,18 +1998,10 @@ Debugger::ensureExecutionObservabilityOfCompartment(JSContext *cx, JSCompartment
     return updateExecutionObservability(cx, obs, Observing);
 }
 
-static const Debugger::Hook ObserveAllExecutionHooks[] = { Debugger::OnDebuggerStatement,
-                                                           Debugger::OnEnterFrame,
-                                                           Debugger::HookCount };
-
 /* static */ bool
 Debugger::hookObservesAllExecution(Hook which)
 {
-    for (const Hook *hook = ObserveAllExecutionHooks; *hook != HookCount; hook++) {
-        if (*hook == which)
-            return true;
-    }
-    return false;
+    return which == OnEnterFrame;
 }
 
 bool
@@ -1983,11 +2015,7 @@ Debugger::hasAnyLiveHooksThatObserveAllExecution() const
 bool
 Debugger::hasAnyHooksThatObserveAllExecution() const
 {
-    for (const Hook *hook = ObserveAllExecutionHooks; *hook != HookCount; hook++) {
-        if (getHook(*hook))
-            return true;
-    }
-    return false;
+    return !!getHook(OnEnterFrame);
 }
 
 /* static */ bool
@@ -4475,6 +4503,7 @@ Debugger::observesScript(JSScript *script) const
 Debugger::replaceFrameGuts(JSContext *cx, AbstractFramePtr from, AbstractFramePtr to,
                            ScriptFrameIter &iter)
 {
+    // Forward live Debugger.Frame objects.
     for (Debugger::FrameRange r(from); !r.empty(); r.popFront()) {
         RootedNativeObject frameobj(cx, r.frontFrame());
         Debugger *dbg = r.frontDebugger();
@@ -4496,6 +4525,9 @@ Debugger::replaceFrameGuts(JSContext *cx, AbstractFramePtr from, AbstractFramePt
             return false;
         }
     }
+
+    // Rekey missingScopes to maintain Debugger.Environment identity.
+    DebugScopes::rekeyMissingScopes(cx, from, to);
 
     return true;
 }

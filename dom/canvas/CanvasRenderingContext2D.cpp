@@ -1735,6 +1735,12 @@ CanvasRenderingContext2D::SetTransform(double m11, double m12,
   mTarget->SetTransform(matrix);
 }
 
+void
+CanvasRenderingContext2D::ResetTransform(ErrorResult& error)
+{
+  SetTransform(1.0, 0.0, 0.0, 1.0, 0.0, 0.0, error);
+}
+
 static void
 MatrixToJSObject(JSContext* cx, const Matrix& matrix,
                  JS::MutableHandle<JSObject*> result, ErrorResult& error)

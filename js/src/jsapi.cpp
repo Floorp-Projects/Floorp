@@ -4764,7 +4764,7 @@ static const unsigned LARGE_SCRIPT_LENGTH = 500*1024;
 
 static bool
 Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
-         SourceBufferHolder &srcBuf, JS::Value *rval)
+         SourceBufferHolder &srcBuf, MutableHandleValue rval)
 {
     CompileOptions options(cx, optionsArg);
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
@@ -4775,7 +4775,6 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
     AutoLastFrameCheck lfc(cx);
 
     options.setCompileAndGo(obj->is<GlobalObject>());
-    options.setNoScriptRval(!rval);
     SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                     obj, NullPtr(), options,
@@ -4785,7 +4784,8 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
 
     MOZ_ASSERT(script->getVersion() == options.version);
 
-    bool result = Execute(cx, script, *obj, rval);
+    bool result = Execute(cx, script, *obj,
+                          options.noScriptRval ? nullptr : rval.address());
     if (!sct.complete())
         result = false;
 
@@ -4805,7 +4805,7 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
 
 static bool
 Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &optionsArg,
-         SourceBufferHolder &srcBuf, JS::Value *rval)
+         SourceBufferHolder &srcBuf, MutableHandleValue rval)
 {
     RootedObject dynamicScope(cx);
     RootedObject unusedStaticScope(cx);
@@ -4816,15 +4816,15 @@ Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptio
 
 static bool
 Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
-         const char16_t *chars, size_t length, JS::Value *rval)
+         const char16_t *chars, size_t length, MutableHandleValue rval)
 {
   SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
   return ::Evaluate(cx, obj, optionsArg, srcBuf, rval);
 }
 
-static bool
-Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-         const char *bytes, size_t length, JS::Value *rval)
+extern JS_PUBLIC_API(bool)
+JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
+         const char *bytes, size_t length, MutableHandleValue rval)
 {
     char16_t *chars;
     if (options.utf8)
@@ -4841,7 +4841,7 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
 
 static bool
 Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
-         const char *filename, JS::Value *rval)
+         const char *filename, MutableHandleValue rval)
 {
     FileContents buffer(cx);
     {
@@ -4855,114 +4855,32 @@ Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsA
     return Evaluate(cx, obj, options, buffer.begin(), buffer.length(), rval);
 }
 
-extern JS_PUBLIC_API(bool)
+JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
              SourceBufferHolder &srcBuf, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, obj, optionsArg, srcBuf, rval.address());
+    return ::Evaluate(cx, obj, optionsArg, srcBuf, rval);
 }
 
-extern JS_PUBLIC_API(bool)
+JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &optionsArg,
              SourceBufferHolder &srcBuf, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, scopeChain, optionsArg, srcBuf, rval.address());
+    return ::Evaluate(cx, scopeChain, optionsArg, srcBuf, rval);
 }
 
-extern JS_PUBLIC_API(bool)
+JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
              const char16_t *chars, size_t length, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, obj, optionsArg, chars, length, rval.address());
+    return ::Evaluate(cx, obj, optionsArg, chars, length, rval);
 }
 
-extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-             const char *bytes, size_t length, MutableHandleValue rval)
-{
-    return ::Evaluate(cx, obj, options, bytes, length, rval.address());
-}
-
-extern JS_PUBLIC_API(bool)
+JS_PUBLIC_API(bool)
 JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
              const char *filename, MutableHandleValue rval)
 {
-    return ::Evaluate(cx, obj, optionsArg, filename, rval.address());
-}
-
-extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
-             SourceBufferHolder &srcBuf)
-{
-    return ::Evaluate(cx, obj, optionsArg, srcBuf, nullptr);
-}
-
-extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, AutoObjectVector &scopeChain, const ReadOnlyCompileOptions &optionsArg,
-             SourceBufferHolder &srcBuf)
-{
-    return ::Evaluate(cx, scopeChain, optionsArg, srcBuf, nullptr);
-}
-
-extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
-             const char16_t *chars, size_t length)
-{
-    return ::Evaluate(cx, obj, optionsArg, chars, length, nullptr);
-}
-
-extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-             const char *bytes, size_t length)
-{
-    return ::Evaluate(cx, obj, options, bytes, length, nullptr);
-}
-
-extern JS_PUBLIC_API(bool)
-JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg,
-             const char *filename)
-{
-    return ::Evaluate(cx, obj, optionsArg, filename, nullptr);
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const char16_t *chars, unsigned length,
-                    const char *filename, unsigned lineno, MutableHandleValue rval)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return ::Evaluate(cx, obj, options, chars, length, rval.address());
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateUCScript(JSContext *cx, HandleObject obj, SourceBufferHolder &srcBuf,
-                    const char *filename, unsigned lineno, MutableHandleValue rval)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return ::Evaluate(cx, obj, options, srcBuf, rval.address());
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateScript(JSContext *cx, HandleObject obj, const char *bytes, unsigned nbytes,
-                  const char *filename, unsigned lineno, MutableHandleValue rval)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return ::Evaluate(cx, obj, options, bytes, nbytes, rval.address());
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateScript(JSContext *cx, HandleObject obj, const char *bytes, unsigned nbytes,
-                  const char *filename, unsigned lineno)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return ::Evaluate(cx, obj, options, bytes, nbytes, nullptr);
+    return ::Evaluate(cx, obj, optionsArg, filename, rval);
 }
 
 JS_PUBLIC_API(bool)
@@ -6099,6 +6017,7 @@ JS_ReportPendingException(JSContext *cx)
 JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext *cx)
   : context(cx),
     wasPropagatingForcedReturn(cx->propagatingForcedReturn_),
+    wasOverRecursed(cx->overRecursed_),
     wasThrowing(cx->throwing),
     exceptionValue(cx)
 {
@@ -6106,6 +6025,8 @@ JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext *cx)
     CHECK_REQUEST(cx);
     if (wasPropagatingForcedReturn)
         cx->clearPropagatingForcedReturn();
+    if (wasOverRecursed)
+        cx->overRecursed_ = false;
     if (wasThrowing) {
         exceptionValue = cx->unwrappedException_;
         cx->clearPendingException();
@@ -6116,6 +6037,7 @@ void
 JS::AutoSaveExceptionState::restore()
 {
     context->propagatingForcedReturn_ = wasPropagatingForcedReturn;
+    context->overRecursed_ = wasOverRecursed;
     context->throwing = wasThrowing;
     context->unwrappedException_ = exceptionValue;
     drop();
@@ -6127,6 +6049,7 @@ JS::AutoSaveExceptionState::~AutoSaveExceptionState()
         if (wasPropagatingForcedReturn)
             context->setPropagatingForcedReturn();
         if (wasThrowing) {
+            context->overRecursed_ = wasOverRecursed;
             context->throwing = true;
             context->unwrappedException_ = exceptionValue;
         }

@@ -12,8 +12,12 @@
  * Only %p and %z are supported.
  * /!\ This function used a fixed-size internal buffer. The caller is
  * expected to not use a format string that may overflow.
+ * The aFd argument is a file descriptor on UNIX and a native win32 file
+ * handle on Windows (from CreateFile). We can't use the windows POSIX
+ * APIs is that they don't support O_APPEND in a multi-process-safe way,
+ * while CreateFile does.
  */
-extern void FdPrintf(int aFd, const char* aFormat, ...)
+extern void FdPrintf(intptr_t aFd, const char* aFormat, ...)
 #ifdef __GNUC__
 __attribute__((format(printf, 2, 3)))
 #endif

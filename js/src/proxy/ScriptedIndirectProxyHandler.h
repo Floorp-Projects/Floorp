@@ -44,7 +44,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     virtual bool getEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
                                            AutoIdVector &props) const MOZ_OVERRIDE;
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                         MutableHandleValue vp) const MOZ_OVERRIDE;
+                         MutableHandleObject objp) const MOZ_OVERRIDE;
     virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) const MOZ_OVERRIDE;
     virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) const MOZ_OVERRIDE;

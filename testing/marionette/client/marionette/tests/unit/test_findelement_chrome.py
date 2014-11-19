@@ -29,6 +29,12 @@ class TestElementsChrome(MarionetteTestCase):
         self.assertEqual(HTMLElement, type(found_el))
         self.assertEqual(el, found_el)
 
+    def test_that_we_can_find_elements_from_css_selectors(self):
+        el = self.marionette.execute_script("return window.document.getElementById('textInput');")
+        found_el = self.marionette.find_element(By.CSS_SELECTOR, "#textInput")
+        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(el, found_el)
+
     def test_child_element(self):
         el = self.marionette.find_element(By.ID, "textInput")
         parent = self.marionette.find_element(By.ID, "things")

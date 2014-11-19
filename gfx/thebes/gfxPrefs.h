@@ -68,9 +68,14 @@ static const char* Get##Name##PrefName() { return Pref; }                     \
 static Type Get##Name##PrefDefault() { return Default; }                      \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
+class PreferenceAccessImpl;
 class gfxPrefs;
 class gfxPrefs MOZ_FINAL
 {
+private:
+  /// See Logging.h.  This lets Moz2D access preference values it owns.
+  PreferenceAccessImpl* mMoz2DPrefAccess;
+
 private:
   // Enums for the update policy.
   MOZ_BEGIN_NESTED_ENUM_CLASS(UpdatePolicy)
@@ -204,6 +209,8 @@ private:
   DECL_GFX_PREF(Live, "gfx.gralloc.fence-with-readpixels",     GrallocFenceWithReadPixels, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.enabled",                LayerScopeEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.port",                   LayerScopePort, int32_t, 23456);
+  // Note that        "gfx.logging.level" is defined in Logging.h
+  DECL_GFX_PREF(Once, "gfx.logging.crash.length",              GfxLoggingCrashLength, uint32_t, 6);
   DECL_GFX_PREF(Live, "gfx.perf-warnings.enabled",             PerfWarnings, bool, false);
   DECL_GFX_PREF(Once, "gfx.work-around-driver-bugs",           WorkAroundDriverBugs, bool, true);
 

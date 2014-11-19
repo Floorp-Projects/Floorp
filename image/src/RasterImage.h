@@ -25,16 +25,14 @@
 #include "nsTArray.h"
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
-#include "DecodeStrategy.h"
+#include "DecodePool.h"
 #include "DiscardTracker.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypedEnum.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
 #ifdef DEBUG
@@ -135,15 +133,6 @@ namespace image {
 
 class Decoder;
 class FrameAnimator;
-class ScaleRunner;
-
-MOZ_BEGIN_ENUM_CLASS(DecodeStatus, uint8_t)
-  INACTIVE,
-  PENDING,
-  ACTIVE,
-  WORK_DONE,
-  STOPPED
-MOZ_END_ENUM_CLASS(DecodeStatus)
 
 class RasterImage MOZ_FINAL : public ImageResource
                             , public nsIProperties
@@ -260,9 +249,7 @@ public:
                                        bool aLastPart) MOZ_OVERRIDE;
   virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
-  static already_AddRefed<nsIEventTarget> GetEventTarget() {
-    return DecodePool::Singleton()->GetEventTarget();
-  }
+  static already_AddRefed<nsIEventTarget> GetEventTarget();
 
   /**
    * A hint of the number of bytes of source data that the image contains. If
@@ -294,8 +281,6 @@ public:
     return mRequestedSampleSize;
   }
 
-
-
  nsCString GetURIString() {
     nsCString spec;
     if (GetURI()) {
@@ -304,168 +289,15 @@ public:
     return spec;
   }
 
-  // Called from module startup. Sets up RasterImage to be used.
   static void Initialize();
 
-  // Decoder shutdown
-  enum eShutdownIntent {
-    eShutdownIntent_Done        = 0,
-    eShutdownIntent_NotNeeded   = 1,
-    eShutdownIntent_Error       = 2,
-    eShutdownIntent_AllCount    = 3
-  };
-
 private:
-  /*
-   * DecodePool is a singleton class we use when decoding large images.
-   *
-   * When we wish to decode an image larger than
-   * image.mem.max_bytes_for_sync_decode, we call DecodePool::RequestDecode()
-   * for the image.  This adds the image to a queue of pending requests and posts
-   * the DecodePool singleton to the event queue, if it's not already pending
-   * there.
-   *
-   * When the DecodePool is run from the event queue, it decodes the image (and
-   * all others it's managing) in chunks, periodically yielding control back to
-   * the event loop.
-   */
-  class DecodePool : public nsIObserver
-  {
-  public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIOBSERVER
+  friend class DecodePool;
+  friend class DecodeWorker;
+  friend class FrameNeededWorker;
+  friend class NotifyProgressWorker;
 
-    static DecodePool* Singleton();
-
-    /**
-     * Ask the DecodePool to asynchronously decode this image.
-     */
-    void RequestDecode(RasterImage* aImg);
-
-    /**
-     * Decode aImg for a short amount of time, and post the remainder to the
-     * queue.
-     */
-    void DecodeABitOf(RasterImage* aImg, DecodeStrategy aStrategy);
-
-    /**
-     * Ask the DecodePool to stop decoding this image.  Internally, we also
-     * call this function when we finish decoding an image.
-     *
-     * Since the DecodePool keeps raw pointers to RasterImages, make sure you
-     * call this before a RasterImage is destroyed!
-     */
-    static void StopDecoding(RasterImage* aImg);
-
-    /**
-     * Synchronously decode the beginning of the image until we run out of
-     * bytes or we get the image's size.  Note that this done on a best-effort
-     * basis; if the size is burried too deep in the image, we'll give up.
-     *
-     * @return NS_ERROR if an error is encountered, and NS_OK otherwise.  (Note
-     *         that we return NS_OK even when the size was not found.)
-     */
-    nsresult DecodeUntilSizeAvailable(RasterImage* aImg);
-
-    /**
-     * Returns an event target interface to the thread pool; primarily for
-     * OnDataAvailable delivery off main thread.
-     *
-     * @return An nsIEventTarget interface to mThreadPool.
-     */
-    already_AddRefed<nsIEventTarget> GetEventTarget();
-
-  private: /* statics */
-    static StaticRefPtr<DecodePool> sSingleton;
-
-  private: /* methods */
-    DecodePool();
-    virtual ~DecodePool();
-
-    enum DecodeType {
-      DECODE_TYPE_UNTIL_TIME,
-      DECODE_TYPE_UNTIL_SIZE,
-      DECODE_TYPE_UNTIL_DONE_BYTES
-    };
-
-    /* Decode some chunks of the given image.  If aDecodeType is UNTIL_SIZE,
-     * decode until we have the image's size, then stop. If bytesToDecode is
-     * non-0, at most bytesToDecode bytes will be decoded. if aDecodeType is
-     * UNTIL_DONE_BYTES, decode until all bytesToDecode bytes are decoded.
-     */
-    nsresult DecodeSomeOfImage(RasterImage* aImg,
-                               DecodeStrategy aStrategy,
-                               DecodeType aDecodeType = DECODE_TYPE_UNTIL_TIME,
-                               uint32_t bytesToDecode = 0);
-
-    /* A decode job dispatched to a thread pool by DecodePool.
-     */
-    class DecodeJob : public nsRunnable
-    {
-    public:
-      DecodeJob(RasterImage* aImage) : mImage(aImage) { }
-
-      NS_IMETHOD Run() MOZ_OVERRIDE;
-
-    protected:
-      virtual ~DecodeJob();
-
-    private:
-      nsRefPtr<RasterImage> mImage;
-    };
-
-  private: /* members */
-
-    // mThreadPoolMutex protects mThreadPool. For all RasterImages R,
-    // R::mDecodingMonitor must be acquired before mThreadPoolMutex
-    // if both are acquired; the other order may cause deadlock.
-    Mutex                     mThreadPoolMutex;
-    nsCOMPtr<nsIThreadPool>   mThreadPool;
-  };
-
-  class DecodeDoneWorker : public nsRunnable
-  {
-  public:
-    /**
-     * Called by the DecodePool with an image when it's done some significant
-     * portion of decoding that needs to be notified about.
-     *
-     * Ensures the decode state accumulated by the decoding process gets
-     * applied to the image.
-     */
-    static void NotifyFinishedSomeDecoding(RasterImage* aImage);
-
-    NS_IMETHOD Run();
-
-  private:
-    DecodeDoneWorker(RasterImage* aImage);
-
-    nsRefPtr<RasterImage> mImage;
-  };
-
-  class FrameNeededWorker : public nsRunnable
-  {
-  public:
-    /**
-     * Called by the DecodeJob with an image when it's been told by the
-     * decoder that it needs a new frame to be allocated on the main thread.
-     *
-     * Dispatches an event to do so, which will further dispatch a
-     * RequestDecode event to continue decoding.
-     */
-    static void GetNewFrame(RasterImage* image);
-
-    NS_IMETHOD Run();
-
-  private: /* methods */
-    explicit FrameNeededWorker(RasterImage* image);
-
-  private: /* members */
-
-    nsRefPtr<RasterImage> mImage;
-  };
-
-  nsresult FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
+  nsresult FinishedSomeDecoding(ShutdownReason aReason = ShutdownReason::DONE,
                                 Progress aProgress = NoProgress);
 
   void DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
@@ -624,10 +456,8 @@ private: // data
   bool                       mPendingError:1;
 
   // Decoding
-  nsresult RequestDecodeIfNeeded(nsresult aStatus,
-                                 eShutdownIntent aIntent,
-                                 bool aDone,
-                                 bool aWasSize);
+  nsresult RequestDecodeIfNeeded(nsresult aStatus, ShutdownReason aReason,
+                                 bool aDone, bool aWasSize);
   nsresult WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify);
   nsresult SyncDecode();
   nsresult InitDecoder(bool aDoSizeDecode);
@@ -639,7 +469,7 @@ private: // data
   // Initializes ProgressTracker and resets it on RasterImage destruction.
   nsAutoPtr<ProgressTrackerInit> mProgressTrackerInit;
 
-  nsresult ShutdownDecoder(eShutdownIntent aIntent);
+  nsresult ShutdownDecoder(ShutdownReason aReason);
 
 
   //////////////////////////////////////////////////////////////////////////////

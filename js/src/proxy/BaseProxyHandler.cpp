@@ -198,7 +198,7 @@ BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy
 
 bool
 BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                          MutableHandleValue vp) const
+                          MutableHandleObject objp) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
 
@@ -209,7 +209,7 @@ BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
         return false;
     }
 
-    return EnumeratedIdVectorToIterator(cx, proxy, flags, props, vp);
+    return EnumeratedIdVectorToIterator(cx, proxy, flags, props, objp);
 }
 
 bool

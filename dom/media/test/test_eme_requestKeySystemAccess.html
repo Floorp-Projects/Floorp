@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function Test(test) {
+  var name = "'" + test.name + "'";
+  return new Promise(function(resolve, reject) {
+    var p;
+    if (test.options) {
+      p = navigator.requestMediaKeySystemAccess(test.keySystem, test.options);
+    } else {
+      p = navigator.requestMediaKeySystemAccess(test.keySystem);
+    }
+    p.then(
+      function(keySystemAccess) {
+        ok(test.shouldPass, name + " passed and was expected to " + (test.shouldPass ? "pass" : "fail"));
+        resolve();
+      },
+      function(ex) {
+        if (test.shouldPass) {
+          info(name + " failed: " + ex);
+        }
+        ok(!test.shouldPass, name + " failed and was expected to " + (test.shouldPass ? "pass" : "fail"));
+        resolve();
+      });
+  });
+}
+
+const CLEARKEY_ID = 'org.w3.clearkey';
+
+var tests = [
+  {
+    name: 'Empty keySystem string',
+    keySystem: '',
+    options: [ ],
+    shouldPass: false,
+  },
+  {
+    name: 'Empty options specified',
+    keySystem: CLEARKEY_ID,
+    options: [ ],
+    shouldPass: false,
+  },
+  {
+    name: 'Undefined options',
+    keySystem: CLEARKEY_ID,
+    shouldPass: true,
+  },
+  {
+    name: 'Basic MP4 cenc',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4',
+      }
+    ],
+    shouldPass: true,
+  },
+  {
+    name: 'Invalid keysystem failure',
+    keySystem: 'bogusKeySystem',
+    options: [],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid initDataType',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid videoType',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid statefulness',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4',
+        stateful: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid uniqueidentifier',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4',
+        uniqueidentifier: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Audio capabilities not supported by CLEARKEY_ID',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4',
+        audioCapability: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Video capabilities not supported by CLEARKEY_ID',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4',
+        videoCapability: 'bogus',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'Invalid option followed by valid',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        bogus: 'bogon',
+      },
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4',
+      }
+    ],
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 audio container',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        audioType: 'audio/mp4',
+      }
+    ],
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 audio container with AAC-LC',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        audioType: 'audio/mp4; codecs="mp4a.40.2"',
+      }
+    ],
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 audio container with invalid codecs',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        audioType: 'audio/mp4; codecs="bogus"',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 audio container with mp3 is unsupported',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        audioType: 'audio/mp4; codecs="mp3"',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 video container with mp3 and h264 is unsupported',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4; codecs="avc1.42E01E,mp3"',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 video container with constrained baseline h.264',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        audioType: 'video/mp4; codecs="avc1.42E01E"',
+      }
+    ],
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 video container with invalid codecs',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4; codecs="bogus"',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 video container with constrained baseline h.264 and AAC-LC',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4; codecs="avc1.42E01E,mp4a.40.2"',
+      }
+    ],
+    shouldPass: true,
+  },
+  {
+    name: 'MP4 audio and video type both specified',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        videoType: 'video/mp4; codecs="avc1.42E01E"',
+        audioType: 'audio/mp4; codecs="mp4a.40.2"',
+      }
+    ],
+    shouldPass: true,
+  },
+  {
+    name: 'WebM CLEARKEY_ID not supported',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'webm',
+        videoType: 'video/webm',
+      }
+    ],
+    shouldPass: false,
+  },
+];
+
+function beginTest() {
+  Promise.all(tests.map(Test)).then(function() { SimpleTest.finish(); });
+}
+
+var prefs = [
+  [ "media.mediasource.enabled", true ],
+  [ "media.mediasource.mp4.enabled", true ],
+];
+
+if (/Linux/.test(navigator.userAgent) ||
+    !document.createElement('video').canPlayType("video/mp4")) {
+  // XXX remove once we have mp4 PlatformDecoderModules on all platforms.
+  prefs.push([ "media.fragmented-mp4.exposed", true ]);
+  prefs.push([ "media.fragmented-mp4.use-blank-decoder", true ]);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+
+</script>
+</pre>
+</body>
+</html>
