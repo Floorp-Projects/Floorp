@@ -400,6 +400,8 @@ def write_interface(iface, fd):
 
     for member in iface.members:
         if isinstance(member, xpidl.Attribute):
+            if member.infallible:
+                fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
             fd.write("\\\n  %s MOZ_OVERRIDE; " % attributeAsNative(member, True))
             if not member.readonly:
                 fd.write("\\\n  %s MOZ_OVERRIDE; " % attributeAsNative(member, False))
@@ -412,11 +414,13 @@ def write_interface(iface, fd):
 
     fd.write(iface_forward % names)
 
-    def emitTemplate(tmpl, tmpl_notxpcom=None):
+    def emitTemplate(forward_infallible, tmpl, tmpl_notxpcom=None):
         if tmpl_notxpcom == None:
             tmpl_notxpcom = tmpl
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
+                if forward_infallible and member.infallible:
+                    fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
                 fd.write(tmpl % {'asNative': attributeAsNative(member, True),
                                  'nativeName': attributeNativeName(member, True),
                                  'paramList': attributeParamNames(member)})
@@ -438,14 +442,16 @@ def write_interface(iface, fd):
         elif not member.kind in ('attribute', 'method'):
             fd.write('\\')
 
-    emitTemplate("\\\n  %(asNative)s MOZ_OVERRIDE { return _to %(nativeName)s(%(paramList)s); } ")
+    emitTemplate(True,
+                 "\\\n  %(asNative)s MOZ_OVERRIDE { return _to %(nativeName)s(%(paramList)s); } ")
 
     fd.write(iface_forward_safe % names)
 
     # Don't try to safely forward notxpcom functions, because we have no
     # sensible default error return.  Instead, the caller will have to
     # implement them.
-    emitTemplate("\\\n  %(asNative)s MOZ_OVERRIDE { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",
+    emitTemplate(False,
+                 "\\\n  %(asNative)s MOZ_OVERRIDE { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",
                  "\\\n  %(asNative)s MOZ_OVERRIDE; ")
 
     fd.write(iface_template_prolog % names)

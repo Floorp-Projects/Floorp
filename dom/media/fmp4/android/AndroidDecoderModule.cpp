@@ -8,7 +8,6 @@
 
 #include "MediaData.h"
 
-#include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/DecoderData.h"
 
@@ -50,7 +49,7 @@ public:
   nsresult Init() MOZ_OVERRIDE {
     mSurfaceTexture = AndroidSurfaceTexture::Create();
     if (!mSurfaceTexture) {
-      printf_stderr("Failed to create SurfaceTexture for video decode\n");
+      NS_WARNING("Failed to create SurfaceTexture for video decode\n");
       return NS_ERROR_FAILURE;
     }
 
@@ -102,25 +101,6 @@ public:
   AudioDataDecoder(const char* aMimeType, MediaFormat* aFormat, MediaDataDecoderCallback* aCallback)
   : MediaCodecDataDecoder(MediaData::Type::AUDIO_DATA, aMimeType, aFormat, aCallback)
   {
-  }
-
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE {
-    if (!strcmp(mMimeType, "audio/mp4a-latm")) {
-      uint32_t numChannels = mFormat->GetInteger(NS_LITERAL_CSTRING("channel-count"));
-      uint32_t sampleRate = mFormat->GetInteger(NS_LITERAL_CSTRING("sample-rate"));
-      uint8_t frequencyIndex =
-          mp4_demuxer::Adts::GetFrequencyIndex(sampleRate);
-      uint32_t aacProfile = mFormat->GetInteger(NS_LITERAL_CSTRING("aac-profile"));
-      bool rv = mp4_demuxer::Adts::ConvertSample(numChannels,
-                                                 frequencyIndex,
-                                                 aacProfile,
-                                                 aSample);
-      if (!rv) {
-        printf_stderr("Failed to prepend ADTS header\n");
-        return NS_ERROR_FAILURE;
-      }
-    }
-    return MediaCodecDataDecoder::Input(aSample);
   }
 
   nsresult Output(BufferInfo* aInfo, void* aBuffer, MediaFormat* aFormat, Microseconds aDuration) {
@@ -213,11 +193,6 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
     env->DeleteLocalRef(buffer);
   }
 
-  if (strcmp(aConfig.mime_type, "audio/mp4a-latm") == 0) {
-    format->SetInteger(NS_LITERAL_CSTRING("is-adts"), 1);
-    format->SetInteger(NS_LITERAL_CSTRING("aac-profile"), aConfig.aac_profile);
-  }
-
   nsRefPtr<MediaDataDecoder> decoder =
     new AudioDataDecoder(aConfig.mime_type, format, aCallback);
 
@@ -242,6 +217,7 @@ MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
   , mInputBuffers(nullptr)
   , mOutputBuffers(nullptr)
   , mMonitor("MediaCodecDataDecoder::mMonitor")
+  , mFlushing(false)
   , mDraining(false)
   , mStopping(false)
 {
@@ -309,9 +285,19 @@ nsresult MediaCodecDataDecoder::InitDecoder(jobject aSurface)
 // This is in usec, so that's 10ms
 #define DECODER_TIMEOUT 10000
 
+#define HANDLE_DECODER_ERROR() \
+  if (NS_FAILED(res)) { \
+    NS_WARNING("exiting decoder loop due to exception"); \
+    mCallback->Error(); \
+    break; \
+  }
+
 void MediaCodecDataDecoder::DecoderLoop()
 {
   bool outputDone = false;
+
+  bool draining = false;
+  bool waitingEOF = false;
 
   JNIEnv* env = GetJNIForThread();
   mp4_demuxer::MP4Sample* sample = nullptr;
@@ -322,7 +308,7 @@ void MediaCodecDataDecoder::DecoderLoop()
   for (;;) {
     {
       MonitorAutoLock lock(mMonitor);
-      while (!mStopping && !mDraining && mQueue.empty()) {
+      while (!mStopping && !mDraining && !mFlushing && mQueue.empty()) {
         if (mQueue.empty()) {
           // We could be waiting here forever if we don't signal that we need more input
           mCallback->InputExhausted();
@@ -335,12 +321,16 @@ void MediaCodecDataDecoder::DecoderLoop()
         break;
       }
 
-      if (mDraining) {
+      if (mFlushing) {
         mDecoder->Flush();
         ClearQueue();
-        mDraining =  false;
+        mFlushing =  false;
         lock.Notify();
         continue;
+      }
+
+      if (mDraining && !sample && !waitingEOF) {
+        draining = true;
       }
 
       // We're not stopping or draining, so try to get a sample
@@ -349,14 +339,22 @@ void MediaCodecDataDecoder::DecoderLoop()
       }
     }
 
+    if (draining && !waitingEOF) {
+      MOZ_ASSERT(!sample, "Shouldn't have a sample when pushing EOF frame");
+
+      int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
+      HANDLE_DECODER_ERROR();
+
+      if (inputIndex >= 0) {
+        mDecoder->QueueInputBuffer(inputIndex, 0, 0, 0, MediaCodec::getBUFFER_FLAG_END_OF_STREAM(), &res);
+        waitingEOF = true;
+      }
+    }
+
     if (sample) {
       // We have a sample, try to feed it to the decoder
       int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
-      if (NS_FAILED(res)) {
-        printf_stderr("exiting decoder loop due to exception while dequeuing input\n");
-        mCallback->Error();
-        break;
-      }
+      HANDLE_DECODER_ERROR();
 
       if (inputIndex >= 0) {
         jobject buffer = env->GetObjectArrayElement(mInputBuffers, inputIndex);
@@ -373,11 +371,7 @@ void MediaCodecDataDecoder::DecoderLoop()
         PodCopy((uint8_t*)directBuffer, sample->data, sample->size);
 
         mDecoder->QueueInputBuffer(inputIndex, 0, sample->size, sample->composition_timestamp, 0, &res);
-        if (NS_FAILED(res)) {
-          printf_stderr("exiting decoder loop due to exception while queuing input\n");
-          mCallback->Error();
-          break;
-        }
+        HANDLE_DECODER_ERROR();
 
         mDurations.push(sample->duration);
 
@@ -393,31 +387,42 @@ void MediaCodecDataDecoder::DecoderLoop()
       BufferInfo bufferInfo;
 
       int outputStatus = mDecoder->DequeueOutputBuffer(bufferInfo.wrappedObject(), DECODER_TIMEOUT, &res);
-      if (NS_FAILED(res)) {
-        printf_stderr("exiting decoder loop due to exception while dequeuing output\n");
-        mCallback->Error();
-        break;
-      }
+      HANDLE_DECODER_ERROR();
 
       if (outputStatus == MediaCodec::getINFO_TRY_AGAIN_LATER()) {
         // We might want to call mCallback->InputExhausted() here, but there seems to be
         // some possible bad interactions here with the threading
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_BUFFERS_CHANGED()) {
         res = ResetOutputBuffers();
-        if (NS_FAILED(res)) {
-          printf_stderr("exiting decoder loop due to exception while restting output buffers\n");
-          mCallback->Error();
-          break;
-        }
+        HANDLE_DECODER_ERROR();
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_FORMAT_CHANGED()) {
         outputFormat = new MediaFormat(mDecoder->GetOutputFormat(), GetJNIForThread());
       } else if (outputStatus < 0) {
-        printf_stderr("unknown error from decoder! %d\n", outputStatus);
+        NS_WARNING("unknown error from decoder!");
         mCallback->Error();
+
+        // Don't break here just in case it's recoverable. If it's not, others stuff will fail later and
+        // we'll bail out.
       } else {
         // We have a valid buffer index >= 0 here
         if (bufferInfo.getFlags() & MediaCodec::getBUFFER_FLAG_END_OF_STREAM()) {
+          if (draining) {
+            draining = false;
+            waitingEOF = false;
+
+            mMonitor.Lock();
+            mDraining = false;
+            mMonitor.Notify();
+            mMonitor.Unlock();
+
+            mCallback->DrainComplete();
+          }
+
+          mDecoder->ReleaseOutputBuffer(outputStatus, false);
           outputDone = true;
+
+          // We only queue empty EOF frames, so we're done for now
+          continue;
         }
 
         MOZ_ASSERT(!mDurations.empty(), "Should have had a duration queued");
@@ -509,20 +514,26 @@ nsresult MediaCodecDataDecoder::ResetOutputBuffers()
 }
 
 nsresult MediaCodecDataDecoder::Flush() {
-  Drain();
+  MonitorAutoLock lock(mMonitor);
+  mFlushing = true;
+  lock.Notify();
+
+  while (mFlushing) {
+    lock.Wait();
+  }
+
   return NS_OK;
 }
 
 nsresult MediaCodecDataDecoder::Drain() {
   MonitorAutoLock lock(mMonitor);
+  if (mDraining) {
+    return NS_OK;
+  }
+
   mDraining = true;
   lock.Notify();
 
-  while (mDraining) {
-    lock.Wait();
-  }
-
-  mCallback->DrainComplete();
   return NS_OK;
 }
 

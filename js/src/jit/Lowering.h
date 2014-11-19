@@ -296,6 +296,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitUnknownValue(MUnknownValue *ins);
     bool visitLexicalCheck(MLexicalCheck *ins);
     bool visitThrowUninitializedLexical(MThrowUninitializedLexical *ins);
+    bool visitDebugger(MDebugger *ins);
 };
 
 } // namespace jit

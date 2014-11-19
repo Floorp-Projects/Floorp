@@ -171,7 +171,7 @@ public:
   UnregisterTransaction(IDBTransaction* aTransaction);
 
   void
-  AbortTransactions();
+  AbortTransactions(bool aShouldWarn);
 
   PBackgroundIDBDatabaseFileChild*
   GetOrCreateFileActorForBlob(File* aBlob);
@@ -299,6 +299,11 @@ private:
 
   void
   InvalidateMutableFiles();
+
+  void
+  LogWarning(const char* aMessageName,
+             const nsAString& aFilename,
+             uint32_t aLineNumber);
 };
 
 } // namespace indexedDB
