@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1426936175604000);
+const PRTime gPreloadListExpirationTime = INT64_C(1427315943033000);
 
 class nsSTSPreload
 {
@@ -267,6 +267,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "getssl.uz", true },
   { "giacomopelagatti.it", true },
   { "github.com", true },
+  { "gizzo.sk", true },
   { "glass.google.com", true },
   { "globuli-info.de", true },
   { "glossopnorthendafc.co.uk", true },
@@ -324,7 +325,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "ideaweb.de", true },
   { "ihrlotto.de", true },
   { "ilikerainbows.co.uk", true },
-  { "imouto.my", false },
+  { "imouto.my", true },
   { "in.xero.com", false },
   { "inbox.google.com", true },
   { "inkbunny.net", true },
@@ -380,7 +381,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "kura.io", true },
   { "lagerauftrag.info", true },
   { "lasst-uns-beten.de", true },
-  { "lastpass.com", false },
   { "launchkey.com", true },
   { "lavalite.de", true },
   { "lb-toner.de", true },
@@ -412,7 +412,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mail.de", true },
   { "mail.google.com", true },
   { "mail.yahoo.com", false },
-  { "mailbox.org", false },
+  { "mailbox.org", true },
   { "makeyourlaws.org", true },
   { "malnex.de", true },
   { "man3s.jp", true },
@@ -473,7 +473,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "myplaceonline.com", true },
   { "nachsenden.info", true },
   { "nectarleaf.com", true },
-  { "neg9.org", false },
   { "neilwynne.com", false },
   { "net-safe.info", true },
   { "netzbit.de", true },
