@@ -102,10 +102,36 @@ body {
 
 .content-area header {
   font-weight: 700;
-  -moz-padding-start: 20px;
 }
 
-.tab-view + .tab .content-area header {
+#fte-getstarted {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 1em;
+}
+
+#fte-title {
+  text-align: center;
+  margin-bottom: .5em;
+}
+
+#fte-button {
+  width: 50%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1rem;
+  padding: .5rem 1rem;
+  height: auto; /* Needed to override .button's height:26px; */
+}
+
+/* Need to remove when these rules when the Beta tag is removed */
+#share-link-header {
+  -moz-padding-start: 20px;
+}
+#fte-getstarted + .generate-url > #share-link-header,
+.tab-view + .tab .content-area > .generate-url > #share-link-header {
   /* The header shouldn't be indented if the tabs are present. */
   -moz-padding-start: 0;
 }
@@ -434,6 +460,7 @@ body[dir=rtl] .generate-url-spinner {
   right: auto;
 }
 
+#fte-button,
 .generate-url .button {
   background-color: #0096dd;
   border-color: #0096dd;
@@ -446,13 +473,73 @@ body[dir=rtl] .generate-url-spinner {
   color: #fff;
 }
 
+#powered-by,
 .terms-service {
   color: #888;
   text-align: center;
   font-size: .9em;
 }
 
-.terms-service a {
+#powered-by {
+  border-top: 1px solid #ccc;
+  padding-top: 1em;
+  margin-left: -14px;
+  margin-right: -14px;
+}
+
+#powered-by-logo {
+  display: inline-block;
+  margin-left: 10px;
+  margin-right: 10px;
+  vertical-align: middle;
+  background-image: url("../img/telefonica.png");
+  background-size: 72px 20px;
+  width: 72px;
+  height: 20px;
+}
+
+#powered-by-logo.en-GB,
+#powered-by-logo.de-DE {
+  background-image: url("../img/02.png");
+  background-size: 21px 20px;
+  width: 21px;
+  height: 20px;
+}
+
+#powered-by-logo.pt-BR {
+  background-image: url("../img/vivo.png");
+  background-size: 53px 26px;
+  width: 53px;
+  height: 26px;
+}
+
+#powered-by-logo[class^="es-"] {
+  background-image: url("../img/movistar.png");
+  background-size: 92px 20px;
+  width: 92px;
+  height: 20px;
+}
+
+@media (min-resolution: 2dppx) {
+  #powered-by-logo {
+    background-image: url("../img/telefonica@2x.png");
+  }
+
+  #powered-by-logo.en-GB,
+  #powered-by-logo.de-DE {
+    background-image: url("../img/02@2x.png");
+  }
+
+  #powered-by-logo.pt-BR {
+    background-image: url("../img/vivo@2x.png");
+  }
+
+  #powered-by-logo[class^="es-"] {
+    background-image: url("../img/movistar@2x.png");
+  }
+}
+
+.terms-service > a {
   color: #00caee;
 }
 
