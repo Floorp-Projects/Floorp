@@ -1502,12 +1502,18 @@ this.MozLoopService = {
 
   /**
    * Opens the Getting Started tour in the browser.
+   *
+   * @param {String} aSrc
+   *   - The UI element that the user used to begin the tour, optional.
    */
-  openGettingStartedTour: Task.async(function() {
+  openGettingStartedTour: Task.async(function(aSrc = null) {
     try {
-      let url = Services.prefs.getCharPref("loop.gettingStarted.url");
+      let url = new URL(Services.prefs.getCharPref("loop.gettingStarted.url"));
+      if (aSrc) {
+        url.searchParams.set("source", aSrc);
+      }
       let win = Services.wm.getMostRecentWindow("navigator:browser");
-      win.switchToTabHavingURI(url, true);
+      win.switchToTabHavingURI(url, true, {replaceQueryString: true});
     } catch (ex) {
       log.error("Error opening Getting Started tour", ex);
     }
