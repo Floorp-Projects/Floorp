@@ -318,16 +318,22 @@ ScriptedIndirectProxyHandler::getEnumerablePropertyKeys(JSContext *cx, HandleObj
 
 bool
 ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
-                                      MutableHandleValue vp) const
+                                      MutableHandleObject objp) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().iterate, &value))
         return false;
     if (!IsCallable(value))
-        return BaseProxyHandler::iterate(cx, proxy, flags, vp);
-    return Trap(cx, handler, value, 0, nullptr, vp) &&
-           ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().iterate, vp);
+        return BaseProxyHandler::iterate(cx, proxy, flags, objp);
+
+    RootedValue rval(cx);
+    if (!Trap(cx, handler, value, 0, nullptr, &rval))
+        return false;
+    if (!ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().iterate, rval))
+        return false;
+    objp.set(&rval.toObject());
+    return true;
 }
 
 bool
