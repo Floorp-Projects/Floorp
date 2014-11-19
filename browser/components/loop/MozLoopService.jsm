@@ -424,7 +424,8 @@ let MozLoopServiceInternal = {
   },
 
   /**
-   * Performs a hawk based request to the loop server.
+   * Performs a hawk based request to the loop server - there is no pre-registration
+   * for this request, if this is required, use hawkRequest.
    *
    * @param {LOOP_SESSION_TYPE} sessionType The type of session to use for the request.
    *                                        This is one of the LOOP_SESSION_TYPE members.
@@ -438,8 +439,7 @@ let MozLoopServiceInternal = {
    *        as JSON and contains an 'error' property, the promise will be
    *        rejected with this JSON-parsed response.
    */
-  hawkRequest: function(sessionType, path, method, payloadObj) {
-    log.debug("hawkRequest: " + path, sessionType);
+  hawkRequestInternal: function(sessionType, path, method, payloadObj) {
     if (!gHawkClient) {
       gHawkClient = new HawkClient(this.loopServerUri);
     }
@@ -481,6 +481,32 @@ let MozLoopServiceInternal = {
         }
       }
       throw error;
+    });
+  },
+
+  /**
+   * Performs a hawk based request to the loop server, registering if necessary.
+   *
+   * @param {LOOP_SESSION_TYPE} sessionType The type of session to use for the request.
+   *                                        This is one of the LOOP_SESSION_TYPE members.
+   * @param {String} path The path to make the request to.
+   * @param {String} method The request method, e.g. 'POST', 'GET'.
+   * @param {Object} payloadObj An object which is converted to JSON and
+   *                            transmitted with the request.
+   * @returns {Promise}
+   *        Returns a promise that resolves to the response of the API call,
+   *        or is rejected with an error.  If the server response can be parsed
+   *        as JSON and contains an 'error' property, the promise will be
+   *        rejected with this JSON-parsed response.
+   */
+  hawkRequest: function(sessionType, path, method, payloadObj) {
+    log.debug("hawkRequest: " + path, sessionType);
+    return new Promise((resolve, reject) => {
+      MozLoopService.promiseRegisteredWithServers(sessionType).then(() => {
+        this.hawkRequestInternal(sessionType, path, method, payloadObj).then(resolve, reject);
+      }, err => {
+        reject(err);
+      }).catch(reject);
     });
   },
 
@@ -586,7 +612,7 @@ let MozLoopServiceInternal = {
           rooms: roomsPushURL,
         },
     };
-    return this.hawkRequest(sessionType, "/registration", "POST", msg)
+    return this.hawkRequestInternal(sessionType, "/registration", "POST", msg)
       .then((response) => {
         // If this failed we got an invalid token.
         if (!this.storeSessionToken(sessionType, response.headers)) {
@@ -642,7 +668,7 @@ let MozLoopServiceInternal = {
     }
 
     let unregisterURL = "/registration?simplePushURL=" + encodeURIComponent(pushURL);
-    return this.hawkRequest(sessionType, unregisterURL, "DELETE")
+    return this.hawkRequestInternal(sessionType, unregisterURL, "DELETE")
       .then(() => {
         log.debug("Successfully unregistered from server for sessionType", sessionType);
       },
@@ -831,7 +857,7 @@ let MozLoopServiceInternal = {
    */
   promiseFxAOAuthParameters: function() {
     const SESSION_TYPE = LOOP_SESSION_TYPE.FXA;
-    return this.hawkRequest(SESSION_TYPE, "/fxa-oauth/params", "POST").then(response => {
+    return this.hawkRequestInternal(SESSION_TYPE, "/fxa-oauth/params", "POST").then(response => {
       if (!this.storeSessionToken(SESSION_TYPE, response.headers)) {
         throw new Error("Invalid FxA hawk token returned");
       }
@@ -1028,6 +1054,7 @@ this.MozLoopService = {
     // If expiresTime is not in the future and the user hasn't
     // previously authenticated then skip registration.
     if (!MozLoopServiceInternal.urlExpiryTimeIsInFuture() &&
+        !LoopRooms.getGuestCreatedRoom() &&
         !MozLoopServiceInternal.fxAOAuthTokenData) {
       return Promise.resolve("registration not needed");
     }
@@ -1061,7 +1088,8 @@ this.MozLoopService = {
     });
 
     try {
-      if (MozLoopServiceInternal.urlExpiryTimeIsInFuture()) {
+      if (MozLoopServiceInternal.urlExpiryTimeIsInFuture() ||
+          LoopRooms.getGuestCreatedRoom()) {
         yield this.promiseRegisteredWithServers(LOOP_SESSION_TYPE.GUEST);
       } else {
         log.debug("delayedInitialize: URL expiry time isn't in the future so not registering as a guest");
