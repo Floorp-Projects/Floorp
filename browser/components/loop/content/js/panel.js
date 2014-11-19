@@ -286,6 +286,10 @@ loop.panel = (function(_, mozL10n) {
       return !!navigator.mozLoop.userProfile;
     },
 
+    openGettingStartedTour: function() {
+      navigator.mozLoop.openGettingStartedTour("settingsMenu");
+    },
+
     render: function() {
       var cx = React.addons.classSet;
 
@@ -308,6 +312,8 @@ loop.panel = (function(_, mozL10n) {
                                    onClick: this.handleClickAccountEntry, 
                                    icon: "account", 
                                    displayed: this._isSignedIn()}), 
+            SettingsDropdownEntry({label: mozL10n.get("tour_label"), 
+                                   onClick: this.openGettingStartedTour}), 
             SettingsDropdownEntry({label: this._isSignedIn() ?
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin"), 
