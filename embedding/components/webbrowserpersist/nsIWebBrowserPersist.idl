@@ -123,6 +123,10 @@ interface nsIWebBrowserPersist : nsICancelable
    *                   nsIWebPageDescriptor.
    * @param aReferrer  The referrer URI to pass with an HTTP request or
    *                   <CODE>nullptr</CODE>.
+   * @param aReferrerPolicy  The referrer policy for when and what to send via
+   *                   HTTP Referer header.  Ignored if aReferrer is
+   *                   <CODE>nullptr</CODE>.  Taken from REFERRER_POLICY
+   *                   constants in nsIHttpChannel.
    * @param aPostData  Post data to pass with an HTTP request or
    *                   <CODE>nullptr</CODE>.
    * @param aExtraHeaders Additional headers to supply with an HTTP request
@@ -143,7 +147,8 @@ interface nsIWebBrowserPersist : nsICancelable
    * @throws NS_ERROR_INVALID_ARG One or more arguments was invalid.
    */
   void saveURI(in nsIURI aURI, in nsISupports aCacheKey,
-      in nsIURI aReferrer, in nsIInputStream aPostData,
+      in nsIURI aReferrer, in unsigned long aReferrerPolicy,
+      in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
       in nsILoadContext aPrivacyContext);
 
@@ -154,7 +159,8 @@ interface nsIWebBrowserPersist : nsICancelable
    * @see saveURI for all other parameter descriptions
    */
   void savePrivacyAwareURI(in nsIURI aURI, in nsISupports aCacheKey,
-      in nsIURI aReferrer, in nsIInputStream aPostData,
+      in nsIURI aReferrer, in unsigned long aReferrerPolicy,
+      in nsIInputStream aPostData,
       in string aExtraHeaders, in nsISupports aFile,
       in boolean aIsPrivate);
 

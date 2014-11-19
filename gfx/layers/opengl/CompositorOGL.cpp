@@ -87,6 +87,7 @@ CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
   , mFrameInProgress(false)
   , mDestroyed(false)
   , mHeight(0)
+  , mCurrentProgram(nullptr)
 {
   MOZ_COUNT_CTOR(CompositorOGL);
   SetBackend(LayersBackend::LAYERS_OPENGL);
@@ -815,6 +816,23 @@ CompositorOGL::GetShaderProgramFor(const ShaderConfigOGL &aConfig)
   return shader;
 }
 
+void
+CompositorOGL::ActivateProgram(ShaderProgramOGL* aProg)
+{
+  if (mCurrentProgram != aProg) {
+    gl()->fUseProgram(aProg->GetProgram());
+    mCurrentProgram = aProg;
+  }
+}
+
+void
+CompositorOGL::ResetProgram()
+{
+  mCurrentProgram = nullptr;
+}
+
+
+
 static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIsPremultiplied = true)
 {
   if (aBlendMode == gfx::CompositionOp::OP_OVER && aIsPremultiplied) {
@@ -957,7 +975,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   ShaderConfigOGL config = GetShaderConfigFor(aEffectChain.mPrimaryEffect, maskType, blendMode, colorMatrix);
   config.SetOpacity(aOpacity != 1.f);
   ShaderProgramOGL *program = GetShaderProgramFor(config);
-  program->Activate();
+  ActivateProgram(program);
   program->SetProjectionMatrix(mProjMatrix);
   program->SetLayerTransform(aTransform);
 

@@ -114,6 +114,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
   nsCOMPtr<nsISupports> owner;
   nsCOMPtr<nsIURI> sourceURI;
+  net::ReferrerPolicy referrerPolicy = net::RP_Default;
 
   if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
     // No cx means that there's no JS running, or at least no JS that
@@ -149,6 +150,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
       docCurrentURI = doc->GetDocumentURI();
       rv = doc->NodePrincipal()->GetURI(getter_AddRefs(principalURI));
       NS_ENSURE_SUCCESS(rv, rv);
+      referrerPolicy = doc->GetReferrerPolicy();
     }
 
     bool urisEqual = false;
@@ -186,6 +188,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
   if (sourceURI) {
     loadInfo->SetReferrer(sourceURI);
+    loadInfo->SetReferrerPolicy(referrerPolicy);
   }
 
   loadInfo.swap(*aLoadInfo);

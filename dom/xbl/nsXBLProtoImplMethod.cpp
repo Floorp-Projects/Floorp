@@ -295,6 +295,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
   // We are going to run script via JS::Call, so we need a script entry point,
   // but as this is XBL related it does not appear in the HTML spec.
   dom::AutoEntryScript aes(global);
+  aes.TakeOwnershipOfErrorReporting();
   JSContext* cx = aes.cx();
 
   JS::Rooted<JSObject*> globalObject(cx, global->GetGlobalJSObject());
@@ -324,20 +325,12 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
   bool scriptAllowed = nsContentUtils::GetSecurityManager()->
                          ScriptAllowed(js::GetGlobalForObjectCrossCompartment(method));
 
-  bool ok = true;
   if (scriptAllowed) {
     JS::Rooted<JS::Value> retval(cx);
     JS::Rooted<JS::Value> methodVal(cx, JS::ObjectValue(*method));
-    ok = ::JS::Call(cx, scopeChain[0], methodVal, JS::HandleValueArray::empty(), &retval);
-  }
-
-  if (!ok) {
-    // If a constructor or destructor threw an exception, it doesn't stop
-    // anything else.  We just report it.  Note that we need to set aside the
-    // frame chain here, since the constructor invocation is not related to
-    // whatever is on the stack right now, really.
-    nsJSUtils::ReportPendingException(cx);
-    return NS_ERROR_FAILURE;
+    // No need to check the return here as AutoEntryScript has taken ownership
+    // of error reporting.
+    ::JS::Call(cx, scopeChain[0], methodVal, JS::HandleValueArray::empty(), &retval);
   }
 
   return NS_OK;

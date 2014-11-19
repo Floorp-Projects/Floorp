@@ -189,7 +189,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 
-#include <string.h>     /* for memset used when DEBUG */
+#include <string.h>
 #ifndef XP_WIN
 # include <sys/mman.h>
 # include <unistd.h>
@@ -965,7 +965,7 @@ GCRuntime::updateOnArenaFree(const ChunkInfo &info)
     ++numArenasFreeCommitted;
 }
 
-inline void
+void
 Chunk::addArenaToFreeList(JSRuntime *rt, ArenaHeader *aheader)
 {
     MOZ_ASSERT(!aheader->allocated());
@@ -977,6 +977,13 @@ Chunk::addArenaToFreeList(JSRuntime *rt, ArenaHeader *aheader)
 }
 
 void
+Chunk::addArenaToDecommittedList(JSRuntime *rt, const ArenaHeader *aheader)
+{
+    ++info.numArenasFree;
+    decommittedArenas.set(Chunk::arenaIndex(aheader->arenaAddress()));
+}
+
+void
 Chunk::recycleArena(ArenaHeader *aheader, SortedArenaList &dest, AllocKind thingKind,
                     size_t thingsPerArena)
 {
@@ -985,13 +992,18 @@ Chunk::recycleArena(ArenaHeader *aheader, SortedArenaList &dest, AllocKind thing
 }
 
 void
-Chunk::releaseArena(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock)
+Chunk::releaseArena(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock,
+                    ArenaDecommitState state /* = IsCommitted */)
 {
     MOZ_ASSERT(aheader->allocated());
     MOZ_ASSERT(!aheader->hasDelayedMarking);
 
-    aheader->setAsNotAllocated();
-    addArenaToFreeList(rt, aheader);
+    if (state == IsCommitted) {
+        aheader->setAsNotAllocated();
+        addArenaToFreeList(rt, aheader);
+    } else {
+        addArenaToDecommittedList(rt, aheader);
+    }
 
     if (info.numArenasFree == 1) {
         MOZ_ASSERT(!info.prevp);
@@ -3411,110 +3423,44 @@ GCRuntime::decommitAllWithoutUnlocking(const AutoLockGC &lock)
 void
 GCRuntime::decommitArenas(const AutoLockGC &lock)
 {
-    Chunk **availableListHeadp = &availableChunkListHead;
-    Chunk *chunk = *availableListHeadp;
-    if (!chunk)
-        return;
+    // Verify that all entries in the empty chunks pool are decommitted.
+    for (ChunkPool::Enum e(emptyChunks(lock)); !e.empty(); e.popFront())
+        MOZ_ASSERT(e.front()->info.numArenasFreeCommitted == 0);
 
-    /*
-     * Decommit is expensive so we avoid holding the GC lock while calling it.
-     *
-     * We decommit from the tail of the list to minimize interference with the
-     * main thread that may start to allocate things at this point.
-     *
-     * The arena that is been decommitted outside the GC lock must not be
-     * available for allocations either via the free list or via the
-     * decommittedArenas bitmap. For that we just fetch the arena from the
-     * free list before the decommit pretending as it was allocated. If this
-     * arena also is the single free arena in the chunk, then we must remove
-     * from the available list before we release the lock so the allocation
-     * thread would not see chunks with no free arenas on the available list.
-     *
-     * After we retake the lock, we mark the arena as free and decommitted if
-     * the decommit was successful. We must also add the chunk back to the
-     * available list if we removed it previously or when the main thread
-     * have allocated all remaining free arenas in the chunk.
-     *
-     * We also must make sure that the aheader is not accessed again after we
-     * decommit the arena.
-     */
-    MOZ_ASSERT(chunk->info.prevp == availableListHeadp);
-    while (Chunk *next = chunk->info.next) {
-        MOZ_ASSERT(next->info.prevp == &chunk->info.next);
-        chunk = next;
+    // Build a Vector of all current available Chunks. Since we release the
+    // gc lock while doing the decommit syscall, it is dangerous to iterate
+    // the available list directly, as concurrent operations can modify it.
+    mozilla::Vector<Chunk *> toDecommit;
+    for (Chunk *chunk = availableChunkListHead; chunk; chunk = chunk->info.next) {
+        if (!toDecommit.append(chunk)) {
+            // The OOM handler does a full, immediate decommit, so there is
+            // nothing more to do here in any case.
+            return onOutOfMallocMemory(lock);
+        }
     }
 
-    for (;;) {
-        while (chunk->info.numArenasFreeCommitted != 0) {
-            ArenaHeader *aheader = chunk->fetchNextFreeArena(rt);
+    // Start at the tail and stop before the first chunk: we allocate from the
+    // head and don't want to thrash with the mutator.
+    for (size_t i = toDecommit.length(); i > 1; --i) {
+        Chunk *chunk = toDecommit[i - 1];
+        MOZ_ASSERT(chunk);
 
-            Chunk **savedPrevp = chunk->info.prevp;
-            if (!chunk->hasAvailableArenas())
-                chunk->removeFromAvailableList();
-
-            size_t arenaIndex = Chunk::arenaIndex(aheader->arenaAddress());
+        // The arena list is not doubly-linked, so we have to work in the free
+        // list order and not in the natural order.
+        while (chunk->info.numArenasFreeCommitted) {
+            ArenaHeader *aheader = chunk->allocateArena(rt, nullptr, FINALIZE_OBJECT0, lock);
             bool ok;
             {
-                /*
-                 * If the main thread waits for the decommit to finish, skip
-                 * potentially expensive unlock/lock pair on the contested
-                 * lock.
-                 */
-                Maybe<AutoUnlockGC> maybeUnlock;
-                if (!isHeapBusy())
-                    maybeUnlock.emplace(rt);
+                AutoUnlockGC unlock(rt);
                 ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
+            chunk->releaseArena(rt, aheader, lock, Chunk::ArenaDecommitState(ok));
 
-            if (ok) {
-                ++chunk->info.numArenasFree;
-                chunk->decommittedArenas.set(arenaIndex);
-            } else {
-                chunk->addArenaToFreeList(rt, aheader);
-            }
-            MOZ_ASSERT(chunk->hasAvailableArenas());
-            MOZ_ASSERT(!chunk->unused());
-            if (chunk->info.numArenasFree == 1) {
-                /*
-                 * Put the chunk back to the available list either at the
-                 * point where it was before to preserve the available list
-                 * that we enumerate, or, when the allocation thread has fully
-                 * used all the previous chunks, at the beginning of the
-                 * available list.
-                 */
-                Chunk **insertPoint = savedPrevp;
-                if (savedPrevp != availableListHeadp) {
-                    Chunk *prev = Chunk::fromPointerToNext(savedPrevp);
-                    if (!prev->hasAvailableArenas())
-                        insertPoint = availableListHeadp;
-                }
-                chunk->insertToAvailableList(insertPoint);
-            } else {
-                MOZ_ASSERT(chunk->info.prevp);
-            }
-
-            if (chunkAllocationSinceLastGC || !ok) {
-                /*
-                 * The allocator thread has started to get new chunks. We should stop
-                 * to avoid decommitting arenas in just allocated chunks.
-                 */
+            // FIXME Bug 1095620: add cancellation support when this becomes
+            // a ParallelTask.
+            if (/* cancel_ || */ !ok)
                 return;
-            }
         }
-
-        /*
-         * chunk->info.prevp becomes null when the allocator thread consumed
-         * all chunks from the available list.
-         */
-        MOZ_ASSERT_IF(chunk->info.prevp, *chunk->info.prevp == chunk);
-        if (chunk->info.prevp == availableListHeadp || !chunk->info.prevp)
-            break;
-
-        /*
-         * prevp exists and is not the list head. It must point to the next
-         * field of the previous chunk.
-         */
-        chunk = chunk->getPrevious();
     }
 }
 
@@ -6493,8 +6439,14 @@ GCRuntime::onOutOfMallocMemory()
     // Stop allocating new chunks.
     allocTask.cancel(GCParallelTask::CancelAndWait);
 
-    // Throw away any excess chunks we have lying around.
     AutoLockGC lock(rt);
+    onOutOfMallocMemory(lock);
+}
+
+void
+GCRuntime::onOutOfMallocMemory(const AutoLockGC &lock)
+{
+    // Throw away any excess chunks we have lying around.
     freeEmptyChunks(rt, lock);
 
     // Immediately decommit as many arenas as possible in the hopes that this

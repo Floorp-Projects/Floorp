@@ -1,0 +1,189 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This is a spot check for whether the speculative parser reuses style, script or image loads after the referrer policy has changed.
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test preloads for Bug 704320</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * Listen for notifications from the child.
+ * These are sent in case of error, or when the loads we await have completed.
+ */
+window.addEventListener("message", function(event) {
+    if (event.data == "childLoadComplete") {
+      // all three loads happen, continue the test.
+      advance();
+    } else if (event.data == "childOverload") {
+      // too many loads happened in a test frame, abort.
+      ok(false, "Too many load handlers called in test.");
+      SimpleTest.finish();
+    } else if (event.data.indexOf("fail-") == 0) {
+      // something else failed in the test frame, abort.
+      ok(false, "Child failed the test with error " + event.data.substr(5));
+      SimpleTest.finish();
+    }});
+
+/**
+ * This is the main test routine -- serialized by use of a generator.
+ * It resets the counter, then performs two tests in sequence using
+ * the same iframe.
+ */
+var tests = (function() {
+  var iframe = document.getElementById("testframe");
+
+  // reset the counter
+  yield resetCounter();
+
+  // load the first test frame
+  // it will call back into this function via postMessage when it finishes loading.
+  // and continue beyond the yield.
+  yield iframe.src = 'file_bug704320_preload_noreuse.html';
+
+  // check the first test
+  yield checkResults(finalizePreloadNoreuse);
+
+  // reset the counter
+  yield resetCounter();
+
+  // load the second test frame
+  // it will call back into this function via postMessage when it finishes loading.
+  // and continue beyond the yield.
+  yield iframe.src = 'file_bug704320_preload_reuse.html';
+
+  // check the second test
+  yield checkResults(finalizePreloadReuse);
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield SimpleTest.finish();
+})();
+
+// Helper functions below.
+
+/**
+ * This checks the first test: a test where the preloads should not
+ * be reused.  * we expect two requests for each image, script, js request
+ * since the referrer policy changed after speculative loads were started.
+ * Problem is that the "origin"/revised loads won't necessarily happen,
+ * so we test for one or two loads (both are OK) and make the 'origin'
+ * referrer optional.
+ */
+function finalizePreloadNoreuse(results) {
+  console.log("<br/><pre>" + JSON.stringify(results) + "</pre>");
+  var expected = {'css': {'count': 2, 'referrers': ['full', 'origin']},
+                  'img': {'count': 2, 'referrers': ['full', 'origin']},
+                  'js':  {'count': 2, 'referrers': ['full', 'origin']}};
+
+  for (var x in expected) {
+    ok(x in results, "some " + x + " loads required in results object.");
+
+    ok(results[x].count == 1 || results[x].count == 2,
+       "Expected 1-2  loads for " + x + " requests.");
+
+    // the 'full' preload is optional, but required if count > 1
+    if (results[x].count > 1) {
+      ok(results[x].referrers.indexOf('full') >= 0,
+         "More than one load for " + x + ", so expected an 'full' referrer preload.")
+    }
+
+    // 'origin' (final load) is required
+    ok(results[x].referrers.indexOf('origin') >= 0,
+       "One load for " + x + " should have had 'origin' referrer.");
+
+    // no other values should be in the referrers.
+    is(results[x].referrers.indexOf('none'), -1,
+       "No loads for " + x + " should have a missing referrer.");
+  }
+
+  advance();
+}
+
+/**
+ * This checks the second test: a test where preloads SHOULD be reused.
+ * We expect one request for each image, script, js request since
+ * the referrer policy does not change after speculative loads.
+ */
+function finalizePreloadReuse(results) {
+  var expected = {'css': {'count': 1, 'referrers': ['origin']},
+                  'img': {'count': 1, 'referrers': ['origin']},
+                  'js':  {'count': 1, 'referrers': ['origin']}};
+
+  for (var x in expected) {
+    ok(x in results, "some " + x + " loads required in results object.");
+
+    is(results[x].count, expected[x].count,
+       "Expected " + expected[x].count + " loads for " + x + " requests.");
+
+    // 'origin' is required
+    ok(results[x].referrers.indexOf('origin') >= 0,
+       "One load for " + x + " should have had 'origin' referrer.");
+
+    // no other values should be in the referrers.
+    is(results[x].referrers.indexOf('none'), -1,
+       "No loads for " + x + " should have a missing referrer.");
+    is(results[x].referrers.indexOf('full'), -1,
+       "No loads for " + x + " should have an 'full' referrer.")
+  }
+
+  advance();
+}
+
+/**
+ * helper to perform an XHR.
+ * Used by resetCounter() and checkResults().
+ */
+function doXHR(url, onSuccess, onFail) {
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    if (xhr.status == 200) {
+      onSuccess(xhr);
+    } else {
+      onFail(xhr);
+    }
+  };
+  xhr.open('GET', url, true);
+  xhr.send(null);
+}
+
+/**
+ * This triggers state-resetting on the counter server.
+ */
+function resetCounter() {
+  doXHR('/tests/dom/base/test/bug704320_counter.sjs?reset',
+        advance,
+        function(xhr) {
+          ok(false, "Need to be able to reset the request counter");
+        });
+}
+
+/**
+ * Grabs the results via XHR and passes to checker.
+ */
+function checkResults(checker) {
+  doXHR('/tests/dom/base/test/bug704320_counter.sjs?results',
+        function(xhr) {
+          checker(JSON.parse(xhr.responseText));
+        },
+        function(xhr) {
+          ok(false, "Can't get results from the counter server.");
+        });
+}
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>

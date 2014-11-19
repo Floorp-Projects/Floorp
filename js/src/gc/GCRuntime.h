@@ -307,6 +307,7 @@ class GCRuntime
     void notifyDidPaint();
     void shrinkBuffers();
     void onOutOfMallocMemory();
+    void onOutOfMallocMemory(const AutoLockGC &lock);
 
 #ifdef JS_GC_ZEAL
     const void *addressOfZealMode() { return &zealMode; }

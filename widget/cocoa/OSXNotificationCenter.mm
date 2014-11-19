@@ -243,7 +243,9 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
       nsCOMPtr<nsIURI> imageUri;
       NS_NewURI(getter_AddRefs(imageUri), aImageUrl);
       if (imageUri) {
-        nsresult rv = il->LoadImage(imageUri, nullptr, nullptr, aPrincipal, nullptr,
+        nsresult rv = il->LoadImage(imageUri, nullptr, nullptr,
+                                    mozilla::net::RP_Default,
+                                    aPrincipal, nullptr,
                                     this, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
                                     nsIContentPolicy::TYPE_IMAGE, EmptyString(),
                                     getter_AddRefs(osxni->mIconRequest));

@@ -61,7 +61,7 @@ runWithMSE(function(ms, v) {
   });
   v.addEventListener("ended", function () {
     ok(Math.abs(v.duration - 4) < 0.1, "Video has correct duration. This fuzz factor is due to bug 1065207");
-    is(v.currentTime, v.duration, "Video has correct current time: " + v.currentTime);
+    ok(Math.abs(v.currentTime - 4) < 0.1, "Video has correct currentTime. See bug 1101062");
     ok(gotWaiting, "Received waiting event and playback continued after data added");
     SimpleTest.finish();
   });

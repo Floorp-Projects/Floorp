@@ -63,6 +63,8 @@ static nsITimer* gFlushTimer = nullptr;
 nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
   : nsHtml5DocumentBuilder(false)
   , mPreloadedURLs(23)  // Mean # of preloadable resources per page on dmoz
+  , mSpeculationReferrerPolicyWasSet(false)
+  , mSpeculationReferrerPolicy(mozilla::net::RP_Default)
 {
   // zeroing operator new for everything else
 }
@@ -903,7 +905,8 @@ nsHtml5TreeOpExecutor::PreloadScript(const nsAString& aURL,
     return;
   }
   mDocument->ScriptLoader()->PreloadURI(uri, aCharset, aType, aCrossOrigin,
-                                        aScriptFromHead);
+                                        aScriptFromHead,
+                                        mSpeculationReferrerPolicy);
 }
 
 void
@@ -915,7 +918,8 @@ nsHtml5TreeOpExecutor::PreloadStyle(const nsAString& aURL,
   if (!uri) {
     return;
   }
-  mDocument->PreloadStyle(uri, aCharset, aCrossOrigin);
+  mDocument->PreloadStyle(uri, aCharset, aCrossOrigin,
+                          mSpeculationReferrerPolicy);
 }
 
 void
@@ -926,7 +930,7 @@ nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL,
   if (!uri) {
     return;
   }
-  mDocument->MaybePreLoadImage(uri, aCrossOrigin);
+  mDocument->MaybePreLoadImage(uri, aCrossOrigin, mSpeculationReferrerPolicy);
 }
 
 void
@@ -950,6 +954,27 @@ nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL)
   DebugOnly<nsresult> rv = NS_NewURI(getter_AddRefs(mSpeculationBaseURI), aURL,
                                      charset.get(), mDocument->GetDocumentURI());
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to create a URI");
+}
+
+void
+nsHtml5TreeOpExecutor::SetSpeculationReferrerPolicy(const nsAString& aReferrerPolicy)
+{
+  ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aReferrerPolicy);
+
+  if (mSpeculationReferrerPolicyWasSet &&
+      policy != mSpeculationReferrerPolicy) {
+    // According to the Referrer Policy spec, if there's already been a policy
+    // set and another attempt is made to set a _different_ policy, the result
+    // is a "No Referrer" policy.
+    mSpeculationReferrerPolicy = mozilla::net::RP_No_Referrer;
+  }
+  else {
+    // Record "speculated" referrer policy locally and thread through the
+    // speculation phase.  The actual referrer policy will be set by
+    // HTMLMetaElement::BindToTree().
+    mSpeculationReferrerPolicyWasSet = true;
+    mSpeculationReferrerPolicy = policy;
+  }
 }
 
 #ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH

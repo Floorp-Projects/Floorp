@@ -65,7 +65,8 @@ protected:
         nsIDOMNode *aNodeIn, bool *aSerializeCloneKids, nsIDOMNode **aNodeOut);
     nsresult SaveURIInternal(
         nsIURI *aURI, nsISupports *aCacheKey, nsIURI *aReferrer,
-        nsIInputStream *aPostData, const char *aExtraHeaders, nsIURI *aFile,
+        uint32_t aReferrerPolicy, nsIInputStream *aPostData,
+        const char *aExtraHeaders, nsIURI *aFile,
         bool aCalcFileExt, bool aIsPrivate);
     nsresult SaveChannelInternal(
         nsIChannel *aChannel, nsIURI *aFile, bool aCalcFileExt);

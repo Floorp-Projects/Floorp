@@ -120,6 +120,13 @@ BINPATH = bin
 endif
 DEFINES += -DBINPATH=$(BINPATH)
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+RESPATH = $(_APPNAME)/Contents/Resources
+else
+RESPATH = $(BINPATH)
+endif
+DEFINES += -DRESPATH=$(RESPATH)
+
 AB = $(firstword $(subst -, ,$(AB_CD)))
 DEFINES += -DAB=$(AB)
 

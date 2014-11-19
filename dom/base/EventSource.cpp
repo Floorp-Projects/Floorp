@@ -700,6 +700,17 @@ EventSource::GetBaseURI(nsIURI **aBaseURI)
   return NS_OK;
 }
 
+net::ReferrerPolicy
+EventSource::GetReferrerPolicy()
+{
+  nsresult rv;
+  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, mozilla::net::RP_Default);
+
+  nsCOMPtr<nsIDocument> doc = nsContentUtils::GetDocumentFromScriptContext(sc);
+  return doc ? doc->GetReferrerPolicy() : mozilla::net::RP_Default;
+}
+
 nsresult
 EventSource::SetupHttpChannel()
 {
@@ -720,7 +731,7 @@ EventSource::SetupHttpChannel()
   nsCOMPtr<nsIURI> codebase;
   nsresult rv = GetBaseURI(getter_AddRefs(codebase));
   if (NS_SUCCEEDED(rv)) {
-    rv = mHttpChannel->SetReferrer(codebase);
+    rv = mHttpChannel->SetReferrerWithPolicy(codebase, this->GetReferrerPolicy());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

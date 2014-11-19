@@ -4,5 +4,92 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['include', 'lib']
+EXPORTS.theora += [
+    'include/theora/codec.h',
+    'include/theora/theoradec.h',
+    'include/theora/theoraenc.h',
+]
+
+MSVC_ENABLE_PGO = True
+
+FINAL_LIBRARY = 'gkmedias'
+
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+    NO_VISIBILITY_FLAGS = True
+
+# The encoder is currently not included.
+DEFINES['THEORA_DISABLE_ENCODE'] = True
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wno-type-limits']
+    if CONFIG['CLANG_CXX']:
+        CFLAGS += ['-Wno-tautological-compare']
+
+UNIFIED_SOURCES += [
+    'lib/apiwrapper.c',
+    'lib/bitpack.c',
+    'lib/decapiwrapper.c',
+    'lib/decinfo.c',
+    'lib/decode.c',
+    'lib/dequant.c',
+    'lib/fragment.c',
+    'lib/huffdec.c',
+    'lib/idct.c',
+    'lib/info.c',
+    'lib/internal.c',
+    'lib/quant.c',
+    'lib/state.c',
+]
+
+LOCAL_INCLUDES += ['include']
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
+    GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
+        'armbits-gnu',
+        'armfrag-gnu',
+        'armidct-gnu',
+        'armloop-gnu',
+    ]]
+
+if '86' in CONFIG['OS_TEST']:
+    if CONFIG['OS_ARCH'] != 'SunOS':
+        if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['OS_TEST'] != 'x86_64':
+            DEFINES['OC_X86_ASM'] = True
+            if '64' in CONFIG['OS_TEST']:
+                DEFINES['OC_X86_64_ASM'] = True
+    if CONFIG['_MSC_VER']:
+        if '64' not in CONFIG['OS_TEST']:
+            SOURCES += [
+                'lib/x86_vc/mmxfrag.c',
+                'lib/x86_vc/mmxidct.c',
+                'lib/x86_vc/mmxstate.c',
+                'lib/x86_vc/x86cpu.c',
+                'lib/x86_vc/x86state.c',
+            ]
+    else:
+        SOURCES += [
+            'lib/x86/mmxfrag.c',
+            'lib/x86/mmxidct.c',
+            'lib/x86/mmxstate.c',
+            'lib/x86/sse2idct.c',
+            'lib/x86/x86cpu.c',
+            'lib/x86/x86state.c',
+        ]
+
+if CONFIG['GNU_AS']:
+    if 'arm' in CONFIG['OS_TEST']:
+        SOURCES += [
+            'lib/arm/armcpu.c',
+            'lib/arm/armstate.c',
+        ]
+        for var in ('OC_ARM_ASM',
+                    'OC_ARM_ASM_EDSP',
+                    'OC_ARM_ASM_MEDIA',
+                    'OC_ARM_ASM_NEON'):
+            DEFINES[var] = True
+        # The Android NDK doesn't pre-define anything to indicate the OS it's
+        # on, so do it for them.
+        if CONFIG['OS_TARGET'] == 'Android':
+            DEFINES['__linux__'] = True
 

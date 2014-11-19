@@ -540,17 +540,16 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
   return true;
 }
 
-void
-ShaderProgramOGL::Activate()
+GLuint
+ShaderProgramOGL::GetProgram()
 {
   if (mProgramState == STATE_NEW) {
     if (!Initialize()) {
       NS_WARNING("Shader could not be initialised");
-      return;
     }
   }
-  NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
-  mGL->fUseProgram(mProgram);
+  MOZ_ASSERT(HasInitialized(), "Attempting to get a program that's not been initialized!");
+  return mProgram;
 }
 
 void

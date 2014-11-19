@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-version = '0.3'
+version = '0.4'
 
 long_description = \
 """Marionette_ is a Mozilla project to enable remote automation in Gecko-based

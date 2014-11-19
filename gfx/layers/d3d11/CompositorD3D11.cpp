@@ -494,9 +494,8 @@ CompositorD3D11::SetRenderTarget(CompositingRenderTarget* aRenderTarget)
   MOZ_ASSERT(aRenderTarget);
   CompositingRenderTargetD3D11* newRT =
     static_cast<CompositingRenderTargetD3D11*>(aRenderTarget);
-  ID3D11RenderTargetView* view = newRT->mRTView;
   mCurrentRT = newRT;
-  mContext->OMSetRenderTargets(1, &view, nullptr);
+  mCurrentRT->BindRenderTarget(mContext);
   PrepareViewport(newRT->GetSize());
 }
 

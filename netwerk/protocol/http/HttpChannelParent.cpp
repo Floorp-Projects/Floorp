@@ -97,7 +97,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
   {
     const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
     return DoAsyncOpen(a.uri(), a.original(), a.doc(), a.referrer(),
-                       a.apiRedirectTo(), a.topWindowURI(),
+                       a.referrerPolicy(), a.apiRedirectTo(), a.topWindowURI(),
                        a.loadFlags(), a.requestHeaders(),
                        a.requestMethod(), a.uploadStream(),
                        a.uploadStreamHasHeaders(), a.priority(),
@@ -172,6 +172,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const OptionalURIParams&   aOriginalURI,
                                  const OptionalURIParams&   aDocURI,
                                  const OptionalURIParams&   aReferrerURI,
+                                 const uint32_t&            aReferrerPolicy,
                                  const OptionalURIParams&   aAPIRedirectToURI,
                                  const OptionalURIParams&   aTopWindowURI,
                                  const uint32_t&            aLoadFlags,
@@ -273,7 +274,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   if (docUri)
     mChannel->SetDocumentURI(docUri);
   if (referrerUri)
-    mChannel->SetReferrerInternal(referrerUri);
+    mChannel->SetReferrerWithPolicyInternal(referrerUri, aReferrerPolicy);
   if (apiRedirectToUri)
     mChannel->RedirectTo(apiRedirectToUri);
   if (topWindowUri)
@@ -968,11 +969,6 @@ HttpChannelParent::DivertTo(nsIStreamListener *aListener)
 
   mDivertListener = aListener;
 
-  if (NS_WARN_IF(mIPCClosed || !SendFlushedForDiversion())) {
-    FailDiversion(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
   // Call OnStartRequest and SendDivertMessages asynchronously to avoid
   // reentering client context.
   NS_DispatchToCurrentThread(
@@ -1019,6 +1015,11 @@ HttpChannelParent::StartDiversion()
   DebugOnly<nsresult> rvdbg = mParentListener->DivertTo(mDivertListener);
   MOZ_ASSERT(NS_SUCCEEDED(rvdbg));
   mDivertListener = nullptr;
+
+  if (NS_WARN_IF(mIPCClosed || !SendFlushedForDiversion())) {
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return;
+  }
 
   // The listener chain should now be setup; tell HttpChannelChild to divert
   // the OnDataAvailables and OnStopRequest to this HttpChannelParent.

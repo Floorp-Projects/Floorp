@@ -76,6 +76,15 @@ BasicCompositor::~BasicCompositor()
   MOZ_COUNT_DTOR(BasicCompositor);
 }
 
+void
+BasicCompositingRenderTarget::BindRenderTarget()
+{
+  if (mClearOnBind) {
+    mDrawTarget->ClearRect(Rect(0, 0, mSize.width, mSize.height));
+    mClearOnBind = false;
+  }
+}
+
 void BasicCompositor::Destroy()
 {
   mWidget->CleanupRemoteDrawing();

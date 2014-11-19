@@ -255,6 +255,11 @@ public:
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
 
   GLContext* gl() const { return mGLContext; }
+  /**
+   * Clear the program state. This must be called
+   * before operating on the GLContext directly. */
+  void ResetProgram();
+
   gfx::SurfaceFormat GetFBOFormat() const {
     return gfx::SurfaceFormat::R8G8B8A8;
   }
@@ -370,6 +375,7 @@ private:
                                       const gfx::Rect& aTexCoordRect,
                                       TextureSource *aTexture);
 
+  void ActivateProgram(ShaderProgramOGL *aProg);
   void CleanupResources();
 
   /**
@@ -402,6 +408,7 @@ private:
   GLint mHeight;
 
   FenceHandle mReleaseFenceHandle;
+  ShaderProgramOGL *mCurrentProgram;
 };
 
 }

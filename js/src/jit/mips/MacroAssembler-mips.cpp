@@ -2347,6 +2347,13 @@ MacroAssemblerMIPSCompat::branchTestNull(Condition cond, const BaseIndex &src, L
 }
 
 void
+MacroAssemblerMIPSCompat::branchTestNull(Condition cond, const Address &address, Label *label) {
+    MOZ_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, SecondScratchReg);
+    ma_b(SecondScratchReg, ImmTag(JSVAL_TAG_NULL), label, cond);
+}
+
+void
 MacroAssemblerMIPSCompat::testNullSet(Condition cond, const ValueOperand &value, Register dest)
 {
     MOZ_ASSERT(cond == Equal || cond == NotEqual);

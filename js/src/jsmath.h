@@ -237,6 +237,9 @@ extern bool
 math_hypot(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
+math_hypot_handle(JSContext *cx, HandleValueArray args, MutableHandleValue res);
+
+extern bool
 math_trunc(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool

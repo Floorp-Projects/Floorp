@@ -217,7 +217,8 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
   if (!il)
     return ShowAlert(nullptr);
 
-  nsresult rv = il->LoadImageXPCOM(imageUri, nullptr, nullptr, nullptr, nullptr,
+  nsresult rv = il->LoadImageXPCOM(imageUri, nullptr, nullptr,
+                                   NS_LITERAL_STRING("default"), nullptr, nullptr,
                                    this, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
                                    0 /* use default */, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv))

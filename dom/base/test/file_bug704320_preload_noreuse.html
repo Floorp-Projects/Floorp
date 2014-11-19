@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This is a spot check for whether the speculative parser reuses style, script or image loads after the referrer policy has changed.
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+-->
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="file_bug704320_preload_common.js"></script>
+
+  <script type="text/javascript">
+    // mess with parser speculation's choice of referrer policy
+    document.write("<meta name='referrer' content='origin'>");
+  </script>
+
+  <!-- preload happens with full referrer, but real load should happen with origin -->
+  <script src="/tests/dom/base/test/bug704320_counter.sjs?type=js"
+          onload="incrementLoad('script');"></script>
+
+  <!-- preload happens with full referrer, but real load should happen with origin -->
+  <link rel="stylesheet"
+        href="/tests/dom/base/test/bug704320_counter.sjs?type=css"
+        onload="incrementLoad('link');"/>
+
+</head>
+<body>
+
+  <!-- preload happens with full referrer, but real load should happen with origin -->
+<img src="/tests/dom/base/test/bug704320_counter.sjs?type=img"
+     onload="incrementLoad('img');"
+     onerror="postfail('image load caused an error in noreuse test');"/>
+</body>
+</html>

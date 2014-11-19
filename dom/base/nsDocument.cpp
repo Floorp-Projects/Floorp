@@ -1539,6 +1539,8 @@ static already_AddRefed<mozilla::dom::NodeInfo> nullNodeInfo;
 // ==================================================================
 nsIDocument::nsIDocument()
   : nsINode(nullNodeInfo),
+    mReferrerPolicySet(false),
+    mReferrerPolicy(mozilla::net::RP_Default),
     mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
     mNodeInfoManager(nullptr),
     mCompatMode(eCompatibility_FullStandards),
@@ -3700,6 +3702,20 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       aHeaderField == nsGkAtoms::viewport_width ||
       aHeaderField ==  nsGkAtoms::viewport_user_scalable) {
     mViewportType = Unknown;
+  }
+
+  // Referrer policy spec says to ignore any empty referrer policies.
+  if (aHeaderField == nsGkAtoms::referrer && !aData.IsEmpty()) {
+    ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aData);
+
+    // Referrer policy spec (section 6.1) says that once the referrer policy
+    // is set, any future attempts to change it result in No-Referrer.
+    if (!mReferrerPolicySet) {
+      mReferrerPolicy = policy;
+      mReferrerPolicySet = true;
+    } else if (mReferrerPolicy != policy) {
+      mReferrerPolicy = mozilla::net::RP_No_Referrer;
+    }
   }
 }
 
@@ -9485,7 +9501,8 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
 }
 
 void
-nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
+nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr,
+                              ReferrerPolicy aReferrerPolicy)
 {
   // Early exit if the img is already present in the img-cache
   // which indicates that the "real" load has already started and
@@ -9519,6 +9536,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
                               this,
                               NodePrincipal(),
                               mDocumentURI, // uri of document used as referrer
+                              aReferrerPolicy,
                               nullptr,       // no observer
                               loadFlags,
                               NS_LITERAL_STRING("img"),
@@ -9574,7 +9592,8 @@ NS_IMPL_ISUPPORTS(StubCSSLoaderObserver, nsICSSLoaderObserver)
 
 void
 nsDocument::PreloadStyle(nsIURI* uri, const nsAString& charset,
-                         const nsAString& aCrossOriginAttr)
+                         const nsAString& aCrossOriginAttr,
+                         const ReferrerPolicy aReferrerPolicy)
 {
   // The CSSLoader will retain this object after we return.
   nsCOMPtr<nsICSSLoaderObserver> obs = new StubCSSLoaderObserver();
@@ -9583,7 +9602,8 @@ nsDocument::PreloadStyle(nsIURI* uri, const nsAString& charset,
   CSSLoader()->LoadSheet(uri, NodePrincipal(),
                          NS_LossyConvertUTF16toASCII(charset),
                          obs,
-                         Element::StringToCORSMode(aCrossOriginAttr));
+                         Element::StringToCORSMode(aCrossOriginAttr),
+                         aReferrerPolicy);
 }
 
 nsresult

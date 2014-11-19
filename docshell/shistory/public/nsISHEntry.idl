@@ -30,7 +30,7 @@ class nsSHEntryShared;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsSHEntryShared(nsSHEntryShared);
 
-[scriptable, uuid(9eed7e92-1121-46f2-95e5-2f5c0dca46f0)]
+[scriptable, uuid(d5fbeb10-f373-4677-b69a-2694aa706cac)]
 interface nsISHEntry : nsISupports
 {
     /**
@@ -63,6 +63,11 @@ interface nsISHEntry : nsISupports
 
     /** Referrer URI */
     attribute nsIURI referrerURI;
+
+    /** Referrer policy, holding one of the values (REFERRER_POLICY_*)
+     *  defined in nsIHttpChannel.
+     */
+    attribute unsigned long referrerPolicy;
 
     /** Content viewer, for fast restoration of presentation */
     attribute nsIContentViewer contentViewer;
