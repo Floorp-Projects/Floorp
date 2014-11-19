@@ -54,7 +54,8 @@ let TESTS = [{
     content.console.timeEnd("FOOBAR");
     let markers = docShell.popProfileTimelineMarkers();
     is(markers.length, 1, "Got one marker");
-    is(markers[0].name, "ConsoleTime:FOOBAR", "Got ConsoleTime:FOOBAR marker");
+    is(markers[0].name, "ConsoleTime", "Got ConsoleTime marker");
+    is(markers[0].causeName, "FOOBAR", "Got ConsoleTime FOOBAR detail");
     content.console.time("FOO");
     content.setTimeout(() => {
       content.console.time("BAR");
@@ -66,8 +67,10 @@ let TESTS = [{
   },
   check: function(markers) {
     is(markers.length, 2, "Got 2 markers");
-    is(markers[0].name, "ConsoleTime:FOO", "Got ConsoleTime:FOO marker");
-    is(markers[1].name, "ConsoleTime:BAR", "Got ConsoleTime:BARmarker");
+    is(markers[0].name, "ConsoleTime", "Got first ConsoleTime marker");
+    is(markers[0].causeName, "FOO", "Got ConsoleTime FOO detail");
+    is(markers[1].name, "ConsoleTime", "Got second ConsoleTime marker");
+    is(markers[1].causeName, "BAR", "Got ConsoleTime BAR detail");
   }
 }];
 

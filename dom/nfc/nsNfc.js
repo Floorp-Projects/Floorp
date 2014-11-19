@@ -101,6 +101,19 @@ MozNFCTagImpl.prototype = {
     return this._nfcContentHelper.makeReadOnly(this.session);
   },
 
+  format: function format() {
+    if (this.isLost) {
+      throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
+    }
+
+    if (!this.isFormatable) {
+      throw new this._window.DOMError("InvalidAccessError",
+                                      "NFCTag object is not formatable");
+    }
+
+    return this._nfcContentHelper.format(this.session);
+  },
+
   classID: Components.ID("{4e1e2e90-3137-11e3-aa6e-0800200c9a66}"),
   contractID: "@mozilla.org/nfc/NFCTag;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,

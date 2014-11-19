@@ -31,6 +31,7 @@ private:
   bool ReadNDEFResponse(const android::Parcel& aParcel, EventOptions& aOptions);
   bool WriteNDEFRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool MakeReadOnlyRequest(android::Parcel& aParcel, const CommandOptions& options);
+  bool FormatRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool ConnectRequest(android::Parcel& aParcel, const CommandOptions& options);
   bool CloseRequest(android::Parcel& aParcel, const CommandOptions& options);
 
