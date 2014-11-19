@@ -50,7 +50,7 @@ public:
   nsresult Init() MOZ_OVERRIDE {
     mSurfaceTexture = AndroidSurfaceTexture::Create();
     if (!mSurfaceTexture) {
-      printf_stderr("Failed to create SurfaceTexture for video decode\n");
+      NS_WARNING("Failed to create SurfaceTexture for video decode\n");
       return NS_ERROR_FAILURE;
     }
 
@@ -116,7 +116,7 @@ public:
                                                  aacProfile,
                                                  aSample);
       if (!rv) {
-        printf_stderr("Failed to prepend ADTS header\n");
+        NS_WARNING("Failed to prepend ADTS header\n");
         return NS_ERROR_FAILURE;
       }
     }
@@ -310,6 +310,13 @@ nsresult MediaCodecDataDecoder::InitDecoder(jobject aSurface)
 // This is in usec, so that's 10ms
 #define DECODER_TIMEOUT 10000
 
+#define HANDLE_DECODER_ERROR() \
+  if (NS_FAILED(res)) { \
+    NS_WARNING("exiting decoder loop due to exception"); \
+    mCallback->Error(); \
+    break; \
+  }
+
 void MediaCodecDataDecoder::DecoderLoop()
 {
   bool outputDone = false;
@@ -361,11 +368,7 @@ void MediaCodecDataDecoder::DecoderLoop()
       MOZ_ASSERT(!sample, "Shouldn't have a sample when pushing EOF frame");
 
       int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
-      if (NS_FAILED(res)) {
-        NS_WARNING("exiting decoder loop due to exception while dequeuing input\n");
-        mCallback->Error();
-        break;
-      }
+      HANDLE_DECODER_ERROR();
 
       if (inputIndex >= 0) {
         mDecoder->QueueInputBuffer(inputIndex, 0, 0, 0, MediaCodec::getBUFFER_FLAG_END_OF_STREAM(), &res);
@@ -376,11 +379,7 @@ void MediaCodecDataDecoder::DecoderLoop()
     if (sample) {
       // We have a sample, try to feed it to the decoder
       int inputIndex = mDecoder->DequeueInputBuffer(DECODER_TIMEOUT, &res);
-      if (NS_FAILED(res)) {
-        printf_stderr("exiting decoder loop due to exception while dequeuing input\n");
-        mCallback->Error();
-        break;
-      }
+      HANDLE_DECODER_ERROR();
 
       if (inputIndex >= 0) {
         jobject buffer = env->GetObjectArrayElement(mInputBuffers, inputIndex);
@@ -397,11 +396,7 @@ void MediaCodecDataDecoder::DecoderLoop()
         PodCopy((uint8_t*)directBuffer, sample->data, sample->size);
 
         mDecoder->QueueInputBuffer(inputIndex, 0, sample->size, sample->composition_timestamp, 0, &res);
-        if (NS_FAILED(res)) {
-          printf_stderr("exiting decoder loop due to exception while queuing input\n");
-          mCallback->Error();
-          break;
-        }
+        HANDLE_DECODER_ERROR();
 
         mDurations.push(sample->duration);
 
@@ -417,27 +412,22 @@ void MediaCodecDataDecoder::DecoderLoop()
       BufferInfo bufferInfo;
 
       int outputStatus = mDecoder->DequeueOutputBuffer(bufferInfo.wrappedObject(), DECODER_TIMEOUT, &res);
-      if (NS_FAILED(res)) {
-        printf_stderr("exiting decoder loop due to exception while dequeuing output\n");
-        mCallback->Error();
-        break;
-      }
+      HANDLE_DECODER_ERROR();
 
       if (outputStatus == MediaCodec::getINFO_TRY_AGAIN_LATER()) {
         // We might want to call mCallback->InputExhausted() here, but there seems to be
         // some possible bad interactions here with the threading
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_BUFFERS_CHANGED()) {
         res = ResetOutputBuffers();
-        if (NS_FAILED(res)) {
-          printf_stderr("exiting decoder loop due to exception while restting output buffers\n");
-          mCallback->Error();
-          break;
-        }
+        HANDLE_DECODER_ERROR();
       } else if (outputStatus == MediaCodec::getINFO_OUTPUT_FORMAT_CHANGED()) {
         outputFormat = new MediaFormat(mDecoder->GetOutputFormat(), GetJNIForThread());
       } else if (outputStatus < 0) {
-        printf_stderr("unknown error from decoder! %d\n", outputStatus);
+        NS_WARNING("unknown error from decoder!");
         mCallback->Error();
+
+        // Don't break here just in case it's recoverable. If it's not, others stuff will fail later and
+        // we'll bail out.
       } else {
         // We have a valid buffer index >= 0 here
         if (bufferInfo.getFlags() & MediaCodec::getBUFFER_FLAG_END_OF_STREAM()) {
