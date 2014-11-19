@@ -94,7 +94,11 @@ function test() {
 
   // We must wait until the about:blank page has completed loading before
   // starting tests or we get notifications from that
-  gForegroundBrowser.addEventListener("load", startTests, true);
+  let promises = [
+    waitForDocLoadComplete(gBackgroundBrowser),
+    waitForDocLoadComplete(gForegroundBrowser)
+  ];
+  Promise.all(promises).then(startTest1);
 }
 
 function runTest(browser, url, next) {
@@ -103,11 +107,6 @@ function runTest(browser, url, next) {
   gNextTest = next;
   gTestBrowser = browser;
   browser.loadURI(url);
-}
-
-function startTests() {
-  gForegroundBrowser.removeEventListener("load", startTests, true);
-  executeSoon(startTest1);
 }
 
 function startTest1() {

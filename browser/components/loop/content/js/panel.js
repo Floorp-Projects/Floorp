@@ -20,7 +20,6 @@ loop.panel = (function(_, mozL10n) {
   var ButtonGroup = sharedViews.ButtonGroup;
   var ContactsList = loop.contacts.ContactsList;
   var ContactDetailsForm = loop.contacts.ContactDetailsForm;
-  var __ = mozL10n.get; // aliasing translation function as __ for concision
 
   var TabView = React.createClass({displayName: 'TabView',
     propTypes: {
@@ -138,8 +137,8 @@ loop.panel = (function(_, mozL10n) {
         'hide': !this.state.showMenu
       });
       var availabilityText = this.state.doNotDisturb ?
-                              __("display_name_dnd_status") :
-                              __("display_name_available_status");
+                              mozL10n.get("display_name_dnd_status") :
+                              mozL10n.get("display_name_available_status");
 
       return (
         React.DOM.div({className: "dropdown"}, 
@@ -152,14 +151,42 @@ loop.panel = (function(_, mozL10n) {
             React.DOM.li({onClick: this.changeAvailability("available"), 
                 className: "dropdown-menu-item dnd-make-available"}, 
               React.DOM.i({className: "status status-available"}), 
-              React.DOM.span(null, __("display_name_available_status"))
+              React.DOM.span(null, mozL10n.get("display_name_available_status"))
             ), 
             React.DOM.li({onClick: this.changeAvailability("do-not-disturb"), 
                 className: "dropdown-menu-item dnd-make-unavailable"}, 
               React.DOM.i({className: "status status-dnd"}), 
-              React.DOM.span(null, __("display_name_dnd_status"))
+              React.DOM.span(null, mozL10n.get("display_name_dnd_status"))
             )
           )
+        )
+      );
+    }
+  });
+
+  var GettingStartedView = React.createClass({displayName: 'GettingStartedView',
+    componentDidMount: function() {
+      navigator.mozLoop.setLoopBoolPref("gettingStarted.seen", true);
+    },
+
+    handleButtonClick: function() {
+      navigator.mozLoop.openGettingStartedTour();
+    },
+
+    render: function() {
+      if (navigator.mozLoop.getLoopBoolPref("gettingStarted.seen")) {
+        return null;
+      }
+      return (
+        React.DOM.div({id: "fte-getstarted"}, 
+          React.DOM.header({id: "fte-title"}, 
+            mozL10n.get("first_time_experience_title", {
+              "clientShortname": mozL10n.get("clientShortname2")
+            })
+          ), 
+          Button({htmlId: "fte-button", 
+                  onClick: this.handleButtonClick, 
+                  caption: mozL10n.get("first_time_experience_button_label")})
         )
       );
     }
@@ -172,23 +199,31 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       if (this.state.seenToS == "unseen") {
+        var locale = mozL10n.getLanguage();
         var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
-        var tosHTML = __("legal_text_and_links3", {
-          "clientShortname": __("clientShortname2"),
+        var tosHTML = mozL10n.get("legal_text_and_links3", {
+          "clientShortname": mozL10n.get("clientShortname2"),
           "terms_of_use": React.renderComponentToStaticMarkup(
             React.DOM.a({href: terms_of_use_url, target: "_blank"}, 
-              __("legal_text_tos")
+              mozL10n.get("legal_text_tos")
             )
           ),
           "privacy_notice": React.renderComponentToStaticMarkup(
             React.DOM.a({href: privacy_notice_url, target: "_blank"}, 
-              __("legal_text_privacy")
+              mozL10n.get("legal_text_privacy")
             )
           ),
         });
-        return React.DOM.p({className: "terms-service", 
-                  dangerouslySetInnerHTML: {__html: tosHTML}});
+        return React.DOM.div(null, 
+          React.DOM.p({id: "powered-by"}, 
+            mozL10n.get("powered_by_beforeLogo"), 
+            React.DOM.img({id: "powered-by-logo", className: locale}), 
+            mozL10n.get("powered_by_afterLogo")
+          ), 
+          React.DOM.p({className: "terms-service", 
+             dangerouslySetInnerHTML: {__html: tosHTML}})
+         );
       } else {
         return React.DOM.div(null);
       }
@@ -262,20 +297,20 @@ loop.panel = (function(_, mozL10n) {
       return (
         React.DOM.div({className: "settings-menu dropdown"}, 
           React.DOM.a({className: "button-settings", onClick: this.showDropdownMenu, 
-             title: __("settings_menu_button_tooltip")}), 
+             title: mozL10n.get("settings_menu_button_tooltip")}), 
           React.DOM.ul({className: cx({"dropdown-menu": true, hide: !this.state.showMenu}), 
               onMouseLeave: this.hideDropdownMenu}, 
-            SettingsDropdownEntry({label: __("settings_menu_item_settings"), 
+            SettingsDropdownEntry({label: mozL10n.get("settings_menu_item_settings"), 
                                    onClick: this.handleClickSettingsEntry, 
                                    displayed: false, 
                                    icon: "settings"}), 
-            SettingsDropdownEntry({label: __("settings_menu_item_account"), 
+            SettingsDropdownEntry({label: mozL10n.get("settings_menu_item_account"), 
                                    onClick: this.handleClickAccountEntry, 
                                    icon: "account", 
                                    displayed: this._isSignedIn()}), 
             SettingsDropdownEntry({label: this._isSignedIn() ?
-                                          __("settings_menu_item_signout") :
-                                          __("settings_menu_item_signin"), 
+                                          mozL10n.get("settings_menu_item_signout") :
+                                          mozL10n.get("settings_menu_item_signin"), 
                                    onClick: this.handleClickAuthEntry, 
                                    displayed: navigator.mozLoop.fxAEnabled, 
                                    icon: this._isSignedIn() ? "signout" : "signin"})
@@ -407,7 +442,7 @@ loop.panel = (function(_, mozL10n) {
       var cx = React.addons.classSet;
       return (
         React.DOM.div({className: "generate-url"}, 
-          React.DOM.header(null, __("share_link_header_text")), 
+          React.DOM.header({id: "share-link-header"}, mozL10n.get("share_link_header_text")), 
           React.DOM.div({className: "generate-url-stack"}, 
             React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
                    onCopy: this.handleLinkExfiltration, 
@@ -451,7 +486,7 @@ loop.panel = (function(_, mozL10n) {
       return (
         React.DOM.p({className: "signin-link"}, 
           React.DOM.a({href: "#", onClick: this.handleSignUpLinkClick}, 
-            __("panel_footer_signin_or_signup_link")
+            mozL10n.get("panel_footer_signin_or_signup_link")
           )
         )
       );
@@ -709,6 +744,7 @@ loop.panel = (function(_, mozL10n) {
         return (
           Tab({name: "call"}, 
             React.DOM.div({className: "content-area"}, 
+              GettingStartedView(null), 
               CallUrlResult({client: this.props.client, 
                              notifications: this.props.notifications, 
                              callUrl: this.props.callUrl}), 
@@ -720,6 +756,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         Tab({name: "rooms"}, 
+          GettingStartedView(null), 
           RoomList({dispatcher: this.props.dispatcher, 
                     store: this.props.roomStore, 
                     userDisplayName: this._getUserDisplayName()}), 
@@ -751,7 +788,7 @@ loop.panel = (function(_, mozL10n) {
 
     _getUserDisplayName: function() {
       return this.state.userProfile && this.state.userProfile.email ||
-             __("display_name_guest");
+             mozL10n.get("display_name_guest");
     },
 
     render: function() {
@@ -830,15 +867,16 @@ loop.panel = (function(_, mozL10n) {
 
   return {
     init: init,
-    UserIdentity: UserIdentity,
     AuthLink: AuthLink,
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
+    GettingStartedView: GettingStartedView,
     PanelView: PanelView,
     RoomEntry: RoomEntry,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
-    ToSView: ToSView
+    ToSView: ToSView,
+    UserIdentity: UserIdentity,
   };
 })(_, document.mozL10n);
 
