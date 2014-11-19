@@ -154,14 +154,6 @@ GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue 
 JSObject *
 GetIteratorObject(JSContext *cx, HandleObject obj, unsigned flags);
 
-bool
-VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
-                    MutableHandleValue vp);
-
-bool
-VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
-                      MutableHandleValue vp);
-
 /*
  * Creates either a key or value iterator, depending on flags. For a value
  * iterator, performs value-lookup to convert the given list of jsids.
