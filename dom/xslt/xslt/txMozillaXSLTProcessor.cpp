@@ -1040,7 +1040,12 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri,
                                        nsIDocument* aLoaderDocument)
 {
-    nsresult rv = TX_LoadSheet(aUri, this, aLoaderDocument);
+    mozilla::net::ReferrerPolicy refpol = mozilla::net::RP_Default;
+    if (mStylesheetDocument) {
+        refpol = mStylesheetDocument->GetReferrerPolicy();
+    }
+
+    nsresult rv = TX_LoadSheet(aUri, this, aLoaderDocument, refpol);
     if (NS_FAILED(rv) && mObserver) {
         // This is most likely a network or security error, just
         // use the uri as context.

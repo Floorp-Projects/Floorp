@@ -725,7 +725,11 @@ class InlineTypedObject : public TypedObject
         size_t nbytes = descr->size();
         MOZ_ASSERT(nbytes <= MaximumSize);
 
-        size_t dataSlots = AlignBytes(nbytes, sizeof(Value) / sizeof(Value));
+        if (nbytes <= sizeof(NativeObject) - sizeof(TypedObject))
+            return gc::FINALIZE_OBJECT0;
+        nbytes -= sizeof(NativeObject) - sizeof(TypedObject);
+
+        size_t dataSlots = AlignBytes(nbytes, sizeof(Value)) / sizeof(Value);
         MOZ_ASSERT(nbytes <= dataSlots * sizeof(Value));
         return gc::GetGCObjectKind(dataSlots);
     }
@@ -982,6 +986,20 @@ IsOpaqueTypedObjectClass(const Class *class_)
 {
     return class_ == &OutlineOpaqueTypedObject::class_ ||
            class_ == &InlineOpaqueTypedObject::class_;
+}
+
+inline bool
+IsOutlineTypedObjectClass(const Class *class_)
+{
+    return class_ == &OutlineOpaqueTypedObject::class_ ||
+           class_ == &OutlineTransparentTypedObject::class_;
+}
+
+inline bool
+IsInlineTypedObjectClass(const Class *class_)
+{
+    return class_ == &InlineOpaqueTypedObject::class_ ||
+           class_ == &InlineTransparentTypedObject::class_;
 }
 
 inline const Class *

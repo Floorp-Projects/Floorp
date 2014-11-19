@@ -845,6 +845,38 @@ RAtan2::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MHypot::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Hypot));
+    return true;
+}
+
+RHypot::RHypot(CompactBufferReader &reader)
+{ }
+
+bool
+RHypot::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    JS::AutoValueVector vec(cx);
+
+    // currently, only 2 args can be saved in MIR
+    if (!vec.reserve(2))
+        return false;
+
+    vec.infallibleAppend(iter.read());
+    vec.infallibleAppend(iter.read());
+
+    RootedValue result(cx);
+
+    if(!js::math_hypot_handle(cx, vec, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
