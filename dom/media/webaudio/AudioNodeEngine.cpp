@@ -187,6 +187,17 @@ AudioBufferInPlaceScale(float* aBlock,
 
 void
 AudioBlockPanMonoToStereo(const float aInput[WEBAUDIO_BLOCK_SIZE],
+                          float aGainL[WEBAUDIO_BLOCK_SIZE],
+                          float aGainR[WEBAUDIO_BLOCK_SIZE],
+                          float aOutputL[WEBAUDIO_BLOCK_SIZE],
+                          float aOutputR[WEBAUDIO_BLOCK_SIZE])
+{
+  AudioBlockCopyChannelWithScale(aInput, aGainL, aOutputL);
+  AudioBlockCopyChannelWithScale(aInput, aGainR, aOutputR);
+}
+
+void
+AudioBlockPanMonoToStereo(const float aInput[WEBAUDIO_BLOCK_SIZE],
                           float aGainL, float aGainR,
                           float aOutputL[WEBAUDIO_BLOCK_SIZE],
                           float aOutputR[WEBAUDIO_BLOCK_SIZE])
@@ -215,13 +226,38 @@ AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
 
   if (aIsOnTheLeft) {
     for (i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
-      *aOutputL++ = *aInputL++ + *aInputR * aGainL;
-      *aOutputR++ = *aInputR++ * aGainR;
+      aOutputL[i] = aInputL[i] + aInputR[i] * aGainL;
+      aOutputR[i] = aInputR[i] * aGainR;
     }
   } else {
     for (i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
-      *aOutputL++ = *aInputL * aGainL;
-      *aOutputR++ = *aInputR++ + *aInputL++ * aGainR;
+      aOutputL[i] = aInputL[i] * aGainL;
+      aOutputR[i] = aInputR[i] + aInputL[i] * aGainR;
+    }
+  }
+}
+
+void
+AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
+                            const float aInputR[WEBAUDIO_BLOCK_SIZE],
+                            float aGainL[WEBAUDIO_BLOCK_SIZE],
+                            float aGainR[WEBAUDIO_BLOCK_SIZE],
+                            bool  aIsOnTheLeft[WEBAUDIO_BLOCK_SIZE],
+                            float aOutputL[WEBAUDIO_BLOCK_SIZE],
+                            float aOutputR[WEBAUDIO_BLOCK_SIZE])
+{
+#ifdef BUILD_ARM_NEON
+  // No NEON version yet: bug 1105513
+#endif
+
+  uint32_t i;
+  for (i = 0; i < WEBAUDIO_BLOCK_SIZE; i++) {
+    if (aIsOnTheLeft[i]) {
+      aOutputL[i] = aInputL[i] + aInputR[i] * aGainL[i];
+      aOutputR[i] = aInputR[i] * aGainR[i];
+    } else {
+      aOutputL[i] = aInputL[i] * aGainL[i];
+      aOutputR[i] = aInputR[i] + aInputL[i] * aGainR[i];
     }
   }
 }
