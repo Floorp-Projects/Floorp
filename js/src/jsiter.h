@@ -170,6 +170,9 @@ bool
 EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
                              MutableHandleValue vp);
 
+bool
+NewEmptyPropertyIterator(JSContext *cx, unsigned flags, MutableHandleValue vp);
+
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
  * contain JSITER_ENUMERATE if js::ValueToIterator is called when enumerating
