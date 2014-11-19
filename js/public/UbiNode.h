@@ -10,6 +10,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 
@@ -19,6 +20,7 @@
 #include "js/HashTable.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
+#include "js/Vector.h"
 
 // JS::ubi::Node
 //
@@ -138,6 +140,8 @@
 
 namespace JS {
 namespace ubi {
+
+using mozilla::Maybe;
 
 class Edge;
 class EdgeRange;
@@ -422,7 +426,103 @@ class EdgeRange {
 };
 
 
+// A dumb Edge concrete class. All but the most essential members have the
+// default behavior.
+class SimpleEdge : public Edge {
+    SimpleEdge(SimpleEdge &) MOZ_DELETE;
+    SimpleEdge &operator=(const SimpleEdge &) MOZ_DELETE;
+
+  public:
+    SimpleEdge() : Edge() { }
+
+    // Construct an initialized SimpleEdge, taking ownership of |name|.
+    SimpleEdge(char16_t *name, const Node &referent) {
+        this->name = name;
+        this->referent = referent;
+    }
+    ~SimpleEdge() {
+        js_free(const_cast<char16_t *>(name));
+    }
+
+    // Move construction and assignment.
+    SimpleEdge(SimpleEdge &&rhs) {
+        name = rhs.name;
+        referent = rhs.referent;
+
+        rhs.name = nullptr;
+    }
+    SimpleEdge &operator=(SimpleEdge &&rhs) {
+        MOZ_ASSERT(&rhs != this);
+        this->~SimpleEdge();
+        new(this) SimpleEdge(mozilla::Move(rhs));
+        return *this;
+    }
+};
+
+typedef mozilla::Vector<SimpleEdge, 8, js::TempAllocPolicy> SimpleEdgeVector;
+
+
+// RootList is a class that can be pointed to by a |ubi::Node|, creating a
+// fictional root-of-roots which has edges to every GC root in the JS
+// runtime. Having a single root |ubi::Node| is useful for algorithms written
+// with the assumption that there aren't multiple roots (such as computing
+// dominator trees) and you want a single point of entry. It also ensures that
+// the roots themselves get visited by |ubi::BreadthFirst| (they would otherwise
+// only be used as starting points).
+//
+// RootList::init itself causes a minor collection, but once the list of roots
+// has been created, GC must not occur, as the referent ubi::Nodes are not
+// stable across GC. The init calls emplace |gcp|'s AutoCheckCannotGC, whose
+// lifetime must extend at least as long as the RootList itself.
+//
+// Example usage:
+//
+//    {
+//        mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
+//        JS::ubi::RootList rootList(cx, maybeNoGC);
+//        if (!rootList.init(cx))
+//            return false;
+//
+//        // The AutoCheckCannotGC is guaranteed to exist if init returned true.
+//        MOZ_ASSERT(maybeNoGC.isSome());
+//
+//        JS::ubi::Node root(&rootList);
+//
+//        ...
+//    }
+class MOZ_STACK_CLASS RootList {
+    Maybe<AutoCheckCannotGC> &noGC;
+
+  public:
+    SimpleEdgeVector edges;
+    bool             wantNames;
+
+    RootList(JSContext *cx, Maybe<AutoCheckCannotGC> &noGC, bool wantNames = false);
+
+    // Find all GC roots.
+    bool init(JSContext *cx);
+    // Find only GC roots in the provided set of |Zone|s.
+    bool init(JSContext *cx, ZoneSet &debuggees);
+    // Find only GC roots in the given Debugger object's set of debuggee zones.
+    bool init(JSContext *cx, HandleObject debuggees);
+};
+
+
 // Concrete classes for ubi::Node referent types.
+
+template<>
+struct Concrete<RootList> : public Base {
+    EdgeRange *edges(JSContext *cx, bool wantNames) const MOZ_OVERRIDE;
+    const char16_t *typeName() const MOZ_OVERRIDE { return concreteTypeName; }
+
+  protected:
+    explicit Concrete(RootList *ptr) : Base(ptr) { }
+    RootList &get() const { return *static_cast<RootList *>(ptr); }
+
+  public:
+    static const char16_t concreteTypeName[];
+    static void construct(void *storage, RootList *ptr) { new (storage) Concrete(ptr); }
+};
 
 // A reusable ubi::Concrete specialization base class for types supported by
 // JS_TraceChildren.
