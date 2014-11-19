@@ -603,16 +603,9 @@ VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVecto
     return true;
 }
 
-bool
-js::VectorToKeyIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
-                        MutableHandleValue vp)
-{
-    return VectorToKeyIterator(cx, obj, flags, props, 0, 0, vp);
-}
-
-bool
-js::VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &keys,
-                          MutableHandleValue vp)
+static bool
+VectorToValueIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &keys,
+                      MutableHandleValue vp)
 {
     MOZ_ASSERT(flags & JSITER_FOREACH);
 
@@ -641,7 +634,7 @@ js::EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags
                                  AutoIdVector &props, MutableHandleValue vp)
 {
     if (!(flags & JSITER_FOREACH))
-        return VectorToKeyIterator(cx, obj, flags, props, vp);
+        return VectorToKeyIterator(cx, obj, flags, props, 0, 0, vp);
 
     return VectorToValueIterator(cx, obj, flags, props, vp);
 }
