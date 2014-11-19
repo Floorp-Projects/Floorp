@@ -65,7 +65,7 @@ interface nsINfcEventListener : nsISupports
   void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(486dff99-6755-428b-834d-3647ce276b54)]
+[scriptable, uuid(9343ae1a-6e2f-11e4-b5c4-fbb166b38b62)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -75,6 +75,7 @@ interface nsINfcContentHelper : nsISupports
   nsIDOMDOMRequest readNDEF(in DOMString sessionToken);
   nsIDOMDOMRequest writeNDEF(in nsIVariant records, in DOMString sessionToken);
   nsIDOMDOMRequest makeReadOnly(in DOMString sessionToken);
+  nsIDOMDOMRequest format(in DOMString sessionToken);
 
   nsIDOMDOMRequest connect(in unsigned long techType, in DOMString sessionToken);
   nsIDOMDOMRequest close(in DOMString sessionToken);
