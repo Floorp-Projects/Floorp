@@ -860,8 +860,9 @@ LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
             .setCompileAndGo(true)
             .setNoScriptRval(true);
         RootedScript script(cx);
+        RootedValue unused(cx);
         if ((compileOnly && !Compile(cx, thisobj, opts, filename.ptr(), &script)) ||
-            !Evaluate(cx, thisobj, opts, filename.ptr()))
+            !Evaluate(cx, thisobj, opts, filename.ptr(), &unused))
         {
             return false;
         }
