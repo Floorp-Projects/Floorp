@@ -5812,7 +5812,9 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_YIELD: {
         TokenKind next;
-        if (!tokenStream.peekToken(&next))
+        TokenStream::Modifier modifier = yieldExpressionsSupported() ? TokenStream::Operand
+                                                                     : TokenStream::None;
+        if (!tokenStream.peekToken(&next, modifier))
             return null();
         if (next == TOK_COLON) {
             if (!checkYieldNameValidity())
@@ -6171,7 +6173,7 @@ Parser<ParseHandler>::assignExpr()
             return stringLiteral();
     }
 
-    if (tt == TOK_YIELD && (versionNumber() >= JSVERSION_1_7 || pc->isGenerator()))
+    if (tt == TOK_YIELD && yieldExpressionsSupported())
         return yieldExpression();
 
     tokenStream.ungetToken();
