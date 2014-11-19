@@ -213,4 +213,18 @@ if (typeof Mozilla == 'undefined') {
 		});
 	};
 
+	Mozilla.UITour.setTreatmentTag = function(name, value) {
+		_sendEvent('setTreatmentTag', {
+			name: name,
+			value: value
+		});
+	};
+
+	Mozilla.UITour.getTreatmentTag = function(name, callback) {
+		_sendEvent('getTreatmentTag', {
+			name: name,
+			callbackID: _waitForCallback(callback)
+		});
+	};
+
 })();
