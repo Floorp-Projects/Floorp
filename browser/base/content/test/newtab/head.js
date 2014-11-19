@@ -374,19 +374,25 @@ function addNewTabPageTabPromise() {
     }
   }
 
-  // The new tab page might have been preloaded in the background.
-  if (browser.contentDocument.readyState == "complete") {
-    waitForCondition(() => !browser.contentDocument.hidden).then(whenNewTabLoaded);
-    return deferred.promise;
-  }
-
   // Wait for the new tab page to be loaded.
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    whenNewTabLoaded();
-  }, true);
+  waitForBrowserLoad(browser, function () {
+    // Wait for the document to become visible in case it was preloaded.
+    waitForCondition(() => !browser.contentDocument.hidden).then(whenNewTabLoaded);
+  });
 
   return deferred.promise;
+}
+
+function waitForBrowserLoad(browser, callback = TestRunner.next) {
+  if (browser.contentDocument.readyState == "complete") {
+    executeSoon(callback);
+    return;
+  }
+
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    executeSoon(callback);
+  }, true);
 }
 
 /**
