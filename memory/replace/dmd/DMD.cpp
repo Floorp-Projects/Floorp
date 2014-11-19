@@ -783,9 +783,9 @@ class Block
   const size_t mReqSize;    // size requested
 
   // Ptr: |mAllocStackTrace| - stack trace where this block was allocated.
-  // Tag bit 0: |mSampled| - was this block sampled? (if so, slop == 0).
+  // Tag bit 0: |mIsSampled| - was this block sampled? (if so, slop == 0).
   TaggedPtr<const StackTrace* const>
-    mAllocStackTrace_mSampled;
+    mAllocStackTrace_mIsSampled;
 
   // This array has two elements because we record at most two reports of a
   // block.
@@ -801,10 +801,10 @@ class Block
 
 public:
   Block(const void* aPtr, size_t aReqSize, const StackTrace* aAllocStackTrace,
-        bool aSampled)
+        bool aIsSampled)
     : mPtr(aPtr),
       mReqSize(aReqSize),
-      mAllocStackTrace_mSampled(aAllocStackTrace, aSampled),
+      mAllocStackTrace_mIsSampled(aAllocStackTrace, aIsSampled),
       mReportStackTrace_mReportedOnAlloc()     // all fields get zeroed
   {
     MOZ_ASSERT(aAllocStackTrace);
@@ -827,12 +827,12 @@ public:
 
   bool IsSampled() const
   {
-    return mAllocStackTrace_mSampled.Tag();
+    return mAllocStackTrace_mIsSampled.Tag();
   }
 
   const StackTrace* AllocStackTrace() const
   {
-    return mAllocStackTrace_mSampled.Ptr();
+    return mAllocStackTrace_mIsSampled.Ptr();
   }
 
   const StackTrace* ReportStackTrace1() const
@@ -995,12 +995,12 @@ AllocCallback(void* aPtr, size_t aReqSize, Thread* aT)
     if (gSmallBlockActualSizeCounter >= sampleBelowSize) {
       gSmallBlockActualSizeCounter -= sampleBelowSize;
 
-      Block b(aPtr, sampleBelowSize, StackTrace::Get(aT), /* sampled */ true);
+      Block b(aPtr, sampleBelowSize, StackTrace::Get(aT), /* isSampled */ true);
       (void)gBlockTable->putNew(aPtr, b);
     }
   } else {
     // If this block size is larger than the sample size, record it exactly.
-    Block b(aPtr, aReqSize, StackTrace::Get(aT), /* sampled */ false);
+    Block b(aPtr, aReqSize, StackTrace::Get(aT), /* isSampled */ false);
     (void)gBlockTable->putNew(aPtr, b);
   }
 }
