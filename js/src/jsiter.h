@@ -149,7 +149,7 @@ bool
 VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap);
 
 bool
-GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue vp);
+GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleObject objp);
 
 JSObject *
 GetIteratorObject(JSContext *cx, HandleObject obj, unsigned flags);
@@ -160,10 +160,10 @@ GetIteratorObject(JSContext *cx, HandleObject obj, unsigned flags);
  */
 bool
 EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
-                             MutableHandleValue vp);
+                             MutableHandleObject objp);
 
 bool
-NewEmptyPropertyIterator(JSContext *cx, unsigned flags, MutableHandleValue vp);
+NewEmptyPropertyIterator(JSContext *cx, unsigned flags, MutableHandleObject objp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
