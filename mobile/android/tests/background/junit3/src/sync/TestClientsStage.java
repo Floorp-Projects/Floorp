@@ -63,15 +63,24 @@ public class TestClientsStage extends AndroidSyncTestCase {
       }
     };
 
-    String guid = "clientabcdef";
+    final String guid = "clientabcdef";
     long lastModified = System.currentTimeMillis();
     ClientRecord record = new ClientRecord(guid, "clients", lastModified , false);
     record.name = "John's Phone";
     record.type = "mobile";
+    record.device = "Some Device";
+    record.os = "iOS";
     record.commands = new JSONArray();
 
     dataAccessor.store(record);
     assertEquals(1, dataAccessor.clientsCount());
+
+    final ClientRecord stored = dataAccessor.fetchAllClients().get(guid);
+    assertNotNull(stored);
+    assertEquals("John's Phone", stored.name);
+    assertEquals("mobile", stored.type);
+    assertEquals("Some Device", stored.device);
+    assertEquals("iOS", stored.os);
 
     stage.wipeLocal(session);
 

@@ -4332,11 +4332,7 @@
 !macroend
 
 /**
- * Parses the uninstall.log for the stub installer on install to first remove a
- * previous installation's files prior to installing.
- *
- * When modifying this macro be aware that LineFind uses all registers except
- * $R0-$R3 so be cautious. Callers of this macro are not affected.
+ * Parses the precomplete file to remove an installation's files and directories.
  *
  * @param   _PROGRESSBAR
  *          The progress bar to update using PBM_STEPIT. Can also be "false" if
@@ -4345,123 +4341,179 @@
  *          The install step counter to increment. The variable specified in
  *          this parameter is also updated. Can also be "false" if a counter
  *          isn't needed.
- *
- * $R2 = _INSTALL_STEP_COUNTER
- * $R3 = _PROGRESSBAR
+ * $R2 = false if all files were deleted or moved to the tobedeleted directory.
+ *       true if file(s) could not be moved to the tobedeleted directory.
+ * $R3 = Path to temporary precomplete file.
+ * $R4 = File handle for the temporary precomplete file.
+ * $R5 = String returned from FileRead.
+ * $R6 = First seven characters of the string returned from FileRead.
+ * $R7 = Temporary file path used to rename files that are in use.
+ * $R8 = _PROGRESSBAR
+ * $R9 = _INSTALL_STEP_COUNTER
  */
-!macro OnStubInstallUninstall
+!macro RemovePrecompleteEntries
 
-  !ifndef OnStubInstallUninstall
-    !insertmacro GetParent
-    !insertmacro LineFind
-    !insertmacro TrimNewLines
+  !ifndef ${_MOZFUNC_UN}RemovePrecompleteEntries
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParent
+    !insertmacro ${_MOZFUNC_UN_TMP}TrimNewLines
+    !insertmacro ${_MOZFUNC_UN_TMP}WordReplace
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
-    !define OnStubInstallUninstall "!insertmacro OnStubInstallUninstallCall"
+    !define ${_MOZFUNC_UN}RemovePrecompleteEntries "!insertmacro ${_MOZFUNC_UN}RemovePrecompleteEntriesCall"
 
-    Function OnStubInstallUninstall
-      Exch $R2
+    Function ${_MOZFUNC_UN}RemovePrecompleteEntries
+      Exch $R9
       Exch 1
-      Exch $R3
-      Push $R9
-      Push $R8
+      Exch $R8
       Push $R7
       Push $R6
       Push $R5
       Push $R4
-      Push $R1
-      Push $R0
-      Push $TmpVal
+      Push $R3
+      Push $R2
 
-      IfFileExists "$INSTDIR\uninstall\uninstall.log" +1 end
+      ${If} ${FileExists} "$INSTDIR\precomplete"
+        StrCpy $R2 "false"
 
-      ; Copy the uninstall log file to a temporary file
-      GetTempFileName $TmpVal
-      CopyFiles /SILENT /FILESONLY "$INSTDIR\uninstall\uninstall.log" "$TmpVal"
+        RmDir /r "$INSTDIR\${TO_BE_DELETED}"
+        CreateDirectory "$INSTDIR\${TO_BE_DELETED}"
+        GetTempFileName $R3 "$INSTDIR\${TO_BE_DELETED}"
+        Delete "$R3"
+        Rename "$INSTDIR\precomplete" "$R3"
 
-      CreateDirectory "$INSTDIR\${TO_BE_DELETED}"
+        ClearErrors
+        ; Rename and then remove files
+        FileOpen $R4 "$R3" r
+        ${Do}
+          FileRead $R4 $R5
+          ${If} ${Errors}
+            ${Break}
+          ${EndIf}
 
-      ; Delete files
-      ${LineFind} "$TmpVal" "/NUL" "1:-1" "StubRemoveFilesCallback"
+          ${${_MOZFUNC_UN}TrimNewLines} "$R5" $R5
+          ; Replace all occurrences of "/" with "\".
+          ${${_MOZFUNC_UN}WordReplace} "$R5" "/" "\" "+" $R5
 
-      ; Delete the temporary uninstall log file
-      Delete /REBOOTOK "$TmpVal"
+          ; Copy the first 7 chars
+          StrCpy $R6 "$R5" 7
+          ${If} "$R6" == "remove "
+            ; Copy the string starting after the 8th char
+            StrCpy $R5 "$R5" "" 8
+            ; Copy all but the last char to remove the double quote.
+            StrCpy $R5 "$R5" -1
+            ${If} ${FileExists} "$INSTDIR\$R5"
+              ${Unless} "$R9" == "false"
+                IntOp $R9 $R9 + 2
+              ${EndUnless}
+              ${Unless} "$R8" == "false"
+                SendMessage $R8 ${PBM_STEPIT} 0 0
+                SendMessage $R8 ${PBM_STEPIT} 0 0
+              ${EndUnless}
 
-      RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
+              ClearErrors
+              Delete "$INSTDIR\$R5"
+              ${If} ${Errors}
+                GetTempFileName $R7 "$INSTDIR\${TO_BE_DELETED}"
+                Delete "$R7"
+                ClearErrors
+                Rename "$INSTDIR\$R5" "$R7"
+                ${Unless} ${Errors}
+                  Delete /REBOOTOK "$R7"
 
-      end:
+                  ClearErrors
+                ${EndUnless}
+!ifdef __UNINSTALL__
+                ${If} ${Errors}
+                  Delete /REBOOTOK "$INSTDIR\$R5"
+                  StrCpy $R2 "true"
+                  ClearErrors
+                ${EndIf}
+!endif
+              ${EndIf}
+            ${EndIf}
+          ${ElseIf} "$R6" == "rmdir $\""
+            ; Copy the string starting after the 7th char.
+            StrCpy $R5 "$R5" "" 7
+            ; Copy all but the last two chars to remove the slash and the double quote.
+            StrCpy $R5 "$R5" -2
+            ${If} ${FileExists} "$INSTDIR\$R5"
+              ; Ignore directory removal errors
+              RmDir "$INSTDIR\$R5"
+              ClearErrors
+            ${EndIf}
+          ${EndIf}
+        ${Loop}
+        FileClose $R4
+
+        ; Delete the temporary precomplete file
+        Delete /REBOOTOK "$R3"
+
+        RmDir /r /REBOOTOK "$INSTDIR\${TO_BE_DELETED}"
+
+        ${If} ${RebootFlag}
+        ${AndIf} "$R2" == "false"
+          ; Clear the reboot flag if all files were deleted or moved to the
+          ; tobedeleted directory.
+          SetRebootFlag false
+        ${EndIf}
+      ${EndIf}
+
       ClearErrors
 
-      Pop $TmpVal
-      Pop $R0
-      Pop $R1
+      Pop $R2
+      Pop $R3
       Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7
-      Pop $R8
-      Pop $R9
-      Exch $R3
+      Exch $R8
       Exch 1
-      Exch $R2
-    FunctionEnd
-
-    Function StubRemoveFilesCallback
-      ${TrimNewLines} "$R9" $R9
-      StrCpy $R1 "$R9" 5       ; Copy the first five chars
-
-      StrCmp "$R1" "File:" +1 end
-      StrCpy $R9 "$R9" "" 6    ; Copy string starting after the 6th char
-      StrCpy $R0 "$R9" 1       ; Copy the first char
-
-      StrCmp "$R0" "\" +1 end  ; If this isn't a relative path goto end
-      StrCmp "$R9" "\MapiProxy_InUse.dll" end +1 ; Skip the MapiProxy_InUse.dll
-      StrCmp "$R9" "\mozMapi32_InUse.dll" end +1 ; Skip the mozMapi32_InUse.dll
-
-      StrCpy $R1 "$INSTDIR$R9" ; Copy the install dir path and suffix it with the string
-      IfFileExists "$R1" +1 end
-
-      ${Unless} "$R2" == "false"
-        IntOp $R2 $R2 + 2
-      ${EndIf}
-      ${Unless} "$R3" == "false"
-        SendMessage $R3 ${PBM_STEPIT} 0 0
-        SendMessage $R3 ${PBM_STEPIT} 0 0
-      ${EndIf}
-
-      ClearErrors
-      Delete "$R1"
-      ${Unless} ${Errors}
-        Goto end
-      ${EndUnless}
-
-      GetTempFileName $R0 "$INSTDIR\${TO_BE_DELETED}"
-      Delete "$R0"
-      ClearErrors
-      Rename "$R1" "$R0"
-      ${If} ${Errors}
-        Delete /REBOOTOK "$R1"
-      ${EndUnless}
-
-      end:
-      ClearErrors
-
-      Push 0
+      Exch $R9
     FunctionEnd
 
     !verbose pop
   !endif
 !macroend
 
-!macro OnStubInstallUninstallCall _PROGRESSBAR _INSTALL_STEP_COUNTER
+!macro RemovePrecompleteEntriesCall _PROGRESSBAR _INSTALL_STEP_COUNTER
   !verbose push
   Push "${_PROGRESSBAR}"
   Push "${_INSTALL_STEP_COUNTER}"
   !verbose ${_MOZFUNC_VERBOSE}
-  Call OnStubInstallUninstall
+  Call RemovePrecompleteEntries
   Pop ${_INSTALL_STEP_COUNTER}
   !verbose pop
+!macroend
+
+!macro un.RemovePrecompleteEntriesCall _PROGRESSBAR _INSTALL_STEP_COUNTER
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_PROGRESSBAR}"
+  Push "${_INSTALL_STEP_COUNTER}"
+  Call un.RemovePrecompleteEntries
+  Pop ${_INSTALL_STEP_COUNTER}
+  Pop $0
+  !verbose pop
+!macroend
+
+!macro un.RemovePrecompleteEntries
+  !ifndef un.RemovePrecompleteEntries
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro RemovePrecompleteEntries
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
 !macroend
 
 /**
@@ -5675,8 +5727,6 @@
       Delete "$INSTDIR\updates.xml"
       Delete "$INSTDIR\active-update.xml"
 
-      RmDir /r "$INSTDIR\distribution"
-
       ; Remove files from the uninstall directory.
       ${If} ${FileExists} "$INSTDIR\uninstall"
         Delete "$INSTDIR\uninstall\*wizard*"
@@ -6061,8 +6111,10 @@
         ${LogMsg} "OS Name    : Windows 7"
       ${ElseIf} ${IsWin8}
         ${LogMsg} "OS Name    : Windows 8"
-      ${ElseIf} ${AtLeastWin8}
-        ${LogMsg} "OS Name    : Above Windows 8"
+      ${ElseIf} ${IsWin8.1}
+        ${LogMsg} "OS Name    : Windows 8.1"
+      ${ElseIf} ${AtLeastWin8.1}
+        ${LogMsg} "OS Name    : Above Windows 8.1"
       ${Else}
         ${LogMsg} "OS Name    : Unable to detect"
       ${EndIf}
@@ -7717,8 +7769,8 @@
  * System::Call "kernel32::GetTickCount()l .s"
  * Pop $varname
  *
- * _START_TICK_COUNT    
- * _FINISH_TICK_COUNT   
+ * _START_TICK_COUNT
+ * _FINISH_TICK_COUNT
  * _RES_ELAPSED_SECONDS return value - elapsed time between _START_TICK_COUNT
  *                      and _FINISH_TICK_COUNT in seconds.
  */
