@@ -42,7 +42,7 @@
         myCustomEvent.prototype = window.Event.prototype;
         window.CustomEvent = myCustomEvent;
       }
- 
+
       // To support IE for the l10n-gaia library on IE <= 10.
       if (!"language" in navigator) {
         navigator.language = navigator.browserLanguage;
@@ -97,6 +97,7 @@
     <script type="text/javascript" src="shared/js/dispatcher.js"></script>
     <script type="text/javascript" src="shared/js/websocket.js"></script>
     <script type="text/javascript" src="shared/js/otSdkDriver.js"></script>
+    <script type="text/javascript" src="shared/js/store.js"></script>
     <script type="text/javascript" src="shared/js/activeRoomStore.js"></script>
     <script type="text/javascript" src="js/standaloneAppStore.js"></script>
     <script type="text/javascript" src="js/standaloneClient.js"></script>

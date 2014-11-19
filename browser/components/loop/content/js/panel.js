@@ -845,9 +845,8 @@ loop.panel = (function(_, mozL10n) {
     var client = new loop.Client();
     var notifications = new sharedModels.NotificationCollection();
     var dispatcher = new loop.Dispatcher();
-    var roomStore = new loop.store.RoomStore({
-      mozLoop: navigator.mozLoop,
-      dispatcher: dispatcher
+    var roomStore = new loop.store.RoomStore(dispatcher, {
+      mozLoop: navigator.mozLoop
     });
 
     React.renderComponent(PanelView({
