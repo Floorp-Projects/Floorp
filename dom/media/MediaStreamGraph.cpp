@@ -2845,7 +2845,7 @@ MediaStreamGraph::DestroyNonRealtimeInstance(MediaStreamGraph* aGraph)
 
   if (!graph->mNonRealtimeProcessing) {
     // Start the graph, but don't produce anything
-    graph->StartNonRealtimeProcessing(1, 0);
+    graph->StartNonRealtimeProcessing(0);
   }
   graph->ForceShutDown();
 }
@@ -3008,7 +3008,7 @@ MediaStreamGraph::IsNonRealtime() const
 }
 
 void
-MediaStreamGraph::StartNonRealtimeProcessing(TrackRate aRate, uint32_t aTicksToProcess)
+MediaStreamGraph::StartNonRealtimeProcessing(uint32_t aTicksToProcess)
 {
   NS_ASSERTION(NS_IsMainThread(), "main thread only");
 
