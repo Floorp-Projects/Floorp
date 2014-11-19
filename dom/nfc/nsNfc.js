@@ -179,6 +179,8 @@ function MozNFCImpl() {
     debug("No NFC support.")
   }
 
+  this.eventService = Cc["@mozilla.org/eventlistenerservice;1"]
+                        .getService(Ci.nsIEventListenerService);
   this._nfcContentHelper.addEventListener(this);
 }
 MozNFCImpl.prototype = {
@@ -186,6 +188,7 @@ MozNFCImpl.prototype = {
   _window: null,
   nfcPeer: null,
   nfcTag: null,
+  eventService: null,
 
   // Should be mapped to the RFState defined in WebIDL.
   rfState: {
@@ -291,6 +294,11 @@ MozNFCImpl.prototype = {
       return;
     }
 
+    if (!this.eventService.hasListenersFor(this.__DOM_IMPL__, "tagfound")) {
+      debug("ontagfound is not registered.");
+      return;
+    }
+
     if (!this.checkPermissions(["nfc-read", "nfc-write"])) {
       return;
     }
@@ -329,10 +337,13 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    if (this.nfcTag && (this.nfcTag.session == sessionToken)) {
-      this.nfcTag.isLost = true;
-      this.nfcTag = null;
+    if (!this.nfcTag) {
+      debug("No NFCTag object existing.");
+      return;
     }
+
+    this.nfcTag.isLost = true;
+    this.nfcTag = null;
 
     debug("fire ontaglost " + sessionToken);
     let event = new this._window.Event("taglost");
@@ -345,11 +356,16 @@ MozNFCImpl.prototype = {
       return;
     }
 
+    if (!isPeerReady &&
+        !this.eventService.hasListenersFor(this.__DOM_IMPL__, "peerfound")) {
+      debug("onpeerfound is not registered.");
+      return;
+    }
+
     if (!this.checkPermissions(["nfc-write"])) {
       return;
     }
 
-    this.session = sessionToken;
     this.nfcPeer = this._createNFCPeer(sessionToken);
     let eventData = { "peer": this.nfcPeer };
     let type = (isPeerReady) ? "peerready" : "peerfound";
@@ -369,17 +385,13 @@ MozNFCImpl.prototype = {
       return;
     }
 
-    if (sessionToken != this.session) {
-      dump("Unpaired session for notifyPeerLost." + sessionToken);
+    if (!this.nfcPeer) {
+      debug("No NFCPeer object existing.");
       return;
     }
 
-    if (this.nfcPeer && (this.nfcPeer.session == sessionToken)) {
-      this.nfcPeer.isLost = true;
-      this.nfcPeer = null;
-    }
-
-    this.session = null;
+    this.nfcPeer.isLost = true;
+    this.nfcPeer = null;
 
     debug("fire onpeerlost");
     let event = new this._window.Event("peerlost");
