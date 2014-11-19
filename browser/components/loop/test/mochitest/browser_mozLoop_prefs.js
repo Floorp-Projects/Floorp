@@ -15,13 +15,13 @@ add_task(function* test_mozLoop_charPref() {
 
   Assert.ok(gMozLoopAPI, "mozLoop should exist");
 
-  // Test setLoopCharPref
-  gMozLoopAPI.setLoopCharPref("test", "foo");
+  // Test setLoopPref
+  gMozLoopAPI.setLoopPref("test", "foo", Ci.nsIPrefBranch.PREF_STRING);
   Assert.equal(Services.prefs.getCharPref("loop.test"), "foo",
                "should set loop pref value correctly");
 
-  // Test getLoopCharPref
-  Assert.equal(gMozLoopAPI.getLoopCharPref("test"), "foo",
+  // Test getLoopPref
+  Assert.equal(gMozLoopAPI.getLoopPref("test"), "foo",
                "should get loop pref value correctly");
 });
 
@@ -34,7 +34,7 @@ add_task(function* test_mozLoop_boolPref() {
 
   Services.prefs.setBoolPref("loop.testBool", true);
 
-  // Test getLoopCharPref
-  Assert.equal(gMozLoopAPI.getLoopBoolPref("testBool"), true,
+  // Test getLoopPref
+  Assert.equal(gMozLoopAPI.getLoopPref("testBool"), true,
                "should get loop pref value correctly");
 });

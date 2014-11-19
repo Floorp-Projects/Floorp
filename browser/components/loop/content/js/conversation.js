@@ -298,13 +298,13 @@ loop.conversation = (function(mozL10n) {
 
           document.title = mozL10n.get("conversation_has_ended");
 
-          var feebackAPIBaseUrl = navigator.mozLoop.getLoopCharPref(
+          var feebackAPIBaseUrl = navigator.mozLoop.getLoopPref(
             "feedback.baseUrl");
 
           var appVersionInfo = navigator.mozLoop.appVersionInfo;
 
           var feedbackClient = new loop.FeedbackAPIClient(feebackAPIBaseUrl, {
-            product: navigator.mozLoop.getLoopCharPref("feedback.product"),
+            product: navigator.mozLoop.getLoopPref("feedback.product"),
             platform: appVersionInfo.OS,
             channel: appVersionInfo.channel,
             version: appVersionInfo.version
@@ -616,10 +616,10 @@ loop.conversation = (function(mozL10n) {
     // don't work in the conversation window
     window.OT.overrideGuidStorage({
       get: function(callback) {
-        callback(null, navigator.mozLoop.getLoopCharPref("ot.guid"));
+        callback(null, navigator.mozLoop.getLoopPref("ot.guid"));
       },
       set: function(guid, callback) {
-        navigator.mozLoop.setLoopCharPref("ot.guid", guid);
+        navigator.mozLoop.setLoopPref("ot.guid", guid);
         callback(null);
       }
     });
