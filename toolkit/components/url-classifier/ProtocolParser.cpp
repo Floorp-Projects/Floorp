@@ -284,7 +284,7 @@ ProtocolParser::ProcessChunk(bool* aDone)
   // Pull the chunk out of the pending stream data.
   nsAutoCString chunk;
   chunk.Assign(Substring(mPending, 0, mChunkState.length));
-  mPending = Substring(mPending, mChunkState.length);
+  mPending.Cut(0, mChunkState.length);
 
   *aDone = false;
   mState = PROTOCOL_STATE_CONTROL;
@@ -590,14 +590,14 @@ ProtocolParser::ProcessHostSubComplete(uint8_t aNumEntries,
 }
 
 bool
-ProtocolParser::NextLine(nsACString& line)
+ProtocolParser::NextLine(nsACString& aLine)
 {
   int32_t newline = mPending.FindChar('\n');
   if (newline == kNotFound) {
     return false;
   }
-  line.Assign(Substring(mPending, 0, newline));
-  mPending = Substring(mPending, newline + 1);
+  aLine.Assign(Substring(mPending, 0, newline));
+  mPending.Cut(0, newline + 1);
   return true;
 }
 
