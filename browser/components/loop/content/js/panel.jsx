@@ -20,7 +20,6 @@ loop.panel = (function(_, mozL10n) {
   var ButtonGroup = sharedViews.ButtonGroup;
   var ContactsList = loop.contacts.ContactsList;
   var ContactDetailsForm = loop.contacts.ContactDetailsForm;
-  var __ = mozL10n.get; // aliasing translation function as __ for concision
 
   var TabView = React.createClass({
     propTypes: {
@@ -138,8 +137,8 @@ loop.panel = (function(_, mozL10n) {
         'hide': !this.state.showMenu
       });
       var availabilityText = this.state.doNotDisturb ?
-                              __("display_name_dnd_status") :
-                              __("display_name_available_status");
+                              mozL10n.get("display_name_dnd_status") :
+                              mozL10n.get("display_name_available_status");
 
       return (
         <div className="dropdown">
@@ -152,14 +151,42 @@ loop.panel = (function(_, mozL10n) {
             <li onClick={this.changeAvailability("available")}
                 className="dropdown-menu-item dnd-make-available">
               <i className="status status-available"></i>
-              <span>{__("display_name_available_status")}</span>
+              <span>{mozL10n.get("display_name_available_status")}</span>
             </li>
             <li onClick={this.changeAvailability("do-not-disturb")}
                 className="dropdown-menu-item dnd-make-unavailable">
               <i className="status status-dnd"></i>
-              <span>{__("display_name_dnd_status")}</span>
+              <span>{mozL10n.get("display_name_dnd_status")}</span>
             </li>
           </ul>
+        </div>
+      );
+    }
+  });
+
+  var GettingStartedView = React.createClass({
+    componentDidMount: function() {
+      navigator.mozLoop.setLoopBoolPref("gettingStarted.seen", true);
+    },
+
+    handleButtonClick: function() {
+      navigator.mozLoop.openGettingStartedTour();
+    },
+
+    render: function() {
+      if (navigator.mozLoop.getLoopBoolPref("gettingStarted.seen")) {
+        return null;
+      }
+      return (
+        <div id="fte-getstarted">
+          <header id="fte-title">
+            {mozL10n.get("first_time_experience_title", {
+              "clientShortname": mozL10n.get("clientShortname2")
+            })}
+          </header>
+          <Button htmlId="fte-button"
+                  onClick={this.handleButtonClick}
+                  caption={mozL10n.get("first_time_experience_button_label")} />
         </div>
       );
     }
@@ -172,23 +199,31 @@ loop.panel = (function(_, mozL10n) {
 
     render: function() {
       if (this.state.seenToS == "unseen") {
+        var locale = mozL10n.getLanguage();
         var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
         var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
-        var tosHTML = __("legal_text_and_links3", {
-          "clientShortname": __("clientShortname2"),
+        var tosHTML = mozL10n.get("legal_text_and_links3", {
+          "clientShortname": mozL10n.get("clientShortname2"),
           "terms_of_use": React.renderComponentToStaticMarkup(
             <a href={terms_of_use_url} target="_blank">
-              {__("legal_text_tos")}
+              {mozL10n.get("legal_text_tos")}
             </a>
           ),
           "privacy_notice": React.renderComponentToStaticMarkup(
             <a href={privacy_notice_url} target="_blank">
-              {__("legal_text_privacy")}
+              {mozL10n.get("legal_text_privacy")}
             </a>
           ),
         });
-        return <p className="terms-service"
-                  dangerouslySetInnerHTML={{__html: tosHTML}}></p>;
+        return <div>
+          <p id="powered-by">
+            {mozL10n.get("powered_by_beforeLogo")}
+            <img id="powered-by-logo" className={locale} />
+            {mozL10n.get("powered_by_afterLogo")}
+          </p>
+          <p className="terms-service"
+             dangerouslySetInnerHTML={{__html: tosHTML}}></p>
+         </div>;
       } else {
         return <div />;
       }
@@ -262,20 +297,20 @@ loop.panel = (function(_, mozL10n) {
       return (
         <div className="settings-menu dropdown">
           <a className="button-settings" onClick={this.showDropdownMenu}
-             title={__("settings_menu_button_tooltip")} />
+             title={mozL10n.get("settings_menu_button_tooltip")} />
           <ul className={cx({"dropdown-menu": true, hide: !this.state.showMenu})}
               onMouseLeave={this.hideDropdownMenu}>
-            <SettingsDropdownEntry label={__("settings_menu_item_settings")}
+            <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_settings")}
                                    onClick={this.handleClickSettingsEntry}
                                    displayed={false}
                                    icon="settings" />
-            <SettingsDropdownEntry label={__("settings_menu_item_account")}
+            <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_account")}
                                    onClick={this.handleClickAccountEntry}
                                    icon="account"
                                    displayed={this._isSignedIn()} />
             <SettingsDropdownEntry label={this._isSignedIn() ?
-                                          __("settings_menu_item_signout") :
-                                          __("settings_menu_item_signin")}
+                                          mozL10n.get("settings_menu_item_signout") :
+                                          mozL10n.get("settings_menu_item_signin")}
                                    onClick={this.handleClickAuthEntry}
                                    displayed={navigator.mozLoop.fxAEnabled}
                                    icon={this._isSignedIn() ? "signout" : "signin"} />
@@ -407,7 +442,7 @@ loop.panel = (function(_, mozL10n) {
       var cx = React.addons.classSet;
       return (
         <div className="generate-url">
-          <header>{__("share_link_header_text")}</header>
+          <header id="share-link-header">{mozL10n.get("share_link_header_text")}</header>
           <div className="generate-url-stack">
             <input type="url" value={this.state.callUrl} readOnly="true"
                    onCopy={this.handleLinkExfiltration}
@@ -451,7 +486,7 @@ loop.panel = (function(_, mozL10n) {
       return (
         <p className="signin-link">
           <a href="#" onClick={this.handleSignUpLinkClick}>
-            {__("panel_footer_signin_or_signup_link")}
+            {mozL10n.get("panel_footer_signin_or_signup_link")}
           </a>
         </p>
       );
@@ -709,6 +744,7 @@ loop.panel = (function(_, mozL10n) {
         return (
           <Tab name="call">
             <div className="content-area">
+              <GettingStartedView />
               <CallUrlResult client={this.props.client}
                              notifications={this.props.notifications}
                              callUrl={this.props.callUrl} />
@@ -720,6 +756,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <Tab name="rooms">
+          <GettingStartedView />
           <RoomList dispatcher={this.props.dispatcher}
                     store={this.props.roomStore}
                     userDisplayName={this._getUserDisplayName()}/>
@@ -751,7 +788,7 @@ loop.panel = (function(_, mozL10n) {
 
     _getUserDisplayName: function() {
       return this.state.userProfile && this.state.userProfile.email ||
-             __("display_name_guest");
+             mozL10n.get("display_name_guest");
     },
 
     render: function() {
@@ -830,15 +867,16 @@ loop.panel = (function(_, mozL10n) {
 
   return {
     init: init,
-    UserIdentity: UserIdentity,
     AuthLink: AuthLink,
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
+    GettingStartedView: GettingStartedView,
     PanelView: PanelView,
     RoomEntry: RoomEntry,
     RoomList: RoomList,
     SettingsDropdown: SettingsDropdown,
-    ToSView: ToSView
+    ToSView: ToSView,
+    UserIdentity: UserIdentity,
   };
 })(_, document.mozL10n);
 
