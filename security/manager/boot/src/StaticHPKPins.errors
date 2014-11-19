@@ -7,3 +7,21 @@ Can't find hash in builtin certs for Chrome nickname CryptoCat1, inserting GOOGL
 Can't find hash in builtin certs for Chrome nickname Libertylavabitcom, inserting GOOGLE_PIN_Libertylavabitcom
 Can't find hash in builtin certs for Chrome nickname EntrustRootEC1, inserting GOOGLE_PIN_EntrustRootEC1
 Can't find hash in builtin certs for Chrome nickname GoDaddySecure, inserting GOOGLE_PIN_GoDaddySecure
+Can't find hash in builtin certs for Chrome nickname SymantecClass3EVG3, inserting GOOGLE_PIN_SymantecClass3EVG3
+Writing pinset test
+Writing pinset google
+Writing pinset tor
+Writing pinset twitterCom
+Writing pinset twitterCDN
+Writing pinset tor2web
+Writing pinset cryptoCat
+Writing pinset lavabit
+Writing pinset dropbox
+Skipping duplicate pinset facebook
+Writing pinset spideroak
+Skipping duplicate pinset for domain {
+  "name": "facebook.com",
+  "test_mode": true,
+  "is_moz": false,
+  "pins": "facebook"
+}
