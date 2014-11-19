@@ -16,6 +16,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'ClippedImage.cpp',
+    'DecodePool.cpp',
     'Decoder.cpp',
     'DiscardTracker.cpp',
     'DynamicImage.cpp',

@@ -19,7 +19,7 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
   // Database Specifications.
   protected static final String DB_NAME = "clients_database";
-  protected static final int SCHEMA_VERSION = 2;
+  protected static final int SCHEMA_VERSION = 3;
 
   // Clients Table.
   public static final String TBL_CLIENTS      = "clients";
@@ -28,7 +28,15 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
   public static final String COL_NAME         = "name";
   public static final String COL_TYPE         = "device_type";
 
-  public static final String[] TBL_CLIENTS_COLUMNS = new String[] { COL_ACCOUNT_GUID, COL_PROFILE, COL_NAME, COL_TYPE };
+  // Optional fields.
+  public static final String COL_FORMFACTOR = "formfactor";
+  public static final String COL_OS = "os";
+  public static final String COL_APPLICATION = "application";
+  public static final String COL_APP_PACKAGE = "appPackage";
+  public static final String COL_DEVICE = "device";
+
+  public static final String[] TBL_CLIENTS_COLUMNS = new String[] { COL_ACCOUNT_GUID, COL_PROFILE, COL_NAME, COL_TYPE,
+                                                                    COL_FORMFACTOR, COL_OS, COL_APPLICATION, COL_APP_PACKAGE, COL_DEVICE };
   public static final String TBL_CLIENTS_KEY = COL_ACCOUNT_GUID + " = ? AND " +
                                                COL_PROFILE + " = ?";
 
@@ -65,6 +73,11 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
         + COL_PROFILE + " TEXT, "
         + COL_NAME + " TEXT, "
         + COL_TYPE + " TEXT, "
+        + COL_FORMFACTOR + " TEXT, "
+        + COL_OS + " TEXT, "
+        + COL_APPLICATION + " TEXT, "
+        + COL_APP_PACKAGE + " TEXT, "
+        + COL_DEVICE + " TEXT, "
         + "PRIMARY KEY (" + COL_ACCOUNT_GUID + ", " + COL_PROFILE + "))";
     db.execSQL(createClientsTableSql);
   }
@@ -82,16 +95,28 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
 
   @Override
   public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-    Logger.debug(LOG_TAG, "ClientsDatabase.onUpgrade().");
-    // For now we'll just drop and recreate the tables.
-    db.execSQL("DROP TABLE IF EXISTS " + TBL_CLIENTS);
-    db.execSQL("DROP TABLE IF EXISTS " + TBL_COMMANDS);
-    onCreate(db);
+    Logger.debug(LOG_TAG, "ClientsDatabase.onUpgrade(" + oldVersion + ", " + newVersion + ").");
+    if (oldVersion < 2) {
+      // For now we'll just drop and recreate the tables.
+      db.execSQL("DROP TABLE IF EXISTS " + TBL_CLIENTS);
+      db.execSQL("DROP TABLE IF EXISTS " + TBL_COMMANDS);
+      onCreate(db);
+      return;
+    }
+
+    if (newVersion >= 3) {
+      // Add the optional columns to clients.
+      db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_FORMFACTOR + " TEXT");
+      db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_OS + " TEXT");
+      db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_APPLICATION + " TEXT");
+      db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_APP_PACKAGE + " TEXT");
+      db.execSQL("ALTER TABLE " + TBL_CLIENTS + " ADD COLUMN " + COL_DEVICE + " TEXT");
+    }
   }
 
   public void wipeDB() {
     SQLiteDatabase db = this.getCachedWritableDatabase();
-    onUpgrade(db, SCHEMA_VERSION, SCHEMA_VERSION);
+    onUpgrade(db, 0, SCHEMA_VERSION);
   }
 
   public void wipeClientsTable() {
@@ -114,6 +139,26 @@ public class ClientsDatabase extends CachedSQLiteOpenHelper {
     cv.put(COL_PROFILE, profileId);
     cv.put(COL_NAME, record.name);
     cv.put(COL_TYPE, record.type);
+
+    if (record.formfactor != null) {
+      cv.put(COL_FORMFACTOR, record.formfactor);
+    }
+
+    if (record.os != null) {
+      cv.put(COL_OS, record.os);
+    }
+
+    if (record.application != null) {
+      cv.put(COL_APPLICATION, record.application);
+    }
+
+    if (record.appPackage != null) {
+      cv.put(COL_APP_PACKAGE, record.appPackage);
+    }
+
+    if (record.device != null) {
+      cv.put(COL_DEVICE, record.device);
+    }
 
     String[] args = new String[] { record.guid, profileId };
     int rowsUpdated = db.update(TBL_CLIENTS, cv, TBL_CLIENTS_KEY, args);
