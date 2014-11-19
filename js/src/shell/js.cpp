@@ -2625,10 +2625,9 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
             JS_ReportError(cx, "Invalid scope argument to evalcx");
             return false;
         }
-        if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
-                                 filename.get(),
-                                 lineno,
-                                 args.rval())) {
+        JS::CompileOptions opts(cx);
+        opts.setFileAndLine(filename.get(), lineno);
+        if (!JS::Evaluate(cx, sobj, opts, src, srclen, args.rval())) {
             return false;
         }
     }
@@ -5404,7 +5403,9 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
         } else {
             const char *code = codeChunks.front();
             RootedValue rval(cx);
-            if (!JS_EvaluateScript(cx, obj, code, strlen(code), "-e", 1, &rval))
+            JS::CompileOptions opts(cx);
+            opts.setFileAndLine("-e", 1);
+            if (!JS::Evaluate(cx, obj, opts, code, strlen(code), &rval))
                 return gExitCode ? gExitCode : EXITCODE_RUNTIME_ERROR;
             codeChunks.popFront();
         }

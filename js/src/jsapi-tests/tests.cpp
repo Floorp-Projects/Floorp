@@ -54,7 +54,9 @@ bool JSAPITest::exec(const char *bytes, const char *filename, int lineno)
 {
     JS::RootedValue v(cx);
     JS::HandleObject global = JS::HandleObject::fromMarkedLocation(this->global.unsafeGet());
-    return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, &v) ||
+    JS::CompileOptions opts(cx);
+    opts.setFileAndLine(filename, lineno);
+    return JS::Evaluate(cx, global, opts, bytes, strlen(bytes), &v) ||
         fail(JSAPITestString(bytes), filename, lineno);
 }
 
@@ -62,7 +64,9 @@ bool JSAPITest::evaluate(const char *bytes, const char *filename, int lineno,
                          JS::MutableHandleValue vp)
 {
     JS::HandleObject global = JS::HandleObject::fromMarkedLocation(this->global.unsafeGet());
-    return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, vp) ||
+    JS::CompileOptions opts(cx);
+    opts.setFileAndLine(filename, lineno);
+    return JS::Evaluate(cx, global, opts, bytes, strlen(bytes), vp) ||
         fail(JSAPITestString(bytes), filename, lineno);
 }
 
