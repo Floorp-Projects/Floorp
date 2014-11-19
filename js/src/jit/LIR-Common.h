@@ -6864,6 +6864,17 @@ class LMemoryBarrier : public LInstructionHelper<0, 0, 0>
     }
 };
 
+class LDebugger : public LCallInstructionHelper<0, 0, 2>
+{
+  public:
+    LIR_HEADER(Debugger)
+
+    LDebugger(const LDefinition &temp1, const LDefinition &temp2) {
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+    }
+};
+
 } // namespace jit
 } // namespace js
 
