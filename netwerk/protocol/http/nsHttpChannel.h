@@ -142,11 +142,13 @@ public: /* internal necko use only */
     void SetUploadStreamHasHeaders(bool hasHeaders)
       { mUploadStreamHasHeaders = hasHeaders; }
 
-    nsresult SetReferrerInternal(nsIURI *referrer) {
+    nsresult SetReferrerWithPolicyInternal(nsIURI *referrer,
+                                           uint32_t referrerPolicy) {
         nsAutoCString spec;
         nsresult rv = referrer->GetAsciiSpec(spec);
         if (NS_FAILED(rv)) return rv;
         mReferrer = referrer;
+        mReferrerPolicy = referrerPolicy;
         mRequestHead.SetHeader(nsHttp::Referer, spec);
         return NS_OK;
     }

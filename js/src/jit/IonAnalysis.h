@@ -131,10 +131,17 @@ class LinearSum
         terms_.appendAll(other.terms_);
     }
 
+    // These return false on an integer overflow, and afterwards the sum must
+    // not be used.
     bool multiply(int32_t scale);
     bool add(const LinearSum &other, int32_t scale = 1);
+    bool add(SimpleLinearSum other, int32_t scale = 1);
     bool add(MDefinition *term, int32_t scale);
     bool add(int32_t constant);
+
+    // Unlike the above function, on failure this leaves the sum unchanged and
+    // it can still be used.
+    bool divide(int32_t scale);
 
     int32_t constant() const { return constant_; }
     size_t numTerms() const { return terms_.length(); }
@@ -150,10 +157,11 @@ class LinearSum
     int32_t constant_;
 };
 
-// Convert all components of a linear sum *except* its constant to a definition,
-// adding any necessary instructions to the end of block.
+// Convert all components of a linear sum (except, optionally, the constant)
+// and add any new instructions to the end of block.
 MDefinition *
-ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum);
+ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum,
+                 bool convertConstant = false);
 
 // Convert the test 'sum >= 0' to a comparison, adding any necessary
 // instructions to the end of block.

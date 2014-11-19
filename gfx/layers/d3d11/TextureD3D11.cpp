@@ -655,6 +655,18 @@ CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D* aTex
   }
 }
 
+void
+CompositingRenderTargetD3D11::BindRenderTarget(ID3D11DeviceContext* aContext)
+{
+  if (!mClearOnBind) {
+    FLOAT clear[] = { 0, 0, 0, 0 };
+    aContext->ClearRenderTargetView(mRTView, clear);
+    mClearOnBind = false;
+  }
+  ID3D11RenderTargetView* view = mRTView;
+  aContext->OMSetRenderTargets(1, &view, nullptr);
+}
+
 IntSize
 CompositingRenderTargetD3D11::GetSize() const
 {
