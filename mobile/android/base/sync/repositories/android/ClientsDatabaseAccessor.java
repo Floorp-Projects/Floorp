@@ -118,12 +118,21 @@ public class ClientsDatabaseAccessor {
   }
 
   protected static ClientRecord recordFromCursor(Cursor cur) {
-    String accountGUID = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_ACCOUNT_GUID);
-    String clientName = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_NAME);
-    String clientType = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_TYPE);
-    ClientRecord record = new ClientRecord(accountGUID);
+    final String accountGUID = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_ACCOUNT_GUID);
+    final String clientName = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_NAME);
+    final String clientType = RepoUtils.getStringFromCursor(cur, ClientsDatabase.COL_TYPE);
+
+    final ClientRecord record = new ClientRecord(accountGUID);
     record.name = clientName;
     record.type = clientType;
+
+    // Optional fields. These will either be null or strings.
+    record.formfactor = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_FORMFACTOR);
+    record.os = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_OS);
+    record.device = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_DEVICE);
+    record.appPackage = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_APP_PACKAGE);
+    record.application = RepoUtils.optStringFromCursor(cur, ClientsDatabase.COL_APPLICATION);
+
     return record;
   }
 

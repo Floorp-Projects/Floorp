@@ -239,6 +239,11 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   padding-bottom: 0;
 }
 
+/* No extra border when customizing since the nav bar doesn't have one */
+#main-window[customize-entered] #customization-container {
+  border: none;
+}
+
 /* Use smaller back button icon */
 #back-button {
   -moz-image-region: rect(0, 54px, 18px, 36px);

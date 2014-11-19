@@ -16,7 +16,7 @@ let PerformanceView = {
     this._onRecordButtonClick = this._onRecordButtonClick.bind(this);
     this._unlockRecordButton = this._unlockRecordButton.bind(this);
 
-    this._recordButton.addEventListener("mouseup", this._onRecordButtonClick);
+    this._recordButton.addEventListener("click", this._onRecordButtonClick);
 
     // Bind to controller events to unlock the record button
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
@@ -27,7 +27,7 @@ let PerformanceView = {
    * Unbinds events.
    */
   destroy: function () {
-    this._recordButton.removeEventListener("mouseup", this._onRecordButtonClick);
+    this._recordButton.removeEventListener("click", this._onRecordButtonClick);
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._unlockRecordButton);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._unlockRecordButton);
   },

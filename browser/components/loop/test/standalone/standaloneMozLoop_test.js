@@ -46,6 +46,36 @@ describe("loop.StandaloneMozLoop", function() {
     });
   });
 
+  describe("#setLoopCharPref", function() {
+    afterEach(function() {
+      localStorage.removeItem("fakePref");
+    });
+
+    it("should store the value of the preference", function() {
+      mozLoop.setLoopCharPref("fakePref", "fakeValue");
+
+      expect(localStorage.getItem("fakePref")).eql("fakeValue");
+    });
+
+    it("should not store the value of seenToS", function() {
+      mozLoop.setLoopCharPref("seenToS", "fakeValue1");
+
+      expect(localStorage.getItem("seenToS")).eql(null);
+    });
+  });
+
+  describe("#getLoopCharPref", function() {
+    afterEach(function() {
+      localStorage.removeItem("fakePref");
+    });
+
+    it("should return the value of the preference", function() {
+      localStorage.setItem("fakePref", "fakeValue");
+
+      expect(mozLoop.getLoopCharPref("fakePref")).eql("fakeValue");
+    });
+  });
+
   describe("#rooms.join", function() {
     it("should POST to the server", function() {
       mozLoop.rooms.join("fakeToken", callback);

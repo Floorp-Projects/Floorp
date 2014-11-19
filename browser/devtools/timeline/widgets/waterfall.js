@@ -287,10 +287,10 @@ Waterfall.prototype = {
     name.className = "plain waterfall-marker-name";
 
     let label;
-    if (marker.detail && marker.detail.causeName) {
+    if (marker.causeName) {
       label = this._l10n.getFormatStr("timeline.markerDetailFormat",
                                       blueprint.label,
-                                      marker.detail.causeName);
+                                      marker.causeName);
     } else {
       label = blueprint.label;
     }
