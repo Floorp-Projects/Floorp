@@ -265,20 +265,6 @@ gfxContext::LineTo(const gfxPoint& pt)
 }
 
 void
-gfxContext::CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt3)
-{
-  EnsurePathBuilder();
-  mPathBuilder->BezierTo(ToPoint(pt1), ToPoint(pt2), ToPoint(pt3));
-}
-
-void
-gfxContext::QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2)
-{
-  EnsurePathBuilder();
-  mPathBuilder->QuadraticBezierTo(ToPoint(pt1), ToPoint(pt2));
-}
-
-void
 gfxContext::Line(const gfxPoint& start, const gfxPoint& end)
 {
   EnsurePathBuilder();
