@@ -4884,48 +4884,6 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const char16_t *chars, unsigned length,
-                    const char *filename, unsigned lineno, MutableHandleValue rval)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return ::Evaluate(cx, obj, options, chars, length, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateUCScript(JSContext *cx, HandleObject obj, SourceBufferHolder &srcBuf,
-                    const char *filename, unsigned lineno, MutableHandleValue rval)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return ::Evaluate(cx, obj, options, srcBuf, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateScript(JSContext *cx, HandleObject obj, const char *bytes, unsigned nbytes,
-                  const char *filename, unsigned lineno, MutableHandleValue rval)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return JS::Evaluate(cx, obj, options, bytes, nbytes, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateScript(JSContext *cx, HandleObject obj, const char *bytes, unsigned nbytes,
-                  const char *filename, unsigned lineno)
-{
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno)
-           .setNoScriptRval(true);
-
-    RootedValue unused(cx);
-    return JS::Evaluate(cx, obj, options, bytes, nbytes, &unused);
-}
-
-JS_PUBLIC_API(bool)
 JS_CallFunction(JSContext *cx, HandleObject obj, HandleFunction fun, const HandleValueArray& args,
                 MutableHandleValue rval)
 {
