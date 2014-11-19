@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
+import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -22,6 +23,9 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
   public SharedPreferencesClientsDataDelegate(SharedPreferences sharedPreferences, Context context) {
     this.sharedPreferences = sharedPreferences;
     this.context = context;
+
+    // It's safe to init this multiple times.
+    HardwareUtils.init(context);
   }
 
   @Override
@@ -91,5 +95,22 @@ public class SharedPreferencesClientsDataDelegate implements ClientsDataDelegate
   @Override
   public long getLastModifiedTimestamp() {
     return sharedPreferences.getLong(SyncConfiguration.PREF_CLIENT_DATA_TIMESTAMP, 0);
+  }
+
+  @Override
+  public String getFormFactor() {
+    if (HardwareUtils.isLargeTablet()) {
+      return "largetablet";
+    }
+
+    if (HardwareUtils.isSmallTablet()) {
+      return "smalltablet";
+    }
+
+    if (HardwareUtils.isTelevision()) {
+      return "tv";
+    }
+
+    return "phone";
   }
 }
