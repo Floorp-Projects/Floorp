@@ -615,12 +615,15 @@ function injectLoopAPI(targetWindow) {
 
     /**
      * Opens the Getting Started tour in the browser.
+     *
+     * @param {String} aSrc
+     *   - The UI element that the user used to begin the tour, optional.
      */
     openGettingStartedTour: {
       enumerable: true,
       writable: true,
-      value: function() {
-        return MozLoopService.openGettingStartedTour();
+      value: function(aSrc) {
+        return MozLoopService.openGettingStartedTour(aSrc);
       },
     },
 
