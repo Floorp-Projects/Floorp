@@ -5,6 +5,7 @@
 ifeq (Darwin_1,$(OS_TARGET)_$(MOZ_REPLACE_MALLOC))
 OS_LDFLAGS += \
   -Wl,-U,_replace_init \
+  -Wl,-U,_replace_get_bridge \
   -Wl,-U,_replace_malloc \
   -Wl,-U,_replace_posix_memalign \
   -Wl,-U,_replace_aligned_alloc \
