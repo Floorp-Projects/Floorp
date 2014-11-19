@@ -652,7 +652,7 @@ public:
                                          JS::AutoIdVector &props) const MOZ_OVERRIDE;
   virtual bool iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
                        unsigned flags,
-                       JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+                       JS::MutableHandle<JSObject*> objp) const MOZ_OVERRIDE;
   virtual const char *className(JSContext *cx,
                                 JS::Handle<JSObject*> wrapper) const MOZ_OVERRIDE;
 
@@ -943,14 +943,13 @@ nsOuterWindowProxy::getEnumerablePropertyKeys(JSContext *cx, JS::Handle<JSObject
   return js::AppendUnique(cx, props, innerProps);
 }
 
-
 bool
 nsOuterWindowProxy::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
-                            unsigned flags, JS::MutableHandle<JS::Value> vp) const
+                            unsigned flags, JS::MutableHandle<JSObject*> objp) const
 {
   // BaseProxyHandler::iterate seems to do what we want here: fall
   // back on the property names returned from keys() and enumerate().
-  return js::BaseProxyHandler::iterate(cx, proxy, flags, vp);
+  return js::BaseProxyHandler::iterate(cx, proxy, flags, objp);
 }
 
 bool
