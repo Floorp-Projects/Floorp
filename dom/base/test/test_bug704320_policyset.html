@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+This checks if the right policies are applied from a given string (including whitespace, invalid policy strings, etc).  It doesn't do a complete check for all load types; that's done in another test.
+https://bugzilla.mozilla.org/show_bug.cgi?id=704320
+-->
+
+<head>
+  <meta charset="utf-8">
+  <title>Test policies for Bug 704320</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+var advance = function() { tests.next(); };
+
+/**
+ * Listen for notifications from the child.
+ * These are sent in case of error, or when the loads we await have completed.
+ */
+window.addEventListener("message", function(event) {
+    if (event.data == "childLoadComplete") {
+      // all loads happen, continue the test.
+      advance();
+    } else if (event.data == "childOverload") {
+      // too many loads happened in a test frame, abort.
+      ok(false, "Too many load handlers called in test.");
+      SimpleTest.finish();
+    } else if (event.data.indexOf("fail-") == 0) {
+      // something else failed in the test frame, abort.
+      ok(false, "Child failed the test with error " + event.data.substr(5));
+      SimpleTest.finish();
+    }});
+
+/**
+ * This is the main test routine -- serialized by use of a generator.
+ * It resets the counter, then performs two tests in sequence using
+ * the same iframe.
+ */
+var tests = (function() {
+  var iframe = document.getElementById("testframe");
+  const sjs = "/tests/dom/base/test/bug704320.sjs?action=generate-policy-test";
+
+
+  // basic calibration check
+  // reset the counter
+  yield resetCounter();
+
+  // load the first test frame
+  // it will call back into this function via postMessage when it finishes loading.
+  // and continue beyond the yield.
+  yield iframe.src = sjs + "&policy=" + escape('default');
+
+  // check the first test (two images, no referrers)
+  yield checkResults("default", ["full"]);
+
+  // check invalid policy
+  // According to the spec section 6.4, if there is a policy token
+  // and it is not one of the expected tokens, "No Referrer"
+  // should be the policy used.
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape('invalid-policy');
+  yield checkResults("invalid", ["none"]);
+
+  // whitespace checks.
+  // according to the spec section 4.1, the content attribute's value
+  // is fed to the token policy algorithm after stripping leading and
+  // trailing whitespace.
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape('default   ');
+  yield checkResults("trailing whitespace", ["full"]);
+
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape(' origin\f');
+  yield checkResults("trailing form feed", ["origin"]);
+
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape('\f origin');
+  yield checkResults("leading form feed", ["origin"]);
+
+  // origin when cross-origin (trimming whitespace)
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape(' origin-when-crossorigin');
+  yield checkResults("origin-when-crossorigin", ["origin", "full"]);
+
+  // according to the spec section 4.1:
+  // "If the meta element lacks a content attribute, or if that attribute’s
+  //  value is the empty string, then abort these steps."
+  // This means empty or missing content attribute means to ignore the meta
+  // tag and use default policy.
+  // Whitespace here is space, tab, LF, FF and CR.
+  // http://www.w3.org/html/wg/drafts/html/CR/infrastructure.html#space-character
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape(' \t  ');
+  yield checkResults("basic whitespace only policy", ["full"]);
+
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape(' \f\r\n\t  ');
+  yield checkResults("whitespace only policy", ["full"]);
+
+  // and double-check that no-referrer works.
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape('no-referrer');
+  yield checkResults("no-referrer", ["none"]);
+
+  // complete.  Be sure to yield so we don't call this twice.
+  yield SimpleTest.finish();
+})();
+
+// Helper functions below.
+
+
+/**
+ * helper to perform an XHR.
+ * Used by resetCounter() and checkResults().
+ */
+function doXHR(url, onSuccess, onFail) {
+  var xhr = new XMLHttpRequest();
+  xhr.onload = function () {
+    if (xhr.status == 200) {
+      onSuccess(xhr);
+    } else {
+      onFail(xhr);
+    }
+  };
+  xhr.open('GET', url, true);
+  xhr.send(null);
+}
+
+/**
+ * This triggers state-resetting on the counter server.
+ */
+function resetCounter() {
+  doXHR('/tests/dom/base/test/bug704320_counter.sjs?reset',
+        advance,
+        function(xhr) {
+          ok(false, "Need to be able to reset the request counter");
+          SimpleTest.finish();
+        });
+}
+
+/**
+ * Grabs the results via XHR and passes to checker.
+ */
+function checkResults(testname, expected) {
+  doXHR('/tests/dom/base/test/bug704320_counter.sjs?results',
+        function(xhr) {
+          var results = JSON.parse(xhr.responseText);
+          info(xhr.responseText);
+
+          ok('img' in results,
+              testname + " test: some image loads required in results object.");
+          is(results['img'].count, 2,
+            testname + " Test: Expected 2 loads for image requests.");
+
+          expected.forEach(function (ref) {
+            ok(results['img'].referrers.indexOf(ref) >= 0,
+                testname + " Test: Expected " + ref + " referrer policy in test, results were " + 
+                JSON.stringify(results['img'].referrers) +".");
+            });
+          advance();
+        },
+        function(xhr) {
+          ok(false, "Can't get results from the counter server.");
+          SimpleTest.finish();
+        });
+}
+
+</script>
+</head>
+
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+
+</body>
+</html>
+

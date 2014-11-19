@@ -15,6 +15,7 @@
 #include "nsIStructuredCloneContainer.h"
 #include "nsIInputStream.h"
 #include "nsIURI.h"
+#include "mozilla/net/ReferrerPolicy.h"
 #include <algorithm>
 
 namespace dom = mozilla::dom;
@@ -27,7 +28,8 @@ static uint32_t gEntryID = 0;
 
 
 nsSHEntry::nsSHEntry()
-  : mLoadType(0)
+  : mReferrerPolicy(mozilla::net::RP_Default)
+  , mLoadType(0)
   , mID(gEntryID++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
@@ -42,6 +44,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   : mShared(other.mShared)
   , mURI(other.mURI)
   , mReferrerURI(other.mReferrerURI)
+  , mReferrerPolicy(other.mReferrerPolicy)
   , mTitle(other.mTitle)
   , mPostData(other.mPostData)
   , mLoadType(0)         // XXX why not copy?
@@ -131,6 +134,18 @@ NS_IMETHODIMP nsSHEntry::GetReferrerURI(nsIURI **aReferrerURI)
 NS_IMETHODIMP nsSHEntry::SetReferrerURI(nsIURI *aReferrerURI)
 {
   mReferrerURI = aReferrerURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::GetReferrerPolicy(uint32_t *aReferrerPolicy)
+{
+  *aReferrerPolicy = mReferrerPolicy;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSHEntry::SetReferrerPolicy(uint32_t aReferrerPolicy)
+{
+  mReferrerPolicy = aReferrerPolicy;
   return NS_OK;
 }
 

@@ -1592,6 +1592,9 @@ AsmJSModule::changeHeap(Handle<ArrayBufferObject*> newHeap, JSContext *cx)
     if (interrupted_)
         return false;
 
+    AutoFlushICache afc("AsmJSModule::changeHeap");
+    setAutoFlushICacheRange();
+
     restoreHeapToInitialState(maybeHeap_);
     initHeap(newHeap, cx);
     return true;

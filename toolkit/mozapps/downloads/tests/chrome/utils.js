@@ -85,7 +85,7 @@ function addDownload(aName) {
                                .QueryInterface(Ci.nsILoadContext);
 
     persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
-    persist.saveURI(dl.source, null, null, null, null, dl.targetFile, privacyContext);
+    persist.saveURI(dl.source, null, null, 0, null, null, dl.targetFile, privacyContext);
 
     return dl;
   }

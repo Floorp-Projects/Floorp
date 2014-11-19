@@ -1167,6 +1167,16 @@ MarionetteServerConnection.prototype = {
       return;
     }
 
+    // At least on desktop, navigating in chrome scope does not
+    // correspond to something a user can do, and leaves marionette
+    // and the browser in an unusable state. Return a generic error insted.
+    // TODO: Error codes need to be refined as a part of bug 1100545 and
+    // bug 945729.
+    if (appName == "Firefox") {
+      sendError("Cannot navigate in chrome context", 13, null, command_id);
+      return;
+    }
+
     this.getCurrentWindow().location.href = aRequest.parameters.url;
     let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     let start = new Date().getTime();

@@ -33,6 +33,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TypedEnum.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -135,6 +136,14 @@ namespace image {
 class Decoder;
 class FrameAnimator;
 class ScaleRunner;
+
+MOZ_BEGIN_ENUM_CLASS(DecodeStatus, uint8_t)
+  INACTIVE,
+  PENDING,
+  ACTIVE,
+  WORK_DONE,
+  STOPPED
+MOZ_END_ENUM_CLASS(DecodeStatus)
 
 class RasterImage MOZ_FINAL : public ImageResource
                             , public nsIProperties
@@ -306,55 +315,7 @@ public:
     eShutdownIntent_AllCount    = 3
   };
 
-  // Decode strategy
-
 private:
-  nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
-
-  /**
-   * Each RasterImage has a pointer to one or zero heap-allocated
-   * DecodeRequests.
-   */
-  struct DecodeRequest
-  {
-    explicit DecodeRequest(RasterImage* aImage)
-      : mImage(aImage)
-      , mBytesToDecode(0)
-      , mRequestStatus(REQUEST_INACTIVE)
-      , mChunkCount(0)
-      , mAllocatedNewFrame(false)
-    { }
-
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodeRequest)
-
-    RasterImage* mImage;
-
-    size_t mBytesToDecode;
-
-    enum DecodeRequestStatus
-    {
-      REQUEST_INACTIVE,
-      REQUEST_PENDING,
-      REQUEST_ACTIVE,
-      REQUEST_WORK_DONE,
-      REQUEST_STOPPED
-    } mRequestStatus;
-
-    /* Keeps track of how much time we've burned decoding this particular decode
-     * request. */
-    TimeDuration mDecodeTime;
-
-    /* The number of chunks it took to decode this image. */
-    int32_t mChunkCount;
-
-    /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
-     * been called to flush data to it */
-    bool mAllocatedNewFrame;
-
-  private:
-    ~DecodeRequest() {}
-  };
-
   /*
    * DecodePool is a singleton class we use when decoding large images.
    *
@@ -442,18 +403,14 @@ private:
     class DecodeJob : public nsRunnable
     {
     public:
-      DecodeJob(DecodeRequest* aRequest, RasterImage* aImg)
-        : mRequest(aRequest)
-        , mImage(aImg)
-      {}
+      DecodeJob(RasterImage* aImage) : mImage(aImage) { }
 
-      NS_IMETHOD Run();
+      NS_IMETHOD Run() MOZ_OVERRIDE;
 
     protected:
       virtual ~DecodeJob();
 
     private:
-      nsRefPtr<DecodeRequest> mRequest;
       nsRefPtr<RasterImage> mImage;
     };
 
@@ -476,17 +433,14 @@ private:
      * Ensures the decode state accumulated by the decoding process gets
      * applied to the image.
      */
-    static void NotifyFinishedSomeDecoding(RasterImage* image, DecodeRequest* request);
+    static void NotifyFinishedSomeDecoding(RasterImage* aImage);
 
     NS_IMETHOD Run();
 
-  private: /* methods */
-    DecodeDoneWorker(RasterImage* image, DecodeRequest* request);
-
-  private: /* members */
+  private:
+    DecodeDoneWorker(RasterImage* aImage);
 
     nsRefPtr<RasterImage> mImage;
-    nsRefPtr<DecodeRequest> mRequest;
   };
 
   class FrameNeededWorker : public nsRunnable
@@ -497,7 +451,7 @@ private:
      * decoder that it needs a new frame to be allocated on the main thread.
      *
      * Dispatches an event to do so, which will further dispatch a
-     * DecodeRequest event to continue decoding.
+     * RequestDecode event to continue decoding.
      */
     static void GetNewFrame(RasterImage* image);
 
@@ -512,7 +466,6 @@ private:
   };
 
   nsresult FinishedSomeDecoding(eShutdownIntent intent = eShutdownIntent_Done,
-                                DecodeRequest* request = nullptr,
                                 Progress aProgress = NoProgress);
 
   void DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
@@ -637,7 +590,7 @@ private: // data
 
   // Decoder and friends
   nsRefPtr<Decoder>          mDecoder;
-  nsRefPtr<DecodeRequest>    mDecodeRequest;
+  DecodeStatus               mDecodeStatus;
   // END LOCKED MEMBER VARIABLES
 
   // Notification state. Used to avoid recursive notifications.

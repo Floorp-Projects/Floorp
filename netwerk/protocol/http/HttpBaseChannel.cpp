@@ -76,6 +76,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mProxyResolveFlags(0)
   , mContentDispositionHint(UINT32_MAX)
   , mHttpHandler(gHttpHandler)
+  , mReferrerPolicy(REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE)
   , mRedirectCount(0)
   , mForcePending(false)
 {
@@ -899,14 +900,37 @@ HttpBaseChannel::GetReferrer(nsIURI **referrer)
 NS_IMETHODIMP
 HttpBaseChannel::SetReferrer(nsIURI *referrer)
 {
+  return SetReferrerWithPolicy(referrer, REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE);
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetReferrerPolicy(uint32_t *referrerPolicy)
+{
+  NS_ENSURE_ARG_POINTER(referrerPolicy);
+  *referrerPolicy = mReferrerPolicy;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
+                                       uint32_t referrerPolicy)
+{
   ENSURE_CALLED_BEFORE_CONNECT();
 
   // clear existing referrer, if any
   mReferrer = nullptr;
   mRequestHead.ClearHeader(nsHttp::Referer);
+  mReferrerPolicy = REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE;
 
-  if (!referrer)
-      return NS_OK;
+  if (!referrer) {
+    return NS_OK;
+  }
+
+  // Don't send referrer at all when the meta referrer setting is "no-referrer"
+  if (referrerPolicy == REFERRER_POLICY_NO_REFERRER) {
+    mReferrerPolicy = REFERRER_POLICY_NO_REFERRER;
+    return NS_OK;
+  }
 
   // 0: never send referer
   // 1: send referer for direct user action
@@ -929,12 +953,14 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
 
   // check referrer blocking pref
   uint32_t referrerLevel;
-  if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)
+  if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
     referrerLevel = 1; // user action
-  else
+  } else {
     referrerLevel = 2; // inline content
-  if (userReferrerLevel < referrerLevel)
+  }
+  if (userReferrerLevel < referrerLevel) {
     return NS_OK;
+  }
 
   nsCOMPtr<nsIURI> referrerGrip;
   nsresult rv;
@@ -992,8 +1018,7 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
     rv = referrer->SchemeIs(*scheme, &match);
     if (NS_FAILED(rv)) return rv;
   }
-  if (!match)
-    return NS_OK; // kick out....
+  if (!match) return NS_OK; // kick out....
 
   //
   // Handle secure referrals.
@@ -1003,26 +1028,50 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   //
   rv = referrer->SchemeIs("https", &match);
   if (NS_FAILED(rv)) return rv;
+
   if (match) {
     rv = mURI->SchemeIs("https", &match);
     if (NS_FAILED(rv)) return rv;
-    if (!match)
-      return NS_OK;
 
-    if (!gHttpHandler->SendSecureXSiteReferrer()) {
-      nsAutoCString referrerHost;
-      nsAutoCString host;
+    // It's ok to send referrer for https-to-http scenarios if the referrer
+    // policy is "unsafe-url" or "origin".
+    if (referrerPolicy != REFERRER_POLICY_UNSAFE_URL &&
+        referrerPolicy != REFERRER_POLICY_ORIGIN) {
 
-      rv = referrer->GetAsciiHost(referrerHost);
-      if (NS_FAILED(rv)) return rv;
+      // in other referrer policies, https->http is not allowed...
+      if (!match) return NS_OK;
 
-      rv = mURI->GetAsciiHost(host);
-      if (NS_FAILED(rv)) return rv;
+      // ...and https->https is possibly only allowed if the hosts match.
+      if (!gHttpHandler->SendSecureXSiteReferrer()) {
+        nsAutoCString referrerHost;
+        nsAutoCString host;
 
-      // GetAsciiHost returns lowercase hostname.
-      if (!referrerHost.Equals(host))
-        return NS_OK;
+        rv = referrer->GetAsciiHost(referrerHost);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mURI->GetAsciiHost(host);
+        if (NS_FAILED(rv)) return rv;
+
+        // GetAsciiHost returns lowercase hostname.
+        if (!referrerHost.Equals(host))
+          return NS_OK;
+      }
     }
+  }
+
+  // for cross-origin-based referrer changes (not just host-based), figure out
+  // if the referrer is being sent cross-origin.
+  nsCOMPtr<nsIURI> loadingURI;
+  bool isCrossOrigin = true;
+  if (mLoadInfo) {
+    mLoadInfo->LoadingPrincipal()->GetURI(getter_AddRefs(loadingURI));
+  }
+  if (loadingURI) {
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    rv = ssm->CheckSameOriginURI(loadingURI, mURI, false);
+    isCrossOrigin = NS_FAILED(rv);
+  } else {
+    NS_WARNING("no loading principal available via loadInfo, assumming load is cross-origin");
   }
 
   nsCOMPtr<nsIURI> clone;
@@ -1032,6 +1081,7 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   //  (2) keep a reference to it after returning from this function
   //
   // Use CloneIgnoringRef to strip away any fragment per RFC 2616 section 14.36
+  // and Referrer Policy section 6.3.5.
   rv = referrer->CloneIgnoringRef(getter_AddRefs(clone));
   if (NS_FAILED(rv)) return rv;
 
@@ -1077,10 +1127,21 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   }
 
   // strip away any userpass; we don't want to be giving out passwords ;-)
+  // This is required by Referrer Policy stripping algorithm.
   rv = clone->SetUserPass(EmptyCString());
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString spec;
+
+  // site-specified referrer trimming may affect the trim level
+  // "unsafe-url" behaves like "origin" (send referrer in the same situations) but
+  // "unsafe-url" sends the whole referrer and origin removes the path.
+  // "origin-when-cross-origin" trims the referrer only when the request is
+  // cross-origin.
+  if (referrerPolicy == REFERRER_POLICY_ORIGIN ||
+      (isCrossOrigin && referrerPolicy == REFERRER_POLICY_ORIGIN_WHEN_XORIGIN)) {
+    userReferrerTrimmingPolicy = 2;
+  }
 
   // check how much referer to send
   switch (userReferrerTrimmingPolicy) {
@@ -1117,8 +1178,11 @@ HttpBaseChannel::SetReferrer(nsIURI *referrer)
   }
 
   // finally, remember the referrer URI and set the Referer header.
+  rv = SetRequestHeader(NS_LITERAL_CSTRING("Referer"), spec, false);
+  if (NS_FAILED(rv)) return rv;
+
   mReferrer = clone;
-  mRequestHead.SetHeader(nsHttp::Referer, spec);
+  mReferrerPolicy = referrerPolicy;
   return NS_OK;
 }
 
@@ -2071,7 +2135,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   }
   // convey the referrer if one was used for this channel to the next one
   if (mReferrer)
-    httpChannel->SetReferrer(mReferrer);
+    httpChannel->SetReferrerWithPolicy(mReferrer, mReferrerPolicy);
   // convey the mAllowPipelining and mAllowSTS flags
   httpChannel->SetAllowPipelining(mAllowPipelining);
   httpChannel->SetAllowSTS(mAllowSTS);
