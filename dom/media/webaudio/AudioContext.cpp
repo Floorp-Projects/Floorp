@@ -632,17 +632,21 @@ AudioContext::GetGlobalJSObject() const
   return parentObject->GetGlobalJSObject();
 }
 
-void
+already_AddRefed<Promise>
 AudioContext::StartRendering(ErrorResult& aRv)
 {
+  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
+
   MOZ_ASSERT(mIsOffline, "This should only be called on OfflineAudioContext");
   if (mIsStarted) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
+    return nullptr;
   }
 
   mIsStarted = true;
-  mDestination->StartRendering();
+  nsRefPtr<Promise> promise = Promise::Create(parentObject, aRv);
+  mDestination->StartRendering(promise);
+  return promise.forget();
 }
 
 void
