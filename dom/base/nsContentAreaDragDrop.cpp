@@ -158,7 +158,10 @@ nsContentAreaDragDropDataProvider::SaveURIToFile(nsAString& inSourceURIString,
 
   persist->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
 
-  return persist->SavePrivacyAwareURI(sourceURI, nullptr, nullptr, nullptr, nullptr,
+  // referrer policy can be anything since the referrer is nullptr
+  return persist->SavePrivacyAwareURI(sourceURI, nullptr, nullptr,
+                                      mozilla::net::RP_Default,
+                                      nullptr, nullptr,
                                       inDestFile, isPrivate);
 }
 

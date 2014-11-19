@@ -1330,7 +1330,7 @@ InsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 /*static */ void
 CompositorParent::PostInsertVsyncProfilerMarker(TimeStamp aVsyncTimestamp)
 {
-  if (profiler_is_active()) {
+  if (profiler_is_active() && sCompositorThreadHolder) {
     CompositorLoop()->PostTask(FROM_HERE,
       NewRunnableFunction(InsertVsyncProfilerMarker, aVsyncTimestamp));
   }

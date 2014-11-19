@@ -27,7 +27,7 @@ interface nsISimpleEnumerator;
  * @version 0.3
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(42ef3b0a-cd82-454b-b4c4-f3470014a68b)]
+[scriptable, builtinclass, uuid(e61377d2-910e-4c65-a64b-428d150e1fd1)]
 interface imgILoader : nsISupports
 {
   // Extra flags to pass to loadImage if you want a load to use CORS
@@ -40,6 +40,9 @@ interface imgILoader : nsISupports
    * @param aURI the URI to load
    * @param aInitialDocumentURI the URI that 'initiated' the load -- used for 3rd party cookie blocking
    * @param aReferrerURI the 'referring' URI
+   * @param aReferrerPolicy the policy to apply to sending referrers.
+   *           examples: "default", "never", "always", "origin"
+   *           (see W3C referrer-policy spec for valid policy strings)
    * @param aLoadingPrincipal the principal of the loading document
    * @param aLoadGroup Loadgroup to put the image load into
    * @param aObserver the observer (may be null)
@@ -60,6 +63,7 @@ interface imgILoader : nsISupports
   imgIRequest loadImageXPCOM(in nsIURI aURI,
                              in nsIURI aInitialDocumentURL,
                              in nsIURI aReferrerURI,
+                             in AString aReferrerPolicy,
                              in nsIPrincipal aLoadingPrincipal,
                              in nsILoadGroup aLoadGroup,
                              in imgINotificationObserver aObserver,

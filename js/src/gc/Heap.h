@@ -952,7 +952,9 @@ struct Chunk
     ArenaHeader *allocateArena(JSRuntime *rt, JS::Zone *zone, AllocKind kind,
                                const AutoLockGC &lock);
 
-    void releaseArena(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock);
+    enum ArenaDecommitState { IsCommitted = false, IsDecommitted = true };
+    void releaseArena(JSRuntime *rt, ArenaHeader *aheader, const AutoLockGC &lock,
+                      ArenaDecommitState state = IsCommitted);
     void recycleArena(ArenaHeader *aheader, SortedArenaList &dest, AllocKind thingKind,
                       size_t thingsPerArena);
 
@@ -983,11 +985,12 @@ struct Chunk
     unsigned findDecommittedArenaOffset();
     ArenaHeader* fetchNextDecommittedArena();
 
+    void addArenaToFreeList(JSRuntime *rt, ArenaHeader *aheader);
+    void addArenaToDecommittedList(JSRuntime *rt, const ArenaHeader *aheader);
+
   public:
     /* Unlink and return the freeArenasHead. */
     inline ArenaHeader* fetchNextFreeArena(JSRuntime *rt);
-
-    inline void addArenaToFreeList(JSRuntime *rt, ArenaHeader *aheader);
 };
 
 static_assert(sizeof(Chunk) == ChunkSize,

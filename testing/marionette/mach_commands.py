@@ -128,6 +128,8 @@ class MachCommands(MachCommandBase):
         help='Test type, usually one of: browser, b2g, b2g-qemu.')
     @CommandArgument('--profile',
         help='Path to gecko profile to use.')
+    @CommandArgument('--gecko-log',
+        help='Path to gecko log file, or "-" for stdout.')
     @CommandArgument('tests', nargs='*', metavar='TESTS',
         help='Path to test(s) to run.')
     def run_marionette_test(self, tests, **kwargs):

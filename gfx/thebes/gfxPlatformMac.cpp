@@ -17,11 +17,13 @@
 
 #include "nsTArray.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/VsyncDispatcher.h"
 #include "qcms.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 
 #include <dlfcn.h>
+#include <CoreVideo/CoreVideo.h>
 
 #include "nsCocoaFeatures.h"
 
@@ -373,14 +375,14 @@ uint32_t
 gfxPlatformMac::ReadAntiAliasingThreshold()
 {
     uint32_t threshold = 0;  // default == no threshold
-    
+
     // first read prefs flag to determine whether to use the setting or not
     bool useAntiAliasingThreshold = Preferences::GetBool("gfx.use_text_smoothing_setting", false);
 
     // if the pref setting is disabled, return 0 which effectively disables this feature
     if (!useAntiAliasingThreshold)
         return threshold;
-        
+
     // value set via Appearance pref panel, "Turn off text smoothing for font sizes xxx and smaller"
     CFNumberRef prefValue = (CFNumberRef)CFPreferencesCopyAppValue(CFSTR("AppleAntiAliasingThreshold"), kCFPreferencesCurrentApplication);
 
@@ -417,6 +419,91 @@ gfxPlatformMac::UseProgressivePaint()
   // Progressive painting requires cross-process mutexes, which don't work so
   // well on OS X 10.6 so we disable there.
   return nsCocoaFeatures::OnLionOrLater() && gfxPlatform::UseProgressivePaint();
+}
+
+// This is the renderer output callback function, called on the vsync thread
+static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
+                              const CVTimeStamp* aNow,
+                              const CVTimeStamp* aOutputTime,
+                              CVOptionFlags aFlagsIn,
+                              CVOptionFlags* aFlagsOut,
+                              void* aDisplayLinkContext)
+{
+  mozilla::VsyncSource* vsyncSource = (mozilla::VsyncSource*) aDisplayLinkContext;
+  if (vsyncSource->IsVsyncEnabled()) {
+    // Now refers to "Now" as in when this callback is called or when the current frame
+    // is displayed. aOutputTime is when the next frame should be displayed.
+    // Now is VERY VERY noisy, aOutputTime is in the future though.
+    int64_t timestamp = aOutputTime->hostTime;
+    mozilla::TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(timestamp);
+    mozilla::VsyncDispatcher::GetInstance()->NotifyVsync(vsyncTime);
+    return kCVReturnSuccess;
+  } else {
+    return kCVReturnDisplayLinkNotRunning;
+  }
+}
+
+class OSXVsyncSource MOZ_FINAL : public mozilla::VsyncSource
+{
+public:
+  OSXVsyncSource()
+  {
+    EnableVsync();
+  }
+
+  virtual void EnableVsync() MOZ_OVERRIDE
+  {
+    // Create a display link capable of being used with all active displays
+    // TODO: See if we need to create an active DisplayLink for each monitor in multi-monitor
+    // situations. According to the docs, it is compatible with all displays running on the computer
+    // But if we have different monitors at different display rates, we may hit issues.
+    if (CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink) != kCVReturnSuccess) {
+      NS_WARNING("Could not create a display link, returning");
+      return;
+    }
+
+    // Set the renderer output callback function
+    if (CVDisplayLinkSetOutputCallback(mDisplayLink, &VsyncCallback, this) != kCVReturnSuccess) {
+      NS_WARNING("Could not set displaylink output callback");
+      return;
+    }
+
+    // Activate the display link
+    if (CVDisplayLinkStart(mDisplayLink) != kCVReturnSuccess) {
+      NS_WARNING("Could not activate the display link");
+      mDisplayLink = nullptr;
+    }
+  }
+
+  virtual void DisableVsync() MOZ_OVERRIDE
+  {
+    // Release the display link
+    if (mDisplayLink) {
+      CVDisplayLinkRelease(mDisplayLink);
+      mDisplayLink = nullptr;
+    }
+  }
+
+  virtual bool IsVsyncEnabled() MOZ_OVERRIDE
+  {
+    return mDisplayLink != nullptr;
+  }
+
+private:
+  virtual ~OSXVsyncSource()
+  {
+    DisableVsync();
+  }
+
+  // Manages the display link render thread
+  CVDisplayLinkRef   mDisplayLink;
+}; // OSXVsyncSource
+
+void
+gfxPlatformMac::InitHardwareVsync()
+{
+  nsRefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
+  mozilla::VsyncDispatcher::GetInstance()->SetVsyncSource(osxVsyncSource);
 }
 
 void

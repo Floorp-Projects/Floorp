@@ -587,8 +587,13 @@ protected:
     gfxPlatform();
     virtual ~gfxPlatform();
 
-    void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aLen, 
+    void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aLen,
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
+
+    /**
+     * Initialized hardware vsync based on each platform.
+     */
+    virtual void InitHardwareVsync() {}
 
     /**
      * Helper method, creates a draw target for a specific Azure backend.

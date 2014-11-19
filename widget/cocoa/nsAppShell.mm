@@ -87,7 +87,7 @@ private:
     }
     return NS_OK;
   }
-};
+}; // MacWakeLockListener
 
 // defined in nsCocoaWindow.mm
 extern int32_t             gXULModalLevel;

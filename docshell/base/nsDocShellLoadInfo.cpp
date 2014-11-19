@@ -10,6 +10,7 @@
 #include "nsIInputStream.h"
 #include "nsIURI.h"
 #include "nsIDocShell.h"
+#include "mozilla/net/ReferrerPolicy.h"
 
 //*****************************************************************************
 //***    nsDocShellLoadInfo: Object Management
@@ -19,6 +20,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
   : mInheritOwner(false),
     mOwnerIsExplicit(false),
     mSendReferrer(true),
+    mReferrerPolicy(mozilla::net::RP_Default),
     mLoadType(nsIDocShellLoadInfo::loadNormal),
     mIsSrcdocLoad(false)
 {
@@ -190,6 +192,18 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetSendReferrer(bool aSendReferrer)
 {
    mSendReferrer = aSendReferrer;
    return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::GetReferrerPolicy(nsDocShellInfoReferrerPolicy* aReferrerPolicy)
+{
+   *aReferrerPolicy = mReferrerPolicy;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetReferrerPolicy(nsDocShellInfoReferrerPolicy aReferrerPolicy)
+{
+    mReferrerPolicy = aReferrerPolicy;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsDocShellLoadInfo::GetIsSrcdocLoad(bool* aIsSrcdocLoad)

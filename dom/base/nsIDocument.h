@@ -19,6 +19,7 @@
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
 #include "nsTHashtable.h"                // for member
+#include "mozilla/net/ReferrerPolicy.h"  // for member
 #include "nsWeakReference.h"
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/WeakPtr.h"
@@ -169,6 +170,7 @@ class nsIDocument : public nsINode
 {
   typedef mozilla::dom::GlobalObject GlobalObject;
 public:
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
   typedef mozilla::dom::Element Element;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
@@ -270,6 +272,15 @@ public:
    * chrome privileged script.
    */
   virtual void SetChromeXHRDocBaseURI(nsIURI* aURI) = 0;
+
+  /**
+   * Return the referrer policy of the document. Return "default" if there's no
+   * valid meta referrer tag found in the document.
+   */
+  ReferrerPolicy GetReferrerPolicy() const
+  {
+    return mReferrerPolicy;
+  }
 
   /**
    * Set the principal responsible for this document.
@@ -1886,7 +1897,8 @@ public:
    * be a void string if the attr is not present.
    */
   virtual void MaybePreLoadImage(nsIURI* uri,
-                                 const nsAString& aCrossOriginAttr) = 0;
+                                 const nsAString& aCrossOriginAttr,
+                                 ReferrerPolicy aReferrerPolicy) = 0;
 
   /**
    * Called by nsParser to preload style sheets.  Can also be merged into the
@@ -1894,7 +1906,8 @@ public:
    * should be a void string if the attr is not present.
    */
   virtual void PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
-                            const nsAString& aCrossOriginAttr) = 0;
+                            const nsAString& aCrossOriginAttr,
+                            ReferrerPolicy aReferrerPolicy) = 0;
 
   /**
    * Called by the chrome registry to load style sheets.  Can be put
@@ -2467,6 +2480,9 @@ protected:
   nsCOMPtr<nsIURI> mChromeXHRDocBaseURI;
 
   nsWeakPtr mDocumentLoadGroup;
+
+  bool mReferrerPolicySet;
+  ReferrerPolicy mReferrerPolicy;
 
   mozilla::WeakPtr<nsDocShell> mDocumentContainer;
 
