@@ -239,6 +239,17 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
 void
 URL::GetOrigin(nsString& aOrigin, ErrorResult& aRv) const
 {
+  nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(mURI);
+  if (uriWithPrincipal) {
+    nsCOMPtr<nsIPrincipal> principal;
+    uriWithPrincipal->GetPrincipal(getter_AddRefs(principal));
+
+    if (principal) {
+      nsContentUtils::GetUTFOrigin(principal, aOrigin);
+      return;
+    }
+  }
+
   nsContentUtils::GetUTFOrigin(mURI, aOrigin);
 }
 
