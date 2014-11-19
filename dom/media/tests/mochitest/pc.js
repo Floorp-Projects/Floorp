@@ -678,6 +678,17 @@ PeerConnectionTest.prototype.setStepTimeout = function(ms) {
 };
 
 /**
+ * Set a timeout for the over all PeerConnectionTest
+ * @param {long] ms the number of milliseconds to allow for the test
+ */
+PeerConnectionTest.prototype.setTimeout = function(ms) {
+  this._timeout = setTimeout(function() {
+    ok(false, "PeerConnectionTest timed out");
+    this.teardown();
+  }.bind(this), ms);
+};
+
+/**
  * Creates an answer for the specified peer connection instance
  * and automatically handles the failure case.
  *
