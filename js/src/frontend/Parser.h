@@ -506,6 +506,9 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // whether it's prohibited due to strictness, JS version, or occurrence
     // inside a star generator.
     bool checkYieldNameValidity();
+    bool yieldExpressionsSupported() {
+        return versionNumber() >= JSVERSION_1_7 || pc->isGenerator();
+    }
 
     virtual bool strictMode() { return pc->sc->strict; }
 

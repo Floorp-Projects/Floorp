@@ -17,8 +17,8 @@
 #include <algorithm>
 #include "ImageContainer.h"
 #include "gfxPrefs.h"
-#define PIXMAN_DONT_DEFINE_STDINT
-#include "pixman.h"                     // for pixman_f_transform, etc
+#include "skia/SkCanvas.h"              // for SkCanvas
+#include "skia/SkBitmapDevice.h"        // for SkBitmapDevice
 
 namespace mozilla {
 using namespace mozilla::gfx;
@@ -168,75 +168,62 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                    mode, aMask, aMaskTransform, &matrix);
 }
 
-static pixman_transform
-Matrix3DToPixman(const gfx3DMatrix& aMatrix)
+static SkMatrix
+Matrix3DToSkia(const gfx3DMatrix& aMatrix)
 {
-  pixman_f_transform transform;
+  SkMatrix transform;
+  transform.setAll(aMatrix._11,
+                   aMatrix._21,
+                   aMatrix._41,
+                   aMatrix._12,
+                   aMatrix._22,
+                   aMatrix._42,
+                   aMatrix._14,
+                   aMatrix._24,
+                   aMatrix._44);
 
-  transform.m[0][0] = aMatrix._11;
-  transform.m[0][1] = aMatrix._21;
-  transform.m[0][2] = aMatrix._41;
-  transform.m[1][0] = aMatrix._12;
-  transform.m[1][1] = aMatrix._22;
-  transform.m[1][2] = aMatrix._42;
-  transform.m[2][0] = aMatrix._14;
-  transform.m[2][1] = aMatrix._24;
-  transform.m[2][2] = aMatrix._44;
-
-  pixman_transform result;
-  pixman_transform_from_pixman_f_transform(&result, &transform);
-
-  return result;
+  return transform;
 }
 
 static void
-PixmanTransform(DataSourceSurface* aDest,
-                DataSourceSurface* aSource,
-                const gfx3DMatrix& aTransform,
-                const Point& aDestOffset)
+SkiaTransform(DataSourceSurface* aDest,
+              DataSourceSurface* aSource,
+              const gfx3DMatrix& aTransform,
+              const Point& aDestOffset)
 {
-  IntSize destSize = aDest->GetSize();
-  pixman_image_t* dest = pixman_image_create_bits(PIXMAN_a8r8g8b8,
-                                                  destSize.width,
-                                                  destSize.height,
-                                                  (uint32_t*)aDest->GetData(),
-                                                  aDest->Stride());
-
-  IntSize srcSize = aSource->GetSize();
-  pixman_image_t* src = pixman_image_create_bits(PIXMAN_a8r8g8b8,
-                                                 srcSize.width,
-                                                 srcSize.height,
-                                                 (uint32_t*)aSource->GetData(),
-                                                 aSource->Stride());
-
-  NS_ABORT_IF_FALSE(src && dest, "Failed to create pixman images?");
-
-  pixman_transform pixTransform = Matrix3DToPixman(aTransform);
-  pixman_transform pixTransformInverted;
-
-  // If the transform is singular then nothing would be drawn anyway, return here
-  if (!pixman_transform_invert(&pixTransformInverted, &pixTransform)) {
-    pixman_image_unref(dest);
-    pixman_image_unref(src);
+  if (aTransform.IsSingular()) {
     return;
   }
-  pixman_image_set_transform(src, &pixTransformInverted);
 
-  pixman_image_composite32(PIXMAN_OP_SRC,
-                           src,
-                           nullptr,
-                           dest,
-                           aDestOffset.x,
-                           aDestOffset.y,
-                           0,
-                           0,
-                           0,
-                           0,
-                           destSize.width,
-                           destSize.height);
+  IntSize destSize = aDest->GetSize();
+  SkImageInfo destInfo = SkImageInfo::Make(destSize.width,
+                                           destSize.height,
+                                           kBGRA_8888_SkColorType,
+                                           kPremul_SkAlphaType);
+  SkBitmap destBitmap;
+  destBitmap.setInfo(destInfo, aDest->Stride());
+  destBitmap.setPixels((uint32_t*)aDest->GetData());
+  SkCanvas destCanvas(destBitmap);
 
-  pixman_image_unref(dest);
-  pixman_image_unref(src);
+  IntSize srcSize = aSource->GetSize();
+  SkImageInfo srcInfo = SkImageInfo::Make(srcSize.width,
+                                          srcSize.height,
+                                          kBGRA_8888_SkColorType,
+                                          kPremul_SkAlphaType);
+  SkBitmap src;
+  src.setInfo(srcInfo, aSource->Stride());
+  src.setPixels((uint32_t*)aSource->GetData());
+
+  gfx3DMatrix transform = aTransform;
+  transform.TranslatePost(Point3D(-aDestOffset.x, -aDestOffset.y, 0));
+  destCanvas.setMatrix(Matrix3DToSkia(transform));
+
+  SkPaint paint;
+  paint.setXfermodeMode(SkXfermode::kSrc_Mode);
+  paint.setAntiAlias(true);
+  paint.setFilterLevel(SkPaint::kLow_FilterLevel);
+  SkRect destRect = SkRect::MakeXYWH(0, 0, srcSize.width, srcSize.height);
+  destCanvas.drawBitmapRectToRect(src, nullptr, destRect, &paint);
 }
 
 static inline IntRect
@@ -377,12 +364,12 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     RefPtr<SourceSurface> snapshot = dest->Snapshot();
     RefPtr<DataSourceSurface> source = snapshot->GetDataSurface();
     RefPtr<DataSourceSurface> temp =
-      Factory::CreateDataSourceSurface(RoundOut(transformBounds).Size(), SurfaceFormat::B8G8R8A8);
+      Factory::CreateDataSourceSurface(RoundOut(transformBounds).Size(), SurfaceFormat::B8G8R8A8, true);
     if (NS_WARN_IF(!temp)) {
       return;
     }
 
-    PixmanTransform(temp, source, new3DTransform, transformBounds.TopLeft());
+    SkiaTransform(temp, source, new3DTransform, transformBounds.TopLeft());
 
     transformBounds.MoveTo(0, 0);
     buffer->DrawSurface(temp, transformBounds, transformBounds);
