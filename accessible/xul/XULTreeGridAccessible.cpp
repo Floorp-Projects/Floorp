@@ -13,6 +13,7 @@
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
+#include "nsQueryObject.h"
 
 #include "nsIBoxObject.h"
 #include "nsIMutableArray.h"

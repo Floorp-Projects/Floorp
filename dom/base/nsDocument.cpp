@@ -224,6 +224,7 @@
 #include "nsLocation.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/BoxObject.h"
+#include "nsQueryObject.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "mozilla/MediaManager.h"

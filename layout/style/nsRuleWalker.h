@@ -14,6 +14,7 @@
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "StyleRule.h"
+#include "nsQueryObject.h"
 
 class nsRuleWalker {
 public:
