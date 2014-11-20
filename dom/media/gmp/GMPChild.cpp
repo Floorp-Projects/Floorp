@@ -25,7 +25,7 @@
 
 using mozilla::dom::CrashReporterChild;
 
-static const int MAX_PLUGIN_VOUCHER_LENGTH = 50000;
+static const int MAX_PLUGIN_VOUCHER_LENGTH = 500000;
 
 #ifdef XP_WIN
 #include <stdlib.h> // for _exit()
