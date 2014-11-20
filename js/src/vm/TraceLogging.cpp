@@ -97,6 +97,7 @@ TraceLoggerThread::TraceLoggerThread()
   : enabled(0),
     failed(false),
     graph(),
+    iteration_(0),
     top(nullptr)
 { }
 
@@ -252,10 +253,56 @@ TraceLoggerThread::disable()
 }
 
 const char *
-TraceLoggerThread::eventText(uint32_t id) {
+TraceLoggerThread::eventText(uint32_t id)
+{
     if (id < TraceLogger_Last)
         return TLTextIdString(static_cast<TraceLoggerTextId>(id));
     return extraTextId[id - TraceLogger_Last];
+}
+
+bool
+TraceLoggerThread::textIdIsScriptEvent(uint32_t id)
+{
+    if (id < TraceLogger_Last)
+        return false;
+
+    // Currently this works by checking if text begins with "script".
+    const char *str = eventText(id);
+    return EqualChars(str, "script", 6);
+}
+
+void
+TraceLoggerThread::extractScriptDetails(uint32_t textId, const char **filename, size_t *filename_len,
+                                        const char **lineno, size_t *lineno_len, const char **colno,
+                                        size_t *colno_len)
+{
+    MOZ_ASSERT(textIdIsScriptEvent(textId));
+
+    const char *script = eventText(textId);
+
+    // Get the start of filename (remove 'script ' at the start).
+    MOZ_ASSERT(EqualChars(script, "script ", 7));
+    *filename = script + 7;
+
+    // Get the start of lineno and colno.
+    *lineno = script;
+    *colno = script;
+    const char *next = script - 1;
+    while ((next = strchr(next + 1, ':'))) {
+        *lineno = *colno;
+        *colno = next;
+    }
+
+    MOZ_ASSERT(*lineno && *lineno != script);
+    MOZ_ASSERT(*colno && *colno != script);
+
+    // Remove the ':' at the front.
+    *lineno = *lineno + 1;
+    *colno = *colno + 1;
+
+    *filename_len = *lineno - *filename - 1;
+    *lineno_len = *colno - *lineno - 1;
+    *colno_len = strlen(*colno);
 }
 
 uint32_t
@@ -382,6 +429,7 @@ TraceLoggerThread::logTimestamp(uint32_t id)
         if (graph.get())
             graph->log(events);
 
+        iteration_++;
         events.clear();
 
         // Log the time it took to flush the events as being from the
