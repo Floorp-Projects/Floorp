@@ -53,7 +53,7 @@ var fingerprintRegex = /^a=fingerprint:(\S+) (\S+)/m;
 var identityRegex = /^a=identity:(\S+)/m;
 
 function fingerprintSdp(fingerprints) {
-  return fingerprints.map(fp => "a=fInGeRpRiNt=" + fp.algorithm +
+  return fingerprints.map(fp => "a=fInGeRpRiNt:" + fp.algorithm +
                                 " " + fp.digest + "\n").join("");
 }
 
@@ -78,20 +78,20 @@ function testMultipleFingerprints() {
 
     pcDouble.createOffer(function(offer) {
       ok(offer, "Got offer");
-      var m = offer.sdp.match(fingerprintRegex);
-      if (!m) {
+      var fp = offer.sdp.match(fingerprintRegex);
+      if (!fp) {
         finished(false, "No fingerprint in offer SDP");
         return;
       }
 
-      var fingerprints = makeFingerprints(m[1], m[2]);
+      var fingerprints = makeFingerprints(fp[1], fp[2]);
       getIdentityAssertion(fingerprints, function(assertion) {
         ok(assertion, "Should have assertion");
 
-        var sdp = offer.sdp.slice(0, m.index) +
+        var sdp = offer.sdp.slice(0, fp.index) +
           "a=identity:" + assertion + "\n" +
           fingerprintSdp(fingerprints.slice(1)) +
-          offer.sdp.slice(m.index);
+          offer.sdp.slice(fp.index);
 
         var desc = new mozRTCSessionDescription({ type: "offer", sdp: sdp });
         pcStrict.setRemoteDescription(desc, function() {
