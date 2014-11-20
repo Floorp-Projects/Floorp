@@ -5579,8 +5579,15 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
       pseudoTag->ToString(atomString);
       aTo += nsPrintfCString("%s", NS_LossyConvertUTF16toASCII(atomString).get());
     }
-    if (GetParent() && mStyleContext->GetParent() != GetParent()->StyleContext()) {
-      aTo += nsPrintfCString(",parent=%p", mStyleContext->GetParent());
+    if (!mStyleContext->GetParent() ||
+        (GetParent() && GetParent()->StyleContext() != mStyleContext->GetParent())) {
+      aTo += nsPrintfCString("^%p", mStyleContext->GetParent());
+      if (mStyleContext->GetParent()) {
+        aTo += nsPrintfCString("^%p", mStyleContext->GetParent()->GetParent());
+        if (mStyleContext->GetParent()->GetParent()) {
+          aTo += nsPrintfCString("^%p", mStyleContext->GetParent()->GetParent()->GetParent());
+        }
+      }
     }
   }
   aTo += "]";
