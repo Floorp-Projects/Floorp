@@ -115,31 +115,7 @@ public:
                               AsyncTransactionTracker* aAsyncTransactionTracker) MOZ_OVERRIDE;
 
 protected:
-  virtual bool UpdateImageInternal(ImageContainer* aContainer, uint32_t aContentFlags, bool* aIsSwapped);
-
-protected:
   RefPtr<TextureClient> mFrontBuffer;
-};
-
-/**
- * An image client which uses two texture clients.
- */
-class ImageClientBuffered : public ImageClientSingle
-{
-public:
-  ImageClientBuffered(CompositableForwarder* aFwd,
-                      TextureFlags aFlags,
-                      CompositableType aType);
-
-  virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
-
-  virtual void OnDetach() MOZ_OVERRIDE;
-
-  virtual void FlushAllImages(bool aExceptFront,
-                              AsyncTransactionTracker* aAsyncTransactionTracker) MOZ_OVERRIDE;
-
-protected:
-  RefPtr<TextureClient> mBackBuffer;
 };
 
 /**
