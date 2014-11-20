@@ -629,8 +629,8 @@ class TransportConduitTest : public ::testing::Test
     ASSERT_EQ(mozilla::kMediaConduitNoError, err);
 
     //configure send and recv codecs on theconduit
-    mozilla::VideoCodecConfig cinst1(120, "VP8", 0);
-    mozilla::VideoCodecConfig cinst2(124, "I420", 0);
+    mozilla::VideoCodecConfig cinst1(120, "VP8");
+    mozilla::VideoCodecConfig cinst2(124, "I420");
 
 
     std::vector<mozilla::VideoCodecConfig* > rcvCodecList;
@@ -711,8 +711,8 @@ class TransportConduitTest : public ::testing::Test
     cerr << "    1. Same Codec (VP8) Repeated Twice " << endl;
     cerr << "   *************************************************" << endl;
 
-    mozilla::VideoCodecConfig cinst1(120, "VP8", 0);
-    mozilla::VideoCodecConfig cinst2(120, "VP8", 0);
+    mozilla::VideoCodecConfig cinst1(120, "VP8");
+    mozilla::VideoCodecConfig cinst2(120, "VP8");
     rcvCodecList.push_back(&cinst1);
     rcvCodecList.push_back(&cinst2);
     err = videoSession->ConfigureRecvMediaCodecs(rcvCodecList);
@@ -728,8 +728,8 @@ class TransportConduitTest : public ::testing::Test
     cerr << "   Setting payload 1 with name: I4201234tttttthhhyyyy89087987y76t567r7756765rr6u6676" << endl;
     cerr << "   Setting payload 2 with name of zero length" << endl;
 
-    mozilla::VideoCodecConfig cinst3(124, "I4201234tttttthhhyyyy89087987y76t567r7756765rr6u6676", 0);
-    mozilla::VideoCodecConfig cinst4(124, "", 0);
+    mozilla::VideoCodecConfig cinst3(124, "I4201234tttttthhhyyyy89087987y76t567r7756765rr6u6676");
+    mozilla::VideoCodecConfig cinst4(124, "");
 
     rcvCodecList.push_back(&cinst3);
     rcvCodecList.push_back(&cinst4);
@@ -812,7 +812,7 @@ class TransportConduitTest : public ::testing::Test
       ASSERT_NE(mVideoSession, (void*)nullptr);
 
     // Configure send codecs on the conduit.
-    mozilla::VideoCodecConfig cinst1(120, "VP8", 0, max_fs);
+    mozilla::VideoCodecConfig cinst1(120, "VP8", max_fs);
 
     err = mVideoSession->ConfigureSendMediaCodec(&cinst1);
     ASSERT_EQ(mozilla::kMediaConduitNoError, err);
@@ -947,7 +947,7 @@ class TransportConduitTest : public ::testing::Test
   void SetGmpCodecs() {
     mExternalEncoder = mozilla::GmpVideoCodec::CreateEncoder();
     mExternalDecoder = mozilla::GmpVideoCodec::CreateDecoder();
-    mozilla::VideoCodecConfig config(124, "H264", 0);
+    mozilla::VideoCodecConfig config(124, "H264");
     mVideoSession->SetExternalSendCodec(&config, mExternalEncoder);
     mVideoSession2->SetExternalRecvCodec(&config, mExternalDecoder);
   }
