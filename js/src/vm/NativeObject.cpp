@@ -2053,7 +2053,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
     RootedShape shape(cxArg);
     if (mode == ParallelExecution) {
         NativeObject *npobj;
-        if (!LookupPropertyPure(obj, id, &npobj, shape.address()))
+        if (!LookupPropertyPure(cxArg, obj, id, &npobj, shape.address()))
             return false;
         pobj = npobj;
     } else {
