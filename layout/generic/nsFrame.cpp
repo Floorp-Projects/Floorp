@@ -130,6 +130,11 @@ struct nsContentAndOffset
 #define FORCE_SELECTION_UPDATE 1
 #define CALC_DEBUG             0
 
+// This is faster than nsBidiPresUtils::IsFrameInParagraphDirection,
+// because it uses the frame pointer passed in without drilling down to
+// the leaf frame.
+#define REVERSED_DIRECTION_FRAME(frame) \
+  (!IS_SAME_DIRECTION(NS_GET_EMBEDDING_LEVEL(frame), NS_GET_BASE_LEVEL(frame)))
 
 #include "nsILineIterator.h"
 
@@ -5910,7 +5915,7 @@ nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
         NS_PTR_TO_INT32(Properties().Get(nsIFrame::EmbeddingLevelProperty(),
                                          &hasEmbeddingLevel));
       bool isRTL = hasEmbeddingLevel
-        ? (embeddingLevel & 1) == 1
+        ? IS_LEVEL_RTL(embeddingLevel)
         : StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
       if ((!isRTL && inOffset > newOffset) ||
           (isRTL && inOffset <= newOffset)) {
@@ -6354,8 +6359,7 @@ nsIFrame::PeekOffsetParagraph(nsPeekOffsetStruct *aPos)
 // Determine movement direction relative to frame
 static bool IsMovingInFrameDirection(nsIFrame* frame, nsDirection aDirection, bool aVisual)
 {
-  bool isReverseDirection = aVisual ?
-    (NS_GET_EMBEDDING_LEVEL(frame) & 1) != (NS_GET_BASE_LEVEL(frame) & 1) : false;
+  bool isReverseDirection = aVisual && REVERSED_DIRECTION_FRAME(frame);
   return aDirection == (isReverseDirection ? eDirPrevious : eDirNext);
 }
 
@@ -6652,7 +6656,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(baseFrame);
           // If the direction of the frame on the edge is opposite to that of the line,
           // we'll need to drill down to its opposite end, so reverse endOfLine.
-          if ((embeddingLevel & 1) == !lineIsRTL)
+          if (IS_LEVEL_RTL(embeddingLevel) == !lineIsRTL)
             endOfLine = !endOfLine;
         }
       } else {
@@ -6875,8 +6879,8 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
       nsIFrame** framePtr = aDirection == eDirPrevious ? &firstFrame : &lastFrame;
       if (*framePtr) {
         nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
-        if ((((embeddingLevel & 1) && lineIsRTL) || (!(embeddingLevel & 1) && !lineIsRTL)) ==
-            (aDirection == eDirPrevious)) {
+        bool frameIsRTL = IS_LEVEL_RTL(embeddingLevel);
+        if ((frameIsRTL == lineIsRTL) == (aDirection == eDirPrevious)) {
           nsFrame::GetFirstLeaf(presContext, framePtr);
         } else {
           nsFrame::GetLastLeaf(presContext, framePtr);
@@ -6945,11 +6949,9 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
 
   *aOutOffset = (aDirection == eDirNext) ? 0 : -1;
 
-  if (aVisual) {
-    uint8_t newLevel = NS_GET_EMBEDDING_LEVEL(traversedFrame);
-    uint8_t newBaseLevel = NS_GET_BASE_LEVEL(traversedFrame);
-    if ((newLevel & 1) != (newBaseLevel & 1)) // The new frame is reverse-direction, go to the other end
-      *aOutOffset = -1 - *aOutOffset;
+  if (aVisual && REVERSED_DIRECTION_FRAME(traversedFrame)) {
+    // The new frame is reverse-direction, go to the other end
+    *aOutOffset = -1 - *aOutOffset;
   }
   *aOutFrame = traversedFrame;
   return NS_OK;
