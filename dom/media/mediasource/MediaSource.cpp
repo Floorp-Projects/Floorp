@@ -418,14 +418,10 @@ void
 MediaSource::DurationChange(double aOldDuration, double aNewDuration)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_DEBUG("MediaSource(%p)::DurationChange(aNewDuration=%f)", this, aNewDuration);
+  MSE_DEBUG("MediaSource(%p)::DurationChange(aOldDuration=%f, aNewDuration=%f)", this, aOldDuration, aNewDuration);
 
   if (aNewDuration < aOldDuration) {
-    ErrorResult rv;
-    mSourceBuffers->Remove(aNewDuration, aOldDuration, rv);
-    if (rv.Failed()) {
-      return;
-    }
+    mSourceBuffers->RangeRemoval(aNewDuration, aOldDuration);
   }
   // TODO: If partial audio frames/text cues exist, clamp duration based on mSourceBuffers.
 }
