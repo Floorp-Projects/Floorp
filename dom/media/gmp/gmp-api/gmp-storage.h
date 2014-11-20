@@ -110,4 +110,31 @@ class GMPRecordClient {
   virtual ~GMPRecordClient() {}
 };
 
+// Iterates over the records that are available. Note: this list maintains
+// a snapshot of the records that were present when the iterator was created.
+// Create by calling the GMPCreateRecordIteratorPtr function on the
+// GMPPlatformAPI struct.
+// Iteration is in alphabetical order.
+class GMPRecordIterator {
+public:
+  // Retrieve the name for the current record.
+  // Returns GMPNoErr if successful, or GMPEndOfEnumeration if iteration has
+  // reached the end.
+  virtual GMPErr GetName(const char ** aOutName, uint32_t * aOutNameLength) = 0;
+
+  // Advance iteration to the next record.
+  // Returns GMPNoErr if successful, or GMPEndOfEnumeration if iteration has
+  // reached the end.
+  virtual GMPErr NextRecord() = 0;
+
+  // Signals to the GMP host that the GMP is finished with the
+  // GMPRecordIterator. GMPs must call this to release memory held by
+  // the GMPRecordIterator. Do not access the GMPRecordIterator pointer
+  // after calling this!
+  // Memory retrieved by GetName is *not* valid after calling Close()!
+  virtual void Close() = 0;
+
+  virtual ~GMPRecordIterator() {}
+};
+
 #endif // GMP_STORAGE_h_
