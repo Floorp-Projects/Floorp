@@ -18,7 +18,7 @@ public:
   scoped_array(T* t) : nsAutoArrayPtr<T>(t) {}
   void reset(T* t) {
     scoped_array<T> other(t);
-    operator=(other);
+    this->operator=(other);
   }
 };
 
