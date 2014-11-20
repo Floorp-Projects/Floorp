@@ -314,6 +314,7 @@ if CONFIG['ENABLE_TRACE_LOGGING']:
     SOURCES += [
         'vm/TraceLogging.cpp',
         'vm/TraceLoggingGraph.cpp',
+        'vm/TraceLoggingTypes.cpp',
     ]
 
 if not CONFIG['ENABLE_ION']:
