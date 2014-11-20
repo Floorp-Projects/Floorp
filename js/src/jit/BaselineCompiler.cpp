@@ -82,7 +82,7 @@ BaselineCompiler::compile()
             script->filename(), script->lineno());
 
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
+    AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, script));
     AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
     if (!script->ensureHasTypes(cx) || !script->ensureHasAnalyzedArgsUsage(cx))

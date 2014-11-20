@@ -920,7 +920,7 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime *runtime, JSScript *script, b
     // Patch the logging script textId to be correct.
     // When logging log the specific textId else the global Scripts textId.
     TraceLoggerThread *logger = TraceLoggerForMainThread(runtime);
-    uint32_t textId = TraceLogCreateTextId(logger, script);
+    uint32_t textId = TraceLogCreateTextId(logger, TraceLogger_Scripts, script);
     CodeLocationLabel patchLocation(method()->raw() + traceLoggerScriptTextIdOffset_);
     if (enable) {
         Assembler::PatchDataWithValueCheck(patchLocation,
