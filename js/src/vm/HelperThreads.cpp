@@ -1060,7 +1060,7 @@ HelperThread::handleIonWorkload()
 
     TraceLogger *logger = TraceLoggerForCurrentThread();
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, ionBuilder->script()));
-    AutoTraceLog logCompile(logger, TraceLogger::IonCompilation);
+    AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
     JSRuntime *rt = ionBuilder->script()->compartment()->runtimeFromAnyThread();
 
@@ -1129,7 +1129,7 @@ void
 js::PauseCurrentHelperThread()
 {
     TraceLogger *logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logPaused(logger, TraceLogger::IonCompilationPaused);
+    AutoTraceLog logPaused(logger, TraceLogger_IonCompilationPaused);
 
     HelperThread *thread = CurrentHelperThread();
 

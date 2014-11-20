@@ -1485,7 +1485,7 @@ Interpret(JSContext *cx, RunState &state)
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     uint32_t scriptLogId = TraceLogCreateTextId(logger, script);
     TraceLogStartEvent(logger, scriptLogId);
-    TraceLogStartEvent(logger, TraceLogger::Interpreter);
+    TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
     /*
      * Pool of rooters for use in this interpreter frame. References to these
@@ -1775,8 +1775,8 @@ CASE(JSOP_RETRVAL)
     if (activation.entryFrame() != REGS.fp()) {
         // Stop the engine. (No details about which engine exactly, could be
         // interpreter, Baseline or IonMonkey.)
-        TraceLogStopEvent(logger, TraceLogger::Engine);
-        TraceLogStopEvent(logger, TraceLogger::Scripts);
+        TraceLogStopEvent(logger, TraceLogger_Engine);
+        TraceLogStopEvent(logger, TraceLogger_Scripts);
 
         interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
 
@@ -2614,7 +2614,7 @@ CASE(JSOP_FUNCALL)
 
     uint32_t scriptLogId = TraceLogCreateTextId(logger, script);
     TraceLogStartEvent(logger, scriptLogId);
-    TraceLogStartEvent(logger, TraceLogger::Interpreter);
+    TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
     if (!REGS.fp()->prologue(cx))
         goto error;
@@ -3525,7 +3525,7 @@ DEFAULT()
 
     gc::MaybeVerifyBarriers(cx, true);
 
-    TraceLogStopEvent(logger, TraceLogger::Engine);
+    TraceLogStopEvent(logger, TraceLogger_Engine);
     TraceLogStopEvent(logger, scriptLogId);
 
     /*

@@ -2022,8 +2022,8 @@ CodeGenerator::visitOsrEntry(LOsrEntry *lir)
 
 #ifdef JS_TRACE_LOGGING
     if (gen->info().executionMode() == SequentialExecution) {
-        emitTracelogStopEvent(TraceLogger::Baseline);
-        emitTracelogStartEvent(TraceLogger::IonMonkey);
+        emitTracelogStopEvent(TraceLogger_Baseline);
+        emitTracelogStartEvent(TraceLogger_IonMonkey);
     }
 #endif
 
@@ -7351,7 +7351,7 @@ CodeGenerator::generate()
     if (!gen->compilingAsmJS() && gen->info().executionMode() == SequentialExecution) {
         if (!emitTracelogScriptStart())
             return false;
-        if (!emitTracelogStartEvent(TraceLogger::IonMonkey))
+        if (!emitTracelogStartEvent(TraceLogger_IonMonkey))
             return false;
     }
 #endif
