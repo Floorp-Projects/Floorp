@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["UITour"];
+this.EXPORTED_SYMBOLS = ["UITour", "UITourMetricsProvider"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -23,7 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
   "resource://gre/modules/UITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
   "resource:///modules/BrowserUITelemetry.jsm");
-
+XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
+  "resource://gre/modules/Metrics.jsm");
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL      = "browser.uitour.loglevel";
@@ -1544,3 +1545,105 @@ this.UITour = {
 };
 
 this.UITour.init();
+
+/**
+ * UITour Health Report
+ */
+const DAILY_DISCRETE_TEXT_FIELD = Metrics.Storage.FIELD_DAILY_DISCRETE_TEXT;
+
+/**
+ * Public API to be called by the UITour code
+ */
+const UITourHealthReport = {
+  recordTreatmentTag: function(tag, value) {
+#ifdef MOZ_SERVICES_HEALTHREPORT
+    Task.spawn(function*() {
+      let reporter = Cc["@mozilla.org/datareporting/service;1"]
+                       .getService()
+                       .wrappedJSObject
+                       .healthReporter;
+
+      // This can happen if the FHR component of the data reporting service is
+      // disabled. This is controlled by a pref that most will never use.
+      if (!reporter) {
+        return;
+      }
+
+      yield reporter.onInit();
+
+      // Get the UITourMetricsProvider instance from the Health Reporter
+      reporter.getProvider("org.mozilla.uitour").recordTreatmentTag(tag, value);
+    });
+#endif
+  }
+};
+
+this.UITourMetricsProvider = function() {
+  Metrics.Provider.call(this);
+}
+
+UITourMetricsProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  name: "org.mozilla.uitour",
+
+  measurementTypes: [
+    UITourTreatmentMeasurement1,
+  ],
+
+  recordTreatmentTag: function(tag, value) {
+    let m = this.getMeasurement(UITourTreatmentMeasurement1.prototype.name,
+                                UITourTreatmentMeasurement1.prototype.version);
+    let field = tag;
+
+    if (this.storage.hasFieldFromMeasurement(m.id, field,
+                                             DAILY_DISCRETE_TEXT_FIELD)) {
+      let fieldID = this.storage.fieldIDFromMeasurement(m.id, field);
+      return this.enqueueStorageOperation(function recordKnownField() {
+        return this.storage.addDailyDiscreteTextFromFieldID(fieldID, value);
+      }.bind(this));
+    }
+
+    // Otherwise, we first need to create the field.
+    return this.enqueueStorageOperation(function recordField() {
+      // This function has to return a promise.
+      return Task.spawn(function () {
+        let fieldID = yield this.storage.registerField(m.id, field,
+                                                       DAILY_DISCRETE_TEXT_FIELD);
+        yield this.storage.addDailyDiscreteTextFromFieldID(fieldID, value);
+      }.bind(this));
+    }.bind(this));
+  },
+});
+
+function UITourTreatmentMeasurement1() {
+  Metrics.Measurement.call(this);
+
+  this._serializers = {};
+  this._serializers[this.SERIALIZE_JSON] = {
+    //singular: We don't need a singular serializer because we have none of this data
+    daily: this._serializeJSONDaily.bind(this)
+  };
+
+}
+
+UITourTreatmentMeasurement1.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "treatment",
+  version: 1,
+
+  // our fields are dynamic
+  fields: { },
+
+  // We need a custom serializer because the default one doesn't accept unknown fields
+  _serializeJSONDaily: function(data) {
+    let result = {_v: this.version };
+
+    for (let [field, data] of data) {
+      result[field] = data;
+    }
+
+    return result;
+  }
+});
