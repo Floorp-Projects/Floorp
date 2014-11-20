@@ -25,6 +25,7 @@ public:
                       nsTArray<uint8_t>& aOutBytes) = 0;
   virtual GMPErr Write(const nsCString& aRecordName,
                        const nsTArray<uint8_t>& aBytes) = 0;
+  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) = 0;
   virtual void Close(const nsCString& aRecordName) = 0;
 };
 
@@ -42,6 +43,7 @@ protected:
   virtual bool RecvRead(const nsCString& aRecordName) MOZ_OVERRIDE;
   virtual bool RecvWrite(const nsCString& aRecordName,
                          const InfallibleTArray<uint8_t>& aBytes) MOZ_OVERRIDE;
+  virtual bool RecvGetRecordNames() MOZ_OVERRIDE;
   virtual bool RecvClose(const nsCString& aRecordName) MOZ_OVERRIDE;
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
