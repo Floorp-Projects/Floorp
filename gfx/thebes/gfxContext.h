@@ -398,7 +398,6 @@ public:
 
     // define enum for operators (clear, src, dst, etc)
     enum GraphicsOperator {
-        OPERATOR_CLEAR,
         OPERATOR_SOURCE,
 
         OPERATOR_OVER,
@@ -555,7 +554,6 @@ private:
   struct AzureState {
     AzureState()
       : op(mozilla::gfx::CompositionOp::OP_OVER)
-      , opIsClear(false)
       , color(0, 0, 0, 1.0f)
       , clipWasReset(false)
       , fillRule(mozilla::gfx::FillRule::FILL_WINDING)
@@ -564,7 +562,6 @@ private:
     {}
 
     mozilla::gfx::CompositionOp op;
-    bool opIsClear;
     Color color;
     nsRefPtr<gfxPattern> pattern;
     nsRefPtr<gfxASurface> sourceSurfCairo;

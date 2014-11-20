@@ -89,10 +89,8 @@ gfxSurfaceDrawable::DrawInternal(gfxContext* aContext,
     Rect fillRect = ToRect(aFillRect);
     DrawTarget* dt = aContext->GetDrawTarget();
 
-    if (aContext->CurrentOperator() == gfxContext::OPERATOR_CLEAR) {
-        dt->ClearRect(fillRect);
-    } else if (aContext->CurrentOperator() == gfxContext::OPERATOR_SOURCE &&
-               aOpacity == 1.0) {
+    if (aContext->CurrentOperator() == gfxContext::OPERATOR_SOURCE &&
+        aOpacity == 1.0) {
         // Emulate cairo operator source which is bound by mask!
         dt->ClearRect(fillRect);
         dt->FillRect(fillRect, pattern);
