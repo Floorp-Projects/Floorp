@@ -147,3 +147,51 @@
 #UITourTooltipButtons > button.button-primary:not(:active):hover {
   background-color: rgb(105,173,61);
 }
+
+.SearchHighlight {
+  -moz-margin-end: 6px;
+  font-size: 110%;
+  width: 225px;
+}
+
+.SearchHighlight label,
+.SearchHighlight description {
+  color: #535353;
+  margin: 0 0 8px 0;
+  padding: 0;
+}
+
+.SearchHighlightTitle {
+  font-weight: bold;
+}
+
+.SearchHighlight .dot {
+  width: 7px;
+  height: 7px;
+  background-image: -moz-image-rect(url("chrome://browser/skin/dots.png"), 0, 100%, 100%, 9);
+  background-size: 7px;
+  background-position: center center;
+  background-repeat: no-repeat;
+  -moz-margin-end: 2px;
+}
+
+.SearchHighlight .dot.filled {
+  background-image: -moz-image-rect(url("chrome://browser/skin/dots.png"), 0, 7, 100%, 0);
+}
+
+.SearchHighlight button {
+  margin: 0;
+  /* On some platforms clicking the button will steal focus from the search box
+     causing the popup to close. */
+  -moz-user-focus: ignore;
+}
+
+@media not all and (max-resolution: 1dppx) {
+  .SearchHighlight .dot {
+    background-image: -moz-image-rect(url("chrome://browser/skin/dots@2x.png"), 0, 100%, 100%, 18);
+  }
+
+  .SearchHighlight .dot.filled {
+    background-image: -moz-image-rect(url("chrome://browser/skin/dots@2x.png"), 0, 14, 100%, 0);
+  }
+}
