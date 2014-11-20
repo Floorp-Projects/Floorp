@@ -8,6 +8,8 @@
 
 #include "mozilla/Endian.h"
 
+#include "jsstr.h"
+
 #include "vm/TraceLogging.h"
 
 #ifndef TRACE_LOG_DIR
@@ -552,12 +554,14 @@ TraceLoggerGraph::addTextId(uint32_t id, const char *text)
     MOZ_ASSERT(id == nextTextId);
     nextTextId++;
 
-    int written;
-    if (id > 0)
-        written = fprintf(dictFile, ",\n\"%s\"", text);
-    else
-        written = fprintf(dictFile, "\"%s\"", text);
+    if (id > 0) {
+        int written = fprintf(dictFile, ",\n");
+        if (written < 0) {
+            failed = true;
+            return;
+        }
+    }
 
-    if (written < 0)
+    if (!js::FileEscapedString(dictFile, text, strlen(text), '"'))
         failed = true;
 }
