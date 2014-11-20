@@ -6058,6 +6058,8 @@ bool CodeGenerator::visitSubstr(LSubstr *lir)
     Register length = ToRegister(lir->length());
     Register output = ToRegister(lir->output());
     Register temp = ToRegister(lir->temp());
+    Register temp2 = ToRegister(lir->temp2());
+    Register temp3 = ToRegister(lir->temp3());
     Address stringFlags(string, JSString::offsetOfFlags());
 
     Label isLatin1, notInline, nonZero, isInlinedLatin1;
@@ -6102,9 +6104,10 @@ bool CodeGenerator::visitSubstr(LSubstr *lir)
                      Address(output, JSString::offsetOfFlags()));
         masm.computeEffectiveAddress(stringStorage, temp);
         BaseIndex chars(temp, begin, ScaleFromElemWidth(sizeof(char16_t)));
-        masm.computeEffectiveAddress(chars, begin);
+        masm.computeEffectiveAddress(chars, temp2);
         masm.computeEffectiveAddress(outputStorage, temp);
-        CopyStringChars(masm, temp, begin, length, string, sizeof(char16_t), sizeof(char16_t));
+        CopyStringChars(masm, temp, temp2, length, temp3, sizeof(char16_t), sizeof(char16_t));
+        masm.load32(Address(output, JSString::offsetOfLength()), length);
         masm.store16(Imm32(0), Address(temp, 0));
         masm.jump(done);
     }
@@ -6112,11 +6115,12 @@ bool CodeGenerator::visitSubstr(LSubstr *lir)
     {
         masm.store32(Imm32(JSString::INIT_FAT_INLINE_FLAGS | JSString::LATIN1_CHARS_BIT),
                      Address(output, JSString::offsetOfFlags()));
-        masm.computeEffectiveAddress(stringStorage, temp);
+        masm.computeEffectiveAddress(stringStorage, temp2);
         static_assert(sizeof(char) == 1, "begin index shouldn't need scaling");
-        masm.addPtr(temp, begin);
+        masm.addPtr(begin, temp2);
         masm.computeEffectiveAddress(outputStorage, temp);
-        CopyStringChars(masm, temp, begin, length, string, sizeof(char), sizeof(char));
+        CopyStringChars(masm, temp, temp2, length, temp3, sizeof(char), sizeof(char));
+        masm.load32(Address(output, JSString::offsetOfLength()), length);
         masm.store8(Imm32(0), Address(temp, 0));
         masm.jump(done);
     }
