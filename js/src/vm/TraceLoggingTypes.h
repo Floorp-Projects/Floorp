@@ -137,6 +137,12 @@ class ContinuousSpace {
         return true;
     }
 
+    ~ContinuousSpace()
+    {
+        js_free(data_);
+        data_ = nullptr;
+    }
+
     T *data() {
         return data_;
     }
