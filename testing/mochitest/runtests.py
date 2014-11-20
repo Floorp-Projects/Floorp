@@ -1711,8 +1711,9 @@ class Mochitest(MochitestUtilsMixin):
 
     self.setTestRoot(options)
 
-    # Until we have all green, this only runs on bc* jobs (not dt* jobs)
-    if options.browserChrome and not options.subsuite:
+    # This runs on bc* and dt* jobs only
+    # We need to fix tests on plain|chrome|webapprt|a11y before making this default
+    if options.browserChrome:
       options.runByDir = True
 
     if not options.runByDir:
