@@ -293,7 +293,7 @@ ElementManager.prototype = {
     let startNode = (values.element != undefined) ?
                     this.getKnownElement(values.element, win) : win.document;
     if (this.elementStrategies.indexOf(values.using) < 0) {
-      throw new ElementException("No such strategy.", 17, null);
+      throw new ElementException("No such strategy.", 32, null);
     }
     let found = all ? this.findElements(values.using, values.value, win.document, startNode) :
                       this.findElement(values.using, values.value, win.document, startNode);

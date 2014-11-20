@@ -53,6 +53,12 @@ public:
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData) MOZ_OVERRIDE;
   virtual bool MediumFeaturesChanged(nsPresContext* aPresContext) MOZ_OVERRIDE;
+  virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;
+  virtual void RulesMatching(PseudoElementRuleProcessorData* aData) MOZ_OVERRIDE;
+  virtual void RulesMatching(AnonBoxRuleProcessorData* aData) MOZ_OVERRIDE;
+#ifdef MOZ_XUL
+  virtual void RulesMatching(XULTreeRuleProcessorData* aData) MOZ_OVERRIDE;
+#endif
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
@@ -68,10 +74,23 @@ public:
   // elements.
   void AddStyleUpdatesTo(mozilla::RestyleTracker& aTracker);
 
-  virtual AnimationPlayerCollection*
+  AnimationPlayerCollection*
   GetAnimationPlayers(dom::Element *aElement,
                       nsCSSPseudoElements::Type aPseudoType,
-                      bool aCreateIfNeeded) = 0;
+                      bool aCreateIfNeeded);
+
+  // Returns true if aContent or any of its ancestors has an animation
+  // or transition.
+  static bool ContentOrAncestorHasAnimation(nsIContent* aContent) {
+    do {
+      if (aContent->GetProperty(nsGkAtoms::animationsProperty) ||
+          aContent->GetProperty(nsGkAtoms::transitionsProperty)) {
+        return true;
+      }
+    } while ((aContent = aContent->GetParent()));
+
+    return false;
+  }
 
   // Notify this manager that one of its collections of animation players,
   // has been updated.
@@ -81,6 +100,9 @@ public:
     Can_Throttle,
     Cannot_Throttle
   };
+
+  nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
+                                 nsCSSPseudoElements::Type aPseudoType);
 
   static bool ExtractComputedValueForTransition(
                   nsCSSProperty aProperty,
@@ -113,6 +135,14 @@ protected:
 
   // Check to see if we should stop or start observing the refresh driver
   void CheckNeedsRefresh();
+
+  virtual nsIAtom* GetAnimationsAtom() = 0;
+  virtual nsIAtom* GetAnimationsBeforeAtom() = 0;
+  virtual nsIAtom* GetAnimationsAfterAtom() = 0;
+
+  virtual bool IsAnimationManager() {
+    return false;
+  }
 
   // When this returns a value other than nullptr, it also,
   // as a side-effect, notifies the ActiveLayerTracker.

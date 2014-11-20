@@ -3450,18 +3450,20 @@ class LStringSplit : public LCallInstructionHelper<1, 2, 0>
     }
 };
 
-class LSubstr : public LInstructionHelper<1, 3, 1>
+class LSubstr : public LInstructionHelper<1, 3, 3>
 {
   public:
     LIR_HEADER(Substr)
 
     LSubstr(const LAllocation &string, const LAllocation &begin, const LAllocation &length,
-            const LDefinition &temp)
+            const LDefinition &temp, const LDefinition &temp2, const LDefinition &temp3)
     {
         setOperand(0, string);
         setOperand(1, begin);
         setOperand(2, length);
         setTemp(0, temp);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
     }
     const LAllocation *string() {
         return getOperand(0);
@@ -3474,6 +3476,12 @@ class LSubstr : public LInstructionHelper<1, 3, 1>
     }
     const LDefinition *temp() {
         return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return getTemp(2);
     }
     const MStringSplit *mir() const {
         return mir_->toStringSplit();

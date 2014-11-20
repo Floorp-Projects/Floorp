@@ -1450,8 +1450,11 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
               aPseudoType == nsCSSPseudoElements::ePseudo_before ||
               aPseudoType == nsCSSPseudoElements::ePseudo_after) {
-            PresContext()->TransitionManager()->
-              WalkTransitionRule(aElement, aPseudoType, &ruleWalker);
+            nsIStyleRule* rule = PresContext()->TransitionManager()->
+              GetAnimationRule(aElement, aPseudoType);
+            if (rule) {
+              ruleWalker.ForwardOnPossiblyCSSRule(rule);
+            }
           }
           break;
         }
