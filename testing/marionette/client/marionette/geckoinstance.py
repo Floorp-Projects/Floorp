@@ -16,7 +16,6 @@ from mozrunner import Runner
 class GeckoInstance(object):
 
     required_prefs = {"marionette.defaultPrefs.enabled": True,
-                      "marionette.defaultPrefs.port": 2828,
                       "marionette.logging": True,
                       "startup.homepage_welcome_url": "about:blank",
                       "browser.shell.checkDefaultBrowser": False,
@@ -45,6 +44,7 @@ class GeckoInstance(object):
 
     def start(self):
         profile_args = {"preferences": deepcopy(self.required_prefs)}
+        profile_args["preferences"]["marionette.defaultPrefs.port"] = self.marionette_port
         if self.prefs:
             profile_args["preferences"].update(self.prefs)
         if not self.profile_path:
