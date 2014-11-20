@@ -1482,7 +1482,7 @@ Interpret(JSContext *cx, RunState &state)
     RootedScript script(cx);
     SET_SCRIPT(REGS.fp()->script());
 
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     uint32_t scriptLogId = TraceLogCreateTextId(logger, script);
     TraceLogStartEvent(logger, scriptLogId);
     TraceLogStartEvent(logger, TraceLogger_Interpreter);
