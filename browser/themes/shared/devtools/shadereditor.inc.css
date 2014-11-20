@@ -6,16 +6,8 @@
 
 .notice-container {
   margin-top: -50vh;
-}
-
-.theme-dark .notice-container {
-  background-color: #343c45; /* Toolbars */
-  color: #f5f7fa; /* Light foreground text */
-}
-
-.theme-light .notice-container {
-  background-color: #f0f1f2; /* Toolbars */
-  color: #585959; /* Grey foreground text */
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color-alt);
 }
 
 #reload-notice {
@@ -99,26 +91,15 @@
   border-top: 1px solid;
 }
 
-.theme-dark .editor-label {
-  background: #343c45; /* Dark toolbars */
-  border-color: #000; /* Match the splitter color. */
-  color: #f5f7fa; /* Light foreground text */
+.editor-label {
+  background: var(--theme-toolbar-background);
+  border-color: var(--theme-splitter-color);
+  color: var(--theme-body-color-alt);
 }
 
-.theme-light .editor-label {
-  background: #f0f1f2; /* Light toolbars */
-  border-color: #aaa; /* Match the splitter color. */
-  color: #585959; /* Grey foreground text */
-}
-
-.theme-dark .editor-label[selected] {
-  background-color: #1d4f73; /* Select Highlight Blue */
-  color: #f5f7fa; /* Light foreground text */
-}
-
-.theme-light .editor-label[selected] {
-  background-color: #4c9ed9; /* Select Highlight Blue */
-  color: #f5f7fa; /* Light foreground text */
+.editor-label[selected] {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
 }
 
 /* Responsive sidebar */

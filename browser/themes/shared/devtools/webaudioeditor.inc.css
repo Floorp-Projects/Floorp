@@ -5,16 +5,8 @@
 /* Reload and waiting notices */
 .notice-container {
   margin-top: -50vh;
-}
-
-.theme-dark .notice-container {
-  background-color: #343c45; /* Toolbars */
-  color: #f5f7fa; /* Light foreground text */
-}
-
-.theme-light .notice-container {
-  background-color: #f0f1f2; /* Toolbars */
-  color: #585959; /* Grey foreground text */
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color-alt);
 }
 
 #reload-notice {
@@ -75,7 +67,7 @@ g.edgePath.param-connection {
   fill: #fcfcfc; /* Background - Editor */
 }
 .theme-dark g.edgeLabel tspan {
-  fill: #b6babf; /* Grey foreground text */
+  fill: var(--theme-body-color-alt);
 }
 .theme-light g.edgeLabel tspan {
   fill: #585959; /* Grey foreground text */
@@ -87,22 +79,13 @@ g.edgePath.param-connection {
   cursor: pointer;
 }
 
-.theme-dark .nodes rect {
-  stroke: #252c33; /* Tab toolbar */
-  fill: #343c45; /* Toolbars */
+.nodes rect {
+  stroke: var(--theme-tab-toolbar-background);
+  fill: var(--theme-toolbar-background);
 }
 
-.theme-light .nodes rect {
-  stroke: #ebeced; /* Tab toolbar */
-  fill: #f0f1f2; /* Toolbar */
-}
-
-.theme-dark .nodes g.selected rect {
-  fill: #1d4f73; /* Select Highlight Blue */
-}
-
-.theme-light .nodes g.selected rect {
-  fill: #4c9ed9; /* Select Highlight Blue */
+.nodes g.selected rect {
+  fill: var(--theme-selection-background);
 }
 
 /* Text in nodes and edges */
@@ -113,14 +96,12 @@ text {
   font-size: 14px;
 }
 
-.theme-dark text {
-  fill: #b6babf; /* Grey foreground text */
+text {
+  fill: var(--theme-body-color-alt);
 }
-.theme-light text {
-  fill: #585959; /* Grey foreground text */
-}
+
 .theme-light g.selected text {
-  fill: #f0f1f2; /* Toolbars */
+  fill: var(--theme-toolbar-background);
 }
 
 .nodes text {
