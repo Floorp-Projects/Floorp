@@ -333,30 +333,33 @@ input[type=button] {
   max-width: 600px; /* 2 * (290 cell width + 10 cell margin) */
 }
 
-#newtab-search-logo {
+#newtab-search-icon {
   display: -moz-box;
-  width: 77px; /* 65 image width + 6 left "padding" + 6 right "padding" */
+  width: 38px; /* 26 image width + 6 left "padding" + 6 right "padding" */
   height: 38px; /* 26 image height + 6 top "padding" + 6 bottom "padding" */
   border: 1px solid transparent;
-  -moz-margin-end: 8px;
+  -moz-margin-end: 5px;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 65px 26px;
+  background-size: 26px;
+  background-image: url("chrome://browser/skin/magnifier.png");
 }
 
-#newtab-search-logo[hidden] {
-  display: none;
+@media not all and (max-resolution: 1dppx) {
+  #newtab-search-icon {
+    background-image: url("chrome://browser/skin/magnifier@2px.png");
+  }
 }
 
-#newtab-search-logo[active],
-#newtab-search-logo:hover {
+#newtab-search-icon[active],
+#newtab-search-icon:hover {
   background-color: #e9e9e9;
   border: 1px solid rgb(226, 227, 229);
   border-radius: 2.5px;
 }
 
 #newtab-search-text {
-  height: 38px;
+  height: 38px; /* same height as #newtab-search-icon */
   -moz-box-flex: 1;
 
   padding: 0 8px;
@@ -380,7 +383,7 @@ input[type=button] {
 }
 
 #newtab-search-submit {
-  height: 38px;
+  height: 38px; /* same height as #newtab-search-icon */
   font-size: 13px !important;
 
   -moz-margin-start: -1px;
