@@ -193,9 +193,8 @@ TraceLogger::enable(JSContext *cx)
 
     if (enabled == 1) {
         // Get the top Activation to log the top script/pc (No inlined frames).
-        Activation *act = cx->mainThread().activation();
-        while (act && (act->cx() != cx || (act->isJit() && !act->asJit()->isActive())))
-            act = act->prev();
+        ActivationIterator iter(cx->runtime());
+        Activation *act = iter.activation();
 
         if (!act) {
             failed = true;
@@ -207,27 +206,13 @@ TraceLogger::enable(JSContext *cx)
         int32_t engine = 0;
 
         if (act->isJit()) {
-            JSRuntime *rt = cx->runtime();
+            JitFrameIterator it(iter);
 
-            JitFrameIterator it(rt->mainThread.jitTop, SequentialExecution);
-
-            MOZ_ASSERT(it.type() == JitFrame_Exit);
-            ++it;
-
-            if (it.type() == JitFrame_Rectifier ||
-                it.type() == JitFrame_Unwound_Rectifier)
-            {
+            while (!it.isScripted() && !it.done())
                 ++it;
-                MOZ_ASSERT(it.type() == JitFrame_BaselineStub ||
-                           it.type() == JitFrame_BaselineJS ||
-                           it.type() == JitFrame_IonJS);
-            }
-            if (it.type() == JitFrame_BaselineStub ||
-                it.type() == JitFrame_Unwound_BaselineStub)
-            {
-                ++it;
-                MOZ_ASSERT(it.type() == JitFrame_BaselineJS);
-            }
+
+            MOZ_ASSERT(!it.done());
+            MOZ_ASSERT(it.isIonJS() || it.isBaselineJS());
 
             script = it.script();
             engine = it.isIonJS() ? IonMonkey : Baseline;
