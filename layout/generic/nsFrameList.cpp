@@ -367,11 +367,11 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
     } else {
       // Just get the next or prev sibling, depending on block and frame direction.
       nsBidiLevel frameEmbeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(mFirstChild);
-      if ((frameEmbeddingLevel & 1) == (baseLevel & 1)) {
+      if (IS_SAME_DIRECTION(frameEmbeddingLevel, baseLevel)) {
         return aFrame ? aFrame->GetPrevSibling() : LastChild();
       } else {
         return aFrame ? aFrame->GetNextSibling() : mFirstChild;
-      }    
+      }
     }
   }
 
@@ -441,7 +441,7 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
     } else {
       // Just get the next or prev sibling, depending on block and frame direction.
       nsBidiLevel frameEmbeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(mFirstChild);
-      if ((frameEmbeddingLevel & 1) == (baseLevel & 1)) {
+      if (IS_SAME_DIRECTION(frameEmbeddingLevel, baseLevel)) {
         return aFrame ? aFrame->GetNextSibling() : mFirstChild;
       } else {
         return aFrame ? aFrame->GetPrevSibling() : LastChild();
