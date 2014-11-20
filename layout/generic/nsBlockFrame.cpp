@@ -6587,7 +6587,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
 #ifdef DEBUG
     // The only times a block that is an anonymous box is allowed to have a
     // first-letter frame are when it's the block inside a non-anonymous cell,
-    // the block inside a fieldset, a scrolled content block, or a column
+    // the block inside a fieldset, button or column set, or a scrolled
     // content block.  Note that this means that blocks which are the anonymous
     // block in {ib} splits do NOT get first-letter frames.  Note that
     // NS_BLOCK_HAS_FIRST_LETTER_STYLE gets set on all continuations of the
@@ -6598,8 +6598,9 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
        (pseudo == nsCSSAnonBoxes::cellContent &&
         GetParent()->StyleContext()->GetPseudo() == nullptr) ||
        pseudo == nsCSSAnonBoxes::fieldsetContent ||
-       pseudo == nsCSSAnonBoxes::scrolledContent ||
+       pseudo == nsCSSAnonBoxes::buttonContent ||
        pseudo == nsCSSAnonBoxes::columnContent ||
+       pseudo == nsCSSAnonBoxes::scrolledContent ||
        pseudo == nsCSSAnonBoxes::mozSVGText) &&
       !IsFrameOfType(eMathML) &&
       nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nullptr;
