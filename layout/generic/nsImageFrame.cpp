@@ -1447,6 +1447,39 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
   return LAYER_ACTIVE;
 }
 
+
+/* virtual */ nsRegion
+nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                bool* aSnap)
+{
+  *aSnap = true;
+  bool animated;
+  if (mImage && mImage->GetAnimated(&animated) == NS_OK && !animated &&
+      mImage->FrameIsOpaque(imgIContainer::FRAME_CURRENT)) {
+    // OK, the entire region painted by the image is opaque. But what is that
+    // region? It's the image's "dest rect" (the rect where a full copy of
+    // the image is mapped), clipped to the container's content box (which is
+    // what GetBounds() returns). So, we grab those rects and intersect them.
+    const nsRect frameContentBox = GetBounds(aSnap);
+
+    // Note: To get the "dest rect", we have to provide the "constraint rect"
+    // (which is the content-box, with the effects of fragmentation undone).
+    nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
+    nsRect constraintRect(frameContentBox.TopLeft(),
+                          imageFrame->mComputedSize);
+    constraintRect.y -= imageFrame->GetContinuationOffset();
+
+    const nsRect destRect =
+      nsLayoutUtils::ComputeObjectDestRect(constraintRect,
+                                           imageFrame->mIntrinsicSize,
+                                           imageFrame->mIntrinsicRatio,
+                                           imageFrame->StylePosition());
+
+    return nsRegion(destRect.Intersect(frameContentBox));
+  }
+  return nsRegion();
+}
+
 already_AddRefed<Layer>
 nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                            LayerManager* aManager,

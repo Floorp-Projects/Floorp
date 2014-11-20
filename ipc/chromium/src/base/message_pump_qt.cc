@@ -15,7 +15,6 @@
 #include <math.h>
 
 #include "base/eintr_wrapper.h"
-#include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/platform_thread.h"
 
