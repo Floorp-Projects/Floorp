@@ -144,6 +144,16 @@ struct BaselineScript
 #endif
     uint32_t spsPushToggleOffset_;
 
+#ifdef JS_TRACE_LOGGING
+#ifdef DEBUG
+    bool traceLoggerScriptsEnabled_;
+    bool traceLoggerEngineEnabled_;
+#endif
+    uint32_t traceLoggerEnterToggleOffset_;
+    uint32_t traceLoggerExitToggleOffset_;
+    uint32_t traceLoggerScriptTextIdOffset_;
+#endif
+
     // Native code offsets right after the debug prologue VM call returns, or
     // would have returned. This offset is recorded even when debug mode is
     // off to aid on-stack debug mode recompilation.
@@ -202,11 +212,15 @@ struct BaselineScript
   public:
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
     BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
-                   uint32_t spsPushToggleOffset, uint32_t postDebugPrologueOffset);
+                   uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
+                   uint32_t traceLoggerExitToggleOffset, uint32_t traceLoggerScriptTextIdOffset,
+                   uint32_t postDebugPrologueOffset);
 
     static BaselineScript *New(JSScript *jsscript, uint32_t prologueOffset,
                                uint32_t epilogueOffset, uint32_t postDebugPrologueOffset,
-                               uint32_t spsPushToggleOffset, size_t icEntries,
+                               uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
+                               uint32_t traceLoggerExitToggleOffset,
+                               uint32_t traceLoggerScriptTextIdOffset, size_t icEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
                                size_t bytecodeTypeMapEntries, size_t yieldEntries);
 
@@ -386,6 +400,9 @@ struct BaselineScript
 
     void toggleSPS(bool enable);
 
+    void toggleTraceLoggerScripts(JSRuntime *runtime, JSScript *script, bool enable);
+    void toggleTraceLoggerEngine(bool enable);
+
     void noteAccessedGetter(uint32_t pcOffset);
     void noteArrayWriteHole(uint32_t pcOffset);
 
@@ -437,6 +454,11 @@ AddSizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf, size
 
 void
 ToggleBaselineSPS(JSRuntime *runtime, bool enable);
+
+void
+ToggleBaselineTraceLoggerScripts(JSRuntime *runtime, bool enable);
+void
+ToggleBaselineTraceLoggerEngine(JSRuntime *runtime, bool enable);
 
 struct BaselineBailoutInfo
 {

@@ -14,6 +14,7 @@
 #include "jsprf.h"
 #include "jsscript.h"
 
+#include "jit/BaselineJIT.h"
 #include "jit/CompileWrappers.h"
 #include "vm/Runtime.h"
 #include "vm/TraceLoggingGraph.h"
@@ -578,6 +579,53 @@ TraceLoggerThreadState::lazyInit()
     return true;
 }
 
+void
+TraceLoggerThreadState::enableTextId(JSContext *cx, uint32_t textId)
+{
+    MOZ_ASSERT(TLTextIdIsToggable(textId));
+
+    if (enabledTextIds[textId])
+        return;
+
+    enabledTextIds[textId] = true;
+    if (textId == TraceLogger_Engine) {
+        enabledTextIds[TraceLogger_IonMonkey] = true;
+        enabledTextIds[TraceLogger_Baseline] = true;
+        enabledTextIds[TraceLogger_Interpreter] = true;
+    }
+
+    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
+
+    if (textId == TraceLogger_Scripts)
+        jit::ToggleBaselineTraceLoggerScripts(cx->runtime(), true);
+    if (textId == TraceLogger_Engine)
+        jit::ToggleBaselineTraceLoggerEngine(cx->runtime(), true);
+
+}
+void
+TraceLoggerThreadState::disableTextId(JSContext *cx, uint32_t textId)
+{
+    MOZ_ASSERT(TLTextIdIsToggable(textId));
+
+    if (!enabledTextIds[textId])
+        return;
+
+    enabledTextIds[textId] = false;
+    if (textId == TraceLogger_Engine) {
+        enabledTextIds[TraceLogger_IonMonkey] = false;
+        enabledTextIds[TraceLogger_Baseline] = false;
+        enabledTextIds[TraceLogger_Interpreter] = false;
+    }
+
+    ReleaseAllJITCode(cx->runtime()->defaultFreeOp());
+
+    if (textId == TraceLogger_Scripts)
+        jit::ToggleBaselineTraceLoggerScripts(cx->runtime(), false);
+    if (textId == TraceLogger_Engine)
+        jit::ToggleBaselineTraceLoggerEngine(cx->runtime(), false);
+}
+
+
 TraceLoggerThread *
 js::TraceLoggerForMainThread(CompileRuntime *runtime)
 {
@@ -688,4 +736,15 @@ bool
 js::TraceLogTextIdEnabled(uint32_t textId)
 {
     return traceLoggers.isTextIdEnabled(textId);
+}
+
+void
+js::TraceLogEnableTextId(JSContext *cx, uint32_t textId)
+{
+    traceLoggers.enableTextId(cx, textId);
+}
+void
+js::TraceLogDisableTextId(JSContext *cx, uint32_t textId)
+{
+    traceLoggers.disableTextId(cx, textId);
 }
