@@ -2602,7 +2602,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // Figure out which frame has the main style for the document element,
   // assigning it to mRootElementStyleFrame.
   // Backgrounds should be propagated from that frame to the viewport.
-  mRootElementStyleFrame = contentFrame->GetParentStyleContextFrame();
+  contentFrame->GetParentStyleContext(&mRootElementStyleFrame);
   bool isChild = mRootElementStyleFrame &&
                  mRootElementStyleFrame->GetParent() == contentFrame;
   if (!isChild) {
@@ -6287,15 +6287,19 @@ nsCSSFrameConstructor::IsValidSibling(nsIFrame*              aSibling,
       nsGkAtoms::menuFrame == parentType) {
     // if we haven't already, construct a style context to find the display type of aContent
     if (UNSET_DISPLAY == aDisplay) {
-      nsRefPtr<nsStyleContext> styleContext;
-      nsIFrame* styleParent = aSibling->GetParentStyleContextFrame();
+      nsIFrame* styleParent;
+      aSibling->GetParentStyleContext(&styleParent);
+      if (!styleParent) {
+        styleParent = aSibling->GetParent();
+      }
       if (!styleParent) {
         NS_NOTREACHED("Shouldn't happen");
         return false;
       }
       // XXXbz when this code is killed, the state argument to
       // ResolveStyleContext can be made non-optional.
-      styleContext = ResolveStyleContext(styleParent, aContent, nullptr);
+      nsRefPtr<nsStyleContext> styleContext =
+        ResolveStyleContext(styleParent, aContent, nullptr);
       const nsStyleDisplay* display = styleContext->StyleDisplay();
       aDisplay = display->mDisplay;
     }

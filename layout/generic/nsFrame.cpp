@@ -7734,15 +7734,33 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   return nullptr;
 }
 
-nsIFrame*
-nsFrame::DoGetParentStyleContextFrame() const
+nsStyleContext*
+nsFrame::DoGetParentStyleContext(nsIFrame** aProviderFrame) const
 {
-  if (mContent && !mContent->GetParent() &&
-      !StyleContext()->GetPseudo()) {
-    // we're a frame for the root.  We have no style context parent.
-    return nullptr;
+  *aProviderFrame = nullptr;
+  nsFrameManager* fm = PresContext()->FrameManager();
+  if (MOZ_LIKELY(mContent)) {
+    nsIContent* parentContent = mContent->GetFlattenedTreeParent();
+    if (MOZ_LIKELY(parentContent)) {
+      nsIAtom* pseudo = StyleContext()->GetPseudo();
+      if (!pseudo || !mContent->IsElement() ||
+          !nsCSSAnonBoxes::IsAnonBox(pseudo) ||
+          /* if next is true then it's really a request for the table frame's
+             parent context, see nsTable[Outer]Frame::GetParentStyleContext. */
+          pseudo == nsCSSAnonBoxes::tableOuter) {
+        nsStyleContext* sc = fm->GetDisplayContentsStyleFor(parentContent);
+        if (MOZ_UNLIKELY(sc)) {
+          return sc;
+        }
+      }
+    } else {
+      if (!StyleContext()->GetPseudo()) {
+        // we're a frame for the root.  We have no style context parent.
+        return nullptr;
+      }
+    }
   }
-  
+
   if (!(mState & NS_FRAME_OUT_OF_FLOW)) {
     /*
      * If this frame is an anonymous block created when an inline with a block
@@ -7752,26 +7770,27 @@ nsFrame::DoGetParentStyleContextFrame() const
     if (mState & NS_FRAME_PART_OF_IBSPLIT) {
       nsIFrame* ibSplitSibling = GetIBSplitSiblingForAnonymousBlock(this);
       if (ibSplitSibling) {
-        return ibSplitSibling;
+        return (*aProviderFrame = ibSplitSibling)->StyleContext();
       }
     }
 
     // If this frame is one of the blocks that split an inline, we must
     // return the "special" inline parent, i.e., the parent that this
     // frame would have if we didn't mangle the frame structure.
-    return GetCorrectedParent(this);
+    *aProviderFrame = GetCorrectedParent(this);
+    return *aProviderFrame ? (*aProviderFrame)->StyleContext() : nullptr;
   }
 
   // We're an out-of-flow frame.  For out-of-flow frames, we must
   // resolve underneath the placeholder's parent.  The placeholder is
   // reached from the first-in-flow.
-  nsIFrame* placeholder = PresContext()->FrameManager()->
-                            GetPlaceholderFrameFor(FirstInFlow());
+  nsIFrame* placeholder = fm->GetPlaceholderFrameFor(FirstInFlow());
   if (!placeholder) {
     NS_NOTREACHED("no placeholder frame for out-of-flow frame");
-    return GetCorrectedParent(this);
+    *aProviderFrame = GetCorrectedParent(this);
+    return *aProviderFrame ? (*aProviderFrame)->StyleContext() : nullptr;
   }
-  return placeholder->GetParentStyleContextFrame();
+  return placeholder->GetParentStyleContext(aProviderFrame);
 }
 
 void

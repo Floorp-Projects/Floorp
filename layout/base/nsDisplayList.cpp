@@ -4724,11 +4724,18 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
 
   //TODO: Should this be using our bounds or the parent's bounds?
   // How do we handle aBoundsOverride in the latter case?
-  nsIFrame* parent = aFrame->GetParentStyleContextFrame();
-  if (!parent) {
+  nsIFrame* parent;
+  nsStyleContext* psc = aFrame->GetParentStyleContext(&parent);
+  if (!psc) {
     return Point3D();
   }
-  const nsStyleDisplay* display = parent->StyleDisplay();
+  if (!parent) {
+    parent = aFrame->GetParent();
+    if (!parent) {
+      return Point3D();
+    }
+  }
+  const nsStyleDisplay* display = psc->StyleDisplay();
   nsRect boundingRect = nsDisplayTransform::GetFrameBoundsForTransform(parent);
 
   /* Allows us to access named variables by index. */

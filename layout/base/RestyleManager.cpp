@@ -1802,14 +1802,8 @@ VerifyContextParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
 
   if (!aParentContext) {
-    // Get the correct parent context from the frame
-    //  - if the frame is a placeholder, we get the out of flow frame's context
-    //    as the parent context instead of asking the frame
-
-    // get the parent context from the frame (indirectly)
-    nsIFrame* providerFrame = aFrame->GetParentStyleContextFrame();
-    if (providerFrame)
-      aParentContext = providerFrame->StyleContext();
+    nsIFrame* providerFrame;
+    aParentContext = aFrame->GetParentStyleContext(&providerFrame);
     // aParentContext could still be null
   }
 
@@ -2141,20 +2135,19 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
   nsStyleContext* oldContext = aFrame->StyleContext();
 
   nsRefPtr<nsStyleContext> newContext;
-  nsIFrame* providerFrame = aFrame->GetParentStyleContextFrame();
+  nsIFrame* providerFrame;
+  nsStyleContext* newParentContext = aFrame->GetParentStyleContext(&providerFrame);
   bool isChild = providerFrame && providerFrame->GetParent() == aFrame;
-  nsStyleContext* newParentContext = nullptr;
   nsIFrame* providerChild = nullptr;
   if (isChild) {
     ReparentStyleContext(providerFrame);
+    // Get the style context again after ReparentStyleContext() which might have
+    // changed it.
     newParentContext = providerFrame->StyleContext();
     providerChild = providerFrame;
-  } else if (providerFrame) {
-    newParentContext = providerFrame->StyleContext();
-  } else {
-    NS_NOTREACHED("Reparenting something that has no usable parent? "
-                  "Shouldn't happen!");
   }
+  NS_ASSERTION(newParentContext, "Reparenting something that has no usable"
+               " parent? Shouldn't happen!");
   // XXX need to do something here to produce the correct style context for
   // an IB split whose first inline part is inside a first-line frame.
   // Currently the first IB anonymous block's style context takes the first
@@ -2550,6 +2543,9 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   MOZ_ASSERT(!(aRestyleHint & eRestyle_LaterSiblings),
              "eRestyle_LaterSiblings must not be part of aRestyleHint");
 
+  AutoDisplayContentsAncestorPusher adcp(mTreeMatchContext, mFrame->PresContext(),
+      mFrame->GetContent() ? mFrame->GetContent()->GetParent() : nullptr);
+
   // List of descendant elements of mContent we know we will eventually need to
   // restyle.  Before we return from this function, we call
   // RestyleTracker::AddRestyleRootsIfAwaitingRestyle to ensure they get
@@ -2649,9 +2645,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     MOZ_ASSERT(mFrame->StyleContext() == oldContext,
                "frame should have been left with its old style context");
 
-    nsStyleContext* newParent =
-      mFrame->GetParentStyleContextFrame()->StyleContext();
-
+    nsIFrame* unused;
+    nsStyleContext* newParent = mFrame->GetParentStyleContext(&unused);
     if (oldContext->GetParent() != newParent) {
       // If we received eRestyleResult_Stop, then the old style context was
       // left on mFrame.  Since we ended up restyling our parent, change
@@ -2890,20 +2885,14 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
   nsIAtom* const pseudoTag = oldContext->GetPseudo();
   const nsCSSPseudoElements::Type pseudoType = oldContext->GetPseudoType();
 
-  nsStyleContext* parentContext;
   // Get the frame providing the parent style context.  If it is a
   // child, then resolve the provider first.
-  nsIFrame* providerFrame = aSelf->GetParentStyleContextFrame();
+  nsIFrame* providerFrame;
+  nsStyleContext* parentContext = aSelf->GetParentStyleContext(&providerFrame);
   bool isChild = providerFrame && providerFrame->GetParent() == aSelf;
-  if (!isChild) {
-    if (providerFrame)
-      parentContext = providerFrame->StyleContext();
-    else
-      parentContext = nullptr;
-  }
-  else {
+  if (isChild) {
     MOZ_ASSERT(providerFrame->GetContent() == aSelf->GetContent(),
-               "Postcondition for GetParentStyleContextFrame() violated. "
+               "Postcondition for GetParentStyleContext() violated. "
                "That means we need to add the current element to the "
                "ancestor filter.");
 
@@ -3625,7 +3614,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
           NS_ASSERTION(outOfFlowFrame != mResolvedChild,
                        "out-of-flow frame not a true descendant");
 
-          // |nsFrame::GetParentStyleContextFrame| checks being out
+          // |nsFrame::GetParentStyleContext| checks being out
           // of flow so that this works correctly.
           do {
             if (GetPrevContinuationWithSameStyle(outOfFlowFrame)) {
