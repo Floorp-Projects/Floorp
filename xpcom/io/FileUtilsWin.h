@@ -21,7 +21,7 @@ EnsureLongPath(nsAString& aDosPath)
   auto inputPath = PromiseFlatString(aDosPath);
   // Try to get the long path, or else get the required length of the long path
   DWORD longPathLen = GetLongPathNameW(inputPath.get(),
-                                       aDosPath.BeginWriting(),
+                                       reinterpret_cast<wchar_t*>(aDosPath.BeginWriting()),
                                        aDosPathOriginalLen);
   if (longPathLen == 0) {
     return false;
@@ -33,7 +33,7 @@ EnsureLongPath(nsAString& aDosPath)
   }
   // Now we have a large enough buffer, get the actual string
   longPathLen = GetLongPathNameW(inputPath.get(),
-                                 aDosPath.BeginWriting(), aDosPath.Length());
+                                 reinterpret_cast<wchar_t*>(aDosPath.BeginWriting()), aDosPath.Length());
   if (longPathLen == 0) {
     return false;
   }
