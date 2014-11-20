@@ -266,14 +266,6 @@ class TraceLoggerThread
     static unsigned offsetOfEnabled() {
         return offsetof(TraceLoggerThread, enabled);
     }
-
-  private:
-    void assertNoQuotes(const char *text) {
-#ifdef DEBUG
-        const char *quote = strchr(text, '"');
-        MOZ_ASSERT(!quote);
-#endif
-    }
 #endif
 };
 
