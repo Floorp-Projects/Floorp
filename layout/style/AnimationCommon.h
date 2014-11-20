@@ -79,6 +79,19 @@ public:
                       nsCSSPseudoElements::Type aPseudoType,
                       bool aCreateIfNeeded);
 
+  // Returns true if aContent or any of its ancestors has an animation
+  // or transition.
+  static bool ContentOrAncestorHasAnimation(nsIContent* aContent) {
+    do {
+      if (aContent->GetProperty(nsGkAtoms::animationsProperty) ||
+          aContent->GetProperty(nsGkAtoms::transitionsProperty)) {
+        return true;
+      }
+    } while ((aContent = aContent->GetParent()));
+
+    return false;
+  }
+
   // Notify this manager that one of its collections of animation players,
   // has been updated.
   void NotifyCollectionUpdated(AnimationPlayerCollection& aCollection);

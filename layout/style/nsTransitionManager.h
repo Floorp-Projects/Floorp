@@ -100,23 +100,6 @@ public:
   typedef mozilla::AnimationPlayerCollection AnimationPlayerCollection;
 
   static AnimationPlayerCollection*
-  GetTransitions(nsIContent* aContent) {
-    return static_cast<AnimationPlayerCollection*>
-      (aContent->GetProperty(nsGkAtoms::transitionsProperty));
-  }
-
-  // Returns true if aContent or any of its ancestors has a transition.
-  static bool ContentOrAncestorHasTransition(nsIContent* aContent) {
-    do {
-      if (GetTransitions(aContent)) {
-        return true;
-      }
-    } while ((aContent = aContent->GetParent()));
-
-    return false;
-  }
-
-  static AnimationPlayerCollection*
   GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
