@@ -10256,12 +10256,10 @@ CodeGenerator::visitDebugger(LDebugger *ins)
     Register cx = ToRegister(ins->getTemp(0));
     Register temp = ToRegister(ins->getTemp(1));
 
-    // The check for cx->compartment()->isDebuggee() could be inlined, but the
-    // performance of |debugger;| does not matter.
     masm.loadJSContext(cx);
     masm.setupUnalignedABICall(1, temp);
     masm.passABIArg(cx);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, IsCompartmentDebuggee));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, GlobalHasLiveOnDebuggerStatement));
 
     Label bail;
     masm.branchIfTrueBool(ReturnReg, &bail);

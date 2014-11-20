@@ -474,12 +474,12 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
 }
 
 /* static */ bool
-Debugger::hasLiveOnExceptionUnwind(GlobalObject *global)
+Debugger::hasLiveHook(GlobalObject *global, Hook which)
 {
     if (GlobalObject::DebuggerVector *debuggers = global->getDebuggers()) {
         for (Debugger **p = debuggers->begin(); p != debuggers->end(); p++) {
             Debugger *dbg = *p;
-            if (dbg->enabled && dbg->getHook(OnExceptionUnwind))
+            if (dbg->enabled && dbg->getHook(which))
                 return true;
         }
     }
