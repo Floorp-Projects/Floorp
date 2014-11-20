@@ -37,7 +37,7 @@ let tests = [
         "privateWindow",
         "quit",
         "search",
-        "searchProvider",
+        "searchIcon",
         "urlbar",
       ].concat(searchEngineTargets()));
       ok(UITour.availableTargetsCache.has(window),
@@ -63,7 +63,7 @@ let tests = [
         "privateWindow",
         "quit",
         "search",
-        "searchProvider",
+        "searchIcon",
         "urlbar",
       ].concat(searchEngineTargets()));
       ok(UITour.availableTargetsCache.has(window),
@@ -80,7 +80,7 @@ let tests = [
     // Make sure the callback still fires with the other available targets.
     CustomizableUI.removeWidgetFromArea("search-container");
     gContentAPI.getConfiguration("availableTargets", (data) => {
-      // Default minus "search" and "searchProvider"
+      // Default minus "search", "searchProvider" and "searchIcon"
       ok_targets(data, [
         "accountStatus",
         "addons",
