@@ -200,10 +200,6 @@ class TraceLoggerGraph
     // Create a tree out of all the given events.
     void log(ContinuousSpace<EventEntry> &events);
 
-    // Disable/enable the logger.
-    void disable(uint64_t timestamp);
-    void enable();
-
   private:
     bool failed;
     bool enabled;
@@ -251,6 +247,10 @@ class TraceLoggerGraph
 
     // Log an (non-tree) event.
     void logTimestamp(uint32_t id, uint64_t timestamp);
+
+    // Disable logging and forcefully report all not yet stopped tree events
+    // as stopped.
+    void disable(uint64_t timestamp);
 };
 
 #endif /* TraceLoggingGraph_h */
