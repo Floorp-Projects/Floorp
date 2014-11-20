@@ -5162,7 +5162,7 @@ var BrowserEventHandler = {
     let win = BrowserApp.selectedBrowser.contentWindow;
     try {
       let cwu = win.top.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      cwu.sendMouseEventToWindow(aName, aX, aY, 0, 1, 0, true, 0, Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH);
+      cwu.sendMouseEventToWindow(aName, aX, aY, 0, 1, 0, true, 0, Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH, false);
     } catch(e) {
       Cu.reportError(e);
     }
