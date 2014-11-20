@@ -584,8 +584,10 @@ bool
 ShmemTextureClient::Allocate(uint32_t aSize)
 {
   MOZ_ASSERT(mValid);
-  SharedMemory::SharedMemoryType memType = OptimalShmemType();
-  mAllocated = GetAllocator()->AllocUnsafeShmem(aSize, memType, &mShmem);
+  if (aSize > 0) {
+    SharedMemory::SharedMemoryType memType = OptimalShmemType();
+    mAllocated = GetAllocator()->AllocUnsafeShmem(aSize, memType, &mShmem);
+  }
   return mAllocated;
 }
 
@@ -714,10 +716,12 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFla
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::YUV, "This textureClient cannot use YCbCr data");
-  MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
+  if (aSize.width <= 0 || aSize.height <= 0) {
+    gfxDebug() << "Asking for buffer of invalid size " << aSize.width << "x" << aSize.height;
+    return false;
+  }
 
-  int bufSize
-    = ImageDataSerializer::ComputeMinBufferSize(aSize, mFormat);
+  uint32_t bufSize = ImageDataSerializer::ComputeMinBufferSize(aSize, mFormat);
   if (!Allocate(bufSize)) {
     return false;
   }
@@ -830,7 +834,6 @@ BufferTextureClient::AllocateForYCbCr(gfx::IntSize aYSize,
                                       StereoMode aStereoMode)
 {
   MOZ_ASSERT(IsValid());
-
   size_t bufSize = YCbCrImageDataSerializer::ComputeMinBufferSize(aYSize,
                                                                   aCbCrSize);
   if (!Allocate(bufSize)) {
