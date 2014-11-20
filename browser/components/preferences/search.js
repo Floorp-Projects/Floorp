@@ -13,7 +13,8 @@ var gSearchPane = {
     Services.search.getVisibleEngines().forEach(e => {
       let item = list.appendItem(e.name);
       item.setAttribute("class", "menuitem-iconic");
-      item.setAttribute("image", e.iconURI.spec);
+      if (e.iconURI)
+        item.setAttribute("image", e.iconURI.spec);
       item.engine = e;
       if (e.name == currentEngine)
         list.selectedItem = item;
@@ -42,7 +43,8 @@ var gSearchPane = {
       item.setAttribute("label", e.name);
       if (hiddenList.indexOf(e.name) == -1)
         item.setAttribute("checked", "true");
-      item.setAttribute("src", e.iconURI.spec);
+      if (e.iconURI)
+        item.setAttribute("src", e.iconURI.spec);
       richlistbox.appendChild(item);
     });
   },
