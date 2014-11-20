@@ -259,7 +259,7 @@ let UI = {
     this._busyTimeout = setTimeout(() => {
       this.unbusy();
       UI.reportError("error_operationTimeout", this._busyOperationDescription);
-    }, 6000);
+    }, Services.prefs.getIntPref("devtools.webide.busyTimeout"));
   },
 
   cancelBusyTimeout: function() {
