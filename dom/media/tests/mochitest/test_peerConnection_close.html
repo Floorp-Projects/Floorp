@@ -16,7 +16,6 @@
 
   runNetworkTest(function () {
     var pc = new mozRTCPeerConnection();
-    var signalStateChanged = false;
     var exception = null;
     var eTimeout = null;
 
@@ -25,12 +24,15 @@
     is(pc.iceConnectionState, "new", "Initial iceConnectionState is 'new'");
     is(pc.iceGatheringState, "new", "Initial iceGatheringState is 'new'");
 
-    pc.onsignalingstatechange = function(aEvent) {
+    var finish;
+    var finished = new Promise(function(resolve) {
+      finish = resolve;
+    });
+
+    pc.onsignalingstatechange = function(e) {
       clearTimeout(eTimeout);
-      signalStateChanged = true;
-      is(aEvent, "closed", "onsignalingstatechange event is 'closed'");
-      is(pc.signalingState, "closed", "Event callback signalingState is 'closed'");
-      is(pc.iceConnectionState, "closed", "Event callback iceConnectionState is 'closed'");
+      is(pc.signalingState, "closed", "signalingState is 'closed'");
+      is(pc.iceConnectionState, "closed", "iceConnectionState is 'closed'");
 
       try {
         pc.close();
@@ -82,23 +84,13 @@
         pc.setIdentityProvider("Invalid Provider")},
         "setIdentityProvider() on closed PC raised expected exception");
 
-      // in case we are ending the test from within here
-      if(pc !== null) {
-        pc = null;
-        networkTestFinished();
-      }
+      finish();
     }
 
-    // This is only a shortcut to prevent a mochitest timeout in case the
-    // event does not fire
+    // This prevents a mochitest timeout in case the event does not fire
     eTimeout = setTimeout(function() {
-      ok(signalStateChanged, "Failed to receive expected onsignalingstatechange event in 60s");
-
-      // in case we are ending the test in this timeout
-      if (pc !== null) {
-        pc = null;
-        networkTestFinished();
-      }
+      ok(false, "Failed to receive expected onsignalingstatechange event in 60s");
+      finish();
     }, 60000);
 
     try {
@@ -107,20 +99,10 @@
       exception = e;
     }
     is(exception, null, "closing the connection raises no exception");
-    if (pc !== null) {
-      is(pc.signalingState, "closed", "Final signalingState is 'closed'");
-      is(pc.iceConnectionState, "closed", "Final iceConnectionState is 'closed'");
-    }
+    is(pc.signalingState, "closed", "Final signalingState is 'closed'");
+    is(pc.iceConnectionState, "closed", "Final iceConnectionState is 'closed'");
 
-    if (signalStateChanged) {
-      clearTimeout(eTimeout);
-      // in case we are ending the test outside the even handler
-      if (pc !== null) {
-        pc = null;
-        networkTestFinished();
-      }
-    }
-
+    finished.then(networkTestFinished);
   });
 </script>
 </pre>
