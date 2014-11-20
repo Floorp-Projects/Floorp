@@ -600,7 +600,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::BaselineFrame *to);
     static bool handleIonBailout(JSContext *cx, jit::RematerializedFrame *from, jit::BaselineFrame *to);
     static void propagateForcedReturn(JSContext *cx, AbstractFramePtr frame, HandleValue rval);
-    static bool hasLiveOnExceptionUnwind(GlobalObject *global);
+    static bool hasLiveHook(GlobalObject *global, Hook which);
 
     /************************************* Functions for use by Debugger.cpp. */
 
