@@ -225,7 +225,7 @@ TraceLoggerThread::enable(JSContext *cx)
             }
         }
 
-        startEvent(createTextId(script));
+        startEvent(createTextId(TraceLogger_Scripts, script));
         startEvent(engine);
     }
 
@@ -338,8 +338,11 @@ TraceLoggerThread::createTextId(const char *text)
 }
 
 uint32_t
-TraceLoggerThread::createTextId(const char *filename, size_t lineno, size_t colno, const void *ptr)
+TraceLoggerThread::createTextId(TraceLoggerTextId type, const char *filename, size_t lineno,
+                                size_t colno, const void *ptr)
 {
+    MOZ_ASSERT(type == TraceLogger_Scripts || type == TraceLogger_AnnotateScripts);
+
     if (!filename)
         filename = "<unknown>";
 
@@ -347,8 +350,8 @@ TraceLoggerThread::createTextId(const char *filename, size_t lineno, size_t coln
 
     // Only log scripts when enabled otherwise return the global Scripts textId,
     // which will get filtered out.
-    if (!traceLoggers.isTextIdEnabled(TraceLogger_Scripts))
-        return TraceLogger_Scripts;
+    if (!traceLoggers.isTextIdEnabled(type))
+        return type;
 
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(ptr);
     if (p)
@@ -385,15 +388,15 @@ TraceLoggerThread::createTextId(const char *filename, size_t lineno, size_t coln
 }
 
 uint32_t
-TraceLoggerThread::createTextId(JSScript *script)
+TraceLoggerThread::createTextId(TraceLoggerTextId type, JSScript *script)
 {
-    return createTextId(script->filename(), script->lineno(), script->column(), script);
+    return createTextId(type, script->filename(), script->lineno(), script->column(), script);
 }
 
 uint32_t
-TraceLoggerThread::createTextId(const JS::ReadOnlyCompileOptions &script)
+TraceLoggerThread::createTextId(TraceLoggerTextId type, const JS::ReadOnlyCompileOptions &script)
 {
-    return createTextId(script.filename(), script.lineno, script.column, &script);
+    return createTextId(type, script.filename(), script.lineno, script.column, &script);
 }
 
 void
@@ -549,6 +552,7 @@ TraceLoggerThreadState::lazyInit()
     }
 
     if (ContainsFlag(env, "Default")) {
+        enabledTextIds[TraceLogger_AnnotateScripts] = true;
         enabledTextIds[TraceLogger_Bailout] = true;
         enabledTextIds[TraceLogger_Baseline] = true;
         enabledTextIds[TraceLogger_BaselineCompilation] = true;
