@@ -248,8 +248,10 @@ BaselineCompiler::compile()
     if (cx->runtime()->spsProfiler.enabled())
         baselineScript->toggleSPS(true);
 
+#ifdef JS_TRACE_LOGGING
     // Initialize the tracelogger instrumentation.
     baselineScript->initTraceLogger(cx->runtime(), script);
+#endif
 
     uint32_t *bytecodeMap = baselineScript->bytecodeTypeMap();
     types::FillBytecodeTypeMap(script, bytecodeMap);
@@ -382,8 +384,10 @@ BaselineCompiler::emitPrologue()
     if (needsEarlyStackCheck())
         masm.bind(&earlyStackCheckFailed);
 
+#ifdef JS_TRACE_LOGGING
     if (!emitTraceLoggerEnter())
         return false;
+#endif
 
     // Record the offset of the prologue, because Ion can bailout before
     // the scope chain is initialized.
@@ -763,6 +767,7 @@ BaselineCompiler::emitDebugTrap()
     return true;
 }
 
+#ifdef JS_TRACE_LOGGING
 bool
 BaselineCompiler::emitTraceLoggerEnter()
 {
@@ -818,6 +823,7 @@ BaselineCompiler::emitTraceLoggerExit()
 
     return true;
 }
+#endif
 
 bool
 BaselineCompiler::emitSPSPush()
