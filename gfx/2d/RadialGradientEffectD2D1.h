@@ -72,6 +72,7 @@ public:
   IFACEMETHODIMP SetDrawInfo(ID2D1DrawInfo *pDrawInfo);
 
   static HRESULT Register(ID2D1Factory1* aFactory);
+  static void Unregister(ID2D1Factory1* aFactory);
   static HRESULT __stdcall CreateEffect(IUnknown** aEffectImpl);
 
   HRESULT SetStopCollection(IUnknown *aStopCollection);

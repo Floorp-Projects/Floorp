@@ -5,9 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_WIDGET_QT
-#include <QDesktopServices>
-#include <QUrl>
-#include <QString>
 #if (MOZ_ENABLE_CONTENTACTION)
 #include <contentaction/contentaction.h>
 #include "nsContentHandlerApp.h"
@@ -24,6 +21,9 @@
 #ifdef MOZ_ENABLE_DBUS
 #include "nsDBusHandlerApp.h"
 #endif
+#ifdef MOZ_WIDGET_QT
+#include "nsMIMEInfoQt.h"
+#endif
 
 nsresult
 nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
@@ -32,11 +32,7 @@ nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
 
 #ifdef MOZ_WIDGET_QT
   if (NS_FAILED(rv)) {
-    nsAutoCString spec;
-    aURI->GetAsciiSpec(spec);
-    if (QDesktopServices::openUrl(QUrl(spec.get()))) {
-      rv = NS_OK;
-    }
+    rv = nsMIMEInfoQt::LoadUriInternal(aURI);
   }
 #endif
 
