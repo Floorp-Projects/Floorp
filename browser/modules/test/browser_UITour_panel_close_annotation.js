@@ -60,7 +60,7 @@ let tests = [
 
   function test_highlight_panel_click_find(done) {
     gContentAPI.showHighlight("help");
-    gContentAPI.showInfo("searchProvider", "test title", "test text");
+    gContentAPI.showInfo("searchIcon", "test title", "test text");
     waitForElementToBeVisible(highlight, function checkPanelIsOpen() {
       isnot(PanelUI.panel.state, "closed", "Panel should have opened");
 
