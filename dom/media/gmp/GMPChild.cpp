@@ -311,7 +311,11 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
   infoFile->GetPath(path);
 
   std::ifstream stream;
+#ifdef _MSC_VER
   stream.open(path.get());
+#else
+  stream.open(NS_ConvertUTF16toUTF8(path).get());
+#endif
   if (!stream.good()) {
     NS_WARNING("Failure opening info file for required DLLs");
     return false;
