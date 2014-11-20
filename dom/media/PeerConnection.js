@@ -25,7 +25,7 @@ const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
 const PC_RECEIVER_CONTRACT = "@mozilla.org/dom/rtpreceiver;1";
 
-const PC_CID = Components.ID("{00e0e20d-1494-4776-8e0e-0f0acbea3c79}");
+const PC_CID = Components.ID("{bdc2e533-b308-4708-ac8e-a8bfade6d851}");
 const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
@@ -849,7 +849,7 @@ RTCPeerConnection.prototype = {
 
     this._impl.addIceCandidate(cand.candidate, cand.sdpMid || "",
                                (cand.sdpMLineIndex === null) ? 0 :
-                                 cand.sdpMLineIndex + 1);
+                                 cand.sdpMLineIndex);
   },
 
   addStream: function(stream) {
@@ -1122,7 +1122,7 @@ PeerConnectionObserver.prototype = {
     const reasonName = [
       "",
       "InternalError",
-      "InternalError",
+      "InvalidCandidateError",
       "InvalidParameter",
       "InvalidStateError",
       "InvalidSessionDescriptionError",
@@ -1221,7 +1221,7 @@ PeerConnectionObserver.prototype = {
           {
               candidate: candidate,
               sdpMid: mid,
-              sdpMLineIndex: level - 1
+              sdpMLineIndex: level
           }
       ));
     }

@@ -171,7 +171,7 @@ static int nr_ice_peer_ctx_parse_stream_attributes_int(nr_ice_peer_ctx *pctx, nr
         }
       }
       else {
-        r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) specified bogus attribute",pctx->ctx->label,pctx->label);
+        r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) specified bogus attribute: %s",pctx->ctx->label,pctx->label,attrs[i]);
       }
     }
 
@@ -219,6 +219,9 @@ static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream
     cand->component=comp;
 
     TAILQ_INSERT_TAIL(&comp->candidates,cand,entry_comp);
+
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND(%s): creating peer candidate",
+      pctx->label,cand->label);
 
     _status=0;
  abort:
@@ -291,25 +294,25 @@ int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_
         r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s), stream(%s) failed to pair trickle ICE candidates",pctx->ctx->label,pctx->label,stream->label);
         ABORT(r);
       }
-    }
 
-    /* Start checks if this stream is not checking yet or if it has checked
-       all the available candidates but not had a completed check for all
-       components.
+      /* Start checks if this stream is not checking yet or if it has checked
+         all the available candidates but not had a completed check for all
+         components.
 
-       Note that this is not compliant with RFC 5245, but consistent with
-       the libjingle trickle ICE behavior. Note that we will not restart
-       checks if either (a) the stream has failed or (b) all components
-       have a successful pair because the switch statement above jumps
-       will in both states.
+         Note that this is not compliant with RFC 5245, but consistent with
+         the libjingle trickle ICE behavior. Note that we will not restart
+         checks if either (a) the stream has failed or (b) all components
+         have a successful pair because the switch statement above jumps
+         will in both states.
 
-       TODO(ekr@rtfm.com): restart checks.
-       TODO(ekr@rtfm.com): update when the trickle ICE RFC is published
-    */
-    if (!pstream->timer) {
-      if(r=nr_ice_media_stream_start_checks(pctx, pstream)) {
-        r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s), stream(%s) failed to start checks",pctx->ctx->label,pctx->label,stream->label);
-        ABORT(r);
+         TODO(ekr@rtfm.com): restart checks.
+         TODO(ekr@rtfm.com): update when the trickle ICE RFC is published
+      */
+      if (!pstream->timer) {
+        if(r=nr_ice_media_stream_start_checks(pctx, pstream)) {
+          r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s), stream(%s) failed to start checks",pctx->ctx->label,pctx->label,stream->label);
+          ABORT(r);
+        }
       }
     }
 

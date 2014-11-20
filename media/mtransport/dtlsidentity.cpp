@@ -17,8 +17,6 @@
 
 namespace mozilla {
 
-MOZ_MTLOG_MODULE("mtransport")
-
 DtlsIdentity::~DtlsIdentity() {
   // XXX: make cert_ a smart pointer to avoid this, after we figure
   // out the linking problem.
@@ -27,7 +25,6 @@ DtlsIdentity::~DtlsIdentity() {
 }
 
 const std::string DtlsIdentity::DEFAULT_HASH_ALGORITHM = "sha-256";
-const size_t DtlsIdentity::HASH_ALGORITHM_MAX_LENGTH = 64;
 
 TemporaryRef<DtlsIdentity> DtlsIdentity::Generate() {
 
@@ -206,91 +203,6 @@ nsresult DtlsIdentity::ComputeFingerprint(const CERTCertificate *cert,
     return NS_ERROR_FAILURE;
 
   *digest_length = ho->length;
-
-  return NS_OK;
-}
-
-// Format the fingerprint in RFC 4572 Section 5 attribute format, including both
-// the hash name and the fingerprint, colons and all.
-// returns an empty string if there is a problem
-std::string DtlsIdentity::GetFormattedFingerprint(const std::string &algorithm) {
-  unsigned char digest[HASH_ALGORITHM_MAX_LENGTH];
-  size_t digest_length;
-
-  nsresult res = this->ComputeFingerprint(algorithm,
-                                          digest,
-                                          sizeof(digest),
-                                          &digest_length);
-  if (NS_FAILED(res)) {
-    MOZ_MTLOG(ML_ERROR, "Unable to compute " << algorithm
-              << " hash for identity: nsresult = 0x"
-              << std::hex << std::uppercase
-              << static_cast<uint32_t>(res)
-              << std::nouppercase << std::dec);
-    return "";
-  }
-
-  return algorithm + " " + this->FormatFingerprint(digest, digest_length);
-}
-
-std::string DtlsIdentity::FormatFingerprint(const unsigned char *digest,
-                                            std::size_t size) {
-  std::string str("");
-  char group[3];
-
-  for (std::size_t i=0; i < size; i++) {
-    PR_snprintf(group, sizeof(group), "%.2X", digest[i]);
-    if (i != 0) {
-      str += ":";
-    }
-    str += group;
-  }
-
-  MOZ_ASSERT(str.size() == (size * 3 - 1));  // Check result length
-  return str;
-}
-
-// Parse a fingerprint in RFC 4572 format.
-// Note that this tolerates some badly formatted data, in particular:
-// (a) arbitrary runs of colons
-// (b) colons at the beginning or end.
-nsresult DtlsIdentity::ParseFingerprint(const std::string fp,
-                                        unsigned char *digest,
-                                        size_t size,
-                                        size_t *length) {
-  size_t offset = 0;
-  bool top_half = true;
-  uint8_t val = 0;
-
-  for (size_t i=0; i<fp.length(); i++) {
-    if (offset >= size) {
-      // Note: no known way for offset to get > size
-      MOZ_MTLOG(ML_ERROR, "Fingerprint too long for buffer");
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    if (top_half && (fp[i] == ':')) {
-      continue;
-    } else if ((fp[i] >= '0') && (fp[i] <= '9')) {
-      val |= fp[i] - '0';
-    } else if ((fp[i] >= 'A') && (fp[i] <= 'F')) {
-      val |= fp[i] - 'A' + 10;
-    } else {
-      MOZ_MTLOG(ML_ERROR, "Invalid fingerprint value " << fp[i]);
-      return NS_ERROR_ILLEGAL_VALUE;
-    }
-
-    if (top_half) {
-      val <<= 4;
-      top_half = false;
-    } else {
-      digest[offset++] = val;
-      top_half = true;
-      val = 0;
-    }
-  }
-
-  *length = offset;
 
   return NS_OK;
 }
