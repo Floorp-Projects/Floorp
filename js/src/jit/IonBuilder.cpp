@@ -6561,7 +6561,7 @@ ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *
     }
 
     if (clasp->resolve == fun_resolve)
-        return FunctionHasResolveHook(comp->runtime()->names(), name);
+        return FunctionHasResolveHook(comp->runtime()->names(), NameToId(name));
 
     return true;
 }
