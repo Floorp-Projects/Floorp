@@ -261,6 +261,8 @@ namespace jit {
     _(InterruptCheckPar)                                                    \
     _(RecompileCheck)                                                       \
     _(MemoryBarrier)                                                        \
+    _(AsmJSCompareExchangeHeap)                                             \
+    _(AsmJSAtomicBinopHeap)                                                 \
     _(UnknownValue)                                                         \
     _(LexicalCheck)                                                         \
     _(ThrowUninitializedLexical)                                            \
