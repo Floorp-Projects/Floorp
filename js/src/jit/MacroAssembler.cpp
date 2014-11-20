@@ -1674,7 +1674,7 @@ MacroAssembler::tracelogStart(Register logger, uint32_t textId)
     if (!TraceLogTextIdEnabled(textId))
         return;
 
-    void (&TraceLogFunc)(TraceLogger*, uint32_t) = TraceLogStartEvent;
+    void (&TraceLogFunc)(TraceLoggerThread *, uint32_t) = TraceLogStartEvent;
 
     PushRegsInMask(RegisterSet::Volatile());
 
@@ -1695,7 +1695,7 @@ MacroAssembler::tracelogStart(Register logger, uint32_t textId)
 void
 MacroAssembler::tracelogStart(Register logger, Register textId)
 {
-    void (&TraceLogFunc)(TraceLogger*, uint32_t) = TraceLogStartEvent;
+    void (&TraceLogFunc)(TraceLoggerThread *, uint32_t) = TraceLogStartEvent;
 
     PushRegsInMask(RegisterSet::Volatile());
 
