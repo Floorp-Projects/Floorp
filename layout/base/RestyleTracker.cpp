@@ -9,10 +9,12 @@
  */
 
 #include "RestyleTracker.h"
+
+#include "GeckoProfiler.h"
+#include "nsFrameManager.h"
+#include "nsIDocument.h"
 #include "nsStyleChangeList.h"
 #include "RestyleManager.h"
-#include "GeckoProfiler.h"
-#include "nsIDocument.h"
 #include "RestyleTrackerInlines.h"
 
 namespace mozilla {
@@ -114,8 +116,10 @@ CollectRestyles(nsISupports* aElement,
   NS_ASSERTION(!element->HasFlag(collector->tracker->RootBit()) ||
                // Maybe we're just not reachable via the frame tree?
                (element->GetFlattenedTreeParent() &&
-                (!element->GetFlattenedTreeParent()->GetPrimaryFrame()||
-                 element->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf())) ||
+                (!element->GetFlattenedTreeParent()->GetPrimaryFrame() ||
+                 element->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf() ||
+                 element->GetCurrentDoc()->GetShell()->FrameManager()
+                   ->GetDisplayContentsStyleFor(element))) ||
                // Or not reachable due to an async reinsert we have
                // pending?  If so, we'll have a reframe hint around.
                // That incidentally makes it safe that we still have

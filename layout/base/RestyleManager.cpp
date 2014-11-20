@@ -3767,6 +3767,44 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
   }
 }
 
+AutoDisplayContentsAncestorPusher::AutoDisplayContentsAncestorPusher(
+  TreeMatchContext& aTreeMatchContext, nsPresContext* aPresContext,
+  nsIContent* aParent)
+  : mTreeMatchContext(aTreeMatchContext)
+  , mPresContext(aPresContext)
+{
+  if (aParent) {
+    nsFrameManager* fm = mPresContext->FrameManager();
+    // Push display:contents mAncestors onto mTreeMatchContext.
+    for (nsIContent* p = aParent; p && fm->GetDisplayContentsStyleFor(p);
+         p = p->GetParent()) {
+      mAncestors.AppendElement(p->AsElement());
+    }
+    bool hasFilter = mTreeMatchContext.mAncestorFilter.HasFilter();
+    nsTArray<mozilla::dom::Element*>::size_type i = mAncestors.Length();
+    while (i--) {
+      if (hasFilter) {
+        mTreeMatchContext.mAncestorFilter.PushAncestor(mAncestors[i]);
+      }
+      mTreeMatchContext.PushStyleScope(mAncestors[i]);
+    }
+  }
+}
+
+AutoDisplayContentsAncestorPusher::~AutoDisplayContentsAncestorPusher()
+{
+  // Pop the ancestors we pushed in the CTOR, if any.
+  typedef nsTArray<mozilla::dom::Element*>::size_type sz;
+  sz len = mAncestors.Length();
+  bool hasFilter = mTreeMatchContext.mAncestorFilter.HasFilter();
+  for (sz i = 0; i < len; ++i) {
+    if (hasFilter) {
+      mTreeMatchContext.mAncestorFilter.PopAncestor();
+    }
+    mTreeMatchContext.PopStyleScope(mAncestors[i]);
+  }
+}
+
 #ifdef RESTYLE_LOGGING
 uint32_t
 RestyleManager::StructsToLog()
