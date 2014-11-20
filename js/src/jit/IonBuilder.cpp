@@ -7043,7 +7043,7 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
         return jsop_setprop(name);
     }
 
-    if (!CanWriteProperty(constraints(), property, value))
+    if (!CanWriteProperty(alloc(), constraints(), property, value))
         return jsop_setprop(name);
 
     current->pop();
@@ -7371,7 +7371,7 @@ IonBuilder::getElemTryReferenceElemOfTypedObject(bool *emitted,
 
     *emitted = true;
 
-    return pushReferenceLoadFromTypedObject(obj, indexAsByteOffset, elemType);
+    return pushReferenceLoadFromTypedObject(obj, indexAsByteOffset, elemType, nullptr);
 }
 
 bool
@@ -7418,7 +7418,8 @@ IonBuilder::pushScalarLoadFromTypedObject(MDefinition *obj,
 bool
 IonBuilder::pushReferenceLoadFromTypedObject(MDefinition *typedObj,
                                              const LinearSum &byteOffset,
-                                             ReferenceTypeDescr::Type type)
+                                             ReferenceTypeDescr::Type type,
+                                             PropertyName *name)
 {
     // Find location within the owner object.
     MDefinition *elements, *scaledOffset;
@@ -7429,22 +7430,34 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition *typedObj,
     types::TemporaryTypeSet *observedTypes = bytecodeTypes(pc);
 
     MInstruction *load;
-    BarrierKind barrier = BarrierKind::NoBarrier;
+    BarrierKind barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(),
+                                                       typedObj, name, observedTypes);
+
     switch (type) {
-      case ReferenceTypeDescr::TYPE_ANY:
+      case ReferenceTypeDescr::TYPE_ANY: {
+        // Make sure the barrier reflects the possibility of reading undefined.
+        bool bailOnUndefined = barrier == BarrierKind::NoBarrier &&
+                               !observedTypes->hasType(types::Type::UndefinedType());
+        if (bailOnUndefined)
+            barrier = BarrierKind::TypeTagOnly;
         load = MLoadElement::New(alloc(), elements, scaledOffset, false, false, adjustment);
-        if (!observedTypes->unknown())
-            barrier = BarrierKind::TypeSet;
         break;
-      case ReferenceTypeDescr::TYPE_OBJECT:
-        load = MLoadUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, adjustment);
-        if (!observedTypes->unknownObject() || !observedTypes->hasType(types::Type::NullType()))
-            barrier = BarrierKind::TypeSet;
+      }
+      case ReferenceTypeDescr::TYPE_OBJECT: {
+        // Make sure the barrier reflects the possibility of reading null. When
+        // there is no other barrier needed we include the null bailout with
+        // MLoadUnboxedObjectOrNull, which avoids the need to box the result
+        // for a type barrier instruction.
+        bool bailOnNull = barrier == BarrierKind::NoBarrier &&
+                          !observedTypes->hasType(types::Type::NullType());
+        load = MLoadUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, bailOnNull, adjustment);
         break;
-      case ReferenceTypeDescr::TYPE_STRING:
+      }
+      case ReferenceTypeDescr::TYPE_STRING: {
         load = MLoadUnboxedString::New(alloc(), elements, scaledOffset, adjustment);
         observedTypes->addType(types::Type::StringType(), alloc().lifoAlloc());
         break;
+      }
     }
 
     current->add(load);
@@ -8264,8 +8277,8 @@ IonBuilder::setElemTryReferenceElemOfTypedObject(bool *emitted,
     if (!checkTypedObjectIndexInBounds(elemSize, obj, index, objPrediction, &indexAsByteOffset))
         return true;
 
-    if (!storeReferenceTypedObjectValue(obj, indexAsByteOffset, elemType, value))
-        return false;
+    if (!storeReferenceTypedObjectValue(obj, indexAsByteOffset, elemType, value, nullptr))
+        return true;
 
     current->push(value);
 
@@ -9274,7 +9287,7 @@ IonBuilder::jsop_getprop(PropertyName *name)
         return emitted;
 
     // Try to emit loads from known binary data blocks
-    if (!getPropTryTypedObject(&emitted, obj, name, types) || emitted)
+    if (!getPropTryTypedObject(&emitted, obj, name) || emitted)
         return emitted;
 
     // Try to emit loads from definite slots.
@@ -9443,8 +9456,7 @@ IonBuilder::getPropTryConstant(bool *emitted, MDefinition *obj, PropertyName *na
 bool
 IonBuilder::getPropTryTypedObject(bool *emitted,
                                   MDefinition *obj,
-                                  PropertyName *name,
-                                  types::TemporaryTypeSet *resultTypes)
+                                  PropertyName *name)
 {
     TypedObjectPrediction fieldPrediction;
     size_t fieldOffset;
@@ -9463,22 +9475,20 @@ IonBuilder::getPropTryTypedObject(bool *emitted,
                                                   obj,
                                                   fieldOffset,
                                                   fieldPrediction,
-                                                  fieldIndex,
-                                                  resultTypes);
+                                                  fieldIndex);
 
       case type::Reference:
         return getPropTryReferencePropOfTypedObject(emitted,
                                                     obj,
                                                     fieldOffset,
                                                     fieldPrediction,
-                                                    resultTypes);
+                                                    name);
 
       case type::Scalar:
         return getPropTryScalarPropOfTypedObject(emitted,
                                                  obj,
                                                  fieldOffset,
-                                                 fieldPrediction,
-                                                 resultTypes);
+                                                 fieldPrediction);
     }
 
     MOZ_CRASH("Bad kind");
@@ -9487,8 +9497,7 @@ IonBuilder::getPropTryTypedObject(bool *emitted,
 bool
 IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted, MDefinition *typedObj,
                                               int32_t fieldOffset,
-                                              TypedObjectPrediction fieldPrediction,
-                                              types::TemporaryTypeSet *resultTypes)
+                                              TypedObjectPrediction fieldPrediction)
 {
     // Must always be loading the same scalar type
     Scalar::Type fieldType = fieldPrediction.scalarType();
@@ -9511,7 +9520,7 @@ bool
 IonBuilder::getPropTryReferencePropOfTypedObject(bool *emitted, MDefinition *typedObj,
                                                  int32_t fieldOffset,
                                                  TypedObjectPrediction fieldPrediction,
-                                                 types::TemporaryTypeSet *resultTypes)
+                                                 PropertyName *name)
 {
     ReferenceTypeDescr::Type fieldType = fieldPrediction.referenceType();
 
@@ -9525,7 +9534,7 @@ IonBuilder::getPropTryReferencePropOfTypedObject(bool *emitted, MDefinition *typ
     if (!byteOffset.add(fieldOffset))
         setForceAbort();
 
-    return pushReferenceLoadFromTypedObject(typedObj, byteOffset, fieldType);
+    return pushReferenceLoadFromTypedObject(typedObj, byteOffset, fieldType, name);
 }
 
 bool
@@ -9533,8 +9542,7 @@ IonBuilder::getPropTryComplexPropOfTypedObject(bool *emitted,
                                                MDefinition *typedObj,
                                                int32_t fieldOffset,
                                                TypedObjectPrediction fieldPrediction,
-                                               size_t fieldIndex,
-                                               types::TemporaryTypeSet *resultTypes)
+                                               size_t fieldIndex)
 {
     // Don't optimize if the typed object might be neutered.
     types::TypeObjectKey *globalType = types::TypeObjectKey::get(&script()->global());
@@ -10022,13 +10030,13 @@ IonBuilder::jsop_setprop(PropertyName *name)
     if (!setPropTryCommonSetter(&emitted, obj, name, value) || emitted)
         return emitted;
 
-    types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    bool barrier = PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &obj, name, &value,
-                                                 /* canModify = */ true);
-
     // Try to emit stores to known binary data blocks
     if (!setPropTryTypedObject(&emitted, obj, name, value) || emitted)
         return emitted;
+
+    types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
+    bool barrier = PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &obj, name, &value,
+                                                 /* canModify = */ true);
 
     if (!barrier) {
         // Try to emit store from definite slots.
@@ -10177,7 +10185,7 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
 
       case type::Reference:
         return setPropTryReferencePropOfTypedObject(emitted, obj, fieldOffset,
-                                                    value, fieldPrediction);
+                                                    value, fieldPrediction, name);
 
       case type::Scalar:
         return setPropTryScalarPropOfTypedObject(emitted, obj, fieldOffset,
@@ -10196,7 +10204,8 @@ IonBuilder::setPropTryReferencePropOfTypedObject(bool *emitted,
                                                  MDefinition *obj,
                                                  int32_t fieldOffset,
                                                  MDefinition *value,
-                                                 TypedObjectPrediction fieldPrediction)
+                                                 TypedObjectPrediction fieldPrediction,
+                                                 PropertyName *name)
 {
     ReferenceTypeDescr::Type fieldType = fieldPrediction.referenceType();
 
@@ -10208,8 +10217,8 @@ IonBuilder::setPropTryReferencePropOfTypedObject(bool *emitted,
     if (!byteOffset.add(fieldOffset))
         setForceAbort();
 
-    if (!storeReferenceTypedObjectValue(obj, byteOffset, fieldType, value))
-        return false;
+    if (!storeReferenceTypedObjectValue(obj, byteOffset, fieldType, value, name))
+        return true;
 
     current->push(value);
 
@@ -11390,8 +11399,24 @@ bool
 IonBuilder::storeReferenceTypedObjectValue(MDefinition *typedObj,
                                            const LinearSum &byteOffset,
                                            ReferenceTypeDescr::Type type,
-                                           MDefinition *value)
+                                           MDefinition *value,
+                                           PropertyName *name)
 {
+    // Make sure we aren't adding new type information for writes of object and value
+    // references.
+    if (type != ReferenceTypeDescr::TYPE_STRING) {
+        MOZ_ASSERT(type == ReferenceTypeDescr::TYPE_ANY ||
+                   type == ReferenceTypeDescr::TYPE_OBJECT);
+        MIRType implicitType =
+            (type == ReferenceTypeDescr::TYPE_ANY) ? MIRType_Undefined : MIRType_Null;
+
+        if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current, &typedObj, name, &value,
+                                          /* canModify = */ true, implicitType))
+        {
+            return false;
+        }
+    }
+
     // Find location within the owner object.
     MDefinition *elements, *scaledOffset;
     int32_t adjustment;

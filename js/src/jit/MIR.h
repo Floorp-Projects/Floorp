@@ -7931,13 +7931,21 @@ class MLoadUnboxedObjectOrNull
   : public MBinaryInstruction,
     public SingleObjectPolicy::Data
 {
+    bool bailOnNull_;
     int32_t offsetAdjustment_;
 
-    MLoadUnboxedObjectOrNull(MDefinition *elements, MDefinition *index, int32_t offsetAdjustment)
+    MLoadUnboxedObjectOrNull(MDefinition *elements, MDefinition *index,
+                             bool bailOnNull, int32_t offsetAdjustment)
       : MBinaryInstruction(elements, index),
+        bailOnNull_(bailOnNull),
         offsetAdjustment_(offsetAdjustment)
     {
-        setResultType(MIRType_Value);
+        if (bailOnNull) {
+            // Don't eliminate loads which bail out on a null pointer, for the
+            // same reason as MLoadElement.
+            setGuard();
+        }
+        setResultType(bailOnNull ? MIRType_Object : MIRType_Value);
         setMovable();
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType_Int32);
@@ -7948,8 +7956,8 @@ class MLoadUnboxedObjectOrNull
 
     static MLoadUnboxedObjectOrNull *New(TempAllocator &alloc,
                                          MDefinition *elements, MDefinition *index,
-                                         int32_t offsetAdjustment) {
-        return new(alloc) MLoadUnboxedObjectOrNull(elements, index, offsetAdjustment);
+                                         bool bailOnNull, int32_t offsetAdjustment) {
+        return new(alloc) MLoadUnboxedObjectOrNull(elements, index, bailOnNull, offsetAdjustment);
     }
 
     MDefinition *elements() const {
@@ -7958,13 +7966,21 @@ class MLoadUnboxedObjectOrNull
     MDefinition *index() const {
         return getOperand(1);
     }
+    bool bailOnNull() const {
+        return bailOnNull_;
+    }
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
+    }
+    bool fallible() const {
+        return bailOnNull();
     }
     bool congruentTo(const MDefinition *ins) const {
         if (!ins->isLoadUnboxedObjectOrNull())
             return false;
         const MLoadUnboxedObjectOrNull *other = ins->toLoadUnboxedObjectOrNull();
+        if (bailOnNull() != other->bailOnNull())
+            return false;
         if (offsetAdjustment() != other->offsetAdjustment())
             return false;
         return congruentIfOperandsEqual(other);
@@ -12503,12 +12519,13 @@ bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
                               MDefinition *obj, PropertyName *name);
 void AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
                                types::TemporaryTypeSet *observed);
-bool CanWriteProperty(types::CompilerConstraintList *constraints,
-                      types::HeapTypeSetKey property, MDefinition *value);
+bool CanWriteProperty(TempAllocator &alloc, types::CompilerConstraintList *constraints,
+                      types::HeapTypeSetKey property, MDefinition *value,
+                      MIRType implicitType = MIRType_None);
 bool PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstraintList *constraints,
                                    MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue,
-                                   bool canModify);
+                                   bool canModify, MIRType implicitType = MIRType_None);
 
 } // namespace jit
 } // namespace js
