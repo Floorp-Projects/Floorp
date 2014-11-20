@@ -711,7 +711,7 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFla
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mFormat != gfx::SurfaceFormat::YUV, "This textureClient cannot use YCbCr data");
-  MOZ_ASSERT(aSize.width * aSize.height);
+  MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
 
   int bufSize
     = ImageDataSerializer::ComputeMinBufferSize(aSize, mFormat);

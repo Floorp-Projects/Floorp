@@ -31,7 +31,7 @@ public:
   virtual HRESULT Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
   virtual HRESULT Output(int64_t aStreamOffset,
-                         nsAutoPtr<MediaData>& aOutput) MOZ_OVERRIDE;
+                         nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
   virtual void Shutdown() MOZ_OVERRIDE;
 

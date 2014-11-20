@@ -7,6 +7,8 @@
 #ifndef mozilla_ChaosMode_h
 #define mozilla_ChaosMode_h
 
+#include "mozilla/EnumSet.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -20,10 +22,29 @@ namespace mozilla {
 class ChaosMode
 {
 public:
-  static bool isActive()
+  enum ChaosFeature {
+    None = 0x0,
+    // Altering thread scheduling.
+    ThreadScheduling = 0x1,
+    // Altering network request scheduling.
+    NetworkScheduling = 0x2,
+    // Altering timer scheduling.
+    TimerScheduling = 0x4,
+    // Read and write less-than-requested amounts.
+    IOAmounts = 0x8,
+    // Iterate over hash tables in random order.
+    HashTableIteration = 0x10,
+    Any = 0xffffffff,
+  };
+
+private:
+  // Change this to any non-None value to activate ChaosMode.
+  static const ChaosFeature sChaosFeatures = None;
+
+public:
+  static bool isActive(ChaosFeature aFeature)
   {
-    // Flip this to true to activate chaos mode
-    return false;
+    return sChaosFeatures & aFeature;
   }
 
   /**

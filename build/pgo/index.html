@@ -3,48 +3,64 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- var list = 
-     [
+ var list = [
   "blueprint/sample.html",
   "blueprint/forms.html",
   "blueprint/grid.html",
   "blueprint/elements.html",
-  "js-input/3d-cube.html",
-  "js-input/3d-morph.html",
-  "js-input/3d-raytrace.html",
   "js-input/3d-thingy.html",
-  "js-input/access-binary-trees.html",
-  "js-input/access-fannkuch.html",
-  "js-input/access-nbody.html",
-  "js-input/access-nsieve.html",
-  "js-input/bitops-3bit-bits-in-byte.html",
-  "js-input/bitops-bits-in-byte.html",
-  "js-input/bitops-bitwise-and.html",
-  "js-input/bitops-nsieve-bits.html",
-  "js-input/controlflow-recursive.html",
-  "js-input/crypto-aes.html",
-  "js-input/crypto-md5.html",
-  "js-input/crypto-sha1.html",
   "js-input/crypto-otp.html",
-  "js-input/date-format-tofte.html",
-  "js-input/date-format-xparb.html",
-  "js-input/math-cordic.html",
-  "js-input/math-partial-sums.html",
-  "js-input/math-spectral-norm.html",
-  "js-input/regexp-dna.html",
-  "js-input/string-base64.html",
-  "js-input/string-fasta.html",
-  "js-input/string-tagcloud.html",
-  "js-input/string-unpack-code.html",
-  "js-input/string-validate-input.html"
+
+  "js-input/sunspider/3d-cube.html",
+  "js-input/sunspider/3d-morph.html",
+  "js-input/sunspider/3d-raytrace.html",
+  "js-input/sunspider/access-binary-trees.html",
+  "js-input/sunspider/access-fannkuch.html",
+  "js-input/sunspider/access-nbody.html",
+  "js-input/sunspider/access-nsieve.html",
+  "js-input/sunspider/bitops-3bit-bits-in-byte.html",
+  "js-input/sunspider/bitops-bits-in-byte.html",
+  "js-input/sunspider/bitops-bitwise-and.html",
+  "js-input/sunspider/bitops-nsieve-bits.html",
+  "js-input/sunspider/controlflow-recursive.html",
+  "js-input/sunspider/crypto-aes.html",
+  "js-input/sunspider/crypto-md5.html",
+  "js-input/sunspider/crypto-sha1.html",
+  "js-input/sunspider/date-format-tofte.html",
+  "js-input/sunspider/date-format-xparb.html",
+  "js-input/sunspider/math-cordic.html",
+  "js-input/sunspider/math-partial-sums.html",
+  "js-input/sunspider/math-spectral-norm.html",
+  "js-input/sunspider/regexp-dna.html",
+  "js-input/sunspider/string-base64.html",
+  "js-input/sunspider/string-fasta.html",
+  "js-input/sunspider/string-tagcloud.html",
+  "js-input/sunspider/string-unpack-code.html",
+  "js-input/sunspider/string-validate-input.html",
+
+  "js-input/octane/box2d.html",
+  "js-input/octane/code-load.html",
+  "js-input/octane/crypto.html",
+  "js-input/octane/deltablue.html",
+  "js-input/octane/earley-boyer.html",
+  "js-input/octane/gbemu.html",
+  "js-input/octane/mandreel.html",
+  "js-input/octane/navier-stokes.html",
+  "js-input/octane/pdfjs.html",
+  "js-input/octane/raytrace.html",
+  "js-input/octane/regexp.html",
+  "js-input/octane/richards.html",
+  "js-input/octane/splay.html",
+  "js-input/octane/typescript.html",
+  "js-input/octane/zlib.html"
      ];
- var interval = 3000; // 15000
+ var interval = 1000;
  var idx = 0;
  var w;
- 
+
  window.onload = function () {
      w = window.open("about:blank");
-     window.setTimeout(loadURL, interval); 
+     window.setTimeout(loadURL, interval);
  };
  function loadURL () {
      w.close();
@@ -56,7 +72,7 @@
      }
  }
  var i;
- 
+
  for(i=0; i < list.length;i++) {
      document.write(list[i]);
      document.write("<br>");

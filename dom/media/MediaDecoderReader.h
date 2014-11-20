@@ -322,7 +322,7 @@ public:
 
   // Returns failure on error, or NS_OK.
   // If *aSample is null, EOS has been reached.
-  nsresult Await(nsAutoPtr<AudioData>& aSample);
+  nsresult Await(nsRefPtr<AudioData>& aSample);
 
   // Interrupts a call to Wait().
   void Cancel();
@@ -330,7 +330,7 @@ public:
 private:
   Monitor mMonitor;
   nsresult mStatus;
-  nsAutoPtr<AudioData> mSample;
+  nsRefPtr<AudioData> mSample;
   bool mHaveResult;
 };
 

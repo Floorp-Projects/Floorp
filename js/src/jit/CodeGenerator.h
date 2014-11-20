@@ -153,6 +153,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewArray(LNewArray *lir);
     bool visitOutOfLineNewArray(OutOfLineNewArray *ool);
     bool visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite *lir);
+    bool visitNewArrayDynamicLength(LNewArrayDynamicLength *lir);
     bool visitNewObjectVMCall(LNewObject *lir);
     bool visitNewObject(LNewObject *lir);
     bool visitOutOfLineNewObject(OutOfLineNewObject *ool);

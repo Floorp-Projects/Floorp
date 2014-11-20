@@ -78,6 +78,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/PluginCrashedEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Telemetry.h"
@@ -326,54 +327,20 @@ nsPluginCrashedEvent::Run()
     return NS_OK;
   }
 
-  ErrorResult rv;
-  nsRefPtr<Event> event =
-    doc->CreateEvent(NS_LITERAL_STRING("customevent"), rv);
-  nsCOMPtr<nsIDOMCustomEvent> customEvent(do_QueryObject(event));
-  if (!customEvent) {
-    NS_WARNING("Couldn't QI event for PluginCrashed event!");
-    return NS_OK;
-  }
+  PluginCrashedEventInit init;
+  init.mPluginDumpID = mPluginDumpID;
+  init.mBrowserDumpID = mBrowserDumpID;
+  init.mPluginName = mPluginName;
+  init.mPluginFilename = mPluginFilename;
+  init.mSubmittedCrashReport = mSubmittedCrashReport;
+  init.mBubbles = true;
+  init.mCancelable = true;
 
-  nsCOMPtr<nsIWritableVariant> variant;
-  variant = do_CreateInstance("@mozilla.org/variant;1");
-  if (!variant) {
-    NS_WARNING("Couldn't create detail variant for PluginCrashed event!");
-    return NS_OK;
-  }
-  customEvent->InitCustomEvent(NS_LITERAL_STRING("PluginCrashed"),
-                               true, true, variant);
+  nsRefPtr<PluginCrashedEvent> event =
+    PluginCrashedEvent::Constructor(doc, NS_LITERAL_STRING("PluginCrashed"), init);
+
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
-
-  nsCOMPtr<nsIWritablePropertyBag2> propBag;
-  propBag = do_CreateInstance("@mozilla.org/hash-property-bag;1");
-  if (!propBag) {
-    NS_WARNING("Couldn't create a property bag for PluginCrashed event!");
-    return NS_OK;
-  }
-
-  // add a "pluginDumpID" property to this event
-  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginDumpID"),
-                                mPluginDumpID);
-
-  // add a "browserDumpID" property to this event
-  propBag->SetPropertyAsAString(NS_LITERAL_STRING("browserDumpID"),
-                                mBrowserDumpID);
-
-  // add a "pluginName" property to this event
-  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginName"),
-                                mPluginName);
-
-  // add a "pluginFilename" property to this event
-  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginFilename"),
-                                mPluginFilename);
-
-  // add a "submittedCrashReport" property to this event
-  propBag->SetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"),
-                             mSubmittedCrashReport);
-
-  variant->SetAsISupports(propBag);
 
   EventDispatcher::DispatchDOMEvent(mContent, nullptr, event, nullptr, nullptr);
   return NS_OK;
