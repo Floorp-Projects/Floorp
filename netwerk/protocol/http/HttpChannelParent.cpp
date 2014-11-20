@@ -31,7 +31,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsIOService.h"
 #include "nsICachingChannel.h"
-
+#include "nsQueryObject.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;

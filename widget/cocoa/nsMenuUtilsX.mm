@@ -17,6 +17,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsPIDOMWindow.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla;
 

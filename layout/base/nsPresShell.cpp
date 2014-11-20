@@ -176,6 +176,7 @@
 #include "nsIFrameInlines.h"
 #include "mozilla/gfx/2D.h"
 #include "nsSubDocumentFrame.h"
+#include "nsQueryObject.h"
 
 #ifdef ANDROID
 #include "nsIDocShellTreeOwner.h"

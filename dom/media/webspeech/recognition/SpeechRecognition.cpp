@@ -21,6 +21,7 @@
 #include "mozilla/dom/SpeechRecognitionEvent.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsQueryObject.h"
 
 #include <algorithm>
 

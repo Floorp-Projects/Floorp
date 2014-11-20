@@ -17,6 +17,7 @@
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
+#include "nsQueryObject.h"
 
 #include "nsNetCID.h"
 #include "nsIProperty.h"

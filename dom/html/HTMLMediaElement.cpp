@@ -38,6 +38,7 @@
 #include "nsIThreadInternal.h"
 #include "nsContentUtils.h"
 #include "nsIRequest.h"
+#include "nsQueryObject.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPConnect.h"

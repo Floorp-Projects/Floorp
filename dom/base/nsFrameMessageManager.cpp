@@ -42,6 +42,7 @@
 #include "mozilla/dom/DOMStringList.h"
 #include "nsPrintfCString.h"
 #include "nsXULAppAPI.h"
+#include "nsQueryObject.h"
 #include <algorithm>
 
 #ifdef ANDROID
