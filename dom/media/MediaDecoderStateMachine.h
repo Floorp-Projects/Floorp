@@ -818,6 +818,10 @@ protected:
   // audio stream, unless another frame is pushed to the hardware.
   int64_t mAudioEndTime;
 
+  // The end time of the last decoded audio frame. This signifies the end of
+  // decoded audio data. Used to check if we are low in decoded data.
+  int64_t mDecodedAudioEndTime;
+
   // The presentation end time of the last video frame which has been displayed
   // in microseconds. Accessed from the state machine thread.
   int64_t mVideoFrameEndTime;
