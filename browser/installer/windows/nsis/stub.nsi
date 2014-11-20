@@ -1747,44 +1747,24 @@ Function UpdateFreeSpaceLabel
 
   ${If} $0 > 1024
   ${OrIf} $0 < 0
-    ; Multiply by 10 so it is possible to display a decimal in the size
-    System::Int64Op $0 * 10
-    Pop $0
     System::Int64Op $0 / 1024
     Pop $0
     StrCpy $1 "$(KILO)$(BYTE)"
-    ${If} $0 > 10240
+    ${If} $0 > 1024
     ${OrIf} $0 < 0
       System::Int64Op $0 / 1024
       Pop $0
       StrCpy $1 "$(MEGA)$(BYTE)"
-      ${If} $0 > 10240
+      ${If} $0 > 1024
       ${OrIf} $0 < 0
         System::Int64Op $0 / 1024
         Pop $0
         StrCpy $1 "$(GIGA)$(BYTE)"
       ${EndIf}
     ${EndIf}
-    StrLen $3 "$0"
-    ${If} $3 > 1
-      StrCpy $2 "$0" -1 ; All characters except the last one
-      StrCpy $0 "$0" "" -1 ; The last character
-      ${If} "$0" == "0"
-        StrCpy $0 "$2" ; Don't display the decimal if it is 0
-      ${Else}
-        StrCpy $0 "$2.$0"
-      ${EndIf}
-    ${ElseIf} $3 == 1
-      StrCpy $0 "0.$0"
-    ${Else}
-      ; This should never happen
-      System::Int64Op $0 / 10
-      Pop $0
-    ${EndIf}
   ${EndIf}
 
   SendMessage $LabelFreeSpace ${WM_SETTEXT} 0 "STR:$0 $1"
-
 FunctionEnd
 
 Function OnChange_DirRequest
