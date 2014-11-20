@@ -8634,6 +8634,19 @@ nsIFrame::DestroyRegion(void* aPropertyValue)
   delete static_cast<nsRegion*>(aPropertyValue);
 }
 
+/*static*/ void
+nsIFrame::DestroyContentArray(void* aPropertyValue)
+{
+  typedef nsTArray<nsIContent*> T;
+  T* arr = static_cast<T*>(aPropertyValue);
+  for (T::size_type i = 0; i < arr->Length(); ++i) {
+    nsIContent* content = (*arr)[i];
+    content->UnbindFromTree();
+    NS_RELEASE(content);
+  }
+  delete arr;
+}
+
 bool
 nsIFrame::IsPseudoStackingContextFromStyle() {
   const nsStyleDisplay* disp = StyleDisplay();
