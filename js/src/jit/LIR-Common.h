@@ -7,6 +7,7 @@
 #ifndef jit_LIR_Common_h
 #define jit_LIR_Common_h
 
+#include "jit/AtomicOp.h"
 #include "jit/shared/Assembler-shared.h"
 
 // This file declares LIR instructions that are common to every platform.
@@ -6587,6 +6588,60 @@ class LAsmJSStoreHeap : public LInstructionHelper<0, 2, 0>
     }
     const LAllocation *value() {
         return getOperand(1);
+    }
+};
+
+class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 3, 0>
+{
+  public:
+    LIR_HEADER(AsmJSCompareExchangeHeap);
+
+    LAsmJSCompareExchangeHeap(const LAllocation &ptr, const LAllocation &oldValue,
+                              const LAllocation &newValue)
+    {
+        setOperand(0, ptr);
+        setOperand(1, oldValue);
+        setOperand(2, newValue);
+    }
+
+    const LAllocation *ptr() {
+        return getOperand(0);
+    }
+    const LAllocation *oldValue() {
+        return getOperand(1);
+    }
+    const LAllocation *newValue() {
+        return getOperand(2);
+    }
+
+    MAsmJSCompareExchangeHeap *mir() const {
+        return mir_->toAsmJSCompareExchangeHeap();
+    }
+};
+
+class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(AsmJSAtomicBinopHeap);
+    LAsmJSAtomicBinopHeap(const LAllocation &ptr, const LAllocation &value,
+                          const LDefinition &temp)
+    {
+        setOperand(0, ptr);
+        setOperand(1, value);
+        setTemp(0, temp);
+    }
+    const LAllocation *ptr() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+
+    MAsmJSAtomicBinopHeap *mir() const {
+        return mir_->toAsmJSAtomicBinopHeap();
     }
 };
 
