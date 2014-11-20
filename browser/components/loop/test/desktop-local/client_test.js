@@ -28,7 +28,7 @@ describe("loop.Client", function() {
     callback = sinon.spy();
     fakeToken = "fakeTokenText";
     mozLoop = {
-      getLoopCharPref: sandbox.stub()
+      getLoopPref: sandbox.stub()
         .returns(null)
         .withArgs("hawk-session-token")
         .returns(fakeToken),

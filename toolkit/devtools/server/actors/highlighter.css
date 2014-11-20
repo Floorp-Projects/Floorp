@@ -170,3 +170,11 @@
   stroke-dasharray: 5 3;
   stroke-width: 2;
 }
+
+/* Rect highlighter */
+
+:-moz-native-anonymous .highlighted-rect {
+  position: absolute;
+  background: #80d4ff;
+  opacity: 0.8;
+}
