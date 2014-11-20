@@ -185,6 +185,10 @@ xul|menulist > xul|*.menulist-label-box {
   padding-left: 10px !important;
 }
 
+xul|menulist > xul|*.menulist-label-box > xul|*.menulist-icon {
+  -moz-margin-end: 5px;
+}
+
 xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
   -moz-appearance: none;
   margin: 1px 0;
@@ -454,6 +458,10 @@ xul|*.checkbox-label-box {
     background-image: url("chrome://global/skin/in-content/check@2x.png"),
                       linear-gradient(#fff, rgba(255,255,255,0.8)) !important;
   }
+}
+
+xul|richlistitem > xul|*.checkbox-check {
+  margin: 3px 6px;
 }
 
 xul|*.radio-check {

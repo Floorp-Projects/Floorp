@@ -14,3 +14,5 @@ browser.jar:
    content/browser/preferences/in-content/content.js
    content/browser/preferences/in-content/sync.js
    content/browser/preferences/in-content/security.js
+   content/browser/preferences/in-content/search.css
+   content/browser/preferences/in-content/search.js

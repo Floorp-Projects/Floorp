@@ -24,6 +24,7 @@ function init_all() {
 
   gSubDialog.init();
   gMainPane.init();
+  gSearchPane.init();
   gPrivacyPane.init();
   gAdvancedPane.init();
   gApplicationsPane.init();
