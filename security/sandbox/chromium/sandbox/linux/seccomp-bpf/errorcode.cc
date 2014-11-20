@@ -18,11 +18,6 @@ ErrorCode::ErrorCode(int err) {
       error_type_ = ET_SIMPLE;
       break;
     default:
-      if ((err & ~SECCOMP_RET_DATA) == ERR_TRACE) {
-        err_ = SECCOMP_RET_TRACE + (err & SECCOMP_RET_DATA);
-        error_type_ = ET_SIMPLE;
-        break;
-      }
       SANDBOX_DIE("Invalid use of ErrorCode object");
   }
 }

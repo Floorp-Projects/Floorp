@@ -47,7 +47,7 @@ class BrowserTestBase;
 class GLHelper;
 class GpuChannelHost;
 class NestedMessagePumpAndroid;
-class RenderWidgetResizeHelper;
+class RenderWidgetHelper;
 class ScopedAllowWaitForAndroidLayoutTests;
 class TextInputClientMac;
 }
@@ -60,11 +60,6 @@ class InFlightIO;
 }
 namespace media {
 class AudioOutputController;
-}
-namespace mojo {
-namespace common {
-class WatcherThreadManager;
-}
 }
 namespace net {
 class FileStreamPosix;
@@ -185,13 +180,12 @@ class BASE_EXPORT ThreadRestrictions {
   friend class content::BrowserShutdownProfileDumper;
   friend class content::BrowserTestBase;
   friend class content::NestedMessagePumpAndroid;
-  friend class content::RenderWidgetResizeHelper;
+  friend class content::RenderWidgetHelper;
   friend class content::ScopedAllowWaitForAndroidLayoutTests;
   friend class ::HistogramSynchronizer;
   friend class ::ScopedAllowWaitForLegacyWebViewApi;
   friend class ::TestingAutomationProvider;
   friend class cc::CompletionEvent;
-  friend class mojo::common::WatcherThreadManager;
   friend class remoting::AutoThread;
   friend class MessagePumpDefault;
   friend class SequencedWorkerPool;

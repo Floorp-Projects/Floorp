@@ -11,9 +11,8 @@
 
 namespace sandbox {
 
-bool GetDefaultDacl(
-    HANDLE token,
-    scoped_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter>* default_dacl) {
+bool GetDefaultDacl(HANDLE token,
+                    scoped_ptr_malloc<TOKEN_DEFAULT_DACL>* default_dacl) {
   if (token == NULL)
     return false;
 
@@ -37,10 +36,10 @@ bool GetDefaultDacl(
   return true;
 }
 
-bool AddSidToDacl(const Sid& sid, ACL* old_dacl, ACCESS_MODE access_mode,
-                  ACCESS_MASK access, ACL** new_dacl) {
+bool AddSidToDacl(const Sid& sid, ACL* old_dacl, ACCESS_MASK access,
+                  ACL** new_dacl) {
   EXPLICIT_ACCESS new_access = {0};
-  new_access.grfAccessMode = access_mode;
+  new_access.grfAccessMode = GRANT_ACCESS;
   new_access.grfAccessPermissions = access;
   new_access.grfInheritance = NO_INHERITANCE;
 
@@ -60,13 +59,12 @@ bool AddSidToDefaultDacl(HANDLE token, const Sid& sid, ACCESS_MASK access) {
   if (token == NULL)
     return false;
 
-  scoped_ptr<TOKEN_DEFAULT_DACL, base::FreeDeleter> default_dacl;
+  scoped_ptr_malloc<TOKEN_DEFAULT_DACL> default_dacl;
   if (!GetDefaultDacl(token, &default_dacl))
     return false;
 
   ACL* new_dacl = NULL;
-  if (!AddSidToDacl(sid, default_dacl->DefaultDacl, GRANT_ACCESS, access,
-                    &new_dacl))
+  if (!AddSidToDacl(sid, default_dacl->DefaultDacl, access, &new_dacl))
     return false;
 
   TOKEN_DEFAULT_DACL new_token_dacl = {0};
@@ -82,7 +80,7 @@ bool AddUserSidToDefaultDacl(HANDLE token, ACCESS_MASK access) {
   DWORD size = sizeof(TOKEN_USER) + SECURITY_MAX_SID_SIZE;
   TOKEN_USER* token_user = reinterpret_cast<TOKEN_USER*>(malloc(size));
 
-  scoped_ptr<TOKEN_USER, base::FreeDeleter> token_user_ptr(token_user);
+  scoped_ptr_malloc<TOKEN_USER> token_user_ptr(token_user);
 
   if (!::GetTokenInformation(token, TokenUser, token_user, size, &size))
     return false;
@@ -92,24 +90,23 @@ bool AddUserSidToDefaultDacl(HANDLE token, ACCESS_MASK access) {
                              access);
 }
 
-bool AddKnownSidToObject(HANDLE object, SE_OBJECT_TYPE object_type,
-                         const Sid& sid, ACCESS_MODE access_mode,
-                         ACCESS_MASK access) {
+bool AddKnownSidToKernelObject(HANDLE object, const Sid& sid,
+                               ACCESS_MASK access) {
   PSECURITY_DESCRIPTOR descriptor = NULL;
   PACL old_dacl = NULL;
   PACL new_dacl = NULL;
 
-  if (ERROR_SUCCESS != ::GetSecurityInfo(object, object_type,
+  if (ERROR_SUCCESS != ::GetSecurityInfo(object, SE_KERNEL_OBJECT,
                                          DACL_SECURITY_INFORMATION, NULL, NULL,
                                          &old_dacl, NULL, &descriptor))
     return false;
 
-  if (!AddSidToDacl(sid.GetPSID(), old_dacl, access_mode, access, &new_dacl)) {
+  if (!AddSidToDacl(sid.GetPSID(), old_dacl, access, &new_dacl)) {
     ::LocalFree(descriptor);
     return false;
   }
 
-  DWORD result = ::SetSecurityInfo(object, object_type,
+  DWORD result = ::SetSecurityInfo(object, SE_KERNEL_OBJECT,
                                    DACL_SECURITY_INFORMATION, NULL, NULL,
                                    new_dacl, NULL);
 

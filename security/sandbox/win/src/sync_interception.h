@@ -12,32 +12,27 @@ namespace sandbox {
 
 extern "C" {
 
-typedef NTSTATUS (WINAPI* NtCreateEventFunction) (
-    PHANDLE EventHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    EVENT_TYPE EventType,
-    BOOLEAN InitialState);
+typedef HANDLE (WINAPI *CreateEventWFunction) (
+    LPSECURITY_ATTRIBUTES lpEventAttributes,
+    DWORD dwDesiredAccess,
+    BOOL bInheritHandle,
+    LPCWSTR lpName);
 
-typedef NTSTATUS (WINAPI *NtOpenEventFunction) (
-    PHANDLE EventHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes);
+typedef HANDLE (WINAPI *OpenEventWFunction) (
+    BOOL bManualReset,
+    BOOL bInitialState,
+    LPCWSTR lpName);
 
-// Interceptors for NtCreateEvent/NtOpenEvent
-SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtCreateEvent(
-    NtCreateEventFunction orig_CreateEvent,
-    PHANDLE event_handle,
-    ACCESS_MASK desired_access,
-    POBJECT_ATTRIBUTES object_attributes,
-    EVENT_TYPE event_type,
-    BOOLEAN initial_state);
+// Interception of CreateEvent on the child process.
+SANDBOX_INTERCEPT HANDLE WINAPI TargetCreateEventW(
+    CreateEventWFunction orig_CreateEvent,
+    LPSECURITY_ATTRIBUTES security_attributes, BOOL manual_reset,
+    BOOL initial_state, LPCWSTR name);
 
-SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenEvent(
-    NtOpenEventFunction orig_OpenEvent,
-    PHANDLE event_handle,
-    ACCESS_MASK desired_access,
-    POBJECT_ATTRIBUTES object_attributes);
+// Interception of OpenEvent on the child process.
+SANDBOX_INTERCEPT HANDLE WINAPI TargetOpenEventW(
+    OpenEventWFunction orig_OpenEvent, ACCESS_MASK desired_access,
+    BOOL inherit_handle, LPCWSTR name);
 
 }  // extern "C"
 

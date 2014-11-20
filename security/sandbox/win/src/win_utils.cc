@@ -6,11 +6,10 @@
 
 #include <map>
 
+#include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
-#include "base/win/pe_image.h"
 #include "sandbox/win/src/internal_types.h"
 #include "sandbox/win/src/nt_internals.h"
-#include "sandbox/win/src/sandbox_nt_util.h"
 
 namespace {
 
@@ -34,7 +33,7 @@ const KnownReservedKey kKnownKey[] = {
 };
 
 // Returns true if the provided path points to a pipe.
-bool IsPipe(const base::string16& path) {
+bool IsPipe(const std::wstring& path) {
   size_t start = 0;
   if (0 == path.compare(0, sandbox::kNTPrefixLen, sandbox::kNTPrefix))
     start = sandbox::kNTPrefixLen;
@@ -47,7 +46,7 @@ bool IsPipe(const base::string16& path) {
 
 namespace sandbox {
 
-HKEY GetReservedKeyFromName(const base::string16& name) {
+HKEY GetReservedKeyFromName(const std::wstring& name) {
   for (size_t i = 0; i < arraysize(kKnownKey); ++i) {
     if (name == kKnownKey[i].name)
       return kKnownKey[i].key;
@@ -56,7 +55,7 @@ HKEY GetReservedKeyFromName(const base::string16& name) {
   return NULL;
 }
 
-bool ResolveRegistryName(base::string16 name, base::string16* resolved_name) {
+bool ResolveRegistryName(std::wstring name, std::wstring* resolved_name) {
   for (size_t i = 0; i < arraysize(kKnownKey); ++i) {
     if (name.find(kKnownKey[i].name) == 0) {
       HKEY key;
@@ -80,8 +79,8 @@ bool ResolveRegistryName(base::string16 name, base::string16* resolved_name) {
   return false;
 }
 
-DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
-  base::string16 path = full_path;
+DWORD IsReparsePoint(const std::wstring& full_path, bool* result) {
+  std::wstring path = full_path;
 
   // Remove the nt prefix.
   if (0 == path.compare(0, kNTPrefixLen, kNTPrefix))
@@ -93,7 +92,7 @@ DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
     return ERROR_SUCCESS;
   }
 
-  base::string16::size_type last_pos = base::string16::npos;
+  std::wstring::size_type last_pos = std::wstring::npos;
 
   do {
     path = path.substr(0, last_pos);
@@ -105,7 +104,7 @@ DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
           error != ERROR_PATH_NOT_FOUND &&
           error != ERROR_INVALID_NAME) {
         // Unexpected error.
-        NOTREACHED_NT();
+        NOTREACHED();
         return error;
       }
     } else if (FILE_ATTRIBUTE_REPARSE_POINT & attributes) {
@@ -115,7 +114,7 @@ DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
     }
 
     last_pos = path.rfind(L'\\');
-  } while (last_pos > 2);  // Skip root dir.
+  } while (last_pos != std::wstring::npos);
 
   *result = false;
   return ERROR_SUCCESS;
@@ -124,14 +123,14 @@ DWORD IsReparsePoint(const base::string16& full_path, bool* result) {
 // We get a |full_path| of the form \??\c:\some\foo\bar, and the name that
 // we'll get from |handle| will be \device\harddiskvolume1\some\foo\bar.
 bool SameObject(HANDLE handle, const wchar_t* full_path) {
-  base::string16 path(full_path);
-  DCHECK_NT(!path.empty());
+  std::wstring path(full_path);
+  DCHECK(!path.empty());
 
   // Check if it's a pipe.
   if (IsPipe(path))
     return true;
 
-  base::string16 actual_path;
+  std::wstring actual_path;
   if (!GetPathFromHandle(handle, &actual_path))
     return false;
 
@@ -146,7 +145,7 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
 
   // Look for the drive letter.
   size_t colon_pos = path.find(L':');
-  if (colon_pos == 0 || colon_pos == base::string16::npos)
+  if (colon_pos == 0 || colon_pos == std::wstring::npos)
     return false;
 
   // Only one character for the drive.
@@ -181,11 +180,11 @@ bool SameObject(HANDLE handle, const wchar_t* full_path) {
   return true;
 }
 
-bool ConvertToLongPath(const base::string16& short_path,
-                       base::string16* long_path) {
+bool ConvertToLongPath(const std::wstring& short_path,
+                       std::wstring* long_path) {
   // Check if the path is a NT path.
   bool is_nt_path = false;
-  base::string16 path = short_path;
+  std::wstring path = short_path;
   if (0 == path.compare(0, kNTPrefixLen, kNTPrefix)) {
     path = path.substr(kNTPrefixLen);
     is_nt_path = true;
@@ -207,12 +206,12 @@ bool ConvertToLongPath(const base::string16& short_path,
                             ERROR_PATH_NOT_FOUND == last_error ||
                             ERROR_INVALID_NAME == last_error)) {
     // The file does not exist, but maybe a sub path needs to be expanded.
-    base::string16::size_type last_slash = path.rfind(L'\\');
-    if (base::string16::npos == last_slash)
+    std::wstring::size_type last_slash = path.rfind(L'\\');
+    if (std::wstring::npos == last_slash)
       return false;
 
-    base::string16 begin = path.substr(0, last_slash);
-    base::string16 end = path.substr(last_slash);
+    std::wstring begin = path.substr(0, last_slash);
+    std::wstring end = path.substr(last_slash);
     if (!ConvertToLongPath(begin, &begin))
       return false;
 
@@ -237,7 +236,7 @@ bool ConvertToLongPath(const base::string16& short_path,
   return false;
 }
 
-bool GetPathFromHandle(HANDLE handle, base::string16* path) {
+bool GetPathFromHandle(HANDLE handle, std::wstring* path) {
   NtQueryObjectFunction NtQueryObject = NULL;
   ResolveNTFunctionPtr("NtQueryObject", &NtQueryObject);
 
@@ -266,8 +265,7 @@ bool GetPathFromHandle(HANDLE handle, base::string16* path) {
   return true;
 }
 
-bool GetNtPathFromWin32Path(const base::string16& path,
-                            base::string16* nt_path) {
+bool GetNtPathFromWin32Path(const std::wstring& path, std::wstring* nt_path) {
   HANDLE file = ::CreateFileW(path.c_str(), 0,
     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
     OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
@@ -300,22 +298,26 @@ bool WriteProtectedChildMemory(HANDLE child_process, void* address,
 
 };  // namespace sandbox
 
+// TODO(jschuh): http://crbug.com/11789
+// I'm guessing we have a race where some "security" software is messing
+// with ntdll/imports underneath us. So, we retry a few times, and in the
+// worst case we sleep briefly before a few more attempts. (Normally sleeping
+// would be very bad, but it's better than crashing in this case.)
 void ResolveNTFunctionPtr(const char* name, void* ptr) {
-  static volatile HMODULE ntdll = NULL;
+  const int max_tries = 5;
+  const int sleep_threshold = 2;
 
-  if (!ntdll) {
-    HMODULE ntdll_local = ::GetModuleHandle(sandbox::kNtdllName);
-    // Use PEImage to sanity-check that we have a valid ntdll handle.
-    base::win::PEImage ntdll_peimage(ntdll_local);
-    CHECK_NT(ntdll_peimage.VerifyMagic());
-    // Race-safe way to set static ntdll.
-    ::InterlockedCompareExchangePointer(
-        reinterpret_cast<PVOID volatile*>(&ntdll), ntdll_local, NULL);
+  static HMODULE ntdll = ::GetModuleHandle(sandbox::kNtdllName);
 
-  }
-
-  CHECK_NT(ntdll);
   FARPROC* function_ptr = reinterpret_cast<FARPROC*>(ptr);
   *function_ptr = ::GetProcAddress(ntdll, name);
-  CHECK_NT(*function_ptr);
+
+  for (int tries = 1; !(*function_ptr) && tries < max_tries; ++tries) {
+    if (tries >= sleep_threshold)
+      ::Sleep(1);
+    ntdll = ::GetModuleHandle(sandbox::kNtdllName);
+    *function_ptr = ::GetProcAddress(ntdll, name);
+  }
+
+  CHECK(*function_ptr);
 }

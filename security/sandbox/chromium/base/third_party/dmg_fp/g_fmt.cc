@@ -46,14 +46,14 @@ g_fmt(register char *b, double x)
 	if (sign)
 		*b++ = '-';
 	if (decpt == 9999) /* Infinity or Nan */ {
-		for(*b = *s++; *b++; *b = *s++) {}
+		while((*b++ = *s++)) {}
 		goto done0;
 		}
 	if (decpt <= -4 || decpt > se - s + 5) {
 		*b++ = *s++;
 		if (*s) {
 			*b++ = '.';
-			for(*b = *s++; *b; *b = *s++)
+			while((*b = *s++))
 				b++;
 			}
 		*b++ = 'e';
@@ -79,10 +79,10 @@ g_fmt(register char *b, double x)
 		*b++ = '.';
 		for(; decpt < 0; decpt++)
 			*b++ = '0';
-		for(*b = *s++; *b++; *b = *s++) {}
+		while((*b++ = *s++)) {}
 		}
 	else {
-		for(*b = *s++; *b; *b = *s++) {
+		while((*b = *s++)) {
 			b++;
 			if (--decpt == 0 && *s)
 				*b++ = '.';
