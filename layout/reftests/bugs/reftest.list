@@ -1383,7 +1383,7 @@ pref(dom.use_xbl_scopes_for_remote_xul,true) skip-if(B2G&&browserIsRemote) == 49
 == 495385-3.html 495385-3-ref.html
 == 495385-4.html 495385-4-ref.html
 == 495385-5.html 495385-5-ref.html
-asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
+== 496032-1.html 496032-1-ref.html
 == 496840-1.html 496840-1-ref.html
 skip-if(B2G&&browserIsRemote) == 498228-1.xul 498228-1-ref.xul # bug 974780
 == 501037.html 501037-ref.html
