@@ -83,7 +83,7 @@ BaselineCompiler::compile()
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
-    AutoTraceLog logCompile(logger, TraceLogger::BaselineCompilation);
+    AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
     if (!script->ensureHasTypes(cx) || !script->ensureHasAnalyzedArgsUsage(cx))
         return Method_Error;
@@ -380,7 +380,7 @@ BaselineCompiler::emitPrologue()
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);
     masm.tracelogStart(loggerReg, TraceLogCreateTextId(logger, script));
-    masm.tracelogStart(loggerReg, TraceLogger::Baseline);
+    masm.tracelogStart(loggerReg, TraceLogger_Baseline);
     masm.Pop(loggerReg);
 #endif
 
@@ -429,8 +429,8 @@ BaselineCompiler::emitEpilogue()
     Register loggerReg = RegisterSet::Volatile().takeGeneral();
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);
-    masm.tracelogStop(loggerReg, TraceLogger::Baseline);
-    masm.tracelogStop(loggerReg, TraceLogger::Scripts);
+    masm.tracelogStop(loggerReg, TraceLogger_Baseline);
+    masm.tracelogStop(loggerReg, TraceLogger_Scripts);
     masm.Pop(loggerReg);
 #endif
 
