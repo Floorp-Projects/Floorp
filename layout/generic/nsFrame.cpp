@@ -6653,11 +6653,14 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
         baseFrame = endOfLine ? lastFrame : firstFrame;
         if (baseFrame) {
-          nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(baseFrame);
-          // If the direction of the frame on the edge is opposite to that of the line,
-          // we'll need to drill down to its opposite end, so reverse endOfLine.
-          if (IS_LEVEL_RTL(embeddingLevel) == !lineIsRTL)
+          bool frameIsRTL =
+            (nsBidiPresUtils::FrameDirection(baseFrame) == NSBIDI_RTL);
+          // If the direction of the frame on the edge is opposite to
+          // that of the line, we'll need to drill down to its opposite
+          // end, so reverse endOfLine.
+          if (frameIsRTL != lineIsRTL) {
             endOfLine = !endOfLine;
+          }
         }
       } else {
         it->GetLine(thisLine, &firstFrame, &lineFrameCount, usedRect, &lineFlags);
@@ -6878,8 +6881,8 @@ nsIFrame::GetFrameFromDirection(nsDirection aDirection, bool aVisual,
       result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
       nsIFrame** framePtr = aDirection == eDirPrevious ? &firstFrame : &lastFrame;
       if (*framePtr) {
-        nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(*framePtr);
-        bool frameIsRTL = IS_LEVEL_RTL(embeddingLevel);
+        bool frameIsRTL =
+          (nsBidiPresUtils::FrameDirection(*framePtr) == NSBIDI_RTL);
         if ((frameIsRTL == lineIsRTL) == (aDirection == eDirPrevious)) {
           nsFrame::GetFirstLeaf(presContext, framePtr);
         } else {
