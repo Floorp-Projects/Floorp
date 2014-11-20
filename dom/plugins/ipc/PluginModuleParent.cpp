@@ -40,6 +40,7 @@
 #endif
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
+#include "nsIProfiler.h"
 #include "nsIProfileSaveEvent.h"
 #endif
 
@@ -1968,13 +1969,26 @@ PluginProfilerObserver::Observe(nsISupports *aSubject,
                                 const char *aTopic,
                                 const char16_t *aData)
 {
-    nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
-    if (pse) {
-      nsCString result;
-      bool success = mPmp->CallGeckoGetProfile(&result);
-      if (success && !result.IsEmpty()) {
-          pse->AddSubProfile(result.get());
-      }
+    if (!strcmp(aTopic, "profiler-started")) {
+        nsCOMPtr<nsIProfilerStartParams> params(do_QueryInterface(aSubject));
+        uint32_t entries;
+        double interval;
+        params->GetEntries(&entries);
+        params->GetInterval(&interval);
+        const nsTArray<nsCString>& features = params->GetFeatures();
+        const nsTArray<nsCString>& threadFilterNames = params->GetThreadFilterNames();
+        unused << mPmp->SendStartProfiler(entries, interval, features, threadFilterNames);
+    } else if (!strcmp(aTopic, "profiler-stopped")) {
+        unused << mPmp->SendStopProfiler();
+    } else if (!strcmp(aTopic, "profiler-subprocess")) {
+        nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);
+        if (pse) {
+            nsCString result;
+            bool success = mPmp->CallGetProfile(&result);
+            if (success && !result.IsEmpty()) {
+                pse->AddSubProfile(result.get());
+            }
+        }
     }
     return NS_OK;
 }
@@ -1985,6 +1999,8 @@ PluginModuleChromeParent::InitPluginProfiling()
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
         mProfilerObserver = new PluginProfilerObserver(this);
+        observerService->AddObserver(mProfilerObserver, "profiler-started", false);
+        observerService->AddObserver(mProfilerObserver, "profiler-stopped", false);
         observerService->AddObserver(mProfilerObserver, "profiler-subprocess", false);
     }
 }
@@ -1994,6 +2010,8 @@ PluginModuleChromeParent::ShutdownPluginProfiling()
 {
     nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
     if (observerService) {
+        observerService->RemoveObserver(mProfilerObserver, "profiler-started");
+        observerService->RemoveObserver(mProfilerObserver, "profiler-stopped");
         observerService->RemoveObserver(mProfilerObserver, "profiler-subprocess");
     }
 }

@@ -10,13 +10,13 @@ GECKOVIEW_LIBRARY_FILES := \
   build.xml \
   $(NULL)
 
-PP_TARGETS = properties manifest project
-
-properties = local.properties.in
-project = project.properties.in
-manifest = AndroidManifest.xml.in
-
-GARBAGE = $(GECKOVIEW_LIBRARY_FILES) local.properties project.properties AndroidManifest.xml
+PP_TARGETS += gen
+gen := \
+  local.properties.in \
+  project.properties.in \
+  AndroidManifest.xml.in \
+  $(NULL)
+gen_FLAGS += -DANDROID_SDK_ROOT=$(ANDROID_SDK_ROOT)
 
 GARBAGE_DIRS = \
   bin \
