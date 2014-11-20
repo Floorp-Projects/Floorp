@@ -4568,8 +4568,9 @@ class LLoadUnboxedPointerT : public LInstructionHelper<1, 2, 0>
         setOperand(1, index);
     }
 
-    const MLoadUnboxedString *mir() const {
-        return mir_->toLoadUnboxedString();
+    MDefinition *mir() {
+        MOZ_ASSERT(mir_->isLoadUnboxedObjectOrNull() || mir_->isLoadUnboxedString());
+        return mir_;
     }
     const LAllocation *elements() {
         return getOperand(0);
