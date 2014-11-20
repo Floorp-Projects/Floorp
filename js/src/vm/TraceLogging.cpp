@@ -130,7 +130,7 @@ TraceLoggerThread::init()
     }
 
     enabled = 1;
-    graph.enable();
+    logTimestamp(TraceLogger_Enable);
 
     return true;
 }
@@ -157,12 +157,8 @@ TraceLoggerThread::enable()
     if (failed)
         return false;
 
-    // TODO: Remove this. This is so the refactor works with mimimal changes,
-    // It is the intention to remove this by logging TraceLogger_Enable/TraceLogger_Disable.
-    events.clear();
-
     enabled = 1;
-    graph.enable();
+    logTimestamp(TraceLogger_Enable);
 
     return true;
 }
@@ -233,12 +229,7 @@ TraceLoggerThread::disable()
         return true;
     }
 
-    graph.log(events);
-    events.clear();
-
-    uint64_t time = rdtsc() - traceLoggers.startupTime;
-    graph.disable(time);
-
+    logTimestamp(TraceLogger_Disable);
     enabled = 0;
 
     return true;
