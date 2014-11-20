@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-print">
+  <head>
+    <meta charset="utf-8">
+    <style type="text/css">
+      img.test {
+        background: salmon;
+        padding-left: 10px;
+        padding-top: 20px;
+        width: 22px;
+        height: calc(5in - 20px);
+        display: block; /* Required for fragmentation */
+      }
+    </style>
+  </head>
+  <body>
+    <img class="test" src="blue-32x32.png">
+  </body>
+</html>

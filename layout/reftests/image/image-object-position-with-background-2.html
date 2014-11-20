@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!--
+     This testcase ensures that we paint the background around an opaque image,
+     when the image is offset from the container via 'object-position' (and
+     the img element is fragmented). This is an interesting case because, by
+     default, images fill their container, which means we can often optimize
+     away the background completely. BUT, if "object-position" offsets the
+     image from its container's content-box, we can't optimize away the
+     background; it need to be painted in the uncovered area.
+-->
+<html class="reftest-print">
+  <head>
+    <meta charset="utf-8">
+    <style type="text/css">
+      img.test {
+        background: salmon;
+        object-position: 10px 20px;
+        width: 32px;
+        height: 5in;
+        display: block; /* Required for fragmentation */
+      }
+    </style>
+  </head>
+  <body>
+    <img class="test" src="blue-32x32.png">
+  </body>
+</html>
