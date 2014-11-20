@@ -114,6 +114,7 @@ using namespace mozilla::gfx;
 #define GRID_ENABLED_PREF_NAME "layout.css.grid.enabled"
 #define RUBY_ENABLED_PREF_NAME "layout.css.ruby.enabled"
 #define STICKY_ENABLED_PREF_NAME "layout.css.sticky.enabled"
+#define DISPLAY_CONTENTS_ENABLED_PREF_NAME "layout.css.display-contents.enabled"
 #define TEXT_ALIGN_TRUE_ENABLED_PREF_NAME "layout.css.text-align-true-value.enabled"
 
 #ifdef DEBUG
@@ -293,6 +294,36 @@ StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   // depending on whether the sticky pref is enabled vs. disabled.
   nsCSSProps::kPositionKTable[sIndexOfStickyInPositionTable] =
     isStickyEnabled ? eCSSKeyword_sticky : eCSSKeyword_UNKNOWN;
+}
+
+// When the pref "layout.css.display-contents.enabled" changes, this function is
+// invoked to let us update kDisplayKTable, to selectively disable or restore
+// the entries for "contents" in that table.
+static void
+DisplayContentsEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
+{
+  NS_ASSERTION(strcmp(aPrefName, DISPLAY_CONTENTS_ENABLED_PREF_NAME) == 0,
+               "Did you misspell " DISPLAY_CONTENTS_ENABLED_PREF_NAME " ?");
+
+  static bool sIsDisplayContentsKeywordIndexInitialized;
+  static int32_t sIndexOfContentsInDisplayTable;
+  bool isDisplayContentsEnabled =
+    Preferences::GetBool(DISPLAY_CONTENTS_ENABLED_PREF_NAME, false);
+
+  if (!sIsDisplayContentsKeywordIndexInitialized) {
+    // First run: find the position of "contents" in kDisplayKTable.
+    sIndexOfContentsInDisplayTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_contents,
+                                     nsCSSProps::kDisplayKTable);
+    sIsDisplayContentsKeywordIndexInitialized = true;
+  }
+
+  // OK -- now, stomp on or restore the "contents" entry in kDisplayKTable,
+  // depending on whether the pref is enabled vs. disabled.
+  if (sIndexOfContentsInDisplayTable >= 0) {
+    nsCSSProps::kDisplayKTable[sIndexOfContentsInDisplayTable] =
+      isDisplayContentsEnabled ? eCSSKeyword_contents : eCSSKeyword_UNKNOWN;
+  }
 }
 
 // When the pref "layout.css.text-align-true-value.enabled" changes, this
@@ -6670,6 +6701,10 @@ nsLayoutUtils::Initialize()
   StickyEnabledPrefChangeCallback(STICKY_ENABLED_PREF_NAME, nullptr);
   Preferences::RegisterCallback(TextAlignTrueEnabledPrefChangeCallback,
                                 TEXT_ALIGN_TRUE_ENABLED_PREF_NAME);
+  Preferences::RegisterCallback(DisplayContentsEnabledPrefChangeCallback,
+                                DISPLAY_CONTENTS_ENABLED_PREF_NAME);
+  DisplayContentsEnabledPrefChangeCallback(DISPLAY_CONTENTS_ENABLED_PREF_NAME,
+                                           nullptr);
   TextAlignTrueEnabledPrefChangeCallback(TEXT_ALIGN_TRUE_ENABLED_PREF_NAME,
                                          nullptr);
 
