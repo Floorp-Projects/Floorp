@@ -114,10 +114,6 @@ TraceLoggerGraphState::nextLoggerId()
 bool
 TraceLoggerGraph::init(uint64_t startTimestamp)
 {
-    if (!events.init()) {
-        failed = true;
-        return false;
-    }
     if (!tree.init()) {
         failed = true;
         return false;
@@ -251,19 +247,6 @@ TraceLoggerGraph::flush()
 
         treeOffset += tree.lastEntryId();
         tree.clear();
-    }
-
-    if (eventFile) {
-        // Format data in big endian
-        for (size_t i = 0; i < events.size(); i++) {
-            events[i].time = NativeEndian::swapToBigEndian(events[i].time);
-            events[i].textId = NativeEndian::swapToBigEndian(events[i].textId);
-        }
-
-        size_t bytesWritten = fwrite(events.data(), sizeof(EventEntry), events.size(), eventFile);
-        if (bytesWritten < events.size())
-            return false;
-        events.clear();
     }
 
     return true;
@@ -419,24 +402,33 @@ TraceLoggerGraph::stopEvent(uint64_t timestamp)
 void
 TraceLoggerGraph::logTimestamp(uint32_t id, uint64_t timestamp)
 {
+    if (failed)
+        return;
+
     if (id == TraceLogger_Enable)
         enabled = true;
 
     if (!enabled)
         return;
 
-    if (!events.ensureSpaceBeforeAdd()) {
-        fprintf(stderr, "TraceLogging: Disabled a tracelogger due to OOM.\n");
-        enabled = 0;
-        return;
-    }
-
     if (id == TraceLogger_Disable)
         disable(timestamp);
 
-    EventEntry &entry = events.pushUninitialized();
-    entry.time = timestamp;
-    entry.textId = id;
+    MOZ_ASSERT(eventFile);
+
+    // Format data in big endian
+    timestamp = NativeEndian::swapToBigEndian(timestamp);
+    id = NativeEndian::swapToBigEndian(id);
+
+    // The layout of the event log in the log file is:
+    // [timestamp, textId]
+    size_t itemsWritten = 0;
+    itemsWritten += fwrite(&timestamp, sizeof(uint64_t), 1, eventFile);
+    itemsWritten += fwrite(&id, sizeof(uint32_t), 1, eventFile);
+    if (itemsWritten < 2) {
+        failed = true;
+        enabled = false;
+    }
 }
 
 bool
