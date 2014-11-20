@@ -31,7 +31,6 @@ struct NtExports {
   _strnicmpFunction                     _strnicmp;
   strlenFunction                        strlen;
   wcslenFunction                        wcslen;
-  memcpyFunction                        memcpy;
 };
 
 // This is the value used for the ntdll level allocator.

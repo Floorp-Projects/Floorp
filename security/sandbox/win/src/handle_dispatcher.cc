@@ -44,6 +44,7 @@ bool HandleDispatcher::DuplicateHandleProxy(IPCInfo* ipc,
                                             DWORD target_process_id,
                                             DWORD desired_access,
                                             DWORD options) {
+  NTSTATUS error;
   static NtQueryObject QueryObject = NULL;
   if (!QueryObject)
     ResolveNTFunctionPtr("NtQueryObject", &QueryObject);
@@ -52,11 +53,10 @@ bool HandleDispatcher::DuplicateHandleProxy(IPCInfo* ipc,
   HANDLE handle_temp;
   if (!::DuplicateHandle(ipc->client_info->process, source_handle,
                          ::GetCurrentProcess(), &handle_temp,
-                         0, FALSE, DUPLICATE_SAME_ACCESS | options)) {
+                         0, FALSE, DUPLICATE_SAME_ACCESS)) {
     ipc->return_info.win32_result = ::GetLastError();
     return false;
   }
-  options &= ~DUPLICATE_CLOSE_SOURCE;
   base::win::ScopedHandle handle(handle_temp);
 
   // Get the object type (32 characters is safe; current max is 14).
@@ -64,10 +64,9 @@ bool HandleDispatcher::DuplicateHandleProxy(IPCInfo* ipc,
   OBJECT_TYPE_INFORMATION* type_info =
       reinterpret_cast<OBJECT_TYPE_INFORMATION*>(buffer);
   ULONG size = sizeof(buffer) - sizeof(wchar_t);
-  NTSTATUS error =
-      QueryObject(handle, ObjectTypeInformation, type_info, size, &size);
+  error = QueryObject(handle, ObjectTypeInformation, type_info, size, &size);
   if (!NT_SUCCESS(error)) {
-    ipc->return_info.nt_status = error;
+    ipc->return_info.win32_result = error;
     return false;
   }
   type_info->Name.Buffer[type_info->Name.Length / sizeof(wchar_t)] = L'\0';
@@ -79,7 +78,8 @@ bool HandleDispatcher::DuplicateHandleProxy(IPCInfo* ipc,
   EvalResult eval = policy_base_->EvalPolicy(IPC_DUPLICATEHANDLEPROXY_TAG,
                                              params.GetBase());
   ipc->return_info.win32_result =
-      HandlePolicy::DuplicateHandleProxyAction(eval, handle,
+      HandlePolicy::DuplicateHandleProxyAction(eval, *ipc->client_info,
+                                               source_handle,
                                                target_process_id,
                                                &ipc->return_info.handle,
                                                desired_access, options);

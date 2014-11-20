@@ -14,6 +14,7 @@
 namespace sandbox {
 
 unsigned RestrictedToken::Init(const HANDLE effective_token) {
+  DCHECK(!init_);
   if (init_)
     return ERROR_ALREADY_INITIALIZED;
 
@@ -276,7 +277,7 @@ unsigned RestrictedToken::AddUserSidForDenyOnly() {
 }
 
 unsigned RestrictedToken::DeleteAllPrivileges(
-    const std::vector<base::string16> *exceptions) {
+    const std::vector<std::wstring> *exceptions) {
   DCHECK(init_);
   if (!init_)
     return ERROR_NO_TOKEN;

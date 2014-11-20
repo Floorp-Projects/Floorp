@@ -29,10 +29,7 @@ class Job {
   // If the function succeeds, the return value is ERROR_SUCCESS. If the
   // function fails, the return value is the win32 error code corresponding to
   // the error.
-  DWORD Init(JobLevel security_level,
-             const wchar_t* job_name,
-             DWORD ui_exceptions,
-             size_t memory_limit);
+  DWORD Init(JobLevel security_level, wchar_t *job_name, DWORD ui_exceptions);
 
   // Assigns the process referenced by process_handle to the job.
   // If the function succeeds, the return value is ERROR_SUCCESS. If the

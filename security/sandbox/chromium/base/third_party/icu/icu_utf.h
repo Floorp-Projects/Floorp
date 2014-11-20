@@ -21,8 +21,7 @@
 
 namespace base_icu {
 
-typedef int32 UChar32;
-typedef uint16 UChar;
+typedef uint32 UChar32;
 typedef int8 UBool;
 
 // General ---------------------------------------------------------------------
@@ -305,8 +304,7 @@ UChar32 utf8_nextCharSafeBody(const uint8 *s, int32 *pi, int32 length, UChar32 c
  * @return lead surrogate (U+d800..U+dbff) for supplementary
  * @stable ICU 2.4
  */
-#define CBU16_LEAD(supplementary) \
-    (base_icu::UChar)(((supplementary)>>10)+0xd7c0)
+#define CBU16_LEAD(supplementary) (UChar)(((supplementary)>>10)+0xd7c0)
 
 /**
  * Get the trail surrogate (0xdc00..0xdfff) for a
@@ -315,8 +313,7 @@ UChar32 utf8_nextCharSafeBody(const uint8 *s, int32 *pi, int32 length, UChar32 c
  * @return trail surrogate (U+dc00..U+dfff) for supplementary
  * @stable ICU 2.4
  */
-#define CBU16_TRAIL(supplementary) \
-    (base_icu::UChar)(((supplementary)&0x3ff)|0xdc00)
+#define CBU16_TRAIL(supplementary) (UChar)(((supplementary)&0x3ff)|0xdc00)
 
 /**
  * How many 16-bit code units are used to encode this Unicode code point? (1 or 2)
