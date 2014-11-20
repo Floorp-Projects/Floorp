@@ -21,7 +21,7 @@ interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   readonly attribute ServiceWorkerClients clients;
   [Unforgeable] readonly attribute DOMString scope;
 
-  Promise<any> fetch((Request or ScalarValueString) request);
+  Promise<any> fetch((Request or USVString) request);
 
   void update();
   void unregister();
@@ -55,7 +55,7 @@ synchronous requests MUST NOT be initiated inside of a Service Worker.
         interface CacheStorage {};
         interface ServiceWorkerClients {};
         interface Request {};
-        interface ScalarValueString {};
+        interface USVString {};
         interface EventHandler {};
         interface WorkerGlobalScope {};
     </pre>

@@ -12,26 +12,26 @@
 [Constructor(DOMString url, optional DOMString base = "about:blank"),
  Exposed=Window,Worker]
 interface URL {
-  static DOMString domainToASCII(ScalarValueString domain);
-  static DOMString domainToUnicode(ScalarValueString domain);
+  static DOMString domainToASCII(USVString domain);
+  static DOMString domainToUnicode(USVString domain);
 };
 URL implements URLUtils;
 
 [NoInterfaceObject]
 interface URLUtils {
-  stringifier attribute ScalarValueString href;
+  stringifier attribute USVString href;
   readonly attribute DOMString origin;
 
-           attribute ScalarValueString protocol;
-           attribute ScalarValueString username;
-           attribute ScalarValueString password;
-           attribute ScalarValueString host;
-           attribute ScalarValueString hostname;
-           attribute ScalarValueString port;
-           attribute ScalarValueString pathname;
-           attribute ScalarValueString search;
+           attribute USVString protocol;
+           attribute USVString username;
+           attribute USVString password;
+           attribute USVString host;
+           attribute USVString hostname;
+           attribute USVString port;
+           attribute USVString pathname;
+           attribute USVString search;
            attribute URLSearchParams searchParams;
-           attribute ScalarValueString hash;
+           attribute USVString hash;
 };
 
 [NoInterfaceObject]
@@ -48,15 +48,15 @@ interface URLUtilsReadOnly {
   readonly attribute DOMString hash;
 };
 interface URLSearchParams {
-  void append(ScalarValueString name, ScalarValueString value);
-  void delete(ScalarValueString name);
-  DOMString? get(ScalarValueString name);
-  sequence<DOMString> getAll(ScalarValueString name);
-  boolean has(ScalarValueString name);
-  void set(ScalarValueString name, ScalarValueString value);
+  void append(USVString name, USVString value);
+  void delete(USVString name);
+  DOMString? get(USVString name);
+  sequence<DOMString> getAll(USVString name);
+  boolean has(USVString name);
+  void set(USVString name, USVString value);
   stringifier;
 };
-typedef DOMString ScalarValueString;
+typedef DOMString USVString;
 </script>
 <script>
 "use strict";
