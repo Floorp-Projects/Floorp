@@ -55,13 +55,15 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
     spsOn_(false),
 #endif
     spsPushToggleOffset_(spsPushToggleOffset),
-#ifdef DEBUG
+#ifdef JS_TRACE_LOGGING
+# ifdef DEBUG
     traceLoggerScriptsEnabled_(false),
     traceLoggerEngineEnabled_(false),
-#endif
+# endif
     traceLoggerEnterToggleOffset_(traceLoggerEnterToggleOffset),
     traceLoggerExitToggleOffset_(traceLoggerExitToggleOffset),
     traceLoggerScriptEvent_(),
+#endif
     postDebugPrologueOffset_(postDebugPrologueOffset),
     flags_(0)
 { }
@@ -906,6 +908,7 @@ BaselineScript::toggleSPS(bool enable)
 #endif
 }
 
+#ifdef JS_TRACE_LOGGING
 void
 BaselineScript::initTraceLogger(JSRuntime *runtime, JSScript *script)
 {
@@ -987,6 +990,7 @@ BaselineScript::toggleTraceLoggerEngine(bool enable)
     traceLoggerEngineEnabled_ = enable;
 #endif
 }
+#endif
 
 void
 BaselineScript::purgeOptimizedStubs(Zone *zone)
@@ -1095,6 +1099,7 @@ jit::ToggleBaselineSPS(JSRuntime *runtime, bool enable)
     }
 }
 
+#ifdef JS_TRACE_LOGGING
 void
 jit::ToggleBaselineTraceLoggerScripts(JSRuntime *runtime, bool enable)
 {
@@ -1120,6 +1125,7 @@ jit::ToggleBaselineTraceLoggerEngine(JSRuntime *runtime, bool enable)
         }
     }
 }
+#endif
 
 static void
 MarkActiveBaselineScripts(JSRuntime *rt, const JitActivationIterator &activation)
