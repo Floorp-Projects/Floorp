@@ -8,6 +8,7 @@
 #define TraceLoggingTypes_h
 
 #include "jsalloc.h"
+#include "jsstr.h"
 
 #define TRACELOGGER_TREE_ITEMS(_)                     \
     _(Baseline)                                       \
@@ -87,6 +88,9 @@ TLTextIdString(TraceLoggerTextId id)
         MOZ_CRASH();
     }
 }
+
+uint32_t
+TLStringToTextId(JSLinearString *str);
 
 inline bool
 TLTextIdIsToggable(uint32_t id)
