@@ -171,6 +171,8 @@ class TraceLoggerThreadState
             return enabledTextIds[textId];
         return true;
     }
+    void enableTextId(JSContext *cx, uint32_t textId);
+    void disableTextId(JSContext *cx, uint32_t textId);
 
   private:
     TraceLoggerThread *forMainThread(PerThreadData *mainThread);
@@ -242,10 +244,14 @@ inline uint32_t TraceLogCreateTextId(TraceLoggerThread *logger, const char *text
 }
 #ifdef JS_TRACE_LOGGING
 bool TraceLogTextIdEnabled(uint32_t textId);
+void TraceLogEnableTextId(JSContext *cx, uint32_t textId);
+void TraceLogDisableTextId(JSContext *cx, uint32_t textId);
 #else
 inline bool TraceLogTextIdEnabled(uint32_t textId) {
     return false;
 }
+inline void TraceLogEnableTextId(JSContext *cx, uint32_t textId) {}
+inline void TraceLogDisableTextId(JSContext *cx, uint32_t textId) {}
 #endif
 inline void TraceLogTimestamp(TraceLoggerThread *logger, uint32_t textId) {
 #ifdef JS_TRACE_LOGGING
