@@ -141,6 +141,7 @@ function* prepareTest() {
       searchBar.removeEventListener("focus", onFocus);
       deferred.resolve();
     });
+    gURLBar.focus();
     searchBar.focus();
   } else {
     deferred.resolve();
