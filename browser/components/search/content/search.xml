@@ -552,13 +552,6 @@
         // Speculatively connect to the current engine's search URI (and
         // suggest URI, if different) to reduce request latency
         this.currentEngine.speculativeConnect({window: window});
-
-        if (this._textbox.value && !this._textbox.open) {
-          this._textbox.showHistoryPopup();
-          // showHistoryPopup does a startSearch("") call, ensure the
-          // controller handles the text from the input box instead:
-          this._textbox.mController.handleText();
-        }
       ]]></handler>
     </handlers>
   </binding>
@@ -643,10 +636,41 @@
                   .hidden = !this._textbox.value;
         ]]></body>
       </method>
+
+      <method name="openSuggestionsPanel">
+        <parameter name="aShowOnlySettingsIfEmpty"/>
+        <body><![CDATA[
+          if (this._textbox.open)
+            return;
+
+          this._textbox.showHistoryPopup();
+
+          if (this._textbox.value) {
+            // showHistoryPopup does a startSearch("") call, ensure the
+            // controller handles the text from the input box instead:
+            this._textbox.mController.handleText();
+          }
+          else if (aShowOnlySettingsIfEmpty) {
+            this.setAttribute("showonlysettings", "true");
+          }
+        ]]></body>
+      </method>
     </implementation>
     <handlers>
       <handler event="input" action="this.updateGoButtonVisibility();"/>
       <handler event="drop" action="this.updateGoButtonVisibility();"/>
+      <handler event="focus">
+      <![CDATA[
+        if (this._textbox.value)
+          this.openSuggestionsPanel();
+      ]]></handler>
+
+      <handler event="click">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("anonid") == "searchbar-search-button")
+          this.openSuggestionsPanel(true);
+      ]]></handler>
+
     </handlers>
   </binding>
 
@@ -883,6 +907,15 @@
           let popup = this.popup;
           if (!popup.popupOpen)
             return;
+
+          if (aEvent.keyCode == KeyEvent.DOM_VK_DOWN &&
+              popup.hasAttribute("showonlysettings")) {
+            // If the suggestion tree is collapsed, don't let the down arrow
+            // key event reach the tree.
+            aEvent.preventDefault();
+            aEvent.stopPropagation();
+            return;
+          }
 
           let list = document.getAnonymousElementByAttribute(popup, "anonid",
                                                              "search-panel-one-offs");
