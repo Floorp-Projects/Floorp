@@ -430,9 +430,7 @@ BaselineCompiler::emitEpilogue()
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);
     masm.tracelogStop(loggerReg, TraceLogger::Baseline);
-    // Stop the script. Using a stop without checking the textId, since we
-    // we didn't save the textId for the script.
-    masm.tracelogStop(loggerReg);
+    masm.tracelogStop(loggerReg, TraceLogger::Scripts);
     masm.Pop(loggerReg);
 #endif
 
