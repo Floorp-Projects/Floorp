@@ -627,6 +627,9 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
             destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
             CreateBuffer(result.mContentType, destBufferRect, bufferFlags,
                          &destDTBuffer, &destDTBufferOnWhite);
+            MOZ_ASSERT(destDTBuffer, "Failed to allocate a texture");
+            MOZ_ASSERT(destDTBufferOnWhite || !(bufferFlags & BUFFER_COMPONENT_ALPHA),
+                       "Failed to allocate the texture on white");
             if (!destDTBuffer) {
               return result;
             }
@@ -647,6 +650,9 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
     // The buffer's not big enough, so allocate a new one
     CreateBuffer(result.mContentType, destBufferRect, bufferFlags,
                  &destDTBuffer, &destDTBufferOnWhite);
+    MOZ_ASSERT(destDTBuffer, "Failed to allocate a texture");
+    MOZ_ASSERT(destDTBufferOnWhite || !(bufferFlags & BUFFER_COMPONENT_ALPHA),
+               "Failed to allocate the texture on white");
     if (!destDTBuffer) {
       return result;
     }
