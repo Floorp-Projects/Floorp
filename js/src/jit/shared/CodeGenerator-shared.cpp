@@ -1426,9 +1426,9 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
         return false;
 
     if (isStart)
-        masm.tracelogStart(logger, script);
+        masm.tracelogStartId(logger, script);
     else
-        masm.tracelogStop(logger, script);
+        masm.tracelogStopId(logger, script);
 
     masm.Pop(script);
 
@@ -1458,9 +1458,9 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
 
     if (isStart)
-        masm.tracelogStart(logger, textId);
+        masm.tracelogStartId(logger, textId);
     else
-        masm.tracelogStop(logger, textId);
+        masm.tracelogStopId(logger, textId);
 
     masm.bind(&done);
 
