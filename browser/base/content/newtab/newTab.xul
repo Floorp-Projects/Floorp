@@ -69,7 +69,7 @@
 
       <div id="newtab-search-container">
         <form id="newtab-search-form" name="searchForm">
-          <div id="newtab-search-logo"/>
+          <div id="newtab-search-icon"/>
           <input type="text" name="q" value="" id="newtab-search-text"
                  maxlength="256" dir="auto"/>
           <input id="newtab-search-submit" type="submit"
