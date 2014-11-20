@@ -2737,7 +2737,7 @@ public class BrowserApp extends GeckoApp
         bookmark.setVisible(!GeckoProfile.get(this).inGuestMode());
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
-        bookmark.setIcon(tab.isBookmark() ? R.drawable.ic_menu_bookmark_remove : R.drawable.ic_menu_bookmark_add);
+        bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
 
         back.setEnabled(tab.canDoBack());
         forward.setEnabled(tab.canDoForward());
@@ -2836,6 +2836,22 @@ public class BrowserApp extends GeckoApp
         return true;
     }
 
+    private int resolveBookmarkIconID(final boolean isBookmark) {
+        if (NewTabletUI.isEnabled(this) && HardwareUtils.isLargeTablet()) {
+            if (isBookmark) {
+                return R.drawable.new_tablet_ic_menu_bookmark_remove;
+            } else {
+                return R.drawable.new_tablet_ic_menu_bookmark_add;
+            }
+        }
+
+        if (isBookmark) {
+            return R.drawable.ic_menu_bookmark_remove;
+        } else {
+            return R.drawable.ic_menu_bookmark_add;
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Tab tab = null;
@@ -2857,11 +2873,11 @@ public class BrowserApp extends GeckoApp
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.removeBookmark();
-                    item.setIcon(R.drawable.ic_menu_bookmark_add);
+                    item.setIcon(resolveBookmarkIconID(false));
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.addBookmark();
-                    item.setIcon(R.drawable.ic_menu_bookmark_remove);
+                    item.setIcon(resolveBookmarkIconID(true));
                 }
             }
             return true;
