@@ -17,7 +17,6 @@ class BluetoothServiceBluedroid : public BluetoothService
                                 , public BluetoothNotificationHandler
 {
   class CancelDiscoveryResultHandler;
-  class CleanupTask;
   class CreateBondResultHandler;
   class DisableResultHandler;
   class EnableResultHandler;
@@ -27,8 +26,8 @@ class BluetoothServiceBluedroid : public BluetoothService
   class ProfileDeinitResultHandler;
   class ProfileInitResultHandler;
   class RemoveBondResultHandler;
+  class SetAdapterPropertyDiscoverableResultHandler;
   class SetAdapterPropertyResultHandler;
-  class SetupAfterEnabledTask;
   class SspReplyResultHandler;
   class StartDiscoveryResultHandler;
 
