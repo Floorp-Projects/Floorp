@@ -79,13 +79,19 @@ rdtsc(void)
 
 TraceLogging traceLoggers;
 
-static const char* const text[] =
+static const char *
+TLTextIdString(TraceLogger::TextId id)
 {
-    "TraceLogger failed to process text",
-#define NAME(x) #x,
-    TRACELOGGER_TEXT_ID_LIST(NAME)
+    switch (id) {
+      case TraceLogger::TL_Error:
+        return "TraceLogger failed to process text";
+#define NAME(textId) case TraceLogger::textId: return #textId;
+        TRACELOGGER_TEXT_ID_LIST(NAME)
 #undef NAME
-};
+      default:
+        MOZ_CRASH();
+    }
+}
 
 TraceLogger::TraceLogger()
  : enabled(0),
@@ -155,7 +161,8 @@ TraceLogger::init(uint32_t loggerId)
 
     // Eagerly create the default textIds, to match their Tracelogger::TextId.
     for (uint32_t i = 0; i < LAST; i++) {
-        mozilla::DebugOnly<uint32_t> textId = createTextId(text[i]);
+        TraceLogger::TextId id = TraceLogger::TextId(i);
+        mozilla::DebugOnly<uint32_t> textId = createTextId(TLTextIdString(id));
         MOZ_ASSERT(textId == i);
     }
 
@@ -803,9 +810,10 @@ TraceLogging::lazyInit()
             "Specific log items:\n"
         );
         for (uint32_t i = 1; i < TraceLogger::LAST; i++) {
-            if (!TraceLogger::textIdIsToggable(i))
+            TraceLogger::TextId id = TraceLogger::TextId(i);
+            if (!TraceLogger::textIdIsToggable(id))
                 continue;
-            printf("  %s\n", text[i]);
+            printf("  %s\n", TLTextIdString(id));
         }
         printf("\n");
         exit(0);
@@ -813,8 +821,9 @@ TraceLogging::lazyInit()
     }
 
     for (uint32_t i = 1; i < TraceLogger::LAST; i++) {
-        if (TraceLogger::textIdIsToggable(i))
-            enabledTextIds[i] = ContainsFlag(env, text[i]);
+        TraceLogger::TextId id = TraceLogger::TextId(i);
+        if (TraceLogger::textIdIsToggable(id))
+            enabledTextIds[i] = ContainsFlag(env, TLTextIdString(id));
         else
             enabledTextIds[i] = true;
     }
