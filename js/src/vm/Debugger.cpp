@@ -367,7 +367,13 @@ Debugger::Debugger(JSContext *cx, NativeObject *dbg)
     scripts(cx),
     sources(cx),
     objects(cx),
-    environments(cx)
+    environments(cx),
+#ifdef NIGHTLY_BUILD
+    traceLoggerLastDrainedId(0),
+    traceLoggerLastDrainedIteration(0),
+#endif
+    traceLoggerScriptedCallsLastDrainedId(0),
+    traceLoggerScriptedCallsLastDrainedIteration(0)
 {
     assertSameCompartment(cx, dbg);
 
@@ -3757,6 +3763,18 @@ Debugger::makeGlobalObjectReference(JSContext *cx, unsigned argc, Value *vp)
     return dbg->wrapDebuggeeValue(cx, args.rval());
 }
 
+static bool
+DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const char *value, size_t n)
+{
+    JSString *text = JS_NewStringCopyN(cx, value, n);
+    if (!text)
+        return false;
+
+    RootedValue str(cx, StringValue(text));
+    return JS_DefinePropertyById(cx, obj, id, str, JSPROP_ENUMERATE);
+}
+
+#ifdef NIGHTLY_BUILD
 bool
 Debugger::setupTraceLogger(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3825,6 +3843,169 @@ Debugger::setupTraceLogger(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+bool
+Debugger::drainTraceLogger(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "drainTraceLogger", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.drainTraceLogger", 0))
+        return false;
+
+    size_t num;
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    bool lostEvents = logger->lostEvents(dbg->traceLoggerLastDrainedIteration,
+                                         dbg->traceLoggerLastDrainedId);
+    EventEntry *events = logger->getEventsStartingAt(&dbg->traceLoggerLastDrainedIteration,
+                                                     &dbg->traceLoggerLastDrainedId,
+                                                     &num);
+
+    RootedObject array(cx, NewDenseEmptyArray(cx));
+    JSAtom *dataAtom = Atomize(cx, "data", strlen("data"));
+    if (!dataAtom)
+        return false;
+    RootedId dataId(cx, AtomToId(dataAtom));
+
+    /* Add all events to the array. */
+    uint32_t index = 0;
+    for (EventEntry *eventItem = events; eventItem < events + num; eventItem++, index++) {
+        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr, cx->global()));
+        if (!item)
+            return false;
+
+        const char *eventText = logger->eventText(eventItem->textId);
+        if (!DefineProperty(cx, item, dataId, eventText, strlen(eventText)))
+            return false;
+
+        RootedValue obj(cx, ObjectValue(*item));
+        if (!JS_DefineElement(cx, array, index, obj, JSPROP_ENUMERATE))
+            return false;
+    }
+
+    /* Add "lostEvents" indicating if there are events that were lost. */
+    RootedValue lost(cx, BooleanValue(lostEvents));
+    if (!JS_DefineProperty(cx, array, "lostEvents", lost, JSPROP_ENUMERATE))
+        return false;
+
+    args.rval().setObject(*array);
+
+    return true;
+}
+#endif
+
+bool
+Debugger::setupTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "setupTraceLoggerScriptCalls", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.setupTraceLoggerScriptCalls", 0))
+        return false;
+
+    TraceLogEnableTextId(cx, TraceLogger_Scripts);
+
+    args.rval().setBoolean(true);
+
+    return true;
+}
+
+bool
+Debugger::startTraceLogger(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "startTraceLogger", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.startTraceLogger", 0))
+        return false;
+
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerEnable(logger, cx);
+
+    args.rval().setUndefined();
+
+    return true;
+}
+
+bool
+Debugger::endTraceLogger(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "endTraceLogger", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.endTraceLogger", 0))
+        return false;
+
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerDisable(logger);
+
+    args.rval().setUndefined();
+
+    return true;
+}
+
+bool
+Debugger::drainTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGGER(cx, argc, vp, "drainTraceLoggerScriptCalls", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.drainTraceLoggerScriptCalls", 0))
+        return false;
+
+    size_t num;
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    bool lostEvents = logger->lostEvents(dbg->traceLoggerScriptedCallsLastDrainedIteration,
+                                         dbg->traceLoggerScriptedCallsLastDrainedId);
+    EventEntry *events = logger->getEventsStartingAt(
+                                         &dbg->traceLoggerScriptedCallsLastDrainedIteration,
+                                         &dbg->traceLoggerScriptedCallsLastDrainedId,
+                                         &num);
+
+    RootedObject array(cx, NewDenseEmptyArray(cx));
+    RootedId fileNameId(cx, AtomToId(cx->names().fileName));
+    RootedId lineNumberId(cx, AtomToId(cx->names().lineNumber));
+    RootedId columnNumberId(cx, AtomToId(cx->names().columnNumber));
+    JSAtom *logTypeAtom = Atomize(cx, "logType", strlen("logType"));
+    if (!logTypeAtom)
+        return false;
+    RootedId logTypeId(cx, AtomToId(logTypeAtom));
+
+    /* Add all events to the array. */
+    uint32_t index = 0;
+    for (EventEntry *eventItem = events; eventItem < events + num; eventItem++) {
+        RootedObject item(cx, NewObjectWithGivenProto(cx, &PlainObject::class_, nullptr, cx->global()));
+        if (!item)
+            return false;
+
+        uint32_t textId = eventItem->textId;
+        if (textId != TraceLogger_Stop && !logger->textIdIsScriptEvent(textId))
+            continue;
+
+        const char *type = (textId == TraceLogger_Stop) ? "Stop" : "Script";
+        if (!DefineProperty(cx, item, logTypeId, type, strlen(type)))
+            return false;
+
+        if (textId != TraceLogger_Stop) {
+            const char *filename, *lineno, *colno;
+            size_t filename_len, lineno_len, colno_len;
+            logger->extractScriptDetails(textId, &filename, &filename_len, &lineno, &lineno_len,
+                                         &colno, &colno_len);
+
+            if (!DefineProperty(cx, item, fileNameId, filename, filename_len))
+                return false;
+            if (!DefineProperty(cx, item, lineNumberId, lineno, lineno_len))
+                return false;
+            if (!DefineProperty(cx, item, columnNumberId, colno, colno_len))
+                return false;
+        }
+
+        RootedValue obj(cx, ObjectValue(*item));
+        if (!JS_DefineElement(cx, array, index, obj, JSPROP_ENUMERATE))
+            return false;
+
+        index++;
+    }
+
+    /* Add "lostEvents" indicating if there are events that were lost. */
+    RootedValue lost(cx, BooleanValue(lostEvents));
+    if (!JS_DefineProperty(cx, array, "lostEvents", lost, JSPROP_ENUMERATE))
+        return false;
+
+    args.rval().setObject(*array);
+
+    return true;
+}
+
 const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -3854,7 +4035,14 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("findObjects", Debugger::findObjects, 1, 0),
     JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
     JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1, 0),
+    JS_FN("setupTraceLoggerScriptCalls", Debugger::setupTraceLoggerScriptCalls, 0, 0),
+    JS_FN("drainTraceLoggerScriptCalls", Debugger::drainTraceLoggerScriptCalls, 0, 0),
+    JS_FN("startTraceLogger", Debugger::startTraceLogger, 0, 0),
+    JS_FN("endTraceLogger", Debugger::endTraceLogger, 0, 0),
+#ifdef NIGHTLY_BUILD
     JS_FN("setupTraceLogger", Debugger::setupTraceLogger, 1, 0),
+    JS_FN("drainTraceLogger", Debugger::drainTraceLogger, 0, 0),
+#endif
     JS_FS_END
 };
 
