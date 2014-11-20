@@ -81,8 +81,8 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       mappedTracksFinished.AppendElement(true);
       mappedTracksWithMatchingInputTracks.AppendElement(false);
     }
-    bool allFinished = true;
-    bool allHaveCurrentData = true;
+    bool allFinished = !mInputs.IsEmpty();
+    bool allHaveCurrentData = !mInputs.IsEmpty();
     for (uint32_t i = 0; i < mInputs.Length(); ++i) {
       MediaStream* stream = mInputs[i]->GetSource();
       if (!stream->IsFinishedOnGraphThread()) {
