@@ -93,9 +93,13 @@ nsresult
 RtspMediaCodecReader::ReadMetadata(MediaInfo* aInfo,
                                    MetadataTags** aTags)
 {
+  mRtspResource->DisablePlayoutDelay();
+  EnsureActive();
   nsresult rv = MediaCodecReader::ReadMetadata(aInfo, aTags);
+  SetIdle();
+
   if (rv == NS_OK && !IsWaitingMediaResources()) {
-    EnsureActive();
+    mRtspResource->EnablePlayoutDelay();
   }
 
   return rv;
