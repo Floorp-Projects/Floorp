@@ -189,6 +189,13 @@ public:
     return NS_FAILED(mAbortCode);
   }
 
+  nsresult
+  AbortCode() const
+  {
+    AssertIsOnOwningThread();
+    return mAbortCode;
+  }
+
   void
   GetCallerLocation(nsAString& aFilename, uint32_t* aLineNo) const;
 
