@@ -402,19 +402,6 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
   return apzc;
 }
 
-static EventRegions
-EventRegionsFor(const LayerMetricsWrapper& aLayer)
-{
-  // This is a workaround for bug 1082594. We should be able to replace this
-  // with just a call to aLayer.GetEventRegions() once that bug is fixed.
-  if (aLayer.IsScrollInfoLayer()) {
-    EventRegions regions(ParentLayerIntRect::ToUntyped(RoundedIn(aLayer.Metrics().mCompositionBounds)));
-    regions.mDispatchToContentHitRegion = regions.mHitRegion;
-    return regions;
-  }
-  return aLayer.GetEventRegions();
-}
-
 AsyncPanZoomController*
 APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
                                              const LayerMetricsWrapper& aLayer,
@@ -497,7 +484,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
     // region as we loop backwards through the children.
     nsIntRegion childRegion;
     if (gfxPrefs::LayoutEventRegionsEnabled()) {
-      childRegion = EventRegionsFor(child).mHitRegion;
+      childRegion = child.GetEventRegions().mHitRegion;
     } else {
       childRegion = child.GetVisibleRegion();
     }
@@ -531,7 +518,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
     // we count the children as obscuring the parent or not.
 
     EventRegions unobscured;
-    unobscured.Sub(EventRegionsFor(aLayer), obscured);
+    unobscured.Sub(aLayer.GetEventRegions(), obscured);
     APZCTM_LOG("Picking up unobscured hit region %s from layer %p\n", Stringify(unobscured).c_str(), aLayer.GetLayer());
 
     // Take the hit region of the |aLayer|'s subtree (which has already been
