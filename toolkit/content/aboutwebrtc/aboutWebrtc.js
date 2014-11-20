@@ -111,9 +111,11 @@ var PeerConnections = React.createClass({displayName: 'PeerConnections',
 
 var PeerConnection = React.createClass({displayName: 'PeerConnection',
   getPCInfo: function(report) {
+    var idmatch = report.pcid.match(/id=(\S+)/);
+    var urlmatch = report.pcid.match(/url=([^)]+)/);
     return {
-      id: report.pcid.match(/id=(\S+)/)[1],
-      url: report.pcid.match(/url=([^)]+)/)[1],
+      id: (idmatch? idmatch[1] : report.pcid),
+      url: (urlmatch? urlmatch[1] : ""),
       closed: report.closed
     };
   },
