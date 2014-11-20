@@ -3758,20 +3758,68 @@ Debugger::makeGlobalObjectReference(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-Debugger::enableTraceItem(JSContext *cx, unsigned argc, Value *vp)
+Debugger::setupTraceLogger(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_DEBUGGER(cx, argc, vp, "enableTraceItem", args, dbg);
-    if (!args.requireAtLeast(cx, "Debugger.enableTraceItem", 1))
+    THIS_DEBUGGER(cx, argc, vp, "setupTraceLogger", args, dbg);
+    if (!args.requireAtLeast(cx, "Debugger.setupTraceLogger", 1))
         return false;
 
-    uint32_t id = args[0].toInt32();
+    RootedObject obj(cx, ToObject(cx, args[0]));
+    if (!obj)
+        return false;
 
-    if (!TLTextIdIsToggable(id)) {
-        args.rval().setBoolean(false);
+    AutoIdVector ids(cx);
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &ids))
+        return false;
+
+    if (ids.length() == 0) {
+        args.rval().setBoolean(true);
         return true;
     }
 
-    TraceLogEnableTextId(cx, id);
+    Vector<uint32_t> textIds(cx);
+    if (!textIds.reserve(ids.length()))
+        return false;
+
+    Vector<bool> values(cx);
+    if (!values.reserve(ids.length()))
+        return false;
+
+    for (size_t i = 0; i < ids.length(); i++) {
+        if (!JSID_IS_STRING(ids[i])) {
+            args.rval().setBoolean(false);
+            return true;
+        }
+
+        JSString *id = JSID_TO_STRING(ids[i]);
+        JSLinearString *linear = id->ensureLinear(cx);
+        if (!linear)
+            return false;
+
+        uint32_t textId = TLStringToTextId(linear);
+
+        if (!TLTextIdIsToggable(textId)) {
+            args.rval().setBoolean(false);
+            return true;
+        }
+
+        RootedValue v(cx);
+        if (!JSObject::getGeneric(cx, obj, obj, ids[i], &v))
+            return false;
+
+        textIds.append(textId);
+        values.append(ToBoolean(v));
+    }
+
+    MOZ_ASSERT(ids.length() == textIds.length());
+    MOZ_ASSERT(textIds.length() == values.length());
+
+    for (size_t i = 0; i < textIds.length(); i++) {
+        if (values[i])
+            TraceLogEnableTextId(cx, textIds[i]);
+        else
+            TraceLogDisableTextId(cx, textIds[i]);
+    }
 
     args.rval().setBoolean(true);
     return true;
@@ -3806,7 +3854,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("findObjects", Debugger::findObjects, 1, 0),
     JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
     JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1, 0),
-    JS_FN("enableTraceItem", Debugger::enableTraceItem, 1, 0),
+    JS_FN("setupTraceLogger", Debugger::setupTraceLogger, 1, 0),
     JS_FS_END
 };
 
