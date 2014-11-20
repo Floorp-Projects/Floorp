@@ -286,6 +286,30 @@ public:
    */
   static nsBidiLevel GetFrameBaseLevel(nsIFrame* aFrame);
 
+  /**
+   * Get an nsBidiDirection representing the direction implied by the
+   * bidi base level of the frame.
+   * @return NSBIDI_LTR (left-to-right) or NSBIDI_RTL (right-to-left)
+   *  NSBIDI_MIXED will never be returned.
+   */
+  static nsBidiDirection ParagraphDirection(nsIFrame* aFrame) {
+    return DIRECTION_FROM_LEVEL(GetFrameBaseLevel(aFrame));
+  }
+
+  /**
+   * Get an nsBidiDirection representing the direction implied by the
+   * bidi embedding level of the frame.
+   * @return NSBIDI_LTR (left-to-right) or NSBIDI_RTL (right-to-left)
+   *  NSBIDI_MIXED will never be returned.
+   */
+  static nsBidiDirection FrameDirection(nsIFrame* aFrame) {
+    return DIRECTION_FROM_LEVEL(GetFrameEmbeddingLevel(aFrame));
+  }
+
+  static bool IsFrameInParagraphDirection(nsIFrame* aFrame) {
+    return ParagraphDirection(aFrame) == FrameDirection(aFrame);
+  }
+
   enum Mode { MODE_DRAW, MODE_MEASURE };
 
   /**

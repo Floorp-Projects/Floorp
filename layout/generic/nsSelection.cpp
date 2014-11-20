@@ -870,17 +870,17 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
   nsPeekOffsetStruct pos(aAmount, eDirPrevious, offsetused, desiredX,
                          true, mLimiter != nullptr, true, aVisualMovement);
 
-  nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
-  
+  nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
+
   CaretAssociateHint tHint(mHint); //temporary variable so we dont set mHint until it is necessary
   switch (aKeycode){
-    case nsIDOMKeyEvent::DOM_VK_RIGHT : 
+    case nsIDOMKeyEvent::DOM_VK_RIGHT :
         InvalidateDesiredX();
-        pos.mDirection = IS_LEVEL_RTL(baseLevel) ? eDirPrevious : eDirNext;
+        pos.mDirection = (paraDir == NSBIDI_RTL) ? eDirPrevious : eDirNext;
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT :
         InvalidateDesiredX();
-        pos.mDirection = IS_LEVEL_RTL(baseLevel) ? eDirNext : eDirPrevious;
+        pos.mDirection = (paraDir == NSBIDI_RTL) ? eDirNext : eDirPrevious;
       break;
     case nsIDOMKeyEvent::DOM_VK_DELETE :
         InvalidateDesiredX();
@@ -5825,15 +5825,15 @@ Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
     Collapse(focusNode, focusOffset);
   }
 
-  // If the base level of the focused frame is odd, we may have to swap the
-  // direction of the keycode.
+  // If the paragraph direction of the focused frame is right-to-left,
+  // we may have to swap the direction of the keycode.
   nsIFrame *frame;
   int32_t offset;
   rv = GetPrimaryFrameForFocusNode(&frame, &offset, visual);
   if (NS_SUCCEEDED(rv) && frame) {
-    nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
+    nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
-    if (IS_LEVEL_RTL(baseLevel)) {
+    if (paraDir == NSBIDI_RTL) {
       if (!visual && keycode == nsIDOMKeyEvent::DOM_VK_RIGHT) {
         keycode = nsIDOMKeyEvent::DOM_VK_LEFT;
       }
