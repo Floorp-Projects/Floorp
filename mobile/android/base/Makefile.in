@@ -191,9 +191,6 @@ GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
-# Like generated/org/mozilla/fennec_$USERID.
-android_package_dir = $(addprefix generated/,$(subst .,/,$(ANDROID_PACKAGE_NAME)))
-
 # These _PP_JAVAFILES are specified in moz.build and defined in
 # backend.mk, which is included by config.mk.  Therefore this needs to
 # be defined after config.mk is included.
@@ -217,20 +214,6 @@ preprocessed_KEEP_PATH := 1
 preprocessed_FLAGS := --marker='//\\\#'
 
 PP_TARGETS += preprocessed
-
-# Certain source files have Java package name @ANDROID_PACKAGE_NAME@.
-# We hate these files but they are necessary for backwards
-# compatibility.  These special rules generate these files into
-# generated/org/mozilla/{firefox,firefox_beta,fennec,fennec_$USER} for
-# consumption by the build system and IDEs.
-
-preprocessed_package := $(addsuffix .in,$(subst $(android_package_dir)/,,$(filter $(android_package_dir)/%,$(PP_JAVAFILES))))
-
-preprocessed_package_PATH := $(android_package_dir)
-preprocessed_package_KEEP_PATH := 1
-preprocessed_package_FLAGS := --marker='//\\\#'
-
-PP_TARGETS += preprocessed_package
 
 include $(topsrcdir)/config/rules.mk
 
