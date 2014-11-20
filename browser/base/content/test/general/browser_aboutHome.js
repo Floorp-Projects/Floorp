@@ -70,25 +70,6 @@ let gTests = [
   }
 },
 
-{
-  desc: "Check that search engine logo has alt text",
-  setup: function () { },
-  run: function ()
-  {
-    let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
-
-    let searchEngineLogoElt = doc.getElementById("searchEngineLogo");
-    ok(searchEngineLogoElt, "Found search engine logo");
-
-    let altText = searchEngineLogoElt.alt;
-    ok(typeof altText == "string" && altText.length > 0,
-       "Search engine logo's alt text is a nonempty string");
-
-    isnot(altText, "undefined",
-          "Search engine logo's alt text shouldn't be the string 'undefined'");
-  }
-},
-
 // Disabled on Linux for intermittent issues with FHR, see Bug 945667.
 {
   desc: "Check that performing a search fires a search event and records to " +
@@ -241,52 +222,6 @@ let gTests = [
     ok(snippetsElt.getElementsByTagName("a")[0].href != "about:rights", "Snippet link should not point to about:rights.");
 
     Services.prefs.clearUserPref("browser.rights.override");
-  }
-},
-
-{
-  desc: "Check that the search UI/ action is updated when the search engine is changed",
-  setup: function() {},
-  run: function()
-  {
-    let currEngine = Services.search.currentEngine;
-    let unusedEngines = [].concat(Services.search.getVisibleEngines()).filter(x => x != currEngine);
-    let searchbar = document.getElementById("searchbar");
-
-    function checkSearchUI(engine) {
-      let doc = gBrowser.selectedTab.linkedBrowser.contentDocument;
-      let searchText = doc.getElementById("searchText");
-      let logoElt = doc.getElementById("searchEngineLogo");
-      let engineName = doc.documentElement.getAttribute("searchEngineName");
-
-      is(engineName, engine.name, "Engine name should've been updated");
-
-      if (!logoElt.parentNode.hidden) {
-        is(logoElt.alt, engineName, "Alt text of logo image should match search engine name")
-      } else {
-        is(searchText.placeholder, engineName, "Placeholder text should match search engine name");
-      }
-    }
-    // Do a sanity check that all attributes are correctly set to begin with
-    checkSearchUI(currEngine);
-
-    let deferred = Promise.defer();
-    promiseBrowserAttributes(gBrowser.selectedTab).then(function() {
-      // Test if the update propagated
-      checkSearchUI(unusedEngines[0]);
-      searchbar.currentEngine = currEngine;
-      deferred.resolve();
-    });
-
-    // The following cleanup function will set currentEngine back to the previous
-    // engine if we fail to do so above.
-    registerCleanupFunction(function() {
-      searchbar.currentEngine = currEngine;
-    });
-    // Set the current search engine to an unused one
-    searchbar.currentEngine = unusedEngines[0];
-    searchbar.select();
-    return deferred.promise;
   }
 },
 
@@ -472,6 +407,27 @@ let gTests = [
     yield promiseWaitForCondition(() => doc.activeElement === searchInput);
     is(searchInput, doc.activeElement, "Search bar should be the active element.");
   })
+},
+
+{
+  desc: "Clicking the icon should open the popup",
+  setup: function () {},
+  run: Task.async(function* () {
+    let doc = gBrowser.selectedBrowser.contentDocument;
+    let searchIcon = doc.getElementById("searchIcon");
+    let panel = window.document.getElementById("abouthome-search-panel");
+
+    info("Waiting for popup to open");
+    EventUtils.synthesizeMouseAtCenter(searchIcon, {}, gBrowser.selectedBrowser.contentWindow);
+    yield promiseWaitForEvent(panel, "popupshown");
+    ok("Saw popup open");
+
+    let promise = promisePrefsOpen();
+    let item = window.document.getElementById("abouthome-search-panel-manage");
+    EventUtils.synthesizeMouseAtCenter(item, {});
+
+    yield promise;
+  })
 }
 
 ];
@@ -645,6 +601,36 @@ function waitForLoad(cb) {
 
     cb();
   }, true);
+}
+
+function promiseWaitForEvent(node, type, capturing) {
+  return new Promise((resolve) => {
+    node.addEventListener(type, function listener(event) {
+      node.removeEventListener(type, listener, capturing);
+      resolve(event);
+    }, capturing);
+  });
+}
+
+function promisePrefsOpen() {
+  info("Waiting for the preferences window to open...");
+  let deferred = Promise.defer();
+  let winWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+                   getService(Ci.nsIWindowWatcher);
+  winWatcher.registerNotification(function onWin(subj, topic, data) {
+    if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
+      subj.addEventListener("load", function onLoad() {
+        subj.removeEventListener("load", onLoad);
+        is(subj.document.documentURI, "chrome://browser/content/preferences/preferences.xul", "Should have seen the prefs window");
+        winWatcher.unregisterNotification(onWin);
+        executeSoon(() => {
+          subj.close();
+          deferred.resolve();
+        });
+      });
+    }
+  });
+  return deferred.promise;
 }
 
 function promiseNewEngine(basename) {
