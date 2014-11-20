@@ -379,8 +379,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
                                                                    IntSize(paintRect.right - paintRect.left,
                                                                    paintRect.bottom - paintRect.top));
-          nsRefPtr<gfxContext> thebesContext = new gfxContext(dt);
-
           // don't need to double buffer with anything but GDI
           BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
           if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
@@ -396,15 +394,16 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
               case eTransparencyTransparent:
                 // If we're rendering with translucency, we're going to be
                 // rendering the whole window; make sure we clear it first
-                thebesContext->SetOperator(gfxContext::OPERATOR_CLEAR);
-                thebesContext->Paint();
-                thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
+                dt->ClearRect(Rect(0.f, 0.f,
+                                   dt->GetSize().width, dt->GetSize().height));
                 break;
             }
 #else
             doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
 #endif
           }
+
+          nsRefPtr<gfxContext> thebesContext = new gfxContext(dt);
 
           {
             AutoLayerManagerSetup
