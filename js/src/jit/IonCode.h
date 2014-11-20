@@ -19,6 +19,7 @@
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonTypes.h"
 #include "js/UbiNode.h"
+#include "vm/TraceLogging.h"
 
 namespace js {
 
@@ -285,6 +286,9 @@ struct IonScript
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
 
+    // The tracelogger event used to log the start/stop of this IonScript.
+    TraceLoggerEvent traceLoggerScriptEvent_;
+
     IonBuilder *pendingBuilder_;
 
   private:
@@ -461,6 +465,9 @@ struct IonScript
     }
     bool hasSPSInstrumentation() const {
         return hasSPSInstrumentation_;
+    }
+    void setTraceLoggerEvent(TraceLoggerEvent &event) {
+        traceLoggerScriptEvent_ = event;
     }
     const uint8_t *snapshots() const {
         return reinterpret_cast<const uint8_t *>(this) + snapshots_;

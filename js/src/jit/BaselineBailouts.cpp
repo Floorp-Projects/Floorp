@@ -1497,7 +1497,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
             // TraceLogger doesn't create entries for inlined frames. But we
             // see them in Baseline. Here we create the start events of those
             // entries. So they correspond to what we will see in Baseline.
-            TraceLogStartEvent(logger, TraceLogCreateTextId(logger, TraceLogger_Scripts, scr));
+            TraceLoggerEvent scriptEvent(logger, TraceLogger_Scripts, scr);
+            TraceLogStartEvent(logger, scriptEvent);
             TraceLogStartEvent(logger, TraceLogger_Baseline);
         }
 
