@@ -3239,7 +3239,8 @@ js::HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp)
 }
 
 static MOZ_ALWAYS_INLINE bool
-LookupPropertyPureInline(JSObject *obj, jsid id, NativeObject **objp, Shape **propp)
+LookupPropertyPureInline(ThreadSafeContext *cx, JSObject *obj, jsid id, NativeObject **objp,
+                         Shape **propp)
 {
     if (!obj->isNative())
         return false;
@@ -3274,9 +3275,17 @@ LookupPropertyPureInline(JSObject *obj, jsid id, NativeObject **objp, Shape **pr
             return true;
         }
 
-        /* Fail if there's a resolve hook. */
-        if (current->getClass()->resolve != JS_ResolveStub)
+        // Fail if there's a resolve hook. We allow the JSFunction resolve hook
+        // if we know it will never add a property with this name.
+        do {
+            const Class *clasp = current->getClass();
+            MOZ_ASSERT(clasp->resolve);
+            if (clasp->resolve == JS_ResolveStub)
+                break;
+            if (clasp->resolve == fun_resolve && !FunctionHasResolveHook(cx->names(), id))
+                break;
             return false;
+        } while (0);
 
         JSObject *proto = current->getProto();
 
@@ -3308,9 +3317,10 @@ NativeGetPureInline(NativeObject *pobj, Shape *shape, Value *vp)
 }
 
 bool
-js::LookupPropertyPure(JSObject *obj, jsid id, NativeObject **objp, Shape **propp)
+js::LookupPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, NativeObject **objp,
+                       Shape **propp)
 {
-    return LookupPropertyPureInline(obj, id, objp, propp);
+    return LookupPropertyPureInline(cx, obj, id, objp, propp);
 }
 
 /*
@@ -3329,7 +3339,7 @@ js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
     /* Deal with native objects. */
     NativeObject *obj2;
     Shape *shape;
-    if (!LookupPropertyPureInline(obj, id, &obj2, &shape))
+    if (!LookupPropertyPureInline(cx, obj, id, &obj2, &shape))
         return false;
 
     if (!shape) {

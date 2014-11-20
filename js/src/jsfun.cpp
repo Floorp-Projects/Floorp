@@ -443,9 +443,13 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
 }
 
 bool
-js::FunctionHasResolveHook(const JSAtomState &atomState, PropertyName *name)
+js::FunctionHasResolveHook(const JSAtomState &atomState, jsid id)
 {
-    return name == atomState.prototype || name == atomState.length || name == atomState.name;
+    if (!JSID_IS_ATOM(id))
+        return false;
+
+    JSAtom *atom = JSID_TO_ATOM(id);
+    return atom == atomState.prototype || atom == atomState.length || atom == atomState.name;
 }
 
 bool
