@@ -169,6 +169,16 @@ LIRGenerator::visitNewArrayCopyOnWrite(MNewArrayCopyOnWrite *ins)
 }
 
 bool
+LIRGenerator::visitNewArrayDynamicLength(MNewArrayDynamicLength *ins)
+{
+    MDefinition *length = ins->length();
+    MOZ_ASSERT(length->type() == MIRType_Int32);
+
+    LNewArrayDynamicLength *lir = new(alloc()) LNewArrayDynamicLength(useRegister(length), temp());
+    return define(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitNewObject(MNewObject *ins)
 {
     LNewObject *lir = new(alloc()) LNewObject(temp());

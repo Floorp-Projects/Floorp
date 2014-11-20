@@ -257,8 +257,8 @@ function getNodeFront(selector, {walker}) {
  * to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let getNodeFrontInFrame = Task.async(function*(selector, frameSelector, inspector,
-                                             reason="test") {
+let getNodeFrontInFrame = Task.async(function*(selector, frameSelector,
+                                               inspector, reason="test") {
   let iframe = yield getNodeFront(frameSelector, inspector);
   let {nodes} = yield inspector.walker.children(iframe);
   return inspector.walker.querySelector(nodes[0], selector);

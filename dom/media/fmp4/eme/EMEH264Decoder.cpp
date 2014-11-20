@@ -157,15 +157,15 @@ EMEH264Decoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
   b.mPlanes[2].mSkip = 0;
 
   gfx::IntRect pictureRegion(0, 0, width, height);
-  VideoData *v = VideoData::Create(mVideoInfo,
-                                   mImageContainer,
-                                   mLastStreamOffset,
-                                   aDecodedFrame->Timestamp(),
-                                   aDecodedFrame->Duration(),
-                                   b,
-                                   false,
-                                   -1,
-                                   pictureRegion);
+  nsRefPtr<VideoData> v = VideoData::Create(mVideoInfo,
+                                            mImageContainer,
+                                            mLastStreamOffset,
+                                            aDecodedFrame->Timestamp(),
+                                            aDecodedFrame->Duration(),
+                                            b,
+                                            false,
+                                            -1,
+                                            pictureRegion);
   aDecodedFrame->Destroy();
   mCallback->Output(v);
 }

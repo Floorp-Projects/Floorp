@@ -30,13 +30,11 @@ describe("loop.roomViews", function () {
       return x;
     });
 
-    activeRoomStore = new loop.store.ActiveRoomStore({
-      dispatcher: dispatcher,
+    activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
       mozLoop: {},
       sdkDriver: {}
     });
-    roomStore = new loop.store.RoomStore({
-      dispatcher: dispatcher,
+    roomStore = new loop.store.RoomStore(dispatcher, {
       mozLoop: {},
       activeRoomStore: activeRoomStore
     });

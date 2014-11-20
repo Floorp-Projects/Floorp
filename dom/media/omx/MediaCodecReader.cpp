@@ -477,7 +477,7 @@ MediaCodecReader::DecodeAudioDataTask()
 {
   bool result = DecodeAudioDataSync();
   if (AudioQueue().GetSize() > 0) {
-    AudioData* a = AudioQueue().PopFront();
+    nsRefPtr<AudioData> a = AudioQueue().PopFront();
     if (a) {
       if (mAudioTrack.mDiscontinuity) {
         a->mDiscontinuity = true;
@@ -497,7 +497,7 @@ MediaCodecReader::DecodeVideoFrameTask(int64_t aTimeThreshold)
 {
   bool result = DecodeVideoFrameSync(aTimeThreshold);
   if (VideoQueue().GetSize() > 0) {
-    VideoData* v = VideoQueue().PopFront();
+    nsRefPtr<VideoData> v = VideoQueue().PopFront();
     if (v) {
       if (mVideoTrack.mDiscontinuity) {
         v->mDiscontinuity = true;
@@ -878,7 +878,7 @@ MediaCodecReader::DecodeVideoFrameSync(int64_t aTimeThreshold)
   }
 
   bool result = false;
-  VideoData *v = nullptr;
+  nsRefPtr<VideoData> v;
   RefPtr<TextureClient> textureClient;
   sp<GraphicBuffer> graphicBuffer;
   if (bufferInfo.mBuffer != nullptr) {

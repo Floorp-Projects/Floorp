@@ -187,7 +187,22 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
-  if (!dragEvent || !IsValidDropData(dragEvent)) {
+  if (!dragEvent) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+  dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
+  if (!IsValidDropData(dataTransfer)) {
+    return NS_OK;
+  }
+
+
+  nsIContent* content = mFrame->GetContent();
+  bool supportsMultiple = content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  if (!CanDropTheseFiles(dataTransfer, supportsMultiple)) {
+    dataTransfer->SetDropEffect(NS_LITERAL_STRING("none"));
+    aEvent->StopPropagation();
     return NS_OK;
   }
 
@@ -203,14 +218,10 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
     aEvent->StopPropagation();
     aEvent->PreventDefault();
 
-    nsIContent* content = mFrame->GetContent();
     NS_ASSERTION(content, "The frame has no content???");
 
     HTMLInputElement* inputElement = HTMLInputElement::FromContent(content);
     NS_ASSERTION(inputElement, "No input element for this file upload control frame!");
-
-    nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-    dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
 
     nsCOMPtr<nsIDOMFileList> fileList;
     dataTransfer->GetFiles(getter_AddRefs(fileList));
@@ -225,16 +236,31 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 /* static */ bool
-nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDragEvent* aEvent)
+nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTransfer)
 {
-  nsCOMPtr<nsIDOMDataTransfer> domDataTransfer;
-  aEvent->GetDataTransfer(getter_AddRefs(domDataTransfer));
-  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
+  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
   NS_ENSURE_TRUE(dataTransfer, false);
 
   // We only support dropping files onto a file upload control
   nsRefPtr<DOMStringList> types = dataTransfer->Types();
   return types->Contains(NS_LITERAL_STRING("Files"));
+}
+
+/* static */ bool
+nsFileControlFrame::DnDListener::CanDropTheseFiles(nsIDOMDataTransfer* aDOMDataTransfer,
+                                                   bool aSupportsMultiple)
+{
+  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDOMDataTransfer);
+  NS_ENSURE_TRUE(dataTransfer, false);
+
+  nsCOMPtr<nsIDOMFileList> fileList;
+  dataTransfer->GetFiles(getter_AddRefs(fileList));
+
+  uint32_t listLength = 0;
+  if (fileList) {
+    fileList->GetLength(&listLength);
+  }
+  return listLength <= 1 || aSupportsMultiple;
 }
 
 nscoord

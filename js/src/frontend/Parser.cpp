@@ -5812,8 +5812,9 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
 
       case TOK_YIELD: {
         TokenKind next;
-        TokenStream::Modifier modifier = yieldExpressionsSupported() ? TokenStream::Operand
-                                                                     : TokenStream::None;
+        TokenStream::Modifier modifier = yieldExpressionsSupported()
+                                         ? TokenStream::Operand
+                                         : TokenStream::None;
         if (!tokenStream.peekToken(&next, modifier))
             return null();
         if (next == TOK_COLON) {

@@ -61,6 +61,7 @@ CompositingRenderTargetOGL::BindRenderTarget()
   }
 
   if (mClearOnBind) {
+    mGL->fScissor(0, 0, mInitParams.mSize.width, mInitParams.mSize.height);
     mGL->fClearColor(0.0, 0.0, 0.0, 0.0);
     mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
     mClearOnBind = false;

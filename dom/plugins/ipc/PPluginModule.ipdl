@@ -81,7 +81,13 @@ child:
   intr PCrashReporter()
     returns (NativeThreadId tid, uint32_t processType);
 
-  intr GeckoGetProfile()
+  /**
+   * Control the Gecko Profiler in the plugin process.
+   */
+  async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
+                      nsCString[] aThreadNameFilters);
+  async StopProfiler();
+  intr GetProfile()
     returns (nsCString aProfile);
 
   async SettingChanged(PluginSettings settings);
