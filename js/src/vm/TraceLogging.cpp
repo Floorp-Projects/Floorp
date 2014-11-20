@@ -139,6 +139,11 @@ TraceLoggerThread::~TraceLoggerThread()
 {
     if (!failed)
         graph.log(events);
+
+    for (uint32_t i = 0; i < extraTextId.length(); i++) {
+        js_free(extraTextId[i]);
+    }
+    extraTextId.clear();
 }
 
 bool
@@ -264,8 +269,10 @@ TraceLoggerThread::createTextId(const char *text)
     MOZ_ASSERT(ret == len);
     MOZ_ASSERT(strlen(str) == len);
 
-    if (!extraTextId.append(str))
+    if (!extraTextId.append(str)) {
+        js_free(str);
         return TraceLogger_Error;
+    }
 
     uint32_t textId = extraTextId.length() - 1 + TraceLogger_Last;
     if (!pointerMap.add(p, text, textId))
@@ -307,8 +314,10 @@ TraceLoggerThread::createTextId(const char *filename, size_t lineno, size_t coln
     DebugOnly<size_t> ret = JS_snprintf(str, len + 1, "script %s:%u:%u", filename, lineno, colno);
     MOZ_ASSERT(ret == len);
 
-    if (!extraTextId.append(str))
+    if (!extraTextId.append(str)) {
+        js_free(str);
         return TraceLogger_Error;
+    }
 
     uint32_t textId = extraTextId.length() - 1 + TraceLogger_Last;
     if (!pointerMap.add(p, ptr, textId))
