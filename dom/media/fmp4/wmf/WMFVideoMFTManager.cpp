@@ -289,23 +289,22 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
 
   Microseconds pts = GetSampleTime(aSample);
   Microseconds duration = GetSampleDuration(aSample);
-  VideoData *v = VideoData::Create(mVideoInfo,
-                                   mImageContainer,
-                                   aStreamOffset,
-                                   pts,
-                                   duration,
-                                   b,
-                                   false,
-                                   -1,
-                                   ToIntRect(mPictureRegion));
+  nsRefPtr<VideoData> v = VideoData::Create(mVideoInfo,
+                                            mImageContainer,
+                                            aStreamOffset,
+                                            pts,
+                                            duration,
+                                            b,
+                                            false,
+                                            -1,
+                                            ToIntRect(mPictureRegion));
   if (twoDBuffer) {
     twoDBuffer->Unlock2D();
   } else {
     buffer->Unlock();
   }
 
-  *aOutVideoData = v;
-
+  v.forget(aOutVideoData);
   return S_OK;
 }
 
@@ -332,18 +331,18 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
 
   Microseconds pts = GetSampleTime(aSample);
   Microseconds duration = GetSampleDuration(aSample);
-  VideoData *v = VideoData::CreateFromImage(mVideoInfo,
-                                            mImageContainer,
-                                            aStreamOffset,
-                                            pts,
-                                            duration,
-                                            image.forget(),
-                                            false,
-                                            -1,
-                                            ToIntRect(mPictureRegion));
+  nsRefPtr<VideoData> v = VideoData::CreateFromImage(mVideoInfo,
+                                                     mImageContainer,
+                                                     aStreamOffset,
+                                                     pts,
+                                                     duration,
+                                                     image.forget(),
+                                                     false,
+                                                     -1,
+                                                     ToIntRect(mPictureRegion));
 
   NS_ENSURE_TRUE(v, E_FAIL);
-  *aOutVideoData = v;
+  v.forget(aOutVideoData);
 
   return S_OK;
 }
@@ -351,7 +350,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
 // Blocks until decoded sample is produced by the deoder.
 HRESULT
 WMFVideoMFTManager::Output(int64_t aStreamOffset,
-                           nsAutoPtr<MediaData>& aOutData)
+                           nsRefPtr<MediaData>& aOutData)
 {
   RefPtr<IMFSample> sample;
   HRESULT hr;
@@ -382,11 +381,11 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
     return E_FAIL;
   }
 
-  VideoData* frame = nullptr;
+  nsRefPtr<VideoData> frame;
   if (mUseHwAccel) {
-    hr = CreateD3DVideoFrame(sample, aStreamOffset, &frame);
+    hr = CreateD3DVideoFrame(sample, aStreamOffset, getter_AddRefs(frame));
   } else {
-    hr = CreateBasicVideoFrame(sample, aStreamOffset, &frame);
+    hr = CreateBasicVideoFrame(sample, aStreamOffset, getter_AddRefs(frame));
   }
   // Frame should be non null only when we succeeded.
   MOZ_ASSERT((frame != nullptr) == SUCCEEDED(hr));
