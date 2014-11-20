@@ -2890,6 +2890,12 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
   }
 }
 
+void
+nsDisplayLayerEventRegions::AddInactiveScrollPort(const nsRect& aRect)
+{
+  mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aRect);
+}
+
 nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
                                nsIFrame* aCaretFrame)
   : nsDisplayItem(aBuilder, aCaretFrame)
