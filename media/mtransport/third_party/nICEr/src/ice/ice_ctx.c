@@ -455,6 +455,10 @@ void nr_ice_initialize_finished_cb(NR_SOCKET s, int h, void *cb_arg)
 
     ctx->uninitialized_candidates--;
 
+    // Avoid the need for yet another initialization function
+    if (cand->state == NR_ICE_CAND_STATE_INITIALIZING && cand->type == HOST)
+      cand->state = NR_ICE_CAND_STATE_INITIALIZED;
+
     if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
       int was_pruned = 0;
 
@@ -468,7 +472,7 @@ void nr_ice_initialize_finished_cb(NR_SOCKET s, int h, void *cb_arg)
       if (ctx->trickle_cb && !was_pruned) {
         ctx->trickle_cb(ctx->trickle_cb_arg, ctx, cand->stream, cand->component_id, cand);
 
-        if (r=nr_ice_ctx_pair_new_trickle_candidates(ctx, cand)) {
+        if (nr_ice_ctx_pair_new_trickle_candidates(ctx, cand)) {
           r_log(LOG_ICE,LOG_ERR, "ICE(%s): All could not pair new trickle candidate",ctx->label);
           /* But continue */
         }

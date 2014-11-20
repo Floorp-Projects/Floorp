@@ -861,6 +861,10 @@ WebrtcAudioConduit::CodecConfigToWebRTCCodec(const AudioCodecConfig* codecInfo,
   cinst.rate     =  codecInfo->mRate;
   cinst.pacsize  =  codecInfo->mPacSize;
   cinst.plfreq   =  codecInfo->mFreq;
+  if (codecInfo->mName == "G722") {
+    // Compensate for G.722 spec error in RFC 1890
+    cinst.plfreq = 16000;
+  }
   cinst.channels =  codecInfo->mChannels;
   return true;
  }

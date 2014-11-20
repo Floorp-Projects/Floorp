@@ -56,7 +56,7 @@ static bool SetupGlobalThread() {
       return false;
 
     gThread = thread;
-    sipcc::PeerConnectionCtx::InitializeGlobal(gThread,
+    PeerConnectionCtx::InitializeGlobal(gThread,
                                                test_utils->sts_target());
   }
   return true;
@@ -2444,7 +2444,7 @@ int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
 
-  sipcc::PeerConnectionCtx::Destroy();
+  PeerConnectionCtx::Destroy();
   delete test_utils;
 
   return result;
