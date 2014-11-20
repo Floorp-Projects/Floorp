@@ -183,6 +183,13 @@ public:
     AssertIsOnOwningThread();
     return NS_FAILED(mAbortCode);
   }
+  
+  nsresult
+  AbortCode() const
+  {
+    AssertIsOnOwningThread();
+    return mAbortCode;
+  }
 
   // 'Get' prefix is to avoid name collisions with the enum
   Mode

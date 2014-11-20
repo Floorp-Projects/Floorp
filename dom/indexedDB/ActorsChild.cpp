@@ -551,59 +551,6 @@ ConvertActorsToBlobs(IDBDatabase* aDatabase,
 }
 
 void
-DispatchSuccessEvent(ResultHelper* aResultHelper,
-                     nsIDOMEvent* aEvent = nullptr)
-{
-  MOZ_ASSERT(aResultHelper);
-
-  PROFILER_LABEL("IndexedDB",
-                 "DispatchSuccessEvent",
-                 js::ProfileEntry::Category::STORAGE);
-
-  nsRefPtr<IDBRequest> request = aResultHelper->Request();
-  MOZ_ASSERT(request);
-  request->AssertIsOnOwningThread();
-
-  nsRefPtr<IDBTransaction> transaction = aResultHelper->Transaction();
-
-  nsCOMPtr<nsIDOMEvent> successEvent;
-  if (!aEvent) {
-    successEvent = CreateGenericEvent(request,
-                                      nsDependentString(kSuccessEventType),
-                                      eDoesNotBubble,
-                                      eNotCancelable);
-    if (NS_WARN_IF(!successEvent)) {
-      return;
-    }
-
-    aEvent = successEvent;
-  }
-
-  request->SetResultCallback(aResultHelper);
-
-  MOZ_ASSERT(aEvent);
-  MOZ_ASSERT_IF(transaction, transaction->IsOpen());
-
-  bool dummy;
-  nsresult rv = request->DispatchEvent(aEvent, &dummy);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  MOZ_ASSERT_IF(transaction,
-                transaction->IsOpen() || transaction->IsAborted());
-
-  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
-  MOZ_ASSERT(internalEvent);
-
-  if (transaction &&
-      transaction->IsOpen() &&
-      internalEvent->mFlags.mExceptionHasBeenRisen) {
-    transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
-  }
-}
-
-void
 DispatchErrorEvent(IDBRequest* aRequest,
                    nsresult aErrorCode,
                    IDBTransaction* aTransaction = nullptr,
@@ -659,6 +606,64 @@ DispatchErrorEvent(IDBRequest* aRequest,
     } else if (doDefault) {
       transaction->Abort(request);
     }
+  }
+}
+
+void
+DispatchSuccessEvent(ResultHelper* aResultHelper,
+                     nsIDOMEvent* aEvent = nullptr)
+{
+  MOZ_ASSERT(aResultHelper);
+
+  PROFILER_LABEL("IndexedDB",
+                 "DispatchSuccessEvent",
+                 js::ProfileEntry::Category::STORAGE);
+
+  nsRefPtr<IDBRequest> request = aResultHelper->Request();
+  MOZ_ASSERT(request);
+  request->AssertIsOnOwningThread();
+
+  nsRefPtr<IDBTransaction> transaction = aResultHelper->Transaction();
+
+  if (transaction && transaction->IsAborted()) {
+    DispatchErrorEvent(request, transaction->AbortCode(), transaction);
+    return;
+  }
+
+  nsCOMPtr<nsIDOMEvent> successEvent;
+  if (!aEvent) {
+    successEvent = CreateGenericEvent(request,
+                                      nsDependentString(kSuccessEventType),
+                                      eDoesNotBubble,
+                                      eNotCancelable);
+    if (NS_WARN_IF(!successEvent)) {
+      return;
+    }
+
+    aEvent = successEvent;
+  }
+
+  request->SetResultCallback(aResultHelper);
+
+  MOZ_ASSERT(aEvent);
+  MOZ_ASSERT_IF(transaction, transaction->IsOpen());
+
+  bool dummy;
+  nsresult rv = request->DispatchEvent(aEvent, &dummy);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  MOZ_ASSERT_IF(transaction,
+                transaction->IsOpen() || transaction->IsAborted());
+
+  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
+  MOZ_ASSERT(internalEvent);
+
+  if (transaction &&
+      transaction->IsOpen() &&
+      internalEvent->mFlags.mExceptionHasBeenRisen) {
+    transaction->Abort(NS_ERROR_DOM_INDEXEDDB_ABORT_ERR);
   }
 }
 
