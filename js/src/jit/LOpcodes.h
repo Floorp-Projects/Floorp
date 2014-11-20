@@ -46,6 +46,7 @@
     _(Goto)                         \
     _(NewArray)                     \
     _(NewArrayCopyOnWrite)          \
+    _(NewArrayDynamicLength)        \
     _(ArraySplice)                  \
     _(NewObject)                    \
     _(NewTypedObject)               \

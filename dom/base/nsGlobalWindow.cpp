@@ -5356,26 +5356,11 @@ nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
   FORWARD_TO_OUTER_OR_THROW(MatchMedia, (aMediaQueryList, aError), aError,
                             nullptr);
 
-  // We need this now to ensure that we have a non-null |presContext|
-  // when we ought to.
-  // This is similar to EnsureSizeUpToDate, but only flushes frames.
-  nsGlobalWindow *parent = static_cast<nsGlobalWindow*>(GetPrivateParent());
-  if (parent) {
-    parent->FlushPendingNotifications(Flush_Frames);
-  }
-
-  if (!mDocShell) {
+  if (!mDoc) {
     return nullptr;
   }
 
-  nsRefPtr<nsPresContext> presContext;
-  mDocShell->GetPresContext(getter_AddRefs(presContext));
-
-  if (!presContext) {
-    return nullptr;
-  }
-
-  return presContext->MatchMedia(aMediaQueryList);
+  return mDoc->MatchMedia(aMediaQueryList);
 }
 
 NS_IMETHODIMP

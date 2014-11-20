@@ -881,10 +881,10 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
   }
 
   if (ret == TH_DUPFRAME) {
-    VideoData* v = VideoData::CreateDuplicate(mDecoder->GetResource()->Tell(),
-                                              time,
-                                              endTime - time,
-                                              aPacket->granulepos);
+    nsRefPtr<VideoData> v = VideoData::CreateDuplicate(mDecoder->GetResource()->Tell(),
+                                                       time,
+                                                       endTime - time,
+                                                       aPacket->granulepos);
     mVideoQueue.Push(v);
   } else if (ret == 0) {
     th_ycbcr_buffer buffer;
@@ -900,15 +900,15 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
       b.mPlanes[i].mOffset = b.mPlanes[i].mSkip = 0;
     }
 
-    VideoData *v = VideoData::Create(mInfo.mVideo,
-                                     mDecoder->GetImageContainer(),
-                                     mDecoder->GetResource()->Tell(),
-                                     time,
-                                     endTime - time,
-                                     b,
-                                     isKeyframe,
-                                     aPacket->granulepos,
-                                     ToIntRect(mPicture));
+    nsRefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
+                                              mDecoder->GetImageContainer(),
+                                              mDecoder->GetResource()->Tell(),
+                                              time,
+                                              endTime - time,
+                                              b,
+                                              isKeyframe,
+                                              aPacket->granulepos,
+                                              ToIntRect(mPicture));
     if (!v) {
       // There may be other reasons for this error, but for
       // simplicity just assume the worst case: out of memory.
@@ -1540,7 +1540,7 @@ nsresult OggReader::SeekInternal(int64_t aTarget,
     // keyframe.
     VideoData* v;
     while ((v = mVideoQueue.PeekFront()) && !v->mKeyframe) {
-      delete mVideoQueue.PopFront();
+      nsRefPtr<VideoData> releaseMe = mVideoQueue.PopFront();
     }
     if (mVideoQueue.GetSize() == 0) {
       // We didn't find a keyframe in the frames already here, so decode
