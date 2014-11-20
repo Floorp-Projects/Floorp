@@ -1,4 +1,3 @@
-//#filter substitution
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,14 +21,11 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.mozglue.ContextUtils.SafeIntent;
 
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
-
-    // These match AppConstants, but we're built earlier.
-    private static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
-    private static final String MOZ_APP_ABI = "@MOZ_APP_ABI@";
 
     private static volatile SafeIntent sIntent;
     private static File sCacheFile;
@@ -228,16 +224,16 @@ public final class GeckoLoader {
             }
         }
 
-//#ifdef MOZ_LINKER_EXTRACT
-        putenv("MOZ_LINKER_EXTRACT=1");
-        // Ensure that the cache dir is world-writable
-        File cacheDir = new File(linkerCache);
-        if (cacheDir.isDirectory()) {
-            cacheDir.setWritable(true, false);
-            cacheDir.setExecutable(true, false);
-            cacheDir.setReadable(true, false);
+        if (AppConstants.MOZ_LINKER_EXTRACT) {
+            putenv("MOZ_LINKER_EXTRACT=1");
+            // Ensure that the cache dir is world-writable
+            File cacheDir = new File(linkerCache);
+            if (cacheDir.isDirectory()) {
+                cacheDir.setWritable(true, false);
+                cacheDir.setExecutable(true, false);
+                cacheDir.setReadable(true, false);
+            }
         }
-//#endif
     }
 
     @RobocopTarget
@@ -357,15 +353,17 @@ public final class GeckoLoader {
     }
 
     private static String getLoadDiagnostics(final Context context, final String lib) {
+        final String androidPackageName = context.getPackageName();
+
         final StringBuilder message = new StringBuilder("LOAD ");
         message.append(lib);
 
         // These might differ. If so, we know why the library won't load!
-        message.append(": ABI: " + MOZ_APP_ABI + ", " + getCPUABI());
+        message.append(": ABI: " + AppConstants.MOZ_APP_ABI + ", " + getCPUABI());
         message.append(": Data: " + context.getApplicationInfo().dataDir);
         try {
-            final boolean appLibExists = new File("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so").exists();
-            final boolean dataDataExists = new File("/data/data/" + ANDROID_PACKAGE_NAME + "/lib/lib" + lib + ".so").exists();
+            final boolean appLibExists = new File("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so").exists();
+            final boolean dataDataExists = new File("/data/data/" + androidPackageName + "/lib/lib" + lib + ".so").exists();
             message.append(", ax=" + appLibExists);
             message.append(", ddx=" + dataDataExists);
         } catch (Throwable e) {
@@ -373,8 +371,8 @@ public final class GeckoLoader {
         }
 
         try {
-            final String dashOne = "/data/data/" + ANDROID_PACKAGE_NAME + "-1";
-            final String dashTwo = "/data/data/" + ANDROID_PACKAGE_NAME + "-2";
+            final String dashOne = "/data/data/" + androidPackageName + "-1";
+            final String dashTwo = "/data/data/" + androidPackageName + "-2";
             final boolean dashOneExists = new File(dashOne).exists();
             final boolean dashTwoExists = new File(dashTwo).exists();
             message.append(", -1x=" + dashOneExists);
@@ -475,12 +473,13 @@ public final class GeckoLoader {
         }
 
         // Attempt 4: use /data/app-lib directly. This is a last-ditch effort.
-        if (attemptLoad("/data/app-lib/" + ANDROID_PACKAGE_NAME + "/lib" + lib + ".so")) {
+        final String androidPackageName = context.getPackageName();
+        if (attemptLoad("/data/app-lib/" + androidPackageName + "/lib" + lib + ".so")) {
             return;
         }
 
         // Attempt 5: even more optimistic.
-        if (attemptLoad("/data/data/" + ANDROID_PACKAGE_NAME + "/lib/lib" + lib + ".so")) {
+        if (attemptLoad("/data/data/" + androidPackageName + "/lib/lib" + lib + ".so")) {
             return;
         }
 

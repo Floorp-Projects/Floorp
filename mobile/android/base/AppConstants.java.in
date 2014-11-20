@@ -265,4 +265,11 @@ public class AppConstants {
 //#else
     false;
 //#endif
+
+    public static final boolean MOZ_LINKER_EXTRACT =
+//#ifdef MOZ_LINKER_EXTRACT
+    true;
+//#else
+    false;
+//#endif
 }
