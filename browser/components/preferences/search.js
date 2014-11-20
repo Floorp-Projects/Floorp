@@ -12,7 +12,7 @@ var gSearchPane = {
     let currentEngine = Services.search.currentEngine.name;
     Services.search.getVisibleEngines().forEach(e => {
       let item = list.appendItem(e.name);
-      item.setAttribute("class", "menuitem-iconic");
+      item.setAttribute("class", "menuitem-iconic searchengine-menuitem menuitem-with-favicon");
       if (e.iconURI)
         item.setAttribute("image", e.iconURI.spec);
       item.engine = e;

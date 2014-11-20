@@ -40,8 +40,8 @@
       <caption label="One-click search engines"/>
       <label>The search bar lets you search alternate engines directly. Choose which ones to display.</label>
 
-      <richlistbox id="oneClickProvidersList" style="min-height: 50px;"/>
-      <hbox pack="end" style="margin-bottom: 2em">
+      <richlistbox id="oneClickProvidersList"/>
+      <hbox pack="end">
         <label id="addEngines" class="text-link" value="Add more search providers…"
                onclick="if (event.button == 0) { Services.wm.getMostRecentWindow('navigator:browser').BrowserSearch.loadAddEngines(); }"/>
       </hbox>
