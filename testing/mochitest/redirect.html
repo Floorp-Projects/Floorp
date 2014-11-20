@@ -17,8 +17,19 @@
       document.dispatchEvent(event);
     }
 
-    function onLoad() {
+    function redirectToHarness()
+    {
       redirect("chrome://mochikit/content/harness.xul");
+    }
+
+    function onLoad() {
+      // Wait for MozAfterPaint, since the listener in browser-test.js is not
+      // added until then.
+      window.addEventListener("MozAfterPaint", function testOnMozAfterPaint() {
+        window.removeEventListener("MozAfterPaint", testOnMozAfterPaint);
+        setTimeout(redirectToHarness, 0);
+      });
+
     }
   </script>
 </head>

@@ -76,7 +76,10 @@ function runTests1(aTab) {
 
     gDevTools.unregisterTool(toolId1);
 
-    runTests2();
+    // Wait for unregisterTool to select the next tool before calling runTests2,
+    // otherwise we will receive the wrong select event when waiting for
+    // unregisterTool to select the next tool in continueTests below.
+    toolbox.once("select", runTests2);
   });
 }
 

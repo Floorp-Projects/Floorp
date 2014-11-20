@@ -24,7 +24,7 @@ runWithMSE(function (ms, v) {
         if (updateCount == 1) {
           sb.appendBuffer(new Uint8Array(arrayBuffer, 25223));
         }
-        else {
+        else if (updateCount == 2) {
           ms.endOfStream();
         }
       });

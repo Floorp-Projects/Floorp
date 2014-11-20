@@ -369,12 +369,17 @@ class DebugScript
      */
     uint32_t        stepMode;
 
-    /* Number of breakpoint sites at opcodes in the script. */
+    /*
+     * Number of breakpoint sites at opcodes in the script. This is the number
+     * of populated entries in DebugScript::breakpoints, below.
+     */
     uint32_t        numSites;
 
     /*
-     * Array with all breakpoints installed at opcodes in the script, indexed
-     * by the offset of the opcode into the script.
+     * Breakpoints set in our script. For speed and simplicity, this array is
+     * parallel to script->code(): the BreakpointSite for the opcode at
+     * script->code()[offset] is debugScript->breakpoints[offset]. Naturally,
+     * this array's true length is script->length().
      */
     BreakpointSite  *breakpoints[1];
 };
