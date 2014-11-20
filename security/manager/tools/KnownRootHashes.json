@@ -773,7 +773,32 @@
       "label": "CA______",
       "binNumber": 153,
       "sha256Fingerprint": "1vA0vZSqIz8Cl+ykJFsoOXPkR6pZDzEMd/SP34MRIlQ="
+    },
+    {
+      "label": "COMODO_RSA_Certification_Authority",
+      "binNumber": 154,
+      "sha256Fingerprint": "UvDhxOWOxikpG2AxfwdGcbhdfqgNWwcnNGNTSzK0AjQ="
+    },
+    {
+      "label": "USERTrust_RSA_Certification_Authority",
+      "binNumber": 155,
+      "sha256Fingerprint": "55PJsC/YqhPiHDEiisywgRlkO3SciYlksXRtRsPUy9I="
+    },
+    {
+      "label": "USERTrust_ECC_Certification_Authority",
+      "binNumber": 156,
+      "sha256Fingerprint": "T/Rg1Uuchtq/vPxXEuBADSvtP7xNT72qhuBq3NKprXo="
+    },
+    {
+      "label": "GlobalSign",
+      "binNumber": 157,
+      "sha256Fingerprint": "vslJEcKVVnbbbApVCYbXbjugBWZ8RCyXYrT7t3PeIow="
+    },
+    {
+      "label": "GlobalSign",
+      "binNumber": 158,
+      "sha256Fingerprint": "F5+8FIo90A/STqE0WMxDv6f1nIGC14OlE/br7BAMiSQ="
     }
   ],
-  "maxBin": 153
+  "maxBin": 158
 }

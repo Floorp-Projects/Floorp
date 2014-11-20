@@ -34,23 +34,21 @@ public:
 
   virtual void OnAudioDecoded(AudioData* aSample) MOZ_OVERRIDE {
     MonitorAutoLock lock(mMonitor);
-    nsAutoPtr<AudioData> sample(aSample);
     if (!mTarget || !mTaskQueue) {
       // We've been shutdown, abort.
       return;
     }
-    RefPtr<nsIRunnable> task(new DeliverAudioTask(sample.forget(), mTarget));
+    RefPtr<nsIRunnable> task(new DeliverAudioTask(aSample, mTarget));
     mTaskQueue->Dispatch(task);
   }
 
   virtual void OnVideoDecoded(VideoData* aSample) MOZ_OVERRIDE {
     MonitorAutoLock lock(mMonitor);
-    nsAutoPtr<VideoData> sample(aSample);
     if (!mTarget || !mTaskQueue) {
       // We've been shutdown, abort.
       return;
     }
-    RefPtr<nsIRunnable> task(new DeliverVideoTask(sample.forget(), mTarget));
+    RefPtr<nsIRunnable> task(new DeliverVideoTask(aSample, mTarget));
     mTaskQueue->Dispatch(task);
   }
 
@@ -101,11 +99,11 @@ private:
     }
   public:
     NS_METHOD Run() {
-      mTarget->OnAudioDecoded(mSample.forget());
+      mTarget->OnAudioDecoded(mSample);
       return NS_OK;
     }
   private:
-    nsAutoPtr<AudioData> mSample;
+    nsRefPtr<AudioData> mSample;
     RefPtr<Target> mTarget;
   };
 
@@ -124,11 +122,11 @@ private:
     }
   public:
     NS_METHOD Run() {
-      mTarget->OnVideoDecoded(mSample.forget());
+      mTarget->OnVideoDecoded(mSample);
       return NS_OK;
     }
   private:
-    nsAutoPtr<VideoData> mSample;
+    nsRefPtr<VideoData> mSample;
     RefPtr<Target> mTarget;
   };
 

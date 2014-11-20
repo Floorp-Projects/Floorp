@@ -2198,7 +2198,13 @@ SetDefaultPragmas(mozIStorageConnection* aConnection)
     // refcount function. This behavior changes with enabled recursive triggers,
     // so the statement fires the delete trigger first and then the insert
     // trigger.
-    "PRAGMA recursive_triggers = ON;";
+    "PRAGMA recursive_triggers = ON;"
+    // We don't need SQLite's table locks because we manage transaction ordering
+    // ourselves and we know we will never allow a write transaction to modify
+    // an object store that a read transaction is in the process of using.
+    "PRAGMA read_uncommitted = TRUE;"
+    // No more PRAGMAs.
+    ;
 
   nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(query));
   if (NS_WARN_IF(NS_FAILED(rv))) {

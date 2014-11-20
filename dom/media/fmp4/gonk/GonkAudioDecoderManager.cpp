@@ -129,20 +129,21 @@ GonkAudioDecoderManager::CreateAudioData(int64_t aStreamOffset, AudioData **v) {
   if (!duration.isValid()) {
     return NS_ERROR_UNEXPECTED;
   }
-  *v = new AudioData(aStreamOffset,
-                     timeUs,
-                     duration.value(),
-                     frames,
-                     buffer.forget(),
-                     mAudioChannels,
-                     mAudioRate);
+  nsRefPtr<AudioData> audioData = new AudioData(aStreamOffset,
+                                                timeUs,
+                                                duration.value(),
+                                                frames,
+                                                buffer.forget(),
+                                                mAudioChannels,
+                                                mAudioRate);
   ReleaseAudioBuffer();
+  audioData.forget(v);
   return NS_OK;
 }
 
 nsresult
 GonkAudioDecoderManager::Output(int64_t aStreamOffset,
-                                nsAutoPtr<MediaData>& aOutData)
+                                nsRefPtr<MediaData>& aOutData)
 {
   aOutData = nullptr;
   status_t err;
@@ -151,8 +152,8 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
   switch (err) {
     case OK:
     {
-      AudioData* data = nullptr;
-      nsresult rv = CreateAudioData(aStreamOffset, &data);
+      nsRefPtr<AudioData> data;
+      nsresult rv = CreateAudioData(aStreamOffset, getter_AddRefs(data));
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // Decoder outputs an empty video buffer, try again
         return NS_ERROR_NOT_AVAILABLE;
@@ -176,8 +177,8 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
     case android::ERROR_END_OF_STREAM:
     {
       ALOG("Got EOS frame!");
-      AudioData* data = nullptr;
-      nsresult rv = CreateAudioData(aStreamOffset, &data);
+      nsRefPtr<AudioData> data;
+      nsresult rv = CreateAudioData(aStreamOffset, getter_AddRefs(data));
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // For EOS, no need to do any thing.
         return NS_ERROR_ABORT;

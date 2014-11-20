@@ -48,7 +48,7 @@ loop.shared.utils = (function(mozL10n) {
    */
   function getBoolPreference(prefName) {
     if (navigator.mozLoop) {
-      return !!navigator.mozLoop.getLoopBoolPref(prefName);
+      return !!navigator.mozLoop.getLoopPref(prefName);
     }
 
     return !!localStorage.getItem(prefName);
@@ -110,7 +110,7 @@ loop.shared.utils = (function(mozL10n) {
       mozL10n.get("share_email_body4", {
         callUrl: callUrl,
         clientShortname: mozL10n.get("clientShortname2"),
-        learnMoreUrl: navigator.mozLoop.getLoopCharPref("learnMoreUrl")
+        learnMoreUrl: navigator.mozLoop.getLoopPref("learnMoreUrl")
       }),
       recipient
     );

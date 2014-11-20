@@ -115,7 +115,6 @@ MediaSourceReader::OnAudioDecoded(AudioData* aSample)
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnAudioDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      delete aSample;
       mAudioReader->RequestAudioData();
       return;
     }
@@ -160,7 +159,6 @@ MediaSourceReader::OnVideoDecoded(VideoData* aSample)
     if (aSample->mTime < mTimeThreshold) {
       MSE_DEBUG("MediaSourceReader(%p)::OnVideoDecoded mTime=%lld < mTimeThreshold=%lld",
                 this, aSample->mTime, mTimeThreshold);
-      delete aSample;
       mVideoReader->RequestVideoData(false, 0);
       return;
     }
@@ -640,6 +638,29 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
   *aTags = nullptr; // TODO: Handle metadata.
 
   return NS_OK;
+}
+
+void
+MediaSourceReader::ReadUpdatedMetadata(MediaInfo* aInfo)
+{
+  if (mAudioTrack) {
+    MOZ_ASSERT(mAudioTrack->IsReady());
+    mAudioReader = mAudioTrack->Decoders()[0]->GetReader();
+
+    const MediaInfo& info = mAudioReader->GetMediaInfo();
+    MOZ_ASSERT(info.HasAudio());
+    mInfo.mAudio = info.mAudio;
+  }
+
+  if (mVideoTrack) {
+    MOZ_ASSERT(mVideoTrack->IsReady());
+    mVideoReader = mVideoTrack->Decoders()[0]->GetReader();
+
+    const MediaInfo& info = mVideoReader->GetMediaInfo();
+    MOZ_ASSERT(info.HasVideo());
+    mInfo.mVideo = info.mVideo;
+  }
+  *aInfo = mInfo;
 }
 
 void
