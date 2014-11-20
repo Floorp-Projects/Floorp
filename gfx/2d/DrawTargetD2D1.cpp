@@ -137,6 +137,11 @@ DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface *aSurface,
   Matrix mat;
   RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP);
 
+  if (!image) {
+    gfxWarning() << "Couldn't get image for surface.";
+    return;
+  }
+
   if (!mat.IsIdentity()) {
     gfxDebug() << *this << ": At this point complex partial uploads are not supported for Shadow surfaces.";
     return;
