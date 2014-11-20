@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'CPOWTimer.cpp',
     'JavaScriptChild.cpp',
     'JavaScriptParent.cpp',
     'JavaScriptShared.cpp',

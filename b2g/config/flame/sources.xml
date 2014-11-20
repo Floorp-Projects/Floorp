@@ -17,10 +17,10 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="8e09627d75acd4abced0ab81983b5b5de6d15881"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="1abe09b4925547699dfdb2d358aed019137c3aa6"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="45c54a55e31758f7e54e5eafe0d01d387f35897a"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="fe893bb760a3bb64375f62fdf4762a58c59df9ef"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="b6f8267794b8c7f2a33236d46a857a84388b8485"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="6a8f8bd05043e7b8f8e26ad390c82021b995ee4d"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
