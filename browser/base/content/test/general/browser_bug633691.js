@@ -6,7 +6,7 @@ function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
   // Open a html page with about:certerror in an iframe
-  gBrowser.selectedTab.linkedBrowser.addEventListener("load", testIframeCert, true);
+  gBrowser.selectedBrowser.addEventListener("load", testIframeCert, true);
   content.location = "data:text/html,<iframe width='700' height='700' src='about:certerror'></iframe>";
 }
 
@@ -14,7 +14,7 @@ function testIframeCert(e) {
   if (e.target.location.href == "about:blank") {
     return;
   }
-  gBrowser.selectedTab.linkedBrowser.removeEventListener("load", testIframeCert, true);
+  gBrowser.selectedBrowser.removeEventListener("load", testIframeCert, true);
   // Confirm that the expert section is hidden
   var doc = gBrowser.contentDocument.getElementsByTagName('iframe')[0].contentDocument;
   var eC = doc.getElementById("expertContent");
