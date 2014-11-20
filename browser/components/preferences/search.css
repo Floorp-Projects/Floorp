@@ -13,6 +13,10 @@
   height: 178px;
 }
 
+.searchengine-menuitem > .menu-iconic-left {
+  display: -moz-box
+}
+
 .checkbox-label-box {
   -moz-box-align: center;
 }
