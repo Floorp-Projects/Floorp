@@ -9,7 +9,6 @@ import java.security.NoSuchAlgorithmException;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.TwoKeys;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
-import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.ExecuteDelegate;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.AccountVerified;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.LocalError;
@@ -61,10 +60,10 @@ public class Engaged extends State {
         byte[] kB;
         try {
           kB = FxAccountUtils.unwrapkB(unwrapkB, result.wrapkB);
-          if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-            FxAccountConstants.pii(LOG_TAG, "Fetched kA: " + Utils.byte2Hex(result.kA));
-            FxAccountConstants.pii(LOG_TAG, "And wrapkB: " + Utils.byte2Hex(result.wrapkB));
-            FxAccountConstants.pii(LOG_TAG, "Giving kB : " + Utils.byte2Hex(kB));
+          if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+            FxAccountUtils.pii(LOG_TAG, "Fetched kA: " + Utils.byte2Hex(result.kA));
+            FxAccountUtils.pii(LOG_TAG, "And wrapkB: " + Utils.byte2Hex(result.wrapkB));
+            FxAccountUtils.pii(LOG_TAG, "Giving kB : " + Utils.byte2Hex(kB));
           }
         } catch (Exception e) {
           delegate.handleTransition(new RemoteError(e), new Separated(email, uid, verified));
