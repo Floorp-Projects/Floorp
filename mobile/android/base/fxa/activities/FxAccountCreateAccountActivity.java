@@ -19,8 +19,8 @@ import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.PasswordStretcher;
-import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.tasks.FxAccountCreateAccountTask;
 
 import android.app.AlertDialog;
@@ -250,10 +250,10 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
             ? selectedEngines
             : null;
         if (FxAccountAgeLockoutHelper.passesAgeCheck(yearEdit.getText().toString(), yearItems)) {
-          FxAccountConstants.pii(LOG_TAG, "Passed age check.");
+          FxAccountUtils.pii(LOG_TAG, "Passed age check.");
           createAccount(email, password, engines);
         } else {
-          FxAccountConstants.pii(LOG_TAG, "Failed age check!");
+          FxAccountUtils.pii(LOG_TAG, "Failed age check!");
           FxAccountAgeLockoutHelper.lockOut(SystemClock.elapsedRealtime());
           setResult(RESULT_CANCELED);
           redirectToActivity(FxAccountCreateAccountNotAllowedActivity.class);
@@ -304,7 +304,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
         selectedEngines.put("history", checkedItems[INDEX_HISTORY]);
         selectedEngines.put("tabs", checkedItems[INDEX_TABS]);
         selectedEngines.put("passwords", checkedItems[INDEX_PASSWORDS]);
-        FxAccountConstants.pii(LOG_TAG, "Updating selectedEngines: " + selectedEngines.toString());
+        FxAccountUtils.pii(LOG_TAG, "Updating selectedEngines: " + selectedEngines.toString());
       }
     };
 
