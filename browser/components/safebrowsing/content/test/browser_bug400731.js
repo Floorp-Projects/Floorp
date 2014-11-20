@@ -20,7 +20,11 @@ function test() {
   content.location = "http://www.itisatrap.org/firefox/its-an-attack.html";
 }
 
-function testMalware() {
+function testMalware(event) {
+  if (event.target != gBrowser.selectedBrowser.contentDocument) {
+    return;
+  }
+
   window.removeEventListener("DOMContentLoaded", testMalware, true);
 
   // Confirm that "Ignore this warning" is visible - bug 422410
@@ -35,7 +39,11 @@ function testMalware() {
   content.location = "http://www.itisatrap.org/firefox/its-a-trap.html";
 }
 
-function testPhishing() {
+function testPhishing(event) {
+  if (event.target != gBrowser.selectedBrowser.contentDocument) {
+    return;
+  }
+
   window.removeEventListener("DOMContentLoaded", testPhishing, true);
   
   var el = content.document.getElementById("ignoreWarningButton");
