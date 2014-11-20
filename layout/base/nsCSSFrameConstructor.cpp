@@ -6366,8 +6366,8 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
   if (!sibling && GetDisplayContentsStyleFor(aContent)) {
     // A display:contents node - check if it has a ::before / ::after frame...
     sibling = aPrevSibling ?
-      nsLayoutUtils::GetAfterFrame(aParentFrame) :
-      nsLayoutUtils::GetBeforeFrame(aParentFrame);
+      nsLayoutUtils::GetAfterFrameForContent(aParentFrame, aContent) :
+      nsLayoutUtils::GetBeforeFrameForContent(aParentFrame, aContent);
     if (!sibling) {
       // ... then recurse into children ...
       const bool forward = !aPrevSibling;
@@ -6379,8 +6379,8 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
     if (!sibling) {
       // ... then ::after / ::before on the opposite end.
       sibling = aPrevSibling ?
-        nsLayoutUtils::GetBeforeFrame(aParentFrame) :
-        nsLayoutUtils::GetAfterFrame(aParentFrame);
+        nsLayoutUtils::GetBeforeFrameForContent(aParentFrame, aContent) :
+        nsLayoutUtils::GetAfterFrameForContent(aParentFrame, aContent);
     }
     if (!sibling) {
       return nullptr;
