@@ -31,11 +31,13 @@ namespace mozilla {
 
 class TransportLayerIce : public TransportLayer {
  public:
-  TransportLayerIce(const std::string& name,
-                    RefPtr<NrIceCtx> ctx,
-                    RefPtr<NrIceMediaStream> stream,
-                    int component);
+  explicit TransportLayerIce(const std::string& name);
+
   virtual ~TransportLayerIce();
+
+  void SetParameters(RefPtr<NrIceCtx> ctx,
+                     RefPtr<NrIceMediaStream> stream,
+                     int component);
 
   // Transport layer overrides.
   virtual TransportResult SendPacket(const unsigned char *data, size_t len);
@@ -51,6 +53,7 @@ class TransportLayerIce : public TransportLayer {
 
  private:
   DISALLOW_COPY_ASSIGN(TransportLayerIce);
+  void PostSetup();
 
   const std::string name_;
   RefPtr<NrIceCtx> ctx_;

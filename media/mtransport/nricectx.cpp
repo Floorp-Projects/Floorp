@@ -533,9 +533,19 @@ NrIceCtx::CreateStream(const std::string& name, int components) {
   RefPtr<NrIceMediaStream> stream =
     NrIceMediaStream::Create(this, name, components);
 
-  streams_.push_back(stream);
+  if (stream) {
+    streams_.push_back(stream);
+  }
 
   return stream;
+}
+
+std::string NrIceCtx::ufrag() const {
+  return ctx_->ufrag;
+}
+
+std::string NrIceCtx::pwd() const {
+  return ctx_->pwd;
 }
 
 void NrIceCtx::destroy_peer_ctx() {
