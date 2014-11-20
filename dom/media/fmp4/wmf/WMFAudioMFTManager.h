@@ -28,7 +28,7 @@ public:
   // presumably they're the preroll samples, and we strip them. We may return
   // a null aOutput in this case.
   virtual HRESULT Output(int64_t aStreamOffset,
-                         nsAutoPtr<MediaData>& aOutput) MOZ_OVERRIDE;
+                         nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
   virtual void Shutdown() MOZ_OVERRIDE;
 

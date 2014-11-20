@@ -28,7 +28,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/prctl.h>
-#include "Zip.h"
 #include "sqlite3.h"
 #include "SQLiteBridge.h"
 #include "NSSBridge.h"
@@ -217,8 +216,6 @@ loadGeckoLibs(const char *apkName)
   getrusage(RUSAGE_THREAD, &usage1_thread);
   getrusage(RUSAGE_SELF, &usage1);
   
-  RefPtr<Zip> zip = ZipCollection::GetZip(apkName);
-
   char *file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libxul.so")];
   sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libxul.so", apkName);
   xul_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
@@ -273,7 +270,6 @@ loadSQLiteLibs(const char *apkName)
 #else
   chdir(getenv("GRE_HOME"));
 
-  RefPtr<Zip> zip = ZipCollection::GetZip(apkName);
   if (!lib_mapping) {
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }
@@ -301,7 +297,6 @@ loadNSSLibs(const char *apkName)
 
   chdir(getenv("GRE_HOME"));
 
-  RefPtr<Zip> zip = ZipCollection::GetZip(apkName);
   if (!lib_mapping) {
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }

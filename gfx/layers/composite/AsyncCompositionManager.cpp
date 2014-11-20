@@ -267,7 +267,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    const Matrix4x4& aCurrentTransformForRoot,
                                                    const LayerMargin& aFixedLayerMargins)
 {
+  // If aLayer == aTransformedSubtreeRoot, then treat aLayer as fixed relative
+  // to the ancestor scrollable layer rather than relative to itself.
   bool isRootFixed = aLayer->GetIsFixedPosition() &&
+    aLayer != aTransformedSubtreeRoot &&
     !aLayer->GetParent()->GetIsFixedPosition();
   bool isStickyForSubtree = aLayer->GetIsStickyPosition() &&
     aLayer->GetStickyScrollContainerId() == aTransformScrollId;

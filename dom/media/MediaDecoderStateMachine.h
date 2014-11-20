@@ -877,7 +877,7 @@ protected:
   // This is so that if we hit end of stream while we're decoding to reach
   // the seek target, we will still have a frame that we can display as the
   // last frame in the media.
-  nsAutoPtr<VideoData> mFirstVideoFrameAfterSeek;
+  nsRefPtr<VideoData> mFirstVideoFrameAfterSeek;
 
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
