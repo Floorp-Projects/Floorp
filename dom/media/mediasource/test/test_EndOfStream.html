@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: endOfStream call after an appendBuffer</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function () {
+  var ms = new MediaSource();
+
+  var v = document.createElement("video");
+  v.src = URL.createObjectURL(ms);
+  document.body.appendChild(v);
+
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    fetchWithXHR("seek.webm", function (arrayBuffer) {
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 88966));
+      var count = 0;
+      sb.addEventListener("updateend", function () {
+        ++count;
+        if (count == 1) {
+          setTimeout(function() {
+                       var fail = false;
+                       try {
+                         ms.endOfStream();
+                       } catch (e) {
+                         fail = true;
+                       }
+                       ok(!fail, "MediaSource.endOfStream succeeded");
+                       SimpleTest.finish();
+                     }, 0);
+        }
+      });
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>

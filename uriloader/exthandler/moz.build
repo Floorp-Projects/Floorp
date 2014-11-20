@@ -84,6 +84,9 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'android/nsMIMEInfoAndroid.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
+    SOURCES += [
+        'unix/nsMIMEInfoQt.cpp',
+    ]
     UNIFIED_SOURCES += [
         'unix/nsGNOMERegistry.cpp',
         'unix/nsMIMEInfoUnix.cpp',

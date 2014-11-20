@@ -57,7 +57,12 @@ runWithMSE(function () {
     sb.addEventListener("update", function () {
       is(sb.updating, false, "SourceBuffer.updating is expected value in update event");
       updateCount++;
-      ms.endOfStream();
+      /* Ensure that we endOfStream on the first update event only as endOfStream can
+         raise more if the duration of the last buffered range and the intial duration
+         differ. See bug 1065207 */
+      if (updateCount == 1) {
+        ms.endOfStream();
+      }
     });
 
     sb.addEventListener("updatestart", function () {
@@ -84,9 +89,10 @@ runWithMSE(function () {
     // XXX: Duration should be exactly 4.0, see bug 1065207.
     ok(Math.abs(v.duration - 4) <= 0.002, "Video has correct duration");
     ok(Math.abs(v.currentTime - 4) <= 0.002, "Video has played to end");
-    is(updateCount, 1, "update event received");
-    is(updateendCount, 1, "updateend event received");
-    is(updatestartCount, 1, "updatestart event received");
+    // XXX: 2 update events can be received dueto duration differences, see bug 1065207.
+    ok(updateCount == 1 || updateCount == 2, "update event received");
+    ok(updateendCount == 1 || updateendCount == 2, "updateend event received");
+    ok(updatestartCount == 1 || updatestartCount == 2, "updatestart event received");
     is(loadedmetadataCount, 1, "loadedmetadata event received");
     v.parentNode.removeChild(v);
     SimpleTest.finish();

@@ -284,6 +284,12 @@ RadialGradientEffectD2D1::Register(ID2D1Factory1 *aFactory)
   return hr;
 }
 
+void
+RadialGradientEffectD2D1::Unregister(ID2D1Factory1 *aFactory)
+{
+  aFactory->UnregisterEffect(CLSID_RadialGradientEffect);
+}
+
 HRESULT __stdcall
 RadialGradientEffectD2D1::CreateEffect(IUnknown **aEffectImpl)
 {
