@@ -82,7 +82,8 @@ BaselineCompiler::compile()
             script->filename(), script->lineno());
 
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, script));
+    TraceLoggerEvent scriptEvent(logger, TraceLogger_AnnotateScripts, script);
+    AutoTraceLog logScript(logger, scriptEvent);
     AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
     if (!script->ensureHasTypes(cx) || !script->ensureHasAnalyzedArgsUsage(cx))
@@ -178,7 +179,6 @@ BaselineCompiler::compile()
 #ifdef JS_TRACE_LOGGING
     traceLoggerEnterToggleOffset_.fixup(&masm);
     traceLoggerExitToggleOffset_.fixup(&masm);
-    traceLoggerScriptTextIdOffset_.fixup(&masm);
 #endif
     postDebugPrologueOffset_.fixup(&masm);
 
@@ -191,7 +191,6 @@ BaselineCompiler::compile()
                             spsPushToggleOffset_.offset(),
                             traceLoggerEnterToggleOffset_.offset(),
                             traceLoggerExitToggleOffset_.offset(),
-                            traceLoggerScriptTextIdOffset_.offset(),
                             postDebugPrologueOffset_.offset(),
                             icEntries_.length(),
                             pcMappingIndexEntries.length(),
@@ -247,10 +246,8 @@ BaselineCompiler::compile()
     if (cx->runtime()->spsProfiler.enabled())
         baselineScript->toggleSPS(true);
 
-    if (TraceLogTextIdEnabled(TraceLogger_Scripts))
-        baselineScript->toggleTraceLoggerScripts(cx->runtime(), script, true);
-    if (TraceLogTextIdEnabled(TraceLogger_Engine))
-        baselineScript->toggleTraceLoggerEngine(true);
+    // Initialize the tracelogger instrumentation.
+    baselineScript->initTraceLogger(cx->runtime(), script);
 
     uint32_t *bytecodeMap = baselineScript->bytecodeTypeMap();
     types::FillBytecodeTypeMap(script, bytecodeMap);
@@ -789,12 +786,14 @@ BaselineCompiler::emitTraceLoggerEnter()
     masm.movePtr(ImmPtr(logger), loggerReg);
 
     // Script start.
-    traceLoggerScriptTextIdOffset_ =
-        masm.movWithPatch(ImmWord(uintptr_t(TraceLogger_Scripts)), scriptReg);
-    masm.tracelogStart(loggerReg, scriptReg);
+    masm.movePtr(ImmGCPtr(script), scriptReg);
+    masm.loadPtr(Address(scriptReg, JSScript::offsetOfBaselineScript()), scriptReg);
+    Address scriptEvent(scriptReg, BaselineScript::offsetOfTraceLoggerScriptEvent());
+    masm.computeEffectiveAddress(scriptEvent, scriptReg);
+    masm.tracelogStartEvent(loggerReg, scriptReg);
 
     // Engine start.
-    masm.tracelogStart(loggerReg, TraceLogger_Baseline, /* force = */ true);
+    masm.tracelogStartId(loggerReg, TraceLogger_Baseline, /* force = */ true);
 
     masm.Pop(scriptReg);
     masm.Pop(loggerReg);
@@ -816,8 +815,8 @@ BaselineCompiler::emitTraceLoggerExit()
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);
 
-    masm.tracelogStop(loggerReg, TraceLogger_Baseline, /* force = */ true);
-    masm.tracelogStop(loggerReg, TraceLogger_Scripts, /* force = */ true);
+    masm.tracelogStopId(loggerReg, TraceLogger_Baseline, /* force = */ true);
+    masm.tracelogStopId(loggerReg, TraceLogger_Scripts, /* force = */ true);
 
     masm.Pop(loggerReg);
 

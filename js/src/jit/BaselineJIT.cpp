@@ -44,7 +44,6 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
                                uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
                                uint32_t traceLoggerExitToggleOffset,
-                               uint32_t traceLoggerScriptTextIdOffset,
                                uint32_t postDebugPrologueOffset)
   : method_(nullptr),
     templateScope_(nullptr),
@@ -62,7 +61,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
 #endif
     traceLoggerEnterToggleOffset_(traceLoggerEnterToggleOffset),
     traceLoggerExitToggleOffset_(traceLoggerExitToggleOffset),
-    traceLoggerScriptTextIdOffset_(traceLoggerScriptTextIdOffset),
+    traceLoggerScriptEvent_(),
     postDebugPrologueOffset_(postDebugPrologueOffset),
     flags_(0)
 { }
@@ -352,9 +351,8 @@ jit::CanEnterBaselineMethod(JSContext *cx, RunState &state)
 BaselineScript *
 BaselineScript::New(JSScript *jsscript, uint32_t prologueOffset, uint32_t epilogueOffset,
                     uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
-                    uint32_t traceLoggerExitToggleOffset, uint32_t traceLoggerScriptTextIdOffset,
-                    uint32_t postDebugPrologueOffset, size_t icEntries,
-                    size_t pcMappingIndexEntries, size_t pcMappingSize,
+                    uint32_t traceLoggerExitToggleOffset, uint32_t postDebugPrologueOffset,
+                    size_t icEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
                     size_t bytecodeTypeMapEntries, size_t yieldEntries)
 {
     static const unsigned DataAlignment = sizeof(uintptr_t);
@@ -381,8 +379,7 @@ BaselineScript::New(JSScript *jsscript, uint32_t prologueOffset, uint32_t epilog
         return nullptr;
     new (script) BaselineScript(prologueOffset, epilogueOffset,
                                 spsPushToggleOffset, traceLoggerEnterToggleOffset,
-                                traceLoggerExitToggleOffset, traceLoggerScriptTextIdOffset,
-                                postDebugPrologueOffset);
+                                traceLoggerExitToggleOffset, postDebugPrologueOffset);
 
     size_t offsetCursor = sizeof(BaselineScript);
     MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));
@@ -910,6 +907,28 @@ BaselineScript::toggleSPS(bool enable)
 }
 
 void
+BaselineScript::initTraceLogger(JSRuntime *runtime, JSScript *script)
+{
+#ifdef DEBUG
+    traceLoggerScriptsEnabled_ = TraceLogTextIdEnabled(TraceLogger_Scripts);
+    traceLoggerEngineEnabled_ = TraceLogTextIdEnabled(TraceLogger_Engine);
+#endif
+
+    TraceLoggerThread *logger = TraceLoggerForMainThread(runtime);
+    if (TraceLogTextIdEnabled(TraceLogger_Scripts))
+        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
+    else
+        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts);
+
+    if (TraceLogTextIdEnabled(TraceLogger_Engine) || TraceLogTextIdEnabled(TraceLogger_Scripts)) {
+        CodeLocationLabel enter(method_, CodeOffsetLabel(traceLoggerEnterToggleOffset_));
+        CodeLocationLabel exit(method_, CodeOffsetLabel(traceLoggerExitToggleOffset_));
+        Assembler::ToggleToCmp(enter);
+        Assembler::ToggleToCmp(exit);
+    }
+}
+
+void
 BaselineScript::toggleTraceLoggerScripts(JSRuntime *runtime, JSScript *script, bool enable)
 {
     bool engineEnabled = TraceLogTextIdEnabled(TraceLogger_Engine);
@@ -920,17 +939,10 @@ BaselineScript::toggleTraceLoggerScripts(JSRuntime *runtime, JSScript *script, b
     // Patch the logging script textId to be correct.
     // When logging log the specific textId else the global Scripts textId.
     TraceLoggerThread *logger = TraceLoggerForMainThread(runtime);
-    uint32_t textId = TraceLogCreateTextId(logger, TraceLogger_Scripts, script);
-    CodeLocationLabel patchLocation(method()->raw() + traceLoggerScriptTextIdOffset_);
-    if (enable) {
-        Assembler::PatchDataWithValueCheck(patchLocation,
-                                           PatchedImmPtr((void *)textId),
-                                           PatchedImmPtr((void *)TraceLogger_Scripts));
-    } else {
-        Assembler::PatchDataWithValueCheck(patchLocation,
-                                           PatchedImmPtr((void *)TraceLogger_Scripts),
-                                           PatchedImmPtr((void *)textId));
-    }
+    if (enable)
+        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts, script);
+    else
+        traceLoggerScriptEvent_ = TraceLoggerEvent(logger, TraceLogger_Scripts);
 
     // Enable/Disable the traceLogger prologue and epilogue.
     CodeLocationLabel enter(method_, CodeOffsetLabel(traceLoggerEnterToggleOffset_));
