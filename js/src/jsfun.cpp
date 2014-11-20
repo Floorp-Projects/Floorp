@@ -1069,16 +1069,17 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
                 return nullptr;
 
             // Fish out the argument names.
-            BindingVector *localNames = cx->new_<BindingVector>(cx);
-            ScopedJSDeletePtr<BindingVector> freeNames(localNames);
-            if (!FillBindingVector(script, localNames))
-                return nullptr;
-            for (unsigned i = 0; i < fun->nargs(); i++) {
-                if ((i && !out.append(", ")) ||
-                    (i == unsigned(fun->nargs() - 1) && fun->hasRest() && !out.append("...")) ||
-                    !out.append((*localNames)[i].name())) {
+            MOZ_ASSERT(script->bindings.numArgs() == fun->nargs());
+
+            BindingIter bi(script);
+            for (unsigned i = 0; i < fun->nargs(); i++, bi++) {
+                MOZ_ASSERT(bi.argIndex() == i);
+                if (i && !out.append(", "))
                     return nullptr;
-                }
+                if (i == unsigned(fun->nargs() - 1) && fun->hasRest() && !out.append("..."))
+                    return nullptr;
+                if (!out.append(bi->name()))
+                    return nullptr;
             }
             if (!out.append(") {\n"))
                 return nullptr;
