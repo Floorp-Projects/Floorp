@@ -3774,7 +3774,8 @@ DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const char *value, 
     return JS_DefinePropertyById(cx, obj, id, str, JSPROP_ENUMERATE);
 }
 
-#ifdef NIGHTLY_BUILD
+#ifdef JS_TRACE_LOGGING
+# ifdef NIGHTLY_BUILD
 bool
 Debugger::setupTraceLogger(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -3889,7 +3890,7 @@ Debugger::drainTraceLogger(JSContext *cx, unsigned argc, Value *vp)
 
     return true;
 }
-#endif
+# endif // NIGHTLY_BUILD
 
 bool
 Debugger::setupTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp)
@@ -4007,6 +4008,7 @@ Debugger::drainTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp)
 
     return true;
 }
+#endif
 
 const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
@@ -4037,13 +4039,15 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("findObjects", Debugger::findObjects, 1, 0),
     JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
     JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1, 0),
+#ifdef JS_TRACE_LOGGING
     JS_FN("setupTraceLoggerScriptCalls", Debugger::setupTraceLoggerScriptCalls, 0, 0),
     JS_FN("drainTraceLoggerScriptCalls", Debugger::drainTraceLoggerScriptCalls, 0, 0),
     JS_FN("startTraceLogger", Debugger::startTraceLogger, 0, 0),
     JS_FN("endTraceLogger", Debugger::endTraceLogger, 0, 0),
-#ifdef NIGHTLY_BUILD
+# ifdef NIGHTLY_BUILD
     JS_FN("setupTraceLogger", Debugger::setupTraceLogger, 1, 0),
     JS_FN("drainTraceLogger", Debugger::drainTraceLogger, 0, 0),
+# endif
 #endif
     JS_FS_END
 };
