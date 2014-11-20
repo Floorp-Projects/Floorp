@@ -191,8 +191,8 @@ jit::EnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc)
     }
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLogStopEvent(logger, TraceLogger::Interpreter);
-    TraceLogStartEvent(logger, TraceLogger::Baseline);
+    TraceLogStopEvent(logger, TraceLogger_Interpreter);
+    TraceLogStartEvent(logger, TraceLogger_Baseline);
 
     IonExecStatus status = EnterBaseline(cx, data);
     if (status != IonExec_Ok)

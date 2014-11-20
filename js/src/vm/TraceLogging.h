@@ -114,6 +114,7 @@ namespace jit {
     _(GC)                                             \
     _(GCAllocation)                                   \
     _(GCSweeping)                                     \
+    _(Internal)                                       \
     _(Interpreter)                                    \
     _(Invalidation)                                   \
     _(IonCompilation)                                 \
@@ -127,7 +128,6 @@ namespace jit {
     _(ParserCompileLazy)                              \
     _(ParserCompileScript)                            \
     _(Scripts)                                        \
-    _(TL)                                             \
     _(VM)                                             \
                                                       \
     /* Specific passes during ion compilation */      \
@@ -153,6 +153,15 @@ namespace jit {
     _(RegisterAllocation)                             \
     _(GenerateCode)                                   \
 
+// Predefined IDs for common operations. These IDs can be used
+// without using TraceLogCreateTextId, because they are already created.
+enum TraceLoggerTextId {
+    TraceLogger_Error = 0,
+#   define DEFINE_TEXT_ID(textId) TraceLogger_ ## textId,
+    TRACELOGGER_TEXT_ID_LIST(DEFINE_TEXT_ID)
+#   undef DEFINE_TEXT_ID
+    TraceLogger_LAST
+};
 class AutoTraceLog;
 
 template <class T>
@@ -253,15 +262,6 @@ class ContinuousSpace {
 class TraceLogger
 {
   public:
-    // Predefined IDs for common operations. These IDs can be used
-    // without using TraceLogCreateTextId, because there are already created.
-    enum TextId {
-        TL_Error = 0,
-#   define DEFINE_TEXT_ID(textId) textId,
-        TRACELOGGER_TEXT_ID_LIST(DEFINE_TEXT_ID)
-#   undef DEFINE_TEXT_ID
-        LAST
-    };
 
 #ifdef JS_TRACE_LOGGING
   private:
@@ -433,13 +433,13 @@ class TraceLogger
     bool init(uint32_t loggerId);
 
     static bool textIdIsToggable(uint32_t id) {
-        if (id == TL_Error)
+        if (id == TraceLogger_Error)
             return false;
-        if (id == TL)
+        if (id == TraceLogger_Internal)
             return false;
         // Cannot toggle the logging of one engine on/off, because at the stop
         // event it is sometimes unknown which engine was running.
-        if (id == IonMonkey || id == Baseline || id == Interpreter)
+        if (id == TraceLogger_IonMonkey || id == TraceLogger_Baseline || id == TraceLogger_Interpreter)
             return false;
         return true;
     }
@@ -492,7 +492,7 @@ class TraceLogging
 
     bool initialized;
     bool enabled;
-    bool enabledTextIds[TraceLogger::LAST];
+    bool enabledTextIds[TraceLogger_LAST];
     bool mainThreadEnabled;
     bool offThreadEnabled;
     ThreadLoggerHashMap threadLoggers;
@@ -512,7 +512,7 @@ class TraceLogging
     TraceLogger *forThread(PRThread *thread);
 
     bool isTextIdEnabled(uint32_t textId) {
-        if (textId < TraceLogger::LAST)
+        if (textId < TraceLogger_LAST)
             return enabledTextIds[textId];
         return true;
     }
@@ -567,7 +567,7 @@ inline uint32_t TraceLogCreateTextId(TraceLogger *logger, JSScript *script) {
     if (logger)
         return logger->createTextId(script);
 #endif
-    return TraceLogger::TL_Error;
+    return TraceLogger_Error;
 }
 inline uint32_t TraceLogCreateTextId(TraceLogger *logger,
                                      const JS::ReadOnlyCompileOptions &compileOptions)
@@ -576,14 +576,14 @@ inline uint32_t TraceLogCreateTextId(TraceLogger *logger,
     if (logger)
         return logger->createTextId(compileOptions);
 #endif
-    return TraceLogger::TL_Error;
+    return TraceLogger_Error;
 }
 inline uint32_t TraceLogCreateTextId(TraceLogger *logger, const char *text) {
 #ifdef JS_TRACE_LOGGING
     if (logger)
         return logger->createTextId(text);
 #endif
-    return TraceLogger::TL_Error;
+    return TraceLogger_Error;
 }
 #ifdef JS_TRACE_LOGGING
 bool TraceLogTextIdEnabled(uint32_t textId);
