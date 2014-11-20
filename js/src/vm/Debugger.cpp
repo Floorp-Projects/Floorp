@@ -6035,15 +6035,14 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
         MOZ_ASSERT(fun->nargs() == script->bindings.numArgs());
 
         if (fun->nargs() > 0) {
-            BindingVector bindings(cx);
-            if (!FillBindingVector(script, &bindings))
-                return false;
-            for (size_t i = 0; i < fun->nargs(); i++) {
+            BindingIter bi(script);
+            for (size_t i = 0; i < fun->nargs(); i++, bi++) {
+                MOZ_ASSERT(bi.argIndex() == i);
                 Value v;
-                if (bindings[i].name()->length() == 0)
+                if (bi->name()->length() == 0)
                     v = UndefinedValue();
                 else
-                    v = StringValue(bindings[i].name());
+                    v = StringValue(bi->name());
                 result->setDenseElement(i, v);
             }
         }

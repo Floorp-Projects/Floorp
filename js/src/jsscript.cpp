@@ -334,17 +334,6 @@ Bindings::trace(JSTracer *trc)
     }
 }
 
-bool
-js::FillBindingVector(HandleScript fromScript, BindingVector *vec)
-{
-    for (BindingIter bi(fromScript); bi; bi++) {
-        if (!vec->append(*bi))
-            return false;
-    }
-
-    return true;
-}
-
 template<XDRMode mode>
 bool
 js::XDRScriptConst(XDRState<mode> *xdr, MutableHandleValue vp)
