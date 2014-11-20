@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Test: CSS display:contents</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+<style type="text/css">
+
+        html,body {
+            color:black; background-color:white; font-size:16px; padding:0; margin:0;
+        }
+	
+.table   { display:table; border-collapse:collapse; border: blue solid 1pt;}
+.itable  { display:inline-table; }
+.caption { display:table-caption; }
+.cell    { display:table-cell; border:inherit; }
+.row     { display:table-row; border: green dashed 1pt; }
+.rowg    { display:table-row-group; }
+.head    { display:table-header-group; }
+.foot    { display:table-footer-group; }
+.col     { display:table-column; }
+.colg    { display:table-column-group; }
+.flex    { display:flex; }
+.iflex   { display:inline-flex; }
+.li      { display:list-item; }
+.ib      { display:inline-block; }
+.inline  { display:inline; }
+.columns  { -moz-columns:2; columns:2; height:4em; }
+
+
+
+.c1 { color:lime; }
+.c2 { color:pink; }
+.c3 { color:teal; }
+.c4 { color:green; }
+.c5 { color:silver; }
+.c6 { color:cyan; }
+.c7 { color:magenta; }
+.c8 { color:yellow; }
+.c9 { color:grey; }
+.c10{ color:black; }
+
+.b { background:blue; }
+    </style>
+</head>
+<body style="color:red">
+
+<div class="caption c2">1<span>1</span></div>
+<div class="row c2">2a<div class="cell">2<div class="inline c2">b<span class="b">b</span></div></div></div>
+<div class="cell c3">3</div>
+<div class="rowg c4">4</div>
+<div class="cell c5">5a</div>
+<div class="cell c5">5b</div>
+<div class="head c6">6</div>
+<div class="cell c7"><div class="inline c2">7<span class="b">a</span></div></div>
+<div class="cell c8">7b</div>
+<div class="foot c9">8</div>
+<div class="foot c9">9<div class="inline c2">a<span class="b">b</span>c</div></div>
+<div class="cell c10">10</div>
+
+<div class="table" style="float:right">
+<div class="caption c2">1<span>1</span></div>
+<div class="row c2">2a<div class="cell">2<div class="inline c2">b<span class="b">b</span></div></div></div>
+<div class="cell c3" style="border:none">3</div>
+<div class="rowg c4">4</div>
+<div class="cell c5" style="border:none">5a</div>
+<div class="cell c5">5b</div>
+<div class="head c6">6</div>
+<div class="cell c7" style="border:none"><div class="inline c2">7<span class="b">a</span></div></div>
+<div class="cell c8" style="border:none">7b</div>
+<div class="foot c9" style="border:none">8</div>
+<div class="foot c9">9<div class="inline c2">a<span class="b">b</span>c</div></div>
+<div class="cell c10" style="border:none">10</div>
+</div>
+
+<div class="flex c1">
+0&nbsp;
+<div class="inline c1">x&nbsp;</div>
+<div class="inline c1"><div class="inline c2">y</div></div>
+<div class="inline c1"><div class="inline c2"><div class="">1<span>1</span></div></div></div>
+<div class="inline c2"><div class="inline">2a<div class="">2<div class="inline c2">b<span class="b">b</span></div></div></div></div>
+<div class="c3">3</div>
+<div class="inline"><div class="inline c4">4</div></div>
+<div class=""><div class="inline c5">5a</div></div>
+<div class=" c5">5b</div>
+<div class="inline c6"><div class="">6</div></div>
+<div class="ib"><div class="inline c7"><div class="inline c2">7<span class="b">a</span></div></div></div>
+<div class="inline c9"><div class="">8</div></div>
+<div class="inline c9"><div class="inline">9<div class="inline c2">a</div></div></div>
+<span class="c2 b">b</span>
+<div class="inline c2">c</div>
+<div class="inline c10"><div class="">10</div></div>
+</div>
+
+<div class="flex c1">
+<div class="inline c2">0&nbsp;</div>
+<div class="inline c1">x&nbsp;</div>
+<div class="inline c1"><div class="inline c2">y</div></div>
+<div class="inline c1"><div class="inline c2"><div class="">1<span>1</span></div></div></div>
+<div class="c2"><div class="inline">2a<div>2<div class="inline c2">b<span class="b">b</span></div></div></div></div>
+<div class="c3">3</div>
+<div class="inline"><div class="inline c4">4</div></div>
+<div class=""><div class="inline c5">5a</div></div>
+<div class=" c5">5b</div>
+<div class="inline c6"><div class="">6</div></div>
+<div class="ib"><div class="inline c7"><div class="inline c2">7<span class="b">a</span></div></div></div>
+<div class="inline c9"><div class="">8</div></div>
+<div class="inline c9"><div class="inline">9<div class="inline c2">a</div></div></div>
+<span class="c2 b">b</span>
+<div class="inline c2">c</div>
+<div class="inline c10"><div class="">10</div></div>
+</div>
+
+
+<div class="iflex"><div class="contents c2">
+0
+</div></div>
+<div class="iflex"><div class="contents c2">
+0
+<div class="inline c1">1</div>
+2
+</div></div>
+<div class="iflex"><div class="contents c2">
+0<div class="inline c1">1</div>2
+</div></div>
+<div class="iflex c3">
+0<div class="inline c2"><div class="c1">1</div></div>2
+</div>
+<div class="iflex c3">
+<div class="inline c2">0</div><div class="inline c2"><div class="c1">1</div></div><div class="inline c2">2</div>
+</div>
+<div class="iflex c3">
+<div class="inline">0</div>
+<div class="inline"><div class="inline c1">1</div></div>
+<div class="inline">2</div>
+</div>
+
+<ul><li class="c1"><div class="inline c2">
+0
+<div class="inline c1">x</div>
+<div class="inline c1"><div class="inline c2">y</div></div>
+<div class="inline c1"><div class="inline c2"><div class="">1<span>1</span></div></div></div>
+<div class="inline c2"><div class="inline">2a<div class="">2<div class="inline c2">b<span class="b">b</span></div></div></div></div>
+<div class="inline c3"><div class="inline">3</div></div>
+<div class="inline"><div class="inline c4">4</div></div>
+<div class=""><div class="inline c5">5a</div></div>
+<div class=" c5">5b</div>
+<div class="inline c6"><div class="">6</div></div>
+<div class="ib"><div class="inline c7"><div class="inline c2">7<span class="b">a</span></div></div></div>
+<div class="inline c9"><div class="">8</div></div>
+<div class="inline c9"><div class="inline">9<div class="inline c2">a<span class="b">b</span>c</div></div></div>
+<div class="inline c10"><div class="">10</div></div>
+</div></li>
+</ul>
+
+<div class="columns">
+<div class="contents c1"><div class="contents c2"><div>1<span>1</span></div></div></div>
+<div class="contents c2"><div>2</div></div>
+<div class="contents c3"><div>3</div></div>
+</div>
+
+<div class="columns">
+<div class="contents c1"><div class="contents c2"><div>1<span>1</span></div></div></div>
+<div class="contents c2"><div>2</div></div>
+<div class="contents c3"><div>3</div></div>
+</div>
+
+<span class="c2 b"><legend class="inline c1">Legend</legend><legend class="inline c1">Legend</legend></span>
+<br clear="all">
+<span class="c3">x<div class="inline c1">float:left</div></span>
+<span class="c3">y<div class="inline c1">position:absolute</div></span>
+
+<!--  -->
+
+<fieldset class="c1" style="display:inline"><legend>Legend</legend>fieldset</fieldset>
+<button class="c1">but<span>ton</span></button>
+<select class="c1"><option>select</select>
+
+</body>
+</html>

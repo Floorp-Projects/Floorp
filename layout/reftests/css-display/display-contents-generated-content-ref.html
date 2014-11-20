@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <title>CSS Test: CSS display:contents; generated content</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+  <link rel="help" href="http://dev.w3.org/csswg/css-display">
+<style type="text/css">
+body,html { color:black; background-color:white; }
+
+.test {
+  display: inline;
+  content: "content";
+  color: lime;
+}
+.contents {
+  display: inline;
+  color: green;
+}
+.before::before {
+  display: inline;
+  content:"before";
+}
+.after::after {
+  display: inline;
+  content:"after";
+}
+</style>
+</head>
+<body>
+
+<div class="test"><span>A a</span></div>
+<div class="test"><span class="contents">t1</span></div>
+<div class="test"></div>
+<div class="contents before">1<span>B b</span>2</div>
+<div class="contents after">1<span>C c</span>2</div>
+<div class="contents before after">1<span>D d</span>2</div>
+<div class="contents before">1<span class="t5">B b</span>2</div>
+<div class="contents after">12</div>
+<div class="contents before after">1<span class="t7">D d</span>2</div>
+
+<div class="contents">
+  <div class="test"><span>span</span></div>
+  <div class="test"><span class="contents">t3</span></div>
+  <div class="test"></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+  <div class="contents before">12</div>
+  <div class="contents after">1<span class="t9">span</span>2</div>
+  <div class="contents before after">12</div>
+  <div class="contents before">1<span class="t11">span</span>2</div>
+  <div class="contents after">12</div>
+  <div class="contents before after">1<span class="t13">span</span>2</div>
+</div>
+
+<div class="contents"><span class="s1">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s2">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s3">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s4">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"></div>
+
+<div class="contents"></div>
+
+<div class="contents before"><span class="s7">
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents after"><span class="s8">
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents"><span class="s9">
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents before after"><span class="s10">
+  <div class="test"><span>span</span></div>
+  <div class="contents before">1<span>span</span>2</div>
+  <div class="contents after">1<span>span</span>2</div>
+  <div class="contents before after">1<span>span</span>2</div>
+</span></div>
+
+<div class="contents before"></div>
+
+<div class="contents after"></div>
+
+</body>
+</html>

@@ -1,0 +1,272 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<head>
+  <title>CSS Test: CSS display:contents in XBL</title>
+  <link rel="author" title="William Chen" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1040291"/>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396"/>
+  <link rel="help" href="http://dev.w3.org/csswg/css-display"/>
+
+<style>
+.c { display:contents; }
+</style>
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <binding id="a">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .a {
+          display: contents;
+          color: blue;
+        }
+      </style>
+      <xhtml:span>a</xhtml:span>
+      <xhtml:span class="a">
+        <children></children>
+      </xhtml:span>
+      <xhtml:span>c</xhtml:span>
+    </content>
+  </binding>
+
+  <binding id="b">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .b {
+          display: contents;
+          color: blue;
+        }
+	.b::after {
+          content: 'c';
+        }
+      </style>
+      <xhtml:span class="b">
+        a <children></children>
+      </xhtml:span>
+    </content>
+  </binding>
+
+  <binding id="c">
+    <content>
+      <xhtml:span>a</xhtml:span>
+      <xhtml:span style="color:blue"> <children></children> </xhtml:span>
+      <xhtml:span>c</xhtml:span>
+    </content>
+  </binding>
+
+  <binding id="d">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .d {
+          display: contents;
+          color: blue;
+        }
+        #d1::after { content: "a"; }
+        #d2::before { content: "c"; }
+      </style>
+      <xhtml:span id="d1"></xhtml:span>
+      <xhtml:span class="d">
+        <children></children>
+      </xhtml:span>
+      <xhtml:span id="d2"></xhtml:span>
+    </content>
+  </binding>
+
+  <binding id="e">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .e {
+          display: contents;
+          color: blue;
+        }
+	.e::before {
+          content: 'a';
+          color: black;
+        }
+      </style>
+      <xhtml:span class="e">
+        <children></children> <xhtml:span style="color:black">c</xhtml:span>
+      </xhtml:span>
+    </content>
+  </binding>
+
+  <binding id="f">
+    <content><children includes="b"/><children includes="i"/></content>
+  </binding>
+
+  <binding id="g">
+    <content>
+      <style xmlns="http://www.w3.org/1999/xhtml">
+        .a {
+          display: contents;
+          color: blue;
+        }
+      </style>
+      <xhtml:span class="a"><children includes="b"></children></xhtml:span>
+      <xhtml:span class="a" style="color:green"><children includes="c"></children></xhtml:span>
+    </content>
+  </binding>
+</bindings>
+</head>
+<body>
+<div id="host1" style="-moz-binding: url(#a);"></div>
+<div id="host2" style="-moz-binding: url(#b);"></div>
+<div id="host3" style="-moz-binding: url(#c); display: contents;"></div>d
+<div id="host4" style="-moz-binding: url(#d);"></div>
+<div id="host5" style="-moz-binding: url(#e);"></div>
+<div            style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div            style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div            style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="host6" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="host7" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="host8" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="host9" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="hostA" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="hostB" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hostC" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="hostD" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="hostE" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hostF" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="hostG" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="hostH" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hostI" style="color:green"><b style="display:contents">I</b></div>
+<div id="hostJ" style="-moz-binding:url(#a); color:green"><b>J</b></div>
+<div id="hostK" style="-moz-binding:url(#b); color:red"><b>K</b></div>
+<div id="hostL" style="color:red"><c>2</c><b style="display:contents">L1</b></div>
+<div id="hostM" style="-moz-binding:url(#g); color:red"><c>2</c><b style="display:contents">M1</b></div>
+<div id="hostO" class="c" style="-moz-binding:url(#a); color:green"><b>O</b></div>
+<div id="hostP" class="c" style="-moz-binding:url(#b); color:red"><b>P</b></div>
+<div id="hostQ" class="c" style="color:red"><c>2</c><b style="display:contents">Q1</b></div>
+<div id="hostR" class="c" style="-moz-binding:url(#g); color:red"><c>2</c><b style="display:contents">R1</b></div>
+<div id="hostS" style="-moz-binding: url(#a);"></div>
+<div id="hostT" style="-moz-binding: url(#b);"></div>
+<div id="hostU" style="-moz-binding: url(#c); display: contents;"></div>d
+<div id="hostV" style="-moz-binding: url(#d);"></div>
+<div id="hostW" style="-moz-binding: url(#e);"></div>
+<div class="c"  style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div class="c"  style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div class="c"  style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hostX" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="hostY" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="hostZ" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hosta" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="hostb" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="hostc" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hostd" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="hoste" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="hostf" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hostg" style="-moz-binding: url(#f)"><i>Two</i><b>One</b></div>
+<div id="hosth" style="-moz-binding: url(#f)"><i style="display: contents;">Two</i><b>One</b></div>
+<div id="hosti" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+<div id="hostj" style="-moz-binding: url(#f)"><i>Two</i><b style="display: contents;">One</b></div>
+
+<script>
+
+function tweak() {
+  document.body.offsetHeight;
+
+  function span(s) {
+    var elm = document.createElement("span");
+    elm.textContent = s;
+    return elm;
+  }
+  function elem(tag) {
+    var elm = document.createElement(tag);
+    elm.textContent = tag;
+    return elm;
+  }
+
+  // Span should be distributed to the xbl:children insertion point between 'a' and 'c'.
+  host1.appendChild(span("b"));
+
+  var elm = span("b");
+  elm.style.display = "contents";
+  elm.style.color = "blue";
+  host2.appendChild(elm);
+
+  host3.appendChild(span("b"));
+  host4.appendChild(span("b"));
+  host5.appendChild(span("b"));
+
+  host6.appendChild(elem("b"));
+  host7.appendChild(elem("b"));
+  host8.appendChild(elem("b"));
+
+  host9.appendChild(elem("i"));
+  hostA.appendChild(elem("i"));
+  hostB.appendChild(elem("i"));
+
+  hostC.insertBefore(elem("b"), hostC.firstChild);
+  hostD.insertBefore(elem("b"), hostD.firstChild);
+  hostE.insertBefore(elem("b"), hostE.firstChild);
+
+  hostF.insertBefore(elem("i"), hostF.firstChild);
+  hostG.insertBefore(elem("i"), hostG.firstChild);
+  hostH.insertBefore(elem("i"), hostH.firstChild);
+
+  document.body.offsetHeight;
+  hostI.style.MozBinding='url(#a)';
+  hostL.style.MozBinding='url(#g)';
+  hostO.style.MozBinding='url(#a)';
+  hostQ.style.MozBinding='url(#g)';
+
+  hostS.className="c";
+  hostT.className="c";
+  hostU.className="c";
+  hostV.className="c";
+  hostW.className="c";
+  hostX.className="c";
+  hostY.className="c";
+  hostZ.className="c";
+  hosta.className="c";
+  hostb.className="c";
+  hostc.className="c";
+  hostd.className="c";
+  hoste.className="c";
+  hostf.className="c";
+  hostg.className="c";
+  hosth.className="c";
+  hosti.className="c";
+
+  hostS.appendChild(span("b"));
+
+  var elm = span("b");
+  elm.style.display = "contents";
+  elm.style.color = "blue";
+  hostT.appendChild(elm);
+
+  hostU.appendChild(span("b"));
+  hostV.appendChild(span("b"));
+  hostW.appendChild(span("b"));
+
+  hostX.appendChild(elem("b"));
+  hostY.appendChild(elem("b"));
+  hostZ.appendChild(elem("b"));
+
+  hosta.appendChild(elem("i"));
+  hostb.appendChild(elem("i"));
+  hostc.appendChild(elem("i"));
+
+  hostd.insertBefore(elem("b"), hostd.firstChild);
+  hoste.insertBefore(elem("b"), hoste.firstChild);
+  hostf.insertBefore(elem("b"), hostf.firstChild);
+
+  hostg.insertBefore(elem("i"), hostg.firstChild);
+  hosth.insertBefore(elem("i"), hosth.firstChild);
+  hosti.insertBefore(elem("i"), hosti.firstChild);
+
+  document.body.offsetHeight;
+  hostj.children[0].style.MozBinding='url(#a)';
+  hostj.children[1].style.MozBinding='url(#a)';
+  document.body.offsetHeight;
+  hostj.insertBefore(elem("i"), hostj.firstChild);
+
+  document.body.offsetHeight;
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", tweak);
+</script>
+</body>
+</html>
