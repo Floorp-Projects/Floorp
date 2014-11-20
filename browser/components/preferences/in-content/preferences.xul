@@ -14,6 +14,7 @@
 <?xml-stylesheet
   href="chrome://browser/content/preferences/handlers.css"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/applications.css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/in-content/search.css"?>
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
@@ -96,6 +97,16 @@
         <label class="category-name" flex="1">&paneGeneral.title;</label>
       </richlistitem>
 
+      <richlistitem id="category-search"
+                    class="category"
+                    value="paneSearch"
+                    helpTopic="prefs-main"
+                    tooltiptext="Search"
+                    align="center">
+        <image class="category-icon"/>
+        <label class="category-name" flex="1">Search</label>
+      </richlistitem>
+
       <richlistitem id="category-content"
                     class="category"
                     value="paneContent"
@@ -162,6 +173,7 @@
     <vbox class="main-content" flex="1">
       <prefpane id="mainPrefPane">
 #include main.xul
+#include search.xul
 #include privacy.xul
 #include advanced.xul
 #include applications.xul
