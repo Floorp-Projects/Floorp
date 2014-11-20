@@ -143,24 +143,26 @@ let requestHandler = {
     let wrapper = JSON.parse(aData);
     let listener = this._listeners[aTopic];
 
-    // A null response indicates an error. If an error occurs in the callback
-    // below, the response will remain null, and Java will fire onError for
-    // this request.
-    let response = null;
-
     try {
-      let result = yield listener(wrapper.data);
-      if (typeof result !== "object" || result === null) {
+      let response = yield listener(wrapper.data);
+      if (typeof response !== "object" || response === null) {
         throw new Error("Gecko request listener did not return an object");
       }
-      response = result;
-    } catch (e) {
-      Cu.reportError(e);
-    }
 
-    Messaging.sendRequest({
-      type: "Gecko:Request" + wrapper.id,
-      response: response
-    });
+      Messaging.sendRequest({
+        type: "Gecko:Request" + wrapper.id,
+        response: response
+      });
+    } catch (e) {
+      Cu.reportError("Error in Messaging handler for " + aTopic + ": " + e);
+
+      Messaging.sendRequest({
+        type: "Gecko:Request" + wrapper.id,
+        error: {
+          message: e.message || (e && e.toString()),
+          stack: e.stack || Components.stack.formattedStack,
+        }
+      });
+    }
   })
 };

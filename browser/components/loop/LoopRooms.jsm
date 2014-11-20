@@ -160,10 +160,6 @@ let LoopRoomsInternal = {
     }
 
     Task.spawn(function* () {
-      let deferredInitialization = Promise.defer();
-      MozLoopService.delayedInitialize(deferredInitialization);
-      yield deferredInitialization.promise;
-
       if (!gDirty) {
         callback(null, [...this.rooms.values()]);
         return;
@@ -198,6 +194,12 @@ let LoopRoomsInternal = {
           // fails the room data will not be added to the map.
           yield LoopRooms.promise("get", room.roomToken);
         }
+      }
+
+      // If there's no rooms in the list, remove the guest created room flag, so that
+      // we don't keep registering for guest when we don't need to.
+      if (this.sessionType == LOOP_SESSION_TYPE.GUEST && !this.rooms.size) {
+        this.setGuestCreatedRoom(false);
       }
 
       // Set the 'dirty' flag back to FALSE, since the list is as fresh as can be now.
@@ -269,9 +271,37 @@ let LoopRoomsInternal = {
         delete room.expiresIn;
         this.rooms.set(room.roomToken, room);
 
+        if (this.sessionType == LOOP_SESSION_TYPE.GUEST) {
+          this.setGuestCreatedRoom(true);
+        }
+
         eventEmitter.emit("add", room);
         callback(null, room);
       }, error => callback(error)).catch(error => callback(error));
+  },
+
+  /**
+   * Sets whether or not the user has created a room in guest mode.
+   *
+   * @param {Boolean} created If the user has created the room.
+   */
+  setGuestCreatedRoom: function(created) {
+    if (created) {
+      Services.prefs.setBoolPref("loop.createdRoom", created);
+    } else {
+      Services.prefs.clearUserPref("loop.createdRoom");
+    }
+  },
+
+  /**
+   * Returns true if the user has a created room in guest mode.
+   */
+  getGuestCreatedRoom: function() {
+    try {
+      return Services.prefs.getBoolPref("loop.createdRoom");
+    } catch (x) {
+      return false;
+    }
   },
 
   open: function(roomToken) {
@@ -484,6 +514,10 @@ this.LoopRooms = {
 
   rename: function(roomToken, newRoomName, callback) {
     return LoopRoomsInternal.rename(roomToken, newRoomName, callback);
+  },
+
+  getGuestCreatedRoom: function() {
+    return LoopRoomsInternal.getGuestCreatedRoom();
   },
 
   promise: function(method, ...params) {

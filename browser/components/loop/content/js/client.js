@@ -82,40 +82,29 @@ loop.Client = (function($) {
     },
 
     /**
-     * Ensures the client is registered with the push server.
+     * Requests a call URL from the Loop server. It will note the
+     * expiry time for the url with the mozLoop api.  It will select the
+     * appropriate hawk session to use based on whether or not the user
+     * is currently logged into a Firefox account profile.
      *
      * Callback parameters:
-     * - err null on successful registration, non-null otherwise.
-     *
-     * @param {LOOP_SESSION_TYPE} sessionType Guest or FxA
-     * @param {Function} cb Callback(err)
-     */
-    _ensureRegistered: function(sessionType, cb) {
-      this.mozLoop.ensureRegistered(sessionType, function(error) {
-        if (error) {
-          console.log("Error registering with Loop server, code: " + error);
-          cb(error);
-          return;
-        } else {
-          cb(null);
-        }
-      });
-    },
-
-    /**
-     * Internal handler for requesting a call url from the server.
-     *
-     * Callback parameters:
-     * - err null on successful registration, non-null otherwise.
+     * - err null on successful request, non-null otherwise.
      * - callUrlData an object of the obtained call url data if successful:
      * -- callUrl: The url of the call
      * -- expiresAt: The amount of hours until expiry of the url
      *
-     * @param {LOOP_SESSION_TYPE} sessionType
+     * @param  {String} simplepushUrl a registered Simple Push URL
      * @param  {string} nickname the nickname of the future caller
      * @param  {Function} cb Callback(err, callUrlData)
      */
-    _requestCallUrlInternal: function(sessionType, nickname, cb) {
+    requestCallUrl: function(nickname, cb) {
+      var sessionType;
+      if (this.mozLoop.userProfile) {
+        sessionType = this.mozLoop.LOOP_SESSION_TYPE.FXA;
+      } else {
+        sessionType = this.mozLoop.LOOP_SESSION_TYPE.GUEST;
+      }
+
       this.mozLoop.hawkRequest(sessionType, "/call-url/", "POST",
                                {callerId: nickname},
         function (error, responseText) {
@@ -154,17 +143,6 @@ loop.Client = (function($) {
      *                      it does not make sense to display an error.
      **/
     deleteCallUrl: function(token, sessionType, cb) {
-      this._ensureRegistered(sessionType, function(err) {
-        if (err) {
-          cb(err);
-          return;
-        }
-
-        this._deleteCallUrlInternal(token, sessionType, cb);
-      }.bind(this));
-    },
-
-    _deleteCallUrlInternal: function(token, sessionType, cb) {
       function deleteRequestCallback(error, responseText) {
         if (error) {
           this._failureHandler(cb, error);
@@ -182,40 +160,6 @@ loop.Client = (function($) {
       this.mozLoop.hawkRequest(sessionType,
                                "/call-url/" + token, "DELETE", null,
                                deleteRequestCallback.bind(this));
-    },
-
-    /**
-     * Requests a call URL from the Loop server. It will note the
-     * expiry time for the url with the mozLoop api.  It will select the
-     * appropriate hawk session to use based on whether or not the user
-     * is currently logged into a Firefox account profile.
-     *
-     * Callback parameters:
-     * - err null on successful registration, non-null otherwise.
-     * - callUrlData an object of the obtained call url data if successful:
-     * -- callUrl: The url of the call
-     * -- expiresAt: The amount of hours until expiry of the url
-     *
-     * @param  {String} simplepushUrl a registered Simple Push URL
-     * @param  {string} nickname the nickname of the future caller
-     * @param  {Function} cb Callback(err, callUrlData)
-     */
-    requestCallUrl: function(nickname, cb) {
-      var sessionType;
-      if (this.mozLoop.userProfile) {
-        sessionType = this.mozLoop.LOOP_SESSION_TYPE.FXA;
-      } else {
-        sessionType = this.mozLoop.LOOP_SESSION_TYPE.GUEST;
-      }
-
-      this._ensureRegistered(sessionType, function(err) {
-        if (err) {
-          cb(err);
-          return;
-        }
-
-        this._requestCallUrlInternal(sessionType, nickname, cb);
-      }.bind(this));
     },
 
     /**
