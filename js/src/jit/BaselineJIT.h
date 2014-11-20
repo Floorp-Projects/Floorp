@@ -128,6 +128,7 @@ struct BaselineScript
 #endif
     uint32_t spsPushToggleOffset_;
 
+    // The offsets and event used for Tracelogger toggling.
 #ifdef JS_TRACE_LOGGING
 # ifdef DEBUG
     bool traceLoggerScriptsEnabled_;
@@ -371,9 +372,15 @@ struct BaselineScript
 
     void toggleSPS(bool enable);
 
+#ifdef JS_TRACE_LOGGING
     void initTraceLogger(JSRuntime *runtime, JSScript *script);
     void toggleTraceLoggerScripts(JSRuntime *runtime, JSScript *script, bool enable);
     void toggleTraceLoggerEngine(bool enable);
+
+    static size_t offsetOfTraceLoggerScriptEvent() {
+        return offsetof(BaselineScript, traceLoggerScriptEvent_);
+    }
+#endif
 
     void noteAccessedGetter(uint32_t pcOffset);
     void noteArrayWriteHole(uint32_t pcOffset);
@@ -383,9 +390,6 @@ struct BaselineScript
     }
     static size_t offsetOfYieldEntriesOffset() {
         return offsetof(BaselineScript, yieldEntriesOffset_);
-    }
-    static size_t offsetOfTraceLoggerScriptEvent() {
-        return offsetof(BaselineScript, traceLoggerScriptEvent_);
     }
 
     static void writeBarrierPre(Zone *zone, BaselineScript *script);
