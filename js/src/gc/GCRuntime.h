@@ -250,6 +250,39 @@ struct Callback {
 template<typename F>
 class CallbackVector : public Vector<Callback<F>, 4, SystemAllocPolicy> {};
 
+template <typename T, typename Iter0, typename Iter1>
+class ChainedIter
+{
+    Iter0 iter0_;
+    Iter1 iter1_;
+
+  public:
+    ChainedIter(const Iter0 &iter0, const Iter1 &iter1)
+      : iter0_(iter0), iter1_(iter1)
+    {}
+
+    bool done() const { return iter0_.done() && iter1_.done(); }
+    void next() {
+        MOZ_ASSERT(!done());
+        if (!iter0_.done()) {
+            iter0_.next();
+        } else {
+            MOZ_ASSERT(!iter1_.done());
+            iter1_.next();
+        }
+    }
+    T get() const {
+        MOZ_ASSERT(!done());
+        if (!iter0_.done())
+            return iter0_.get();
+        MOZ_ASSERT(!iter1_.done());
+        return iter1_.get();
+    }
+
+    operator T() const { return get(); }
+    T operator->() const { return get(); }
+};
+
 class GCRuntime
 {
   public:
@@ -475,13 +508,16 @@ class GCRuntime
     inline void updateOnFreeArenaAlloc(const ChunkInfo &info);
     inline void updateOnArenaFree(const ChunkInfo &info);
 
-    GCChunkSet::Range allChunks() { return chunkSet.all(); }
-    void moveChunkToFreePool(Chunk *chunk, const AutoLockGC &lock);
-    bool hasChunk(Chunk *chunk) { return chunkSet.has(chunk); }
+    ChunkPool &fullChunks(const AutoLockGC &lock) { return fullChunks_; }
     ChunkPool &availableChunks(const AutoLockGC &lock) { return availableChunks_; }
     ChunkPool &emptyChunks(const AutoLockGC &lock) { return emptyChunks_; }
+    const ChunkPool &fullChunks(const AutoLockGC &lock) const { return fullChunks_; }
     const ChunkPool &availableChunks(const AutoLockGC &lock) const { return availableChunks_; }
     const ChunkPool &emptyChunks(const AutoLockGC &lock) const { return emptyChunks_; }
+    typedef ChainedIter<Chunk *, ChunkPool::Iter, ChunkPool::Iter> NonEmptyChunksIter;
+    NonEmptyChunksIter allNonEmptyChunks() {
+        return NonEmptyChunksIter(ChunkPool::Iter(availableChunks_), ChunkPool::Iter(fullChunks_));
+    }
 
 #ifdef JS_GC_ZEAL
     void startVerifyPreBarriers();
@@ -628,22 +664,23 @@ class GCRuntime
     GCSchedulingState schedulingState;
 
   private:
-    /*
-     * Set of all GC chunks with at least one allocated thing. The
-     * conservative GC uses it to quickly check if a possible GC thing points
-     * into an allocated chunk.
-     */
-    js::GCChunkSet chunkSet;
+    // When empty, chunks reside in the emptyChunks pool and are re-used as
+    // needed or eventually expired if not re-used. The emptyChunks pool gets
+    // refilled from the background allocation task heuristically so that empty
+    // chunks should always available for immediate allocation without syscalls.
+    ChunkPool             emptyChunks_;
 
-    /*
-     * Doubly-linked lists of chunks from user and system compartments. The GC
-     * allocates its arenas from the corresponding list and when all arenas
-     * in the list head are taken, then the chunk is removed from the list.
-     * During the GC when all arenas in a chunk become free, that chunk is
-     * removed from the list and scheduled for release.
-     */
-    ChunkPool availableChunks_;
-    ChunkPool emptyChunks_;
+    // Chunks which have had some, but not all, of their arenas allocated live
+    // in the available chunk lists. When all available arenas in a chunk have
+    // been allocated, the chunk is removed from the available list and moved
+    // to the fullChunks pool. During a GC, if all arenas are free, the chunk
+    // is moved back to the emptyChunks pool and scheduled for eventual
+    // release.
+    ChunkPool             availableChunks_;
+
+    // When all arenas in a chunk are used, it is moved to the fullChunks pool
+    // so as to reduce the cost of operations on the available lists.
+    ChunkPool             fullChunks_;
 
     js::RootedValueMap rootsHash;
 
