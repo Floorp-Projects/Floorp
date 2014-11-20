@@ -378,6 +378,11 @@ TraceLogger::createTextId(JSScript *script)
 
     assertNoQuotes(script->filename());
 
+    // Only log scripts when enabled otherwise return the global Scripts textId,
+    // which will get filtered out.
+    if (!traceLoggers.isTextIdEnabled(TraceLogger::Scripts))
+        return TraceLogger::Scripts;
+
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(script);
     if (p)
         return p->value();
@@ -408,6 +413,11 @@ TraceLogger::createTextId(const JS::ReadOnlyCompileOptions &compileOptions)
         return createTextId("");
 
     assertNoQuotes(compileOptions.filename());
+
+    // Only log scripts when enabled. Else return the global Scripts textId,
+    // which will get filtered out.
+    if (!traceLoggers.isTextIdEnabled(TraceLogger::Scripts))
+        return TraceLogger::Scripts;
 
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(&compileOptions);
     if (p)
@@ -671,10 +681,10 @@ void
 TraceLogger::stopEvent(uint32_t id)
 {
 #ifdef DEBUG
-    if (stack.size() > 1) {
+    if (stack.size() > 1 && id != TraceLogger::Scripts && stack.lastEntry().active()) {
         TreeEntry entry;
-        MOZ_ASSERT_IF(stack.lastEntry().active(), getTreeEntry(stack.lastEntry().treeId(), &entry));
-        MOZ_ASSERT_IF(stack.lastEntry().active(), entry.textId() == id);
+        MOZ_ASSERT(getTreeEntry(stack.lastEntry().treeId(), &entry));
+        MOZ_ASSERT(entry.textId() == id);
     }
 #endif
     stopEvent();
@@ -821,6 +831,7 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::ParserCompileScript] = true;
         enabledTextIds[TraceLogger::IrregexpCompile] = true;
         enabledTextIds[TraceLogger::IrregexpExecute] = true;
+        enabledTextIds[TraceLogger::Scripts] = true;
     }
 
     if (ContainsFlag(env, "IonCompiler")) {
@@ -845,6 +856,7 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::GenerateLIR] = true;
         enabledTextIds[TraceLogger::RegisterAllocation] = true;
         enabledTextIds[TraceLogger::GenerateCode] = true;
+        enabledTextIds[TraceLogger::Scripts] = true;
     }
 
     const char *options = getenv("TLOPTIONS");
