@@ -209,22 +209,47 @@ public:
   static mozilla::layout::FrameChildListID GetChildListNameFor(nsIFrame* aChildFrame);
 
   /**
-   * GetBeforeFrame returns the outermost :before frame of the given frame, if
+   * GetBeforeFrameForContent returns the ::before frame for aContent, if
    * one exists.  This is typically O(1).  The frame passed in must be
    * the first-in-flow.
    *
-   * @param aFrame the frame whose :before is wanted
+   * @param aGenConParentFrame an ancestor of the ::before frame
+   * @param aContent the content whose ::before is wanted
+   * @return the ::before frame or nullptr if there isn't one
+   */
+  static nsIFrame* GetBeforeFrameForContent(nsIFrame* aGenConParentFrame,
+                                            nsIContent* aContent);
+
+  /**
+   * GetBeforeFrame returns the outermost ::before frame of the given frame, if
+   * one exists.  This is typically O(1).  The frame passed in must be
+   * the first-in-flow.
+   *
+   * @param aFrame the frame whose ::before is wanted
    * @return the :before frame or nullptr if there isn't one
    */
   static nsIFrame* GetBeforeFrame(nsIFrame* aFrame);
 
   /**
-   * GetAfterFrame returns the outermost :after frame of the given frame, if one
+   * GetAfterFrameForContent returns the ::after frame for aContent, if one
+   * exists.  This will walk the in-flow chain of aGenConParentFrame to the
+   * last-in-flow if needed.  This function is typically O(N) in the number
+   * of child frames, following in-flows, etc.
+   *
+   * @param aGenConParentFrame an ancestor of the ::after frame
+   * @param aContent the content whose ::after is wanted
+   * @return the ::after frame or nullptr if there isn't one
+   */
+  static nsIFrame* GetAfterFrameForContent(nsIFrame* aGenConParentFrame,
+                                           nsIContent* aContent);
+
+  /**
+   * GetAfterFrame returns the outermost ::after frame of the given frame, if one
    * exists.  This will walk the in-flow chain to the last-in-flow if
    * needed.  This function is typically O(N) in the number of child
    * frames, following in-flows, etc.
    *
-   * @param aFrame the frame whose :after is wanted
+   * @param aFrame the frame whose ::after is wanted
    * @return the :after frame or nullptr if there isn't one
    */
   static nsIFrame* GetAfterFrame(nsIFrame* aFrame);
