@@ -746,7 +746,7 @@ static_assert(sizeof(ChunkTrailer) == 2 * sizeof(uintptr_t) + sizeof(uint64_t),
 struct ChunkInfo
 {
     Chunk           *next;
-    Chunk           **prevp;
+    Chunk           *prev;
 
     /* Free arenas are linked together with aheader.next. */
     ArenaHeader     *freeArenasHead;
@@ -945,10 +945,6 @@ struct Chunk
         return info.numArenasFree != 0;
     }
 
-    inline void addToAvailableList(JSRuntime *rt);
-    inline void insertToAvailableList(Chunk **insertPoint);
-    inline void removeFromAvailableList();
-
     ArenaHeader *allocateArena(JSRuntime *rt, JS::Zone *zone, AllocKind kind,
                                const AutoLockGC &lock);
 
@@ -961,22 +957,6 @@ struct Chunk
     static Chunk *allocate(JSRuntime *rt);
 
     void decommitAllArenas(JSRuntime *rt);
-
-    /*
-     * Assuming that the info.prevp points to the next field of the previous
-     * chunk in a doubly-linked list, get that chunk.
-     */
-    Chunk *getPrevious() {
-        MOZ_ASSERT(info.prevp);
-        return fromPointerToNext(info.prevp);
-    }
-
-    /* Get the chunk from a pointer to its info.next field. */
-    static Chunk *fromPointerToNext(Chunk **nextFieldPtr) {
-        uintptr_t addr = reinterpret_cast<uintptr_t>(nextFieldPtr);
-        MOZ_ASSERT((addr & ChunkMask) == offsetof(Chunk, info.next));
-        return reinterpret_cast<Chunk *>(addr - offsetof(Chunk, info.next));
-    }
 
   private:
     inline void init(JSRuntime *rt);

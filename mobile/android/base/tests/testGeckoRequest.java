@@ -96,7 +96,7 @@ public class testGeckoRequest extends UITest {
             }
 
             @Override
-            public void onError() {
+            public void onError(NativeJSObject error) {
                 errorReceived.set(true);
             }
         });
