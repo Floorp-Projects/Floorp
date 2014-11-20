@@ -8,10 +8,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.DSACryptoImplementation;
 import org.mozilla.gecko.browserid.RSACryptoImplementation;
-import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -135,15 +135,15 @@ public class StateFactory {
   }
 
   protected static void logMigration(State from, State to) {
-    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+    if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
       return;
     }
     try {
-      FxAccountConstants.pii(LOG_TAG, "V1 persisted state is: " + from.toJSONObject().toJSONString());
+      FxAccountUtils.pii(LOG_TAG, "V1 persisted state is: " + from.toJSONObject().toJSONString());
     } catch (Exception e) {
       Logger.warn(LOG_TAG, "Error producing JSON representation of V1 state.", e);
     }
-    FxAccountConstants.pii(LOG_TAG, "Generated new V2 state: " + to.toJSONObject().toJSONString());
+    FxAccountUtils.pii(LOG_TAG, "Generated new V2 state: " + to.toJSONObject().toJSONString());
   }
 
   protected static State migrateV1toV2(StateLabel stateLabel, State state) throws NoSuchAlgorithmException {
