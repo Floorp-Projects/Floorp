@@ -1314,6 +1314,19 @@ this.UITour = {
         props.forEach(property => appinfo[property] = Services.appinfo[property]);
         this.sendPageCallback(aContentDocument, aCallbackID, appinfo);
         break;
+      case "selectedSearchEngine":
+        Services.search.init(rv => {
+          let engine;
+          if (Components.isSuccessCode(rv)) {
+            engine = Services.search.defaultEngine;
+          } else {
+            engine = { identifier: "" };
+          }
+          this.sendPageCallback(aContentDocument, aCallbackID, {
+            searchEngineIdentifier: engine.identifier
+          });
+        });
+        break;
       default:
         Cu.reportError("getConfiguration: Unknown configuration requested: " + aConfiguration);
         break;
