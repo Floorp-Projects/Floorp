@@ -31,6 +31,11 @@
 #include <windows.h>
 #endif
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+using namespace mozilla::tasktracer;
+#endif
+
 using namespace mozilla;
 
 NS_IMPL_ADDREF(nsConsoleService)
@@ -244,6 +249,17 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
       aMessage->GetMessageMoz(getter_Copies(msg));
       msg.Append('\n');
       OutputDebugStringW(msg.get());
+    }
+#endif
+#ifdef MOZ_TASK_TRACER
+    {
+      nsCString msg;
+      aMessage->ToString(msg);
+      int prefixPos = msg.Find(GetJSLabelPrefix());
+      if (prefixPos >= 0) {
+        nsDependentCSubstring submsg(msg, prefixPos);
+        AddLabel("%s", submsg.BeginReading());
+      }
     }
 #endif
 

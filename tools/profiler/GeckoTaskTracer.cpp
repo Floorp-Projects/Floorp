@@ -37,6 +37,7 @@ static nsTArray<nsAutoPtr<TraceInfo>>* sTraceInfos = nullptr;
 static bool sIsLoggingStarted = false;
 
 static TimeStamp sStartTime;
+static const char sJSLabelPrefix[] = "#tt#";
 
 namespace {
 
@@ -400,6 +401,12 @@ GetLoggedData(TimeStamp aStartTime)
   }
 
   return result;
+}
+
+const char*
+GetJSLabelPrefix()
+{
+  return sJSLabelPrefix;
 }
 
 } // namespace tasktracer
