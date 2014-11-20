@@ -6,6 +6,10 @@
   -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox");
 }
 
+.searchengine-menuitem > .menu-iconic-left {
+  display: -moz-box
+}
+
 .checkbox-label-box {
   -moz-box-align: center;
 }
