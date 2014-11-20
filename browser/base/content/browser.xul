@@ -240,6 +240,41 @@
            mousethrough="always">
       <box id="UITourHighlight"></box>
     </panel>
+    <!-- Used to highlight the new search experience -->
+    <panel id="SearchHighlight1"
+           class="SearchHighlight"
+           type="arrow"
+           hidden="true"
+           noautofocus="true"
+           noautohide="true"
+           orient="vertical"
+           align="stretch">
+      <label class="SearchHighlightTitle">One-Click Searches</label>
+      <description class="SearchHighlightText" flex="1">Search any of these sites instantly, without changing your default.</description>
+      <hbox class="SearchHighlightFooter" align="center">
+        <spacer class="dot filled"/>
+        <spacer class="dot"/>
+        <spacer flex="1"/>
+        <button label="Next"/>
+      </hbox>
+    </panel>
+    <panel id="SearchHighlight2"
+           class="SearchHighlight"
+           type="arrow"
+           hidden="true"
+           noautofocus="true"
+           noautohide="true"
+           orient="vertical"
+           align="stretch">
+      <label class="SearchHighlightTitle">Smart Suggestions</label>
+      <description class="SearchHighlightText" flex="1">Suggestions from your default search engine appear as you type.</description>
+      <hbox class="SearchHighlightFooter" align="center">
+        <spacer class="dot"/>
+        <spacer class="dot filled"/>
+        <spacer flex="1"/>
+        <button label="Thanks!"/>
+      </hbox>
+    </panel>
 
     <panel id="abouthome-search-panel" orient="vertical" type="arrow" hidden="true">
       <hbox id="abouthome-search-panel-manage" class="abouthome-search-panel-item"
