@@ -5,6 +5,7 @@
 #include "BackgroundChildImpl.h"
 
 #include "FileDescriptorSetChild.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
@@ -78,6 +79,39 @@ BackgroundChildImpl::~BackgroundChildImpl()
 {
   // May happen on any thread!
   MOZ_COUNT_DTOR(mozilla::ipc::BackgroundChildImpl);
+}
+
+void
+BackgroundChildImpl::ProcessingError(Result aWhat)
+{
+  // May happen on any thread!
+
+  nsAutoCString abortMessage;
+
+  switch (aWhat) {
+
+#define HANDLE_CASE(_result)                                                   \
+    case _result:                                                              \
+      abortMessage.AssignLiteral(#_result);                                    \
+      break
+
+    HANDLE_CASE(MsgDropped);
+    HANDLE_CASE(MsgNotKnown);
+    HANDLE_CASE(MsgNotAllowed);
+    HANDLE_CASE(MsgPayloadError);
+    HANDLE_CASE(MsgProcessingError);
+    HANDLE_CASE(MsgRouteError);
+    HANDLE_CASE(MsgValueError);
+
+#undef HANDLE_CASE
+
+    default:
+      MOZ_CRASH("Unknown error code!");
+  }
+
+  // This is just MOZ_CRASH() un-inlined so that we can pass the result code as
+  // a string. MOZ_CRASH() only supports string literals at the moment.
+  MOZ_ReportCrash(abortMessage.get(), __FILE__, __LINE__); MOZ_REALLY_CRASH();
 }
 
 void
