@@ -92,8 +92,10 @@ VIAddVersionKey "ProductVersion"  "${AppVersion}"
 # VIAddVersionKey "Comments"        "Comments"
 
 # It isn't possible to get the size of the installation prior to downloading
-# so the stub installer uses an estimate.
-!define APPROXIMATE_REQUIRED_SPACE_MB "42.2"
+# so the stub installer uses an estimate. The size is derived from the size of
+# the complete installer, the size of the extracted complete installer, and at
+# least 15 MB additional for working room.
+!define APPROXIMATE_REQUIRED_SPACE_MB "145"
 
 # Control positions in Dialog Units so they are placed correctly with
 # non-default DPI settings
