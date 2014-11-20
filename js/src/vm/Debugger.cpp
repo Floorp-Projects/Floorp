@@ -241,6 +241,7 @@ class Debugger::FrameRange
     }
 };
 
+
 /*** Breakpoints *********************************************************************************/
 
 BreakpointSite::BreakpointSite(JSScript *script, jsbytecode *pc)
@@ -343,6 +344,7 @@ Breakpoint::nextInSite()
     return (link == &site->breakpoints) ? nullptr : fromSiteLinks(link);
 }
 
+
 /*** Debugger hook dispatch **********************************************************************/
 
 Debugger::Debugger(JSContext *cx, NativeObject *dbg)
@@ -2968,8 +2970,11 @@ Debugger::addDebuggeeGlobal(JSContext *cx, Handle<GlobalObject*> global)
     }
 
     /*
-     * Each debugger-debuggee relation must be stored in up to three places.
-     * JSCompartment::addDebuggee enables debug mode if needed.
+     * For global to become this js::Debugger's debuggee:
+     * - global must be in this->debuggees,
+     * - this js::Debugger must be in global->getDebuggers(), and
+     * - JSCompartment::isDebuggee()'s bit must be set.
+     * All three indications must be kept consistent.
      */
     AutoCompartment ac(cx, global);
     GlobalObject::DebuggerVector *v = GlobalObject::getOrCreateDebuggers(cx, global);
@@ -5814,6 +5819,7 @@ static const JSFunctionSpec DebuggerFrame_methods[] = {
     JS_FS_END
 };
 
+
 /*** Debugger.Object *****************************************************************************/
 
 static void
