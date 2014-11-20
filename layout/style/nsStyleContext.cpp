@@ -509,8 +509,21 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
   // Any direct children of elements with Ruby display values which are
   // block-level are converted to their inline-level equivalents.
   if (!aSkipParentDisplayBasedStyleFixup && mParent) {
-    const nsStyleDisplay* parentDisp = mParent->StyleDisplay();
-    if (parentDisp->IsFlexOrGridDisplayType() &&
+    // Skip display:contents ancestors to reach the potential container.
+    // (If there are only display:contents ancestors between this node and
+    // a flex/grid container ancestor, then this node is a flex/grid item, since
+    // its parent *in the frame tree* will be the flex/grid container. So we treat
+    // it like a flex/grid item here.)
+    nsStyleContext* containerContext = mParent;
+    const nsStyleDisplay* containerDisp = containerContext->StyleDisplay();
+    while (containerDisp->mDisplay == NS_STYLE_DISPLAY_CONTENTS) {
+      if (!containerContext->GetParent()) {
+        break;
+      }
+      containerContext = containerContext->GetParent();
+      containerDisp = containerContext->StyleDisplay();
+    }
+    if (containerDisp->IsFlexOrGridDisplayType() &&
         GetPseudo() != nsCSSAnonBoxes::mozNonElement) {
       uint8_t displayVal = disp->mDisplay;
       // Skip table parts.
@@ -543,8 +556,8 @@ nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
             static_cast<nsStyleDisplay*>(GetUniqueStyleData(eStyleStruct_Display));
           mutable_display->mDisplay = displayVal;
         }
-      } 
-    } else if (parentDisp->IsRubyDisplayType()) {
+      }
+    } else if (containerDisp->IsRubyDisplayType()) {
       uint8_t displayVal = disp->mDisplay;
       nsRuleNode::EnsureInlineDisplay(displayVal);
       // The display change should only occur for "in-flow" children
