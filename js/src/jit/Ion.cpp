@@ -541,7 +541,7 @@ jit::LazyLinkTopActivation(JSContext *cx)
     if (CodeGenerator *codegen = builder->backgroundCodegen()) {
         js::TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
         AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
-        AutoTraceLog logLink(logger, TraceLogger::IonLinking);
+        AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
         IonContext ictx(cx, &builder->alloc());
 
@@ -1307,7 +1307,7 @@ OptimizeMIR(MIRGenerator *mir)
         return false;
 
     if (!mir->compilingAsmJS()) {
-        AutoTraceLog log(logger, TraceLogger::FoldTests);
+        AutoTraceLog log(logger, TraceLogger_FoldTests);
         FoldTests(graph);
         IonSpewPass("Fold Tests");
         AssertBasicGraphCoherency(graph);
@@ -1317,7 +1317,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     {
-        AutoTraceLog log(logger, TraceLogger::SplitCriticalEdges);
+        AutoTraceLog log(logger, TraceLogger_SplitCriticalEdges);
         if (!SplitCriticalEdges(graph))
             return false;
         IonSpewPass("Split Critical Edges");
@@ -1328,7 +1328,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     {
-        AutoTraceLog log(logger, TraceLogger::RenumberBlocks);
+        AutoTraceLog log(logger, TraceLogger_RenumberBlocks);
         if (!RenumberBlocks(graph))
             return false;
         IonSpewPass("Renumber Blocks");
@@ -1339,7 +1339,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     {
-        AutoTraceLog log(logger, TraceLogger::DominatorTree);
+        AutoTraceLog log(logger, TraceLogger_DominatorTree);
         if (!BuildDominatorTree(graph))
             return false;
         // No spew: graph not changed.
@@ -1349,7 +1349,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     {
-        AutoTraceLog log(logger, TraceLogger::PhiAnalysis);
+        AutoTraceLog log(logger, TraceLogger_PhiAnalysis);
         // Aggressive phi elimination must occur before any code elimination. If the
         // script contains a try-statement, we only compiled the try block and not
         // the catch or finally blocks, so in this case it's also invalid to use
@@ -1375,7 +1375,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (mir->optimizationInfo().scalarReplacementEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::ScalarReplacement);
+        AutoTraceLog log(logger, TraceLogger_ScalarReplacement);
         if (!ScalarReplacement(mir, graph))
             return false;
         IonSpewPass("Scalar Replacement");
@@ -1386,7 +1386,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (!mir->compilingAsmJS()) {
-        AutoTraceLog log(logger, TraceLogger::ApplyTypes);
+        AutoTraceLog log(logger, TraceLogger_ApplyTypes);
         if (!ApplyTypeInformation(mir, graph))
             return false;
         IonSpewPass("Apply types");
@@ -1401,7 +1401,7 @@ OptimizeMIR(MIRGenerator *mir)
     // are not deleted, leaving them dangling. This is ok, since we'll rerun
     // AliasAnalysis, which recomputes them, before they're needed.
     if (graph.entryBlock()->info().executionMode() == ParallelExecution) {
-        AutoTraceLog log(logger, TraceLogger::ParallelSafetyAnalysis);
+        AutoTraceLog log(logger, TraceLogger_ParallelSafetyAnalysis);
         ParallelSafetyAnalysis analysis(mir, graph);
         if (!analysis.analyze())
             return false;
@@ -1420,7 +1420,7 @@ OptimizeMIR(MIRGenerator *mir)
     if (mir->optimizationInfo().licmEnabled() ||
         mir->optimizationInfo().gvnEnabled())
     {
-        AutoTraceLog log(logger, TraceLogger::AliasAnalysis);
+        AutoTraceLog log(logger, TraceLogger_AliasAnalysis);
         AliasAnalysis analysis(mir, graph);
         if (!analysis.analyze())
             return false;
@@ -1443,7 +1443,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (mir->optimizationInfo().gvnEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::GVN);
+        AutoTraceLog log(logger, TraceLogger_GVN);
         if (!gvn.run(ValueNumberer::UpdateAliasAnalysis))
             return false;
         IonSpewPass("GVN");
@@ -1454,7 +1454,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (mir->optimizationInfo().licmEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::LICM);
+        AutoTraceLog log(logger, TraceLogger_LICM);
         // LICM can hoist instructions from conditional branches and trigger
         // repeated bailouts. Disable it if this script is known to bailout
         // frequently.
@@ -1471,7 +1471,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (mir->optimizationInfo().rangeAnalysisEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::RangeAnalysis);
+        AutoTraceLog log(logger, TraceLogger_RangeAnalysis);
         RangeAnalysis r(mir, graph);
         if (!r.addBetaNodes())
             return false;
@@ -1529,7 +1529,7 @@ OptimizeMIR(MIRGenerator *mir)
         }
 
         if (mir->optimizationInfo().loopUnrollingEnabled()) {
-            AutoTraceLog log(logger, TraceLogger::LoopUnrolling);
+            AutoTraceLog log(logger, TraceLogger_LoopUnrolling);
 
             if (!UnrollLoops(graph, r.loopIterationBounds))
                 return false;
@@ -1540,7 +1540,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (mir->optimizationInfo().eaaEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::EffectiveAddressAnalysis);
+        AutoTraceLog log(logger, TraceLogger_EffectiveAddressAnalysis);
         EffectiveAddressAnalysis eaa(graph);
         if (!eaa.analyze())
             return false;
@@ -1552,7 +1552,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     {
-        AutoTraceLog log(logger, TraceLogger::EliminateDeadCode);
+        AutoTraceLog log(logger, TraceLogger_EliminateDeadCode);
         if (!EliminateDeadCode(mir, graph))
             return false;
         IonSpewPass("DCE");
@@ -1565,7 +1565,7 @@ OptimizeMIR(MIRGenerator *mir)
     // Make loops contiguous. We do this after GVN/UCE and range analysis,
     // which can remove CFG edges, exposing more blocks that can be moved.
     {
-        AutoTraceLog log(logger, TraceLogger::MakeLoopsContiguous);
+        AutoTraceLog log(logger, TraceLogger_MakeLoopsContiguous);
         if (!MakeLoopsContiguous(graph))
             return false;
         IonSpewPass("Make loops contiguous");
@@ -1579,7 +1579,7 @@ OptimizeMIR(MIRGenerator *mir)
     // depend on knowing the final order in which instructions will execute.
 
     if (mir->optimizationInfo().edgeCaseAnalysisEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::EdgeCaseAnalysis);
+        AutoTraceLog log(logger, TraceLogger_EdgeCaseAnalysis);
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
             return false;
@@ -1591,7 +1591,7 @@ OptimizeMIR(MIRGenerator *mir)
     }
 
     if (mir->optimizationInfo().eliminateRedundantChecksEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::EliminateRedundantChecks);
+        AutoTraceLog log(logger, TraceLogger_EliminateRedundantChecks);
         // Note: check elimination has to run after all other passes that move
         // instructions. Since check uses are replaced with the actual index,
         // code motion after this pass could incorrectly move a load or store
@@ -1622,7 +1622,7 @@ GenerateLIR(MIRGenerator *mir)
 
     LIRGenerator lirgen(mir, graph, *lir);
     {
-        AutoTraceLog log(logger, TraceLogger::GenerateLIR);
+        AutoTraceLog log(logger, TraceLogger_GenerateLIR);
         if (!lirgen.generate())
             return nullptr;
         IonSpewPass("Generate LIR");
@@ -1634,7 +1634,7 @@ GenerateLIR(MIRGenerator *mir)
     AllocationIntegrityState integrity(*lir);
 
     {
-        AutoTraceLog log(logger, TraceLogger::RegisterAllocation);
+        AutoTraceLog log(logger, TraceLogger_RegisterAllocation);
 
         switch (mir->optimizationInfo().registerAllocator()) {
           case RegisterAllocator_LSRA: {
@@ -1709,7 +1709,7 @@ GenerateCode(MIRGenerator *mir, LIRGraph *lir)
         logger = TraceLoggerForMainThread(GetIonContext()->runtime);
     else
         logger = TraceLoggerForCurrentThread();
-    AutoTraceLog log(logger, TraceLogger::GenerateCode);
+    AutoTraceLog log(logger, TraceLogger_GenerateCode);
 
     CodeGenerator *codegen = js_new<CodeGenerator>(mir, lir);
     if (!codegen)
@@ -1804,7 +1804,7 @@ AttachFinishedCompilations(JSContext *cx)
             RootedScript script(cx, builder->script());
             IonContext ictx(cx, &builder->alloc());
             AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
-            AutoTraceLog logLink(logger, TraceLogger::IonLinking);
+            AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
             // Root the assembler until the builder is finished below. As it
             // was constructed off thread, the assembler has not been rooted
@@ -1884,7 +1884,7 @@ IonCompile(JSContext *cx, JSScript *script,
 {
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
-    AutoTraceLog logCompile(logger, TraceLogger::IonCompilation);
+    AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
     MOZ_ASSERT(optimizationLevel > Optimization_DontCompile);
 
