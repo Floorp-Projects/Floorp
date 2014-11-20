@@ -1018,15 +1018,15 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
         picture.height = (img->d_h * mPicture.height) / mInitialFrame.height;
       }
 
-      VideoData *v = VideoData::Create(mInfo.mVideo,
-                                       mDecoder->GetImageContainer(),
-                                       holder->mOffset,
-                                       tstamp_usecs,
-                                       (next_tstamp / NS_PER_USEC)-tstamp_usecs,
-                                       b,
-                                       si.is_kf,
-                                       -1,
-                                       picture);
+      nsRefPtr<VideoData> v = VideoData::Create(mInfo.mVideo,
+                                                mDecoder->GetImageContainer(),
+                                                holder->mOffset,
+                                                tstamp_usecs,
+                                                (next_tstamp / NS_PER_USEC)-tstamp_usecs,
+                                                b,
+                                                si.is_kf,
+                                                -1,
+                                                picture);
       if (!v) {
         return false;
       }

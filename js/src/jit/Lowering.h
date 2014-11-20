@@ -72,6 +72,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTableSwitch(MTableSwitch *tableswitch);
     bool visitNewArray(MNewArray *ins);
     bool visitNewArrayCopyOnWrite(MNewArrayCopyOnWrite *ins);
+    bool visitNewArrayDynamicLength(MNewArrayDynamicLength *ins);
     bool visitNewObject(MNewObject *ins);
     bool visitNewTypedObject(MNewTypedObject *ins);
     bool visitNewDeclEnvObject(MNewDeclEnvObject *ins);

@@ -775,11 +775,11 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   }
 
   int64_t offset = mDecoder->GetResource()->Tell(); // Estimate location in media.
-  VideoData* video = VideoData::CreateFromImage(mInfo.mVideo,
-                                                mDecoder->GetImageContainer(),
-                                                offset, timestamp, duration,
-                                                static_cast<Image*>(image.get()),
-                                                isKeyframe, -1, mPicture);
+  nsRefPtr<VideoData> video = VideoData::CreateFromImage(mInfo.mVideo,
+                                                         mDecoder->GetImageContainer(),
+                                                         offset, timestamp, duration,
+                                                         static_cast<Image*>(image.get()),
+                                                         isKeyframe, -1, mPicture);
   mVideoQueue.Push(video);
 
   gst_buffer_unref(buffer);

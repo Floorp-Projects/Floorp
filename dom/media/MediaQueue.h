@@ -18,7 +18,7 @@ namespace mozilla {
 template <class T>
 class MediaQueueDeallocator : public nsDequeFunctor {
   virtual void* operator() (void* aObject) {
-    delete static_cast<T*>(aObject);
+    nsRefPtr<T> releaseMe = dont_AddRef(static_cast<T*>(aObject));
     return nullptr;
   }
 };
@@ -44,22 +44,24 @@ template <class T> class MediaQueue : private nsDeque {
   inline void Push(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     MOZ_ASSERT(aItem);
+    NS_ADDREF(aItem);
     nsDeque::Push(aItem);
   }
 
   inline void PushFront(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     MOZ_ASSERT(aItem);
+    NS_ADDREF(aItem);
     nsDeque::PushFront(aItem);
   }
 
-  inline T* PopFront() {
+  inline already_AddRefed<T> PopFront() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    T* rv = static_cast<T*>(nsDeque::PopFront());
+    nsRefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
     if (rv) {
       NotifyPopListeners();
     }
-    return rv;
+    return rv.forget();
   }
 
   inline T* Peek() {
@@ -80,8 +82,7 @@ template <class T> class MediaQueue : private nsDeque {
   void Reset() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     while (GetSize() > 0) {
-      T* x = PopFront();
-      delete x;
+      nsRefPtr<T> x = PopFront();
     }
     mEndOfStream = false;
   }
@@ -123,7 +124,7 @@ template <class T> class MediaQueue : private nsDeque {
 
   // Extracts elements from the queue into aResult, in order.
   // Elements whose start time is before aTime are ignored.
-  void GetElementsAfter(int64_t aTime, nsTArray<T*>* aResult) {
+  void GetElementsAfter(int64_t aTime, nsTArray<nsRefPtr<T>>* aResult) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     if (!GetSize())
       return;
@@ -136,7 +137,8 @@ template <class T> class MediaQueue : private nsDeque {
     // Elements less than i have a end time before aTime. It's also possible
     // that the element at i has a end time before aTime, but that's OK.
     for (; i < GetSize(); ++i) {
-      aResult->AppendElement(static_cast<T*>(ObjectAt(i)));
+      nsRefPtr<T> elem = static_cast<T*>(ObjectAt(i));
+      aResult->AppendElement(elem);
     }
   }
 

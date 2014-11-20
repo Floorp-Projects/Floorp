@@ -90,7 +90,7 @@ nsEventQueue::PutEvent(nsIRunnable* aRunnable)
   // Avoid calling AddRef+Release while holding our monitor.
   nsRefPtr<nsIRunnable> event(aRunnable);
 
-  if (ChaosMode::isActive()) {
+  if (ChaosMode::isActive(ChaosMode::ThreadScheduling)) {
     // With probability 0.5, yield so other threads have a chance to
     // dispatch events to this queue first.
     if (ChaosMode::randomUint32LessThan(2)) {
