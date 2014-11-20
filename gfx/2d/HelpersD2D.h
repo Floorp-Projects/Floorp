@@ -562,10 +562,6 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
 
     scaler.ScaleForSize(scaleSize);
 
-    if (newSize.IsEmpty()) {
-      return nullptr;
-    }
-
     IntSize newSize = scaler.GetSize();
     
     aRT->CreateBitmap(D2D1::SizeU(newSize.width, newSize.height),
@@ -573,8 +569,8 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
                       D2D1::BitmapProperties(D2DPixelFormat(aSurface->GetFormat())),
                       byRef(bitmap));
 
-    aSourceTransform.PreScale(Float(size.width) / newSize.width,
-                              Float(size.height) / newSize.height);
+    aSourceTransform.Scale(Float(size.width / newSize.width),
+                           Float(size.height / newSize.height));
     return bitmap.forget();
   }
 }
