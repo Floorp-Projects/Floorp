@@ -11930,22 +11930,22 @@ class MMemoryBarrier
   : public MNullaryInstruction
 {
     // The type is a combination of the memory barrier types in AtomicOp.h.
-    const int type_;
+    const MemoryBarrierBits type_;
 
-    explicit MMemoryBarrier(int type)
+    explicit MMemoryBarrier(MemoryBarrierBits type)
       : type_(type)
     {
-        MOZ_ASSERT((type_ & ~MembarAllbits) == 0);
+        MOZ_ASSERT((type_ & ~MembarAllbits) == MembarNobits);
         setGuard();             // Not removable
     }
 
   public:
     INSTRUCTION_HEADER(MemoryBarrier);
 
-    static MMemoryBarrier *New(TempAllocator &alloc, int type=MembarFull) {
+    static MMemoryBarrier *New(TempAllocator &alloc, MemoryBarrierBits type = MembarFull) {
         return new(alloc) MMemoryBarrier(type);
     }
-    int type() const {
+    MemoryBarrierBits type() const {
         return type_;
     }
 
