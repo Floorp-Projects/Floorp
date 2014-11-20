@@ -1296,6 +1296,19 @@ this.UITour = {
         props.forEach(property => appinfo[property] = Services.appinfo[property]);
         this.sendPageCallback(aMessageManager, aCallbackID, appinfo);
         break;
+      case "selectedSearchEngine":
+        Services.search.init(rv => {
+          let engine;
+          if (Components.isSuccessCode(rv)) {
+            engine = Services.search.defaultEngine;
+          } else {
+            engine = { identifier: "" };
+          }
+          this.sendPageCallback(aMessageManager, aCallbackID, {
+            searchEngineIdentifier: engine.identifier
+          });
+        });
+        break;
       default:
         log.error("getConfiguration: Unknown configuration requested: " + aConfiguration);
         break;

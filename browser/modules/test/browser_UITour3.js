@@ -8,6 +8,7 @@ let gContentAPI;
 let gContentWindow;
 
 Components.utils.import("resource:///modules/UITour.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 requestLongerTimeout(2);
 
@@ -145,4 +146,15 @@ let tests = [
 
     popup.removeAttribute("animate");
   }),
+
+  function test_getConfiguration_selectedSearchEngine(done) {
+    Services.search.init(rv => {
+      ok(Components.isSuccessCode(rv), "Search service initialized");
+      let engine = Services.search.defaultEngine;
+      gContentAPI.getConfiguration("selectedSearchEngine", (data) => {
+        is(data.searchEngineIdentifier, engine.identifier, "Correct engine identifier");
+        done();
+      });
+    });
+  },
 ];
