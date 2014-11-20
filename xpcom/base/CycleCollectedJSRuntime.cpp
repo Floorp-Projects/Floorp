@@ -1299,4 +1299,3 @@ CycleCollectedJSRuntime::OnLargeAllocationFailure()
   CustomLargeAllocationFailureCallback();
   AnnotateAndSetOutOfMemory(&mLargeAllocationFailureState, OOMState::Reported);
 }
-
