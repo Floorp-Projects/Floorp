@@ -7,7 +7,7 @@ def main(request, response):
     response.headers.set("Transfer-Encoding", "chunked");
     response.headers.set("Trailer", "X-Test-Me");
     response.headers.set("Content-Type", "text/plain");
-    response.writer.flush()
+    response.write_status_headers()
 
     for value in chunks:
         response.writer.write("%d\r\n" % len(value))

@@ -15,7 +15,7 @@
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerEnter event does not bubble"); // set up test harness
             // showPointerTypes is defined in pointerevent_support.js
-            // Requirements: the callbakc function will reference the test_pointerEvent object and
+            // Requirements: the callback function will reference the test_pointerEvent object and
             // will fail unless the async_test is created with the var name "test_pointerEvent".
             add_completion_callback(showPointerTypes);
 
@@ -30,11 +30,9 @@
 
                     check_PointerEvent(event);
                     test_pointerEvent.step(function () {
-                        assert_equals(event.type, "pointerenter", "pointer event received" + event.type);
+                        assert_equals(event.type, "pointerenter", "pointer event received: " + event.type);
                         assert_false(event.bubbles, "pointerenter event.bubbles should be false: " + event.bubbles);
                     });
-
-                    detected_pointertypes[event.pointerType] = true;
                 });
                 on_event(target0, "pointerout", function (event) {
                     test_pointerEvent.step(function () {
@@ -45,6 +43,7 @@
 
                 // parent
                 on_event(parent0, "pointerenter", function (event) {
+                    detected_pointertypes[event.pointerType] = true;
                     test_pointerEvent.step(function () {
                         assert_equals(event.target.id, "parent0", "Recieved " + event.type + " in parent for " + event.target.id);
                     });

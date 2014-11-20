@@ -2,6 +2,7 @@
 <html>
     <head>
         <title>touch-action: parent > child: pan-x pan-y > child: pan-y</title>
+        <meta name="assert" content="TA15.17 - Touch action 'pan-x pan-y' 'pan-y' test">
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
@@ -18,7 +19,7 @@
     </head>
     <body onload="run()">
         <h1>Pointer Events touch-action attribute support</h1>
-        <h4 id="desc">Test Description: Try to scroll text DOWN. Wait for description update. Expected: no panning/zooming/etc.</h4>
+        <h4 id="desc">Test Description: Try to scroll element DOWN then RIGHT. Tap Complete button under the rectangle when done. Expected: only pans in y direction.</h4>
         <p>Note: this test is for touch-devices only</p>
         <div class="scroller" id="target0">
             <div>
@@ -76,59 +77,34 @@
                 </div>
             </div>
         </div>
+        <input type="button" id="btnComplete" value="Complete test">
         <script type='text/javascript'>
-            var yCount = 0;
-            var moveCount = 0;
-            var countToPass = 50;
-            var xScr0, yScr0, xScr1, yScr1;
-
             var detected_pointertypes = {};
-
             add_completion_callback(showPointerTypes);
 
             var test_touchaction = async_test("touch-action attribute test");
 
             function run() {
                 var target0 = document.getElementById("target0");
+                var btnComplete = document.getElementById("btnComplete");
 
-                xScr0 = target0.scrollLeft;
-                yScr0 = target0.scrollTop;
-
-                on_event(target0, 'pointerdown', function(event) {
+                // Check if touch-action attribute works properly for embedded divs
+                //
+                // TA: 15.17
+                on_event(btnComplete, 'click', function(event) {
                     detected_pointertypes[event.pointerType] = true;
-                });
-
-                on_event(target0, 'pointermove', function(event) {
-                    moveCount++;
-                    if(moveCount >= countToPass) {
-                        test_touchaction.done();
-                        updateDescriptionComplete();
-                    }
-                });
-
-                on_event(target0, 'scroll', function(event) {
-                    xScr1 = target0.scrollLeft;
-                    yScr1 = target0.scrollTop;
-
-                    if(yScr1 != yScr0) {
-                        yCount++;
-                        yScr0 = yScr1;
-                    }
-
-                    if(xScr1 != xScr0) {
-                        test_touchaction.step(failOnScroll, "x-scroll received while pan-y is set");
-                    }
-
-                    if(yCount >= countToPass) {
-                        updateDescriptionNextStep();
-                    }
+                    test_touchaction.step(function() {
+                        assert_equals(target0.scrollLeft, 0, "scroll x offset should be 0 in the end of the test");
+                        assert_not_equals(target0.scrollTop, 0, "scroll y offset should not be 0 in the end of the test");
+                    });
+                    test_touchaction.done();
+                    updateDescriptionComplete();
                 });
             }
         </script>
         <h1>behaviour: pan-y</h1>
         <div id="complete-notice">
             <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
-            <p>Would you like to <a href="#">run the tests again</a> with a different pointer type?</p>
         </div>
         <div id="log"></div>
     </body>
