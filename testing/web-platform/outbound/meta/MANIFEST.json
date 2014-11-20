@@ -1,0 +1,16 @@
+{
+  "items": {
+    "helper": [],
+    "manual": [],
+    "reftest": [],
+    "stub": [],
+    "testharness": [],
+    "wdspec": []
+  },
+  "local_changes": {
+    "deleted": [],
+    "items": {}
+  },
+  "rev": null,
+  "url_base": "/_outbound/"
+}
