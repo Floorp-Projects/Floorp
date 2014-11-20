@@ -678,8 +678,10 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
           aBidiLevel = std::max(aBidiLevel, std::min(levelBefore, levelAfter));                                  // rule c3
           aBidiLevel = std::min(aBidiLevel, std::max(levelBefore, levelAfter));                                  // rule c4
           if (aBidiLevel == levelBefore                                                                      // rule c1
-              || (aBidiLevel > levelBefore && aBidiLevel < levelAfter && !((aBidiLevel ^ levelBefore) & 1))    // rule c5
-              || (aBidiLevel < levelBefore && aBidiLevel > levelAfter && !((aBidiLevel ^ levelBefore) & 1)))  // rule c9
+              || (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
+                  IS_SAME_DIRECTION(aBidiLevel, levelBefore))   // rule c5
+              || (aBidiLevel < levelBefore && aBidiLevel > levelAfter &&
+                  IS_SAME_DIRECTION(aBidiLevel, levelBefore)))  // rule c9
           {
             if (theFrame != frameBefore)
             {
@@ -708,8 +710,10 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
             }
           }
           else if (aBidiLevel == levelAfter                                                                     // rule c2
-                   || (aBidiLevel > levelBefore && aBidiLevel < levelAfter && !((aBidiLevel ^ levelAfter) & 1))   // rule c6
-                   || (aBidiLevel < levelBefore && aBidiLevel > levelAfter && !((aBidiLevel ^ levelAfter) & 1)))  // rule c10
+                   || (aBidiLevel > levelBefore && aBidiLevel < levelAfter &&
+                       IS_SAME_DIRECTION(aBidiLevel, levelAfter))   // rule c6
+                   || (aBidiLevel < levelBefore && aBidiLevel > levelAfter &&
+                       IS_SAME_DIRECTION(aBidiLevel, levelAfter)))  // rule c10
           {
             if (theFrame != frameAfter)
             {
@@ -739,33 +743,33 @@ nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection*    aFrameSelection,
             }
           }
           else if (aBidiLevel > levelBefore && aBidiLevel < levelAfter  // rule c7/8
-                   && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
-                   && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
+                   && IS_SAME_DIRECTION(levelBefore, levelAfter)        // before and after have the same parity
+                   && !IS_SAME_DIRECTION(aBidiLevel, levelAfter))       // caret has different parity
           {
             if (NS_SUCCEEDED(aFrameSelection->GetFrameFromLevel(frameAfter, eDirNext, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
-              if (aBidiLevel & 1) // c8: caret to the right of the rightmost character
-                theFrameOffset = (levelAfter & 1) ? start : end;
+              if (IS_LEVEL_RTL(aBidiLevel)) // c8: caret to the right of the rightmost character
+                theFrameOffset = IS_LEVEL_RTL(levelAfter) ? start : end;
               else               // c7: caret to the left of the leftmost character
-                theFrameOffset = (levelAfter & 1) ? end : start;
+                theFrameOffset = IS_LEVEL_RTL(levelAfter) ? end : start;
             }
           }
           else if (aBidiLevel < levelBefore && aBidiLevel > levelAfter  // rule c11/12
-                   && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
-                   && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
+                   && IS_SAME_DIRECTION(levelBefore, levelAfter)        // before and after have the same parity
+                   && !IS_SAME_DIRECTION(aBidiLevel, levelAfter))       // caret has different parity
           {
             if (NS_SUCCEEDED(aFrameSelection->GetFrameFromLevel(frameBefore, eDirPrevious, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
-              if (aBidiLevel & 1) // c12: caret to the left of the leftmost character
-                theFrameOffset = (levelBefore & 1) ? end : start;
+              if (IS_LEVEL_RTL(aBidiLevel)) // c12: caret to the left of the leftmost character
+                theFrameOffset = IS_LEVEL_RTL(levelBefore) ? end : start;
               else               // c11: caret to the right of the rightmost character
-                theFrameOffset = (levelBefore & 1) ? start : end;
+                theFrameOffset = IS_LEVEL_RTL(levelBefore) ? start : end;
             }
-          }   
+          }
         }
       }
     }

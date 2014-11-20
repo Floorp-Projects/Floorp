@@ -107,15 +107,15 @@ public:
      * @remark The reason that the function gives a string instead of an index
      *  is that ProcessText copies and modifies the string passed to it, so
      *  passing an index would be impossible.
-     * 
+     *
      * @param aText The string of text.
      * @param aLength The length of the string of text.
      * @param aDirection The direction of the text. The string will never have
      *  mixed direction.
      */
     virtual void SetText(const char16_t*   aText,
-                         int32_t            aLength,
-                         nsBidiDirection    aDirection) = 0;
+                         int32_t           aLength,
+                         nsBidiDirection   aDirection) = 0;
 
     /**
      * Returns the measured width of the text given in SetText. If SetText was
@@ -171,11 +171,11 @@ public:
    *
    * @lina 06/18/2000 
    */
-  static nsresult FormatUnicodeText(nsPresContext* aPresContext,
-                                    char16_t*      aText,
+  static nsresult FormatUnicodeText(nsPresContext*  aPresContext,
+                                    char16_t*       aText,
                                     int32_t&        aTextLength,
                                     nsCharType      aCharType,
-                                    bool            aIsOddLevel);
+                                    nsBidiDirection aDir);
 
   /**
    * Reorder plain text using the Unicode Bidi algorithm and send it to
