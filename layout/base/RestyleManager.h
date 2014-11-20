@@ -26,6 +26,7 @@ struct TreeMatchContext;
 
 namespace mozilla {
   class EventStates;
+  struct UndisplayedNode;
 
 namespace dom {
   class Element;
@@ -627,7 +628,13 @@ private:
   /**
    * Helpers for RestyleChildren().
    */
-  void RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint);
+  void RestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint);
+  void DoRestyleUndisplayedDescendants(nsRestyleHint aChildRestyleHint,
+                                       nsIContent* aParent);
+  void RestyleUndisplayedNodes(nsRestyleHint    aChildRestyleHint,
+                               UndisplayedNode* aUndisplayed,
+                               nsIContent*      aUndisplayedParent,
+                               const uint8_t    aDisplay);
   void MaybeReframeForBeforePseudo();
   void MaybeReframeForAfterPseudo(nsIFrame* aFrame);
   void RestyleContentChildren(nsIFrame* aParent,
