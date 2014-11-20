@@ -357,13 +357,30 @@ IonBuilder::inlineArray(CallInfo &callInfo)
         }
     }
 
+    types::TemporaryTypeSet::DoubleConversion conversion =
+        getInlineReturnTypeSet()->convertDoubleElements(constraints());
+    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+        templateObject->setShouldConvertDoubleElements();
+    else
+        templateObject->clearShouldConvertDoubleElements();
+
     // A single integer argument denotes initial length.
     if (callInfo.argc() == 1) {
         if (callInfo.getArg(0)->type() != MIRType_Int32)
             return InliningStatus_NotInlined;
+
         MDefinition *arg = callInfo.getArg(0);
-        if (!arg->isConstant())
-            return InliningStatus_NotInlined;
+        if (!arg->isConstant()) {
+            callInfo.setImplicitlyUsedUnchecked();
+            ArrayObject *templateArray = &templateObject->as<ArrayObject>();
+            MNewArrayDynamicLength *ins =
+                MNewArrayDynamicLength::New(alloc(), constraints(), templateArray,
+                                            templateArray->type()->initialHeap(constraints()),
+                                            arg);
+            current->add(ins);
+            current->push(ins);
+            return InliningStatus_Inlined;
+        }
 
         // Negative lengths generate a RangeError, unhandled by the inline path.
         initLength = arg->toConstant()->value().toInt32();
@@ -384,13 +401,6 @@ IonBuilder::inlineArray(CallInfo &callInfo)
     }
 
     callInfo.setImplicitlyUsedUnchecked();
-
-    types::TemporaryTypeSet::DoubleConversion conversion =
-        getInlineReturnTypeSet()->convertDoubleElements(constraints());
-    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
-        templateObject->setShouldConvertDoubleElements();
-    else
-        templateObject->clearShouldConvertDoubleElements();
 
     MConstant *templateConst = MConstant::NewConstraintlessObject(alloc(), templateObject);
     current->add(templateConst);
