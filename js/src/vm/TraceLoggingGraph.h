@@ -9,6 +9,8 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jslock.h"
+
 #include "js/TypeDecls.h"
 #include "vm/TraceLoggingTypes.h"
 
@@ -68,10 +70,10 @@ class TraceLoggerGraphState
     FILE *out;
 
   public:
-    TraceLoggerGraphState()
-      : numLoggers(0),
-        out(nullptr)
-    { }
+    PRLock *lock;
+
+  public:
+    TraceLoggerGraphState();
     ~TraceLoggerGraphState();
 
     uint32_t nextLoggerId();
