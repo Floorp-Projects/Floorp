@@ -21,6 +21,7 @@
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsTArray.h"
+#include "nsQueryObject.h"
 
 #include "RuntimeService.h"
 #include "ServiceWorker.h"

@@ -17,6 +17,7 @@
 #include "Role.h"
 #include "States.h"
 #include "XULTreeGridAccessible.h"
+#include "nsQueryObject.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsIAccessibleRelation.h"
