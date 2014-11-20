@@ -88,8 +88,17 @@
 }
 
 .searchbar-search-button {
-  list-style-image: url("chrome://global/skin/icons/Search-glass.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
+  list-style-image: url("chrome://browser/skin/search-indicator.png");
+  -moz-image-region: rect(0, 20px, 20px, 0);
+  margin: -2px -2px;
+}
+
+.searchbar-search-button:hover {
+  -moz-image-region: rect(0, 40px, 20px, 20px);
+}
+
+.searchbar-search-button:hover:active {
+  -moz-image-region: rect(0, 60px, 20px, 40px);
 }
 
 searchbar[oneoffui] .search-go-button {
@@ -181,6 +190,40 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
   height: 16px;
 }
 
+.addengine-item {
+  -moz-appearance: none;
+  font-size: 10px;
+  height: 32px;
+  margin: 0 0;
+  padding: 0 10px;
+}
+
+.addengine-item > .button-box {
+  -moz-box-pack: start;
+}
+
+.addengine-item:first-of-type {
+  border-top: 1px solid #ccc;
+}
+
+.addengine-item:hover {
+  background-color: Highlight;
+}
+
+.addengine-item > .button-box > .button-icon {
+  width: 16px;
+}
+
+.addengine-item > .button-box > .button-text {
+  -moz-box-flex: 1;
+  text-align: start;
+  -moz-padding-start: 10px;
+}
+
+.addengine-item:not([image]) {
+  list-style-image: url("chrome://browser/skin/search-engine-placeholder.png");
+}
+
 searchbar[oneoffui] .searchbar-engine-button {
   display: none;
 }
@@ -204,11 +247,6 @@ searchbar[oneoffui] .searchbar-engine-button {
 }
 
 .search-setting-button:hover {
-  background-color: hsla(210,4%,10%,.07);
-}
-
-.search-setting-button:hover:active {
-  outline: 1px solid hsla(210,4%,10%,.12);
-  background-color: hsla(210,4%,10%,.12);
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
+  background-color: #d3d3d3;
+  border-top-color: #bdbebe;
 }
