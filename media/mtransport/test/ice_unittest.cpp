@@ -545,7 +545,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   void DumpAndCheckActiveCandidates_s() {
     std::cerr << "Active candidates:" << std::endl;
     for (size_t i=0; i < streams_.size(); ++i) {
-      for (int j=0; j < streams_[i]->components(); ++j) {
+      for (size_t j=0; j < streams_[i]->components(); ++j) {
         std::cerr << "Stream " << i << " component " << j+1 << std::endl;
 
         NrIceCandidate *local;
