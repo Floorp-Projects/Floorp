@@ -957,30 +957,58 @@
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
     <content ignorekeys="true" level="top" consumeoutsideclicks="false">
-      <xul:hbox class="search-panel-header search-panel-current-engine">
+      <xul:hbox xbl:inherits="collapsed=showonlysettings"
+                class="search-panel-header search-panel-current-engine">
         <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
         <xul:label anonid="searchbar-engine-name"/>
       </xul:hbox>
-      <xul:tree anonid="tree" class="autocomplete-tree plain search-panel-tree" hidecolumnpicker="true" flex="1" seltype="single">
+      <xul:tree anonid="tree" flex="1"
+                class="autocomplete-tree plain search-panel-tree"
+                hidecolumnpicker="true" seltype="single">
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
         </xul:treecols>
         <xul:treechildren class="autocomplete-treebody"/>
       </xul:tree>
       <xul:hbox anonid="search-panel-one-offs-header"
-                class="search-panel-header search-panel-current-input">
+                class="search-panel-header search-panel-current-input"
+                xbl:inherits="hidden=showonlysettings">
         <xul:label anonid="searchbar-oneoffheader-before" value="Search for "/>
         <xul:label anonid="searchbar-oneoffheader-searchtext" flex="1" crop="end" class="search-panel-input-value"/>
-        <xul:label anonid="searchbar-oneoffheader-after" flex="10000" value=" on:"/>
+        <xul:label anonid="searchbar-oneoffheader-after" flex="10000" value=" with:"/>
       </xul:hbox>
-      <xul:description anonid="search-panel-one-offs" class="search-panel-one-offs"/>
+      <xul:description anonid="search-panel-one-offs"
+                       class="search-panel-one-offs"
+                       xbl:inherits="hidden=showonlysettings"/>
+      <xul:vbox anonid="add-engines"/>
       <xul:button anonid="search-settings"
+                  xbl:inherits="showonlysettings"
                   oncommand="openPreferences('paneSearch')"
                   class="search-setting-button search-panel-header"
                   label="Change Search Settings"/>
     </content>
     <handlers>
       <handler event="popupshowing"><![CDATA[
+        // First handle deciding if we are showing the reduced version of the
+        // popup containing only the preferences button. We do this if the
+        // glass icon has been clicked if the text field is empty.
+        let searchbar = document.getElementById("searchbar");
+        let tree = document.getAnonymousElementByAttribute(this, "anonid",
+                                                           "tree")
+        if (searchbar.hasAttribute("showonlysettings")) {
+          searchbar.removeAttribute("showonlysettings");
+          this.setAttribute("showonlysettings", "true");
+
+          // Setting this with an xbl-inherited attribute gets overridden the
+          // second time the user clicks the glass icon for some reason...
+          tree.collapsed = true;
+        }
+        else {
+          this.removeAttribute("showonlysettings");
+          tree.collapsed = false;
+        }
+
+        // Show the current default engine in the top header of the panel.
         let currentEngine = Services.search.currentEngine;
         let uri = currentEngine.iconURI;
         if (uri)
@@ -989,12 +1017,16 @@
         document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
                 .setAttribute("value", currentEngine.name + " Search");
 
+        // Update the 'Search for <keywords> with:" header.
         let headerSearchText =
           document.getAnonymousElementByAttribute(this, "anonid",
                                                   "searchbar-oneoffheader-searchtext");
-        let textbox = document.getElementById("searchbar").textbox;
+        let textbox = searchbar.textbox;
+        let self = this;
         let keyPressHandler = function() {
           headerSearchText.setAttribute("value", textbox.value);
+          if (textbox.value)
+            self.removeAttribute("showonlysettings");
         };
         textbox.addEventListener("keyup", keyPressHandler);
         this.addEventListener("popuphiding", function hiding() {
@@ -1003,9 +1035,42 @@
         });
         keyPressHandler();
 
+        // Handle opensearch items. This needs to be done before building the
+        // list of one off providers, as that code will return early if all the
+        // alternative engines are hidden.
+        let addEngineList =
+          document.getAnonymousElementByAttribute(this, "anonid", "add-engines");
+        while (addEngineList.firstChild)
+          addEngineList.firstChild.remove();
+
         const kXULNS =
           "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+        let addEngines = getBrowser().mCurrentBrowser.engines;
+        if (addEngines && addEngines.length > 0) {
+          const kBundleURI = "chrome://browser/locale/search.properties";
+          let bundle = Services.strings.createBundle(kBundleURI);
+          for (let engine of addEngines) {
+            let button = document.createElementNS(kXULNS, "button");
+            let label = bundle.formatStringFromName("cmd_addFoundEngine",
+                                                    [engine.title], 1);
+            button.setAttribute("class", "addengine-item");
+            button.setAttribute("label", label);
+            button.setAttribute("pack", "start");
+
+            button.setAttribute("crop", "end");
+            button.setAttribute("tooltiptext", engine.uri);
+            button.setAttribute("uri", engine.uri);
+            if (engine.icon) {
+              let uri = PlacesUtils.getImageURLForResolution(window, engine.icon);
+              button.setAttribute("image", uri);
+            }
+            button.setAttribute("title", engine.title);
+            addEngineList.appendChild(button);
+          }
+        }
+
+        // Finally, build the list of one-off buttons.
         let list = document.getAnonymousElementByAttribute(this, "anonid",
                                                            "search-panel-one-offs")
         while (list.firstChild)
@@ -1056,11 +1121,12 @@
         let dummyItems = enginesPerRow - (engines.length % enginesPerRow || enginesPerRow);
         for (let i = 0; i < engines.length; ++i) {
           let engine = engines[i];
-          if (!engine.iconURI)
-            continue;
           let button = document.createElementNS(kXULNS, "button");
-          let uri = PlacesUtils.getImageURLForResolution(window, engine.iconURI.spec);
           button.setAttribute("label", engine.name);
+          let uri = "chrome://browser/skin/search-engine-placeholder.png";
+          if (engine.iconURI) {
+            uri = PlacesUtils.getImageURLForResolution(window, engine.iconURI.spec);
+          }
           button.setAttribute("image", uri);
           button.setAttribute("class", "searchbar-engine-one-off-item");
           button.setAttribute("tooltiptext", engine.name);
@@ -1115,6 +1181,23 @@
 
         let searchbar = document.getElementById("searchbar");
         searchbar.handleSearchCommand(event, button.engine);
+      ]]></handler>
+
+      <handler event="command"><![CDATA[
+        let target = event.originalTarget;
+        if (target.classList.contains("addengine-item")) {
+          // On success, hide and reshow the panel to show the new engine.
+          let installCallback = {
+            onSuccess: function(engine) {
+              event.target.hidePopup();
+              BrowserSearch.searchBar.openSuggestionsPanel();
+            }
+          }
+          Services.search.addEngine(target.getAttribute("uri"),
+                                    Ci.nsISearchEngine.DATA_XML,
+                                    target.getAttribute("src"), false,
+                                    installCallback);
+        }
       ]]></handler>
     </handlers>
   </binding>

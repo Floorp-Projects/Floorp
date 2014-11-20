@@ -9,11 +9,15 @@
                    window auto-sizing code work. */
 }
 
+#oneClickProvidersList {
+  height: 178px;
+}
+
 .checkbox-label-box {
   -moz-box-align: center;
 }
 
 .checkbox-icon {
   margin: 3px 3px;
+  max-width: 16px;
 }
-
