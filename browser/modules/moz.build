@@ -49,5 +49,9 @@ EXTRA_PP_JS_MODULES += [
     'webrtcUI.jsm',
 ]
 
+EXTRA_PP_COMPONENTS += [
+    'modules.manifest',
+]
+
 if CONFIG['MOZILLA_OFFICIAL']:
     DEFINES['MOZILLA_OFFICIAL'] = 1

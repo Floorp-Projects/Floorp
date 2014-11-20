@@ -1810,3 +1810,32 @@ Example
       "lastActiveBranch": "control"
     }
 
+org.mozilla.uitour.treatment
+----------------------------
+
+Daily measurement reporting information about treatment tagging done
+by the UITour module.
+
+Version 1
+^^^^^^^^^
+
+Daily text values in the following properties:
+
+<tag>:
+    Array of discrete strings corresponding to calls for setTreatmentTag(tag, value).
+
+Example
+^^^^^^^
+
+::
+
+    "org.mozilla.uitour.treatment": {
+      "_v": 1,
+      "treatment": [
+        "optin",
+        "optin-DNT"
+      ],
+      "another-tag": [
+        "foobar-value"
+      ]
+    }
