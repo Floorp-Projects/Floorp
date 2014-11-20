@@ -1463,8 +1463,8 @@ Interpret(JSContext *cx, RunState &state)
     SET_SCRIPT(REGS.fp()->script());
 
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    uint32_t scriptLogId = TraceLogCreateTextId(logger, TraceLogger_Scripts, script);
-    TraceLogStartEvent(logger, scriptLogId);
+    TraceLoggerEvent scriptEvent(logger, TraceLogger_Scripts, script);
+    TraceLogStartEvent(logger, scriptEvent);
     TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
     /*
@@ -2577,9 +2577,11 @@ CASE(JSOP_FUNCALL)
 
     SET_SCRIPT(REGS.fp()->script());
 
-    uint32_t scriptLogId = TraceLogCreateTextId(logger, TraceLogger_Scripts, script);
-    TraceLogStartEvent(logger, scriptLogId);
-    TraceLogStartEvent(logger, TraceLogger_Interpreter);
+    {
+        TraceLoggerEvent event(logger, TraceLogger_Scripts, script);
+        TraceLogStartEvent(logger, event);
+        TraceLogStartEvent(logger, TraceLogger_Interpreter);
+    }
 
     if (!REGS.fp()->prologue(cx))
         goto error;
@@ -3492,7 +3494,7 @@ DEFAULT()
     gc::MaybeVerifyBarriers(cx, true);
 
     TraceLogStopEvent(logger, TraceLogger_Engine);
-    TraceLogStopEvent(logger, scriptLogId);
+    TraceLogStopEvent(logger, scriptEvent);
 
     /*
      * This path is used when it's guaranteed the method can be finished
