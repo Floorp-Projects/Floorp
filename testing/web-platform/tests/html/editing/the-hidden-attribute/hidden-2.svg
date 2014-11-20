@@ -3,9 +3,9 @@
   <link xmlns="http://www.w3.org/1999/xhtml" rel="author" title="Ms2ger"
         href="mailto:Ms2ger@gmail.com"/>
   <link xmlns="http://www.w3.org/1999/xhtml" rel="help"
-        href="http://www.whatwg.org/html/#the-hidden-attribute"/>
+        href="https://html.spec.whatwg.org/multipage/#the-hidden-attribute"/>
   <link xmlns="http://www.w3.org/1999/xhtml" rel="help"
-        href="http://www.whatwg.org/html/#hidden-elements"/>
+        href="https://html.spec.whatwg.org/multipage/#hidden-elements"/>
 </metadata>
 <rect hidden="" height="20" width="20"/>
 </svg>

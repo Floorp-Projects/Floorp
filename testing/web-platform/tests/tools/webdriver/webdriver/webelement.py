@@ -28,9 +28,15 @@ class WebElement(searchcontext.SearchContext):
         """Get the value of an element property or attribute."""
         return self.execute('GET', '/attribute/%s' % name, 'getElementAttribute')
 
-    def get_text(self):
+    @property
+    def text(self):
         """Get the visible text for this element."""
         return self.execute('GET', '/text', 'text')
+
+    @property
+    def tag_name(self):
+        """Get the tag name for this element"""
+        return self.execute('GET', '/name', 'getElementTagName')
 
     def click(self):
         """Click on this element."""

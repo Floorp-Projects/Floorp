@@ -2,7 +2,7 @@
 <title>DOM img complete Test</title>
 <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
 <link rel="author" title="Anselm Hannemann" href="http://anselm-hannemann.com/" />
-<link rel="help" href="http://www.w3.org/html/wg/drafts/html/CR/embedded-content-0.html#dom-img-complete" />
+<link rel="help" href="https://html.spec.whatwg.org/multipage/#dom-img-complete" />
 <meta name="assert" content="Tests the complete status of the img-element">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -44,7 +44,7 @@
     t.done();
   });
 
-  // http://www.whatwg.org/specs/web-apps/current-work/multipage/embedded-content-1.html#update-the-image-data
+  // https://html.spec.whatwg.org/multipage/multipage/embedded-content-1.html#update-the-image-data
   // says to "await a stable state" before fetching so we use a separate <script>
   imageInstance.src = 'image-1.jpg?pipe=trickle(d1)&nocache=' + Math.random(); // make sure the image isn't in cache
 </script>
