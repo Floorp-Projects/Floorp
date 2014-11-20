@@ -640,11 +640,35 @@ LIRGeneratorARM::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArra
 bool
 LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->viewType() != Scalar::Uint8Clamped);
+    MOZ_ASSERT(ins->viewType() != Scalar::Float32);
+    MOZ_ASSERT(ins->viewType() != Scalar::Float64);
+
+    MDefinition *ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    LAsmJSCompareExchangeHeap *lir =
+        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr),
+                                               useRegister(ins->oldValue()),
+                                               useRegister(ins->newValue()));
+
+    return define(lir, ins);
 }
 
 bool
 LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->viewType() != Scalar::Uint8Clamped);
+    MOZ_ASSERT(ins->viewType() != Scalar::Float32);
+    MOZ_ASSERT(ins->viewType() != Scalar::Float64);
+
+    MDefinition *ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    LAsmJSAtomicBinopHeap *lir =
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr),
+                                           useRegister(ins->value()),
+                                           LDefinition::BogusTemp());
+
+    return define(lir, ins);
 }
