@@ -1447,6 +1447,20 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
   return LAYER_ACTIVE;
 }
 
+
+/* virtual */ nsRegion
+nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                bool* aSnap)
+{
+  *aSnap = true;
+  bool animated;
+  if (mImage && mImage->GetAnimated(&animated) == NS_OK && !animated &&
+      mImage->FrameIsOpaque(imgIContainer::FRAME_CURRENT)) {
+    return nsRegion(GetBounds(aSnap));
+  }
+  return nsRegion();
+}
+
 already_AddRefed<Layer>
 nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                            LayerManager* aManager,
