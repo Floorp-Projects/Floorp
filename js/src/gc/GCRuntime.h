@@ -324,6 +324,7 @@ class GCRuntime
 #ifdef JS_GC_ZEAL
     const void *addressOfZealMode() { return &zealMode; }
     void setZeal(uint8_t zeal, uint32_t frequency);
+    bool parseAndSetZeal(const char *str);
     void setNextScheduled(uint32_t count);
     void verifyPreBarriers();
     void verifyPostBarriers();
@@ -532,7 +533,6 @@ class GCRuntime
     inline bool wantBackgroundAllocation(const AutoLockGC &lock) const;
     void startBackgroundAllocTaskIfIdle();
 
-    bool initZeal();
     void requestMajorGC(JS::gcreason::Reason reason);
     void collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
