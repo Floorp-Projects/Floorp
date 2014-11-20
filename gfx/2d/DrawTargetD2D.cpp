@@ -2397,9 +2397,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
         bitmap = CreatePartialBitmapForSurface(dataSurf, mTransform, mSize, pat->mExtendMode, mat, mRT); 
         if (!bitmap) {
-          RefPtr<ID2D1SolidColorBrush> colBrush;
-          mRT->CreateSolidColorBrush(D2D1::ColorF(0, 0), byRef(colBrush));
-          return colBrush.forget();
+          return nullptr;
         }
       }
       break;
