@@ -708,8 +708,8 @@ TraceLogging::TraceLogging()
 {
     initialized = false;
     enabled = 0;
-    mainThreadEnabled = true;
-    offThreadEnabled = true;
+    mainThreadEnabled = false;
+    offThreadEnabled = false;
     loggerId = 0;
 
     lock = PR_NewLock();
@@ -804,7 +804,7 @@ TraceLogging::lazyInit()
     enabledTextIds[TraceLogger::TL_Error] = true;
     enabledTextIds[TraceLogger::TL] = true;
 
-    if (ContainsFlag(env, "Default") || strlen(env) == 0) {
+    if (ContainsFlag(env, "Default")) {
         enabledTextIds[TraceLogger::Bailout] = true;
         enabledTextIds[TraceLogger::Baseline] = true;
         enabledTextIds[TraceLogger::BaselineCompilation] = true;
@@ -823,7 +823,7 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::IrregexpExecute] = true;
     }
 
-    if (ContainsFlag(env, "IonCompiler") || strlen(env) == 0) {
+    if (ContainsFlag(env, "IonCompiler")) {
         enabledTextIds[TraceLogger::IonCompilation] = true;
         enabledTextIds[TraceLogger::IonLinking] = true;
         enabledTextIds[TraceLogger::FoldTests] = true;
@@ -855,18 +855,18 @@ TraceLogging::lazyInit()
                 "\n"
                 "usage: TLOPTIONS=option,option,option,... where options can be:\n"
                 "\n"
-                "  DisableMainThread        Don't start logging the mainThread automatically.\n"
-                "  DisableOffThread         Don't start logging the off mainThread automatically.\n"
+                "  EnableMainThread        Start logging the main thread immediately.\n"
+                "  EnableOffThread         Start logging helper threads immediately.\n"
             );
             printf("\n");
             exit(0);
             /*NOTREACHED*/
         }
 
-        if (strstr(options, "DisableMainThread"))
-           mainThreadEnabled = false;
-        if (strstr(options, "DisableOffThread"))
-           offThreadEnabled = false;
+        if (strstr(options, "EnableMainThread"))
+           mainThreadEnabled = true;
+        if (strstr(options, "EnableOffThread"))
+           offThreadEnabled = true;
     }
 
     startupTime = rdtsc();
