@@ -34,11 +34,11 @@ using namespace gfx;
 namespace {
 struct SurfaceBufferInfo
 {
-  uint32_t width;
-  uint32_t height;
+  int32_t width;
+  int32_t height;
   SurfaceFormat format;
 
-  static uint32_t GetOffset()
+  static int32_t GetOffset()
   {
     return GetAlignedStride<16>(sizeof(SurfaceBufferInfo));
   }
@@ -65,12 +65,12 @@ ImageDataSerializer::InitializeBufferInfo(IntSize aSize,
   Validate();
 }
 
-static inline uint32_t
-ComputeStride(SurfaceFormat aFormat, uint32_t aWidth)
+static inline int32_t
+ComputeStride(SurfaceFormat aFormat, int32_t aWidth)
 {
-  CheckedInt<uint32_t> size = BytesPerPixel(aFormat);
+  CheckedInt<int32_t> size = BytesPerPixel(aFormat);
   size *= aWidth;
-  if (!size.isValid() || size == 0) {
+  if (!size.isValid() || size <= 0) {
     gfxDebug() << "ComputeStride overflow " << aWidth;
     return 0;
   }
@@ -88,10 +88,10 @@ ImageDataSerializerBase::ComputeMinBufferSize(IntSize aSize,
     return 0;
   }
 
-  CheckedInt<uint32_t> bufsize = ComputeStride(aFormat, aSize.width);
+  CheckedInt<int32_t> bufsize = ComputeStride(aFormat, aSize.width);
   bufsize *= aSize.height;
 
-  if (!bufsize.isValid() || bufsize.value() == 0) {
+  if (!bufsize.isValid() || bufsize.value() <= 0) {
     gfxDebug() << "Buffer size overflow " << aSize.width << "x" << aSize.height;
     return 0;
   }
