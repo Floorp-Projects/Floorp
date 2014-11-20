@@ -20,7 +20,7 @@ describe("loop.store.ActiveRoomStore", function () {
     sandbox.stub(dispatcher, "dispatch");
 
     fakeMozLoop = {
-      setLoopCharPref: sandbox.stub(),
+      setLoopPref: sandbox.stub(),
       rooms: {
         get: sinon.stub(),
         join: sinon.stub(),
@@ -44,8 +44,7 @@ describe("loop.store.ActiveRoomStore", function () {
       multiplexGum: fakeMultiplexGum
     };
 
-    store = new loop.store.ActiveRoomStore({
-      dispatcher: dispatcher,
+    store = new loop.store.ActiveRoomStore(dispatcher, {
       mozLoop: fakeMozLoop,
       sdkDriver: fakeSdkDriver
     });
@@ -56,21 +55,15 @@ describe("loop.store.ActiveRoomStore", function () {
   });
 
   describe("#constructor", function() {
-    it("should throw an error if the dispatcher is missing", function() {
-      expect(function() {
-        new loop.store.ActiveRoomStore({mozLoop: {}});
-      }).to.Throw(/dispatcher/);
-    });
-
     it("should throw an error if mozLoop is missing", function() {
       expect(function() {
-        new loop.store.ActiveRoomStore({dispatcher: dispatcher});
+        new loop.store.ActiveRoomStore(dispatcher);
       }).to.Throw(/mozLoop/);
     });
 
     it("should throw an error if sdkDriver is missing", function() {
       expect(function() {
-        new loop.store.ActiveRoomStore({dispatcher: dispatcher, mozLoop: {}});
+        new loop.store.ActiveRoomStore(dispatcher, {mozLoop: {}});
       }).to.Throw(/sdkDriver/);
     });
   });
@@ -143,6 +136,10 @@ describe("loop.store.ActiveRoomStore", function () {
         roomUrl: "http://invalid"
       };
 
+      store = new loop.store.ActiveRoomStore(dispatcher, {
+        mozLoop: fakeMozLoop,
+        sdkDriver: {}
+      });
       fakeMozLoop.rooms.get.
         withArgs(fakeToken).
         callsArgOnWith(1, // index of callback argument
@@ -525,8 +522,8 @@ describe("loop.store.ActiveRoomStore", function () {
     it("should set the pref for ToS to `seen`", function() {
       store.remotePeerConnected();
 
-      sinon.assert.calledOnce(fakeMozLoop.setLoopCharPref);
-      sinon.assert.calledWithExactly(fakeMozLoop.setLoopCharPref,
+      sinon.assert.calledOnce(fakeMozLoop.setLoopPref);
+      sinon.assert.calledWithExactly(fakeMozLoop.setLoopPref,
         "seenToS", "seen");
     });
   });

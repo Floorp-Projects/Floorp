@@ -67,6 +67,7 @@ browser.jar:
   # Shared scripts
   content/browser/loop/shared/js/actions.js           (content/shared/js/actions.js)
   content/browser/loop/shared/js/conversationStore.js (content/shared/js/conversationStore.js)
+  content/browser/loop/shared/js/store.js             (content/shared/js/store.js)
   content/browser/loop/shared/js/roomStore.js         (content/shared/js/roomStore.js)
   content/browser/loop/shared/js/activeRoomStore.js   (content/shared/js/activeRoomStore.js)
   content/browser/loop/shared/js/dispatcher.js        (content/shared/js/dispatcher.js)
