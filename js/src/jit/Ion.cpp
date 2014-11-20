@@ -540,7 +540,8 @@ jit::LazyLinkTopActivation(JSContext *cx)
 
     if (CodeGenerator *codegen = builder->backgroundCodegen()) {
         js::TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-        AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
+        uint32_t textId = TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, script);
+        AutoTraceLog logScript(logger, textId);
         AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
         IonContext ictx(cx, &builder->alloc());
@@ -1803,7 +1804,8 @@ AttachFinishedCompilations(JSContext *cx)
         if (CodeGenerator *codegen = builder->backgroundCodegen()) {
             RootedScript script(cx, builder->script());
             IonContext ictx(cx, &builder->alloc());
-            AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
+            uint32_t textId = TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, script);
+            AutoTraceLog logScript(logger, textId);
             AutoTraceLog logLink(logger, TraceLogger_IonLinking);
 
             // Root the assembler until the builder is finished below. As it
@@ -1883,7 +1885,8 @@ IonCompile(JSContext *cx, JSScript *script,
            OptimizationLevel optimizationLevel)
 {
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
+    uint32_t textId = TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, script);
+    AutoTraceLog logScript(logger, textId);
     AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
     MOZ_ASSERT(optimizationLevel > Optimization_DontCompile);
