@@ -16,10 +16,6 @@
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 
-#include "mozilla/dom/PromiseDebugging.h"
-#include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseDebuggingBinding.h"
-
 class nsCycleCollectionNoteRootCallback;
 class nsIException;
 class nsIRunnable;
@@ -294,12 +290,6 @@ public:
   // Get the current thread's CycleCollectedJSRuntime.  Returns null if there
   // isn't one.
   static CycleCollectedJSRuntime* Get();
-
-  // Storage for watching rejected promises waiting for some client to
-  // consume their rejection.
-  nsTArray<nsRefPtr<dom::Promise>> mUncaughtRejections;
-  nsTArray<nsRefPtr<dom::Promise>> mConsumedRejections;
-  nsTArray<nsRefPtr<dom::UncaughtRejectionObserver>> mUncaughtRejectionObservers;
 
 private:
   JSGCThingParticipant mGCThingCycleCollectorGlobal;
