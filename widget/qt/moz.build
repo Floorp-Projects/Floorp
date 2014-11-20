@@ -42,7 +42,7 @@ LOCAL_INCLUDES += [
 
 if CONFIG['MOZ_X11']:
     LOCAL_INCLUDES += [
-        '../shared/x11',
+        '../x11',
     ]
 
 #DEFINES['DEBUG_WIDGETS'] = True

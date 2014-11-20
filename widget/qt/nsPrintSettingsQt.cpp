@@ -291,15 +291,9 @@ static const QPrinter::PageSize indexToQtPaperEnum[] =
 NS_IMETHODIMP
 nsPrintSettingsQt::GetPaperName(char16_t** aPaperName)
 {
-    PR_STATIC_ASSERT(sizeof(indexToPaperName)/
-        sizeof(char*) == QPrinter::NPageSize);
-    PR_STATIC_ASSERT(sizeof(indexToQtPaperEnum)/
-        sizeof(QPrinter::PageSize) == QPrinter::NPageSize);
-
     QPrinter::PaperSize size = mQPrinter->paperSize();
     QString name(indexToPaperName[size]);
-    *aPaperName = ToNewUnicode(nsDependentString
-        ((const char16_t*)name.constData()));
+    *aPaperName = ToNewUnicode(nsDependentString((const char16_t*)name.constData()));
     return NS_OK;
 }
 
@@ -307,7 +301,7 @@ NS_IMETHODIMP
 nsPrintSettingsQt::SetPaperName(const char16_t* aPaperName)
 {
     QString ref((QChar*)aPaperName, NS_strlen(aPaperName));
-    for (uint32_t i = 0; i < QPrinter::NPageSize; i++)
+    for (uint32_t i = 0; i < sizeof(indexToPaperName)/sizeof(char*); i++)
     {
         if (ref == QString(indexToPaperName[i])) {
             mQPrinter->setPageSize(indexToQtPaperEnum[i]);
