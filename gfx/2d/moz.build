@@ -89,17 +89,21 @@ if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['_MSC_VER'] != '1400':
         SOURCES += [
             'BlurSSE2.cpp',
-            'convolverSSE2.cpp',
             'FilterProcessingSSE2.cpp',
             'ImageScalingSSE2.cpp',
         ]
+        if CONFIG['MOZ_ENABLE_SKIA']:
+            SOURCES += [
+                'convolverSSE2.cpp',
+            ]
         DEFINES['USE_SSE2'] = True
         # The file uses SSE2 intrinsics, so it needs special compile flags on some
         # compilers.
         SOURCES['BlurSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
         SOURCES['FilterProcessingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
         SOURCES['ImageScalingSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-        SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+        if CONFIG['MOZ_ENABLE_SKIA']:
+            SOURCES['convolverSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 UNIFIED_SOURCES += [
     'Blur.cpp',

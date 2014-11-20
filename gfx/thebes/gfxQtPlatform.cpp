@@ -7,7 +7,6 @@
 #include <QWindow>
 #ifdef MOZ_X11
 #include <qpa/qplatformnativeinterface.h>
-#include <qpa/qplatformintegration.h>
 #endif
 #include <QGuiApplication>
 #include <QScreen>
