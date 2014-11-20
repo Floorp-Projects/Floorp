@@ -1,12 +1,11 @@
-// Copyright 2013 The Chromium Authors. All rights reserved.
+// Copyright (c) 2006-2010 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "sandbox/win/src/service_resolver.h"
 
+#include "base/logging.h"
 #include "base/win/pe_image.h"
-#include "sandbox/win/src/internal_types.h"
-#include "sandbox/win/src/sandbox_nt_util.h"
 
 namespace sandbox {
 
@@ -25,6 +24,7 @@ NTSTATUS ServiceResolverThunk::ResolveInterceptor(
 NTSTATUS ServiceResolverThunk::ResolveTarget(const void* module,
                                              const char* function_name,
                                              void** address) {
+  DCHECK(address);
   if (NULL == module)
     return STATUS_UNSUCCESSFUL;
 
@@ -32,15 +32,11 @@ NTSTATUS ServiceResolverThunk::ResolveTarget(const void* module,
   *address = module_image.GetProcAddress(function_name);
 
   if (NULL == *address) {
-    NOTREACHED_NT();
+    NOTREACHED();
     return STATUS_UNSUCCESSFUL;
   }
 
   return STATUS_SUCCESS;
-}
-
-void ServiceResolverThunk::AllowLocalPatches() {
-  ntdll_base_ = ::GetModuleHandle(kNtdllName);
 }
 
 }  // namespace sandbox

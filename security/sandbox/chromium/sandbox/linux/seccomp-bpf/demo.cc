@@ -26,15 +26,12 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "base/macros.h"
 #include "base/posix/eintr_wrapper.h"
 #include "sandbox/linux/seccomp-bpf/sandbox_bpf.h"
-#include "sandbox/linux/seccomp-bpf/sandbox_bpf_policy.h"
 #include "sandbox/linux/services/linux_syscalls.h"
 
 using sandbox::ErrorCode;
 using sandbox::SandboxBPF;
-using sandbox::SandboxBPFPolicy;
 using sandbox::arch_seccomp_data;
 
 #define ERR EPERM
@@ -240,17 +237,7 @@ intptr_t DefaultHandler(const struct arch_seccomp_data& data, void *) {
   return -ERR;
 }
 
-class DemoPolicy : public SandboxBPFPolicy {
- public:
-  DemoPolicy() {}
-  virtual ErrorCode EvaluateSyscall(SandboxBPF* sandbox,
-                                    int sysno) const OVERRIDE;
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(DemoPolicy);
-};
-
-ErrorCode DemoPolicy::EvaluateSyscall(SandboxBPF* sandbox, int sysno) const {
+ErrorCode Evaluator(SandboxBPF* sandbox, int sysno, void *) {
   switch (sysno) {
 #if defined(__NR_accept)
   case __NR_accept: case __NR_accept4:
@@ -433,7 +420,7 @@ int main(int argc, char *argv[]) {
   }
   SandboxBPF sandbox;
   sandbox.set_proc_fd(proc_fd);
-  sandbox.SetSandboxPolicy(new DemoPolicy());
+  sandbox.SetSandboxPolicyDeprecated(Evaluator, NULL);
   if (!sandbox.StartSandbox(SandboxBPF::PROCESS_SINGLE_THREADED)) {
     fprintf(stderr, "StartSandbox() failed");
     _exit(1);

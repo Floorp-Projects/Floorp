@@ -18,10 +18,7 @@ subtle::AtomicWord WaitForInstance(subtle::AtomicWord* instance) {
   // the object has been created.
   subtle::AtomicWord value;
   while (true) {
-    // The load has acquire memory ordering as the thread which reads the
-    // instance pointer must acquire visibility over the associated data.
-    // The pairing Release_Store operation is in Singleton::get().
-    value = subtle::Acquire_Load(instance);
+    value = subtle::NoBarrier_Load(instance);
     if (value != kBeingCreatedMarker)
       break;
     PlatformThread::YieldCurrentThread();

@@ -28,8 +28,7 @@
 #ifndef BASE_ATOMICOPS_H_
 #define BASE_ATOMICOPS_H_
 
-#include <stdint.h>
-
+#include "base/basictypes.h"
 #include "build/build_config.h"
 
 #if defined(OS_WIN) && defined(ARCH_CPU_64_BITS)
@@ -44,7 +43,7 @@
 namespace base {
 namespace subtle {
 
-typedef int32_t Atomic32;
+typedef int32 Atomic32;
 #ifdef ARCH_CPU_64_BITS
 // We need to be able to go between Atomic64 and AtomicWord implicitly.  This
 // means Atomic64 and AtomicWord should be the same type on 64-bit.
@@ -134,7 +133,7 @@ Atomic64 Acquire_Load(volatile const Atomic64* ptr);
 Atomic64 Release_Load(volatile const Atomic64* ptr);
 #endif  // ARCH_CPU_64_BITS
 
-}  // namespace subtle
+}  // namespace base::subtle
 }  // namespace base
 
 // Include our platform specific implementation.
@@ -146,10 +145,8 @@ Atomic64 Release_Load(volatile const Atomic64* ptr);
 #include "base/atomicops_internals_mac.h"
 #elif defined(OS_NACL)
 #include "base/atomicops_internals_gcc.h"
-#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARMEL)
+#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARM_FAMILY)
 #include "base/atomicops_internals_arm_gcc.h"
-#elif defined(COMPILER_GCC) && defined(ARCH_CPU_ARM64)
-#include "base/atomicops_internals_arm64_gcc.h"
 #elif defined(COMPILER_GCC) && defined(ARCH_CPU_X86_FAMILY)
 #include "base/atomicops_internals_x86_gcc.h"
 #elif defined(COMPILER_GCC) && defined(ARCH_CPU_MIPS_FAMILY)

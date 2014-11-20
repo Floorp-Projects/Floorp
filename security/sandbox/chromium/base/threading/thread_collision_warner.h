@@ -9,7 +9,6 @@
 
 #include "base/atomicops.h"
 #include "base/base_export.h"
-#include "base/basictypes.h"
 #include "base/compiler_specific.h"
 
 // A helper class alongside macros to be used to verify assumptions about thread

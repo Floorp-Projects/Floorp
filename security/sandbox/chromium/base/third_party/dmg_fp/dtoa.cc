@@ -548,10 +548,8 @@ Balloc
 	ACQUIRE_DTOA_LOCK(0);
 	/* The k > Kmax case does not need ACQUIRE_DTOA_LOCK(0), */
 	/* but this case seems very unlikely. */
-	if (k <= Kmax && freelist[k]) {
-		rv = freelist[k];
+	if (k <= Kmax && (rv = freelist[k]))
 		freelist[k] = rv->next;
-		}
 	else {
 		x = 1 << k;
 #ifdef Omit_Private_Memory
@@ -836,8 +834,7 @@ mult
 	xc0 = c->x;
 #ifdef ULLong
 	for(; xb < xbe; xc0++) {
-		y = *xb++;
-		if (y) {
+		if ((y = *xb++)) {
 			x = xa;
 			xc = xc0;
 			carry = 0;
@@ -919,19 +916,16 @@ pow5mult
 	int i;
 	static int p05[3] = { 5, 25, 125 };
 
-	i = k & 3;
-	if (i)
+	if ((i = k & 3))
 		b = multadd(b, p05[i-1], 0);
 
 	if (!(k >>= 2))
 		return b;
-	p5 = p5s;
-	if (!p5) {
+	if (!(p5 = p5s)) {
 		/* first time */
 #ifdef MULTIPLE_THREADS
 		ACQUIRE_DTOA_LOCK(1);
-		p5 = p5s;
-		if (!p5) {
+		if (!(p5 = p5s)) {
 			p5 = p5s = i2b(625);
 			p5->next = 0;
 			}
@@ -949,12 +943,10 @@ pow5mult
 			}
 		if (!(k >>= 1))
 			break;
-		p51 = p5->next;
-		if (!p51) {
+		if (!(p51 = p5->next)) {
 #ifdef MULTIPLE_THREADS
 			ACQUIRE_DTOA_LOCK(1);
-			p51 = p5->next;
-			if (!p51) {
+			if (!(p51 = p5->next)) {
 				p51 = p5->next = mult(p5,p5);
 				p51->next = 0;
 				}
@@ -1005,8 +997,7 @@ lshift
 			z = *x++ >> k1;
 			}
 			while(x < xe);
-		*x1 = z;
-		if (*x1)
+		if ((*x1 = z))
 			++n1;
 		}
 #else
@@ -1308,25 +1299,21 @@ d2b
 	z |= Exp_msk11;
 #endif
 #else
-	de = (int)(d0 >> Exp_shift);
-	if (de)
+	if ((de = (int)(d0 >> Exp_shift)))
 		z |= Exp_msk1;
 #endif
 #ifdef Pack_32
-	y = d1;
-	if (y) {
-		k = lo0bits(&y);
-		if (k) {
+	if ((y = d1)) {
+		if ((k = lo0bits(&y))) {
 			x[0] = y | z << (32 - k);
 			z >>= k;
 			}
 		else
 			x[0] = y;
-		x[1] = z;
-		b->wds = x[1] ? 2 : 1;
 #ifndef Sudden_Underflow
-		i = b->wds;
+		i =
 #endif
+		    b->wds = (x[1] = z) ? 2 : 1;
 		}
 	else {
 		k = lo0bits(&z);
@@ -1549,7 +1536,7 @@ match
 	int c, d;
 	CONST char *s = *sp;
 
-	for(d = *t++; d; d = *t++) {
+	while((d = *t++)) {
 		if ((c = *++s) >= 'A' && c <= 'Z')
 			c += 'a' - 'A';
 		if (c != d)
@@ -1579,13 +1566,12 @@ hexnan
 	udx0 = 1;
 	s = *sp;
 	/* allow optional initial 0x or 0X */
-	for(c = *(CONST unsigned char*)(s+1); c && c <= ' '; c = *(CONST unsigned char*)(s+1))
+	while((c = *(CONST unsigned char*)(s+1)) && c <= ' ')
 		++s;
 	if (s[1] == '0' && (s[2] == 'x' || s[2] == 'X'))
 		s += 2;
-	for(c = *(CONST unsigned char*)++s; c; c = *(CONST unsigned char*)++s) {
-		c1 = hexdig[c];
-		if (c1)
+	while((c = *(CONST unsigned char*)++s)) {
+		if ((c1 = hexdig[c]))
 			c  = c1 & 0xf;
 		else if (c <= ' ') {
 			if (udx0 && havedig) {
@@ -1608,8 +1594,7 @@ hexnan
 					*sp = s + 1;
 					break;
 					}
-				c = *++s;
-				} while(c);
+				} while((c = *++s));
 			break;
 			}
 #endif
@@ -2343,8 +2328,7 @@ bigcomp
 	/* Now b/d = exactly half-way between the two floating-point values */
 	/* on either side of the input string.  Compute first digit of b/d. */
 
-	dig = quorem(b,d);
-	if (!dig) {
+	if (!(dig = quorem(b,d))) {
 		b = multadd(b, 10, 0);	/* very unlikely */
 		dig = quorem(b,d);
 		}
@@ -2352,8 +2336,7 @@ bigcomp
 	/* Compare b/d with s0 */
 
 	for(i = 0; i < nd0; ) {
-		dd = s0[i++] - '0' - dig;
-		if (dd)
+		if ((dd = s0[i++] - '0' - dig))
 			goto ret;
 		if (!b->x[0] && b->wds == 1) {
 			if (i < nd)
@@ -2364,8 +2347,7 @@ bigcomp
 		dig = quorem(b,d);
 		}
 	for(j = bc->dp1; i++ < nd;) {
-		dd = s0[j++] - '0' - dig;
-		if (dd)
+		if ((dd = s0[j++] - '0' - dig))
 			goto ret;
 		if (!b->x[0] && b->wds == 1) {
 			if (i < nd)
@@ -2765,8 +2747,7 @@ strtod
 	/* Get starting approximation = rv * 10**e1 */
 
 	if (e1 > 0) {
-		i = e1 & 15;
-		if (i)
+		if ((i = e1 & 15))
 			dval(&rv) *= tens[i];
 		if (e1 &= ~15) {
 			if (e1 > DBL_MAX_10_EXP) {
@@ -2824,8 +2805,7 @@ strtod
 		}
 	else if (e1 < 0) {
 		e1 = -e1;
-		i = e1 & 15;
-		if (i)
+		if ((i = e1 & 15))
 			dval(&rv) /= tens[i];
 		if (e1 >>= 4) {
 			if (e1 >= 1 << n_bigtens)
@@ -3476,7 +3456,7 @@ nrv_alloc(CONST char *s, char **rve, int n)
 	char *rv, *t;
 
 	t = rv = rv_alloc(n);
-	for(*t = *s++; *t; *t = *s++) t++;
+	while((*t = *s++)) t++;
 	if (rve)
 		*rve = t;
 	return rv;
@@ -3665,9 +3645,10 @@ dtoa
 #endif
 
 	b = d2b(&u, &be, &bbits);
+#ifdef Sudden_Underflow
 	i = (int)(word0(&u) >> Exp_shift1 & (Exp_mask>>Exp_shift1));
-#ifndef Sudden_Underflow
-	if (i) {
+#else
+	if ((i = (int)(word0(&u) >> Exp_shift1 & (Exp_mask>>Exp_shift1)))) {
 #endif
 		dval(&d2) = dval(&u);
 		word0(&d2) &= Frac_mask1;
@@ -3822,16 +3803,13 @@ dtoa
 					}
 			dval(&u) /= ds;
 			}
-		else {
-			j1 = -k;
-			if (j1) {
-				dval(&u) *= tens[j1 & 0xf];
-				for(j = j1 >> 4; j; j >>= 1, i++)
-					if (j & 1) {
-						ieps++;
-						dval(&u) *= bigtens[i];
-						}
-				}
+		else if ((j1 = -k)) {
+			dval(&u) *= tens[j1 & 0xf];
+			for(j = j1 >> 4; j; j >>= 1, i++)
+				if (j & 1) {
+					ieps++;
+					dval(&u) *= bigtens[i];
+					}
 			}
 		if (k_check && dval(&u) < 1. && ilim > 0) {
 			if (ilim1 <= 0)
@@ -3986,8 +3964,7 @@ dtoa
 				Bfree(b);
 				b = b1;
 				}
-			j = b5 - m5;
-			if (j)
+			if ((j = b5 - m5))
 				b = pow5mult(b, j);
 			}
 		else
@@ -4025,8 +4002,7 @@ dtoa
 	 * can do shifts and ors to compute the numerator for q.
 	 */
 #ifdef Pack_32
-	i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0x1f;
-	if (i)
+	if ((i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0x1f))
 		i = 32 - i;
 #define iInc 28
 #else

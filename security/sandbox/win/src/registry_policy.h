@@ -8,7 +8,6 @@
 #include <string>
 
 #include "base/basictypes.h"
-#include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/policy_low_level.h"
@@ -31,7 +30,7 @@ class RegistryPolicy {
   // API that is compatible with the IPC-received parameters.
   static bool CreateKeyAction(EvalResult eval_result,
                               const ClientInfo& client_info,
-                              const base::string16 &key,
+                              const std::wstring &key,
                               uint32 attributes,
                               HANDLE root_directory,
                               uint32 desired_access,
@@ -45,7 +44,7 @@ class RegistryPolicy {
   // API that is compatible with the IPC-received parameters.
   static bool OpenKeyAction(EvalResult eval_result,
                               const ClientInfo& client_info,
-                              const base::string16 &key,
+                              const std::wstring &key,
                               uint32 attributes,
                               HANDLE root_directory,
                               uint32 desired_access,

@@ -2,12 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SANDBOX_SANDBOX_EXPORT_H_
-#define SANDBOX_SANDBOX_EXPORT_H_
-
-#if defined(WIN32)
-#error "sandbox_export.h does not support WIN32."
-#endif
+#ifndef SANDBOX_LINUX_SANDBOX_EXPORT_H_
+#define SANDBOX_LINUX_SANDBOX_EXPORT_H_
 
 #if defined(COMPONENT_BUILD)
 
@@ -20,10 +16,8 @@
 #endif  // defined(SANDBOX_IMPLEMENTATION)
 
 #else  // defined(COMPONENT_BUILD)
-
 #define SANDBOX_EXPORT
 #define SANDBOX_EXPORT_PRIVATE
-
 #endif  // defined(COMPONENT_BUILD)
 
-#endif  // SANDBOX_SANDBOX_EXPORT_H_
+#endif  // SANDBOX_LINUX_SANDBOX_EXPORT_H_

@@ -52,6 +52,7 @@ bool HandlePolicy::GenerateRules(const wchar_t* type_name,
 }
 
 DWORD HandlePolicy::DuplicateHandleProxyAction(EvalResult eval_result,
+                                               const ClientInfo& client_info,
                                                HANDLE source_handle,
                                                DWORD target_process_id,
                                                HANDLE* target_handle,
@@ -80,7 +81,7 @@ DWORD HandlePolicy::DuplicateHandleProxyAction(EvalResult eval_result,
   HANDLE target_process = remote_target_process.IsValid() ?
                           remote_target_process.Get() : ::GetCurrentProcess();
   DWORD result = ERROR_SUCCESS;
-  if (!::DuplicateHandle(::GetCurrentProcess(), source_handle, target_process,
+  if (!::DuplicateHandle(client_info.process, source_handle, target_process,
                          target_handle, desired_access, FALSE,
                          options)) {
     return ::GetLastError();

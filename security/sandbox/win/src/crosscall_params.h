@@ -235,8 +235,7 @@ class ActualCallParams : public CrossCallParams {
       return false;
     }
 
-    if ((size > sizeof(*this)) ||
-        (param_info_[index].offset_ > (sizeof(*this) - size))) {
+    if (param_info_[index].offset_ > sizeof(*this)) {
       // It does not fit, abort copy.
       return false;
     }

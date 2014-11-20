@@ -73,7 +73,6 @@ bool SetupNtdllImports(TargetProcess *child) {
   INIT_GLOBAL_RTL(_strnicmp);
   INIT_GLOBAL_RTL(strlen);
   INIT_GLOBAL_RTL(wcslen);
-  INIT_GLOBAL_RTL(memcpy);
 
 #ifndef NDEBUG
   // Verify that the structure is fully initialized.

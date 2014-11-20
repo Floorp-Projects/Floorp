@@ -150,11 +150,10 @@ SBOX_TESTS_COMMAND int PolicyTargetTest_process(int argc, wchar_t **argv) {
   // Use default values to create a new process.
   STARTUPINFO startup_info = {0};
   startup_info.cb = sizeof(startup_info);
-  PROCESS_INFORMATION temp_process_info = {};
+  base::win::ScopedProcessInformation process_info;
   if (!::CreateProcessW(L"foo.exe", L"foo.exe", NULL, NULL, FALSE, 0,
-                        NULL, NULL, &startup_info, &temp_process_info))
+                        NULL, NULL, &startup_info, process_info.Receive()))
     return SBOX_TEST_SUCCEEDED;
-  base::win::ScopedProcessInformation process_info(temp_process_info);
   return SBOX_TEST_FAILED;
 }
 
@@ -229,7 +228,7 @@ TEST(PolicyTargetTest, DesktopPolicy) {
   wchar_t prog_name[MAX_PATH];
   GetModuleFileNameW(NULL, prog_name, MAX_PATH);
 
-  base::string16 arguments(L"\"");
+  std::wstring arguments(L"\"");
   arguments += prog_name;
   arguments += L"\" -child 0 wait";  // Don't care about the "state" argument.
 
@@ -240,15 +239,11 @@ TEST(PolicyTargetTest, DesktopPolicy) {
   TargetPolicy* policy = broker->CreatePolicy();
   policy->SetAlternateDesktop(false);
   policy->SetTokenLevel(USER_INTERACTIVE, USER_LOCKDOWN);
-  PROCESS_INFORMATION temp_process_info = {};
   result = broker->SpawnTarget(prog_name, arguments.c_str(), policy,
-                               &temp_process_info);
-  base::string16 desktop_name = policy->GetAlternateDesktop();
+                               target.Receive());
   policy->Release();
 
   EXPECT_EQ(SBOX_ALL_OK, result);
-  if (result == SBOX_ALL_OK)
-    target.Set(temp_process_info);
 
   EXPECT_EQ(1, ::ResumeThread(target.thread_handle()));
 
@@ -257,6 +252,7 @@ TEST(PolicyTargetTest, DesktopPolicy) {
   EXPECT_NE(::GetThreadDesktop(target.thread_id()),
             ::GetThreadDesktop(::GetCurrentThreadId()));
 
+  std::wstring desktop_name = policy->GetAlternateDesktop();
   HDESK desk = ::OpenDesktop(desktop_name.c_str(), 0, FALSE, DESKTOP_ENUMERATE);
   EXPECT_TRUE(NULL != desk);
   EXPECT_TRUE(::CloseDesktop(desk));
@@ -292,7 +288,7 @@ TEST(PolicyTargetTest, WinstaPolicy) {
   wchar_t prog_name[MAX_PATH];
   GetModuleFileNameW(NULL, prog_name, MAX_PATH);
 
-  base::string16 arguments(L"\"");
+  std::wstring arguments(L"\"");
   arguments += prog_name;
   arguments += L"\" -child 0 wait";  // Don't care about the "state" argument.
 
@@ -303,15 +299,11 @@ TEST(PolicyTargetTest, WinstaPolicy) {
   TargetPolicy* policy = broker->CreatePolicy();
   policy->SetAlternateDesktop(true);
   policy->SetTokenLevel(USER_INTERACTIVE, USER_LOCKDOWN);
-  PROCESS_INFORMATION temp_process_info = {};
   result = broker->SpawnTarget(prog_name, arguments.c_str(), policy,
-                               &temp_process_info);
-  base::string16 desktop_name = policy->GetAlternateDesktop();
+                               target.Receive());
   policy->Release();
 
   EXPECT_EQ(SBOX_ALL_OK, result);
-  if (result == SBOX_ALL_OK)
-    target.Set(temp_process_info);
 
   EXPECT_EQ(1, ::ResumeThread(target.thread_handle()));
 
@@ -320,10 +312,11 @@ TEST(PolicyTargetTest, WinstaPolicy) {
   EXPECT_NE(::GetThreadDesktop(target.thread_id()),
             ::GetThreadDesktop(::GetCurrentThreadId()));
 
+  std::wstring desktop_name = policy->GetAlternateDesktop();
   ASSERT_FALSE(desktop_name.empty());
 
   // Make sure there is a backslash, for the window station name.
-  EXPECT_NE(desktop_name.find_first_of(L'\\'), base::string16::npos);
+  EXPECT_NE(desktop_name.find_first_of(L'\\'), std::wstring::npos);
 
   // Isolate the desktop name.
   desktop_name = desktop_name.substr(desktop_name.find_first_of(L'\\') + 1);

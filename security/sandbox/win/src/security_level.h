@@ -76,8 +76,7 @@ enum TokenLevel {
    USER_INTERACTIVE,
    USER_NON_ADMIN,
    USER_RESTRICTED_SAME_ACCESS,
-   USER_UNPROTECTED,
-   USER_LAST
+   USER_UNPROTECTED
 };
 
 // The Job level specifies a set of decreasing security profiles for the
