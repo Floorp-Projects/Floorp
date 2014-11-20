@@ -33,6 +33,10 @@ prefpane {
   -moz-image-region: rect(0, 24px, 24px, 0);
 }
 
+#category-search > .category-icon {
+  -moz-image-region: rect(0, 194px, 24px, 168px);
+}
+
 #category-content > .category-icon {
   -moz-image-region: rect(0, 48px, 24px, 24px);
 }
@@ -64,6 +68,10 @@ prefpane {
 
   #category-general > .category-icon {
     -moz-image-region: rect(0, 48px, 48px, 0);
+  }
+
+  #category-search > .category-icon {
+    -moz-image-region: rect(0, 384px, 48px, 336px);
   }
 
   #category-content > .category-icon {
