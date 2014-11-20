@@ -37,7 +37,7 @@ struct GMPAudioCodec
   // AAC AudioSpecificConfig.
   // These are null/0 if not externally negotiated
   const uint8_t* mExtraData;
-  size_t         mExtraDataLen;
+  uint32_t       mExtraDataLen;
 };
 
 #endif // GMP_AUDIO_CODEC_h_
