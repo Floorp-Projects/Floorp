@@ -6,6 +6,7 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 const {MozLoopService, LOOP_SESSION_TYPE} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
@@ -14,6 +15,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
   const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
   return new EventEmitter();
+});
+XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {
+  return Services.strings.createBundle('chrome://browser/locale/loop/loop.properties');
 });
 
 this.EXPORTED_SYMBOLS = ["LoopRooms", "roomsPushNotification"];
@@ -327,9 +331,16 @@ let LoopRoomsInternal = {
    *                            `Error` object or `null`.
    */
   join: function(roomToken, callback) {
+    let displayName;
+    if (MozLoopService.userProfile && MozLoopService.userProfile.email) {
+      displayName = MozLoopService.userProfile.email;
+    } else {
+      displayName = gLoopBundle.GetStringFromName("display_name_guest");
+    }
+
     this._postToRoom(roomToken, {
       action: "join",
-      displayName: MozLoopService.userProfile.email,
+      displayName: displayName,
       clientMaxSize: CLIENT_MAX_SIZE
     }, callback);
   },
