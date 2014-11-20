@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head>
+  <title>CSS Test: CSS display:contents; tables</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396"/>
+  <link rel="help" href="http://dev.w3.org/csswg/css-display"/>
+<style type="text/css">
+body { color:red; background-color:white; }
+.test { display:contents; color:white; background-color:lime; }
+td { background-color:inherit; }
+</style>
+</head>
+<body><div class="test"><td>green</td></div><div class="test" style="background-color:pink"><td>pink</td></div></body></html>

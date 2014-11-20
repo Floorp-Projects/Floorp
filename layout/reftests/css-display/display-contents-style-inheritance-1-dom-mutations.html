@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US" class="reftest-wait">
+<head>
+  <meta charset="utf-8">
+  <title>CSS Test: CSS display:contents; style inheritance, DOM mutations</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+  <link rel="help" href="http://dev.w3.org/csswg/css-display">
+<style type="text/css">
+body,span { color:black; background-color:white; }
+.test { display:contents; }
+.green { color:green; }
+.border { border-left:1px solid green; }
+b { border:inherit; font-weight:normal; }
+</style>
+<script>
+function $(id) { return document.getElementById(id); }
+function text(s) { return document.createTextNode(s); }
+function b(s) { var e = document.createElement('b'); e.appendChild(document.createTextNode(s)); return e; }
+function div(s) { var e = document.createElement('div'); e.setAttribute('class','test'); e.appendChild(document.createTextNode(s)); return e; }
+function runTest() {
+  document.body.offsetHeight;
+
+  var e = $('t1');
+  var c = e.firstChild;
+  e.insertBefore(text('g'), c);
+  e.insertBefore(text('r'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t1b');
+  var c = e.firstChild;
+  e.insertBefore(text('g'), c);
+  e.insertBefore(text('r'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t2');
+  var c = e.firstChild;
+  e.insertBefore(text('gr'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t2b');
+  var c = e.firstChild;
+  e.insertBefore(text('gr'), c);
+  e.appendChild(text('n'));
+
+  var e = $('t3');
+  var c = e.firstChild;
+  e.insertBefore(text('n'), c);
+  e.insertBefore(text('o'), c);
+  e.appendChild(text('er'));
+
+  var e = $('t4');
+  var c = e.firstChild;
+  e.insertBefore(text('n'), c);
+  e.insertBefore(text('o'), c);
+  e.appendChild(text('er'));
+
+  var e = $('t5');
+  var c = e.firstChild;
+  e.insertBefore(b('1px green left '), c);
+  e.appendChild(text('er'));
+
+  var e = $('t6');
+  e.appendChild(b('2px green left border'));
+
+  var e = $('t7');
+  e.appendChild(div('green'));
+
+  var e = $('t8');
+  e.appendChild(div('green'));
+
+  var e = $('t9');
+  var c = b("1px green left border");
+  var d = div('');
+  d.appendChild(c);
+  e.appendChild(d);
+
+  var e = $('t10');
+  var c = b("1px green left border");
+  var d = div('');
+  d.setAttribute('style','border:inherit');
+  d.appendChild(c);
+  e.appendChild(d);
+
+  var e = $('t11');
+  var c = b("2px green left border");
+  var d = div('');
+  d.setAttribute('style','border:inherit');
+  d.appendChild(c);
+  e.appendChild(d);
+
+  var e = $('t12');
+  var c = e.firstChild;
+  e.insertBefore(text("This text"), c);
+  e.insertBefore(b(" should be"), c);
+  e.appendChild(text(" green"));
+
+  var e = $('t13');
+  e.className = 'test';
+
+  var e = $('t14');
+  e.removeAttribute('style')
+
+  var e = $('t15');
+  e.innerHTML=':scope{color:green}';
+  var e = $('t16');
+  e.innerHTML=':scope{color:inherit}';
+  var e = $('t17');
+  e.innerHTML=':scope{color:inherit}';
+  e.parentNode.appendChild(text("green"));
+
+  var e = $('t18');
+  var c = e.appendChild(div("green"));
+  document.body.offsetHeight;
+  document.styleSheets[8].cssRules[0].style.setProperty('color','green');
+  document.body.offsetHeight;
+
+  document.documentElement.className = '';
+}
+</script>
+</head>
+<body onload="runTest()">
+
+<span class="green"><div class="test" id="t1">ee</div></span>
+<span class="green"><div class="test" id="t1b">ee</div>x</span>
+<span><div class="test green" id="t2">ee</div></span>
+<span><div class="test green" id="t2b">ee</div>x</span>
+<br>
+<span><div class="test border" id="t3"> bord</div></span>
+<span><div class="test border" id="t4"><span> bord</span></div></span>
+<span class="border"><div class="test" id="t5">bord</div></span>
+<span class="border"><div class="test" style="border:inherit" id="t6"></div></span>
+<br>
+
+<span class="green"><div class="test" id="t7"></div></span>
+<span><div class="test green" id="t8"></div></span>
+<br>
+<span class="border"><div class="test" id="t9"></div></span>
+<span class="border"><div class="test" id="t10"></div></span>
+<span class="border"><div class="test" style="border:inherit" id="t11"></div></span>
+<br>
+
+<span style="color:red"><div class="test green" id="t12"></div></span>
+<span style="color:red"><span><style scoped>:scope{color:green}</style><di id="t13"v>green</div></span></span>
+<span style="color:red"><span class="test"><style scoped>:scope{color:green}</style><div id="t14" class="test" style="color:red">green</div></span></span>
+<span style="color:red"><div class="test"><style id="t15" scoped></style>green</div></span>
+<span style="color:red"><div class="test"><style scoped>:scope{color:green}</style>
+  <div class="test"><style scoped id="t16"></style>green</div>
+  <div class="test"><style scoped id="t17"></style></div></div></span>
+<span style="color:red"><div class="test"><style scoped>:scope{color:red}</style>
+  <div class="test" id="t18"><style scoped>:scope{color:red}</style></div></div></span>
+
+</body>
+</html>
