@@ -22,6 +22,7 @@ if (window.location === "chrome://browser/content/browser.xul") {
 }
 
 Services.prefs.setBoolPref("devtools.webide.enabled", true);
+Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
 
 Services.prefs.setCharPref("devtools.webide.addonsURL", TEST_BASE + "addons/simulators.json");
 Services.prefs.setCharPref("devtools.webide.simulatorAddonsURL", TEST_BASE + "addons/fxos_#SLASHED_VERSION#_simulator-#OS#.xpi");
@@ -32,6 +33,7 @@ Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "template
 
 SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.enabled");
+  Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
   Services.prefs.clearUserPref("devtools.webide.autoinstallADBHelper");
   Services.prefs.clearUserPref("devtools.webide.autoinstallFxdtAdapters");
 });

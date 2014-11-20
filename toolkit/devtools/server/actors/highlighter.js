@@ -48,7 +48,8 @@ const SIMPLE_OUTLINE_SHEET = ".__fx-devtools-hide-shortcut__ {" +
 let HIGHLIGHTER_CLASSES = exports.HIGHLIGHTER_CLASSES = {
   "BoxModelHighlighter": BoxModelHighlighter,
   "CssTransformHighlighter": CssTransformHighlighter,
-  "SelectorHighlighter": SelectorHighlighter
+  "SelectorHighlighter": SelectorHighlighter,
+  "RectHighlighter": RectHighlighter
 };
 
 /**
@@ -343,7 +344,17 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
   },
 
   /**
-   * Display the highlighter on a given NodeActor.
+   * Show the highlighter.
+   * This calls through to the highlighter instance's |show(node, options)|
+   * method.
+   *
+   * Most custom highlighters are made to highlight DOM nodes, hence the first
+   * NodeActor argument (NodeActor as in toolkit/devtools/server/actor/inspector).
+   * Note however that some highlighters use this argument merely as a context
+   * node: the RectHighlighter for instance uses it to calculate the absolute
+   * position of the provided rect. The SelectHighlighter uses it as a base node
+   * to run the provided CSS selector on.
+   *
    * @param NodeActor The node to be highlighted
    * @param Object Options for the custom highlighter
    */
@@ -1469,6 +1480,86 @@ SelectorHighlighter.prototype = {
   destroy: function() {
     this.hide();
     this.tabActor = null;
+  }
+};
+
+/**
+ * The RectHighlighter is a class that draws a rectangle highlighter at specific
+ * coordinates.
+ * It does *not* highlight DOM nodes, but rects.
+ * It also does *not* update dynamically, it only highlights a rect and remains
+ * there as long as it is shown.
+ */
+function RectHighlighter(tabActor) {
+  this.win = tabActor.window;
+  this.layoutHelpers = new LayoutHelpers(this.win);
+  this.markup = new CanvasFrameAnonymousContentHelper(tabActor,
+    this._buildMarkup.bind(this));
+}
+
+RectHighlighter.prototype = {
+  _buildMarkup: function() {
+    let doc = this.win.document;
+
+    let container = doc.createElement("div");
+    container.className = "highlighter-container";
+    container.innerHTML = '<div id="highlighted-rect" ' +
+                          'class="highlighted-rect" hidden="true">';
+
+    return container;
+  },
+
+  destroy: function() {
+    this.win = null;
+    this.layoutHelpers = null;
+    this.markup.destroy();
+  },
+
+  _hasValidOptions: function(options) {
+    let isValidNb = n => typeof n === "number" && n >= 0 && isFinite(n);
+    return options && options.rect &&
+           isValidNb(options.rect.x) &&
+           isValidNb(options.rect.y) &&
+           options.rect.width && isValidNb(options.rect.width) &&
+           options.rect.height && isValidNb(options.rect.height);
+  },
+
+  /**
+   * @param {DOMNode} node The highlighter rect is relatively positioned to the
+   * viewport this node is in. Using the provided node, the highligther will get
+   * the parent documentElement and use it as context to position the
+   * highlighter correctly.
+   * @param {Object} options Accepts the following options:
+   * - rect: mandatory object that should have the x, y, width, height properties
+   * - fill: optional fill color for the rect
+   */
+  show: function(node, options) {
+    if (!this._hasValidOptions(options) || !node || !node.ownerDocument) {
+      this.hide();
+      return;
+    }
+
+    let contextNode = node.ownerDocument.documentElement;
+
+    // Caculate the absolute rect based on the context node's adjusted quads.
+    let {bounds} = this.layoutHelpers.getAdjustedQuads(contextNode);
+    let x = "left:" + (bounds.x + options.rect.x) + "px;";
+    let y = "top:" + (bounds.y + options.rect.y) + "px;";
+    let width = "width:" + options.rect.width + "px;";
+    let height = "height:" + options.rect.height + "px;";
+
+    let style = x + y + width + height;
+    if (options.fill) {
+      style += "background:" + options.fill + ";";
+    }
+
+    // Set the coordinates of the highlighter and show it
+    this.markup.setAttributeForElement("highlighted-rect", "style", style);
+    this.markup.removeAttributeForElement("highlighted-rect", "hidden");
+  },
+
+  hide: function() {
+    this.markup.setAttributeForElement("highlighted-rect", "hidden", "true");
   }
 };
 

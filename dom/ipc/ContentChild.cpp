@@ -16,6 +16,7 @@
 
 #include "BlobChild.h"
 #include "CrashReporterChild.h"
+#include "GeckoProfiler.h"
 #include "TabChild.h"
 
 #include "mozilla/Attributes.h"
@@ -2381,6 +2382,48 @@ ContentChild::RecvOnAppThemeChanged()
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
         os->NotifyObservers(nullptr, "app-theme-changed", nullptr);
+    }
+    return true;
+}
+
+bool
+ContentChild::RecvStartProfiler(const uint32_t& aEntries,
+                                const double& aInterval,
+                                const nsTArray<nsCString>& aFeatures,
+                                const nsTArray<nsCString>& aThreadNameFilters)
+{
+    nsTArray<const char*> featureArray;
+    for (size_t i = 0; i < aFeatures.Length(); ++i) {
+        featureArray.AppendElement(aFeatures[i].get());
+    }
+
+    nsTArray<const char*> threadNameFilterArray;
+    for (size_t i = 0; i < aThreadNameFilters.Length(); ++i) {
+        threadNameFilterArray.AppendElement(aThreadNameFilters[i].get());
+    }
+
+    profiler_start(aEntries, aInterval, featureArray.Elements(), featureArray.Length(),
+                   threadNameFilterArray.Elements(), threadNameFilterArray.Length());
+
+    return true;
+}
+
+bool
+ContentChild::RecvStopProfiler()
+{
+    profiler_stop();
+    return true;
+}
+
+bool
+ContentChild::AnswerGetProfile(nsCString* aProfile)
+{
+    char* profile = profiler_get_profile();
+    if (profile) {
+        *aProfile = nsCString(profile, strlen(profile));
+        free(profile);
+    } else {
+        *aProfile = EmptyCString();
     }
     return true;
 }

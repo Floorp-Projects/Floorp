@@ -40,7 +40,7 @@ loop.panel = (function(_, mozL10n) {
       // getDefaultProps (bug 1100258).
       return {
         selectedTab: this.props.selectedTab ||
-          (navigator.mozLoop.getLoopBoolPref("rooms.enabled") ?
+          (navigator.mozLoop.getLoopPref("rooms.enabled") ?
             "rooms" : "call")
       };
     },
@@ -166,7 +166,7 @@ loop.panel = (function(_, mozL10n) {
 
   var GettingStartedView = React.createClass({
     componentDidMount: function() {
-      navigator.mozLoop.setLoopBoolPref("gettingStarted.seen", true);
+      navigator.mozLoop.setLoopPref("gettingStarted.seen", true);
     },
 
     handleButtonClick: function() {
@@ -174,7 +174,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      if (navigator.mozLoop.getLoopBoolPref("gettingStarted.seen")) {
+      if (navigator.mozLoop.getLoopPref("gettingStarted.seen")) {
         return null;
       }
       return (
@@ -194,14 +194,14 @@ loop.panel = (function(_, mozL10n) {
 
   var ToSView = React.createClass({
     getInitialState: function() {
-      return {seenToS: navigator.mozLoop.getLoopCharPref('seenToS')};
+      return {seenToS: navigator.mozLoop.getLoopPref("seenToS")};
     },
 
     render: function() {
       if (this.state.seenToS == "unseen") {
         var locale = mozL10n.getLanguage();
-        var terms_of_use_url = navigator.mozLoop.getLoopCharPref('legal.ToS_url');
-        var privacy_notice_url = navigator.mozLoop.getLoopCharPref('legal.privacy_url');
+        var terms_of_use_url = navigator.mozLoop.getLoopPref('legal.ToS_url');
+        var privacy_notice_url = navigator.mozLoop.getLoopPref('legal.privacy_url');
         var tosHTML = mozL10n.get("legal_text_and_links3", {
           "clientShortname": mozL10n.get("clientShortname2"),
           "terms_of_use": React.renderComponentToStaticMarkup(
@@ -286,6 +286,10 @@ loop.panel = (function(_, mozL10n) {
       return !!navigator.mozLoop.userProfile;
     },
 
+    openGettingStartedTour: function() {
+      navigator.mozLoop.openGettingStartedTour("settingsMenu");
+    },
+
     render: function() {
       var cx = React.addons.classSet;
 
@@ -308,6 +312,8 @@ loop.panel = (function(_, mozL10n) {
                                    onClick={this.handleClickAccountEntry}
                                    icon="account"
                                    displayed={this._isSignedIn()} />
+            <SettingsDropdownEntry label={mozL10n.get("tour_label")}
+                                   onClick={this.openGettingStartedTour} />
             <SettingsDropdownEntry label={this._isSignedIn() ?
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin")}
@@ -720,7 +726,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _roomsEnabled: function() {
-      return navigator.mozLoop.getLoopBoolPref("rooms.enabled");
+      return navigator.mozLoop.getLoopPref("rooms.enabled");
     },
 
     _onStatusChanged: function() {
@@ -845,9 +851,8 @@ loop.panel = (function(_, mozL10n) {
     var client = new loop.Client();
     var notifications = new sharedModels.NotificationCollection();
     var dispatcher = new loop.Dispatcher();
-    var roomStore = new loop.store.RoomStore({
-      mozLoop: navigator.mozLoop,
-      dispatcher: dispatcher
+    var roomStore = new loop.store.RoomStore(dispatcher, {
+      mozLoop: navigator.mozLoop
     });
 
     React.renderComponent(<PanelView
