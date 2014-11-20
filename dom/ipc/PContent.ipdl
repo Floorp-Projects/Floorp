@@ -509,6 +509,15 @@ child:
      */
     OnAppThemeChanged();
 
+    /**
+     * Control the Gecko Profiler in the child process.
+     */
+    async StartProfiler(uint32_t aEntries, double aInterval, nsCString[] aFeatures,
+                        nsCString[] aThreadNameFilters);
+    async StopProfiler();
+    intr GetProfile()
+      returns (nsCString aProfile);
+
 parent:
     /**
      * Tell the parent process a new accessible document has been created.

@@ -196,6 +196,9 @@ array_slice(JSContext *cx, unsigned argc, js::Value *vp);
 extern bool
 NewbornArrayPush(JSContext *cx, HandleObject obj, const Value &v);
 
+extern ArrayObject *
+ArrayConstructorOneArg(JSContext *cx, HandleTypeObject type, int32_t lengthInt);
+
 } /* namespace js */
 
 #ifdef DEBUG

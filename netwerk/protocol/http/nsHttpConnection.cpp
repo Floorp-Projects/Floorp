@@ -1644,7 +1644,8 @@ nsHttpConnection::OnWriteSegment(char *buf,
         return NS_ERROR_FAILURE; // stop iterating
     }
 
-    if (ChaosMode::isActive() && ChaosMode::randomUint32LessThan(2)) {
+    if (ChaosMode::isActive(ChaosMode::IOAmounts) &&
+        ChaosMode::randomUint32LessThan(2)) {
         // read 1...count bytes
         count = ChaosMode::randomUint32LessThan(count) + 1;
     }
