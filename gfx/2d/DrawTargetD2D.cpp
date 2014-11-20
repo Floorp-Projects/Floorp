@@ -77,8 +77,6 @@ public:
     HRESULT hr = mDT->mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpTexture));
     if (FAILED(hr)) {
       gfxCriticalError() << "[D2D] CreateTexture2D failure " << size << " Code: " << hexa(hr);
-      // Crash debug builds but try to recover in release builds.
-      MOZ_ASSERT(false);
       return;
     }
     mDT->mDevice->CopyResource(tmpTexture, mDT->mTexture);
@@ -94,8 +92,6 @@ public:
 
     if (FAILED(hr)) {
       gfxCriticalError() << "[D2D] CreateSharedBitmap failure " << size << " Code: " << hexa(hr);
-      // Crash debug builds but try to recover in release builds.
-      MOZ_ASSERT(false);
       return;
     }
 
@@ -1386,7 +1382,7 @@ DrawTargetD2D::Init(ID3D10Texture2D *aTexture, SurfaceFormat aFormat)
   mFormat = aFormat;
 
   if (!mTexture) {
-    gfxDebug() << "No valid texture for Direct2D draw target initialization.";
+    gfxCriticalError() << "No valid texture for Direct2D draw target initialization.";
     return false;
   }
 
