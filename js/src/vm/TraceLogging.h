@@ -8,6 +8,7 @@
 #define TraceLogging_h
 
 #include "mozilla/GuardObjects.h"
+#include "mozilla/UniquePtr.h"
 
 #include "jsalloc.h"
 #include "jslock.h"
@@ -77,7 +78,7 @@ class TraceLoggerThread
     uint32_t enabled;
     bool failed;
 
-    TraceLoggerGraph graph;
+    mozilla::UniquePtr<TraceLoggerGraph> graph;
 
     PointerHashMap pointerMap;
     Vector<char *, 0, js::SystemAllocPolicy> extraTextId;
@@ -92,6 +93,7 @@ class TraceLoggerThread
     ~TraceLoggerThread();
 
     bool init(uint32_t loggerId);
+    void initGraph();
 
     bool enable();
     bool enable(JSContext *cx);
@@ -149,6 +151,7 @@ class TraceLoggerThreadState
     bool enabledTextIds[TraceLogger_Last];
     bool mainThreadEnabled;
     bool offThreadEnabled;
+    bool graphSpewingEnabled;
     ThreadLoggerHashMap threadLoggers;
     MainThreadLoggers mainThreadLoggers;
 
