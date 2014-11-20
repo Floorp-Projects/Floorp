@@ -60,6 +60,7 @@ add_task(function* test_rejected_promise_args() {
   }
 });
 
+// Test that we can transfer to the worker using argument `transfer`
 add_task(function* test_transfer_args() {
   let array = new Uint8Array(4);
   for (let i = 0; i < 4; ++i) {
@@ -77,6 +78,29 @@ add_task(function* test_transfer_args() {
   let array2 = new Uint8Array(result);
   for (let i = 0; i < 4; ++i) {
     Assert.equal(array2[i], i);
+  }
+});
+
+// Test that we can transfer to the worker using an instance of `Meta`
+add_task(function* test_transfer_with_meta() {
+  let array = new Uint8Array(4);
+  for (let i = 0; i < 4; ++i) {
+    array[i] = i;
+  }
+  Assert.equal(array.buffer.byteLength, 4, "The buffer is not neutered yet");
+
+  let message = new BasePromiseWorker.Meta(array, {transfers: [array.buffer]});
+  let result = (yield worker.post("bounce", [message]))[0];
+
+  // Check that the buffer has been sent
+  Assert.equal(array.buffer.byteLength, 0, "The buffer has been neutered");
+
+  // Check that the result is correct
+  Assert.equal(result.toString(), "[object Uint8Array]", "The result appears to be a Typed Array");
+  Assert.equal(result.byteLength, 4, "The result has the right size");
+
+  for (let i = 0; i < 4; ++i) {
+    Assert.equal(result[i], i);
   }
 });
 
