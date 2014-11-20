@@ -6874,19 +6874,19 @@ class LThrowUninitializedLexical : public LCallInstructionHelper<0, 0, 0>
 class LMemoryBarrier : public LInstructionHelper<0, 0, 0>
 {
   private:
-    const int type_;
+    const MemoryBarrierBits type_;
 
   public:
     LIR_HEADER(MemoryBarrier)
 
     // The parameter 'type' is a bitwise 'or' of the barrier types needed,
     // see AtomicOp.h.
-    explicit LMemoryBarrier(int type) : type_(type)
+    explicit LMemoryBarrier(MemoryBarrierBits type) : type_(type)
     {
-        MOZ_ASSERT((type_ & ~MembarAllbits) == 0);
+        MOZ_ASSERT((type_ & ~MembarAllbits) == MembarNobits);
     }
 
-    int type() const {
+    MemoryBarrierBits type() const {
         return type_;
     }
 

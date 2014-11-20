@@ -2250,7 +2250,7 @@ JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
 }
 
 void
-CodeGeneratorARM::memoryBarrier(int barrier)
+CodeGeneratorARM::memoryBarrier(MemoryBarrierBits barrier)
 {
     // On ARMv6 the optional argument (BarrierST, etc) is ignored.
     if (barrier == (MembarStoreStore|MembarSynchronizing))

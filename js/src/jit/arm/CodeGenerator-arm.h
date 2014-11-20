@@ -181,7 +181,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool modICommon(MMod *mir, Register lhs, Register rhs, Register output, LSnapshot *snapshot,
                     Label &done);
 
-    void memoryBarrier(int barrier);
+    void memoryBarrier(MemoryBarrierBits barrier);
 
   public:
     CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
