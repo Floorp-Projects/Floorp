@@ -794,6 +794,7 @@ public:
 
   static void DestroySurface(void* aPropertyValue);
   static void DestroyDT(void* aPropertyValue);
+  static void DestroyContentArray(void* aPropertyValue);
 
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
@@ -852,6 +853,13 @@ public:
   NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
   NS_DECLARE_FRAME_PROPERTY(RefusedAsyncAnimation, nullptr)
+
+  NS_DECLARE_FRAME_PROPERTY(GenConProperty, DestroyContentArray)
+
+  nsTArray<nsIContent*>* GetGenConPseudos() {
+    const FramePropertyDescriptor* prop = GenConProperty();
+    return static_cast<nsTArray<nsIContent*>*>(Properties().Get(prop));
+  }
 
   /**
    * Return the distance between the border edge of the frame and the

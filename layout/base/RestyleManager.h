@@ -31,7 +31,8 @@ namespace dom {
   class Element;
 } // namespace dom
 
-class RestyleManager MOZ_FINAL {
+class RestyleManager MOZ_FINAL
+{
 public:
   friend class ::nsRefreshDriver;
   friend class RestyleTracker;
@@ -516,7 +517,8 @@ private:
  * An ElementRestyler is created for *each* element in a subtree that we
  * recompute styles for.
  */
-class ElementRestyler MOZ_FINAL {
+class ElementRestyler MOZ_FINAL
+{
 public:
   typedef mozilla::dom::Element Element;
 
@@ -686,6 +688,27 @@ private:
 #ifdef RESTYLE_LOGGING
   int32_t mLoggingDepth;
 #endif
+};
+
+/**
+ * This pushes any display:contents nodes onto a TreeMatchContext.
+ * Use it before resolving style for kids of aParent where aParent
+ * (and further ancestors) may be display:contents nodes which have
+ * not yet been pushed onto TreeMatchContext.
+ */
+class MOZ_STACK_CLASS AutoDisplayContentsAncestorPusher MOZ_FINAL
+{
+ public:
+  typedef mozilla::dom::Element Element;
+  AutoDisplayContentsAncestorPusher(TreeMatchContext& aTreeMatchContext,
+                                    nsPresContext*    aPresContext,
+                                    nsIContent*       aParent);
+  ~AutoDisplayContentsAncestorPusher();
+  bool IsEmpty() const { return mAncestors.Length() == 0; }
+private:
+  TreeMatchContext& mTreeMatchContext;
+  nsPresContext* const mPresContext;
+  nsAutoTArray<mozilla::dom::Element*, 4> mAncestors;
 };
 
 } // namespace mozilla
