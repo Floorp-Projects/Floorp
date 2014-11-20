@@ -81,7 +81,7 @@ BaselineCompiler::compile()
     JitSpew(JitSpew_Codegen, "# Emitting baseline code for script %s:%d",
             script->filename(), script->lineno());
 
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     AutoTraceLog logScript(logger, TraceLogCreateTextId(logger, script));
     AutoTraceLog logCompile(logger, TraceLogger_BaselineCompilation);
 
@@ -375,7 +375,7 @@ BaselineCompiler::emitPrologue()
         masm.bind(&earlyStackCheckFailed);
 
 #ifdef JS_TRACE_LOGGING
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     Register loggerReg = RegisterSet::Volatile().takeGeneral();
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);
@@ -425,7 +425,7 @@ BaselineCompiler::emitEpilogue()
     masm.bind(&return_);
 
 #ifdef JS_TRACE_LOGGING
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     Register loggerReg = RegisterSet::Volatile().takeGeneral();
     masm.Push(loggerReg);
     masm.movePtr(ImmPtr(logger), loggerReg);

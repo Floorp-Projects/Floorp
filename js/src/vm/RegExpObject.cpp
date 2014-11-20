@@ -456,7 +456,7 @@ bool
 RegExpShared::compile(JSContext *cx, HandleLinearString input,
                       CompilationMode mode, ForceByteCodeEnum force)
 {
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
     AutoTraceLog logCompile(logger, TraceLogger_IrregexpCompile);
 
     if (!sticky()) {
@@ -543,7 +543,7 @@ RegExpRunStatus
 RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t start,
                       MatchPairs *matches)
 {
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
 
     CompilationMode mode = matches ? Normal : MatchOnly;
 
