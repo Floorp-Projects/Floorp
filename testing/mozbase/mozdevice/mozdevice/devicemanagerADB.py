@@ -637,7 +637,7 @@ class DeviceManagerADB(DeviceManager):
                 raise DMError("bad status for device %s: %s" % (self._deviceSerial, deviceStatus))
 
         # Check to see if we can connect to device and run a simple command
-        if self._checkCmd(["shell", "echo"]) is None:
+        if not self._checkCmd(["shell", "echo"]) == 0:
             raise DMError("unable to connect to device")
 
     def _checkForRoot(self):
