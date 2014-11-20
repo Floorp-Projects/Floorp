@@ -27,7 +27,7 @@
 .theme-selected ~ .editor .theme-fg-color5,
 .theme-selected ~ .editor .theme-fg-color6,
 .theme-selected ~ .editor .theme-fg-color7 {
-  color: #f5f7fa; /* Light foreground text */
+  color: var(--theme-selection-color);
 }
 
 /* In case a node isn't displayed in the page, we fade the syntax highlighting */
@@ -53,14 +53,9 @@
   overflow: hidden;
 }
 
-.theme-dark #previewbar {
-  background: #252c33; /* Tab Toolbar */
-  border-color: #000; /* Splitters */
-}
-
-.theme-light #previewbar {
-  background: #ebeced; /* Tab Toolbar */
-  border-color: #aaa; /* Splitters */
+#previewbar {
+  background: var(--theme-tab-toolbar-background);
+  border-color: var(--theme-splitter-color);
 }
 
 #preview {
@@ -99,12 +94,7 @@
   -moz-user-select: none;
 }
 
-.theme-dark .markupview-events {
-  background-color: #b6babf;
-  color: #14171a;
-}
-
-.theme-light .markupview-events {
-  background-color: #585959;
-  color: #fcfcfc;
+.markupview-events {
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-body-background);
 }

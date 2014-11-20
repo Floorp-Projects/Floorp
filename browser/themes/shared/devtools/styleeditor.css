@@ -14,24 +14,24 @@
 
 .theme-dark .stylesheet-title,
 .theme-dark .stylesheet-name {
-  color: #f5f7fa;
+  color: var(--theme-selection-color);
 }
 
 .theme-dark .stylesheet-rule-count,
 .theme-dark .stylesheet-linked-file,
 .theme-dark .stylesheet-saveButton {
-  color: #b6babf;
+  color: var(--theme-body-color-alt);
 }
 
 .theme-light .stylesheet-title,
 .theme-light .stylesheet-name {
-  color: #585959;
+  color: var(--theme-body-color-alt);
 }
 
 .theme-light .stylesheet-rule-count,
 .theme-light .stylesheet-linked-file,
 .theme-light .stylesheet-saveButton {
-  color: #18191a;
+  color: var(--theme-body-color);
 }
 
 .stylesheet-saveButton {
@@ -44,7 +44,7 @@
 .theme-light .splitview-active .stylesheet-rule-count,
 .theme-light .splitview-active .stylesheet-linked-file,
 .theme-light .splitview-active .stylesheet-saveButton {
-  color: #f5f7fa;
+  color: var(--theme-selection-color);
 }
 
 .splitview-nav:focus {
@@ -205,12 +205,8 @@ h3 {
   }
 }
 
-.theme-light .csscoverage-report {
-  background-color: #f0f1f2; /* Toolbars */
-}
-
-.theme-dark .csscoverage-report {
-  background-color: #343c45; /* Toolbars */
+.csscoverage-report {
+  background-color: var(--theme-toolbar-background);
 }
 
 .csscoverage-report-container {
@@ -274,34 +270,19 @@ h3 {
   -moz-border-start: none;
 }
 
-.theme-dark .chart-colored-blob[name="Used Preload"] {
-  fill: #df80ff; /* Pink highlight */
-  background: #df80ff;
+.chart-colored-blob[name="Used Preload"] {
+  fill: var(--theme-highlight-pink);
+  background: var(--theme-highlight-pink);;
 }
 
-.theme-light .chart-colored-blob[name="Used Preload"] {
-  fill: #b82ee5; /* Pink highlight */
-  background: #b82ee5;
+.chart-colored-blob[name=Used] {
+  fill: var(--theme-highlight-green);
+  background: var(--theme-highlight-green);
 }
 
-.theme-dark .chart-colored-blob[name=Used] {
-  fill: #70bf53; /* Green highlight */
-  background: #70bf53;
-}
-
-.theme-light .chart-colored-blob[name=Used] {
-  fill: #2cbb0f; /* Green highlight */
-  background: #2cbb0f;
-}
-
-.theme-dark .chart-colored-blob[name=Unused] {
-  fill: #d99b28; /* Light Orange highlight */
-  background: #d99b28;
-}
-
-.theme-light .chart-colored-blob[name=Unused] {
-  fill: #d97e00; /* Light Orange highlight */
-  background: #d97e00;
+.chart-colored-blob[name=Unused] {
+  fill: var(--theme-highlight-lightorange);
+  background: var(--theme-highlight-lightorange);
 }
 
 /* Undo 'largest' customization */
