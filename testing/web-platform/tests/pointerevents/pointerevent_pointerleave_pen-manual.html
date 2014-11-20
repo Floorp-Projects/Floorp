@@ -15,7 +15,7 @@
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerleave event"); // set up test harness
             // showPointerTypes is defined in pointerevent_support.js
-            // Requirements: the callbakc function will reference the test_pointerEvent object and
+            // Requirements: the callback function will reference the test_pointerEvent object and
             // will fail unless the async_test is created with the var name "test_pointerEvent".
             add_completion_callback(showPointerTypes);
 
@@ -23,6 +23,7 @@
                 var target0 = document.getElementById("target0");
 
                 on_event(target0, "pointerleave", function (event) {
+                    detected_pointertypes[event.pointerType] = true;
                     check_PointerEvent(event);
                     test_pointerEvent.step(function () {
                         assert_equals(event.pointerType, "pen", "Test should be run using a pen as input");
@@ -33,7 +34,6 @@
                             (event.clientY < target0.getBoundingClientRect().bottom),
                             "pointerleave should be received inside of target bounds");
                     });
-                    detected_pointertypes[event.pointerType] = true;
                     test_pointerEvent.done(); // complete test
                 });
             }

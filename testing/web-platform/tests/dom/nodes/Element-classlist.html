@@ -2,7 +2,7 @@
 <html>
 	<head class="test test">
 		<title class=" ">Element.classList in case-sensitive documents</title>
-		<link rel="help" href="http://dom.spec.whatwg.org/#concept-class">
+		<link rel="help" href="https://dom.spec.whatwg.org/#concept-class">
 		<script type="text/javascript" src="/resources/testharness.js"></script>
 		<script type="text/javascript" src="/resources/testharnessreport.js"></script>
 		<style type="text/css">
@@ -31,7 +31,7 @@ test(function () {
 	assert_not_equals( getComputedStyle(elem,null).fontStyle, 'italic', 'critical test; required by the testsuite' );
 }, 'CSS .foo selectors must not match elements without any class');
 test(function () {
-	assert_equals( secondelem.classList.length, 1, 'duplicates in initial string should be removed per http://dom.spec.whatwg.org/#concept-class' );
+	assert_equals( secondelem.classList.length, 1, 'duplicates in initial string should be removed per https://dom.spec.whatwg.org/#concept-class' );
 	assert_equals( secondelem.classList.item(0), 'test' );
 	assert_true( secondelem.classList.contains('test') );
 }, 'classList must be correct for an element that has classes');

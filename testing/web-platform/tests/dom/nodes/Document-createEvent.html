@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <title>Document.createEvent</title>
-<link rel=help href="http://dom.spec.whatwg.org/#dom-document-createevent">
+<link rel=help href="https://dom.spec.whatwg.org/#dom-document-createevent">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="Document-createEvent.js"></script>
 <div id="log"></div>
 <script>
 function testAlias(arg, iface) {
@@ -32,16 +33,7 @@ function testAlias(arg, iface) {
                   "isTrusted should be initialized to false");
   }, "createEvent('" + arg + "') should be initialized correctly.");
 }
-[
-  ["CustomEvent", "CustomEvent"],
-  ["Event", "Event"],
-  ["Events", "Event"],
-  ["HTMLEvents", "Event"],
-  ["MouseEvent", "MouseEvent"],
-  ["MouseEvents", "MouseEvent"],
-  ["UIEvent", "UIEvent"],
-  ["UIEvents", "UIEvent"]
-].forEach(function(alias) {
+aliases.forEach(function(alias) {
   testAlias(alias[0], alias[1]);
   testAlias(alias[0].toLowerCase(), alias[1]);
   testAlias(alias[0].toUpperCase(), alias[1]);
