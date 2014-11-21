@@ -21,7 +21,6 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/Opcodes.h"
 #include "vm/RegExpStatics.h"
-#include "vm/TraceLogging.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
@@ -342,11 +341,6 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
 {
     if (!optimizationInfo().inlineInterpreted())
         return InliningDecision_DontInline;
-
-    if (TraceLogTextIdEnabled(TraceLogger_InlinedScripts)) {
-        return DontInline(nullptr, "Tracelogging of inlined scripts is enabled"
-                                   "but Tracelogger cannot do that yet.");
-    }
 
     if (!target->isInterpreted())
         return DontInline(nullptr, "Non-interpreted target");
