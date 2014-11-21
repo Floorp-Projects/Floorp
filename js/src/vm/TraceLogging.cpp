@@ -106,8 +106,6 @@ TraceLoggerThread::init()
 {
     if (!pointerMap.init())
         return false;
-    if (!extraTextId.init())
-        return false;
     if (!events.init())
         return false;
 
@@ -159,10 +157,10 @@ TraceLoggerThread::~TraceLoggerThread()
         graph = nullptr;
     }
 
-    for (TextIdHashMap::Range r = extraTextId.all(); !r.empty(); r.popFront())
-        js_delete(r.front().value());
-    extraTextId.finish();
-    pointerMap.finish();
+    for (uint32_t i = 0; i < extraTextId.length(); i++) {
+        js_free(extraTextId[i]);
+    }
+    extraTextId.clear();
 }
 
 bool
@@ -227,8 +225,7 @@ TraceLoggerThread::enable(JSContext *cx)
             }
         }
 
-        TraceLoggerEvent event(this, TraceLogger_Scripts, script);
-        startEvent(event);
+        startEvent(createTextId(TraceLogger_Scripts, script));
         startEvent(engine);
     }
 
@@ -260,11 +257,7 @@ TraceLoggerThread::eventText(uint32_t id)
 {
     if (id < TraceLogger_Last)
         return TLTextIdString(static_cast<TraceLoggerTextId>(id));
-
-    TextIdHashMap::Ptr p = extraTextId.lookup(id);
-    MOZ_ASSERT(p);
-
-    return p->value()->string();
+    return extraTextId[id - TraceLogger_Last];
 }
 
 bool
@@ -312,23 +305,8 @@ TraceLoggerThread::extractScriptDetails(uint32_t textId, const char **filename, 
     *colno_len = strlen(*colno);
 }
 
-TraceLoggerEventPayload *
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId textId)
-{
-    TextIdHashMap::AddPtr p = extraTextId.lookupForAdd(textId);
-    if (p)
-        return p->value();
-
-    TraceLoggerEventPayload *payload = js_new<TraceLoggerEventPayload>(textId, (char *)nullptr);
-
-    if (!extraTextId.add(p, textId, payload))
-        return nullptr;
-
-    return payload;
-}
-
-TraceLoggerEventPayload *
-TraceLoggerThread::getOrCreateEventPayload(const char *text)
+uint32_t
+TraceLoggerThread::createTextId(const char *text)
 {
     assertNoQuotes(text);
 
@@ -339,36 +317,29 @@ TraceLoggerThread::getOrCreateEventPayload(const char *text)
     size_t len = strlen(text);
     char *str = js_pod_malloc<char>(len + 1);
     if (!str)
-        return nullptr;
+        return TraceLogger_Error;
 
     DebugOnly<size_t> ret = JS_snprintf(str, len + 1, "%s", text);
     MOZ_ASSERT(ret == len);
 
-    uint32_t textId = extraTextId.count() + TraceLogger_Last;
-
-    TraceLoggerEventPayload *payload = js_new<TraceLoggerEventPayload>(textId, str);
-    if (!payload) {
+    if (!extraTextId.append(str)) {
         js_free(str);
-        return nullptr;
+        return TraceLogger_Error;
     }
 
-    if (!extraTextId.putNew(textId, payload)) {
-        js_delete(payload);
-        return nullptr;
-    }
-
-    if (!pointerMap.add(p, text, payload))
-        return nullptr;
+    uint32_t textId = extraTextId.length() - 1 + TraceLogger_Last;
+    if (!pointerMap.add(p, text, textId))
+        return TraceLogger_Error;
 
     if (graph.get())
-        graph->addTextId(textId, str);
+        graph->addTextId(textId, text);
 
-    return payload;
+    return textId;
 }
 
-TraceLoggerEventPayload *
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char *filename,
-                                           size_t lineno, size_t colno, const void *ptr)
+uint32_t
+TraceLoggerThread::createTextId(TraceLoggerTextId type, const char *filename, size_t lineno,
+                                size_t colno, const void *ptr)
 {
     MOZ_ASSERT(type == TraceLogger_Scripts || type == TraceLogger_AnnotateScripts ||
                type == TraceLogger_InlinedScripts);
@@ -381,7 +352,7 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char *f
     // Only log scripts when enabled otherwise return the global Scripts textId,
     // which will get filtered out.
     if (!traceLoggers.isTextIdEnabled(type))
-        return getOrCreateEventPayload(type);
+        return type;
 
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(ptr);
     if (p)
@@ -397,65 +368,42 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char *f
     size_t len = 7 + lenFilename + 1 + lenLineno + 1 + lenColno;
     char *str = js_pod_malloc<char>(len + 1);
     if (!str)
-        return nullptr;
+        return TraceLogger_Error;
 
-    DebugOnly<size_t> ret =
-        JS_snprintf(str, len + 1, "script %s:%u:%u", filename, lineno, colno);
+    DebugOnly<size_t> ret = JS_snprintf(str, len + 1, "script %s:%u:%u", filename, lineno, colno);
     MOZ_ASSERT(ret == len);
 
-    uint32_t textId = extraTextId.count() + TraceLogger_Last;
-    TraceLoggerEventPayload *payload = js_new<TraceLoggerEventPayload>(textId, str);
-    if (!payload) {
+    if (!extraTextId.append(str)) {
         js_free(str);
-        return nullptr;
+        return TraceLogger_Error;
     }
 
-    if (!extraTextId.putNew(textId, payload)) {
-        js_delete(payload);
-        return nullptr;
-    }
-
-    if (!pointerMap.add(p, ptr, payload))
-        return nullptr;
+    uint32_t textId = extraTextId.length() - 1 + TraceLogger_Last;
+    if (!pointerMap.add(p, ptr, textId))
+        return TraceLogger_Error;
 
     if (graph.get())
         graph->addTextId(textId, str);
 
-    return payload;
+    return textId;
 }
 
-TraceLoggerEventPayload *
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, JSScript *script)
+uint32_t
+TraceLoggerThread::createTextId(TraceLoggerTextId type, JSScript *script)
 {
-    return getOrCreateEventPayload(type, script->filename(), script->lineno(), script->column(),
-                                   script);
+    return createTextId(type, script->filename(), script->lineno(), script->column(), script);
 }
 
-TraceLoggerEventPayload *
-TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type,
-                                           const JS::ReadOnlyCompileOptions &script)
+uint32_t
+TraceLoggerThread::createTextId(TraceLoggerTextId type, const JS::ReadOnlyCompileOptions &script)
 {
-    return getOrCreateEventPayload(type, script.filename(), script.lineno, script.column, &script);
-}
-
-void
-TraceLoggerThread::startEvent(TraceLoggerTextId id) {
-    startEvent(uint32_t(id));
-}
-
-void
-TraceLoggerThread::startEvent(const TraceLoggerEvent &event) {
-    if (!event.hasPayload()) {
-        startEvent(TraceLogger_Error);
-        return;
-    }
-    startEvent(event.payload()->textId());
+    return createTextId(type, script.filename(), script.lineno, script.column, &script);
 }
 
 void
 TraceLoggerThread::startEvent(uint32_t id)
 {
-    MOZ_ASSERT(TLTextIdIsTreeEvent(id) || id == TraceLogger_Error);
+    MOZ_ASSERT(TLTextIdIsTreeEvent(id));
     if (!traceLoggers.isTextIdEnabled(id))
        return;
 
@@ -463,33 +411,13 @@ TraceLoggerThread::startEvent(uint32_t id)
 }
 
 void
-TraceLoggerThread::stopEvent(TraceLoggerTextId id) {
-    stopEvent(uint32_t(id));
-}
-
-void
-TraceLoggerThread::stopEvent(const TraceLoggerEvent &event) {
-    if (!event.hasPayload()) {
-        stopEvent(TraceLogger_Error);
-        return;
-    }
-    stopEvent(event.payload()->textId());
-}
-
-void
 TraceLoggerThread::stopEvent(uint32_t id)
 {
-    MOZ_ASSERT(TLTextIdIsTreeEvent(id) || id == TraceLogger_Error);
+    MOZ_ASSERT(TLTextIdIsTreeEvent(id));
     if (!traceLoggers.isTextIdEnabled(id))
         return;
 
     logTimestamp(TraceLogger_Stop);
-}
-
-void
-TraceLoggerThread::logTimestamp(TraceLoggerTextId id)
-{
-    logTimestamp(uint32_t(id));
 }
 
 void
@@ -520,14 +448,6 @@ TraceLoggerThread::logTimestamp(uint32_t id)
             EventEntry &entryStop = events.pushUninitialized();
             entryStop.time = rdtsc() - traceLoggers.startupTime;
             entryStop.textId = TraceLogger_Stop;
-        }
-
-        // Free all TextEvents that have no uses anymore.
-        for (TextIdHashMap::Enum e(extraTextId); !e.empty(); e.popFront()) {
-            if (e.front().value()->uses() == 0) {
-                js_delete(e.front().value());
-                e.removeFront();
-            }
         }
     }
 
@@ -877,40 +797,4 @@ void
 js::TraceLogDisableTextId(JSContext *cx, uint32_t textId)
 {
     traceLoggers.disableTextId(cx, textId);
-}
-
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId textId)
-{
-    payload_ = logger->getOrCreateEventPayload(textId);
-    if (payload_)
-        payload_->use();
-}
-
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId type,
-                                   JSScript *script)
-{
-    payload_ = logger->getOrCreateEventPayload(type, script);
-    if (payload_)
-        payload_->use();
-}
-
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId type,
-                                   const JS::ReadOnlyCompileOptions &compileOptions)
-{
-    payload_ = logger->getOrCreateEventPayload(type, compileOptions);
-    if (payload_)
-        payload_->use();
-}
-
-TraceLoggerEvent::TraceLoggerEvent(TraceLoggerThread *logger, const char *text)
-{
-    payload_ = logger->getOrCreateEventPayload(text);
-    if (payload_)
-        payload_->use();
-}
-
-TraceLoggerEvent::~TraceLoggerEvent()
-{
-    if (payload_)
-        payload_->release();
 }
