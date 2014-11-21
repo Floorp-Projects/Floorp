@@ -293,25 +293,6 @@ class PastebinProvider(object):
 
 
 @CommandProvider
-class ReviewboardToolsProvider(MachCommandBase):
-    @Command('rbt', category='devenv',
-        description='Run Reviewboard Tools')
-    @CommandArgument('args', nargs='...', help='Arguments to rbt tool')
-    def rbt(self, args):
-        if not args:
-            args = ['help']
-
-        self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_package('RBTools==0.6')
-
-        from rbtools.commands.main import main
-
-        # main() doesn't accept arguments and instead reads from sys.argv. So,
-        # we fake it out.
-        sys.argv = ['rbt'] + args
-        return main()
-
-@CommandProvider
 class FormatProvider(MachCommandBase):
     @Command('clang-format', category='misc',
         description='Run clang-format on current changes')
