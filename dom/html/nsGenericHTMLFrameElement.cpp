@@ -307,6 +307,10 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   nsresult rv = permMgr->TestPermissionFromPrincipal(principal, "browser", &permission);
   NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
+    rv = permMgr->TestPermissionFromPrincipal(principal, "embed-widgets", &permission);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+  }
   *aOut = permission == nsIPermissionManager::ALLOW_ACTION;
   return NS_OK;
 }
