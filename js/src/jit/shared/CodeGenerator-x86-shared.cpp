@@ -2720,16 +2720,16 @@ CodeGeneratorX86Shared::visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *ins)
     MSimdBinaryComp::Operation op = ins->operation();
     switch (op) {
       case MSimdBinaryComp::equal:
-        masm.cmpps(rhs, lhs, 0x0);
+        masm.cmpeqps(rhs, lhs);
         return true;
       case MSimdBinaryComp::lessThan:
-        masm.cmpps(rhs, lhs, 0x1);
+        masm.cmpltps(rhs, lhs);
         return true;
       case MSimdBinaryComp::lessThanOrEqual:
-        masm.cmpps(rhs, lhs, 0x2);
+        masm.cmpleps(rhs, lhs);
         return true;
       case MSimdBinaryComp::notEqual:
-        masm.cmpps(rhs, lhs, 0x4);
+        masm.cmpneqps(rhs, lhs);
         return true;
       case MSimdBinaryComp::greaterThanOrEqual:
       case MSimdBinaryComp::greaterThan:
@@ -2796,7 +2796,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
         return true;
       case MSimdBinaryArith::Max: {
         masm.movaps(lhs, ScratchSimdReg);
-        masm.cmpps(rhs, ScratchSimdReg, 0x3);
+        masm.cmpunordps(rhs, ScratchSimdReg);
 
         FloatRegister tmp = ToFloatRegister(ins->temp());
         masm.movaps(rhs, tmp);
