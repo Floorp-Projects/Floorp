@@ -1101,7 +1101,7 @@ XPCNativeScriptableShared::PopulateJSClass()
     if (mFlags.WantAddProperty())
         addProperty = XPC_WN_Helper_AddProperty;
     else if (mFlags.UseJSStubForAddProperty())
-        addProperty = JS_PropertyStub;
+        addProperty = nullptr;
     else if (mFlags.AllowPropModsDuringResolve())
         addProperty = XPC_WN_MaybeResolvingPropertyStub;
     else
@@ -1112,7 +1112,7 @@ XPCNativeScriptableShared::PopulateJSClass()
     if (mFlags.WantDelProperty())
         delProperty = XPC_WN_Helper_DelProperty;
     else if (mFlags.UseJSStubForDelProperty())
-        delProperty = JS_DeletePropertyStub;
+        delProperty = nullptr;
     else if (mFlags.AllowPropModsDuringResolve())
         delProperty = XPC_WN_MaybeResolvingDeletePropertyStub;
     else
@@ -1139,7 +1139,7 @@ XPCNativeScriptableShared::PopulateJSClass()
 
     if (mFlags.WantNewEnumerate() || mFlags.WantEnumerate() ||
         mFlags.DontEnumStaticProps())
-        mJSClass.base.enumerate = JS_EnumerateStub;
+        mJSClass.base.enumerate = nullptr;
     else
         mJSClass.base.enumerate = XPC_WN_Shared_Enumerate;
 
@@ -1392,20 +1392,20 @@ const js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
     "XPC_WN_ModsAllowed_WithCall_Proto_JSClass", // name;
     WRAPPER_SLOTS, // flags;
 
-    /* Mandatory non-null function pointer members. */
-    JS_PropertyStub,                // addProperty;
-    JS_DeletePropertyStub,          // delProperty;
+    /* Function pointer members. */
+    nullptr,                        // addProperty;
+    nullptr,                        // delProperty;
     JS_PropertyStub,                // getProperty;
     JS_StrictPropertyStub,          // setProperty;
     XPC_WN_Shared_Proto_Enumerate,  // enumerate;
     XPC_WN_ModsAllowed_Proto_Resolve, // resolve;
-    JS_ConvertStub,                 // convert;
+    nullptr,                        // convert;
     XPC_WN_Shared_Proto_Finalize,   // finalize;
 
     /* Optionally non-null members start here. */
-    nullptr,                         // call;
-    nullptr,                         // construct;
-    nullptr,                         // hasInstance;
+    nullptr,                        // call;
+    nullptr,                        // construct;
+    nullptr,                        // hasInstance;
     XPC_WN_Shared_Proto_Trace,      // trace;
 
     JS_NULL_CLASS_SPEC,
@@ -1417,14 +1417,14 @@ const js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
     "XPC_WN_ModsAllowed_NoCall_Proto_JSClass", // name;
     WRAPPER_SLOTS,                  // flags;
 
-    /* Mandatory non-null function pointer members. */
-    JS_PropertyStub,                // addProperty;
-    JS_DeletePropertyStub,          // delProperty;
+    /* Function pointer members. */
+    nullptr,                        // addProperty;
+    nullptr,                        // delProperty;
     JS_PropertyStub,                // getProperty;
     JS_StrictPropertyStub,          // setProperty;
     XPC_WN_Shared_Proto_Enumerate,  // enumerate;
     XPC_WN_ModsAllowed_Proto_Resolve, // resolve;
-    JS_ConvertStub,                 // convert;
+    nullptr,                        // convert;
     XPC_WN_Shared_Proto_Finalize,   // finalize;
 
     /* Optionally non-null members start here. */
@@ -1511,7 +1511,7 @@ const js::Class XPC_WN_NoMods_WithCall_Proto_JSClass = {
     XPC_WN_OnlyIWrite_Proto_SetPropertyStub,   // setProperty;
     XPC_WN_Shared_Proto_Enumerate,             // enumerate;
     XPC_WN_NoMods_Proto_Resolve,               // resolve;
-    JS_ConvertStub,                            // convert;
+    nullptr,                                   // convert;
     XPC_WN_Shared_Proto_Finalize,              // finalize;
 
     /* Optionally non-null members start here. */
@@ -1536,7 +1536,7 @@ const js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
     XPC_WN_OnlyIWrite_Proto_SetPropertyStub,   // setProperty;
     XPC_WN_Shared_Proto_Enumerate,             // enumerate;
     XPC_WN_NoMods_Proto_Resolve,               // resolve;
-    JS_ConvertStub,                            // convert;
+    nullptr,                                   // convert;
     XPC_WN_Shared_Proto_Finalize,              // finalize;
 
     /* Optionally non-null members start here. */
