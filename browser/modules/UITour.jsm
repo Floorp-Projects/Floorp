@@ -522,6 +522,36 @@ this.UITour = {
         this.sendPageCallback(contentDocument, data.callbackID, { value: value });
         break;
       }
+
+      case "setSearchTerm": {
+        let targetPromise = this.getTarget(window, "search");
+        targetPromise.then(target => {
+          let searchbar = target.node;
+          searchbar.value = data.term;
+          searchbar.inputChanged();
+        }).then(null, Cu.reportError);
+        break;
+      }
+
+      case "openSearchPanel": {
+        let targetPromise = this.getTarget(window, "search");
+        targetPromise.then(target => {
+          let searchbar = target.node;
+
+          if (searchbar.textbox.open) {
+            this.sendPageCallback(contentDocument, data.callbackID);
+          } else {
+            let onPopupShown = () => {
+              searchbar.textbox.popup.removeEventListener("popupshown", onPopupShown);
+              this.sendPageCallback(contentDocument, data.callbackID);
+            };
+
+            searchbar.textbox.popup.addEventListener("popupshown", onPopupShown);
+            searchbar.openSuggestionsPanel();
+          }
+        }).then(null, Cu.reportError);
+        break;
+      }
     }
 
     if (!this.originTabs.has(window))
