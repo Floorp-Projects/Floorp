@@ -1245,7 +1245,7 @@ IonBuilder::inlineMathMinMax(CallInfo &callInfo, bool max)
     current->add(last);
 
     for (unsigned i = 2; i < cases.length(); i++) {
-        MMinMax *ins = MMinMax::New(alloc(), last, cases[2], returnType, max);
+        MMinMax *ins = MMinMax::New(alloc(), last, cases[i], returnType, max);
         current->add(ins);
         last = ins;
     }
