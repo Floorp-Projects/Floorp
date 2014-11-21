@@ -400,12 +400,6 @@ FileEscapedString(FILE *fp, JSLinearString *str, uint32_t quote)
     return PutEscapedStringImpl(nullptr, 0, fp, str, quote) != size_t(-1);
 }
 
-inline bool
-FileEscapedString(FILE *fp, const char *chars, size_t length, uint32_t quote)
-{
-    return PutEscapedStringImpl(nullptr, 0, fp, chars, length, quote) != size_t(-1);
-}
-
 bool
 str_match(JSContext *cx, unsigned argc, Value *vp);
 
