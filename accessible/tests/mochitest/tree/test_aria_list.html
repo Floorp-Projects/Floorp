@@ -34,10 +34,15 @@
       accTree = { // div@role="list"
         role: ROLE_LIST,
         children: [
-          { // li text leaf
-             role: ROLE_TEXT_LEAF,
-             name: "item1",
-             children: [ ]
+          { // li
+            role: ROLE_PARAGRAPH,
+            children: [
+              { // li text leaf
+                role: ROLE_TEXT_LEAF,
+                name: "item1",
+                children: [ ]
+              }
+            ]
           },
           { // li@role="listitem"
             role: ROLE_LISTITEM,
