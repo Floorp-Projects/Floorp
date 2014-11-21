@@ -305,8 +305,6 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
       case AsmJSHeapAccess::Uint32:    masm.movl(srcAddr, ToRegister(out)); break;
       case AsmJSHeapAccess::Float32:   masm.loadFloat32(srcAddr, ToFloatRegister(out)); break;
       case AsmJSHeapAccess::Float64:   masm.loadDouble(srcAddr, ToFloatRegister(out)); break;
-      case AsmJSHeapAccess::Float32x4: masm.loadUnalignedFloat32x4(srcAddr, ToFloatRegister(out)); break;
-      case AsmJSHeapAccess::Int32x4:   masm.loadUnalignedInt32x4(srcAddr, ToFloatRegister(out)); break;
       case AsmJSHeapAccess::Uint8Clamped: MOZ_CRASH("unexpected array type");
     }
     uint32_t after = masm.size();
@@ -353,8 +351,6 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
           case AsmJSHeapAccess::Uint32:       masm.movl(Imm32(ToInt32(ins->value())), dstAddr); break;
           case AsmJSHeapAccess::Float32:
           case AsmJSHeapAccess::Float64:
-          case AsmJSHeapAccess::Float32x4:
-          case AsmJSHeapAccess::Int32x4:
           case AsmJSHeapAccess::Uint8Clamped: MOZ_CRASH("unexpected array type");
         }
     } else {
@@ -367,8 +363,6 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
           case AsmJSHeapAccess::Uint32:       masm.movl(ToRegister(ins->value()), dstAddr); break;
           case AsmJSHeapAccess::Float32:      masm.storeFloat32(ToFloatRegister(ins->value()), dstAddr); break;
           case AsmJSHeapAccess::Float64:      masm.storeDouble(ToFloatRegister(ins->value()), dstAddr); break;
-          case AsmJSHeapAccess::Float32x4:    masm.storeUnalignedFloat32x4(ToFloatRegister(ins->value()), dstAddr); break;
-          case AsmJSHeapAccess::Int32x4:      masm.storeUnalignedInt32x4(ToFloatRegister(ins->value()), dstAddr); break;
           case AsmJSHeapAccess::Uint8Clamped: MOZ_CRASH("unexpected array type");
         }
     }
@@ -376,7 +370,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     if (rejoin.used())
         masm.bind(&rejoin);
     memoryBarrier(ins->mir()->barrierAfter());
-    masm.append(AsmJSHeapAccess(before, after, vt, maybeCmpOffset));
+    masm.append(AsmJSHeapAccess(before, after, maybeCmpOffset));
     return true;
 }
 
@@ -418,7 +412,7 @@ CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
     uint32_t after = masm.size();
     if (rejoin.used())
         masm.bind(&rejoin);
-    masm.append(AsmJSHeapAccess(after, after, mir->viewType(), maybeCmpOffset));
+    masm.append(AsmJSHeapAccess(after, after, maybeCmpOffset));
     return true;
 }
 
@@ -469,7 +463,7 @@ CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
     uint32_t after = masm.size();
     if (rejoin.used())
         masm.bind(&rejoin);
-    masm.append(AsmJSHeapAccess(after, after, mir->viewType(), maybeCmpOffset));
+    masm.append(AsmJSHeapAccess(after, after, maybeCmpOffset));
     return true;
 }
 

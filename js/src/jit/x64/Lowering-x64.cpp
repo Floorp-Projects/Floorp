@@ -173,8 +173,6 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         break;
       case AsmJSHeapAccess::Float32:
       case AsmJSHeapAccess::Float64:
-      case AsmJSHeapAccess::Float32x4:
-      case AsmJSHeapAccess::Int32x4:
         lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
         break;
       case AsmJSHeapAccess::Uint8Clamped:
