@@ -5734,6 +5734,10 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Max, def, type);
       case AsmJSSimdOperation_min:
         return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Min, def, type);
+      case AsmJSSimdOperation_maxNum:
+        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::MaxNum, def, type);
+      case AsmJSSimdOperation_minNum:
+        return CheckSimdBinary(f, call, opType, MSimdBinaryArith::MinNum, def, type);
 
       case AsmJSSimdOperation_lessThan:
         return CheckSimdBinary(f, call, opType, MSimdBinaryComp::lessThan, def, type);
