@@ -73,12 +73,6 @@ rdtsc(void)
 
     return result;
 }
-#else
-static __inline__ uint64_t
-rdtsc(void)
-{
-    return 0;
-}
 #endif
 
 class AutoTraceLoggerThreadStateLock
