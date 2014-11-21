@@ -742,6 +742,8 @@ class AsmJSHeapAccess
          Float32      = Scalar::Float32,
          Float64      = Scalar::Float64,
          Uint8Clamped = Scalar::Uint8Clamped,
+         Float32x4,
+         Int32x4
     };
 
   private:
@@ -770,11 +772,12 @@ class AsmJSHeapAccess
         viewType_(viewType),
         loadedReg_(loadedReg.code())
     {}
-    AsmJSHeapAccess(uint32_t offset, uint8_t after, uint32_t cmp = NoLengthCheck)
+    AsmJSHeapAccess(uint32_t offset, uint8_t after, ViewType viewType,
+                    uint32_t cmp = NoLengthCheck)
       : offset_(offset),
         cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
         opLength_(after - offset),
-        viewType_(ViewType(-1)),
+        viewType_(viewType),
         loadedReg_(UINT8_MAX)
     {}
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)

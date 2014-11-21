@@ -754,6 +754,29 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
     MOZ_ASSERT(isStaticallyLinked());
 }
 
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+static inline size_t
+ViewTypeByteSize(AsmJSHeapAccess::ViewType vt)
+{
+    switch (vt) {
+      case AsmJSHeapAccess::Int8:
+      case AsmJSHeapAccess::Uint8:
+      case AsmJSHeapAccess::Uint8Clamped:
+      case AsmJSHeapAccess::Int16:
+      case AsmJSHeapAccess::Uint16:
+      case AsmJSHeapAccess::Int32:
+      case AsmJSHeapAccess::Uint32:
+      case AsmJSHeapAccess::Float32:
+      case AsmJSHeapAccess::Float64:
+        return 1 << TypedArrayShift(Scalar::Type(vt));
+      case AsmJSHeapAccess::Float32x4:
+      case AsmJSHeapAccess::Int32x4:
+        return 16;
+    }
+    MOZ_CRASH("unexpected view type");
+}
+#endif // JS_CODEGEN_X86 || JS_CODEGEN_X64
+
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx)
 {
@@ -767,11 +790,17 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
 
 #if defined(JS_CODEGEN_X86)
     uint8_t *heapOffset = heap->dataPointer();
-    void *heapLength = (void*)heap->byteLength();
     for (unsigned i = 0; i < heapAccesses_.length(); i++) {
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
-        if (access.hasLengthCheck())
-            X86Assembler::setPointer(access.patchLengthAt(code_), heapLength);
+        if (access.hasLengthCheck()) {
+            // An access is out-of-bounds iff
+            //      ptr + data-type-byte-size > heapLength
+            // i.e. ptr >= heapLength + 1 - data-type-byte-size
+            // (Note that we need >= as this is what codegen uses.)
+            AsmJSHeapAccess::ViewType vt = access.viewType();
+            X86Assembler::setPointer(access.patchLengthAt(code_),
+                                     (void*)(heap->byteLength() + 1 - ViewTypeByteSize(vt)));
+        }
         void *addr = access.patchOffsetAt(code_);
         uint32_t disp = reinterpret_cast<uint32_t>(X86Assembler::getPointer(addr));
         MOZ_ASSERT(disp <= INT32_MAX);
@@ -788,8 +817,11 @@ AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx
     int32_t heapLength = int32_t(intptr_t(heap->byteLength()));
     for (size_t i = 0; i < heapAccesses_.length(); i++) {
         const jit::AsmJSHeapAccess &access = heapAccesses_[i];
-        if (access.hasLengthCheck())
-            X86Assembler::setInt32(access.patchLengthAt(code_), heapLength);
+        if (access.hasLengthCheck()) {
+            // See comment above for x86 codegen.
+            X86Assembler::setInt32(access.patchLengthAt(code_),
+                                   heapLength + 1 - ViewTypeByteSize(access.viewType()));
+        }
     }
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     uint32_t heapLength = heap->byteLength();
