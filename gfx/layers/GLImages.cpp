@@ -8,7 +8,6 @@
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
 #include "AndroidSurfaceTexture.h"
-#include "GLLibraryEGL.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -18,33 +17,16 @@ namespace layers {
 
 static nsRefPtr<GLContext> sSnapshotContext;
 
-EGLImageImage::~EGLImageImage()
-{
-  if (!mData.mOwns) {
-    return;
-  }
-
-  if (mData.mImage) {
-    sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mData.mImage);
-    mData.mImage = nullptr;
-  }
-
-  if (mData.mSync) {
-    sEGLLibrary.fDestroySync(EGL_DISPLAY(), mData.mSync);
-    mData.mSync = nullptr;
-  }
-}
-
-TemporaryRef<SourceSurface>
-GLImage::GetAsSourceSurface()
+TemporaryRef<gfx::SourceSurface>
+SurfaceTextureImage::GetAsSourceSurface()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread");
 
   if (!sSnapshotContext) {
-    sSnapshotContext = GLContextProvider::CreateHeadless();
+    SurfaceCaps caps = SurfaceCaps::ForRGBA();
+    sSnapshotContext = GLContextProvider::CreateOffscreen(gfxIntSize(16, 16), caps);
 
     if (!sSnapshotContext) {
-      NS_WARNING("Failed to create snapshot GLContext");
       return nullptr;
     }
   }
@@ -52,10 +34,8 @@ GLImage::GetAsSourceSurface()
   sSnapshotContext->MakeCurrent();
   ScopedTexture scopedTex(sSnapshotContext);
   ScopedBindTexture boundTex(sSnapshotContext, scopedTex.Texture());
-
-  gfx::IntSize size = GetSize();
   sSnapshotContext->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA,
-                                size.width, size.height, 0,
+                                mData.mSize.width, mData.mSize.height, 0,
                                 LOCAL_GL_RGBA,
                                 LOCAL_GL_UNSIGNED_BYTE,
                                 nullptr);
@@ -64,11 +44,11 @@ GLImage::GetAsSourceSurface()
 
   GLBlitHelper helper(sSnapshotContext);
 
-  helper.BlitImageToFramebuffer(this, size, fb.FB(), false);
+  helper.BlitImageToFramebuffer(this, mData.mSize, fb.FB(), false);
   ScopedBindFramebuffer bind(sSnapshotContext, fb.FB());
 
   RefPtr<gfx::DataSourceSurface> source =
-        gfx::Factory::CreateDataSourceSurface(size, gfx::SurfaceFormat::B8G8R8A8);
+        gfx::Factory::CreateDataSourceSurface(mData.mSize, gfx::SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!source)) {
     return nullptr;
   }

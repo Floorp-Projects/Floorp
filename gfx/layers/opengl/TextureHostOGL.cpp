@@ -68,7 +68,6 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
       const EGLImageDescriptor& desc = aDesc.get_EGLImageDescriptor();
       result = new EGLImageTextureHost(aFlags,
                                        (EGLImage)desc.image(),
-                                       (EGLSync)desc.fence(),
                                        desc.size());
       break;
     }
@@ -634,11 +633,9 @@ EGLImageTextureSource::GetTextureTransform()
 
 EGLImageTextureHost::EGLImageTextureHost(TextureFlags aFlags,
                                          EGLImage aImage,
-                                         EGLSync aSync,
                                          gfx::IntSize aSize)
   : TextureHost(aFlags)
   , mImage(aImage)
-  , mSync(aSync)
   , mSize(aSize)
   , mCompositor(nullptr)
 {
@@ -658,11 +655,6 @@ bool
 EGLImageTextureHost::Lock()
 {
   if (!mCompositor) {
-    return false;
-  }
-
-  EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), mSync, 0, LOCAL_EGL_FOREVER);
-  if (status != LOCAL_EGL_CONDITION_SATISFIED) {
     return false;
   }
 

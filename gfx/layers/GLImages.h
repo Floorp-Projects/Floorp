@@ -18,25 +18,12 @@ class AndroidSurfaceTexture;
 }
 namespace layers {
 
-class GLImage : public Image {
-public:
-  GLImage(ImageFormat aFormat) : Image(nullptr, aFormat){}
-
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
-};
-
-class EGLImageImage : public GLImage {
+class EGLImageImage : public Image {
 public:
   struct Data {
     EGLImage mImage;
-    EGLSync mSync;
     gfx::IntSize mSize;
     bool mInverted;
-    bool mOwns;
-
-    Data() : mImage(nullptr), mSync(nullptr), mSize(0, 0), mInverted(false), mOwns(false)
-    {
-    }
   };
 
   void SetData(const Data& aData) { mData = aData; }
@@ -44,10 +31,12 @@ public:
 
   gfx::IntSize GetSize() { return mData.mSize; }
 
-  EGLImageImage() : GLImage(ImageFormat::EGLIMAGE) {}
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE
+  {
+    return nullptr;
+  }
 
-protected:
-  virtual ~EGLImageImage();
+  EGLImageImage() : Image(nullptr, ImageFormat::EGLIMAGE) {}
 
 private:
   Data mData;
@@ -55,7 +44,7 @@ private:
 
 #ifdef MOZ_WIDGET_ANDROID
 
-class SurfaceTextureImage : public GLImage {
+class SurfaceTextureImage : public Image {
 public:
   struct Data {
     mozilla::gl::AndroidSurfaceTexture* mSurfTex;
@@ -68,7 +57,9 @@ public:
 
   gfx::IntSize GetSize() { return mData.mSize; }
 
-  SurfaceTextureImage() : GLImage(ImageFormat::SURFACE_TEXTURE) {}
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
+
+  SurfaceTextureImage() : Image(nullptr, ImageFormat::SURFACE_TEXTURE) {}
 
 private:
   Data mData;

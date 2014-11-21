@@ -8,7 +8,6 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/TextureClientOGL.h"
 #include "nsSize.h"                     // for nsIntSize
-#include "GLLibraryEGL.h"
 
 using namespace mozilla::gl;
 
@@ -21,8 +20,9 @@ class CompositableForwarder;
 // EGLImageTextureClient
 
 EGLImageTextureClient::EGLImageTextureClient(TextureFlags aFlags,
-                                             EGLImageImage* aImage,
-                                             gfx::IntSize aSize)
+                                             EGLImage aImage,
+                                             gfx::IntSize aSize,
+                                             bool aInverted)
   : TextureClient(aFlags)
   , mImage(aImage)
   , mSize(aSize)
@@ -31,11 +31,17 @@ EGLImageTextureClient::EGLImageTextureClient(TextureFlags aFlags,
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
              "Can't pass an `EGLImage` between processes.");
 
+  // Our data is always owned externally.
   AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 
-  if (aImage->GetData()->mInverted) {
+  if (aInverted) {
     AddFlags(TextureFlags::NEEDS_Y_FLIP);
   }
+}
+
+EGLImageTextureClient::~EGLImageTextureClient()
+{
+  // Our data is always owned externally.
 }
 
 bool
@@ -44,8 +50,7 @@ EGLImageTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(IsAllocated());
 
-  const EGLImageImage::Data* data = mImage->GetData();
-  aOutDescriptor = EGLImageDescriptor((uintptr_t)data->mImage, (uintptr_t)data->mSync, mSize);
+  aOutDescriptor = EGLImageDescriptor((uintptr_t)mImage, mSize);
   return true;
 }
 
