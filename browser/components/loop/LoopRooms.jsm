@@ -184,16 +184,10 @@ let LoopRoomsInternal = {
           delete room.currSize;
         }
         this.rooms.set(room.roomToken, room);
-        // When a version is specified, all the data is already provided by this
-        // request.
-        if (version) {
-          eventEmitter.emit("update", room);
-          eventEmitter.emit("update" + ":" + room.roomToken, room);
-        } else {
-          // Next, request the detailed information for each room. If the request
-          // fails the room data will not be added to the map.
-          yield LoopRooms.promise("get", room.roomToken);
-        }
+        
+        let eventName = orig ? "update" : "add";
+        eventEmitter.emit(eventName, room);
+        eventEmitter.emit(eventName + ":" + room.roomToken, room);
       }
 
       // If there's no rooms in the list, remove the guest created room flag, so that
