@@ -113,7 +113,7 @@ interface BrowserElementPrivileged {
    CheckPermissions="browser"]
   DOMRequest getScreenshot([EnforceRange] unsigned long width,
                            [EnforceRange] unsigned long height,
-                           optional DOMString mimeType);
+                           optional DOMString mimeType="");
 
   [Throws,
    Pref="dom.mozBrowserFramesEnabled",
