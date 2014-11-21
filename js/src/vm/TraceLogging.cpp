@@ -681,9 +681,7 @@ void
 TraceLogger::stopEvent(uint32_t id)
 {
 #ifdef DEBUG
-    if (id != TraceLogger::Scripts && id != TraceLogger::Engine &&
-        stack.size() > 1 && stack.lastEntry().active())
-    {
+    if (stack.size() > 1 && id != TraceLogger::Scripts && stack.lastEntry().active()) {
         TreeEntry entry;
         MOZ_ASSERT(getTreeEntry(stack.lastEntry().treeId(), &entry));
         MOZ_ASSERT(entry.textId() == id);
@@ -803,8 +801,6 @@ TraceLogging::lazyInit()
             "Specific log items:\n"
         );
         for (uint32_t i = 1; i < TraceLogger::LAST; i++) {
-            if (!TraceLogger::textIdIsToggable(i))
-                continue;
             printf("  %s\n", text[i]);
         }
         printf("\n");
@@ -812,12 +808,11 @@ TraceLogging::lazyInit()
         /*NOTREACHED*/
     }
 
-    for (uint32_t i = 1; i < TraceLogger::LAST; i++) {
-        if (TraceLogger::textIdIsToggable(i))
-            enabledTextIds[i] = ContainsFlag(env, text[i]);
-        else
-            enabledTextIds[i] = true;
-    }
+    for (uint32_t i = 1; i < TraceLogger::LAST; i++)
+        enabledTextIds[i] = ContainsFlag(env, text[i]);
+
+    enabledTextIds[TraceLogger::TL_Error] = true;
+    enabledTextIds[TraceLogger::TL] = true;
 
     if (ContainsFlag(env, "Default")) {
         enabledTextIds[TraceLogger::Bailout] = true;
@@ -837,7 +832,6 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::IrregexpCompile] = true;
         enabledTextIds[TraceLogger::IrregexpExecute] = true;
         enabledTextIds[TraceLogger::Scripts] = true;
-        enabledTextIds[TraceLogger::Engine] = true;
     }
 
     if (ContainsFlag(env, "IonCompiler")) {
@@ -864,10 +858,6 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::GenerateCode] = true;
         enabledTextIds[TraceLogger::Scripts] = true;
     }
-
-    enabledTextIds[TraceLogger::Interpreter] = enabledTextIds[TraceLogger::Engine];
-    enabledTextIds[TraceLogger::Baseline] = enabledTextIds[TraceLogger::Engine];
-    enabledTextIds[TraceLogger::IonMonkey] = enabledTextIds[TraceLogger::Engine];
 
     const char *options = getenv("TLOPTIONS");
     if (options) {

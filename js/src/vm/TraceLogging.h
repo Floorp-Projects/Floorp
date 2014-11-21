@@ -110,7 +110,6 @@ namespace jit {
     _(Bailout)                                        \
     _(Baseline)                                       \
     _(BaselineCompilation)                            \
-    _(Engine)                                         \
     _(GC)                                             \
     _(GCAllocation)                                   \
     _(GCSweeping)                                     \
@@ -432,18 +431,6 @@ class TraceLogger
 
     bool init(uint32_t loggerId);
 
-    static bool textIdIsToggable(uint32_t id) {
-        if (id == TL_Error)
-            return false;
-        if (id == TL)
-            return false;
-        // Cannot toggle the logging of one engine on/off, because at the stop
-        // event it is sometimes unknown which engine was running.
-        if (id == IonMonkey || id == Baseline || id == Interpreter)
-            return false;
-        return true;
-    }
-
     bool enable();
     bool enable(JSContext *cx);
     bool disable();
@@ -463,10 +450,8 @@ class TraceLogger
     // correctness.
     void startEvent(uint32_t id);
     void stopEvent(uint32_t id);
-  private:
     void stopEvent();
 
-  public:
     static unsigned offsetOfEnabled() {
         return offsetof(TraceLogger, enabled);
     }
@@ -608,6 +593,12 @@ inline void TraceLogStopEvent(TraceLogger *logger, uint32_t textId) {
 #ifdef JS_TRACE_LOGGING
     if (logger)
         logger->stopEvent(textId);
+#endif
+}
+inline void TraceLogStopEvent(TraceLogger *logger) {
+#ifdef JS_TRACE_LOGGING
+    if (logger)
+        logger->stopEvent();
 #endif
 }
 
