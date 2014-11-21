@@ -7758,6 +7758,13 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   CSSToScreenScale defaultScale = layoutDeviceScale
                                 * LayoutDeviceToScreenScale(1.0);
 
+  if (!Preferences::GetBool("dom.meta-viewport.enabled", false)) {
+    return nsViewportInfo(aDisplaySize,
+                          defaultScale,
+                          /*allowZoom*/ false,
+                          /*allowDoubleTapZoom*/ true);
+  }
+
   // In cases where the width of the CSS viewport is less than or equal to the width
   // of the display (i.e. width <= device-width) then we disable double-tap-to-zoom
   // behaviour. See bug 941995 for details.
