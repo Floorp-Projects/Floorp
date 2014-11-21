@@ -5,62 +5,87 @@
 
 const { utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-// Values from robocop_article.html
-const ARTICLE = {
-  url: "http://mochi.test:8888/tests/robocop/robocop_article.html",
-  title: "Article title",
-  byline: "by Jane Doe",
-  excerpt: "This is the article description.",
-  length: 1931,
-  content: "Lorem ipsum..." // This test doesn't actually compare content strings
-};
+let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
 
-const ARTICLE_URI = Services.io.newURI(ARTICLE.url, null, null);
+const URL_PREFIX = "http://mochi.test:8888/tests/robocop/reader_mode_pages/";
+
+let TEST_PAGES = [
+  {
+    url: URL_PREFIX + "basic_article.html",
+    expected: {
+      title: "Article title",
+      byline: "by Jane Doe",
+      excerpt: "This is the article description.",
+      length: 1931
+    }
+  },
+  {
+    url: URL_PREFIX + "addons.mozilla.org/en-US/firefox/index.html",
+    expected: null
+  },
+  {
+    url: URL_PREFIX + "developer.mozilla.org/en/XULRunner/Build_Instructions.html",
+    expected: {
+      title: "Building XULRunner | MDN",
+      byline: null,
+      excerpt: "XULRunner is built using basically the same process as Firefox or other applications. Please read and follow the general Build Documentation for instructions on how to get sources and set up build prerequisites.",
+      length: 2300
+    }
+  },
+];
 
 add_task(function* test_article_not_found() {
-  let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
-
-  let article = yield Reader.getArticleFromCache(ARTICLE_URI);
+  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
+  let article = yield Reader.getArticleFromCache(uri);
   do_check_eq(article, null);
 });
 
 add_task(function* test_store_article() {
-  let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
+  // Create an article object to store in the cache.
+  yield Reader.storeArticleInCache({
+    url: TEST_PAGES[0].url,
+    content: "Lorem ipsum",
+    title: TEST_PAGES[0].expected.title,
+    byline: TEST_PAGES[0].expected.byline,
+    excerpt: TEST_PAGES[0].expected.excerpt,
+    length: TEST_PAGES[0].expected.length
+  });
 
-  yield Reader.storeArticleInCache(ARTICLE);
-
-  let article = yield Reader.getArticleFromCache(ARTICLE_URI);
-  checkArticle(article);
+  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
+  let article = yield Reader.getArticleFromCache(uri);
+  checkArticle(article, TEST_PAGES[0]);
 });
 
 add_task(function* test_remove_article() {
-  let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
-
-  yield Reader.removeArticleFromCache(ARTICLE_URI);
-
-  let article = yield Reader.getArticleFromCache(ARTICLE_URI);
+  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
+  yield Reader.removeArticleFromCache(uri);
+  let article = yield Reader.getArticleFromCache(uri);
   do_check_eq(article, null);
 });
 
-add_task(function* test_parse_article() {
-  let Reader = Services.wm.getMostRecentWindow("navigator:browser").Reader;
-
-  let article = yield Reader._downloadAndParseDocument(ARTICLE.url);
-  checkArticle(article);
+add_task(function* test_parse_articles() {
+  for (let testcase of TEST_PAGES) {
+    let article = yield Reader._downloadAndParseDocument(testcase.url);
+    checkArticle(article, testcase);
+  }
 });
 
-function checkArticle(article) {
+function checkArticle(article, testcase) {
+  if (testcase.expected == null) {
+    do_check_eq(article, null);
+    return;
+  }
+
   do_check_neq(article, null);
-  do_check_neq(article.content, null);
-  do_check_eq(article.url, ARTICLE.url);
-  do_check_eq(article.title, ARTICLE.title);
-  do_check_eq(article.byline, ARTICLE.byline);
-  do_check_eq(article.excerpt, ARTICLE.excerpt);
-  do_check_eq(article.length, ARTICLE.length);
+  do_check_eq(!!article.content, true); // A bit of a hack to avoid spamming the test log.
+  do_check_eq(article.url, testcase.url);
+  do_check_eq(article.title, testcase.expected.title);
+  do_check_eq(article.byline, testcase.expected.byline);
+  do_check_eq(article.excerpt, testcase.expected.excerpt);
+  do_check_eq(article.length, testcase.expected.length);
 }
 
 run_next_test();
