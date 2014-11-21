@@ -4083,7 +4083,9 @@ LIRGenerator::visitSimdBinaryArith(MSimdBinaryArith *ins)
 
     LSimdBinaryArithFx4 *lir = new(alloc()) LSimdBinaryArithFx4();
 
-    bool needsTemp = ins->operation() == MSimdBinaryArith::Max;
+    bool needsTemp = ins->operation() == MSimdBinaryArith::Max ||
+                     ins->operation() == MSimdBinaryArith::MinNum ||
+                     ins->operation() == MSimdBinaryArith::MaxNum;
     lir->setTemp(0, needsTemp ? temp(LDefinition::FLOAT32X4) : LDefinition::BogusTemp());
 
     return lowerForFPU(lir, ins, lhs, rhs);

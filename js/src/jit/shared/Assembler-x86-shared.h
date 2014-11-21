@@ -1907,6 +1907,7 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
     void andnps(const Operand &src, FloatRegister dest) {
+        // Negates bits of dest and then applies AND
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:

@@ -2769,6 +2769,9 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
         // we can do max with a single instruction only if we have SSE4.1
         // using the PMINSD instruction.
         break;
+      case MSimdBinaryArith::MinNum:
+      case MSimdBinaryArith::MaxNum:
+        break;
     }
     MOZ_CRASH("unexpected SIMD op");
 }
@@ -2813,6 +2816,54 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
         masm.minps(Operand(lhs), rhsCopy);
         masm.minps(rhs, lhs);
         masm.orps(rhsCopy, lhs); // NaN or'd with arbitrary bits is NaN
+        return true;
+      }
+      case MSimdBinaryArith::MinNum: {
+        FloatRegister tmp = ToFloatRegister(ins->temp());
+        masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), ScratchSimdReg);
+        masm.movdqa(ScratchSimdReg, tmp);
+
+        FloatRegister mask = ScratchSimdReg;
+        masm.pcmpeqd(Operand(lhs), mask);
+        masm.andps(tmp, mask);
+
+        masm.movaps(lhs, tmp);
+        masm.minps(rhs, tmp);
+        masm.orps(mask, tmp);
+
+        masm.movaps(rhs, mask);
+        masm.cmpneqps(Operand(mask), mask);
+
+        // Emulates blendv
+        masm.andps(Operand(mask), lhs);
+        masm.andnps(Operand(tmp), mask);
+        masm.orps(Operand(mask), lhs);
+        return true;
+      }
+      case MSimdBinaryArith::MaxNum: {
+        FloatRegister mask = ScratchSimdReg;
+        masm.loadConstantInt32x4(SimdConstant::SplatX4(0), mask);
+        masm.pcmpeqd(Operand(lhs), mask);
+
+        FloatRegister tmp = ToFloatRegister(ins->temp());
+        masm.loadConstantInt32x4(SimdConstant::SplatX4(int32_t(0x80000000)), tmp);
+        masm.andps(tmp, mask);
+
+        masm.movaps(lhs, tmp);
+        masm.maxps(rhs, tmp);
+        masm.andnps(Operand(tmp), mask);
+
+        // Ensure tmp always contains the temporary result
+        mask = tmp;
+        tmp = ScratchSimdReg;
+
+        masm.movaps(rhs, mask);
+        masm.cmpneqps(Operand(mask), mask);
+
+        // Emulates blendv
+        masm.andps(Operand(mask), lhs);
+        masm.andnps(Operand(tmp), mask);
+        masm.orps(Operand(mask), lhs);
         return true;
       }
     }
@@ -2965,8 +3016,6 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect *ins)
     FloatRegister onFalse = ToFloatRegister(ins->rhs());
 
     MOZ_ASSERT(onTrue == ToFloatRegister(ins->output()));
-    // The onFalse argument is not destroyed but due to limitations of the
-    // register allocator its life ends at the start of the operation.
     masm.bitwiseAndX4(Operand(mask), onTrue);
     masm.bitwiseAndNotX4(Operand(onFalse), mask);
     masm.bitwiseOrX4(Operand(mask), onTrue);
