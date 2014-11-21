@@ -193,6 +193,9 @@
             () => {
               this.swapDocShells(cb);
 
+              chatbar.focus();
+              this.close();
+
               // chatboxForURL is a map of URL -> chatbox used to avoid opening
               // duplicate chat windows. Ensure reattached chat windows aren't
               // registered with about:blank as their URL, otherwise reattaching
@@ -200,8 +203,6 @@
               chatbar.chatboxForURL.delete("about:blank");
               chatbar.chatboxForURL.set(this.src, Cu.getWeakReference(cb));
 
-              chatbar.focus();
-              this.close();
               deferred.resolve(cb);
             }
           );
@@ -527,7 +528,9 @@
           let cb = this.chatboxForURL.get(aURL);
           if (cb) {
             cb = cb.get();
-            if (cb.parentNode) {
+            // A chatbox is still alive to us when it's parented and still has
+            // content.
+            if (cb.parentNode && cb.contentWindow) {
               this.showChat(cb, aMode);
               if (aCallback) {
                 if (cb._callbacks == null) {
@@ -646,6 +649,7 @@
         <parameter name="aOptions"/>
         <body><![CDATA[
           let deferred = Promise.defer();
+          let chatbar = this;
           let options = "";
           for (let name in aOptions)
             options += "," + name + "=" + aOptions[name];
@@ -661,6 +665,8 @@
             let otherChatbox = otherWin.document.getElementById("chatter");
             aChatbox.swapDocShells(otherChatbox);
             aChatbox.close();
+            chatbar.chatboxForURL.set(aChatbox.src, Cu.getWeakReference(otherChatbox));
+
             deferred.resolve(otherChatbox);
           }, true);
           return deferred.promise;
