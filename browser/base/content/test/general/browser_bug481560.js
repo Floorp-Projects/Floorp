@@ -1,14 +1,8 @@
 function test() {
   waitForExplicitFinish();
 
-  var win = openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no");
-
-  win.addEventListener("load", function () {
-    win.removeEventListener("load", arguments.callee, false);
-
-    win.content.addEventListener("focus", function () {
-      win.content.removeEventListener("focus", arguments.callee, false);
-
+  whenNewWindowLoaded(null, function (win) {
+    waitForFocus(function () {
       function onTabClose() {
         ok(false, "shouldn't have gotten the TabClose event for the last tab");
       }
@@ -22,6 +16,6 @@ function test() {
       tab.removeEventListener("TabClose", onTabClose, false);
 
       finish();
-    }, false);
-  }, false);
+    }, win);
+  });
 }

@@ -51,12 +51,8 @@
 }
 
 /* User agent styles are not editable, display them differently */
-.theme-light .ruleview-rule[uneditable=true] {
-  background: #ebeced; /* Tab Toolbar */
-}
-
-.theme-dark .ruleview-rule[uneditable=true] {
-  background: #252c33; /* Tab Toolbar */
+.ruleview-rule[uneditable=true] {
+  background: var(--theme-tab-toolbar-background);
 }
 
 .ruleview-rule[uneditable=true] :focus {
@@ -64,7 +60,7 @@
 }
 
 .ruleview-rule[uneditable=true] .theme-link {
-  color: #5f88b0; /* Blue - Grey */
+  color: var(--theme-highlight-bluegrey);
 }
 
 .ruleview-rule[uneditable=true] .ruleview-enableproperty {
@@ -198,7 +194,7 @@
 }
 
 .theme-light .ruleview-overridden {
-  text-decoration-color: #667380; /*  Content (Text) - Dark Grey */
+  text-decoration-color: var(--theme-content-color3);
 }
 
 .styleinspector-propertyeditor {
@@ -215,12 +211,8 @@
   vertical-align: middle;
 }
 
-.theme-dark .ruleview-property[dirty] {
-  border-left-color: #70bf53; /* Green */
-}
-
-.theme-light .ruleview-property[dirty] {
-  border-left-color: #2cbb0f; /* Green */
+.ruleview-property[dirty] {
+  border-left-color: var(--theme-highlight-green);
 }
 
 .ruleview-namecontainer > .ruleview-propertyname,
