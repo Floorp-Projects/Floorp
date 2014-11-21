@@ -313,6 +313,8 @@ public:
   bool
   IsToggling() const;
 
+  static void AcknowledgeToggleBt(bool aEnabled);
+
   /**
    * Below 2 function/variable are used for ensuring event 'AdapterAdded' will
    * be fired after event 'Enabled'.
@@ -392,6 +394,8 @@ protected:
   // Called by Get().
   static BluetoothService*
   Create();
+
+  void CompleteToggleBt(bool aEnabled);
 
   typedef nsClassHashtable<nsStringHashKey, BluetoothSignalObserverList >
   BluetoothSignalObserverTable;

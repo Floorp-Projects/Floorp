@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="3ab0d9c70f0b2e1ededc679112c392303f037361">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="1abe09b4925547699dfdb2d358aed019137c3aa6"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="d695e7cdcd162e779e15594054931c84dec34a95"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="45c54a55e31758f7e54e5eafe0d01d387f35897a"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -111,7 +111,7 @@
   <project name="platform/libcore" path="libcore" revision="baf7d8068dd501cfa338d3a8b1b87216d6ce0571"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="50c4430e32849530ced32680fd6ee98963b3f7ac"/>
   <project name="platform/ndk" path="ndk" revision="e58ef003be4306bb53a8c11331146f39e4eab31f"/>
-  <project name="platform/prebuilts/misc" path="prebuilts/misc" revision="a094aa8f160e211fb4994fdfaaac8a78aa6cc897"/>
+  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="0e7c060db684b409616fe67ea433ef19f5634c60"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="c792f0bd9fff7aea2887c60bbb3a9bbdb534ffa3"/>
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="c24c8871173bf6aedcf236cab075edf092a7015c"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="69d524e80cdf3981006627c65ac85f3a871238a3"/>

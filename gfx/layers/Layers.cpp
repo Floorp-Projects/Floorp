@@ -806,7 +806,15 @@ Layer::ComputeEffectiveTransformForMaskLayer(const Matrix4x4& aTransformToSurfac
     bool maskIs2D = mMaskLayer->GetTransform().CanDraw2D();
     NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
 #endif
-    mMaskLayer->mEffectiveTransform = mMaskLayer->GetTransform() * mMaskLayer->mEffectiveTransform;
+    // Use our shadow transform and base transform to compute a delta for the
+    // mask layer's effective transform, as though it was also transformed by
+    // the APZ.
+    //
+    // Note: This will fail if the base transform is degenerate. Currently, this
+    //       is not expected for OMTA transformed layers.
+    mMaskLayer->mEffectiveTransform = mMaskLayer->GetTransform() *
+      GetTransform().Inverse() * GetLocalTransform() *
+      mMaskLayer->mEffectiveTransform;
   }
 }
 

@@ -6,19 +6,47 @@
 /* According to:
  * https://bugzilla.mozilla.org/show_bug.cgi?id=715472#c17
  */
+:root {
+  --theme-body-background: #14171a;
+  --theme-sidebar-background: #181d20;
+  --theme-contrast-background: #b28025;
+
+  --theme-tab-toolbar-background: #252c33;
+  --theme-toolbar-background: #343c45;
+  --theme-selection-background: #1d4f73;
+  --theme-selection-color: #f5f7fa;
+  --theme-splitter-color: black;
+  --theme-comment: #5c6773;
+
+  --theme-body-color: #a9bacb;
+  --theme-body-color-alt: #b6babf;
+  --theme-content-color1: #a9bacb;
+  --theme-content-color2: #8fa1b2;
+  --theme-content-color3: #667380;
+
+  --theme-highlight-green: #5c9966;
+  --theme-highlight-blue: #3689b2;
+  --theme-highlight-bluegrey: #5e88b0;
+  --theme-highlight-purple: #6270b2;
+  --theme-highlight-lightorange: #a18650;
+  --theme-highlight-orange: #b26b47;
+  --theme-highlight-red: #bf5656;
+  --theme-highlight-pink: #a673bf;
+}
+
 .theme-body {
-  background: #14171a;
-  color: #a9bacb;
+  background: var(--theme-body-background);
+  color: var(--theme-body-color);
 }
 
 .theme-sidebar {
-  background: #181d20;
-  color: #a9bacb;
+  background: var(--theme-sidebar-background);
+  color: var(--theme-content-color1);
 }
 
 ::-moz-selection {
-  background-color: #1d4f73;
-  color: #f5f7fa;
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
 }
 
 .theme-bg-darker {
@@ -27,18 +55,18 @@
 
 .theme-selected,
 .CodeMirror-hint-active {
-  background-color: #1d4f73;
-  color: #f5f7fa; /* Light foreground text */
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
 }
 
 .theme-bg-contrast,
-.variable-or-property:not([overridden])[changed] { /* contrast bg color to attract attention on a container */
-  background: #B28025; /* Background - Attention */
+.variable-or-property:not([overridden])[changed] {
+  background: var(--theme-contrast-background);
 }
 
 .theme-link,
-.cm-s-mozilla .cm-link { /* blue */
-  color: #3689b2;
+.cm-s-mozilla .cm-link {
+  color: var(--theme-highlight-blue);
 }
 
 /*
@@ -47,8 +75,8 @@
  */
 .theme-link:visited,
 .cm-s-mozilla .cm-link:visited,
-.CodeMirror-Tern-type { /* blue */
-  color: #3689b2;
+.CodeMirror-Tern-type {
+  color: var(--theme-highlight-blue);
 }
 
 
@@ -57,17 +85,14 @@
 .cm-s-mozilla .cm-hr,
 .cm-s-mozilla .cm-comment,
 .variable-or-property .token-undefined,
-.variable-or-property .token-null { /* grey */
-  color: #5c6773;
-}
-
+.variable-or-property .token-null,
 .CodeMirror-Tern-completion-unknown:before {
-  background-color: #5c6773;
+  color: var(--theme-comment);
 }
 
 .theme-gutter {
   background-color: #0f171f;
-  color: #667380;
+  color: var(--theme-content-color3);
   border-color: #303b47;
 }
 
@@ -79,8 +104,8 @@
 .cm-s-mozilla .cm-number,
 .variable-or-property .token-number,
 .variable-or-property[return] > .title > .name,
-.variable-or-property[scope] > .title > .name { /* green */
-  color: #5c9966;
+.variable-or-property[scope] > .title > .name {
+  color: var(--theme-highlight-green);
 }
 
 .CodeMirror-Tern-completion-number:before {
@@ -93,8 +118,8 @@
 .cm-s-mozilla .cm-def,
 .cm-s-mozilla .cm-property,
 .cm-s-mozilla .cm-qualifier,
-.variables-view-variable > .title > .name { /* blue */
-  color: #3689b2;
+.variables-view-variable > .title > .name {
+  color: var(--theme-highlight-blue);
 }
 
 .CodeMirror-Tern-completion-object:before {
@@ -114,30 +139,30 @@
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
-.variables-view-property > .title > .name { /* pink/lavender */
-  color: #a673bf;
+.cm-s-mozilla .cm-bracket,
+.variables-view-property > .title > .name {
+  color: var(--theme-highlight-pink);
 }
 
 .CodeMirror-Tern-completion-array:before {
-  background-color: #a673bf;
+  background-color: var(--theme-highlight-bluegrey);
 }
 
-.theme-fg-color4 { /* purple/violet */
-  color: #6270b2;
+.theme-fg-color4 {
+  color: var(--theme-highlight-purple);
 }
 
 .theme-fg-color5,
-.cm-s-mozilla .cm-bracket,
-.cm-s-mozilla .cm-keyword { /* Yellow */
-  color: #a18650;
+.cm-s-mozilla .cm-keyword {
+  color: var(--theme-highlight-lightorange);
 }
 
 .theme-fg-color6,
 .cm-s-mozilla .cm-string,
 .cm-s-mozilla .cm-string-2,
 .variable-or-property .token-string,
-.CodeMirror-Tern-farg { /* Orange */
-  color: #b26b47;
+.CodeMirror-Tern-farg {
+  color: var(--theme-highlight-orange);
 }
 
 .CodeMirror-Tern-completion-string:before,
@@ -151,8 +176,8 @@
 .cm-s-mozilla .cm-error,
 .variable-or-property .token-boolean,
 .variable-or-property .token-domnode,
-.variable-or-property[exception] > .title > .name { /* Red */
-  color: #bf5656;
+.variable-or-property[exception] > .title > .name {
+  color: var(--theme-highlight-red);
 }
 
 .CodeMirror-Tern-completion-bool:before {
@@ -167,8 +192,8 @@
 .devtools-toolbar,
 .devtools-sidebar-tabs > tabs,
 .CodeMirror-dialog { /* General toolbar styling */
-  color: #b6babf;
-  background-color: #343c45;
+  color: var(--theme-body-color-alt);
+  background-color: var(--theme-toolbar-background);
   border-color: hsla(210,8%,5%,.6);
 }
 
@@ -196,8 +221,8 @@
 .cm-s-mozilla .cm-variable-2,
 .cm-s-mozilla .cm-variable-3,
 .cm-s-mozilla .cm-operator,
-.cm-s-mozilla .cm-special { /* theme-body color */
-  color: #a9bacb;
+.cm-s-mozilla .cm-special {
+  color: var(--theme-content-color1);
 }
 
 .cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {
@@ -248,12 +273,12 @@ div.CodeMirror span.eval-text {
 }
 
 .cm-s-mozilla .CodeMirror-linenumber { /* line number text */
-  color: #5f7387;
+  color: var(--theme-content-color3);
 }
 
 .cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */
-  border-right-color: #343c45;
-  background-color: #181d20;
+  border-right-color: var(--theme-toolbar-background);
+  background-color: var(--theme-sidebar-background);
 }
 
 .cm-s-markup-view pre {
@@ -359,12 +384,12 @@ div.CodeMirror span.eval-text {
 }
 
 .devtools-horizontal-splitter {
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .devtools-side-splitter {
-  -moz-border-end: 1px solid black;
-  border-color: black; /* Needed for responsive container at low width. */
+  -moz-border-end: 1px solid var(--theme-splitter-color);
+  border-color: var(--theme-splitter-color); /* Needed for responsive container at low width. */
 }
 
 .devtools-textinput,
@@ -381,7 +406,7 @@ div.CodeMirror span.eval-text {
 .CodeMirror-Tern-tooltip {
   box-shadow: 0 0 4px rgba(255, 255, 255, .3);
   background-color: #0f171f;
-  color: #8fa1b2;
+  color: var(--theme-body-color);
 }
 
 
