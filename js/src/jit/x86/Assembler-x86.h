@@ -465,6 +465,16 @@ class Assembler : public AssemblerX86Shared
         masm.movsd_mr_disp32(src.offset, src.base.code(), dest.code());
         return CodeOffsetLabel(masm.currentOffset());
     }
+    CodeOffsetLabel movupsWithPatch(Address src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movups_mr_disp32(src.offset, src.base.code(), dest.code());
+        return CodeOffsetLabel(masm.currentOffset());
+    }
+    CodeOffsetLabel movdquWithPatch(Address src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movdqu_mr_disp32(src.offset, src.base.code(), dest.code());
+        return CodeOffsetLabel(masm.currentOffset());
+    }
 
     // Store to *(base + disp32) where disp32 can be patched.
     CodeOffsetLabel movbWithPatch(Register src, Address dest) {
@@ -487,6 +497,16 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel movsdWithPatch(FloatRegister src, Address dest) {
         MOZ_ASSERT(HasSSE2());
         masm.movsd_rm_disp32(src.code(), dest.offset, dest.base.code());
+        return CodeOffsetLabel(masm.currentOffset());
+    }
+    CodeOffsetLabel movupsWithPatch(FloatRegister src, Address dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movups_rm_disp32(src.code(), dest.offset, dest.base.code());
+        return CodeOffsetLabel(masm.currentOffset());
+    }
+    CodeOffsetLabel movdquWithPatch(FloatRegister src, Address dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movdqu_rm_disp32(src.code(), dest.offset, dest.base.code());
         return CodeOffsetLabel(masm.currentOffset());
     }
 
@@ -534,9 +554,19 @@ class Assembler : public AssemblerX86Shared
         masm.movdqa_mr(src.addr, dest.code());
         return CodeOffsetLabel(masm.currentOffset());
     }
+    CodeOffsetLabel movdquWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movdqu_mr(src.addr, dest.code());
+        return CodeOffsetLabel(masm.currentOffset());
+    }
     CodeOffsetLabel movapsWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         masm.movaps_mr(src.addr, dest.code());
+        return CodeOffsetLabel(masm.currentOffset());
+    }
+    CodeOffsetLabel movupsWithPatch(PatchedAbsoluteAddress src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movups_mr(src.addr, dest.code());
         return CodeOffsetLabel(masm.currentOffset());
     }
 
@@ -571,6 +601,16 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel movapsWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
         MOZ_ASSERT(HasSSE2());
         masm.movaps_rm(src.code(), dest.addr);
+        return CodeOffsetLabel(masm.currentOffset());
+    }
+    CodeOffsetLabel movdquWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movdqu_rm(src.code(), dest.addr);
+        return CodeOffsetLabel(masm.currentOffset());
+    }
+    CodeOffsetLabel movupsWithPatch(FloatRegister src, PatchedAbsoluteAddress dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.movups_rm(src.code(), dest.addr);
         return CodeOffsetLabel(masm.currentOffset());
     }
 

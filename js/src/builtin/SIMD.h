@@ -173,7 +173,9 @@
     _(withZ)                         \
     _(withW)                         \
     _(not)                           \
-    _(neg)
+    _(neg)                           \
+    _(load)                          \
+    _(store)
 #define FORALL_SIMD_OP(_)            \
     FOREACH_INT32X4_SIMD_OP(_)       \
     FOREACH_FLOAT32X4_SIMD_OP(_)     \
