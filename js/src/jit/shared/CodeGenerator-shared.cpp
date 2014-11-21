@@ -1402,9 +1402,6 @@ CodeGeneratorShared::computeDivisionConstants(int d) {
 bool
 CodeGeneratorShared::emitTracelogScript(bool isStart)
 {
-    if (!TraceLogTextIdEnabled(TraceLogger::Scripts))
-        return true;
-
     Label done;
 
     RegisterSet regs = RegisterSet::Volatile();
@@ -1458,10 +1455,15 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     Address enabledAddress(logger, TraceLogger::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
 
-    if (isStart)
+    if (isStart) {
         masm.tracelogStart(logger, textId);
-    else
+    } else {
+#ifdef DEBUG
         masm.tracelogStop(logger, textId);
+#else
+        masm.tracelogStop(logger);
+#endif
+    }
 
     masm.bind(&done);
 
