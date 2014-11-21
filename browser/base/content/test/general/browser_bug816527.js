@@ -44,7 +44,7 @@ function test() {
     });
   });
 
-  function runTest(aSourceWindow, aDestWindow, aExpectSuccess, aCallback) {
+  function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
     // Open the base tab
     let baseTab = aSourceWindow.gBrowser.addTab(testURL);
     baseTab.linkedBrowser.addEventListener("load", function() {
@@ -71,52 +71,52 @@ function test() {
         ok(!testTab.hasAttribute("busy"),
            "The test tab doesn't have the busy attribute");
 
-        // Set the urlbar to include the moz-action
-        aDestWindow.gURLBar.value = "moz-action:switchtab," + JSON.stringify({url: testURL});
-        // Focus the urlbar so we can press enter
-        aDestWindow.gURLBar.focus();
+        let urlbar = aDestWindow.gURLBar;
+        let controller = urlbar.controller;
 
-        // We want to see if the switchtab action works.  If it does, the
-        // current tab will get closed, and that's what we detect with the
-        // TabClose handler.  If pressing enter triggers a load in that tab,
-        // then the load handler will get called.  Neither of these are
-        // the desired effect here.  So if the test goes successfully, it is
-        // the timeout handler which gets called.
-        //
-        // The reason that we can't avoid the timeout here is because we are
-        // trying to test something which should not happen, so we just need
-        // to wait for a while and then check whether any bad things have
-        // happened.
+        // Focus URL bar, enter value, and start searching.
+        urlbar.focus();
+        urlbar.value = testURL;
+        controller.startSearch(testURL);
 
-        function onTabClose(aEvent) {
-          aDestWindow.gBrowser.tabContainer.removeEventListener("TabClose", onTabClose, false);
-          aDestWindow.gBrowser.removeEventListener("load", onLoad, false);
-          clearTimeout(timeout);
-          // Should only happen when we expect success
-          ok(aExpectSuccess, "Tab closed as expected");
-          aCallback();
-        }
-        function onLoad(aEvent) {
-          aDestWindow.gBrowser.tabContainer.removeEventListener("TabClose", onTabClose, false);
-          aDestWindow.gBrowser.removeEventListener("load", onLoad, false);
-          clearTimeout(timeout);
-          // Should only happen when we expect success
-          ok(aExpectSuccess, "Tab loaded as expected");
-          aCallback();
-        }
+        // Wait for the Awesomebar popup to appear.
+        promisePopupShown(aDestWindow.gURLBar.popup).then(() => {
+          function searchIsComplete() {
+            return controller.searchStatus ==
+              Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH;
+          }
 
-        aDestWindow.gBrowser.tabContainer.addEventListener("TabClose", onTabClose, false);
-        aDestWindow.gBrowser.addEventListener("load", onLoad, false);
-        let timeout = setTimeout(function() {
-          aDestWindow.gBrowser.tabContainer.removeEventListener("TabClose", onTabClose, false);
-          aDestWindow.gBrowser.removeEventListener("load", onLoad, false);
-          aCallback();
-        }, 500);
+          // Wait until the search is complete.
+          waitForCondition(searchIsComplete, function () {
+            if (aExpectSwitch) {
+              // If we expect a tab switch then the current tab
+              // will be closed and we switch to the other tab.
+              let tabContainer = aDestWindow.gBrowser.tabContainer;
+              tabContainer.addEventListener("TabClose", function onClose(event) {
+                if (event.target == testTab) {
+                  tabContainer.removeEventListener("TabClose", onClose);
+                  executeSoon(aCallback);
+                }
+              });
+            } else {
+              // If we don't expect a tab switch then wait for the tab to load.
+              testTab.addEventListener("load", function onLoad() {
+                testTab.removeEventListener("load", onLoad, true);
+                executeSoon(aCallback);
+              }, true);
+            }
 
-        // Press enter!
-        EventUtils.synthesizeKey("VK_RETURN", {});
+            // Select the second match, if any.
+            if (controller.matchCount > 1) {
+              controller.handleKeyNavigation(KeyEvent.DOM_VK_DOWN);
+            }
+
+            // Execute the selected action.
+            controller.handleEnter(true);
+          });
+        });
+
       }, aDestWindow);
     }, true);
   }
 }
-
