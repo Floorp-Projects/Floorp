@@ -330,6 +330,8 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId textId)
 TraceLoggerEventPayload *
 TraceLoggerThread::getOrCreateEventPayload(const char *text)
 {
+    assertNoQuotes(text);
+
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd((const void *)text);
     if (p)
         return p->value();
@@ -373,6 +375,8 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char *f
 
     if (!filename)
         filename = "<unknown>";
+
+    assertNoQuotes(filename);
 
     // Only log scripts when enabled otherwise return the global Scripts textId,
     // which will get filtered out.
