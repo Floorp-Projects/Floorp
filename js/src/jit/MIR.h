@@ -12141,6 +12141,12 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
           case AsmJSHeapAccess::Float64:
             setResultType(MIRType_Double);
             break;
+          case AsmJSHeapAccess::Float32x4:
+            setResultType(MIRType_Float32x4);
+            break;
+          case AsmJSHeapAccess::Int32x4:
+            setResultType(MIRType_Int32x4);
+            break;
           case AsmJSHeapAccess::Uint8Clamped:
             MOZ_CRASH("unexpected uint8clamped load heap in asm.js");
         }

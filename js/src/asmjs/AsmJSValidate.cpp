@@ -5614,6 +5614,108 @@ CheckSimdShuffle(FunctionCompiler &f, ParseNode *call, Type retType, MDefinition
 }
 
 static bool
+CheckSimdLoadStoreArgs(FunctionCompiler &f, ParseNode *call, Type retType,
+                       AsmJSHeapAccess::ViewType *viewType, MDefinition **index,
+                       NeedsBoundsCheck *needsBoundsCheck)
+{
+    MOZ_ASSERT(retType.isSimd());
+    if (retType.isInt32x4())
+        *viewType = AsmJSHeapAccess::Int32x4;
+    else if (retType.isFloat32x4())
+        *viewType = AsmJSHeapAccess::Float32x4;
+    else
+        MOZ_CRASH("unexpected SIMD type");
+
+    ParseNode *view = CallArgList(call);
+    if (!view->isKind(PNK_NAME))
+        return f.fail(view, "expected Uint8Array view as SIMD.*.store first argument");
+
+    const ModuleCompiler::Global *global = f.lookupGlobal(view->name());
+    if (!global ||
+        global->which() != ModuleCompiler::Global::ArrayView ||
+        global->viewType() != Scalar::Uint8)
+    {
+        return f.fail(view, "expected Uint8Array view as SIMD.*.store first argument");
+    }
+
+    *needsBoundsCheck = NEEDS_BOUNDS_CHECK;
+
+    ParseNode *indexExpr = NextNode(view);
+    uint32_t indexLit;
+    if (IsLiteralOrConstInt(f, indexExpr, &indexLit)) {
+        if (indexLit > INT32_MAX)
+            return f.fail(indexExpr, "constant index out of range");
+
+        if (!f.m().tryRequireHeapLengthToBeAtLeast(indexLit + Simd128DataSize)) {
+            return f.failf(indexExpr, "constant index outside heap size range declared by the "
+                                      "change-heap function (0x%x - 0x%x)",
+                                      f.m().minHeapLength(), f.m().module().maxHeapLength());
+        }
+
+        *needsBoundsCheck = NO_BOUNDS_CHECK;
+        *index = f.constant(Int32Value(indexLit), Type::Int);
+        return true;
+    }
+
+    f.enterHeapExpression();
+
+    Type indexType;
+    if (!CheckExpr(f, indexExpr, index, &indexType))
+        return false;
+    if (!indexType.isIntish())
+        return f.failf(indexExpr, "%s is not a subtype of intish", indexType.toChars());
+
+    f.leaveHeapExpression();
+
+    return true;
+}
+
+static bool
+CheckSimdLoad(FunctionCompiler &f, ParseNode *call, Type retType, MDefinition **def, Type *type)
+{
+    unsigned numArgs = CallArgListLength(call);
+    if (numArgs != 2)
+        return f.failf(call, "expected 2 arguments to SIMD load, got %u", numArgs);
+
+    AsmJSHeapAccess::ViewType viewType;
+    MDefinition *index;
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckSimdLoadStoreArgs(f, call, retType, &viewType, &index, &needsBoundsCheck))
+        return false;
+
+    *def = f.loadHeap(viewType, index, needsBoundsCheck);
+    *type = retType;
+    return true;
+}
+
+static bool
+CheckSimdStore(FunctionCompiler &f, ParseNode *call, Type retType, MDefinition **def, Type *type)
+{
+    unsigned numArgs = CallArgListLength(call);
+    if (numArgs != 3)
+        return f.failf(call, "expected 3 arguments to SIMD load, got %u", numArgs);
+
+    AsmJSHeapAccess::ViewType viewType;
+    MDefinition *index;
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckSimdLoadStoreArgs(f, call, retType, &viewType, &index, &needsBoundsCheck))
+        return false;
+
+    ParseNode *vecExpr = NextNode(NextNode(CallArgList(call)));
+    MDefinition *vec;
+    Type vecType;
+    if (!CheckExpr(f, vecExpr, &vec, &vecType))
+        return false;
+    if (!(vecType <= retType))
+        return f.failf(vecExpr, "%s is not a subtype of %s", vecType.toChars(), retType.toChars());
+
+    f.storeHeap(viewType, index, vec, needsBoundsCheck);
+    *def = vec;
+    *type = vecType;
+    return true;
+}
+
+static bool
 CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Global *global,
                        MDefinition **def, Type *type)
 {
@@ -5697,6 +5799,11 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdSwizzle(f, call, retType, def, type);
       case AsmJSSimdOperation_shuffle:
         return CheckSimdShuffle(f, call, retType, def, type);
+
+      case AsmJSSimdOperation_load:
+        return CheckSimdLoad(f, call, retType, def, type);
+      case AsmJSSimdOperation_store:
+        return CheckSimdStore(f, call, retType, def, type);
 
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;
