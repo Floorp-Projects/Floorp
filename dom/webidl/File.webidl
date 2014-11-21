@@ -7,12 +7,12 @@
 interface nsIFile;
 
 [Constructor(sequence<(ArrayBuffer or ArrayBufferView or Blob or DOMString)> fileBits,
-             ScalarValueString fileName, optional FilePropertyBag options),
+             USVString fileName, optional FilePropertyBag options),
 
  // These constructors are just for chrome callers:
  Constructor(Blob fileBits, optional ChromeFilePropertyBag options),
  Constructor(nsIFile fileBits, optional ChromeFilePropertyBag options),
- Constructor(ScalarValueString fileBits, optional ChromeFilePropertyBag options),
+ Constructor(USVString fileBits, optional ChromeFilePropertyBag options),
 
  Exposed=(Window,Worker)]
 interface File : Blob {

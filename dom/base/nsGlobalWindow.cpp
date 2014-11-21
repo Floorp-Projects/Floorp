@@ -6370,7 +6370,7 @@ nsGlobalWindow::Confirm(const nsAString& aString, bool* aReturn)
 }
 
 already_AddRefed<Promise>
-nsGlobalWindow::Fetch(const RequestOrScalarValueString& aInput,
+nsGlobalWindow::Fetch(const RequestOrUSVString& aInput,
                       const RequestInit& aInit, ErrorResult& aRv)
 {
   return FetchRequest(this, aInput, aInit, aRv);

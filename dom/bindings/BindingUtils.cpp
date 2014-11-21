@@ -2142,7 +2142,7 @@ NonVoidByteStringToJsval(JSContext *cx, const nsACString &str,
 
 
 template<typename T> static void
-NormalizeScalarValueStringInternal(JSContext* aCx, T& aString)
+NormalizeUSVStringInternal(JSContext* aCx, T& aString)
 {
   char16_t* start = aString.BeginWriting();
   // Must use const here because we can't pass char** to UTF16CharEnumerator as
@@ -2159,15 +2159,15 @@ NormalizeScalarValueStringInternal(JSContext* aCx, T& aString)
 }
 
 void
-NormalizeScalarValueString(JSContext* aCx, nsAString& aString)
+NormalizeUSVString(JSContext* aCx, nsAString& aString)
 {
-  NormalizeScalarValueStringInternal(aCx, aString);
+  NormalizeUSVStringInternal(aCx, aString);
 }
 
 void
-NormalizeScalarValueString(JSContext* aCx, binding_detail::FakeString& aString)
+NormalizeUSVString(JSContext* aCx, binding_detail::FakeString& aString)
 {
-  NormalizeScalarValueStringInternal(aCx, aString);
+  NormalizeUSVStringInternal(aCx, aString);
 }
 
 bool

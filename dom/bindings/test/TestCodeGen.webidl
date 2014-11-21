@@ -460,15 +460,15 @@ interface TestInterface {
   void passOptionalNullableByteString(optional ByteString? arg);
   void passVariadicByteString(ByteString... arg);
 
-  // ScalarValueString types
-  void passSVS(ScalarValueString arg);
-  void passNullableSVS(ScalarValueString? arg);
-  void passOptionalSVS(optional ScalarValueString arg);
-  void passOptionalSVSWithDefaultValue(optional ScalarValueString arg = "abc");
-  void passOptionalNullableSVS(optional ScalarValueString? arg);
-  void passOptionalNullableSVSWithDefaultValue(optional ScalarValueString? arg = null);
-  void passVariadicSVS(ScalarValueString... arg);
-  ScalarValueString receiveSVS();
+  // USVString types
+  void passUSVS(USVString arg);
+  void passNullableUSVS(USVString? arg);
+  void passOptionalUSVS(optional USVString arg);
+  void passOptionalUSVSWithDefaultValue(optional USVString arg = "abc");
+  void passOptionalNullableUSVS(optional USVString? arg);
+  void passOptionalNullableUSVSWithDefaultValue(optional USVString? arg = null);
+  void passVariadicUSVS(USVString... arg);
+  USVString receiveUSVS();
 
   // Enumerated types
   void passEnum(TestEnum arg);
@@ -578,7 +578,7 @@ interface TestInterface {
   void passUnionWithMozMap((MozMap<DOMString> or DOMString) arg);
   void passUnionWithMozMapAndSequence((MozMap<DOMString> or sequence<DOMString>) arg);
   void passUnionWithSequenceAndMozMap((sequence<DOMString> or MozMap<DOMString>) arg);
-  void passUnionWithSVS((ScalarValueString or long) arg);
+  void passUnionWithUSVS((USVString or long) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);

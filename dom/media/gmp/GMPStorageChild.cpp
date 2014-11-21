@@ -268,6 +268,82 @@ GMPStorageChild::RecvWriteComplete(const nsCString& aRecordName,
   return true;
 }
 
+GMPErr
+GMPStorageChild::EnumerateRecords(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
+                                  void* aUserArg)
+{
+  if (mPlugin->GMPMessageLoop() != MessageLoop::current()) {
+    MOZ_ASSERT(false, "GMP used GMPStorage on non-main thread.");
+    return GMPGenericErr;
+  }
+  if (mShutdown) {
+    NS_WARNING("GMPStorage used after it's been shutdown!");
+    return GMPClosedErr;
+  }
+  if (!SendGetRecordNames()) {
+    return GMPGenericErr;
+  }
+  MOZ_ASSERT(aRecvIteratorFunc);
+  mPendingRecordIterators.push(RecordIteratorContext(aRecvIteratorFunc, aUserArg));
+  return GMPNoErr;
+}
+
+class GMPRecordIteratorImpl : public GMPRecordIterator {
+public:
+  GMPRecordIteratorImpl(const InfallibleTArray<nsCString>& aRecordNames)
+    : mRecordNames(aRecordNames)
+    , mIndex(0)
+  {
+    mRecordNames.Sort();
+  }
+
+  virtual GMPErr GetName(const char** aOutName, uint32_t* aOutNameLength) MOZ_OVERRIDE {
+    if (!aOutName || !aOutNameLength) {
+      return GMPInvalidArgErr;
+    }
+    if (mIndex == mRecordNames.Length()) {
+      return GMPEndOfEnumeration;
+    }
+    *aOutName = mRecordNames[mIndex].get();
+    *aOutNameLength = mRecordNames[mIndex].Length();
+    return GMPNoErr;
+  }
+
+  virtual GMPErr NextRecord() MOZ_OVERRIDE {
+    if (mIndex < mRecordNames.Length()) {
+      mIndex++;
+    }
+    return (mIndex < mRecordNames.Length()) ? GMPNoErr
+                                            : GMPEndOfEnumeration;
+  }
+
+  virtual void Close() MOZ_OVERRIDE {
+    delete this;
+  }
+
+private:
+  nsTArray<nsCString> mRecordNames;
+  size_t mIndex;
+};
+
+bool
+GMPStorageChild::RecvRecordNames(const InfallibleTArray<nsCString>& aRecordNames,
+                                 const GMPErr& aStatus)
+{
+  if (mShutdown || mPendingRecordIterators.empty()) {
+    return true;
+  }
+  RecordIteratorContext ctx = mPendingRecordIterators.front();
+  mPendingRecordIterators.pop();
+
+  if (GMP_FAILED(aStatus)) {
+    ctx.mFunc(nullptr, ctx.mUserArg, aStatus);
+  } else {
+    ctx.mFunc(new GMPRecordIteratorImpl(aRecordNames), ctx.mUserArg, GMPNoErr);
+  }
+  return true;
+}
+
 bool
 GMPStorageChild::RecvShutdown()
 {
@@ -275,6 +351,9 @@ GMPStorageChild::RecvShutdown()
   // parent. We don't delete any objects here, as that may invalidate
   // GMPRecord pointers held by the GMP.
   mShutdown = true;
+  while (!mPendingRecordIterators.empty()) {
+    mPendingRecordIterators.pop();
+  }
   return true;
 }
 

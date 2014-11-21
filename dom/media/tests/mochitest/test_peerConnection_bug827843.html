@@ -24,8 +24,9 @@
         var exception = null;
 
         // handle the event which the close() triggers
-        test.pcLocal.onsignalingstatechange = function (state) {
-          is(state, "closed", "Received expected onsignalingstatechange event 'closed'");
+        test.pcLocal.onsignalingstatechange = function (e) {
+          is(e.target.signalingState, "closed",
+             "Received expected onsignalingstatechange event on 'closed'");
         }
 
         test.pcLocal.close();
@@ -39,8 +40,9 @@
         exception = null;
 
         // handle the event which the close() triggers
-        test.pcRemote.onsignalingstatechange = function (state) {
-          is(state, "closed", "Received expected onsignalingstatechange event 'closed'");
+        test.pcRemote.onsignalingstatechange = function (e) {
+          is(e.target.signalingState, "closed",
+             "Received expected onsignalingstatechange event on 'closed'");
         }
 
         test.pcRemote.close();

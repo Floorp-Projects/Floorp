@@ -18,6 +18,8 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "nsContentCID.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Base64.h"
+#include "nsISimpleEnumerator.h"
 
 namespace mozilla {
 
@@ -104,9 +106,17 @@ OpenStorageFile(const nsCString& aRecordName,
     return rv;
   }
 
-  nsAutoString recordNameHash;
-  recordNameHash.AppendInt(HashString(aRecordName.get()));
-  f->Append(recordNameHash);
+  nsAutoCString recordNameBase64;
+  rv = Base64Encode(aRecordName, recordNameBase64);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Base64 can encode to a '/' character, which will mess with file paths,
+  // so we need to replace that here with something that won't mess with paths.
+  recordNameBase64.ReplaceChar('/', '-');
+
+  f->AppendNative(recordNameBase64);
 
   auto mode = PR_RDWR | PR_CREATE_FILE;
   if (aMode == Truncate) {
@@ -193,6 +203,54 @@ public:
     return (bytesWritten == (int32_t)aBytes.Length()) ? GMPNoErr : GMPGenericErr;
   }
 
+  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) MOZ_OVERRIDE
+  {
+    nsCOMPtr<nsIFile> storageDir;
+    nsresult rv = GetGMPStorageDir(getter_AddRefs(storageDir), mNodeId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return GMPGenericErr;
+    }
+
+    nsCOMPtr<nsISimpleEnumerator> iter;
+    rv = storageDir->GetDirectoryEntries(getter_AddRefs(iter));
+    if (NS_FAILED(rv)) {
+      return GMPGenericErr;
+    }
+
+    bool hasMore;
+    while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> supports;
+      rv = iter->GetNext(getter_AddRefs(supports));
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+      nsCOMPtr<nsIFile> dirEntry(do_QueryInterface(supports, &rv));
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      nsAutoCString leafName;
+      rv = dirEntry->GetNativeLeafName(leafName);
+      if (NS_FAILED(rv)) {
+        continue;
+      }
+
+      // The record's file name is the Base64 encode of the record name,
+      // with '/' characters replaced with '-' characters. Base64 decode
+      // to extract the file name.
+      leafName.ReplaceChar('-', '/');
+      nsAutoCString recordName;
+      rv = Base64Decode(leafName, recordName);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      aOutRecordNames.AppendElement(recordName);
+    }
+
+    return GMPNoErr;
+  }
+
   virtual void Close(const nsCString& aRecordName) MOZ_OVERRIDE
   {
     PRFileDesc* fd = mFiles.Get(aRecordName);
@@ -255,6 +313,12 @@ public:
     return GMPNoErr;
   }
 
+  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) MOZ_OVERRIDE
+  {
+    mRecords.EnumerateRead(EnumRecordNames, &aOutRecordNames);
+    return GMPNoErr;
+  }
+
   virtual void Close(const nsCString& aRecordName) MOZ_OVERRIDE
   {
     Record* record = nullptr;
@@ -276,6 +340,16 @@ private:
     nsTArray<uint8_t> mData;
     bool mIsOpen;
   };
+
+  static PLDHashOperator
+  EnumRecordNames(const nsACString& aKey,
+                  Record* aRecord,
+                  void* aUserArg)
+  {
+    nsTArray<nsCString>* names = reinterpret_cast<nsTArray<nsCString>*>(aUserArg);
+    names->AppendElement(aKey);
+    return PL_DHASH_NEXT;
+  }
 
   nsClassHashtable<nsCStringHashKey, Record> mRecords;
 };
@@ -385,6 +459,22 @@ GMPStorageParent::RecvWrite(const nsCString& aRecordName,
   }
 
   unused << SendWriteComplete(aRecordName, mStorage->Write(aRecordName, aBytes));
+
+  return true;
+}
+
+bool
+GMPStorageParent::RecvGetRecordNames()
+{
+  LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
+
+  if (mShutdown) {
+    return true;
+  }
+
+  nsTArray<nsCString> recordNames;
+  GMPErr status = mStorage->GetRecordNames(recordNames);
+  unused << SendRecordNames(recordNames, status);
 
   return true;
 }

@@ -23,7 +23,7 @@ namespace dom {
 class Headers;
 class InternalHeaders;
 class Promise;
-class RequestOrScalarValueString;
+class RequestOrUSVString;
 
 class Request MOZ_FINAL : public nsISupports
                         , public nsWrapperCache
@@ -89,7 +89,7 @@ public:
   GetBody(nsIInputStream** aStream) { return mRequest->GetBody(aStream); }
 
   static already_AddRefed<Request>
-  Constructor(const GlobalObject& aGlobal, const RequestOrScalarValueString& aInput,
+  Constructor(const GlobalObject& aGlobal, const RequestOrUSVString& aInput,
               const RequestInit& aInit, ErrorResult& rv);
 
   nsIGlobalObject* GetParentObject() const

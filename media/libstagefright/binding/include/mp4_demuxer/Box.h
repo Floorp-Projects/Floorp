@@ -35,6 +35,7 @@ class Box
 {
 public:
   Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent = nullptr);
+  Box();
 
   bool IsAvailable() const { return !mRange.IsNull(); }
   uint64_t Offset() const { return mRange.mStart; }
