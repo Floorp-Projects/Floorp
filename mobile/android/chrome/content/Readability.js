@@ -199,7 +199,7 @@ Readability.prototype = {
     // In some cases a body element can't be found (if the HTML is
     // totally hosed for example) so we create a new body node and
     // append it to the document.
-    if (doc.body === null) {
+    if (!doc.body) {
       let body = doc.createElement("body");
 
       try {
