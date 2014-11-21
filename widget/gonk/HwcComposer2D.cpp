@@ -237,7 +237,7 @@ HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
       LOGE("Non-uniform vsync interval: %lld\n", vsyncInterval);
     }
     mLastVsyncTime = aVsyncTimestamp;
-    VsyncDispatcher::GetInstance()->NotifyVsync(vsyncTime);
+    mozilla::layers::VsyncDispatcher::NotifyVsync(vsyncTime);
 }
 
 // Called on the "invalidator" thread (run from HAL).
