@@ -13189,12 +13189,15 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
   uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
   if (IsElementAnchor(aContent)) {
     MOZ_ASSERT(aContent->IsHTML());
-    if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel,
-                              NS_LITERAL_STRING("noreferrer"),
-                              aContent->IsInHTMLDocument() ?
-                              eIgnoreCase : eCaseMatters)) {
+    nsAutoString referrer;
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
+    nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(referrer);
+    while (tok.hasMoreTokens()) {
+      if (tok.nextToken().LowerCaseEqualsLiteral("noreferrer")) {
         flags |= INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER |
                  INTERNAL_LOAD_FLAGS_NO_OPENER;
+        break;
+      }
     }
   }
 
