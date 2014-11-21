@@ -111,10 +111,10 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 .search-panel-current-engine {
   border-top: none !important;
   border-bottom: 1px solid #ccc;
-  -moz-box-align: center;
 }
 
 .search-panel-header {
+  font-size: 10px;
   font-weight: normal;
   background-color: rgb(245, 245, 245);
   border-top: 1px solid #ccc;
@@ -183,8 +183,7 @@ searchbar[oneoffui] .search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon
 
 .addengine-item {
   -moz-appearance: none;
-  border: none;
-  -moz-border-colors: none;
+  font-size: 10px;
   height: 32px;
   margin: 0 0;
   padding: 0 10px;
@@ -225,7 +224,7 @@ searchbar[oneoffui] .searchbar-engine-button {
   border-top: none !important;
 }
 
-searchbar[oneoffui] .searchbar-engine-image {
+.searchbar-engine-image {
   -moz-margin-start: -1px;
 }
 
