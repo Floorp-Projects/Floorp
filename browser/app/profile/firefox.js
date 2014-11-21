@@ -1820,4 +1820,9 @@ pref("print.enable_e10s_testing", false);
 pref("print.enable_e10s_testing", true);
 #endif
 
+#ifdef NIGHTLY_BUILD
+// Enable e10s add-on interposition by default.
+pref("extensions.interposition.enabled", true);
+#endif
+
 pref("browser.defaultbrowser.notificationbar", false);
