@@ -73,7 +73,7 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
 }
 
 function getLoopString(stringID) {
-  return MozLoopServiceInternal.localizedStrings[stringID].textContent;
+  return MozLoopServiceInternal.localizedStrings.get(stringID);
 }
 
 /**

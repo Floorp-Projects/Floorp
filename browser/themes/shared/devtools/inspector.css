@@ -105,11 +105,6 @@
   margin-bottom: 0;
 }
 
-.theme-dark .event-tooltip-attributes-box {
-  background-color: #B6BABF;
-  color: #343C45;
-}
-
 .event-tooltip-attributes-container {
   display: flex;
   flex-shrink: 0;
@@ -124,15 +119,12 @@
   border-radius: 3px;
   padding: 2px;
   -moz-margin-start: 5px;
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-toolbar-background);
 }
 
 .event-tooltip-attributes {
   margin: 0;
   font-size: 9px;
   padding-top: 2px;
-}
-
-.theme-light .event-tooltip-attributes-box {
-  background-color: #585959;
-  color: #F0F1F2;
 }

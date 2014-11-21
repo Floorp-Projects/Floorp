@@ -74,6 +74,16 @@ const FMM_MESSAGES = [
   "SessionStore:reloadPendingTab",
 ];
 
+// The list of messages we accept from <xul:browser>s that have no tab
+// assigned. Those are for example the ones that preload about:newtab pages.
+const FMM_NOTAB_MESSAGES = new Set([
+  // For a description see above.
+  "SessionStore:setupSyncHandler",
+
+  // For a description see above.
+  "SessionStore:update",
+]);
+
 // Messages that will be received via the Parent Process Message Manager.
 const PPMM_MESSAGES = [
   // A tab is being revived from the crashed state. The sender of this
@@ -605,9 +615,12 @@ let SessionStoreInternal = {
     var browser = aMessage.target;
     var win = browser.ownerDocument.defaultView;
     let tab = win.gBrowser.getTabForBrowser(browser);
-    if (!tab) {
-      // Ignore messages from <browser> elements that are not tabs.
-      return;
+
+    // Ensure we receive only specific messages from <xul:browser>s that
+    // have no tab assigned, e.g. the ones that preload aobut:newtab pages.
+    if (!tab && !FMM_NOTAB_MESSAGES.has(aMessage.name)) {
+      throw new Error(`received unexpected message '${aMessage.name}' ` +
+                      `from a browser that has no tab`);
     }
 
     switch (aMessage.name) {
@@ -691,7 +704,7 @@ let SessionStoreInternal = {
         }
         break;
       default:
-        debug(`received unknown message '${aMessage.name}'`);
+        throw new Error(`received unknown message '${aMessage.name}'`);
         break;
     }
   },
