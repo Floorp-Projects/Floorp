@@ -629,6 +629,12 @@
         ]]></body>
       </method>
 
+      <method name="inputChanged">
+        <body><![CDATA[
+          this.updateGoButtonVisibility();
+        ]]></body>
+      </method>
+
       <method name="updateGoButtonVisibility">
         <body><![CDATA[
           document.getAnonymousElementByAttribute(this, "anonid",
@@ -657,8 +663,8 @@
       </method>
     </implementation>
     <handlers>
-      <handler event="input" action="this.updateGoButtonVisibility();"/>
-      <handler event="drop" action="this.updateGoButtonVisibility();"/>
+      <handler event="input" action="this.inputChanged();"/>
+      <handler event="drop" action="this.inputChanged();"/>
       <handler event="focus">
       <![CDATA[
         if (this._textbox.value)

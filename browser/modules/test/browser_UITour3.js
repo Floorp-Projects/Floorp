@@ -157,4 +157,43 @@ let tests = [
       });
     });
   },
+
+  function test_setSearchTerm(done) {
+    const TERM = "UITour Search Term";
+    gContentAPI.setSearchTerm(TERM);
+
+    let searchbar = document.getElementById("searchbar");
+    // The UITour gets to the searchbar element through a promise, so the value setting
+    // only happens after a tick.
+    waitForCondition(() => searchbar.value == TERM, done, "Correct term set");
+  },
+
+  function test_clearSearchTerm(done) {
+    gContentAPI.setSearchTerm("");
+
+    let searchbar = document.getElementById("searchbar");
+    // The UITour gets to the searchbar element through a promise, so the value setting
+    // only happens after a tick.
+    waitForCondition(() => searchbar.value == "", done, "Search term cleared");
+  },
+
+  function test_openSearchPanel(done) {
+    let searchbar = document.getElementById("searchbar");
+
+    // If suggestions are enabled, the panel will attempt to use the network to connect
+    // to the suggestions provider, causing the test suite to fail.
+    Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+    registerCleanupFunction(() => {
+      Services.prefs.clearUserPref("browser.search.suggest.enabled");
+    });
+
+    ok(!searchbar.textbox.open, "Popup starts as closed");
+    gContentAPI.openSearchPanel(() => {
+      ok(searchbar.textbox.open, "Popup was opened");
+      searchbar.textbox.closePopup();
+      ok(!searchbar.textbox.open, "Popup was closed");
+      done();
+    });
+  },
+
 ];
