@@ -228,13 +228,6 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
     return NS_OK;
   }
 
-  if (aFlags & VisitFlags::REDIRECT_SOURCE || aFlags & VisitFlags::REDIRECT_PERMANENT || aFlags & VisitFlags::REDIRECT_TEMPORARY) {
-    // aLastVisitedURI redirected to aURI. We want to ignore aLastVisitedURI,
-    // so remove the pending visit. We want to give aURI a chance to be saved,
-    // so don't return early.
-    RemovePendingVisitURI(aLastVisitedURI);
-  }
-
   // Silently return if URI is something we shouldn't add to DB.
   bool canAdd;
   nsresult rv = CanAddURI(aURI, &canAdd);
@@ -244,6 +237,15 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
   }
 
   if (aLastVisitedURI) {
+    if (aFlags & VisitFlags::REDIRECT_SOURCE ||
+        aFlags & VisitFlags::REDIRECT_PERMANENT ||
+        aFlags & VisitFlags::REDIRECT_TEMPORARY) {
+      // aLastVisitedURI redirected to aURI. We want to ignore aLastVisitedURI,
+      // so remove the pending visit. We want to give aURI a chance to be saved,
+      // so don't return early.
+      RemovePendingVisitURI(aLastVisitedURI);
+    }
+
     bool same;
     rv = aURI->Equals(aLastVisitedURI, &same);
     NS_ENSURE_SUCCESS(rv, rv);
