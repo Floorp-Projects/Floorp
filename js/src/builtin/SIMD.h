@@ -46,7 +46,9 @@
   V(loadXY,  (Load<Float32x4, 2>), 2, 0)                                            \
   V(loadX,   (Load<Float32x4, 1>), 2, 0)                                            \
   V(max, (BinaryFunc<Float32x4, Maximum, Float32x4>), 2, 0)                         \
+  V(maxNum, (BinaryFunc<Float32x4, MaxNum, Float32x4>), 2, 0)                       \
   V(min, (BinaryFunc<Float32x4, Minimum, Float32x4>), 2, 0)                         \
+  V(minNum, (BinaryFunc<Float32x4, MinNum, Float32x4>), 2, 0)                       \
   V(mul, (BinaryFunc<Float32x4, Mul, Float32x4>), 2, 0)                             \
   V(notEqual, (CompareFunc<Float32x4, NotEqual>), 2, 0)                             \
   V(or, (CoercedBinaryFunc<Float32x4, Int32x4, Or, Float32x4>), 2, 0)               \

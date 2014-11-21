@@ -508,11 +508,19 @@ struct Mul {
 };
 template<typename T>
 struct Minimum {
-    static inline T apply(T l, T r) { return l < r ? l : r; }
+    static inline T apply(T l, T r) { return math_min_impl(l, r); }
+};
+template<typename T>
+struct MinNum {
+    static inline T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_min_impl(l, r)); }
 };
 template<typename T>
 struct Maximum {
-    static inline T apply(T l, T r) { return l > r ? l : r; }
+    static inline T apply(T l, T r) { return math_max_impl(l, r); }
+};
+template<typename T>
+struct MaxNum {
+    static inline T apply(T l, T r) { return IsNaN(l) ? r : (IsNaN(r) ? l : math_max_impl(l, r)); }
 };
 template<typename T>
 struct LessThan {

@@ -120,8 +120,14 @@ math_abs_handle(JSContext *cx, js::HandleValue v, js::MutableHandleValue r);
 extern bool
 math_abs(JSContext *cx, unsigned argc, js::Value *vp);
 
+extern double
+math_max_impl(double x, double y);
+
 extern bool
 math_max(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern double
+math_min_impl(double x, double y);
 
 extern bool
 math_min(JSContext *cx, unsigned argc, js::Value *vp);

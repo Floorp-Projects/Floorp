@@ -565,8 +565,8 @@ js::math_log(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static double
-max_double(double x, double y)
+double
+js::math_max_impl(double x, double y)
 {
     // Math.max(num, NaN) => NaN, Math.max(-0, +0) => +0
     if (x > y || IsNaN(x) || (x == y && IsNegative(y)))
@@ -584,14 +584,14 @@ js::math_max(JSContext *cx, unsigned argc, Value *vp)
         double x;
         if (!ToNumber(cx, args[i], &x))
             return false;
-        maxval = max_double(x, maxval);
+        maxval = math_max_impl(x, maxval);
     }
     args.rval().setNumber(maxval);
     return true;
 }
 
-static double
-min_double(double x, double y)
+double
+js::math_min_impl(double x, double y)
 {
     // Math.min(num, NaN) => NaN, Math.min(-0, +0) => -0
     if (x < y || IsNaN(x) || (x == y && IsNegativeZero(x)))
@@ -609,7 +609,7 @@ js::math_min(JSContext *cx, unsigned argc, Value *vp)
         double x;
         if (!ToNumber(cx, args[i], &x))
             return false;
-        minval = min_double(x, minval);
+        minval = math_min_impl(x, minval);
     }
     args.rval().setNumber(minval);
     return true;
@@ -626,9 +626,9 @@ js::minmax_impl(JSContext *cx, bool max, HandleValue a, HandleValue b, MutableHa
         return false;
 
     if (max)
-        res.setNumber(max_double(x, y));
+        res.setNumber(math_max_impl(x, y));
     else
-        res.setNumber(min_double(x, y));
+        res.setNumber(math_min_impl(x, y));
 
     return true;
 }
