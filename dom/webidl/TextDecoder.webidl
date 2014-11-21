@@ -18,7 +18,7 @@ interface TextDecoder {
   [Constant]
   readonly attribute boolean fatal;
   [Throws]
-  ScalarValueString decode(optional BufferSource input, optional TextDecodeOptions options);
+  USVString decode(optional BufferSource input, optional TextDecodeOptions options);
 };
 
 dictionary TextDecoderOptions {
