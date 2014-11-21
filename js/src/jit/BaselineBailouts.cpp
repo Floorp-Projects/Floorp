@@ -1347,9 +1347,9 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
     MOZ_ASSERT(poppedLastSPSFrameOut);
     MOZ_ASSERT(!*poppedLastSPSFrameOut);
 
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLogStopEvent(logger, TraceLogger_IonMonkey);
-    TraceLogStartEvent(logger, TraceLogger_Baseline);
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogStopEvent(logger, TraceLogger::IonMonkey);
+    TraceLogStartEvent(logger, TraceLogger::Baseline);
 
     // The caller of the top frame must be one of the following:
     //      IonJS - Ion calling into Ion.
@@ -1460,12 +1460,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
         snapIter.settleOnFrame();
 
         if (frameNo > 0) {
-            // TraceLogger doesn't create entries for inlined frames. But we
-            // see them in Baseline. Here we create the start events of those
-            // entries. So they correspond to what we will see in Baseline.
-            TraceLoggerEvent scriptEvent(logger, TraceLogger_Scripts, scr);
-            TraceLogStartEvent(logger, scriptEvent);
-            TraceLogStartEvent(logger, TraceLogger_Baseline);
+            TraceLogStartEvent(logger, TraceLogCreateTextId(logger, scr));
+            TraceLogStartEvent(logger, TraceLogger::Baseline);
         }
 
         JitSpew(JitSpew_BaselineBailouts, "    FrameNo %d", frameNo);

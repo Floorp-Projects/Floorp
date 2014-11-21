@@ -1704,7 +1704,7 @@ static bool
 EnableTraceLogger(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     args.rval().setBoolean(TraceLoggerEnable(logger, cx));
 
     return true;
@@ -1714,7 +1714,7 @@ static bool
 DisableTraceLogger(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     args.rval().setBoolean(TraceLoggerDisable(logger));
 
     return true;
