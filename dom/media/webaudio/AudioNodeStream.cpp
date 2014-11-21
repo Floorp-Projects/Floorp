@@ -98,7 +98,7 @@ void
 AudioNodeStream::SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
                                             double aStreamTime)
 {
-  TrackTicks ticks = TicksFromDestinationTime(aRelativeToStream, aStreamTime);
+  StreamTime ticks = TicksFromDestinationTime(aRelativeToStream, aStreamTime);
   mEngine->SetStreamTimeParameter(aIndex, ticks);
 }
 
@@ -445,7 +445,7 @@ void
 AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
 {
   if (!mFinished) {
-    EnsureTrack(AUDIO_TRACK, mSampleRate);
+    EnsureTrack(AUDIO_TRACK);
   }
   // No more tracks will be coming
   mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
@@ -537,7 +537,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
 void
 AudioNodeStream::AdvanceOutputSegment()
 {
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK, mSampleRate);
+  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   AudioSegment* segment = track->Get<AudioSegment>();
 
   if (mKind == MediaStreamGraph::EXTERNAL_STREAM) {
@@ -552,16 +552,15 @@ AudioNodeStream::AdvanceOutputSegment()
     AudioSegment tmpSegment;
     tmpSegment.AppendAndConsumeChunk(&copyChunk);
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
-                                mSampleRate, segment->GetDuration(), 0,
-                                tmpSegment);
+                                segment->GetDuration(), 0, tmpSegment);
   }
 }
 
-TrackTicks
+StreamTime
 AudioNodeStream::GetCurrentPosition()
 {
   NS_ASSERTION(!mFinished, "Don't create another track after finishing");
-  return EnsureTrack(AUDIO_TRACK, mSampleRate)->Get<AudioSegment>()->GetDuration();
+  return EnsureTrack(AUDIO_TRACK)->Get<AudioSegment>()->GetDuration();
 }
 
 void
@@ -571,7 +570,7 @@ AudioNodeStream::FinishOutput()
     return;
   }
 
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK, mSampleRate);
+  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   track->SetEnded();
   FinishOnGraphThread();
 
@@ -579,7 +578,6 @@ AudioNodeStream::FinishOutput()
     MediaStreamListener* l = mListeners[j];
     AudioSegment emptySegment;
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
-                                mSampleRate,
                                 track->GetSegment()->GetDuration(),
                                 MediaStreamListener::TRACK_EVENT_ENDED, emptySegment);
   }
@@ -607,7 +605,7 @@ AudioNodeStream::FractionalTicksFromDestinationTime(AudioNodeStream* aDestinatio
   return thisFractionalTicks;
 }
 
-TrackTicks
+StreamTime
 AudioNodeStream::TicksFromDestinationTime(MediaStream* aDestination,
                                           double aSeconds)
 {
@@ -617,17 +615,16 @@ AudioNodeStream::TicksFromDestinationTime(MediaStream* aDestination,
   double thisSeconds =
     FractionalTicksFromDestinationTime(destination, aSeconds);
   // Round to nearest
-  TrackTicks ticks = thisSeconds + 0.5;
+  StreamTime ticks = thisSeconds + 0.5;
   return ticks;
 }
 
 double
 AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
-                                          TrackTicks aPosition)
+                                          StreamTime aPosition)
 {
   MOZ_ASSERT(SampleRate() == aDestination->SampleRate());
-  StreamTime sourceTime = TicksToTimeRoundDown(SampleRate(), aPosition);
-  GraphTime graphTime = StreamTimeToGraphTime(sourceTime);
+  GraphTime graphTime = StreamTimeToGraphTime(aPosition);
   StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
   return StreamTimeToSeconds(destinationTime);
 }

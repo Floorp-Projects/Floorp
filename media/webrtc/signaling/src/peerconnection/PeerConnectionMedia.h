@@ -63,7 +63,7 @@ class Fake_AudioGenerator {
 
     // Make a track
     mozilla::AudioSegment *segment = new mozilla::AudioSegment();
-    mStream->GetStream()->AsSourceStream()->AddTrack(1, 16000, 0, segment);
+    mStream->GetStream()->AsSourceStream()->AddAudioTrack(1, 16000, 0, segment);
 
     // Set the timer
     mTimer->InitWithFuncCallback(Callback, this, 100, nsITimer::TYPE_REPEATING_PRECISE);
@@ -107,7 +107,7 @@ class Fake_VideoGenerator {
 
     // Make a track
     mozilla::VideoSegment *segment = new mozilla::VideoSegment();
-    mStream->GetStream()->AsSourceStream()->AddTrack(1, mozilla::USECS_PER_S, 0, segment);
+    mStream->GetStream()->AsSourceStream()->AddTrack(1, 0, segment);
     mStream->GetStream()->AsSourceStream()->AdvanceKnownTracksTime(mozilla::STREAM_TIME_MAX);
 
     // Set the timer. Set to 10 fps.
@@ -157,7 +157,8 @@ class Fake_VideoGenerator {
     // AddTrack takes ownership of segment
     mozilla::VideoSegment *segment = new mozilla::VideoSegment();
     // 10 fps.
-    segment->AppendFrame(image.forget(), mozilla::USECS_PER_S / 10,
+    segment->AppendFrame(image.forget(),
+                         gen->mStream->GetStream()->GraphRate() / 10,
                          IntSize(WIDTH, HEIGHT));
 
     gen->mStream->GetStream()->AsSourceStream()->AppendToTrack(1, segment);

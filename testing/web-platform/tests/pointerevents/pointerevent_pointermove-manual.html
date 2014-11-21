@@ -22,14 +22,12 @@
 
             function run() {
                 var target0 = document.getElementById("target0");
-                
 
                 // When a pointer changes coordinates, the pointermove event must be dispatched.
                 // TA: 5.3
                 on_event(target0, "pointermove", function (event) {
+                    detected_pointertypes[event.pointerType] = true;
                     if (eventTested == false) {
-                        detected_pointertypes[event.pointerType] = true;
-
                         test_pointermove.done();
                         eventTested = true;
                     }
@@ -39,7 +37,7 @@
         <h1>Pointer Events pointermove Tests</h1>
         <div id="complete-notice">
             <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
-            <p>Would you like to <a href="javascript:location.reload()">run the tests again</a> with a different pointer type?</p>
+            <p>Refresh the page to run the tests again with a different pointer type.</p>
         </div>
         <div id="log"></div>
     </body>

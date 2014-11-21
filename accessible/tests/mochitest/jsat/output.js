@@ -99,3 +99,16 @@ function testOutput(expected, aAccOrElmOrID, aOldAccOrElmOrID, aOutputKind) {
   }
   testObjectOutput(aAccOrElmOrID, generator);
 }
+
+function testHints(expected, aAccOrElmOrID, aOldAccOrElmOrID) {
+  var accessible = getAccessible(aAccOrElmOrID);
+  var oldAccessible = aOldAccOrElmOrID !== null ?
+  getAccessible(aOldAccOrElmOrID || 'root') : null;
+  var context = new PivotContext(accessible, oldAccessible);
+  var hints = context.interactionHints;
+
+  isDeeply(hints, expected,
+           "Context hitns are correct for " + aAccOrElmOrID +
+           " (hints: " + JSON.stringify(hints) + ") ==" +
+           " (expected: " + JSON.stringify(expected) + ")");
+}

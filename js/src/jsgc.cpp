@@ -189,6 +189,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 
+#include <ctype.h>
 #include <string.h>
 #ifndef XP_WIN
 # include <sys/mman.h>
@@ -1285,22 +1286,22 @@ GCRuntime::setNextScheduled(uint32_t count)
 }
 
 bool
-GCRuntime::initZeal()
+GCRuntime::parseAndSetZeal(const char *str)
 {
-    const char *env = getenv("JS_GC_ZEAL");
-    if (!env)
-        return true;
-
     int zeal = -1;
-    int frequency = JS_DEFAULT_ZEAL_FREQ;
-    if (strcmp(env, "help") != 0) {
-        zeal = atoi(env);
-        const char *p = strchr(env, ',');
-        if (p)
+    int frequency = -1;
+
+    if (isdigit(str[0])) {
+        zeal = atoi(str);
+
+        const char *p = strchr(str, ',');
+        if (!p)
+            frequency = JS_DEFAULT_ZEAL_FREQ;
+        else
             frequency = atoi(p + 1);
     }
 
-    if (zeal < 0 || zeal > ZealLimit || frequency < 0) {
+    if (zeal < 0 || zeal > ZealLimit || frequency <= 0) {
         fprintf(stderr, "Format: JS_GC_ZEAL=level[,N]\n");
         fputs(ZealModeHelpText, stderr);
         return false;
@@ -1360,7 +1361,8 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 #endif
 
 #ifdef JS_GC_ZEAL
-    if (!initZeal())
+    const char *zealSpec = getenv("JS_GC_ZEAL");
+    if (zealSpec && zealSpec[0] && !parseAndSetZeal(zealSpec))
         return false;
 #endif
 
@@ -1986,6 +1988,7 @@ ArenaLists::allocateFromArena(JS::Zone *zone, AllocKind thingKind,
     if (!aheader)
         return nullptr;
 
+    MOZ_ASSERT(!maybeLock->wasUnlocked());
     MOZ_ASSERT(al.isCursorAtEnd());
     al.insertAtCursor(aheader);
 
@@ -3274,7 +3277,6 @@ GCRuntime::maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock)
     if (usedBytes >= thresholdBytes) {
         // The threshold has been surpassed, immediately trigger a GC,
         // which will be done non-incrementally.
-        AutoUnlockGC unlock(rt);
         triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
     } else if (usedBytes >= igcThresholdBytes) {
         // Reduce the delay to the start of the next incremental slice.
@@ -3288,7 +3290,6 @@ GCRuntime::maybeAllocTriggerZoneGC(Zone *zone, const AutoLockGC &lock)
             // to try to avoid performing non-incremental GCs on zones
             // which allocate a lot of data, even when incremental slices
             // can't be triggered via scheduling in the event loop.
-            AutoUnlockGC unlock(rt);
             triggerZoneGC(zone, JS::gcreason::ALLOC_TRIGGER);
 
             // Delay the next slice until a certain amount of allocation
@@ -3414,7 +3415,7 @@ GCRuntime::decommitAllWithoutUnlocking(const AutoLockGC &lock)
 }
 
 void
-GCRuntime::decommitArenas(const AutoLockGC &lock)
+GCRuntime::decommitArenas(AutoLockGC &lock)
 {
     // Verify that all entries in the empty chunks pool are decommitted.
     for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done(); chunk.next())
@@ -3445,7 +3446,7 @@ GCRuntime::decommitArenas(const AutoLockGC &lock)
             ArenaHeader *aheader = chunk->allocateArena(rt, nullptr, FINALIZE_OBJECT0, lock);
             bool ok;
             {
-                AutoUnlockGC unlock(rt);
+                AutoUnlockGC unlock(lock);
                 ok = MarkPagesUnused(aheader->getArena(), ArenaSize);
             }
             chunk->releaseArena(rt, aheader, lock, Chunk::ArenaDecommitState(ok));
@@ -3460,14 +3461,14 @@ GCRuntime::decommitArenas(const AutoLockGC &lock)
 }
 
 void
-GCRuntime::expireChunksAndArenas(bool shouldShrink, const AutoLockGC &lock)
+GCRuntime::expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock)
 {
 #ifdef JSGC_FJGENERATIONAL
     rt->threadPool.pruneChunkCache();
 #endif
 
     if (Chunk *toFree = expireEmptyChunkPool(shouldShrink, lock)) {
-        AutoUnlockGC unlock(rt);
+        AutoUnlockGC unlock(lock);
         freeChunkList(toFree);
     }
 
@@ -3604,7 +3605,7 @@ GCHelperState::work()
     MOZ_ASSERT(!thread);
     thread = PR_GetCurrentThread();
 
-    TraceLogger *logger = TraceLoggerForCurrentThread();
+    TraceLoggerThread *logger = TraceLoggerForCurrentThread();
 
     switch (state()) {
 
@@ -3613,7 +3614,7 @@ GCHelperState::work()
         break;
 
       case SWEEPING: {
-        AutoTraceLog logSweeping(logger, TraceLogger::GCSweeping);
+        AutoTraceLog logSweeping(logger, TraceLogger_GCSweeping);
         doSweep(lock);
         MOZ_ASSERT(state() == SWEEPING);
         break;
@@ -3637,14 +3638,14 @@ BackgroundAllocTask::BackgroundAllocTask(JSRuntime *rt, ChunkPool &pool)
 /* virtual */ void
 BackgroundAllocTask::run()
 {
-    TraceLogger *logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logAllocation(logger, TraceLogger::GCAllocation);
+    TraceLoggerThread *logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logAllocation(logger, TraceLogger_GCAllocation);
 
     AutoLockGC lock(runtime);
     while (!cancel_ && runtime->gc.wantBackgroundAllocation(lock)) {
         Chunk *chunk;
         {
-            AutoUnlockGC unlock(runtime);
+            AutoUnlockGC unlock(lock);
             chunk = Chunk::allocate(runtime);
             if (!chunk)
                 break;
@@ -3697,11 +3698,11 @@ GCHelperState::waitBackgroundSweepEnd()
 }
 
 void
-GCHelperState::doSweep(const AutoLockGC &lock)
+GCHelperState::doSweep(AutoLockGC &lock)
 {
     if (sweepFlag) {
         sweepFlag = false;
-        AutoUnlockGC unlock(rt);
+        AutoUnlockGC unlock(lock);
 
         rt->gc.sweepBackgroundThings();
 
@@ -6248,8 +6249,8 @@ GCRuntime::collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
     if (rt->mainThread.suppressGC)
         return;
 
-    TraceLogger *logger = TraceLoggerForMainThread(rt);
-    AutoTraceLog logGC(logger, TraceLogger::GC);
+    TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
+    AutoTraceLog logGC(logger, TraceLogger_GC);
 
 #ifdef JS_GC_ZEAL
     if (deterministicOnly && !IsDeterministicGCReason(reason))
@@ -6455,8 +6456,8 @@ GCRuntime::minorGC(JS::gcreason::Reason reason)
 {
 #ifdef JSGC_GENERATIONAL
     minorGCRequested = false;
-    TraceLogger *logger = TraceLoggerForMainThread(rt);
-    AutoTraceLog logMinorGC(logger, TraceLogger::MinorGC);
+    TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
+    AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery.collect(rt, reason, nullptr);
     MOZ_ASSERT_IF(!rt->mainThread.suppressGC, nursery.isEmpty());
 #endif
@@ -6469,8 +6470,8 @@ GCRuntime::minorGC(JSContext *cx, JS::gcreason::Reason reason)
     // objects as needing pretenuring.
 #ifdef JSGC_GENERATIONAL
     minorGCRequested = false;
-    TraceLogger *logger = TraceLoggerForMainThread(rt);
-    AutoTraceLog logMinorGC(logger, TraceLogger::MinorGC);
+    TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
+    AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     Nursery::TypeObjectList pretenureTypes;
     nursery.collect(rt, reason, &pretenureTypes);
     for (size_t i = 0; i < pretenureTypes.length(); i++) {

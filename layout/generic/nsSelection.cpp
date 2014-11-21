@@ -626,7 +626,7 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
 }
 
 void
-nsFrameSelection::SetCaretBidiLevel(uint8_t aLevel)
+nsFrameSelection::SetCaretBidiLevel(nsBidiLevel aLevel)
 {
   // If the current level is undefined, we have just inserted new text.
   // In this case, we don't want to reset the keyboard language
@@ -634,7 +634,7 @@ nsFrameSelection::SetCaretBidiLevel(uint8_t aLevel)
   return;
 }
 
-uint8_t
+nsBidiLevel
 nsFrameSelection::GetCaretBidiLevel() const
 {
   return mCaretBidiLevel;
@@ -870,17 +870,17 @@ nsFrameSelection::MoveCaret(uint32_t          aKeycode,
   nsPeekOffsetStruct pos(aAmount, eDirPrevious, offsetused, desiredX,
                          true, mLimiter != nullptr, true, aVisualMovement);
 
-  nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
-  
+  nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
+
   CaretAssociateHint tHint(mHint); //temporary variable so we dont set mHint until it is necessary
   switch (aKeycode){
-    case nsIDOMKeyEvent::DOM_VK_RIGHT : 
+    case nsIDOMKeyEvent::DOM_VK_RIGHT :
         InvalidateDesiredX();
-        pos.mDirection = (baseLevel & 1) ? eDirPrevious : eDirNext;
+        pos.mDirection = (paraDir == NSBIDI_RTL) ? eDirPrevious : eDirNext;
       break;
     case nsIDOMKeyEvent::DOM_VK_LEFT :
         InvalidateDesiredX();
-        pos.mDirection = (baseLevel & 1) ? eDirNext : eDirPrevious;
+        pos.mDirection = (paraDir == NSBIDI_RTL) ? eDirNext : eDirPrevious;
       break;
     case nsIDOMKeyEvent::DOM_VK_DELETE :
         InvalidateDesiredX();
@@ -1169,9 +1169,9 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
   if (NS_FAILED(rv))
     newFrame = nullptr;
 
-  uint8_t baseLevel = NS_GET_BASE_LEVEL(currentFrame);
-  uint8_t currentLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
-  uint8_t newLevel = newFrame ? NS_GET_EMBEDDING_LEVEL(newFrame) : baseLevel;
+  nsBidiLevel baseLevel = NS_GET_BASE_LEVEL(currentFrame);
+  nsBidiLevel currentLevel = NS_GET_EMBEDDING_LEVEL(currentFrame);
+  nsBidiLevel newLevel = newFrame ? NS_GET_EMBEDDING_LEVEL(newFrame) : baseLevel;
   
   // If not jumping lines, disregard br frames, since they might be positioned incorrectly.
   // XXX This could be removed once bug 339786 is fixed.
@@ -1197,11 +1197,11 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
 nsresult
 nsFrameSelection::GetFrameFromLevel(nsIFrame    *aFrameIn,
                                     nsDirection  aDirection,
-                                    uint8_t      aBidiLevel,
+                                    nsBidiLevel  aBidiLevel,
                                     nsIFrame   **aFrameOut) const
 {
   NS_ENSURE_STATE(mShell);
-  uint8_t foundLevel = 0;
+  nsBidiLevel foundLevel = 0;
   nsIFrame *foundFrame = aFrameIn;
 
   nsCOMPtr<nsIFrameEnumerator> frameTraversal;
@@ -3954,7 +3954,7 @@ Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
   CaretAssociationHint hint = mFrameSelection->GetHint();
 
   if (aVisual) {
-    uint8_t caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
+    nsBidiLevel caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
 
     return nsCaret::GetCaretFrameForNodeOffset(mFrameSelection,
       content, FocusOffset(), hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
@@ -5825,15 +5825,15 @@ Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
     Collapse(focusNode, focusOffset);
   }
 
-  // If the base level of the focused frame is odd, we may have to swap the
-  // direction of the keycode.
+  // If the paragraph direction of the focused frame is right-to-left,
+  // we may have to swap the direction of the keycode.
   nsIFrame *frame;
   int32_t offset;
   rv = GetPrimaryFrameForFocusNode(&frame, &offset, visual);
   if (NS_SUCCEEDED(rv) && frame) {
-    nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
+    nsBidiDirection paraDir = nsBidiPresUtils::ParagraphDirection(frame);
 
-    if (baseLevel & 1) {
+    if (paraDir == NSBIDI_RTL) {
       if (!visual && keycode == nsIDOMKeyEvent::DOM_VK_RIGHT) {
         keycode = nsIDOMKeyEvent::DOM_VK_LEFT;
       }
@@ -5886,12 +5886,12 @@ Selection::SelectionLanguageChange(bool aLangRTL)
   int32_t frameStart, frameEnd;
   focusFrame->GetOffsets(frameStart, frameEnd);
   nsRefPtr<nsPresContext> context = GetPresContext();
-  uint8_t levelBefore, levelAfter;
+  nsBidiLevel levelBefore, levelAfter;
   if (!context) {
     return NS_ERROR_FAILURE;
   }
 
-  uint8_t level = NS_GET_EMBEDDING_LEVEL(focusFrame);
+  nsBidiLevel level = NS_GET_EMBEDDING_LEVEL(focusFrame);
   int32_t focusOffset = static_cast<int32_t>(FocusOffset());
   if ((focusOffset != frameStart) && (focusOffset != frameEnd))
     // the cursor is not at a frame boundary, so the level of both the characters (logically) before and after the cursor
@@ -5908,14 +5908,14 @@ Selection::SelectionLanguageChange(bool aLangRTL)
     levelAfter = levels.mLevelAfter;
   }
 
-  if ((levelBefore & 1) == (levelAfter & 1)) {
+  if (IS_SAME_DIRECTION(levelBefore, levelAfter)) {
     // if cursor is between two characters with the same orientation, changing the keyboard language
     //  must toggle the cursor level between the level of the character with the lowest level
     //  (if the new language corresponds to the orientation of that character) and this level plus 1
     //  (if the new language corresponds to the opposite orientation)
     if ((level != levelBefore) && (level != levelAfter))
       level = std::min(levelBefore, levelAfter);
-    if ((level & 1) == aLangRTL)
+    if (IS_LEVEL_RTL(level) == aLangRTL)
       mFrameSelection->SetCaretBidiLevel(level);
     else
       mFrameSelection->SetCaretBidiLevel(level + 1);
@@ -5923,7 +5923,7 @@ Selection::SelectionLanguageChange(bool aLangRTL)
   else {
     // if cursor is between characters with opposite orientations, changing the keyboard language must change
     //  the cursor level to that of the adjacent character with the orientation corresponding to the new language.
-    if ((levelBefore & 1) == aLangRTL)
+    if (IS_LEVEL_RTL(levelBefore) == aLangRTL)
       mFrameSelection->SetCaretBidiLevel(levelBefore);
     else
       mFrameSelection->SetCaretBidiLevel(levelAfter);

@@ -100,7 +100,7 @@ private:
 public:
   explicit SharedBuffers(float aSampleRate)
     : mOutputQueue("SharedBuffers::outputQueue")
-    , mDelaySoFar(TRACK_TICKS_MAX)
+    , mDelaySoFar(STREAM_TIME_MAX)
     , mSampleRate(aSampleRate)
     , mLatency(0.0)
     , mDroppingBuffers(false)
@@ -184,14 +184,14 @@ public:
     {
       MutexAutoLock lock(mOutputQueue.Lock());
       if (mOutputQueue.ReadyToConsume() > 0) {
-        if (mDelaySoFar == TRACK_TICKS_MAX) {
+        if (mDelaySoFar == STREAM_TIME_MAX) {
           mDelaySoFar = 0;
         }
         buffer = mOutputQueue.Consume();
       } else {
         // If we're out of buffers to consume, just output silence
         buffer.SetNull(WEBAUDIO_BLOCK_SIZE);
-        if (mDelaySoFar != TRACK_TICKS_MAX) {
+        if (mDelaySoFar != STREAM_TIME_MAX) {
           // Remember the delay that we just hit
           mDelaySoFar += WEBAUDIO_BLOCK_SIZE;
         }
@@ -201,16 +201,16 @@ public:
     return buffer;
   }
 
-  TrackTicks DelaySoFar() const
+  StreamTime DelaySoFar() const
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    return mDelaySoFar == TRACK_TICKS_MAX ? 0 : mDelaySoFar;
+    return mDelaySoFar == STREAM_TIME_MAX ? 0 : mDelaySoFar;
   }
 
   void Reset()
   {
     MOZ_ASSERT(!NS_IsMainThread());
-    mDelaySoFar = TRACK_TICKS_MAX;
+    mDelaySoFar = STREAM_TIME_MAX;
     mLatency = 0.0f;
     {
       MutexAutoLock lock(mOutputQueue.Lock());
@@ -223,8 +223,8 @@ private:
   OutputQueue mOutputQueue;
   // How much delay we've seen so far.  This measures the amount of delay
   // caused by the main thread lagging behind in producing output buffers.
-  // TRACK_TICKS_MAX means that we have not received our first buffer yet.
-  TrackTicks mDelaySoFar;
+  // STREAM_TIME_MAX means that we have not received our first buffer yet.
+  StreamTime mDelaySoFar;
   // The samplerate of the context.
   float mSampleRate;
   // This is the latency caused by the buffering. If this grows too high, we
@@ -352,7 +352,7 @@ private:
     MOZ_ASSERT(!NS_IsMainThread());
 
     // we now have a full input buffer ready to be sent to the main thread.
-    TrackTicks playbackTick = mSource->GetCurrentPosition();
+    StreamTime playbackTick = mSource->GetCurrentPosition();
     // Add the duration of the current sample
     playbackTick += WEBAUDIO_BLOCK_SIZE;
     // Add the delay caused by the main thread

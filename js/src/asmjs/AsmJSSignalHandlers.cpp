@@ -457,6 +457,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (heapAccess->isLoad())
         SetRegisterToCoercedUndefined(context, heapAccess->isFloat32Load(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
+
     return true;
 # else
     return false;
@@ -848,6 +849,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     if (heapAccess->isLoad())
         SetRegisterToCoercedUndefined(context, heapAccess->isFloat32Load(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
+
     return true;
 # else
     return false;

@@ -3,8 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import ast
 import os
 import sys
+from collections import OrderedDict
 
 import config
 
@@ -48,11 +50,20 @@ def create_parser(product_choices=None):
     parser.add_argument("--metadata", action="store", type=abs_path, dest="metadata_root",
                         help="Path to the folder containing test metadata"),
     parser.add_argument("--tests", action="store", type=abs_path, dest="tests_root",
-                        help="Path to web-platform-tests"),
+                        help="Path to test files"),
     parser.add_argument("--prefs-root", dest="prefs_root", action="store", type=abs_path,
                         help="Path to the folder containing browser prefs"),
-    parser.add_argument("--config", action="store", type=abs_path,
+    parser.add_argument("--serve-root", action="store", type=abs_path, dest="serve_root",
+                        help="Path to web-platform-tests checkout containing serve.py and manifest.py"
+                        " (defaults to test_root)")
+    parser.add_argument("--run-info", action="store", type=abs_path,
+                        help="Path to directory containing extra json files to add to run info")
+    parser.add_argument("--config", action="store", type=abs_path, dest="config",
                         help="Path to config file")
+
+    parser.add_argument("--manifest-update", action="store_true", default=False,
+                        help="Force regeneration of the test manifest")
+
     parser.add_argument("--binary", action="store",
                         type=abs_path, help="Binary to run tests against")
     parser.add_argument("--test-types", action="store",
@@ -118,12 +129,17 @@ def create_parser(product_choices=None):
 
 def set_from_config(kwargs):
     if kwargs["config"] is None:
-        kwargs["config"] = config.path()
+        config_path = config.path()
+    else:
+        config_path = kwargs["config"]
 
-    kwargs["config"] = config.read(kwargs["config"])
+    kwargs["config_path"] = config_path
+    kwargs["config"] = config.read(kwargs["config_path"])
+    kwargs["test_paths"] = OrderedDict()
 
-    keys = {"paths": [("tests", "tests_root", True),
-                      ("metadata", "metadata_root", True)],
+    keys = {"paths": [("serve", "serve_root", True),
+                      ("prefs", "prefs_root", True),
+                      ("run_info", "run_info", True)],
             "web-platform-tests": [("remote_url", "remote_url", False),
                                    ("branch", "branch", False),
                                    ("sync_path", "sync_path", True)]}
@@ -132,10 +148,30 @@ def set_from_config(kwargs):
         for config_value, kw_value, is_path in values:
             if kw_value in kwargs and kwargs[kw_value] is None:
                 if not is_path:
-                    new_value = kwargs["config"].get(section, {}).get(config_value, None)
+                    new_value = kwargs["config"].get(section, {}).get(config_value)
                 else:
                     new_value = kwargs["config"].get(section, {}).get_path(config_value)
                 kwargs[kw_value] = new_value
+
+    # Set up test_paths
+
+    for section in kwargs["config"].iterkeys():
+        if section.startswith("manifest:"):
+            manifest_opts = kwargs["config"].get(section)
+            url_base = manifest_opts.get("url_base", "/")
+            kwargs["test_paths"][url_base] = {
+                "tests_path": manifest_opts.get_path("tests"),
+                "metadata_path": manifest_opts.get_path("metadata")}
+
+    if kwargs["tests_root"]:
+        if "/" not in kwargs["test_paths"]:
+            kwargs["test_paths"]["/"] = {}
+        kwargs["test_paths"]["/"]["tests_path"] = kwargs["tests_root"]
+
+    if kwargs["metadata_root"]:
+        if "/" not in kwargs["test_paths"]:
+            kwargs["test_paths"]["/"] = {}
+        kwargs["test_paths"]["/"]["metadata_path"] = kwargs["metadata_root"]
 
 
 def check_args(kwargs):
@@ -143,17 +179,31 @@ def check_args(kwargs):
 
     set_from_config(kwargs)
 
-    for key in ["tests_root", "metadata_root"]:
-        name = key.split("_", 1)[0]
-        path = kwargs[key]
-
-        if not os.path.exists(path):
-            print "Fatal: %s path %s does not exist" % (name, path)
+    for test_paths in kwargs["test_paths"].itervalues():
+        if not ("tests_path" in test_paths and
+                "metadata_path" in test_paths):
+            print "Fatal: must specify both a test path and metadata path"
             sys.exit(1)
+        for key, path in test_paths.iteritems():
+            name = key.split("_", 1)[0]
 
-        if not os.path.isdir(path):
-            print "Fatal: %s path %s is not a directory" % (name, path)
-            sys.exit(1)
+            if not os.path.exists(path):
+                print "Fatal: %s path %s does not exist" % (name, path)
+                sys.exit(1)
+
+            if not os.path.isdir(path):
+                print "Fatal: %s path %s is not a directory" % (name, path)
+                sys.exit(1)
+
+    if kwargs["serve_root"] is None:
+        if "/" in kwargs["test_paths"]:
+            kwargs["serve_root"] = kwargs["test_paths"]["/"]["tests_path"]
+    else:
+        print >> sys.stderr, "Unable to determine server root path"
+        sys.exit(1)
+
+    if kwargs["run_info"] is None:
+        kwargs["run_info"] = kwargs["config_path"]
 
     if kwargs["this_chunk"] > 1:
         require_arg(kwargs, "total_chunks", lambda x: x >= kwargs["this_chunk"])
@@ -187,17 +237,20 @@ def check_args(kwargs):
 def create_parser_update():
     parser = argparse.ArgumentParser("web-platform-tests-update",
                                      description="Update script for web-platform-tests tests.")
+    parser.add_argument("--config", action="store", type=abs_path, help="Path to config file")
     parser.add_argument("--metadata", action="store", type=abs_path, dest="metadata_root",
                         help="Path to the folder containing test metadata"),
     parser.add_argument("--tests", action="store", type=abs_path, dest="tests_root",
                         help="Path to web-platform-tests"),
     parser.add_argument("--sync-path", action="store", type=abs_path,
                         help="Path to store git checkout of web-platform-tests during update"),
+    parser.add_argument("--serve-root", action="store", type=abs_path, dest="serve_root",
+                        help="Path to web-platform-tests checkout containing serve.py and manifest.py"
+                        " (defaults to test_root)")
     parser.add_argument("--remote_url", action="store",
                         help="URL of web-platfrom-tests repository to sync against"),
     parser.add_argument("--branch", action="store", type=abs_path,
                         help="Remote branch to sync against")
-    parser.add_argument("--config", action="store", type=abs_path, help="Path to config file")
     parser.add_argument("--rev", action="store", help="Revision to sync to")
     parser.add_argument("--no-check-clean", action="store_true", default=False,
                         help="Don't check the working directory is clean before updating")

@@ -15,15 +15,13 @@ import time
 import urlparse
 from Queue import Empty
 from StringIO import StringIO
-from abc import ABCMeta, abstractmethod
-from collections import defaultdict, OrderedDict
+
 from multiprocessing import Queue
 
 from mozlog.structured import commandline, stdadapter
 
-import manifestexpected
-import manifestinclude
 import products
+import testloader
 import wptcommandline
 import wpttest
 from testrunner import ManagerGroup
@@ -68,11 +66,11 @@ def setup_stdlib_logger():
     logging.root = stdadapter.std_logging_adapter(logging.root)
 
 
-def do_test_relative_imports(test_root):
+def do_delayed_imports(serve_root):
     global serve, manifest
 
-    sys.path.insert(0, os.path.join(test_root))
-    sys.path.insert(0, os.path.join(test_root, "tools", "scripts"))
+    sys.path.insert(0, os.path.join(serve_root))
+    sys.path.insert(0, os.path.join(serve_root, "tools", "scripts"))
     failed = None
     try:
         import serve
@@ -86,18 +84,20 @@ def do_test_relative_imports(test_root):
     if failed:
         logger.critical(
             "Failed to import %s. Ensure that tests path %s contains web-platform-tests" %
-            (failed, test_root))
+            (failed, serve_root))
         sys.exit(1)
+
 
 class TestEnvironmentError(Exception):
     pass
 
 
 class TestEnvironment(object):
-    def __init__(self, test_path, options):
+    def __init__(self, serve_path, test_paths, options):
         """Context manager that owns the test environment i.e. the http and
         websockets servers"""
-        self.test_path = test_path
+        self.serve_path = serve_path
+        self.test_paths = test_paths
         self.server = None
         self.config = None
         self.external_config = None
@@ -108,7 +108,7 @@ class TestEnvironment(object):
 
     def __enter__(self):
         self.copy_required_files()
-
+        self.setup_routes()
         self.config = self.load_config()
         serve.set_computed_defaults(self.config)
 
@@ -123,7 +123,7 @@ class TestEnvironment(object):
                 server.kill()
 
     def load_config(self):
-        default_config_path = os.path.join(self.test_path, "config.default.json")
+        default_config_path = os.path.join(self.serve_path, "config.default.json")
         local_config_path = os.path.join(here, "config.json")
 
         with open(default_config_path) as f:
@@ -135,13 +135,41 @@ class TestEnvironment(object):
 
         local_config["external_host"] = self.options.get("external_host", None)
 
-        return serve.merge_json(default_config, local_config)
+        config = serve.merge_json(default_config, local_config)
+        config["doc_root"] = self.serve_path
+
+        return config
+
+    def setup_routes(self):
+        for url, paths in self.test_paths.iteritems():
+            if url == "/":
+                continue
+
+            path = paths["tests_path"]
+            url = "/%s/" % url.strip("/")
+
+            for (method,
+                 suffix,
+                 handler_cls) in [(serve.any_method,
+                                   b"*.py",
+                                   serve.handlers.PythonScriptHandler),
+                                  (b"GET",
+                                   "*.asis",
+                                   serve.handlers.AsIsHandler),
+                                  (b"GET",
+                                   "*",
+                                   serve.handlers.FileHandler)]:
+                route = (method, b"%s%s" % (str(url), str(suffix)), handler_cls(path, url_base=url))
+                serve.routes.insert(-3, route)
+
+        if "/" not in self.test_paths:
+            serve.routes = serve.routes[:-3]
 
     def copy_required_files(self):
         logger.info("Placing required files in server environment.")
         for source, destination, copy_if_exists in self.required_files:
             source_path = os.path.join(here, source)
-            dest_path = os.path.join(self.test_path, destination, os.path.split(source)[1])
+            dest_path = os.path.join(self.serve_path, destination, os.path.split(source)[1])
             dest_exists = os.path.exists(dest_path)
             if not dest_exists or copy_if_exists:
                 if dest_exists:
@@ -176,369 +204,6 @@ class TestEnvironment(object):
             if os.path.exists(path + ".orig"):
                 os.rename(path + ".orig", path)
 
-
-class TestChunker(object):
-    def __init__(self, total_chunks, chunk_number):
-        self.total_chunks = total_chunks
-        self.chunk_number = chunk_number
-        assert self.chunk_number <= self.total_chunks
-
-    def __call__(self, manifest):
-        raise NotImplementedError
-
-
-class Unchunked(TestChunker):
-    def __init__(self, *args, **kwargs):
-        TestChunker.__init__(self, *args, **kwargs)
-        assert self.total_chunks == 1
-
-    def __call__(self, manifest):
-        for item in manifest:
-            yield item
-
-
-class HashChunker(TestChunker):
-    def __call__(self):
-        chunk_index = self.chunk_number - 1
-        for test_path, tests in manifest:
-            if hash(test_path) % self.total_chunks == chunk_index:
-                yield test_path, tests
-
-
-class EqualTimeChunker(TestChunker):
-    """Chunker that uses the test timeout as a proxy for the running time of the test"""
-
-    def _get_chunk(self, manifest_items):
-        # For each directory containing tests, calculate the maximum execution time after running all
-        # the tests in that directory. Then work out the index into the manifest corresponding to the
-        # directories at fractions of m/N of the running time where m=1..N-1 and N is the total number
-        # of chunks. Return an array of these indicies
-
-        total_time = 0
-        by_dir = OrderedDict()
-
-        class PathData(object):
-            def __init__(self, path):
-                self.path = path
-                self.time = 0
-                self.tests = []
-
-        class Chunk(object):
-            def __init__(self):
-                self.paths = []
-                self.tests = []
-                self.time = 0
-
-            def append(self, path_data):
-                self.paths.append(path_data.path)
-                self.tests.extend(path_data.tests)
-                self.time += path_data.time
-
-        class ChunkList(object):
-            def __init__(self, total_time, n_chunks):
-                self.total_time = total_time
-                self.n_chunks = n_chunks
-
-                self.remaining_chunks = n_chunks
-
-                self.chunks = []
-
-                self.update_time_per_chunk()
-
-            def __iter__(self):
-                for item in self.chunks:
-                    yield item
-
-            def __getitem__(self, i):
-                return self.chunks[i]
-
-            def sort_chunks(self):
-                self.chunks = sorted(self.chunks, key=lambda x:x.paths[0])
-
-            def get_tests(self, chunk_number):
-                return self[chunk_number - 1].tests
-
-            def append(self, chunk):
-                if len(self.chunks) == self.n_chunks:
-                    raise ValueError("Tried to create more than %n chunks" % self.n_chunks)
-                self.chunks.append(chunk)
-                self.remaining_chunks -= 1
-
-            @property
-            def current_chunk(self):
-                if self.chunks:
-                    return self.chunks[-1]
-
-            def update_time_per_chunk(self):
-                self.time_per_chunk = (self.total_time - sum(item.time for item in self)) / self.remaining_chunks
-
-            def create(self):
-                rv = Chunk()
-                self.append(rv)
-                return rv
-
-            def add_path(self, path_data):
-                sum_time = self.current_chunk.time + path_data.time
-                if sum_time > self.time_per_chunk and self.remaining_chunks > 0:
-                    overshoot = sum_time - self.time_per_chunk
-                    undershoot = self.time_per_chunk - self.current_chunk.time
-                    if overshoot < undershoot:
-                        self.create()
-                        self.current_chunk.append(path_data)
-                    else:
-                        self.current_chunk.append(path_data)
-                        self.create()
-                else:
-                    self.current_chunk.append(path_data)
-
-        for i, (test_path, tests) in enumerate(manifest_items):
-            test_dir = tuple(os.path.split(test_path)[0].split(os.path.sep)[:3])
-
-            if not test_dir in by_dir:
-                by_dir[test_dir] = PathData(test_dir)
-
-            data = by_dir[test_dir]
-            time = sum(wpttest.DEFAULT_TIMEOUT if test.timeout !=
-                       "long" else wpttest.LONG_TIMEOUT for test in tests)
-            data.time += time
-            data.tests.append((test_path, tests))
-
-            total_time += time
-
-        chunk_list = ChunkList(total_time, self.total_chunks)
-
-        if len(by_dir) < self.total_chunks:
-            raise ValueError("Tried to split into %i chunks, but only %i subdirectories included" % (
-                self.total_chunks, len(by_dir)))
-
-        # Put any individual dirs with a time greater than the time per chunk into their own
-        # chunk
-        while True:
-            to_remove = []
-            for path_data in by_dir.itervalues():
-                if path_data.time > chunk_list.time_per_chunk:
-                    to_remove.append(path_data)
-            if to_remove:
-                for path_data in to_remove:
-                    chunk = chunk_list.create()
-                    chunk.append(path_data)
-                    del by_dir[path_data.path]
-                chunk_list.update_time_per_chunk()
-            else:
-                break
-
-        chunk = chunk_list.create()
-        for path_data in by_dir.itervalues():
-            chunk_list.add_path(path_data)
-
-        assert len(chunk_list.chunks) == self.total_chunks, len(chunk_list.chunks)
-        assert sum(item.time for item in chunk_list) == chunk_list.total_time
-
-        chunk_list.sort_chunks()
-
-        return chunk_list.get_tests(self.chunk_number)
-
-    def __call__(self, manifest_iter):
-        manifest = list(manifest_iter)
-        tests = self._get_chunk(manifest)
-        for item in tests:
-            yield item
-
-
-class TestFilter(object):
-    def __init__(self, include=None, exclude=None, manifest_path=None):
-        if manifest_path is not None and include is None:
-            self.manifest = manifestinclude.get_manifest(manifest_path)
-        else:
-            self.manifest = manifestinclude.IncludeManifest.create()
-
-        if include is not None:
-            self.manifest.set("skip", "true")
-            for item in include:
-                self.manifest.add_include(item)
-
-        if exclude is not None:
-            for item in exclude:
-                self.manifest.add_exclude(item)
-
-    def __call__(self, manifest_iter):
-        for test_path, tests in manifest_iter:
-            include_tests = set()
-            for test in tests:
-                if self.manifest.include(test):
-                    include_tests.add(test)
-
-            if include_tests:
-                yield test_path, include_tests
-
-
-class TestLoader(object):
-    def __init__(self, tests_root, metadata_root, test_types, test_filter, run_info,
-                 chunk_type="none", total_chunks=1, chunk_number=1):
-        self.tests_root = tests_root
-        self.metadata_root = metadata_root
-        self.test_types = test_types
-        self.test_filter = test_filter
-        self.run_info = run_info
-        self.manifest_path = os.path.join(self.metadata_root, "MANIFEST.json")
-        self.manifest = self.load_manifest()
-        self.tests = None
-        self.disabled_tests = None
-
-        self.chunk_type = chunk_type
-        self.total_chunks = total_chunks
-        self.chunk_number = chunk_number
-
-        self.chunker = {"none": Unchunked,
-                        "hash": HashChunker,
-                        "equal_time": EqualTimeChunker}[chunk_type](total_chunks,
-                                                                    chunk_number)
-
-        self._test_ids = None
-        self._load_tests()
-
-    @property
-    def test_ids(self):
-        if self._test_ids is None:
-            self._test_ids = []
-            for test_dict in [self.disabled_tests, self.tests]:
-                for test_type in self.test_types:
-                    self._test_ids += [item.id for item in test_dict[test_type]]
-        return self._test_ids
-
-    def create_manifest(self):
-        logger.info("Creating test manifest")
-        manifest.setup_git(self.tests_root)
-        manifest_file = manifest.Manifest(None)
-        manifest.update(manifest_file)
-        manifest.write(manifest_file, self.manifest_path)
-
-    def load_manifest(self):
-        if not os.path.exists(self.manifest_path):
-            self.create_manifest()
-        return manifest.load(self.manifest_path)
-
-    def get_test(self, manifest_test, expected_file):
-        if expected_file is not None:
-            expected = expected_file.get_test(manifest_test.id)
-        else:
-            expected = None
-        return wpttest.from_manifest(manifest_test, expected)
-
-    def load_expected_manifest(self, test_path):
-        return manifestexpected.get_manifest(self.metadata_root, test_path, self.run_info)
-
-    def iter_tests(self):
-        manifest_items = self.test_filter(self.manifest.itertypes(*self.test_types))
-
-        if self.chunker is not None:
-            manifest_items = self.chunker(manifest_items)
-
-        for test_path, tests in manifest_items:
-            expected_file = self.load_expected_manifest(test_path)
-            for manifest_test in tests:
-                test = self.get_test(manifest_test, expected_file)
-                test_type = manifest_test.item_type
-                yield test_path, test_type, test
-
-    def _load_tests(self):
-        """Read in the tests from the manifest file and add them to a queue"""
-        tests = {"enabled":defaultdict(list),
-                 "disabled":defaultdict(list)}
-
-        for test_path, test_type, test in self.iter_tests():
-            key = "enabled" if not test.disabled() else "disabled"
-            tests[key][test_type].append(test)
-
-        self.tests = tests["enabled"]
-        self.disabled_tests = tests["disabled"]
-
-    def groups(self, test_types, chunk_type="none", total_chunks=1, chunk_number=1):
-        groups = set()
-
-        for test_type in test_types:
-            for test in self.tests[test_type]:
-                group = test.url.split("/")[1]
-                groups.add(group)
-
-        return groups
-
-
-class TestSource(object):
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def queue_tests(self, test_queue):
-        pass
-
-    @abstractmethod
-    def requeue_test(self, test):
-        pass
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        pass
-
-
-class SingleTestSource(TestSource):
-    def __init__(self, test_queue):
-        self.test_queue = test_queue
-
-    @classmethod
-    def queue_tests(cls, test_queue, test_type, tests):
-        for test in tests[test_type]:
-            test_queue.put(test)
-
-    def get_queue(self):
-        if self.test_queue.empty():
-            return None
-        return self.test_queue
-
-    def requeue_test(self, test):
-        self.test_queue.put(test)
-
-class PathGroupedSource(TestSource):
-    def __init__(self, test_queue):
-        self.test_queue = test_queue
-        self.current_queue = None
-
-    @classmethod
-    def queue_tests(cls, test_queue, test_type, tests, depth=None):
-        if depth is True:
-            depth = None
-
-        prev_path = None
-        group = None
-
-        for test in tests[test_type]:
-            path = urlparse.urlsplit(test.url).path.split("/")[1:-1][:depth]
-            if path != prev_path:
-                group = []
-                test_queue.put(group)
-                prev_path = path
-
-            group.append(test)
-
-    def get_queue(self):
-        if not self.current_queue or self.current_queue.empty():
-            try:
-                data = self.test_queue.get(block=True, timeout=1)
-                self.current_queue = Queue()
-                for item in data:
-                    self.current_queue.put(item)
-            except Empty:
-                return None
-
-        return self.current_queue
-
-    def requeue_test(self, test):
-        self.current_queue.put(test)
-
-    def __exit__(self, *args, **kwargs):
-        if self.current_queue:
-            self.current_queue.close()
 
 class LogThread(threading.Thread):
     def __init__(self, queue, logger, level):
@@ -584,25 +249,30 @@ class LoggingWrapper(StringIO):
     def flush(self):
         pass
 
+def list_test_groups(serve_root, test_paths, test_types, product, **kwargs):
 
-def list_test_groups(tests_root, metadata_root, test_types, product, **kwargs):
-    do_test_relative_imports(tests_root)
+    do_delayed_imports(serve_root)
 
-    run_info = wpttest.get_run_info(metadata_root, product, debug=False)
-    test_filter = TestFilter(include=kwargs["include"], exclude=kwargs["exclude"],
-                             manifest_path=kwargs["include_manifest"])
-    test_loader = TestLoader(tests_root, metadata_root, test_types, test_filter, run_info)
+    run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=False)
+    test_filter = testloader.TestFilter(include=kwargs["include"],
+                                        exclude=kwargs["exclude"],
+                                        manifest_path=kwargs["include_manifest"])
+    test_loader = testloader.TestLoader(test_paths,
+                                        test_types,
+                                        test_filter,
+                                        run_info)
 
-    for item in sorted(test_loader.groups()):
+    for item in sorted(test_loader.groups(test_types)):
         print item
 
-
-def list_disabled(tests_root, metadata_root, test_types, product, **kwargs):
-    do_test_relative_imports(tests_root)
-
+def list_disabled(serve_root, test_paths, test_types, product, **kwargs):
+    do_delayed_imports(serve_root)
     rv = []
-    run_info = wpttest.get_run_info(metadata_root, product, debug=False)
-    test_loader = TestLoader(tests_root, metadata_root, test_types, TestFilter(), run_info)
+    run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=False)
+    test_loader = testloader.TestLoader(test_paths,
+                                        test_types,
+                                        testloader.TestFilter(),
+                                        run_info)
 
     for test_type, tests in test_loader.disabled_tests.iteritems():
         for test in tests:
@@ -610,7 +280,7 @@ def list_disabled(tests_root, metadata_root, test_types, product, **kwargs):
     print json.dumps(rv, indent=2)
 
 
-def run_tests(config, tests_root, metadata_root, product, **kwargs):
+def run_tests(config, serve_root, test_paths, product, **kwargs):
     logging_queue = None
     logging_thread = None
     original_stdio = (sys.stdout, sys.stderr)
@@ -624,9 +294,9 @@ def run_tests(config, tests_root, metadata_root, product, **kwargs):
             sys.stderr = LoggingWrapper(logging_queue, prefix="STDERR")
             logging_thread.start()
 
-        do_test_relative_imports(tests_root)
+        do_delayed_imports(serve_root)
 
-        run_info = wpttest.get_run_info(metadata_root, product, debug=False)
+        run_info = wpttest.get_run_info(kwargs["run_info"], product, debug=False)
 
         (check_args,
          browser_cls, get_browser_kwargs,
@@ -642,29 +312,31 @@ def run_tests(config, tests_root, metadata_root, product, **kwargs):
         if "test_loader" in kwargs:
             test_loader = kwargs["test_loader"]
         else:
-            test_filter = TestFilter(include=kwargs["include"],
-                                     exclude=kwargs["exclude"],
-                                     manifest_path=kwargs["include_manifest"])
-            test_loader = TestLoader(tests_root,
-                                     metadata_root,
-                                     kwargs["test_types"],
-                                     test_filter,
-                                     run_info,
-                                     kwargs["chunk_type"],
-                                     kwargs["total_chunks"],
-                                     kwargs["this_chunk"])
+            test_filter = testloader.TestFilter(include=kwargs["include"],
+                                                exclude=kwargs["exclude"],
+                                                manifest_path=kwargs["include_manifest"])
+            test_loader = testloader.TestLoader(test_paths,
+                                                kwargs["test_types"],
+                                                test_filter,
+                                                run_info,
+                                                kwargs["chunk_type"],
+                                                kwargs["total_chunks"],
+                                                kwargs["this_chunk"],
+                                                kwargs["manifest_update"])
 
         if kwargs["run_by_dir"] is False:
-            test_source_cls = SingleTestSource
+            test_source_cls = testloader.SingleTestSource
             test_source_kwargs = {}
         else:
             # A value of None indicates infinite depth
-            test_source_cls = PathGroupedSource
+            test_source_cls = testloader.PathGroupedSource
             test_source_kwargs = {"depth": kwargs["run_by_dir"]}
 
         logger.info("Using %i client processes" % kwargs["processes"])
 
-        with TestEnvironment(tests_root, env_options) as test_environment:
+        with TestEnvironment(serve_root,
+                             test_paths,
+                             env_options) as test_environment:
             try:
                 test_environment.ensure_started()
             except TestEnvironmentError as e:

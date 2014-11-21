@@ -1011,7 +1011,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 #endif
 
 #ifdef JS_TRACE_LOGGING
-    if (!emitTracelogStartEvent(TraceLogger::VM))
+    if (!emitTracelogStartEvent(TraceLogger_VM))
         return false;
 #endif
 
@@ -1056,7 +1056,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     //    ... frame ...
 
 #ifdef JS_TRACE_LOGGING
-    if (!emitTracelogStopEvent(TraceLogger::VM))
+    if (!emitTracelogStopEvent(TraceLogger_VM))
         return false;
 #endif
 
@@ -1402,6 +1402,9 @@ CodeGeneratorShared::computeDivisionConstants(int d) {
 bool
 CodeGeneratorShared::emitTracelogScript(bool isStart)
 {
+    if (!TraceLogTextIdEnabled(TraceLogger_Scripts))
+        return true;
+
     Label done;
 
     RegisterSet regs = RegisterSet::Volatile();
@@ -1414,7 +1417,7 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
     if (!patchableTraceLoggers_.append(patchLogger))
         return false;
 
-    Address enabledAddress(logger, TraceLogger::offsetOfEnabled());
+    Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
 
     masm.Push(script);
@@ -1424,9 +1427,9 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
         return false;
 
     if (isStart)
-        masm.tracelogStart(logger, script);
+        masm.tracelogStartId(logger, script);
     else
-        masm.tracelogStop(logger, script);
+        masm.tracelogStopId(logger, script);
 
     masm.Pop(script);
 
@@ -1452,18 +1455,13 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     if (!patchableTraceLoggers_.append(patchLocation))
         return false;
 
-    Address enabledAddress(logger, TraceLogger::offsetOfEnabled());
+    Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
 
-    if (isStart) {
-        masm.tracelogStart(logger, textId);
-    } else {
-#ifdef DEBUG
-        masm.tracelogStop(logger, textId);
-#else
-        masm.tracelogStop(logger);
-#endif
-    }
+    if (isStart)
+        masm.tracelogStartId(logger, textId);
+    else
+        masm.tracelogStopId(logger, textId);
 
     masm.bind(&done);
 

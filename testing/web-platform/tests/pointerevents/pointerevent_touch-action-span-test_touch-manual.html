@@ -60,7 +60,6 @@
                 yScr0 = target0.scrollTop;
 
                 on_event(btnComplete, 'click', function(event) {
-                    detected_pointertypes[event.pointerType] = true;
                     test_touchaction_span.step(function() {
                         assert_not_equals(target0.scrollLeft, 0, "span scroll x offset should not be 0 in the end of the test");
                         assert_not_equals(target0.scrollTop, 0, "span scroll y offset should not be 0 in the end of the test");
@@ -68,6 +67,10 @@
                     });
                     test_touchaction_span.done();
                     updateDescriptionComplete();
+                });
+
+                on_event(btnComplete, 'pointerdown', function(event) {
+                    detected_pointertypes[event.pointerType] = true;
                 });
 
                 on_event(target0, 'scroll', function(event) {

@@ -8,7 +8,8 @@ var embeddedElements = {
 		crossOrigin: {type: "enum", keywords: ["", "anonymous", "use-credentials"]},
 		useMap: "string",
 		isMap: "boolean",
-		// TODO: width/height reflect for setting, but not for getting.
+		width: {type: "unsigned long", customGetter: true},
+		height: {type: "unsigned long", customGetter: true},
 
 		// Obsolete
 		name: "string",

@@ -74,13 +74,10 @@
             <p>Lorem ipsum dolor sit amet...</p>
         </div>
         <script type='text/javascript'>
-            var detected_pointertypes = {};
 
             var xScrollIsReceived = false;
             var yScrollIsReceived = false;
             var xScr0, yScr0, xScr1, yScr1;
-
-            add_completion_callback(showPointerTypes);
 
             function run() {
                 var target0 = document.getElementById("target0");
@@ -91,10 +88,6 @@
                 yScr0 = target0.scrollTop;
 
                 target0.focus();
-
-                on_event(target0, 'pointerdown', function(event) {
-                    detected_pointertypes[event.pointerType] = true;
-                });
 
                 on_event(target0, 'scroll', function(event) {
                     xScr1 = target0.scrollLeft;
@@ -125,7 +118,6 @@
         </script>
         <h1>touch-action: none</h1>
         <div id="complete-notice">
-            <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
         </div>
         <div id="log"></div>
     </body>

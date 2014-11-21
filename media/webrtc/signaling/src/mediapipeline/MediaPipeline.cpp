@@ -940,26 +940,24 @@ nsresult MediaPipeline::PipelineTransport::SendRtcpPacket_s(
 // Called if we're attached with AddDirectListener()
 void MediaPipelineTransmit::PipelineListener::
 NotifyRealtimeData(MediaStreamGraph* graph, TrackID tid,
-                   TrackRate rate,
-                   TrackTicks offset,
+                   StreamTime offset,
                    uint32_t events,
                    const MediaSegment& media) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyRealtimeData()");
 
-  NewData(graph, tid, rate, offset, events, media);
+  NewData(graph, tid, offset, events, media);
 }
 
 void MediaPipelineTransmit::PipelineListener::
 NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                         TrackRate rate,
-                         TrackTicks offset,
+                         StreamTime offset,
                          uint32_t events,
                          const MediaSegment& queued_media) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyQueuedTrackChanges()");
 
   // ignore non-direct data if we're also getting direct data
   if (!direct_connect_) {
-    NewData(graph, tid, rate, offset, events, queued_media);
+    NewData(graph, tid, offset, events, queued_media);
   }
 }
 
@@ -974,8 +972,7 @@ NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
 
 void MediaPipelineTransmit::PipelineListener::
 NewData(MediaStreamGraph* graph, TrackID tid,
-        TrackRate rate,
-        TrackTicks offset,
+        StreamTime offset,
         uint32_t events,
         const MediaSegment& media) {
   if (!active_) {
@@ -1007,6 +1004,12 @@ NewData(MediaStreamGraph* graph, TrackID tid,
 
     AudioSegment::ChunkIterator iter(*audio);
     while(!iter.IsEnded()) {
+      TrackRate rate;
+#ifdef USE_FAKE_MEDIA_STREAMS
+      rate = Fake_MediaStream::GraphRate();
+#else
+      rate = graph->GraphRate();
+#endif
       ProcessAudioChunk(static_cast<AudioSessionConduit*>(conduit_.get()),
                         rate, *iter);
       iter.Next();
@@ -1019,7 +1022,7 @@ NewData(MediaStreamGraph* graph, TrackID tid,
     VideoSegment::ChunkIterator iter(*video);
     while(!iter.IsEnded()) {
       ProcessVideoChunk(static_cast<VideoSessionConduit*>(conduit_.get()),
-                        rate, *iter);
+                        *iter);
       iter.Next();
     }
 #endif
@@ -1128,7 +1131,6 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
 #ifdef MOZILLA_INTERNAL_API
 void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     VideoSessionConduit* conduit,
-    TrackRate rate,
     VideoChunk& chunk) {
   layers::Image *img = chunk.mFrame.GetImage();
 
@@ -1330,8 +1332,15 @@ static void AddTrackAndListener(MediaStream* source,
       // To avoid assertions, we need to insert a dummy segment that covers up
       // to the "start" time for the track
       segment_->AppendNullData(current_ticks);
-      mStream->AsSourceStream()->AddTrack(track_id_, track_rate_,
-                                          current_ticks, segment_.forget());
+      if (segment_->GetType() == MediaSegment::AUDIO) {
+        mStream->AsSourceStream()->AddAudioTrack(track_id_, track_rate_,
+                                                 current_ticks,
+                                                 static_cast<AudioSegment*>(segment_.forget()));
+      } else {
+        NS_ASSERTION(mStream->GraphRate() == track_rate_, "Rate mismatch");
+        mStream->AsSourceStream()->AddTrack(track_id_,
+                                            current_ticks, segment_.forget());
+      }
       // AdvanceKnownTracksTicksTime(HEAT_DEATH_OF_UNIVERSE) means that in
       // theory per the API, we can't add more tracks before that
       // time. However, the impl actually allows it, and it avoids a whole
@@ -1356,7 +1365,12 @@ static void AddTrackAndListener(MediaStream* source,
   source->GraphImpl()->AppendMessage(new Message(source, track_id, track_rate, segment, listener, completed));
 #else
   source->AddListener(listener);
-  source->AsSourceStream()->AddTrack(track_id, track_rate, 0, segment);
+  if (segment->GetType() == MediaSegment::AUDIO) {
+    source->AsSourceStream()->AddAudioTrack(track_id, track_rate, 0,
+        static_cast<AudioSegment*>(segment));
+  } else {
+    source->AsSourceStream()->AddTrack(track_id, 0, segment);
+  }
 #endif
 }
 
@@ -1459,7 +1473,7 @@ nsresult MediaPipelineReceiveVideo::Init() {
 
 MediaPipelineReceiveVideo::PipelineListener::PipelineListener(
   SourceMediaStream* source, TrackID track_id)
-  : GenericReceiveListener(source, track_id, USECS_PER_S),
+  : GenericReceiveListener(source, track_id, source->GraphRate()),
     width_(640),
     height_(480),
 #ifdef MOZILLA_INTERNAL_API
@@ -1527,8 +1541,9 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
 
 #ifdef MOZILLA_INTERNAL_API
   nsRefPtr<layers::Image> image = image_;
-  TrackTicks target = source_->TimeToTicksRoundUp(USECS_PER_S, desired_time);
-  TrackTicks delta = target - played_ticks_;
+  // our constructor sets track_rate_ to the graph rate
+  MOZ_ASSERT(track_rate_ == source_->GraphRate());
+  StreamTime delta = desired_time - played_ticks_;
 
   // Don't append if we've already provided a frame that supposedly
   // goes past the current aDesiredTime Doing so means a negative
@@ -1538,7 +1553,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
     segment.AppendFrame(image.forget(), delta, IntSize(width_, height_));
     // Handle track not actually added yet or removed/finished
     if (source_->AppendToTrack(track_id_, &segment)) {
-      played_ticks_ = target;
+      played_ticks_ = desired_time;
     } else {
       MOZ_MTLOG(ML_ERROR, "AppendToTrack failed");
       return;

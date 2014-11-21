@@ -16,7 +16,7 @@
         <script>
             var test_pointerEvent = async_test("pointerout event received");
             // showPointerTypes is defined in pointerevent_support.js
-            // Requirements: the callbakc function will reference the test_pointerEvent object and
+            // Requirements: the callback function will reference the test_pointerEvent object and
             // will fail unless the async_test is created with the var name "test_pointerEvent".
             add_completion_callback(showPointerTypes);
 
@@ -27,8 +27,8 @@
                 var target0 = document.getElementById("target0");
 
                 on_event(target0, "pointerout", function (event) {
+                    detected_pointertypes[event.pointerType] = true;
                     if (eventTested == false) {
-                        detected_pointertypes[event.pointerType] = true;
                         eventTested = true;
                         check_PointerEvent(event);
                         test_pointerEvent.done();

@@ -4,6 +4,7 @@ import unittest
 
 sys.path.insert(1, os.path.abspath(os.path.join(__file__, "../..")))
 import base_test
+from webdriver import exceptions
 
 
 class CookieTest(base_test.WebDriverBaseTest):
@@ -44,7 +45,7 @@ class CookieTest(base_test.WebDriverBaseTest):
             self.driver.add_cookie({ 'name': invalid_name, 'value': value })
             self.fail( 'should have thrown exceptions.' )
 
-        except UnableToSetCookieException:
+        except exceptions.UnableToSetCookieException:
             pass
         except exceptions.InvalidCookieDomainException:
             pass

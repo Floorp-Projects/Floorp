@@ -17,6 +17,7 @@
 #include "nsIDOMElement.h"
 #include "WordMovementType.h"
 #include "CaretAssociationHint.h"
+#include "nsBidiPresUtils.h"
 
 class nsRange;
 class nsTableOuterFrame;
@@ -145,8 +146,8 @@ struct nsPrevNextBidiLevels
 {
   void SetData(nsIFrame* aFrameBefore,
                nsIFrame* aFrameAfter,
-               uint8_t aLevelBefore,
-               uint8_t aLevelAfter)
+               nsBidiLevel aLevelBefore,
+               nsBidiLevel aLevelAfter)
   {
     mFrameBefore = aFrameBefore;
     mFrameAfter = aFrameAfter;
@@ -155,8 +156,8 @@ struct nsPrevNextBidiLevels
   }
   nsIFrame* mFrameBefore;
   nsIFrame* mFrameAfter;
-  uint8_t mLevelBefore;
-  uint8_t mLevelAfter;
+  nsBidiLevel mLevelBefore;
+  nsBidiLevel mLevelAfter;
 };
 
 namespace mozilla {
@@ -403,11 +404,11 @@ public:
    *  @param aLevel the caret bidi level
    *  This method is virtual since it gets called from outside of layout.
    */
-  virtual void SetCaretBidiLevel (uint8_t aLevel);
+  virtual void SetCaretBidiLevel(nsBidiLevel aLevel);
   /** GetCaretBidiLevel gets the caret bidi level
    *  This method is virtual since it gets called from outside of layout.
    */
-  virtual uint8_t GetCaretBidiLevel() const;
+  virtual nsBidiLevel GetCaretBidiLevel() const;
   /** UndefineCaretBidiLevel sets the caret bidi level to "undefined"
    *  This method is virtual since it gets called from outside of layout.
    */
@@ -554,7 +555,7 @@ public:
    */
   nsresult GetFrameFromLevel(nsIFrame *aFrameIn,
                              nsDirection aDirection,
-                             uint8_t aBidiLevel,
+                             nsBidiLevel aBidiLevel,
                              nsIFrame **aFrameOut) const;
 
   /**
@@ -705,7 +706,7 @@ private:
   int16_t mDisplaySelection; //for visual display purposes.
 
   CaretAssociateHint mHint;   //hint to tell if the selection is at the end of this line or beginning of next
-  uint8_t mCaretBidiLevel;
+  nsBidiLevel mCaretBidiLevel;
 
   int32_t mDesiredX;
   uint32_t mDelayedMouseEventClickCount;

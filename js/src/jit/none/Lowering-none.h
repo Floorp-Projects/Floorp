@@ -80,6 +80,8 @@ class LIRGeneratorNone : public LIRGeneratorShared
     bool visitForkJoinGetSlice(MForkJoinGetSlice *ins) { MOZ_CRASH(); }
     bool visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins) { MOZ_CRASH(); }
     bool visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins) { MOZ_CRASH(); }
+    bool visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins) { MOZ_CRASH(); }
+    bool visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins) { MOZ_CRASH(); }
 
     LTableSwitch *newLTableSwitch(LAllocation, LDefinition, MTableSwitch *) { MOZ_CRASH(); }
     LTableSwitchV *newLTableSwitchV(MTableSwitch *) { MOZ_CRASH(); }

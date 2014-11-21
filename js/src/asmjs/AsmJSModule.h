@@ -66,6 +66,20 @@ enum AsmJSMathBuiltinFunction
     AsmJSMathBuiltin_clz32
 };
 
+// The asm.js spec will recognize this set of builtin Atomics functions.
+enum AsmJSAtomicsBuiltinFunction
+{
+    AsmJSAtomicsBuiltin_compareExchange,
+    AsmJSAtomicsBuiltin_load,
+    AsmJSAtomicsBuiltin_store,
+    AsmJSAtomicsBuiltin_fence,
+    AsmJSAtomicsBuiltin_add,
+    AsmJSAtomicsBuiltin_sub,
+    AsmJSAtomicsBuiltin_and,
+    AsmJSAtomicsBuiltin_or,
+    AsmJSAtomicsBuiltin_xor
+};
+
 // Set of known global object SIMD's attributes, i.e. types
 enum AsmJSSimdType
 {
@@ -200,8 +214,8 @@ class AsmJSModule
     class Global
     {
       public:
-        enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction, Constant,
-                     SimdCtor, SimdOperation, ByteLength };
+        enum Which { Variable, FFI, ArrayView, ArrayViewCtor, SharedArrayView, MathBuiltinFunction,
+                     AtomicsBuiltinFunction, Constant, SimdCtor, SimdOperation, ByteLength };
         enum VarInitKind { InitConstant, InitImport };
         enum ConstantKind { GlobalConstant, MathConstant };
 
@@ -220,6 +234,7 @@ class AsmJSModule
                 uint32_t ffiIndex_;
                 Scalar::Type viewType_;
                 AsmJSMathBuiltinFunction mathBuiltinFunc_;
+                AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
                 AsmJSSimdType simdCtorType_;
                 struct {
                     AsmJSSimdType type_;
@@ -289,20 +304,28 @@ class AsmJSModule
         //   var i32 = new I32(buffer);
         // the second import has nothing to validate and thus has a null field.
         PropertyName *maybeViewName() const {
-            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
+            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == SharedArrayView || pod.which_ == ArrayViewCtor);
             return name_;
         }
         Scalar::Type viewType() const {
-            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
+            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == SharedArrayView || pod.which_ == ArrayViewCtor);
             return pod.u.viewType_;
         }
         PropertyName *mathName() const {
             MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
             return name_;
         }
+        PropertyName *atomicsName() const {
+            MOZ_ASSERT(pod.which_ == AtomicsBuiltinFunction);
+            return name_;
+        }
         AsmJSMathBuiltinFunction mathBuiltinFunction() const {
             MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
             return pod.u.mathBuiltinFunc_;
+        }
+        AsmJSAtomicsBuiltinFunction atomicsBuiltinFunction() const {
+            MOZ_ASSERT(pod.which_ == AtomicsBuiltinFunction);
+            return pod.u.atomicsBuiltinFunc_;
         }
         AsmJSSimdType simdCtorType() const {
             MOZ_ASSERT(pod.which_ == SimdCtor);
@@ -783,6 +806,7 @@ class AsmJSModule
         uint32_t                          srcLengthWithRightBrace_;
         bool                              strict_;
         bool                              hasArrayView_;
+        bool                              isSharedView_;
         bool                              hasFixedMinHeapLength_;
         bool                              usesSignalHandlers_;
     } pod;
@@ -982,16 +1006,20 @@ class AsmJSModule
         g.pod.u.ffiIndex_ = *ffiIndex = pod.numFFIs_++;
         return globals_.append(g);
     }
-    bool addArrayView(Scalar::Type vt, PropertyName *maybeField) {
+    bool addArrayView(Scalar::Type vt, PropertyName *maybeField, bool isSharedView) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!pod.hasArrayView_ || (pod.isSharedView_ == isSharedView));
         pod.hasArrayView_ = true;
+        pod.isSharedView_ = isSharedView;
         Global g(Global::ArrayView, maybeField);
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
     }
-    bool addArrayViewCtor(Scalar::Type vt, PropertyName *field) {
+    bool addArrayViewCtor(Scalar::Type vt, PropertyName *field, bool isSharedView) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
         MOZ_ASSERT(field);
+        MOZ_ASSERT(!pod.isSharedView_ || isSharedView);
+        pod.isSharedView_ = isSharedView;
         Global g(Global::ArrayViewCtor, field);
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
@@ -1012,6 +1040,12 @@ class AsmJSModule
         Global g(Global::Constant, field);
         g.pod.u.constant.value_ = value;
         g.pod.u.constant.kind_ = Global::MathConstant;
+        return globals_.append(g);
+    }
+    bool addAtomicsBuiltinFunction(AsmJSAtomicsBuiltinFunction func, PropertyName *field) {
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
+        Global g(Global::AtomicsBuiltinFunction, field);
+        g.pod.u.atomicsBuiltinFunc_ = func;
         return globals_.append(g);
     }
     bool addSimdCtor(AsmJSSimdType type, PropertyName *field) {
@@ -1038,6 +1072,11 @@ class AsmJSModule
     Global &global(unsigned i) {
         return globals_[i];
     }
+    bool isValidViewSharedness(bool shared) const {
+        if (pod.hasArrayView_)
+            return pod.isSharedView_ == shared;
+        return !pod.isSharedView_ || shared;
+    }
 
     /*************************************************************************/
 
@@ -1053,6 +1092,10 @@ class AsmJSModule
     bool hasArrayView() const {
         MOZ_ASSERT(isFinishedWithModulePrologue());
         return pod.hasArrayView_;
+    }
+    bool isSharedView() const {
+        MOZ_ASSERT(pod.hasArrayView_);
+        return pod.isSharedView_;
     }
     void addChangeHeap(uint32_t mask, uint32_t min, uint32_t max) {
         MOZ_ASSERT(isFinishedWithModulePrologue());

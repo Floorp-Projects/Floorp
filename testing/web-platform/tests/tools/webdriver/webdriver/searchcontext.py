@@ -11,14 +11,6 @@ class SearchContext(object):
         """Find all elements matching a css selector."""
         return self._find_elements('css selector', selector)
 
-    def find_element_by_id(self, id):
-        """Find the first element with the given id."""
-        return self._find_element('id', id)
-
-    def find_elements_by_id(self, id):
-        """Find all elements with the given id."""
-        return self._find_elements('id', id)
-
     def find_element_by_link_text(self, text):
         """Find the first link with the given text."""
         return self._find_element('link text', text)

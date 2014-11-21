@@ -1207,11 +1207,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     void printf(const char *output, Register value);
 
 #ifdef JS_TRACE_LOGGING
-    void tracelogStart(Register logger, uint32_t textId);
-    void tracelogStart(Register logger, Register textId);
-    void tracelogStop(Register logger, uint32_t textId);
-    void tracelogStop(Register logger, Register textId);
-    void tracelogStop(Register logger);
+    void tracelogStartId(Register logger, uint32_t textId, bool force = false);
+    void tracelogStartId(Register logger, Register textId);
+    void tracelogStartEvent(Register logger, Register event);
+    void tracelogStopId(Register logger, uint32_t textId, bool force = false);
+    void tracelogStopId(Register logger, Register textId);
 #endif
 
 #define DISPATCH_FLOATING_POINT_OP(method, type, arg1d, arg1f, arg2)    \

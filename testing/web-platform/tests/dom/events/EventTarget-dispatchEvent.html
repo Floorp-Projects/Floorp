@@ -3,9 +3,10 @@
 <title>EventTarget.dispatchEvent</title>
 <link rel="author" title="Olli Pettay" href="mailto:Olli.Pettay@gmail.com">
 <link rel="author" title="Ms2ger" href="mailto:Ms2ger@gmail.com">
-<link rel="help" href="http://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent">
+<link rel="help" href="https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/dom/nodes/Document-createEvent.js"></script>
 <div id="log"></div>
 <script>
 setup({
@@ -13,10 +14,16 @@ setup({
 })
 
 test(function() {
-  var e = document.createEvent("Event")
-  assert_equals(e.type, "", "Event type should be empty string before initialization")
-  assert_throws("InvalidStateError", function() { document.dispatchEvent(e) })
-}, "If the event's initialized flag is not set, an InvalidStateError must be thrown.")
+  assert_throws(new TypeError(), function() { document.dispatchEvent(null) })
+}, "Calling dispatchEvent(null).")
+
+aliases.forEach(function(alias) {
+  test(function() {
+    var e = document.createEvent(alias[0])
+    assert_equals(e.type, "", "Event type should be empty string before initialization")
+    assert_throws("InvalidStateError", function() { document.dispatchEvent(e) })
+  }, "If the event's initialized flag is not set, an InvalidStateError must be thrown (" + alias [0] + ").")
+})
 
 var dispatch_dispatch = async_test("If the event's dispatch flag is set, an InvalidStateError must be thrown.")
 dispatch_dispatch.step(function() {

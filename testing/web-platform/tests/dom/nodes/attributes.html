@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <title>Attributes tests</title>
-<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#attr">
-<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-setattribute">
-<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-element-setattributens">
+<link rel=help href="https://dom.spec.whatwg.org/#attr">
+<link rel=help href="https://dom.spec.whatwg.org/#dom-element-setattribute">
+<link rel=help href="https://dom.spec.whatwg.org/#dom-element-setattributens">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="attributes.js"></script>
@@ -25,7 +25,6 @@ test(function() {
   assert_throws(new TypeError(), function() { attr.appendChild(null) })
   assert_equals(attr.value, "pass")
   assert_false("childNodes" in attr, "Should not have childNodes")
-  assert_false("textContent" in attr, "Should not have textContent")
 }, "AttrExodus")
 
 // setAttribute exhaustive tests
@@ -353,4 +352,37 @@ test(function() {
   el.removeAttributeNS("", "foo")
   el.removeAttributeNS("xx", "foo")
 }, "First set attribute is returned with mapped attribute set later")
+
+test(function() {
+  var el = document.createElementNS("http://www.example.com", "foo")
+  el.setAttribute("A", "test")
+  assert_equals(el.hasAttribute("A"), true, "hasAttribute()")
+  assert_equals(el.hasAttributeNS("", "A"), true, "el.hasAttributeNS(\"\")")
+  assert_equals(el.hasAttributeNS(null, "A"), true, "el.hasAttributeNS(null)")
+  assert_equals(el.hasAttributeNS(undefined, "A"), true, "el.hasAttributeNS(undefined)")
+  assert_equals(el.hasAttributeNS("foo", "A"), false, "el.hasAttributeNS(\"foo\")")
+
+  assert_equals(el.getAttribute("A"), "test", "getAttribute()")
+  assert_equals(el.getAttributeNS("", "A"), "test", "el.getAttributeNS(\"\")")
+  assert_equals(el.getAttributeNS(null, "A"), "test", "el.getAttributeNS(null)")
+  assert_equals(el.getAttributeNS(undefined, "A"), "test", "el.getAttributeNS(undefined)")
+  assert_equals(el.getAttributeNS("foo", "A"), null, "el.getAttributeNS(\"foo\")")
+}, "Non-HTML element with upper-case attribute")
+
+test(function() {
+  var el = document.createElement("div")
+  el.setAttribute("pre:fix", "value 1")
+  el.setAttribute("fix", "value 2")
+
+  var prefixed = el.attributes[0]
+  assert_equals(prefixed.localName, "pre:fix", "prefixed local name")
+  assert_equals(prefixed.namespaceURI, null, "prefixed namespace")
+
+  var unprefixed = el.attributes[1]
+  assert_equals(unprefixed.localName, "fix", "unprefixed local name")
+  assert_equals(unprefixed.namespaceURI, null, "unprefixed namespace")
+
+  el.removeAttributeNS(null, "pre:fix")
+  assert_equals(el.attributes[0], unprefixed)
+}, "Attribute with prefix in local name")
 </script>

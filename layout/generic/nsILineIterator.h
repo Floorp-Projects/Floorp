@@ -49,6 +49,8 @@ public:
    *
    * @return true if the CSS direction property for the block is
    *         "rtl", otherwise false
+   *
+   *XXX after bug 924851 change this to return a UBiDiDirection
    */
   virtual bool GetDirection() = 0;
 

@@ -11,12 +11,12 @@ class ForwardTest(base_test.WebDriverBaseTest):
     def test_forward(self):
         self.driver.get(self.webserver.where_is('navigation/res/forwardStart.html'))
         self.driver.get(self.webserver.where_is('navigation/res/forwardNext.html'))
-        nextbody = self.driver.find_element_by_css("body").get_text()
+        nextbody = self.driver.find_element_by_css("body").text
         self.driver.go_back()
-        currbody = self.driver.find_element_by_css("body").get_text()
+        currbody = self.driver.find_element_by_css("body").text
         self.assertNotEqual(nextbody, currbody)
         self.driver.go_forward()
-        currbody = self.driver.find_element_by_css("body").get_text()
+        currbody = self.driver.find_element_by_css("body").text
         self.assertEqual(nextbody, currbody)
 
 

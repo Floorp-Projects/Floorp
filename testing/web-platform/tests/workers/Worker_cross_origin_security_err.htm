@@ -8,15 +8,15 @@
 <body>
 <div id=log></div>
 <script>
-    
+
     var description = "Test Description: Throw a SECURITY_ERR exception when origin of the "
                     + "worker script URL and origin URL are not same.";
-                  
+
     test(function()
     {
         assert_throws("SECURITY_ERR", function()
         {
-            var worker = new Worker("data://./support/WorkerBasic.js");
+            var worker = new Worker("ftp://example.org/support/WorkerBasic.js");
         });
     }, description);
 </script>

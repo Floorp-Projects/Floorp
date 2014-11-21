@@ -181,7 +181,7 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
 // Writes `fromValue` into the `typedObj` at offset `offset`, adapting
 // it to `descr` as needed. This is the most general entry point
 // and works for any type.
-function TypedObjectSet(descr, typedObj, offset, fromValue) {
+function TypedObjectSet(descr, typedObj, offset, name, fromValue) {
   if (!TypedObjectIsAttached(typedObj))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
@@ -191,7 +191,7 @@ function TypedObjectSet(descr, typedObj, offset, fromValue) {
     return;
 
   case JS_TYPEREPR_REFERENCE_KIND:
-    TypedObjectSetReference(descr, typedObj, offset, fromValue);
+    TypedObjectSetReference(descr, typedObj, offset, name, fromValue);
     return;
 
   case JS_TYPEREPR_SIMD_KIND:
@@ -217,7 +217,7 @@ function TypedObjectSet(descr, typedObj, offset, fromValue) {
       var fieldDescr = fieldDescrs[i];
       var fieldOffset = fieldOffsets[i];
       var fieldValue = fromValue[fieldName];
-      TypedObjectSet(fieldDescr, typedObj, offset + fieldOffset, fieldValue);
+      TypedObjectSet(fieldDescr, typedObj, offset + fieldOffset, fieldName, fieldValue);
     }
     return;
   }
@@ -241,7 +241,7 @@ function TypedObjectSetArray(descr, length, typedObj, offset, fromValue) {
     var elemSize = DESCR_SIZE(elemDescr);
     var elemOffset = offset;
     for (var i = 0; i < length; i++) {
-      TypedObjectSet(elemDescr, typedObj, elemOffset, fromValue[i]);
+      TypedObjectSet(elemDescr, typedObj, elemOffset, null, fromValue[i]);
       elemOffset += elemSize;
     }
   }
@@ -293,18 +293,18 @@ function TypedObjectSetScalar(descr, typedObj, offset, fromValue) {
   return undefined;
 }
 
-function TypedObjectSetReference(descr, typedObj, offset, fromValue) {
+function TypedObjectSetReference(descr, typedObj, offset, name, fromValue) {
   var type = DESCR_TYPE(descr);
   switch (type) {
   case JS_REFERENCETYPEREPR_ANY:
-    return Store_Any(typedObj, offset, fromValue);
+    return Store_Any(typedObj, offset, name, fromValue);
 
   case JS_REFERENCETYPEREPR_OBJECT:
     var value = (fromValue === null ? fromValue : ToObject(fromValue));
-    return Store_Object(typedObj, offset, value);
+    return Store_Object(typedObj, offset, name, value);
 
   case JS_REFERENCETYPEREPR_STRING:
-    return Store_string(typedObj, offset, ToString(fromValue));
+    return Store_string(typedObj, offset, name, ToString(fromValue));
   }
 
   assert(false, "Unhandled scalar type: " + type);
@@ -351,6 +351,7 @@ function TypedObjectSetSimd(descr, typedObj, offset, fromValue) {
 function ConvertAndCopyTo(destDescr,
                           destTypedObj,
                           destOffset,
+                          fieldName,
                           fromValue)
 {
   assert(IsObject(destDescr) && ObjectIsTypeDescr(destDescr),
@@ -361,7 +362,7 @@ function ConvertAndCopyTo(destDescr,
   if (!TypedObjectIsAttached(destTypedObj))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
-  TypedObjectSet(destDescr, destTypedObj, destOffset, fromValue);
+  TypedObjectSet(destDescr, destTypedObj, destOffset, fieldName, fromValue);
 }
 
 // Wrapper for use from C++ code.
@@ -815,7 +816,7 @@ function BuildTypedSeqImpl(arrayType, len, depth, func) {
     var r = callFunction(std_Function_apply, func, undefined, indices);
     callFunction(std_Array_pop, indices);
     if (r !== undefined)
-      TypedObjectSet(grainType, result, outOffset, r); // result[...indices] = r;
+      TypedObjectSet(grainType, result, outOffset, null, r); // result[...indices] = r;
 
     // Increment indices.
     IncrementIterationSpace(indices, iterationSpace);
@@ -918,7 +919,7 @@ function MapUntypedSeqImpl(inArray, outputType, maybeFunc) {
       var r = func(element, i, inArray, out);
 
       if (r !== undefined)
-        TypedObjectSet(outGrainType, result, outOffset, r); // result[i] = r
+        TypedObjectSet(outGrainType, result, outOffset, null, r); // result[i] = r
     }
 
     // Update offset and (implicitly) increment indices.
@@ -978,7 +979,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
       // Invoke: var r = func(element, ...indices, collection, out);
       var r = func(element, i, inArray, out);
       if (r !== undefined)
-        TypedObjectSet(outGrainType, result, outOffset, r); // result[i] = r
+        TypedObjectSet(outGrainType, result, outOffset, null, r); // result[i] = r
 
       // Update offsets and (implicitly) increment indices.
       inOffset += inUnitSize;
@@ -1013,7 +1014,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
       callFunction(std_Array_push, args, inArray, out);
       var r = callFunction(std_Function_apply, func, void 0, args);
       if (r !== undefined)
-        TypedObjectSet(outGrainType, result, outOffset, r); // result[...indices] = r
+        TypedObjectSet(outGrainType, result, outOffset, null, r); // result[...indices] = r
 
       // Update offsets and explicitly increment indices.
       inOffset += inUnitSize;

@@ -4,6 +4,7 @@ import unittest
 
 sys.path.insert(1, os.path.abspath(os.path.join(__file__, "../..")))
 import base_test
+from webdriver import exceptions
 
 
 class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
@@ -24,8 +25,8 @@ class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
 
     def test_zero_sized_element_is_shown_if_decendant_has_size(self):
         self.driver.get(self.webserver.where_is("element_state/res/zero-sized-element-with-sizable-decendant.html"))
-        parent = self.driver.find_element_by_id("parent")
-        child = self.driver.find_element_by_id("child")
+        parent = self.driver.find_element_by_css("#parent")
+        child = self.driver.find_element_by_css("#child")
 
         self.assertTrue(parent.is_displayed())
         self.assertTrue(child.is_displayed())
@@ -53,7 +54,7 @@ class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
         children = self.driver.find_elements_by_css(".child")
         assert all(child.is_displayed() for child in children)
 
-        parent = self.driver.find_element_by_id("parent")
+        parent = self.driver.find_element_by_css("#parent")
         assert parent.is_displayed()
 
     def test_element_hidden_by_overflow_x_is_not_visible(self):
@@ -65,8 +66,8 @@ class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
 
         for page in pages:
             self.driver.get(self.webserver.where_is(page))
-            right = self.driver.find_element_by_id("right")
-            bottom_right = self.driver.find_element_by_id("bottom-right")
+            right = self.driver.find_element_by_css("#right")
+            bottom_right = self.driver.find_element_by_css("#bottom-right")
 
             self.assertFalse(right.is_displayed())
             self.assertFalse(bottom_right.is_displayed())
@@ -80,8 +81,8 @@ class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
 
         for page in pages:
             self.driver.get(self.webserver.where_is(page))
-            bottom = self.driver.find_element_by_id("bottom")
-            bottom_right = self.driver.find_element_by_id("bottom-right")
+            bottom = self.driver.find_element_by_css("#bottom")
+            bottom_right = self.driver.find_element_by_css("#bottom-right")
 
             self.assertFalse(bottom.is_displayed())
             self.assertFalse(bottom_right.is_displayed())
@@ -113,21 +114,21 @@ class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
 
     def test_element_hidden_by_other_element(self):
         self.driver.get(self.webserver.where_is("element_state/res/element-hidden-by-other-element.html"))
-        overlay = self.driver.find_element_by_id("overlay")
-        hidden = self.driver.find_element_by_id("hidden")
+        overlay = self.driver.find_element_by_css("#overlay")
+        hidden = self.driver.find_element_by_css("#hidden")
 
         self.assertTrue(overlay.is_displayed())
         self.assertFalse(hidden.is_displayed())
 
     def test_element_partially_hidden_by_other_element(self):
         self.driver.get(self.webserver.where_is("element_state/res/element-partially-hidden-by-other-element.html"))
-        partial = self.driver.find_element_by_id("partial")
+        partial = self.driver.find_element_by_css("#partial")
         self.assertTrue(partial.is_displayed())
 
     def test_element_hidden_by_z_index(self):
         self.driver.get(self.webserver.where_is("element_state/res/element-hidden-by-z-index.html"))
-        overlay = self.driver.find_element_by_id("overlay")
-        hidden = self.driver.find_element_by_id("hidden")
+        overlay = self.driver.find_element_by_css("#overlay")
+        hidden = self.driver.find_element_by_css("#hidden")
 
         self.assertTrue(overlay.is_displayed())
         self.assertFalse(hidden.is_displayed())
@@ -139,8 +140,8 @@ class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
 
     def test_element_moved_behind_other_element_by_transform(self):
         self.driver.get(self.webserver.where_is("element_state/res/element-moved-behind-other-element-by-transform.html"))
-        overlay = self.driver.find_element_by_id("overlay")
-        hidden = self.driver.find_element_by_id("hidden")
+        overlay = self.driver.find_element_by_css("#overlay")
+        hidden = self.driver.find_element_by_css("#hidden")
 
         self.assertTrue(overlay.is_displayed())
         self.assertFalse(hidden.is_displayed())
@@ -167,7 +168,7 @@ class NaturalNonVisibleElementsTest(base_test.WebDriverBaseTest):
 
     def test_element_with_same_color_as_parent_background(self):
         self.driver.get(self.webserver.where_is("element_state/res/element-with-same-color-as-parent-background.html"))
-        hidden = self.driver.find_element_by_id("hidden")
+        hidden = self.driver.find_element_by_css("#hidden")
         self.assertFalse(hidden.is_displayed())
 
 
@@ -203,35 +204,35 @@ class DisplayTest(base_test.WebDriverBaseTest):
 
     def test_display_none_hides_child_node(self):
         self.driver.get(self.webserver.where_is("element_state/res/display-none-child.html"))
-        parent = self.driver.find_element_by_id("parent")
-        child = self.driver.find_element_by_id("child")
+        parent = self.driver.find_element_by_css("#parent")
+        child = self.driver.find_element_by_css("#child")
 
         self.assertFalse(parent.is_displayed())
         self.assertFalse(child.is_displayed())
 
     def test_display_none_hides_child_node_link(self):
         self.driver.get(self.webserver.where_is("element_state/res/display-none-child-link.html"))
-        child = self.driver.find_element_by_id("child")
+        child = self.driver.find_element_by_css("#child")
         self.assertFalse(child.is_displayed())
 
     def test_display_none_hides_child_node_paragraph(self):
         self.driver.get(self.webserver.where_is("element_state/res/display-none-child-paragraph.html"))
-        child = self.driver.find_element_by_id("child")
+        child = self.driver.find_element_by_css("#child")
         self.assertFalse(child.is_displayed())
 
     def test_display_none_on_parent_takes_presedence(self):
         self.driver.get(self.webserver.where_is("element_state/res/display-none-parent-presedence.html"))
-        child = self.driver.find_element_by_id("child")
+        child = self.driver.find_element_by_css("#child")
         self.assertFalse(child.is_displayed())
 
     def test_display_none_on_parent_takes_presedence_over_visibility_visible(self):
         self.driver.get(self.webserver.where_is("element_state/res/display-none-parent-presedence-visibility.html"))
-        child = self.driver.find_element_by_id("child")
+        child = self.driver.find_element_by_css("#child")
         self.assertFalse(child.is_displayed())
 
     def test_display_none_hidden_dynamically(self):
         self.driver.get(self.webserver.where_is("element_state/res/display-none-dynamic.html"))
-        hidden = self.driver.find_element_by_id("hidden")
+        hidden = self.driver.find_element_by_css("#hidden")
         self.assertFalse(hidden.is_displayed())
 
 
@@ -248,34 +249,34 @@ class VisibilityTest(base_test.WebDriverBaseTest):
 
     def test_visibility_hidden_hides_child_node(self):
         self.driver.get(self.webserver.where_is("element_state/res/visibility-child.html"))
-        parent = self.driver.find_element_by_id("parent")
-        child = self.driver.find_element_by_id("child")
+        parent = self.driver.find_element_by_css("#parent")
+        child = self.driver.find_element_by_css("#child")
 
         self.assertFalse(parent.is_displayed())
         self.assertFalse(child.is_displayed())
 
     def test_visibility_hidden_hides_child_node_link(self):
         self.driver.get(self.webserver.where_is("element_state/res/visibility-child-link.html"))
-        parent = self.driver.find_element_by_id("parent")
-        child = self.driver.find_element_by_id("child")
+        parent = self.driver.find_element_by_css("#parent")
+        child = self.driver.find_element_by_css("#child")
 
         self.assertFalse(parent.is_displayed())
         self.assertFalse(child.is_displayed())
 
     def test_visibility_hidden_hides_child_node_paragraph(self):
         self.driver.get(self.webserver.where_is("element_state/res/visibility-child-paragraph.html"))
-        parent = self.driver.find_element_by_id("parent")
-        child = self.driver.find_element_by_id("child")
+        parent = self.driver.find_element_by_css("#parent")
+        child = self.driver.find_element_by_css("#child")
 
         self.assertFalse(parent.is_displayed())
         self.assertFalse(child.is_displayed())
 
-    def test_visibility_hidden_on_child_takes_presedence(self):
+    def test_visibility_hidden_on_child_takes_precedence(self):
         self.driver.get(self.webserver.where_is("element_state/res/visibility-child-presedence.html"))
-        child = self.driver.find_element_by_id("child")
+        child = self.driver.find_element_by_css("#child")
         self.assertTrue(child.is_displayed())
 
-    def test_visibility_hidden_on_parent_takes_presedence_over_display_block(self):
+    def test_visibility_hidden_on_parent_takes_precedence_over_display_block(self):
         pass
 
     def test_visibility_hidden_set_dynamically(self):
@@ -283,12 +284,12 @@ class VisibilityTest(base_test.WebDriverBaseTest):
 
     def test_should_show_element_not_visible_with_hidden_attribute(self):
         self.driver.get(self.webserver.where_is("element_state/res/hidden.html"))
-        singleHidden = self.driver.find_element('id', 'singleHidden')
+        singleHidden = self.driver.find_element_by_css('#singleHidden')
         self.assertFalse(singleHidden.is_displayed())
 
     def test_should_show_element_not_visible_when_parent_element_has_hidden_attribute(self):
         self.driver.get(self.webserver.where_is("element_state/res/hidden.html"))
-        child = self.driver.find_element('id', 'child')
+        child = self.driver.find_element_by_css('#child')
         self.assertFalse(child.is_displayed())
 
 

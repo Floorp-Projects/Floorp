@@ -1,11 +1,9 @@
-web-platform-tests Harness
-==========================
+wptrunner: A web-platform-tests harness
+=======================================
 
-This harness is designed for running the W3C web-platform-tests
-`testsuite_`.
+wptrunner is a harness for running the W3C `web-platform-tests testsuite`_.
 
-The code hasn't been merged to master yet, but when it is the
-documentation below might be quite relevant.
+.. contents::
 
 Installation
 ~~~~~~~~~~~~
@@ -18,17 +16,87 @@ development, it can be installed using the `-e` option::
 Running the Tests
 ~~~~~~~~~~~~~~~~~
 
-After installation the command `wptrunner` should be avaliable to run
-the tests. This takes two arguments; the path to the metadata
-directory containing expectation files (see below) and a MANIFEST.json
-file (see the web-platform-tests documentation for isntructions on
-generating this file), and the path to the web-platform-tests
-checkout::
+After installation, the command ``wptrunner`` should be available to run
+the tests.
 
-  wptrunner /path/to/metadata /path/to/tests
+The ``wptrunner`` command  takes multiple options, of which the
+following are most significant:
 
-There are also a variety of other options available; use `--help` to
+``--product`` (defaults to `firefox`)
+  The product to test against: `b2g`, `chrome`, `firefox`, or `servo`.
+
+``--binary`` (required)
+  The path to a binary file for the product (browser) to test against.
+
+``--metadata`` (required)
+  The path to a directory containing test metadata. [#]_
+
+``--tests`` (required)
+  The path to a directory containing a web-platform-tests checkout.
+
+``--prefs-root`` (required only when testing a Firefox binary)
+  The path to a directory containing Firefox test-harness preferences. [#]_
+
+.. [#] The ``--metadata`` path is to a directory that contains:
+
+  * a ``MANIFEST.json`` file (the web-platform-tests documentation has
+    instructions on generating this file); and
+  * (optionally) any expectation files (see below)
+
+.. [#] Example ``--prefs-root`` value: ``~/mozilla-central/testing/profiles``.
+
+There are also a variety of other options available; use ``--help`` to
 list them.
+
+-------------------------------
+Example: How to start wptrunner
+-------------------------------
+
+To test a Firefox Nightly build in an OS X environment, you might start
+wptrunner using something similar to the following example::
+
+  wptrunner --metadata=~/web-platform-tests/ --tests=~/web-platform-tests/ \
+  --binary=~/mozilla-central/obj-x86_64-apple-darwin14.0.0/dist/Nightly.app/Contents/MacOS/firefox \
+  --prefs-root=~/mozilla-central/testing/profiles
+
+And to test a Chromium build in an OS X environment, you might start
+wptrunner using something similar to the following example::
+
+  wptrunner --metadata=~/web-platform-tests/ --tests=~/web-platform-tests/ \
+  --binary=~/chromium/src/out/Release/Chromium.app/Contents/MacOS/Chromium \
+  --product=chrome
+
+-------------------------------------
+Example: How to run a subset of tests
+-------------------------------------
+
+To restrict a test run just to tests in a particular web-platform-tests
+subdirectory, use ``--include`` with the directory name; for example::
+
+  wptrunner --metadata=~/web-platform-tests/ --tests=~/web-platform-tests/ \
+  --binary=/path/to/firefox --prefs-root=/path/to/testing/profiles \
+  --include=dom
+
+Output
+~~~~~~
+
+By default wptrunner just dumps its entire output as raw JSON messages
+to stdout. This is convenient for piping into other tools, but not ideal
+for humans reading the output.
+
+As an alternative, you can use the ``--log-mach`` option, which provides
+output in a reasonable format for humans. The option requires a value:
+either the path for a file to write the `mach`-formatted output to, or
+"`-`" (a hyphen) to write the `mach`-formatted output to stdout.
+
+When using ``--log-mach``, output of the full raw JSON log is still
+available, from the ``--log-raw`` option. So to output the full raw JSON
+log to a file and a human-readable summary to stdout, you might start
+wptrunner using something similar to the following example::
+
+  wptrunner --metadata=~/web-platform-tests/ --tests=~/web-platform-tests/ \
+  --binary=/path/to/firefox --prefs-root=/path/to/testing/profiles
+  --log-raw=output.log --log-mach=-
 
 Expectation Data
 ~~~~~~~~~~~~~~~~
@@ -153,4 +221,4 @@ The web-platform-test harness knows about several keys:
 `refurl`
   The reference url for reftests.
 
-_testsuite: https://github.com/w3c/web-platform-tests
+.. _`web-platform-tests testsuite`: https://github.com/w3c/web-platform-tests

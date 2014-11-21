@@ -1072,6 +1072,9 @@ class AssemblerX86Shared : public AssemblerShared
     void addl(Imm32 imm, Register dest) {
         masm.addl_ir(imm.value, dest.code());
     }
+    void addl_wide(Imm32 imm, Register dest) {
+        masm.addl_ir_wide(imm.value, dest.code());
+    }
     void addl(Imm32 imm, const Operand &op) {
         switch (op.kind()) {
           case Operand::REG:

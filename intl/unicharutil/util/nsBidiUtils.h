@@ -46,6 +46,25 @@ enum nsCharType   {
 typedef enum nsCharType nsCharType;
 
 /**
+ * Find the direction of an embedding level or paragraph level set by
+ * the Unicode Bidi Algorithm. (Even levels are left-to-right, odd
+ * levels right-to-left.
+ */
+#define IS_LEVEL_RTL(level) (((level) & 1) == 1)
+
+/**
+ * Check whether two bidi levels have the same parity and thus the same
+ * directionality
+ */
+#define IS_SAME_DIRECTION(level1, level2) (((level1 ^ level2) & 1) == 0)
+
+/**
+ * Convert from nsBidiLevel to nsBidiDirection
+ */
+#define DIRECTION_FROM_LEVEL(level) ((IS_LEVEL_RTL(level)) \
+   ? NSBIDI_RTL : NSBIDI_LTR)
+
+/**
  * definitions of bidirection character types by category
  */
 

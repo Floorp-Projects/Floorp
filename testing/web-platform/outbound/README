@@ -1,0 +1,7 @@
+This directory is intended for web-platform-tests that should be
+upstreamed. The intent is to make this an automatic process, however
+that does not work yet.
+
+ When run they are mounted on the server under /_outbound/. Note that
+this will change when the tests are upstreamed, so using absolute URLs
+in tests should be avoided where possible.

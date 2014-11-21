@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>li element</title>
     <link rel="author" title="dzenana" href="mailto:dzenana.trenutak@gmail.com">
-    <link rel="help" href="http://www.w3.org/html/wg/drafts/html/CR/grouping-content.html#the-li-element">
+    <link rel="help" href="https://html.spec.whatwg.org/multipage/#the-li-element">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
 </head>
@@ -128,7 +128,7 @@
             assert_own_property(testLI,"value", "li should have a 'value' attribute");
         }, "li should have a 'value' attribute");
 
-        // "The [value] attribute has no default value" so, per http://www.w3.org/html/wg/drafts/html/CR/single-page.html#reflect,
+        // "The [value] attribute has no default value" so, per https://html.spec.whatwg.org/multipage/#reflect,
         // the default when unspecified is 0
         testList = document.querySelectorAll("#unordered li, #basic li");
         test(function() {
@@ -139,7 +139,7 @@
 
         // "If the value attribute is present, user agents must parse it as an integer, in order to determine the attribute's value.
         //  If the attribute's value cannot be converted to a number, the attribute must be treated as if it was absent."
-        // Per http://www.w3.org/html/wg/drafts/html/CR/single-page.html#collect-a-sequence-of-characters,
+        // Per https://html.spec.whatwg.org/multipage/#collect-a-sequence-of-characters,
         //    an integer is parsed by collecting as many digits as possible and then aborting at the first
         //    non-digit character after the first digit (otherwise, with no beginning digit, it's just an error)
         // and:  "The value IDL attribute must reflect the value of the value content attribute."

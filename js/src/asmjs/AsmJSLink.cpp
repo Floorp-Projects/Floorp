@@ -30,6 +30,7 @@
 #include "jswrapper.h"
 
 #include "asmjs/AsmJSModule.h"
+#include "builtin/AtomicsObject.h"
 #include "builtin/SIMD.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/Ion.h"
@@ -219,7 +220,7 @@ ValidateFFI(JSContext *cx, AsmJSModule::Global &global, HandleValue importVal,
 }
 
 static bool
-ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
+ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal, bool isShared)
 {
     RootedPropertyName field(cx, global.maybeViewName());
     if (!field)
@@ -229,11 +230,10 @@ ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue global
     if (!GetDataProperty(cx, globalVal, field, &v))
         return false;
 
-    if (!IsTypedArrayConstructor(v, global.viewType()) &&
-        !IsSharedTypedArrayConstructor(v, global.viewType()))
-    {
+    bool tac = IsTypedArrayConstructor(v, global.viewType());
+    bool stac = IsSharedTypedArrayConstructor(v, global.viewType());
+    if (!((tac || stac) && stac == isShared))
         return LinkFail(cx, "bad typed array constructor");
-    }
 
     return true;
 }
@@ -407,6 +407,35 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
 }
 
 static bool
+ValidateAtomicsBuiltinFunction(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
+{
+    RootedValue v(cx);
+    if (!GetDataProperty(cx, globalVal, cx->names().Atomics, &v))
+        return false;
+    RootedPropertyName field(cx, global.atomicsName());
+    if (!GetDataProperty(cx, v, field, &v))
+        return false;
+
+    Native native = nullptr;
+    switch (global.atomicsBuiltinFunction()) {
+      case AsmJSAtomicsBuiltin_compareExchange: native = atomics_compareExchange; break;
+      case AsmJSAtomicsBuiltin_load: native = atomics_load; break;
+      case AsmJSAtomicsBuiltin_store: native = atomics_store; break;
+      case AsmJSAtomicsBuiltin_fence: native = atomics_fence; break;
+      case AsmJSAtomicsBuiltin_add: native = atomics_add; break;
+      case AsmJSAtomicsBuiltin_sub: native = atomics_sub; break;
+      case AsmJSAtomicsBuiltin_and: native = atomics_and; break;
+      case AsmJSAtomicsBuiltin_or: native = atomics_or; break;
+      case AsmJSAtomicsBuiltin_xor: native = atomics_xor; break;
+    }
+
+    if (!IsNativeFunction(v, native))
+        return LinkFail(cx, "bad Atomics.* builtin function");
+
+    return true;
+}
+
+static bool
 ValidateConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue globalVal)
 {
     RootedPropertyName field(cx, global.constantName());
@@ -533,8 +562,9 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
                 return false;
             break;
           case AsmJSModule::Global::ArrayView:
+          case AsmJSModule::Global::SharedArrayView:
           case AsmJSModule::Global::ArrayViewCtor:
-            if (!ValidateArrayView(cx, global, globalVal))
+            if (!ValidateArrayView(cx, global, globalVal, module.hasArrayView() && module.isSharedView()))
                 return false;
             break;
           case AsmJSModule::Global::ByteLength:
@@ -543,6 +573,10 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
             break;
           case AsmJSModule::Global::MathBuiltinFunction:
             if (!ValidateMathBuiltinFunction(cx, global, globalVal))
+                return false;
+            break;
+          case AsmJSModule::Global::AtomicsBuiltinFunction:
+            if (!ValidateAtomicsBuiltinFunction(cx, global, globalVal))
                 return false;
             break;
           case AsmJSModule::Global::Constant:

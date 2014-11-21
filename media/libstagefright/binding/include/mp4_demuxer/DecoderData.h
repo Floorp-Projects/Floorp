@@ -97,6 +97,7 @@ public:
     , samples_per_second(0)
     , frequency_index(0)
     , aac_profile(0)
+    , extended_profile(0)
   {
   }
 
@@ -105,6 +106,7 @@ public:
   uint32_t samples_per_second;
   int8_t frequency_index;
   int8_t aac_profile;
+  int8_t extended_profile;
   mozilla::Vector<uint8_t> extra_data;
   mozilla::Vector<uint8_t> audio_specific_config;
 

@@ -258,6 +258,13 @@ CodeGeneratorX64::visitAsmJSCall(LAsmJSCall *ins)
     return true;
 }
 
+void
+CodeGeneratorX64::memoryBarrier(MemoryBarrierBits barrier)
+{
+    if (barrier & MembarStoreLoad)
+        masm.storeLoadFence();
+}
+
 bool
 CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 {
@@ -275,6 +282,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         srcAddr = Operand(HeapReg, ToRegister(ptr), TimesOne);
     }
 
+    memoryBarrier(ins->mir()->barrierBefore());
     OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
@@ -303,6 +311,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     uint32_t after = masm.size();
     if (ool)
         masm.bind(ool->rejoin());
+    memoryBarrier(ins->mir()->barrierAfter());
     masm.append(AsmJSHeapAccess(before, after, vt, ToAnyRegister(out), maybeCmpOffset));
     return true;
 }
@@ -323,6 +332,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         dstAddr = Operand(HeapReg, ToRegister(ptr), TimesOne);
     }
 
+    memoryBarrier(ins->mir()->barrierBefore());
     Label rejoin;
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (mir->needsBoundsCheck()) {
@@ -358,7 +368,95 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     uint32_t after = masm.size();
     if (rejoin.used())
         masm.bind(&rejoin);
+    memoryBarrier(ins->mir()->barrierAfter());
     masm.append(AsmJSHeapAccess(before, after, maybeCmpOffset));
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
+{
+    MAsmJSCompareExchangeHeap *mir = ins->mir();
+    Scalar::Type vt = mir->viewType();
+    const LAllocation *ptr = ins->ptr();
+
+    MOZ_ASSERT(ptr->isRegister());
+    BaseIndex srcAddr(HeapReg, ToRegister(ptr), TimesOne);
+
+    Register oldval = ToRegister(ins->oldValue());
+    Register newval = ToRegister(ins->newValue());
+
+    Label rejoin;
+    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    MOZ_ASSERT(mir->needsBoundsCheck());
+    {
+        maybeCmpOffset = masm.cmplWithPatch(ToRegister(ptr), Imm32(0)).offset();
+        Label goahead;
+        masm.j(Assembler::LessThan, &goahead);
+        memoryBarrier(MembarFull);
+        Register out = ToRegister(ins->output());
+        masm.xorl(out,out);
+        masm.jmp(&rejoin);
+        masm.bind(&goahead);
+    }
+    masm.compareExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
+                                        srcAddr,
+                                        oldval,
+                                        newval,
+                                        InvalidReg,
+                                        ToAnyRegister(ins->output()));
+    uint32_t after = masm.size();
+    if (rejoin.used())
+        masm.bind(&rejoin);
+    masm.append(AsmJSHeapAccess(after, after, maybeCmpOffset));
+    return true;
+}
+
+bool
+CodeGeneratorX64::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
+{
+    MAsmJSAtomicBinopHeap *mir = ins->mir();
+    Scalar::Type vt = mir->viewType();
+    const LAllocation *ptr = ins->ptr();
+    Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
+    const LAllocation* value = ins->value();
+    AtomicOp op = mir->operation();
+
+    MOZ_ASSERT(ptr->isRegister());
+    BaseIndex srcAddr(HeapReg, ToRegister(ptr), TimesOne);
+
+    Label rejoin;
+    uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
+    MOZ_ASSERT(mir->needsBoundsCheck());
+    {
+        maybeCmpOffset = masm.cmplWithPatch(ToRegister(ptr), Imm32(0)).offset();
+        Label goahead;
+        masm.j(Assembler::LessThan, &goahead);
+        memoryBarrier(MembarFull);
+        Register out = ToRegister(ins->output());
+        masm.xorl(out,out);
+        masm.jmp(&rejoin);
+        masm.bind(&goahead);
+    }
+    if (value->isConstant()) {
+        masm.atomicBinopToTypedIntArray(op, vt == Scalar::Uint32 ? Scalar::Int32 : vt,
+                                        Imm32(ToInt32(value)),
+                                        srcAddr,
+                                        temp,
+                                        InvalidReg,
+                                        ToAnyRegister(ins->output()));
+    } else {
+        masm.atomicBinopToTypedIntArray(op, vt == Scalar::Uint32 ? Scalar::Int32 : vt,
+                                        ToRegister(value),
+                                        srcAddr,
+                                        temp,
+                                        InvalidReg,
+                                        ToAnyRegister(ins->output()));
+    }
+    uint32_t after = masm.size();
+    if (rejoin.used())
+        masm.bind(&rejoin);
+    masm.append(AsmJSHeapAccess(after, after, maybeCmpOffset));
     return true;
 }
 

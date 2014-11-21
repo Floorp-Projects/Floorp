@@ -1,0 +1,50 @@
+<style>
+select::first-letter, option::first-letter { color:green; }
+.block select, .block option{ display:block; }
+.scroll select, .scroll option{ display:block; overflow:hidden; }
+</style>
+
+<select></select>
+<select>F</select>
+<select>Ff</select>
+<select><option>F</select>
+<select><option>Ff</select>
+
+<div class="block">
+<select></select>
+<select>F</select>
+<select>Ff</select>
+<select><option>F</select>
+<select><option>Ff</select>
+</div>
+
+<div class="scroll">
+<select></select>
+<select>F</select>
+<select>Ff</select>
+<select><option>F</select>
+<select><option>Ff</select>
+</div>
+
+<select size=2></select>
+<select size=2>F</select>
+<select size=2>Ff</select>
+<select size=2><option>F</select>
+<select size=2><option>Ff</select>
+
+<div class="block">
+<select size=2></select>
+<select size=2>F</select>
+<select size=2>Ff</select>
+<select size=2><option>F</select>
+<select size=2><option>Ff</select>
+</div>
+
+<div class="scroll">
+<select size=2></select>
+<select size=2>F</select>
+<select size=2>Ff</select>
+<select size=2><option>F</select>
+<select size=2><option>Ff</select>
+</div>
+

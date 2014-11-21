@@ -838,7 +838,8 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
     mInheritedYScale(1.0f),
     mUseIntermediateSurface(false),
     mSupportsComponentAlphaChildren(false),
-    mMayHaveReadbackChild(false)
+    mMayHaveReadbackChild(false),
+    mChildrenChanged(false)
 {
   mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
 }

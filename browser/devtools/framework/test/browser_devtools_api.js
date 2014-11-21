@@ -4,9 +4,12 @@
 ///////////////////
 //
 // Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+// As part of bug 1077403, the leaking uncaught rejections should be fixed.
 //
 thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.docShell is null");
+
+// When running in a standalone directory, we get this error
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: this.doc is undefined");
 
 // Tests devtools API
 

@@ -265,6 +265,7 @@ TemporaryRef<DrawTarget>
 Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat)
 {
   if (!CheckSurfaceSize(aSize)) {
+    gfxCriticalError() << "Failed to allocate a surface due to invalid size " << aSize;
     return nullptr;
   }
 
@@ -336,7 +337,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
 
   if (!retVal) {
     // Failed
-    gfxDebug() << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize;
+    gfxCriticalError() << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize;
   }
   
   return retVal.forget();
@@ -355,7 +356,9 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
                                  int32_t aStride, 
                                  SurfaceFormat aFormat)
 {
+  MOZ_ASSERT(aData);
   if (!CheckSurfaceSize(aSize)) {
+    gfxCriticalError() << "Failed to allocate a surface due to invalid size " << aSize;
     return nullptr;
   }
 
@@ -491,6 +494,8 @@ Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, c
 TemporaryRef<DrawTarget>
 Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
 {
+  MOZ_ASSERT(targetA && targetB);
+
   RefPtr<DrawTarget> newTarget =
     new DrawTargetDual(targetA, targetB);
 
@@ -508,6 +513,8 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
 TemporaryRef<DrawTarget>
 Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceFormat aFormat)
 {
+  MOZ_ASSERT(aTexture);
+
   RefPtr<DrawTargetD2D> newTarget;
 
   newTarget = new DrawTargetD2D();
@@ -532,6 +539,7 @@ Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
                                               ID3D10Texture2D *aTextureB,
                                               SurfaceFormat aFormat)
 {
+  MOZ_ASSERT(aTextureA && aTextureB);
   RefPtr<DrawTargetD2D> newTargetA;
   RefPtr<DrawTargetD2D> newTargetB;
 
@@ -585,6 +593,8 @@ Factory::GetDirect3D10Device()
 TemporaryRef<DrawTarget>
 Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceFormat aFormat)
 {
+  MOZ_ASSERT(aTexture);
+
   RefPtr<DrawTargetD2D1> newTarget;
 
   newTarget = new DrawTargetD2D1();
@@ -754,6 +764,7 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
                                          const IntSize &aSize,
                                          SurfaceFormat aFormat)
 {
+  MOZ_ASSERT(aData);
   if (aSize.width <= 0 || aSize.height <= 0) {
     return nullptr;
   }
@@ -773,7 +784,7 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
                                  bool aZero)
 {
   if (!CheckSurfaceSize(aSize)) {
-    gfxWarning() << "CreateDataSourceSurface failed with bad size";
+    gfxCriticalError() << "Failed to allocate a surface due to invalid size " << aSize;
     return nullptr;
   }
 
@@ -793,7 +804,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
                                            bool aZero)
 {
   if (aStride < aSize.width * BytesPerPixel(aFormat)) {
-    gfxWarning() << "CreateDataSourceSurfaceWithStride failed with bad stride";
+    gfxCriticalError() << "CreateDataSourceSurfaceWithStride failed with bad stride";
     return nullptr;
   }
 
@@ -802,7 +813,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
     return newSurf.forget();
   }
 
-  gfxWarning() << "CreateDataSourceSurfaceWithStride failed to initialize";
+  gfxCriticalError() << "CreateDataSourceSurfaceWithStride failed to initialize";
   return nullptr;
 }
 

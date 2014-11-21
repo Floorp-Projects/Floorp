@@ -189,7 +189,7 @@ TEST(VorbisTrackEncoder, EncodedFrame)
   segment.AppendFrames(samples.forget(), channelData, 44100);
 
   // Track change notification.
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, 0, 0, segment);
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, 0, segment);
 
   // Pull Encoded data back from encoder and verify encoded samples.
   EncodedFrameContainer container;
@@ -216,7 +216,7 @@ TEST(VorbisTrackEncoder, EncodeComplete)
 
   // Track end notification.
   AudioSegment segment;
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, 0,
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0,
                                    MediaStreamListener::TRACK_EVENT_ENDED,
                                    segment);
 

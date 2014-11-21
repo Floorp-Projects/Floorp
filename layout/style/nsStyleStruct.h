@@ -2101,7 +2101,8 @@ struct nsStyleDisplay {
            NS_STYLE_DISPLAY_RUBY_BASE == aDisplay ||
            NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == aDisplay ||
            NS_STYLE_DISPLAY_RUBY_TEXT == aDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == aDisplay;
+           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == aDisplay ||
+           NS_STYLE_DISPLAY_CONTENTS == aDisplay;
   }
 
   bool IsInlineOutsideStyle() const {

@@ -189,15 +189,26 @@ nsPlaceholderFrame::CanContinueTextRun() const
   return mOutOfFlowFrame->CanContinueTextRun();
 }
 
-nsIFrame*
-nsPlaceholderFrame::GetParentStyleContextFrame() const
+nsStyleContext*
+nsPlaceholderFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 {
   NS_PRECONDITION(GetParent(), "How can we not have a parent here?");
+
+  nsIContent* parentContent = mContent ? mContent->GetParent() : nullptr;
+  if (parentContent) {
+    nsStyleContext* sc =
+      PresContext()->FrameManager()->GetDisplayContentsStyleFor(parentContent);
+    if (sc) {
+      *aProviderFrame = nullptr;
+      return sc;
+    }
+  }
 
   // Lie about our pseudo so we can step out of all anon boxes and
   // pseudo-elements.  The other option would be to reimplement the
   // {ib} split gunk here.
-  return CorrectStyleParentFrame(GetParent(), nsGkAtoms::placeholderFrame);
+  *aProviderFrame = CorrectStyleParentFrame(GetParent(), nsGkAtoms::placeholderFrame);
+  return *aProviderFrame ? (*aProviderFrame)->StyleContext() : nullptr;
 }
 
 

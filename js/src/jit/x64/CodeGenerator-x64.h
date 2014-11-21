@@ -25,6 +25,7 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
 
     void storeUnboxedValue(const LAllocation *value, MIRType valueType,
                            Operand dest, MIRType slotType);
+    void memoryBarrier(MemoryBarrierBits barrier);
 
   public:
     CodeGeneratorX64(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
@@ -44,6 +45,8 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     bool visitAsmJSCall(LAsmJSCall *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
+    bool visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins);
+    bool visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins);
     bool visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
     bool visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins);
     bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);

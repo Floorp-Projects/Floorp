@@ -463,23 +463,20 @@ public:
 
     // Implement MediaStreamListener
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                                          TrackRate rate,
-                                          TrackTicks offset,
+                                          StreamTime offset,
                                           uint32_t events,
                                           const MediaSegment& queued_media) MOZ_OVERRIDE;
     virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) MOZ_OVERRIDE {}
 
     // Implement MediaStreamDirectListener
     virtual void NotifyRealtimeData(MediaStreamGraph* graph, TrackID tid,
-                                    TrackRate rate,
-                                    TrackTicks offset,
+                                    StreamTime offset,
                                     uint32_t events,
                                     const MediaSegment& media) MOZ_OVERRIDE;
 
    private:
     void NewData(MediaStreamGraph* graph, TrackID tid,
-                 TrackRate rate,
-                 TrackTicks offset,
+                 StreamTime offset,
                  uint32_t events,
                  const MediaSegment& media);
 
@@ -487,7 +484,7 @@ public:
                                    TrackRate rate, AudioChunk& chunk);
 #ifdef MOZILLA_INTERNAL_API
     virtual void ProcessVideoChunk(VideoSessionConduit *conduit,
-                                   TrackRate rate, VideoChunk& chunk);
+                                   VideoChunk& chunk);
 #endif
     RefPtr<MediaSessionConduit> conduit_;
 
@@ -626,8 +623,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
 
     // Implement MediaStreamListener
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                                          TrackRate rate,
-                                          TrackTicks offset,
+                                          StreamTime offset,
                                           uint32_t events,
                                           const MediaSegment& queued_media) MOZ_OVERRIDE {}
     virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) MOZ_OVERRIDE;
@@ -716,8 +712,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
 
     // Implement MediaStreamListener
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                                          TrackRate rate,
-                                          TrackTicks offset,
+                                          StreamTime offset,
                                           uint32_t events,
                                           const MediaSegment& queued_media) MOZ_OVERRIDE {}
     virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) MOZ_OVERRIDE;

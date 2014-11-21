@@ -38,7 +38,7 @@ protected:
   struct TrackMapEntry {
     // mEndOfConsumedInputTicks is the end of the input ticks that we've consumed.
     // 0 if we haven't consumed any yet.
-    TrackTicks mEndOfConsumedInputTicks;
+    StreamTime mEndOfConsumedInputTicks;
     // mEndOfLastInputIntervalInInputStream is the timestamp for the end of the
     // previous interval which was unblocked for both the input and output
     // stream, in the input stream's timeline, or -1 if there wasn't one.

@@ -361,7 +361,7 @@ struct BidiLineData {
       nsBidiLevel level = nsBidiPresUtils::GetFrameEmbeddingLevel(frame);
       mLevels.AppendElement(level);
       mIndexMap.AppendElement(0);
-      if (level & 1) {
+      if (IS_LEVEL_RTL(level)) {
         hasRTLFrames = true;
       }
     }
@@ -1539,7 +1539,7 @@ nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
   for (; index != limit; index += step) {
     frame = aBld->VisualFrameAt(index);
     RepositionFrame(frame,
-                    !(aBld->mLevels[aBld->mIndexMap[index]] & 1),
+                    !(IS_LEVEL_RTL(aBld->mLevels[aBld->mIndexMap[index]])),
                     start,
                     &continuationStates,
                     aLineWM,
@@ -1675,9 +1675,9 @@ nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData *aBpd,
 nsresult
 nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
                                    char16_t*       aText,
-                                   int32_t&         aTextLength,
-                                   nsCharType       aCharType,
-                                   bool             aIsOddLevel)
+                                   int32_t&        aTextLength,
+                                   nsCharType      aCharType,
+                                   nsBidiDirection aDir)
 {
   nsresult rv = NS_OK;
   // ahmed 
@@ -1877,8 +1877,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
   uint32_t visualStart = 0;
   uint8_t charType;
   uint8_t prevType = eCharType_LeftToRight;
-  nsBidiLevel level;
-      
+
   for(int nPosResolve=0; nPosResolve < aPosResolveCount; ++nPosResolve)
   {
     aPosResolve[nPosResolve].visualIndex = kNotFound;
@@ -1892,10 +1891,12 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
     if (NS_FAILED(rv))
       return rv;
 
+    nsBidiLevel level;
     rv = aBidiEngine->GetLogicalRun(start, &limit, &level);
     if (NS_FAILED(rv))
       return rv;
 
+    dir = DIRECTION_FROM_LEVEL(level);
     int32_t subRunLength = limit - start;
     int32_t lineOffset = start;
     int32_t typeLimit = std::min(limit, aLength);
@@ -1914,8 +1915,8 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
      * x-coordinate of the end of the run for the start of the next run.
      */
 
-    if (level & 1) {
-      aprocessor.SetText(aText + start, subRunLength, nsBidiDirection(level & 1));
+    if (dir == NSBIDI_RTL) {
+      aprocessor.SetText(aText + start, subRunLength, dir);
       width = aprocessor.GetWidth();
       xOffset += width;
       xEndRun = xOffset;
@@ -1925,18 +1926,18 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
       // CalculateCharType can increment subRunCount if the run
       // contains mixed character types
       CalculateCharType(aBidiEngine, aText, lineOffset, typeLimit, subRunLimit, subRunLength, subRunCount, charType, prevType);
-      
+
       nsAutoString runVisualText;
       runVisualText.Assign(aText + start, subRunLength);
       if (int32_t(runVisualText.Length()) < subRunLength)
         return NS_ERROR_OUT_OF_MEMORY;
-      FormatUnicodeText(aPresContext, runVisualText.BeginWriting(), subRunLength,
-                        (nsCharType)charType, level & 1);
+      FormatUnicodeText(aPresContext, runVisualText.BeginWriting(),
+                        subRunLength, (nsCharType)charType, dir);
 
-      aprocessor.SetText(runVisualText.get(), subRunLength, nsBidiDirection(level & 1));
+      aprocessor.SetText(runVisualText.get(), subRunLength, dir);
       width = aprocessor.GetWidth();
       totalWidth += width;
-      if (level & 1) {
+      if (dir == NSBIDI_RTL) {
         xOffset -= width;
       }
       if (aMode == MODE_DRAW) {
@@ -2007,7 +2008,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
             // The position in the text where this run's "left part" begins.
             const char16_t* visualLeftPart;
             const char16_t* visualRightSide;
-            if (level & 1) {
+            if (dir == NSBIDI_RTL) {
               // One day, son, this could all be replaced with mBidiEngine.GetVisualIndex ...
               posResolve->visualIndex = visualStart + (subRunLength - (posResolve->logicalIndex + 1 - start));
               // Skipping to the "left part".
@@ -2024,16 +2025,16 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
             }
             // The delta between the start of the run and the left part's end.
             int32_t visualLeftLength = posResolve->visualIndex - visualStart;
-            aprocessor.SetText(visualLeftPart, visualLeftLength, nsBidiDirection(level & 1));
+            aprocessor.SetText(visualLeftPart, visualLeftLength, dir);
             subWidth = aprocessor.GetWidth();
-            aprocessor.SetText(visualRightSide, visualLeftLength + 1, nsBidiDirection(level & 1));
+            aprocessor.SetText(visualRightSide, visualLeftLength + 1, dir);
             posResolve->visualLeftTwips = xOffset + subWidth;
             posResolve->visualWidth = aprocessor.GetWidth() - subWidth;
           }
         }
       }
 
-      if (!(level & 1)) {
+      if (dir == NSBIDI_LTR) {
         xOffset += width;
       }
 
@@ -2042,10 +2043,10 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
       subRunLimit = typeLimit;
       subRunLength = typeLimit - lineOffset;
     } // while
-    if (level & 1) {
+    if (dir == NSBIDI_RTL) {
       xOffset = xEndRun;
     }
-    
+
     visualStart += length;
   } // for
 
@@ -2075,8 +2076,8 @@ public:
   }
 
   virtual void SetText(const char16_t* aText,
-                       int32_t          aLength,
-                       nsBidiDirection  aDirection) MOZ_OVERRIDE
+                       int32_t         aLength,
+                       nsBidiDirection aDirection) MOZ_OVERRIDE
   {
     mFontMetrics->SetTextRunRTL(aDirection==NSBIDI_RTL);
     mText = aText;

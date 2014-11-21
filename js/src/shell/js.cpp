@@ -22,11 +22,8 @@
 # include <io.h>     /* for isatty() */
 #endif
 #include <locale.h>
-#ifdef HAVE_MALLOC_H /* for malloc_usable_size on Linux, _msize on Windows */
-#include <malloc.h>
-#endif
-#ifdef HAVE_MALLOC_MALLOC_H
-#include <malloc/malloc.h> /* for malloc_size on OSX */
+#if defined(MALLOC_H)
+# include MALLOC_H    /* for malloc_usable_size, malloc_size, _msize */
 #endif
 #include <math.h>
 #include <signal.h>
@@ -5615,6 +5612,12 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
     dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
 #endif
 
+#ifdef JS_GC_ZEAL
+    const char *zealStr = op.getStringOption("gc-zeal");
+    if (zealStr && !rt->gc.parseAndSetZeal(zealStr))
+        return false;
+#endif
+
     return true;
 }
 
@@ -5846,6 +5849,11 @@ main(int argc, char **argv, char **envp)
 #endif
 #ifdef JSGC_GENERATIONAL
         || !op.addIntOption('\0', "nursery-size", "SIZE-MB", "Set the maximum nursery size in MB", 16)
+#endif
+#ifdef JS_GC_ZEAL
+        || !op.addStringOption('z', "gc-zeal", "LEVEL[,N]",
+                               "Specifies zealous garbage collection, overriding the environement "
+                               "variable JS_GC_ZEAL.")
 #endif
     )
     {

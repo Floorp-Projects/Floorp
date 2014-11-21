@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset=utf-8>
 <title>Node.nodeValue</title>
-<link rel=help href="http://dom.spec.whatwg.org/#dom-node-nodevalue">
+<link rel=help href="https://dom.spec.whatwg.org/#dom-node-nodevalue">
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <div id=log></div>
@@ -61,4 +61,11 @@ test(function() {
   the_frag.nodeValue = "foo";
   assert_equals(the_frag.nodeValue, null);
 }, "DocumentFragment.nodeValue");
+
+test(function() {
+  var the_doctype = document.doctype;
+  assert_equals(the_doctype.nodeValue, null);
+  the_doctype.nodeValue = "foo";
+  assert_equals(the_doctype.nodeValue, null);
+}, "DocumentType.nodeValue");
 </script>

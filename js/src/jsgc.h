@@ -1030,8 +1030,7 @@ class GCHelperState
         js_free(array);
     }
 
-    /* Must be called with the GC lock taken. */
-    void doSweep(const AutoLockGC &lock);
+    void doSweep(AutoLockGC &lock);
 
   public:
     explicit GCHelperState(JSRuntime *rt)

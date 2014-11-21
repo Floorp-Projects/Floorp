@@ -6,6 +6,7 @@
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/DecoderData.h"
+#include <media/stagefright/foundation/ABitReader.h>
 #include "media/stagefright/MetaData.h"
 #include "media/stagefright/MediaBuffer.h"
 #include "media/stagefright/MediaDefs.h"
@@ -150,8 +151,16 @@ AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
     const void* data;
     size_t size;
     if (esds.getCodecSpecificInfo(&data, &size) == OK) {
-      audio_specific_config.append(reinterpret_cast<const uint8_t*>(data),
-                                   size);
+      const uint8_t* cdata = reinterpret_cast<const uint8_t*>(data);
+      audio_specific_config.append(cdata, size);
+      if (size > 1) {
+        ABitReader br(cdata, size);
+        extended_profile = br.getBits(5);
+
+        if (extended_profile == 31) {  // AAC-ELD => additional 6 bits
+          extended_profile = 32 + br.getBits(6);
+        }
+      }
     }
   }
 }

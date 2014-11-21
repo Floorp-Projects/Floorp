@@ -458,8 +458,8 @@ bool
 RegExpShared::compile(JSContext *cx, HandleLinearString input,
                       CompilationMode mode, ForceByteCodeEnum force)
 {
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
-    AutoTraceLog logCompile(logger, TraceLogger::IrregexpCompile);
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    AutoTraceLog logCompile(logger, TraceLogger_IrregexpCompile);
 
     if (!sticky()) {
         RootedAtom pattern(cx, source);
@@ -548,7 +548,7 @@ RegExpRunStatus
 RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t start,
                       MatchPairs *matches)
 {
-    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
 
     CompilationMode mode = matches ? Normal : MatchOnly;
 
@@ -604,7 +604,7 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t start,
 
         RegExpRunStatus result;
         {
-            AutoTraceLog logJIT(logger, TraceLogger::IrregexpExecute);
+            AutoTraceLog logJIT(logger, TraceLogger_IrregexpExecute);
             AutoCheckCannotGC nogc;
             if (input->hasLatin1Chars()) {
                 const Latin1Char *chars = input->latin1Chars(nogc) + charsOffset;
@@ -643,7 +643,7 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t start,
         return RegExpRunStatus_Error;
 
     uint8_t *byteCode = compilation(mode, input->hasLatin1Chars()).byteCode;
-    AutoTraceLog logInterpreter(logger, TraceLogger::IrregexpExecute);
+    AutoTraceLog logInterpreter(logger, TraceLogger_IrregexpExecute);
 
     AutoStableStringChars inputChars(cx);
     if (!inputChars.init(cx, input))

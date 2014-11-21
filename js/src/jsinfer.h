@@ -1137,9 +1137,12 @@ struct TypeObject : public gc::TenuredCell
      *
      * The type sets in the properties of a type object describe the possible
      * values that can be read out of that property in actual JS objects.
-     * Properties only account for native properties (those with a slot and no
-     * specialized getter hook) and the elements of dense arrays. For accesses
-     * on such properties, the correspondence is as follows:
+     * In native objects, property types account for plain data properties
+     * (those with a slot and no getter or setter hook) and dense elements.
+     * In typed objects, property types account for object and value properties
+     * and elements in the object.
+     *
+     * For accesses on these properties, the correspondence is as follows:
      *
      * 1. If the type has unknownProperties(), the possible properties and
      *    value types for associated JSObjects are unknown.
@@ -1148,16 +1151,21 @@ struct TypeObject : public gc::TenuredCell
      *    which is a property in obj, before obj->getProperty(id) the property
      *    in type for id must reflect the result of the getProperty.
      *
-     *    There is an exception for properties of global JS objects which
-     *    are undefined at the point where the property was (lazily) generated.
-     *    In such cases the property type set will remain empty, and the
-     *    'undefined' type will only be added after a subsequent assignment or
-     *    deletion. After these properties have been assigned a defined value,
-     *    the only way they can become undefined again is after such an assign
-     *    or deletion.
+     * There are several exceptions to this:
      *
-     *    There is another exception for array lengths, which are special cased
-     *    by the compiler and VM and are not reflected in property types.
+     * 1. For properties of global JS objects which are undefined at the point
+     *    where the property was (lazily) generated, the property type set will
+     *    remain empty, and the 'undefined' type will only be added after a
+     *    subsequent assignment or deletion. After these properties have been
+     *    assigned a defined value, the only way they can become undefined
+     *    again is after such an assign or deletion.
+     *
+     * 2. Array lengths are special cased by the compiler and VM and are not
+     *    reflected in property types.
+     *
+     * 3. In typed objects, the initial values of properties (null pointers and
+     *    undefined values) are not reflected in the property types. These
+     *    values are always possible when reading the property.
      *
      * We establish these by using write barriers on calls to setProperty and
      * defineProperty which are on native properties, and on any jitcode which

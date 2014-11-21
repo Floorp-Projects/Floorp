@@ -36,6 +36,9 @@
             var isRelatedTargetValueTested = false;
             var count = 0;
 
+            var detected_pointertypes = {};
+            add_completion_callback(showPointerTypes);
+
             var target0 = document.getElementById('target0');
             var target1 = document.getElementById('target1');
             var captureButton = document.getElementById('btnCapture');
@@ -79,6 +82,7 @@
 
             function run() {
                 on_event(target0, "pointerover", function (event) {
+                    detected_pointertypes[ event.pointerType ] = true;
                     log("pointerover", target0);
                     if(isPointerCapture) {
                         test_pointerover_capture.done();
@@ -163,7 +167,9 @@
             }
         </script>
         <h1>Pointer Events Capture Test</h1>
-        <div id="complete-notice"></div>
+        <div id="complete-notice">
+            <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
+        </div>
         <div id="log"></div>
     </body>
 </html>

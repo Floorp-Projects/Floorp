@@ -610,6 +610,13 @@ public:
             m_formatter.immediate32(imm);
         }
     }
+    void addl_ir_wide(int imm, RegisterID dst)
+    {
+        // 32-bit immediate always, for patching.
+        spew("addl       $0x%x, %s", imm, nameIReg(4,dst));
+        m_formatter.oneByteOp(OP_GROUP1_EvIz, GROUP1_OP_ADD, dst);
+        m_formatter.immediate32(imm);
+    }
 
     void addl_im(int imm, int offset, RegisterID base)
     {

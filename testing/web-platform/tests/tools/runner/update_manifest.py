@@ -10,9 +10,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(here, "..", "scripts")))
 import manifest
 
 def main(request, response):
-    manifest_path = os.path.join(root, "MANIFEST.json")
-    manifest.update_manifest(root, **{"rebuild": False,
-                                      "local_changes": True,
-                                      "path": manifest_path})
+    path = os.path.join(root, "MANIFEST.json")
+    manifest_file = manifest.load(path)
+    manifest.update(root, "/", manifest_file)
+    manifest.write(manifest_file, path)
 
     return [("Content-Type", "application/json")], json.dumps({"url": "/MANIFEST.json"})

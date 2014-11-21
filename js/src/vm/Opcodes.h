@@ -72,6 +72,7 @@
  *     Logical Operators
  *     Special Operators
  *     Stack Operations
+ *     Debugger
  *   [Literals]
  *     Constants
  *     Object
@@ -1620,10 +1621,11 @@
     macro(JSOP_FORCEINTERPRETER, 207, "forceinterpreter", NULL,  1,  0,  0,  JOF_BYTE) \
     \
     /*
-     * Bytecode emitted after 'yield' statements to help the Debugger
+     * Bytecode emitted after 'yield' expressions to help the Debugger
      * fix up the frame in the JITs. No-op in the interpreter.
      *
-     *   Category: Debugger
+     *   Category: Operator
+     *   Type: Debugger
      *   Operands:
      *   Stack: =>
      */ \

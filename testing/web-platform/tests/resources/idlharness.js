@@ -1026,15 +1026,15 @@ IdlInterface.prototype.test_self = function()
 
     if (!this.is_callback()) {
         test(function() {
-            // This function tests WebIDL as of 2013-08-25.
-            // http://dev.w3.org/2006/webapi/WebIDL/#es-interface-call
+            // This function tests WebIDL as of 2014-10-25.
+            // https://heycam.github.io/webidl/#es-interface-call
 
             assert_own_property(window, this.name,
                                 "window does not have own property " + format_value(this.name));
 
             // "Interface objects for non-callback interfaces MUST have a
             // property named “length” with attributes { [[Writable]]: false,
-            // [[Enumerable]]: false, [[Configurable]]: false } whose value is
+            // [[Enumerable]]: false, [[Configurable]]: true } whose value is
             // a Number."
             assert_own_property(window[this.name], "length");
             var desc = Object.getOwnPropertyDescriptor(window[this.name], "length");
@@ -1042,7 +1042,7 @@ IdlInterface.prototype.test_self = function()
             assert_false("set" in desc, this.name + ".length has setter");
             assert_false(desc.writable, this.name + ".length is writable");
             assert_false(desc.enumerable, this.name + ".length is enumerable");
-            assert_false(desc.configurable, this.name + ".length is configurable");
+            assert_true(desc.configurable, this.name + ".length is not configurable");
 
             var constructors = this.extAttrs
                 .filter(function(attr) { return attr.name == "Constructor"; });
@@ -1266,10 +1266,14 @@ IdlInterface.prototype.test_member_attribute = function(member)
                 "The prototype object must have a property " +
                 format_value(member.name));
 
-            // TODO: Needs to test for LenientThis.
-            assert_throws(new TypeError(), function() {
-                window[this.name].prototype[member.name];
-            }.bind(this), "getting property on prototype object must throw TypeError");
+            if (!member.has_extended_attribute("LenientThis")) {
+                assert_throws(new TypeError(), function() {
+                    window[this.name].prototype[member.name];
+                }.bind(this), "getting property on prototype object must throw TypeError");
+            } else {
+                assert_equals(window[this.name].prototype[member.name], undefined,
+                              "getting property on prototype object must return undefined");
+            }
             do_interface_attribute_asserts(window[this.name].prototype, member);
         }
     }.bind(this), this.name + " interface: attribute " + member.name);
@@ -1705,11 +1709,14 @@ function do_interface_attribute_asserts(obj, member)
     // value 0."
     assert_equals(typeof desc.get, "function", "getter must be Function");
     assert_equals(desc.get.length, 0, "getter length must be 0");
-    // TODO: Account for LenientThis
-    assert_throws(new TypeError(), function()
-    {
-        desc.get.call({});
-    }.bind(this), "calling getter on wrong object type must throw TypeError");
+    if (!member.has_extended_attribute("LenientThis")) {
+        assert_throws(new TypeError(), function() {
+            desc.get.call({});
+        }.bind(this), "calling getter on wrong object type must throw TypeError");
+    } else {
+        assert_equals(desc.get.call({}), undefined,
+                      "calling getter on wrong object type must return undefined");
+    }
 
     // TODO: Test calling setter on the interface prototype (should throw
     // TypeError in most cases).
@@ -1731,6 +1738,14 @@ function do_interface_attribute_asserts(obj, member)
     {
         assert_equals(typeof desc.set, "function", "setter must be function for PutForwards, Replaceable, or non-readonly attributes");
         assert_equals(desc.set.length, 1, "setter length must be 1");
+        if (!member.has_extended_attribute("LenientThis")) {
+            assert_throws(new TypeError(), function() {
+                desc.set.call({});
+            }.bind(this), "calling setter on wrong object type must throw TypeError");
+        } else {
+            assert_equals(desc.set.call({}), undefined,
+                          "calling setter on wrong object type must return undefined");
+        }
     }
 }
 //@}

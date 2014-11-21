@@ -1889,6 +1889,10 @@ public:
    */
   static bool HasOpaqueAncestorLayer(Layer* aLayer);
 
+  void SetChildrenChanged(bool aVal) {
+    mChildrenChanged = aVal;
+  }
+
 protected:
   friend class ReadbackProcessor;
 
@@ -1931,6 +1935,9 @@ protected:
   bool mUseIntermediateSurface;
   bool mSupportsComponentAlphaChildren;
   bool mMayHaveReadbackChild;
+  // This is updated by ComputeDifferences. This will be true if we need to invalidate
+  // the intermediate surface.
+  bool mChildrenChanged;
 };
 
 /**

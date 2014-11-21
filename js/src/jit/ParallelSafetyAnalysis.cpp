@@ -358,6 +358,8 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     UNSAFE_OP(CompareExchangeTypedArrayElement)
     UNSAFE_OP(AtomicTypedArrayElementBinop)
     UNSAFE_OP(MemoryBarrier)
+    UNSAFE_OP(AsmJSCompareExchangeHeap)
+    UNSAFE_OP(AsmJSAtomicBinopHeap)
     UNSAFE_OP(UnknownValue)
     UNSAFE_OP(LexicalCheck)
     UNSAFE_OP(ThrowUninitializedLexical)

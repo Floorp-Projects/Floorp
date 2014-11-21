@@ -116,6 +116,7 @@ ConvertAndCopyTo(JSContext *cx,
                  HandleTypeDescr typeObj,
                  HandleTypedObject typedObj,
                  int32_t offset,
+                 HandleAtom name,
                  HandleValue val)
 {
     RootedFunction func(
@@ -124,14 +125,18 @@ ConvertAndCopyTo(JSContext *cx,
         return false;
 
     InvokeArgs args(cx);
-    if (!args.init(4))
+    if (!args.init(5))
         return false;
 
     args.setCallee(ObjectValue(*func));
     args[0].setObject(*typeObj);
     args[1].setObject(*typedObj);
     args[2].setInt32(offset);
-    args[3].set(val);
+    if (name)
+        args[3].setString(name);
+    else
+        args[3].setNull();
+    args[4].set(val);
 
     return Invoke(cx, args);
 }
@@ -140,7 +145,7 @@ static bool
 ConvertAndCopyTo(JSContext *cx, HandleTypedObject typedObj, HandleValue val)
 {
     Rooted<TypeDescr*> type(cx, &typedObj->typeDescr());
-    return ConvertAndCopyTo(cx, type, typedObj, 0, val);
+    return ConvertAndCopyTo(cx, type, typedObj, 0, NullPtr(), val);
 }
 
 /*
@@ -1003,6 +1008,8 @@ StructMetaTypeDescr::create(JSContext *cx,
 
     if (!LinkConstructorAndPrototype(cx, descr, prototypeObj))
         return nullptr;
+
+    // Initialize type information for instances of this struct.
 
     return descr;
 }
@@ -1959,7 +1966,8 @@ TypedObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
 
         size_t offset = descr->fieldOffset(fieldIndex);
         Rooted<TypeDescr*> fieldType(cx, &descr->fieldDescr(fieldIndex));
-        return ConvertAndCopyTo(cx, fieldType, typedObj, offset, vp);
+        RootedAtom fieldName(cx, &descr->fieldName(fieldIndex));
+        return ConvertAndCopyTo(cx, fieldType, typedObj, offset, fieldName, vp);
       }
     }
 
@@ -2013,7 +2021,7 @@ TypedObject::obj_setArrayElement(JSContext *cx,
     Rooted<TypeDescr*> elementType(cx);
     elementType = &descr->as<ArrayTypeDescr>().elementType();
     size_t offset = elementType->size() * index;
-    return ConvertAndCopyTo(cx, elementType, typedObj, offset, vp);
+    return ConvertAndCopyTo(cx, elementType, typedObj, offset, NullPtr(), vp);
 }
 
 bool
@@ -2822,21 +2830,27 @@ JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::StoreScalar##T::JitInfo,              
 
 #define JS_STORE_REFERENCE_CLASS_IMPL(_constant, T, _name)                      \
 bool                                                                            \
-js::StoreReference##T::Func(ThreadSafeContext *, unsigned argc, Value *vp)      \
+js::StoreReference##T::Func(ThreadSafeContext *cx, unsigned argc, Value *vp)    \
 {                                                                               \
     CallArgs args = CallArgsFromVp(argc, vp);                                   \
-    MOZ_ASSERT(args.length() == 3);                                             \
+    MOZ_ASSERT(args.length() == 4);                                             \
     MOZ_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());     \
     MOZ_ASSERT(args[1].isInt32());                                              \
+    MOZ_ASSERT(args[2].isString() || args[2].isNull());                         \
                                                                                 \
     TypedObject &typedObj = args[0].toObject().as<TypedObject>();               \
     int32_t offset = args[1].toInt32();                                         \
+                                                                                \
+    jsid id = args[2].isString()                                                \
+              ? types::IdToTypeId(AtomToId(&args[2].toString()->asAtom()))      \
+              : JSID_VOID;                                                      \
                                                                                 \
     /* Should be guaranteed by the typed objects API: */                        \
     MOZ_ASSERT(offset % MOZ_ALIGNOF(T) == 0);                                   \
                                                                                 \
     T *target = reinterpret_cast<T*>(typedObj.typedMem(offset));                \
-    store(target, args[2]);                                                     \
+    if (!store(cx, target, args[3], &typedObj, id))                             \
+        return false;                                                           \
     args.rval().setUndefined();                                                 \
     return true;                                                                \
 }                                                                               \
@@ -2896,24 +2910,54 @@ JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::LoadReference##T::JitInfo,            
 // differs, we abstract it away using specialized variants of the
 // private methods `store()` and `load()`.
 
-void
-StoreReferenceHeapValue::store(HeapValue *heap, const Value &v)
+bool
+StoreReferenceHeapValue::store(ThreadSafeContext *cx, HeapValue *heap, const Value &v,
+                               TypedObject *obj, jsid id)
 {
+    // Undefined values are not included in type inference information for
+    // value properties of typed objects, as these properties are always
+    // considered to contain undefined.
+    if (!v.isUndefined()) {
+        if (cx->isJSContext())
+            types::AddTypePropertyId(cx->asJSContext(), obj, id, v);
+        else if (!types::HasTypePropertyId(obj, id, v))
+            return false;
+    }
+
     *heap = v;
+    return true;
 }
 
-void
-StoreReferenceHeapPtrObject::store(HeapPtrObject *heap, const Value &v)
+bool
+StoreReferenceHeapPtrObject::store(ThreadSafeContext *cx, HeapPtrObject *heap, const Value &v,
+                                   TypedObject *obj, jsid id)
 {
     MOZ_ASSERT(v.isObjectOrNull()); // or else Store_object is being misused
+
+    // Null pointers are not included in type inference information for
+    // object properties of typed objects, as these properties are always
+    // considered to contain null.
+    if (v.isObject()) {
+        if (cx->isJSContext())
+            types::AddTypePropertyId(cx->asJSContext(), obj, id, v);
+        else if (!types::HasTypePropertyId(obj, id, v))
+            return false;
+    }
+
     *heap = v.toObjectOrNull();
+    return true;
 }
 
-void
-StoreReferenceHeapPtrString::store(HeapPtrString *heap, const Value &v)
+bool
+StoreReferenceHeapPtrString::store(ThreadSafeContext *cx, HeapPtrString *heap, const Value &v,
+                                   TypedObject *obj, jsid id)
 {
     MOZ_ASSERT(v.isString()); // or else Store_string is being misused
+
+    // Note: string references are not reflected in type information for the object.
     *heap = v.toString();
+
+    return true;
 }
 
 void

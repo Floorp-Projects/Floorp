@@ -101,6 +101,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
+    bool visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins);
+    bool visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     bool visitForkJoinGetSlice(MForkJoinGetSlice *ins);
     bool visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);

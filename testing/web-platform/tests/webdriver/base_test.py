@@ -4,13 +4,13 @@ import os
 import sys
 import unittest
 
-from webserver import Httpd
 from network import get_lan_ip
 
 repo_root = os.path.abspath(os.path.join(__file__, "../.."))
 sys.path.insert(1, os.path.join(repo_root, "tools", "webdriver"))
+sys.path.insert(1, os.path.join(repo_root, "tools", "wptserve"))
+from wptserve import server
 from webdriver.driver import WebDriver
-from webdriver import exceptions, wait
 
 
 class WebDriverBaseTest(unittest.TestCase):
@@ -18,8 +18,9 @@ class WebDriverBaseTest(unittest.TestCase):
     def setUpClass(cls):
         cls.driver = create_driver()
 
-        cls.webserver = Httpd(host=get_lan_ip())
+        cls.webserver = server.WebTestHttpd(host=get_lan_ip())
         cls.webserver.start()
+        cls.webserver.where_is = cls.webserver.get_url
 
     @classmethod
     def tearDownClass(cls):

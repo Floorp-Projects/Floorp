@@ -15,7 +15,7 @@
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("gotpointercapture event"); // set up test harness
             // showPointerTypes is defined in pointerevent_support.js
-            // Requirements: the callbakc function will reference the test_pointerEvent object and
+            // Requirements: the callback function will reference the test_pointerEvent object and
             // will fail unless the async_test is created with the var name "test_pointerEvent".
             add_completion_callback(showPointerTypes);
 
@@ -54,8 +54,6 @@
                                 assert_false(eventRcvd, "no other events should be received before gotpointercapture." + eventsRcvd_str);
                                 assert_equals(event.pointerId, pointerdown_event.pointerId, "pointerID is same for pointerdown and gotpointercapture");
                             });
-
-                            detected_pointertypes[event.pointerType] = true;
                         }
                         else {
                             if (pointerdown_event.pointerId === event.pointerId) {
@@ -70,6 +68,7 @@
 
                 // set pointer capture
                 on_event(target0, "pointerdown", function (event) {
+                    detected_pointertypes[event.pointerType] = true;
                     pointerdown_event = event;
                     listener.setPointerCapture(event.pointerId);
                     isWaiting = true;

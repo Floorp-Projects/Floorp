@@ -2,7 +2,7 @@
 <meta charset=utf-8>
 <title>Document.getElementById</title>
 <link rel="author" title="Tetsuharu OHZEKI" href="mailto:saneyuki.snyk@gmail.com">
-<link rel=help href="http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#dom-document-getelementbyid">
+<link rel=help href="https://dom.spec.whatwg.org/#dom-document-getelementbyid">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <body>
@@ -53,7 +53,7 @@
     gBody.removeChild(test);
     var removed = document.getElementById(TEST_ID);
     // `document.getElementById()` returns `null` if there is none.
-    // http://dom.spec.whatwg.org/#dom-nonelementparentnode-getelementbyid
+    // https://dom.spec.whatwg.org/#dom-nonelementparentnode-getelementbyid
     assert_equals(removed, null, "should not get removed element.");
   }, "Document.getElementById with a script-inserted element");
 
@@ -287,6 +287,18 @@
 
 
   }, "where insertion order and tree order don't match");
+
+  test(function() {
+    let TEST_ID = "test14";
+    let a = document.createElement("a");
+    let b = document.createElement("b");
+    a.appendChild(b);
+    b.id = TEST_ID;
+    assert_equals(document.getElementById(TEST_ID), null);
+
+    gBody.appendChild(a);
+    assert_equals(document.getElementById(TEST_ID), b);
+  }, "Inserting an id by inserting its parent node");
 
   // TODO:
   // id attribute in a namespace

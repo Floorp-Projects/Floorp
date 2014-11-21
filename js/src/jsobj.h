@@ -1113,7 +1113,8 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp);
 namespace js {
 
 bool
-LookupPropertyPure(JSObject *obj, jsid id, NativeObject **objp, Shape **propp);
+LookupPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, NativeObject **objp,
+                   Shape **propp);
 
 bool
 GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp);

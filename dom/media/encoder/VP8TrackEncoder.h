@@ -43,15 +43,15 @@ protected:
 
 private:
   // Calculate the target frame's encoded duration.
-  TrackTicks CalculateEncodedDuration(TrackTicks aDurationCopied);
+  StreamTime CalculateEncodedDuration(StreamTime aDurationCopied);
 
   // Calculate the mRemainingTicks for next target frame.
-  TrackTicks CalculateRemainingTicks(TrackTicks aDurationCopied,
-                                     TrackTicks aEncodedDuration);
+  StreamTime CalculateRemainingTicks(StreamTime aDurationCopied,
+                                     StreamTime aEncodedDuration);
 
   // Get the EncodeOperation for next target frame.
   EncodeOperation GetNextEncodeOperation(TimeDuration aTimeElapsed,
-                                         TrackTicks aProcessedDuration);
+                                         StreamTime aProcessedDuration);
 
   // Get the encoded data from encoder to aData.
   nsresult GetEncodedPartitions(EncodedFrameContainer& aData);
@@ -62,11 +62,11 @@ private:
   // Output frame rate.
   uint32_t mEncodedFrameRate;
   // Duration for the output frame, reciprocal to mEncodedFrameRate.
-  TrackTicks mEncodedFrameDuration;
+  StreamTime mEncodedFrameDuration;
   // Encoded timestamp.
-  TrackTicks mEncodedTimestamp;
+  StreamTime mEncodedTimestamp;
   // Duration to the next encode frame.
-  TrackTicks mRemainingTicks;
+  StreamTime mRemainingTicks;
 
   // Muted frame, we only create it once.
   nsRefPtr<layers::Image> mMuteFrame;

@@ -151,13 +151,7 @@ struct LayerPropertiesBase : public LayerProperties
       result = OldTransformedBounds();
       AddRegion(result, NewTransformedBounds());
 
-      // If we don't have to generate invalidations separately for child
-      // layers then we can just stop here since we've already invalidated the entire
-      // old and new bounds.
-      if (!aCallback) {
-        ClearInvalidations(mLayer);
-        return result;
-      }
+      // We can't bail out early because we need to update mChildrenChanged.
     }
 
     AddRegion(result, ComputeChangeInternal(aCallback, aGeometryChanged));
@@ -227,19 +221,16 @@ struct ContainerLayerProperties : public LayerPropertiesBase
     ContainerLayer* container = mLayer->AsContainerLayer();
     nsIntRegion result;
 
+    bool childrenChanged = false;
+
     if (mPreXScale != container->GetPreXScale() ||
         mPreYScale != container->GetPreYScale()) {
       aGeometryChanged = true;
       result = OldTransformedBounds();
       AddRegion(result, NewTransformedBounds());
+      childrenChanged = true;
 
-      // If we don't have to generate invalidations separately for child
-      // layers then we can just stop here since we've already invalidated the entire
-      // old and new bounds.
-      if (!aCallback) {
-        ClearInvalidations(mLayer);
-        return result;
-      }
+      // Can't bail out early, we need to update the child container layers
     }
 
     // A low frame rate is especially visible to users when scrolling, so we
@@ -270,13 +261,18 @@ struct ContainerLayerProperties : public LayerPropertiesBase
             // encounter them in the new list):
             for (uint32_t j = i; j < childsOldIndex; ++j) {
               AddRegion(result, mChildren[j]->OldTransformedBounds());
+              childrenChanged |= true;
             }
-            // Invalidate any regions of the child that have changed: 
-            AddRegion(result, mChildren[childsOldIndex]->ComputeChange(aCallback, aGeometryChanged));
+            // Invalidate any regions of the child that have changed:
+            nsIntRegion region = mChildren[childsOldIndex]->ComputeChange(aCallback, aGeometryChanged);
             i = childsOldIndex + 1;
+            if (!region.IsEmpty()) {
+              AddRegion(result, region);
+              childrenChanged |= true;
+            }
           } else {
             // We've already seen this child in mChildren (which means it must
-            // have been reordered) and invalidated its old area. We need to 
+            // have been reordered) and invalidated its old area. We need to
             // invalidate its new area too:
             invalidateChildsCurrentArea = true;
           }
@@ -297,10 +293,12 @@ struct ContainerLayerProperties : public LayerPropertiesBase
           ClearInvalidations(child);
         }
       }
+      childrenChanged |= invalidateChildsCurrentArea;
     }
 
     // Process remaining removed children.
     while (i < mChildren.Length()) {
+      childrenChanged |= true;
       AddRegion(result, mChildren[i]->OldTransformedBounds());
       i++;
     }
@@ -309,7 +307,12 @@ struct ContainerLayerProperties : public LayerPropertiesBase
       aCallback(container, result);
     }
 
+    if (childrenChanged) {
+      container->SetChildrenChanged(true);
+    }
+
     result.Transform(gfx::To3DMatrix(mLayer->GetLocalTransform()));
+
     return result;
   }
 

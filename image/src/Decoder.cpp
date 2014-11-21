@@ -137,6 +137,8 @@ Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
         // Use the data we saved when we asked for a new frame.
         WriteInternal(nullptr, 0, aStrategy);
       }
+
+      mNeedsToFlushData = false;
     }
   }
 

@@ -56,7 +56,7 @@ public:
                                        AudioDestinationNode* aDestination) :
     AudioNodeEngine(aNode),
     mStart(0.0), mBeginProcessing(0),
-    mStop(TRACK_TICKS_MAX),
+    mStop(STREAM_TIME_MAX),
     mResampler(nullptr), mRemainingResamplerTail(0),
     mBufferEnd(0),
     mLoopStart(0), mLoopEnd(0),
@@ -91,7 +91,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
     }
   }
-  virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
+  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam)
   {
     switch (aIndex) {
     case AudioBufferSourceNode::STOP: mStop = aParam; break;
@@ -140,7 +140,7 @@ public:
 
   bool BegunResampling()
   {
-    return mBeginProcessing == -TRACK_TICKS_MAX;
+    return mBeginProcessing == -STREAM_TIME_MAX;
   }
 
   void UpdateResampler(int32_t aOutRate, uint32_t aChannels)
@@ -233,7 +233,7 @@ public:
                                          AudioChunk* aOutput,
                                          uint32_t aChannels,
                                          uint32_t* aOffsetWithinBlock,
-                                         TrackTicks* aCurrentPosition,
+                                         StreamTime* aCurrentPosition,
                                          int32_t aBufferMax) {
     // TODO: adjust for mStop (see bug 913854 comment 9).
     uint32_t availableInOutputBuffer =
@@ -268,7 +268,7 @@ public:
         }
         speex_resampler_set_skip_frac_num(resampler, skipFracNum);
 
-        mBeginProcessing = -TRACK_TICKS_MAX;
+        mBeginProcessing = -STREAM_TIME_MAX;
       }
       inputLimit = std::min(inputLimit, availableInInputBuffer);
 
@@ -334,12 +334,12 @@ public:
   void FillWithZeroes(AudioChunk* aOutput,
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
-                      TrackTicks* aCurrentPosition,
-                      TrackTicks aMaxPos)
+                      StreamTime* aCurrentPosition,
+                      StreamTime aMaxPos)
   {
     MOZ_ASSERT(*aCurrentPosition < aMaxPos);
     uint32_t numFrames =
-      std::min<TrackTicks>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+      std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
                            aMaxPos - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE) {
       aOutput->SetNull(numFrames);
@@ -366,12 +366,12 @@ public:
                       AudioChunk* aOutput,
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
-                      TrackTicks* aCurrentPosition,
+                      StreamTime* aCurrentPosition,
                       int32_t aBufferMax)
   {
     MOZ_ASSERT(*aCurrentPosition < mStop);
     uint32_t numFrames =
-      std::min(std::min<TrackTicks>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+      std::min(std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
                                     aBufferMax - mBufferPosition),
                mStop - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE && !mResampler) {
@@ -445,11 +445,11 @@ public:
     UpdateSampleRateIfNeeded(channels);
 
     uint32_t written = 0;
-    TrackTicks streamPosition = aStream->GetCurrentPosition();
+    StreamTime streamPosition = aStream->GetCurrentPosition();
     while (written < WEBAUDIO_BLOCK_SIZE) {
-      if (mStop != TRACK_TICKS_MAX &&
+      if (mStop != STREAM_TIME_MAX &&
           streamPosition >= mStop) {
-        FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
+        FillWithZeroes(aOutput, channels, &written, &streamPosition, STREAM_TIME_MAX);
         continue;
       }
       if (streamPosition < mBeginProcessing) {
@@ -469,7 +469,7 @@ public:
         if (mBufferPosition < mBufferEnd || mRemainingResamplerTail) {
           CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferEnd);
         } else {
-          FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
+          FillWithZeroes(aOutput, channels, &written, &streamPosition, STREAM_TIME_MAX);
         }
       }
     }
@@ -510,10 +510,10 @@ public:
   double mStart; // including the fractional position between ticks
   // Low pass filter effects from the resampler mean that samples before the
   // start time are influenced by resampling the buffer.  mBeginProcessing
-  // includes the extent of this filter.  The special value of -TRACK_TICKS_MAX
+  // includes the extent of this filter.  The special value of -STREAM_TIME_MAX
   // indicates that the resampler has begun processing.
-  TrackTicks mBeginProcessing;
-  TrackTicks mStop;
+  StreamTime mBeginProcessing;
+  StreamTime mStop;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   SpeexResamplerState* mResampler;
   // mRemainingResamplerTail, like mBufferPosition, and

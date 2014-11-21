@@ -334,17 +334,6 @@ Bindings::trace(JSTracer *trc)
     }
 }
 
-bool
-js::FillBindingVector(HandleScript fromScript, BindingVector *vec)
-{
-    for (BindingIter bi(fromScript); bi; bi++) {
-        if (!vec->append(*bi))
-            return false;
-    }
-
-    return true;
-}
-
 template<XDRMode mode>
 bool
 js::XDRScriptConst(XDRState<mode> *xdr, MutableHandleValue vp)
@@ -2103,17 +2092,6 @@ bool
 ScriptSource::setSourceMapURL(ExclusiveContext *cx, const char16_t *sourceMapURL)
 {
     MOZ_ASSERT(sourceMapURL);
-    if (hasSourceMapURL()) {
-        // Warn about the replacement, but use the new one.
-        if (cx->isJSContext()) {
-            JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING,
-                                         js_GetErrorMessage, nullptr,
-                                         JSMSG_ALREADY_HAS_PRAGMA, filename_.get(),
-                                         "//# sourceMappingURL");
-        }
-
-        sourceMapURL_ = nullptr;
-    }
 
     size_t len = js_strlen(sourceMapURL) + 1;
     if (len == 1)
