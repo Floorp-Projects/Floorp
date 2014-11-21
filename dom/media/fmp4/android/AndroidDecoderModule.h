@@ -98,6 +98,7 @@ protected:
 
   virtual nsresult Output(mozilla::widget::android::sdk::BufferInfo* aInfo, void* aBuffer, mozilla::widget::android::sdk::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
   virtual nsresult PostOutput(mozilla::widget::android::sdk::BufferInfo* aInfo, mozilla::widget::android::sdk::MediaFormat* aFormat, Microseconds aDuration) { return NS_OK; }
+  virtual void Cleanup() {};
 
   nsresult ResetInputBuffers();
   nsresult ResetOutputBuffers();
