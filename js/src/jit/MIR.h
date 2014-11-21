@@ -1857,17 +1857,21 @@ class MSimdBinaryArith : public MBinaryInstruction
         Mul,
         Div,
         Min,
-        Max
+        Max,
+        MinNum,
+        MaxNum
     };
 
     static const char* OperationName(Operation op) {
         switch (op) {
-          case Add: return "Add";
-          case Sub: return "Sub";
-          case Mul: return "Mul";
-          case Div: return "Div";
-          case Min: return "Min";
-          case Max: return "Max";
+          case Add:    return "Add";
+          case Sub:    return "Sub";
+          case Mul:    return "Mul";
+          case Div:    return "Div";
+          case Min:    return "Min";
+          case Max:    return "Max";
+          case MinNum: return "MinNum";
+          case MaxNum: return "MaxNum";
         }
         MOZ_CRASH("unexpected operation");
     }
