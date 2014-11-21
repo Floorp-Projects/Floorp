@@ -250,6 +250,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
           case AsmJSHeapAccess::Int16: case AsmJSHeapAccess::Uint16:
           case AsmJSHeapAccess::Int32: case AsmJSHeapAccess::Uint32:
           case AsmJSHeapAccess::Float32: case AsmJSHeapAccess::Float64:
+          case AsmJSHeapAccess::Float32x4: case AsmJSHeapAccess::Int32x4:
             // See comment below.
             lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
             break;
@@ -267,6 +268,7 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
       case AsmJSHeapAccess::Int16: case AsmJSHeapAccess::Uint16:
       case AsmJSHeapAccess::Int32: case AsmJSHeapAccess::Uint32:
       case AsmJSHeapAccess::Float32: case AsmJSHeapAccess::Float64:
+      case AsmJSHeapAccess::Float32x4: case AsmJSHeapAccess::Int32x4:
         // For now, don't allow constant values. The immediate operand
         // affects instruction layout which affects patching.
         lir = new(alloc()) LAsmJSStoreHeap(useRegisterAtStart(ptr), useRegisterAtStart(ins->value()));
