@@ -589,7 +589,10 @@ nsBrowserContentHandler.prototype = {
                                .getService(Components.interfaces.nsISessionStartup);
             willRestoreSession = ss.isAutomaticRestoreEnabled();
 
-            overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
+            // Only show the whatsnew page if the new search UI is active
+            // This is a one-off hack for Firefox 34
+            if (Services.prefs.getBoolPref("browser.search.showOneOffButtons"))
+              overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
             if (prefb.prefHasUserValue("app.update.postupdate"))
               overridePage = getPostUpdateOverridePage(overridePage);
 
