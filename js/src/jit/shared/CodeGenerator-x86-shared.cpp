@@ -2794,19 +2794,27 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
       case MSimdBinaryArith::Div:
         masm.packedDivFloat32(rhs, lhs);
         return true;
-      case MSimdBinaryArith::Max:
-        // TODO: standardization of float32x4.min/max needs to define the
-        // semantics for particular values: if both input operands are -0 or 0,
-        // or one operand is NaN, the return value will be the "second operand"
-        // in the instruction.
-        // See also bug 1068028, which is about fixing semantics once the
-        // specification is stable.
+      case MSimdBinaryArith::Max: {
+        masm.movaps(lhs, ScratchSimdReg);
+        masm.cmpps(rhs, ScratchSimdReg, 0x3);
+
+        FloatRegister tmp = ToFloatRegister(ins->temp());
+        masm.movaps(rhs, tmp);
+        masm.maxps(Operand(lhs), tmp);
         masm.maxps(rhs, lhs);
+
+        masm.andps(tmp, lhs);
+        masm.orps(ScratchSimdReg, lhs); // or in the all-ones NaNs
         return true;
-      case MSimdBinaryArith::Min:
-        // See comment above.
+      }
+      case MSimdBinaryArith::Min: {
+        FloatRegister rhsCopy = ScratchSimdReg;
+        masm.movaps(rhs, rhsCopy);
+        masm.minps(Operand(lhs), rhsCopy);
         masm.minps(rhs, lhs);
+        masm.orps(rhsCopy, lhs); // NaN or'd with arbitrary bits is NaN
         return true;
+      }
     }
     MOZ_CRASH("unexpected SIMD op");
 }

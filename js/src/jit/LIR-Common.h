@@ -366,19 +366,21 @@ class LSimdBinaryCompFx4 : public LSimdBinaryComp
 };
 
 // Binary SIMD arithmetic operation between two SIMD operands
-class LSimdBinaryArith : public LInstructionHelper<1, 2, 0>
+template<size_t Temps>
+class LSimdBinaryArith : public LInstructionHelper<1, 2, Temps>
 {
   public:
     LSimdBinaryArith() {}
 
     const LAllocation *lhs() {
-        return getOperand(0);
+        return this->getOperand(0);
     }
     const LAllocation *rhs() {
-        return getOperand(1);
+        return this->getOperand(1);
     }
+
     MSimdBinaryArith::Operation operation() const {
-        return mir_->toSimdBinaryArith()->operation();
+        return this->mir_->toSimdBinaryArith()->operation();
     }
     const char *extraName() const {
         return MSimdBinaryArith::OperationName(operation());
@@ -386,19 +388,23 @@ class LSimdBinaryArith : public LInstructionHelper<1, 2, 0>
 };
 
 // Binary SIMD arithmetic operation between two Int32x4 operands
-class LSimdBinaryArithIx4 : public LSimdBinaryArith
+class LSimdBinaryArithIx4 : public LSimdBinaryArith<0>
 {
   public:
     LIR_HEADER(SimdBinaryArithIx4);
-    LSimdBinaryArithIx4() : LSimdBinaryArith() {}
+    LSimdBinaryArithIx4() : LSimdBinaryArith<0>() {}
 };
 
 // Binary SIMD arithmetic operation between two Float32x4 operands
-class LSimdBinaryArithFx4 : public LSimdBinaryArith
+class LSimdBinaryArithFx4 : public LSimdBinaryArith<1>
 {
   public:
     LIR_HEADER(SimdBinaryArithFx4);
-    LSimdBinaryArithFx4() : LSimdBinaryArith() {}
+    LSimdBinaryArithFx4() : LSimdBinaryArith<1>() {}
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
 };
 
 // Unary SIMD arithmetic operation on a SIMD operand

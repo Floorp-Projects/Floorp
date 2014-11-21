@@ -56,7 +56,8 @@ class LIRGeneratorARM : public LIRGeneratorShared
 
     bool lowerForFPU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir,
                      MDefinition *src);
-    bool lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
+    template<size_t Temps>
+    bool lowerForFPU(LInstructionHelper<1, 2, Temps> *ins, MDefinition *mir,
                      MDefinition *lhs, MDefinition *rhs);
 
     bool lowerForCompIx4(LSimdBinaryCompIx4 *ins, MSimdBinaryComp *mir,
