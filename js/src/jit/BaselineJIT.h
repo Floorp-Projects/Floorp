@@ -16,7 +16,6 @@
 #include "jit/Bailouts.h"
 #include "jit/IonCode.h"
 #include "jit/IonMacroAssembler.h"
-#include "vm/TraceLogging.h"
 
 namespace js {
 namespace jit {
@@ -129,13 +128,13 @@ struct BaselineScript
     uint32_t spsPushToggleOffset_;
 
 #ifdef JS_TRACE_LOGGING
-# ifdef DEBUG
+#ifdef DEBUG
     bool traceLoggerScriptsEnabled_;
     bool traceLoggerEngineEnabled_;
-# endif
+#endif
     uint32_t traceLoggerEnterToggleOffset_;
     uint32_t traceLoggerExitToggleOffset_;
-    TraceLoggerEvent traceLoggerScriptEvent_;
+    uint32_t traceLoggerScriptTextIdOffset_;
 #endif
 
     // Native code offsets right after the debug prologue VM call returns, or
@@ -197,12 +196,14 @@ struct BaselineScript
     // Do not call directly, use BaselineScript::New. This is public for cx->new_.
     BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
                    uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
-                   uint32_t traceLoggerExitToggleOffset, uint32_t postDebugPrologueOffset);
+                   uint32_t traceLoggerExitToggleOffset, uint32_t traceLoggerScriptTextIdOffset,
+                   uint32_t postDebugPrologueOffset);
 
     static BaselineScript *New(JSScript *jsscript, uint32_t prologueOffset,
                                uint32_t epilogueOffset, uint32_t postDebugPrologueOffset,
                                uint32_t spsPushToggleOffset, uint32_t traceLoggerEnterToggleOffset,
-                               uint32_t traceLoggerExitToggleOffset, size_t icEntries,
+                               uint32_t traceLoggerExitToggleOffset,
+                               uint32_t traceLoggerScriptTextIdOffset, size_t icEntries,
                                size_t pcMappingIndexEntries, size_t pcMappingSize,
                                size_t bytecodeTypeMapEntries, size_t yieldEntries);
 
@@ -371,7 +372,6 @@ struct BaselineScript
 
     void toggleSPS(bool enable);
 
-    void initTraceLogger(JSRuntime *runtime, JSScript *script);
     void toggleTraceLoggerScripts(JSRuntime *runtime, JSScript *script, bool enable);
     void toggleTraceLoggerEngine(bool enable);
 
@@ -383,9 +383,6 @@ struct BaselineScript
     }
     static size_t offsetOfYieldEntriesOffset() {
         return offsetof(BaselineScript, yieldEntriesOffset_);
-    }
-    static size_t offsetOfTraceLoggerScriptEvent() {
-        return offsetof(BaselineScript, traceLoggerScriptEvent_);
     }
 
     static void writeBarrierPre(Zone *zone, BaselineScript *script);
