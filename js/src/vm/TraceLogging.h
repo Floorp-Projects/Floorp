@@ -119,14 +119,13 @@ namespace jit {
     _(IonCompilationPaused)                           \
     _(IonLinking)                                     \
     _(IonMonkey)                                      \
-    _(IrregexpCompile)                                \
-    _(IrregexpExecute)                                \
     _(MinorGC)                                        \
     _(ParserCompileFunction)                          \
     _(ParserCompileLazy)                              \
     _(ParserCompileScript)                            \
-    _(Scripts)                                        \
     _(TL)                                             \
+    _(IrregexpCompile)                                \
+    _(IrregexpExecute)                                \
     _(VM)                                             \
                                                       \
     /* Specific passes during ion compilation */      \

@@ -757,7 +757,7 @@ HandleException(ResumeFromException *rfe)
                 probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
                 if (!frames.more()) {
                     TraceLogStopEvent(logger, TraceLogger::IonMonkey);
-                    TraceLogStopEvent(logger, TraceLogger::Scripts);
+                    TraceLogStopEvent(logger);
                     break;
                 }
                 ++frames;
@@ -788,7 +788,7 @@ HandleException(ResumeFromException *rfe)
                 return;
 
             TraceLogStopEvent(logger, TraceLogger::Baseline);
-            TraceLogStopEvent(logger, TraceLogger::Scripts);
+            TraceLogStopEvent(logger);
 
             // Unwind profiler pseudo-stack
             JSScript *script = iter.script();
