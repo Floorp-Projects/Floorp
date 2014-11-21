@@ -227,7 +227,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         logger = TraceLoggerForCurrentThread();
     uint32_t logId = js::TraceLogCreateTextId(logger, options);
     js::AutoTraceLog scriptLogger(logger, logId);
-    js::AutoTraceLog typeLogger(logger, TraceLogger_ParserCompileScript);
+    js::AutoTraceLog typeLogger(logger, TraceLogger::ParserCompileScript);
 
     /*
      * The scripted callerFrame can only be given for compile-and-go scripts
@@ -478,7 +478,7 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
     js::TraceLogger *logger = js::TraceLoggerForMainThread(cx->runtime());
     uint32_t logId = js::TraceLogCreateTextId(logger, options);
     js::AutoTraceLog scriptLogger(logger, logId);
-    js::AutoTraceLog typeLogger(logger, TraceLogger_ParserCompileLazy);
+    js::AutoTraceLog typeLogger(logger, TraceLogger::ParserCompileLazy);
 
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
                                     /* foldConstants = */ true, nullptr, lazy);
@@ -536,7 +536,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     js::TraceLogger *logger = js::TraceLoggerForMainThread(cx->runtime());
     uint32_t logId = js::TraceLogCreateTextId(logger, options);
     js::AutoTraceLog scriptLogger(logger, logId);
-    js::AutoTraceLog typeLogger(logger, TraceLogger_ParserCompileFunction);
+    js::AutoTraceLog typeLogger(logger, TraceLogger::ParserCompileFunction);
 
     // FIXME: make Function pass in two strings and parse them as arguments and
     // ProgramElements respectively.

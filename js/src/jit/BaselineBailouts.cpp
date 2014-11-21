@@ -1348,8 +1348,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
     MOZ_ASSERT(!*poppedLastSPSFrameOut);
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLogStopEvent(logger, TraceLogger_IonMonkey);
-    TraceLogStartEvent(logger, TraceLogger_Baseline);
+    TraceLogStopEvent(logger, TraceLogger::IonMonkey);
+    TraceLogStartEvent(logger, TraceLogger::Baseline);
 
     // The caller of the top frame must be one of the following:
     //      IonJS - Ion calling into Ion.
@@ -1461,7 +1461,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
 
         if (frameNo > 0) {
             TraceLogStartEvent(logger, TraceLogCreateTextId(logger, scr));
-            TraceLogStartEvent(logger, TraceLogger_Baseline);
+            TraceLogStartEvent(logger, TraceLogger::Baseline);
         }
 
         JitSpew(JitSpew_BaselineBailouts, "    FrameNo %d", frameNo);
