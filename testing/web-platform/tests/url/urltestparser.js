@@ -1,6 +1,6 @@
 function URLTestParser(input) {
   var relativeSchemes = ["ftp", "file", "gopher", "http", "https", "ws", "wss"],
-      tokenMap = { "\\": "\\", n: "\n", r: "\r", s: " ", t: "\t", f: "\f" }
+      tokenMap = { "\\": "\\", "#": "#", n: "\n", r: "\r", s: " ", t: "\t", f: "\f" }
       resultMap = { s: "scheme", u: "username", pass: "password", h: "host", port: "port", p: "path", q: "query", f: "fragment" },
       results = []
   function Test() {

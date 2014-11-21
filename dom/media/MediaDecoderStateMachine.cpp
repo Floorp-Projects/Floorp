@@ -341,18 +341,22 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
   aOutput->ApplyVolume(mVolume);
 }
 
-static void WriteVideoToMediaStream(layers::Image* aImage,
-                                    int64_t aDuration,
+static void WriteVideoToMediaStream(MediaStream* aStream,
+                                    layers::Image* aImage,
+                                    int64_t aEndMicroseconds,
+                                    int64_t aStartMicroseconds,
                                     const IntSize& aIntrinsicSize,
                                     VideoSegment* aOutput)
 {
   nsRefPtr<layers::Image> image = aImage;
-  aOutput->AppendFrame(image.forget(), aDuration, aIntrinsicSize);
+  StreamTime duration =
+      aStream->MicrosecondsToStreamTimeRoundDown(aEndMicroseconds) -
+      aStream->MicrosecondsToStreamTimeRoundDown(aStartMicroseconds);
+  aOutput->AppendFrame(image.forget(), duration, aIntrinsicSize);
 }
 
 static const TrackID TRACK_AUDIO = 1;
 static const TrackID TRACK_VIDEO = 2;
-static const TrackRate RATE_VIDEO = USECS_PER_S;
 
 void MediaDecoderStateMachine::SendStreamData()
 {
@@ -389,13 +393,13 @@ void MediaDecoderStateMachine::SendStreamData()
     if (!stream->mStreamInitialized) {
       if (mInfo.HasAudio()) {
         AudioSegment* audio = new AudioSegment();
-        mediaStream->AddTrack(TRACK_AUDIO, mInfo.mAudio.mRate, 0, audio);
+        mediaStream->AddAudioTrack(TRACK_AUDIO, mInfo.mAudio.mRate, 0, audio);
         stream->mStream->DispatchWhenNotEnoughBuffered(TRACK_AUDIO,
             GetStateMachineThread(), GetWakeDecoderRunnable());
       }
       if (mInfo.HasVideo()) {
         VideoSegment* video = new VideoSegment();
-        mediaStream->AddTrack(TRACK_VIDEO, RATE_VIDEO, 0, video);
+        mediaStream->AddTrack(TRACK_VIDEO, 0, video);
         stream->mStream->DispatchWhenNotEnoughBuffered(TRACK_VIDEO,
             GetStateMachineThread(), GetWakeDecoderRunnable());
       }
@@ -437,16 +441,16 @@ void MediaDecoderStateMachine::SendStreamData()
                       mediaStream, v->mTime - stream->mNextVideoTime);
           // Write last video frame to catch up. mLastVideoImage can be null here
           // which is fine, it just means there's no video.
-          WriteVideoToMediaStream(stream->mLastVideoImage,
-            v->mTime - stream->mNextVideoTime, stream->mLastVideoImageDisplaySize,
+          WriteVideoToMediaStream(mediaStream, stream->mLastVideoImage,
+            v->mTime, stream->mNextVideoTime, stream->mLastVideoImageDisplaySize,
               &output);
           stream->mNextVideoTime = v->mTime;
         }
         if (stream->mNextVideoTime < v->GetEndTime()) {
           VERBOSE_LOG("writing video frame %lldus to MediaStream %p for %lldus",
                       v->mTime, mediaStream, v->GetEndTime() - stream->mNextVideoTime);
-          WriteVideoToMediaStream(v->mImage,
-              v->GetEndTime() - stream->mNextVideoTime, v->mDisplay,
+          WriteVideoToMediaStream(mediaStream, v->mImage,
+              v->GetEndTime(), stream->mNextVideoTime, v->mDisplay,
               &output);
           stream->mNextVideoTime = v->GetEndTime();
           stream->mLastVideoImage = v->mImage;
@@ -464,7 +468,8 @@ void MediaDecoderStateMachine::SendStreamData()
         stream->mHaveSentFinishVideo = true;
       }
       endPosition = std::max(endPosition,
-          mediaStream->TicksToTimeRoundDown(RATE_VIDEO, stream->mNextVideoTime - stream->mInitialTime));
+          mediaStream->MicrosecondsToStreamTimeRoundDown(
+              stream->mNextVideoTime - stream->mInitialTime));
     }
 
     if (!stream->mHaveSentFinish) {

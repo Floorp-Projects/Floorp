@@ -5127,6 +5127,10 @@ js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const Latin1
                          size_t length, uint32_t quote);
 
 template size_t
+js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const char *chars,
+                         size_t length, uint32_t quote);
+
+template size_t
 js::PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const char16_t *chars,
                          size_t length, uint32_t quote);
 

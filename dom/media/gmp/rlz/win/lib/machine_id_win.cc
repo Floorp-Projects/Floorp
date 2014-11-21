@@ -3,7 +3,7 @@
 // found in the COPYING file.
 
 #include <windows.h>
-#include <Sddl.h>  // For ConvertSidToStringSidW.
+#include <sddl.h>  // For ConvertSidToStringSidW.
 #include <string>
 
 #include "base/memory/scoped_ptr.h"

@@ -17,7 +17,7 @@ http://www.w3.org/wiki/PointerEvents/TestAssertions
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerdown event received");
             // showPointerTypes is defined in pointerevent_support.js
-            // Requirements: the callbakc function will reference the test_pointerEvent object and
+            // Requirements: the callback function will reference the test_pointerEvent object and
             // will fail unless the async_test is created with the var name "test_pointerEvent".
             add_completion_callback(showPointerTypes);
 
@@ -27,10 +27,9 @@ http://www.w3.org/wiki/PointerEvents/TestAssertions
                 var pointerover_event;
 
                 on_event(target0, "pointerover", function (event) {
+                    detected_pointertypes[event.pointerType] = true;
                     pointerover_event = event;
                     check_PointerEvent(event);
-
-                    detected_pointertypes[event.pointerType] = true;
                 });
 
                 on_event(target0, "pointerdown", function (event) {

@@ -7931,13 +7931,21 @@ class MLoadUnboxedObjectOrNull
   : public MBinaryInstruction,
     public SingleObjectPolicy::Data
 {
+    bool bailOnNull_;
     int32_t offsetAdjustment_;
 
-    MLoadUnboxedObjectOrNull(MDefinition *elements, MDefinition *index, int32_t offsetAdjustment)
+    MLoadUnboxedObjectOrNull(MDefinition *elements, MDefinition *index,
+                             bool bailOnNull, int32_t offsetAdjustment)
       : MBinaryInstruction(elements, index),
+        bailOnNull_(bailOnNull),
         offsetAdjustment_(offsetAdjustment)
     {
-        setResultType(MIRType_Value);
+        if (bailOnNull) {
+            // Don't eliminate loads which bail out on a null pointer, for the
+            // same reason as MLoadElement.
+            setGuard();
+        }
+        setResultType(bailOnNull ? MIRType_Object : MIRType_Value);
         setMovable();
         MOZ_ASSERT(IsValidElementsType(elements, offsetAdjustment));
         MOZ_ASSERT(index->type() == MIRType_Int32);
@@ -7948,8 +7956,8 @@ class MLoadUnboxedObjectOrNull
 
     static MLoadUnboxedObjectOrNull *New(TempAllocator &alloc,
                                          MDefinition *elements, MDefinition *index,
-                                         int32_t offsetAdjustment) {
-        return new(alloc) MLoadUnboxedObjectOrNull(elements, index, offsetAdjustment);
+                                         bool bailOnNull, int32_t offsetAdjustment) {
+        return new(alloc) MLoadUnboxedObjectOrNull(elements, index, bailOnNull, offsetAdjustment);
     }
 
     MDefinition *elements() const {
@@ -7958,13 +7966,21 @@ class MLoadUnboxedObjectOrNull
     MDefinition *index() const {
         return getOperand(1);
     }
+    bool bailOnNull() const {
+        return bailOnNull_;
+    }
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
+    }
+    bool fallible() const {
+        return bailOnNull();
     }
     bool congruentTo(const MDefinition *ins) const {
         if (!ins->isLoadUnboxedObjectOrNull())
             return false;
         const MLoadUnboxedObjectOrNull *other = ins->toLoadUnboxedObjectOrNull();
+        if (bailOnNull() != other->bailOnNull())
+            return false;
         if (offsetAdjustment() != other->offsetAdjustment())
             return false;
         return congruentIfOperandsEqual(other);
@@ -11914,22 +11930,22 @@ class MMemoryBarrier
   : public MNullaryInstruction
 {
     // The type is a combination of the memory barrier types in AtomicOp.h.
-    const int type_;
+    const MemoryBarrierBits type_;
 
-    explicit MMemoryBarrier(int type)
+    explicit MMemoryBarrier(MemoryBarrierBits type)
       : type_(type)
     {
-        MOZ_ASSERT((type_ & ~MembarAllbits) == 0);
+        MOZ_ASSERT((type_ & ~MembarAllbits) == MembarNobits);
         setGuard();             // Not removable
     }
 
   public:
     INSTRUCTION_HEADER(MemoryBarrier);
 
-    static MMemoryBarrier *New(TempAllocator &alloc, int type=MembarFull) {
+    static MMemoryBarrier *New(TempAllocator &alloc, MemoryBarrierBits type = MembarFull) {
         return new(alloc) MMemoryBarrier(type);
     }
-    int type() const {
+    MemoryBarrierBits type() const {
         return type_;
     }
 
@@ -12091,10 +12107,20 @@ class MAsmJSHeapAccess
 
 class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
 {
-    MAsmJSLoadHeap(Scalar::Type vt, MDefinition *ptr, bool needsBoundsCheck)
-      : MUnaryInstruction(ptr), MAsmJSHeapAccess(vt, needsBoundsCheck)
+    MemoryBarrierBits barrierBefore_;
+    MemoryBarrierBits barrierAfter_;
+
+    MAsmJSLoadHeap(Scalar::Type vt, MDefinition *ptr, bool needsBoundsCheck,
+                   MemoryBarrierBits before, MemoryBarrierBits after)
+      : MUnaryInstruction(ptr),
+        MAsmJSHeapAccess(vt, needsBoundsCheck),
+        barrierBefore_(before),
+        barrierAfter_(after)
     {
-        setMovable();
+        if (before|after)
+            setGuard();         // Not removable
+        else
+            setMovable();
         if (vt == Scalar::Float32)
             setResultType(MIRType_Float32);
         else if (vt == Scalar::Float64)
@@ -12107,12 +12133,16 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
     INSTRUCTION_HEADER(AsmJSLoadHeap);
 
     static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type vt,
-                               MDefinition *ptr, bool needsBoundsCheck)
+                               MDefinition *ptr, bool needsBoundsCheck,
+                               MemoryBarrierBits barrierBefore = MembarNobits,
+                               MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSLoadHeap(vt, ptr, needsBoundsCheck);
+        return new(alloc) MAsmJSLoadHeap(vt, ptr, needsBoundsCheck, barrierBefore, barrierAfter);
     }
 
     MDefinition *ptr() const { return getOperand(0); }
+    MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
+    MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
 
     bool congruentTo(const MDefinition *ins) const;
     AliasSet getAliasSet() const {
@@ -12123,19 +12153,96 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
 
 class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 {
-    MAsmJSStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck)
-      : MBinaryInstruction(ptr, v) , MAsmJSHeapAccess(vt, needsBoundsCheck)
-    {}
+    MemoryBarrierBits barrierBefore_;
+    MemoryBarrierBits barrierAfter_;
+
+    MAsmJSStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
+                    MemoryBarrierBits before, MemoryBarrierBits after)
+      : MBinaryInstruction(ptr, v),
+        MAsmJSHeapAccess(vt, needsBoundsCheck),
+        barrierBefore_(before),
+        barrierAfter_(after)
+    {
+        if (before|after)
+            setGuard();         // Not removable
+    }
 
   public:
     INSTRUCTION_HEADER(AsmJSStoreHeap);
 
     static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type vt,
-                                MDefinition *ptr, MDefinition *v, bool needsBoundsCheck)
+                                MDefinition *ptr, MDefinition *v, bool needsBoundsCheck,
+                                MemoryBarrierBits barrierBefore = MembarNobits,
+                                MemoryBarrierBits barrierAfter = MembarNobits)
     {
-        return new(alloc) MAsmJSStoreHeap(vt, ptr, v, needsBoundsCheck);
+        return new(alloc) MAsmJSStoreHeap(vt, ptr, v, needsBoundsCheck,
+                                          barrierBefore, barrierAfter);
     }
 
+    MDefinition *ptr() const { return getOperand(0); }
+    MDefinition *value() const { return getOperand(1); }
+    MemoryBarrierBits barrierBefore() const { return barrierBefore_; }
+    MemoryBarrierBits barrierAfter() const { return barrierAfter_; }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::AsmJSHeap);
+    }
+};
+
+class MAsmJSCompareExchangeHeap : public MTernaryInstruction, public MAsmJSHeapAccess
+{
+    MAsmJSCompareExchangeHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *oldv, MDefinition *newv,
+                              bool needsBoundsCheck)
+        : MTernaryInstruction(ptr, oldv, newv),
+          MAsmJSHeapAccess(vt, needsBoundsCheck)
+    {
+        setGuard();             // Not removable
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(AsmJSCompareExchangeHeap);
+
+    static MAsmJSCompareExchangeHeap *New(TempAllocator &alloc, Scalar::Type vt,
+                                          MDefinition *ptr, MDefinition *oldv,
+                                          MDefinition *newv, bool needsBoundsCheck)
+    {
+        return new(alloc) MAsmJSCompareExchangeHeap(vt, ptr, oldv, newv, needsBoundsCheck);
+    }
+
+    MDefinition *ptr() const { return getOperand(0); }
+    MDefinition *oldValue() const { return getOperand(1); }
+    MDefinition *newValue() const { return getOperand(2); }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::AsmJSHeap);
+    }
+};
+
+class MAsmJSAtomicBinopHeap : public MBinaryInstruction, public MAsmJSHeapAccess
+{
+    AtomicOp op_;
+
+    MAsmJSAtomicBinopHeap(AtomicOp op, Scalar::Type vt, MDefinition *ptr, MDefinition *v,
+                          bool needsBoundsCheck)
+        : MBinaryInstruction(ptr, v),
+          MAsmJSHeapAccess(vt, needsBoundsCheck),
+          op_(op)
+    {
+        setGuard();         // Not removable
+        setResultType(MIRType_Int32);
+    }
+
+  public:
+    INSTRUCTION_HEADER(AsmJSAtomicBinopHeap);
+
+    static MAsmJSAtomicBinopHeap *New(TempAllocator &alloc, AtomicOp op, Scalar::Type vt,
+                                      MDefinition *ptr, MDefinition *v, bool needsBoundsCheck)
+    {
+        return new(alloc) MAsmJSAtomicBinopHeap(op, vt, ptr, v, needsBoundsCheck);
+    }
+
+    AtomicOp operation() const { return op_; }
     MDefinition *ptr() const { return getOperand(0); }
     MDefinition *value() const { return getOperand(1); }
 
@@ -12503,12 +12610,13 @@ bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
                               MDefinition *obj, PropertyName *name);
 void AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
                                types::TemporaryTypeSet *observed);
-bool CanWriteProperty(types::CompilerConstraintList *constraints,
-                      types::HeapTypeSetKey property, MDefinition *value);
+bool CanWriteProperty(TempAllocator &alloc, types::CompilerConstraintList *constraints,
+                      types::HeapTypeSetKey property, MDefinition *value,
+                      MIRType implicitType = MIRType_None);
 bool PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstraintList *constraints,
                                    MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue,
-                                   bool canModify);
+                                   bool canModify, MIRType implicitType = MIRType_None);
 
 } // namespace jit
 } // namespace js

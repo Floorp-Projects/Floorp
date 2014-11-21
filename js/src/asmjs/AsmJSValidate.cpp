@@ -1064,6 +1064,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             ArrayView,
             ArrayViewCtor,
             MathBuiltinFunction,
+            AtomicsBuiltinFunction,
             SimdCtor,
             SimdOperation,
             ByteLength,
@@ -1083,6 +1084,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             uint32_t ffiIndex_;
             Scalar::Type viewType_;
             AsmJSMathBuiltinFunction mathBuiltinFunc_;
+            AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
             AsmJSSimdType simdCtorType_;
             struct {
                 AsmJSSimdType type_;
@@ -1130,8 +1132,11 @@ class MOZ_STACK_CLASS ModuleCompiler
             MOZ_ASSERT(which_ == FFI);
             return u.ffiIndex_;
         }
+        bool isAnyArrayView() const {
+            return which_ == ArrayView || which_ == ArrayViewCtor;
+        }
         Scalar::Type viewType() const {
-            MOZ_ASSERT(which_ == ArrayView || which_ == ArrayViewCtor);
+            MOZ_ASSERT(isAnyArrayView());
             return u.viewType_;
         }
         bool isMathFunction() const {
@@ -1140,6 +1145,13 @@ class MOZ_STACK_CLASS ModuleCompiler
         AsmJSMathBuiltinFunction mathBuiltinFunction() const {
             MOZ_ASSERT(which_ == MathBuiltinFunction);
             return u.mathBuiltinFunc_;
+        }
+        bool isAtomicsFunction() const {
+            return which_ == AtomicsBuiltinFunction;
+        }
+        AsmJSAtomicsBuiltinFunction atomicsBuiltinFunction() const {
+            MOZ_ASSERT(which_ == AtomicsBuiltinFunction);
+            return u.atomicsBuiltinFunc_;
         }
         bool isSimdCtor() const {
             return which_ == SimdCtor;
@@ -1278,6 +1290,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     };
 
     typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
+    typedef HashMap<PropertyName*, AsmJSAtomicsBuiltinFunction> AtomicsNameMap;
     typedef HashMap<PropertyName*, AsmJSSimdOperation> SimdOperationNameMap;
     typedef HashMap<PropertyName*, Global*> GlobalMap;
     typedef Vector<Func*> FuncVector;
@@ -1301,6 +1314,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     ArrayViewVector                arrayViews_;
     ExitMap                        exits_;
     MathNameMap                    standardLibraryMathNames_;
+    AtomicsNameMap                 standardLibraryAtomicsNames_;
     SimdOperationNameMap           standardLibrarySimdOpNames_;
     NonAssertingLabel              stackOverflowLabel_;
     NonAssertingLabel              asyncInterruptLabel_;
@@ -1333,6 +1347,12 @@ class MOZ_STACK_CLASS ModuleCompiler
         MathBuiltin builtin(cst);
         return standardLibraryMathNames_.putNew(atom->asPropertyName(), builtin);
     }
+    bool addStandardLibraryAtomicsName(const char *name, AsmJSAtomicsBuiltinFunction func) {
+        JSAtom *atom = Atomize(cx_, name, strlen(name));
+        if (!atom)
+            return false;
+        return standardLibraryAtomicsNames_.putNew(atom->asPropertyName(), func);
+    }
     bool addStandardLibrarySimdOpName(const char *name, AsmJSSimdOperation op) {
         JSAtom *atom = Atomize(cx_, name, strlen(name));
         if (!atom)
@@ -1354,6 +1374,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         arrayViews_(cx),
         exits_(cx),
         standardLibraryMathNames_(cx),
+        standardLibraryAtomicsNames_(cx),
         standardLibrarySimdOpNames_(cx),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
@@ -1411,6 +1432,20 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibraryMathName("PI", M_PI) ||
             !addStandardLibraryMathName("SQRT1_2", M_SQRT1_2) ||
             !addStandardLibraryMathName("SQRT2", M_SQRT2))
+        {
+            return false;
+        }
+
+        if (!standardLibraryAtomicsNames_.init() ||
+            !addStandardLibraryAtomicsName("compareExchange", AsmJSAtomicsBuiltin_compareExchange) ||
+            !addStandardLibraryAtomicsName("load", AsmJSAtomicsBuiltin_load) ||
+            !addStandardLibraryAtomicsName("store", AsmJSAtomicsBuiltin_store) ||
+            !addStandardLibraryAtomicsName("fence", AsmJSAtomicsBuiltin_fence) ||
+            !addStandardLibraryAtomicsName("add", AsmJSAtomicsBuiltin_add) ||
+            !addStandardLibraryAtomicsName("sub", AsmJSAtomicsBuiltin_sub) ||
+            !addStandardLibraryAtomicsName("and", AsmJSAtomicsBuiltin_and) ||
+            !addStandardLibraryAtomicsName("or", AsmJSAtomicsBuiltin_or) ||
+            !addStandardLibraryAtomicsName("xor", AsmJSAtomicsBuiltin_xor))
         {
             return false;
         }
@@ -1544,6 +1579,13 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
         return false;
     }
+    bool lookupStandardLibraryAtomicsName(PropertyName *name, AsmJSAtomicsBuiltinFunction *atomicsBuiltin) const {
+        if (AtomicsNameMap::Ptr p = standardLibraryAtomicsNames_.lookup(name)) {
+            *atomicsBuiltin = p->value();
+            return true;
+        }
+        return false;
+    }
     bool lookupStandardSimdOpName(PropertyName *name, AsmJSSimdOperation *op) const {
         if (SimdOperationNameMap::Ptr p = standardLibrarySimdOpNames_.lookup(name)) {
             *op = p->value();
@@ -1660,22 +1702,22 @@ class MOZ_STACK_CLASS ModuleCompiler
         global->u.ffiIndex_ = index;
         return globals_.putNew(varName, global);
     }
-    bool addArrayView(PropertyName *varName, Scalar::Type vt, PropertyName *maybeField) {
+    bool addArrayView(PropertyName *varName, Scalar::Type vt, PropertyName *maybeField, bool isSharedView) {
         if (!arrayViews_.append(ArrayView(varName, vt)))
             return false;
         Global *global = moduleLifo_.new_<Global>(Global::ArrayView);
         if (!global)
             return false;
-        if (!module_->addArrayView(vt, maybeField))
+        if (!module_->addArrayView(vt, maybeField, isSharedView))
             return false;
         global->u.viewType_ = vt;
         return globals_.putNew(varName, global);
     }
-    bool addArrayViewCtor(PropertyName *varName, Scalar::Type vt, PropertyName *fieldName) {
+    bool addArrayViewCtor(PropertyName *varName, Scalar::Type vt, PropertyName *fieldName, bool isSharedView) {
         Global *global = moduleLifo_.new_<Global>(Global::ArrayViewCtor);
         if (!global)
             return false;
-        if (!module_->addArrayViewCtor(vt, fieldName))
+        if (!module_->addArrayViewCtor(vt, fieldName, isSharedView))
             return false;
         global->u.viewType_ = vt;
         return globals_.putNew(varName, global);
@@ -1687,6 +1729,15 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (!global)
             return false;
         global->u.mathBuiltinFunc_ = func;
+        return globals_.putNew(varName, global);
+    }
+    bool addAtomicsBuiltinFunction(PropertyName *varName, AsmJSAtomicsBuiltinFunction func, PropertyName *fieldName) {
+        if (!module_->addAtomicsBuiltinFunction(func, fieldName))
+            return false;
+        Global *global = moduleLifo_.new_<Global>(Global::AtomicsBuiltinFunction);
+        if (!global)
+            return false;
+        global->u.atomicsBuiltinFunc_ = func;
         return globals_.putNew(varName, global);
     }
     bool addSimdCtor(PropertyName *varName, AsmJSSimdType type, PropertyName *fieldName) {
@@ -2751,6 +2802,63 @@ class FunctionCompiler
         curBlock_->add(store);
     }
 
+    void memoryBarrier(MemoryBarrierBits type)
+    {
+        if (inDeadCode())
+            return;
+        MMemoryBarrier *ins = MMemoryBarrier::New(alloc(), type);
+        curBlock_->add(ins);
+    }
+
+    MDefinition *atomicLoadHeap(Scalar::Type vt, MDefinition *ptr, NeedsBoundsCheck chk)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
+        MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(alloc(), vt, ptr, needsBoundsCheck,
+                                                   MembarBeforeLoad, MembarAfterLoad);
+        curBlock_->add(load);
+        return load;
+    }
+
+    void atomicStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v, NeedsBoundsCheck chk)
+    {
+        if (inDeadCode())
+            return;
+
+        bool needsBoundsCheck = chk == NEEDS_BOUNDS_CHECK && !m().usesSignalHandlersForOOB();
+        MAsmJSStoreHeap *store = MAsmJSStoreHeap::New(alloc(), vt, ptr, v, needsBoundsCheck,
+                                                      MembarBeforeStore, MembarAfterStore);
+        curBlock_->add(store);
+    }
+
+    MDefinition *atomicCompareExchangeHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *oldv, MDefinition *newv, NeedsBoundsCheck chk)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        // The code generator requires explicit bounds checking for compareExchange.
+        bool needsBoundsCheck = true;
+        MAsmJSCompareExchangeHeap *cas =
+            MAsmJSCompareExchangeHeap::New(alloc(), vt, ptr, oldv, newv, needsBoundsCheck);
+        curBlock_->add(cas);
+        return cas;
+    }
+
+    MDefinition *atomicBinopHeap(js::jit::AtomicOp op, Scalar::Type vt, MDefinition *ptr, MDefinition *v, NeedsBoundsCheck chk)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        // The code generator requires explicit bounds checking for the binops.
+        bool needsBoundsCheck = true;
+        MAsmJSAtomicBinopHeap *binop =
+            MAsmJSAtomicBinopHeap::New(alloc(), op, vt, ptr, v, needsBoundsCheck);
+        curBlock_->add(binop);
+        return binop;
+    }
+
     MDefinition *loadGlobalVar(const ModuleCompiler::Global &global)
     {
         if (inDeadCode())
@@ -3648,27 +3756,53 @@ CheckGlobalVariableInitImport(ModuleCompiler &m, PropertyName *varName, ParseNod
 }
 
 static bool
-IsArrayViewCtorName(ModuleCompiler &m, PropertyName *name, Scalar::Type *type)
+IsArrayViewCtorName(ModuleCompiler &m, PropertyName *name, Scalar::Type *type, bool *shared)
 {
     JSAtomState &names = m.cx()->names();
-    if (name == names.Int8Array || name == names.SharedInt8Array)
+    *shared = false;
+    if (name == names.Int8Array) {
         *type = Scalar::Int8;
-    else if (name == names.Uint8Array || name == names.SharedUint8Array)
+    } else if (name == names.Uint8Array) {
         *type = Scalar::Uint8;
-    else if (name == names.Int16Array || name == names.SharedInt16Array)
+    } else if (name == names.Int16Array) {
         *type = Scalar::Int16;
-    else if (name == names.Uint16Array || name == names.SharedUint16Array)
+    } else if (name == names.Uint16Array) {
         *type = Scalar::Uint16;
-    else if (name == names.Int32Array || name == names.SharedInt32Array)
+    } else if (name == names.Int32Array) {
         *type = Scalar::Int32;
-    else if (name == names.Uint32Array || name == names.SharedUint32Array)
+    } else if (name == names.Uint32Array) {
         *type = Scalar::Uint32;
-    else if (name == names.Float32Array || name == names.SharedFloat32Array)
+    } else if (name == names.Float32Array) {
         *type = Scalar::Float32;
-    else if (name == names.Float64Array || name == names.SharedFloat64Array)
+    } else if (name == names.Float64Array) {
         *type = Scalar::Float64;
-    else
+    } else if (name == names.SharedInt8Array) {
+        *shared = true;
+        *type = Scalar::Int8;
+    } else if (name == names.SharedUint8Array) {
+        *shared = true;
+        *type = Scalar::Uint8;
+    } else if (name == names.SharedInt16Array) {
+        *shared = true;
+        *type = Scalar::Int16;
+    } else if (name == names.SharedUint16Array) {
+        *shared = true;
+        *type = Scalar::Uint16;
+    } else if (name == names.SharedInt32Array) {
+        *shared = true;
+        *type = Scalar::Int32;
+    } else if (name == names.SharedUint32Array) {
+        *shared = true;
+        *type = Scalar::Uint32;
+    } else if (name == names.SharedFloat32Array) {
+        *shared = true;
+        *type = Scalar::Float32;
+    } else if (name == names.SharedFloat64Array) {
+        *shared = true;
+        *type = Scalar::Float64;
+    } else {
         return false;
+    }
     return true;
 }
 
@@ -3700,6 +3834,7 @@ CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr)
 
     PropertyName *field;
     Scalar::Type type;
+    bool shared = false;
     if (ctorExpr->isKind(PNK_DOT)) {
         ParseNode *base = DotBase(ctorExpr);
 
@@ -3707,7 +3842,7 @@ CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr)
             return m.failName(base, "expecting '%s.*Array", globalName);
 
         field = DotMember(ctorExpr);
-        if (!IsArrayViewCtorName(m, field, &type))
+        if (!IsArrayViewCtorName(m, field, &type, &shared))
             return m.fail(ctorExpr, "could not match typed array name");
     } else {
         if (!ctorExpr->isKind(PNK_NAME))
@@ -3728,7 +3863,10 @@ CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr)
     if (!CheckNewArrayViewArgs(m, ctorExpr, bufferName))
         return false;
 
-    return m.addArrayView(varName, type, field);
+    if (!m.module().isValidViewSharedness(shared))
+        return m.failName(ctorExpr, "%s has different sharedness than previous view constructors", globalName);
+
+    return m.addArrayView(varName, type, field, shared);
 }
 
 static bool
@@ -3782,6 +3920,18 @@ CheckGlobalMathImport(ModuleCompiler &m, ParseNode *initNode, PropertyName *varN
 }
 
 static bool
+CheckGlobalAtomicsImport(ModuleCompiler &m, ParseNode *initNode, PropertyName *varName,
+                         PropertyName *field)
+{
+    // Atomics builtin, with the form glob.Atomics.[[builtin]]
+    AsmJSAtomicsBuiltinFunction func;
+    if (!m.lookupStandardLibraryAtomicsName(field, &func))
+        return m.failName(initNode, "'%s' is not a standard Atomics builtin", field);
+
+    return m.addAtomicsBuiltinFunction(varName, func, field);
+}
+
+static bool
 CheckGlobalSimdImport(ModuleCompiler &m, ParseNode *initNode, PropertyName *varName,
                       PropertyName *field)
 {
@@ -3817,7 +3967,7 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
 
     if (base->isKind(PNK_DOT)) {
         ParseNode *global = DotBase(base);
-        PropertyName *mathOrSimd = DotMember(base);
+        PropertyName *mathOrAtomicsOrSimd = DotMember(base);
 
         PropertyName *globalName = m.module().globalArgumentName();
         if (!globalName)
@@ -3831,9 +3981,11 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
             return m.failName(base, "expecting %s.*", globalName);
         }
 
-        if (mathOrSimd == m.cx()->names().Math)
+        if (mathOrAtomicsOrSimd == m.cx()->names().Math)
             return CheckGlobalMathImport(m, initNode, varName, field);
-        if (mathOrSimd == m.cx()->names().SIMD)
+        if (mathOrAtomicsOrSimd == m.cx()->names().Atomics)
+            return CheckGlobalAtomicsImport(m, initNode, varName, field);
+        if (mathOrAtomicsOrSimd == m.cx()->names().SIMD)
             return CheckGlobalSimdImport(m, initNode, varName, field);
         return m.failName(base, "expecting %s.{Math|SIMD}", globalName);
     }
@@ -3850,8 +4002,12 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
             return m.addByteLength(varName);
 
         Scalar::Type type;
-        if (IsArrayViewCtorName(m, field, &type))
-            return m.addArrayViewCtor(varName, type, field);
+        bool shared = false;
+        if (IsArrayViewCtorName(m, field, &type, &shared)) {
+            if (!m.module().isValidViewSharedness(shared))
+                return m.failName(initNode, "'%s' has different sharedness than previous view constructors", field);
+            return m.addArrayViewCtor(varName, type, field, shared);
+        }
 
         return m.failName(initNode, "'%s' is not a standard constant or typed array name", field);
     }
@@ -4159,6 +4315,7 @@ CheckVarRef(FunctionCompiler &f, ParseNode *varRef, MDefinition **def, Type *typ
           case ModuleCompiler::Global::Function:
           case ModuleCompiler::Global::FFI:
           case ModuleCompiler::Global::MathBuiltinFunction:
+          case ModuleCompiler::Global::AtomicsBuiltinFunction:
           case ModuleCompiler::Global::FuncPtrTable:
           case ModuleCompiler::Global::ArrayView:
           case ModuleCompiler::Global::ArrayViewCtor:
@@ -4208,18 +4365,16 @@ FoldMaskedArrayIndex(FunctionCompiler &f, ParseNode **indexExpr, int32_t *mask,
 }
 
 static bool
-CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, Scalar::Type *viewType,
-                 MDefinition **def, NeedsBoundsCheck *needsBoundsCheck)
+CheckArrayAccess(FunctionCompiler &f, ParseNode *viewName, ParseNode *indexExpr,
+                 Scalar::Type *viewType, MDefinition **def, NeedsBoundsCheck *needsBoundsCheck)
 {
-    ParseNode *viewName = ElemBase(elem);
-    ParseNode *indexExpr = ElemIndex(elem);
     *needsBoundsCheck = NEEDS_BOUNDS_CHECK;
 
     if (!viewName->isKind(PNK_NAME))
         return f.fail(viewName, "base of array access must be a typed array view name");
 
     const ModuleCompiler::Global *global = f.lookupGlobal(viewName->name());
-    if (!global || global->which() != ModuleCompiler::Global::ArrayView)
+    if (!global || !global->isAnyArrayView())
         return f.fail(viewName, "base of array access must be a typed array view name");
 
     *viewType = global->viewType();
@@ -4316,7 +4471,7 @@ CheckLoadArray(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *ty
     Scalar::Type viewType;
     MDefinition *pointerDef;
     NeedsBoundsCheck needsBoundsCheck;
-    if (!CheckArrayAccess(f, elem, &viewType, &pointerDef, &needsBoundsCheck))
+    if (!CheckArrayAccess(f, ElemBase(elem), ElemIndex(elem), &viewType, &pointerDef, &needsBoundsCheck))
         return false;
 
     *def = f.loadHeap(viewType, pointerDef, needsBoundsCheck);
@@ -4371,7 +4526,7 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
     Scalar::Type viewType;
     MDefinition *pointerDef;
     NeedsBoundsCheck needsBoundsCheck;
-    if (!CheckArrayAccess(f, lhs, &viewType, &pointerDef, &needsBoundsCheck))
+    if (!CheckArrayAccess(f, ElemBase(lhs), ElemIndex(lhs), &viewType, &pointerDef, &needsBoundsCheck))
         return false;
 
     f.enterHeapExpression();
@@ -4619,6 +4774,193 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, boo
 
     *def = lastDef;
     return true;
+}
+
+static bool
+CheckSharedArrayAtomicAccess(FunctionCompiler &f, ParseNode *viewName, ParseNode *indexExpr,
+                             Scalar::Type *viewType, MDefinition** pointerDef,
+                             NeedsBoundsCheck *needsBoundsCheck)
+{
+    if (!CheckArrayAccess(f, viewName, indexExpr, viewType, pointerDef, needsBoundsCheck))
+        return false;
+
+    // Atomic accesses may be made on shared integer arrays only.
+
+    // The global will be sane, CheckArrayAccess checks it.
+    const ModuleCompiler::Global *global = f.lookupGlobal(viewName->name());
+    if (global->which() != ModuleCompiler::Global::ArrayView || !f.m().module().isSharedView())
+        return f.fail(viewName, "base of array access must be a shared typed array view name");
+
+    switch (*viewType) {
+      case Scalar::Int8:
+      case Scalar::Int16:
+      case Scalar::Int32:
+      case Scalar::Uint8:
+      case Scalar::Uint16:
+      case Scalar::Uint32:
+        return true;
+      default:
+        return f.failf(viewName, "not an integer array");
+    }
+
+    return true;
+}
+
+static bool
+CheckAtomicsFence(FunctionCompiler &f, ParseNode *call, MDefinition **def, Type *type)
+{
+    if (CallArgListLength(call) != 0)
+        return f.fail(call, "Atomics.fence must be passed 0 arguments");
+
+    f.memoryBarrier(MembarFull);
+    *type = Type::Void;
+    return true;
+}
+
+static bool
+CheckAtomicsLoad(FunctionCompiler &f, ParseNode *call, MDefinition **def, Type *type)
+{
+    if (CallArgListLength(call) != 2)
+        return f.fail(call, "Atomics.load must be passed 2 arguments");
+
+    ParseNode *arrayArg = CallArgList(call);
+    ParseNode *indexArg = NextNode(arrayArg);
+
+    Scalar::Type viewType;
+    MDefinition *pointerDef;
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &pointerDef, &needsBoundsCheck))
+        return false;
+
+    *def = f.atomicLoadHeap(viewType, pointerDef, needsBoundsCheck);
+    *type = Type::Signed;
+    return true;
+}
+
+static bool
+CheckAtomicsStore(FunctionCompiler &f, ParseNode *call, MDefinition **def, Type *type)
+{
+    if (CallArgListLength(call) != 3)
+        return f.fail(call, "Atomics.store must be passed 3 arguments");
+
+    ParseNode *arrayArg = CallArgList(call);
+    ParseNode *indexArg = NextNode(arrayArg);
+    ParseNode *valueArg = NextNode(indexArg);
+
+    Scalar::Type viewType;
+    MDefinition *pointerDef;
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &pointerDef, &needsBoundsCheck))
+        return false;
+
+    MDefinition *rhsDef;
+    Type rhsType;
+    if (!CheckExpr(f, valueArg, &rhsDef, &rhsType))
+        return false;
+
+    if (!rhsType.isIntish())
+        return f.failf(arrayArg, "%s is not a subtype of intish", rhsType.toChars());
+
+    f.atomicStoreHeap(viewType, pointerDef, rhsDef, needsBoundsCheck);
+
+    *def = rhsDef;
+    *type = Type::Signed;
+    return true;
+}
+
+static bool
+CheckAtomicsBinop(FunctionCompiler &f, ParseNode *call, MDefinition **def, Type *type, js::jit::AtomicOp op)
+{
+    if (CallArgListLength(call) != 3)
+        return f.fail(call, "Atomics binary operator must be passed 3 arguments");
+
+    ParseNode *arrayArg = CallArgList(call);
+    ParseNode *indexArg = NextNode(arrayArg);
+    ParseNode *valueArg = NextNode(indexArg);
+
+    Scalar::Type viewType;
+    MDefinition *pointerDef;
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &pointerDef, &needsBoundsCheck))
+        return false;
+
+    MDefinition *valueArgDef;
+    Type valueArgType;
+    if (!CheckExpr(f, valueArg, &valueArgDef, &valueArgType))
+        return false;
+
+    if (!valueArgType.isIntish())
+        return f.failf(valueArg, "%s is not a subtype of intish", valueArgType.toChars());
+
+    *def = f.atomicBinopHeap(op, viewType, pointerDef, valueArgDef, needsBoundsCheck);
+    *type = Type::Signed;
+    return true;
+}
+
+static bool
+CheckAtomicsCompareExchange(FunctionCompiler &f, ParseNode *call, MDefinition **def, Type *type)
+{
+    if (CallArgListLength(call) != 4)
+        return f.fail(call, "Atomics.compareExchange must be passed 4 arguments");
+
+    ParseNode *arrayArg = CallArgList(call);
+    ParseNode *indexArg = NextNode(arrayArg);
+    ParseNode *oldValueArg = NextNode(indexArg);
+    ParseNode *newValueArg = NextNode(oldValueArg);
+
+    Scalar::Type viewType;
+    MDefinition *pointerDef;
+    NeedsBoundsCheck needsBoundsCheck;
+    if (!CheckSharedArrayAtomicAccess(f, arrayArg, indexArg, &viewType, &pointerDef, &needsBoundsCheck))
+        return false;
+
+    MDefinition *oldValueArgDef;
+    Type oldValueArgType;
+    if (!CheckExpr(f, oldValueArg, &oldValueArgDef, &oldValueArgType))
+        return false;
+
+    MDefinition *newValueArgDef;
+    Type newValueArgType;
+    if (!CheckExpr(f, newValueArg, &newValueArgDef, &newValueArgType))
+        return false;
+
+    if (!oldValueArgType.isIntish())
+        return f.failf(oldValueArg, "%s is not a subtype of intish", oldValueArgType.toChars());
+
+    if (!newValueArgType.isIntish())
+        return f.failf(newValueArg, "%s is not a subtype of intish", newValueArgType.toChars());
+
+    *def = f.atomicCompareExchangeHeap(viewType, pointerDef, oldValueArgDef, newValueArgDef, needsBoundsCheck);
+    *type = Type::Signed;
+    return true;
+}
+
+static bool
+CheckAtomicsBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSAtomicsBuiltinFunction func,
+                        MDefinition **resultDef, Type *resultType)
+{
+    switch (func) {
+      case AsmJSAtomicsBuiltin_compareExchange:
+        return CheckAtomicsCompareExchange(f, callNode, resultDef, resultType);
+      case AsmJSAtomicsBuiltin_load:
+        return CheckAtomicsLoad(f, callNode, resultDef, resultType);
+      case AsmJSAtomicsBuiltin_store:
+        return CheckAtomicsStore(f, callNode, resultDef, resultType);
+      case AsmJSAtomicsBuiltin_fence:
+        return CheckAtomicsFence(f, callNode, resultDef, resultType);
+      case AsmJSAtomicsBuiltin_add:
+        return CheckAtomicsBinop(f, callNode, resultDef, resultType, AtomicFetchAddOp);
+      case AsmJSAtomicsBuiltin_sub:
+        return CheckAtomicsBinop(f, callNode, resultDef, resultType, AtomicFetchSubOp);
+      case AsmJSAtomicsBuiltin_and:
+        return CheckAtomicsBinop(f, callNode, resultDef, resultType, AtomicFetchAndOp);
+      case AsmJSAtomicsBuiltin_or:
+        return CheckAtomicsBinop(f, callNode, resultDef, resultType, AtomicFetchOrOp);
+      case AsmJSAtomicsBuiltin_xor:
+        return CheckAtomicsBinop(f, callNode, resultDef, resultType, AtomicFetchXorOp);
+      default:
+        MOZ_CRASH("unexpected atomicsBuiltin function");
+    }
 }
 
 typedef bool (*CheckArgType)(FunctionCompiler &f, ParseNode *argNode, Type type);
@@ -5406,6 +5748,8 @@ CheckUncoercedCall(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type
     if (IsCallToGlobal(f.m(), expr, &global)) {
         if (global->isMathFunction())
             return CheckMathBuiltinCall(f, expr, global->mathBuiltinFunction(), def, type);
+        if (global->isAtomicsFunction())
+            return CheckAtomicsBuiltinCall(f, expr, global->atomicsBuiltinFunction(), def, type);
         if (global->isSimdCtor())
             return CheckSimdCtorCall(f, expr, global, def, type);
         if (global->isSimdOperation())
@@ -5510,6 +5854,18 @@ CheckCoercedSimdCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler:
 }
 
 static bool
+CheckCoercedAtomicsBuiltinCall(FunctionCompiler &f, ParseNode *callNode,
+                               AsmJSAtomicsBuiltinFunction func, RetType retType,
+                               MDefinition **resultDef, Type *resultType)
+{
+    MDefinition *operand;
+    Type actualRetType;
+    if (!CheckAtomicsBuiltinCall(f, callNode, func, &operand, &actualRetType))
+        return false;
+    return CoerceResult(f, callNode, retType, operand, actualRetType, resultDef, resultType);
+}
+
+static bool
 CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
@@ -5541,6 +5897,8 @@ CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinit
             return CheckFFICall(f, call, global->ffiIndex(), retType, def, type);
           case ModuleCompiler::Global::MathBuiltinFunction:
             return CheckCoercedMathBuiltinCall(f, call, global->mathBuiltinFunction(), retType, def, type);
+          case ModuleCompiler::Global::AtomicsBuiltinFunction:
+            return CheckCoercedAtomicsBuiltinCall(f, call, global->atomicsBuiltinFunction(), retType, def, type);
           case ModuleCompiler::Global::ConstantLiteral:
           case ModuleCompiler::Global::ConstantImport:
           case ModuleCompiler::Global::Variable:

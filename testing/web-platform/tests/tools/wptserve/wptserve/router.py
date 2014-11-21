@@ -51,6 +51,8 @@ class RouteCompiler(object):
         for token in tokens:
             re_parts.append(func_map[token[0]](token))
 
+        if self.star_seen:
+            re_parts.append(")")
         re_parts.append("$")
 
         return re.compile("".join(re_parts))
@@ -70,7 +72,7 @@ class RouteCompiler(object):
         if self.star_seen:
             raise ValueError("Star seen after star in regexp")
         self.star_seen = True
-        return "(.*)"
+        return "(.*"
 
 def compile_path_match(route_pattern):
     """tokens: / or literal or match or *"""
@@ -111,7 +113,8 @@ class Router(object):
                              a request path matches this route. Match patterns
                              consist of either literal text, match groups,
                              denoted {name}, which match any character except /,
-                             and, at most one \*, which matches any character.
+                             and, at most one \*, which matches and character and
+                             creates a match group to the end of the string.
                              If there is no leading "/" on the pattern, this is
                              automatically implied. For example::
 
@@ -120,17 +123,18 @@ class Router(object):
                             Would match `/api/test/data.json` or
                             `/api/test/test2/data.json`, but not `/api/test/data.py`.
 
-                            The match groups, and anything matching the * are made
-                            available in the request object as a dictionary through
-                            the route_match property. For example, given the route
-                            pattern above and the path `/api/test/data.json`, the
-                            route_match property would contain::
+                            The match groups are made available in the request object
+                            as a dictionary through the route_match property. For
+                            example, given the route pattern above and the path
+                            `/api/test/data.json`, the route_match property would
+                            contain::
 
-                                {"resource": "test", "*": "data"}
+                                {"resource": "test", "*": "data.json"}
 
         :param handler: Function that will be called to process matching
                         requests. This must take two parameters, the request
                         object and the response object.
+
         """
         if type(methods) in types.StringTypes or methods is any_method:
             methods = [methods]

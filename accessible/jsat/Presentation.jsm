@@ -507,7 +507,8 @@ B2GPresenter.prototype.pivotChanged =
           pattern: this.PIVOT_CHANGE_HAPTIC_PATTERN,
           isKey: Utils.isActivatableOnFingerUp(aContext.accessible),
           reason: this.pivotChangedReasons[aReason],
-          isUserInput: aIsUserInput
+          isUserInput: aIsUserInput,
+          hints: aContext.interactionHints
         }
       }
     };

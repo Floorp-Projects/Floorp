@@ -1,54 +1,62 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <title>Document.createElementNS</title>
-<link rel=help href="http://dom.spec.whatwg.org/#dom-document-createelementns">
+<link rel=help href="https://dom.spec.whatwg.org/#dom-document-createelementns">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="Document-createElementNS.js"></script>
 <div id="log"></div>
 <script>
 test(function() {
-  var invalidNames = [
-    "",
-    "1foo",
-    "\u0300foo",
-    "}foo",
-    "f}oo",
-    "foo}",
-    "\ufffffoo",
-    "f\uffffoo",
-    "foo\uffff",
-    "<foo",
-    "foo>",
-    "<foo>",
-    "f<oo"
-  ],
-  invalidNSQNameCombinations = [
-    [undefined, ":foo"],
-    [undefined, "foo:"],
-    [undefined, "foo:foo"],
-    [null, ":foo"],
-    [null, "foo:"],
-    [null, "foo:foo"],
-    ["", ":foo"],
-    ["", "foo:"],
-    ["", "foo:foo"],
-    ["http://oops/", "xml:foo"],
-    ["http://oops/", "xmlns"],
-    ["http://oops/", "xmlns:foo"],
-    ["http://www.w3.org/2000/xmlns/", "xml:foo"],
-    ["http://www.w3.org/2000/xmlns/", "foo:xmlns"]
-  ];
+  var tests = createElementNS_tests.concat([
+    /* Arrays with three elements:
+     *   the namespace argument
+     *   the qualifiedName argument
+     *   the expected exception, or null if none
+     */
+    ["", "", "INVALID_CHARACTER_ERR"],
+    [null, null, null],
+    [null, "", "INVALID_CHARACTER_ERR"],
+    [undefined, null, null],
+    [undefined, undefined, null],
+    [undefined, "", "INVALID_CHARACTER_ERR"],
+    ["http://example.com/", null, null],
+    ["http://example.com/", "", "INVALID_CHARACTER_ERR"],
+    ["/", null, null],
+    ["/", "", "INVALID_CHARACTER_ERR"],
+    ["http://www.w3.org/XML/1998/namespace", null, null],
+    ["http://www.w3.org/XML/1998/namespace", "", "INVALID_CHARACTER_ERR"],
+    ["http://www.w3.org/2000/xmlns/", null, "NAMESPACE_ERR"],
+    ["http://www.w3.org/2000/xmlns/", "", "INVALID_CHARACTER_ERR"],
+    ["foo:", null, null],
+    ["foo:", "", "INVALID_CHARACTER_ERR"],
+  ])
 
-  invalidNames.forEach(function(name) {
+  tests.forEach(function(t, i) {
     test(function() {
-      assert_throws("INVALID_CHARACTER_ERR", function() { document.createElementNS("", name) });
-    }, "Invalid Name: " + name)
-  })
-
-  invalidNSQNameCombinations.forEach(function(a) {
-    test(function() {
-      assert_throws("NAMESPACE_ERR", function() { document.createElementNS(a[0], a[1]) });
-    }, "Invalid namespace " + a[0] + " and QName " + a[1])
+      var namespace = t[0], qualifiedName = t[1], expected = t[2]
+      if (expected != null) {
+        assert_throws(expected, function() { document.createElementNS(namespace, qualifiedName) })
+      } else {
+        var element = document.createElementNS(namespace, qualifiedName)
+        assert_not_equals(element, null)
+        assert_equals(element.nodeType, Node.ELEMENT_NODE)
+        assert_equals(element.nodeType, element.ELEMENT_NODE)
+        assert_equals(element.nodeValue, null)
+        assert_equals(element.ownerDocument, document)
+        var qualified = String(qualifiedName), names = []
+        if (qualified.indexOf(":") >= 0) {
+          names = qualified.split(":", 2)
+        } else {
+          names = [null, qualified]
+        }
+        assert_equals(element.prefix, names[0])
+        assert_equals(element.localName, names[1])
+        assert_equals(element.tagName, qualified)
+        assert_equals(element.nodeName, qualified)
+        assert_equals(element.namespaceURI, namespace === undefined ? null : namespace)
+      }
+    }, "createElementNS test " + i + ": " + t.map(function(el) { return format_value(el) }))
   })
 })
 

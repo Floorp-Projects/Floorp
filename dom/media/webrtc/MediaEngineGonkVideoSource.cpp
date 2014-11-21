@@ -42,7 +42,7 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                        SourceMediaStream* aSource,
                                        TrackID aID,
                                        StreamTime aDesiredTime,
-                                       TrackTicks& aLastEndTime)
+                                       StreamTime& aLastEndTime)
 {
   VideoSegment segment;
 
@@ -53,10 +53,9 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::Image> image = mImage;
-  TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
-  TrackTicks delta = target - aLastEndTime;
-  LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime,
-            (int64_t) target, (int64_t) delta, image ? "" : "<null>"));
+  StreamTime delta = aDesiredTime - aLastEndTime;
+  LOGFRAME(("NotifyPull, desired = %ld, delta = %ld %s", (int64_t) aDesiredTime,
+            (int64_t) delta, image ? "" : "<null>"));
 
   // Bug 846188 We may want to limit incoming frames to the requested frame rate
   // mFps - if you want 30FPS, and the camera gives you 60FPS, this could
@@ -75,7 +74,7 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
     if (aSource->AppendToTrack(aID, &(segment))) {
-      aLastEndTime = target;
+      aLastEndTime = aDesiredTime;
     }
   }
 }
@@ -146,7 +145,7 @@ MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   mSources.AppendElement(aStream);
 
-  aStream->AddTrack(aID, USECS_PER_S, 0, new VideoSegment());
+  aStream->AddTrack(aID, 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);

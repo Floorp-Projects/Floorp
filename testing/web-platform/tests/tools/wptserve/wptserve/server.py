@@ -110,8 +110,8 @@ class WebTestServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
     # Ensure that we don't hang on shutdown waiting for requests
     daemon_threads = True
 
-    def __init__(self, server_address, RequestHandlerClass, router, rewriter, bind_hostname, config=None,
-                 use_ssl=False, certificate=None, **kwargs):
+    def __init__(self, server_address, RequestHandlerClass, router, rewriter, bind_hostname,
+                 config=None, use_ssl=False, key_file=None, certificate=None, **kwargs):
         """Server for HTTP(s) Requests
 
         :param server_address: tuple of (server_name, port)
@@ -130,7 +130,9 @@ class WebTestServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
         :param use_ssl: Boolean indicating whether the server should use SSL
 
-        :param certificate: Certificate to use if SSL is enabled.
+        :param key_file: Path to key file to use if SSL is enabled.
+
+        :param certificate: Path to certificate to use if SSL is enabled.
 
         :param bind_hostname True to bind the server to both the hostname and
                              port specified in the server_address parameter.
@@ -160,6 +162,7 @@ class WebTestServer(ThreadingMixIn, BaseHTTPServer.HTTPServer):
 
         if use_ssl:
             self.socket = ssl.wrap_socket(self.socket,
+                                          keyfile=key_file,
                                           certfile=certificate,
                                           server_side=True)
 
@@ -217,10 +220,11 @@ class WebTestRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     response.set_error(e.code, e.message)
                 except Exception as e:
                     if e.message:
-                        err = e.message
+                        err = [e.message]
                     else:
-                        err = traceback.format_exc()
-                    response.set_error(500, err)
+                        err = []
+                        err.append(traceback.format_exc())
+                    response.set_error(500, "\n".join(err))
             logger.info("%i %s %s (%s) %i" % (response.status[0], request.method,
                                          request.request_path, request.headers.get('Referer'), request.raw_input.length))
 
@@ -273,7 +277,8 @@ class WebTestHttpd(object):
     :param server_cls: Class to use for the server (default depends on ssl vs non-ssl)
     :param handler_cls: Class to use for the RequestHandler
     :param use_ssl: Use a SSL server if no explicit server_cls is supplied
-    :param certificate: Certificate file to use if ssl is enabled
+    :param key_file: Path to key file to use if ssl is enabled
+    :param certificate: Path to certificate file to use if ssl is enabled
     :param router_cls: Router class to use when matching URLs to handlers
     :param doc_root: Document root for serving files
     :param routes: List of routes with which to initialize the router
@@ -315,7 +320,7 @@ class WebTestHttpd(object):
     """
     def __init__(self, host="127.0.0.1", port=8000,
                  server_cls=None, handler_cls=WebTestRequestHandler,
-                 use_ssl=False, certificate=None, router_cls=Router,
+                 use_ssl=False, key_file=None, certificate=None, router_cls=Router,
                  doc_root=os.curdir, routes=None,
                  rewriter_cls=RequestRewriter, bind_hostname=True, rewrites=None,
                  config=None):
@@ -334,6 +339,8 @@ class WebTestHttpd(object):
             server_cls = WebTestServer
 
         if use_ssl:
+            if key_file is not None:
+                assert os.path.exists(key_file)
             assert certificate is not None and os.path.exists(certificate)
 
         try:
@@ -344,6 +351,7 @@ class WebTestHttpd(object):
                                     config=config,
                                     bind_hostname=bind_hostname,
                                     use_ssl=use_ssl,
+                                    key_file=key_file,
                                     certificate=certificate)
             self.started = False
 

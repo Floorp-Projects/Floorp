@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <title>CSS Test: CSS display:contents; style inheritance</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+<style type="text/css">
+body,span { color:black; background-color:white; }
+.test { display:inline; }
+.green { color:green; }
+.border { border-left:1px solid green; }
+b { font-weight:normal; }
+</style>
+</head>
+<body>
+<span class="green"><div class="test">green</div></span>
+<span class="green"><div class="test">green</div>x</span>
+<span><div class="test green">green</div></span>
+<span><div class="test green">green</div>x</span>
+<br>
+<span><div class="test">no border</div></span>
+<span><div class="test">no border</div></span>
+<span class="border"><div class="test"><b>1px green left border</b></div></span>
+<span class="border"><div class="test" style="border:inherit"><b>2px green left border</b></div></span>
+<br>
+
+<span class="green"><div class="test"><div class="test">green</div></div></span>
+<span><div class="test green"><div class="test">green</div></div></span>
+<br>
+<span class="border"><div class="test"><div class="test"><b>1px green left border</b></div></div></span>
+<span class="border"><div class="test"><div class="test" style="border:inherit"><b>1px green left border</b></div></div></span>
+<span class="border"><div class="test" style="border:inherit"><div class="test"><b>2px green left border</b></div></div></span>
+<br>
+
+<span><div class="green">This text should be green green green green greengreen green</div></span>
+
+</body>
+</html>
