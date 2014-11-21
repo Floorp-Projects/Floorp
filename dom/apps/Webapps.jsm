@@ -3940,7 +3940,9 @@ this.DOMApplicationRegistry = {
                                     : aIsUpdate ? "installed"
                                                 : "pending";
 
-    if (aOldApp.staged) {
+    // Erase the .staged properties only if there's no download available
+    // anymore.
+    if (!aOldApp.downloadAvailable && aOldApp.staged) {
       delete aOldApp.staged;
     }
 

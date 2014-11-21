@@ -252,6 +252,52 @@ var steps = [
     info("== TEST == Check for Update after getting the same package");
     checkForUpdate(false);
   },
+
+  function() {
+    PackagedTestHelper.setAppVersion(5, PackagedTestHelper.next,
+                                     /* aDontUpdatePackage */ false,
+                                     /* aAllowCancel */ false,
+                                     /* aRole */ undefined,
+                                     /* aFailOnce */ true);
+
+  },
+  function() {
+    info("== TEST == Update packaged app - fail the update once");
+
+    var downloadSuccess = function() {
+      ok(false, "We got an unexpected downloadsuccess or downloadapplied");
+      PackagedTestHelper.finish();
+    };
+    var downloadError = function() {
+      info("We got an expected download error: " +
+           PackagedTestHelper.gApp.downloadError.name);
+      PackagedTestHelper.next();
+    };
+    checkForUpdate(true, downloadSuccess, downloadSuccess, downloadError,
+                   /* aLaunchDownload */ true);
+  },
+  function() {
+    info("=== TEST == Update packaged app - apply the update after failing");
+    var lApp = PackagedTestHelper.gApp;
+    lApp.ondownloadsuccess = function() {
+      info("Download succeeded, applying it");
+      navigator.mozApps.mgmt.applyDownload(lApp);
+    };
+    lApp.ondownloadapplied = function() {
+      info("Download successfuly applied");
+      PackagedTestHelper.next();
+    };
+    lApp.ondownloaderror = function() {
+      ok(false, "Got an unexpected error: " + lApp.downloaderror.name);
+      PackagedTestHelper.finish();
+    };
+    lApp.download();
+  },
+  function() {
+    info("== TEST == Check for Update applying a previously failed package");
+    checkForUpdate(false);
+  },
+
   function() {
     PackagedTestHelper.setAppVersion(1, PackagedTestHelper.next);
   },
