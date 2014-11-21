@@ -1562,14 +1562,22 @@ void MediaDecoder::Progress(bool aTimer)
     mDataTime = now;
   }
 
-  // If PROGRESS_MS has passed since the last progress event fired and more
-  // data has arrived since then, fire another progress event.
-  if ((mProgressTime.IsNull() ||
-       now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS)) &&
-      !mDataTime.IsNull() &&
-      now - mDataTime <= TimeDuration::FromMilliseconds(PROGRESS_MS)) {
+  // If this is the first progress, or PROGRESS_MS has passed since the last
+  // progress event fired and more data has arrived since then, fire a
+  // progress event.
+  if (!mDataTime.IsNull() &&
+      (mProgressTime.IsNull() ||
+       (now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS) &&
+        mDataTime > mProgressTime))) {
     mOwner->DownloadProgressed();
-    mProgressTime = now;
+    // Resolution() ensures that future data will have now > mProgressTime,
+    // and so will trigger another event.  mDataTime is not reset because it
+    // is still required to detect stalled; it is similarly offset by
+    // resolution to indicate the new data has not yet arrived.
+    mProgressTime = now - TimeDuration::Resolution();
+    if (mDataTime > mProgressTime) {
+      mDataTime = mProgressTime;
+    }
   }
 
   if (!mDataTime.IsNull() &&
