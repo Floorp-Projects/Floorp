@@ -154,6 +154,8 @@
     _(div)                           \
     _(max)                           \
     _(min)                           \
+    _(maxNum)                        \
+    _(minNum)                        \
     _(lessThanOrEqual)               \
     _(notEqual)                      \
     _(greaterThanOrEqual)

@@ -539,6 +539,23 @@ CheckF4(F32MAX + FROUND + 'var Infinity = glob.Infinity;', 'var x=f4(0,0,0,0); v
 CheckF4(F32MAX, 'var x=f4(0,0,-0,-0); var y=f4(0,-0,0,-0); x=max(x,y)', [0,0,0,-0]);
 CheckF4(F32MAX + FROUND + 'var NaN = glob.NaN;', 'var x=f4(0,0,0,0); var y=f4(0,0,0,0); var n=f32(0); n=f32(NaN); x=f4(n,0.,n,0.); y=f4(n,n,0.,0.); x=max(x,y)', [NaN, NaN, NaN, 0]);
 
+const F32MINNUM = 'var min = f4.minNum;'
+const F32MAXNUM = 'var max = f4.maxNum;'
+
+CheckF4(F32MINNUM, 'var x=f4(1,2,3,4); x=min(x,x)', [1,2,3,4]);
+CheckF4(F32MINNUM, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=min(x,y)', [4,2,3,2]);
+CheckF4(F32MINNUM + FROUND + 'var Infinity = glob.Infinity;', 'var x=f4(0,0,0,0); var y=f4(2310,3,5,0); x=f4(f32(+Infinity),f32(-Infinity),f32(3),f32(-0.)); x=min(x,y)', [2310,-Infinity,3,-0]);
+
+CheckF4(F32MINNUM, 'var x=f4(0,0,-0,-0); var y=f4(0,-0,0,-0); x=min(x,y)', [0,-0,-0,-0]);
+CheckF4(F32MINNUM + FROUND + 'var NaN = glob.NaN;', 'var x=f4(0,0,0,0); var y=f4(0,0,0,0); var n=f32(0); n=f32(NaN); x=f4(n,0.,n,0.); y=f4(n,n,0.,0.); x=min(x,y)', [NaN, 0, 0, 0]);
+
+CheckF4(F32MAXNUM, 'var x=f4(1,2,3,4); x=max(x,x)', [1,2,3,4]);
+CheckF4(F32MAXNUM, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=max(x,y)', [13.37, 3, 5, 4]);
+CheckF4(F32MAXNUM + FROUND + 'var Infinity = glob.Infinity;', 'var x=f4(0,0,0,0); var y=f4(2310,3,5,0); x=f4(f32(+Infinity),f32(-Infinity),f32(3),f32(-0.)); x=max(x,y)', [+Infinity,3,5,0]);
+
+CheckF4(F32MAXNUM, 'var x=f4(0,0,-0,-0); var y=f4(0,-0,0,-0); x=max(x,y)', [0,0,0,-0]);
+CheckF4(F32MAXNUM + FROUND + 'var NaN = glob.NaN;', 'var x=f4(0,0,0,0); var y=f4(0,0,0,0); var n=f32(0); n=f32(NaN); x=f4(n,0.,n,0.); y=f4(n,n,0.,0.); x=max(x,y)', [NaN, 0, 0, 0]);
+
 // With
 const WXF = 'var w = f4.withX;';
 const WYF = 'var w = f4.withY;';
