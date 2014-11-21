@@ -123,6 +123,7 @@ EXPORTS.mozilla += [
     'TextEvents.h',
     'TextRange.h',
     'TouchEvents.h',
+    'VsyncDispatcher.h',
     'WidgetUtils.h',
 ]
 
@@ -156,6 +157,7 @@ UNIFIED_SOURCES += [
     'PuppetWidget.cpp',
     'ScreenProxy.cpp',
     'SharedWidgetUtils.cpp',
+    'VsyncDispatcher.cpp',
     'WidgetEventImpl.cpp',
     'WidgetUtils.cpp',
 ]
