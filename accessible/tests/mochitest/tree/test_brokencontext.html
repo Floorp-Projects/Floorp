@@ -80,15 +80,15 @@
 
     ok(!isAccessible("presentation_ul"),
                      "presentational ul shouldn't be accessible");
-    ok(!isAccessible("item_in_presentation_ul"),
-                     "li in presentational ul shouldn't be accessible");
-    ok(!isAccessible("styleditem_in_presentation_ul"),
-                     "list styled span in presentational ul shouldn't be accessible");
+    ok(isAccessible("item_in_presentation_ul"),
+                    "li in presentational ul should have generic accessible");
+    ok(isAccessible("styleditem_in_presentation_ul"),
+                    "list styled span in presentational ul should have generic accessible");
 
     ok(!isAccessible("presentation_ol"),
                      "presentational ol shouldn't be accessible");
-    ok(!isAccessible("item_in_presentation_ol"),
-                     "li in presentational ol shouldn't be accessible");
+    ok(isAccessible("item_in_presentation_ol"),
+                    "li in presentational ol should have generic accessible");
 
     ok(!isAccessible("presentation_dl"),
                      "presentational dl shouldn't be accessible");
