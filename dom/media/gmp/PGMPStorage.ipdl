@@ -19,6 +19,7 @@ child:
   OpenComplete(nsCString aRecordName, GMPErr aStatus);
   ReadComplete(nsCString aRecordName, GMPErr aStatus, uint8_t[] aBytes);
   WriteComplete(nsCString aRecordName, GMPErr aStatus);
+  RecordNames(nsCString[] aRecordNames, GMPErr aStatus);
   Shutdown();
 
 parent:
@@ -26,6 +27,7 @@ parent:
   Read(nsCString aRecordName);
   Write(nsCString aRecordName, uint8_t[] aBytes);
   Close(nsCString aRecordName);
+  GetRecordNames();
   __delete__();
 
 };

@@ -17,31 +17,31 @@
  Exposed=(Window, Worker)]
 interface URLUtils {
   // Bug 824857: no support for stringifier attributes yet.
-  //  stringifier attribute ScalarValueString href;
+  //  stringifier attribute USVString href;
   [Throws, CrossOriginWritable=Location]
-           attribute ScalarValueString href;
+           attribute USVString href;
   [Throws]
-  readonly attribute ScalarValueString origin;
+  readonly attribute USVString origin;
 
   [Throws]
-           attribute ScalarValueString protocol;
+           attribute USVString protocol;
   [Throws]
-           attribute ScalarValueString username;
+           attribute USVString username;
   [Throws]
-           attribute ScalarValueString password;
+           attribute USVString password;
   [Throws]
-           attribute ScalarValueString host;
+           attribute USVString host;
   [Throws]
-           attribute ScalarValueString hostname;
+           attribute USVString hostname;
   [Throws]
-           attribute ScalarValueString port;
+           attribute USVString port;
   [Throws]
-           attribute ScalarValueString pathname;
+           attribute USVString pathname;
   [Throws]
-           attribute ScalarValueString search;
+           attribute USVString search;
 
   [Throws]
-           attribute ScalarValueString hash;
+           attribute USVString hash;
 
   // Bug 824857 should remove this.
   [Throws]

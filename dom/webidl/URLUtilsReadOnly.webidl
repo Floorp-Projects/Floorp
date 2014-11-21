@@ -17,14 +17,14 @@
  Exposed=(Window, Worker)]
 interface URLUtilsReadOnly {
   stringifier;
-  readonly attribute ScalarValueString href;
+  readonly attribute USVString href;
 
-  readonly attribute ScalarValueString protocol;
-  readonly attribute ScalarValueString host;
-  readonly attribute ScalarValueString hostname;
-  readonly attribute ScalarValueString port;
-  readonly attribute ScalarValueString pathname;
-  readonly attribute ScalarValueString search;
-  readonly attribute ScalarValueString hash;
-  readonly attribute ScalarValueString origin;
+  readonly attribute USVString protocol;
+  readonly attribute USVString host;
+  readonly attribute USVString hostname;
+  readonly attribute USVString port;
+  readonly attribute USVString pathname;
+  readonly attribute USVString search;
+  readonly attribute USVString hash;
+  readonly attribute USVString origin;
 };
