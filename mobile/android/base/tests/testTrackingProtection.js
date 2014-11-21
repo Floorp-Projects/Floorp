@@ -15,7 +15,7 @@ function ok(passed, text) {
   do_report_result(passed, text, Components.stack.caller, false);
 }
 
-function promiseLoadEvent(browser, url, eventType="load") {
+function promiseLoadEvent(browser, url, eventType="load", runBeforeLoad) {
   return new Promise((resolve, reject) => {
     do_print("Wait browser event: " + eventType);
 
@@ -30,7 +30,11 @@ function promiseLoadEvent(browser, url, eventType="load") {
       resolve(event);
     }
 
-    browser.addEventListener(eventType, handle, true, true);
+    browser.addEventListener(eventType, handle, true);
+
+    if (runBeforeLoad) {
+      runBeforeLoad();
+    }
     if (url) {
       browser.loadURI(url);
     }
@@ -120,6 +124,19 @@ add_task(function* () {
 
   // Point tab to a test page containing tracking elements
   yield promiseLoadEvent(browser, "http://tracking.example.org/tests/robocop/tracking_bad.html");
+  Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
+
+  // Simulate a click on the "Disable protection" button in the site identity popup.
+  // We need to wait for a "load" event because "Session:Reload" will cause a full page reload.
+  yield promiseLoadEvent(browser, undefined, undefined, () => {
+    Services.obs.notifyObservers(null, "Session:Reload", "{\"allowContent\":true,\"contentType\":\"tracking\"}");
+  });
+  Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_loaded" });
+
+  // Simulate a click on the "Enable protection" button in the site identity popup.
+  yield promiseLoadEvent(browser, undefined, undefined, () => {
+    Services.obs.notifyObservers(null, "Session:Reload", "{\"allowContent\":false,\"contentType\":\"tracking\"}");
+  });
   Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
 
   // Disable Tracking Protection
