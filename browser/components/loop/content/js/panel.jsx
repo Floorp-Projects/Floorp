@@ -166,7 +166,7 @@ loop.panel = (function(_, mozL10n) {
 
   var GettingStartedView = React.createClass({
     handleButtonClick: function() {
-      navigator.mozLoop.openGettingStartedTour();
+      navigator.mozLoop.openGettingStartedTour("getting-started");
       navigator.mozLoop.setLoopPref("gettingStarted.seen", true);
       var event = new CustomEvent("GettingStartedSeen");
       window.dispatchEvent(event);
@@ -286,7 +286,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     openGettingStartedTour: function() {
-      navigator.mozLoop.openGettingStartedTour("settingsMenu");
+      navigator.mozLoop.openGettingStartedTour("settings-menu");
     },
 
     render: function() {
