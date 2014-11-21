@@ -20,7 +20,6 @@ class Image;
 class PlanarYCbCrImage;
 class GrallocImage;
 class SurfaceTextureImage;
-class EGLImageImage;
 }
 
 namespace gl {
@@ -99,8 +98,7 @@ class GLBlitHelper MOZ_FINAL
         BlitTexRect,
         ConvertGralloc,
         ConvertPlanarYCbCr,
-        ConvertSurfaceTexture,
-        ConvertEGLImage
+        ConvertSurfaceTexture
     };
     // The GLContext is the sole owner of the GLBlitHelper.
     GLContext* mGL;
@@ -142,15 +140,14 @@ class GLBlitHelper MOZ_FINAL
     bool InitTexQuadProgram(BlitType target = BlitTex2D);
     void DeleteTexBlitProgram();
     void BindAndUploadYUVTexture(Channel which, uint32_t width, uint32_t height, void* data, bool allocation);
-    void BindAndUploadEGLImage(EGLImage image, GLuint target);
 
 #ifdef MOZ_WIDGET_GONK
+    void BindAndUploadExternalTexture(EGLImage image);
     bool BlitGrallocImage(layers::GrallocImage* grallocImage, bool yFlip = false);
 #endif
     bool BlitPlanarYCbCrImage(layers::PlanarYCbCrImage* yuvImage, bool yFlip = false);
 #ifdef MOZ_WIDGET_ANDROID
-    bool BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage, bool yFlip = false);
-    bool BlitEGLImageImage(layers::EGLImageImage* eglImage, bool yFlip = false);
+    bool BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage);
 #endif
 
 public:
