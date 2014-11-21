@@ -86,22 +86,13 @@ class TraceLoggerEvent {
     TraceLoggerEventPayload *payload_;
 
   public:
-    TraceLoggerEvent() { payload_ = nullptr; };
-#ifdef JS_TRACE_LOGGING
     TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId textId);
     TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId type, JSScript *script);
     TraceLoggerEvent(TraceLoggerThread *logger, TraceLoggerTextId type,
                      const JS::ReadOnlyCompileOptions &compileOptions);
     TraceLoggerEvent(TraceLoggerThread *logger, const char *text);
+    TraceLoggerEvent() { payload_ = nullptr; };
     ~TraceLoggerEvent();
-#else
-    TraceLoggerEvent (TraceLoggerThread *logger, TraceLoggerTextId textId) {}
-    TraceLoggerEvent (TraceLoggerThread *logger, TraceLoggerTextId type, JSScript *script) {}
-    TraceLoggerEvent (TraceLoggerThread *logger, TraceLoggerTextId type,
-                      const JS::ReadOnlyCompileOptions &compileOptions) {}
-    TraceLoggerEvent (TraceLoggerThread *logger, const char *text) {}
-    ~TraceLoggerEvent() {}
-#endif
 
     TraceLoggerEventPayload *payload() const {
         MOZ_ASSERT(hasPayload());
@@ -490,11 +481,6 @@ class AutoTraceLog
 #else
   public:
     AutoTraceLog(TraceLoggerThread *logger, uint32_t textId MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    AutoTraceLog(TraceLoggerThread *logger,
-                 const TraceLoggerEvent &event MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
