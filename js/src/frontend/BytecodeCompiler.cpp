@@ -225,8 +225,8 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         logger = TraceLoggerForMainThread(cx->asJSContext()->runtime());
     else
         logger = TraceLoggerForCurrentThread();
-    js::TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, options);
-    js::AutoTraceLog scriptLogger(logger, event);
+    uint32_t logId = js::TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, options);
+    js::AutoTraceLog scriptLogger(logger, logId);
     js::AutoTraceLog typeLogger(logger, TraceLogger_ParserCompileScript);
 
     /*
@@ -476,8 +476,8 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
            .setSelfHostingMode(false);
 
     js::TraceLoggerThread *logger = js::TraceLoggerForMainThread(cx->runtime());
-    js::TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, options);
-    js::AutoTraceLog scriptLogger(logger, event);
+    uint32_t logId = js::TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, options);
+    js::AutoTraceLog scriptLogger(logger, logId);
     js::AutoTraceLog typeLogger(logger, TraceLogger_ParserCompileLazy);
 
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
@@ -534,8 +534,8 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
                     HandleObject enclosingScope, GeneratorKind generatorKind)
 {
     js::TraceLoggerThread *logger = js::TraceLoggerForMainThread(cx->runtime());
-    js::TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, options);
-    js::AutoTraceLog scriptLogger(logger, event);
+    uint32_t logId = js::TraceLogCreateTextId(logger, TraceLogger_AnnotateScripts, options);
+    js::AutoTraceLog scriptLogger(logger, logId);
     js::AutoTraceLog typeLogger(logger, TraceLogger_ParserCompileFunction);
 
     // FIXME: make Function pass in two strings and parse them as arguments and
