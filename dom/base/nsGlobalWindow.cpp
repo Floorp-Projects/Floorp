@@ -11071,6 +11071,10 @@ nsGlobalWindow::ShowSlowScriptDialog()
   nsresult rv;
   AutoJSContext cx;
 
+  if (Preferences::GetBool("dom.always_stop_slow_scripts")) {
+    return KillSlowScript;
+  }
+
   // If it isn't safe to run script, then it isn't safe to bring up the prompt
   // (since that spins the event loop). In that (rare) case, we just kill the
   // script and report a warning.
