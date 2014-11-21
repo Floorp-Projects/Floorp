@@ -30,10 +30,7 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, TempAllocator &all
     icLoadLabels_(),
     pushedBeforeCall_(0),
     inCall_(false),
-    spsPushToggleOffset_(),
-    traceLoggerEnterToggleOffset_(),
-    traceLoggerExitToggleOffset_(),
-    traceLoggerScriptTextIdOffset_()
+    spsPushToggleOffset_()
 { }
 
 bool
