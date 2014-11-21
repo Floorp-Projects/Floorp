@@ -17,7 +17,6 @@
 
 #include "nsTArray.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/VsyncDispatcher.h"
 #include "qcms.h"
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
@@ -26,6 +25,7 @@
 #include <CoreVideo/CoreVideo.h>
 
 #include "nsCocoaFeatures.h"
+#include "mozilla/layers/CompositorParent.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -38,7 +38,7 @@ typedef uint32_t AutoActivationSetting;
 
 // bug 567552 - disable auto-activation of fonts
 
-static void 
+static void
 DisableFontActivation()
 {
     // get the main bundle identifier
@@ -429,21 +429,21 @@ static CVReturn VsyncCallback(CVDisplayLinkRef aDisplayLink,
                               CVOptionFlags* aFlagsOut,
                               void* aDisplayLinkContext)
 {
-  mozilla::VsyncSource* vsyncSource = (mozilla::VsyncSource*) aDisplayLinkContext;
+  mozilla::layers::VsyncSource* vsyncSource = (mozilla::layers::VsyncSource*) aDisplayLinkContext;
   if (vsyncSource->IsVsyncEnabled()) {
     // Now refers to "Now" as in when this callback is called or when the current frame
     // is displayed. aOutputTime is when the next frame should be displayed.
     // Now is VERY VERY noisy, aOutputTime is in the future though.
     int64_t timestamp = aOutputTime->hostTime;
     mozilla::TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(timestamp);
-    mozilla::VsyncDispatcher::GetInstance()->NotifyVsync(vsyncTime);
+    mozilla::layers::VsyncDispatcher::NotifyVsync(vsyncTime);
     return kCVReturnSuccess;
   } else {
     return kCVReturnDisplayLinkNotRunning;
   }
 }
 
-class OSXVsyncSource MOZ_FINAL : public mozilla::VsyncSource
+class OSXVsyncSource MOZ_FINAL : public mozilla::layers::VsyncSource
 {
 public:
   OSXVsyncSource()
@@ -499,11 +499,11 @@ private:
   CVDisplayLinkRef   mDisplayLink;
 }; // OSXVsyncSource
 
-void
-gfxPlatformMac::InitHardwareVsync()
+already_AddRefed<mozilla::layers::VsyncSource>
+gfxPlatformMac::GetVsyncSource()
 {
-  nsRefPtr<VsyncSource> osxVsyncSource = new OSXVsyncSource();
-  mozilla::VsyncDispatcher::GetInstance()->SetVsyncSource(osxVsyncSource);
+  nsRefPtr<mozilla::layers::VsyncSource> osxVsyncSource = new OSXVsyncSource();
+  return osxVsyncSource.forget();
 }
 
 void
