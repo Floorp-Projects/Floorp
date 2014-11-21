@@ -513,6 +513,12 @@ public:
   static void SetScrollbarThumbLayerization(nsIFrame* aThumbFrame, bool aLayerize);
 
   /**
+   * Returns whether aThumbFrame wants its own layer due to having called
+   * SetScrollbarThumbLayerization.
+   */
+  static bool IsScrollbarThumbLayerized(nsIFrame* aThumbFrame);
+
+  /**
    * Finds the nearest ancestor frame to aItem that is considered to have (or
    * will have) "animated geometry". For example the scrolled frames of
    * scrollframes which are actively being scrolled fall into this category.
