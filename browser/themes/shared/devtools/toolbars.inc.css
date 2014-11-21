@@ -57,6 +57,8 @@
   margin: 2px 3px;
   color: inherit;
   transition: background 0.05s ease-in-out;
+  color: var(--theme-content-color1);
+  background-color: var(--theme-toolbar-background);
 }
 
 .devtools-menulist:-moz-focusring,
@@ -141,14 +143,10 @@
 
 .theme-dark .devtools-menulist,
 .theme-dark .devtools-toolbarbutton {
-  color: #a9bacb; /* Body text - high contrast */
-  background-color: #343c45; /* Toolbars */
   border-color: rgba(0, 0, 0, .4); /* Splitters */
 }
 .theme-light .devtools-menulist,
 .theme-light .devtools-toolbarbutton {
-  color: #292e33; /* Body text - high contrast */
-  background-color: #f0f1f2; /* Toolbars */
   border-color: rgba(170, 170, 170, .5); /* Splitters */
 }
 
@@ -189,7 +187,7 @@
 .theme-dark .devtools-toolbarbutton[checked=true],
 .theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image][checked] {
   background: rgba(29, 79, 115, .7); /* Select highlight blue */
-  color: #f5f7fa;
+  color: var(--theme-selection-color);
 }
 
 .theme-light .devtools-toolbarbutton[checked=true],
@@ -203,7 +201,7 @@
 .theme-dark .devtools-toolbarbutton[open=true]:hover:active,
 .theme-dark .devtools-toolbarbutton[checked=true]:hover {
   background: rgba(29, 79, 115, .8); /* Select highlight blue */
-  color: #f5f7fa;
+  color: var(--theme-selection-color);
 }
 
 .theme-light .devtools-menulist[open=true],
@@ -259,16 +257,7 @@
   border-radius: 2px;
 %endif
   padding: 4px 6px;
-}
-
-.theme-dark .devtools-textinput,
-.theme-dark .devtools-searchinput {
-  border-color: rgb(88, 94, 101);
-}
-
-.theme-light .devtools-textinput,
-.theme-light .devtools-searchinput {
-  border-color: #aaa; /* Match the splitter color */
+  border-color: var(--theme-splitter-color);
 }
 
 .devtools-searchinput {
@@ -310,7 +299,7 @@
 }
 
 .devtools-no-search-result {
-  border-color: #eb5368 !important;
+  border-color: var(--theme-highlight-red) !important;
 }
 
 /* Close button */
@@ -349,7 +338,6 @@
 }
 
 /* In-tools sidebar */
-
 .devtools-sidebar-tabs {
   -moz-appearance: none;
   margin: 0;
@@ -363,8 +351,8 @@
 }
 
 .theme-light .devtools-sidebar-tabs > tabpanels {
-  background: #f7f7f7;
-  color: #18191a;
+  background: var(--theme-sidebar-background);
+  color: var(--theme-body-color);
 }
 
 .devtools-sidebar-tabs > tabs {
@@ -434,7 +422,7 @@
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected],
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
-  color: #f5f7fa;
+  color: var(--theme-selection-color);
   background: #1d4f73;
   border-image: @solidSeparatorDark@ 1 1;
 }
@@ -464,7 +452,7 @@
 
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected],
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
-  color: #f5f7fa;
+  color: var(--theme-selection-color);
   background: #4c9ed9;
   border-image: @solidSeparatorLight@;
 }
@@ -663,18 +651,16 @@
   border: 0px solid;
   border-bottom-width: 1px;
   padding: 0;
+  background: var(--theme-tab-toolbar-background);
+  border-bottom-color: var(--theme-splitter-color);
 }
 
 .theme-light .devtools-tabbar {
   box-shadow: 0 -2px 0 rgba(170,170,170,.1) inset;
-  background: #ebeced;
-  border-bottom-color: #aaa;
 }
 
 .theme-dark .devtools-tabbar {
   box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
-  background: #252c33;
-  border-bottom-color: #000;
 }
 
 #toolbox-tabs {
@@ -697,13 +683,13 @@
 }
 
 .theme-dark .devtools-tab {
-  color: #b6babf;
+  color: var(--theme-body-color-alt);
   border-color: #42484f;
 }
 
 .theme-light .devtools-tab {
-  color: #18191a;
-  border-color: #aaa;
+  color: var(--theme-body-color);
+  border-color: var(--theme-splitter-color);
 }
 
 .theme-dark .devtools-tab:hover {
@@ -717,7 +703,7 @@
 
 .theme-dark .devtools-tab:hover:active {
   background-color: hsla(206,37%,4%,.4);
-  color: #f5f7fa;
+  color: var(--theme-selection-color);
 }
 
 .theme-light .devtools-tab:hover:active {
@@ -755,17 +741,18 @@
   opacity: 1;
 }
 
+.devtools-tabbar .devtools-tab[selected] {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
 .theme-dark .devtools-tabbar .devtools-tab[selected] {
-  color: #f5f7fa;
-  background-color: #1a4666;
   box-shadow: 0 2px 0 #d7f1ff inset,
               0 8px 3px -5px #2b82bf inset,
               0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
 .theme-light .devtools-tabbar .devtools-tab[selected] {
-  color: #f5f7fa;
-  background-color: #4c9ed9;
   box-shadow: 0 2px 0 #d7f1ff inset,
               0 8px 3px -5px #2b82bf inset,
               0 -2px 0 rgba(0,0,0,.06) inset;
