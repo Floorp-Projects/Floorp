@@ -1691,6 +1691,21 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void cmpeqps(const Operand &src, FloatRegister dest) {
+        cmpps(src, dest, X86Assembler::ConditionCmp_EQ);
+    }
+    void cmpltps(const Operand &src, FloatRegister dest) {
+        cmpps(src, dest, X86Assembler::ConditionCmp_LT);
+    }
+    void cmpleps(const Operand &src, FloatRegister dest) {
+        cmpps(src, dest, X86Assembler::ConditionCmp_LE);
+    }
+    void cmpunordps(const Operand &src, FloatRegister dest) {
+        cmpps(src, dest, X86Assembler::ConditionCmp_UNORD);
+    }
+    void cmpneqps(const Operand &src, FloatRegister dest) {
+        cmpps(src, dest, X86Assembler::ConditionCmp_NEQ);
+    }
     void rcpps(const Operand &src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         switch (src.kind()) {
