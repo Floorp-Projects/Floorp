@@ -6,36 +6,198 @@
 
 #include "nsBrowserElement.h"
 
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/dom/BrowserElementBinding.h"
 #include "mozilla/dom/DOMRequest.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/ToJSValue.h"
+
+#include "nsComponentManagerUtils.h"
+#include "nsContentUtils.h"
+#include "nsFrameLoader.h"
+#include "nsIDOMDOMRequest.h"
+#include "nsIDOMElement.h"
+#include "nsINode.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsIPrincipal.h"
+#include "nsWeakReference.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
+
+static const char kRemoteBrowserPending[] = "remote-browser-pending";
+static const char kInprocessBrowserShown[] = "inprocess-browser-shown";
+
+class nsBrowserElement::BrowserShownObserver : public nsIObserver
+                                             , public nsSupportsWeakReference
+{
+public:
+  BrowserShownObserver(nsBrowserElement* aBrowserElement);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  void AddObserver();
+  void RemoveObserver();
+private:
+  virtual ~BrowserShownObserver();
+
+  // Weak reference to the browser element. nsBrowserElement has a
+  // reference to us. nsBrowserElement's destructor is responsible to
+  // null out this weak reference via RemoveObserver()
+  nsBrowserElement* mBrowserElement;
+};
+
+NS_IMPL_ISUPPORTS(nsBrowserElement::BrowserShownObserver, nsIObserver, nsISupportsWeakReference)
+
+nsBrowserElement::BrowserShownObserver::BrowserShownObserver(nsBrowserElement* aBrowserElement)
+  : mBrowserElement(aBrowserElement)
+{
+}
+
+nsBrowserElement::BrowserShownObserver::~BrowserShownObserver()
+{
+  RemoveObserver();
+}
+
+NS_IMETHODIMP
+nsBrowserElement::BrowserShownObserver::Observe(nsISupports* aSubject,
+                                                const char* aTopic,
+                                                const char16_t* aData)
+{
+  NS_ENSURE_TRUE(mBrowserElement, NS_OK);
+
+  if (!strcmp(aTopic, kRemoteBrowserPending) ||
+      !strcmp(aTopic, kInprocessBrowserShown)) {
+    nsCOMPtr<nsIFrameLoader> frameLoader = do_QueryInterface(aSubject);
+    nsCOMPtr<nsIFrameLoader> myFrameLoader = mBrowserElement->GetFrameLoader();
+    // The browser element API needs the frameloader to
+    // initialize. We still use the observer to get notified when the
+    // frameloader is created. So we check if the frameloader created
+    // is ours, then initialize the browser element API.
+    if (frameLoader && frameLoader == myFrameLoader) {
+      mBrowserElement->InitBrowserElementAPI();
+    }
+  }
+  return NS_OK;
+}
+
+void
+nsBrowserElement::BrowserShownObserver::AddObserver()
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, kRemoteBrowserPending, true);
+    obs->AddObserver(this, kInprocessBrowserShown, true);
+  }
+}
+
+void
+nsBrowserElement::BrowserShownObserver::RemoveObserver()
+{
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, kRemoteBrowserPending);
+    obs->RemoveObserver(this, kInprocessBrowserShown);
+  }
+  mBrowserElement = nullptr;
+}
+
+bool
+nsBrowserElement::IsBrowserElementOrThrow(ErrorResult& aRv)
+{
+  if (mBrowserElementAPI) {
+    return true;
+  }
+  aRv.Throw(NS_ERROR_DOM_INVALID_NODE_TYPE_ERR);
+  return false;
+}
+
+void
+nsBrowserElement::InitBrowserElementAPI()
+{
+  bool isBrowserOrApp;
+  nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
+  NS_ENSURE_TRUE_VOID(frameLoader);
+  nsresult rv = frameLoader->GetOwnerIsBrowserOrAppFrame(&isBrowserOrApp);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  if (!isBrowserOrApp) {
+    return;
+  }
+
+  mBrowserElementAPI = do_CreateInstance("@mozilla.org/dom/browser-element-api;1");
+  if (mBrowserElementAPI) {
+    mBrowserElementAPI->SetFrameLoader(frameLoader);
+  }
+}
+
+nsBrowserElement::nsBrowserElement()
+{
+  mObserver = new BrowserShownObserver(this);
+  mObserver->AddObserver();
+}
+
+nsBrowserElement::~nsBrowserElement()
+{
+  mObserver->RemoveObserver();
+}
 
 void
 nsBrowserElement::SetVisible(bool aVisible, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->SetVisible(aVisible);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::GetVisible(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetVisible(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
 void
 nsBrowserElement::SetActive(bool aVisible, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->SetActive(aVisible);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 bool
 nsBrowserElement::GetActive(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return false;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), false);
+
+  bool isActive;
+  nsresult rv = mBrowserElementAPI->GetActive(&isActive);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
+  }
+
+  return isActive;
 }
 
 void
@@ -47,122 +209,307 @@ nsBrowserElement::SendMouseEvent(const nsAString& aType,
                                  uint32_t aModifiers,
                                  ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->SendMouseEvent(aType,
+                                                   aX,
+                                                   aY,
+                                                   aButton,
+                                                   aClickCount,
+                                                   aModifiers);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
 nsBrowserElement::SendTouchEvent(const nsAString& aType,
-                                 const dom::Sequence<uint32_t>& aIdentifiers,
-                                 const dom::Sequence<int32_t>& aXs,
-                                 const dom::Sequence<int32_t>& aYs,
-                                 const dom::Sequence<uint32_t>& aRxs,
-                                 const dom::Sequence<uint32_t>& aRys,
-                                 const dom::Sequence<float>& aRotationAngles,
-                                 const dom::Sequence<float>& aForces,
+                                 const Sequence<uint32_t>& aIdentifiers,
+                                 const Sequence<int32_t>& aXs,
+                                 const Sequence<int32_t>& aYs,
+                                 const Sequence<uint32_t>& aRxs,
+                                 const Sequence<uint32_t>& aRys,
+                                 const Sequence<float>& aRotationAngles,
+                                 const Sequence<float>& aForces,
                                  uint32_t aCount,
                                  uint32_t aModifiers,
                                  ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  if (aIdentifiers.Length() != aCount ||
+      aXs.Length() != aCount ||
+      aYs.Length() != aCount ||
+      aRxs.Length() != aCount ||
+      aRys.Length() != aCount ||
+      aRotationAngles.Length() != aCount ||
+      aForces.Length() != aCount) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  nsresult rv = mBrowserElementAPI->SendTouchEvent(aType,
+                                                   aIdentifiers.Elements(),
+                                                   aXs.Elements(),
+                                                   aYs.Elements(),
+                                                   aRxs.Elements(),
+                                                   aRys.Elements(),
+                                                   aRotationAngles.Elements(),
+                                                   aForces.Elements(),
+                                                   aCount,
+                                                   aModifiers);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
 nsBrowserElement::GoBack(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->GoBack();
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
 nsBrowserElement::GoForward(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->GoForward();
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
 nsBrowserElement::Reload(bool aHardReload, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->Reload(aHardReload);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
 nsBrowserElement::Stop(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  nsresult rv = mBrowserElementAPI->Stop();
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::Download(const nsAString& aUrl,
-                           const dom::BrowserElementDownloadOptions& aOptions,
+                           const BrowserElementDownloadOptions& aOptions,
                            ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JS::Rooted<JS::Value> options(jsapi.cx());
+  if (!ToJSValue(jsapi.cx(), aOptions, &options)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+  nsresult rv = mBrowserElementAPI->Download(aUrl, options, getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::PurgeHistory(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->PurgeHistory(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::GetScreenshot(uint32_t aWidth,
                                 uint32_t aHeight,
-                                const dom::Optional<nsAString>& aMimeType,
+                                const nsAString& aMimeType,
                                 ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetScreenshot(aWidth, aHeight, aMimeType,
+                                                  getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (rv == NS_ERROR_INVALID_ARG) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    } else {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
 void
 nsBrowserElement::Zoom(float aZoom, ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+  nsresult rv = mBrowserElementAPI->Zoom(aZoom);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::GetCanGoBack(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetCanGoBack(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::GetCanGoForward(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetCanGoForward(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::GetContentDimensions(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  nsresult rv = mBrowserElementAPI->GetContentDimensions(getter_AddRefs(req));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
 void
-nsBrowserElement::AddNextPaintListener(dom::BrowserElementNextPaintEventCallback& aListener,
+nsBrowserElement::AddNextPaintListener(BrowserElementNextPaintEventCallback& aListener,
                                        ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  CallbackObjectHolder<BrowserElementNextPaintEventCallback,
+                       nsIBrowserElementNextPaintListener> holder(&aListener);
+  nsCOMPtr<nsIBrowserElementNextPaintListener> listener = holder.ToXPCOMCallback();
+
+  nsresult rv = mBrowserElementAPI->AddNextPaintListener(listener);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
-nsBrowserElement::RemoveNextPaintListener(dom::BrowserElementNextPaintEventCallback& aListener,
+nsBrowserElement::RemoveNextPaintListener(BrowserElementNextPaintEventCallback& aListener,
                                           ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE_VOID(IsBrowserElementOrThrow(aRv));
+
+  CallbackObjectHolder<BrowserElementNextPaintEventCallback,
+                       nsIBrowserElementNextPaintListener> holder(&aListener);
+  nsCOMPtr<nsIBrowserElementNextPaintListener> listener = holder.ToXPCOMCallback();
+
+  nsresult rv = mBrowserElementAPI->RemoveNextPaintListener(listener);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
-already_AddRefed<dom::DOMRequest>
+already_AddRefed<DOMRequest>
 nsBrowserElement::SetInputMethodActive(bool aIsActive,
                                        ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  NS_ENSURE_TRUE(IsBrowserElementOrThrow(aRv), nullptr);
+
+  nsCOMPtr<nsIFrameLoader> frameLoader = GetFrameLoader();
+  if (!frameLoader) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMElement> ownerElement;
+  nsresult rv = frameLoader->GetOwnerElement(getter_AddRefs(ownerElement));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(ownerElement);
+  nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
+  if (!nsContentUtils::IsExactSitePermAllow(principal, "input-manage")) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMDOMRequest> req;
+  rv = mBrowserElementAPI->SetInputMethodActive(aIsActive,
+                                                getter_AddRefs(req));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (rv == NS_ERROR_INVALID_ARG) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    } else {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+    return nullptr;
+  }
+
+  return req.forget().downcast<DOMRequest>();
 }
 
 } // namespace mozilla
