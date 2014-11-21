@@ -34,6 +34,7 @@ public:
     , mStyleSet(nullptr)
     , mRootFrame(nullptr)
     , mUndisplayedMap(nullptr)
+    , mDisplayContentsMap(nullptr)
     , mIsDestroyingFrames(false)
   {
     mPlaceholderMap.ops = nullptr;
@@ -65,6 +66,7 @@ protected:
   nsIFrame*                       mRootFrame;
   PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
+  UndisplayedMap*                 mDisplayContentsMap;
   bool                            mIsDestroyingFrames;  // The frame manager is destroying some frame(s).
 
   // The frame tree generation number

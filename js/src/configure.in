@@ -2985,16 +2985,16 @@ AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
-dnl = Enable trace logging
+dnl = Disable trace logging
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(trace-logging,
-[  --enable-trace-logging   Enable trace logging],
-    ENABLE_TRACE_LOGGING=1,
+ENABLE_TRACE_LOGGING=1
+MOZ_ARG_DISABLE_BOOL(trace-logging,
+[  --disable-trace-logging   Disable trace logging],
     ENABLE_TRACE_LOGGING= )
 
 AC_SUBST(ENABLE_TRACE_LOGGING)
 
-if test "$ENABLE_TRACE_LOGGING"; then
+if test -n "$ENABLE_TRACE_LOGGING"; then
     AC_DEFINE(JS_TRACE_LOGGING)
 fi
 
@@ -3975,7 +3975,17 @@ dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================
 
-AC_CHECK_HEADERS(malloc.h malloc/malloc.h)
+MALLOC_HEADERS="malloc.h malloc_np.h malloc/malloc.h sys/malloc.h"
+MALLOC_H=
+
+for file in $MALLOC_HEADERS; do
+  MOZ_CHECK_HEADER($file, [MALLOC_H=$file])
+  if test "$MALLOC_H" != ""; then
+    AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
+    break
+  fi
+done
+
 AC_CHECK_FUNCS(setlocale localeconv malloc_size malloc_usable_size)
 
 AC_SUBST(MOZILLA_VERSION)

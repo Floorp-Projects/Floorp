@@ -794,6 +794,7 @@ public:
 
   static void DestroySurface(void* aPropertyValue);
   static void DestroyDT(void* aPropertyValue);
+  static void DestroyContentArray(void* aPropertyValue);
 
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
@@ -852,6 +853,13 @@ public:
   NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
   NS_DECLARE_FRAME_PROPERTY(RefusedAsyncAnimation, nullptr)
+
+  NS_DECLARE_FRAME_PROPERTY(GenConProperty, DestroyContentArray)
+
+  nsTArray<nsIContent*>* GetGenConPseudos() {
+    const FramePropertyDescriptor* prop = GenConProperty();
+    return static_cast<nsTArray<nsIContent*>*>(Properties().Get(prop));
+  }
 
   /**
    * Return the distance between the border edge of the frame and the
@@ -2474,11 +2482,13 @@ public:
    * return a grandparent or higher!  Furthermore, if a child frame is
    * returned it must have the same GetContent() as this frame.
    *
-   * @return The frame whose style context should be the parent of this frame's
+   * @param aProviderFrame (out) the frame associated with the returned value
+   *     or nullptr if the style context is for display:contents content.
+   * @return The style context that should be the parent of this frame's
    *         style context.  Null is permitted, and means that this frame's
    *         style context should be the root of the style context tree.
    */
-  virtual nsIFrame* GetParentStyleContextFrame() const = 0;
+  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const = 0;
 
   /**
    * Determines whether a frame is visible for painting;

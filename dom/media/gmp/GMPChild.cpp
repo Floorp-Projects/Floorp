@@ -25,7 +25,7 @@
 
 using mozilla::dom::CrashReporterChild;
 
-static const int MAX_PLUGIN_VOUCHER_LENGTH = 50000;
+static const int MAX_PLUGIN_VOUCHER_LENGTH = 500000;
 
 #ifdef XP_WIN
 #include <stdlib.h> // for _exit()
@@ -311,7 +311,11 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
   infoFile->GetPath(path);
 
   std::ifstream stream;
+#ifdef _MSC_VER
   stream.open(path.get());
+#else
+  stream.open(NS_ConvertUTF16toUTF8(path).get());
+#endif
   if (!stream.good()) {
     NS_WARNING("Failure opening info file for required DLLs");
     return false;

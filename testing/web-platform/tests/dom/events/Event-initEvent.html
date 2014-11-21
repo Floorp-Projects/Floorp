@@ -102,4 +102,20 @@ async_test(function() {
 
   this.done()
 }, "Calling initEvent must unset the stop propagation flag.")
+
+async_test(function() {
+  var e = document.createEvent("Event")
+  e.initEvent("type", false, false)
+
+  var target = document.createElement("div")
+  target.addEventListener("type", this.step_func(function() {
+    e.initEvent("type2", true, true);
+    assert_equals(e.type, "type", "initEvent type setter should short-circuit");
+    assert_false(e.bubbles, "initEvent bubbles setter should short-circuit");
+    assert_false(e.cancelable, "initEvent cancelable setter should short-circuit");
+  }), false)
+  assert_equals(target.dispatchEvent(e), true, "dispatchEvent must return true")
+
+  this.done()
+}, "Calling initEvent during propagation.")
 </script>

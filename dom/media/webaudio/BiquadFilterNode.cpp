@@ -185,7 +185,7 @@ public:
     uint32_t numberOfChannels = mBiquads.Length();
     AllocateAudioBlock(numberOfChannels, aOutput);
 
-    TrackTicks pos = aStream->GetCurrentPosition();
+    StreamTime pos = aStream->GetCurrentPosition();
 
     double freq = mFrequency.GetValueAtTime(pos);
     double q = mQ.GetValueAtTime(pos);

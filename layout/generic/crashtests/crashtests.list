@@ -509,9 +509,9 @@ load 827076.html
 load 840818.html
 load 812822-1.html
 load 812893.html
-asserts(1) load 824297-1.html # bug 399262
+load 824297-1.html
 load 826483-1.html
-asserts(1) load 826532-1.html # bug 399262
+load 826532-1.html
 load 827168-1.html
 load 836895.html
 load 837007.xhtml

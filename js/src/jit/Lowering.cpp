@@ -2739,7 +2739,17 @@ LIRGenerator::visitLoadUnboxedObjectOrNull(MLoadUnboxedObjectOrNull *ins)
 {
     MOZ_ASSERT(IsValidElementsType(ins->elements(), ins->offsetAdjustment()));
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    if (ins->type() == MIRType_Object) {
+        LLoadUnboxedPointerT *lir = new(alloc()) LLoadUnboxedPointerT(useRegister(ins->elements()),
+                                                                      useRegisterOrConstant(ins->index()));
+        if (ins->bailOnNull() && !assignSnapshot(lir, Bailout_TypeBarrierO))
+            return false;
+        return define(lir, ins);
+    }
+
     MOZ_ASSERT(ins->type() == MIRType_Value);
+    MOZ_ASSERT(!ins->bailOnNull());
 
     LLoadUnboxedPointerV *lir = new(alloc()) LLoadUnboxedPointerV(useRegister(ins->elements()),
                                                                   useRegisterOrConstant(ins->index()));

@@ -25,6 +25,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIContentIterator.h"
 #include "nsFocusManager.h"
+#include "nsFrameManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
@@ -976,6 +977,7 @@ Element::CreateShadowRoot(ErrorResult& aError)
     nsIPresShell* shell = doc->GetShell();
     if (shell) {
       shell->DestroyFramesFor(this, &destroyedFramesFor);
+      MOZ_ASSERT(!shell->FrameManager()->GetDisplayContentsStyleFor(this));
     }
   }
   MOZ_ASSERT(!GetPrimaryFrame());

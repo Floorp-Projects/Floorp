@@ -466,7 +466,7 @@ void
 AudioDestinationNode::StartRendering()
 {
   mOfflineRenderingRef.Take(this);
-  mStream->Graph()->StartNonRealtimeProcessing(TrackRate(Context()->SampleRate()), mFramesToProduce);
+  mStream->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
 }
 
 void

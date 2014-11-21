@@ -7,7 +7,7 @@
     <link rel="author" title="Fabrice Clari" href="mailto:f.clari@inno-group.com">
     <link rel="author" title="Dimitri Bocquet" href="mailto:Dimitri.Bocquet@mosquito-fp7.eu">
     <link rel="author" title="Tomoyuki SHIMIZU" href="mailto:tomoyuki.labs@gmail.com">
-    <link rel="help" href="http://www.w3.org/TR/html5/the-input-element.html#the-input-element">
+    <link rel="help" href="https://html.spec.whatwg.org/multipage/#the-input-element">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
   </head>
@@ -47,7 +47,7 @@
         },
         "range type support on input element",
         {
-          "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-type"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-type"
         }
       );
 
@@ -57,7 +57,7 @@
         },
         "min attribute support on input element",
         {
-          "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-min"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-min"
         }
       );
 
@@ -67,7 +67,7 @@
         },
         "max attribute support on input element",
         {
-          "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-max"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-max"
         }
       );
 
@@ -79,7 +79,7 @@
         },
         "Illegal value of min attribute",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -88,7 +88,7 @@
           assert_equals(document.getElementById('illegal_min_and_max').max, "100")
         },
         "Illegal value of max attribute",
-        { "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)" }
+        { "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)" }
       );
 
       test(
@@ -97,7 +97,7 @@
         },
         "Converting an illegal string to the default value",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -106,7 +106,7 @@
           assert_equals(document.getElementById('illegal_value_and_step').step, "1")
         },
         "Converting an illegal string to the default step",
-        { "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)" }
+        { "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)" }
       );
 
       test(
@@ -115,7 +115,7 @@
         },
         "the value is set to min when a smaller value than min attribute is given",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -125,7 +125,7 @@
         },
         "the value is set to max when a larger value than max attribute is given",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -134,7 +134,7 @@
           assert_equals(document.getElementById('empty_attributes').min, "0")
         },
         "default value of min attribute in input type=range",
-        { "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-min" }
+        { "help" : "https://html.spec.whatwg.org/multipage/#dom-input-min" }
       );
 
       test(
@@ -143,7 +143,7 @@
         },
         "default value of max attribute in input type=range",
         {
-          "help" : "http://www.w3.org/TR/html5/the-input-element.html#dom-input-max"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-max"
         }
       );
 
@@ -153,7 +153,7 @@
         },
         "default value when min and max attributes are given (= min plus half the difference between min and max)",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -163,7 +163,7 @@
         },
         "default value with step control when both min and max attributes are given",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -174,7 +174,7 @@
         },
         "default value when both min and max attributes are given, while min > max",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -184,7 +184,7 @@
         },
         "The default step scale factor is 1, unless min attribute has non-integer value",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -194,7 +194,7 @@
         },
         "Step scale factor behavior when min attribute has integer value but max attribute is non-integer ",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)" }
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)" }
       );
 
       test(
@@ -203,7 +203,7 @@
         },
         "The default scale factor is 1 even if step attribute is explicitly set to non-integer value, unless min attribute has non-integer value",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -213,7 +213,7 @@
         },
         "Solving the step mismatch",
         {
-          "help" : "http://www.w3.org/TR/html5/forms.html#range-state-(type=range)"
+          "help" : "https://html.spec.whatwg.org/multipage/#range-state-(type=range)"
         }
       );
 
@@ -226,7 +226,7 @@
         },
         "Performing stepUp()",
         {
-          "help" : "http://www.w3.org/html/wg/drafts/html/master/forms.html#dom-input-stepup"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-stepup"
         }
       );
 
@@ -239,7 +239,7 @@
         },
         "Performing stepDown()",
         {
-          "help" : "http://www.w3.org/html/wg/drafts/html/master/forms.html#dom-input-stepdown"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-stepdown"
         }
       );
 
@@ -253,7 +253,7 @@
         },
         "Performing stepUp() beyond the value of the max attribute",
         {
-          "help" : "http://www.w3.org/html/wg/drafts/html/master/forms.html#dom-input-stepup"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-stepup"
         }
       );
 
@@ -265,7 +265,7 @@
           e.stepDown(2);
           assert_equals(e.value, "3")
         }, "Performing stepDown() beyond the value of the min attribute", {
-          "help" : "http://www.w3.org/html/wg/drafts/html/master/forms.html#dom-input-stepdown"
+          "help" : "https://html.spec.whatwg.org/multipage/#dom-input-stepdown"
         }
       );
 

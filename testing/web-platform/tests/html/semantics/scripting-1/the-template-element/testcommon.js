@@ -30,7 +30,7 @@ var HTML5_VOID_ELEMENTS = [ 'area', 'base', 'br', 'col', 'command', 'embed',
         'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source',
         'track', 'wbr' ];
 
-// http://www.whatwg.org/specs/web-apps/current-work/multipage/forms.html#form-associated-element
+// https://html.spec.whatwg.org/multipage/multipage/forms.html#form-associated-element
 var HTML5_FORM_ASSOCIATED_ELEMENTS = [ 'button', 'fieldset', 'input', 'keygen',
         'label', 'object', 'output', 'select', 'textarea' ];
 

@@ -14,33 +14,33 @@
         <script type="text/javascript">
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointer event has pointerType as touch"); // set up test harness
-			var eventTested = false;
+            var eventTested = false;
             // showPointerTypes is defined in pointerevent_support.js
-            // Requirements: the callbakc function will reference the test_pointerEvent object and
+            // Requirements: the callback function will reference the test_pointerEvent object and
             // will fail unless the async_test is created with the var name "test_pointerEvent".
             add_completion_callback(showPointerTypes);
 
             function eventHandler(event) {
-				if(!eventTested) {
-					check_PointerEvent(event);
-					test_pointerEvent.step(function () {
-						assert_equals(event.pointerType, "touch", "Verify event.pointerType is 'touch'.");
-					});
-					detected_pointertypes[event.pointerType] = true;
-					eventTested = true;
-				}
-				if (event.type == "pointerup") {
-					test_pointerEvent.done(); // complete test
-				}
-			}
+                detected_pointertypes[event.pointerType] = true;
+                if(!eventTested) {
+                    check_PointerEvent(event);
+                    test_pointerEvent.step(function () {
+                        assert_equals(event.pointerType, "touch", "Verify event.pointerType is 'touch'.");
+                    });
+                    eventTested = true;
+                }
+                if (event.type == "pointerup") {
+                    test_pointerEvent.done(); // complete test
+                }
+            }
 
             function run() {
-				var target0 = document.getElementById("target0");
+                var target0 = document.getElementById("target0");
 
-				// listen for all events.
-				for (var i = 0; i < All_Pointer_Events.length; i++) {
-					on_event(target0, All_Pointer_Events[i], eventHandler);
-				}
+                // listen for all events.
+                for (var i = 0; i < All_Pointer_Events.length; i++) {
+                    on_event(target0, All_Pointer_Events[i], eventHandler);
+                }
             }
         </script>
     </head>

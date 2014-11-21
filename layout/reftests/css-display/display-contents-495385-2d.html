@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html lang="en-US">
+<head>
+<!-- Test that before/after generated content stops suppression correctly,
+     both statically and dynamically -->
+  <meta charset="UTF-8">
+  <title>CSS Test: CSS display:contents; with ::after/::before</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=907396">
+  <link rel="help" href="http://dev.w3.org/csswg/css-display">
+<style>
+body > div { border:1px solid black; margin:1em;
+             font-family:sans-serif; letter-spacing:2px; }
+#d1:before { content:"Hello"; }
+#d2:after { content:"Kitty"; }
+#d3.c:before { content:"Hello"; }
+#d4.c:after { content:"Kitty"; }
+#d5.c:before { content:"Hello"; }
+#d6.c:after { content:"Kitty"; }
+#d7.c:after { content:"Kitty"; }
+#d8.c:before { content:"Hello"; }
+#d5,#d6 { overflow:hidden; }
+#d1,#d2,#d3,#d4 { display:contents; }
+x { display:table; }
+y { display:table-outer; }
+</style>
+<script>
+function loaded() {
+  document.body.offsetHeight;
+  document.getElementById("d3").setAttribute("class", "c");
+  document.getElementById("d4").setAttribute("class", "c");
+  document.getElementById("d5").setAttribute("class", "c");
+  document.getElementById("d6").setAttribute("class", "c");
+  document.getElementById("d7").setAttribute("class", "c");
+  document.getElementById("d8").setAttribute("class", "c");
+}
+</script>
+</head>
+<body onload="loaded()">
+  <div><div id="d1"> <span>Kitty</span></div></div>
+  <div><div id="d2"><span>Hello</span> </div></div>
+  <div><div id="d3"> <span>Kitty</span></div></div>
+  <div><div id="d4"><span>Hello</span> </div></div>
+  <div><div id="d5"> <span>Kitty</span></div></div>
+  <div><div id="d6"><span>Hello</span> </div></div>
+  <div><x id="d7"><span>Hello</span> </div></x>
+  <div><x id="d8"> <span>Kitty</span> </div></x>
+</body>
+</html>

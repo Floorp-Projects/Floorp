@@ -135,7 +135,7 @@ public:
   }
 #endif
 
-  virtual nsIFrame* GetParentStyleContextFrame() const MOZ_OVERRIDE;
+  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const MOZ_OVERRIDE;
 
   /**
    * @return the out-of-flow for aFrame if aFrame is a placeholder; otherwise

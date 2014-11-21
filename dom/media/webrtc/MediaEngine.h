@@ -117,7 +117,7 @@ public:
                           SourceMediaStream *aSource,
                           TrackID aId,
                           StreamTime aDesiredTime,
-                          TrackTicks &aLastEndTime) = 0;
+                          StreamTime &aLastEndTime) = 0;
 
   /* Stop the device and release the corresponding MediaStream */
   virtual nsresult Stop(SourceMediaStream *aSource, TrackID aID) = 0;

@@ -136,17 +136,20 @@ public:
     // notification of its parent.  (We can know about both if the
     // binding loads were triggered from the DOM rather than frame
     // construction.)  So we have to check both whether the element
-    // has a primary frame and whether it's in the undisplayed map
+    // has a primary frame and whether it's in the frame manager maps
     // before sending a ContentInserted notification, or bad things
     // will happen.
     MOZ_ASSERT(shell == doc->GetShell());
     if (shell) {
       nsIFrame* childFrame = mBoundElement->GetPrimaryFrame();
       if (!childFrame) {
-        // Check to see if it's in the undisplayed content map.
-        nsStyleContext* sc =
-          shell->FrameManager()->GetUndisplayedContent(mBoundElement);
-
+        // Check to see if it's in the undisplayed content map...
+        nsFrameManager* fm = shell->FrameManager();
+        nsStyleContext* sc = fm->GetUndisplayedContent(mBoundElement);
+        if (!sc) {
+          // or in the display:contents map.
+          sc = fm->GetDisplayContentsStyleFor(mBoundElement);
+        }
         if (!sc) {
           shell->CreateFramesFor(destroyedFramesFor);
         }

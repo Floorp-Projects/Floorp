@@ -65,7 +65,7 @@ public:
     , mSource(nullptr)
     , mDestination(static_cast<AudioNodeStream*> (aDestination->Stream()))
     , mStart(-1)
-    , mStop(TRACK_TICKS_MAX)
+    , mStop(STREAM_TIME_MAX)
     // Keep the default values in sync with OscillatorNode::OscillatorNode.
     , mFrequency(440.f)
     , mDetune(0.f)
@@ -116,7 +116,7 @@ public:
     }
   }
 
-  virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
+  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam)
   {
     switch (aIndex) {
     case START: mStart = aParam; break;
@@ -207,7 +207,7 @@ public:
     return mType == OscillatorType::Square || mType == OscillatorType::Triangle;
   }
 
-  void UpdateParametersIfNeeded(TrackTicks ticks, size_t count)
+  void UpdateParametersIfNeeded(StreamTime ticks, size_t count)
   {
     double frequency, detune;
 
@@ -249,11 +249,11 @@ public:
     mAmplitudeAtZero = mNumberOfHarmonics / mSignalPeriod;
   }
 
-  void FillBounds(float* output, TrackTicks ticks,
+  void FillBounds(float* output, StreamTime ticks,
                   uint32_t& start, uint32_t& end)
   {
     MOZ_ASSERT(output);
-    static_assert(TrackTicks(WEBAUDIO_BLOCK_SIZE) < UINT_MAX,
+    static_assert(StreamTime(WEBAUDIO_BLOCK_SIZE) < UINT_MAX,
         "WEBAUDIO_BLOCK_SIZE overflows interator bounds.");
     start = 0;
     if (ticks < mStart) {
@@ -304,7 +304,7 @@ public:
     return blit;
   }
 
-  void ComputeSine(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  void ComputeSine(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
       UpdateParametersIfNeeded(ticks, i);
@@ -315,7 +315,7 @@ public:
     }
   }
 
-  void ComputeSquare(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  void ComputeSquare(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
       UpdateParametersIfNeeded(ticks, i);
@@ -329,7 +329,7 @@ public:
     }
   }
 
-  void ComputeSawtooth(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  void ComputeSawtooth(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
   {
     float dcoffset;
     for (uint32_t i = aStart; i < aEnd; ++i) {
@@ -346,7 +346,7 @@ public:
     }
   }
 
-  void ComputeTriangle(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
+  void ComputeTriangle(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
       UpdateParametersIfNeeded(ticks, i);
@@ -366,7 +366,7 @@ public:
   }
 
   void ComputeCustom(float* aOutput,
-                     TrackTicks ticks,
+                     StreamTime ticks,
                      uint32_t aStart,
                      uint32_t aEnd)
   {
@@ -426,7 +426,7 @@ public:
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
-    TrackTicks ticks = aStream->GetCurrentPosition();
+    StreamTime ticks = aStream->GetCurrentPosition();
     if (mStart == -1) {
       ComputeSilence(aOutput);
       return;
@@ -503,8 +503,8 @@ public:
   DCBlocker mDCBlocker;
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
-  TrackTicks mStart;
-  TrackTicks mStop;
+  StreamTime mStart;
+  StreamTime mStop;
   AudioParamTimeline mFrequency;
   AudioParamTimeline mDetune;
   OscillatorType mType;

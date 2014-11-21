@@ -537,17 +537,28 @@ class TestQueue(object):
         self.test_type = test_type
         self.tests = tests
         self.kwargs = kwargs
+        self.queue = None
 
     def __enter__(self):
+        if not self.tests[self.test_type]:
+            return None
+
         self.queue = Queue()
-        self.test_source_cls.queue_tests(self.queue,
-                                         self.test_type,
-                                         self.tests,
-                                         **self.kwargs)
+        has_tests = self.test_source_cls.queue_tests(self.queue,
+                                                     self.test_type,
+                                                     self.tests,
+                                                     **self.kwargs)
+        # There is a race condition that means sometimes we continue
+        # before the tests have been written to the underlying pipe.
+        # Polling the pipe for data here avoids that
+        self.queue._reader.poll(10)
+        assert not self.queue.empty()
         return self.queue
 
     def __exit__(self, *args, **kwargs):
-        self.queue.close()
+        if self.queue is not None:
+            self.queue.close()
+            self.queue = None
 
 
 class ManagerGroup(object):
@@ -586,6 +597,9 @@ class ManagerGroup(object):
                                     tests,
                                     **self.test_source_kwargs)
         with self.test_queue as test_queue:
+            if test_queue is None:
+                self.logger.info("No %s tests to run" % test_type)
+                return
             for _ in range(self.size):
                 manager = TestRunnerManager(self.suite_name,
                                             test_queue,

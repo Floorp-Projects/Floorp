@@ -65,7 +65,7 @@ protected:
   virtual bool AppendToTrack(SourceMediaStream* aSource,
                              layers::Image* aImage,
                              TrackID aID,
-                             TrackTicks delta);
+                             StreamTime delta);
 
   static bool IsWithin(int32_t n, const dom::ConstrainLongRange& aRange);
   static bool IsWithin(double n, const dom::ConstrainDoubleRange& aRange);

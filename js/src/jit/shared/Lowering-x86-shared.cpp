@@ -489,6 +489,129 @@ LIRGeneratorX86Shared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 }
 
 bool
+LIRGeneratorX86Shared::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins)
+{
+    MDefinition *ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    bool byteArray = false;
+    switch (ins->viewType()) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+        byteArray = true;
+        break;
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+        break;
+      default:
+        MOZ_CRASH("Unexpected array type");
+    }
+
+    // Register allocation:
+    //
+    // The output must be eax.
+    //
+    // oldval must be in a register (it'll eventually end up in eax so
+    // ideally it's there to begin with).
+    //
+    // newval will need to be in a register.  If the source is a byte
+    // array then the newval must be a register that has a byte size:
+    // ebx, ecx, or edx, since eax is taken for the output in this
+    // case.  We pick ebx but it would be more flexible to pick any of
+    // the three that wasn't being used.
+    //
+    // Bug #1077036 describes some optimization opportunities.
+
+    const LAllocation newval = byteArray ? useFixed(ins->newValue(), ebx) : useRegister(ins->newValue());
+    const LAllocation oldval = useRegister(ins->oldValue());
+
+    LAsmJSCompareExchangeHeap *lir =
+        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr), oldval, newval);
+
+    return defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+}
+
+bool
+LIRGeneratorX86Shared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
+{
+    MDefinition *ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    bool byteArray = false;
+    switch (ins->viewType()) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+        byteArray = true;
+        break;
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+        break;
+      default:
+        MOZ_CRASH("Unexpected array type");
+    }
+
+    // Register allocation:
+    //
+    // For ADD and SUB we'll use XADD:
+    //
+    //    movl       value, output
+    //    lock xaddl output, mem
+    //
+    // For the 8-bit variants XADD needs a byte register for the
+    // output only, we can still set up with movl; just pin the output
+    // to eax (or ebx / ecx / edx).
+    //
+    // For AND/OR/XOR we need to use a CMPXCHG loop:
+    //
+    //    movl          *mem, eax
+    // L: mov           eax, temp
+    //    andl          value, temp
+    //    lock cmpxchg  temp, mem  ; reads eax also
+    //    jnz           L
+    //    ; result in eax
+    //
+    // Note the placement of L, cmpxchg will update eax with *mem if
+    // *mem does not have the expected value, so reloading it at the
+    // top of the loop is redundant.
+    //
+    // We want to fix eax as the output.  We also need a temp for
+    // the intermediate value.
+    //
+    // For the 8-bit variants the temp must have a byte register.
+    //
+    // There are optimization opportunities:
+    //  - when the result is unused, Bug #1077014.
+    //  - better register allocation and instruction selection, Bug #1077036.
+
+    bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
+    LDefinition tempDef = LDefinition::BogusTemp();
+    LAllocation value;
+
+    // Optimization opportunity: "value" need not be pinned to something that
+    // has a byte register unless the back-end insists on using a byte move
+    // for the setup or the payload computation, which really it need not do.
+
+    if (byteArray) {
+        value = useFixed(ins->value(), ebx);
+        if (bitOp)
+            tempDef = tempFixed(ecx);
+    } else {
+        value = useRegister(ins->value());
+        if (bitOp)
+            tempDef = temp();
+    }
+
+    LAsmJSAtomicBinopHeap *lir =
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr), value, tempDef);
+
+    return defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+}
+
+bool
 LIRGeneratorX86Shared::visitSimdTernaryBitwise(MSimdTernaryBitwise *ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));

@@ -1167,7 +1167,7 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
     // of turn. We don't mind doing this even when purity isn't required, because we
     // only miss out on shape hashification, which is only a temporary perf cost.
     // The limits were arbitrarily set, anyways.
-    if (!LookupPropertyPure(obj, NameToId(name), holder.address(), shape.address()))
+    if (!LookupPropertyPure(cx, obj, NameToId(name), holder.address(), shape.address()))
         return GetPropertyIC::CanAttachNone;
 
     RootedScript script(cx);
@@ -2783,7 +2783,7 @@ IsPropertyAddInlineable(NativeObject *obj, HandleId id, ConstantOrRegister val, 
 }
 
 static SetPropertyIC::NativeSetPropCacheability
-CanAttachNativeSetProp(HandleObject obj, HandleId id, ConstantOrRegister val,
+CanAttachNativeSetProp(ThreadSafeContext *cx, HandleObject obj, HandleId id, ConstantOrRegister val,
                        bool needsTypeBarrier, MutableHandleNativeObject holder,
                        MutableHandleShape shape, bool *checkTypeset)
 {
@@ -2796,7 +2796,7 @@ CanAttachNativeSetProp(HandleObject obj, HandleId id, ConstantOrRegister val,
 
     // If we couldn't find the property on the object itself, do a full, but
     // still pure lookup for setters.
-    if (!LookupPropertyPure(obj, id, holder.address(), shape.address()))
+    if (!LookupPropertyPure(cx, obj, id, holder.address(), shape.address()))
         return SetPropertyIC::CanAttachNone;
 
     // If the object doesn't have the property, we don't know if we can attach
@@ -2864,7 +2864,7 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         RootedShape shape(cx);
         RootedNativeObject holder(cx);
         bool checkTypeset;
-        canCache = CanAttachNativeSetProp(obj, id, cache.value(), cache.needsTypeBarrier(),
+        canCache = CanAttachNativeSetProp(cx, obj, id, cache.value(), cache.needsTypeBarrier(),
                                           &holder, &shape, &checkTypeset);
 
         if (!addedSetterStub && canCache == CanAttachSetSlot) {
@@ -2957,7 +2957,7 @@ SetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject ob
                 RootedShape shape(cx);
                 RootedNativeObject holder(cx);
                 bool checkTypeset;
-                canCache = CanAttachNativeSetProp(nobj, id, cache.value(), cache.needsTypeBarrier(),
+                canCache = CanAttachNativeSetProp(cx, nobj, id, cache.value(), cache.needsTypeBarrier(),
                                                   &holder, &shape, &checkTypeset);
 
                 if (canCache == SetPropertyIC::CanAttachSetSlot) {

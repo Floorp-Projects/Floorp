@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window onload="
+            document.documentElement.removeChild(document.getElementById('b'));
+            setTimeout(function(){
+              x = document.getElementById('x');
+              c = x.parentNode;
+              c.removeChild(x);
+              c.appendChild(x);
+            }, 0);
+            
+"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:xbl="http://www.mozilla.org/xbl"
+>
+
+<bindings xmlns="http://www.mozilla.org/xbl" id="b">
+    <binding id="mylistitem"><content style="color:red"><html:span style="border:solid;color:green;display:contents"><children style="color:red;"><html:span id="x" style="border:inherit">X</html:span></children></html:span></content></binding>
+
+    <binding id="foo">
+        <content id="c" style="color:red;"><xul:mylistitem id="i" style="-moz-binding: url(#mylistitem); color:red; border:dashed; display:contents" ><xbl:children style="color:red;"/></xul:mylistitem></content>
+    </binding>
+</bindings>
+
+<b id="l" style="-moz-binding: url(#foo); color:red; "></b>
+
+
+</window>

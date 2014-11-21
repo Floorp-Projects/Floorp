@@ -175,7 +175,7 @@ MediaEngineTabVideoSource::Deallocate()
 }
 
 nsresult
-MediaEngineTabVideoSource::Start(mozilla::SourceMediaStream* aStream, mozilla::TrackID aID)
+MediaEngineTabVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   nsCOMPtr<nsIRunnable> runnable;
   if (!mWindow)
@@ -183,23 +183,24 @@ MediaEngineTabVideoSource::Start(mozilla::SourceMediaStream* aStream, mozilla::T
   else
     runnable = new StartRunnable(this);
   NS_DispatchToMainThread(runnable);
-  aStream->AddTrack(aID, USECS_PER_S, 0, new VideoSegment());
+  aStream->AddTrack(aID, 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   return NS_OK;
 }
 
 void
-MediaEngineTabVideoSource::
-NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, mozilla::StreamTime aDesiredTime, mozilla::TrackTicks& aLastEndTime)
+MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
+                                      SourceMediaStream* aSource,
+                                      TrackID aID, StreamTime aDesiredTime,
+                                      StreamTime& aLastEndTime)
 {
   VideoSegment segment;
   MonitorAutoLock mon(mMonitor);
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::CairoImage> image = mImage;
-  TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
-  TrackTicks delta = target - aLastEndTime;
+  StreamTime delta = aDesiredTime - aLastEndTime;
   if (delta > 0) {
     // nullptr images are allowed
     gfx::IntSize size = image ? image->GetSize() : IntSize(0, 0);
@@ -207,7 +208,7 @@ NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, 
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
     if (aSource->AppendToTrack(aID, &(segment))) {
-      aLastEndTime = target;
+      aLastEndTime = aDesiredTime;
     }
   }
 }
