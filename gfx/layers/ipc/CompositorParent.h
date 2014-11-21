@@ -35,7 +35,6 @@
 #include "nsISupportsImpl.h"
 #include "nsSize.h"                     // for nsIntSize
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
-#include "mozilla/VsyncDispatcher.h"
 
 class CancelableTask;
 class MessageLoop;
@@ -89,35 +88,53 @@ private:
   friend class CompositorParent;
 };
 
+// Controls how and when to enable/disable vsync.
+class VsyncSource
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VsyncSource)
+  virtual void EnableVsync() = 0;
+  virtual void DisableVsync() = 0;
+  virtual bool IsVsyncEnabled() = 0;
+
+protected:
+  virtual ~VsyncSource() {}
+}; // VsyncSource
+
 /**
  * Manages the vsync (de)registration and tracking on behalf of the
  * compositor when it need to paint.
  * Turns vsync notifications into scheduled composites.
  **/
 
-class CompositorVsyncObserver MOZ_FINAL : public VsyncObserver
+class VsyncDispatcher MOZ_FINAL
 {
+  // Cleaned up on main thread along with the compositor. This has the same lifetime
+  // as the CompositorParent
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(VsyncDispatcher)
   friend class CompositorParent;
 
 public:
-  CompositorVsyncObserver(CompositorParent* aCompositorParent);
-  virtual bool NotifyVsync(TimeStamp aVsyncTimestamp) MOZ_OVERRIDE;
+  VsyncDispatcher(CompositorParent* aCompositorParent, VsyncSource* aVsyncSource);
+  static void NotifyVsync(TimeStamp aVsyncTimestamp);
+  void RunVsync(TimeStamp aVsyncTimestamp);
   void SetNeedsComposite(bool aSchedule);
   bool NeedsComposite();
   void CancelCurrentCompositeTask();
- 
+
 private:
-  virtual ~CompositorVsyncObserver();
+  virtual ~VsyncDispatcher();
 
   void Composite(TimeStamp aVsyncTimestamp);
   void NotifyCompositeTaskExecuted();
-  void ObserveVsync();
-  void UnobserveVsync();
+  void EnableVsync();
+  void DisableVsync();
   void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
 
   bool mNeedsComposite;
   bool mIsObservingVsync;
   nsRefPtr<CompositorParent> mCompositorParent;
+  nsRefPtr<VsyncSource> mVsyncSource;
 
   mozilla::Monitor mCurrentCompositeTaskMonitor;
   CancelableTask* mCurrentCompositeTask;
@@ -127,7 +144,7 @@ class CompositorParent MOZ_FINAL : public PCompositorParent,
                                    public ShadowLayersManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorParent)
-  friend class CompositorVsyncObserver;
+  friend class VsyncDispatcher;
 
 public:
   explicit CompositorParent(nsIWidget* aWidget,
@@ -388,7 +405,7 @@ protected:
   nsRefPtr<APZCTreeManager> mApzcTreeManager;
 
   nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-  nsRefPtr<CompositorVsyncObserver> mCompositorVsyncObserver;
+  nsRefPtr<VsyncDispatcher> mVsyncDispatcher;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
