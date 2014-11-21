@@ -22,33 +22,6 @@ using mozilla::NativeEndian;
 
 TraceLoggerGraphState traceLoggersGraph;
 
-class AutoTraceLoggerGraphStateLock
-{
-  TraceLoggerGraphState *graph;
-
-  public:
-    AutoTraceLoggerGraphStateLock(TraceLoggerGraphState *graph MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : graph(graph)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        PR_Lock(graph->lock);
-    }
-    ~AutoTraceLoggerGraphStateLock() {
-        PR_Unlock(graph->lock);
-    }
-  private:
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-TraceLoggerGraphState::TraceLoggerGraphState()
-  : numLoggers(0),
-    out(nullptr)
-{
-    lock = PR_NewLock();
-    if (!lock)
-        MOZ_CRASH();
-}
-
 bool
 TraceLoggerGraphState::ensureInitialized()
 {
@@ -70,18 +43,12 @@ TraceLoggerGraphState::~TraceLoggerGraphState()
         fclose(out);
         out = nullptr;
     }
-
-    if (lock) {
-        PR_DestroyLock(lock);
-        lock = nullptr;
-    }
 }
 
 uint32_t
 TraceLoggerGraphState::nextLoggerId()
 {
-    AutoTraceLoggerGraphStateLock lock(this);
-
+// TODO: lock
     if (!ensureInitialized()) {
         fprintf(stderr, "TraceLogging: Couldn't create the main log file.");
         return uint32_t(-1);
