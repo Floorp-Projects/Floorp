@@ -169,8 +169,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
       "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
-      "findIndex", "copyWithin", "fill", "includes", kIteratorSymbol, "entries", "keys", "constructor"];
+      "findIndex", "copyWithin", "fill", kIteratorSymbol, "entries", "keys", "constructor"];
   if (isNightlyBuild) {
+    gPrototypeProperties['Array'].push('includes');
     let pjsMethods = ['mapPar', 'reducePar', 'scanPar', 'scatterPar', 'filterPar'];
     gPrototypeProperties['Array'] = gPrototypeProperties['Array'].concat(pjsMethods);
   }
