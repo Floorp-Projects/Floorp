@@ -1556,7 +1556,7 @@ void MediaDecoder::Progress(bool aTimer)
   if (!mOwner)
     return;
 
-  TimeStamp now = TimeStamp::Now();
+  TimeStamp now = TimeStamp::NowLoRes();
 
   if (!aTimer) {
     mDataTime = now;
