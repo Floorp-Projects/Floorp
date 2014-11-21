@@ -289,13 +289,13 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
         UnregisterInjectorCallback(mFlashProcess2);
 #endif
 
+    UnregisterSettingsCallbacks();
+
     Preferences::UnregisterCallback(TimeoutChanged, kChildTimeoutPref, this);
     Preferences::UnregisterCallback(TimeoutChanged, kParentTimeoutPref, this);
 #ifdef XP_WIN
     Preferences::UnregisterCallback(TimeoutChanged, kHangUITimeoutPref, this);
     Preferences::UnregisterCallback(TimeoutChanged, kHangUIMinDisplayPref, this);
-
-    UnregisterSettingsCallbacks();
 
     if (mHangUIParent) {
         delete mHangUIParent;
