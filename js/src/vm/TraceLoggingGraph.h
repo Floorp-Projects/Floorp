@@ -214,6 +214,8 @@ class TraceLoggerGraph
     ContinuousSpace<StackEntry> stack;
     uint32_t treeOffset;
 
+    ContinuousSpace<EventEntry> events;
+
     // Helper functions that convert a TreeEntry in different endianness
     // in place.
     void entryToBigEndian(TreeEntry *entry);
@@ -237,7 +239,7 @@ class TraceLoggerGraph
     bool updateNextId(uint32_t treeId, uint32_t nextId);
     bool updateStop(uint32_t treeId, uint64_t timestamp);
 
-    // Flush the tree.
+    // Flush the tree and events.
     bool flush();
 
     // Stop a tree event.
