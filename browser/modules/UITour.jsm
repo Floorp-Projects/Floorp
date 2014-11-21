@@ -527,6 +527,36 @@ this.UITour = {
         enginePromise.catch(Cu.reportError);
         break;
       }
+
+      case "setSearchTerm": {
+        let targetPromise = this.getTarget(window, "search");
+        targetPromise.then(target => {
+          let searchbar = target.node;
+          searchbar.value = data.term;
+          searchbar.inputChanged();
+        }).then(null, Cu.reportError);
+        break;
+      }
+
+      case "openSearchPanel": {
+        let targetPromise = this.getTarget(window, "search");
+        targetPromise.then(target => {
+          let searchbar = target.node;
+
+          if (searchbar.textbox.open) {
+            this.sendPageCallback(messageManager, data.callbackID);
+          } else {
+            let onPopupShown = () => {
+              searchbar.textbox.popup.removeEventListener("popupshown", onPopupShown);
+              this.sendPageCallback(messageManager, data.callbackID);
+            };
+
+            searchbar.textbox.popup.addEventListener("popupshown", onPopupShown);
+            searchbar.openSuggestionsPanel();
+          }
+        }).then(null, Cu.reportError);
+        break;
+      }
     }
 
     if (!window.gMultiProcessBrowser) { // Non-e10s. See bug 1089000.
