@@ -7928,7 +7928,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         ionScript->copyPatchableBackedges(cx, code, patchableBackedges_.begin(), masm);
 
 #ifdef JS_TRACE_LOGGING
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     for (uint32_t i = 0; i < patchableTraceLoggers_.length(); i++) {
         patchableTraceLoggers_[i].fixup(&masm);
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTraceLoggers_[i]),

@@ -695,7 +695,7 @@ void
 HandleException(ResumeFromException *rfe)
 {
     JSContext *cx = GetJSContextFromJitCode();
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 
