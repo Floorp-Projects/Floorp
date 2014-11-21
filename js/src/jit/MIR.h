@@ -6950,6 +6950,13 @@ class MStringReplace
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        if (pattern()->isRegExp())
+            return !pattern()->toRegExp()->source()->global();
+        return false;
+    }
 };
 
 class MSubstr
