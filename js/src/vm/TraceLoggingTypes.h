@@ -11,7 +11,6 @@
 #include "jsstr.h"
 
 #define TRACELOGGER_TREE_ITEMS(_)                     \
-    _(AnnotateScripts)                                \
     _(Baseline)                                       \
     _(BaselineCompilation)                            \
     _(Engine)                                         \
