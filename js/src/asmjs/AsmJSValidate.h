@@ -57,9 +57,7 @@ const size_t AsmJSPageSize = 4096;
 // On x64, the internal ArrayBuffer data array is inflated to 4GiB (only the
 // byteLength portion of which is accessible) so that out-of-bounds accesses
 // (made using a uint32 index) are guaranteed to raise a SIGSEGV.
-// Unaligned accesses and mask optimizations might also try to access a few
-// bytes after this limit, so just inflate it by AsmJSPageSize.
-static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL + AsmJSPageSize;
+static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
 #endif
 
 // From the asm.js spec Linking section:

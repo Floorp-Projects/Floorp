@@ -350,20 +350,6 @@ SetXMMRegToNaN(AsmJSHeapAccess::ViewType viewType, T *xmm_reg)
         dbls[1] = 0;
         break;
       }
-      case AsmJSHeapAccess::Float32x4: {
-        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
-        float *floats = reinterpret_cast<float*>(xmm_reg);
-        for (unsigned i = 0; i < 4; i++)
-            floats[i] = GenericNaN();
-        break;
-      }
-      case AsmJSHeapAccess::Int32x4: {
-        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(int32_t));
-        int32_t *ints = reinterpret_cast<int32_t*>(xmm_reg);
-        for (unsigned i = 0; i < 4; i++)
-            ints[i] = 0;
-        break;
-      }
       case AsmJSHeapAccess::Int8:
       case AsmJSHeapAccess::Uint8:
       case AsmJSHeapAccess::Int16:

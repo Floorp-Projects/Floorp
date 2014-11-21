@@ -353,12 +353,6 @@ CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTyp
       case AsmJSHeapAccess::Float64:
         masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
         break;
-      case AsmJSHeapAccess::Float32x4:
-        masm.loadConstantFloat32x4(SimdConstant::SplatX4(float(GenericNaN())), ool->dest().fpu());
-        break;
-      case AsmJSHeapAccess::Int32x4:
-        masm.loadConstantInt32x4(SimdConstant::SplatX4(0), ool->dest().fpu());
-        break;
       case AsmJSHeapAccess::Int8:
       case AsmJSHeapAccess::Uint8:
       case AsmJSHeapAccess::Int16:
