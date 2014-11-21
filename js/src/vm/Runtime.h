@@ -54,7 +54,7 @@ class PerThreadData;
 struct ThreadSafeContext;
 class AutoKeepAtoms;
 #ifdef JS_TRACE_LOGGING
-class TraceLoggerThread;
+class TraceLogger;
 #endif
 
 /* Thread Local Storage slot for storing the runtime for a thread. */
@@ -537,7 +537,7 @@ class PerThreadData : public PerThreadDataFriendFields
     irregexp::RegExpStack regexpStack;
 
 #ifdef JS_TRACE_LOGGING
-    TraceLoggerThread   *traceLogger;
+    TraceLogger         *traceLogger;
 #endif
 
   private:
