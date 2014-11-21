@@ -50,7 +50,7 @@ LayoutHelpers.prototype = {
     }
 
     let [xOffset, yOffset] = this.getFrameOffsets(node);
-    let scale = this.calculateScale(node);
+    let scale = LayoutHelpers.getCurrentZoom(node);
 
     return {
       p1: {
@@ -88,19 +88,6 @@ LayoutHelpers.prototype = {
         y: quads.bounds.y * scale + yOffset
       }
     };
-  },
-
-  /**
-   * Get the current zoom factor applied to the container window of a given node
-   * @param {DOMNode}
-   *        The node for which the zoom factor should be calculated
-   * @return {Number}
-   */
-  calculateScale: function(node) {
-    let win = node.ownerDocument.defaultView;
-    let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
-    return winUtils.fullZoom;
   },
 
   /**
@@ -411,7 +398,7 @@ LayoutHelpers.prototype = {
     let xOffset = 0;
     let yOffset = 0;
     let frameWin = node.ownerDocument.defaultView;
-    let scale = this.calculateScale(node);
+    let scale = LayoutHelpers.getCurrentZoom(node);
 
     while (true) {
       // Are we in the top-level window?
@@ -454,7 +441,7 @@ LayoutHelpers.prototype = {
       return;
     }
 
-    let scale = this.calculateScale(node);
+    let scale = LayoutHelpers.getCurrentZoom(node);
 
     // Find out the offset of the node in its current frame
     let offsetLeft = 0;
@@ -606,4 +593,26 @@ LayoutHelpers.isShadowAnonymous = function(node) {
   // If there is a shadowRoot and this is part of it then this
   // is not native anonymous
   return parent.shadowRoot && parent.shadowRoot.contains(node);
+};
+
+/**
+ * Get the current zoom factor applied to the container window of a given node.
+ * Container windows are used as a weakmap key to store the corresponding
+ * nsIDOMWindowUtils instance to avoid querying it every time.
+ *
+ * @param {DOMNode} The node for which the zoom factor should be calculated
+ * @return {Number}
+ */
+let windowUtils = new WeakMap;
+LayoutHelpers.getCurrentZoom = function(node, map = z=>z) {
+  let win = node.ownerDocument.defaultView;
+  let utils = windowUtils.get(win);
+  if (utils) {
+    return utils.fullZoom;
+  }
+
+  utils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+             .getInterface(Ci.nsIDOMWindowUtils);
+  windowUtils.set(win, utils);
+  return utils.fullZoom;
 };
