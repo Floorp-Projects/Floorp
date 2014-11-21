@@ -29,18 +29,17 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     ValueOperand ToTempValue(LInstruction *ins, size_t pos);
 
     template<typename T>
-    bool loadAndNoteViewTypeElement(AsmJSHeapAccess::ViewType vt, const T &srcAddr,
-                                    const LDefinition *out);
-    template<typename T>
-    void loadViewTypeElement(AsmJSHeapAccess::ViewType vt, const T &srcAddr,
+    bool loadAndNoteViewTypeElement(Scalar::Type vt, const T &srcAddr,
                              const LDefinition *out);
     template<typename T>
-    void storeAndNoteViewTypeElement(AsmJSHeapAccess::ViewType vt, const LAllocation *value,
+    void loadViewTypeElement(Scalar::Type vt, const T &srcAddr,
+                                       const LDefinition *out);
+    template<typename T>
+    void storeAndNoteViewTypeElement(Scalar::Type vt, const LAllocation *value,
                                      const T &dstAddr);
     template<typename T>
-    void storeViewTypeElement(AsmJSHeapAccess::ViewType vt, const LAllocation *value,
+    void storeViewTypeElement(Scalar::Type vt, const LAllocation *value,
                               const T &dstAddr);
-
     void memoryBarrier(MemoryBarrierBits barrier);
 
   public:
