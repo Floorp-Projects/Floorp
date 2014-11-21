@@ -22,8 +22,8 @@ my_convert(JSContext* context, JS::HandleObject obj, JSType type, JS::MutableHan
 static const JSClass myClass = {
     "MyClass",
     0,
-    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, my_convert
+    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+    nullptr, nullptr, my_convert
 };
 
 static bool
