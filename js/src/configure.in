@@ -2985,16 +2985,16 @@ AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
-dnl = Disable trace logging
+dnl = Enable trace logging
 dnl ========================================================
-ENABLE_TRACE_LOGGING=1
-MOZ_ARG_DISABLE_BOOL(trace-logging,
-[  --disable-trace-logging   Disable trace logging],
+MOZ_ARG_ENABLE_BOOL(trace-logging,
+[  --enable-trace-logging   Enable trace logging],
+    ENABLE_TRACE_LOGGING=1,
     ENABLE_TRACE_LOGGING= )
 
 AC_SUBST(ENABLE_TRACE_LOGGING)
 
-if test -n "$ENABLE_TRACE_LOGGING"; then
+if test "$ENABLE_TRACE_LOGGING"; then
     AC_DEFINE(JS_TRACE_LOGGING)
 fi
 
