@@ -114,12 +114,13 @@ public:
     AudioDataValue* audio = new AudioDataValue[aInfo->getSize()];
     PodCopy(audio, static_cast<AudioDataValue*>(aBuffer), aInfo->getSize());
 
-    mCallback->Output(new AudioData(aInfo->getOffset(), aInfo->getPresentationTimeUs(),
-                                    aDuration,
-                                    numFrames,
-                                    audio,
-                                    numChannels,
-                                    sampleRate));
+    nsRefPtr<AudioData> data = new AudioData(aInfo->getOffset(), aInfo->getPresentationTimeUs(),
+                                             aDuration,
+                                             numFrames,
+                                             audio,
+                                             numChannels,
+                                             sampleRate);
+    mCallback->Output(data);
     return NS_OK;
   }
 };

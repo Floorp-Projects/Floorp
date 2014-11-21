@@ -726,7 +726,7 @@ JSObject *InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleO
 
 bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mustReturn);
 bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn);
-bool IsCompartmentDebuggee(JSContext *cx);
+bool GlobalHasLiveOnDebuggerStatement(JSContext *cx);
 
 bool EnterWith(JSContext *cx, BaselineFrame *frame, HandleValue val,
                Handle<StaticWithObject *> templ);

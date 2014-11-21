@@ -10,6 +10,9 @@
 #include "gmp-storage.h"
 #include "nsTHashtable.h"
 #include "nsRefPtrHashtable.h"
+#include "gmp-platform.h"
+
+#include <queue>
 
 namespace mozilla {
 namespace gmp {
@@ -70,6 +73,9 @@ public:
 
   GMPErr Close(GMPRecordImpl* aRecord);
 
+  GMPErr EnumerateRecords(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
+                          void* aUserArg);
+
 protected:
   ~GMPStorageChild() {}
 
@@ -81,11 +87,25 @@ protected:
                                 const InfallibleTArray<uint8_t>& aBytes) MOZ_OVERRIDE;
   virtual bool RecvWriteComplete(const nsCString& aRecordName,
                                  const GMPErr& aStatus) MOZ_OVERRIDE;
+  virtual bool RecvRecordNames(const InfallibleTArray<nsCString>& aRecordNames,
+                               const GMPErr& aStatus) MOZ_OVERRIDE;
   virtual bool RecvShutdown() MOZ_OVERRIDE;
 
 private:
   nsRefPtrHashtable<nsCStringHashKey, GMPRecordImpl> mRecords;
   GMPChild* mPlugin;
+
+  struct RecordIteratorContext {
+    explicit RecordIteratorContext(RecvGMPRecordIteratorPtr aFunc,
+                                   void* aUserArg)
+      : mFunc(aFunc)
+      , mUserArg(aUserArg)
+    {}
+    RecvGMPRecordIteratorPtr mFunc;
+    void* mUserArg;
+  };
+
+  std::queue<RecordIteratorContext> mPendingRecordIterators;
   bool mShutdown;
 };
 
