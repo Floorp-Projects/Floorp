@@ -107,11 +107,27 @@ TraceLoggerThread::init()
     if (!events.init())
         return false;
 
+    uint64_t start = rdtsc() - traceLoggers.startupTime;
+    if (!graph.init(start))
+        return false;
+
     // Minimum amount of capacity needed for operation to allow flushing.
     // Flushing requires space for the actual event and two spaces to log the
     // start and stop of flushing.
     if (!events.ensureSpaceBeforeAdd(3))
         return false;
+
+    // Report the textIds to the graph.
+    for (uint32_t i = 0; i < TraceLogger_LastTreeItem; i++) {
+        TraceLoggerTextId id = TraceLoggerTextId(i);
+        graph.addTextId(i, TLTextIdString(id));
+    }
+
+    graph.addTextId(TraceLogger_LastTreeItem, "TraceLogger internal");
+    for (uint32_t i = TraceLogger_LastTreeItem + 1; i < TraceLogger_Last; i++) {
+        TraceLoggerTextId id = TraceLoggerTextId(i);
+        graph.addTextId(i, TLTextIdString(id));
+    }
 
     enabled = 1;
     logTimestamp(TraceLogger_Enable);
@@ -119,41 +135,10 @@ TraceLoggerThread::init()
     return true;
 }
 
-void
-TraceLoggerThread::initGraph()
-{
-    // Create a graph. I don't like this is called reset, but it locks the
-    // graph into the UniquePtr. So it gets deleted when TraceLoggerThread
-    // is destructed.
-    graph.reset(js_new<TraceLoggerGraph>());
-    if (!graph.get())
-        return;
-
-    uint64_t start = rdtsc() - traceLoggers.startupTime;
-    if (!graph->init(start)) {
-        graph = nullptr;
-        return;
-    }
-
-    // Report the textIds to the graph.
-    for (uint32_t i = 0; i < TraceLogger_LastTreeItem; i++) {
-        TraceLoggerTextId id = TraceLoggerTextId(i);
-        graph->addTextId(i, TLTextIdString(id));
-    }
-    graph->addTextId(TraceLogger_LastTreeItem, "TraceLogger internal");
-    for (uint32_t i = TraceLogger_LastTreeItem + 1; i < TraceLogger_Last; i++) {
-        TraceLoggerTextId id = TraceLoggerTextId(i);
-        graph->addTextId(i, TLTextIdString(id));
-    }
-}
-
 TraceLoggerThread::~TraceLoggerThread()
 {
-    if (graph.get()) {
-        if (!failed)
-            graph->log(events);
-        graph = nullptr;
-    }
+    if (!failed)
+        graph.log(events);
 
     for (uint32_t i = 0; i < extraTextId.length(); i++) {
         js_free(extraTextId[i]);
@@ -283,9 +268,7 @@ TraceLoggerThread::createTextId(const char *text)
     if (!pointerMap.add(p, text, textId))
         return TraceLogger_Error;
 
-    if (graph.get())
-        graph->addTextId(textId, text);
-
+    graph.addTextId(textId, text);
     return textId;
 }
 
@@ -330,8 +313,7 @@ TraceLoggerThread::createTextId(const char *filename, size_t lineno, size_t coln
     if (!pointerMap.add(p, ptr, textId))
         return TraceLogger_Error;
 
-    if (graph.get())
-        graph->addTextId(textId, str);
+    graph.addTextId(textId, str);
 
     return textId;
 }
@@ -377,23 +359,19 @@ TraceLoggerThread::logTimestamp(uint32_t id)
     if (!events.ensureSpaceBeforeAdd()) {
         uint64_t start = rdtsc() - traceLoggers.startupTime;
 
-        if (graph.get())
-            graph->log(events);
-
+        graph.log(events);
         events.clear();
 
         // Log the time it took to flush the events as being from the
         // Tracelogger.
-        if (graph.get()) {
-            MOZ_ASSERT(events.capacity() > 2);
-            EventEntry &entryStart = events.pushUninitialized();
-            entryStart.time = start;
-            entryStart.textId = TraceLogger_Internal;
+        MOZ_ASSERT(events.capacity() > 2);
+        EventEntry &entryStart = events.pushUninitialized();
+        entryStart.time = start;
+        entryStart.textId = TraceLogger_Internal;
 
-            EventEntry &entryStop = events.pushUninitialized();
-            entryStop.time = rdtsc() - traceLoggers.startupTime;
-            entryStop.textId = TraceLogger_Stop;
-        }
+        EventEntry &entryStop = events.pushUninitialized();
+        entryStop.time = rdtsc() - traceLoggers.startupTime;
+        entryStop.textId = TraceLogger_Stop;
     }
 
     uint64_t time = rdtsc() - traceLoggers.startupTime;
@@ -409,7 +387,6 @@ TraceLoggerThreadState::TraceLoggerThreadState()
     enabled = 0;
     mainThreadEnabled = false;
     offThreadEnabled = false;
-    graphSpewingEnabled = false;
 
     lock = PR_NewLock();
     if (!lock)
@@ -419,13 +396,13 @@ TraceLoggerThreadState::TraceLoggerThreadState()
 TraceLoggerThreadState::~TraceLoggerThreadState()
 {
     for (size_t i = 0; i < mainThreadLoggers.length(); i++)
-        js_delete(mainThreadLoggers[i]);
+        delete mainThreadLoggers[i];
 
     mainThreadLoggers.clear();
 
     if (threadLoggers.initialized()) {
         for (ThreadLoggerHashMap::Range r = threadLoggers.all(); !r.empty(); r.popFront())
-            js_delete(r.front().value());
+            delete r.front().value();
 
         threadLoggers.finish();
     }
@@ -557,7 +534,6 @@ TraceLoggerThreadState::lazyInit()
                 "\n"
                 "  EnableMainThread        Start logging the main thread immediately.\n"
                 "  EnableOffThread         Start logging helper threads immediately.\n"
-                "  EnableGraph             Enable spewing the tracelogging graph to a file.\n"
             );
             printf("\n");
             exit(0);
@@ -568,8 +544,6 @@ TraceLoggerThreadState::lazyInit()
            mainThreadEnabled = true;
         if (strstr(options, "EnableOffThread"))
            offThreadEnabled = true;
-        if (strstr(options, "EnableGraph"))
-           graphSpewingEnabled = true;
     }
 
     startupTime = rdtsc();
@@ -615,7 +589,7 @@ TraceLoggerThreadState::forMainThread(PerThreadData *mainThread)
             return nullptr;
 
         if (!mainThreadLoggers.append(logger)) {
-            js_delete(logger);
+            delete logger;
             return nullptr;
         }
 
@@ -651,12 +625,9 @@ TraceLoggerThreadState::forThread(PRThread *thread)
         return nullptr;
 
     if (!threadLoggers.add(p, thread, logger)) {
-        js_delete(logger);
+        delete logger;
         return nullptr;
     }
-
-    if (graphSpewingEnabled)
-        logger->initGraph();
 
     if (!offThreadEnabled)
         logger->disable();
@@ -667,12 +638,12 @@ TraceLoggerThreadState::forThread(PRThread *thread)
 TraceLoggerThread *
 TraceLoggerThreadState::create()
 {
-    TraceLoggerThread *logger = js_new<TraceLoggerThread>();
+    TraceLoggerThread *logger = new TraceLoggerThread();
     if (!logger)
         return nullptr;
 
     if (!logger->init()) {
-        js_delete(logger);
+        delete logger;
         return nullptr;
     }
 
