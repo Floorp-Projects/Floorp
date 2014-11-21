@@ -3908,7 +3908,9 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
   nsPresContext* presContext = mFrame->PresContext();
   nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
   bool isRootContentDocument = presContext->IsRootContentDocument();
-  ContainerLayerParameters params = aContainerParameters;
+  nsIPresShell* presShell = presContext->PresShell();
+  ContainerLayerParameters params(presShell->GetXResolution(),
+      presShell->GetYResolution(), nsIntPoint(), aContainerParameters);
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) &&
       rootScrollFrame->GetContent() &&
       nsLayoutUtils::GetCriticalDisplayPort(rootScrollFrame->GetContent(), nullptr)) {
