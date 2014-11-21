@@ -151,11 +151,10 @@ class TraceLoggerThread
     // limited if possible, because of the overhead.
     // Note: it is not allowed to use them in logTimestamp.
     uint32_t createTextId(const char *text);
-    uint32_t createTextId(TraceLoggerTextId type, JSScript *script);
-    uint32_t createTextId(TraceLoggerTextId type, const JS::ReadOnlyCompileOptions &script);
+    uint32_t createTextId(JSScript *script);
+    uint32_t createTextId(const JS::ReadOnlyCompileOptions &script);
   private:
-    uint32_t createTextId(TraceLoggerTextId type, const char *filename, size_t lineno,
-                          size_t colno, const void *p);
+    uint32_t createTextId(const char *filename, size_t lineno, size_t colno, const void *p);
 
   public:
     // Log an event (no start/stop, only the timestamp is recorded).
@@ -265,21 +264,19 @@ inline bool TraceLoggerDisable(TraceLoggerThread *logger) {
     return false;
 }
 
-inline uint32_t TraceLogCreateTextId(TraceLoggerThread *logger, TraceLoggerTextId type,
-                                     JSScript *script)
-{
+inline uint32_t TraceLogCreateTextId(TraceLoggerThread *logger, JSScript *script) {
 #ifdef JS_TRACE_LOGGING
     if (logger)
-        return logger->createTextId(type, script);
+        return logger->createTextId(script);
 #endif
     return TraceLogger_Error;
 }
-inline uint32_t TraceLogCreateTextId(TraceLoggerThread *logger, TraceLoggerTextId type,
+inline uint32_t TraceLogCreateTextId(TraceLoggerThread *logger,
                                      const JS::ReadOnlyCompileOptions &compileOptions)
 {
 #ifdef JS_TRACE_LOGGING
     if (logger)
-        return logger->createTextId(type, compileOptions);
+        return logger->createTextId(compileOptions);
 #endif
     return TraceLogger_Error;
 }
