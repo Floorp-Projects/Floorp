@@ -57,8 +57,6 @@
 
 #define TRACELOGGER_LOG_ITEMS(_)                      \
     _(Bailout)                                        \
-    _(Disable)                                        \
-    _(Enable)                                         \
     _(Stop)
 
 // Predefined IDs for common operations. These IDs can be used
