@@ -480,15 +480,15 @@ public:
   void PassOptionalNullableByteString(const Optional<nsCString>&);
   void PassVariadicByteString(const Sequence<nsCString>&);
 
-  // ScalarValueString types
-  void PassSVS(const nsAString&);
-  void PassNullableSVS(const nsAString&);
-  void PassOptionalSVS(const Optional<nsAString>&);
-  void PassOptionalSVSWithDefaultValue(const nsAString&);
-  void PassOptionalNullableSVS(const Optional<nsAString>&);
-  void PassOptionalNullableSVSWithDefaultValue(const nsAString&);
-  void PassVariadicSVS(const Sequence<nsString>&);
-  void ReceiveSVS(DOMString&);
+  // USVString types
+  void PassUSVS(const nsAString&);
+  void PassNullableUSVS(const nsAString&);
+  void PassOptionalUSVS(const Optional<nsAString>&);
+  void PassOptionalUSVSWithDefaultValue(const nsAString&);
+  void PassOptionalNullableUSVS(const Optional<nsAString>&);
+  void PassOptionalNullableUSVSWithDefaultValue(const nsAString&);
+  void PassVariadicUSVS(const Sequence<nsString>&);
+  void ReceiveUSVS(DOMString&);
 
   // Enumerated types
   void PassEnum(TestEnum);
@@ -613,7 +613,7 @@ public:
   void PassUnionWithMozMap(const StringMozMapOrString&);
   void PassUnionWithMozMapAndSequence(const StringMozMapOrStringSequence&);
   void PassUnionWithSequenceAndMozMap(const StringSequenceOrStringMozMap&);
-  void PassUnionWithSVS(const ScalarValueStringOrLong&);
+  void PassUnionWithUSVS(const USVStringOrLong&);
 #endif
   void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&);
   void PassOptionalUnion(JSContext*, const Optional<ObjectOrLong>&);

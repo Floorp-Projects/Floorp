@@ -337,14 +337,14 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   // only two scales are 1.0 or 2.0, and so the quantization doesn't actually
   // cause problems anyhow).
   // In the case of a mismatch, fall back to scaling based on the dev context's
-  // unscaledAppUnitsPerDevPixel value. On platforms where the device-pixel
+  // AppUnitsPerDevPixelAtUnitFullZoom value. On platforms where the device-pixel
   // scale is uniform across all displays (currently all except OS X), we'll
   // always use the precise value from mWindow->GetDefaultScale here.
   CSSToLayoutDeviceScale scale = widget->GetDefaultScale();
-  if (NSToIntRound(60.0 / scale.scale) == dx->UnscaledAppUnitsPerDevPixel()) {
+  if (NSToIntRound(60.0 / scale.scale) == dx->AppUnitsPerDevPixelAtUnitFullZoom()) {
     invScale = 1.0 / scale.scale;
   } else {
-    invScale = dx->UnscaledAppUnitsPerDevPixel() / 60.0;
+    invScale = dx->AppUnitsPerDevPixelAtUnitFullZoom() / 60.0;
   }
 
   if (changedPos) {

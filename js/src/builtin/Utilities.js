@@ -103,6 +103,11 @@ function ToLength(v) {
     return std_Math_min(v, 0x1fffffffffffff);
 }
 
+// Spec: ECMAScript Draft, 6th edition Oct 14, 2014, 7.2.4.
+function SameValueZero(x, y) {
+    return x === y || (x !== x && y !== y);
+}
+
 /********** Testing code **********/
 
 #ifdef ENABLE_PARALLEL_JS

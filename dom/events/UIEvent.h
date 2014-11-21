@@ -60,7 +60,7 @@ public:
     LayoutDeviceIntPoint offset = aEvent->refPoint +
       LayoutDeviceIntPoint::FromUntyped(event->widget->WidgetToScreenOffset());
     nscoord factor =
-      aPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
+      aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
     return nsIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
                       nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
   }

@@ -49,7 +49,7 @@ Request::GetInternalRequest()
 
 /*static*/ already_AddRefed<Request>
 Request::Constructor(const GlobalObject& aGlobal,
-                     const RequestOrScalarValueString& aInput,
+                     const RequestOrUSVString& aInput,
                      const RequestInit& aInit, ErrorResult& aRv)
 {
   nsRefPtr<InternalRequest> request;
@@ -76,9 +76,9 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   RequestMode fallbackMode = RequestMode::EndGuard_;
   RequestCredentials fallbackCredentials = RequestCredentials::EndGuard_;
-  if (aInput.IsScalarValueString()) {
+  if (aInput.IsUSVString()) {
     nsString input;
-    input.Assign(aInput.GetAsScalarValueString());
+    input.Assign(aInput.GetAsUSVString());
 
     nsString requestURL;
     if (NS_IsMainThread()) {
@@ -191,7 +191,7 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   if (aInit.mBody.WasPassed()) {
-    const OwningArrayBufferOrArrayBufferViewOrBlobOrScalarValueStringOrURLSearchParams& bodyInit = aInit.mBody.Value();
+    const OwningArrayBufferOrArrayBufferViewOrBlobOrUSVStringOrURLSearchParams& bodyInit = aInit.mBody.Value();
     nsCOMPtr<nsIInputStream> stream;
     nsCString contentType;
     aRv = ExtractByteStreamFromBody(bodyInit,
