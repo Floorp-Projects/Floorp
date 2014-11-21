@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr" id="developer-mozilla-org" xmlns:fb="http://www.facebook.com/2008/fbml" xmlns:og="http://ogp.me/ns#">
+<head>
+  <title>Building XULRunner | MDN</title>
+  
+  <meta charset="utf-8">
+  <meta name="robots" content="index, follow">
+  <link rel="home" href="https://developer.mozilla.org/en-US/">
+  <link rel="copyright" href="Build_Instructions.html#copyright">
+  <link rel="shortcut icon" href="../../media/img/favicon.ico">
+
+        <!--[if !IE 6]><!-->
+  <link rel="stylesheet" media="screen,projection,tv" href="../../media/css/mdn-min.css%3Fbuild=f424781.css" />
+      <link rel="stylesheet" media="screen,projection,tv" href="../../media/css/wiki-min.css%3Fbuild=f424781.css" />
+    <!--<![endif]-->
+  <!--[if IE]><link rel="stylesheet" type="text/css" media="all" href="//developer.mozilla.org/media/css/mdn-ie.css"><![endif]-->
+  <!--[if lte IE 7]><link rel="stylesheet" type="text/css" media="all" href="//developer.mozilla.org/media/css/mdn-ie7.css"><![endif]-->
+  <!--[if lte IE 6]><link rel="stylesheet" type="text/css" media="all" href="//developer.mozilla.org/media/css/mdn-ie6.css"><![endif]-->
+  <link rel="stylesheet" type="text/css" media="print" href="../../media/css/mdn-print.css">
+  <link rel="stylesheet" href="../../../www.mozilla.org/tabzilla/media/css/tabzilla.css">
+  
+    <link rel="stylesheet" media="print" href="../../media/css/wiki-print-min.css%3Fbuild=f424781.css" />
+          <link rel="stylesheet" type="text/css"
+            href="../../en-US/docs/Template:CustomCSS%3Fraw=1.css" />
+    
+  <!--[if IE]>
+  <meta http-equiv="imagetoolbar" content="no">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <script src="//developer.mozilla.org/media/js/html5.js"></script>
+  <![endif]-->
+
+    <link rel="alternate" type="application/json" href="https://developer.mozilla.org/en-US/docs/XULRunner/Build_Instructions$json" />
+  <link rel="canonical" href="Build_Instructions.html" />
+
+  <meta property="og:title" content="Building XULRunner"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:image" content="https://developer.mozilla.org/media/img/mdn-logo-sm.png"/>    
+  <meta property="og:site_name" content="Mozilla Developer Network"/>
+
+    <meta property="og:description" content="XULRunner is built using basically the same process as Firefox or other applications. Please read and follow the general Build Documentation for instructions on how to get sources and set up build prerequisites."/>
+  <meta name="description" content="XULRunner is built using basically the same process as Firefox or other applications. Please read and follow the general Build Documentation for instructions on how to get sources and set up build prerequisites." />
+  </head>
+
+<body id="" class="html-ltr document" role="document">
+<!--[if lte IE 8]>
+<noscript><div class="global-notice">
+<p><strong>Warning:</strong> The Mozilla Developer Network website employs emerging web standards that may not be fully supported in some versions of MicroSoft Internet Explorer. You can improve your experience of this website by enabling JavaScript.</p>
+</div></noscript>
+<![endif]-->
+  <header id="masthead" class="minor">
+    <div class="wrap">
+      <ul id="nav-access">
+        <li><a href="Build_Instructions.html#language">Select language</a></li>
+        <li><a href="Build_Instructions.html#q">Skip to search</a></li>
+        <li><a href="Build_Instructions.html#content">Skip to main content</a></li>
+      </ul>
+    
+      <div id="branding">
+                <div id="logo"><a href="https://developer.mozilla.org/en-US/"><img src="../../media/img/mdn-logo-sm.png" alt="Mozilla Developer Network" title="Mozilla Developer Network" width="62" height="71"> Mozilla Developer Network</a></div>
+              </div>
+      
+      
+      <nav id="nav">
+        <ul id="nav-main" role="menubar">
+          <li id="nav-main-topics" class="menu" role="menuitem"><a href="Build_Instructions.html#nav-sub-topics" class="toggle" aria-haspopup="true" aria-labelledby="nav-main-topics" title="Explore other parts of MDN">Topics</a>
+            <ul id="nav-sub-topics" class="sub-menu" aria-hidden="true">
+              <li id="nav-sub-web"><a href="https://developer.mozilla.org/en-US/web">Web</a></li>
+              <li id="nav-sub-apps"><a href="https://developer.mozilla.org/en-US/apps">Apps</a></li>
+              <li id="nav-sub-mobile"><a href="https://developer.mozilla.org/en-US/mobile">Mobile</a></li>
+              <li id="nav-sub-addons"><a href="https://developer.mozilla.org/en-US/addons">Add-ons</a></li>
+              <li id="nav-sub-mozilla"><a href="https://developer.mozilla.org/en-US/mozilla">Mozilla</a></li>
+            </ul>
+          </li>
+          <li id="nav-main-docs" class="menu" role="menuitem">
+            <a href="https://developer.mozilla.org/en-US/docs" class="docs toggle" aria-haspopup="true" aria-labelledby="nav-main-docs">Docs</a>
+            <div id="nav-sub-docs" class="sub-menu" aria-hidden="true">
+              <ul>
+                <li>
+                  <ul>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/HTML">HTML</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/DOM">DOM</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/Using_HTML5_audio_and_video_in_Firefox">Video</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/Using_HTML5_audio_and_video_in_Firefox">Audio</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/SVG">SVG</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/WebGL">WebGL</a></li>
+                  </ul>
+                </li>
+                <li>
+                  <ul>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/HTML/HTML5">HTML5</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/WebSockets">WebSockets</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/HTML/Using_the_application_cache">Offline Cache</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/DOM/Storage">Local Storage</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/IndexedDB">IndexedDB</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications">File API</a></li>
+                  </ul>
+                </li>
+                <li>
+                  <ul>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/CSS">CSS</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/CSS/Using_CSS_gradients">Gradients</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/CSS/Using_CSS_transforms">Transforms</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/CSS/Using_CSS_transitions">Transitions</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/CSS/Using_CSS_animations">Animations</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/CSS/Media_queries">Media Queries</a></li>
+                  </ul>
+                </li>
+                <li>
+                  <ul>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/JavaScript">JavaScript</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/AJAX">AJAX</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/HTML/Canvas">Canvas</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/Using_geolocation">Geolocation</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/DragDrop/Drag_and_Drop">Drag &amp; Drop</a></li>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/DOM/Using_web_workers">Web Workers</a></li>
+                  </ul>
+                </li>
+              </ul>
+              <p><a href="https://developer.mozilla.org/en-US/docs">More docs&hellip;</a></p>
+            </div>
+          </li>
+          <li id="nav-main-demos" role="menuitem"><a href="https://developer.mozilla.org/en-US/demos/" class="demos">Demos</a></li>
+          <li id="nav-main-learning" role="menuitem"><a href="https://developer.mozilla.org/en-US/learn" class="learning">Learning</a></li>
+          <li id="nav-main-community" class="menu" role="menuitem"><a href="Build_Instructions.html#nav-sub-community" class="community toggle" aria-haspopup="true" aria-labelledby="nav-main-community">Community</a>
+            <ul id="nav-sub-community" class="sub-menu">
+              <li><a href="https://developer.mozilla.org/en-US/events">Events</a></li>
+              <li><a href="https://developer.mozilla.org/en-US/discussions">Discussions</a></li>
+              <li><a href="https://developer.mozilla.org/en-US/promote">Promote</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+          
+      <ul class="user-state signed-out">
+    <li class="user-signin menu">
+    <form class="browserid" action="https://developer.mozilla.org/en-US/users/browserid_verify" method="POST"><div style='display:none;'><input type='hidden' id='csrfmiddlewaretoken' name='csrfmiddlewaretoken' value='c92fde167c4768ad483a05412bede68c' /></div>
+        <input id="next" name="next" type="hidden" value="/en-US/docs/XULRunner/Build_Instructions"/>
+        <input required="required" type="hidden" name="assertion" id="id_assertion" />
+                        <a href="Build_Instructions.html#" target="_blank" class="browserid-signin toggle" aria-haspopup="true" title="Sign in with Persona">Sign in</a>
+                <div class="browserid-info sub-menu" aria-hidden="true">
+                <h3>What's this?</h3> <p>MDN has switched to <a href="https://persona.org/" target="_blank" rel="external">Persona</a>, a safe and simple way to sign in with just your e-mail address. <a href="http://identity.mozilla.com/post/12950196039/deploying-browserid-at-mozilla" rel="external">Learn more about why Mozilla is using Persona</a>.</p> <p><strong>Returning members:</strong> sign in with Persona and you'll be connected to your MDN profile (all your information is still here).</p> <p><strong>New members:</strong> sign in with Persona first, then you'll be able to set up your new MDN profile.</p>          <p><a href="Build_Instructions.html#" target="_blank" class="browserid-signin" title="Sign in with Persona">Sign in</a></p>
+        </div>
+              </form>
+    </li>
+  </ul>
+      
+      <form id="site-search" method="get" action="http://www.google.com/search"
+              data-url="/en-US/search">
+        <p>
+          <input type="text" role="search" placeholder="Search MDN" id="q" name="q" value="">
+          <noscript><button type="submit">Search</button></noscript>
+        </p>
+        <input type="hidden" name="sitesearch" value="developer.mozilla.org">
+        <div id="site-search-gg"></div>
+      </form>
+
+      <a href="http://www.mozilla.org/" id="tabzilla">mozilla</a>
+    </div>
+  </header>
+
+    
+
+<!-- top toolbar -->
+<section id="nav-toolbar"><div><div class="wrap">
+  <!-- right floated navigation -->
+  <nav id="tool-menus" role="navigation">
+    <ul id="tools">
+      <li class="menu">
+        <a href="Build_Instructions.html#page-tools" class="toggle">This page</a>
+        <ul id="page-tools" class="sub-menu">
+          <li class="page-print"> <a href="Build_Instructions.html#" onclick="return window.print();"  title="Print page">Print page</a></li>
+                      <li><a href="https://developer.mozilla.org/en-US/docs/new?parent=15078">New sub-page</a></li>
+                  </ul>
+      </li>
+            <li class="menu">
+        <a href="Build_Instructions.html#" class="toggle">Languages</a>
+        <ul id="translations">
+                      <li><a rel="internal" href="https://developer.mozilla.org/ja/docs/XULRunner/Build_Instructions" title="Building XULRunner">日本語</a></li>
+                    
+                      <li><a href="https://developer.mozilla.org/en-US/docs/XULRunner/Build_Instructions$locales">Add translation</a></li>
+                  </ul>
+      </li>
+          </ul>
+  </nav>
+  
+  <!-- left crumb navigation -->
+  <nav class="crumbs" role="navigation">
+    <ol>
+              <li class="crumb"><a href="https://developer.mozilla.org/en-US/docs/en">MDN</a></li>
+              <li class="crumb"><a href="https://developer.mozilla.org/en-US/docs/XULRunner">XULRunner</a></li>
+            <li class="crumb">Building XULRunner</li>
+    </ol>
+  </nav>
+  
+</div></div></section>
+
+
+
+<section id="content">
+  <div class="wrap">
+    <div id="content-main" class="full">
+      <article class="article" role="main" 
+          data-current-revision="129041"
+          data-refresh-message="Your changes were merged. However, something else has been edited, so this page will be refreshed to reflect the changes."
+          data-cancel-edit-message="Abort editing in progress? Your unsaved changes will be discarded.">
+      <header id="article-head">
+        <div class="title">
+            <h1 class="page-title">Building XULRunner</h1>
+                    </div>
+        <ul id="page-buttons">
+            <li class="page-history"><a href="https://developer.mozilla.org/en-US/docs/XULRunner/Build_Instructions$history">History</a></li>
+                                                                                  <li class="page-edit"><a href="https://developer.mozilla.org/en-US/docs/XULRunner/Build_Instructions$edit">Edit</a></li>
+                    </ul>
+
+        
+               </header>
+
+           
+                                
+            
+      <div id="wikiArticle" class="page-content boxed">
+                <div id="article-nav">
+          <div class="page-toc">
+            <h2>Table of Contents</h2>
+            <ol>
+              <code></code><li><ol><li><a href="Build_Instructions.html#CVS_tags_and_XULRunner_versions" rel="internal">CVS tags and XULRunner versions</a><li><a href="Build_Instructions.html#Fetching_Sources_from_Mercurial" rel="internal">Fetching Sources from Mercurial</a></ol></li>
+            </ol>
+          </div>
+          <ul class="page-anchors">
+            <li class="anchor-tags">
+                              <a href="Build_Instructions.html#page-tags">Tags</a>
+                          </li>
+            <li class="anchor-files">
+                              <span title="This document has no attachments">Files</span>
+                          </li>
+          </ul>
+        </div>
+                                <p> </p>
+<p><a href="https://developer.mozilla.org/en/XULRunner" title="en/XULRunner">XULRunner</a> is built using basically the same process as Firefox or other applications. Please read and follow the general <a href="https://developer.mozilla.org/En/Developer_Guide/Build_Instructions" title="En/Developer_Guide/Build_Instructions">Build Documentation</a> for instructions on how to get sources and set up build prerequisites.</p>
+<p>By default, XULRunner is built with <a href="https://developer.mozilla.org/en/JavaXPCOM" title="en/JavaXPCOM">JavaXPCOM</a> support; the build system must be able to find an appropriate JDK on the system; see the instructions on <a href="https://developer.mozilla.org/En/Developer_Guide/Build_Instructions/Building_JavaXPCOM" title="En/Developer_Guide/Build_Instructions/Building_JavaXPCOM">Building JavaXPCOM</a> for more details. If you do not want to build JavaXPCOM support, specify <code>--disable-javaxpcom</code> in your configuration.</p>
+<p>On Mac, XULRunner requires Mac OS X 10.3 or higher and XCode 1.5 or higher to build properly. The runtime requirement is Mac OS X 10.2.</p>
+<p>A basic minimal <a href="https://developer.mozilla.org/en/Configuring_Build_Options#Using_a_.mozconfig_Configuration_File" title="en/Configuring_Build_Options#Using_a_.mozconfig_Configuration_File">mozconfig</a> which will build a release configuration of XULRunner is:</p>
+<pre class="eval">mk_add_options MOZ_CO_PROJECT=xulrunner
+mk_add_options MOZ_OBJDIR=@topsrcdir@/obj-xulrunner
+
+ac_add_options --enable-application=xulrunner
+#Uncomment the following line if you don't want to build JavaXPCOM:
+#ac_add_options --disable-javaxpcom
+</pre>
+<h3 id="CVS_tags_and_XULRunner_versions">CVS tags and XULRunner versions</h3>
+<p>Older XULRunner releases where tagged in CVS with (for instance XULRUNNER_1_8_0_5_RELEASE ) up to version 1.8.0.5</p>
+<p>The CVS repository does not have specific tags for XULRunner anymore. Instead a XULRunner build is a just special build made from the Firefox/Mozilla tree, using the same tag as a Firefox build. There is a convention where a certain XULRunner version maps to a certain tag in the CVS.</p>
+<p>For instance XULRunner 1.8.1.3, the corresponding tag is CVS is : FIREFOX_2_0_0_3_RELEASE</p>
+<p>To find out how those Firefox tags and XULRunner version maps, check out the file mozilla/config/milestone.txt .</p>
+<p>You can also check the User Agent string in Firefox Help/About menu to get the mapping from a certain binary Firefox version to the corresponding XULRunner version. For instance, in Firefox 2.0.0.9 you will get :</p>
+<pre class="eval">Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.9) Gecko/20071025 Firefox/2.0.0.9
+</pre>
+<p>Therefore the XULRunner version for this Firefox version is : 1.8.1.9</p>
+<h3 id="Fetching_Sources_from_Mercurial">Fetching Sources from Mercurial</h3>
+<p>As with all other Mozilla products, one would fetch recent sources from Mercurial. For example, to build XULRunner with the top of the tree:</p>
+<pre>hg clone http://hg.mozilla.org/mozilla-central/ src
+cd src
+echo ". \$topsrcdir/xulrunner/config/mozconfig" &gt; .mozconfig
+make -f client.mk build
+</pre>
+<p><span>Interwiki Language Links</span></p>
+<p></p>
+                  </div>
+    <section class="page-meta">
+      
+            <section id="page-tags">
+        <h2>Tags (4)</h2>
+        <div id="deki-page-tags">
+          <ul class="tags tagit ui-widget ui-widget-content">
+                        <li class="tagit-choice ui-widget-content ui-state-default">
+                <a class="text tagit-label" href="https://developer.mozilla.org/en-US/docs/tag/Developing%20Mozilla">Developing Mozilla</a>
+            </li>
+                        <li class="tagit-choice ui-widget-content ui-state-default">
+                <a class="text tagit-label" href="https://developer.mozilla.org/en-US/docs/tag/XUL">XUL</a>
+            </li>
+                        <li class="tagit-choice ui-widget-content ui-state-default">
+                <a class="text tagit-label" href="https://developer.mozilla.org/en-US/docs/tag/XULRunner">XULRunner</a>
+            </li>
+                        <li class="tagit-choice ui-widget-content ui-state-default">
+                <a class="text tagit-label" href="https://developer.mozilla.org/en-US/docs/tag/Build%20documentation">Build documentation</a>
+            </li>
+                      </ul>
+        </div>
+      </section>
+      
+      
+      <section id="doc-contributors">
+        Contributors to this page: <a href="https://developer.mozilla.org/en-US/profiles/Kray2">Kray2</a>, <a href="https://developer.mozilla.org/en-US/profiles/Taken">Taken</a>, <a href="https://developer.mozilla.org/en-US/profiles/Kozawa">Kozawa</a>, <a href="https://developer.mozilla.org/en-US/profiles/Benjamin%20Smedberg">Benjamin Smedberg</a>, <a href="https://developer.mozilla.org/en-US/profiles/Nickolay">Nickolay</a>, <a href="https://developer.mozilla.org/en-US/profiles/NickolayBot">NickolayBot</a>, <a href="https://developer.mozilla.org/en-US/profiles/Pombredanne">Pombredanne</a>
+                          <br />
+          Last updated by:  
+          <a href="https://developer.mozilla.org/en-US/profiles/Taken">Taken</a>, 
+          <time datetime="2009-10-08T15:16:43-07:00">Oct 8, 2009 3:16:43 PM</time>
+                        </section>
+    </section>
+  </article>
+  <form id="wiki-page-edit" class="editing" method="post" action="https://developer.mozilla.org/en-US/docs/XULRunner/Build_Instructions$edit"><div style='display:none;'><input type='hidden'  name='csrfmiddlewaretoken' value='c92fde167c4768ad483a05412bede68c' /></div>
+      <input type="hidden" name="form" id="form" value="rev" />
+      <input type="hidden" name="content" id="content" value="" />
+  </form>
+      </div>
+   </div>
+    </section>
+
+<section id="footbar">
+<div class="wrap">
+  <p>
+  What do you think of the new MDN? Please <a href="http://mdn.uservoice.com/forums/51389-mdn-website-feedback-http-developer-mozilla-org">share your feedback</a> with us. <a id="dev-mdc-link" href="https://lists.mozilla.org/listinfo/dev-mdc">Join our mailing list</a> to discuss ways to help create great documentation.  </p>
+</div>
+</section>
+<footer id="site-info" class="footer" role="contentinfo">
+<div class="wrap">
+    <div id="legal">
+      <img src="../../media/img/mdn-logo-tiny.png" alt="" width="42" height="48">
+      <p id="copyright">&copy; 2005 - 2012 Mozilla Developer Network and individual contributors</p>
+      <p>
+      Content is available under <a href="https://developer.mozilla.org/en-US/docs/Project:Copyrights">these licenses</a>      &bull; <a href="https://developer.mozilla.org/en-US/docs/Project:About">About MDN</a> &bull;
+      <a href="http://www.mozilla.org/en-US/privacy">Privacy Policy</a> &bull;
+      <a href="https://developer.mozilla.org/discussions">Help</a></p>
+    </div>
+    <ul class="user-state signed-out">
+    <li class="user-signin menu">
+    <form class="browserid" action="https://developer.mozilla.org/en-US/users/browserid_verify" method="POST"><div style='display:none;'><input type='hidden'  name='csrfmiddlewaretoken' value='c92fde167c4768ad483a05412bede68c' /></div>
+        <input id="next" name="next" type="hidden" value="/en-US/docs/XULRunner/Build_Instructions"/>
+        <input required="required" type="hidden" name="assertion" id="id_assertion" />
+                        <a href="Build_Instructions.html#" target="_blank" class="browserid-signin toggle" aria-haspopup="true" title="Sign in with Persona">Sign in</a>
+                <div class="browserid-info sub-menu" aria-hidden="true">
+                <h3>What's this?</h3> <p>MDN has switched to <a href="https://persona.org/" target="_blank" rel="external">Persona</a>, a safe and simple way to sign in with just your e-mail address. <a href="http://identity.mozilla.com/post/12950196039/deploying-browserid-at-mozilla" rel="external">Learn more about why Mozilla is using Persona</a>.</p> <p><strong>Returning members:</strong> sign in with Persona and you'll be connected to your MDN profile (all your information is still here).</p> <p><strong>New members:</strong> sign in with Persona first, then you'll be able to set up your new MDN profile.</p>          <p><a href="Build_Instructions.html#" target="_blank" class="browserid-signin" title="Sign in with Persona">Sign in</a></p>
+        </div>
+              </form>
+    </li>
+  </ul>
+          <form class="languages go" method="get" action="https://developer.mozilla.org/en-US/docs">
+      <label for="language">Other languages:</label>
+      <select id="language" class="wiki-l10n" name="next" dir="ltr">
+        <option value="/en-US/docs/XULRunner/Build_Instructions" selected>
+          English (US)
+        </option>
+                  <option value="/ja/docs/XULRunner/Build_Instructions">
+            日本語
+          </option>      </select>
+      <noscript><button type="submit">Go</button></noscript>
+    </form>
+  </div>
+</footer>
+
+<script src="../../en-US/jsi18n/build:f424781"></script>
+  <script src="../../../www.google.com/jsapi" type="text/javascript"></script>
+  <script src="../../../login.persona.org/include.js" type="text/javascript" async></script>
+  <script src="../../../www.mozilla.org/tabzilla/media/js/tabzilla.js" async></script>
+  <script src="../../media/js/mdn-min.js%3Fbuild=f424781"></script>
+      <script src="../../media/js/wiki-min.js%3Fbuild=f424781"></script>
+      
+<script type="text/javascript">
+//<![CDATA[
+var _tag=new WebTrends();
+_tag.dcsGetId();
+//]]>>
+</script>
+<script type="text/javascript">
+//<![CDATA[
+_tag.dcsCollect();
+//]]>>
+</script>
+<noscript>
+<div><img alt="DCSIMG" id="DCSIMG" width="1" height="1" src="../../../statse.webtrendslive.com/dcs8yrjuavz5bdaun34r2o8bi_8o8x/njs.gif%3Fdcsuri=%252Fnojavascript&amp;WT.js=No&amp;WT.tv=8.6.2"/></div>
+</noscript>
+</body>
+</html>
