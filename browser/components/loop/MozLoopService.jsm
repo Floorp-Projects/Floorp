@@ -23,8 +23,6 @@ const LOOP_SESSION_TYPE = {
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "loop.debug.loglevel";
 
-const EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
-
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
