@@ -1718,8 +1718,8 @@ nsLayoutUtils::SetScrollbarThumbLayerization(nsIFrame* aThumbFrame, bool aLayeri
     reinterpret_cast<void*>(intptr_t(aLayerize)));
 }
 
-static bool
-IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
+bool
+nsLayoutUtils::IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
 {
   return reinterpret_cast<intptr_t>(aThumbFrame->Properties().Get(ScrollbarThumbLayerized()));
 }
@@ -1729,55 +1729,7 @@ nsLayoutUtils::GetAnimatedGeometryRootForFrame(nsDisplayListBuilder* aBuilder,
                                                nsIFrame* aFrame,
                                                const nsIFrame* aStopAtAncestor)
 {
-  nsIFrame* f = aFrame;
-  nsIFrame* stickyFrame = nullptr;
-  while (f != aStopAtAncestor) {
-    if (nsLayoutUtils::IsPopup(f))
-      break;
-    if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(f))
-      break;
-    if (!f->GetParent() &&
-        nsLayoutUtils::ViewportHasDisplayPort(f->PresContext())) {
-      // Viewport frames in a display port need to be animated geometry roots
-      // for background-attachment:fixed elements.
-      break;
-    }
-    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(f);
-    if (!parent)
-      break;
-    nsIAtom* parentType = parent->GetType();
-    // Treat the slider thumb as being as an active scrolled root when it wants
-    // its own layer so that it can move without repainting.
-    if (parentType == nsGkAtoms::sliderFrame && IsScrollbarThumbLayerized(f)) {
-      break;
-    }
-    // Sticky frames are active if their nearest scrollable frame
-    // is also active, just keep a record of sticky frames that we
-    // encounter for now.
-    if (f->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY &&
-        !stickyFrame) {
-      stickyFrame = f;
-    }
-    if (parentType == nsGkAtoms::scrollFrame) {
-      nsIScrollableFrame* sf = do_QueryFrame(parent);
-      if (sf->IsScrollingActive(aBuilder) && sf->GetScrolledFrame() == f) {
-        // If we found a sticky frame inside this active scroll frame,
-        // then use that. Otherwise use the scroll frame.
-        if (stickyFrame) {
-          return stickyFrame;
-        }
-        return f;
-      } else {
-        stickyFrame = nullptr;
-      }
-    }
-    // Fixed-pos frames are parented by the viewport frame, which has no parent
-    if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f)) {
-      return f;
-    }
-    f = parent;
-  }
-  return f;
+  return aBuilder->FindAnimatedGeometryRootFor(aFrame, aStopAtAncestor);
 }
 
 nsIFrame*
