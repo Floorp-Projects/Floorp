@@ -7,14 +7,14 @@
  * https://fetch.spec.whatwg.org/#request-class
  */
 
-typedef (Request or ScalarValueString) RequestInfo;
+typedef (Request or USVString) RequestInfo;
 
 [Constructor(RequestInfo input, optional RequestInit init),
  Exposed=(Window,Worker),
  Func="mozilla::dom::Headers::PrefEnabled"]
 interface Request {
   readonly attribute ByteString method;
-  readonly attribute ScalarValueString url;
+  readonly attribute USVString url;
   readonly attribute Headers headers;
 
   readonly attribute DOMString referrer;

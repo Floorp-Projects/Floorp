@@ -12,11 +12,11 @@
  Func="mozilla::dom::Headers::PrefEnabled"]
 interface Response {
   static Response error();
-  static Response redirect(ScalarValueString url, optional unsigned short status = 302);
+  static Response redirect(USVString url, optional unsigned short status = 302);
 
   readonly attribute ResponseType type;
 
-  readonly attribute ScalarValueString url;
+  readonly attribute USVString url;
   readonly attribute unsigned short status;
   readonly attribute ByteString statusText;
   readonly attribute Headers headers;

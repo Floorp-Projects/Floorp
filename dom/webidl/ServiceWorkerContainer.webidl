@@ -20,11 +20,11 @@ interface ServiceWorkerContainer : EventTarget {
   readonly attribute Promise<ServiceWorkerRegistration> ready;
 
   [Throws]
-  Promise<ServiceWorkerRegistration> register(ScalarValueString scriptURL,
+  Promise<ServiceWorkerRegistration> register(USVString scriptURL,
                                               optional RegistrationOptionList options);
 
   [Throws]
-  Promise<ServiceWorkerRegistration> getRegistration(optional ScalarValueString documentURL = "");
+  Promise<ServiceWorkerRegistration> getRegistration(optional USVString documentURL = "");
 
   [Throws]
    Promise<sequence<ServiceWorkerRegistration>> getRegistrations();
@@ -47,5 +47,5 @@ partial interface ServiceWorkerContainer {
 };
 
 dictionary RegistrationOptionList {
-  ScalarValueString scope = "/";
+  USVString scope = "/";
 };

@@ -648,7 +648,7 @@ void
 nsBaseDragService::ConvertToUnscaledDevPixels(nsPresContext* aPresContext,
                                               int32_t* aScreenX, int32_t* aScreenY)
 {
-  int32_t adj = aPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
+  int32_t adj = aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
   *aScreenX = nsPresContext::CSSPixelsToAppUnits(*aScreenX) / adj;
   *aScreenY = nsPresContext::CSSPixelsToAppUnits(*aScreenY) / adj;
 }

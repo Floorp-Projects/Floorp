@@ -418,12 +418,10 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
     jsbytecode *pc = frame.pc();
 
     if (cx->compartment()->isDebuggee()) {
-        // We need to bail when debug mode is active to observe the Debugger's
-        // exception unwinding handler if either a Debugger is observing all
-        // execution in the compartment, or it has a live onExceptionUnwind
-        // hook, or it has observed this frame (e.g., for onPop).
-        bool shouldBail = cx->compartment()->debugObservesAllExecution() ||
-                          Debugger::hasLiveOnExceptionUnwind(cx->global());
+        // We need to bail when we are the debuggee of a Debugger with a live
+        // onExceptionUnwind hook, or if a Debugger has observed this frame
+        // (e.g., for onPop).
+        bool shouldBail = Debugger::hasLiveHook(cx->global(), Debugger::OnExceptionUnwind);
         if (!shouldBail) {
             JitActivation *act = cx->mainThread().activation()->asJit();
             RematerializedFrame *rematFrame =

@@ -738,13 +738,13 @@ ShadowLayerForwarder::DeallocShmem(ipc::Shmem& aShmem)
 bool
 ShadowLayerForwarder::IPCOpen() const
 {
-  return mShadowManager->IPCOpen();
+  return HasShadowManager() && mShadowManager->IPCOpen();
 }
 
 bool
 ShadowLayerForwarder::IsSameProcess() const
 {
-  if (!mShadowManager->IPCOpen()) {
+  if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
     return false;
   }
   return mShadowManager->OtherProcess() == kInvalidProcessHandle;
