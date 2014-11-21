@@ -3912,7 +3912,6 @@ Debugger::setupTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     TraceLogEnableTextId(cx, TraceLogger_Scripts);
-    TraceLogDisableTextId(cx, TraceLogger_AnnotateScripts);
 
     args.rval().setBoolean(true);
 

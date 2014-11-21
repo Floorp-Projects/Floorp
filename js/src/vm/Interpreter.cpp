@@ -1463,7 +1463,7 @@ Interpret(JSContext *cx, RunState &state)
     SET_SCRIPT(REGS.fp()->script());
 
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    uint32_t scriptLogId = TraceLogCreateTextId(logger, TraceLogger_Scripts, script);
+    uint32_t scriptLogId = TraceLogCreateTextId(logger, script);
     TraceLogStartEvent(logger, scriptLogId);
     TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
@@ -2577,7 +2577,7 @@ CASE(JSOP_FUNCALL)
 
     SET_SCRIPT(REGS.fp()->script());
 
-    uint32_t scriptLogId = TraceLogCreateTextId(logger, TraceLogger_Scripts, script);
+    uint32_t scriptLogId = TraceLogCreateTextId(logger, script);
     TraceLogStartEvent(logger, scriptLogId);
     TraceLogStartEvent(logger, TraceLogger_Interpreter);
 

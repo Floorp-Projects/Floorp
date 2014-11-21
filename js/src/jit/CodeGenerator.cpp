@@ -7935,7 +7935,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                                            ImmPtr(logger),
                                            ImmPtr(nullptr));
     }
-    uint32_t scriptId = TraceLogCreateTextId(logger, TraceLogger_Scripts, script);
+    uint32_t scriptId = TraceLogCreateTextId(logger, script);
     for (uint32_t i = 0; i < patchableTLScripts_.length(); i++) {
         patchableTLScripts_[i].fixup(&masm);
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, patchableTLScripts_[i]),
