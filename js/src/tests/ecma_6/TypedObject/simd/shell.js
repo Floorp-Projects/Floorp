@@ -10,3 +10,21 @@ function assertEqX4(v, arr) {
     }
 }
 
+function simdToArray(v) {
+    return [v.x, v.y, v.z, v.w];
+}
+
+const INT32_MAX = Math.pow(2, 31) - 1;
+const INT32_MIN = -Math.pow(2, 31);
+assertEq(INT32_MAX + 1 | 0, INT32_MIN);
+
+function testBinaryFunc(v, w, simdFunc, func) {
+    var varr = simdToArray(v);
+    var warr = simdToArray(w);
+
+    var observed = simdToArray(simdFunc(v, w));
+    var expected = varr.map(function(v, i) { return func(varr[i], warr[i]); });
+
+    for (var i = 0; i < observed.length; i++)
+        assertEq(observed[i], expected[i]);
+}
