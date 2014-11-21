@@ -1417,7 +1417,7 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
     if (!patchableTraceLoggers_.append(patchLogger))
         return false;
 
-    Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
+    Address enabledAddress(logger, TraceLogger::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
 
     masm.Push(script);
@@ -1455,7 +1455,7 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     if (!patchableTraceLoggers_.append(patchLocation))
         return false;
 
-    Address enabledAddress(logger, TraceLoggerThread::offsetOfEnabled());
+    Address enabledAddress(logger, TraceLogger::offsetOfEnabled());
     masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
 
     if (isStart)

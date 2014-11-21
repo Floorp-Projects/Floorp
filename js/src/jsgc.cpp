@@ -3605,7 +3605,7 @@ GCHelperState::work()
     MOZ_ASSERT(!thread);
     thread = PR_GetCurrentThread();
 
-    TraceLoggerThread *logger = TraceLoggerForCurrentThread();
+    TraceLogger *logger = TraceLoggerForCurrentThread();
 
     switch (state()) {
 
@@ -3638,7 +3638,7 @@ BackgroundAllocTask::BackgroundAllocTask(JSRuntime *rt, ChunkPool &pool)
 /* virtual */ void
 BackgroundAllocTask::run()
 {
-    TraceLoggerThread *logger = TraceLoggerForCurrentThread();
+    TraceLogger *logger = TraceLoggerForCurrentThread();
     AutoTraceLog logAllocation(logger, TraceLogger_GCAllocation);
 
     AutoLockGC lock(runtime);
@@ -6249,7 +6249,7 @@ GCRuntime::collect(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
     if (rt->mainThread.suppressGC)
         return;
 
-    TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
+    TraceLogger *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logGC(logger, TraceLogger_GC);
 
 #ifdef JS_GC_ZEAL
@@ -6456,7 +6456,7 @@ GCRuntime::minorGC(JS::gcreason::Reason reason)
 {
 #ifdef JSGC_GENERATIONAL
     minorGCRequested = false;
-    TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
+    TraceLogger *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     nursery.collect(rt, reason, nullptr);
     MOZ_ASSERT_IF(!rt->mainThread.suppressGC, nursery.isEmpty());
@@ -6470,7 +6470,7 @@ GCRuntime::minorGC(JSContext *cx, JS::gcreason::Reason reason)
     // objects as needing pretenuring.
 #ifdef JSGC_GENERATIONAL
     minorGCRequested = false;
-    TraceLoggerThread *logger = TraceLoggerForMainThread(rt);
+    TraceLogger *logger = TraceLoggerForMainThread(rt);
     AutoTraceLog logMinorGC(logger, TraceLogger_MinorGC);
     Nursery::TypeObjectList pretenureTypes;
     nursery.collect(rt, reason, &pretenureTypes);

@@ -1347,7 +1347,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, JitFrameIter
     MOZ_ASSERT(poppedLastSPSFrameOut);
     MOZ_ASSERT(!*poppedLastSPSFrameOut);
 
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     TraceLogStopEvent(logger, TraceLogger_IonMonkey);
     TraceLogStartEvent(logger, TraceLogger_Baseline);
 
