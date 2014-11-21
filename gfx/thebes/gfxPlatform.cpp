@@ -547,6 +547,10 @@ gfxPlatform::Init()
     }
 
     RegisterStrongMemoryReporter(new GfxMemoryImageReporter());
+
+    if (gfxPrefs::HardwareVsyncEnabled() && gfxPrefs::VsyncAlignedCompositor()) {
+      gPlatform->InitHardwareVsync();
+    }
 }
 
 static bool sLayersIPCIsUp = false;
@@ -1634,13 +1638,6 @@ gfxPlatform::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aLen, eFon
         AppendPrefLang(aPrefLangs, aLen, (eFontPrefLang) (mCJKPrefLangs[i]));
     }
 
-}
-
-already_AddRefed<mozilla::layers::VsyncSource>
-gfxPlatform::GetVsyncSource()
-{
-  MOZ_CRASH("Vsync support not yet implemented\n");
-  return nullptr;
 }
 
 void
