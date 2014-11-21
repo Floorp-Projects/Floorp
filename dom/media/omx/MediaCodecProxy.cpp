@@ -110,10 +110,6 @@ MediaCodecProxy::MediaCodecProxy(sp<ALooper> aLooper,
 MediaCodecProxy::~MediaCodecProxy()
 {
   releaseCodec();
-
-  // Complete all pending Binder ipc transactions
-  IPCThreadState::self()->flushCommands();
-
   cancelResource();
 }
 
@@ -181,6 +177,7 @@ MediaCodecProxy::releaseCodec()
 
     // Release MediaCodec
     if (mCodec != nullptr) {
+      status_t err = mCodec->stop();
       mCodec->release();
       mCodec = nullptr;
     }
@@ -190,6 +187,10 @@ MediaCodecProxy::releaseCodec()
     // this value come from stagefright's AwesomePlayer.
     usleep(1000);
   }
+
+  // Complete all pending Binder ipc transactions
+  IPCThreadState::self()->flushCommands();
+
 }
 
 bool
@@ -597,6 +598,8 @@ status_t MediaCodecProxy::Output(MediaBuffer** aBuffer, int64_t aTimeoutUs)
 
 bool MediaCodecProxy::IsWaitingResources()
 {
+  // Write Lock for mCodec
+  RWLock::AutoWLock awl(mCodecLock);
   return mCodec == nullptr;
 }
 
@@ -607,11 +610,8 @@ bool MediaCodecProxy::IsDormantNeeded()
 
 void MediaCodecProxy::ReleaseMediaResources()
 {
-  if (mCodec.get()) {
-    mCodec->stop();
-    mCodec->release();
-    mCodec.clear();
-  }
+  releaseCodec();
+  cancelResource();
 }
 
 void MediaCodecProxy::ReleaseMediaBuffer(MediaBuffer* aBuffer) {

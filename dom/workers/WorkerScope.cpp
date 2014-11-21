@@ -304,7 +304,7 @@ WorkerGlobalScope::GetPerformance()
 }
 
 already_AddRefed<Promise>
-WorkerGlobalScope::Fetch(const RequestOrScalarValueString& aInput,
+WorkerGlobalScope::Fetch(const RequestOrUSVString& aInput,
                          const RequestInit& aInit, ErrorResult& aRv)
 {
   return FetchRequest(this, aInput, aInit, aRv);

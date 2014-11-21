@@ -15,11 +15,11 @@
 <script type=text/plain id="idl_0">
 [Constructor]
 interface Cache {
-  Promise<AbstractResponse> match((Request or ScalarValueString) request, optional QueryParams params);
-  Promise<sequence<AbstractResponse>> matchAll((Request or ScalarValueString) request, optional QueryParams params);
-  Promise<any> add((Request or ScalarValueString)... requests);
-  Promise<any> put((Request or ScalarValueString) request, AbstractResponse response);
-  Promise<any> delete((Request or ScalarValueString) request, optional QueryParams params);
+  Promise<AbstractResponse> match((Request or USVString) request, optional QueryParams params);
+  Promise<sequence<AbstractResponse>> matchAll((Request or USVString) request, optional QueryParams params);
+  Promise<any> add((Request or USVString)... requests);
+  Promise<any> put((Request or USVString) request, AbstractResponse response);
+  Promise<any> delete((Request or USVString) request, optional QueryParams params);
   Promise<any> each(CacheIterationCallback callback, optional object thisArg);
 };
 
@@ -30,7 +30,7 @@ dictionary QueryParams {
   boolean prefixMatch;
 };
 
-callback CacheIterationCallback = void (AbstractResponse value, (Request or ScalarValueString) key, Cache map);
+callback CacheIterationCallback = void (AbstractResponse value, (Request or USVString) key, Cache map);
 </pre>
 
 
@@ -38,7 +38,7 @@ callback CacheIterationCallback = void (AbstractResponse value, (Request or Scal
     <script type=text/plain id="untested_idls">
         interface AbstractResponse {};
         interface Request {};
-        interface ScalarValueString {};
+        interface USVString {};
     </pre>
 
     <script>

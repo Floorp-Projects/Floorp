@@ -33,8 +33,10 @@ PRLogModuleInfo* GetDemuxerLog() {
   return log;
 }
 #define LOG(...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define VLOG(...) PR_LOG(GetDemuxerLog(), PR_LOG_DEBUG+1, (__VA_ARGS__))
 #else
 #define LOG(...)
+#define VLOG(...)
 #endif
 
 using namespace mp4_demuxer;
@@ -134,14 +136,28 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
 
 MP4Reader::~MP4Reader()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_DTOR(MP4Reader);
-  Shutdown();
 }
+
+class DestroyPDMTask : public nsRunnable {
+public:
+  DestroyPDMTask(nsAutoPtr<PlatformDecoderModule>& aPDM)
+    : mPDM(aPDM)
+  {}
+  NS_IMETHOD Run() MOZ_OVERRIDE {
+    MOZ_ASSERT(NS_IsMainThread());
+    mPDM = nullptr;
+    return NS_OK;
+  }
+private:
+  nsAutoPtr<PlatformDecoderModule> mPDM;
+};
 
 void
 MP4Reader::Shutdown()
 {
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+
   if (mAudio.mDecoder) {
     Flush(kAudio);
     mAudio.mDecoder->Shutdown();
@@ -164,8 +180,10 @@ MP4Reader::Shutdown()
   mQueuedVideoSample = nullptr;
 
   if (mPlatform) {
-    mPlatform->Shutdown();
-    mPlatform = nullptr;
+    // PDMs are supposed to be destroyed on the main thread...
+    nsRefPtr<DestroyPDMTask> task(new DestroyPDMTask(mPlatform));
+    MOZ_ASSERT(!mPlatform);
+    NS_DispatchToMainThread(task);
   }
 }
 
@@ -206,12 +224,10 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 
   InitLayersBackendType();
 
-  mAudio.mTaskQueue = new MediaTaskQueue(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("MP4 Audio Decode")));
+  mAudio.mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
   NS_ENSURE_TRUE(mAudio.mTaskQueue, NS_ERROR_FAILURE);
 
-  mVideo.mTaskQueue = new MediaTaskQueue(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("MP4 Video Decode")));
+  mVideo.mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
   NS_ENSURE_TRUE(mVideo.mTaskQueue, NS_ERROR_FAILURE);
 
   static bool sSetupPrefCache = false;
@@ -483,6 +499,176 @@ MP4Reader::GetDecoderData(TrackType aTrack)
   return (aTrack == kAudio) ? mAudio : mVideo;
 }
 
+void
+MP4Reader::RequestVideoData(bool aSkipToNextKeyframe,
+                            int64_t aTimeThreshold)
+{
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  VLOG("RequestVideoData skip=%d time=%lld", aSkipToNextKeyframe, aTimeThreshold);
+
+  // Record number of frames decoded and parsed. Automatically update the
+  // stats counters using the AutoNotifyDecoded stack-based class.
+  uint32_t parsed = 0, decoded = 0;
+  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+
+  MOZ_ASSERT(HasVideo() && mPlatform && mVideo.mDecoder);
+
+  if (aSkipToNextKeyframe) {
+    if (!SkipVideoDemuxToNextKeyFrame(aTimeThreshold, parsed) ||
+        NS_FAILED(mVideo.mDecoder->Flush())) {
+      NS_WARNING("Failed to skip/flush video when skipping-to-next-keyframe.");
+    }
+  }
+
+  auto& decoder = GetDecoderData(kVideo);
+  MonitorAutoLock lock(decoder.mMonitor);
+  decoder.mOutputRequested = true;
+  ScheduleUpdate(kVideo);
+
+  // Report the number of "decoded" frames as the difference in the
+  // mNumSamplesOutput field since the last time we were called.
+  uint64_t delta = mVideo.mNumSamplesOutput - mLastReportedNumDecodedFrames;
+  decoded = static_cast<uint32_t>(delta);
+  mLastReportedNumDecodedFrames = mVideo.mNumSamplesOutput;
+}
+
+void
+MP4Reader::RequestAudioData()
+{
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  VLOG("RequestAudioData");
+  auto& decoder = GetDecoderData(kAudio);
+  MonitorAutoLock lock(decoder.mMonitor);
+  decoder.mOutputRequested = true;
+  ScheduleUpdate(kAudio);
+}
+
+void
+MP4Reader::ScheduleUpdate(TrackType aTrack)
+{
+  auto& decoder = GetDecoderData(aTrack);
+  decoder.mMonitor.AssertCurrentThreadOwns();
+  if (decoder.mUpdateScheduled) {
+    return;
+  }
+  VLOG("SchedulingUpdate(%s)", TrackTypeToStr(aTrack));
+  decoder.mUpdateScheduled = true;
+  RefPtr<nsIRunnable> task(
+    NS_NewRunnableMethodWithArg<TrackType>(this, &MP4Reader::Update, aTrack));
+  GetTaskQueue()->Dispatch(task.forget());
+}
+
+bool
+MP4Reader::NeedInput(DecoderData& aDecoder)
+{
+  aDecoder.mMonitor.AssertCurrentThreadOwns();
+  // We try to keep a few more compressed samples input than decoded samples
+  // have been output, provided the state machine has requested we send it a
+  // decoded sample. To account for H.264 streams which may require a longer
+  // run of input than we input, decoders fire an "input exhausted" callback,
+  // which overrides our "few more samples" threshold.
+  return
+    !aDecoder.mError &&
+    !aDecoder.mEOS &&
+    aDecoder.mOutputRequested &&
+    aDecoder.mOutput.IsEmpty() &&
+    (aDecoder.mInputExhausted ||
+     aDecoder.mNumSamplesInput - aDecoder.mNumSamplesOutput < aDecoder.mDecodeAhead);
+}
+
+void
+MP4Reader::Update(TrackType aTrack)
+{
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+
+  bool needInput = false;
+  bool needOutput = false;
+  bool eos = false;
+  auto& decoder = GetDecoderData(aTrack);
+  nsRefPtr<MediaData> output;
+  {
+    MonitorAutoLock lock(decoder.mMonitor);
+    decoder.mUpdateScheduled = false;
+    if (NeedInput(decoder)) {
+      needInput = true;
+      decoder.mInputExhausted = false;
+      decoder.mNumSamplesInput++;
+    }
+    needOutput = decoder.mOutputRequested;
+    if (needOutput && !decoder.mOutput.IsEmpty()) {
+      output = decoder.mOutput[0];
+      decoder.mOutput.RemoveElementAt(0);
+    }
+    eos = decoder.mEOS;
+  }
+  VLOG("Update(%s) ni=%d no=%d iex=%d or=%d fl=%d",
+       TrackTypeToStr(aTrack),
+       needInput,
+       needOutput,
+       decoder.mInputExhausted,
+       decoder.mOutputRequested,
+       decoder.mIsFlushing);
+
+  if (needInput) {
+    MP4Sample* sample = PopSample(aTrack);
+    if (sample) {
+      decoder.mDecoder->Input(sample);
+    } else {
+      {
+        MonitorAutoLock lock(decoder.mMonitor);
+        MOZ_ASSERT(!decoder.mEOS);
+        eos = decoder.mEOS = true;
+      }
+      decoder.mDecoder->Drain();
+    }
+  }
+  if (needOutput) {
+    if (output) {
+      ReturnOutput(output, aTrack);
+    } else if (eos) {
+      ReturnEOS(aTrack);
+    }
+  }
+}
+
+void
+MP4Reader::ReturnOutput(MediaData* aData, TrackType aTrack)
+{
+  auto& decoder = GetDecoderData(aTrack);
+  {
+    MonitorAutoLock lock(decoder.mMonitor);
+    MOZ_ASSERT(decoder.mOutputRequested);
+    decoder.mOutputRequested = false;
+    if (decoder.mDiscontinuity) {
+      decoder.mDiscontinuity = false;
+      aData->mDiscontinuity = true;
+    }
+  }
+
+  if (aTrack == kAudio) {
+    AudioData* audioData = static_cast<AudioData*>(aData);
+
+    if (audioData->mChannels != mInfo.mAudio.mChannels ||
+        audioData->mRate != mInfo.mAudio.mRate) {
+      LOG("MP4Reader::ReturnOutput change of sampling rate:%d->%d",
+          mInfo.mAudio.mRate, audioData->mRate);
+      mInfo.mAudio.mRate = audioData->mRate;
+      mInfo.mAudio.mChannels = audioData->mChannels;
+    }
+
+    GetCallback()->OnAudioDecoded(audioData);
+  } else if (aTrack == kVideo) {
+    GetCallback()->OnVideoDecoded(static_cast<VideoData*>(aData));
+  }
+}
+
+void
+MP4Reader::ReturnEOS(TrackType aTrack)
+{
+  GetCallback()->OnNotDecoded(aTrack == kAudio ? MediaData::AUDIO_DATA : MediaData::VIDEO_DATA,
+                              RequestSampleCallback::END_OF_STREAM);
+}
+
 MP4Sample*
 MP4Reader::PopSample(TrackType aTrack)
 {
@@ -501,108 +687,12 @@ MP4Reader::PopSample(TrackType aTrack)
   }
 }
 
-// How async decoding works:
-//
-// When MP4Reader::Decode() is called:
-// * Lock the DecoderData. We assume the state machine wants
-//   output from the decoder (in future, we'll assume decoder wants input
-//   when the output MediaQueue isn't "full").
-// * Cache the value of mNumSamplesOutput, as prevFramesOutput.
-// * While we've not output data (mNumSamplesOutput != prevNumFramesOutput)
-//   and while we still require input, we demux and input data in the reader.
-//   We assume we require input if
-//   ((mNumSamplesInput - mNumSamplesOutput) < sDecodeAheadMargin) or
-//   mInputExhausted is true. Before we send input, we reset mInputExhausted
-//   and increment mNumFrameInput, and drop the lock on DecoderData.
-// * Once we no longer require input, we wait on the DecoderData
-//   lock for output, or for the input exhausted callback. If we receive the
-//   input exhausted callback, we go back and input more data.
-// * When our output callback is called, we take the DecoderData lock and
-//   increment mNumSamplesOutput. We notify the DecoderData lock. This will
-//   awaken the Decode thread, and unblock it, and it will return.
-bool
-MP4Reader::Decode(TrackType aTrack)
-{
-  DecoderData& data = GetDecoderData(aTrack);
-  MOZ_ASSERT(data.mDecoder);
-
-  data.mMonitor.Lock();
-  uint64_t prevNumFramesOutput = data.mNumSamplesOutput;
-  while (prevNumFramesOutput == data.mNumSamplesOutput) {
-    data.mMonitor.AssertCurrentThreadOwns();
-    if (data.mError) {
-      // Decode error!
-      data.mMonitor.Unlock();
-      return false;
-    }
-    // Send input to the decoder, if we need to. We assume the decoder
-    // needs input if it's told us it's out of input, or we're beneath the
-    // "low water mark" for the amount of input we've sent it vs the amount
-    // out output we've received. We always try to keep the decoder busy if
-    // possible, so we try to maintain at least a few input samples ahead,
-    // if we need output.
-    while (prevNumFramesOutput == data.mNumSamplesOutput &&
-           (data.mInputExhausted ||
-           (data.mNumSamplesInput - data.mNumSamplesOutput) < data.mDecodeAhead) &&
-           !data.mEOS) {
-      data.mMonitor.AssertCurrentThreadOwns();
-      data.mMonitor.Unlock();
-      nsAutoPtr<MP4Sample> compressed(PopSample(aTrack));
-      if (!compressed) {
-        // EOS, or error. Send the decoder a signal to drain.
-        LOG("MP4Reader: EOS or error - no samples available");
-        LOG("Draining %s", TrackTypeToStr(aTrack));
-        data.mMonitor.Lock();
-        MOZ_ASSERT(!data.mEOS);
-        data.mEOS = true;
-        MOZ_ASSERT(!data.mDrainComplete);
-        data.mDrainComplete = false;
-        data.mMonitor.Unlock();
-        data.mDecoder->Drain();
-      } else {
-#ifdef LOG_SAMPLE_DECODE
-        LOG("PopSample %s time=%lld dur=%lld", TrackTypeToStr(aTrack),
-            compressed->composition_timestamp, compressed->duration);
-#endif
-        data.mMonitor.Lock();
-        data.mDrainComplete = false;
-        data.mInputExhausted = false;
-        data.mNumSamplesInput++;
-        data.mMonitor.Unlock();
-
-        if (NS_FAILED(data.mDecoder->Input(compressed))) {
-          return false;
-        }
-        // If Input() failed, we let the auto pointer delete |compressed|.
-        // Otherwise, we assume the decoder will delete it when it's finished
-        // with it.
-        compressed.forget();
-      }
-      data.mMonitor.Lock();
-    }
-    data.mMonitor.AssertCurrentThreadOwns();
-    while (!data.mError &&
-           prevNumFramesOutput == data.mNumSamplesOutput &&
-           (!data.mInputExhausted || data.mEOS) &&
-           !data.mDrainComplete) {
-      data.mMonitor.Wait();
-    }
-    if (data.mError ||
-        (data.mEOS && data.mDrainComplete)) {
-      break;
-    }
-  }
-  data.mMonitor.AssertCurrentThreadOwns();
-  bool rv = !(data.mDrainComplete || data.mError);
-  data.mMonitor.Unlock();
-  return rv;
-}
-
 nsresult
 MP4Reader::ResetDecode()
 {
-  Flush(kAudio);
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   Flush(kVideo);
+  Flush(kAudio);
   return MediaDecoderReader::ResetDecode();
 }
 
@@ -610,7 +700,7 @@ void
 MP4Reader::Output(TrackType aTrack, MediaData* aSample)
 {
 #ifdef LOG_SAMPLE_DECODE
-  LOG("Decoded %s sample time=%lld dur=%lld",
+  VLOG("Decoded %s sample time=%lld dur=%lld",
       TrackTypeToStr(aTrack), aSample->mTime, aSample->mDuration);
 #endif
 
@@ -620,40 +710,20 @@ MP4Reader::Output(TrackType aTrack, MediaData* aSample)
     return;
   }
 
-  DecoderData& data = GetDecoderData(aTrack);
+  auto& decoder = GetDecoderData(aTrack);
   // Don't accept output while we're flushing.
-  MonitorAutoLock mon(data.mMonitor);
-  if (data.mIsFlushing) {
+  MonitorAutoLock mon(decoder.mMonitor);
+  if (decoder.mIsFlushing) {
     LOG("MP4Reader produced output while flushing, discarding.");
     mon.NotifyAll();
     return;
   }
 
-  switch (aTrack) {
-    case kAudio: {
-      MOZ_ASSERT(aSample->mType == MediaData::AUDIO_DATA);
-      AudioData* audioData = static_cast<AudioData*>(aSample);
-      AudioQueue().Push(audioData);
-      if (audioData->mChannels != mInfo.mAudio.mChannels ||
-          audioData->mRate != mInfo.mAudio.mRate) {
-        LOG("MP4Reader::Output change of sampling rate:%d->%d",
-            mInfo.mAudio.mRate, audioData->mRate);
-        mInfo.mAudio.mRate = audioData->mRate;
-        mInfo.mAudio.mChannels = audioData->mChannels;
-      }
-      break;
-    }
-    case kVideo: {
-      MOZ_ASSERT(aSample->mType == MediaData::VIDEO_DATA);
-      VideoQueue().Push(static_cast<VideoData*>(aSample));
-      break;
-    }
-    default:
-      break;
+  decoder.mOutput.AppendElement(aSample);
+  decoder.mNumSamplesOutput++;
+  if (NeedInput(decoder) || decoder.mOutputRequested) {
+    ScheduleUpdate(aTrack);
   }
-
-  data.mNumSamplesOutput++;
-  mon.NotifyAll();
 }
 
 void
@@ -671,28 +741,26 @@ MP4Reader::InputExhausted(TrackType aTrack)
   DecoderData& data = GetDecoderData(aTrack);
   MonitorAutoLock mon(data.mMonitor);
   data.mInputExhausted = true;
-  mon.NotifyAll();
+  ScheduleUpdate(aTrack);
 }
 
 void
 MP4Reader::Error(TrackType aTrack)
 {
   DecoderData& data = GetDecoderData(aTrack);
-  MonitorAutoLock mon(data.mMonitor);
-  data.mError = true;
-  mon.NotifyAll();
-}
-
-bool
-MP4Reader::DecodeAudioData()
-{
-  MOZ_ASSERT(HasAudio() && mPlatform && mAudio.mDecoder);
-  return Decode(kAudio);
+  {
+    MonitorAutoLock mon(data.mMonitor);
+    data.mError = true;
+  }
+  GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA,
+                              RequestSampleCallback::DECODE_ERROR);
 }
 
 void
 MP4Reader::Flush(TrackType aTrack)
 {
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+  VLOG("Flush(%s) BEGIN", TrackTypeToStr(aTrack));
   DecoderData& data = GetDecoderData(aTrack);
   if (!data.mDecoder) {
     return;
@@ -710,12 +778,28 @@ MP4Reader::Flush(TrackType aTrack)
   {
     MonitorAutoLock mon(data.mMonitor);
     data.mIsFlushing = false;
+    data.mOutput.Clear();
+    data.mNumSamplesInput = 0;
+    data.mNumSamplesOutput = 0;
+    data.mInputExhausted = false;
+    if (data.mOutputRequested) {
+      GetCallback()->OnNotDecoded(aTrack == kVideo ? MediaData::VIDEO_DATA : MediaData::AUDIO_DATA,
+                                  RequestSampleCallback::CANCELED);
+    }
+    data.mOutputRequested = false;
+    data.mDiscontinuity = true;
   }
+  if (aTrack == kVideo) {
+    mQueuedVideoSample = nullptr;
+  }
+  VLOG("Flush(%s) END", TrackTypeToStr(aTrack));
 }
 
 bool
 MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed)
 {
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
+
   MOZ_ASSERT(mVideo.mDecoder);
 
   Flush(kVideo);
@@ -725,6 +809,12 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
     nsAutoPtr<MP4Sample> compressed(PopSample(kVideo));
     if (!compressed) {
       // EOS, or error. Let the state machine know.
+      GetCallback()->OnNotDecoded(MediaData::VIDEO_DATA,
+                                  RequestSampleCallback::END_OF_STREAM);
+      {
+        MonitorAutoLock mon(mVideo.mMonitor);
+        mVideo.mEOS = true;
+      }
       return false;
     }
     parsed++;
@@ -739,47 +829,16 @@ MP4Reader::SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed
   return true;
 }
 
-bool
-MP4Reader::DecodeVideoFrame(bool &aKeyframeSkip,
-                            int64_t aTimeThreshold)
-{
-  // Record number of frames decoded and parsed. Automatically update the
-  // stats counters using the AutoNotifyDecoded stack-based class.
-  uint32_t parsed = 0, decoded = 0;
-  AbstractMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
-
-  MOZ_ASSERT(HasVideo() && mPlatform && mVideo.mDecoder);
-
-  if (aKeyframeSkip) {
-    bool ok = SkipVideoDemuxToNextKeyFrame(aTimeThreshold, parsed);
-    if (!ok) {
-      NS_WARNING("Failed to skip demux up to next keyframe");
-      return false;
-    }
-    aKeyframeSkip = false;
-    nsresult rv = mVideo.mDecoder->Flush();
-    NS_ENSURE_SUCCESS(rv, false);
-  }
-
-  bool rv = Decode(kVideo);
-  {
-    // Report the number of "decoded" frames as the difference in the
-    // mNumSamplesOutput field since the last time we were called.
-    MonitorAutoLock mon(mVideo.mMonitor);
-    uint64_t delta = mVideo.mNumSamplesOutput - mLastReportedNumDecodedFrames;
-    decoded = static_cast<uint32_t>(delta);
-    mLastReportedNumDecodedFrames = mVideo.mNumSamplesOutput;
-  }
-  return rv;
-}
-
 void
 MP4Reader::Seek(int64_t aTime,
                 int64_t aStartTime,
                 int64_t aEndTime,
                 int64_t aCurrentTime)
 {
+  LOG("MP4Reader::Seek(%lld)", aTime);
+  MOZ_ASSERT(GetTaskQueue()->IsCurrentThreadIn());
   if (!mDecoder->GetResource()->IsTransportSeekable() || !mDemuxer->CanSeek()) {
+    VLOG("Seek() END (Unseekable)");
     GetCallback()->OnSeekCompleted(NS_ERROR_FAILURE);
     return;
   }
@@ -793,7 +852,7 @@ MP4Reader::Seek(int64_t aTime,
     mDemuxer->SeekAudio(
       mQueuedVideoSample ? mQueuedVideoSample->composition_timestamp : aTime);
   }
-
+  LOG("MP4Reader::Seek(%lld) exit", aTime);
   GetCallback()->OnSeekCompleted(NS_OK);
 }
 

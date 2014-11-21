@@ -68,6 +68,9 @@ public:
 
   static void Message(const std::string& aMessage);
 
+  void ProcessRecordNames(GMPRecordIterator* aRecordIterator,
+                          GMPErr aStatus);
+
 private:
 
   virtual ~FakeDecryptor() {}

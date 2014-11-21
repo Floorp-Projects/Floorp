@@ -82,6 +82,22 @@ typedef GMPErr (*GMPCreateRecordPtr)(const char* aRecordName,
 typedef GMPErr (*GMPSetTimerOnMainThreadPtr)(GMPTask* aTask, int64_t aTimeoutMS);
 typedef GMPErr (*GMPGetCurrentTimePtr)(GMPTimestamp* aOutTime);
 
+typedef void (*RecvGMPRecordIteratorPtr)(GMPRecordIterator* aRecordIterator,
+                                         void* aUserArg,
+                                         GMPErr aStatus);
+
+// Creates a GMPCreateRecordIterator to enumerate the records in storage.
+// When the iterator is ready, the function at aRecvIteratorFunc
+// is called with the GMPRecordIterator as an argument. If the operation
+// fails, RecvGMPRecordIteratorPtr is called with a failure aStatus code.
+// The list that the iterator is covering is fixed when
+// GMPCreateRecordIterator is called, it is *not* updated when changes are
+// made to storage.
+// Iterator begins pointing at first record.
+// aUserArg is passed to the aRecvIteratorFunc upon completion.
+typedef GMPErr (*GMPCreateRecordIteratorPtr)(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
+                                             void* aUserArg);
+
 struct GMPPlatformAPI {
   // Increment the version when things change. Can only add to the struct,
   // do not change what already exists. Pointers to functions may be NULL
@@ -96,6 +112,7 @@ struct GMPPlatformAPI {
   GMPCreateRecordPtr createrecord;
   GMPSetTimerOnMainThreadPtr settimer;
   GMPGetCurrentTimePtr getcurrenttime;
+  GMPCreateRecordIteratorPtr getrecordenumerator;
 };
 
 #endif // GMP_PLATFORM_h_

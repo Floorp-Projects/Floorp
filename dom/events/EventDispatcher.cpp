@@ -32,6 +32,12 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/unused.h"
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+#include "mozilla/dom/Element.h"
+using namespace mozilla::tasktracer;
+#endif
+
 namespace mozilla {
 
 using namespace dom;
@@ -406,6 +412,27 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   // If aTargets is non-null, the event isn't going to be dispatched.
   NS_ENSURE_TRUE(aEvent->message || !aDOMEvent || aTargets,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
+
+#ifdef MOZ_TASK_TRACER
+  {
+    if (aDOMEvent) {
+      nsAutoString eventType;
+      aDOMEvent->GetType(eventType);
+
+      nsCOMPtr<Element> element = do_QueryInterface(aTarget);
+      nsAutoString elementId;
+      nsAutoString elementTagName;
+      if (element) {
+        element->GetId(elementId);
+        element->GetTagName(elementTagName);
+      }
+      AddLabel("Event [%s] dispatched at target [id:%s tag:%s]",
+               NS_ConvertUTF16toUTF8(eventType).get(),
+               NS_ConvertUTF16toUTF8(elementId).get(),
+               NS_ConvertUTF16toUTF8(elementTagName).get());
+    }
+  }
+#endif
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(aTarget);
 
