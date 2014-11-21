@@ -21,7 +21,7 @@ interface FetchEvent : Event {
   readonly attribute boolean isReload;
 
   void respondWith(Promise<AbstractResponse> r);
-  Promise<any> forwardTo(ScalarValueString url);
+  Promise<any> forwardTo(USVString url);
   Promise<any> default();
 };
 
@@ -51,7 +51,7 @@ Service Workers use the `[FetchEvent][1]` interface for `[fetch][2]` event.
         interface Request {};
         interface Client {};
         interface AbstractResponse {};
-        interface ScalarValueString {};
+        interface USVString {};
         interface Event {};
     </pre>
 

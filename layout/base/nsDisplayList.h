@@ -209,7 +209,19 @@ public:
    */
   const nsIFrame* FindReferenceFrameFor(const nsIFrame *aFrame,
                                         nsPoint* aOffset = nullptr);
-  
+
+  /**
+   * Returns whether a frame acts as an animated geometry root, optionally
+   * returning the next ancestor to check.
+   */
+  bool IsAnimatedGeometryRoot(nsIFrame* aFrame, nsIFrame** aParent = nullptr);
+
+  /**
+   * Returns the nearest ancestor frame to aFrame that is considered to have
+   * (or will have) animated geometry. This can return aFrame.
+   */
+  nsIFrame* FindAnimatedGeometryRootFor(nsIFrame* aFrame, const nsIFrame* aStopAtAncestor = nullptr);
+
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
    * establishes the coordinate system for the display list
@@ -311,6 +323,10 @@ public:
   const nsIFrame* GetCurrentFrame() { return mCurrentFrame; }
   const nsIFrame* GetCurrentReferenceFrame() { return mCurrentReferenceFrame; }
   const nsPoint& GetCurrentFrameOffsetToReferenceFrame() { return mCurrentOffsetToReferenceFrame; }
+  const nsIFrame* GetCurrentAnimatedGeometryRoot() {
+    return mCurrentAnimatedGeometryRoot;
+  }
+  void RecomputeCurrentAnimatedGeometryRoot();
 
   /**
    * Returns true if merging and flattening of display lists should be
@@ -539,6 +555,7 @@ public:
       : mBuilder(aBuilder),
         mPrevFrame(aBuilder->mCurrentFrame),
         mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
+        mPrevAnimatedGeometryRoot(mBuilder->mCurrentAnimatedGeometryRoot),
         mPrevLayerEventRegions(aBuilder->mLayerEventRegions),
         mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
         mPrevDirtyRect(aBuilder->mDirtyRect),
@@ -555,6 +572,16 @@ public:
           aBuilder->FindReferenceFrameFor(aForChild,
               &aBuilder->mCurrentOffsetToReferenceFrame);
       }
+      if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
+        if (aBuilder->IsAnimatedGeometryRoot(aForChild)) {
+          aBuilder->mCurrentAnimatedGeometryRoot = aForChild;
+        }
+      } else {
+        // Stop at the previous animated geometry root to help cases that
+        // aren't immediate descendents.
+        aBuilder->mCurrentAnimatedGeometryRoot =
+          aBuilder->FindAnimatedGeometryRootFor(aForChild, aBuilder->mCurrentAnimatedGeometryRoot);
+      }
       aBuilder->mCurrentFrame = aForChild;
       aBuilder->mDirtyRect = aDirtyRect;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
@@ -566,6 +593,11 @@ public:
       mBuilder->mCurrentReferenceFrame = aFrame;
       mBuilder->mCurrentOffsetToReferenceFrame = aOffset;
     }
+    // Return the previous frame's animated geometry root, whether or not the
+    // current frame is an immediate descendant.
+    const nsIFrame* GetPrevAnimatedGeometryRoot() const {
+      return mPrevAnimatedGeometryRoot;
+    }
     ~AutoBuildingDisplayList() {
       mBuilder->mCurrentFrame = mPrevFrame;
       mBuilder->mCurrentReferenceFrame = mPrevReferenceFrame;
@@ -574,11 +606,13 @@ public:
       mBuilder->mDirtyRect = mPrevDirtyRect;
       mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
       mBuilder->mAncestorHasTouchEventHandler = mPrevAncestorHasTouchEventHandler;
+      mBuilder->mCurrentAnimatedGeometryRoot = mPrevAnimatedGeometryRoot;
     }
   private:
     nsDisplayListBuilder* mBuilder;
     const nsIFrame*       mPrevFrame;
     const nsIFrame*       mPrevReferenceFrame;
+    nsIFrame*             mPrevAnimatedGeometryRoot;
     nsDisplayLayerEventRegions* mPrevLayerEventRegions;
     nsPoint               mPrevOffset;
     nsRect                mPrevDirtyRect;
@@ -795,6 +829,8 @@ private:
   const nsIFrame*                mCurrentReferenceFrame;
   // The offset from mCurrentFrame to mCurrentReferenceFrame.
   nsPoint                        mCurrentOffsetToReferenceFrame;
+  // The animated geometry root for mCurrentFrame.
+  nsIFrame*                      mCurrentAnimatedGeometryRoot;
   // will-change budget tracker
   nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
                                  mWillChangeBudget;
