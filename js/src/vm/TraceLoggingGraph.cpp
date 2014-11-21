@@ -377,7 +377,7 @@ TraceLoggerGraph::stopEvent(uint64_t timestamp)
             return;
 
         // Forcefully disable logging. We have no stack information anymore.
-        logTimestamp(TraceLogger_Disable, timestamp);
+        disable(timestamp);
         return;
     }
     stack.pop();
@@ -386,9 +386,6 @@ TraceLoggerGraph::stopEvent(uint64_t timestamp)
 void
 TraceLoggerGraph::logTimestamp(uint32_t id, uint64_t timestamp)
 {
-    if (id == TraceLogger_Enable)
-        enabled = true;
-
     if (!enabled)
         return;
 
@@ -397,9 +394,6 @@ TraceLoggerGraph::logTimestamp(uint32_t id, uint64_t timestamp)
         enabled = 0;
         return;
     }
-
-    if (id == TraceLogger_Disable)
-        disable(timestamp);
 
     EventEntry &entry = events.pushUninitialized();
     entry.time = timestamp;
@@ -492,6 +486,12 @@ TraceLoggerGraph::updateStop(uint32_t treeId, uint64_t timestamp)
 
     tree[treeId - treeOffset].setStop(timestamp);
     return true;
+}
+
+void
+TraceLoggerGraph::enable()
+{
+    enabled = true;
 }
 
 void
