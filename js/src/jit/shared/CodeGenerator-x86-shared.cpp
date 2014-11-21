@@ -346,14 +346,23 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
 bool
 CodeGeneratorX86Shared::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds *ool)
 {
-    if (ool->dest().isFloat()) {
-        if (ool->isFloat32Load())
-            masm.loadConstantFloat32(float(GenericNaN()), ool->dest().fpu());
-        else
-            masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
-    } else {
+    switch (ool->viewType()) {
+      case AsmJSHeapAccess::Float32:
+        masm.loadConstantFloat32(float(GenericNaN()), ool->dest().fpu());
+        break;
+      case AsmJSHeapAccess::Float64:
+        masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
+        break;
+      case AsmJSHeapAccess::Int8:
+      case AsmJSHeapAccess::Uint8:
+      case AsmJSHeapAccess::Int16:
+      case AsmJSHeapAccess::Uint16:
+      case AsmJSHeapAccess::Int32:
+      case AsmJSHeapAccess::Uint32:
+      case AsmJSHeapAccess::Uint8Clamped:
         Register destReg = ool->dest().gpr();
         masm.mov(ImmWord(0), destReg);
+        break;
     }
     masm.jmp(ool->rejoin());
     return true;
