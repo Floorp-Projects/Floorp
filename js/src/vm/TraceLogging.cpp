@@ -80,12 +80,12 @@ rdtsc(void)
 TraceLogging traceLoggers;
 
 static const char *
-TLTextIdString(TraceLoggerTextId id)
+TLTextIdString(TraceLogger::TextId id)
 {
     switch (id) {
-      case TraceLogger_Error:
+      case TraceLogger::TL_Error:
         return "TraceLogger failed to process text";
-#define NAME(textId) case TraceLogger_ ## textId: return #textId;
+#define NAME(textId) case TraceLogger::textId: return #textId;
         TRACELOGGER_TEXT_ID_LIST(NAME)
 #undef NAME
       default:
@@ -159,9 +159,9 @@ TraceLogger::init(uint32_t loggerId)
     if (written < 0)
         fprintf(stderr, "TraceLogging: Error while writing.\n");
 
-    // Eagerly create the default textIds, to match their TraceLoggerTextId.
-    for (uint32_t i = 0; i < TraceLogger_LAST; i++) {
-        TraceLoggerTextId id = TraceLoggerTextId(i);
+    // Eagerly create the default textIds, to match their Tracelogger::TextId.
+    for (uint32_t i = 0; i < LAST; i++) {
+        TraceLogger::TextId id = TraceLogger::TextId(i);
         mozilla::DebugOnly<uint32_t> textId = createTextId(TLTextIdString(id));
         MOZ_ASSERT(textId == i);
     }
@@ -215,14 +215,14 @@ TraceLogger::enable(JSContext *cx)
             MOZ_ASSERT(it.isIonJS() || it.isBaselineJS());
 
             script = it.script();
-            engine = it.isIonJS() ? TraceLogger_IonMonkey : TraceLogger_Baseline;
+            engine = it.isIonJS() ? IonMonkey : Baseline;
         } else {
             MOZ_ASSERT(act->isInterpreter());
             InterpreterFrame *fp = act->asInterpreter()->current();
             MOZ_ASSERT(!fp->runningInJit());
 
             script = fp->script();
-            engine = TraceLogger_Interpreter;
+            engine = Interpreter;
             if (script->compartment() != cx->compartment()) {
                 failed = true;
                 enabled = 0;
@@ -348,7 +348,7 @@ TraceLogger::createTextId(const char *text)
 
     uint32_t textId = nextTextId++;
     if (!pointerMap.add(p, text, textId))
-        return TraceLogger_Error;
+        return TraceLogger::TL_Error;
 
     int written;
     if (textId > 0)
@@ -357,7 +357,7 @@ TraceLogger::createTextId(const char *text)
         written = fprintf(dictFile, "\"%s\"", text);
 
     if (written < 0)
-        return TraceLogger_Error;
+        return TraceLogger::TL_Error;
 
     return textId;
 }
@@ -372,8 +372,8 @@ TraceLogger::createTextId(JSScript *script)
 
     // Only log scripts when enabled otherwise return the global Scripts textId,
     // which will get filtered out.
-    if (!traceLoggers.isTextIdEnabled(TraceLogger_Scripts))
-        return TraceLogger_Scripts;
+    if (!traceLoggers.isTextIdEnabled(TraceLogger::Scripts))
+        return TraceLogger::Scripts;
 
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(script);
     if (p)
@@ -381,7 +381,7 @@ TraceLogger::createTextId(JSScript *script)
 
     uint32_t textId = nextTextId++;
     if (!pointerMap.add(p, script, textId))
-        return TraceLogger_Error;
+        return TraceLogger::TL_Error;
 
     int written;
     if (textId > 0) {
@@ -393,7 +393,7 @@ TraceLogger::createTextId(JSScript *script)
     }
 
     if (written < 0)
-        return TraceLogger_Error;
+        return TraceLogger::TL_Error;
 
     return textId;
 }
@@ -408,8 +408,8 @@ TraceLogger::createTextId(const JS::ReadOnlyCompileOptions &compileOptions)
 
     // Only log scripts when enabled. Else return the global Scripts textId,
     // which will get filtered out.
-    if (!traceLoggers.isTextIdEnabled(TraceLogger_Scripts))
-        return TraceLogger_Scripts;
+    if (!traceLoggers.isTextIdEnabled(TraceLogger::Scripts))
+        return TraceLogger::Scripts;
 
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(&compileOptions);
     if (p)
@@ -417,7 +417,7 @@ TraceLogger::createTextId(const JS::ReadOnlyCompileOptions &compileOptions)
 
     uint32_t textId = nextTextId++;
     if (!pointerMap.add(p, &compileOptions, textId))
-        return TraceLogger_Error;
+        return TraceLogger::TL_Error;
 
     int written;
     if (textId > 0) {
@@ -429,7 +429,7 @@ TraceLogger::createTextId(const JS::ReadOnlyCompileOptions &compileOptions)
     }
 
     if (written < 0)
-        return TraceLogger_Error;
+        return TraceLogger::TL_Error;
 
     return textId;
 }
@@ -583,7 +583,7 @@ TraceLogger::startEvent(uint32_t id)
 
         // Log the time it took to flush the events as being from the
         // Tracelogger.
-        if (!startEvent(TraceLogger_Internal, start)) {
+        if (!startEvent(TraceLogger::TL, start)) {
             fprintf(stderr, "TraceLogging: Failed to start an event.\n");
             enabled = 0;
             failed = true;
@@ -673,7 +673,7 @@ void
 TraceLogger::stopEvent(uint32_t id)
 {
 #ifdef DEBUG
-    if (id != TraceLogger_Scripts && id != TraceLogger_Engine &&
+    if (id != TraceLogger::Scripts && id != TraceLogger::Engine &&
         stack.size() > 1 && stack.lastEntry().active())
     {
         TreeEntry entry;
@@ -794,8 +794,8 @@ TraceLogging::lazyInit()
             "\n"
             "Specific log items:\n"
         );
-        for (uint32_t i = 1; i < TraceLogger_LAST; i++) {
-            TraceLoggerTextId id = TraceLoggerTextId(i);
+        for (uint32_t i = 1; i < TraceLogger::LAST; i++) {
+            TraceLogger::TextId id = TraceLogger::TextId(i);
             if (!TraceLogger::textIdIsToggable(id))
                 continue;
             printf("  %s\n", TLTextIdString(id));
@@ -805,8 +805,8 @@ TraceLogging::lazyInit()
         /*NOTREACHED*/
     }
 
-    for (uint32_t i = 1; i < TraceLogger_LAST; i++) {
-        TraceLoggerTextId id = TraceLoggerTextId(i);
+    for (uint32_t i = 1; i < TraceLogger::LAST; i++) {
+        TraceLogger::TextId id = TraceLogger::TextId(i);
         if (TraceLogger::textIdIsToggable(id))
             enabledTextIds[i] = ContainsFlag(env, TLTextIdString(id));
         else
@@ -814,54 +814,54 @@ TraceLogging::lazyInit()
     }
 
     if (ContainsFlag(env, "Default")) {
-        enabledTextIds[TraceLogger_Bailout] = true;
-        enabledTextIds[TraceLogger_Baseline] = true;
-        enabledTextIds[TraceLogger_BaselineCompilation] = true;
-        enabledTextIds[TraceLogger_GC] = true;
-        enabledTextIds[TraceLogger_GCAllocation] = true;
-        enabledTextIds[TraceLogger_GCSweeping] = true;
-        enabledTextIds[TraceLogger_Interpreter] = true;
-        enabledTextIds[TraceLogger_IonCompilation] = true;
-        enabledTextIds[TraceLogger_IonLinking] = true;
-        enabledTextIds[TraceLogger_IonMonkey] = true;
-        enabledTextIds[TraceLogger_MinorGC] = true;
-        enabledTextIds[TraceLogger_ParserCompileFunction] = true;
-        enabledTextIds[TraceLogger_ParserCompileLazy] = true;
-        enabledTextIds[TraceLogger_ParserCompileScript] = true;
-        enabledTextIds[TraceLogger_IrregexpCompile] = true;
-        enabledTextIds[TraceLogger_IrregexpExecute] = true;
-        enabledTextIds[TraceLogger_Scripts] = true;
-        enabledTextIds[TraceLogger_Engine] = true;
+        enabledTextIds[TraceLogger::Bailout] = true;
+        enabledTextIds[TraceLogger::Baseline] = true;
+        enabledTextIds[TraceLogger::BaselineCompilation] = true;
+        enabledTextIds[TraceLogger::GC] = true;
+        enabledTextIds[TraceLogger::GCAllocation] = true;
+        enabledTextIds[TraceLogger::GCSweeping] = true;
+        enabledTextIds[TraceLogger::Interpreter] = true;
+        enabledTextIds[TraceLogger::IonCompilation] = true;
+        enabledTextIds[TraceLogger::IonLinking] = true;
+        enabledTextIds[TraceLogger::IonMonkey] = true;
+        enabledTextIds[TraceLogger::MinorGC] = true;
+        enabledTextIds[TraceLogger::ParserCompileFunction] = true;
+        enabledTextIds[TraceLogger::ParserCompileLazy] = true;
+        enabledTextIds[TraceLogger::ParserCompileScript] = true;
+        enabledTextIds[TraceLogger::IrregexpCompile] = true;
+        enabledTextIds[TraceLogger::IrregexpExecute] = true;
+        enabledTextIds[TraceLogger::Scripts] = true;
+        enabledTextIds[TraceLogger::Engine] = true;
     }
 
     if (ContainsFlag(env, "IonCompiler")) {
-        enabledTextIds[TraceLogger_IonCompilation] = true;
-        enabledTextIds[TraceLogger_IonLinking] = true;
-        enabledTextIds[TraceLogger_FoldTests] = true;
-        enabledTextIds[TraceLogger_SplitCriticalEdges] = true;
-        enabledTextIds[TraceLogger_RenumberBlocks] = true;
-        enabledTextIds[TraceLogger_DominatorTree] = true;
-        enabledTextIds[TraceLogger_PhiAnalysis] = true;
-        enabledTextIds[TraceLogger_ApplyTypes] = true;
-        enabledTextIds[TraceLogger_ParallelSafetyAnalysis] = true;
-        enabledTextIds[TraceLogger_AliasAnalysis] = true;
-        enabledTextIds[TraceLogger_GVN] = true;
-        enabledTextIds[TraceLogger_LICM] = true;
-        enabledTextIds[TraceLogger_RangeAnalysis] = true;
-        enabledTextIds[TraceLogger_LoopUnrolling] = true;
-        enabledTextIds[TraceLogger_EffectiveAddressAnalysis] = true;
-        enabledTextIds[TraceLogger_EliminateDeadCode] = true;
-        enabledTextIds[TraceLogger_EdgeCaseAnalysis] = true;
-        enabledTextIds[TraceLogger_EliminateRedundantChecks] = true;
-        enabledTextIds[TraceLogger_GenerateLIR] = true;
-        enabledTextIds[TraceLogger_RegisterAllocation] = true;
-        enabledTextIds[TraceLogger_GenerateCode] = true;
-        enabledTextIds[TraceLogger_Scripts] = true;
+        enabledTextIds[TraceLogger::IonCompilation] = true;
+        enabledTextIds[TraceLogger::IonLinking] = true;
+        enabledTextIds[TraceLogger::FoldTests] = true;
+        enabledTextIds[TraceLogger::SplitCriticalEdges] = true;
+        enabledTextIds[TraceLogger::RenumberBlocks] = true;
+        enabledTextIds[TraceLogger::DominatorTree] = true;
+        enabledTextIds[TraceLogger::PhiAnalysis] = true;
+        enabledTextIds[TraceLogger::ApplyTypes] = true;
+        enabledTextIds[TraceLogger::ParallelSafetyAnalysis] = true;
+        enabledTextIds[TraceLogger::AliasAnalysis] = true;
+        enabledTextIds[TraceLogger::GVN] = true;
+        enabledTextIds[TraceLogger::LICM] = true;
+        enabledTextIds[TraceLogger::RangeAnalysis] = true;
+        enabledTextIds[TraceLogger::LoopUnrolling] = true;
+        enabledTextIds[TraceLogger::EffectiveAddressAnalysis] = true;
+        enabledTextIds[TraceLogger::EliminateDeadCode] = true;
+        enabledTextIds[TraceLogger::EdgeCaseAnalysis] = true;
+        enabledTextIds[TraceLogger::EliminateRedundantChecks] = true;
+        enabledTextIds[TraceLogger::GenerateLIR] = true;
+        enabledTextIds[TraceLogger::RegisterAllocation] = true;
+        enabledTextIds[TraceLogger::GenerateCode] = true;
+        enabledTextIds[TraceLogger::Scripts] = true;
     }
 
-    enabledTextIds[TraceLogger_Interpreter] = enabledTextIds[TraceLogger_Engine];
-    enabledTextIds[TraceLogger_Baseline] = enabledTextIds[TraceLogger_Engine];
-    enabledTextIds[TraceLogger_IonMonkey] = enabledTextIds[TraceLogger_Engine];
+    enabledTextIds[TraceLogger::Interpreter] = enabledTextIds[TraceLogger::Engine];
+    enabledTextIds[TraceLogger::Baseline] = enabledTextIds[TraceLogger::Engine];
+    enabledTextIds[TraceLogger::IonMonkey] = enabledTextIds[TraceLogger::Engine];
 
     const char *options = getenv("TLOPTIONS");
     if (options) {

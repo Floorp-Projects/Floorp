@@ -42,7 +42,7 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     MOZ_ASSERT(!iter.ionScript()->invalidated());
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLogTimestamp(logger, TraceLogger_Bailout);
+    TraceLogTimestamp(logger, TraceLogger::Bailout);
 
     JitSpew(JitSpew_IonBailouts, "Took bailout! Snapshot offset: %d", iter.snapshotOffset());
 
@@ -108,7 +108,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     JitFrameIterator iter(jitActivations);
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
-    TraceLogTimestamp(logger, TraceLogger_Invalidation);
+    TraceLogTimestamp(logger, TraceLogger::Invalidation);
 
     JitSpew(JitSpew_IonBailouts, "Took invalidation bailout! Snapshot offset: %d", iter.snapshotOffset());
 
