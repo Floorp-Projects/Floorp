@@ -1421,9 +1421,12 @@ this.MozLoopService = {
    */
   openGettingStartedTour: Task.async(function(aSrc = null) {
     try {
-      let url = new URL(Services.prefs.getCharPref("loop.gettingStarted.url"));
+      let urlStr = Services.prefs.getCharPref("loop.gettingStarted.url");
+      let url = new URL(Services.urlFormatter.formatURL(urlStr));
       if (aSrc) {
-        url.searchParams.set("source", aSrc);
+        url.searchParams.set("utm_source", "firefox-browser");
+        url.searchParams.set("utm_medium", "firefox-browser");
+        url.searchParams.set("utm_campaign", aSrc);
       }
       let win = Services.wm.getMostRecentWindow("navigator:browser");
       win.switchToTabHavingURI(url, true, {replaceQueryString: true});
