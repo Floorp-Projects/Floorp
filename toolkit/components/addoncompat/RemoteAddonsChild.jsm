@@ -325,8 +325,8 @@ let AboutProtocolChild = {
       this._instances[contractID] = instance;
       registrar.registerFactory(this._classID, this._classDescription, contractID, instance);
     } else {
+      registrar.unregisterFactory(this._classID, this._instances[contractID]);
       delete this._instances[contractID];
-      registerFactory.unregisterFactory(this._classID, this);
     }
   },
 };
