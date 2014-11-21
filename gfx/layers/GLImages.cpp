@@ -8,6 +8,7 @@
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
 #include "AndroidSurfaceTexture.h"
+#include "GLLibraryEGL.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -16,6 +17,23 @@ namespace mozilla {
 namespace layers {
 
 static nsRefPtr<GLContext> sSnapshotContext;
+
+EGLImageImage::~EGLImageImage()
+{
+  if (!mData.mOwns) {
+    return;
+  }
+
+  if (mData.mImage) {
+    sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mData.mImage);
+    mData.mImage = nullptr;
+  }
+
+  if (mData.mSync) {
+    sEGLLibrary.fDestroySync(EGL_DISPLAY(), mData.mSync);
+    mData.mSync = nullptr;
+  }
+}
 
 TemporaryRef<gfx::SourceSurface>
 SurfaceTextureImage::GetAsSourceSurface()
