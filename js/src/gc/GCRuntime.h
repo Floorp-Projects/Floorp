@@ -75,12 +75,6 @@ class ChunkPool
       private:
         Chunk *current_;
     };
-
-  private:
-    // ChunkPool controls external resources with interdependencies on the
-    // JSRuntime and related structs, so must not be copied.
-    ChunkPool(const ChunkPool &) MOZ_DELETE;
-    ChunkPool operator=(const ChunkPool &) MOZ_DELETE;
 };
 
 // Performs extra allocation off the main thread so that when memory is
@@ -558,9 +552,8 @@ class GCRuntime
      * Return the list of chunks that can be released outside the GC lock.
      * Must be called either during the GC or with the GC lock taken.
      */
-    Chunk *expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock);
+    ChunkPool expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC &lock);
     void freeEmptyChunks(JSRuntime *rt, const AutoLockGC &lock);
-    void freeChunkList(Chunk *chunkListHead);
     void prepareToFreeChunk(ChunkInfo &info);
     void releaseChunk(Chunk *chunk);
 
