@@ -197,6 +197,18 @@ public:
         ConditionNC = ConditionAE
     } Condition;
 
+    // Conditions for CMP instructions (CMPSS, CMPSD, CMPPS, CMPPD, etc).
+    typedef enum {
+        ConditionCmp_EQ    = 0x0,
+        ConditionCmp_LT    = 0x1,
+        ConditionCmp_LE    = 0x2,
+        ConditionCmp_UNORD = 0x3,
+        ConditionCmp_NEQ   = 0x4,
+        ConditionCmp_NLT   = 0x5,
+        ConditionCmp_NLE   = 0x6,
+        ConditionCmp_ORD   = 0x7,
+    } ConditionCmp;
+
     static const char* nameCC(Condition cc)
     {
         static const char* const names[16]
