@@ -8,10 +8,6 @@
 var float32x4 = SIMD.float32x4;
 var int32x4 = SIMD.int32x4;
 
-function simdToArray(v) {
-    return [v.x, v.y, v.z, v.w];
-}
-
 function swizzle(arr, x, y, z, w) {
     return [arr[x], arr[y], arr[z], arr[w]];
 }
