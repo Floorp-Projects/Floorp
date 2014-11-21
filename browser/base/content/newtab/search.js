@@ -19,6 +19,10 @@ let gSearch = {
   },
 
   showPanel: function () {
+    if (!Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
+      return;
+    }
+
     let panel = this._nodes.panel;
     let icon = this._nodes.icon;
     panel.openPopup(icon);
