@@ -75,6 +75,8 @@ loop.store.ConversationStore = (function() {
       // Call Connection information
       // The call id from the loop-server
       callId: undefined,
+      // The caller id of the contacting side
+      callerId: undefined,
       // The connection progress url to connect the websocket
       progressURL: undefined,
       // The websocket token that allows connection to the progress url
