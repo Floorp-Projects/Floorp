@@ -17,11 +17,77 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
+
+function NfcCallback(aWindow) {
+  this.initDOMRequestHelper(aWindow, null);
+  this._createPromise();
+}
+NfcCallback.prototype = {
+  __proto__: DOMRequestIpcHelper.prototype,
+
+  promise: null,
+  _requestId: null,
+
+  _createPromise: function _createPromise() {
+    this.promise = this.createPromise((aResolve, aReject) => {
+      this._requestId = btoa(this.getPromiseResolverId({
+        resolve: aResolve,
+        reject: aReject
+      }));
+    });
+  },
+
+  getCallbackId: function getCallbackId() {
+    return this._requestId;
+  },
+
+  notifySuccess: function notifySuccess() {
+    let resolver = this.takePromiseResolver(atob(this._requestId));
+    if (!resolver) {
+      debug("can not find promise resolver for id: " + this._requestId);
+      return;
+    }
+    resolver.resolve();
+  },
+
+  notifySuccessWithBoolean: function notifySuccessWithBoolean(aResult) {
+    let resolver = this.takePromiseResolver(atob(this._requestId));
+    if (!resolver) {
+      debug("can not find promise resolver for id: " + this._requestId);
+      return;
+    }
+    resolver.resolve(aResult);
+  },
+
+  notifySuccessWithNDEFRecords: function notifySuccessWithNDEFRecords(aRecords) {
+    let resolver = this.takePromiseResolver(atob(this._requestId));
+    if (!resolver) {
+      debug("can not find promise resolver for id: " + this._requestId);
+      return;
+    }
+    resolver.resolve(aRecords);
+  },
+
+  notifyError: function notifyError(aErrorMsg) {
+    let resolver = this.takePromiseResolver(atob(this._requestId));
+    if (!resolver) {
+      debug("can not find promise resolver for id: " + this._requestId +
+           ", errormsg: " + aErrorMsg);
+      return;
+    }
+    resolver.reject(aErrorMsg);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
+                                         Ci.nsIObserver,
+                                         Ci.nsINfcRequestCallback]),
+};
 
 /**
  * Implementation of NFCTag.
@@ -64,7 +130,9 @@ MozNFCTagImpl.prototype = {
       throw new this._window.DOMError("InvalidStateError", "NFCTag object is invalid");
     }
 
-    return this._nfcContentHelper.readNDEF(this.session);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.readNDEF(this.session, callback);
+    return callback.promise;
   },
 
   writeNDEF: function writeNDEF(records) {
@@ -85,7 +153,9 @@ MozNFCTagImpl.prototype = {
       throw new this._window.DOMError("NotSupportedError", "Exceed max NDEF size");
     }
 
-    return this._nfcContentHelper.writeNDEF(records, this.session);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.writeNDEF(records, this.session, callback);
+    return callback.promise;
   },
 
   makeReadOnly: function makeReadOnly() {
@@ -98,7 +168,9 @@ MozNFCTagImpl.prototype = {
                                       "NFCTag object cannot be made read-only");
     }
 
-    return this._nfcContentHelper.makeReadOnly(this.session);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.makeReadOnly(this.session, callback);
+    return callback.promise;
   },
 
   format: function format() {
@@ -111,7 +183,9 @@ MozNFCTagImpl.prototype = {
                                       "NFCTag object is not formatable");
     }
 
-    return this._nfcContentHelper.format(this.session);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.format(this.session, callback);
+    return callback.promise;
   },
 
   classID: Components.ID("{4e1e2e90-3137-11e3-aa6e-0800200c9a66}"),
@@ -146,7 +220,9 @@ MozNFCPeerImpl.prototype = {
     }
 
     // Just forward sendNDEF to writeNDEF
-    return this._nfcContentHelper.writeNDEF(records, this.session);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.writeNDEF(records, this.session, callback);
+    return callback.promise;
   },
 
   sendFile: function sendFile(blob) {
@@ -157,8 +233,11 @@ MozNFCPeerImpl.prototype = {
     let data = {
       "blob": blob
     };
-    return this._nfcContentHelper.sendFile(Cu.cloneInto(data, this._window),
-                                           this.session);
+
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.sendFile(Cu.cloneInto(data, this._window),
+                                    this.session, callback);
+    return callback.promise;
   },
 
   classID: Components.ID("{c1b2bcf0-35eb-11e3-aa6e-0800200c9a66}"),
@@ -217,7 +296,10 @@ MozNFCImpl.prototype = {
   checkP2PRegistration: function checkP2PRegistration(manifestUrl) {
     // Get the AppID and pass it to ContentHelper
     let appID = appsService.getAppLocalIdByManifestURL(manifestUrl);
-    return this._nfcContentHelper.checkP2PRegistration(appID);
+
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.checkP2PRegistration(appID, callback);
+    return callback.promise;
   },
 
   notifyUserAcceptedP2P: function notifyUserAcceptedP2P(manifestUrl) {
@@ -231,15 +313,21 @@ MozNFCImpl.prototype = {
   },
 
   startPoll: function startPoll() {
-    return this._nfcContentHelper.changeRFState(this.rfState.DISCOVERY);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.changeRFState(this.rfState.DISCOVERY, callback);
+    return callback.promise;
   },
 
   stopPoll: function stopPoll() {
-    return this._nfcContentHelper.changeRFState(this.rfState.LISTEN);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.changeRFState(this.rfState.LISTEN, callback);
+    return callback.promise;
   },
 
   powerOff: function powerOff() {
-    return this._nfcContentHelper.changeRFState(this.rfState.IDLE);
+    let callback = new NfcCallback(this._window);
+    this._nfcContentHelper.changeRFState(this.rfState.IDLE, callback);
+    return callback.promise;
   },
 
   _createNFCPeer: function _createNFCPeer(sessionToken) {
