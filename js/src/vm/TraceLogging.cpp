@@ -341,8 +341,7 @@ uint32_t
 TraceLoggerThread::createTextId(TraceLoggerTextId type, const char *filename, size_t lineno,
                                 size_t colno, const void *ptr)
 {
-    MOZ_ASSERT(type == TraceLogger_Scripts || type == TraceLogger_AnnotateScripts ||
-               type == TraceLogger_InlinedScripts);
+    MOZ_ASSERT(type == TraceLogger_Scripts || type == TraceLogger_AnnotateScripts);
 
     if (!filename)
         filename = "<unknown>";

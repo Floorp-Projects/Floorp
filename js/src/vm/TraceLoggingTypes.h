@@ -20,14 +20,13 @@
     _(GCSweeping)                                     \
     _(Internal)                                       \
     _(Interpreter)                                    \
-    _(InlinedScripts)                                 \
     _(Invalidation)                                   \
+    _(IrregexpCompile)                                \
+    _(IrregexpExecute)                                \
     _(IonCompilation)                                 \
     _(IonCompilationPaused)                           \
     _(IonLinking)                                     \
     _(IonMonkey)                                      \
-    _(IrregexpCompile)                                \
-    _(IrregexpExecute)                                \
     _(MinorGC)                                        \
     _(ParserCompileFunction)                          \
     _(ParserCompileLazy)                              \
