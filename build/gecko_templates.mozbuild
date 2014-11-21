@@ -90,7 +90,9 @@ def GeckoProgram(name, linkage='standalone', **kwargs):
     '''
     Program(name)
 
-    GeckoBinary(linkage=linkage, mozglue='program', **kwargs)
+    kwargs.setdefault('mozglue', 'program')
+
+    GeckoBinary(linkage=linkage, **kwargs)
 
 
 @template
@@ -103,7 +105,9 @@ def GeckoSimplePrograms(names, **kwargs):
     '''
     SimplePrograms(names)
 
-    GeckoBinary(mozglue='program', **kwargs)
+    kwargs.setdefault('mozglue', 'program')
+
+    GeckoBinary(**kwargs)
 
 
 @template
@@ -116,7 +120,9 @@ def GeckoCppUnitTests(names, **kwargs):
     '''
     CppUnitTests(names)
 
-    GeckoBinary(mozglue='program', **kwargs)
+    kwargs.setdefault('mozglue', 'program')
+
+    GeckoBinary(**kwargs)
 
 
 @template
@@ -128,7 +134,9 @@ def GeckoSharedLibrary(name, **kwargs):
     '''
     SharedLibrary(name)
 
-    GeckoBinary(mozglue='library', **kwargs)
+    kwargs.setdefault('mozglue', 'library')
+
+    GeckoBinary(**kwargs)
 
 
 @template
@@ -140,7 +148,9 @@ def GeckoFramework(name, **kwargs):
     '''
     Framework(name)
 
-    GeckoBinary(mozglue='library', **kwargs)
+    kwargs.setdefault('mozglue', 'library')
+
+    GeckoBinary(**kwargs)
 
 
 @template
