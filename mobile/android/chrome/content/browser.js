@@ -1548,14 +1548,34 @@ var BrowserApp = {
 
         // Check to see if this is a message to enable/disable mixed content blocking.
         if (aData) {
-          let allowMixedContent = JSON.parse(aData).allowMixedContent;
-          if (allowMixedContent) {
-            // Set a flag to disable mixed content blocking.
-            flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
-          } else {
-            // Set mixedContentChannel to null to re-enable mixed content blocking.
-            let docShell = browser.webNavigation.QueryInterface(Ci.nsIDocShell);
-            docShell.mixedContentChannel = null;
+          let data = JSON.parse(aData);
+          if (data.contentType === "mixed") {
+            if (data.allowContent) {
+              // Set a flag to disable mixed content blocking.
+              flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_MIXED_CONTENT;
+            } else {
+              // Set mixedContentChannel to null to re-enable mixed content blocking.
+              let docShell = browser.webNavigation.QueryInterface(Ci.nsIDocShell);
+              docShell.mixedContentChannel = null;
+            }
+          } else if (data.contentType === "tracking") {
+            if (data.allowContent) {
+              // Convert document URI into the format used by
+              // nsChannelClassifier::ShouldEnableTrackingProtection
+              // (any scheme turned into https is correct)
+              let normalizedUrl = Services.io.newURI("https://" + browser.currentURI.hostPort, null, null);
+              // Add the current host in the 'trackingprotection' consumer of
+              // the permission manager using a normalized URI. This effectively
+              // places this host on the tracking protection white list.
+              Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
+              Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
+            } else {
+              // Remove the current host from the 'trackingprotection' consumer
+              // of the permission manager. This effectively removes this host
+              // from the tracking protection white list (any list actually).
+              Services.perms.remove(browser.currentURI.host, "trackingprotection");
+              Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
+            }
           }
         }
 
