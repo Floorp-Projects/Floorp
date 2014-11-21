@@ -296,17 +296,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     /* The map from debuggee Envs to Debugger.Environment instances. */
     ObjectWeakMap environments;
 
-    /*
-     * Keep track of tracelogger last drained identifiers to know if there are
-     * lost events.
-     */
-#ifdef NIGHTLY_BUILD
-    uint32_t traceLoggerLastDrainedId;
-    uint32_t traceLoggerLastDrainedIteration;
-#endif
-    uint32_t traceLoggerScriptedCallsLastDrainedId;
-    uint32_t traceLoggerScriptedCallsLastDrainedIteration;
-
     class FrameRange;
     class ScriptQuery;
     class ObjectQuery;
@@ -405,14 +394,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static bool findObjects(JSContext *cx, unsigned argc, Value *vp);
     static bool findAllGlobals(JSContext *cx, unsigned argc, Value *vp);
     static bool makeGlobalObjectReference(JSContext *cx, unsigned argc, Value *vp);
-    static bool setupTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp);
-    static bool drainTraceLoggerScriptCalls(JSContext *cx, unsigned argc, Value *vp);
-    static bool startTraceLogger(JSContext *cx, unsigned argc, Value *vp);
-    static bool endTraceLogger(JSContext *cx, unsigned argc, Value *vp);
-#ifdef NIGHTLY_BUILD
     static bool setupTraceLogger(JSContext *cx, unsigned argc, Value *vp);
-    static bool drainTraceLogger(JSContext *cx, unsigned argc, Value *vp);
-#endif
     static bool construct(JSContext *cx, unsigned argc, Value *vp);
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
