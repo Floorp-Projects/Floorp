@@ -2028,7 +2028,10 @@ bool
 CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
 {
     MAsmJSCompareExchangeHeap *mir = ins->mir();
-    Scalar::Type vt = mir->viewType();
+
+    MOZ_ASSERT(mir->viewType() <= AsmJSHeapAccess::Uint32);
+    Scalar::Type vt = Scalar::Type(mir->viewType());
+
     const LAllocation *ptr = ins->ptr();
     Register ptrReg = ToRegister(ptr);
     BaseIndex srcAddr(HeapReg, ptrReg, TimesOne);
@@ -2063,7 +2066,10 @@ bool
 CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
 {
     MAsmJSAtomicBinopHeap *mir = ins->mir();
-    Scalar::Type vt = mir->viewType();
+
+    MOZ_ASSERT(mir->viewType() <= AsmJSHeapAccess::Uint32);
+    Scalar::Type vt = Scalar::Type(mir->viewType());
+
     const LAllocation *ptr = ins->ptr();
     Register ptrReg = ToRegister(ptr);
     Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
