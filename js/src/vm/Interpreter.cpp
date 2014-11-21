@@ -1763,7 +1763,7 @@ CASE(JSOP_RETRVAL)
     if (activation.entryFrame() != REGS.fp()) {
         // Stop the engine. (No details about which engine exactly, could be
         // interpreter, Baseline or IonMonkey.)
-        TraceLogStopEvent(logger, TraceLogger::Engine);
+        TraceLogStopEvent(logger);
         TraceLogStopEvent(logger, TraceLogger::Scripts);
 
         interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
@@ -3491,7 +3491,7 @@ DEFAULT()
 
     gc::MaybeVerifyBarriers(cx, true);
 
-    TraceLogStopEvent(logger, TraceLogger::Engine);
+    TraceLogStopEvent(logger);
     TraceLogStopEvent(logger, scriptLogId);
 
     /*
