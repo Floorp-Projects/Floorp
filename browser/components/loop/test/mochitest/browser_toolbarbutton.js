@@ -8,11 +8,13 @@
 "use strict";
 
 const {LoopRoomsInternal} = Components.utils.import("resource:///modules/loop/LoopRooms.jsm", {});
+Services.prefs.setBoolPref("loop.gettingStarted.seen", true);
 
 registerCleanupFunction(function*() {
   MozLoopService.doNotDisturb = false;
   MozLoopServiceInternal.fxAOAuthProfile = null;
   yield MozLoopServiceInternal.clearError("testing");
+  Services.prefs.clearUserPref("loop.gettingStarted.seen");
 });
 
 add_task(function* test_doNotDisturb() {
