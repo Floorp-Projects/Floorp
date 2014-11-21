@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.SkewHandler;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
@@ -316,7 +315,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
       @Override
       public void handleSuccess(final TokenServerToken token) {
-        FxAccountUtils.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
+        FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
 
         if (!didReceiveBackoff) {
           // We must be OK to touch this token server.
@@ -359,9 +358,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         FxAccountGlobalSession globalSession = null;
         try {
           final ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs, getContext());
-          if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
-            FxAccountUtils.pii(LOG_TAG, "Client device name is: '" + clientsDataDelegate.getClientName() + "'.");
-            FxAccountUtils.pii(LOG_TAG, "Client device data last modified: " + clientsDataDelegate.getLastModifiedTimestamp());
+          if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+            FxAccountConstants.pii(LOG_TAG, "Client device name is: '" + clientsDataDelegate.getClientName() + "'.");
+            FxAccountConstants.pii(LOG_TAG, "Client device data last modified: " + clientsDataDelegate.getLastModifiedTimestamp());
           }
 
           // We compute skew over time using SkewHandler. This yields an unchanging
@@ -445,7 +444,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     Logger.info(LOG_TAG, "Account last synced at: " + fxAccount.getLastSyncedTimestamp());
 
-    if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
       fxAccount.dump();
     }
 

@@ -1137,8 +1137,8 @@ sync_java_files = [
 ]
 
 sync_generated_java_files = [
-    'background/common/GlobalConstants.java',
-    'background/healthreport/HealthReportConstants.java',
-    'fxa/FxAccountConstants.java',
-    'sync/SyncConstants.java',
+    'org/mozilla/gecko/background/common/GlobalConstants.java',
+    'org/mozilla/gecko/background/healthreport/HealthReportConstants.java',
+    'org/mozilla/gecko/fxa/FxAccountConstants.java',
+    'org/mozilla/gecko/sync/SyncConstants.java',
 ]
