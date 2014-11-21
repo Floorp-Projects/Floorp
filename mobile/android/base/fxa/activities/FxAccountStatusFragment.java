@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.preferences.PreferenceFragment;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
@@ -146,7 +145,7 @@ public class FxAccountStatusFragment
     tabsPreference = (CheckBoxPreference) ensureFindPreference("tabs");
     passwordsPreference = (CheckBoxPreference) ensureFindPreference("passwords");
 
-    if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
       removeDebugButtons();
     } else {
       connectDebugButtons();

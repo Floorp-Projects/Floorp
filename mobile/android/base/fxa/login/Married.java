@@ -17,6 +17,7 @@ import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.ExecuteDelegate;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.LogMessage;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -60,23 +61,23 @@ public class Married extends TokensAndKeysState {
     // invalid-timestamp errors from the token server.
     final long expiresAt = JSONWebTokenUtils.DEFAULT_FUTURE_EXPIRES_AT_IN_MILLISECONDS;
     String assertion = JSONWebTokenUtils.createAssertion(keyPair.getPrivate(), certificate, audience, issuer, null, expiresAt);
-    if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
       return assertion;
     }
 
     try {
-      FxAccountUtils.pii(LOG_TAG, "Generated assertion: " + assertion);
+      FxAccountConstants.pii(LOG_TAG, "Generated assertion: " + assertion);
       ExtendedJSONObject a = JSONWebTokenUtils.parseAssertion(assertion);
       if (a != null) {
-        FxAccountUtils.pii(LOG_TAG, "aHeader   : " + a.getObject("header"));
-        FxAccountUtils.pii(LOG_TAG, "aPayload  : " + a.getObject("payload"));
-        FxAccountUtils.pii(LOG_TAG, "aSignature: " + a.getString("signature"));
+        FxAccountConstants.pii(LOG_TAG, "aHeader   : " + a.getObject("header"));
+        FxAccountConstants.pii(LOG_TAG, "aPayload  : " + a.getObject("payload"));
+        FxAccountConstants.pii(LOG_TAG, "aSignature: " + a.getString("signature"));
         String certificate = a.getString("certificate");
         if (certificate != null) {
           ExtendedJSONObject c = JSONWebTokenUtils.parseCertificate(certificate);
-          FxAccountUtils.pii(LOG_TAG, "cHeader   : " + c.getObject("header"));
-          FxAccountUtils.pii(LOG_TAG, "cPayload  : " + c.getObject("payload"));
-          FxAccountUtils.pii(LOG_TAG, "cSignature: " + c.getString("signature"));
+          FxAccountConstants.pii(LOG_TAG, "cHeader   : " + c.getObject("header"));
+          FxAccountConstants.pii(LOG_TAG, "cPayload  : " + c.getObject("payload"));
+          FxAccountConstants.pii(LOG_TAG, "cSignature: " + c.getString("signature"));
           // Print the relevant timestamps in sorted order with labels.
           HashMap<Long, String> map = new HashMap<Long, String>();
           map.put(a.getObject("payload").getLong("iat"), "aiat");
@@ -86,16 +87,16 @@ public class Married extends TokensAndKeysState {
           ArrayList<Long> values = new ArrayList<Long>(map.keySet());
           Collections.sort(values);
           for (Long value : values) {
-            FxAccountUtils.pii(LOG_TAG, map.get(value) + ": " + value);
+            FxAccountConstants.pii(LOG_TAG, map.get(value) + ": " + value);
           }
         } else {
-          FxAccountUtils.pii(LOG_TAG, "Could not parse certificate!");
+          FxAccountConstants.pii(LOG_TAG, "Could not parse certificate!");
         }
       } else {
-        FxAccountUtils.pii(LOG_TAG, "Could not parse assertion!");
+        FxAccountConstants.pii(LOG_TAG, "Could not parse assertion!");
       }
     } catch (Exception e) {
-      FxAccountUtils.pii(LOG_TAG, "Got exception dumping assertion debug info.");
+      FxAccountConstants.pii(LOG_TAG, "Got exception dumping assertion debug info.");
     }
     return assertion;
   }
@@ -106,8 +107,8 @@ public class Married extends TokensAndKeysState {
   }
 
   public String getClientState() {
-    if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
-      FxAccountUtils.pii(LOG_TAG, "Client state: " + this.clientState);
+    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+      FxAccountConstants.pii(LOG_TAG, "Client state: " + this.clientState);
     }
     return this.clientState;
   }

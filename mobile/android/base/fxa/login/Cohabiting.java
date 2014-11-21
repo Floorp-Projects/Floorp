@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko.fxa.login;
 
-import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.ExecuteDelegate;
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.LogMessage;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -24,19 +24,19 @@ public class Cohabiting extends TokensAndKeysState {
         new BaseRequestDelegate<String>(this, delegate) {
       @Override
       public void handleSuccess(String certificate) {
-        if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+        if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
           try {
-            FxAccountUtils.pii(LOG_TAG, "Fetched certificate: " + certificate);
+            FxAccountConstants.pii(LOG_TAG, "Fetched certificate: " + certificate);
             ExtendedJSONObject c = JSONWebTokenUtils.parseCertificate(certificate);
             if (c != null) {
-              FxAccountUtils.pii(LOG_TAG, "Header   : " + c.getObject("header"));
-              FxAccountUtils.pii(LOG_TAG, "Payload  : " + c.getObject("payload"));
-              FxAccountUtils.pii(LOG_TAG, "Signature: " + c.getString("signature"));
+              FxAccountConstants.pii(LOG_TAG, "Header   : " + c.getObject("header"));
+              FxAccountConstants.pii(LOG_TAG, "Payload  : " + c.getObject("payload"));
+              FxAccountConstants.pii(LOG_TAG, "Signature: " + c.getString("signature"));
             } else {
-              FxAccountUtils.pii(LOG_TAG, "Could not parse certificate!");
+              FxAccountConstants.pii(LOG_TAG, "Could not parse certificate!");
             }
           } catch (Exception e) {
-            FxAccountUtils.pii(LOG_TAG, "Could not parse certificate!");
+            FxAccountConstants.pii(LOG_TAG, "Could not parse certificate!");
           }
         }
         delegate.handleTransition(new LogMessage("sign succeeded"), new Married(email, uid, sessionToken, kA, kB, keyPair, certificate));
