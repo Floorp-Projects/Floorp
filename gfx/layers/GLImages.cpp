@@ -35,16 +35,16 @@ EGLImageImage::~EGLImageImage()
   }
 }
 
-TemporaryRef<gfx::SourceSurface>
-SurfaceTextureImage::GetAsSourceSurface()
+TemporaryRef<SourceSurface>
+GLImage::GetAsSourceSurface()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread");
 
   if (!sSnapshotContext) {
-    SurfaceCaps caps = SurfaceCaps::ForRGBA();
-    sSnapshotContext = GLContextProvider::CreateOffscreen(gfxIntSize(16, 16), caps);
+    sSnapshotContext = GLContextProvider::CreateHeadless();
 
     if (!sSnapshotContext) {
+      NS_WARNING("Failed to create snapshot GLContext");
       return nullptr;
     }
   }
@@ -52,8 +52,10 @@ SurfaceTextureImage::GetAsSourceSurface()
   sSnapshotContext->MakeCurrent();
   ScopedTexture scopedTex(sSnapshotContext);
   ScopedBindTexture boundTex(sSnapshotContext, scopedTex.Texture());
+
+  gfx::IntSize size = GetSize();
   sSnapshotContext->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA,
-                                mData.mSize.width, mData.mSize.height, 0,
+                                size.width, size.height, 0,
                                 LOCAL_GL_RGBA,
                                 LOCAL_GL_UNSIGNED_BYTE,
                                 nullptr);
@@ -62,11 +64,11 @@ SurfaceTextureImage::GetAsSourceSurface()
 
   GLBlitHelper helper(sSnapshotContext);
 
-  helper.BlitImageToFramebuffer(this, mData.mSize, fb.FB(), false);
+  helper.BlitImageToFramebuffer(this, size, fb.FB(), false);
   ScopedBindFramebuffer bind(sSnapshotContext, fb.FB());
 
   RefPtr<gfx::DataSourceSurface> source =
-        gfx::Factory::CreateDataSourceSurface(mData.mSize, gfx::SurfaceFormat::B8G8R8A8);
+        gfx::Factory::CreateDataSourceSurface(size, gfx::SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!source)) {
     return nullptr;
   }
