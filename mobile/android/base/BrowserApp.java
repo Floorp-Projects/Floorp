@@ -1953,12 +1953,12 @@ public class BrowserApp extends GeckoApp
     }
 
     /**
-     * Enters editing mode with the specified URL. This method will
-     * always open the HISTORY page on about:home.
+     * Enters editing mode with the specified URL. If a null
+     * url is given, the empty String will be used instead.
      */
     private void enterEditingMode(String url) {
         if (url == null) {
-            throw new IllegalArgumentException("Cannot handle null URLs in enterEditingMode");
+            url = "";
         }
 
         if (mBrowserToolbar.isEditing() || mBrowserToolbar.isAnimating()) {
