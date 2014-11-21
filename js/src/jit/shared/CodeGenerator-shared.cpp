@@ -1011,7 +1011,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 #endif
 
 #ifdef JS_TRACE_LOGGING
-    if (!emitTracelogStartEvent(TraceLogger_VM))
+    if (!emitTracelogStartEvent(TraceLogger::VM))
         return false;
 #endif
 
@@ -1056,7 +1056,7 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
     //    ... frame ...
 
 #ifdef JS_TRACE_LOGGING
-    if (!emitTracelogStopEvent(TraceLogger_VM))
+    if (!emitTracelogStopEvent(TraceLogger::VM))
         return false;
 #endif
 
@@ -1402,7 +1402,7 @@ CodeGeneratorShared::computeDivisionConstants(int d) {
 bool
 CodeGeneratorShared::emitTracelogScript(bool isStart)
 {
-    if (!TraceLogTextIdEnabled(TraceLogger_Scripts))
+    if (!TraceLogTextIdEnabled(TraceLogger::Scripts))
         return true;
 
     Label done;
