@@ -177,11 +177,6 @@ BaselineCompiler::compile()
     prologueOffset_.fixup(&masm);
     epilogueOffset_.fixup(&masm);
     spsPushToggleOffset_.fixup(&masm);
-#ifdef JS_TRACE_LOGGING
-    traceLoggerEnterToggleOffset_.fixup(&masm);
-    traceLoggerExitToggleOffset_.fixup(&masm);
-    traceLoggerScriptTextIdOffset_.fixup(&masm);
-#endif
     postDebugPrologueOffset_.fixup(&masm);
 
     // Note: There is an extra entry in the bytecode type map for the search hint, see below.
@@ -191,9 +186,6 @@ BaselineCompiler::compile()
         BaselineScript::New(script, prologueOffset_.offset(),
                             epilogueOffset_.offset(),
                             spsPushToggleOffset_.offset(),
-                            traceLoggerEnterToggleOffset_.offset(),
-                            traceLoggerExitToggleOffset_.offset(),
-                            traceLoggerScriptTextIdOffset_.offset(),
                             postDebugPrologueOffset_.offset(),
                             icEntries_.length(),
                             pcMappingIndexEntries.length(),
@@ -248,11 +240,6 @@ BaselineCompiler::compile()
     // All SPS instrumentation is emitted toggled off.  Toggle them on if needed.
     if (cx->runtime()->spsProfiler.enabled())
         baselineScript->toggleSPS(true);
-
-    if (TraceLogTextIdEnabled(TraceLogger_Scripts))
-        baselineScript->toggleTraceLoggerScripts(cx->runtime(), script, true);
-    if (TraceLogTextIdEnabled(TraceLogger_Engine))
-        baselineScript->toggleTraceLoggerEngine(true);
 
     uint32_t *bytecodeMap = baselineScript->bytecodeTypeMap();
     types::FillBytecodeTypeMap(script, bytecodeMap);
@@ -385,8 +372,15 @@ BaselineCompiler::emitPrologue()
     if (needsEarlyStackCheck())
         masm.bind(&earlyStackCheckFailed);
 
-    if (!emitTraceLoggerEnter())
-        return false;
+#ifdef JS_TRACE_LOGGING
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    Register loggerReg = RegisterSet::Volatile().takeGeneral();
+    masm.Push(loggerReg);
+    masm.movePtr(ImmPtr(logger), loggerReg);
+    masm.tracelogStart(loggerReg, TraceLogCreateTextId(logger, script));
+    masm.tracelogStart(loggerReg, TraceLogger_Baseline);
+    masm.Pop(loggerReg);
+#endif
 
     // Record the offset of the prologue, because Ion can bailout before
     // the scope chain is initialized.
@@ -425,8 +419,13 @@ BaselineCompiler::emitEpilogue()
     masm.bind(&return_);
 
 #ifdef JS_TRACE_LOGGING
-    if (!emitTraceLoggerExit())
-        return false;
+    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    Register loggerReg = RegisterSet::Volatile().takeGeneral();
+    masm.Push(loggerReg);
+    masm.movePtr(ImmPtr(logger), loggerReg);
+    masm.tracelogStop(loggerReg, TraceLogger_Baseline);
+    masm.tracelogStop(loggerReg, TraceLogger_Scripts);
+    masm.Pop(loggerReg);
 #endif
 
     // Pop SPS frame if necessary
@@ -762,60 +761,6 @@ BaselineCompiler::emitDebugTrap()
     icEntry.setReturnOffset(CodeOffsetLabel(masm.currentOffset()));
     if (!icEntries_.append(icEntry))
         return false;
-
-    return true;
-}
-
-bool
-BaselineCompiler::emitTraceLoggerEnter()
-{
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    RegisterSet regs = RegisterSet::Volatile();
-    Register loggerReg = regs.takeGeneral();
-    Register scriptReg = regs.takeGeneral();
-
-    Label noTraceLogger;
-    traceLoggerEnterToggleOffset_ = masm.toggledJump(&noTraceLogger);
-
-    masm.Push(loggerReg);
-    masm.Push(scriptReg);
-
-    masm.movePtr(ImmPtr(logger), loggerReg);
-
-    // Script start.
-    traceLoggerScriptTextIdOffset_ =
-        masm.movWithPatch(ImmWord(uintptr_t(TraceLogger_Scripts)), scriptReg);
-    masm.tracelogStart(loggerReg, scriptReg);
-
-    // Engine start.
-    masm.tracelogStart(loggerReg, TraceLogger_Baseline, /* force = */ true);
-
-    masm.Pop(scriptReg);
-    masm.Pop(loggerReg);
-
-    masm.bind(&noTraceLogger);
-
-    return true;
-}
-
-bool
-BaselineCompiler::emitTraceLoggerExit()
-{
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    Register loggerReg = RegisterSet::Volatile().takeGeneral();
-
-    Label noTraceLogger;
-    traceLoggerExitToggleOffset_ = masm.toggledJump(&noTraceLogger);
-
-    masm.Push(loggerReg);
-    masm.movePtr(ImmPtr(logger), loggerReg);
-
-    masm.tracelogStop(loggerReg, TraceLogger_Baseline, /* force = */ true);
-    masm.tracelogStop(loggerReg, TraceLogger_Scripts, /* force = */ true);
-
-    masm.Pop(loggerReg);
-
-    masm.bind(&noTraceLogger);
 
     return true;
 }

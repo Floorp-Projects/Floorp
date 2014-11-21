@@ -1207,9 +1207,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void printf(const char *output, Register value);
 
 #ifdef JS_TRACE_LOGGING
-    void tracelogStart(Register logger, uint32_t textId, bool force = false);
+    void tracelogStart(Register logger, uint32_t textId);
     void tracelogStart(Register logger, Register textId);
-    void tracelogStop(Register logger, uint32_t textId, bool force = false);
+    void tracelogStop(Register logger, uint32_t textId);
     void tracelogStop(Register logger, Register textId);
 #endif
 
