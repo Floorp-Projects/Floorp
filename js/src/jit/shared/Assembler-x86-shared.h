@@ -475,6 +475,9 @@ class AssemblerX86Shared : public AssemblerShared
           case Operand::MEM_SCALE:
             masm.movaps_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
             break;
+          case Operand::FPREG:
+            masm.movaps_rr(src.fpu(), dest.code());
+            break;
           default:
             MOZ_CRASH("unexpected operand kind");
         }
