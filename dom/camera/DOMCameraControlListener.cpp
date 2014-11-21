@@ -140,6 +140,7 @@ DOMCameraControlListener::OnPreviewStateChange(PreviewState aState)
       MOZ_ASSERT_UNREACHABLE("Invalid preview state");
       return;
   }
+  mStream->OnPreviewStateChange(aState == kPreviewStarted);
   NS_DispatchToMainThread(new Callback(mDOMCameraControl, aState));
 }
 
