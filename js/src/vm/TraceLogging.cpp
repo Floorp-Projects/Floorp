@@ -423,12 +423,10 @@ TraceLoggerThread::logTimestamp(uint32_t id)
         return;
 
     if (!events.ensureSpaceBeforeAdd()) {
-        uint64_t start = 0;
+        uint64_t start = rdtsc() - traceLoggers.startupTime;
 
-        if (graph.get()) {
-            start = rdtsc() - traceLoggers.startupTime;
+        if (graph.get())
             graph->log(events);
-        }
 
         iteration_++;
         events.clear();
@@ -447,7 +445,7 @@ TraceLoggerThread::logTimestamp(uint32_t id)
         }
     }
 
-    uint64_t time = graph.get() ? rdtsc() - traceLoggers.startupTime : 0;
+    uint64_t time = rdtsc() - traceLoggers.startupTime;
 
     EventEntry &entry = events.pushUninitialized();
     entry.time = time;
