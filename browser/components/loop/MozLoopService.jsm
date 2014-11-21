@@ -774,14 +774,7 @@ let MozLoopServiceInternal = {
   openChatWindow: function(conversationWindowData) {
     // So I guess the origin is the loop server!?
     let origin = this.loopServerUri;
-    // Try getting a window ID that can (re-)identify this conversation, or resort
-    // to a globally unique one as a last resort.
-    // XXX We can clean this up once rooms and direct contact calling are the only
-    //     two modes left.
-    let windowId = ("contact" in conversationWindowData) ?
-                   conversationWindowData.contact._guid :
-                   conversationWindowData.roomToken || conversationWindowData.callId ||
-                   gLastWindowId++;
+    let windowId = gLastWindowId++;
     // Store the id as a string, as that's what we use elsewhere.
     windowId = windowId.toString();
 
