@@ -499,7 +499,7 @@ body[dir=rtl] .generate-url-spinner {
 }
 
 #powered-by-logo.en-GB,
-#powered-by-logo.de-DE {
+#powered-by-logo.de {
   background-image: url("../img/02.png");
   background-size: 21px 20px;
   width: 21px;
@@ -526,7 +526,7 @@ body[dir=rtl] .generate-url-spinner {
   }
 
   #powered-by-logo.en-GB,
-  #powered-by-logo.de-DE {
+  #powered-by-logo.de {
     background-image: url("../img/02@2x.png");
   }
 
