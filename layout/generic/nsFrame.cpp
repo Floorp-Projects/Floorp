@@ -2395,6 +2395,21 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // THIS IS THE COMMON CASE.
       // Not a pseudo or real stacking context. Do the simple thing and
       // return early.
+
+      if (aBuilder->IsBuildingLayerEventRegions()) {
+        MOZ_ASSERT(buildingForChild.GetPrevAnimatedGeometryRoot() ==
+                   aBuilder->FindAnimatedGeometryRootFor(child->GetParent()));
+
+        // If this frame has a different animated geometry root than its parent,
+        // make sure we accumulate event regions for its layer.
+        nsIFrame *animatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(child);
+        if (animatedGeometryRoot != buildingForChild.GetPrevAnimatedGeometryRoot()) {
+          nsDisplayLayerEventRegions* eventRegions =
+            new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
+          aBuilder->SetLayerEventRegions(eventRegions);
+        }
+      }
+
       nsDisplayLayerEventRegions* eventRegions = aBuilder->GetLayerEventRegions();
       if (eventRegions) {
         eventRegions->AddFrame(aBuilder, child);
