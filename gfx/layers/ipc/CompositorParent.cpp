@@ -394,7 +394,7 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
 
   if (gfxPrefs::VsyncAlignedCompositor()) {
     nsRefPtr<VsyncSource> platformVsyncSource = gfxPlatform::GetPlatform()->GetVsyncSource();
-    mVsyncDispatcher = new VsyncDispatcher(this, platformVsyncSource);
+    mVsyncDispatcher = new VsyncDispatcher(this, platformVsyncSource.get());
   }
 }
 
