@@ -267,13 +267,13 @@ AppleATDecoder::SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample)
     nsAutoArrayPtr<AudioDataValue>
       data(new AudioDataValue[outputData.Length()]);
     PodCopy(data.get(), &outputData[0], outputData.Length());
-    AudioData* audio = new AudioData(aSample->byte_offset,
-                                     aSample->composition_timestamp,
-                                     duration.value(),
-                                     numFrames,
-                                     data.forget(),
-                                     channels,
-                                     rate);
+    nsRefPtr<AudioData> audio = new AudioData(aSample->byte_offset,
+                                              aSample->composition_timestamp,
+                                              duration.value(),
+                                              numFrames,
+                                              data.forget(),
+                                              channels,
+                                              rate);
     mCallback->Output(audio);
   }
 

@@ -15,7 +15,7 @@
 <script type=text/plain id="idl_0">
 [Constructor(sequence<any> iterable)]
 interface CacheStorage {
-  Promise<any> match(ScalarValueString url, optional DOMString cacheName);
+  Promise<any> match(USVString url, optional DOMString cacheName);
   Promise<Cache> get(DOMString key);
   Promise<boolean> has(DOMString key);
   Promise<any> set(DOMString key, Cache val);
@@ -42,7 +42,7 @@ convenience methods.
 
 
     <script type=text/plain id="untested_idls">
-        interface ScalarValueString {};
+        interface USVString {};
         interface Cache {};
     </pre>
 

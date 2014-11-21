@@ -15,7 +15,7 @@ interface ServiceWorkerRegistration : EventTarget {
   [Unforgeable] readonly attribute ServiceWorker? waiting;
   [Unforgeable] readonly attribute ServiceWorker? active;
 
-  readonly attribute ScalarValueString scope;
+  readonly attribute USVString scope;
 
   [Throws]
   Promise<boolean> unregister();
