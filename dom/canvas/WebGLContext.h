@@ -1084,6 +1084,9 @@ public:
         return mGLMaxVertexAttribs;
     }
 
+
+    bool IsFormatValidForFB(GLenum sizedFormat) const;
+
 protected:
     // Represents current status of the context with respect to context loss.
     // That is, whether the context is lost, and what part of the context loss
@@ -1115,6 +1118,10 @@ protected:
 
     // enable an extension. the extension should not be enabled before.
     void EnableExtension(WebGLExtensionID ext);
+
+    // Enable an extension if it's supported. Return the extension on success.
+    WebGLExtensionBase* EnableSupportedExtension(JSContext* js,
+                                                 WebGLExtensionID ext);
 
     // returns true if the extension has been enabled by calling getExtension.
     bool IsExtensionEnabled(WebGLExtensionID ext) const;
