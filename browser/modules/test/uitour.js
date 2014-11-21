@@ -213,6 +213,18 @@ if (typeof Mozilla == 'undefined') {
 		});
 	};
 
+	Mozilla.UITour.setSearchTerm = function(term) {
+		_sendEvent('setSearchTerm', {
+			term: term
+		});
+	};
+
+	Mozilla.UITour.openSearchPanel = function(callback) {
+		_sendEvent('openSearchPanel', {
+			callbackID: _waitForCallback(callback)
+		});
+	};
+
 	Mozilla.UITour.setTreatmentTag = function(name, value) {
 		_sendEvent('setTreatmentTag', {
 			name: name,
