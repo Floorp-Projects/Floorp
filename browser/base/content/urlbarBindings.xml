@@ -1011,9 +1011,10 @@
         // Show the current default engine in the top header of the panel.
         let currentEngine = Services.search.currentEngine;
         let uri = currentEngine.iconURI;
-        if (uri)
+        if (uri) {
           uri = uri.spec;
-        this.setAttribute("src", PlacesUtils.getImageURLForResolution(window, uri));
+          this.setAttribute("src", PlacesUtils.getImageURLForResolution(window, uri));
+        }
         document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
                 .setAttribute("value", currentEngine.name + " Search");
 
