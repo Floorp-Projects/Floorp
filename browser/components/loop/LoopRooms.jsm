@@ -184,7 +184,7 @@ let LoopRoomsInternal = {
           delete room.currSize;
         }
         this.rooms.set(room.roomToken, room);
-        
+
         let eventName = orig ? "update" : "add";
         eventEmitter.emit(eventName, room);
         eventEmitter.emit(eventName + ":" + room.roomToken, room);
