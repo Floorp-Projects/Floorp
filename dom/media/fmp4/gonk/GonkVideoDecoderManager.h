@@ -50,7 +50,10 @@ public:
   virtual nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
 
+  virtual void ReleaseMediaResources();
+
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
+
 private:
   struct FrameInfo
   {
@@ -112,7 +115,7 @@ private:
   void codecCanceled();
   void onMessageReceived(const sp<AMessage> &aMessage);
 
-  void ReleaseAllPendingVideoBuffersLocked();
+  void ReleaseAllPendingVideoBuffers();
   void PostReleaseVideoBuffer(android::MediaBuffer *aBuffer);
 
   uint32_t mVideoWidth;

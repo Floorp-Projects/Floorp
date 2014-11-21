@@ -613,16 +613,16 @@ PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
     }
   }
 
-  function signalingstatechangeLocalClose(state) {
-    info("'onsignalingstatechange' event '" + state + "' received");
-    is(state, "closed", "onsignalingstatechange event is closed");
+  function signalingstatechangeLocalClose(e) {
+    info("'signalingstatechange' event received");
+    is(e.target.signalingState, "closed", "signalingState is closed");
     self.waitingForLocal = false;
     verifyClosed();
   }
 
-  function signalingstatechangeRemoteClose(state) {
-    info("'onsignalingstatechange' event '" + state + "' received");
-    is(state, "closed", "onsignalingstatechange event is closed");
+  function signalingstatechangeRemoteClose(e) {
+    info("'signalingstatechange' event received");
+    is(e.target.signalingState, "closed", "signalingState is closed");
     self.waitingForRemote = false;
     verifyClosed();
   }
@@ -744,9 +744,10 @@ function PCT_setLocalDescription(peer, desc, stateExpected, onSuccess) {
     }
   }
 
-  peer.onsignalingstatechange = function (state) {
-    info(peer + ": 'onsignalingstatechange' event '" + state + "' received");
-    if(stateExpected === state && eventFired == false) {
+  peer.onsignalingstatechange = function (e) {
+    info(peer + ": 'signalingstatechange' event received");
+    var state = e.target.signalingState;
+    if(stateExpected === state && !eventFired) {
       eventFired = true;
       peer.setLocalDescStableEventDate = new Date();
       check_next_test();
@@ -812,9 +813,10 @@ function PCT_setRemoteDescription(peer, desc, stateExpected, onSuccess) {
     }
   }
 
-  peer.onsignalingstatechange = function (state) {
-    info(peer + ": 'onsignalingstatechange' event '" + state + "' received");
-    if(stateExpected === state && eventFired == false) {
+  peer.onsignalingstatechange = function(e) {
+    info(peer + ": 'signalingstatechange' event received");
+    var state = e.target.signalingState;
+    if(stateExpected === state && !eventFired) {
       eventFired = true;
       peer.setRemoteDescStableEventDate = new Date();
       check_next_test();
@@ -1618,7 +1620,6 @@ function PeerConnectionWrapper(label, configuration, h264) {
    * failure will be raised if an event of this type is caught.
    *
    * @param {Object} aEvent
-   *        Event data which includes the newly created data channel
    */
   this._pc.onsignalingstatechange = function (anEvent) {
     info(self + ": 'onsignalingstatechange' event fired");
@@ -1930,7 +1931,7 @@ PeerConnectionWrapper.prototype = {
   logSignalingState: function PCW_logSignalingState() {
     var self = this;
 
-    function _logSignalingState(state) {
+    function _logSignalingState(e) {
       var newstate = self._pc.signalingState;
       var oldstate = self.signalingStateLog[self.signalingStateLog.length - 1]
       if (Object.keys(signalingStateTransitions).indexOf(oldstate) != -1) {
@@ -1956,7 +1957,7 @@ PeerConnectionWrapper.prototype = {
     var self = this;
 
     self._remote_ice_candidates.push(candidate);
-    if (self.signalingstate === 'closed') {
+    if (self.signalingState === 'closed') {
       info("Received ICE candidate for closed PeerConnection - discarding");
       return;
     }

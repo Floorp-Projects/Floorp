@@ -55,7 +55,7 @@
 @RESPATH@/browser/@PREF_DIR@/firefox-l10n.js
 @RESPATH@/browser/searchplugins/*
 #ifdef XP_WIN32
-@RESPATH@/uninstall/helper.exe
+@BINPATH@/uninstall/helper.exe
 #endif
 #ifdef MOZ_UPDATER
 @RESPATH@/update.locale

@@ -193,3 +193,10 @@ GMPOpenRecord(const std::string& aRecordName,
   }
   return client->Init(record, aContinuation);
 }
+
+GMPErr
+GMPEnumRecordNames(RecvGMPRecordIteratorPtr aRecvIteratorFunc,
+                   void* aUserArg)
+{
+  return g_platform_api->getrecordenumerator(aRecvIteratorFunc, aUserArg);
+}
