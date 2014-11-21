@@ -206,6 +206,10 @@ let AboutHome = {
         break;
 
       case "AboutHome:OpenSearchPanel":
+        if (!Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
+          return;
+        }
+
         let panel = window.document.getElementById("abouthome-search-panel");
         let anchor = aMessage.objects.anchor;
         panel.openPopup(anchor);
