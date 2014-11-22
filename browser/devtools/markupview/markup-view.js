@@ -33,7 +33,7 @@ loader.lazyGetter(this, "DOMParser", function() {
  return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
 loader.lazyGetter(this, "AutocompletePopup", () => {
-  return require("devtools/shared/autocomplete-popup").AutocompletePopup
+  return require("devtools/shared/autocomplete-popup").AutocompletePopup;
 });
 
 /**
@@ -702,16 +702,19 @@ MarkupView.prototype = {
             removedContainers.add(container);
           }
 
-          // If there has been additions, flash the nodes
+          // If there has been additions, flash the nodes if their associated
+          // container exist (so if their parent is expanded in the inspector).
           added.forEach(added => {
             let addedContainer = this.getContainer(added);
-            addedOrEditedContainers.add(addedContainer);
+            if (addedContainer) {
+              addedOrEditedContainers.add(addedContainer);
 
-            // The node may be added as a result of an append, in which case it
-            // it will have been removed from another container first, but in
-            // these cases we don't want to flash both the removal and the
-            // addition
-            removedContainers.delete(container);
+              // The node may be added as a result of an append, in which case
+              // it will have been removed from another container first, but in
+              // these cases we don't want to flash both the removal and the
+              // addition
+              removedContainers.delete(container);
+            }
           });
         }
       }
@@ -801,19 +804,45 @@ MarkupView.prototype = {
   },
 
   /**
+   * Returns either the innerHTML or the outerHTML for a remote node.
+   * @param aNode The NodeFront to get the outerHTML / innerHTML for.
+   * @param isOuter A boolean that, if true, makes the function return the
+   *                outerHTML, otherwise the innerHTML.
+   * @returns A promise that will be resolved with the outerHTML / innerHTML.
+   */
+  _getNodeHTML: function(aNode, isOuter) {
+    let walkerPromise = null;
+
+    if (isOuter) {
+      walkerPromise = this.walker.outerHTML(aNode);
+    } else {
+      walkerPromise = this.walker.innerHTML(aNode);
+    }
+
+    return walkerPromise.then(longstr => {
+      return longstr.string().then(html => {
+        longstr.release().then(null, console.error);
+        return html;
+      });
+    });
+  },
+
+  /**
    * Retrieve the outerHTML for a remote node.
    * @param aNode The NodeFront to get the outerHTML for.
    * @returns A promise that will be resolved with the outerHTML.
    */
   getNodeOuterHTML: function(aNode) {
-    let def = promise.defer();
-    this.walker.outerHTML(aNode).then(longstr => {
-      longstr.string().then(outerHTML => {
-        longstr.release().then(null, console.error);
-        def.resolve(outerHTML);
-      });
-    });
-    return def.promise;
+    return this._getNodeHTML(aNode, true);
+  },
+
+  /**
+   * Retrieve the innerHTML for a remote node.
+   * @param aNode The NodeFront to get the innerHTML for.
+   * @returns A promise that will be resolved with the innerHTML.
+   */
+  getNodeInnerHTML: function(aNode) {
+    return this._getNodeHTML(aNode);
   },
 
   /**
@@ -886,23 +915,81 @@ MarkupView.prototype = {
   /**
    * Replace the outerHTML of any node displayed in the inspector with
    * some other HTML code
-   * @param aNode node which outerHTML will be replaced.
-   * @param newValue The new outerHTML to set on the node.
-   * @param oldValue The old outerHTML that will be used if the user undos the update.
+   * @param {NodeFront} node node which outerHTML will be replaced.
+   * @param {string} newValue The new outerHTML to set on the node.
+   * @param {string} oldValue The old outerHTML that will be used if the
+   *                          user undoes the update.
    * @returns A promise that will resolve when the outer HTML has been updated.
    */
-  updateNodeOuterHTML: function(aNode, newValue, oldValue) {
-    let container = this._containers.get(aNode);
+  updateNodeOuterHTML: function(node, newValue, oldValue) {
+    let container = this.getContainer(node);
     if (!container) {
       return promise.reject();
     }
 
     // Changing the outerHTML removes the node which outerHTML was changed.
     // Listen to this removal to reselect the right node afterwards.
-    this.reselectOnRemoved(aNode, "outerhtml");
-    return this.walker.setOuterHTML(aNode, newValue).then(null, () => {
+    this.reselectOnRemoved(node, "outerhtml");
+    return this.walker.setOuterHTML(node, newValue).then(null, () => {
       this.cancelReselectOnRemoved();
     });
+  },
+
+  /**
+   * Replace the innerHTML of any node displayed in the inspector with
+   * some other HTML code
+   * @param {Node} node node which innerHTML will be replaced.
+   * @param {string} newValue The new innerHTML to set on the node.
+   * @param {string} oldValue The old innerHTML that will be used if the user
+   *                 undoes the update.
+   * @returns A promise that will resolve when the inner HTML has been updated.
+   */
+  updateNodeInnerHTML: function(node, newValue, oldValue) {
+    let container = this.getContainer(node);
+    if (!container) {
+      return promise.reject();
+    }
+
+    let def = promise.defer();
+
+    container.undo.do(() => {
+      this.walker.setInnerHTML(node, newValue).then(def.resolve, def.reject);
+    }, () => {
+      this.walker.setInnerHTML(node, oldValue);
+    });
+
+    return def.promise;
+  },
+
+  /**
+   * Insert adjacent HTML to any node displayed in the inspector.
+   *
+   * @param {NodeFront} node The reference node.
+   * @param {string} position The position as specified for Element.insertAdjacentHTML
+   *        (i.e. "beforeBegin", "afterBegin", "beforeEnd", "afterEnd").
+   * @param {string} newValue The adjacent HTML.
+   * @returns A promise that will resolve when the adjacent HTML has
+   *          been inserted.
+   */
+  insertAdjacentHTMLToNode: function(node, position, value) {
+    let container = this.getContainer(node);
+    if (!container) {
+      return promise.reject();
+    }
+
+    let def = promise.defer();
+
+    let injectedNodes = [];
+    container.undo.do(() => {
+      this.walker.insertAdjacentHTML(node, position, value).then(nodeArray => {
+        injectedNodes = nodeArray.nodes;
+        return nodeArray;
+      }).then(def.resolve, def.reject);
+    }, () => {
+      this.walker.removeNodes(injectedNodes);
+    });
+
+    return def.promise;
   },
 
   /**
@@ -910,7 +997,7 @@ MarkupView.prototype = {
    * @param aNode The NodeFront to edit.
    */
   beginEditingOuterHTML: function(aNode) {
-    this.getNodeOuterHTML(aNode).then((oldValue)=> {
+    this.getNodeOuterHTML(aNode).then(oldValue => {
       let container = this.getContainer(aNode);
       if (!container) {
         return;
@@ -1217,7 +1304,7 @@ MarkupView.prototype = {
     this._inspector.selection.off("new-node-front", this._boundOnNewSelection);
     this._boundOnNewSelection = null;
 
-    this.walker.off("mutations", this._boundMutationObserver)
+    this.walker.off("mutations", this._boundMutationObserver);
     this._boundMutationObserver = null;
 
     this.walker.off("display-change", this._boundOnDisplayChange);
@@ -1924,7 +2011,7 @@ function TextEditor(aContainer, aNode, aTemplate) {
           }, () => {
             this.node.setNodeValue(oldValue).then(() => {
               this.markup.nodeChanged(this.node);
-            })
+            });
           });
         });
       });
@@ -2155,7 +2242,7 @@ ElementEditor.prototype = {
             doMods.apply();
           }, () => {
             undoMods.apply();
-          })
+          });
         } catch(ex) {
           console.error(ex);
         }

@@ -14,7 +14,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: jsterm.focusInput is
 // 1) menu items are disabled/enabled depending on the clicked node
 // 2) actions triggered by the items work correctly
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_menu.html";
+const TEST_URL = TEST_URL_ROOT + "doc_inspector_menu-01.html";
 const MENU_SENSITIVITY_TEST_DATA = [
   {
     desc: "doctype node",
@@ -26,41 +26,6 @@ const MENU_SENSITIVITY_TEST_DATA = [
     selector: "p",
     disabled: false,
   }
-];
-
-const PASTE_OUTER_HTML_TEST_DATA = [
-  {
-    desc: "some text",
-    clipboardData: "some text",
-    clipboardDataType: undefined,
-    disabled: false
-  },
-  {
-    desc: "base64 encoded image data uri",
-    clipboardData:
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABC" +
-      "AAAAAA6fptVAAAACklEQVQYV2P4DwABAQEAWk1v8QAAAABJRU5ErkJggg==",
-    clipboardDataType: undefined,
-    disabled: true
-  },
-  {
-    desc: "html",
-    clipboardData: "<p>some text</p>",
-    clipboardDataType: "html",
-    disabled: false
-  },
-  {
-    desc: "empty string",
-    clipboardData: "",
-    clipboardDataType: undefined,
-    disabled: true
-  },
-  {
-    desc: "whitespace only",
-    clipboardData: " \n\n\t\n\n  \n",
-    clipboardDataType: undefined,
-    disabled: true
-  },
 ];
 
 const COPY_ITEMS_TEST_DATA = [
@@ -90,29 +55,24 @@ add_task(function* () {
   let { inspector, toolbox } = yield openInspectorForURL(TEST_URL);
 
   yield testMenuItemSensitivity();
-  yield testPasteOuterHTMLMenuItemSensitivity();
   yield testCopyMenuItems();
   yield testShowDOMProperties();
-  yield testPasteOuterHTMLMenu();
   yield testDeleteNode();
   yield testDeleteRootNode();
 
   function* testMenuItemSensitivity() {
     info("Testing sensitivity of menu items for different elements.");
 
+    // The sensibility for paste options are described in browser_inspector_menu-02.js
     const MENU_ITEMS = [
       "node-menu-copyinner",
       "node-menu-copyouter",
       "node-menu-copyuniqueselector",
       "node-menu-delete",
-      "node-menu-pasteouterhtml",
       "node-menu-pseudo-hover",
       "node-menu-pseudo-active",
       "node-menu-pseudo-focus"
     ];
-
-    // To ensure clipboard contains something to paste.
-    clipboard.set("<p>test</p>", "html");
 
     for (let {desc, selector, disabled} of MENU_SENSITIVITY_TEST_DATA) {
       info("Testing context menu entries for " + desc);
@@ -132,25 +92,6 @@ add_task(function* () {
       for (let name of MENU_ITEMS) {
         checkMenuItem(name, disabled);
       }
-    }
-  }
-
-  function* testPasteOuterHTMLMenuItemSensitivity() {
-    info("Checking 'Paste Outer HTML' menu item sensitivity for different types" +
-         "of data");
-
-    let nodeFront = yield getNodeFront("p", inspector);
-    let markupTagLine = getContainerForNodeFront(nodeFront, inspector).tagLine;
-
-    for (let data of PASTE_OUTER_HTML_TEST_DATA) {
-      let { desc, clipboardData, clipboardDataType, disabled } = data;
-      info("Checking 'Paste Outer HTML' for " + desc);
-      clipboard.set(clipboardData, clipboardDataType);
-
-      yield selectNode(nodeFront, inspector);
-
-      contextMenuClick(markupTagLine);
-      checkMenuItem("node-menu-pasteouterhtml", disabled);
     }
   }
 
@@ -188,27 +129,6 @@ add_task(function* () {
     ok(webconsoleUI.jsterm.history[0] === 'inspect($0)');
 
     yield toolbox.toggleSplitConsole();
-  }
-
-  function* testPasteOuterHTMLMenu() {
-    info("Testing that 'Paste Outer HTML' menu item works.");
-    clipboard.set("this was pasted");
-
-    let nodeFront = yield getNodeFront("h1", inspector);
-    yield selectNode(nodeFront, inspector);
-
-    contextMenuClick(getContainerForNodeFront(nodeFront, inspector).tagLine);
-
-    let onNodeReselected = inspector.markup.once("reselectedonremoved");
-    let menu = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
-    dispatchCommandEvent(menu);
-
-    info("Waiting for inspector selection to update");
-    yield onNodeReselected;
-
-    ok(content.document.body.outerHTML.contains(clipboard.get()),
-       "Clipboard content was pasted into the node's outer HTML.");
-    ok(!getNode("h1", { expectNoMatch: true }), "The original node was removed.");
   }
 
   function* testDeleteNode() {
