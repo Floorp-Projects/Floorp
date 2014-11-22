@@ -500,28 +500,6 @@ js::NativeObject::toDictionaryMode(ThreadSafeContext *cx)
     return true;
 }
 
-/*
- * Normalize stub getter and setter values for faster is-stub testing in the
- * SHAPE_CALL_[GS]ETTER macros.
- */
-static inline bool
-NormalizeGetterAndSetter(JSObject *obj,
-                         jsid id, unsigned attrs, unsigned flags,
-                         PropertyOp &getter,
-                         StrictPropertyOp &setter)
-{
-    if (setter == JS_StrictPropertyStub) {
-        MOZ_ASSERT(!(attrs & JSPROP_SETTER));
-        setter = nullptr;
-    }
-    if (getter == JS_PropertyStub) {
-        MOZ_ASSERT(!(attrs & JSPROP_GETTER));
-        getter = nullptr;
-    }
-
-    return true;
-}
-
 /* static */ Shape *
 NativeObject::addProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
                           PropertyOp getter, StrictPropertyOp setter,
@@ -529,6 +507,8 @@ NativeObject::addProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId
                           unsigned flags, bool allowDictionary)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
     bool extensible;
     if (!JSObject::isExtensible(cx, obj, &extensible))
@@ -538,8 +518,6 @@ NativeObject::addProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId
             obj->reportNotExtensible(cx->asJSContext());
         return nullptr;
     }
-
-    NormalizeGetterAndSetter(obj, id, attrs, flags, getter, setter);
 
     Shape **spp = nullptr;
     if (obj->inDictionaryMode())
@@ -582,6 +560,8 @@ NativeObject::addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveC
 {
     MOZ_ASSERT(cx->isThreadLocal(obj));
     MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
@@ -767,6 +747,8 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
 {
     MOZ_ASSERT(cx->isThreadLocal(obj));
     MOZ_ASSERT(!JSID_IS_VOID(id));
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
 #ifdef DEBUG
     if (obj->is<ArrayObject>()) {
@@ -776,8 +758,6 @@ NativeObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTy
             MOZ_ASSERT(index < arr->length() || arr->lengthIsWritable());
     }
 #endif
-
-    NormalizeGetterAndSetter(obj, id, attrs, flags, getter, setter);
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
@@ -982,6 +962,8 @@ NativeObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContex
 {
     MOZ_ASSERT(cx->isThreadLocal(obj));
     MOZ_ASSERT(obj->containsPure(shape));
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
     attrs |= shape->attrs & mask;
     MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
@@ -996,11 +978,6 @@ NativeObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContex
     } else {
         types::MarkTypePropertyNonData(cx->asExclusiveContext(), obj, shape->propid());
     }
-
-    if (getter == JS_PropertyStub)
-        getter = nullptr;
-    if (setter == JS_StrictPropertyStub)
-        setter = nullptr;
 
     if (!CheckCanChangeAttrs(cx, obj, shape, &attrs))
         return nullptr;
