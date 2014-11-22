@@ -2448,6 +2448,7 @@ public:
       return;
     }
 
+    TABC_LOG("Got refresh, sending target APZCs for input block %" PRIu64 "\n", mInputBlockId);
     mTabChild->SendSetTargetAPZC(mInputBlockId, mTargets);
 
     if (!mPresShell->RemovePostRefreshObserver(this)) {
@@ -2494,21 +2495,34 @@ TabChild::SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
     nsIScrollableFrame* scrollAncestor = GetScrollableAncestorFrame(target);
     nsCOMPtr<dom::Element> dpElement = GetDisplayportElementFor(scrollAncestor);
 
+    nsAutoString dpElementDesc;
+    if (dpElement) {
+      dpElement->Describe(dpElementDesc);
+    }
+    TABC_LOG("For input block %" PRIu64 " found scrollable element %p (%s)\n",
+        aInputBlockId, dpElement.get(),
+        NS_LossyConvertUTF16toASCII(dpElementDesc).get());
+
     bool guidIsValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
       dpElement, &(guid.mPresShellId), &(guid.mScrollId));
     targets.AppendElement(guid);
 
     if (guidIsValid && !nsLayoutUtils::GetDisplayPort(dpElement, nullptr)) {
+      TABC_LOG("%p didn't have a displayport, so setting one...\n", dpElement.get());
       waitForRefresh |= nsLayoutUtils::CalculateAndSetDisplayPortMargins(
         scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
     }
   }
   if (waitForRefresh) {
+    TABC_LOG("At least one target got a new displayport, need to wait for refresh\n");
     waitForRefresh = shell->AddPostRefreshObserver(
       new DisplayportSetListener(this, shell, aInputBlockId, targets));
   }
   if (!waitForRefresh) {
+    TABC_LOG("Sending target APZCs for input block %" PRIu64 "\n", aInputBlockId);
     SendSetTargetAPZC(aInputBlockId, targets);
+  } else {
+    TABC_LOG("Successfully registered post-refresh observer\n");
   }
 }
 
