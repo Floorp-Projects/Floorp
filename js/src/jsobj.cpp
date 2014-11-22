@@ -2595,9 +2595,9 @@ js_InitClass(JSContext *cx, HandleObject obj, JSObject *protoProto_,
     RootedObject protoProto(cx, protoProto_);
 
     /* Check function pointer members. */
-    MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);  // (use null instead)
-    MOZ_ASSERT(clasp->getProperty);
-    MOZ_ASSERT(clasp->setProperty);
+    MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);
+    MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
+    MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
 
     RootedAtom atom(cx, Atomize(cx, clasp->name, strlen(clasp->name)));
     if (!atom)
@@ -3223,8 +3223,8 @@ js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
         return false;
 
     if (!shape) {
-        /* Fail if we have a non-stub class op hooks. */
-        if (obj->getClass()->getProperty && obj->getClass()->getProperty != JS_PropertyStub)
+        /* Fail if we have a class getter op. */
+        if (obj->getClass()->getProperty)
             return false;
 
         if (obj->getOps()->getElement)

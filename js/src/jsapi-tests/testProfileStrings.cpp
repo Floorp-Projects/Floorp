@@ -26,7 +26,7 @@ reset(JSContext *cx)
 }
 
 static const JSClass ptestClass = {
-    "Prof", 0, nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
+    "Prof", 0
 };
 
 static bool

@@ -53,15 +53,7 @@ using namespace JS;
 // This JSClass exists to trick silly code that expects toString()ing the
 // global in a component scope to return something with "BackstagePass" in it
 // to continue working.
-static const JSClass kFakeBackstagePassJSClass =
-{
-    "FakeBackstagePass",
-    0,
-    nullptr,
-    nullptr,
-    JS_PropertyStub,
-    JS_StrictPropertyStub
-};
+static const JSClass kFakeBackstagePassJSClass = { "FakeBackstagePass" };
 
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";

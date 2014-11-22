@@ -92,8 +92,7 @@ static const JSClass gPrototypeJSClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
     // Our one reserved slot holds the relevant nsXBLPrototypeBinding
     JSCLASS_HAS_RESERVED_SLOTS(1),
-    nullptr, nullptr,
-    JS_PropertyStub, JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     XBLEnumerate, nullptr,
     nullptr, XBLFinalize,
     nullptr, nullptr, nullptr, nullptr

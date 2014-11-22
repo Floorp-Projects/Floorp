@@ -570,8 +570,8 @@ const Class NormalArgumentsObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) | JSCLASS_BACKGROUND_FINALIZE,
     nullptr,                 /* addProperty */
     args_delProperty,
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
+    nullptr,                 /* getProperty */
+    nullptr,                 /* setProperty */
     args_enumerate,
     args_resolve,
     nullptr,                 /* convert     */
@@ -594,8 +594,8 @@ const Class StrictArgumentsObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object) | JSCLASS_BACKGROUND_FINALIZE,
     nullptr,                 /* addProperty */
     args_delProperty,
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
+    nullptr,                 /* getProperty */
+    nullptr,                 /* setProperty */
     strictargs_enumerate,
     strictargs_resolve,
     nullptr,                 /* convert     */
