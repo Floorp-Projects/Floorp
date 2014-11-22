@@ -1444,10 +1444,10 @@ FinalizeStub(JSFreeOp *fop, JSObject *obj)
 static const JSClass XPCOutParamClass = {
     "XPCOutParam",
     0,
-    nullptr,
-    nullptr,
-    JS_PropertyStub,
-    JS_StrictPropertyStub,
+    nullptr,   /* addProperty */
+    nullptr,   /* delProperty */
+    nullptr,   /* getProperty */
+    nullptr,   /* setProperty */
     nullptr,   /* enumerate */
     nullptr,   /* resolve */
     nullptr,   /* convert */

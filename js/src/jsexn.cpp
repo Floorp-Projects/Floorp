@@ -67,8 +67,8 @@ static const JSFunctionSpec exception_methods[] = {
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS), \
         nullptr,                 /* addProperty */ \
         nullptr,                 /* delProperty */ \
-        JS_PropertyStub,         /* getProperty */ \
-        JS_StrictPropertyStub,   /* setProperty */ \
+        nullptr,                 /* getProperty */ \
+        nullptr,                 /* setProperty */ \
         nullptr,                 /* enumerate */ \
         nullptr,                 /* resolve */ \
         nullptr,                 /* convert */ \
@@ -97,8 +97,8 @@ ErrorObject::classes[JSEXN_LIMIT] = {
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS),
         nullptr,                 /* addProperty */
         nullptr,                 /* delProperty */
-        JS_PropertyStub,         /* getProperty */
-        JS_StrictPropertyStub,   /* setProperty */
+        nullptr,                 /* getProperty */
+        nullptr,                 /* setProperty */
         nullptr,                 /* enumerate */
         nullptr,                 /* resolve */
         nullptr,                 /* convert */

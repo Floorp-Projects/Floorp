@@ -460,7 +460,7 @@ GlobalDebuggees_finalize(FreeOp *fop, JSObject *obj)
 static const Class
 GlobalDebuggees_class = {
     "GlobalDebuggee", JSCLASS_HAS_PRIVATE,
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, GlobalDebuggees_finalize
 };
 

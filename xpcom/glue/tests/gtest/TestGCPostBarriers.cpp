@@ -86,7 +86,7 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
 {
   static const JSClass GlobalClass = {
     "global", JSCLASS_GLOBAL_FLAGS,
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook

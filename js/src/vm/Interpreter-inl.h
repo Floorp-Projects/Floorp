@@ -558,8 +558,8 @@ static MOZ_ALWAYS_INLINE bool
 InitElemOperation(JSContext *cx, HandleObject obj, HandleValue idval, HandleValue val)
 {
     MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
-    MOZ_ASSERT(obj->getClass()->getProperty == JS_PropertyStub);
-    MOZ_ASSERT(obj->getClass()->setProperty == JS_StrictPropertyStub);
+    MOZ_ASSERT(!obj->getClass()->getProperty);
+    MOZ_ASSERT(!obj->getClass()->setProperty);
 
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, idval, &id))
