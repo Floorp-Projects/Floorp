@@ -8316,9 +8316,6 @@ Parser<ParseHandler>::accumulateTelemetry()
     JSContext* cx = context->maybeJSContext();
     if (!cx)
         return;
-    JSAccumulateTelemetryDataCallback cb = cx->runtime()->telemetryCallback;
-    if (!cb)
-        return;
     const char* filename = getFilename();
     if (!filename)
         return;
@@ -8342,13 +8339,13 @@ Parser<ParseHandler>::accumulateTelemetry()
 
     // Call back into Firefox's Telemetry reporter.
     if (sawDeprecatedForEach)
-        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedForEach);
+        cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedForEach);
     if (sawDeprecatedDestructuringForIn)
-        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedDestructuringForIn);
+        cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedDestructuringForIn);
     if (sawDeprecatedLegacyGenerator)
-        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLegacyGenerator);
+        cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedLegacyGenerator);
     if (sawDeprecatedExpressionClosure)
-        (*cb)(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedExpressionClosure);
+        cx->runtime()->addTelemetry(JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT, DeprecatedExpressionClosure);
 }
 
 template class Parser<FullParseHandler>;
