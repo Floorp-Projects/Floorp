@@ -842,11 +842,7 @@ ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer)
 
 const JSClass IDBObjectStore::sDummyPropJSClass = {
   "IDBObjectStore Dummy",
-  0 /* flags */,
-  nullptr /* addProperty */,
-  nullptr /* delProperty */,
-  JS_PropertyStub /* getProperty */,
-  JS_StrictPropertyStub /* setProperty */
+  0 /* flags */
 };
 
 IDBObjectStore::IDBObjectStore(IDBTransaction* aTransaction,

@@ -291,21 +291,13 @@ CallObject::createForStrictEval(JSContext *cx, AbstractFramePtr frame)
 
 const Class CallObject::class_ = {
     "Call",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS)
 };
 
 const Class DeclEnvObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(DeclEnvObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Object)
 };
 
 /*
@@ -340,11 +332,9 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
 
     JSPropertyOp getter = clasp->getProperty;
-    if (getter == JS_PropertyStub)
-        getter = nullptr;
     JSStrictPropertyOp setter = clasp->setProperty;
-    if (setter == JS_StrictPropertyStub)
-        setter = nullptr;
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
     if (!NativeObject::putProperty<SequentialExecution>(cx, obj, id, getter, setter, lambdaSlot(),
                                                         attrs, 0)) {
@@ -589,29 +579,25 @@ const Class StaticWithObject::class_ = {
     "WithTemplate",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StaticWithObject::RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_IS_ANONYMOUS
 };
 
 const Class DynamicWithObject::class_ = {
     "With",
     JSCLASS_HAS_RESERVED_SLOTS(DynamicWithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
-    nullptr,                 /* finalize */
-    nullptr,                 /* call        */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct   */
-    nullptr,                 /* trace       */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    nullptr, /* trace */
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     {
@@ -743,11 +729,7 @@ const Class BlockObject::class_ = {
     "Block",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_IS_ANONYMOUS
 };
 
 template<XDRMode mode>
@@ -1037,18 +1019,18 @@ const Class UninitializedLexicalObject::class_ = {
     "UninitializedLexical",
     JSCLASS_HAS_RESERVED_SLOTS(UninitializedLexicalObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
-    nullptr,                 /* finalize */
-    nullptr,                 /* call        */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct   */
-    nullptr,                 /* trace       */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    nullptr, /* trace */
     JS_NULL_CLASS_SPEC,
     JS_NULL_CLASS_EXT,
     {
