@@ -604,6 +604,23 @@ ContentEventHandler::GetLineBreakType(bool aUseNativeLineBreak)
     LINE_BREAK_TYPE_NATIVE : LINE_BREAK_TYPE_XP;
 }
 
+// Similar to nsFrameSelection::GetFrameForNodeOffset,
+// but this is more flexible for OnQueryTextRect to use
+static nsresult GetFrameForTextRect(nsINode* aNode,
+                                    int32_t aNodeOffset,
+                                    bool aHint,
+                                    nsIFrame** aReturnFrame)
+{
+  NS_ENSURE_TRUE(aNode && aNode->IsNodeOfType(nsINode::eCONTENT),
+                 NS_ERROR_UNEXPECTED);
+  nsIContent* content = static_cast<nsIContent*>(aNode);
+  nsIFrame* frame = content->GetPrimaryFrame();
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+  int32_t childNodeOffset = 0;
+  return frame->GetChildFrameContainingOffset(aNodeOffset, aHint,
+                                              &childNodeOffset, aReturnFrame);
+}
+
 nsresult
 ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
 {
@@ -644,6 +661,14 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
     rv = GenerateFlatTextContent(mFirstSelectedRange, aEvent->mReply.mString,
                                  lineBreakType);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsIFrame* frame = nullptr;
+  rv = GetFrameForTextRect(focusNode, focusOffset, true, &frame);
+  if (NS_SUCCEEDED(rv) && frame) {
+    aEvent->mReply.mWritingMode = frame->GetWritingMode();
+  } else {
+    aEvent->mReply.mWritingMode = WritingMode();
   }
 
   aEvent->mSucceeded = true;
@@ -695,23 +720,6 @@ static nsINode* AdjustTextRectNode(nsINode* aNode,
     }
   }
   return node;
-}
-
-// Similar to nsFrameSelection::GetFrameForNodeOffset,
-// but this is more flexible for OnQueryTextRect to use
-static nsresult GetFrameForTextRect(nsINode* aNode,
-                                    int32_t aNodeOffset,
-                                    bool aHint,
-                                    nsIFrame** aReturnFrame)
-{
-  NS_ENSURE_TRUE(aNode && aNode->IsNodeOfType(nsINode::eCONTENT),
-                 NS_ERROR_UNEXPECTED);
-  nsIContent* content = static_cast<nsIContent*>(aNode);
-  nsIFrame* frame = content->GetPrimaryFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  int32_t childNodeOffset = 0;
-  return frame->GetChildFrameContainingOffset(aNodeOffset, aHint,
-                                              &childNodeOffset, aReturnFrame);
 }
 
 nsresult
