@@ -49,17 +49,20 @@ namespace android {
  * This implements the (main) framebuffer management. This class
  * was adapted from the version in SurfaceFlinger
  */
-FramebufferSurface::FramebufferSurface(int disp, uint32_t width, uint32_t height, uint32_t format,
-        sp<BufferQueue>& bq) :
+FramebufferSurface::FramebufferSurface(int disp,
+                                       uint32_t width,
+                                       uint32_t height,
+                                       uint32_t format,
+                                       const sp<StreamConsumer>& sc)
 #if ANDROID_VERSION >= 19
-    ConsumerBase(bq, true),
+    : ConsumerBase(sc, true)
 #else
-    ConsumerBase(bq),
+    : ConsumerBase(sc)
 #endif
-    mDisplayType(disp),
-    mCurrentBufferSlot(-1),
-    mCurrentBuffer(0),
-    lastHandle(0)
+    , mDisplayType(disp)
+    , mCurrentBufferSlot(-1)
+    , mCurrentBuffer(0)
+    , lastHandle(0)
 {
     mName = "FramebufferSurface";
 
@@ -113,7 +116,7 @@ status_t FramebufferSurface::nextBuffer(sp<GraphicBuffer>& outBuffer, sp<Fence>&
         err = releaseBufferLocked(mCurrentBufferSlot, EGL_NO_DISPLAY,
                 EGL_NO_SYNC_KHR);
 #endif
-        if (err != NO_ERROR && err != BufferQueue::STALE_BUFFER_SLOT) {
+        if (err != NO_ERROR && err != StreamConsumer::STALE_BUFFER_SLOT) {
             ALOGE("error releasing buffer: %s (%d)", strerror(-err), err);
             return err;
         }
