@@ -339,8 +339,10 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
     Rooted<PropertyDescriptor> desc(cx);
     if (!Proxy::getPropertyDescriptor(cx, proxy, id, &desc))
         return false;
-    if (desc.object() && desc.setter() && desc.setter() != JS_StrictPropertyStub)
+    if (desc.object() && desc.setter()) {
+        MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
         return CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp);
+    }
 
     if (desc.isReadonly()) {
         return strict ? Throw(cx, id, JSMSG_READ_ONLY) : true;
@@ -353,13 +355,10 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
         ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
         : JSPROP_ENUMERATE;
     const Class *clasp = receiver->getClass();
-    JSPropertyOp getter = clasp->getProperty;
-    if (getter == JS_PropertyStub)
-        getter = nullptr;
-    JSStrictPropertyOp setter = clasp->setProperty;
-    if (setter == JS_StrictPropertyStub)
-        setter = nullptr;
-    return JSObject::defineGeneric(cx, receiver, id, vp, getter, setter, attrs);
+    MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
+    MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
+    return JSObject::defineGeneric(cx, receiver, id, vp, clasp->getProperty, clasp->setProperty,
+                                   attrs);
 }
 
 bool

@@ -435,8 +435,8 @@ class CGDOMJSClass(CGThing):
                 ${flags},
                 ${addProperty}, /* addProperty */
                 nullptr,               /* delProperty */
-                JS_PropertyStub,       /* getProperty */
-                JS_StrictPropertyStub, /* setProperty */
+                nullptr,               /* getProperty */
+                nullptr,               /* setProperty */
                 ${enumerate}, /* enumerate */
                 ${resolve}, /* resolve */
                 nullptr,               /* convert */
@@ -651,8 +651,8 @@ class CGPrototypeJSClass(CGThing):
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
                 nullptr,               /* addProperty */
                 nullptr,               /* delProperty */
-                JS_PropertyStub,       /* getProperty */
-                JS_StrictPropertyStub, /* setProperty */
+                nullptr,               /* getProperty */
+                nullptr,               /* setProperty */
                 nullptr,               /* enumerate */
                 nullptr,               /* resolve */
                 nullptr,               /* convert */
@@ -747,8 +747,8 @@ class CGInterfaceObjectJSClass(CGThing):
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
                 nullptr,               /* addProperty */
                 nullptr,               /* delProperty */
-                JS_PropertyStub,       /* getProperty */
-                JS_StrictPropertyStub, /* setProperty */
+                nullptr,               /* getProperty */
+                nullptr,               /* setProperty */
                 nullptr,               /* enumerate */
                 nullptr,               /* resolve */
                 nullptr,               /* convert */
