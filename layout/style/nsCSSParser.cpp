@@ -889,7 +889,9 @@ protected:
   bool ParseDirectionalBoxProperty(nsCSSProperty aProperty,
                                      int32_t aSourceType);
   bool ParseBoxCornerRadius(const nsCSSProperty aPropID);
+  bool ParseBoxCornerRadiiInternals(nsCSSValue array[]);
   bool ParseBoxCornerRadii(const nsCSSProperty aPropIDs[]);
+
   int32_t ParseChoice(nsCSSValue aValues[],
                       const nsCSSProperty aPropIDs[], int32_t aNumIDs);
   bool ParseColor(nsCSSValue& aValue);
@@ -966,6 +968,7 @@ protected:
   bool ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens);
   bool ParsePolygonFunction(nsCSSValue& aValue);
   bool ParseCircleOrEllipseFunction(nsCSSKeyword, nsCSSValue& aValue);
+  bool ParseInsetFunction(nsCSSValue& aValue);
 
   /* Functions for transform Parsing */
   bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue);
@@ -9383,7 +9386,7 @@ CSSParserImpl::ParseBoxCornerRadius(nsCSSProperty aPropID)
 }
 
 bool
-CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
+CSSParserImpl::ParseBoxCornerRadiiInternals(nsCSSValue array[])
 {
   // Rectangles are used as scratch storage.
   // top => top-left, right => top-right,
@@ -9446,12 +9449,26 @@ CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
     nsCSSValue& y = dimenY.*nsCSSRect::sides[side];
 
     if (x == y) {
-      AppendValue(aPropIDs[side], x);
+      array[side] = x;
     } else {
       nsCSSValue pair;
       pair.SetPairValue(x, y);
-      AppendValue(aPropIDs[side], pair);
+      array[side] = pair;
     }
+  }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseBoxCornerRadii(const nsCSSProperty aPropIDs[])
+{
+  nsCSSValue value[4];
+  if (!ParseBoxCornerRadiiInternals(value)) {
+    return false;
+  }
+
+  NS_FOR_CSS_SIDES(side) {
+    AppendValue(aPropIDs[side], value[side]);
   }
   return true;
 }
@@ -13888,6 +13905,49 @@ CSSParserImpl::ParseCircleOrEllipseFunction(nsCSSKeyword aKeyword,
 }
 
 bool
+CSSParserImpl::ParseInsetFunction(nsCSSValue& aValue)
+{
+  nsRefPtr<nsCSSValue::Array> functionArray =
+    aValue.InitFunction(eCSSKeyword_inset, 5);
+
+  if (ParseVariant(functionArray->Item(1), VARIANT_LPCALC, nullptr)) {
+    // Consume up to 4, but only require one.
+    ParseVariant(functionArray->Item(2), VARIANT_LPCALC, nullptr) &&
+    ParseVariant(functionArray->Item(3), VARIANT_LPCALC, nullptr) &&
+    ParseVariant(functionArray->Item(4), VARIANT_LPCALC, nullptr);
+  } else {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedShapeArg);
+    SkipUntil(')');
+    return false;
+  }
+
+  if (!ExpectSymbol(')', true)) {
+    if (!GetToken(true)) {
+      NS_NOTREACHED("ExpectSymbol should have returned true");
+      return false;
+    }
+
+    nsRefPtr<nsCSSValue::Array> radiusArray = nsCSSValue::Array::Create(4);
+    functionArray->Item(5).SetArrayValue(radiusArray, eCSSUnit_Array);
+    if (mToken.mType != eCSSToken_Ident ||
+        !mToken.mIdent.LowerCaseEqualsLiteral("round") ||
+        !ParseBoxCornerRadiiInternals(radiusArray->ItemStorage())) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectedRadius);
+      SkipUntil(')');
+      return false;
+    }
+
+    if (!ExpectSymbol(')', true)) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
+      SkipUntil(')');
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
 CSSParserImpl::ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens)
 {
   if (!GetToken(true)) {
@@ -13908,6 +13968,8 @@ CSSParserImpl::ParseBasicShape(nsCSSValue& aValue, bool* aConsumedTokens)
   case eCSSKeyword_circle:
   case eCSSKeyword_ellipse:
     return ParseCircleOrEllipseFunction(keyword, aValue);
+  case eCSSKeyword_inset:
+    return ParseInsetFunction(aValue);
   default:
     return false;
   }
