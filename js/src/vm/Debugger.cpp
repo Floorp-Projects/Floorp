@@ -1053,8 +1053,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_,
     RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj ||
         !wrapDebuggeeValue(cx, &value) ||
-        !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
-                              JSPROP_ENUMERATE))
+        !DefineNativeProperty(cx, obj, key, value, nullptr, nullptr, JSPROP_ENUMERATE))
     {
         return false;
     }
@@ -5426,8 +5425,7 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         MOZ_ASSERT(frame.numActualArgs() <= 0x7fffffff);
         unsigned fargc = frame.numActualArgs();
         RootedValue fargcVal(cx, Int32Value(fargc));
-        if (!DefineNativeProperty(cx, argsobj, cx->names().length,
-                                  fargcVal, nullptr, nullptr,
+        if (!DefineNativeProperty(cx, argsobj, cx->names().length, fargcVal, nullptr, nullptr,
                                   JSPROP_PERMANENT | JSPROP_READONLY))
         {
             return false;

@@ -613,9 +613,7 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
             MOZ_ASSERT(!obj->getOps()->defineProperty);
             RootedValue v(cx, desc.hasValue() ? desc.value() : UndefinedValue());
-            return baseops::DefineGeneric(cx, obj, id, v,
-                                          JS_PropertyStub, JS_StrictPropertyStub,
-                                          desc.attributes());
+            return baseops::DefineGeneric(cx, obj, id, v, nullptr, nullptr, desc.attributes());
         }
 
         MOZ_ASSERT(desc.isAccessorDescriptor());
@@ -822,8 +820,8 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
             changed |= JSPROP_ENUMERATE;
 
         attrs = (shapeAttributes & ~changed) | (desc.attributes() & changed);
-        getter = IsImplicitDenseOrTypedArrayElement(shape) ? JS_PropertyStub : shape->getter();
-        setter = IsImplicitDenseOrTypedArrayElement(shape) ? JS_StrictPropertyStub : shape->setter();
+        getter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->getter();
+        setter = IsImplicitDenseOrTypedArrayElement(shape) ? nullptr : shape->setter();
     } else if (desc.isDataDescriptor()) {
         unsigned unchanged = 0;
         if (!desc.hasConfigurable())
@@ -837,8 +835,8 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
         if (desc.hasValue())
             v = desc.value();
         attrs = (desc.attributes() & ~unchanged) | (shapeAttributes & unchanged);
-        getter = JS_PropertyStub;
-        setter = JS_StrictPropertyStub;
+        getter = nullptr;
+        setter = nullptr;
     } else {
         MOZ_ASSERT(desc.isAccessorDescriptor());
 
@@ -858,14 +856,14 @@ DefinePropertyOnObject(JSContext *cx, HandleNativeObject obj, HandleId id, const
             getter = desc.getter();
         } else {
             getter = (shapeHasDefaultGetter && !shapeHasGetterValue)
-                     ? JS_PropertyStub
+                     ? nullptr
                      : shape->getter();
         }
         if (desc.hasSet()) {
             setter = desc.setter();
         } else {
             setter = (shapeHasDefaultSetter && !shapeHasSetterValue)
-                     ? JS_StrictPropertyStub
+                     ? nullptr
                      : shape->setter();
         }
     }
@@ -2119,8 +2117,11 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleNativeObject obj)
                 return false;
 
             if (mode == XDR_DECODE) {
-                if (!DefineNativeProperty(cx, obj, id, tmpValue, NULL, NULL, JSPROP_ENUMERATE))
+                if (!DefineNativeProperty(cx, obj, id, tmpValue, nullptr, nullptr,
+                                          JSPROP_ENUMERATE))
+                {
                     return false;
+                }
             }
         }
 
@@ -2893,6 +2894,15 @@ JSObject::defineGeneric(ExclusiveContext *cx, HandleObject obj,
             return false;
         return op(cx->asJSContext(), obj, id, value, getter, setter, attrs);
     }
+
+    if (getter == nullptr)
+        getter = obj->getClass()->getProperty;
+    if (setter == nullptr)
+        setter = obj->getClass()->setProperty;
+    if (getter == JS_PropertyStub)
+        getter = nullptr;
+    if (setter == JS_StrictPropertyStub)
+        setter = nullptr;
     return baseops::DefineGeneric(cx, obj.as<NativeObject>(), id, value, getter, setter, attrs);
 }
 
@@ -2916,6 +2926,15 @@ JSObject::defineElement(ExclusiveContext *cx, HandleObject obj,
             return false;
         return op(cx->asJSContext(), obj, index, value, getter, setter, attrs);
     }
+
+    if (!getter)
+        getter = obj->getClass()->getProperty;
+    if (!setter)
+        setter = obj->getClass()->setProperty;
+    if (getter == JS_PropertyStub)
+        getter = nullptr;
+    if (setter == JS_StrictPropertyStub)
+        setter = nullptr;
     return baseops::DefineElement(cx, obj.as<NativeObject>(), index, value, getter, setter, attrs);
 }
 
