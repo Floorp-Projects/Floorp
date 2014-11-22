@@ -34,7 +34,7 @@ typedef Rooted<JSFlatString*>    RootedFlatString;
 static const JSClass sLibraryClass = {
   "Library",
   JSCLASS_HAS_RESERVED_SLOTS(LIBRARY_SLOTS),
-  nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+  nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, Library::Finalize
 };
 

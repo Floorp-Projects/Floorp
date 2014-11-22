@@ -542,7 +542,7 @@ IsCacheableNoProperty(JSObject *obj, JSObject *holder, Shape *shape, jsbytecode 
 
     // Just because we didn't find the property on the object doesn't mean it
     // won't magically appear through various engine hacks:
-    if (obj->getClass()->getProperty && obj->getClass()->getProperty != JS_PropertyStub)
+    if (obj->getClass()->getProperty)
         return false;
 
     // Don't generate missing property ICs if we skipped a non-native object, as

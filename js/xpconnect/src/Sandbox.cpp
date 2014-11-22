@@ -459,7 +459,7 @@ sandbox_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
 static const js::Class SandboxClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
@@ -478,7 +478,7 @@ static const js::Class SandboxClass = {
 static const js::Class SandboxWriteToProtoClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
-    sandbox_addProperty, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
+    sandbox_addProperty, nullptr, nullptr, nullptr,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
