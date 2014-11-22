@@ -567,8 +567,27 @@ public:
                                                                    Direction aDirection);
 
   enum {
+    /**
+     * If the SCROLLABLE_SAME_DOC flag is set, then we only walk the frame tree
+     * up to the root frame in the current document.
+     */
     SCROLLABLE_SAME_DOC = 0x01,
-    SCROLLABLE_INCLUDE_HIDDEN = 0x02
+    /**
+     * If the SCROLLABLE_INCLUDE_HIDDEN flag is set then we allow
+     * overflow:hidden scrollframes to be returned as scrollable frames.
+     */
+    SCROLLABLE_INCLUDE_HIDDEN = 0x02,
+    /**
+     * If the SCROLLABLE_ONLY_ASYNC_SCROLLABLE flag is set, then we only
+     * want to match scrollable frames for which WantAsyncScroll() returns
+     * true.
+     */
+    SCROLLABLE_ONLY_ASYNC_SCROLLABLE = 0x04,
+    /**
+     * If the SCROLLABLE_ALWAYS_MATCH_ROOT flag is set, then return the
+     * root scrollable frame for the root content document if we hit it.
+     */
+    SCROLLABLE_ALWAYS_MATCH_ROOT = 0x08,
   };
   /**
    * GetNearestScrollableFrame locates the first ancestor of aFrame
