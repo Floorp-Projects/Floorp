@@ -415,6 +415,16 @@ public:
    */
   virtual void UndefineCaretBidiLevel();
 
+  /** PhysicalMove will generally be called from the nsiselectioncontroller implementations.
+   *  the effect being the selection will move one unit 'aAmount' in the
+   *  given aDirection.
+   * @param aDirection  the direction to move the selection
+   * @param aAmount     amount of movement (char/line; word/page; eol/doc)
+   * @param aExtend     continue selection
+   */
+  /*unsafe*/
+  nsresult PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend);
+
   /** CharacterMove will generally be called from the nsiselectioncontroller implementations.
    *  the effect being the selection will move one character left or right.
    * @param aForward move forward in document.

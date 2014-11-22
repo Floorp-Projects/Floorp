@@ -2304,6 +2304,12 @@ NS_IMETHODIMP PresShell::GetSelectionFlags(int16_t *aOutEnable)
 //implementation of nsISelectionController
 
 NS_IMETHODIMP
+PresShell::PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend)
+{
+  return mSelection->PhysicalMove(aDirection, aAmount, aExtend);
+}
+
+NS_IMETHODIMP
 PresShell::CharacterMove(bool aForward, bool aExtend)
 {
   return mSelection->CharacterMove(aForward, aExtend);
