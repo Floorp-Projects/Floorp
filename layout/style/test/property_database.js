@@ -4633,7 +4633,7 @@ if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
 
 if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
   gCSSProperties["clip-path"] = {
-    domProp: "clip-path",
+    domProp: "clipPath",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
@@ -4702,6 +4702,15 @@ if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
       "ellipse(20px 50% at top right)",
       "ellipse(closest-side 40% at 50% 100%)",
       "ellipse(calc(20% + 20%) calc(20px + 20cm) at right bottom)",
+
+      "inset(1px)",
+      "inset(20% -20px)",
+      "inset(20em 4rem calc(20% + 20px))",
+      "inset(20vh 20vw 20pt 3%)",
+      "inset(5px round 3px)",
+      "inset(1px 2px round 3px / 3px)",
+      "inset(1px 2px 3px round 3px 2em / 20%)",
+      "inset(1px 2px 3px 4px round 3px 2vw 20% / 20px 3em 2vh 20%)",
     ],
     invalid_values: [
       "url(#test) url(#tes2)",
@@ -4767,6 +4776,18 @@ if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
       "polygon(at center top closest-side closest-side)",
       "polygon(40% at 50% 100%)",
       "polygon(40% farthest-side 20px at 50% 100%)",
+
+      "inset()",
+      "inset(round)",
+      "inset(round 3px)",
+      "inset(1px round 1px 2px 3px 4px 5px)",
+      "inset(1px 2px 3px 4px 5px)",
+      "inset(1px, round 3px)",
+      "inset(1px, 2px)",
+      "inset(1px 2px, 3px)",
+      "inset(1px at 3px)",
+      "inset(1px round 1px // 2px)",
+      "inset(1px round)",
     ],
     unbalanced_values: [
       "polygon(30% 30%",
@@ -4777,6 +4798,13 @@ if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
       "circle(40% at 50% 100%",
       "ellipse(",
       "ellipse(40% at 50% 100%",
+
+      "inset(1px",
+      "inset(1px 2px",
+      "inset(1px 2px 3px",
+      "inset(1px 2px 3px 4px",
+      "inset(1px 2px 3px 4px round 5px",
+      "inset(1px 2px 3px 4px round 5px / 6px",
     ]
   };
 }
