@@ -71,7 +71,7 @@ class Nursery
     {}
     ~Nursery();
 
-    bool init(uint32_t maxNurseryBytes);
+    bool init(uint32_t numNurseryChunks);
 
     bool exists() const { return numNurseryChunks_ != 0; }
     size_t numChunks() const { return numNurseryChunks_; }
