@@ -352,7 +352,14 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
         (desc.object() == proxy)
         ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
         : JSPROP_ENUMERATE;
-    return JSObject::defineGeneric(cx, receiver, id, vp, nullptr, nullptr, attrs);
+    const Class *clasp = receiver->getClass();
+    JSPropertyOp getter = clasp->getProperty;
+    if (getter == JS_PropertyStub)
+        getter = nullptr;
+    JSStrictPropertyOp setter = clasp->setProperty;
+    if (setter == JS_StrictPropertyStub)
+        setter = nullptr;
+    return JSObject::defineGeneric(cx, receiver, id, vp, getter, setter, attrs);
 }
 
 bool
