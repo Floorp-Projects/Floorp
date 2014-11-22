@@ -3628,7 +3628,8 @@ ComputeConcreteObjectSize(const nsSize& aConstraintSize,
 nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
                                      const IntrinsicSize& aIntrinsicSize,
                                      const nsSize& aIntrinsicRatio,
-                                     const nsStylePosition* aStylePos)
+                                     const nsStylePosition* aStylePos,
+                                     nsPoint* aAnchorPoint)
 {
   // Step 1: Figure out our "concrete object size"
   // (the size of the region we'll actually draw our image's pixels into).
@@ -3648,8 +3649,9 @@ nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
   imageTopLeftPt += aConstraintRect.TopLeft();
   imageAnchorPt += aConstraintRect.TopLeft();
 
-  // XXXdholbert Per bug 1098417, we should be returning imageAnchorPt here,
-  // and our caller should make sure it's pixel-aligned.
+  if (aAnchorPoint) {
+    *aAnchorPoint = imageAnchorPt;
+  }
   return nsRect(imageTopLeftPt, concreteObjectSize);
 }
 
@@ -5689,6 +5691,7 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
                                const nsRect&          aDirty,
                                const SVGImageContext* aSVGContext,
                                uint32_t               aImageFlags,
+                               const nsPoint*         aAnchorPoint,
                                const nsRect*          aSourceArea)
 {
   nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
@@ -5724,7 +5727,8 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
   nsRect fill;
   fill.IntersectRect(aDest, dest);
   return DrawImageInternal(aContext, aPresContext, image,
-                           aGraphicsFilter, dest, fill, fill.TopLeft(),
+                           aGraphicsFilter, dest, fill,
+                           aAnchorPoint ? *aAnchorPoint : fill.TopLeft(),
                            aDirty, aSVGContext, aImageFlags);
 }
 
