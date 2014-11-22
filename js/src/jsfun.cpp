@@ -499,7 +499,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
             v.setString(fun->atom() == nullptr ? cx->runtime()->emptyString : fun->atom());
         }
 
-        if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
+        if (!DefineNativeProperty(cx, fun, id, v, nullptr, nullptr,
                                   JSPROP_PERMANENT | JSPROP_READONLY)) {
             return false;
         }

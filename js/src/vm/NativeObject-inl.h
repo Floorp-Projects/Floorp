@@ -624,6 +624,9 @@ DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj,
                      PropertyName *name, HandleValue value,
                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
     RootedId id(cx, NameToId(name));
     return DefineNativeProperty(cx, obj, id, value, getter, setter, attrs);
 }
