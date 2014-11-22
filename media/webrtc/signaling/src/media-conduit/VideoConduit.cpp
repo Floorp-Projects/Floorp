@@ -172,6 +172,11 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
   }
 }
 
+bool WebrtcVideoConduit::SetLocalSSRC(unsigned int ssrc)
+{
+  return !mPtrRTP->SetLocalSSRC(mChannel, ssrc);
+}
+
 bool WebrtcVideoConduit::GetLocalSSRC(unsigned int* ssrc)
 {
   return !mPtrRTP->GetLocalSSRC(mChannel, *ssrc);
@@ -180,6 +185,14 @@ bool WebrtcVideoConduit::GetLocalSSRC(unsigned int* ssrc)
 bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc)
 {
   return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
+}
+
+bool WebrtcVideoConduit::SetLocalCNAME(const char* cname)
+{
+  char temp[256];
+  strncpy(temp, cname, sizeof(temp) - 1);
+  temp[sizeof(temp) - 1] = 0;
+  return !mPtrRTP->SetRTCPCName(mChannel, temp);
 }
 
 bool WebrtcVideoConduit::GetVideoEncoderStats(double* framerateMean,
