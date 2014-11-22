@@ -713,23 +713,8 @@ ErrorReport::init(JSContext *cx, HandleValue exn)
     if (exn.isObject()) {
         exnObject = &exn.toObject();
         reportp = js_ErrorFromException(cx, exnObject);
-
-        JSCompartment *comp = exnObject->compartment();
-        JSAddonId *addonId = comp->addonId;
-        if (addonId) {
-            UniqueChars addonIdChars(JS_EncodeString(cx, addonId));
-
-            const char *filename = strrchr(reportp->filename, '/');
-            if (filename)
-                filename++;
-            else
-                filename = "COULD_NOT_FIND_FILENAME";
-
-            char histogramKey[64];
-            JS_snprintf(histogramKey, sizeof(histogramKey), "%s %s %u", addonIdChars, filename, reportp->lineno);
-            cx->runtime()->addTelemetry(JS_TELEMETRY_ADDON_EXCEPTIONS, 1, histogramKey);
-        }
     }
+
     // Be careful not to invoke ToString if we've already successfully extracted
     // an error report, since the exception might be wrapped in a security
     // wrapper, and ToString-ing it might throw.

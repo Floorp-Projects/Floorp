@@ -681,7 +681,7 @@ js::StringToLinearStringSlow(JSContext *cx, JSString *str)
 JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback)
 {
-    rt->setTelemetryCallback(rt, callback);
+    rt->telemetryCallback = callback;
 }
 
 JS_FRIEND_API(JSObject *)

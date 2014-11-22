@@ -324,12 +324,6 @@
     "n_values": 10,
     "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach, DestructuringForIn, LegacyGenerator, ExpressionClosure"
   },
-  "JS_TELEMETRY_ADDON_EXCEPTIONS" : {
-    "expires_in_version" : "never",
-    "kind": "count",
-    "keyed" : true,
-    "description" : "Exceptions thrown by add-ons"
-  },
   "TELEMETRY_PING": {
     "expires_in_version": "default",
     "kind": "exponential",
