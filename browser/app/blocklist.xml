@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1416342793000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1416506840000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -1466,6 +1466,12 @@
     </emItem>
       <emItem  blockID="i86" id="{45147e67-4020-47e2-8f7a-55464fb535aa}">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i788" id="{729c9605-0626-4792-9584-4cbe65b243e6}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
