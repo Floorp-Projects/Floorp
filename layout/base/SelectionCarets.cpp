@@ -635,7 +635,7 @@ CompareRangeWithContentOffset(nsRange* aRange,
   nsPeekOffsetStruct pos(eSelectCluster,
                          dir,
                          offset,
-                         0,
+                         nsPoint(0, 0),
                          true,
                          true,  //limit on scrolled views
                          false,
