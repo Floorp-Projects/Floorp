@@ -110,7 +110,23 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandTable *i
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_movePageUp");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_movePageDown");
   NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectPageUp");
-  NS_REGISTER_LAST_COMMAND(nsSelectionMoveCommands, "cmd_selectPageDown");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectPageDown");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveLeft");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveRight");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveUp");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveDown");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveLeft2");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveRight2");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveUp2");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveDown2");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLeft");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectRight");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectUp");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectDown");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLeft2");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectRight2");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectUp2");
+  NS_REGISTER_LAST_COMMAND(nsSelectionMoveCommands, "cmd_selectDown2");
 
   return NS_OK;
 }

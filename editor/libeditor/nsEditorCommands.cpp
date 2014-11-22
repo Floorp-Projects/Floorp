@@ -723,6 +723,30 @@ static const struct MoveCommand {
     &nsISelectionController::CompleteMove }
 };
 
+static const struct PhysicalCommand {
+  const char *move;
+  const char *select;
+  int16_t direction;
+  int16_t amount;
+} physicalCommands[] = {
+  { "cmd_moveLeft", "cmd_selectLeft",
+    nsISelectionController::MOVE_LEFT, 0 },
+  { "cmd_moveRight", "cmd_selectRight",
+    nsISelectionController::MOVE_RIGHT, 0 },
+  { "cmd_moveUp", "cmd_selectUp",
+    nsISelectionController::MOVE_UP, 0 },
+  { "cmd_moveDown", "cmd_selectDown",
+    nsISelectionController::MOVE_DOWN, 0 },
+  { "cmd_moveLeft2", "cmd_selectLeft2",
+    nsISelectionController::MOVE_LEFT, 1 },
+  { "cmd_moveRight2", "cmd_selectRight2",
+    nsISelectionController::MOVE_RIGHT, 1 },
+  { "cmd_moveUp2", "cmd_selectUp2",
+    nsISelectionController::MOVE_UP, 1 },
+  { "cmd_moveDown2", "cmd_selectDown2",
+    nsISelectionController::MOVE_DOWN, 1 }
+};
+
 NS_IMETHODIMP
 nsSelectionMoveCommands::DoCommand(const char *aCommandName,
                                    nsISupports *aCommandRefCon)
@@ -765,6 +789,16 @@ nsSelectionMoveCommands::DoCommand(const char *aCommandName,
       return (selCont->*(cmd.move))(false, true);
     } else if (!nsCRT::strcmp(aCommandName, cmd.forwardSelect)) {
       return (selCont->*(cmd.move))(true, true);
+    }
+  }
+
+  // physical-direction movement/selection
+  for (size_t i = 0; i < ArrayLength(physicalCommands); i++) {
+    const PhysicalCommand& cmd = physicalCommands[i];
+    if (!nsCRT::strcmp(aCommandName, cmd.move)) {
+      return selCont->PhysicalMove(cmd.direction, cmd.amount, false);
+    } else if (!nsCRT::strcmp(aCommandName, cmd.select)) {
+      return selCont->PhysicalMove(cmd.direction, cmd.amount, true);
     }
   }
 
