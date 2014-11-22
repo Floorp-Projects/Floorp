@@ -217,7 +217,7 @@ intrinsic_MakeConstructible(JSContext *cx, unsigned argc, Value *vp)
     // correctly, it must be enumerable.
     RootedObject ctor(cx, &args[0].toObject());
     if (!JSObject::defineProperty(cx, ctor, cx->names().prototype, args[1],
-                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT))
     {
         return false;

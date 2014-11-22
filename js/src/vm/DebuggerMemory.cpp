@@ -453,7 +453,7 @@ class ByJSType {
 
         RootedValue otherReport(cx);
         if (!other.report(census, &otherReport) ||
-            !JSObject::defineProperty(cx, obj, cx->names().other,   otherReport))
+            !JSObject::defineProperty(cx, obj, cx->names().other, otherReport))
             return false;
 
         report.setObject(*obj);
