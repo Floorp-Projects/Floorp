@@ -2395,24 +2395,27 @@ TabChild::CancelTapTracking()
   mTapHoldTimer = nullptr;
 }
 
-static dom::Element*
-GetScrollableAncestor(nsIFrame* aTarget)
+static nsIScrollableFrame*
+GetScrollableAncestorFrame(nsIFrame* aTarget)
 {
   if (!aTarget) {
     return nullptr;
   }
   uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT
                  | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE;
-  nsIScrollableFrame* scrollTarget = nsLayoutUtils::GetNearestScrollableFrame(
-    aTarget, flags);
-  if (!scrollTarget) {
+  return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
+}
+
+static dom::Element*
+GetDisplayportElementFor(nsIScrollableFrame* aScrollableFrame)
+{
+  if (!aScrollableFrame) {
     return nullptr;
   }
-  nsIFrame* scrolledFrame = scrollTarget->GetScrolledFrame();
+  nsIFrame* scrolledFrame = aScrollableFrame->GetScrolledFrame();
   if (!scrolledFrame) {
     return nullptr;
   }
-
   // |scrolledFrame| should at this point be the root content frame of the
   // nearest ancestor scrollable frame. The element corresponding to this
   // frame should be the one with the displayport set on it, so find that
@@ -2421,6 +2424,49 @@ GetScrollableAncestor(nsIFrame* aTarget)
   MOZ_ASSERT(content->IsElement()); // roc says this must be true
   return content->AsElement();
 }
+
+class DisplayportSetListener : public nsAPostRefreshObserver {
+public:
+  DisplayportSetListener(TabChild* aTabChild,
+                         nsIPresShell* aPresShell,
+                         const uint64_t& aInputBlockId,
+                         const nsTArray<ScrollableLayerGuid>& aTargets)
+    : mTabChild(aTabChild)
+    , mPresShell(aPresShell)
+    , mInputBlockId(aInputBlockId)
+    , mTargets(aTargets)
+  {
+  }
+
+  virtual ~DisplayportSetListener()
+  {
+  }
+
+  void DidRefresh() MOZ_OVERRIDE {
+    if (!mTabChild) {
+      MOZ_ASSERT_UNREACHABLE("Post-refresh observer fired again after failed attempt at unregistering it");
+      return;
+    }
+
+    mTabChild->SendSetTargetAPZC(mInputBlockId, mTargets);
+
+    if (!mPresShell->RemovePostRefreshObserver(this)) {
+      MOZ_ASSERT_UNREACHABLE("Unable to unregister post-refresh observer! Leaking it instead of leaving garbage registered");
+      // Graceful handling, just in case...
+      mTabChild = nullptr;
+      mPresShell = nullptr;
+      return;
+    }
+
+    delete this;
+  }
+
+private:
+  nsRefPtr<TabChild> mTabChild;
+  nsRefPtr<nsIPresShell> mPresShell;
+  uint64_t mInputBlockId;
+  nsTArray<ScrollableLayerGuid> mTargets;
+};
 
 void
 TabChild::SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
@@ -2437,6 +2483,7 @@ TabChild::SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
     return;
   }
 
+  bool waitForRefresh = false;
   nsTArray<ScrollableLayerGuid> targets;
   for (size_t i = 0; i < aEvent.touches.Length(); i++) {
     ScrollableLayerGuid guid(aGuid.mLayersId, 0, FrameMetrics::NULL_SCROLL_ID);
@@ -2444,13 +2491,25 @@ TabChild::SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
       WebWidget(), aEvent.touches[i]->mRefPoint, rootFrame);
     nsIFrame* target = nsLayoutUtils::GetFrameForPoint(rootFrame, touchPoint,
       nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
-    APZCCallbackHelper::GetOrCreateScrollIdentifiers(
-      GetScrollableAncestor(target),
-      &(guid.mPresShellId),
-      &(guid.mScrollId));
+    nsIScrollableFrame* scrollAncestor = GetScrollableAncestorFrame(target);
+    nsCOMPtr<dom::Element> dpElement = GetDisplayportElementFor(scrollAncestor);
+
+    bool guidIsValid = APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+      dpElement, &(guid.mPresShellId), &(guid.mScrollId));
     targets.AppendElement(guid);
+
+    if (guidIsValid && !nsLayoutUtils::GetDisplayPort(dpElement, nullptr)) {
+      waitForRefresh |= nsLayoutUtils::CalculateAndSetDisplayPortMargins(
+        scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
+    }
   }
-  SendSetTargetAPZC(aInputBlockId, targets);
+  if (waitForRefresh) {
+    waitForRefresh = shell->AddPostRefreshObserver(
+      new DisplayportSetListener(this, shell, aInputBlockId, targets));
+  }
+  if (!waitForRefresh) {
+    SendSetTargetAPZC(aInputBlockId, targets);
+  }
 }
 
 bool
