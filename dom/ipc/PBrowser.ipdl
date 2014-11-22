@@ -354,6 +354,13 @@ parent:
     ContentReceivedTouch(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
 
     /**
+     * Notifies the APZ code of the results of the gecko hit-test for a
+     * particular input block. Each target corresponds to one touch point in the
+     * touch event.
+     */
+    SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
+
+    /**
      * Updates the zoom constraints for a scrollable frame in this tab.
      * The zoom controller code lives on the parent side and so this allows it to
      * have up-to-date zoom constraints.
