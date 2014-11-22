@@ -63,7 +63,7 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct
   nsPeekOffsetStruct(nsSelectionAmount aAmount,
                      nsDirection aDirection,
                      int32_t aStartOffset,
-                     nscoord aDesiredX,
+                     nsPoint aDesiredPos,
                      bool aJumpLines,
                      bool aScrollViewStop,
                      bool aIsKeyboardSelect,
@@ -96,9 +96,10 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct
   //               Used with: eSelectCharacter, eSelectWord
   int32_t mStartOffset;
   
-  // mDesiredX: The desired x coordinate for the caret.
-  //            Used with: eSelectLine.
-  nscoord mDesiredX;
+  // mDesiredPos: The desired inline coordinate for the caret
+  //              (one of .x or .y will be used, depending on line's writing mode)
+  //              Used with: eSelectLine.
+  nsPoint mDesiredPos;
 
   // mWordMovementType: An enum that determines whether to prefer the start or end of a word
   //                    or to use the default beahvior, which is a combination of 
@@ -645,9 +646,9 @@ private:
                          nsSelectionAmount aAmount,
                          CaretMovementStyle aMovementStyle);
 
-  nsresult     FetchDesiredX(nscoord &aDesiredX); //the x position requested by the Key Handling for up down
-  void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
-  void         SetDesiredX(nscoord aX); //set the mDesiredX
+  nsresult     FetchDesiredPos(nsPoint &aDesiredPos); //the position requested by the Key Handling for up down
+  void         InvalidateDesiredPos(); //do not listen to mDesiredPos you must get another.
+  void         SetDesiredPos(nsPoint aPos); //set the mDesiredPos
 
   uint32_t     GetBatching() const {return mBatching; }
   bool         GetNotifyFrames() const { return mNotifyFrames; }
@@ -714,7 +715,7 @@ private:
   CaretAssociateHint mHint;   //hint to tell if the selection is at the end of this line or beginning of next
   nsBidiLevel mCaretBidiLevel;
 
-  int32_t mDesiredX;
+  nsPoint mDesiredPos;
   uint32_t mDelayedMouseEventClickCount;
   bool mDelayedMouseEventIsShift;
   bool mDelayedMouseEventValid;
@@ -724,7 +725,7 @@ private:
   bool mDragSelectingCells;
   bool mDragState;   //for drag purposes
   bool mMouseDoubleDownState; //has the doubleclick down happened
-  bool mDesiredXSet;
+  bool mDesiredPosSet;
 
   int8_t mCaretMovementStyle;
 };
