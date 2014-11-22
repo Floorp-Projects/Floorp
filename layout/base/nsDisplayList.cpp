@@ -1248,6 +1248,8 @@ nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame, const nsSize& aRec
 
 bool
 nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame) const {
+  uint32_t multiplier = 3;
+
   mWillChangeBudgetCalculated = true;
 
   nsPresContext* key = aFrame->PresContext();
@@ -1264,7 +1266,22 @@ nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame) const {
   uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
     nsPresContext::AppUnitsToIntCSSPixels(area.height);
 
-  return budget.mBudget / 3 < budgetLimit;
+  bool onBudget = budget.mBudget / multiplier < budgetLimit;
+  if (!onBudget) {
+    nsString usageStr;
+    usageStr.AppendInt(budget.mBudget);
+
+    nsString multiplierStr;
+    multiplierStr.AppendInt(multiplier);
+
+    nsString limitStr;
+    limitStr.AppendInt(budgetLimit);
+
+    const char16_t* params[] = { usageStr.get(), multiplierStr.get(), limitStr.get() };
+    key->Document()->WarnOnceAbout(nsIDocument::eWillChangeBudget, false,
+                                   params, ArrayLength(params));
+  }
+  return onBudget;
 }
 
 void nsDisplayListSet::MoveTo(const nsDisplayListSet& aDestination) const
