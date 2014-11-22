@@ -1,4 +1,3 @@
-18f.gsa.gov: did not receive HSTS header
 admin.google.com: did not receive HSTS header (error ignored - included regardless)
 adsfund.org: could not connect to host
 airbnb.com: did not receive HSTS header
@@ -184,6 +183,7 @@ nl.search.yahoo.com: did not receive HSTS header
 no.search.yahoo.com: did not receive HSTS header
 noexpect.org: could not connect to host
 np.search.yahoo.com: did not receive HSTS header
+npw.net: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-periodicupdate-00/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 nz.search.yahoo.com: did not receive HSTS header
 openshift.redhat.com: did not receive HSTS header
 otakurepublic.com: did not receive HSTS header
@@ -216,7 +216,6 @@ research.facebook.com: did not receive HSTS header
 riseup.net: did not receive HSTS header
 rme.li: did not receive HSTS header
 ro.search.yahoo.com: did not receive HSTS header
-robteix.com: did not receive HSTS header
 ru.search.yahoo.com: did not receive HSTS header
 rw.search.yahoo.com: did not receive HSTS header
 sah3.net: could not connect to host
@@ -252,7 +251,6 @@ stocktrade.de: could not connect to host
 sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
 sv.search.yahoo.com: did not receive HSTS header
-sylaps.com: could not connect to host
 t.facebook.com: did not receive HSTS header
 tablet.facebook.com: did not receive HSTS header
 talk.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -277,8 +275,6 @@ ve.search.yahoo.com: did not receive HSTS header
 vn.search.yahoo.com: did not receive HSTS header
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
-wf-training-master.appspot.com: could not connect to host
-wf-training-master.appspot.com: could not connect to host (error ignored - included regardless)
 whonix.org: did not receive HSTS header
 wikidsystems.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-periodicupdate-00/getHSTSPreloadList.js :: processStsHeader :: line 134"  data: no]
 wiz.biz: did not receive HSTS header
