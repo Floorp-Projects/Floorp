@@ -598,7 +598,7 @@ private:
   void BidiLevelFromMove(nsIPresShell* aPresShell,
                          nsIContent *aNode,
                          uint32_t aContentOffset,
-                         uint32_t aKeycode,
+                         nsSelectionAmount aAmount,
                          CaretAssociateHint aHint);
   void BidiLevelFromClick(nsIContent *aNewFocus, uint32_t aContentOffset);
   nsPrevNextBidiLevels GetPrevNextBidiLevels(nsIContent *aNode,
@@ -632,12 +632,18 @@ private:
 #endif /* DEBUG */
 
   void ResizeBuffer(uint32_t aNewBufSize);
+
 /*HELPER METHODS*/
-  nsresult     MoveCaret(uint32_t aKeycode, bool aContinueSelection,
-                         nsSelectionAmount aAmount);
-  nsresult     MoveCaret(uint32_t aKeycode, bool aContinueSelection,
+  // Whether MoveCaret should use logical or visual movement,
+  // or follow the bidi.edit.caret_movement_style preference.
+  enum CaretMovementStyle {
+    eLogical,
+    eVisual,
+    eUsePrefStyle
+  };
+  nsresult     MoveCaret(nsDirection aDirection, bool aContinueSelection,
                          nsSelectionAmount aAmount,
-                         bool aVisualMovement);
+                         CaretMovementStyle aMovementStyle);
 
   nsresult     FetchDesiredX(nscoord &aDesiredX); //the x position requested by the Key Handling for up down
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
