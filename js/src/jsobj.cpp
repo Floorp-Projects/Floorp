@@ -674,6 +674,9 @@ JS_FRIEND_API(bool)
 js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue value,
                         unsigned attrs, PropertyOp getter, StrictPropertyOp setter)
 {
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
     if (!obj->isNative())
         return true;
 
@@ -695,8 +698,8 @@ js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValu
         // Steps 6-11, skipping step 10.a.ii. Prohibit redefining a permanent
         // property with different metadata, except to make a writable property
         // non-writable.
-        if ((getter != desc.getter() && !(getter == JS_PropertyStub && !desc.getter())) ||
-            (setter != desc.setter() && !(setter == JS_StrictPropertyStub && !desc.setter())) ||
+        if (getter != desc.getter() ||
+            setter != desc.setter() ||
             (attrs != desc.attributes() && attrs != (desc.attributes() | JSPROP_READONLY)))
         {
             return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);
