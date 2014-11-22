@@ -1019,20 +1019,7 @@ static const uint32_t CacheEntry_SOURCE = 0;
 static const uint32_t CacheEntry_BYTECODE = 1;
 
 static const JSClass CacheEntry_class = {
-    "CacheEntryObject", JSCLASS_HAS_RESERVED_SLOTS(2),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
-    JS_PropertyStub,       /* getProperty */
-    JS_StrictPropertyStub, /* setProperty */
-    nullptr,               /* enumerate */
-    nullptr,               /* resolve */
-    nullptr,               /* convert */
-    nullptr,               /* finalize */
-    nullptr,               /* call */
-    nullptr,               /* hasInstance */
-    nullptr,               /* construct */
-    nullptr,               /* trace */
-    JSCLASS_NO_INTERNAL_MEMBERS
+    "CacheEntryObject", JSCLASS_HAS_RESERVED_SLOTS(2)
 };
 
 static bool
@@ -2569,8 +2556,7 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 static const JSClass sandbox_class = {
     "sandbox",
     JSCLASS_GLOBAL_FLAGS,
-    nullptr,           nullptr,
-    JS_PropertyStub,   JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     sandbox_enumerate, sandbox_resolve,
     nullptr, nullptr,
     nullptr, nullptr, nullptr,
@@ -3961,11 +3947,7 @@ ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
 
     static const JSClass cls = {
         "ObjectEmulatingUndefined",
-        JSCLASS_EMULATES_UNDEFINED,
-        nullptr,
-        nullptr,
-        JS_PropertyStub,
-        JS_StrictPropertyStub
+        JSCLASS_EMULATES_UNDEFINED
     };
 
     RootedObject obj(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
@@ -4782,8 +4764,7 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 
 static const JSClass global_class = {
     "global", JSCLASS_GLOBAL_FLAGS,
-    nullptr,          nullptr,
-    JS_PropertyStub,  JS_StrictPropertyStub,
+    nullptr, nullptr, nullptr, nullptr,
     global_enumerate, global_resolve,
     nullptr, nullptr,
     nullptr, nullptr, nullptr,
@@ -4898,20 +4879,7 @@ static const JSFunctionSpec dom_methods[] = {
 };
 
 static const JSClass dom_class = {
-    "FakeDOMObject", JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
-    JS_PropertyStub,       /* getProperty */
-    JS_StrictPropertyStub, /* setProperty */
-    nullptr,               /* enumerate */
-    nullptr,               /* resolve */
-    nullptr,               /* convert */
-    nullptr,               /* finalize */
-    nullptr,               /* call */
-    nullptr,               /* hasInstance */
-    nullptr,               /* construct */
-    nullptr,               /* trace */
-    JSCLASS_NO_INTERNAL_MEMBERS
+    "FakeDOMObject", JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2)
 };
 
 #ifdef DEBUG

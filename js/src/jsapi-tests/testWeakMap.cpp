@@ -142,18 +142,18 @@ JSObject *newKey()
     static const js::Class keyClass = {
         "keyWithDelgate",
         JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
-        nullptr,                 /* addProperty */
-        nullptr,                 /* delProperty */
-        JS_PropertyStub,         /* getProperty */
-        JS_StrictPropertyStub,   /* setProperty */
-        nullptr,                 /* enumerate */
-        nullptr,                 /* resolve */
-        nullptr,                 /* convert */
-        nullptr,                 /* finalize */
-        nullptr,
-        nullptr,
-        nullptr,
-        nullptr,
+        nullptr, /* addProperty */
+        nullptr, /* delProperty */
+        nullptr, /* getProperty */
+        nullptr, /* setProperty */
+        nullptr, /* enumerate */
+        nullptr, /* resolve */
+        nullptr, /* convert */
+        nullptr, /* finalize */
+        nullptr, /* call */
+        nullptr, /* hasInstance */
+        nullptr, /* construct */
+        nullptr, /* trace */
         JS_NULL_CLASS_SPEC,
         {
             nullptr,
@@ -202,17 +202,17 @@ JSObject *newDelegate()
     static const js::Class delegateClass = {
         "delegate",
         JSCLASS_GLOBAL_FLAGS | JSCLASS_HAS_RESERVED_SLOTS(1),
-        nullptr,                 /* addProperty */
-        nullptr,                 /* delProperty */
-        JS_PropertyStub,
-        JS_StrictPropertyStub,
-        nullptr,                 /* enumerate */
-        nullptr,                 /* resolve */
-        nullptr,                 /* convert */
-        nullptr,                 /* finalize */
-        nullptr,
-        nullptr,
-        nullptr,
+        nullptr, /* addProperty */
+        nullptr, /* delProperty */
+        nullptr, /* getProperty */
+        nullptr, /* setProperty */
+        nullptr, /* enumerate */
+        nullptr, /* resolve */
+        nullptr, /* convert */
+        nullptr, /* finalize */
+        nullptr, /* call */
+        nullptr, /* hasInstance */
+        nullptr, /* construct */
         JS_GlobalObjectTraceHook,
         JS_NULL_CLASS_SPEC,
         {

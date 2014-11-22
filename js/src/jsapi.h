@@ -3102,8 +3102,14 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
     void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }
     void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
 
-    void setGetter(JSPropertyOp op) { desc()->getter = op; }
-    void setSetter(JSStrictPropertyOp op) { desc()->setter = op; }
+    void setGetter(JSPropertyOp op) {
+        MOZ_ASSERT(op != JS_PropertyStub);
+        desc()->getter = op;
+    }
+    void setSetter(JSStrictPropertyOp op) {
+        MOZ_ASSERT(op != JS_StrictPropertyStub);
+        desc()->setter = op;
+    }
     void setGetterObject(JSObject *obj) { desc()->getter = reinterpret_cast<JSPropertyOp>(obj); }
     void setSetterObject(JSObject *obj) { desc()->setter = reinterpret_cast<JSStrictPropertyOp>(obj); }
 

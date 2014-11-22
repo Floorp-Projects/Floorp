@@ -6,11 +6,7 @@
 
 static const JSClass ObjectEmulatingUndefinedClass = {
     "ObjectEmulatingUndefined",
-    JSCLASS_EMULATES_UNDEFINED,
-    nullptr,
-    nullptr,
-    JS_PropertyStub,
-    JS_StrictPropertyStub
+    JSCLASS_EMULATES_UNDEFINED
 };
 
 static bool

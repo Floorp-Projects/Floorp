@@ -919,18 +919,18 @@ const Class PropertyIteratorObject::class_ = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
     JSCLASS_HAS_PRIVATE |
     JSCLASS_BACKGROUND_FINALIZE,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
     finalize,
-    nullptr,                 /* call        */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct   */
-    trace,
+    nullptr, /* call        */
+    nullptr, /* hasInstance */
+    nullptr, /* construct   */
+    trace
 };
 
 enum {
@@ -943,11 +943,7 @@ enum {
 const Class ArrayIteratorObject::class_ = {
     "Array Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(ArrayIteratorSlotCount),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_HAS_RESERVED_SLOTS(ArrayIteratorSlotCount)
 };
 
 static const JSFunctionSpec array_iterator_methods[] = {
@@ -958,11 +954,7 @@ static const JSFunctionSpec array_iterator_methods[] = {
 
 static const Class StringIteratorPrototypeClass = {
     "String Iterator",
-    JSCLASS_IMPLEMENTS_BARRIERS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_IMPLEMENTS_BARRIERS
 };
 
 enum {
@@ -974,11 +966,7 @@ enum {
 const Class StringIteratorObject::class_ = {
     "String Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(StringIteratorSlotCount),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_HAS_RESERVED_SLOTS(StringIteratorSlotCount)
 };
 
 static const JSFunctionSpec string_iterator_methods[] = {
@@ -1305,17 +1293,16 @@ stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, bool
 const Class StopIterationObject::class_ = {
     "StopIteration",
     JSCLASS_HAS_CACHED_PROTO(JSProto_StopIteration),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
-    nullptr,                 /* finalize    */
-    nullptr,                 /* call        */
-    stopiter_hasInstance,
-    nullptr                  /* construct   */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    stopiter_hasInstance
 };
 
 /* static */ bool

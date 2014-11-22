@@ -264,17 +264,17 @@ const Class RegExpObject::class_ = {
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
-    nullptr,                 /* finalize */
-    nullptr,                 /* call */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
     RegExpObject::trace
 };
 

@@ -280,15 +280,15 @@ namespace js {
             flags,                                                                      \
         nullptr,                 /* addProperty */                                      \
         nullptr,                 /* delProperty */                                      \
-        JS_PropertyStub,         /* getProperty */                                      \
-        JS_StrictPropertyStub,   /* setProperty */                                      \
+        nullptr,                 /* getProperty */                                      \
+        nullptr,                 /* setProperty */                                      \
         nullptr,                 /* enumerate */                                        \
         nullptr,                 /* resolve */                                          \
         js::proxy_Convert,                                                              \
         js::proxy_Finalize,      /* finalize    */                                      \
-        nullptr,                  /* call        */                                     \
+        nullptr,                 /* call        */                                      \
         js::proxy_HasInstance,   /* hasInstance */                                      \
-        nullptr,             /* construct   */                                          \
+        nullptr,                 /* construct   */                                      \
         js::proxy_Trace,         /* trace       */                                      \
         JS_NULL_CLASS_SPEC,                                                             \
         ext,                                                                            \

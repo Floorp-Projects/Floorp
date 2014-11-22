@@ -27,11 +27,7 @@ using namespace js::types;
 
 const Class BooleanObject::class_ = {
     "Boolean",
-    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean)
 };
 
 MOZ_ALWAYS_INLINE bool

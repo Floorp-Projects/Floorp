@@ -804,8 +804,8 @@ TypedArrayObject::sharedTypedArrayPrototypeClass = {
     JSCLASS_HAS_CACHED_PROTO(JSProto_TypedArray),
     nullptr,                /* addProperty */
     nullptr,                /* delProperty */
-    JS_PropertyStub,        /* getProperty */
-    JS_StrictPropertyStub,  /* setProperty */
+    nullptr,                /* getProperty */
+    nullptr,                /* setProperty */
     nullptr,                /* enumerate */
     nullptr,                /* resolve */
     nullptr,                /* convert */
@@ -1763,8 +1763,8 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
     nullptr,                 /* addProperty */                                 \
     nullptr,                 /* delProperty */                                 \
-    JS_PropertyStub,         /* getProperty */                                 \
-    JS_StrictPropertyStub,   /* setProperty */                                 \
+    nullptr,                 /* getProperty */                                 \
+    nullptr,                 /* setProperty */                                 \
     nullptr,                 /* enumerate   */                                 \
     nullptr,                 /* resolve     */                                 \
     nullptr,                 /* convert     */                                 \
@@ -1806,18 +1806,18 @@ const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
      */ \
     #typedArray "Prototype", \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##typedArray), \
-    nullptr,                /* addProperty */ \
-    nullptr,                /* delProperty */ \
-    JS_PropertyStub,        /* getProperty */ \
-    JS_StrictPropertyStub,  /* setProperty */ \
-    nullptr,                /* enumerate   */ \
-    nullptr,                /* resolve     */ \
-    nullptr,                /* convert     */ \
-    nullptr,                /* finalize    */ \
-    nullptr,                /* call        */ \
-    nullptr,                /* hasInstance */ \
-    nullptr,                /* construct   */ \
-    nullptr,                /* trace  */ \
+    nullptr, /* addProperty */ \
+    nullptr, /* delProperty */ \
+    nullptr, /* getProperty */ \
+    nullptr, /* setProperty */ \
+    nullptr, /* enumerate */ \
+    nullptr, /* resolve */ \
+    nullptr, /* convert */ \
+    nullptr, /* finalize */ \
+    nullptr, /* call */ \
+    nullptr, /* hasInstance */ \
+    nullptr, /* construct */ \
+    nullptr, /* trace  */ \
     { \
         typedArray::createConstructor, \
         typedArray::createPrototype, \
@@ -1851,11 +1851,7 @@ const Class DataViewObject::protoClass = {
     "DataViewPrototype",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView)
 };
 
 const Class DataViewObject::class_ = {
@@ -1864,17 +1860,17 @@ const Class DataViewObject::class_ = {
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate   */
-    nullptr,                 /* resolve     */
-    nullptr,                 /* convert     */
-    nullptr,                 /* finalize    */
-    nullptr,                 /* call        */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct   */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* convert */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
     ArrayBufferViewObject::trace
 };
 

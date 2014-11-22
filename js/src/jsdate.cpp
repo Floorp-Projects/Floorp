@@ -3020,18 +3020,18 @@ const Class DateObject::class_ = {
     js_Date_str,
     JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Date),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
     date_convert,
-    nullptr,                 /* finalize */
-    nullptr,                 /* call */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct */
-    nullptr,                 /* trace */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    nullptr, /* trace */
     {
         GenericCreateConstructor<js_Date, MAXARGS, JSFunction::FinalizeKind>,
         GenericCreatePrototype,

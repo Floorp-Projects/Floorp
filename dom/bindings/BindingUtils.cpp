@@ -1198,8 +1198,8 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
 
     desc.object().set(wrapper);
     desc.setAttributes(attrs);
-    desc.setGetter(JS_PropertyStub);
-    desc.setSetter(JS_StrictPropertyStub);
+    desc.setGetter(nullptr);
+    desc.setSetter(nullptr);
     desc.value().set(JS::ObjectValue(*protoOrIface));
   }
   return JS_WrapPropertyDescriptor(cx, desc);

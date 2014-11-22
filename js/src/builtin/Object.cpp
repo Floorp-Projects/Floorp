@@ -1339,18 +1339,18 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
 const Class PlainObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
-    nullptr,                 /* finalize */
-    nullptr,                 /* call */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct */
-    nullptr,                 /* trace */
+    nullptr,  /* addProperty */
+    nullptr,  /* delProperty */
+    nullptr,  /* getProperty */
+    nullptr,  /* setProperty */
+    nullptr,  /* enumerate */
+    nullptr,  /* resolve */
+    nullptr,  /* convert */
+    nullptr,  /* finalize */
+    nullptr,  /* call */
+    nullptr,  /* hasInstance */
+    nullptr,  /* construct */
+    nullptr,  /* trace */
     {
         CreateObjectConstructor,
         CreateObjectPrototype,
