@@ -5,6 +5,7 @@
 
 
 #include "mozFlushType.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -769,7 +770,7 @@ nsSelectionMoveCommands::DoCommand(const char *aCommandName,
   NS_ENSURE_TRUE(selCont, NS_ERROR_FAILURE);
 
   // scroll commands
-  for (size_t i = 0; i < ArrayLength(scrollCommands); i++) {
+  for (size_t i = 0; i < mozilla::ArrayLength(scrollCommands); i++) {
     const ScrollCommand& cmd = scrollCommands[i];
     if (!nsCRT::strcmp(aCommandName, cmd.reverseScroll)) {
       return (selCont->*(cmd.scroll))(false);
@@ -779,7 +780,7 @@ nsSelectionMoveCommands::DoCommand(const char *aCommandName,
   }
 
   // caret movement/selection commands
-  for (size_t i = 0; i < ArrayLength(moveCommands); i++) {
+  for (size_t i = 0; i < mozilla::ArrayLength(moveCommands); i++) {
     const MoveCommand& cmd = moveCommands[i];
     if (!nsCRT::strcmp(aCommandName, cmd.reverseMove)) {
       return (selCont->*(cmd.move))(false, false);
@@ -793,7 +794,7 @@ nsSelectionMoveCommands::DoCommand(const char *aCommandName,
   }
 
   // physical-direction movement/selection
-  for (size_t i = 0; i < ArrayLength(physicalCommands); i++) {
+  for (size_t i = 0; i < mozilla::ArrayLength(physicalCommands); i++) {
     const PhysicalCommand& cmd = physicalCommands[i];
     if (!nsCRT::strcmp(aCommandName, cmd.move)) {
       return selCont->PhysicalMove(cmd.direction, cmd.amount, false);
