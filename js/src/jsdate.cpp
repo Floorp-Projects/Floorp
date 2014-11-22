@@ -3013,7 +3013,7 @@ FinishDateClassInit(JSContext *cx, HandleObject ctor, HandleObject proto)
     RootedId toGMTStringId(cx, NameToId(cx->names().toGMTString));
     return baseops::GetProperty(cx, proto.as<NativeObject>(), toUTCStringId, &toUTCStringFun) &&
            baseops::DefineGeneric(cx, proto.as<NativeObject>(), toGMTStringId, toUTCStringFun,
-                                  JS_PropertyStub, JS_StrictPropertyStub, 0);
+                                  nullptr, nullptr, 0);
 }
 
 const Class DateObject::class_ = {
