@@ -100,13 +100,19 @@ LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition
     return defineReuseInput(ins, mir, 0);
 }
 
+template<size_t Temps>
 bool
-LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
+LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, Temps> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, lhs != rhs ? use(rhs) : useAtStart(rhs));
     return defineReuseInput(ins, mir, 0);
 }
+
+template bool LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
+                                                 MDefinition *lhs, MDefinition *rhs);
+template bool LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 1> *ins, MDefinition *mir,
+                                                 MDefinition *lhs, MDefinition *rhs);
 
 bool
 LIRGeneratorX86Shared::lowerForCompIx4(LSimdBinaryCompIx4 *ins, MSimdBinaryComp *mir, MDefinition *lhs, MDefinition *rhs)

@@ -41,12 +41,22 @@
   V(greaterThanOrEqual, (CompareFunc<Float32x4, GreaterThanOrEqual>), 2, 0)         \
   V(lessThan, (CompareFunc<Float32x4, LessThan>), 2, 0)                             \
   V(lessThanOrEqual, (CompareFunc<Float32x4, LessThanOrEqual>), 2, 0)               \
+  V(load,    (Load<Float32x4, 4>), 2, 0)                                            \
+  V(loadXYZ, (Load<Float32x4, 3>), 2, 0)                                            \
+  V(loadXY,  (Load<Float32x4, 2>), 2, 0)                                            \
+  V(loadX,   (Load<Float32x4, 1>), 2, 0)                                            \
   V(max, (BinaryFunc<Float32x4, Maximum, Float32x4>), 2, 0)                         \
+  V(maxNum, (BinaryFunc<Float32x4, MaxNum, Float32x4>), 2, 0)                       \
   V(min, (BinaryFunc<Float32x4, Minimum, Float32x4>), 2, 0)                         \
+  V(minNum, (BinaryFunc<Float32x4, MinNum, Float32x4>), 2, 0)                       \
   V(mul, (BinaryFunc<Float32x4, Mul, Float32x4>), 2, 0)                             \
   V(notEqual, (CompareFunc<Float32x4, NotEqual>), 2, 0)                             \
   V(or, (CoercedBinaryFunc<Float32x4, Int32x4, Or, Float32x4>), 2, 0)               \
   V(scale, (FuncWith<Float32x4, Scale>), 2, 0)                                      \
+  V(store,    (Store<Float32x4, 4>), 3, 0)                                          \
+  V(storeXYZ, (Store<Float32x4, 3>), 3, 0)                                          \
+  V(storeXY,  (Store<Float32x4, 2>), 3, 0)                                          \
+  V(storeX,   (Store<Float32x4, 1>), 3, 0)                                          \
   V(sub, (BinaryFunc<Float32x4, Sub, Float32x4>), 2, 0)                             \
   V(withX, (FuncWith<Float32x4, WithX>), 2, 0)                                      \
   V(withY, (FuncWith<Float32x4, WithY>), 2, 0)                                      \
@@ -85,12 +95,20 @@
   V(equal, (CompareFunc<Int32x4, Equal>), 2, 0)                                     \
   V(greaterThan, (CompareFunc<Int32x4, GreaterThan>), 2, 0)                         \
   V(lessThan, (CompareFunc<Int32x4, LessThan>), 2, 0)                               \
+  V(load,    (Load<Int32x4, 4>), 2, 0)                                              \
+  V(loadXYZ, (Load<Int32x4, 3>), 2, 0)                                              \
+  V(loadXY,  (Load<Int32x4, 2>), 2, 0)                                              \
+  V(loadX,   (Load<Int32x4, 1>), 2, 0)                                              \
   V(mul, (BinaryFunc<Int32x4, Mul, Int32x4>), 2, 0)                                 \
   V(or, (BinaryFunc<Int32x4, Or, Int32x4>), 2, 0)                                   \
   V(sub, (BinaryFunc<Int32x4, Sub, Int32x4>), 2, 0)                                 \
   V(shiftLeft, (Int32x4BinaryScalar<ShiftLeft>), 2, 0)                              \
   V(shiftRight, (Int32x4BinaryScalar<ShiftRight>), 2, 0)                            \
   V(shiftRightLogical, (Int32x4BinaryScalar<ShiftRightLogical>), 2, 0)              \
+  V(store,    (Store<Int32x4, 4>), 3, 0)                                            \
+  V(storeXYZ, (Store<Int32x4, 3>), 3, 0)                                            \
+  V(storeXY,  (Store<Int32x4, 2>), 3, 0)                                            \
+  V(storeX,   (Store<Int32x4, 1>), 3, 0)                                            \
   V(withFlagX, (FuncWith<Int32x4, WithFlagX>), 2, 0)                                \
   V(withFlagY, (FuncWith<Int32x4, WithFlagY>), 2, 0)                                \
   V(withFlagZ, (FuncWith<Int32x4, WithFlagZ>), 2, 0)                                \
@@ -136,6 +154,8 @@
     _(div)                           \
     _(max)                           \
     _(min)                           \
+    _(maxNum)                        \
+    _(minNum)                        \
     _(lessThanOrEqual)               \
     _(notEqual)                      \
     _(greaterThanOrEqual)
@@ -157,7 +177,9 @@
     _(withZ)                         \
     _(withW)                         \
     _(not)                           \
-    _(neg)
+    _(neg)                           \
+    _(load)                          \
+    _(store)
 #define FORALL_SIMD_OP(_)            \
     FOREACH_INT32X4_SIMD_OP(_)       \
     FOREACH_FLOAT32X4_SIMD_OP(_)     \
