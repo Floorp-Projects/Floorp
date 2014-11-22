@@ -1555,6 +1555,9 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       if (aContext->IsList() &&
           aContext->GetContent() == aContent->GetParent()) {
         newAcc = new HTMLLIAccessible(aContent, document);
+      } else {
+        // Otherwise create a generic text accessible to avoid text jamming.
+        newAcc = new HyperTextAccessibleWrap(aContent, document);
       }
       break;
     case eHTMLSelectListType:

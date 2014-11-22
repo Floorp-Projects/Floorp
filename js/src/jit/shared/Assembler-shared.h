@@ -731,11 +731,27 @@ static const unsigned AsmJSNaN32GlobalDataOffset = 2 * sizeof(void*) + sizeof(do
 // #ifdefery.
 class AsmJSHeapAccess
 {
+  public:
+    enum ViewType {
+         Int8         = Scalar::Int8,
+         Uint8        = Scalar::Uint8,
+         Int16        = Scalar::Int16,
+         Uint16       = Scalar::Uint16,
+         Int32        = Scalar::Int32,
+         Uint32       = Scalar::Uint32,
+         Float32      = Scalar::Float32,
+         Float64      = Scalar::Float64,
+         Uint8Clamped = Scalar::Uint8Clamped,
+         Float32x4,
+         Int32x4
+    };
+
+  private:
     uint32_t offset_;
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
     uint8_t opLength_;  // the length of the load/store instruction
-    uint8_t isFloat32Load_;
+    ViewType viewType_;
     AnyRegister::Code loadedReg_ : 8;
 #endif
 
@@ -748,19 +764,20 @@ class AsmJSHeapAccess
 
     // If 'cmp' equals 'offset' or if it is not supplied then the
     // cmpDelta_ is zero indicating that there is no length to patch.
-    AsmJSHeapAccess(uint32_t offset, uint32_t after, Scalar::Type vt,
+    AsmJSHeapAccess(uint32_t offset, uint32_t after, ViewType viewType,
                     AnyRegister loadedReg, uint32_t cmp = NoLengthCheck)
       : offset_(offset),
         cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
         opLength_(after - offset),
-        isFloat32Load_(vt == Scalar::Float32),
+        viewType_(viewType),
         loadedReg_(loadedReg.code())
     {}
-    AsmJSHeapAccess(uint32_t offset, uint8_t after, uint32_t cmp = NoLengthCheck)
+    AsmJSHeapAccess(uint32_t offset, uint8_t after, ViewType viewType,
+                    uint32_t cmp = NoLengthCheck)
       : offset_(offset),
         cmpDelta_(cmp == NoLengthCheck ? 0 : offset - cmp),
         opLength_(after - offset),
-        isFloat32Load_(false),
+        viewType_(viewType),
         loadedReg_(UINT8_MAX)
     {}
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
@@ -779,7 +796,7 @@ class AsmJSHeapAccess
     void *patchLengthAt(uint8_t *code) const { return code + (offset_ - cmpDelta_); }
     unsigned opLength() const { return opLength_; }
     bool isLoad() const { return loadedReg_ != UINT8_MAX; }
-    bool isFloat32Load() const { return isFloat32Load_; }
+    ViewType viewType() const { return viewType_; }
     AnyRegister loadedReg() const { return AnyRegister::FromCode(loadedReg_); }
 #endif
 };

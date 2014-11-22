@@ -18,6 +18,7 @@
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nscore.h"                     // for nsACString
 #include "mozilla/EnumeratedArray.h"
+#include "gfxVR.h"
 
 namespace mozilla {
 namespace layers {
@@ -94,6 +95,36 @@ struct EffectMask : public Effect
   bool mIs3D;
   gfx::IntSize mSize;
   gfx::Matrix4x4 mMaskTransform;
+};
+
+struct EffectVRDistortion : public Effect
+{
+  EffectVRDistortion(gfx::VRHMDInfo* aHMD,
+                     CompositingRenderTarget* aRenderTarget)
+    : Effect(EffectTypes::VR_DISTORTION)
+    , mHMD(aHMD)
+    , mRenderTarget(aRenderTarget)
+    , mTexture(aRenderTarget)
+  {}
+
+  EffectVRDistortion(gfx::VRHMDInfo* aHMD,
+                     TextureSource* aTexture)
+    : Effect(EffectTypes::VR_DISTORTION)
+    , mHMD(aHMD)
+    , mRenderTarget(nullptr)
+    , mTexture(aTexture)
+  {}
+
+  virtual const char* Name() { return "EffectVRDistortion"; }
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
+
+  nsRefPtr<gfx::VRHMDInfo> mHMD;
+  RefPtr<CompositingRenderTarget> mRenderTarget;
+  TextureSource* mTexture;
+
+  // The viewport for each eye in the source and
+  // destination textures.
+  gfx::IntRect mViewports[2];
 };
 
 struct EffectBlendMode : public Effect

@@ -102,6 +102,12 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
 
+namespace mozilla {
+namespace gfx {
+class VRHMDInfo;
+}
+}
+
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
 {
@@ -588,6 +594,10 @@ nsFrame::Init(nsIContent*       aContent,
     NS_ASSERTION(GetParent() ||
                  (GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER),
                  "root frame should always be a container");
+  }
+
+  if (aContent && aContent->GetProperty(nsGkAtoms::vr_state) != nullptr) {
+    AddStateBits(NS_FRAME_HAS_VR_CONTENT);
   }
 
   DidSetStyleContext(nullptr);
@@ -1995,6 +2005,12 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingDisplayList(aBuilder, this, dirtyRect, true);
+
+  mozilla::gfx::VRHMDInfo* vrHMDInfo = nullptr;
+  if ((GetStateBits() & NS_FRAME_HAS_VR_CONTENT)) {
+    vrHMDInfo = static_cast<mozilla::gfx::VRHMDInfo*>(mContent->GetProperty(nsGkAtoms::vr_state));
+  }
+
   DisplayListClipState::AutoSaveRestore clipState(aBuilder);
 
   if (isTransformed || useOpacity || useBlendMode || usingSVGEffects || useStickyPosition) {
@@ -2153,6 +2169,13 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       resultList.AppendNewToTop(
         new (aBuilder) nsDisplayTransform(aBuilder, this, &resultList, dirtyRect));
     }
+  }
+
+  /* If we're doing VR rendering, then we need to wrap everything in a nsDisplayVR
+   */
+  if (vrHMDInfo && !resultList.IsEmpty()) {
+    resultList.AppendNewToTop(
+      new (aBuilder) nsDisplayVR(aBuilder, this, &resultList, vrHMDInfo));
   }
 
   /* If adding both a nsDisplayBlendContainer and a nsDisplayMixBlendMode to the
@@ -2325,7 +2348,8 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // but the spec says it acts like the rest of these
     || disp->mChildPerspective.GetUnit() == eStyleUnit_Coord
     || disp->mMixBlendMode != NS_STYLE_BLEND_NORMAL
-    || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
+    || nsSVGIntegrationUtils::UsingEffectsForFrame(child)
+    || (child->GetStateBits() & NS_FRAME_HAS_VR_CONTENT);
 
   bool isPositioned = disp->IsPositioned(child);
   bool isStackingContext =

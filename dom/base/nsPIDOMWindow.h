@@ -38,6 +38,9 @@ namespace dom {
 class AudioContext;
 class Element;
 }
+namespace gfx {
+class VRHMDInfo;
+}
 }
 
 // Popup control state enum. The values in this enum must go from most
@@ -60,8 +63,8 @@ enum UIStateChangeType
 };
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x71412748, 0x6368, 0x4332, \
-  { 0x82, 0x66, 0xff, 0xaa, 0x19, 0xda, 0x09, 0x7c } }
+{ 0x19fb3019, 0x7b5d, 0x4235, \
+  { 0xa9, 0x59, 0xa2, 0x31, 0xa2, 0xe7, 0x94, 0x79 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -460,9 +463,13 @@ public:
    * otherwise exits fullscreen. If aRequireTrust is true, this method only
    * changes window state in a context trusted for write.
    *
+   * If aHMD is not null, the window is made full screen on the given VR HMD
+   * device instead of its currrent display.
+   *
    * Outer windows only.
    */
-  virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust) = 0;
+  virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust,
+                                         mozilla::gfx::VRHMDInfo *aHMD = nullptr) = 0;
 
   /**
    * Call this to check whether some node (this window, its document,

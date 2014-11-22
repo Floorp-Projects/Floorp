@@ -7193,6 +7193,7 @@ PresShell::HandleKeyboardEvent(nsINode* aTarget,
 
   // Dispatch after events to partial items.
   if (defaultPrevented) {
+    *aStatus = nsEventStatus_eConsumeNoDefault;
     DispatchAfterKeyboardEventInternal(chain, aEvent,
                                        aEvent.mFlags.mDefaultPrevented, chainIndex);
 
