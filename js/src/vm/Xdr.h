@@ -43,6 +43,12 @@ static const uint32_t XDR_BYTECODE_VERSION =
 #endif
                                                               ));
 
+static_assert(JSErr_Limit == 367,
+              "GREETINGS, POTENTIAL SUBTRAHEND INCREMENTER! If you added or "
+              "removed MSG_DEFs from js.msg, you should increment "
+              "XDR_BYTECODE_VERSION_SUBTRAHEND and update this assertion's "
+              "expected JSErr_Limit.");
+
 class XDRBuffer {
   public:
     explicit XDRBuffer(JSContext *cx)
