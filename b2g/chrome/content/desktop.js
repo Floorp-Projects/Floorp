@@ -30,11 +30,15 @@ function setupButtons() {
   // so that click events are delayed and it is better to
   // listen for touch events.
   homeButton.addEventListener('touchstart', function() {
-    shell.sendChromeEvent({type: 'home-button-press'});
+    let window = shell.contentBrowser.contentWindow;
+    let e = new window.KeyboardEvent('keydown', {key: 'Home'});
+    window.dispatchEvent(e);
     homeButton.classList.add('active');
   });
   homeButton.addEventListener('touchend', function() {
-    shell.sendChromeEvent({type: 'home-button-release'});
+    let window = shell.contentBrowser.contentWindow;
+    let e = new window.KeyboardEvent('keyup', {key: 'Home'});
+    window.dispatchEvent(e);
     homeButton.classList.remove('active');
   });
 

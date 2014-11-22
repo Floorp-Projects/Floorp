@@ -9,7 +9,6 @@ import optparse
 import os
 import tempfile
 
-from automationutils import addCommonOptions
 from mozprofile import DEFAULT_PORTS
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -435,6 +434,35 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "gmp_path",
           "help": "Path to fake GMP plugin. Will be deduced from the binary if not passed.",
         }],
+        [["--xre-path"],
+        { "action": "store",
+          "type": "string", 
+          "dest": "xrePath",
+          "default": None,    # individual scripts will set a sane default
+          "help": "absolute path to directory containing XRE (probably xulrunner)",
+        }],
+        [["--symbols-path"],
+        { "action": "store", 
+          "type": "string", 
+          "dest": "symbolsPath",
+          "default": None,
+          "help": "absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols",
+        }],
+        [["--debugger"],
+        { "action": "store", 
+          "dest": "debugger",
+          "help": "use the given debugger to launch the application",
+        }],
+        [["--debugger-args"],
+        { "action": "store",
+          "dest": "debuggerArgs",
+          "help": "pass the given args to the debugger _before_ the application on the command line",
+        }],
+        [["--debugger-interactive"],
+        { "action": "store_true",
+          "dest": "debuggerInteractive",
+          "help": "prevents the test harness from redirecting stdout and stderr for interactive debuggers",
+        }],
     ]
 
     def __init__(self, **kwargs):
@@ -446,7 +474,6 @@ class MochitestOptions(optparse.OptionParser):
             if "default" in value and isinstance(value["default"], list):
                 value["default"] = []
             self.add_option(*option, **value)
-        addCommonOptions(self)
         self.set_usage(self.__doc__)
 
     def verifyOptions(self, options, mochitest):

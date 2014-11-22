@@ -1258,3 +1258,28 @@ RArrayState::recover(JSContext *cx, SnapshotIterator &iter) const
     iter.storeInstructionResult(result);
     return true;
 }
+
+bool
+MStringReplace::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_StringReplace));
+    return true;
+}
+
+RStringReplace::RStringReplace(CompactBufferReader &reader)
+{ }
+
+bool RStringReplace::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedString string(cx, iter.read().toString());
+    RootedString pattern(cx, iter.read().toString());
+    RootedString replace(cx, iter.read().toString());
+    RootedValue result(cx);
+
+    if (!js::str_replace_string_raw(cx, string, pattern, replace, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
