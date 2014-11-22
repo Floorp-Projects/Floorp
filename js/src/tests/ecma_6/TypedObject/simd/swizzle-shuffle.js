@@ -8,17 +8,6 @@
 var float32x4 = SIMD.float32x4;
 var int32x4 = SIMD.int32x4;
 
-function assertEq4(v, arr) {
-    assertEq(v.x, arr[0]);
-    assertEq(v.y, arr[1]);
-    assertEq(v.z, arr[2]);
-    assertEq(v.w, arr[3]);
-}
-
-function simdToArray(v) {
-    return [v.x, v.y, v.z, v.w];
-}
-
 function swizzle(arr, x, y, z, w) {
     return [arr[x], arr[y], arr[z], arr[w]];
 }
@@ -38,7 +27,7 @@ function testSwizzleForType(type) {
     var x, y, z, w;
     for (var i = 0; i < Math.pow(4, 4); i++) {
         [x, y, z, w] = [i & 3, (i >> 2) & 3, (i >> 4) & 3, (i >> 6) & 3];
-        assertEq4(type.swizzle(v, x, y, z, w), swizzle(simdToArray(v), x, y, z, w));
+        assertEqX4(type.swizzle(v, x, y, z, w), swizzle(simdToArray(v), x, y, z, w));
     }
 
     // Test that the lane inputs are converted into an int32.
@@ -47,7 +36,7 @@ function testSwizzleForType(type) {
         x: 0,
         valueOf: function() { return this.x++ }
     };
-    assertEq4(type.swizzle(v, obj, obj, obj, obj), swizzle(simdToArray(v), 0, 1, 2, 3));
+    assertEqX4(type.swizzle(v, obj, obj, obj, obj), swizzle(simdToArray(v), 0, 1, 2, 3));
 
     // Object for which ToInt32 will fail.
     obj = {
@@ -100,8 +89,8 @@ function testShuffleForType(type) {
     var x, y, z, w;
     for (var i = 0; i < Math.pow(8, 4); i++) {
         [x, y, z, w] = [i & 7, (i >> 3) & 7, (i >> 6) & 7, (i >> 9) & 7];
-        assertEq4(type.shuffle(lhs, rhs, x, y, z, w),
-                  shuffle(simdToArray(lhs), simdToArray(rhs), x, y, z, w));
+        assertEqX4(type.shuffle(lhs, rhs, x, y, z, w),
+                   shuffle(simdToArray(lhs), simdToArray(rhs), x, y, z, w));
     }
 
     // Test that the lane inputs are converted into an int32.
@@ -110,8 +99,8 @@ function testShuffleForType(type) {
         x: 0,
         valueOf: function() { return this.x++ }
     };
-    assertEq4(type.shuffle(lhs, rhs, obj, obj, obj, obj),
-              shuffle(simdToArray(lhs),simdToArray(rhs), 0, 1, 2, 3));
+    assertEqX4(type.shuffle(lhs, rhs, obj, obj, obj, obj),
+               shuffle(simdToArray(lhs),simdToArray(rhs), 0, 1, 2, 3));
 
     // Object for which ToInt32 will fail.
     obj = {

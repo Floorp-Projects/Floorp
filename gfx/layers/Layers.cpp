@@ -994,7 +994,8 @@ void
 ContainerLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
   aAttrs = ContainerLayerAttributes(mPreXScale, mPreYScale,
-                                    mInheritedXScale, mInheritedYScale);
+                                    mInheritedXScale, mInheritedYScale,
+                                    reinterpret_cast<uint64_t>(mHMDInfo.get()));
 }
 
 bool
@@ -1657,6 +1658,9 @@ ContainerLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (1.0 != mPreXScale || 1.0 != mPreYScale) {
     aStream << nsPrintfCString(" [preScale=%g, %g]", mPreXScale, mPreYScale).get();
+  }
+  if (mHMDInfo) {
+    aStream << nsPrintfCString(" [hmd=%p]", mHMDInfo.get()).get();
   }
 }
 

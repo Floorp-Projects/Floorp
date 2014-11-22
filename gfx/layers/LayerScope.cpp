@@ -13,6 +13,7 @@
 #include "mozilla/Endian.h"
 #include "TexturePoolOGL.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/TextureHostOGL.h"
 
@@ -333,7 +334,7 @@ public:
     static void CreateServerSocket()
     {
         // Create Web Server Socket (which has to be on the main thread)
-        NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+        MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
         if (!sWebSocketManager) {
             sWebSocketManager = new LayerScopeWebSocketManager();
         }
@@ -651,6 +652,16 @@ protected:
 
 NS_IMPL_ISUPPORTS(DebugDataSender, nsIRunnable);
 
+
+class CreateServerSocketRunnable : public nsRunnable
+{
+public:
+    NS_IMETHOD Run() {
+        WebSocketHelper::CreateServerSocket();
+        return NS_OK;
+    }
+};
+
 /*
  * LayerScope SendXXX Structure
  * 1. SendLayer
@@ -915,15 +926,19 @@ LayerScope::Init()
         return;
     }
 
-    // Note: The server socket has to be created on the main thread
-    WebSocketHelper::CreateServerSocket();
-}
-
-void
-LayerScope::DeInit()
-{
-    // Destroy Web Server Socket
-    WebSocketHelper::DestroyServerSocket();
+    if (NS_IsMainThread()) {
+        WebSocketHelper::CreateServerSocket();
+    } else {
+        // Dispatch creation to main thread, and make sure we
+        // dispatch this only once after booting
+        static bool dispatched = false;
+        if (dispatched) {
+            return;
+        }
+        DebugOnly<nsresult> rv = NS_DispatchToMainThread(new CreateServerSocketRunnable());
+        MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to dispatch WebSocket Creation to main thread");
+        dispatched = true;
+    }
 }
 
 void
@@ -965,7 +980,14 @@ LayerScope::SendLayerDump(UniquePtr<Packet> aPacket)
 bool
 LayerScope::CheckSendable()
 {
+    // Only compositor threads check LayerScope status
+    MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+
+    if (!gfxPrefs::LayerScopeEnabled()) {
+        return false;
+    }
     if (!WebSocketHelper::GetSocketManager()) {
+        Init();
         return false;
     }
     if (!WebSocketHelper::GetSocketManager()->IsConnected()) {

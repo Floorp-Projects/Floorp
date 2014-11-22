@@ -692,7 +692,7 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsWindow::MakeFullScreen(bool aFullScreen)
+nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*)
 {
     mozilla::widget::android::GeckoAppShell::SetFullScreen(aFullScreen);
     return NS_OK;

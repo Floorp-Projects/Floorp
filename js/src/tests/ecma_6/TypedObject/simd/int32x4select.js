@@ -4,9 +4,6 @@ var int32x4 = SIMD.int32x4;
 
 var summary = 'int32x4 select';
 
-const INT32_MAX = Math.pow(2, 31) - 1;
-const INT32_MIN = INT32_MAX + 1 | 0;
-
 function test() {
   print(BUGNUMBER + ": " + summary);
 

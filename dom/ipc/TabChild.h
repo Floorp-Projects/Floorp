@@ -583,6 +583,7 @@ private:
 
     class CachedFileDescriptorInfo;
     class CachedFileDescriptorCallbackRunnable;
+    class DelayedDeleteRunnable;
 
     TextureFactoryIdentifier mTextureFactoryIdentifier;
     nsCOMPtr<nsIWebNavigation> mWebNav;

@@ -38,14 +38,14 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     class OutOfLineLoadTypedArrayOutOfBounds : public OutOfLineCodeBase<CodeGeneratorX86Shared>
     {
         AnyRegister dest_;
-        bool isFloat32Load_;
+        AsmJSHeapAccess::ViewType viewType_;
       public:
-        OutOfLineLoadTypedArrayOutOfBounds(AnyRegister dest, bool isFloat32Load)
-          : dest_(dest), isFloat32Load_(isFloat32Load)
+        OutOfLineLoadTypedArrayOutOfBounds(AnyRegister dest, AsmJSHeapAccess::ViewType viewType)
+          : dest_(dest), viewType_(viewType)
         {}
 
         AnyRegister dest() const { return dest_; }
-        bool isFloat32Load() const { return isFloat32Load_; }
+        AsmJSHeapAccess::ViewType viewType() const { return viewType_; }
         bool accept(CodeGeneratorX86Shared *codegen) {
             return codegen->visitOutOfLineLoadTypedArrayOutOfBounds(this);
         }
