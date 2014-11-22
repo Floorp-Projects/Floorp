@@ -3233,7 +3233,11 @@ ContentParent::DeallocPNeckoParent(PNeckoParent* necko)
 PPrintingParent*
 ContentParent::AllocPPrintingParent()
 {
+#ifdef NS_PRINTING
     return new PrintingParent();
+#else
+    return nullptr;
+#endif
 }
 
 bool

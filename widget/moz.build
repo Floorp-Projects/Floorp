@@ -105,7 +105,6 @@ EXPORTS += [
     'nsIRollupListener.h',
     'nsIWidget.h',
     'nsIWidgetListener.h',
-    'nsPrintOptionsImpl.h',
     'nsWidgetInitData.h',
     'nsWidgetsCID.h',
     'PluginWidgetProxy.h',
@@ -147,7 +146,6 @@ UNIFIED_SOURCES += [
     'nsIdleService.cpp',
     'nsIWidgetListener.cpp',
     'nsPrimitiveHelpers.cpp',
-    'nsPrintOptionsImpl.cpp',
     'nsPrintSession.cpp',
     'nsPrintSettingsImpl.cpp',
     'nsScreenManagerProxy.cpp',
@@ -162,6 +160,14 @@ UNIFIED_SOURCES += [
     'WidgetEventImpl.cpp',
     'WidgetUtils.cpp',
 ]
+
+if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
+    EXPORTS += [
+        'nsPrintOptionsImpl.h',
+    ]
+    UNIFIED_SOURCES += [
+        'nsPrintOptionsImpl.cpp',
+    ]
 
 # nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
 SOURCES += [
