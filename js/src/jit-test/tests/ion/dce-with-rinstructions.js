@@ -927,6 +927,48 @@ function rregexp_m_literal_replace(i) {
     return i;
 }
 
+var uceFault_string_replace = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_replace'))
+function rstring_replace(i) {
+    var re = /str\d+9/;
+
+    assertEq(re.lastIndex == 0, true);
+    var res = "str00123456789".replace(re, "abc");
+    if (uceFault_string_replace(i) || uceFault_string_replace(i)) {
+        assertEq(res, "abc");
+    }
+    assertEq(re.lastIndex == 0, true);
+
+    return i;
+}
+
+var uceFault_string_replace_y = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_replace_y'))
+function rstring_replace_y(i) {
+    var re = /str\d+9/y;
+
+    assertEq(re.lastIndex == 0, true);
+    var res = "str00123456789".replace(re, "abc");
+    if (uceFault_string_replace_y(i) || uceFault_string_replace_y(i)) {
+        assertEq(res, "abc");
+    }
+    assertEq(re.lastIndex == 0, true);
+
+    return i;
+}
+
+var uceFault_string_replace_g = eval(uneval(uceFault).replace('uceFault', 'uceFault_string_replace_g'))
+function rstring_replace_g(i) {
+    var re = /str\d+9/g;
+
+    assertEq(re.lastIndex == 0, true);
+    var res = "str00123456789str00123456789".replace(re, "abc");
+    if (uceFault_string_replace_g(i) || uceFault_string_replace_g(i)) {
+        assertEq(res, "abcabc");
+    }
+    assertEq(re.lastIndex == 0, true);
+
+    return i;
+}
+
 var uceFault_typeof = eval(uneval(uceFault).replace('uceFault', 'uceFault_typeof'))
 function rtypeof(i) {
     var inputs = [ {}, [], 1, true, undefined, function(){}, null ];
@@ -1098,6 +1140,9 @@ for (i = 0; i < 100; i++) {
     rregexp_i_literal_replace(i);
     rregexp_m_replace(i);
     rregexp_m_literal_replace(i);
+    rstring_replace(i);
+    rstring_replace_y(i);
+    rstring_replace_g(i);
     rtypeof(i);
     rtodouble_value(i);
     rtodouble_number(i);

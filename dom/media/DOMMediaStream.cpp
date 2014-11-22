@@ -93,7 +93,7 @@ public:
       nsRefPtr<TrackChange> runnable =
         new TrackChange(this, aID, aTrackOffset, aTrackEvents,
                         aQueuedMedia.GetType());
-      NS_DispatchToMainThread(runnable);
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
   }
 

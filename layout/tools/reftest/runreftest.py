@@ -22,7 +22,6 @@ SCRIPT_DIRECTORY = os.path.abspath(os.path.realpath(os.path.dirname(sys.argv[0])
 sys.path.insert(0, SCRIPT_DIRECTORY)
 
 from automationutils import (
-    addCommonOptions,
     dumpScreen,
     environment,
     processLeakLog
@@ -618,8 +617,26 @@ class ReftestOptions(OptionParser):
   def __init__(self):
     OptionParser.__init__(self)
     defaults = {}
-    addCommonOptions(self)
-
+    self.add_option("--xre-path",
+                    action = "store", type = "string", dest = "xrePath",
+                    # individual scripts will set a sane default
+                    default = None,
+                    help = "absolute path to directory containing XRE (probably xulrunner)")
+    self.add_option("--symbols-path",
+                    action = "store", type = "string", dest = "symbolsPath",
+                    default = None,
+                    help = "absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
+    self.add_option("--debugger",
+                    action = "store", dest = "debugger",
+                    help = "use the given debugger to launch the application")
+    self.add_option("--debugger-args",
+                    action = "store", dest = "debuggerArgs",
+                    help = "pass the given args to the debugger _before_ "
+                           "the application on the command line")
+    self.add_option("--debugger-interactive",
+                    action = "store_true", dest = "debuggerInteractive",
+                    help = "prevents the test harness from redirecting "
+                        "stdout and stderr for interactive debuggers")
     self.add_option("--appname",
                     action = "store", type = "string", dest = "app",
                     help = "absolute path to application, overriding default")

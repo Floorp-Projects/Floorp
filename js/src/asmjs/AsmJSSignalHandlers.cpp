@@ -331,45 +331,72 @@ ContextToPC(CONTEXT *context)
 #if defined(JS_CODEGEN_X64)
 template <class T>
 static void
-SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
+SetXMMRegToNaN(AsmJSHeapAccess::ViewType viewType, T *xmm_reg)
 {
-    if (isFloat32) {
+    switch (viewType) {
+      case AsmJSHeapAccess::Float32: {
         JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
         float *floats = reinterpret_cast<float*>(xmm_reg);
         floats[0] = GenericNaN();
         floats[1] = 0;
         floats[2] = 0;
         floats[3] = 0;
-    } else {
+        break;
+      }
+      case AsmJSHeapAccess::Float64: {
         JS_STATIC_ASSERT(sizeof(T) == 2 * sizeof(double));
         double *dbls = reinterpret_cast<double*>(xmm_reg);
         dbls[0] = GenericNaN();
         dbls[1] = 0;
+        break;
+      }
+      case AsmJSHeapAccess::Float32x4: {
+        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
+        float *floats = reinterpret_cast<float*>(xmm_reg);
+        for (unsigned i = 0; i < 4; i++)
+            floats[i] = GenericNaN();
+        break;
+      }
+      case AsmJSHeapAccess::Int32x4: {
+        JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(int32_t));
+        int32_t *ints = reinterpret_cast<int32_t*>(xmm_reg);
+        for (unsigned i = 0; i < 4; i++)
+            ints[i] = 0;
+        break;
+      }
+      case AsmJSHeapAccess::Int8:
+      case AsmJSHeapAccess::Uint8:
+      case AsmJSHeapAccess::Int16:
+      case AsmJSHeapAccess::Uint16:
+      case AsmJSHeapAccess::Int32:
+      case AsmJSHeapAccess::Uint32:
+      case AsmJSHeapAccess::Uint8Clamped:
+        MOZ_CRASH("unexpected type in SetXMMRegToNaN");
     }
 }
 
 # if !defined(XP_MACOSX)
 static void
-SetRegisterToCoercedUndefined(CONTEXT *context, bool isFloat32, AnyRegister reg)
+SetRegisterToCoercedUndefined(CONTEXT *context, AsmJSHeapAccess::ViewType viewType, AnyRegister reg)
 {
     if (reg.isFloat()) {
         switch (reg.fpu().code()) {
-          case X86Registers::xmm0:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 0)); break;
-          case X86Registers::xmm1:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 1)); break;
-          case X86Registers::xmm2:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 2)); break;
-          case X86Registers::xmm3:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 3)); break;
-          case X86Registers::xmm4:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 4)); break;
-          case X86Registers::xmm5:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 5)); break;
-          case X86Registers::xmm6:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 6)); break;
-          case X86Registers::xmm7:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 7)); break;
-          case X86Registers::xmm8:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 8)); break;
-          case X86Registers::xmm9:  SetXMMRegToNaN(isFloat32, &XMM_sig(context, 9)); break;
-          case X86Registers::xmm10: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 10)); break;
-          case X86Registers::xmm11: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 11)); break;
-          case X86Registers::xmm12: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 12)); break;
-          case X86Registers::xmm13: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 13)); break;
-          case X86Registers::xmm14: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 14)); break;
-          case X86Registers::xmm15: SetXMMRegToNaN(isFloat32, &XMM_sig(context, 15)); break;
+          case X86Registers::xmm0:  SetXMMRegToNaN(viewType, &XMM_sig(context, 0)); break;
+          case X86Registers::xmm1:  SetXMMRegToNaN(viewType, &XMM_sig(context, 1)); break;
+          case X86Registers::xmm2:  SetXMMRegToNaN(viewType, &XMM_sig(context, 2)); break;
+          case X86Registers::xmm3:  SetXMMRegToNaN(viewType, &XMM_sig(context, 3)); break;
+          case X86Registers::xmm4:  SetXMMRegToNaN(viewType, &XMM_sig(context, 4)); break;
+          case X86Registers::xmm5:  SetXMMRegToNaN(viewType, &XMM_sig(context, 5)); break;
+          case X86Registers::xmm6:  SetXMMRegToNaN(viewType, &XMM_sig(context, 6)); break;
+          case X86Registers::xmm7:  SetXMMRegToNaN(viewType, &XMM_sig(context, 7)); break;
+          case X86Registers::xmm8:  SetXMMRegToNaN(viewType, &XMM_sig(context, 8)); break;
+          case X86Registers::xmm9:  SetXMMRegToNaN(viewType, &XMM_sig(context, 9)); break;
+          case X86Registers::xmm10: SetXMMRegToNaN(viewType, &XMM_sig(context, 10)); break;
+          case X86Registers::xmm11: SetXMMRegToNaN(viewType, &XMM_sig(context, 11)); break;
+          case X86Registers::xmm12: SetXMMRegToNaN(viewType, &XMM_sig(context, 12)); break;
+          case X86Registers::xmm13: SetXMMRegToNaN(viewType, &XMM_sig(context, 13)); break;
+          case X86Registers::xmm14: SetXMMRegToNaN(viewType, &XMM_sig(context, 14)); break;
+          case X86Registers::xmm15: SetXMMRegToNaN(viewType, &XMM_sig(context, 15)); break;
           default: MOZ_CRASH();
         }
     } else {
@@ -455,7 +482,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     // register) and set the PC to the next op. Upon return from the handler,
     // execution will resume at this next PC.
     if (heapAccess->isLoad())
-        SetRegisterToCoercedUndefined(context, heapAccess->isFloat32Load(), heapAccess->loadedReg());
+        SetRegisterToCoercedUndefined(context, heapAccess->viewType(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
 
     return true;
@@ -505,24 +532,24 @@ SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
         if (kret != KERN_SUCCESS)
             return false;
 
-        bool f32 = heapAccess.isFloat32Load();
+        AsmJSHeapAccess::ViewType viewType = heapAccess.viewType();
         switch (heapAccess.loadedReg().fpu().code()) {
-          case X86Registers::xmm0:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm0); break;
-          case X86Registers::xmm1:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm1); break;
-          case X86Registers::xmm2:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm2); break;
-          case X86Registers::xmm3:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm3); break;
-          case X86Registers::xmm4:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm4); break;
-          case X86Registers::xmm5:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm5); break;
-          case X86Registers::xmm6:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm6); break;
-          case X86Registers::xmm7:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm7); break;
-          case X86Registers::xmm8:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm8); break;
-          case X86Registers::xmm9:  SetXMMRegToNaN(f32, &fstate.__fpu_xmm9); break;
-          case X86Registers::xmm10: SetXMMRegToNaN(f32, &fstate.__fpu_xmm10); break;
-          case X86Registers::xmm11: SetXMMRegToNaN(f32, &fstate.__fpu_xmm11); break;
-          case X86Registers::xmm12: SetXMMRegToNaN(f32, &fstate.__fpu_xmm12); break;
-          case X86Registers::xmm13: SetXMMRegToNaN(f32, &fstate.__fpu_xmm13); break;
-          case X86Registers::xmm14: SetXMMRegToNaN(f32, &fstate.__fpu_xmm14); break;
-          case X86Registers::xmm15: SetXMMRegToNaN(f32, &fstate.__fpu_xmm15); break;
+          case X86Registers::xmm0:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm0); break;
+          case X86Registers::xmm1:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm1); break;
+          case X86Registers::xmm2:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm2); break;
+          case X86Registers::xmm3:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm3); break;
+          case X86Registers::xmm4:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm4); break;
+          case X86Registers::xmm5:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm5); break;
+          case X86Registers::xmm6:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm6); break;
+          case X86Registers::xmm7:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm7); break;
+          case X86Registers::xmm8:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm8); break;
+          case X86Registers::xmm9:  SetXMMRegToNaN(viewType, &fstate.__fpu_xmm9); break;
+          case X86Registers::xmm10: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm10); break;
+          case X86Registers::xmm11: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm11); break;
+          case X86Registers::xmm12: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm12); break;
+          case X86Registers::xmm13: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm13); break;
+          case X86Registers::xmm14: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm14); break;
+          case X86Registers::xmm15: SetXMMRegToNaN(viewType, &fstate.__fpu_xmm15); break;
           default: MOZ_CRASH();
         }
 
@@ -847,7 +874,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     // register) and set the PC to the next op. Upon return from the handler,
     // execution will resume at this next PC.
     if (heapAccess->isLoad())
-        SetRegisterToCoercedUndefined(context, heapAccess->isFloat32Load(), heapAccess->loadedReg());
+        SetRegisterToCoercedUndefined(context, heapAccess->viewType(), heapAccess->loadedReg());
     *ppc += heapAccess->opLength();
 
     return true;
