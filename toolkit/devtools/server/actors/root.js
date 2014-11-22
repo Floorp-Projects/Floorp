@@ -119,7 +119,11 @@ RootActor.prototype = {
 
   traits: {
     sources: true,
+    // Whether the inspector actor allows modifying outer HTML.
     editOuterHTML: true,
+    // Whether the inspector actor allows modifying innerHTML and inserting
+    // adjacent HTML.
+    pasteHTML: true,
     // Whether the server-side highlighter actor exists and can be used to
     // remotely highlight nodes (see server/actors/highlighter.js)
     highlightable: true,
