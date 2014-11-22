@@ -132,6 +132,35 @@ addMessageListener("Test:ChangeHighlightedNodeWaitForUpdate", function(msg) {
 });
 
 /**
+ * Change the zoom level of the page.
+ * Optionally subscribe to the box-model highlighter's update event and waiting
+ * for it to refresh before responding.
+ * @param {Object} msg The msg.data part expects the following properties
+ * - {Number} level The new zoom level
+ * - {String} actorID Optional. The highlighter actor ID
+ */
+addMessageListener("Test:ChangeZoomLevel", function(msg) {
+  let {level, actorID} = msg.data;
+  dumpn("Zooming page to " + level);
+
+  if (actorID) {
+    let {_highlighter: h} = getHighlighterActor(actorID);
+    h.once("updated", () => {
+      sendAsyncMessage("Test:ChangeZoomLevel");
+    });
+  }
+
+  let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation)
+                        .QueryInterface(Ci.nsIDocShell);
+  docShell.contentViewer.fullZoom = level;
+
+  if (!actorID) {
+    sendAsyncMessage("Test:ChangeZoomLevel");
+  }
+});
+
+/**
  * Get the element at the given x/y coordinates.
  * @param {Object} msg The msg.data part expects the following properties
  * - {Number} x

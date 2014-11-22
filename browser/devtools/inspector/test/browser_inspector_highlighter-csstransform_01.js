@@ -33,7 +33,7 @@ add_task(function*() {
 function* isHiddenByDefault(highlighterFront, inspector) {
   info("Checking that the highlighter is hidden by default");
 
-  let hidden = yield getAttribute("css-transform-root", "hidden", highlighterFront);
+  let hidden = yield getAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is hidden by default");
 }
 
@@ -58,7 +58,7 @@ function* isNotShownForUntransformed(highlighterFront, inspector) {
   let node = yield getNodeFront("#untransformed", inspector);
   yield highlighterFront.show(node);
 
-  let hidden = yield getAttribute("css-transform-root", "hidden", highlighterFront);
+  let hidden = yield getAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is still hidden");
 }
 
@@ -68,7 +68,7 @@ function* isNotShownForInline(highlighterFront, inspector) {
   let node = yield getNodeFront("#inline", inspector);
   yield highlighterFront.show(node);
 
-  let hidden = yield getAttribute("css-transform-root", "hidden", highlighterFront);
+  let hidden = yield getAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is still hidden");
 }
 
@@ -78,13 +78,13 @@ function* isVisibleWhenShown(highlighterFront, inspector) {
   let node = yield getNodeFront("#transformed", inspector);
   yield highlighterFront.show(node);
 
-  let hidden = yield getAttribute("css-transform-root", "hidden", highlighterFront);
+  let hidden = yield getAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(!hidden, "The highlighter is visible");
 
   info("Hiding the highlighter");
   yield highlighterFront.hide();
 
-  hidden = yield getAttribute("css-transform-root", "hidden", highlighterFront);
+  hidden = yield getAttribute("css-transform-elements", "hidden", highlighterFront);
   ok(hidden, "The highlighter is hidden");
 }
 

@@ -91,7 +91,7 @@
   background-color: ThreeDShadow;
 }
 
-#navigator-toolbox > toolbar:not(:-moz-lwtheme) {
+#navigator-toolbox > toolbar {
   -moz-appearance: none;
   border-style: none;
 }

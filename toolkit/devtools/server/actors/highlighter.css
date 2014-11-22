@@ -26,7 +26,7 @@
 
 /* Box model highlighter */
 
-:-moz-native-anonymous .box-model-container {
+:-moz-native-anonymous .box-model-regions {
   opacity: 0.4;
 }
 

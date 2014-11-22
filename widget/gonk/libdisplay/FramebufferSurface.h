@@ -30,11 +30,17 @@ class Rect;
 class String8;
 class HWComposer;
 
+#if ANDROID_VERSION >= 21
+typedef IGraphicBufferConsumer StreamConsumer;
+#else
+typedef BufferQueue StreamConsumer;
+#endif
+
 // ---------------------------------------------------------------------------
 
 class FramebufferSurface : public ConsumerBase {
 public:
-    FramebufferSurface(int disp, uint32_t width, uint32_t height, uint32_t format, sp<BufferQueue>& bq);
+    FramebufferSurface(int disp, uint32_t width, uint32_t height, uint32_t format, const sp<StreamConsumer>& sc);
 
     bool isUpdateOnDemand() const { return false; }
     status_t setUpdateRectangle(const Rect& updateRect);
