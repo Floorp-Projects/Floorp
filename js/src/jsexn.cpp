@@ -508,11 +508,8 @@ ErrorObject::createProto(JSContext *cx, JSProtoKey key)
     // instance properties.
     RootedPropertyName name(cx, ClassName(key, cx));
     RootedValue nameValue(cx, StringValue(name));
-    if (!JSObject::defineProperty(cx, err, cx->names().name, nameValue,
-                                  JS_PropertyStub, JS_StrictPropertyStub, 0))
-    {
+    if (!JSObject::defineProperty(cx, err, cx->names().name, nameValue, nullptr, nullptr, 0))
         return nullptr;
-    }
 
     return errorProto;
 }
