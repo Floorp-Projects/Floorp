@@ -181,8 +181,9 @@ public:
    * @param aPriority a priority value to determine which margins take effect
    *                  when multiple callers specify margins
    * @param aRepaintMode whether to schedule a paint after setting the margins
+   * @return true if the new margins were applied.
    */
-  static void SetDisplayPortMargins(nsIContent* aContent,
+  static bool SetDisplayPortMargins(nsIContent* aContent,
                                     nsIPresShell* aPresShell,
                                     const ScreenMargin& aMargins,
                                     uint32_t aPriority = 0,
@@ -2429,7 +2430,18 @@ public:
     }
   }
 
- /**
+  /**
+   * Calculate a default set of displayport margins for the given scrollframe
+   * and set them on the scrollframe's content element. The margins are set with
+   * the default priority, which may clobber previously set margins. The repaint
+   * mode provided is passed through to the call to SetDisplayPortMargins.
+   * The |aScrollFrame| parameter must be non-null and queryable to an nsIFrame.
+   * @return true iff the call to SetDisplayPortMargins returned true.
+   */
+  static bool CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFrame,
+                                                RepaintMode aRepaintMode);
+
+  /**
    * Get the display port for |aScrollFrame|'s content. If |aScrollFrame|
    * WantsAsyncScroll() and we don't have a scrollable displayport yet (as
    * tracked by |aBuilder|), calculate and set a display port. Returns true if
