@@ -463,8 +463,19 @@ static bool
 array_length_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
     if (!obj->is<ArrayObject>()) {
+        // This array .length property was found on the prototype
+        // chain. Ideally the setter should not have been called, but since
+        // we're here, do an impression of SetPropertyByDefining.
+        const Class *clasp = obj->getClass();
+        JSPropertyOp getter = clasp->getProperty;
+        if (getter == JS_PropertyStub)
+            getter = nullptr;
+        JSStrictPropertyOp setter = clasp->setProperty;
+        if (setter == JS_StrictPropertyStub)
+            setter = nullptr;
+
         return JSObject::defineProperty(cx, obj, cx->names().length, vp,
-                                        nullptr, nullptr, JSPROP_ENUMERATE);
+                                        getter, setter, JSPROP_ENUMERATE);
     }
 
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
