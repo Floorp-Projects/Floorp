@@ -7934,8 +7934,8 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
 
     if (op == JSOP_INITPROP) {
         MOZ_ASSERT(obj->is<JSObject>());
-        if (!DefineNativeProperty(cx, obj.as<NativeObject>(), id, rhs,
-                                  nullptr, nullptr, JSPROP_ENUMERATE))
+        if (!DefineNativeProperty(cx, obj.as<NativeObject>(), id, rhs, nullptr, nullptr,
+                                  JSPROP_ENUMERATE))
         {
             return false;
         }

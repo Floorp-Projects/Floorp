@@ -1072,11 +1072,10 @@ NativeObject::addDataProperty(ExclusiveContext *cx, HandlePropertyName name,
 template <ExecutionMode mode>
 static inline bool
 CallAddPropertyHook(typename ExecutionModeTraits<mode>::ExclusiveContextType cxArg,
-                    const Class *clasp, HandleNativeObject obj, HandleShape shape,
-                    HandleValue nominal)
+                    HandleNativeObject obj, HandleShape shape, HandleValue nominal)
 {
-    if (clasp->addProperty) {
-        MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);
+    if (JSPropertyOp addProperty = obj->getClass()->addProperty) {
+        MOZ_ASSERT(addProperty != JS_PropertyStub);
 
         if (mode == ParallelExecution)
             return false;
@@ -1089,7 +1088,7 @@ CallAddPropertyHook(typename ExecutionModeTraits<mode>::ExclusiveContextType cxA
         RootedValue value(cx, nominal);
 
         Rooted<jsid> id(cx, shape->propid());
-        if (!CallJSPropertyOp(cx->asJSContext(), clasp->addProperty, obj, id, &value)) {
+        if (!CallJSPropertyOp(cx->asJSContext(), addProperty, obj, id, &value)) {
             obj->removeProperty(cx, shape->propid());
             return false;
         }
@@ -1104,8 +1103,7 @@ CallAddPropertyHook(typename ExecutionModeTraits<mode>::ExclusiveContextType cxA
 template <ExecutionMode mode>
 static inline bool
 CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextType cxArg,
-                         const Class *clasp, HandleNativeObject obj, uint32_t index,
-                         HandleValue nominal)
+                         HandleNativeObject obj, uint32_t index, HandleValue nominal)
 {
     /* Inline addProperty for array objects. */
     if (obj->is<ArrayObject>()) {
@@ -1124,8 +1122,8 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
         return true;
     }
 
-    if (clasp->addProperty) {
-        MOZ_ASSERT(clasp->addProperty != JS_PropertyStub);
+    if (JSPropertyOp addProperty = obj->getClass()->addProperty) {
+        MOZ_ASSERT(addProperty != JS_PropertyStub);
 
         if (mode == ParallelExecution)
             return false;
@@ -1141,7 +1139,7 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
         RootedValue value(cx, nominal);
 
         Rooted<jsid> id(cx, INT_TO_JSID(index));
-        if (!CallJSPropertyOp(cx->asJSContext(), clasp->addProperty, obj, id, &value)) {
+        if (!CallJSPropertyOp(cx->asJSContext(), addProperty, obj, id, &value)) {
             obj->setDenseElementHole(cx, index);
             return false;
         }
@@ -1207,10 +1205,13 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
                         unsigned attrs, HandleValue value,
                         bool callSetterAfterwards, bool setterIsStrict)
 {
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
     /* Use dense storage for new indexed properties where possible. */
     if (JSID_IS_INT(id) &&
-        getter == JS_PropertyStub &&
-        setter == JS_StrictPropertyStub &&
+        !getter &&
+        !setter &&
         attrs == JSPROP_ENUMERATE &&
         (!obj->isIndexed() || !obj->containsPure(id)) &&
         !IsAnyTypedArray(obj))
@@ -1240,7 +1241,7 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
             } else {
                 obj->setDenseElementWithType(cx->asExclusiveContext(), index, value);
             }
-            return CallAddPropertyHookDense<mode>(cx, obj->getClass(), obj, index, value);
+            return CallAddPropertyHookDense<mode>(cx, obj, index, value);
         }
     }
 
@@ -1271,11 +1272,6 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
     }
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
-
-    if (getter == JS_PropertyStub)
-        getter = nullptr;
-    if (setter == JS_StrictPropertyStub)
-        setter = nullptr;
     RootedShape shape(cx, NativeObject::putProperty<mode>(cx, obj, id, getter, setter,
                                                           SHAPE_INVALID_SLOT, attrs, 0));
     if (!shape)
@@ -1303,11 +1299,11 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
             return false;
         if (result == NativeObject::ED_OK) {
             MOZ_ASSERT(!setter);
-            return CallAddPropertyHookDense<mode>(cx, obj->getClass(), obj, index, value);
+            return CallAddPropertyHookDense<mode>(cx, obj, index, value);
         }
     }
 
-    if (!CallAddPropertyHook<mode>(cx, obj->getClass(), obj, shape, value))
+    if (!CallAddPropertyHook<mode>(cx, obj, shape, value))
         return false;
 
     if (callSetterAfterwards && setter) {
@@ -1405,6 +1401,8 @@ bool
 js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
                          PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
@@ -1437,10 +1435,6 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
             }
             if (shape->isAccessorDescriptor()) {
                 attrs = ApplyOrDefaultAttributes(attrs, shape);
-                if (getter == JS_PropertyStub)
-                    getter = nullptr;
-                if (setter == JS_StrictPropertyStub)
-                    setter = nullptr;
                 shape = NativeObject::changeProperty<SequentialExecution>(cx, obj, shape, attrs,
                                                                           JSPROP_GETTER | JSPROP_SETTER,
                                                                           (attrs & JSPROP_GETTER)
@@ -1514,13 +1508,6 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
     if (!PurgeScopeChain(cx, obj, id))
         return false;
 
-    /* Use the object's class getter and setter by default. */
-    const Class *clasp = obj->getClass();
-    if (!getter && !(attrs & JSPROP_GETTER))
-        getter = clasp->getProperty;
-    if (!setter && !(attrs & JSPROP_SETTER))
-        setter = clasp->setProperty;
-
     if (shouldDefine) {
         // Handle the default cases here. Anyone that wanted to set non-default attributes has
         // cleared the IGNORE flags by now. Since we can never get here with JSPROP_IGNORE_VALUE
@@ -1534,7 +1521,7 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
 
     JS_ALWAYS_TRUE(UpdateShapeTypeAndValue<SequentialExecution>(cx, obj, shape, updateValue));
 
-    return CallAddPropertyHook<SequentialExecution>(cx, clasp, obj, shape, updateValue);
+    return CallAddPropertyHook<SequentialExecution>(cx, obj, shape, updateValue);
 }
 
 static bool
@@ -2008,8 +1995,13 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
                                        clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
     }
     Rooted<NativeObject*> nativeReceiver(cxArg, &receiver->as<NativeObject>());
-    return DefinePropertyOrElement<mode>(cxArg, nativeReceiver, id,
-                                         clasp->getProperty, clasp->setProperty,
+    JSPropertyOp getter = clasp->getProperty;
+    if (getter == JS_PropertyStub)
+        getter = nullptr;
+    JSStrictPropertyOp setter = clasp->setProperty;
+    if (setter == JS_StrictPropertyStub)
+        setter = nullptr;
+    return DefinePropertyOrElement<mode>(cxArg, nativeReceiver, id, getter, setter,
                                          JSPROP_ENUMERATE, v, true, strict);
 }
 
