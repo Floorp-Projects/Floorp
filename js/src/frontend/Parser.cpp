@@ -1650,11 +1650,6 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                     return false;
                 }
 
-                if (hasDefaults) {
-                    report(ParseError, false, null(), JSMSG_NONDEFAULT_FORMAL_AFTER_DEFAULT);
-                    return false;
-                }
-
                 funbox->hasDestructuringArgs = true;
 
                 /*
@@ -1682,16 +1677,22 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 if (!rhs)
                     return false;
 
+                handler.addFunctionArgument(funcpn, rhs);
                 if (!pc->define(tokenStream, name, rhs, Definition::ARG))
                     return false;
 
                 Node item = handler.newBinary(PNK_ASSIGN, lhs, rhs);
                 if (!item)
                     return false;
+
+                Node vars = handler.newDeclarationList(PNK_VAR, item);
+                if (!vars)
+                    return false;
+
                 if (list) {
-                    handler.addList(list, item);
+                    handler.addList(list, vars);
                 } else {
-                    list = handler.newDeclarationList(PNK_VAR, item);
+                    list = handler.newList(PNK_SEQ, vars);
                     if (!list)
                         return false;
                     *listp = list;
@@ -1743,39 +1744,6 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 RootedPropertyName name(context, tokenStream.currentName());
                 if (!defineArg(funcpn, name, disallowDuplicateArgs, &duplicatedArg))
                     return false;
-
-                bool matched;
-                if (!tokenStream.matchToken(&matched, TOK_ASSIGN))
-                    return false;
-                if (matched) {
-                    // A default argument without parentheses would look like:
-                    // a = expr => body, but both operators are right-associative, so
-                    // that would have been parsed as a = (expr => body) instead.
-                    // Therefore it's impossible to get here with parenFreeArrow.
-                    MOZ_ASSERT(!parenFreeArrow);
-
-                    if (*hasRest) {
-                        report(ParseError, false, null(), JSMSG_REST_WITH_DEFAULT);
-                        return false;
-                    }
-                    disallowDuplicateArgs = true;
-                    if (duplicatedArg) {
-                        report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
-                        return false;
-                    }
-                    if (!hasDefaults) {
-                        hasDefaults = true;
-
-                        // The Function.length property is the number of formals
-                        // before the first default argument.
-                        funbox->length = pc->numArgs() - 1;
-                    }
-                    Node def_expr = assignExprWithoutYield(yieldHandling, JSMSG_YIELD_IN_DEFAULT);
-                    if (!def_expr)
-                        return false;
-                    handler.setLastFunctionArgumentDefault(funcpn, def_expr);
-                }
-
                 break;
               }
 
@@ -1784,10 +1752,41 @@ Parser<ParseHandler>::functionArguments(YieldHandling yieldHandling, FunctionSyn
                 return false;
             }
 
+            bool matched;
+            if (!tokenStream.matchToken(&matched, TOK_ASSIGN))
+                return false;
+            if (matched) {
+                // A default argument without parentheses would look like:
+                // a = expr => body, but both operators are right-associative, so
+                // that would have been parsed as a = (expr => body) instead.
+                // Therefore it's impossible to get here with parenFreeArrow.
+                MOZ_ASSERT(!parenFreeArrow);
+
+                if (*hasRest) {
+                    report(ParseError, false, null(), JSMSG_REST_WITH_DEFAULT);
+                    return false;
+                }
+                disallowDuplicateArgs = true;
+                if (duplicatedArg) {
+                    report(ParseError, false, duplicatedArg, JSMSG_BAD_DUP_ARGS);
+                    return false;
+                }
+                if (!hasDefaults) {
+                    hasDefaults = true;
+
+                    // The Function.length property is the number of formals
+                    // before the first default argument.
+                    funbox->length = pc->numArgs() - 1;
+                }
+                Node def_expr = assignExprWithoutYield(yieldHandling, JSMSG_YIELD_IN_DEFAULT);
+                if (!def_expr)
+                    return false;
+                handler.setLastFunctionArgumentDefault(funcpn, def_expr);
+            }
+
             if (parenFreeArrow || kind == Setter)
                 break;
 
-            bool matched;
             if (!tokenStream.matchToken(&matched, TOK_COMMA))
                 return false;
             if (!matched)

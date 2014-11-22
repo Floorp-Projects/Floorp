@@ -7003,35 +7003,45 @@ BytecodeEmitter::emitUnary(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitDefaults(ParseNode* pn)
+BytecodeEmitter::emitDefaultsAndDestructuring(ParseNode* pn, ParseNode* pndestruct)
 {
     MOZ_ASSERT(pn->isKind(PNK_ARGSBODY));
 
+    uint32_t i = 0;
     ParseNode* pnlast = pn->last();
+    ParseNode* destruct = pndestruct ? pndestruct->pn_head : nullptr;
     for (ParseNode* arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
-        if (!(arg->pn_dflags & PND_DEFAULT))
-            continue;
-        if (!bindNameToSlot(arg))
-            return false;
-        if (!emitVarOp(arg, JSOP_GETARG))
-            return false;
-        if (!emit1(JSOP_UNDEFINED))
-            return false;
-        if (!emit1(JSOP_STRICTEQ))
-            return false;
-        // Emit source note to enable ion compilation.
-        if (!newSrcNote(SRC_IF))
-            return false;
-        ptrdiff_t jump;
-        if (!emitJump(JSOP_IFEQ, 0, &jump))
-            return false;
-        if (!emitTree(arg->expr()))
-            return false;
-        if (!emitVarOp(arg, JSOP_SETARG))
-            return false;
-        if (!emit1(JSOP_POP))
-            return false;
-        SET_JUMP_OFFSET(code(jump), offset() - jump);
+        if (arg->pn_dflags & PND_DEFAULT) {
+            if (!bindNameToSlot(arg))
+                return false;
+            if (!emitVarOp(arg, JSOP_GETARG))
+                return false;
+            if (!emit1(JSOP_UNDEFINED))
+                return false;
+            if (!emit1(JSOP_STRICTEQ))
+                return false;
+            // Emit source note to enable ion compilation.
+            if (!newSrcNote(SRC_IF))
+                return false;
+            ptrdiff_t jump;
+            if (!emitJump(JSOP_IFEQ, 0, &jump))
+                return false;
+            if (!emitTree(arg->expr()))
+                return false;
+            if (!emitVarOp(arg, JSOP_SETARG))
+                return false;
+            if (!emit1(JSOP_POP))
+                return false;
+            SET_JUMP_OFFSET(code(jump), offset() - jump);
+        }
+        if (destruct && destruct->pn_head->pn_right->frameSlot() == i) {
+            if (!emitTree(destruct))
+                return false;
+            if (!emit1(JSOP_POP))
+                return false;
+            destruct = destruct->pn_next;
+        }
+        ++i;
     }
 
     return true;
@@ -7207,61 +7217,61 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         ParseNode* pnlast = pn->last();
 
         // Carefully emit everything in the right order:
-        // 1. Destructuring
-        // 2. Defaults
-        // 3. Functions
+        // 1. Defaults and Destructuring for each argument
+        // 2. Functions
         ParseNode* pnchild = pnlast->pn_head;
-        if (pnlast->pn_xflags & PNX_DESTRUCT) {
-            // Assign the destructuring arguments before defining any functions,
-            // see bug 419662.
+        ParseNode* pndestruct = nullptr;
+        bool hasDestructuring = pnlast->pn_xflags & PNX_DESTRUCT;
+        if (hasDestructuring) {
             MOZ_ASSERT(pnchild->isKind(PNK_SEMI));
-            MOZ_ASSERT(pnchild->pn_kid->isKind(PNK_VAR) || pnchild->pn_kid->isKind(PNK_GLOBALCONST));
-            if (!emitTree(pnchild))
-                return false;
+            MOZ_ASSERT(pnchild->pn_kid->isKind(PNK_SEQ));
+#ifdef DEBUG
+            for (ParseNode* pnvar = pnchild->pn_kid->pn_head; pnvar; pnvar = pnvar->pn_next)
+                MOZ_ASSERT(pnvar->isKind(PNK_VAR) || pnvar->isKind(PNK_GLOBALCONST));
+#endif
+            pndestruct = pnchild->pn_head;
             pnchild = pnchild->pn_next;
         }
         bool hasDefaults = sc->asFunctionBox()->hasDefaults();
-        if (hasDefaults) {
-            ParseNode* rest = nullptr;
-            bool restIsDefn = false;
-            if (fun->hasRest()) {
-                MOZ_ASSERT(!sc->asFunctionBox()->argumentsHasLocalBinding());
+        ParseNode* rest = nullptr;
+        bool restIsDefn = false;
+        if (fun->hasRest() && hasDefaults) {
+            MOZ_ASSERT(!sc->asFunctionBox()->argumentsHasLocalBinding());
 
-                // Defaults with a rest parameter need special handling. The
-                // rest parameter needs to be undefined while defaults are being
-                // processed. To do this, we create the rest argument and let it
-                // sit on the stack while processing defaults. The rest
-                // parameter's slot is set to undefined for the course of
-                // default processing.
-                rest = pn->pn_head;
-                while (rest->pn_next != pnlast)
-                    rest = rest->pn_next;
-                restIsDefn = rest->isDefn();
-                if (!emit1(JSOP_REST))
-                    return false;
-                checkTypeSet(JSOP_REST);
-
-                // Only set the rest parameter if it's not aliased by a nested
-                // function in the body.
-                if (restIsDefn) {
-                    if (!emit1(JSOP_UNDEFINED))
-                        return false;
-                    if (!bindNameToSlot(rest))
-                        return false;
-                    if (!emitVarOp(rest, JSOP_SETARG))
-                        return false;
-                    if (!emit1(JSOP_POP))
-                        return false;
-                }
-            }
-            if (!emitDefaults(pn))
+            // Defaults with a rest parameter need special handling. The
+            // rest parameter needs to be undefined while defaults are being
+            // processed. To do this, we create the rest argument and let it
+            // sit on the stack while processing defaults. The rest
+            // parameter's slot is set to undefined for the course of
+            // default processing.
+            rest = pn->pn_head;
+            while (rest->pn_next != pnlast)
+                rest = rest->pn_next;
+            restIsDefn = rest->isDefn();
+            if (!emit1(JSOP_REST))
                 return false;
-            if (fun->hasRest()) {
-                if (restIsDefn && !emitVarOp(rest, JSOP_SETARG))
+            checkTypeSet(JSOP_REST);
+
+            // Only set the rest parameter if it's not aliased by a nested
+            // function in the body.
+            if (restIsDefn) {
+                if (!emit1(JSOP_UNDEFINED))
+                    return false;
+                if (!bindNameToSlot(rest))
+                    return false;
+                if (!emitVarOp(rest, JSOP_SETARG))
                     return false;
                 if (!emit1(JSOP_POP))
                     return false;
             }
+        }
+        if (!emitDefaultsAndDestructuring(pn, pndestruct))
+            return false;
+        if (fun->hasRest() && hasDefaults) {
+            if (restIsDefn && !emitVarOp(rest, JSOP_SETARG))
+                return false;
+            if (!emit1(JSOP_POP))
+                return false;
         }
         for (ParseNode* pn2 = pn->pn_head; pn2 != pnlast; pn2 = pn2->pn_next) {
             // Only bind the parameter if it's not aliased by a nested function
