@@ -10,6 +10,7 @@ const TEST_URL = "data:text/html;charset=utf-8,<div>test</div>";
 
 // IDs of all highlighter elements that we expect to find in the canvasFrame.
 const ELEMENTS = ["box-model-root",
+                  "box-model-elements",
                   "box-model-margin",
                   "box-model-border",
                   "box-model-padding",
