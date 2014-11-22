@@ -95,7 +95,7 @@ public:
     }
     NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent);
 
-    NS_IMETHOD MakeFullScreen(bool aFullScreen) /*MOZ_OVERRIDE*/;
+    NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) /*MOZ_OVERRIDE*/;
 
     virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget>
         StartRemoteDrawing() MOZ_OVERRIDE;

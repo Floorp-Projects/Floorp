@@ -6748,6 +6748,7 @@ jemalloc_purge_freed_pages_impl()
 			hard_purge_arena(arena);
 	}
 	if (!config_munmap || config_recycle) {
+		malloc_mutex_lock(&chunks_mtx);
 		extent_node_t *node = extent_tree_szad_first(&chunks_szad_mmap);
 		while (node) {
 			pages_decommit(node->addr, node->size);
@@ -6755,6 +6756,7 @@ jemalloc_purge_freed_pages_impl()
 			node->zeroed = true;
 			node = extent_tree_szad_next(&chunks_szad_mmap, node);
 		}
+		malloc_mutex_unlock(&chunks_mtx);
 	}
 }
 

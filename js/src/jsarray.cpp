@@ -3229,7 +3229,9 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("keys",        "ArrayKeys",        0,0),
 
     /* ES7 additions */
+#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("includes",    "ArrayIncludes",    2,0),
+#endif
 
     JS_FS_END
 };

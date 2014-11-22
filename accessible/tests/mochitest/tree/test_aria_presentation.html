@@ -56,6 +56,15 @@
       ] };
     testAccessibleTree("tblfocusable_cnt", tree);
 
+    // Presentation list, expose generic accesisble for list items.
+    tree =
+      { SECTION: [ // container
+        { PARAGRAPH: [ // li generic accessible
+          { TEXT_LEAF: [ ] } // li text
+        ] }
+      ] };
+    testAccessibleTree("list_cnt", tree);
+
     // Has ARIA globals or referred by ARIA relationship.
     tree =
       { SECTION: [ // container
@@ -111,6 +120,12 @@
         <td>cell</td>
       </tr>
     </table>
+  </div>
+
+  <div id="list_cnt">
+    <ul role="presentation">
+      <li>item</li>
+    </ul>
   </div>
 
   <div id="airaglobalprop_cnt">
