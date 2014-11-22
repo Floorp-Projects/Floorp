@@ -219,11 +219,13 @@ public:
    * where the initial input event of the block hit a dispatch-to-content region
    * but is safe to call for all input blocks. This function should always be
    * invoked on the controller thread.
-   * In the case where the input block has no target, or the target is not a
-   * scrollable frame, |aGuid.mScrollId| should be set to FrameMetrics::
-   * NULL_SCROLL_ID.
+   * The different elements in the array of targets correspond to the targets
+   * for the different touch points. In the case where the touch point has no
+   * target, or the target is not a scrollable frame, the target's |mScrollId|
+   * should be set to FrameMetrics::NULL_SCROLL_ID.
    */
-  void SetTargetAPZC(uint64_t aInputBlockId, const ScrollableLayerGuid& aGuid);
+  void SetTargetAPZC(uint64_t aInputBlockId,
+                     const nsTArray<ScrollableLayerGuid>& aTargets);
 
   /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
@@ -404,8 +406,9 @@ private:
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc,
                                          const gfx::Point& aHitTestPoint,
                                          HitTestResult* aOutHitResult);
-  already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
-  already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
+  already_AddRefed<AsyncPanZoomController> GetMultitouchTarget(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
+  already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const;
+  already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc) const;
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
                                                                   HitTestResult* aOutHitResult);
   nsEventStatus ProcessTouchInput(MultiTouchInput& aInput,
