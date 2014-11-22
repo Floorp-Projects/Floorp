@@ -598,20 +598,20 @@ class JSObject : public js::gc::Cell
 
     static bool defineGeneric(js::ExclusiveContext *cx, js::HandleObject obj,
                               js::HandleId id, js::HandleValue value,
-                              JSPropertyOp getter = JS_PropertyStub,
-                              JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                              JSPropertyOp getter = nullptr,
+                              JSStrictPropertyOp setter = nullptr,
                               unsigned attrs = JSPROP_ENUMERATE);
 
     static bool defineProperty(js::ExclusiveContext *cx, js::HandleObject obj,
                                js::PropertyName *name, js::HandleValue value,
-                               JSPropertyOp getter = JS_PropertyStub,
-                               JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                               JSPropertyOp getter = nullptr,
+                               JSStrictPropertyOp setter = nullptr,
                                unsigned attrs = JSPROP_ENUMERATE);
 
     static bool defineElement(js::ExclusiveContext *cx, js::HandleObject obj,
                               uint32_t index, js::HandleValue value,
-                              JSPropertyOp getter = JS_PropertyStub,
-                              JSStrictPropertyOp setter = JS_StrictPropertyStub,
+                              JSPropertyOp getter = nullptr,
+                              JSStrictPropertyOp setter = nullptr,
                               unsigned attrs = JSPROP_ENUMERATE);
 
     static inline bool getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,

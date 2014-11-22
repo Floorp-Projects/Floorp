@@ -2025,19 +2025,19 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
     }
 
     // Define the new data property.
-    if (!receiver->is<NativeObject>()) {
-        if (mode == ParallelExecution)
-            return false;
-        return JSObject::defineGeneric(cxArg->asJSContext(), receiver, id, v,
-                                       clasp->getProperty, clasp->setProperty, JSPROP_ENUMERATE);
-    }
-    Rooted<NativeObject*> nativeReceiver(cxArg, &receiver->as<NativeObject>());
     JSPropertyOp getter = clasp->getProperty;
     if (getter == JS_PropertyStub)
         getter = nullptr;
     JSStrictPropertyOp setter = clasp->setProperty;
     if (setter == JS_StrictPropertyStub)
         setter = nullptr;
+    if (!receiver->is<NativeObject>()) {
+        if (mode == ParallelExecution)
+            return false;
+        return JSObject::defineGeneric(cxArg->asJSContext(), receiver, id, v, getter, setter,
+                                       JSPROP_ENUMERATE);
+    }
+    Rooted<NativeObject*> nativeReceiver(cxArg, &receiver->as<NativeObject>());
     return DefinePropertyOrElement<mode>(cxArg, nativeReceiver, id, getter, setter,
                                          JSPROP_ENUMERATE, v, true, strict);
 }

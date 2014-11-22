@@ -555,38 +555,30 @@ js::CreateUserSizeAndAlignmentProperties(JSContext *cx, HandleTypeDescr descr)
     if (descr->transparent()) {
         // byteLength
         RootedValue typeByteLength(cx, Int32Value(descr->size()));
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteLength,
-                                      typeByteLength,
-                                      nullptr, nullptr,
-                                      JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!JSObject::defineProperty(cx, descr, cx->names().byteLength, typeByteLength,
+                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
 
         // byteAlignment
         RootedValue typeByteAlignment(cx, Int32Value(descr->alignment()));
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteAlignment,
-                                      typeByteAlignment,
-                                      nullptr, nullptr,
-                                      JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!JSObject::defineProperty(cx, descr, cx->names().byteAlignment, typeByteAlignment,
+                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
     } else {
         // byteLength
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteLength,
-                                      UndefinedHandleValue,
-                                      nullptr, nullptr,
-                                      JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!JSObject::defineProperty(cx, descr, cx->names().byteLength, UndefinedHandleValue,
+                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
 
         // byteAlignment
-        if (!JSObject::defineProperty(cx, descr, cx->names().byteAlignment,
-                                      UndefinedHandleValue,
-                                      nullptr, nullptr,
-                                      JSPROP_READONLY | JSPROP_PERMANENT))
+        if (!JSObject::defineProperty(cx, descr, cx->names().byteAlignment, UndefinedHandleValue,
+                                      nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
         {
             return false;
         }
@@ -620,16 +612,18 @@ ArrayMetaTypeDescr::create(JSContext *cx,
     obj->initReservedSlot(JS_DESCR_SLOT_ARRAY_LENGTH, Int32Value(length));
 
     RootedValue elementTypeVal(cx, ObjectValue(*elementType));
-    if (!JSObject::defineProperty(cx, obj, cx->names().elementType,
-                                  elementTypeVal, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JSObject::defineProperty(cx, obj, cx->names().elementType, elementTypeVal,
+                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return nullptr;
+    }
 
     RootedValue lengthValue(cx, NumberValue(length));
-    if (!JSObject::defineProperty(cx, obj, cx->names().length,
-                                  lengthValue, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JSObject::defineProperty(cx, obj, cx->names().length, lengthValue,
+                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return nullptr;
+    }
 
     if (!CreateUserSizeAndAlignmentProperties(cx, obj))
         return nullptr;
@@ -976,16 +970,14 @@ StructMetaTypeDescr::create(JSContext *cx,
     if (!JSObject::freeze(cx, userFieldTypes))
         return nullptr;
     RootedValue userFieldOffsetsValue(cx, ObjectValue(*userFieldOffsets));
-    if (!JSObject::defineProperty(cx, descr, cx->names().fieldOffsets,
-                                  userFieldOffsetsValue, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JSObject::defineProperty(cx, descr, cx->names().fieldOffsets, userFieldOffsetsValue,
+                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
     RootedValue userFieldTypesValue(cx, ObjectValue(*userFieldTypes));
-    if (!JSObject::defineProperty(cx, descr, cx->names().fieldTypes,
-                                  userFieldTypesValue, nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JSObject::defineProperty(cx, descr, cx->names().fieldTypes, userFieldTypesValue,
+                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
     {
         return nullptr;
     }
@@ -1243,11 +1235,11 @@ DefineMetaTypeDescr(JSContext *cx,
         return nullptr;
 
     RootedValue protoProtoValue(cx, ObjectValue(*protoProto));
-    if (!JSObject::defineProperty(cx, proto, cx->names().prototype,
-                                  protoProtoValue,
-                                  nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JSObject::defineProperty(cx, proto, cx->names().prototype, protoProtoValue,
+                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return nullptr;
+    }
 
     // Create ctor itself
 
@@ -1317,11 +1309,11 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
         return false;
 
     RootedValue arrayTypeValue(cx, ObjectValue(*arrayType));
-    if (!JSObject::defineProperty(cx, module, cx->names().ArrayType,
-                                  arrayTypeValue,
-                                  nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JSObject::defineProperty(cx, module, cx->names().ArrayType, arrayTypeValue,
+                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return false;
+    }
 
     // StructType.
 
@@ -1332,19 +1324,17 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
         return false;
 
     RootedValue structTypeValue(cx, ObjectValue(*structType));
-    if (!JSObject::defineProperty(cx, module, cx->names().StructType,
-                                  structTypeValue,
-                                  nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
+    if (!JSObject::defineProperty(cx, module, cx->names().StructType, structTypeValue,
+                                  nullptr, nullptr, JSPROP_READONLY | JSPROP_PERMANENT))
+    {
         return false;
+    }
 
     // Everything is setup, install module on the global object:
     RootedValue moduleValue(cx, ObjectValue(*module));
     global->setConstructor(JSProto_TypedObject, moduleValue);
-    if (!JSObject::defineProperty(cx, global, cx->names().TypedObject,
-                                  moduleValue,
-                                  nullptr, nullptr,
-                                  0))
+    if (!JSObject::defineProperty(cx, global, cx->names().TypedObject, moduleValue,
+                                  nullptr, nullptr, 0))
     {
         return false;
     }
