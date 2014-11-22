@@ -48,6 +48,10 @@ typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 using mozilla::layout::RenderFrameParent;
 
 namespace mozilla {
+namespace gfx {
+class VRHMDInfo;
+}
+
 namespace layers {
 
 class PGrallocBufferParent;
@@ -378,6 +382,15 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
           specific.get_ContainerLayerAttributes();
         containerLayer->SetPreScale(attrs.preXScale(), attrs.preYScale());
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
+
+        if (attrs.hmdInfo()) {
+          if (!IsSameProcess()) {
+            NS_WARNING("VR layers currently not supported with cross-process compositing");
+            return false;
+          }
+          containerLayer->SetVRHMDInfo(reinterpret_cast<mozilla::gfx::VRHMDInfo*>(attrs.hmdInfo()));
+        }
+
         break;
       }
       case Specific::TColorLayerAttributes: {
