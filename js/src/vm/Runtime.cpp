@@ -459,6 +459,19 @@ JSRuntime::~JSRuntime()
 }
 
 void
+JSRuntime::addTelemetry(int id, uint32_t sample, const char *key)
+{
+    if (telemetryCallback)
+        (*telemetryCallback)(id, sample, key);
+}
+
+void
+JSRuntime::setTelemetryCallback(JSRuntime *rt, JSAccumulateTelemetryDataCallback callback)
+{
+    rt->telemetryCallback = callback;
+}
+
+void
 NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 {
 #ifdef JSGC_GENERATIONAL
