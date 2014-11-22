@@ -395,7 +395,7 @@ let isRegionHidden = Task.async(function*(region, toolbox) {
  */
 let isHighlighting = Task.async(function*(toolbox) {
   let {data: value} = yield executeInContent("Test:GetHighlighterAttribute", {
-    nodeID: "box-model-root",
+    nodeID: "box-model-elements",
     name: "hidden",
     actorID: getHighlighterActorID(toolbox)
   });
@@ -553,6 +553,19 @@ let clickContainer = Task.async(function*(selector, inspector) {
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mouseup"},
     inspector.markup.doc.defaultView);
   return updated;
+});
+
+/**
+ * Zoom the current page to a given level.
+ * @param {Number} level The new zoom level.
+ * @param {String} actorID Optional highlighter actor ID. If provided, the
+ * returned promise will only resolve when the highlighter has updated to the
+ * new zoom level.
+ * @return {Promise}
+ */
+let zoomPageTo = Task.async(function*(level, actorID) {
+  yield executeInContent("Test:ChangeZoomLevel",
+                         {level, actorID});
 });
 
 /**
