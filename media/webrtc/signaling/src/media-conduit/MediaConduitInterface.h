@@ -161,8 +161,10 @@ public:
    */
   virtual MediaConduitErrorCode AttachTransport(RefPtr<TransportInterface> aTransport) = 0;
 
+  virtual bool SetLocalSSRC(unsigned int ssrc) = 0;
   virtual bool GetLocalSSRC(unsigned int* ssrc) = 0;
   virtual bool GetRemoteSSRC(unsigned int* ssrc) = 0;
+  virtual bool SetLocalCNAME(const char* cname) = 0;
 
   /**
    * Functions returning stats needed by w3c stats model.

@@ -177,8 +177,10 @@ public:
 
   int GetChannel() { return mChannel; }
   webrtc::VoiceEngine* GetVoiceEngine() { return mVoiceEngine; }
+  bool SetLocalSSRC(unsigned int ssrc) MOZ_OVERRIDE;
   bool GetLocalSSRC(unsigned int* ssrc);
   bool GetRemoteSSRC(unsigned int* ssrc);
+  bool SetLocalCNAME(const char* cname) MOZ_OVERRIDE;
   bool GetVideoEncoderStats(double* framerateMean,
                             double* framerateStdDev,
                             double* bitrateMean,

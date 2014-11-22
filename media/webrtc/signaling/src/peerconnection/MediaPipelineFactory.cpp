@@ -242,10 +242,14 @@ MediaPipelineFactory::CreateMediaPipeline(const JsepTrackPair& aTrackPair,
 
   MOZ_ASSERT(aTrackPair.mRtpTransport);
 
+  size_t transportLevel = aTrackPair.mBundleLevel.isSome() ?
+                          *aTrackPair.mBundleLevel :
+                          aTrackPair.mLevel;
+
   // First make sure the transport flow exists.
   RefPtr<TransportFlow> rtpFlow;
   nsresult rv = CreateOrGetTransportFlow(
-      aTrackPair.mLevel, false, *aTrackPair.mRtpTransport, &rtpFlow);
+      transportLevel, false, *aTrackPair.mRtpTransport, &rtpFlow);
   if (NS_FAILED(rv))
     return rv;
   MOZ_ASSERT(rtpFlow);
@@ -253,14 +257,11 @@ MediaPipelineFactory::CreateMediaPipeline(const JsepTrackPair& aTrackPair,
   RefPtr<TransportFlow> rtcpFlow;
   if (aTrackPair.mRtcpTransport) {
     rv = CreateOrGetTransportFlow(
-        aTrackPair.mLevel, true, *aTrackPair.mRtcpTransport, &rtcpFlow);
+        transportLevel, true, *aTrackPair.mRtcpTransport, &rtcpFlow);
     if (NS_FAILED(rv))
       return rv;
     MOZ_ASSERT(rtcpFlow);
   }
-
-  // TODO(bug 1016476): If bundle is in play, grab the TransportFlows for the
-  // bundle level too.
 
   bool receiving =
       aTrack.GetDirection() == JsepTrack::Direction::kJsepTrackReceiving;
@@ -280,12 +281,12 @@ MediaPipelineFactory::CreateMediaPipeline(const JsepTrackPair& aTrackPair,
   }
 
   if (receiving) {
-    rv = CreateMediaPipelineReceiving(rtpFlow, rtcpFlow, nullptr, nullptr,
+    rv = CreateMediaPipelineReceiving(rtpFlow, rtcpFlow,
                                       aTrackPair, aTrack, conduit);
     if (NS_FAILED(rv))
       return rv;
   } else {
-    rv = CreateMediaPipelineSending(rtpFlow, rtcpFlow, nullptr, nullptr,
+    rv = CreateMediaPipelineSending(rtpFlow, rtcpFlow,
                                     aTrackPair, aTrack, conduit);
     if (NS_FAILED(rv))
       return rv;
@@ -298,8 +299,6 @@ nsresult
 MediaPipelineFactory::CreateMediaPipelineReceiving(
     RefPtr<TransportFlow> aRtpFlow,
     RefPtr<TransportFlow> aRtcpFlow,
-    RefPtr<TransportFlow> aBundleRtpFlow,
-    RefPtr<TransportFlow> aBundleRtcpFlow,
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack,
     const RefPtr<MediaSessionConduit>& aConduit)
@@ -318,8 +317,26 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
 
   RefPtr<MediaPipelineReceive> pipeline;
 
-  // TODO(bug 1016476): Need bundle filter.
-  nsAutoPtr<MediaPipelineFilter> filter(nullptr);
+  nsAutoPtr<MediaPipelineFilter> filter;
+
+  if (aTrackPair.mBundleLevel.isSome()) {
+    filter = new MediaPipelineFilter;
+
+    // Add remote SSRCs so we can distinguish which RTP packets actually
+    // belong to this pipeline (also RTCP sender reports).
+    for (auto i = aTrack.GetSsrcs().begin();
+        i != aTrack.GetSsrcs().end(); ++i) {
+      filter->AddRemoteSSRC(*i);
+    }
+
+    // TODO(bug 1105005): Tell the filter about the mid for this track
+
+    // Add unique payload types as a last-ditch fallback
+    auto uniquePts = aTrack.GetNegotiatedDetails()->GetUniquePayloadTypes();
+    for (auto i = uniquePts.begin(); i != uniquePts.end(); ++i) {
+      filter->AddUniquePT(*i);
+    }
+  }
 
   if (aTrack.GetMediaType() == SdpMediaSection::kAudio) {
     pipeline = new MediaPipelineReceiveAudio(
@@ -333,8 +350,6 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         static_cast<AudioSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
         aRtcpFlow,
-        aBundleRtpFlow,
-        aBundleRtcpFlow,
         filter);
 
   } else if (aTrack.GetMediaType() == SdpMediaSection::kVideo) {
@@ -349,8 +364,6 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         static_cast<VideoSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
         aRtcpFlow,
-        aBundleRtpFlow,
-        aBundleRtcpFlow,
         filter);
   } else {
     MOZ_ASSERT(false);
@@ -372,8 +385,6 @@ nsresult
 MediaPipelineFactory::CreateMediaPipelineSending(
     RefPtr<TransportFlow> aRtpFlow,
     RefPtr<TransportFlow> aRtcpFlow,
-    RefPtr<TransportFlow> aBundleRtpFlow,
-    RefPtr<TransportFlow> aBundleRtcpFlow,
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack,
     const RefPtr<MediaSessionConduit>& aConduit)
@@ -389,12 +400,25 @@ MediaPipelineFactory::CreateMediaPipelineSending(
     return NS_ERROR_FAILURE;
   }
 
+  nsAutoPtr<MediaPipelineFilter> filter;
+
+  if (aTrackPair.mBundleLevel.isSome()) {
+    filter = new MediaPipelineFilter;
+
+    // Add local SSRCs so we can distinguish which RTCP packets actually
+    // belong to this pipeline.
+    for (auto i = aTrack.GetSsrcs().begin();
+         i != aTrack.GetSsrcs().end(); ++i) {
+      filter->AddLocalSSRC(*i);
+    }
+  }
+
   // Now we have all the pieces, create the pipeline
   RefPtr<MediaPipelineTransmit> pipeline = new MediaPipelineTransmit(
       mPC->GetHandle(), mPC->GetMainThread().get(), mPC->GetSTSThread(),
       stream->GetMediaStream(), aTrackPair.mLevel,
       aTrack.GetMediaType() == SdpMediaSection::kVideo, aConduit, aRtpFlow,
-      aRtcpFlow);
+      aRtcpFlow, filter);
 
 #ifdef MOZILLA_INTERNAL_API
   // implement checking for peerIdentity (where failure == black/silence)
@@ -413,24 +437,6 @@ MediaPipelineFactory::CreateMediaPipelineSending(
     MOZ_MTLOG(ML_ERROR, "Couldn't initialize sending pipeline");
     return rv;
   }
-
-// TODO(bug 1016476): Copied from vcmSIPCCBinding. Need to unifdef and port in.
-#if 0
-  // This tells the receive MediaPipeline (if there is one) whether we are
-  // doing bundle, and if so, updates the filter. Once the filter is finalized,
-  // it is then copied to the transmit pipeline so it can filter RTCP.
-  if (attrs->bundle_level) {
-    nsAutoPtr<MediaPipelineFilter> filter (new MediaPipelineFilter);
-    for (int s = 0; s < attrs->num_ssrcs; ++s) {
-      filter->AddRemoteSSRC(attrs->ssrcs[s]);
-    }
-    pc.impl()->media()->SetUsingBundle_m(level, true);
-    pc.impl()->media()->UpdateFilterFromRemoteDescription_m(level, filter);
-  } else {
-    // This will also clear the filter.
-    pc.impl()->media()->SetUsingBundle_m(level, false);
-  }
-#endif
 
   stream->StorePipeline(aTrackPair.mLevel, pipeline);
 
@@ -501,6 +507,17 @@ MediaPipelineFactory::CreateAudioConduit(const JsepTrackPair& aTrackPair,
       return NS_ERROR_FAILURE;
     }
   } else {
+    // For now we only expect to have one ssrc per local track.
+    auto ssrcs = aTrack.GetSsrcs();
+    if (!ssrcs.empty()) {
+      if (!conduit->SetLocalSSRC(ssrcs.front())) {
+        MOZ_MTLOG(ML_ERROR, "SetLocalSSRC failed");
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    conduit->SetLocalCNAME(aTrack.GetCNAME().c_str());
+
     const JsepCodecDescription* cdesc;
     // Best codec.
     nsresult rv = aTrack.GetNegotiatedDetails()->GetCodec(0, &cdesc);
@@ -614,6 +631,17 @@ MediaPipelineFactory::CreateVideoConduit(const JsepTrackPair& aTrackPair,
       return NS_ERROR_FAILURE;
     }
   } else {
+    // For now we only expect to have one ssrc per local track.
+    auto ssrcs = aTrack.GetSsrcs();
+    if (!ssrcs.empty()) {
+      if (!conduit->SetLocalSSRC(ssrcs.front())) {
+        MOZ_MTLOG(ML_ERROR, "SetLocalSSRC failed");
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    conduit->SetLocalCNAME(aTrack.GetCNAME().c_str());
+
     const JsepCodecDescription* cdesc;
     // Best codec.
     nsresult rv = aTrack.GetNegotiatedDetails()->GetCodec(0, &cdesc);

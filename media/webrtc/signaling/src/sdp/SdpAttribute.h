@@ -7,6 +7,7 @@
 #ifndef _SDPATTRIBUTE_H_
 #define _SDPATTRIBUTE_H_
 
+#include <algorithm>
 #include <vector>
 #include <ostream>
 #include <sstream>
@@ -424,6 +425,23 @@ public:
   {
     Group value = { semantics, tags };
     mGroups.push_back(value);
+  }
+
+  void
+  RemoveMid(const std::string& mid)
+  {
+    for (auto i = mGroups.begin(); i != mGroups.end();) {
+      auto tag = std::find(i->tags.begin(), i->tags.end(), mid);
+      if (tag != i->tags.end()) {
+        i->tags.erase(tag);
+      }
+
+      if (i->tags.empty()) {
+        i = mGroups.erase(i);
+      } else {
+        ++i;
+      }
+    }
   }
 
   virtual void Serialize(std::ostream& os) const MOZ_OVERRIDE;
