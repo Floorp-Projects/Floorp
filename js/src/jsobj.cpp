@@ -2417,7 +2417,7 @@ DefineStandardSlot(JSContext *cx, HandleObject obj, JSProtoKey key, JSAtom *atom
             global->setConstructorPropertySlot(key, v);
 
             uint32_t slot = GlobalObject::constructorPropertySlot(key);
-            if (!NativeObject::addProperty(cx, global, id, JS_PropertyStub, JS_StrictPropertyStub, slot, attrs, 0))
+            if (!NativeObject::addProperty(cx, global, id, nullptr, nullptr, slot, attrs, 0))
                 return false;
 
             named = true;
