@@ -3430,7 +3430,7 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock)
 #endif
 
     ChunkPool toFree = expireEmptyChunkPool(shouldShrink, lock);
-    {
+    if (toFree.count()) {
         AutoUnlockGC unlock(lock);
         FreeChunkPool(rt, toFree);
     }
