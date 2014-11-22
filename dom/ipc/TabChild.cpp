@@ -2395,6 +2395,64 @@ TabChild::CancelTapTracking()
   mTapHoldTimer = nullptr;
 }
 
+static dom::Element*
+GetScrollableAncestor(nsIFrame* aTarget)
+{
+  if (!aTarget) {
+    return nullptr;
+  }
+  uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT
+                 | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE;
+  nsIScrollableFrame* scrollTarget = nsLayoutUtils::GetNearestScrollableFrame(
+    aTarget, flags);
+  if (!scrollTarget) {
+    return nullptr;
+  }
+  nsIFrame* scrolledFrame = scrollTarget->GetScrolledFrame();
+  if (!scrolledFrame) {
+    return nullptr;
+  }
+
+  // |scrolledFrame| should at this point be the root content frame of the
+  // nearest ancestor scrollable frame. The element corresponding to this
+  // frame should be the one with the displayport set on it, so find that
+  // element and return it.
+  nsIContent* content = scrolledFrame->GetContent();
+  MOZ_ASSERT(content->IsElement()); // roc says this must be true
+  return content->AsElement();
+}
+
+void
+TabChild::SendSetTargetAPZCNotification(const WidgetTouchEvent& aEvent,
+                                        const ScrollableLayerGuid& aGuid,
+                                        const uint64_t& aInputBlockId)
+{
+  nsCOMPtr<nsIDocument> document(GetDocument());
+  nsIPresShell* shell = document->GetShell();
+  if (!shell) {
+    return;
+  }
+  nsIFrame* rootFrame = shell->GetRootFrame();
+  if (!rootFrame) {
+    return;
+  }
+
+  nsTArray<ScrollableLayerGuid> targets;
+  for (size_t i = 0; i < aEvent.touches.Length(); i++) {
+    ScrollableLayerGuid guid(aGuid.mLayersId, 0, FrameMetrics::NULL_SCROLL_ID);
+    nsPoint touchPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(
+      WebWidget(), aEvent.touches[i]->mRefPoint, rootFrame);
+    nsIFrame* target = nsLayoutUtils::GetFrameForPoint(rootFrame, touchPoint,
+      nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
+    APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+      GetScrollableAncestor(target),
+      &(guid.mPresShellId),
+      &(guid.mScrollId));
+    targets.AppendElement(guid);
+  }
+  SendSetTargetAPZC(aInputBlockId, targets);
+}
+
 bool
 TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
                              const ScrollableLayerGuid& aGuid,
@@ -2402,12 +2460,17 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
 {
   TABC_LOG("Receiving touch event of type %d\n", aEvent.message);
 
-  WidgetTouchEvent localEvent(aEvent);
-  localEvent.widget = mWidget;
-  for (size_t i = 0; i < localEvent.touches.Length(); i++) {
+  for (size_t i = 0; i < aEvent.touches.Length(); i++) {
     aEvent.touches[i]->mRefPoint = APZCCallbackHelper::ApplyCallbackTransform(aEvent.touches[i]->mRefPoint, aGuid, mWidget->GetDefaultScale());
   }
 
+  if (aEvent.message == NS_TOUCH_START && IsAsyncPanZoomEnabled()) {
+    SendSetTargetAPZCNotification(aEvent, aGuid, aInputBlockId);
+  }
+
+  WidgetTouchEvent localEvent(aEvent);
+  localEvent.widget = mWidget;
+  // Dispatch event to content (potentially a long-running operation)
   nsEventStatus status = DispatchWidgetEvent(localEvent);
 
   if (!IsAsyncPanZoomEnabled()) {

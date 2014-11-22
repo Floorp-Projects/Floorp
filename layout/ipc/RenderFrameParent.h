@@ -101,6 +101,8 @@ public:
   void ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
                             uint64_t aInputBlockId,
                             bool aPreventDefault);
+  void SetTargetAPZC(uint64_t aInputBlockId,
+                     const nsTArray<ScrollableLayerGuid>& aTargets);
 
   void UpdateZoomConstraints(uint32_t aPresShellId,
                              ViewID aViewId,
