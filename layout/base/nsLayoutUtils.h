@@ -1149,13 +1149,17 @@ public:
    *                  example, a <video>'s poster-image has a dedicated
    *                  anonymous element & child-frame, but we should still use
    *                  the <video>'s 'object-fit' and 'object-position' values.)
+   * @param aAnchorPoint [out] A point that should be pixel-aligned by functions
+   *                           like nsLayoutUtils::DrawImage. See documentation
+   *                           in nsCSSRendering.h for ComputeObjectAnchorPoint.
    * @return The nsRect into which we should render the replaced content (using
    *         the same coordinate space as the passed-in aConstraintRect).
    */
   static nsRect ComputeObjectDestRect(const nsRect& aConstraintRect,
                                       const IntrinsicSize& aIntrinsicSize,
                                       const nsSize& aIntrinsicRatio,
-                                      const nsStylePosition* aStylePos);
+                                      const nsStylePosition* aStylePos,
+                                      nsPoint* aAnchorPoint = nullptr);
 
   /**
    * Get the font metrics corresponding to the frame's style data.
@@ -1677,6 +1681,8 @@ public:
    *                            raster images.
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_*
    *                            variety.
+   *   @param aAnchor           If non-null, a point which we will ensure
+   *                            is pixel-aligned in the output.
    *   @param aSourceArea       If non-null, this area is extracted from
    *                            the image and drawn in aDest. It's
    *                            in appunits. For best results it should
@@ -1690,6 +1696,7 @@ public:
                                   const nsRect&       aDirty,
                                   const mozilla::SVGImageContext* aSVGContext,
                                   uint32_t            aImageFlags,
+                                  const nsPoint*      aAnchorPoint = nullptr,
                                   const nsRect*       aSourceArea = nullptr);
 
   /**
