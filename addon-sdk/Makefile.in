@@ -12,6 +12,7 @@ ADDONS = $(patsubst $(ADDONSRC)/%/package.json,$(TESTADDONS)/%.xpi,$(wildcard $(
 INSTALL_TARGETS += test_addons
 test_addons_FILES = $(ADDONS)
 test_addons_DEST = $(TESTROOT)
+test_addons_TARGET := misc
 
 sinclude $(topsrcdir)/config/rules.mk
 
