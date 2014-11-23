@@ -671,12 +671,14 @@ Factory::GetD2DVRAMUsageSourceSurface()
 void
 Factory::D2DCleanup()
 {
+#ifdef USE_D2D1_1
   if (mD2D1Device) {
     mD2D1Device->Release();
     mD2D1Device = nullptr;
   }
-  DrawTargetD2D::CleanupD2D();
   DrawTargetD2D1::CleanupD2D();
+#endif
+  DrawTargetD2D::CleanupD2D();
 }
 
 #endif // XP_WIN
