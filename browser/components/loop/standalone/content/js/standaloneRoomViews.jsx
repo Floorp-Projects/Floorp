@@ -20,8 +20,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
   var StandaloneRoomInfoArea = React.createClass({
     propTypes: {
       helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired,
-      activeRoomStore:
-        React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
+      activeRoomStore: React.PropTypes.oneOfType([
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
+        React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
+      ]).isRequired,
       feedbackStore:
         React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired
     },
@@ -189,8 +191,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      activeRoomStore:
-        React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
+      activeRoomStore: React.PropTypes.oneOfType([
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore),
+        React.PropTypes.instanceOf(loop.store.FxOSActiveRoomStore)
+      ]).isRequired,
       feedbackStore:
         React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
@@ -379,6 +383,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
                 enableHangup={this._roomIsActive()} />
             </div>
           </div>
+          <loop.fxOSMarketplaceViews.FxOSHiddenMarketplaceView
+            marketplaceSrc={this.state.marketplaceSrc}
+            onMarketplaceMessage={this.state.onMarketplaceMessage} />
           <StandaloneRoomFooter />
         </div>
       );
