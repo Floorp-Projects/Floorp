@@ -964,7 +964,6 @@ Search.prototype = {
       comment: match.engineName,
       icon: match.iconUrl,
       style: "action searchengine",
-      finalCompleteValue: this._trimmedOriginalSearchString,
       frecency: FRECENCY_SEARCHENGINES_DEFAULT,
     });
   },
@@ -1017,7 +1016,6 @@ Search.prototype = {
       value: value,
       comment: uri.spec,
       style: "action visiturl",
-      finalCompleteValue: this._originalSearchString,
       frecency: 0,
     };
 
