@@ -932,6 +932,35 @@
           createBundle("chrome://browser/locale/places/places.properties");
       </field>
 
+      <!-- Override this so that navigating between items results in an item
+           always being selected. This is contrary to the normal behaviour where
+           if you navigate beyond either end of the list, no item will be
+           selected. -->
+      <method name="getNextIndex">
+        <parameter name="reverse"/>
+        <parameter name="amount"/>
+        <parameter name="index"/>
+        <parameter name="maxRow"/>
+        <body><![CDATA[
+          if (maxRow < 0)
+            return -1;
+
+          let newIndex = index + (reverse ? -1 : 1) * amount;
+
+          // We don't want to wrap if navigation in any direction by one item.
+          // Otherwise we clamp to one end of the list.
+          // ie, hitting page-down will only cause is to wrap if we're already
+          // at one end of the list.
+          if (newIndex < 0) {
+            newIndex = index > 0 ? 0 : maxRow;
+          } else if (newIndex > maxRow) {
+            newIndex = index < maxRow ? maxRow : 0;
+          }
+
+          return newIndex;
+        ]]></body>
+      </method>
+
       <property name="maxResults" readonly="true">
         <getter>
           <![CDATA[
@@ -1035,6 +1064,18 @@
             }
 
             return label;
+          ]]>
+        </body>
+      </method>
+
+      <method name="onResultsAdded">
+        <body>
+          <![CDATA[
+            if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
+              return;
+
+            if (this._matchCount > 0 && this.selectedIndex == -1)
+              this.selectedIndex = 0;
           ]]>
         </body>
       </method>
