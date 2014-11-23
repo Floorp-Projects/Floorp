@@ -9,7 +9,7 @@ function g() {
 	try {
             f();
 	} catch (e) {
-	    assertEq(e.message.contains("is not a constructor"), true);
+	    assertEq(e.message.includes("is not a constructor"), true);
 	    count++;
 	}
     }
