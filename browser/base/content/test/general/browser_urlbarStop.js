@@ -11,23 +11,23 @@ function test() {
 function onload() {
   gBrowser.selectedBrowser.removeEventListener("load", onload, true);
 
-  is(gURLBar.value, gURLBar.trimValue(goodURL), "location bar reflects loaded page");
+  is(gURLBar.textValue, gURLBar.trimValue(goodURL), "location bar reflects loaded page");
 
   typeAndSubmit(badURL);
-  is(gURLBar.value, gURLBar.trimValue(badURL), "location bar reflects loading page");
+  is(gURLBar.textValue, gURLBar.trimValue(badURL), "location bar reflects loading page");
 
   gBrowser.contentWindow.stop();
-  is(gURLBar.value, gURLBar.trimValue(goodURL), "location bar reflects loaded page after stop()");
+  is(gURLBar.textValue, gURLBar.trimValue(goodURL), "location bar reflects loaded page after stop()");
   gBrowser.removeCurrentTab();
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  is(gURLBar.value, "", "location bar is empty");
+  is(gURLBar.textValue, "", "location bar is empty");
 
   typeAndSubmit(badURL);
-  is(gURLBar.value, gURLBar.trimValue(badURL), "location bar reflects loading page");
+  is(gURLBar.textValue, gURLBar.trimValue(badURL), "location bar reflects loading page");
 
   gBrowser.contentWindow.stop();
-  is(gURLBar.value, gURLBar.trimValue(badURL), "location bar reflects stopped page in an empty tab");
+  is(gURLBar.textValue, gURLBar.trimValue(badURL), "location bar reflects stopped page in an empty tab");
   gBrowser.removeCurrentTab();
 
   finish();

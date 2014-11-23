@@ -31,8 +31,8 @@ let tests = [
     setup: function() {
       gURLBar.value = testActionURL;
       gURLBar.valueIsTyped = true;
-    is(gURLBar._value, testActionURL, "gURLBar starts with the correct real value");
-    is(gURLBar.value, testURL, "gURLBar starts with the correct display value");
+      is(gURLBar.value, testActionURL, "gURLBar starts with the correct real value");
+      is(gURLBar.textValue, testURL, "gURLBar starts with the correct display value");
 
       // Focus the urlbar so we can select it all & copy
       gURLBar.focus();
@@ -40,7 +40,7 @@ let tests = [
       goDoCommand("cmd_copy");
     },
     success: function() {
-      is(gURLBar._value, testActionURL, "gURLBar.value didn't change when copying");
+      is(gURLBar.value, testActionURL, "gURLBar.value didn't change when copying");
     }
   },
   {
@@ -52,7 +52,7 @@ let tests = [
       goDoCommand("cmd_copy");
     },
     success: function() {
-      is(gURLBar._value, testActionURL, "gURLBar.value didn't change when copying");
+      is(gURLBar.value, testActionURL, "gURLBar.value didn't change when copying");
     }
   },
   {
@@ -74,8 +74,8 @@ let tests = [
       gURLBar.value = testActionURL;
       gURLBar.valueIsTyped = true;
       // Sanity check that we have the right value
-      is(gURLBar._value, testActionURL, "gURLBar starts with the correct real value");
-      is(gURLBar.value, testURL, "gURLBar starts with the correct display value");
+      is(gURLBar.value, testActionURL, "gURLBar starts with the correct real value");
+      is(gURLBar.textValue, testURL, "gURLBar starts with the correct display value");
 
       // Now just select part of the value & cut that.
       gURLBar.selectionStart = testURL.length - 10;
