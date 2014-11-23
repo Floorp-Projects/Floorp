@@ -27,7 +27,7 @@ function g() {
 	try {
 	    f(funs[i % funs.length]);
 	} catch (e) {
-	    assertEq(e.message.contains("not a constructor"), true);
+	    assertEq(e.message.includes("not a constructor"), true);
 	    c++;
 	}
     }
