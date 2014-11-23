@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var li = document.getElementById("li");
+  li.removeChild(li.lastChild);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<ul id="ul">
+<li id="li" style="-moz-column-count: -1; white-space: pre-wrap;"><span>A</span><span>B</span><span style="float: right;"></span>
+
+</li>
+</ul>
+
+</body>
+</html>
