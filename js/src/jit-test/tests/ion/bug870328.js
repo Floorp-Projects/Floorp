@@ -3,5 +3,5 @@ try {
     evalcx("'use strict'; (function() { x = 33; })()", g);
     assertEq(0, 1);
 } catch(e) {
-    assertEq(e.toString().contains("variable x"), true);
+    assertEq(e.toString().includes("variable x"), true);
 }

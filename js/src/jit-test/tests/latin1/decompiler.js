@@ -5,7 +5,7 @@ function f(someName) {
 try {
     f(3);
 } catch(e) {
-    assertEq(e.message.contains("someName"), true);
+    assertEq(e.message.includes("someName"), true);
 }
 
 // TwoByte
@@ -16,5 +16,5 @@ try {
     g(3);
 } catch(e) {
     // Note: string is deflated; don't check for the \u1200.
-    assertEq(e.message.contains("someName"), true);
+    assertEq(e.message.includes("someName"), true);
 }

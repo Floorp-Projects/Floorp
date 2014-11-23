@@ -9,7 +9,7 @@ for (var i=0; i<3; i++) {
 	assertEq(0, 1);
     } catch(e) {
 	c++;
-	assertEq(e.message.contains("undeclared variable"), true);
+	assertEq(e.message.includes("undeclared variable"), true);
     }
 }
 assertEq(c, 3);

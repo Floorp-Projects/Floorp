@@ -14,6 +14,6 @@ g.f();
 assertEq(typeof g.trace, "string");
 
 var frames = g.trace.split("\n");
-assertEq(frames[0].contains("eval code"), true);
+assertEq(frames[0].includes("eval code"), true);
 assertEq(frames[1].startsWith("f@"), true);
 assertEq(frames[2].startsWith("@"), true);
