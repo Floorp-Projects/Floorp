@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  for (var i = 0; i < 200; ++i) {
+    //dump(i + "\n");
+    r1 = document.createElementNS("http://www.w3.org/1999/xhtml", "a");
+    r1.setAttributeNS(null, "href", "404");
+    r1.style.color = "green";
+    r2 = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+    r2.style.color = "red";
+    document.removeChild(document.documentElement);
+    document.appendChild(r1);
+    document.removeChild(document.documentElement);
+    document.appendChild(r2);
+    document.removeChild(document.documentElement);
+    document.appendChild(r1);
+    document.documentElement.offsetHeight;
+  }
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
