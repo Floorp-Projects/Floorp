@@ -139,20 +139,6 @@ MP4Reader::~MP4Reader()
   MOZ_COUNT_DTOR(MP4Reader);
 }
 
-class DestroyPDMTask : public nsRunnable {
-public:
-  DestroyPDMTask(nsAutoPtr<PlatformDecoderModule>& aPDM)
-    : mPDM(aPDM)
-  {}
-  NS_IMETHOD Run() MOZ_OVERRIDE {
-    MOZ_ASSERT(NS_IsMainThread());
-    mPDM = nullptr;
-    return NS_OK;
-  }
-private:
-  nsAutoPtr<PlatformDecoderModule> mPDM;
-};
-
 void
 MP4Reader::Shutdown()
 {
@@ -180,10 +166,8 @@ MP4Reader::Shutdown()
   mQueuedVideoSample = nullptr;
 
   if (mPlatform) {
-    // PDMs are supposed to be destroyed on the main thread...
-    nsRefPtr<DestroyPDMTask> task(new DestroyPDMTask(mPlatform));
-    MOZ_ASSERT(!mPlatform);
-    NS_DispatchToMainThread(task);
+    mPlatform->Shutdown();
+    mPlatform = nullptr;
   }
 }
 
