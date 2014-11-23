@@ -260,6 +260,11 @@
       <field name="_disableTrim">false</field>
       <property name="value">
         <getter><![CDATA[
+          if (typeof this.onBeforeValueGet == "function") {
+            var result = this.onBeforeValueGet();
+            if (result)
+              return result.value;
+          }
           return this.inputField.value;
         ]]></getter>
         <setter><![CDATA[
@@ -559,15 +564,22 @@
           onEvent: function() {}
         })
       ]]></field>
+
+      <method name="onInput">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this.mIgnoreInput && this.mController.input == this) {
+            this.valueIsTyped = true;
+            this.mController.handleText();
+          }
+          this.resetActionType();
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
       <handler event="input"><![CDATA[
-        if (!this.mIgnoreInput && this.mController.input == this) {
-          this.valueIsTyped = true;
-          this.mController.handleText();
-        }
-        this.resetActionType();
+        this.onInput(event);
       ]]></handler>
 
       <handler event="keypress" phase="capturing"
