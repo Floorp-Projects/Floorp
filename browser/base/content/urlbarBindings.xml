@@ -126,6 +126,17 @@
       <field name="_value">""</field>
 
       <!--
+        onBeforeValueGet is called by the base-binding's .value getter.
+        It can return an object with a "value" property, to override the
+        return value of the getter.
+      -->
+      <method name="onBeforeValueGet">
+        <body><![CDATA[
+          return {value: this._value};
+        ]]></body>
+      </method>
+
+      <!--
         onBeforeValueSet is called by the base-binding's .value setter.
         It should return the value that the setter should use.
       -->
@@ -272,31 +283,31 @@
           var mayInheritPrincipal = false;
           var postData = null;
 
-          var action = this._parseActionUrl(url);
+          let action = this._parseActionUrl(this._value);
           let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
 
           let matchLastLocationChange = true;
           if (action) {
-            if (this.hasAttribute("actiontype")) {
-              if (action.type == "switchtab") {
-                url = action.params.url;
+            if (action.type == "switchtab") {
+              url = action.params.url;
+              if (this.hasAttribute("actiontype")) {
                 this.handleRevert();
                 let prevTab = gBrowser.selectedTab;
                 if (switchToTabHavingURI(url) &&
                     isTabEmpty(prevTab))
                   gBrowser.removeTab(prevTab);
                 return;
-              } else if (action.type == "keyword") {
-                url = action.params.url;
-              } else if (action.type == "searchengine") {
-                let engine = Services.search.getEngineByName(action.params.engineName);
-                let submission = engine.getSubmission(action.params.searchQuery);
-
-                url = submission.uri.spec;
-                postData = submission.postData;
-              } else if (action.type == "visiturl") {
-                url = action.params.url;
               }
+            } else if (action.type == "keyword") {
+              url = action.params.url;
+            } else if (action.type == "searchengine") {
+              let engine = Services.search.getEngineByName(action.params.engineName);
+              let submission = engine.getSubmission(action.params.searchQuery);
+
+              url = submission.uri.spec;
+              postData = submission.postData;
+            } else if (action.type == "visiturl") {
+              url = action.params.url;
             }
             continueOperation.call(this);
           }
@@ -571,7 +582,11 @@
               urlbar.inputField.value = urlbar.inputField.value.substring(0, start) +
                                         urlbar.inputField.value.substring(end);
               urlbar.selectionStart = urlbar.selectionEnd = start;
-              urlbar.removeAttribute("actiontype");
+
+              let event = document.createEvent("UIEvents");
+              event.initUIEvent("input", true, false, window, 0);
+              urlbar.dispatchEvent(event);
+
               SetPageProxyState("invalid");
             }
 
@@ -703,8 +718,10 @@
 
           // Trim popup selected values, but never trim results coming from
           // autofill.
-          if (this.popup.selectedIndex == -1)
+          if (this.popup.selectedIndex == -1 ||
+              this.mController.getStyleAt(this.popup.selectedIndex) == "autofill") {
             this._disableTrim = true;
+          }
           this.value = val;
           this._disableTrim = false;
 
@@ -729,7 +746,6 @@
 
           // URL is in the format moz-action:ACTION,PARAMS
           // Where PARAMS is a JSON encoded object.
-          aUrl = decodeURI(aUrl);
           let [, type, params] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
 
           let action = {
@@ -775,6 +791,19 @@
           this.inputField.setSelectionRange(aStartIndex, aEndIndex);
         ]]></body>
       </method>
+
+      <method name="onInput">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this.mIgnoreInput && this.mController.input == this) {
+            this._value = this.inputField.value;
+            gBrowser.userTypedValue = this.value;
+            this.valueIsTyped = true;
+            this.mController.handleText();
+          }
+          this.resetActionType();
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -808,7 +837,7 @@
 
       <handler event="dragstart" phase="capturing"><![CDATA[
         // Drag only if the gesture starts from the input field.
-        if (this.inputField != event.originalTarget && 
+        if (this.inputField != event.originalTarget &&
             !(this.inputField.compareDocumentPosition(event.originalTarget) &
               Node.DOCUMENT_POSITION_CONTAINED_BY))
           return;
