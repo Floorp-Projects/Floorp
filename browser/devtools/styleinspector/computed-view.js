@@ -1012,7 +1012,7 @@ PropertyView.prototype = {
   {
     if (this.visible) {
       let isDark = this.tree._darkStripe = !this.tree._darkStripe;
-      return isDark ? "property-view theme-bg-darker" : "property-view";
+      return isDark ? "property-view row-striped" : "property-view";
     }
     return "property-view-hidden";
   },
@@ -1026,7 +1026,7 @@ PropertyView.prototype = {
   {
     if (this.visible) {
       let isDark = this.tree._darkStripe;
-      return isDark ? "property-content theme-bg-darker" : "property-content";
+      return isDark ? "property-content row-striped" : "property-content";
     }
     return "property-content-hidden";
   },
