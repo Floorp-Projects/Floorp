@@ -97,7 +97,6 @@ let AboutHome = {
     "AboutHome:Settings",
     "AboutHome:RequestUpdate",
     "AboutHome:Search",
-    "AboutHome:OpenSearchPanel",
   ],
 
   init: function() {
@@ -203,21 +202,6 @@ let AboutHome = {
           mm.sendAsyncMessage("AboutHome:SearchTriggered", aMessage.data.searchData);
         });
 
-        break;
-
-      case "AboutHome:OpenSearchPanel":
-        if (!Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
-          return;
-        }
-
-        let panel = window.document.getElementById("abouthome-search-panel");
-        let anchor = aMessage.objects.anchor;
-        panel.openPopup(anchor);
-        anchor.setAttribute("active", "true");
-        panel.addEventListener("popuphidden", function onHidden() {
-          panel.removeEventListener("popuphidden", onHidden);
-          anchor.removeAttribute("active");
-        });
         break;
     }
   },
