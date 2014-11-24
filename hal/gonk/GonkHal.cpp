@@ -238,7 +238,7 @@ namespace {
  * This runnable runs for the lifetime of the program, once started.  It's
  * responsible for "playing" vibration patterns.
  */
-class VibratorRunnable
+class VibratorRunnable MOZ_FINAL
   : public nsIRunnable
   , public nsIObserver
 {
