@@ -11,9 +11,6 @@
   <Param name="q" value="{searchTerms}"/>
   <Param name="ie" value="utf-8"/>
   <Param name="oe" value="utf-8"/>
-  <Param name="aq" value="t"/>
-  <!-- Dynamic parameters -->
-  <Param name="rls" value="{moz:distributionID}:{moz:locale}:{moz:official}"/>
 </Url>
 <SearchForm>https://www.google.com</SearchForm>
 </SearchPlugin>
