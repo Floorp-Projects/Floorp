@@ -518,6 +518,7 @@ child:
     intr GetProfile()
       returns (nsCString aProfile);
 
+    NuwaFreeze();
 parent:
     /**
      * Tell the parent process a new accessible document has been created.
@@ -728,6 +729,9 @@ parent:
     async SystemMessageHandled();
 
     NuwaReady();
+    // Sent when nuwa finished its initialization process and is waiting for
+    // parent's signal to make it freeze.
+    NuwaWaitForFreeze();
 
     sync AddNewProcess(uint32_t pid, ProtocolFdMapping[] aFds);
 
