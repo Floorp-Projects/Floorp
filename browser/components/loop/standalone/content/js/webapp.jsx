@@ -260,6 +260,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
           <div title={mozL10n.get("vendor_alttext",
                                   {vendorShortname: mozL10n.get("vendorShortname")})}
                className="footer-logo"></div>
+          <div className="footer-external-links">
+            <a target="_blank" href={loop.config.guestSupportUrl}>
+              {mozL10n.get("support_link")}
+            </a>
+          </div>
         </div>
       );
     }
