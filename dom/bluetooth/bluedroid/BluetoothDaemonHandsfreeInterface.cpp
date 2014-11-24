@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BluetoothDaemonHandsfreeInterface.h"
+#include "BluetoothDaemonSetupInterface.h"
 #include "mozilla/unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -951,6 +952,289 @@ BluetoothDaemonHandsfreeModule::HandleNtf(
   }
 
   (this->*(HandleNtf[index]))(aHeader, aPDU);
+}
+
+//
+// Handsfree interface
+//
+
+BluetoothDaemonHandsfreeInterface::BluetoothDaemonHandsfreeInterface(
+  BluetoothDaemonHandsfreeModule* aModule)
+  : mModule(aModule)
+{ }
+
+BluetoothDaemonHandsfreeInterface::~BluetoothDaemonHandsfreeInterface()
+{ }
+
+class BluetoothDaemonHandsfreeInterface::InitResultHandler MOZ_FINAL
+  : public BluetoothSetupResultHandler
+{
+public:
+  InitResultHandler(BluetoothHandsfreeResultHandler* aRes)
+    : mRes(aRes)
+  {
+    MOZ_ASSERT(mRes);
+  }
+
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mRes->OnError(aStatus);
+  }
+
+  void RegisterModule() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    mRes->Init();
+  }
+
+private:
+  nsRefPtr<BluetoothHandsfreeResultHandler> mRes;
+};
+
+void
+BluetoothDaemonHandsfreeInterface::Init(
+  BluetoothHandsfreeNotificationHandler* aNotificationHandler,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  // Set notification handler _before_ registering the module. It could
+  // happen that we receive notifications, before the result handler runs.
+  mModule->SetNotificationHandler(aNotificationHandler);
+
+  InitResultHandler* res;
+
+  if (aRes) {
+    res = new InitResultHandler(aRes);
+  } else {
+    // We don't need a result handler if the caller is not interested.
+    res = nullptr;
+  }
+
+  nsresult rv = mModule->RegisterModule(
+    BluetoothDaemonHandsfreeModule::SERVICE_ID, MODE_NARROWBAND_SPEECH, res);
+
+  if (NS_FAILED(rv) && aRes) {
+    DispatchError(aRes, STATUS_FAIL);
+  }
+}
+
+class BluetoothDaemonHandsfreeInterface::CleanupResultHandler MOZ_FINAL
+  : public BluetoothSetupResultHandler
+{
+public:
+  CleanupResultHandler(BluetoothDaemonHandsfreeModule* aModule,
+                       BluetoothHandsfreeResultHandler* aRes)
+    : mModule(aModule)
+    , mRes(aRes)
+  {
+    MOZ_ASSERT(mModule);
+  }
+
+  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (mRes) {
+      mRes->OnError(aStatus);
+    }
+  }
+
+  void UnregisterModule() MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Clear notification handler _after_ module has been
+    // unregistered. While unregistering the module, we might
+    // still receive notifications.
+    mModule->SetNotificationHandler(nullptr);
+
+    if (mRes) {
+      mRes->Cleanup();
+    }
+  }
+
+private:
+  BluetoothDaemonHandsfreeModule* mModule;
+  nsRefPtr<BluetoothHandsfreeResultHandler> mRes;
+};
+
+void
+BluetoothDaemonHandsfreeInterface::Cleanup(
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  mModule->UnregisterModule(BluetoothDaemonHandsfreeModule::SERVICE_ID,
+                            new CleanupResultHandler(mModule, aRes));
+}
+
+/* Connect / Disconnect */
+
+void
+BluetoothDaemonHandsfreeInterface::Connect(
+  const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->ConnectCmd(aBdAddr, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::Disconnect(
+  const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->DisconnectCmd(aBdAddr, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::ConnectAudio(
+  const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->ConnectAudioCmd(aBdAddr, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::DisconnectAudio(
+  const nsAString& aBdAddr, BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->DisconnectAudioCmd(aBdAddr, aRes);
+}
+
+/* Voice Recognition */
+
+void
+BluetoothDaemonHandsfreeInterface::StartVoiceRecognition(
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->StartVoiceRecognitionCmd(aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::StopVoiceRecognition(
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->StopVoiceRecognitionCmd(aRes);
+}
+
+/* Volume */
+
+void
+BluetoothDaemonHandsfreeInterface::VolumeControl(
+  BluetoothHandsfreeVolumeType aType, int aVolume,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->VolumeControlCmd(aType, aVolume, aRes);
+}
+
+/* Device status */
+
+void
+BluetoothDaemonHandsfreeInterface::DeviceStatusNotification(
+  BluetoothHandsfreeNetworkState aNtkState,
+  BluetoothHandsfreeServiceType aSvcType, int aSignal, int aBattChg,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->DeviceStatusNotificationCmd(aNtkState, aSvcType, aSignal,
+                                       aBattChg, aRes);
+}
+
+/* Responses */
+
+void
+BluetoothDaemonHandsfreeInterface::CopsResponse(
+  const char* aCops, BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->CopsResponseCmd(aCops, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::CindResponse(
+  int aSvc, int aNumActive, int aNumHeld,
+  BluetoothHandsfreeCallState aCallSetupState,
+  int aSignal, int aRoam, int aBattChg,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->CindResponseCmd(aSvc, aNumActive, aNumHeld, aCallSetupState,
+                           aSignal, aRoam, aBattChg, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::FormattedAtResponse(
+  const char* aRsp, BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->FormattedAtResponseCmd(aRsp, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::AtResponse(
+  BluetoothHandsfreeAtResponse aResponseCode, int aErrorCode,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->AtResponseCmd(aResponseCode, aErrorCode, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::ClccResponse(
+  int aIndex, BluetoothHandsfreeCallDirection aDir,
+  BluetoothHandsfreeCallState aState,
+  BluetoothHandsfreeCallMode aMode,
+  BluetoothHandsfreeCallMptyType aMpty,
+  const nsAString& aNumber,
+  BluetoothHandsfreeCallAddressType aType,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->ClccResponseCmd(aIndex, aDir, aState, aMode, aMpty, aNumber,
+                           aType, aRes);
+}
+
+/* Phone State */
+
+void
+BluetoothDaemonHandsfreeInterface::PhoneStateChange(
+  int aNumActive, int aNumHeld,
+  BluetoothHandsfreeCallState aCallSetupState,
+  const nsAString& aNumber,
+  BluetoothHandsfreeCallAddressType aType,
+  BluetoothHandsfreeResultHandler* aRes)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->PhoneStateChangeCmd(aNumActive, aNumHeld, aCallSetupState, aNumber,
+                               aType, aRes);
+}
+
+void
+BluetoothDaemonHandsfreeInterface::DispatchError(
+  BluetoothHandsfreeResultHandler* aRes, BluetoothStatus aStatus)
+{
+  BluetoothResultRunnable1<BluetoothHandsfreeResultHandler, void,
+                           BluetoothStatus, BluetoothStatus>::Dispatch(
+    aRes, &BluetoothHandsfreeResultHandler::OnError,
+    ConstantInitOp1<BluetoothStatus>(aStatus));
 }
 
 END_BLUETOOTH_NAMESPACE
