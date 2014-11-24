@@ -21,25 +21,12 @@ add_task(function* test_switchtab_override_keynav() {
     return promiseClearHistory();
   });
 
-  info("Wait for autocomplete")
-  let searchDeferred = Promise.defer();
-  let onSearchComplete = gURLBar.onSearchComplete;
-  registerCleanupFunction(() => {
-    gURLBar.onSearchComplete = onSearchComplete;
-  });
-  gURLBar.onSearchComplete = function () {
-    ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
-    onSearchComplete.apply(gURLBar);
-    searchDeferred.resolve();
-  }
-
   gURLBar.focus();
   gURLBar.value = "dummy_pag";
   EventUtils.synthesizeKey("e" , {});
-  yield searchDeferred.promise;
+  yield promiseSearchComplete();
 
   info("Select second autocomplete popup entry");
-  EventUtils.synthesizeKey("VK_DOWN" , {});
   EventUtils.synthesizeKey("VK_DOWN" , {});
   ok(/moz-action:switchtab/.test(gURLBar.value), "switch to tab entry found");
 

@@ -51,12 +51,12 @@ let gTests = [
 ]
 
 function checkCurrent(aTab) {
-  is(gURLBar.value, TEST_VALUE, "Urlbar should preserve the value on return keypress");
+  is(gURLBar.textValue, TEST_VALUE, "Urlbar should preserve the value on return keypress");
   is(gBrowser.selectedTab, aTab, "New URL was loaded in the current tab");
 }
 
 function checkNewTab(aTab) {
-  is(gURLBar.value, TEST_VALUE, "Urlbar should preserve the value on return keypress");
+  is(gURLBar.textValue, TEST_VALUE, "Urlbar should preserve the value on return keypress");
   isnot(gBrowser.selectedTab, aTab, "New URL was loaded in a new tab");
 }
 

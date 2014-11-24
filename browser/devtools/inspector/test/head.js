@@ -664,3 +664,43 @@ function executeInContent(name, data={}, objects={}, expectResponse=true) {
     return promise.resolve();
   }
 }
+
+/**
+ * Undo the last markup-view action and wait for the corresponding mutation to
+ * occur
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return a promise that resolves when the markup-mutation has been treated or
+ * rejects if no undo action is possible
+ */
+function undoChange(inspector) {
+  let canUndo = inspector.markup.undo.canUndo();
+  ok(canUndo, "The last change in the markup-view can be undone");
+  if (!canUndo) {
+    return promise.reject();
+  }
+
+  let mutated = inspector.once("markupmutation");
+  inspector.markup.undo.undo();
+  return mutated;
+}
+
+/**
+ * Redo the last markup-view action and wait for the corresponding mutation to
+ * occur
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return a promise that resolves when the markup-mutation has been treated or
+ * rejects if no redo action is possible
+ */
+function redoChange(inspector) {
+  let canRedo = inspector.markup.undo.canRedo();
+  ok(canRedo, "The last change in the markup-view can be redone");
+  if (!canRedo) {
+    return promise.reject();
+  }
+
+  let mutated = inspector.once("markupmutation");
+  inspector.markup.undo.redo();
+  return mutated;
+}
