@@ -145,8 +145,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageService",
                                    "nsIMobileMessageService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gSmsService",
-                                   "@mozilla.org/sms/smsservice;1",
-                                   "nsISmsService");
+                                   "@mozilla.org/sms/gonksmsservice;1",
+                                   "nsIGonkSmsService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileMessageDatabaseService",
                                    "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1",

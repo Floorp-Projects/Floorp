@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISmsService.idl"
+
+%{C++
+#define GONK_SMSSERVICE_CONTRACTID \
+        "@mozilla.org/sms/gonksmsservice;1"
+%}
+
+[scriptable, uuid(63fab75e-73b4-11e4-a10d-dbfa9d05a4f4)]
+interface nsIGonkSmsService : nsISmsService
+{
+  /**
+   * TODO: define callback to receive message from the network.
+   */
+};

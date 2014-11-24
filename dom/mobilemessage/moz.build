@@ -34,9 +34,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
         'gonk/MmsService.manifest',
         'gonk/MobileMessageDatabaseService.js',
         'gonk/MobileMessageDatabaseService.manifest',
-    ]
-    UNIFIED_SOURCES += [
-        'gonk/SmsService.cpp',
+        'gonk/SmsService.js',
+        'gonk/SmsService.manifest',
     ]
 
 EXPORTS.mozilla.dom += [
