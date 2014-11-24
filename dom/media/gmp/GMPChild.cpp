@@ -356,32 +356,13 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
 
 #if defined(MOZ_GMP_SANDBOX)
 
-#if defined(XP_LINUX)
-class LinuxSandboxStarter : public SandboxStarter {
-public:
-  LinuxSandboxStarter(const std::string& aLibPath)
-    : mLibPath(aLibPath)
-  {}
-  virtual void Start() MOZ_OVERRIDE {
-    if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
-      mozilla::SetMediaPluginSandbox(mLibPath.c_str());
-    } else {
-      printf_stderr("GMPChild::LoadPluginLibrary: Loading media plugin %s unsandboxed.\n",
-                    mLibPath.c_str());
-    }
-  }
-private:
-  std::string mLibPath;
-};
-#endif
-
 #if defined(XP_MACOSX)
 class MacOSXSandboxStarter : public SandboxStarter {
 public:
   MacOSXSandboxStarter(GMPChild* aGMPChild)
     : mGMPChild(aGMPChild)
   {}
-  virtual void Start() MOZ_OVERRIDE {
+  virtual void Start(const char* aLibPath) MOZ_OVERRIDE {
     mGMPChild->StartMacSandbox();
   }
 private:
@@ -432,16 +413,10 @@ GMPChild::RecvStartPlugin()
     return false;
   }
 
-#if defined(MOZ_GMP_SANDBOX)
-#if defined(XP_MACOSX)
+#if defined(MOZ_GMP_SANDBOX) && defined(XP_MACOSX)
   nsAutoPtr<SandboxStarter> starter(new MacOSXSandboxStarter(this));
   mGMPLoader->SetStartSandboxStarter(starter);
-#elif defined(XP_LINUX)
-  nsAutoPtr<SandboxStarter> starter(new
-    LinuxSandboxStarter(std::string(libPath.get(), libPath.get()+libPath.Length())));
-  mGMPLoader->SetStartSandboxStarter(starter);
 #endif
-#endif // MOZ_GMP_SANDBOX
 
   if (!mGMPLoader->Load(libPath.get(),
                         libPath.Length(),
