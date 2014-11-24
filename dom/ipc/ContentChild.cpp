@@ -507,6 +507,12 @@ NS_IMPL_ISUPPORTS(BackgroundChildPrimer, nsIIPCBackgroundChildCreateCallback)
 
 ContentChild* ContentChild::sSingleton;
 
+static void
+PostForkPreload()
+{
+    TabChild::PostForkPreload();
+}
+
 // Performs initialization that is not fork-safe, i.e. that must be done after
 // forking from the Nuwa process.
 static void
@@ -517,6 +523,7 @@ InitOnContentProcessCreated()
     if (IsNuwaProcess()) {
         return;
     }
+    PostForkPreload();
 #endif
 
     // This will register cross-process observer.
@@ -2081,6 +2088,9 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
 #endif
        ) {
         PreloadSlowThings();
+#ifndef MOZ_NUWA_PROCESS
+        PostForkPreload();
+#endif
     }
 
 #ifdef MOZ_NUWA_PROCESS
