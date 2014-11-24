@@ -84,6 +84,44 @@ IsWindowsBuildOrLater(uint32_t aBuild)
   return false;
 }
 
+#if defined(_M_X64) || defined(_M_AMD64)
+// We support only Win7 or later on Win64.
+MOZ_ALWAYS_INLINE bool
+IsXPSP3OrLater()
+{
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+IsWin2003OrLater()
+{
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+IsWin2003SP2OrLater()
+{
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+IsVistaOrLater()
+{
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+IsVistaSP1OrLater()
+{
+  return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+IsWin7OrLater()
+{
+  return true;
+}
+#else
 MOZ_ALWAYS_INLINE bool
 IsXPSP3OrLater()
 {
@@ -119,6 +157,7 @@ IsWin7OrLater()
 {
   return IsWindowsVersionOrLater(0x06010000ul);
 }
+#endif
 
 MOZ_ALWAYS_INLINE bool
 IsWin7SP1OrLater()
