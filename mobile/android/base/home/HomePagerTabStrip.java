@@ -8,6 +8,7 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.BounceAnimator;
 import org.mozilla.gecko.animation.BounceAnimator.Attributes;
+import org.mozilla.gecko.animation.TransitionsTracker;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -119,6 +120,8 @@ class HomePagerTabStrip extends PagerTabStrip {
         nextBounceAnimator.queue(new Attributes(bounceDistance/4, BOUNCE2_MS));
         nextBounceAnimator.queue(new Attributes(0, BOUNCE4_MS));
         nextBounceAnimator.setStartDelay(ANIMATION_DELAY_MS);
+
+        TransitionsTracker.track(nextBounceAnimator);
 
         // Start animations.
         alphaAnimatorSet.start();
