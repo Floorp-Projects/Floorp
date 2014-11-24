@@ -276,6 +276,13 @@
       </hbox>
     </panel>
 
+    <panel id="abouthome-search-panel" orient="vertical" type="arrow" hidden="true">
+      <hbox id="abouthome-search-panel-manage" class="abouthome-search-panel-item"
+            onclick="openPreferences('paneSearch')">
+        <label>&cmd_engineManager.label;</label>
+      </hbox>
+    </panel>
+
     <panel id="social-share-panel"
            class="social-panel"
            type="arrow"
