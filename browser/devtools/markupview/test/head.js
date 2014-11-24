@@ -252,7 +252,7 @@ let clickContainer = Task.async(function*(selector, inspector) {
   let nodeFront = yield getNodeFront(selector, inspector);
   let container = getContainerForNodeFront(nodeFront, inspector);
 
-  let updated = inspector.once("inspector-updated");
+  let updated = container.selected ? promise.resolve() : inspector.once("inspector-updated");
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousedown"},
     inspector.markup.doc.defaultView);
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mouseup"},

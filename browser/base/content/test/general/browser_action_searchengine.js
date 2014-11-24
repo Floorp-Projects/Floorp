@@ -43,11 +43,14 @@ add_task(function* () {
 
   let result = yield promise_first_result("open a search");
   isnot(result, null, "Should have a result");
+  is(result.getAttribute("url"),
+     `moz-action:searchengine,{"engineName":"MozSearch","input":"open a search","searchQuery":"open a search"}`,
+     "Result should be a moz-action: for the correct search engine");
   is(result.hasAttribute("image"), false, "Result shouldn't have an image attribute");
 
   let tabPromise = promiseTabLoaded(gBrowser.selectedTab);
   EventUtils.synthesizeMouseAtCenter(result, {});
   yield tabPromise;
 
-  is(gBrowser.selectedBrowser.currentURI.spec, "http://example.com/?q=open+a+search");
+  is(gBrowser.selectedBrowser.currentURI.spec, "http://example.com/?q=open+a+search", "Correct URL should be loaded");
 });

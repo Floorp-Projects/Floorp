@@ -41,7 +41,7 @@ function testNext() {
 
   gURLBar.focus();
   paste(inputValue, function() {
-    is(gURLBar.value, expectedURL, "entering '" + inputValue + "' strips relevant bits.");
+    is(gURLBar.textValue, expectedURL, "entering '" + inputValue + "' strips relevant bits.");
 
     setTimeout(testNext, 0);
   });

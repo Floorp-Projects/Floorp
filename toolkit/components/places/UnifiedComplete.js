@@ -17,7 +17,7 @@ const PREF_BRANCH = "browser.urlbar.";
 const PREF_ENABLED =                [ "autocomplete.enabled",   true ];
 const PREF_AUTOFILL =               [ "autoFill",               true ];
 const PREF_AUTOFILL_TYPED =         [ "autoFill.typed",         true ];
-const PREF_AUTOFILL_SEARCHENGINES = [ "autoFill.searchEngines", true ];
+const PREF_AUTOFILL_SEARCHENGINES = [ "autoFill.searchEngines", false ];
 const PREF_RESTYLESEARCHES        = [ "restyleSearches",        false ];
 const PREF_DELAY =                  [ "delay",                  50 ];
 const PREF_BEHAVIOR =               [ "matchBehavior", MATCH_BOUNDARY_ANYWHERE ];
@@ -964,7 +964,6 @@ Search.prototype = {
       comment: match.engineName,
       icon: match.iconUrl,
       style: "action searchengine",
-      finalCompleteValue: this._trimmedOriginalSearchString,
       frecency: FRECENCY_SEARCHENGINES_DEFAULT,
     });
   },
@@ -1017,7 +1016,6 @@ Search.prototype = {
       value: value,
       comment: uri.spec,
       style: "action visiturl",
-      finalCompleteValue: this._originalSearchString,
       frecency: 0,
     };
 

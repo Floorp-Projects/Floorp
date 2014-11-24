@@ -18,7 +18,7 @@ function getConfigFile(req, res) {
   res.send([
     "var loop = loop || {};",
     "loop.config = loop.config || {};",
-    "loop.config.serverUrl = 'http://localhost:" + loopServerPort + "';",
+    "loop.config.serverUrl = 'http://localhost:" + loopServerPort + "/v0';",
     "loop.config.feedbackApiUrl = '" + feedbackApiUrl + "';",
     "loop.config.feedbackProductName = '" + feedbackProductName + "';",
     // XXX Update with the real marketplace url once the FxOS Loop app is
