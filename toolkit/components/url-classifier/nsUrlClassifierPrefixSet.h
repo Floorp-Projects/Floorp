@@ -36,6 +36,7 @@ public:
   NS_IMETHOD LoadFromFile(nsIFile* aFile);
   NS_IMETHOD StoreToFile(nsIFile* aFile);
 
+  nsresult GetPrefixesNative(FallibleTArray<uint32_t>& outArray);
   size_t SizeInMemory() { return mMemoryInUse; };
 
   NS_DECL_THREADSAFE_ISUPPORTS
