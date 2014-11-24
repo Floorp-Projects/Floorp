@@ -45,7 +45,7 @@ NS_EXPORT int android_sdk_version;
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-#include "mozilla/Sandbox.h"
+#include "mozilla/SandboxInfo.h"
 #endif
 
 // Slot for NS_InitXPCOM2 to pass information to nsSystemInfo::Init.
@@ -357,20 +357,19 @@ nsSystemInfo::Init()
 #endif
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  SandboxFeatureFlags sandboxFlags = GetSandboxFeatureFlags();
-  SetPropertyAsBool(NS_LITERAL_STRING("hasSeccompBPF"),
-                    sandboxFlags & kSandboxFeatureSeccompBPF);
+  SandboxInfo sandInfo = SandboxInfo::Get();
 
-  SandboxStatus sandboxContent = ContentProcessSandboxStatus();
-  if (sandboxContent != kSandboxingDisabled) {
+  SetPropertyAsBool(NS_LITERAL_STRING("hasSeccompBPF"),
+                    sandInfo.Test(SandboxInfo::kHasSeccompBPF));
+
+  if (sandInfo.Test(SandboxInfo::kEnabledForContent)) {
     SetPropertyAsBool(NS_LITERAL_STRING("canSandboxContent"),
-                      sandboxContent != kSandboxingWouldFail);
+                      sandInfo.CanSandboxContent());
   }
 
-  SandboxStatus sandboxMedia = MediaPluginSandboxStatus();
-  if (sandboxMedia != kSandboxingDisabled) {
+  if (sandInfo.Test(SandboxInfo::kEnabledForMedia)) {
     SetPropertyAsBool(NS_LITERAL_STRING("canSandboxMedia"),
-                      sandboxMedia != kSandboxingWouldFail);
+                      sandInfo.CanSandboxMedia());
   }
 #endif // XP_LINUX && MOZ_SANDBOX
 

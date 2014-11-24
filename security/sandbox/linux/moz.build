@@ -43,5 +43,6 @@ if CONFIG['OS_TARGET'] != 'Android':
     ]
 
 DIRS += [
+    'common',
     'glue',
 ]
