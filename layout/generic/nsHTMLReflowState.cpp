@@ -192,6 +192,16 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   AvailableISize() = aAvailableSpace.ISize(mWritingMode);
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
 
+  if (mWritingMode.IsOrthogonalTo(aParentReflowState.GetWritingMode())) {
+    // If we're setting up for an orthogonal flow, and the parent reflow state
+    // had a constrained ComputedBSize, we can use that as our AvailableISize
+    // in preference to leaving it unconstrained.
+    if (AvailableISize() == NS_UNCONSTRAINEDSIZE &&
+        aParentReflowState.ComputedBSize() != NS_UNCONSTRAINEDSIZE) {
+      AvailableISize() = aParentReflowState.ComputedBSize();
+    }
+  }
+
   mFloatManager = aParentReflowState.mFloatManager;
   if (frame->IsFrameOfType(nsIFrame::eLineParticipant))
     mLineLayout = aParentReflowState.mLineLayout;
