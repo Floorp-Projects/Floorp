@@ -60,7 +60,9 @@ __sanitizer_sandbox_on_notify(__sanitizer_sandbox_arguments *args);
 
 namespace mozilla {
 
+#ifdef ANDROID
 SandboxCrashFunc gSandboxCrashFunc;
+#endif
 
 #ifdef MOZ_GMP_SANDBOX
 // For media plugins, we can start the sandbox before we dlopen the
