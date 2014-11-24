@@ -19,7 +19,7 @@
 #include "GMPTimerParent.h"
 #include "runnable_utils.h"
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-#include "mozilla/Sandbox.h"
+#include "mozilla/SandboxInfo.h"
 #endif
 
 #include "mozilla/dom/CrashReporterParent.h"
@@ -963,7 +963,7 @@ GMPParent::ReadGMPMetaData()
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
     if (cap->mAPIName.EqualsLiteral("eme-decrypt") &&
-        mozilla::MediaPluginSandboxStatus() == mozilla::kSandboxingWouldFail) {
+        !mozilla::SandboxInfo::Get().CanSandboxMedia()) {
       printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
                     " but this system can't sandbox it; not loading.\n",
                     mDisplayName.get());

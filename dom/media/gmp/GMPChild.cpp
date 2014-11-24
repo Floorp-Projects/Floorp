@@ -33,11 +33,14 @@ static const int MAX_PLUGIN_VOUCHER_LENGTH = 500000;
 #include <unistd.h> // for _exit()
 #endif
 
-#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+#if defined(MOZ_GMP_SANDBOX)
+#if defined(XP_WIN)
 #define TARGET_SANDBOX_EXPORTS
 #include "mozilla/sandboxTarget.h"
-#elif defined (MOZ_GMP_SANDBOX)
-#if defined(XP_LINUX) || defined(XP_MACOSX)
+#elif defined (XP_LINUX)
+#include "mozilla/Sandbox.h"
+#include "mozilla/SandboxInfo.h"
+#elif defined(XP_MACOSX)
 #include "mozilla/Sandbox.h"
 #endif
 #endif
@@ -360,7 +363,7 @@ public:
     : mLibPath(aLibPath)
   {}
   virtual void Start() MOZ_OVERRIDE {
-    if (mozilla::MediaPluginSandboxStatus() != mozilla::kSandboxingWouldFail) {
+    if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
       mozilla::SetMediaPluginSandbox(mLibPath.c_str());
     } else {
       printf_stderr("GMPChild::LoadPluginLibrary: Loading media plugin %s unsandboxed.\n",
