@@ -6,12 +6,12 @@
 <script src="/resources/testharnessreport.js"></script>
 <script src="/dom/nodes/selectors.js"></script>
 <script src="level2-lib.js"></script>
+<script src="Element-matches.js"></script>
 <style>iframe { visibility: hidden; position: absolute; }</style>
 
 <div id="log">This test requires JavaScript.</div>
 
 <script>
-var testType = TEST_FIND | TEST_MATCH;
 var docType  = "html"; // Only run tests suitable for HTML
 
 var frame = document.createElement("iframe"),
@@ -64,36 +64,24 @@ function init() {
   fragment.appendChild(element.cloneNode(true));
 
   // Setup Tests
-  interfaceCheck("Document", doc, testType);
-  interfaceCheck("Detached Element", detached, testType);
-  interfaceCheck("Fragment", fragment, testType);
-  interfaceCheck("In-document Element", element, testType);
-
-  runSpecialSelectorTests("Document", doc);
-  runSpecialSelectorTests("Detached Element", detached);
-  runSpecialSelectorTests("Fragment", fragment);
-  runSpecialSelectorTests("In-document Element", element);
+  interfaceCheckMatches("Document", doc);
+  interfaceCheckMatches("Detached Element", detached);
+  interfaceCheckMatches("Fragment", fragment);
+  interfaceCheckMatches("In-document Element", element);
 
   runSpecialMatchesTests("DIV Element", element);
   runSpecialMatchesTests("NULL Element", document.createElement("null"));
   runSpecialMatchesTests("UNDEFINED Element", document.createElement("undefined"));
 
-  verifyStaticList("Document", doc);
-  verifyStaticList("Detached Element", detached);
-  verifyStaticList("Fragment", fragment);
-  verifyStaticList("In-document Element", element);
+  runInvalidSelectorTestMatches("Document", doc, invalidSelectors);
+  runInvalidSelectorTestMatches("Detached Element", detached, invalidSelectors);
+  runInvalidSelectorTestMatches("Fragment", fragment, invalidSelectors);
+  runInvalidSelectorTestMatches("In-document Element", element, invalidSelectors);
 
-  runInvalidSelectorTest("Document", doc, invalidSelectors);
-  runInvalidSelectorTest("Detached Element", detached, invalidSelectors);
-  runInvalidSelectorTest("Fragment", fragment, invalidSelectors);
-  runInvalidSelectorTest("In-document Element", element, invalidSelectors);
+  runMatchesTest("In-document", doc, validSelectors, "html");
+  runMatchesTest("Detached", detached, validSelectors, "html");
+  runMatchesTest("Fragment", fragment, validSelectors, "html");
 
-  runMatchesTest("In-document", doc, validSelectors, testType, "html");
-  runMatchesTest("Detached", detached, validSelectors, testType, "html");
-  runMatchesTest("Fragment", fragment, validSelectors, testType, "html");
-
-  runMatchesTest("In-document", doc, scopedSelectors, testType, "html");
-
-  runValidSelectorTest("In-document", doc, scopedSelectors, testType, "html");
+  runMatchesTest("In-document", doc, scopedSelectors, "html");
 }
 </script>

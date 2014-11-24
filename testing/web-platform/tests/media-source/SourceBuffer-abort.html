@@ -10,40 +10,24 @@
 <div id="log"></div>
 
 <script>
-var video = document.createElement('video');
 var mimes = ['video/webm; codecs="vorbis,vp8"', 'video/mp4'];
 
-//check the browser supports the MIME used in this test
-function isTypeSupported(mime) {
-    if(!MediaSource.isTypeSupported(mime)) {
-        this.step(function() {
-            assert_unreached("Browser doesn't support the MIME used in this test: " + mime);
-        });
-        this.done();
-        return false;
-    }
-    return true;
-}
-function mediaTest(mime) {
-    async_test(function(t) {
-        if(!isTypeSupported.bind(t)(mime)) {
-            return;
-        }
+mimes.forEach(function(mime) {
+    async_test(function() {
+        assert_true(MediaSource.isTypeSupported(mime),
+                    "Browser doesn't support the MIME used in this test: " + mime);
+
         var mediaSource = new MediaSource();
-        mediaSource.addEventListener('sourceopen', function(e) {
+        mediaSource.addEventListener('sourceopen', this.step_func_done(function(e) {
             var sourceBuffer = mediaSource.addSourceBuffer(mime);
             sourceBuffer.abort();
-            t.step(function() {
-                assert_equals(sourceBuffer.appendWindowStart, 0);
-                assert_equals(sourceBuffer.appendWindowEnd, Number.POSITIVE_INFINITY);
-            });
-            t.done();
-        });
+            assert_equals(sourceBuffer.appendWindowStart, 0);
+            assert_equals(sourceBuffer.appendWindowEnd, Number.POSITIVE_INFINITY);
+        }));
+
+        var video = document.createElement('video');
         video.src = window.URL.createObjectURL(mediaSource);
     }, 'SourceBuffer#abort() (' + mime + '): Check the values of appendWindowStart and appendWindowEnd.');
-}
-mimes.forEach(function(mime) {
-    mediaTest(mime);
 });
 </script>
 </body>
