@@ -590,25 +590,37 @@ CheckI4(WWI, 'var x = i4(1,2,3,4); x = w(x, 42);', [1, 2, 3, 42]);
 // yields all bits set to 0 (i.e 0).
 const T = -1;
 const F = 0;
-assertAsmTypeFail('glob', USE_ASM + I32 + "var lt=i4.lessThanOrEqual; function f() {} return f");
-assertAsmTypeFail('glob', USE_ASM + I32 + "var ge=i4.greaterThanOrEqual; function f() {} return f");
-assertAsmTypeFail('glob', USE_ASM + I32 + "var ne=i4.notEqual; function f() {} return f");
 
+const EQI32 = 'var eq = i4.equal';
+const NEI32 = 'var ne = i4.notEqual';
 const LTI32 = 'var lt = i4.lessThan;';
+const LEI32 = 'var le = i4.lessThanOrEqual';
 const GTI32 = 'var gt = i4.greaterThan;';
-const EQI32 = 'var eq = i4.equal;';
-
-CheckI4(LTI32, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=lt(x,y)', [F, F, F, F]);
-CheckI4(LTI32, 'var x=i4(-1,1,0,2); var y=i4(1,2,3,4); x=lt(x,y)', [T, T, T, T]);
-CheckI4(LTI32, 'var x=i4(1,0,3,4); var y=i4(1,1,7,0); x=lt(x,y)', [F, T, T, F]);
+const GEI32 = 'var ge = i4.greaterThanOrEqual';
 
 CheckI4(EQI32, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=eq(x,y)', [F, F, F, F]);
 CheckI4(EQI32, 'var x=i4(-1,1,0,2); var y=i4(1,2,3,4); x=eq(x,y)', [F, F, F, F]);
 CheckI4(EQI32, 'var x=i4(1,0,3,4); var y=i4(1,1,7,0); x=eq(x,y)', [T, F, F, F]);
 
+CheckI4(NEI32, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=ne(x,y)', [T, T, T, T]);
+CheckI4(NEI32, 'var x=i4(-1,1,0,2); var y=i4(1,2,3,4); x=ne(x,y)', [T, T, T, T]);
+CheckI4(NEI32, 'var x=i4(1,0,3,4); var y=i4(1,1,7,0); x=ne(x,y)', [F, T, T, T]);
+
+CheckI4(LTI32, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=lt(x,y)', [F, F, F, F]);
+CheckI4(LTI32, 'var x=i4(-1,1,0,2); var y=i4(1,2,3,4); x=lt(x,y)', [T, T, T, T]);
+CheckI4(LTI32, 'var x=i4(1,0,3,4); var y=i4(1,1,7,0); x=lt(x,y)', [F, T, T, F]);
+
+CheckI4(LEI32, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=le(x,y)', [F, F, F, F]);
+CheckI4(LEI32, 'var x=i4(-1,1,0,2); var y=i4(1,2,3,4); x=le(x,y)', [T, T, T, T]);
+CheckI4(LEI32, 'var x=i4(1,0,3,4); var y=i4(1,1,7,0); x=le(x,y)', [T, T, T, F]);
+
 CheckI4(GTI32, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=gt(x,y)', [T, T, T, T]);
 CheckI4(GTI32, 'var x=i4(-1,1,0,2); var y=i4(1,2,3,4); x=gt(x,y)', [F, F, F, F]);
 CheckI4(GTI32, 'var x=i4(1,0,3,4); var y=i4(1,1,7,0); x=gt(x,y)', [F, F, F, T]);
+
+CheckI4(GEI32, 'var x=i4(1,2,3,4); var y=i4(-1,1,0,2); x=ge(x,y)', [T, T, T, T]);
+CheckI4(GEI32, 'var x=i4(-1,1,0,2); var y=i4(1,2,3,4); x=ge(x,y)', [F, F, F, F]);
+CheckI4(GEI32, 'var x=i4(1,0,3,4); var y=i4(1,1,7,0); x=ge(x,y)', [T, F, F, T]);
 
 const LTF32 = 'var lt=f4.lessThan;';
 const LEF32 = 'var le=f4.lessThanOrEqual;';
