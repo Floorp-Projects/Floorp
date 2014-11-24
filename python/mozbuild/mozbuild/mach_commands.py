@@ -666,12 +666,28 @@ class GTestCommands(MachCommandBase):
         help='Output test results in a format that can be parsed by TBPL.')
     @CommandArgument('--shuffle', '-s', action='store_true',
         help='Randomize the execution order of tests.')
-    def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser):
+
+    @CommandArgumentGroup('debugging')
+    @CommandArgument('--debug', action='store_true', group='debugging',
+        help='Enable the debugger. Not specifying a --debugger option will result in the default debugger being used. The following arguments have no effect without this.')
+    @CommandArgument('--debugger', default=None, type=str, group='debugging',
+        help='Name of debugger to use.')
+    @CommandArgument('--debugger-args', default=None, metavar='params', type=str,
+        group='debugging',
+        help='Command-line arguments to pass to the debugger itself; split as the Bourne shell would.')
+
+    def gtest(self, shuffle, jobs, gtest_filter, tbpl_parser, debug, debugger,
+              debugger_args):
 
         # We lazy build gtest because it's slow to link
         self._run_make(directory="testing/gtest", target='gtest', ensure_exit_code=True)
 
         app_path = self.get_binary_path('app')
+        args = [app_path, '-unittest'];
+
+        if debug:
+            args = self.prepend_debugger_args(args, debugger, debugger_args)
+
         cwd = os.path.join(self.topobjdir, '_tests', 'gtest')
 
         if not os.path.isdir(cwd):
@@ -695,7 +711,7 @@ class GTestCommands(MachCommandBase):
             gtest_env[b"MOZ_TBPL_PARSER"] = b"True"
 
         if jobs == 1:
-            return self.run_process([app_path, "-unittest"],
+            return self.run_process(args=args,
                                     append_env=gtest_env,
                                     cwd=cwd,
                                     ensure_exit_code=False,
@@ -731,6 +747,43 @@ class GTestCommands(MachCommandBase):
             exit_code = 255
 
         return exit_code
+
+    def prepend_debugger_args(self, args, debugger, debugger_args):
+        '''
+        Given an array with program arguments, prepend arguments to run it under a
+        debugger.
+
+        :param args: The executable and arguments used to run the process normally.
+        :param debugger: The debugger to use, or empty to use the default debugger.
+        :param debugger_args: Any additional parameters to pass to the debugger.
+        '''
+
+        import mozdebug
+
+        if not debugger:
+            # No debugger name was provided. Look for the default ones on
+            # current OS.
+            debugger = mozdebug.get_default_debugger_name(mozdebug.DebuggerSearch.KeepLooking)
+
+        debuggerInfo = mozdebug.get_debugger_info(debugger, debugger_args)
+        if not debuggerInfo:
+            print("Could not find a suitable debugger in your PATH.")
+            return 1
+
+        # Parameters come from the CLI. We need to convert them before
+        # their use.
+        if debugger_args:
+            import pymake.process
+            argv, badchar = pymake.process.clinetoargv(debugger_args, os.getcwd())
+            if badchar:
+                print("The --debugger_args you passed require a real shell to parse them.")
+                print("(We can't handle the %r character.)" % (badchar,))
+                return 1
+            debugger_args = argv;
+
+        # Prepend the debugger args.
+        args = [debuggerInfo.path] + debuggerInfo.args + args
+        return args
 
 @CommandProvider
 class ClangCommands(MachCommandBase):
