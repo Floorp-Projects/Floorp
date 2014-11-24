@@ -2304,6 +2304,12 @@ NS_IMETHODIMP PresShell::GetSelectionFlags(int16_t *aOutEnable)
 //implementation of nsISelectionController
 
 NS_IMETHODIMP
+PresShell::PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend)
+{
+  return mSelection->PhysicalMove(aDirection, aAmount, aExtend);
+}
+
+NS_IMETHODIMP
 PresShell::CharacterMove(bool aForward, bool aExtend)
 {
   return mSelection->CharacterMove(aForward, aExtend);
@@ -7230,13 +7236,13 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 #ifdef MOZ_TASK_TRACER
   // Make touch events, mouse events and hardware key events to be the source
   // events of TaskTracer, and originate the rest correlation tasks from here.
-  SourceEventType type = SourceEventType::UNKNOWN;
+  SourceEventType type = SourceEventType::Unknown;
   if (WidgetTouchEvent* inputEvent = aEvent->AsTouchEvent()) {
-    type = SourceEventType::TOUCH;
+    type = SourceEventType::Touch;
   } else if (WidgetMouseEvent* inputEvent = aEvent->AsMouseEvent()) {
-    type = SourceEventType::MOUSE;
+    type = SourceEventType::Mouse;
   } else if (WidgetKeyboardEvent* inputEvent = aEvent->AsKeyboardEvent()) {
-    type = SourceEventType::KEY;
+    type = SourceEventType::Key;
   }
   AutoSourceEvent taskTracerEvent(type);
 #endif
