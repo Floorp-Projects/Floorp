@@ -8,9 +8,43 @@ const kSelectedEnginePref = "browser.search.selectedEngine";
 
 const kTestEngineName = "Test search engine";
 
+// These two functions (getLocale and getIsUS) are copied from nsSearchService.js
+function getLocale() {
+  let LOCALE_PREF = "general.useragent.locale";
+  return Services.prefs.getCharPref(LOCALE_PREF);
+}
+
+function getIsUS() {
+  if (getLocale() != "en-US") {
+    return false;
+  }
+
+  // Timezone assumptions! We assume that if the system clock's timezone is
+  // between Newfoundland and Hawaii, that the user is in North America.
+
+  // This includes all of South America as well, but we have relatively few
+  // en-US users there, so that's OK.
+
+  // 150 minutes = 2.5 hours (UTC-2.5), which is
+  // Newfoundland Daylight Time (http://www.timeanddate.com/time/zones/ndt)
+
+  // 600 minutes = 10 hours (UTC-10), which is
+  // Hawaii-Aleutian Standard Time (http://www.timeanddate.com/time/zones/hast)
+
+  let UTCOffset = (new Date()).getTimezoneOffset();
+  let isNA = UTCOffset >= 150 && UTCOffset <= 600;
+
+  return isNA;
+}
+
 function getDefaultEngineName() {
   const nsIPLS = Ci.nsIPrefLocalizedString;
-  return Services.prefs.getComplexValue(kDefaultenginenamePref, nsIPLS).data;
+  // Copy the logic from nsSearchService
+  let pref = kDefaultenginenamePref;
+  if (getIsUS()) {
+    pref += ".US";
+  }
+  return Services.prefs.getComplexValue(pref, nsIPLS).data;
 }
 
 function waitForNotification(aExpectedData) {
@@ -94,7 +128,10 @@ add_task(function* test_persistAcrossRestarts() {
 
   // Cleanup (set the engine back to default).
   Services.search.currentEngine = Services.search.defaultEngine;
-  do_check_eq(Services.search.currentEngine.name, getDefaultEngineName());
+  // This check is no longer valid with bug 1102416's patch - defaultEngine
+  // is not based on the same value as _originalDefaultEngine in non-Firefox
+  // users of the search service.
+  //do_check_eq(Services.search.currentEngine.name, getDefaultEngineName());
 });
 
 // An engine set without a valid hash should be ignored.
