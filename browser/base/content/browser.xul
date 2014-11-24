@@ -249,8 +249,8 @@
            noautohide="true"
            orient="vertical"
            align="stretch">
-      <label class="SearchHighlightTitle">One Click Searches</label>
-      <description class="SearchHighlightText" flex="1">Looking for something specific? Instantly search on any site using these options!</description>
+      <label class="SearchHighlightTitle">One-Click Searches</label>
+      <description class="SearchHighlightText" flex="1">Search any of these sites instantly, without changing your default.</description>
       <hbox class="SearchHighlightFooter" align="center">
         <spacer class="dot filled"/>
         <spacer class="dot"/>
@@ -266,8 +266,8 @@
            noautohide="true"
            orient="vertical"
            align="stretch">
-      <label class="SearchHighlightTitle">Search Suggestions</label>
-      <description class="SearchHighlightText" flex="1">As-you-type suggestions from your default search engine help you to get to the right results quickly.</description>
+      <label class="SearchHighlightTitle">Smart Suggestions</label>
+      <description class="SearchHighlightText" flex="1">Suggestions from your default search engine appear as you type.</description>
       <hbox class="SearchHighlightFooter" align="center">
         <spacer class="dot"/>
         <spacer class="dot filled"/>
