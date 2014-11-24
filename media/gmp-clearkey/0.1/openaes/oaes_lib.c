@@ -34,7 +34,6 @@ static const char _NR[] = {
 #include <stdlib.h>
 #include <stddef.h>
 #include <time.h> 
-#include <sys/timeb.h>
 #include <string.h>
 
 #ifdef WIN32
@@ -480,6 +479,7 @@ OAES_RET oaes_sprintf(
 	return OAES_RET_SUCCESS;
 }
 
+/*
 #ifdef OAES_HAVE_ISAAC
 static void oaes_get_seed( char buf[RANDSIZ + 1] )
 {
@@ -519,6 +519,7 @@ static uint32_t oaes_get_seed()
 	return _ret;
 }
 #endif // OAES_HAVE_ISAAC
+*/
 
 static OAES_RET oaes_key_destroy( oaes_key ** key )
 {
