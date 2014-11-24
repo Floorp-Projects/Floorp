@@ -543,9 +543,7 @@ public:
   {
     size_t n = 0;
     n += mSet.sizeOfExcludingThis(aMallocSizeOf);
-    for (StringHashSet::Range r = mSet.all();
-         !r.empty();
-         r.popFront()) {
+    for (auto r = mSet.all(); !r.empty(); r.popFront()) {
       n += aMallocSizeOf(r.front());
     }
     return n;
@@ -936,9 +934,8 @@ GatherUsedStackTraces(StackTraceSet& aStackTraces)
   aStackTraces.finish();
   aStackTraces.init(512);
 
-  for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
-    const Block& b = r.front();
-    b.AddStackTracesToTable(aStackTraces);
+  for (auto r = gBlockTable->all(); !r.empty(); r.popFront()) {
+    r.front().AddStackTracesToTable(aStackTraces);
   }
 }
 
@@ -1439,9 +1436,7 @@ SizeOfInternal(Sizes* aSizes)
   StackTraceSet usedStackTraces;
   GatherUsedStackTraces(usedStackTraces);
 
-  for (StackTraceTable::Range r = gStackTraceTable->all();
-       !r.empty();
-       r.popFront()) {
+  for (auto r = gStackTraceTable->all(); !r.empty(); r.popFront()) {
     StackTrace* const& st = r.front();
 
     if (usedStackTraces.has(st)) {
@@ -1475,7 +1470,7 @@ DMDFuncs::ClearReports()
   // Unreport all blocks that were marked reported by a memory reporter.  This
   // excludes those that were reported on allocation, because they need to keep
   // their reported marking.
-  for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
+  for (auto r = gBlockTable->all(); !r.empty(); r.popFront()) {
     r.front().UnreportIfNotReportedOnAlloc();
   }
 }
@@ -1584,7 +1579,7 @@ AnalyzeReportsImpl(UniquePtr<JSONWriteFunc> aWriter)
 
     writer.StartArrayProperty("blockList");
     {
-      for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
+      for (auto r = gBlockTable->all(); !r.empty(); r.popFront()) {
         const Block& b = r.front();
         b.AddStackTracesToTable(usedStackTraces);
 
@@ -1619,8 +1614,8 @@ AnalyzeReportsImpl(UniquePtr<JSONWriteFunc> aWriter)
 
     writer.StartObjectProperty("traceTable");
     {
-      for (StackTraceSet::Enum e(usedStackTraces); !e.empty(); e.popFront()) {
-        const StackTrace* const st = e.front();
+      for (auto r = usedStackTraces.all(); !r.empty(); r.popFront()) {
+        const StackTrace* const st = r.front();
         writer.StartArrayProperty(isc.ToIdString(st), writer.SingleLineStyle);
         {
           for (uint32_t i = 0; i < st->Length(); i++) {
