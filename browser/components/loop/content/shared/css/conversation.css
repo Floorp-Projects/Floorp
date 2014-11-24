@@ -706,6 +706,7 @@ html, .fx-embedded, #main,
   background: #000;
   height: 50px;
   text-align: left;
+  width: 75%;
 }
 
 .room-conversation-wrapper header h1 {
@@ -717,6 +718,20 @@ html, .fx-embedded, #main,
   background-size: 30px;
   background-position: 10px;
   background-repeat: no-repeat;
+  display: inline-block;
+}
+
+.room-conversation-wrapper header a {
+  float: right;
+}
+
+.room-conversation-wrapper header .icon-help {
+  display: inline-block;
+  background-size: contain;
+  margin-top: 20px;
+  width: 20px;
+  height: 20px;
+  background: transparent url("../img/svg/glyph-help-16x16.svg") no-repeat;
 }
 
 .room-conversation-wrapper footer {
