@@ -14,7 +14,6 @@ UNIFIED_SOURCES += [
     'ClearKeyUtils.cpp',
     'gmp-clearkey.cpp',
     'openaes/oaes_lib.c',
-    'openaes/rand.c',
 ]
 
 LOCAL_INCLUDES += [
