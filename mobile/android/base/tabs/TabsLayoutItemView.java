@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
@@ -89,6 +90,12 @@ public class TabsLayoutItemView extends LinearLayout
         mCloseButton = (ImageButton) findViewById(R.id.close);
         mThumbnailWrapper = (TabThumbnailWrapper) findViewById(R.id.wrapper);
 
+        if (NewTabletUI.isEnabled(getContext())) {
+            growCloseButtonHitArea();
+        }
+    }
+
+    private void growCloseButtonHitArea() {
         getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             @Override
             public boolean onPreDraw() {
