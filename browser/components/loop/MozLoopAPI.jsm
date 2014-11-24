@@ -656,6 +656,19 @@ function injectLoopAPI(targetWindow) {
         MozLoopService.startDirectCall(contact, callType);
       }
     },
+
+    /**
+     * @see MozLoopInternal#blockDirectCaller
+     */
+    blockDirectCaller: {
+      enumerable: true,
+      writable: true,
+      value: function(callerId, callback) {
+        MozLoopService.blockDirectCaller(callerId, err => {
+          callback(cloneValueInto(err, targetWindow));
+        });
+      }
+    },
   };
 
   function onStatusChanged(aSubject, aTopic, aData) {
