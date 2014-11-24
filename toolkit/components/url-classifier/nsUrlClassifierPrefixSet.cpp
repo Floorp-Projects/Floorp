@@ -300,7 +300,7 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
     nsTArray<uint32_t> indexStarts;
     indexStarts.SetLength(indexSize);
     mIndexPrefixes.SetLength(indexSize);
-    mIndexDeltas.Clear();
+    mIndexDeltas.SetLength(indexSize);
 
     mTotalPrefixes = indexSize;
 
@@ -313,7 +313,6 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
       return NS_ERROR_FILE_CORRUPTED;
     }
     for (uint32_t i = 0; i < indexSize; i++) {
-      mIndexDeltas.AppendElement();
       uint32_t numInDelta = i == indexSize - 1 ? deltaSize - indexStarts[i]
                                : indexStarts[i + 1] - indexStarts[i];
       if (numInDelta > 0) {
