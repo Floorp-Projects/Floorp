@@ -409,6 +409,11 @@ gfxWindowsPlatform::UpdateRenderMode()
                 d2dBlocked = true;
             }
         }
+        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &status))) {
+            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+                d2dBlocked = true;
+            }
+        }
     }
 
     // These will only be evaluated once, and any subsequent changes to
