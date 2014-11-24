@@ -565,4 +565,19 @@ private:
 void
 NS_SetMainThread();
 
+/**
+ * Helpers for thread to report their status when compiled with Nuwa.
+ */
+#ifdef MOZILLA_INTERNAL_API
+#ifdef MOZ_NUWA_PROCESS
+extern void
+NS_SetIgnoreStatusOfCurrentThread();
+#else // MOZ_NUWA_PROCESS
+inline void
+NS_SetIgnoreStatusOfCurrentThread()
+{
+}
+#endif // MOZ_NUWA_PROCESS
+#endif // MOZILLA_INTERNAL_API
+
 #endif  // nsThreadUtils_h__
