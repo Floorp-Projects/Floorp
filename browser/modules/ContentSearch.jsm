@@ -206,6 +206,12 @@ this.ContentSearch = {
 
   _onMessageManageEngines: function (msg, data) {
     let browserWin = msg.target.ownerDocument.defaultView;
+
+    if (Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
+      browserWin.openPreferences("paneSearch");
+      return Promise.resolve();
+    }
+
     let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
              getService(Components.interfaces.nsIWindowMediator);
     let window = wm.getMostRecentWindow("Browser:SearchManager");
