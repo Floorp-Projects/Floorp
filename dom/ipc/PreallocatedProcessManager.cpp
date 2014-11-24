@@ -338,7 +338,7 @@ PreallocatedProcessManagerImpl::OnNuwaReady()
     AutoJSContext cx;
     nsCOMPtr<nsIMessageBroadcaster> ppmm =
       do_GetService("@mozilla.org/parentprocessmessagemanager;1");
-    nsresult rv = ppmm->BroadcastAsyncMessage(
+    mozilla::unused << ppmm->BroadcastAsyncMessage(
       NS_LITERAL_STRING("TEST-ONLY:nuwa-ready"),
       JS::NullHandleValue, JS::NullHandleValue, cx, 1);
   }
