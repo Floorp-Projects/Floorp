@@ -356,7 +356,7 @@ loop.conversationViews = (function(mozL10n) {
           nameDisplayMode: "off",
           videoDisabledDisplayMode: "off"
         }
-      }
+      };
     },
 
     /**
@@ -431,7 +431,8 @@ loop.conversationViews = (function(mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       store: React.PropTypes.instanceOf(
-        loop.store.ConversationStore).isRequired
+        loop.store.ConversationStore).isRequired,
+      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore)
     },
 
     getInitialState: function() {
@@ -462,22 +463,9 @@ loop.conversationViews = (function(mozL10n) {
     _renderFeedbackView: function() {
       document.title = mozL10n.get("conversation_has_ended");
 
-      // XXX Bug 1076754 Feedback view should be redone in the Flux style.
-      var feebackAPIBaseUrl = navigator.mozLoop.getLoopPref(
-        "feedback.baseUrl");
-
-      var appVersionInfo = navigator.mozLoop.appVersionInfo;
-
-      var feedbackClient = new loop.FeedbackAPIClient(feebackAPIBaseUrl, {
-        product: navigator.mozLoop.getLoopPref("feedback.product"),
-        platform: appVersionInfo.OS,
-        channel: appVersionInfo.channel,
-        version: appVersionInfo.version
-      });
-
       return (
         <sharedViews.FeedbackView
-          feedbackApiClient={feedbackClient}
+          feedbackStore={this.props.feedbackStore}
           onAfterFeedbackReceived={this._closeWindow.bind(this)}
         />
       );
