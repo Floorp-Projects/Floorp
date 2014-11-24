@@ -16,8 +16,6 @@
 #include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/CondVar.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Atomics.h"
 
