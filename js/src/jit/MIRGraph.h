@@ -286,6 +286,15 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Move an instruction. Movement may cross block boundaries.
     void moveBefore(MInstruction *at, MInstruction *ins);
 
+    enum IgnoreTop {
+        IgnoreNone = 0,
+        IgnoreRecover = 1 << 0
+    };
+
+    // Locate the top of the |block|, where it is safe to insert a new
+    // instruction.
+    MInstruction *safeInsertTop(MDefinition *ins = nullptr, IgnoreTop ignore = IgnoreNone);
+
     // Removes an instruction with the intention to discard it.
     void discard(MInstruction *ins);
     void discardLastIns();
