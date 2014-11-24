@@ -2089,7 +2089,9 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
     nsresult rv;
     nsCOMPtr<nsISupports> implISupports = do_CreateInstance(aContractId, &rv);
     if (!implISupports) {
-      NS_WARNING("Failed to get JS implementation for contract");
+      nsPrintfCString msg("Failed to get JS implementation for contract \"%s\"",
+                          aContractId);
+      NS_WARNING(msg.get());
       aRv.Throw(rv);
       return;
     }
