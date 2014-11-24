@@ -17,6 +17,9 @@ loop.conversation = (function(mozL10n) {
   var OutgoingConversationView = loop.conversationViews.OutgoingConversationView;
   var CallIdentifierView = loop.conversationViews.CallIdentifierView;
 
+  // Matches strings of the form "<nonspaces>@<nonspaces>" or "+<digits>"
+  var EMAIL_OR_PHONE_RE = /^(:?\S+@\S+|\+\d+)$/;
+
   var IncomingCallView = React.createClass({displayName: 'IncomingCallView',
     mixins: [sharedMixins.DropdownMenuMixin],
 
@@ -498,14 +501,27 @@ loop.conversation = (function(mozL10n) {
     declineAndBlock: function() {
       navigator.mozLoop.stopAlerting();
       var token = this.props.conversation.get("callToken");
-      this.props.client.deleteCallUrl(token,
-        this.props.conversation.get("sessionType"),
-        function(error) {
+      var callerId = this.props.conversation.get("callerId");
+
+      // If this is a direct call, we'll need to block the caller directly.
+      if (callerId && EMAIL_OR_PHONE_RE.test(callerId)) {
+        navigator.mozLoop.blockDirectCaller(callerId, function(err) {
           // XXX The conversation window will be closed when this cb is triggered
           // figure out if there is a better way to report the error to the user
-          // (bug 1048909).
-          console.log(error);
+          // (bug 1103150).
+          console.log(err.fileName + ":" + err.lineNumber + ": " + err.message);
         });
+      } else {
+        this.props.client.deleteCallUrl(token,
+          this.props.conversation.get("sessionType"),
+          function(error) {
+            // XXX The conversation window will be closed when this cb is triggered
+            // figure out if there is a better way to report the error to the user
+            // (bug 1048909).
+            console.log(error);
+          });
+      }
+
       this._declineCall();
     },
 
