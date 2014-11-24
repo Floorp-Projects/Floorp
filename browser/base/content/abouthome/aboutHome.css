@@ -99,9 +99,7 @@ html[searchUIConfiguration="oldsearchui"] #searchIcon {
 }
 
 html:not([searchUIConfiguration="oldsearchui"]) #searchText::-moz-placeholder {
-  visibility: hidden !important;
-  display: none !important;
-  color: blue;
+  color: transparent;
 }
 
 html:not([searchUIConfiguration="oldsearchui"]) #searchLogoContainer {
