@@ -13,18 +13,26 @@
 // sandboxing itself.  See also common/SandboxInfo.h for what parts of
 // sandboxing are enabled/supported.
 
+#ifdef ANDROID
+// Defined in libmozsandbox and referenced by linking against it.
+#define MOZ_SANDBOX_EXPORT MOZ_EXPORT
+#else
+// Defined in plugin-container and referenced by libraries it loads.
+#define MOZ_SANDBOX_EXPORT MOZ_EXPORT __attribute__((weak))
+#endif
+
 namespace mozilla {
 
 #ifdef MOZ_CONTENT_SANDBOX
 // Call only if SandboxInfo::CanSandboxContent() returns true.
 // (No-op if MOZ_DISABLE_CONTENT_SANDBOX is set.)
-MOZ_EXPORT void SetContentProcessSandbox();
+MOZ_SANDBOX_EXPORT void SetContentProcessSandbox();
 #endif
 
 #ifdef MOZ_GMP_SANDBOX
 // Call only if SandboxInfo::CanSandboxMedia() returns true.
 // (No-op if MOZ_DISABLE_GMP_SANDBOX is set.)
-MOZ_EXPORT void SetMediaPluginSandbox(const char *aFilePath);
+MOZ_SANDBOX_EXPORT void SetMediaPluginSandbox(const char *aFilePath);
 #endif
 
 } // namespace mozilla
