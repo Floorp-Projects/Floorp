@@ -76,6 +76,36 @@ a {
   min-width: 70px;
 }
 
+#searchIcon {
+  border: 1px solid transparent;
+  -moz-margin-end: 5px;
+  height: 38px;
+  width: 38px;
+  background-image: url("chrome://browser/skin/magnifier.png");
+  background-size: 26px;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+#searchIcon[active],
+#searchIcon:hover {
+  background-color: #e9e9e9;
+  border: 1px solid rgb(226, 227, 229);
+  border-radius: 2.5px;
+}
+
+html[searchUIConfiguration="oldsearchui"] #searchIcon {
+  display: none;
+}
+
+html:not([searchUIConfiguration="oldsearchui"]) #searchText::-moz-placeholder {
+  color: transparent;
+}
+
+html:not([searchUIConfiguration="oldsearchui"]) #searchLogoContainer {
+  display: none;
+}
+
 #searchText {
   -moz-box-flex: 1;
   padding: 6px 8px;
@@ -366,6 +396,10 @@ body[narrow] #restorePreviousSession::before {
 @media not all and (max-resolution: 1dppx) {
   #brandLogo {
     background-image: url("chrome://branding/content/about-logo@2x.png");
+  }
+
+  #searchIcon {
+    background-image: url("chrome://browser/skin/magnifier@2x.png");
   }
 
   #defaultSnippet1,
