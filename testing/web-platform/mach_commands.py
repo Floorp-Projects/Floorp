@@ -74,6 +74,7 @@ class WebPlatformTestsUpdater(MozbuildObject):
             kwargs["config"] = os.path.join(self.topsrcdir, 'testing', 'web-platform', 'wptrunner.ini')
 
         wptcommandline.set_from_config(kwargs)
+        update.setup_logging(kwargs, {"mach": sys.stdout})
 
         update.run_update(**kwargs)
 
