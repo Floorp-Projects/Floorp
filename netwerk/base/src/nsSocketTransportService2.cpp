@@ -701,7 +701,6 @@ nsSocketTransportService::Run()
                      "NuwaMarkCurrentThread is undefined!");
         NuwaMarkCurrentThread(nullptr, nullptr);
     }
-    NS_SetIgnoreStatusOfCurrentThread();
 #endif
 
     SOCKET_LOG(("STS thread init\n"));

@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/ReentrantMonitor.h"
 #ifdef MOZ_CANARY
 #include <fcntl.h>
 #include <unistd.h>
@@ -48,54 +47,6 @@ NS_SetMainThread()
 
 typedef nsTArray<nsRefPtr<nsThread>> nsThreadArray;
 
-#ifdef MOZ_NUWA_PROCESS
-class NotifyAllThreadsWereIdle: public nsRunnable
-{
-public:
-
-  NotifyAllThreadsWereIdle(
-    nsTArray<nsRefPtr<nsThreadManager::AllThreadsWereIdleListener>>* aListeners)
-    : mListeners(aListeners)
-  {
-  }
-
-  virtual NS_IMETHODIMP
-  Run() {
-    // Copy listener array, which may be modified during call back.
-    nsTArray<nsRefPtr<nsThreadManager::AllThreadsWereIdleListener>> arr(*mListeners);
-    for (size_t i = 0; i < arr.Length(); i++) {
-      arr[i]->OnAllThreadsWereIdle();
-    }
-    return NS_OK;
-  }
-
-private:
-  // Raw pointer, since it's pointing to a  member of thread manager.
-  nsTArray<nsRefPtr<nsThreadManager::AllThreadsWereIdleListener>>* mListeners;
-};
-
-struct nsThreadManager::ThreadStatusInfo {
-  Atomic<bool> mWorking;
-  Atomic<bool> mWillBeWorking;
-  bool mIgnored;
-  nsThreadManager *mMgr;
-  ThreadStatusInfo(nsThreadManager *aManager)
-    : mWorking(false)
-    , mWillBeWorking(false)
-    , mIgnored(false)
-    , mMgr(aManager)
-  {
-    ReentrantMonitorAutoEnter mon(*(mMgr->mMonitor));
-    mMgr->mThreadStatusInfos.AppendElement(this);
-  }
-  ~ThreadStatusInfo()
-  {
-    ReentrantMonitorAutoEnter mon(*(mMgr->mMonitor));
-    mMgr->mThreadStatusInfos.RemoveElement(this);
-  }
-};
-#endif // MOZ_NUWA_PROCESS
-
 //-----------------------------------------------------------------------------
 
 static void
@@ -103,14 +54,6 @@ ReleaseObject(void* aData)
 {
   static_cast<nsISupports*>(aData)->Release();
 }
-
-#ifdef MOZ_NUWA_PROCESS
-static void
-DeleteThreadStatusInfo(void* aData)
-{
-  delete static_cast<nsThreadManager::ThreadStatusInfo*>(aData);
-}
-#endif
 
 static PLDHashOperator
 AppendAndRemoveThread(PRThread* aKey, nsRefPtr<nsThread>& aThread, void* aArg)
@@ -153,17 +96,7 @@ nsThreadManager::Init()
     return NS_ERROR_FAILURE;
   }
 
-#ifdef MOZ_NUWA_PROCESS
-  if (PR_NewThreadPrivateIndex(&mThreadStatusInfoIndex,
-                               DeleteThreadStatusInfo) == PR_FAILURE) {
-    return NS_ERROR_FAILURE;
-  }
-#endif // MOZ_NUWA_PROCESS
-
   mLock = new Mutex("nsThreadManager.mLock");
-#ifdef MOZ_NUWA_PROCESS
-  mMonitor = MakeUnique<ReentrantMonitor>("nsThreadManager.mMonitor");
-#endif // MOZ_NUWA_PROCESS
 
 #ifdef MOZ_CANARY
   const int flags = O_WRONLY | O_APPEND | O_CREAT | O_NONBLOCK;
@@ -261,9 +194,6 @@ nsThreadManager::Shutdown()
 
   // Remove the TLS entry for the main thread.
   PR_SetThreadPrivate(mCurThreadIndex, nullptr);
-#ifdef MOZ_NUWA_PROCESS
-  PR_SetThreadPrivate(mThreadStatusInfoIndex, nullptr);
-#endif
 }
 
 void
@@ -296,9 +226,6 @@ nsThreadManager::UnregisterCurrentThread(nsThread* aThread)
 
   PR_SetThreadPrivate(mCurThreadIndex, nullptr);
   // Ref-count balanced via ReleaseObject
-#ifdef MOZ_NUWA_PROCESS
-  PR_SetThreadPrivate(mThreadStatusInfoIndex, nullptr);
-#endif
 }
 
 nsThread*
@@ -322,21 +249,6 @@ nsThreadManager::GetCurrentThread()
 
   return thread.get();  // reference held in TLS
 }
-
-#ifdef MOZ_NUWA_PROCESS
-nsThreadManager::ThreadStatusInfo*
-nsThreadManager::GetCurrentThreadStatusInfo()
-{
-  void* data = PR_GetThreadPrivate(mThreadStatusInfoIndex);
-  if (!data) {
-    ThreadStatusInfo *thrInfo = new ThreadStatusInfo(this);
-    PR_SetThreadPrivate(mThreadStatusInfoIndex, thrInfo);
-    data = thrInfo;
-  }
-
-  return static_cast<ThreadStatusInfo*>(data);
-}
-#endif
 
 NS_IMETHODIMP
 nsThreadManager::NewThread(uint32_t aCreationFlags,
@@ -430,127 +342,3 @@ nsThreadManager::GetHighestNumberOfThreads()
   MutexAutoLock lock(*mLock);
   return mHighestNumberOfThreads;
 }
-
-#ifdef MOZ_NUWA_PROCESS
-void
-nsThreadManager::SetIgnoreThreadStatus()
-{
-  GetCurrentThreadStatusInfo()->mIgnored = true;
-}
-
-void
-nsThreadManager::SetThreadIdle()
-{
-  SetThreadIsWorking(GetCurrentThreadStatusInfo(), false);
-}
-
-void
-nsThreadManager::SetThreadWorking()
-{
-  SetThreadIsWorking(GetCurrentThreadStatusInfo(), true);
-}
-
-void
-nsThreadManager::SetThreadIsWorking(ThreadStatusInfo* aInfo, bool aIsWorking)
-{
-  aInfo->mWillBeWorking = aIsWorking;
-  if (mThreadsIdledListeners.Length() > 0) {
-
-    // A race condition occurs since we don't want threads to try to enter the
-    // monitor (nsThreadManager::mMonitor) when no one cares about their status.
-    // And thus the race can happen when we put the first listener into
-    // |mThreadsIdledListeners|:
-    //
-    // (1) Thread A wants to dispatch a task to Thread B.
-    // (2) Thread A checks |mThreadsIdledListeners|, and nothing is in the
-    //     list. So Thread A decides not to enter |mMonitor| when updating B's
-    //     status.
-    // (3) Thread A is suspended just before it changed status of B.
-    // (4) A listener is added to |mThreadsIdledListeners|
-    // (5) Now is Thread C's turn to run. Thread C finds there's something in
-    //     |mThreadsIdledListeners|, so it enters |mMonitor| and check all
-    //     thread info structs in |mThreadStatusInfos| while A is in the middle
-    //     of changing B's status.
-    //
-    // Then C may find Thread B is an idle thread (which is not correct, because
-    // A attempted to change B's status prior to C starting to walk throught
-    // |mThreadStatusInfo|), but the fact that thread A is working (thread A
-    // hasn't finished dispatching a task to thread B) can prevent thread C from
-    // firing a bogus notification.
-    //
-    // If the state transition that happens outside the monitor is in the other
-    // direction, the race condition could be:
-    //
-    // (1) Thread D has just finished its jobs and wants to set its status to idle.
-    // (2) Thread D checks |mThreadsIdledListeners|, and nothing is in the list.
-    //     So Thread D decides not to enter |mMonitor|.
-    // (3) Thread D is is suspended before it updates its own status.
-    // (4) A listener is put into |mThreadsIdledListeners|.
-    // (5) Thread C wants to changes status of itself. It checks
-    //     |mThreadsIdledListeners| and finds something inside the list. Thread C
-    //     then enters |mMonitor|, updates its status and checks thread info in
-    //     |mThreadStatusInfos| while D is changing status of itself out of monitor.
-    //
-    // Thread C will find that thread D is working (D actually wants to change its
-    // status to idle before C starting to check), then C returns without firing
-    // any notification. Finding that thread D is working can make our checking
-    // mechanism miss a chance to fire a notification: because thread D thought
-    // there's nothing in |mThreadsIdledListeners| and thus won't check the
-    // |mThreadStatusInfos| after changing the status of itself.
-    //
-    // |mWillBeWorking| can be used to address this problem. We require each
-    // thread to put the value that is going to be set to |mWorking| to
-    // |mWillBeWorking| before the thread decide whether it should enter
-    // |mMonitor| to change status or not. Thus C finds that D is working while
-    // D's |mWillBeWorking| is false, and C realizes that D is just updating and
-    // can treat D as an idle thread.
-    //
-    // It doesn't matter whether D will check thread status after changing its
-    // own status or not. If D checks, which means D will enter the monitor
-    // before updating status, thus D must be blocked until C has finished
-    // dispatching the notification task to main thread, and D will find that main
-    // thread is working and will not fire an additional event. On the other hand,
-    // if D doesn't check |mThreadStatusInfos|, it's still ok, because C has
-    // treated D as an idle thread already.
-
-    bool hasWorkingThread = false;
-    ReentrantMonitorAutoEnter mon(*mMonitor);
-    // Get data structure of thread info.
-    aInfo->mWorking = aIsWorking;
-    for (size_t i = 0; i < mThreadStatusInfos.Length(); i++) {
-      ThreadStatusInfo *info = mThreadStatusInfos[i];
-      if (!info->mIgnored) {
-        if (info->mWorking) {
-          if (info->mWillBeWorking) {
-            hasWorkingThread = true;
-            break;
-          }
-        }
-      }
-    }
-    if (!hasWorkingThread) {
-      nsRefPtr<NotifyAllThreadsWereIdle> runnable =
-        new NotifyAllThreadsWereIdle(&mThreadsIdledListeners);
-      NS_DispatchToMainThread(runnable);
-    }
-  } else {
-    // Update thread info without holding any lock.
-    aInfo->mWorking = aIsWorking;
-  }
-}
-
-
-void
-nsThreadManager::AddAllThreadsWereIdleListener(AllThreadsWereIdleListener *listener)
-{
-  MOZ_ASSERT(GetCurrentThreadStatusInfo()->mWorking);
-  mThreadsIdledListeners.AppendElement(listener);
-}
-
-void
-nsThreadManager::RemoveAllThreadsWereIdleListener(AllThreadsWereIdleListener *listener)
-{
-  mThreadsIdledListeners.RemoveElement(listener);
-}
-
-#endif // MOZ_NUWA_PROCESS

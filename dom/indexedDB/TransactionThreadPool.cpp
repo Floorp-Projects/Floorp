@@ -19,7 +19,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOMCIDInternal.h"
 #include "ProfilerHelpers.h"
-#include "nsThread.h"
 
 namespace mozilla {
 namespace dom {
@@ -172,10 +171,6 @@ public:
 private:
   ~TransactionQueue()
   { }
-
-#ifdef MOZ_NUWA_PROCESS
-  nsThread* mThread;
-#endif
 
   NS_DECL_NSIRUNNABLE
 };
@@ -796,9 +791,6 @@ TransactionQueue::TransactionQueue(TransactionThreadPool* aThreadPool,
   mObjectStoreNames(aObjectStoreNames),
   mMode(aMode),
   mShouldFinish(false)
-#ifdef MOZ_NUWA_PROCESS
-, mThread(nullptr)
-#endif
 {
   MOZ_ASSERT(aThreadPool);
   aThreadPool->AssertIsOnOwningThread();
@@ -823,12 +815,6 @@ TransactionThreadPool::TransactionQueue::Dispatch(nsIRunnable* aRunnable)
   NS_ASSERTION(!mShouldFinish, "Dispatch called after Finish!");
 
   mQueue.AppendElement(aRunnable);
-
-#ifdef MOZ_NUWA_PROCESS
-  if (mThread) {
-    mThread->SetWorking();
-  }
-#endif
 
   mMonitor.Notify();
 }
@@ -863,12 +849,6 @@ TransactionThreadPool::TransactionQueue::Run()
   nsAutoTArray<nsCOMPtr<nsIRunnable>, 10> queue;
   nsRefPtr<FinishCallback> finishCallback;
   bool shouldFinish = false;
-#ifdef MOZ_NUWA_PROCESS
-  mThread = static_cast<nsThread*>(NS_GetCurrentThread());
-  // Set ourself as working thread. We can reset later if we found
-  // our queue is empty.
-  mThread->SetWorking();
-#endif
 
   do {
     NS_ASSERTION(queue.IsEmpty(), "Should have cleared this!");
@@ -876,9 +856,6 @@ TransactionThreadPool::TransactionQueue::Run()
     {
       MonitorAutoLock lock(mMonitor);
       while (!mShouldFinish && mQueue.IsEmpty()) {
-#ifdef MOZ_NUWA_PROCESS
-        mThread->SetIdle();
-#endif
         if (NS_FAILED(mMonitor.Wait())) {
           NS_ERROR("Failed to wait!");
         }
@@ -910,10 +887,6 @@ TransactionThreadPool::TransactionQueue::Run()
       queue.Clear();
     }
   } while (!shouldFinish);
-
-#ifdef MOZ_NUWA_PROCESS
-  mThread = nullptr;
-#endif
 
 #ifdef DEBUG
   if (kDEBUGThreadSleepMS) {

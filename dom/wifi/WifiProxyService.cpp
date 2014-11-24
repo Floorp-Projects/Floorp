@@ -65,9 +65,6 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(!NS_IsMainThread());
-#ifdef MOZ_NUWA_PROCESS
-    NS_SetIgnoreStatusOfCurrentThread();
-#endif
     nsAutoString event;
     gWpaSupplicant->WaitForEvent(event, mInterface);
     if (!event.IsEmpty()) {
