@@ -93,7 +93,7 @@ let DeviceActor = exports.DeviceActor = protocol.ActorClass({
     };
     if (win) {
       let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      desc.dpi: utils.displayDPI;
+      desc.dpi = utils.displayDPI;
       desc.useragent = win.navigator.userAgent;
       desc.width = win.screen.width;
       desc.height = win.screen.height;
