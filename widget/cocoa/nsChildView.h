@@ -504,6 +504,13 @@ public:
                       const mozilla::WidgetKeyboardEvent& aEvent,
                       DoCommandCallback aCallback,
                       void* aCallbackData) MOZ_OVERRIDE;
+  bool ExecuteNativeKeyBindingRemapped(
+                      NativeKeyBindingsType aType,
+                      const mozilla::WidgetKeyboardEvent& aEvent,
+                      DoCommandCallback aCallback,
+                      void* aCallbackData,
+                      uint32_t aGeckoKeyCode,
+                      uint32_t aCocoaKeyCode);
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() MOZ_OVERRIDE;
   NS_IMETHOD        GetToggledKeyState(uint32_t aKeyCode,
                                        bool* aLEDState);

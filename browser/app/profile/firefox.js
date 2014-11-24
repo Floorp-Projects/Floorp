@@ -1811,7 +1811,7 @@ pref("privacy.trackingprotection.ui.enabled", false);
 #endif
 
 #ifdef NIGHTLY_BUILD
-pref("browser.tabs.remote.autostart.1", true);
+pref("browser.tabs.remote.autostart.1", false);
 #endif
 
 // Temporary pref to allow printing in e10s windows on some platforms.
@@ -1819,6 +1819,11 @@ pref("browser.tabs.remote.autostart.1", true);
 pref("print.enable_e10s_testing", false);
 #else
 pref("print.enable_e10s_testing", true);
+#endif
+
+#ifdef NIGHTLY_BUILD
+// Enable e10s add-on interposition by default.
+pref("extensions.interposition.enabled", true);
 #endif
 
 pref("browser.defaultbrowser.notificationbar", false);

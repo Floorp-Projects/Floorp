@@ -9,7 +9,7 @@ const TAB_URL = EXAMPLE_URL + "doc_random-javascript.html";
 const JS_URL = EXAMPLE_URL + "sjs_random-javascript.sjs";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     let gDebugger = aPanel.panelWin;
     let gEditor = gDebugger.DebuggerView.editor;
     let gSources = gDebugger.DebuggerView.Sources;

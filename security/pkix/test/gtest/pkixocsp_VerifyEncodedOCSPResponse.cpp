@@ -382,6 +382,65 @@ TEST_F(pkixocsp_VerifyEncodedResponse_successful,
   ASSERT_FALSE(expired);
 }
 
+// Added for bug 1079436. The output variable validThrough represents the
+// latest time for which VerifyEncodedOCSPResponse will succeed, which is
+// different from the nextUpdate time in the OCSP response due to the slop we
+// add for time comparisons to deal with clock skew.
+TEST_F(pkixocsp_VerifyEncodedResponse_successful, check_validThrough)
+{
+  ByteString responseString(
+               CreateEncodedOCSPSuccessfulResponse(
+                         OCSPResponseContext::good, *endEntityCertID, byKey,
+                         *rootKeyPair, oneDayBeforeNow,
+                         oneDayBeforeNow, &oneDayAfterNow,
+                         sha256WithRSAEncryption));
+  Time validThrough(Time::uninitialized);
+  {
+    Input response;
+    ASSERT_EQ(Success,
+              response.Init(responseString.data(), responseString.length()));
+    bool expired;
+    ASSERT_EQ(Success,
+              VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID,
+                                        Now(), END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                        response, expired, nullptr,
+                                        &validThrough));
+    ASSERT_FALSE(expired);
+    // The response was created to be valid until one day after now, so the
+    // value we got for validThrough should be after that.
+    Time oneDayAfterNowAsPKIXTime(TimeFromEpochInSeconds(oneDayAfterNow));
+    ASSERT_TRUE(validThrough > oneDayAfterNowAsPKIXTime);
+  }
+  {
+    Input response;
+    ASSERT_EQ(Success,
+              response.Init(responseString.data(), responseString.length()));
+    bool expired;
+    // Given validThrough from a previous verification, this response should be
+    // valid through that time.
+    ASSERT_EQ(Success,
+              VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID,
+                                        validThrough, END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                        response, expired));
+    ASSERT_FALSE(expired);
+  }
+  {
+    Time noLongerValid(validThrough);
+    ASSERT_EQ(Success, noLongerValid.AddSeconds(1));
+    Input response;
+    ASSERT_EQ(Success,
+              response.Init(responseString.data(), responseString.length()));
+    bool expired;
+    // The verification time is now after when the response will be considered
+    // valid.
+    ASSERT_EQ(Result::ERROR_OCSP_OLD_RESPONSE,
+              VerifyEncodedOCSPResponse(trustDomain, *endEntityCertID,
+                                        noLongerValid, END_ENTITY_MAX_LIFETIME_IN_DAYS,
+                                        response, expired));
+    ASSERT_TRUE(expired);
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // indirect responses (signed by a delegated OCSP responder cert)
 

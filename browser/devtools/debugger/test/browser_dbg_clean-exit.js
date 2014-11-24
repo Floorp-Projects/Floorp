@@ -5,14 +5,13 @@
  * Test that closing a tab with the debugger in a paused state exits cleanly.
  */
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 
 const TAB_URL = EXAMPLE_URL + "doc_inline-debugger-statement.html";
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
 
@@ -28,12 +27,11 @@ function testCleanExit() {
     return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_REFILLED);
   }).then(() => closeDebuggerAndFinish(gPanel, { whilePaused: true }));
 
-  gDebuggee.runDebuggerStatement();
+  callInTab(gTab, "runDebuggerStatement");
 }
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
 });

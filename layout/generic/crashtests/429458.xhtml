@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:html="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl">
+  <binding id="foo">
+    <content><html:span><children xmlns="http://www.mozilla.org/xbl"/></html:span></content>
+  </binding>
+</bindings>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var s = document.getAnonymousNodes(document.body)[0];
+  s.appendChild(document.createTextNode("apples and oranges"));
+  document.body.offsetHeight;
+  document.body.appendChild(document.createTextNode("\n\n"));
+}
+
+</script>
+
+</head>
+
+<body onload="boom();" style="-moz-binding: url('#foo'); width: 1px; word-spacing: 1px;"></body>
+
+</html>

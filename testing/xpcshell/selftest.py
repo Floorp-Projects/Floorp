@@ -508,6 +508,8 @@ tail =
 
         self.assertTestResult(True, verbose=True)
 
+    @unittest.skipIf('MOZ_AUTOMATION' in os.environ,
+                     'Timeout code path occasionally times out (bug 1098121)')
     def testHangingTimeout(self):
         """
         Check that a test that never finishes results in the correct error log.
@@ -889,4 +891,4 @@ tail =
         self.assertInLog("Throwing an error to force displaying the log")
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(verbosity=3)

@@ -59,16 +59,15 @@ WMFDecoderModule::Shutdown()
 {
   DebugOnly<HRESULT> hr = wmf::MFShutdown();
   NS_ASSERTION(SUCCEEDED(hr), "MFShutdown failed");
-
   return NS_OK;
 }
 
 already_AddRefed<MediaDataDecoder>
-WMFDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                                    layers::LayersBackend aLayersBackend,
-                                    layers::ImageContainer* aImageContainer,
-                                    MediaTaskQueue* aVideoTaskQueue,
-                                    MediaDataDecoderCallback* aCallback)
+WMFDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                                     layers::LayersBackend aLayersBackend,
+                                     layers::ImageContainer* aImageContainer,
+                                     MediaTaskQueue* aVideoTaskQueue,
+                                     MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder =
     new WMFMediaDataDecoder(new WMFVideoMFTManager(aConfig,
@@ -90,6 +89,15 @@ WMFDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aCon
                             aAudioTaskQueue,
                             aCallback);
   return decoder.forget();
+}
+
+bool
+WMFDecoderModule::SupportsVideoMimeType(const char* aMimeType)
+{
+  return !strcmp(aMimeType, "video/mp4") ||
+         !strcmp(aMimeType, "video/avc") ||
+         !strcmp(aMimeType, "video/webm; codecs=vp8") ||
+         !strcmp(aMimeType, "video/webm; codecs=vp9");
 }
 
 bool
