@@ -5830,12 +5830,14 @@ nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsString& aOrigin)
     nsCOMPtr<nsIPrincipal> principal;
     uriWithPrincipal->GetPrincipal(getter_AddRefs(principal));
 
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = principal->GetURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (principal) {
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = principal->GetURI(getter_AddRefs(uri));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (uri && uri != aURI) {
-      return GetUTFOrigin(uri, aOrigin);
+      if (uri && uri != aURI) {
+        return GetUTFOrigin(uri, aOrigin);
+      }
     }
   }
 
