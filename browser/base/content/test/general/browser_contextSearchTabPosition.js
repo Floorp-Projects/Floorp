@@ -53,8 +53,9 @@ function test() {
       ok(data.days.hasDay(now), "Have data for today.");
       let day = data.days.getDay(now);
 
-      // Will need to be changed if Google isn't the default search engine.
-      let field = "google.contextmenu";
+      // Will need to be changed if Yahoo isn't the default search engine.
+      let defaultProviderID = "yahoo";
+      let field = defaultProviderID + ".contextmenu";
       ok(day.has(field), "Have search recorded for context menu.");
 
       // If any other mochitests perform a context menu search, this will fail.
