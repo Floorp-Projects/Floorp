@@ -109,6 +109,7 @@ private:
   void DrainComplete(mp4_demuxer::TrackType aTrack);
   void UpdateIndex();
   bool IsSupportedAudioMimeType(const char* aMimeType);
+  bool IsSupportedVideoMimeType(const char* aMimeType);
   void NotifyResourcesStatusChanged();
   bool IsWaitingOnCodecResource();
   virtual bool IsWaitingOnCDMResource() MOZ_OVERRIDE;

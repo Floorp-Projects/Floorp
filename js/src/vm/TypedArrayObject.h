@@ -182,7 +182,7 @@ class TypedArrayObject : public NativeObject
         return layout_;
     }
 
-    static void ObjectMoved(JSObject *obj, const JSObject *old);
+    static void trace(JSTracer *trc, JSObject *obj);
 
     /* Initialization bits */
 

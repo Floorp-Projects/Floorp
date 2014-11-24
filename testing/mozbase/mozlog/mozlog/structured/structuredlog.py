@@ -101,7 +101,11 @@ class LoggerState(object):
         self.handlers = []
         self.running_tests = set()
         self.suite_started = False
+        self.component_states = {}
 
+class ComponentState(object):
+    def __init__(self):
+        self.filter_ = None
 
 class StructuredLogger(object):
     _lock = Lock()
@@ -120,9 +124,11 @@ class StructuredLogger(object):
             if name not in self._logger_states:
                 self._logger_states[name] = LoggerState()
 
-    @property
-    def _state(self):
-        return self._logger_states[self.name]
+            if component not in self._logger_states[name].component_states:
+                self._logger_states[name].component_states[component] = ComponentState()
+
+        self._state = self._logger_states[name]
+        self._component_state = self._state.component_states[component]
 
     def add_handler(self, handler):
         """Add a handler to the current logger"""
@@ -140,6 +146,14 @@ class StructuredLogger(object):
         """A list of handlers that will be called when a
         message is logged from this logger"""
         return self._state.handlers
+
+    @property
+    def component_filter(self):
+        return self._component_state.filter_
+
+    @component_filter.setter
+    def component_filter(self, value):
+        self._component_state.filter_ = value
 
     def log_raw(self, raw_data):
         if "action" not in raw_data:
@@ -170,6 +184,11 @@ class StructuredLogger(object):
 
     def _handle_log(self, data):
         with self._lock:
+            if self.component_filter:
+                data = self.component_filter(data)
+                if data is None:
+                    return
+
             for handler in self.handlers:
                 handler(data)
 

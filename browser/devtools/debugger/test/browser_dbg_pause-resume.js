@@ -7,13 +7,12 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_pause-exceptions.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gResumeButton, gResumeKey, gFrames;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gResumeButton = gDebugger.document.getElementById("resume");
@@ -69,7 +68,6 @@ function testResume() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gResumeButton = null;

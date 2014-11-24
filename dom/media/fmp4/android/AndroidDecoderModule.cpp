@@ -135,7 +135,7 @@ bool AndroidDecoderModule::SupportsAudioMimeType(const char* aMimeType) {
 }
 
 already_AddRefed<MediaDataDecoder>
-AndroidDecoderModule::CreateH264Decoder(
+AndroidDecoderModule::CreateVideoDecoder(
                                 const mp4_demuxer::VideoDecoderConfig& aConfig,
                                 layers::LayersBackend aLayersBackend,
                                 layers::ImageContainer* aImageContainer,
