@@ -988,7 +988,7 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
   return GetDisplayPortImpl(aContent, aResult, 1.0f);
 }
 
-void
+bool
 nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
                                      nsIPresShell* aPresShell,
                                      const ScreenMargin& aMargins,
@@ -998,7 +998,7 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
   DisplayPortMarginsPropertyData* currentData =
     static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
   if (currentData && currentData->mPriority > aPriority) {
-    return;
+    return false;
   }
 
   aContent->SetProperty(nsGkAtoms::DisplayPortMargins,
@@ -1022,6 +1022,8 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
       rootFrame->SchedulePaint();
     }
   }
+
+  return true;
 }
 
 void
@@ -1790,11 +1792,23 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame, uint32_t aFlags)
        f->GetParent() : nsLayoutUtils::GetCrossDocParentFrame(f)) {
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
     if (scrollableFrame) {
+      if (aFlags & SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
+        if (scrollableFrame->WantAsyncScroll()) {
+          return scrollableFrame;
+        }
+        continue;
+      }
       ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
       if ((aFlags & SCROLLABLE_INCLUDE_HIDDEN) ||
           ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN ||
           ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN)
         return scrollableFrame;
+    }
+    if (aFlags & SCROLLABLE_ALWAYS_MATCH_ROOT) {
+      nsPresContext* pc = f->PresContext();
+      if (pc->IsRootContentDocument() && pc->PresShell()->GetRootScrollFrame() == f) {
+        return scrollableFrame;
+      }
     }
   }
   return nullptr;
@@ -2725,20 +2739,22 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
   return NS_OK;
 }
 
-// aScrollFrame and aScrollFrameAsScrollable must be non-nullptr
+// aScrollFrameAsScrollable must be non-nullptr and queryable to an nsIFrame
 static FrameMetrics
-CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
-                                    nsIScrollableFrame* aScrollFrameAsScrollable) {
+CalculateFrameMetricsForDisplayPort(nsIScrollableFrame* aScrollFrame) {
+  nsIFrame* frame = do_QueryFrame(aScrollFrame);
+  MOZ_ASSERT(frame);
+
   // Calculate the metrics necessary for calculating the displayport.
   // This code has a lot in common with the code in ComputeFrameMetrics();
   // we may want to refactor this at some point.
   FrameMetrics metrics;
-  nsPresContext* presContext = aScrollFrame->PresContext();
+  nsPresContext* presContext = frame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
   CSSToLayoutDeviceScale deviceScale(float(nsPresContext::AppUnitsPerCSSPixel())
                                      / presContext->AppUnitsPerDevPixel());
   float resolution = 1.0f;
-  if (aScrollFrame == presShell->GetRootScrollFrame()) {
+  if (frame == presShell->GetRootScrollFrame()) {
     // Only the root scrollable frame for a given presShell should pick up
     // the presShell's resolution. All the other frames are 1.0.
     resolution = presShell->GetXResolution();
@@ -2751,7 +2767,7 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
   // and leaving mExtraResolution at 1.
   LayoutDeviceToLayerScale cumulativeResolution(
       presShell->GetCumulativeResolution().width
-    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame).width);
+    * nsLayoutUtils::GetTransformToAncestorScale(frame).width);
 
   LayerToParentLayerScale layerToParentLayerScale(1.0f);
   metrics.mDevPixelsPerCSSPixel = deviceScale;
@@ -2761,9 +2777,9 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
 
   // Only the size of the composition bounds is relevant to the
   // displayport calculation, not its origin.
-  nsSize compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(aScrollFrame);
+  nsSize compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(frame);
   LayoutDeviceToParentLayerScale compBoundsScale(1.0f);
-  if (aScrollFrame == presShell->GetRootScrollFrame() && presContext->IsRootContentDocument()) {
+  if (frame == presShell->GetRootScrollFrame() && presContext->IsRootContentDocument()) {
     if (presContext->GetParentPresContext()) {
       gfxSize res = presContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
       compBoundsScale = LayoutDeviceToParentLayerScale(res.width, res.height);
@@ -2777,15 +2793,31 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
       * compBoundsScale;
 
   metrics.SetRootCompositionSize(
-      nsLayoutUtils::CalculateRootCompositionSize(aScrollFrame, false, metrics));
+      nsLayoutUtils::CalculateRootCompositionSize(frame, false, metrics));
 
   metrics.SetScrollOffset(CSSPoint::FromAppUnits(
-      aScrollFrameAsScrollable->GetScrollPosition()));
+      aScrollFrame->GetScrollPosition()));
 
   metrics.mScrollableRect = CSSRect::FromAppUnits(
-      nsLayoutUtils::CalculateScrollableRectForFrame(aScrollFrameAsScrollable, nullptr));
+      nsLayoutUtils::CalculateScrollableRectForFrame(aScrollFrame, nullptr));
 
   return metrics;
+}
+
+bool
+nsLayoutUtils::CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFrame,
+                                                 RepaintMode aRepaintMode) {
+  nsIFrame* frame = do_QueryFrame(aScrollFrame);
+  MOZ_ASSERT(frame);
+  nsIContent* content = frame->GetContent();
+  MOZ_ASSERT(content);
+
+  FrameMetrics metrics = CalculateFrameMetricsForDisplayPort(aScrollFrame);
+  ScreenMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
+      metrics, ParentLayerPoint(0.0f, 0.0f), 0.0);
+  nsIPresShell* presShell = frame->PresContext()->GetPresShell();
+  return nsLayoutUtils::SetDisplayPortMargins(
+      content, presShell, displayportMargins, 0, aRepaintMode);
 }
 
 bool
@@ -2818,13 +2850,7 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
 
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
-      FrameMetrics metrics = CalculateFrameMetricsForDisplayPort(aScrollFrame, scrollableFrame);
-      ScreenMargin displayportMargins = APZCTreeManager::CalculatePendingDisplayPort(
-          metrics, ParentLayerPoint(0.0f, 0.0f), 0.0);
-      nsIPresShell* presShell = aScrollFrame->PresContext()->GetPresShell();
-      nsLayoutUtils::SetDisplayPortMargins(
-          content, presShell, displayportMargins,
-          0, nsLayoutUtils::RepaintMode::DoNotRepaint);
+      CalculateAndSetDisplayPortMargins(scrollableFrame, nsLayoutUtils::RepaintMode::DoNotRepaint);
       haveDisplayPort = GetDisplayPort(content, aOutDisplayport);
       NS_ASSERTION(haveDisplayPort, "should have a displayport after having just set it");
     }

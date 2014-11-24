@@ -678,6 +678,17 @@ PeerConnectionTest.prototype.setStepTimeout = function(ms) {
 };
 
 /**
+ * Set a timeout for the over all PeerConnectionTest
+ * @param {long] ms the number of milliseconds to allow for the test
+ */
+PeerConnectionTest.prototype.setTimeout = function(ms) {
+  this._timeout = setTimeout(function() {
+    ok(false, "PeerConnectionTest timed out");
+    this.teardown();
+  }.bind(this), ms);
+};
+
+/**
  * Creates an answer for the specified peer connection instance
  * and automatically handles the failure case.
  *
@@ -1536,6 +1547,9 @@ function PeerConnectionWrapper(label, configuration, h264) {
   this.onAddStreamFired = false;
   this.addStreamCallbacks = {};
 
+  this._local_ice_candidates = [];
+  this._remote_ice_candidates = [];
+  this._ice_candidates_to_add = [];
   this.holdIceCandidates = true;
   this.endOfTrickleIce = false;
   this.localRequiresTrickleIce = false;
@@ -2122,9 +2136,6 @@ PeerConnectionWrapper.prototype = {
   setupIceCandidateHandler : function
     PCW_setupIceCandidateHandler(test, candidateHandler, endHandler) {
     var self = this;
-    self._local_ice_candidates = [];
-    self._remote_ice_candidates = [];
-    self._ice_candidates_to_add = [];
 
     candidateHandler = candidateHandler || test.iceCandidateHandler.bind(test);
     endHandler = endHandler || test.signalEndOfTrickleIce.bind(test);

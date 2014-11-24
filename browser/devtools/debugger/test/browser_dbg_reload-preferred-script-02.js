@@ -9,13 +9,12 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 const PREFERRED_URL = EXAMPLE_URL + "code_script-switching-02.js";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gSources;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
@@ -39,7 +38,6 @@ function finishTest() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gSources = null;

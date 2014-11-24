@@ -10,6 +10,9 @@
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
 
+#include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
+
 //Interfaces Needed
 #include "nsReadableUtils.h"
 #include "nsIComponentManager.h"
@@ -51,6 +54,7 @@
 #include "nsXULAppAPI.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
@@ -1650,12 +1654,13 @@ static void DrawPaintedLayer(PaintedLayer* aLayer,
                             const nsIntRegion& aRegionToInvalidate,
                             void* aCallbackData)
 {
-  nscolor* color = static_cast<nscolor*>(aCallbackData);
-  aContext->NewPath();
-  aContext->SetColor(gfxRGBA(*color));
+  DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
+
+  ColorPattern color(ToDeviceColor(*static_cast<nscolor*>(aCallbackData)));
   nsIntRect dirtyRect = aRegionToDraw.GetBounds();
-  aContext->Rectangle(gfxRect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
-  aContext->Fill();  
+  aDrawTarget.FillRect(Rect(dirtyRect.x, dirtyRect.y,
+                            dirtyRect.width, dirtyRect.height),
+                       color);
 }
 
 void nsWebBrowser::WindowRaised(nsIWidget* aWidget)

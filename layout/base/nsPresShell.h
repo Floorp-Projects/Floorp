@@ -249,6 +249,7 @@ public:
 
   // nsISelectionController
 
+  NS_IMETHOD PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend) MOZ_OVERRIDE;
   NS_IMETHOD CharacterMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
   NS_IMETHOD CharacterExtendForDelete() MOZ_OVERRIDE;
   NS_IMETHOD CharacterExtendForBackspace() MOZ_OVERRIDE;

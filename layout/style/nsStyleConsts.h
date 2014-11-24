@@ -79,7 +79,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_BASIC_SHAPE_POLYGON       0
 #define NS_STYLE_BASIC_SHAPE_CIRCLE        1
 #define NS_STYLE_BASIC_SHAPE_ELLIPSE       2
-//#define NS_STYLE_BASIC_SHAPE_INSET       3
+#define NS_STYLE_BASIC_SHAPE_INSET         3
 
 // box-shadow
 #define NS_STYLE_BOX_SHADOW_INSET         0

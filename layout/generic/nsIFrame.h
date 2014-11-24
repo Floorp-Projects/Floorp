@@ -160,14 +160,18 @@ enum nsSelectionAmount {
                         // choice for movement or selection by "character"
                         // as perceived by the user
   eSelectWord      = 2,
-  eSelectLine      = 3, // previous drawn line in flow.
-  eSelectBeginLine = 4,
-  eSelectEndLine   = 5,
-  eSelectNoAmount  = 6, // just bounce back current offset.
-  eSelectParagraph = 7,  // select a "paragraph"
-  eSelectWordNoSpace = 8 // select a "word" without selecting the following
-                         // space, no matter what the default platform
-                         // behavior is
+  eSelectWordNoSpace = 3, // select a "word" without selecting the following
+                          // space, no matter what the default platform
+                          // behavior is
+  eSelectLine      = 4, // previous drawn line in flow.
+  // NOTE that selection code depends on the ordering of the above values,
+  // allowing simple <= tests to check categories of caret movement.
+  // Don't rearrange without checking the usage in nsSelection.cpp!
+
+  eSelectBeginLine = 5,
+  eSelectEndLine   = 6,
+  eSelectNoAmount  = 7, // just bounce back current offset.
+  eSelectParagraph = 8  // select a "paragraph"
 };
 
 enum nsSpread {
