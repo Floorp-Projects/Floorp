@@ -659,6 +659,15 @@ gfxContext::UpdateSurfaceClip()
 {
 }
 
+void
+gfxContext::PopClip()
+{
+  MOZ_ASSERT(CurrentState().pushedClips.Length() > 0);
+
+  CurrentState().pushedClips.RemoveElementAt(CurrentState().pushedClips.Length() - 1);
+  mDT->PopClip();
+}
+
 gfxRect
 gfxContext::GetClipExtents()
 {

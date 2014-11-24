@@ -15,6 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PathHelpers.h"
 
 #include "nsCOMPtr.h"
 #include "nsFrameList.h"
@@ -1463,6 +1464,8 @@ private:
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
 {
+  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
+
   LookAndFeel::ColorID colorID;
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
     colorID = LookAndFeel::eColorID_TextSelectBackground;
@@ -1472,19 +1475,16 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
     colorID = LookAndFeel::eColorID_TextSelectBackgroundDisabled;
   }
 
-  nscolor color = LookAndFeel::GetColor(colorID, NS_RGB(255, 255, 255));
-
-  gfxRGBA c(color);
+  Color c = Color::FromABGR(LookAndFeel::GetColor(colorID, NS_RGB(255, 255, 255)));
   c.a = .5;
-
-  gfxContext *ctx = aCtx->ThebesContext();
-  ctx->SetColor(c);
+  ColorPattern color(ToDeviceColor(c));
 
   nsIntRect pxRect =
     mVisibleRect.ToOutsidePixels(mFrame->PresContext()->AppUnitsPerDevPixel());
-  ctx->NewPath();
-  ctx->Rectangle(gfxRect(pxRect.x, pxRect.y, pxRect.width, pxRect.height), true);
-  ctx->Fill();
+  Rect rect(pxRect.x, pxRect.y, pxRect.width, pxRect.height);
+  MaybeSnapToDevicePixels(rect, aDrawTarget);
+
+  aDrawTarget.FillRect(rect, color);
 }
 
 /********************************************************
