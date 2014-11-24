@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIDOMDOMRequest.idl"
 
 interface nsIVariant;
+interface nsIDOMWindow;
 
 [scriptable, uuid(9b43bdda-52f4-4712-b28c-ad7cba736e14)]
 interface nsINfcTagEvent : nsISupports
@@ -65,20 +65,106 @@ interface nsINfcEventListener : nsISupports
   void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(9343ae1a-6e2f-11e4-b5c4-fbb166b38b62)]
+[scriptable, uuid(a8ef3590-d853-4766-b54a-a4547da4dde4)]
+interface nsINfcRequestCallback : nsISupports
+{
+  DOMString getCallbackId();
+
+  void notifySuccess();
+
+  void notifySuccessWithBoolean(in boolean result);
+
+  void notifySuccessWithNDEFRecords(in nsIVariant records);
+
+  void notifyError(in DOMString errorMsg);
+};
+
+[scriptable, uuid(9da02537-c4d0-4b2d-b294-d3250ff1720e)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
 
   boolean checkSessionToken(in DOMString sessionToken, in boolean isP2P);
 
-  nsIDOMDOMRequest readNDEF(in DOMString sessionToken);
-  nsIDOMDOMRequest writeNDEF(in nsIVariant records, in DOMString sessionToken);
-  nsIDOMDOMRequest makeReadOnly(in DOMString sessionToken);
-  nsIDOMDOMRequest format(in DOMString sessionToken);
+  /**
+   * Read current NDEF data on the tag.
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * @param callback
+   *        Called when request is finished
+   */
+  void readNDEF(in DOMString sessionToken,
+                in nsINfcRequestCallback callback);
 
-  nsIDOMDOMRequest connect(in unsigned long techType, in DOMString sessionToken);
-  nsIDOMDOMRequest close(in DOMString sessionToken);
+  /**
+   * Write NDEF data to a peer device or a tag.
+   *
+   * @param records
+   *        NDEF records to be written
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * @param callback
+   *        Called when request is finished
+   */
+  void writeNDEF(in nsIVariant records,
+                 in DOMString sessionToken,
+                 in nsINfcRequestCallback callback);
+
+  /**
+   * Make a tag read-only
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * @param callback
+   *        Called when request is finished
+   */
+  void makeReadOnly(in DOMString sessionToken,
+                    in nsINfcRequestCallback callback);
+
+  /**
+   * Format a tag as NDEF
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * @param callback
+   *        Called when request is finished
+   */
+  void format(in DOMString sessionToken,
+              in nsINfcRequestCallback callback);
+
+  /**
+   * Enable I/O operations to the tag
+   *
+   * @param techType
+   *        Interface to a technology in a Tag
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * @param callback
+   *        Called when request is finished
+   */
+  void connect(in unsigned long techType,
+               in DOMString sessionToken,
+               in nsINfcRequestCallback callback);
+
+  /**
+   * Disable I/O operations to the tag
+   *
+   * @param sessionToken
+   *        Current token
+   *
+   * @param callback
+   *        Called when request is finished
+   */
+  void close(in DOMString sessionToken,
+             in nsINfcRequestCallback callback);
 
   /**
    * Initiate send file operation.
@@ -91,11 +177,12 @@ interface nsINfcContentHelper : nsISupports
    * @param sessionToken
    *        Current token
    *
-   * Returns DOMRequest, if initiation of send file operation is successful
-   * then 'onsuccess' is called else 'onerror'
+   * @param callback
+   *        Called when request is finished
    */
-  nsIDOMDOMRequest sendFile(in jsval blob,
-                            in DOMString sessionToken);
+  void sendFile(in jsval blob,
+                in DOMString sessionToken,
+                in nsINfcRequestCallback callback);
 
   /**
    * Add the event listener.
@@ -127,9 +214,11 @@ interface nsINfcContentHelper : nsISupports
    * @param appId
    *        Application ID to be updated with parent process
    *
-   * Returns DOMRequest, if appId is registered then 'onsuccess' is called else 'onerror'
+   * @param callback
+   *        Called when request is finished
    */
-  nsIDOMDOMRequest checkP2PRegistration(in unsigned long appId);
+  void checkP2PRegistration(in unsigned long appId,
+                            in nsINfcRequestCallback callback);
 
   /**
    * Notify the parent process that user has accepted to share nfc message on P2P UI
@@ -155,6 +244,10 @@ interface nsINfcContentHelper : nsISupports
    * Change RF state.
    *
    * @param rfState. Possible values are 'idle', 'listen' and 'discovery'.
+   *
+   * @param callback
+   *        Called when request is finished
    */
-  nsIDOMDOMRequest changeRFState(in DOMString rfState);
+  void changeRFState(in DOMString rfState,
+                     in nsINfcRequestCallback callback);
 };
