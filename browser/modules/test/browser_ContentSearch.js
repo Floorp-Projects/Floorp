@@ -79,13 +79,11 @@ add_task(function* ManageEngines() {
       subj.addEventListener("load", function onLoad() {
         subj.removeEventListener("load", onLoad);
         if (subj.document.documentURI ==
-            "chrome://browser/content/preferences/preferences.xul") {
+            "chrome://browser/content/search/engineManager.xul") {
           winWatcher.unregisterNotification(onOpen);
-          ok(true, "Observed Preferences window open");
+          ok(true, "Observed search manager window open");
           is(subj.opener, window,
-             "Preferences window opener should be this chrome window");
-          is(subj.document.documentElement.currentPane.id, "paneSearch",
-             "Preferences window should be opened in the Search pane");
+             "Search engine manager opener should be this chrome window");
           subj.close();
           deferred.resolve();
         }
