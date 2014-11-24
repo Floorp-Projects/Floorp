@@ -258,14 +258,14 @@ void *
 mapMemoryAt(void *desired, size_t length)
 {
 #if defined(__ia64__)
-    MOZ_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
+    MOZ_RELEASE_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
 #endif
     void *region = mmap(desired, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
     if (region == MAP_FAILED)
         return nullptr;
     if (region != desired) {
         if (munmap(region, length))
-            MOZ_ASSERT(errno == ENOMEM);
+            MOZ_RELEASE_ASSERT(errno == ENOMEM);
         return nullptr;
     }
     return region;
@@ -284,7 +284,7 @@ mapMemory(size_t length)
 #if defined(__ia64__)
     if ((uintptr_t(region) + (length - 1)) & 0xffff800000000000ULL) {
         if (munmap(region, length))
-            MOZ_ASSERT(errno == ENOMEM);
+            MOZ_RELEASE_ASSERT(errno == ENOMEM);
         return nullptr;
     }
 #endif
@@ -295,7 +295,7 @@ void
 unmapPages(void *p, size_t size)
 {
     if (munmap(p, size))
-        MOZ_ASSERT(errno == ENOMEM);
+        MOZ_RELEASE_ASSERT(errno == ENOMEM);
 }
 
 #else // !defined(XP_WIN) && !defined(SOLARIS) && !defined(XP_UNIX)
