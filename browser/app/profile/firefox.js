@@ -404,6 +404,11 @@ pref("browser.search.order.1",                "chrome://browser-region/locale/re
 pref("browser.search.order.2",                "chrome://browser-region/locale/region.properties");
 pref("browser.search.order.3",                "chrome://browser-region/locale/region.properties");
 
+pref("browser.search.defaultenginename.US",      "chrome://browser-region/locale/region.properties");
+pref("browser.search.order.US.1",                "chrome://browser-region/locale/region.properties");
+pref("browser.search.order.US.2",                "chrome://browser-region/locale/region.properties");
+pref("browser.search.order.US.3",                "chrome://browser-region/locale/region.properties");
+
 // search bar results always open in a new tab
 pref("browser.search.openintab", false);
 
