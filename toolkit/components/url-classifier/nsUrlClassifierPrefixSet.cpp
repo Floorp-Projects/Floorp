@@ -140,6 +140,30 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
   return NS_OK;
 }
 
+nsresult
+nsUrlClassifierPrefixSet::GetPrefixesNative(FallibleTArray<uint32_t>& outArray)
+{
+  if (!outArray.SetLength(mTotalPrefixes)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  uint32_t prefixIdxLength = mIndexPrefixes.Length();
+  uint32_t prefixCnt = 0;
+
+  for (uint32_t i = 0; i < prefixIdxLength; i++) {
+    uint32_t prefix = mIndexPrefixes[i];
+
+    outArray[prefixCnt++] = prefix;
+    for (uint32_t j = 0; j < mIndexDeltas[i].Length(); j++) {
+      prefix += mIndexDeltas[i][j];
+      outArray[prefixCnt++] = prefix;
+    }
+  }
+
+  NS_ASSERTION(mTotalPrefixes == prefixCnt, "Lengths are inconsistent");
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
                                       uint32_t** aPrefixes)
@@ -149,24 +173,17 @@ nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
   NS_ENSURE_ARG_POINTER(aPrefixes);
   *aPrefixes = nullptr;
 
-  uint64_t itemCount = mTotalPrefixes;
+  FallibleTArray<uint32_t> prefixes;
+  nsresult rv = GetPrefixesNative(prefixes);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint64_t itemCount = prefixes.Length();
   uint32_t* prefixArray = static_cast<uint32_t*>(nsMemory::Alloc(itemCount * sizeof(uint32_t)));
   NS_ENSURE_TRUE(prefixArray, NS_ERROR_OUT_OF_MEMORY);
 
-  uint32_t prefixIdxLength = mIndexPrefixes.Length();
-  uint32_t prefixCnt = 0;
-
-  for (uint32_t i = 0; i < prefixIdxLength; i++) {
-    uint32_t prefix = mIndexPrefixes[i];
-
-    prefixArray[prefixCnt++] = prefix;
-    for (uint32_t j = 0; j < mIndexDeltas[i].Length(); j++) {
-      prefix += mIndexDeltas[i][j];
-      prefixArray[prefixCnt++] = prefix;
-    }
-  }
-
-  NS_ASSERTION(itemCount == prefixCnt, "Lengths are inconsistent");
+  memcpy(prefixArray, prefixes.Elements(), sizeof(uint32_t) * itemCount);
 
   *aCount = itemCount;
   *aPrefixes = prefixArray;
