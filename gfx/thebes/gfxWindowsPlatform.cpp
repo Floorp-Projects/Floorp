@@ -403,7 +403,7 @@ gfxWindowsPlatform::UpdateRenderMode()
         DoesD3D11DeviceWork(device)) {
 
         VerifyD2DDevice(d2dForceEnabled);
-        if (mD2DDevice) {
+        if (mD2DDevice && GetD3D11Device()) {
             mRenderMode = RENDER_DIRECT2D;
             mUseDirectWrite = true;
         }
@@ -1653,17 +1653,24 @@ gfxWindowsPlatform::InitD3D11Devices()
     return;
   }
 
-  HRESULT hr;
-
-  hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                         // Use
-                         // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
-                         // to prevent bug 1092260. IE 11 also uses this flag.
-                         D3D11_CREATE_DEVICE_BGRA_SUPPORT | D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
-                         featureLevels.Elements(), featureLevels.Length(),
-                         D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
+  HRESULT hr = E_INVALIDARG;
+  __try {
+    hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                           // Use
+                           // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+                           // to prevent bug 1092260. IE 11 also uses this flag.
+                           D3D11_CREATE_DEVICE_BGRA_SUPPORT |
+                           D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+                           featureLevels.Elements(), featureLevels.Length(),
+                           D3D11_SDK_VERSION, byRef(mD3D11Device),
+                           nullptr, nullptr);
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    mD3D11Device = nullptr;
+    return;
+  }
 
   if (FAILED(hr)) {
+    mD3D11Device = nullptr;
     return;
   }
 
@@ -1671,10 +1678,21 @@ gfxWindowsPlatform::InitD3D11Devices()
 
 #ifdef USE_D2D1_1
   if (Factory::SupportsD2D1()) {
-    hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                           D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-                           featureLevels.Elements(), featureLevels.Length(),
-                           D3D11_SDK_VERSION, byRef(mD3D11ContentDevice), nullptr, nullptr);
+    hr = E_INVALIDARG;
+    __try {
+      hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                             // Use
+                             // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS
+                             // to prevent bug 1092260. IE 11 also uses this flag
+                             D3D11_CREATE_DEVICE_BGRA_SUPPORT |
+                             D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+                             featureLevels.Elements(), featureLevels.Length(),
+                             D3D11_SDK_VERSION, byRef(mD3D11ContentDevice),
+                             nullptr, nullptr);
+    } __except(EXCEPTION_EXECUTE_HANDLER) {
+      mD3D11Device = nullptr;
+      return;
+    }
 
     if (FAILED(hr)) {
       mD3D11Device = nullptr;
