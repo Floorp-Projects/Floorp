@@ -9,22 +9,23 @@ PP_TARGETS            += aus-update-head
 aus-update-head_FLAGS := -Fsubstitution $(DEFINES) $(ACDEFINES)
 aus-update-head       := $(srcdir)/unit_aus_update/head_update.js
 aus-update-head_PATH  := $(XPCSHELLTESTROOT)/unit_aus_update
+aus-update-head_TARGET := misc
 
 INSTALL_TARGETS       += xpcshell-data
-xpcshell-data_TARGET  := libs
+xpcshell-data_TARGET  := misc
 xpcshell-data_DEST    := $(XPCSHELLTESTROOT)/data
 xpcshell-data_FILES   := $(wildcard $(srcdir)/data/*)
 
 # Android doesn't use the Mozilla updater or the toolkit update UI
 ifneq (android,$(MOZ_WIDGET_TOOLKIT))
 INSTALL_TARGETS           += base-updater-head
-base-updater-head_TARGET  := libs
+base-updater-head_TARGET  := misc
 base-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_base_updater
 base-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
 
 ifdef MOZ_MAINTENANCE_SERVICE
 INSTALL_TARGETS              += service-updater-head
-service-updater-head_TARGET  := libs
+service-updater-head_TARGET  := misc
 service-updater-head_DEST    := $(XPCSHELLTESTROOT)/unit_service_updater
 service-updater-head_FILES   := $(XPCSHELLTESTROOT)/unit_aus_update/head_update.js
 endif # MOZ_MAINTENANCE_SERVICE
@@ -32,7 +33,7 @@ endif # MOZ_MAINTENANCE_SERVICE
 ifndef MOZ_PROFILE_GENERATE
 ifdef COMPILE_ENVIRONMENT
 INSTALL_TARGETS              += xpcshell-test-helper
-xpcshell-test-helper_TARGET  := libs
+xpcshell-test-helper_TARGET  := misc
 xpcshell-test-helper_DEST    := $(XPCSHELLTESTROOT)/data
 xpcshell-test-helper_FILES   := $(DIST)/bin/TestAUSHelper$(BIN_SUFFIX)
 endif
@@ -45,12 +46,13 @@ _CHROME_SHARED := \
 PP_TARGETS         += chrome-shared
 chrome-shared      := $(addprefix $(srcdir)/chrome/,$(_CHROME_SHARED))
 chrome-shared_PATH := $(CHROMETESTROOT)/chrome
+chrome-shared_TARGET := misc
 
 _CHROME_DATA := \
   simple.mar \
   $(NULL)
 INSTALL_TARGETS     += chrome-data
-chrome-data_TARGET  := libs
+chrome-data_TARGET  := misc
 chrome-data_DEST    := $(CHROMETESTROOT)/data
 chrome-data_FILES   := $(addprefix $(srcdir)/data/,$(_CHROME_DATA))
 
