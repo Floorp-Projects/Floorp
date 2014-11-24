@@ -83,6 +83,7 @@ public:
     return GetMovementPoint().y;
   }
   float MozPressure() const;
+  bool HitCluster() const;
   uint16_t MozInputSource() const;
   void InitNSMouseEvent(const nsAString& aType,
                         bool aCanBubble, bool aCancelable,
