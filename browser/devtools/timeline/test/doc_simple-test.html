@@ -10,12 +10,11 @@
 
   <body>
     <script type="text/javascript">
+      var x = 1;
       function test() {
-        var a = "Hello world!";
-        document.body.style.backgroundColor = "rgba(" +
-          ((Math.random() * 64)|0) + "," +
-          ((Math.random() * 16)|0) + "," +
-          ((Math.random() * 16)|0) + ",1)";
+        document.body.style.borderTop = x + "px solid red";
+        x = 1^x;
+        document.body.innerHeight; // flush pending reflows
       }
 
       // Prevent this script from being garbage collected.

@@ -63,6 +63,10 @@
   overflow-y: auto;
 }
 
+.waterfall-header-contents {
+  overflow-x: hidden;
+}
+
 .waterfall-background-ticks {
   /* Background created on a <canvas> in js. */
   /* @see browser/devtools/timeline/widgets/waterfall.js */
@@ -152,4 +156,43 @@
   border: 1px solid;
   border-radius: 1px;
   transform-origin: left center;
+}
+
+.theme-light .waterfall-marker-container.selected > .waterfall-sidebar,
+.theme-light .waterfall-marker-container.selected > .waterfall-marker-item {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-dark .waterfall-marker-container.selected > .waterfall-sidebar,
+.theme-dark .waterfall-marker-container.selected > .waterfall-marker-item {
+  background-color: #1d4f73; /* Select Highlight Blue */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.waterfall-marker-container.selected .waterfall-marker-bullet,
+.waterfall-marker-container.selected .waterfall-marker-bar {
+  border-color: initial!important;
+}
+
+#timeline-waterfall-details {
+  padding-top: 28px;
+  overflow: auto;
+}
+
+.marker-details-bullet {
+  width: 8px;
+  height: 8px;
+  margin: 0 8px;
+  border: 1px solid;
+  border-radius: 1px;
+}
+
+.marker-details-type {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.marker-details-duration {
+  font-weight: bold;
 }
