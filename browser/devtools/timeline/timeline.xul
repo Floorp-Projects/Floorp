@@ -4,8 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/timeline.css" type="text/css"?>
+
 <!DOCTYPE window [
   <!ENTITY % timelineDTD SYSTEM "chrome://browser/locale/devtools/timeline.dtd">
   %timelineDTD;
@@ -66,7 +68,11 @@
         <label value="&timelineUI.stopNotice2;"/>
       </hbox>
 
-      <vbox id="timeline-waterfall" flex="1"/>
+      <hbox id="timeline-waterfall-container" class="devtools-responsive-container" flex="1">
+        <vbox id="timeline-waterfall" flex="1"/>
+        <splitter class="devtools-side-splitter"/>
+        <vbox id="timeline-waterfall-details" class="theme-sidebar" width="150" height="150"/>
+      </hbox>
     </deck>
   </vbox>
 </window>
