@@ -111,16 +111,14 @@ function registerOnpeerready() {
 function fireCheckP2PReg(manifestUrl) {
   let deferred = Promise.defer();
 
-  let request = nfc.checkP2PRegistration(manifestUrl);
-  request.onsuccess = function() {
+  let promise = nfc.checkP2PRegistration(manifestUrl);
+  promise.then(() => {
     ok(true, 'checkP2PRegistration allways results in success');
     deferred.resolve(request.result);
-  };
-
-  request.onerror = function() {
+  }).catch(() => {
     ok(false, 'see NfcContentHelper.handleCheckP2PRegistrationResponse');
     deferred.reject();
-  };
+  });
 
   return deferred.promise;
 }
