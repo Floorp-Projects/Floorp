@@ -27,6 +27,14 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
             SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
             """)
 
+        with self.marionette.using_context('chrome'):
+            self.multi_process_browser = self.marionette.execute_script("""
+                try {
+                  return Services.appinfo.browserTabsRemoteAutostart;
+                } catch (e) {
+                  return false;
+                }""")
+
     def test_remote_frame(self):
         self.marionette.navigate(self.marionette.absolute_url("test.html"))
         self.marionette.execute_script("SpecialPowers.addPermission('browser', true, document)")
@@ -71,7 +79,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
         main_process = self.marionette.execute_script("""
             return SpecialPowers.isMainProcess();
             """)
-        self.assertTrue(main_process)
+        should_be_main_process = not self.multi_process_browser
+        self.assertEqual(main_process, should_be_main_process)
         self.marionette.switch_to_frame(self.marionette.find_element("id",
                                                                      "remote_iframe"))
         main_process = self.marionette.execute_script("""
@@ -102,7 +111,8 @@ class TestSwitchRemoteFrame(MarionetteTestCase):
         main_process = self.marionette.execute_script("""
             return SpecialPowers.isMainProcess();
             """)
-        self.assertTrue(main_process)
+        should_be_main_process = not self.multi_process_browser
+        self.assertEqual(main_process, should_be_main_process)
         self.marionette.switch_to_frame(0)
         main_process = self.marionette.execute_script("""
             return SpecialPowers.isMainProcess();

@@ -18,6 +18,8 @@ devtools.lazyRequireGetter(this, "MemoryOverview",
   "devtools/timeline/memory-overview", true);
 devtools.lazyRequireGetter(this, "Waterfall",
   "devtools/timeline/waterfall", true);
+devtools.lazyRequireGetter(this, "MarkerDetails",
+  "devtools/timeline/marker-details", true);
 
 devtools.lazyImporter(this, "CanvasGraphUtils",
   "resource:///modules/devtools/Graphs.jsm");
@@ -250,11 +252,17 @@ let TimelineView = {
   initialize: Task.async(function*() {
     this.markersOverview = new MarkersOverview($("#markers-overview"));
     this.waterfall = new Waterfall($("#timeline-waterfall"));
+    this.markerDetails = new MarkerDetails($("#timeline-waterfall-details"));
 
     this._onSelecting = this._onSelecting.bind(this);
     this._onRefresh = this._onRefresh.bind(this);
     this.markersOverview.on("selecting", this._onSelecting);
     this.markersOverview.on("refresh", this._onRefresh);
+    this.markerDetails.on("resize", this._onRefresh);
+
+    this._onMarkerSelected = this._onMarkerSelected.bind(this);
+    this.waterfall.on("selected", this._onMarkerSelected);
+    this.waterfall.on("unselected", this._onMarkerSelected);
 
     yield this.markersOverview.ready();
     yield this.waterfall.recalculateBounds();
@@ -264,6 +272,9 @@ let TimelineView = {
    * Destruction function, called when the tool is closed.
    */
   destroy: function() {
+    this.markerDetails.off("resize", this._onRefresh);
+    this.waterfall.off("selected", this._onMarkerSelected);
+    this.waterfall.off("unselected", this._onMarkerSelected);
     this.markersOverview.off("selecting", this._onSelecting);
     this.markersOverview.off("refresh", this._onRefresh);
     this.markersOverview.destroy();
@@ -301,6 +312,18 @@ let TimelineView = {
   },
 
   /**
+   * A marker has been selected in the waterfall.
+   */
+  _onMarkerSelected: function(event, marker) {
+    if (event == "selected") {
+      this.markerDetails.render(marker);
+    }
+    if (event == "unselected") {
+      this.markerDetails.empty();
+    }
+  },
+
+  /**
    * Signals that a recording session has started and triggers the appropriate
    * changes in the UI.
    */
@@ -328,7 +351,7 @@ let TimelineView = {
   handleRecordingEnded: function() {
     $("#record-button").removeAttribute("checked");
     $("#memory-checkbox").removeAttribute("disabled");
-    $("#timeline-pane").selectedPanel = $("#timeline-waterfall");
+    $("#timeline-pane").selectedPanel = $("#timeline-waterfall-container");
 
     this.markersOverview.selectionEnabled = true;
 
@@ -346,9 +369,9 @@ let TimelineView = {
       let end = start + this.markersOverview.width * OVERVIEW_INITIAL_SELECTION_RATIO;
       this.markersOverview.setSelection({ start, end });
     } else {
-      let timeStart = interval.startTime;
-      let timeEnd = interval.endTime;
-      this.waterfall.setData(markers, timeStart, timeStart, timeEnd);
+      let startTime = interval.startTime;
+      let endTime = interval.endTime;
+      this.waterfall.setData(markers, startTime, startTime, endTime);
     }
 
     window.emit(EVENTS.RECORDING_ENDED);
@@ -382,6 +405,14 @@ let TimelineView = {
       this.waterfall.clearView();
       return;
     }
+    this.waterfall.resetSelection();
+    this.updateWaterfall();
+  },
+
+  /**
+   * Rebuild the waterfall.
+   */
+  updateWaterfall: function() {
     let selection = this.markersOverview.getSelection();
     let start = selection.start / this.markersOverview.dataScaleX;
     let end = selection.end / this.markersOverview.dataScaleX;
@@ -389,9 +420,10 @@ let TimelineView = {
     let markers = TimelineController.getMarkers();
     let interval = TimelineController.getInterval();
 
-    let timeStart = interval.startTime + Math.min(start, end);
-    let timeEnd = interval.startTime + Math.max(start, end);
-    this.waterfall.setData(markers, interval.startTime, timeStart, timeEnd);
+    let startTime = interval.startTime + Math.min(start, end);
+    let endTime = interval.startTime + Math.max(start, end);
+
+    this.waterfall.setData(markers, interval.startTime, startTime, endTime);
   },
 
   /**
@@ -399,7 +431,7 @@ let TimelineView = {
    */
   _onRefresh: function() {
     this.waterfall.recalculateBounds();
-    this._onSelecting();
+    this.updateWaterfall();
   }
 };
 

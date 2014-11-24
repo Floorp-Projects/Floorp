@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -15,6 +16,8 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
+
+class ArrayBufferViewOrArrayBuffer;
 
 class TextDecoder MOZ_FINAL
   : public NonRefcountedDOMObject
@@ -98,18 +101,13 @@ public:
               const bool aStream, nsAString& aOutDecodedString,
               ErrorResult& aRv);
 
-  void Decode(nsAString& aOutDecodedString,
-              ErrorResult& aRv) {
-    Decode(nullptr, 0, false, aOutDecodedString, aRv);
-  }
-
-  void Decode(const ArrayBufferView& aView,
+  void Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
               const TextDecodeOptions& aOptions,
               nsAString& aOutDecodedString,
-              ErrorResult& aRv) {
-    aView.ComputeLengthAndData();
-    Decode(reinterpret_cast<char*>(aView.Data()), aView.Length(),
-           aOptions.mStream, aOutDecodedString, aRv);
+              ErrorResult& aRv);
+
+  bool Fatal() const {
+    return mFatal;
   }
 
 private:

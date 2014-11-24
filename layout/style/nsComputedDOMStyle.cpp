@@ -5199,11 +5199,65 @@ inline void AppendBasicShapeTypeToString(nsStyleBasicShape::Type aType,
     case nsStyleBasicShape::Type::eEllipse:
       functionName = eCSSKeyword_ellipse;
       break;
+    case nsStyleBasicShape::Type::eInset:
+      functionName = eCSSKeyword_inset;
+      break;
     default:
+      functionName = eCSSKeyword_UNKNOWN;
       NS_NOTREACHED("unexpected type");
   }
   AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(functionName),
                      aString);
+}
+
+void
+nsComputedDOMStyle::BoxValuesToString(nsAString& aString,
+                                      const nsTArray<nsStyleCoord>& aBoxValues)
+{
+  NS_ABORT_IF_FALSE(aBoxValues.Length() == 4, "wrong number of box values");
+  nsAutoString value1, value2, value3, value4;
+  SetCssTextToCoord(value1, aBoxValues[0]);
+  SetCssTextToCoord(value2, aBoxValues[1]);
+  SetCssTextToCoord(value3, aBoxValues[2]);
+  SetCssTextToCoord(value4, aBoxValues[3]);
+
+  // nsROCSSPrimitiveValue do not have binary comparison operators.
+  // Compare string results instead.
+  aString.Append(value1);
+  if (value1 != value2 || value1 != value3 || value1 != value4) {
+    aString.Append(' ');
+    aString.Append(value2);
+    if (value1 != value3 || value2 != value4) {
+      aString.Append(' ');
+      aString.Append(value3);
+      if (value2 != value4) {
+        aString.Append(' ');
+        aString.Append(value4);
+      }
+    }
+  }
+}
+
+void
+nsComputedDOMStyle::BasicShapeRadiiToString(nsAString& aCssText,
+                                            const nsStyleCorners& aCorners)
+{
+  nsTArray<nsStyleCoord> horizontal, vertical;
+  nsAutoString horizontalString, verticalString;
+  NS_FOR_CSS_FULL_CORNERS(corner) {
+    horizontal.AppendElement(
+      aCorners.Get(NS_FULL_TO_HALF_CORNER(corner, false)));
+    vertical.AppendElement(
+      aCorners.Get(NS_FULL_TO_HALF_CORNER(corner, true)));
+  }
+  BoxValuesToString(horizontalString, horizontal);
+  BoxValuesToString(verticalString, vertical);
+  aCssText.Append(horizontalString);
+  if (horizontalString == verticalString) {
+    return;
+  }
+  aCssText.AppendLiteral(" / ");
+  aCssText.Append(verticalString);
 }
 
 CSSValue*
@@ -5263,6 +5317,16 @@ nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
         SetValueToPosition(aStyleBasicShape->GetPosition(), position);
         position->GetCssText(positionString);
         shapeFunctionString.Append(positionString);
+        break;
+      }
+      case nsStyleBasicShape::Type::eInset: {
+        BoxValuesToString(shapeFunctionString, aStyleBasicShape->Coordinates());
+        if (aStyleBasicShape->HasRadius()) {
+          shapeFunctionString.AppendLiteral(" round ");
+          nsAutoString radiiString;
+          BasicShapeRadiiToString(radiiString, aStyleBasicShape->GetRadius());
+          shapeFunctionString.Append(radiiString);
+        }
         break;
       }
       default:

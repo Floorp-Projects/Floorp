@@ -186,6 +186,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mCurrentFrameTime(0),
   mAudioStartTime(-1),
   mAudioEndTime(-1),
+  mDecodedAudioEndTime(-1),
   mVideoFrameEndTime(-1),
   mVolume(1.0),
   mPlaybackRate(1.0),
@@ -704,6 +705,7 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
   nsRefPtr<AudioData> audio(aAudioSample);
   MOZ_ASSERT(audio);
   mAudioRequestPending = false;
+  mDecodedAudioEndTime = audio->GetEndTime();
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
              (audio ? audio->mTime : -1),
@@ -1493,6 +1495,7 @@ void MediaDecoderStateMachine::ResetPlayback()
   mVideoFrameEndTime = -1;
   mAudioStartTime = -1;
   mAudioEndTime = -1;
+  mDecodedAudioEndTime = -1;
   mAudioCompleted = false;
   AudioQueue().Reset();
   VideoQueue().Reset();
@@ -1947,7 +1950,10 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
   }
   int64_t endOfDecodedAudioData = INT64_MAX;
   if (HasAudio() && !AudioQueue().AtEndOfStream()) {
-    endOfDecodedAudioData = AudioQueue().Peek() ? AudioQueue().Peek()->GetEndTime() : GetAudioClock();
+    // mDecodedAudioEndTime could be -1 when no audio samples are decoded.
+    // But that is fine since we consider ourself as low in decoded data when
+    // we don't have any decoded audio samples at all.
+    endOfDecodedAudioData = mDecodedAudioEndTime;
   }
   int64_t endOfDecodedData = std::min(endOfDecodedVideoData, endOfDecodedAudioData);
 

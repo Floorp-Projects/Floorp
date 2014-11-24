@@ -741,6 +741,7 @@ class InlineTypedObject : public TypedObject
     }
 
     static void obj_trace(JSTracer *trace, JSObject *object);
+    static void objectMovedDuringMinorGC(JSTracer *trc, JSObject *dst, JSObject *src);
 
     static size_t offsetOfDataStart() {
         return offsetof(InlineTypedObject, data_);

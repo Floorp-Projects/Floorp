@@ -5,12 +5,20 @@
 
 
 #include "nsMathMLmfracFrame.h"
+
+#include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
+#include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
 #include "nsDisplayList.h"
 #include "gfxContext.h"
 #include "nsMathMLElement.h"
 #include <algorithm>
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 //
 // <mfrac> -- form a fraction from two subexpressions - implementation
@@ -602,32 +610,32 @@ private:
 void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
                                  nsRenderingContext* aCtx)
 {
+  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
+
   // get the gfxRect
   nsPresContext* presContext = mFrame->PresContext();
-  gfxRect rect = presContext->AppUnitsToGfxUnits(mRect + ToReferenceFrame());
+  Rect rect = NSRectToRect(mRect + ToReferenceFrame(),
+                           presContext->AppUnitsPerDevPixel());
   
-  // paint with the current text color
-  aCtx->ThebesContext()->SetColor(mFrame->GetVisitedDependentColor(eCSSProperty_color));
+  ColorPattern color(ToDeviceColor(
+                       mFrame->GetVisitedDependentColor(eCSSProperty_color)));
  
   // draw the slash as a parallelogram 
-  gfxContext *gfxCtx = aCtx->ThebesContext();
-  gfxPoint delta = gfxPoint(presContext->AppUnitsToGfxUnits(mThickness), 0);
-  gfxCtx->NewPath();
-
+  Point delta = Point(presContext->AppUnitsToGfxUnits(mThickness), 0);
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder();
   if (mRTL) {
-    gfxCtx->MoveTo(rect.TopLeft());
-    gfxCtx->LineTo(rect.TopLeft() + delta);
-    gfxCtx->LineTo(rect.BottomRight());
-    gfxCtx->LineTo(rect.BottomRight() - delta);
+    builder->MoveTo(rect.TopLeft());
+    builder->LineTo(rect.TopLeft() + delta);
+    builder->LineTo(rect.BottomRight());
+    builder->LineTo(rect.BottomRight() - delta);
   } else {
-    gfxCtx->MoveTo(rect.BottomLeft());
-    gfxCtx->LineTo(rect.BottomLeft() + delta);
-    gfxCtx->LineTo(rect.TopRight());
-    gfxCtx->LineTo(rect.TopRight() - delta);
+    builder->MoveTo(rect.BottomLeft());
+    builder->LineTo(rect.BottomLeft() + delta);
+    builder->LineTo(rect.TopRight());
+    builder->LineTo(rect.TopRight() - delta);
   }
-
-  gfxCtx->ClosePath();
-  gfxCtx->Fill();
+  RefPtr<Path> path = builder->Finish();
+  aDrawTarget.Fill(path, color);
 }
 
 void

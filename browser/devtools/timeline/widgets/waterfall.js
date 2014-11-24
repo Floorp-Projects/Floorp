@@ -8,7 +8,7 @@
  * of all the markers in the timeline data.
  */
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+const {Ci, Cu} = require("chrome");
 
 loader.lazyRequireGetter(this, "L10N",
   "devtools/timeline/global", true);
@@ -19,6 +19,8 @@ loader.lazyImporter(this, "setNamedTimeout",
   "resource:///modules/devtools/ViewHelpers.jsm");
 loader.lazyImporter(this, "clearNamedTimeout",
   "resource:///modules/devtools/ViewHelpers.jsm");
+loader.lazyRequireGetter(this, "EventEmitter",
+  "devtools/toolkit/event-emitter");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -39,6 +41,8 @@ const WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 32; // byte
 const WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 32; // byte
 const WATERFALL_MARKER_BAR_WIDTH_MIN = 5; // px
 
+const WATERFALL_ROWCOUNT_ONPAGEUPDOWN = 10;
+
 /**
  * A detailed waterfall view for the timeline data.
  *
@@ -46,6 +50,7 @@ const WATERFALL_MARKER_BAR_WIDTH_MIN = 5; // px
  *        The parent node holding the waterfall.
  */
 function Waterfall(parent) {
+  EventEmitter.decorate(this);
   this._parent = parent;
   this._document = parent.ownerDocument;
   this._fragment = this._document.createDocumentFragment();
@@ -60,6 +65,8 @@ function Waterfall(parent) {
   this._listContents.setAttribute("flex", "1");
   this._parent.appendChild(this._listContents);
 
+  this.setupKeys();
+
   this._isRTL = this._getRTL();
 
   // Lazy require is a bit slow, and these are hot objects.
@@ -67,6 +74,10 @@ function Waterfall(parent) {
   this._blueprint = TIMELINE_BLUEPRINT;
   this._setNamedTimeout = setNamedTimeout;
   this._clearNamedTimeout = clearNamedTimeout;
+
+  // Selected row index. By default, we want the first
+  // row to be selected.
+  this._selectedRowIdx = 0;
 }
 
 Waterfall.prototype = {
@@ -77,20 +88,55 @@ Waterfall.prototype = {
    *        A list of markers received from the controller.
    * @param number timeEpoch
    *        The absolute time (in milliseconds) when the recording started.
-   * @param number timeStart
+   * @param number startTime
    *        The time (in milliseconds) to start drawing from.
-   * @param number timeEnd
+   * @param number endTime
    *        The time (in milliseconds) to end drawing at.
    */
-  setData: function(markers, timeEpoch, timeStart, timeEnd) {
+  setData: function(markers, timeEpoch, startTime, endTime) {
     this.clearView();
+    this._markers = markers;
 
-    let dataScale = this._waterfallWidth / (timeEnd - timeStart);
+    let dataScale = this._waterfallWidth / (endTime - startTime);
     this._drawWaterfallBackground(dataScale);
 
     // Label the header as if the first possible marker was at T=0.
-    this._buildHeader(this._headerContents, timeStart - timeEpoch, dataScale);
-    this._buildMarkers(this._listContents, markers, timeStart, timeEnd, dataScale);
+    this._buildHeader(this._headerContents, startTime - timeEpoch, dataScale);
+    this._buildMarkers(this._listContents, markers, startTime, endTime, dataScale);
+    this.selectRow(this._selectedRowIdx);
+  },
+
+  /**
+   * Keybindings.
+   */
+  setupKeys: function() {
+    let pane = this._document.querySelector("#timeline-pane");
+    pane.parentNode.parentNode.addEventListener("keydown", e => {
+      if (e.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_UP) {
+        e.preventDefault();
+        this.selectNearestRow(this._selectedRowIdx - 1);
+      }
+      if (e.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
+        e.preventDefault();
+        this.selectNearestRow(this._selectedRowIdx + 1);
+      }
+      if (e.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_HOME) {
+        e.preventDefault();
+        this.selectNearestRow(0);
+      }
+      if (e.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_END) {
+        e.preventDefault();
+        this.selectNearestRow(this._listContents.children.length);
+      }
+      if (e.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP) {
+        e.preventDefault();
+        this.selectNearestRow(this._selectedRowIdx - WATERFALL_ROWCOUNT_ONPAGEUPDOWN);
+      }
+      if (e.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_PAGE_DOWN) {
+        e.preventDefault();
+        this.selectNearestRow(this._selectedRowIdx + WATERFALL_ROWCOUNT_ONPAGEUPDOWN);
+      }
+    }, true);
   },
 
   /**
@@ -122,12 +168,12 @@ Waterfall.prototype = {
    *
    * @param nsIDOMNode parent
    *        The parent node holding the header.
-   * @param number timeStart
+   * @param number startTime
    *        @see Waterfall.prototype.setData
    * @param number dataScale
    *        The time scale of the data source.
    */
-  _buildHeader: function(parent, timeStart, dataScale) {
+  _buildHeader: function(parent, startTime, dataScale) {
     let container = this._document.createElement("hbox");
     container.className = "waterfall-header-container";
     container.setAttribute("flex", "1");
@@ -159,7 +205,7 @@ Waterfall.prototype = {
 
     for (let x = 0; x < this._waterfallWidth; x += tickInterval) {
       let start = x + direction * WATERFALL_HEADER_TEXT_PADDING;
-      let time = Math.round(timeStart + x / dataScale);
+      let time = Math.round(startTime + x / dataScale);
       let label = this._l10n.getFormatStr("timeline.tick", time);
 
       let node = this._document.createElement("label");
@@ -177,23 +223,25 @@ Waterfall.prototype = {
    *
    * @param nsIDOMNode parent
    *        The parent node holding the markers.
-   * @param number timeStart
+   * @param number startTime
    *        @see Waterfall.prototype.setData
    * @param number dataScale
    *        The time scale of the data source.
    */
-  _buildMarkers: function(parent, markers, timeStart, timeEnd, dataScale) {
-    let processed = 0;
+  _buildMarkers: function(parent, markers, startTime, endTime, dataScale) {
+    let rowsCount = 0;
+    let markerIdx = -1;
 
     for (let marker of markers) {
-      if (!isMarkerInRange(marker, timeStart, timeEnd)) {
+      markerIdx++;
+      if (!isMarkerInRange(marker, startTime, endTime)) {
         continue;
       }
       // Only build and display a finite number of markers initially, to
       // preserve a snappy UI. After a certain delay, continue building the
       // outstanding markers while there's (hopefully) no user interaction.
-      let arguments_ = [this._fragment, marker, timeStart, dataScale];
-      if (processed++ < WATERFALL_IMMEDIATE_DRAW_MARKERS_COUNT) {
+      let arguments_ = [this._fragment, marker, startTime, dataScale, markerIdx, rowsCount];
+      if (rowsCount++ < WATERFALL_IMMEDIATE_DRAW_MARKERS_COUNT) {
         this._buildMarker.apply(this, arguments_);
       } else {
         this._outstandingMarkers.push(arguments_);
@@ -228,6 +276,7 @@ Waterfall.prototype = {
     }
     this._outstandingMarkers.length = 0;
     parent.appendChild(this._fragment);
+    this.selectRow(this._selectedRowIdx);
   },
 
   /**
@@ -237,18 +286,24 @@ Waterfall.prototype = {
    *        The parent node holding the marker.
    * @param object marker
    *        The { name, start, end } marker in the data source.
-   * @param timeStart
+   * @param startTime
    *        @see Waterfall.prototype.setData
    * @param number dataScale
    *        @see Waterfall.prototype._buildMarkers
+   * @param number markerIdx
+   *        Index of the marker in this._markers
+   * @param number rowIdx
+   *        Index of current row
    */
-  _buildMarker: function(parent, marker, timeStart, dataScale) {
+  _buildMarker: function(parent, marker, startTime, dataScale, markerIdx, rowIdx) {
     let container = this._document.createElement("hbox");
+    container.setAttribute("markerIdx", markerIdx);
     container.className = "waterfall-marker-container";
 
     if (marker) {
       this._buildMarkerSidebar(container, marker);
-      this._buildMarkerWaterfall(container, marker, timeStart, dataScale);
+      this._buildMarkerWaterfall(container, marker, startTime, dataScale, markerIdx);
+      container.onclick = () => this.selectRow(rowIdx);
     } else {
       this._buildMarkerSpacer(container);
       container.setAttribute("flex", "1");
@@ -256,6 +311,83 @@ Waterfall.prototype = {
     }
 
     parent.appendChild(container);
+  },
+
+  /**
+   * Select first row.
+   */
+  resetSelection: function() {
+    this.selectRow(0);
+  },
+
+  /**
+   * Select a marker in the waterfall.
+   *
+   * @param number idx
+   *        Index of the row to select. -1 clears the selection.
+   */
+  selectRow: function(idx) {
+    // Unselect
+    let prev = this._listContents.children[this._selectedRowIdx];
+    if (prev) {
+      prev.classList.remove("selected");
+    }
+
+    this._selectedRowIdx = idx;
+
+    let row = this._listContents.children[idx];
+    if (row && !row.hasAttribute("is-spacer")) {
+      row.focus();
+      row.classList.add("selected");
+      let markerIdx = row.getAttribute("markerIdx");
+      this.emit("selected", this._markers[markerIdx]);
+      this.ensureRowIsVisible(row);
+    } else {
+      this.emit("unselected");
+    }
+  },
+
+  /**
+   * Find a valid row to select.
+   *
+   * @param number idx
+   *        Index of the row to select.
+   */
+  selectNearestRow: function(idx) {
+    if (this._listContents.children.length == 0) {
+      return;
+    }
+    idx = Math.max(idx, 0);
+    idx = Math.min(idx, this._listContents.children.length - 1);
+    let row = this._listContents.children[idx];
+    if (row && row.hasAttribute("is-spacer")) {
+      if (idx > 0) {
+        return this.selectNearestRow(idx - 1);
+      } else {
+        return;
+      }
+    }
+    this.selectRow(idx);
+  },
+
+  /**
+   * Scroll waterfall to ensure row is in the viewport.
+   *
+   * @param number idx
+   *        Index of the row to select.
+   */
+  ensureRowIsVisible: function(row) {
+    let parent = row.parentNode;
+    let parentRect = parent.getBoundingClientRect();
+    let rowRect = row.getBoundingClientRect();
+    let yDelta = rowRect.top - parentRect.top;
+    if (yDelta < 0) {
+      parent.scrollTop += yDelta;
+    }
+    yDelta = parentRect.bottom - rowRect.bottom;
+    if (yDelta < 0) {
+      parent.scrollTop -= yDelta;
+    }
   },
 
   /**
@@ -308,12 +440,12 @@ Waterfall.prototype = {
    *        The container node representing the marker.
    * @param object marker
    *        @see Waterfall.prototype._buildMarker
-   * @param timeStart
+   * @param startTime
    *        @see Waterfall.prototype.setData
    * @param number dataScale
    *        @see Waterfall.prototype._buildMarkers
    */
-  _buildMarkerWaterfall: function(container, marker, timeStart, dataScale) {
+  _buildMarkerWaterfall: function(container, marker, startTime, dataScale) {
     let blueprint = this._blueprint[marker.name];
 
     let waterfall = this._document.createElement("hbox");
@@ -321,7 +453,7 @@ Waterfall.prototype = {
     waterfall.setAttribute("align", "center");
     waterfall.setAttribute("flex", "1");
 
-    let start = (marker.start - timeStart) * dataScale;
+    let start = (marker.start - startTime) * dataScale;
     let width = (marker.end - marker.start) * dataScale;
     let offset = this._isRTL ? this._waterfallWidth : 0;
 
@@ -329,6 +461,8 @@ Waterfall.prototype = {
     bar.className = "waterfall-marker-bar";
     bar.style.backgroundColor = blueprint.fill;
     bar.style.borderColor = blueprint.stroke;
+    // Save border color. It will change when marker is selected.
+    bar.setAttribute("borderColor", blueprint.stroke);
     bar.style.transform = "translateX(" + (start - offset) + "px)";
     bar.setAttribute("type", marker.name);
     bar.setAttribute("width", Math.max(width, WATERFALL_MARKER_BAR_WIDTH_MIN));

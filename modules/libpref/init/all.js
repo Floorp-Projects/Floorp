@@ -284,6 +284,9 @@ pref("media.wave.enabled", true);
 #endif
 #ifdef MOZ_WEBM
 pref("media.webm.enabled", true);
+#if defined(MOZ_FMP4) && defined(MOZ_WMF)
+pref("media.webm.intel_decoder.enabled", false);
+#endif
 #endif
 #ifdef MOZ_GSTREAMER
 pref("media.gstreamer.enabled", true);
@@ -4415,3 +4418,6 @@ pref("dom.beforeAfterKeyboardEvent.enabled", false);
 #ifdef XP_MACOSX
 pref("intl.collation.mac.use_icu", true);
 #endif
+
+// Enable meta-viewport support in remote APZ-enabled frames.
+pref("dom.meta-viewport.enabled", false);

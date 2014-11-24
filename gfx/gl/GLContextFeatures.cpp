@@ -16,21 +16,44 @@ namespace gl {
 
 const size_t kMAX_EXTENSION_GROUP_SIZE = 5;
 
+MOZ_BEGIN_ENUM_CLASS(GLVersion, uint32_t)
+    NONE  = 0,   // Feature is not supported natively by GL
+    GL1_2 = 120,
+    GL1_3 = 130,
+    GL2   = 200,
+    GL2_1 = 210,
+    GL3   = 300,
+    GL3_1 = 310,
+    GL3_2 = 320,
+    GL3_3 = 330,
+    GL4   = 400,
+    GL4_1 = 410,
+    GL4_2 = 420,
+    GL4_3 = 430,
+MOZ_END_ENUM_CLASS(GLVersion)
+
+MOZ_BEGIN_ENUM_CLASS(GLESVersion, uint32_t)
+    NONE  = 0,   // Feature is not support natively by GL ES
+    ES2   = 200,
+    ES3   = 300,
+    ES3_1 = 310,
+MOZ_END_ENUM_CLASS(GLESVersion)
+
 // ARB_ES2_compatibility is natively supported in OpenGL 4.1.
-static const unsigned int kGLCoreVersionForES2Compat = 410;
+static const GLVersion kGLCoreVersionForES2Compat = GLVersion::GL4_1;
 
 // ARB_ES3_compatibility is natively supported in OpenGL 4.3.
-static const unsigned int kGLCoreVersionForES3Compat = 430;
+static const GLVersion kGLCoreVersionForES3Compat = GLVersion::GL4_3;
 
 struct FeatureInfo
 {
     const char* mName;
 
     /* The (desktop) OpenGL version that provides this feature */
-    unsigned int mOpenGLVersion;
+    GLVersion mOpenGLVersion;
 
     /* The OpenGL ES version that provides this feature */
-    unsigned int mOpenGLESVersion;
+    GLESVersion mOpenGLESVersion;
 
     /* If there is an ARB extension, and its function symbols are
      * not decorated with an ARB suffix, then its extension ID should go
@@ -51,8 +74,8 @@ struct FeatureInfo
 static const FeatureInfo sFeatureInfoArr[] = {
     {
         "bind_buffer_offset",
-        0,   // OpenGL version
-        0,   // OpenGL ES version
+        GLVersion::NONE,
+        GLESVersion::NONE,
         GLContext::Extension_None,
         {
 
@@ -63,8 +86,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "blend_minmax",
-        200, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_blend_minmax,
@@ -73,8 +96,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "clear_buffers",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::Extensions_End
@@ -82,8 +105,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "copy_buffer",
-        310, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_1,
+        GLESVersion::ES3,
         GLContext::ARB_copy_buffer,
         {
             GLContext::Extensions_End
@@ -91,8 +114,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "depth_texture",
-        200, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_depth_texture,
@@ -104,8 +127,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "draw_buffers",
-        200, // OpenGL version
-        0, // Only enable when we have the extension on ES, bug 1056947
+        GLVersion::GL2,
+        GLESVersion::NONE,
         GLContext::Extension_None,
         {
             GLContext::ARB_draw_buffers,
@@ -115,8 +138,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "draw_instanced",
-        310, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_1,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_draw_instanced,
@@ -128,8 +151,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "draw_range_elements",
-        120, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL1_2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_draw_range_elements,
@@ -138,8 +161,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "element_index_uint",
-        200, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::OES_element_index_uint,
@@ -149,7 +172,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "ES2_compatibility",
         kGLCoreVersionForES2Compat,
-        200, // OpenGL ES version
+        GLESVersion::ES2, // OpenGL ES version
         GLContext::ARB_ES2_compatibility, // no suffix on ARB extension
         {
             GLContext::Extensions_End
@@ -158,7 +181,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "ES3_compatibility",
         kGLCoreVersionForES3Compat,
-        300, // OpenGL ES version
+        GLESVersion::ES3, // OpenGL ES version
         GLContext::ARB_ES3_compatibility, // no suffix on ARB extension
         {
             GLContext::Extensions_End
@@ -167,8 +190,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         // Removes clamping for float color outputs from frag shaders.
         "frag_color_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_color_buffer_float,
@@ -179,8 +202,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "frag_depth",
-        200, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_frag_depth,
@@ -189,8 +212,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "framebuffer_blit",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_framebuffer_blit,
@@ -200,8 +223,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "framebuffer_multisample",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_framebuffer_multisample,
@@ -211,8 +234,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "framebuffer_object",
-        300, // OpenGL version
-        200, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES2,
         GLContext::ARB_framebuffer_object,
         {
             GLContext::EXT_framebuffer_object,
@@ -221,8 +244,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "get_integer_indexed",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_draw_buffers2,
@@ -231,8 +254,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "get_integer64_indexed",
-        320, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::Extensions_End
@@ -240,8 +263,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "get_query_object_iv",
-        200, // OpenGL version
-        0,   // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::NONE,
         GLContext::Extension_None,
         {
             GLContext::Extensions_End
@@ -253,8 +276,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "gpu_shader4",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_gpu_shader4,
@@ -263,8 +286,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "instanced_arrays",
-        330, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_instanced_arrays,
@@ -275,8 +298,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "instanced_non_arrays",
-        330, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_instanced_arrays,
@@ -290,8 +313,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "invalidate_framebuffer",
-        430, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL4_3,
+        GLESVersion::ES3,
         GLContext::ARB_invalidate_subdata,
         {
             GLContext::Extensions_End
@@ -299,8 +322,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "map_buffer_range",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::ARB_map_buffer_range,
         {
             GLContext::Extensions_End
@@ -308,8 +331,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "occlusion_query",
-        200, // OpenGL version
-        0,   // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::NONE,
         GLContext::Extension_None,
         {
             GLContext::Extensions_End
@@ -319,7 +342,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "occlusion_query_boolean",
         kGLCoreVersionForES3Compat,
-        300, // OpenGL ES version
+        GLESVersion::ES3,
         GLContext::ARB_ES3_compatibility,
         {
             GLContext::EXT_occlusion_query_boolean,
@@ -334,8 +357,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "occlusion_query2",
-        330, // = min(330, kGLCoreVersionForES3Compat),
-        300, // OpenGL ES version
+        GLVersion::GL3_3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_occlusion_query2,
@@ -351,8 +374,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "packed_depth_stencil",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_packed_depth_stencil,
@@ -362,8 +385,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "query_objects",
-        200, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_occlusion_query_boolean,
@@ -377,8 +400,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "renderbuffer_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,
@@ -388,8 +411,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "renderbuffer_half_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,
@@ -399,8 +422,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "robustness",
-        0,   // OpenGL version
-        0,   // OpenGL ES version
+        GLVersion::NONE,
+        GLESVersion::NONE,
         GLContext::Extension_None,
         {
             GLContext::ARB_robustness,
@@ -410,8 +433,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "sRGB",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_sRGB,
@@ -420,8 +443,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "sampler_objects",
-        330, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_3,
+        GLESVersion::ES3,
         GLContext::ARB_sampler_objects,
         {
             GLContext::Extensions_End
@@ -429,8 +452,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "standard_derivatives",
-        200, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::OES_standard_derivatives,
@@ -439,8 +462,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_3D",
-        120, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL1_2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_texture3D,
@@ -450,8 +473,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_3D_compressed",
-        130, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL1_3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_compression,
@@ -461,8 +484,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_3D_copy",
-        120, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL1_2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::EXT_copy_texture,
@@ -472,8 +495,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,
@@ -483,8 +506,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_float_linear",
-        310, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_1,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_float,
@@ -494,8 +517,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_half_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_half_float_pixel,
@@ -514,8 +537,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_half_float_linear",
-        310, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_1,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_half_float_pixel,
@@ -527,8 +550,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_non_power_of_two",
-        200, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::ARB_texture_non_power_of_two,
@@ -538,8 +561,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_storage",
-        420, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL4_2,
+        GLESVersion::ES3,
         GLContext::ARB_texture_storage,
         {
             /*
@@ -552,8 +575,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "transform_feedback2",
-        400, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL4,
+        GLESVersion::ES3,
         GLContext::ARB_transform_feedback2,
         {
             GLContext::NV_transform_feedback2,
@@ -562,8 +585,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "uniform_buffer_object",
-        310, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3_1,
+        GLESVersion::ES3,
         GLContext::ARB_uniform_buffer_object,
         {
             GLContext::Extensions_End
@@ -571,8 +594,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "uniform_matrix_nonsquare",
-        210, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL2_1,
+        GLESVersion::ES3,
         GLContext::Extension_None,
         {
             GLContext::Extensions_End
@@ -580,8 +603,8 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "vertex_array_object",
-        300, // OpenGL version
-        300, // OpenGL ES version
+        GLVersion::GL3,
+        GLESVersion::ES3,
         GLContext::ARB_vertex_array_object, // ARB extension
         {
             GLContext::OES_vertex_array_object,
@@ -612,10 +635,10 @@ ProfileVersionForFeature(GLFeature feature, ContextProfile profile)
     const FeatureInfo& featureInfo = GetFeatureInfo(feature);
 
     if (profile == ContextProfile::OpenGLES) {
-        return featureInfo.mOpenGLESVersion;
+        return (uint32_t) featureInfo.mOpenGLESVersion;
     }
 
-    return featureInfo.mOpenGLVersion;
+    return (uint32_t) featureInfo.mOpenGLVersion;
 }
 
 bool
