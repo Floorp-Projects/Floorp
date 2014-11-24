@@ -262,12 +262,6 @@ public class DynamicPanel extends HomeFragment {
         public void requestDataset(DatasetRequest request) {
             Log.d(LOGTAG, "Requesting request: " + request);
 
-            // Ignore dataset requests while the fragment is not
-            // allowed to load its content.
-            if (!getCanLoadHint()) {
-                return;
-            }
-
             final Bundle bundle = new Bundle();
             bundle.putParcelable(DATASET_REQUEST, request);
 
