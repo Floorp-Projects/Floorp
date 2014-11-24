@@ -611,8 +611,8 @@ Classifier::ApplyTableUpdates(nsTArray<TableUpdate*>* aUpdates,
   if (!prefixSet) {
     return NS_ERROR_FAILURE;
   }
-  nsTArray<uint32_t> AddPrefixHashes;
-  rv = prefixSet->GetPrefixes(&AddPrefixHashes);
+  FallibleTArray<uint32_t> AddPrefixHashes;
+  rv = prefixSet->GetPrefixes(AddPrefixHashes);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = store->AugmentAdds(AddPrefixHashes);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -734,8 +734,8 @@ Classifier::ReadNoiseEntries(const Prefix& aPrefix,
     return NS_ERROR_FAILURE;
   }
 
-  nsTArray<uint32_t> prefixes;
-  nsresult rv = cache->GetPrefixes(&prefixes);
+  FallibleTArray<uint32_t> prefixes;
+  nsresult rv = cache->GetPrefixes(prefixes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   size_t idx = prefixes.BinaryIndexOf(aPrefix.ToUint32());
