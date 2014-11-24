@@ -7,13 +7,12 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_step-out.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gVars;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gVars = gDebugger.DebuggerView.Variables;
@@ -41,9 +40,7 @@ function testNormalReturn() {
       gDebugger);
   });
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    gDebuggee.document.getElementById("return"),
-    gDebuggee);
+  sendMouseClickToTab(gTab, content.document.getElementById("return"));
 }
 
 function testReturnWithException() {
@@ -65,9 +62,7 @@ function testReturnWithException() {
       gDebugger);
   });
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    gDebuggee.document.getElementById("throw"),
-    gDebuggee);
+  sendMouseClickToTab(gTab, content.document.getElementById("throw"));
 }
 
 function resumeDebuggee() {
@@ -78,7 +73,6 @@ function resumeDebuggee() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gVars = null;

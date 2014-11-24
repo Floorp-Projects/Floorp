@@ -14,15 +14,14 @@ function test() {
   // GC from previous tests does not interfere with the debugger suite.
   requestLongerTimeout(2);
 
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     ok(aTab, "Should have a tab available.");
-    ok(aDebuggee, "Should have a debuggee available.");
     ok(aPanel, "Should have a debugger pane available.");
 
     waitForSourceAndCaretAndScopes(aPanel, "-02.js", 1).then(() => {
       resumeDebuggerThenCloseAndFinish(aPanel);
     });
 
-    aDebuggee.firstCall();
+    callInTab(aTab, "firstCall");
   });
 }
