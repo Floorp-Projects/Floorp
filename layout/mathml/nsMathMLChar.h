@@ -7,6 +7,7 @@
 #define nsMathMLChar_h___
 
 #include "nsAutoPtr.h"
+#include "nsColor.h"
 #include "nsMathMLOperators.h"
 #include "nsPoint.h"
 #include "nsRect.h"
@@ -258,12 +259,14 @@ private:
   nsresult
   PaintVertically(nsPresContext* aPresContext,
                   gfxContext*    aThebesContext,
-                  nsRect&        aRect);
+                  nsRect&        aRect,
+                  nscolor        aColor);
 
   nsresult
   PaintHorizontally(nsPresContext* aPresContext,
                     gfxContext*    aThebesContext,
-                    nsRect&        aRect);
+                    nsRect&        aRect,
+                    nscolor        aColor);
 
   void
   ApplyTransforms(gfxContext* aThebesContext, int32_t aAppUnitsPerGfxUnit,
