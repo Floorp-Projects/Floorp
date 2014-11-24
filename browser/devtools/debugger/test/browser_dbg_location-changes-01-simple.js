@@ -7,13 +7,12 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gEditor, gSources, gFrames;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gEditor = gDebugger.DebuggerView.editor;
@@ -21,7 +20,7 @@ function test() {
     gFrames = gDebugger.DebuggerView.StackFrames;
 
     waitForSourceAndCaretAndScopes(gPanel, ".html", 14).then(performTest);
-    gDebuggee.simpleCall();
+    callInTab(gTab, "simpleCall");
   });
 }
 
@@ -62,7 +61,6 @@ function testLocationChange() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gEditor = null;
