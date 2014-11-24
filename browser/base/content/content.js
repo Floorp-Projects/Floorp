@@ -129,9 +129,6 @@ let AboutHomeListener = {
       case "AboutHomeSearchEvent":
         this.onSearch(aEvent);
         break;
-      case "AboutHomeSearchPanel":
-        this.onOpenSearchPanel(aEvent);
-        break;
       case "click":
         this.onClick(aEvent);
         break;
@@ -191,7 +188,6 @@ let AboutHomeListener = {
 
     sendAsyncMessage("AboutHome:RequestUpdate");
     doc.addEventListener("AboutHomeSearchEvent", this, true, true);
-    doc.addEventListener("AboutHomeSearchPanel", this, true, true);
   },
 
   onClick: function(aEvent) {
@@ -242,10 +238,6 @@ let AboutHomeListener = {
       case "settings":
         sendAsyncMessage("AboutHome:Settings");
         break;
-
-      case "searchIcon":
-        sendAsyncMessage("AboutHome:OpenSearchPanel", null, { anchor: originalTarget });
-        break;
     }
   },
 
@@ -263,10 +255,6 @@ let AboutHomeListener = {
 
   onSearch: function(aEvent) {
     sendAsyncMessage("AboutHome:Search", { searchData: aEvent.detail });
-  },
-
-  onOpenSearchPanel: function(aEvent) {
-    sendAsyncMessage("AboutHome:OpenSearchPanel");
   },
 
   onFocusInput: function () {
