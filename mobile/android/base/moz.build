@@ -436,6 +436,7 @@ gbjar.sources += [
     'toolbar/ToolbarPrefs.java',
     'toolbar/ToolbarProgressView.java',
     'TouchEventInterceptor.java',
+    'TransitionsTracker.java',
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
     'Webapp.java',
