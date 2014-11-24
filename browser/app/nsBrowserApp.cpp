@@ -121,7 +121,7 @@ static bool IsArg(const char* arg, const char* s)
   return false;
 }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && defined(MOZ_METRO)
 /*
  * AttachToTestHarness - Windows helper for when we are running
  * in the immersive environment. Firefox is launched by Windows in
