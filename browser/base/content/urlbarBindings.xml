@@ -1015,6 +1015,11 @@
           uri = uri.spec;
           this.setAttribute("src", PlacesUtils.getImageURLForResolution(window, uri));
         }
+        else {
+          // If the default has just been changed to a provider without icon,
+          // avoid showing the icon of the previous default provider.
+          this.removeAttribute("src");
+        }
         document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
                 .setAttribute("value", currentEngine.name + " Search");
 
