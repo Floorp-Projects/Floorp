@@ -106,37 +106,11 @@ function runTests() {
     promiseClick(logoImg()),
   ]).then(TestRunner.next);
 
-  // In the search panel, click the no-logo engine.  It should become the
-  // current engine.
-  let noLogoBox = null;
-  for (let box of panel.childNodes) {
-    if (box.getAttribute("engine") == noLogoEngine.name) {
-      noLogoBox = box;
-      break;
-    }
-  }
-  ok(noLogoBox, "Search panel should contain the no-logo engine");
-  yield Promise.all([
-    promiseSearchEvents(["CurrentEngine"]),
-    promiseClick(noLogoBox),
-  ]).then(TestRunner.next);
-
-  yield checkCurrentEngine(ENGINE_NO_LOGO, false, false);
-
-  // Switch back to the 1x-and-2x logo engine.
-  Services.search.currentEngine = logo1x2xEngine;
-  yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  yield checkCurrentEngine(ENGINE_1X_2X_LOGO, true, true);
-
-  // Open the panel again.
-  yield Promise.all([
-    promisePanelShown(panel),
-    promiseClick(logoImg()),
-  ]).then(TestRunner.next);
-
-  // In the search panel, click the Manage Engines box.
   let manageBox = $("manage");
   ok(!!manageBox, "The Manage Engines box should be present in the document");
+  is(panel.childNodes.length, 1, "Search panel should only contain the Manage Engines entry");
+  is(panel.childNodes[0], manageBox, "Search panel should contain the Manage Engines entry");
+
   yield Promise.all([
     promiseManagerOpen(),
     promiseClick(manageBox),
@@ -319,58 +293,7 @@ function checkCurrentEngine(basename, has1xLogo, has2xLogo) {
   is(gSearch().currentEngineName, engine.name,
      "currentEngineName: " + engine.name);
 
-  // search bar logo
-  let logoURI = null;
-  if (window.devicePixelRatio == 2) {
-    if (has2xLogo) {
-      logoURI = engine.getIconURLBySize(...LOGO_2X_DPI_SIZE);
-      ok(!!logoURI, "Sanity check: engine should have 2x logo");
-    }
-  }
-  else {
-    if (has1xLogo) {
-      logoURI = engine.getIconURLBySize(...LOGO_1X_DPI_SIZE);
-      ok(!!logoURI, "Sanity check: engine should have 1x logo");
-    }
-    else if (has2xLogo) {
-      logoURI = engine.getIconURLBySize(...LOGO_2X_DPI_SIZE);
-      ok(!!logoURI, "Sanity check: engine should have 2x logo");
-    }
-  }
-  let logo = logoImg();
-  is(logo.hidden, !logoURI,
-     "Logo should be visible iff engine has a logo: " + engine.name);
-  if (logoURI) {
-    // The URLs of blobs created with the same ArrayBuffer are different, so
-    // just check that the URI is a blob URI.
-    ok(/^url\("blob:/.test(logo.style.backgroundImage), "Logo URI"); //"
-  }
-
-  if (logo.hidden) {
-    executeSoon(TestRunner.next);
-    return;
-  }
-
-  // "selected" attributes of engines in the panel
-  let panel = searchPanel();
-  promisePanelShown(panel).then(() => {
-    panel.hidePopup();
-    for (let engineBox of panel.childNodes) {
-      let engineName = engineBox.getAttribute("engine");
-      if (engineName == engine.name) {
-        is(engineBox.getAttribute("selected"), "true",
-           "Engine box's selected attribute should be true for " +
-           "selected engine: " + engineName);
-      }
-      else {
-        ok(!engineBox.hasAttribute("selected"),
-           "Engine box's selected attribute should be absent for " +
-           "non-selected engine: " + engineName);
-      }
-    }
-    TestRunner.next();
-  });
-  panel.openPopup(logo);
+  executeSoon(TestRunner.next);
 }
 
 function promisePanelShown(panel) {
@@ -404,12 +327,14 @@ function promiseManagerOpen() {
       subj.addEventListener("load", function onLoad() {
         subj.removeEventListener("load", onLoad);
         if (subj.document.documentURI ==
-            "chrome://browser/content/search/engineManager.xul") {
+            "chrome://browser/content/preferences/preferences.xul") {
           winWatcher.unregisterNotification(onWin);
-          ok(true, "Observed search manager window opened");
+          ok(true, "Observed Preferences window opened");
           is(subj.opener, gWindow,
-             "Search engine manager opener should be the chrome browser " +
+             "Preferences window opener should be the chrome browser " +
              "window containing the newtab page");
+          is(subj.document.documentElement.currentPane.id, "paneSearch",
+             "Preferences window should be opened in the Search pane");
           executeSoon(() => {
             subj.close();
             deferred.resolve();

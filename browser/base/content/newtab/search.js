@@ -8,10 +8,21 @@ let gSearch = {
 
   currentEngineName: null,
 
+  get useNewUI() {
+    let newUI = Services.prefs.getBoolPref("browser.search.showOneOffButtons");
+    delete this.useNewUI;
+    this.useNewUI = newUI;
+    return newUI;
+  },
+
   init: function () {
     for (let idSuffix of this._nodeIDSuffixes) {
       this._nodes[idSuffix] =
         document.getElementById("newtab-search-" + idSuffix);
+    }
+
+    if (this.useNewUI) {
+      this._nodes.logo.classList.add("magnifier");
     }
 
     window.addEventListener("ContentSearchService", this);
@@ -19,10 +30,6 @@ let gSearch = {
   },
 
   showPanel: function () {
-    if (!Services.prefs.getBoolPref("browser.search.showOneOffButtons")) {
-      return;
-    }
-
     let panel = this._nodes.panel;
     let logo = this._nodes.logo;
     panel.openPopup(logo);
@@ -113,6 +120,11 @@ let gSearch = {
   },
 
   _setUpPanel: function () {
+    // The new search UI only contains the "manage" engine entry in the panel
+    if (this.useNewUI) {
+      return;
+    }
+
     // Build the panel if necessary.
     if (this._newEngines) {
       this._buildPanel(this._newEngines);
@@ -184,18 +196,20 @@ let gSearch = {
   _setCurrentEngine: function (engine) {
     this.currentEngineName = engine.name;
 
-    // Set the logo.
-    let logoBuf = window.devicePixelRatio == 2 ? engine.logo2xBuffer :
-                  engine.logoBuffer || engine.logo2xBuffer;
-    if (logoBuf) {
-      this._nodes.logo.hidden = false;
-      let uri = URL.createObjectURL(new Blob([logoBuf]));
-      this._nodes.logo.style.backgroundImage = "url(" + uri + ")";
-      this._nodes.text.placeholder = "";
-    }
-    else {
-      this._nodes.logo.hidden = true;
-      this._nodes.text.placeholder = engine.name;
+    if (!this.useNewUI) {
+      // Set the logo.
+      let logoBuf = window.devicePixelRatio == 2 ? engine.logo2xBuffer :
+                    engine.logoBuffer || engine.logo2xBuffer;
+      if (logoBuf) {
+        this._nodes.logo.hidden = false;
+        let uri = URL.createObjectURL(new Blob([logoBuf]));
+        this._nodes.logo.style.backgroundImage = "url(" + uri + ")";
+        this._nodes.text.placeholder = "";
+      }
+      else {
+        this._nodes.logo.hidden = true;
+        this._nodes.text.placeholder = engine.name;
+      }
     }
 
     // Set up the suggestion controller.
