@@ -26,11 +26,11 @@ public:
 
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
-  CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                    layers::LayersBackend aLayersBackend,
-                    layers::ImageContainer* aImageContainer,
-                    MediaTaskQueue* aVideoTaskQueue,
-                    MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+  CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                     layers::LayersBackend aLayersBackend,
+                     layers::ImageContainer* aImageContainer,
+                     MediaTaskQueue* aVideoTaskQueue,
+                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
 
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>

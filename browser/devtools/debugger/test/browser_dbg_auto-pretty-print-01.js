@@ -5,7 +5,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_auto-pretty-print-01.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gEditor, gSources, gPrefs, gOptions, gView;
 
 let gFirstSourceLabel = "code_ugly-5.js";
@@ -15,9 +15,8 @@ let gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-pr
 Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", true);
 
 function test(){
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gEditor = gDebugger.DebuggerView.editor;
@@ -99,7 +98,6 @@ function testSourceIsPretty() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gEditor = null;

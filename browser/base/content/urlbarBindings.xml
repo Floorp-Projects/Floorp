@@ -132,9 +132,7 @@
       -->
       <method name="onBeforeValueGet">
         <body><![CDATA[
-          if (this.hasAttribute("actiontype"))
-            return {value: this._value};
-          return null;
+          return {value: this._value};
         ]]></body>
       </method>
 
@@ -285,31 +283,31 @@
           var mayInheritPrincipal = false;
           var postData = null;
 
-          var action = this._parseActionUrl(url);
+          let action = this._parseActionUrl(this._value);
           let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
 
           let matchLastLocationChange = true;
           if (action) {
-            if (this.hasAttribute("actiontype")) {
-              if (action.type == "switchtab") {
-                url = action.params.url;
+            if (action.type == "switchtab") {
+              url = action.params.url;
+              if (this.hasAttribute("actiontype")) {
                 this.handleRevert();
                 let prevTab = gBrowser.selectedTab;
                 if (switchToTabHavingURI(url) &&
                     isTabEmpty(prevTab))
                   gBrowser.removeTab(prevTab);
                 return;
-              } else if (action.type == "keyword") {
-                url = action.params.url;
-              } else if (action.type == "searchengine") {
-                let engine = Services.search.getEngineByName(action.params.engineName);
-                let submission = engine.getSubmission(action.params.searchQuery);
-
-                url = submission.uri.spec;
-                postData = submission.postData;
-              } else if (action.type == "visiturl") {
-                url = action.params.url;
               }
+            } else if (action.type == "keyword") {
+              url = action.params.url;
+            } else if (action.type == "searchengine") {
+              let engine = Services.search.getEngineByName(action.params.engineName);
+              let submission = engine.getSubmission(action.params.searchQuery);
+
+              url = submission.uri.spec;
+              postData = submission.postData;
+            } else if (action.type == "visiturl") {
+              url = action.params.url;
             }
             continueOperation.call(this);
           }
@@ -584,7 +582,11 @@
               urlbar.inputField.value = urlbar.inputField.value.substring(0, start) +
                                         urlbar.inputField.value.substring(end);
               urlbar.selectionStart = urlbar.selectionEnd = start;
-              urlbar.removeAttribute("actiontype");
+
+              let event = document.createEvent("UIEvents");
+              event.initUIEvent("input", true, false, window, 0);
+              urlbar.dispatchEvent(event);
+
               SetPageProxyState("invalid");
             }
 
@@ -704,8 +706,10 @@
         ]]></body>
       </method>
 
-      <property name="textValue"
-                onget="return this.value;">
+      <property name="textValue">
+        <getter><![CDATA[
+          return this.inputField.value;
+        ]]></getter>
         <setter>
           <![CDATA[
           try {
@@ -714,8 +718,10 @@
 
           // Trim popup selected values, but never trim results coming from
           // autofill.
-          if (this.popup.selectedIndex == -1)
+          if (this.popup.selectedIndex == -1 ||
+              this.mController.getStyleAt(this.popup.selectedIndex) == "autofill") {
             this._disableTrim = true;
+          }
           this.value = val;
           this._disableTrim = false;
 
@@ -740,7 +746,6 @@
 
           // URL is in the format moz-action:ACTION,PARAMS
           // Where PARAMS is a JSON encoded object.
-          aUrl = decodeURI(aUrl);
           let [, type, params] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
 
           let action = {
@@ -786,6 +791,19 @@
           this.inputField.setSelectionRange(aStartIndex, aEndIndex);
         ]]></body>
       </method>
+
+      <method name="onInput">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this.mIgnoreInput && this.mController.input == this) {
+            this._value = this.inputField.value;
+            gBrowser.userTypedValue = this.value;
+            this.valueIsTyped = true;
+            this.mController.handleText();
+          }
+          this.resetActionType();
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -819,7 +837,7 @@
 
       <handler event="dragstart" phase="capturing"><![CDATA[
         // Drag only if the gesture starts from the input field.
-        if (this.inputField != event.originalTarget && 
+        if (this.inputField != event.originalTarget &&
             !(this.inputField.compareDocumentPosition(event.originalTarget) &
               Node.DOCUMENT_POSITION_CONTAINED_BY))
           return;
@@ -943,6 +961,35 @@
           createBundle("chrome://browser/locale/places/places.properties");
       </field>
 
+      <!-- Override this so that navigating between items results in an item
+           always being selected. This is contrary to the normal behaviour where
+           if you navigate beyond either end of the list, no item will be
+           selected. -->
+      <method name="getNextIndex">
+        <parameter name="reverse"/>
+        <parameter name="amount"/>
+        <parameter name="index"/>
+        <parameter name="maxRow"/>
+        <body><![CDATA[
+          if (maxRow < 0)
+            return -1;
+
+          let newIndex = index + (reverse ? -1 : 1) * amount;
+
+          // We don't want to wrap if navigation in any direction by one item.
+          // Otherwise we clamp to one end of the list.
+          // ie, hitting page-down will only cause is to wrap if we're already
+          // at one end of the list.
+          if (newIndex < 0) {
+            newIndex = index > 0 ? 0 : maxRow;
+          } else if (newIndex > maxRow) {
+            newIndex = index < maxRow ? maxRow : 0;
+          }
+
+          return newIndex;
+        ]]></body>
+      </method>
+
       <property name="maxResults" readonly="true">
         <getter>
           <![CDATA[
@@ -1046,6 +1093,18 @@
             }
 
             return label;
+          ]]>
+        </body>
+      </method>
+
+      <method name="onResultsAdded">
+        <body>
+          <![CDATA[
+            if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
+              return;
+
+            if (this._matchCount > 0 && this.selectedIndex == -1)
+              this.selectedIndex = 0;
           ]]>
         </body>
       </method>

@@ -17,6 +17,7 @@ var is_remote;
     }
     compartment_test();
     regexp_test();
+    postmessage_test();
     sync_test();
     async_test();
     rpc_test();
@@ -177,6 +178,11 @@ function compartment_test()
 function regexp_test()
 {
   sendSyncMessage("cpows:regexp_test", {}, { regexp: /myRegExp/g });
+}
+
+function postmessage_test()
+{
+  sendSyncMessage("cpows:postmessage_test", {}, { win: content.window });
 }
 
 function sync_test()

@@ -45,10 +45,12 @@ function testNext() {
 
   gURLBar.addEventListener("focus", function onFocus() {
     gURLBar.removeEventListener("focus", onFocus);
+    gURLBar.inputField.value = inputValue.slice(0, -1);
+    EventUtils.synthesizeKey(inputValue.slice(-1) , {});
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
   });
 
   gBrowser.selectedBrowser.focus();
-  gURLBar.inputField.value = inputValue;
   gURLBar.focus();
+
 }

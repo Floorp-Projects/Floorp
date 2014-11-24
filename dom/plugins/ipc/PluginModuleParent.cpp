@@ -97,29 +97,82 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentPa
     return PPluginModule::Bridge(aContentParent, chromeParent);
 }
 
-PluginModuleContentParent* PluginModuleContentParent::sSavedModuleParent;
+// A linked list used to fetch newly created PluginModuleContentParent instances
+// for LoadModule. Each pending LoadModule call owns an element in this list.
+// The element's mModule field is filled in when the new
+// PluginModuleContentParent arrives from chrome.
+struct MOZ_STACK_CLASS SavedPluginModule
+{
+    SavedPluginModule() : mModule(nullptr), mNext(sSavedModuleStack)
+    {
+        sSavedModuleStack = this;
+    }
+    ~SavedPluginModule()
+    {
+        MOZ_ASSERT(sSavedModuleStack == this);
+        sSavedModuleStack = mNext;
+    }
+
+    PluginModuleContentParent* GetModule() { return mModule; }
+
+    // LoadModule can be on the stack multiple times since the intr message it
+    // sends will dispatch arbitrary incoming messages from the chrome process,
+    // which can include new HTTP data. This makes it somewhat tricky to match
+    // up the object created in PluginModuleContentParent::Create with the
+    // LoadModule call that asked for it.
+    //
+    // Each invocation of LoadModule pushes a new SavedPluginModule object on
+    // the sSavedModuleStack stack, with the most recent invocation at the
+    // front. LoadModule messages are always processed by the chrome process in
+    // order, and PluginModuleContentParent allocation messages will also be
+    // received in order. Therefore, we need to match up the first received
+    // PluginModuleContentParent creation message with the first sent LoadModule
+    // call. This call will be the last one in the list that doesn't already
+    // have a module attached to it.
+    static void SaveModule(PluginModuleContentParent* module)
+    {
+        SavedPluginModule* saved = sSavedModuleStack;
+        SavedPluginModule* prev = nullptr;
+        while (saved && !saved->mModule) {
+            prev = saved;
+            saved = saved->mNext;
+        }
+        MOZ_ASSERT(prev);
+        MOZ_ASSERT(!prev->mModule);
+        prev->mModule = module;
+    }
+
+private:
+    PluginModuleContentParent* mModule;
+    SavedPluginModule* mNext;
+
+    static SavedPluginModule* sSavedModuleStack;
+};
+
+SavedPluginModule* SavedPluginModule::sSavedModuleStack;
 
 /* static */ PluginLibrary*
 PluginModuleContentParent::LoadModule(uint32_t aPluginId)
 {
-    MOZ_ASSERT(!sSavedModuleParent);
+    SavedPluginModule saved;
+
     MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content);
 
     /*
      * We send a LoadPlugin message to the chrome process using an intr
-     * message. Before it sends its response, it sends a message to create
-     * PluginModuleParent instance. That message is handled by
-     * PluginModuleContentParent::Create, which saves the instance in
-     * sSavedModuleParent. We fetch it from there after LoadPlugin finishes.
+     * message. Before it sends its response, it sends a message to create a
+     * PluginModuleContentParent instance. That message is handled by
+     * PluginModuleContentParent::Create. See SavedPluginModule for details
+     * about how we match up the result of PluginModuleContentParent::Create
+     * with the LoadModule call that requested it.
      */
     dom::ContentChild* cp = dom::ContentChild::GetSingleton();
     if (!cp->CallLoadPlugin(aPluginId)) {
         return nullptr;
     }
 
-    PluginModuleContentParent* parent = sSavedModuleParent;
+    PluginModuleContentParent* parent = saved.GetModule();
     MOZ_ASSERT(parent);
-    sSavedModuleParent = nullptr;
 
     return parent;
 }
@@ -135,8 +188,7 @@ PluginModuleContentParent::Create(mozilla::ipc::Transport* aTransport,
         return nullptr;
     }
 
-    MOZ_ASSERT(!sSavedModuleParent);
-    sSavedModuleParent = parent;
+    SavedPluginModule::SaveModule(parent);
 
     DebugOnly<bool> ok = parent->Open(aTransport, handle, XRE_GetIOMessageLoop(),
                                       mozilla::ipc::ParentSide);
@@ -289,13 +341,13 @@ PluginModuleChromeParent::~PluginModuleChromeParent()
         UnregisterInjectorCallback(mFlashProcess2);
 #endif
 
+    UnregisterSettingsCallbacks();
+
     Preferences::UnregisterCallback(TimeoutChanged, kChildTimeoutPref, this);
     Preferences::UnregisterCallback(TimeoutChanged, kParentTimeoutPref, this);
 #ifdef XP_WIN
     Preferences::UnregisterCallback(TimeoutChanged, kHangUITimeoutPref, this);
     Preferences::UnregisterCallback(TimeoutChanged, kHangUIMinDisplayPref, this);
-
-    UnregisterSettingsCallbacks();
 
     if (mHangUIParent) {
         delete mHangUIParent;

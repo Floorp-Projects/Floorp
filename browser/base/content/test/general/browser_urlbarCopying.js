@@ -156,7 +156,7 @@ function runTest(test, cb) {
   function doCheck() {
     if (test.setURL || test.loadURL) {
       gURLBar.valueIsTyped = !!test.setURL;
-      is(gURLBar.value, test.expectedURL, "url bar value set");
+      is(gURLBar.textValue, test.expectedURL, "url bar value set");
     }
 
     testCopy(test.copyVal, test.copyExpected, cb);
@@ -180,7 +180,7 @@ function testCopy(copyVal, targetValue, cb) {
       let endBracket = copyVal.indexOf(">");
       if (startBracket == -1 || endBracket == -1 ||
           startBracket > endBracket ||
-          copyVal.replace("<", "").replace(">", "") != gURLBar.value) {
+          copyVal.replace("<", "").replace(">", "") != gURLBar.textValue) {
         ok(false, "invalid copyVal: " + copyVal);
       }
       gURLBar.selectionStart = startBracket;

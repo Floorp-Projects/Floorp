@@ -234,7 +234,8 @@ class Range : public TempObject {
         // exponent 30, which is strictly less than MaxInt32Exponent. For
         // another example, 1.9 has an exponent of 0 but requires upper_ to be
         // at least 2, which has exponent 1.
-        uint32_t adjustedExponent = max_exponent_ + (canHaveFractionalPart_ ? 1 : 0);
+        mozilla::DebugOnly<uint32_t> adjustedExponent = max_exponent_ +
+            (canHaveFractionalPart_ ? 1 : 0);
         MOZ_ASSERT_IF(!hasInt32LowerBound_ || !hasInt32UpperBound_,
                       adjustedExponent >= MaxInt32Exponent);
         MOZ_ASSERT(adjustedExponent >= mozilla::FloorLog2(mozilla::Abs(upper_)));

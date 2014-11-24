@@ -59,10 +59,36 @@
         label="&inspectorShowDOMProperties.label;"
         oncommand="inspector.showDOMProperties()"/>
       <menuseparator/>
+      <menuitem id="node-menu-pasteinnerhtml"
+        label="&inspectorHTMLPasteInner.label;"
+        accesskey="&inspectorHTMLPasteInner.accesskey;"
+        oncommand="inspector.pasteInnerHTML()"/>
       <menuitem id="node-menu-pasteouterhtml"
         label="&inspectorHTMLPasteOuter.label;"
         accesskey="&inspectorHTMLPasteOuter.accesskey;"
         oncommand="inspector.pasteOuterHTML()"/>
+      <menu id="node-menu-paste-extra-submenu"
+        label="&inspectorHTMLPasteExtraSubmenu.label;"
+        accesskey="&inspectorHTMLPasteExtraSubmenu.accesskey;">
+        <menupopup>
+          <menuitem id="node-menu-pastebefore"
+            label="&inspectorHTMLPasteBefore.label;"
+            accesskey="&inspectorHTMLPasteBefore.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('beforeBegin')"/>
+          <menuitem id="node-menu-pasteafter"
+            label="&inspectorHTMLPasteAfter.label;"
+            accesskey="&inspectorHTMLPasteAfter.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('afterEnd')"/>
+          <menuitem id="node-menu-pastefirstchild"
+            label="&inspectorHTMLPasteFirstChild.label;"
+            accesskey="&inspectorHTMLPasteFirstChild.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('afterBegin')"/>
+          <menuitem id="node-menu-pastelastchild"
+            label="&inspectorHTMLPasteLastChild.label;"
+            accesskey="&inspectorHTMLPasteLastChild.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('beforeEnd')"/>
+        </menupopup>
+      </menu>
       <menuseparator/>
       <menuitem id="node-menu-delete"
         label="&inspectorHTMLDelete.label;"

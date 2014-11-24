@@ -9,7 +9,7 @@ const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
   Task.spawn(function() {
-    let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
+    let [tab,, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
     let frames = win.DebuggerController.StackFrames;
     let framesView = win.DebuggerView.StackFrames;
@@ -38,7 +38,7 @@ function test() {
     is(sources._cache.size, 2, "There should be two cached sources in the cache.");
 
     // Allow this generator function to yield first.
-    executeSoon(() => debuggee.firstCall());
+    callInTab(tab, "firstCall");
     yield waitForSourceAndCaretAndScopes(panel, "-02.js", 1);
     checkView(0, 1, 1, [/secondCall/, 118]);
 

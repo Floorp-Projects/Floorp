@@ -630,12 +630,15 @@ SingleResponse(Reader& input, Context& context)
     }
   }
 
-  Time timeMinusSlop(context.time);
-  rv = timeMinusSlop.SubtractSeconds(SLOP_SECONDS);
+  // Add some slop to hopefully handle clock-skew.
+  Time notAfterPlusSlop(notAfter);
+  rv = notAfterPlusSlop.AddSeconds(SLOP_SECONDS);
   if (rv != Success) {
-    return rv;
+    // This could only happen if we're dealing with times beyond the year
+    // 10,000AD.
+    return Result::ERROR_OCSP_FUTURE_RESPONSE;
   }
-  if (timeMinusSlop > notAfter) {
+  if (context.time > notAfterPlusSlop) {
     context.expired = true;
   }
 
@@ -650,7 +653,7 @@ SingleResponse(Reader& input, Context& context)
     *context.thisUpdate = thisUpdate;
   }
   if (context.validThrough) {
-    *context.validThrough = notAfter;
+    *context.validThrough = notAfterPlusSlop;
   }
 
   return Success;

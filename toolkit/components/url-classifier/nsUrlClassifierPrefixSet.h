@@ -16,8 +16,6 @@
 #include "nsTArray.h"
 #include "nsToolkitCompsCID.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/CondVar.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Atomics.h"
 
@@ -36,6 +34,7 @@ public:
   NS_IMETHOD LoadFromFile(nsIFile* aFile);
   NS_IMETHOD StoreToFile(nsIFile* aFile);
 
+  nsresult GetPrefixesNative(FallibleTArray<uint32_t>& outArray);
   size_t SizeInMemory() { return mMemoryInUse; };
 
   NS_DECL_THREADSAFE_ISUPPORTS

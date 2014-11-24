@@ -56,6 +56,22 @@ class ArrayBufferViewObject;
 // As ArrayBufferObject and SharedArrayBufferObject are separated, so are the
 // TypedArray hierarchies below the two.  However, the TypedArrays have the
 // same layout (see TypedArrayObject.h), so there is little code duplication.
+//
+// The possible data ownership and reference relationships with array buffers
+// and related classes are enumerated below. These are the possible locations
+// for typed data:
+//
+// (1) malloc'ed or mmap'ed data owned by an ArrayBufferObject.
+// (2) Data allocated inline with an ArrayBufferObject.
+// (3) Data allocated inline with a TypedArrayObject.
+// (4) Data allocated inline with an InlineTypedObject.
+//
+// An ArrayBufferObject may point to any of these sources of data, except (3).
+// All array buffer views may point to any of these sources of data, except
+// that (3) may only be pointed to by the typed array the data is inline with.
+//
+// During a minor GC, (3) and (4) may move. During a compacting GC, (2), (3),
+// and (4) may move.
 
 class ArrayBufferObjectMaybeShared;
 
@@ -329,6 +345,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         setFlags(flags() | TYPED_OBJECT_VIEWS);
     }
 
+    bool forInlineTypedObject() const { return flags() & FOR_INLINE_TYPED_OBJECT; }
+
   protected:
     void setDataPointer(BufferContents contents, OwnsState ownsState);
     void setByteLength(size_t length);
@@ -341,7 +359,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         setFlags(owns ? (flags() | OWNS_DATA) : (flags() & ~OWNS_DATA));
     }
 
-    bool forInlineTypedObject() const { return flags() & FOR_INLINE_TYPED_OBJECT; }
     bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
 
     void setIsAsmJSMalloced() { setFlags((flags() & ~KIND_MASK) | ASMJS_MALLOCED); }

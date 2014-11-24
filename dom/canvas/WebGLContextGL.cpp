@@ -1444,24 +1444,31 @@ WebGLContext::GetProgramParameter(WebGLProgram *prog, GLenum pname)
 
     MakeContextCurrent();
 
+    GLint i = 0;
+
+    if (IsWebGL2()) {
+        switch (pname) {
+        case LOCAL_GL_ACTIVE_UNIFORM_BLOCKS:
+        case LOCAL_GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH:
+            gl->fGetProgramiv(progname, pname, &i);
+            return JS::Int32Value(i);
+        }
+    }
+
     switch (pname) {
         case LOCAL_GL_ATTACHED_SHADERS:
         case LOCAL_GL_ACTIVE_UNIFORMS:
         case LOCAL_GL_ACTIVE_ATTRIBUTES:
-        {
-            GLint i = 0;
             gl->fGetProgramiv(progname, pname, &i);
             return JS::Int32Value(i);
-        }
+
         case LOCAL_GL_DELETE_STATUS:
             return JS::BooleanValue(prog->IsDeleteRequested());
+
         case LOCAL_GL_LINK_STATUS:
-        {
             return JS::BooleanValue(prog->LinkStatus());
-        }
+
         case LOCAL_GL_VALIDATE_STATUS:
-        {
-            GLint i = 0;
 #ifdef XP_MACOSX
             // See comment in ValidateProgram below.
             if (gl->WorkAroundDriverBugs())
@@ -1472,8 +1479,6 @@ WebGLContext::GetProgramParameter(WebGLProgram *prog, GLenum pname)
             gl->fGetProgramiv(progname, pname, &i);
 #endif
             return JS::BooleanValue(bool(i));
-        }
-            break;
 
         default:
             ErrorInvalidEnumInfo("getProgramParameter: parameter", pname);

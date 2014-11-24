@@ -38,7 +38,7 @@ elif sys.platform == "win32":
         return leafName + ".exe"
 
 elif sys.platform == "darwin":
-    xulrunnerStubName = "xulrunner"
+    xulrunnerStubName = "xulrunner-stub"
 
     def installApp(appLocation, installDir, appName, greDir):
         zipApp, iniparser, appName = validateArguments(appLocation, installDir, appName, greDir)

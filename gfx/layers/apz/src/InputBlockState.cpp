@@ -37,6 +37,16 @@ InputBlockState::SetConfirmedTargetApzc(const nsRefPtr<AsyncPanZoomController>& 
   }
   mTargetConfirmed = true;
 
+  if (mTargetApzc == aTargetApzc) {
+    // The confirmed target is the same as the tentative one, so we're done.
+    return true;
+  }
+
+  // Log enabled by default for now, we will put it in a TBS_LOG eventually
+  // once this code is more baked
+  printf_stderr("%p replacing unconfirmed target %p with real target %p\n",
+      this, mTargetApzc.get(), aTargetApzc.get());
+
   // note that aTargetApzc MAY be null here.
   mTargetApzc = aTargetApzc;
   mOverscrollHandoffChain = (mTargetApzc ? mTargetApzc->BuildOverscrollHandoffChain() : nullptr);

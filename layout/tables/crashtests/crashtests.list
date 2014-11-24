@@ -124,6 +124,9 @@ load 512749-1.html
 load 513732-1.html
 asserts(0-1) load 533380-1.xhtml # Bug 614457
 load 534716-1.html
+load 563009-1.html
+load 563009-2.html
+load 563009-3.html
 load 573354-1.xhtml
 load 576890-1.html
 load 576890-2.html
