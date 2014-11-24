@@ -564,15 +564,22 @@
           onEvent: function() {}
         })
       ]]></field>
+
+      <method name="onInput">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this.mIgnoreInput && this.mController.input == this) {
+            this.valueIsTyped = true;
+            this.mController.handleText();
+          }
+          this.resetActionType();
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
       <handler event="input"><![CDATA[
-        if (!this.mIgnoreInput && this.mController.input == this) {
-          this.valueIsTyped = true;
-          this.mController.handleText();
-        }
-        this.resetActionType();
+        this.onInput(event);
       ]]></handler>
 
       <handler event="keypress" phase="capturing"
@@ -1122,7 +1129,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // Process maxRows per chunk to improve performance and user experience
           for (let i = 0; i < this.maxRows; i++) {
             if (this._currentIndex >= matchCount)
-              return;
+              break;
 
             var item;
 
@@ -1133,9 +1140,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             let url = Components.classes["@mozilla.org/intl/texttosuburi;1"].
               getService(Components.interfaces.nsITextToSubURI).
               unEscapeURIForUI("UTF-8", controller.getValueAt(this._currentIndex));
-
-            if (typeof this.input.trimValue == "function")
-              url = this.input.trimValue(url);
 
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
@@ -1178,8 +1182,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this._currentIndex++;
           }
 
-          // yield after each batch of items so that typing the url bar is responsive
-          setTimeout(function (self) { self._appendCurrentResult(); }, 0, this);
+          if (typeof this.onResultsAdded == "function")
+            this.onResultsAdded();
+
+          if (this._currentIndex < matchCount) {
+            // yield after each batch of items so that typing the url bar is
+            // responsive
+            setTimeout(function (self) { self._appendCurrentResult(); }, 0, this);
+          }
         ]]>
         </body>
       </method>
@@ -1566,6 +1576,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           let title = this.getAttribute("title");
           let type = this.getAttribute("type");
 
+          let displayUrl = url;
+
+          let input = this.parentNode.parentNode.input;
+          if (typeof input.trimValue == "function")
+            displayUrl = input.trimValue(url);
+
           let emphasiseTitle = true;
           let emphasiseUrl = true;
 
@@ -1591,7 +1607,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this.setAttribute("actiontype", action.type);
 
             if (action.type == "switchtab") {
-              url = action.params.url;
+              displayUrl = action.params.url;
               let desc = this._stringBundle.GetStringFromName("switchToTab");
               this._setUpDescription(this._action, desc, true);
             } else if (action.type == "searchengine") {
@@ -1613,11 +1629,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               }
             } else if (action.type == "visiturl") {
               emphasiseUrl = false;
-              url = action.params.url;
+              displayUrl = action.params.url;
 
               let sourceStr = this._stringBundle.GetStringFromName("visitURL");
               title = this._generateEmphasisPairs(sourceStr, [
-                                                    [trimURL(url), true],
+                                                    [displayUrl, true],
                                                   ]);
             }
 
@@ -1634,7 +1650,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             let searchEngine = "";
             [title, searchEngine] = title.split(TITLE_SEARCH_ENGINE_SEPARATOR);
-            url = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
+            displayUrl = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
 
             // Remove the "search" substring so that the correct style, if any,
             // is applied below.
@@ -1647,7 +1663,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             let sourceStr = this._stringBundle.GetStringFromName("visitURL");
             title = this._generateEmphasisPairs(sourceStr, [
-                                                 [trimURL(url), true],
+                                                 [displayUrl, true],
                                                 ]);
 
             types.delete("autofill");
@@ -1717,9 +1733,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this._typeImage.className = "ac-type-icon" +
             (type ? " ac-result-type-" + type : "");
 
-          // Show the url as the title if we don't have a title
-          if (title == "")
-            title = url;
+          // Show the domain as the title if we don't have a title.
+          if (title == "") {
+            title = displayUrl;
+            try {
+              let uri = Services.io.newURI(url, null, null);
+              // Not all valid URLs have a domain.
+              if (uri.host)
+                title = uri.host;
+            } catch (e) {}
+          }
 
           // Emphasize the matching search terms for the description
           if (Array.isArray(title))
@@ -1727,7 +1750,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           else
             this._setUpDescription(this._title, title, !emphasiseTitle);
 
-          this._setUpDescription(this._url, url, !emphasiseUrl);
+          this._setUpDescription(this._url, displayUrl, !emphasiseUrl);
 
           // Set up overflow on a timeout because the contents of the box
           // might not have a width yet even though we just changed them

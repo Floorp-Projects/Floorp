@@ -87,6 +87,8 @@ const RADIO_POWER_OFF_TIMEOUT = 30000;
 const SMS_HANDLED_WAKELOCK_TIMEOUT = 5000;
 const HW_DEFAULT_CLIENT_ID = 0;
 
+const INT32_MAX = 2147483647;
+
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:GetRilContext",
   "RIL:SendStkResponse",
@@ -776,13 +778,12 @@ XPCOMUtils.defineLazyGetter(this, "gDataConnectionManager", function () {
         oldSettings.enabled = false;
       }
 
-      if (oldConnHandler.anyDataConnected()) {
+      if (oldConnHandler.deactivateDataCalls()) {
         this._pendingDataCallRequest = applyPendingDataSettings;
         if (DEBUG) {
           this.debug("_handleDataClientIdChange: existing data call(s) active" +
                      ", wait for them to get disconnected.");
         }
-        oldConnHandler.deactivateDataCalls();
         return;
       }
 
@@ -1145,18 +1146,6 @@ DataConnectionHandler.prototype = {
     return true;
   },
 
-  /**
-   * Check if there is any activated data connection.
-   */
-  anyDataConnected: function() {
-    for (let i = 0; i < this._dataCalls.length; i++) {
-      if (this._dataCalls[i].state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
-        return true;
-      }
-    }
-    return false;
-  },
-
   updateApnSettings: function(newApnSettings) {
     if (!newApnSettings) {
       return;
@@ -1335,9 +1324,11 @@ DataConnectionHandler.prototype = {
   deactivateDataCalls: function() {
     let dataDisconnecting = false;
     this.dataNetworkInterfaces.forEach(function(networkInterface) {
-      if (networkInterface.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
+      if (networkInterface.enabled) {
+        if (networkInterface.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
+          dataDisconnecting = true;
+        }
         networkInterface.disconnect();
-        dataDisconnecting = true;
       }
     });
 
@@ -1346,6 +1337,8 @@ DataConnectionHandler.prototype = {
     if (gRadioEnabledController.isDeactivatingDataCalls() && !dataDisconnecting) {
       gRadioEnabledController.finishDeactivatingDataCalls(this.clientId);
     }
+
+    return dataDisconnecting;
   },
 
   /**
@@ -3812,9 +3805,26 @@ DataCall.prototype = {
   chappap: null,
 
   dataCallError: function(message) {
-    if (DEBUG) this.debug("Data call error on APN: " + message.apn);
+    if (DEBUG) {
+      this.debug("Data call error on APN " + message.apn + ": " +
+                 message.errorMsg + " (" + message.status + "), retry time: " +
+                 message.suggestedRetryTime);
+    }
     this.state = RIL.GECKO_NETWORK_STATE_DISCONNECTED;
-    this.retry();
+
+    if (this.requestedNetworkIfaces.length === 0) {
+      if (DEBUG) this.debug("This DataCall is not requested anymore.");
+      return;
+    }
+
+    // For suggestedRetryTime, the value of INT32_MAX(0x7fffffff) means no retry.
+    if (message.suggestedRetryTime === INT32_MAX ||
+        this.isPermanentFail(message.status, message.errorMsg)) {
+      if (DEBUG) this.debug("Data call error: no retry needed.");
+      return;
+    }
+
+    this.retry(message.suggestedRetryTime);
   },
 
   dataCallStateChanged: function(datacall) {
@@ -3832,6 +3842,7 @@ DataCall.prototype = {
     switch (datacall.state) {
       case RIL.GECKO_NETWORK_STATE_CONNECTED:
         if (this.state == RIL.GECKO_NETWORK_STATE_CONNECTING) {
+          this.apnRetryCounter = 0;
           this.linkInfo.cid = datacall.cid;
 
           if (this.requestedNetworkIfaces.length === 0) {
@@ -3917,6 +3928,29 @@ DataCall.prototype = {
 
   get connected() {
     return this.state == RIL.GECKO_NETWORK_STATE_CONNECTED;
+  },
+
+  isPermanentFail: function(dataFailCause, errorMsg) {
+    // Check ril.h for 'no retry' data call fail causes.
+    if (errorMsg === RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE ||
+        errorMsg === RIL.GECKO_ERROR_INVALID_PARAMETER ||
+        dataFailCause === RIL.DATACALL_FAIL_OPERATOR_BARRED ||
+        dataFailCause === RIL.DATACALL_FAIL_MISSING_UKNOWN_APN ||
+        dataFailCause === RIL.DATACALL_FAIL_UNKNOWN_PDP_ADDRESS_TYPE ||
+        dataFailCause === RIL.DATACALL_FAIL_USER_AUTHENTICATION ||
+        dataFailCause === RIL.DATACALL_FAIL_ACTIVATION_REJECT_GGSN ||
+        dataFailCause === RIL.DATACALL_FAIL_SERVICE_OPTION_NOT_SUPPORTED ||
+        dataFailCause === RIL.DATACALL_FAIL_SERVICE_OPTION_NOT_SUBSCRIBED ||
+        dataFailCause === RIL.DATACALL_FAIL_NSAPI_IN_USE ||
+        dataFailCause === RIL.DATACALL_FAIL_ONLY_IPV4_ALLOWED ||
+        dataFailCause === RIL.DATACALL_FAIL_ONLY_IPV6_ALLOWED ||
+        dataFailCause === RIL.DATACALL_FAIL_PROTOCOL_ERRORS ||
+        dataFailCause === RIL.DATACALL_FAIL_RADIO_POWER_OFF ||
+        dataFailCause === RIL.DATACALL_FAIL_TETHERED_CALL_ACTIVE) {
+      return true;
+    }
+
+    return false;
   },
 
   inRequestedTypes: function(type) {
@@ -4045,7 +4079,7 @@ DataCall.prototype = {
     this.state = RIL.GECKO_NETWORK_STATE_CONNECTING;
   },
 
-  retry: function() {
+  retry: function(suggestedRetryTime) {
     let apnRetryTimer;
 
     // We will retry the connection in increasing times
@@ -4057,9 +4091,14 @@ DataCall.prototype = {
       return;
     }
 
-    apnRetryTimer = this.NETWORK_APNRETRY_FACTOR *
-                    (this.apnRetryCounter * this.apnRetryCounter) +
-                    this.NETWORK_APNRETRY_ORIGIN;
+    // If there is a valid suggestedRetryTime, override the retry timer.
+    if (suggestedRetryTime !== undefined && suggestedRetryTime >= 0) {
+      apnRetryTimer = suggestedRetryTime / 1000;
+    } else {
+      apnRetryTimer = this.NETWORK_APNRETRY_FACTOR *
+                      (this.apnRetryCounter * this.apnRetryCounter) +
+                      this.NETWORK_APNRETRY_ORIGIN;
+    }
     this.apnRetryCounter++;
     if (DEBUG) {
       this.debug("Data call - APN Connection Retry Timer (secs-counter): " +

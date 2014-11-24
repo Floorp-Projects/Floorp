@@ -44,20 +44,18 @@ function handleTechnologyDiscoveredRE0ForP2PRegFailure(msg) {
 
   nfc.onpeerready = peerReadyCb;
 
-  let request = nfc.checkP2PRegistration(INCORRECT_MANIFEST_URL);
-  request.onsuccess = function (evt) {
+  let promise = nfc.checkP2PRegistration(INCORRECT_MANIFEST_URL);
+  promise.then(evt => {
     is(request.result, false, "check for P2P registration result");
 
     nfc.onpeerready = null;
     NCI.deactivate().then(() => toggleNFC(false)).then(runNextTest);
-  }
-
-  request.onerror = function () {
+  }).catch(() => {
     ok(false, "checkP2PRegistration failed.");
 
     nfc.onpeerready = null;
     NCI.deactivate().then(() => toggleNFC(false)).then(runNextTest);
-  }
+  });
 }
 
 function testPeerReady() {

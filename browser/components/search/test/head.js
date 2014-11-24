@@ -123,14 +123,16 @@ function doOnloadOnce(aCallback) {
 }
 
 function* promiseOnLoad() {
-  let deferred = Promise.defer();
-
-  gBrowser.addEventListener("load", function onLoadListener(aEvent) {
-    info("onLoadListener: " + aEvent.originalTarget.location);
-    gBrowser.removeEventListener("load", onLoadListener, true);
-    deferred.resolve(aEvent);
-  }, true);
-
-  return deferred.promise;
+  return new Promise(resolve => {
+    gBrowser.addEventListener("load", function onLoadListener(aEvent) {
+      let cw = aEvent.target.defaultView;
+      let tab = gBrowser._getTabForContentWindow(cw);
+      if (tab) {
+        info("onLoadListener: " + aEvent.originalTarget.location);
+        gBrowser.removeEventListener("load", onLoadListener, true);
+        resolve(aEvent);
+      }
+    }, true);
+  });
 }
 

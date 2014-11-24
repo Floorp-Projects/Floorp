@@ -299,8 +299,8 @@ add_task(function* test_openRoom() {
 
   Assert.ok(openedUrl, "should open a chat window");
 
-  // Stop the busy kicking in for following tests.
-  let windowId = openedUrl.match(/about:loopconversation\#(\d+)$/)[1];
+  // Stop the busy kicking in for following tests. (note: windowId can be 'fakeToken')
+  let windowId = openedUrl.match(/about:loopconversation\#(\w+)$/)[1];
   let windowData = MozLoopService.getConversationWindowData(windowId);
 
   Assert.equal(windowData.type, "room", "window data should contain room as the type");
