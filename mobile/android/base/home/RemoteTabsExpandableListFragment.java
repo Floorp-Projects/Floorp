@@ -392,14 +392,14 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
         }
     }
 
-    private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
+    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             return new RemoteTabsCursorLoader(getActivity());
         }
 
         @Override
-        public void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
+        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
             final List<RemoteClient> clients = TabsAccessor.getClientsFromCursor(c);
 
             // Filter the hidden clients out of the clients list. The clients
@@ -421,7 +421,6 @@ public class RemoteTabsExpandableListFragment extends HomeFragment implements Re
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            super.onLoaderReset(loader);
             mAdapter.replaceClients(null);
         }
     }
