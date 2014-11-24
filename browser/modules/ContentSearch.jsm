@@ -206,7 +206,19 @@ this.ContentSearch = {
 
   _onMessageManageEngines: function (msg, data) {
     let browserWin = msg.target.ownerDocument.defaultView;
-    browserWin.openPreferences("paneSearch");
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+             getService(Components.interfaces.nsIWindowMediator);
+    let window = wm.getMostRecentWindow("Browser:SearchManager");
+
+    if (window) {
+      window.focus()
+    }
+    else {
+      browserWin.setTimeout(function () {
+        browserWin.openDialog("chrome://browser/content/search/engineManager.xul",
+          "_blank", "chrome,dialog,modal,centerscreen,resizable");
+      }, 0);
+    }
     return Promise.resolve();
   },
 
