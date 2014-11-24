@@ -5,6 +5,7 @@
 
 
 #include "mozFlushType.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -683,6 +684,70 @@ nsSelectionMoveCommands::IsCommandEnabled(const char * aCommandName,
   return NS_OK;
 }
 
+static const struct ScrollCommand {
+  const char *reverseScroll;
+  const char *forwardScroll;
+  nsresult (NS_STDCALL nsISelectionController::*scroll)(bool);
+} scrollCommands[] = {
+  { "cmd_scrollTop", "cmd_scrollBottom",
+    &nsISelectionController::CompleteScroll },
+  { "cmd_scrollPageUp", "cmd_scrollPageDown",
+    &nsISelectionController::ScrollPage },
+  { "cmd_scrollLineUp", "cmd_scrollLineDown",
+    &nsISelectionController::ScrollLine }
+};
+
+static const struct MoveCommand {
+  const char *reverseMove;
+  const char *forwardMove;
+  const char *reverseSelect;
+  const char *forwardSelect;
+  nsresult (NS_STDCALL nsISelectionController::*move)(bool, bool);
+} moveCommands[] = {
+  { "cmd_charPrevious", "cmd_charNext",
+    "cmd_selectCharPrevious", "cmd_selectCharNext",
+    &nsISelectionController::CharacterMove },
+  { "cmd_linePrevious", "cmd_lineNext",
+    "cmd_selectLinePrevious", "cmd_selectLineNext",
+    &nsISelectionController::LineMove },
+  { "cmd_wordPrevious", "cmd_wordNext",
+    "cmd_selectWordPrevious", "cmd_selectWordNext",
+    &nsISelectionController::WordMove },
+  { "cmd_beginLine", "cmd_endLine",
+    "cmd_selectBeginLine", "cmd_selectEndLine",
+    &nsISelectionController::IntraLineMove },
+  { "cmd_movePageUp", "cmd_movePageDown",
+    "cmd_selectPageUp", "cmd_selectPageDown",
+    &nsISelectionController::PageMove },
+  { "cmd_moveTop", "cmd_moveBottom",
+    "cmd_selectTop", "cmd_selectBottom",
+    &nsISelectionController::CompleteMove }
+};
+
+static const struct PhysicalCommand {
+  const char *move;
+  const char *select;
+  int16_t direction;
+  int16_t amount;
+} physicalCommands[] = {
+  { "cmd_moveLeft", "cmd_selectLeft",
+    nsISelectionController::MOVE_LEFT, 0 },
+  { "cmd_moveRight", "cmd_selectRight",
+    nsISelectionController::MOVE_RIGHT, 0 },
+  { "cmd_moveUp", "cmd_selectUp",
+    nsISelectionController::MOVE_UP, 0 },
+  { "cmd_moveDown", "cmd_selectDown",
+    nsISelectionController::MOVE_DOWN, 0 },
+  { "cmd_moveLeft2", "cmd_selectLeft2",
+    nsISelectionController::MOVE_LEFT, 1 },
+  { "cmd_moveRight2", "cmd_selectRight2",
+    nsISelectionController::MOVE_RIGHT, 1 },
+  { "cmd_moveUp2", "cmd_selectUp2",
+    nsISelectionController::MOVE_UP, 1 },
+  { "cmd_moveDown2", "cmd_selectDown2",
+    nsISelectionController::MOVE_DOWN, 1 }
+};
+
 NS_IMETHODIMP
 nsSelectionMoveCommands::DoCommand(const char *aCommandName,
                                    nsISupports *aCommandRefCon)
@@ -704,84 +769,40 @@ nsSelectionMoveCommands::DoCommand(const char *aCommandName,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(selCont, NS_ERROR_FAILURE);
 
-  // complete scroll commands
-  if (!nsCRT::strcmp(aCommandName,"cmd_scrollTop"))
-    return selCont->CompleteScroll(false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_scrollBottom"))
-    return selCont->CompleteScroll(true);
+  // scroll commands
+  for (size_t i = 0; i < mozilla::ArrayLength(scrollCommands); i++) {
+    const ScrollCommand& cmd = scrollCommands[i];
+    if (!nsCRT::strcmp(aCommandName, cmd.reverseScroll)) {
+      return (selCont->*(cmd.scroll))(false);
+    } else if (!nsCRT::strcmp(aCommandName, cmd.forwardScroll)) {
+      return (selCont->*(cmd.scroll))(true);
+    }
+  }
 
-  // complete move commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_moveTop"))
-    return selCont->CompleteMove(false, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_moveBottom"))
-    return selCont->CompleteMove(true, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectTop"))
-    return selCont->CompleteMove(false, true);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectBottom"))
-    return selCont->CompleteMove(true, true);
+  // caret movement/selection commands
+  for (size_t i = 0; i < mozilla::ArrayLength(moveCommands); i++) {
+    const MoveCommand& cmd = moveCommands[i];
+    if (!nsCRT::strcmp(aCommandName, cmd.reverseMove)) {
+      return (selCont->*(cmd.move))(false, false);
+    } else if (!nsCRT::strcmp(aCommandName, cmd.forwardMove)) {
+      return (selCont->*(cmd.move))(true, false);
+    } else if (!nsCRT::strcmp(aCommandName, cmd.reverseSelect)) {
+      return (selCont->*(cmd.move))(false, true);
+    } else if (!nsCRT::strcmp(aCommandName, cmd.forwardSelect)) {
+      return (selCont->*(cmd.move))(true, true);
+    }
+  }
 
-  // line move commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_lineNext"))
-    return selCont->LineMove(true, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_linePrevious"))
-    return selCont->LineMove(false, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectLineNext"))
-    return selCont->LineMove(true, true);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectLinePrevious"))
-    return selCont->LineMove(false, true);
+  // physical-direction movement/selection
+  for (size_t i = 0; i < mozilla::ArrayLength(physicalCommands); i++) {
+    const PhysicalCommand& cmd = physicalCommands[i];
+    if (!nsCRT::strcmp(aCommandName, cmd.move)) {
+      return selCont->PhysicalMove(cmd.direction, cmd.amount, false);
+    } else if (!nsCRT::strcmp(aCommandName, cmd.select)) {
+      return selCont->PhysicalMove(cmd.direction, cmd.amount, true);
+    }
+  }
 
-  // character move commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_charPrevious"))
-    return selCont->CharacterMove(false, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_charNext"))
-    return selCont->CharacterMove(true, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectCharPrevious"))
-    return selCont->CharacterMove(false, true);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectCharNext"))
-    return selCont->CharacterMove(true, true);
-
-  // intra line move commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_beginLine"))
-    return selCont->IntraLineMove(false, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_endLine"))
-    return selCont->IntraLineMove(true, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectBeginLine"))
-    return selCont->IntraLineMove(false, true);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectEndLine"))
-    return selCont->IntraLineMove(true, true);
-  
-  // word move commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_wordPrevious"))
-    return selCont->WordMove(false, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_wordNext"))
-    return selCont->WordMove(true, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectWordPrevious"))
-    return selCont->WordMove(false, true);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectWordNext"))
-    return selCont->WordMove(true, true);
-  
-  // scroll page commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_scrollPageUp"))
-    return selCont->ScrollPage(false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_scrollPageDown"))
-    return selCont->ScrollPage(true);
-  
-  // scroll line commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_scrollLineUp"))
-    return selCont->ScrollLine(false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_scrollLineDown"))
-    return selCont->ScrollLine(true);
-  
-  // page move commands
-  else if (!nsCRT::strcmp(aCommandName,"cmd_movePageUp"))
-    return selCont->PageMove(false, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_movePageDown"))
-    return selCont->PageMove(true, false);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectPageUp"))
-    return selCont->PageMove(false, true);
-  else if (!nsCRT::strcmp(aCommandName,"cmd_selectPageDown"))
-    return selCont->PageMove(true, true);
-    
   return NS_ERROR_FAILURE;
 }
 

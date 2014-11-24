@@ -376,13 +376,9 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
   if (!dt) {
     return nullptr;
   }
+  dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
   nsRefPtr<gfxContext> gfx = new gfxContext(dt);
-
-  // Fill with transparent black
-  gfx->SetOperator(gfxContext::OPERATOR_CLEAR);
-  gfx->Paint();
-  gfx->SetOperator(gfxContext::OPERATOR_OVER);
 
   if (aGraphicOpacity != 1.0f) {
     gfx->Save();

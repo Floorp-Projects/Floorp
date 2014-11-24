@@ -270,6 +270,12 @@
       is(regexp.toString(), shell.toString(), ".compile works right");
     }
 
+    function recvPostMessageTest(message) {
+      let win = message.objects.win;
+      win.postMessage('nookery', '*');
+      ok(true, "Didn't crash invoking postMessage over CPOW");
+    }
+
     let savedWilldieObj;
     let wontDie = {f:2, __exposedProps__: {"f": "r"}};
     function recvLifetimeTest1(message) {
@@ -327,6 +333,7 @@
       }
       mm.addMessageListener("cpows:compartment_test", recvCompartmentTest);
       mm.addMessageListener("cpows:regexp_test", recvRegExpTest);
+      mm.addMessageListener("cpows:postmessage_test", recvPostMessageTest);
       mm.addMessageListener("cpows:lifetime_test_1", recvLifetimeTest1);
       mm.addMessageListener("cpows:lifetime_test_2", recvLifetimeTest2);
       mm.loadFrameScript("chrome://mochitests/content/chrome/dom/base/test/chrome/cpows_child.js", true);

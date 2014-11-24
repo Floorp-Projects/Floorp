@@ -36,6 +36,7 @@
 #include "nsIDOMNSEditableElement.h"
 #include "nsContentUtils.h"
 #include "nsILoadContext.h"
+#include "nsIFrame.h"
 
 using namespace mozilla::dom;
 
@@ -948,6 +949,36 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
   case nsIDOMKeyEvent::DOM_VK_DOWN:
   case nsIDOMKeyEvent::DOM_VK_LEFT:
   case nsIDOMKeyEvent::DOM_VK_RIGHT:
+    {
+      // Get the writing-mode of the relevant input element,
+      // so that we can remap arrow keys if necessary.
+      mozilla::WritingMode wm;
+      if (mFocusedInputNode && mFocusedInputNode->IsElement()) {
+        mozilla::dom::Element *elem = mFocusedInputNode->AsElement();
+        nsIFrame *frame = elem->GetPrimaryFrame();
+        if (frame) {
+          wm = frame->GetWritingMode();
+        }
+      }
+      if (wm.IsVertical()) {
+        switch (k) {
+        case nsIDOMKeyEvent::DOM_VK_LEFT:
+          k = wm.IsVerticalLR() ? nsIDOMKeyEvent::DOM_VK_UP
+                                : nsIDOMKeyEvent::DOM_VK_DOWN;
+          break;
+        case nsIDOMKeyEvent::DOM_VK_RIGHT:
+          k = wm.IsVerticalLR() ? nsIDOMKeyEvent::DOM_VK_DOWN
+                                : nsIDOMKeyEvent::DOM_VK_UP;
+          break;
+        case nsIDOMKeyEvent::DOM_VK_UP:
+          k = nsIDOMKeyEvent::DOM_VK_LEFT;
+          break;
+        case nsIDOMKeyEvent::DOM_VK_DOWN:
+          k = nsIDOMKeyEvent::DOM_VK_RIGHT;
+          break;
+        }
+      }
+    }
     mController->HandleKeyNavigation(k, &cancel);
     break;
   case nsIDOMKeyEvent::DOM_VK_ESCAPE:

@@ -545,6 +545,22 @@ RenderFrameParent::ContentReceivedTouch(const ScrollableLayerGuid& aGuid,
 }
 
 void
+RenderFrameParent::SetTargetAPZC(uint64_t aInputBlockId,
+                                 const nsTArray<ScrollableLayerGuid>& aTargets)
+{
+  for (size_t i = 0; i < aTargets.Length(); i++) {
+    if (aTargets[i].mLayersId != mLayersId) {
+      // Guard against bad data from hijacked child processes
+      NS_ERROR("Unexpected layers id in SetTargetAPZC; dropping message...");
+      return;
+    }
+  }
+  if (GetApzcTreeManager()) {
+    GetApzcTreeManager()->SetTargetAPZC(aInputBlockId, aTargets);
+  }
+}
+
+void
 RenderFrameParent::UpdateZoomConstraints(uint32_t aPresShellId,
                                          ViewID aViewId,
                                          bool aIsRoot,

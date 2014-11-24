@@ -52,6 +52,10 @@ def main(argv):
                   action='store_true', help='show command lines of failed tests')
     op.add_option('-o', '--show-output', dest='show_output', action='store_true',
                   help='show output from js shell')
+    op.add_option('-F', '--failed-only', dest='failed_only', action='store_true',
+                  help="if --show-output is given, only print output for failed tests")
+    op.add_option('--no-show-failed', dest='no_show_failed', action='store_true',
+                  help="don't print output for failed tests (no-op with --show-output)")
     op.add_option('-x', '--exclude', dest='exclude', action='append',
                   help='exclude given test dir or path')
     op.add_option('--slow', dest='run_slow', action='store_true',

@@ -84,6 +84,7 @@ const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
 const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
+const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
@@ -4282,13 +4283,11 @@ this.XPIProvider = {
 
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
-#if defined(NIGHTLY_BUILD) && defined(HAVE_SHIMS)
-    if (!aMultiprocessCompatible) {
+    if (!aMultiprocessCompatible && Preferences.get(PREF_INTERPOSITION_ENABLED, false)) {
       let interposition = Cc["@mozilla.org/addons/multiprocess-shims;1"].
         getService(Ci.nsIAddonInterposition);
       Cu.setAddonInterposition(aId, interposition);
     }
-#endif
 
     if (!aFile.exists()) {
       this.bootstrapScopes[aId] =
