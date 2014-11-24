@@ -5,9 +5,7 @@
 
 package org.mozilla.gecko.util;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import org.mozilla.gecko.SysInfo;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -27,14 +25,10 @@ public final class HardwareUtils {
     // reading list capabilities in HomePager.
     private static final int LOW_MEMORY_THRESHOLD_MB = 384;
 
-    // Number of bytes of /proc/meminfo to read in one go.
-    private static final int MEMINFO_BUFFER_SIZE_BYTES = 256;
-
     private static final boolean IS_AMAZON_DEVICE = Build.MANUFACTURER.equalsIgnoreCase("Amazon");
     public static final boolean IS_KINDLE_DEVICE = IS_AMAZON_DEVICE &&
                                                    (Build.MODEL.equals("Kindle Fire") ||
                                                     Build.MODEL.startsWith("KF"));
-    private static volatile int sTotalRAM = -1;
 
     private static volatile boolean sInited;
 
@@ -99,95 +93,8 @@ public final class HardwareUtils {
         return sHasMenuButton;
     }
 
-    /**
-    * Helper functions used to extract key/value data from /proc/meminfo
-    * Pulled from:
-    * http://androidxref.com/4.2_r1/xref/frameworks/base/core/java/com/android/internal/util/MemInfoReader.java
-    */
-
-    private static boolean matchMemText(byte[] buffer, int index, int bufferLength, byte[] text) {
-        final int N = text.length;
-        if ((index + N) >= bufferLength) {
-            return false;
-        }
-        for (int i = 0; i < N; i++) {
-            if (buffer[index + i] != text[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Parses a line like:
-     *
-     *  MemTotal: 1605324 kB
-     *
-     * into 1605324.
-     *
-     * @return the first uninterrupted sequence of digits following the
-     *         specified index, parsed as an integer value in KB.
-     */
-    private static int extractMemValue(byte[] buffer, int offset, int length) {
-        if (offset >= length) {
-            return 0;
-        }
-
-        while (offset < length && buffer[offset] != '\n') {
-            if (buffer[offset] >= '0' && buffer[offset] <= '9') {
-                int start = offset++;
-                while (offset < length &&
-                       buffer[offset] >= '0' &&
-                       buffer[offset] <= '9') {
-                    ++offset;
-                }
-                return Integer.parseInt(new String(buffer, start, offset - start), 10);
-            }
-            ++offset;
-        }
-        return 0;
-    }
-
-    /**
-     * Fetch the total memory of the device in MB by parsing /proc/meminfo.
-     *
-     * Of course, Android doesn't have a neat and tidy way to find total
-     * RAM, so we do it by parsing /proc/meminfo.
-     *
-     * @return 0 if a problem occurred, or memory size in MB.
-     */
     public static int getMemSize() {
-        if (sTotalRAM >= 0) {
-            return sTotalRAM;
-        }
-
-        // This is the string "MemTotal" that we're searching for in the buffer.
-        final byte[] MEMTOTAL = {'M', 'e', 'm', 'T', 'o', 't', 'a', 'l'};
-        try {
-            final byte[] buffer = new byte[MEMINFO_BUFFER_SIZE_BYTES];
-            final FileInputStream is = new FileInputStream("/proc/meminfo");
-            try {
-                final int length = is.read(buffer);
-
-                for (int i = 0; i < length; i++) {
-                    if (matchMemText(buffer, i, length, MEMTOTAL)) {
-                        i += 8;
-                        sTotalRAM = extractMemValue(buffer, i, length) / 1024;
-                        Log.d(LOGTAG, "System memory: " + sTotalRAM + "MB.");
-                        return sTotalRAM;
-                    }
-                }
-            } finally {
-                is.close();
-            }
-
-            Log.w(LOGTAG, "Did not find MemTotal line in /proc/meminfo.");
-            return sTotalRAM = 0;
-        } catch (FileNotFoundException f) {
-            return sTotalRAM = 0;
-        } catch (IOException e) {
-            return sTotalRAM = 0;
-        }
+        return SysInfo.getMemSize();
     }
 
     public static boolean isLowMemoryPlatform() {
