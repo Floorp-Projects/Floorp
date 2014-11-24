@@ -57,9 +57,9 @@ class nsSOCKSSocketInfo : public nsISOCKSSocketInfo
         SOCKS_FAILED
     };
 
-    // A buffer of 262 bytes should be enough for any request and response
+    // A buffer of 265 bytes should be enough for any request and response
     // in case of SOCKS4 as well as SOCKS5
-    static const uint32_t BUFFER_SIZE = 262;
+    static const uint32_t BUFFER_SIZE = 265;
     static const uint32_t MAX_HOSTNAME_LEN = 255;
 
 public:
@@ -98,13 +98,6 @@ private:
     PRStatus ReadV5AddrTypeAndLength(uint8_t *type, uint32_t *len);
     PRStatus ReadV5ConnectResponseTop();
     PRStatus ReadV5ConnectResponseBottom();
-
-    void WriteUint8(uint8_t d);
-    void WriteUint16(uint16_t d);
-    void WriteUint32(uint32_t d);
-    void WriteNetAddr(const NetAddr *addr);
-    void WriteNetPort(const NetAddr *addr);
-    void WriteString(const nsACString &str);
 
     uint8_t ReadUint8();
     uint16_t ReadUint16();
@@ -166,6 +159,115 @@ nsSOCKSSocketInfo::nsSOCKSSocketInfo()
     mDestinationAddr.inet.ip = htonl(INADDR_ANY);
     mDestinationAddr.inet.port = htons(0);
 }
+
+/* Helper template class to statically check that writes to a fixed-size
+ * buffer are not going to overflow.
+ *
+ * Example usage:
+ *   uint8_t real_buf[TOTAL_SIZE];
+ *   Buffer<TOTAL_SIZE> buf(&real_buf);
+ *   auto buf2 = buf.WriteUint16(1);
+ *   auto buf3 = buf2.WriteUint8(2);
+ *
+ * It is possible to chain them, to limit the number of (error-prone)
+ * intermediate variables:
+ *   auto buf = Buffer<TOTAL_SIZE>(&real_buf)
+ *              .WriteUint16(1)
+ *              .WriteUint8(2);
+ *
+ * Debug builds assert when intermediate variables are reused:
+ *   Buffer<TOTAL_SIZE> buf(&real_buf);
+ *   auto buf2 = buf.WriteUint16(1);
+ *   auto buf3 = buf.WriteUint8(2); // Asserts
+ *
+ * Strings can be written, given an explicit maximum length.
+ *   buf.WriteString<MAX_STRING_LENGTH>(str);
+ *
+ * The Written() method returns how many bytes have been written so far:
+ *   Buffer<TOTAL_SIZE> buf(&real_buf);
+ *   auto buf2 = buf.WriteUint16(1);
+ *   auto buf3 = buf2.WriteUint8(2);
+ *   buf3.Written(); // returns 3.
+ */
+template <size_t Size>
+class Buffer
+{
+public:
+  Buffer() : mBuf(nullptr), mLength(0) {}
+
+  explicit Buffer(uint8_t* aBuf, size_t aLength=0)
+  : mBuf(aBuf), mLength(aLength) {}
+
+  template <size_t Size2>
+  Buffer(const Buffer<Size2>& aBuf) : mBuf(aBuf.mBuf), mLength(aBuf.mLength) {
+      static_assert(Size2 > Size, "Cannot cast buffer");
+  }
+
+  Buffer<Size - sizeof(uint8_t)> WriteUint8(uint8_t aValue) {
+      return Write(aValue);
+  }
+
+  Buffer<Size - sizeof(uint16_t)> WriteUint16(uint16_t aValue) {
+      return Write(aValue);
+  }
+
+  Buffer<Size - sizeof(uint32_t)> WriteUint32(uint32_t aValue) {
+      return Write(aValue);
+  }
+
+  Buffer<Size - sizeof(uint16_t)> WriteNetPort(const NetAddr* aAddr) {
+      return WriteUint16(aAddr->inet.port);
+  }
+
+  Buffer<Size - sizeof(IPv6Addr)> WriteNetAddr(const NetAddr* aAddr) {
+      if (aAddr->raw.family == AF_INET) {
+          return Write(aAddr->inet.ip);
+      } else if (aAddr->raw.family == AF_INET6) {
+          return Write(aAddr->inet6.ip.u8);
+      }
+      NS_NOTREACHED("Unknown address family");
+      return *this;
+  }
+
+  template <size_t MaxLength>
+  Buffer<Size - MaxLength> WriteString(const nsACString& aStr) {
+      if (aStr.Length() > MaxLength) {
+          return Buffer<Size - MaxLength>(nullptr);
+      }
+      return WritePtr<char, MaxLength>(aStr.Data(), aStr.Length());
+  }
+
+  size_t Written() {
+      MOZ_ASSERT(mBuf);
+      return mLength;
+  }
+
+  operator bool() { return !!mBuf; }
+private:
+  template <size_t Size2>
+  friend class Buffer;
+
+  template <typename T>
+  Buffer<Size - sizeof(T)> Write(T& aValue) {
+      return WritePtr<T, sizeof(T)>(&aValue, sizeof(T));
+  }
+
+  template <typename T, size_t Length>
+  Buffer<Size - Length> WritePtr(const T* aValue, size_t aCopyLength) {
+      static_assert(Size >= Length, "Cannot write that much");
+      MOZ_ASSERT(aCopyLength <= Length);
+      MOZ_ASSERT(mBuf);
+      memcpy(mBuf, aValue, aCopyLength);
+      Buffer<Size - Length> result(mBuf + aCopyLength, mLength + aCopyLength);
+      mBuf = nullptr;
+      mLength = 0;
+      return result;
+  }
+
+  uint8_t* mBuf;
+  size_t mLength;
+};
+
 
 void
 nsSOCKSSocketInfo::Init(int32_t version, int32_t family, const char *proxyHost, int32_t proxyPort, const char *host, uint32_t flags)
@@ -454,33 +556,39 @@ nsSOCKSSocketInfo::WriteV4ConnectRequest()
              proxy_resolve? "yes" : "no"));
 
     // Send a SOCKS 4 connect request.
-    WriteUint8(0x04); // version -- 4
-    WriteUint8(0x01); // command -- connect
-    WriteNetPort(addr);
+    auto buf = Buffer<BUFFER_SIZE>(mData)
+               .WriteUint8(0x04) // version -- 4
+               .WriteUint8(0x01) // command -- connect
+               .WriteNetPort(addr);
+
+    // We don't have anything more to write after the if, so we can
+    // use a buffer with no further writes allowed.
+    Buffer<0> buf3;
     if (proxy_resolve) {
         // Add the full name, null-terminated, to the request
         // according to SOCKS 4a. A fake IP address, with the first
         // four bytes set to 0 and the last byte set to something other
         // than 0, is used to notify the proxy that this is a SOCKS 4a
         // request. This request type works for Tor and perhaps others.
-        WriteUint32(htonl(0x00000001)); // Fake IP
-        WriteUint8(0x00); // Send an emtpy username
-        if (mDestinationHost.Length() > MAX_HOSTNAME_LEN) {
+        auto buf2 = buf.WriteUint32(htonl(0x00000001)) // Fake IP
+                       .WriteUint8(0x00) // Send an emtpy username
+                       .WriteString<MAX_HOSTNAME_LEN>(mDestinationHost); // Hostname
+        if (!buf2) {
             LOGERROR(("socks4: destination host name is too long!"));
             HandshakeFinished(PR_BAD_ADDRESS_ERROR);
             return PR_FAILURE;
         }
-        WriteString(mDestinationHost); // Hostname
-        WriteUint8(0x00);
+        buf3 = buf2.WriteUint8(0x00);
     } else if (addr->raw.family == AF_INET) {
-        WriteNetAddr(addr); // Add the IPv4 address
-        WriteUint8(0x00); // Send an emtpy username
-    } else if (addr->raw.family == AF_INET6) {
-        LOGERROR(("socks: SOCKS 4 can't handle IPv6 addresses!"));
+        buf3 = buf.WriteNetAddr(addr) // Add the IPv4 address
+                  .WriteUint8(0x00); // Send an emtpy username
+    } else {
+        LOGERROR(("socks: SOCKS 4 can only handle IPv4 addresses!"));
         HandshakeFinished(PR_BAD_ADDRESS_ERROR);
         return PR_FAILURE;
     }
 
+    mDataLength = buf3.Written();
     return PR_SUCCESS;
 }
 
@@ -521,9 +629,11 @@ nsSOCKSSocketInfo::WriteV5AuthRequest()
 
     // Send an initial SOCKS 5 greeting
     LOGDEBUG(("socks5: sending auth methods"));
-    WriteUint8(0x05); // version -- 5
-    WriteUint8(0x01); // # auth methods -- 1
-    WriteUint8(0x00); // we don't support authentication
+    mDataLength = Buffer<BUFFER_SIZE>(mData)
+                  .WriteUint8(0x05) // version -- 5
+                  .WriteUint8(0x01) // # auth methods -- 1
+                  .WriteUint8(0x00) // we don't support authentication
+                  .Written();
 
     return PR_SUCCESS;
 }
@@ -569,36 +679,41 @@ nsSOCKSSocketInfo::WriteV5ConnectRequest()
     mDataLength = 0;
     mState = SOCKS5_WRITE_CONNECT_REQUEST;
 
-    WriteUint8(0x05); // version -- 5
-    WriteUint8(0x01); // command -- connect
-    WriteUint8(0x00); // reserved
+    auto buf = Buffer<BUFFER_SIZE>(mData)
+               .WriteUint8(0x05) // version -- 5
+               .WriteUint8(0x01) // command -- connect
+               .WriteUint8(0x00); // reserved
    
+    // We're writing a net port after the if, so we need a buffer allowing
+    // to write that much.
+    Buffer<sizeof(uint16_t)> buf2;
     // Add the address to the SOCKS 5 request. SOCKS 5 supports several
     // address types, so we pick the one that works best for us.
     if (proxy_resolve) {
         // Add the host name. Only a single byte is used to store the length,
         // so we must prevent long names from being used.
-        if (mDestinationHost.Length() > MAX_HOSTNAME_LEN) {
+        buf2 = buf.WriteUint8(0x03) // addr type -- domainname
+                  .WriteUint8(mDestinationHost.Length()) // name length
+                  .WriteString<MAX_HOSTNAME_LEN>(mDestinationHost); // Hostname
+        if (!buf2) {
             LOGERROR(("socks5: destination host name is too long!"));
             HandshakeFinished(PR_BAD_ADDRESS_ERROR);
             return PR_FAILURE;
         }
-        WriteUint8(0x03); // addr type -- domainname
-        WriteUint8(mDestinationHost.Length()); // name length
-        WriteString(mDestinationHost);
     } else if (addr->raw.family == AF_INET) {
-        WriteUint8(0x01); // addr type -- IPv4
-        WriteNetAddr(addr);
+        buf2 = buf.WriteUint8(0x01) // addr type -- IPv4
+                  .WriteNetAddr(addr);
     } else if (addr->raw.family == AF_INET6) {
-        WriteUint8(0x04); // addr type -- IPv6
-        WriteNetAddr(addr);
+        buf2 = buf.WriteUint8(0x04) // addr type -- IPv6
+                  .WriteNetAddr(addr);
     } else {
         LOGERROR(("socks5: destination address of unknown type!"));
         HandshakeFinished(PR_BAD_ADDRESS_ERROR);
         return PR_FAILURE;
     }
 
-    WriteNetPort(addr); // port
+    auto buf3 = buf2.WriteNetPort(addr); // port
+    mDataLength = buf3.Written();
 
     return PR_SUCCESS;
 }
@@ -850,70 +965,6 @@ nsSOCKSSocketInfo::GetPollFlags() const
     }
 
     return 0;
-}
-
-inline void
-nsSOCKSSocketInfo::WriteUint8(uint8_t v)
-{
-    NS_ABORT_IF_FALSE(mDataLength + sizeof(v) <= BUFFER_SIZE,
-                      "Can't write that much data!");
-    mData[mDataLength] = v;
-    mDataLength += sizeof(v);
-}
-
-inline void
-nsSOCKSSocketInfo::WriteUint16(uint16_t v)
-{
-    NS_ABORT_IF_FALSE(mDataLength + sizeof(v) <= BUFFER_SIZE,
-                      "Can't write that much data!");
-    memcpy(mData + mDataLength, &v, sizeof(v));
-    mDataLength += sizeof(v);
-}
-
-inline void
-nsSOCKSSocketInfo::WriteUint32(uint32_t v)
-{
-    NS_ABORT_IF_FALSE(mDataLength + sizeof(v) <= BUFFER_SIZE,
-                      "Can't write that much data!");
-    memcpy(mData + mDataLength, &v, sizeof(v));
-    mDataLength += sizeof(v);
-}
-
-void
-nsSOCKSSocketInfo::WriteNetAddr(const NetAddr *addr)
-{
-    const char *ip = nullptr;
-    uint32_t len = 0;
-
-    if (addr->raw.family == AF_INET) {
-        ip = (const char*)&addr->inet.ip;
-        len = sizeof(addr->inet.ip);
-    } else if (addr->raw.family == AF_INET6) {
-        ip = (const char*)addr->inet6.ip.u8;
-        len = sizeof(addr->inet6.ip.u8);
-    }
-
-    NS_ABORT_IF_FALSE(ip != nullptr, "Unknown address");
-    NS_ABORT_IF_FALSE(mDataLength + len <= BUFFER_SIZE,
-                      "Can't write that much data!");
- 
-    memcpy(mData + mDataLength, ip, len);
-    mDataLength += len;
-}
-
-void
-nsSOCKSSocketInfo::WriteNetPort(const NetAddr *addr)
-{
-    WriteUint16(addr->inet.port);
-}
-
-void
-nsSOCKSSocketInfo::WriteString(const nsACString &str)
-{
-    NS_ABORT_IF_FALSE(mDataLength + str.Length() <= BUFFER_SIZE,
-                      "Can't write that much data!");
-    memcpy(mData + mDataLength, str.Data(), str.Length());
-    mDataLength += str.Length();
 }
 
 inline uint8_t
