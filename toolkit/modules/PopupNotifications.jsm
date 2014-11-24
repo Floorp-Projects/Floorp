@@ -7,6 +7,7 @@ this.EXPORTED_SYMBOLS = ["PopupNotifications"];
 var Cc = Components.classes, Ci = Components.interfaces, Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";
@@ -153,20 +154,6 @@ PopupNotifications.prototype = {
   },
   get iconBox() {
     return this._iconBox;
-  },
-
-  /**
-   * Enable or disable the opening/closing transition.
-   * @param state
-   *        Boolean state
-   */
-  set transitionsEnabled(state) {
-    if (state) {
-      this.panel.removeAttribute("animate");
-    }
-    else {
-      this.panel.setAttribute("animate", "false");
-    }
   },
 
   /**
@@ -485,15 +472,16 @@ PopupNotifications.prototype = {
    * Hides the notification popup.
    */
   _hidePanel: function PopupNotifications_hide() {
-    // We need to disable the closing animation when setting _ignoreDismissal
-    // to true, otherwise the popuphidden event will fire after we have set
-    // _ignoreDismissal back to false.
-    let transitionsEnabled = this.transitionsEnabled;
-    this.transitionsEnabled = false;
-    this._ignoreDismissal = true;
+    if (this.panel.state == "closed") {
+      return Promise.resolve();
+    }
+    if (this._ignoreDismissal) {
+      return this._ignoreDismissal.promise;
+    }
+    let deferred = Promise.defer();
+    this._ignoreDismissal = deferred;
     this.panel.hidePopup();
-    this._ignoreDismissal = false;
-    this.transitionsEnabled = transitionsEnabled;
+    return deferred.promise;
   },
 
   /**
@@ -630,33 +618,33 @@ PopupNotifications.prototype = {
     // If the panel is already open but we're changing anchors, we need to hide
     // it first.  Otherwise it can appear in the wrong spot.  (_hidePanel is
     // safe to call even if the panel is already hidden.)
-    this._hidePanel();
+    let promise = this._hidePanel().then(() => {
+      // If the anchor element is hidden or null, use the tab as the anchor. We
+      // only ever show notifications for the current browser, so we can just use
+      // the current tab.
+      let selectedTab = this.tabbrowser.selectedTab;
+      if (anchorElement) {
+        let bo = anchorElement.boxObject;
+        if (bo.height == 0 && bo.width == 0)
+          anchorElement = selectedTab; // hidden
+      } else {
+        anchorElement = selectedTab; // null
+      }
 
-    // If the anchor element is hidden or null, use the tab as the anchor. We
-    // only ever show notifications for the current browser, so we can just use
-    // the current tab.
-    let selectedTab = this.tabbrowser.selectedTab;
-    if (anchorElement) {
-      let bo = anchorElement.boxObject;
-      if (bo.height == 0 && bo.width == 0)
-        anchorElement = selectedTab; // hidden
-    } else {
-      anchorElement = selectedTab; // null
-    }
+      this._currentAnchorElement = anchorElement;
 
-    this._currentAnchorElement = anchorElement;
-
-    // On OS X and Linux we need a different panel arrow color for
-    // click-to-play plugins, so copy the popupid and use css.
-    this.panel.setAttribute("popupid", this.panel.firstChild.getAttribute("popupid"));
-    notificationsToShow.forEach(function (n) {
-      // Remember the time the notification was shown for the security delay.
-      n.timeShown = this.window.performance.now();
-    }, this);
-    this.panel.openPopup(anchorElement, "bottomcenter topleft");
-    notificationsToShow.forEach(function (n) {
-      this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
-    }, this);
+      // On OS X and Linux we need a different panel arrow color for
+      // click-to-play plugins, so copy the popupid and use css.
+      this.panel.setAttribute("popupid", this.panel.firstChild.getAttribute("popupid"));
+      notificationsToShow.forEach(function (n) {
+        // Remember the time the notification was shown for the security delay.
+        n.timeShown = this.window.performance.now();
+      }, this);
+      this.panel.openPopup(anchorElement, "bottomcenter topleft");
+      notificationsToShow.forEach(function (n) {
+        this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
+      }, this);
+    });
   },
 
   /**
@@ -809,6 +797,16 @@ PopupNotifications.prototype = {
     while (anchor && anchor.parentNode != this.iconBox)
       anchor = anchor.parentNode;
 
+    if (!anchor) {
+      return;
+    }
+
+    // If the panel is not closed, and the anchor is different, immediately mark all
+    // active notifications for the previous anchor as dismissed
+    if (this.panel.state != "closed" && anchor != this._currentAnchorElement) {
+      this._dismissOrRemoveCurrentNotifications();
+    }
+
     this._reshowNotifications(anchor);
   },
 
@@ -881,9 +879,22 @@ PopupNotifications.prototype = {
   },
 
   _onPopupHidden: function PopupNotifications_onPopupHidden(event) {
-    if (event.target != this.panel || this._ignoreDismissal)
+    if (event.target != this.panel || this._ignoreDismissal) {
+      if (this._ignoreDismissal) {
+        this._ignoreDismissal.resolve();
+        this._ignoreDismissal = null;
+      }
       return;
+    }
 
+    this._dismissOrRemoveCurrentNotifications();
+
+    this._clearPanel();
+
+    this._update();
+  },
+
+  _dismissOrRemoveCurrentNotifications: function() {
     let browser = this.panel.firstChild &&
                   this.panel.firstChild.notification.browser;
     if (!browser)
@@ -899,17 +910,13 @@ PopupNotifications.prototype = {
 
       // Do not mark the notification as dismissed or fire NOTIFICATION_EVENT_DISMISSED
       // if the notification is removed.
-      if (notificationObj.options.removeOnDismissal)
+      if (notificationObj.options.removeOnDismissal) {
         this._remove(notificationObj);
-      else {
+      } else {
         notificationObj.dismissed = true;
         this._fireCallback(notificationObj, NOTIFICATION_EVENT_DISMISSED);
       }
     }, this);
-
-    this._clearPanel();
-
-    this._update();
   },
 
   _onButtonCommand: function PopupNotifications_onButtonCommand(event) {
