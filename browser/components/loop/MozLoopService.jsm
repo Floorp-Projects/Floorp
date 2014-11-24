@@ -855,6 +855,50 @@ let MozLoopServiceInternal = {
     return true;
   },
 
+  /**
+   * Block a caller so it will show up in the contacts list as a blocked contact.
+   * If the contact is not yet part of the users' contacts list, it will be added
+   * as a blocked contact directly.
+   *
+   * @param {String}   callerId Email address or phone number that may identify
+   *                            the caller as an existing contact
+   * @param {Function} callback Function that will be invoked once the operation
+   *                            has completed. When an error occurs, it will be
+   *                            passed as its first argument
+   */
+  blockDirectCaller: function(callerId, callback) {
+    let field = callerId.contains("@") ? "email" : "tel";
+    Task.spawn(function* () {
+      // See if we can find the caller in our database.
+      let contacts = yield LoopContacts.promise("search", {
+        q: callerId,
+        field: field
+      });
+
+      let contact;
+      if (contacts.length) {
+        for (contact of contacts) {
+          yield LoopContacts.promise("block", contact._guid);
+        }
+      } else {
+        // If the contact doesn't exist yet, add it as a blocked contact.
+        contact = {
+          id: MozLoopService.generateUUID(),
+          name: [callerId],
+          category: ["local"],
+          blocked: true
+        };
+        // Add the phone OR email field to the contact.
+        contact[field] = [{
+          pref: true,
+          value: callerId
+        }];
+
+        yield LoopContacts.promise("add", contact);
+      }
+    }).then(callback, callback);
+  },
+
    /**
    * Open call progress websocket and terminate with a reason of busy
    * the server.
@@ -1681,5 +1725,12 @@ this.MozLoopService = {
      */
   startDirectCall: function(contact, callType) {
     MozLoopServiceInternal.startDirectCall(contact, callType);
+  },
+
+  /**
+   * @see MozLoopInternal#blockDirectCaller
+   */
+  blockDirectCaller: function(callerId, callback) {
+    return MozLoopServiceInternal.blockDirectCaller(callerId, callback);
   },
 };
