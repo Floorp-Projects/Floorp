@@ -1138,9 +1138,14 @@ this.UITour = {
 
       tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
+      let xOffset = 0, yOffset = 0;
       let alignment = "bottomcenter topright";
+      if (aAnchor.targetName == "search") {
+        alignment = "after_start";
+        xOffset = 18;
+      }
       this._addAnnotationPanelMutationObserver(tooltip);
-      tooltip.openPopup(aAnchorEl, alignment);
+      tooltip.openPopup(aAnchorEl, alignment, xOffset, yOffset);
     }
 
     // Prevent showing a panel at an undefined position.
