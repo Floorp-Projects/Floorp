@@ -18,4 +18,7 @@ LOCAL_INCLUDES += [
     '/security/sandbox/chromium'
 ]
 
-FINAL_LIBRARY = 'mozsandbox'
+if CONFIG['OS_TARGET'] == 'Android':
+    FINAL_LIBRARY = 'mozsandbox'
+else:
+    FINAL_LIBRARY = 'xul'
