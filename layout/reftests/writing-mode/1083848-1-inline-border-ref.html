@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+.test {
+  margin:10px;
+  border:1px solid blue;
+  font-family: monospace;
+  font-size: 16px;
+  word-break:break-all;
+  text-transform:full-width;
+  width:7.8em;
+  height:7.8em;
+}
+
+.h { writing-mode:horizontal-tb; }
+.v-lr { writing-mode:vertical-lr; }
+.v-rl { writing-mode:vertical-rl; }
+
+b {
+  background-color: yellow;
+}
+
+.bh1 {
+  border-left: 3px solid cyan;
+}
+.bh2 {
+  border-right: 3px solid magenta;
+}
+
+.bv1 {
+  border-top: 3px solid cyan;
+}
+.bv2 {
+  border-bottom: 3px solid magenta;
+}
+</style>
+</head>
+
+<body>
+
+<div class="test h">ABCDE<b class="bh1">F</b><b>GHIJKLMNOPQRS</b><b class="bh2">T</b>UVWXYZ</div>
+
+<div class="test v-lr">ABCDE<b class="bv1">F</b><b>GHIJKLMNOPQRS</b><b class="bv2">T</b>UVWXYZ</div>
+
+<div class="test v-rl">ABCDE<b class="bv1">F</b><b>GHIJKLMNOPQRS</b><b class="bv2">T</b>UVWXYZ</div>
+
+</body>
+</html>
