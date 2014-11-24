@@ -65,6 +65,18 @@ private:
   const bool mDXVAEnabled;
   const layers::LayersBackend mLayersBackend;
   bool mUseHwAccel;
+
+  enum StreamType {
+    Unknown,
+    H264,
+    VP8,
+    VP9
+  };
+
+  StreamType mStreamType;
+
+  const GUID& GetMFTGUID();
+  const GUID& GetMediaSubtypeGUID();
 };
 
 } // namespace mozilla

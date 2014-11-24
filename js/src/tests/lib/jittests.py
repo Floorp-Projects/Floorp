@@ -599,21 +599,15 @@ def print_test_summary(num_tests, failures, complete, doing, options):
                 traceback.print_exc()
                 sys.stderr.write('---\n')
 
-        def show_test(res):
-            if options.show_failed:
-                print('    ' + subprocess.list2cmdline(res.cmd))
-            else:
-                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
-
         print('FAILURES:')
         for res in failures:
             if not res.timed_out:
-                show_test(res)
+                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
 
         print('TIMEOUTS:')
         for res in failures:
             if res.timed_out:
-                show_test(res)
+                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)' % doing))
 
@@ -648,14 +642,23 @@ def process_test_results(results, num_tests, options):
 
     try:
         for i, res in enumerate(results):
-            if options.show_output:
+            ok = check_output(res.out, res.err, res.rc, res.timed_out, res.test, options)
+
+            if ok:
+                show_output = options.show_output and not options.failed_only
+            else:
+                show_output = options.show_output or not options.no_show_failed
+
+            if show_output:
+                pb.beginline()
                 sys.stdout.write(res.out)
                 sys.stdout.write(res.err)
                 sys.stdout.write('Exit code: %s\n' % res.rc)
-            if res.test.valgrind:
+
+            if res.test.valgrind and not show_output:
+                pb.beginline()
                 sys.stdout.write(res.err)
 
-            ok = check_output(res.out, res.err, res.rc, res.timed_out, res.test, options)
             doing = 'after %s' % res.test.relpath_tests
             if not ok:
                 failures.append(res)

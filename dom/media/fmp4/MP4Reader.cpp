@@ -139,20 +139,6 @@ MP4Reader::~MP4Reader()
   MOZ_COUNT_DTOR(MP4Reader);
 }
 
-class DestroyPDMTask : public nsRunnable {
-public:
-  DestroyPDMTask(nsAutoPtr<PlatformDecoderModule>& aPDM)
-    : mPDM(aPDM)
-  {}
-  NS_IMETHOD Run() MOZ_OVERRIDE {
-    MOZ_ASSERT(NS_IsMainThread());
-    mPDM = nullptr;
-    return NS_OK;
-  }
-private:
-  nsAutoPtr<PlatformDecoderModule> mPDM;
-};
-
 void
 MP4Reader::Shutdown()
 {
@@ -180,10 +166,8 @@ MP4Reader::Shutdown()
   mQueuedVideoSample = nullptr;
 
   if (mPlatform) {
-    // PDMs are supposed to be destroyed on the main thread...
-    nsRefPtr<DestroyPDMTask> task(new DestroyPDMTask(mPlatform));
-    MOZ_ASSERT(!mPlatform);
-    NS_DispatchToMainThread(task);
+    mPlatform->Shutdown();
+    mPlatform = nullptr;
   }
 }
 
@@ -327,6 +311,14 @@ MP4Reader::IsSupportedAudioMimeType(const char* aMimeType)
          mPlatform->SupportsAudioMimeType(aMimeType);
 }
 
+bool
+MP4Reader::IsSupportedVideoMimeType(const char* aMimeType)
+{
+  return (!strcmp(aMimeType, "video/mp4") ||
+          !strcmp(aMimeType, "video/avc")) &&
+         mPlatform->SupportsVideoMimeType(aMimeType);
+}
+
 nsresult
 MP4Reader::ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags)
@@ -429,22 +421,25 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
 
   if (HasVideo()) {
     const VideoDecoderConfig& video = mDemuxer->VideoConfig();
+    if (mInfo.mVideo.mHasVideo && !IsSupportedVideoMimeType(video.mime_type)) {
+      return NS_ERROR_FAILURE;
+    }
     mInfo.mVideo.mDisplay =
       nsIntSize(video.display_width, video.display_height);
     mVideo.mCallback = new DecoderCallback(this, kVideo);
     if (mSharedDecoderManager) {
       mVideo.mDecoder =
-        mSharedDecoderManager->CreateH264Decoder(video,
-                                                 mLayersBackendType,
-                                                 mDecoder->GetImageContainer(),
-                                                 mVideo.mTaskQueue,
-                                                 mVideo.mCallback);
+        mSharedDecoderManager->CreateVideoDecoder(video,
+                                                  mLayersBackendType,
+                                                  mDecoder->GetImageContainer(),
+                                                  mVideo.mTaskQueue,
+                                                  mVideo.mCallback);
     } else {
-      mVideo.mDecoder = mPlatform->CreateH264Decoder(video,
-                                                     mLayersBackendType,
-                                                     mDecoder->GetImageContainer(),
-                                                     mVideo.mTaskQueue,
-                                                     mVideo.mCallback);
+      mVideo.mDecoder = mPlatform->CreateVideoDecoder(video,
+                                                      mLayersBackendType,
+                                                      mDecoder->GetImageContainer(),
+                                                      mVideo.mTaskQueue,
+                                                      mVideo.mCallback);
     }
     NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, NS_ERROR_FAILURE);
     nsresult rv = mVideo.mDecoder->Init();

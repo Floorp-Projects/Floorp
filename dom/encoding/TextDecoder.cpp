@@ -1,10 +1,13 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsContentUtils.h"
+#include <stdint.h>
 
 namespace mozilla {
 namespace dom {
@@ -91,6 +94,40 @@ TextDecoder::Decode(const char* aInput, const int32_t aLength,
   if (NS_FAILED(rv)) {
     aRv.Throw(NS_ERROR_DOM_ENCODING_DECODE_ERR);
   }
+}
+
+void
+TextDecoder::Decode(const Optional<ArrayBufferViewOrArrayBuffer>& aBuffer,
+                    const TextDecodeOptions& aOptions,
+                    nsAString& aOutDecodedString,
+                    ErrorResult& aRv)
+{
+  if (!aBuffer.WasPassed()) {
+    Decode(nullptr, 0, aOptions.mStream, aOutDecodedString, aRv);
+    return;
+  }
+  const ArrayBufferViewOrArrayBuffer& buf = aBuffer.Value();
+  uint8_t* data;
+  uint32_t length;
+  if (buf.IsArrayBufferView()) {
+    buf.GetAsArrayBufferView().ComputeLengthAndData();
+    data = buf.GetAsArrayBufferView().Data();
+    length = buf.GetAsArrayBufferView().Length();
+  } else {
+    MOZ_ASSERT(buf.IsArrayBuffer());
+    buf.GetAsArrayBuffer().ComputeLengthAndData();
+    data = buf.GetAsArrayBuffer().Data();
+    length = buf.GetAsArrayBuffer().Length();
+  }
+  // The other Decode signature takes a signed int, because that's
+  // what nsIUnicodeDecoder::Convert takes as the length.  Throw if
+  // our length is too big.
+  if (length > INT32_MAX) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+  Decode(reinterpret_cast<char*>(data), length, aOptions.mStream,
+         aOutDecodedString, aRv);
 }
 
 void

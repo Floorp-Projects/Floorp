@@ -227,6 +227,7 @@ public:
   NS_IMETHOD GetCaretEnabled(bool *_retval);
   NS_IMETHOD GetCaretVisible(bool *_retval);
   NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility);
+  NS_IMETHOD PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend) MOZ_OVERRIDE;
   NS_IMETHOD CharacterMove(bool aForward, bool aExtend);
   NS_IMETHOD CharacterExtendForDelete();
   NS_IMETHOD CharacterExtendForBackspace();
@@ -443,6 +444,15 @@ nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(bool aVisibility)
     }
   }
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::PhysicalMove(int16_t aDirection, int16_t aAmount,
+                                       bool aExtend)
+{
+  if (mFrameSelection)
+    return mFrameSelection->PhysicalMove(aDirection, aAmount, aExtend);
+  return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP

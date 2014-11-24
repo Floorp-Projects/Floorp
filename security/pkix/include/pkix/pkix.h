@@ -113,8 +113,9 @@ Result CreateEncodedOCSPRequest(TrustDomain& trustDomain,
 // good, unknown, or revoked responses that verify correctly are considered
 // trustworthy. If the response is not trustworthy, thisUpdate will be 0.
 // Similarly, the optional parameter validThrough will be the time through
-// which the encoded response is considered trustworthy (that is, if a response had a
-// thisUpdate time of validThrough, it would be considered trustworthy).
+// which the encoded response is considered trustworthy (that is, as long as
+// the given time at which to validate is less than or equal to validThrough,
+// the response will be considered trustworthy).
 Result VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                                  const CertID& certID, Time time,
                                  uint16_t maxLifetimeInDays,

@@ -156,16 +156,6 @@ public:
      */
     void LineTo(const gfxPoint& pt);
 
-    /**
-     * Draws a cubic Bézier curve with control points pt1, pt2 and pt3.
-     */
-    void CurveTo(const gfxPoint& pt1, const gfxPoint& pt2, const gfxPoint& pt3);
-
-    /**
-     * Draws a quadratic Bézier curve with control points pt1, pt2 and pt3.
-     */
-    void QuadraticCurveTo(const gfxPoint& pt1, const gfxPoint& pt2);
-
     // path helpers
     /**
      * Draws a line from start to end.
@@ -408,7 +398,6 @@ public:
 
     // define enum for operators (clear, src, dst, etc)
     enum GraphicsOperator {
-        OPERATOR_CLEAR,
         OPERATOR_SOURCE,
 
         OPERATOR_OVER,
@@ -477,6 +466,8 @@ public:
     void Clip(const Rect& rect);
     void Clip(const gfxRect& rect); // will clip to a rect
     void Clip(Path* aPath);
+
+    void PopClip();
 
     /**
      * This will ensure that the surface actually has its clip set.
@@ -565,7 +556,6 @@ private:
   struct AzureState {
     AzureState()
       : op(mozilla::gfx::CompositionOp::OP_OVER)
-      , opIsClear(false)
       , color(0, 0, 0, 1.0f)
       , clipWasReset(false)
       , fillRule(mozilla::gfx::FillRule::FILL_WINDING)
@@ -574,7 +564,6 @@ private:
     {}
 
     mozilla::gfx::CompositionOp op;
-    bool opIsClear;
     Color color;
     nsRefPtr<gfxPattern> pattern;
     nsRefPtr<gfxASurface> sourceSurfCairo;

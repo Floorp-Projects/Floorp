@@ -30,11 +30,24 @@ function handleRequest(request, response) {
   var alreadyDeferred = Number(getState("alreadyDeferred"));
   var role = query.role || "";
 
+  var failPackageDownloadOnce = "failPackageDownloadOnce" in query;
+  var failOnce = "failOnce" in query;
+  var alreadyFailed = Number(getState("alreadyFailed"));
+
   if (allowCancel && getPackage && !alreadyDeferred) {
     // Only do this for the actual package delivery.
     response.processAsync();
     // And to avoid timer problems, only do this once.
     setState("alreadyDeferred", "1");
+  }
+
+  if (failOnce && !alreadyFailed) {
+    setState("alreadyFailed", "1");
+    // We need to simulate a network error... let's just try closing the connection
+    // without any output
+    response.seizePower();
+    response.finish();
+    return;
   }
 
   response.setHeader("Access-Control-Allow-Origin", "*", false);
@@ -49,8 +62,9 @@ function handleRequest(request, response) {
 
     setState("packageName", packageName);
     var packagePath = "/" + gBasePath + "file_packaged_app.sjs?" +
-                      (allowCancel?"allowCancel&": "") + "getPackage=" +
-                      packageName;
+                      (allowCancel ? "allowCancel&" : "") +
+                      (failPackageDownloadOnce ? "failOnce&" : "") +
+                      "getPackage=" + packageName;
     setState("packagePath", packagePath);
 
     if (version == packageVersion) {

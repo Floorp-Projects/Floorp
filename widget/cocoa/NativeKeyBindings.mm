@@ -282,7 +282,7 @@ NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
 
     PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
       ("%p NativeKeyBindings::KeyPress, command=%s",
-       this, geckoCommand));
+       this, WidgetKeyboardEvent::GetCommandStr(geckoCommand)));
 
     // Execute the Gecko command
     aCallback(geckoCommand, aCallbackData);

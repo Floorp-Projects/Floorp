@@ -5091,8 +5091,12 @@ IonBuilder::inlineCalls(CallInfo &callInfo, ObjectVector &targets,
                     if (choiceSet[i])
                         continue;
 
-                    remaining = &targets[i]->as<JSFunction>();
-                    clonedAtCallsite = targets[i] != originals[i];
+                    MOZ_ASSERT(!remaining);
+
+                    if (targets[i]->is<JSFunction>()) {
+                        remaining = &targets[i]->as<JSFunction>();
+                        clonedAtCallsite = targets[i] != originals[i];
+                    }
                     break;
                 }
             }

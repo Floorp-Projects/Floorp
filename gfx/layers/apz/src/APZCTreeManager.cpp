@@ -721,11 +721,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
   apzc = GetTargetAPZC(aEvent.mTouches[0].mScreenPoint, aOutHitResult);
   for (size_t i = 1; i < aEvent.mTouches.Length(); i++) {
     nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(aEvent.mTouches[i].mScreenPoint, aOutHitResult);
-    apzc = CommonAncestor(apzc.get(), apzc2.get());
-    APZCTM_LOG("Using APZC %p as the common ancestor\n", apzc.get());
-    // For now, we only ever want to do pinching on the root APZC for a given layers id. So
-    // when we find the common ancestor of multiple points, also walk up to the root APZC.
-    apzc = RootAPZCForLayersId(apzc);
+    apzc = GetMultitouchTarget(apzc, apzc2);
     APZCTM_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
   }
 
@@ -960,9 +956,16 @@ APZCTreeManager::ContentReceivedTouch(uint64_t aInputBlockId,
 
 void
 APZCTreeManager::SetTargetAPZC(uint64_t aInputBlockId,
-                               const ScrollableLayerGuid& aGuid)
+                               const nsTArray<ScrollableLayerGuid>& aTargets)
 {
-  nsRefPtr<AsyncPanZoomController> target = GetTargetAPZC(aGuid);
+  nsRefPtr<AsyncPanZoomController> target = nullptr;
+  if (aTargets.Length() > 0) {
+    target = GetTargetAPZC(aTargets[0]);
+  }
+  for (size_t i = 1; i < aTargets.Length(); i++) {
+    nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(aTargets[i]);
+    target = GetMultitouchTarget(target, apzc2);
+  }
   mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
 
@@ -1556,7 +1559,17 @@ APZCTreeManager::GetApzcToGeckoTransform(const AsyncPanZoomController *aApzc) co
 }
 
 already_AddRefed<AsyncPanZoomController>
-APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2)
+APZCTreeManager::GetMultitouchTarget(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const
+{
+  nsRefPtr<AsyncPanZoomController> apzc = CommonAncestor(aApzc1, aApzc2);
+  // For now, we only ever want to do pinching on the root APZC for a given layers id. So
+  // when we find the common ancestor of multiple points, also walk up to the root APZC.
+  apzc = RootAPZCForLayersId(apzc);
+  return apzc.forget();
+}
+
+already_AddRefed<AsyncPanZoomController>
+APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const
 {
   MonitorAutoLock lock(mTreeLock);
   nsRefPtr<AsyncPanZoomController> ancestor;
@@ -1602,7 +1615,7 @@ APZCTreeManager::CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomCont
 }
 
 already_AddRefed<AsyncPanZoomController>
-APZCTreeManager::RootAPZCForLayersId(AsyncPanZoomController* aApzc)
+APZCTreeManager::RootAPZCForLayersId(AsyncPanZoomController* aApzc) const
 {
   MonitorAutoLock lock(mTreeLock);
   nsRefPtr<AsyncPanZoomController> apzc = aApzc;

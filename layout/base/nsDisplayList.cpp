@@ -747,15 +747,8 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
   // all the pres shells from here up to the root, as well as any css-driven
   // resolution. We don't need to compute it as it's already stored in the
   // container parameters.
-  // TODO: On Fennec, the container parameters do not appear to contain the
-  // cumulative resolution the way they do on B2G, and using them breaks
-  // rendering for normal pages (no CSS transform involves). As a temporary
-  // workaround, use the same value as the resolution-to-screen; this will make
-  // the "extra resolution" 1, and pages with CSS transforms may not be
-  // rendered correctly, but normal pages will.
-  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(
-      presShell->GetCumulativeResolution().width
-    * nsLayoutUtils::GetTransformToAncestorScale(aScrollFrame ? aScrollFrame : aForFrame).width);
+  metrics.mCumulativeResolution = LayoutDeviceToLayerScale(aContainerParameters.mXScale,
+                                                           aContainerParameters.mYScale);
 
   LayoutDeviceToScreenScale resolutionToScreen(
       presShell->GetCumulativeResolution().width
@@ -2818,20 +2811,19 @@ void
 nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx)
 {
+  DrawTarget& aDrawTarget = *aCtx->GetDrawTarget();
+
   if (mColor == NS_RGBA(0, 0, 0, 0)) {
     return;
   }
 
-  gfxContext* ctx = aCtx->ThebesContext();
   nsRect borderBox = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
-  gfxRect bounds =
-    nsLayoutUtils::RectToGfxRect(borderBox, mFrame->PresContext()->AppUnitsPerDevPixel());
-
-  ctx->SetColor(mColor);
-  ctx->NewPath();
-  ctx->Rectangle(bounds, true);
-  ctx->Fill();
+  Rect rect = NSRectToSnappedRect(borderBox,
+                                  mFrame->PresContext()->AppUnitsPerDevPixel(),
+                                  aDrawTarget);
+  ColorPattern color(ToDeviceColor(mColor));
+  aDrawTarget.FillRect(rect, color);
 }
 
 nsRegion
@@ -3908,7 +3900,9 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
   nsPresContext* presContext = mFrame->PresContext();
   nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
   bool isRootContentDocument = presContext->IsRootContentDocument();
-  ContainerLayerParameters params = aContainerParameters;
+  nsIPresShell* presShell = presContext->PresShell();
+  ContainerLayerParameters params(presShell->GetXResolution(),
+      presShell->GetYResolution(), nsIntPoint(), aContainerParameters);
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) &&
       rootScrollFrame->GetContent() &&
       nsLayoutUtils::GetCriticalDisplayPort(rootScrollFrame->GetContent(), nullptr)) {

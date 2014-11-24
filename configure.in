@@ -3988,13 +3988,7 @@ MOZ_ARG_WITH_STRING(xulrunner-stub-name,
   XULRUNNER_STUB_NAME=$withval)
 
 if test -z "$XULRUNNER_STUB_NAME"; then
-  case "$target_os" in
-  darwin*)
-    XULRUNNER_STUB_NAME=xulrunner
-    ;;
-  *)
-    XULRUNNER_STUB_NAME=xulrunner-stub
-  esac
+  XULRUNNER_STUB_NAME=xulrunner-stub
 fi
 AC_SUBST(XULRUNNER_STUB_NAME)
 

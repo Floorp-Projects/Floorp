@@ -29,6 +29,7 @@ if toolkit == 'windows':
     ]
 elif toolkit == 'cocoa':
     XPIDL_SOURCES += [
+        'nsIGfxInfo2.idl',
         'nsIMacDockSupport.idl',
         'nsIMacWebAppUtils.idl',
         'nsIStandaloneNativeMenu.idl',

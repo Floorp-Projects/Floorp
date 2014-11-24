@@ -114,38 +114,6 @@ Declaration::AppendValueToString(nsCSSProperty aProperty,
   return true;
 }
 
-// Helper to append |aString| with the shorthand sides notation used in e.g.
-// 'padding'. |aProperties| and |aValues| are expected to have 4 elements.
-static void
-AppendSidesShorthandToString(const nsCSSProperty aProperties[],
-                             const nsCSSValue* aValues[],
-                             nsAString& aString,
-                             nsCSSValue::Serialization aSerialization)
-{
-  const nsCSSValue& value1 = *aValues[0];
-  const nsCSSValue& value2 = *aValues[1];
-  const nsCSSValue& value3 = *aValues[2];
-  const nsCSSValue& value4 = *aValues[3];
-
-  NS_ABORT_IF_FALSE(value1.GetUnit() != eCSSUnit_Null, "null value 1");
-  value1.AppendToString(aProperties[0], aString, aSerialization);
-  if (value1 != value2 || value1 != value3 || value1 != value4) {
-    aString.Append(char16_t(' '));
-    NS_ABORT_IF_FALSE(value2.GetUnit() != eCSSUnit_Null, "null value 2");
-    value2.AppendToString(aProperties[1], aString, aSerialization);
-    if (value1 != value3 || value2 != value4) {
-      aString.Append(char16_t(' '));
-      NS_ABORT_IF_FALSE(value3.GetUnit() != eCSSUnit_Null, "null value 3");
-      value3.AppendToString(aProperties[2], aString, aSerialization);
-      if (value2 != value4) {
-        aString.Append(char16_t(' '));
-        NS_ABORT_IF_FALSE(value4.GetUnit() != eCSSUnit_Null, "null value 4");
-        value4.AppendToString(aProperties[3], aString, aSerialization);
-      }
-    }
-  }
-}
-
 void
 Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
 {
@@ -294,7 +262,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         data->ValueFor(subprops[2]),
         data->ValueFor(subprops[3])
       };
-      AppendSidesShorthandToString(subprops, vals, aValue, aSerialization);
+      nsCSSValue::AppendSidesShorthandToString(subprops, vals, aValue,
+                                               aSerialization);
       break;
     }
     case eCSSProperty_border_radius:
@@ -307,27 +276,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         data->ValueFor(subprops[2]),
         data->ValueFor(subprops[3])
       };
-
-      // For compatibility, only write a slash and the y-values
-      // if they're not identical to the x-values.
-      bool needY = false;
-      const nsCSSValue* xVals[4];
-      const nsCSSValue* yVals[4];
-      for (int i = 0; i < 4; i++) {
-        if (vals[i]->GetUnit() == eCSSUnit_Pair) {
-          needY = true;
-          xVals[i] = &vals[i]->GetPairValue().mXValue;
-          yVals[i] = &vals[i]->GetPairValue().mYValue;
-        } else {
-          xVals[i] = yVals[i] = vals[i];
-        }
-      }
-
-      AppendSidesShorthandToString(subprops, xVals, aValue, aSerialization);
-      if (needY) {
-        aValue.AppendLiteral(" / ");
-        AppendSidesShorthandToString(subprops, yVals, aValue, aSerialization);
-      }
+      nsCSSValue::AppendBasicShapeRadiusToString(subprops, vals, aValue,
+                                                 aSerialization);
       break;
     }
     case eCSSProperty_border_image: {

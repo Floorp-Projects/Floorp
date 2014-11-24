@@ -44,13 +44,13 @@ void ShutdownTaskTracer();
 class FakeTracedTask;
 
 enum SourceEventType {
-  UNKNOWN = 0,
-  TOUCH,
-  MOUSE,
-  KEY,
-  BLUETOOTH,
-  UNIXSOCKET,
-  WIFI
+  Unknown = 0,
+  Touch,
+  Mouse,
+  Key,
+  Bluetooth,
+  Unixsocket,
+  Wifi
 };
 
 class AutoSourceEvent

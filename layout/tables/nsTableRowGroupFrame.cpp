@@ -1732,84 +1732,89 @@ nsTableRowGroupFrame::CheckLineOrder(int32_t                  aLine,
 
 NS_IMETHODIMP
 nsTableRowGroupFrame::FindFrameAt(int32_t    aLineNumber, 
-                                  nscoord    aX, 
+                                  nsPoint    aPos, 
                                   nsIFrame** aFrameFound,
-                                  bool*    aXIsBeforeFirstFrame, 
-                                  bool*    aXIsAfterLastFrame)
+                                  bool*    aPosIsBeforeFirstFrame, 
+                                  bool*    aPosIsAfterLastFrame)
 {
-   nsTableFrame* table = nsTableFrame::GetTableFrame(this);
-   nsTableCellMap* cellMap = table->GetCellMap();
-   
-   *aFrameFound = nullptr;
-   *aXIsBeforeFirstFrame = true;
-   *aXIsAfterLastFrame = false;
+  nsTableFrame* table = nsTableFrame::GetTableFrame(this);
+  nsTableCellMap* cellMap = table->GetCellMap();
 
-   aLineNumber += GetStartRowIndex();
-   int32_t numCells = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
-   if (numCells == 0) {
-     return NS_OK;
-   }
+  WritingMode wm = table->GetWritingMode();
+  nscoord cw = table->GetRect().width;
+  LogicalPoint pos(wm, aPos, cw);
   
-   nsIFrame* frame = nullptr;
-   int32_t colCount = table->GetColCount();
-   for (int32_t i = 0; i < colCount; i++) {
-     CellData* data = cellMap->GetDataAt(aLineNumber, i);
-     if (data && data->IsOrig()) {
-       frame = (nsIFrame*)data->GetCellFrame();
-       break;
-     }
-   }
-   NS_ASSERTION(frame, "cellmap is lying");
-   bool isRTL = (NS_STYLE_DIRECTION_RTL ==
-                   table->StyleVisibility()->mDirection);
-   
-   nsIFrame* closestFromLeft = nullptr;
-   nsIFrame* closestFromRight = nullptr;
-   int32_t n = numCells;
-   nsIFrame* firstFrame = frame;
-   while (n--) {
-     nsRect rect = frame->GetRect();
-     if (rect.width > 0) {
-       // If aX is inside this frame - this is it
-       if (rect.x <= aX && rect.XMost() > aX) {
-         closestFromLeft = closestFromRight = frame;
-         break;
-       }
-       if (rect.x < aX) {
-         if (!closestFromLeft ||
-             rect.XMost() > closestFromLeft->GetRect().XMost())
-           closestFromLeft = frame;
-       }
-       else {
-         if (!closestFromRight ||
-             rect.x < closestFromRight->GetRect().x)
-           closestFromRight = frame;
-       }
-     }
-     frame = frame->GetNextSibling();
-   }
-   if (!closestFromLeft && !closestFromRight) {
-     // All frames were zero-width. Just take the first one.
-     closestFromLeft = closestFromRight = firstFrame;
-   }
-   *aXIsBeforeFirstFrame = isRTL ? !closestFromRight : !closestFromLeft;
-   *aXIsAfterLastFrame =   isRTL ? !closestFromLeft : !closestFromRight;
-   if (closestFromLeft == closestFromRight) {
-     *aFrameFound = closestFromLeft;
-   }
-   else if (!closestFromLeft) {
-     *aFrameFound = closestFromRight;
-   }
-   else if (!closestFromRight) {
-     *aFrameFound = closestFromLeft;
-   }
-   else { // we're between two frames
-     nscoord delta = closestFromRight->GetRect().x -
-                     closestFromLeft->GetRect().XMost();
-     if (aX < closestFromLeft->GetRect().XMost() + delta/2)
-       *aFrameFound = closestFromLeft;
-     else
-       *aFrameFound = closestFromRight;
+  *aFrameFound = nullptr;
+  *aPosIsBeforeFirstFrame = true;
+  *aPosIsAfterLastFrame = false;
+
+  aLineNumber += GetStartRowIndex();
+  int32_t numCells = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
+  if (numCells == 0) {
+    return NS_OK;
+  }
+  
+  nsIFrame* frame = nullptr;
+  int32_t colCount = table->GetColCount();
+  for (int32_t i = 0; i < colCount; i++) {
+    CellData* data = cellMap->GetDataAt(aLineNumber, i);
+    if (data && data->IsOrig()) {
+      frame = (nsIFrame*)data->GetCellFrame();
+      break;
+    }
+  }
+  NS_ASSERTION(frame, "cellmap is lying");
+  bool isRTL = (NS_STYLE_DIRECTION_RTL ==
+                  table->StyleVisibility()->mDirection);
+  
+  nsIFrame* closestFromStart = nullptr;
+  nsIFrame* closestFromEnd = nullptr;
+  int32_t n = numCells;
+  nsIFrame* firstFrame = frame;
+  while (n--) {
+    LogicalRect rect = frame->GetLogicalRect(wm, cw);
+    if (rect.ISize(wm) > 0) {
+      // If pos.I() is inside this frame - this is it
+      if (rect.IStart(wm) <= pos.I(wm) && rect.IEnd(wm) > pos.I(wm)) {
+        closestFromStart = closestFromEnd = frame;
+        break;
+      }
+      if (rect.IStart(wm) < pos.I(wm)) {
+        if (!closestFromStart ||
+            rect.IEnd(wm) > closestFromStart->GetLogicalRect(wm, cw).IEnd(wm))
+          closestFromStart = frame;
+      }
+      else {
+        if (!closestFromEnd ||
+            rect.IStart(wm) < closestFromEnd->GetLogicalRect(wm, cw).IStart(wm))
+          closestFromEnd = frame;
+      }
+    }
+    frame = frame->GetNextSibling();
+  }
+  if (!closestFromStart && !closestFromEnd) {
+    // All frames were zero-width. Just take the first one.
+    closestFromStart = closestFromEnd = firstFrame;
+  }
+  *aPosIsBeforeFirstFrame = isRTL ? !closestFromEnd : !closestFromStart;
+  *aPosIsAfterLastFrame =   isRTL ? !closestFromStart : !closestFromEnd;
+  if (closestFromStart == closestFromEnd) {
+    *aFrameFound = closestFromStart;
+  }
+  else if (!closestFromStart) {
+    *aFrameFound = closestFromEnd;
+  }
+  else if (!closestFromEnd) {
+    *aFrameFound = closestFromStart;
+  }
+  else { // we're between two frames
+    nscoord delta = closestFromEnd->GetLogicalRect(wm, cw).IStart(wm) -
+                    closestFromStart->GetLogicalRect(wm, cw).IEnd(wm);
+    if (pos.I(wm) < closestFromStart->GetLogicalRect(wm, cw).IEnd(wm) + delta/2) {
+      *aFrameFound = closestFromStart;
+    } else {
+      *aFrameFound = closestFromEnd;
+    }
   }
   return NS_OK;
 }

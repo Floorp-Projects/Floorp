@@ -4410,14 +4410,14 @@ static bool ShouldDrawRectsSeparately(gfxContext* aContext, DrawRegionClip aClip
   return !dt->SupportsRegionClipping();
 }
 
-static void DrawForcedBackgroundColor(gfxContext* aContext, Layer* aLayer, nscolor aBackgroundColor)
+static void DrawForcedBackgroundColor(DrawTarget& aDrawTarget,
+                                      Layer* aLayer, nscolor
+                                      aBackgroundColor)
 {
   if (NS_GET_A(aBackgroundColor) > 0) {
     nsIntRect r = aLayer->GetVisibleRegion().GetBounds();
-    aContext->NewPath();
-    aContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
-    aContext->SetColor(gfxRGBA(aBackgroundColor));
-    aContext->Fill();
+    ColorPattern color(ToDeviceColor(aBackgroundColor));
+    aDrawTarget.FillRect(Rect(r.x, r.y, r.width, r.height), color);
   }
 }
 
@@ -4457,6 +4457,8 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
                                    const nsIntRegion& aRegionToInvalidate,
                                    void* aCallbackData)
 {
+  DrawTarget& aDrawTarget = *aContext->GetDrawTarget();
+
   PROFILER_LABEL("FrameLayerBuilder", "DrawPaintedLayer",
     js::ProfileEntry::Category::GRAPHICS);
 
@@ -4488,7 +4490,8 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       gfxUtils::ClipToRegion(aContext, aRegionToDraw);
     }
 
-    DrawForcedBackgroundColor(aContext, aLayer, userData->mForcedBackgroundColor);
+    DrawForcedBackgroundColor(aDrawTarget, aLayer,
+                              userData->mForcedBackgroundColor);
   }
 
   if (NS_GET_A(userData->mFontSmoothingBackgroundColor) > 0) {
@@ -4522,7 +4525,8 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
       aContext->Rectangle(*iterRect);
       aContext->Clip();
 
-      DrawForcedBackgroundColor(aContext, aLayer, userData->mForcedBackgroundColor);
+      DrawForcedBackgroundColor(aDrawTarget, aLayer,
+                                userData->mForcedBackgroundColor);
 
       // Apply the residual transform if it has been enabled, to ensure that
       // snapping when we draw into aContext exactly matches the ideal transform.
@@ -4720,11 +4724,11 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
     context->Multiply(ThebesMatrix(imageTransform));
 
     // paint the clipping rects with alpha to create the mask
-    context->SetColor(gfxRGBA(1, 1, 1, 1));
-    aClip.DrawRoundedRectsTo(context,
-                             newData.mAppUnitsPerDevPixel,
-                             0,
-                             aRoundedRectClipCount);
+    aClip.FillIntersectionOfRoundedRectClips(context,
+                                             Color(1.f, 1.f, 1.f, 1.f),
+                                             newData.mAppUnitsPerDevPixel,
+                                             0,
+                                             aRoundedRectClipCount);
 
     RefPtr<SourceSurface> surface = dt->Snapshot();
 

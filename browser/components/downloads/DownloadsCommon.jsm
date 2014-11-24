@@ -413,13 +413,12 @@ this.DownloadsCommon = {
     if (shouldApplySmoothing) {
       // Apply hysteresis to favor downward over upward swings.  Trust only 30%
       // of the new value if lower, and 10% if higher (exponential smoothing).
-      let (diff = aSeconds - aLastSeconds) {
-        aSeconds = aLastSeconds + (diff < 0 ? .3 : .1) * diff;
-      }
+      let diff = aSeconds - aLastSeconds;
+      aSeconds = aLastSeconds + (diff < 0 ? .3 : .1) * diff;
 
       // If the new time is similar, reuse something close to the last time
       // left, but subtract a little to provide forward progress.
-      let diff = aSeconds - aLastSeconds;
+      diff = aSeconds - aLastSeconds;
       let diffPercent = diff / aLastSeconds * 100;
       if (Math.abs(diff) < 5 || Math.abs(diffPercent) < 5) {
         aSeconds = aLastSeconds - (diff < 0 ? .4 : .2);

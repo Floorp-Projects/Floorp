@@ -30,6 +30,38 @@ using mozilla::layers::Image;
 using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
 
+const GUID MFVideoFormat_VP80 =
+{
+  0x30385056,
+  0x0000,
+  0x0010,
+  {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}
+};
+
+const GUID MFVideoFormat_VP90 =
+{
+  0x30395056,
+  0x0000,
+  0x0010,
+  {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}
+};
+
+const CLSID CLSID_WebmMfVp8Dec =
+{
+  0x451e3cb7,
+  0x2622,
+  0x4ba5,
+  {0x8e, 0x1d, 0x44, 0xb3, 0xc4, 0x1d, 0x09, 0x24}
+};
+
+const CLSID CLSID_WebmMfVp9Dec =
+{
+  0x7ab4bd2,
+  0x1979,
+  0x4fcd,
+  {0xa6, 0x97, 0xdf, 0x9a, 0xd1, 0x5b, 0x34, 0xfe}
+};
+
 namespace mozilla {
 
 WMFVideoMFTManager::WMFVideoMFTManager(
@@ -48,6 +80,18 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   NS_ASSERTION(!NS_IsMainThread(), "Should not be on main thread.");
   MOZ_ASSERT(mImageContainer);
   MOZ_COUNT_CTOR(WMFVideoMFTManager);
+
+  // Need additional checks/params to check vp8/vp9
+  if (!strcmp(aConfig.mime_type, "video/mp4") ||
+      !strcmp(aConfig.mime_type, "video/avc")) {
+    mStreamType = H264;
+  } else if (!strcmp(aConfig.mime_type, "video/webm; codecs=vp8")) {
+    mStreamType = VP8;
+  } else if (!strcmp(aConfig.mime_type, "video/webm; codecs=vp9")) {
+    mStreamType = VP9;
+  } else {
+    mStreamType = Unknown;
+  }
 }
 
 WMFVideoMFTManager::~WMFVideoMFTManager()
@@ -55,6 +99,30 @@ WMFVideoMFTManager::~WMFVideoMFTManager()
   MOZ_COUNT_DTOR(WMFVideoMFTManager);
   // Ensure DXVA/D3D9 related objects are released on the main thread.
   DeleteOnMainThread(mDXVA2Manager);
+}
+
+const GUID&
+WMFVideoMFTManager::GetMFTGUID()
+{
+  MOZ_ASSERT(mStreamType != Unknown);
+  switch (mStreamType) {
+    case H264: return CLSID_CMSH264DecoderMFT;
+    case VP8: return CLSID_WebmMfVp8Dec;
+    case VP9: return CLSID_WebmMfVp9Dec;
+    default: return GUID_NULL;
+  };
+}
+
+const GUID&
+WMFVideoMFTManager::GetMediaSubtypeGUID()
+{
+  MOZ_ASSERT(mStreamType != Unknown);
+  switch (mStreamType) {
+    case H264: return MFVideoFormat_H264;
+    case VP8: return MFVideoFormat_VP80;
+    case VP9: return MFVideoFormat_VP90;
+    default: return GUID_NULL;
+  };
 }
 
 class CreateDXVAManagerEvent : public nsRunnable {
@@ -95,7 +163,7 @@ WMFVideoMFTManager::Init()
 
   RefPtr<MFTDecoder> decoder(new MFTDecoder());
 
-  HRESULT hr = decoder->Create(CLSID_CMSH264DecoderMFT);
+  HRESULT hr = decoder->Create(GetMFTGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   if (useDxva) {
@@ -126,7 +194,7 @@ WMFVideoMFTManager::Init()
   hr = type->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
-  hr = type->SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
+  hr = type->SetGUID(MF_MT_SUBTYPE, GetMediaSubtypeGUID());
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
 
   hr = type->SetUINT32(MF_MT_INTERLACE_MODE, MFVideoInterlace_MixedInterlaceOrProgressive);
@@ -145,8 +213,10 @@ WMFVideoMFTManager::Init()
 HRESULT
 WMFVideoMFTManager::Input(mp4_demuxer::MP4Sample* aSample)
 {
-  // We must prepare samples in AVC Annex B.
-  mp4_demuxer::AnnexB::ConvertSample(aSample);
+  if (mStreamType != VP8 && mStreamType != VP9) {
+    // We must prepare samples in AVC Annex B.
+    mp4_demuxer::AnnexB::ConvertSample(aSample);
+  }
   // Forward sample data to the decoder.
   const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
   uint32_t length = aSample->size;

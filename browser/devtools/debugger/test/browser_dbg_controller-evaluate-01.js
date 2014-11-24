@@ -9,7 +9,7 @@ const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
   Task.spawn(function() {
-    let [tab, debuggee, panel] = yield initDebugger(TAB_URL);
+    let [tab,, panel] = yield initDebugger(TAB_URL);
     let win = panel.panelWin;
     let frames = win.DebuggerController.StackFrames;
     let framesView = win.DebuggerView.StackFrames;
@@ -45,8 +45,7 @@ function test() {
         "Evaluating shouldn't work while the debuggee isn't paused.");
     }
 
-    // Allow this generator function to yield first.
-    executeSoon(() => debuggee.firstCall());
+    callInTab(tab, "firstCall");
     yield waitForSourceAndCaretAndScopes(panel, "-02.js", 1);
     checkView(0, 1, 1, [/secondCall/, 118]);
 

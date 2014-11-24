@@ -1667,6 +1667,43 @@ Quit(JSContext *cx, unsigned argc, jsval *vp)
     return false;
 }
 
+static bool
+StartTimingMutator(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() > 0) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             JSSMSG_TOO_MANY_ARGS, "startTimingMutator");
+        return false;
+    }
+
+    cx->runtime()->gc.stats.startTimingMutator();
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+StopTimingMutator(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() > 0) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                             JSSMSG_TOO_MANY_ARGS, "stopTimingMutator");
+        return false;
+    }
+
+    double mutator_ms, gc_ms;
+    cx->runtime()->gc.stats.stopTimingMutator(mutator_ms, gc_ms);
+    double total_ms = mutator_ms + gc_ms;
+    if (total_ms > 0) {
+        fprintf(gOutFile, "Mutator: %.3fms (%.1f%%), GC: %.3fms (%.1f%%)\n",
+                mutator_ms, mutator_ms / total_ms * 100.0, gc_ms, gc_ms / total_ms * 100.0);
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
 static const char *
 ToSource(JSContext *cx, MutableHandleValue vp, JSAutoByteString *bytes)
 {
@@ -4245,6 +4282,14 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "assertEq(actual, expected[, msg])",
 "  Throw if the first two arguments are not the same (both +0 or both -0,\n"
 "  both NaN, or non-zero and ===)."),
+
+    JS_FN_HELP("startTimingMutator", StartTimingMutator, 0, 0,
+"startTimingMutator()",
+"  Start accounting time to mutator vs GC."),
+
+    JS_FN_HELP("stopTimingMutator", StopTimingMutator, 0, 0,
+"stopTimingMutator()",
+"  Stop accounting time to mutator vs GC and dump the results."),
 
     JS_FN_HELP("throwError", ThrowError, 0, 0,
 "throwError()",

@@ -181,8 +181,9 @@ public:
    * @param aPriority a priority value to determine which margins take effect
    *                  when multiple callers specify margins
    * @param aRepaintMode whether to schedule a paint after setting the margins
+   * @return true if the new margins were applied.
    */
-  static void SetDisplayPortMargins(nsIContent* aContent,
+  static bool SetDisplayPortMargins(nsIContent* aContent,
                                     nsIPresShell* aPresShell,
                                     const ScreenMargin& aMargins,
                                     uint32_t aPriority = 0,
@@ -567,8 +568,27 @@ public:
                                                                    Direction aDirection);
 
   enum {
+    /**
+     * If the SCROLLABLE_SAME_DOC flag is set, then we only walk the frame tree
+     * up to the root frame in the current document.
+     */
     SCROLLABLE_SAME_DOC = 0x01,
-    SCROLLABLE_INCLUDE_HIDDEN = 0x02
+    /**
+     * If the SCROLLABLE_INCLUDE_HIDDEN flag is set then we allow
+     * overflow:hidden scrollframes to be returned as scrollable frames.
+     */
+    SCROLLABLE_INCLUDE_HIDDEN = 0x02,
+    /**
+     * If the SCROLLABLE_ONLY_ASYNC_SCROLLABLE flag is set, then we only
+     * want to match scrollable frames for which WantAsyncScroll() returns
+     * true.
+     */
+    SCROLLABLE_ONLY_ASYNC_SCROLLABLE = 0x04,
+    /**
+     * If the SCROLLABLE_ALWAYS_MATCH_ROOT flag is set, then return the
+     * root scrollable frame for the root content document if we hit it.
+     */
+    SCROLLABLE_ALWAYS_MATCH_ROOT = 0x08,
   };
   /**
    * GetNearestScrollableFrame locates the first ancestor of aFrame
@@ -2410,7 +2430,18 @@ public:
     }
   }
 
- /**
+  /**
+   * Calculate a default set of displayport margins for the given scrollframe
+   * and set them on the scrollframe's content element. The margins are set with
+   * the default priority, which may clobber previously set margins. The repaint
+   * mode provided is passed through to the call to SetDisplayPortMargins.
+   * The |aScrollFrame| parameter must be non-null and queryable to an nsIFrame.
+   * @return true iff the call to SetDisplayPortMargins returned true.
+   */
+  static bool CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFrame,
+                                                RepaintMode aRepaintMode);
+
+  /**
    * Get the display port for |aScrollFrame|'s content. If |aScrollFrame|
    * WantsAsyncScroll() and we don't have a scrollable displayport yet (as
    * tracked by |aBuilder|), calculate and set a display port. Returns true if

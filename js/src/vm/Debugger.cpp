@@ -42,6 +42,7 @@ using namespace js;
 using JS::dbg::Builder;
 using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
+using mozilla::DebugOnly;
 using mozilla::Maybe;
 
 
@@ -1282,6 +1283,7 @@ Debugger::dispatchHook(JSContext *cx, MutableHandleValue vp, Hook which, HandleO
                 break;
               default:
                 MOZ_ASSERT_UNREACHABLE("Unexpected debugger hook");
+                st = JSTRAP_CONTINUE;
             }
             if (st != JSTRAP_CONTINUE)
                 return st;
@@ -1676,7 +1678,7 @@ Debugger::slowPathPromiseHook(JSContext *cx, Hook hook, HandleObject promise)
 {
     MOZ_ASSERT(hook == OnNewPromise || hook == OnPromiseSettled);
     RootedValue rval(cx);
-    JSTrapStatus status = dispatchHook(cx, &rval, hook, promise);
+    DebugOnly<JSTrapStatus> status = dispatchHook(cx, &rval, hook, promise);
     MOZ_ASSERT(status == JSTRAP_CONTINUE);
     MOZ_ASSERT(!cx->isExceptionPending());
 }

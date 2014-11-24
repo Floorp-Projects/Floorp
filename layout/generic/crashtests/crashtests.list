@@ -261,12 +261,16 @@ load 425253-1.html
 load 426040-1.html
 load 426272-1.html
 load 428263-1.html
+load 429458.xhtml
+load 429960-1.html
+load 429960-2.html
 load 429969-1.html
 load 429981-1.html
 load 430332-1.html
 load 430344-1.html
 load 430352-1.html
 load 430744-1.html
+load 430991.html
 load 431260-1.html
 load 431260-2.html
 load 435529.html
@@ -330,6 +334,7 @@ load 472617-1.xhtml
 load 472774-1.html
 load 472776-1.html
 load 472950-1.html
+load 472957.xhtml
 load 473278-1.xhtml
 load 473894-1.html
 load 476241-1.html
@@ -430,6 +435,7 @@ load 606642.xhtml
 load 619021.html
 load 621424-1.html
 load 621841-1.html
+load 622596.html
 load 645072-1.html
 load 645072-2.html
 load 646561-1.html
@@ -473,7 +479,7 @@ load 737313-2.html
 load 737313-3.html
 load 747688.html
 load 750066.html
-test-pref(font.size.inflation.emPerLine,15) asserts-if(!browserIsRemote,1-100) load font-inflation-762332.html # bug 762332
+pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts-if(!browserIsRemote,1-100) load font-inflation-762332.html # bug 762332
 load 762902.html
 load 762764-1.html
 load 765409.html

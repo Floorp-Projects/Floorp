@@ -763,22 +763,24 @@ Blocklist.prototype = {
       fstream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       cstream.init(fstream, "UTF-8", 0, 0);
 
-      let (str = {}) {
-        let read = 0;
+      let str = {};
+      let read = 0;
 
-        do {
-          read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
-          text += str.value;
-        } while (read != 0);
-      }
+      do {
+        read = cstream.readString(0xffffffff, str); // read as much as we can and put it in str.value
+        text += str.value;
+      } while (read != 0);
     } catch (e) {
       LOG("Blocklist::_loadBlocklistFromFile: Failed to load XML file " + e);
     } finally {
-      cstream.close();
-      fstream.close();
+      if (cstream)
+        cstream.close();
+      if (fstream)
+        fstream.close();
     }
 
-    text && this._loadBlocklistFromString(text);
+    if (text)
+        this._loadBlocklistFromString(text);
   },
 
   _isBlocklistLoaded: function() {

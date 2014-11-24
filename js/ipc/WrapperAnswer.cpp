@@ -9,7 +9,7 @@
 #include "JavaScriptLogging.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "nsContentUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "xpcprivate.h"
 #include "jsfriendapi.h"
 
@@ -17,7 +17,14 @@ using namespace JS;
 using namespace mozilla;
 using namespace mozilla::jsipc;
 
-using mozilla::AutoSafeJSContext;
+// Note - Using AutoJSAPI (rather than AutoEntryScript) for a trap means
+// that we don't expect it to run script. For most of these traps that will only
+// happen if the target is a scripted proxy, which is probably something that we
+// don't want to support over CPOWs. When enough code is fixed up, the long-term
+// plan is to have the JS engine throw if it encounters script when it isn't
+// expecting it.
+using mozilla::dom::AutoJSAPI;
+using mozilla::dom::AutoEntryScript;
 
 bool
 WrapperAnswer::fail(JSContext *cx, ReturnStatus *rs)
@@ -61,16 +68,16 @@ bool
 WrapperAnswer::RecvPreventExtensions(const ObjectId &objId, ReturnStatus *rs,
                                      bool *succeeded)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
 
     *succeeded = false;
-
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
 
-    JSAutoCompartment comp(cx, obj);
     if (!JS_PreventExtensions(cx, obj, succeeded))
         return fail(cx, rs);
 
@@ -93,16 +100,15 @@ bool
 WrapperAnswer::RecvGetPropertyDescriptor(const ObjectId &objId, const JSIDVariant &idVar,
                                          ReturnStatus *rs, PPropertyDescriptor *out)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
-
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
     EmptyDesc(out);
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.getPropertyDescriptor(%s)", ReceiverObj(objId), Identifier(idVar));
 
@@ -124,16 +130,15 @@ bool
 WrapperAnswer::RecvGetOwnPropertyDescriptor(const ObjectId &objId, const JSIDVariant &idVar,
                                             ReturnStatus *rs, PPropertyDescriptor *out)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
-
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
     EmptyDesc(out);
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.getOwnPropertyDescriptor(%s)", ReceiverObj(objId), Identifier(idVar));
 
@@ -155,14 +160,14 @@ bool
 WrapperAnswer::RecvDefineProperty(const ObjectId &objId, const JSIDVariant &idVar,
                                   const PPropertyDescriptor &descriptor, ReturnStatus *rs)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("define %s[%s]", ReceiverObj(objId), Identifier(idVar));
 
@@ -198,16 +203,15 @@ bool
 WrapperAnswer::RecvDelete(const ObjectId &objId, const JSIDVariant &idVar, ReturnStatus *rs,
                           bool *success)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
-
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
     *success = false;
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("delete %s[%s]", ReceiverObj(objId), Identifier(idVar));
 
@@ -224,16 +228,15 @@ WrapperAnswer::RecvDelete(const ObjectId &objId, const JSIDVariant &idVar, Retur
 bool
 WrapperAnswer::RecvHas(const ObjectId &objId, const JSIDVariant &idVar, ReturnStatus *rs, bool *bp)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
-
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
     *bp = false;
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.has(%s)", ReceiverObj(objId), Identifier(idVar));
 
@@ -253,16 +256,15 @@ bool
 WrapperAnswer::RecvHasOwn(const ObjectId &objId, const JSIDVariant &idVar, ReturnStatus *rs,
                           bool *bp)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
-
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
     *bp = false;
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.hasOwn(%s)", ReceiverObj(objId), Identifier(idVar));
 
@@ -282,8 +284,9 @@ bool
 WrapperAnswer::RecvGet(const ObjectId &objId, const ObjectVariant &receiverVar,
                        const JSIDVariant &idVar, ReturnStatus *rs, JSVariant *result)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    // We may run scripted getters.
+    AutoEntryScript aes(xpc::NativeGlobal(scopeForTargetObjects()));
+    JSContext *cx = aes.cx();
 
     // The outparam will be written to the buffer, so it must be set even if
     // the parent won't read it.
@@ -292,8 +295,6 @@ WrapperAnswer::RecvGet(const ObjectId &objId, const ObjectVariant &receiverVar,
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     RootedObject receiver(cx, fromObjectVariant(cx, receiverVar));
     if (!receiver)
@@ -320,8 +321,9 @@ WrapperAnswer::RecvSet(const ObjectId &objId, const ObjectVariant &receiverVar,
                        const JSIDVariant &idVar, const bool &strict, const JSVariant &value,
                        ReturnStatus *rs, JSVariant *result)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    // We may run scripted setters.
+    AutoEntryScript aes(xpc::NativeGlobal(scopeForTargetObjects()));
+    JSContext *cx = aes.cx();
 
     // The outparam will be written to the buffer, so it must be set even if
     // the parent won't read it.
@@ -330,8 +332,6 @@ WrapperAnswer::RecvSet(const ObjectId &objId, const ObjectVariant &receiverVar,
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     RootedObject receiver(cx, fromObjectVariant(cx, receiverVar));
     if (!receiver)
@@ -361,16 +361,15 @@ WrapperAnswer::RecvSet(const ObjectId &objId, const ObjectVariant &receiverVar,
 bool
 WrapperAnswer::RecvIsExtensible(const ObjectId &objId, ReturnStatus *rs, bool *result)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
-
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
     *result = false;
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.isExtensible()", ReceiverObj(objId));
 
@@ -390,8 +389,8 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId &objId,
                                    JSVariant *result,
                                    nsTArray<JSParam> *outparams)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoEntryScript aes(xpc::NativeGlobal(scopeForTargetObjects()));
+    JSContext *cx = aes.cx();
 
     // The outparam will be written to the buffer, so it must be set even if
     // the parent won't read it.
@@ -400,8 +399,6 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId &objId,
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     MOZ_ASSERT(argv.Length() >= 2);
 
@@ -492,14 +489,14 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId &objId,
 bool
 WrapperAnswer::RecvHasInstance(const ObjectId &objId, const JSVariant &vVar, ReturnStatus *rs, bool *bp)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.hasInstance(%s)", ReceiverObj(objId), InVariant(vVar));
 
@@ -517,8 +514,10 @@ bool
 WrapperAnswer::RecvObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                                  bool *result)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj) {
@@ -526,8 +525,6 @@ WrapperAnswer::RecvObjectClassIs(const ObjectId &objId, const uint32_t &classVal
         *result = false;
         return true;
     }
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.objectClassIs()", ReceiverObj(objId));
 
@@ -538,16 +535,16 @@ WrapperAnswer::RecvObjectClassIs(const ObjectId &objId, const uint32_t &classVal
 bool
 WrapperAnswer::RecvClassName(const ObjectId &objId, nsString *name)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj) {
         // This is very unfortunate, but we have no choice.
         return "<dead CPOW>";
     }
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.className()", ReceiverObj(objId));
 
@@ -559,14 +556,16 @@ bool
 WrapperAnswer::RecvRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
                                   nsString *source, uint32_t *flags)
 {
-    AutoSafeJSContext cx;
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
+
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
 
-    JSAutoCompartment ac(cx, obj);
     MOZ_RELEASE_ASSERT(JS_ObjectIsRegExp(cx, obj));
-
     RootedString sourceJSStr(cx, JS_GetRegExpSource(cx, obj));
     if (!sourceJSStr)
         return fail(cx, rs);
@@ -584,14 +583,14 @@ bool
 WrapperAnswer::RecvGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
                                    ReturnStatus *rs, nsTArray<JSIDVariant> *ids)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.getPropertyKeys()", ReceiverObj(objId));
 
@@ -614,16 +613,16 @@ bool
 WrapperAnswer::RecvInstanceOf(const ObjectId &objId, const JSIID &iid, ReturnStatus *rs,
                               bool *instanceof)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
 
     *instanceof = false;
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.instanceOf()", ReceiverObj(objId));
 
@@ -641,16 +640,15 @@ bool
 WrapperAnswer::RecvDOMInstanceOf(const ObjectId &objId, const int &prototypeID,
                                  const int &depth, ReturnStatus *rs, bool *instanceof)
 {
-    AutoSafeJSContext cx;
-    JSAutoRequest request(cx);
-
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
+        return false;
+    JSContext *cx = jsapi.cx();
     *instanceof = false;
 
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj)
         return fail(cx, rs);
-
-    JSAutoCompartment comp(cx, obj);
 
     LOG("%s.domInstanceOf()", ReceiverObj(objId));
 

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -46,15 +47,6 @@ public:
     return TextEncoderBinding::Wrap(aCx, this, aTookOwnership);
   }
 
-  void Encode(JSContext* aCx,
-	      JS::Handle<JSObject*> aObj,
-	      const nsAString& aString,
-	      const TextEncodeOptions& aOptions,
-	      JS::MutableHandle<JSObject*> aRetval,
-	      ErrorResult& aRv) {
-    TextEncoder::Encode(aCx, aObj, aString, aOptions.mStream, aRetval, aRv);
-  }
-
 protected:
 
   /**
@@ -82,20 +74,14 @@ public:
    * @param aCx        Javascript context.
    * @param aObj       the wrapper of the TextEncoder
    * @param aString    utf-16 code units to be encoded.
-   * @param aOptions   Streaming option. Initialised by default to false.
-   *                   If the streaming option is false, then the encoding
-   *                   algorithm state will get reset. If set to true then
-   *                   the previous encoding is reused/continued.
    * @return JSObject* The Uint8Array wrapped in a JS object.  Returned via
    *                   the aRetval out param.
    */
   void Encode(JSContext* aCx,
-	      JS::Handle<JSObject*> aObj,
-	      const nsAString& aString,
-	      const bool aStream,
-	      JS::MutableHandle<JSObject*> aRetval,
-	      ErrorResult& aRv);
-
+              JS::Handle<JSObject*> aObj,
+              const nsAString& aString,
+              JS::MutableHandle<JSObject*> aRetval,
+              ErrorResult& aRv);
 private:
   nsCString mEncoding;
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;

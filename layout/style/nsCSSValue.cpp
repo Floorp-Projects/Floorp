@@ -904,6 +904,108 @@ nsCSSValue::AppendCircleOrEllipseToString(nsCSSKeyword aFunctionId,
                                     aResult, aSerialization);
 }
 
+// Helper to append |aString| with the shorthand sides notation used in e.g.
+// 'padding'. |aProperties| and |aValues| are expected to have 4 elements.
+/*static*/ void
+nsCSSValue::AppendSidesShorthandToString(const nsCSSProperty aProperties[],
+                                         const nsCSSValue* aValues[],
+                                         nsAString& aString,
+                                         nsCSSValue::Serialization
+                                            aSerialization)
+{
+  const nsCSSValue& value1 = *aValues[0];
+  const nsCSSValue& value2 = *aValues[1];
+  const nsCSSValue& value3 = *aValues[2];
+  const nsCSSValue& value4 = *aValues[3];
+
+  NS_ABORT_IF_FALSE(value1.GetUnit() != eCSSUnit_Null, "null value 1");
+  value1.AppendToString(aProperties[0], aString, aSerialization);
+  if (value1 != value2 || value1 != value3 || value1 != value4) {
+    aString.Append(char16_t(' '));
+    NS_ABORT_IF_FALSE(value2.GetUnit() != eCSSUnit_Null, "null value 2");
+    value2.AppendToString(aProperties[1], aString, aSerialization);
+    if (value1 != value3 || value2 != value4) {
+      aString.Append(char16_t(' '));
+      NS_ABORT_IF_FALSE(value3.GetUnit() != eCSSUnit_Null, "null value 3");
+      value3.AppendToString(aProperties[2], aString, aSerialization);
+      if (value2 != value4) {
+        aString.Append(char16_t(' '));
+        NS_ABORT_IF_FALSE(value4.GetUnit() != eCSSUnit_Null, "null value 4");
+        value4.AppendToString(aProperties[3], aString, aSerialization);
+      }
+    }
+  }
+}
+
+/*static*/ void
+nsCSSValue::AppendBasicShapeRadiusToString(const nsCSSProperty aProperties[],
+                                           const nsCSSValue* aValues[],
+                                           nsAString& aResult,
+                                           Serialization aSerialization)
+{
+  bool needY = false;
+  const nsCSSValue* xVals[4];
+  const nsCSSValue* yVals[4];
+  for (int i = 0; i < 4; i++) {
+    if (aValues[i]->GetUnit() == eCSSUnit_Pair) {
+      needY = true;
+      xVals[i] = &aValues[i]->GetPairValue().mXValue;
+      yVals[i] = &aValues[i]->GetPairValue().mYValue;
+    } else {
+      xVals[i] = yVals[i] = aValues[i];
+    }
+  }
+
+  AppendSidesShorthandToString(aProperties, xVals, aResult, aSerialization);
+  if (needY) {
+    aResult.AppendLiteral(" / ");
+    AppendSidesShorthandToString(aProperties, yVals, aResult, aSerialization);
+  }
+}
+
+void
+nsCSSValue::AppendInsetToString(nsCSSProperty aProperty, nsAString& aResult,
+                                Serialization aSerialization) const
+{
+  const nsCSSValue::Array* array = GetArrayValue();
+  NS_ABORT_IF_FALSE(array->Count() == 6,
+                    "inset function has wrong number of arguments");
+  if (array->Item(1).GetUnit() != eCSSUnit_Null) {
+    array->Item(1).AppendToString(aProperty, aResult, aSerialization);
+    if (array->Item(2).GetUnit() != eCSSUnit_Null) {
+      aResult.Append(' ');
+      array->Item(2).AppendToString(aProperty, aResult, aSerialization);
+      if (array->Item(3).GetUnit() != eCSSUnit_Null) {
+        aResult.Append(' ');
+        array->Item(3).AppendToString(aProperty, aResult, aSerialization);
+        if (array->Item(4).GetUnit() != eCSSUnit_Null) {
+          aResult.Append(' ');
+          array->Item(4).AppendToString(aProperty, aResult, aSerialization);
+        }
+      }
+    }
+  }
+
+  if (array->Item(5).GetUnit() == eCSSUnit_Array) {
+    const nsCSSProperty* subprops =
+      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_radius);
+    const nsCSSValue::Array* radius = array->Item(5).GetArrayValue();
+    NS_ABORT_IF_FALSE(radius->Count() == 4, "expected 4 radii values");
+    const nsCSSValue* vals[4] = {
+      &(radius->Item(0)),
+      &(radius->Item(1)),
+      &(radius->Item(2)),
+      &(radius->Item(3))
+    };
+    aResult.AppendLiteral(" round ");
+    AppendBasicShapeRadiusToString(subprops, vals, aResult,
+                                   aSerialization);
+  } else {
+    NS_ABORT_IF_FALSE(array->Item(5).GetUnit() == eCSSUnit_Null,
+                      "unexpected value");
+  }
+}
+
 void
 nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                            Serialization aSerialization) const
@@ -1047,6 +1149,10 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       case eCSSKeyword_ellipse:
         AppendCircleOrEllipseToString(functionId, aProperty, aResult,
                                       aSerialization);
+        break;
+
+      case eCSSKeyword_inset:
+        AppendInsetToString(aProperty, aResult, aSerialization);
         break;
 
       default: {

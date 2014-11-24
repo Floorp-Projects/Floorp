@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsPrintfCString.h"
@@ -12,13 +11,11 @@
 #include "nsString.h"
 #include "nsUrlClassifierPrefixSet.h"
 #include "nsIUrlClassifierPrefixSet.h"
-#include "nsIRandomGenerator.h"
 #include "nsIFile.h"
 #include "nsToolkitCompsCID.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/FileUtils.h"
 #include "prlog.h"
@@ -140,6 +137,30 @@ nsUrlClassifierPrefixSet::MakePrefixSet(const uint32_t* aPrefixes, uint32_t aLen
   return NS_OK;
 }
 
+nsresult
+nsUrlClassifierPrefixSet::GetPrefixesNative(FallibleTArray<uint32_t>& outArray)
+{
+  if (!outArray.SetLength(mTotalPrefixes)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  uint32_t prefixIdxLength = mIndexPrefixes.Length();
+  uint32_t prefixCnt = 0;
+
+  for (uint32_t i = 0; i < prefixIdxLength; i++) {
+    uint32_t prefix = mIndexPrefixes[i];
+
+    outArray[prefixCnt++] = prefix;
+    for (uint32_t j = 0; j < mIndexDeltas[i].Length(); j++) {
+      prefix += mIndexDeltas[i][j];
+      outArray[prefixCnt++] = prefix;
+    }
+  }
+
+  NS_ASSERTION(mTotalPrefixes == prefixCnt, "Lengths are inconsistent");
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
                                       uint32_t** aPrefixes)
@@ -149,24 +170,17 @@ nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
   NS_ENSURE_ARG_POINTER(aPrefixes);
   *aPrefixes = nullptr;
 
-  uint64_t itemCount = mTotalPrefixes;
+  FallibleTArray<uint32_t> prefixes;
+  nsresult rv = GetPrefixesNative(prefixes);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint64_t itemCount = prefixes.Length();
   uint32_t* prefixArray = static_cast<uint32_t*>(nsMemory::Alloc(itemCount * sizeof(uint32_t)));
   NS_ENSURE_TRUE(prefixArray, NS_ERROR_OUT_OF_MEMORY);
 
-  uint32_t prefixIdxLength = mIndexPrefixes.Length();
-  uint32_t prefixCnt = 0;
-
-  for (uint32_t i = 0; i < prefixIdxLength; i++) {
-    uint32_t prefix = mIndexPrefixes[i];
-
-    prefixArray[prefixCnt++] = prefix;
-    for (uint32_t j = 0; j < mIndexDeltas[i].Length(); j++) {
-      prefix += mIndexDeltas[i][j];
-      prefixArray[prefixCnt++] = prefix;
-    }
-  }
-
-  NS_ASSERTION(itemCount == prefixCnt, "Lengths are inconsistent");
+  memcpy(prefixArray, prefixes.Elements(), sizeof(uint32_t) * itemCount);
 
   *aCount = itemCount;
   *aPrefixes = prefixArray;
@@ -300,7 +314,7 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
     nsTArray<uint32_t> indexStarts;
     indexStarts.SetLength(indexSize);
     mIndexPrefixes.SetLength(indexSize);
-    mIndexDeltas.Clear();
+    mIndexDeltas.SetLength(indexSize);
 
     mTotalPrefixes = indexSize;
 
@@ -313,7 +327,6 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
       return NS_ERROR_FILE_CORRUPTED;
     }
     for (uint32_t i = 0; i < indexSize; i++) {
-      mIndexDeltas.AppendElement();
       uint32_t numInDelta = i == indexSize - 1 ? deltaSize - indexStarts[i]
                                : indexStarts[i + 1] - indexStarts[i];
       if (numInDelta > 0) {

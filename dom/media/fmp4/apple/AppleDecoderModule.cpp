@@ -144,11 +144,11 @@ AppleDecoderModule::Shutdown()
 }
 
 already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                                      layers::LayersBackend aLayersBackend,
-                                      layers::ImageContainer* aImageContainer,
-                                      MediaTaskQueue* aVideoTaskQueue,
-                                      MediaDataDecoderCallback* aCallback)
+AppleDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                                       layers::LayersBackend aLayersBackend,
+                                       layers::ImageContainer* aImageContainer,
+                                       MediaTaskQueue* aVideoTaskQueue,
+                                       MediaDataDecoderCallback* aCallback)
 {
   nsRefPtr<MediaDataDecoder> decoder;
 
