@@ -15,11 +15,11 @@ invalid_names.forEach(function(name) {
   }, "createAttribute(" + format_value(name) + ")");
 });
 
-var tests = ["title", "TITLE"];
+var tests = ["title", "TITLE", null, undefined];
 tests.forEach(function(name) {
   test(function() {
     var attribute = document.createAttribute(name);
-    attr_is(attribute, "", name, null, null, name);
+    attr_is(attribute, "", String(name), null, null, String(name));
     assert_equals(attribute.ownerElement, null);
   }, "createAttribute(" + format_value(name) + ")");
 });
