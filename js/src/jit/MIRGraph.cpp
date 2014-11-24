@@ -795,6 +795,27 @@ MBasicBlock::moveBefore(MInstruction *at, MInstruction *ins)
     ins->setTrackedSite(at->trackedSite());
 }
 
+MInstruction *
+MBasicBlock::safeInsertTop(MDefinition *ins, IgnoreTop ignore)
+{
+    // Beta nodes and interrupt checks are required to be located at the
+    // beginnings of basic blocks, so we must insert new instructions after any
+    // such instructions.
+    MInstructionIterator insertIter = !ins || ins->isPhi()
+                                    ? begin()
+                                    : begin(ins->toInstruction());
+    while (insertIter->isBeta() ||
+           insertIter->isInterruptCheck() ||
+           insertIter->isInterruptCheckPar() ||
+           insertIter->isConstant() ||
+           (!(ignore & IgnoreRecover) && insertIter->isRecoveredOnBailout()))
+    {
+        insertIter++;
+    }
+
+    return *insertIter;
+}
+
 void
 MBasicBlock::discardResumePoint(MResumePoint *rp, ReferencesType refType /* = RefType_Default */)
 {
