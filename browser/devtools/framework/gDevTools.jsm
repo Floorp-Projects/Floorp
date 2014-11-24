@@ -710,7 +710,7 @@ let gDevToolsBrowser = {
 
   isWebIDEWidgetInstalled: function() {
     let widgetWrapper = CustomizableUI.getWidget("webide-button");
-    return !!(widgetWrapper && widgetWrapper.instances.some(i => !!i.node));
+    return !!(widgetWrapper && widgetWrapper.provider == CustomizableUI.PROVIDER_API);
   },
 
   /**
