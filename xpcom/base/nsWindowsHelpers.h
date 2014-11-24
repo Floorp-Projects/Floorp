@@ -127,7 +127,7 @@ typedef nsAutoRef<HMODULE> nsModuleHandle;
 
 namespace {
 
-bool
+bool inline
 IsRunningInWindowsMetro()
 {
   static bool alreadyChecked = false;
@@ -157,7 +157,7 @@ IsRunningInWindowsMetro()
   return isMetro;
 }
 
-HMODULE
+HMODULE inline
 LoadLibrarySystem32(LPCWSTR aModule)
 {
   WCHAR systemPath[MAX_PATH + 1] = { L'\0' };
