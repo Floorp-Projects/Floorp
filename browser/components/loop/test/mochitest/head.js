@@ -77,11 +77,6 @@ function promiseGetMozLoopAPI() {
  * This assumes that the tests are running in a generatorTest.
  */
 function loadLoopPanel(aOverrideOptions = {}) {
-  Services.prefs.setBoolPref("loop.rooms.enabled", false);
-  registerCleanupFunction(function() {
-     Services.prefs.clearUserPref("loop.rooms.enabled");
-  });
-
   // Set prefs to ensure we don't access the network externally.
   Services.prefs.setCharPref("services.push.serverURL", aOverrideOptions.pushURL || "ws://localhost/");
   Services.prefs.setCharPref("loop.server", aOverrideOptions.loopURL || "http://localhost/");
