@@ -7,52 +7,11 @@
 
 "use strict";
 
-const BROWSER_SEARCH_PREF      = "browser.search.";
-
-const MOZ_PARAM_LOCALE         = /\{moz:locale\}/g;
-const MOZ_PARAM_DIST_ID        = /\{moz:distributionID\}/g;
-const MOZ_PARAM_OFFICIAL       = /\{moz:official\}/g;
-
-let runtime = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
-// Custom search parameters
-const MOZ_OFFICIAL = runtime.isOfficialBranding ? "official" : "unofficial";
-
-var google_client;
-switch (runtime.defaultUpdateChannel) {
-case "beta":
-  google_client = "firefox-beta";
-  break;
-case "aurora":
-  google_client = "firefox-aurora";
-  break;
-case "nightly":
-  google_client = "firefox-nightly";
-  break;
-default:
-  google_client = "firefox-a";
-  break;
-}
-
-const GOOGLE_CLIENT = google_client;
-const MOZ_DISTRIBUTION_ID = runtime.distributionID;
-
 function test() {
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Google");
 
-  is(Services.search.defaultEngine, engine, "Check that Google is the default search engine");
-
-  let distributionID;
-  try {
-    distributionID = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
-  } catch (ex) {
-    distributionID = MOZ_DISTRIBUTION_ID;
-  }
-
-  let base = "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t&rls={moz:distributionID}:{moz:locale}:{moz:official}&client=" + GOOGLE_CLIENT;
-  base = base.replace(MOZ_PARAM_LOCALE, getLocale());
-  base = base.replace(MOZ_PARAM_DIST_ID, distributionID);
-  base = base.replace(MOZ_PARAM_OFFICIAL, MOZ_OFFICIAL);
+  let base = "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8";
 
   let url;
 
@@ -60,15 +19,15 @@ function test() {
   url = engine.getSubmission("foo").uri.spec;
   is(url, base, "Check search URL for 'foo'");
   url = engine.getSubmission("foo", null, "contextmenu").uri.spec;
-  is(url, base + "&channel=rcs", "Check context menu search URL for 'foo'");
+  is(url, base, "Check context menu search URL for 'foo'");
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
-  is(url, base + "&channel=fflb", "Check keyword search URL for 'foo'");
+  is(url, base, "Check keyword search URL for 'foo'");
   url = engine.getSubmission("foo", null, "searchbar").uri.spec;
-  is(url, base + "&channel=sb", "Check search bar search URL for 'foo'");
+  is(url, base, "Check search bar search URL for 'foo'");
   url = engine.getSubmission("foo", null, "homepage").uri.spec;
-  is(url, base + "&channel=np&source=hp", "Check homepage search URL for 'foo'");
+  is(url, base, "Check homepage search URL for 'foo'");
   url = engine.getSubmission("foo", null, "newtab").uri.spec;
-  is(url, base + "&channel=nts", "Check newtab search URL for 'foo'");
+  is(url, base, "Check newtab search URL for 'foo'");
 
   // Check search suggestion URL.
   url = engine.getSubmission("foo", "application/x-suggestions+json").uri.spec;
@@ -119,60 +78,8 @@ function test() {
               "value": "utf-8",
               "purpose": undefined,
             },
-            {
-              "name": "aq",
-              "value": "t",
-              "purpose": undefined,
-            },
-            {
-              "name": "rls",
-              "value": "{moz:distributionID}:{moz:locale}:{moz:official}",
-              "purpose": undefined,
-            },
-            {
-              "name": "client",
-              "value": GOOGLE_CLIENT,
-              "purpose": undefined,
-            },
-            {
-              "name": "channel",
-              "value": "rcs",
-              "purpose": "contextmenu",
-            },
-            {
-              "name": "channel",
-              "value": "fflb",
-              "purpose": "keyword",
-            },
-            {
-              "name": "channel",
-              "value": "sb",
-              "purpose": "searchbar",
-            },
-            {
-              "name": "channel",
-              "value": "np",
-              "purpose": "homepage",
-            },
-            {
-              "name": "channel",
-              "value": "nts",
-              "purpose": "newtab",
-            },
-            {
-              "name": "source",
-              "value": "hp",
-              "purpose": "homepage",
-            },
           ],
           mozparams: {
-            "client": {
-              "name": "client",
-              "falseValue": "firefox",
-              "trueValue": GOOGLE_CLIENT,
-              "condition": "defaultEngine",
-              "mozparam": true,
-            },
           },
         },
         {
