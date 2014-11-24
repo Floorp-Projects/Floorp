@@ -1,7 +1,7 @@
 
 /* pngwtran.c - transforms the data in a row for PNG writers
  *
- * Last changed in libpng 1.6.9 [February 6, 2014]
+ * Last changed in libpng 1.6.15 [November 20, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -177,7 +177,7 @@ png_do_shift(png_row_infop row_info, png_bytep row,
       int shift_start[4], shift_dec[4];
       int channels = 0;
 
-      if (row_info->color_type & PNG_COLOR_MASK_COLOR)
+      if ((row_info->color_type & PNG_COLOR_MASK_COLOR) != 0)
       {
          shift_start[channels] = row_info->bit_depth - bit_depth->red;
          shift_dec[channels] = bit_depth->red;
@@ -199,7 +199,7 @@ png_do_shift(png_row_infop row_info, png_bytep row,
          channels++;
       }
 
-      if (row_info->color_type & PNG_COLOR_MASK_ALPHA)
+      if ((row_info->color_type & PNG_COLOR_MASK_ALPHA) != 0)
       {
          shift_start[channels] = row_info->bit_depth - bit_depth->alpha;
          shift_dec[channels] = bit_depth->alpha;
@@ -353,7 +353,7 @@ png_do_write_swap_alpha(png_row_infop row_info, png_bytep row)
                *(dp++) = save[1];
             }
          }
-#endif /* PNG_WRITE_16BIT_SUPPORTED */
+#endif /* WRITE_16BIT */
       }
 
       else if (row_info->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
@@ -392,7 +392,7 @@ png_do_write_swap_alpha(png_row_infop row_info, png_bytep row)
                *(dp++) = save[1];
             }
          }
-#endif /* PNG_WRITE_16BIT_SUPPORTED */
+#endif /* WRITE_16BIT */
       }
    }
 }
@@ -449,7 +449,7 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
                *(dp++) = (png_byte)(255 - *(sp++));
             }
          }
-#endif /* PNG_WRITE_16BIT_SUPPORTED */
+#endif /* WRITE_16BIT */
       }
 
       else if (row_info->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
@@ -487,7 +487,7 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
                *(dp++) = (png_byte)(255 - *(sp++));
             }
          }
-#endif /* PNG_WRITE_16BIT_SUPPORTED */
+#endif /* WRITE_16BIT */
       }
    }
 }
@@ -505,7 +505,7 @@ png_do_write_transformations(png_structrp png_ptr, png_row_infop row_info)
       return;
 
 #ifdef PNG_WRITE_USER_TRANSFORM_SUPPORTED
-   if (png_ptr->transformations & PNG_USER_TRANSFORM)
+   if ((png_ptr->transformations & PNG_USER_TRANSFORM) != 0)
       if (png_ptr->write_user_transform_fn != NULL)
          (*(png_ptr->write_user_transform_fn)) /* User write transform
                                                  function */
@@ -521,52 +521,54 @@ png_do_write_transformations(png_structrp png_ptr, png_row_infop row_info)
 #endif
 
 #ifdef PNG_WRITE_FILLER_SUPPORTED
-   if (png_ptr->transformations & PNG_FILLER)
+   if ((png_ptr->transformations & PNG_FILLER) != 0)
       png_do_strip_channel(row_info, png_ptr->row_buf + 1,
          !(png_ptr->flags & PNG_FLAG_FILLER_AFTER));
 #endif
 
 #ifdef PNG_WRITE_PACKSWAP_SUPPORTED
-   if (png_ptr->transformations & PNG_PACKSWAP)
+   if ((png_ptr->transformations & PNG_PACKSWAP) != 0)
       png_do_packswap(row_info, png_ptr->row_buf + 1);
 #endif
 
 #ifdef PNG_WRITE_PACK_SUPPORTED
-   if (png_ptr->transformations & PNG_PACK)
+   if ((png_ptr->transformations & PNG_PACK) != 0)
       png_do_pack(row_info, png_ptr->row_buf + 1,
           (png_uint_32)png_ptr->bit_depth);
 #endif
 
 #ifdef PNG_WRITE_SWAP_SUPPORTED
-   if (png_ptr->transformations & PNG_SWAP_BYTES)
+#  ifdef PNG_16BIT_SUPPORTED
+   if ((png_ptr->transformations & PNG_SWAP_BYTES) != 0)
       png_do_swap(row_info, png_ptr->row_buf + 1);
+#  endif
 #endif
 
 #ifdef PNG_WRITE_SHIFT_SUPPORTED
-   if (png_ptr->transformations & PNG_SHIFT)
+   if ((png_ptr->transformations & PNG_SHIFT) != 0)
       png_do_shift(row_info, png_ptr->row_buf + 1,
           &(png_ptr->shift));
 #endif
 
 #ifdef PNG_WRITE_SWAP_ALPHA_SUPPORTED
-   if (png_ptr->transformations & PNG_SWAP_ALPHA)
+   if ((png_ptr->transformations & PNG_SWAP_ALPHA) != 0)
       png_do_write_swap_alpha(row_info, png_ptr->row_buf + 1);
 #endif
 
 #ifdef PNG_WRITE_INVERT_ALPHA_SUPPORTED
-   if (png_ptr->transformations & PNG_INVERT_ALPHA)
+   if ((png_ptr->transformations & PNG_INVERT_ALPHA) != 0)
       png_do_write_invert_alpha(row_info, png_ptr->row_buf + 1);
 #endif
 
 #ifdef PNG_WRITE_BGR_SUPPORTED
-   if (png_ptr->transformations & PNG_BGR)
+   if ((png_ptr->transformations & PNG_BGR) != 0)
       png_do_bgr(row_info, png_ptr->row_buf + 1);
 #endif
 
 #ifdef PNG_WRITE_INVERT_SUPPORTED
-   if (png_ptr->transformations & PNG_INVERT_MONO)
+   if ((png_ptr->transformations & PNG_INVERT_MONO) != 0)
       png_do_invert(row_info, png_ptr->row_buf + 1);
 #endif
 }
-#endif /* PNG_WRITE_TRANSFORMS_SUPPORTED */
-#endif /* PNG_WRITE_SUPPORTED */
+#endif /* WRITE_TRANSFORMS */
+#endif /* WRITE */
