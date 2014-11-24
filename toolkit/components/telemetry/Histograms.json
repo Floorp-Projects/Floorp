@@ -6854,5 +6854,16 @@
     "expires_in_version": "40",
     "kind": "boolean",
     "description": "Whether the e10s pref was set but it was blocked from running due to blacklisted conditions"
+  },
+  "ONBEFOREUNLOAD_PROMPT_ACTION" : {
+    "expires_in_version": "45",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "What button a user clicked in an onbeforeunload prompt.  (Stay on Page = 0, Leave Page = 1, prompt aborted = 2)"
+  },
+  "ONBEFOREUNLOAD_PROMPT_COUNT" : {
+    "expires_in_version": "45",
+    "kind": "count",
+    "description": "How many onbeforeunload prompts has the user encountered in their session?"
   }
 }
