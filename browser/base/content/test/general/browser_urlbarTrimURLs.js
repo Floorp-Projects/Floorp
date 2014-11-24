@@ -5,7 +5,7 @@
 function testVal(originalValue, targetValue) {
   gURLBar.value = originalValue;
   gURLBar.valueIsTyped = false;
-  is(gURLBar.value, targetValue || originalValue, "url bar value set");
+  is(gURLBar.textValue, targetValue || originalValue, "url bar value set");
 }
 
 function test() {
@@ -96,7 +96,7 @@ function test() {
 
 function testCopy(originalValue, targetValue, cb) {
   waitForClipboard(targetValue, function () {
-    is(gURLBar.value, originalValue, "url bar copy value set");
+    is(gURLBar.textValue, originalValue, "url bar copy value set");
 
     gURLBar.focus();
     gURLBar.select();

@@ -37,10 +37,10 @@ function runShiftLeftClickTest() {
     addPageShowListener(aWindow.gBrowser.selectedBrowser, function() {
       executeSoon(function () {
         info("URL should be loaded in a new window");
-        is(gURLBar.value, "", "Urlbar reverted to original value");       
+        is(gURLBar.value, "", "Urlbar reverted to original value");
         is(gFocusManager.focusedElement, null, "There should be no focused element");
         is(gFocusManager.focusedWindow, aWindow.gBrowser.contentWindow, "Content window should be focused");
-        is(aWindow.gURLBar.value, TEST_VALUE, "New URL is loaded in new window");
+        is(aWindow.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
 
         aWindow.close();
 
@@ -61,7 +61,7 @@ function runNextTest() {
     finish();
     return;
   }
-  
+
   info("Running test: " + test.desc);
   // Tab will be blank if test.startValue is null
   let tab = gBrowser.selectedTab = gBrowser.addTab(test.startValue);
@@ -106,7 +106,7 @@ let gTests = [
       is(gURLBar.value, "", "Urlbar reverted to original value");
       ok(!gURLBar.focused, "Urlbar is no longer focused after urlbar command");
       is(gBrowser.selectedTab, aTab, "Focus did not change to the new tab");
-    
+
       // Select the new background tab
       gBrowser.selectedTab = gBrowser.selectedTab.nextSibling;
       is(gURLBar.value, TEST_VALUE, "New URL is loaded in new tab");
@@ -143,7 +143,7 @@ function triggerCommand(aClick, aEvent) {
   if (aClick) {
     is(gURLBar.getAttribute("pageproxystate"), "invalid",
        "page proxy state must be invalid for go button to be visible");
-    EventUtils.synthesizeMouseAtCenter(gGoButton, aEvent); 
+    EventUtils.synthesizeMouseAtCenter(gGoButton, aEvent);
   }
   else
     EventUtils.synthesizeKey("VK_RETURN", aEvent);

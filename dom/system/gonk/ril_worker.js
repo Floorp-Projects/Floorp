@@ -4141,6 +4141,10 @@ RilObject.prototype = {
     // can be removed if is the same as the current one.
     for each (let newDataCall in datacalls) {
       if (newDataCall.status != DATACALL_FAIL_NONE) {
+        if (newDataCallOptions) {
+          newDataCallOptions.status = newDataCall.status;
+          newDataCallOptions.suggestedRetryTime = newDataCall.suggestedRetryTime;
+        }
         this._sendDataCallError(newDataCallOptions || newDataCall,
                                 newDataCall.status);
       }
