@@ -99,16 +99,6 @@ let wrapper = {
   iframe: null,
 
   init: function (url, urlParams) {
-    let weave = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Ci.nsISupports)
-                  .wrappedJSObject;
-
-    // Don't show about:accounts with FxA disabled.
-    if (!weave.fxAccountsEnabled) {
-      document.body.remove();
-      return;
-    }
-
     // If a master-password is enabled, we want to encourage the user to
     // unlock it.  Things still work if not, but the user will probably need
     // to re-auth next startup (in which case we will get here again and

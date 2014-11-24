@@ -6,6 +6,10 @@
 
 TEST_DIRS += ['cpp']
 
+TESTING_JS_MODULES += [
+    'PlacesTestUtils.jsm',
+]
+
 XPCSHELL_TESTS_MANIFESTS += [
     'autocomplete/xpcshell.ini',
     'bookmarks/xpcshell.ini',

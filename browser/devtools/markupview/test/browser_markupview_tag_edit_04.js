@@ -4,27 +4,41 @@
 
 "use strict";
 
-// Tests that a node can be deleted from the markup-view with the delete key
+// Tests that a node can be deleted from the markup-view with the delete key.
+// Also checks that after deletion the correct element is highlighted.
+// The next sibling is preferred, but the parent is a fallback.
 
-const TEST_URL = "data:text/html,<div id='delete-me'></div>";
+const TEST_URL = "data:text/html,<div id='parent'><div id='first'></div><div id='second'></div><div id='third'></div></div>";
 
-let test = asyncTest(function*() {
-  let {toolbox, inspector} = yield addTab(TEST_URL).then(openInspector);
+function* checkDeleteAndSelection(inspector, nodeSelector, focusedNodeSelector) {
+  yield selectNode(nodeSelector, inspector);
+  yield clickContainer(nodeSelector, inspector);
 
-  info("Selecting the test node by clicking on it to make sure it receives focus");
-  let node = content.document.querySelector("#delete-me");
-  yield clickContainer("#delete-me", inspector);
-
-  info("Deleting the element with the keyboard");
+  info("Deleting the element \"" + nodeSelector + "\" with the keyboard");
   let mutated = inspector.once("markupmutation");
   EventUtils.sendKey("delete", inspector.panelWin);
-  yield mutated;
+
+  yield Promise.all([mutated, inspector.once("inspector-updated")]);
+
+  let nodeFront = yield getNodeFront(focusedNodeSelector, inspector);
+  is(inspector.selection.nodeFront, nodeFront,
+    focusedNodeSelector + " should be selected after " + nodeSelector + " node gets deleted.");
 
   info("Checking that it's gone, baby gone!");
-  ok(!content.document.querySelector("#delete-me"), "The test node does not exist");
+  ok(!content.document.querySelector(nodeSelector), "The test node does not exist");
 
   yield undoChange(inspector);
-  ok(content.document.querySelector("#delete-me"), "The test node is back!");
+  ok(content.document.querySelector(nodeSelector), "The test node is back!");
+}
+
+let test = asyncTest(function*() {
+  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+
+  info("Selecting the test node by clicking on it to make sure it receives focus");
+
+  yield checkDeleteAndSelection(inspector, "#first", "#parent");
+  yield checkDeleteAndSelection(inspector, "#second", "#first");
+  yield checkDeleteAndSelection(inspector, "#third", "#second");
 
   yield inspector.once("inspector-updated");
 });
