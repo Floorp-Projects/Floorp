@@ -2903,6 +2903,14 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
 
+  // Tracks just got known, pass the info along to the output streams
+  uint8_t hints = (mHasAudio ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+                  (mHasVideo ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+  for (uint32_t i = 0; i < mOutputStreams.Length(); ++i) {
+    OutputMediaStream* out = &mOutputStreams[i];
+    out->mStream->SetHintContents(hints);
+  }
+
   // If this element had a video track, but consists only of an audio track now,
   // delete the VideoFrameContainer. This happens when the src is changed to an
   // audio only file.
