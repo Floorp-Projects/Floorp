@@ -1141,9 +1141,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               getService(Components.interfaces.nsITextToSubURI).
               unEscapeURIForUI("UTF-8", controller.getValueAt(this._currentIndex));
 
-            if (typeof this.input.trimValue == "function")
-              url = this.input.trimValue(url);
-
             if (this._currentIndex < existingItemsCount) {
               // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
@@ -1577,6 +1574,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           let title = this.getAttribute("title");
           let type = this.getAttribute("type");
 
+          let displayUrl = url;
+
+          let input = this.parentNode.parentNode.input;
+          if (typeof input.trimValue == "function")
+            displayUrl = input.trimValue(url);
+
           let emphasiseTitle = true;
           let emphasiseUrl = true;
 
@@ -1602,7 +1605,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             this.setAttribute("actiontype", action.type);
 
             if (action.type == "switchtab") {
-              url = action.params.url;
+              displayUrl = action.params.url;
               let desc = this._stringBundle.GetStringFromName("switchToTab");
               this._setUpDescription(this._action, desc, true);
             } else if (action.type == "searchengine") {
@@ -1624,11 +1627,11 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               }
             } else if (action.type == "visiturl") {
               emphasiseUrl = false;
-              url = action.params.url;
+              displayUrl = action.params.url;
 
               let sourceStr = this._stringBundle.GetStringFromName("visitURL");
               title = this._generateEmphasisPairs(sourceStr, [
-                                                    [trimURL(url), true],
+                                                    [displayUrl, true],
                                                   ]);
             }
 
@@ -1645,7 +1648,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             let searchEngine = "";
             [title, searchEngine] = title.split(TITLE_SEARCH_ENGINE_SEPARATOR);
-            url = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
+            displayUrl = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
 
             // Remove the "search" substring so that the correct style, if any,
             // is applied below.
@@ -1658,7 +1661,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             let sourceStr = this._stringBundle.GetStringFromName("visitURL");
             title = this._generateEmphasisPairs(sourceStr, [
-                                                 [trimURL(url), true],
+                                                 [displayUrl, true],
                                                 ]);
 
             types.delete("autofill");
@@ -1728,9 +1731,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this._typeImage.className = "ac-type-icon" +
             (type ? " ac-result-type-" + type : "");
 
-          // Show the url as the title if we don't have a title
-          if (title == "")
-            title = url;
+          // Show the domain as the title if we don't have a title.
+          if (title == "") {
+            title = displayUrl;
+            try {
+              let uri = Services.io.newURI(url, null, null);
+              // Not all valid URLs have a domain.
+              if (uri.host)
+                title = uri.host;
+            } catch (e) {}
+          }
 
           // Emphasize the matching search terms for the description
           if (Array.isArray(title))
@@ -1738,7 +1748,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           else
             this._setUpDescription(this._title, title, !emphasiseTitle);
 
-          this._setUpDescription(this._url, url, !emphasiseUrl);
+          this._setUpDescription(this._url, displayUrl, !emphasiseUrl);
 
           // Set up overflow on a timeout because the contents of the box
           // might not have a width yet even though we just changed them
