@@ -467,6 +467,8 @@ public:
     void Clip(const gfxRect& rect); // will clip to a rect
     void Clip(Path* aPath);
 
+    void PopClip();
+
     /**
      * This will ensure that the surface actually has its clip set.
      * Useful if you are doing native drawing.
