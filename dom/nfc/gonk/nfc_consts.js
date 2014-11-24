@@ -19,8 +19,8 @@
 this.DEBUG_ALL = false;
 
 // Set individually to debug specific layers
-this.DEBUG_CONTENT_HELPER = false || DEBUG_ALL;
-this.DEBUG_NFC = false || DEBUG_ALL;
+this.DEBUG_CONTENT_HELPER = DEBUG_ALL || false;
+this.DEBUG_NFC = DEBUG_ALL || false;
 
 // Gecko specific error codes
 this.NFC_GECKO_SUCCESS = 0;
