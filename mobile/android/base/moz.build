@@ -124,6 +124,7 @@ gbjar.sources += [
     'animation/HeightChangeAnimation.java',
     'animation/PropertyAnimator.java',
     'animation/Rotate3DAnimation.java',
+    'animation/TransitionsTracker.java',
     'animation/ViewHelper.java',
     'ANRReporter.java',
     'AppNotificationClient.java',
