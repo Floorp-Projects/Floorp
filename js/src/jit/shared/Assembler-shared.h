@@ -18,6 +18,10 @@
 #include "jit/RegisterSets.h"
 #include "vm/HelperThreads.h"
 
+#if defined(JS_CODEGEN_ARM)
+#define JS_USE_LINK_REGISTER
+#endif
+
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
 // JS_SMALL_BRANCH means the range on a branch instruction
 // is smaller than the whole address space

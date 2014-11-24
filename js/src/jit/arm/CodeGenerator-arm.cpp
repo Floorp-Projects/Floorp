@@ -42,7 +42,9 @@ CodeGeneratorARM::generatePrologue()
 {
     MOZ_ASSERT(masm.framePushed() == 0);
     MOZ_ASSERT(!gen->compilingAsmJS());
-
+#ifdef JS_USE_LINK_REGISTER
+    masm.pushReturnAddress();
+#endif
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
     masm.checkStackAlignment();
