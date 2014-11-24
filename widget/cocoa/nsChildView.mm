@@ -225,6 +225,10 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 - (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove forUnderTitlebar:(BOOL)aForUnderTitlebar;
 @end
 
+@interface NSWindow(NSWindowShouldZoomOnDoubleClick)
++ (BOOL)_shouldZoomOnDoubleClick; // present on 10.7 and above
+@end
+
 // Starting with 10.7 the bottom corners of all windows are rounded.
 // Unfortunately, the standard rounding that OS X applies to OpenGL views
 // does not use anti-aliasing and looks very crude. Since we want a smooth,
@@ -4972,13 +4976,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
   LayoutDeviceIntPoint pos = geckoEvent.refPoint;
   if (!defaultPrevented && [theEvent clickCount] == 2 &&
       mGeckoChild->GetDraggableRegion().Contains(pos.x, pos.y) &&
-      [self shouldMinimizeOnTitlebarDoubleClick] &&
       [[self window] isKindOfClass:[ToolbarWindow class]] &&
       (locationInTitlebar < [(ToolbarWindow*)[self window] titlebarHeight] ||
        locationInTitlebar < [(ToolbarWindow*)[self window] unifiedToolbarHeight])) {
-
-    NSButton *minimizeButton = [[self window] standardWindowButton:NSWindowMiniaturizeButton];
-    [minimizeButton performClick:self];
+    if ([self shouldZoomOnDoubleClick]) {
+      [[self window] performZoom:nil];
+    } else if ([self shouldMinimizeOnTitlebarDoubleClick]) {
+      NSButton *minimizeButton = [[self window] standardWindowButton:NSWindowMiniaturizeButton];
+      [minimizeButton performClick:self];
+    }
   }
 
   // If our mouse-up event's location is over some other object (as might
@@ -5717,6 +5723,14 @@ static int32_t RoundUp(double aDouble)
 {
   NS_ENSURE_TRUE(mTextInputHandler, NO);
   return mTextInputHandler->HasMarkedText();
+}
+
+- (BOOL)shouldZoomOnDoubleClick
+{
+  if ([NSWindow respondsToSelector:@selector(_shouldZoomOnDoubleClick)]) {
+    return [NSWindow _shouldZoomOnDoubleClick];
+  }
+  return nsCocoaFeatures::OnYosemiteOrLater();
 }
 
 - (BOOL)shouldMinimizeOnTitlebarDoubleClick
