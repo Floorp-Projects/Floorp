@@ -7,6 +7,7 @@ this.EXPORTED_SYMBOLS = ["TabEngine", "TabSetRecord"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const TABS_TTL = 604800;           // 7 days.
+const TAB_ENTRIES_LIMIT = 25;      // How many URLs to include in tab history.
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -129,23 +130,40 @@ TabStore.prototype = {
           continue;
         }
 
-        // Until we store full or partial history, just grab the current entry.
-        // index is 1 based, so make sure we adjust.
-        let entry = tabState.entries[tabState.index - 1];
+        let acceptable = !filter ? (url) => url :
+                                   (url) => url && !filteredUrls.test(url);
 
-        // Filter out some urls if necessary. SessionStore can return empty
-        // tabs in some cases - easiest thing is to just ignore them for now.
-        if (!entry.url || filter && filteredUrls.test(entry.url)) {
+        let entries = tabState.entries;
+        let index = tabState.index;
+        let current = entries[index - 1];
+
+        // We ignore the tab completely if the current entry url is
+        // not acceptable (we need something accurate to open).
+        if (!acceptable(current.url)) {
           continue;
         }
 
-        // I think it's also possible that attributes[.image] might not be set
-        // so handle that as well.
+        // The element at `index` is the current page. Previous URLs were
+        // previously visited URLs; subsequent URLs are in the 'forward' stack,
+        // which we can't represent in Sync, so we truncate here.
+        let candidates = (entries.length == index) ?
+                         entries :
+                         entries.slice(0, index);
+
+        let urls = candidates.map((entry) => entry.url)
+                             .filter(acceptable)
+                             .reverse();                       // Because Sync puts current at index 0, and history after.
+
+        // Truncate if necessary.
+        if (urls.length > TAB_ENTRIES_LIMIT) {
+          urls.length = TAB_ENTRIES_LIMIT;
+        }
+
         allTabs.push({
-          title: entry.title || "",
-          urlHistory: [entry.url],
+          title: current.title || "",
+          urlHistory: urls,
           icon: tabState.attributes && tabState.attributes.image || "",
-          lastUsed: Math.floor((tabState.lastAccessed || 0) / 1000)
+          lastUsed: Math.floor((tabState.lastAccessed || 0) / 1000),
         });
       }
     }
