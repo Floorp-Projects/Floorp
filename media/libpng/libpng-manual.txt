@@ -1,6 +1,6 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.14 - October 23, 2014
+ libpng version 1.6.15 - November 20, 2014
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2014 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.14 - October 23, 2014
+ libpng versions 0.97, January 1998, through 1.6.15 - November 20, 2014
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2014 Glenn Randers-Pehrson
 
@@ -5277,13 +5277,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XVI. Y2K Compliance in libpng
 
-October 23, 2014
+November 20, 2014
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.14 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.15 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer
