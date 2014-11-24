@@ -27,14 +27,14 @@ function testHosts(aHostTypes, aLayoutTypes) {
 
   return Task.spawn(function() {
     let [tab, debuggee, panel] = yield initDebugger("about:blank");
-    yield testHost(tab, debuggee, panel, firstHost, firstLayout);
-    yield switchAndTestHost(tab, debuggee, panel, secondHost, secondLayout);
-    yield switchAndTestHost(tab, debuggee, panel, thirdHost, thirdLayout);
+    yield testHost(tab, panel, firstHost, firstLayout);
+    yield switchAndTestHost(tab, panel, secondHost, secondLayout);
+    yield switchAndTestHost(tab, panel, thirdHost, thirdLayout);
     yield teardown(panel);
   });
 }
 
-function switchAndTestHost(aTab, aDebuggee, aPanel, aHostType, aLayoutType) {
+function switchAndTestHost(aTab, aPanel, aHostType, aLayoutType) {
   let gToolbox = aPanel._toolbox;
   let gDebugger = aPanel.panelWin;
 
@@ -48,7 +48,7 @@ function switchAndTestHost(aTab, aDebuggee, aPanel, aHostType, aLayoutType) {
     yield layoutChanged;
     ok(true, "The debugger's layout has changed.");
 
-    yield testHost(aTab, aDebuggee, aPanel, aHostType, aLayoutType);
+    yield testHost(aTab, aPanel, aHostType, aLayoutType);
   });
 
   function once(aTarget, aEvent) {
@@ -58,7 +58,7 @@ function switchAndTestHost(aTab, aDebuggee, aPanel, aHostType, aLayoutType) {
   }
 }
 
-function testHost(aTab, aDebuggee, aPanel, aHostType, aLayoutType) {
+function testHost(aTab, aPanel, aHostType, aLayoutType) {
   let gDebugger = aPanel.panelWin;
   let gView = gDebugger.DebuggerView;
 

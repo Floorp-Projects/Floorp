@@ -6,7 +6,7 @@
 #define nsILineIterator_h___
 
 #include "nscore.h"
-#include "nsCoord.h"
+#include "nsPoint.h"
 #include "mozilla/Attributes.h"
 
 class nsIFrame;
@@ -82,15 +82,16 @@ public:
   virtual int32_t FindLineContaining(nsIFrame* aFrame,
                                      int32_t aStartLine = 0) = 0;
 
-  // Given a line number and an X coordinate, find the frame on the
-  // line that is nearest to the X coordinate. The
-  // aXIsBeforeFirstFrame and aXIsAfterLastFrame flags are updated
+  // Given a line number and a coordinate, find the frame on the line
+  // that is nearest to aPos along the inline axis. (The block-axis coord
+  // of aPos is irrelevant.)
+  // The aPosIsBeforeFirstFrame and aPosIsAfterLastFrame flags are updated
   // appropriately.
   NS_IMETHOD FindFrameAt(int32_t aLineNumber,
-                         nscoord aX,
+                         nsPoint aPos,
                          nsIFrame** aFrameFound,
-                         bool* aXIsBeforeFirstFrame,
-                         bool* aXIsAfterLastFrame) = 0;
+                         bool* aPosIsBeforeFirstFrame,
+                         bool* aPosIsAfterLastFrame) = 0;
 
   // Give the line iterator implementor a chance todo something more complicated than
   // nsIFrame::GetNextSibling()

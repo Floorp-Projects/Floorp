@@ -1511,6 +1511,11 @@ PrototypeForTypeDescr(JSContext *cx, HandleTypeDescr descr)
 void
 OutlineTypedObject::setOwnerAndData(JSObject *owner, uint8_t *data)
 {
+    // Make sure we don't associate with array buffers whose data is from an
+    // inline typed object, see obj_trace.
+    MOZ_ASSERT_IF(owner && owner->is<ArrayBufferObject>(),
+                  !owner->as<ArrayBufferObject>().forInlineTypedObject());
+
     // Typed objects cannot move from one owner to another, so don't worry
     // about pre barriers during this initialization.
     owner_ = owner;
@@ -1553,6 +1558,14 @@ OutlineTypedObject::attach(JSContext *cx, ArrayBufferObject &buffer, int32_t off
     MOZ_ASSERT(!isAttached());
     MOZ_ASSERT(offset >= 0);
     MOZ_ASSERT((size_t) (offset + size()) <= buffer.byteLength());
+
+    // If the owner's data is from an inline typed object, associate this with
+    // the inline typed object instead, to simplify tracing.
+    if (buffer.forInlineTypedObject()) {
+        InlineTypedObject &realOwner = buffer.firstView()->as<InlineTypedObject>();
+        attach(cx, realOwner, offset);
+        return;
+    }
 
     buffer.setHasTypedObjectViews();
 
@@ -1683,22 +1696,29 @@ OutlineTypedObject::obj_trace(JSTracer *trc, JSObject *object)
     gc::MarkObjectUnbarriered(trc, &typedObj.owner_, "typed object owner");
     JSObject *owner = typedObj.owner_;
 
-    uint8_t *mem = typedObj.outOfLineTypedMem();
+    uint8_t *oldData = typedObj.outOfLineTypedMem();
+    uint8_t *newData = oldData;
 
     // Update the data pointer if the owner moved and the owner's data is
-    // inline with it.
+    // inline with it. Note that an array buffer pointing to data in an inline
+    // typed object will never be used as an owner for another outline typed
+    // object. In such cases, the owner will be the inline typed object itself.
+    MOZ_ASSERT_IF(owner->is<ArrayBufferObject>(),
+                  !owner->as<ArrayBufferObject>().forInlineTypedObject());
     if (owner != oldOwner &&
         (owner->is<InlineTypedObject>() ||
          owner->as<ArrayBufferObject>().hasInlineData()))
     {
-        mem += reinterpret_cast<uint8_t *>(owner) - reinterpret_cast<uint8_t *>(oldOwner);
-        typedObj.setData(mem);
+        newData += reinterpret_cast<uint8_t *>(owner) - reinterpret_cast<uint8_t *>(oldOwner);
+        typedObj.setData(newData);
+
+        trc->runtime()->gc.nursery.maybeSetForwardingPointer(trc, oldData, newData, /* direct = */ false);
     }
 
     if (!descr.opaque() || !typedObj.maybeForwardedIsAttached())
         return;
 
-    descr.traceInstances(trc, mem, 1);
+    descr.traceInstances(trc, newData, 1);
 }
 
 bool
@@ -2258,6 +2278,25 @@ InlineTypedObject::obj_trace(JSTracer *trc, JSObject *object)
     TypeDescr &descr = typedObj.maybeForwardedTypeDescr();
 
     descr.traceInstances(trc, typedObj.inlineTypedMem(), 1);
+}
+
+/* static */ void
+InlineTypedObject::objectMovedDuringMinorGC(JSTracer *trc, JSObject *dst, JSObject *src)
+{
+    // Inline typed object element arrays can be preserved on the stack by Ion
+    // and need forwarding pointers created during a minor GC. We can't do this
+    // in the trace hook because we don't have any stale data to determine
+    // whether this object moved and where it was moved from.
+    TypeDescr &descr = dst->as<InlineTypedObject>().typeDescr();
+    if (descr.kind() == type::Array) {
+        // The forwarding pointer can be direct as long as there is enough
+        // space for it. Other objects might point into the object's buffer,
+        // but they will not set any direct forwarding pointers.
+        uint8_t *oldData = reinterpret_cast<uint8_t *>(src) + offsetOfDataStart();
+        uint8_t *newData = dst->as<InlineTypedObject>().inlineTypedMem();
+        trc->runtime()->gc.nursery.maybeSetForwardingPointer(trc, oldData, newData,
+                                                             descr.size() >= sizeof(uintptr_t));
+    }
 }
 
 ArrayBufferObject *

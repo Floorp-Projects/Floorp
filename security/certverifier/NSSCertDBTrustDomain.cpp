@@ -532,7 +532,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
     Result error = rv;
     if (attemptedRequest) {
       Time timeout(time);
-      if ( timeout.AddSeconds(ServerFailureDelaySeconds) != Success) {
+      if (timeout.AddSeconds(ServerFailureDelaySeconds) != Success) {
         return Result::FATAL_ERROR_LIBRARY_FAILURE; // integer overflow
       }
       rv = mOCSPCache.Put(certID, error, time, timeout);

@@ -7,13 +7,12 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_recursion-stack.html";
 
-let gTab, gDebuggee, gPanel, gDebugger;
+let gTab, gPanel, gDebugger;
 let gPrefs, gOptions;
 
 function test() {
-  initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
+  initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gTab = aTab;
-    gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gPrefs = gDebugger.Prefs;
@@ -146,7 +145,6 @@ function testPanesStartupPref() {
 
 registerCleanupFunction(function() {
   gTab = null;
-  gDebuggee = null;
   gPanel = null;
   gDebugger = null;
   gPrefs = null;

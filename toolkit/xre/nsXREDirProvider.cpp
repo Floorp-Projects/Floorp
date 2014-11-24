@@ -551,7 +551,9 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
 static void
 RegisterExtensionInterpositions(nsINIParser &parser)
 {
-#if defined(NIGHTLY_BUILD) && defined(HAVE_SHIMS)
+  if (!mozilla::Preferences::GetBool("extensions.interposition.enabled", false))
+    return;
+
   nsCOMPtr<nsIAddonInterposition> interposition =
     do_GetService("@mozilla.org/addons/multiprocess-shims;1");
 
@@ -570,7 +572,6 @@ RegisterExtensionInterpositions(nsINIParser &parser)
       continue;
   }
   while (true);
-#endif
 }
 
 static void

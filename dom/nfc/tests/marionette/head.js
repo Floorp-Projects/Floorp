@@ -194,22 +194,20 @@ let SNEP = (function() {
 function toggleNFC(enabled) {
   let deferred = Promise.defer();
 
-  let req;
+  let promise;
   if (enabled) {
-    req = nfc.startPoll();
+    promise = nfc.startPoll();
   } else {
-    req = nfc.powerOff();
+    promise = nfc.powerOff();
   }
 
-  req.onsuccess = function() {
+  promise.then(() => {
     deferred.resolve();
-  };
-
-  req.onerror = function() {
+  }).catch(() => {
     ok(false, 'operation failed, error ' + req.error.name);
     deferred.reject();
     finish();
-  };
+  });
 
   return deferred.promise;
 }

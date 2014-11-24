@@ -1,0 +1,42 @@
+<html class="reftest-print">
+<head>
+<style type="text/css">
+
+ div.room {
+   display: inline-block;
+   float: left;
+   border: 1px solid green; 
+ }
+
+
+ </style>
+</head>
+<body>
+
+<!-- adjust height to get tfoot at page boundary" -->
+<div style=" width:430px; height: 880px; border: 1px solid green;">
+
+</div>
+
+
+<div class="room">
+ <table  border width="260px" >
+  <tbody>
+   <tr>
+    <td><div style="width:50px; height:28px; border: 1px solid green;"></div>
+    </td>
+   </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td >
+        <div style="width:50px; height:68px; border: 1px solid green;"></div>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+
+<div class="room" style=" width:430px; height: 311px"></div>
+
+<div class="room" style=" width:430px; height: 311px"></div>

@@ -38,16 +38,22 @@
       <handler event="keypress" keycode="VK_HOME" command="cmd_scrollTop" /> 
       <handler event="keypress" keycode="VK_END"  command="cmd_scrollBottom" /> 
 
-      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_wordPrevious" />
-      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_wordNext" />
-      <handler event="keypress" keycode="VK_LEFT" modifiers="alt,shift" command="cmd_selectWordPrevious" />
-      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt,shift" command="cmd_selectWordNext" />
-      <handler event="keypress" keycode="VK_LEFT" modifiers="shift" command="cmd_selectCharPrevious" />
-      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift" command="cmd_selectCharNext" />
-      <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
-      <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
-      <handler event="keypress" keycode="VK_UP" modifiers="accel" command="cmd_moveTop"/>
-      <handler event="keypress" keycode="VK_DOWN" modifiers="accel" command="cmd_moveBottom"/>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_moveLeft2" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_moveRight2" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt,shift" command="cmd_selectLeft2" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt,shift" command="cmd_selectRight2" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift" command="cmd_selectLeft" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift" command="cmd_selectRight" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="accel" command="cmd_moveLeft3"/>
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="accel" command="cmd_moveRight3"/>
+      <handler event="keypress" keycode="VK_UP" modifiers="alt" command="cmd_moveUp2" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="alt" command="cmd_moveDown2" />
+      <handler event="keypress" keycode="VK_UP" modifiers="alt,shift" command="cmd_selectUp2" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="alt,shift" command="cmd_selectDown2" />
+      <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectUp" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectDown" />
+      <handler event="keypress" keycode="VK_UP" modifiers="accel" command="cmd_moveUp3"/>
+      <handler event="keypress" keycode="VK_DOWN" modifiers="accel" command="cmd_moveDown3"/>
     </handlers>
   </binding>
 
