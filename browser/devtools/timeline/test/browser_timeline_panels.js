@@ -34,7 +34,7 @@ let test = Task.async(function*() {
 
   is($("#record-button").hasAttribute("checked"), false,
     "The record button should be unchecked again.");
-  is($("#timeline-pane").selectedPanel, $("#timeline-waterfall"),
+  is($("#timeline-pane").selectedPanel, $("#timeline-waterfall-container"),
     "A waterfall view is now displayed.");
 
   yield teardown(panel);

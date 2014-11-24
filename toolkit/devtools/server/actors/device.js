@@ -69,7 +69,6 @@ let DeviceActor = exports.DeviceActor = protocol.ActorClass({
 
     let appInfo = Services.appinfo;
     let win = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
-    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
     desc = {
       appid: appInfo.ID,
@@ -83,19 +82,22 @@ let DeviceActor = exports.DeviceActor = protocol.ActorClass({
       geckobuildid: appInfo.platformBuildID,
       geckoversion: appInfo.platformVersion,
       changeset: this._getAppIniString("App", "SourceStamp"),
-      useragent: win.navigator.userAgent,
       locale: Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry).getSelectedLocale("global"),
       os: null,
       hardware: "unknown",
       processor: appInfo.XPCOMABI.split("-")[0],
       compiler: appInfo.XPCOMABI.split("-")[1],
-      dpi: utils.displayDPI,
       brandName: null,
       channel: null,
       profile: null,
-      width: win.screen.width,
-      height: win.screen.height
     };
+    if (win) {
+      let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      desc.dpi = utils.displayDPI;
+      desc.useragent = win.navigator.userAgent;
+      desc.width = win.screen.width;
+      desc.height = win.screen.height;
+    }
 
     // Profile
     let profd = Services.dirsvc.get("ProfD", Ci.nsILocalFile);

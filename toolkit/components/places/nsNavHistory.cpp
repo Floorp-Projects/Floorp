@@ -2237,9 +2237,6 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   return NS_OK;
 }
 
-
-// nsNavHistory::AddObserver
-
 NS_IMETHODIMP
 nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver, bool aOwnsWeak)
 {
@@ -2248,9 +2245,6 @@ nsNavHistory::AddObserver(nsINavHistoryObserver* aObserver, bool aOwnsWeak)
 
   return mObservers.AppendWeakElement(aObserver, aOwnsWeak);
 }
-
-
-// nsNavHistory::RemoveObserver
 
 NS_IMETHODIMP
 nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
@@ -2261,7 +2255,51 @@ nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
   return mObservers.RemoveWeakElement(aObserver);
 }
 
-// nsNavHistory::BeginUpdateBatch
+NS_IMETHODIMP
+nsNavHistory::GetObservers(uint32_t* _count,
+                           nsINavHistoryObserver*** _observers)
+{
+  NS_ENSURE_ARG_POINTER(_count);
+  NS_ENSURE_ARG_POINTER(_observers);
+
+  *_count = 0;
+  *_observers = nullptr;
+
+  // Clear any cached value, cause it's very likely the consumer has made
+  // changes to history and is now trying to notify them.
+  mDaysOfHistory = -1;
+
+  if (!mCanNotify)
+    return NS_OK;
+
+  nsCOMArray<nsINavHistoryObserver> observers;
+
+  // First add the category cache observers.
+  mCacheObservers.GetEntries(observers);
+
+  // Then add the other observers.
+  for (uint32_t i = 0; i < mObservers.Length(); ++i) {
+    const nsCOMPtr<nsINavHistoryObserver> &observer = mObservers.ElementAt(i);
+    // Skip nullified weak observers.
+    if (observer)
+      observers.AppendElement(observer);
+  }
+
+  if (observers.Count() == 0)
+    return NS_OK;
+
+  *_observers = static_cast<nsINavHistoryObserver**>
+    (nsMemory::Alloc(observers.Count() * sizeof(nsINavHistoryObserver*)));
+  NS_ENSURE_TRUE(*_observers, NS_ERROR_OUT_OF_MEMORY);
+
+  *_count = observers.Count();
+  for (uint32_t i = 0; i < *_count; ++i) {
+    NS_ADDREF((*_observers)[i] = observers[i]);
+  }
+
+  return NS_OK;
+}
+
 // See RunInBatchMode
 nsresult
 nsNavHistory::BeginUpdateBatch()
