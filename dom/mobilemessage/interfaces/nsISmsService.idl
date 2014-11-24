@@ -12,7 +12,7 @@ interface nsIMobileMessageCallback;
 #define SMS_SERVICE_CONTRACTID "@mozilla.org/sms/smsservice;1"
 %}
 
-[scriptable, builtinclass, uuid(8f86d068-698e-11e4-9470-8f75a088b84a)]
+[scriptable, uuid(31626940-73b4-11e4-8b03-1724e1d8a6a1)]
 interface nsISmsService : nsISupports
 {
   /**

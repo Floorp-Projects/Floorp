@@ -36,7 +36,7 @@
 #include "android/SmsService.h"
 #elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
 #include "nsIRilMobileMessageDatabaseService.h"
-#include "gonk/SmsService.h"
+#include "nsIGonkSmsService.h"
 #endif
 #include "nsXULAppAPI.h" // For XRE_GetProcessType()
 
@@ -711,7 +711,7 @@ NS_CreateSmsService()
 #ifdef MOZ_WIDGET_ANDROID
     smsService = new SmsService();
 #elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-    smsService = new SmsService();
+    smsService = do_GetService(GONK_SMSSERVICE_CONTRACTID);
 #endif
   }
 
