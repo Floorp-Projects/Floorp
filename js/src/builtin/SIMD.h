@@ -94,12 +94,15 @@
   V(and, (BinaryFunc<Int32x4, And, Int32x4>), 2, 0)                                 \
   V(equal, (CompareFunc<Int32x4, Equal>), 2, 0)                                     \
   V(greaterThan, (CompareFunc<Int32x4, GreaterThan>), 2, 0)                         \
+  V(greaterThanOrEqual, (CompareFunc<Int32x4, GreaterThanOrEqual>), 2, 0)           \
   V(lessThan, (CompareFunc<Int32x4, LessThan>), 2, 0)                               \
+  V(lessThanOrEqual, (CompareFunc<Int32x4, LessThanOrEqual>), 2, 0)                 \
   V(load,    (Load<Int32x4, 4>), 2, 0)                                              \
   V(loadXYZ, (Load<Int32x4, 3>), 2, 0)                                              \
   V(loadXY,  (Load<Int32x4, 2>), 2, 0)                                              \
   V(loadX,   (Load<Int32x4, 1>), 2, 0)                                              \
   V(mul, (BinaryFunc<Int32x4, Mul, Int32x4>), 2, 0)                                 \
+  V(notEqual, (CompareFunc<Int32x4, NotEqual>), 2, 0)                               \
   V(or, (BinaryFunc<Int32x4, Or, Int32x4>), 2, 0)                                   \
   V(sub, (BinaryFunc<Int32x4, Sub, Int32x4>), 2, 0)                                 \
   V(shiftLeft, (Int32x4BinaryScalar<ShiftLeft>), 2, 0)                              \
@@ -155,16 +158,16 @@
     _(max)                           \
     _(min)                           \
     _(maxNum)                        \
-    _(minNum)                        \
-    _(lessThanOrEqual)               \
-    _(notEqual)                      \
-    _(greaterThanOrEqual)
+    _(minNum)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     _(add)                           \
     _(sub)                           \
     _(lessThan)                      \
+    _(lessThanOrEqual)               \
     _(equal)                         \
+    _(notEqual)                      \
     _(greaterThan)                   \
+    _(greaterThanOrEqual)            \
     _(and)                           \
     _(or)                            \
     _(xor)                           \
