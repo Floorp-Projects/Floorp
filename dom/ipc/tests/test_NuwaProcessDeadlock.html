@@ -77,7 +77,7 @@ function runTest()
   let timeout = setTimeout(function() {
     ok(false, "Nuwa process is not launched");
     testEnd();
-  }, 240000);
+  }, 90000);
 
   function testEnd() {
     cpmm.removeMessageListener("TEST-ONLY:nuwa-ready", msgHandler);
