@@ -42,8 +42,7 @@ class ServoTestharnessExecutor(ProcessTestExecutor):
         # Now wait to get the output we expect, or until we reach the timeout
         self.result_flag.wait(timeout + 5)
 
-        if self.result_flag.is_set():
-            assert self.result_data is not None
+        if self.result_flag.is_set() and self.result_data is not None:
             self.result_data["test"] = test.url
             result = self.convert_result(test, self.result_data)
             self.proc.kill()

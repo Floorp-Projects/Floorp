@@ -135,7 +135,6 @@ def set_from_config(kwargs):
 
     kwargs["config_path"] = config_path
     kwargs["config"] = config.read(kwargs["config_path"])
-    kwargs["test_paths"] = OrderedDict()
 
     keys = {"paths": [("serve", "serve_root", True),
                       ("prefs", "prefs_root", True),
@@ -153,15 +152,7 @@ def set_from_config(kwargs):
                     new_value = kwargs["config"].get(section, {}).get_path(config_value)
                 kwargs[kw_value] = new_value
 
-    # Set up test_paths
-
-    for section in kwargs["config"].iterkeys():
-        if section.startswith("manifest:"):
-            manifest_opts = kwargs["config"].get(section)
-            url_base = manifest_opts.get("url_base", "/")
-            kwargs["test_paths"][url_base] = {
-                "tests_path": manifest_opts.get_path("tests"),
-                "metadata_path": manifest_opts.get_path("metadata")}
+    kwargs["test_paths"] = get_test_paths(kwargs["config"])
 
     if kwargs["tests_root"]:
         if "/" not in kwargs["test_paths"]:
@@ -173,9 +164,24 @@ def set_from_config(kwargs):
             kwargs["test_paths"]["/"] = {}
         kwargs["test_paths"]["/"]["metadata_path"] = kwargs["metadata_root"]
 
+def get_test_paths(config):
+    # Set up test_paths
+    test_paths = OrderedDict()
+
+    for section in config.iterkeys():
+        if section.startswith("manifest:"):
+            manifest_opts = config.get(section)
+            url_base = manifest_opts.get("url_base", "/")
+            test_paths[url_base] = {
+                "tests_path": manifest_opts.get_path("tests"),
+                "metadata_path": manifest_opts.get_path("metadata")}
+
+    return test_paths
+
+
 
 def check_args(kwargs):
-    from mozrunner import cli
+    from mozrunner import debugger_arguments
 
     set_from_config(kwargs)
 
@@ -215,8 +221,8 @@ def check_args(kwargs):
             kwargs["chunk_type"] = "none"
 
     if kwargs["debugger"] is not None:
-        debug_args, interactive = cli.debugger_arguments(kwargs["debugger"],
-                                                         kwargs["debugger_args"])
+        debug_args, interactive = debugger_arguments(kwargs["debugger"],
+                                                     kwargs["debugger_args"])
         if interactive:
             require_arg(kwargs, "processes", lambda x: x == 1)
             kwargs["no_capture_stdio"] = True
