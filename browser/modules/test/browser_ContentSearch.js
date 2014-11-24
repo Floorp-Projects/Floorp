@@ -66,34 +66,6 @@ add_task(function* SetCurrentEngine() {
   });
 });
 
-add_task(function* ManageEngines() {
-  yield addTab();
-  gMsgMan.sendAsyncMessage(TEST_MSG, {
-    type: "ManageEngines",
-  });
-  let deferred = Promise.defer();
-  let winWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-                   getService(Ci.nsIWindowWatcher);
-  winWatcher.registerNotification(function onOpen(subj, topic, data) {
-    if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
-      subj.addEventListener("load", function onLoad() {
-        subj.removeEventListener("load", onLoad);
-        if (subj.document.documentURI ==
-            "chrome://browser/content/search/engineManager.xul") {
-          winWatcher.unregisterNotification(onOpen);
-          ok(true, "Observed search manager window open");
-          is(subj.opener, window,
-             "Search engine manager opener should be this chrome window");
-          subj.close();
-          deferred.resolve();
-        }
-      });
-    }
-  });
-  info("Waiting for search engine manager window to open...");
-  yield deferred.promise;
-});
-
 add_task(function* modifyEngine() {
   yield addTab();
   let engine = Services.search.currentEngine;
