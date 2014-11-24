@@ -311,6 +311,7 @@ gbjar.sources += [
     'home/TopSitesGridView.java',
     'home/TopSitesPanel.java',
     'home/TopSitesThumbnailView.java',
+    'home/TransitionAwareCursorLoaderCallbacks.java',
     'home/TwoLinePageRow.java',
     'InputMethods.java',
     'IntentHelper.java',
