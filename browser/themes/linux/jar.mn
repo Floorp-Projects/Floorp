@@ -40,6 +40,8 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-active.png
   skin/classic/browser/identity-icons-https-mixed-display.png
   skin/classic/browser/Info.png
+  skin/classic/browser/magnifier.png                        (../shared/magnifier.png)
+  skin/classic/browser/magnifier@2x.png                     (../shared/magnifier@2x.png)
   skin/classic/browser/mask.png                             (../shared/mask.png)
   skin/classic/browser/mask@2x.png                          (../shared/mask@2x.png)
   skin/classic/browser/menuPanel.png
