@@ -14,26 +14,9 @@
 
 class nsIRunnable;
 
-namespace mozilla {
-class ReentrantMonitor;
-}
-
 class nsThreadManager : public nsIThreadManager
 {
 public:
-#ifdef MOZ_NUWA_PROCESS
-  struct ThreadStatusInfo;
-  class AllThreadsWereIdleListener {
-  public:
-    NS_INLINE_DECL_REFCOUNTING(AllThreadsWereIdleListener);
-    virtual void OnAllThreadsWereIdle() = 0;
-  protected:
-    virtual ~AllThreadsWereIdleListener()
-    {
-    }
-  };
-#endif // MOZ_NUWA_PROCESS
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSITHREADMANAGER
 
@@ -71,17 +54,6 @@ public:
   {
   }
 
-#ifdef MOZ_NUWA_PROCESS
-  void SetIgnoreThreadStatus();
-  void SetThreadIdle();
-  void SetThreadWorking();
-  void SetThreadIsWorking(ThreadStatusInfo* aInfo, bool aIsWorking);
-
-  void AddAllThreadsWereIdleListener(AllThreadsWereIdleListener *listener);
-  void RemoveAllThreadsWereIdleListener(AllThreadsWereIdleListener *listener);
-  ThreadStatusInfo* GetCurrentThreadStatusInfo();
-#endif // MOZ_NUWA_PROCESS
-
 private:
   nsThreadManager()
     : mCurThreadIndex(0)
@@ -90,9 +62,6 @@ private:
     , mInitialized(false)
     , mCurrentNumberOfThreads(1)
     , mHighestNumberOfThreads(1)
-#ifdef MOZ_NUWA_PROCESS
-    , mMonitor(nullptr)
-#endif
   {
   }
 
@@ -109,13 +78,6 @@ private:
   uint32_t            mCurrentNumberOfThreads;
   // The highest number of threads encountered so far during the session
   uint32_t            mHighestNumberOfThreads;
-
-#ifdef MOZ_NUWA_PROCESS
-  unsigned            mThreadStatusInfoIndex;
-  nsTArray<nsRefPtr<AllThreadsWereIdleListener>> mThreadsIdledListeners;
-  nsTArray<ThreadStatusInfo*> mThreadStatusInfos;
-  mozilla::UniquePtr<mozilla::ReentrantMonitor> mMonitor;
-#endif // MOZ_NUWA_PROCESS
 };
 
 #define NS_THREADMANAGER_CID                       \

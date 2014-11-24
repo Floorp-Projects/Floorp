@@ -122,7 +122,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
 #include "nsThreadUtils.h"
-#include "nsThreadManager.h"
 #include "nsToolkitCompsCID.h"
 #include "nsWidgetsCID.h"
 #include "PreallocatedProcessManager.h"
@@ -1371,28 +1370,6 @@ StaticAutoPtr<LinkedList<SystemMessageHandledListener> >
 NS_IMPL_ISUPPORTS(SystemMessageHandledListener,
                   nsITimerCallback)
 
-#ifdef MOZ_NUWA_PROCESS
-class NuwaFreezeListener : public nsThreadManager::AllThreadsWereIdleListener
-{
-public:
-    NuwaFreezeListener(ContentParent* parent)
-        : mParent(parent)
-    {
-    }
-
-    void OnAllThreadsWereIdle()
-    {
-        unused << mParent->SendNuwaFreeze();
-        nsThreadManager::get()->RemoveAllThreadsWereIdleListener(this);
-    }
-private:
-    nsRefPtr<ContentParent> mParent;
-    virtual ~NuwaFreezeListener()
-    {
-    }
-};
-#endif // MOZ_NUWA_PROCESS
-
 } // anonymous namespace
 
 void
@@ -2080,8 +2057,6 @@ ContentParent::ContentParent(ContentParent* aTemplate,
         priority = PROCESS_PRIORITY_FOREGROUND;
     }
 
-    mSendPermissionUpdates = aTemplate->mSendPermissionUpdates;
-
     InitInternal(priority,
                  false, /* Setup Off-main thread compositing */
                  false  /* Send registered chrome */);
@@ -2239,7 +2214,7 @@ ContentParent::IsForApp()
 
 #ifdef MOZ_NUWA_PROCESS
 bool
-ContentParent::IsNuwaProcess() const
+ContentParent::IsNuwaProcess()
 {
     return mIsNuwaProcess;
 }
@@ -2586,19 +2561,6 @@ ContentParent::RecvNuwaReady()
     NS_ERROR("ContentParent::RecvNuwaReady() not implemented!");
     return false;
 #endif
-}
-
-bool
-ContentParent::RecvNuwaWaitForFreeze()
-{
-#ifdef MOZ_NUWA_PROCESS
-    nsRefPtr<NuwaFreezeListener> listener = new NuwaFreezeListener(this);
-    nsThreadManager::get()->AddAllThreadsWereIdleListener(listener);
-    return true;
-#else // MOZ_NUWA_PROCESS
-    NS_ERROR("ContentParent::RecvNuwaWaitForFreeze() not implemented!");
-    return false;
-#endif // MOZ_NUWA_PROCESS
 }
 
 bool
