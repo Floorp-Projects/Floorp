@@ -1,10 +1,8 @@
 import itertools
-import logging
 import re
 import types
 
-logger = logging.getLogger("wptserve")
-logger.setLevel(logging.DEBUG)
+from logger import get_logger
 
 any_method = object()
 
@@ -99,6 +97,7 @@ class Router(object):
     def __init__(self, doc_root, routes):
         self.doc_root = doc_root
         self.routes = []
+        self.logger = get_logger()
         for route in reversed(routes):
             self.register(*route)
 
@@ -140,7 +139,7 @@ class Router(object):
             methods = [methods]
         for method in methods:
             self.routes.append((method, compile_path_match(path), handler))
-            logger.debug("Route pattern: %s" % self.routes[-1][1].pattern)
+            self.logger.debug("Route pattern: %s" % self.routes[-1][1].pattern)
 
     def get_handler(self, request):
         """Get a handler for a request or None if there is no handler.
@@ -158,7 +157,7 @@ class Router(object):
                         name = handler.__name__
                     else:
                         name = handler.__class__.__name__
-                    logger.debug("Found handler %s" % name)
+                    self.logger.debug("Found handler %s" % name)
 
                     match_parts = m.groupdict().copy()
                     if len(match_parts) < len(m.groups()):

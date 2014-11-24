@@ -10,7 +10,6 @@
 <div id="log"></div>
 
 <script>
-var video = document.createElement('video');
 var mimes = ['video/webm; codecs="vorbis,vp8"', 'video/mp4'];
 
 //check the browser supports the MIME used in this test
@@ -30,18 +29,16 @@ function mediaTest(mime) {
             return;
         }
         var mediaSource = new MediaSource();
-        mediaSource.addEventListener('sourceopen', function(e) {
+        mediaSource.addEventListener('sourceopen', t.step_func_done(function(e) {
             var sourceBuffer = mediaSource.addSourceBuffer(mime);
             mediaSource.removeSourceBuffer(sourceBuffer);
-            t.step(function() {
-                assert_throws({name: 'InvalidStateError'},
-                              function() {
-                                  sourceBuffer.abort();
-                              },
-                              'SourceBuffer#abort() after removing the SourceBuffer object');
-            });
-            t.done();
-        }, false);
+            assert_throws({name: 'InvalidStateError'},
+                          function() {
+                              sourceBuffer.abort();
+                          },
+                          'SourceBuffer#abort() after removing the SourceBuffer object');
+        }), false);
+        var video = document.createElement('video');
         video.src = window.URL.createObjectURL(mediaSource);
     }, 'SourceBuffer#abort (' + mime + ') : ' +
        'if this object has been removed from the sourceBuffers attribute of the parent media source, ' +

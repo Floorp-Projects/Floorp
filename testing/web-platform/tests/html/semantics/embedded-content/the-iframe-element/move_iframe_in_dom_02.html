@@ -12,11 +12,11 @@ onload = function() {
   ifr.contentDocument.write('Modified document');
   ifr.contentDocument.close();
   setTimeout(function() {
-    document.getElementById('target').appendChild(ifr);
-    setTimeout(function() {
+    ifr.onload = function() {
         assert_equals(ifr.contentDocument.body.textContent.indexOf('Modified'), -1);
         done();
-    }, 100);
+    };
+    document.getElementById('target').appendChild(ifr);
   }, 100);
 }
 </script>
