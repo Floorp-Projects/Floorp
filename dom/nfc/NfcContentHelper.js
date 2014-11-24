@@ -37,7 +37,7 @@ let DEBUG = NFC.DEBUG_CONTENT_HELPER;
 
 let debug;
 function updateDebug() {
-  if (DEBUG) {
+  if (DEBUG || NFC.DEBUG_CONTENT_HELPER) {
     debug = function (s) {
       dump("-*- NfcContentHelper: " + s + "\n");
     };
@@ -99,7 +99,7 @@ NfcContentHelper.prototype = {
     this._window = aWindow;
     this.initDOMRequestHelper(this._window, NFC_IPC_MSG_NAMES);
 
-    if (this._window.navigator.mozSettings) {
+    if (!NFC.DEBUG_CONTENT_HELPER && this._window.navigator.mozSettings) {
       let lock = this._window.navigator.mozSettings.createLock();
       var nfcDebug = lock.get(NFC.SETTING_NFC_DEBUG);
       nfcDebug.onsuccess = function _nfcDebug() {
