@@ -1776,6 +1776,7 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder,
       switch (item->GetType()) {
         case nsDisplayItem::TYPE_TRANSFORM: {
           if (!aTemp->IsEmpty()) {
+            // Flush current aTemp contents
             aOutput->AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder,
                 aFrame, aTemp, aTemp->GetVisibleRect(), aIndex++));
           }
@@ -1799,6 +1800,7 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder,
         }
         case nsDisplayItem::TYPE_OPACITY: {
           if (!aTemp->IsEmpty()) {
+            // Flush current aTemp contents
             aOutput->AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder,
                 aFrame, aTemp, aTemp->GetVisibleRect(), aIndex++));
           }
@@ -1813,6 +1815,9 @@ WrapPreserve3DListInternal(nsIFrame* aFrame, nsDisplayListBuilder *aBuilder,
             output.AppendToTop(new (aBuilder) nsDisplayTransform(aBuilder,
                 aFrame, aTemp, aTemp->GetVisibleRect(), aIndex++));
           }
+
+          opacity->SetVisibleRect(output.GetVisibleRect());
+          opacity->SetReferenceFrame(output.GetBottom()->ReferenceFrame());
           opacity->GetChildren()->AppendToTop(&output);
           opacity->UpdateBounds(aBuilder);
           aOutput->AppendToTop(item);
