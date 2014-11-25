@@ -154,6 +154,26 @@ function waitForNotificationBar(notificationID, browser, callback) {
 }
 
 /**
+ * Reshow a notification and call a callback when it is reshown.
+ * @param notification
+ *        The notification to reshow
+ * @param callback
+ *        A function to be called when the notification has been reshown
+ */
+function waitForNotificationShown(notification, callback)
+{
+  if (PopupNotifications.panel.state == "open") {
+    executeSoon(callback);
+    return;
+  }
+  PopupNotifications.panel.addEventListener("popupshown", function onShown(e) {
+    PopupNotifications.panel.removeEventListener("popupshown", onShown);
+    callback();
+  }, false);
+  notification.reshow();
+}
+
+/**
  * Due to layout being async, "PluginBindAttached" may trigger later.
  * This returns a Promise that resolves once we've forced a layout
  * flush, which triggers the PluginBindAttached event to fire.

@@ -132,11 +132,11 @@ function afterBindingAttached() {
   ok(!objLoadingContent.activated, "Plugin should not be activated");
 
   // Simulate clicking the "Allow Always" button.
-  popupNotification.reshow();
-  PopupNotifications.panel.firstChild._primaryButton.click();
-
-  let condition = function() objLoadingContent.activated;
-  waitForCondition(condition, pluginActivated, "Waited too long for plugin to activate");
+  waitForNotificationShown(popupNotification, function() {
+    PopupNotifications.panel.firstChild._primaryButton.click();
+    let condition = function() objLoadingContent.activated;
+    waitForCondition(condition, pluginActivated, "Waited too long for plugin to activate");
+  });
 }
 
 function pluginActivated() {

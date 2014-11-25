@@ -54,11 +54,30 @@ function blockMixedContentTest1()
   }, true);
 }
 
+function waitForNotificationShown(notification, callback)
+{
+  if (PopupNotifications.panel.state == "open") {
+    executeSoon(callback);
+    return;
+  }
+  PopupNotifications.panel.addEventListener("popupshown", function onShown(e) {
+    PopupNotifications.panel.removeEventListener("popupshown", onShown);
+    callback();
+  }, false);
+  notification.reshow();
+}
+
 function mixedContentOverrideTest2(hud)
 {
   var notification = PopupNotifications.getNotification("bad-content", browser);
   ok(notification, "Mixed Content Doorhanger did appear");
-  notification.reshow();
+  waitForNotificationShown(notification, () => {
+    afterNotificationShown(hud, notification);
+  });
+}
+
+function afterNotificationShown(hud, notification)
+{
   ok(PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked");
   // Click on the doorhanger.
   PopupNotifications.panel.firstChild.disableMixedContentProtection();
