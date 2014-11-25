@@ -180,6 +180,7 @@
 @BINPATH@/components/autoconfig.xpt
 @BINPATH@/browser/components/browsercompsbase.xpt
 @BINPATH@/browser/components/browser-feeds.xpt
+@BINPATH@/browser/components/browsermodules.manifest
 @BINPATH@/components/caps.xpt
 @BINPATH@/components/chrome.xpt
 @BINPATH@/components/commandhandler.xpt
