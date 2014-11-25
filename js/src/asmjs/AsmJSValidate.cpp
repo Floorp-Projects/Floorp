@@ -1870,13 +1870,13 @@ class MOZ_STACK_CLASS ModuleCompiler
         uint32_t end = masm_.currentOffset();
         return module_->addCodeRange(AsmJSModule::CodeRange::SlowFFI, beg, pret, end);
     }
-    bool finishGeneratingIonExit(unsigned exitIndex, Label *begin, Label *profilingReturn) {
+    bool finishGeneratingJitExit(unsigned exitIndex, Label *begin, Label *profilingReturn) {
         MOZ_ASSERT(finishedFunctionBodies_);
         uint32_t beg = begin->offset();
-        module_->exit(exitIndex).initIonOffset(beg);
+        module_->exit(exitIndex).initJitOffset(beg);
         uint32_t pret = profilingReturn->offset();
         uint32_t end = masm_.currentOffset();
-        return module_->addCodeRange(AsmJSModule::CodeRange::IonFFI, beg, pret, end);
+        return module_->addCodeRange(AsmJSModule::CodeRange::JitFFI, beg, pret, end);
     }
     bool finishGeneratingInterrupt(Label *begin, Label *profilingReturn) {
         MOZ_ASSERT(finishedFunctionBodies_);
@@ -8453,7 +8453,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     unsigned framePushed = Max(ionFrameSize, coerceFrameSize);
 
     Label begin;
-    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::IonFFI, &begin);
+    GenerateAsmJSExitPrologue(masm, framePushed, AsmJSExit::JitFFI, &begin);
 
     // 1. Descriptor
     size_t argOffset = offsetToIonArgs;
@@ -8501,7 +8501,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     argOffset += exit.sig().args().length() * sizeof(Value);
     MOZ_ASSERT(argOffset == offsetToIonArgs + ionArgBytes);
 
-    // 6. Ion will clobber all registers, even non-volatiles. GlobalReg and
+    // 6. Jit code will clobber all registers, even non-volatiles. GlobalReg and
     //    HeapReg are removed from the general register set for asm.js code, so
     //    these will not have been saved by the caller like all other registers,
     //    so they must be explicitly preserved. Only save GlobalReg since
@@ -8553,7 +8553,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     // 2. Call
     AssertStackAlignment(masm, AsmJSStackAlignment);
-    masm.callIonFromAsmJS(callee);
+    masm.callJitFromAsmJS(callee);
     AssertStackAlignment(masm, AsmJSStackAlignment);
 
     {
@@ -8625,7 +8625,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     GenerateCheckForHeapDetachment(m, ABIArgGenerator::NonReturn_VolatileReg0);
 
     Label profilingReturn;
-    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::IonFFI, &profilingReturn);
+    GenerateAsmJSExitEpilogue(masm, framePushed, AsmJSExit::JitFFI, &profilingReturn);
 
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
@@ -8669,7 +8669,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     MOZ_ASSERT(masm.framePushed() == 0);
 
-    return m.finishGeneratingIonExit(exitIndex, &begin, &profilingReturn) && !masm.oom();
+    return m.finishGeneratingJitExit(exitIndex, &begin, &profilingReturn) && !masm.oom();
 }
 
 // See "asm.js FFI calls" comment above.

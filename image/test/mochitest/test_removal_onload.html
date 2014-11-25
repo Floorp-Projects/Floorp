@@ -109,7 +109,7 @@ function main() {
 
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.
-  clearImageCache();
+  clearAllImageCaches();
 
   // kick off image-loading! myOnStopFrame handles the rest.
   gImg.setAttribute("src", gFiles.next());

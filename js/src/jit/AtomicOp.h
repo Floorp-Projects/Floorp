@@ -39,33 +39,33 @@ enum MemoryBarrierBits {
     MembarAllbits = 31,
 };
 
-inline MemoryBarrierBits
+static inline MOZ_CONSTEXPR MemoryBarrierBits
 operator|(MemoryBarrierBits a, MemoryBarrierBits b)
 {
     return MemoryBarrierBits(int(a) | int(b));
 }
 
-inline MemoryBarrierBits
+static inline MOZ_CONSTEXPR MemoryBarrierBits
 operator&(MemoryBarrierBits a, MemoryBarrierBits b)
 {
     return MemoryBarrierBits(int(a) & int(b));
 }
 
-inline MemoryBarrierBits
+static inline MOZ_CONSTEXPR MemoryBarrierBits
 operator~(MemoryBarrierBits a)
 {
     return MemoryBarrierBits(~int(a));
 }
 
 // Standard barrier bits for a full barrier.
-static const MemoryBarrierBits MembarFull = MembarLoadLoad|MembarLoadStore|MembarStoreLoad|MembarStoreStore;
+static MOZ_CONSTEXPR_VAR MemoryBarrierBits MembarFull = MembarLoadLoad|MembarLoadStore|MembarStoreLoad|MembarStoreStore;
 
 // Standard sets of barrier bits for atomic loads and stores.
 // See http://gee.cs.oswego.edu/dl/jmm/cookbook.html for more.
-static const MemoryBarrierBits MembarBeforeLoad = MembarNobits;
-static const MemoryBarrierBits MembarAfterLoad = MembarLoadLoad|MembarLoadStore;
-static const MemoryBarrierBits MembarBeforeStore = MembarStoreStore;
-static const MemoryBarrierBits MembarAfterStore = MembarStoreLoad;
+static MOZ_CONSTEXPR_VAR MemoryBarrierBits MembarBeforeLoad = MembarNobits;
+static MOZ_CONSTEXPR_VAR MemoryBarrierBits MembarAfterLoad = MembarLoadLoad|MembarLoadStore;
+static MOZ_CONSTEXPR_VAR MemoryBarrierBits MembarBeforeStore = MembarStoreStore;
+static MOZ_CONSTEXPR_VAR MemoryBarrierBits MembarAfterStore = MembarStoreLoad;
 
 } // namespace jit
 } // namespace js

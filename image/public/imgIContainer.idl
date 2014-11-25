@@ -69,7 +69,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(f8bb7671-5f36-490b-b828-3f4c6ad38665)]
+[scriptable, builtinclass, uuid(14ea6fa5-183e-4409-ac88-110bd2e05292)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -215,12 +215,9 @@ interface imgIContainer : nsISupports
                                                      in uint32_t aFlags);
 
   /**
-   * Whether the given frame is opaque; that is, needs the background painted
-   * behind it.
-   *
-   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * Whether this image is opaque (i.e., needs a background painted behind it).
    */
-  [notxpcom] boolean frameIsOpaque(in uint32_t aWhichFrame);
+  [notxpcom] boolean isOpaque();
 
   /**
    * Attempts to create an ImageContainer (and Image) containing the current
