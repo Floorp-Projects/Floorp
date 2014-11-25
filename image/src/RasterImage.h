@@ -338,7 +338,7 @@ private:
 
   nsresult DoImageDataComplete();
 
-  bool ApplyDecodeFlags(uint32_t aNewFlags, uint32_t aWhichFrame);
+  bool ApplyDecodeFlags(uint32_t aNewFlags);
 
   already_AddRefed<layers::Image> GetCurrentImage();
   void UpdateImageContainer();

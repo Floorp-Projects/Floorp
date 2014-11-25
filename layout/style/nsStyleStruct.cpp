@@ -2054,8 +2054,8 @@ nsStyleImage::IsOpaque() const
   mImage->GetImage(getter_AddRefs(imageContainer));
   NS_ABORT_IF_FALSE(imageContainer, "IsComplete() said image container is ready");
 
-  // Check if the crop region of the current image frame is opaque.
-  if (imageContainer->FrameIsOpaque(imgIContainer::FRAME_CURRENT)) {
+  // Check if the crop region of the image is opaque.
+  if (imageContainer->IsOpaque()) {
     if (!mCropRect)
       return true;
 
