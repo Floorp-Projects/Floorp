@@ -10,7 +10,7 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "jit/MoveEmitter.h"
 
 #include "jsscriptinlines.h"
@@ -369,7 +369,7 @@ MacroAssemblerX86::handleFailureWithHandler(void *handler)
     passABIArg(eax);
     callWithABI(handler);
 
-    JitCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
+    JitCode *excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
     jmp(excTail);
 }
 
@@ -503,7 +503,7 @@ MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Registe
     MOZ_ASSERT(ptr != temp);
     MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
 
-    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    const Nursery &nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
     addPtr(ptr, temp);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,

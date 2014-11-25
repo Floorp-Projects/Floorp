@@ -11,7 +11,7 @@
 #include "vm/Debugger.h"
 #include "vm/ScopeObject.h"
 
-#include "jit/IonFrames-inl.h"
+#include "jit/JitFrames-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

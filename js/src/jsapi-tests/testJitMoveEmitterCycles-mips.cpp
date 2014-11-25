@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #if defined(JS_MIPS_SIMULATOR)
-#include "jit/IonLinker.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/Linker.h"
+#include "jit/MacroAssembler.h"
 #include "jit/mips/Assembler-mips.h"
 #include "jit/mips/MoveEmitter-mips.h"
 #include "jit/mips/Simulator-mips.h"
@@ -83,7 +83,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_simple)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     AutoFlushICache afc("test");
 
@@ -126,7 +126,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     AutoFlushICache afc("test");
     MacroAssembler masm;
@@ -214,7 +214,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen2)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     AutoFlushICache afc("test");
     MacroAssembler masm;
@@ -314,7 +314,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     AutoFlushICache afc("test");
     MacroAssembler masm;

@@ -970,12 +970,12 @@ class IonBuilder
         {}
     };
 
-    Vector<CFGState, 8, IonAllocPolicy> cfgStack_;
-    Vector<ControlFlowInfo, 4, IonAllocPolicy> loops_;
-    Vector<ControlFlowInfo, 0, IonAllocPolicy> switches_;
-    Vector<ControlFlowInfo, 2, IonAllocPolicy> labels_;
-    Vector<MInstruction *, 2, IonAllocPolicy> iterators_;
-    Vector<LoopHeader, 0, IonAllocPolicy> loopHeaders_;
+    Vector<CFGState, 8, JitAllocPolicy> cfgStack_;
+    Vector<ControlFlowInfo, 4, JitAllocPolicy> loops_;
+    Vector<ControlFlowInfo, 0, JitAllocPolicy> switches_;
+    Vector<ControlFlowInfo, 2, JitAllocPolicy> labels_;
+    Vector<MInstruction *, 2, JitAllocPolicy> iterators_;
+    Vector<LoopHeader, 0, JitAllocPolicy> loopHeaders_;
     BaselineInspector *inspector;
 
     size_t inliningDepth_;

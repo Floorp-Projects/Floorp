@@ -13,7 +13,7 @@
 #include "jit/arm/Simulator-arm.h"
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "jit/MoveEmitter.h"
 
 using namespace js;
@@ -1785,7 +1785,7 @@ MacroAssemblerARMCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
     uint32_t pseudoReturnOffset = currentOffset();
     leaveNoPool();
 
-    MOZ_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
+    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
     MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
 
     *offset = pseudoReturnOffset;
@@ -1810,7 +1810,7 @@ MacroAssemblerARMCompat::callWithExitFrame(Label *target)
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
     Push(Imm32(descriptor)); // descriptor
 
-    ma_callIonHalfPush(target);
+    ma_callJitHalfPush(target);
 }
 
 void
@@ -1827,7 +1827,7 @@ MacroAssemblerARMCompat::callWithExitFrame(JitCode *target)
         rs = L_LDR;
 
     ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, rs);
-    ma_callIonHalfPush(ScratchRegister);
+    ma_callJitHalfPush(ScratchRegister);
 }
 
 void
@@ -1845,25 +1845,25 @@ MacroAssemblerARMCompat::callWithExitFrame(JitCode *target, Register dynStack)
         rs = L_LDR;
 
     ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, rs);
-    ma_callIonHalfPush(ScratchRegister);
+    ma_callJitHalfPush(ScratchRegister);
 }
 
 void
-MacroAssemblerARMCompat::callIon(Register callee)
+MacroAssemblerARMCompat::callJit(Register callee)
 {
     MOZ_ASSERT((framePushed() & 3) == 0);
     if ((framePushed() & 7) == 4) {
-        ma_callIonHalfPush(callee);
+        ma_callJitHalfPush(callee);
     } else {
         adjustFrame(sizeof(void*));
-        ma_callIon(callee);
+        ma_callJit(callee);
     }
 }
 
 void
 MacroAssemblerARMCompat::callJitFromAsmJS(Register callee)
 {
-    ma_callIonNoPush(callee);
+    ma_callJitNoPush(callee);
 
     // The JIT ABI has the callee pop the return address off the stack.
     // The asm.js caller assumes that the call leaves sp unchanged, so bump
@@ -3710,7 +3710,7 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex &dest)
 // ION ABI says *sp should be the address that we will return to when leaving
 // this function.
 void
-MacroAssemblerARM::ma_callIon(const Register r)
+MacroAssemblerARM::ma_callJit(const Register r)
 {
     // When the stack is 8 byte aligned, we want to decrement sp by 8, and write
     // pc + 8 into the new sp. When we return from this call, sp will be its
@@ -3719,7 +3719,7 @@ MacroAssemblerARM::ma_callIon(const Register r)
     as_blx(r);
 }
 void
-MacroAssemblerARM::ma_callIonNoPush(const Register r)
+MacroAssemblerARM::ma_callJitNoPush(const Register r)
 {
     // Since we just write the return address into the stack, which is popped on
     // return, the net effect is removing 4 bytes from the stack.
@@ -3730,7 +3730,7 @@ MacroAssemblerARM::ma_callIonNoPush(const Register r)
 }
 
 void
-MacroAssemblerARM::ma_callIonHalfPush(const Register r)
+MacroAssemblerARM::ma_callJitHalfPush(const Register r)
 {
     // The stack is unaligned by 4 bytes. We push the pc to the stack to align
     // the stack before the call, when we return the pc is poped and the stack
@@ -3739,7 +3739,7 @@ MacroAssemblerARM::ma_callIonHalfPush(const Register r)
 }
 
 void
-MacroAssemblerARM::ma_callIonHalfPush(Label *label)
+MacroAssemblerARM::ma_callJitHalfPush(Label *label)
 {
     // The stack is unaligned by 4 bytes. The callee will push the lr to the stack to align
     // the stack after the call, when we return the pc is poped and the stack
@@ -4219,7 +4219,7 @@ MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
     passABIArg(r0);
     callWithABI(handler);
 
-    JitCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
+    JitCode *excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
     branch(excTail);
 }
 
@@ -4698,7 +4698,7 @@ MacroAssemblerARMCompat::branchPtrInNurseryRange(Condition cond, Register ptr, R
     MOZ_ASSERT(ptr != temp);
     MOZ_ASSERT(ptr != secondScratchReg_);
 
-    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    const Nursery &nursery = GetJitContext()->runtime->gcNursery();
     uintptr_t startChunk = nursery.start() >> Nursery::ChunkShift;
 
     ma_mov(Imm32(startChunk), secondScratchReg_);

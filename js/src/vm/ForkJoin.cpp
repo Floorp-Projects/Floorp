@@ -1580,9 +1580,9 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
 
     Spew(SpewOps, "Up");
 
-    // Make a new IonContext for the slice, which is needed if we need to
+    // Make a new JitContext for the slice, which is needed if we need to
     // re-enter the VM.
-    IonContext icx(CompileRuntime::get(cx_->runtime()),
+    JitContext jcx(CompileRuntime::get(cx_->runtime()),
                    CompileCompartment::get(cx_->compartment()),
                    nullptr);
 

@@ -20,7 +20,7 @@
 
 #include "jsscriptinlines.h"
 
-#include "jit/IonFrames-inl.h"
+#include "jit/JitFrames-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -75,7 +75,7 @@ class BufferPointer
 struct BaselineStackBuilder
 {
     JitFrameIterator &iter_;
-    IonJSFrameLayout *frame_;
+    JitFrameLayout *frame_;
 
     static size_t HeaderSize() {
         return AlignBytes(sizeof(BaselineBailoutInfo), sizeof(void *));
@@ -90,7 +90,7 @@ struct BaselineStackBuilder
 
     BaselineStackBuilder(JitFrameIterator &iter, size_t initialSize)
       : iter_(iter),
-        frame_(static_cast<IonJSFrameLayout*>(iter.current())),
+        frame_(static_cast<JitFrameLayout*>(iter.current())),
         bufferTotal_(initialSize),
         bufferAvail_(0),
         bufferUsed_(0),
@@ -300,12 +300,12 @@ struct BaselineStackBuilder
         return reinterpret_cast<uint8_t *>(frame_) + (offset - bufferUsed_);
     }
 
-    inline IonJSFrameLayout *startFrame() {
+    inline JitFrameLayout *startFrame() {
         return frame_;
     }
 
-    BufferPointer<IonJSFrameLayout> topFrameAddress() {
-        return pointerAtStackOffset<IonJSFrameLayout>(0);
+    BufferPointer<JitFrameLayout> topFrameAddress() {
+        return pointerAtStackOffset<JitFrameLayout>(0);
     }
 
     //
@@ -321,7 +321,7 @@ struct BaselineStackBuilder
     //
     void *calculatePrevFramePtr() {
         // Get the incoming frame.
-        BufferPointer<IonJSFrameLayout> topFrame = topFrameAddress();
+        BufferPointer<JitFrameLayout> topFrame = topFrameAddress();
         FrameType type = topFrame->prevType();
 
         // For IonJS and Entry frames, the "saved" frame pointer in the baseline
@@ -332,11 +332,11 @@ struct BaselineStackBuilder
 
         // BaselineStub - Baseline calling into Ion.
         //  PrevFramePtr needs to point to the BaselineStubFrame's saved frame pointer.
-        //      STACK_START_ADDR + IonJSFrameLayout::Size() + PREV_FRAME_SIZE
-        //                      - IonBaselineStubFrameLayout::reverseOffsetOfSavedFramePtr()
+        //      STACK_START_ADDR + JitFrameLayout::Size() + PREV_FRAME_SIZE
+        //                      - BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr()
         if (type == JitFrame_BaselineStub) {
-            size_t offset = IonJSFrameLayout::Size() + topFrame->prevFrameLocalSize() +
-                            IonBaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
+            size_t offset = JitFrameLayout::Size() + topFrame->prevFrameLocalSize() +
+                            BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
             return virtualPointerAtStackOffset(offset);
         }
 
@@ -345,7 +345,7 @@ struct BaselineStackBuilder
         // whether the arch is x86 or not.  The x86 rectifier frame saves the frame pointer,
         // so we can calculate it directly.  For other archs, the previous frame pointer
         // is stored on the stack in the frame that precedes the rectifier frame.
-        size_t priorOffset = IonJSFrameLayout::Size() + topFrame->prevFrameLocalSize();
+        size_t priorOffset = JitFrameLayout::Size() + topFrame->prevFrameLocalSize();
 #if defined(JS_CODEGEN_X86)
         // On X86, the FramePointer is pushed as the first value in the Rectifier frame.
         MOZ_ASSERT(BaselineFrameReg == FramePointer);
@@ -354,8 +354,8 @@ struct BaselineStackBuilder
 #elif defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
         // On X64, ARM and MIPS, the frame pointer save location depends on
         // the caller of the rectifier frame.
-        BufferPointer<IonRectifierFrameLayout> priorFrame =
-            pointerAtStackOffset<IonRectifierFrameLayout>(priorOffset);
+        BufferPointer<RectifierFrameLayout> priorFrame =
+            pointerAtStackOffset<RectifierFrameLayout>(priorOffset);
         FrameType priorType = priorFrame->prevType();
         MOZ_ASSERT(priorType == JitFrame_IonJS || priorType == JitFrame_BaselineStub);
 
@@ -365,12 +365,12 @@ struct BaselineStackBuilder
             return nullptr;
 
         // Otherwise, the frame preceding the rectifier is a BaselineStub frame.
-        //  let X = STACK_START_ADDR + IonJSFrameLayout::Size() + PREV_FRAME_SIZE
-        //      X + IonRectifierFrameLayout::Size()
-        //        + ((IonRectifierFrameLayout *) X)->prevFrameLocalSize()
+        //  let X = STACK_START_ADDR + JitFrameLayout::Size() + PREV_FRAME_SIZE
+        //      X + RectifierFrameLayout::Size()
+        //        + ((RectifierFrameLayout *) X)->prevFrameLocalSize()
         //        - BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr()
-        size_t extraOffset = IonRectifierFrameLayout::Size() + priorFrame->prevFrameLocalSize() +
-                             IonBaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
+        size_t extraOffset = RectifierFrameLayout::Size() + priorFrame->prevFrameLocalSize() +
+                             BaselineStubFrameLayout::reverseOffsetOfSavedFramePtr();
         return virtualPointerAtStackOffset(priorOffset + extraOffset);
 #elif defined(JS_CODEGEN_NONE)
         MOZ_CRASH();
@@ -719,7 +719,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         JitSpew(JitSpew_BaselineBailouts, "      Is function!");
         JitSpew(JitSpew_BaselineBailouts, "      thisv=%016llx", *((uint64_t *) &thisv));
 
-        size_t thisvOffset = builder.framePushed() + IonJSFrameLayout::offsetOfThis();
+        size_t thisvOffset = builder.framePushed() + JitFrameLayout::offsetOfThis();
         *builder.valuePointerAtStackOffset(thisvOffset) = thisv;
 
         MOZ_ASSERT(iter.numAllocations() >= CountArgSlots(script, fun));
@@ -742,7 +742,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             JitSpew(JitSpew_BaselineBailouts, "      arg %d = %016llx",
                         (int) i, *((uint64_t *) &arg));
             if (callerPC) {
-                size_t argOffset = builder.framePushed() + IonJSFrameLayout::offsetOfActualArg(i);
+                size_t argOffset = builder.framePushed() + JitFrameLayout::offsetOfActualArg(i);
                 *builder.valuePointerAtStackOffset(argOffset) = arg;
             } else {
                 startFrameFormals[i].set(arg);
