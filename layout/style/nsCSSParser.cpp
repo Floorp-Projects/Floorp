@@ -7495,12 +7495,11 @@ CSSParserImpl::ParseFlex()
     return true;
   }
 
-  // Next, check for 'none' == '0 0 main-size'
+  // Next, check for 'none' == '0 0 auto'
   if (ParseVariant(tmpVal, VARIANT_NONE, nullptr)) {
     AppendValue(eCSSProperty_flex_grow, nsCSSValue(0.0f, eCSSUnit_Number));
     AppendValue(eCSSProperty_flex_shrink, nsCSSValue(0.0f, eCSSUnit_Number));
-    AppendValue(eCSSProperty_flex_basis,
-                nsCSSValue(NS_STYLE_FLEX_BASIS_MAIN_SIZE, eCSSUnit_Enumerated));
+    AppendValue(eCSSProperty_flex_basis, nsCSSValue(eCSSUnit_Auto));
     return true;
   }
 
@@ -7558,15 +7557,6 @@ CSSParserImpl::ParseFlex()
       // Failed to parse anything after our flex-basis -- that's fine. We can
       // skip the remaining parsing.
       doneParsing = true;
-      if (flexBasis.GetUnit() == eCSSUnit_Auto) {
-        // We've just parsed "flex:auto", without a number after "auto".  In
-        // this case, "auto" is *not* actually the flex-basis -- it's a special
-        // keyword for the "flex" shorthand, which expands to "1 1 main-size".
-        // Fortunately, the variables flexGrow & flexShrink are already set to
-        // 1, so we don't need to adjust them; we just need to set flexBasis.
-        flexBasis.SetIntValue(NS_STYLE_FLEX_BASIS_MAIN_SIZE,
-                              eCSSUnit_Enumerated);
-      }
     }
   }
 
