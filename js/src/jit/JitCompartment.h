@@ -13,7 +13,7 @@
 
 #include "jit/CompileInfo.h"
 #include "jit/IonCode.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "jit/shared/Assembler-shared.h"
 #include "js/Value.h"
 #include "vm/Stack.h"

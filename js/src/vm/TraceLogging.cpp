@@ -17,7 +17,7 @@
 #include "jit/CompileWrappers.h"
 #include "vm/Runtime.h"
 
-#include "jit/IonFrames-inl.h"
+#include "jit/JitFrames-inl.h"
 
 using namespace js;
 using namespace js::jit;

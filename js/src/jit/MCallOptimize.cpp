@@ -1389,7 +1389,7 @@ IonBuilder::inlineRegExpExec(CallInfo &callInfo)
     if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
-    JSContext *cx = GetIonContext()->cx;
+    JSContext *cx = GetJitContext()->cx;
     if (!cx->compartment()->jitCompartment()->ensureRegExpExecStubExists(cx))
         return InliningStatus_Error;
 
@@ -1427,7 +1427,7 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
     if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
-    JSContext *cx = GetIonContext()->cx;
+    JSContext *cx = GetJitContext()->cx;
     if (!cx->compartment()->jitCompartment()->ensureRegExpTestStubExists(cx))
         return InliningStatus_Error;
 

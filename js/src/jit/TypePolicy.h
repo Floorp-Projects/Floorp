@@ -7,8 +7,8 @@
 #ifndef jit_TypePolicy_h
 #define jit_TypePolicy_h
 
-#include "jit/IonAllocPolicy.h"
 #include "jit/IonTypes.h"
+#include "jit/JitAllocPolicy.h"
 
 namespace js {
 namespace jit {

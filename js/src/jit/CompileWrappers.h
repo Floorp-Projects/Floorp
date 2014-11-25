@@ -37,13 +37,13 @@ class CompileRuntime
     // rt->mainThread.jitStackLimit;
     const void *addressOfJitStackLimit();
 
-    // &mainThread.ionJSContext
+    // &mainThread.jitJSContext
     const void *addressOfJSContext();
 
     // &mainThread.activation_
     const void *addressOfActivation();
 
-    // &GetIonContext()->runtime->nativeIterCache.last
+    // &GetJitContext()->runtime->nativeIterCache.last
     const void *addressOfLastCachedNativeIterator();
 
 #ifdef JS_GC_ZEAL

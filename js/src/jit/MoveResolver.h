@@ -8,7 +8,7 @@
 #define jit_MoveResolver_h
 
 #include "jit/InlineList.h"
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "jit/Registers.h"
 
 namespace js {

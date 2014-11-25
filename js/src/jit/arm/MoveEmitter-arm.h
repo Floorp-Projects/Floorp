@@ -7,7 +7,7 @@
 #ifndef jit_arm_MoveEmitter_arm_h
 #define jit_arm_MoveEmitter_arm_h
 
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MoveResolver.h"
 
 namespace js {

@@ -33,7 +33,7 @@
 
 #include "irregexp/RegExpAST.h"
 #include "irregexp/RegExpEngine.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 
 namespace js {
 namespace irregexp {

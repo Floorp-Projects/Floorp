@@ -163,7 +163,7 @@ IonSpewAliasInfo(const char *pre, MInstruction *ins, const char *post)
 bool
 AliasAnalysis::analyze()
 {
-    Vector<MInstructionVector, AliasSet::NumCategories, IonAllocPolicy> stores(alloc());
+    Vector<MInstructionVector, AliasSet::NumCategories, JitAllocPolicy> stores(alloc());
 
     // Initialize to the first instruction.
     MInstruction *firstIns = *graph_.entryBlock()->begin();

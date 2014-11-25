@@ -7,7 +7,7 @@
 #ifndef jit_none_BaselineRegisters_none_h
 #define jit_none_BaselineRegisters_none_h
 
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 
 namespace js {
 namespace jit {

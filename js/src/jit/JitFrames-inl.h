@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonFrames_inl_h
-#define jit_IonFrames_inl_h
+#ifndef jit_JitFrames_inl_h
+#define jit_JitFrames_inl_h
 
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 
 #include "jit/JitFrameIterator.h"
 #include "jit/LIR.h"
@@ -31,21 +31,21 @@ SafepointIndex::resolve()
 inline uint8_t *
 JitFrameIterator::returnAddress() const
 {
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    CommonFrameLayout *current = (CommonFrameLayout *) current_;
     return current->returnAddress();
 }
 
 inline size_t
 JitFrameIterator::prevFrameLocalSize() const
 {
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    CommonFrameLayout *current = (CommonFrameLayout *) current_;
     return current->prevFrameLocalSize();
 }
 
 inline FrameType
 JitFrameIterator::prevType() const
 {
-    IonCommonFrameLayout *current = (IonCommonFrameLayout *) current_;
+    CommonFrameLayout *current = (CommonFrameLayout *) current_;
     return current->prevType();
 }
 
@@ -60,12 +60,12 @@ JitFrameIterator::isFakeExitFrame() const
     return res;
 }
 
-inline IonExitFrameLayout *
+inline ExitFrameLayout *
 JitFrameIterator::exitFrame() const
 {
     MOZ_ASSERT(type() == JitFrame_Exit);
     MOZ_ASSERT(!isFakeExitFrame());
-    return (IonExitFrameLayout *) fp();
+    return (ExitFrameLayout *) fp();
 }
 
 inline BaselineFrame *
@@ -83,4 +83,4 @@ GetTopBaselineFrame(JSContext *cx)
 } // namespace jit
 } // namespace js
 
-#endif /* jit_IonFrames_inl_h */
+#endif /* jit_JitFrames_inl_h */

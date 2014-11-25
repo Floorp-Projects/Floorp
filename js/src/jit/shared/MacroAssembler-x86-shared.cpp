@@ -6,8 +6,8 @@
 
 #include "jit/shared/MacroAssembler-x86-shared.h"
 
-#include "jit/IonFrames.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/JitFrames.h"
+#include "jit/MacroAssembler.h"
 
 using namespace js;
 using namespace js::jit;
@@ -161,7 +161,7 @@ MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t *offset)
     bind(cl.src());
     *offset = currentOffset();
 
-    MOZ_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
+    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
     return addCodeLabel(cl);
 }
 
