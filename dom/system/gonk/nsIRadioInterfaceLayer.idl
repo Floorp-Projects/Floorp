@@ -40,17 +40,21 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(622e8809-1a89-45f7-9b35-7e49b5aaa69f)]
+[scriptable, uuid(dc874da3-5f74-49d4-8e1c-a58ed9a1c0ef)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
 
   /**
    * PDP APIs
+   *
+   * @param networkType
+   *        Mobile network type, that is, nsINetworkInterface.NETWORK_TYPE_MOBILE
+   *        or one of the nsINetworkInterface.NETWORK_TYPE_MOBILE_* values.
    */
-  void setupDataCallByType(in DOMString apntype);
-  void deactivateDataCallByType(in DOMString apntype);
-  long getDataCallStateByType(in DOMString apntype);
+  void setupDataCallByType(in long networkType);
+  void deactivateDataCallByType(in long networkType);
+  long getDataCallStateByType(in long networkType);
 
   void updateRILNetworkInterface();
 
