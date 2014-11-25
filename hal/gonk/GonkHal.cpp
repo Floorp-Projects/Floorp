@@ -1212,11 +1212,9 @@ OomVictimLogger::Observe(
   // deprecated the old klog defs.
   // Our current bionic does not hit this
   // change yet so handle the future change.
+  // (ICS doesn't have KLOG_SIZE_BUFFER but 
+  // JB and onwards does.)
   #define KLOG_SIZE_BUFFER KLOG_WRITE
-#else
-  // Once the change hits our bionic this ifndef
-  // can be removed.
-  #warning "Please remove KLOG_UNREAD_SIZE compatability def"
 #endif
   // Retreive kernel log
   int msg_buf_size = klogctl(KLOG_SIZE_BUFFER, NULL, 0);
