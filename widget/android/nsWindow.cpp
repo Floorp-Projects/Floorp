@@ -675,7 +675,8 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
             MOZ_ASSERT(!mIMEComposing);
             mIMEComposing = true;
             break;
-        case NS_COMPOSITION_END:
+        case NS_COMPOSITION_COMMIT_AS_IS:
+        case NS_COMPOSITION_COMMIT:
             MOZ_ASSERT(mIMEComposing);
             mIMEComposing = false;
             mIMEComposingStart = -1;
@@ -1718,15 +1719,11 @@ nsWindow::RemoveIMEComposition()
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
     AutoIMEMask textMask(mIMEMaskTextUpdate);
 
-    WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
+    WidgetCompositionEvent compositionCommitEvent(true,
+                                                  NS_COMPOSITION_COMMIT_AS_IS,
                                                   this);
-    InitEvent(compositionChangeEvent, nullptr);
-    compositionChangeEvent.mData = mIMEComposingText;
-    DispatchEvent(&compositionChangeEvent);
-
-    WidgetCompositionEvent compEndEvent(true, NS_COMPOSITION_END, this);
-    InitEvent(compEndEvent, nullptr);
-    DispatchEvent(&compEndEvent);
+    InitEvent(compositionCommitEvent, nullptr);
+    DispatchEvent(&compositionCommitEvent);
 }
 
 void
@@ -1878,10 +1875,11 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             // Don't end composition when composing text.
             if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT)
             {
-                WidgetCompositionEvent event(true, NS_COMPOSITION_END, this);
-                InitEvent(event, nullptr);
-                event.mData = ae->Characters();
-                DispatchEvent(&event);
+                WidgetCompositionEvent compositionCommitEvent(
+                                           true, NS_COMPOSITION_COMMIT, this);
+                InitEvent(compositionCommitEvent, nullptr);
+                compositionCommitEvent.mData = ae->Characters();
+                DispatchEvent(&compositionCommitEvent);
             }
 
             FlushIMEChanges();
@@ -2083,15 +2081,12 @@ nsWindow::NotifyIME(const IMENotification& aIMENotification)
             if (mIMEComposing) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-                WidgetCompositionEvent compositionChangeEvent(
-                                         true, NS_COMPOSITION_CHANGE, this);
-                InitEvent(compositionChangeEvent, nullptr);
-                DispatchEvent(&compositionChangeEvent);
-
-                WidgetCompositionEvent compositionEndEvent(
-                                         true, NS_COMPOSITION_END, this);
-                InitEvent(compositionEndEvent, nullptr);
-                DispatchEvent(&compositionEndEvent);
+                WidgetCompositionEvent compositionCommitEvent(
+                                         true, NS_COMPOSITION_COMMIT, this);
+                InitEvent(compositionCommitEvent, nullptr);
+                // Dispatch it with empty mData value for canceling the
+                // composition
+                DispatchEvent(&compositionCommitEvent);
             }
 
             mozilla::widget::android::GeckoAppShell::NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);

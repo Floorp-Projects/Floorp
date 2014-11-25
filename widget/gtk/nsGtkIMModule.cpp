@@ -369,8 +369,7 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
                 // IM.  For compromising this issue, we should dispatch
                 // compositionend event, however, we don't need to reset IM
                 // actually.
-                DispatchCompositionEventsForCommit(activeContext,
-                                                   EmptyString());
+                DispatchCompositionCommitEvent(activeContext, &EmptyString());
                 filterThisEvent = false;
             }
         } else {
@@ -749,7 +748,7 @@ nsGtkIMModule::OnEndCompositionNative(GtkIMContext *aContext)
     }
 
     // Be aware, widget can be gone
-    DispatchCompositionEventsForCommit(aContext, mDispatchedCompositionString);
+    DispatchCompositionCommitEvent(aContext);
 }
 
 /* static */
@@ -921,7 +920,7 @@ nsGtkIMModule::OnCommitCompositionNative(GtkIMContext *aContext,
 
     NS_ConvertUTF8toUTF16 str(commitString);
     // Be aware, widget can be gone
-    DispatchCompositionEventsForCommit(aContext, str);
+    DispatchCompositionCommitEvent(aContext, &str);
 }
 
 void
@@ -1096,14 +1095,15 @@ nsGtkIMModule::DispatchCompositionChangeEvent(
 }
 
 bool
-nsGtkIMModule::DispatchCompositionEventsForCommit(
+nsGtkIMModule::DispatchCompositionCommitEvent(
                    GtkIMContext* aContext,
-                   const nsAString& aCommitString)
+                   const nsAString* aCommitString)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): DispatchCompositionEventsForCommit, aContext=%p, "
-         "aCommitString=\"%s\"",
-         this, aContext, NS_ConvertUTF16toUTF8(aCommitString).get()));
+        ("GtkIMModule(%p): DispatchCompositionCommitEvent, aContext=%p, "
+         "aCommitString=%p, (\"%s\")",
+         this, aContext, aCommitString,
+         aCommitString ? NS_ConvertUTF16toUTF8(*aCommitString).get() : ""));
 
     if (!mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -1112,7 +1112,7 @@ nsGtkIMModule::DispatchCompositionEventsForCommit(
     }
 
     if (!IsComposing()) {
-        if (aCommitString.IsEmpty()) {
+        if (!aCommitString || aCommitString->IsEmpty()) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
                 ("    FAILED, there is no composition and empty commit "
                  "string"));
@@ -1128,56 +1128,28 @@ nsGtkIMModule::DispatchCompositionEventsForCommit(
 
     nsRefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
-    // First, dispatch a compositionchange event for committing with
-    // aCommitString.
-    mCompositionState =
-        eCompositionState_CommitCompositionChangeEventDispatched;
-
-    WidgetCompositionEvent compositionChangeEvent(true, NS_COMPOSITION_CHANGE,
-                                                  mLastFocusedWindow);
-    InitEvent(compositionChangeEvent);
-    compositionChangeEvent.mData = aCommitString;
-
-    nsEventStatus status = nsEventStatus_eIgnore;
-    mLastFocusedWindow->DispatchEvent(&compositionChangeEvent, status);
-
-    if (!IsComposing()) {
-        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, there is no composition during dispatching "
-             "a compositionchange event for committing the composition"));
-        if (lastFocusedWindow->IsDestroyed() ||
-            lastFocusedWindow != mLastFocusedWindow) {
-            PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-                ("    NOTE, the focused widget was destroyed/changed by "
-                 "compositionchange event"));
-            return false;
-        }
-        return true;
-    }
-
-    // Next, forget current composition before dispatching a composionend event.
+    uint32_t message = aCommitString ? NS_COMPOSITION_COMMIT :
+                                       NS_COMPOSITION_COMMIT_AS_IS;
     mCompositionState = eCompositionState_NotComposing;
     mCompositionStart = UINT32_MAX;
     mCompositionTargetOffset = UINT32_MAX;
     mDispatchedCompositionString.Truncate();
 
-    // Finally, dispatch a compositionend event if it's possible.
-    if (!lastFocusedWindow->IsDestroyed() &&
-        lastFocusedWindow == mLastFocusedWindow) {
-        WidgetCompositionEvent compositionEndEvent(true, NS_COMPOSITION_END,
-                                                   mLastFocusedWindow);
-        InitEvent(compositionEndEvent);
-        compositionEndEvent.mData = aCommitString;
-
-        status = nsEventStatus_eIgnore;
-        mLastFocusedWindow->DispatchEvent(&compositionEndEvent, status);
+    WidgetCompositionEvent compositionCommitEvent(true, message,
+                                                  mLastFocusedWindow);
+    InitEvent(compositionCommitEvent);
+    if (message == NS_COMPOSITION_COMMIT) {
+        compositionCommitEvent.mData = *aCommitString;
     }
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    mLastFocusedWindow->DispatchEvent(&compositionCommitEvent, status);
 
     if (lastFocusedWindow->IsDestroyed() ||
         lastFocusedWindow != mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    NOTE, the focused widget was destroyed/changed by "
-             "compositionend event"));
+             "compositioncommit event"));
         return false;
     }
 
@@ -1493,7 +1465,7 @@ nsGtkIMModule::DeleteText(GtkIMContext* aContext,
     bool editorHadCompositionString = EditorHasCompositionString();
     if (wasComposing) {
         selOffset = mCompositionStart;
-        if (!DispatchCompositionEventsForCommit(aContext, mSelectedString)) {
+        if (!DispatchCompositionCommitEvent(aContext, &mSelectedString)) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
                 ("    FAILED, quitting from DeletText"));
             return NS_ERROR_FAILURE;
