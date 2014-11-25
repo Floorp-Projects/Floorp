@@ -471,9 +471,12 @@ public final class ANRReporter extends BroadcastReceiver
 
     private static void processTraces(Reader traces, File pingFile) {
 
-        // Unwinding is memory intensive; only unwind if we have enough memory
-        boolean haveNativeStack = requestNativeStack(
-            /* unwind */ SysInfo.getMemSize() >= 640);
+        // Only get native stack if Gecko is running.
+        // Also, unwinding is memory intensive, so only unwind if we have enough memory.
+        final boolean haveNativeStack =
+            GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning) ?
+            requestNativeStack(/* unwind */ SysInfo.getMemSize() >= 640) : false;
+
         try {
             OutputStream ping = new BufferedOutputStream(
                 new FileOutputStream(pingFile), TRACES_BLOCK_SIZE);
