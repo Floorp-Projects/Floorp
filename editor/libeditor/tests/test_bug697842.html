@@ -90,19 +90,7 @@ function runTests()
         "caret": { "start": 2, "length": 0 }
       });
 
-    // commit
-    synthesizeCompositionChange(
-      { "composition":
-        { "string": composingString,
-          "clauses":
-          [
-            { "length": 0, "attr": 0 }
-          ]
-        },
-        "caret": { "start": 2, "length": 0 }
-      });
-
-    synthesizeComposition({ type: "compositionend", data: composingString });
+    synthesizeComposition({ type: "compositioncommitasis" });
 
     is(editor.innerHTML, composingString,
        "editor has unexpected result");
