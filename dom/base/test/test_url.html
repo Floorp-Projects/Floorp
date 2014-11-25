@@ -117,7 +117,7 @@
     { url: 'http://example.com/carrot#question%3f',
       base: undefined,
       error: false,
-      hash: '#question%3f'
+      hash: '#question?'
     },
     { url: 'https://example.com:4443?',
       base: undefined,
@@ -327,7 +327,6 @@
     var u = new URL(url);
     ok(u.origin, 'http://mochi.test:8888', "The URL generated from a blob URI has an origin");
   </script>
-
 
   <script>
     var blob = new Blob(['a']);
