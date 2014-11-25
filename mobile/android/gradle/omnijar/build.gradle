@@ -1,0 +1,42 @@
+project.buildDir = "${topobjdir}/mobile/android/gradle/omnijar/build"
+
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        java {
+            // Remove the default directories entirely.
+            srcDirs = []
+            // Depend on everything in mobile/android that goes into
+            // the omnijar.
+            srcDir '../../locales'
+            srcDir '../../chrome'
+            srcDir '../../components'
+            srcDir '../../modules'
+            srcDir '../../themes/core'
+        }
+    }
+}
+
+/**
+ * This task runs when any input file is newer than the omnijar.
+ */
+task rebuildOmnijar(type:Exec) {
+    // Depend on all the inputs labeled as Java sources.
+    project.sourceSets.main.java.srcDirs.each { srcDir ->
+        inputs.sourceDir srcDir
+    }
+    // Produce a single output file.
+    outputs.file "${topobjdir}/dist/fennec/assets/omni.ja"
+
+    workingDir "${topobjdir}"
+
+    commandLine "${topsrcdir}/mach"
+    args 'build'
+    args '-C'
+    args 'mobile/android/base'
+    args 'gradle-omnijar'
+}
+
+// Rebuild the omnijar before the earliest Java task.
+tasks.compileJava.dependsOn rebuildOmnijar
