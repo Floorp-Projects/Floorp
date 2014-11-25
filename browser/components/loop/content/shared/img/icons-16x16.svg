@@ -118,6 +118,10 @@ use[id$="-red"] {
     <polyline fill="#FFFFFF" points="9.25,7.542 8.75,7.542 8.75,11.542 9.25,11.542  "/>
     <rect x="6.75" y="7.542" fill="#FFFFFF" width="0.5" height="4"/>
   </g>
+  <g id="leave-shape">
+    <polygon fill="#FFFFFF" points="2.08,11.52 2.08,4 8,4 8,2.24 0.32,2.24 0.32,13.28 8,13.28 8,11.52"/>
+    <polygon fill="#FFFFFF" points="15.66816,7.77344 9.6,2.27456 9.6,5.6 3.68,5.6 3.68,9.92 9.6,9.92 9.6,13.27232"/>
+  </g>
 </defs>
 <use id="audio"               xlink:href="#audio-shape"/>
 <use id="audio-hover"         xlink:href="#audio-shape"/>
@@ -137,6 +141,7 @@ use[id$="-red"] {
 <use id="history"             xlink:href="#history-shape"/>
 <use id="history-hover"       xlink:href="#history-shape"/>
 <use id="history-active"      xlink:href="#history-shape"/>
+<use id="leave"               xlink:href="#leave-shape"/>
 <use id="precall"             xlink:href="#precall-shape"/>
 <use id="precall-hover"       xlink:href="#precall-shape"/>
 <use id="precall-active"      xlink:href="#precall-shape"/>

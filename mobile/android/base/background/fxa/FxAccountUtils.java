@@ -35,6 +35,16 @@ public class FxAccountUtils {
 
   public static final int NUMBER_OF_QUICK_STRETCH_ROUNDS = 1000;
 
+  // For extra debugging.  Not final so it can be changed from Fennec, or from
+  // an add-on.
+  public static boolean LOG_PERSONAL_INFORMATION = false;
+
+  public static void pii(String tag, String message) {
+    if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+      Logger.info(tag, "$$FxA PII$$: " + message);
+    }
+  }
+
   public static String bytes(String string) throws UnsupportedEncodingException {
     return Utils.byte2Hex(string.getBytes("UTF-8"));
   }

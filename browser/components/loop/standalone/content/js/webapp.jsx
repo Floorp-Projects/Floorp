@@ -270,7 +270,80 @@ loop.webapp = (function($, _, OT, mozL10n) {
     }
   });
 
+  /**
+   * A view for when conversations are pending, displays any messages
+   * and an option cancel button.
+   */
   var PendingConversationView = React.createClass({
+    propTypes: {
+      callState: React.PropTypes.string.isRequired,
+      // If not supplied, the cancel button is not displayed.
+      cancelCallback: React.PropTypes.func
+    },
+
+    render: function() {
+      var cancelButtonClasses = React.addons.classSet({
+        btn: true,
+        "btn-large": true,
+        "btn-cancel": true,
+        hide: !this.props.cancelCallback
+      });
+
+      return (
+        <div className="container">
+          <div className="container-box">
+            <header className="pending-header header-box">
+              <ConversationBranding />
+            </header>
+
+            <div id="cameraPreview" />
+
+            <div id="messages" />
+
+            <p className="standalone-btn-label">
+              {this.props.callState}
+            </p>
+
+            <div className="btn-pending-cancel-group btn-group">
+              <div className="flex-padding-1" />
+              <button className={cancelButtonClasses}
+                      onClick={this.props.cancelCallback} >
+                <span className="standalone-call-btn-text">
+                  {mozL10n.get("initiate_call_cancel_button")}
+                </span>
+              </button>
+              <div className="flex-padding-1" />
+            </div>
+          </div>
+          <ConversationFooter />
+        </div>
+      );
+    }
+  });
+
+  /**
+   * View displayed whilst the get user media prompt is being displayed. Indicates
+   * to the user to accept the prompt.
+   */
+  var GumPromptConversationView = React.createClass({
+    render: function() {
+      var callState = mozL10n.get("call_progress_getting_media_description", {
+        clientShortname: mozL10n.get("clientShortname2")
+      });
+      document.title = mozL10n.get("standalone_title_with_status", {
+        clientShortname: mozL10n.get("clientShortname2"),
+        currentStatus: mozL10n.get("call_progress_getting_media_title")
+      });
+
+      return <PendingConversationView callState={callState}/>;
+    }
+  });
+
+  /**
+   * View displayed waiting for a call to be connected. Updates the display
+   * once the websocket shows that the callee is being alerted.
+   */
+  var WaitingConversationView = React.createClass({
     mixins: [sharedMixins.AudioMixin],
 
     getInitialState: function() {
@@ -306,34 +379,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
       document.title = mozL10n.get("standalone_title_with_status",
                                    {clientShortname: mozL10n.get("clientShortname2"),
                                     currentStatus: mozL10n.get(callStateStringEntityName)});
+
       return (
-        <div className="container">
-          <div className="container-box">
-            <header className="pending-header header-box">
-              <ConversationBranding />
-            </header>
-
-            <div id="cameraPreview" />
-
-            <div id="messages" />
-
-            <p className="standalone-btn-label">
-              {callState}
-            </p>
-
-            <div className="btn-pending-cancel-group btn-group">
-              <div className="flex-padding-1" />
-              <button className="btn btn-large btn-cancel"
-                      onClick={this._cancelOutgoingCall} >
-                <span className="standalone-call-btn-text">
-                  {mozL10n.get("initiate_call_cancel_button")}
-                </span>
-              </button>
-              <div className="flex-padding-1" />
-            </div>
-          </div>
-          <ConversationFooter />
-        </div>
+        <PendingConversationView
+          callState={callState}
+          cancelCallback={this._cancelOutgoingCall}
+        />
       );
     }
   });
@@ -458,15 +509,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
      */
     startCall: function(callType) {
       return function() {
-        multiplexGum.getPermsAndCacheMedia({audio:true, video:true},
-          function(localStream) {
-            this.props.conversation.setupOutgoingCall(callType);
-            this.setState({disableCallButton: true});
-          }.bind(this),
-          function(errorCode) {
-            multiplexGum.reset();
-          }.bind(this)
-        );
+        this.props.conversation.setupOutgoingCall(callType);
+        this.setState({disableCallButton: true});
       }.bind(this);
     },
 
@@ -627,6 +671,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     componentDidMount: function() {
       this.props.conversation.on("call:outgoing", this.startCall, this);
+      this.props.conversation.on("call:outgoing:get-media-privs", this.getMediaPrivs, this);
       this.props.conversation.on("call:outgoing:setup", this.setupOutgoingCall, this);
       this.props.conversation.on("change:publishedStream", this._checkConnected, this);
       this.props.conversation.on("change:subscribedStream", this._checkConnected, this);
@@ -674,8 +719,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
             />
           );
         }
+        case "gumPrompt": {
+          return <GumPromptConversationView />;
+        }
         case "pending": {
-          return <PendingConversationView websocket={this._websocket} />;
+          return <WaitingConversationView websocket={this._websocket} />;
         }
         case "connected": {
           document.title = mozL10n.get("standalone_title_with_status",
@@ -775,6 +823,22 @@ loop.webapp = (function($, _, OT, mozL10n) {
     },
 
     /**
+     * Asks the user for the media privileges, handling the result appropriately.
+     */
+    getMediaPrivs: function() {
+      this.setState({callStatus: "gumPrompt"});
+      multiplexGum.getPermsAndCacheMedia({audio:true, video:true},
+        function(localStream) {
+          this.props.conversation.gotMediaPrivs();
+        }.bind(this),
+        function(errorCode) {
+          multiplexGum.reset();
+          this.setState({callStatus: "failure"});
+        }.bind(this)
+      );
+    },
+
+    /**
      * Actually starts the call.
      */
     startCall: function() {
@@ -866,6 +930,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * Handles ending a call by resetting the view to the start state.
      */
     _endCall: function() {
+      multiplexGum.reset();
+
       if (this.state.callStatus !== "failure") {
         this.setState({callStatus: "end"});
       }
@@ -1050,6 +1116,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
   return {
     CallUrlExpiredView: CallUrlExpiredView,
     PendingConversationView: PendingConversationView,
+    GumPromptConversationView: GumPromptConversationView,
+    WaitingConversationView: WaitingConversationView,
     StartConversationView: StartConversationView,
     FailedConversationView: FailedConversationView,
     OutgoingConversationView: OutgoingConversationView,
