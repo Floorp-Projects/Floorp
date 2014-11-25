@@ -176,6 +176,9 @@
 // composition events
 #define NS_COMPOSITION_EVENT_START    2200
 #define NS_COMPOSITION_START          (NS_COMPOSITION_EVENT_START)
+// NS_COMPOSITION_END is the message for DOM compositionend event.
+// This event should NOT be dispatched from widget if NS_COMPOSITION_COMMIT
+// is available.
 #define NS_COMPOSITION_END            (NS_COMPOSITION_EVENT_START + 1)
 // NS_COMPOSITION_UPDATE is the message for DOM compositionupdate event.
 // This event should NOT be dispatched from widget since it will be dispatched
@@ -187,6 +190,13 @@
 // composition string isn't changed but the ranges are changed.  This causes
 // a DOM "text" event which is a non-standard DOM event.
 #define NS_COMPOSITION_CHANGE         (NS_COMPOSITION_EVENT_START + 3)
+// NS_COMPOSITION_COMMIT_AS_IS is the message for representing a commit of
+// composition string.  TextComposition will commit composition with the
+// last data.  TextComposition will dispatch this event to the DOM tree as
+// NS_COMPOSITION_CHANGE without clause information.  After that,
+// NS_COMPOSITION_END will be dispatched automatically.
+// Its mData and mRanges should be empty and nullptr.
+#define NS_COMPOSITION_COMMIT_AS_IS   (NS_COMPOSITION_EVENT_START + 4)
 
 // UI events
 #define NS_UI_EVENT_START          2500

@@ -140,6 +140,7 @@ WidgetEvent::HasIMEEventMessage() const
     case NS_COMPOSITION_END:
     case NS_COMPOSITION_UPDATE:
     case NS_COMPOSITION_CHANGE:
+    case NS_COMPOSITION_COMMIT_AS_IS:
       return true;
     default:
       return false;
