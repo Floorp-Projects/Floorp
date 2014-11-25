@@ -1266,18 +1266,7 @@ function runEditorFlagChangeTests()
      description + "#3 IME isn't enabled on HTML editor");
 
   // cancel the composition
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 0, "length": 0 }
-    });
-
-  synthesizeComposition({ type: "compositionend", data: "" });
+  synthesizeComposition({ type: "compositioncommit", data: "" });
 
   container.removeAttribute("contenteditable");
 }
