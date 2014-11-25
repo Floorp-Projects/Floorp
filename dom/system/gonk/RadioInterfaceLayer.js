@@ -191,16 +191,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSmsMessenger",
                                    "@mozilla.org/ril/system-messenger-helper;1",
                                    "nsISmsMessenger");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gIccMessenger",
-                                   "@mozilla.org/ril/system-messenger-helper;1",
-                                   "nsIIccMessenger");
-
-XPCOMUtils.defineLazyGetter(this, "gStkCmdFactory", function() {
-  let stk = {};
-  Cu.import("resource://gre/modules/StkProactiveCmdFactory.jsm", stk);
-  return stk.StkProactiveCmdFactory;
-});
-
 XPCOMUtils.defineLazyGetter(this, "WAP", function() {
   let wap = {};
   Cu.import("resource://gre/modules/WapPushManager.js", wap);
@@ -2820,9 +2810,9 @@ RadioInterface.prototype = {
     if (DEBUG) this.debug("handleStkProactiveCommand " + JSON.stringify(message));
     let iccId = this.rilContext.iccInfo && this.rilContext.iccInfo.iccid;
     if (iccId) {
-      gIccMessenger
-        .notifyStkProactiveCommand(iccId,
-                                   gStkCmdFactory.createCommand(message));
+      gSystemMessenger.broadcastMessage("icc-stkcommand",
+                                        {iccId: iccId,
+                                         command: message});
     }
     gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
   },
