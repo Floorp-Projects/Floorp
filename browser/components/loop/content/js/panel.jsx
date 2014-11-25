@@ -214,7 +214,7 @@ loop.panel = (function(_, mozL10n) {
             </a>
           ),
         });
-        return <div>
+        return <div id="powered-by-wrapper">
           <p id="powered-by">
             {mozL10n.get("powered_by_beforeLogo")}
             <img id="powered-by-logo" className={locale} />
