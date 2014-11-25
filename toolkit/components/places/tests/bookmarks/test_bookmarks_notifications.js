@@ -111,10 +111,6 @@ add_task(function* insert_bookmark_tag_notification() {
                                   tag.url, null, tag.dateAdded,
                                   tag.guid, tag.parentGuid ] },
                    { name: "onItemChanged",
-                     arguments: [ tagId, "tags", false, "",
-                                  tag.lastModified, tag.type, tagParentId,
-                                  tag.guid, tag.parentGuid ] },
-                   { name: "onItemChanged",
                      arguments: [ itemId, "tags", false, "",
                                   bm.lastModified, bm.type, parentId,
                                   bm.guid, bm.parentGuid ] }
