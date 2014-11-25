@@ -6,8 +6,6 @@
     function navigate() {
         var arguments = window.location.hash.substring(1).split(",");
         var target = arguments[0];
-        target = target.replace("%5B", "[");
-        target = target.replace("%5D", "]");
         var mechanism = arguments[1];
 
         switch(mechanism) {
@@ -31,8 +29,6 @@
 <script>
 var arguments = window.location.hash.substring(1).split(",");
 var target = arguments[0];
-target = target.replace("%5B", "[");
-target = target.replace("%5D", "]");
 var mechanism = arguments[1];
 document.write("target=" + target + " mechanism=" + mechanism);
 </script>
