@@ -1674,24 +1674,12 @@ nsTextStore::FlushPendingActions()
 
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
-                "dispatching compositionchange event...", this));
-        WidgetCompositionEvent compositionChange(true, NS_COMPOSITION_CHANGE,
+                "dispatching compositioncommit event...", this));
+        WidgetCompositionEvent compositionCommit(true, NS_COMPOSITION_COMMIT,
                                                  mWidget);
-        mWidget->InitEvent(compositionChange);
-        compositionChange.mData = action.mData;
-        mWidget->DispatchWindowEvent(&compositionChange);
-        if (!mWidget || mWidget->Destroyed()) {
-          break;
-        }
-
-        PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-               ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
-                "dispatching compositionend event...", this));
-        WidgetCompositionEvent compositionEnd(true, NS_COMPOSITION_END,
-                                              mWidget);
-        compositionEnd.mData = compositionChange.mData;
-        mWidget->InitEvent(compositionEnd);
-        mWidget->DispatchWindowEvent(&compositionEnd);
+        mWidget->InitEvent(compositionCommit);
+        compositionCommit.mData = action.mData;
+        mWidget->DispatchWindowEvent(&compositionCommit);
         if (!mWidget || mWidget->Destroyed()) {
           break;
         }
