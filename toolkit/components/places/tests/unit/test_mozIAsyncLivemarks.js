@@ -192,6 +192,7 @@ add_task(function test_addLivemark_noSiteURI_succeeds()
   do_check_eq(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
   do_check_eq(livemark.index, PlacesUtils.bookmarks.getItemIndex(livemark.id));
   do_check_eq(livemark.lastModified, PlacesUtils.bookmarks.getItemLastModified(livemark.id));
+  do_check_eq(livemark.dateAdded, PlacesUtils.bookmarks.getItemDateAdded(livemark.id));
   do_check_true(livemark.feedURI.equals(FEED_URI));
   do_check_eq(livemark.siteURI, null);
 });
@@ -211,6 +212,7 @@ add_task(function test_addLivemark_succeeds()
   do_check_eq(livemark.title, "test");
   do_check_eq(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
   do_check_eq(livemark.index, PlacesUtils.bookmarks.getItemIndex(livemark.id));
+  do_check_eq(livemark.dateAdded, PlacesUtils.bookmarks.getItemDateAdded(livemark.id));
   do_check_eq(livemark.lastModified, PlacesUtils.bookmarks.getItemLastModified(livemark.id));
   do_check_true(livemark.feedURI.equals(FEED_URI));
   do_check_true(livemark.siteURI.equals(SITE_URI));
@@ -285,6 +287,18 @@ add_task(function test_addLivemark_forceGuid_succeeds()
     , guid: "1234567890AB"
     });
   checkLivemark(livemark);
+});
+
+add_task(function* test_addLivemark_dateAdded_succeeds() {
+  let dateAdded = new Date("2013-03-01T01:10:00") * 1000;
+  let livemark = yield PlacesUtils.livemarks.addLivemark(
+    { title: "test"
+    , parentId: PlacesUtils.unfiledBookmarksFolderId
+    , index: PlacesUtils.bookmarks.DEFAULT_INDEX
+    , feedURI: FEED_URI
+    , dateAdded
+    });
+  do_check_eq(livemark.dateAdded, dateAdded);
 });
 
 add_task(function test_addLivemark_lastModified_succeeds()
