@@ -19,7 +19,10 @@ AddProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHan
 static const JSClass AddPropertyClass = {
     "AddPropertyTester",
     0,
-    AddProperty
+    AddProperty,
+    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub    /* setProperty */
 };
 
 BEGIN_TEST(testAddPropertyHook)

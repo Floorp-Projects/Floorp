@@ -958,7 +958,11 @@ OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
 #endif
 
 static const js::Class FakePromiseClass = {
-    "Promise", JSCLASS_IS_ANONYMOUS
+    "Promise", JSCLASS_IS_ANONYMOUS,
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub  /* setProperty */
 };
 
 static bool
@@ -1004,13 +1008,13 @@ finalize_counter_finalize(JSFreeOp *fop, JSObject *obj)
 
 static const JSClass FinalizeCounterClass = {
     "FinalizeCounter", JSCLASS_IS_ANONYMOUS,
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* convert */
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    nullptr,               /* enumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* convert */
     finalize_counter_finalize
 };
 
@@ -1546,14 +1550,21 @@ class CloneBufferObject : public NativeObject {
 
 const Class CloneBufferObject::class_ = {
     "CloneBuffer", JSCLASS_HAS_RESERVED_SLOTS(CloneBufferObject::NUM_SLOTS),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* convert */
-    Finalize
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    nullptr,               /* enumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* convert */
+    Finalize,
+    nullptr,                  /* call */
+    nullptr,                  /* hasInstance */
+    nullptr,                  /* construct */
+    nullptr,                  /* trace */
+    JS_NULL_CLASS_SPEC,
+    JS_NULL_CLASS_EXT,
+    JS_NULL_OBJECT_OPS
 };
 
 const JSPropertySpec CloneBufferObject::props_[] = {
