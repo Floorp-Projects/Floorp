@@ -143,6 +143,8 @@ GetEventMessageName(uint32_t aMessage)
       return "NS_COMPOSITION_UPDATE";
     case NS_COMPOSITION_CHANGE:
       return "NS_COMPOSITION_CHANGE";
+    case NS_COMPOSITION_COMMIT_AS_IS:
+      return "NS_COMPOSITION_COMMIT_AS_IS";
     default:
       return "unacceptable event message";
   }

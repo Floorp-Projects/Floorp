@@ -345,12 +345,14 @@ public:
 
   bool CausesDOMTextEvent() const
   {
-    return message == NS_COMPOSITION_CHANGE;
+    return message == NS_COMPOSITION_CHANGE ||
+           message == NS_COMPOSITION_COMMIT_AS_IS;
   }
 
   bool CausesDOMCompositionEndEvent() const
   {
-    return message == NS_COMPOSITION_END;
+    return message == NS_COMPOSITION_END ||
+           message == NS_COMPOSITION_COMMIT_AS_IS;
   }
 };
 

@@ -2138,13 +2138,15 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
                "compositionupdate since it's ignored and the event is "
                "fired automatically when it's necessary");
     return NS_OK;
+  } else if (aType.EqualsLiteral("compositioncommitasis")) {
+    msg = NS_COMPOSITION_COMMIT_AS_IS;
   } else {
     return NS_ERROR_FAILURE;
   }
 
   WidgetCompositionEvent compositionEvent(true, msg, widget);
   InitEvent(compositionEvent);
-  if (msg != NS_COMPOSITION_START) {
+  if (msg != NS_COMPOSITION_START && msg != NS_COMPOSITION_COMMIT_AS_IS) {
     compositionEvent.mData = aData;
   }
 
