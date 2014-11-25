@@ -141,6 +141,9 @@ public:
   // Resize the cache entry to 0 if it exists
   void ResetCacheEntry();
 
+  // Update the cache entry size based on the image container
+  void UpdateCacheEntrySize();
+
   // OK to use on any thread.
   nsresult GetURI(ImageURL **aURI);
   nsresult GetCurrentURI(nsIURI **aURI);
@@ -179,9 +182,6 @@ private:
 
   // Returns whether we've got a reference to the cache entry.
   bool HasCacheEntry() const;
-
-  // Update the cache entry size based on the image container.
-  void UpdateCacheEntrySize();
 
   // Return the priority of the underlying network request, or return
   // PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
