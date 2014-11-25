@@ -38,10 +38,10 @@ class nsDownload;
 #include "nsDownloadScanner.h"
 #endif
 
-class nsDownloadManager : public nsIDownloadManager,
-                          public nsINavHistoryObserver,
-                          public nsIObserver,
-                          public nsSupportsWeakReference
+class nsDownloadManager MOZ_FINAL : public nsIDownloadManager,
+                                    public nsINavHistoryObserver,
+                                    public nsIObserver,
+                                    public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

@@ -30,8 +30,8 @@ const int kLeftStickYAxis = 1;
 const int kRightStickXAxis = 2;
 const int kRightStickYAxis = 3;
 
-class Gamepad : public nsISupports,
-                public nsWrapperCache
+class Gamepad MOZ_FINAL : public nsISupports,
+                          public nsWrapperCache
 {
 public:
   Gamepad(nsISupports* aParent,

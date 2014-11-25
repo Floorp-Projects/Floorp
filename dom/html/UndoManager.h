@@ -25,8 +25,8 @@ namespace dom {
 class DOMTransaction;
 class DOMTransactionCallback;
 
-class UndoManager : public nsISupports,
-                    public nsWrapperCache
+class UndoManager MOZ_FINAL : public nsISupports,
+                              public nsWrapperCache
 {
   friend class TxnScopeGuard;
 public:
