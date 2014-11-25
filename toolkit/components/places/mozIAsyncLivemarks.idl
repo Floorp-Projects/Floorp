@@ -101,7 +101,7 @@ interface mozILivemarkCallback : nsISupports
                     in mozILivemark aLivemark);
 };
 
-[scriptable, uuid(6e40d5b1-ce48-4458-8b68-6bee17d30ef3)]
+[scriptable, uuid(E52B2273-729D-4EBC-A039-E9CD9E18FF86)]
 interface mozILivemarkInfo : nsISupports
 {
   /**
@@ -128,6 +128,11 @@ interface mozILivemarkInfo : nsISupports
    * The position of this livemark in the bookmarks parent folder.
    */
   readonly attribute long index;
+
+  /**
+   * Time this livemark was created.
+   */
+  readonly attribute PRTime dateAdded;
 
   /**
    * Time this livemark's details were last modified.  Doesn't track changes to
