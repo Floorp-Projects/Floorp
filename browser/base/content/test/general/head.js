@@ -780,6 +780,16 @@ function promisePopupHidden(popup) {
   return promisePopupEvent(popup, "hidden");
 }
 
+function promiseNotificationShown(notification) {
+  let win = notification.browser.ownerDocument.defaultView;
+  if (win.PopupNotifications.panel.state == "open") {
+    return Promise.resolved();
+  }
+  let panelPromise = promisePopupShown(win.PopupNotifications.panel);
+  notification.reshow();
+  return panelPromise;
+}
+
 function promiseSearchComplete(win = window) {
   return promisePopupShown(win.gURLBar.popup).then(() => {
     function searchIsComplete() {
