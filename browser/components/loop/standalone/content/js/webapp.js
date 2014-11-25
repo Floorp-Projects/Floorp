@@ -259,7 +259,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
         React.DOM.div({className: "standalone-footer container-box"}, 
           React.DOM.div({title: mozL10n.get("vendor_alttext",
                                   {vendorShortname: mozL10n.get("vendorShortname")}), 
-               className: "footer-logo"})
+               className: "footer-logo"}), 
+          React.DOM.div({className: "footer-external-links"}, 
+            React.DOM.a({target: "_blank", href: loop.config.guestSupportUrl}, 
+              mozL10n.get("support_link")
+            )
+          )
         )
       );
     }
@@ -538,7 +543,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
                          .isRequired,
       sdk: React.PropTypes.object.isRequired,
-      feedbackApiClient: React.PropTypes.object.isRequired,
+      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore),
       onAfterFeedbackReceived: React.PropTypes.func.isRequired
     },
 
@@ -549,7 +554,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return (
         React.DOM.div({className: "ended-conversation"}, 
           sharedViews.FeedbackView({
-            feedbackApiClient: this.props.feedbackApiClient, 
+            feedbackStore: this.props.feedbackStore, 
             onAfterFeedbackReceived: this.props.onAfterFeedbackReceived}
           ), 
           sharedViews.ConversationView({
@@ -611,7 +616,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       notifications: React.PropTypes.instanceOf(sharedModels.NotificationCollection)
                           .isRequired,
       sdk: React.PropTypes.object.isRequired,
-      feedbackApiClient: React.PropTypes.object.isRequired
+      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore)
     },
 
     getInitialState: function() {
@@ -690,7 +695,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
             EndedConversationView({
               sdk: this.props.sdk, 
               conversation: this.props.conversation, 
-              feedbackApiClient: this.props.feedbackApiClient, 
+              feedbackStore: this.props.feedbackStore, 
               onAfterFeedbackReceived: this.callStatusSwitcher("start")}
             )
           );
@@ -887,14 +892,14 @@ loop.webapp = (function($, _, OT, mozL10n) {
       notifications: React.PropTypes.instanceOf(sharedModels.NotificationCollection)
                           .isRequired,
       sdk: React.PropTypes.object.isRequired,
-      feedbackApiClient: React.PropTypes.object.isRequired,
 
       // XXX New types for flux style
       standaloneAppStore: React.PropTypes.instanceOf(
         loop.store.StandaloneAppStore).isRequired,
       activeRoomStore: React.PropTypes.instanceOf(
         loop.store.ActiveRoomStore).isRequired,
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore)
     },
 
     getInitialState: function() {
@@ -931,7 +936,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
                helper: this.props.helper, 
                notifications: this.props.notifications, 
                sdk: this.props.sdk, 
-               feedbackApiClient: this.props.feedbackApiClient}
+               feedbackStore: this.props.feedbackStore}
             )
           );
         }
@@ -992,7 +997,14 @@ loop.webapp = (function($, _, OT, mozL10n) {
       dispatcher: dispatcher,
       sdk: OT
     });
+    var feedbackClient = new loop.FeedbackAPIClient(
+      loop.config.feedbackApiUrl, {
+      product: loop.config.feedbackProductName,
+      user_agent: navigator.userAgent,
+      url: document.location.origin
+    });
 
+    // Stores
     var standaloneAppStore = new loop.store.StandaloneAppStore({
       conversation: conversation,
       dispatcher: dispatcher,
@@ -1002,6 +1014,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
     var activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
       mozLoop: standaloneMozLoop,
       sdkDriver: sdkDriver
+    });
+    var feedbackStore = new loop.store.FeedbackStore(dispatcher, {
+      feedbackClient: feedbackClient
     });
 
     window.addEventListener("unload", function() {
@@ -1014,7 +1029,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       helper: helper, 
       notifications: notifications, 
       sdk: OT, 
-      feedbackApiClient: feedbackApiClient, 
+      feedbackStore: feedbackStore, 
       standaloneAppStore: standaloneAppStore, 
       activeRoomStore: activeRoomStore, 
       dispatcher: dispatcher}

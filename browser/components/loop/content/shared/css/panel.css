@@ -659,6 +659,10 @@ body[dir=rtl] .generate-url-spinner {
   background: transparent url(../img/svg/glyph-signout-16x16.svg) no-repeat center center;
 }
 
+.settings-menu .icon-help {
+  background: transparent url(../img/svg/glyph-help-16x16.svg) no-repeat center center;
+}
+
 /* Footer */
 
 .footer {
