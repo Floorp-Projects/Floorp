@@ -396,7 +396,7 @@ DWriteGlyphRunFromGlyphs(const GlyphBuffer &aGlyphs, ScaledFontDWrite *aFont, Au
   run->isSideways = FALSE;
 }
 
-static TemporaryRef<ID2D1Geometry>
+static inline TemporaryRef<ID2D1Geometry>
 ConvertRectToGeometry(const D2D1_RECT_F& aRect)
 {
   RefPtr<ID2D1RectangleGeometry> rectGeom;
@@ -404,7 +404,7 @@ ConvertRectToGeometry(const D2D1_RECT_F& aRect)
   return rectGeom.forget();
 }
 
-static TemporaryRef<ID2D1Geometry>
+static inline TemporaryRef<ID2D1Geometry>
 GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform)
 {
   RefPtr<ID2D1PathGeometry> tmpGeometry;
@@ -417,7 +417,7 @@ GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTrans
   return tmpGeometry.forget();
 }
 
-static TemporaryRef<ID2D1Geometry>
+static inline TemporaryRef<ID2D1Geometry>
 IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
 {
   RefPtr<ID2D1PathGeometry> pathGeom;
@@ -430,7 +430,7 @@ IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
   return pathGeom.forget();
 }
 
-static TemporaryRef<ID2D1StrokeStyle>
+static inline TemporaryRef<ID2D1StrokeStyle>
 CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
 {
   RefPtr<ID2D1StrokeStyle> style;
@@ -510,7 +510,7 @@ CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
 // This creates a (partially) uploaded bitmap for a DataSourceSurface. It
 // uploads the minimum requirement and possibly downscales. It adjusts the
 // input Matrix to compensate.
-static TemporaryRef<ID2D1Bitmap>
+static inline TemporaryRef<ID2D1Bitmap>
 CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestinationTransform,
                               const IntSize &aDestinationSize, ExtendMode aExtendMode,
                               Matrix &aSourceTransform, ID2D1RenderTarget *aRT,

@@ -196,7 +196,7 @@ var tests = [
       if (navigator.platform.indexOf("Linux") < 0) {
         ok(panelrect.top >= 210 - mozInnerScreenY + 10, testname + "top greater");
       }
-      ok(panelrect.top <= 210 - mozInnerScreenY + 30, testname + "top less");
+      ok(panelrect.top <= 210 - mozInnerScreenY + 32, testname + "top less");
       is(panelrect.width, 120, testname + "width");
       is(panelrect.height, 40, testname + "height");
 

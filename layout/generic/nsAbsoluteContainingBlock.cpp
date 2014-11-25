@@ -132,7 +132,8 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                           aConstrainHeight, kidFrame, kidStatus,
                           aOverflowAreas);
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
-      if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus)) {
+      if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus) &&
+          aDelegatingFrame->IsFrameOfType(nsIFrame::eCanContainOverflowContainers)) {
         // Need a continuation
         if (!nextFrame) {
           nextFrame =
