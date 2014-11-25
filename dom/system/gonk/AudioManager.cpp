@@ -692,23 +692,17 @@ AudioManager::GetFmRadioAudioEnabled(bool *aFmRadioAudioEnabled)
 NS_IMETHODIMP
 AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
 {
-  if (static_cast<
-      status_t (*) (AudioSystem::audio_devices, AudioSystem::device_connection_state, const char *)
-      >(AudioSystem::setDeviceConnectionState)) {
-    AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_FM,
-      aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE :
-      AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
-    InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
-    // sync volume with music after powering on fm radio
-    if (aFmRadioAudioEnabled) {
-      int32_t volIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC];
-      SetStreamVolumeIndex(AUDIO_STREAM_FM, volIndex);
-      mCurrentStreamVolumeTbl[AUDIO_STREAM_FM] = volIndex;
-    }
-    return NS_OK;
-  } else {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_FM,
+    aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE :
+    AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
+  InternalSetAudioRoutes(GetCurrentSwitchState(SWITCH_HEADPHONES));
+  // sync volume with music after powering on fm radio
+  if (aFmRadioAudioEnabled) {
+    int32_t volIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC];
+    SetStreamVolumeIndex(AUDIO_STREAM_FM, volIndex);
+    mCurrentStreamVolumeTbl[AUDIO_STREAM_FM] = volIndex;
   }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
