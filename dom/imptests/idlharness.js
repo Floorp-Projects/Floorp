@@ -1150,15 +1150,15 @@ IdlInterface.prototype.test_self = function()
 
     if (!this.is_callback()) {
         test(function() {
-            // This function tests WebIDL as of 2013-08-25.
-            // http://dev.w3.org/2006/webapi/WebIDL/#es-interface-call
+            // This function tests WebIDL as of 2014-10-25.
+            // https://heycam.github.io/webidl/#es-interface-call
 
             assert_own_property(window, this.name,
                                 "window does not have own property " + format_value(this.name));
 
             // "Interface objects for non-callback interfaces MUST have a
             // property named “length” with attributes { [[Writable]]: false,
-            // [[Enumerable]]: false, [[Configurable]]: false } whose value is
+            // [[Enumerable]]: false, [[Configurable]]: true } whose value is
             // a Number."
             assert_own_property(window[this.name], "length");
             var desc = Object.getOwnPropertyDescriptor(window[this.name], "length");
@@ -1166,7 +1166,7 @@ IdlInterface.prototype.test_self = function()
             assert_false("set" in desc, this.name + ".length has setter");
             assert_false(desc.writable, this.name + ".length is writable");
             assert_false(desc.enumerable, this.name + ".length is enumerable");
-            assert_false(desc.configurable, this.name + ".length is configurable");
+            assert_true(desc.configurable, this.name + ".length is not configurable");
 
             var constructors = this.extAttrs
                 .filter(function(attr) { return attr.name == "Constructor"; });

@@ -5,8 +5,6 @@
     <title>Vibration API: test a simple array parameter to vibrate()</title>
     <link rel='author' title='Robin Berjon' href='mailto:robin@berjon.com'/>
     <link rel='help' href='http://www.w3.org/TR/vibration/#methods'/>
-    <meta name='flags' content='dom, interact'/>
-    <link rel='stylesheet' href='/resources/testharness.css' media='all'/>
   </head>
   <body>
     <h1>Description</h1>
@@ -15,20 +13,11 @@
     </p>
     <button id='vib'>Vibrate!</button>
     <div id='log'></div>
-    <script src='/resources/testharness.js'></script>
-    <script src='/resources/testharnessreport.js'></script>
     <script src='/common/vendor-prefix.js' data-prefixed-objects='[{"ancestors":["navigator"], "name":"vibrate"}]'></script>
     <script>
-      if (undefined !== navigator.vibrate) {
-          setup({explicit_done:true});
-          var t = async_test("Tests that vibrate returns true");
-
-          document.getElementById("vib").onclick = t.step_func(function () {
-              assert_true(navigator.vibrate([2000]), "vibrate() returns a boolean");
-              t.done();
-              done();
-          }, "Calling vibrate returns true");
-      }
+      document.getElementById("vib").onclick = function () {
+        navigator.vibrate([2000]);
+      };
     </script>
   </body>
 </html>

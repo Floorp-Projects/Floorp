@@ -12,6 +12,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
                                   "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Constants
@@ -1447,74 +1449,76 @@ urlInlineComplete.prototype = {
 
     this._listener = aListener;
 
-    // Don't autoFill if the search term is recognized as a keyword, otherwise
-    // it will override default keywords behavior.  Note that keywords are
-    // hashed on first use, so while the first query may delay a little bit,
-    // next ones will just hit the memory hash.
-    if (this._currentSearchString.length == 0 || !this._db ||
-        PlacesUtils.bookmarks.getURIForKeyword(this._currentSearchString)) {
-      this._finishSearch();
-      return;
-    }
-
-    // Don't try to autofill if the search term includes any whitespace.
-    // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
-    // tokenizer ends up trimming the search string and returning a value
-    // that doesn't match it, or is even shorter.
-    if (/\s/.test(this._currentSearchString)) {
-      this._finishSearch();
-      return;
-    }
-
-    // Hosts have no "/" in them.
-    let lastSlashIndex = this._currentSearchString.lastIndexOf("/");
-
-    // Search only URLs if there's a slash in the search string...
-    if (lastSlashIndex != -1) {
-      // ...but not if it's exactly at the end of the search string.
-      if (lastSlashIndex < this._currentSearchString.length - 1)
-        this._queryURL();
-      else
+    Task.spawn(function* () {
+      // Don't autoFill if the search term is recognized as a keyword, otherwise
+      // it will override default keywords behavior.  Note that keywords are
+      // hashed on first use, so while the first query may delay a little bit,
+      // next ones will just hit the memory hash.
+      if (this._currentSearchString.length == 0 || !this._db ||
+          (yield PlacesUtils.promiseHrefAndPostDataForKeyword(this._currentSearchString)).href) {
         this._finishSearch();
-      return;
-    }
-
-    // Do a synchronous search on the table of hosts.
-    let query = this._hostQuery;
-    query.params.search_string = this._currentSearchString.toLowerCase();
-    // This is just to measure the delay to reach the UI, not the query time.
-    TelemetryStopwatch.start(DOMAIN_QUERY_TELEMETRY);
-    let ac = this;
-    let wrapper = new AutoCompleteStatementCallbackWrapper(this, {
-      handleResult: function (aResultSet) {
-        let row = aResultSet.getNextRow();
-        let trimmedHost = row.getResultByIndex(0);
-        let untrimmedHost = row.getResultByIndex(1);
-        // If the untrimmed value doesn't preserve the user's input just
-        // ignore it and complete to the found host.
-        if (untrimmedHost &&
-            !untrimmedHost.toLowerCase().contains(ac._originalSearchString.toLowerCase())) {
-          untrimmedHost = null;
-        }
-
-        ac._result.appendMatch(ac._strippedPrefix + trimmedHost, "", "", "", untrimmedHost);
-
-        // handleCompletion() will cause the result listener to be called, and
-        // will display the result in the UI.
-      },
-
-      handleError: function (aError) {
-        Components.utils.reportError(
-          "URL Inline Complete: An async statement encountered an " +
-          "error: " + aError.result + ", '" + aError.message + "'");
-      },
-
-      handleCompletion: function (aReason) {
-        TelemetryStopwatch.finish(DOMAIN_QUERY_TELEMETRY);
-        ac._finishSearch();
+        return;
       }
-    }, this._db);
-    this._pendingQuery = wrapper.executeAsync([query]);
+
+      // Don't try to autofill if the search term includes any whitespace.
+      // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
+      // tokenizer ends up trimming the search string and returning a value
+      // that doesn't match it, or is even shorter.
+      if (/\s/.test(this._currentSearchString)) {
+        this._finishSearch();
+        return;
+      }
+
+      // Hosts have no "/" in them.
+      let lastSlashIndex = this._currentSearchString.lastIndexOf("/");
+
+      // Search only URLs if there's a slash in the search string...
+      if (lastSlashIndex != -1) {
+        // ...but not if it's exactly at the end of the search string.
+        if (lastSlashIndex < this._currentSearchString.length - 1)
+          this._queryURL();
+        else
+          this._finishSearch();
+        return;
+      }
+
+      // Do a synchronous search on the table of hosts.
+      let query = this._hostQuery;
+      query.params.search_string = this._currentSearchString.toLowerCase();
+      // This is just to measure the delay to reach the UI, not the query time.
+      TelemetryStopwatch.start(DOMAIN_QUERY_TELEMETRY);
+      let ac = this;
+      let wrapper = new AutoCompleteStatementCallbackWrapper(this, {
+        handleResult: function (aResultSet) {
+          let row = aResultSet.getNextRow();
+          let trimmedHost = row.getResultByIndex(0);
+          let untrimmedHost = row.getResultByIndex(1);
+          // If the untrimmed value doesn't preserve the user's input just
+          // ignore it and complete to the found host.
+          if (untrimmedHost &&
+              !untrimmedHost.toLowerCase().contains(ac._originalSearchString.toLowerCase())) {
+            untrimmedHost = null;
+          }
+
+          ac._result.appendMatch(ac._strippedPrefix + trimmedHost, "", "", "", untrimmedHost);
+
+          // handleCompletion() will cause the result listener to be called, and
+          // will display the result in the UI.
+        },
+
+        handleError: function (aError) {
+          Components.utils.reportError(
+            "URL Inline Complete: An async statement encountered an " +
+            "error: " + aError.result + ", '" + aError.message + "'");
+        },
+
+        handleCompletion: function (aReason) {
+          TelemetryStopwatch.finish(DOMAIN_QUERY_TELEMETRY);
+          ac._finishSearch();
+        }
+      }, this._db);
+      this._pendingQuery = wrapper.executeAsync([query]);
+    }.bind(this));
   },
 
   /**

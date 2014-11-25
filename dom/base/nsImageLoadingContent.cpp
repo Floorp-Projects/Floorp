@@ -893,6 +893,11 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
                                  getter_AddRefs(req),
                                  policyType);
 
+  // Tell the document to forget about the image preload, if any, for
+  // this URI, now that we might have another imgRequestProxy for it.
+  // That way if we get canceled later the image load won't continue.
+  aDocument->ForgetImagePreload(aNewURI);
+
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
     ResetAnimationIfNeeded();
