@@ -79,7 +79,6 @@ endif
 JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 
 ALL_JARS = \
-  constants.jar \
   gecko-R.jar \
   gecko-browser.jar \
   gecko-mozglue.jar \
@@ -152,7 +151,7 @@ classycle_jar := $(topsrcdir)/mobile/android/build/classycle/classycle-1.4.1.jar
 # outputs are fresher than the target, preventing a subsequent
 # invocation from thinking Proguard's outputs are stale.  This is safe
 # because Make removes the target file if any recipe command fails.
-.proguard.deps: .geckoview.deps $(ALL_JARS) $(topsrcdir)/mobile/android/config/proguard.cfg
+.proguard.deps: .geckoview.deps $(ALL_JARS)
 	$(REPORT_BUILD)
 	@$(TOUCH) $@
 	java \
@@ -195,7 +194,7 @@ GeneratedJNIWrappers.cpp: $(ALL_JARS)
 # These _PP_JAVAFILES are specified in moz.build and defined in
 # backend.mk, which is included by config.mk.  Therefore this needs to
 # be defined after config.mk is included.
-PP_JAVAFILES := $(filter-out generated/org/mozilla/gecko/R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES) $(constants_PP_JAVAFILES))
+PP_JAVAFILES := $(filter-out generated/org/mozilla/gecko/R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES))
 
 manifest := \
   AndroidManifest.xml.in \
