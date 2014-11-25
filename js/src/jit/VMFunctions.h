@@ -41,6 +41,11 @@ struct PopValues
     { }
 };
 
+enum MaybeTailCall {
+    TailCall,
+    NonTailCall
+};
+
 // Contains information about a virtual machine function that can be called
 // from JIT code. Functions described in this manner must conform to a simple
 // protocol: the return type must have a special "failure" value (for example,
@@ -122,6 +127,11 @@ struct VMFunction
     // Used by baseline IC stubs so that they can use tail calls to call the VM
     // wrapper.
     uint32_t extraValuesToPop;
+
+    // On some architectures, called functions need to explicitly push their
+    // return address, for a tail call, there is nothing to push, so tail-callness
+    // needs to be known at compile time.
+    MaybeTailCall expectTailCall;
 
     uint32_t argc() const {
         // JSContext * + args + (OutParam? *)
@@ -227,7 +237,8 @@ struct VMFunction
     VMFunction(void *wrapped, uint32_t explicitArgs, uint32_t argumentProperties,
                uint32_t argumentPassedInFloatRegs, uint64_t argRootTypes,
                DataType outParam, RootType outParamRootType, DataType returnType,
-               ExecutionMode executionMode, uint32_t extraValuesToPop = 0)
+               ExecutionMode executionMode, uint32_t extraValuesToPop = 0,
+               MaybeTailCall expectTailCall = NonTailCall)
       : wrapped(wrapped),
         explicitArgs(explicitArgs),
         argumentProperties(argumentProperties),
@@ -237,7 +248,8 @@ struct VMFunction
         argumentRootTypes(argRootTypes),
         outParamRootType(outParamRootType),
         executionMode(executionMode),
-        extraValuesToPop(extraValuesToPop)
+        extraValuesToPop(extraValuesToPop),
+        expectTailCall(expectTailCall)
     {
         // Check for valid failure/return type.
         MOZ_ASSERT_IF(outParam != Type_Void && executionMode == SequentialExecution,
@@ -503,12 +515,20 @@ template <> struct MatchContext<ThreadSafeContext *> {
     static inline uint64_t argumentRootTypes() {                                        \
         return ForEachNb(COMPUTE_ARG_ROOT, SEP_OR, NOTHING);                            \
     }                                                                                   \
+    explicit FunctionInfo(pf fun, MaybeTailCall expectTailCall,                         \
+                          PopValues extraValuesToPop = PopValues(0))                    \
+        : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
+                     argumentProperties(), argumentPassedInFloatRegs(),                 \
+                     argumentRootTypes(), outParam(), outParamRootType(),               \
+                     returnType(), executionMode(),                                     \
+                     extraValuesToPop.numValues, expectTailCall)                        \
+    { }                                                                                 \
     explicit FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))            \
         : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),                  \
                      argumentProperties(), argumentPassedInFloatRegs(),                 \
                      argumentRootTypes(), outParam(), outParamRootType(),               \
                      returnType(), executionMode(),                                     \
-                     extraValuesToPop.numValues)                                        \
+                     extraValuesToPop.numValues, NonTailCall)                           \
     { }
 
 template <typename Fun>
@@ -548,7 +568,13 @@ struct FunctionInfo<R (*)(Context)> : public VMFunction {
       : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
                    argumentProperties(), argumentPassedInFloatRegs(),
                    argumentRootTypes(), outParam(), outParamRootType(),
-                   returnType(), executionMode())
+                   returnType(), executionMode(), 0, NonTailCall)
+    { }
+    explicit FunctionInfo(pf fun, MaybeTailCall expectTailCall)
+      : VMFunction(JS_FUNC_TO_DATA_PTR(void *, fun), explicitArgs(),
+                   argumentProperties(), argumentPassedInFloatRegs(),
+                   argumentRootTypes(), outParam(), outParamRootType(),
+                   returnType(), executionMode(), 0, expectTailCall)
     { }
 };
 

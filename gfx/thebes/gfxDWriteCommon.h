@@ -20,7 +20,7 @@
 #include <windows.h>
 #include <dwrite.h>
 
-static DWRITE_FONT_STRETCH
+static inline DWRITE_FONT_STRETCH
 DWriteFontStretchFromStretch(int16_t aStretch) 
 {
     switch (aStretch) {
@@ -47,7 +47,7 @@ DWriteFontStretchFromStretch(int16_t aStretch)
     }
 }
 
-static int16_t
+static inline int16_t
 FontStretchFromDWriteStretch(DWRITE_FONT_STRETCH aStretch) 
 {
     switch (aStretch) {

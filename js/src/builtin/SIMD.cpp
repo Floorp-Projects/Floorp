@@ -559,10 +559,6 @@ struct Or {
     static inline T apply(T l, T r) { return l | r; }
 };
 template<typename T>
-struct Scale {
-    static inline T apply(int32_t lane, T scalar, T x) { return scalar * x; }
-};
-template<typename T>
 struct WithX {
     static inline T apply(int32_t lane, T scalar, T x) { return lane == 0 ? scalar : x; }
 };
@@ -577,22 +573,6 @@ struct WithZ {
 template<typename T>
 struct WithW {
     static inline T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
-};
-template<typename T>
-struct WithFlagX {
-    static inline T apply(T l, T f, T x) { return l == 0 ? (f ? 0xFFFFFFFF : 0x0) : x; }
-};
-template<typename T>
-struct WithFlagY {
-    static inline T apply(T l, T f, T x) { return l == 1 ? (f ? 0xFFFFFFFF : 0x0) : x; }
-};
-template<typename T>
-struct WithFlagZ {
-    static inline T apply(T l, T f, T x) { return l == 2 ? (f ? 0xFFFFFFFF : 0x0) : x; }
-};
-template<typename T>
-struct WithFlagW {
-    static inline T apply(T l, T f, T x) { return l == 3 ? (f ? 0xFFFFFFFF : 0x0) : x; }
 };
 struct ShiftLeft {
     static inline int32_t apply(int32_t v, int32_t bits) { return v << bits; }

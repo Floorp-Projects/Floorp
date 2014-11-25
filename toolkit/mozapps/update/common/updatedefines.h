@@ -51,7 +51,7 @@
 // multiple nulls in a string is fine and this approach is simpler (possibly
 // faster) than calculating the string length to place the null terminator and
 // truncates the string as _snprintf and _snwprintf do on other platforms.
-static int mysnprintf(char* dest, size_t count, const char* fmt, ...)
+static inline int mysnprintf(char* dest, size_t count, const char* fmt, ...)
 {
   size_t _count = count - 1;
   va_list varargs;
@@ -62,7 +62,7 @@ static int mysnprintf(char* dest, size_t count, const char* fmt, ...)
   return result;
 }
 #define snprintf mysnprintf
-static int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
+static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
 {
   size_t _count = count - 1;
   va_list varargs;
