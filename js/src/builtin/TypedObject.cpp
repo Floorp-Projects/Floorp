@@ -35,7 +35,11 @@ using namespace js;
 const Class js::TypedObjectModuleObject::class_ = {
     "TypedObject",
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject)
+    JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject),
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub    /* setProperty */
 };
 
 static const JSFunctionSpec TypedObjectMethods[] = {
@@ -201,7 +205,11 @@ GetPrototype(JSContext *cx, HandleObject obj)
 
 const Class js::TypedProto::class_ = {
     "TypedProto",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPROTO_SLOTS)
+    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPROTO_SLOTS),
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub  /* setProperty */
 };
 
 /***************************************************************************
@@ -216,14 +224,14 @@ const Class js::TypedProto::class_ = {
 const Class js::ScalarTypeDescr::class_ = {
     "Scalar",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* convert */
-    nullptr, /* finalize */
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    nullptr,               /* enumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* convert */
+    nullptr,               /* finalize */
     ScalarTypeDescr::call
 };
 
@@ -309,14 +317,14 @@ ScalarTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 const Class js::ReferenceTypeDescr::class_ = {
     "Reference",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* convert */
-    nullptr, /* finalize */
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    nullptr,               /* enumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* convert */
+    nullptr,               /* finalize */
     ReferenceTypeDescr::call
 };
 
@@ -488,17 +496,18 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx,
 const Class ArrayTypeDescr::class_ = {
     "ArrayType",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* convert */
-    nullptr, /* finalize */
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    TypedObject::construct
+    nullptr,               /* addProperty */
+    nullptr,               /* delProperty */
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    nullptr,               /* enumerate */
+    nullptr,               /* resolve */
+    nullptr,               /* convert */
+    nullptr,               /* finalize */
+    nullptr,
+    nullptr,
+    TypedObject::construct,
+    nullptr
 };
 
 const JSPropertySpec ArrayMetaTypeDescr::typeObjectProperties[] = {
@@ -711,15 +720,16 @@ const Class StructTypeDescr::class_ = {
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* convert */
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
-    TypedObject::construct
+    TypedObject::construct,
+    nullptr  /* trace */
 };
 
 const JSPropertySpec StructMetaTypeDescr::typeObjectProperties[] = {
@@ -2379,8 +2389,8 @@ LazyArrayBufferTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
         Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS, \
         nullptr,        /* addProperty */                \
         nullptr,        /* delProperty */                \
-        nullptr,        /* getProperty */                \
-        nullptr,        /* setProperty */                \
+        JS_PropertyStub,                                 \
+        JS_StrictPropertyStub,                           \
         nullptr,        /* enumerate   */                \
         nullptr,        /* resolve     */                \
         nullptr,        /* convert     */                \
