@@ -341,7 +341,8 @@ MediaEngineGonkVideoSource::StopImpl() {
 }
 
 void
-MediaEngineGonkVideoSource::OnHardwareStateChange(HardwareState aState)
+MediaEngineGonkVideoSource::OnHardwareStateChange(HardwareState aState,
+                                                  nsresult aReason)
 {
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   if (aState == CameraControlListener::kHardwareClosed) {

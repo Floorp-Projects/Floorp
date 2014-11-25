@@ -37,6 +37,7 @@
 #include "mozilla/dom/CameraFacesDetectedEvent.h"
 #include "mozilla/dom/CameraFacesDetectedEventBinding.h"
 #include "mozilla/dom/CameraStateChangeEvent.h"
+#include "mozilla/dom/CameraClosedEvent.h"
 #include "mozilla/dom/BlobEvent.h"
 #include "DOMCameraDetectedFace.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -1214,7 +1215,8 @@ nsDOMCameraControl::DispatchStateEvent(const nsString& aType, const nsString& aS
 
 // Camera Control event handlers--must only be called from the Main Thread!
 void
-nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState aState)
+nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState aState,
+                                          nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ErrorResult ignored;
@@ -1222,6 +1224,7 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
   switch (aState) {
     case CameraControlListener::kHardwareOpen:
       DOM_CAMERA_LOGI("DOM OnHardwareStateChange: open\n");
+      MOZ_ASSERT(aReason == NS_OK);
       {
         // The hardware is open, so we can return a camera to JS, even if
         // the preview hasn't started yet.
@@ -1245,29 +1248,53 @@ nsDOMCameraControl::OnHardwareStateChange(CameraControlListener::HardwareState a
       DOM_CAMERA_LOGI("DOM OnHardwareStateChange: closed\n");
       {
         nsRefPtr<Promise> promise = mReleasePromise.forget();
-        if (promise || mReleaseOnSuccessCb) {
-          // If we have this event handler, this was a solicited hardware close.
-          if (promise) {
-            promise->MaybeResolve(JS::UndefinedHandleValue);
-          }
-          nsRefPtr<CameraReleaseCallback> cb = mReleaseOnSuccessCb.forget();
-          mReleaseOnErrorCb = nullptr;
-          if (cb) {
-            cb->Call(ignored);
-          }
-        } else {
-          // If not, something else closed the hardware.
-          nsRefPtr<CameraClosedCallback> cb = mOnClosedCb;
-          if (cb) {
-            cb->Call(ignored);
-          }
+        if (promise) {
+          promise->MaybeResolve(JS::UndefinedHandleValue);
         }
-        DispatchTrustedEvent(NS_LITERAL_STRING("close"));
+
+        nsRefPtr<CameraReleaseCallback> rcb = mReleaseOnSuccessCb.forget();
+        mReleaseOnErrorCb = nullptr;
+        if (rcb) {
+          ErrorResult ignored;
+          rcb->Call(ignored);
+        }
+
+        CameraClosedEventInit eventInit;
+        switch (aReason) {
+          case NS_OK:
+            eventInit.mReason = NS_LITERAL_STRING("HardwareReleased");
+            break;
+
+          case NS_ERROR_FAILURE:
+            eventInit.mReason = NS_LITERAL_STRING("SystemFailure");
+            break;
+
+          case NS_ERROR_NOT_AVAILABLE:
+            eventInit.mReason = NS_LITERAL_STRING("NotAvailable");
+            break;
+
+          default:
+            DOM_CAMERA_LOGE("Unhandled hardware close reason, 0x%x\n", aReason);
+            MOZ_ASSERT_UNREACHABLE("Unanticipated reason for hardware close");
+            eventInit.mReason = NS_LITERAL_STRING("SystemFailure");
+            break;
+        }
+
+        nsRefPtr<CameraClosedCallback> cb = mOnClosedCb;
+        if (cb) {
+          cb->Call(eventInit.mReason, ignored);
+        }
+        nsRefPtr<CameraClosedEvent> event =
+          CameraClosedEvent::Constructor(this,
+                                         NS_LITERAL_STRING("close"),
+                                         eventInit);
+        DispatchTrustedEvent(event);
       }
       break;
 
     case CameraControlListener::kHardwareOpenFailed:
       DOM_CAMERA_LOGI("DOM OnHardwareStateChange: open failed\n");
+      MOZ_ASSERT(aReason == NS_ERROR_NOT_AVAILABLE);
       OnUserError(DOMCameraControlListener::kInStartCamera, NS_ERROR_NOT_AVAILABLE);
       break;
 
@@ -1566,8 +1593,24 @@ nsDOMCameraControl::OnUserError(CameraControlListener::UserContext aContext, nsr
 
     case CameraControlListener::kInStopCamera:
       promise = mReleasePromise.forget();
-      mReleaseOnSuccessCb = nullptr;
       errorCb = mReleaseOnErrorCb.forget();
+      if (aError == NS_ERROR_NOT_INITIALIZED) {
+        // This value indicates that the hardware is already closed; which for
+        // kInStopCamera, is not actually an error.
+        if (promise) {
+          promise->MaybeResolve(JS::UndefinedHandleValue);
+        }
+
+        nsRefPtr<CameraReleaseCallback> cb = mReleaseOnSuccessCb.forget();
+        mReleaseOnErrorCb = nullptr;
+        if (cb) {
+          ErrorResult ignored;
+          cb->Call(ignored);
+        }
+
+        return;
+      }
+      mReleaseOnSuccessCb = nullptr;
       break;
 
     case CameraControlListener::kInSetConfiguration:
