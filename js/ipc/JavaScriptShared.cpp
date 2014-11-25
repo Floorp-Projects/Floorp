@@ -532,7 +532,8 @@ JavaScriptShared::findObjectById(JSContext *cx, const ObjectId &objId)
     return obj;
 }
 
-static const uint64_t UnknownPropertyOp = 1;
+static const uint64_t DefaultPropertyOp = 1;
+static const uint64_t UnknownPropertyOp = 2;
 
 bool
 JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> desc,
@@ -555,7 +556,7 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
         out->getter() = objVar;
     } else {
         if (desc.getter() == JS_PropertyStub)
-            out->getter() = 0;
+            out->getter() = DefaultPropertyOp;
         else
             out->getter() = UnknownPropertyOp;
     }
@@ -570,7 +571,7 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
         out->setter() = objVar;
     } else {
         if (desc.setter() == JS_StrictPropertyStub)
-            out->setter() = 0;
+            out->setter() = DefaultPropertyOp;
         else
             out->setter() = UnknownPropertyOp;
     }
@@ -610,7 +611,10 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
             return false;
         out.setGetter(JS_DATA_TO_FUNC_PTR(JSPropertyOp, getter.get()));
     } else {
-        out.setGetter(UnknownPropertyStub);
+        if (in.getter().get_uint64_t() == DefaultPropertyOp)
+            out.setGetter(JS_PropertyStub);
+        else
+            out.setGetter(UnknownPropertyStub);
     }
 
     if (in.setter().type() == GetterSetter::Tuint64_t && !in.setter().get_uint64_t()) {
@@ -622,7 +626,10 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
             return false;
         out.setSetter(JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, setter.get()));
     } else {
-        out.setSetter(UnknownStrictPropertyStub);
+        if (in.setter().get_uint64_t() == DefaultPropertyOp)
+            out.setSetter(JS_StrictPropertyStub);
+        else
+            out.setSetter(UnknownStrictPropertyStub);
     }
 
     return true;
