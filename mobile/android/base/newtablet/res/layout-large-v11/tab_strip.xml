@@ -12,6 +12,8 @@
         android:layout_weight="1"
         android:paddingTop="4dp"/>
 
+    <!-- The right margin creates a "dead area" on the right side of the button
+         which we compensate for with a touch delegate. See TabStrip -->
     <ImageButton
         android:id="@+id/add_tab"
         style="@style/UrlBar.ImageButton"

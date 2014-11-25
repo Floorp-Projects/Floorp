@@ -1094,6 +1094,7 @@ public:
   virtual void MaybePreLoadImage(nsIURI* uri,
                                  const nsAString &aCrossOriginAttr,
                                  ReferrerPolicy aReferrerPolicy) MOZ_OVERRIDE;
+  virtual void ForgetImagePreload(nsIURI* aURI) MOZ_OVERRIDE;
 
   virtual void PreloadStyle(nsIURI* uri, const nsAString& charset,
                             const nsAString& aCrossOriginAttr,
@@ -1742,8 +1743,11 @@ private:
 
   nsExternalResourceMap mExternalResourceMap;
 
-  // All images in process of being preloaded
-  nsCOMArray<imgIRequest> mPreloadingImages;
+  // All images in process of being preloaded.  This is a hashtable so
+  // we can remove them as the real image loads start; that way we
+  // make sure to not keep the image load going when no one cares
+  // about it anymore.
+  nsRefPtrHashtable<nsURIHashKey, imgIRequest> mPreloadingImages;
 
   nsRefPtr<mozilla::dom::DOMImplementation> mDOMImplementation;
 

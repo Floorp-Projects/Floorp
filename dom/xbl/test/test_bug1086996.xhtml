@@ -34,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1086996
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1086996">Mozilla Bug 1086996</a>
-<div id="boundContent" style="-moz-binding: url(#mainBinding)"></div>
 <div id="content" style="display: none">
 </div>
 <pre id="test">
@@ -56,5 +55,8 @@ function gotEvent() {
 ]]>
 </script>
 </pre>
+<!-- This div needs to come after the <script> so we don't run the binding ctor
+     before the <script> has been parsed -->
+<div id="boundContent" style="-moz-binding: url(#mainBinding)"></div>
 </body>
 </html>

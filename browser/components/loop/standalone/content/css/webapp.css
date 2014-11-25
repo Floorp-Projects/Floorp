@@ -87,15 +87,19 @@ body,
     color: #777;
   }
 
-.footer-external-links a {
+.footer-external-links {
   padding: .2rem .7rem;
-  margin: 0 .5rem;
-  text-decoration: none;
 }
 
-  .footer-external-links a:hover {
-    color: #111;
-  }
+.footer-external-links a {
+  margin: 0 .5rem;
+  text-decoration: none;
+  color: #adadad;
+}
+
+.footer-external-links a:hover {
+  color: #777;
+}
 
 .footer-logo {
   width: 100px;
