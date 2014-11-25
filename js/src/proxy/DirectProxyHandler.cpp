@@ -208,7 +208,11 @@ DirectProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool 
 {
     assertEnteredPolicy(cx, proxy, id, GET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return js::HasOwnProperty(cx, target, id, bp);
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!JS_GetPropertyDescriptorById(cx, target, id, &desc))
+        return false;
+    *bp = (desc.object() == target);
+    return true;
 }
 
 bool

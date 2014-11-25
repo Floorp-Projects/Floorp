@@ -924,11 +924,11 @@ HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp);
 
 template <AllowGC allowGC>
 extern bool
-NonProxyLookupOwnProperty(JSContext *cx, LookupGenericOp lookup,
-                          typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
-                          typename MaybeRooted<jsid, allowGC>::HandleType id,
-                          typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
-                          typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
+HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
+               typename MaybeRooted<JSObject*, allowGC>::HandleType obj,
+               typename MaybeRooted<jsid, allowGC>::HandleType id,
+               typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+               typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
 
 typedef JSObject *(*ClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
 
