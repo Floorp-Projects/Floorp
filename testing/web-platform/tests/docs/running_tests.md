@@ -22,7 +22,7 @@ edge-cases like tests that cause the browser to crash or hang.
 ## By Automating the Browser
 
 For automated test running designed to be robust enough to use in a CI
-environment, the [wptrunner](http://github.com/wptrunner) test runner
+environment, the [wptrunner](http://github.com/w3c/wptrunner) test runner
 can be used. This is a test runner written in Python and designed to
 control the browser from the outside using some remote control
 protocol such as WebDriver. This allows it to handle cases such as the
