@@ -35,7 +35,6 @@ struct MOZ_EXPORT MediaSource;
 struct MOZ_EXPORT MediaWriter;
 class MOZ_EXPORT MetaData;
 struct MOZ_EXPORT AudioSource;
-class MOZ_EXPORT MediaProfiles;
 class GonkCameraHardware;
 
 struct GonkRecorder {
