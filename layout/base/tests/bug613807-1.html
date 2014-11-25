@@ -81,18 +81,7 @@
       });
 
     // commit
-    synthesizeCompositionChange(
-      { composition:
-        { string: "\u732B",
-          clauses: [
-            { length: 0, attr: 0 }
-          ]
-        },
-        caret: { start: 1, length: 0 }
-      });
-
-    // end composition
-    synthesizeComposition({ type: "compositionend", data: "\u732B" });
+    synthesizeComposition({ type: "compositioncommitasis" });
 
     document.body.clientWidth;
 

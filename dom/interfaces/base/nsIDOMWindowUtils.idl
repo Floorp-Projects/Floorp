@@ -1036,11 +1036,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * Cannot be accessed from unprivileged context (not content-accessible)
    * Will throw a DOM security error if called without chrome privileges.
    *
-   * @param aType     The event type: "compositionstart", "compositionend" or
-   *                  "compositionupdate".
+   * @param aType     The event type: "compositionstart",
+   *                  "compositioncommitasis", or "compositioncommit".
    * @param aData     The data property value.  Note that this isn't applied
    *                  for compositionstart event because its value is the
-   *                  selected text which is automatically computed.
+   *                  selected text which is automatically computed. And also
+   *                  this isn't applied for compositioncommitasis because
+   *                  the last data will be set automatically.
    * @param aLocale   The locale property value.
    */
   void sendCompositionEvent(in AString aType,
