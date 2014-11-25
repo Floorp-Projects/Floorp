@@ -1,0 +1,503 @@
+<html>
+<title>
+PyASN1 codecs
+</title>
+<head>
+</head>
+<body>
+<center>
+<table width=60%>
+<tr>
+<td>
+<h3>
+2. PyASN1 Codecs
+</h3>
+
+<p>
+In ASN.1 context, 
+<a href=http://en.wikipedia.org/wiki/Codec>codec</a>
+is a program that transforms between concrete data structures and a stream
+of octets, suitable for transmission over the wire. This serialized form of
+data is sometimes called <i>substrate</i> or <i>essence</i>.
+</p>
+
+<p>
+In pyasn1 implementation, substrate takes shape of Python 3 bytes or 
+Python 2 string objects.
+</p>
+
+<p>
+One of the properties of a codec is its ability to cope with incomplete
+data and/or substrate what implies codec to be stateful. In other words, 
+when decoder runs out of substrate and data item being recovered is still 
+incomplete, stateful codec would suspend and complete data item recovery 
+whenever the rest of substrate becomes available. Similarly, stateful encoder
+would encode data items in multiple steps waiting for source data to
+arrive. Codec restartability is especially important when application deals
+with large volumes of data and/or runs on low RAM. For an interesting
+discussion on codecs options and design choices, refer to
+<a href=http://directory.apache.org/subprojects/asn1/>Apache ASN.1 project</a>
+.
+</p>
+
+<p>
+As of this writing, codecs implemented in pyasn1 are all stateless, mostly
+to keep the code simple.
+</p>
+
+<p>
+The pyasn1 package currently supports 
+<a href=http://en.wikipedia.org/wiki/Basic_encoding_rules>BER</a> codec and
+its variations -- 
+<a href=http://en.wikipedia.org/wiki/Canonical_encoding_rules>CER</a> and
+<a href=http://en.wikipedia.org/wiki/Distinguished_encoding_rules>DER</a>.
+More ASN.1 codecs are planned for implementation in the future.
+</p>
+
+<a name="2.1"></a>
+<h4>
+2.1 Encoders
+</h4>
+
+<p>
+Encoder is used for transforming pyasn1 value objects into substrate. Only
+pyasn1 value objects could be serialized, attempts to process pyasn1 type
+objects will cause encoder failure.
+</p>
+
+<p>
+The following code will create a pyasn1 Integer object and serialize it with
+BER encoder:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder
+>>> encoder.encode(univ.Integer(123456))
+b'\x02\x03\x01\xe2@'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+BER standard also defines a so-called <i>indefinite length</i> encoding form
+which makes large data items processing more memory efficient. It is mostly
+useful when encoder does not have the whole value all at once and the
+length of the value can not be determined at the beginning of encoding.
+</p>
+
+<p>
+<i>Constructed encoding</i> is another feature of BER closely related to the
+indefinite length form. In essence, a large scalar value (such as ASN.1
+character BitString type) could be chopped into smaller chunks by encoder
+and transmitted incrementally to limit memory consumption. Unlike indefinite
+length case, the length of the whole value must be known in advance when
+using constructed, definite length encoding form.
+</p>
+
+<p>
+Since pyasn1 codecs are not restartable, pyasn1 encoder may only encode data
+item all at once. However, even in this case, generating indefinite length 
+encoding may help a low-memory receiver, running a restartable decoder,
+to process a large data item.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder
+>>> encoder.encode(
+...   univ.OctetString('The quick brown fox jumps over the lazy dog'),
+...   defMode=False,
+...   maxChunkSize=8
+... )
+b'$\x80\x04\x08The quic\x04\x08k brown \x04\x08fox jump\x04\x08s over \
+t\x04\x08he lazy \x04\x03dog\x00\x00'
+>>>
+>>> encoder.encode(
+...   univ.OctetString('The quick brown fox jumps over the lazy dog'),
+...   maxChunkSize=8
+... )
+b'$7\x04\x08The quic\x04\x08k brown \x04\x08fox jump\x04\x08s over \
+t\x04\x08he lazy \x04\x03dog'
+</pre>
+</td></tr></table>
+
+<p>
+The <b>defMode</b> encoder parameter disables definite length encoding mode,
+while the optional <b>maxChunkSize</b> parameter specifies desired
+substrate chunk size that influences memory requirements at the decoder's end.
+</p>
+
+<p>
+To use CER or DER encoders one needs to explicitly import and call them - the
+APIs are all compatible.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder as ber_encoder
+>>> from pyasn1.codec.cer import encoder as cer_encoder
+>>> from pyasn1.codec.der import encoder as der_encoder
+>>> ber_encoder.encode(univ.Boolean(True))
+b'\x01\x01\x01'
+>>> cer_encoder.encode(univ.Boolean(True))
+b'\x01\x01\xff'
+>>> der_encoder.encode(univ.Boolean(True))
+b'\x01\x01\xff'
+>>>
+</pre>
+</td></tr></table>
+
+<a name="2.2"></a>
+<h4>
+2.2 Decoders
+</h4>
+
+<p>
+In the process of decoding, pyasn1 value objects are created and linked to
+each other, based on the information containted in the substrate. Thus,
+the original pyasn1 value object(s) are recovered.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> substrate = encoder.encode(univ.Boolean(True))
+>>> decoder.decode(substrate)
+(Boolean('True(1)'), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Commenting on the code snippet above, pyasn1 decoder accepts substrate
+as an argument and returns a tuple of pyasn1 value object (possibly
+a top-level one in case of constructed object) and unprocessed part
+of input substrate.
+</p>
+
+<p>
+All pyasn1 decoders can handle both definite and indefinite length
+encoding modes automatically, explicit switching into one mode
+to another is not required.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> substrate = encoder.encode(
+...   univ.OctetString('The quick brown fox jumps over the lazy dog'),
+...   defMode=False,
+...   maxChunkSize=8
+... )
+>>> decoder.decode(substrate)
+(OctetString(b'The quick brown fox jumps over the lazy dog'), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Speaking of BER/CER/DER encoding, in many situations substrate may not contain
+all necessary information needed for complete and accurate ASN.1 values
+recovery. The most obvious cases include implicitly tagged ASN.1 types
+and constrained types.
+</p>
+
+<p>
+As discussed earlier in this handbook, when an ASN.1 type is implicitly
+tagged, previous outermost tag is lost and never appears in substrate.
+If it is the base tag that gets lost, decoder is unable to pick type-specific
+value decoder at its table of built-in types, and therefore recover
+the value part, based only on the information contained in substrate. The
+approach taken by pyasn1 decoder is to use a prototype pyasn1 type object (or
+a set of them) to <i>guide</i> the decoding process by matching [possibly
+incomplete] tags recovered from substrate with those found in prototype pyasn1
+type objects (also called pyasn1 specification object further in this paper).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.codec.ber import decoder
+>>> decoder.decode(b'\x02\x01\x0c', asn1Spec=univ.Integer())
+Integer(12), b''
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Decoder would neither modify pyasn1 specification object nor use
+its current values (if it's a pyasn1 value object), but rather use it as
+a hint for choosing proper decoder and as a pattern for creating new objects:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, tag
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> i = univ.Integer(12345).subtype(
+...   implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 40)
+... )
+>>> substrate = encoder.encode(i)
+>>> substrate
+b'\x9f(\x0209'
+>>> decoder.decode(substrate)
+Traceback (most recent call last):
+...
+pyasn1.error.PyAsn1Error: 
+   TagSet(Tag(tagClass=128, tagFormat=0, tagId=40)) not in asn1Spec
+>>> decoder.decode(substrate, asn1Spec=i)
+(Integer(12345), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Notice in the example above, that an attempt to run decoder without passing
+pyasn1 specification object fails because recovered tag does not belong
+to any of the built-in types.
+</p>
+
+<p>
+Another important feature of guided decoder operation is the use of
+values constraints possibly present in pyasn1 specification object.
+To explain this, we will decode a random integer object into generic Integer
+and the constrained one.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, constraint
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> class DialDigit(univ.Integer):
+...   subtypeSpec = constraint.ValueRangeConstraint(0,9)
+>>> substrate = encoder.encode(univ.Integer(13))
+>>> decoder.decode(substrate)
+(Integer(13), b'')
+>>> decoder.decode(substrate, asn1Spec=DialDigit())
+Traceback (most recent call last):
+...
+pyasn1.type.error.ValueConstraintError:
+  ValueRangeConstraint(0, 9) failed at: 13
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Similarily to encoders, to use CER or DER decoders application has to
+explicitly import and call them - all APIs are compatible.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder as ber_encoder
+>>> substrate = ber_encoder.encode(univ.OctetString('http://pyasn1.sf.net'))
+>>>
+>>> from pyasn1.codec.ber import decoder as ber_decoder
+>>> from pyasn1.codec.cer import decoder as cer_decoder
+>>> from pyasn1.codec.der import decoder as der_decoder
+>>> 
+>>> ber_decoder.decode(substrate)
+(OctetString(b'http://pyasn1.sf.net'), b'')
+>>> cer_decoder.decode(substrate)
+(OctetString(b'http://pyasn1.sf.net'), b'')
+>>> der_decoder.decode(substrate)
+(OctetString(b'http://pyasn1.sf.net'), b'')
+>>> 
+</pre>
+</td></tr></table>
+
+<a name="2.2.1"></a>
+<h4>
+2.2.1 Decoding untagged types
+</h4>
+
+<p>
+It has already been mentioned, that ASN.1 has two "special case" types:
+CHOICE and ANY. They are different from other types in part of 
+tagging - unless these two are additionally tagged, neither of them will
+have their own tag. Therefore these types become invisible in substrate
+and can not be recovered without passing pyasn1 specification object to
+decoder.
+</p>
+
+<p>
+To explain the issue, we will first prepare a Choice object to deal with:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedtype
+>>> class CodeOrMessage(univ.Choice):
+...   componentType = namedtype.NamedTypes(
+...     namedtype.NamedType('code', univ.Integer()),
+...     namedtype.NamedType('message', univ.OctetString())
+...   )
+>>>
+>>> codeOrMessage = CodeOrMessage()
+>>> codeOrMessage.setComponentByName('message', 'my string value')
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ message=b'my string value'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Let's now encode this Choice object and then decode its substrate
+with and without pyasn1 specification object:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> substrate = encoder.encode(codeOrMessage)
+>>> substrate
+b'\x04\x0fmy string value'
+>>> encoder.encode(univ.OctetString('my string value'))
+b'\x04\x0fmy string value'
+>>>
+>>> decoder.decode(substrate)
+(OctetString(b'my string value'), b'')
+>>> codeOrMessage, substrate = decoder.decode(substrate, asn1Spec=CodeOrMessage())
+>>> print(codeOrMessage.prettyPrint())
+CodeOrMessage:
+ message=b'my string value'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+First thing to notice in the listing above is that the substrate produced
+for our Choice value object is equivalent to the substrate for an OctetString
+object initialized to the same value. In other words, any information about
+the Choice component is absent in encoding.
+</p>
+
+<p>
+Sure enough, that kind of substrate will decode into an OctetString object,
+unless original Choice type object is passed to decoder to guide the decoding
+process.
+</p>
+
+<p>
+Similarily untagged ANY type behaves differently on decoding phase - when
+decoder bumps into an Any object in pyasn1 specification, it stops decoding
+and puts all the substrate into a new Any value object in form of an octet
+string. Concerned application could then re-run decoder with an additional,
+more exact pyasn1 specification object to recover the contents of Any
+object.
+</p>
+
+<p>
+As it was mentioned elsewhere in this paper, Any type allows for incomplete
+or changing ASN.1 specification to be handled gracefully by decoder and
+applications.
+</p>
+
+<p>
+To illustrate the working of Any type, we'll have to make the stage
+by encoding a pyasn1 object and then putting its substrate into an any
+object.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> innerSubstrate = encoder.encode(univ.Integer(1234))
+>>> innerSubstrate
+b'\x02\x02\x04\xd2'
+>>> any = univ.Any(innerSubstrate)
+>>> any
+Any(b'\x02\x02\x04\xd2')
+>>> substrate = encoder.encode(any)
+>>> substrate
+b'\x02\x02\x04\xd2'
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+As with Choice type encoding, there is no traces of Any type in substrate.
+Obviously, the substrate we are dealing with, will decode into the inner
+[Integer] component, unless pyasn1 specification is given to guide the 
+decoder. Continuing previous code:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> from pyasn1.codec.ber import encoder, decoder
+
+>>> decoder.decode(substrate)
+(Integer(1234), b'')
+>>> any, substrate = decoder.decode(substrate, asn1Spec=univ.Any())
+>>> any
+Any(b'\x02\x02\x04\xd2')
+>>> decoder.decode(str(any))
+(Integer(1234), b'')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Both CHOICE and ANY types are widely used in practice. Reader is welcome to
+take a look at 
+<a href=http://www.cs.auckland.ac.nz/~pgut001/pubs/x509guide.txt>
+ASN.1 specifications of X.509 applications</a> for more information.
+</p>
+
+<a name="2.2.2"></a>
+<h4>
+2.2.2 Ignoring unknown types
+</h4>
+
+<p>
+When dealing with a loosely specified ASN.1 structure, the receiving
+end may not be aware of some types present in the substrate. It may be
+convenient then to turn decoder into a recovery mode. Whilst there, decoder
+will not bail out when hit an unknown tag but rather treat it as an Any
+type.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, tag
+>>> from pyasn1.codec.ber import encoder, decoder
+>>> taggedInt = univ.Integer(12345).subtype(
+...   implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 40)
+... )
+>>> substrate = encoder.encode(taggedInt)
+>>> decoder.decode(substrate)
+Traceback (most recent call last):
+...
+pyasn1.error.PyAsn1Error: TagSet(Tag(tagClass=128, tagFormat=0, tagId=40)) not in asn1Spec
+>>>
+>>> decoder.decode.defaultErrorState = decoder.stDumpRawValue
+>>> decoder.decode(substrate)
+(Any(b'\x9f(\x0209'), '')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+It's also possible to configure a custom decoder, to handle unknown tags
+found in substrate. This can be done by means of <b>defaultRawDecoder</b>
+attribute holding a reference to type decoder object. Refer to the source
+for API details.
+</p>
+
+<hr>
+
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>

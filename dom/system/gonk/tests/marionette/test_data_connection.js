@@ -53,10 +53,10 @@ function testNonDefaultDataConnection() {
       currentApn = value;
     })
     .then(setEmulatorAPN)
-    .then(() => doTestNonDefaultDataConnection("mms"))
-    .then(() => doTestNonDefaultDataConnection("supl"))
-    .then(() => doTestNonDefaultDataConnection("ims"))
-    .then(() => doTestNonDefaultDataConnection("dun"))
+    .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_MMS))
+    .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_SUPL))
+    .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_IMS))
+    .then(() => doTestNonDefaultDataConnection(NETWORK_TYPE_MOBILE_DUN))
     // Restore APN settings
     .then(() => setSettings(SETTINGS_KEY_DATA_APN_SETTINGS, currentApn));
 }

@@ -156,6 +156,9 @@ function starttest() {
       check = false;
       window.addEventListener("compositionend", function() { check = true; }, false);
       synthesizeComposition({ type: "compositionend", data: "a" });
+      is(check, false, 'synthesizeComposition() should not dispatch compositionend');
+
+      synthesizeComposition({ type: "compositioncommit", data: "a" });
       is(check, true, 'synthesizeComposition() should dispatch compositionend');
 
       var querySelectedText = synthesizeQuerySelectedText();

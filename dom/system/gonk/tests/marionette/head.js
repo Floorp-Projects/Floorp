@@ -9,6 +9,20 @@ const SETTINGS_KEY_DATA_APN_SETTINGS  = "ril.data.apnSettings";
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const TOPIC_NETWORK_ACTIVE_CHANGED = "network-active-changed";
 
+const NETWORK_TYPE_MOBILE = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
+const NETWORK_TYPE_MOBILE_MMS = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS;
+const NETWORK_TYPE_MOBILE_SUPL = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL;
+const NETWORK_TYPE_MOBILE_IMS = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS;
+const NETWORK_TYPE_MOBILE_DUN = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN;
+
+const networkTypes = [
+  NETWORK_TYPE_MOBILE,
+  NETWORK_TYPE_MOBILE_MMS,
+  NETWORK_TYPE_MOBILE_SUPL,
+  NETWORK_TYPE_MOBILE_IMS,
+  NETWORK_TYPE_MOBILE_DUN
+];
+
 let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
 let ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
@@ -107,14 +121,6 @@ function waitForObserverEvent(aTopic) {
   return deferred.promise;
 }
 
-let mobileTypeMapping = {
-  "default": Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
-  "mms": Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
-  "supl": Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL,
-  "ims": Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS,
-  "dun": Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN
-};
-
 /**
  * Set the default data connection enabling state, wait for
  * "network-connection-state-changed" event and verify state.
@@ -132,8 +138,8 @@ function setDataEnabledAndWait(aEnabled) {
     .then(function(aSubject) {
       ok(aSubject instanceof Ci.nsIRilNetworkInterface,
          "subject should be an instance of nsIRILNetworkInterface");
-      is(aSubject.type, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
-         "subject.type should be " + Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
+      is(aSubject.type, NETWORK_TYPE_MOBILE,
+         "subject.type should be " + NETWORK_TYPE_MOBILE);
       is(aSubject.state,
          aEnabled ? Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED
                   : Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED,
@@ -150,26 +156,25 @@ function setDataEnabledAndWait(aEnabled) {
  *
  * Fulfill params: (none)
  *
- * @param aType
- *        The string of the type of data connection to setup.
+ * @param aNetworkType
+ *        The mobile network type to setup.
  *
  * @return A deferred promise.
  */
-function setupDataCallAndWait(aType) {
-  log("setupDataCallAndWait: " + aType);
+function setupDataCallAndWait(aNetworkType) {
+  log("setupDataCallAndWait: " + aNetworkType);
 
   let promises = [];
   promises.push(waitForObserverEvent(TOPIC_CONNECTION_STATE_CHANGED)
     .then(function(aSubject) {
-      let networkType = mobileTypeMapping[aType];
       ok(aSubject instanceof Ci.nsIRilNetworkInterface,
          "subject should be an instance of nsIRILNetworkInterface");
-      is(aSubject.type, networkType,
-         "subject.type should be " + networkType);
+      is(aSubject.type, aNetworkType,
+         "subject.type should be " + aNetworkType);
       is(aSubject.state, Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED,
          "subject.state should be CONNECTED");
     }));
-  promises.push(radioInterface.setupDataCallByType(aType));
+  promises.push(radioInterface.setupDataCallByType(aNetworkType));
 
   return Promise.all(promises);
 }
@@ -180,26 +185,25 @@ function setupDataCallAndWait(aType) {
  *
  * Fulfill params: (none)
  *
- * @param aType
- *        The string of the type of data connection to deactivate.
+ * @param aNetworkType
+ *        The mobile network type to deactivate.
  *
  * @return A deferred promise.
  */
-function deactivateDataCallAndWait(aType) {
-  log("deactivateDataCallAndWait: " + aType);
+function deactivateDataCallAndWait(aNetworkType) {
+  log("deactivateDataCallAndWait: " + aNetworkType);
 
   let promises = [];
   promises.push(waitForObserverEvent(TOPIC_CONNECTION_STATE_CHANGED)
     .then(function(aSubject) {
-      let networkType = mobileTypeMapping[aType];
       ok(aSubject instanceof Ci.nsIRilNetworkInterface,
          "subject should be an instance of nsIRILNetworkInterface");
-      is(aSubject.type, networkType,
-         "subject.type should be " + networkType);
+      is(aSubject.type, aNetworkType,
+         "subject.type should be " + aNetworkType);
       is(aSubject.state, Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED,
          "subject.state should be DISCONNECTED");
     }));
-  promises.push(radioInterface.deactivateDataCallByType(aType));
+  promises.push(radioInterface.deactivateDataCallByType(aNetworkType));
 
   return Promise.all(promises);
 }

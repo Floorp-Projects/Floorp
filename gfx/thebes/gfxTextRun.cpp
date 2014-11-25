@@ -1973,7 +1973,7 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
 
     uint16_t orientation = aFlags & TEXT_ORIENT_MASK;
     if (orientation == TEXT_ORIENT_VERTICAL_MIXED) {
-        orientation = TEXT_ORIENT_VERTICAL_UPRIGHT;
+        orientation = TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
     }
 
     gfxFont *font = GetFirstValidFont();

@@ -89,6 +89,14 @@ const HW_DEFAULT_CLIENT_ID = 0;
 
 const INT32_MAX = 2147483647;
 
+const NETWORK_TYPE_UNKNOWN     = Ci.nsINetworkInterface.NETWORK_TYPE_UNKNOWN;
+const NETWORK_TYPE_WIFI        = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
+const NETWORK_TYPE_MOBILE      = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
+const NETWORK_TYPE_MOBILE_MMS  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS;
+const NETWORK_TYPE_MOBILE_SUPL = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL;
+const NETWORK_TYPE_MOBILE_IMS  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS;
+const NETWORK_TYPE_MOBILE_DUN  = Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN;
+
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:GetRilContext",
   "RIL:SendStkResponse",
@@ -1008,17 +1016,17 @@ DataConnectionHandler.prototype = {
   _convertApnType: function(apnType) {
     switch(apnType) {
       case "default":
-        return Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE;
+        return NETWORK_TYPE_MOBILE;
       case "mms":
-        return Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS;
+        return NETWORK_TYPE_MOBILE_MMS;
       case "supl":
-        return Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL;
+        return NETWORK_TYPE_MOBILE_SUPL;
       case "ims":
-        return Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS;
+        return NETWORK_TYPE_MOBILE_IMS;
       case "dun":
-        return Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN;
+        return NETWORK_TYPE_MOBILE_DUN;
       default:
-        return Ci.nsINetworkInterface.NETWORK_TYPE_UNKNOWN;
+        return NETWORK_TYPE_UNKNOWN;
      }
   },
 
@@ -1094,7 +1102,7 @@ DataConnectionHandler.prototype = {
       for (let i = 0; i < inputApnSetting.types.length; i++) {
         let apnType = inputApnSetting.types[i];
         let networkType = this._convertApnType(apnType);
-        if (networkType === Ci.nsINetworkInterface.NETWORK_TYPE_UNKNOWN) {
+        if (networkType === NETWORK_TYPE_UNKNOWN) {
           if (DEBUG) this.debug("Invalid apn type: " + apnType);
           continue;
         }
@@ -1121,7 +1129,7 @@ DataConnectionHandler.prototype = {
                                                          inputApnSetting,
                                                          dataCall);
           gNetworkManager.registerNetworkInterface(networkInterface);
-          this.dataNetworkInterfaces.set(apnType, networkInterface);
+          this.dataNetworkInterfaces.set(networkType, networkInterface);
         } catch (e) {
           if (DEBUG) {
             this.debug("Error setting up RILNetworkInterface for type " +
@@ -1174,7 +1182,7 @@ DataConnectionHandler.prototype = {
   },
 
   updateRILNetworkInterface: function() {
-    let networkInterface = this.dataNetworkInterfaces.get("default");
+    let networkInterface = this.dataNetworkInterfaces.get(NETWORK_TYPE_MOBILE);
     if (!networkInterface) {
       if (DEBUG) {
         this.debug("No network interface for default data.");
@@ -1223,7 +1231,7 @@ DataConnectionHandler.prototype = {
     }
     let wifi_active = false;
     if (gNetworkManager.active &&
-        gNetworkManager.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
+        gNetworkManager.active.type == NETWORK_TYPE_WIFI) {
       wifi_active = true;
     }
 
@@ -1283,22 +1291,45 @@ DataConnectionHandler.prototype = {
     networkInterface.connect();
   },
 
-  getDataCallStateByType: function(apnType) {
-    let networkInterface = this.dataNetworkInterfaces.get(apnType);
+  _isMobileNetworkType: function(networkType) {
+    if (networkType === NETWORK_TYPE_MOBILE ||
+        networkType === NETWORK_TYPE_MOBILE_MMS ||
+        networkType === NETWORK_TYPE_MOBILE_SUPL ||
+        networkType === NETWORK_TYPE_MOBILE_IMS ||
+        networkType === NETWORK_TYPE_MOBILE_DUN) {
+      return true;
+    }
+
+    return false;
+  },
+
+  getDataCallStateByType: function(networkType) {
+    if (!this._isMobileNetworkType(networkType)) {
+      if (DEBUG) this.debug(networkType + " is not a mobile network type!");
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    let networkInterface = this.dataNetworkInterfaces.get(networkType);
     if (!networkInterface) {
       return RIL.GECKO_NETWORK_STATE_UNKNOWN;
     }
     return networkInterface.state;
   },
 
-  setupDataCallByType: function(apnType) {
+  setupDataCallByType: function(networkType) {
     if (DEBUG) {
-      this.debug("setupDataCallByType: " + apnType);
+      this.debug("setupDataCallByType: " + networkType);
     }
-    let networkInterface = this.dataNetworkInterfaces.get(apnType);
+
+    if (!this._isMobileNetworkType(networkType)) {
+      if (DEBUG) this.debug(networkType + " is not a mobile network type!");
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    let networkInterface = this.dataNetworkInterfaces.get(networkType);
     if (!networkInterface) {
       if (DEBUG) {
-        this.debug("No network interface for type: " + apnType);
+        this.debug("No network interface for type: " + networkType);
       }
       return;
     }
@@ -1306,14 +1337,20 @@ DataConnectionHandler.prototype = {
     networkInterface.connect();
   },
 
-  deactivateDataCallByType: function(apnType) {
+  deactivateDataCallByType: function(networkType) {
     if (DEBUG) {
-      this.debug("deactivateDataCallByType: " + apnType);
+      this.debug("deactivateDataCallByType: " + networkType);
     }
-    let networkInterface = this.dataNetworkInterfaces.get(apnType);
+
+    if (!this._isMobileNetworkType(networkType)) {
+      if (DEBUG) this.debug(networkType + " is not a mobile network type!");
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    let networkInterface = this.dataNetworkInterfaces.get(networkType);
     if (!networkInterface) {
       if (DEBUG) {
-        this.debug("No network interface for type: " + apnType);
+        this.debug("No network interface for type: " + networkType);
       }
       return;
     }
@@ -1346,7 +1383,7 @@ DataConnectionHandler.prototype = {
    */
   handleDataCallError: function(message) {
     // Notify data call error only for data APN
-    let networkInterface = this.dataNetworkInterfaces.get("default");
+    let networkInterface = this.dataNetworkInterfaces.get(NETWORK_TYPE_MOBILE);
     if (networkInterface && networkInterface.enabled) {
       let dataCall = networkInterface.dataCall;
       // If there is a cid, compare cid; otherwise it is probably an error on
@@ -2893,8 +2930,8 @@ RadioInterface.prototype = {
         }
 
         // SNTP can only update when we have mobile or Wifi connections.
-        if (network.type != Ci.nsINetworkInterface.NETWORK_TYPE_WIFI &&
-            network.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+        if (network.type != NETWORK_TYPE_WIFI &&
+            network.type != NETWORK_TYPE_MOBILE) {
           return;
         }
 
@@ -3721,22 +3758,22 @@ RadioInterface.prototype = {
 
   // TODO: Bug 928861 - B2G NetworkManager: Provide a more generic function
   //                    for connecting
-  setupDataCallByType: function(apntype) {
+  setupDataCallByType: function(networkType) {
     let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
-    connHandler.setupDataCallByType(apntype);
+    connHandler.setupDataCallByType(networkType);
   },
 
   // TODO: Bug 928861 - B2G NetworkManager: Provide a more generic function
   //                    for connecting
-  deactivateDataCallByType: function(apntype) {
+  deactivateDataCallByType: function(networkType) {
     let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
-    connHandler.deactivateDataCallByType(apntype);
+    connHandler.deactivateDataCallByType(networkType);
   },
 
   // TODO: Bug 904514 - [meta] NetworkManager enhancement
-  getDataCallStateByType: function(apntype) {
+  getDataCallStateByType: function(networkType) {
     let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
-    return connHandler.getDataCallStateByType(apntype);
+    return connHandler.getDataCallStateByType(networkType);
   },
 
   sendWorkerMessage: function(rilMessageType, message, callback) {
@@ -4271,7 +4308,7 @@ RILNetworkInterface.prototype = {
   },
 
   get mmsc() {
-    if (this.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
+    if (this.type != NETWORK_TYPE_MOBILE_MMS) {
       if (DEBUG) this.debug("Error! Only MMS network can get MMSC.");
       throw Cr.NS_ERROR_UNEXPECTED;
     }
@@ -4289,7 +4326,7 @@ RILNetworkInterface.prototype = {
   },
 
   get mmsProxy() {
-    if (this.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
+    if (this.type != NETWORK_TYPE_MOBILE_MMS) {
       if (DEBUG) this.debug("Error! Only MMS network can get MMS proxy.");
       throw Cr.NS_ERROR_UNEXPECTED;
     }
@@ -4307,7 +4344,7 @@ RILNetworkInterface.prototype = {
   },
 
   get mmsPort() {
-    if (this.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
+    if (this.type != NETWORK_TYPE_MOBILE_MMS) {
       if (DEBUG) this.debug("Error! Only MMS network can get MMS port.");
       throw Cr.NS_ERROR_UNEXPECTED;
     }

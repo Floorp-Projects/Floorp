@@ -99,7 +99,6 @@ function GetExpectedTestFailSet() {
       break;
 
     case DriverInfo.OS.LINUX:
-      failSet['conformance/extensions/oes-texture-float.html'] = true;
       failSet['conformance/glsl/functions/glsl-function-sin.html'] = true;
       failSet['conformance/misc/type-conversion-test.html'] = true;
       failSet['conformance/textures/texture-mips.html'] = true;
@@ -107,8 +106,6 @@ function GetExpectedTestFailSet() {
       break;
 
     case DriverInfo.OS.ANDROID:
-      failSet['conformance/extensions/oes-texture-float.html'] = true;
-
       if (DriverInfo.getOSVersion() >= OS_VERSION_ANDROID_ICS) {
         // Android 4.0 slaves.
         failSet['conformance/extensions/oes-vertex-array-object.html'] = true;
@@ -129,6 +126,7 @@ function GetExpectedTestFailSet() {
         failSet['conformance/textures/texture-size-cube-maps.html'] = true;
       } else {
         // Android 2.3 slaves.
+        failSet['conformance/extensions/oes-texture-float.html'] = true;
         failSet['conformance/glsl/functions/glsl-function-sin.html'] = true;
         failSet['conformance/misc/object-deletion-behaviour.html'] = true;
         failSet['conformance/textures/tex-image-and-sub-image-2d-with-video.html'] = true;
@@ -139,7 +137,6 @@ function GetExpectedTestFailSet() {
 
     case DriverInfo.OS.B2G:
       failSet['conformance/context/context-attributes-alpha-depth-stencil-antialias.html'] = true;
-      failSet['conformance/extensions/oes-texture-float.html'] = true;
       failSet['conformance/glsl/functions/glsl-function-sin.html'] = true;
       failSet['conformance/glsl/reserved/_webgl_function.vert.html'] = true;
       failSet['conformance/glsl/reserved/webgl_function.vert.html'] = true;

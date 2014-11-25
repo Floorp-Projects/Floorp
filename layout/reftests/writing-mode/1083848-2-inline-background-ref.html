@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<style>
+.test {
+  margin:10px;
+  border:1px solid blue;
+  font-family: monospace;
+  font-size: 16px;
+  word-break:break-all;
+  text-transform:full-width;
+  width:7.8em;
+  height:7.8em;
+}
+
+.h { writing-mode:horizontal-tb; }
+.v-lr { writing-mode:vertical-lr; }
+.v-rl { writing-mode:vertical-rl; }
+
+.bgtest {
+  background: url(blue-32x32.png) no-repeat;
+}
+</style>
+</head>
+
+<body>
+
+<div class="test h">ABCDE<b class="bgtest">FG</b><b>HIJKLMNOPQRST</b>UVWXYZ</div>
+
+<div class="test v-lr">ABCDE<b class="bgtest">FG</b><b>HIJKLMNOPQRST</b>UVWXYZ</div>
+
+<div class="test v-rl">ABCDE<b class="bgtest">FG</b><b>HIJKLMNOPQRST</b>UVWXYZ</div>
+
+</body>
+</html>

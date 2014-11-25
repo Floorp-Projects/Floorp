@@ -131,4 +131,8 @@ SandboxSetCrashFunc()
   gSandboxCrashFunc = SandboxCrash;
 }
 
+#ifndef ANDROID
+SandboxCrashFunc gSandboxCrashFunc;
+#endif
+
 } // namespace mozilla

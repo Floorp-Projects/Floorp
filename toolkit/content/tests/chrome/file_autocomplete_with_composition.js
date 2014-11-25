@@ -118,17 +118,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "compositionend should open the popup",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "Mo",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 2, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "Mo" }, aWindow);
+        synthesizeComposition({ type: "compositioncommitasis" }, aWindow);
         synthesizeKey("VK_RETURN", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mo", searchString: "Mo"
     },
@@ -169,17 +159,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "compositionend should research the result and open the popup",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "zi",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 2, "length": 0 }
-          });
-        synthesizeComposition({ type: "compositionend", data: "zi" }, aWindow);
+        synthesizeComposition({ type: "compositioncommitasis" }, aWindow);
         synthesizeKey("VK_RETURN", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mozi", searchString: "Mozi"
     },
@@ -234,17 +214,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "cancled compositionend should reopen the popup",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 0, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "" }, aWindow);
+        synthesizeComposition({ type: "compositioncommit", data: "" }, aWindow);
         synthesizeKey("VK_ESCAPE", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mozi", searchString: "Mozi"
     },
@@ -302,17 +272,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "canceled compositionend should seach the result with the latest value",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 0, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "" }, aWindow);
+        synthesizeComposition({ type: "compositioncommitasis" }, aWindow);
         synthesizeKey("VK_ESCAPE", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mo", searchString: "Mo"
     },
@@ -375,17 +335,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "canceled compositionend shouldn't open the popup if it was closed",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 0, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "" }, aWindow);
+        synthesizeComposition({ type: "compositioncommitasis" }, aWindow);
         synthesizeKey("VK_ESCAPE", { type: "keyup" }, aWindow);
       }, popup: false, value: "", searchString: ""
     },
@@ -448,17 +398,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "canceled compositionend should open the popup if it was opened",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 0, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "" }, aWindow);
+        synthesizeComposition({ type: "compositioncommitasis" }, aWindow);
         synthesizeKey("VK_ESCAPE", { type: "keyup" }, aWindow);
       }, popup: true, value: "", searchString: ""
     },
@@ -524,17 +464,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "canceled compositionend shouldn't open the popup if the popup was closed",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 0, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "" }, aWindow);
+        synthesizeComposition({ type: "compositioncommitasis" }, aWindow);
         synthesizeKey("VK_ESCAPE", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mo", searchString: "Mo"
     },
@@ -582,17 +512,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "compositionend should open the popup (completeDefaultIndex is true)",
       completeDefaultIndex: true,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "Mo",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 2, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "Mo" }, aWindow);
+        synthesizeComposition({ type: "compositioncommitasis" }, aWindow);
         synthesizeKey("VK_RETURN", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mozilla", searchString: "Mo"
     },

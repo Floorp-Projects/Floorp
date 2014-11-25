@@ -196,8 +196,24 @@ class TypeDescr : public NativeObject
         return getReservedSlot(JS_DESCR_SLOT_SIZE).toInt32();
     }
 
+    // Type descriptors may contain a list of their references for use during
+    // scanning. Marking code is optimized to use this list to mark inline
+    // typed objects, rather than the slower trace hook. This list is only
+    // specified when (a) the descriptor is short enough that it can fit in an
+    // InlineTypedObject, and (b) the descriptor contains at least one
+    // reference. Otherwise it is null.
+    //
+    // The list is three consecutive arrays of int32_t offsets, with each array
+    // terminated by -1. The arrays store offsets of string, object, and value
+    // references in the descriptor, in that order.
+    const int32_t *traceList() const {
+        return reinterpret_cast<int32_t *>(getReservedSlot(JS_DESCR_SLOT_TRACE_LIST).toPrivate());
+    }
+
     void initInstances(const JSRuntime *rt, uint8_t *mem, size_t length);
     void traceInstances(JSTracer *trace, uint8_t *mem, size_t length);
+
+    static void finalize(FreeOp *fop, JSObject *obj);
 };
 
 typedef Handle<TypeDescr*> HandleTypeDescr;

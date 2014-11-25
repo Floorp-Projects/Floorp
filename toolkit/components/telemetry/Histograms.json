@@ -6562,6 +6562,12 @@
     "n_buckets": 10,
     "description": "How many permanent certificate overrides a user has stored."
   },
+  "SSL_SERVER_AUTH_EKU": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Presence of of the Server Authenticaton EKU in accepted SSL server certificates (0=No EKU, 1=EKU present and has id_kp_serverAuth, 2=EKU present and has id_kp_serverAuth as well as some other EKU, 3=EKU present but does not contain id_kp_serverAuth)"
+  },
   "TELEMETRY_TEST_EXPIRED": {
     "expires_in_version": "4.0a1",
     "kind": "flag",

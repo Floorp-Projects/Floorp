@@ -55,7 +55,6 @@ UNIFIED_SOURCES += [
     'WebGLActiveInfo.cpp',
     'WebGLBuffer.cpp',
     'WebGLContext.cpp',
-    'WebGLContextAsyncQueries.cpp',
     'WebGLContextBuffers.cpp',
     'WebGLContextDraw.cpp',
     'WebGLContextExtensions.cpp',

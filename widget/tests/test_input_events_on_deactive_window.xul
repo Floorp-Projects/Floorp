@@ -195,17 +195,8 @@ function startTests()
        "query selected text event returns wrong selected text");
     clear();
     // commit composition
-    synthesizeCompositionChange(
-      { "composition":
-        { "string": "\u3089",
-          "clauses":
-          [
-            { "length": 0, "attr": 0 }
-          ]
-        },
-        "caret": { "start": 1, "length": 0 }
-      });
-    checkCompositionEvents(false, false, false, false, "commit composition");
+    synthesizeComposition({ type: "compositioncommitasis" });
+    checkCompositionEvents(false, true, false, true, "commit composition as is");
     queryText = synthesizeQueryTextContent(0, 100);
     ok(queryText, "query text event result is null after commit");
     if (!queryText) {
@@ -232,9 +223,6 @@ function startTests()
     is(querySelectedText.text, "",
        "query selected text event returns wrong selected text after commit");
     clear();
-    // end composition
-    synthesizeComposition({ type: "compositionend", data: "\u3089" });
-    checkCompositionEvents(false, true, false, true, "compositionend");
   }
 
   textarea.removeEventListener("keydown", onEvent, false);
