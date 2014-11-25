@@ -383,6 +383,14 @@ class LifoAlloc
         return n;
     }
 
+    // Get the total size of the arena chunks (including unused space).
+    size_t computedSizeOfExcludingThis() const {
+        size_t n = 0;
+        for (BumpChunk *chunk = first; chunk; chunk = chunk->next())
+            n += chunk->computedSizeOfIncludingThis();
+        return n;
+    }
+
     // Like sizeOfExcludingThis(), but includes the size of the LifoAlloc itself.
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
