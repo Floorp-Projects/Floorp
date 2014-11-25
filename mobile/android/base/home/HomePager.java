@@ -223,7 +223,7 @@ public class HomePager extends ViewPager {
 
         final HomeAdapter adapter = new HomeAdapter(mContext, fm);
         adapter.setOnAddPanelListener(mAddPanelListener);
-        adapter.setCanLoadHint(!shouldAnimate);
+        adapter.setCanLoadHint(true);
         setAdapter(adapter);
 
         // Don't show the tabs strip until we have the
@@ -243,7 +243,6 @@ public class HomePager extends ViewPager {
                 @Override
                 public void onPropertyAnimationEnd() {
                     setLayerType(View.LAYER_TYPE_NONE, null);
-                    adapter.setCanLoadHint(true);
                 }
             });
 
@@ -373,9 +372,7 @@ public class HomePager extends ViewPager {
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
 
         // Disable any fragment loading until we have the initial
-        // panel selection done. Store previous value to restore
-        // it if necessary once the UI is fully updated.
-        final boolean canLoadHint = adapter.getCanLoadHint();
+        // panel selection done.
         adapter.setCanLoadHint(false);
 
         // Destroy any existing panels currently loaded
@@ -436,19 +433,15 @@ public class HomePager extends ViewPager {
             }
         }
 
-        // If the load hint was originally true, this means the pager
-        // is not animating and it's fine to restore the load hint back.
-        if (canLoadHint) {
-            // The selection is updated asynchronously so we need to post to
-            // UI thread to give the pager time to commit the new page selection
-            // internally and load the right initial panel.
-            ThreadUtils.getUiHandler().post(new Runnable() {
-                @Override
-                public void run() {
-                    adapter.setCanLoadHint(true);
-                }
-            });
-        }
+        // The selection is updated asynchronously so we need to post to
+        // UI thread to give the pager time to commit the new page selection
+        // internally and load the right initial panel.
+        ThreadUtils.getUiHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                adapter.setCanLoadHint(true);
+            }
+        });
     }
 
     public void setOnPanelChangeListener(OnPanelChangeListener listener) {

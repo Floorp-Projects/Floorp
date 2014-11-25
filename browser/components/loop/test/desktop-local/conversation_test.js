@@ -233,7 +233,8 @@ describe("loop.conversation", function() {
   });
 
   describe("IncomingConversationView", function() {
-    var conversationAppStore, conversation, client, icView, oldTitle;
+    var conversationAppStore, conversation, client, icView, oldTitle,
+        feedbackStore;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -241,7 +242,8 @@ describe("loop.conversation", function() {
           client: client,
           conversation: conversation,
           sdk: {},
-          conversationAppStore: conversationAppStore
+          conversationAppStore: conversationAppStore,
+          feedbackStore: feedbackStore
         }));
     }
 
@@ -256,6 +258,9 @@ describe("loop.conversation", function() {
       conversationAppStore = new loop.store.ConversationAppStore({
         dispatcher: dispatcher,
         mozLoop: navigator.mozLoop
+      });
+      feedbackStore = new loop.store.FeedbackStore(dispatcher, {
+        feedbackClient: {}
       });
       sandbox.stub(conversation, "setOutgoingSessionData");
     });

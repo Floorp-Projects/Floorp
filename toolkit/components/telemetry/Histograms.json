@@ -6601,6 +6601,12 @@
     "n_buckets": 10,
     "extended_statistics_ok": true
   },
+  "CERT_VALIDATION_SUCCESS_BY_CA": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 256,
+    "description": "Successful SSL server cert validations by CA (see RootHashes.inc for names of CAs)"
+  },
   "CERT_PINNING_FAILURES_BY_CA": {
     "alert_emails": ["pinning@mozilla.org"],
     "expires_in_version": "never",

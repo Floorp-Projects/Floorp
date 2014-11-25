@@ -289,9 +289,9 @@
   }, "where insertion order and tree order don't match");
 
   test(function() {
-    let TEST_ID = "test14";
-    let a = document.createElement("a");
-    let b = document.createElement("b");
+    var TEST_ID = "test14";
+    var a = document.createElement("a");
+    var b = document.createElement("b");
     a.appendChild(b);
     b.id = TEST_ID;
     assert_equals(document.getElementById(TEST_ID), null);

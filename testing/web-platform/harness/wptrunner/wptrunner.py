@@ -18,7 +18,8 @@ from StringIO import StringIO
 
 from multiprocessing import Queue
 
-from mozlog.structured import commandline, stdadapter
+from mozlog.structured import (commandline, stdadapter, get_default_logger,
+                               structuredlog, handlers, formatters)
 
 import products
 import testloader
@@ -92,6 +93,29 @@ class TestEnvironmentError(Exception):
     pass
 
 
+class LogLevelRewriter(object):
+    """Filter that replaces log messages at specified levels with messages
+    at a different level.
+
+    This can be used to e.g. downgrade log messages from ERROR to WARNING
+    in some component where ERRORs are not critical.
+
+    :param inner: Handler to use for messages that pass this filter
+    :param from_levels: List of levels which should be affected
+    :param to_level: Log level to set for the affected messages
+    """
+    def __init__(self, inner, from_levels, to_level):
+        self.inner = inner
+        self.from_levels = [item.upper() for item in from_levels]
+        self.to_level = to_level.upper()
+
+    def __call__(self, data):
+        if data["action"] == "log" and data["level"].upper() in self.from_levels:
+            data = data.copy()
+            data["level"] = self.to_level
+        return self.inner(data)
+
+
 class TestEnvironment(object):
     def __init__(self, serve_path, test_paths, options):
         """Context manager that owns the test environment i.e. the http and
@@ -108,11 +132,10 @@ class TestEnvironment(object):
 
     def __enter__(self):
         self.copy_required_files()
+        self.setup_server_logging()
         self.setup_routes()
         self.config = self.load_config()
         serve.set_computed_defaults(self.config)
-
-        serve.logger = serve.default_logger("info")
         self.external_config, self.servers = serve.start(self.config)
         return self
 
@@ -139,6 +162,18 @@ class TestEnvironment(object):
         config["doc_root"] = self.serve_path
 
         return config
+
+    def setup_server_logging(self):
+        server_logger = get_default_logger(component="wptserve")
+        assert server_logger is not None
+        log_filter = handlers.LogLevelFilter(lambda x:x, "info")
+        # Downgrade errors to warnings for the server
+        log_filter = LogLevelRewriter(log_filter, ["error"], "warning")
+        server_logger.component_filter = log_filter
+
+        serve.logger = server_logger
+        #Set as the default logger for wptserve
+        serve.set_logger(server_logger)
 
     def setup_routes(self):
         for url, paths in self.test_paths.iteritems():

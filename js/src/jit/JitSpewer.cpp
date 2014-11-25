@@ -240,6 +240,7 @@ jit::CheckLogging()
             "  alias      Alias analysis\n"
             "  gvn        Global Value Numbering\n"
             "  licm       Loop invariant code motion\n"
+            "  sink       Sink transformation\n"
             "  regalloc   Register allocation\n"
             "  inline     Inlining\n"
             "  snapshots  Snapshot information\n"
@@ -288,6 +289,8 @@ jit::CheckLogging()
         EnableChannel(JitSpew_Unrolling);
     if (ContainsFlag(env, "licm"))
         EnableChannel(JitSpew_LICM);
+    if (ContainsFlag(env, "sink"))
+        EnableChannel(JitSpew_Sink);
     if (ContainsFlag(env, "regalloc"))
         EnableChannel(JitSpew_RegAlloc);
     if (ContainsFlag(env, "inline"))

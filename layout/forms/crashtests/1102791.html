@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html class="reftest-print"><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1102791</title>
+    <style type="text/css">
+
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+button {
+  position: absolute;
+  -moz-appearance: none;
+  background: transparent;
+  padding: 0;
+  border-style:none;
+}
+button::before {
+  position: absolute;
+  content: "::before";
+  width: 10px;
+  height: 200em;
+  border: 1px solid black;
+}
+
+    </style>
+</head>
+<body>
+
+<button></button>
+
+</body>
+</html>

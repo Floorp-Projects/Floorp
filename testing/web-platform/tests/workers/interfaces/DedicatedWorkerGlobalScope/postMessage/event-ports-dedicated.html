@@ -1,6 +1,6 @@
 <!--
 onmessage = function(e) {
-  postMessage(e.ports === null);
+  postMessage(e.ports instanceof Array && e.ports.length === 0);
 }
 /*
 -->

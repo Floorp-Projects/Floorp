@@ -1,5 +1,6 @@
 function attr_is(attr, v, ln, ns, p, n) {
   assert_equals(attr.value, v)
+  assert_equals(attr.nodeValue, v)
   assert_equals(attr.textContent, v)
   assert_equals(attr.localName, ln)
   assert_equals(attr.namespaceURI, ns)

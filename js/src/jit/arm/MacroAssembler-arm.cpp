@@ -3715,8 +3715,7 @@ MacroAssemblerARM::ma_callIon(const Register r)
     // When the stack is 8 byte aligned, we want to decrement sp by 8, and write
     // pc + 8 into the new sp. When we return from this call, sp will be its
     // present value minus 4.
-    AutoForbidPools afp(this, 2);
-    as_dtr(IsStore, 32, PreIndex, pc, DTRAddr(sp, DtrOffImm(-8)));
+    as_sub(sp, sp, Imm8(4));
     as_blx(r);
 }
 void
@@ -3724,8 +3723,9 @@ MacroAssemblerARM::ma_callIonNoPush(const Register r)
 {
     // Since we just write the return address into the stack, which is popped on
     // return, the net effect is removing 4 bytes from the stack.
-    AutoForbidPools afp(this, 2);
-    as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
+
+    // Bug 1103108: remove this function, and refactor all uses.
+    as_add(sp, sp, Imm8(4));
     as_blx(r);
 }
 
@@ -3735,19 +3735,18 @@ MacroAssemblerARM::ma_callIonHalfPush(const Register r)
     // The stack is unaligned by 4 bytes. We push the pc to the stack to align
     // the stack before the call, when we return the pc is poped and the stack
     // is restored to its unaligned state.
-    AutoForbidPools afp(this, 2);
-    ma_push(pc);
     as_blx(r);
 }
 
 void
 MacroAssemblerARM::ma_callIonHalfPush(Label *label)
 {
-    // The stack is unaligned by 4 bytes. We push the pc to the stack to align
-    // the stack before the call, when we return the pc is poped and the stack
+    // The stack is unaligned by 4 bytes. The callee will push the lr to the stack to align
+    // the stack after the call, when we return the pc is poped and the stack
     // is restored to its unaligned state.
-    AutoForbidPools afp(this, 2);
-    ma_push(pc);
+
+    // leave the stack as-is so the callee-side can push when necessary.
+
     as_bl(label, Always);
 }
 

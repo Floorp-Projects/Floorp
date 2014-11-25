@@ -689,7 +689,7 @@ public class TopSitesPanel extends HomeFragment {
         }
     }
 
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             trace("Creating TopSitesLoader: " + id);
@@ -707,7 +707,7 @@ public class TopSitesPanel extends HomeFragment {
          * Why that is... dunno.
          */
         @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
+        protected void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
             debug("onLoadFinished: " + c.getCount() + " rows.");
 
             mListAdapter.swapCursor(c);
@@ -752,6 +752,8 @@ public class TopSitesPanel extends HomeFragment {
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
+            super.onLoaderReset(loader);
+
             if (mListAdapter != null) {
                 mListAdapter.swapCursor(null);
             }
