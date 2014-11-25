@@ -479,8 +479,7 @@ var gFlexboxTestcases =
      ]
  },
 
- // Trying "flex: auto" (== "1 1 main-size") on one flex item, w/ a mix of
- // flex-grow/flex-basis values on the other flex items.
+ // Trying "flex: auto" (== "1 1 auto") w/ a mix of flex-grow/flex-basis values
  {
    items:
      [
@@ -711,7 +710,7 @@ var gFlexboxTestcases =
          "_main-size": [ null,  "20px" ]
        },
        {
-         "flex": "9 main-size",
+         "flex": "9 auto",
          "_min-main-size": "150px",
          "_main-size": [ "50px",  "180px" ]
        },
