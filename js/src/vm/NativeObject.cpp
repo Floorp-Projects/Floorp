@@ -1272,10 +1272,6 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    if (getter == JS_PropertyStub)
-        getter = nullptr;
-    if (setter == JS_StrictPropertyStub)
-        setter = nullptr;
     RootedShape shape(cx, NativeObject::putProperty<mode>(cx, obj, id, getter, setter,
                                                           SHAPE_INVALID_SLOT, attrs, 0));
     if (!shape)
@@ -1302,7 +1298,7 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
         if (result == NativeObject::ED_FAILED)
             return false;
         if (result == NativeObject::ED_OK) {
-            MOZ_ASSERT(!setter);
+            MOZ_ASSERT(setter == JS_StrictPropertyStub);
             return CallAddPropertyHookDense<mode>(cx, obj->getClass(), obj, index, value);
         }
     }
@@ -1310,7 +1306,7 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
     if (!CallAddPropertyHook<mode>(cx, obj->getClass(), obj, shape, value))
         return false;
 
-    if (callSetterAfterwards && setter) {
+    if (callSetterAfterwards && setter != JS_StrictPropertyStub) {
         if (!cx->shouldBeJSContext())
             return false;
         RootedValue nvalue(cx, value);
@@ -1437,10 +1433,6 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
             }
             if (shape->isAccessorDescriptor()) {
                 attrs = ApplyOrDefaultAttributes(attrs, shape);
-                if (getter == JS_PropertyStub)
-                    getter = nullptr;
-                if (setter == JS_StrictPropertyStub)
-                    setter = nullptr;
                 shape = NativeObject::changeProperty<SequentialExecution>(cx, obj, shape, attrs,
                                                                           JSPROP_GETTER | JSPROP_SETTER,
                                                                           (attrs & JSPROP_GETTER)

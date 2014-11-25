@@ -338,16 +338,8 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
     Rooted<jsid> id(cx, AtomToId(fun->atom()));
     const Class *clasp = obj->getClass();
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
-
-    JSPropertyOp getter = clasp->getProperty;
-    if (getter == JS_PropertyStub)
-        getter = nullptr;
-    JSStrictPropertyOp setter = clasp->setProperty;
-    if (setter == JS_StrictPropertyStub)
-        setter = nullptr;
-
-    if (!NativeObject::putProperty<SequentialExecution>(cx, obj, id, getter, setter, lambdaSlot(),
-                                                        attrs, 0)) {
+    if (!NativeObject::putProperty<SequentialExecution>(cx, obj, id, clasp->getProperty,
+                                                        clasp->setProperty, lambdaSlot(), attrs, 0)) {
         return nullptr;
     }
 
@@ -715,7 +707,7 @@ StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block
 
     *redeclared = false;
 
-    /* Inline NativeObject::addProperty in order to trap the redefinition case. */
+    /* Inline JSObject::addProperty in order to trap the redefinition case. */
     Shape **spp;
     if (Shape::search(cx, block->lastProperty(), id, &spp, true)) {
         *redeclared = true;
