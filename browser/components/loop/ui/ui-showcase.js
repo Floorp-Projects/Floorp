@@ -128,7 +128,7 @@
       "audio", "audio-hover", "audio-active", "block",
       "block-red", "block-hover", "block-active", "contacts", "contacts-hover",
       "contacts-active", "copy", "checkmark", "google", "google-hover",
-      "google-active", "history", "history-hover", "history-active",
+      "google-active", "history", "history-hover", "history-active", "leave",
       "precall", "precall-hover", "precall-active", "settings", "settings-hover",
       "settings-active", "tag", "tag-hover", "tag-active", "trash", "unblock",
       "unblock-hover", "unblock-active", "video", "video-hover", "video-active"
