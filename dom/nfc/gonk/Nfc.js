@@ -59,7 +59,8 @@ const NFC_IPC_ADD_EVENT_TARGET_MSG_NAMES = [
 ];
 
 const NFC_IPC_MSG_NAMES = [
-  "NFC:CheckSessionToken"
+  "NFC:CheckSessionToken",
+  "NFC:QueryInfo"
 ];
 
 const NFC_IPC_READ_PERM_MSG_NAMES = [
@@ -265,6 +266,13 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       for (let target of this.eventListeners) {
         this.notifyDOMEvent(target, { event: eventType,
                                       sessionToken: sessionToken });
+      }
+    },
+
+    onRFStateChange: function onRFStateChange(rfState) {
+      for (let target of this.eventListeners) {
+        this.notifyDOMEvent(target, { event: NFC.RF_EVENT_STATE_CHANGE,
+                                      rfState: rfState});
       }
     },
 
@@ -557,11 +565,12 @@ Nfc.prototype = {
         this.notifyHCIEventTransaction(message);
         break;
      case "ChangeRFStateResponse":
+        this.sendNfcResponse(message);
+
         if (!message.errorMsg) {
           this.rfState = message.rfState;
+          gMessageManager.onRFStateChange(this.rfState);
         }
-
-        this.sendNfcResponse(message);
         break;
       case "ConnectResponse": // Fall through.
       case "CloseResponse":
@@ -602,13 +611,15 @@ Nfc.prototype = {
   receiveMessage: function receiveMessage(message) {
     let isRFAPI = message.name == "NFC:ChangeRFState";
     let isSendFile = message.name == "NFC:SendFile";
-    if (!isRFAPI && (this.rfState != NFC.NFC_RF_STATE_DISCOVERY)) {
+    let isInfoAPI = message.name == "NFC:QueryInfo";
+
+    if (!isRFAPI && !isInfoAPI && (this.rfState != NFC.NFC_RF_STATE_DISCOVERY)) {
       debug("NFC is not enabled. current rfState:" + this.rfState);
       this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_NOT_ENABLED);
       return null;
     }
 
-    if (!isRFAPI && !isSendFile) {
+    if (!isRFAPI && !isSendFile && !isInfoAPI) {
       // Update the current sessionId before sending to the NFC service.
       message.data.sessionId = SessionHelper.getId(message.data.sessionToken);
     }
@@ -647,6 +658,8 @@ Nfc.prototype = {
         gSystemMessenger.broadcastMessage("nfc-manager-send-file",
                                            message.data);
         break;
+      case "NFC:QueryInfo":
+        return {rfState: this.rfState};
       default:
         debug("UnSupported : Message Name " + message.name);
         return null;

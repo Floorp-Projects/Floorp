@@ -265,6 +265,7 @@ function MozNFCImpl() {
 MozNFCImpl.prototype = {
   _nfcContentHelper: null,
   _window: null,
+  _rfState: null,
   nfcPeer: null,
   nfcTag: null,
   eventService: null,
@@ -287,6 +288,7 @@ MozNFCImpl.prototype = {
 
     if (this._nfcContentHelper) {
       this._nfcContentHelper.init(aWindow);
+      this._rfState = this._nfcContentHelper.queryRFState();
     }
   },
 
@@ -518,6 +520,10 @@ MozNFCImpl.prototype = {
       debug("handleEvent notifyPeerLost");
       this.notifyPeerLost(this.nfcPeer.session);
     }
+  },
+
+  notifyRFStateChange: function notifyRFStateChange(rfState) {
+    this._rfState = rfState;
   },
 
   checkPermissions: function checkPermissions(perms) {
