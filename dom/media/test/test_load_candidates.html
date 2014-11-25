@@ -24,8 +24,8 @@ var manager = new MediaTestManager;
 
 function finish(evt) {
   var v = evt.target;
-  info("Got loadeddata: " + v.token);
   is(v._error, 2, "Should have received 2 error events before loaded");
+  v._finished = true;
   // remove error event handler, because this would otherwise
   // cause a failure on Windows 7, see bug 1024535
   v.onerror = null;
@@ -34,7 +34,6 @@ function finish(evt) {
 }
 
 function errorHandler(evt) {
-  info("Got error event: " + evt.target.parentNode.token + " (" + evt.target.src + ")");
   evt.target.parentNode._error++;
 }
 
@@ -49,12 +48,11 @@ var extension = {
 function startTest(test, token) {
   var v = document.createElement('video');
   v.preload = "auto";
-  v.onerror = function() {
-    ok(false,"Error events on source children should not bubble");
-  }
+  v.onerror = function(){ok(false,"Error events on source children should not bubble");}
   v.token = token;
   manager.started(token);
   v._error = 0;
+  v._finished = false;
   v._name = test.name;
 
   var s1 = document.createElement("source");
@@ -62,18 +60,18 @@ function startTest(test, token) {
   s1.src = "404." + extension[test.type];
   s1.addEventListener("error", errorHandler, false);
   v.appendChild(s1);
-
+  
   var s2 = document.createElement("source");
   s2.type = test.type;
   s2.src = "test_load_candidates.html"; // definitely an invalid media file, regardless of its actual mime type...
   s2.addEventListener("error", errorHandler, false);
   v.appendChild(s2);
-
+    
   var s3 = document.createElement("source");
   s3.type = test.type;
   s3.src = test.name;
   v.appendChild(s3);
-
+  
   v.addEventListener("loadeddata", finish, false);
   document.body.appendChild(v);
 }
