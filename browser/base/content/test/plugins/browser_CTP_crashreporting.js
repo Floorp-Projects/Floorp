@@ -123,6 +123,19 @@ function onPageLoad() {
   executeSoon(afterBindingAttached);
 }
 
+function waitForNotificationShown(notification, callback)
+{
+  if (PopupNotifications.panel.state == "open") {
+    executeSoon(callback);
+    return;
+  }
+  PopupNotifications.panel.addEventListener("popupshown", function onShown(e) {
+    PopupNotifications.panel.removeEventListener("popupshown", onShown);
+    callback();
+  }, false);
+  notification.reshow();
+}
+
 function afterBindingAttached() {
   let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(popupNotification, "Should have a click-to-play notification");
@@ -132,11 +145,11 @@ function afterBindingAttached() {
   ok(!objLoadingContent.activated, "Plugin should not be activated");
 
   // Simulate clicking the "Allow Always" button.
-  popupNotification.reshow();
-  PopupNotifications.panel.firstChild._primaryButton.click();
-
-  let condition = function() objLoadingContent.activated;
-  waitForCondition(condition, pluginActivated, "Waited too long for plugin to activate");
+  waitForNotificationShown(popupNotification, function() {
+    PopupNotifications.panel.firstChild._primaryButton.click();
+    let condition = function() objLoadingContent.activated;
+    waitForCondition(condition, pluginActivated, "Waited too long for plugin to activate");
+  });
 }
 
 function pluginActivated() {
