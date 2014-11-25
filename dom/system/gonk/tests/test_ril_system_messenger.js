@@ -54,13 +54,9 @@ function run_test() {
   let cellbroadcastMessenger = Cc["@mozilla.org/ril/system-messenger-helper;1"]
                                .getService(Ci.nsICellbroadcastMessenger);
 
-  let mobileConnectionMessenger = Cc["@mozilla.org/ril/system-messenger-helper;1"]
-                                  .getService(Ci.nsIMobileConnectionMessenger);
-
   ok(telephonyMessenger !== null, "Get TelephonyMessenger.");
   ok(smsMessenger != null, "Get SmsMessenger.");
   ok(cellbroadcastMessenger != null, "Get CellbroadcastMessenger.");
-  ok(mobileConnectionMessenger != null, "Get MobileConnectionMessenger.");
 
   run_next_test();
 }
@@ -373,140 +369,6 @@ add_test(function test_cellbroadcast_messenger_notify_cb_message_received() {
       timestamp: timestamp,
       cdmaServiceCategory: 512,
       etws: null
-  });
-
-  run_next_test();
-});
-
-/**
- * Verify RILSystemMessenger.notifyUssdReceived()
- */
-add_test(function test_mobileconnection_notify_ussd_received() {
-  let messenger = newRILSystemMessenger();
-
-  messenger.notifyUssdReceived(0, "USSD Message", false);
-
-  equal_received_system_message("ussd-received", {
-    serviceId: 0,
-    message: "USSD Message",
-    sessionEnded: false
-  });
-
-  messenger.notifyUssdReceived(1, "USSD Message", true);
-
-  equal_received_system_message("ussd-received", {
-    serviceId: 1,
-    message: "USSD Message",
-    sessionEnded: true
-  });
-
-  run_next_test();
-});
-
-/**
- * Verify RILSystemMessenger.notifyCdmaInfoRecXXX()
- */
-add_test(function test_mobileconnection_notify_cdma_info() {
-  let messenger = newRILSystemMessenger();
-
-  messenger.notifyCdmaInfoRecDisplay(0, "CDMA Display Info");
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 0,
-    display: "CDMA Display Info"
-  });
-
-  messenger.notifyCdmaInfoRecCalledPartyNumber(1, 1, 2, "+0987654321", 3, 4);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 1,
-    calledNumber: {
-      type: 1,
-      plan: 2,
-      number: "+0987654321",
-      pi: 3,
-      si: 4
-    }
-  });
-
-  messenger.notifyCdmaInfoRecCallingPartyNumber(0, 5, 6, "+1234567890", 7, 8);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 0,
-    callingNumber: {
-      type: 5,
-      plan: 6,
-      number: "+1234567890",
-      pi: 7,
-      si: 8
-    }
-  });
-
-  messenger.notifyCdmaInfoRecConnectedPartyNumber(1, 4, 3, "+56473839201", 2, 1);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 1,
-    connectedNumber: {
-      type: 4,
-      plan: 3,
-      number: "+56473839201",
-      pi: 2,
-      si: 1
-    }
-  });
-
-  messenger.notifyCdmaInfoRecSignal(0, 1, 2, 3);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 0,
-      signal: {
-        type: 1,
-        alertPitch: 2,
-        signal: 3
-      }
-  });
-
-  messenger.notifyCdmaInfoRecRedirectingNumber(1, 8, 7, "+1029384756", 6, 5, 4);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 1,
-    redirect: {
-      type: 8,
-      plan: 7,
-      number: "+1029384756",
-      pi: 6,
-      si: 5,
-      reason: 4
-    }
-  });
-
-  messenger.notifyCdmaInfoRecLineControl(0, 1, 0, 1, 255);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 0,
-    lineControl: {
-      polarityIncluded: 1,
-      toggle: 0,
-      reverse: 1,
-      powerDenial: 255
-    }
-  });
-
-  messenger.notifyCdmaInfoRecClir(1, 256);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 1,
-    clirCause: 256
-  });
-
-  messenger.notifyCdmaInfoRecAudioControl(0, 255, -1);
-
-  equal_received_system_message("cdma-info-rec-received", {
-    clientId: 0,
-    audioControl: {
-      upLink: 255,
-      downLink: -1
-    }
   });
 
   run_next_test();
