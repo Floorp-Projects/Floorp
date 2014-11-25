@@ -1396,28 +1396,61 @@ PT.SortByName.prototype = {
 /**
  * Transaction for removing an item (any type).
  *
- * Required Input Properties: guid.
+ * Required Input Properties: guids.
  */
-PT.Remove = DefineTransaction(["guid"]);
+PT.Remove = DefineTransaction(["guids"]);
 PT.Remove.prototype = {
-  execute: function* (aGuid) {
-    const bms = PlacesUtils.bookmarks;
+  *execute(aGuids) {
+    function promiseBookmarksTree(guid) {
+      try {
+        return PlacesUtils.promiseBookmarksTree(guid);
+      }
+      catch(ex) {
+        throw new Error("Failed to get info for the specified item (guid: " +
+                        guid + "). Ex: " + ex);
+      }
+    }
+    let toRestore = [for (guid of aGuids) yield promiseBookmarksTree(guid)];
 
-    let itemInfo = null;
-    try {
-      itemInfo = yield PlacesUtils.promiseBookmarksTree(aGuid);
-    }
-    catch(ex) {
-      throw new Error("Failed to get info for the specified item (guid: " +
-                      aGuid + "). Ex: " + ex);
-    }
-    PlacesUtils.bookmarks.removeItem(yield PlacesUtils.promiseItemId(aGuid));
-    this.undo = createItemsFromBookmarksTree.bind(null, itemInfo, true);
+    let removeThem = Task.async(function* () {
+      for (let guid of aGuids) {
+        PlacesUtils.bookmarks.removeItem(yield PlacesUtils.promiseItemId(guid));
+      }
+    });
+    yield removeThem();
+
+    this.undo = Task.async(function* () {
+      for (let info of toRestore) {
+        yield createItemsFromBookmarksTree(info, true);
+      }
+    });
+    this.redo = removeThem;
   }
 };
 
 /**
- * Transaction for tagging a URI.
+ * Transactions for removing all bookmarks for one or more urls.
+ *
+ * Required Input Properties: urls.
+ */
+PT.RemoveBookmarksForUrls = DefineTransaction(["urls"]);
+PT.RemoveBookmarksForUrls.prototype = {
+  *execute(aUrls) {
+    let guids = [];
+    for (let url of aUrls) {
+      yield PlacesUtils.bookmarks.fetch({ url }, info => {
+        guids.push(info.guid);
+      });
+    }
+    let removeTxn = TransactionsHistory.getRawTransaction(PT.Remove(guids));
+    yield removeTxn.execute();
+    this.undo = removeTxn.undo.bind(removeTxn);
+    this.redo = removeTxn.redo.bind(removeTxn);
+  }
+};
+
+/**
+ * Transaction for tagging urls.
  *
  * Required Input Properties: urls, tags.
  */
