@@ -792,7 +792,7 @@ status_t GonkBufferQueue::disconnect(int api) {
     return err;
 }
 
-void GonkBufferQueue::dump(String8& result, const char* prefix) const {
+void GonkBufferQueue::dumpToString(String8& result, const char* prefix) const {
     Mutex::Autolock _l(mMutex);
 
     String8 fifo;
