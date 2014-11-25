@@ -37,7 +37,9 @@ loop.store.ActiveRoomStore = (function() {
     // There was an issue with the room
     FAILED: "room-failed",
     // The room is full
-    FULL: "room-full"
+    FULL: "room-full",
+    // The room conversation has ended
+    ENDED: "room-ended"
   };
 
   /**
@@ -424,7 +426,7 @@ loop.store.ActiveRoomStore = (function() {
       }
 
       this.setStoreState({
-        roomState: nextState ? nextState : ROOM_STATES.READY
+        roomState: nextState ? nextState : ROOM_STATES.ENDED
       });
     }
   });
