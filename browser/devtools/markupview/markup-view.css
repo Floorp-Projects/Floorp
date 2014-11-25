@@ -35,7 +35,7 @@
 
 .html-editor-inner {
   border: solid .1px;
-  flex: 1 1 main-size;
+  flex: 1 1 auto;
 
   /* Keep the editor away from the markup view floating scrollbars */
   -moz-margin-end: 12px;
