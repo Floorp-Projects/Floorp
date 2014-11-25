@@ -1316,7 +1316,7 @@ pref("devtools.devedition.promo.shown", false);
 pref("devtools.devedition.promo.url", "https://mozilla.org/firefox/developer");
 
 // Only potentially show in beta release
-#ifdef MOZ_UPDATE_CHANNEL == beta
+#if MOZ_UPDATE_CHANNEL == beta
   pref("devtools.devedition.promo.enabled", true);
 #else
   pref("devtools.devedition.promo.enabled", false);
