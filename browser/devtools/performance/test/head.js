@@ -101,7 +101,7 @@ function handleError(aError) {
   finish();
 }
 
-function once(aTarget, aEventName, aUseCapture = false) {
+function once(aTarget, aEventName, aUseCapture = false, spread = false) {
   info("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
 
   let deferred = Promise.defer();
@@ -114,13 +114,21 @@ function once(aTarget, aEventName, aUseCapture = false) {
     if ((add in aTarget) && (remove in aTarget)) {
       aTarget[add](aEventName, function onEvent(...aArgs) {
         aTarget[remove](aEventName, onEvent, aUseCapture);
-        deferred.resolve(...aArgs);
+        deferred.resolve(spread ? aArgs : aArgs[0]);
       }, aUseCapture);
       break;
     }
   }
 
   return deferred.promise;
+}
+
+/**
+ * Like `once`, except returns an array so we can
+ * access all arguments fired by the event.
+ */
+function onceSpread(aTarget, aEventName, aUseCapture) {
+  return once(aTarget, aEventName, aUseCapture, true);
 }
 
 function test () {
@@ -281,4 +289,25 @@ function waitUntil(predicate, interval = 10) {
     waitUntil(predicate).then(() => deferred.resolve(true));
   }, interval);
   return deferred.promise;
+}
+
+// EventUtils just doesn't work!
+
+function dragStart(graph, x, y = 1) {
+  x /= window.devicePixelRatio;
+  y /= window.devicePixelRatio;
+  graph._onMouseMove({ clientX: x, clientY: y });
+  graph._onMouseDown({ clientX: x, clientY: y });
+}
+
+function dragStop(graph, x, y = 1) {
+  x /= window.devicePixelRatio;
+  y /= window.devicePixelRatio;
+  graph._onMouseMove({ clientX: x, clientY: y });
+  graph._onMouseUp({ clientX: x, clientY: y });
+}
+
+function dropSelection(graph) {
+  graph.dropSelection();
+  graph.emit("mouseup");
 }
