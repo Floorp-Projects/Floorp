@@ -345,7 +345,8 @@ GonkGPSGeolocationProvider::GetDataConnectionState()
   }
 
   int32_t state;
-  mRadioInterface->GetDataCallStateByType(NS_LITERAL_STRING("supl"), &state);
+  mRadioInterface->GetDataCallStateByType(
+    nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL, &state);
   return state;
 }
 
@@ -436,7 +437,7 @@ GonkGPSGeolocationProvider::RequestDataConnection()
     // We just get supl APN and make AGPS data connection state updated.
     RequestSettingValue("ril.supl.apn");
   } else {
-    mRadioInterface->SetupDataCallByType(NS_LITERAL_STRING("supl"));
+    mRadioInterface->SetupDataCallByType(nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL);
   }
 }
 
@@ -449,7 +450,7 @@ GonkGPSGeolocationProvider::ReleaseDataConnection()
     return;
   }
 
-  mRadioInterface->DeactivateDataCallByType(NS_LITERAL_STRING("supl"));
+  mRadioInterface->DeactivateDataCallByType(nsINetworkInterface::NETWORK_TYPE_MOBILE_SUPL);
 }
 
 void
