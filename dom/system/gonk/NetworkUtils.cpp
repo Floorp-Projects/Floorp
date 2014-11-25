@@ -917,7 +917,7 @@ void NetworkUtils::setInterfaceDns(CommandChain* aChain,
       continue;
     }
 
-    if ((ret + written) >= sizeof(command)) {
+    if (((size_t)ret + written) >= sizeof(command)) {
       command[written] = '\0';
       break;
     }
