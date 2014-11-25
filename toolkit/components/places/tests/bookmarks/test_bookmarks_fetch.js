@@ -255,6 +255,9 @@ add_task(function* fetch_byurl() {
                                                  title: "a bookmark" });
   checkBookmarkObject(bm1);
 
+  // Also ensure that fecth-by-url excludes the tags folder.
+  PlacesUtils.tagging.tagURI(uri(bm1.url.href), ["Test Tag"]);
+
   let bm2 = yield PlacesUtils.bookmarks.fetch({ url: bm1.url },
                                               gAccumulator.callback);
   checkBookmarkObject(bm2);
@@ -293,6 +296,9 @@ add_task(function* fetch_byurl() {
   Assert.equal(gAccumulator.results.length, 2);
   gAccumulator.results.forEach(checkBookmarkObject);
   Assert.deepEqual(gAccumulator.results[0], bm5);
+
+  // cleanup
+  PlacesUtils.tagging.untagURI(uri(bm1.url.href), ["Test Tag"]);
 });
 
 add_task(function* fetch_bykeyword_nonexisting() {

@@ -981,8 +981,10 @@ function* fetchBookmarksByURL(info) {
      LEFT JOIN moz_keywords k ON k.id = b.keyword_id
      LEFT JOIN moz_places h ON h.id = b.fk
      WHERE h.url = :url
+     AND _grandParentId <> :tags_folder
      ORDER BY b.lastModified DESC
-    `, { url: info.url.href });
+    `, { url: info.url.href,
+         tags_folder: PlacesUtils.tagsFolderId });
 
   return rows.length ? rowsToItemsArray(rows) : null;
 }
