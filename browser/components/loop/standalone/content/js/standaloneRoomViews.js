@@ -68,6 +68,16 @@ loop.standaloneRoomViews = (function(mozL10n) {
             )
           );
         }
+        case ROOM_STATES.MEDIA_WAIT: {
+          var msg = mozL10n.get("call_progress_getting_media_description",
+                                {clientShortname: mozL10n.get("clientShortname2")});
+          // XXX Bug 1047040 will add images to help prompt the user.
+          return (
+            React.DOM.p({className: "prompt-media-message"}, 
+              msg
+            )
+          );
+        }
         case ROOM_STATES.JOINED:
         case ROOM_STATES.SESSION_CONNECTED: {
           return (
@@ -211,7 +221,31 @@ loop.standaloneRoomViews = (function(mozL10n) {
       };
     },
 
+    /**
+     * Used to update the video container whenever the orientation or size of the
+     * display area changes.
+     */
+    updateVideoContainer: function() {
+      var localStreamParent = this._getElement('.local .OT_publisher');
+      var remoteStreamParent = this._getElement('.remote .OT_subscriber');
+      if (localStreamParent) {
+        localStreamParent.style.width = "100%";
+      }
+      if (remoteStreamParent) {
+        remoteStreamParent.style.height = "100%";
+      }
+    },
+
     componentDidMount: function() {
+      /**
+       * OT inserts inline styles into the markup. Using a listener for
+       * resize events helps us trigger a full width/height on the element
+       * so that they update to the correct dimensions.
+       * XXX: this should be factored as a mixin, bug 1104930
+       */
+      window.addEventListener('orientationchange', this.updateVideoContainer);
+      window.addEventListener('resize', this.updateVideoContainer);
+
       // Adding a class to the document body element from here to ease styling it.
       document.body.classList.add("is-standalone-room");
     },
@@ -228,13 +262,21 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @param  {Object} nextState Next state object.
      */
     componentWillUpdate: function(nextProps, nextState) {
-      if (this.state.roomState !== ROOM_STATES.JOINED &&
-          nextState.roomState === ROOM_STATES.JOINED) {
+      if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
+          nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
           publisherConfig: this._getPublisherConfig(),
           getLocalElementFunc: this._getElement.bind(this, ".local"),
           getRemoteElementFunc: this._getElement.bind(this, ".remote")
         }));
+      }
+
+      if (this.state.roomState !== ROOM_STATES.JOINED &&
+          nextState.roomState === ROOM_STATES.JOINED) {
+        // This forces the video size to update - creating the publisher
+        // first, and then connecting to the session doesn't seem to set the
+        // initial size correctly.
+        this.updateVideoContainer();
       }
     },
 
