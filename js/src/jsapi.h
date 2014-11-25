@@ -3031,13 +3031,6 @@ class PropertyDescriptorOperations
     bool isIndex() const { return desc()->attrs & JSPROP_INDEX; }
     bool hasAttributes(unsigned attrs) const { return desc()->attrs & attrs; }
 
-    // Descriptors with JSPropertyOps are considered data descriptors. It's
-    // complicated.
-    bool isAccessorDescriptor() const { return hasGetterOrSetterObject(); }
-    bool isDataDescriptor() const { return !isAccessorDescriptor(); }
-
-    bool isWritable() const { MOZ_ASSERT(isDataDescriptor()); return !isReadonly(); }
-
     JS::HandleObject object() const {
         return JS::HandleObject::fromMarkedLocation(&desc()->obj);
     }
