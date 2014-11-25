@@ -1057,22 +1057,6 @@ describe("loop.webapp", function() {
     it("should render a FeedbackView", function() {
       TestUtils.findRenderedComponentWithType(view, sharedViews.FeedbackView);
     });
-
-    describe("#componentDidMount", function() {
-
-      it("should play a terminating sound, once", function() {
-        fakeAudioXHR.onload();
-
-        sinon.assert.called(fakeAudioXHR.open);
-        sinon.assert.calledWithExactly(
-          fakeAudioXHR.open, "GET", "shared/sounds/terminated.ogg", true);
-
-        sinon.assert.calledOnce(fakeAudio.play);
-        expect(fakeAudio.loop).to.not.equal(true);
-      });
-
-    });
-
   });
 
   describe("PromoteFirefoxView", function() {
