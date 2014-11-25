@@ -384,6 +384,34 @@ describe("loop.store.ActiveRoomStore", function () {
         actionData);
     });
 
+    it("should call mozLoop.rooms.get to get the room data if the roomName" +
+      "is not known", function() {
+        store.setStoreState({roomName: undefined});
+
+        store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
+
+        sinon.assert.calledOnce(fakeMozLoop.rooms.get);
+      });
+
+    it("should dispatch UpdateRoomInfo if mozLoop.rooms.get is successful",
+      function() {
+        var roomDetails = {
+          roomName: "fakeName",
+          roomUrl: "http://invalid",
+          roomOwner: "gavin"
+        };
+
+        fakeMozLoop.rooms.get.callsArgWith(1, null, roomDetails);
+
+        store.setStoreState({roomName: undefined});
+
+        store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.UpdateRoomInfo(roomDetails));
+      });
+
     it("should call mozLoop.rooms.refreshMembership before the expiresTime",
       function() {
         store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
