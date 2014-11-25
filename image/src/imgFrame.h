@@ -88,7 +88,6 @@ public:
   bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
   int32_t GetStride() const;
   SurfaceFormat GetFormat() const;
-  bool GetNeedsBackground() const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
   bool GetIsPaletted() const;

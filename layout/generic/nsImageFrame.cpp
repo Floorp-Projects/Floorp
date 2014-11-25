@@ -1453,9 +1453,7 @@ nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                 bool* aSnap)
 {
   *aSnap = true;
-  bool animated;
-  if (mImage && mImage->GetAnimated(&animated) == NS_OK && !animated &&
-      mImage->FrameIsOpaque(imgIContainer::FRAME_CURRENT)) {
+  if (mImage && mImage->IsOpaque()) {
     // OK, the entire region painted by the image is opaque. But what is that
     // region? It's the image's "dest rect" (the rect where a full copy of
     // the image is mapped), clipped to the container's content box (which is
