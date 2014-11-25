@@ -14,10 +14,9 @@ thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 constants_jar = add_java_jar('constants')
 constants_jar.sources = []
 constants_jar.generated_sources = [
-    'preprocessed/org/mozilla/gecko/AppConstants.java',
-    'preprocessed/org/mozilla/gecko/SysInfo.java',
+    'org/mozilla/gecko/AppConstants.java',
+    'org/mozilla/gecko/SysInfo.java',
 ]
-constants_jar.generated_sources += ['preprocessed/org/mozilla/gecko/' + f for f in sync_generated_java_files]
 
 resjar = add_java_jar('gecko-R')
 resjar.sources = []
@@ -550,6 +549,7 @@ if CONFIG['MOZ_ANDROID_NEW_TABLET_UI'] and max_sdk_version >= 11:
     ANDROID_RES_DIRS += [ SRCDIR + '/newtablet/res' ]
 
 gbjar.sources += sync_java_files
+gbjar.generated_sources += sync_generated_java_files
 gbjar.extra_jars += [
     'gecko-R.jar',
     'gecko-mozglue.jar',
@@ -794,8 +794,11 @@ else:
 # Manifest.java for all packages) but also preprocessed files. In the past, the
 # generated R.java files were used by the Eclipse build, but now Eclipse
 # generates these files itself. Therefore, we exclude those generated sources.
-main.add_classpathentry('generated', OBJDIR + '/generated/preprocessed',
-    dstdir='generated')
+main.add_classpathentry('generated', OBJDIR + '/generated',
+    dstdir='generated',
+    exclude_patterns=[
+        '**/R.java',
+        '**/Manifest.java'])
 main.add_classpathentry('thirdparty', TOPSRCDIR + '/mobile/android/thirdparty',
     dstdir='thirdparty',
     ignore_warnings=True)

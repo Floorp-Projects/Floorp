@@ -192,6 +192,11 @@ GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
+# These _PP_JAVAFILES are specified in moz.build and defined in
+# backend.mk, which is included by config.mk.  Therefore this needs to
+# be defined after config.mk is included.
+PP_JAVAFILES := $(filter-out generated/org/mozilla/gecko/R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES) $(constants_PP_JAVAFILES))
+
 manifest := \
   AndroidManifest.xml.in \
   WebappManifestFragment.xml.frag.in \
@@ -203,15 +208,9 @@ PP_TARGETS += manifest
 # generates these files into generated/org/mozilla/gecko for
 # consumption by the build system and IDEs.
 
-# The list in moz.build looks like
-# 'preprocessed/org/mozilla/gecko/AppConstants.java'.  The list in
-# constants_PP_JAVAFILES looks like
-# 'generated/preprocessed/org/mozilla/gecko/AppConstants.java'.  We
-# need to write AppConstants.java.in to
-# generated/preprocessed/org/mozilla/gecko.
-preprocessed := $(addsuffix .in,$(subst generated/preprocessed/org/mozilla/gecko/,,$(filter generated/preprocessed/org/mozilla/gecko/%,$(constants_PP_JAVAFILES))))
+preprocessed := $(addsuffix .in,$(subst generated/org/mozilla/gecko/,,$(filter generated/org/mozilla/gecko/%,$(PP_JAVAFILES))))
 
-preprocessed_PATH := generated/preprocessed/org/mozilla/gecko
+preprocessed_PATH := generated/org/mozilla/gecko
 preprocessed_KEEP_PATH := 1
 preprocessed_FLAGS := --marker='//\\\#'
 
