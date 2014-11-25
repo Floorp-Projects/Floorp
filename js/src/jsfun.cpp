@@ -894,13 +894,13 @@ const Class JSFunction::class_ = {
     js_Function_str,
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Function),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
     fun_enumerate,
     js::fun_resolve,
-    nullptr,                 /* convert     */
+    JS_ConvertStub,
     nullptr,                 /* finalize    */
     nullptr,                 /* call        */
     fun_hasInstance,

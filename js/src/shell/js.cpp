@@ -1020,13 +1020,13 @@ static const uint32_t CacheEntry_BYTECODE = 1;
 
 static const JSClass CacheEntry_class = {
     "CacheEntryObject", JSCLASS_HAS_RESERVED_SLOTS(2),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
-    nullptr,               /* enumerate */
-    nullptr,               /* resolve */
-    nullptr,               /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     nullptr,               /* finalize */
     nullptr,               /* call */
     nullptr,               /* hasInstance */
@@ -2569,10 +2569,10 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 static const JSClass sandbox_class = {
     "sandbox",
     JSCLASS_GLOBAL_FLAGS,
-    nullptr,           nullptr,
+    JS_PropertyStub,   JS_DeletePropertyStub,
     JS_PropertyStub,   JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve,
-    nullptr, nullptr,
+    JS_ConvertStub, nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
 };
@@ -3962,10 +3962,13 @@ ObjectEmulatingUndefined(JSContext *cx, unsigned argc, jsval *vp)
     static const JSClass cls = {
         "ObjectEmulatingUndefined",
         JSCLASS_EMULATES_UNDEFINED,
-        nullptr,
-        nullptr,
         JS_PropertyStub,
-        JS_StrictPropertyStub
+        JS_DeletePropertyStub,
+        JS_PropertyStub,
+        JS_StrictPropertyStub,
+        JS_EnumerateStub,
+        JS_ResolveStub,
+        JS_ConvertStub
     };
 
     RootedObject obj(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
@@ -4782,10 +4785,10 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
 
 static const JSClass global_class = {
     "global", JSCLASS_GLOBAL_FLAGS,
-    nullptr,          nullptr,
+    JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     global_enumerate, global_resolve,
-    nullptr, nullptr,
+    JS_ConvertStub,   nullptr,
     nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
 };
@@ -4899,13 +4902,13 @@ static const JSFunctionSpec dom_methods[] = {
 
 static const JSClass dom_class = {
     "FakeDOMObject", JSCLASS_IS_DOMJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
-    nullptr,               /* enumerate */
-    nullptr,               /* resolve */
-    nullptr,               /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     nullptr,               /* finalize */
     nullptr,               /* call */
     nullptr,               /* hasInstance */

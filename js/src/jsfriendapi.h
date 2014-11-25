@@ -277,12 +277,12 @@ namespace js {
             JSCLASS_IS_PROXY |                                                          \
             JSCLASS_IMPLEMENTS_BARRIERS |                                               \
             flags,                                                                      \
-        nullptr,                 /* addProperty */                                      \
-        nullptr,                 /* delProperty */                                      \
+        JS_PropertyStub,         /* addProperty */                                      \
+        JS_DeletePropertyStub,   /* delProperty */                                      \
         JS_PropertyStub,         /* getProperty */                                      \
         JS_StrictPropertyStub,   /* setProperty */                                      \
-        nullptr,                 /* enumerate */                                        \
-        nullptr,                 /* resolve */                                          \
+        JS_EnumerateStub,                                                               \
+        JS_ResolveStub,                                                                 \
         js::proxy_Convert,                                                              \
         js::proxy_Finalize,      /* finalize    */                                      \
         nullptr,                  /* call        */                                     \

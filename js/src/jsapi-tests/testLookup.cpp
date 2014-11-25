@@ -40,10 +40,13 @@ END_TEST(testLookup_bug522590)
 static const JSClass DocumentAllClass = {
     "DocumentAll",
     JSCLASS_EMULATES_UNDEFINED,
-    nullptr,
-    nullptr,
     JS_PropertyStub,
-    JS_StrictPropertyStub
+    JS_DeletePropertyStub,
+    JS_PropertyStub,
+    JS_StrictPropertyStub,
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 bool
@@ -80,8 +83,8 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *res
 
 static const JSClass document_class = {
     "document", 0,
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
-    nullptr, document_resolve, nullptr
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, document_resolve, JS_ConvertStub
 };
 
 BEGIN_TEST(testLookup_bug570195)

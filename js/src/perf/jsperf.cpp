@@ -161,8 +161,8 @@ static void pm_finalize(JSFreeOp* fop, JSObject* obj);
 
 static const JSClass pm_class = {
     "PerfMeasurement", JSCLASS_HAS_PRIVATE,
-    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
-    nullptr, nullptr, nullptr, pm_finalize
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, pm_finalize
 };
 
 // Constructor and destructor

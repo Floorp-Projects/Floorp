@@ -64,13 +64,13 @@ static const JSFunctionSpec exception_methods[] = {
         JSCLASS_IMPLEMENTS_BARRIERS | \
         JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS), \
-        nullptr,                 /* addProperty */ \
-        nullptr,                 /* delProperty */ \
+        JS_PropertyStub,         /* addProperty */ \
+        JS_DeletePropertyStub,   /* delProperty */ \
         JS_PropertyStub,         /* getProperty */ \
         JS_StrictPropertyStub,   /* setProperty */ \
-        nullptr,                 /* enumerate */ \
-        nullptr,                 /* resolve */ \
-        nullptr,                 /* convert */ \
+        JS_EnumerateStub, \
+        JS_ResolveStub, \
+        JS_ConvertStub, \
         exn_finalize, \
         nullptr,                 /* call        */ \
         nullptr,                 /* hasInstance */ \
@@ -94,13 +94,13 @@ ErrorObject::classes[JSEXN_LIMIT] = {
         JSCLASS_IMPLEMENTS_BARRIERS |
         JSCLASS_HAS_CACHED_PROTO(JSProto_Error) |
         JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS),
-        nullptr,                 /* addProperty */
-        nullptr,                 /* delProperty */
+        JS_PropertyStub,         /* addProperty */
+        JS_DeletePropertyStub,   /* delProperty */
         JS_PropertyStub,         /* getProperty */
         JS_StrictPropertyStub,   /* setProperty */
-        nullptr,                 /* enumerate */
-        nullptr,                 /* resolve */
-        nullptr,                 /* convert */
+        JS_EnumerateStub,
+        JS_ResolveStub,
+        JS_ConvertStub,
         exn_finalize,
         nullptr,                 /* call        */
         nullptr,                 /* hasInstance */

@@ -17,12 +17,13 @@ BEGIN_TEST(testResolveRecursion)
     static const JSClass my_resolve_class = {
         "MyResolve",
         JSCLASS_HAS_PRIVATE,
-        nullptr,               // add
-        nullptr,               // delete
+        JS_PropertyStub,       // add
+        JS_DeletePropertyStub, // delete
         JS_PropertyStub,       // get
         JS_StrictPropertyStub, // set
-        nullptr,
-        my_resolve
+        JS_EnumerateStub,
+        my_resolve,
+        JS_ConvertStub
     };
 
     obj1 = obj2 = nullptr;

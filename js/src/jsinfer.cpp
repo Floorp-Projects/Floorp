@@ -2363,7 +2363,8 @@ types::UseNewTypeForInitializer(JSScript *script, jsbytecode *pc, const Class *c
 static inline bool
 ClassCanHaveExtraProperties(const Class *clasp)
 {
-    return clasp->resolve
+    MOZ_ASSERT(clasp->resolve);
+    return clasp->resolve != JS_ResolveStub
         || clasp->ops.lookupGeneric
         || clasp->ops.getGeneric
         || IsAnyTypedArrayClass(clasp);

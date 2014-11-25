@@ -36,10 +36,13 @@ const Class js::TypedObjectModuleObject::class_ = {
     "TypedObject",
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_TypedObject),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 static const JSFunctionSpec TypedObjectMethods[] = {
@@ -206,10 +209,18 @@ GetPrototype(JSContext *cx, HandleObject obj)
 const Class js::TypedProto::class_ = {
     "TypedProto",
     JSCLASS_HAS_RESERVED_SLOTS(JS_TYPROTO_SLOTS),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
-    JS_StrictPropertyStub  /* setProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr
 };
 
 /***************************************************************************
@@ -224,15 +235,18 @@ const Class js::TypedProto::class_ = {
 const Class js::ScalarTypeDescr::class_ = {
     "Scalar",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
-    nullptr,               /* enumerate */
-    nullptr,               /* resolve */
-    nullptr,               /* convert */
-    nullptr,               /* finalize */
-    ScalarTypeDescr::call
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,
+    ScalarTypeDescr::call,
+    nullptr,
+    nullptr,
+    nullptr
 };
 
 const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
@@ -317,15 +331,18 @@ ScalarTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 const Class js::ReferenceTypeDescr::class_ = {
     "Reference",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
     JS_PropertyStub,       /* getProperty */
     JS_StrictPropertyStub, /* setProperty */
-    nullptr,               /* enumerate */
-    nullptr,               /* resolve */
-    nullptr,               /* convert */
-    nullptr,               /* finalize */
-    ReferenceTypeDescr::call
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,
+    ReferenceTypeDescr::call,
+    nullptr,
+    nullptr,
+    nullptr
 };
 
 const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
@@ -496,14 +513,14 @@ CreatePrototypeObjectForComplexTypeInstance(JSContext *cx,
 const Class ArrayTypeDescr::class_ = {
     "ArrayType",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr,               /* addProperty */
-    nullptr,               /* delProperty */
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
     JS_PropertyStub,
     JS_StrictPropertyStub,
-    nullptr,               /* enumerate */
-    nullptr,               /* resolve */
-    nullptr,               /* convert */
-    nullptr,               /* finalize */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,
     nullptr,
     nullptr,
     TypedObject::construct,
@@ -724,13 +741,13 @@ js::IsTypedObjectArray(JSObject &obj)
 const Class StructTypeDescr::class_ = {
     "StructType",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
     JS_PropertyStub,
     JS_StrictPropertyStub,
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
@@ -2403,13 +2420,13 @@ LazyArrayBufferTable::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf)
     const Class Name::class_ = {                         \
         # Name,                                          \
         Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS, \
-        nullptr,        /* addProperty */                \
-        nullptr,        /* delProperty */                \
+        JS_PropertyStub,                                 \
+        JS_DeletePropertyStub,                           \
         JS_PropertyStub,                                 \
         JS_StrictPropertyStub,                           \
-        nullptr,        /* enumerate   */                \
-        nullptr,        /* resolve     */                \
-        nullptr,        /* convert     */                \
+        JS_EnumerateStub,                                \
+        JS_ResolveStub,                                  \
+        JS_ConvertStub,                                  \
         nullptr,        /* finalize    */                \
         nullptr,        /* call        */                \
         nullptr,        /* hasInstance */                \
@@ -3187,3 +3204,4 @@ TypeDescr::traceInstances(JSTracer *trace, uint8_t *mem, size_t length)
         mem += size();
     }
 }
+

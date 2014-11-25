@@ -168,17 +168,17 @@ static bool type##SignMask(JSContext *cx, unsigned argc, Value *vp) { \
 const Class SimdTypeDescr::class_ = {
     "SIMD",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate   */
-    nullptr,                 /* resolve     */
-    nullptr,                 /* convert     */
-    nullptr,                 /* finalize    */
-    call,                    /* call        */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct   */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,             /* finalize    */
+    call,                /* call        */
+    nullptr,             /* hasInstance */
+    nullptr,             /* construct   */
     nullptr
 };
 
@@ -352,12 +352,20 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 // SIMD class
 
 const Class SIMDObject::class_ = {
-    "SIMD",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_SIMD),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+        "SIMD",
+        JSCLASS_HAS_CACHED_PROTO(JSProto_SIMD),
+        JS_PropertyStub,         /* addProperty */
+        JS_DeletePropertyStub,   /* delProperty */
+        JS_PropertyStub,         /* getProperty */
+        JS_StrictPropertyStub,   /* setProperty */
+        JS_EnumerateStub,
+        JS_ResolveStub,
+        JS_ConvertStub,
+        nullptr,             /* finalize    */
+        nullptr,             /* call        */
+        nullptr,             /* hasInstance */
+        nullptr,             /* construct   */
+        nullptr
 };
 
 JSObject *
