@@ -54,7 +54,7 @@ static StaticRefPtr<SurfaceCacheImpl> sInstance;
 // SurfaceCache Implementation
 ///////////////////////////////////////////////////////////////////////////////
 
-/**
+/*
  * Cost models the cost of storing a surface in the cache. Right now, this is
  * simply an estimate of the size of the surface in bytes, but in the future it
  * may be worth taking into account the cost of rematerializing the surface as
@@ -67,7 +67,7 @@ static Cost ComputeCost(const IntSize& aSize)
   return aSize.width * aSize.height * 4;  // width * height * 4 bytes (32bpp)
 }
 
-/**
+/*
  * Since we want to be able to make eviction decisions based on cost, we need to
  * be able to look up the CachedSurface which has a certain cost as well as the
  * cost associated with a certain CachedSurface. To make this possible, in data
@@ -108,7 +108,7 @@ private:
   Cost           mCost;
 };
 
-/**
+/*
  * A CachedSurface associates a surface with a key that uniquely identifies that
  * surface.
  */
@@ -158,36 +158,6 @@ public:
   nsExpirationState* GetExpirationState() { return &mExpirationState; }
   Lifetime GetLifetime() const { return mLifetime; }
 
-  // A helper type used by SurfaceCacheImpl::SizeOfSurfacesSum.
-  struct SizeOfSurfacesSum
-  {
-    SizeOfSurfacesSum(gfxMemoryLocation aLocation,
-                      MallocSizeOf      aMallocSizeOf)
-      : mLocation(aLocation)
-      , mMallocSizeOf(aMallocSizeOf)
-      , mSum(0)
-    { }
-
-    void Add(CachedSurface* aCachedSurface)
-    {
-      MOZ_ASSERT(aCachedSurface, "Should have a CachedSurface");
-
-      if (!aCachedSurface->mSurface) {
-        return;
-      }
-
-      mSum += aCachedSurface->mSurface->
-        SizeOfExcludingThisWithComputedFallbackIfHeap(mLocation, mMallocSizeOf);
-    }
-
-    size_t Result() const { return mSum; }
-
-  private:
-    gfxMemoryLocation mLocation;
-    MallocSizeOf      mMallocSizeOf;
-    size_t            mSum;
-  };
-
 private:
   nsExpirationState  mExpirationState;
   nsRefPtr<imgFrame> mSurface;
@@ -198,7 +168,7 @@ private:
   const Lifetime     mLifetime;
 };
 
-/**
+/*
  * An ImageSurfaceCache is a per-image surface cache. For correctness we must be
  * able to remove all surfaces associated with an image when the image is
  * destroyed or invalidated. Since this will happen frequently, it makes sense
@@ -257,7 +227,7 @@ private:
   bool         mLocked;
 };
 
-/**
+/*
  * SurfaceCacheImpl is responsible for determining which surfaces will be cached
  * and managing the surface cache data structures. Rather than interact with
  * SurfaceCacheImpl directly, client code interacts with SurfaceCache, which
@@ -580,53 +550,38 @@ public:
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport,
                  nsISupports*             aData,
-                 bool                     aAnonymize) MOZ_OVERRIDE
+                 bool                     aAnonymize)
   {
-    // We have explicit memory reporting for the surface cache which is more
-    // accurate than the cost metrics we report here, but these metrics are
-    // still useful to report, since they control the cache's behavior.
     nsresult rv;
 
-    rv = MOZ_COLLECT_REPORT("imagelib-surface-cache-estimated-total",
+    rv = MOZ_COLLECT_REPORT("imagelib-surface-cache-total",
                             KIND_OTHER, UNITS_BYTES,
-                            (mMaxCost - mAvailableCost),
-                            "Estimated total memory used by the imagelib "
-                            "surface cache.");
+                            SizeOfSurfacesEstimate(),
+                            "Total memory used by the imagelib surface cache.");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = MOZ_COLLECT_REPORT("imagelib-surface-cache-estimated-locked",
+    rv = MOZ_COLLECT_REPORT("imagelib-surface-cache-locked",
                             KIND_OTHER, UNITS_BYTES,
-                            mLockedCost,
-                            "Estimated memory used by locked surfaces in the "
-                            "imagelib surface cache.");
+                            SizeOfLockedSurfacesEstimate(),
+                            "Memory used by locked surfaces in the imagelib "
+                            "surface cache.");
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
-  size_t SizeOfSurfaces(const ImageKey    aImageKey,
-                        gfxMemoryLocation aLocation,
-                        MallocSizeOf      aMallocSizeOf)
+  // XXX(seth): This is currently only an estimate and, since we don't know
+  // which surfaces are in GPU memory and which aren't, it's reported as
+  // KIND_OTHER and will also show up in heap-unclassified. Bug 923302 will
+  // make this nicer.
+  Cost SizeOfSurfacesEstimate() const
   {
-    nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
-    if (!cache) {
-      return 0;  // No surfaces for this image.
-    }
-
-    // Sum the size of all surfaces in the per-image cache.
-    CachedSurface::SizeOfSurfacesSum sum(aLocation, aMallocSizeOf);
-    cache->ForEach(DoSizeOfSurfacesSum, &sum);
-
-    return sum.Result();
+    return mMaxCost - mAvailableCost;
   }
 
-  static PLDHashOperator DoSizeOfSurfacesSum(const SurfaceKey&,
-                                             CachedSurface*    aSurface,
-                                             void*             aSum)
+  Cost SizeOfLockedSurfacesEstimate() const
   {
-    auto sum = static_cast<CachedSurface::SizeOfSurfacesSum*>(aSum);
-    sum->Add(aSurface);
-    return PL_DHASH_NEXT;
+    return mLockedCost;
   }
 
 private:
@@ -670,9 +625,7 @@ private:
   {
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Observe(nsISupports*,
-                       const char* aTopic,
-                       const char16_t*) MOZ_OVERRIDE
+    NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*)
     {
       if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
         sInstance->DiscardForMemoryPressure();
@@ -841,19 +794,6 @@ SurfaceCache::DiscardAll()
   if (sInstance) {
     sInstance->DiscardAll();
   }
-}
-
-/* static */ size_t
-SurfaceCache::SizeOfSurfaces(const ImageKey    aImageKey,
-                             gfxMemoryLocation aLocation,
-                             MallocSizeOf      aMallocSizeOf)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!sInstance) {
-    return 0;
-  }
-
-  return sInstance->SizeOfSurfaces(aImageKey, aLocation, aMallocSizeOf);
 }
 
 } // namespace image

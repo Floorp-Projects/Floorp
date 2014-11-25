@@ -981,13 +981,10 @@ size_t
 RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
                                                      MallocSizeOf aMallocSizeOf) const
 {
-  size_t n = 0;
-  n += SurfaceCache::SizeOfSurfaces(ImageKey(this), aLocation, aMallocSizeOf);
-  if (mFrameBlender) {
-    n += mFrameBlender->SizeOfDecodedWithComputedFallbackIfHeap(aLocation,
-                                                                aMallocSizeOf);
-  }
-  return n;
+  return mFrameBlender
+       ? mFrameBlender->SizeOfDecodedWithComputedFallbackIfHeap(aLocation,
+                                                                aMallocSizeOf)
+       : 0;
 }
 
 size_t
