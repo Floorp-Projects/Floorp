@@ -312,10 +312,12 @@ function* ensureEqualBookmarksTrees(aOriginal,
     yield ensureLivemarkCreatedByAddLivemark(aNew.guid);
 }
 
-function* ensureBookmarksTreeRestoredCorrectly(aOriginalBookmarksTree) {
-  let restoredTree =
-    yield PlacesUtils.promiseBookmarksTree(aOriginalBookmarksTree.guid);
-  yield ensureEqualBookmarksTrees(aOriginalBookmarksTree, restoredTree);
+function* ensureBookmarksTreeRestoredCorrectly(...aOriginalBookmarksTrees) {
+  for (let originalTree of aOriginalBookmarksTrees) {
+    let restoredTree =
+      yield PlacesUtils.promiseBookmarksTree(originalTree.guid);
+    yield ensureEqualBookmarksTrees(originalTree, restoredTree);
+  }
 }
 
 function* ensureNonExistent(...aGuids) {
@@ -1573,6 +1575,84 @@ add_task(function* test_annotate_multiple_items() {
   yield PT.undo();
   yield PT.undo();
   yield ensureNonExistent(...guids);
-  PT.clearTransactionsHistory();
+  yield PT.clearTransactionsHistory();
+  observer.reset();
+});
+
+add_task(function* test_remove_multiple() {
+  let guids = [];
+  yield PT.batch(function* () {
+    let folderGuid = yield PT.NewFolder({ title: "Test Folder"
+                                        , parentGuid: rootGuid }).transact();
+    let nestedFolderGuid =
+      yield PT.NewFolder({ title: "Nested Test Folder"
+                         , parentGuid: folderGuid }).transact();
+    let nestedSepGuid = yield PT.NewSeparator(nestedFolderGuid).transact();
+
+    guids.push(folderGuid);
+
+    let bmGuid =
+      yield PT.NewBookmark({ url: new URL("http://test.bookmark.removed")
+                           , parentGuid: rootGuid }).transact();
+    guids.push(bmGuid);
+  });
+
+  let originalInfos = [for (guid of guids)
+                       yield PlacesUtils.promiseBookmarksTree(guid)];
+
+  yield PT.Remove(guids).transact();
+  yield ensureNonExistent(...guids);
+  yield PT.undo();
+  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+  yield PT.redo();
+  yield ensureNonExistent(...guids);
+  yield PT.undo();
+  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+
+  // Undo the New* transactions batch.
+  yield PT.undo();
+  yield ensureNonExistent(...guids);
+
+  // Redo it.
+  yield PT.redo();
+  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+
+  // Redo remove.
+  yield PT.redo();
+  yield ensureNonExistent(...guids);
+
+  // Cleanup
+  yield PT.clearTransactionsHistory();
+  observer.reset();
+});
+
+add_task(function* test_remove_bookmarks_for_urls() {
+  let urls = [new URL("http://test.url.1"), new URL("http://test.url.2")];
+  let guids = [];
+  yield PT.batch(function* () {
+    for (let url of urls) {
+      for (let title of ["test title a", "test title b"]) {
+        let txn = PT.NewBookmark({ url, title, parentGuid: rootGuid });
+        guids.push(yield txn.transact());
+      }
+    }
+  });
+
+  let originalInfos = [for (guid of guids)
+                       yield PlacesUtils.promiseBookmarksTree(guid)];
+
+  yield PT.RemoveBookmarksForUrls(urls).transact();
+  yield ensureNonExistent(...guids);
+  yield PT.undo();
+  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+  yield PT.redo();
+  yield ensureNonExistent(...guids);
+  yield PT.undo();
+  yield ensureBookmarksTreeRestoredCorrectly(...originalInfos);
+
+  // Cleanup.
+  yield PT.redo();
+  yield ensureNonExistent(...guids);
+  yield PT.clearTransactionsHistory();
   observer.reset();
 });
