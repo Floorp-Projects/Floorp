@@ -50,7 +50,7 @@ EXTRA_PP_JS_MODULES += [
 ]
 
 EXTRA_PP_COMPONENTS += [
-    'modules.manifest',
+    'browsermodules.manifest',
 ]
 
 if CONFIG['MOZILLA_OFFICIAL']:
