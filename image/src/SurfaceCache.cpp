@@ -240,12 +240,10 @@ public:
   NS_DECL_ISUPPORTS
 
   SurfaceCacheImpl(uint32_t aSurfaceCacheExpirationTimeMS,
-                   uint32_t aSurfaceCacheDiscardFactor,
                    uint32_t aSurfaceCacheSize)
     : mExpirationTracker(MOZ_THIS_IN_INITIALIZER_LIST(),
                          aSurfaceCacheExpirationTimeMS)
     , mMemoryPressureObserver(new MemoryPressureObserver)
-    , mDiscardFactor(aSurfaceCacheDiscardFactor)
     , mMaxCost(aSurfaceCacheSize)
     , mAvailableCost(aSurfaceCacheSize)
     , mLockedCost(0)
@@ -476,32 +474,6 @@ public:
     }
   }
 
-  void DiscardForMemoryPressure()
-  {
-    // Compute our discardable cost. Since locked surfaces aren't discardable,
-    // we exclude them.
-    const Cost discardableCost = (mMaxCost - mAvailableCost) - mLockedCost;
-    MOZ_ASSERT(discardableCost <= mMaxCost, "Discardable cost doesn't add up");
-
-    // Our target is to raise our available cost by (1 / mDiscardFactor) of our
-    // discardable cost - in other words, we want to end up with about
-    // (discardableCost / mDiscardFactor) fewer bytes stored in the surface
-    // cache after we're done.
-    const Cost targetCost = mAvailableCost + (discardableCost / mDiscardFactor);
-
-    if (targetCost > mMaxCost - mLockedCost) {
-      MOZ_ASSERT_UNREACHABLE("Target cost is more than we can discard");
-      DiscardAll();
-      return;
-    }
-
-    // Discard surfaces until we've reduced our cost to our target cost.
-    while (mAvailableCost < targetCost) {
-      MOZ_ASSERT(!mCosts.IsEmpty(), "Removed everything and still not done");
-      Remove(mCosts.LastElement().GetSurface());
-    }
-  }
-
   static PLDHashOperator DoStopTracking(const SurfaceKey&,
                                         CachedSurface*    aSurface,
                                         void*             aCache)
@@ -628,7 +600,7 @@ private:
     NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*)
     {
       if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
-        sInstance->DiscardForMemoryPressure();
+        sInstance->DiscardAll();
       }
       return NS_OK;
     }
@@ -642,7 +614,6 @@ private:
   nsRefPtrHashtable<nsPtrHashKey<Image>, ImageSurfaceCache> mImageCaches;
   SurfaceTracker                                            mExpirationTracker;
   nsRefPtr<MemoryPressureObserver>                          mMemoryPressureObserver;
-  const uint32_t                                            mDiscardFactor;
   const Cost                                                mMaxCost;
   Cost                                                      mAvailableCost;
   Cost                                                      mLockedCost;
@@ -668,13 +639,6 @@ SurfaceCache::Initialize()
   uint32_t surfaceCacheExpirationTimeMS =
     gfxPrefs::ImageMemSurfaceCacheMinExpirationMS();
 
-  // What fraction of the memory used by the surface cache we should discard
-  // when we get a memory pressure notification. This value is interpreted as
-  // 1/N, so 1 means to discard everything, 2 means to discard about half of the
-  // memory we're using, and so forth. We clamp it to avoid division by zero.
-  uint32_t surfaceCacheDiscardFactor =
-    max(gfxPrefs::ImageMemSurfaceCacheDiscardFactor(), 1u);
-
   // Maximum size of the surface cache, in kilobytes.
   uint64_t surfaceCacheMaxSizeKB = gfxPrefs::ImageMemSurfaceCacheMaxSizeKB();
 
@@ -685,9 +649,10 @@ SurfaceCache::Initialize()
   // For example, a value of 4 would yield a 256MB cache on a 1GB machine.
   // The smallest machines we are likely to run this code on have 256MB
   // of memory, which would yield a 64MB cache on this setting.
-  // We clamp this value to avoid division by zero.
-  uint32_t surfaceCacheSizeFactor =
-    max(gfxPrefs::ImageMemSurfaceCacheSizeFactor(), 1u);
+  uint32_t surfaceCacheSizeFactor = gfxPrefs::ImageMemSurfaceCacheSizeFactor();
+
+  // Clamp to avoid division by zero below.
+  surfaceCacheSizeFactor = max(surfaceCacheSizeFactor, 1u);
 
   // Compute the size of the surface cache.
   uint64_t proposedSize = PR_GetPhysicalMemorySize() / surfaceCacheSizeFactor;
@@ -695,11 +660,10 @@ SurfaceCache::Initialize()
   uint32_t finalSurfaceCacheSizeBytes =
     min(surfaceCacheSizeBytes, uint64_t(UINT32_MAX));
 
-  // Create the surface cache singleton with the requested settings.  Note that
-  // the size is a limit that the cache may not grow beyond, but we do not
-  // actually allocate any storage for surfaces at this time.
+  // Create the surface cache singleton with the requested expiration time and
+  // size. Note that the size is a limit that the cache may not grow beyond, but
+  // we do not actually allocate any storage for surfaces at this time.
   sInstance = new SurfaceCacheImpl(surfaceCacheExpirationTimeMS,
-                                   surfaceCacheDiscardFactor,
                                    finalSurfaceCacheSizeBytes);
   sInstance->InitMemoryReporter();
 }
