@@ -4,6 +4,16 @@
 // Note that this is use by tests elsewhere in the source tree. When in doubt,
 // check mxr before removing or changing functionality.
 
+// Helper function to clear both the content and chrome image caches
+function clearAllImageCaches()
+{
+  var tools = SpecialPowers.Cc["@mozilla.org/image/tools;1"]
+                             .getService(SpecialPowers.Ci.imgITools);
+  var imageCache = tools.getImgCacheForDocument(window.document);
+  imageCache.clearCache(true);  // true=chrome
+  imageCache.clearCache(false); // false=content
+}
+
 // Helper function to clear the image cache of content images
 function clearImageCache()
 {
