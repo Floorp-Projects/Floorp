@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.3
+#!/usr/bin/env python
 # Copyright 2014 Adobe Systems Incorporated. All Rights Reserved.
 #
 # Adobe permits you to use, modify, and distribute this file in accordance
