@@ -102,6 +102,8 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
     bool visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins);
     bool visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
+    bool visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins);
+    bool visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
     bool visitForkJoinGetSlice(MForkJoinGetSlice *ins);
