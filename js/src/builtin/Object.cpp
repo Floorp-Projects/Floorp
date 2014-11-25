@@ -64,8 +64,7 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
         /* Step 3. */
         Shape *shape;
         if (!obj->is<ProxyObject>() &&
-            NonProxyLookupOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id,
-                                            &pobj, &shape))
+            HasOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id, &pobj, &shape))
         {
             /* Step 4. */
             if (!shape) {
@@ -724,8 +723,7 @@ js::obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
         JSObject *obj = &args.thisv().toObject(), *obj2;
         Shape *prop;
         if (!obj->is<ProxyObject>() &&
-            NonProxyLookupOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id,
-                                            &obj2, &prop))
+            HasOwnProperty<NoGC>(cx, obj->getOps()->lookupGeneric, obj, id, &obj2, &prop))
         {
             args.rval().setBoolean(!!prop);
             return true;
@@ -741,6 +739,15 @@ js::obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx, ToObject(cx, args.thisv()));
     if (!obj)
         return false;
+
+    /* Non-standard code for proxies. */
+    if (obj->is<ProxyObject>()) {
+        bool has;
+        if (!Proxy::hasOwn(cx, obj, idRoot, &has))
+            return false;
+        args.rval().setBoolean(has);
+        return true;
+    }
 
     /* Step 3. */
     bool found;
