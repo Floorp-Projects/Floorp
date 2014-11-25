@@ -214,17 +214,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "cancled compositionend should reopen the popup",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeCompositionChange(
-          { "composition":
-            { "string": "",
-              "clauses":
-              [
-                { "length": 0, "attr": 0 }
-              ]
-            },
-            "caret": { "start": 0, "length": 0 }
-          }, aWindow);
-        synthesizeComposition({ type: "compositionend", data: "" }, aWindow);
+        synthesizeComposition({ type: "compositioncommit", data: "" }, aWindow);
         synthesizeKey("VK_ESCAPE", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mozi", searchString: "Mozi"
     },

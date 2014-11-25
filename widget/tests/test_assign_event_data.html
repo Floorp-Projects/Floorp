@@ -270,16 +270,7 @@ const kTests = [
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeCompositionChange({ "composition":
-        { "string": "\u306D",
-          "clauses":
-          [
-            { "length": 0, "attr": 0 }
-          ]
-        },
-        "caret": { "start": 1, "length": 0 }
-      });
-      synthesizeComposition({ type: "compositionend", data: "\u732B" });
+      synthesizeComposition({ type: "compositioncommit", data: "\u306D" });
     },
     canRun: function () {
       return true;
@@ -292,16 +283,7 @@ const kTests = [
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeCompositionChange({ "composition":
-        { "string": "\u30E9\u30FC\u30E1\u30F3",
-          "clauses":
-          [
-            { "length": 0, "attr": 0 }
-          ]
-        },
-        "caret": { "start": 4, "length": 0 }
-      });
-      synthesizeComposition({ type: "compositionend", data: "\u30E9\u30FC\u30E1\u30F3" });
+      synthesizeComposition({ type: "compositioncommit", data: "\u30E9\u30FC\u30E1\u30F3" });
     },
     canRun: function () {
       return true;
