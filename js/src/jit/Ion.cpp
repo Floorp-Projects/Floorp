@@ -12,7 +12,6 @@
 #include "jscompartment.h"
 #include "jsprf.h"
 
-#include "asmjs/AsmJSModule.h"
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
 #include "jit/BacktrackingAllocator.h"
@@ -844,7 +843,6 @@ IonScript::IonScript()
     parallelAge_(0),
     recompileInfo_(),
     osrPcMismatchCounter_(0),
-    dependentAsmJSModules(nullptr),
     pendingBuilder_(nullptr)
 {
 }
@@ -1222,32 +1220,9 @@ IonScript::destroyCaches()
         getCacheFromIndex(i).destroy();
 }
 
-bool
-IonScript::addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit)
-{
-    if (!dependentAsmJSModules) {
-        dependentAsmJSModules = cx->new_<Vector<DependentAsmJSModuleExit> >(cx);
-        if (!dependentAsmJSModules)
-            return false;
-    }
-    return dependentAsmJSModules->append(exit);
-}
-
 void
 IonScript::unlinkFromRuntime(FreeOp *fop)
 {
-    // Remove any links from AsmJSModules that contain optimized FFI calls into
-    // this IonScript.
-    if (dependentAsmJSModules) {
-        for (size_t i = 0; i < dependentAsmJSModules->length(); i++) {
-            DependentAsmJSModuleExit exit = dependentAsmJSModules->begin()[i];
-            exit.module->detachIonCompilation(exit.exitIndex);
-        }
-
-        fop->delete_(dependentAsmJSModules);
-        dependentAsmJSModules = nullptr;
-    }
-
     // The writes to the executable buffer below may clobber backedge jumps, so
     // make sure that those backedges are unlinked from the runtime and not
     // reclobbered with garbage if an interrupt is requested.

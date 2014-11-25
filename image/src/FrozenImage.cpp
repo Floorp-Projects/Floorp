@@ -50,12 +50,6 @@ FrozenImage::GetFrame(uint32_t aWhichFrame,
   return InnerImage()->GetFrame(FRAME_FIRST, aFlags);
 }
 
-NS_IMETHODIMP_(bool)
-FrozenImage::FrameIsOpaque(uint32_t aWhichFrame)
-{
-  return InnerImage()->FrameIsOpaque(FRAME_FIRST);
-}
-
 NS_IMETHODIMP
 FrozenImage::GetImageContainer(layers::LayerManager* aManager,
                                layers::ImageContainer** _retval)

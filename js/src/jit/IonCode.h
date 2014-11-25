@@ -160,19 +160,6 @@ class IonCache;
 struct PatchableBackedgeInfo;
 struct CacheLocation;
 
-// Describes a single AsmJSModule which jumps (via an FFI exit with the given
-// index) directly into an IonScript.
-struct DependentAsmJSModuleExit
-{
-    const AsmJSModule *module;
-    size_t exitIndex;
-
-    DependentAsmJSModuleExit(const AsmJSModule *module, size_t exitIndex)
-      : module(module),
-        exitIndex(exitIndex)
-    { }
-};
-
 // An IonScript attaches Ion-generated information to a JSScript.
 struct IonScript
 {
@@ -298,10 +285,6 @@ struct IonScript
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
 
-    // If non-null, the list of AsmJSModules
-    // that contain an optimized call directly into this IonScript.
-    Vector<DependentAsmJSModuleExit> *dependentAsmJSModules;
-
     IonBuilder *pendingBuilder_;
 
   private:
@@ -351,19 +334,6 @@ struct IonScript
     }
     PatchableBackedge *backedgeList() {
         return (PatchableBackedge *) &bottomBuffer()[backedgeList_];
-    }
-    bool addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit);
-    void removeDependentAsmJSModule(DependentAsmJSModuleExit exit) {
-        if (!dependentAsmJSModules)
-            return;
-        for (size_t i = 0; i < dependentAsmJSModules->length(); i++) {
-            if (dependentAsmJSModules->begin()[i].module == exit.module &&
-                dependentAsmJSModules->begin()[i].exitIndex == exit.exitIndex)
-            {
-                dependentAsmJSModules->erase(dependentAsmJSModules->begin() + i);
-                break;
-            }
-        }
     }
 
   private:

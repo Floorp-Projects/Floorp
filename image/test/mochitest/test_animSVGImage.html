@@ -32,7 +32,7 @@ const gImg = document.getElementsByTagName("img")[0];
 
 var gMyDecoderObserver; // value will be set in main()
 var gReferenceSnapshot; // value will be set in takeReferenceSnapshot()
-var gOnStopFrameCounter = 0;
+var gPollCounter = 0;
 var gIsTestFinished = false;
 
 
@@ -54,29 +54,29 @@ function takeReferenceSnapshot() {
      "reference div should disappear when it becomes display:none");
 }
 
-function myOnStopFrame() {
-  gOnStopFrameCounter++;
-  ok(true, "myOnStopFrame called");
+function myPoll() {
+  gPollCounter++;
+  ok(true, "myPoll called");
   let currentSnapshot = snapshotWindow(window, false);
   if (compareSnapshots(currentSnapshot, gReferenceSnapshot, true)[0]) {
     // SUCCESS!
     ok(true, "Animated image looks correct, " +
-             "at call #" + gOnStopFrameCounter + " to onStopFrame");
+             "at call #" + gPollCounter + " to myPoll");
     cleanUpAndFinish();
   }
   else
-    setTimeout(myOnStopFrame, 1);
+    setTimeout(myPoll, 1);
 }
 
 function failTest() {
   ok(false, "timing out after " + FAILURE_TIMEOUT + "ms.  " +
             "Animated image still doesn't look correct, " +
-            "after call #" + gOnStopFrameCounter + " to onStopFrame");
+            "after call #" + gPollCounter + " to myPoll");
   cleanUpAndFinish();
 }
 
 function cleanUpAndFinish() {
-  // On the off chance that failTest and myOnStopFrame are triggered
+  // On the off chance that failTest and myPoll are triggered
   // back-to-back, use a flag to prevent multiple calls to SimpleTest.finish.
   if (gIsTestFinished) {
     return;
@@ -90,11 +90,11 @@ function main() {
 
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.
-  clearImageCache();
+  clearAllImageCaches();
 
-  setTimeout(myOnStopFrame, 1);
+  setTimeout(myPoll, 1);
 
-  // kick off image-loading! myOnStopFrame handles the rest.
+  // kick off image-loading! myPoll handles the rest.
   gImg.setAttribute("src", "lime-anim-100x100.svg");
 
   // In case something goes wrong, fail earlier than mochitest timeout,

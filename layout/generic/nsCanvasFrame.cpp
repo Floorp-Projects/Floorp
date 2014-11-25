@@ -286,11 +286,13 @@ nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
 #ifdef MOZ_DUMP_PAINTING
 void
-nsDisplayCanvasBackgroundColor::WriteDebugInfo(nsACString& aTo)
+nsDisplayCanvasBackgroundColor::WriteDebugInfo(std::stringstream& aStream)
 {
-  aTo += nsPrintfCString(" (rgba %d,%d,%d,%d)",
-          NS_GET_R(mColor), NS_GET_G(mColor),
-          NS_GET_B(mColor), NS_GET_A(mColor));
+  aStream << " (rgba "
+          << (int)NS_GET_R(mColor) << ","
+          << (int)NS_GET_G(mColor) << ","
+          << (int)NS_GET_B(mColor) << ","
+          << (int)NS_GET_A(mColor) << ")";
 }
 #endif
 
