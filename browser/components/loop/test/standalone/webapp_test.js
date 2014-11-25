@@ -369,6 +369,16 @@ describe("loop.webapp", function() {
       });
 
       describe("session:ended", function() {
+        it("should call multiplexGum.reset", function() {
+          var multiplexGum = new standaloneMedia._MultiplexGum();
+          standaloneMedia.setSingleton(multiplexGum);
+          sandbox.stub(standaloneMedia._MultiplexGum.prototype, "reset");
+
+          conversation.trigger("session:ended");
+
+          sinon.assert.calledOnce(multiplexGum.reset);
+        });
+
         it("should display the StartConversationView", function() {
           conversation.trigger("session:ended");
 
@@ -474,14 +484,14 @@ describe("loop.webapp", function() {
           });
 
           it("should display the FailedConversationView", function() {
-            conversation.setupOutgoingCall();
+            ocView.setupOutgoingCall();
 
             TestUtils.findRenderedComponentWithType(ocView,
               loop.webapp.FailedConversationView);
           });
 
           it("should display an error", function() {
-            conversation.setupOutgoingCall();
+            ocView.setupOutgoingCall();
 
             sinon.assert.calledOnce(notifications.errorL10n);
           });
@@ -494,7 +504,8 @@ describe("loop.webapp", function() {
 
           it("should call requestCallInfo on the client",
             function() {
-              conversation.setupOutgoingCall("audio-video");
+              conversation.set("selectedCallType", "audio-video");
+              ocView.setupOutgoingCall();
 
               sinon.assert.calledOnce(client.requestCallInfo);
               sinon.assert.calledWith(client.requestCallInfo, "fakeToken",
@@ -506,7 +517,7 @@ describe("loop.webapp", function() {
                function() {
                 client.requestCallInfo.callsArgWith(2, {errno: 105});
 
-                conversation.setupOutgoingCall();
+                ocView.setupOutgoingCall();
 
                 TestUtils.findRenderedComponentWithType(ocView,
                   loop.webapp.CallUrlExpiredView);
@@ -516,7 +527,7 @@ describe("loop.webapp", function() {
                function() {
                 client.requestCallInfo.callsArgWith(2, {errno: 104});
 
-                conversation.setupOutgoingCall();
+                ocView.setupOutgoingCall();
 
                 TestUtils.findRenderedComponentWithType(ocView,
                   loop.webapp.FailedConversationView);
@@ -525,7 +536,7 @@ describe("loop.webapp", function() {
             it("should notify the user on any other error", function() {
               client.requestCallInfo.callsArgWith(2, {errno: 104});
 
-              conversation.setupOutgoingCall();
+              ocView.setupOutgoingCall();
 
               sinon.assert.calledOnce(notifications.errorL10n);
             });
@@ -534,7 +545,7 @@ describe("loop.webapp", function() {
                "are successfully received", function() {
                 client.requestCallInfo.callsArgWith(2, null, fakeSessionData);
 
-                conversation.setupOutgoingCall();
+                ocView.setupOutgoingCall();
 
                 sinon.assert.calledOnce(conversation.outgoing);
                 sinon.assert.calledWithExactly(conversation.outgoing, fakeSessionData);
@@ -542,6 +553,52 @@ describe("loop.webapp", function() {
           });
         });
       });
+
+      describe("getMediaPrivs", function() {
+        var multiplexGum;
+
+        beforeEach(function() {
+          multiplexGum = new standaloneMedia._MultiplexGum();
+          standaloneMedia.setSingleton(multiplexGum);
+          sandbox.stub(standaloneMedia._MultiplexGum.prototype, "reset");
+
+          sandbox.stub(conversation, "gotMediaPrivs");
+        });
+
+        it("should call getPermsAndCacheMedia", function() {
+          conversation.trigger("call:outgoing:get-media-privs");
+
+          sinon.assert.calledOnce(stubGetPermsAndCacheMedia);
+        });
+
+        it("should call gotMediaPrevs on the model when successful", function() {
+          stubGetPermsAndCacheMedia.callsArgWith(1, {});
+
+          conversation.trigger("call:outgoing:get-media-privs");
+
+          sinon.assert.calledOnce(conversation.gotMediaPrivs);
+        });
+
+        it("should call multiplexGum.reset when getPermsAndCacheMedia fails",
+          function() {
+            stubGetPermsAndCacheMedia.callsArgWith(2, "FAKE_ERROR");
+
+            conversation.trigger("call:outgoing:get-media-privs");
+
+            sinon.assert.calledOnce(multiplexGum.reset);
+          });
+
+        it("should set state to `failure` when getPermsAndCacheMedia fails",
+          function() {
+            stubGetPermsAndCacheMedia.callsArgWith(2, "FAKE_ERROR");
+
+            conversation.trigger("call:outgoing:get-media-privs");
+
+            expect(ocView.state.callStatus).eql("failure");
+          });
+      });
+
+
     });
 
     describe("FailedConversationView", function() {
@@ -693,7 +750,7 @@ describe("loop.webapp", function() {
     });
   });
 
-  describe("PendingConversationView", function() {
+  describe("WaitingConversationView", function() {
     var view, websocket, fakeAudio;
 
     beforeEach(function() {
@@ -713,7 +770,7 @@ describe("loop.webapp", function() {
       sandbox.stub(window, "XMLHttpRequest").returns(fakeAudioXHR);
 
       view = React.addons.TestUtils.renderIntoDocument(
-        loop.webapp.PendingConversationView({
+        loop.webapp.WaitingConversationView({
           websocket: websocket
         })
       );
@@ -802,26 +859,7 @@ describe("loop.webapp", function() {
               client: standaloneClientStub
             })
         );
-
-        // default to succeeding with a null local media object
-        stubGetPermsAndCacheMedia.callsArgWith(1, {});
       });
-
-      it("should fire multiplexGum.reset when getPermsAndCacheMedia calls" +
-        " back an error",
-        function() {
-          var setupOutgoingCall = sinon.stub(conversation, "setupOutgoingCall");
-          var multiplexGum = new standaloneMedia._MultiplexGum();
-          standaloneMedia.setSingleton(multiplexGum);
-          sandbox.stub(standaloneMedia._MultiplexGum.prototype, "reset");
-          stubGetPermsAndCacheMedia.callsArgWith(2, "FAKE_ERROR");
-
-          var button = view.getDOMNode().querySelector(".btn-accept");
-          React.addons.TestUtils.Simulate.click(button);
-
-          sinon.assert.calledOnce(multiplexGum.reset);
-          sinon.assert.calledWithExactly(multiplexGum.reset);
-        });
 
       it("should start the audio-video conversation establishment process",
         function() {
