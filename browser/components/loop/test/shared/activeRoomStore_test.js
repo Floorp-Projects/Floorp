@@ -284,10 +284,6 @@ describe("loop.store.ActiveRoomStore", function () {
   });
 
   describe("#joinRoom", function() {
-    beforeEach(function() {
-      store.setStoreState({roomToken: "tokenFake"});
-    });
-
     it("should reset failureReason", function() {
       store.setStoreState({failureReason: "Test"});
 
@@ -296,8 +292,22 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(store.getStoreState().failureReason).eql(undefined);
     });
 
-    it("should call rooms.join on mozLoop", function() {
+    it("should set the state to MEDIA_WAIT", function() {
+      store.setStoreState({roomState: ROOM_STATES.READY});
+
       store.joinRoom();
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.MEDIA_WAIT);
+    });
+  });
+
+  describe("#gotMediaPermission", function() {
+    beforeEach(function() {
+      store.setStoreState({roomToken: "tokenFake"});
+    });
+
+    it("should call rooms.join on mozLoop", function() {
+      store.gotMediaPermission();
 
       sinon.assert.calledOnce(fakeMozLoop.rooms.join);
       sinon.assert.calledWith(fakeMozLoop.rooms.join, "tokenFake");
@@ -313,7 +323,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
       fakeMozLoop.rooms.join.callsArgWith(1, null, responseData);
 
-      store.joinRoom();
+      store.gotMediaPermission();
 
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWith(dispatcher.dispatch,
@@ -325,7 +335,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
       fakeMozLoop.rooms.join.callsArgWith(1, fakeError);
 
-      store.joinRoom();
+      store.gotMediaPermission();
 
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWith(dispatcher.dispatch,

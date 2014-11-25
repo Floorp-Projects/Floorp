@@ -207,6 +207,9 @@ loop.OTSdkDriver = (function() {
     _onPublishComplete: function(event) {
       event.preventDefault();
       this._publisherReady = true;
+
+      this.dispatcher.dispatch(new sharedActions.GotMediaPermission());
+
       this._maybePublishLocalStream();
     },
 
