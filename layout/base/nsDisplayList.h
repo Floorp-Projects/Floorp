@@ -2629,6 +2629,10 @@ public:
   const nsRegion& MaybeHitRegion() { return mMaybeHitRegion; }
   const nsRegion& DispatchToContentHitRegion() { return mDispatchToContentHitRegion; }
 
+#ifdef MOZ_DUMP_PAINTING
+  virtual void WriteDebugInfo(std::stringstream& aStream) MOZ_OVERRIDE;
+#endif
+
 private:
   // Relative to aFrame's reference frame.
   // These are the points that are definitely in the hit region.

@@ -2988,6 +2988,22 @@ nsDisplayLayerEventRegions::AddInactiveScrollPort(const nsRect& aRect)
   mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aRect);
 }
 
+#ifdef MOZ_DUMP_PAINTING
+void
+nsDisplayLayerEventRegions::WriteDebugInfo(std::stringstream& aStream)
+{
+  if (!mHitRegion.IsEmpty()) {
+    AppendToString(aStream, mHitRegion, " (hitRegion ", ")");
+  }
+  if (!mMaybeHitRegion.IsEmpty()) {
+    AppendToString(aStream, mMaybeHitRegion, " (maybeHitRegion ", ")");
+  }
+  if (!mDispatchToContentHitRegion.IsEmpty()) {
+    AppendToString(aStream, mDispatchToContentHitRegion, " (dispatchToContentRegion ", ")");
+  }
+}
+#endif
+
 nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
                                nsIFrame* aCaretFrame)
   : nsDisplayItem(aBuilder, aCaretFrame)
