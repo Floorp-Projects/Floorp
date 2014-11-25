@@ -44,8 +44,7 @@ public:
    * when drawing content into an imgFrame, as it may use a different graphics
    * backend than normal content drawing.
    */
-  nsresult InitForDecoder(const nsIntSize& aImageSize,
-                          const nsIntRect& aRect,
+  nsresult InitForDecoder(const nsIntRect& aRect,
                           SurfaceFormat aFormat,
                           uint8_t aPaletteDepth = 0);
 
@@ -53,7 +52,7 @@ public:
                           SurfaceFormat aFormat,
                           uint8_t aPaletteDepth = 0)
   {
-    return InitForDecoder(aSize, nsIntRect(0, 0, aSize.width, aSize.height),
+    return InitForDecoder(nsIntRect(0, 0, aSize.width, aSize.height),
                           aFormat, aPaletteDepth);
   }
 
@@ -78,11 +77,11 @@ public:
   RawAccessFrameRef RawAccessRef();
 
   bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
-            GraphicsFilter aFilter, uint32_t aImageFlags);
+            const nsIntMargin& aPadding, GraphicsFilter aFilter,
+            uint32_t aImageFlags);
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
 
-  IntSize GetImageSize() { return mImageSize; }
   nsIntRect GetRect() const;
   IntSize GetSize() const { return mSize; }
   bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
@@ -113,6 +112,7 @@ public:
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
+  void SetDiscardable();
   void SetOptimizable();
 
   TemporaryRef<SourceSurface> GetSurface();
@@ -173,7 +173,6 @@ private: // data
   RefPtr<DataSourceSurface> mImageSurface;
   RefPtr<SourceSurface> mOptSurface;
 
-  IntSize      mImageSize;
   IntSize      mSize;
   nsIntPoint   mOffset;
 
@@ -206,6 +205,7 @@ private: // data
   bool mCompositingFailed;
   bool mHasNoAlpha;
   bool mNonPremult;
+  bool mDiscardable;
   bool mOptimizable;
 
   /** Have we called DiscardTracker::InformAllocation()? */
