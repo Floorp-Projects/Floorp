@@ -33,7 +33,7 @@ function testActiveNetworkChangedBySwitchingDataCall(aDataCallEnabled) {
          "subject should be an instance of nsINetworkInterface");
       ok(subject instanceof Ci.nsIRilNetworkInterface,
          "subject should be an instance of nsIRILNetworkInterface");
-      is(subject.type, Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE,
+      is(subject.type, NETWORK_TYPE_MOBILE,
          "subject.type should be NETWORK_TYPE_MOBILE");
     }
 
