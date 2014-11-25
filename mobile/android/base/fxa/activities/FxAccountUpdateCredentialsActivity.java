@@ -17,6 +17,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClient
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
@@ -155,7 +156,7 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
       fxAccount.requestSync(FirefoxAccounts.FORCE);
 
       // For great debugging.
-      if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+      if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
         fxAccount.dump();
       }
 

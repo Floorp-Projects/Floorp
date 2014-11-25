@@ -13,6 +13,7 @@ import java.util.concurrent.Executor;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BaseResource;
@@ -205,7 +206,7 @@ public class FxAccountClient20 extends FxAccountClient10 implements FxAccountCli
       final RequestDelegate<LoginResponse> delegate) {
     byte[] quickStretchedPW;
     try {
-      FxAccountUtils.pii(LOG_TAG, "Trying user provided email: '" + new String(emailUTF8, "UTF-8") + "'" );
+      FxAccountConstants.pii(LOG_TAG, "Trying user provided email: '" + new String(emailUTF8, "UTF-8") + "'" );
       quickStretchedPW = stretcher.getQuickStretchedPW(emailUTF8);
     } catch (Exception e) {
       delegate.handleError(e);
@@ -232,7 +233,7 @@ public class FxAccountClient20 extends FxAccountClient10 implements FxAccountCli
         };
 
         Logger.info(LOG_TAG, "Server returned alternate email; retrying login with provided email.");
-        FxAccountUtils.pii(LOG_TAG, "Trying server provided email: '" + alternateEmail + "'" );
+        FxAccountConstants.pii(LOG_TAG, "Trying server provided email: '" + alternateEmail + "'" );
 
         try {
           // Nota bene: this is not recursive, since we call the fixed password
