@@ -76,6 +76,12 @@ LIRGeneratorX86::useByteOpRegisterOrNonDoubleConstant(MDefinition *mir)
     return useFixed(mir, eax);
 }
 
+LDefinition
+LIRGeneratorX86::tempByteOpRegister()
+{
+    return tempFixed(eax);
+}
+
 bool
 LIRGeneratorX86::visitBox(MBox *box)
 {
@@ -308,4 +314,19 @@ bool
 LIRGeneratorX86::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
     return define(new(alloc()) LAsmJSLoadFuncPtr(useRegisterAtStart(ins->index())), ins);
+}
+
+bool
+LIRGeneratorX86::visitSubstr(MSubstr *ins)
+{
+    // Due to lack of registers on x86, we reuse the string register as
+    // temporary. As a result we only need two temporary registers and take a
+    // bugos temporary as fifth argument.
+    LSubstr *lir = new (alloc()) LSubstr(useRegister(ins->string()),
+                                         useRegister(ins->begin()),
+                                         useRegister(ins->length()),
+                                         temp(),
+                                         LDefinition::BogusTemp(),
+                                         tempByteOpRegister());
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }

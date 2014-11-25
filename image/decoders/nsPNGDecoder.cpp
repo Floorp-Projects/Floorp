@@ -155,9 +155,17 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
   // infrastructure. Just use it as long as it matches up.
   nsIntRect neededRect(x_offset, y_offset, width, height);
   nsRefPtr<imgFrame> currentFrame = GetCurrentFrame();
-  if (mNumFrames != 0 || !currentFrame->GetRect().IsEqualEdges(neededRect)) {
+  if (!currentFrame->GetRect().IsEqualEdges(neededRect)) {
+    if (mNumFrames == 0) {
+      // We need padding on the first frame, which means that we don't draw into
+      // part of the image at all. Report that as transparency.
+      PostHasTransparency();
+    }
+
     NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
-  } else if (mNumFrames == 0) {
+  } else if (mNumFrames != 0) {
+    NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
+  } else {
     // Our preallocated frame matches up, with the possible exception of alpha.
     if (format == gfx::SurfaceFormat::B8G8R8X8) {
       currentFrame->SetHasNoAlpha();
@@ -176,6 +184,12 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
     mAnimInfo = AnimFrameInfo(mPNG, mInfo);
+
+    if (mAnimInfo.mDispose == FrameBlender::kDisposeClear) {
+      // We may have to display the background under this image during
+      // animation playback, so we regard it as transparent.
+      PostHasTransparency();
+    }
   }
 #endif
 }

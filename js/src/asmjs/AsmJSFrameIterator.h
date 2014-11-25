@@ -69,7 +69,7 @@ namespace AsmJSExit
     // handler).
     enum ReasonKind {
         Reason_None,
-        Reason_IonFFI,
+        Reason_JitFFI,
         Reason_SlowFFI,
         Reason_Interrupt,
         Reason_Builtin
@@ -106,7 +106,7 @@ namespace AsmJSExit
     typedef uint32_t Reason;
 
     static const uint32_t None = Reason_None;
-    static const uint32_t IonFFI = Reason_IonFFI;
+    static const uint32_t JitFFI = Reason_JitFFI;
     static const uint32_t SlowFFI = Reason_SlowFFI;
     static const uint32_t Interrupt = Reason_Interrupt;
     static inline Reason Builtin(BuiltinKind builtin) {
