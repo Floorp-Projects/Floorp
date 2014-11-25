@@ -197,6 +197,12 @@
 // NS_COMPOSITION_END will be dispatched automatically.
 // Its mData and mRanges should be empty and nullptr.
 #define NS_COMPOSITION_COMMIT_AS_IS   (NS_COMPOSITION_EVENT_START + 4)
+// NS_COMPOSITION_COMMIT is the message for representing a commit of
+// composition string with its mData value.  TextComposition will dispatch this
+// event to the DOM tree as NS_COMPOSITION_CHANGE without clause information.
+// After that, NS_COMPOSITION_END will be dispatched automatically.
+// Its mRanges should be nullptr.
+#define NS_COMPOSITION_COMMIT         (NS_COMPOSITION_EVENT_START + 5)
 
 // UI events
 #define NS_UI_EVENT_START          2500
