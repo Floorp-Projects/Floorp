@@ -16,8 +16,6 @@ loop.roomViews = (function(mozL10n) {
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedViews = loop.shared.views;
 
-  function noop() {}
-
   /**
    * ActiveRoomStore mixin.
    * @type {Object}
@@ -140,7 +138,9 @@ loop.roomViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      feedbackStore:
+        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired,
     },
 
     _renderInvitationOverlay: function() {
@@ -216,6 +216,13 @@ loop.roomViews = (function(mozL10n) {
     },
 
     /**
+     * User clicked on the "Leave" button.
+     */
+    leaveRoom: function() {
+      this.props.dispatcher.dispatch(new sharedActions.LeaveRoom());
+    },
+
+    /**
      * Closes the window if the cancel button is pressed in the generic failure view.
      */
     closeWindow: function() {
@@ -257,6 +264,12 @@ loop.roomViews = (function(mozL10n) {
             cancelCall: this.closeWindow}
           );
         }
+        case ROOM_STATES.ENDED: {
+          return sharedViews.FeedbackView({
+            feedbackStore: this.props.feedbackStore, 
+            onAfterFeedbackReceived: this.closeWindow}
+          );
+        }
         default: {
           return (
             React.DOM.div({className: "room-conversation-wrapper"}, 
@@ -273,7 +286,7 @@ loop.roomViews = (function(mozL10n) {
                     video: {enabled: !this.state.videoMuted, visible: true}, 
                     audio: {enabled: !this.state.audioMuted, visible: true}, 
                     publishStream: this.publishStream, 
-                    hangup: noop})
+                    hangup: this.leaveRoom})
                 )
               )
             )

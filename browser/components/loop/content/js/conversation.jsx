@@ -223,6 +223,8 @@ loop.conversation = (function(mozL10n) {
    * At the moment, it does more than that, these parts need refactoring out.
    */
   var IncomingConversationView = React.createClass({
+    mixins: [sharedMixins.AudioMixin],
+
     propTypes: {
       client: React.PropTypes.instanceOf(loop.Client).isRequired,
       conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
@@ -230,7 +232,8 @@ loop.conversation = (function(mozL10n) {
       sdk: React.PropTypes.object.isRequired,
       conversationAppStore: React.PropTypes.instanceOf(
         loop.store.ConversationAppStore).isRequired,
-      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore)
+      feedbackStore:
+        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired
     },
 
     getInitialState: function() {
@@ -301,6 +304,8 @@ loop.conversation = (function(mozL10n) {
           }
 
           document.title = mozL10n.get("conversation_has_ended");
+
+          this.play("terminated");
 
           return (
             <sharedViews.FeedbackView
@@ -552,7 +557,8 @@ loop.conversation = (function(mozL10n) {
                               .isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore),
-      feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore)
+      feedbackStore:
+        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired
     },
 
     getInitialState: function() {
