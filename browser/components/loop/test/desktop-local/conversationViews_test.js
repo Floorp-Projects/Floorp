@@ -510,6 +510,22 @@ describe("loop.conversationViews", function () {
           loop.shared.views.FeedbackView);
     });
 
+    it("should play the terminated sound when the call state is 'finished'",
+      function() {
+        var fakeAudio = {
+          play: sinon.spy(),
+          pause: sinon.spy(),
+          removeAttribute: sinon.spy()
+        };
+        sandbox.stub(window, "Audio").returns(fakeAudio);
+
+        store.set({callState: CALL_STATES.FINISHED});
+
+        view = mountTestComponent();
+
+        sinon.assert.calledOnce(fakeAudio.play);
+    });
+
     it("should update the rendered views when the state is changed.",
       function() {
         store.set({
