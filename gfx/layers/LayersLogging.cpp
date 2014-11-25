@@ -291,8 +291,6 @@ AppendToString(std::stringstream& aStream, TextureFlags flags,
     AppendFlag(TextureFlags::USE_NEAREST_FILTER);
     AppendFlag(TextureFlags::NEEDS_Y_FLIP);
     AppendFlag(TextureFlags::DISALLOW_BIGIMAGE);
-    AppendFlag(TextureFlags::ALLOW_REPEAT);
-    AppendFlag(TextureFlags::NEW_TILE);
 
 #undef AppendFlag
   }

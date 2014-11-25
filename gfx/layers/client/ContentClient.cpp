@@ -56,10 +56,6 @@ static TextureFlags TextureFlagsForRotatedContentBufferFlags(uint32_t aBufferFla
     result |= TextureFlags::COMPONENT_ALPHA;
   }
 
-  if (aBufferFlags & RotatedContentBuffer::ALLOW_REPEAT) {
-    result |= TextureFlags::ALLOW_REPEAT;
-  }
-
   return result;
 }
 
@@ -702,9 +698,7 @@ ContentClientIncremental::BeginPaintBuffer(PaintedLayer* aLayer,
     neededRegion = aLayer->GetVisibleRegion();
     // If we're going to resample, we need a buffer that's in clamp mode.
     canReuseBuffer = neededRegion.GetBounds().Size() <= mBufferRect.Size() &&
-      mHasBuffer &&
-      (!(aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE) ||
-       !(mTextureInfo.mTextureFlags & TextureFlags::ALLOW_REPEAT));
+      mHasBuffer && !(aFlags & RotatedContentBuffer::PAINT_WILL_RESAMPLE);
 
     if (canReuseBuffer) {
       if (mBufferRect.Contains(neededRegion.GetBounds())) {
@@ -800,9 +794,6 @@ ContentClientIncremental::BeginPaintBuffer(PaintedLayer* aLayer,
   bool createdBuffer = false;
 
   TextureFlags bufferFlags = TextureFlags::NO_FLAGS;
-  if (canHaveRotation) {
-    bufferFlags |= TextureFlags::ALLOW_REPEAT;
-  }
   if (mode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     bufferFlags |= TextureFlags::COMPONENT_ALPHA;
   }
