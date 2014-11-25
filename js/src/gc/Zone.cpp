@@ -19,6 +19,8 @@
 using namespace js;
 using namespace js::gc;
 
+Zone * const Zone::NotOnList = reinterpret_cast<Zone *>(1);
+
 JS::Zone::Zone(JSRuntime *rt)
   : JS::shadow::Zone(rt, &rt->gc.marker),
     allocator(this),
@@ -37,7 +39,8 @@ JS::Zone::Zone(JSRuntime *rt)
     gcState_(NoGC),
     gcScheduled_(false),
     gcPreserveCode_(false),
-    jitUsingBarriers_(false)
+    jitUsingBarriers_(false),
+    listNext_(NotOnList)
 {
     /* Ensure that there are no vtables to mess us up here. */
     MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone *>(this) ==
@@ -264,4 +267,96 @@ bool
 js::ZonesIter::atAtomsZone(JSRuntime *rt)
 {
     return rt->isAtomsZone(*it);
+}
+
+bool Zone::isOnList()
+{
+    return listNext_ != NotOnList;
+}
+
+ZoneList::ZoneList()
+  : head(nullptr), tail(nullptr)
+{}
+
+ZoneList::ZoneList(Zone *zone)
+  : head(zone), tail(zone)
+{
+    MOZ_ASSERT(!zone->isOnList());
+    zone->listNext_ = nullptr;
+}
+
+void
+ZoneList::check() const
+{
+#ifdef DEBUG
+    MOZ_ASSERT((head == nullptr) == (tail == nullptr));
+    if (head) {
+        Zone *zone = head;
+        while (zone != tail) {
+            zone = zone->listNext_;
+            MOZ_ASSERT(zone);
+        }
+        MOZ_ASSERT(!zone->listNext_);
+    }
+#endif
+}
+
+bool ZoneList::isEmpty() const
+{
+    return head == nullptr;
+}
+
+Zone *
+ZoneList::front() const
+{
+    MOZ_ASSERT(!isEmpty());
+    return head;
+}
+
+void
+ZoneList::append(Zone *zone)
+{
+    ZoneList singleZone(zone);
+    append(singleZone);
+}
+
+void
+ZoneList::append(ZoneList &other)
+{
+    check();
+    other.check();
+    MOZ_ASSERT(tail != other.tail);
+
+    if (tail)
+        tail->listNext_ = other.head;
+    else
+        head = other.head;
+    tail = other.tail;
+}
+
+Zone *
+ZoneList::removeFront()
+{
+    MOZ_ASSERT(!isEmpty());
+    check();
+
+    Zone *front = head;
+    head = head->listNext_;
+    if (!head)
+        tail = nullptr;
+
+    front->listNext_ = Zone::NotOnList;
+    return front;
+}
+
+void
+ZoneList::transferFrom(ZoneList& other)
+{
+    MOZ_ASSERT(isEmpty());
+    other.check();
+
+    head = other.head;
+    tail = other.tail;
+    other.head = nullptr;
+    other.tail = nullptr;
 }
