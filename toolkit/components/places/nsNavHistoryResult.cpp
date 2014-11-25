@@ -3584,9 +3584,6 @@ nsNavHistoryFolderResultNode::OnItemAdded(int64_t aItemId,
     node = new nsNavHistorySeparatorResultNode();
     NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
     node->mItemId = aItemId;
-    node->mBookmarkGuid = aGUID;
-    node->mDateAdded = aDateAdded;
-    node->mLastModified = aDateAdded;
   }
 
   node->mBookmarkIndex = aIndex;

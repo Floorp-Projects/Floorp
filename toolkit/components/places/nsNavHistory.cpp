@@ -1512,8 +1512,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
           "SELECT b2.fk, h.url, COALESCE(b2.title, h.title) AS page_title, "
             "h.rev_host, h.visit_count, h.last_visit_date, f.url, b2.id, "
             "b2.dateAdded, b2.lastModified, b2.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
-            "b2.guid, b2.position, b2.type, b2.fk "
+            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid "
           "FROM moz_bookmarks b2 "
           "JOIN (SELECT b.fk "
                 "FROM moz_bookmarks b "
@@ -1537,8 +1536,7 @@ PlacesSQLQueryBuilder::SelectAsURI()
           "SELECT b.fk, h.url, COALESCE(b.title, h.title) AS page_title, "
             "h.rev_host, h.visit_count, h.last_visit_date, f.url, b.id, "
             "b.dateAdded, b.lastModified, b.parent, ") +
-            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid,"
-            "b.guid, b.position, b.type, b.fk "
+            tagsSqlFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid "
           "FROM moz_bookmarks b "
           "JOIN moz_places h ON b.fk = h.id "
           "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -3904,40 +3902,36 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
   }
 
   if (IsQueryURI(url)) {
-    // Special case "place:" URIs: turn them into containers.
+    // special case "place:" URIs: turn them into containers
+
+    // We should never expose the history title for query nodes if the
+    // bookmark-item's title is set to null (the history title may be the
+    // query string without the place: prefix). Thus we call getItemTitle
+    // explicitly. Doing this in the SQL query would be less performant since
+    // it should be done for all results rather than only for queries.
+    if (itemId != -1) {
+      nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
+      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+      rv = bookmarks->GetItemTitle(itemId, title);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     nsRefPtr<nsNavHistoryResultNode> resultNode;
     rv = QueryRowToResult(itemId, url, title, accessCount, time, favicon,
                           getter_AddRefs(resultNode));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    if (itemId != -1) {
-      rv = aRow->GetUTF8String(nsNavBookmarks::kGetChildrenIndex_Guid,
-                               resultNode->mBookmarkGuid);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // We should never expose the history title for query nodes if the
-      // bookmark-item's title is set to null (the history title may be the
-      // query string without the place: prefix). Thus we call getItemTitle
-      // explicitly. Doing this in the SQL query would be less performant since
-      // it should be done for all results rather than only for queries.
-      nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
-      NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-
-      rv = bookmarks->GetItemTitle(itemId, resultNode->mTitle);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    if (itemId != -1 ||
-        aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
+    if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
       // RESULTS_AS_TAG_QUERY has date columns
       resultNode->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
       resultNode->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
-      if (resultNode->IsFolder()) {
-        // If it's a simple folder node (i.e. a shortcut to another folder), apply
-        // our options for it. However, if the parent type was tag query, we do not
-        // apply them, because it would not yield any results.
-        resultNode->GetAsContainer()->mOptions = aOptions;
-      }
+    }
+    else if (resultNode->IsFolder()) {
+      // If it's a simple folder node (i.e. a shortcut to another folder), apply
+      // our options for it. However, if the parent type was tag query, we do not
+      // apply them, because it would not yield any results.
+      resultNode->GetAsContainer()->mOptions = aOptions;
     }
 
     resultNode.forget(aResult);
@@ -3952,10 +3946,6 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
       resultNode->mFolderId = parentId;
       resultNode->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
       resultNode->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
-
-      rv = aRow->GetUTF8String(nsNavBookmarks::kGetChildrenIndex_Guid,
-                               resultNode->mBookmarkGuid);
-      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     resultNode->mFrecency = aRow->AsInt32(kGetInfoIndex_Frecency);
@@ -4145,8 +4135,7 @@ nsNavHistory::BookmarkIdToResultNode(int64_t aBookmarkId, nsNavHistoryQueryOptio
       "SELECT b.fk, h.url, COALESCE(b.title, h.title), "
              "h.rev_host, h.visit_count, h.last_visit_date, f.url, b.id, "
              "b.dateAdded, b.lastModified, b.parent, "
-             ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid, "
-             "b.guid, b.position, b.type, b.fk "
+             ) + tagsFragment + NS_LITERAL_CSTRING(", h.frecency, h.hidden, h.guid "
       "FROM moz_bookmarks b "
       "JOIN moz_places h ON b.fk = h.id "
       "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "
