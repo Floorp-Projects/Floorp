@@ -216,7 +216,7 @@ public class BookmarksPanel extends HomeFragment {
     /**
      * Loader callbacks for the LoaderManager of this fragment.
      */
-    private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+    private class CursorLoaderCallbacks extends TransitionAwareCursorLoaderCallbacks {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             if (args == null) {
@@ -229,7 +229,7 @@ public class BookmarksPanel extends HomeFragment {
         }
 
         @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
+        public void onLoadFinishedAfterTransitions(Loader<Cursor> loader, Cursor c) {
             BookmarksLoader bl = (BookmarksLoader) loader;
             mListAdapter.swapCursor(c, bl.getFolderInfo(), bl.getRefreshType());
             updateUiFromCursor(c);
@@ -237,6 +237,8 @@ public class BookmarksPanel extends HomeFragment {
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
+            super.onLoaderReset(loader);
+
             if (mList != null) {
                 mListAdapter.swapCursor(null);
             }
