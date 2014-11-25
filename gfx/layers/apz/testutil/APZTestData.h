@@ -42,10 +42,9 @@ class APZTestData {
   friend struct APZTestDataToJSConverter;
 public:
   void StartNewPaint(SequenceNumber aSequenceNumber) {
+    // We should never get more than one paint with the same sequence number.
+    MOZ_ASSERT(mPaints.find(aSequenceNumber) == mPaints.end());
     mPaints.insert(DataStore::value_type(aSequenceNumber, Bucket()));
-    // TODO(botond): MOZ_ASSERT() that we didn't already have a paint with this
-    // sequence number once we get rid ofAPZCTreeManager::UpdatePanZoomControllerTree()
-    // calls for repeat transactions (bug 1007728).
   }
   void LogTestDataForPaint(SequenceNumber aSequenceNumber,
                            ViewID aScrollId,
@@ -93,10 +92,9 @@ private:
     }
     Bucket& bucket = bucketIterator->second;
     ScrollFrameData& scrollFrameData = bucket[aScrollId];  // create if doesn't exist
+    MOZ_ASSERT(scrollFrameData.find(aKey) == scrollFrameData.end()
+            || scrollFrameData[aKey] == aValue);
     scrollFrameData.insert(ScrollFrameData::value_type(aKey, aValue));
-    // TODO(botond): MOZ_ASSERT() that we don't already have this key once we
-    // get rid of APZCTreeManager::UpdatePanZoomControllerTree() calls for
-    // repeat transactions (bug 1007728).
   }
 };
 

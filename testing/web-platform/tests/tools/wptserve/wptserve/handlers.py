@@ -1,6 +1,5 @@
 import cgi
 import json
-import logging
 import os
 import traceback
 import urllib
@@ -9,14 +8,13 @@ import urlparse
 from constants import content_types
 from pipes import Pipeline, template
 from ranges import RangeParser
+from request import Authentication
 from response import MultipartContent
 from utils import HTTPException
 
-logger = logging.getLogger("wptserve")
-
 __all__ = ["file_handler", "python_script_handler",
            "FunctionHandler", "handler", "json_handler",
-           "as_is_handler", "ErrorHandler"]
+           "as_is_handler", "ErrorHandler", "BasicAuthHandler"]
 
 
 def guess_content_type(path):
@@ -38,10 +36,15 @@ def filesystem_path(base_path, request, url_base="/"):
         path = path[len(url_base):]
 
     if ".." in path:
-        raise HTTPException(500)
+        raise HTTPException(404)
 
-    return os.path.join(base_path, path)
+    new_path = os.path.join(base_path, path)
 
+    # Otherwise setting path to / allows access outside the root directory
+    if not new_path.startswith(base_path):
+        raise HTTPException(404)
+
+    return new_path
 
 class DirectoryHandler(object):
     def __init__(self, base_path=None, url_base="/"):
@@ -153,7 +156,8 @@ class FileHandler(object):
         except IOError:
             return []
         else:
-            data = template(request, data)
+            if use_sub:
+                data = template(request, data)
             return [tuple(item.strip() for item in line.split(":", 1))
                     for line in data.splitlines() if line]
 
@@ -222,7 +226,7 @@ def FunctionHandler(func):
     def inner(request, response):
         try:
             rv = func(request, response)
-        except:
+        except Exception:
             msg = traceback.format_exc()
             raise HTTPException(500, message=msg)
         if rv is not None:
@@ -267,7 +271,7 @@ class AsIsHandler(object):
         self.base_path = base_path
         self.url_base = url_base
 
-    def __call__(request, response):
+    def __call__(self, request, response):
         path = filesystem_path(self.base_path, request, self.url_base)
 
         try:
@@ -279,6 +283,33 @@ class AsIsHandler(object):
 
 as_is_handler = AsIsHandler()
 
+class BasicAuthHandler(object):
+    def __init__(self, handler, user, password):
+        """
+         A Basic Auth handler
+
+         :Args:
+         - handler: a secondary handler for the request after authentication is successful (example file_handler)
+         - user: string of the valid user name or None if any / all credentials are allowed
+         - password: string of the password required
+        """
+        self.user = user
+        self.password = password
+        self.handler = handler
+
+    def __call__(self, request, response):
+        if "authorization" not in request.headers:
+            response.status = 401
+            response.headers.set("WWW-Authenticate", "Basic")
+            return response
+        else:
+            auth = Authentication(request.headers)
+            if self.user is not None and (self.user != auth.username or self.password != auth.password):
+                response.set_error(403, "Invalid username or password")
+                return response
+            return self.handler(request, response)
+
+basic_auth_handler = BasicAuthHandler(file_handler, None, None)
 
 class ErrorHandler(object):
     def __init__(self, status):

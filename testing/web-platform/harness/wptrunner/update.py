@@ -9,12 +9,16 @@ import sys
 import traceback
 import uuid
 
+from mozlog.structured import commandline
+
 import vcs
 from vcs import git, hg
 manifest = None
 import metadata
 import testloader
 import wptcommandline
+
+logger = None
 
 base_path = os.path.abspath(os.path.split(__file__)[0])
 
@@ -49,11 +53,22 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 """
 
+
 def do_delayed_imports(serve_root):
     global manifest
     sys.path.insert(0, os.path.join(serve_root, "tools", "scripts"))
     import manifest
 
+
+def setup_logging(args, defaults):
+    global logger
+    logger = commandline.setup_logging("web-platform-tests-update", args, defaults)
+
+    for name in args.keys():
+        if name.startswith("log_"):
+            args.pop(name)
+
+    return logger
 
 class RepositoryError(Exception):
     pass
