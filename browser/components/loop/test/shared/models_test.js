@@ -91,12 +91,22 @@ describe("loop.shared.models", function() {
             expect(conversation.get("selectedCallType")).eql("audio-video");
           });
 
+        it("should trigger a `call:outgoing:get-media-privs` event", function(done) {
+          conversation.once("call:outgoing:get-media-privs", function() {
+            done();
+          });
+
+          conversation.setupOutgoingCall();
+        });
+      });
+
+      describe("#gotMediaPrivs", function() {
         it("should trigger a `call:outgoing:setup` event", function(done) {
           conversation.once("call:outgoing:setup", function() {
             done();
           });
 
-          conversation.setupOutgoingCall();
+          conversation.gotMediaPrivs();
         });
       });
 

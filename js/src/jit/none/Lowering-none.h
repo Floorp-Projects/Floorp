@@ -29,6 +29,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
 
     LAllocation useByteOpRegister(MDefinition *) { MOZ_CRASH(); }
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition *) { MOZ_CRASH(); }
+    LDefinition tempByteOpRegister() { MOZ_CRASH(); }
     LDefinition tempToUnbox() { MOZ_CRASH(); }
     bool needTempForPostBarrier() { MOZ_CRASH(); }
     LDefinition tempForDispatchCache(MIRType v = MIRType_None) { MOZ_CRASH(); }

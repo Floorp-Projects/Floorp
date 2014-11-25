@@ -80,7 +80,8 @@ LivemarkService.prototype = {
                 AND n.name = ${aAnnoParam}`;
     }
 
-    return `SELECT b.id, b.title, b.parent, b.position, b.guid, b.lastModified,
+    return `SELECT b.id, b.title, b.parent, b.position, b.guid,
+                   b.dateAdded, b.lastModified,
                    ( ${getAnnoSQLFragment(":feedURI_anno")} ) AS feedURI,
                    ( ${getAnnoSQLFragment(":siteURI_anno")} ) AS siteURI
             FROM moz_bookmarks b
@@ -106,6 +107,7 @@ LivemarkService.prototype = {
                          title: row.getResultByName("title"),
                          parentId: row.getResultByName("parent"),
                          index: row.getResultByName("position"),
+                         dateAdded: row.getResultByName("dateAdded"),
                          lastModified: row.getResultByName("lastModified"),
                          feedURI: NetUtil.newURI(row.getResultByName("feedURI")),
                          siteURI: siteURL ? NetUtil.newURI(siteURL) : null });
@@ -202,11 +204,15 @@ LivemarkService.prototype = {
                               , feedURI:      aLivemarkInfo.feedURI
                               , siteURI:      aLivemarkInfo.siteURI
                               , guid:         aLivemarkInfo.guid
+                              , dateAdded:    aLivemarkInfo.dateAdded
                               , lastModified: aLivemarkInfo.lastModified
                               });
       if (this._itemAdded && this._itemAdded.id == livemark.id) {
         livemark.index = this._itemAdded.index;
         livemark.guid = this._itemAdded.guid;
+        if (!aLivemarkInfo.dateAdded) {
+          livemark.dateAdded = this._itemAdded.dateAdded;
+        }
         if (!aLivemarkInfo.lastModified) {
           livemark.lastModified = this._itemAdded.lastModified;
         }
@@ -411,6 +417,7 @@ LivemarkService.prototype = {
       this._itemAdded = { id: aItemId
                         , guid: aGUID
                         , index: aIndex
+                        , dateAdded: aDateAdded
                         , lastModified: aDateAdded
                         };
     }
@@ -422,11 +429,15 @@ LivemarkService.prototype = {
     if (aItemType == Ci.nsINavBookmarksService.TYPE_FOLDER) {
       if (this._itemAdded && this._itemAdded.id == aItemId) {
         this._itemAdded.lastModified = aLastModified;
-     }
+      }
       if (aItemId in this._livemarks) {
         if (aProperty == "title") {
           this._livemarks[aItemId].title = aValue;
         }
+        else if (aProperty == "dateAdded") {
+          this._livemark[aItemId].dateAdded = parseInt(aValue, 10);
+        }
+
         this._livemarks[aItemId].lastModified = aLastModified;
       }
     }
@@ -526,8 +537,8 @@ function Livemark(aLivemarkInfo)
   this._nodes = new Map();
 
   this._guid = "";
+  this._dateAdded = 0;
   this._lastModified = 0;
-
   this.loadGroup = null;
   this.feedURI = null;
   this.siteURI = null;
@@ -539,6 +550,7 @@ function Livemark(aLivemarkInfo)
     this.guid = aLivemarkInfo.guid;
     this.feedURI = aLivemarkInfo.feedURI;
     this.siteURI = aLivemarkInfo.siteURI;
+    this.dateAdded = aLivemarkInfo.dateAdded;
     this.lastModified = aLivemarkInfo.lastModified;
   }
   else {
@@ -550,6 +562,10 @@ function Livemark(aLivemarkInfo)
     this.writeFeedURI(aLivemarkInfo.feedURI);
     if (aLivemarkInfo.siteURI) {
       this.writeSiteURI(aLivemarkInfo.siteURI);
+    }
+    if (aLivemarkInfo.dateAdded) {
+      this.dateAdded = aLivemarkInfo.dateAdded;
+      PlacesUtils.bookmarks.setItemDateAdded(this.id, this.dateAdded);
     }
     // Last modified time must be the last change.
     if (aLivemarkInfo.lastModified) {
@@ -614,16 +630,13 @@ Livemark.prototype = {
     this.siteURI = aSiteURI;
   },
 
-  set guid(aGUID) {
-    this._guid = aGUID;
-    return aGUID;
-  },
+  set guid(aGUID) this._guid = aGUID,
   get guid() this._guid,
 
-  set lastModified(aLastModified) {
-    this._lastModified = aLastModified;
-    return aLastModified;
-  },
+  set dateAdded(aDateAdded) this._dateAdded = aDateAdded,
+  get dateAdded() this._dateAdded,
+
+  set lastModified(aLastModified) this._lastModified = aLastModified,
   get lastModified() this._lastModified,
 
   /**

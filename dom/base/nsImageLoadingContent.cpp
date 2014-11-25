@@ -361,14 +361,51 @@ nsImageLoadingContent::GetImageBlockingStatus(int16_t* aStatus)
   return NS_OK;
 }
 
+static void
+ReplayImageStatus(imgIRequest* aRequest, imgINotificationObserver* aObserver)
+{
+  if (!aRequest) {
+    return;
+  }
+
+  uint32_t status = 0;
+  nsresult rv = aRequest->GetImageStatus(&status);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (status & imgIRequest::STATUS_SIZE_AVAILABLE) {
+    aObserver->Notify(aRequest, imgINotificationObserver::SIZE_AVAILABLE, nullptr);
+  }
+  if (status & imgIRequest::STATUS_FRAME_COMPLETE) {
+    aObserver->Notify(aRequest, imgINotificationObserver::FRAME_COMPLETE, nullptr);
+  }
+  if (status & imgIRequest::STATUS_HAS_TRANSPARENCY) {
+    aObserver->Notify(aRequest, imgINotificationObserver::HAS_TRANSPARENCY, nullptr);
+  }
+  if (status & imgIRequest::STATUS_IS_ANIMATED) {
+    aObserver->Notify(aRequest, imgINotificationObserver::IS_ANIMATED, nullptr);
+  }
+  if (status & imgIRequest::STATUS_DECODE_COMPLETE) {
+    aObserver->Notify(aRequest, imgINotificationObserver::DECODE_COMPLETE, nullptr);
+  }
+  if (status & imgIRequest::STATUS_LOAD_COMPLETE) {
+    aObserver->Notify(aRequest, imgINotificationObserver::LOAD_COMPLETE, nullptr);
+  }
+}
+
 NS_IMETHODIMP
 nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
 {
   NS_ENSURE_ARG_POINTER(aObserver);
 
   if (!mObserverList.mObserver) {
-    mObserverList.mObserver = aObserver;
     // Don't touch the linking of the list!
+    mObserverList.mObserver = aObserver;
+
+    ReplayImageStatus(mCurrentRequest, aObserver);
+    ReplayImageStatus(mPendingRequest, aObserver);
+
     return NS_OK;
   }
 
@@ -383,6 +420,9 @@ nsImageLoadingContent::AddObserver(imgINotificationObserver* aObserver)
   if (! observer->mNext) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  ReplayImageStatus(mCurrentRequest, aObserver);
+  ReplayImageStatus(mPendingRequest, aObserver);
 
   return NS_OK;
 }

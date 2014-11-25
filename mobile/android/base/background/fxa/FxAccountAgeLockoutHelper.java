@@ -35,13 +35,13 @@ public class FxAccountAgeLockoutHelper {
     // Otherwise, find out how long it's been since we last failed.
     long millsecondsSinceLastFailedAgeCheck = elapsedRealtime - ELAPSED_REALTIME_OF_LAST_FAILED_AGE_CHECK;
     boolean isLockedOut = millsecondsSinceLastFailedAgeCheck < FxAccountConstants.MINIMUM_TIME_TO_WAIT_AFTER_AGE_CHECK_FAILED_IN_MILLISECONDS;
-    FxAccountConstants.pii(LOG_TAG, "Checking if locked out: it's been " + millsecondsSinceLastFailedAgeCheck + "ms " +
+    FxAccountUtils.pii(LOG_TAG, "Checking if locked out: it's been " + millsecondsSinceLastFailedAgeCheck + "ms " +
         "since last lockout, so " + (isLockedOut ? "yes." : "no."));
     return isLockedOut;
   }
 
   public static synchronized void lockOut(long elapsedRealtime) {
-      FxAccountConstants.pii(LOG_TAG, "Locking out at time: " + elapsedRealtime);
+      FxAccountUtils.pii(LOG_TAG, "Locking out at time: " + elapsedRealtime);
       ELAPSED_REALTIME_OF_LAST_FAILED_AGE_CHECK = Math.max(elapsedRealtime, ELAPSED_REALTIME_OF_LAST_FAILED_AGE_CHECK);
   }
 
@@ -60,8 +60,8 @@ public class FxAccountAgeLockoutHelper {
     int thisYear = Calendar.getInstance().get(Calendar.YEAR);
     int approximateAge = thisYear - yearOfBirth;
     boolean oldEnough = approximateAge >= FxAccountConstants.MINIMUM_AGE_TO_CREATE_AN_ACCOUNT;
-    if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
-      FxAccountConstants.pii(LOG_TAG, "Age check " + (oldEnough ? "passes" : "fails") +
+    if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+      FxAccountUtils.pii(LOG_TAG, "Age check " + (oldEnough ? "passes" : "fails") +
           ": age is " + approximateAge + " = " + thisYear + " - " + yearOfBirth);
     }
     return oldEnough;
@@ -79,7 +79,7 @@ public class FxAccountAgeLockoutHelper {
     }
     if (!Arrays.asList(yearItems).contains(yearText)) {
       // This should never happen, but let's be careful.
-      FxAccountConstants.pii(LOG_TAG, "Failed age check: year text was not found in item list.");
+      FxAccountUtils.pii(LOG_TAG, "Failed age check: year text was not found in item list.");
       return false;
     }
     Integer yearOfBirth;
@@ -88,7 +88,7 @@ public class FxAccountAgeLockoutHelper {
     } catch (NumberFormatException e) {
       // Any non-numbers in the list are ranges (and we say as much to
       // translators in the resource file), so these people pass the age check.
-      FxAccountConstants.pii(LOG_TAG, "Passed age check: year text was found in item list but was not a number.");
+      FxAccountUtils.pii(LOG_TAG, "Passed age check: year text was found in item list but was not a number.");
       return true;
     }
     return passesAgeCheck(yearOfBirth);

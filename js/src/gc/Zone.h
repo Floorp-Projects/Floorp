@@ -250,6 +250,10 @@ struct Zone : public JS::shadow::Zone,
 
     js::jit::JitZone *createJitZone(JSContext *cx);
 
+    bool isQueuedForBackgroundSweep() {
+        return isOnList();
+    }
+
   public:
     js::Allocator allocator;
 
@@ -313,6 +317,12 @@ struct Zone : public JS::shadow::Zone,
     bool gcScheduled_;
     bool gcPreserveCode_;
     bool jitUsingBarriers_;
+
+    // Allow zones to be linked into a list
+    friend class js::gc::ZoneList;
+    static Zone * const NotOnList;
+    Zone *listNext_;
+    bool isOnList();
 
     friend bool js::CurrentThreadCanAccessZone(Zone *zone);
     friend class js::gc::GCRuntime;

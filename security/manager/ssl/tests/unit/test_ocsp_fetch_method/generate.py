@@ -22,7 +22,7 @@ def generate_certs():
     [noise_file, pwd_file] = CertUtils.init_nss_db(srcdir)
     generate_ca_cert(srcdir, srcdir, noise_file, 'ca')
     generate_child_cert(srcdir, srcdir, noise_file, 'int', 'ca', False, '')
-    ocsp_url = "http://www.example.com:8080/"
+    ocsp_url = "http://www.example.com:8888/"
     generate_child_cert(srcdir, srcdir, noise_file, "a", 'int', True, ocsp_url)
     generate_child_cert(srcdir, srcdir, noise_file, "b", 'int', True, ocsp_url)
 
