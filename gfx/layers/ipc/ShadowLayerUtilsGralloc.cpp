@@ -193,41 +193,6 @@ MagicGrallocBufferHandle::MagicGrallocBufferHandle(const sp<GraphicBuffer>& aGra
 //-----------------------------------------------------------------------------
 // Parent process
 
-static gfxImageFormat
-ImageFormatForPixelFormat(android::PixelFormat aFormat)
-{
-  switch (aFormat) {
-  case PIXEL_FORMAT_RGBA_8888:
-    return gfxImageFormat::ARGB32;
-  case PIXEL_FORMAT_RGBX_8888:
-    return gfxImageFormat::RGB24;
-  case PIXEL_FORMAT_RGB_565:
-    return gfxImageFormat::RGB16_565;
-  default:
-    MOZ_CRASH("Unknown gralloc pixel format");
-  }
-  return gfxImageFormat::ARGB32;
-}
-
-static android::PixelFormat
-PixelFormatForImageFormat(gfxImageFormat aFormat)
-{
-  switch (aFormat) {
-  case gfxImageFormat::ARGB32:
-    return android::PIXEL_FORMAT_RGBA_8888;
-  case gfxImageFormat::RGB24:
-    return android::PIXEL_FORMAT_RGBX_8888;
-  case gfxImageFormat::RGB16_565:
-    return android::PIXEL_FORMAT_RGB_565;
-  case gfxImageFormat::A8:
-    NS_WARNING("gralloc does not support gfxImageFormat::A8");
-    return android::PIXEL_FORMAT_UNKNOWN;
-  default:
-    MOZ_CRASH("Unknown gralloc pixel format");
-  }
-  return android::PIXEL_FORMAT_RGBA_8888;
-}
-
 /*static*/ bool
 LayerManagerComposite::SupportsDirectTexturing()
 {
