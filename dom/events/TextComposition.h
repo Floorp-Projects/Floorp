@@ -278,10 +278,14 @@ private:
   /**
    * CloneAndDispatchAs() dispatches a composition event which is
    * duplicateed from aCompositionEvent and set the aMessage.
+   *
+   * @return Returns BaseEventFlags which is the result of dispatched event.
    */
-  void CloneAndDispatchAs(
-         const WidgetCompositionEvent* aCompositionEvent,
-         uint32_t aMessage);
+  BaseEventFlags CloneAndDispatchAs(
+                   const WidgetCompositionEvent* aCompositionEvent,
+                   uint32_t aMessage,
+                   nsEventStatus* aStatus = nullptr,
+                   EventDispatchingCallback* aCallBack = nullptr);
 
   /**
    * If IME has already dispatched compositionend event but it was discarded
