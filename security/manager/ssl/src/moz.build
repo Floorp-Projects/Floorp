@@ -77,6 +77,10 @@ SOURCES += [
     'PSMContentListener.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/security/manager/boot/src',
+]
+
 if not CONFIG['MOZ_NO_SMART_CARDS']:
     UNIFIED_SOURCES += [
         'nsSmartCardMonitor.cpp',

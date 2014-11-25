@@ -1,5 +1,5 @@
 def main(request, response):
-    response.headers.extend([('Transfer-Encoding', 'chunked'),
+    response.headers.update([('Transfer-Encoding', 'chunked'),
                              ('Content-Type', 'text/html'),
                              ('Connection', 'keep-alive')])
     response.write_status_headers()

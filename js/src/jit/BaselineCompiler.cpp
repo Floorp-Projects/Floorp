@@ -309,11 +309,15 @@ BaselineCompiler::emitInitializeLocals(size_t n, const Value &v)
 bool
 BaselineCompiler::emitPrologue()
 {
+#ifdef JS_USE_LINK_REGISTER
+    // Push link register from generateEnterJIT()'s BLR.
+    masm.pushReturnAddress();
+    masm.checkStackAlignment();
+#endif
     masm.push(BaselineFrameReg);
     masm.mov(BaselineStackReg, BaselineFrameReg);
 
     masm.subPtr(Imm32(BaselineFrame::Size()), BaselineStackReg);
-    masm.checkStackAlignment();
 
     // Initialize BaselineFrame. For eval scripts, the scope chain
     // is passed in R1, so we have to be careful not to clobber
@@ -3450,7 +3454,7 @@ typedef bool (*InterpretResumeFn)(JSContext *, HandleObject, HandleValue, Handle
 static const VMFunction InterpretResumeInfo = FunctionInfo<InterpretResumeFn>(jit::InterpretResume);
 
 typedef bool (*GeneratorThrowFn)(JSContext *, BaselineFrame *, HandleObject, HandleValue, uint32_t);
-static const VMFunction GeneratorThrowInfo = FunctionInfo<GeneratorThrowFn>(jit::GeneratorThrowOrClose);
+static const VMFunction GeneratorThrowInfo = FunctionInfo<GeneratorThrowFn>(jit::GeneratorThrowOrClose, TailCall);
 
 bool
 BaselineCompiler::emit_JSOP_RESUME()
