@@ -9,6 +9,12 @@ const DEFAULT_ECC_LIST = "112,911";
 function setEccListProperty(list) {
   log("Set property ril.ecclist: " + list);
 
+  // We should wrap empty |list| by ''. Otherwise, the entire command will be
+  // "setprop ril.ecclist" which causus the command error.
+  if (!list) {
+    list = "''";
+  }
+
   let deferred = Promise.defer();
   try {
     emulator.runShellCmd(["setprop","ril.ecclist", list]).then(function() {
