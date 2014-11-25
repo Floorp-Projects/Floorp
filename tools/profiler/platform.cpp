@@ -88,10 +88,6 @@ void Sampler::Startup() {
 
 void Sampler::Shutdown() {
   while (sRegisteredThreads->size() > 0) {
-    // Any stack that's still referenced at this point are
-    // still active and we don't have a way to clean them up
-    // safetly and still handle the pop call on that object.
-    sRegisteredThreads->back()->ForgetStack();
     delete sRegisteredThreads->back();
     sRegisteredThreads->pop_back();
   }
@@ -127,9 +123,6 @@ ThreadInfo::~ThreadInfo() {
     delete mProfile;
 
   Sampler::FreePlatformData(mPlatformData);
-
-  delete mPseudoStack;
-  mPseudoStack = nullptr;
 }
 
 void
@@ -141,6 +134,33 @@ ThreadInfo::SetPendingDelete()
   if (mProfile) {
     mProfile->SetPendingDelete();
   }
+}
+
+StackOwningThreadInfo::StackOwningThreadInfo(const char* aName, int aThreadId,
+                                             bool aIsMainThread,
+                                             PseudoStack* aPseudoStack,
+                                             void* aStackTop)
+  : ThreadInfo(aName, aThreadId, aIsMainThread, aPseudoStack, aStackTop)
+{
+  aPseudoStack->ref();
+}
+
+StackOwningThreadInfo::~StackOwningThreadInfo()
+{
+  PseudoStack* stack = Stack();
+  if (stack) {
+    stack->deref();
+  }
+}
+
+void
+StackOwningThreadInfo::SetPendingDelete()
+{
+  PseudoStack* stack = Stack();
+  if (stack) {
+    stack->deref();
+  }
+  ThreadInfo::SetPendingDelete();
 }
 
 ProfilerMarker::ProfilerMarker(const char* aMarkerName,
@@ -519,7 +539,7 @@ void mozilla_sampler_init(void* stackTop)
 
   Sampler::Startup();
 
-  PseudoStack *stack = new PseudoStack();
+  PseudoStack *stack = PseudoStack::create();
   tlsPseudoStack.set(stack);
 
   bool isMainThread = true;
@@ -592,9 +612,9 @@ void mozilla_sampler_shutdown()
 
   Sampler::Shutdown();
 
-  // We can't delete the Stack because we can be between a
-  // sampler call_enter/call_exit point.
-  // TODO Need to find a safe time to delete Stack
+  PseudoStack *stack = tlsPseudoStack.get();
+  stack->deref();
+  tlsPseudoStack.set(nullptr);
 }
 
 void mozilla_sampler_save()
@@ -809,7 +829,7 @@ void mozilla_sampler_stop()
   LOG("BEGIN mozilla_sampler_stop");
 
   if (!stack_key_initialized)
-    profiler_init(nullptr);
+    return;
 
   TableTicker *t = tlsTicker.get();
   if (!t) {
@@ -942,7 +962,8 @@ bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
   }
 #endif
 
-  PseudoStack* stack = new PseudoStack();
+  MOZ_ASSERT(tlsPseudoStack.get() == nullptr);
+  PseudoStack* stack = PseudoStack::create();
   tlsPseudoStack.set(stack);
   bool isMainThread = is_main_thread_name(aName);
   return Sampler::RegisterCurrentThread(aName, stack, isMainThread, stackTop);
@@ -950,7 +971,9 @@ bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
 
 void mozilla_sampler_unregister_thread()
 {
-  if (sInitCount == 0) {
+  // Don't check sInitCount count here -- we may be unregistering the
+  // thread after the sampler was shut down.
+  if (!stack_key_initialized) {
     return;
   }
 
@@ -958,6 +981,7 @@ void mozilla_sampler_unregister_thread()
   if (!stack) {
     return;
   }
+  stack->deref();
   tlsPseudoStack.set(nullptr);
 
   Sampler::UnregisterCurrentThread();
