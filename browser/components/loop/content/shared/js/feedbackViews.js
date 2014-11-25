@@ -222,7 +222,7 @@ loop.shared.views.FeedbackView = (function(l10n) {
    * Feedback view.
    */
   var FeedbackView = React.createClass({displayName: 'FeedbackView',
-    mixins: [Backbone.Events, sharedMixins.AudioMixin],
+    mixins: [Backbone.Events],
 
     propTypes: {
       feedbackStore: React.PropTypes.instanceOf(loop.store.FeedbackStore),
@@ -240,10 +240,6 @@ loop.shared.views.FeedbackView = (function(l10n) {
 
     componentWillMount: function() {
       this.listenTo(this.props.feedbackStore, "change", this._onStoreStateChanged);
-    },
-
-    componentDidMount: function() {
-      this.play("terminated");
     },
 
     componentWillUnmount: function() {
