@@ -776,6 +776,12 @@ void imgRequestProxy::OnDecodeComplete()
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
     mListener->Notify(this, imgINotificationObserver::DECODE_COMPLETE, nullptr);
   }
+
+  if (GetOwner()) {
+    // We finished the decode, and thus have the decoded frames. Update the cache
+    // entry size to take this into account.
+    GetOwner()->UpdateCacheEntrySize();
+  }
 }
 
 void imgRequestProxy::OnDiscard()
@@ -786,6 +792,10 @@ void imgRequestProxy::OnDiscard()
     // Hold a ref to the listener while we call it, just in case.
     nsCOMPtr<imgINotificationObserver> kungFuDeathGrip(mListener);
     mListener->Notify(this, imgINotificationObserver::DISCARD, nullptr);
+  }
+  if (GetOwner()) {
+    // Update the cache entry size, since we just got rid of frame data.
+    GetOwner()->UpdateCacheEntrySize();
   }
 }
 
