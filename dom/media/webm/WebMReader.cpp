@@ -973,8 +973,10 @@ void WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
 nsresult WebMReader::SeekInternal(int64_t aTarget, int64_t aStartTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  nsresult rv = mVideoDecoder->Flush();
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (mVideoDecoder) {
+    nsresult rv = mVideoDecoder->Flush();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   LOG(PR_LOG_DEBUG, ("Reader [%p] for Decoder [%p]: About to seek to %fs",
                      this, mDecoder, double(aTarget) / USECS_PER_S));
