@@ -279,7 +279,7 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 {
     /* Define a top-level property 'undefined' with the undefined value. */
     if (!JSObject::defineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
-                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+                                  JS_PropertyStub, JS_StrictPropertyStub, JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -326,7 +326,8 @@ GlobalObject::initSelfHostingBuiltins(JSContext *cx, Handle<GlobalObject*> globa
 {
     // Define a top-level property 'undefined' with the undefined value.
     if (!JSObject::defineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
-                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -434,10 +435,11 @@ js::LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_
     RootedValue protoVal(cx, ObjectValue(*proto));
     RootedValue ctorVal(cx, ObjectValue(*ctor));
 
-    return JSObject::defineProperty(cx, ctor, cx->names().prototype, protoVal,
-                                    nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY) &&
-           JSObject::defineProperty(cx, proto, cx->names().constructor, ctorVal,
-                                    nullptr, nullptr, 0);
+    return JSObject::defineProperty(cx, ctor, cx->names().prototype,
+                                    protoVal, JS_PropertyStub, JS_StrictPropertyStub,
+                                    JSPROP_PERMANENT | JSPROP_READONLY) &&
+           JSObject::defineProperty(cx, proto, cx->names().constructor,
+                                    ctorVal, JS_PropertyStub, JS_StrictPropertyStub, 0);
 }
 
 bool
