@@ -5236,7 +5236,7 @@ GCRuntime::beginSweepPhase(bool lastGC)
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
 
     sweepOnBackgroundThread =
-        !lastGC && !TraceEnabled() && CanUseExtraThreads() && !shouldCompact();
+        !lastGC && !TraceEnabled() && CanUseExtraThreads();
 
     releaseObservedTypes = shouldReleaseObservedTypes();
 
@@ -5562,14 +5562,25 @@ GCRuntime::endSweepPhase(bool lastGC)
 #endif
 }
 
-#ifdef JSGC_COMPACTING
-void
+bool
 GCRuntime::compactPhase(bool lastGC)
 {
-    MOZ_ASSERT(rt->gc.nursery.isEmpty());
-    MOZ_ASSERT(!sweepOnBackgroundThread);
-
+#ifndef JSGC_COMPACTING
+    MOZ_CRASH();
+#else
     gcstats::AutoPhase ap(stats, gcstats::PHASE_COMPACT);
+
+    if (isIncremental) {
+        // Poll for end of background sweeping
+        AutoLockGC lock(rt);
+        if (isBackgroundSweeping())
+            return false;
+    } else {
+        waitBackgroundSweepEnd();
+    }
+
+    MOZ_ASSERT(rt->gc.nursery.isEmpty());
+    assertBackgroundSweepingFinished();
 
     ArenaHeader *relocatedList = relocateArenas();
     updatePointersToRelocatedCells();
@@ -5606,8 +5617,10 @@ GCRuntime::compactPhase(bool lastGC)
             zone->allocator.arenas.checkEmptyFreeLists();
     }
 #endif
-}
+
 #endif // JSGC_COMPACTING
+    return true;
+}
 
 void
 GCRuntime::finishCollection()
@@ -5759,6 +5772,11 @@ GCRuntime::resetIncrementalGC(const char *reason)
         }
         break;
       }
+
+#ifdef JSGC_COMPACTING
+      case COMPACT:
+        break;
+#endif
 
       default:
         MOZ_CRASH("Invalid incremental GC state");
@@ -5952,24 +5970,31 @@ GCRuntime::incrementalCollectSlice(SliceBudget &budget, JS::gcreason::Reason rea
         /* fall through */
       }
 
-      case SWEEP: {
-        bool finished = sweepPhase(budget);
-        if (!finished)
-            break;
+      case SWEEP:
+        {
+            bool finished = sweepPhase(budget);
+            if (!finished)
+                break;
+        }
 
         endSweepPhase(lastGC);
 
-#ifdef JSGC_COMPACTING
+        incrementalState = COMPACT;
+
+        /* Yield before compacting since it is not incremental. */
+        if (shouldCompact() && isIncremental)
+            break;
+
+      case COMPACT:
         if (shouldCompact()) {
-            incrementalState = COMPACT;
-            compactPhase(lastGC);
+            bool finished = compactPhase(lastGC);
+            if (!finished)
+                break;
         }
-#endif
 
         finishCollection();
         incrementalState = NO_INCREMENTAL;
         break;
-      }
 
       default:
         MOZ_ASSERT(false);
