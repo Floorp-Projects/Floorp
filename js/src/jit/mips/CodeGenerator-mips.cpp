@@ -2113,6 +2113,18 @@ CodeGeneratorMIPS::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 }
 
 bool
+CodeGeneratorMIPS::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+bool
+CodeGeneratorMIPS::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+bool
 CodeGeneratorMIPS::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
 {
     const MAsmJSPassStackArg *mir = ins->mir();
