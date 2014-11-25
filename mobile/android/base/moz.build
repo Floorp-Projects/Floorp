@@ -11,13 +11,6 @@ include('android-services.mozbuild')
 
 thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 
-constants_jar = add_java_jar('constants')
-constants_jar.sources = []
-constants_jar.generated_sources = [
-    'org/mozilla/gecko/AppConstants.java',
-    'org/mozilla/gecko/SysInfo.java',
-]
-
 resjar = add_java_jar('gecko-R')
 resjar.sources = []
 resjar.generated_sources += [
@@ -46,10 +39,8 @@ mgjar.sources += [
     'mozglue/WebRTCJNITarget.java',
 ]
 mgjar.generated_sources += [
+    'org/mozilla/gecko/AppConstants.java',
     'org/mozilla/gecko/mozglue/GeckoLoader.java',
-]
-mgjar.extra_jars += [
-    'constants.jar',
 ]
 mgjar.javac_flags += ['-Xlint:all']
 
@@ -86,8 +77,7 @@ gujar.sources += [
     'util/WebActivityMapper.java',
 ]
 gujar.extra_jars = [
-    'constants.jar',
-    'gecko-mozglue.jar',
+    'gecko-mozglue.jar'
 ]
 gujar.javac_flags += ['-Xlint:all,-deprecation']
 
@@ -509,9 +499,8 @@ gbjar.sources += [ thirdparty_source_dir + f for f in [
     'com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
 ] ]
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
-gbjar.generated_sources = [] # Keep it this way.
-gbjar.extra_jars += [
-    'constants.jar'
+gbjar.generated_sources += [
+    'org/mozilla/gecko/SysInfo.java',
 ]
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'CrashReporter.java' ]
@@ -551,7 +540,7 @@ if CONFIG['MOZ_ANDROID_NEW_TABLET_UI'] and max_sdk_version >= 11:
 
 gbjar.sources += sync_java_files
 gbjar.generated_sources += sync_generated_java_files
-gbjar.extra_jars += [
+gbjar.extra_jars = [
     'gecko-R.jar',
     'gecko-mozglue.jar',
     'gecko-thirdparty.jar',
@@ -697,7 +686,6 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
     search_activity.sources += [search_source_dir + '/' + f for f in search_activity_sources]
     search_activity.javac_flags += ['-Xlint:all']
     search_activity.extra_jars = [
-        'constants.jar',
         'gecko-R.jar',
         'gecko-browser.jar',
         'gecko-mozglue.jar',
