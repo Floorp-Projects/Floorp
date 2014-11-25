@@ -4344,7 +4344,7 @@ DebuggerScript_getAllOffsets(JSContext *cx, unsigned argc, Value *vp)
             RootedId id(cx, INT_TO_JSID(lineno));
 
             bool found;
-            if (!HasOwnProperty(cx, result, id, &found))
+            if (!js::HasOwnProperty(cx, result, id, &found))
                 return false;
             if (found && !JSObject::getGeneric(cx, result, result, id, &offsetsv))
                 return false;
