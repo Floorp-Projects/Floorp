@@ -90,7 +90,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
         masm.makeFrameDescriptor(BaselineTailCallReg, JitFrame_BaselineJS);
         masm.push(BaselineTailCallReg);
     }
-
+    MOZ_ASSERT(fun.expectTailCall == NonTailCall);
     // Perform the call.
     masm.call(code);
     uint32_t callOffset = masm.currentOffset();

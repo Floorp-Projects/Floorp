@@ -419,6 +419,8 @@ JitCode *
 JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void **returnAddrOut)
 {
     MacroAssembler masm(cx);
+    masm.pushReturnAddress();
+
     // ArgumentsRectifierReg contains the |nargs| pushed onto the current frame.
     // Including |this|, there are (|nargs| + 1) arguments to copy.
     MOZ_ASSERT(ArgumentsRectifierReg == r8);
@@ -747,6 +749,10 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     //  +0  ExitFrame
     //
     // We're aligned to an exit frame, so link it up.
+    // If it isn't a tail call, then the return address needs to be saved
+    if (f.expectTailCall == NonTailCall)
+        masm.pushReturnAddress();
+
     masm.enterExitFrameAndLoadContext(&f, cxreg, regs.getAny(), f.executionMode);
 
     // Save the base of the argument set stored on the stack.
@@ -914,6 +920,7 @@ JitRuntime::generatePreBarrier(JSContext *cx, MIRType type)
         save = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
                            FloatRegisterSet());
     }
+    save.add(lr);
     masm.PushRegsInMask(save);
 
     MOZ_ASSERT(PreBarrierReg == r1);
@@ -923,9 +930,9 @@ JitRuntime::generatePreBarrier(JSContext *cx, MIRType type)
     masm.passABIArg(r0);
     masm.passABIArg(r1);
     masm.callWithABI(IonMarkFunction(type));
-
+    save.take(AnyRegister(lr));
+    save.add(pc);
     masm.PopRegsInMask(save);
-    masm.ret();
 
     Linker linker(masm);
     AutoFlushICache afc("PreBarrier");

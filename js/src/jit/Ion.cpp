@@ -38,6 +38,7 @@
 #include "jit/PerfSpewer.h"
 #include "jit/RangeAnalysis.h"
 #include "jit/ScalarReplacement.h"
+#include "jit/Sink.h"
 #include "jit/StupidAllocator.h"
 #include "jit/ValueNumbering.h"
 #include "vm/ForkJoin.h"
@@ -1559,6 +1560,17 @@ OptimizeMIR(MIRGenerator *mir)
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("DCE"))
+            return false;
+    }
+
+    if (mir->optimizationInfo().sinkEnabled()) {
+        AutoTraceLog log(logger, TraceLogger::EliminateDeadCode);
+        if (!Sink(mir, graph))
+            return false;
+        IonSpewPass("Sink");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Sink"))
             return false;
     }
 

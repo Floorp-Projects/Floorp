@@ -177,6 +177,23 @@ struct BaseRect {
     *static_cast<Sub*>(this) = aRect1.UnionEdges(aRect2);
   }
 
+  // Expands the rect to include the point
+  void ExpandToEnclose(const Point& aPoint)
+  {
+    if (aPoint.x < x) {
+      width = XMost() - aPoint.x;
+      x = aPoint.x;
+    } else if (aPoint.x > XMost()) {
+      width = aPoint.x - x;
+    }
+    if (aPoint.y < y) {
+      height = YMost() - aPoint.y;
+      y = aPoint.y;
+    } else if (aPoint.y > YMost()) {
+      height = aPoint.y - y;
+    }
+  }
+
   void SetRect(T aX, T aY, T aWidth, T aHeight)
   {
     x = aX; y = aY; width = aWidth; height = aHeight;

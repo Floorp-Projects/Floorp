@@ -5,9 +5,15 @@
 import subprocess
 from functools import partial
 
+from mozlog.structured import get_default_logger
+
+logger = None
 
 def vcs(bin_name):
     def inner(command, *args, **kwargs):
+        global logger
+        if logger is None:
+            logger = get_default_logger("vcs")
         repo = kwargs.pop("repo", None)
         if kwargs:
             raise TypeError, kwargs
@@ -19,12 +25,11 @@ def vcs(bin_name):
             proc_kwargs["cwd"] = repo
 
         command_line = [bin_name, command] + args
-        print " ".join(command_line)
+        logger.debug(" ".join(command_line))
         try:
             return subprocess.check_output(command_line, **proc_kwargs)
         except subprocess.CalledProcessError as e:
-            print proc_kwargs
-            print e.output
+            logger.error(e.output)
             raise
     return inner
 
@@ -41,5 +46,4 @@ def is_git_root(path):
         rv = git("rev-parse", "--show-cdup", repo=path)
     except subprocess.CalledProcessError:
         return False
-    print rv
     return rv == "\n"

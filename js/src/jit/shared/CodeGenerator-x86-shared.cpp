@@ -2677,6 +2677,8 @@ CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle *ins)
 bool
 CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
 {
+    static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
+
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     Operand rhs = ToOperand(ins->rhs());
     MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
@@ -2690,22 +2692,41 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
         masm.packedEqualInt32x4(rhs, lhs);
         return true;
       case MSimdBinaryComp::lessThan:
-        // scr := rhs
+        // src := rhs
         if (rhs.kind() == Operand::FPREG)
             masm.moveAlignedInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
         else
             masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
 
-        // scr := scr > lhs (i.e. lhs < rhs)
+        // src := src > lhs (i.e. lhs < rhs)
         // Improve by doing custom lowering (rhs is tied to the output register)
         masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), ScratchSimdReg);
         masm.moveAlignedInt32x4(ScratchSimdReg, lhs);
         return true;
       case MSimdBinaryComp::notEqual:
+        // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
+        // should invert the comparison by, e.g. swapping the arms of a select
+        // if that's what it's used in.
+        masm.loadConstantInt32x4(allOnes, ScratchSimdReg);
+        masm.packedEqualInt32x4(rhs, lhs);
+        masm.bitwiseXorX4(Operand(ScratchSimdReg), lhs);
+        return true;
       case MSimdBinaryComp::greaterThanOrEqual:
+        // src := rhs
+        if (rhs.kind() == Operand::FPREG)
+            masm.moveAlignedInt32x4(ToFloatRegister(ins->rhs()), ScratchSimdReg);
+        else
+            masm.loadAlignedInt32x4(rhs, ScratchSimdReg);
+        masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), ScratchSimdReg);
+        masm.loadConstantInt32x4(allOnes, lhs);
+        masm.bitwiseXorX4(Operand(ScratchSimdReg), lhs);
+        return true;
       case MSimdBinaryComp::lessThanOrEqual:
-        // These operations are not part of the spec. so are not implemented.
-        break;
+        // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
+        masm.loadConstantInt32x4(allOnes, ScratchSimdReg);
+        masm.packedGreaterThanInt32x4(rhs, lhs);
+        masm.bitwiseXorX4(Operand(ScratchSimdReg), lhs);
+        return true;
     }
     MOZ_CRASH("unexpected SIMD op");
 }

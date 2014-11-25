@@ -5500,6 +5500,15 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
             return OptionFailure("ion-range-analysis", str);
     }
 
+    if (const char *str = op.getStringOption("ion-sink")) {
+        if (strcmp(str, "on") == 0)
+            jit::js_JitOptions.disableSink = false;
+        else if (strcmp(str, "off") == 0)
+            jit::js_JitOptions.disableSink = true;
+        else
+            return OptionFailure("ion-sink", str);
+    }
+
     if (const char *str = op.getStringOption("ion-loop-unrolling")) {
         if (strcmp(str, "on") == 0)
             jit::js_JitOptions.disableLoopUnrolling = false;
@@ -5797,6 +5806,8 @@ main(int argc, char **argv, char **envp)
                                "Find edge cases where Ion can avoid bailouts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-range-analysis", "on/off",
                                "Range analysis (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-sink", "on/off",
+                               "Sink code motion (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-loop-unrolling", "on/off",
                                "Loop unrolling (default: off, on to enable)")
         || !op.addBoolOption('\0', "ion-check-range-analysis",

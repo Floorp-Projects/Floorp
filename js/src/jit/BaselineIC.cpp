@@ -660,6 +660,7 @@ ICStubCompiler::tailCallVM(const VMFunction &fun, MacroAssembler &masm)
     if (!code)
         return false;
 
+    MOZ_ASSERT(fun.expectTailCall == TailCall);
     uint32_t argSize = fun.explicitStackSlots() * sizeof(void *);
     EmitTailCallVM(code, masm, argSize);
     return true;
@@ -672,6 +673,7 @@ ICStubCompiler::callVM(const VMFunction &fun, MacroAssembler &masm)
     if (!code)
         return false;
 
+    MOZ_ASSERT(fun.expectTailCall == NonTailCall);
     EmitCallVM(code, masm);
     return true;
 }
@@ -1120,7 +1122,7 @@ DoProfilerFallback(JSContext *cx, BaselineFrame *frame, ICProfiler_Fallback *stu
 
 typedef bool (*DoProfilerFallbackFn)(JSContext *, BaselineFrame *frame, ICProfiler_Fallback *);
 static const VMFunction DoProfilerFallbackInfo =
-    FunctionInfo<DoProfilerFallbackFn>(DoProfilerFallback);
+    FunctionInfo<DoProfilerFallbackFn>(DoProfilerFallback, TailCall);
 
 bool
 ICProfiler_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1322,7 +1324,7 @@ DoTypeMonitorFallback(JSContext *cx, BaselineFrame *frame, ICTypeMonitor_Fallbac
 typedef bool (*DoTypeMonitorFallbackFn)(JSContext *, BaselineFrame *, ICTypeMonitor_Fallback *,
                                         HandleValue, MutableHandleValue);
 static const VMFunction DoTypeMonitorFallbackInfo =
-    FunctionInfo<DoTypeMonitorFallbackFn>(DoTypeMonitorFallback);
+    FunctionInfo<DoTypeMonitorFallbackFn>(DoTypeMonitorFallback, TailCall);
 
 bool
 ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1553,7 +1555,7 @@ DoTypeUpdateFallback(JSContext *cx, BaselineFrame *frame, ICUpdatedStub *stub, H
 typedef bool (*DoTypeUpdateFallbackFn)(JSContext *, BaselineFrame *, ICUpdatedStub *, HandleValue,
                                        HandleValue);
 const VMFunction DoTypeUpdateFallbackInfo =
-    FunctionInfo<DoTypeUpdateFallbackFn>(DoTypeUpdateFallback);
+    FunctionInfo<DoTypeUpdateFallbackFn>(DoTypeUpdateFallback, NonTailCall);
 
 bool
 ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1696,7 +1698,7 @@ DoThisFallback(JSContext *cx, ICThis_Fallback *stub, HandleValue thisv, MutableH
 }
 
 typedef bool (*DoThisFallbackFn)(JSContext *, ICThis_Fallback *, HandleValue, MutableHandleValue);
-static const VMFunction DoThisFallbackInfo = FunctionInfo<DoThisFallbackFn>(DoThisFallback);
+static const VMFunction DoThisFallbackInfo = FunctionInfo<DoThisFallbackFn>(DoThisFallback, TailCall);
 
 bool
 ICThis_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1732,7 +1734,7 @@ DoNewArray(JSContext *cx, ICNewArray_Fallback *stub, uint32_t length,
 
 typedef bool(*DoNewArrayFn)(JSContext *, ICNewArray_Fallback *, uint32_t, HandleTypeObject,
                             MutableHandleValue);
-static const VMFunction DoNewArrayInfo = FunctionInfo<DoNewArrayFn>(DoNewArray);
+static const VMFunction DoNewArrayInfo = FunctionInfo<DoNewArrayFn>(DoNewArray, TailCall);
 
 bool
 ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1765,7 +1767,7 @@ DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, MutableHandleValue res)
 }
 
 typedef bool(*DoNewObjectFn)(JSContext *, ICNewObject_Fallback *, MutableHandleValue);
-static const VMFunction DoNewObjectInfo = FunctionInfo<DoNewObjectFn>(DoNewObject);
+static const VMFunction DoNewObjectInfo = FunctionInfo<DoNewObjectFn>(DoNewObject, TailCall);
 
 bool
 ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -1977,7 +1979,7 @@ DoCompareFallback(JSContext *cx, BaselineFrame *frame, ICCompare_Fallback *stub_
 typedef bool (*DoCompareFallbackFn)(JSContext *, BaselineFrame *, ICCompare_Fallback *,
                                     HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoCompareFallbackInfo =
-    FunctionInfo<DoCompareFallbackFn>(DoCompareFallback, PopValues(2));
+    FunctionInfo<DoCompareFallbackFn>(DoCompareFallback, TailCall, PopValues(2));
 
 bool
 ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -2312,7 +2314,7 @@ DoToBoolFallback(JSContext *cx, BaselineFrame *frame, ICToBool_Fallback *stub, H
 
 typedef bool (*pf)(JSContext *, BaselineFrame *, ICToBool_Fallback *, HandleValue,
                    MutableHandleValue);
-static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback);
+static const VMFunction fun = FunctionInfo<pf>(DoToBoolFallback, TailCall);
 
 bool
 ICToBool_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -2479,7 +2481,7 @@ DoToNumberFallback(JSContext *cx, ICToNumber_Fallback *stub, HandleValue arg, Mu
 
 typedef bool (*DoToNumberFallbackFn)(JSContext *, ICToNumber_Fallback *, HandleValue, MutableHandleValue);
 static const VMFunction DoToNumberFallbackInfo =
-    FunctionInfo<DoToNumberFallbackFn>(DoToNumberFallback, PopValues(1));
+    FunctionInfo<DoToNumberFallbackFn>(DoToNumberFallback, TailCall, PopValues(1));
 
 bool
 ICToNumber_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -2722,7 +2724,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
 typedef bool (*DoBinaryArithFallbackFn)(JSContext *, BaselineFrame *, ICBinaryArith_Fallback *,
                                         HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoBinaryArithFallbackInfo =
-    FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback, PopValues(2));
+    FunctionInfo<DoBinaryArithFallbackFn>(DoBinaryArithFallback, TailCall, PopValues(2));
 
 bool
 ICBinaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -2768,7 +2770,7 @@ DoConcatStrings(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleVa
 }
 
 typedef bool (*DoConcatStringsFn)(JSContext *, HandleValue, HandleValue, MutableHandleValue);
-static const VMFunction DoConcatStringsInfo = FunctionInfo<DoConcatStringsFn>(DoConcatStrings);
+static const VMFunction DoConcatStringsInfo = FunctionInfo<DoConcatStringsFn>(DoConcatStrings, TailCall);
 
 bool
 ICBinaryArith_StringConcat::Compiler::generateStubCode(MacroAssembler &masm)
@@ -2845,7 +2847,7 @@ DoConcatStringObject(JSContext *cx, bool lhsIsString, HandleValue lhs, HandleVal
 typedef bool (*DoConcatStringObjectFn)(JSContext *, bool lhsIsString, HandleValue, HandleValue,
                                        MutableHandleValue);
 static const VMFunction DoConcatStringObjectInfo =
-    FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject, PopValues(2));
+    FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject, TailCall, PopValues(2));
 
 bool
 ICBinaryArith_StringObjectConcat::Compiler::generateStubCode(MacroAssembler &masm)
@@ -3132,7 +3134,7 @@ DoUnaryArithFallback(JSContext *cx, BaselineFrame *frame, ICUnaryArith_Fallback 
 typedef bool (*DoUnaryArithFallbackFn)(JSContext *, BaselineFrame *, ICUnaryArith_Fallback *,
                                        HandleValue, MutableHandleValue);
 static const VMFunction DoUnaryArithFallbackInfo =
-    FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback, PopValues(1));
+    FunctionInfo<DoUnaryArithFallbackFn>(DoUnaryArithFallback, TailCall, PopValues(1));
 
 bool
 ICUnaryArith_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -4087,7 +4089,7 @@ DoGetElemFallback(JSContext *cx, BaselineFrame *frame, ICGetElem_Fallback *stub_
 typedef bool (*DoGetElemFallbackFn)(JSContext *, BaselineFrame *, ICGetElem_Fallback *,
                                     HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoGetElemFallbackInfo =
-    FunctionInfo<DoGetElemFallbackFn>(DoGetElemFallback, PopValues(2));
+    FunctionInfo<DoGetElemFallbackFn>(DoGetElemFallback, TailCall, PopValues(2));
 
 bool
 ICGetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -5150,7 +5152,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
 typedef bool (*DoSetElemFallbackFn)(JSContext *, BaselineFrame *, ICSetElem_Fallback *, Value *,
                                     HandleValue, HandleValue, HandleValue);
 static const VMFunction DoSetElemFallbackInfo =
-    FunctionInfo<DoSetElemFallbackFn>(DoSetElemFallback, PopValues(2));
+    FunctionInfo<DoSetElemFallbackFn>(DoSetElemFallback, TailCall, PopValues(2));
 
 bool
 ICSetElem_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -5674,7 +5676,7 @@ DoInFallback(JSContext *cx, ICIn_Fallback *stub, HandleValue key, HandleValue ob
 typedef bool (*DoInFallbackFn)(JSContext *, ICIn_Fallback *, HandleValue, HandleValue,
                                MutableHandleValue);
 static const VMFunction DoInFallbackInfo =
-    FunctionInfo<DoInFallbackFn>(DoInFallback, PopValues(2));
+    FunctionInfo<DoInFallbackFn>(DoInFallback, TailCall, PopValues(2));
 
 bool
 ICIn_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -6038,7 +6040,7 @@ DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub_
 
 typedef bool (*DoGetNameFallbackFn)(JSContext *, BaselineFrame *, ICGetName_Fallback *,
                                     HandleObject, MutableHandleValue);
-static const VMFunction DoGetNameFallbackInfo = FunctionInfo<DoGetNameFallbackFn>(DoGetNameFallback);
+static const VMFunction DoGetNameFallbackInfo = FunctionInfo<DoGetNameFallbackFn>(DoGetNameFallback, TailCall);
 
 bool
 ICGetName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -6149,7 +6151,7 @@ DoBindNameFallback(JSContext *cx, BaselineFrame *frame, ICBindName_Fallback *stu
 typedef bool (*DoBindNameFallbackFn)(JSContext *, BaselineFrame *, ICBindName_Fallback *,
                                      HandleObject, MutableHandleValue);
 static const VMFunction DoBindNameFallbackInfo =
-    FunctionInfo<DoBindNameFallbackFn>(DoBindNameFallback);
+    FunctionInfo<DoBindNameFallbackFn>(DoBindNameFallback, TailCall);
 
 bool
 ICBindName_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -6209,7 +6211,7 @@ DoGetIntrinsicFallback(JSContext *cx, BaselineFrame *frame, ICGetIntrinsic_Fallb
 typedef bool (*DoGetIntrinsicFallbackFn)(JSContext *, BaselineFrame *, ICGetIntrinsic_Fallback *,
                                          MutableHandleValue);
 static const VMFunction DoGetIntrinsicFallbackInfo =
-    FunctionInfo<DoGetIntrinsicFallbackFn>(DoGetIntrinsicFallback);
+    FunctionInfo<DoGetIntrinsicFallbackFn>(DoGetIntrinsicFallback, TailCall);
 
 bool
 ICGetIntrinsic_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -6833,7 +6835,7 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
 typedef bool (*DoGetPropFallbackFn)(JSContext *, BaselineFrame *, ICGetProp_Fallback *,
                                     MutableHandleValue, MutableHandleValue);
 static const VMFunction DoGetPropFallbackInfo =
-    FunctionInfo<DoGetPropFallbackFn>(DoGetPropFallback, PopValues(1));
+    FunctionInfo<DoGetPropFallbackFn>(DoGetPropFallback, TailCall, PopValues(1));
 
 bool
 ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -7985,7 +7987,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
 typedef bool (*DoSetPropFallbackFn)(JSContext *, BaselineFrame *, ICSetProp_Fallback *,
                                     HandleValue, HandleValue, MutableHandleValue);
 static const VMFunction DoSetPropFallbackInfo =
-    FunctionInfo<DoSetPropFallbackFn>(DoSetPropFallback, PopValues(2));
+    FunctionInfo<DoSetPropFallbackFn>(DoSetPropFallback, TailCall, PopValues(2));
 
 bool
 ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -10484,7 +10486,7 @@ DoIteratorNewFallback(JSContext *cx, BaselineFrame *frame, ICIteratorNew_Fallbac
 typedef bool (*DoIteratorNewFallbackFn)(JSContext *, BaselineFrame *, ICIteratorNew_Fallback *,
                                         HandleValue, MutableHandleValue);
 static const VMFunction DoIteratorNewFallbackInfo =
-    FunctionInfo<DoIteratorNewFallbackFn>(DoIteratorNewFallback, PopValues(1));
+    FunctionInfo<DoIteratorNewFallbackFn>(DoIteratorNewFallback, TailCall, PopValues(1));
 
 bool
 ICIteratorNew_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -10540,7 +10542,7 @@ DoIteratorMoreFallback(JSContext *cx, BaselineFrame *frame, ICIteratorMore_Fallb
 typedef bool (*DoIteratorMoreFallbackFn)(JSContext *, BaselineFrame *, ICIteratorMore_Fallback *,
                                          HandleObject, MutableHandleValue);
 static const VMFunction DoIteratorMoreFallbackInfo =
-    FunctionInfo<DoIteratorMoreFallbackFn>(DoIteratorMoreFallback);
+    FunctionInfo<DoIteratorMoreFallbackFn>(DoIteratorMoreFallback, TailCall);
 
 bool
 ICIteratorMore_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -10619,7 +10621,7 @@ DoIteratorCloseFallback(JSContext *cx, ICIteratorClose_Fallback *stub, HandleVal
 
 typedef bool (*DoIteratorCloseFallbackFn)(JSContext *, ICIteratorClose_Fallback *, HandleValue);
 static const VMFunction DoIteratorCloseFallbackInfo =
-    FunctionInfo<DoIteratorCloseFallbackFn>(DoIteratorCloseFallback);
+    FunctionInfo<DoIteratorCloseFallbackFn>(DoIteratorCloseFallback, TailCall);
 
 bool
 ICIteratorClose_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -10666,7 +10668,7 @@ DoInstanceOfFallback(JSContext *cx, ICInstanceOf_Fallback *stub,
 typedef bool (*DoInstanceOfFallbackFn)(JSContext *, ICInstanceOf_Fallback *, HandleValue, HandleValue,
                                        MutableHandleValue);
 static const VMFunction DoInstanceOfFallbackInfo =
-    FunctionInfo<DoInstanceOfFallbackFn>(DoInstanceOfFallback, PopValues(2));
+    FunctionInfo<DoInstanceOfFallbackFn>(DoInstanceOfFallback, TailCall, PopValues(2));
 
 bool
 ICInstanceOf_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -10715,7 +10717,7 @@ DoTypeOfFallback(JSContext *cx, BaselineFrame *frame, ICTypeOf_Fallback *stub, H
 typedef bool (*DoTypeOfFallbackFn)(JSContext *, BaselineFrame *frame, ICTypeOf_Fallback *,
                                    HandleValue, MutableHandleValue);
 static const VMFunction DoTypeOfFallbackInfo =
-    FunctionInfo<DoTypeOfFallbackFn>(DoTypeOfFallback);
+    FunctionInfo<DoTypeOfFallbackFn>(DoTypeOfFallback, TailCall);
 
 bool
 ICTypeOf_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -10806,7 +10808,7 @@ typedef bool(*DoRetSubFallbackFn)(JSContext *cx, BaselineFrame *, ICRetSub_Fallb
 static const VMFunction DoRetSubFallbackInfo = FunctionInfo<DoRetSubFallbackFn>(DoRetSubFallback);
 
 typedef bool (*ThrowFn)(JSContext *, HandleValue);
-static const VMFunction ThrowInfoBaseline = FunctionInfo<ThrowFn>(js::Throw);
+static const VMFunction ThrowInfoBaseline = FunctionInfo<ThrowFn>(js::Throw, TailCall);
 
 bool
 ICRetSub_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
@@ -11529,7 +11531,7 @@ static bool DoRestFallback(JSContext *cx, ICRest_Fallback *stub,
 typedef bool (*DoRestFallbackFn)(JSContext *, ICRest_Fallback *, BaselineFrame *,
                                  MutableHandleValue);
 static const VMFunction DoRestFallbackInfo =
-    FunctionInfo<DoRestFallbackFn>(DoRestFallback);
+    FunctionInfo<DoRestFallbackFn>(DoRestFallback, TailCall);
 
 bool
 ICRest_Fallback::Compiler::generateStubCode(MacroAssembler &masm)

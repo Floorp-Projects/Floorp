@@ -1584,3 +1584,13 @@ class Marionette(object):
         """
 
         return self._send_message("maximizeWindow", "ok")
+
+    def set_frame_timeout(self, timeout):
+        """ Set the OOP frame timeout value in ms. When focus is on a
+        remote frame, if the heartbeat pong is not received within this
+        specified value, the frame will timeout.
+
+        :param timeout: The frame timeout value in ms.
+        """
+
+        return self._send_message("setFrameTimeout", "ok", ms=timeout)

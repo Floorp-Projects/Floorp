@@ -569,10 +569,6 @@ jit::EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph)
             if (js::jit::IsDiscardable(inst))
             {
                 block->discard(inst);
-            } else if (!inst->isRecoveredOnBailout() && !inst->isGuard() &&
-                       !inst->hasLiveDefUses() && inst->canRecoverOnBailout())
-            {
-                inst->setRecoveredOnBailout();
             }
         }
     }

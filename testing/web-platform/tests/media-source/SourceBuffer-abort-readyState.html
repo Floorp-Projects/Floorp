@@ -10,7 +10,6 @@
 <div id="log"></div>
 
 <script>
-var video = document.createElement('video');
 var contents = {'/media/white.webm': 'video/webm; codecs="vorbis,vp8"',
                 '/media/white.mp4' : 'video/mp4'};
 
@@ -49,13 +48,15 @@ function mediaTest(file, mime) {
             mediaSource.addEventListener('sourceopen', function(e) {
                 sourceBuffer = mediaSource.addSourceBuffer(mime);
                 mediaSource.endOfStream();
+                assert_equals(mediaSource.readyState, 'ended',
+                              'mediaSource.readyState is "ended" after endOfStream()');
             });
-            mediaSource.addEventListener('sourceclose', function(e) {
+            mediaSource.addEventListener('sourceended', t.step_func_done(function(e) {
                 assert_throws({name: 'InvalidStateError'}, function() {
                     sourceBuffer.abort();
                 });
-                t.done();
-            });
+            }));
+            var video = document.createElement('video');
             video.src = window.URL.createObjectURL(mediaSource);
         });
     }, 'SourceBuffer#abort() (' + mime + ') : If the readyState attribute ' +

@@ -359,7 +359,7 @@ class TestRunnerManager(threading.Thread):
         """Callback when we can't connect to the browser via
         marionette for some reason"""
         self.init_fail_count += 1
-        self.logger.error("Init failed %i" % self.init_fail_count)
+        self.logger.warning("Init failed %i" % self.init_fail_count)
         self.init_timer.cancel()
         if self.init_fail_count < self.max_init_fails:
             self.restart_runner()
