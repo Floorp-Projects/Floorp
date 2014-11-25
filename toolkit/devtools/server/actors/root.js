@@ -161,7 +161,10 @@ RootActor.prototype = {
     // Whether the debugger server supports
     // blackboxing/pretty-printing (not supported in Fever Dream yet)
     noBlackBoxing: false,
-    noPrettyPrinting: false
+    noPrettyPrinting: false,
+    // Whether the page style actor implements the getUsedFontFaces method
+    // that returns the font faces used on a node
+    getUsedFontFaces: true
   },
 
   /**
