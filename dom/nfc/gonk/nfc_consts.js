@@ -51,6 +51,7 @@ this.PEER_EVENT_LOST  = 0x02;
 this.TAG_EVENT_FOUND = 0x03;
 this.TAG_EVENT_LOST  = 0x04;
 this.PEER_EVENT_FOUND = 0x05;
+this.RF_EVENT_STATE_CHANGE = 0x06;
 
 // Allow this file to be imported via Components.utils.import().
 this.EXPORTED_SYMBOLS = Object.keys(this);
