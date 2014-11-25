@@ -1217,8 +1217,8 @@ PrepareAndExecuteRegExp(JSContext *cx, MacroAssembler &masm, Register regexp, Re
 }
 
 static void
-CopyStringChars(MacroAssembler &masm, Register to, Register from, Register len, Register scratch,
-                size_t fromWidth, size_t toWidth);
+CopyStringChars(MacroAssembler &masm, Register to, Register from, Register len,
+                Register byteOpScratch, size_t fromWidth, size_t toWidth);
 
 static void
 CreateDependentString(MacroAssembler &masm, const JSAtomState &names,
@@ -5921,8 +5921,8 @@ CodeGenerator::visitConcatPar(LConcatPar *lir)
 }
 
 static void
-CopyStringChars(MacroAssembler &masm, Register to, Register from, Register len, Register scratch,
-                size_t fromWidth, size_t toWidth)
+CopyStringChars(MacroAssembler &masm, Register to, Register from, Register len,
+                Register byteOpScratch, size_t fromWidth, size_t toWidth)
 {
     // Copy |len| char16_t code units from |from| to |to|. Assumes len > 0
     // (checked below in debug builds), and when done |to| must point to the
@@ -5942,13 +5942,13 @@ CopyStringChars(MacroAssembler &masm, Register to, Register from, Register len, 
     Label start;
     masm.bind(&start);
     if (fromWidth == 2)
-        masm.load16ZeroExtend(Address(from, 0), scratch);
+        masm.load16ZeroExtend(Address(from, 0), byteOpScratch);
     else
-        masm.load8ZeroExtend(Address(from, 0), scratch);
+        masm.load8ZeroExtend(Address(from, 0), byteOpScratch);
     if (toWidth == 2)
-        masm.store16(scratch, Address(to, 0));
+        masm.store16(byteOpScratch, Address(to, 0));
     else
-        masm.store8(scratch, Address(to, 0));
+        masm.store8(byteOpScratch, Address(to, 0));
     masm.addPtr(Imm32(fromWidth), from);
     masm.addPtr(Imm32(toWidth), to);
     masm.branchSub32(Assembler::NonZero, Imm32(1), len, &start);
@@ -6065,8 +6065,12 @@ bool CodeGenerator::visitSubstr(LSubstr *lir)
     Register length = ToRegister(lir->length());
     Register output = ToRegister(lir->output());
     Register temp = ToRegister(lir->temp());
-    Register temp2 = ToRegister(lir->temp2());
     Register temp3 = ToRegister(lir->temp3());
+
+    // On x86 there are not enough registers. In that case reuse the string
+    // register as temporary.
+    Register temp2 = lir->temp2()->isBogusTemp() ? string : ToRegister(lir->temp2());
+
     Address stringFlags(string, JSString::offsetOfFlags());
 
     Label isLatin1, notInline, nonZero, isInlinedLatin1;
@@ -6110,18 +6114,24 @@ bool CodeGenerator::visitSubstr(LSubstr *lir)
         masm.store32(Imm32(JSString::INIT_FAT_INLINE_FLAGS),
                      Address(output, JSString::offsetOfFlags()));
         masm.computeEffectiveAddress(stringStorage, temp);
+        if (temp2 == string)
+            masm.push(string);
         BaseIndex chars(temp, begin, ScaleFromElemWidth(sizeof(char16_t)));
         masm.computeEffectiveAddress(chars, temp2);
         masm.computeEffectiveAddress(outputStorage, temp);
         CopyStringChars(masm, temp, temp2, length, temp3, sizeof(char16_t), sizeof(char16_t));
         masm.load32(Address(output, JSString::offsetOfLength()), length);
         masm.store16(Imm32(0), Address(temp, 0));
+        if (temp2 == string)
+            masm.pop(string);
         masm.jump(done);
     }
     masm.bind(&isInlinedLatin1);
     {
         masm.store32(Imm32(JSString::INIT_FAT_INLINE_FLAGS | JSString::LATIN1_CHARS_BIT),
                      Address(output, JSString::offsetOfFlags()));
+        if (temp2 == string)
+            masm.push(string);
         masm.computeEffectiveAddress(stringStorage, temp2);
         static_assert(sizeof(char) == 1, "begin index shouldn't need scaling");
         masm.addPtr(begin, temp2);
@@ -6129,6 +6139,8 @@ bool CodeGenerator::visitSubstr(LSubstr *lir)
         CopyStringChars(masm, temp, temp2, length, temp3, sizeof(char), sizeof(char));
         masm.load32(Address(output, JSString::offsetOfLength()), length);
         masm.store8(Imm32(0), Address(temp, 0));
+        if (temp2 == string)
+            masm.pop(string);
         masm.jump(done);
     }
 

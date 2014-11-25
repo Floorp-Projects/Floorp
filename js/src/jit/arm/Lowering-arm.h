@@ -30,6 +30,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     // stores and loads; on ARM all registers are okay.
     LAllocation useByteOpRegister(MDefinition *mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition *mir);
+    LDefinition tempByteOpRegister();
 
     inline LDefinition tempToUnbox() {
         return LDefinition::BogusTemp();
@@ -111,6 +112,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitSimdValueX4(MSimdValueX4 *ins);
     bool visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
     bool visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
+    bool visitSubstr(MSubstr *ins);
 };
 
 typedef LIRGeneratorARM LIRGeneratorSpecific;
