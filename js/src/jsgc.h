@@ -39,6 +39,12 @@ enum HeapState {
     MinorCollecting   // doing a GC of the minor heap (nursery)
 };
 
+enum ThreadType
+{
+    MainThread,
+    BackgroundThread
+};
+
 namespace jit {
     class JitCode;
 }
@@ -845,7 +851,7 @@ class ArenaLists
 
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget,
                             SortedArenaList &sweepList);
-    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead);
+    static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, ArenaHeader **empty);
 
     void wipeDuringParallelExecution(JSRuntime *rt);
 
@@ -1040,11 +1046,8 @@ class GCHelperState
 
     void work();
 
-    /* Must be called with the GC lock taken. */
-    void startBackgroundSweep();
-
-    /* Must be called with the GC lock taken. */
-    void startBackgroundShrink();
+    void maybeStartBackgroundSweep(const AutoLockGC &lock);
+    void startBackgroundShrink(const AutoLockGC &lock);
 
     /* Must be called without the GC lock taken. */
     void waitBackgroundSweepEnd();
@@ -1456,6 +1459,34 @@ class AutoEnterOOMUnsafeRegion {};
 // is appropriate.
 bool
 IsInsideGGCNursery(const gc::Cell *cell);
+
+// A singly linked list of zones.
+class ZoneList
+{
+    static Zone * const End;
+
+    Zone *head;
+    Zone *tail;
+
+  public:
+    ZoneList();
+    explicit ZoneList(Zone *singleZone);
+
+    bool isEmpty() const;
+    Zone *front() const;
+
+    void append(Zone *zone);
+    void append(ZoneList& list);
+    Zone *removeFront();
+
+    void transferFrom(ZoneList &other);
+
+  private:
+    void check() const;
+
+    ZoneList(const ZoneList &other) MOZ_DELETE;
+    ZoneList &operator=(const ZoneList &other) MOZ_DELETE;
+};
 
 } /* namespace gc */
 

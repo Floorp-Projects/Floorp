@@ -560,7 +560,7 @@ FinalizeTypedArenas(FreeOp *fop,
 {
     // When operating in the foreground, take the lock at the top.
     Maybe<AutoLockGC> maybeLock;
-    if (!fop->runtime()->gc.isBackgroundSweeping())
+    if (!fop->onBackgroundThread())
         maybeLock.emplace(fop->runtime());
 
     /*
@@ -580,9 +580,9 @@ FinalizeTypedArenas(FreeOp *fop,
 
         if (nmarked) {
             dest.insertAt(aheader, nfree);
-        } else if (keepArenas) {
+        } else if (keepArenas == ArenaLists::KEEP_ARENAS) {
             aheader->chunk()->recycleArena(aheader, dest, thingKind, thingsPerArena);
-        } else if (fop->runtime()->gc.isBackgroundSweeping()) {
+        } else if (fop->onBackgroundThread()) {
             // When background sweeping, take the lock around each release so
             // that we do not block the foreground for extended periods.
             AutoLockGC lock(fop->runtime());
@@ -1159,7 +1159,6 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     lastMarkSlice(false),
     sweepOnBackgroundThread(false),
     foundBlackGrayEdges(false),
-    sweepingZones(nullptr),
     freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     zoneGroupIndex(0),
     zoneGroups(nullptr),
@@ -2869,7 +2868,6 @@ inline void
 ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
 {
     MOZ_ASSERT(IsBackgroundFinalized(thingKind));
-    MOZ_ASSERT(!fop->runtime()->gc.isBackgroundSweeping());
 
     ArenaList *al = &arenaLists[thingKind];
     if (al->isEmpty()) {
@@ -2885,10 +2883,11 @@ ArenaLists::queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind)
 }
 
 /*static*/ void
-ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
+ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, ArenaHeader **empty)
 {
     MOZ_ASSERT(listHead);
     MOZ_ASSERT(!InParallelSection());
+    MOZ_ASSERT(empty);
 
     AllocKind thingKind = listHead->getAllocKind();
     Zone *zone = listHead->zone;
@@ -2897,8 +2896,10 @@ ArenaLists::backgroundFinalize(FreeOp *fop, ArenaHeader *listHead)
     SortedArenaList finalizedSorted(thingsPerArena);
 
     SliceBudget budget;
-    FinalizeArenas(fop, &listHead, finalizedSorted, thingKind, budget, RELEASE_ARENAS);
+    FinalizeArenas(fop, &listHead, finalizedSorted, thingKind, budget, KEEP_ARENAS);
     MOZ_ASSERT(!listHead);
+
+    finalizedSorted.extractEmpty(empty);
 
     // When arenas are queued for background finalization, all arenas are moved
     // to arenaListsToSweep[], leaving the arenaLists[] empty. However, new
@@ -3444,38 +3445,41 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock)
 }
 
 void
-GCRuntime::sweepBackgroundThings()
+GCRuntime::sweepBackgroundThings(ZoneList &zones, ThreadType threadType)
 {
-    /*
-     * We must finalize in the correct order, see comments in
-     * finalizeObjects.
-     */
-    FreeOp fop(rt);
-    for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
-        for (Zone *zone = sweepingZones; zone; zone = zone->gcNextGraphNode) {
+    // We must finalize thing kinds in the order specified by BackgroundFinalizePhases.
+    FreeOp fop(rt, threadType);
+    while (!zones.isEmpty()) {
+        Zone *zone = zones.front();
+        ArenaHeader *emptyArenas = nullptr;
+        for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
             for (unsigned index = 0 ; index < BackgroundFinalizePhases[phase].length ; ++index) {
                 AllocKind kind = BackgroundFinalizePhases[phase].kinds[index];
                 ArenaHeader *arenas = zone->allocator.arenas.arenaListsToSweep[kind];
                 if (arenas)
-                    ArenaLists::backgroundFinalize(&fop, arenas);
+                    ArenaLists::backgroundFinalize(&fop, arenas, &emptyArenas);
             }
         }
-    }
 
-    sweepingZones = nullptr;
+        AutoLockGC lock(rt);
+        ReleaseArenaList(rt, emptyArenas, lock);
+        zones.removeFront();
+    }
 }
 
 void
 GCRuntime::assertBackgroundSweepingFinished()
 {
 #ifdef DEBUG
-    MOZ_ASSERT(!sweepingZones);
+    MOZ_ASSERT(backgroundSweepZones.isEmpty());
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+        MOZ_ASSERT(!zone->isOnList());
         for (unsigned i = 0; i < FINALIZE_LIMIT; ++i) {
             MOZ_ASSERT(!zone->allocator.arenas.arenaListsToSweep[i]);
             MOZ_ASSERT(zone->allocator.arenas.doneBackgroundFinalize(AllocKind(i)));
         }
     }
+    MOZ_ASSERT(freeLifoAlloc.computedSizeOfExcludingThis() == 0);
 #endif
 }
 
@@ -3622,22 +3626,43 @@ BackgroundAllocTask::run()
 }
 
 void
-GCHelperState::startBackgroundSweep()
+GCRuntime::queueZonesForBackgroundSweep(ZoneList &zones)
+{
+    AutoLockHelperThreadState helperLock;
+    AutoLockGC lock(rt);
+    backgroundSweepZones.append(zones);
+    helperState.maybeStartBackgroundSweep(lock);
+}
+
+void
+GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc *lifo)
+{
+    MOZ_ASSERT(isHeapBusy());
+    AutoLockGC lock(rt);
+    freeLifoAlloc.transferUnusedFrom(lifo);
+}
+
+void
+GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc *lifo)
+{
+    MOZ_ASSERT(isHeapBusy());
+    AutoLockGC lock(rt);
+    freeLifoAlloc.transferFrom(lifo);
+}
+
+void
+GCHelperState::maybeStartBackgroundSweep(const AutoLockGC &lock)
 {
     MOZ_ASSERT(CanUseExtraThreads());
 
-    AutoLockHelperThreadState helperLock;
-    AutoLockGC lock(rt);
-    MOZ_ASSERT(state() == IDLE);
-    MOZ_ASSERT(!sweepFlag);
     sweepFlag = true;
     shrinkFlag = false;
-    startBackgroundThread(SWEEPING);
+    if (state() == IDLE)
+        startBackgroundThread(SWEEPING);
 }
 
-/* Must be called with the GC lock taken. */
 void
-GCHelperState::startBackgroundShrink()
+GCHelperState::startBackgroundShrink(const AutoLockGC &lock)
 {
     MOZ_ASSERT(CanUseExtraThreads());
     switch (state()) {
@@ -3667,13 +3692,16 @@ GCHelperState::waitBackgroundSweepEnd()
 void
 GCHelperState::doSweep(AutoLockGC &lock)
 {
-    if (sweepFlag) {
+    while (sweepFlag) {
         sweepFlag = false;
+        ZoneList zones;
+        zones.transferFrom(rt->gc.backgroundSweepZones);
+        LifoAlloc freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+        freeLifoAlloc.transferFrom(&rt->gc.freeLifoAlloc);
         AutoUnlockGC unlock(lock);
 
-        rt->gc.sweepBackgroundThings();
-
-        rt->gc.freeLifoAlloc.freeAll();
+        rt->gc.sweepBackgroundThings(zones, BackgroundThread);
+        freeLifoAlloc.freeAll();
     }
 
     bool shrinking = shrinkFlag;
@@ -3762,6 +3790,8 @@ Zone::sweepCompartments(FreeOp *fop, bool keepAtleastOne, bool lastGC)
 void
 GCRuntime::sweepZones(FreeOp *fop, bool lastGC)
 {
+    AutoLockGC lock(rt); // Avoid race with background sweeping.
+
     JSZoneCallback callback = rt->destroyZoneCallback;
 
     /* Skip the atomsCompartment zone. */
@@ -3775,10 +3805,13 @@ GCRuntime::sweepZones(FreeOp *fop, bool lastGC)
         Zone *zone = *read++;
 
         if (zone->wasGCStarted()) {
-            if ((zone->allocator.arenas.arenaListsAreEmpty() && !zone->hasMarkedCompartments()) ||
-                lastGC)
+            if ((!zone->isQueuedForBackgroundSweep() &&
+                 zone->allocator.arenas.arenaListsAreEmpty() &&
+                 !zone->hasMarkedCompartments()) || lastGC)
             {
                 zone->allocator.arenas.checkEmptyFreeLists();
+                AutoUnlockGC unlock(lock);
+
                 if (callback)
                     callback(zone);
                 zone->sweepCompartments(fop, false, lastGC);
@@ -3794,25 +3827,10 @@ GCRuntime::sweepZones(FreeOp *fop, bool lastGC)
 }
 
 void
-GCRuntime::freeUnusedLifoBlocksAfterSweeping(LifoAlloc *lifo)
-{
-    MOZ_ASSERT(isHeapBusy());
-    freeLifoAlloc.transferUnusedFrom(lifo);
-}
-
-void
-GCRuntime::freeAllLifoBlocksAfterSweeping(LifoAlloc *lifo)
-{
-    MOZ_ASSERT(isHeapBusy());
-    freeLifoAlloc.transferFrom(lifo);
-}
-
-void
 GCRuntime::purgeRuntime()
 {
     for (GCCompartmentsIter comp(rt); !comp.done(); comp.next())
         comp->purge();
-
 
     freeUnusedLifoBlocksAfterSweeping(&rt->tempLifoAlloc);
 
@@ -4264,6 +4282,8 @@ js::gc::MarkingValidator::nonIncrementalMark()
     JSRuntime *runtime = gc->rt;
     GCMarker *gcmarker = &gc->marker;
 
+    gc->waitBackgroundSweepEnd();
+
     /* Save existing mark bits. */
     for (auto chunk = gc->allNonEmptyChunks(); !chunk.done(); chunk.next()) {
         ChunkBitmap *bitmap = &chunk->bitmap;
@@ -4371,6 +4391,8 @@ js::gc::MarkingValidator::validate()
 
     if (!initialized)
         return;
+
+    gc->waitBackgroundSweepEnd();
 
     for (auto chunk = gc->allNonEmptyChunks(); !chunk.done(); chunk.next()) {
         BitmapMap::Ptr ptr = map.lookup(chunk);
@@ -5169,10 +5191,18 @@ GCRuntime::beginSweepingZoneGroup()
 void
 GCRuntime::endSweepingZoneGroup()
 {
-    /* Update the GC state for zones we have swept and unlink the list. */
+    /* Update the GC state for zones we have swept. */
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCSweeping());
         zone->setGCState(Zone::Finished);
+    }
+
+    /* Start background thread to sweep zones if required. */
+    if (sweepOnBackgroundThread) {
+        ZoneList zones;
+        for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+            zones.append(zone);
+        queueZonesForBackgroundSweep(zones);
     }
 
     /* Reset the list of arenas marked as being allocated during sweep phase. */
@@ -5483,18 +5513,14 @@ GCRuntime::endSweepPhase(bool lastGC)
             grayBitsValid = true;
     }
 
-    /* Set up list of zones for sweeping of background things. */
-    MOZ_ASSERT(!sweepingZones);
-    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
-        zone->gcNextGraphNode = sweepingZones;
-        sweepingZones = zone;
-    }
-
     /* If not sweeping on background thread then we must do it here. */
     if (!sweepOnBackgroundThread) {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_DESTROY);
 
-        sweepBackgroundThings();
+        ZoneList zones;
+        for (GCZonesIter zone(rt); !zone.done(); zone.next())
+            zones.append(zone);
+        sweepBackgroundThings(zones, MainThread);
 
         /*
          * Destroy arenas after we finished the sweeping so finalizers can
@@ -5534,9 +5560,6 @@ GCRuntime::endSweepPhase(bool lastGC)
         }
     }
 #endif
-
-    if (sweepOnBackgroundThread)
-        helperState.startBackgroundSweep();
 }
 
 #ifdef JSGC_COMPACTING
@@ -5709,6 +5732,8 @@ GCRuntime::resetIncrementalGC(const char *reason)
         }
         rt->setNeedsIncrementalBarrier(false);
         AssertNeedsBarrierFlagsConsistent(rt);
+
+        freeLifoAlloc.freeAll();
 
         incrementalState = NO_INCREMENTAL;
 
@@ -6078,9 +6103,8 @@ GCRuntime::gcCycle(bool incremental, SliceBudget &budget, JSGCInvocationKind gck
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
 
-        // As we are about to purge caches and clear the mark bits, wait for
-        // background finalization to finish. It cannot run between slices
-        // so we only need to wait on the first slice.
+        // As we are about to clear the mark bits, wait for background
+        // finalization to finish. We only need to wait on the first slice.
         if (incrementalState == NO_INCREMENTAL)
             waitBackgroundSweepEnd();
 
@@ -6389,7 +6413,7 @@ GCRuntime::shrinkBuffers()
     MOZ_ASSERT(!rt->isHeapBusy());
 
     if (CanUseExtraThreads())
-        helperState.startBackgroundShrink();
+        helperState.startBackgroundShrink(lock);
     else
         expireChunksAndArenas(true, lock);
 }

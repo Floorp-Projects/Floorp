@@ -599,7 +599,8 @@ class GCRuntime
     void decommitAllWithoutUnlocking(const AutoLockGC &lock);
     void decommitArenas(AutoLockGC &lock);
     void expireChunksAndArenas(bool shouldShrink, AutoLockGC &lock);
-    void sweepBackgroundThings();
+    void queueZonesForBackgroundSweep(js::gc::ZoneList& zones);
+    void sweepBackgroundThings(js::gc::ZoneList &zones, ThreadType threadType);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
 #ifdef JSGC_COMPACTING
@@ -758,9 +759,8 @@ class GCRuntime
     /* Whether any black->gray edges were found during marking. */
     bool foundBlackGrayEdges;
 
-    /* List head of zones to be swept in the background. */
-    JS::Zone *sweepingZones;
-
+    /* Singly linekd list of zones to be swept in the background. */
+    js::gc::ZoneList backgroundSweepZones;
     /*
      * Free LIFO blocks are transferred to this allocator before being freed on
      * the background GC thread.
