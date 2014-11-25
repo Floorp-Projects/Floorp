@@ -34,7 +34,7 @@
 #include "mozilla/Types.h"
 #include "GonkBufferQueue.h"
 
-struct MOZ_EXPORT ANativeWindow_Buffer;
+struct ANativeWindow_Buffer;
 
 namespace android {
 
