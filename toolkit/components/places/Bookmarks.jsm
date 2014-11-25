@@ -370,14 +370,14 @@ let Bookmarks = Object.freeze({
                                              updatedItem.guid,
                                              updatedItem.parentGuid ]);
       }
-      // If the item was move, notify onItemMoved.
+      // If the item was moved, notify onItemMoved.
       if (item.parentGuid != updatedItem.parentGuid ||
           item.index != updatedItem.index) {
         notify(observers, "onItemMoved", [ updatedItem._id, item._parentId,
                                            item.index, updatedItem._parentId,
                                            updatedItem.index, updatedItem.type,
                                            updatedItem.guid, item.parentGuid,
-                                           updatedItem.newParentGuid ]);
+                                           updatedItem.parentGuid ]);
       }
 
       // Remove non-enumerable properties.
