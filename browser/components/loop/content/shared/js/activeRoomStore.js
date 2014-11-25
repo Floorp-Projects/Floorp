@@ -304,6 +304,21 @@ loop.store.ActiveRoomStore = (function() {
 
       this._setRefreshTimeout(actionData.expires);
       this._sdkDriver.connectSession(actionData);
+
+      // If we haven't got a room name yet, go and get one. We typically
+      // need to do this in the case of the standalone window.
+      // XXX When bug 1103331 lands this can be moved to earlier.
+      if (!this._storeState.roomName) {
+        this._mozLoop.rooms.get(this._storeState.roomToken,
+          function(err, result) {
+            if (err) {
+              console.error("Failed to get room data:", err);
+              return;
+            }
+
+            this.dispatcher.dispatch(new sharedActions.UpdateRoomInfo(result));
+        }.bind(this));
+      }
     },
 
     /**
