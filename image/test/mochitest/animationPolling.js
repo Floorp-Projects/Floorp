@@ -80,7 +80,7 @@ function AnimationTest(pollFreq, timeout, referenceElementId, imageElementId,
 {
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.
-  clearImageCache();
+  clearAllImageCaches();
 
   this.wereFailures = false;
   this.pollFreq = pollFreq;

@@ -106,7 +106,7 @@ function main() {
 
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.
-  clearImageCache();
+  clearAllImageCaches();
 
   // These are two copies of the same image; hence, they have the same frame rate.
   gImg1.src = "animated1.gif";
