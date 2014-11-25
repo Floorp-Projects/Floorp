@@ -71,9 +71,13 @@ function openToolbox(form) {
   };
   devtools.TargetFactory.forRemoteTab(options).then(target => {
     let frame = document.getElementById("toolbox-iframe");
+    let lastSelectedTool = "jsdebugger";
+    try {
+      lastSelectedTool = Services.prefs.getCharPref("devtools.toolbox.selectedTool");
+    } catch(e) {}
     let options = { customIframe: frame };
     gDevTools.showToolbox(target,
-                          "jsdebugger",
+                          lastSelectedTool,
                           devtools.Toolbox.HostType.CUSTOM,
                           options)
              .then(onNewToolbox);
