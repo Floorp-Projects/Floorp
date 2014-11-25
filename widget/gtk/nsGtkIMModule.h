@@ -128,8 +128,7 @@ protected:
     enum eCompositionState {
         eCompositionState_NotComposing,
         eCompositionState_CompositionStartDispatched,
-        eCompositionState_CompositionChangeEventDispatched,
-        eCompositionState_CommitCompositionChangeEventDispatched
+        eCompositionState_CompositionChangeEventDispatched
     };
     eCompositionState mCompositionState;
 
@@ -164,8 +163,6 @@ protected:
                 return "CompositionStartDispatched";
             case eCompositionState_CompositionChangeEventDispatched:
                 return "CompositionChangeEventDispatched";
-            case eCompositionState_CommitCompositionChangeEventDispatched:
-                return "CommitCompositionChangeEventDispatched";
             default:
                 return "InvaildState";
         }
@@ -317,7 +314,7 @@ protected:
      *    FALSE, callers cannot continue the composition.
      *      - DispatchCompositionStart
      *      - DispatchCompositionChangeEvent
-     *      - DispatchCompositionEventsForCommit
+     *      - DispatchCompositionCommitEvent
      */
 
     /**
@@ -341,17 +338,19 @@ protected:
                                         const nsAString& aCompositionString);
 
     /**
-     * Dispatches a compositionchange event for committing the composition
-     * string and a compositionend event.
+     * Dispatches a compositioncommit event or compositioncommitasis event.
      *
      * @param aContext              A GtkIMContext which is being handled.
-     * @param aCommitString         The string which the composition is
-     *                              committed with.
+     * @param aCommitString         If this is nullptr, the composition will
+     *                              be committed with last dispatched data.
+     *                              Otherwise, the composition will be
+     *                              committed with this value.
      * @return                      true if the focused widget is neither
      *                              destroyed nor changed.  Otherwise, false.
      */
-    bool DispatchCompositionEventsForCommit(GtkIMContext* aContext,
-                                            const nsAString& aCommitString);
+    bool DispatchCompositionCommitEvent(
+             GtkIMContext* aContext,
+             const nsAString* aCommitString = nullptr);
 };
 
 #endif // __nsGtkIMModule_h__
