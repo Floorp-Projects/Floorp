@@ -152,6 +152,12 @@ ProgressTracker::GetImageStatus() const
   if (mProgress & FLAG_LOAD_COMPLETE) {
     status |= imgIRequest::STATUS_LOAD_COMPLETE;
   }
+  if (mProgress & FLAG_IS_ANIMATED) {
+    status |= imgIRequest::STATUS_IS_ANIMATED;
+  }
+  if (mProgress & FLAG_HAS_TRANSPARENCY) {
+    status |= imgIRequest::STATUS_HAS_TRANSPARENCY;
+  }
   if (mProgress & FLAG_HAS_ERROR) {
     status |= imgIRequest::STATUS_ERROR;
   }
