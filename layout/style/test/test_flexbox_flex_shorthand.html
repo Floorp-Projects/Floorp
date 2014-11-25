@@ -68,31 +68,22 @@ let gFlexShorthandTestcases = [
     "flex":        "",
     "flex-grow":   "0",
     "flex-shrink": "1",
-    "flex-basis":  "main-size",
+    "flex-basis":  "auto",
   },
   {
     "flex":        "initial",
     "flex-grow":   "0",
     "flex-shrink": "1",
-    "flex-basis":  "main-size",
+    "flex-basis":  "auto",
   },
 
-  // Special keyword "none" --> "0 0 main-size"
+  // Special keyword "none" --> "0 0 auto"
   // -------------------------------------
   {
     "flex":        "none",
     "flex-grow":   "0",
     "flex-shrink": "0",
-    "flex-basis":  "main-size",
-  },
-
-  // Special keyword "auto" --> "1 1 main-size"
-  // -------------------------------------
-  {
-    "flex":        "auto",
-    "flex-grow":   "1",
-    "flex-shrink": "1",
-    "flex-basis":  "main-size",
+    "flex-basis":  "auto",
   },
 
   // One Value (numeric) --> sets flex-grow
@@ -137,6 +128,10 @@ let gFlexShorthandTestcases = [
     "flex-basis":  "5%",
   },
   {
+    "flex":        "auto",
+    "flex-basis":  "auto",
+  },
+  {
     "flex":        "-moz-fit-content",
     "flex-basis":  "-moz-fit-content",
   },
@@ -147,10 +142,6 @@ let gFlexShorthandTestcases = [
   {
     "flex":        "calc(15% + 30px)",
     "flex-basis":  "calc(30px + 15%)",
-  },
-  {
-    "flex":        "main-size",
-    "flex-basis":  "main-size",
   },
 
   // Two Values (numeric) --> sets flex-grow, flex-shrink
@@ -212,11 +203,6 @@ let gFlexShorthandTestcases = [
     "flex":        "auto 5",
     "flex-grow":   "5",
     "flex-basis":  "auto",
-  },
-  {
-    "flex":        "main-size 5",
-    "flex-grow":   "5",
-    "flex-basis":  "main-size",
   },
   {
     "flex":        "5 -moz-fit-content",
