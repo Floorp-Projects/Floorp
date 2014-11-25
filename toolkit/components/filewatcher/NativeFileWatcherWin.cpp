@@ -693,7 +693,7 @@ NativeFileWatcherIOTask::AddPathRunnableMethod(
   // We failed to watch the folder. Remove the callbacks
   // from the hash tables.
   RemoveCallbacksFromHashtables(
-    watchedResource->mPath,
+    wrappedParameters->mPath,
     wrappedParameters->mChangeCallbackHandle,
     wrappedParameters->mErrorCallbackHandle);
 
