@@ -1425,13 +1425,13 @@ FinalizeStub(JSFreeOp *fop, JSObject *obj)
 static const JSClass XPCOutParamClass = {
     "XPCOutParam",
     0,
-    nullptr,
-    nullptr,
+    JS_PropertyStub,
+    JS_DeletePropertyStub,
     JS_PropertyStub,
     JS_StrictPropertyStub,
-    nullptr,   /* enumerate */
-    nullptr,   /* resolve */
-    nullptr,   /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     FinalizeStub,
     nullptr,   /* call */
     nullptr,   /* hasInstance */

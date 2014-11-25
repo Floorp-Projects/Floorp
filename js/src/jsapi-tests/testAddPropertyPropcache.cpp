@@ -20,9 +20,12 @@ static const JSClass AddPropertyClass = {
     "AddPropertyTester",
     0,
     AddProperty,
-    nullptr,                 /* delProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 BEGIN_TEST(testAddPropertyHook)

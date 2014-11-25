@@ -2144,7 +2144,27 @@ JS_StrictPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool strict,
 }
 
 JS_PUBLIC_API(bool)
-JS::OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
+JS_DeletePropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+{
+    *succeeded = true;
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_EnumerateStub(JSContext *cx, HandleObject obj)
+{
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_ResolveStub(JSContext *cx, HandleObject obj, HandleId id, bool *resolvedp)
+{
+    MOZ_ASSERT(*resolvedp == false);
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_ConvertStub(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
 {
     MOZ_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
     MOZ_ASSERT(obj);
@@ -2798,6 +2818,7 @@ DefinePropertyById(JSContext *cx, HandleObject obj, HandleId id, HandleValue val
                   setter == JS_StrictPropertyStub || (attrs & JSPROP_PROPOP_ACCESSORS));
     MOZ_ASSERT_IF(setter == JS_StrictPropertyStub,
                   getter == JS_PropertyStub || (attrs & JSPROP_PROPOP_ACCESSORS));
+
 
     // If !(attrs & JSPROP_PROPOP_ACCESSORS), then either getter/setter are both
     // possibly-null JSNatives (or possibly-null JSFunction* if JSPROP_GETTER or
