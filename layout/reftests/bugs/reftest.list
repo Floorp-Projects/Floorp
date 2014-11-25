@@ -637,7 +637,7 @@ skip-if(B2G&&browserIsRemote) == 369882.xul 369882-ref.xul # bug 974780
 == 370525-rowspan-4.html 370525-rowspan-4-ref.html
 == 370525-sib.html 370525-sib-ref.html
 == 370586-1.xhtml 370586-1-ref.xhtml
-skip-if(B2G) == 370629-1.html 370629-1-ref.html # bug 1060869
+== 370629-1.html 370629-1-ref.html
 skip-if(B2G) == 370629-2.html 370629-2-ref.html
 == 370692-1.xhtml 370692-1-ref.xhtml
 == 371041-1.html 371041-1-ref.html
