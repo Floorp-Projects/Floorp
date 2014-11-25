@@ -259,6 +259,8 @@ pref("browser.uitour.pinnedTabUrl", "https://support.mozilla.org/%LOCALE%/kb/pin
 pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tour/");
 pref("browser.uitour.whitelist.add.260", "www.mozilla.org,support.mozilla.org");
 pref("browser.uitour.whitelist.add.340", "about:home");
+// Re-whitelist for Fx34 to workaround the lack of bug 1050080.
+pref("browser.uitour.whitelist.add.341", "www.mozilla.org,support.mozilla.org,about:home");
 
 pref("browser.customizemode.tip0.shown", false);
 pref("browser.customizemode.tip0.learnMoreUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/customize");
