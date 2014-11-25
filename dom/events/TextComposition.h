@@ -276,6 +276,14 @@ private:
          const WidgetCompositionEvent* aCompositionEvent);
 
   /**
+   * CloneAndDispatchAs() dispatches a composition event which is
+   * duplicateed from aCompositionEvent and set the aMessage.
+   */
+  void CloneAndDispatchAs(
+         const WidgetCompositionEvent* aCompositionEvent,
+         uint32_t aMessage);
+
+  /**
    * If IME has already dispatched compositionend event but it was discarded
    * by PresShell due to not safe to dispatch, this returns true.
    */
