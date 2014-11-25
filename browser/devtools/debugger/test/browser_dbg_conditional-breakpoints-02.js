@@ -86,15 +86,15 @@ function test() {
     is(gEditor.getBreakpoints().length, 0,
       "No breakpoints currently shown in the editor.");
 
-    ok(!gBreakpoints._getAdded({ url: "foo", line: 3 }),
+    ok(!gBreakpoints._getAdded({ actor: "foo", line: 3 }),
       "_getAdded('foo', 3) returns falsey.");
-    ok(!gBreakpoints._getRemoving({ url: "bar", line: 3 }),
+    ok(!gBreakpoints._getRemoving({ actor: "bar", line: 3 }),
       "_getRemoving('bar', 3) returns falsey.");
   }
 
   function addBreakpoint1() {
     let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.BREAKPOINT_ADDED);
-    gPanel.addBreakpoint({ url: gSources.selectedValue, line: 18 });
+    gPanel.addBreakpoint({ actor: gSources.selectedValue, line: 18 });
     return finished;
   }
 
@@ -141,15 +141,17 @@ function test() {
   }
 
   function testBreakpoint(aLine, aOpenPopupFlag, aPopupVisible, aConditionalExpression) {
-    let selectedUrl = gSources.selectedValue;
+    let selectedActor = gSources.selectedValue;
     let selectedBreakpoint = gSources._selectedBreakpointItem;
 
-    ok(selectedUrl,
+    ok(selectedActor,
       "There should be a selected item in the sources pane.");
     ok(selectedBreakpoint,
-      "There should be a selected brekapoint in the sources pane.");
+       "There should be a selected brekapoint in the sources pane.");
 
-    is(selectedBreakpoint.attachment.url, selectedUrl,
+    let source = gSources.selectedItem.attachment.source;
+
+    is(selectedBreakpoint.attachment.actor, source.actor,
       "The breakpoint on line " + aLine + " wasn't added on the correct source.");
     is(selectedBreakpoint.attachment.line, aLine,
       "The breakpoint on line " + aLine + " wasn't found.");
@@ -161,8 +163,8 @@ function test() {
       "The breakpoint on line " + aLine + " should have a correct popup state (2).");
 
     return gBreakpoints._getAdded(selectedBreakpoint.attachment).then(aBreakpointClient => {
-      is(aBreakpointClient.location.url, selectedUrl,
-        "The breakpoint's client url is correct");
+      is(aBreakpointClient.location.actor, selectedActor,
+        "The breakpoint's client actor is correct");
       is(aBreakpointClient.location.line, aLine,
         "The breakpoint's client line is correct");
       is(aBreakpointClient.conditionalExpression, aConditionalExpression,
@@ -176,10 +178,10 @@ function test() {
   }
 
   function testNoBreakpoint(aLine) {
-    let selectedUrl = gSources.selectedValue;
+    let selectedActor = gSources.selectedValue;
     let selectedBreakpoint = gSources._selectedBreakpointItem;
 
-    ok(selectedUrl,
+    ok(selectedActor,
       "There should be a selected item in the sources pane for line " + aLine + ".");
     ok(!selectedBreakpoint,
       "There should be no selected brekapoint in the sources pane for line " + aLine + ".");

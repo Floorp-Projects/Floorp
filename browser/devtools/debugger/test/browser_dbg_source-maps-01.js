@@ -45,7 +45,7 @@ function checkSourceMapsEnabled() {
 }
 
 function checkInitialSource() {
-  isnot(gSources.selectedValue.indexOf(".coffee"), -1,
+  isnot(gSources.selectedItem.attachment.source.url.indexOf(".coffee"), -1,
     "The debugger should show the source mapped coffee source file.");
   is(gSources.selectedValue.indexOf(".js"), -1,
     "The debugger should not show the generated js source file.");
@@ -57,9 +57,11 @@ function checkInitialSource() {
 
 function testSetBreakpoint() {
   let deferred = promise.defer();
+  let sourceForm = getSourceForm(gSources, COFFEE_URL);
 
   gDebugger.gThreadClient.interrupt(aResponse => {
-    gDebugger.gThreadClient.setBreakpoint({ url: COFFEE_URL, line: 5 }, aResponse => {
+    let source = gDebugger.gThreadClient.source(sourceForm);
+    source.setBreakpoint({ line: 5 }, aResponse => {
       ok(!aResponse.error,
         "Should be able to set a breakpoint in a coffee source file.");
       ok(!aResponse.actualLocation,
@@ -74,14 +76,16 @@ function testSetBreakpoint() {
 
 function testSetBreakpointBlankLine() {
   let deferred = promise.defer();
+  let sourceForm = getSourceForm(gSources, COFFEE_URL);
 
-  gDebugger.gThreadClient.setBreakpoint({ url: COFFEE_URL, line: 3 }, aResponse => {
+  let source = gDebugger.gThreadClient.source(sourceForm);
+  source.setBreakpoint({ line: 3 }, aResponse => {
     ok(!aResponse.error,
       "Should be able to set a breakpoint in a coffee source file on a blank line.");
     ok(aResponse.actualLocation,
       "Because 3 is empty, we should have an actualLocation.");
-    is(aResponse.actualLocation.url, COFFEE_URL,
-      "actualLocation.url should be source mapped to the coffee file.");
+    is(aResponse.actualLocation.source.url, COFFEE_URL,
+      "actualLocation.actor should be source mapped to the coffee file.");
     is(aResponse.actualLocation.line, 2,
       "actualLocation.line should be source mapped back to 2.");
 

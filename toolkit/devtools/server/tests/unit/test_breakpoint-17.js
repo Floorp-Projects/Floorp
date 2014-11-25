@@ -31,8 +31,6 @@ function run_test_with_server(aServer, aCallback)
   });
 }
 
-const URL = "http://example.com/benderbendingrodriguez.js";
-
 const code =
 "(" + function (global) {
   global.foo = function () {
@@ -43,13 +41,11 @@ const code =
 } + "(this))";
 
 const firstLocation = {
-  url: URL,
   line: 3,
   column: 4
 };
 
 const secondLocation = {
-  url: URL,
   line: 3,
   column: 18
 };
@@ -57,19 +53,20 @@ const secondLocation = {
 function test_breakpoints_columns() {
   gClient.addOneTimeListener("paused", set_breakpoints);
 
-  Components.utils.evalInSandbox(code, gDebuggee, "1.8", URL, 1);
+  Components.utils.evalInSandbox(code, gDebuggee, "1.8", "http://example.com/", 1);
 }
 
-function set_breakpoints() {
+function set_breakpoints(aEvent, aPacket) {
   let first, second;
+  let source = gThreadClient.source(aPacket.frame.where.source);
 
-  gThreadClient.setBreakpoint(firstLocation, function ({ error, actualLocation },
-                                                       aBreakpointClient) {
+  source.setBreakpoint(firstLocation, function ({ error, actualLocation },
+                                        aBreakpointClient) {
     do_check_true(!error, "Should not get an error setting the breakpoint");
     do_check_true(!actualLocation, "Should not get an actualLocation");
     first = aBreakpointClient;
 
-    gThreadClient.setBreakpoint(secondLocation, function ({ error, actualLocation },
+    source.setBreakpoint(secondLocation, function ({ error, actualLocation },
                                                           aBreakpointClient) {
       do_check_true(!error, "Should not get an error setting the breakpoint");
       do_check_true(!actualLocation, "Should not get an actualLocation");

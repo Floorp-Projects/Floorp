@@ -97,6 +97,6 @@ function run_code() {
 function test_correct_location(aPacket) {
   do_check_eq(aPacket.why.type, "debuggerStatement",
               "Should hit a debugger statement.");
-  do_check_eq(aPacket.frame.where.url, "http://example.com/c.js",
+  do_check_eq(aPacket.frame.where.source.url, "http://example.com/c.js",
               "Should have skipped over the debugger statement in the black boxed source");
 }

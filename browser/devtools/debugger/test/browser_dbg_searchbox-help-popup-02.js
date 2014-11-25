@@ -63,9 +63,9 @@ function focusEditor() {
 }
 
 function testFocusLost() {
-  ok(isCaretPos(gPanel, 1, 1),
+  ok(isCaretPos(gPanel, 6, 1),
     "The editor caret position appears to be correct after gaining focus.");
-  ok(isEditorSel(gPanel, [1, 1]),
+  ok(isEditorSel(gPanel, [165, 165]),
     "The editor selection appears to be correct after gaining focus.");
   is(gEditor.getSelection(), "",
     "The editor selected text appears to be correct after gaining focus.");

@@ -46,6 +46,7 @@ function test() {
       .then(() => ensureSourceIs(aPanel, "doc_editor-mode"))
       .then(() => ensureCaretAt(aPanel, 1))
       .then(() => typeText(gSearchBox, ":"))
+      .then(() => waitForSourceShown(gPanel, "code_test-editor-mode"))
       .then(() => ensureSourceIs(aPanel, "code_test-editor-mode", true))
       .then(() => ensureCaretAt(aPanel, 1))
       .then(() => typeText(gSearchBox, "5"))

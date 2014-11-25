@@ -52,7 +52,7 @@ function htmlSearch() {
     ok(gFilteredFunctions.selectedItem,
       "An item should be selected in the filtered functions view (2).");
 
-    if (gSources.selectedValue.indexOf(".html") != -1) {
+    if (gSources.selectedItem.attachment.source.url.indexOf(".html") != -1) {
       let expectedResults = [
         ["inline", ".html", "", 19, 16],
         ["arrow", ".html", "", 20, 11],
@@ -117,7 +117,7 @@ function firstJsSearch() {
     ok(gFilteredFunctions.selectedItem,
       "An item should be selected in the filtered functions view (2).");
 
-    if (gSources.selectedValue.indexOf("-01.js") != -1) {
+    if (gSources.selectedItem.attachment.source.url.indexOf("-01.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
       let expectedResults = [
         ["test", "-01.js", "", 4, 10],
@@ -188,7 +188,7 @@ function secondJsSearch() {
     ok(gFilteredFunctions.selectedItem,
       "An item should be selected in the filtered functions view (2).");
 
-    if (gSources.selectedValue.indexOf("-02.js") != -1) {
+    if (gSources.selectedItem.attachment.source.url.indexOf("-02.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
       let expectedResults = [
         ["test2", "-02.js", "", 4, 5],
@@ -259,7 +259,7 @@ function thirdJsSearch() {
     ok(gFilteredFunctions.selectedItem,
       "An item should be selected in the filtered functions view (2).");
 
-    if (gSources.selectedValue.indexOf("-03.js") != -1) {
+    if (gSources.selectedItem.attachment.source.url.indexOf("-03.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
       let expectedResults = [
         ["namedEventListener", "-03.js", "", 4, 43],
@@ -330,7 +330,7 @@ function filterSearch() {
     ok(gFilteredFunctions.selectedItem,
       "An item should be selected in the filtered functions view (2).");
 
-    if (gSources.selectedValue.indexOf("-03.js") != -1) {
+    if (gSources.selectedItem.attachment.source.url.indexOf("-03.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
       let expectedResults = [
         ["namedEventListener", "-03.js", "", 4, 43],
@@ -452,7 +452,7 @@ function saveSearch() {
 }
 
 function writeInfo() {
-  info("Current source url:\n" + gSources.selectedValue);
+  info("Current source url:\n" + getSelectedSourceURL(gSources));
   info("Debugger editor text:\n" + gEditor.getText());
 }
 

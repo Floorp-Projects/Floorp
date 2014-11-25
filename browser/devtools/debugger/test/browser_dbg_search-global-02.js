@@ -51,12 +51,12 @@ function firstSearch() {
     // Some operations are synchronously dispatched on the main thread,
     // to avoid blocking UI, thus giving the impression of faster searching.
     executeSoon(() => {
-      info("Current source url:\n" + gSources.selectedValue);
+      info("Current source url:\n" + getSelectedSourceURL(gSources));
       info("Debugger editor text:\n" + gEditor.getText());
 
-      ok(isCaretPos(gPanel, 1),
+      ok(isCaretPos(gPanel, 6),
         "The editor shouldn't have jumped to a matching line yet.");
-      ok(gSources.selectedValue.contains("-02.js"),
+      ok(getSelectedSourceURL(gSources).contains("-02.js"),
         "The current source shouldn't have changed after a global search.");
       is(gSources.visibleItems.length, 2,
         "Not all the sources are shown after the global search.");
@@ -65,7 +65,7 @@ function firstSearch() {
     });
   });
 
-  setText(gSearchBox, "!eval");
+  setText(gSearchBox, "!function");
 
   return deferred.promise;
 }
@@ -73,20 +73,20 @@ function firstSearch() {
 function doFirstJump() {
   let deferred = promise.defer();
 
-  waitForSourceAndCaret(gPanel, "-01.js", 1).then(() => {
-    info("Current source url:\n" + gSources.selectedValue);
+  waitForSourceAndCaret(gPanel, "-01.js", 4).then(() => {
+    info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(gSources.selectedValue.contains("-01.js"),
+    ok(getSelectedSourceURL(gSources).contains("-01.js"),
       "The currently shown source is incorrect (1).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (1).");
 
     // The editor's selected text takes a tick to update.
     executeSoon(() => {
-      ok(isCaretPos(gPanel, 5, 7),
+      ok(isCaretPos(gPanel, 4, 9),
         "The editor didn't jump to the correct line (1).");
-      is(gEditor.getSelection(), "eval",
+      is(gEditor.getSelection(), "function",
         "The editor didn't select the correct text (1).");
 
       deferred.resolve();
@@ -101,20 +101,20 @@ function doFirstJump() {
 function doSecondJump() {
   let deferred = promise.defer();
 
-  waitForSourceAndCaret(gPanel, "-02.js", 1).then(() => {
-    info("Current source url:\n" + gSources.selectedValue);
+  waitForSourceAndCaret(gPanel, "-02.js", 4).then(() => {
+    info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(gSources.selectedValue.contains("-02.js"),
+    ok(getSelectedSourceURL(gSources).contains("-02.js"),
       "The currently shown source is incorrect (2).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (2).");
 
     // The editor's selected text takes a tick to update.
     executeSoon(() => {
-      ok(isCaretPos(gPanel, 6, 7),
+      ok(isCaretPos(gPanel, 4, 9),
         "The editor didn't jump to the correct line (2).");
-      is(gEditor.getSelection(), "eval",
+      is(gEditor.getSelection(), "function",
         "The editor didn't select the correct text (2).");
 
       deferred.resolve();
@@ -129,26 +129,27 @@ function doSecondJump() {
 function doWrapAroundJump() {
   let deferred = promise.defer();
 
-  waitForSourceAndCaret(gPanel, "-01.js", 1).then(() => {
-    info("Current source url:\n" + gSources.selectedValue);
+  waitForSourceAndCaret(gPanel, "-01.js", 4).then(() => {
+    info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(gSources.selectedValue.contains("-01.js"),
+    ok(getSelectedSourceURL(gSources).contains("-01.js"),
       "The currently shown source is incorrect (3).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (3).");
 
     // The editor's selected text takes a tick to update.
     executeSoon(() => {
-      ok(isCaretPos(gPanel, 5, 7),
+      ok(isCaretPos(gPanel, 4, 9),
         "The editor didn't jump to the correct line (3).");
-      is(gEditor.getSelection(), "eval",
+      is(gEditor.getSelection(), "function",
         "The editor didn't select the correct text (3).");
 
       deferred.resolve();
     });
   });
 
+  EventUtils.sendKey("DOWN", gDebugger);
   EventUtils.sendKey("DOWN", gDebugger);
 
   return deferred.promise;
@@ -157,20 +158,20 @@ function doWrapAroundJump() {
 function doBackwardsWrapAroundJump() {
   let deferred = promise.defer();
 
-  waitForSourceAndCaret(gPanel, "-02.js", 1).then(() => {
-    info("Current source url:\n" + gSources.selectedValue);
+  waitForSourceAndCaret(gPanel, "-02.js", 7).then(() => {
+    info("Current source url:\n" + getSelectedSourceURL(gSources));
     info("Debugger editor text:\n" + gEditor.getText());
 
-    ok(gSources.selectedValue.contains("-02.js"),
+    ok(getSelectedSourceURL(gSources).contains("-02.js"),
       "The currently shown source is incorrect (4).");
     is(gSources.visibleItems.length, 2,
       "Not all the sources are shown after the global search (4).");
 
     // The editor's selected text takes a tick to update.
     executeSoon(() => {
-      ok(isCaretPos(gPanel, 6, 7),
+      ok(isCaretPos(gPanel, 7, 11),
         "The editor didn't jump to the correct line (4).");
-      is(gEditor.getSelection(), "eval",
+      is(gEditor.getSelection(), "function",
         "The editor didn't select the correct text (4).");
 
       deferred.resolve();
@@ -185,14 +186,14 @@ function doBackwardsWrapAroundJump() {
 function testSearchTokenEmpty() {
   backspaceText(gSearchBox, 4);
 
-  info("Current source url:\n" + gSources.selectedValue);
+  info("Current source url:\n" + getSelectedSourceURL(gSources));
   info("Debugger editor text:\n" + gEditor.getText());
 
-  ok(gSources.selectedValue.contains("-02.js"),
+  ok(getSelectedSourceURL(gSources).contains("-02.js"),
     "The currently shown source is incorrect (4).");
   is(gSources.visibleItems.length, 2,
     "Not all the sources are shown after the global search (4).");
-  ok(isCaretPos(gPanel, 6, 7),
+  ok(isCaretPos(gPanel, 7, 11),
     "The editor didn't remain at the correct line (4).");
   is(gEditor.getSelection(), "",
     "The editor shouldn't keep the previous text selected (4).");

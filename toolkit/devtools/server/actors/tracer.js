@@ -280,37 +280,6 @@ TracerActor.prototype = {
         sequence: this._sequence++
       };
 
-      let sourceMappedLocation;
-      if (this._requestsForTraceType.name || this._requestsForTraceType.location) {
-        if (aFrame.script) {
-          sourceMappedLocation = yield this._parent.threadActor.sources.getOriginalLocation({
-            url: aFrame.script.url,
-            line: aFrame.script.startLine,
-            // We should return the location of the start of the script, but
-            // Debugger.Script does not provide complete start locations (bug
-            // 901138). Instead, return the current offset (the location of the
-            // first statement in the function).
-            column: getOffsetColumn(aFrame.offset, aFrame.script)
-          });
-        }
-      }
-
-      if (this._requestsForTraceType.name) {
-        if (sourceMappedLocation && sourceMappedLocation.name) {
-          packet.name = sourceMappedLocation.name;
-        } else {
-          packet.name = aFrame.callee
-            ? aFrame.callee.displayName || "(anonymous function)"
-            : "(" + aFrame.type + ")";
-        }
-      }
-
-      if (this._requestsForTraceType.location) {
-        if (sourceMappedLocation && sourceMappedLocation.url) {
-          packet.location = sourceMappedLocation;
-        }
-      }
-
       if (this._requestsForTraceType.hitCount) {
         if (aFrame.script) {
           // Increment hit count.
@@ -365,6 +334,52 @@ TracerActor.prototype = {
       aFrame.onPop = function (aCompletion) {
         onExitFrame(this, aCompletion);
       };
+
+      // Async work is done below that doesn't depend on the frame
+      // being live
+
+      let name = aFrame.callee
+          ? aFrame.callee.displayName || "(anonymous function)"
+          : "(" + aFrame.type + ")";
+      let sourceMappedLocation;
+
+      if (this._requestsForTraceType.name || this._requestsForTraceType.location) {
+        if (aFrame.script) {
+          let sources = this._parent.threadActor.sources;
+
+          sourceMappedLocation = yield sources.getOriginalLocation({
+            source: aFrame.script.source,
+            url: aFrame.script.source.url,
+            line: aFrame.script.startLine,
+            // We should return the location of the start of the script, but
+            // Debugger.Script does not provide complete start locations (bug
+            // 901138). Instead, return the current offset (the location of the
+            // first statement in the function).
+            column: getOffsetColumn(aFrame.offset, aFrame.script)
+          });
+        }
+      }
+
+      if (this._requestsForTraceType.name) {
+        if (sourceMappedLocation && sourceMappedLocation.name) {
+          packet.name = sourceMappedLocation.name;
+        } else {
+          packet.name = name;
+        }
+      }
+
+      if (this._requestsForTraceType.location) {
+        if (sourceMappedLocation) {
+          // Don't copy sourceMappedLocation directly because it
+          // contains a reference to the source actor
+          packet.location = {
+            url: sourceMappedLocation.url,
+            line: sourceMappedLocation.line,
+            column: sourceMappedLocation.column,
+            name: sourceMappedLocation.name
+          };
+        }
+      }
 
       runInOrder(() => this._send(packet));
     }.bind(this));

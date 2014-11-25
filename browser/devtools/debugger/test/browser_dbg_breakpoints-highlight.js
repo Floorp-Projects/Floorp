@@ -35,17 +35,17 @@ function test() {
   function addBreakpoints() {
     return promise.resolve(null)
       .then(() => initialChecks(0, 1))
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[0], line: 5 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[0], line: 5 }))
       .then(() => initialChecks(0, 5))
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[1], line: 6 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[1], line: 6 }))
       .then(() => waitForSourceShown(gPanel, "-02.js"))
       .then(() => waitForCaretUpdated(gPanel, 6))
       .then(() => initialChecks(1, 6))
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[1], line: 7 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[1], line: 7 }))
       .then(() => initialChecks(1, 7))
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[1], line: 8 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[1], line: 8 }))
       .then(() => initialChecks(1, 8))
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[1], line: 9 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[1], line: 9 }))
       .then(() => initialChecks(1, 9));
   }
 
@@ -80,10 +80,10 @@ function test() {
     return finished;
   }
 
-  function checkHighlight(aUrl, aLine) {
-    is(gSources._selectedBreakpointItem, gSources.getBreakpoint({ url: aUrl, line: aLine }),
+  function checkHighlight(aActor, aLine) {
+    is(gSources._selectedBreakpointItem, gSources.getBreakpoint({ actor: aActor, line: aLine }),
       "The currently selected breakpoint item is incorrect.");
-    is(gSources._selectedBreakpointItem.attachment.url, aUrl,
+    is(gSources._selectedBreakpointItem.attachment.actor, aActor,
       "The selected breakpoint item's source location attachment is incorrect.");
     is(gSources._selectedBreakpointItem.attachment.line, aLine,
       "The selected breakpoint item's source line number is incorrect.");
@@ -96,7 +96,7 @@ function test() {
       is(gEditor.getText().indexOf("firstCall"), 118,
         "The first source is correctly displayed.");
     } else {
-      is(gEditor.getText().indexOf("debugger"), 172,
+      is(gEditor.getText().indexOf("debugger"), 166,
         "The second source is correctly displayed.");
     }
   }

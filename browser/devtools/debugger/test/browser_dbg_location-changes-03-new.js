@@ -37,7 +37,7 @@ function testLocationChange() {
     is(gSources.itemCount, 1,
       "Found the expected number of entries in the sources widget.");
 
-    is(gSources.selectedValue, EXAMPLE_URL + "doc_inline-debugger-statement.html",
+    is(getSelectedSourceURL(gSources), EXAMPLE_URL + "doc_inline-debugger-statement.html",
       "There should be a selected source value.");
     isnot(gEditor.getText().length, 0,
       "The source editor should have some text displayed.");

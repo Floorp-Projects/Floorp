@@ -103,7 +103,7 @@ function escapeAndClear() {
 function verifySourceAndCaret(aUrl, aLine, aColumn) {
   ok(gSources.selectedItem.attachment.label.contains(aUrl),
     "The selected item's label appears to be correct.");
-  ok(gSources.selectedItem.value.contains(aUrl),
+  ok(gSources.selectedItem.attachment.source.url.contains(aUrl),
     "The selected item's value appears to be correct.");
   ok(isCaretPos(gPanel, aLine, aColumn),
     "The current caret position appears to be correct.");
