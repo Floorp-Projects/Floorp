@@ -36,7 +36,7 @@ Message::Message()
 #ifdef MOZ_TASK_TRACER
   header()->source_event_id = 0;
   header()->parent_task_id = 0;
-  header()->source_event_type = SourceEventType::UNKNOWN;
+  header()->source_event_type = SourceEventType::Unknown;
 #endif
   InitLoggingVariables();
 }
@@ -61,7 +61,7 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
 #ifdef MOZ_TASK_TRACER
   header()->source_event_id = 0;
   header()->parent_task_id = 0;
-  header()->source_event_type = SourceEventType::UNKNOWN;
+  header()->source_event_type = SourceEventType::Unknown;
 #endif
   InitLoggingVariables(name);
 }
