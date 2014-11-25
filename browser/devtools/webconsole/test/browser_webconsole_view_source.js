@@ -6,9 +6,9 @@
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-error.html";
 
-let containsValue;
+let getItemForAttachment;
 let Sources;
-let containsValueInvoked = false;
+let getItemInvoked = false;
 
 function test() {
   addTab(TEST_URI);
@@ -52,9 +52,9 @@ function testViewSource(hud) {
 
     Services.ww.registerNotification(observer);
 
-    containsValue = Sources.containsValue;
-    Sources.containsValue = () => {
-      containsValueInvoked = true;
+    getItemForAttachment = Sources.getItemForAttachment;
+    Sources.getItemForAttachment = () => {
+      getItemInvoked = true;
       return false;
     };
 
@@ -72,9 +72,9 @@ let observer = {
        "the location node");
 
     aSubject.close();
-    ok(containsValueInvoked, "custom containsValue() was invoked");
-    Sources.containsValue = containsValue;
-    Sources = containsValue = null;
+    ok(getItemInvoked, "custom getItemForAttachment() was invoked");
+    Sources.getItemForAttachment = getItemForAttachment;
+    Sources = getItemForAttachment = null;
     finishTest();
   }
 };

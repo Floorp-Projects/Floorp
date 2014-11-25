@@ -46,7 +46,7 @@ function test() {
 }
 
 function checkInitialSource() {
-  isnot(gSources.selectedValue.indexOf("code_math_bogus_map.js"), -1,
+  isnot(gSources.selectedItem.attachment.source.url.indexOf("code_math_bogus_map.js"), -1,
     "The debugger should show the minified js file.");
 }
 
@@ -86,8 +86,10 @@ function disableIgnoreCaughtExceptions() {
 
 function testSetBreakpoint() {
   let deferred = promise.defer();
+  let sourceForm = getSourceForm(gSources, JS_URL);
+  let source = gDebugger.gThreadClient.source(sourceForm);
 
-  gDebugger.gThreadClient.setBreakpoint({ url: JS_URL, line: 3, column: 61 }, aResponse => {
+  source.setBreakpoint({ line: 3, column: 61 }, aResponse => {
     ok(!aResponse.error,
       "Should be able to set a breakpoint in a js file.");
     ok(!aResponse.actualLocation,
@@ -115,7 +117,17 @@ function testHitBreakpoint() {
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_SCOPES).then(() => {
       is(gFrames.itemCount, 1, "Should have one frame.");
 
-      gDebugger.gThreadClient.resume(deferred.resolve);
+      // This is weird, but we need to let the debugger a chance to
+      // update first
+      executeSoon(() => {
+        gDebugger.gThreadClient.resume(() => {
+          // We also need to make sure the next step doesn't add a
+          // "resumed" handler until this is completely finished
+          executeSoon(() => {
+            deferred.resolve();
+          });
+        });
+      });
     });
   });
 

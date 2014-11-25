@@ -20,11 +20,12 @@ function test() {
 }
 
 function testCleanExit() {
-  waitForSourceAndCaretAndScopes(gPanel, ".html", 16).then(() => {
+  promise.all([
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 16),
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_REFILLED)
+  ]).then(() => {
     is(gDebugger.gThreadClient.paused, true,
       "Should be paused after the debugger statement.");
-
-    return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_REFILLED);
   }).then(() => closeDebuggerAndFinish(gPanel, { whilePaused: true }));
 
   callInTab(gTab, "runDebuggerStatement");

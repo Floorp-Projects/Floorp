@@ -66,7 +66,7 @@ function test() {
          "1 breakpoint correctly added");
       is(gEditor.getBreakpoints().length, 1,
          "1 breakpoint currently shown in the editor.");
-      ok(gBreakpoints._getAdded({ url: gSources.values[1], line: 7 }),
+      ok(gBreakpoints._getAdded({ actor: gSources.values[1], line: 7 }),
          "Breakpoint on line 7 exists");
     });
   }
@@ -88,7 +88,7 @@ function test() {
          "2 breakpoints correctly added");
       is(gEditor.getBreakpoints().length, 2,
          "2 breakpoints currently shown in the editor.");
-      ok(gBreakpoints._getAdded({ url: gSources.values[1], line: 8 }),
+      ok(gBreakpoints._getAdded({ actor: gSources.values[1], line: 8 }),
          "Breakpoint on line 8 exists");
     });
   }

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check that setting a breakpoint in a line without code in a child script
+ * Check that setting a breakpoint in a line without code in a child scrip
  * will skip forward.
  */
 
@@ -36,16 +36,18 @@ function run_test_with_server(aServer, aCallback)
 function test_child_skip_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-05.js');
-    let location = { url: path, line: gDebuggee.line0 + 3};
-    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
+    let source = gThreadClient.source(aPacket.frame.where.source);
+    let location = { line: gDebuggee.line0 + 3 };
+
+    source.setBreakpoint(location, function (aResponse, bpClient) {
       // Check that the breakpoint has properly skipped forward one line.
-      do_check_eq(aResponse.actualLocation.url, location.url);
+      do_check_eq(aResponse.actualLocation.source.actor, source.actor);
       do_check_eq(aResponse.actualLocation.line, location.line + 1);
+
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
-        do_check_eq(aPacket.frame.where.url, path);
+        do_check_eq(aPacket.frame.where.source.actor, source.actor);
         do_check_eq(aPacket.frame.where.line, location.line + 1);
         do_check_eq(aPacket.why.type, "breakpoint");
         do_check_eq(aPacket.why.actors[0], bpClient.actor);
@@ -59,13 +61,11 @@ function test_child_skip_breakpoint()
             gClient.close(gCallback);
           });
         });
-
       });
+
       // Continue until the breakpoint is hit.
       gThreadClient.resume();
-
     });
-
   });
 
   gDebuggee.eval("var line0 = Error().lineNumber;\n" +

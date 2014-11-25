@@ -9,14 +9,9 @@
   </head>
 
   <body>
-    <script type="text/javascript">
-      function firstCall() {
-        window.gLineNumber = Error().lineNumber; secondCall();
-      }
-      function secondCall() {
-        debugger;
-      }
-    </script>
+    <button onclick="evalSource()">Click me!</button>
+
+    <script type="text/javascript" src="code_script-eval.js"></script>
   </body>
 
 </html>

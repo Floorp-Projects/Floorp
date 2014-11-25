@@ -246,7 +246,7 @@ function waitForTime(aDelay) {
 
 function waitForSourceShown(aPanel, aUrl) {
   return waitForDebuggerEvents(aPanel, aPanel.panelWin.EVENTS.SOURCE_SHOWN).then(aSource => {
-    let sourceUrl = aSource.url;
+    let sourceUrl = aSource.url || aSource.introductionUrl;
     info("Source shown: " + sourceUrl);
 
     if (!sourceUrl.contains(aUrl)) {
@@ -261,15 +261,18 @@ function waitForEditorLocationSet(aPanel) {
   return waitForDebuggerEvents(aPanel, aPanel.panelWin.EVENTS.EDITOR_LOCATION_SET);
 }
 
-function ensureSourceIs(aPanel, aUrl, aWaitFlag = false) {
-  if (aPanel.panelWin.DebuggerView.Sources.selectedValue.contains(aUrl)) {
-    ok(true, "Expected source is shown: " + aUrl);
+function ensureSourceIs(aPanel, aUrlOrSource, aWaitFlag = false) {
+  let sources = aPanel.panelWin.DebuggerView.Sources;
+
+  if (sources.selectedValue === aUrlOrSource ||
+      sources.selectedItem.attachment.source.url.contains(aUrlOrSource)) {
+    ok(true, "Expected source is shown: " + aUrlOrSource);
     return promise.resolve(null);
   }
   if (aWaitFlag) {
-    return waitForSourceShown(aPanel, aUrl);
+    return waitForSourceShown(aPanel, aUrlOrSource);
   }
-  ok(false, "Expected source was not already shown: " + aUrl);
+  ok(false, "Expected source was not already shown: " + aUrlOrSource);
   return promise.reject(null);
 }
 
@@ -658,7 +661,7 @@ AddonDebugger.prototype = {
     }
 
     for (let source of sources) {
-      let { label, group } = debuggerWin.DebuggerView.Sources.getItemByValue(source.url).attachment;
+      let { label, group } = debuggerWin.DebuggerView.Sources.getItemByValue(source.actor).attachment;
 
       if (!groupmap.has(group)) {
         ok(false, "Saw a source group not in the UI: " + group);
@@ -776,13 +779,14 @@ function toggleBlackBoxing(aPanel, aSource = null) {
   return blackBoxChanged;
 }
 
-function selectSourceAndGetBlackBoxButton(aPanel, aSource) {
+function selectSourceAndGetBlackBoxButton(aPanel, aUrl) {
   function returnBlackboxButton() {
     return getBlackBoxButton(aPanel);
   }
 
-  aPanel.panelWin.DebuggerView.Sources.selectedValue = aSource;
-  return ensureSourceIs(aPanel, aSource, true).then(returnBlackboxButton);
+  let sources = aPanel.panelWin.DebuggerView.Sources;
+  sources.selectedValue = getSourceActor(sources, aUrl);
+  return ensureSourceIs(aPanel, aUrl, true).then(returnBlackboxButton);
 }
 
 // Variables view inspection popup helpers
@@ -981,4 +985,26 @@ function sendMouseClickToTab(tab, target) {
   sendMessageToTab(tab, "test:click", undefined, {
     target: target
   });
+}
+
+// Source helpers
+
+function getSelectedSourceURL(aSources) {
+  return (aSources.selectedItem &&
+          aSources.selectedItem.attachment.source.url);
+}
+
+function getSourceURL(aSources, aActor) {
+  let item = aSources.getItemByValue(aActor);
+  return item && item.attachment.source.url;
+}
+
+function getSourceActor(aSources, aURL) {
+  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+  return item && item.value;
+}
+
+function getSourceForm(aSources, aURL) {
+  let item = aSources.getItemByValue(getSourceActor(gSources, aURL));
+  return item.attachment.source;
 }

@@ -27,7 +27,7 @@ function test() {
 }
 
 function performTest() {
-  is(gFrames.selectedIndex, 3,
+  is(gFrames.selectedIndex, 1,
     "Newest frame should be selected by default.");
   is(gClassicFrames.selectedIndex, 0,
     "Newest frame should also be selected in the mirrored view.");
@@ -35,13 +35,13 @@ function performTest() {
     "The second source is selected in the widget.");
   is(gEditor.getText().search(/firstCall/), -1,
     "The first source is not displayed.");
-  is(gEditor.getText().search(/debugger/), 172,
+  is(gEditor.getText().search(/debugger/), 166,
     "The second source is displayed.");
 
   waitForSourceAndCaret(gPanel, "-01.js", 1).then(waitForTick).then(() => {
     is(gFrames.selectedIndex, 0,
       "Oldest frame should be selected after click.");
-    is(gClassicFrames.selectedIndex, 3,
+    is(gClassicFrames.selectedIndex, 1,
       "Oldest frame should also be selected in the mirrored view.");
     is(gSources.selectedIndex, 0,
       "The first source is now selected in the widget.");
@@ -51,7 +51,7 @@ function performTest() {
       "The second source is not displayed.");
 
     waitForSourceAndCaret(gPanel, "-02.js", 1).then(waitForTick).then(() => {
-      is(gFrames.selectedIndex, 3,
+      is(gFrames.selectedIndex, 1,
         "Newest frame should be selected again after click.");
       is(gClassicFrames.selectedIndex, 0,
         "Newest frame should also be selected again in the mirrored view.");
@@ -59,7 +59,7 @@ function performTest() {
         "The second source is selected in the widget.");
       is(gEditor.getText().search(/firstCall/), -1,
         "The first source is not displayed.");
-      is(gEditor.getText().search(/debugger/), 172,
+      is(gEditor.getText().search(/debugger/), 166,
         "The second source is displayed.");
 
       resumeDebuggerThenCloseAndFinish(gPanel);
@@ -71,7 +71,7 @@ function performTest() {
   });
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    gDebugger.document.querySelector("#stackframe-3"),
+    gDebugger.document.querySelector("#stackframe-1"),
     gDebugger);
 }
 

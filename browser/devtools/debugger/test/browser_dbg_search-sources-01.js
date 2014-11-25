@@ -108,11 +108,11 @@ function thirdSearch() {
     let finished = promise.all([
       once(gDebugger, "popupshown"),
       waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FILE_SEARCH_MATCH_FOUND),
-      waitForCaretUpdated(gPanel, 6, 12)
+      waitForCaretUpdated(gPanel, 6, 6)
     ])
     .then(() => promise.all([
       ensureSourceIs(gPanel, "-02.js"),
-      ensureCaretAt(gPanel, 6, 12),
+      ensureCaretAt(gPanel, 6, 6),
       verifyContents({ itemCount: 1, hidden: false })
     ]));
 

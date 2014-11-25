@@ -36,9 +36,10 @@ function run_test_with_server(aServer, aCallback)
 function test_simple_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-14.js');
-    let location = { url: path, line: gDebuggee.line0 + 2};
-    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
+    let source = gThreadClient.source(aPacket.frame.where.source);
+    let location = { line: gDebuggee.line0 + 2 };
+
+    source.setBreakpoint(location, function (aResponse, bpClient) {
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check that the stepping worked.
         do_check_eq(aPacket.frame.where.line, gDebuggee.line0 + 5);

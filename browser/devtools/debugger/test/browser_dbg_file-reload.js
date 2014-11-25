@@ -20,7 +20,7 @@ function test() {
 
       is(gSources.itemCount, 1,
         "There should be one source displayed in the view.")
-      is(gSources.selectedValue, JS_URL,
+      is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is currently selected in the view.");
       ok(gEditor.getText().contains("bacon"),
         "The currently shown source contains bacon. Mmm, delicious!");
@@ -38,7 +38,7 @@ function test() {
 
       is(gSources.itemCount, 1,
         "There should be one source displayed in the view after reloading.")
-      is(gSources.selectedValue, JS_URL,
+      is(getSelectedSourceURL(gSources), JS_URL,
         "The correct source is currently selected in the view after reloading.");
       ok(gEditor.getText().contains("bacon"),
         "The newly shown source contains bacon. Mmm, delicious!");

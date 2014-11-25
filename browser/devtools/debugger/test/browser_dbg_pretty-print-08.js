@@ -19,8 +19,6 @@ function test() {
   });
 }
 
-let CODE_URL;
-
 const BP_LOCATION = {
   line: 5,
   column: 11
@@ -28,11 +26,11 @@ const BP_LOCATION = {
 
 function findSource() {
   gThreadClient.getSources(({ error, sources }) => {
-    ok(!error);
+    ok(!error, "error should exist");
     sources = sources.filter(s => s.url.contains("code_ugly-3.js"));
-    is(sources.length, 1);
+    is(sources.length, 1, "sources.length should be 1");
     [gSource] = sources;
-    CODE_URL = BP_LOCATION.url = gSource.url;
+    BP_LOCATION.actor = gSource.actor;
 
     prettyPrintSource(sources[0]);
   });
@@ -50,26 +48,30 @@ function runCode({ error }) {
 
 function testDbgStatement(event, { why, frame }) {
   is(why.type, "debuggerStatement");
-  const { url, line, column } = frame.where;
-  is(url, CODE_URL);
-  is(line, 3);
+  const { source, line, column } = frame.where;
+  is(source.actor, BP_LOCATION.actor, "source.actor should be the right actor");
+  is(line, 3, "the line should be 3");
   setBreakpoint();
 }
 
 function setBreakpoint() {
-  gThreadClient.setBreakpoint(BP_LOCATION, ({ error, actualLocation }) => {
-    ok(!error);
-    ok(!actualLocation);
-    testStepping();
-  });
+  gThreadClient.source(gSource).setBreakpoint(
+    { line: BP_LOCATION.line,
+      column: BP_LOCATION.column },
+    ({ error, actualLocation }) => {
+      ok(!error, "error should not exist");
+      ok(!actualLocation, "actualLocation should not exist");
+      testStepping();
+    }
+  );
 }
 
 function testStepping() {
   gClient.addOneTimeListener("paused", (event, { why, frame }) => {
     is(why.type, "resumeLimit");
-    const { url, line } = frame.where;
-    is(url, CODE_URL);
-    is(line, 4);
+    const { source, line } = frame.where;
+    is(source.actor, BP_LOCATION.actor, "source.actor should be the right actor");
+    is(line, 4, "the line should be 4");
     testHitBreakpoint();
   });
   gThreadClient.stepIn();
@@ -78,9 +80,9 @@ function testStepping() {
 function testHitBreakpoint() {
   gClient.addOneTimeListener("paused", (event, { why, frame }) => {
     is(why.type, "breakpoint");
-    const { url, line } = frame.where;
-    is(url, CODE_URL);
-    is(line, BP_LOCATION.line);
+    const { source, line } = frame.where;
+    is(source.actor, BP_LOCATION.actor, "source.actor should be the right actor");
+    is(line, BP_LOCATION.line, "the line should the right line");
 
     resumeDebuggerThenCloseAndFinish(gPanel);
   });

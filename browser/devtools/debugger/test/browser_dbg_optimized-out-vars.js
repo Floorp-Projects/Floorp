@@ -13,7 +13,8 @@ function test() {
     sources = gDebugger.DebuggerView.Sources;
 
     yield waitForSourceShown(panel, ".html");
-    yield panel.addBreakpoint({ url: sources.values[0], line: 18 });
+    yield panel.addBreakpoint({ actor: sources.values[0],
+                                line: 18 });
     yield ensureThreadClientState(panel, "resumed");
 
     // Spin the event loop before causing the debuggee to pause, to allow
