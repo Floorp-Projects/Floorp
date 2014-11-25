@@ -230,19 +230,7 @@ function runUndoRedoTest()
     });
 
   // commit
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u732B",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
-  // end composition
-  synthesizeComposition({ type: "compositionend", data: "\u732B" });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   // start composition
   synthesizeComposition({ type: "compositionstart" });
@@ -260,19 +248,7 @@ function runUndoRedoTest()
     });
 
   // cancel the composition
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 0, "length": 0 }
-    });
-
-  // end composition
-  synthesizeComposition({ type: "compositionend", data: "" });
+  synthesizeComposition({ type: "compositioncommit", data: "" });
 
   // start composition
   synthesizeComposition({ type: "compositionstart" });
@@ -325,19 +301,7 @@ function runUndoRedoTest()
     });
 
   // commit
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u5A18",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
-  // end composition
-  synthesizeComposition({ type: "compositionend", data: "\u5A18" });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   synthesizeKey(" ", {});
   synthesizeKey("m", {});
@@ -433,19 +397,7 @@ function runUndoRedoTest()
     });
 
   // commit
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u5996\u602a",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 2, "length": 0 }
-    });
-
-  // end composition
-  synthesizeComposition({ type: "compositionend", data: "\u5996\u602a" });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   synthesizeKey("VK_BACK_SPACE", {});
   synthesizeKey("VK_BACK_SPACE", {});
@@ -612,6 +564,343 @@ function runUndoRedoTest()
       !checkSelection(20, "", "runUndoRedoTest", "#" + i)) {
     return;
   }
+}
+
+function runCompositionCommitAsIsTest()
+{
+  textarea.focus();
+
+  var result = {};
+  function clearResult()
+  {
+    result = { compositionupdate: false, compositionend: false, text: false, input: false }
+  }
+
+  function handler(aEvent)
+  {
+    result[aEvent.type] = true;
+  }
+
+  textarea.addEventListener("compositionupdate", handler, true);
+  textarea.addEventListener("compositionend", handler, true);
+  textarea.addEventListener("input", handler, true);
+  textarea.addEventListener("text", handler, true);
+
+  // compositioncommitasis with composing string.
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have composition string #1");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommitasis" });
+
+  is(result.compositionupdate, false, "runCompositionCommitAsIsTest: compositionupdate shouldn't be fired after dispatching compositioncommitasis #1");
+  is(result.compositionend, true, "runCompositionCommitAsIsTest: compositionend should be fired after dispatching compositioncommitasis #1");
+  is(result.text, true, "runCompositionCommitAsIsTest: text should be fired after dispatching compositioncommitasis because it's dispatched when there is composing string #1");
+  is(result.input, true, "runCompositionCommitAsIsTest: input should be fired after dispatching compositioncommitasis #1");
+  is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have committed string #1");
+
+  // compositioncommitasis with committed string.
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have composition string #2");
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have committed string #2");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommitasis" });
+
+  is(result.compositionupdate, false, "runCompositionCommitAsIsTest: compositionupdate shouldn't be fired after dispatching compositioncommitasis #2");
+  is(result.compositionend, true, "runCompositionCommitAsIsTest: compositionend should be fired after dispatching compositioncommitasis #2");
+  is(result.text, false, "runCompositionCommitAsIsTest: text shouldn't be fired after dispatching compositioncommitasis because it's dispatched when there is already committed string #2");
+  is(result.input, true, "runCompositionCommitAsIsTest: input should be fired after dispatching compositioncommitasis #2");
+  is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have committed string #2");
+
+  // compositioncommitasis with committed string.
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitAsIsTest: textarea doesn't have composition string #3");
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+  is(textarea.value, "", "runCompositionCommitAsIsTest: textarea has non-empty composition string #3");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommitasis" });
+
+  is(result.compositionupdate, false, "runCompositionCommitAsIsTest: compositionupdate shouldn't be fired after dispatching compositioncommitasis #3");
+  is(result.compositionend, true, "runCompositionCommitAsIsTest: compositionend should be fired after dispatching compositioncommitasis #3");
+  is(result.text, false, "runCompositionCommitAsIsTest: text shouldn't be fired after dispatching compositioncommitasis because it's dispatched when there is empty composition string #3");
+  is(result.input, true, "runCompositionCommitAsIsTest: input should be fired after dispatching compositioncommitasis #3");
+  is(textarea.value, "", "runCompositionCommitAsIsTest: textarea doesn't have committed string #3");
+
+  textarea.removeEventListener("compositionupdate", handler, true);
+  textarea.removeEventListener("compositionend", handler, true);
+  textarea.removeEventListener("input", handler, true);
+  textarea.removeEventListener("text", handler, true);
+}
+
+function runCompositionCommitTest()
+{
+  textarea.focus();
+
+  var result = {};
+  function clearResult()
+  {
+    result = { compositionupdate: false, compositionend: false, text: false, input: false }
+  }
+
+  function handler(aEvent)
+  {
+    result[aEvent.type] = true;
+  }
+
+  textarea.addEventListener("compositionupdate", handler, true);
+  textarea.addEventListener("compositionend", handler, true);
+  textarea.addEventListener("input", handler, true);
+  textarea.addEventListener("text", handler, true);
+
+  // compositioncommit with different composing string.
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have composition string #1");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "\u3043" });
+
+  is(result.compositionupdate, true, "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #1");
+  is(result.compositionend, true, "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #1");
+  is(result.text, true, "runCompositionCommitTest: text should be fired after dispatching compositioncommit because it's dispatched when there is compoing string #1");
+  is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #1");
+  is(textarea.value, "\u3043", "runCompositionCommitTest: textarea doesn't have committed string #1");
+
+  // compositioncommit with different committed string when there is already committed string
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have composition string #2");
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have committed string #2");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "\u3043" });
+
+  is(result.compositionupdate, true, "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #2");
+  is(result.compositionend, true, "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #2");
+  is(result.text, true, "runCompositionCommitTest: text should be fired after dispatching compositioncommit #2");
+  is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #2");
+  is(textarea.value, "\u3043", "runCompositionCommitTest: textarea doesn't have committed string #2");
+
+  // compositioncommit with empty composition string.
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have composition string #3");
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+  is(textarea.value, "", "runCompositionCommitTest: textarea has non-empty composition string #3");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "\u3043" });
+
+  is(result.compositionupdate, true, "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #3");
+  is(result.compositionend, true, "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #3");
+  is(result.text, true, "runCompositionCommitTest: text should be fired after dispatching compositioncommit #3");
+  is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #3");
+  is(textarea.value, "\u3043", "runCompositionCommitTest: textarea doesn't have committed string #3");
+
+  // compositioncommit with non-empty composition string.
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have composition string #4");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "" });
+
+  is(result.compositionupdate, true, "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #4");
+  is(result.compositionend, true, "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #4");
+  is(result.text, true, "runCompositionCommitTest: text should be fired after dispatching compositioncommit #4");
+  is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #4");
+  is(textarea.value, "", "runCompositionCommitTest: textarea should be empty #4");
+
+  // compositioncommit immediately after compositionstart
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "\u3042" });
+
+  is(result.compositionupdate, true, "runCompositionCommitTest: compositionupdate should be fired after dispatching compositioncommit #5");
+  is(result.compositionend, true, "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #5");
+  is(result.text, true, "runCompositionCommitTest: text should be fired after dispatching compositioncommit #5");
+  is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #5");
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea should be empty #5");
+
+  // compositioncommit with same composition string.
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have composition string #5");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "\u3042" });
+
+  is(result.compositionupdate, false, "runCompositionCommitTest: compositionupdate shouldn't be fired after dispatching compositioncommit #5");
+  is(result.compositionend, true, "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #5");
+  is(result.text, true, "runCompositionCommitTest: text should be fired after dispatching compositioncommit because there was composition string #5");
+  is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #5");
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea should have committed string #5");
+
+  // compositioncommit with same composition string when there is committed string
+  textarea.value = "";
+  synthesizeComposition({ type: "compositionstart" });
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have composition string #6");
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "\u3042",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea doesn't have composition string #6");
+
+  clearResult();
+  synthesizeComposition({ type: "compositioncommit", data: "\u3042" });
+
+  is(result.compositionupdate, false, "runCompositionCommitTest: compositionupdate shouldn't be fired after dispatching compositioncommit #6");
+  is(result.compositionend, true, "runCompositionCommitTest: compositionend should be fired after dispatching compositioncommit #6");
+  is(result.text, false, "runCompositionCommitTest: text shouldn't be fired after dispatching compositioncommit because there was already committed string #6");
+  is(result.input, true, "runCompositionCommitTest: input should be fired after dispatching compositioncommit #6");
+  is(textarea.value, "\u3042", "runCompositionCommitTest: textarea should have committed string #6");
+
+  textarea.removeEventListener("compositionupdate", handler, true);
+  textarea.removeEventListener("compositionend", handler, true);
+  textarea.removeEventListener("input", handler, true);
+  textarea.removeEventListener("text", handler, true);
 }
 
 function runCompositionTest()
@@ -978,25 +1267,13 @@ function runCompositionTest()
   }
 
   // commit the composition string
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 8, "length": 0 }
-    });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046",
                     "runCompositionTest", "#1-13") ||
       !checkSelection(8, "", "runCompositionTest", "#1-13")) {
     return;
   }
-
-  synthesizeComposition({ type: "compositionend",
-                          data: "\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046" });
 
   var textRect3 = synthesizeQueryTextRect(0, 1);
   var textRect4 = synthesizeQueryTextRect(1, 1);
@@ -1084,24 +1361,13 @@ function runCompositionTest()
   }
 
   // commit the composition string
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3058\u3087\u3046",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 3, "length": 0 }
-    });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u3055\u884C\u3053\u3046\u3058\u3087\u3046",
                     "runCompositionTest", "#2-4") ||
       !checkSelection(8 + 3, "", "runCompositionTest", "#2-4")) {
     return;
   }
-
-  synthesizeComposition({ type: "compositionend", data: "\u3058\u3087\u3046" });
 
   // set selection
   var selectionSetTest = synthesizeSelectionSet(4, 7, false);
@@ -1168,18 +1434,7 @@ function runCompositionTest()
   }
 
   // cancel the composition
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 0, "length": 0 }
-    });
-
-  synthesizeComposition({ type: "compositionend", data: "" });
+  synthesizeComposition({ type: "compositioncommit", data: "" });
 
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
                     "runCompositionTest", "#3-5") ||
@@ -1226,28 +1481,10 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u6700",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
+  synthesizeComposition({ type: "compositioncommit", data: "\u6700" });
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
                     "runCompositionTest", "#4-3") ||
       !checkSelection(5, "", "runCompositionTest", "#4-3")) {
-    return;
-  }
-
-  synthesizeComposition({ type: "compositionend", data: "\u6700" });
-
-  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
-                    "runCompositionTest", "#4-4") ||
-      !checkSelection(5, "", "runCompositionTest", "#4-4")) {
     return;
   }
 
@@ -1271,28 +1508,11 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 0, "length": 0 }
-    });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
                     "runCompositionTest", "#4-6") ||
       !checkSelection(5, "", "runCompositionTest", "#4-6")) {
-    return;
-  }
-
-  synthesizeComposition({ type: "compositionend", data: "\u6700" });
-
-  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700",
-                    "runCompositionTest", "#4-7") ||
-      !checkSelection(5, "", "runCompositionTest", "#4-7")) {
     return;
   }
 
@@ -1318,28 +1538,10 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u9AD8",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
+  synthesizeComposition({ type: "compositioncommit", data: "\u9AD8" });
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u9AD8",
                     "runCompositionTest", "#4-9") ||
       !checkSelection(5, "", "runCompositionTest", "#4-9")) {
-    return;
-  }
-
-  synthesizeComposition({ type: "compositionend", data: "\u9AD8" });
-
-  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u9AD8",
-                    "runCompositionTest", "#4-10") ||
-      !checkSelection(5, "", "runCompositionTest", "#4-10")) {
     return;
   }
 
@@ -1388,28 +1590,10 @@ function runCompositionTest()
     return;
   }
 
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 0, "length": 0 }
-    });
-
+  synthesizeComposition({ type: "compositioncommitasis" });
   if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
                     "runCompositionTest", "#5-3") ||
       !checkSelection(4, "", "runCompositionTest", "#5-3")) {
-    return;
-  }
-
-  synthesizeComposition({ type: "compositionend", data: "\u9AD8" });
-
-  if (!checkContent("\u30E9\u30FC\u30E1\u30F3",
-                    "runCompositionTest", "#5-4") ||
-      !checkSelection(4, "", "runCompositionTest", "#5-4")) {
     return;
   }
 
@@ -1639,18 +1823,7 @@ function runCompositionEventTest()
      kDescription + "value of input element wasn't modified (input) #2");
 
   // text event shouldn't cause composition update, e.g., at committing.
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3089\u30FC",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 2, "length": 0 }
-    });
-
-  synthesizeComposition({ type: "compositionend", data: "\u3089\u30FC" });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   is(windowEventCounts["compositionstart"], 1,
      kDescription + "compositionstart has been handled more than once by window #3");
@@ -1702,18 +1875,7 @@ function runCompositionEventTest()
       "caret": { "start": 1, "length": 0 }
     });
 
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3089",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
-  synthesizeComposition({ type: "compositionend", data: "\u3089" });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   is(windowEventCounts["compositionstart"], 1,
      kDescription + "compositionstart hasn't been handled by window #4");
@@ -1782,18 +1944,7 @@ function runCompositionEventTest()
       "caret": { "start": 1, "length": 0 }
     });
 
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u306D",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
-  synthesizeComposition({ type: "compositionend", data: "\u306D" });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   is(windowEventCounts["compositionstart"], 1,
      kDescription + "compositionstart hasn't been handled by window #5");
@@ -1864,18 +2015,7 @@ function runCompositionEventTest()
       "caret": { "start": 1, "length": 0 }
     });
 
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u306E",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
-  synthesizeComposition({ type: "compositionend", data: "\u306E" });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   is(windowEventCounts["compositionstart"], 1,
      kDescription + "compositionstart hasn't been handled by window #6");
@@ -2741,23 +2881,32 @@ function runIsComposingTest()
     }
   }
 
+  function onComposition(aEvent)
+  {
+    if (aEvent.type == "compositionstart") {
+      expectedIsComposing = true;
+    } else if (aEvent.type == "compositionend") {
+      expectedIsComposing = false;
+    }
+  }
+
   textarea.addEventListener("keydown", eventHandler, true);
   textarea.addEventListener("keypress", eventHandler, true);
   textarea.addEventListener("keyup", eventHandler, true);
   textarea.addEventListener("input", eventHandler, true);
+  textarea.addEventListener("compositionstart", onComposition, true);
+  textarea.addEventListener("compositionend", onComposition, true);
 
   textarea.focus();
   textarea.value = "";
 
   // XXX These cases shouldn't occur in actual native key events because we
   //     don't dispatch key events while composition (bug 354358).
-  expectedIsComposing = false;
   description = "events before dispatching compositionstart";
   synthesizeKey("VK_LEFT", {});
 
   synthesizeKey("a", { type: "keydown" });
   synthesizeComposition({ type: "compositionstart" });
-  expectedIsComposing = true;
   description = "events after dispatching compositionstart";
   synthesizeCompositionChange(
     { "composition":
@@ -2776,28 +2925,20 @@ function runIsComposingTest()
 
   description = "events for committing composition string";
   synthesizeKey("VK_RETURN", { type: "keydown" });
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3042",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
+
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   // input event will be fired by synthesizing compositionend event.
   // Then, its isComposing should be false.
-  expectedIsComposing = false;
-  description = "events after dispatching compositionend";
-  synthesizeComposition({ type: "compositionend" });
+  description = "events after dispatching compositioncommitasis";
   synthesizeKey("VK_RETURN", { type: "keyup" });
 
   textarea.removeEventListener("keydown", eventHandler, true);
   textarea.removeEventListener("keypress", eventHandler, true);
   textarea.removeEventListener("keyup", eventHandler, true);
   textarea.removeEventListener("input", eventHandler, true);
+  textarea.removeEventListener("compositionstart", onComposition, true);
+  textarea.removeEventListener("compositionend", onComposition, true);
 
   textarea.value = "";
 }
@@ -2972,23 +3113,11 @@ function runTestOnAnotherContext(aPanelOrFrame, aFocusedEditor, aTestName)
   }
 
   // commit them
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u5909\u8EAB",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 2, "length": 0 }
-    });
-
+  synthesizeComposition({ type: "compositioncommitasis" });
   if (!checkContent("\u5909\u8EAB", aTestName, "#1-4") ||
       !checkSelection(2, "", aTestName, "#1-4")) {
     return;
   }
-
-  synthesizeComposition({ type: "compositionend", data: "\u5909\u8EAB" });
 
   is(aFocusedEditor.value, "\u5909\u8EAB",
      aTestName + ": composition isn't in the focused editor");
@@ -3261,24 +3390,11 @@ function runMaxLengthTest()
   }
 
   // commit the composition string
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 6, "length": 0 }
-    });
-
+  synthesizeComposition({ type: "compositioncommitasis" });
   if (!checkContent("\u30E9", kDesc, "#1-11") ||
       !checkSelection(1, "", kDesc, "#1-11")) {
     return;
   }
-
-  synthesizeComposition({ type: "compositionend",
-                          data: "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8" });
 
   // restart composition
   synthesizeComposition({ type: "compositionstart" });
@@ -3301,23 +3417,11 @@ function runMaxLengthTest()
   }
 
   // commit the composition string
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u3058",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
-
+  synthesizeComposition({ type: "compositioncommit", data: "\u3058" });
   if (!checkContent("\u30E9", kDesc, "#2-2") ||
       !checkSelection(1 + 0, "", kDesc, "#2-2")) {
     return;
   }
-
-  synthesizeComposition({ type: "compositionend", data: "\u3058" });
 
   // Undo
   synthesizeKey("Z", {accelKey: true});
@@ -3375,16 +3479,7 @@ function runMaxLengthTest()
   }
 
   // commit the composition string
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u9B54",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 1, "length": 0 }
-    });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   // The input text must be discarded. Then, the caret position shouldn't be
   // updated from its position at compositionstart.
@@ -3392,8 +3487,6 @@ function runMaxLengthTest()
       !checkSelection(0, "", kDesc, "#4-2")) {
     return;
   }
-
-  synthesizeComposition({ type: "compositionend", data: "\u9B54" });
 
   // start composition
   synthesizeComposition({ type: "compositionstart" });
@@ -3416,23 +3509,12 @@ function runMaxLengthTest()
   }
 
   // commit the composition string
-  synthesizeCompositionChange(
-    { "composition":
-      { "string": "\u9B54\u6CD5",
-        "clauses":
-        [
-          { "length": 0, "attr": 0 }
-        ]
-      },
-      "caret": { "start": 2, "length": 0 }
-    });
+  synthesizeComposition({ type: "compositioncommitasis" });
 
   if (!checkContent("X", kDesc, "#5-2") ||
       !checkSelection(0, "", kDesc, "#5-2")) {
     return;
   }
-
-  synthesizeComposition({ type: "compositionend", data: "\u9B54\u6CD5" });
 }
 
 function runTest()
@@ -3440,6 +3522,8 @@ function runTest()
   textareaInFrame = iframe.contentDocument.getElementById("textarea");
 
   runUndoRedoTest();
+  runCompositionCommitAsIsTest();
+  runCompositionCommitTest();
   runCompositionTest();
   runCompositionEventTest();
   runCharAtPointTest(textarea, "textarea in the document");

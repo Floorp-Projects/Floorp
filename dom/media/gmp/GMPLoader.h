@@ -16,10 +16,10 @@ namespace gmp {
 class SandboxStarter {
 public:
   virtual ~SandboxStarter() {}
-  virtual void Start() = 0;
+  virtual void Start(const char* aLibPath) = 0;
 };
 
-#if (defined(XP_LINUX) || defined(XP_MACOSX))
+#if defined(XP_MACOSX)
 #define SANDBOX_NOT_STATICALLY_LINKED_INTO_PLUGIN_CONTAINER 1
 #endif
 

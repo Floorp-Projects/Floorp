@@ -9,56 +9,31 @@
 
 #include "mozilla/Types.h"
 
+// This defines the entry points for a content process to start
+// sandboxing itself.  See also common/SandboxInfo.h for what parts of
+// sandboxing are enabled/supported.
+
+#ifdef ANDROID
+// Defined in libmozsandbox and referenced by linking against it.
+#define MOZ_SANDBOX_EXPORT MOZ_EXPORT
+#else
+// Defined in plugin-container and referenced by libraries it loads.
+#define MOZ_SANDBOX_EXPORT MOZ_EXPORT __attribute__((weak))
+#endif
+
 namespace mozilla {
 
-// Whether a given type of sandboxing is available, and why not:
-enum SandboxStatus {
-  // Sandboxing is enabled in Gecko but not available on this system;
-  // trying to start the sandbox will crash:
-  kSandboxingWouldFail,
-  // Sandboxing is enabled in Gecko and is available:
-  kSandboxingSupported,
-  // Sandboxing is disabled, either at compile-time or at run-time;
-  // trying to start the sandbox is a no-op:
-  kSandboxingDisabled,
-};
-
-
 #ifdef MOZ_CONTENT_SANDBOX
-// Disabled by setting env var MOZ_DISABLE_CONTENT_SANDBOX.
-MOZ_EXPORT SandboxStatus ContentProcessSandboxStatus();
-MOZ_EXPORT void SetContentProcessSandbox();
-#else
-static inline SandboxStatus ContentProcessSandboxStatus()
-{
-  return kSandboxingDisabled;
-}
-static inline void SetContentProcessSandbox()
-{
-}
+// Call only if SandboxInfo::CanSandboxContent() returns true.
+// (No-op if MOZ_DISABLE_CONTENT_SANDBOX is set.)
+MOZ_SANDBOX_EXPORT void SetContentProcessSandbox();
 #endif
 
 #ifdef MOZ_GMP_SANDBOX
-// Disabled by setting env var MOZ_DISABLE_GMP_SANDBOX.
-MOZ_EXPORT SandboxStatus MediaPluginSandboxStatus();
-MOZ_EXPORT void SetMediaPluginSandbox(const char *aFilePath);
-#else
-static inline SandboxStatus MediaPluginSandboxStatus()
-{
-  return kSandboxingDisabled;
-}
-static inline void SetMediaPluginSandbox()
-{
-}
+// Call only if SandboxInfo::CanSandboxMedia() returns true.
+// (No-op if MOZ_DISABLE_GMP_SANDBOX is set.)
+MOZ_SANDBOX_EXPORT void SetMediaPluginSandbox(const char *aFilePath);
 #endif
-
-// System-level security features which are relevant to our sandboxing
-// and which aren't available on all Linux systems supported by Gecko.
-enum SandboxFeatureFlags {
-  kSandboxFeatureSeccompBPF = 1 << 0,
-};
-
-MOZ_EXPORT SandboxFeatureFlags GetSandboxFeatureFlags();
 
 } // namespace mozilla
 

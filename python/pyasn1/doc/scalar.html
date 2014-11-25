@@ -1,0 +1,794 @@
+<html>
+<title>
+PyASN1 data model and scalar types
+</title>
+<head>
+</head>
+<body>
+<center>
+<table width=60%>
+<tr>
+<td>
+
+<h3>
+1. Data model for ASN.1 types
+</h3>
+
+<p>
+All ASN.1 types could be categorized into two groups: scalar (also called
+simple or primitive) and constructed. The first group is populated by
+well-known types like Integer or String. Members of constructed group
+hold other types (simple or constructed) as their inner components, thus
+they are semantically close to a programming language records or lists.
+</p>
+
+<p>
+In pyasn1, all ASN.1 types and values are implemented as Python objects.
+The same pyasn1 object can represent either ASN.1 type and/or value
+depending of the presense of value initializer on object instantiation.
+We will further refer to these as <i>pyasn1 type object</i> versus <i>pyasn1
+value object</i>.
+</p>
+
+<p>
+Primitive ASN.1 types are implemented as immutable scalar objects. There values
+could be used just like corresponding native Python values (integers,
+strings/bytes etc) and freely mixed with them in expressions.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> asn1IntegerValue = univ.Integer(12)
+>>> asn1IntegerValue - 2
+10
+>>> univ.OctetString('abc') == 'abc'
+True   # Python 2
+>>> univ.OctetString(b'abc') == b'abc'
+True   # Python 3
+</pre>
+</td></tr></table>
+
+<p>
+It would be an error to perform an operation on a pyasn1 type object
+as it holds no value to deal with:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> asn1IntegerType = univ.Integer()
+>>> asn1IntegerType - 2
+...
+pyasn1.error.PyAsn1Error: No value for __coerce__()
+</pre>
+</td></tr></table>
+
+<a name="1.1"></a>
+<h4>
+1.1 Scalar types
+</h4>
+
+<p>
+In the sub-sections that follow we will explain pyasn1 mapping to those
+primitive ASN.1 types. Both, ASN.1 notation and corresponding pyasn1
+syntax will be given in each case.
+</p>
+
+<a name="1.1.1"></a>
+<h4>
+1.1.1 Boolean type
+</h4>
+
+<p>
+This is the simplest type those values could be either True or False.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; type specification
+FunFactorPresent ::= BOOLEAN
+
+;; values declaration and assignment
+pythonFunFactor FunFactorPresent ::= TRUE
+cobolFunFactor FunFactorPresent :: FALSE
+</pre>
+</td></tr></table>
+
+<p>
+And here's pyasn1 version of it:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> class FunFactorPresent(univ.Boolean): pass
+... 
+>>> pythonFunFactor = FunFactorPresent(True)
+>>> cobolFunFactor = FunFactorPresent(False)
+>>> pythonFunFactor
+FunFactorPresent('True(1)')
+>>> cobolFunFactor
+FunFactorPresent('False(0)')
+>>> pythonFunFactor == cobolFunFactor
+False
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.1.2"></a>
+<h4>
+1.1.2 Null type
+</h4>
+
+<p>
+The NULL type is sometimes used to express the absense of any information.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; type specification
+Vote ::= CHOICE {
+  agreed BOOLEAN,
+  skip NULL
+}
+</td></tr></table>
+
+;; value declaration and assignment
+myVote Vote ::= skip:NULL
+</pre>
+
+<p>
+We will explain the CHOICE type later in this paper, meanwhile the NULL
+type:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> skip = univ.Null()
+>>> skip
+Null('')
+>>>
+</pre>
+</td></tr></table>
+
+<a name="1.1.3"></a>
+<h4>
+1.1.3 Integer type
+</h4>
+
+<p>
+ASN.1 defines the values of Integer type as negative or positive of whatever
+length. This definition plays nicely with Python as the latter places no
+limit on Integers. However, some ASN.1 implementations may impose certain
+limits of integer value ranges. Keep that in mind when designing new
+data structures.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; values specification
+age-of-universe INTEGER ::= 13750000000
+mean-martian-surface-temperature INTEGER ::= -63
+</pre>
+</td></tr></table>
+
+<p>
+A rather strigntforward mapping into pyasn1:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> ageOfUniverse = univ.Integer(13750000000)
+>>> ageOfUniverse
+Integer(13750000000)
+>>>
+>>> meanMartianSurfaceTemperature = univ.Integer(-63)
+>>> meanMartianSurfaceTemperature
+Integer(-63)
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+ASN.1 allows to assign human-friendly names to particular values of
+an INTEGER type.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+Temperature ::= INTEGER {
+  freezing(0),
+  boiling(100) 
+}
+</pre>
+</td></tr></table>
+
+<p>
+The Temperature type expressed in pyasn1:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedval
+>>> class Temperature(univ.Integer):
+...   namedValues = namedval.NamedValues(('freezing', 0), ('boiling', 100))
+...
+>>> t = Temperature(0)
+>>> t
+Temperature('freezing(0)')
+>>> t + 1
+Temperature(1)
+>>> t + 100
+Temperature('boiling(100)')
+>>> t = Temperature('boiling')
+>>> t
+Temperature('boiling(100)')
+>>> Temperature('boiling') / 2
+Temperature(50)
+>>> -1 < Temperature('freezing')
+True
+>>> 47 > Temperature('boiling')
+False
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+These values labels have no effect on Integer type operations, any value
+still could be assigned to a type (information on value constraints will
+follow further in this paper).
+</p>
+
+<a name="1.1.4"></a>
+<h4>
+1.1.4 Enumerated type
+</h4>
+
+<p>
+ASN.1 Enumerated type differs from an Integer type in a number of ways.
+Most important is that its instance can only hold a value that belongs
+to a set of values specified on type declaration.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+error-status ::= ENUMERATED {
+  no-error(0),
+  authentication-error(10),
+  authorization-error(20),
+  general-failure(51)
+}
+</pre>
+</td></tr></table>
+
+<p>
+When constructing Enumerated type we will use two pyasn1 features: values
+labels (as mentioned above) and value constraint (will be described in
+more details later on).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedval, constraint
+>>> class ErrorStatus(univ.Enumerated):
+...   namedValues = namedval.NamedValues(
+...        ('no-error', 0),
+...        ('authentication-error', 10),
+...        ('authorization-error', 20),
+...        ('general-failure', 51)
+...   )
+...   subtypeSpec = univ.Enumerated.subtypeSpec + \
+...                    constraint.SingleValueConstraint(0, 10, 20, 51)
+...
+>>> errorStatus = univ.ErrorStatus('no-error')
+>>> errorStatus
+ErrorStatus('no-error(0)')
+>>> errorStatus == univ.ErrorStatus('general-failure')
+False
+>>> univ.ErrorStatus('non-existing-state')
+Traceback (most recent call last):
+...
+pyasn1.error.PyAsn1Error: Can't coerce non-existing-state into integer
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Particular integer values associated with Enumerated value states
+have no meaning. They should not be used as such or in any kind of
+math operation. Those integer values are only used by codecs to
+transfer state from one entity to another.
+</p>
+
+<a name="1.1.5"></a>
+<h4>
+1.1.5 Real type
+</h4>
+
+<p>
+Values of the Real type are a three-component tuple of mantissa, base and 
+exponent. All three are integers.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+pi ::= REAL { mantissa 314159, base 10, exponent -5 }
+</pre>
+</td></tr></table>
+
+<p>
+Corresponding pyasn1 objects can be initialized with either a three-component
+tuple or a Python float. Infinite values could be expressed in a way, 
+compatible with Python float type.
+
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> pi = univ.Real((314159, 10, -5))
+>>> pi
+Real((314159, 10,-5))
+>>> float(pi)
+3.14159
+>>> pi == univ.Real(3.14159)
+True
+>>> univ.Real('inf')
+Real('inf')
+>>> univ.Real('-inf') == float('-inf')
+True
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+If a Real object is initialized from a Python float or yielded by a math
+operation, the base is set to decimal 10 (what affects encoding).
+</p>
+
+<a name="1.1.6"></a>
+<h4>
+1.1.6 Bit string type
+</h4>
+
+<p>
+ASN.1 BIT STRING type holds opaque binary data of an arbitrarily length.
+A BIT STRING value could be initialized by either a binary (base 2) or 
+hex (base 16) value.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+public-key BIT STRING ::= '1010111011110001010110101101101
+                           1011000101010000010110101100010
+                           0110101010000111101010111111110'B
+
+signature  BIT STRING ::= 'AF01330CD932093392100B39FF00DE0'H
+</pre>
+</td></tr></table>
+
+<p>
+The pyasn1 BitString objects can initialize from native ASN.1 notation
+(base 2 or base 16 strings) or from a Python tuple of binary components.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> publicKey = univ.BitString(
+...          "'1010111011110001010110101101101"
+...          "1011000101010000010110101100010"
+...          "0110101010000111101010111111110'B"
+)
+>>> publicKey
+BitString("'10101110111100010101101011011011011000101010000010110101100010\
+0110101010000111101010111111110'B")
+>>> signature = univ.BitString(
+...          "'AF01330CD932093392100B39FF00DE0'H"
+... )
+>>> signature
+BitString("'101011110000000100110011000011001101100100110010000010010011001\
+1100100100001000000001011001110011111111100000000110111100000'B")
+>>> fingerprint = univ.BitString(
+...          (1, 0, 1, 1 ,0, 1, 1, 1, 0, 1, 0, 1)
+... )
+>>> fingerprint
+BitString("'101101110101'B")
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Another BIT STRING initialization method supported by ASN.1 notation
+is to specify only 1-th bits along with their human-friendly label
+and bit offset relative to the beginning of the bit string. With this 
+method, all not explicitly mentioned bits are doomed to be zeros.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+bit-mask  BIT STRING ::= {
+  read-flag(0),
+  write-flag(2),
+  run-flag(4)
+}
+</pre>
+</td></tr></table>
+
+<p>
+To express this in pyasn1, we will employ the named values feature (as with
+Enumeration type).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ, namedval
+>>> class BitMask(univ.BitString):
+...   namedValues = namedval.NamedValues(
+...        ('read-flag', 0),
+...        ('write-flag', 2),
+...        ('run-flag', 4)
+... )
+>>> bitMask = BitMask('read-flag,run-flag')
+>>> bitMask
+BitMask("'10001'B")
+>>> tuple(bitMask)
+(1, 0, 0, 0, 1)
+>>> bitMask[4]
+1
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The BitString objects mimic the properties of Python tuple type in part
+of immutable sequence object protocol support.
+</p>
+
+<a name="1.1.7"></a>
+<h4>
+1.1.7 OctetString type
+</h4>
+
+<p>
+The OCTET STRING type is a confusing subject. According to ASN.1
+specification, this type is similar to BIT STRING, the major difference
+is that the former operates in 8-bit chunks of data. What is important
+to note, is that OCTET STRING was NOT designed to handle text strings - the
+standard provides many other types specialized for text content. For that
+reason, ASN.1 forbids to initialize OCTET STRING values with "quoted text
+strings", only binary or hex initializers, similar to BIT STRING ones,
+are allowed.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+thumbnail OCTET STRING ::= '1000010111101110101111000000111011'B
+thumbnail OCTET STRING ::= 'FA9823C43E43510DE3422'H
+</pre>
+</td></tr></table>
+
+<p>
+However, ASN.1 users (e.g. protocols designers) seem to ignore the original
+purpose of the OCTET STRING type - they used it for handling all kinds of
+data, including text strings.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+welcome-message OCTET STRING ::= "Welcome to ASN.1 wilderness!"
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1, we have taken a liberal approach and allowed both BIT STRING
+style and quoted text initializers for the OctetString objects. To avoid
+possible collisions, quoted text is the default initialization syntax.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> thumbnail = univ.OctetString(
+...    binValue='1000010111101110101111000000111011'
+... )
+>>> thumbnail
+OctetString(hexValue='85eebcec0')
+>>> thumbnail = univ.OctetString(
+...    hexValue='FA9823C43E43510DE3422'
+... )
+>>> thumbnail
+OctetString(hexValue='fa9823c43e4351de34220')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+Most frequent usage of the OctetString class is to instantiate it with
+a text string.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> welcomeMessage = univ.OctetString('Welcome to ASN.1 wilderness!')
+>>> welcomeMessage
+OctetString(b'Welcome to ASN.1 wilderness!')
+>>> print('%s' % welcomeMessage)
+Welcome to ASN.1 wilderness!
+>>> welcomeMessage[11:16]
+OctetString(b'ASN.1')
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+OctetString objects support the immutable sequence object protocol.
+In other words, they behave like Python 3 bytes (or Python 2 strings).
+</p>
+
+<p>
+When running pyasn1 on Python 3, it's better to use the bytes objects for
+OctetString instantiation, as it's more reliable and efficient.
+</p>
+
+<p>
+Additionally, OctetString's can also be instantiated with a sequence of
+8-bit integers (ASCII codes).
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> univ.OctetString((77, 101, 101, 103, 111))
+OctetString(b'Meego')
+</pre>
+</td></tr></table>
+
+<p>
+It is sometimes convenient to express OctetString instances as 8-bit
+characters (Python 3 bytes or Python 2 strings) or 8-bit integers.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> octetString = univ.OctetString('ABCDEF')
+>>> octetString.asNumbers()
+(65, 66, 67, 68, 69, 70)
+>>> octetString.asOctets()
+b'ABCDEF'
+</pre>
+</td></tr></table>
+
+<a name="1.1.8"></a>
+<h4>
+1.1.8 ObjectIdentifier type
+</h4>
+
+<p>
+Values of the OBJECT IDENTIFIER type are sequences of integers that could
+be used to identify virtually anything in the world. Various ASN.1-based
+protocols employ OBJECT IDENTIFIERs for their own identification needs.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+internet-id OBJECT IDENTIFIER ::= {
+  iso(1) identified-organization(3) dod(6) internet(1)
+}
+</pre>
+</td></tr></table>
+
+<p>
+One of the natural ways to map OBJECT IDENTIFIER type into a Python
+one is to use Python tuples of integers. So this approach is taken by
+pyasn1.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> internetId = univ.ObjectIdentifier((1, 3, 6, 1))
+>>> internetId
+ObjectIdentifier('1.3.6.1')
+>>> internetId[2]
+6
+>>> internetId[1:3]
+ObjectIdentifier('3.6')
+</pre>
+</td></tr></table>
+
+<p>
+A more human-friendly "dotted" notation is also supported.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import univ
+>>> univ.ObjectIdentifier('1.3.6.1')
+ObjectIdentifier('1.3.6.1')
+</pre>
+</td></tr></table>
+
+<p>
+Symbolic names of the arcs of object identifier, sometimes present in
+ASN.1 specifications, are not preserved and used in pyasn1 objects.
+</p>
+
+<p>
+The ObjectIdentifier objects mimic the properties of Python tuple type in
+part of immutable sequence object protocol support.
+</p>
+
+<a name="1.1.9"></a>
+<h4>
+1.1.9 Character string types
+</h4>
+
+<p>
+ASN.1 standard introduces a diverse set of text-specific types. All of them
+were designed to handle various types of characters. Some of these types seem
+be obsolete nowdays, as their target technologies are gone. Another issue
+to be aware of is that raw OCTET STRING type is sometimes used in practice
+by ASN.1 users instead of specialized character string types, despite
+explicit prohibition imposed by ASN.1 specification.
+</p>
+
+<p>
+The two types are specific to ASN.1 are NumericString and PrintableString.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+welcome-message ::= PrintableString {
+  "Welcome to ASN.1 text types"
+}
+
+dial-pad-numbers ::= NumericString {
+  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+}
+</pre>
+</td></tr></table>
+
+<p>
+Their pyasn1 implementations are:
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char
+>>> '%s' % char.PrintableString("Welcome to ASN.1 text types")
+'Welcome to ASN.1 text types'
+>>> dialPadNumbers = char.NumericString(
+      "0" "1" "2" "3" "4" "5" "6" "7" "8" "9"
+)
+>>> dialPadNumbers
+NumericString(b'0123456789')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The following types came to ASN.1 from ISO standards on character sets.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char
+>>> char.VisibleString("abc")
+VisibleString(b'abc')
+>>> char.IA5String('abc')
+IA5String(b'abc')
+>>> char.TeletexString('abc')
+TeletexString(b'abc')
+>>> char.VideotexString('abc')
+VideotexString(b'abc')
+>>> char.GraphicString('abc')
+GraphicString(b'abc')
+>>> char.GeneralString('abc')
+GeneralString(b'abc')
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+The last three types are relatively recent addition to the family of
+character string types: UniversalString, BMPString, UTF8String.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import char
+>>> char.UniversalString("abc")
+UniversalString(b'abc')
+>>> char.BMPString('abc')
+BMPString(b'abc')
+>>> char.UTF8String('abc')
+UTF8String(b'abc')
+>>> utf8String = char.UTF8String('У попа была собака')
+>>> utf8String
+UTF8String(b'\xd0\xa3 \xd0\xbf\xd0\xbe\xd0\xbf\xd0\xb0 \xd0\xb1\xd1\x8b\xd0\xbb\xd0\xb0 \
+\xd1\x81\xd0\xbe\xd0\xb1\xd0\xb0\xd0\xba\xd0\xb0')
+>>> print(utf8String)
+У попа была собака
+>>>
+</pre>
+</td></tr></table>
+
+<p>
+In pyasn1, all character type objects behave like Python strings. None of
+them is currently constrained in terms of valid alphabet so it's up to
+the data source to keep an eye on data validation for these types.
+</p>
+
+<a name="1.1.10"></a>
+<h4>
+1.1.10 Useful types
+</h4>
+
+<p>
+There are three so-called useful types defined in the standard:
+ObjectDescriptor, GeneralizedTime, UTCTime. They all are subtypes
+of GraphicString or VisibleString types therefore useful types are
+character string types.
+</p>
+
+<p>
+It's advised by the ASN.1 standard to have an instance of ObjectDescriptor
+type holding a human-readable description of corresponding instance of
+OBJECT IDENTIFIER type. There are no formal linkage between these instances
+and provision for ObjectDescriptor uniqueness in the standard.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import useful
+>>> descrBER = useful.ObjectDescriptor(
+      "Basic encoding of a single ASN.1 type"
+)
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+GeneralizedTime and UTCTime types are designed to hold a human-readable
+timestamp in a universal and unambiguous form. The former provides
+more flexibility in notation while the latter is more strict but has
+Y2K issues.
+</p>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+;; Mar 8 2010 12:00:00 MSK
+moscow-time GeneralizedTime ::= "20110308120000.0"
+;; Mar 8 2010 12:00:00 UTC
+utc-time GeneralizedTime ::= "201103081200Z"
+;; Mar 8 1999 12:00:00 UTC
+utc-time UTCTime ::= "9803081200Z"
+</pre>
+</td></tr></table>
+
+<table bgcolor="lightgray" border=0 width=100%><TR><TD>
+<pre>
+>>> from pyasn1.type import useful
+>>> moscowTime = useful.GeneralizedTime("20110308120000.0")
+>>> utcTime = useful.UTCTime("9803081200Z")
+>>> 
+</pre>
+</td></tr></table>
+
+<p>
+Despite their intended use, these types possess no special, time-related,
+handling in pyasn1. They are just printable strings.
+</p>
+
+<hr>
+
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>

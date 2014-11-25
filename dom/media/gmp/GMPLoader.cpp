@@ -168,7 +168,7 @@ GMPLoaderImpl::Load(const char* aLibPath,
   // This must happen after the node id is bound to the device id, as
   // generating the device id requires privileges.
   if (mSandboxStarter) {
-    mSandboxStarter->Start();
+    mSandboxStarter->Start(aLibPath);
   }
 #endif
 

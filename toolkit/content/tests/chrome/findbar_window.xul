@@ -259,17 +259,7 @@
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() != searchStr,
          "testNormalFindWithComposition: text shouldn't be found during composition");
 
-      synthesizeCompositionChange(
-        { "composition":
-          { "string": searchStr,
-            "clauses":
-            [
-              { "length": 0, "attr": 0 }
-            ]
-          },
-          "caret": { "start": searchStr.length, "length": 0 }
-        });
-      synthesizeComposition({ type: "compositionend", data: searchStr });
+      synthesizeComposition({ type: "compositioncommitasis" });
 
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() == searchStr,
          "testNormalFindWithComposition: text should be found after committing composition");

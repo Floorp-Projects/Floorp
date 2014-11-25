@@ -3,16 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
-#include "GLContext.h"
 #include "WebGLQuery.h"
+
+#include "GLContext.h"
+#include "WebGLContext.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;
 
 JSObject*
-WebGLQuery::WrapObject(JSContext *cx) {
+WebGLQuery::WrapObject(JSContext* cx)
+{
     return dom::WebGLQueryBinding::Wrap(cx, this);
 }
 
@@ -27,15 +29,18 @@ WebGLQuery::WebGLQuery(WebGLContext* context)
     mContext->gl->fGenQueries(1, &mGLName);
 }
 
-void WebGLQuery::Delete() {
+void
+WebGLQuery::Delete()
+{
     mContext->MakeContextCurrent();
     mContext->gl->fDeleteQueries(1, &mGLName);
     LinkedListElement<WebGLQuery>::removeFrom(mContext->mQueries);
 }
 
-bool WebGLQuery::IsActive() const
+bool
+WebGLQuery::IsActive() const
 {
-    WebGLRefPtr<WebGLQuery>* targetSlot = mContext->GetQueryTargetSlot(mType, "WebGLQuery::IsActive()");
+    WebGLRefPtr<WebGLQuery>* targetSlot = mContext->GetQueryTargetSlot(mType);
 
     MOZ_ASSERT(targetSlot, "unknown query object's type");
 
