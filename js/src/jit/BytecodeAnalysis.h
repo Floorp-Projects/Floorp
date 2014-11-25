@@ -8,7 +8,7 @@
 #define jit_BytecodeAnalysis_h
 
 #include "jsscript.h"
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "js/Vector.h"
 
 namespace js {
@@ -36,7 +36,7 @@ struct BytecodeInfo
 class BytecodeAnalysis
 {
     JSScript *script_;
-    Vector<BytecodeInfo, 0, IonAllocPolicy> infos_;
+    Vector<BytecodeInfo, 0, JitAllocPolicy> infos_;
 
     bool usesScopeChain_;
     bool hasTryFinally_;

@@ -1639,7 +1639,7 @@ jit::BuildDominatorTree(MIRGraph &graph)
 {
     ComputeImmediateDominators(graph);
 
-    Vector<MBasicBlock *, 4, IonAllocPolicy> worklist(graph.alloc());
+    Vector<MBasicBlock *, 4, JitAllocPolicy> worklist(graph.alloc());
 
     // Traversing through the graph in post-order means that every non-phi use
     // of a definition is visited before the def itself. Since a def
@@ -2099,7 +2099,7 @@ struct BoundsCheckInfo
 typedef HashMap<uint32_t,
                 BoundsCheckInfo,
                 DefaultHasher<uint32_t>,
-                IonAllocPolicy> BoundsCheckMap;
+                JitAllocPolicy> BoundsCheckMap;
 
 // Compute a hash for bounds checks which ignores constant offsets in the index.
 static HashNumber
@@ -2430,7 +2430,7 @@ jit::EliminateRedundantChecks(MIRGraph &graph)
         return false;
 
     // Stack for pre-order CFG traversal.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist(graph.alloc());
+    Vector<MBasicBlock *, 1, JitAllocPolicy> worklist(graph.alloc());
 
     // The index of the current block in the CFG traversal.
     size_t index = 0;
@@ -2576,7 +2576,7 @@ LinearSum::print(Sprinter &sp) const
 void
 LinearSum::dump(FILE *fp) const
 {
-    Sprinter sp(GetIonContext()->cx);
+    Sprinter sp(GetJitContext()->cx);
     sp.init();
     print(sp);
     fprintf(fp, "%s\n", sp.string());
@@ -2873,7 +2873,7 @@ jit::AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
     LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
     TempAllocator temp(&alloc);
-    IonContext ictx(cx, &temp);
+    JitContext jctx(cx, &temp);
 
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
         return false;
@@ -3113,7 +3113,7 @@ jit::AnalyzeArgumentsUsage(JSContext *cx, JSScript *scriptArg)
     LifoAlloc alloc(types::TypeZone::TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
     TempAllocator temp(&alloc);
-    IonContext ictx(cx, &temp);
+    JitContext jctx(cx, &temp);
 
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
         return false;

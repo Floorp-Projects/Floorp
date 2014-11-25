@@ -4313,7 +4313,7 @@ UpdateFrameIterPc(FrameIter &iter)
         //
         // We walk the stack to assert that it doesn't need updating.
         jit::RematerializedFrame *frame = iter.abstractFramePtr().asRematerializedFrame();
-        jit::IonJSFrameLayout *jsFrame = (jit::IonJSFrameLayout *)frame->top();
+        jit::JitFrameLayout *jsFrame = (jit::JitFrameLayout *)frame->top();
         jit::JitActivation *activation = iter.activation()->asJit();
 
         ActivationIterator activationIter(activation->cx()->perThreadData);

@@ -9,7 +9,7 @@
 
 #include "jscompartment.h"
 
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
 #include "jit/shared/MacroAssembler-x86-shared.h"
 

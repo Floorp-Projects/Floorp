@@ -19,7 +19,7 @@
 
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #if defined(DEBUG)

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonMacroAssembler_h
-#define jit_IonMacroAssembler_h
+#ifndef jit_MacroAssembler_h
+#define jit_MacroAssembler_h
 
 #include "jscompartment.h"
 
@@ -181,8 +181,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     };
 
     mozilla::Maybe<AutoRooter> autoRooter_;
-    mozilla::Maybe<IonContext> ionContext_;
-    mozilla::Maybe<AutoIonContextAlloc> alloc_;
+    mozilla::Maybe<JitContext> jitContext_;
+    mozilla::Maybe<AutoJitContextAlloc> alloc_;
 
     // SPS instrumentation, only used for Ion caches.
     mozilla::Maybe<IonInstrumentation> spsInstrumentation_;
@@ -207,36 +207,36 @@ class MacroAssembler : public MacroAssemblerSpecific
     MacroAssembler()
       : sps_(nullptr)
     {
-        IonContext *icx = GetIonContext();
-        JSContext *cx = icx->cx;
+        JitContext *jcx = GetJitContext();
+        JSContext *cx = jcx->cx;
         if (cx)
             constructRoot(cx);
 
-        if (!icx->temp) {
+        if (!jcx->temp) {
             MOZ_ASSERT(cx);
             alloc_.emplace(cx);
         }
 
-        moveResolver_.setAllocator(*icx->temp);
+        moveResolver_.setAllocator(*jcx->temp);
 #ifdef JS_CODEGEN_ARM
         initWithAllocator();
-        m_buffer.id = icx->getNextAssemblerId();
+        m_buffer.id = jcx->getNextAssemblerId();
 #endif
     }
 
-    // This constructor should only be used when there is no IonContext active
+    // This constructor should only be used when there is no JitContext active
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
     explicit MacroAssembler(JSContext *cx, IonScript *ion = nullptr,
                             JSScript *script = nullptr, jsbytecode *pc = nullptr)
       : sps_(nullptr)
     {
         constructRoot(cx);
-        ionContext_.emplace(cx, (js::jit::TempAllocator *)nullptr);
+        jitContext_.emplace(cx, (js::jit::TempAllocator *)nullptr);
         alloc_.emplace(cx);
-        moveResolver_.setAllocator(*ionContext_->temp);
+        moveResolver_.setAllocator(*jitContext_->temp);
 #ifdef JS_CODEGEN_ARM
         initWithAllocator();
-        m_buffer.id = GetIonContext()->getNextAssemblerId();
+        m_buffer.id = GetJitContext()->getNextAssemblerId();
 #endif
         if (ion) {
             setFramePushed(ion->frameSize());
@@ -251,7 +251,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    // asm.js compilation handles its own IonContext-pushing
+    // asm.js compilation handles its own JitContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
       : sps_(nullptr)
@@ -397,10 +397,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadJSContext(Register dest) {
-        loadPtr(AbsoluteAddress(GetIonContext()->runtime->addressOfJSContext()), dest);
+        loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfJSContext()), dest);
     }
     void loadJitActivation(Register dest) {
-        loadPtr(AbsoluteAddress(GetIonContext()->runtime->addressOfActivation()), dest);
+        loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfActivation()), dest);
     }
 
     template<typename T>
@@ -656,7 +656,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void branchTestNeedsIncrementalBarrier(Condition cond, Label *label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero);
-        CompileZone *zone = GetIonContext()->compartment->zone();
+        CompileZone *zone = GetJitContext()->compartment->zone();
         AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsIncrementalBarrier());
         branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
     }
@@ -671,7 +671,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         Push(PreBarrierReg);
         computeEffectiveAddress(address, PreBarrierReg);
 
-        const JitRuntime *rt = GetIonContext()->runtime->jitRuntime();
+        const JitRuntime *rt = GetJitContext()->runtime->jitRuntime();
         JitCode *preBarrier = rt->preBarrier(type);
 
         call(preBarrier);
@@ -866,7 +866,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     // The JitCode * argument here is one of the tokens defined in the various
-    // exit frame layout classes, e.g. IonNativeExitFrameLayout::Token().
+    // exit frame layout classes, e.g. NativeExitFrameLayout::Token().
     void enterFakeExitFrame(JitCode *codeVal) {
         linkExitFrame();
         Push(ImmPtr(codeVal));
@@ -876,7 +876,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void loadThreadPool(Register pool) {
         // JitRuntimes are tied to JSRuntimes and there is one ThreadPool per
         // JSRuntime, so we can hardcode the ThreadPool address here.
-        movePtr(ImmPtr(GetIonContext()->runtime->addressOfThreadPool()), pool);
+        movePtr(ImmPtr(GetJitContext()->runtime->addressOfThreadPool()), pool);
     }
 
     void loadForkJoinContext(Register cx, Register scratch);
@@ -894,7 +894,7 @@ class MacroAssembler : public MacroAssemblerSpecific
                             JitCode *codeVal);
 
     void leaveExitFrame() {
-        freeStack(IonExitFooterFrame::Size());
+        freeStack(ExitFooterFrame::Size());
     }
 
     bool hasEnteredExitFrame() const {
@@ -938,9 +938,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     // see above comment for what is returned
-    uint32_t callIon(Register callee) {
+    uint32_t callJit(Register callee) {
         leaveSPSFrame();
-        MacroAssemblerSpecific::callIon(callee);
+        MacroAssemblerSpecific::callJit(callee);
         uint32_t ret = currentOffset();
         reenterSPSFrame();
         return ret;
@@ -1536,4 +1536,4 @@ StackDecrementForCall(uint32_t alignment, size_t bytesAlreadyPushed, size_t byte
 } // namespace jit
 } // namespace js
 
-#endif /* jit_IonMacroAssembler_h */
+#endif /* jit_MacroAssembler_h */

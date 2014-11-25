@@ -21,7 +21,7 @@
 #include "jsopcodeinlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/IonFrames-inl.h"
+#include "jit/JitFrames-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -82,7 +82,7 @@ CheckFrame(InterpreterFrame *fp)
     return true;
 }
 
-static IonExecStatus
+static JitExecStatus
 EnterBaseline(JSContext *cx, EnterJitData &data)
 {
     if (data.osrFrame) {
@@ -90,9 +90,9 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
         uint8_t spDummy;
         uint32_t extra = BaselineFrame::Size() + (data.osrNumStackValues * sizeof(Value));
         uint8_t *checkSp = (&spDummy) - extra;
-        JS_CHECK_RECURSION_WITH_SP(cx, checkSp, return IonExec_Aborted);
+        JS_CHECK_RECURSION_WITH_SP(cx, checkSp, return JitExec_Aborted);
     } else {
-        JS_CHECK_RECURSION(cx, return IonExec_Aborted);
+        JS_CHECK_RECURSION(cx, return JitExec_Aborted);
     }
 
     MOZ_ASSERT(jit::IsBaselineEnabled(cx));
@@ -129,10 +129,10 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
     cx->runtime()->getJitRuntime(cx)->freeOsrTempData();
 
     MOZ_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
-    return data.result.isMagic() ? IonExec_Error : IonExec_Ok;
+    return data.result.isMagic() ? JitExec_Error : JitExec_Ok;
 }
 
-IonExecStatus
+JitExecStatus
 jit::EnterBaselineMethod(JSContext *cx, RunState &state)
 {
     BaselineScript *baseline = state.script()->baselineScript();
@@ -142,17 +142,17 @@ jit::EnterBaselineMethod(JSContext *cx, RunState &state)
 
     AutoValueVector vals(cx);
     if (!SetEnterJitData(cx, data, state, vals))
-        return IonExec_Error;
+        return JitExec_Error;
 
-    IonExecStatus status = EnterBaseline(cx, data);
-    if (status != IonExec_Ok)
+    JitExecStatus status = EnterBaseline(cx, data);
+    if (status != JitExec_Ok)
         return status;
 
     state.setReturnValue(data.result);
-    return IonExec_Ok;
+    return JitExec_Ok;
 }
 
-IonExecStatus
+JitExecStatus
 jit::EnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc)
 {
     MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
@@ -198,12 +198,12 @@ jit::EnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc)
     TraceLogStopEvent(logger, TraceLogger::Interpreter);
     TraceLogStartEvent(logger, TraceLogger::Baseline);
 
-    IonExecStatus status = EnterBaseline(cx, data);
-    if (status != IonExec_Ok)
+    JitExecStatus status = EnterBaseline(cx, data);
+    if (status != JitExec_Ok)
         return status;
 
     fp->setReturnValue(data.result);
-    return IonExec_Ok;
+    return JitExec_Ok;
 }
 
 MethodStatus
@@ -220,7 +220,7 @@ jit::BaselineCompile(JSContext *cx, JSScript *script)
     if (!temp)
         return Method_Error;
 
-    IonContext ictx(cx, temp);
+    JitContext jctx(cx, temp);
 
     BaselineCompiler compiler(cx, *temp, script);
     if (!compiler.init())

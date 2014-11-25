@@ -8,7 +8,7 @@
 
 #include "jsinfer.h"
 
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"
 
@@ -46,7 +46,7 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, ArgumentsObjec
 }
 
 /* static */ void
-ArgumentsObject::MaybeForwardToCallObject(jit::IonJSFrameLayout *frame, HandleObject callObj,
+ArgumentsObject::MaybeForwardToCallObject(jit::JitFrameLayout *frame, HandleObject callObj,
                                           ArgumentsObject *obj, ArgumentsData *data)
 {
     JSFunction *callee = jit::CalleeTokenToFunction(frame->calleeToken());
@@ -80,12 +80,12 @@ struct CopyFrameArgs
     }
 };
 
-struct CopyIonJSFrameArgs
+struct CopyJitFrameArgs
 {
-    jit::IonJSFrameLayout *frame_;
+    jit::JitFrameLayout *frame_;
     HandleObject callObj_;
 
-    CopyIonJSFrameArgs(jit::IonJSFrameLayout *frame, HandleObject callObj)
+    CopyJitFrameArgs(jit::JitFrameLayout *frame, HandleObject callObj)
       : frame_(frame), callObj_(callObj)
     { }
 
@@ -264,14 +264,14 @@ ArgumentsObject::createUnexpected(JSContext *cx, AbstractFramePtr frame)
 }
 
 ArgumentsObject *
-ArgumentsObject::createForIon(JSContext *cx, jit::IonJSFrameLayout *frame, HandleObject scopeChain)
+ArgumentsObject::createForIon(JSContext *cx, jit::JitFrameLayout *frame, HandleObject scopeChain)
 {
     jit::CalleeToken token = frame->calleeToken();
     MOZ_ASSERT(jit::CalleeTokenIsFunction(token));
     RootedScript script(cx, jit::ScriptFromCalleeToken(token));
     RootedFunction callee(cx, jit::CalleeTokenToFunction(token));
     RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
-    CopyIonJSFrameArgs copy(frame, callObj);
+    CopyJitFrameArgs copy(frame, callObj);
     return create(cx, script, callee, frame->numActualArgs(), copy);
 }
 

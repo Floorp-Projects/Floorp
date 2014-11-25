@@ -51,7 +51,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
     mozilla::PodZero(infos_.begin(), infos_.length());
     infos_[0].init(/*stackDepth=*/0);
 
-    Vector<CatchFinallyRange, 0, IonAllocPolicy> catchFinallyRanges(alloc);
+    Vector<CatchFinallyRange, 0, JitAllocPolicy> catchFinallyRanges(alloc);
 
     jsbytecode *nextpc;
     for (jsbytecode *pc = script_->code(); pc < end; pc = nextpc) {

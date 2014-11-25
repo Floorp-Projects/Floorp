@@ -763,7 +763,7 @@ class FastInvokeGuard
     RootedFunction fun_;
     RootedScript script_;
 
-    // Constructing an IonContext is pretty expensive due to the TLS access,
+    // Constructing a JitContext is pretty expensive due to the TLS access,
     // so only do this if we have to.
     bool useIon_;
 
@@ -803,11 +803,11 @@ class FastInvokeGuard
             if (status == jit::Method_Error)
                 return false;
             if (status == jit::Method_Compiled) {
-                jit::IonExecStatus result = jit::FastInvoke(cx, fun_, args_);
+                jit::JitExecStatus result = jit::FastInvoke(cx, fun_, args_);
                 if (IsErrorStatus(result))
                     return false;
 
-                MOZ_ASSERT(result == jit::IonExec_Ok);
+                MOZ_ASSERT(result == jit::JitExec_Ok);
                 return true;
             }
 

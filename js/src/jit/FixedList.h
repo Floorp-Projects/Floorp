@@ -10,7 +10,7 @@
 #include <stddef.h>
 
 #include "jit/Ion.h"
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 
 namespace js {
 namespace jit {

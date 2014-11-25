@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonLinker_h
-#define jit_IonLinker_h
+#ifndef jit_Linker_h
+#define jit_Linker_h
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -13,8 +13,8 @@
 
 #include "jit/ExecutableAllocator.h"
 #include "jit/IonCode.h"
-#include "jit/IonMacroAssembler.h"
 #include "jit/JitCompartment.h"
+#include "jit/MacroAssembler.h"
 
 namespace js {
 namespace jit {
@@ -97,4 +97,4 @@ class Linker
 } // namespace jit
 } // namespace js
 
-#endif /* jit_IonLinker_h */
+#endif /* jit_Linker_h */

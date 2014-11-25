@@ -9,8 +9,8 @@
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/MoveEmitter-arm.h"
 #include "jit/arm/Simulator-arm.h"
-#include "jit/IonLinker.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/Linker.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MoveResolver.h"
 
 #include "jsapi-tests/tests.h"
@@ -68,7 +68,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_simple)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     MacroAssembler masm;
     MoveEmitter mover(masm);
@@ -109,7 +109,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     MacroAssembler masm;
     MoveEmitter mover(masm);
@@ -209,7 +209,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen2)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     MacroAssembler masm;
     MoveEmitter mover(masm);
@@ -322,7 +322,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3)
     using namespace js::jit;
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ic(cx, &alloc);
+    JitContext jc(cx, &alloc);
     rt->getJitRuntime(cx);
     MacroAssembler masm;
     MoveEmitter mover(masm);

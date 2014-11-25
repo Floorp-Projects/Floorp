@@ -20,7 +20,7 @@
 
 #include "asmjs/AsmJSModule.h"
 #include "asmjs/AsmJSValidate.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 
 using namespace js;
 using namespace js::jit;
