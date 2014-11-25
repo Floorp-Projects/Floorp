@@ -9,10 +9,13 @@ using namespace JS;
 static const JSClass CustomClass = {
   "CustomClass",
   JSCLASS_HAS_RESERVED_SLOTS(1),
-  nullptr,
-  nullptr,
   JS_PropertyStub,
-  JS_StrictPropertyStub
+  JS_DeletePropertyStub,
+  JS_PropertyStub,
+  JS_StrictPropertyStub,
+  JS_EnumerateStub,
+  JS_ResolveStub,
+  JS_ConvertStub
 };
 
 static const uint32_t CUSTOM_SLOT = 0;

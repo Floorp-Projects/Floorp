@@ -1159,17 +1159,6 @@ ToString(JSContext *cx, HandleValue v)
     return js::ToStringSlow(cx, v);
 }
 
-/*
- * Implements ES6 draft rev 28 (2014 Oct 14) 7.1.1, second algorithm.
- *
- * Most users should not call this -- use JS::ToNumber, ToBoolean, or ToString
- * instead. This should only be called from custom convert hooks. It implements
- * the default conversion behavior shared by most objects in JS, so it's useful
- * as a fallback.
- */
-extern JS_PUBLIC_API(bool)
-OrdinaryToPrimitive(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp);
-
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
@@ -2378,6 +2367,20 @@ JS_PropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 extern JS_PUBLIC_API(bool)
 JS_StrictPropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool strict,
                       JS::MutableHandleValue vp);
+
+extern JS_PUBLIC_API(bool)
+JS_DeletePropertyStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                      bool *succeeded);
+
+extern JS_PUBLIC_API(bool)
+JS_EnumerateStub(JSContext *cx, JS::HandleObject obj);
+
+extern JS_PUBLIC_API(bool)
+JS_ResolveStub(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *resolvedp);
+
+extern JS_PUBLIC_API(bool)
+JS_ConvertStub(JSContext *cx, JS::HandleObject obj, JSType type,
+               JS::MutableHandleValue vp);
 
 template<typename T>
 struct JSConstScalarSpec {

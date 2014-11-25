@@ -266,13 +266,13 @@ const Class RegExpObject::class_ = {
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(RegExpObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    JS_EnumerateStub,        /* enumerate */
+    JS_ResolveStub,
+    JS_ConvertStub,
     nullptr,                 /* finalize */
     nullptr,                 /* call */
     nullptr,                 /* hasInstance */

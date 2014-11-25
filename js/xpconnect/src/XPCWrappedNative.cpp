@@ -804,8 +804,11 @@ XPCWrappedNative::Init(HandleObject parent,
     MOZ_ASSERT(jsclazz &&
                jsclazz->name &&
                jsclazz->flags &&
+               jsclazz->addProperty &&
+               jsclazz->delProperty &&
                jsclazz->getProperty &&
                jsclazz->setProperty &&
+               jsclazz->enumerate &&
                jsclazz->resolve &&
                jsclazz->convert &&
                jsclazz->finalize, "bad class");

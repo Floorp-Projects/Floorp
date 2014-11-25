@@ -300,10 +300,13 @@ SharedArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSi
 const Class SharedArrayBufferObject::protoClass = {
     "SharedArrayBufferPrototype",
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 const Class SharedArrayBufferObject::class_ = {
@@ -311,13 +314,13 @@ const Class SharedArrayBufferObject::class_ = {
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     SharedArrayBufferObject::Finalize,
     nullptr,        /* call        */
     nullptr,        /* hasInstance */

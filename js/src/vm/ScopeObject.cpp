@@ -292,20 +292,26 @@ CallObject::createForStrictEval(JSContext *cx, AbstractFramePtr frame)
 const Class CallObject::class_ = {
     "Call",
     JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(CallObject::RESERVED_SLOTS),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    nullptr                  /* convert: Leave it nullptr so we notice if calls ever escape */
 };
 
 const Class DeclEnvObject::class_ = {
     js_Object_str,
     JSCLASS_HAS_RESERVED_SLOTS(DeclEnvObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 /*
@@ -582,23 +588,26 @@ const Class StaticWithObject::class_ = {
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(StaticWithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 const Class DynamicWithObject::class_ = {
     "With",
     JSCLASS_HAS_RESERVED_SLOTS(DynamicWithObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     nullptr,                 /* finalize */
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
@@ -736,10 +745,13 @@ const Class BlockObject::class_ = {
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub
 };
 
 template<XDRMode mode>
@@ -1029,13 +1041,13 @@ const Class UninitializedLexicalObject::class_ = {
     "UninitializedLexical",
     JSCLASS_HAS_RESERVED_SLOTS(UninitializedLexicalObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     nullptr,                 /* finalize */
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */

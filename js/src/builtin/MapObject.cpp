@@ -867,13 +867,13 @@ const Class MapIteratorObject::class_ = {
     "Map Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(MapIteratorObject::SlotCount),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     MapIteratorObject::finalize
 };
 
@@ -1011,13 +1011,13 @@ const Class MapObject::class_ = {
     "Map",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
-    nullptr,                 // addProperty
-    nullptr,                 // delProperty
+    JS_PropertyStub,         // addProperty
+    JS_DeletePropertyStub,   // delProperty
     JS_PropertyStub,         // getProperty
     JS_StrictPropertyStub,   // setProperty
-    nullptr,                 // enumerate
-    nullptr,                 // resolve
-    nullptr,                 // convert
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     finalize,
     nullptr,                 // call
     nullptr,                 // hasInstance
@@ -1524,13 +1524,13 @@ const Class SetIteratorObject::class_ = {
     "Set Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_RESERVED_SLOTS(SetIteratorObject::SlotCount),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     SetIteratorObject::finalize
 };
 
@@ -1664,13 +1664,13 @@ const Class SetObject::class_ = {
     "Set",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Set),
-    nullptr,                 // addProperty
-    nullptr,                 // delProperty
+    JS_PropertyStub,         // addProperty
+    JS_DeletePropertyStub,   // delProperty
     JS_PropertyStub,         // getProperty
     JS_StrictPropertyStub,   // setProperty
-    nullptr,                 // enumerate
-    nullptr,                 // resolve
-    nullptr,                 // convert
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     finalize,
     nullptr,                 // call
     nullptr,                 // hasInstance

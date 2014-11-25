@@ -585,13 +585,13 @@ const Class WeakMapObject::class_ = {
     "WeakMap",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_HAS_CACHED_PROTO(JSProto_WeakMap),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
     JS_StrictPropertyStub,   /* setProperty */
-    nullptr,                 /* enumerate */
-    nullptr,                 /* resolve */
-    nullptr,                 /* convert */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
     WeakMap_finalize,
     nullptr,                 /* call        */
     nullptr,                 /* construct   */

@@ -566,7 +566,7 @@ LookupOwnPropertyInline(ExclusiveContext *cx,
     }
 
     // id was not found in obj. Try obj's resolve hook, if any.
-    if (obj->getClass()->resolve) {
+    if (obj->getClass()->resolve != JS_ResolveStub) {
         if (!cx->shouldBeJSContext() || !allowGC)
             return false;
 

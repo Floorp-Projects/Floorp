@@ -203,19 +203,35 @@ LegacyGeneratorObject::close(JSContext *cx, HandleObject obj)
 const Class LegacyGeneratorObject::class_ = {
     "Generator",
     JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,                 /* finalize    */
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
+    nullptr,                 /* trace       */
 };
 
 const Class StarGeneratorObject::class_ = {
     "Generator",
     JSCLASS_HAS_RESERVED_SLOTS(GeneratorObject::RESERVED_SLOTS),
-    nullptr,                 /* addProperty */
-    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* addProperty */
+    JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub    /* setProperty */
+    JS_StrictPropertyStub,   /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,                 /* finalize    */
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
+    nullptr,                 /* trace       */
 };
 
 static const JSFunctionSpec star_generator_methods[] = {
