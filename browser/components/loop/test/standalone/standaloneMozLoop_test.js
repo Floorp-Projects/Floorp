@@ -76,6 +76,42 @@ describe("loop.StandaloneMozLoop", function() {
     });
   });
 
+  describe("#rooms.get", function() {
+    it("should GET to the server", function() {
+      mozLoop.rooms.get("fakeToken", callback);
+
+      expect(requests).to.have.length.of(1);
+      expect(requests[0].url).eql(fakeBaseServerUrl + "/rooms/fakeToken");
+      expect(requests[0].method).eql("GET");
+    });
+
+    it("should call the callback with success parameters", function() {
+      mozLoop.rooms.get("fakeToken", callback);
+
+      var roomDetails = {
+        roomName: "fakeName",
+        roomUrl: "http://invalid",
+        roomOwner: "gavin"
+      };
+
+      requests[0].respond(200, {"Content-Type": "application/json"},
+        JSON.stringify(roomDetails));
+
+      sinon.assert.calledOnce(callback);
+      sinon.assert.calledWithExactly(callback, null, roomDetails);
+    });
+
+    it("should call the callback with failure parameters", function() {
+      mozLoop.rooms.get("fakeToken", callback);
+
+      requests[0].respond(401, {"Content-Type": "application/json"},
+                          JSON.stringify(fakeServerErrorDescription));
+      sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
+        return /HTTP 401 Unauthorized/.test(err.message);
+      }));
+    });
+  });
+
   describe("#rooms.join", function() {
     it("should POST to the server", function() {
       mozLoop.rooms.join("fakeToken", callback);
