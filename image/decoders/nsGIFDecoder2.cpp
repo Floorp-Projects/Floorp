@@ -828,6 +828,18 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount,
       if (mGIFStruct.disposal_method == 4) {
         mGIFStruct.disposal_method = 3;
       }
+
+      {
+        int32_t method =
+          FrameBlender::FrameDisposalMethod(mGIFStruct.disposal_method);
+        if (method == FrameBlender::kDisposeClearAll ||
+            method == FrameBlender::kDisposeClear) {
+          // We may have to display the background under this image during
+          // animation playback, so we regard it as transparent.
+          PostHasTransparency();
+        }
+      }
+
       mGIFStruct.delay_time = GETINT16(q + 1) * 10;
       GETN(1, gif_consume_block);
       break;
