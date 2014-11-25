@@ -514,10 +514,8 @@ URL::GetHash(nsString& aHash, ErrorResult& aRv) const
   nsAutoCString ref;
   nsresult rv = mURI->GetRef(ref);
   if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
+    NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
     aHash.Assign(char16_t('#'));
-    if (!nsContentUtils::ShouldEncodeURLHash()) {
-      NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
-    }
     AppendUTF8toUTF16(ref, aHash);
   }
 }
