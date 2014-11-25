@@ -7,7 +7,7 @@
 #ifndef jit_mips_MoveEmitter_mips_h
 #define jit_mips_MoveEmitter_mips_h
 
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MoveResolver.h"
 
 namespace js {

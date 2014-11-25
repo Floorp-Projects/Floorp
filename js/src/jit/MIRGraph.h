@@ -11,7 +11,7 @@
 // containing MIR.
 
 #include "jit/FixedList.h"
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "jit/MIR.h"
 
 namespace js {
@@ -623,7 +623,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MIRGraph &graph_;
     CompileInfo &info_; // Each block originates from a particular script.
     InlineList<MInstruction> instructions_;
-    Vector<MBasicBlock *, 1, IonAllocPolicy> predecessors_;
+    Vector<MBasicBlock *, 1, JitAllocPolicy> predecessors_;
     InlineList<MPhi> phis_;
     FixedList<MDefinition *> slots_;
     uint32_t stackPosition_;
@@ -655,7 +655,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Utility mark for traversal algorithms.
     bool mark_;
 
-    Vector<MBasicBlock *, 1, IonAllocPolicy> immediatelyDominated_;
+    Vector<MBasicBlock *, 1, JitAllocPolicy> immediatelyDominated_;
     MBasicBlock *immediateDominator_;
 
     const BytecodeSite *trackedSite_;
@@ -676,7 +676,7 @@ typedef InlineListIterator<MBasicBlock> MBasicBlockIterator;
 typedef InlineListIterator<MBasicBlock> ReversePostorderIterator;
 typedef InlineListReverseIterator<MBasicBlock> PostorderIterator;
 
-typedef Vector<MBasicBlock *, 1, IonAllocPolicy> MIRGraphReturns;
+typedef Vector<MBasicBlock *, 1, JitAllocPolicy> MIRGraphReturns;
 
 class MIRGraph
 {

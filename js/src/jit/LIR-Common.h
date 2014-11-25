@@ -100,7 +100,7 @@ class LMove
 
 class LMoveGroup : public LInstructionHelper<0, 0, 0>
 {
-    js::Vector<LMove, 2, IonAllocPolicy> moves_;
+    js::Vector<LMove, 2, JitAllocPolicy> moves_;
 
     explicit LMoveGroup(TempAllocator &alloc)
       : moves_(alloc)

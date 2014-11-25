@@ -110,13 +110,13 @@
 namespace js {
 namespace jit {
 
-typedef Vector<BufferOffset, 512, OldIonAllocPolicy> LoadOffsets;
+typedef Vector<BufferOffset, 512, OldJitAllocPolicy> LoadOffsets;
 
 // The allocation unit size for pools.
 typedef int32_t PoolAllocUnit;
 
 struct Pool
-  : public OldIonAllocPolicy
+  : public OldJitAllocPolicy
 {
   private:
     // The maximum program-counter relative offset below which the instruction
@@ -385,8 +385,8 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
 
   public:
 
-    // A unique id within each IonContext, to identify pools in the debug
-    // spew. Set by the IonMacroAssembler, see getNextAssemblerId().
+    // A unique id within each JitContext, to identify pools in the debug
+    // spew. Set by the MacroAssembler, see getNextAssemblerId().
     int id;
 
   private:
@@ -423,8 +423,8 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     {
     }
 
-    // We need to wait until an AutoIonContextAlloc is created by the
-    // IonMacroAssembler before allocating any space.
+    // We need to wait until an AutoJitContextAlloc is created by the
+    // MacroAssembler before allocating any space.
     void initWithAllocator() {
         poolInfo_ = this->lifoAlloc_.template newArrayUninitialized<PoolInfo>(poolInfoSize_);
 

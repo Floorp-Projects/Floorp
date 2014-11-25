@@ -33,7 +33,7 @@ js_ReportOverRecursed(js::ThreadSafeContext *cx);
 namespace js {
 
 namespace jit {
-class IonContext;
+class JitContext;
 class CompileCompartment;
 class DebugModeOSRVolatileJitFrameIterator;
 }
@@ -313,7 +313,7 @@ class ExclusiveContext : public ThreadSafeContext
     friend class AutoLockForExclusiveAccess;
     friend struct StackBaseShape;
     friend void JSScript::initCompartment(ExclusiveContext *cx);
-    friend class jit::IonContext;
+    friend class jit::JitContext;
 
     // The thread on which this context is running, if this is not a JSContext.
     HelperThread *helperThread_;
