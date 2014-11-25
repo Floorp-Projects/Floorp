@@ -282,10 +282,10 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
 
   mSurfaceFormat = aFormat;
   mSize = gfx::IntSize(aRect.width, aRect.height);
-  mTextureInfo.mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
+  mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
-    mTextureInfo.mTextureFlags |= TextureFlags::COMPONENT_ALPHA;
+    mTextureFlags |= TextureFlags::COMPONENT_ALPHA;
   }
 
   CreateBackBuffer(mBufferRect);
@@ -297,7 +297,7 @@ ContentClientRemoteBuffer::CreateBackBuffer(const nsIntRect& aBufferRect)
   // gfx::BackendType::NONE means fallback to the content backend
   mTextureClient = CreateTextureClientForDrawing(
     mSurfaceFormat, mSize, gfx::BackendType::NONE,
-    mTextureInfo.mTextureFlags,
+    mTextureFlags,
     TextureAllocationFlags::ALLOC_CLEAR_BUFFER
   );
   if (!mTextureClient || !AddTextureClient(mTextureClient)) {
@@ -305,9 +305,9 @@ ContentClientRemoteBuffer::CreateBackBuffer(const nsIntRect& aBufferRect)
     return;
   }
 
-  if (mTextureInfo.mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
+  if (mTextureFlags & TextureFlags::COMPONENT_ALPHA) {
     mTextureClientOnWhite = mTextureClient->CreateSimilar(
-      mTextureInfo.mTextureFlags,
+      mTextureFlags,
       TextureAllocationFlags::ALLOC_CLEAR_BUFFER_WHITE
     );
     if (!mTextureClientOnWhite || !AddTextureClient(mTextureClientOnWhite)) {

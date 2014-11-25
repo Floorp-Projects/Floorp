@@ -224,10 +224,11 @@ struct TextureInfo
     , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
-  explicit TextureInfo(CompositableType aType)
+  explicit TextureInfo(CompositableType aType,
+                       TextureFlags aTextureFlags = TextureFlags::DEFAULT)
     : mCompositableType(aType)
     , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
-    , mTextureFlags(TextureFlags::NO_FLAGS)
+    , mTextureFlags(aTextureFlags)
   {}
 
   bool operator==(const TextureInfo& aOther) const
