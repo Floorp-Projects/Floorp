@@ -51,12 +51,8 @@ function run_test() {
   let smsMessenger = Cc["@mozilla.org/ril/system-messenger-helper;1"]
                      .getService(Ci.nsISmsMessenger);
 
-  let cellbroadcastMessenger = Cc["@mozilla.org/ril/system-messenger-helper;1"]
-                               .getService(Ci.nsICellbroadcastMessenger);
-
   ok(telephonyMessenger !== null, "Get TelephonyMessenger.");
   ok(smsMessenger != null, "Get SmsMessenger.");
-  ok(cellbroadcastMessenger != null, "Get CellbroadcastMessenger.");
 
   run_next_test();
 }
@@ -244,132 +240,6 @@ add_test(function test_sms_messenger_notify_sms() {
                         false);
     ok(false, "Failed to verify the protection of invalid nsISmsMessenger.NOTIFICATION_TYPE!");
   } catch (e) {}
-
-  run_next_test();
-});
-
-/**
- * Verify RILSystemMessenger.notifyCbMessageReceived()
- */
-add_test(function test_cellbroadcast_messenger_notify_cb_message_received() {
-  let messenger = newRILSystemMessenger();
-  let timestamp = Date.now();
-
-  // Verify ETWS
-  messenger.notifyCbMessageReceived(0,
-                                    Ci.nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_CELL_IMMEDIATE,
-                                    256,
-                                    4352,
-                                    null,
-                                    null,
-                                    Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS_NORMAL,
-                                    timestamp,
-                                    Ci.nsICellBroadcastService.CDMA_SERVICE_CATEGORY_INVALID,
-                                    true,
-                                    Ci.nsICellBroadcastService.GSM_ETWS_WARNING_EARTHQUAKE,
-                                    false,
-                                    true);
-  equal_received_system_message("cellbroadcast-received", {
-      serviceId: 0,
-      gsmGeographicalScope: "cell-immediate",
-      messageCode: 256,
-      messageId: 4352,
-      language: null,
-      body: null,
-      messageClass: "normal",
-      timestamp: timestamp,
-      cdmaServiceCategory: null,
-      etws: {
-        warningType: "earthquake",
-        emergencyUserAlert: false,
-        popup: true
-      }
-  });
-
-  // Verify Normal CB Message
-  messenger.notifyCbMessageReceived(1,
-                                    Ci.nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_PLMN,
-                                    0,
-                                    50,
-                                    "en",
-                                    "The quick brown fox jumps over the lazy dog",
-                                    Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS_NORMAL,
-                                    timestamp,
-                                    Ci.nsICellBroadcastService.CDMA_SERVICE_CATEGORY_INVALID,
-                                    false,
-                                    Ci.nsICellBroadcastService.GSM_ETWS_WARNING_INVALID,
-                                    false,
-                                    false);
-  equal_received_system_message("cellbroadcast-received", {
-      serviceId: 1,
-      gsmGeographicalScope: "plmn",
-      messageCode: 0,
-      messageId: 50,
-      language: "en",
-      body: "The quick brown fox jumps over the lazy dog",
-      messageClass: "normal",
-      timestamp: timestamp,
-      cdmaServiceCategory: null,
-      etws: null
-  });
-
-  // Verify CB Message with ETWS Info
-  messenger.notifyCbMessageReceived(0,
-                                    Ci.nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_LOCATION_AREA,
-                                    0,
-                                    4354,
-                                    "en",
-                                    "Earthquake & Tsunami Warning!",
-                                    Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS_0,
-                                    timestamp,
-                                    Ci.nsICellBroadcastService.CDMA_SERVICE_CATEGORY_INVALID,
-                                    true,
-                                    Ci.nsICellBroadcastService.GSM_ETWS_WARNING_EARTHQUAKE_TSUNAMI,
-                                    true,
-                                    false);
-  equal_received_system_message("cellbroadcast-received", {
-      serviceId: 0,
-      gsmGeographicalScope: "location-area",
-      messageCode: 0,
-      messageId: 4354,
-      language: "en",
-      body: "Earthquake & Tsunami Warning!",
-      messageClass: "class-0",
-      timestamp: timestamp,
-      cdmaServiceCategory: null,
-      etws: {
-        warningType: "earthquake-tsunami",
-        emergencyUserAlert: true,
-        popup: false
-      }
-  });
-
-  // Verify CDMA CB Message
-  messenger.notifyCbMessageReceived(0,
-                                    Ci.nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_INVALID,
-                                    0,
-                                    0,
-                                    null,
-                                    "CDMA CB Message",
-                                    Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS_NORMAL,
-                                    timestamp,
-                                    512,
-                                    false,
-                                    Ci.nsICellBroadcastService.GSM_ETWS_WARNING_INVALID,
-                                    false,
-                                    false);
-  equal_received_system_message("cellbroadcast-received", {
-      serviceId: 0,
-      gsmGeographicalScope: null,
-      messageCode: 0,
-      messageId: 0,
-      language: null,
-      body: "CDMA CB Message",
-      messageClass: "normal",
-      timestamp: timestamp,
-      cdmaServiceCategory: 512,
-      etws: null
-  });
 
   run_next_test();
 });
