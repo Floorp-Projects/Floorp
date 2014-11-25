@@ -342,6 +342,16 @@ public:
   {
     return mRanges ? mRanges->Length() : 0;
   }
+
+  bool CausesDOMTextEvent() const
+  {
+    return message == NS_COMPOSITION_CHANGE;
+  }
+
+  bool CausesDOMCompositionEndEvent() const
+  {
+    return message == NS_COMPOSITION_END;
+  }
 };
 
 /******************************************************************************

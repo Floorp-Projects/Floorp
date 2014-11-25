@@ -122,7 +122,7 @@ TextComposition::OnCompositionEventDiscarded(
   //     runnable event?  However, even if we do so, it might make native IME
   //     confused due to async modification.  Especially when native IME is
   //     TSF.
-  if (aCompositionEvent->message != NS_COMPOSITION_END) {
+  if (!aCompositionEvent->CausesDOMCompositionEndEvent()) {
     return;
   }
 
@@ -185,7 +185,7 @@ TextComposition::DispatchCompositionEvent(
     }
   }
 
-  if (aCompositionEvent->message == NS_COMPOSITION_CHANGE) {
+  if (aCompositionEvent->CausesDOMTextEvent()) {
     if (!MaybeDispatchCompositionUpdate(aCompositionEvent)) {
       return;
     }
@@ -200,13 +200,13 @@ TextComposition::DispatchCompositionEvent(
 
   // Emulate editor behavior of compositionchange event (DOM text event) handler
   // if no editor handles composition events.
-  if (aCompositionEvent->message == NS_COMPOSITION_CHANGE && !HasEditor()) {
+  if (aCompositionEvent->CausesDOMTextEvent() && !HasEditor()) {
     EditorWillHandleCompositionChangeEvent(aCompositionEvent);
     EditorDidHandleCompositionChangeEvent();
   }
 
 #ifdef DEBUG
-  else if (aCompositionEvent->message == NS_COMPOSITION_END) {
+  else if (aCompositionEvent->CausesDOMCompositionEndEvent()) {
     MOZ_ASSERT(!mIsComposing, "Why is the editor still composing?");
     MOZ_ASSERT(!HasEditor(), "Why does the editor still keep to hold this?");
   }
@@ -240,7 +240,7 @@ TextComposition::NotityUpdateComposition(
       mCompositionStartOffset = 0;
     }
     mCompositionTargetOffset = mCompositionStartOffset;
-  } else if (aCompositionEvent->message == NS_COMPOSITION_CHANGE) {
+  } else if (aCompositionEvent->CausesDOMTextEvent()) {
     mCompositionTargetOffset =
       mCompositionStartOffset + aCompositionEvent->TargetClauseOffset();
   } else {
