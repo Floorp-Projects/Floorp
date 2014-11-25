@@ -33,6 +33,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     // give us one of {al,bl,cl,dl}. For now, just useFixed(al).
     LAllocation useByteOpRegister(MDefinition *mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition *mir);
+    LDefinition tempByteOpRegister();
 
     inline LDefinition tempToUnbox() {
         return LDefinition::BogusTemp();
@@ -55,6 +56,7 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
+    bool visitSubstr(MSubstr *ins);
     bool lowerPhi(MPhi *phi);
 
     static bool allowTypedElementHoleCheck() {
