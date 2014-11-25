@@ -67,7 +67,8 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
  *            a live bookmark is associated.
  *  - tag - a string.
  *  - tags: an array of strings.
- *  - guid, parentGuid, newParentGuid: a valid places GUID string.
+ *  - guid, parentGuid, newParentGuid: a valid Places GUID string.
+ *  - guids: an array of valid Places GUID strings.
  *  - title: a string
  *  - index, newIndex: the position of an item in its containing folder,
  *    starting from 0.
@@ -462,7 +463,6 @@ Enqueuer.prototype = {
    */
   get promise() this._promise
 };
-
 
 let TransactionsManager = {
   // See the documentation at the top of this file. |transact| calls are not
@@ -869,6 +869,7 @@ DefineTransaction.defineInputProps(["index", "newIndex"],
                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
 DefineTransaction.defineInputProps(["annotation"],
                                    DefineTransaction.annotationObjectValidate);
+DefineTransaction.defineArrayInputProp("guids", "guid");
 DefineTransaction.defineArrayInputProp("urls", "url");
 DefineTransaction.defineArrayInputProp("tags", "tag");
 DefineTransaction.defineArrayInputProp("annotations", "annotation");
@@ -1269,29 +1270,40 @@ PT.EditUrl.prototype = Object.seal({
  *
  * Required Input Properties: guid, annotationObject
  */
-PT.Annotate = DefineTransaction(["guid", "annotations"]);
+PT.Annotate = DefineTransaction(["guids", "annotations"]);
 PT.Annotate.prototype = {
-  execute: function* (aGuid, aNewAnnos) {
-    let itemId = yield PlacesUtils.promiseItemId(aGuid);
-    let currentAnnos = PlacesUtils.getAnnotationsForItem(itemId);
-    let undoAnnos = [];
-    for (let newAnno of aNewAnnos) {
-      let currentAnno = currentAnnos.find( a => a.name == newAnno.name );
-      if (!!currentAnno) {
-        undoAnnos.push(currentAnno);
+  *execute(aGuids, aNewAnnos) {
+    let undoAnnosForItem = new Map(); // itemId => undoAnnos;
+    for (let guid of aGuids) {
+      let itemId = yield PlacesUtils.promiseItemId(guid);
+      let currentAnnos = PlacesUtils.getAnnotationsForItem(itemId);
+
+      let undoAnnos = [];
+      for (let newAnno of aNewAnnos) {
+        let currentAnno = currentAnnos.find(a => a.name == newAnno.name);
+        if (!!currentAnno) {
+          undoAnnos.push(currentAnno);
+        }
+        else {
+          // An unset value removes the annotation.
+          undoAnnos.push({ name: newAnno.name });
+        }
       }
-      else {
-        // An unset value removes the annotation.
-        undoAnnos.push({ name: newAnno.name });
-      }
+      undoAnnosForItem.set(itemId, undoAnnos);
+
+      PlacesUtils.setAnnotationsForItem(itemId, aNewAnnos);
     }
 
-    PlacesUtils.setAnnotationsForItem(itemId, aNewAnnos);
-    this.undo = () => {
-      PlacesUtils.setAnnotationsForItem(itemId, undoAnnos);
+    this.undo = function() {
+      for (let [itemId, undoAnnos] of undoAnnosForItem) {
+        PlacesUtils.setAnnotationsForItem(itemId, undoAnnos);
+      }
     };
-    this.redo = () => {
-      PlacesUtils.setAnnotationsForItem(itemId, aNewAnnos);
+    this.redo = function* () {
+      for (let guid of aGuids) {
+        let itemId = yield PlacesUtils.promiseItemId(guid);
+        PlacesUtils.setAnnotationsForItem(itemId, aNewAnnos);
+      }
     };
   }
 };

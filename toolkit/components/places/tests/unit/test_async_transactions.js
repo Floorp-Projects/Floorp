@@ -4,10 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const bmsvc   = PlacesUtils.bookmarks;
-const tagssvc = PlacesUtils.tagging;
-const annosvc = PlacesUtils.annotations;
-const PT      = PlacesTransactions;
+const bmsvc    = PlacesUtils.bookmarks;
+const tagssvc  = PlacesUtils.tagging;
+const annosvc  = PlacesUtils.annotations;
+const PT       = PlacesTransactions;
+const rootGuid = PlacesUtils.bookmarks.rootGuid;
 
 Components.utils.importGlobalProperties(["URL"]);
 
@@ -105,9 +106,6 @@ observer.reset();
 
 // index at which items should begin
 let bmStartIndex = 0;
-
-// get bookmarks root id
-let root = PlacesUtils.bookmarksMenuFolderId;
 
 function run_test() {
   bmsvc.addObserver(observer, false);
@@ -248,9 +246,8 @@ function ensureTagsForURI(aURI, aTags) {
   do_check_true(aTags.every( t => tagsSet.indexOf(t) != -1 ));
 }
 
-function* createTestFolderInfo(aTitle = "Test Folder") {
-  return { parentGuid: yield PlacesUtils.promiseItemGuid(root)
-         , title: "Test Folder" };
+function createTestFolderInfo(aTitle = "Test Folder") {
+  return { parentGuid: rootGuid, title: "Test Folder" };
 }
 
 function isLivemarkTree(aTree) {
@@ -338,7 +335,7 @@ add_task(function* test_recycled_transactions() {
     ensureUndoState(txns, undoPosition);
   }
 
-  let txn_a = PT.NewFolder(yield createTestFolderInfo());
+  let txn_a = PT.NewFolder(createTestFolderInfo());
   yield txn_a.transact();
   ensureUndoState([[txn_a]], 0);
   yield ensureTransactThrowsFor(txn_a);
@@ -351,7 +348,7 @@ add_task(function* test_recycled_transactions() {
   ensureUndoState();
   ensureTransactThrowsFor(txn_a);
 
-  let txn_b = PT.NewFolder(yield createTestFolderInfo());
+  let txn_b = PT.NewFolder(createTestFolderInfo());
   yield PT.batch(function* () {
     try {
       yield txn_a.transact();
@@ -375,7 +372,7 @@ add_task(function* test_recycled_transactions() {
 
 add_task(function* test_new_folder_with_annotation() {
   const ANNO = { name: "TestAnno", value: "TestValue" };
-  let folder_info = yield createTestFolderInfo();
+  let folder_info = createTestFolderInfo();
   folder_info.index = bmStartIndex;
   folder_info.annotations = [ANNO];
   ensureUndoState();
@@ -410,7 +407,7 @@ add_task(function* test_new_folder_with_annotation() {
 });
 
 add_task(function* test_new_bookmark() {
-  let bm_info = { parentGuid: yield PlacesUtils.promiseItemGuid(root)
+  let bm_info = { parentGuid: rootGuid
                 , url:        NetUtil.newURI("http://test_create_item.com")
                 , index:      bmStartIndex
                 , title:      "Test creating an item" };
@@ -447,7 +444,7 @@ add_task(function* test_new_bookmark() {
 });
 
 add_task(function* test_merge_create_folder_and_item() {
-  let folder_info = yield createTestFolderInfo();
+  let folder_info = createTestFolderInfo();
   let bm_info = { url: NetUtil.newURI("http://test_create_item_to_folder.com")
                 , title: "Test Bookmark"
                 , index: bmStartIndex };
@@ -485,7 +482,7 @@ add_task(function* test_merge_create_folder_and_item() {
 });
 
 add_task(function* test_move_items_to_folder() {
-  let folder_a_info = yield createTestFolderInfo("Folder A");
+  let folder_a_info = createTestFolderInfo("Folder A");
   let bkm_a_info = { url: new URL("http://test_move_items.com")
                    , title: "Bookmark A" };
   let bkm_b_info = { url: NetUtil.newURI("http://test_move_items.com")
@@ -541,7 +538,7 @@ add_task(function* test_move_items_to_folder() {
   ensureUndoState([[bkm_b_txn, bkm_a_txn, folder_a_txn]], 0);
 
   // Test moving items between folders.
-  let folder_b_info = yield createTestFolderInfo("Folder B");
+  let folder_b_info = createTestFolderInfo("Folder B");
   let folder_b_txn = PT.NewFolder(folder_b_info);
   folder_b_info.guid = yield folder_b_txn.transact();
   ensureUndoState([ [folder_b_txn]
@@ -595,7 +592,7 @@ add_task(function* test_move_items_to_folder() {
 });
 
 add_task(function* test_remove_folder() {
-  let folder_level_1_info = yield createTestFolderInfo("Folder Level 1");
+  let folder_level_1_info = createTestFolderInfo("Folder Level 1");
   let folder_level_2_info = { title: "Folder Level 2" };
   let [folder_level_1_txn,
        folder_level_2_txn] = yield PT.batch(function* () {
@@ -688,7 +685,7 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
       , POST_DATA = "post_data"
       , ANNO = { name: "TestAnno", value: "TestAnnoValue" };
 
-  let folder_info = yield createTestFolderInfo();
+  let folder_info = createTestFolderInfo();
   folder_info.guid = yield PT.NewFolder(folder_info).transact();
   let ensureTags = ensureTagsForURI.bind(null, testURI);
 
@@ -803,7 +800,7 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
 });
 
 add_task(function* test_creating_and_removing_a_separator() {
-  let folder_info = yield createTestFolderInfo();
+  let folder_info = createTestFolderInfo();
   let separator_info = {};
   let undoEntries = [];
 
@@ -872,7 +869,7 @@ add_task(function* test_creating_and_removing_a_separator() {
 add_task(function* test_add_and_remove_livemark() {
   let createLivemarkTxn = PT.NewLivemark(
     { feedUrl: NetUtil.newURI("http://test.remove.livemark")
-    , parentGuid: yield PlacesUtils.promiseItemGuid(root)
+    , parentGuid: rootGuid
     , title: "Test Remove Livemark" });
   let guid = yield createLivemarkTxn.transact();
   let originalInfo = yield PlacesUtils.promiseBookmarksTree(guid);
@@ -913,7 +910,7 @@ add_task(function* test_add_and_remove_livemark() {
 });
 
 add_task(function* test_edit_title() {
-  let bm_info = { parentGuid: yield PlacesUtils.promiseItemGuid(root)
+  let bm_info = { parentGuid: rootGuid
                 , url:        NetUtil.newURI("http://test_create_item.com")
                 , title:      "Original Title" };
 
@@ -951,10 +948,7 @@ add_task(function* test_edit_title() {
 add_task(function* test_edit_url() {
   let oldURI = NetUtil.newURI("http://old.test_editing_item_uri.com/");
   let newURI = NetUtil.newURI("http://new.test_editing_item_uri.com/");
-  let bm_info = { parentGuid: yield PlacesUtils.promiseItemGuid(root)
-                , url:        oldURI
-                , tags:       ["TestTag"]};
-
+  let bm_info = { parentGuid: rootGuid, url: oldURI, tags: ["TestTag"] };
   function ensureURIAndTags(aPreChangeURI, aPostChangeURI, aOLdURITagsPreserved) {
     ensureItemsChanged({ guid: bm_info.guid
                        , property: "uri"
@@ -1016,8 +1010,8 @@ add_task(function* test_edit_url() {
 });
 
 add_task(function* test_edit_keyword() {
-  let bm_info = { parentGuid: yield PlacesUtils.promiseItemGuid(root)
-                , url:        NetUtil.newURI("http://test.edit.keyword") };
+  let bm_info = { parentGuid: rootGuid
+                , url: NetUtil.newURI("http://test.edit.keyword") };
   const KEYWORD = "test_keyword";
   bm_info.guid = yield PT.NewBookmark(bm_info).transact();
   function ensureKeywordChange(aCurrentKeyword = "") {
@@ -1054,9 +1048,9 @@ add_task(function* test_edit_keyword() {
 add_task(function* test_tag_uri() {
   // This also tests passing uri specs.
   let bm_info_a = { url: "http://bookmarked.uri"
-                  , parentGuid: yield PlacesUtils.promiseItemGuid(root) };
+                  , parentGuid: rootGuid };
   let bm_info_b = { url: NetUtil.newURI("http://bookmarked2.uri")
-                  , parentGuid: yield PlacesUtils.promiseItemGuid(root) };
+                  , parentGuid: rootGuid };
   let unbookmarked_uri = NetUtil.newURI("http://un.bookmarked.uri");
 
   function* promiseIsBookmarked(aURI) {
@@ -1128,10 +1122,10 @@ add_task(function* test_tag_uri() {
 
 add_task(function* test_untag_uri() {
   let bm_info_a = { url: NetUtil.newURI("http://bookmarked.uri")
-                  , parentGuid: yield PlacesUtils.promiseItemGuid(root)
+                  , parentGuid: rootGuid
                   , tags: ["A", "B"] };
   let bm_info_b = { url: NetUtil.newURI("http://bookmarked2.uri")
-                  , parentGuid: yield PlacesUtils.promiseItemGuid(root)
+                  , parentGuid: rootGuid
                   , tag: "B" };
 
   yield PT.batch(function* () {
@@ -1206,7 +1200,7 @@ add_task(function* test_untag_uri() {
 
 add_task(function* test_annotate() {
   let bm_info = { url: NetUtil.newURI("http://test.item.annotation")
-                , parentGuid: yield PlacesUtils.promiseItemGuid(root) };
+                , parentGuid: rootGuid };
   let anno_info = { name: "TestAnno", value: "TestValue" };
   function ensureAnnoState(aSet) {
     ensureAnnotationsSet(bm_info.guid,
@@ -1248,7 +1242,7 @@ add_task(function* test_annotate() {
 });
 
 add_task(function* test_annotate_multiple() {
-  let guid = yield PT.NewFolder(yield createTestFolderInfo()).transact();
+  let guid = yield PT.NewFolder(createTestFolderInfo()).transact();
   let itemId = yield PlacesUtils.promiseItemId(guid);
 
   function AnnoObj(aName, aValue) {
@@ -1302,7 +1296,7 @@ add_task(function* test_annotate_multiple() {
 });
 
 add_task(function* test_sort_folder_by_name() {
-  let folder_info = yield createTestFolderInfo();
+  let folder_info = createTestFolderInfo();
 
   let url = NetUtil.newURI("http://sort.by.name/");
   let preSep =  [{ title: i, url } for (i of ["3","2","1"])];
@@ -1349,7 +1343,7 @@ add_task(function* test_sort_folder_by_name() {
 add_task(function* test_livemark_txns() {
   let livemark_info =
     { feedUrl: NetUtil.newURI("http://test.feed.uri")
-    , parentGuid: yield PlacesUtils.promiseItemGuid(root)
+    , parentGuid: rootGuid
     , title: "Test Livemark" };
   function ensureLivemarkAdded() {
     ensureItemsAdded({ guid:       livemark_info.guid
@@ -1396,11 +1390,9 @@ add_task(function* test_livemark_txns() {
 });
 
 add_task(function* test_copy() {
-  let rootGuid = yield PlacesUtils.promiseItemGuid(root);
-
   function* duplicate_and_test(aOriginalGuid) {
-    yield duplicateGuid =
-      yield PT.Copy({ guid: aOriginalGuid, newParentGuid: rootGuid }).transact();
+    let txn = PT.Copy({ guid: aOriginalGuid, newParentGuid: rootGuid });
+    yield duplicateGuid = yield txn.transact();
     let originalInfo = yield PlacesUtils.promiseBookmarksTree(aOriginalGuid);
     let duplicateInfo = yield PlacesUtils.promiseBookmarksTree(duplicateGuid);
     yield ensureEqualBookmarksTrees(originalInfo, duplicateInfo, false);
@@ -1436,9 +1428,9 @@ add_task(function* test_copy() {
   let sepTxn = PT.NewSeparator({ parentGuid: rootGuid, index: 1 });
   let livemarkTxn = PT.NewLivemark(
     { feedUrl: new URL("http://test.feed.uri")
-    , parentGuid: yield PlacesUtils.promiseItemGuid(root)
+    , parentGuid: rootGuid
     , title: "Test Livemark", index: 1 });
-  let emptyFolderTxn = PT.NewFolder(yield createTestFolderInfo());
+  let emptyFolderTxn = PT.NewFolder(createTestFolderInfo());
   for (let txn of [livemarkTxn, sepTxn, emptyFolderTxn]) {
     let guid = yield txn.transact();
     yield duplicate_and_test(guid);
@@ -1446,8 +1438,7 @@ add_task(function* test_copy() {
 
   // Test duplicating a folder having some contents.
   let filledFolderGuid = yield PT.batch(function *() {
-    let folderGuid =
-      yield PT.NewFolder(yield createTestFolderInfo()).transact();
+    let folderGuid = yield PT.NewFolder(createTestFolderInfo()).transact();
     let nestedFolderGuid =
       yield PT.NewFolder({ parentGuid: folderGuid
                          , title: "Nested Folder" }).transact();
@@ -1469,9 +1460,7 @@ add_task(function* test_copy() {
 });
 
 add_task(function* test_array_input_for_batch() {
-  let rootGuid = yield PlacesUtils.promiseItemGuid(root);
-
-  let folderTxn = PT.NewFolder(yield createTestFolderInfo());
+  let folderTxn = PT.NewFolder(createTestFolderInfo());
   let folderGuid = yield folderTxn.transact();
 
   let sep1_txn = PT.NewSeparator({ parentGuid: folderGuid });
@@ -1503,9 +1492,7 @@ add_task(function* test_array_input_for_batch() {
 });
 
 add_task(function* test_copy_excluding_annotations() {
-  let rootGuid = yield PlacesUtils.promiseItemGuid(root);
-
-  let folderInfo = yield createTestFolderInfo();
+  let folderInfo = createTestFolderInfo();
   let anno = n => { return { name: n, value: 1 } };
   folderInfo.annotations = [anno("a"), anno("b"), anno("c")];
   let folderGuid = yield PT.NewFolder(folderInfo).transact();
@@ -1539,7 +1526,6 @@ add_task(function* test_copy_excluding_annotations() {
 });
 
 add_task(function* test_invalid_uri_spec_throws() {
-  let rootGuid = yield PlacesUtils.promiseItemGuid(root);
   Assert.throws(() =>
     PT.NewBookmark({ parentGuid: rootGuid
                    , url:        "invalid uri spec"
@@ -1550,4 +1536,43 @@ add_task(function* test_invalid_uri_spec_throws() {
   Assert.throws(() =>
     PT.Tag({ tag: "TheTag"
            , urls: ["about:blank", "invalid uri spec"] }));
+});
+
+add_task(function* test_annotate_multiple_items() {
+  let parentGuid = rootGuid;
+  let guids = [
+    yield PT.NewBookmark({ url: "about:blank", parentGuid }).transact(),
+    yield PT.NewFolder({ title: "Test Folder", parentGuid }).transact()];
+
+  let annotation = { name: "TestAnno", value: "TestValue" };
+  yield PT.Annotate({ guids, annotation }).transact();
+
+  function *ensureAnnoSet() {
+    for (let guid of guids) {
+      let itemId = yield PlacesUtils.promiseItemId(guid);
+      Assert.equal(annosvc.getItemAnnotation(itemId, annotation.name),
+                   annotation.value);
+    }
+  }
+  function *ensureAnnoUnset() {
+    for (let guid of guids) {
+      let itemId = yield PlacesUtils.promiseItemId(guid);
+      Assert.ok(!annosvc.itemHasAnnotation(itemId, annotation.name));
+    }
+  }
+
+  yield ensureAnnoSet();
+  yield PT.undo();
+  yield ensureAnnoUnset();
+  yield PT.redo();
+  yield ensureAnnoSet();
+  yield PT.undo();
+  yield ensureAnnoUnset();
+
+  // Cleanup
+  yield PT.undo();
+  yield PT.undo();
+  yield ensureNonExistent(...guids);
+  PT.clearTransactionsHistory();
+  observer.reset();
 });
