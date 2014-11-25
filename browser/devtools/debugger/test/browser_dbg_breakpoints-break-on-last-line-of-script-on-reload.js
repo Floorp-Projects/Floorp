@@ -13,13 +13,14 @@ function test() {
   // Debug test slaves are a bit slow at this test.
   requestLongerTimeout(2);
 
-  let gPanel, gDebugger, gThreadClient, gEvents;
+  let gPanel, gDebugger, gThreadClient, gEvents, gSources;
 
   initDebugger(TAB_URL).then(([aTab,, aPanel]) => {
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gThreadClient = gDebugger.gThreadClient;
     gEvents = gDebugger.EVENTS;
+    gSources = gDebugger.DebuggerView.Sources;
 
     Task.spawn(function* () {
       try {
@@ -92,8 +93,11 @@ function test() {
   });
 
   function setBreakpoint(location) {
+    let item = gSources.getItemByValue(getSourceActor(gSources, location.url));
+    let source = gThreadClient.source(item.attachment.source);
+
     let deferred = promise.defer();
-    gThreadClient.setBreakpoint(location, ({ error, message }, bpClient) => {
+    source.setBreakpoint(location, ({ error, message }, bpClient) => {
       if (error) {
         deferred.reject(error + ": " + message);
       }

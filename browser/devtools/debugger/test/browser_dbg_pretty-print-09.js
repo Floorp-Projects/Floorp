@@ -53,8 +53,8 @@ function runCode({ error }) {
 
 function testDbgStatement(event, { frame, why }) {
   is(why.type, "debuggerStatement");
-  const { url, line } = frame.where;
-  is(url, B_URL);
+  const { source, line } = frame.where;
+  is(source.url, B_URL);
   is(line, 2);
 
   disablePrettyPrint();
@@ -75,8 +75,8 @@ function getFrame() {
 }
 
 function testFrame({ frames: [frame] }) {
-  const { url, line } = frame.where;
-  is(url, B_URL);
+  const { source, line } = frame.where;
+  is(source.url, B_URL);
   is(line, 1);
 
   resumeDebuggerThenCloseAndFinish(gPanel);

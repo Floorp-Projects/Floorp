@@ -20,7 +20,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
 
     waitForSourceShown(gPanel, PREFERRED_URL).then(finishTest);
-    gSources.preferredSource = PREFERRED_URL;
+    gSources.preferredSource = getSourceActor(gSources, PREFERRED_URL);
   });
 }
 
@@ -28,9 +28,9 @@ function finishTest() {
   info("Currently preferred source: " + gSources.preferredValue);
   info("Currently selected source: " + gSources.selectedValue);
 
-  is(gSources.preferredValue, PREFERRED_URL,
+  is(getSourceURL(gSources, gSources.preferredValue), PREFERRED_URL,
     "The preferred source url wasn't set correctly.");
-  is(gSources.selectedValue, PREFERRED_URL,
+  is(getSourceURL(gSources, gSources.selectedValue), PREFERRED_URL,
     "The selected source isn't the correct one.");
 
   closeDebuggerAndFinish(gPanel);

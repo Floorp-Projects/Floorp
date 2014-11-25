@@ -158,3 +158,8 @@ function* stopRecording(panel, { waitForDisplay }) {
       "The record button should not be locked anymore.");
   }
 }
+
+function getSourceActor(aSources, aURL) {
+  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+  return item && item.value;
+}

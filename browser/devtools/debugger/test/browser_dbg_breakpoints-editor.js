@@ -31,7 +31,7 @@ function test() {
       "Should only be getting stack frames while paused.");
     is(gSources.itemCount, 2,
       "Found the expected number of sources.");
-    is(gEditor.getText().indexOf("debugger"), 172,
+    is(gEditor.getText().indexOf("debugger"), 166,
       "The correct source was loaded initially.");
     is(gSources.selectedValue, gSources.values[1],
       "The correct source is selected.");
@@ -52,7 +52,7 @@ function test() {
       "The second source should be currently selected.");
 
     info("Add the first breakpoint.");
-    let location = { url: gSources.selectedValue, line: 6 };
+    let location = { actor: gSources.selectedValue, line: 6 };
     gEditor.once("breakpointAdded", onEditorBreakpointAddFirst);
     gPanel.addBreakpoint(location).then(onBreakpointAddFirst);
   }
@@ -78,7 +78,7 @@ function test() {
 
     ok(aBreakpointClient,
       "breakpoint1 added, client received.");
-    is(aBreakpointClient.location.url, gSources.selectedValue,
+    is(aBreakpointClient.location.actor, gSources.selectedValue,
       "breakpoint1 client url is correct.");
     is(aBreakpointClient.location.line, 6,
       "breakpoint1 client line is correct.");
@@ -123,7 +123,7 @@ function test() {
 
     ok(aLocation,
       "breakpoint1 removed");
-    is(aLocation.url, gSources.selectedValue,
+    is(aLocation.actor, gSources.selectedValue,
       "breakpoint1 removal url is correct.");
     is(aLocation.line, 6,
       "breakpoint1 removal line is correct.");
@@ -139,16 +139,16 @@ function test() {
     is(gEditor.getBreakpoints().length, 0,
       "No breakpoints currently shown in the editor.");
 
-    ok(!gBreakpoints._getAdded({ url: gSources.selectedValue, line: 6 }),
+    ok(!gBreakpoints._getAdded({ actor: gSources.selectedValue, line: 6 }),
       "_getAdded('gSources.selectedValue', 6) returns falsey.");
-    ok(!gBreakpoints._getRemoving({ url: gSources.selectedValue, line: 6 }),
+    ok(!gBreakpoints._getRemoving({ actor: gSources.selectedValue, line: 6 }),
       "_getRemoving('gSources.selectedValue', 6) returns falsey.");
 
     is(gSources.values[1], gSources.selectedValue,
       "The second source should be currently selected.");
 
     info("Add a breakpoint to the first source, which is not selected.");
-    let location = { url: gSources.values[0], line: 5 };
+    let location = { actor: gSources.values[0], line: 5 };
     let options = { noEditorUpdate: true };
     gEditor.on("breakpointAdded", onEditorBreakpointAddBackgroundTrap);
     gPanel.addBreakpoint(location, options).then(onBreakpointAddBackground);
@@ -166,7 +166,7 @@ function test() {
 
     ok(aBreakpointClient,
       "breakpoint2 added, client received");
-    is(aBreakpointClient.location.url, gSources.values[0],
+    is(aBreakpointClient.location.actor, gSources.values[0],
       "breakpoint2 client url is correct.");
     is(aBreakpointClient.location.line, 5,
       "breakpoint2 client line is correct.");
@@ -276,19 +276,19 @@ function test() {
     is(gEditor.getBreakpoints().length, 0,
       "No breakpoints currently shown in the editor.");
 
-    ok(!gBreakpoints._getAdded({ url: gSources.values[0], line: 5 }),
+    ok(!gBreakpoints._getAdded({ actor: gSources.values[0], line: 5 }),
       "_getAdded('gSources.values[0]', 5) returns falsey.");
-    ok(!gBreakpoints._getRemoving({ url: gSources.values[0], line: 5 }),
+    ok(!gBreakpoints._getRemoving({ actor: gSources.values[0], line: 5 }),
       "_getRemoving('gSources.values[0]', 5) returns falsey.");
 
-    ok(!gBreakpoints._getAdded({ url: gSources.values[1], line: 6 }),
+    ok(!gBreakpoints._getAdded({ actor: gSources.values[1], line: 6 }),
       "_getAdded('gSources.values[1]', 6) returns falsey.");
-    ok(!gBreakpoints._getRemoving({ url: gSources.values[1], line: 6 }),
+    ok(!gBreakpoints._getRemoving({ actor: gSources.values[1], line: 6 }),
       "_getRemoving('gSources.values[1]', 6) returns falsey.");
 
-    ok(!gBreakpoints._getAdded({ url: "foo", line: 3 }),
+    ok(!gBreakpoints._getAdded({ actor: "foo", line: 3 }),
       "_getAdded('foo', 3) returns falsey.");
-    ok(!gBreakpoints._getRemoving({ url: "bar", line: 3 }),
+    ok(!gBreakpoints._getRemoving({ actor: "bar", line: 3 }),
       "_getRemoving('bar', 3) returns falsey.");
 
     is(breakpointsAdded, 2,

@@ -28,7 +28,7 @@ function test() {
       "Should only be getting stack frames while paused.");
     is(gSources.itemCount, 2,
       "Found the expected number of sources.");
-    is(gEditor.getText().indexOf("debugger"), 172,
+    is(gEditor.getText().indexOf("debugger"), 166,
       "The correct source was loaded initially.");
     is(gSources.selectedValue, gSources.values[1],
       "The correct source is selected.");

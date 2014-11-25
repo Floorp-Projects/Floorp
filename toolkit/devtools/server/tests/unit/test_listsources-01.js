@@ -38,7 +38,7 @@ function test_simple_listsources()
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
     gThreadClient.getSources(function (aResponse) {
       do_check_true(aResponse.sources.some(function (s) {
-        return s.url.match(/test_listsources-01.js$/);
+        return s.url && s.url.match(/test_listsources-01.js/);
       }));
 
       do_check_true(gNumTimesSourcesSent <= 1,
@@ -51,8 +51,9 @@ function test_simple_listsources()
     });
   });
 
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-       "debugger;\n" +   // line0 + 1
-       "var a = 1;\n" +  // line0 + 2
-       "var b = 2;\n");  // line0 + 3
+  Components.utils.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                                "debugger;\n" +   // line0 + 1
+                                "var a = 1;\n" +  // line0 + 2
+                                "var b = 2;\n",   // line0 + 3
+                                gDebuggee);
 }

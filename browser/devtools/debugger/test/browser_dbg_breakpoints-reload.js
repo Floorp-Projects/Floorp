@@ -16,9 +16,8 @@ let test = Task.async(function* () {
   yield ensureSourceIs(panel, "doc_breakpoints-reload.html", true);
 
   const sources = panel.panelWin.DebuggerView.Sources;
-
   yield panel.addBreakpoint({
-    url: sources.selectedValue,
+    actor: sources.selectedValue,
     line: 10 // "break on me" string
   });
 
@@ -31,5 +30,6 @@ let test = Task.async(function* () {
   is(packet.frame.where.line, 10,
      "Should have stopped at line 10, where we set the breakpoint");
 
+  yield waitForDebuggerEvents(panel, panel.panelWin.EVENTS.SOURCE_SHOWN)
   yield resumeDebuggerThenCloseAndFinish(panel);
 });

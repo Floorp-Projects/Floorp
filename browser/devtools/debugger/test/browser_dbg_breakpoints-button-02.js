@@ -33,16 +33,16 @@ function test() {
 
   function addBreakpoints() {
     return promise.resolve(null)
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[0], line: 5 }))
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[1], line: 6 }))
-      .then(() => gPanel.addBreakpoint({ url: gSources.values[1], line: 7 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[0], line: 5 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[1], line: 6 }))
+      .then(() => gPanel.addBreakpoint({ actor: gSources.values[1], line: 7 }))
       .then(() => ensureThreadClientState(gPanel, "resumed"));
   }
 
   function disableSomeBreakpoints() {
     return promise.all([
-      gSources.disableBreakpoint({ url: gSources.values[0], line: 5 }),
-      gSources.disableBreakpoint({ url: gSources.values[1], line: 6 })
+      gSources.disableBreakpoint({ actor: gSources.values[0], line: 5 }),
+      gSources.disableBreakpoint({ actor: gSources.values[1], line: 6 })
     ]);
   }
 

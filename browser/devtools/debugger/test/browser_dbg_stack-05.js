@@ -23,8 +23,8 @@ function test() {
 
     waitForSourceAndCaretAndScopes(gPanel, "-02.js", 1)
       .then(initialChecks)
-      .then(testNewestTwoFrames)
-      .then(testOldestTwoFrames)
+      .then(testNewestFrame)
+      .then(testOldestFrame)
       .then(testAfterResume)
       .then(() => closeDebuggerAndFinish(gPanel))
       .then(null, aError => {
@@ -38,16 +38,16 @@ function test() {
 function initialChecks() {
   is(gDebugger.gThreadClient.state, "paused",
     "Should only be getting stack frames while paused.");
-  is(gFrames.itemCount, 4,
+  is(gFrames.itemCount, 2,
     "Should have four frames.");
-  is(gClassicFrames.itemCount, 4,
+  is(gClassicFrames.itemCount, 2,
     "Should also have four frames in the mirrored view.");
 }
 
-function testNewestTwoFrames() {
+function testNewestFrame() {
   let deferred = promise.defer();
 
-  is(gFrames.selectedIndex, 3,
+  is(gFrames.selectedIndex, 1,
     "Newest frame should be selected by default.");
   is(gClassicFrames.selectedIndex, 0,
     "Newest frame should be selected in the mirrored view as well.");
@@ -58,77 +58,39 @@ function testNewestTwoFrames() {
 
   // The editor's debug location takes a tick to update.
   executeSoon(() => {
-    is(gEditor.getDebugLocation(), 0,
+    is(gEditor.getDebugLocation(), 5,
       "Editor debug location is correct.");
 
-    EventUtils.sendMouseEvent({ type: "mousedown" },
-      gFrames.getItemAtIndex(2).target,
-      gDebugger);
+    deferred.resolve();
+  });
 
-    is(gFrames.selectedIndex, 2,
-      "Third frame should be selected after click.");
+  return deferred.promise;
+}
+
+function testOldestFrame() {
+  let deferred = promise.defer();
+
+  waitForSourceAndCaret(gPanel, "-01.js", 1).then(waitForTick).then(() => {
+    is(gFrames.selectedIndex, 0,
+      "Second frame should be selected after click.");
     is(gClassicFrames.selectedIndex, 1,
-      "Third frame should be selected in the mirrored view as well.");
-    is(gSources.selectedIndex, 1,
-      "The second source is still selected in the widget.");
-    ok(isCaretPos(gPanel, 6),
-      "Editor caret location is correct (2).");
+      "Second frame should be selected in the mirrored view as well.");
+    is(gSources.selectedIndex, 0,
+      "The first source is now selected in the widget.");
+    ok(isCaretPos(gPanel, 5),
+      "Editor caret location is correct (3).");
 
     // The editor's debug location takes a tick to update.
     executeSoon(() => {
-      is(gEditor.getDebugLocation(), 5,
+      is(gEditor.getDebugLocation(), 4,
         "Editor debug location is correct.");
 
       deferred.resolve();
     });
   });
 
-  return deferred.promise;
-}
-
-function testOldestTwoFrames() {
-  let deferred = promise.defer();
-
-  waitForSourceAndCaret(gPanel, "-01.js", 1).then(waitForTick).then(() => {
-    is(gFrames.selectedIndex, 1,
-      "Second frame should be selected after click.");
-    is(gClassicFrames.selectedIndex, 2,
-      "Second frame should be selected in the mirrored view as well.");
-    is(gSources.selectedIndex, 0,
-      "The first source is now selected in the widget.");
-    ok(isCaretPos(gPanel, 1),
-      "Editor caret location is correct (3).");
-
-    // The editor's debug location takes a tick to update.
-    executeSoon(() => {
-      is(gEditor.getDebugLocation(), 0,
-        "Editor debug location is correct.");
-
-      EventUtils.sendMouseEvent({ type: "mousedown" },
-        gFrames.getItemAtIndex(0).target,
-        gDebugger);
-
-      is(gFrames.selectedIndex, 0,
-        "Oldest frame should be selected after click.");
-      is(gClassicFrames.selectedIndex, 3,
-        "Oldest frame should be selected in the mirrored view as well.");
-      is(gSources.selectedIndex, 0,
-        "The first source is still selected in the widget.");
-      ok(isCaretPos(gPanel, 5),
-        "Editor caret location is correct (4).");
-
-      // The editor's debug location takes a tick to update.
-      executeSoon(() => {
-        is(gEditor.getDebugLocation(), 4,
-          "Editor debug location is correct.");
-
-        deferred.resolve();
-      });
-    });
-  });
-
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    gDebugger.document.querySelector("#stackframe-2"),
+    gDebugger.document.querySelector("#stackframe-1"),
     gDebugger);
 
   return deferred.promise;

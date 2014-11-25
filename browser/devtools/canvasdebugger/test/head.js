@@ -270,3 +270,8 @@ function evalInDebuggee (script) {
 
   return deferred.promise;
 }
+
+function getSourceActor(aSources, aURL) {
+  let item = aSources.getItemForAttachment(a => a.source.url === aURL);
+  return item ? item.value : null;
+}

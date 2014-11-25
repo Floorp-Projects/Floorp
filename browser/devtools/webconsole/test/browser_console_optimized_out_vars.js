@@ -15,7 +15,7 @@ function test() {
     ok(true, "Debugger resumed");
 
     let sources = panelWin.DebuggerView.Sources;
-    yield panel.addBreakpoint({ url: sources.values[0], line: 18 });
+    yield panel.addBreakpoint({ actor: sources.values[0], line: 18 });
     yield ensureThreadClientState(panel, "resumed");
 
     let fetchedScopes = panelWin.once(panelWin.EVENTS.FETCHED_SCOPES);

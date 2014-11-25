@@ -25,8 +25,9 @@ function test(){
         yield ensureSourceIs(gPanel, "code_script-switching-02.js", true);
 
         yield doInterrupt(gPanel);
-        yield rdpInvoke(gThreadClient, gThreadClient.setBreakpoint, {
-          url: gSources.selectedValue,
+
+        let source = gThreadClient.source(getSourceForm(gSources, SECOND_SOURCE_VALUE));
+        yield rdpInvoke(source, source.setBreakpoint, {
           line: 6
         });
         yield doResume(gPanel);
@@ -37,7 +38,7 @@ function test(){
 
         info("Switch to the second source.");
         const sourceShown = waitForSourceShown(gPanel, SECOND_SOURCE_VALUE);
-        gSources.selectedValue = SECOND_SOURCE_VALUE;
+        gSources.selectedValue = getSourceActor(gSources, SECOND_SOURCE_VALUE);
         yield sourceShown;
 
         info("Pretty print the source.");

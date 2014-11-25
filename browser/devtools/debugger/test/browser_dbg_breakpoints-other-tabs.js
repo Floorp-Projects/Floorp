@@ -17,7 +17,7 @@ let test = Task.async(function* () {
   const sources = panel1.panelWin.DebuggerView.Sources;
 
   yield panel1.addBreakpoint({
-    url: sources.selectedValue,
+    actor: sources.selectedValue,
     line: 2
   });
 

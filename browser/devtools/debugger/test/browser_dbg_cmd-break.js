@@ -6,14 +6,20 @@
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_cmd-break.html";
+let TAB_URL_ACTOR;
 
 function test() {
-  let gPanel, gDebugger, gThreadClient;
+  let gPanel, gDebugger, gThreadClient, gSources;
   let gLineNumber;
 
+  let expectedActorObj = {
+    value: null,
+    message: ''
+  };
+
   helpers.addTabWithToolbar(TAB_URL, aOptions => {
-    return helpers.audit(aOptions, [
-      {
+    return Task.spawn(function() {
+      yield helpers.audit(aOptions, [{
         setup: 'break',
         check: {
           input:  'break',
@@ -21,8 +27,9 @@ function test() {
           markup: 'IIIII',
           status: 'ERROR',
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         setup: 'break add',
         check: {
           input:  'break add',
@@ -30,8 +37,9 @@ function test() {
           markup: 'IIIIIVIII',
           status: 'ERROR'
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         setup: 'break add line',
         check: {
           input:  'break add line',
@@ -39,8 +47,9 @@ function test() {
           markup: 'VVVVVVVVVVVVVV',
           status: 'ERROR'
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         name: 'open toolbox',
         setup: function() {
           return initDebugger(gBrowser.selectedTab).then(([aTab, aDebuggee, aPanel]) => {
@@ -53,15 +62,19 @@ function test() {
               gDebugger = gPanel.panelWin;
               gThreadClient = gPanel.panelWin.gThreadClient;
               gLineNumber = '' + aOptions.window.wrappedJSObject.gLineNumber;
+              gSources = gDebugger.DebuggerView.Sources;
+
+              expectedActorObj.value = getSourceActor(gSources, TAB_URL);
             });
           });
         },
         post: function() {
           ok(gThreadClient, "Debugger client exists.");
-          is(gLineNumber, 1, "gLineNumber is correct.");
+          is(gLineNumber, 14, "gLineNumber is correct.");
         },
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         name: 'break add line .../doc_cmd-break.html 14',
         setup: function() {
           // We have to setup in a function to allow gLineNumber to be initialized.
@@ -73,30 +86,32 @@ function test() {
           status: 'VALID',
           message: '',
           args: {
-            file: { value: TAB_URL, message: '' },
-            line: { value: 1 }
+            file: expectedActorObj,
+            line: { value: 14 }
           }
         },
         exec: {
           output: 'Added breakpoint'
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         setup: 'break add line ' + TAB_URL + ' 17',
         check: {
           hints: '',
           status: 'VALID',
           message: '',
           args: {
-            file: { value: TAB_URL, message: '' },
+            file: expectedActorObj,
             line: { value: 17 }
           }
         },
         exec: {
           output: 'Added breakpoint'
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         setup: 'break list',
         check: {
           input:  'break list',
@@ -107,25 +122,27 @@ function test() {
         exec: {
           output: [
             /Source/, /Remove/,
-            /doc_cmd-break\.html:1/,
-            /doc_cmd-break\.html:1/
+            /doc_cmd-break\.html:14/,
+            /doc_cmd-break\.html:17/
           ]
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         name: 'cleanup',
         setup: function() {
           let deferred = promise.defer();
           gThreadClient.resume(deferred.resolve);
           return deferred.promise;
         }
-      },
-      {
-        setup: 'break del 1',
+      }]);
+
+      yield helpers.audit(aOptions, [{
+        setup: 'break del 14',
         check: {
-          input:  'break del 1',
-          hints:              ' -> doc_cmd-break.html:1',
-          markup: 'VVVVVVVVVVI',
+          input:  'break del 14',
+          hints:              ' -> doc_cmd-break.html:14',
+          markup: 'VVVVVVVVVVII',
           status: 'ERROR',
           args: {
             breakpoint: {
@@ -134,23 +151,25 @@ function test() {
             }
           }
         }
-      },
-      {
-        setup: 'break del doc_cmd-break.html:1',
+      }]);
+
+      yield helpers.audit(aOptions, [{
+        setup: 'break del doc_cmd-break.html:14',
         check: {
-          input:  'break del doc_cmd-break.html:1',
+          input:  'break del doc_cmd-break.html:14',
           hints:                                 '',
-          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
           status: 'VALID',
           args: {
-            breakpoint: { arg: ' doc_cmd-break.html:1' },
+            breakpoint: { arg: ' doc_cmd-break.html:14' },
           }
         },
         exec: {
           output: 'Breakpoint removed'
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         setup: 'break list',
         check: {
           input:  'break list',
@@ -164,8 +183,9 @@ function test() {
             /doc_cmd-break\.html:17/
           ]
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         setup: 'break del doc_cmd-break.html:17',
         check: {
           input:  'break del doc_cmd-break.html:17',
@@ -179,8 +199,9 @@ function test() {
         exec: {
           output: 'Breakpoint removed'
         }
-      },
-      {
+      }]);
+
+      yield helpers.audit(aOptions, [{
         setup: 'break list',
         check: {
           input:  'break list',
@@ -194,7 +215,7 @@ function test() {
         post: function() {
           return teardown(gPanel, { noTabRemoval: true });
         }
-      },
-    ]);
+      }]);
+    });
   }).then(finish);
 }

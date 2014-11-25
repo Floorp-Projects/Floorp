@@ -32,47 +32,48 @@ function testBreakpointMapping(aName, aCallback)
     do_check_true(!aPacket.error);
     do_check_eq(aPacket.why.type, "debuggerStatement");
 
-    gThreadClient.setBreakpoint({
-      url: "http://example.com/www/js/" + aName + ".js",
-      // Setting the breakpoint on an empty line so that it is pushed down one
-      // line and we can check the source mapped actualLocation later.
-      line: 3,
-      column: 0
-    }, function (aResponse) {
-      do_check_true(!aResponse.error);
+    getSource(gThreadClient, "http://example.com/www/js/" + aName + ".js").then(source => {
+      source.setBreakpoint({
+        // Setting the breakpoint on an empty line so that it is pushed down one
+        // line and we can check the source mapped actualLocation later.
+        line: 3,
+        column: 0
+      }, function (aResponse) {
+        do_check_true(!aResponse.error);
 
-      // Actual location should come back source mapped still so that
-      // breakpoints are displayed in the UI correctly, etc.
-      do_check_eq(aResponse.actualLocation.line, 4);
-      do_check_eq(aResponse.actualLocation.url,
-                  "http://example.com/www/js/" + aName + ".js");
+        // Actual location should come back source mapped still so that
+        // breakpoints are displayed in the UI correctly, etc.
+        do_check_eq(aResponse.actualLocation.line, 4);
+        do_check_eq(aResponse.actualLocation.source.url,
+                    "http://example.com/www/js/" + aName + ".js");
 
-      // The eval will cause us to resume, then we get an unsolicited pause
-      // because of our breakpoint, we resume again to finish the eval, and
-      // finally receive our last pause which has the result of the client
-      // evaluation.
-      gThreadClient.eval(null, aName + "()", function (aResponse) {
-        do_check_true(!aResponse.error, "Shouldn't be an error resuming to eval");
-        do_check_eq(aResponse.type, "resumed");
+        // The eval will cause us to resume, then we get an unsolicited pause
+        // because of our breakpoint, we resume again to finish the eval, and
+        // finally receive our last pause which has the result of the client
+        // evaluation.
+        gThreadClient.eval(null, aName + "()", function (aResponse) {
+          do_check_true(!aResponse.error, "Shouldn't be an error resuming to eval");
+          do_check_eq(aResponse.type, "resumed");
 
-        gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-          do_check_eq(aPacket.why.type, "breakpoint");
-          // Assert that we paused because of the breakpoint at the correct
-          // location in the code by testing that the value of `ret` is still
-          // undefined.
-          do_check_eq(aPacket.frame.environment.bindings.variables.ret.value.type,
-                      "undefined");
+          gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+            do_check_eq(aPacket.why.type, "breakpoint");
+            // Assert that we paused because of the breakpoint at the correct
+            // location in the code by testing that the value of `ret` is still
+            // undefined.
+            do_check_eq(aPacket.frame.environment.bindings.variables.ret.value.type,
+                        "undefined");
 
-          gThreadClient.resume(function (aResponse) {
-            do_check_true(!aResponse.error);
+            gThreadClient.resume(function (aResponse) {
+              do_check_true(!aResponse.error);
 
-            gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-              do_check_eq(aPacket.why.type, "clientEvaluated");
-              do_check_eq(aPacket.why.frameFinished.return, aName);
+              gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
+                do_check_eq(aPacket.why.type, "clientEvaluated");
+                do_check_eq(aPacket.why.frameFinished.return, aName);
 
-              gThreadClient.resume(function (aResponse) {
-                do_check_true(!aResponse.error);
-                aCallback();
+                gThreadClient.resume(function (aResponse) {
+                  do_check_true(!aResponse.error);
+                  aCallback();
+                });
               });
             });
           });

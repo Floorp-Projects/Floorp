@@ -36,28 +36,28 @@ function run_test_with_server(aServer, aCallback)
   });
 }
 
-const URL = "test.js";
-
 function setUpCode() {
-  gClient.addOneTimeListener("newSource", setBreakpoint);
+  gClient.addOneTimeListener("paused", setBreakpoint);
   Cu.evalInSandbox(
-    "" + function test() {
+    "debugger;\n" +
+    function test() {
       console.log("foo bar");
       debugger;
     },
     gDebuggee,
     "1.8",
-    URL
+    "http://example.com/",
+    1
   );
 }
 
-function setBreakpoint() {
+function setBreakpoint(aEvent, aPacket) {
+  let source = gThreadClient.source(aPacket.frame.where.source);
   gClient.addOneTimeListener("resumed", runCode);
-  gThreadClient.setBreakpoint({
-    url: URL,
-    line: 1
-  }, ({ error }) => {
+
+  source.setBreakpoint({ line: 2 }, ({ error }) => {
     do_check_true(!error);
+    gThreadClient.resume();
   });
 }
 
