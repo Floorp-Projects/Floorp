@@ -42,7 +42,7 @@ class ParallelSafetyAnalysis
 //
 // This code may clone scripts and thus may invoke the GC.  Hence only
 // run from the link phase, which executes on the main thread.
-typedef Vector<JSScript *, 4, IonAllocPolicy> CallTargetVector;
+typedef Vector<JSScript *, 4, JitAllocPolicy> CallTargetVector;
 bool AddPossibleCallees(JSContext *cx, MIRGraph &graph, CallTargetVector &targets);
 
 } // namespace jit

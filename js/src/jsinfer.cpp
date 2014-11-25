@@ -810,7 +810,7 @@ TypeSet::intersectSets(TemporaryTypeSet *a, TemporaryTypeSet *b, LifoAlloc *allo
 // discarded.
 
 // Superclass of all constraints generated during Ion compilation. These may
-// be allocated off the main thread, using the current Ion context's allocator.
+// be allocated off the main thread, using the current JIT context's allocator.
 class CompilerConstraint
 {
   public:
@@ -852,10 +852,10 @@ class types::CompilerConstraintList
     LifoAlloc *alloc_;
 
     // Constraints generated on heap properties.
-    Vector<CompilerConstraint *, 0, jit::IonAllocPolicy> constraints;
+    Vector<CompilerConstraint *, 0, jit::JitAllocPolicy> constraints;
 
     // Scripts whose stack type sets were frozen for the compilation.
-    Vector<FrozenScript, 1, jit::IonAllocPolicy> frozenScripts;
+    Vector<FrozenScript, 1, jit::JitAllocPolicy> frozenScripts;
 
   public:
     explicit CompilerConstraintList(jit::TempAllocator &alloc)

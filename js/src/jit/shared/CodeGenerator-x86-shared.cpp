@@ -11,9 +11,9 @@
 
 #include "jsmath.h"
 
-#include "jit/IonFrames.h"
-#include "jit/IonLinker.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitFrames.h"
+#include "jit/Linker.h"
 #include "jit/RangeAnalysis.h"
 #include "vm/TraceLogging.h"
 

@@ -7,7 +7,7 @@
 #ifndef jit_ValueNumbering_h
 #define jit_ValueNumbering_h
 
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "js/HashTable.h"
 
 namespace js {
@@ -36,7 +36,7 @@ class ValueNumberer
             static void rekey(Key &k, Key newKey);
         };
 
-        typedef HashSet<MDefinition *, ValueHasher, IonAllocPolicy> ValueSet;
+        typedef HashSet<MDefinition *, ValueHasher, JitAllocPolicy> ValueSet;
 
         ValueSet set_;        // Set of visible values
 
@@ -58,8 +58,8 @@ class ValueNumberer
 #endif
     };
 
-    typedef Vector<MBasicBlock *, 4, IonAllocPolicy> BlockWorklist;
-    typedef Vector<MDefinition *, 4, IonAllocPolicy> DefWorklist;
+    typedef Vector<MBasicBlock *, 4, JitAllocPolicy> BlockWorklist;
+    typedef Vector<MDefinition *, 4, JitAllocPolicy> DefWorklist;
 
     MIRGenerator *const mir_;
     MIRGraph &graph_;

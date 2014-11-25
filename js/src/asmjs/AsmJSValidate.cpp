@@ -2251,7 +2251,7 @@ class FunctionCompiler
     MIRGraph *             graph_;
     CompileInfo *          info_;
     MIRGenerator *         mirGen_;
-    Maybe<IonContext>      ionContext_;
+    Maybe<JitContext>      jitContext_;
 
     MBasicBlock *          curBlock_;
 
@@ -2359,7 +2359,7 @@ class FunctionCompiler
         MOZ_ASSERT(locals_.count() == argTypes.length() + varInitializers_.length());
 
         alloc_  = lifo_.new_<TempAllocator>(&lifo_);
-        ionContext_.emplace(m_.cx(), alloc_);
+        jitContext_.emplace(m_.cx(), alloc_);
 
         graph_  = lifo_.new_<MIRGraph>(alloc_);
         info_   = lifo_.new_<CompileInfo>(locals_.count(), SequentialExecution);
@@ -6931,7 +6931,7 @@ CheckFunctionsSequential(ModuleCompiler &m)
 
         int64_t before = PRMJ_Now();
 
-        IonContext icx(m.cx(), &mir->alloc());
+        JitContext jcx(m.cx(), &mir->alloc());
 
         IonSpewNewFunction(&mir->graph(), NullPtr());
 
@@ -7038,7 +7038,7 @@ GetUsedTask(ModuleCompiler &m, ParallelGroupState &group, AsmJSParallelTask **ou
 
     {
         // Perform code generation on the main thread.
-        IonContext ionContext(m.cx(), &task->mir->alloc());
+        JitContext jitContext(m.cx(), &task->mir->alloc());
         if (!GenerateCode(m, func, *task->mir, *task->lir))
             return false;
     }
@@ -8348,7 +8348,7 @@ FinishModule(ModuleCompiler &m,
 {
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
-    IonContext ionContext(m.cx(), &alloc);
+    JitContext jitContext(m.cx(), &alloc);
 
     m.masm().resetForNewCodeGenerator(alloc);
 

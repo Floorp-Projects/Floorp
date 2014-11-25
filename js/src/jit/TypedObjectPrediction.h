@@ -8,7 +8,7 @@
 #define jit_TypedObjectPrediction_h
 
 #include "builtin/TypedObject.h"
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 
 namespace js {
 namespace jit {

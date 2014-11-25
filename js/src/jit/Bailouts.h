@@ -9,8 +9,8 @@
 
 #include "jstypes.h"
 
-#include "jit/IonFrames.h"
 #include "jit/JitFrameIterator.h"
+#include "jit/JitFrames.h"
 #include "vm/Stack.h"
 
 namespace js {
@@ -86,7 +86,7 @@ namespace jit {
 // pointers. To account for this we segregate frames into a limited set of
 // "frame sizes", and create a table for each frame size. We also have the
 // option of not using bailout tables, for platforms or situations where the
-// 10 byte cost is more optimal than a bailout table. See IonFrames.h for more
+// 10 byte cost is more optimal than a bailout table. See JitFrames.h for more
 // detail.
 
 static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);

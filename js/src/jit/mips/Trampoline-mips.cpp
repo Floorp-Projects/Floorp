@@ -7,10 +7,10 @@
 #include "jscompartment.h"
 
 #include "jit/Bailouts.h"
-#include "jit/IonFrames.h"
-#include "jit/IonLinker.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
+#include "jit/Linker.h"
 #include "jit/mips/Bailouts-mips.h"
 #include "jit/mips/BaselineHelpers-mips.h"
 #ifdef JS_ION_PERF
@@ -237,7 +237,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.storePtr(zero, Address(StackPointer, 0)); // fake return address
 
         // No GC things to mark, push a bare token.
-        masm.enterFakeExitFrame(IonExitFrameLayout::BareToken());
+        masm.enterFakeExitFrame(ExitFrameLayout::BareToken());
 
         masm.reserveStack(2 * sizeof(uintptr_t));
         masm.storePtr(framePtr, Address(StackPointer, sizeof(uintptr_t))); // BaselineFrame
@@ -260,7 +260,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.freeStack(2 * sizeof(uintptr_t));
 
         Label error;
-        masm.freeStack(IonExitFrameLayout::SizeWithFooter());
+        masm.freeStack(ExitFrameLayout::SizeWithFooter());
         masm.addPtr(Imm32(BaselineFrame::Size()), framePtr);
         masm.branchIfFalseBool(ReturnReg, &error);
 
@@ -282,7 +282,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     }
 
     // Call the function with pushing return address to stack.
-    masm.ma_callIonHalfPush(reg_code);
+    masm.ma_callJitHalfPush(reg_code);
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.
@@ -400,11 +400,11 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     Register numArgsReg = t5;
 
     // Copy number of actual arguments into numActArgsReg
-    masm.loadPtr(Address(StackPointer, IonRectifierFrameLayout::offsetOfNumActualArgs()),
+    masm.loadPtr(Address(StackPointer, RectifierFrameLayout::offsetOfNumActualArgs()),
                  numActArgsReg);
 
     // Load the number of |undefined|s to push into t1.
-    masm.loadPtr(Address(StackPointer, IonRectifierFrameLayout::offsetOfCalleeToken()),
+    masm.loadPtr(Address(StackPointer, RectifierFrameLayout::offsetOfCalleeToken()),
                  calleeTokenReg);
     masm.mov(calleeTokenReg, numArgsReg);
     masm.andPtr(Imm32(CalleeTokenMask), numArgsReg);
@@ -431,7 +431,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Get the topmost argument.
     masm.ma_sll(t0, s3, Imm32(3)); // t0 <- nargs * 8
     masm.addPtr(t0, t2); // t2 <- t2(saved sp) + nargs * 8
-    masm.addPtr(Imm32(sizeof(IonRectifierFrameLayout)), t2);
+    masm.addPtr(Imm32(sizeof(RectifierFrameLayout)), t2);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
     {
@@ -463,7 +463,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Construct sizeDescriptor.
     masm.makeFrameDescriptor(t0, JitFrame_Rectifier);
 
-    // Construct IonJSFrameLayout.
+    // Construct JitFrameLayout.
     masm.subPtr(Imm32(3 * sizeof(uintptr_t)), StackPointer);
     // Push actual arguments.
     masm.storePtr(numActArgsReg, Address(StackPointer, 2 * sizeof(uintptr_t)));
@@ -477,7 +477,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     masm.andPtr(Imm32(CalleeTokenMask), calleeTokenReg);
     masm.loadPtr(Address(calleeTokenReg, JSFunction::offsetOfNativeOrScript()), t1);
     masm.loadBaselineOrIonRaw(t1, t1, mode, nullptr);
-    masm.ma_callIonHalfPush(t1);
+    masm.ma_callJitHalfPush(t1);
 
     uint32_t returnOffset = masm.currentOffset();
 
@@ -729,7 +729,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     if (f.explicitArgs) {
         argsBase = t1; // Use temporary register.
         regs.take(argsBase);
-        masm.ma_addu(argsBase, StackPointer, Imm32(IonExitFrameLayout::SizeWithFooter()));
+        masm.ma_addu(argsBase, StackPointer, Imm32(ExitFrameLayout::SizeWithFooter()));
     }
 
     masm.alignStackPointer();
@@ -885,7 +885,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     masm.restoreStackPointer();
 
     masm.leaveExitFrame();
-    masm.retn(Imm32(sizeof(IonExitFrameLayout) +
+    masm.retn(Imm32(sizeof(ExitFrameLayout) +
                     f.explicitStackSlots() * sizeof(uintptr_t) +
                     f.extraValuesToPop * sizeof(Value)));
 

@@ -7,7 +7,7 @@
 #ifndef jit_mips_BaselineRegisters_mips_h
 #define jit_mips_BaselineRegisters_mips_h
 
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 
 namespace js {
 namespace jit {

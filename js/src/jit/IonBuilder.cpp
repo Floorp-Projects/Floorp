@@ -44,8 +44,8 @@ class jit::BaselineFrameInspector
     types::Type thisType;
     JSObject *singletonScopeChain;
 
-    Vector<types::Type, 4, IonAllocPolicy> argTypes;
-    Vector<types::Type, 4, IonAllocPolicy> varTypes;
+    Vector<types::Type, 4, JitAllocPolicy> argTypes;
+    Vector<types::Type, 4, JitAllocPolicy> varTypes;
 
     explicit BaselineFrameInspector(TempAllocator *temp)
       : thisType(types::Type::UndefinedType()),
@@ -1308,8 +1308,8 @@ IonBuilder::traverseBytecode()
         //
         // This is used to catch problems where IonBuilder pops a value without
         // adding any SSA uses and doesn't call setImplicitlyUsedUnchecked on it.
-        Vector<MDefinition *, 4, IonAllocPolicy> popped(alloc());
-        Vector<size_t, 4, IonAllocPolicy> poppedUses(alloc());
+        Vector<MDefinition *, 4, JitAllocPolicy> popped(alloc());
+        Vector<size_t, 4, JitAllocPolicy> poppedUses(alloc());
         unsigned nuses = GetUseCount(script_, script_->pcToOffset(pc));
 
         for (unsigned i = 0; i < nuses; i++) {
@@ -6921,7 +6921,7 @@ bool
 jit::NeedsPostBarrier(CompileInfo &info, MDefinition *value)
 {
 #ifdef JSGC_GENERATIONAL
-    if (!GetIonContext()->runtime->gcNursery().exists())
+    if (!GetJitContext()->runtime->gcNursery().exists())
         return false;
 #endif
     return info.executionMode() != ParallelExecution && value->mightBeType(MIRType_Object);

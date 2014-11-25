@@ -1214,8 +1214,8 @@ class Assembler : public AssemblerShared
     {
     }
 
-    // We need to wait until an AutoIonContextAlloc is created by the
-    // IonMacroAssembler, before allocating any space.
+    // We need to wait until an AutoJitContextAlloc is created by the
+    // MacroAssembler, before allocating any space.
     void initWithAllocator() {
         m_buffer.initWithAllocator();
     }

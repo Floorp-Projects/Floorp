@@ -10,7 +10,7 @@
 #include "jsopcode.h"
 
 #include "jit/IonCaches.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "jit/mips/Assembler-mips.h"
 #include "jit/MoveResolver.h"
 
@@ -295,11 +295,11 @@ class MacroAssemblerMIPS : public Assembler
 
   public:
     // calls an Ion function, assumes that the stack is untouched (8 byte alinged)
-    void ma_callIon(const Register reg);
+    void ma_callJit(const Register reg);
     // callso an Ion function, assuming that sp has already been decremented
-    void ma_callIonNoPush(const Register reg);
+    void ma_callJitNoPush(const Register reg);
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
-    void ma_callIonHalfPush(const Register reg);
+    void ma_callJitHalfPush(const Register reg);
 
     void ma_call(ImmPtr dest);
 
@@ -410,7 +410,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         ma_liPatchable(ScratchRegister, Imm32((uint32_t)c->raw()));
-        ma_callIonHalfPush(ScratchRegister);
+        ma_callJitHalfPush(ScratchRegister);
     }
     void call(const CallSiteDesc &desc, const Register reg) {
         call(reg);
@@ -980,9 +980,9 @@ public:
     void callWithExitFrame(JitCode *target);
     void callWithExitFrame(JitCode *target, Register dynStack);
 
-    // Makes an Ion call using the only two methods that it is sane for
+    // Makes a call using the only two methods that it is sane for
     // indep code to make a call
-    void callIon(Register callee);
+    void callJit(Register callee);
     void callIonFromAsmJS(Register callee);
 
     void reserveStack(uint32_t amount);
