@@ -51,8 +51,7 @@ RILSystemMessengerHelper.prototype = {
   classID: RILSYSTEMMESSENGERHELPER_CID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyMessenger,
                                          Ci.nsISmsMessenger,
-                                         Ci.nsICellbroadcastMessenger,
-                                         Ci.nsIMobileConnectionMessenger]),
+                                         Ci.nsICellbroadcastMessenger]),
 
   /**
    * RILSystemMessenger instance.
@@ -94,59 +93,6 @@ RILSystemMessengerHelper.prototype = {
                                            aMessageId, aLanguage, aBody, aMessageClass,
                                            aTimestamp, aCdmaServiceCategory, aHasEtwsInfo,
                                            aEtwsWarningType, aEtwsEmergencyUserAlert, aEtwsPopup);
-  },
-
-  /**
-   * nsIMobileConnectionMessenger API
-   */
-  notifyUssdReceived: function(aServiceId, aMessage, aSessionEnded) {
-    this.messenger.notifyUssdReceived(aServiceId, aMessage, aSessionEnded);
-  },
-
-  notifyCdmaInfoRecDisplay: function(aServiceId, aDisplay) {
-    this.messenger.notifyCdmaInfoRecDisplay(aServiceId, aDisplay);
-  },
-
-  notifyCdmaInfoRecCalledPartyNumber: function(aServiceId, aType, aPlan,
-                                               aNumber, aPi, aSi) {
-    this.messenger.notifyCdmaInfoRecCalledPartyNumber(aServiceId, aType, aPlan,
-                                                      aNumber, aPi, aSi);
-  },
-
-  notifyCdmaInfoRecCallingPartyNumber: function(aServiceId, aType, aPlan,
-                                                aNumber, aPi, aSi) {
-    this.messenger.notifyCdmaInfoRecCallingPartyNumber(aServiceId, aType, aPlan,
-                                                       aNumber, aPi, aSi);
-  },
-
-  notifyCdmaInfoRecConnectedPartyNumber: function(aServiceId, aType, aPlan,
-                                                  aNumber, aPi, aSi) {
-    this.messenger.notifyCdmaInfoRecConnectedPartyNumber(aServiceId, aType, aPlan,
-                                                         aNumber, aPi, aSi);
-  },
-
-  notifyCdmaInfoRecSignal: function(aServiceId, aType, aAlertPitch, aSignal) {
-    this.messenger.notifyCdmaInfoRecSignal(aServiceId, aType, aAlertPitch, aSignal);
-  },
-
-  notifyCdmaInfoRecRedirectingNumber: function(aServiceId, aType, aPlan,
-                                               aNumber, aPi, aSi, aReason) {
-    this.messenger.notifyCdmaInfoRecRedirectingNumber(aServiceId, aType, aPlan,
-                                                      aNumber, aPi, aSi, aReason);
-  },
-
-  notifyCdmaInfoRecLineControl: function(aServiceId, aPolarityIncluded,
-                                         aToggle, aReverse, aPowerDenial) {
-    this.messenger.notifyCdmaInfoRecLineControl(aServiceId, aPolarityIncluded,
-                                                aToggle, aReverse, aPowerDenial);
-  },
-
-  notifyCdmaInfoRecClir: function(aServiceId, aCause) {
-    this.messenger.notifyCdmaInfoRecClir(aServiceId, aCause);
-  },
-
-  notifyCdmaInfoRecAudioControl: function(aServiceId, aUpLink, aDownLink) {
-    this.messenger.notifyCdmaInfoRecAudioControl(aServiceId, aUpLink, aDownLink);
   }
 };
 
