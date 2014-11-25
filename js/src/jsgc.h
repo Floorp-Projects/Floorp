@@ -58,9 +58,7 @@ enum State {
     MARK_ROOTS,
     MARK,
     SWEEP,
-#ifdef JSGC_COMPACTING
     COMPACT
-#endif
 };
 
 /* Return a printable string for the given kind, for diagnostic purposes. */
