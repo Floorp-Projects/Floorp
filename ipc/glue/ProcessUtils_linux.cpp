@@ -112,7 +112,7 @@ static void ProcLoaderClientDeinit();
  * starting from kBeginReserveFileDescriptor so that operations like
  * __android_log_print() won't take these magic FDs.
  */
-static const int kReservedFileDescriptors = 5;
+static const size_t kReservedFileDescriptors = 5;
 static const int kBeginReserveFileDescriptor = STDERR_FILENO + 1;
 
 class ProcLoaderParent : public PProcLoaderParent
