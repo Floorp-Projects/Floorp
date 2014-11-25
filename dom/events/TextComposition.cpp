@@ -80,21 +80,32 @@ TextComposition::MaybeDispatchCompositionUpdate(
   if (mLastData == aCompositionEvent->mData) {
     return true;
   }
+  CloneAndDispatchAs(aCompositionEvent, NS_COMPOSITION_UPDATE);
+  return IsValidStateForComposition(aCompositionEvent->widget);
+}
 
-  WidgetCompositionEvent compositionUpdate(aCompositionEvent->mFlags.mIsTrusted,
-                                           NS_COMPOSITION_UPDATE,
-                                           aCompositionEvent->widget);
-  compositionUpdate.time = aCompositionEvent->time;
-  compositionUpdate.timeStamp = aCompositionEvent->timeStamp;
-  compositionUpdate.mData = aCompositionEvent->mData;
-  compositionUpdate.mFlags.mIsSynthesizedForTests =
+void
+TextComposition::CloneAndDispatchAs(
+                   const WidgetCompositionEvent* aCompositionEvent,
+                   uint32_t aMessage)
+{
+  MOZ_ASSERT(IsValidStateForComposition(aCompositionEvent->widget),
+             "Should be called only when it's safe to dispatch an event");
+
+  WidgetCompositionEvent compositionEvent(aCompositionEvent->mFlags.mIsTrusted,
+                                          aMessage, aCompositionEvent->widget);
+  compositionEvent.time = aCompositionEvent->time;
+  compositionEvent.timeStamp = aCompositionEvent->timeStamp;
+  compositionEvent.mData = aCompositionEvent->mData;
+  compositionEvent.mFlags.mIsSynthesizedForTests =
     aCompositionEvent->mFlags.mIsSynthesizedForTests;
 
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
-  mLastData = compositionUpdate.mData;
+  if (aMessage == NS_COMPOSITION_UPDATE) {
+    mLastData = compositionEvent.mData;
+  }
   EventDispatcher::Dispatch(mNode, mPresContext,
-                            &compositionUpdate, nullptr, &status, nullptr);
-  return IsValidStateForComposition(aCompositionEvent->widget);
+                            &compositionEvent, nullptr, &status, nullptr);
 }
 
 void
