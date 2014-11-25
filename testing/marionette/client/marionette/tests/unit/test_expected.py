@@ -95,6 +95,10 @@ class TestExpected(marionette_test.MarionetteTestCase):
         els = expected.elements_present(By.TAG_NAME, "p")(self.marionette)
         self.assertEqual(len(els), 2)
 
+    def test_elements_present_not_present(self):
+        r = expected.elements_present(no_such_elements)(self.marionette)
+        self.assertEqual(r, [])
+
     def test_elements_not_present_func(self):
         r = expected.element_not_present(no_such_elements)(self.marionette)
         self.assertIsInstance(r, bool)
