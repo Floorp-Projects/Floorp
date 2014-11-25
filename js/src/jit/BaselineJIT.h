@@ -93,6 +93,19 @@ struct PCMappingIndexEntry
     uint32_t bufferOffset;
 };
 
+// Describes a single AsmJSModule which jumps (via an FFI exit with the given
+// index) directly to a BaselineScript or IonScript.
+struct DependentAsmJSModuleExit
+{
+    const AsmJSModule *module;
+    size_t exitIndex;
+
+    DependentAsmJSModuleExit(const AsmJSModule *module, size_t exitIndex)
+      : module(module),
+        exitIndex(exitIndex)
+    { }
+};
+
 struct BaselineScript
 {
   public:
@@ -113,6 +126,10 @@ struct BaselineScript
 
     // Allocated space for fallback stubs.
     FallbackICStubSpace fallbackStubSpace_;
+
+    // If non-null, the list of AsmJSModules that contain an optimized call
+    // directly to this script.
+    Vector<DependentAsmJSModuleExit> *dependentAsmJSModules_;
 
     // Native code offset right before the scope chain is initialized.
     uint32_t prologueOffset_;
@@ -346,6 +363,10 @@ struct BaselineScript
 
     jsbytecode *pcForNativeAddress(JSScript *script, uint8_t *nativeAddress);
     jsbytecode *pcForNativeOffset(JSScript *script, uint32_t nativeOffset);
+
+    bool addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit);
+    void unlinkDependentAsmJSModules(FreeOp *fop);
+    void removeDependentAsmJSModule(DependentAsmJSModuleExit exit);
 
   private:
     jsbytecode *pcForNativeOffset(JSScript *script, uint32_t nativeOffset, bool isReturn);

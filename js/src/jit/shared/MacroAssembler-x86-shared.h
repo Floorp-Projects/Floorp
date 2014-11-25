@@ -1205,7 +1205,7 @@ class MacroAssemblerX86Shared : public Assembler
     void callIon(Register callee) {
         call(callee);
     }
-    void callIonFromAsmJS(Register callee) {
+    void callJitFromAsmJS(Register callee) {
         call(callee);
     }
     void call(AsmJSImmPtr target) {
