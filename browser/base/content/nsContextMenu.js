@@ -1773,31 +1773,18 @@ nsContextMenu.prototype = {
   },
 
   _getTelemetryPageContextInfo: function() {
-    if (this.isContentSelected) {
-      return "selection";
-    }
-    if (this.onLink) {
-      if (this.onImage || this.onCanvas) {
-        return "image-link";
+    let rv = [];
+    for (let k of ["isContentSelected", "onLink", "onImage", "onCanvas", "onVideo", "onAudio",
+                   "onTextInput", "onSocial"]) {
+      if (this[k]) {
+        rv.push(k.replace(/^(?:is|on)(.)/, (match, firstLetter) => firstLetter.toLowerCase()));
       }
-      return "link";
     }
-    if (this.onImage) {
-      return "image"
+    if (!rv.length) {
+      rv.push('other');
     }
-    if (this.onCanvas) {
-      return "canvas";
-    }
-    if (this.onVideo || this.onAudio) {
-      return "media";
-    }
-    if (this.onTextInput) {
-      return "input";
-    }
-    if (this.onSocial) {
-      return "social";
-    }
-    return "other";
+
+    return JSON.stringify(rv);
   },
 
   _checkTelemetryForMenu: function(aXulMenu) {
