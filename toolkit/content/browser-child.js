@@ -47,6 +47,15 @@ let WebProgressListener = {
     webProgress.addProgressListener(this._filter, Ci.nsIWebProgress.NOTIFY_ALL);
   },
 
+  uninit() {
+    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebProgress);
+    webProgress.removeProgressListener(this._filter);
+
+    this._filter.removeProgressListener(this);
+    this._filter = null;
+  },
+
   _requestSpec: function (aRequest, aPropertyName) {
     if (!aRequest || !(aRequest instanceof Ci.nsIChannel))
       return null;
@@ -154,6 +163,9 @@ let WebProgressListener = {
 };
 
 WebProgressListener.init();
+addEventListener("unload", () => {
+  WebProgressListener.uninit();
+});
 
 let WebNavigation =  {
   init: function() {
