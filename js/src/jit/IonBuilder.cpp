@@ -3423,10 +3423,48 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
       case MDefinition::Op_Compare:
         return improveTypesAtCompare(ins->toCompare(), trueBranch, test);
 
-      default:
-        break;
-    }
+      // By default MTest tests ToBoolean(input). As a result in the true branch we can filter
+      // undefined and null. In false branch we can only encounter undefined, null, false, 0, ""
+      // and objects that emulate undefined.
+      default: {
+        // If ins does not have a typeset we return as we cannot optimize.
+        if (!ins->resultTypeSet() || ins->resultTypeSet()->unknown())
+            return true;
 
+        types::TemporaryTypeSet *type;
+
+        // Decide either to set or filter.
+        if (trueBranch) {
+            // Filter undefined/null.
+            if (!ins->mightBeType(MIRType_Undefined) &&
+                !ins->mightBeType(MIRType_Null))
+            {
+                return true;
+            }
+            type = ins->resultTypeSet()->filter(alloc_->lifoAlloc(), true, true);
+        } else {
+            // According to the standards, we cannot filter out:
+            // Strings, Int32, Double, Booleans, Objects (if they emulate undefined)
+            uint32_t flags = types::TYPE_FLAG_PRIMITIVE;
+
+            // If the typeset does not emulate undefined. Then we can filter out objects.
+            if (!ins->resultTypeSet()->maybeEmulatesUndefined())
+                flags &= ~types::TYPE_FLAG_ANYOBJECT;
+
+            // Only intersect the typesets if it will generate a more narrow typeset.
+            if (!ins->resultTypeSet()->hasAnyFlag(~flags & types::TYPE_FLAG_BASE_MASK) &&
+                ins->resultTypeSet()->getObjectCount() == 0)
+            {
+                return true;
+            }
+
+            types::TemporaryTypeSet base(flags, static_cast<types::TypeObjectKey**>(nullptr));
+            type = types::TypeSet::intersectSets(&base, ins->resultTypeSet(), alloc_->lifoAlloc());
+            replaceTypeSet(ins, type, test);
+        }
+      }
+
+    }
     return true;
 }
 
