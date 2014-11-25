@@ -563,23 +563,26 @@ FrameBlender::Discard()
 }
 
 size_t
-FrameBlender::SizeOfDecoded(gfxMemoryLocation aLocation,
-                            MallocSizeOf aMallocSizeOf) const
+FrameBlender::SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
+                                                      MallocSizeOf aMallocSizeOf) const
 {
   size_t n = 0;
 
   for (uint32_t i = 0; i < mFrames.Length(); ++i) {
-    n += mFrames[i]->SizeOfExcludingThis(aLocation, aMallocSizeOf);
+    n += mFrames[i]->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation,
+                                                                   aMallocSizeOf);
   }
 
   if (mAnim) {
     if (mAnim->compositingFrame) {
       n += mAnim->compositingFrame
-                ->SizeOfExcludingThis(aLocation, aMallocSizeOf);
+                ->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation,
+                                                                aMallocSizeOf);
     }
     if (mAnim->compositingPrevFrame) {
       n += mAnim->compositingPrevFrame
-                ->SizeOfExcludingThis(aLocation, aMallocSizeOf);
+                ->SizeOfExcludingThisWithComputedFallbackIfHeap(aLocation,
+                                                                aMallocSizeOf);
     }
   }
 

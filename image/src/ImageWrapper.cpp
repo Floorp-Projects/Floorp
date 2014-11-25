@@ -39,17 +39,34 @@ ImageWrapper::FrameRect(uint32_t aWhichFrame)
   return mInnerImage->FrameRect(aWhichFrame);
 }
 
-size_t
-ImageWrapper::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
+uint32_t
+ImageWrapper::SizeOfData()
 {
-  return mInnerImage->SizeOfSourceWithComputedFallback(aMallocSizeOf);
+  return mInnerImage->SizeOfData();
 }
 
 size_t
-ImageWrapper::SizeOfDecoded(gfxMemoryLocation aLocation,
-                            MallocSizeOf aMallocSizeOf) const
+ImageWrapper::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
-  return mInnerImage->SizeOfDecoded(aLocation, aMallocSizeOf);
+  return mInnerImage->HeapSizeOfSourceWithComputedFallback(aMallocSizeOf);
+}
+
+size_t
+ImageWrapper::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
+{
+  return mInnerImage->HeapSizeOfDecodedWithComputedFallback(aMallocSizeOf);
+}
+
+size_t
+ImageWrapper::NonHeapSizeOfDecoded() const
+{
+  return mInnerImage->NonHeapSizeOfDecoded();
+}
+
+size_t
+ImageWrapper::OutOfProcessSizeOfDecoded() const
+{
+  return mInnerImage->OutOfProcessSizeOfDecoded();
 }
 
 void

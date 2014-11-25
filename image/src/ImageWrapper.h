@@ -27,8 +27,15 @@ public:
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() MOZ_OVERRIDE;
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
-  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-  virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation, MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE; 
+  virtual uint32_t SizeOfData() MOZ_OVERRIDE;
+  virtual size_t HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t NonHeapSizeOfDecoded() const MOZ_OVERRIDE;
+  virtual size_t OutOfProcessSizeOfDecoded() const MOZ_OVERRIDE;
+
+  virtual size_t HeapSizeOfVectorImageDocument(nsACString* aDocURL = nullptr) const MOZ_OVERRIDE {
+    return mInnerImage->HeapSizeOfVectorImageDocument(aDocURL);
+  }
 
   virtual void IncrementAnimationConsumers() MOZ_OVERRIDE;
   virtual void DecrementAnimationConsumers() MOZ_OVERRIDE;
