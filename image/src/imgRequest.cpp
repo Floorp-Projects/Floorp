@@ -455,8 +455,10 @@ void imgRequest::SetIsInCache(bool incache)
 
 void imgRequest::UpdateCacheEntrySize()
 {
-  if (mCacheEntry)
-    mCacheEntry->SetDataSize(mImage->SizeOfData());
+  if (mCacheEntry) {
+    size_t size = mImage->SizeOfSourceWithComputedFallback(moz_malloc_size_of);
+    mCacheEntry->SetDataSize(size);
+  }
 }
 
 void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
