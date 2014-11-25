@@ -295,6 +295,14 @@ describe("loop.OTSdkDriver", function () {
 
         sinon.assert.calledOnce(session.publish);
       });
+
+      it("should dispatch a GotMediaPermission action", function() {
+        publisher.trigger("accessAllowed", fakeEvent);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.GotMediaPermission());
+      });
     });
 
     describe("accessDenied", function() {
