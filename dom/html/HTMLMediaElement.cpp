@@ -2470,7 +2470,7 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     UpdatePreloadAction();
   }
   if (mDecoder) {
-    mDecoder->SetDormantIfNecessary(OwnerDoc()->Hidden());
+    mDecoder->SetDormantIfNecessary(false);
   }
 
   return rv;
@@ -3467,12 +3467,7 @@ void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 
   if (mDecoder) {
     mDecoder->SetElementVisibility(!ownerDoc->Hidden());
-    // Since we enter dormant state in UnbindFromTree(),
-    // we should only leave dormant state after binding to the tree.
-    nsCOMPtr<nsIDOMNode> parent;
-    nsresult rv = GetParentNode(getter_AddRefs(parent));
-    bool hasParent = NS_SUCCEEDED(rv) && parent;
-    mDecoder->SetDormantIfNecessary(ownerDoc->Hidden() || !hasParent);
+    mDecoder->SetDormantIfNecessary(ownerDoc->Hidden());
   }
 
   // SetVisibilityState will update mMuted with MUTED_BY_AUDIO_CHANNEL via the
