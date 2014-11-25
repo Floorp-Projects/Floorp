@@ -79,7 +79,6 @@ CheckProgressConsistency(Progress aProgress)
     MOZ_ASSERT(aProgress & FLAG_SIZE_AVAILABLE);
   }
   if (aProgress & FLAG_HAS_TRANSPARENCY) {
-    MOZ_ASSERT(aProgress & FLAG_DECODE_STARTED);
     MOZ_ASSERT(aProgress & FLAG_SIZE_AVAILABLE);
   }
   if (aProgress & FLAG_IS_MULTIPART) {
