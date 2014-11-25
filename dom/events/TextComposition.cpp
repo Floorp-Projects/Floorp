@@ -154,6 +154,10 @@ TextComposition::DispatchCompositionEvent(
     } else {
       aCompositionEvent->mData = mLastData;
     }
+  } else if (aCompositionEvent->message == NS_COMPOSITION_COMMIT) {
+    NS_ASSERTION(!aCompositionEvent->mRanges,
+                 "mRanges of NS_COMPOSITION_COMMIT should be null");
+    aCompositionEvent->mRanges = nullptr;
   }
 
   if (!IsValidStateForComposition(aCompositionEvent->widget)) {
@@ -189,6 +193,7 @@ TextComposition::DispatchCompositionEvent(
       case NS_COMPOSITION_END:
       case NS_COMPOSITION_CHANGE:
       case NS_COMPOSITION_COMMIT_AS_IS:
+      case NS_COMPOSITION_COMMIT:
         committingData = &aCompositionEvent->mData;
         break;
       default:
@@ -354,35 +359,16 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
       //      dispatch the event.
       nsCOMPtr<nsIWidget> widget(aWidget);
       nsAutoString commitData(aDiscard ? EmptyString() : lastData);
-      if (commitData == mLastData) {
-        WidgetCompositionEvent commitEvent(true, NS_COMPOSITION_COMMIT_AS_IS,
-                                           widget);
-        commitEvent.mFlags.mIsSynthesizedForTests = true;
-        nsEventStatus status = nsEventStatus_eIgnore;
-        widget->DispatchEvent(&commitEvent, status);
-      } else {
-        WidgetCompositionEvent changeEvent(true, NS_COMPOSITION_CHANGE, widget);
-        changeEvent.mData = commitData;
-        changeEvent.mFlags.mIsSynthesizedForTests = true;
-
-        MaybeDispatchCompositionUpdate(&changeEvent);
-
-        // If changing the data or committing string isn't empty, we need to
-        // dispatch compositionchange event for setting the composition string
-        // without IME selection.
-        if (IsValidStateForComposition(widget)) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          widget->DispatchEvent(&changeEvent, status);
-        }
-
-        if (IsValidStateForComposition(widget)) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          WidgetCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
-          endEvent.mData = commitData;
-          endEvent.mFlags.mIsSynthesizedForTests = true;
-          widget->DispatchEvent(&endEvent, status);
-        }
+      bool isChanging = commitData != mLastData;
+      uint32_t message =
+        isChanging ? NS_COMPOSITION_COMMIT : NS_COMPOSITION_COMMIT_AS_IS;
+      WidgetCompositionEvent commitEvent(true, message, widget);
+      if (commitEvent.message == NS_COMPOSITION_COMMIT) {
+        commitEvent.mData = commitData;
       }
+      commitEvent.mFlags.mIsSynthesizedForTests = true;
+      nsEventStatus status = nsEventStatus_eIgnore;
+      widget->DispatchEvent(&commitEvent, status);
     }
   }
 
@@ -398,17 +384,9 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
   if (data == mLastData) {
     DispatchCompositionEventRunnable(NS_COMPOSITION_COMMIT_AS_IS, EmptyString(),
                                      true);
-    return NS_OK;
+  } else {
+    DispatchCompositionEventRunnable(NS_COMPOSITION_COMMIT, data, true);
   }
-  // If the last composition string and new data are different, we need to
-  // dispatch compositionchange event for removing IME selection.  However, if
-  // the commit string is empty string and it's not changed from the last data,
-  // we don't need to dispatch compositionchange event.
-  if (lastData != data || !data.IsEmpty()) {
-    DispatchCompositionEventRunnable(NS_COMPOSITION_CHANGE, data, true);
-  }
-  DispatchCompositionEventRunnable(NS_COMPOSITION_END, data, true);
-
   return NS_OK;
 }
 
@@ -519,9 +497,9 @@ TextComposition::CompositionEventDispatcher::Run()
                                                 mIsSynthesizedEvent);
       break;
     }
-    case NS_COMPOSITION_END:
     case NS_COMPOSITION_CHANGE:
-    case NS_COMPOSITION_COMMIT_AS_IS: {
+    case NS_COMPOSITION_COMMIT_AS_IS:
+    case NS_COMPOSITION_COMMIT: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);
       if (mEventMessage != NS_COMPOSITION_COMMIT_AS_IS) {
         compEvent.mData = mData;
