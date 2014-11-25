@@ -603,10 +603,10 @@ class GCRuntime
     void sweepBackgroundThings(js::gc::ZoneList &zones, ThreadType threadType);
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
+    bool compactPhase(bool lastGC);
 #ifdef JSGC_COMPACTING
     void sweepTypesAfterCompacting(Zone *zone);
     void sweepZoneAfterCompacting(Zone *zone);
-    void compactPhase(bool lastGC);
     ArenaHeader *relocateArenas();
     void updateAllCellPointersParallel(ArenasToUpdate &source);
     void updateAllCellPointersSerial(MovingTracer *trc, ArenasToUpdate &source);
