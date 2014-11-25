@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonFrames_h
-#define jit_IonFrames_h
+#ifndef jit_JitFrames_h
+#define jit_JitFrames_h
 
 #include <stdint.h>
 
@@ -271,7 +271,7 @@ struct ResumeFromException
 void HandleException(ResumeFromException *rfe);
 void HandleParallelFailure(ResumeFromException *rfe);
 
-void EnsureExitFrame(IonCommonFrameLayout *frame);
+void EnsureExitFrame(CommonFrameLayout *frame);
 
 void MarkJitActivations(PerThreadData *ptd, JSTracer *trc);
 void MarkIonCompilerRoots(JSTracer *trc);
@@ -290,9 +290,9 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type)
     return (frameSize << FRAMESIZE_SHIFT) | type;
 }
 
-// Returns the JSScript associated with the topmost Ion frame.
+// Returns the JSScript associated with the topmost JIT frame.
 inline JSScript *
-GetTopIonJSScript(ThreadSafeContext *cx, void **returnAddrOut = nullptr)
+GetTopJitJSScript(ThreadSafeContext *cx, void **returnAddrOut = nullptr)
 {
     JitFrameIterator iter(cx);
     MOZ_ASSERT(iter.type() == JitFrame_Exit);
@@ -324,7 +324,7 @@ alignDoubleSpillWithOffset(uint8_t *pointer, int32_t offset)
 
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
-class IonCommonFrameLayout
+class CommonFrameLayout
 {
     uint8_t *returnAddress_;
     uintptr_t descriptor_;
@@ -333,10 +333,10 @@ class IonCommonFrameLayout
 
   public:
     static size_t offsetOfDescriptor() {
-        return offsetof(IonCommonFrameLayout, descriptor_);
+        return offsetof(CommonFrameLayout, descriptor_);
     }
     static size_t offsetOfReturnAddress() {
-        return offsetof(IonCommonFrameLayout, returnAddress_);
+        return offsetof(CommonFrameLayout, returnAddress_);
     }
     FrameType prevType() const {
         return FrameType(descriptor_ & FrameTypeMask);
@@ -359,7 +359,7 @@ class IonCommonFrameLayout
     }
 };
 
-class IonJSFrameLayout : public IonCommonFrameLayout
+class JitFrameLayout : public CommonFrameLayout
 {
     CalleeToken calleeToken_;
     uintptr_t numActualArgs_;
@@ -373,17 +373,17 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     }
 
     static size_t offsetOfCalleeToken() {
-        return offsetof(IonJSFrameLayout, calleeToken_);
+        return offsetof(JitFrameLayout, calleeToken_);
     }
     static size_t offsetOfNumActualArgs() {
-        return offsetof(IonJSFrameLayout, numActualArgs_);
+        return offsetof(JitFrameLayout, numActualArgs_);
     }
     static size_t offsetOfThis() {
-        IonJSFrameLayout *base = nullptr;
+        JitFrameLayout *base = nullptr;
         return reinterpret_cast<size_t>(&base->argv()[0]);
     }
     static size_t offsetOfActualArgs() {
-        IonJSFrameLayout *base = nullptr;
+        JitFrameLayout *base = nullptr;
         // +1 to skip |this|.
         return reinterpret_cast<size_t>(&base->argv()[1]);
     }
@@ -408,48 +408,48 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     }
 
     static inline size_t Size() {
-        return sizeof(IonJSFrameLayout);
+        return sizeof(JitFrameLayout);
     }
 };
 
 // this is the layout of the frame that is used when we enter Ion code from platform ABI code
-class IonEntryFrameLayout : public IonJSFrameLayout
+class EntryFrameLayout : public JitFrameLayout
 {
   public:
     static inline size_t Size() {
-        return sizeof(IonEntryFrameLayout);
+        return sizeof(EntryFrameLayout);
     }
 };
 
-class IonRectifierFrameLayout : public IonJSFrameLayout
+class RectifierFrameLayout : public JitFrameLayout
 {
   public:
     static inline size_t Size() {
-        return sizeof(IonRectifierFrameLayout);
+        return sizeof(RectifierFrameLayout);
     }
 };
 
 // The callee token is now dead.
-class IonUnwoundRectifierFrameLayout : public IonRectifierFrameLayout
+class IonUnwoundRectifierFrameLayout : public RectifierFrameLayout
 {
   public:
     static inline size_t Size() {
         // It is not necessary to accout for an extra callee token here because
-        // sizeof(IonExitFrameLayout) == sizeof(IonRectifierFrameLayout) due to
+        // sizeof(ExitFrameLayout) == sizeof(RectifierFrameLayout) due to
         // extra padding.
         return sizeof(IonUnwoundRectifierFrameLayout);
     }
 };
 
 // GC related data used to keep alive data surrounding the Exit frame.
-class IonExitFooterFrame
+class ExitFooterFrame
 {
     const VMFunction *function_;
     JitCode *jitCode_;
 
   public:
     static inline size_t Size() {
-        return sizeof(IonExitFooterFrame);
+        return sizeof(ExitFooterFrame);
     }
     inline JitCode *jitCode() const {
         return jitCode_;
@@ -470,14 +470,14 @@ class IonExitFooterFrame
     }
 };
 
-class IonNativeExitFrameLayout;
+class NativeExitFrameLayout;
 class IonOOLNativeExitFrameLayout;
 class IonOOLPropertyOpExitFrameLayout;
 class IonOOLProxyExitFrameLayout;
 class IonDOMExitFrameLayout;
 
 // this is the frame layout when we are exiting ion code, and about to enter platform ABI code
-class IonExitFrameLayout : public IonCommonFrameLayout
+class ExitFrameLayout : public CommonFrameLayout
 {
     inline uint8_t *top() {
         return reinterpret_cast<uint8_t *>(this + 1);
@@ -489,15 +489,15 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     static JitCode *BareToken() { return (JitCode *)0xFF; }
 
     static inline size_t Size() {
-        return sizeof(IonExitFrameLayout);
+        return sizeof(ExitFrameLayout);
     }
     static inline size_t SizeWithFooter() {
-        return Size() + IonExitFooterFrame::Size();
+        return Size() + ExitFooterFrame::Size();
     }
 
-    inline IonExitFooterFrame *footer() {
+    inline ExitFooterFrame *footer() {
         uint8_t *sp = reinterpret_cast<uint8_t *>(this);
-        return reinterpret_cast<IonExitFooterFrame *>(sp - IonExitFooterFrame::Size());
+        return reinterpret_cast<ExitFooterFrame *>(sp - ExitFooterFrame::Size());
     }
 
     // argBase targets the point which precedes the exit frame. Arguments of VM
@@ -526,12 +526,12 @@ class IonExitFrameLayout : public IonCommonFrameLayout
 };
 
 // Cannot inherit implementation since we need to extend the top of
-// IonExitFrameLayout.
-class IonNativeExitFrameLayout
+// ExitFrameLayout.
+class NativeExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
-    IonExitFooterFrame footer_;
-    IonExitFrameLayout exit_;
+    ExitFooterFrame footer_;
+    ExitFrameLayout exit_;
     uintptr_t argc_;
 
     // We need to split the Value into 2 fields of 32 bits, otherwise the C++
@@ -543,11 +543,11 @@ class IonNativeExitFrameLayout
     static JitCode *Token() { return (JitCode *)0x0; }
 
     static inline size_t Size() {
-        return sizeof(IonNativeExitFrameLayout);
+        return sizeof(NativeExitFrameLayout);
     }
 
     static size_t offsetOfResult() {
-        return offsetof(IonNativeExitFrameLayout, loCalleeResult_);
+        return offsetof(NativeExitFrameLayout, loCalleeResult_);
     }
     inline Value *vp() {
         return reinterpret_cast<Value*>(&loCalleeResult_);
@@ -560,8 +560,8 @@ class IonNativeExitFrameLayout
 class IonOOLNativeExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
-    IonExitFooterFrame footer_;
-    IonExitFrameLayout exit_;
+    ExitFooterFrame footer_;
+    ExitFrameLayout exit_;
 
     // pointer to root the stub's JitCode
     JitCode *stubCode_;
@@ -606,8 +606,8 @@ class IonOOLNativeExitFrameLayout
 class IonOOLPropertyOpExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
-    IonExitFooterFrame footer_;
-    IonExitFrameLayout exit_;
+    ExitFooterFrame footer_;
+    ExitFrameLayout exit_;
 
     // Object for HandleObject
     JSObject *obj_;
@@ -655,8 +655,8 @@ class IonOOLPropertyOpExitFrameLayout
 class IonOOLProxyExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
-    IonExitFooterFrame footer_;
-    IonExitFrameLayout exit_;
+    ExitFooterFrame footer_;
+    ExitFrameLayout exit_;
 
     // The proxy object.
     JSObject *proxy_;
@@ -706,8 +706,8 @@ class IonOOLProxyExitFrameLayout
 class IonDOMExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
-    IonExitFooterFrame footer_;
-    IonExitFrameLayout exit_;
+    ExitFooterFrame footer_;
+    ExitFrameLayout exit_;
     JSObject *thisObj;
 
     // We need to split the Value into 2 fields of 32 bits, otherwise the C++
@@ -740,8 +740,8 @@ struct IonDOMMethodExitFrameLayoutTraits;
 class IonDOMMethodExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
-    IonExitFooterFrame footer_;
-    IonExitFrameLayout exit_;
+    ExitFooterFrame footer_;
+    ExitFrameLayout exit_;
     // This must be the last thing pushed, so as to stay common with
     // IonDOMExitFrameLayout.
     JSObject *thisObj_;
@@ -788,7 +788,7 @@ IonDOMExitFrameLayout::isMethodFrame()
 
 template <>
 inline bool
-IonExitFrameLayout::is<IonDOMExitFrameLayout>()
+ExitFrameLayout::is<IonDOMExitFrameLayout>()
 {
     JitCode *code = footer()->jitCode();
     return
@@ -799,7 +799,7 @@ IonExitFrameLayout::is<IonDOMExitFrameLayout>()
 
 template <>
 inline IonDOMExitFrameLayout *
-IonExitFrameLayout::as<IonDOMExitFrameLayout>()
+ExitFrameLayout::as<IonDOMExitFrameLayout>()
 {
     MOZ_ASSERT(is<IonDOMExitFrameLayout>());
     return reinterpret_cast<IonDOMExitFrameLayout *>(footer());
@@ -813,11 +813,11 @@ struct IonDOMMethodExitFrameLayoutTraits {
 
 class ICStub;
 
-class IonBaselineStubFrameLayout : public IonCommonFrameLayout
+class BaselineStubFrameLayout : public CommonFrameLayout
 {
   public:
     static inline size_t Size() {
-        return sizeof(IonBaselineStubFrameLayout);
+        return sizeof(BaselineStubFrameLayout);
     }
 
     static inline int reverseOffsetOfStubPtr() {
@@ -849,7 +849,7 @@ class InvalidationBailoutStack
     uint8_t *sp() const {
         return (uint8_t *) this + sizeof(InvalidationBailoutStack);
     }
-    IonJSFrameLayout *fp() const;
+    JitFrameLayout *fp() const;
     MachineState machine() {
         return MachineState::FromBailout(regs_, fpregs_);
     }
@@ -879,4 +879,4 @@ MarkCalleeToken(JSTracer *trc, CalleeToken token);
 } /* namespace jit */
 } /* namespace js */
 
-#endif /* jit_IonFrames_h */
+#endif /* jit_JitFrames_h */

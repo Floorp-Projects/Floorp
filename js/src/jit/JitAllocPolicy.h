@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_IonAllocPolicy_h
-#define jit_IonAllocPolicy_h
+#ifndef jit_JitAllocPolicy_h
+#define jit_JitAllocPolicy_h
 
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TypeTraits.h"
@@ -24,7 +24,7 @@ class TempAllocator
     LifoAllocScope lifoScope_;
 
   public:
-    // Most infallible Ion allocations are small, so we use a ballast of 16
+    // Most infallible JIT allocations are small, so we use a ballast of 16
     // KiB. And with a ballast of 16 KiB, a chunk size of 32 KiB works well,
     // because TempAllocators with a peak allocation size of less than 16 KiB
     // (which is most of them) only have to allocate a single chunk.
@@ -69,12 +69,12 @@ class TempAllocator
     }
 };
 
-class IonAllocPolicy
+class JitAllocPolicy
 {
     TempAllocator &alloc_;
 
   public:
-    MOZ_IMPLICIT IonAllocPolicy(TempAllocator &alloc)
+    MOZ_IMPLICIT JitAllocPolicy(TempAllocator &alloc)
       : alloc_(alloc)
     {}
     template <typename T>
@@ -105,16 +105,16 @@ class IonAllocPolicy
     }
 };
 
-class OldIonAllocPolicy
+class OldJitAllocPolicy
 {
   public:
-    OldIonAllocPolicy()
+    OldJitAllocPolicy()
     {}
     template <typename T>
     T *pod_malloc(size_t numElems) {
         if (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
             return nullptr;
-        return static_cast<T *>(GetIonContext()->temp->allocate(numElems * sizeof(T)));
+        return static_cast<T *>(GetJitContext()->temp->allocate(numElems * sizeof(T)));
     }
     void free_(void *p) {
     }
@@ -122,24 +122,24 @@ class OldIonAllocPolicy
     }
 };
 
-class AutoIonContextAlloc
+class AutoJitContextAlloc
 {
     TempAllocator tempAlloc_;
-    IonContext *icx_;
+    JitContext *jcx_;
     TempAllocator *prevAlloc_;
 
   public:
-    explicit AutoIonContextAlloc(JSContext *cx)
+    explicit AutoJitContextAlloc(JSContext *cx)
       : tempAlloc_(&cx->tempLifoAlloc()),
-        icx_(GetIonContext()),
-        prevAlloc_(icx_->temp)
+        jcx_(GetJitContext()),
+        prevAlloc_(jcx_->temp)
     {
-        icx_->temp = &tempAlloc_;
+        jcx_->temp = &tempAlloc_;
     }
 
-    ~AutoIonContextAlloc() {
-        MOZ_ASSERT(icx_->temp == &tempAlloc_);
-        icx_->temp = prevAlloc_;
+    ~AutoJitContextAlloc() {
+        MOZ_ASSERT(jcx_->temp == &tempAlloc_);
+        jcx_->temp = prevAlloc_;
     }
 };
 
@@ -187,4 +187,4 @@ class TempObjectPool
 } // namespace jit
 } // namespace js
 
-#endif /* jit_IonAllocPolicy_h */
+#endif /* jit_JitAllocPolicy_h */

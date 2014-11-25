@@ -18,7 +18,7 @@
 #include "jscompartment.h"
 
 #include "jit/CompileInfo.h"
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "jit/JitCompartment.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
@@ -50,7 +50,7 @@ class MIRGenerator
         return alloc().ensureBallast();
     }
     const JitRuntime *jitRuntime() const {
-        return GetIonContext()->runtime->jitRuntime();
+        return GetJitContext()->runtime->jitRuntime();
     }
     CompileInfo &info() {
         return *info_;
@@ -77,7 +77,7 @@ class MIRGenerator
 
     bool instrumentedProfiling() {
         if (!instrumentedProfilingIsCached_) {
-            instrumentedProfiling_ = GetIonContext()->runtime->spsProfiler().enabled();
+            instrumentedProfiling_ = GetJitContext()->runtime->spsProfiler().enabled();
             instrumentedProfilingIsCached_ = true;
         }
         return instrumentedProfiling_;
@@ -156,7 +156,7 @@ class MIRGenerator
         return modifiesFrameArguments_;
     }
 
-    typedef Vector<types::TypeObject *, 0, IonAllocPolicy> TypeObjectVector;
+    typedef Vector<types::TypeObject *, 0, JitAllocPolicy> TypeObjectVector;
 
     // When abortReason() == AbortReason_NewScriptProperties, all types which
     // the new script properties analysis hasn't been performed on yet.

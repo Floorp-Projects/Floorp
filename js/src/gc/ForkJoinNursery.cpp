@@ -14,7 +14,7 @@
 #include "prmjtime.h"
 
 #include "gc/Heap.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "jit/RematerializedFrame.h"
 #include "vm/ArrayObject.h"
 #include "vm/ForkJoin.h"

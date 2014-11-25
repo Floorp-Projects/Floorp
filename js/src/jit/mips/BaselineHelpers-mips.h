@@ -10,7 +10,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineRegisters.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 
 namespace js {
 namespace jit {
@@ -99,9 +99,9 @@ EmitTailCallVM(JitCode *target, MacroAssembler &masm, uint32_t argSize)
     // called expects the return address to also be pushed on the stack.
     MOZ_ASSERT(BaselineTailCallReg == ra);
     masm.makeFrameDescriptor(t6, JitFrame_BaselineJS);
-    masm.subPtr(Imm32(sizeof(IonCommonFrameLayout)), StackPointer);
-    masm.storePtr(t6, Address(StackPointer, IonCommonFrameLayout::offsetOfDescriptor()));
-    masm.storePtr(ra, Address(StackPointer, IonCommonFrameLayout::offsetOfReturnAddress()));
+    masm.subPtr(Imm32(sizeof(CommonFrameLayout)), StackPointer);
+    masm.storePtr(t6, Address(StackPointer, CommonFrameLayout::offsetOfDescriptor()));
+    masm.storePtr(ra, Address(StackPointer, CommonFrameLayout::offsetOfReturnAddress()));
 
     masm.branch(target);
 }

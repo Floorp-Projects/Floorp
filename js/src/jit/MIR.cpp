@@ -607,14 +607,14 @@ jit::MakeSingletonTypeSet(types::CompilerConstraintList *constraints, JSObject *
     types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
     objType->hasFlags(constraints, types::OBJECT_FLAG_UNKNOWN_PROPERTIES);
 
-    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
     return alloc->new_<types::TemporaryTypeSet>(alloc, types::Type::ObjectType(obj));
 }
 
 static types::TemporaryTypeSet *
 MakeUnknownTypeSet()
 {
-    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
     return alloc->new_<types::TemporaryTypeSet>(alloc, types::Type::UnknownType());
 }
 
@@ -876,7 +876,7 @@ void
 MAssertRange::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
-    Sprinter sp(GetIonContext()->cx);
+    Sprinter sp(GetJitContext()->cx);
     sp.init();
     assertedRange()->print(sp);
     fprintf(fp, " %s", sp.string());
@@ -1342,7 +1342,7 @@ MPhi::foldsTernary()
     // - fold testArg ? testArg : "" to testArg
     // - fold testArg ? "" : testArg to ""
     if (testArg->type() == MIRType_String &&
-        c->vp()->toString() == GetIonContext()->runtime->emptyString())
+        c->vp()->toString() == GetJitContext()->runtime->emptyString())
     {
         // When folding to the constant we need to hoist it.
         if (trueDef == c && !c->block()->dominates(block()))
@@ -1419,7 +1419,7 @@ MakeMIRTypeSet(MIRType type)
     types::Type ntype = type == MIRType_Object
                         ? types::Type::AnyObjectType()
                         : types::Type::PrimitiveType(ValueTypeFromMIRType(type));
-    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
     return alloc->new_<types::TemporaryTypeSet>(alloc, ntype);
 }
 
@@ -1444,7 +1444,7 @@ jit::MergeTypes(MIRType *ptype, types::TemporaryTypeSet **ptypeSet,
         }
     }
     if (*ptypeSet) {
-        LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+        LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
         if (!newTypeSet && newType != MIRType_Value) {
             newTypeSet = MakeMIRTypeSet(newType);
             if (!newTypeSet)
@@ -2233,7 +2233,7 @@ MBinaryArithInstruction::inferFallback(BaselineInspector *inspector,
     // the lhs or rhs, mark the binary instruction as having no possible types
     // either to avoid degrading subsequent analysis.
     if (getOperand(0)->emptyResultTypeSet() || getOperand(1)->emptyResultTypeSet()) {
-        LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+        LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
         types::TemporaryTypeSet *types = alloc->new_<types::TemporaryTypeSet>();
         if (types)
             setResultTypeSet(types);
@@ -2585,7 +2585,7 @@ MTypeOf::foldsTo(TempAllocator &alloc)
         return this;
     }
 
-    return MConstant::New(alloc, StringValue(TypeName(type, GetIonContext()->runtime->names())));
+    return MConstant::New(alloc, StringValue(TypeName(type, GetJitContext()->runtime->names())));
 }
 
 void
@@ -3353,7 +3353,7 @@ MBeta::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
 
-    if (IonContext *context = MaybeGetIonContext()) {
+    if (JitContext *context = MaybeGetJitContext()) {
         Sprinter sp(context->cx);
         sp.init();
         comparison_->print(sp);
@@ -3710,7 +3710,7 @@ InlinePropertyTable::hasFunction(JSFunction *func) const
 types::TemporaryTypeSet *
 InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
 {
-    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
     types::TemporaryTypeSet *types = alloc->new_<types::TemporaryTypeSet>();
     if (!types)
         return nullptr;
@@ -4113,7 +4113,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                         break;
                     if (types.length()) {
                         // Note: the return value here is ignored.
-                        observed->addType(types[0], GetIonContext()->temp->lifoAlloc());
+                        observed->addType(types[0], GetJitContext()->temp->lifoAlloc());
                         break;
                     }
                 }
@@ -4237,7 +4237,7 @@ jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
     // Add objects to observed which *could* be observed by reading name from obj,
     // to hopefully avoid unnecessary type barriers and code invalidations.
 
-    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    LifoAlloc *alloc = GetJitContext()->temp->lifoAlloc();
 
     types::TemporaryTypeSet *types = obj->resultTypeSet();
     if (!types || types->unknownObject()) {

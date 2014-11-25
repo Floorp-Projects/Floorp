@@ -46,7 +46,7 @@
 #include "jsinferinlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/IonFrames-inl.h"
+#include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Probes-inl.h"
@@ -409,7 +409,7 @@ js::RunScript(JSContext *cx, RunState &state)
         if (status == jit::Method_Error)
             return false;
         if (status == jit::Method_Compiled) {
-            jit::IonExecStatus status = jit::IonCannon(cx, state);
+            jit::JitExecStatus status = jit::IonCannon(cx, state);
             return !IsErrorStatus(status);
         }
     }
@@ -419,7 +419,7 @@ js::RunScript(JSContext *cx, RunState &state)
         if (status == jit::Method_Error)
             return false;
         if (status == jit::Method_Compiled) {
-            jit::IonExecStatus status = jit::EnterBaselineMethod(cx, state);
+            jit::JitExecStatus status = jit::EnterBaselineMethod(cx, state);
             return !IsErrorStatus(status);
         }
     }
@@ -1676,13 +1676,13 @@ CASE(JSOP_LOOPENTRY)
             goto error;
         if (status == jit::Method_Compiled) {
             bool wasSPS = REGS.fp()->hasPushedSPSFrame();
-            jit::IonExecStatus maybeOsr = jit::EnterBaselineAtBranch(cx, REGS.fp(), REGS.pc);
+            jit::JitExecStatus maybeOsr = jit::EnterBaselineAtBranch(cx, REGS.fp(), REGS.pc);
 
             // We failed to call into baseline at all, so treat as an error.
-            if (maybeOsr == jit::IonExec_Aborted)
+            if (maybeOsr == jit::JitExec_Aborted)
                 goto error;
 
-            interpReturnOK = (maybeOsr == jit::IonExec_Ok);
+            interpReturnOK = (maybeOsr == jit::JitExec_Ok);
 
             // Pop the SPS frame pushed by the interpreter.  (The compiled version of the
             // function popped a copy of the frame pushed by the OSR trampoline.)
@@ -2547,7 +2547,7 @@ CASE(JSOP_FUNCALL)
             if (status == jit::Method_Error)
                 goto error;
             if (status == jit::Method_Compiled) {
-                jit::IonExecStatus exec = jit::IonCannon(cx, state);
+                jit::JitExecStatus exec = jit::IonCannon(cx, state);
                 CHECK_BRANCH();
                 REGS.sp = args.spAfterCall();
                 interpReturnOK = !IsErrorStatus(exec);
@@ -2560,7 +2560,7 @@ CASE(JSOP_FUNCALL)
             if (status == jit::Method_Error)
                 goto error;
             if (status == jit::Method_Compiled) {
-                jit::IonExecStatus exec = jit::EnterBaselineMethod(cx, state);
+                jit::JitExecStatus exec = jit::EnterBaselineMethod(cx, state);
                 CHECK_BRANCH();
                 REGS.sp = args.spAfterCall();
                 interpReturnOK = !IsErrorStatus(exec);

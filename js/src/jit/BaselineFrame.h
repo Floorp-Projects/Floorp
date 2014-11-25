@@ -7,7 +7,7 @@
 #ifndef jit_BaselineFrame_h
 #define jit_BaselineFrame_h
 
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "vm/Stack.h"
 
 namespace js {
@@ -18,7 +18,7 @@ struct BaselineDebugModeOSRInfo;
 // The stack looks like this, fp is the frame pointer:
 //
 // fp+y   arguments
-// fp+x   IonJSFrameLayout (frame header)
+// fp+x   JitFrameLayout (frame header)
 // fp  => saved frame pointer
 // fp-x   BaselineFrame
 //        locals
@@ -374,23 +374,23 @@ class BaselineFrame
         return false;
     }
 
-    IonJSFrameLayout *framePrefix() const {
+    JitFrameLayout *framePrefix() const {
         uint8_t *fp = (uint8_t *)this + Size() + FramePointerOffset;
-        return (IonJSFrameLayout *)fp;
+        return (JitFrameLayout *)fp;
     }
 
     // Methods below are used by the compiler.
     static size_t offsetOfCalleeToken() {
-        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfCalleeToken();
+        return FramePointerOffset + js::jit::JitFrameLayout::offsetOfCalleeToken();
     }
     static size_t offsetOfThis() {
-        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfThis();
+        return FramePointerOffset + js::jit::JitFrameLayout::offsetOfThis();
     }
     static size_t offsetOfArg(size_t index) {
-        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfActualArg(index);
+        return FramePointerOffset + js::jit::JitFrameLayout::offsetOfActualArg(index);
     }
     static size_t offsetOfNumActualArgs() {
-        return FramePointerOffset + js::jit::IonJSFrameLayout::offsetOfNumActualArgs();
+        return FramePointerOffset + js::jit::JitFrameLayout::offsetOfNumActualArgs();
     }
     static size_t Size() {
         return sizeof(BaselineFrame);

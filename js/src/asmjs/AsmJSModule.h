@@ -29,8 +29,8 @@
 #include "asmjs/AsmJSValidate.h"
 #include "builtin/SIMD.h"
 #include "gc/Marking.h"
-#include "jit/IonMacroAssembler.h"
 #include "jit/IonTypes.h"
+#include "jit/MacroAssembler.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
