@@ -127,7 +127,9 @@
 #include "nsURLHelper.h"
 
 #include "ssl.h"
+#include "cert.h"
 #include "secerr.h"
+#include "secoidt.h"
 #include "secport.h"
 #include "sslerr.h"
 
@@ -813,8 +815,10 @@ GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
 {
   CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
   CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
-  PR_ASSERT(endEntityNode && rootNode);
-  if (!endEntityNode || !rootNode) {
+  PR_ASSERT(!(CERT_LIST_END(endEntityNode, certList) ||
+              CERT_LIST_END(rootNode, certList)));
+  if (CERT_LIST_END(endEntityNode, certList) ||
+      CERT_LIST_END(rootNode, certList)) {
     return;
   }
   CERTCertificate* cert = endEntityNode->cert;
@@ -960,6 +964,77 @@ GatherBaselineRequirementsTelemetry(const ScopedCERTCertList& certList)
                                        commonNameInSubjectAltNames);
 }
 
+// Gather telemetry on whether the end-entity cert for a server has the
+// required TLS Server Authentication EKU, or any others
+void
+GatherEKUTelemetry(const ScopedCERTCertList& certList)
+{
+  CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
+  CERTCertListNode* rootNode = CERT_LIST_TAIL(certList);
+  PR_ASSERT(!(CERT_LIST_END(endEntityNode, certList) ||
+              CERT_LIST_END(rootNode, certList)));
+  if (CERT_LIST_END(endEntityNode, certList) ||
+      CERT_LIST_END(rootNode, certList)) {
+    return;
+  }
+  CERTCertificate* endEntityCert = endEntityNode->cert;
+
+  // Only log telemetry if the root CA is built-in
+  bool isBuiltIn = false;
+  SECStatus rv = IsCertBuiltInRoot(rootNode->cert, isBuiltIn);
+  if (rv != SECSuccess || !isBuiltIn) {
+    return;
+  }
+
+  // Find the EKU extension, if present
+  bool foundEKU = false;
+  SECOidTag oidTag;
+  CERTCertExtension* ekuExtension = nullptr;
+  for (size_t i = 0; endEntityCert->extensions[i]; i++) {
+    oidTag = SECOID_FindOIDTag(&endEntityCert->extensions[i]->id);
+    if (oidTag == SEC_OID_X509_EXT_KEY_USAGE) {
+      foundEKU = true;
+      ekuExtension = endEntityCert->extensions[i];
+    }
+  }
+
+  if (!foundEKU) {
+    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 0);
+    return;
+  }
+
+  // Parse the EKU extension
+  ScopedCERTOidSequence ekuSequence(
+    CERT_DecodeOidSequence(&ekuExtension->value));
+  if (!ekuSequence) {
+    return;
+  }
+
+  // Search through the available EKUs
+  bool foundServerAuth = false;
+  bool foundOther = false;
+  for (SECItem** oids = ekuSequence->oids; oids && *oids; oids++) {
+    oidTag = SECOID_FindOIDTag(*oids);
+    if (oidTag == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH) {
+      foundServerAuth = true;
+    } else {
+      foundOther = true;
+    }
+  }
+
+  // Cases 3 is included only for completeness.  It should never
+  // appear in these statistics, because CheckExtendedKeyUsage()
+  // should require the EKU extension, if present, to contain the
+  // value id_kp_serverAuth.
+  if (foundServerAuth && !foundOther) {
+    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 1);
+  } else if (foundServerAuth && foundOther) {
+    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 2);
+  } else if (!foundServerAuth) {
+    Telemetry::Accumulate(Telemetry::SSL_SERVER_AUTH_EKU, 3);
+  }
+}
+
 // Gathers telemetry on which CA is the root of a given cert chain.
 // If the root is a built-in root, then the telemetry makes a count
 // by root.  Roots that are not built-in are counted in one bin.
@@ -985,6 +1060,7 @@ void
 GatherSuccessfulValidationTelemetry(const ScopedCERTCertList& certList)
 {
   GatherBaselineRequirementsTelemetry(certList);
+  GatherEKUTelemetry(certList);
   GatherRootCATelemetry(certList);
 }
 
