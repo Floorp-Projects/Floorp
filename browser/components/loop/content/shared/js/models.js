@@ -95,6 +95,13 @@ loop.shared.models = (function(l10n) {
       if (selectedCallType) {
         this.set("selectedCallType", selectedCallType);
       }
+      this.trigger("call:outgoing:get-media-privs");
+    },
+
+    /**
+     * Used to indicate that media privileges have been accepted.
+     */
+    gotMediaPrivs: function() {
       this.trigger("call:outgoing:setup");
     },
 
