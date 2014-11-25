@@ -101,6 +101,9 @@ public:
   // Get the current image status (as in imgIRequest).
   uint32_t GetImageStatus() const;
 
+  // Get the current Progress.
+  Progress GetProgress() const { return mProgress; }
+ 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
   // We will also take note of any notifications that happen between the time
