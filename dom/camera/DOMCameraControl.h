@@ -187,7 +187,7 @@ protected:
   void OnTakePictureComplete(nsIDOMBlob* aPicture);
   void OnFacesDetected(const nsTArray<ICameraControl::Face>& aFaces);
 
-  void OnHardwareStateChange(DOMCameraControlListener::HardwareState aState);
+  void OnHardwareStateChange(DOMCameraControlListener::HardwareState aState, nsresult aReason);
   void OnPreviewStateChange(DOMCameraControlListener::PreviewState aState);
   void OnRecorderStateChange(CameraControlListener::RecorderState aState, int32_t aStatus, int32_t aTrackNum);
   void OnConfigurationChange(DOMCameraConfiguration* aConfiguration);

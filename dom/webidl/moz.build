@@ -681,6 +681,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'CallEvent.webidl',
     'CallGroupErrorEvent.webidl',
+    'CameraClosedEvent.webidl',
     'CameraConfigurationEvent.webidl',
     'CameraFacesDetectedEvent.webidl',
     'CameraStateChangeEvent.webidl',

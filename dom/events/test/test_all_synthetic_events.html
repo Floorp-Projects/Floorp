@@ -80,6 +80,10 @@ const kEventConstructors = {
                                                           return new CallGroupErrorEvent(aName, aProps);
                                                        },
                                              },
+  CameraClosedEvent:                        { create: function (aName, aProps) {
+                                                          return new CameraClosedEvent(aName, aProps);
+                                                       },
+                                             },
   CameraConfigurationEvent:                  { create: function (aName, aProps) {
                                                           return new CameraConfigurationEvent(aName, aProps);
                                                        },
