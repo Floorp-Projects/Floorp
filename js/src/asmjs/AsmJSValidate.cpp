@@ -8586,6 +8586,16 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         masm.storePtr(reg2, Address(reg0, offsetOfJitJSContext));
     }
 
+    MOZ_ASSERT(masm.framePushed() == framePushed);
+
+    // Reload the global register since Ion code can clobber any register.
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    JS_STATIC_ASSERT(MaybeSavedGlobalReg > 0);
+    masm.loadPtr(Address(StackPointer, savedGlobalOffset), GlobalReg);
+#else
+    JS_STATIC_ASSERT(MaybeSavedGlobalReg == 0);
+#endif
+
     masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
 
     Label oolConvert;
@@ -8608,16 +8618,6 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     Label done;
     masm.bind(&done);
-
-    MOZ_ASSERT(masm.framePushed() == framePushed);
-
-    // Reload the global register since Ion code can clobber any register.
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-    JS_STATIC_ASSERT(MaybeSavedGlobalReg > 0);
-    masm.loadPtr(Address(StackPointer, savedGlobalOffset), GlobalReg);
-#else
-    JS_STATIC_ASSERT(MaybeSavedGlobalReg == 0);
-#endif
 
     // The heap pointer has to be reloaded anyway since Ion could have clobbered
     // it. Additionally, the FFI may have detached the heap buffer.
