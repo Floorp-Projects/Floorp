@@ -159,12 +159,12 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                          nsDisplayItem* aItem,
                          const ContainerLayerParameters& aContainerParameters)
 {
-  nsSize contentBoxSize = GetContentRectRelativeToSelf().Size();
+  nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
 
   nsIntSize videoSizeInPx;
   if (NS_FAILED(element->GetVideoSize(&videoSizeInPx)) ||
-      contentBoxSize.IsEmpty()) {
+      area.IsEmpty()) {
     return nullptr;
   }
 
@@ -189,11 +189,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   intrinsicSize.width.SetCoordValue(aspectRatio.width);
   intrinsicSize.height.SetCoordValue(aspectRatio.height);
 
-  nsRect contentBoxRect(
-    GetContentRectRelativeToSelf().TopLeft() + aItem->ToReferenceFrame(),
-    contentBoxSize);
-
-  nsRect dest = nsLayoutUtils::ComputeObjectDestRect(contentBoxRect,
+  nsRect dest = nsLayoutUtils::ComputeObjectDestRect(area,
                                                      intrinsicSize,
                                                      aspectRatio,
                                                      StylePosition());
