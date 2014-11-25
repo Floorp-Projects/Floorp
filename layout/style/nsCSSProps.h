@@ -567,7 +567,6 @@ public:
   static const KTableValue kAlignContentKTable[];
   static const KTableValue kAlignItemsKTable[];
   static const KTableValue kAlignSelfKTable[];
-  static const KTableValue kFlexBasisKTable[];
   static const KTableValue kFlexDirectionKTable[];
   static const KTableValue kFlexWrapKTable[];
   static const KTableValue kJustifyContentKTable[];
