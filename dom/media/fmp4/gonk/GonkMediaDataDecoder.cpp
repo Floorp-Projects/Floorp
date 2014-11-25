@@ -135,8 +135,7 @@ GonkMediaDataDecoder::Flush()
   // flushing.
   mTaskQueue->Flush();
 
-  status_t err = mDecoder->flush();
-  return err == OK ? NS_OK : NS_ERROR_FAILURE;
+  return mManager->Flush();
 }
 
 void
