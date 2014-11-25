@@ -145,12 +145,13 @@ function checkPopUpNotification() {
 
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in " + curTestName + "!");
-  notification.reshow();
-  ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in " + curTestName + "!");
+  promiseNotificationShown(notification).then(function() {
+    ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in " + curTestName + "!");
 
-  // Disable Mixed Content Protection for the page (and reload page)
-  gTestWin.PopupNotifications.panel.firstChild.disableMixedContentProtection();
-  notification.remove();
+    // Disable Mixed Content Protection for the page (and reload page)
+    gTestWin.PopupNotifications.panel.firstChild.disableMixedContentProtection();
+    notification.remove();
+  });
 }
 
 function reloadedTabAfterDisablingMCB() {
@@ -193,15 +194,16 @@ function test1A() {
   // because our decision of disabling the mixed content blocker is persistent across tabs.
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 1A!");
-  notification.reshow();
-  ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 1A!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 1A!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 1A");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 1A");
 
-  gTestWin.gBrowser.removeCurrentTab();
-  test1B();
+    gTestWin.gBrowser.removeCurrentTab();
+    test1B();
+  });
 }
 
 function test1B() {
@@ -221,20 +223,21 @@ function test1C() {
   // because our decision of disabling the mixed content blocker is persistent across tabs.
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 1C!");
-  notification.reshow();
-  ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 1C!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 1C!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 1C");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 1C");
 
-  // remove tabs
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
-  gTestWin.gBrowser.selectTabAtIndex(0);
+    // remove tabs
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
+    gTestWin.gBrowser.selectTabAtIndex(0);
 
-  var childTabLink = gHttpTestRoot2 + "file_bug906190_2.html";
-  setUpTest("Test2", "linkForTest2", test2, childTabLink);
+    var childTabLink = gHttpTestRoot2 + "file_bug906190_2.html";
+    setUpTest("Test2", "linkForTest2", test2, childTabLink);
+  });
 }
 
 //------------------------ Test 2 ------------------------------
@@ -255,15 +258,16 @@ function test2A() {
   // because our decision of disabling the mixed content blocker should only persist if pages are from the same domain.
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 2A!");
-  notification.reshow();
-  ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 2A!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 2A!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 2A");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 2A");
 
-  gTestWin.gBrowser.removeCurrentTab();
-  test2B();
+    gTestWin.gBrowser.removeCurrentTab();
+    test2B();
+  });
 }
 
 function test2B() {
@@ -283,21 +287,22 @@ function test2C() {
   // because our decision of disabling the mixed content blocker should only persist if pages are from the same domain.
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 2C!");
-  notification.reshow();
-  ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 2C!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 2C!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 2C");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 2C");
 
-  // remove tabs
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
-  gTestWin.gBrowser.selectTabAtIndex(0);
+    // remove tabs
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
+    gTestWin.gBrowser.selectTabAtIndex(0);
 
-  // file_bug906190_3_4.html redirects to page test1.example.com/* using meta-refresh
-  var childTabLink = gHttpTestRoot1 + "file_bug906190_3_4.html";
-  setUpTest("Test3", "linkForTest3", test3, childTabLink);
+    // file_bug906190_3_4.html redirects to page test1.example.com/* using meta-refresh
+    var childTabLink = gHttpTestRoot1 + "file_bug906190_3_4.html";
+    setUpTest("Test3", "linkForTest3", test3, childTabLink);
+  });
 }
 
 //------------------------ Test 3 ------------------------------
@@ -321,16 +326,17 @@ function test3B() {
   // The Doorhanger should appear but isMixedContentBlocked should be >> NOT << true!
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 3B!");
-  notification.reshow();
-  ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 3B!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 3B!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 3B");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 3B");
 
-  // remove tabs
-  gTestWin.gBrowser.removeCurrentTab();
-  test3C();
+    // remove tabs
+    gTestWin.gBrowser.removeCurrentTab();
+    test3C();
+  });
 }
 
 function test3C() {
@@ -353,20 +359,21 @@ function test3E() {
   // The Doorhanger should appear but isMixedContentBlocked should be >> NOT << true!
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 3E!");
-  notification.reshow();
-  ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 3E!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 3E!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 3E");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 3E");
 
-  // remove tabs
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
-  gTestWin.gBrowser.selectTabAtIndex(0);
+    // remove tabs
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
+    gTestWin.gBrowser.selectTabAtIndex(0);
 
-  var childTabLink = gHttpTestRoot1 + "file_bug906190_3_4.html";
-  setUpTest("Test4", "linkForTest4", test4, childTabLink);
+    var childTabLink = gHttpTestRoot1 + "file_bug906190_3_4.html";
+    setUpTest("Test4", "linkForTest4", test4, childTabLink);
+  });
 }
 
 //------------------------ Test 4 ------------------------------
@@ -391,16 +398,17 @@ function test4B() {
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 4B!");
-  notification.reshow();
-  ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 4B!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 4B!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 4B");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 4B");
 
-  // remove tabs
-  gTestWin.gBrowser.removeCurrentTab();
-  test4C();
+    // remove tabs
+    gTestWin.gBrowser.removeCurrentTab();
+    test4C();
+  });
 }
 
 function test4C() {
@@ -423,21 +431,22 @@ function test4E() {
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 4E!");
-  notification.reshow();
-  ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 4E!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 4E!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 4E");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 4E");
 
-  // remove tabs
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
-  gTestWin.gBrowser.selectTabAtIndex(0);
+    // remove tabs
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
+    gTestWin.gBrowser.selectTabAtIndex(0);
 
-  // the sjs files returns a 302 redirect- note, same origins
-  var childTabLink = gHttpTestRoot1 + "file_bug906190.sjs";
-  setUpTest("Test5", "linkForTest5", test5, childTabLink);
+    // the sjs files returns a 302 redirect- note, same origins
+    var childTabLink = gHttpTestRoot1 + "file_bug906190.sjs";
+    setUpTest("Test5", "linkForTest5", test5, childTabLink);
+  });
 }
 
 //------------------------ Test 5 ------------------------------
@@ -458,16 +467,17 @@ function test5A() {
   // Currently it is >> TRUE << - see follow up bug 914860
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 5A!");
-  notification.reshow();
-  todo(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 5A!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    todo(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 5A!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  todo_is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 5A!");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    todo_is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 5A!");
 
-  // remove tabs
-  gTestWin.gBrowser.removeCurrentTab();
-  test5B();
+    // remove tabs
+    gTestWin.gBrowser.removeCurrentTab();
+    test5B();
+  });
 }
 
 function test5B() {
@@ -487,21 +497,22 @@ function test5C() {
   // Currently it is >> TRUE << - see follow up bug 914860
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 5C!");
-  notification.reshow();
-  todo(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 5C!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    todo(!gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is NOT being blocked in Test 5C!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  todo_is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 5C!");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    todo_is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 5C!");
 
-  // remove tabs
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
-  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
-  gTestWin.gBrowser.selectTabAtIndex(0);
+    // remove tabs
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+    gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
+    gTestWin.gBrowser.selectTabAtIndex(0);
 
-  // the sjs files returns a 302 redirect - note, different origins
-  var childTabLink = gHttpTestRoot2 + "file_bug906190.sjs";
-  setUpTest("Test6", "linkForTest6", test6, childTabLink);
+    // the sjs files returns a 302 redirect - note, different origins
+    var childTabLink = gHttpTestRoot2 + "file_bug906190.sjs";
+    setUpTest("Test6", "linkForTest6", test6, childTabLink);
+  });
 }
 
 //------------------------ Test 6 ------------------------------
@@ -521,16 +532,17 @@ function test6A() {
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 6A!");
-  notification.reshow();
-  ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 6A!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 6A!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 6A");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 6A");
 
-  // done
-  gTestWin.gBrowser.removeCurrentTab();
-  test6B();
+    // done
+    gTestWin.gBrowser.removeCurrentTab();
+    test6B();
+  });
 }
 
 function test6B() {
@@ -548,15 +560,16 @@ function test6C() {
   // The Doorhanger should appear and isMixedContentBlocked should be >> TRUE <<
   var notification = PopupNotifications.getNotification("bad-content", gTestWin.gBrowser.selectedBrowser);
   ok(notification, "OK: Mixed Content Doorhanger did appear in Test 6C!");
-  notification.reshow();
-  ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 6C!");
-  notification.remove();
+  promiseNotificationShown(notification).then(function() {
+    ok(gTestWin.PopupNotifications.panel.firstChild.isMixedContentBlocked, "OK: Mixed Content is being blocked in Test 6C!");
+    notification.remove();
 
-  var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
-  is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 6C");
+    var actual = gTestWin.content.document.getElementById('mctestdiv').innerHTML;
+    is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 6C");
 
-  gTestWin.close();
-  finish();
+    gTestWin.close();
+    finish();
+  });
 }
 
 //------------------------ SETUP ------------------------------

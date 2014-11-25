@@ -85,11 +85,12 @@ function test1b() {
   ok(!objLoadingContent.activated, "Test 1b, Plugin should not be activated");
 
   // Simulate clicking the "Allow Always" button.
-  popupNotification.reshow();
-  PopupNotifications.panel.firstChild._primaryButton.click();
+  waitForNotificationShown(popupNotification, function() {
+    PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test1c, "Test 1b, Waited too long for plugin to activate");
+    let condition = function() objLoadingContent.activated;
+    waitForCondition(condition, test1c, "Test 1b, Waited too long for plugin to activate");
+  });
 }
 
 function test1c() {
@@ -114,36 +115,37 @@ function test2b() {
   ok(notification, "Test 2b, Should have a click-to-play notification");
 
   // Simulate choosing "Allow now" for the test plugin
-  notification.reshow();
-  is(notification.options.pluginData.size, 2, "Test 2b, Should have two types of plugin in the notification");
+  waitForNotificationShown(notification, function() {
+    is(notification.options.pluginData.size, 2, "Test 2b, Should have two types of plugin in the notification");
 
-  var centerAction = null;
-  for (var action of notification.options.pluginData.values()) {
-    if (action.pluginName == "Test") {
-      centerAction = action;
-      break;
+    var centerAction = null;
+    for (var action of notification.options.pluginData.values()) {
+      if (action.pluginName == "Test") {
+        centerAction = action;
+        break;
+      }
     }
-  }
-  ok(centerAction, "Test 2b, found center action for the Test plugin");
+    ok(centerAction, "Test 2b, found center action for the Test plugin");
 
-  var centerItem = null;
-  for (var item of PopupNotifications.panel.firstChild.childNodes) {
-    is(item.value, "block", "Test 2b, all plugins should start out blocked");
-    if (item.action == centerAction) {
-      centerItem = item;
-      break;
+    var centerItem = null;
+    for (var item of PopupNotifications.panel.firstChild.childNodes) {
+      is(item.value, "block", "Test 2b, all plugins should start out blocked");
+      if (item.action == centerAction) {
+        centerItem = item;
+        break;
+      }
     }
-  }
-  ok(centerItem, "Test 2b, found center item for the Test plugin");
+    ok(centerItem, "Test 2b, found center item for the Test plugin");
 
-  // "click" the button to activate the Test plugin
-  centerItem.value = "allownow";
-  PopupNotifications.panel.firstChild._primaryButton.click();
+    // "click" the button to activate the Test plugin
+    centerItem.value = "allownow";
+    PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let plugin = gTestBrowser.contentDocument.getElementById("test1");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  let condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test2c, "Test 2b, Waited too long for plugin to activate");
+    let plugin = gTestBrowser.contentDocument.getElementById("test1");
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    let condition = function() objLoadingContent.activated;
+    waitForCondition(condition, test2c, "Test 2b, Waited too long for plugin to activate");
+  });
 }
 
 function test2c() {
@@ -164,11 +166,12 @@ function test3a() {
   ok(!objLoadingContent.activated, "Test 3a, Plugin should not be activated");
 
   // Simulate clicking the "Allow Always" button.
-  popupNotification.reshow();
-  PopupNotifications.panel.firstChild._primaryButton.click();
+  waitForNotificationShown(popupNotification, function() {
+    PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test3b, "Test 3a, Waited too long for plugin to activate");
+    let condition = function() objLoadingContent.activated;
+    waitForCondition(condition, test3b, "Test 3a, Waited too long for plugin to activate");
+  });
 }
 
 function test3b() {
@@ -195,11 +198,12 @@ function test4a() {
   ok(!objLoadingContent.activated, "Test 4a, Plugin should not be activated");
 
   // Simulate clicking the "Allow Always" button.
-  popupNotification.reshow();
-  PopupNotifications.panel.firstChild._primaryButton.click();
+  waitForNotificationShown(popupNotification, function() {
+    PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test4b, "Test 4a, Waited too long for plugin to activate");
+    let condition = function() objLoadingContent.activated;
+    waitForCondition(condition, test4b, "Test 4a, Waited too long for plugin to activate");
+  });
 }
 
 function test4b() {

@@ -780,6 +780,16 @@ function promisePopupHidden(popup) {
   return promisePopupEvent(popup, "hidden");
 }
 
+function promiseNotificationShown(notification) {
+  let win = notification.browser.ownerDocument.defaultView;
+  if (win.PopupNotifications.panel.state == "open") {
+    return Promise.resolved();
+  }
+  let panelPromise = promisePopupShown(win.PopupNotifications.panel);
+  notification.reshow();
+  return panelPromise;
+}
+
 // NOTE: If you're using this, and attempting to interact with one of the
 // autocomplete results, your test is likely to be unreliable on Linux.
 // See bug 1073339.
