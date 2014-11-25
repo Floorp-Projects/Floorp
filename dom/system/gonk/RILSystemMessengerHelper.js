@@ -50,8 +50,7 @@ RILSystemMessengerHelper.prototype = {
 
   classID: RILSYSTEMMESSENGERHELPER_CID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyMessenger,
-                                         Ci.nsISmsMessenger,
-                                         Ci.nsICellbroadcastMessenger]),
+                                         Ci.nsISmsMessenger]),
 
   /**
    * RILSystemMessenger instance.
@@ -80,19 +79,6 @@ RILSystemMessengerHelper.prototype = {
     this.messenger.notifySms(aNotificationType, aId, aThreadId, aIccId, aDelivery,
                              aDeliveryStatus, aSender, aReceiver, aBody, aMessageClass,
                              aTimestamp, aSentTimestamp, aDeliveryTimestamp, aRead);
-  },
-
-  /**
-   * nsICellbroadcastMessenger API
-   */
-  notifyCbMessageReceived: function(aServiceId, aGsmGeographicalScope, aMessageCode,
-                                    aMessageId, aLanguage, aBody, aMessageClass,
-                                    aTimestamp, aCdmaServiceCategory, aHasEtwsInfo,
-                                    aEtwsWarningType, aEtwsEmergencyUserAlert, aEtwsPopup) {
-    this.messenger.notifyCbMessageReceived(aServiceId, aGsmGeographicalScope, aMessageCode,
-                                           aMessageId, aLanguage, aBody, aMessageClass,
-                                           aTimestamp, aCdmaServiceCategory, aHasEtwsInfo,
-                                           aEtwsWarningType, aEtwsEmergencyUserAlert, aEtwsPopup);
   }
 };
 
