@@ -422,10 +422,11 @@ $(abspath $(DIST)/fennec/$(OMNIJAR_NAME)): FORCE
 	$(RM) $(DIST)/fennec/$(notdir $(OMNIJAR_NAME))
 
 # Targets built very early during a Gradle build.
-gradle-targets: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
 gradle-targets: .aapt.deps
 
-.PHONY: gradle-targets
+gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
+
+.PHONY: gradle-targets gradle-omnijar
 
 libs:: geckoview_resources.zip classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
 	$(INSTALL) geckoview_resources.zip $(FINAL_TARGET)
