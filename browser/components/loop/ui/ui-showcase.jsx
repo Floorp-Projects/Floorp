@@ -28,7 +28,8 @@
   var UnsupportedBrowserView  = loop.webapp.UnsupportedBrowserView;
   var UnsupportedDeviceView   = loop.webapp.UnsupportedDeviceView;
   var CallUrlExpiredView      = loop.webapp.CallUrlExpiredView;
-  var PendingConversationView = loop.webapp.PendingConversationView;
+  var GumPromptConversationView = loop.webapp.GumPromptConversationView;
+  var WaitingConversationView = loop.webapp.WaitingConversationView;
   var StartConversationView   = loop.webapp.StartConversationView;
   var FailedConversationView  = loop.webapp.FailedConversationView;
   var EndedConversationView   = loop.webapp.EndedConversationView;
@@ -326,16 +327,24 @@
             </div>
           </Section>
 
-          <Section name="PendingConversationView">
-            <Example summary="Pending conversation view (connecting)" dashed="true">
+          <Section name="GumPromptConversationView">
+            <Example summary="Gum Prompt conversation view" dashed="true">
               <div className="standalone">
-                <PendingConversationView websocket={mockWebSocket}
+                <GumPromptConversationView />
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="WaitingConversationView">
+            <Example summary="Waiting conversation view (connecting)" dashed="true">
+              <div className="standalone">
+                <WaitingConversationView websocket={mockWebSocket}
                                          dispatcher={dispatcher} />
               </div>
             </Example>
-            <Example summary="Pending conversation view (ringing)" dashed="true">
+            <Example summary="Waiting conversation view (ringing)" dashed="true">
               <div className="standalone">
-                <PendingConversationView websocket={mockWebSocket}
+                <WaitingConversationView websocket={mockWebSocket}
                                          dispatcher={dispatcher}
                                          callState="ringing"/>
               </div>
