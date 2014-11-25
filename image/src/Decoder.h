@@ -215,6 +215,13 @@ protected:
                 Orientation aOrientation = Orientation());
 
   // Called by decoders if they determine that the image has transparency.
+  //
+  // This should be fired as early as possible to allow observers to do things
+  // that affect content, so it's necessarily pessimistic. PostFrameStop's
+  // aFrameAlpha argument, on the other hand, is only used internally to
+  // ImageLib. Because PostFrameStop isn't delivered until the entire frame has
+  // been decoded, decoders may take into account the actual contents of the
+  // frame.
   void PostHasTransparency();
 
   // Called by decoders when they begin a frame. Informs the image, sends
