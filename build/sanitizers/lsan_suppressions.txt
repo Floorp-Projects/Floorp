@@ -15,9 +15,6 @@ leak:nsComponentManagerImpl
 leak:mozJSComponentLoader::LoadModule
 leak:nsNativeModuleLoader::LoadModule
 
-# Bug 980109 - Freeing this properly on shutdown is hard.
-leak:profiler_init
-
 # Bug 981220 - Pixman fails to free TLS memory.
 leak:pixman_implementation_lookup_composite
 
