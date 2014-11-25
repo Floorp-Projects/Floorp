@@ -3808,14 +3808,6 @@ pref("image.mem.surfacecache.max_size_kb", 102400); // 100MB
 // systems.
 pref("image.mem.surfacecache.size_factor", 64);
 
-// How much of the data in the surface cache is discarded when we get a memory
-// pressure notification, as a fraction. The discard factor is interpreted as a
-// reciprocal, so a discard factor of 1 means to discard everything in the
-// surface cache on memory pressure, a discard factor of 2 means to discard half
-// of the data, and so forth. The default should be a good balance for desktop
-// and laptop systems, where we never discard visible images.
-pref("image.mem.surfacecache.discard_factor", 1);
-
 // Whether we decode images on multiple background threads rather than the
 // foreground thread.
 pref("image.multithreaded_decoding.enabled", true);
