@@ -70,9 +70,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gPowerManagerService",
                                    "@mozilla.org/power/powermanagerservice;1",
                                    "nsIPowerManagerService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyMessenger",
-                                   "@mozilla.org/ril/system-messenger-helper;1",
-                                   "nsITelephonyMessenger");
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gAudioService",
                                    "@mozilla.org/telephony/audio-service;1",
@@ -1090,17 +1090,21 @@ TelephonyService.prototype = {
     aCall.isEmergency = this._isEmergencyNumber(aCall.number);
     let duration = ("started" in aCall && typeof aCall.started == "number") ?
       new Date().getTime() - aCall.started : 0;
+    let data = {
+      number: aCall.number,
+      serviceId: aClientId,
+      emergency: aCall.isEmergency,
+      duration: duration,
+      direction: aCall.isOutgoing ? "outgoing" : "incoming",
+      hangUpLocal: aCall.hangUpLocal
+    };
 
-    gTelephonyMessenger.notifyCallEnded(aClientId,
-                                        aCall.number,
-                                        this._cdmaCallWaitingNumber,
-                                        aCall.isEmergency,
-                                        duration,
-                                        aCall.isOutgoing,
-                                        aCall.hangUpLocal);
+    if (this._cdmaCallWaitingNumber != null) {
+      data.secondNumber = this._cdmaCallWaitingNumber;
+      this._cdmaCallWaitingNumber = null;
+    }
 
-    // Clear cache of this._cdmaCallWaitingNumber after call disconnected.
-    this._cdmaCallWaitingNumber = null;
+    gSystemMessenger.broadcastMessage("telephony-call-ended", data);
 
     let manualConfStateChange = false;
     let childId = this._currentCalls[aClientId][aCall.callIndex].childId;
@@ -1165,7 +1169,7 @@ TelephonyService.prototype = {
     // the sleep mode when the RIL handles the incoming call.
     this._acquireCallRingWakeLock();
 
-    gTelephonyMessenger.notifyNewCall();
+    gSystemMessenger.broadcastMessage("telephony-new-call", {});
   },
 
   /**
@@ -1180,7 +1184,7 @@ TelephonyService.prototype = {
     }
 
     if (aCall.state == nsITelephonyService.CALL_STATE_DIALING) {
-      gTelephonyMessenger.notifyNewCall();
+      gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
 
     aCall.clientId = aClientId;
