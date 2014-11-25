@@ -396,7 +396,8 @@ SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleVa
 inline bool
 SetConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName name, HandleValue rval)
 {
-    return JSObject::defineProperty(cx, varobj, name, rval, nullptr, nullptr,
+    return JSObject::defineProperty(cx, varobj, name, rval,
+                                    JS_PropertyStub, JS_StrictPropertyStub,
                                     JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
 }
 

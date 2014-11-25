@@ -143,8 +143,9 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     self->setIntrinsicsHolder(intrinsicsHolder);
     /* Define a property 'global' with the current global as its value. */
     RootedValue global(cx, ObjectValue(*self));
-    if (!JSObject::defineProperty(cx, intrinsicsHolder, cx->names().global, global,
-                                  nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!JSObject::defineProperty(cx, intrinsicsHolder, cx->names().global,
+                                  global, JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -2558,7 +2559,8 @@ DefineStandardSlot(JSContext *cx, HandleObject obj, JSProtoKey key, JSAtom *atom
         }
     }
 
-    named = JSObject::defineGeneric(cx, obj, id, v, nullptr, nullptr, attrs);
+    named = JSObject::defineGeneric(cx, obj, id,
+                                    v, JS_PropertyStub, JS_StrictPropertyStub, attrs);
     return named;
 }
 
@@ -3020,16 +3022,22 @@ JSObject::defineGeneric(ExclusiveContext *cx, HandleObject obj,
                         HandleId id, HandleValue value,
                         JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
-
     js::DefineGenericOp op = obj->getOps()->defineGeneric;
     if (op) {
         if (!cx->shouldBeJSContext())
             return false;
         return op(cx->asJSContext(), obj, id, value, getter, setter, attrs);
     }
+
+    if (getter == nullptr)
+        getter = obj->getClass()->getProperty;
+    if (setter == nullptr)
+        setter = obj->getClass()->setProperty;
+    if (getter == JS_PropertyStub)
+        getter = nullptr;
+    if (setter == JS_StrictPropertyStub)
+        setter = nullptr;
     return baseops::DefineGeneric(cx, obj.as<NativeObject>(), id, value, getter, setter, attrs);
 }
 
@@ -3047,15 +3055,21 @@ JSObject::defineElement(ExclusiveContext *cx, HandleObject obj,
                         uint32_t index, HandleValue value,
                         JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
 {
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
-
     js::DefineElementOp op = obj->getOps()->defineElement;
     if (op) {
         if (!cx->shouldBeJSContext())
             return false;
         return op(cx->asJSContext(), obj, index, value, getter, setter, attrs);
     }
+
+    if (!getter)
+        getter = obj->getClass()->getProperty;
+    if (!setter)
+        setter = obj->getClass()->setProperty;
+    if (getter == JS_PropertyStub)
+        getter = nullptr;
+    if (setter == JS_StrictPropertyStub)
+        setter = nullptr;
     return baseops::DefineElement(cx, obj.as<NativeObject>(), index, value, getter, setter, attrs);
 }
 
