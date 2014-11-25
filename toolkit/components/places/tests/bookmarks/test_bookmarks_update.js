@@ -402,6 +402,71 @@ add_task(function* update_move() {
   Assert.equal(descendant.index, 1);
 });
 
+add_task(function* update_move_append() {
+  let folder_a =
+    yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                         type: PlacesUtils.bookmarks.TYPE_FOLDER });
+  checkBookmarkObject(folder_a);
+  let folder_b =
+    yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                         type: PlacesUtils.bookmarks.TYPE_FOLDER });
+  checkBookmarkObject(folder_b);
+
+  /* folder_a: [sep_1, sep_2, sep_3], folder_b: [] */
+  let sep_1 = yield PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
+                                                   type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
+  checkBookmarkObject(sep_1);
+  let sep_2 = yield PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
+                                                   type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
+  checkBookmarkObject(sep_2);
+  let sep_3 = yield PlacesUtils.bookmarks.insert({ parentGuid: folder_a.guid,
+                                                   type: PlacesUtils.bookmarks.TYPE_SEPARATOR });
+  checkBookmarkObject(sep_3);
+
+  function ensurePosition(info, parentGuid, index) {
+    checkBookmarkObject(info);
+    Assert.equal(info.parentGuid, parentGuid);
+    Assert.equal(info.index, index);
+  }
+
+  // folder_a: [sep_2, sep_3, sep_1], folder_b: []
+  sep_1.index = PlacesUtils.bookmarks.DEFAULT_INDEX;
+  // Note sep_1 includes parentGuid even though we're not moving the item to
+  // another folder
+  sep_1 = yield PlacesUtils.bookmarks.update(sep_1);
+  ensurePosition(sep_1, folder_a.guid, 2);
+  sep_2 = yield PlacesUtils.bookmarks.fetch(sep_2.guid);
+  ensurePosition(sep_2, folder_a.guid, 0);
+  sep_3 = yield PlacesUtils.bookmarks.fetch(sep_3.guid);
+  ensurePosition(sep_3, folder_a.guid, 1);
+  sep_1 = yield PlacesUtils.bookmarks.fetch(sep_1.guid);
+  ensurePosition(sep_1, folder_a.guid, 2);
+
+  // folder_a: [sep_2, sep_1], folder_b: [sep_3]
+  sep_3.index = PlacesUtils.bookmarks.DEFAULT_INDEX;
+  sep_3.parentGuid = folder_b.guid;
+  sep_3 = yield PlacesUtils.bookmarks.update(sep_3);
+  ensurePosition(sep_3, folder_b.guid, 0);
+  sep_2 = yield PlacesUtils.bookmarks.fetch(sep_2.guid);
+  ensurePosition(sep_2, folder_a.guid, 0);
+  sep_1 = yield PlacesUtils.bookmarks.fetch(sep_1.guid);
+  ensurePosition(sep_1, folder_a.guid, 1);
+  sep_3 = yield PlacesUtils.bookmarks.fetch(sep_3.guid);
+  ensurePosition(sep_3, folder_b.guid, 0);
+
+  // folder_a: [sep_1], folder_b: [sep_3, sep_2]
+  sep_2.index = Number.MAX_SAFE_INTEGER;
+  sep_2.parentGuid = folder_b.guid;
+  sep_2 = yield PlacesUtils.bookmarks.update(sep_2);
+  ensurePosition(sep_2, folder_b.guid, 1);
+  sep_1 = yield PlacesUtils.bookmarks.fetch(sep_1.guid);
+  ensurePosition(sep_1, folder_a.guid, 0);
+  sep_3 = yield PlacesUtils.bookmarks.fetch(sep_3.guid);
+  ensurePosition(sep_3, folder_b.guid, 0);
+  sep_2 = yield PlacesUtils.bookmarks.fetch(sep_2.guid);
+  ensurePosition(sep_2, folder_b.guid, 1);
+});
+
 function run_test() {
   run_next_test();
 }
