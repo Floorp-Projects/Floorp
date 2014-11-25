@@ -6,6 +6,7 @@
 package org.mozilla.gecko.updater;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.CrashHandler;
 import org.mozilla.gecko.R;
 
 import org.mozilla.apache.commons.codec.binary.Hex;
@@ -80,18 +81,28 @@ public class UpdateService extends IntentService {
     private boolean mCancelDownload;
     private boolean mApplyImmediately;
 
+    private CrashHandler mCrashHandler;
+
     public UpdateService() {
         super("updater");
     }
 
     @Override
     public void onCreate () {
+        mCrashHandler = CrashHandler.createDefaultCrashHandler(getApplicationContext());
+
         super.onCreate();
 
         mPrefs = getSharedPreferences(PREFS_NAME, 0);
         mNotificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         mConnectivityManager = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         mCancelDownload = false;
+    }
+
+    @Override
+    public void onDestroy() {
+        mCrashHandler.unregister();
+        mCrashHandler = null;
     }
 
     @Override
