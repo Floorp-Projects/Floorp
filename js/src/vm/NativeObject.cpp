@@ -1792,14 +1792,12 @@ GetPropertyHelperInline(JSContext *cx,
 
         vp.setUndefined();
 
-        if (JSPropertyOp getProperty = obj->getClass()->getProperty) {
-            if (!CallJSPropertyOp(cx, getProperty,
-                                  MaybeRooted<JSObject*, allowGC>::toHandle(obj),
-                                  MaybeRooted<jsid, allowGC>::toHandle(id),
-                                  MaybeRooted<Value, allowGC>::toMutableHandle(vp)))
-            {
-                return false;
-            }
+        if (!CallJSPropertyOp(cx, obj->getClass()->getProperty,
+                              MaybeRooted<JSObject*, allowGC>::toHandle(obj),
+                              MaybeRooted<jsid, allowGC>::toHandle(id),
+                              MaybeRooted<Value, allowGC>::toMutableHandle(vp)))
+        {
+            return false;
         }
 
         /*
@@ -1981,7 +1979,7 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
         if (receiver->isDelegate())
             return false;
 
-        if (clasp->getProperty || !types::HasTypePropertyId(receiver, id, v))
+        if (clasp->getProperty != JS_PropertyStub || !types::HasTypePropertyId(receiver, id, v))
             return false;
     } else {
         // Purge the property cache of now-shadowed id in receiver's scope chain.
@@ -1991,9 +1989,11 @@ SetPropertyByDefining(typename ExecutionModeTraits<mode>::ContextType cxArg,
 
     // Define the new data property.
     JSPropertyOp getter = clasp->getProperty;
+    if (getter == JS_PropertyStub)
+        getter = nullptr;
     JSStrictPropertyOp setter = clasp->setProperty;
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+    if (setter == JS_StrictPropertyStub)
+        setter = nullptr;
     if (!receiver->is<NativeObject>()) {
         if (mode == ParallelExecution)
             return false;

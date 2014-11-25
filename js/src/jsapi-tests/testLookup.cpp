@@ -39,7 +39,11 @@ END_TEST(testLookup_bug522590)
 
 static const JSClass DocumentAllClass = {
     "DocumentAll",
-    JSCLASS_EMULATES_UNDEFINED
+    JSCLASS_EMULATES_UNDEFINED,
+    nullptr,
+    nullptr,
+    JS_PropertyStub,
+    JS_StrictPropertyStub
 };
 
 bool
@@ -76,7 +80,7 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *res
 
 static const JSClass document_class = {
     "document", 0,
-    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
     nullptr, document_resolve, nullptr
 };
 

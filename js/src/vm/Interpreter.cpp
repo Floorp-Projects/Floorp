@@ -141,7 +141,8 @@ static const uint32_t JSSLOT_SAVED_ID = 1;
 
 static const Class js_NoSuchMethodClass = {
     "NoSuchMethod",
-    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS
+    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS,
+    nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub
 };
 
 /*

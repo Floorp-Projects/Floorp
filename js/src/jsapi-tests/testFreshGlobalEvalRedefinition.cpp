@@ -23,7 +23,7 @@ BEGIN_TEST(testRedefineGlobalEval)
 {
     static const JSClass cls = {
         "global", JSCLASS_GLOBAL_FLAGS,
-        nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, JS_PropertyStub, JS_StrictPropertyStub,
         GlobalEnumerate, GlobalResolve, nullptr,
         nullptr, nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook

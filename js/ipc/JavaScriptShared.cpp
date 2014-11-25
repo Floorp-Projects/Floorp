@@ -554,8 +554,10 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
             return false;
         out->getter() = objVar;
     } else {
-        MOZ_ASSERT(desc.getter() != JS_PropertyStub);
-        out->getter() = UnknownPropertyOp;
+        if (desc.getter() == JS_PropertyStub)
+            out->getter() = 0;
+        else
+            out->getter() = UnknownPropertyOp;
     }
 
     if (!desc.setter()) {
@@ -567,8 +569,10 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
             return false;
         out->setter() = objVar;
     } else {
-        MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
-        out->setter() = UnknownPropertyOp;
+        if (desc.setter() == JS_StrictPropertyStub)
+            out->setter() = 0;
+        else
+            out->setter() = UnknownPropertyOp;
     }
 
     return true;

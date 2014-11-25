@@ -70,7 +70,12 @@ DebuggerMemory::construct(JSContext *cx, unsigned argc, Value *vp)
 /* static */ const Class DebuggerMemory::class_ = {
     "Memory",
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_COUNT)
+    JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_COUNT),
+
+    nullptr,               // addProperty
+    nullptr,               // delProperty
+    JS_PropertyStub,       // getProperty
+    JS_StrictPropertyStub  // setProperty
 };
 
 /* static */ DebuggerMemory *

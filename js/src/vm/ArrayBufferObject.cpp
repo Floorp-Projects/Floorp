@@ -94,7 +94,11 @@ js::ToClampedIndex(JSContext *cx, HandleValue v, uint32_t length, uint32_t *out)
 
 const Class ArrayBufferObject::protoClass = {
     "ArrayBufferPrototype",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer)
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    nullptr,                 /* addProperty */
+    nullptr,                 /* delProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub    /* setProperty */
 };
 
 const Class ArrayBufferObject::class_ = {
@@ -105,8 +109,8 @@ const Class ArrayBufferObject::class_ = {
     JSCLASS_BACKGROUND_FINALIZE,
     nullptr,                 /* addProperty */
     nullptr,                 /* delProperty */
-    nullptr,                 /* getProperty */
-    nullptr,                 /* setProperty */
+    JS_PropertyStub,         /* getProperty */
+    JS_StrictPropertyStub,   /* setProperty */
     nullptr,                 /* enumerate */
     nullptr,                 /* resolve */
     nullptr,                 /* convert */

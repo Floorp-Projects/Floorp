@@ -55,8 +55,9 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
         vp.setUndefined();
         return true;
     }
-    MOZ_ASSERT(desc.getter() != JS_PropertyStub);
-    if (!desc.getter()) {
+    if (!desc.getter() ||
+        (!desc.hasGetterObject() && desc.getter() == JS_PropertyStub))
+    {
         vp.set(desc.value());
         return true;
     }
@@ -116,7 +117,6 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
         // Nonstandard SpiderMonkey special case: setter ops.
         StrictPropertyOp setter = ownDesc.setter();
-        MOZ_ASSERT(setter != JS_StrictPropertyStub);
         if (setter && setter != JS_StrictPropertyStub)
             return CallSetter(cx, receiver, id, setter, ownDesc.attributes(), strict, vp);
 
@@ -135,10 +135,13 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
         // A very old nonstandard SpiderMonkey extension: default to the Class
         // getter and setter ops.
         const Class *clasp = receiver->getClass();
-        MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
-        MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
-        return JSObject::defineGeneric(cx, receiver, id, vp,
-                                       clasp->getProperty, clasp->setProperty, attrs);
+        PropertyOp getter = clasp->getProperty;
+        if (getter == JS_PropertyStub)
+            getter = nullptr;
+        setter = clasp->setProperty;
+        if (setter == JS_StrictPropertyStub)
+            setter = nullptr;
+        return JSObject::defineGeneric(cx, receiver, id, vp, getter, setter, attrs);
     }
 
     // Step 6.
@@ -161,9 +164,6 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
     /* The control-flow here differs from ::get() because of the fall-through case below. */
     MOZ_ASSERT_IF(descIsOwn, desc.object());
     if (desc.object()) {
-        MOZ_ASSERT(desc.getter() != JS_PropertyStub);
-        MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
-
         // Check for read-only properties.
         if (desc.isReadonly()) {
             if (strict)
@@ -171,6 +171,8 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
             return true;
         }
 
+        MOZ_ASSERT(desc.getter() != JS_PropertyStub);
+        MOZ_ASSERT(desc.setter() != JS_StrictPropertyStub);
         if (desc.hasSetterObject() || desc.setter()) {
             if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
                 return false;
