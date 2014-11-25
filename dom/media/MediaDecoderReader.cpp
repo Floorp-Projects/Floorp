@@ -264,6 +264,7 @@ MediaDecoderReader::BreakCycles()
 void
 MediaDecoderReader::Shutdown()
 {
+  MOZ_ASSERT(mDecoder->OnDecodeThread());
   ReleaseMediaResources();
 }
 
