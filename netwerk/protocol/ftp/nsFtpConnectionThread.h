@@ -76,13 +76,13 @@ class nsIStreamListener;
 // implements nsITransportEventSink so it can mix status events from both the
 // control connection and the data connection.
 
-class nsFtpState : public nsBaseContentStream,
-                   public nsIInputStreamCallback,
-                   public nsITransportEventSink,
-                   public nsICacheListener,
-                   public nsIRequestObserver,
-                   public nsFtpControlConnectionListener,
-                   public nsIProtocolProxyCallback
+class nsFtpState MOZ_FINAL : public nsBaseContentStream,
+                             public nsIInputStreamCallback,
+                             public nsITransportEventSink,
+                             public nsICacheListener,
+                             public nsIRequestObserver,
+                             public nsFtpControlConnectionListener,
+                             public nsIProtocolProxyCallback
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

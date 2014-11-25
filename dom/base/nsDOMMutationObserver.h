@@ -28,8 +28,8 @@
 class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfo;
 
-class nsDOMMutationRecord : public nsISupports,
-                            public nsWrapperCache
+class nsDOMMutationRecord MOZ_FINAL : public nsISupports,
+                                      public nsWrapperCache
 {
   virtual ~nsDOMMutationRecord() {}
 
@@ -337,8 +337,8 @@ public:
 { 0x0c3b91f8, 0xcc3b, 0x4b08, \
   { 0x9e, 0xab, 0x07, 0x47, 0xa9, 0xe4, 0x65, 0xb4 } }
 
-class nsDOMMutationObserver : public nsISupports,
-                              public nsWrapperCache
+class nsDOMMutationObserver MOZ_FINAL : public nsISupports,
+                                        public nsWrapperCache
 {
 public:
   nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow>&& aOwner,

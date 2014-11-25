@@ -104,10 +104,10 @@ private:
 
 //-----------------------------------------------------------------------------
 
-class nsSocketTransport : public nsASocketHandler
-                        , public nsISocketTransport
-                        , public nsIDNSListener
-                        , public nsIClassInfo
+class nsSocketTransport MOZ_FINAL : public nsASocketHandler
+                                  , public nsISocketTransport
+                                  , public nsIDNSListener
+                                  , public nsIClassInfo
 {
     typedef mozilla::Mutex Mutex;
 

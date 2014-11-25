@@ -81,10 +81,10 @@
 { 0x56c778e4, 0x1bee, 0x45f3, \
   { 0xa6, 0x89, 0x88, 0x66, 0x92, 0xa9, 0x7f, 0xe7 } }
 
-class mozHunspell : public mozISpellCheckingEngine,
-                    public nsIObserver,
-                    public nsSupportsWeakReference,
-                    public nsIMemoryReporter
+class mozHunspell MOZ_FINAL : public mozISpellCheckingEngine,
+                              public nsIObserver,
+                              public nsSupportsWeakReference,
+                              public nsIMemoryReporter
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
