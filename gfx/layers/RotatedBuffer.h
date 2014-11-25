@@ -302,14 +302,12 @@ public:
                                                DrawIterator* aIter = nullptr);
 
   enum {
-    ALLOW_REPEAT = 0x01,
     BUFFER_COMPONENT_ALPHA = 0x02 // Dual buffers should be created for drawing with
                                   // component alpha.
   };
   /**
    * Return a new surface of |aSize| and |aType|.
-   * @param aFlags if ALLOW_REPEAT is set, then the buffer should be configured
-   * to allow repeat-mode, otherwise it should be in pad (clamp) mode
+   *
    * If the created buffer supports azure content, then the result(s) will
    * be returned in aBlackDT/aWhiteDT, otherwise aBlackSurface/aWhiteSurface
    * will be used.
