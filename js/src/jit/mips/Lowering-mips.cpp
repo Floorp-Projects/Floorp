@@ -57,6 +57,12 @@ LIRGeneratorMIPS::useByteOpRegisterOrNonDoubleConstant(MDefinition *mir)
     return useRegisterOrNonDoubleConstant(mir);
 }
 
+LDefinition
+LIRGeneratorMIPS::tempByteOpRegister()
+{
+    return temp();
+}
+
 bool
 LIRGeneratorMIPS::lowerConstantDouble(double d, MInstruction *mir)
 {
@@ -523,6 +529,18 @@ LIRGeneratorMIPS::lowerTruncateFToInt32(MTruncateToInt32 *ins)
     MOZ_ASSERT(opd->type() == MIRType_Float32);
 
     return define(new(alloc()) LTruncateFToInt32(useRegister(opd), LDefinition::BogusTemp()), ins);
+}
+
+bool
+LIRGeneratorMIPS::visitSubstr(MSubstr *ins)
+{
+    LSubstr *lir = new (alloc()) LSubstr(useRegister(ins->string()),
+                                         useRegister(ins->begin()),
+                                         useRegister(ins->length()),
+                                         temp(),
+                                         temp(),
+                                         tempByteOpRegister());
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

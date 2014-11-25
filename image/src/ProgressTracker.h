@@ -34,8 +34,8 @@ enum {
   FLAG_LOAD_COMPLETE      = 1u << 4,  // STATUS_LOAD_COMPLETE
   FLAG_ONLOAD_BLOCKED     = 1u << 5,
   FLAG_ONLOAD_UNBLOCKED   = 1u << 6,
-  FLAG_IS_ANIMATED        = 1u << 7,
-  FLAG_HAS_TRANSPARENCY   = 1u << 8,
+  FLAG_IS_ANIMATED        = 1u << 7,  // STATUS_IS_ANIMATED
+  FLAG_HAS_TRANSPARENCY   = 1u << 8,  // STATUS_HAS_TRANSPARENCY
   FLAG_IS_MULTIPART       = 1u << 9,
   FLAG_LAST_PART_COMPLETE = 1u << 10,
   FLAG_HAS_ERROR          = 1u << 11  // STATUS_ERROR
@@ -101,6 +101,9 @@ public:
   // Get the current image status (as in imgIRequest).
   uint32_t GetImageStatus() const;
 
+  // Get the current Progress.
+  Progress GetProgress() const { return mProgress; }
+ 
   // Schedule an asynchronous "replaying" of all the notifications that would
   // have to happen to put us in the current state.
   // We will also take note of any notifications that happen between the time

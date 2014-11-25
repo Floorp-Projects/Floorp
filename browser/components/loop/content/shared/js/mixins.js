@@ -238,17 +238,18 @@ loop.shared.mixins = (function() {
 
       function isConnectedToRoom(state) {
         return state === ROOM_STATES.HAS_PARTICIPANTS ||
-          state === ROOM_STATES.SESSION_CONNECTED;
+               state === ROOM_STATES.SESSION_CONNECTED;
       }
 
       function notConnectedToRoom(state) {
         // Failed and full are states that the user is not
-        // really connected o the room, but we don't want to
+        // really connected to the room, but we don't want to
         // catch those here, as they get their own sounds.
         return state === ROOM_STATES.INIT ||
-          state === ROOM_STATES.GATHER ||
-          state === ROOM_STATES.READY ||
-          state === ROOM_STATES.JOINED;
+               state === ROOM_STATES.GATHER ||
+               state === ROOM_STATES.READY ||
+               state === ROOM_STATES.JOINED ||
+               state === ROOM_STATES.ENDED;
       }
 
       // Joining the room.

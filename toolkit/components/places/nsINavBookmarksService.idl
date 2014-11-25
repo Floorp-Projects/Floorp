@@ -113,8 +113,7 @@ interface nsINavBookmarkObserver : nsISupports
    *        For certain properties, this is set to the new value of the
    *        property (see the list below).
    * @param aLastModified
-   *        If lastModified changed, this parameter is the new value, otherwise
-   *        it's set to 0.
+   *        The updated last-modified value.
    * @param aItemType
    *        The type of the item to be removed (see TYPE_* constants below).
    * @param aParentId

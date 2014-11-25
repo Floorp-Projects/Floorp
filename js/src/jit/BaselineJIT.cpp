@@ -8,6 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
+#include "asmjs/AsmJSModule.h"
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
@@ -45,6 +46,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
   : method_(nullptr),
     templateScope_(nullptr),
     fallbackStubSpace_(),
+    dependentAsmJSModules_(nullptr),
     prologueOffset_(prologueOffset),
     epilogueOffset_(epilogueOffset),
 #ifdef DEBUG
@@ -440,7 +442,52 @@ BaselineScript::Destroy(FreeOp *fop, BaselineScript *script)
     MOZ_ASSERT(fop->runtime()->gc.nursery.isEmpty());
 #endif
 
+    script->unlinkDependentAsmJSModules(fop);
+
     fop->delete_(script);
+}
+
+void
+BaselineScript::unlinkDependentAsmJSModules(FreeOp *fop)
+{
+    // Remove any links from AsmJSModules that contain optimized FFI calls into
+    // this BaselineScript.
+    if (dependentAsmJSModules_) {
+        for (size_t i = 0; i < dependentAsmJSModules_->length(); i++) {
+            DependentAsmJSModuleExit exit = (*dependentAsmJSModules_)[i];
+            exit.module->detachJitCompilation(exit.exitIndex);
+        }
+
+        fop->delete_(dependentAsmJSModules_);
+        dependentAsmJSModules_ = nullptr;
+    }
+}
+
+bool
+BaselineScript::addDependentAsmJSModule(JSContext *cx, DependentAsmJSModuleExit exit)
+{
+    if (!dependentAsmJSModules_) {
+        dependentAsmJSModules_ = cx->new_<Vector<DependentAsmJSModuleExit> >(cx);
+        if (!dependentAsmJSModules_)
+            return false;
+    }
+    return dependentAsmJSModules_->append(exit);
+}
+
+void
+BaselineScript::removeDependentAsmJSModule(DependentAsmJSModuleExit exit)
+{
+    if (!dependentAsmJSModules_)
+        return;
+
+    for (size_t i = 0; i < dependentAsmJSModules_->length(); i++) {
+        if ((*dependentAsmJSModules_)[i].module == exit.module &&
+            (*dependentAsmJSModules_)[i].exitIndex == exit.exitIndex)
+        {
+            dependentAsmJSModules_->erase(dependentAsmJSModules_->begin() + i);
+            break;
+        }
+    }
 }
 
 ICEntry &

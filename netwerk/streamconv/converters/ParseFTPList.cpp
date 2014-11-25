@@ -723,7 +723,7 @@ int ParseFTPList(const char *line, struct list_state *state,
        * "07-21-00  01:19PM                52275 Name Plate.jpg"
        * "07-14-00  01:38PM              2250540 Valentineoffprank-HiRes.jpg"
       */
-      if ((numtoks >= 4) && toklen[0] == 8 && toklen[1] == 7 && 
+      if ((numtoks >= 4) && (toklen[0] == 8 || toklen[0] == 10) && toklen[1] == 7 && 
           (*tokens[2] == '<' || isdigit(*tokens[2])) )
       {
         p = tokens[0];

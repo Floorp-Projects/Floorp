@@ -13,7 +13,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
 #include "nsAString.h"
 #include "nsPrintfCString.h"            // for nsPrintfCString
-#include "nsRegion.h"                   // for nsIntRegion
+#include "nsRegion.h"                   // for nsRegion, nsIntRegion
 #include "nscore.h"                     // for nsACString, etc
 
 struct gfxRGBA;
@@ -92,6 +92,10 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRectTyped<T>& 
     r.x, r.y, r.width, r.height).get();
   aStream << sfx;
 }
+
+void
+AppendToString(std::stringstream& aStream, const nsRegion& r,
+               const char* pfx="", const char* sfx="");
 
 void
 AppendToString(std::stringstream& aStream, const nsIntRegion& r,

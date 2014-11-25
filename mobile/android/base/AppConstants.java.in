@@ -6,9 +6,10 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.mozglue.RobocopTarget;
-
 import android.os.Build;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * A collection of constants that pertain to the build and runtime state of the
@@ -19,7 +20,9 @@ import android.os.Build;
  * See also SysInfo.java, which includes some of the values available from
  * nsSystemInfo inside Gecko.
  */
-@RobocopTarget
+// Normally, we'd annotate with @RobocopTarget.  Since AppConstants is compiled
+// before RobocopTarget, we instead add o.m.g.AppConstants directly to the
+// Proguard configuration.
 public class AppConstants {
     public static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
     public static final String MANGLED_ANDROID_PACKAGE_NAME = "@MANGLED_ANDROID_PACKAGE_NAME@";
@@ -259,6 +262,13 @@ public class AppConstants {
     public static final boolean ANDROID_DOWNLOADS_INTEGRATION =
 //#ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
     AppConstants.Versions.feature12Plus;
+//#else
+    false;
+//#endif
+
+    public static final boolean MOZ_LINKER_EXTRACT =
+//#ifdef MOZ_LINKER_EXTRACT
+    true;
 //#else
     false;
 //#endif
