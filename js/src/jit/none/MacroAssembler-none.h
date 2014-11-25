@@ -191,7 +191,7 @@ class MacroAssemblerNone : public Assembler
     void callWithExitFrame(JitCode *, Register) { MOZ_CRASH(); }
 
     void callIon(Register callee) { MOZ_CRASH(); }
-    void callIonFromAsmJS(Register callee) { MOZ_CRASH(); }
+    void callJitFromAsmJS(Register callee) { MOZ_CRASH(); }
 
     void nop() { MOZ_CRASH(); }
     void breakpoint() { MOZ_CRASH(); }
