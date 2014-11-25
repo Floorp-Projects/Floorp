@@ -80,6 +80,8 @@ function skipTests(tests, startTestPattern, endTestPattern) {
     var test_path;
     if ((tests[i] instanceof Object) && ('test' in tests[i])) {
       test_path = tests[i]['test']['url'];
+    } else if ((tests[i] instanceof Object) && ('url' in tests[i])) {
+      test_path = tests[i]['url'];
     } else {
       test_path = tests[i];
     }
