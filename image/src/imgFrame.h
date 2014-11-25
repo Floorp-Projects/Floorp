@@ -96,6 +96,7 @@ public:
   uint8_t* GetImageData() const;
   void GetPaletteData(uint32_t **aPalette, uint32_t *length) const;
   uint32_t* GetPaletteData() const;
+  uint8_t* GetRawData() const;
 
   int32_t GetRawTimeout() const;
   void SetRawTimeout(int32_t aTimeout);
