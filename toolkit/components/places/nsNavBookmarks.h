@@ -210,6 +210,11 @@ public:
   nsresult GetDescendantFolders(int64_t aFolderId,
                                 nsTArray<int64_t>& aDescendantFoldersArray);
 
+  static const int32_t kGetChildrenIndex_Guid;
+  static const int32_t kGetChildrenIndex_Position;
+  static const int32_t kGetChildrenIndex_Type;
+  static const int32_t kGetChildrenIndex_PlaceID;
+
 private:
   static nsNavBookmarks* gBookmarksService;
 
@@ -355,11 +360,6 @@ private:
                               nsTArray<BookmarkData>& _bookmarks);
 
   int64_t RecursiveFindRedirectedBookmark(int64_t aPlaceId);
-
-  static const int32_t kGetChildrenIndex_Position;
-  static const int32_t kGetChildrenIndex_Type;
-  static const int32_t kGetChildrenIndex_PlaceID;
-  static const int32_t kGetChildrenIndex_Guid;
 
   class RemoveFolderTransaction MOZ_FINAL : public nsITransaction {
   public:
