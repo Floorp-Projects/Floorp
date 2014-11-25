@@ -50,6 +50,12 @@ LIRGeneratorX64::useByteOpRegisterOrNonDoubleConstant(MDefinition *mir)
 }
 
 LDefinition
+LIRGeneratorX64::tempByteOpRegister()
+{
+    return temp();
+}
+
+LDefinition
 LIRGeneratorX64::tempToUnbox()
 {
     return temp();
@@ -188,6 +194,18 @@ bool
 LIRGeneratorX64::visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins)
 {
     return define(new(alloc()) LAsmJSLoadFuncPtr(useRegister(ins->index()), temp()), ins);
+}
+
+bool
+LIRGeneratorX64::visitSubstr(MSubstr *ins)
+{
+    LSubstr *lir = new (alloc()) LSubstr(useRegister(ins->string()),
+                                         useRegister(ins->begin()),
+                                         useRegister(ins->length()),
+                                         temp(),
+                                         temp(),
+                                         tempByteOpRegister());
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool

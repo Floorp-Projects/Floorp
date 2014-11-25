@@ -516,14 +516,14 @@ public class AndroidFxAccount {
    * <b>For debugging only!</b>
    */
   public void dump() {
-    if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+    if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
       return;
     }
     ExtendedJSONObject o = toJSONObject();
     ArrayList<String> list = new ArrayList<String>(o.keySet());
     Collections.sort(list);
     for (String key : list) {
-      FxAccountConstants.pii(LOG_TAG, key + ": " + o.get(key));
+      FxAccountUtils.pii(LOG_TAG, key + ": " + o.get(key));
     }
   }
 

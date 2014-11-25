@@ -10,6 +10,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -112,7 +113,7 @@ public class FxAccountUpgradeReceiver extends BroadcastReceiver {
         try {
           final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
           // For great debugging.
-          if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+          if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
             fxAccount.dump();
           }
           State state = fxAccount.getState();

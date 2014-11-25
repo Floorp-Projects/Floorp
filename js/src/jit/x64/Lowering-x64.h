@@ -32,6 +32,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     // stores and loads; on x64 all registers are okay.
     LAllocation useByteOpRegister(MDefinition *mir);
     LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition *mir);
+    LDefinition tempByteOpRegister();
 
     LDefinition tempToUnbox();
 
@@ -53,6 +54,7 @@ class LIRGeneratorX64 : public LIRGeneratorX86Shared
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
+    bool visitSubstr(MSubstr *ins);
 
     static bool allowInlineForkJoinGetSlice() {
         return true;

@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(dc61f0ea-4139-4c2a-ae69-cec82d33e089)]
+[scriptable, builtinclass, uuid(83a7708b-5c35-409f-bab3-7fc08be6a264)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -54,6 +54,10 @@ interface imgIRequest : nsIRequest
    * completely decoded.
    *
    * STATUS_DECODE_COMPLETE: The whole image has been decoded.
+   *
+   * STATUS_IS_ANIMATED: The image is animated.
+   *
+   * STATUS_HAS_TRANSPARENCY: The image is partially or completely transparent.
    */
   //@{
   const long STATUS_NONE             = 0x0;
@@ -63,6 +67,8 @@ interface imgIRequest : nsIRequest
   const long STATUS_DECODE_STARTED   = 0x8;
   const long STATUS_FRAME_COMPLETE   = 0x10;
   const long STATUS_DECODE_COMPLETE  = 0x20;
+  const long STATUS_IS_ANIMATED      = 0x40;
+  const long STATUS_HAS_TRANSPARENCY = 0x80;
   //@}
 
   /**

@@ -1140,7 +1140,7 @@ public:
     // Makes an Ion call using the only two methods that it is sane for
     // indep code to make a call
     void callIon(Register callee);
-    void callIonFromAsmJS(Register callee);
+    void callJitFromAsmJS(Register callee);
 
     void reserveStack(uint32_t amount);
     void freeStack(uint32_t amount);
