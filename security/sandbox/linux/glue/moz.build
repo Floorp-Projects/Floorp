@@ -14,8 +14,9 @@ LOCAL_INCLUDES += [
     '/security/sandbox/linux',
 ]
 
-USE_LIBS += [
-    'mozsandbox',
-]
+if CONFIG['OS_TARGET'] == 'Android':
+    USE_LIBS += [
+        'mozsandbox',
+    ]
 
 FINAL_LIBRARY = 'xul'

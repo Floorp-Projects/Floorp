@@ -35,6 +35,11 @@
 #endif
 #endif
 
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#include "mozilla/Sandbox.h"
+#include "mozilla/SandboxInfo.h"
+#endif
+
 #ifdef MOZ_WIDGET_GONK
 # include <sys/time.h>
 # include <sys/resource.h> 
@@ -88,8 +93,27 @@ void StartSandboxCallback()
 
 class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
 public:
-    virtual void Start() MOZ_OVERRIDE {
+    virtual void Start(const char *aLibPath) MOZ_OVERRIDE {
         StartSandboxCallback();
+    }
+};
+#endif
+
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+class LinuxSandboxStarter : public mozilla::gmp::SandboxStarter {
+    LinuxSandboxStarter() { }
+public:
+    static SandboxStarter* Make() {
+        if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
+            return new LinuxSandboxStarter();
+        } else {
+            // Sandboxing isn't possible, but the parent has already
+            // checked that this plugin doesn't require it.  (Bug 1074561)
+            return nullptr;
+        }
+    }
+    virtual void Start(const char *aLibPath) MOZ_OVERRIDE {
+        mozilla::SetMediaPluginSandbox(aLibPath);
     }
 };
 #endif
@@ -97,12 +121,14 @@ public:
 mozilla::gmp::SandboxStarter*
 MakeSandboxStarter()
 {
-    // Note: Linux and MacOSX create their SandboxStarters inside xul code,
-    // they need to change to statically link their sandbox code into
-    // plugin-container. Once they do that, we can create SandboxStarters for
-    // them here.
+    // Note: MacOSX creates its SandboxStarter inside xul code; it
+    // needs to change to statically link its sandbox code into
+    // plugin-container. Once it does that, we can create the
+    // SandboxStarter for it here.
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
     return new WinSandboxStarter();
+#elif defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+    return LinuxSandboxStarter::Make();
 #else
     return nullptr;
 #endif

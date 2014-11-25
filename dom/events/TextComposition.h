@@ -250,6 +250,14 @@ private:
   void EditorDidHandleCompositionChangeEvent();
 
   /**
+   * IsValidStateForComposition() returns true if it's safe to dispatch an event
+   * to the DOM tree.  Otherwise, false.
+   * WARNING: This doesn't check script blocker state.  It should be checked
+   *          before dispatching the first event.
+   */
+  bool IsValidStateForComposition(nsIWidget* aWidget) const;
+
+  /**
    * DispatchCompositionEvent() dispatches the aCompositionEvent to the mContent
    * synchronously. The caller must ensure that it's safe to dispatch the event.
    */
@@ -266,6 +274,18 @@ private:
    */
   bool MaybeDispatchCompositionUpdate(
          const WidgetCompositionEvent* aCompositionEvent);
+
+  /**
+   * CloneAndDispatchAs() dispatches a composition event which is
+   * duplicateed from aCompositionEvent and set the aMessage.
+   *
+   * @return Returns BaseEventFlags which is the result of dispatched event.
+   */
+  BaseEventFlags CloneAndDispatchAs(
+                   const WidgetCompositionEvent* aCompositionEvent,
+                   uint32_t aMessage,
+                   nsEventStatus* aStatus = nullptr,
+                   EventDispatchingCallback* aCallBack = nullptr);
 
   /**
    * If IME has already dispatched compositionend event but it was discarded

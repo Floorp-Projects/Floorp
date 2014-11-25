@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+.test {
+  margin: 10px;
+  border: 1px solid gray;
+  font: 16px/24px monospace;
+  word-break: break-all;
+  width: 10em;
+  height: 6em;
+  /* we use text-orientation:upright to improve the chances that our
+     glyphs will have an advance of exactly 1em, as the reference
+     rendering relies on this */
+  text-orientation: upright;
+}
+
+.v-lr { writing-mode:vertical-lr; }
+.v-rl { writing-mode:vertical-rl; }
+
+.bgtest {
+  background: url(4colors.png); /* A square divided into a 2x2 grid of 4 colors; */
+                                /* only the two left squares (blue & cyan) should show */
+  background-size: 32px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="test v-lr">ABCD<span class="bgtest">EFGHIJKLMNOPQRSTU</span>VWXYZ</div>
+
+<div class="test v-rl">ABCD<span class="bgtest">EFGHIJKLMNOPQRSTU</span>VWXYZ</div>
+
+</body>
+</html>

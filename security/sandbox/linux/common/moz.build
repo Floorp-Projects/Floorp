@@ -1,0 +1,24 @@
+# -*- Mode: python; python-indent: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+FAIL_ON_WARNINGS = True
+
+EXPORTS.mozilla += [
+    'SandboxInfo.h',
+]
+
+SOURCES += [
+    'SandboxInfo.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/security/sandbox/chromium'
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    FINAL_LIBRARY = 'mozsandbox'
+else:
+    FINAL_LIBRARY = 'xul'

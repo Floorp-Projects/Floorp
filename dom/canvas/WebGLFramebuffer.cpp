@@ -284,6 +284,36 @@ IsValidFBORenderbufferStencilFormat(GLenum internalFormat)
 }
 
 bool
+WebGLContext::IsFormatValidForFB(GLenum sizedFormat) const
+{
+    switch (sizedFormat) {
+    case LOCAL_GL_ALPHA8:
+    case LOCAL_GL_LUMINANCE8:
+    case LOCAL_GL_LUMINANCE8_ALPHA8:
+    case LOCAL_GL_RGB8:
+    case LOCAL_GL_RGBA8:
+    case LOCAL_GL_RGB565:
+    case LOCAL_GL_RGB5_A1:
+    case LOCAL_GL_RGBA4:
+        return true;
+
+    case LOCAL_GL_SRGB8:
+    case LOCAL_GL_SRGB8_ALPHA8_EXT:
+        return IsExtensionEnabled(WebGLExtensionID::EXT_sRGB);
+
+    case LOCAL_GL_RGB32F:
+    case LOCAL_GL_RGBA32F:
+        return IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float);
+
+    case LOCAL_GL_RGB16F:
+    case LOCAL_GL_RGBA16F:
+        return IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float);
+    }
+
+    return false;
+}
+
+bool
 WebGLFramebuffer::Attachment::IsComplete() const
 {
     if (!HasImage())
@@ -301,23 +331,24 @@ WebGLFramebuffer::Attachment::IsComplete() const
         MOZ_ASSERT(Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel));
         const WebGLTexture::ImageInfo& imageInfo =
             Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel);
-        GLenum internalformat = imageInfo.EffectiveInternalFormat().get();
+        GLenum sizedFormat = imageInfo.EffectiveInternalFormat().get();
 
         if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT)
-            return IsValidFBOTextureDepthFormat(internalformat);
+            return IsValidFBOTextureDepthFormat(sizedFormat);
 
         if (mAttachmentPoint == LOCAL_GL_STENCIL_ATTACHMENT)
             return false; // Textures can't have the correct format for stencil buffers
 
         if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-            return IsValidFBOTextureDepthStencilFormat(internalformat);
+            return IsValidFBOTextureDepthStencilFormat(sizedFormat);
         }
 
         if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
             mAttachmentPoint <= FBAttachment(LOCAL_GL_COLOR_ATTACHMENT0 - 1 +
                                              WebGLContext::kMaxColorAttachments))
         {
-            return IsValidFBOTextureColorFormat(internalformat);
+            WebGLContext* webgl = Texture()->Context();
+            return webgl->IsFormatValidForFB(sizedFormat);
         }
         MOZ_ASSERT(false, "Invalid WebGL attachment point?");
         return false;
@@ -339,7 +370,8 @@ WebGLFramebuffer::Attachment::IsComplete() const
             mAttachmentPoint <= FBAttachment(LOCAL_GL_COLOR_ATTACHMENT0 - 1 +
                                              WebGLContext::kMaxColorAttachments))
         {
-            return IsValidFBORenderbufferColorFormat(internalFormat);
+            WebGLContext* webgl = Renderbuffer()->Context();
+            return webgl->IsFormatValidForFB(internalFormat);
         }
         MOZ_ASSERT(false, "Invalid WebGL attachment point?");
         return false;
