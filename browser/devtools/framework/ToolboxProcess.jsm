@@ -159,14 +159,11 @@ BrowserToolboxProcess.prototype = {
     try {
       debuggingProfileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
     } catch (ex) {
-      // Don't re-copy over the prefs again if this profile already exists
-      if (ex.result === Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
-        this._dbgProfilePath = debuggingProfileDir.path;
-      } else {
+      if (ex.result !== Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
         dumpn("Error trying to create a profile directory, failing.");
         dumpn("Error: " + (ex.message || ex));
+        return;
       }
-      return;
     }
 
     this._dbgProfilePath = debuggingProfileDir.path;
