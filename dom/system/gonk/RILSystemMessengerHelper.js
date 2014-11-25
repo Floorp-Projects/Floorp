@@ -49,8 +49,7 @@ function RILSystemMessengerHelper() {
 RILSystemMessengerHelper.prototype = {
 
   classID: RILSYSTEMMESSENGERHELPER_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyMessenger,
-                                         Ci.nsISmsMessenger]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyMessenger]),
 
   /**
    * RILSystemMessenger instance.
@@ -68,17 +67,6 @@ RILSystemMessengerHelper.prototype = {
                             aDuration, aOutgoing, aHangUpLocal) {
     this.messenger.notifyCallEnded(aServiceId, aNumber, aCdmaWaitingNumber, aEmergency,
                                    aDuration, aOutgoing, aHangUpLocal);
-  },
-
-  /**
-   * nsISmsMessenger API
-   */
-  notifySms: function(aNotificationType, aId, aThreadId, aIccId, aDelivery,
-                      aDeliveryStatus, aSender, aReceiver, aBody, aMessageClass,
-                      aTimestamp, aSentTimestamp, aDeliveryTimestamp, aRead) {
-    this.messenger.notifySms(aNotificationType, aId, aThreadId, aIccId, aDelivery,
-                             aDeliveryStatus, aSender, aReceiver, aBody, aMessageClass,
-                             aTimestamp, aSentTimestamp, aDeliveryTimestamp, aRead);
   }
 };
 
