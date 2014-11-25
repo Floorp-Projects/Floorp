@@ -36,7 +36,6 @@ mgjar.sources += [
     'mozglue/ByteBufferInputStream.java',
     'mozglue/ContextUtils.java',
     'mozglue/DirectBufferAllocator.java',
-    'mozglue/GeckoLoader.java',
     'mozglue/generatorannotations/OptionalGeneratedParameter.java',
     'mozglue/generatorannotations/WrapElementForJNI.java',
     'mozglue/generatorannotations/WrapEntireClassForJNI.java',
@@ -46,7 +45,9 @@ mgjar.sources += [
     'mozglue/RobocopTarget.java',
     'mozglue/WebRTCJNITarget.java',
 ]
-mgjar.generated_sources = [] # Keep it this way.
+mgjar.generated_sources += [
+    'org/mozilla/gecko/mozglue/GeckoLoader.java',
+]
 mgjar.extra_jars += [
     'constants.jar',
 ]
