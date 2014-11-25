@@ -328,8 +328,8 @@ let MozLoopServiceInternal = {
    */
   promiseRegisteredWithPushServer: function(sessionType) {
     if (!this.deferredRegistrations.has(sessionType)) {
-      return Promise.reject("promiseRegisteredWithPushServer must be called while there is a " +
-                            "deferred in deferredRegistrations in order to prevent reentrancy");
+      return Promise.reject(new Error("promiseRegisteredWithPushServer must be called while there is a " +
+                            "deferred in deferredRegistrations in order to prevent reentrancy"));
     }
     // Wrap push notification registration call-back in a Promise.
     function registerForNotification(channelID, onNotification) {
@@ -375,7 +375,7 @@ let MozLoopServiceInternal = {
       return Promise.all([callsRegFxA, roomsRegFxA]);
     }
 
-    return Promise.reject("promiseRegisteredWithPushServer: Invalid sessionType");
+    return Promise.reject(new Error("promiseRegisteredWithPushServer: Invalid sessionType"));
   },
 
   /**
@@ -593,7 +593,7 @@ let MozLoopServiceInternal = {
     }
 
     if (!callsPushURL || !roomsPushURL) {
-      return Promise.reject("Invalid sessionType or missing push URLs for registerWithLoopServer: " + sessionType);
+      return Promise.reject(new Error("Invalid sessionType or missing push URLs for registerWithLoopServer: " + sessionType));
     }
 
     // create a registration payload with a backwards compatible attribute (simplePushURL)
@@ -609,7 +609,7 @@ let MozLoopServiceInternal = {
       .then((response) => {
         // If this failed we got an invalid token.
         if (!this.storeSessionToken(sessionType, response.headers)) {
-          return Promise.reject("session-token-wrong-size");
+          return Promise.reject(new Error("session-token-wrong-size"));
         }
 
         log.debug("Successfully registered with server for sessionType", sessionType);
@@ -1013,7 +1013,7 @@ this.MozLoopService = {
 
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled")) {
-      return Promise.reject("loop is not enabled");
+      return Promise.reject(new Error("loop is not enabled"));
     }
 
     if (Services.prefs.getPrefType("loop.fxa.enabled") == Services.prefs.PREF_BOOL) {

@@ -60,6 +60,23 @@ add_task(function* test_tab_matches() {
                { uri: makeActionURI("switchtab", {url: "http://xyz.net/"}), title: "xyz.net - we're better than ABC", style: [ "action", "switchtab" ] } ]
   });
 
+  do_log_info("three results, no tab matches (disable-private-actions)");
+  yield check_autocomplete({
+    search: "abc",
+    searchParam: "enable-actions disable-private-actions",
+    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc", searchQuery: "abc"}), title: "MozSearch", style: [ "action", "searchengine" ] },
+               { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
+  });
+
+  do_log_info("two results (actions disabled)");
+  yield check_autocomplete({
+    search: "abc",
+    searchParam: "",
+    matches: [ { uri: uri1, title: "ABC rocks", style: [ "favicon" ] },
+               { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
+  });
+
   do_log_info("three results, no tab matches");
   removeOpenPages(uri1, 1);
   removeOpenPages(uri2, 6);

@@ -199,12 +199,8 @@ a {
   border-color: #777;
 }
 
-.theme-light .message:hover {
-  background-color: rgba(76, 158, 217, 0.23) !important;
-}
-
-.theme-dark .message:hover {
-  background-color: rgba(29, 79, 115, 0.5) !important;
+.message:hover {
+  background-color: var(--theme-selection-background-semitransparent) !important;
 }
 
 .theme-light .message[severity=error] {
