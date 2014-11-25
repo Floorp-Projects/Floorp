@@ -108,6 +108,10 @@ InspectorPanel.prototype = {
     return this._target.client.traits.getUniqueSelector;
   },
 
+  get canGetUsedFontFaces() {
+    return this._target.client.traits.getUsedFontFaces;
+  },
+
   get canPasteInnerOrAdjacentHTML() {
     return this._target.client.traits.pasteHTML;
   },
@@ -321,7 +325,7 @@ InspectorPanel.prototype = {
                         "chrome://browser/content/devtools/computedview.xhtml",
                         "computedview" == defaultTab);
 
-    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && !this.target.isRemote) {
+    if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && this.canGetUsedFontFaces) {
       this.sidebar.addTab("fontinspector",
                           "chrome://browser/content/devtools/fontinspector/font-inspector.xhtml",
                           "fontinspector" == defaultTab);
