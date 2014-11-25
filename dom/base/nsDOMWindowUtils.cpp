@@ -2128,7 +2128,15 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
   if (aType.EqualsLiteral("compositionstart")) {
     msg = NS_COMPOSITION_START;
   } else if (aType.EqualsLiteral("compositionend")) {
-    msg = NS_COMPOSITION_END;
+    // Now we don't support manually dispatching composition end with this
+    // API.  A compositionend is dispatched when this is called with
+    // compositioncommitasis or compositioncommit automatically.  For backward
+    // compatibility, this shouldn't return error in this case.
+    NS_WARNING("Don't call nsIDOMWindowUtils.sendCompositionEvent() for "
+               "compositionend.  Instead, use it with compositioncommitasis or "
+               "compositioncommit.  Then, compositionend will be automatically "
+               "dispatched.");
+    return NS_OK;
   } else if (aType.EqualsLiteral("compositionupdate")) {
     // Now we don't support manually dispatching composition update with this
     // API.  A compositionupdate is dispatched when a DOM text event modifies
@@ -2138,13 +2146,17 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
                "compositionupdate since it's ignored and the event is "
                "fired automatically when it's necessary");
     return NS_OK;
+  } else if (aType.EqualsLiteral("compositioncommitasis")) {
+    msg = NS_COMPOSITION_COMMIT_AS_IS;
+  } else if (aType.EqualsLiteral("compositioncommit")) {
+    msg = NS_COMPOSITION_COMMIT;
   } else {
     return NS_ERROR_FAILURE;
   }
 
   WidgetCompositionEvent compositionEvent(true, msg, widget);
   InitEvent(compositionEvent);
-  if (msg != NS_COMPOSITION_START) {
+  if (msg != NS_COMPOSITION_START && msg != NS_COMPOSITION_COMMIT_AS_IS) {
     compositionEvent.mData = aData;
   }
 

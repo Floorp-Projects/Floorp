@@ -7,14 +7,17 @@
 #ifndef mozilla_SandboxInternal_h
 #define mozilla_SandboxInternal_h
 
-// The code in Sandbox.cpp can't link against libxul, where
-// SandboxCrash.cpp lives, so it has to use a callback, defined here.
-
 #include <signal.h>
 
 #include "mozilla/Types.h"
 
 namespace mozilla {
+
+// SandboxCrash() has to be in libxul to use internal interfaces, but
+// its caller in the sandbox code is elsewhere:
+// * Desktop: defined in libxul; referenced in plugin-container.
+// * Mobile: defined in libmozsandbox; referenced in libxul.
+// See also bug 1101170.
 
 typedef void (*SandboxCrashFunc)(int, siginfo_t*, void*);
 extern MOZ_EXPORT SandboxCrashFunc gSandboxCrashFunc;

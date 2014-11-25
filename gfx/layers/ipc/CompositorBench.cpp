@@ -81,7 +81,7 @@ DrawFrameStressQuad(Compositor* aCompositor, const gfx::Rect& aScreenRect, size_
     float opacity = 1.f;
 
     gfx::Matrix transform2d;
-    transform2d = transform2d.Rotate(SimplePseudoRandom(i, 4) * 70.f);
+    transform2d = transform2d.PreRotate(SimplePseudoRandom(i, 4) * 70.f);
 
     gfx::Matrix4x4 transform = gfx::Matrix4x4::From2D(transform2d);
 
@@ -241,7 +241,7 @@ public:
   }
 
   TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
+    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
     return effect;
   }
 };
@@ -285,7 +285,7 @@ public:
   }
 
   virtual TemporaryRef<Effect> CreateEffect(size_t i) {
-    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT);
+    RefPtr<TexturedEffect> effect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mTexture, Filter::POINT, true);
     return effect;
   }
 };
@@ -405,7 +405,7 @@ static void RunCompositorBench(Compositor* aCompositor, const gfx::Rect& aScreen
       aCompositor->BeginFrame(
         nsIntRect(screenRect.x, screenRect.y,
                   screenRect.width, screenRect.height),
-        nullptr, gfx::Matrix(), aScreenRect);
+        nullptr, aScreenRect, nullptr, nullptr);
 
       test->DrawFrame(aCompositor, aScreenRect, j);
 

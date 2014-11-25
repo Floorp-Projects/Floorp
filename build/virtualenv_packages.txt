@@ -23,3 +23,5 @@ copy:build/buildconfig.py
 packages.txt:testing/mozbase/packages.txt
 objdir:build
 gyp.pth:media/webrtc/trunk/tools/gyp/pylib
+pyasn1.pth:python/pyasn1
+bitstring.pth:python/bitstring

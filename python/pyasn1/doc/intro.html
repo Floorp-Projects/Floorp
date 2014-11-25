@@ -1,0 +1,156 @@
+<html>
+<title>
+PyASN1 reference manual
+</title>
+<head>
+</head>
+<body>
+<center>
+<table width=60%>
+<tr>
+<td>
+
+<h3>
+PyASN1 reference manual
+</h3>
+
+<p align=right>
+<i>written by <a href=mailto:ilya@glas.net>Ilya Etingof</a>, 2011-2012</i>
+</p>
+
+<p>
+Free and open-source pyasn1 library makes it easier for programmers and
+network engineers to develop, debug and experiment with ASN.1-based protocols
+using Python programming language as a tool.
+</p>
+
+<p>
+Abstract Syntax Notation One 
+(<a href=http://en.wikipedia.org/wiki/Abstract_Syntax_Notation_1x>ASN.1</a>)
+is a set of 
+<a href=http://www.itu.int/ITU-T/studygroups/com17/languages/X.680-X.693-0207w.zip>
+ITU standards</a> concered with provisioning instrumentation for developing
+data exchange protocols in a robust, clear and interoperabable way for
+various IT systems and applications. Most of the efforts are targeting the
+following areas:
+<ul>
+<li>Data structures: the standard introduces a collection of basic data types
+(similar to integers, bits, strings, arrays and records in a programming
+language) that can be used for defining complex, possibly nested data
+structures representing domain-specific data units.
+<li>Serialization protocols: domain-specific data units expressed in ASN.1
+types could be converted into a series of octets for storage or transmission
+over the wire and then recovered back into their structured form on the
+receiving end. This process is immune to various hardware and software
+related dependencies.
+<li>Data description language: could be used to describe particular set of
+domain-specific data structures and their relationships. Such a description
+could be passed to an ASN.1 compiler for automated generation of program
+code that represents ASN.1 data structures in language-native environment
+and handles data serialization issues.
+</ul>
+</p>
+
+<p>
+This tutorial and algorithms, implemented by pyasn1 library, are
+largely based on the information read in the book
+<a href="http://www.oss.com/asn1/dubuisson.html">
+ASN.1 - Communication between heterogeneous systems</a>
+by Olivier Dubuisson. Another relevant resource is
+<a href=ftp://ftp.rsasecurity.com/pub/pkcs/ascii/layman.asc>
+A Layman's Guide to a Subset of ASN.1, BER, and DER</a> by Burton S. Kaliski.
+It's advised to refer to these books for more in-depth knowledge on the
+subject of ASN.1.
+</p>
+
+<p>
+As of this writing, pyasn1 library implements most of standard ASN.1 data
+structures in a rather detailed and feature-rich manner. Another highly
+important capability of the library is its data serialization facilities.
+The last component of the standard - ASN.1 compiler is planned for
+implementation in the future.
+</p>
+
+</p>
+The pyasn1 library was designed to follow the pre-1995 ASN.1 specification
+(also known as X.208). Later, post 1995, revision (X.680) introduced
+significant changes most of which have not yet been supported by pyasn1.
+</p>
+
+<h3>
+Table of contents
+</h3>
+
+<p>
+<ul>
+<li><a href="scalar.html">1. Data model for ASN.1 types</a>
+<li><a href="scalar.html#1.1">1.1 Scalar types</a>
+<li><a href="scalar.html#1.1.1">1.1.1 Boolean type</a>
+<li><a href="scalar.html#1.1.2">1.1.2 Null type</a>
+<li><a href="scalar.html#1.1.3">1.1.3 Integer type</a>
+<li><a href="scalar.html#1.1.4">1.1.4 Enumerated type</a>
+<li><a href="scalar.html#1.1.5">1.1.5 Real type</a>
+<li><a href="scalar.html#1.1.6">1.1.6 Bit string type</a>
+<li><a href="scalar.html#1.1.7">1.1.7 OctetString type</a>
+<li><a href="scalar.html#1.1.8">1.1.8 ObjectIdentifier type</a>
+<li><a href="scalar.html#1.1.9">1.1.9 Character string types</a>
+<li><a href="scalar.html#1.1.10">1.1.10 Useful types</a>
+<li><a href="tagging.html">1.2 Tagging</a>
+<li><a href="constructed.html">1.3 Constructed types</a>
+<li><a href="constructed.html#1.3.1">1.3.1 Sequence and Set types</a>
+<li><a href="constructed.html#1.3.2">1.3.2 SequenceOf and SetOf types</a>
+<li><a href="constructed.html#1.3.3">1.3.3 Choice type</a>
+<li><a href="constructed.html#1.3.4">1.3.4 Any type</a>
+<li><a href="constraints.html">1.4 Subtype constraints</a>
+<li><a href="constraints.html#1.4.1">1.4.1 Single value constraint</a>
+<li><a href="constraints.html#1.4.2">1.4.2 Value range constraint</a>
+<li><a href="constraints.html#1.4.3">1.4.3 Size constraint</a>
+<li><a href="constraints.html#1.4.4">1.4.4 Alphabet constraint</a>
+<li><a href="constraints.html#1.4.5">1.4.5 Constraint combinations</a>
+<li><a href="constraints.html#1.5">1.5 Types relationships</a>
+<li><a href="codecs.html">2. Codecs</a>
+<li><a href="codecs.html#2.1">2.1 Encoders</a>
+<li><a href="codecs.html#2.2">2.2 Decoders</a>
+<li><a href="codecs.html#2.2.1">2.2.1 Decoding untagged types</a>
+<li><a href="codecs.html#2.2.2">2.2.2 Ignoring unknown types</a>
+</ul>
+
+<p>
+Although pyasn1 software is almost a decade old and used in many production
+environments, it still may have bugs and non-implemented pieces. Anyone
+who happens to run into such defect is welcome to complain to
+<a href=mailto:pyasn1-users@lists.sourceforge.net>pyasn1 mailing list</a>
+or better yet fix the issue and send
+<a href=mailto:ilya@glas.net>me</a> the patch.
+</p>
+
+<p>
+Typically, pyasn1 is used for building arbitrary protocol support into
+various applications. This involves manual translation of ASN.1 data
+structures into their pyasn1 implementations. To save time and effort,
+data structures for some of the popular protocols are pre-programmed
+and kept for further re-use in form of the
+<a href=http://sourceforge.net/projects/pyasn1/files/pyasn1-modules/>
+pyasn1-modules package</a>. For instance, many structures for PKI (X.509,
+PKCS#*, CRMF, OCSP), LDAP and SNMP are present.
+Applications authors are advised to import and use relevant modules 
+from that package whenever needed protocol structures are already 
+there. New protocol modules contributions are welcome.
+</p>
+
+<p>
+And finally, the latest pyasn1 package revision is available for free
+download from
+<a href=http://sourceforge.net/projects/pyasn1/>project home</a> and
+also from the 
+<a href=http://pypi.python.org/pypi>Python package repository</a>.
+</p>
+
+<hr>
+
+</td>
+</tr>
+</table>
+</center>
+</body>
+</html>
