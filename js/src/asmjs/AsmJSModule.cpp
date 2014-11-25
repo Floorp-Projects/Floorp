@@ -105,11 +105,11 @@ AsmJSModule::~AsmJSModule()
     if (code_) {
         for (unsigned i = 0; i < numExits(); i++) {
             AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
-            if (!exitDatum.ionScript)
+            if (!exitDatum.baselineScript)
                 continue;
 
             jit::DependentAsmJSModuleExit exit(this, i);
-            exitDatum.ionScript->removeDependentAsmJSModule(exit);
+            exitDatum.baselineScript->removeDependentAsmJSModule(exit);
         }
 
         DeallocateExecutableMemory(code_, pod.totalBytes_, AsmJSPageSize);
@@ -501,23 +501,31 @@ CoerceInPlace_ToNumber(MutableHandleValue val)
 }
 
 static bool
-TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t exitIndex,
+TryEnablingJit(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t exitIndex,
                int32_t argc, Value *argv)
 {
     if (!fun->hasScript())
         return true;
 
-    // Test if the function is Ion compiled
+    // Test if the function is JIT compiled.
     JSScript *script = fun->nonLazyScript();
-    if (!script->hasIonScript())
+    if (!script->hasBaselineScript()) {
+        MOZ_ASSERT(!script->hasIonScript());
         return true;
+    }
 
     // Currently we can't rectify arguments. Therefore disabling if argc is too low.
     if (fun->nargs() > size_t(argc))
         return true;
 
-    // Normally the types should correspond, since we just ran with those types,
-    // but there are reports this is asserting. Therefore doing it as a check, instead of DEBUG only.
+    // Ensure the argument types are included in the argument TypeSets stored in
+    // the TypeScript. This is necessary for Ion, because the FFI exit will
+    // use the skip-arg-checks entry point.
+    //
+    // Note that the TypeScript is never discarded while the script has a
+    // BaselineScript, so if those checks hold now they must hold at least until
+    // the BaselineScript is discarded and when that happens the FFI exit is
+    // patched back.
     if (!types::TypeScript::ThisTypes(script)->hasType(types::Type::UndefinedType()))
         return true;
     for (uint32_t i = 0; i < fun->nargs(); i++) {
@@ -533,11 +541,11 @@ TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t 
     if (module.exitIsOptimized(exitIndex))
         return true;
 
-    IonScript *ionScript = script->ionScript();
-    if (!ionScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
+    BaselineScript *baselineScript = script->baselineScript();
+    if (!baselineScript->addDependentAsmJSModule(cx, DependentAsmJSModuleExit(&module, exitIndex)))
         return false;
 
-    module.optimizeExit(exitIndex, ionScript);
+    module.optimizeExit(exitIndex, baselineScript);
     return true;
 }
 
@@ -553,7 +561,7 @@ InvokeFromAsmJS(AsmJSActivation *activation, int32_t exitIndex, int32_t argc, Va
     if (!Invoke(cx, UndefinedValue(), fval, argc, argv, rval))
         return false;
 
-    return TryEnablingIon(cx, module, fun, exitIndex, argc, argv);
+    return TryEnablingJit(cx, module, fun, exitIndex, argc, argv);
 }
 
 // Use an int32_t return type instead of bool since bool does not have a
@@ -748,7 +756,7 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
         AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
         exitDatum.exit = interpExitTrampoline(exits_[i]);
         exitDatum.fun = nullptr;
-        exitDatum.ionScript = nullptr;
+        exitDatum.baselineScript = nullptr;
     }
 
     MOZ_ASSERT(isStaticallyLinked());
@@ -904,7 +912,7 @@ AsmJSModule::detachHeap(JSContext *cx)
     // Even if this->active(), to reach here, the activation must have called
     // out via an FFI stub. FFI stubs check if heapDatum() is null on reentry
     // and throw an exception if so.
-    MOZ_ASSERT_IF(active(), activation()->exitReason() == AsmJSExit::Reason_IonFFI ||
+    MOZ_ASSERT_IF(active(), activation()->exitReason() == AsmJSExit::Reason_JitFFI ||
                             activation()->exitReason() == AsmJSExit::Reason_SlowFFI);
 
     restoreHeapToInitialState(maybeHeap_);
@@ -1338,7 +1346,7 @@ AsmJSModule::CodeRange::CodeRange(Kind kind, uint32_t begin, uint32_t profilingR
 
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
-    MOZ_ASSERT(u.kind_ == IonFFI || u.kind_ == SlowFFI || u.kind_ == Interrupt);
+    MOZ_ASSERT(u.kind_ == JitFFI || u.kind_ == SlowFFI || u.kind_ == Interrupt);
 }
 
 AsmJSModule::CodeRange::CodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin,
