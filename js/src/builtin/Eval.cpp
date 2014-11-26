@@ -320,7 +320,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setForEval(true)
                .setNoScriptRval(false)
                .setMutedErrors(mutedErrors)
-               .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
+               .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset)
+               .maybeMakeStrictMode(evalType == DIRECT_EVAL && callerScript && callerScript->strict());
 
         AutoStableStringChars flatChars(cx);
         if (!flatChars.initTwoByte(cx, flatStr))
@@ -393,7 +394,8 @@ js::DirectEvalStringFromIon(JSContext *cx,
                .setForEval(true)
                .setNoScriptRval(false)
                .setMutedErrors(mutedErrors)
-               .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
+               .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset)
+               .maybeMakeStrictMode(callerScript->strict());
 
         AutoStableStringChars flatChars(cx);
         if (!flatChars.initTwoByte(cx, flatStr))
