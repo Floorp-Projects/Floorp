@@ -92,20 +92,6 @@ public class SiteIdentityPopup extends ArrowPopup {
             init();
         }
 
-        final MixedMode mixedMode = siteIdentity.getMixedMode();
-        final TrackingMode trackingMode = siteIdentity.getTrackingMode();
-        if (mixedMode != MixedMode.UNKNOWN || trackingMode != TrackingMode.UNKNOWN) {
-            // Hide the identity data if there isn't valid site identity data.
-            // Set some top padding on the popup content to create a of light blue
-            // between the popup arrow and the mixed content notification.
-            mContent.setPadding(0, (int) mContext.getResources().getDimension(R.dimen.identity_padding_top), 0, 0);
-            mIdentity.setVisibility(View.GONE);
-            return;
-        }
-
-        mIdentity.setVisibility(View.VISIBLE);
-        mContent.setPadding(0, 0, 0, 0);
-
         final boolean isIdentityKnown = (siteIdentity.getSecurityMode() != SecurityMode.UNKNOWN);
         toggleIdentityKnownContainerVisibility(isIdentityKnown);
 
