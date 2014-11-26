@@ -291,21 +291,25 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       describe("Feedback", function() {
+        beforeEach(function() {
+          activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
+        });
+
         it("should display a feedback form when the user leaves the room",
           function() {
-            activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
-
             expect(view.getDOMNode().querySelector(".faces")).not.eql(null);
           });
 
-        it("should reinit the view after feedback is sent", function() {
-          feedbackStore.setStoreState({feedbackState: FEEDBACK_STATES.SENT});
+        it("should dispatch a `FeedbackComplete` action after feedback is sent",
+          function() {
+            feedbackStore.setStoreState({feedbackState: FEEDBACK_STATES.SENT});
 
-          sandbox.clock.tick(
-            loop.shared.views.WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS * 1000);
+            sandbox.clock.tick(
+              loop.shared.views.WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS * 1000 + 1000);
 
-          expect(view.getDOMNode().querySelector(".btn-join")).not.eql(null);
-        });
+            sinon.assert.calledOnce(dispatch);
+            sinon.assert.calledWithExactly(dispatch, new sharedActions.FeedbackComplete());
+          });
       });
     });
   });
