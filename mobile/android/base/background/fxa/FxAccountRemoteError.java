@@ -16,7 +16,6 @@ public interface FxAccountRemoteError {
   public static final int INVALID_REQUEST_SIGNATURE = 109;
   public static final int INVALID_AUTHENTICATION_TOKEN = 110;
   public static final int INVALID_AUTHENTICATION_TIMESTAMP = 111;
-  public static final int INVALID_AUTHENTICATION_NONCE = 115;
   public static final int CONTENT_LENGTH_HEADER_WAS_NOT_PROVIDED = 112;
   public static final int REQUEST_BODY_TOO_LARGE = 113;
   public static final int CLIENT_HAS_SENT_TOO_MANY_REQUESTS = 114;
@@ -26,6 +25,7 @@ public interface FxAccountRemoteError {
   public static final int INCORRECT_KEY_RETRIEVAL_METHOD_FOR_THIS_ACCOUNT = 118;
   public static final int INCORRECT_API_VERSION_FOR_THIS_ACCOUNT = 119;
   public static final int INCORRECT_EMAIL_CASE = 120;
+  public static final int ACCOUNT_LOCKED = 121;
   public static final int SERVICE_TEMPORARILY_UNAVAILABLE_DUE_TO_HIGH_LOAD = 201;
   public static final int UNKNOWN_ERROR = 999;
 }
