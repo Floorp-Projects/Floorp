@@ -96,6 +96,10 @@ public class FxAccountClientException extends Exception {
       return apiErrorNumber == FxAccountRemoteError.INCORRECT_EMAIL_CASE;
     }
 
+    public boolean isAccountLocked() {
+      return apiErrorNumber == FxAccountRemoteError.ACCOUNT_LOCKED;
+    }
+
     public int getErrorMessageStringResource() {
       if (isUpgradeRequired()) {
         return R.string.fxaccount_remote_error_UPGRADE_REQUIRED;
@@ -111,6 +115,8 @@ public class FxAccountClientException extends Exception {
         return R.string.fxaccount_remote_error_CLIENT_HAS_SENT_TOO_MANY_REQUESTS;
       } else if (isServerUnavailable()) {
         return R.string.fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD;
+      } else if (isAccountLocked()) {
+        return R.string.fxaccount_remote_error_ACCOUNT_LOCKED;
       } else {
         return R.string.fxaccount_remote_error_UNKNOWN_ERROR;
       }
