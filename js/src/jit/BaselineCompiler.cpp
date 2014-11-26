@@ -410,6 +410,10 @@ BaselineCompiler::emitPrologue()
     if (!emitSPSPush())
         return false;
 
+    // Pad a nop so that the last non-op ICEntry we pushed does not get
+    // confused with the start address of the first op for PC mapping.
+    masm.nop();
+
     return true;
 }
 
