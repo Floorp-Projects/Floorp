@@ -1,0 +1,52 @@
+---
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: {{owner}}
+    name: Reftest
+    description: Reftest test run {{chunk}}
+
+  workerType: b2gtest
+  provisionerId: aws-provisioner
+
+  scopes:
+    - 'docker-worker:cache:sources-gaia'
+
+  payload:
+    cache:
+      sources-gaia: '/home/worker/gaia'
+    image: '{{#docker_image}}tester{{/docker_image}}'
+    maxRunTime: 3600
+    env:
+      MOZ_DISABLE_NONLOCAL_CONNECTIONS: 0
+    command:
+      - entrypoint
+      - ./bin/pull_gaia.sh &&
+      - >
+        python ./mozharness/scripts/mulet_unittest.py --no-read-buildbot-config
+        --config-file ./mozharness/configs/b2g/generic_config.py
+        --config-file ./mozharness/configs/b2g/mulet_config.py
+        --config-file ./mozharness_configs/remove_executables.py
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --download-symbols ondemand
+        --test-suite reftest
+        --test-manifest tests/layout/reftests/reftest.list
+        --this-chunk {{chunk}}
+        --total-chunk {{total_chunks}}
+        --gaia-repo https://hg.mozilla.org/integration/gaia-central
+        --gaia-dir /home/worker/gaia
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      groupName: Reftest
+      groupSymbol: R
+      symbol: 'R{{chunk}}'
+      productName: b2g
