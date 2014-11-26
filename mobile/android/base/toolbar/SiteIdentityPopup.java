@@ -147,11 +147,11 @@ public class SiteIdentityPopup extends ArrowPopup {
         int icon;
         String message;
         if (blocked) {
-            icon = R.drawable.shield_doorhanger;
+            icon = R.drawable.shield_enabled_doorhanger;
             message = mContext.getString(R.string.blocked_mixed_content_message_top) + "\n\n" +
                       mContext.getString(R.string.blocked_mixed_content_message_bottom);
         } else {
-            icon = R.drawable.warning_doorhanger;
+            icon = R.drawable.shield_disabled_doorhanger;
             message = mContext.getString(R.string.loaded_mixed_content_message);
         }
 
@@ -179,12 +179,13 @@ public class SiteIdentityPopup extends ArrowPopup {
         int icon;
         String message;
         if (blocked) {
-            icon = R.drawable.shield_doorhanger;
+            icon = R.drawable.shield_enabled_doorhanger;
             message = mContext.getString(R.string.blocked_tracking_content_message_top) + "\n\n" +
                       mContext.getString(R.string.blocked_tracking_content_message_bottom);
         } else {
-            icon = R.drawable.warning_doorhanger;
-            message = mContext.getString(R.string.loaded_tracking_content_message);
+            icon = R.drawable.shield_disabled_doorhanger;
+            message = mContext.getString(R.string.loaded_tracking_content_message_top) + "\n\n" +
+                      mContext.getString(R.string.loaded_tracking_content_message_bottom);
         }
 
         mTrackingContentNotification.setIcon(icon);
