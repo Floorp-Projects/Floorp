@@ -22,12 +22,16 @@ flags:
     - gaia-build-unit
     - gaia-js-integration
     - gaia-linter
+    - gaia-ui-test-accessibility
+    - gaia-ui-test-functional
+    - gaia-ui-test-unit
     - jetpack
     - jittests
     - jsreftest
     - marionette
     - marionette-webapi
-    - mochitests
+    - mochitest
+    - mochitest-media
     - mochitest-oop
     - mozmill
     - reftest
