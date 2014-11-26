@@ -11,6 +11,9 @@ ADD           get-objdir.py         /home/worker/bin/get-objdir.py
 ADD           get_gaia_repo.js      /home/worker/bin/get_gaia_repo.js
 ADD           get_gaia_revision.js  /home/worker/bin/get_gaia_revision.js
 ADD           build-setup.sh        /home/worker/bin/build-setup.sh
+RUN           chown -R              worker:worker /home/worker/
+
+USER worker
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
