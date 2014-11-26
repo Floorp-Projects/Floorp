@@ -102,13 +102,13 @@ RuleViewTool.prototype = {
 
     if (!this.inspector.selection.isConnected() ||
         !this.inspector.selection.isElementNode()) {
-      this.view.highlight(null);
+      this.view.selectElement(null);
       return;
     }
 
     if (!aEvent || aEvent == "new-node-front") {
       let done = this.inspector.updating("rule-view");
-      this.view.highlight(this.inspector.selection.nodeFront).then(done, done);
+      this.view.selectElement(this.inspector.selection.nodeFront).then(done, done);
     }
   },
 
@@ -163,7 +163,7 @@ function ComputedViewTool(aInspector, aWindow, aIFrame)
   this.inspector.on("layout-change", this.refresh);
   this.inspector.selection.on("pseudoclass", this.refresh);
 
-  this.view.highlight(null);
+  this.view.selectElement(null);
 
   this.onSelect();
 }
@@ -181,13 +181,13 @@ ComputedViewTool.prototype = {
 
     if (!this.inspector.selection.isConnected() ||
         !this.inspector.selection.isElementNode()) {
-      this.view.highlight(null);
+      this.view.selectElement(null);
       return;
     }
 
     if (!aEvent || aEvent == "new-node-front") {
       let done = this.inspector.updating("computed-view");
-      this.view.highlight(this.inspector.selection.nodeFront).then(() => {
+      this.view.selectElement(this.inspector.selection.nodeFront).then(() => {
         done();
       });
     }
