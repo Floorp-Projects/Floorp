@@ -633,13 +633,13 @@ IsEqualityOp(JSOp op)
     return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
 }
 
-#ifdef DEBUG
 inline bool
 IsCheckStrictOp(JSOp op)
 {
     return js_CodeSpec[op].format & JOF_CHECKSTRICT;
 }
 
+#ifdef DEBUG
 inline bool
 IsCheckSloppyOp(JSOp op)
 {
