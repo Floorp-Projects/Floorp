@@ -609,7 +609,7 @@ class MinifiedJavaScript(BaseFile):
 
     def open(self):
         output = BytesIO()
-        minify = JavascriptMinify(self._file.open(), output)
+        minify = JavascriptMinify(self._file.open(), output, quote_chars="'\"`")
         minify.minify()
         output.seek(0)
 
