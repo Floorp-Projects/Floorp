@@ -2963,12 +2963,12 @@ UpdatePropertyType(ExclusiveContext *cx, HeapTypeSet *types, NativeObject *obj, 
          * that are not collated into the JSID_VOID property (see propertySet
          * comment).
          *
-         * Also don't add initial uninitialized lexical magic values as
-         * appearing in CallObjects.
+         * Also don't add untracked values (initial uninitialized lexical
+         * magic values and optimized out values) as appearing in CallObjects.
          */
-        MOZ_ASSERT_IF(value.isMagic(JS_UNINITIALIZED_LEXICAL), obj->is<CallObject>());
+        MOZ_ASSERT_IF(IsUntrackedValue(value), obj->is<CallObject>());
         if ((indexed || !value.isUndefined() || !CanHaveEmptyPropertyTypesForOwnProperty(obj)) &&
-            !value.isMagic(JS_UNINITIALIZED_LEXICAL))
+            !IsUntrackedValue(value))
         {
             Type type = GetValueType(value);
             types->TypeSet::addType(type, &cx->typeLifoAlloc());
