@@ -4,7 +4,6 @@ MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 ENV PATH $PATH:/home/worker/bin/
 
 # Add utilities and configuration
-ADD           mozconfigs/           /home/worker/mozconfigs/
 RUN           mkdir -p              /home/worker/bin
 ADD           build.sh              /home/worker/bin/build.sh
 ADD           build-b2g-desktop.sh  /home/worker/bin/build-b2g-desktop.sh
