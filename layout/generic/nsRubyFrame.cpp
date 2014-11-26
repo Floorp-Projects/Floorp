@@ -232,84 +232,49 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   LogicalSize availSize(lineWM, aReflowState.AvailableISize(),
                         aReflowState.AvailableBSize());
-  // The ruby base container for the current segment
-  nsRubyBaseContainerFrame* segmentRBC = nullptr;
-  nscoord annotationBSize = 0;
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    nsIFrame* childFrame = e.get();
-    if (childFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
-      if (segmentRBC) {
-        annotationBSize = 0;
-      }
-
-      // Figure out what all the text containers are for this segment (necessary
-      // for reflow calculations)
-      segmentRBC = do_QueryFrame(childFrame);
-      nsFrameList::Enumerator segment(e);
-      segment.Next();
-      while (!segment.AtEnd() && (segment.get()->GetType() !=
-             nsGkAtoms::rubyBaseContainerFrame)) {
-        if (segment.get()->GetType() == nsGkAtoms::rubyTextContainerFrame) {
-          segmentRBC->AppendTextContainer(segment.get());
-        }
-        segment.Next();
-      }
-
-      nsReflowStatus frameReflowStatus;
-      nsHTMLReflowMetrics metrics(aReflowState, aDesiredSize.mFlags);
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         childFrame, availSize);
-      childReflowState.mLineLayout = aReflowState.mLineLayout;
-      childFrame->Reflow(aPresContext, metrics, childReflowState,
-                         frameReflowStatus);
-      NS_ASSERTION(frameReflowStatus == NS_FRAME_COMPLETE,
+  for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
+    nsRubyBaseContainerFrame* baseContainer = e.GetBaseContainer();
+    AutoSetTextContainers holder(baseContainer);
+    nsReflowStatus baseReflowStatus;
+    nsHTMLReflowMetrics baseMetrics(aReflowState, aDesiredSize.mFlags);
+    nsHTMLReflowState baseReflowState(aPresContext, aReflowState,
+                                      baseContainer, availSize);
+    baseReflowState.mLineLayout = aReflowState.mLineLayout;
+    baseContainer->Reflow(aPresContext, baseMetrics, baseReflowState,
+                          baseReflowStatus);
+    NS_ASSERTION(baseReflowStatus == NS_FRAME_COMPLETE,
                  "Ruby line breaking is not yet implemented");
-      childFrame->SetSize(LogicalSize(lineWM, metrics.ISize(lineWM),
-                                      metrics.BSize(lineWM)));
-      FinishReflowChild(childFrame, aPresContext, metrics, &childReflowState, 0,
-                        0, NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW);
+    baseContainer->SetSize(LogicalSize(lineWM, baseMetrics.ISize(lineWM),
+                                       baseMetrics.BSize(lineWM)));
+    FinishReflowChild(baseContainer, aPresContext, baseMetrics,
+                      &baseReflowState, 0, 0,
+                      NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW);
 
-    } else if (childFrame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
-      nsReflowStatus frameReflowStatus;
-      nsHTMLReflowMetrics metrics(aReflowState, aDesiredSize.mFlags);
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame,
-                                         availSize);
-      childReflowState.mLineLayout = aReflowState.mLineLayout;
-      childFrame->Reflow(aPresContext, metrics, childReflowState,
-                      frameReflowStatus);
-      NS_ASSERTION(frameReflowStatus == NS_FRAME_COMPLETE,
-                 "Ruby line breaking is not yet implemented");
-      annotationBSize += metrics.BSize(lineWM);
-      childFrame->SetSize(LogicalSize(lineWM, metrics.ISize(lineWM),
-                                      metrics.BSize(lineWM)));
+    for (TextContainerIterator iter(baseContainer);
+         !iter.AtEnd(); iter.Next()) {
+      nsRubyTextContainerFrame* textContainer = iter.GetTextContainer();
+      nsReflowStatus textReflowStatus;
+      nsHTMLReflowMetrics textMetrics(aReflowState, aDesiredSize.mFlags);
+      nsHTMLReflowState textReflowState(aPresContext, aReflowState,
+                                        textContainer, availSize);
+      textReflowState.mLineLayout = aReflowState.mLineLayout;
+      textContainer->Reflow(aPresContext, textMetrics,
+                            textReflowState, textReflowStatus);
+      NS_ASSERTION(textReflowStatus == NS_FRAME_COMPLETE,
+                   "Ruby line breaking is not yet implemented");
+      textContainer->SetSize(LogicalSize(lineWM, textMetrics.ISize(lineWM),
+                                         textMetrics.BSize(lineWM)));
       // FIXME: This is a temporary calculation for finding the block coordinate
       // of the ruby text container. A better one replace it once it's been
       // spec'ed.
-      nscoord baseContainerBCoord; 
-      if (segmentRBC) {
-        // Find the starting block coordinate of the ruby base container for
-        // this segment. For now, the ruby text container will be placed so that
-        // its bottom edge touches this coordinate.
-        baseContainerBCoord = segmentRBC->
-          GetLogicalPosition(this->GetParent()->GetLogicalSize().ISize(lineWM)).
-          B(lineWM);
-      } else {
-        baseContainerBCoord = 0;
-      }
-      FinishReflowChild(childFrame, aPresContext, metrics, &childReflowState, 0,
-                        baseContainerBCoord - metrics.BSize(lineWM), 0);
-    } else {
-      NS_NOTREACHED(
-        "Unrecognized child type for ruby frame will not be reflowed."); 
-    }
-  }
-
-  // Null the pointers between child frames.
-  for (nsFrameList::Enumerator children(mFrames); !children.AtEnd();
-       children.Next()) {
-    nsRubyBaseContainerFrame* rbcFrame = do_QueryFrame(children.get());
-    if (rbcFrame) {
-      rbcFrame->ClearTextContainers();
+      // Find the starting block coordinate of the ruby base container for
+      // this segment. For now, the ruby text container will be placed so that
+      // its bottom edge touches this coordinate.
+      nscoord baseContainerBCoord = baseContainer->GetLogicalPosition(
+          GetParent()->GetLogicalSize().ISize(lineWM)).B(lineWM);
+      FinishReflowChild(textContainer, aPresContext, textMetrics,
+                        &textReflowState, 0,
+                        baseContainerBCoord - textMetrics.BSize(lineWM), 0);
     }
   }
 

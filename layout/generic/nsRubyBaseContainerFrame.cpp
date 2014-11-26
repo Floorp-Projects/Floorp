@@ -221,7 +221,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   nscoord isize = 0;
-  int baseNum = 0;
   nscoord leftoverSpace = 0;
   nscoord spaceApart = 0;
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
@@ -233,8 +232,9 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   LogicalSize availSize(lineWM, aReflowState.AvailableWidth(),
                         aReflowState.AvailableHeight());
 
+  const uint32_t rtcCount = mTextContainers.Length();
   // Begin the line layout for each ruby text container in advance.
-  for (uint32_t i = 0; i < mTextContainers.Length(); i++) {
+  for (uint32_t i = 0; i < rtcCount; i++) {
     nsRubyTextContainerFrame* rtcFrame = mTextContainers.ElementAt(i);
     nsHTMLReflowState rtcReflowState(aPresContext,
                                      *aReflowState.parentReflowState,
@@ -244,26 +244,14 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     rtcFrame->BeginRTCLineLayout(aPresContext, rtcReflowState);
   }
 
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    nsIFrame* rbFrame = e.get();
-    if (rbFrame->GetType() != nsGkAtoms::rubyBaseFrame) {
-      NS_ASSERTION(false, "Unrecognized child type for ruby base container");
-      continue;
-    }
-
-    nsReflowStatus frameReflowStatus;
-    nsHTMLReflowMetrics metrics(aReflowState, aDesiredSize.mFlags);
-
+  for (PairEnumerator e(this, mTextContainers); !e.AtEnd(); e.Next()) {
     // Determine if we need more spacing between bases in the inline direction
     // depending on the inline size of the corresponding annotations
     // FIXME: The use of GetPrefISize here and below is easier but not ideal. It
     // would be better to use metrics from reflow.
-    nscoord prefWidth = rbFrame->GetPrefISize(aReflowState.rendContext);
     nscoord textWidth = 0;
-
-    for (uint32_t i = 0; i < mTextContainers.Length(); i++) {
-      nsRubyTextFrame* rtFrame = do_QueryFrame(mTextContainers.ElementAt(i)->
-                          PrincipalChildList().FrameAt(baseNum));
+    for (uint32_t i = 0; i < rtcCount; i++) {
+      nsRubyTextFrame* rtFrame = do_QueryFrame(e.GetTextFrame(i));
       if (rtFrame) {
         int newWidth = rtFrame->GetPrefISize(aReflowState.rendContext);
         if (newWidth > textWidth) {
@@ -271,34 +259,43 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
         }
       }
     }
-    if (textWidth > prefWidth) {
-      spaceApart = std::max((textWidth - prefWidth) / 2, spaceApart);
-      leftoverSpace = spaceApart;
-    } else {
-      spaceApart = leftoverSpace;
-      leftoverSpace = 0;
-    }
-    if (spaceApart > 0) {
-      aReflowState.mLineLayout->AdvanceICoord(spaceApart);
-    }
-    baseStart = aReflowState.mLineLayout->GetCurrentICoord();
 
-    bool pushedFrame;
-    aReflowState.mLineLayout->ReflowFrame(rbFrame, frameReflowStatus,
-                                          &metrics, pushedFrame);
-    NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
+    nsIFrame* rbFrame = e.GetBaseFrame();
+    NS_ASSERTION(!rbFrame || rbFrame->GetType() == nsGkAtoms::rubyBaseFrame,
+                 "Unrecognized child type for ruby base container");
+    if (rbFrame) {
+      nsReflowStatus frameReflowStatus;
+      nsHTMLReflowMetrics metrics(aReflowState, aDesiredSize.mFlags);
+      nscoord prefWidth = rbFrame->GetPrefISize(aReflowState.rendContext);
 
-    isize += metrics.ISize(lineWM);
-    rbFrame->SetSize(LogicalSize(lineWM, metrics.ISize(lineWM),
-                                 metrics.BSize(lineWM)));
-    FinishReflowChild(rbFrame, aPresContext, metrics, &aReflowState, 0, 0,
-                      NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW);
+      if (textWidth > prefWidth) {
+        spaceApart = std::max((textWidth - prefWidth) / 2, spaceApart);
+        leftoverSpace = spaceApart;
+      } else {
+        spaceApart = leftoverSpace;
+        leftoverSpace = 0;
+      }
+      if (spaceApart > 0) {
+        aReflowState.mLineLayout->AdvanceICoord(spaceApart);
+      }
+      baseStart = aReflowState.mLineLayout->GetCurrentICoord();
+
+      bool pushedFrame;
+      aReflowState.mLineLayout->ReflowFrame(rbFrame, frameReflowStatus,
+                                            &metrics, pushedFrame);
+      NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
+
+      isize += metrics.ISize(lineWM);
+      rbFrame->SetSize(LogicalSize(lineWM, metrics.ISize(lineWM),
+                                  metrics.BSize(lineWM)));
+      FinishReflowChild(rbFrame, aPresContext, metrics, &aReflowState, 0, 0,
+                        NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW);
+    }
 
     // Now reflow the ruby text boxes that correspond to this ruby base box.
-    for (uint32_t i = 0; i < mTextContainers.Length(); i++) {
-      nsRubyTextFrame* rtFrame = do_QueryFrame(mTextContainers.ElementAt(i)->
-                          PrincipalChildList().FrameAt(baseNum));
-      nsRubyTextContainerFrame* rtcFrame = mTextContainers.ElementAt(i);
+    for (uint32_t i = 0; i < rtcCount; i++) {
+      nsRubyTextFrame* rtFrame = do_QueryFrame(e.GetTextFrame(i));
+      nsRubyTextContainerFrame* rtcFrame = mTextContainers[i];
       if (rtFrame) {
         nsHTMLReflowMetrics rtcMetrics(*aReflowState.parentReflowState,
                                        aDesiredSize.mFlags);
@@ -311,36 +308,6 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                       rtcReflowState);
       }
     }
-    baseNum++;
-  }
-
-  // Reflow ruby annotations which do not have a corresponding ruby base box due
-  // to a ruby base shortage. According to the spec, an empty ruby base is
-  // assumed to exist for each of these annotations.
-  bool continueReflow = true;
-  while (continueReflow) {
-    continueReflow = false;
-    for (uint32_t i = 0; i < mTextContainers.Length(); i++) {
-      nsRubyTextFrame* rtFrame = do_QueryFrame(mTextContainers.ElementAt(i)->
-                          PrincipalChildList().FrameAt(baseNum));
-      nsRubyTextContainerFrame* rtcFrame = mTextContainers.ElementAt(i);
-      if (rtFrame) {
-        continueReflow = true;
-        nsHTMLReflowMetrics rtcMetrics(*aReflowState.parentReflowState,
-                                       aDesiredSize.mFlags);
-        nsHTMLReflowState rtcReflowState(aPresContext,
-                                         *aReflowState.parentReflowState,
-                                         rtcFrame, availSize);
-        rtcReflowState.mLineLayout = rtcFrame->GetLineLayout();
-        rtcFrame->ReflowRubyTextFrame(rtFrame, nullptr, baseStart,
-                                      aPresContext, rtcMetrics,
-                                      rtcReflowState);
-        // Update the inline coord to make space for subsequent ruby annotations
-        // (since there is no corresponding base inline size to use).
-        baseStart += rtcMetrics.ISize(lineWM);
-      }
-    }
-    baseNum++;
   }
 
   aDesiredSize.ISize(lineWM) = isize;
