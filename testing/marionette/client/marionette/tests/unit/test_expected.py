@@ -117,11 +117,26 @@ class TestExpected(marionette_test.MarionetteTestCase):
         visible = expected.element_displayed(el)(self.marionette)
         self.assertTrue(visible)
 
+    def test_element_displayed_locator(self):
+        self.marionette.navigate(static_element)
+        visible = expected.element_displayed(By.TAG_NAME, "p")(self.marionette)
+        self.assertTrue(visible)
+
     def test_element_displayed_when_hidden(self):
         self.marionette.navigate(hidden_element)
         el = self.marionette.find_element(By.TAG_NAME, "p")
-        hidden = expected.element_displayed(el)(self.marionette)
-        self.assertFalse(hidden)
+        visible = expected.element_displayed(el)(self.marionette)
+        self.assertFalse(visible)
+
+    def test_element_displayed_when_hidden_locator(self):
+        self.marionette.navigate(hidden_element)
+        visible = expected.element_displayed(By.TAG_NAME, "p")(self.marionette)
+        self.assertFalse(visible)
+
+    def test_element_displayed_when_not_present(self):
+        self.marionette.navigate("about:blank")
+        visible = expected.element_displayed(By.TAG_NAME, "p")(self.marionette)
+        self.assertFalse(visible)
 
     def test_element_displayed_when_stale_element(self):
         self.marionette.navigate(static_element)
@@ -133,13 +148,23 @@ class TestExpected(marionette_test.MarionetteTestCase):
     def test_element_not_displayed(self):
         self.marionette.navigate(hidden_element)
         el = self.marionette.find_element(By.TAG_NAME, "p")
-        visible = expected.element_not_displayed(el)(self.marionette)
-        self.assertTrue(visible)
+        hidden = expected.element_not_displayed(el)(self.marionette)
+        self.assertTrue(hidden)
+
+    def test_element_not_displayed_locator(self):
+        self.marionette.navigate(hidden_element)
+        hidden = expected.element_not_displayed(By.TAG_NAME, "p")(self.marionette)
+        self.assertTrue(hidden)
 
     def test_element_not_displayed_when_visible(self):
         self.marionette.navigate(static_element)
         el = self.marionette.find_element(By.TAG_NAME, "p")
         hidden = expected.element_not_displayed(el)(self.marionette)
+        self.assertFalse(hidden)
+
+    def test_element_not_displayed_when_visible_locator(self):
+        self.marionette.navigate(static_element)
+        hidden = expected.element_not_displayed(By.TAG_NAME, "p")(self.marionette)
         self.assertFalse(hidden)
 
     def test_element_not_displayed_when_stale_element(self):
