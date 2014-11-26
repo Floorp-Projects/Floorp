@@ -985,13 +985,15 @@ DataChannelConnection::SendOpenRequestMessage(const nsACString& label,
                                               uint16_t stream, bool unordered,
                                               uint16_t prPolicy, uint32_t prValue)
 {
-  int label_len = label.Length(); // not including nul
-  int proto_len = protocol.Length(); // not including nul
+  const int label_len = label.Length(); // not including nul
+  const int proto_len = protocol.Length(); // not including nul
+  // careful - request struct include one char for the label
+  const int req_size = sizeof(struct rtcweb_datachannel_open_request) - 1 +
+                        label_len + proto_len;
   struct rtcweb_datachannel_open_request *req =
-    (struct rtcweb_datachannel_open_request*) moz_xmalloc((sizeof(*req)-1) + label_len + proto_len);
-   // careful - request includes 1 char label
+    (struct rtcweb_datachannel_open_request*) moz_xmalloc(req_size);
 
-  memset(req, 0, sizeof(struct rtcweb_datachannel_open_request));
+  memset(req, 0, req_size);
   req->msg_type = DATA_CHANNEL_OPEN_REQUEST;
   switch (prPolicy) {
   case SCTP_PR_SCTP_NONE:
@@ -1020,8 +1022,7 @@ DataChannelConnection::SendOpenRequestMessage(const nsACString& label,
   memcpy(&req->label[0], PromiseFlatCString(label).get(), label_len);
   memcpy(&req->label[label_len], PromiseFlatCString(protocol).get(), proto_len);
 
-  // sizeof(*req) already includes +1 byte for label, need nul for both strings
-  int32_t result = SendControlMessage(req, (sizeof(*req)-1) + label_len + proto_len, stream);
+  int32_t result = SendControlMessage(req, req_size, stream);
 
   moz_free(req);
   return result;
