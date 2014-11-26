@@ -2258,8 +2258,8 @@ NeedFrameFor(const nsFrameConstructorState& aState,
   // should be considered ignorable just because they evaluate to
   // whitespace.
 
-  // We could handle all this in CreateNeededPseudos or some other place
-  // after we build our frame construction items, but that would involve
+  // We could handle all this in CreateNeededPseudoContainers or some other
+  // place after we build our frame construction items, but that would involve
   // creating frame construction items for whitespace kids of
   // eExcludesIgnorableWhitespace frames, where we know we'll be dropping them
   // all anyway, and involve an extra walk down the frame construction item
@@ -9618,9 +9618,10 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
  * contain only items for frames that can be direct kids of aParentFrame.
  */
 void
-nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
-                                           FrameConstructionItemList& aItems,
-                                           nsIFrame* aParentFrame)
+nsCSSFrameConstructor::CreateNeededPseudoContainers(
+    nsFrameConstructorState& aState,
+    FrameConstructionItemList& aItems,
+    nsIFrame* aParentFrame)
 {
   ParentType ourParentType = GetParentType(aParentFrame);
   if (aItems.AllWantParentType(ourParentType)) {
@@ -9946,14 +9947,55 @@ nsCSSFrameConstructor::CreateNeededPseudos(nsFrameConstructorState& aState,
   } while (!iter.IsDone());
 }
 
+void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
+    nsFrameConstructorState& aState,
+    FrameConstructionItemList& aItems,
+    nsIFrame* aParentFrame)
+{
+  if (aItems.IsEmpty() ||
+      GetParentType(aParentFrame) != eTypeRuby) {
+    return;
+  }
+
+  FCItemIterator iter(aItems);
+  int firstDisplay = iter.item().mStyleContext->StyleDisplay()->mDisplay;
+  if (firstDisplay == NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER) {
+    return;
+  }
+  NS_ASSERTION(firstDisplay == NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER,
+               "Child of ruby frame should either a rbc or a rtc");
+
+  const PseudoParentData& pseudoData =
+    sPseudoParentData[eTypeRubyBaseContainer];
+  already_AddRefed<nsStyleContext> pseudoStyle = mPresShell->StyleSet()->
+    ResolveAnonymousBoxStyle(*pseudoData.mPseudoType,
+                             aParentFrame->StyleContext());
+  FrameConstructionItem* newItem =
+    new FrameConstructionItem(&pseudoData.mFCData,
+                              // Use the content of the parent frame
+                              aParentFrame->GetContent(),
+                              // Tag type
+                              *pseudoData.mPseudoType,
+                              // Use the namespace of the rtc frame
+                              iter.item().mNameSpaceID,
+                              // no pending binding
+                              nullptr,
+                              pseudoStyle,
+                              true, nullptr);
+  newItem->mIsAllInline = true;
+  newItem->mChildItems.SetParentHasNoXBLChildren(true);
+  iter.InsertItem(newItem);
+}
+
 inline void
 nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                                    FrameConstructionItemList& aItems,
                                                    nsContainerFrame* aParentFrame,
                                                    nsFrameItems& aFrameItems)
 {
-  CreateNeededPseudos(aState, aItems, aParentFrame);
+  CreateNeededPseudoContainers(aState, aItems, aParentFrame);
   CreateNeededAnonFlexOrGridItems(aState, aItems, aParentFrame);
+  CreateNeededPseudoSiblings(aState, aItems, aParentFrame);
 
   aItems.SetTriedConstructingFrames();
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {

@@ -1160,13 +1160,20 @@ private:
                                        nsIFrame* aParentFrame);
 
   /**
-   * Function to create the table pseudo items we need.
+   * Function to create the pseudo intermediate containers we need.
    * @param aItems the child frame construction items before pseudo creation
    * @param aParentFrame the parent frame we're creating pseudos for
    */
-  inline void CreateNeededPseudos(nsFrameConstructorState& aState,
-                                  FrameConstructionItemList& aItems,
-                                  nsIFrame* aParentFrame);
+  inline void CreateNeededPseudoContainers(nsFrameConstructorState& aState,
+                                           FrameConstructionItemList& aItems,
+                                           nsIFrame* aParentFrame);
+
+  /**
+   * Function to create the pseudo siblings we need.
+   */
+  inline void CreateNeededPseudoSiblings(nsFrameConstructorState& aState,
+                                         FrameConstructionItemList& aItems,
+                                         nsIFrame* aParentFrame);
 
   /**
    * Function to adjust aParentFrame to deal with captions.
