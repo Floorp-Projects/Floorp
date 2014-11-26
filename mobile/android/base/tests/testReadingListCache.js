@@ -73,6 +73,47 @@ add_task(function* test_parse_articles() {
   }
 });
 
+add_task(function* test_migrate_cache() {
+  // Store an article in the old indexedDB reader mode cache.
+  let cacheDB = yield new Promise((resolve, reject) => {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let request = win.indexedDB.open("about:reader", 1);
+    request.onerror = event => reject(request.error);
+
+    // This will always happen because there is no pre-existing data store.
+    request.onupgradeneeded = event => {
+      let cacheDB = event.target.result;
+      cacheDB.createObjectStore("articles", { keyPath: "url" });
+    };
+
+    request.onsuccess = event => resolve(event.target.result);
+  });
+
+  yield new Promise((resolve, reject) => {
+    let transaction = cacheDB.transaction(["articles"], "readwrite");
+    let store = transaction.objectStore("articles");
+
+    let request = store.add({
+      url: TEST_PAGES[0].url,
+      content: "Lorem ipsum",
+      title: TEST_PAGES[0].expected.title,
+      byline: TEST_PAGES[0].expected.byline,
+      excerpt: TEST_PAGES[0].expected.excerpt,
+      length: TEST_PAGES[0].expected.length
+    });
+    request.onerror = event => reject(request.error);
+    request.onsuccess = event => resolve();
+  });
+
+  // Migrate the cache.
+  yield Reader.migrateCache();
+
+  // Check to make sure the article made it into the new cache.
+  let uri = Services.io.newURI(TEST_PAGES[0].url, null, null);
+  let article = yield Reader.getArticleFromCache(uri);
+  checkArticle(article, TEST_PAGES[0]);
+});
+
 function checkArticle(article, testcase) {
   if (testcase.expected == null) {
     do_check_eq(article, null);
