@@ -111,11 +111,13 @@ PreallocatedProcessManagerImpl::Singleton()
 NS_IMPL_ISUPPORTS(PreallocatedProcessManagerImpl, nsIObserver)
 
 PreallocatedProcessManagerImpl::PreallocatedProcessManagerImpl()
-  : mEnabled(false)
+  :
 #ifdef MOZ_NUWA_PROCESS
-  , mPreallocateAppProcessTask(nullptr)
+    mPreallocateAppProcessTask(nullptr)
   , mIsNuwaReady(false)
+  ,
 #endif
+    mEnabled(false)
   , mShutdown(false)
 {}
 
