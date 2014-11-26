@@ -888,6 +888,9 @@ class SSLTunnel:
         config.write("redirhost:%s:%s:%s:%s\n" %
                      (loc.host, loc.port, self.sslPort, redirhost))
 
+      if option in ('ssl3', 'rc4'):
+        config.write("%s:%s:%s:%s\n" % (option, loc.host, loc.port, self.sslPort))
+
   def buildConfig(self, locations):
     """Create the ssltunnel configuration file"""
     configFd, self.configFile = tempfile.mkstemp(prefix="ssltunnel", suffix=".cfg")
