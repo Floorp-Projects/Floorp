@@ -80,7 +80,16 @@ builds:
           debug: 1
           b2g-config: 'emulator-kk'
           build-type: Debug
-
+  emulator-jb:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator.yml
+        additional-parameters:
+          debug: 0
+          b2g-config: 'emulator-jb'
+          build-type: Opt
 
 # Test section covers the -u options in the try flags
 tests:
