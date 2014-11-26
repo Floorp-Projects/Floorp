@@ -11,6 +11,8 @@
 
 #include "nsContainerFrame.h"
 
+class nsRubyBaseContainerFrame;
+
 /**
  * Factory function.
  * @return a newly allocated nsRubyFrame (infallible)
@@ -57,6 +59,12 @@ protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
   explicit nsRubyFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+
+  void ReflowSegment(nsPresContext* aPresContext,
+                     const nsHTMLReflowState& aReflowState,
+                     nsRubyBaseContainerFrame* aBaseContainer,
+                     nsReflowStatus& aStatus);
+
   nscoord mBaseline;
 };
 

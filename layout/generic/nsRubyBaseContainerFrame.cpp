@@ -67,6 +67,7 @@ public:
   nsIFrame* GetFrame(uint32_t aIndex) const { return mFrames[aIndex]; }
   nsIFrame* GetBaseFrame() const { return GetFrame(0); }
   nsIFrame* GetTextFrame(uint32_t aIndex) const { return GetFrame(aIndex + 1); }
+  void GetTextFrames(nsTArray<nsIFrame*>& aFrames) const;
 
 private:
   nsAutoTArray<nsIFrame*, RTC_ARRAY_SIZE + 1> mFrames;
@@ -104,6 +105,15 @@ PairEnumerator::AtEnd() const
     }
   }
   return true;
+}
+
+void
+PairEnumerator::GetTextFrames(nsTArray<nsIFrame*>& aFrames) const
+{
+  aFrames.ClearAndRetainStorage();
+  for (uint32_t i = 1, iend = mFrames.Length(); i < iend; i++) {
+    aFrames.AppendElement(mFrames[i]);
+  }
 }
 
 nscoord
@@ -306,81 +316,24 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                 false, false, lineWM, containerWidth);
   }
 
-  nscoord istart = aReflowState.mLineLayout->GetCurrentICoord();
-  nscoord icoord = istart;
-
   // Reflow non-span annotations and bases
-  for (PairEnumerator e(this, mTextContainers); !e.AtEnd(); e.Next()) {
-    nscoord pairISize = 0;
-
-    for (uint32_t i = 0; i < rtcCount; i++) {
-      nsRubyTextFrame* rtFrame = do_QueryFrame(e.GetTextFrame(i));
-      if (rtFrame) {
-        nsReflowStatus reflowStatus;
-        nsHTMLReflowMetrics metrics(*rtcReflowStates[i]);
-
-        bool pushedFrame;
-        rtcReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
-                                                     &metrics, pushedFrame);
-        NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
-                     "Ruby line breaking is not yet implemented");
-        NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
-        pairISize = std::max(pairISize, metrics.ISize(lineWM));
-      }
-    }
-
-    nsIFrame* rbFrame = e.GetBaseFrame();
-    if (rbFrame) {
-      MOZ_ASSERT(rbFrame->GetType() == nsGkAtoms::rubyBaseFrame);
-      nsReflowStatus reflowStatus;
-      nsHTMLReflowMetrics metrics(aReflowState);
-
-      bool pushedFrame;
-      aReflowState.mLineLayout->ReflowFrame(rbFrame, reflowStatus,
-                                            &metrics, pushedFrame);
-      NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
-                   "Ruby line breaking is not yet implemented");
-      NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
-      pairISize = std::max(pairISize, metrics.ISize(lineWM));
-    }
-
-    // Align all the line layout to the new coordinate.
-    icoord += pairISize;
-    aReflowState.mLineLayout->AdvanceICoord(
-      icoord - aReflowState.mLineLayout->GetCurrentICoord());
-    for (uint32_t i = 0; i < rtcCount; i++) {
-      nsLineLayout* lineLayout = rtcReflowStates[i]->mLineLayout;
-      lineLayout->AdvanceICoord(icoord - lineLayout->GetCurrentICoord());
-    }
-  }
+  nscoord pairsISize = ReflowPairs(aPresContext, aReflowState,
+                                   rtcReflowStates, aStatus);
+  nscoord isize = pairsISize;
 
   // Reflow spans
-  nscoord spanISize = 0;
-  for (uint32_t i = 0; i < spanCount; i++) {
-    nsRubyTextContainerFrame* container = mSpanContainers[i];
-    nsIFrame* rtFrame = container->GetFirstPrincipalChild();
-    nsReflowStatus reflowStatus;
-    nsHTMLReflowMetrics metrics(*spanReflowStates[i]);
-    bool pushedFrame;
-    spanReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
-                                                  &metrics, pushedFrame);
-    NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
-                 "Ruby line breaking is not yet implemented");
-    NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
-    spanISize = std::max(spanISize, metrics.ISize(lineWM));
-  }
-
-  nscoord isize = icoord - istart;
+  nscoord spanISize = ReflowSpans(aPresContext, aReflowState,
+                                  spanReflowStates, aStatus);
   if (isize < spanISize) {
     aReflowState.mLineLayout->AdvanceICoord(spanISize - isize);
     isize = spanISize;
   }
 
-  DebugOnly<nscoord> spanSize = aReflowState.mLineLayout->EndSpan(this);
+  DebugOnly<nscoord> lineSpanSize = aReflowState.mLineLayout->EndSpan(this);
   // When there are no frames inside the ruby base container, EndSpan
   // will return 0. However, in this case, the actual width of the
   // container could be non-zero because of non-empty ruby annotations.
-  MOZ_ASSERT(isize == spanSize || mFrames.IsEmpty());
+  MOZ_ASSERT(isize == lineSpanSize || mFrames.IsEmpty());
   for (uint32_t i = 0; i < totalCount; i++) {
     // It happens before the ruby text container is reflowed, and that
     // when it is reflowed, it will just use this size.
@@ -393,4 +346,107 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.ISize(lineWM) = isize;
   nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, aReflowState,
                                          borderPadding, lineWM, frameWM);
+}
+
+nscoord
+nsRubyBaseContainerFrame::ReflowPairs(nsPresContext* aPresContext,
+                                      const nsHTMLReflowState& aReflowState,
+                                      nsTArray<nsHTMLReflowState*>& aReflowStates,
+                                      nsReflowStatus& aStatus)
+{
+  nscoord istart = aReflowState.mLineLayout->GetCurrentICoord();
+  nscoord icoord = istart;
+
+  nsAutoTArray<nsIFrame*, RTC_ARRAY_SIZE> textFrames;
+  textFrames.SetCapacity(mTextContainers.Length());
+  for (PairEnumerator e(this, mTextContainers); !e.AtEnd(); e.Next()) {
+    e.GetTextFrames(textFrames);
+    icoord += ReflowOnePair(aPresContext, aReflowState, aReflowStates,
+                            e.GetBaseFrame(), textFrames, aStatus);
+  }
+
+  return icoord - istart;
+}
+
+/* static */ nscoord
+nsRubyBaseContainerFrame::ReflowOnePair(nsPresContext* aPresContext,
+                                        const nsHTMLReflowState& aReflowState,
+                                        nsTArray<nsHTMLReflowState*>& aReflowStates,
+                                        nsIFrame* aBaseFrame,
+                                        const nsTArray<nsIFrame*>& aTextFrames,
+                                        nsReflowStatus& aStatus)
+{
+  WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
+  const uint32_t rtcCount = aTextFrames.Length();
+  MOZ_ASSERT(aReflowStates.Length() == rtcCount);
+  nscoord istart = aReflowState.mLineLayout->GetCurrentICoord();
+  nscoord pairISize = 0;
+
+  for (uint32_t i = 0; i < rtcCount; i++) {
+    if (aTextFrames[i]) {
+      MOZ_ASSERT(aTextFrames[i]->GetType() == nsGkAtoms::rubyTextFrame);
+      nsReflowStatus reflowStatus;
+      nsHTMLReflowMetrics metrics(*aReflowStates[i]);
+
+      bool pushedFrame;
+      aReflowStates[i]->mLineLayout->ReflowFrame(aTextFrames[i], reflowStatus,
+                                                 &metrics, pushedFrame);
+      NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
+                   "Ruby line breaking is not yet implemented");
+      NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
+      pairISize = std::max(pairISize, metrics.ISize(lineWM));
+    }
+  }
+
+  if (aBaseFrame) {
+    MOZ_ASSERT(aBaseFrame->GetType() == nsGkAtoms::rubyBaseFrame);
+    nsReflowStatus reflowStatus;
+    nsHTMLReflowMetrics metrics(aReflowState);
+
+    bool pushedFrame;
+    aReflowState.mLineLayout->ReflowFrame(aBaseFrame, reflowStatus,
+                                          &metrics, pushedFrame);
+    NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
+                 "Ruby line breaking is not yet implemented");
+    NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
+    pairISize = std::max(pairISize, metrics.ISize(lineWM));
+  }
+
+  // Align all the line layout to the new coordinate.
+  nscoord icoord = istart + pairISize;
+  aReflowState.mLineLayout->AdvanceICoord(
+    icoord - aReflowState.mLineLayout->GetCurrentICoord());
+  for (uint32_t i = 0; i < rtcCount; i++) {
+    nsLineLayout* lineLayout = aReflowStates[i]->mLineLayout;
+    lineLayout->AdvanceICoord(icoord - lineLayout->GetCurrentICoord());
+  }
+
+  return pairISize;
+}
+
+nscoord
+nsRubyBaseContainerFrame::ReflowSpans(nsPresContext* aPresContext,
+                                      const nsHTMLReflowState& aReflowState,
+                                      nsTArray<nsHTMLReflowState*>& aReflowStates,
+                                      nsReflowStatus& aStatus)
+{
+  WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
+  const uint32_t spanCount = mSpanContainers.Length();
+  nscoord spanISize = 0;
+
+  for (uint32_t i = 0; i < spanCount; i++) {
+    nsRubyTextContainerFrame* container = mSpanContainers[i];
+    nsIFrame* rtFrame = container->GetFirstPrincipalChild();
+    nsReflowStatus reflowStatus;
+    nsHTMLReflowMetrics metrics(*aReflowStates[i]);
+    bool pushedFrame;
+    aReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
+                                               &metrics, pushedFrame);
+    NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
+                 "Ruby line breaking is not yet implemented");
+    NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
+    spanISize = std::max(spanISize, metrics.ISize(lineWM));
+  }
+
+  return spanISize;
 }
