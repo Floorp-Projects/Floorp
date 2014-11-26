@@ -246,6 +246,9 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
   if (!aMetrics.IsScrollable()) {
     return nullptr;
   }
+  if (gfxPrefs::LayoutEventRegionsEnabled() && aLayer.IsScrollInfoLayer()) {
+    return nullptr;
+  }
 
   const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
   if (!(state && state->mController.get())) {
