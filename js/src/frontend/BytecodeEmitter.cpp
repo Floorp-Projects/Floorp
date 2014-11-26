@@ -238,9 +238,22 @@ UpdateDepth(ExclusiveContext *cx, BytecodeEmitter *bce, ptrdiff_t target)
         bce->maxStackDepth = bce->stackDepth;
 }
 
+#ifdef DEBUG
+static bool
+CheckStrictOrSloppy(BytecodeEmitter *bce, JSOp op)
+{
+    if (IsCheckStrictOp(op) && !bce->sc->strict)
+        return false;
+    if (IsCheckSloppyOp(op) && bce->sc->strict)
+        return false;
+    return true;
+}
+#endif
+
 ptrdiff_t
 frontend::Emit1(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
 {
+    MOZ_ASSERT(CheckStrictOrSloppy(bce, op));
     ptrdiff_t offset = EmitCheck(cx, bce, 1);
     if (offset < 0)
         return -1;
@@ -254,6 +267,7 @@ frontend::Emit1(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
 ptrdiff_t
 frontend::Emit2(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1)
 {
+    MOZ_ASSERT(CheckStrictOrSloppy(bce, op));
     ptrdiff_t offset = EmitCheck(cx, bce, 2);
     if (offset < 0)
         return -1;
@@ -269,6 +283,8 @@ ptrdiff_t
 frontend::Emit3(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1,
                 jsbytecode op2)
 {
+    MOZ_ASSERT(CheckStrictOrSloppy(bce, op));
+
     /* These should filter through EmitVarOp. */
     MOZ_ASSERT(!IsArgOp(op));
     MOZ_ASSERT(!IsLocalOp(op));
@@ -288,6 +304,7 @@ frontend::Emit3(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode 
 ptrdiff_t
 frontend::EmitN(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra)
 {
+    MOZ_ASSERT(CheckStrictOrSloppy(bce, op));
     ptrdiff_t length = 1 + (ptrdiff_t)extra;
     ptrdiff_t offset = EmitCheck(cx, bce, length);
     if (offset < 0)
@@ -1019,6 +1036,7 @@ LeaveNestedScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt)
 static bool
 EmitIndex32(ExclusiveContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
 {
+    MOZ_ASSERT(CheckStrictOrSloppy(bce, op));
     const size_t len = 1 + UINT32_INDEX_LEN;
     MOZ_ASSERT(len == size_t(js_CodeSpec[op].length));
     ptrdiff_t offset = EmitCheck(cx, bce, len);
@@ -1036,6 +1054,7 @@ EmitIndex32(ExclusiveContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
 static bool
 EmitIndexOp(ExclusiveContext *cx, JSOp op, uint32_t index, BytecodeEmitter *bce)
 {
+    MOZ_ASSERT(CheckStrictOrSloppy(bce, op));
     const size_t len = js_CodeSpec[op].length;
     MOZ_ASSERT(len >= 1 + UINT32_INDEX_LEN);
     ptrdiff_t offset = EmitCheck(cx, bce, len);
