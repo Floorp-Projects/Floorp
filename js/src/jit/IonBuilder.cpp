@@ -10069,8 +10069,7 @@ IonBuilder::jsop_setprop(PropertyName *name)
     // Always use a call if we are doing the definite properties analysis and
     // not actually emitting code, to simplify later analysis.
     if (info().executionModeIsAnalysis()) {
-        // XXX: Dropped later in stack, but for now other ops rely on the old mechanic.
-        bool strict = IsStrictSetPC(pc) || script()->strict();
+        bool strict = IsStrictSetPC(pc);
         MInstruction *ins = MCallSetProperty::New(alloc(), obj, value, name, strict);
         current->add(ins);
         current->push(value);
@@ -10452,8 +10451,7 @@ IonBuilder::setPropTryCache(bool *emitted, MDefinition *obj,
 {
     MOZ_ASSERT(*emitted == false);
 
-    // XXX Dropped later in stack, but while others rely on it, we must retain the check.
-    bool strict = IsStrictSetPC(pc) || script()->strict();
+    bool strict = IsStrictSetPC(pc);
     // Emit SetPropertyCache.
     MSetPropertyCache *ins = MSetPropertyCache::New(alloc(), obj, value, name, strict, barrier);
 
