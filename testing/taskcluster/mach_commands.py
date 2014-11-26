@@ -22,7 +22,6 @@ from mach.decorators import (
     Command,
 )
 
-
 from taskcluster_graph.commit_parser import parse_commit
 from taskcluster_graph.slugid import slugid
 from taskcluster_graph.from_now import json_time_from_now, current_json_time
@@ -62,7 +61,7 @@ def get_latest_hg_revision(repository):
         ).strip('\n')
     except subprocess.CalledProcessError:
         sys.stderr.write(
-            "Error: Could not determine the latest hg revision at {}" \
+            "Error: Could not determine the latest hg revision at {} " \
             "Ensure command is executed within a cloned hg respository and " \
             "remote default remote repository is accessible".format(repository)
         )
@@ -300,3 +299,68 @@ class CITest(object):
         locations = task['extra']['locations']
         return locations['build'], locations['tests']
 
+@CommandProvider
+class CIDockerRun(object):
+    @Command('ci-docker-run', category='ci',
+        description='Run a docker image and optionally mount local hg repos. ' \
+                    'Repos will be mounted to /home/worker/x/source accordingly. ' \
+                    'For example, to run a centos image and mount local gecko ' \
+                    'and gaia repos: mach ci-docker-run --local-gecko-repo ' \
+                    '/home/user/mozilla-central/ --local-gaia-repo /home/user/gaia/ '\
+                    '--docker-flags="-t -i" centos:centos7 /bin/bash')
+    @CommandArgument('--local-gecko-repo',
+        action='store', dest='local_gecko_repo',
+        help='local gecko hg repository for volume mount')
+    @CommandArgument('--gecko-revision',
+        action='store', dest='gecko_revision',
+        help='local gecko repo revision (defaults to latest)')
+    @CommandArgument('--local-gaia-repo',
+        action='store', dest='local_gaia_repo',
+        help='local gaia hg repository for volume mount')
+    @CommandArgument('--mozconfig',
+        help='The mozconfig file for building gecko')
+    @CommandArgument('--docker-flags',
+        action='store', dest='flags',
+        help='string of run flags (i.e. --docker-flags="-i -t")')
+    @CommandArgument('image',
+        help='name of docker image to run')
+    @CommandArgument('command',
+        nargs='*',
+        help='command to run inside the docker image')
+    def ci_docker_run(self, local_gecko_repo='', gecko_revision='',
+                      local_gaia_repo='', mozconfig="", flags="", **kwargs):
+        ''' Run docker image and optionally volume mount specified local repos '''
+        gecko_mount_point='/home/worker/mozilla-central/source/'
+        gaia_mount_point='/home/worker/gaia/source/'
+        cmd_out = ['docker', 'run']
+        if flags:
+            cmd_out.extend(flags.split())
+        if local_gecko_repo:
+            if not os.path.exists(local_gecko_repo):
+                print("Gecko repository path doesn't exist: %s" % local_gecko_repo)
+                sys.exit(1)
+            if not gecko_revision:
+                gecko_revision = get_latest_hg_revision(local_gecko_repo)
+            cmd_out.extend(['-v', '%s:%s' % (local_gecko_repo, gecko_mount_point)])
+            cmd_out.extend(['-e', 'REPOSITORY=%s' % gecko_mount_point])
+            cmd_out.extend(['-e', 'REVISION=%s' % gecko_revision])
+        if local_gaia_repo:
+            if not os.path.exists(local_gaia_repo):
+                print("Gaia repository path doesn't exist: %s" % local_gaia_repo)
+                sys.exit(1)
+            cmd_out.extend(['-v', '%s:%s' % (local_gaia_repo, gaia_mount_point)])
+            cmd_out.extend(['-e', 'GAIA_REPOSITORY=%s' % gaia_mount_point])
+        if mozconfig:
+            cmd_out.extend(['-e', 'MOZCONFIG=%s' % mozconfig])
+        cmd_out.append(kwargs['image'])
+        for cmd_x in kwargs['command']:
+            cmd_out.append(cmd_x)
+        try:
+            subprocess.check_call(cmd_out)
+        except subprocess.CalledProcessError:
+            sys.stderr.write("Docker run command returned non-zero status. Attempted:\n")
+            cmd_line = ''
+            for x in cmd_out:
+                cmd_line = cmd_line + x + ' '
+            sys.stderr.write(cmd_line + '\n')
+            sys.exit(1)
