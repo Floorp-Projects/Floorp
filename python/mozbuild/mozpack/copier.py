@@ -297,21 +297,21 @@ class FileCopier(FileRegistry):
                         # removed and a directory created above.
                         if remove_all_directory_symlinks:
                             os.remove(full)
-                            result.removed_files.add(os.path.normpath(full))
+                            result.removed_files.add(full)
                         else:
-                            existing_files.add(os.path.normpath(full))
+                            existing_files.add(full)
                     else:
                         filtered.append(d)
 
                 dirs[:] = filtered
 
-            existing_dirs.add(os.path.normpath(root))
+            existing_dirs.add(root)
 
             for d in dirs:
-                existing_dirs.add(os.path.normpath(os.path.join(root, d)))
+                existing_dirs.add(os.path.join(root, d))
 
             for f in files:
-                existing_files.add(os.path.normpath(os.path.join(root, f)))
+                existing_files.add(os.path.join(root, f))
 
         # Now we reconcile the state of the world against what we want.
 
@@ -329,7 +329,7 @@ class FileCopier(FileRegistry):
 
         # Install files.
         for p, f in self:
-            destfile = os.path.normpath(os.path.join(destination, p))
+            destfile = os.path.join(destination, p)
             if f.copy(destfile, skip_if_older):
                 result.updated_files.add(destfile)
             else:
