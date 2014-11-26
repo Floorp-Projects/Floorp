@@ -48,6 +48,12 @@ class MediaTrackListListener;
 
 class MediaStreamDirectListener;
 
+// For classes that need fixed track IDs
+enum {
+  kVideoTrack = 1,
+  kAudioTrack = 2
+};
+
 #define NS_DOMMEDIASTREAM_IID \
 { 0x8cb65468, 0x66c0, 0x444e, \
   { 0x89, 0x9f, 0x89, 0x1d, 0x9e, 0xd2, 0xbe, 0x7c } }
