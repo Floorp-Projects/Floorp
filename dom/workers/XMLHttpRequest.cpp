@@ -1072,16 +1072,13 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
     AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
 
-    JS::Rooted<JSObject*> scope(cx, xpc::UnprivilegedJunkScope());
-    JSAutoCompartment ac(cx, scope);
-
     JS::Rooted<JS::Value> value(cx);
-    if (!GetOrCreateDOMReflector(cx, mXHR, &value)) {
+    if (!GetOrCreateDOMReflectorNoWrap(cx, mXHR, &value)) {
       return NS_ERROR_FAILURE;
     }
 
-    scope = js::UncheckedUnwrap(&value.toObject());
-    JSAutoCompartment ac2(cx, scope);
+    JS::Rooted<JSObject*> scope(cx, &value.toObject());
+    JSAutoCompartment ac(cx, scope);
 
     runnable->Dispatch(cx);
   }
