@@ -3624,6 +3624,29 @@ ComputeConcreteObjectSize(const nsSize& aConstraintSize,
   }
 }
 
+// (Helper for HasInitialObjectFitAndPosition, to check
+// each "object-position" coord.)
+typedef nsStyleBackground::Position::PositionCoord PositionCoord;
+static bool
+IsCoord50Pct(const PositionCoord& aCoord)
+{
+  return (aCoord.mLength == 0 &&
+          aCoord.mHasPercent &&
+          aCoord.mPercent == 0.5f);
+}
+
+// Indicates whether the given nsStylePosition has the initial values
+// for the "object-fit" and "object-position" properties.
+static bool
+HasInitialObjectFitAndPosition(const nsStylePosition* aStylePos)
+{
+  const nsStyleBackground::Position& objectPos = aStylePos->mObjectPosition;
+
+  return aStylePos->mObjectFit == NS_STYLE_OBJECT_FIT_FILL &&
+    IsCoord50Pct(objectPos.mXPosition) &&
+    IsCoord50Pct(objectPos.mYPosition);
+}
+
 /* static */ nsRect
 nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
                                      const IntrinsicSize& aIntrinsicSize,
@@ -3650,7 +3673,21 @@ nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
   imageAnchorPt += aConstraintRect.TopLeft();
 
   if (aAnchorPoint) {
-    *aAnchorPoint = imageAnchorPt;
+    // Special-case: if our "object-fit" and "object-position" properties have
+    // their default values ("object-fit: fill; object-position:50% 50%"), then
+    // we'll override the calculated imageAnchorPt, and instead use the
+    // object's top-left corner.
+    //
+    // This special case is partly for backwards compatibility (since
+    // traditionally we've pixel-aligned the top-left corner of e.g. <img>
+    // elements), and partly because ComputeSnappedDrawingParameters produces
+    // less error if the anchor point is at the top-left corner. So, all other
+    // things being equal, we prefer that code path with less error.
+    if (HasInitialObjectFitAndPosition(aStylePos)) {
+      *aAnchorPoint = imageTopLeftPt;
+    } else {
+      *aAnchorPoint = imageAnchorPt;
+    }
   }
   return nsRect(imageTopLeftPt, concreteObjectSize);
 }
