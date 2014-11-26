@@ -54,6 +54,7 @@
 #include "WebGLObjectModel.h"
 #include "WebGLQuery.h"
 #include "WebGLSampler.h"
+#include "WebGLTransformFeedback.h"
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
 
@@ -328,6 +329,14 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundRenderbuffer = nullptr;
     mBoundVertexArray = nullptr;
     mDefaultVertexArray = nullptr;
+    mBoundTransformFeedback = nullptr;
+    mDefaultTransformFeedback = nullptr;
+
+    if (mBoundTransformFeedbackBuffers) {
+        for (GLuint i = 0; i < mGLMaxTransformFeedbackSeparateAttribs; i++) {
+            mBoundTransformFeedbackBuffers[i] = nullptr;
+        }
+    }
 
     while (!mTextures.isEmpty())
         mTextures.getLast()->DeleteOnce();
@@ -347,6 +356,8 @@ WebGLContext::DestroyResourcesAndContext()
         mQueries.getLast()->DeleteOnce();
     while (!mSamplers.isEmpty())
         mSamplers.getLast()->DeleteOnce();
+    while (!mTransformFeedbacks.isEmpty())
+        mTransformFeedbacks.getLast()->DeleteOnce();
 
     mBlackOpaqueTexture2D = nullptr;
     mBlackOpaqueTextureCubeMap = nullptr;
