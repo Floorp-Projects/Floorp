@@ -41,7 +41,6 @@ yum install -y \
 # distributing them to workers is wasteful.
 yum clean all
 
-pip install virtualenv;
 mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
 hg clone http://hg.mozilla.org/build/mozharness/
 echo 'Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 &> /dev/null &' >> .bashrc
