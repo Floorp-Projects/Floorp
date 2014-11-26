@@ -16,10 +16,15 @@ namespace layout {
 class RenderFrameChild : public PRenderFrameChild
 {
 public:
-  RenderFrameChild() {}
+  RenderFrameChild() : mWasDestroyed(false) {}
   virtual ~RenderFrameChild() {}
 
+  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+
   void Destroy();
+
+private:
+  bool mWasDestroyed;
 };
 
 } // namespace layout
