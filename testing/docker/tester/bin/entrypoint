@@ -6,7 +6,7 @@
 # bootstraps any processes that need to run outside of mozharness (like Xvfb)
 
 # XXX: Note that all tests could be faster at smaller bit depth
-Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 &
+Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 2>/dev/null &
 export DISPLAY=:0
 
 eval $@
