@@ -15,6 +15,7 @@ task:
     - 'docker-worker:cache:sources-mozilla-central'
     - 'docker-worker:cache:build-mulet-linux-objects'
     - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
 
   payload:
     cache:

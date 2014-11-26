@@ -13,6 +13,7 @@ task:
 
   scopes:
     - 'docker-worker:cache:build-emulator-objects'
+    - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
 
   payload:
     cache:
