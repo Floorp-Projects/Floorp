@@ -1011,7 +1011,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
     // CN=COMODO RSA Certification Authority,O=COMODO CA Limited,L=Salford,ST=Greater Manchester,C=GB
     "1.3.6.1.4.1.6449.1.2.1.5.1",
-    "COMODORSACertificationAuthority",
+    "Comodo EV OID",
     SEC_OID_UNKNOWN,
     { 0x52, 0xF0, 0xE1, 0xC4, 0xE5, 0x8E, 0xC6, 0x29, 0x29, 0x1B, 0x60,
       0x31, 0x7F, 0x07, 0x46, 0x71, 0xB8, 0x5D, 0x7E, 0xA8, 0x0D, 0x5B,
@@ -1025,7 +1025,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
     // CN=USERTrust RSA Certification Authority,O=The USERTRUST Network,L=Jersey City,ST=New Jersey,C=US
     "1.3.6.1.4.1.6449.1.2.1.5.1",
-    "USERTrustRSACertificationAuthority",
+    "Comodo EV OID",
     SEC_OID_UNKNOWN,
     { 0xE7, 0x93, 0xC9, 0xB0, 0x2F, 0xD8, 0xAA, 0x13, 0xE2, 0x1C, 0x31,
       0x22, 0x8A, 0xCC, 0xB0, 0x81, 0x19, 0x64, 0x3B, 0x74, 0x9C, 0x89,
@@ -1039,7 +1039,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
     // CN=USERTrust ECC Certification Authority,O=The USERTRUST Network,L=Jersey City,ST=New Jersey,C=US
     "1.3.6.1.4.1.6449.1.2.1.5.1",
-    "USERTrust ECC Certification Authority",
+    "Comodo EV OID",
     SEC_OID_UNKNOWN,
     { 0x4F, 0xF4, 0x60, 0xD5, 0x4B, 0x9C, 0x86, 0xDA, 0xBF, 0xBC, 0xFC,
       0x57, 0x12, 0xE0, 0x40, 0x0D, 0x2B, 0xED, 0x3F, 0xBC, 0x4D, 0x4F,
@@ -1053,7 +1053,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
     // CN=GlobalSign,O=GlobalSign,OU=GlobalSign ECC Root CA - R4
     "1.3.6.1.4.1.4146.1.1",
-    "GlobalSign ECC Root CA - R4",
+    "GlobalSign EV OID",
     SEC_OID_UNKNOWN,
     { 0xBE, 0xC9, 0x49, 0x11, 0xC2, 0x95, 0x56, 0x76, 0xDB, 0x6C, 0x0A,
       0x55, 0x09, 0x86, 0xD7, 0x6E, 0x3B, 0xA0, 0x05, 0x66, 0x7C, 0x44,
@@ -1066,7 +1066,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
     // CN=GlobalSign,O=GlobalSign,OU=GlobalSign ECC Root CA - R5
     "1.3.6.1.4.1.4146.1.1",
-    "GlobalSign ECC Root CA - R5",
+    "GlobalSign EV OID",
     SEC_OID_UNKNOWN,
     { 0x17, 0x9F, 0xBC, 0x14, 0x8A, 0x3D, 0xD0, 0x0F, 0xD2, 0x4E, 0xA1,
       0x34, 0x58, 0xCC, 0x43, 0xBF, 0xA7, 0xF5, 0x9C, 0x81, 0x82, 0xD7,
@@ -1079,7 +1079,7 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
   {
     // CN=Entrust.net Certification Authority (2048),OU=(c) 1999 Entrust.net Limited,OU=www.entrust.net/CPS_2048 incorp. by ref. (limits liab.),O=Entrust.net
     "2.16.840.1.114028.10.1.2",
-    "EntrustCA2048",
+    "Entrust EV OID",
     SEC_OID_UNKNOWN,
     { 0x6D, 0xC4, 0x71, 0x72, 0xE0, 0x1C, 0xBC, 0xB0, 0xBF, 0x62, 0x58,
       0x0D, 0x89, 0x5F, 0xE2, 0xB8, 0xAC, 0x9A, 0xD4, 0xF8, 0x73, 0x80,
