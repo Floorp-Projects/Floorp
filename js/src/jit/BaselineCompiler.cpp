@@ -1957,6 +1957,12 @@ BaselineCompiler::emit_JSOP_SETELEM()
     return true;
 }
 
+bool
+BaselineCompiler::emit_JSOP_STRICTSETELEM()
+{
+    return emit_JSOP_SETELEM();
+}
+
 typedef bool (*DeleteElementFn)(JSContext *, HandleValue, HandleValue, bool *);
 static const VMFunction DeleteElementStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<true>);
 static const VMFunction DeleteElementNonStrictInfo = FunctionInfo<DeleteElementFn>(DeleteElement<false>);

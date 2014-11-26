@@ -108,6 +108,7 @@ namespace jit {
     _(JSOP_ARRAYPUSH)          \
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
+    _(JSOP_STRICTSETELEM)      \
     _(JSOP_CALLELEM)           \
     _(JSOP_DELELEM)            \
     _(JSOP_STRICTDELELEM)      \
