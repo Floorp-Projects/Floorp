@@ -26,7 +26,7 @@ fi
 ### Pull and update gaia
 cd $gaia_dir
 GAIA_REV=$(get_gaia_revision.js)
-GAIA_REPO="https://hg.mozilla.org$(get_gaia_repo.js)"
+GAIA_REPO="$(get_gaia_repo.js)"
 hg pull -r $GAIA_REV $GAIA_REPO;
 hg update $GAIA_REV;
 
