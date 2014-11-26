@@ -131,8 +131,9 @@ public:
 
   TemporaryRef<SourceSurface> CachedSurface();
 
-  size_t SizeOfExcludingThis(gfxMemoryLocation aLocation,
-                             MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
+           gfxMemoryLocation aLocation,
+           MallocSizeOf aMallocSizeOf) const;
 
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
   uint32_t PaletteDataLength() const {
