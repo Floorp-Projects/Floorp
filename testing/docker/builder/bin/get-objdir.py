@@ -2,21 +2,21 @@
 
 from __future__ import print_function
 import sys
-import os.path
+import os
+import json
+import subprocess
+from StringIO import StringIO
 
 DEFAULT_OBJDIR = "/home/worker/object-folder"
 
 gecko_dir = sys.argv[1]
+os.chdir(gecko_dir)
 
-base_path = os.path.join(gecko_dir, 'python')
-sys.path.append(os.path.join(base_path, 'mozbuild'))
-sys.path.append(os.path.join(base_path, 'mach'))
-sys.path.append(os.path.join(gecko_dir, 'testing', 'mozbase', 'mozprocess'))
+result = subprocess.check_output(["./mach", "environment", "--format", "json"])
+environment = json.load(StringIO(result))
 
-from mozbuild.mozconfig import MozconfigLoader
+topobjdir = environment["mozconfig"]["topobjdir"]
+if topobjdir is None:
+    topobjdir = DEFAULT_OBJDIR
 
-loader = MozconfigLoader(gecko_dir)
-result = loader.read_mozconfig()
-
-topobjdir = result['topobjdir']
-print(topobjdir if topobjdir else DEFAULT_OBJDIR)
+print(topobjdir)
