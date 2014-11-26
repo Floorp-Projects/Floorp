@@ -1,7 +1,9 @@
-FROM          quay.io/mozilla/base:0.0.4
+FROM          quay.io/mozilla/base-build:0.0.1
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
-ENV PATH $PATH:/home/worker/bin/
+ENV PATH /tools/python27-mercurial/bin:/tools/python27/bin:/tools/tools/buildfarm/utils:$PATH:/home/worker/bin/
+ENV PYTHONPATH /tools/tools/lib/python:$PYTHONPATH
+
 ENV TOOLTOOL_CACHE  /home/worker/tools/tooltool-cache
 
 # Add utilities and configuration
