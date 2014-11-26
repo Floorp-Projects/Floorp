@@ -366,11 +366,6 @@ ICStub::trace(JSTracer *trc)
         }
         break;
       }
-      case ICStub::GetProp_TypedObject: {
-        ICGetProp_TypedObject *propStub = toGetProp_TypedObject();
-        MarkShape(trc, &propStub->shape(), "baseline-getprop-typedobject-stub-shape");
-        break;
-      }
       case ICStub::GetProp_CallDOMProxyNative:
       case ICStub::GetProp_CallDOMProxyWithGenerationNative: {
         ICGetPropCallDOMProxyNativeStub *propStub;
@@ -438,12 +433,6 @@ ICStub::trace(JSTracer *trc)
           case 4: propStub->toImpl<4>()->traceShapes(trc); break;
           default: MOZ_CRASH("Invalid proto stub.");
         }
-        break;
-      }
-      case ICStub::SetProp_TypedObject: {
-        ICSetProp_TypedObject *propStub = toSetProp_TypedObject();
-        MarkShape(trc, &propStub->shape(), "baseline-setprop-typedobject-stub-shape");
-        MarkTypeObject(trc, &propStub->type(), "baseline-setprop-typedobject-stub-type");
         break;
       }
       case ICStub::SetProp_CallScripted: {
@@ -1554,25 +1543,6 @@ DoTypeUpdateFallback(JSContext *cx, BaselineFrame *frame, ICUpdatedStub *stub, H
         else
             id = NameToId(script->getName(pc));
         types::AddTypePropertyId(cx, obj, id, value);
-        break;
-      }
-      case ICStub::SetProp_TypedObject: {
-        MOZ_ASSERT(obj->is<TypedObject>());
-        jsbytecode *pc = stub->getChainFallback()->icEntry()->pc(script);
-        id = NameToId(script->getName(pc));
-        if (stub->toSetProp_TypedObject()->isObjectReference()) {
-            // Ignore all values being written except plain objects. Null
-            // is included implicitly in type information for this property,
-            // and non-object non-null values will cause the stub to fail to
-            // match shortly and we will end up doing the assignment in the VM.
-            if (value.isObject())
-                types::AddTypePropertyId(cx, obj, id, value);
-        } else {
-            // Ignore undefined values, which are included implicitly in type
-            // information for this property.
-            if (!value.isUndefined())
-                types::AddTypePropertyId(cx, obj, id, value);
-        }
         break;
       }
       default:
@@ -3923,35 +3893,9 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
 }
 
 static bool
-IsPrimitiveArrayTypedObject(JSObject *obj)
+TypedArrayRequiresFloatingPoint(HandleObject obj)
 {
-    if (!obj->is<TypedObject>())
-        return false;
-    TypeDescr &descr = obj->as<TypedObject>().typeDescr();
-    return descr.is<ArrayTypeDescr>() &&
-           descr.as<ArrayTypeDescr>().elementType().is<ScalarTypeDescr>();
-}
-
-static Scalar::Type
-PrimitiveArrayTypedObjectType(JSObject *obj)
-{
-    MOZ_ASSERT(IsPrimitiveArrayTypedObject(obj));
-    TypeDescr &descr = obj->as<TypedObject>().typeDescr();
-    return descr.as<ArrayTypeDescr>().elementType().as<ScalarTypeDescr>().type();
-}
-
-static Scalar::Type
-TypedThingElementType(JSObject *obj)
-{
-    return IsAnyTypedArray(obj)
-           ? AnyTypedArrayType(obj)
-           : PrimitiveArrayTypedObjectType(obj);
-}
-
-static bool
-TypedThingRequiresFloatingPoint(JSObject *obj)
-{
-    Scalar::Type type = TypedThingElementType(obj);
+    uint32_t type = AnyTypedArrayType(obj);
     return type == Scalar::Uint32 ||
            type == Scalar::Float32 ||
            type == Scalar::Float64;
@@ -4043,10 +3987,8 @@ TryAttachGetElemStub(JSContext *cx, JSScript *script, jsbytecode *pc, ICGetElem_
         }
     }
 
-    // Check for TypedArray[int] => Number and TypedObject[int] => Number accesses.
-    if ((IsAnyTypedArray(obj.get()) || IsPrimitiveArrayTypedObject(obj)) &&
-        rhs.isNumber() &&
-        res.isNumber() &&
+    // Check for TypedArray[int] => Number accesses.
+    if (IsAnyTypedArray(obj.get()) && rhs.isNumber() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
         // Don't attach CALLELEM stubs for accesses on typed array expected to yield numbers.
@@ -4056,19 +3998,15 @@ TryAttachGetElemStub(JSContext *cx, JSScript *script, jsbytecode *pc, ICGetElem_
 #endif
 
         if (!cx->runtime()->jitSupportsFloatingPoint &&
-            (TypedThingRequiresFloatingPoint(obj) || rhs.isDouble()))
+            (TypedArrayRequiresFloatingPoint(obj) || rhs.isDouble()))
         {
             return true;
         }
 
-        // Don't attach typed object stubs if they might be neutered, as the
-        // stub will always bail out.
-        if (IsPrimitiveArrayTypedObject(obj) && cx->compartment()->neuteredTypedObjects)
-            return true;
-
         JitSpew(JitSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
-        ICGetElem_TypedArray::Compiler compiler(cx, obj->lastProperty(),
-                                                TypedThingElementType(obj));
+        ICGetElem_TypedArray::Compiler compiler(cx,
+                                                AnyTypedArrayShape(obj.get()),
+                                                AnyTypedArrayType(obj.get()));
         ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
         if (!typedArrayStub)
             return false;
@@ -4676,60 +4614,10 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
 // GetElem_TypedArray
 //
 
-static void
-LoadTypedThingLength(MacroAssembler &masm, TypedThingLayout layout, Register obj, Register result)
-{
-    switch (layout) {
-      case Layout_TypedArray:
-        masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), result);
-        break;
-      case Layout_OutlineTypedObject:
-      case Layout_InlineTypedObject:
-        masm.loadObjProto(obj, result);
-        masm.unboxObject(Address(result, TypedProto::offsetOfTypeDescr()), result);
-        masm.unboxInt32(Address(result, ArrayTypeDescr::offsetOfLength()), result);
-        break;
-      default:
-        MOZ_CRASH();
-    }
-}
-
-static void
-LoadTypedThingData(MacroAssembler &masm, TypedThingLayout layout, Register obj, Register result)
-{
-    switch (layout) {
-      case Layout_TypedArray:
-        masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), result);
-        break;
-      case Layout_OutlineTypedObject:
-        masm.loadPtr(Address(obj, OutlineTypedObject::offsetOfData()), result);
-        break;
-      case Layout_InlineTypedObject:
-        masm.computeEffectiveAddress(Address(obj, InlineTypedObject::offsetOfDataStart()), result);
-        break;
-      default:
-        MOZ_CRASH();
-    }
-}
-
-static void
-CheckForNeuteredTypedObject(JSContext *cx, MacroAssembler &masm, Label *failure)
-{
-    // All stubs which manipulate typed objects need to check the compartment
-    // wide flag indicating whether the objects are neutered, and bail out in
-    // this case.
-    int32_t *address = &cx->compartment()->neuteredTypedObjects;
-    masm.branch32(Assembler::NotEqual, AbsoluteAddress(address), Imm32(0), failure);
-}
-
 bool
 ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
-
-    if (layout_ != Layout_TypedArray)
-        CheckForNeuteredTypedObject(cx, masm, &failure);
-
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
     GeneralRegisterSet regs(availableGeneralRegs(2));
@@ -4762,11 +4650,11 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Bounds check.
-    LoadTypedThingLength(masm, layout_, obj, scratchReg);
+    masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), scratchReg);
     masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
 
     // Load the elements vector.
-    LoadTypedThingData(masm, layout_, obj, scratchReg);
+    masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), scratchReg);
 
     // Load the value.
     BaseIndex source(scratchReg, key, ScaleFromElemWidth(Scalar::byteSize(type_)));
@@ -5224,45 +5112,31 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
         return true;
     }
 
-    if ((IsAnyTypedArray(obj.get()) || IsPrimitiveArrayTypedObject(obj)) &&
-        index.isNumber() &&
-        rhs.isNumber())
-    {
+    if (IsAnyTypedArray(obj.get()) && index.isNumber() && rhs.isNumber()) {
         if (!cx->runtime()->jitSupportsFloatingPoint &&
-            (TypedThingRequiresFloatingPoint(obj) || index.isDouble()))
+            (TypedArrayRequiresFloatingPoint(obj) || index.isDouble()))
         {
             return true;
         }
 
-        bool expectOutOfBounds;
+        uint32_t len = AnyTypedArrayLength(obj.get());
         double idx = index.toNumber();
-        if (IsAnyTypedArray(obj)) {
-            expectOutOfBounds = (idx < 0 || idx >= double(AnyTypedArrayLength(obj)));
-        } else {
-            // Typed objects throw on out of bounds accesses. Don't attach
-            // a stub in this case.
-            if (idx < 0 || idx >= double(obj->as<TypedObject>().length()))
-                return true;
-            expectOutOfBounds = false;
-
-            // Don't attach stubs if typed objects in the compartment might be
-            // neutered, as the stub will always bail out.
-            if (cx->compartment()->neuteredTypedObjects)
-                return true;
-        }
+        bool expectOutOfBounds = (idx < 0 || idx >= double(len));
 
         if (!TypedArraySetElemStubExists(stub, obj, expectOutOfBounds)) {
             // Remove any existing TypedArraySetElemStub that doesn't handle out-of-bounds
             if (expectOutOfBounds)
                 RemoveExistingTypedArraySetElemStub(cx, stub, obj);
 
-            Shape *shape = obj->lastProperty();
-            Scalar::Type type = TypedThingElementType(obj);
-
             JitSpew(JitSpew_BaselineIC,
                     "  Generating SetElem_TypedArray stub (shape=%p, type=%u, oob=%s)",
-                    shape, type, expectOutOfBounds ? "yes" : "no");
-            ICSetElem_TypedArray::Compiler compiler(cx, shape, type, expectOutOfBounds);
+                    AnyTypedArrayShape(obj.get()),
+                    AnyTypedArrayType(obj.get()),
+                    expectOutOfBounds ? "yes" : "no");
+            ICSetElem_TypedArray::Compiler compiler(cx,
+                                                    AnyTypedArrayShape(obj.get()),
+                                                    AnyTypedArrayType(obj.get()),
+                                                    expectOutOfBounds);
             ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
             if (!typedArrayStub)
                 return false;
@@ -5646,81 +5520,10 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
 // SetElem_TypedArray
 //
 
-// Write an arbitrary value to a typed array or typed object address at dest.
-// If the value could not be converted to the appropriate format, jump to
-// failure or failureModifiedScratch.
-template <typename T>
-static void
-StoreToTypedArray(JSContext *cx, MacroAssembler &masm, Scalar::Type type, Address value, T dest,
-                  Register scratch, Label *failure, Label *failureModifiedScratch)
-{
-    Label done;
-
-    if (type == Scalar::Float32 || type == Scalar::Float64) {
-        masm.ensureDouble(value, FloatReg0, failure);
-        if (type == Scalar::Float32) {
-            masm.convertDoubleToFloat32(FloatReg0, ScratchFloat32Reg);
-            masm.storeToTypedFloatArray(type, ScratchFloat32Reg, dest);
-        } else {
-            masm.storeToTypedFloatArray(type, FloatReg0, dest);
-        }
-    } else if (type == Scalar::Uint8Clamped) {
-        Label notInt32;
-        masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
-        masm.unboxInt32(value, scratch);
-        masm.clampIntToUint8(scratch);
-
-        Label clamped;
-        masm.bind(&clamped);
-        masm.storeToTypedIntArray(type, scratch, dest);
-        masm.jump(&done);
-
-        // If the value is a double, clamp to uint8 and jump back.
-        // Else, jump to failure.
-        masm.bind(&notInt32);
-        if (cx->runtime()->jitSupportsFloatingPoint) {
-            masm.branchTestDouble(Assembler::NotEqual, value, failure);
-            masm.unboxDouble(value, FloatReg0);
-            masm.clampDoubleToUint8(FloatReg0, scratch);
-            masm.jump(&clamped);
-        } else {
-            masm.jump(failure);
-        }
-    } else {
-        Label notInt32;
-        masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
-        masm.unboxInt32(value, scratch);
-
-        Label isInt32;
-        masm.bind(&isInt32);
-        masm.storeToTypedIntArray(type, scratch, dest);
-        masm.jump(&done);
-
-        // If the value is a double, truncate and jump back.
-        // Else, jump to failure.
-        masm.bind(&notInt32);
-        if (cx->runtime()->jitSupportsFloatingPoint) {
-            masm.branchTestDouble(Assembler::NotEqual, value, failure);
-            masm.unboxDouble(value, FloatReg0);
-            masm.branchTruncateDouble(FloatReg0, scratch, failureModifiedScratch);
-            masm.jump(&isInt32);
-        } else {
-            masm.jump(failure);
-        }
-    }
-
-    if (done.bound())
-        masm.bind(&done);
-}
-
 bool
 ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 {
     Label failure;
-
-    if (layout_ != Layout_TypedArray)
-        CheckForNeuteredTypedObject(cx, masm, &failure);
-
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
     GeneralRegisterSet regs(availableGeneralRegs(2));
@@ -5754,12 +5557,12 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Bounds check.
     Label oobWrite;
-    LoadTypedThingLength(masm, layout_, obj, scratchReg);
+    masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), scratchReg);
     masm.branch32(Assembler::BelowOrEqual, scratchReg, key,
                   expectOutOfBounds_ ? &oobWrite : &failure);
 
     // Load the elements vector.
-    LoadTypedThingData(masm, layout_, obj, scratchReg);
+    masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), scratchReg);
 
     BaseIndex dest(scratchReg, key, ScaleFromElemWidth(Scalar::byteSize(type_)));
     Address value(BaselineStackReg, ICStackValueOffset);
@@ -5772,15 +5575,64 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     regs.take(scratchReg);
     Register secondScratch = regs.takeAny();
 
-    Label failureModifiedSecondScratch;
-    StoreToTypedArray(cx, masm, type_, value, dest,
-                      secondScratch, &failure, &failureModifiedSecondScratch);
-    EmitReturnFromIC(masm);
+    if (type_ == Scalar::Float32 || type_ == Scalar::Float64) {
+        masm.ensureDouble(value, FloatReg0, &failure);
+        if (type_ == Scalar::Float32)
+        {
+            masm.convertDoubleToFloat32(FloatReg0, ScratchFloat32Reg);
+            masm.storeToTypedFloatArray(type_, ScratchFloat32Reg, dest);
+        } else {
+            masm.storeToTypedFloatArray(type_, FloatReg0, dest);
+        }
+        EmitReturnFromIC(masm);
+    } else if (type_ == Scalar::Uint8Clamped) {
+        Label notInt32;
+        masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
+        masm.unboxInt32(value, secondScratch);
+        masm.clampIntToUint8(secondScratch);
 
-    if (failureModifiedSecondScratch.used()) {
+        Label clamped;
+        masm.bind(&clamped);
+        masm.storeToTypedIntArray(type_, secondScratch, dest);
+        EmitReturnFromIC(masm);
+
+        // If the value is a double, clamp to uint8 and jump back.
+        // Else, jump to failure.
+        masm.bind(&notInt32);
+        if (cx->runtime()->jitSupportsFloatingPoint) {
+            masm.branchTestDouble(Assembler::NotEqual, value, &failure);
+            masm.unboxDouble(value, FloatReg0);
+            masm.clampDoubleToUint8(FloatReg0, secondScratch);
+            masm.jump(&clamped);
+        } else {
+            masm.jump(&failure);
+        }
+    } else {
+        Label notInt32;
+        masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
+        masm.unboxInt32(value, secondScratch);
+
+        Label isInt32;
+        masm.bind(&isInt32);
+        masm.storeToTypedIntArray(type_, secondScratch, dest);
+        EmitReturnFromIC(masm);
+
+        // If the value is a double, truncate and jump back.
+        // Else, jump to failure.
+        Label failureRestoreRegs;
+        masm.bind(&notInt32);
+        if (cx->runtime()->jitSupportsFloatingPoint) {
+            masm.branchTestDouble(Assembler::NotEqual, value, &failure);
+            masm.unboxDouble(value, FloatReg0);
+            masm.branchTruncateDouble(FloatReg0, secondScratch, &failureRestoreRegs);
+            masm.jump(&isInt32);
+        } else {
+            masm.jump(&failure);
+        }
+
         // Writing to secondScratch may have clobbered R0 or R1, restore them
         // first.
-        masm.bind(&failureModifiedSecondScratch);
+        masm.bind(&failureRestoreRegs);
         masm.tagValue(JSVAL_TYPE_OBJECT, obj, R0);
         masm.tagValue(JSVAL_TYPE_INT32, key, R1);
     }
@@ -5790,7 +5642,6 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     EmitStubGuardFailure(masm);
 
     if (expectOutOfBounds_) {
-        MOZ_ASSERT(layout_ == Layout_TypedArray);
         masm.bind(&oobWrite);
         EmitReturnFromIC(masm);
     }
@@ -6753,46 +6604,6 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 static bool
-TryAttachTypedObjectGetPropStub(JSContext *cx, HandleScript script,
-                                ICGetProp_Fallback *stub, HandlePropertyName name, HandleValue val,
-                                bool *attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (!cx->runtime()->jitSupportsFloatingPoint)
-        return true;
-
-    if (!val.isObject() || !val.toObject().is<TypedObject>())
-        return true;
-    Rooted<TypedObject *> obj(cx, &val.toObject().as<TypedObject>());
-
-    if (!obj->typeDescr().is<StructTypeDescr>())
-        return true;
-    Rooted<StructTypeDescr *> structDescr(cx, &obj->typeDescr().as<StructTypeDescr>());
-
-    size_t fieldIndex;
-    if (!structDescr->fieldIndex(NameToId(name), &fieldIndex))
-        return true;
-
-    Rooted<TypeDescr *> fieldDescr(cx, &structDescr->fieldDescr(fieldIndex));
-    if (!fieldDescr->is<SimpleTypeDescr>())
-        return true;
-
-    uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
-    ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
-
-    ICGetProp_TypedObject::Compiler compiler(cx, monitorStub, obj->lastProperty(),
-                                             fieldOffset, &fieldDescr->as<SimpleTypeDescr>());
-    ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
-    if (!newStub)
-        return false;
-    stub->addNewStub(newStub);
-
-    *attached = true;
-    return true;
-}
-
-static bool
 TryAttachPrimitiveGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
                               ICGetProp_Fallback *stub, HandlePropertyName name, HandleValue val,
                               HandleValue res, bool *attached)
@@ -6995,11 +6806,6 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub_
 
     if (!TryAttachNativeGetPropStub(cx, script, pc, stub, name, val, oldShape,
                                     res, &attached, &isTemporarilyUnoptimizable))
-        return false;
-    if (attached)
-        return true;
-
-    if (!TryAttachTypedObjectGetPropStub(cx, script, stub, name, val, &attached))
         return false;
     if (attached)
         return true;
@@ -7899,82 +7705,6 @@ ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-bool
-ICGetProp_TypedObject::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure;
-
-    CheckForNeuteredTypedObject(cx, masm, &failure);
-
-    GeneralRegisterSet regs(availableGeneralRegs(1));
-
-    Register scratch1 = regs.takeAnyExcluding(BaselineTailCallReg);
-    Register scratch2 = regs.takeAnyExcluding(BaselineTailCallReg);
-
-    // Object and shape guard.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    Register object = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(BaselineStubReg, ICGetProp_TypedObject::offsetOfShape()), scratch1);
-    masm.branchTestObjShape(Assembler::NotEqual, object, scratch1, &failure);
-
-    // Get the object's data pointer.
-    LoadTypedThingData(masm, layout_, object, scratch1);
-
-    // Get the address being written to.
-    masm.load32(Address(BaselineStubReg, ICGetProp_TypedObject::offsetOfFieldOffset()), scratch2);
-    masm.addPtr(scratch2, scratch1);
-
-    // Only monitor the result if the type produced by this stub might vary.
-    bool monitorLoad;
-
-    if (fieldDescr_->is<ScalarTypeDescr>()) {
-        Scalar::Type type = fieldDescr_->as<ScalarTypeDescr>().type();
-        monitorLoad = type == Scalar::Uint32;
-
-        masm.loadFromTypedArray(type, Address(scratch1, 0), R0, /* allowDouble = */ true,
-                                scratch2, nullptr);
-    } else {
-        ReferenceTypeDescr::Type type = fieldDescr_->as<ReferenceTypeDescr>().type();
-        monitorLoad = type != ReferenceTypeDescr::TYPE_STRING;
-
-        switch (type) {
-          case ReferenceTypeDescr::TYPE_ANY:
-            masm.loadValue(Address(scratch1, 0), R0);
-            break;
-
-          case ReferenceTypeDescr::TYPE_OBJECT: {
-            Label notNull, done;
-            masm.loadPtr(Address(scratch1, 0), scratch1);
-            masm.branchTestPtr(Assembler::NonZero, scratch1, scratch1, &notNull);
-            masm.moveValue(NullValue(), R0);
-            masm.jump(&done);
-            masm.bind(&notNull);
-            masm.tagValue(JSVAL_TYPE_OBJECT, scratch1, R0);
-            masm.bind(&done);
-            break;
-          }
-
-          case ReferenceTypeDescr::TYPE_STRING:
-            masm.loadPtr(Address(scratch1, 0), scratch1);
-            masm.tagValue(JSVAL_TYPE_STRING, scratch1, R0);
-            break;
-
-          default:
-            MOZ_CRASH();
-        }
-    }
-
-    if (monitorLoad)
-        EmitEnterTypeMonitorIC(masm);
-    else
-        EmitReturnFromIC(masm);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-
-    return true;
-}
-
 void
 BaselineScript::noteAccessedGetter(uint32_t pcOffset)
 {
@@ -8154,48 +7884,6 @@ TryAttachSetAccessorPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 static bool
-TryAttachTypedObjectSetPropStub(JSContext *cx, HandleScript script,
-                                ICSetProp_Fallback *stub, HandleId id,
-                                HandleObject obj, HandleValue rhs, bool *attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (!cx->runtime()->jitSupportsFloatingPoint)
-        return true;
-
-    if (!obj->is<TypedObject>())
-        return true;
-
-    if (!obj->as<TypedObject>().typeDescr().is<StructTypeDescr>())
-        return true;
-    Rooted<StructTypeDescr *> structDescr(cx);
-    structDescr = &obj->as<TypedObject>().typeDescr().as<StructTypeDescr>();
-
-    size_t fieldIndex;
-    if (!structDescr->fieldIndex(id, &fieldIndex))
-        return true;
-
-    Rooted<TypeDescr *> fieldDescr(cx, &structDescr->fieldDescr(fieldIndex));
-    if (!fieldDescr->is<SimpleTypeDescr>())
-        return true;
-
-    uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
-
-    ICSetProp_TypedObject::Compiler compiler(cx, obj->lastProperty(), obj->type(), fieldOffset,
-                                             &fieldDescr->as<SimpleTypeDescr>());
-    ICUpdatedStub *newStub = compiler.getStub(compiler.getStubSpace(script));
-    if (!newStub)
-        return false;
-    if (compiler.needsUpdateStubs() && !newStub->addUpdateStubForValue(cx, script, obj, id, rhs))
-        return false;
-
-    stub->addNewStub(newStub);
-
-    *attached = true;
-    return true;
-}
-
-static bool
 DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_,
                   HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
@@ -8283,15 +7971,6 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         lhs.isObject() &&
         !TryAttachSetValuePropStub(cx, script, pc, stub, obj, oldShape,
                                    oldType, oldSlots, name, id, rhs, &attached))
-    {
-        return false;
-    }
-    if (attached)
-        return true;
-
-    if (!attached &&
-        lhs.isObject() &&
-        !TryAttachTypedObjectSetPropStub(cx, script, stub, id, obj, rhs, &attached))
     {
         return false;
     }
@@ -8571,128 +8250,6 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     // Failure case - jump to next stub
     masm.bind(&failureUnstow);
     EmitUnstowICValues(masm, 2);
-
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure;
-
-    CheckForNeuteredTypedObject(cx, masm, &failure);
-
-    // Guard input is an object.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-
-    GeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratch = regs.takeAny();
-
-    // Unbox and shape guard.
-    Register object = masm.extractObject(R0, ExtractTemp0);
-    masm.loadPtr(Address(BaselineStubReg, ICSetProp_TypedObject::offsetOfShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, object, scratch, &failure);
-
-    // Guard that the type object matches.
-    masm.loadPtr(Address(BaselineStubReg, ICSetProp_TypedObject::offsetOfType()), scratch);
-    masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfType()), scratch,
-                   &failure);
-
-    if (needsUpdateStubs()) {
-        // Stow both R0 and R1 (object and value).
-        masm.push(object);
-        masm.push(BaselineStubReg);
-        EmitStowICValues(masm, 2);
-
-        // Move RHS into R0 for TypeUpdate check.
-        masm.moveValue(R1, R0);
-
-        // Call the type update stub.
-        if (!callTypeUpdateIC(masm, sizeof(Value)))
-            return false;
-
-        // Unstow R0 and R1 (object and key)
-        EmitUnstowICValues(masm, 2);
-        masm.pop(BaselineStubReg);
-        masm.pop(object);
-
-        // Trigger post barriers here on the values being written. Descriptors
-        // which can write objects also need update stubs.
-        GeneralRegisterSet saveRegs;
-        saveRegs.add(R0);
-        saveRegs.add(R1);
-        saveRegs.addUnchecked(object);
-        saveRegs.add(BaselineStubReg);
-        emitPostWriteBarrierSlot(masm, object, R1, scratch, saveRegs);
-    }
-
-    // Save the rhs on the stack so we can get a second scratch register.
-    Label failurePopRHS;
-    masm.pushValue(R1);
-    regs = availableGeneralRegs(1);
-    regs.takeUnchecked(object);
-    regs.take(scratch);
-    Register secondScratch = regs.takeAny();
-
-    // Get the object's data pointer.
-    LoadTypedThingData(masm, layout_, object, scratch);
-
-    // Compute the address being written to.
-    masm.load32(Address(BaselineStubReg, ICSetProp_TypedObject::offsetOfFieldOffset()), secondScratch);
-    masm.addPtr(secondScratch, scratch);
-
-    Address dest(scratch, 0);
-    Address value(BaselineStackReg, 0);
-
-    if (fieldDescr_->is<ScalarTypeDescr>()) {
-        Scalar::Type type = fieldDescr_->as<ScalarTypeDescr>().type();
-        StoreToTypedArray(cx, masm, type, value, dest,
-                          secondScratch, &failurePopRHS, &failurePopRHS);
-        masm.popValue(R1);
-        EmitReturnFromIC(masm);
-    } else {
-        ReferenceTypeDescr::Type type = fieldDescr_->as<ReferenceTypeDescr>().type();
-
-        masm.popValue(R1);
-
-        switch (type) {
-          case ReferenceTypeDescr::TYPE_ANY:
-            EmitPreBarrier(masm, dest, MIRType_Value);
-            masm.storeValue(R1, dest);
-            break;
-
-          case ReferenceTypeDescr::TYPE_OBJECT: {
-            EmitPreBarrier(masm, dest, MIRType_Object);
-            Label notObject;
-            masm.branchTestObject(Assembler::NotEqual, R1, &notObject);
-            Register rhsObject = masm.extractObject(R1, ExtractTemp0);
-            masm.storePtr(rhsObject, dest);
-            EmitReturnFromIC(masm);
-            masm.bind(&notObject);
-            masm.branchTestNull(Assembler::NotEqual, R1, &failure);
-            masm.storePtr(ImmWord(0), dest);
-            break;
-          }
-
-          case ReferenceTypeDescr::TYPE_STRING: {
-            EmitPreBarrier(masm, dest, MIRType_String);
-            masm.branchTestString(Assembler::NotEqual, R1, &failure);
-            Register rhsString = masm.extractString(R1, ExtractTemp0);
-            masm.storePtr(rhsString, dest);
-            break;
-          }
-
-          default:
-            MOZ_CRASH();
-        }
-
-        EmitReturnFromIC(masm);
-    }
-
-    masm.bind(&failurePopRHS);
-    masm.popValue(R1);
 
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
