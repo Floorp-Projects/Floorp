@@ -77,6 +77,7 @@ enum {
     kKeyIsDRM             = 'idrm',  // int32_t (bool)
     kKeyEncoderDelay      = 'encd',  // int32_t (frames)
     kKeyEncoderPadding    = 'encp',  // int32_t (frames)
+    kKeyMediaTime         = 'mtme',  // int64_t (usecs)
 
     kKeyAlbum             = 'albu',  // cstring
     kKeyArtist            = 'arti',  // cstring
