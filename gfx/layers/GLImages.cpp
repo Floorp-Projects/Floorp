@@ -33,7 +33,7 @@ EGLImageImage::~EGLImageImage()
   }
 }
 
-TemporaryRef<SourceSurface>
+TemporaryRef<gfx::SourceSurface>
 GLImage::GetAsSourceSurface()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread");
