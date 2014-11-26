@@ -9,7 +9,6 @@
 #ifndef nsRubyBaseContainerFrame_h___
 #define nsRubyBaseContainerFrame_h___
 
-#include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
 #include "nsRubyBaseFrame.h"
@@ -76,6 +75,23 @@ protected:
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
   nscoord CalculateMaxSpanISize(nsRenderingContext* aRenderingContext);
+
+  nscoord ReflowPairs(nsPresContext* aPresContext,
+                      const nsHTMLReflowState& aReflowState,
+                      nsTArray<nsHTMLReflowState*>& aReflowStates,
+                      nsReflowStatus& aStatus);
+
+  static nscoord ReflowOnePair(nsPresContext* aPresContext,
+                               const nsHTMLReflowState& aReflowState,
+                               nsTArray<nsHTMLReflowState*>& aReflowStates,
+                               nsIFrame* aBaseFrame,
+                               const nsTArray<nsIFrame*>& aTextFrames,
+                               nsReflowStatus& aStatus);
+
+  nscoord ReflowSpans(nsPresContext* aPresContext,
+                      const nsHTMLReflowState& aReflowState,
+                      nsTArray<nsHTMLReflowState*>& aReflowStates,
+                      nsReflowStatus& aStatus);
 
   /**
    * The arrays of ruby text containers below are filled before the ruby

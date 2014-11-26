@@ -242,47 +242,56 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
 
   // FIXME: line breaking / continuations not yet implemented
   aStatus = NS_FRAME_COMPLETE;
-  LogicalSize availSize(lineWM, aReflowState.AvailableISize(),
-                        aReflowState.AvailableBSize());
   for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
-    nsRubyBaseContainerFrame* baseContainer = e.GetBaseContainer();
-    AutoSetTextContainers holder(baseContainer);
-    nsReflowStatus baseReflowStatus;
-    nsHTMLReflowMetrics baseMetrics(aReflowState, aDesiredSize.mFlags);
-    bool pushedFrame;
-    aReflowState.mLineLayout->ReflowFrame(baseContainer, baseReflowStatus,
-                                          &baseMetrics, pushedFrame);
-
-    nsRect baseRect = baseContainer->GetRect();
-    for (TextContainerIterator iter(baseContainer);
-         !iter.AtEnd(); iter.Next()) {
-      nsRubyTextContainerFrame* textContainer = iter.GetTextContainer();
-      nsReflowStatus textReflowStatus;
-      nsHTMLReflowMetrics textMetrics(aReflowState, aDesiredSize.mFlags);
-      nsHTMLReflowState textReflowState(aPresContext, aReflowState,
-                                        textContainer, availSize);
-      textReflowState.mLineLayout = aReflowState.mLineLayout;
-      textContainer->Reflow(aPresContext, textMetrics,
-                            textReflowState, textReflowStatus);
-      NS_ASSERTION(textReflowStatus == NS_FRAME_COMPLETE,
-                   "Ruby line breaking is not yet implemented");
-      textContainer->SetSize(LogicalSize(lineWM, textMetrics.ISize(lineWM),
-                                         textMetrics.BSize(lineWM)));
-      nscoord x, y;
-      nscoord bsize = textMetrics.BSize(lineWM);
-      if (lineWM.IsVertical()) {
-        x = lineWM.IsVerticalLR() ? -bsize : baseRect.XMost();
-        y = baseRect.Y();
-      } else {
-        x = baseRect.X();
-        y = -bsize;
-      }
-      FinishReflowChild(textContainer, aPresContext, textMetrics,
-                        &textReflowState, x, y, 0);
-    }
+    ReflowSegment(aPresContext, aReflowState, e.GetBaseContainer(), aStatus);
   }
 
   aDesiredSize.ISize(lineWM) = aReflowState.mLineLayout->EndSpan(this);
   nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, aReflowState,
                                          borderPadding, lineWM, frameWM);
+}
+
+void
+nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
+                           const nsHTMLReflowState& aReflowState,
+                           nsRubyBaseContainerFrame* aBaseContainer,
+                           nsReflowStatus& aStatus)
+{
+  AutoSetTextContainers holder(aBaseContainer);
+  WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
+  LogicalSize availSize(lineWM, aReflowState.AvailableISize(),
+                        aReflowState.AvailableBSize());
+
+  nsReflowStatus baseReflowStatus;
+  nsHTMLReflowMetrics baseMetrics(aReflowState);
+  bool pushedFrame;
+  aReflowState.mLineLayout->ReflowFrame(aBaseContainer, baseReflowStatus,
+                                        &baseMetrics, pushedFrame);
+
+  nsRect baseRect = aBaseContainer->GetRect();
+  for (TextContainerIterator iter(aBaseContainer); !iter.AtEnd(); iter.Next()) {
+    nsRubyTextContainerFrame* textContainer = iter.GetTextContainer();
+    nsReflowStatus textReflowStatus;
+    nsHTMLReflowMetrics textMetrics(aReflowState);
+    nsHTMLReflowState textReflowState(aPresContext, aReflowState,
+                                      textContainer, availSize);
+    textReflowState.mLineLayout = aReflowState.mLineLayout;
+    textContainer->Reflow(aPresContext, textMetrics,
+                          textReflowState, textReflowStatus);
+    NS_ASSERTION(textReflowStatus == NS_FRAME_COMPLETE,
+                 "Ruby line breaking is not yet implemented");
+    textContainer->SetSize(LogicalSize(lineWM, textMetrics.ISize(lineWM),
+                                       textMetrics.BSize(lineWM)));
+    nscoord x, y;
+    nscoord bsize = textMetrics.BSize(lineWM);
+    if (lineWM.IsVertical()) {
+      x = lineWM.IsVerticalLR() ? -bsize : baseRect.XMost();
+      y = baseRect.Y();
+    } else {
+      x = baseRect.X();
+      y = -bsize;
+    }
+    FinishReflowChild(textContainer, aPresContext, textMetrics,
+                      &textReflowState, x, y, 0);
+  }
 }
