@@ -419,5 +419,49 @@ let Reader = {
         return OS.File.makeDir(dir);
       }
     });
-  }
+  },
+
+  /**
+   * Migrates old indexedDB reader mode cache to new JSON cache.
+   */
+  migrateCache: Task.async(function* () {
+    let cacheDB = yield new Promise((resolve, reject) => {
+      let request = window.indexedDB.open("about:reader", 1);
+      request.onsuccess = event => resolve(event.target.result);
+      request.onerror = event => reject(request.error);
+
+      // If there is no DB to migrate, don't do anything.
+      request.onupgradeneeded = event => resolve(null);
+    });
+
+    if (!cacheDB) {
+      return;
+    }
+
+    let articles = yield new Promise((resolve, reject) => {
+      let articles = [];
+
+      let transaction = cacheDB.transaction(cacheDB.objectStoreNames);
+      let store = transaction.objectStore(cacheDB.objectStoreNames[0]);
+
+      let request = store.openCursor();
+      request.onsuccess = event => {
+        let cursor = event.target.result;
+        if (!cursor) {
+          resolve(articles);
+        } else {
+          articles.push(cursor.value);
+          cursor.continue();
+        }
+      };
+      request.onerror = event => reject(request.error);
+    });
+
+    for (let article of articles) {
+      yield this.storeArticleInCache(article);
+    }
+
+    // Delete the database.
+    window.indexedDB.deleteDatabase("about:reader");
+  }),
 };
