@@ -22,6 +22,10 @@ const Cu = Components.utils;
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
+XPCOMUtils.defineLazyServiceGetter(this, "settings",
+                                   "@mozilla.org/settingsService;1",
+                                   "nsISettingsService");
+
 function debug(msg) {
   log(msg);
 }
@@ -89,14 +93,19 @@ ProcessGlobal.prototype = {
     }
   },
 
-  processWipeFile: function(text) {
-    log("processWipeFile " + text);
+  processCommandsFile: function(text) {
+    log("processCommandsFile " + text);
     let lines = text.split("\n");
     lines.forEach((line) => {
       log(line);
       let params = line.split(" ");
       if (params[0] == "wipe") {
         this.wipeDir(params[1]);
+      } else if (params[0] == "root") {
+        log("unrestrict devtools");
+        Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", false);
+        let lock = settings.createLock();
+        lock.set("developer.menu.enabled", true, null);
       }
     });
   },
@@ -113,7 +122,7 @@ ProcessGlobal.prototype = {
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     file.initWithPath(postResetFile);
     if (!file.exists()) {
-      debug("Nothing to wipe.")
+      debug("No additional command.")
       return;
     }
 
@@ -122,7 +131,7 @@ ProcessGlobal.prototype = {
       (array) => {
         file.remove(false);
         let decoder = new TextDecoder();
-        this.processWipeFile(decoder.decode(array));
+        this.processCommandsFile(decoder.decode(array));
       },
       function onError(error) {
         debug("Error: " + error);
