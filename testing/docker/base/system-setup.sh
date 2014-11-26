@@ -53,6 +53,7 @@ yum install -y                      \
   yasm                              \
   python-devel                      \
   dbus-python                       \
+  python-virtualenv                 \
   ;
 
 yum install -y                      \
