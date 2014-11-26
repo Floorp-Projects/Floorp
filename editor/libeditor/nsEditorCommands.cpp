@@ -362,6 +362,60 @@ nsCopyOrDeleteCommand::GetCommandStateParams(const char *aCommandName,
 }
 
 NS_IMETHODIMP
+nsCopyAndCollapseToEndCommand::IsCommandEnabled(const char *aCommandName,
+                                                nsISupports *aCommandRefCon,
+                                                bool *outCmdEnabled)
+{
+  NS_ENSURE_ARG_POINTER(outCmdEnabled);
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (editor)
+    return editor->CanCopy(outCmdEnabled);
+
+  *outCmdEnabled = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCopyAndCollapseToEndCommand::DoCommand(const char *aCommandName,
+                                         nsISupports *aCommandRefCon)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
+  if (editor) {
+    nsresult rv = editor->Copy();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    nsCOMPtr<nsISelection> selection;
+    rv = editor->GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection) {
+      selection->CollapseToEnd();
+    }
+    return rv;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsCopyAndCollapseToEndCommand::DoCommandParams(const char *aCommandName,
+                                               nsICommandParams *aParams,
+                                               nsISupports *aCommandRefCon)
+{
+  return DoCommand(aCommandName, aCommandRefCon);
+}
+
+NS_IMETHODIMP
+nsCopyAndCollapseToEndCommand::GetCommandStateParams(
+  const char *aCommandName, nsICommandParams *aParams,
+  nsISupports *aCommandRefCon)
+{
+  bool canUndo;
+  IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
+  return aParams->SetBooleanValue(STATE_ENABLED, canUndo);
+}
+
+NS_IMETHODIMP
 nsPasteCommand::IsCommandEnabled(const char *aCommandName,
                                  nsISupports *aCommandRefCon,
                                  bool *outCmdEnabled)
