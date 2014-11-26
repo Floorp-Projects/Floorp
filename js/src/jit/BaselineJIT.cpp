@@ -824,15 +824,28 @@ BaselineScript::pcForNativeOffset(JSScript *script, uint32_t nativeOffset, bool 
         if (b & 0x80)
             curNativeOffset += reader.readUnsigned();
 
-        if (isReturn ? (nativeOffset == curNativeOffset) : (nativeOffset <= curNativeOffset))
-            return curPC;
+        // Return the last PC that matched nativeOffset. Some bytecode
+        // generate no native code (e.g., constant-pushing bytecode like
+        // JSOP_INT8), and so their entries share the same nativeOffset as the
+        // next op that does generate code. Trying to find an entry for a
+        // return address is impossible for bytecodes that generate no code
+        // since calling this method requires VM reentry, so assert an exact
+        // match.
+        if (curNativeOffset > nativeOffset) {
+            MOZ_ASSERT_IF(isReturn, lastNativeOffset == nativeOffset);
+            return lastPC;
+        }
 
         // If this is a raw native lookup (not jsop return addresses), then
         // the native address may lie in-between the last delta-entry in
         // a pcMappingIndexEntry, and the next pcMappingIndexEntry.
-        if (!isReturn && !reader.more())
+        if (!reader.more()) {
+            MOZ_ASSERT_IF(isReturn, curNativeOffset == nativeOffset);
             return curPC;
+        }
 
+        lastNativeOffset = curNativeOffset;
+        lastPC = curPC;
         curPC += GetBytecodeLength(curPC);
     }
 }
