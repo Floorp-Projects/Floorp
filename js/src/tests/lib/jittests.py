@@ -599,15 +599,21 @@ def print_test_summary(num_tests, failures, complete, doing, options):
                 traceback.print_exc()
                 sys.stderr.write('---\n')
 
+        def show_test(res):
+            if options.show_failed:
+                print('    ' + subprocess.list2cmdline(res.cmd))
+            else:
+                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
+
         print('FAILURES:')
         for res in failures:
             if not res.timed_out:
-                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
+                show_test(res)
 
         print('TIMEOUTS:')
         for res in failures:
             if res.timed_out:
-                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
+                show_test(res)
     else:
         print('PASSED ALL' + ('' if complete else ' (partial run -- interrupted by user %s)' % doing))
 
