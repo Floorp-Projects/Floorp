@@ -1738,6 +1738,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_getelem();
 
       case JSOP_SETELEM:
+      case JSOP_STRICTSETELEM:
         return jsop_setelem();
 
       case JSOP_LENGTH:
@@ -8538,7 +8539,8 @@ IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
         current->add(MPostWriteBarrier::New(alloc(), object, value));
 
     // Emit SetElementCache.
-    MInstruction *ins = MSetElementCache::New(alloc(), object, index, value, script()->strict(), guardHoles);
+    bool strict = JSOp(*pc) == JSOP_STRICTSETELEM;
+    MInstruction *ins = MSetElementCache::New(alloc(), object, index, value, strict, guardHoles);
     current->add(ins);
     current->push(value);
 
