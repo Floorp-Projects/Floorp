@@ -15,9 +15,15 @@ if [ ! -d mozharness ]; then
   hg clone https://hg.mozilla.org/build/mozharness mozharness
 fi
 
-OBJDIR=$HOME/object-folder
-mkdir -p $OBJDIR
-git clone https://git.mozilla.org/b2g/B2G.git $OBJDIR/B2G
+OBJDIR="$HOME/object-folder-$B2G_CONFIG-$B2G_DEBUG"
+
+if [ ! -d $OBJDIR ]; then
+    mkdir -p $OBJDIR
+fi
+
+if [ ! -d $OBJDIR/B2G ]; then
+    git clone https://git.mozilla.org/b2g/B2G.git $OBJDIR/B2G
+fi
 
 ./mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-emulator.py \
