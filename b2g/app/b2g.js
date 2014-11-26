@@ -336,8 +336,8 @@ pref("image.mem.min_discard_timeout_ms", 86400000); /* 24h, we rely on the out o
 // surface cache. Once animated images are stored in the surface cache too, this
 // pref will go away; see bug 977459. The same goes for
 // 'hard_limit_decoded_image_kb'; the surface cache limits are all hard.
-pref("image.mem.max_decoded_image_kb", 16384); // 16MB
-pref("image.mem.hard_limit_decoded_image_kb", 16384); // 16MB
+pref("image.mem.max_decoded_image_kb", 30000);
+pref("image.mem.hard_limit_decoded_image_kb", 66560);
 // Limit the surface cache to 1/8 of main memory or 128MB, whichever is smaller.
 // Almost everything that was factored into 'max_decoded_image_kb' is now stored
 // in the surface cache.  1/8 of main memory is 32MB on a 256MB device, which is
