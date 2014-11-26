@@ -140,7 +140,7 @@ loop.store.ActiveRoomStore = (function() {
         "remotePeerConnected",
         "windowUnload",
         "leaveRoom",
-        "resetRoom"
+        "feedbackComplete"
       ]);
     },
 
@@ -453,9 +453,11 @@ loop.store.ActiveRoomStore = (function() {
     },
 
     /**
-     * Resets current room.
+     * When feedback is complete, we reset the room to the initial state.
      */
-    resetRoom: function() {
+    feedbackComplete: function() {
+      // Note, that we want some values, such as the windowId, so we don't
+      // do a full reset here.
       this.setStoreState(this.getInitialStoreState());
     }
   });

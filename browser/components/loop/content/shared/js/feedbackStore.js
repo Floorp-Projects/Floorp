@@ -37,7 +37,8 @@ loop.store.FeedbackStore = (function() {
     actions: [
       "requireFeedbackDetails",
       "sendFeedback",
-      "sendFeedbackError"
+      "sendFeedbackError",
+      "feedbackComplete"
     ],
 
     initialize: function(options) {
@@ -91,6 +92,14 @@ loop.store.FeedbackStore = (function() {
         feedbackState: FEEDBACK_STATES.FAILED,
         error: actionData.error
       });
+    },
+
+    /**
+     * Resets the store to its initial state as feedback has been completed,
+     * i.e. ready for the next round of feedback.
+     */
+    feedbackComplete: function() {
+      this.resetStoreState();
     }
   });
 
