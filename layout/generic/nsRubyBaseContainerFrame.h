@@ -51,6 +51,9 @@ public:
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
+  virtual nscoord
+    GetLogicalBaseline(mozilla::WritingMode aWritingMode) const MOZ_OVERRIDE;
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
@@ -86,6 +89,7 @@ protected:
   // Normal text containers that do not contain spans.
   nsTArray<nsRubyTextContainerFrame*> mTextContainers;
 
+  nscoord mBaseline;
 };
 
 #endif /* nsRubyBaseContainerFrame_h___ */
