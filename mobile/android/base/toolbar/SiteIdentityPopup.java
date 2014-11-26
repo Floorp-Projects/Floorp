@@ -49,6 +49,7 @@ public class SiteIdentityPopup extends ArrowPopup {
     private LinearLayout mIdentityUnknownContainer;
 
     private TextView mHost;
+    private TextView mOwnerLabel;
     private TextView mOwner;
     private TextView mVerifier;
 
@@ -81,6 +82,7 @@ public class SiteIdentityPopup extends ArrowPopup {
                 (LinearLayout) mIdentity.findViewById(R.id.site_identity_unknown_container);
 
         mHost = (TextView) mIdentityKnownContainer.findViewById(R.id.host);
+        mOwnerLabel = (TextView) mIdentityKnownContainer.findViewById(R.id.owner_label);
         mOwner = (TextView) mIdentityKnownContainer.findViewById(R.id.owner);
         mVerifier = (TextView) mIdentityKnownContainer.findViewById(R.id.verifier);
     }
@@ -126,13 +128,20 @@ public class SiteIdentityPopup extends ArrowPopup {
         mHost.setText(siteIdentity.getHost());
 
         String owner = siteIdentity.getOwner();
+        if (owner == null) {
+            mOwnerLabel.setVisibility(View.GONE);
+            mOwner.setVisibility(View.GONE);
+        } else {
+            mOwnerLabel.setVisibility(View.VISIBLE);
+            mOwner.setVisibility(View.VISIBLE);
 
-        // Supplemental data is optional.
-        final String supplemental = siteIdentity.getSupplemental();
-        if (!TextUtils.isEmpty(supplemental)) {
-            owner += "\n" + supplemental;
+            // Supplemental data is optional.
+            final String supplemental = siteIdentity.getSupplemental();
+            if (!TextUtils.isEmpty(supplemental)) {
+                owner += "\n" + supplemental;
+            }
+            mOwner.setText(owner);
         }
-        mOwner.setText(owner);
 
         final String verifier = siteIdentity.getVerifier();
         final String encrypted = siteIdentity.getEncrypted();
