@@ -69,6 +69,21 @@
 
         <activity
             android:theme="@style/FxAccountTheme"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivity"
+            android:configChanges="locale|layoutDirection"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
+            android:name="org.mozilla.gecko.fxa.activities.FxAccountMigrationFinishedActivity"
+            android:configChanges="locale|layoutDirection"
+            android:noHistory="true"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
+        <activity
+            android:theme="@style/FxAccountTheme"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountNotAllowedActivity"
             android:configChanges="locale|layoutDirection"
             android:noHistory="true"
