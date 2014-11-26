@@ -98,8 +98,12 @@ tests:
   #     - builds/b2g_desktop.yml
   mochitests:
     allowed_build_tasks:
-      - tasks/builds/b2g_desktop.yml
-      - tasks/builds/b2g_desktop_debug.yml
-      - tasks/builds/mulet_linux.yml
-    task: tasks/tests/b2g_mochitest.yml
-    chunks: 5
+      tasks/builds/b2g_desktop.yml:
+        task: tasks/tests/b2g_mochitest.yml
+        chunks: 5
+      tasks/builds/b2g_desktop_debug.yml:
+        task: tasks/tests/b2g_mochitest.yml
+        chunks: 5
+      tasks/builds/mulet_linux.yml:
+        task: tasks/tests/mulet_mochitests.yml
+        chunks: 5

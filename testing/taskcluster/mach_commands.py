@@ -185,6 +185,7 @@ class TryGraph(object):
             )
 
             for test in build['dependents']:
+                test = test['allowed_build_tasks'][build['task']]
                 test_parameters = copy.copy(build_parameters)
                 test_parameters['build_url'] = build_url
                 test_parameters['tests_url'] = tests_url
