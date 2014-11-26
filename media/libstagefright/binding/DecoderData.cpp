@@ -131,7 +131,6 @@ TrackConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   // aMimeType points to a string from MediaDefs.cpp so we don't need to copy it
   mime_type = aMimeType;
   duration = FindInt64(aMetaData, kKeyDuration);
-  media_time = FindInt64(aMetaData, kKeyMediaTime);
   mTrackId = FindInt32(aMetaData, kKeyTrackID);
   crypto.Update(aMetaData);
 }
@@ -216,11 +215,11 @@ MP4Sample::~MP4Sample()
 }
 
 void
-MP4Sample::Update(int64_t& aMediaTime)
+MP4Sample::Update()
 {
   sp<MetaData> m = mMediaBuffer->meta_data();
   decode_timestamp = FindInt64(m, kKeyDecodingTime);
-  composition_timestamp = FindInt64(m, kKeyTime) - aMediaTime;
+  composition_timestamp = FindInt64(m, kKeyTime);
   duration = FindInt64(m, kKeyDuration);
   byte_offset = FindInt64(m, kKey64BitFileOffset);
   is_sync_point = FindInt32(m, kKeyIsSyncFrame);

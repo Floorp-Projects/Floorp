@@ -22,7 +22,7 @@ MoofParser::RebuildFragmentedIndex(const nsTArray<MediaByteRange>& aByteRanges)
       mInitRange = MediaByteRange(0, box.Range().mEnd);
       ParseMoov(box);
     } else if (box.IsType("moof")) {
-      Moof moof(box, mTrex, mMdhd, mEdts);
+      Moof moof(box, mTrex, mMdhd);
 
       if (!mMoofs.IsEmpty()) {
         // Stitch time ranges together in the case of a (hopefully small) time
@@ -81,8 +81,6 @@ MoofParser::ParseTrak(Box& aBox)
       if (!mTrex.mTrackId || tkhd.mTrackId == mTrex.mTrackId) {
         ParseMdia(box, tkhd);
       }
-    } else if (box.IsType("edts")) {
-      mEdts = Edts(box);
     }
   }
 }
@@ -110,18 +108,18 @@ MoofParser::ParseMvex(Box& aBox)
   }
 }
 
-Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts) :
+Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd) :
     mRange(aBox.Range()), mMaxRoundingError(0)
 {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
-      ParseTraf(box, aTrex, aMdhd, aEdts);
+      ParseTraf(box, aTrex, aMdhd);
     }
   }
 }
 
 void
-Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts)
+Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd)
 {
   Tfhd tfhd(aTrex);
   Tfdt tfdt;
@@ -134,7 +132,7 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts)
       }
     } else if (box.IsType("trun")) {
       if (!aTrex.mTrackId || tfhd.mTrackId == aTrex.mTrackId) {
-        ParseTrun(box, tfhd, tfdt, aMdhd, aEdts);
+        ParseTrun(box, tfhd, tfdt, aMdhd);
       }
     }
   }
@@ -163,7 +161,7 @@ public:
 };
 
 void
-Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
+Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd)
 {
   if (!aMdhd.mTimescale) {
     return;
@@ -211,8 +209,8 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts)
     offset += sampleSize;
 
     sample.mCompositionRange = Interval<Microseconds>(
-      aMdhd.ToMicroseconds(decodeTime + ctsOffset - aEdts.mMediaStart),
-      aMdhd.ToMicroseconds(decodeTime + ctsOffset + sampleDuration - aEdts.mMediaStart));
+      aMdhd.ToMicroseconds(decodeTime + ctsOffset),
+      aMdhd.ToMicroseconds(decodeTime + ctsOffset + sampleDuration));
     decodeTime += sampleDuration;
 
     sample.mSync = !(sampleFlags & 0x1010000);
@@ -328,37 +326,6 @@ Tfdt::Tfdt(Box& aBox)
   } else if (version == 1) {
     mBaseMediaDecodeTime = reader->ReadU64();
   }
-  reader->DiscardRemaining();
-}
-
-Edts::Edts(Box& aBox)
-  : mMediaStart(0)
-{
-  Box child = aBox.FirstChild();
-  if (!child.IsType("elst")) {
-    return;
-  }
-
-  BoxReader reader(child);
-  uint32_t flags = reader->ReadU32();
-  uint8_t version = flags >> 24;
-
-  uint32_t entryCount = reader->ReadU32();
-  NS_ASSERTION(entryCount == 1, "Can't handle videos with multiple edits");
-  if (entryCount != 1) {
-    reader->DiscardRemaining();
-    return;
-  }
-
-  uint64_t segment_duration;
-  if (version == 1) {
-    segment_duration = reader->ReadU64();
-    mMediaStart = reader->Read64();
-  } else {
-    segment_duration = reader->ReadU32();
-    mMediaStart = reader->Read32();
-  }
-  NS_ASSERTION(segment_duration == 0, "Can't handle edits with fixed durations");
   reader->DiscardRemaining();
 }
 }

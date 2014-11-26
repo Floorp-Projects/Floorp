@@ -86,11 +86,6 @@ private:
         Track *next;
         sp<MetaData> meta;
         uint32_t timescale;
-        // Temporary storage for elst until we've
-        // parsed mdhd and can interpret them.
-        uint64_t segment_duration;
-        int64_t media_time;
-
         sp<SampleTable> sampleTable;
         bool includes_expensive_metadata;
         bool skipTrack;
@@ -145,8 +140,6 @@ private:
     status_t parseTrackHeader(off64_t data_offset, off64_t data_size);
 
     status_t parseSegmentIndex(off64_t data_offset, size_t data_size);
-
-    void storeEditList();
 
     Track *findTrackByMimePrefix(const char *mimePrefix);
 

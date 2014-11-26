@@ -96,15 +96,6 @@ public:
   uint64_t mBaseMediaDecodeTime;
 };
 
-class Edts
-{
-public:
-  Edts() : mMediaStart(0) {}
-  explicit Edts(Box& aBox);
-
-  int64_t mMediaStart;
-};
-
 struct Sample
 {
   mozilla::MediaByteRange mByteRange;
@@ -115,7 +106,7 @@ struct Sample
 class Moof
 {
 public:
-  Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts);
+  Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd);
   void FixRounding(const Moof& aMoof);
 
   mozilla::MediaByteRange mRange;
@@ -124,8 +115,8 @@ public:
   nsTArray<Sample> mIndex;
 
 private:
-  void ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts);
-  void ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts);
+  void ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd);
+  void ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd);
   uint64_t mMaxRoundingError;
 };
 
@@ -155,7 +146,6 @@ public:
   Mdhd mMdhd;
   Trex mTrex;
   Tfdt mTfdt;
-  Edts mEdts;
   nsTArray<Moof> mMoofs;
 };
 }
