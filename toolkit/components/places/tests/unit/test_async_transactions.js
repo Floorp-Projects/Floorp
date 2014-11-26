@@ -67,6 +67,7 @@ let observer = {
   onItemChanged:
   function (aItemId, aProperty, aIsAnnoProperty, aNewValue, aLastModified,
             aItemType, aParentId, aGuid, aParentGuid) {
+    dump("\n\n\n\nOnItemChange: " + aProperty + " " + aNewValue + "\n\n");
     if (this.tagRelatedGuids.has(aGuid))
       return;
 

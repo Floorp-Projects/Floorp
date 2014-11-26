@@ -173,13 +173,20 @@ add_task(function* update_bookmark_keyword() {
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                                 url: new URL("http://keyword.example.com/") });
   let observer = expectNotifications();
-  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid,
-                                            keyword: "kw" });
+  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid, keyword: "kw" });
   let itemId = yield PlacesUtils.promiseItemId(bm.guid);
   let parentId = yield PlacesUtils.promiseItemId(bm.parentGuid);
 
   observer.check([ { name: "onItemChanged",
                      arguments: [ itemId, "keyword", false, bm.keyword,
+                                  bm.lastModified, bm.type, parentId, bm.guid,
+                                  bm.parentGuid ] }
+                 ]);
+
+  observer = expectNotifications();
+  bm = yield PlacesUtils.bookmarks.update({ guid: bm.guid, keyword: "" });
+  observer.check([ { name: "onItemChanged",
+                     arguments: [ itemId, "keyword", false, "",
                                   bm.lastModified, bm.type, parentId, bm.guid,
                                   bm.parentGuid ] }
                  ]);
