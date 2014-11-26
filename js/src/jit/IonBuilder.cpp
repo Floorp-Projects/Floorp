@@ -1769,12 +1769,14 @@ IonBuilder::inspectOpcode(JSOp op)
       }
 
       case JSOP_DELPROP:
+      case JSOP_STRICTDELPROP:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
         return jsop_delprop(name);
       }
 
       case JSOP_DELELEM:
+      case JSOP_STRICTDELELEM:
         return jsop_delelem();
 
       case JSOP_REGEXP:
@@ -10464,7 +10466,8 @@ IonBuilder::jsop_delprop(PropertyName *name)
 {
     MDefinition *obj = current->pop();
 
-    MInstruction *ins = MDeleteProperty::New(alloc(), obj, name);
+    bool strict = JSOp(*pc) == JSOP_STRICTDELPROP;
+    MInstruction *ins = MDeleteProperty::New(alloc(), obj, name, strict);
 
     current->add(ins);
     current->push(ins);
@@ -10478,7 +10481,8 @@ IonBuilder::jsop_delelem()
     MDefinition *index = current->pop();
     MDefinition *obj = current->pop();
 
-    MDeleteElement *ins = MDeleteElement::New(alloc(), obj, index);
+    bool strict = JSOp(*pc) == JSOP_STRICTDELELEM;
+    MDeleteElement *ins = MDeleteElement::New(alloc(), obj, index, strict);
     current->add(ins);
     current->push(ins);
 

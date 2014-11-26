@@ -110,6 +110,7 @@ namespace jit {
     _(JSOP_SETELEM)            \
     _(JSOP_CALLELEM)           \
     _(JSOP_DELELEM)            \
+    _(JSOP_STRICTDELELEM)      \
     _(JSOP_IN)                 \
     _(JSOP_GETGNAME)           \
     _(JSOP_BINDGNAME)          \
@@ -119,6 +120,7 @@ namespace jit {
     _(JSOP_SETPROP)            \
     _(JSOP_CALLPROP)           \
     _(JSOP_DELPROP)            \
+    _(JSOP_STRICTDELPROP)      \
     _(JSOP_LENGTH)             \
     _(JSOP_GETXPROP)           \
     _(JSOP_GETALIASEDVAR)      \
