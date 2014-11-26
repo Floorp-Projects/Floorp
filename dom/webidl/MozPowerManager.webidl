@@ -9,10 +9,13 @@ interface MozWakeLockListener;
   * The reason for the factory reset.
   * "normal" : simple factory reset.
   * "wipe"   : will also attempt to wipe all user storage areas.
+  * "root"   : simple factory reset that also root the phone to get more
+  *            privileges when using devtools.
   */
 enum FactoryResetReason {
     "normal",
-    "wipe"
+    "wipe",
+    "root"
 };
 
 /**
