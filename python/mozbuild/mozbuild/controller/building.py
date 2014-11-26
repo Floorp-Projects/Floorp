@@ -490,6 +490,8 @@ class CCacheStats(object):
     ]
 
     DIRECTORY_DESCRIPTION = "cache directory"
+    PRIMARY_CONFIG_DESCRIPTION = "primary config"
+    SECONDARY_CONFIG_DESCRIPTION = "secondary config      (readonly)"
     ABSOLUTE_KEYS = {'cache_max_size'}
     FORMAT_KEYS = {'cache_size', 'cache_max_size'}
 
@@ -501,6 +503,8 @@ class CCacheStats(object):
         """Construct an instance from the output of ccache -s."""
         self._values = {}
         self.cache_dir = ""
+        self.primary_config = ""
+        self.secondary_config = ""
 
         if not output:
             return
@@ -513,15 +517,20 @@ class CCacheStats(object):
     def _parse_line(self, line):
         if line.startswith(self.DIRECTORY_DESCRIPTION):
             self.cache_dir = self._strip_prefix(line, self.DIRECTORY_DESCRIPTION)
-            return
-
-        for stat_key, stat_description in self.STATS_KEYS:
-            if line.startswith(stat_description):
-                raw_value = self._strip_prefix(line, stat_description)
-                self._values[stat_key] = self._parse_value(raw_value)
-                break
+        elif line.startswith(self.PRIMARY_CONFIG_DESCRIPTION):
+            self.primary_config = self._strip_prefix(
+                line, self.PRIMARY_CONFIG_DESCRIPTION)
+        elif line.startswith(self.SECONDARY_CONFIG_DESCRIPTION):
+            self.secondary_config = self._strip_prefix(
+                line, self.SECONDARY_CONFIG_DESCRIPTION)
         else:
-            raise ValueError('Failed to parse ccache stats output: %s' % line)
+            for stat_key, stat_description in self.STATS_KEYS:
+                if line.startswith(stat_description):
+                    raw_value = self._strip_prefix(line, stat_description)
+                    self._values[stat_key] = self._parse_value(raw_value)
+                    break
+            else:
+                raise ValueError('Failed to parse ccache stats output: %s' % line)
 
     @staticmethod
     def _strip_prefix(line, prefix):
