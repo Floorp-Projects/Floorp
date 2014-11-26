@@ -1,4 +1,4 @@
-FROM          quay.io/mozilla/base:0.0.2
+FROM          quay.io/mozilla/base:0.0.3
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 ENV PATH $PATH:/home/worker/bin/
