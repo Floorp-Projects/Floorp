@@ -169,7 +169,13 @@ function checkStepDown()
     [ '10', '2',    '0',   '4',   '10', '0',    false ],
     [ '10', '2',    '0',   '4',   '5',  '0',    false ],
     // value = "" (NaN).
-    [ '',   null,   null,  null,  null, '-1',     false ],
+    [ '',   null,   null,  null,  null, '-1',   false ],
+    [ '',    '2',   null,  null,  null, '-2',   false ],
+    [ '',    '2',    '3',  null,  null,  '3',   false ],
+    [ '',   null,    '3',  null,  null,  '3',   false ],
+    [ '',    '2',    '3',   '8',  null,  '3',   false ],
+    [ '',   null,  '-10',  '10',  null, '-1',   false ],
+    [ '',    '3',  '-10',  '10',  null, '-1',   false ],
     // With step = 'any'.
     [ '0',  'any',  null,  null,  1,    null,   true ],
     [ '0',  'ANY',  null,  null,  1,    null,   true ],
@@ -484,7 +490,14 @@ function checkStepUp()
     [ '-3', '2',    '-6',  '-2',  null, '-2',  false ],
     [ '-3', '2',    '-6',  '-1',  null, '-2',  false ],
     // value = "" (NaN).
-    [ '',   null,   null,  null,  null, '1',    false ],
+    [ '',   null,   null,  null,  null,  '1',  false ],
+    [ '',   null,   null,  null,  null,  '1',  false ],
+    [ '',    '2',   null,  null,  null,  '2',  false ],
+    [ '',    '2',    '3',  null,  null,  '3',  false ],
+    [ '',   null,    '3',  null,  null,  '3',  false ],
+    [ '',    '2',    '3',   '8',  null,  '3',  false ],
+    [ '',   null,  '-10',  '10',  null,  '1',  false ],
+    [ '',    '3',  '-10',  '10',  null,  '2',  false ],
     // With step = 'any'.
     [ '0',  'any',  null,  null,  1,    null,  true ],
     [ '0',  'ANY',  null,  null,  1,    null,  true ],
