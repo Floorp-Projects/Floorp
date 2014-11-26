@@ -54,13 +54,26 @@ builds:
     platforms:
       - b2g
     types:
-      opt: tasks/builds/b2g_desktop.yml
-      debug: tasks/builds/b2g_desktop_debug.yml
+      opt:
+        task: tasks/builds/b2g_desktop.yml
+      debug:
+        task: tasks/builds/b2g_desktop_debug.yml
   linux64-mulet:
     platforms:
       - Mulet Linux
     types:
-      opt: tasks/builds/mulet_linux.yml
+      opt:
+        task: tasks/builds/mulet_linux.yml
+  emulator-kk:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator.yml
+        additional-parameters:
+          debug: 0
+          b2g-config: 'emulator-kk'
+          build-type: Opt
 
 # Test section covers the -u options in the try flags
 tests:
