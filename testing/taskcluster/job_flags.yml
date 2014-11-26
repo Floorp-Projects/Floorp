@@ -132,6 +132,10 @@ tests:
   #   # "allowed platforms" here.
   #   allowed_build_tasks:
   #     - builds/b2g_desktop.yml
+  cppunit:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_cpp_unit.yml
   crashtest:
     allowed_build_tasks:
       tasks/builds/b2g_emulator.yml:
