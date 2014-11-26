@@ -163,14 +163,21 @@ def parse_commit(message, jobs):
             if build_type not in platform_builds['types']:
                 continue
 
-            build_task = platform_builds['types'][build_type]
+            platform_build = platform_builds['types'][build_type]
+            build_task = platform_build['task']
+
+            if 'additional-parameters' in platform_build:
+                additional_parameters = platform_build['additional-parameters']
+            else:
+                additional_parameters = {}
 
             # Node for this particular build type
             result.append({
                 'task': build_task,
                 'dependents': extract_tests_from_platform(
                     jobs['tests'], platform_builds, build_task, tests
-                )
+                ),
+                'additional-parameters': additional_parameters
             })
 
     return result

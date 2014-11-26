@@ -139,7 +139,8 @@ class TryGraph(object):
                 "docker-worker:cache:sources-gaia",
                 "docker-worker:cache:build-b2g-desktop-objects",
                 "docker-worker:cache:build-mulet-linux-objects",
-                "docker-worker:cache:tooltool-cache"
+                "docker-worker:cache:tooltool-cache",
+                "docker-worker:cache:build-emulator-objects"
             ]
 
             # XXX: This is a hack figure out how to do this correctly or sanely
@@ -165,7 +166,7 @@ class TryGraph(object):
             }
 
         for build in job_graph:
-            build_parameters = copy.copy(parameters)
+            build_parameters = dict(parameters, **build['additional-parameters'])
             build_parameters['build_slugid'] = slugid()
             build_task = import_yaml(build['task'], build_parameters)
 
