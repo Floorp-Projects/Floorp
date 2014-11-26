@@ -264,6 +264,22 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
+  describe("#resetRoom", function() {
+    it("should reset the room store state", function() {
+      var initialState = store.getInitialStoreState();
+      store.setStoreState({
+        roomState: ROOM_STATES.ENDED,
+        audioMuted: true,
+        videoMuted: true,
+        failureReason: "foo"
+      });
+
+      store.resetRoom(new sharedActions.ResetRoom());
+
+      expect(store.getStoreState()).eql(initialState);
+    });
+  });
+
   describe("#setupRoomInfo", function() {
     var fakeRoomInfo;
 
