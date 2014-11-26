@@ -73,7 +73,7 @@ void YCbCrImageDataDeserializerBase::Validate()
                           info->mYStride,
                           IntSize(info->mCbCrWidth, info->mCbCrHeight),
                           info->mCbCrStride);
-  mIsValid = requiredSize && requiredSize <= mDataSize;
+  mIsValid = requiredSize <= mDataSize;
 
 }
 
@@ -140,15 +140,10 @@ static size_t ComputeOffset(uint32_t aHeight, uint32_t aStride)
 // Minimum required shmem size in bytes
 size_t
 YCbCrImageDataDeserializerBase::ComputeMinBufferSize(const gfx::IntSize& aYSize,
-                                                     uint32_t aYStride,
-                                                     const gfx::IntSize& aCbCrSize,
-                                                     uint32_t aCbCrStride)
+                                                   uint32_t aYStride,
+                                                   const gfx::IntSize& aCbCrSize,
+                                                   uint32_t aCbCrStride)
 {
-  MOZ_ASSERT(aYSize.height >= 0 && aYSize.width >= 0);
-  if (aYSize.height <= 0 || aYSize.width <= 0 || aCbCrSize.height <= 0 || aCbCrSize.width <= 0) {
-    gfxDebug() << "Non-positive YCbCr buffer size request " << aYSize.height << "x" << aYSize.width << ", " << aCbCrSize.height << "x" << aCbCrSize.width;
-    return 0;
-  }
   return ComputeOffset(aYSize.height, aYStride)
          + 2 * ComputeOffset(aCbCrSize.height, aCbCrStride)
          + MOZ_ALIGN_WORD(sizeof(YCbCrBufferInfo));
