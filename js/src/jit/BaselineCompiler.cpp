@@ -1974,13 +1974,20 @@ BaselineCompiler::emit_JSOP_DELELEM()
     pushArg(R1);
     pushArg(R0);
 
-    if (!callVM(script->strict() ? DeleteElementStrictInfo : DeleteElementNonStrictInfo))
+    bool strict = JSOp(*pc) == JSOP_STRICTDELELEM;
+    if (!callVM(strict ? DeleteElementStrictInfo : DeleteElementNonStrictInfo))
         return false;
 
     masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R1);
     frame.popn(2);
     frame.push(R1);
     return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_STRICTDELELEM()
+{
+    return emit_JSOP_DELELEM();
 }
 
 bool
@@ -2113,13 +2120,20 @@ BaselineCompiler::emit_JSOP_DELPROP()
     pushArg(ImmGCPtr(script->getName(pc)));
     pushArg(R0);
 
-    if (!callVM(script->strict() ? DeletePropertyStrictInfo : DeletePropertyNonStrictInfo))
+    bool strict = JSOp(*pc) == JSOP_STRICTDELPROP;
+    if (!callVM(strict ? DeletePropertyStrictInfo : DeletePropertyNonStrictInfo))
         return false;
 
     masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R1);
     frame.pop();
     frame.push(R1);
     return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_STRICTDELPROP()
+{
+    return emit_JSOP_DELPROP();
 }
 
 void

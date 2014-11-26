@@ -332,26 +332,26 @@
      *   Operands: uint32_t nameIndex
      *   Stack: => succeeded
      */ \
-    macro(JSOP_DELNAME,   36, "delname",    NULL,         5,  0,  1, JOF_ATOM|JOF_NAME) \
+    macro(JSOP_DELNAME,   36, "delname",    NULL,         5,  0,  1, JOF_ATOM|JOF_NAME|JOF_CHECKSLOPPY) \
     /*
      * Pops the top of stack value, deletes property from it, pushes 'true' onto
      * the stack if succeeded, 'false' if not.
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Operators
+     *   Type: Special Operators
      *   Operands: uint32_t nameIndex
      *   Stack: obj => succeeded
      */ \
-    macro(JSOP_DELPROP,   37, "delprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP) \
+    macro(JSOP_DELPROP,   37, "delprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP|JOF_CHECKSLOPPY) \
     /*
      * Pops the top two values on the stack as 'propval' and 'obj',
      * deletes 'propval' property from 'obj', pushes 'true'  onto the stack if
      * succeeded, 'false' if not.
-     *   Category: Literals
-     *   Type: Object
+     *   Category: Operators
+     *   Type: Special Operators
      *   Operands:
      *   Stack: obj, propval => succeeded
      */ \
-    macro(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM) \
+    macro(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_CHECKSLOPPY) \
     /*
      * Pops the value 'val' from the stack, then pushes 'typeof val'.
      *   Category: Operator
@@ -426,8 +426,27 @@
      */ \
     macro(JSOP_SYMBOL,    45, "symbol",     NULL,         2,  0,  1,  JOF_UINT8) \
     \
-    macro(JSOP_UNUSED46,  46, "unused46",   NULL,         1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED47,  47, "unused47",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops the top of stack value and attempts to delete the given property
+     * from it. Pushes 'true' onto success, else throws a TypeError per strict
+     * mode property-deletion requirements.
+     *   Category: Operators
+     *   Type: Special Operators
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => succeeded
+     */ \
+    macro(JSOP_STRICTDELPROP,   46, "strict-delprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP|JOF_CHECKSTRICT) \
+    /*
+     * Pops the top two values on the stack as 'propval' and 'obj',
+     * and attempts to delete 'propval' property from 'obj'. Pushes 'true' onto
+     * the stack on success, else throws a TypeError per strict mode property
+     * deletion requirements.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval => succeeded
+     */ \
+    macro(JSOP_STRICTDELELEM,   47, "strict-delelem",    NULL,         1,  2,  1, JOF_BYTE|JOF_ELEM|JOF_CHECKSTRICT) \
     macro(JSOP_UNUSED48,  48, "unused48",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED49,  49, "unused49",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED50,  50, "unused50",   NULL,         1,  0,  0,  JOF_BYTE) \

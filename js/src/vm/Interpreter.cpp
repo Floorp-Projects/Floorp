@@ -1588,8 +1588,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED46)
-CASE(JSOP_UNUSED47)
 CASE(JSOP_UNUSED48)
 CASE(JSOP_UNUSED49)
 CASE(JSOP_UNUSED50)
@@ -2256,9 +2254,6 @@ END_CASE(JSOP_POS)
 
 CASE(JSOP_DELNAME)
 {
-    /* Strict mode code should never contain JSOP_DELNAME opcodes. */
-    MOZ_ASSERT(!script->strict());
-
     RootedPropertyName &name = rootName0;
     name = script->getName(REGS.pc);
 
@@ -2273,7 +2268,10 @@ CASE(JSOP_DELNAME)
 END_CASE(JSOP_DELNAME)
 
 CASE(JSOP_DELPROP)
+CASE(JSOP_STRICTDELPROP)
 {
+    static_assert(JSOP_DELPROP_LENGTH == JSOP_STRICTDELPROP_LENGTH,
+                  "delprop and strictdelprop must be the same size");
     RootedId &id = rootId0;
     id = NameToId(script->getName(REGS.pc));
 
@@ -2283,7 +2281,7 @@ CASE(JSOP_DELPROP)
     bool succeeded;
     if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
         goto error;
-    if (!succeeded && script->strict()) {
+    if (!succeeded && JSOp(*REGS.pc) == JSOP_STRICTDELPROP) {
         obj->reportNotConfigurable(cx, id);
         goto error;
     }
@@ -2293,7 +2291,10 @@ CASE(JSOP_DELPROP)
 END_CASE(JSOP_DELPROP)
 
 CASE(JSOP_DELELEM)
+CASE(JSOP_STRICTDELELEM)
 {
+    static_assert(JSOP_DELELEM_LENGTH == JSOP_STRICTDELELEM_LENGTH,
+                  "delelem and strictdelelem must be the same size");
     /* Fetch the left part and resolve it to a non-null object. */
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -2, obj);
@@ -2307,7 +2308,7 @@ CASE(JSOP_DELELEM)
         goto error;
     if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
         goto error;
-    if (!succeeded && script->strict()) {
+    if (!succeeded && JSOp(*REGS.pc) == JSOP_STRICTDELELEM) {
         obj->reportNotConfigurable(cx, id);
         goto error;
     }
