@@ -652,11 +652,8 @@ DrawTargetD2D1::CreateSourceSurfaceFromData(unsigned char *aData,
                                  D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, D2DPixelFormat(aFormat)),
                                  byRef(bitmap));
 
-  if (FAILED(hr)) {
+  if (FAILED(hr) || !bitmap) {
     gfxCriticalError() << "[D2D1.1] CreateBitmap failure " << aSize << " Code: " << hexa(hr);
-  }
-
-  if (!bitmap) {
     return nullptr;
   }
 
@@ -745,7 +742,7 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
   hr = Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, byRef(mDC));
 
   if (FAILED(hr)) {
-    gfxWarning() << *this << ": Error " << hexa(hr) << " failed to initialize new DeviceContext.";
+    gfxCriticalError() <<"[D2D1.1] Failed to create a DeviceContext, code: " << hexa(hr);
     return false;
   }
 
@@ -753,6 +750,7 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
   aTexture->QueryInterface(__uuidof(IDXGISurface),
                            (void**)((IDXGISurface**)byRef(dxgiSurface)));
   if (!dxgiSurface) {
+    gfxCriticalError() <<"[D2D1.1] Failed to obtain a DXGI surface.";
     return false;
   }
 
@@ -799,14 +797,14 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
   hr = Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, byRef(mDC));
 
   if (FAILED(hr)) {
-    gfxWarning() << *this << ": Error " << hexa(hr) << " failed to initialize new DeviceContext.";
+    gfxCriticalError() <<"[D2D1.1] Failed to create a DeviceContext, code: " << hexa(hr);
     return false;
   }
 
   if (mDC->GetMaximumBitmapSize() < UINT32(aSize.width) ||
       mDC->GetMaximumBitmapSize() < UINT32(aSize.height)) {
     // This is 'ok'
-    gfxDebug() << *this << ": Attempt to use unsupported surface size for D2D 1.1.";
+    gfxCriticalError() << "[D2D1.1] Attempt to use unsupported surface size " << aSize;
     return false;
   }
 
@@ -819,7 +817,7 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
   hr = mDC->CreateBitmap(D2DIntSize(aSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mBitmap));
 
   if (FAILED(hr)) {
-    gfxCriticalError() << *this << ": Error " << hexa(hr) << " failed to create new Bitmap. Size: " << aSize;
+    gfxCriticalError() << "[D2D1.1] CreateBitmap failure " << aSize << " Code: " << hexa(hr);
     return false;
   }
 
@@ -829,7 +827,7 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
   hr = mDC->CreateBitmap(D2DIntSize(aSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mTempBitmap));
 
   if (FAILED(hr)) {
-    gfxCriticalError() << *this << ": Error " << hexa(hr) << " failed to create new TempBitmap. Size: " << aSize;
+    gfxCriticalError() << "[D2D1.1] failed to create new TempBitmap " << aSize << " Code: " << hexa(hr);
     return false;
   }
 
