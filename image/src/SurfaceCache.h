@@ -11,13 +11,15 @@
 #ifndef MOZILLA_IMAGELIB_SURFACECACHE_H_
 #define MOZILLA_IMAGELIB_SURFACECACHE_H_
 
-#include "mozilla/Maybe.h"          // for Maybe
-#include "mozilla/HashFunctions.h"  // for HashGeneric and AddToHash
-#include "gfxPoint.h"               // for gfxSize
-#include "nsCOMPtr.h"               // for already_AddRefed
-#include "mozilla/gfx/Point.h"      // for mozilla::gfx::IntSize
-#include "mozilla/gfx/2D.h"         // for SourceSurface
-#include "SVGImageContext.h"        // for SVGImageContext
+#include "mozilla/Maybe.h"           // for Maybe
+#include "mozilla/MemoryReporting.h" // for MallocSizeOf
+#include "mozilla/HashFunctions.h"   // for HashGeneric and AddToHash
+#include "gfx2DGlue.h"               // for gfxMemoryLocation
+#include "gfxPoint.h"                // for gfxSize
+#include "nsCOMPtr.h"                // for already_AddRefed
+#include "mozilla/gfx/Point.h"       // for mozilla::gfx::IntSize
+#include "mozilla/gfx/2D.h"          // for SourceSurface
+#include "SVGImageContext.h"         // for SVGImageContext
 
 namespace mozilla {
 namespace image {
@@ -292,6 +294,23 @@ struct SurfaceCache
    * RemoveSurface() or RemoveImage().
    */
   static void DiscardAll();
+
+  /**
+   * Computes the size of the surfaces stored for the given image at the given
+   * memory location.
+   *
+   * This is intended for use with memory reporting.
+   *
+   * @param aImageKey     The image to report memory usage for.
+   * @param aLocation     The location (heap, nonheap, etc.) of the memory to
+   *                      report on.
+   * @param aMallocSizeOf A fallback malloc memory reporting function. This
+   *                      should be null unless we're reporting on in-process
+   *                      heap memory.
+   */
+  static size_t SizeOfSurfaces(const ImageKey    aImageKey,
+                               gfxMemoryLocation aLocation,
+                               MallocSizeOf      aMallocSizeOf);
 
 private:
   virtual ~SurfaceCache() = 0;  // Forbid instantiation.
