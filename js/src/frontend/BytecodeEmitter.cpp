@@ -1514,6 +1514,25 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
     return false;
 }
 
+static JSOp
+StrictifySetNameOp(JSOp op, BytecodeEmitter *bce)
+{
+    switch (op) {
+      case JSOP_SETNAME:
+        if (bce->sc->strict)
+            op = JSOP_STRICTSETNAME;
+        break;
+        default:;
+    }
+    return op;
+}
+
+static void
+StrictifySetNameNode(ParseNode *pn, BytecodeEmitter *bce)
+{
+    pn->setOp(StrictifySetNameOp(pn->getOp(), bce));
+}
+
 /*
  * Try to convert a *NAME op with a free name to a more specialized GNAME,
  * INTRINSIC or ALIASEDVAR op, which optimize accesses on that name.
@@ -1894,6 +1913,8 @@ BindNameToSlot(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     if (!BindNameToSlotHelper(cx, bce, pn))
         return false;
+
+    StrictifySetNameNode(pn, bce);
 
     if (bce->emitterMode == BytecodeEmitter::SelfHosting && !pn->isBound()) {
         bce->reportError(pn, JSMSG_SELFHOSTED_UNBOUND_NAME);
@@ -2462,7 +2483,8 @@ EmitNameIncDec(ExclusiveContext *cx, ParseNode *pn, BytecodeEmitter *bce)
             return false;
     }
 
-    if (!EmitAtomOp(cx, pn->pn_kid, global ? JSOP_SETGNAME : JSOP_SETNAME, bce)) // N? N+1
+    JSOp setOp = StrictifySetNameOp(global ? JSOP_SETGNAME : JSOP_SETNAME, bce);
+    if (!EmitAtomOp(cx, pn->pn_kid, setOp, bce)) // N? N+1
         return false;
     if (post && Emit1(cx, bce, JSOP_POP) < 0)       // RESULT
         return false;
@@ -3327,6 +3349,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
 
             switch (pn->getOp()) {
               case JSOP_SETNAME:
+              case JSOP_STRICTSETNAME:
               case JSOP_SETGNAME:
               case JSOP_SETCONST: {
                 // This is like ordinary assignment, but with one difference.
@@ -3344,7 +3367,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
                     return false;
 
                 if (!pn->isOp(JSOP_SETCONST)) {
-                    JSOp bindOp = pn->isOp(JSOP_SETNAME) ? JSOP_BINDNAME : JSOP_BINDGNAME;
+                    JSOp bindOp = pn->isOp(JSOP_SETGNAME) ? JSOP_BINDGNAME : JSOP_BINDNAME;
                     if (!EmitIndex32(cx, bindOp, atomIndex, bce))
                         return false;
                     if (Emit1(cx, bce, JSOP_SWAP) < 0)
@@ -3870,10 +3893,10 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
 
         if (pn3) {
             MOZ_ASSERT(emitOption != DefineVars);
-            if (op == JSOP_SETNAME || op == JSOP_SETGNAME || op == JSOP_SETINTRINSIC) {
+            if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME || op == JSOP_SETGNAME || op == JSOP_SETINTRINSIC) {
                 MOZ_ASSERT(emitOption != PushInitialValues);
                 JSOp bindOp;
-                if (op == JSOP_SETNAME)
+                if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
                     bindOp = JSOP_BINDNAME;
                 else if (op == JSOP_SETGNAME)
                     bindOp = JSOP_BINDGNAME;
@@ -3949,7 +3972,7 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
                 return false;
             if (!lhs->isConst()) {
                 JSOp bindOp;
-                if (lhs->isOp(JSOP_SETNAME))
+                if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME))
                     bindOp = JSOP_BINDNAME;
                 else if (lhs->isOp(JSOP_SETGNAME))
                     bindOp = JSOP_BINDGNAME;
@@ -4006,7 +4029,7 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
                     if (!EmitVarOp(cx, lhs, lhs->getOp(), bce))
                         return false;
                 }
-            } else if (lhs->isOp(JSOP_SETNAME)) {
+            } else if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME)) {
                 if (Emit1(cx, bce, JSOP_DUP) < 0)
                     return false;
                 if (!EmitIndex32(cx, JSOP_GETXPROP, atomIndex, bce))
@@ -6286,6 +6309,7 @@ EmitIncOrDec(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
           case JSOP_SETARG:
           case JSOP_SETALIASEDVAR:
           case JSOP_SETNAME:
+          case JSOP_STRICTSETNAME:
           case JSOP_SETGNAME:
             maySet = true;
             break;

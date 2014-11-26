@@ -457,7 +457,16 @@
      *   Stack: obj, val => val
      */ \
     macro(JSOP_STRICTSETPROP,   48, "strict-setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING|JOF_CHECKSTRICT) \
-    macro(JSOP_UNUSED49,  49, "unused49",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops a scope and value from the stack, assigns value to the given name,
+     * and pushes the value back on the stack. If the set failed, then throw
+     * a TypeError, per usual strict mode semantics.
+     *   Category: Variables and Scopes
+     *   Type: Variables
+     *   Operands: uint32_t nameIndex
+     *   Stack: scope, val => val
+     */ \
+    macro(JSOP_STRICTSETNAME,   49, "strict-setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING|JOF_CHECKSTRICT) \
     macro(JSOP_UNUSED50,  50, "unused50",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED51,  51, "unused51",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED52,  52, "unused52",   NULL,         1,  0,  0,  JOF_BYTE) \
@@ -994,7 +1003,7 @@
      *   Operands: uint32_t nameIndex
      *   Stack: scope, val => val
      */ \
-    macro(JSOP_SETNAME,   111,"setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING) \
+    macro(JSOP_SETNAME,   111,"setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING|JOF_CHECKSLOPPY) \
     \
     /* Exception handling ops. */ \
     /*

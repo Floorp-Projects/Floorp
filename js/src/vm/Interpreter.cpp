@@ -1590,7 +1590,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED49)
 CASE(JSOP_UNUSED50)
 CASE(JSOP_UNUSED51)
 CASE(JSOP_UNUSED52)
@@ -2383,7 +2382,10 @@ END_CASE(JSOP_SETINTRINSIC)
 
 CASE(JSOP_SETGNAME)
 CASE(JSOP_SETNAME)
+CASE(JSOP_STRICTSETNAME)
 {
+    static_assert(JSOP_SETNAME_LENGTH == JSOP_STRICTSETNAME_LENGTH,
+                  "setname and strictsetname must be the same size");
     RootedObject &scope = rootObject0;
     scope = &REGS.sp[-2].toObject();
     HandleValue value = REGS.stackHandleAt(-1);
