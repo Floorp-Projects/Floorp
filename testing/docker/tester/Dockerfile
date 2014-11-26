@@ -1,14 +1,13 @@
-FROM          quay.io/mozilla/base:0.0.5
+FROM          quay.io/mozilla/base-test:0.0.1
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 # Add utilities and configuration
-COPY           b2g-desktop-config.py         /home/worker/b2g-desktop-config.py
-COPY           test-setup.sh                 /tmp/test-setup.sh
-COPY           dot-config                    /home/worker/.config
-COPY           dot-pulse                     /home/worker/.pulse
-COPY           emulator_automation_config.py /home/worker/emulator_automation_config.py
-COPY           bin                           /home/worker/bin
-COPY           mozharness_configs            /home/worker/mozharness_configs
+ADD           b2g-desktop-config.py         /home/worker/b2g-desktop-config.py
+ADD           test-setup.sh                 /tmp/test-setup.sh
+ADD           dot-config                    /home/worker/.config
+ADD           dot-pulse                     /home/worker/.pulse
+ADD           bin                           /home/worker/bin
+ADD           mozharness_configs            /home/worker/mozharness_configs
 
 # Run test setup script
 USER          root
