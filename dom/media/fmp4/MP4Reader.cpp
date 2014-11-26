@@ -456,6 +456,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   *aInfo = mInfo;
   *aTags = nullptr;
 
+  MonitorAutoLock mon(mIndexMonitor);
   UpdateIndex();
 
   return NS_OK;
@@ -852,16 +853,8 @@ MP4Reader::Seek(int64_t aTime,
 }
 
 void
-MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
-                             int64_t aOffset)
-{
-  UpdateIndex();
-}
-
-void
 MP4Reader::UpdateIndex()
 {
-  MonitorAutoLock mon(mIndexMonitor);
   if (!mIndexReady) {
     return;
   }
@@ -891,6 +884,7 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
   if (!mIndexReady) {
     return NS_OK;
   }
+  UpdateIndex();
   MOZ_ASSERT(mStartTime != -1, "Need to finish metadata decode first");
 
   AutoPinned<MediaResource> resource(mDecoder->GetResource());
