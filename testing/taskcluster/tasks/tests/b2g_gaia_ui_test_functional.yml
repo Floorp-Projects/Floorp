@@ -1,0 +1,52 @@
+---
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: {{owner}}
+    name: Gaia Python Functional Integration Tests
+    description: Gaia Python Functional Integration Tests run {{chunk}}
+
+  workerType: b2gtest
+  provisionerId: aws-provisioner
+
+  scopes:
+    - 'docker-worker:cache:sources-gaia'
+
+  payload:
+    cache:
+      sources-gaia: '/home/worker/gaia'
+
+    image: '{{#docker_image}}tester{{/docker_image}}'
+    maxRunTime: 3600
+
+    command:
+      - entrypoint # entrypoint ensures we are running in xvfb
+      - ./bin/pull_gaia.sh &&
+      - >
+        python ./mozharness/scripts/marionette.py
+        --no-read-buildbot-config
+        --config-file marionette/gaia_ui_test_prod_config.py
+        --config-file ./mozharness_configs/gaia_integration_override.py
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --download-symbols ondemand
+        --gip-suite functional
+        --total-chunk {{total_chunks}}
+        --this-chunk {{chunk}}
+        --gaia-repo https://hg.mozilla.org/integration/gaia-central
+        --gaia-dir /home/worker
+        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/packages/xre.linux-x86_64.zip
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      groupName: Gaia Python Integration Tests
+      groupSymbol: Gip
+      symbol: 'f{{chunk}}'
+      productName: b2g
