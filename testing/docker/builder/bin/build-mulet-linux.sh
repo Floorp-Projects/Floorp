@@ -1,6 +1,6 @@
 #!/bin/bash -live
 
-################################### build.sh ###################################
+################################### build-mulet-linux.sh ###################################
 
 . build-setup.sh
 
@@ -14,31 +14,26 @@ cd $gecko_dir
 hg pull -r $REVISION $REPOSITORY;
 hg update $REVISION;
 
-### Pull and update gaia
-cd $gaia_dir
-GAIA_REV=$(get_gaia_revision.js)
-GAIA_REPO="https://hg.mozilla.org$(get_gaia_repo.js)"
-hg pull -r $GAIA_REV $GAIA_REPO;
-hg update $GAIA_REV;
+### Retrieve and install latest tooltool manifest
+tooltool=/home/worker/tools/tooltool.py
+manifest=browser/config/tooltool-manifests/linux64/releng.manifest
+tooltool_url=http://tooltool.pub.build.mozilla.org/temp-sm-stuff
 
-cd $gecko_dir
-
-# Nightly mozconfig expects gaia repo be inside mozilla-central tree
-if [ ! -d "gaia" ]; then
-  ln -s ../../gaia/source gaia
-fi
+python $tooltool --url $tooltool_url --overwrite -m $manifest fetch -c $TOOLTOOL_CACHE
+chmod +x setup.sh
+./setup.sh
 
 export MOZ_OBJDIR=$(get-objdir.py $gecko_dir)
 
 ./mach build;
 
 ### Make package
-cd $MOZ_OBJDIR
+cd $MOZ_OBJDIR;
 make package package-tests;
 
 ### Extract artifacts
 # Navigate to dist/ folder
-cd $MOZ_OBJDIR/dist
+cd $MOZ_OBJDIR/dist;
 
 ls -lah $MOZ_OBJDIR/dist/
 

@@ -5,25 +5,25 @@ task:
   metadata:
     source: http://todo.com/soon
     owner: {{owner}}
-    name: B2G Desktop Opt
-    description: B2G Desktop Opt
+    name: Mulet Linux x64 Opt
+    description: Mulet Linux x64 Opt
 
   workerType: b2gbuild
   provisionerId: aws-provisioner
 
   scopes:
     - 'docker-worker:cache:sources-mozilla-central'
-    - 'docker-worker:cache:sources-gaia'
-    - 'docker-worker:cache:build-b2g-desktop-objects'
+    - 'docker-worker:cache:build-mulet-linux-objects'
+    - 'docker-worker:cache:tooltool-cache'
 
   payload:
     cache:
-      sources-gaia: '/home/worker/gaia'
       sources-mozilla-central: '/home/worker/mozilla-central'
-      build-b2g-desktop-objects: '/home/worker/object-folder'
+      build-mulet-linux-objects: '/home/worker/object-folder'
+      tooltool-cache: '/home/worker/tools/tooltool-cache'
 
     env:
-      MOZCONFIG: '/home/worker/mozilla-central/source/b2g/config/mozconfigs/linux64_gecko/nightly'
+      MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
       REVISION: '{{revision}}'
       REPOSITORY: '{{repository}}'
@@ -32,7 +32,7 @@ task:
     maxRunTime: 3600
 
     command:
-      - bin/build-b2g-desktop.sh
+      - bin/build-mulet-linux.sh
 
     artifacts:
       'public/build':

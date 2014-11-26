@@ -32,7 +32,7 @@ task:
     maxRunTime: 3600
 
     command:
-      - build-b2g-desktop.sh
+      - bin/build-b2g-desktop.sh
 
     artifacts:
       'public/build':
