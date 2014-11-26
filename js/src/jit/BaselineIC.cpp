@@ -8657,7 +8657,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
                   JSOp op, uint32_t argc, Value *vp, bool constructing, bool isSpread,
                   bool useNewType)
 {
-    if (useNewType || op == JSOP_EVAL)
+    if (useNewType || op == JSOP_EVAL || op == JSOP_STRICTEVAL)
         return true;
 
     if (stub->numOptimizedStubs() >= ICCall_Fallback::MAX_OPTIMIZED_STUBS) {
@@ -8987,12 +8987,18 @@ DoCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub_, uint
     if (op == JSOP_NEW) {
         if (!InvokeConstructor(cx, callee, argc, args, res))
             return false;
-    } else if (op == JSOP_EVAL && frame->scopeChain()->global().valueIsEval(callee)) {
+    } else if ((op == JSOP_EVAL || op == JSOP_STRICTEVAL) &&
+               frame->scopeChain()->global().valueIsEval(callee))
+    {
         if (!DirectEval(cx, CallArgsFromVp(argc, vp)))
             return false;
         res.set(vp[0]);
     } else {
-        MOZ_ASSERT(op == JSOP_CALL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY || op == JSOP_EVAL);
+        MOZ_ASSERT(op == JSOP_CALL ||
+                   op == JSOP_FUNCALL ||
+                   op == JSOP_FUNAPPLY ||
+                   op == JSOP_EVAL ||
+                   op == JSOP_STRICTEVAL);
         if (!Invoke(cx, thisv, callee, argc, args, res))
             return false;
     }
@@ -9041,7 +9047,7 @@ DoSpreadCallFallback(JSContext *cx, BaselineFrame *frame, ICCall_Fallback *stub_
     bool constructing = (op == JSOP_SPREADNEW);
 
     // Try attaching a call stub.
-    if (op != JSOP_SPREADEVAL &&
+    if (op != JSOP_SPREADEVAL && op != JSOP_STRICTSPREADEVAL &&
         !TryAttachCallStub(cx, stub, script, pc, op, 1, vp, constructing, true, false))
     {
         return false;
