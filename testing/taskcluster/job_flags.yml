@@ -6,31 +6,36 @@
 flags:
   builds:
     - emulator
+    - emulator-ics
     - emulator-jb
     - emulator-kk
-    - emulator-ics
     - linux32_gecko  # b2g desktop linux 32 bit
     - linux64_gecko  # b2g desktop linux 64 bit
+    - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
     - macosx64_gecko # b2g desktop osx 64 bit
     - win32_gecko    # b2g desktop win 32 bit
-    - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
 
   tests:
+    - cppunit
+    - crashtest
+    - crashtest-ipc
+    - gaia-build-unit
+    - gaia-js-integration
+    - gaia-linter
+    - jetpack
+    - jittests
+    - jsreftest
+    - marionette
+    - marionette-webapi
+    - mochitests
+    - mochitest-oop
+    - mozmill
     - reftest
     - reftest-ipc
     - reftest-no-accel
-    - crashtest
-    - crashtest-ipc
-    - xpcshell
-    - jsreftest
-    - jetpack
-    - marionette
-    - mozmill
-    - cppunit
-    - jittests
-    - mochitests
+    - reftest-sanity-oop
     - web-platform-tests
-    - marionette-webapi
+    - xpcshell
 
 # Build section covers the -b[uild] and -p[latform] options that try provides.
 builds:
