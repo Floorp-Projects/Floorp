@@ -1,17 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
-mochitest_profile_FILES := \
+MOCHITEST_PROFILE_FILES = \
   prefs_general.js \
   prefs_b2g_unittest.js \
   webapps_mochitest.json \
   $(NULL)
-mochitest_profile_DEST = $(DEPTH)/_tests/testing/mochitest/profile_data
-mochitest_profile_TARGET := misc
-INSTALL_TARGETS += mochitest_profile
+WPT_PROFILE_FILES = $(MOCHITEST_PROFILE_FILES)
 
-wpt_profile_FILES = $(MOCHITEST_PROFILE_FILES)
-wpt_profile_DEST = $(DEPTH)/_tests/web-platform/prefs
-wpt_profile_TARGET := misc
-INSTALL_TARGETS += wpt_profile
+MOCHITEST_PROFILE_DEST = $(DEPTH)/_tests/testing/mochitest/profile_data
+WPT_PROFILE_DEST = $(DEPTH)/_tests/web-platform/prefs
+
+INSTALL_TARGETS += MOCHITEST_PROFILE
+INSTALL_TARGETS += WPT_PROFILE
