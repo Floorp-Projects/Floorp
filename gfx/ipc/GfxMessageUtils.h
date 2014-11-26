@@ -854,8 +854,8 @@ template <>
 struct ParamTraits<mozilla::layers::CompositableType>
   : public ContiguousTypedEnumSerializer<
              mozilla::layers::CompositableType,
-             mozilla::layers::CompositableType::BUFFER_UNKNOWN,
-             mozilla::layers::CompositableType::BUFFER_COUNT>
+             mozilla::layers::CompositableType::UNKNOWN,
+             mozilla::layers::CompositableType::COUNT>
 {};
 
 template <>

@@ -241,7 +241,7 @@ public:
   explicit ContentHostIncremental(const TextureInfo& aTextureInfo);
   ~ContentHostIncremental();
 
-  virtual CompositableType GetType() { return CompositableType::BUFFER_CONTENT_INC; }
+  virtual CompositableType GetType() { return CompositableType::CONTENT_INC; }
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE { return LayerRenderState(); }
 
