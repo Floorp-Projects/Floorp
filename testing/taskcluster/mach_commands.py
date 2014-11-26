@@ -137,7 +137,9 @@ class TryGraph(object):
             graph['scopes'] = [
                 "docker-worker:cache:sources-mozilla-central",
                 "docker-worker:cache:sources-gaia",
-                "docker-worker:cache:build-b2g-desktop-objects"
+                "docker-worker:cache:build-b2g-desktop-objects",
+                "docker-worker:cache:build-mulet-linux-objects",
+                "docker-worker:cache:tooltool-cache"
             ]
 
             # XXX: This is a hack figure out how to do this correctly or sanely
