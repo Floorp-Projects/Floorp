@@ -116,6 +116,7 @@ namespace jit {
     _(JSOP_BINDGNAME)          \
     _(JSOP_SETGNAME)           \
     _(JSOP_SETNAME)            \
+    _(JSOP_STRICTSETNAME)      \
     _(JSOP_GETPROP)            \
     _(JSOP_SETPROP)            \
     _(JSOP_STRICTSETPROP)      \

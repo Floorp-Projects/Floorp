@@ -2071,6 +2071,12 @@ BaselineCompiler::emit_JSOP_SETNAME()
 }
 
 bool
+BaselineCompiler::emit_JSOP_STRICTSETNAME()
+{
+    return emit_JSOP_SETPROP();
+}
+
+bool
 BaselineCompiler::emit_JSOP_SETGNAME()
 {
     return emit_JSOP_SETPROP();

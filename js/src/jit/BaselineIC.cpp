@@ -7898,6 +7898,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     MOZ_ASSERT(op == JSOP_SETPROP ||
                op == JSOP_STRICTSETPROP ||
                op == JSOP_SETNAME ||
+               op == JSOP_STRICTSETNAME ||
                op == JSOP_SETGNAME ||
                op == JSOP_INITPROP ||
                op == JSOP_SETALIASEDVAR ||
@@ -7940,7 +7941,10 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
         {
             return false;
         }
-    } else if (op == JSOP_SETNAME || op == JSOP_SETGNAME) {
+    } else if (op == JSOP_SETNAME ||
+               op == JSOP_STRICTSETNAME ||
+               op == JSOP_SETGNAME)
+    {
         if (!SetNameOperation(cx, script, pc, obj, rhs))
             return false;
     } else if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {

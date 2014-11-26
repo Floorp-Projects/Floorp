@@ -1764,6 +1764,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_SETPROP:
       case JSOP_STRICTSETPROP:
       case JSOP_SETNAME:
+      case JSOP_STRICTSETNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
         return jsop_setprop(name);
