@@ -12,6 +12,7 @@ flags:
     - linux64_gecko  # b2g desktop linux 64 bit
     - macosx64_gecko # b2g desktop osx 64 bit
     - win32_gecko    # b2g desktop win 32 bit
+    - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
 
   tests:
     - reftest
@@ -55,6 +56,11 @@ builds:
     types:
       opt: tasks/builds/b2g_desktop.yml
       debug: tasks/builds/b2g_desktop_debug.yml
+  linux64-mulet:
+    platforms:
+      - Mulet Linux
+    types:
+      opt: tasks/builds/mulet_linux.yml
 
 # Test section covers the -u options in the try flags
 tests:
@@ -74,5 +80,6 @@ tests:
     allowed_build_tasks:
       - tasks/builds/b2g_desktop.yml
       - tasks/builds/b2g_desktop_debug.yml
+      - tasks/builds/mulet_linux.yml
     task: tasks/tests/b2g_mochitest.yml
     chunks: 5
