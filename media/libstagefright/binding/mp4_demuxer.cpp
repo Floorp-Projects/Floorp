@@ -173,7 +173,7 @@ MP4Demuxer::DemuxAudioSample()
     return nullptr;
   }
 
-  sample->Update();
+  sample->Update(mAudioConfig.media_time);
 
   return sample.forget();
 }
@@ -190,7 +190,7 @@ MP4Demuxer::DemuxVideoSample()
     return nullptr;
   }
 
-  sample->Update();
+  sample->Update(mVideoConfig.media_time);
   sample->prefix_data = mVideoConfig.annex_b;
 
   return sample.forget();
