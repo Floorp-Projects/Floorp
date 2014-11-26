@@ -215,6 +215,10 @@ struct VectorImpl<T, N, AP, ThisVector, true>
   }
 };
 
+// A struct for TestVector.cpp to access private internal fields.
+// DO NOT DEFINE IN YOUR OWN CODE.
+struct VectorTesting;
+
 } // namespace detail
 
 /*
@@ -232,6 +236,8 @@ class VectorBase : private AllocPolicy
   static const bool kElemIsPod = IsPod<T>::value;
   typedef detail::VectorImpl<T, N, AllocPolicy, ThisVector, kElemIsPod> Impl;
   friend struct detail::VectorImpl<T, N, AllocPolicy, ThisVector, kElemIsPod>;
+
+  friend struct detail::VectorTesting;
 
   bool growStorageBy(size_t aIncr);
   bool convertToHeapStorage(size_t aNewCap);
@@ -327,10 +333,17 @@ class VectorBase : private AllocPolicy
   }
 
 #ifdef DEBUG
+  /**
+   * The amount of explicitly allocated space in this vector that is immediately
+   * available to be filled by appending additional elements.  This value is
+   * always greater than or equal to |length()| -- the vector's actual elements
+   * are implicitly reserved.  This value is always less than or equal to
+   * |capacity()|.  It may be explicitly increased using the |reserve()| method.
+   */
   size_t reserved() const
   {
-    MOZ_ASSERT(mReserved <= mCapacity);
     MOZ_ASSERT(mLength <= mReserved);
+    MOZ_ASSERT(mReserved <= mCapacity);
     return mReserved;
   }
 #endif
@@ -450,8 +463,12 @@ public:
   bool initCapacity(size_t aRequest);
 
   /**
-   * If reserve(length() + N) succeeds, the N next appends are guaranteed to
-   * succeed.
+   * If reserve(aRequest) succeeds and |aRequest >= length()|, then appending
+   * |aRequest - length()| elements, in any sequence of append/appendAll calls,
+   * is guaranteed to succeed.
+   *
+   * A request to reserve an amount less than the current length does not affect
+   * reserved space.
    */
   bool reserve(size_t aRequest);
 
@@ -622,7 +639,7 @@ VectorBase<T, N, AP, TV>::VectorBase(AP aAP)
   , mLength(0)
   , mCapacity(kInlineCapacity)
 #ifdef DEBUG
-  , mReserved(kInlineCapacity)
+  , mReserved(0)
   , mEntered(false)
 #endif
 {
@@ -662,7 +679,7 @@ VectorBase<T, N, AllocPolicy, TV>::VectorBase(TV&& aRhs)
     aRhs.mCapacity = kInlineCapacity;
     aRhs.mLength = 0;
 #ifdef DEBUG
-    aRhs.mReserved = kInlineCapacity;
+    aRhs.mReserved = 0;
 #endif
   }
 }
@@ -941,7 +958,7 @@ VectorBase<T, N, AP, TV>::clearAndFree()
   mBegin = static_cast<T*>(mStorage.addr());
   mCapacity = kInlineCapacity;
 #ifdef DEBUG
-  mReserved = kInlineCapacity;
+  mReserved = 0;
 #endif
 }
 
@@ -1155,7 +1172,7 @@ VectorBase<T, N, AP, TV>::extractRawBuffer()
     mLength = 0;
     mCapacity = kInlineCapacity;
 #ifdef DEBUG
-    mReserved = kInlineCapacity;
+    mReserved = 0;
 #endif
   }
   return ret;
