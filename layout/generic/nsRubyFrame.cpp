@@ -187,6 +187,20 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
   aData->currentLine += sum;
 }
 
+/* virtual */ LogicalSize
+nsRubyFrame::ComputeSize(nsRenderingContext *aRenderingContext,
+                           WritingMode aWM,
+                           const LogicalSize& aCBSize,
+                           nscoord aAvailableISize,
+                           const LogicalSize& aMargin,
+                           const LogicalSize& aBorder,
+                           const LogicalSize& aPadding,
+                           ComputeSizeFlags aFlags)
+{
+  // Ruby frame is inline, hence don't compute size before reflow.
+  return LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+}
+
 /* virtual */ nscoord
 nsRubyFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
