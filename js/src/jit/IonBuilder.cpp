@@ -9080,18 +9080,21 @@ IonBuilder::freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, P
     }
 }
 
-inline MDefinition *
+inline bool
 IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
                                    bool isGetter, JSObject *foundProto, Shape *lastProperty,
-                                   Shape *globalShape/* = nullptr*/)
+                                   MDefinition **guard,
+                                   Shape *globalShape/* = nullptr*/,
+                                   MDefinition **globalGuard/* = nullptr */)
 {
+    MOZ_ASSERT_IF(globalShape, globalGuard);
     bool guardGlobal;
 
     // Check if all objects being accessed will lookup the name through foundProto.
     if (!objectsHaveCommonPrototype(types, name, isGetter, foundProto, &guardGlobal) ||
         (guardGlobal && !globalShape))
     {
-        return nullptr;
+        return false;
     }
 
     // We can optimize the getter/setter, so freeze all involved properties to
@@ -9102,16 +9105,19 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
     // Add a shape guard on the prototype we found the property on. The rest of
     // the prototype chain is guarded by TI freezes, except when name is a global
     // name. In this case, we also have to guard on the globals shape to be able
-    // to optimize. Note that a shape guard is good enough here, even in the proxy
-    // case, because we have ensured there are no lookup hooks for this property.
+    // to optimize, because the way global property sets are handled means
+    // freezing doesn't work for what we want here. Note that a shape guard is
+    // good enough here, even in the proxy case, because we have ensured there
+    // are no lookup hooks for this property.
     if (guardGlobal) {
         JSObject *obj = &script()->global();
         MDefinition *globalObj = constant(ObjectValue(*obj));
-        addShapeGuard(globalObj, globalShape, Bailout_ShapeGuard);
+        *globalGuard = addShapeGuard(globalObj, globalShape, Bailout_ShapeGuard);
     }
 
     MInstruction *wrapper = constant(ObjectValue(*foundProto));
-    return addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
+    *guard = addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
+    return true;
 }
 
 void
@@ -9669,9 +9675,13 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
         return true;
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    MDefinition *guard = testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
-                                                foundProto, lastProperty, globalShape);
-    if (!guard)
+    MDefinition *guard = nullptr;
+    MDefinition *globalGuard = nullptr;
+    bool canUseCommonGetter =
+        testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
+                               foundProto, lastProperty, &guard, globalShape,
+                               &globalGuard);
+    if (!canUseCommonGetter)
         return true;
 
     bool isDOM = objTypes->isDOMClass();
@@ -10120,9 +10130,11 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
         return true;
 
     types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
-    MDefinition *guard = testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
-                                                foundProto, lastProperty);
-    if (!guard)
+    MDefinition *guard = nullptr;
+    bool canUseCommonSetter =
+        testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
+                               foundProto, lastProperty, &guard);
+    if (!canUseCommonSetter)
         return true;
 
     bool isDOM = objTypes->isDOMClass();
