@@ -2308,39 +2308,6 @@ JS_GetConstructor(JSContext *cx, HandleObject proto)
     return &cval.toObject();
 }
 
-namespace {
-
-class AutoCompartmentRooter : private JS::CustomAutoRooter
-{
-  public:
-    explicit AutoCompartmentRooter(JSContext *cx, JSCompartment *comp
-                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : CustomAutoRooter(cx), compartment(comp)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    operator JSCompartment *() {
-        return compartment;
-    }
-
-    JSCompartment *operator->() {
-        return compartment;
-    }
-
-  protected:
-    virtual void trace(JSTracer *trc)
-    {
-        compartment->mark();
-    }
-
-  private:
-    JSCompartment *compartment;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
-} /* anonymous namespace */
-
 bool
 JS::CompartmentOptions::extraWarnings(JSRuntime *rt) const
 {
@@ -2392,42 +2359,8 @@ JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
-    MOZ_ASSERT(!cx->isExceptionPending());
 
-    JSRuntime *rt = cx->runtime();
-
-    Zone *zone;
-    if (options.zoneSpecifier() == JS::SystemZone)
-        zone = rt->gc.systemZone;
-    else if (options.zoneSpecifier() == JS::FreshZone)
-        zone = nullptr;
-    else
-        zone = static_cast<Zone *>(options.zonePointer());
-
-    AutoCompartmentRooter compartment(cx, NewCompartment(cx, zone, principals, options));
-    if (!compartment)
-        return nullptr;
-
-    // Lazily create the system zone.
-    if (!rt->gc.systemZone && options.zoneSpecifier() == JS::SystemZone) {
-        rt->gc.systemZone = compartment->zone();
-        rt->gc.systemZone->isSystem = true;
-    }
-
-    Rooted<GlobalObject *> global(cx);
-    {
-        AutoCompartment ac(cx, compartment);
-        global = GlobalObject::create(cx, Valueify(clasp));
-    }
-
-    if (!global)
-        return nullptr;
-
-    if (hookOption == JS::FireOnNewGlobalHook)
-        JS_FireOnNewGlobalObject(cx, global);
-
-    return global;
+    return GlobalObject::new_(cx, Valueify(clasp), principals, hookOption, options);
 }
 
 JS_PUBLIC_API(void)
