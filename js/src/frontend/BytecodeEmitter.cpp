@@ -1522,6 +1522,10 @@ StrictifySetNameOp(JSOp op, BytecodeEmitter *bce)
         if (bce->sc->strict)
             op = JSOP_STRICTSETNAME;
         break;
+      case JSOP_SETGNAME:
+        if (bce->sc->strict)
+            op = JSOP_STRICTSETGNAME;
+        break;
         default:;
     }
     return op;
@@ -1658,7 +1662,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
     JSOp op;
     switch (pn->getOp()) {
       case JSOP_NAME:     op = JSOP_GETGNAME; break;
-      case JSOP_SETNAME:  op = JSOP_SETGNAME; break;
+      case JSOP_SETNAME:  op = StrictifySetNameOp(JSOP_SETGNAME, bce); break;
       case JSOP_SETCONST:
         // Not supported.
         return false;
@@ -3351,6 +3355,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
               case JSOP_SETNAME:
               case JSOP_STRICTSETNAME:
               case JSOP_SETGNAME:
+              case JSOP_STRICTSETGNAME:
               case JSOP_SETCONST: {
                 // This is like ordinary assignment, but with one difference.
                 //
@@ -3367,7 +3372,8 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
                     return false;
 
                 if (!pn->isOp(JSOP_SETCONST)) {
-                    JSOp bindOp = pn->isOp(JSOP_SETGNAME) ? JSOP_BINDGNAME : JSOP_BINDNAME;
+                    bool global = pn->isOp(JSOP_SETGNAME) || pn->isOp(JSOP_STRICTSETGNAME);
+                    JSOp bindOp = global ? JSOP_BINDGNAME : JSOP_BINDNAME;
                     if (!EmitIndex32(cx, bindOp, atomIndex, bce))
                         return false;
                     if (Emit1(cx, bce, JSOP_SWAP) < 0)
@@ -3893,12 +3899,17 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
 
         if (pn3) {
             MOZ_ASSERT(emitOption != DefineVars);
-            if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME || op == JSOP_SETGNAME || op == JSOP_SETINTRINSIC) {
+            if (op == JSOP_SETNAME ||
+                op == JSOP_STRICTSETNAME ||
+                op == JSOP_SETGNAME ||
+                op == JSOP_STRICTSETGNAME ||
+                op == JSOP_SETINTRINSIC)
+            {
                 MOZ_ASSERT(emitOption != PushInitialValues);
                 JSOp bindOp;
                 if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
                     bindOp = JSOP_BINDNAME;
-                else if (op == JSOP_SETGNAME)
+                else if (op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
                     bindOp = JSOP_BINDGNAME;
                 else
                     bindOp = JSOP_BINDINTRINSIC;
@@ -3974,7 +3985,7 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
                 JSOp bindOp;
                 if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME))
                     bindOp = JSOP_BINDNAME;
-                else if (lhs->isOp(JSOP_SETGNAME))
+                else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME))
                     bindOp = JSOP_BINDGNAME;
                 else
                     bindOp = JSOP_BINDINTRINSIC;
@@ -4034,7 +4045,7 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
                     return false;
                 if (!EmitIndex32(cx, JSOP_GETXPROP, atomIndex, bce))
                     return false;
-            } else if (lhs->isOp(JSOP_SETGNAME)) {
+            } else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME)) {
                 MOZ_ASSERT(lhs->pn_cookie.isFree());
                 if (!EmitAtomOp(cx, lhs, JSOP_GETGNAME, bce))
                     return false;
@@ -6311,6 +6322,7 @@ EmitIncOrDec(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
           case JSOP_SETNAME:
           case JSOP_STRICTSETNAME:
           case JSOP_SETGNAME:
+          case JSOP_STRICTSETGNAME:
             maySet = true;
             break;
           default:
