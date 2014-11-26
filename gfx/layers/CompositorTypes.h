@@ -133,20 +133,16 @@ MOZ_END_ENUM_CLASS(EffectTypes)
  * How the Compositable should manage textures.
  */
 MOZ_BEGIN_ENUM_CLASS(CompositableType, uint8_t)
-  BUFFER_UNKNOWN,
-  // the deprecated compositable types
-  BUFFER_CONTENT_INC,     // painted layer interface, only sends incremental
-                          // updates to a texture on the compositor side.
-  // somewhere in the middle
-  BUFFER_TILED,           // tiled painted layer
-  BUFFER_SIMPLE_TILED,
-  // the new compositable types
+  UNKNOWN,
+  CONTENT_INC,     // painted layer interface, only sends incremental
+                   // updates to a texture on the compositor side.
+  CONTENT_TILED,   // tiled painted layer
   IMAGE,           // image with single buffering
   IMAGE_OVERLAY,   // image without buffer
   IMAGE_BRIDGE,    // ImageBridge protocol
   CONTENT_SINGLE,  // painted layer interface, single buffering
   CONTENT_DOUBLE,  // painted layer interface, double buffering
-  BUFFER_COUNT
+  COUNT
 MOZ_END_ENUM_CLASS(CompositableType)
 
 /**
@@ -219,7 +215,7 @@ struct TextureInfo
   TextureFlags mTextureFlags;
 
   TextureInfo()
-    : mCompositableType(CompositableType::BUFFER_UNKNOWN)
+    : mCompositableType(CompositableType::UNKNOWN)
     , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
     , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
