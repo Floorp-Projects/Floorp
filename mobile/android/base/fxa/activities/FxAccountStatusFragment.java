@@ -77,7 +77,6 @@ public class FxAccountStatusFragment
   protected Preference needsVerificationPreference;
   protected Preference needsMasterSyncAutomaticallyEnabledPreference;
   protected Preference needsAccountEnabledPreference;
-  protected Preference needsFinishMigratingPreference;
 
   protected PreferenceCategory syncCategory;
 
@@ -139,7 +138,6 @@ public class FxAccountStatusFragment
     needsVerificationPreference = ensureFindPreference("needs_verification");
     needsMasterSyncAutomaticallyEnabledPreference = ensureFindPreference("needs_master_sync_automatically_enabled");
     needsAccountEnabledPreference = ensureFindPreference("needs_account_enabled");
-    needsFinishMigratingPreference = ensureFindPreference("needs_finish_migrating");
 
     syncCategory = (PreferenceCategory) ensureFindPreference("sync_category");
 
@@ -159,7 +157,6 @@ public class FxAccountStatusFragment
     needsPasswordPreference.setOnPreferenceClickListener(this);
     needsVerificationPreference.setOnPreferenceClickListener(this);
     needsAccountEnabledPreference.setOnPreferenceClickListener(this);
-    needsFinishMigratingPreference.setOnPreferenceClickListener(this);
 
     bookmarksPreference.setOnPreferenceClickListener(this);
     historyPreference.setOnPreferenceClickListener(this);
@@ -195,20 +192,6 @@ public class FxAccountStatusFragment
   public boolean onPreferenceClick(Preference preference) {
     if (preference == needsPasswordPreference) {
       Intent intent = new Intent(getActivity(), FxAccountUpdateCredentialsActivity.class);
-      final Bundle extras = getExtrasForAccount();
-      if (extras != null) {
-        intent.putExtras(extras);
-      }
-      // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
-      // the soft keyboard not being shown for the started activity. Why, Android, why?
-      intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-      startActivity(intent);
-
-      return true;
-    }
-
-    if (preference == needsFinishMigratingPreference) {
-      final Intent intent = new Intent(getActivity(), FxAccountFinishMigratingActivity.class);
       final Bundle extras = getExtrasForAccount();
       if (extras != null) {
         intent.putExtras(extras);
@@ -297,7 +280,6 @@ public class FxAccountStatusFragment
         this.needsVerificationPreference,
         this.needsMasterSyncAutomaticallyEnabledPreference,
         this.needsAccountEnabledPreference,
-        this.needsFinishMigratingPreference,
     };
     for (Preference errorPreference : errorPreferences) {
       final boolean currentlyShown = null != findPreference(errorPreference.getKey());
@@ -340,12 +322,6 @@ public class FxAccountStatusFragment
   protected void showNeedsAccountEnabled() {
     syncCategory.setTitle(R.string.fxaccount_status_sync);
     showOnlyOneErrorPreference(needsAccountEnabledPreference);
-    setCheckboxesEnabled(false);
-  }
-
-  protected void showNeedsFinishMigrating() {
-    syncCategory.setTitle(R.string.fxaccount_status_sync);
-    showOnlyOneErrorPreference(needsFinishMigratingPreference);
     setCheckboxesEnabled(false);
   }
 
@@ -488,12 +464,8 @@ public class FxAccountStatusFragment
       case NeedsVerification:
         showNeedsVerification();
         break;
-      case NeedsFinishMigrating:
-        showNeedsFinishMigrating();
-        break;
-      case None:
+      default:
         showConnected();
-        break;
       }
 
       // We check for the master setting last, since it is not strictly
@@ -731,11 +703,6 @@ public class FxAccountStatusFragment
         State state = fxAccount.getState();
         fxAccount.setState(state.makeDoghouseState());
         refresh();
-      } else if ("debug_migrated_from_sync11".equals(key)) {
-        Logger.info(LOG_TAG, "Moving to MigratedFromSync11 state: Requiring password.");
-        State state = fxAccount.getState();
-        fxAccount.setState(state.makeMigratedFromSync11State(null));
-        refresh();
       } else {
         return false;
       }
@@ -762,8 +729,7 @@ public class FxAccountStatusFragment
         "debug_force_sync",
         "debug_forget_certificate",
         "debug_require_password",
-        "debug_require_upgrade",
-        "debug_migrated_from_sync11" };
+        "debug_require_upgrade" };
     for (String debugKey : debugKeys) {
       final Preference button = ensureFindPreference(debugKey);
       button.setTitle(debugKey); // Not very friendly, but this is for debugging only!
