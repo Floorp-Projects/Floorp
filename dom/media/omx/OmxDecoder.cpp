@@ -574,12 +574,16 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
     while (findNextBuffer) {
       options.setSeekTo(aTimeUs, seekMode);
       findNextBuffer = false;
-      err = mVideoSource->read(&mVideoBuffer, &options);
-      {
+      if (mIsVideoSeeking) {
+        err = mVideoSource->read(&mVideoBuffer, &options);
         Mutex::Autolock autoLock(mSeekLock);
         mIsVideoSeeking = false;
         PostReleaseVideoBuffer(nullptr, FenceHandle());
       }
+      else {
+	err = mVideoSource->read(&mVideoBuffer);
+      }
+
       // If there is no next Keyframe, jump to the previous key frame.
       if (err == ERROR_END_OF_STREAM && seekMode == MediaSource::ReadOptions::SEEK_NEXT_SYNC) {
         seekMode = MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC;
@@ -593,13 +597,11 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
         ALOG("Unexpected error when seeking to %lld", aTimeUs);
         break;
       }
+      // For some codecs, the length of first decoded frame after seek is 0.
+      // Need to ignore it and continue to find the next one
       if (mVideoBuffer->range_length() == 0) {
         ReleaseVideoBuffer();
         findNextBuffer = true;
-        {
-          Mutex::Autolock autoLock(mSeekLock);
-          mIsVideoSeeking = true;
-        }
       }
     }
     aDoSeek = false;
