@@ -176,17 +176,23 @@ var commandsPeerConnection = [
       test.createOffer(test.pcLocal, function (offer) {
         is(test.pcLocal.signalingState, STABLE,
            "Local create offer does not change signaling state");
-        if (test.steeplechase) {
-          send_message({"type": "offer",
-                        "offer": test.originalOffer,
-                        "offer_constraints": test.pcLocal.constraints,
-                        "offer_options": test.pcLocal.offerOptions});
-          test._local_offer = test.originalOffer;
-          test._offer_constraints = test.pcLocal.constraints;
-          test._offer_options = test.pcLocal.offerOptions;
-        }
         test.next();
       });
+    }
+  ],
+  [
+    'PC_LOCAL_STEEPLECHASE_SIGNAL_OFFER',
+    function (test) {
+      if (test.steeplechase) {
+        send_message({"type": "offer",
+          "offer": test.originalOffer,
+          "offer_constraints": test.pcLocal.constraints,
+          "offer_options": test.pcLocal.offerOptions});
+        test._local_offer = test.originalOffer;
+        test._offer_constraints = test.pcLocal.constraints;
+        test._offer_options = test.pcLocal.offerOptions;
+      }
+      test.next();
     }
   ],
   [
@@ -835,17 +841,23 @@ var commandsDataChannel = [
            "Local create offer does not change signaling state");
         ok(offer.sdp.contains("m=application"),
            "m=application is contained in the SDP");
-        if (test.steeplechase) {
-          send_message({"type": "offer",
-                        "offer": test.originalOffer,
-                        "offer_constraints": test.pcLocal.constraints,
-                        "offer_options": test.pcLocal.offerOptions});
-          test._local_offer = test.pcLocal._last_offer;
-          test._offer_constraints = test.pcLocal.constraints;
-          test._offer_options = test.pcLocal.offerOptions;
-        }
         test.next();
       });
+    }
+  ],
+  [
+    'PC_LOCAL_STEEPLECHASE_SIGNAL_OFFER',
+    function (test) {
+      if (test.steeplechase) {
+        send_message({"type": "offer",
+          "offer": test.originalOffer,
+          "offer_constraints": test.pcLocal.constraints,
+          "offer_options": test.pcLocal.offerOptions});
+        test._local_offer = test.originalOffer;
+        test._offer_constraints = test.pcLocal.constraints;
+        test._offer_options = test.pcLocal.offerOptions;
+      }
+      test.next();
     }
   ],
   [
