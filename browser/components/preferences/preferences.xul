@@ -67,7 +67,7 @@
               src="chrome://browser/content/preferences/main.xul"/>
     <prefpane id="paneTabs" label="&paneTabs.title;"
               src="chrome://browser/content/preferences/tabs.xul"/>
-    <prefpane id="paneSearch" label="Search"
+    <prefpane id="paneSearch" label="&paneSearch.title;"
               src="chrome://browser/content/preferences/search.xul"/>
     <prefpane id="paneContent" label="&paneContent.title;"
               src="chrome://browser/content/preferences/content.xul"/>
