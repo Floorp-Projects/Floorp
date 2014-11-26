@@ -2099,7 +2099,9 @@ class Mochitest(MochitestUtilsMixin):
     if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
       options.hideResultsTable = True
 
-    d = dict((k, v) for k, v in options.__dict__.iteritems() if not k.startswith('log'))
+    d = dict((k, v) for k, v in options.__dict__.items() if
+        (not k.startswith('log_') or
+         not any([k.endswith(fmt) for fmt in commandline.log_formatters.keys()])))
     d['testRoot'] = self.testRoot
     content = json.dumps(d)
 
