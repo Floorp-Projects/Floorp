@@ -71,6 +71,7 @@ yum install -y                      \
   unzip                             \
   uuid                              \
   xorg-x11-server-Xvfb              \
+  xorg-x11-server-utils             \
   tcl                               \
   tk                                \
   ;
@@ -129,6 +130,9 @@ rpm -ih $base_url/gcc473_0moz1-4.7.3-0moz1.x86_64.rpm
 # Remove cached packages. Cached package takes up a lot of space and
 # distributing them to workers is wasteful.
 yum clean all
+
+### Generate machine uuid file
+dbus-uuidgen --ensure=/etc/machine-id
 
 # Remove the setup.sh setup, we don't really need this script anymore, deleting
 # it keeps the image as clean as possible.
