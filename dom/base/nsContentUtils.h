@@ -1853,11 +1853,6 @@ public:
     return sIsResourceTimingEnabled;
   }
 
-  static bool ShouldEncodeURLHash()
-  {
-    return sEncodeURLHash;
-  }
-
   /**
    * Returns true if the doc tree branch which contains aDoc contains any
    * plugins which we don't control event dispatch for, i.e. do any plugins
@@ -2309,7 +2304,6 @@ private:
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
   static bool sIsExperimentalAutocompleteEnabled;
-  static bool sEncodeURLHash;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;
