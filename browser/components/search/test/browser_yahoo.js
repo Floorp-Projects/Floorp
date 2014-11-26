@@ -13,7 +13,7 @@ function test() {
   let engine = Services.search.getEngineByName("Yahoo");
   ok(engine, "Yahoo");
 
-  let base = "https://search.yahoo.com/search?p=foo&ei=UTF-8&fr=moz35";
+  let base = "https://search.yahoo.com/yhs/search?p=foo&ei=UTF-8&hspart=mozilla&hsimp=yhs-001";
   let url;
 
   // Test search URLs (including purposes).
@@ -61,7 +61,7 @@ function test() {
         {
           type: "text/html",
           method: "GET",
-          template: "https://search.yahoo.com/search",
+          template: "https://search.yahoo.com/yhs/search",
           params: [
             {
               name: "p",
@@ -74,8 +74,13 @@ function test() {
               purpose: undefined,
             },
             {
-              name: "fr",
-              value: "moz35",
+              name: "hspart",
+              value: "mozilla",
+              purpose: undefined,
+            },
+            {
+              name: "hsimp",
+              value: "yhs-001",
               purpose: undefined,
             },
           ],
