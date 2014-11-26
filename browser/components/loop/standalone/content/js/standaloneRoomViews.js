@@ -19,7 +19,18 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   var StandaloneRoomInfoArea = React.createClass({displayName: 'StandaloneRoomInfoArea',
     propTypes: {
-      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired
+      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired,
+      activeRoomStore:
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
+      feedbackStore:
+        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired
+    },
+
+    onFeedbackSent: function() {
+      // We pass a tick to prevent React warnings regarding nested updates.
+      setTimeout(function() {
+        this.props.activeRoomStore.dispatchAction(new sharedActions.ResetRoom());
+      }.bind(this));
     },
 
     _renderCallToActionLink: function() {
@@ -55,16 +66,17 @@ loop.standaloneRoomViews = (function(mozL10n) {
       }
     },
 
-    _renderContent: function() {
+    render: function() {
       switch(this.props.roomState) {
         case ROOM_STATES.INIT:
-        case ROOM_STATES.READY:
-        case ROOM_STATES.ENDED: {
+        case ROOM_STATES.READY: {
           // XXX: In ENDED state, we should rather display the feedback form.
           return (
-            React.DOM.button({className: "btn btn-join btn-info", 
-                    onClick: this.props.joinRoom}, 
-              mozL10n.get("rooms_room_join_label")
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.button({className: "btn btn-join btn-info", 
+                      onClick: this.props.joinRoom}, 
+                mozL10n.get("rooms_room_join_label")
+              )
             )
           );
         }
@@ -81,37 +93,46 @@ loop.standaloneRoomViews = (function(mozL10n) {
         case ROOM_STATES.JOINED:
         case ROOM_STATES.SESSION_CONNECTED: {
           return (
-            React.DOM.p({className: "empty-room-message"}, 
-              mozL10n.get("rooms_only_occupant_label")
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.p({className: "empty-room-message"}, 
+                mozL10n.get("rooms_only_occupant_label")
+              )
             )
           );
         }
-        case ROOM_STATES.FULL:
+        case ROOM_STATES.FULL: {
           return (
-            React.DOM.div(null, 
+            React.DOM.div({className: "room-inner-info-area"}, 
               React.DOM.p({className: "full-room-message"}, 
                 mozL10n.get("rooms_room_full_label")
               ), 
               React.DOM.p(null, this._renderCallToActionLink())
             )
           );
-        case ROOM_STATES.FAILED:
+        }
+        case ROOM_STATES.ENDED: {
           return (
-            React.DOM.p({className: "failed-room-message"}, 
-              this._getFailureString()
+            React.DOM.div({className: "ended-conversation"}, 
+              sharedViews.FeedbackView({
+                feedbackStore: this.props.feedbackStore, 
+                onAfterFeedbackReceived: this.onFeedbackSent}
+              )
             )
           );
-        default:
+        }
+        case ROOM_STATES.FAILED: {
+          return (
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.p({className: "failed-room-message"}, 
+                this._getFailureString()
+              )
+            )
+          );
+        }
+        default: {
           return null;
+        }
       }
-    },
-
-    render: function() {
-      return (
-        React.DOM.div({className: "room-inner-info-area"}, 
-          this._renderContent()
-        )
-      );
     }
   });
 
@@ -164,6 +185,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
     propTypes: {
       activeRoomStore:
         React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
+      feedbackStore:
+        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired
     },
@@ -326,7 +349,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
           StandaloneRoomInfoArea({roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 
                                   joinRoom: this.joinRoom, 
-                                  helper: this.props.helper}), 
+                                  helper: this.props.helper, 
+                                  activeRoomStore: this.props.activeRoomStore, 
+                                  feedbackStore: this.props.feedbackStore}), 
           React.DOM.div({className: "video-layout-wrapper"}, 
             React.DOM.div({className: "conversation room-conversation"}, 
               React.DOM.h2({className: "room-name"}, this.state.roomName), 
