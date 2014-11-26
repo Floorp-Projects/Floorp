@@ -29,12 +29,6 @@ enum NfcErrorMessage {
 [NoInterfaceObject]
 interface MozNFCManager {
   /**
-   * Returns MozNFCPeer object or null in case of invalid sessionToken
-   */
-   [CheckPermissions="nfc-manager"]
-  MozNFCPeer? getNFCPeer(DOMString sessionToken);
-
-  /**
    * API to check if the given application's manifest
    * URL is registered with the Chrome Process or not.
    *

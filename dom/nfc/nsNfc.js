@@ -332,23 +332,6 @@ MozNFCImpl.prototype = {
     return callback.promise;
   },
 
-  _createNFCPeer: function _createNFCPeer(sessionToken) {
-    let peer = new MozNFCPeerImpl(this._window, sessionToken);
-    return this._window.MozNFCPeer._create(this._window, peer);
-  },
-
-  getNFCPeer: function getNFCPeer(sessionToken) {
-    if (!sessionToken || !this._nfcContentHelper.checkSessionToken(sessionToken, true)) {
-      return null;
-    }
-
-    if (!this.nfcPeer || this.nfcPeer.session != sessionToken) {
-      this.nfcPeer = this._createNFCPeer(sessionToken);
-    }
-
-    return this.nfcPeer;
-  },
-
   defineEventHandlerGetterSetter: function defineEventHandlerGetterSetter(name) {
     Object.defineProperty(this, name, {
       get: function get() {
@@ -469,7 +452,8 @@ MozNFCImpl.prototype = {
     this.eventService.addSystemEventListener(this._window, "visibilitychange",
       this, /* useCapture */false);
 
-    this.nfcPeer = this._createNFCPeer(sessionToken);
+    let peerImpl = new MozNFCPeerImpl(this._window, sessionToken);
+    this.nfcPeer = this._window.MozNFCPeer._create(this._window, peerImpl)
     let eventData = { "peer": this.nfcPeer };
     let type = (isPeerReady) ? "peerready" : "peerfound";
 
