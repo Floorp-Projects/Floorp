@@ -6814,9 +6814,6 @@ var IdentityHandler = {
 
       return result;
     }
-    
-    // Otherwise, we don't know the cert owner
-    result.owner = Strings.browser.GetStringFromName("identity.ownerUnknown3");
 
     // Cache the override service the first time we need to check it
     if (!this._overrideService)
