@@ -167,9 +167,16 @@
 <string name="fxaccount_account_verified_sub_header">&fxaccount_account_verified_sub_header;</string>
 <string name="fxaccount_account_verified_description">&fxaccount_account_verified_description2;</string>
 
+<string name="fxaccount_migration_finished_header">&fxaccount_migration_finished_header;</string>
+<string name="fxaccount_migration_finished_description">&fxaccount_account_verified_description2;</string>
+
 <string name="fxaccount_update_credentials_header">&fxaccount_update_credentials_header;</string>
 <string name="fxaccount_update_credentials_button_label">&fxaccount_update_credentials_button_label;</string>
 <string name="fxaccount_update_credentials_unknown_error">&fxaccount_update_credentials_unknown_error;</string>
+
+<string name="fxaccount_finish_migrating_header">&fxaccount_finish_migrating_header;</string>
+<string name="fxaccount_finish_migrating_button_label">&fxaccount_finish_migrating_button_label;</string>
+<string name="fxaccount_finish_migrating_description">&fxaccount_finish_migrating_description;</string>
 
 <string name="fxaccount_status_activity_label">&syncBrand.shortName.label;</string>
 <string name="fxaccount_status_header">&fxaccount_status_header2;</string>
@@ -187,6 +194,7 @@
 <string name="fxaccount_status_needs_upgrade">&fxaccount_status_needs_upgrade;</string>
 <string name="fxaccount_status_needs_master_sync_automatically_enabled">&fxaccount_status_needs_master_sync_automatically_enabled;</string>
 <string name="fxaccount_status_needs_account_enabled">&fxaccount_status_needs_account_enabled;</string>
+<string name="fxaccount_status_needs_finish_migrating">&fxaccount_status_needs_finish_migrating;</string>
 <string name="fxaccount_status_bookmarks">&fxaccount_status_bookmarks;</string>
 <string name="fxaccount_status_history">&fxaccount_status_history;</string>
 <string name="fxaccount_status_passwords">&fxaccount_status_passwords;</string>
@@ -219,3 +227,6 @@
 <string name="fxaccount_remove_account_dialog_message">&fxaccount_remove_account_dialog_message;</string>
 <string name="fxaccount_remove_account_toast">&fxaccount_remove_account_toast;</string>
 <string name="fxaccount_remove_account_menu_item">&fxaccount_remove_account_menu_item;</string>
+
+<string name="fxaccount_sync_finish_migrating_notification_title">&fxaccount_sync_finish_migrating_notification_title;</string>
+<string name="fxaccount_sync_finish_migrating_notification_text">&fxaccount_sync_finish_migrating_notification_text;</string>
