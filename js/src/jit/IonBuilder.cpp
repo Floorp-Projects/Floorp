@@ -1762,6 +1762,7 @@ IonBuilder::inspectOpcode(JSOp op)
       }
 
       case JSOP_SETPROP:
+      case JSOP_STRICTSETPROP:
       case JSOP_SETNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
@@ -10064,7 +10065,9 @@ IonBuilder::jsop_setprop(PropertyName *name)
     // Always use a call if we are doing the definite properties analysis and
     // not actually emitting code, to simplify later analysis.
     if (info().executionModeIsAnalysis()) {
-        MInstruction *ins = MCallSetProperty::New(alloc(), obj, value, name, script()->strict());
+        // XXX: Dropped later in stack, but for now other ops rely on the old mechanic.
+        bool strict = IsStrictSetPC(pc) || script()->strict();
+        MInstruction *ins = MCallSetProperty::New(alloc(), obj, value, name, strict);
         current->add(ins);
         current->push(value);
         return resumeAfter(ins);
@@ -10445,8 +10448,10 @@ IonBuilder::setPropTryCache(bool *emitted, MDefinition *obj,
 {
     MOZ_ASSERT(*emitted == false);
 
+    // XXX Dropped later in stack, but while others rely on it, we must retain the check.
+    bool strict = IsStrictSetPC(pc) || script()->strict();
     // Emit SetPropertyCache.
-    MSetPropertyCache *ins = MSetPropertyCache::New(alloc(), obj, value, name, script()->strict(), barrier);
+    MSetPropertyCache *ins = MSetPropertyCache::New(alloc(), obj, value, name, strict, barrier);
 
     if (!objTypes || objTypes->propertyNeedsBarrier(constraints(), NameToId(name)))
         ins->setNeedsBarrier();

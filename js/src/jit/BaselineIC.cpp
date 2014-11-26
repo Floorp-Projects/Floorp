@@ -7896,6 +7896,7 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     FallbackICSpew(cx, stub, "SetProp(%s)", js_CodeName[op]);
 
     MOZ_ASSERT(op == JSOP_SETPROP ||
+               op == JSOP_STRICTSETPROP ||
                op == JSOP_SETNAME ||
                op == JSOP_SETGNAME ||
                op == JSOP_INITPROP ||
@@ -7945,8 +7946,8 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     } else if (op == JSOP_SETALIASEDVAR || op == JSOP_INITALIASEDLEXICAL) {
         obj->as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), name, rhs);
     } else {
-        MOZ_ASSERT(op == JSOP_SETPROP);
-        if (script->strict()) {
+        MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
+        if (op == JSOP_STRICTSETPROP) {
             if (!js::SetProperty<true>(cx, obj, id, rhs))
                 return false;
         } else {

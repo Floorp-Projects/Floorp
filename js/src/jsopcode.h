@@ -655,10 +655,18 @@ IsGetPropPC(jsbytecode *pc)
 }
 
 inline bool
+IsStrictSetPC(jsbytecode *pc)
+{
+    JSOp op = JSOp(*pc);
+    return op == JSOP_STRICTSETPROP;
+}
+
+inline bool
 IsSetPropPC(jsbytecode *pc)
 {
     JSOp op = JSOp(*pc);
-    return op == JSOP_SETPROP || op == JSOP_SETNAME || op == JSOP_SETGNAME;
+    return op == JSOP_SETPROP || op == JSOP_STRICTSETPROP ||
+           op == JSOP_SETNAME || op == JSOP_SETGNAME;
 }
 
 inline bool
