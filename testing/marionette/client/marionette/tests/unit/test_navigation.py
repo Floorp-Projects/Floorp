@@ -16,7 +16,8 @@ class TestNavigate(MarionetteTestCase):
 
     def test_navigate_chrome_error(self):
         with self.marionette.using_context("chrome"):
-            self.assertRaises(MarionetteException, self.marionette.navigate, "about:blank")
+            self.assertRaisesRegexp(MarionetteException, "Cannot navigate in chrome context",
+                                    self.marionette.navigate, "about:blank")
 
     def test_getUrl(self):
         test_html = self.marionette.absolute_url("test.html")
