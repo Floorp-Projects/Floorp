@@ -1,4 +1,4 @@
-FROM          quay.io/mozilla/base:0.0.4
+FROM          quay.io/mozilla/base:0.0.5
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 # Add utilities and configuration
