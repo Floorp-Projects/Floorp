@@ -401,7 +401,7 @@ public:
     , mHasBuffer(false)
     , mHasBufferOnWhite(false)
   {
-    mTextureInfo.mCompositableType = CompositableType::BUFFER_CONTENT_INC;
+    mTextureInfo.mCompositableType = CompositableType::CONTENT_INC;
   }
 
   typedef RotatedContentBuffer::PaintState PaintState;
