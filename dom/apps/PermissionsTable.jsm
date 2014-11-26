@@ -410,7 +410,7 @@ this.PermissionsTable =  { geolocation: {
                            "nfc": {
                              app: DENY_ACTION,
                              trusted: DENY_ACTION,
-                             privileged: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "nfc-share": {
