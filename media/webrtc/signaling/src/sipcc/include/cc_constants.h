@@ -549,7 +549,7 @@ typedef enum {
  *
  *   PeerConnectionImpl.h
  *   Peerconnection.js
- *   nsIDOMPeerConnection.idl
+ *   IPeerConnection.idl
  *
  * Yes, this is far from ideal, but there isn't an obviously cleaner
  * way to deal with the situation within the constraints imposed on us
@@ -558,13 +558,10 @@ typedef enum {
 
 typedef enum {
     PC_NO_ERROR                          = 0,
-    PC_INVALID_CONSTRAINTS_TYPE          = 1,
-    PC_INVALID_CANDIDATE_TYPE            = 2,
     PC_INVALID_MEDIASTREAM_TRACK         = 3,
     PC_INVALID_STATE                     = 4,
     PC_INVALID_SESSION_DESCRIPTION       = 5,
     PC_INCOMPATIBLE_SESSION_DESCRIPTION  = 6,
-    PC_INCOMPATIBLE_CONSTRAINTS          = 7,
     PC_INCOMPATIBLE_MEDIA_STREAM_TRACK   = 8,
     PC_INTERNAL_ERROR                    = 9
 } pc_error;
