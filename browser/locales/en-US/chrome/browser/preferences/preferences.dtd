@@ -15,6 +15,7 @@
 
 <!ENTITY  paneGeneral.title       "General">
 <!ENTITY  paneTabs.title          "Tabs">
+<!ENTITY  paneSearch.title        "Search">
 <!ENTITY  paneContent.title       "Content">
 <!ENTITY  paneApplications.title  "Applications">
 <!ENTITY  panePrivacy.title       "Privacy">
