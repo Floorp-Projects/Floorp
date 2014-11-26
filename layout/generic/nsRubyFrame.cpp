@@ -229,6 +229,9 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
     return;
   }
 
+  // Grab overflow frames from prev-in-flow and its own.
+  MoveOverflowToChildList();
+
   // Begin the span for the ruby frame
   WritingMode frameWM = aReflowState.GetWritingMode();
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
@@ -240,11 +243,28 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   aReflowState.mLineLayout->BeginSpan(this, &aReflowState,
                                       startEdge, endEdge, &mBaseline);
 
-  // FIXME: line breaking / continuations not yet implemented
   aStatus = NS_FRAME_COMPLETE;
   for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
     ReflowSegment(aPresContext, aReflowState, e.GetBaseContainer(), aStatus);
+
+    if (NS_INLINE_IS_BREAK(aStatus)) {
+      // A break occurs when reflowing the segment.
+      // Don't continue reflowing more segments.
+      break;
+    }
   }
+
+  ContinuationTraversingState pullState(this);
+  while (aStatus == NS_FRAME_COMPLETE) {
+    nsRubyBaseContainerFrame* baseContainer = PullOneSegment(pullState);
+    if (!baseContainer) {
+      // No more continuations after, finish now.
+      break;
+    }
+    ReflowSegment(aPresContext, aReflowState, baseContainer, aStatus);
+  }
+  // We never handle overflow in ruby.
+  MOZ_ASSERT(!NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus));
 
   aDesiredSize.ISize(lineWM) = aReflowState.mLineLayout->EndSpan(this);
   nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, aReflowState,
@@ -262,24 +282,100 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   LogicalSize availSize(lineWM, aReflowState.AvailableISize(),
                         aReflowState.AvailableBSize());
 
-  nsReflowStatus baseReflowStatus;
+  nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> textContainers;
+  for (TextContainerIterator iter(aBaseContainer); !iter.AtEnd(); iter.Next()) {
+    textContainers.AppendElement(iter.GetTextContainer());
+  }
+  const uint32_t rtcCount = textContainers.Length();
+
   nsHTMLReflowMetrics baseMetrics(aReflowState);
   bool pushedFrame;
-  aReflowState.mLineLayout->ReflowFrame(aBaseContainer, baseReflowStatus,
+  aReflowState.mLineLayout->ReflowFrame(aBaseContainer, aStatus,
                                         &baseMetrics, pushedFrame);
 
+  if (NS_INLINE_IS_BREAK_BEFORE(aStatus)) {
+    if (aBaseContainer != mFrames.FirstChild()) {
+      // Some segments may have been reflowed before, hence it is not
+      // a break-before for the ruby container.
+      aStatus = NS_INLINE_LINE_BREAK_AFTER(NS_FRAME_NOT_COMPLETE);
+      PushChildren(aBaseContainer, aBaseContainer->GetPrevSibling());
+      aReflowState.mLineLayout->SetDirtyNextLine();
+    }
+    // This base container is not placed at all, we can skip all
+    // text containers paired with it.
+    return;
+  }
+  if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+    // It always promise that if the status is incomplete, there is a
+    // break occurs. Break before has been processed above. However,
+    // it is possible that break after happens with the frame reflow
+    // completed. It happens if there is a force break at the end.
+    MOZ_ASSERT(NS_INLINE_IS_BREAK_AFTER(aStatus));
+    // Find the previous sibling which we will
+    // insert new continuations after.
+    nsIFrame* lastChild;
+    if (rtcCount > 0) {
+      lastChild = textContainers.LastElement();
+    } else {
+      lastChild = aBaseContainer;
+    }
+
+    // Create continuations for the base container
+    nsIFrame* newBaseContainer;
+    CreateNextInFlow(aBaseContainer, newBaseContainer);
+    // newBaseContainer is null if there are existing next-in-flows.
+    // We only need to move and push if there were not.
+    if (newBaseContainer) {
+      // Move the new frame after all the text containers
+      mFrames.RemoveFrame(newBaseContainer);
+      mFrames.InsertFrame(nullptr, lastChild, newBaseContainer);
+
+      // Create continuations for text containers
+      nsIFrame* newLastChild = newBaseContainer;
+      for (uint32_t i = 0; i < rtcCount; i++) {
+        nsIFrame* newTextContainer;
+        CreateNextInFlow(textContainers[i], newTextContainer);
+        MOZ_ASSERT(newTextContainer, "Next-in-flow of rtc should not exist "
+                   "if the corresponding rbc does not");
+        mFrames.RemoveFrame(newTextContainer);
+        mFrames.InsertFrame(nullptr, newLastChild, newTextContainer);
+        newLastChild = newTextContainer;
+      }
+      PushChildren(newBaseContainer, lastChild);
+      aReflowState.mLineLayout->SetDirtyNextLine();
+    }
+  } else {
+    // If the ruby base container is reflowed completely, the line
+    // layout will remove the next-in-flows of that frame. But the
+    // line layout is not aware of the ruby text containers, hence
+    // it is necessary to remove them here.
+    for (uint32_t i = 0; i < rtcCount; i++) {
+      nsIFrame* nextRTC = textContainers[i]->GetNextInFlow();
+      if (nextRTC) {
+        nextRTC->GetParent()->DeleteNextInFlowChild(nextRTC, true);
+      }
+    }
+  }
+
   nsRect baseRect = aBaseContainer->GetRect();
-  for (TextContainerIterator iter(aBaseContainer); !iter.AtEnd(); iter.Next()) {
-    nsRubyTextContainerFrame* textContainer = iter.GetTextContainer();
+  for (uint32_t i = 0; i < rtcCount; i++) {
+    nsRubyTextContainerFrame* textContainer = textContainers[i];
     nsReflowStatus textReflowStatus;
     nsHTMLReflowMetrics textMetrics(aReflowState);
     nsHTMLReflowState textReflowState(aPresContext, aReflowState,
                                       textContainer, availSize);
+    // FIXME We probably shouldn't be using the same nsLineLayout for
+    //       the text containers. But it should be fine now as we are
+    //       not actually using this line layout to reflow something,
+    //       but just read the writing mode from it.
     textReflowState.mLineLayout = aReflowState.mLineLayout;
     textContainer->Reflow(aPresContext, textMetrics,
                           textReflowState, textReflowStatus);
+    // Ruby text containers always return NS_FRAME_COMPLETE even when
+    // they have continuations, because the breaking has already been
+    // handled when reflowing the base containers.
     NS_ASSERTION(textReflowStatus == NS_FRAME_COMPLETE,
-                 "Ruby line breaking is not yet implemented");
+                 "Ruby text container must not break itself inside");
     textContainer->SetSize(LogicalSize(lineWM, textMetrics.ISize(lineWM),
                                        textMetrics.BSize(lineWM)));
     nscoord x, y;
@@ -294,4 +390,24 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     FinishReflowChild(textContainer, aPresContext, textMetrics,
                       &textReflowState, x, y, 0);
   }
+}
+
+nsRubyBaseContainerFrame*
+nsRubyFrame::PullOneSegment(ContinuationTraversingState& aState)
+{
+  // Pull a ruby base container
+  nsIFrame* baseFrame = PullNextInFlowChild(aState);
+  if (!baseFrame) {
+    return nullptr;
+  }
+  MOZ_ASSERT(baseFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
+
+  // Pull all ruby text containers following the base container
+  nsIFrame* nextFrame;
+  while ((nextFrame = GetNextInFlowChild(aState)) != nullptr &&
+         nextFrame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
+    PullNextInFlowChild(aState);
+  }
+
+  return static_cast<nsRubyBaseContainerFrame*>(baseFrame);
 }

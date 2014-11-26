@@ -14,6 +14,8 @@
 #include "nsRubyBaseFrame.h"
 #include "nsRubyTextFrame.h"
 
+#define RTC_ARRAY_SIZE 1
+
 /**
  * Factory function.
  * @return a newly allocated nsRubyBaseContainerFrame (infallible)
@@ -81,17 +83,27 @@ protected:
                       nsTArray<nsHTMLReflowState*>& aReflowStates,
                       nsReflowStatus& aStatus);
 
-  static nscoord ReflowOnePair(nsPresContext* aPresContext,
-                               const nsHTMLReflowState& aReflowState,
-                               nsTArray<nsHTMLReflowState*>& aReflowStates,
-                               nsIFrame* aBaseFrame,
-                               const nsTArray<nsIFrame*>& aTextFrames,
-                               nsReflowStatus& aStatus);
+  nscoord ReflowOnePair(nsPresContext* aPresContext,
+                        const nsHTMLReflowState& aReflowState,
+                        nsTArray<nsHTMLReflowState*>& aReflowStates,
+                        nsIFrame* aBaseFrame,
+                        const nsTArray<nsIFrame*>& aTextFrames,
+                        nsReflowStatus& aStatus);
 
   nscoord ReflowSpans(nsPresContext* aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsTArray<nsHTMLReflowState*>& aReflowStates,
                       nsReflowStatus& aStatus);
+
+  struct PullFrameState;
+
+  // Pull ruby base and corresponding ruby text frames from
+  // continuations after them.
+  void PullOnePair(nsLineLayout* aLineLayout,
+                   PullFrameState& aPullFrameState,
+                   nsIFrame*& aBaseFrame,
+                   nsTArray<nsIFrame*>& aTextFrames,
+                   bool& aIsComplete);
 
   /**
    * The arrays of ruby text containers below are filled before the ruby
@@ -106,6 +118,7 @@ protected:
   nsTArray<nsRubyTextContainerFrame*> mTextContainers;
 
   nscoord mBaseline;
+  uint32_t mPairCount;
 };
 
 #endif /* nsRubyBaseContainerFrame_h___ */

@@ -1517,6 +1517,59 @@ nsContainerFrame::DrainSelfOverflowList()
   return false;
 }
 
+nsIFrame*
+nsContainerFrame::GetNextInFlowChild(ContinuationTraversingState& aState,
+                                     bool* aIsInOverflow)
+{
+  nsContainerFrame*& nextInFlow = aState.mNextInFlow;
+  while (nextInFlow) {
+    // See if there is any frame in the container
+    nsIFrame* frame = nextInFlow->mFrames.FirstChild();
+    if (frame) {
+      if (aIsInOverflow) {
+        *aIsInOverflow = false;
+      }
+      return frame;
+    }
+    // No frames in the principal list, try its overflow list
+    nsFrameList* overflowFrames = nextInFlow->GetOverflowFrames();
+    if (overflowFrames) {
+      if (aIsInOverflow) {
+        *aIsInOverflow = true;
+      }
+      return overflowFrames->FirstChild();
+    }
+    nextInFlow = static_cast<nsContainerFrame*>(nextInFlow->GetNextInFlow());
+  }
+  return nullptr;
+}
+
+nsIFrame*
+nsContainerFrame::PullNextInFlowChild(ContinuationTraversingState& aState)
+{
+  bool isInOverflow;
+  nsIFrame* frame = GetNextInFlowChild(aState, &isInOverflow);
+  if (frame) {
+    nsContainerFrame* nextInFlow = aState.mNextInFlow;
+    if (isInOverflow) {
+      nsFrameList* overflowFrames = nextInFlow->GetOverflowFrames();
+      overflowFrames->RemoveFirstChild();
+      if (overflowFrames->IsEmpty()) {
+        nextInFlow->DestroyOverflowList();
+      }
+    } else {
+      nextInFlow->mFrames.RemoveFirstChild();
+    }
+
+    // Move the frame to the principal frame list of this container
+    mFrames.AppendFrame(this, frame);
+    // AppendFrame has reparented the frame, we need
+    // to reparent the frame view then.
+    nsContainerFrame::ReparentFrameView(frame, nextInFlow, this);
+  }
+  return frame;
+}
+
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(nsContainerFrame* aFrame,
                                                              bool              aWalkOOFFrames,
                                                              bool              aSkipOverflowContainerChildren)
