@@ -74,6 +74,13 @@ builds:
           debug: 0
           b2g-config: 'emulator-kk'
           build-type: Opt
+      debug:
+        task: tasks/builds/b2g_emulator.yml
+        additional-parameters:
+          debug: 1
+          b2g-config: 'emulator-kk'
+          build-type: Debug
+
 
 # Test section covers the -u options in the try flags
 tests:
