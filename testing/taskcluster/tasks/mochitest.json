@@ -1,0 +1,38 @@
+{
+  "workerType": "b2gtest",
+  "metadata": {
+    "owner": "jlal@mozilla.com",
+    "source": "http://todo.com/soon",
+    "name": "B2G Mochitests 1",
+    "description": "B2G Desktop Mochi test run 1"
+  },
+  "payload": {
+    "maxRunTime": 3600,
+    "artifacts": {
+      "public/build": {
+        "path": "/home/worker/artifacts/",
+        "expires": "2015-10-19T19:01:54.080641Z",
+        "type": "directory"
+      }
+    },
+    "image": "quay.io/mozilla/tester:0.0.2",
+    "command": [
+      "entrypoint",
+      "python ./mozharness/scripts/b2g_desktop_unittest.py --no-read-buildbot-config --config-file /home/worker/b2g-desktop-config.py --installer-url https://queue.taskcluster.net/v1/task/wFJY0lENTHibWYQJNzHcsw/runs/0/artifacts/public/build/target.linux-x86_64.tar.bz2 --test-url https://queue.taskcluster.net/v1/task/wFJY0lENTHibWYQJNzHcsw/runs/0/artifacts/public/build/target.tests.zip --download-symbols ondemand --test-suite mochitest --total-chunk=1 --this-chunk=1\n"
+    ]
+  },
+  "provisionerId": "aws-provisioner",
+  "extra": {
+    "treeherder": {
+      "symbol": "B"
+    }
+  },
+  "created": "2014-10-20T02:01:54.095Z",
+  "deadline": "2014-10-21T02:01:54.095Z",
+  "schedulerId": "task-graph-scheduler",
+  "taskGroupId": "ley4JgmQTSaFLr-lfH9O3w",
+  "routes": [],
+  "retries": 5,
+  "scopes": [],
+  "tags": {}
+}
