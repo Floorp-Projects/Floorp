@@ -8,6 +8,7 @@
 #include "nsDebug.h"
 #include "NfcGonkMessage.h"
 #include "NfcOptions.h"
+#include "mozilla/unused.h"
 
 #include <android/log.h>
 #define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "NfcMessageHandler", args)
@@ -74,7 +75,7 @@ bool
 NfcMessageHandler::Unmarshall(const Parcel& aParcel, EventOptions& aOptions)
 {
   bool result;
-  uint32_t parcelSize = htonl(aParcel.readInt32());
+  mozilla::unused << htonl(aParcel.readInt32());  // parcel size
   int32_t type = aParcel.readInt32();
 
   switch (type) {

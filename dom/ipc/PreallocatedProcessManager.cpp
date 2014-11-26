@@ -292,7 +292,7 @@ PreallocatedProcessManagerImpl::PublishSpareProcess(ContentParent* aContent)
     AutoJSContext cx;
     nsCOMPtr<nsIMessageBroadcaster> ppmm =
       do_GetService("@mozilla.org/parentprocessmessagemanager;1");
-    nsresult rv = ppmm->BroadcastAsyncMessage(
+    mozilla::unused << ppmm->BroadcastAsyncMessage(
       NS_LITERAL_STRING("TEST-ONLY:nuwa-add-new-process"),
       JS::NullHandleValue, JS::NullHandleValue, cx, 1);
   }
@@ -355,7 +355,7 @@ PreallocatedProcessManagerImpl::PreallocatedProcessReady()
 void
 PreallocatedProcessManagerImpl::NuwaFork()
 {
-  mPreallocatedAppProcess->SendNuwaFork();
+  mozilla::unused << mPreallocatedAppProcess->SendNuwaFork();
 }
 #endif
 
