@@ -235,6 +235,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
      */
     MOZ_ASSERT_IF(evalCaller, options.compileAndGo);
     MOZ_ASSERT_IF(evalCaller, options.forEval);
+    MOZ_ASSERT_IF(evalCaller && evalCaller->strict(), options.strictOption);
     MOZ_ASSERT_IF(staticLevel != 0, evalCaller);
 
     if (!CheckLength(cx, srcBuf))
@@ -314,10 +315,6 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (!pc->init(parser.tokenStream))
         return nullptr;
 
-    /* If this is a direct call to eval, inherit the caller's strictness.  */
-    if (evalCaller && evalCaller->strict())
-        globalsc.strict = true;
-
     if (savedCallerFun) {
         /*
          * An eval script in a caller frame needs to have its enclosing
@@ -325,7 +322,8 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
          * wishes to decompile it while it's running.
          */
         JSFunction *fun = evalCaller->functionOrCallerFunction();
-        Directives directives(/* strict = */ fun->strict());
+        MOZ_ASSERT_IF(fun->strict(), options.strictOption);
+        Directives directives(/* strict = */ options.strictOption);
         ObjectBox *funbox = parser.newFunctionBox(/* fn = */ nullptr, fun, pc.ptr(),
                                                   directives, fun->generatorKind());
         if (!funbox)
