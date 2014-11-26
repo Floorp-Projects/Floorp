@@ -259,7 +259,7 @@ function test_http2_header() {
 // Test to make sure cookies are split into separate fields before compression
 function test_http2_cookie_crumbling() {
   var chan = makeChan("https://localhost:6944/cookie_crumbling");
-  var cookiesSent = ['a=b', 'c=d', 'e=f'].sort();
+  var cookiesSent = ['a=b', 'c=d01234567890123456789', 'e=f'].sort();
   chan.setRequestHeader("Cookie", cookiesSent.join('; '), false);
   var listener = new Http2HeaderListener("X-Received-Header-Pairs", function(pairsReceived) {
     var cookiesReceived = JSON.parse(pairsReceived).filter(function(pair) {
