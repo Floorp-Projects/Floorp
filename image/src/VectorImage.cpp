@@ -337,7 +337,7 @@ VectorImage::VectorImage(ProgressTracker* aProgressTracker,
 VectorImage::~VectorImage()
 {
   CancelAllListeners();
-  SurfaceCache::Discard(this);
+  SurfaceCache::RemoveImage(ImageKey(this));
 }
 
 //------------------------------------------------------------------------------
@@ -565,7 +565,7 @@ VectorImage::SendInvalidationNotifications()
   // notifications directly in |InvalidateObservers...|.
 
   if (mProgressTracker) {
-    SurfaceCache::Discard(this);
+    SurfaceCache::RemoveImage(ImageKey(this));
     mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
                                          nsIntRect::GetMaxSizedIntRect());
   }
@@ -903,7 +903,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   SurfaceCache::Insert(frame, ImageKey(this),
                        VectorSurfaceKey(aParams.size,
                                         aParams.svgContext,
-                                        aParams.animationTime));
+                                        aParams.animationTime),
+                       Lifetime::Transient);
 
   // Draw.
   nsRefPtr<gfxDrawable> drawable =
@@ -971,7 +972,7 @@ VectorImage::UnlockImage()
 NS_IMETHODIMP
 VectorImage::RequestDiscard()
 {
-  SurfaceCache::Discard(this);
+  SurfaceCache::RemoveImage(ImageKey(this));
   return NS_OK;
 }
 
