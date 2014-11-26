@@ -2,7 +2,7 @@
 
 ################################### build.sh ###################################
 
-build-setup.sh
+. build-setup.sh
 
 ### Check that require variables are defined
 test $REPOSITORY  # Should be an hg repository url to pull from
@@ -10,18 +10,19 @@ test $REVISION    # Should be an hg revision to pull down
 test $MOZCONFIG   # Should be a mozconfig file from mozconfig/ folder
 
 ### Pull and update mozilla-central
-cd /home/worker/mozilla-central/source;
+cd $gecko_dir
 hg pull -r $REVISION $REPOSITORY;
 hg update $REVISION;
 
 ### Pull and update gaia
-cd /home/worker/gaia/source;
+cd $gaia_dir
 GAIA_REV=$(get_gaia_revision.js)
 GAIA_REPO="https://hg.mozilla.org$(get_gaia_repo.js)"
 hg pull -r $GAIA_REV $GAIA_REPO;
 hg update $GAIA_REV;
 
-cd /home/worker/mozilla-central/source;
+cd $gecko_dir
+
 ./mach build;
 
 ### Make package
