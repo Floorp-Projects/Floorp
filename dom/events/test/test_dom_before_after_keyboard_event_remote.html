@@ -35,7 +35,8 @@ var testsForEventOrder = [
     doPreventDefaultAt: kUnknownEvent
   },
   {
-    description: "Testing the order of the events (OOP), calling preventDefault() at \"mozbrowserbeforekeydown\" event",
+    description: "Testing the order of the events (OOP), calling " +
+                 "preventDefault() at \"mozbrowserbeforekeydown\" event",
     expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
                         kParent | kAfterEvent | kKeyDownEvent ],
                       [ kParent | kBeforeEvent | kKeyUpEvent,
@@ -47,7 +48,8 @@ var testsForEventOrder = [
     doPreventDefaultAt: kParent | kBeforeEvent | kKeyDownEvent
   },
   {
-    description: "Testing the order of the events (OOP), calling preventDefault() at \"mozbrowserbeforekeyup\" event",
+    description: "Testing the order of the events (OOP), calling " +
+                 "preventDefault() at \"mozbrowserbeforekeyup\" event",
     expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
                         kParent | kKeyDownEvent,
                         kChild | kKeyDownEvent,
@@ -58,9 +60,23 @@ var testsForEventOrder = [
     classifiedEvents: [ [], [] ],
     doPreventDefaultAt: kParent | kBeforeEvent | kKeyUpEvent
   },
-
   {
-    description: "Testing the order of the events (OOP), calling preventDefault() at \"keydown\" event",
+    description: "Testing the order of the events (OOP), calling " +
+                 "preventDefault() at \"keydown\" event in parent process",
+    expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
+                        kParent | kKeyDownEvent,
+                        kParent | kAfterEvent | kKeyDownEvent ],
+                      [ kParent | kBeforeEvent | kKeyUpEvent,
+                        kParent | kKeyUpEvent,
+                        kChild | kKeyUpEvent,
+                        kParent | kAfterEvent | kKeyUpEvent ] ],
+    resultEvents: [],
+    classifiedEvents: [ [], [] ],
+    doPreventDefaultAt: kParent | kKeyDownEvent
+  },
+  {
+    description: "Testing the order of the events (OOP), calling " +
+                 "preventDefault() at \"keydown\" event in child process",
     expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
                         kParent | kKeyDownEvent,
                         kChild | kKeyDownEvent,
@@ -74,7 +90,22 @@ var testsForEventOrder = [
     doPreventDefaultAt: kChild | kKeyDownEvent
   },
   {
-    description: "Testing the order of the events (OOP), calling preventDefault() at \"keyup\" event",
+    description: "Testing the order of the events (OOP), calling " +
+                 "preventDefault() at \"keyup\" event in parent process",
+    expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
+                        kParent | kKeyDownEvent,
+                        kChild | kKeyDownEvent,
+                        kParent | kAfterEvent | kKeyDownEvent ],
+                      [ kParent | kBeforeEvent | kKeyUpEvent,
+                        kParent | kKeyUpEvent,
+                        kParent | kAfterEvent | kKeyUpEvent ] ],
+    resultEvents: [],
+    classifiedEvents: [ [], [] ],
+    doPreventDefaultAt: kParent | kKeyUpEvent
+  },
+  {
+    description: "Testing the order of the events (OOP), calling " +
+                 "preventDefault() at \"keyup\" event in child process",
     expectedEvents: [ [ kParent | kBeforeEvent | kKeyDownEvent,
                         kParent | kKeyDownEvent,
                         kChild | kKeyDownEvent,
