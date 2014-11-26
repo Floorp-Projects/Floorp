@@ -482,7 +482,7 @@ RestyleTracker::AddPendingRestyle(Element* aElement,
       // If cur has an eRestyle_ForceDescendants restyle hint, then we
       // know that we will get to all descendants.  Don't bother
       // recording the descendant to restyle in that case.
-      if (!(curData->mRestyleHint & eRestyle_ForceDescendants)) {
+      if (curData && !(curData->mRestyleHint & eRestyle_ForceDescendants)) {
         curData->mDescendants.AppendElement(aElement);
       }
     }
