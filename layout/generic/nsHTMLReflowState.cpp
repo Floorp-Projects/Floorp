@@ -751,6 +751,7 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     case NS_STYLE_DISPLAY_TABLE_CAPTION:
     case NS_STYLE_DISPLAY_FLEX:
     case NS_STYLE_DISPLAY_GRID:
+    case NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER:
       frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
@@ -762,6 +763,10 @@ nsHTMLReflowState::InitFrameType(nsIAtom* aFrameType)
     case NS_STYLE_DISPLAY_INLINE_STACK:
     case NS_STYLE_DISPLAY_INLINE_FLEX:
     case NS_STYLE_DISPLAY_INLINE_GRID:
+    case NS_STYLE_DISPLAY_RUBY:
+    case NS_STYLE_DISPLAY_RUBY_BASE:
+    case NS_STYLE_DISPLAY_RUBY_TEXT:
+    case NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER:
       frameType = NS_CSS_FRAME_TYPE_INLINE;
       break;
 

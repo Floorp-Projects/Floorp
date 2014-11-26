@@ -202,6 +202,21 @@ nsRubyBaseContainerFrame::CanContinueTextRun() const
   return true;
 }
 
+/* virtual */ LogicalSize
+nsRubyBaseContainerFrame::ComputeSize(nsRenderingContext *aRenderingContext,
+                                      WritingMode aWM,
+                                      const LogicalSize& aCBSize,
+                                      nscoord aAvailableISize,
+                                      const LogicalSize& aMargin,
+                                      const LogicalSize& aBorder,
+                                      const LogicalSize& aPadding,
+                                      ComputeSizeFlags aFlags)
+{
+  // Ruby base container frame is inline,
+  // hence don't compute size before reflow.
+  return LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+}
+
 /* virtual */ void
 nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
                                  nsHTMLReflowMetrics& aDesiredSize,
@@ -295,6 +310,8 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
         bool pushedFrame;
         rtcReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
                                                      &metrics, pushedFrame);
+        NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
+                     "Ruby line breaking is not yet implemented");
         NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
         pairISize = std::max(pairISize, metrics.ISize(lineWM));
       }
@@ -309,6 +326,8 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
       bool pushedFrame;
       aReflowState.mLineLayout->ReflowFrame(rbFrame, reflowStatus,
                                             &metrics, pushedFrame);
+      NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
+                   "Ruby line breaking is not yet implemented");
       NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
       pairISize = std::max(pairISize, metrics.ISize(lineWM));
     }
@@ -333,6 +352,8 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     bool pushedFrame;
     spanReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
                                                   &metrics, pushedFrame);
+    NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus),
+                 "Ruby line breaking is not yet implemented");
     NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
     spanISize = std::max(spanISize, metrics.ISize(lineWM));
   }
