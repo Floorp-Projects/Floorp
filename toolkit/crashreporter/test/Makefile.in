@@ -1,15 +1,14 @@
+#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 INTERNAL_TOOLS = 1
 
-unit_FILES = $(SHARED_LIBRARY) CrashTestUtils.jsm
-unit_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/
-unit_TARGET := misc
-INSTALL_TARGETS += unit
+UNIT_FILES = $(SHARED_LIBRARY) CrashTestUtils.jsm
+UNIT_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/
+INSTALL_TARGETS += UNIT
 
-unit_ipc_FILES = $(UNIT_FILES)
-unit_ipc_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit_ipc/
-unit_ipc_TARGET := misc
-INSTALL_TARGETS += unit_ipc
+UNIT_IPC_FILES = $(UNIT_FILES)
+UNIT_IPC_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit_ipc/
+INSTALL_TARGETS += UNIT_IPC
