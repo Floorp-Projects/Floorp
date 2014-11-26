@@ -233,14 +233,12 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   WritingMode frameWM = aReflowState.GetWritingMode();
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   LogicalMargin borderPadding = aReflowState.ComputedLogicalBorderPadding();
-  nscoord availableISize = aReflowState.AvailableISize();
-  NS_ASSERTION(availableISize != NS_UNCONSTRAINEDSIZE,
+  nscoord startEdge = borderPadding.IStart(frameWM);
+  nscoord endEdge = aReflowState.AvailableISize() - borderPadding.IEnd(frameWM);
+  NS_ASSERTION(aReflowState.AvailableISize() != NS_UNCONSTRAINEDSIZE,
                "should no longer use available widths");
-  // Subtract off inline axis border+padding from availableISize
-  availableISize -= borderPadding.IStartEnd(frameWM);
   aReflowState.mLineLayout->BeginSpan(this, &aReflowState,
-                                      borderPadding.IStart(frameWM),
-                                      availableISize, &mBaseline);
+                                      startEdge, endEdge, &mBaseline);
 
   // FIXME: line breaking / continuations not yet implemented
   aStatus = NS_FRAME_COMPLETE;
@@ -251,19 +249,11 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
     AutoSetTextContainers holder(baseContainer);
     nsReflowStatus baseReflowStatus;
     nsHTMLReflowMetrics baseMetrics(aReflowState, aDesiredSize.mFlags);
-    nsHTMLReflowState baseReflowState(aPresContext, aReflowState,
-                                      baseContainer, availSize);
-    baseReflowState.mLineLayout = aReflowState.mLineLayout;
-    baseContainer->Reflow(aPresContext, baseMetrics, baseReflowState,
-                          baseReflowStatus);
-    NS_ASSERTION(baseReflowStatus == NS_FRAME_COMPLETE,
-                 "Ruby line breaking is not yet implemented");
-    baseContainer->SetSize(LogicalSize(lineWM, baseMetrics.ISize(lineWM),
-                                       baseMetrics.BSize(lineWM)));
-    FinishReflowChild(baseContainer, aPresContext, baseMetrics,
-                      &baseReflowState, 0, 0,
-                      NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW);
+    bool pushedFrame;
+    aReflowState.mLineLayout->ReflowFrame(baseContainer, baseReflowStatus,
+                                          &baseMetrics, pushedFrame);
 
+    nsRect baseRect = baseContainer->GetRect();
     for (TextContainerIterator iter(baseContainer);
          !iter.AtEnd(); iter.Next()) {
       nsRubyTextContainerFrame* textContainer = iter.GetTextContainer();
@@ -278,17 +268,17 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
                    "Ruby line breaking is not yet implemented");
       textContainer->SetSize(LogicalSize(lineWM, textMetrics.ISize(lineWM),
                                          textMetrics.BSize(lineWM)));
-      // FIXME: This is a temporary calculation for finding the block coordinate
-      // of the ruby text container. A better one replace it once it's been
-      // spec'ed.
-      // Find the starting block coordinate of the ruby base container for
-      // this segment. For now, the ruby text container will be placed so that
-      // its bottom edge touches this coordinate.
-      nscoord baseContainerBCoord = baseContainer->GetLogicalPosition(
-          GetParent()->GetLogicalSize().ISize(lineWM)).B(lineWM);
+      nscoord x, y;
+      nscoord bsize = textMetrics.BSize(lineWM);
+      if (lineWM.IsVertical()) {
+        x = lineWM.IsVerticalLR() ? -bsize : baseRect.XMost();
+        y = baseRect.Y();
+      } else {
+        x = baseRect.X();
+        y = -bsize;
+      }
       FinishReflowChild(textContainer, aPresContext, textMetrics,
-                        &textReflowState, 0,
-                        baseContainerBCoord - textMetrics.BSize(lineWM), 0);
+                        &textReflowState, x, y, 0);
     }
   }
 
