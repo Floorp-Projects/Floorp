@@ -6455,7 +6455,8 @@
   },
   "SSL_WEAK_CIPHERS_FALLBACK": {
     "expires_in_version": "never",
-    "kind": "boolean",
+    "kind": "enumerated",
+    "n_values": 64,
     "description": "Fallback attempted when server did not support any strong cipher suites"
   },
   "SSL_CIPHER_SUITE_FULL": {
