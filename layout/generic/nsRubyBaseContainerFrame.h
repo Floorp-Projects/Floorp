@@ -9,6 +9,7 @@
 #ifndef nsRubyBaseContainerFrame_h___
 #define nsRubyBaseContainerFrame_h___
 
+#include "mozilla/UniquePtr.h"
 #include "nsContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
 #include "nsRubyBaseFrame.h"
