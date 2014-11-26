@@ -1593,7 +1593,6 @@ CASE(JSOP_UNUSED2)
 CASE(JSOP_UNUSED50)
 CASE(JSOP_UNUSED51)
 CASE(JSOP_UNUSED52)
-CASE(JSOP_UNUSED57)
 CASE(JSOP_UNUSED83)
 CASE(JSOP_UNUSED92)
 CASE(JSOP_UNUSED103)
@@ -2438,13 +2437,16 @@ CASE(JSOP_CALLELEM)
 END_CASE(JSOP_GETELEM)
 
 CASE(JSOP_SETELEM)
+CASE(JSOP_STRICTSETELEM)
 {
+    static_assert(JSOP_SETELEM_LENGTH == JSOP_STRICTSETELEM_LENGTH,
+                  "setelem and strictsetelem must be the same size");
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -3, obj);
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(-2, id);
     Value &value = REGS.sp[-1];
-    if (!SetObjectElementOperation(cx, obj, id, value, script->strict()))
+    if (!SetObjectElementOperation(cx, obj, id, value, *REGS.pc == JSOP_STRICTSETELEM))
         goto error;
     REGS.sp[-3] = value;
     REGS.sp -= 2;

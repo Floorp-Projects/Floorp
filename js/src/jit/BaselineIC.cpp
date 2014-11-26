@@ -5014,6 +5014,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
     FallbackICSpew(cx, stub, "SetElem(%s)", js_CodeName[JSOp(*pc)]);
 
     MOZ_ASSERT(op == JSOP_SETELEM ||
+               op == JSOP_STRICTSETELEM ||
                op == JSOP_INITELEM ||
                op == JSOP_INITELEM_ARRAY ||
                op == JSOP_INITELEM_INC);
@@ -5043,7 +5044,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
         if (!InitArrayElemOperation(cx, pc, obj, index.toInt32(), rhs))
             return false;
     } else {
-        if (!SetObjectElement(cx, obj, index, rhs, script->strict(), script, pc))
+        if (!SetObjectElement(cx, obj, index, rhs, JSOp(*pc) == JSOP_STRICTSETELEM, script, pc))
             return false;
     }
 
