@@ -2311,7 +2311,7 @@ InlineTypedObject::objectMovedDuringMinorGC(JSTracer *trc, JSObject *dst, JSObje
         uint8_t *oldData = reinterpret_cast<uint8_t *>(src) + offsetOfDataStart();
         uint8_t *newData = dst->as<InlineTypedObject>().inlineTypedMem();
         trc->runtime()->gc.nursery.maybeSetForwardingPointer(trc, oldData, newData,
-                                                             descr.size() >= sizeof(uintptr_t));
+                                                             size_t(descr.size()) >= sizeof(uintptr_t));
     }
 }
 
