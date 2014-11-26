@@ -127,7 +127,7 @@
 
 #if !defined(MOZ_NATIVE_JEMALLOC)
 #  ifdef MOZ_MEMORY_IMPL
-#    if defined(MOZ_JEMALLOC_IMPL) && defined(MOZ_REPLACE_MALLOC)
+#    if defined(MOZ_JEMALLOC_IMPL) && defined(MOZ_REPLACE_MALLOC) && !defined(MOZ_REPLACE_JEMALLOC)
 #      define mozmem_malloc_impl(a)     je_ ## a
 #      define mozmem_jemalloc_impl(a)   je_ ## a
 #    else
