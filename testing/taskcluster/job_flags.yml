@@ -128,6 +128,10 @@ tests:
   #   # "allowed platforms" here.
   #   allowed_build_tasks:
   #     - builds/b2g_desktop.yml
+  gaia-build-unit:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop.yml:
+        task: tasks/tests/b2g_build_unit.yml
   mochitests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
