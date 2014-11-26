@@ -528,6 +528,32 @@ protected:
 
   // ==========================================================================
   /*
+   * Convenience methods for traversing continuations
+   */
+
+  struct ContinuationTraversingState
+  {
+    nsContainerFrame* mNextInFlow;
+    ContinuationTraversingState(nsContainerFrame* aFrame)
+      : mNextInFlow(static_cast<nsContainerFrame*>(aFrame->GetNextInFlow()))
+    { }
+  };
+
+  /**
+   * Find the first frame that is a child of this frame's next-in-flows,
+   * considering both their principal child lists and overflow lists.
+   */
+  nsIFrame* GetNextInFlowChild(ContinuationTraversingState& aState,
+                               bool* aIsInOverflow = nullptr);
+
+  /**
+   * Remove the result of GetNextInFlowChild from its current parent and
+   * append it to this frame's principal child list.
+   */
+  nsIFrame* PullNextInFlowChild(ContinuationTraversingState& aState);
+
+  // ==========================================================================
+  /*
    * Convenience methods for nsFrameLists stored in the
    * PresContext's proptable
    */
