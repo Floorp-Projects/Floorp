@@ -9,7 +9,7 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
 public abstract class State {
-  public static final long CURRENT_VERSION = 2L;
+  public static final long CURRENT_VERSION = 3L;
 
   public enum StateLabel {
     Engaged,
@@ -17,12 +17,14 @@ public abstract class State {
     Married,
     Separated,
     Doghouse,
+    MigratedFromSync11,
   }
 
   public enum Action {
     NeedsUpgrade,
     NeedsPassword,
     NeedsVerification,
+    NeedsFinishMigrating,
     None,
   }
 
@@ -58,6 +60,10 @@ public abstract class State {
 
   public State makeDoghouseState() {
     return new Doghouse(email, uid, verified);
+  }
+
+  public State makeMigratedFromSync11State(String password) {
+    return new MigratedFromSync11(email, uid, verified, password);
   }
 
   public abstract void execute(ExecuteDelegate delegate);

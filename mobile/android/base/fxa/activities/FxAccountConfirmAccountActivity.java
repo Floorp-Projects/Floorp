@@ -7,7 +7,6 @@ package org.mozilla.gecko.fxa.activities;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
-import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
@@ -141,9 +140,6 @@ public class FxAccountConfirmAccountActivity extends FxAccountAbstractActivity i
     case NeedsVerification:
       // This is what we're here to handle.
       break;
-    case NeedsPassword:
-    case NeedsUpgrade:
-    case None:
     default:
       // We're not in the right place!  Redirect to status.
       Logger.warn(LOG_TAG, "No need to verify Firefox Account that needs action " + neededAction.toString() +

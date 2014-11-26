@@ -54,6 +54,13 @@
             android:layout="@layout/fxaccount_status_error_preference"
             android:persistent="false"
             android:title="@string/fxaccount_status_needs_account_enabled" />
+        <Preference
+            android:editable="false"
+            android:icon="@drawable/fxaccount_sync_error"
+            android:key="needs_finish_migrating"
+            android:layout="@layout/fxaccount_status_error_preference"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_needs_finish_migrating" />
 
         <Preference
             android:editable="false"
@@ -125,6 +132,7 @@
         <Preference android:key="debug_forget_certificate" />
         <Preference android:key="debug_require_password" />
         <Preference android:key="debug_require_upgrade" />
+        <Preference android:key="debug_migrated_from_sync11" />
     </PreferenceCategory>
 
 </PreferenceScreen>
