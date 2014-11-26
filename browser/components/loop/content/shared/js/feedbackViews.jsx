@@ -15,7 +15,8 @@ loop.shared.views.FeedbackView = (function(l10n) {
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
 
-  var WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS = 5;
+  var WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS =
+      loop.shared.views.WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS = 5;
   var FEEDBACK_STATES = loop.store.FEEDBACK_STATES;
 
   /**

@@ -331,6 +331,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Resets current room.
+     */
+    ResetRoom: Action.define("resetRoom", {
+    }),
+
+    /**
      * Used to indicate the user wishes to leave the room.
      */
     LeaveRoom: Action.define("leaveRoom", {
