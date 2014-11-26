@@ -1211,7 +1211,7 @@ MarionetteServerConnection.prototype = {
     // TODO: Error codes need to be refined as a part of bug 1100545 and
     // bug 945729.
     if (appName == "Firefox") {
-      sendError("Cannot navigate in chrome context", 13, null, command_id);
+      this.sendError("Cannot navigate in chrome context", 13, null, command_id);
       return;
     }
 
