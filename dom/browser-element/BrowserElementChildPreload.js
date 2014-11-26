@@ -94,6 +94,7 @@ function BrowserElementChild() {
 
   this._isContentWindowCreated = false;
   this._pendingSetInputMethodActive = [];
+  this._forceDispatchSelectionChange = false;
 
   this._init();
 };
@@ -596,6 +597,47 @@ BrowserElementChild.prototype = {
     let boundingClientRect = e.boundingClientRect;
     if (!boundingClientRect) {
       return;
+    }
+
+    let isCollapsed = (e.selectedText.length == 0);
+    let isMouseUp = (e.reasons.indexOf('mouseup') == 0);
+    let canPaste = this._isCommandEnabled("paste");
+
+    if (!this._forceDispatchSelectionChange) {
+      // SelectionChange events with the following reasons are not
+      // necessary to trigger the text dialog, bypass these events
+      // by default.
+      //
+      if(e.reasons.length == 0 ||
+         e.reasons.indexOf('drag') == 0 ||
+         e.reasons.indexOf('keypress') == 0 ||
+         e.reasons.indexOf('mousedown') == 0) {
+        return;
+      }
+
+      // The collapsed SelectionChange event is unnecessary to dispatch,
+      // bypass this event by default. But there is one exception to support
+      // the shortcut mode which can paste previous copied content easily
+      if (isCollapsed) {
+        if (isMouseUp && canPaste) {
+          //Dispatch this selection change event to support shortcut mode
+        } else {
+          return;
+        }
+      }
+    }
+
+    // For every touch on the screen, there are always two mouse events received,
+    // mousedown/mouseup, no matter touch or long tap on the screen. When there is
+    // is a non-collapsed selection change event which comes with mouseup reason,
+    // it implies some texts are selected. In order to hide the text dialog during next
+    // touch, here sets the forceDispatchSelectionChange flag as true to dispatch the
+    // next SelecitonChange event(with the mousedown) so that the parent side can
+    // hide the text dialog.
+    if (isMouseUp && !isCollapsed) {
+      this._forceDispatchSelectionChange = true;
+    } else {
+      this._forceDispatchSelectionChange = false;
     }
 
     let zoomFactor = content.screen.width / content.innerWidth;
