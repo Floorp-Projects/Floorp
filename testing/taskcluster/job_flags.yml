@@ -132,6 +132,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
         task: tasks/tests/b2g_build_unit.yml
+  gaia-linter:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop.yml:
+        task: tasks/tests/b2g_linter.yml
   mochitests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
