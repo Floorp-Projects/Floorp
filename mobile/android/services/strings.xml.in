@@ -157,6 +157,9 @@
 <string name="fxaccount_confirm_account_change_email">&fxaccount_confirm_account_change_email;</string>
 <string name="fxaccount_confirm_account_verification_link_sent">&fxaccount_confirm_account_verification_link_sent2;</string>
 <string name="fxaccount_confirm_account_verification_link_not_sent">&fxaccount_confirm_account_verification_link_not_sent2;</string>
+<string name="fxaccount_resend_unlock_code_button_label">&fxaccount_resend_unlock_code_button_label;</string>
+<string name="fxaccount_unlock_code_sent">&fxaccount_unlock_code_sent;</string>
+<string name="fxaccount_unlock_code_not_sent">&fxaccount_unlock_code_not_sent;</string>
 
 <string name="fxaccount_sign_in_sub_header">&fxaccount_sign_in_sub_header;</string>
 <string name="fxaccount_sign_in_button_label">&fxaccount_sign_in_button_label;</string>
@@ -218,6 +221,7 @@
 <string name="fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD">&fxaccount_remote_error_SERVICE_TEMPORARILY_UNAVAILABLE_TO_DUE_HIGH_LOAD;</string>
 <string name="fxaccount_remote_error_UNKNOWN_ERROR">&fxaccount_remote_error_UNKNOWN_ERROR;</string>
 <string name="fxaccount_remote_error_COULD_NOT_CONNECT">&fxaccount_remote_error_COULD_NOT_CONNECT;</string>
+<string name="fxaccount_remote_error_ACCOUNT_LOCKED">&fxaccount_remote_error_ACCOUNT_LOCKED;</string>
 
 <string name="fxaccount_sync_sign_in_error_notification_title">&fxaccount_sync_sign_in_error_notification_title2;</string>
 <string name="fxaccount_sync_sign_in_error_notification_text">&fxaccount_sync_sign_in_error_notification_text2;</string>
