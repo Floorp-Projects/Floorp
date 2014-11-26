@@ -841,9 +841,13 @@ class IonBuilder
                                     bool isGetter, JSObject *foundProto, bool *guardGlobal);
     void freezePropertiesForCommonPrototype(types::TemporaryTypeSet *types, PropertyName *name,
                                             JSObject *foundProto, bool allowEmptyTypesForGlobal = false);
-    MDefinition *testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
-                                        bool isGetter, JSObject *foundProto, Shape *lastProperty,
-                                        Shape *globalShape = nullptr);
+    /*
+     * Callers must pass a non-null globalGuard if they pass a non-null globalShape.
+     */
+    bool testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName *name,
+                                bool isGetter, JSObject *foundProto, Shape *lastProperty,
+                                MDefinition **guard, Shape *globalShape = nullptr,
+                                MDefinition **globalGuard = nullptr);
     bool testShouldDOMCall(types::TypeSet *inTypes,
                            JSFunction *func, JSJitInfo::OpType opType);
 
