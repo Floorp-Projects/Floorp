@@ -100,6 +100,7 @@
 #include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
+#include "nsIFormProcessor.h"
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
 #include "nsIJSRuntimeService.h"
@@ -4209,6 +4210,42 @@ ContentParent::RecvOpenAnonymousTemporaryFile(FileDescriptor *aFD)
     // The FileDescriptor object owns a duplicate of the file handle; we
     // must close the original (and clean up the NSPR descriptor).
     PR_Close(prfd);
+    return true;
+}
+
+static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
+
+bool
+ContentParent::RecvFormProcessValue(const nsString& oldValue,
+                                    const nsString& challenge,
+                                    const nsString& keytype,
+                                    const nsString& keyparams,
+                                    nsString* newValue)
+{
+    nsCOMPtr<nsIFormProcessor> formProcessor =
+      do_GetService(kFormProcessorCID);
+    if (!formProcessor) {
+        newValue->Truncate();
+        return true;
+    }
+
+    formProcessor->ProcessValueIPC(oldValue, challenge, keytype, keyparams,
+                                   *newValue);
+    return true;
+}
+
+bool
+ContentParent::RecvFormProvideContent(nsString* aAttribute,
+                                      nsTArray<nsString>* aContent)
+{
+    nsCOMPtr<nsIFormProcessor> formProcessor =
+      do_GetService(kFormProcessorCID);
+    if (!formProcessor) {
+        return true;
+    }
+
+    formProcessor->ProvideContent(NS_LITERAL_STRING("SELECT"), *aContent,
+                                  *aAttribute);
     return true;
 }
 
