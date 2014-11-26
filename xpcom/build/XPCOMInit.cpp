@@ -481,6 +481,13 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
               nsIFile* aBinDirectory,
               nsIDirectoryServiceProvider* aAppFileLocationProvider)
 {
+  static bool sInitialized = false;
+  if (sInitialized) {
+    return NS_ERROR_FAILURE;
+  }
+
+  sInitialized = true;
+
   mozPoisonValueInit();
 
   char aLocal;
