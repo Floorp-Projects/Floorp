@@ -189,10 +189,13 @@ void startKeyStoreService()
 void startKeyStoreService() { return; }
 #endif
 
+static const char *CA_BEGIN = "-----BEGIN ",
+                  *CA_END   = "-----END ",
+                  *CA_TAILER = "-----\n";
+
 namespace mozilla {
 namespace ipc {
 
-static const char* KEYSTORE_SOCKET_NAME = "keystore";
 static const char* KEYSTORE_SOCKET_PATH = "/dev/socket/keystore";
 static const char* KEYSTORE_ALLOWED_USERS[] = {
   "root",

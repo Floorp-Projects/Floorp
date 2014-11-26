@@ -488,7 +488,7 @@ GonkVideoDecoderManager::codecReserved()
   if (mNativeWindow != nullptr) {
     surface = new Surface(mNativeWindow->getBufferQueue());
   }
-  status_t err = mDecoder->configure(format, surface, nullptr, 0);
+  mDecoder->configure(format, surface, nullptr, 0);
   mDecoder->Prepare();
 
   if (mHandler != nullptr) {
