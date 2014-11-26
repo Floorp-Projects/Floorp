@@ -42,8 +42,8 @@ GonkAudioDecoderManager::GonkAudioDecoderManager(
   : mAudioChannels(aConfig.channel_count)
   , mAudioRate(aConfig.samples_per_second)
   , mAudioProfile(aConfig.aac_profile)
-  , mAudioBuffer(nullptr)
   , mUseAdts(true)
+  , mAudioBuffer(nullptr)
 {
   MOZ_COUNT_CTOR(GonkAudioDecoderManager);
   MOZ_ASSERT(mAudioChannels);
