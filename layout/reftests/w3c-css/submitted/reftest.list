@@ -43,6 +43,9 @@ include multicol3/reftest.list
 # Text Level 3
 # include text3/reftest.list
 
+# Text Decoration Level 3
+include text-decor-3/reftest.list
+
 # Transforms
 # include transforms/reftest.list
 
