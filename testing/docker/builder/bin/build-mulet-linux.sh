@@ -43,5 +43,6 @@ mkdir -p /home/worker/artifacts/
 mv *.linux-x86_64.tar.bz2   /home/worker/artifacts/target.linux-x86_64.tar.bz2
 mv *.linux-x86_64.json      /home/worker/artifacts/target.linux-x86_64.json
 mv *.tests.zip              /home/worker/artifacts/target.tests.zip
+mv jsshell-linux-x86_64.zip /home/worker/artifacts/jsshell-linux-x86_64.zip
 
 ################################### build.sh ###################################
