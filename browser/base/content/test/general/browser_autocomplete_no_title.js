@@ -14,8 +14,10 @@ function* check_title(inputText, expectedTitle) {
 
 add_task(function*() {
   // This test is only relevant if UnifiedComplete is enabled.
-  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
+  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
+    todo(false, "Stop supporting old autocomplete components.");
     return;
+  }
 
   let uri = NetUtil.newURI("http://bug1060642.example.com/beards/are/pretty/great");
   yield PlacesTestUtils.addVisits([{uri: uri, title: ""}]);
