@@ -11,6 +11,7 @@ import copy
 import datetime
 import subprocess
 import sys
+import urllib2
 
 import pystache
 import yaml
@@ -88,6 +89,9 @@ def docker_image(name):
         repository = open(repository_path).read().strip()
 
     return '{}/{}:{}'.format(repository, name, version)
+
+def get_task(task_id):
+    return json.load(urllib2.urlopen("https://queue.taskcluster.net/v1/task/" + task_id))
 
 @CommandProvider
 class TryGraph(object):
@@ -241,3 +245,58 @@ class CIBuild(object):
         taskcluster_graph.build_task.validate(build_task)
 
         print(json.dumps(build_task['task'], indent=4))
+
+@CommandProvider
+class CITest(object):
+    @Command('ci-test', category='ci',
+        description='Create taskcluster try server test task')
+    @CommandArgument('--task-id',
+        help='the task id to pick the correct build and tests')
+    @CommandArgument('--total-chunks', type=int,
+        help='total number of chunks')
+    @CommandArgument('--chunk', type=int,
+        help='current chunk')
+    @CommandArgument('--owner',
+        help='email address of who owns this graph')
+    @CommandArgument('test_task',
+        help='path to the test task definition')
+    def create_ci_test(self, test_task, task_id='', total_chunks=1, chunk=1, owner=''):
+        if total_chunks is None:
+            total_chunks = 1
+
+        if chunk is None:
+            chunk = 1
+
+        if chunk < 1 or chunk > total_chunks:
+            raise ValueError(
+                '"chunk" must be a value between 1 and "total_chunks (default 1)"')
+
+        build_url, tests_url = self._get_build_and_tests_url(task_id)
+
+        test_parameters = {
+            'docker_image': docker_image,
+            'build_url': ARTIFACT_URL.format(task_id, build_url),
+            'tests_url': ARTIFACT_URL.format(task_id, tests_url),
+            'total_chunks': total_chunks,
+            'chunk': chunk,
+            'owner': owner,
+            'from_now': json_time_from_now,
+            'now': current_json_time()
+        }
+
+        try:
+            test_task = import_yaml(test_task, test_parameters)
+        except IOError:
+            sys.stderr.write(
+                "Could not load test task file.  Ensure path is a relative " \
+                "path from testing/taskcluster"
+            )
+            sys.exit(1)
+
+        print(json.dumps(test_task['task'], indent=4))
+
+    def _get_build_and_tests_url(self, task_id):
+        task = get_task(task_id)
+        locations = task['extra']['locations']
+        return locations['build'], locations['tests']
+
