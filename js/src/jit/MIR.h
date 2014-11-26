@@ -10463,22 +10463,17 @@ class MSetDOMProperty
 };
 
 class MGetDOMProperty
-  : public MAryInstruction<2>,
+  : public MVariadicInstruction,
     public ObjectPolicy<0>::Data
 {
     const JSJitInfo *info_;
 
   protected:
-    MGetDOMProperty(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
+    MGetDOMProperty(const JSJitInfo *jitinfo)
       : info_(jitinfo)
     {
         MOZ_ASSERT(jitinfo);
         MOZ_ASSERT(jitinfo->type() == JSJitInfo::Getter);
-
-        initOperand(0, obj);
-
-        // Pin the guard as an operand if we want to hoist later
-        initOperand(1, guard);
 
         // We are movable iff the jitinfo says we can be.
         if (isDomMovable()) {
@@ -10498,13 +10493,41 @@ class MGetDOMProperty
         return info_;
     }
 
+    bool init(TempAllocator &alloc, MDefinition *obj, MDefinition *guard,
+              MDefinition *globalGuard) {
+        MOZ_ASSERT(obj);
+        MOZ_ASSERT(guard);
+        // globalGuard can be null.
+        size_t operandCount;
+        if (globalGuard)
+            operandCount = 3;
+        else
+            operandCount = 2;
+
+        if (!MVariadicInstruction::init(alloc, operandCount))
+            return false;
+        initOperand(0, obj);
+
+        // Pin the guard as an operand if we want to hoist later.
+        initOperand(1, guard);
+
+        // And the same for the global guard, if we have one.
+        if (globalGuard)
+            initOperand(2, globalGuard);
+
+        return true;
+    }
+
   public:
     INSTRUCTION_HEADER(GetDOMProperty)
 
     static MGetDOMProperty *New(TempAllocator &alloc, const JSJitInfo *info, MDefinition *obj,
-                                MDefinition *guard)
+                                MDefinition *guard, MDefinition *globalGuard)
     {
-        return new(alloc) MGetDOMProperty(info, obj, guard);
+        MGetDOMProperty *res = new(alloc) MGetDOMProperty(info);
+        if (!res || !res->init(alloc, obj, guard, globalGuard))
+            return nullptr;
+        return res;
     }
 
     JSJitGetterOp fun() const {
@@ -10562,8 +10585,8 @@ class MGetDOMProperty
 class MGetDOMMember : public MGetDOMProperty
 {
     // We inherit everything from MGetDOMProperty except our possiblyCalls value
-    MGetDOMMember(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
-        : MGetDOMProperty(jitinfo, obj, guard)
+    MGetDOMMember(const JSJitInfo *jitinfo)
+        : MGetDOMProperty(jitinfo)
     {
     }
 
@@ -10571,9 +10594,12 @@ class MGetDOMMember : public MGetDOMProperty
     INSTRUCTION_HEADER(GetDOMMember)
 
     static MGetDOMMember *New(TempAllocator &alloc, const JSJitInfo *info, MDefinition *obj,
-                              MDefinition *guard)
+                              MDefinition *guard, MDefinition *globalGuard)
     {
-        return new(alloc) MGetDOMMember(info, obj, guard);
+        MGetDOMMember *res = new(alloc) MGetDOMMember(info);
+        if (!res || !res->init(alloc, obj, guard, globalGuard))
+            return nullptr;
+        return res;
     }
 
     bool possiblyCalls() const {
