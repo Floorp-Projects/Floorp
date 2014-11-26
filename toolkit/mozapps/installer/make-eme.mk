@@ -6,7 +6,7 @@ include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 
 ifdef MOZ_SIGN_CMD
   ifeq ($(OS_ARCH),WINNT)
-    MAKE_SIGN_EME_VOUCHER := $(PYTHON) $(topsrcdir)/python/eme/gen-eme-voucher.py -input $(DIST)/bin/plugin-container.exe -output $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/voucher.bin && \
+    MAKE_SIGN_EME_VOUCHER := $(PYTHON) $(MOZILLA_DIR)/python/eme/gen-eme-voucher.py -input $(DIST)/bin/plugin-container.exe -output $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/voucher.bin && \
       $(MOZ_SIGN_CMD) -f emevoucher "$(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/voucher.bin"
   endif
 endif
