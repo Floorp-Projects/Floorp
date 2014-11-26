@@ -63,7 +63,7 @@ class BaselineFrame
         OVER_RECURSED    = 1 << 9,
 
         // Frame has a BaselineRecompileInfo stashed in the scratch value
-        // slot. See PatchBaselineFramesForDebugMOde.
+        // slot. See PatchBaselineFramesForDebugMode.
         HAS_DEBUG_MODE_OSR_INFO = 1 << 10,
 
         // Frame has had its scope chain unwound to a pc during exception
@@ -73,7 +73,13 @@ class BaselineFrame
         // the only way to clear it is to pop the frame. Do *not* set this if
         // we will resume execution on the frame, such as in a catch or
         // finally block.
-        HAS_UNWOUND_SCOPE_OVERRIDE_PC = 1 << 11
+        HAS_UNWOUND_SCOPE_OVERRIDE_PC = 1 << 11,
+
+        // Frame has called out to Debugger code from
+        // HandleExceptionBaseline. This is set for debug mode OSR sanity
+        // checking when it handles corner cases which only arise during
+        // exception handling.
+        DEBUGGER_HANDLING_EXCEPTION = 1 << 12
     };
 
   protected: // Silence Clang warning about unused private fields.
@@ -280,9 +286,16 @@ class BaselineFrame
     void setIsDebuggee() {
         flags_ |= DEBUGGEE;
     }
-    void unsetIsDebuggee() {
-        MOZ_ASSERT(!script()->isDebuggee());
-        flags_ &= ~DEBUGGEE;
+    inline void unsetIsDebuggee();
+
+    bool isDebuggerHandlingException() const {
+        return flags_ & DEBUGGER_HANDLING_EXCEPTION;
+    }
+    void setIsDebuggerHandlingException() {
+        flags_ |= DEBUGGER_HANDLING_EXCEPTION;
+    }
+    void unsetIsDebuggerHandlingException() {
+        flags_ &= ~DEBUGGER_HANDLING_EXCEPTION;
     }
 
     JSScript *evalScript() const {
