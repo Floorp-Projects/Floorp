@@ -24,6 +24,7 @@
 #include "apple/AppleDecoderModule.h"
 #endif
 #ifdef MOZ_WIDGET_ANDROID
+#include "nsIGfxInfo.h"
 #include "AndroidBridge.h"
 #endif
 
@@ -181,6 +182,27 @@ IsAppleAvailable()
 }
 
 static bool
+IsAndroidAvailable()
+{
+#ifndef MOZ_WIDGET_ANDROID
+  return false;
+#else
+  // PowerVR is very slow at texture allocation for some reason, which causes poor performance.
+  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+
+  nsString vendor;
+  if (NS_FAILED(gfxInfo->GetAdapterVendorID(vendor)) ||
+      vendor.Find("Imagination") == 0) {
+    printf_stderr("SNORP: not doing video for PowerVR\n");
+    return nullptr;
+  }
+
+  // We need android.media.MediaCodec which exists in API level 16 and higher.
+  return AndroidBridge::Bridge()->GetAPIVersion() >= 16;
+#endif
+}
+
+static bool
 IsGonkMP4DecoderAvailable()
 {
   return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
@@ -194,10 +216,7 @@ HavePlatformMPEGDecoders()
          // We have H.264/AAC platform decoders on Windows Vista and up.
          IsVistaOrLater() ||
 #endif
-#ifdef MOZ_WIDGET_ANDROID
-         // We need android.media.MediaCodec which exists in API level 16 and higher.
-         (AndroidBridge::Bridge()->GetAPIVersion() >= 16) ||
-#endif
+         IsAndroidAvailable() ||
          IsFFmpegAvailable() ||
          IsAppleAvailable() ||
          IsGonkMP4DecoderAvailable() ||
