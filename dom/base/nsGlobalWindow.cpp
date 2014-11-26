@@ -7912,7 +7912,7 @@ PostMessageReadStructuredClone(JSContext* cx,
       JS::Rooted<JS::Value> val(cx);
       {
         nsRefPtr<File> blob = new File(scInfo->window, blobImpl);
-        if (!WrapNewBindingObject(cx, blob, &val)) {
+        if (!GetOrCreateDOMReflector(cx, blob, &val)) {
           return nullptr;
         }
       }
@@ -14034,7 +14034,7 @@ nsGlobalWindow::GetConsole(JSContext* aCx,
     return rv.ErrorCode();
   }
 
-  if (!WrapNewBindingObject(aCx, console, aConsole)) {
+  if (!GetOrCreateDOMReflector(aCx, console, aConsole)) {
     return NS_ERROR_FAILURE;
   }
 

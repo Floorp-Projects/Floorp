@@ -464,7 +464,7 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
 
   JS::Rooted<JS::Value> indexedDB(aCx);
   js::AssertSameCompartment(aCx, aGlobal);
-  if (!WrapNewBindingObject(aCx, factory, &indexedDB)) {
+  if (!GetOrCreateDOMReflector(aCx, factory, &indexedDB)) {
     return false;
   }
 

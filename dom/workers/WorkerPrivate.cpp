@@ -322,7 +322,7 @@ struct WorkerStructuredCloneCallbacks
           // New scope to protect |result| from a moving GC during ~nsRefPtr.
           nsRefPtr<File> blob = new File(nullptr, blobImpl);
           JS::Rooted<JS::Value> val(aCx);
-          if (WrapNewBindingObject(aCx, blob, &val)) {
+          if (GetOrCreateDOMReflector(aCx, blob, &val)) {
             result = val.toObjectOrNull();
           }
         }
@@ -426,7 +426,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
         JS::Rooted<JS::Value> val(aCx);
         {
           nsRefPtr<File> blob = new File(nullptr, blobImpl);
-          if (!WrapNewBindingObject(aCx, blob, &val)) {
+          if (!GetOrCreateDOMReflector(aCx, blob, &val)) {
             return nullptr;
           }
         }
