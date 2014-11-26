@@ -59,87 +59,119 @@ nsRubyFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-void
-nsRubyFrame::CalculateColSizes(nsRenderingContext* aRenderingContext,
-                               nsTArray<nscoord>& aColSizes)
+class MOZ_STACK_CLASS TextContainerIterator
 {
-  nsFrameList::Enumerator e(this->PrincipalChildList());
-  uint32_t annotationNum = 0;
-  int segmentNum = -1;
+public:
+  TextContainerIterator(nsRubyBaseContainerFrame* aBaseContainer);
+  void Next();
+  bool AtEnd() const { return !mFrame; }
+  nsRubyTextContainerFrame* GetTextContainer() const
+  {
+    return static_cast<nsRubyTextContainerFrame*>(mFrame);
+  }
 
-  nsTArray<int> segmentBaseCounts;
+private:
+  nsIFrame* mFrame;
+};
 
-  for(; !e.AtEnd(); e.Next()) {
-    nsIFrame* childFrame = e.get();
-    if (childFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
-      segmentNum++;
-      segmentBaseCounts.AppendElement(0);
-      nsFrameList::Enumerator bases(childFrame->PrincipalChildList());
-      for(; !bases.AtEnd(); bases.Next()) {
-        aColSizes.AppendElement(bases.get()->GetPrefISize(aRenderingContext));
-        segmentBaseCounts.ElementAt(segmentNum)++;
-      }
-    } else if (childFrame->GetType() == nsGkAtoms::rubyTextContainerFrame) {
-      if (segmentNum == -1) {
-        // No rbc exists for first segment, so act as if there is one
-        segmentNum++;
-        segmentBaseCounts.AppendElement(1);
-        aColSizes.AppendElement(0);
-      }
-      nsFrameList::Enumerator annotations(childFrame->PrincipalChildList());
-      uint32_t baseCount = segmentBaseCounts.ElementAt(segmentNum);
-      for(; !annotations.AtEnd(); annotations.Next()) {
-        nsIFrame* annotationFrame = annotations.get();
-        if (annotationNum > baseCount) {
-          aColSizes.AppendElement(annotationFrame->
-            GetPrefISize(aRenderingContext));
-          baseCount++;
-          segmentBaseCounts.ElementAt(segmentNum) = baseCount;
-          annotationNum++;
-        } else if (annotationNum < baseCount - 1) {
-          //there are fewer annotations than bases, so the last annotation is
-          //associated with (spans) the remaining bases. This means these
-          //columns can't be broken up, so gather their entire ISize in one
-          //entry of aColSizes and clear the other entries.
-          int baseSum = 0;
-          for (uint32_t i = annotationNum; i < annotationNum + baseCount; i++) {
-            baseSum += aColSizes.ElementAt(i);
-            if (i > annotationNum) {
-              aColSizes.ElementAt(i) = 0;
-            }
-          }
-          aColSizes.ElementAt(annotationNum) =
-            std::max(baseSum, annotationFrame->GetPrefISize(aRenderingContext));
-          annotationNum = baseCount;
-        } else {
-          aColSizes.ElementAt(annotationNum) =
-            std::max(aColSizes.ElementAt(annotationNum),
-                     annotationFrame->GetPrefISize(aRenderingContext));
-          annotationNum++;
-        }
-      }
-    } else {
-      NS_ASSERTION(false, "Unrecognized child type for ruby frame.");
+TextContainerIterator::TextContainerIterator(
+    nsRubyBaseContainerFrame* aBaseContainer)
+{
+  mFrame = aBaseContainer;
+  Next();
+}
+
+void
+TextContainerIterator::Next()
+{
+  if (mFrame) {
+    mFrame = mFrame->GetNextSibling();
+    if (mFrame && mFrame->GetType() != nsGkAtoms::rubyTextContainerFrame) {
+      mFrame = nullptr;
     }
   }
+}
+
+/**
+ * This class is responsible for appending and clearing
+ * text container list of the base container.
+ */
+class MOZ_STACK_CLASS AutoSetTextContainers
+{
+public:
+  AutoSetTextContainers(nsRubyBaseContainerFrame* aBaseContainer);
+  ~AutoSetTextContainers();
+
+private:
+  nsRubyBaseContainerFrame* mBaseContainer;
+};
+
+AutoSetTextContainers::AutoSetTextContainers(
+    nsRubyBaseContainerFrame* aBaseContainer)
+  : mBaseContainer(aBaseContainer)
+{
+#ifdef DEBUG
+  aBaseContainer->AssertTextContainersEmpty();
+#endif
+  for (TextContainerIterator iter(aBaseContainer);
+       !iter.AtEnd(); iter.Next()) {
+    aBaseContainer->AppendTextContainer(iter.GetTextContainer());
+  }
+}
+
+AutoSetTextContainers::~AutoSetTextContainers()
+{
+  mBaseContainer->ClearTextContainers();
+}
+
+/**
+ * This enumerator enumerates each segment.
+ */
+class MOZ_STACK_CLASS SegmentEnumerator
+{
+public:
+  SegmentEnumerator(nsRubyFrame* aRubyFrame);
+
+  void Next();
+  bool AtEnd() const { return !mBaseContainer; }
+
+  nsRubyBaseContainerFrame* GetBaseContainer() const
+  {
+    return mBaseContainer;
+  }
+
+private:
+  nsRubyBaseContainerFrame* mBaseContainer;
+};
+
+SegmentEnumerator::SegmentEnumerator(nsRubyFrame* aRubyFrame)
+{
+  nsIFrame* frame = aRubyFrame->GetFirstPrincipalChild();
+  MOZ_ASSERT(!frame ||
+             frame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
+  mBaseContainer = static_cast<nsRubyBaseContainerFrame*>(frame);
+}
+
+void
+SegmentEnumerator::Next()
+{
+  MOZ_ASSERT(mBaseContainer);
+  nsIFrame* frame = mBaseContainer->GetNextSibling();
+  while (frame && frame->GetType() != nsGkAtoms::rubyBaseContainerFrame) {
+    frame = frame->GetNextSibling();
+  }
+  mBaseContainer = static_cast<nsRubyBaseContainerFrame*>(frame);
 }
 
 /* virtual */ void
 nsRubyFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                nsIFrame::InlineMinISizeData *aData)
 {
-  //FIXME: This needs to handle the cases where it's possible for a ruby base to
-  //break, as well as forced breaks.
-  nsTArray<int> colSizes;
-  CalculateColSizes(aRenderingContext, colSizes);
-
   nscoord max = 0;
-  for (uint32_t i = 0; i < colSizes.Length(); i++) {
-    if (colSizes.ElementAt(i) > max) {
-      max = colSizes.ElementAt(i);
-    }
+  for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
+    AutoSetTextContainers holder(e.GetBaseContainer());
+    max = std::max(max, e.GetBaseContainer()->GetMinISize(aRenderingContext));
   }
-
   aData->currentLine += max;
 }
 
@@ -147,14 +179,11 @@ nsRubyFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
 nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                 nsIFrame::InlinePrefISizeData *aData)
 {
-  nsTArray<int> colSizes;
-  CalculateColSizes(aRenderingContext, colSizes);
-
   nscoord sum = 0;
-  for (uint32_t i = 0; i < colSizes.Length(); i++) {
-    sum += colSizes.ElementAt(i);
+  for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
+    AutoSetTextContainers holder(e.GetBaseContainer());
+    sum += e.GetBaseContainer()->GetPrefISize(aRenderingContext);
   }
-
   aData->currentLine += sum;
 }
 
@@ -208,7 +237,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
   nscoord annotationBSize = 0;
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nsIFrame* childFrame = e.get();
-    if (e.get()->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
+    if (childFrame->GetType() == nsGkAtoms::rubyBaseContainerFrame) {
       if (segmentRBC) {
         annotationBSize = 0;
       }
