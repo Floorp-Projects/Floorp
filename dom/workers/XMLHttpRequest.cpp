@@ -1076,7 +1076,7 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
     JSAutoCompartment ac(cx, scope);
 
     JS::Rooted<JS::Value> value(cx);
-    if (!WrapNewBindingObject(cx, mXHR, &value)) {
+    if (!GetOrCreateDOMReflector(cx, mXHR, &value)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -2175,7 +2175,7 @@ XMLHttpRequest::Send(File& aBody, ErrorResult& aRv)
   }
 
   JS::Rooted<JS::Value> value(cx);
-  if (!WrapNewBindingObject(cx, &aBody, &value)) {
+  if (!GetOrCreateDOMReflector(cx, &aBody, &value)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }

@@ -866,7 +866,8 @@ MaybeWrapValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
 // compartment of cx, and outerized as needed.
 template <class T>
 MOZ_ALWAYS_INLINE bool
-WrapNewBindingObject(JSContext* cx, T* value, JS::MutableHandle<JS::Value> rval)
+GetOrCreateDOMReflector(JSContext* cx, T* value,
+                        JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(value);
   JSObject* obj = value->GetWrapperPreserveColor();
@@ -1279,8 +1280,8 @@ VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
 
 // Wrap an object "p" which is not using WebIDL bindings yet.  This _will_
 // actually work on WebIDL binding objects that are wrappercached, but will be
-// much slower than WrapNewBindingObject.  "cache" must either be null or be the
-// nsWrapperCache for "p".
+// much slower than GetOrCreateDOMReflector.  "cache" must either be null or be
+// the nsWrapperCache for "p".
 template<class T>
 inline bool
 WrapObject(JSContext* cx, T* p, nsWrapperCache* cache, const nsIID* iid,
@@ -1583,44 +1584,45 @@ WrapCallThisObject<JS::Rooted<JSObject*>>(JSContext* cx,
   return obj;
 }
 
-// Helper for calling WrapNewBindingObject with smart pointers
+// Helper for calling GetOrCreateDOMReflector with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
 template <class T, bool isSmartPtr=HasgetMember<T>::Value>
-struct WrapNewBindingObjectHelper
+struct GetOrCreateDOMReflectorHelper
 {
-  static inline bool Wrap(JSContext* cx, const T& value,
-                          JS::MutableHandle<JS::Value> rval)
+  static inline bool GetOrCreate(JSContext* cx, const T& value,
+                                 JS::MutableHandle<JS::Value> rval)
   {
-    return WrapNewBindingObject(cx, value.get(), rval);
+    return GetOrCreateDOMReflector(cx, value.get(), rval);
   }
 };
 
 template <class T>
-struct WrapNewBindingObjectHelper<T, false>
+struct GetOrCreateDOMReflectorHelper<T, false>
 {
-  static inline bool Wrap(JSContext* cx, T& value,
-                          JS::MutableHandle<JS::Value> rval)
+  static inline bool GetOrCreate(JSContext* cx, T& value,
+                                 JS::MutableHandle<JS::Value> rval)
   {
-    return WrapNewBindingObject(cx, &value, rval);
+    return GetOrCreateDOMReflector(cx, &value, rval);
   }
 };
 
 template<class T>
 inline bool
-WrapNewBindingObject(JSContext* cx, T& value, JS::MutableHandle<JS::Value> rval)
+GetOrCreateDOMReflector(JSContext* cx, T& value,
+                        JS::MutableHandle<JS::Value> rval)
 {
-  return WrapNewBindingObjectHelper<T>::Wrap(cx, value, rval);
+  return GetOrCreateDOMReflectorHelper<T>::GetOrCreate(cx, value, rval);
 }
 
-// We need this version of WrapNewBindingObject for codegen, so it'll have the
-// same signature as WrapNewBindingNonWrapperCachedObject and
+// We need this version of GetOrCreateDOMReflector for codegen, so it'll have
+// the same signature as WrapNewBindingNonWrapperCachedObject and
 // WrapNewBindingNonWrapperCachedOwnedObject, which still need the scope.
 template<class T>
 inline bool
-WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
-                     JS::MutableHandle<JS::Value> rval)
+GetOrCreateDOMReflector(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
+                        JS::MutableHandle<JS::Value> rval)
 {
-  return WrapNewBindingObject(cx, value, rval);
+  return GetOrCreateDOMReflector(cx, value, rval);
 }
 
 template <class T>
