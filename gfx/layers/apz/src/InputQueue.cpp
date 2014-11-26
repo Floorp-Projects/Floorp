@@ -59,7 +59,7 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
       if (block->GetOverscrollHandoffChain()->HasFastMovingApzc()) {
         // If we're already in a fast fling, then we want the touch event to stop the fling
         // and to disallow the touch event from being used as part of a fling.
-        block->DisallowSingleTap();
+        block->SetDuringFastMotion();
       }
       block->GetOverscrollHandoffChain()->CancelAnimations();
     }
@@ -67,6 +67,9 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
     bool waitForMainThread = !aTargetConfirmed;
     if (!gfxPrefs::LayoutEventRegionsEnabled()) {
       waitForMainThread |= aTarget->NeedToWaitForContent();
+    }
+    if (block->IsDuringFastMotion()) {
+      waitForMainThread = false;
     }
     if (waitForMainThread) {
       // We either don't know for sure if aTarget is the right APZC, or we may
@@ -106,7 +109,9 @@ InputQueue::ReceiveInputEvent(const nsRefPtr<AsyncPanZoomController>& aTarget,
   // XXX calling ArePointerEventsConsumable on |target| may be wrong here if
   // the target isn't confirmed and the real target turns out to be something
   // else. For now assume this is rare enough that it's not an issue.
-  if (target && target->ArePointerEventsConsumable(block, aEvent.AsMultiTouchInput().mTouches.Length())) {
+  if (block->IsDuringFastMotion()) {
+    result = nsEventStatus_eConsumeNoDefault;
+  } else if (target && target->ArePointerEventsConsumable(block, aEvent.AsMultiTouchInput().mTouches.Length())) {
     result = nsEventStatus_eConsumeDoDefault;
   }
 
