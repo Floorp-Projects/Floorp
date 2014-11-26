@@ -10139,11 +10139,13 @@ class MDeleteProperty
     public BoxInputsPolicy::Data
 {
     AlwaysTenuredPropertyName name_;
+    bool strict_;
 
   protected:
-    MDeleteProperty(MDefinition *val, PropertyName *name)
+    MDeleteProperty(MDefinition *val, PropertyName *name, bool strict)
       : MUnaryInstruction(val),
-        name_(name)
+        name_(name),
+        strict_(strict)
     {
         setResultType(MIRType_Boolean);
     }
@@ -10151,8 +10153,10 @@ class MDeleteProperty
   public:
     INSTRUCTION_HEADER(DeleteProperty)
 
-    static MDeleteProperty *New(TempAllocator &alloc, MDefinition *obj, PropertyName *name) {
-        return new(alloc) MDeleteProperty(obj, name);
+    static MDeleteProperty *New(TempAllocator &alloc, MDefinition *obj, PropertyName *name,
+                                bool strict)
+    {
+        return new(alloc) MDeleteProperty(obj, name, strict);
     }
     MDefinition *value() const {
         return getOperand(0);
@@ -10160,14 +10164,20 @@ class MDeleteProperty
     PropertyName *name() const {
         return name_;
     }
+    bool strict() const {
+        return strict_;
+    }
 };
 
 class MDeleteElement
   : public MBinaryInstruction,
     public BoxInputsPolicy::Data
 {
-    MDeleteElement(MDefinition *value, MDefinition *index)
-      : MBinaryInstruction(value, index)
+    bool strict_;
+
+    MDeleteElement(MDefinition *value, MDefinition *index, bool strict)
+      : MBinaryInstruction(value, index),
+        strict_(strict)
     {
         setResultType(MIRType_Boolean);
     }
@@ -10175,14 +10185,19 @@ class MDeleteElement
   public:
     INSTRUCTION_HEADER(DeleteElement)
 
-    static MDeleteElement *New(TempAllocator &alloc, MDefinition *value, MDefinition *index) {
-        return new(alloc) MDeleteElement(value, index);
+    static MDeleteElement *New(TempAllocator &alloc, MDefinition *value, MDefinition *index,
+                               bool strict)
+    {
+        return new(alloc) MDeleteElement(value, index, strict);
     }
     MDefinition *value() const {
         return getOperand(0);
     }
     MDefinition *index() const {
         return getOperand(1);
+    }
+    bool strict() const {
+        return strict_;
     }
 };
 
