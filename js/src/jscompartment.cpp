@@ -56,6 +56,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     lastAnimationTime(0),
     regExps(runtime_),
     globalWriteBarriered(false),
+    neuteredTypedObjects(0),
     propertyTree(thisForCtor()),
     selfHostingScriptSource(nullptr),
     lazyArrayBuffers(nullptr),
