@@ -23,17 +23,24 @@ hg update $GAIA_REV;
 
 cd $gecko_dir
 
+# Nightly mozconfig expects gaia repo be inside mozilla-central tree
+if [ ! -d "gaia" ]; then
+  ln -s ../../gaia/source gaia
+fi
+
+export MOZ_OBJDIR=$(get-objdir.py $gecko_dir)
+
 ./mach build;
 
 ### Make package
-cd /home/worker/object-folder;
+cd $MOZ_OBJDIR
 make package package-tests;
 
 ### Extract artifacts
 # Navigate to dist/ folder
-cd /home/worker/object-folder/dist;
+cd $MOZ_OBJDIR/dist
 
-ls -lah /home/worker/object-folder/dist/
+ls -lah $MOZ_OBJDIR/dist/
 
 
 # Target names are cached so make sure we discard them first if found.
