@@ -649,11 +649,10 @@ nsXREDirProvider::LoadAppBundleDirs()
 {
   nsCOMPtr<nsIFile> dir;
   bool persistent = false;
-  nsresult rv = GetFile(XRE_EXECUTABLE_FILE, &persistent, getter_AddRefs(dir));
+  nsresult rv = GetFile(XRE_APP_DISTRIBUTION_DIR, &persistent, getter_AddRefs(dir));
   if (NS_FAILED(rv))
     return;
 
-  dir->SetNativeLeafName(NS_LITERAL_CSTRING("distribution"));
   dir->AppendNative(NS_LITERAL_CSTRING("bundles"));
 
   nsCOMPtr<nsISimpleEnumerator> e;
