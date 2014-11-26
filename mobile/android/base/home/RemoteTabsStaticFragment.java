@@ -10,6 +10,7 @@ import java.util.Locale;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity;
+import org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivity;
 import org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
@@ -90,7 +91,8 @@ public class RemoteTabsStaticFragment extends HomeFragment implements OnClickLis
                 R.id.remote_tabs_setup_old_sync_link,
                 R.id.remote_tabs_needs_verification_resend_email,
                 R.id.remote_tabs_needs_verification_help,
-                R.id.remote_tabs_needs_password_sign_in, }) {
+                R.id.remote_tabs_needs_password_sign_in,
+                R.id.remote_tabs_needs_finish_migrating_sign_in, }) {
             maybeSetOnClickListener(view, resourceId);
         }
     }
@@ -116,8 +118,11 @@ public class RemoteTabsStaticFragment extends HomeFragment implements OnClickLis
             final EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.noneOf(OnUrlOpenListener.Flags.class);
             mUrlOpenListener.onUrlOpen(CONFIRM_ACCOUNT_SUPPORT_URL, flags);
         } else if (id == R.id.remote_tabs_needs_password_sign_in) {
-            // This Activity will redirect to the correct Activity as needed.
             final Intent intent = new Intent(getActivity(), FxAccountUpdateCredentialsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } else if (id == R.id.remote_tabs_needs_finish_migrating_sign_in) {
+            final Intent intent = new Intent(getActivity(), FxAccountFinishMigratingActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }
