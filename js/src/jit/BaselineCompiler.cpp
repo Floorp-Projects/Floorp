@@ -2083,6 +2083,12 @@ BaselineCompiler::emit_JSOP_SETGNAME()
 }
 
 bool
+BaselineCompiler::emit_JSOP_STRICTSETGNAME()
+{
+    return emit_JSOP_SETPROP();
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETPROP()
 {
     // Keep object in R0.

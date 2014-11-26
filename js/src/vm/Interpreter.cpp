@@ -1608,7 +1608,6 @@ CASE(JSOP_UNUSED147)
 CASE(JSOP_UNUSED148)
 CASE(JSOP_BACKPATCH)
 CASE(JSOP_UNUSED150)
-CASE(JSOP_UNUSED156)
 CASE(JSOP_UNUSED157)
 CASE(JSOP_UNUSED158)
 CASE(JSOP_UNUSED159)
@@ -2381,11 +2380,14 @@ CASE(JSOP_SETINTRINSIC)
 END_CASE(JSOP_SETINTRINSIC)
 
 CASE(JSOP_SETGNAME)
+CASE(JSOP_STRICTSETGNAME)
 CASE(JSOP_SETNAME)
 CASE(JSOP_STRICTSETNAME)
 {
     static_assert(JSOP_SETNAME_LENGTH == JSOP_STRICTSETNAME_LENGTH,
                   "setname and strictsetname must be the same size");
+    static_assert(JSOP_SETGNAME_LENGTH == JSOP_STRICTSETGNAME_LENGTH,
+                  "setganem adn strictsetgname must be the same size");
     RootedObject &scope = rootObject0;
     scope = &REGS.sp[-2].toObject();
     HandleValue value = REGS.stackHandleAt(-1);
