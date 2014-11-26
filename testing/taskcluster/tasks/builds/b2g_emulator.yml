@@ -27,7 +27,7 @@ task:
       REPOSITORY: '{{repository}}'
 
     image: '{{#docker_image}}builder{{/docker_image}}'
-    maxRunTime: 7200
+    maxRunTime: 14400
 
     command:
       - build-emulator.sh
