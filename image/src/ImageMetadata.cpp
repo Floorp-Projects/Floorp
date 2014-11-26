@@ -27,6 +27,10 @@ ImageMetadata::SetOnImage(RasterImage* image)
   }
 
   image->SetLoopCount(mLoopCount);
+
+  for (uint32_t i = 0; i < image->GetNumFrames(); i++) {
+    image->SetFrameAsNonPremult(i, mIsNonPremultiplied);
+  }
 }
 
 } // namespace image
