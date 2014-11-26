@@ -54,6 +54,17 @@ loop.store.createStore = (function() {
         this.trigger("change:" + key);
       }
       this.trigger("change");
+    },
+
+    /**
+     * Resets the store state to the initially defined state.
+     */
+    resetStoreState: function() {
+      if (typeof this.getInitialStoreState === "function") {
+        this._storeState = this.getInitialStoreState();
+      } else {
+        this._storeState = {};
+      }
     }
   };
 
