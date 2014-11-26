@@ -54,12 +54,8 @@ const NFC_CONTRACTID = "@mozilla.org/nfc;1";
 const NFC_CID =
   Components.ID("{2ff24790-5e74-11e1-b86c-0800200c9a66}");
 
-const NFC_IPC_ADD_EVENT_TARGET_MSG_NAMES = [
-  "NFC:AddEventListener"
-];
-
 const NFC_IPC_MSG_NAMES = [
-  "NFC:CheckSessionToken",
+  "NFC:AddEventListener",
   "NFC:QueryInfo"
 ];
 
@@ -131,10 +127,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     _registerMessageListeners: function _registerMessageListeners() {
       ppmm.addMessageListener("child-process-shutdown", this);
 
-      for (let message of NFC_IPC_ADD_EVENT_TARGET_MSG_NAMES) {
-        ppmm.addMessageListener(message, this);
-      }
-
       for (let message of NFC_IPC_MSG_NAMES) {
         ppmm.addMessageListener(message, this);
       }
@@ -154,10 +146,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
 
     _unregisterMessageListeners: function _unregisterMessageListeners() {
       ppmm.removeMessageListener("child-process-shutdown", this);
-
-      for (let message of NFC_IPC_ADD_EVENT_TARGET_MSG_NAMES) {
-        ppmm.removeMessageListener(message, this);
-      }
 
       for (let message of NFC_IPC_MSG_NAMES) {
         ppmm.removeMessageListener(message, this);
@@ -290,8 +278,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         return null;
       }
 
-      if (NFC_IPC_MSG_NAMES.indexOf(message.name) != -1 ||
-          NFC_IPC_ADD_EVENT_TARGET_MSG_NAMES.indexOf(message.name) != -1 ) {
+      if (NFC_IPC_MSG_NAMES.indexOf(message.name) != -1) {
         // Do nothing.
       } else if (NFC_IPC_NFC_PERM_MSG_NAMES.indexOf(message.name) != -1) {
         if (!message.target.assertPermission("nfc")) {
@@ -320,11 +307,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
         case "NFC:AddEventListener":
           this.addEventListener(message.target);
           return null;
-        case "NFC:CheckSessionToken":
-          let sessionToken = message.data.sessionToken;
-          return SessionHelper.isValidToken(sessionToken, message.data.isP2P) ?
-                   NFC.NFC_GECKO_SUCCESS :
-                   NFC.NFC_GECKO_ERROR_BAD_SESSION_TOKEN;
         case "NFC:RegisterPeerReadyTarget":
           this.registerPeerReadyTarget(message.target, message.data.appId);
           return null;
@@ -341,7 +323,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           // Upon receiving the status of sendFile operation, send the response
           // to appropriate content process.
           message.data.type = "NotifySendFileStatusResponse";
-          if (message.data.status !== NFC.NFC_SUCCESS) {
+          if (message.data.status) {
             message.data.errorMsg =
               this.nfc.getErrorMessage(NFC.NFC_GECKO_ERROR_SEND_FILE_FAILED);
           }
@@ -421,17 +403,6 @@ let SessionHelper = {
 
   isP2PSession: function isP2PSession(id) {
     return (this.tokenMap[id] != null) && this.tokenMap[id].isP2P;
-  },
-
-  isValidToken: function isValidToken(token, isP2P) {
-    for (let id in this.tokenMap) {
-      if ((this.tokenMap[id].token == token) &&
-          (this.tokenMap[id].isP2P == isP2P)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 };
 
@@ -511,8 +482,7 @@ Nfc.prototype = {
   },
 
   getErrorMessage: function getErrorMessage(errorCode) {
-    return NFC.NFC_ERROR_MSG[errorCode] ||
-           NFC.NFC_ERROR_MSG[NFC.NFC_GECKO_ERROR_GENERIC_FAILURE];
+    return NFC.NFC_ERROR_MSG[errorCode];
   },
 
   /**

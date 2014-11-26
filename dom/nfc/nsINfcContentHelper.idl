@@ -87,12 +87,10 @@ interface nsINfcRequestCallback : nsISupports
   void notifyError(in DOMString errorMsg);
 };
 
-[scriptable, uuid(bcf214de-885b-43e6-9e53-9b7d880e1633)]
+[scriptable, uuid(c5fdf956-735e-45d3-aa25-3a871bd3e2f8)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
-
-  boolean checkSessionToken(in DOMString sessionToken, in boolean isP2P);
 
   /**
    * Read current NDEF data on the tag.
