@@ -229,7 +229,9 @@ class ICEntry
         // A fake IC entry for returning from a callVM to
         // Debug{Prologue,Epilogue}.
         Kind_DebugPrologue,
-        Kind_DebugEpilogue
+        Kind_DebugEpilogue,
+
+        Kind_Invalid
     };
 
   private:
@@ -238,6 +240,7 @@ class ICEntry
 
     // Set the kind and asserts that it's sane.
     void setKind(Kind kind) {
+        MOZ_ASSERT(kind < Kind_Invalid);
         kind_ = kind;
         MOZ_ASSERT(this->kind() == kind);
     }
