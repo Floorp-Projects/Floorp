@@ -26,6 +26,10 @@ public:
     gfx::IntSize mSize;
     bool mInverted;
     bool mOwns;
+
+    Data() : mImage(nullptr), mSync(nullptr), mSize(0, 0), mInverted(false), mOwns(false)
+    {
+    }
   };
 
   void SetData(const Data& aData) { mData = aData; }
