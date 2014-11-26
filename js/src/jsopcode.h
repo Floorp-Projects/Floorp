@@ -69,8 +69,8 @@ FOR_EACH_OPCODE(ENUMERATE_OPCODE)
 #define JOF_LEFTASSOC    (1U<<16) /* left-associative operator */
 /* (1U<<17) is unused */
 /* (1U<<18) is unused */
-/* (1U<<19) is unused*/
-/* (1U<<20) is unused*/
+#define JOF_CHECKSLOPPY  (1U<<19) /* Op can only be generated in sloppy mode */
+#define JOF_CHECKSTRICT  (1U<<20) /* Op can only be generated in strict mode */
 #define JOF_INVOKE       (1U<<21) /* JSOP_CALL, JSOP_FUNCALL, JSOP_FUNAPPLY,
                                      JSOP_NEW, JSOP_EVAL */
 #define JOF_TMPSLOT      (1U<<22) /* interpreter uses extra temporary slot
@@ -632,6 +632,20 @@ IsEqualityOp(JSOp op)
 {
     return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
 }
+
+#ifdef DEBUG
+inline bool
+IsCheckStrictOp(JSOp op)
+{
+    return js_CodeSpec[op].format & JOF_CHECKSTRICT;
+}
+
+inline bool
+IsCheckSloppyOp(JSOp op)
+{
+    return js_CodeSpec[op].format & JOF_CHECKSLOPPY;
+}
+#endif
 
 inline bool
 IsGetPropPC(jsbytecode *pc)
