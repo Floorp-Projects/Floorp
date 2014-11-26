@@ -96,6 +96,16 @@ public:
     return mozilla::BigEndian::readUint64(ptr);
   }
 
+  int64_t Read64()
+  {
+    auto ptr = Read(8);
+    if (!ptr) {
+      MOZ_ASSERT(false);
+      return 0;
+    }
+    return mozilla::BigEndian::readInt64(ptr);
+  }
+
   const uint8_t* Read(size_t aCount)
   {
     if (aCount > mRemaining) {
