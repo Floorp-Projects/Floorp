@@ -22,8 +22,10 @@ class EGLImageImage : public Image {
 public:
   struct Data {
     EGLImage mImage;
+    EGLSync mSync;
     gfx::IntSize mSize;
     bool mInverted;
+    bool mOwns;
   };
 
   void SetData(const Data& aData) { mData = aData; }
@@ -37,6 +39,9 @@ public:
   }
 
   EGLImageImage() : Image(nullptr, ImageFormat::EGLIMAGE) {}
+
+protected:
+  virtual ~EGLImageImage();
 
 private:
   Data mData;
