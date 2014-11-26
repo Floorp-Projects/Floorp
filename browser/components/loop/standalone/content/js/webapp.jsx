@@ -690,9 +690,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
       return nextState.callStatus !== this.state.callStatus;
     },
 
-    callStatusSwitcher: function(status) {
+    resetCallStatus: function() {
+      this.props.feedbackStore.dispatchAction(new sharedActions.FeedbackComplete());
       return function() {
-        this.setState({callStatus: status});
+        this.setState({callStatus: "start"});
       }.bind(this);
     },
 
@@ -744,7 +745,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
               sdk={this.props.sdk}
               conversation={this.props.conversation}
               feedbackStore={this.props.feedbackStore}
-              onAfterFeedbackReceived={this.callStatusSwitcher("start")}
+              onAfterFeedbackReceived={this.resetCallStatus()}
             />
           );
         }
