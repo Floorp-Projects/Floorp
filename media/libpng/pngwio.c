@@ -1,7 +1,7 @@
 
 /* pngwio.c - functions for data output
  *
- * Last changed in libpng 1.6.9 [February 6, 2014]
+ * Last changed in libpng 1.6.15 [November 20, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -151,7 +151,7 @@ png_set_write_fn(png_structrp png_ptr, png_voidp io_ptr,
 #  endif
 #else
    PNG_UNUSED(output_flush_fn)
-#endif /* PNG_WRITE_FLUSH_SUPPORTED */
+#endif /* WRITE_FLUSH */
 
 #ifdef PNG_READ_SUPPORTED
    /* It is an error to read while writing a png file */
@@ -165,4 +165,4 @@ png_set_write_fn(png_structrp png_ptr, png_voidp io_ptr,
    }
 #endif
 }
-#endif /* PNG_WRITE_SUPPORTED */
+#endif /* WRITE */
