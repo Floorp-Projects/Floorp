@@ -20,6 +20,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidSurfaceTexture.h"
 #include "GLImages.h"
+#include "GLLibraryEGL.h"
 #endif
 
 using mozilla::layers::PlanarYCbCrImage;
