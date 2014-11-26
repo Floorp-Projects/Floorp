@@ -1,0 +1,50 @@
+taskId: {{build_slugid}}
+task:
+  metadata:
+    source: http://todo.com/soon
+    owner: {{owner}}
+    name: B2G Desktop Opt
+    description: B2G Desktop Opt
+
+  workerType: b2gbuild
+  provisionerId: aws-provisioner
+
+  scopes:
+    - 'docker-worker:cache:sources-mozilla-central'
+    - 'docker-worker:cache:sources-gaia'
+    - 'docker-worker:cache:build-b2g-desktop-objects'
+
+  payload:
+    cache:
+      sources-gaia: '/home/worker/gaia'
+      sources-mozilla-central: '/home/worker/mozilla-central'
+      build-b2g-desktop-objects: '/home/worker/object-folder'
+
+    env:
+      MOZCONFIG: '/home/worker/mozconfigs/b2g-desktop'
+      # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
+      REVISION: '{{revision}}'
+      REPOSITORY: '{{repository}}'
+
+    image: '{{#docker_image}}builder{{/docker_image}}'
+    maxRunTime: 3600
+
+    command:
+      - build-b2g-desktop.sh
+
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.linux-x86_64.tar.bz2'
+      tests: 'public/build/target.tests.zip'
+
+    treeherder:
+      symbol: B

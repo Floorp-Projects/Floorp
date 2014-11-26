@@ -1,0 +1,12 @@
+#! /bin/bash -vex
+
+# This file is intended to be used as the "entrypoint" or first command in the
+# docker image. It uses "eval" so it takes place of the usual /bin/bash -c
+# <stuff> conventions you need when running a docker image. Primarily it
+# bootstraps any processes that need to run outside of mozharness (like Xvfb)
+
+# XXX: Note that all tests could be faster at smaller bit depth
+Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 &
+export DISPLAY=:0
+
+eval $@
