@@ -161,6 +161,13 @@ tests:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_mochitests.yml
         chunks: 5
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
+        chunks: 9
+  mochitest-media:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_mochitest_media.yml
   mochitest-oop:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
