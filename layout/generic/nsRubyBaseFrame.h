@@ -9,7 +9,9 @@
 #ifndef nsRubyBaseFrame_h___
 #define nsRubyBaseFrame_h___
 
-#include "nsContainerFrame.h"
+#include "nsInlineFrame.h"
+
+typedef nsInlineFrame nsRubyBaseFrameSuper;
 
 /**
  * Factory function.
@@ -18,7 +20,7 @@
 nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                       nsStyleContext* aContext);
 
-class nsRubyBaseFrame MOZ_FINAL : public nsContainerFrame
+class nsRubyBaseFrame MOZ_FINAL : public nsRubyBaseFrameSuper
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -27,20 +29,7 @@ public:
 
   // nsIFrame overrides
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
-                                 InlineMinISizeData *aData) MOZ_OVERRIDE;
-  virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
-                                  InlinePrefISizeData *aData) MOZ_OVERRIDE;
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext);
-  virtual void Reflow(nsPresContext* aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode)
-    const MOZ_OVERRIDE;
-  virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
@@ -49,8 +38,8 @@ public:
 protected:
   friend nsContainerFrame* NS_NewRubyBaseFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
-  explicit nsRubyBaseFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
-  nscoord mBaseline;
+  explicit nsRubyBaseFrame(nsStyleContext* aContext)
+    : nsRubyBaseFrameSuper(aContext) {}
 };
 
 #endif /* nsRubyBaseFrame_h___ */

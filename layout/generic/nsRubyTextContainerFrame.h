@@ -14,6 +14,8 @@
 #include "nsRubyTextFrame.h"
 #include "nsLineLayout.h"
 
+typedef nsContainerFrame nsRubyTextContainerFrameSuper;
+
 /**
  * Factory function.
  * @return a newly allocated nsRubyTextContainerFrame (infallible)
@@ -21,7 +23,7 @@
 nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
 
-class nsRubyTextContainerFrame MOZ_FINAL : public nsContainerFrame
+class nsRubyTextContainerFrame MOZ_FINAL : public nsRubyTextContainerFrameSuper
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -30,6 +32,7 @@ public:
 
   // nsIFrame overrides
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
@@ -45,7 +48,7 @@ protected:
     NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
-    : nsContainerFrame(aContext) {}
+    : nsRubyTextContainerFrameSuper(aContext) {}
 
   // The intended dimensions of the ruby text container. These are modified
   // whenever a ruby text box is reflowed and used when the ruby text container

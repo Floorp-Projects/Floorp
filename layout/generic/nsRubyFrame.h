@@ -32,6 +32,15 @@ public:
                                  InlineMinISizeData *aData) MOZ_OVERRIDE;
   virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                   InlinePrefISizeData *aData) MOZ_OVERRIDE;
+  virtual mozilla::LogicalSize
+    ComputeSize(nsRenderingContext *aRenderingContext,
+                mozilla::WritingMode aWritingMode,
+                const mozilla::LogicalSize& aCBSize,
+                nscoord aAvailableISize,
+                const mozilla::LogicalSize& aMargin,
+                const mozilla::LogicalSize& aBorder,
+                const mozilla::LogicalSize& aPadding,
+                ComputeSizeFlags aFlags) MOZ_OVERRIDE;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
