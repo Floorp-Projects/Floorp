@@ -118,6 +118,7 @@ namespace jit {
     _(JSOP_SETNAME)            \
     _(JSOP_GETPROP)            \
     _(JSOP_SETPROP)            \
+    _(JSOP_STRICTSETPROP)      \
     _(JSOP_CALLPROP)           \
     _(JSOP_DELPROP)            \
     _(JSOP_STRICTDELPROP)      \
