@@ -362,8 +362,11 @@ let Bookmarks = Object.freeze({
                                              updatedItem.parentGuid ]);
       }
       if (updateInfo.hasOwnProperty("keyword")) {
+        // If the keyword is unset, updatedItem won't have it set.
+        let keyword = updatedItem.hasOwnProperty("keyword") ?
+                        updatedItem.keyword : "";
         notify(observers, "onItemChanged", [ updatedItem._id, "keyword",
-                                             false, updatedItem.keyword,
+                                             false, keyword,
                                              toPRTime(updatedItem.lastModified),
                                              updatedItem.type,
                                              updatedItem._parentId,
@@ -779,10 +782,14 @@ function* updateBookmark(info, item, newParent) {
 
   yield db.executeTransaction(function* () {
     if (info.hasOwnProperty("keyword")) {
-      if (info.keyword.length > 0)
+      if (info.keyword.length > 0) {
         yield maybeCreateKeyword(db, info.keyword);
-      tuples.set("keyword", { value: info.keyword
-                            , fragment: "keyword_id = (SELECT id FROM moz_keywords WHERE keyword = :keyword)" });
+        tuples.set("keyword",
+                   { value: info.keyword
+                   , fragment: "keyword_id = (SELECT id FROM moz_keywords WHERE keyword = :keyword)" });
+      } else {
+        tuples.set("keyword_id", { value: null });
+      }
     }
 
     if (info.hasOwnProperty("url")) {
