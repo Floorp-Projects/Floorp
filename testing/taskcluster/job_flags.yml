@@ -54,6 +54,7 @@ builds:
       - b2g
     types:
       opt: tasks/builds/b2g_desktop.yml
+      debug: tasks/builds/b2g_desktop_debug.yml
 
 # Test section covers the -u options in the try flags
 tests:
@@ -72,5 +73,6 @@ tests:
   mochitests:
     allowed_build_tasks:
       - tasks/builds/b2g_desktop.yml
+      - tasks/builds/b2g_desktop_debug.yml
     task: tasks/tests/b2g_mochitest.yml
     chunks: 5
