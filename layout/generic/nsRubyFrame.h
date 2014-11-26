@@ -12,6 +12,7 @@
 #include "nsContainerFrame.h"
 
 class nsRubyBaseContainerFrame;
+class nsRubyTextContainerFrame;
 
 /**
  * Factory function.
@@ -64,6 +65,8 @@ protected:
                      const nsHTMLReflowState& aReflowState,
                      nsRubyBaseContainerFrame* aBaseContainer,
                      nsReflowStatus& aStatus);
+
+  nsRubyBaseContainerFrame* PullOneSegment(ContinuationTraversingState& aState);
 
   nscoord mBaseline;
 };

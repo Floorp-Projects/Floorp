@@ -41,7 +41,6 @@ public:
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
-  void SetISize(nscoord aISize) { mISize = aISize; }
 
 protected:
   friend nsContainerFrame*
@@ -49,6 +48,9 @@ protected:
                                  nsStyleContext* aContext);
   explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
     : nsRubyTextContainerFrameSuper(aContext) {}
+
+  friend class nsRubyBaseContainerFrame;
+  void SetISize(nscoord aISize) { mISize = aISize; }
 
   // The intended dimensions of the ruby text container. These are modified
   // whenever a ruby text box is reflowed and used when the ruby text container
