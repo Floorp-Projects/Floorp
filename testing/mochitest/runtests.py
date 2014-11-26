@@ -765,12 +765,6 @@ class MochitestUtilsMixin(object):
     with open(os.path.join(options.profilePath, "extensions", "staged", "mochikit@mozilla.org", "chrome.manifest"), "a") as mfile:
       mfile.write(chrome)
 
-  def getChromeTestDir(self):
-    dir = os.path.join(os.path.abspath("."), SCRIPT_DIR) + "/"
-    if mozinfo.isWin:
-      dir = "file:///" + dir.replace("\\", "/")
-    return dir
-
   def addChromeToProfile(self, options):
     "Adds MochiKit chrome tests to the profile."
 
@@ -795,7 +789,9 @@ toolbar#nav-bar {
     manifest = os.path.join(options.profilePath, "tests.manifest")
     with open(manifest, "w") as manifestFile:
       # Register chrome directory.
-      chrometestDir = self.getChromeTestDir()
+      chrometestDir = os.path.join(os.path.abspath("."), SCRIPT_DIR) + "/"
+      if mozinfo.isWin:
+        chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
       manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
 
       if options.testingModulesDir is not None:
