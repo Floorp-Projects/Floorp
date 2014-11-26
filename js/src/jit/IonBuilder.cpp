@@ -1662,6 +1662,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_call(GET_ARGC(pc), (JSOp)*pc == JSOP_NEW);
 
       case JSOP_EVAL:
+      case JSOP_STRICTEVAL:
         return jsop_eval(GET_ARGC(pc));
 
       case JSOP_INT8:

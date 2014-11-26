@@ -151,9 +151,11 @@ namespace jit {
     _(JSOP_FUNAPPLY)           \
     _(JSOP_NEW)                \
     _(JSOP_EVAL)               \
+    _(JSOP_STRICTEVAL)         \
     _(JSOP_SPREADCALL)         \
     _(JSOP_SPREADNEW)          \
     _(JSOP_SPREADEVAL)         \
+    _(JSOP_STRICTSPREADEVAL)   \
     _(JSOP_IMPLICITTHIS)       \
     _(JSOP_INSTANCEOF)         \
     _(JSOP_TYPEOF)             \

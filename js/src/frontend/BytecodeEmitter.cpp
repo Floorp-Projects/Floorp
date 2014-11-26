@@ -6210,7 +6210,11 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
     }
     CheckTypeSet(cx, bce, pn->getOp());
-    if (pn->isOp(JSOP_EVAL) || pn->isOp(JSOP_SPREADEVAL)) {
+    if (pn->isOp(JSOP_EVAL) ||
+        pn->isOp(JSOP_STRICTEVAL) ||
+        pn->isOp(JSOP_SPREADEVAL) ||
+        pn->isOp(JSOP_STRICTSPREADEVAL))
+    {
         uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
         EMIT_UINT16_IMM_OP(JSOP_LINENO, lineNum);
     }
