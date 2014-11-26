@@ -78,11 +78,10 @@ public:
 class TrackConfig
 {
 public:
-  TrackConfig() : mime_type(nullptr), mTrackId(0), duration(0), media_time(0) {}
+  TrackConfig() : mime_type(nullptr), mTrackId(0), duration(0) {}
   const char* mime_type;
   uint32_t mTrackId;
   int64_t duration;
-  int64_t media_time;
   CryptoTrack crypto;
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
@@ -145,7 +144,7 @@ class MP4Sample
 public:
   MP4Sample();
   ~MP4Sample();
-  void Update(int64_t& aMediaTime);
+  void Update();
   void Pad(size_t aPaddingBytes);
 
   stagefright::MediaBuffer* mMediaBuffer;
