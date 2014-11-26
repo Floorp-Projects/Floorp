@@ -5,8 +5,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!DOCTYPE overlay [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%brandDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  <!ENTITY % searchDTD SYSTEM "chrome://browser/locale/preferences/search.dtd">
+  %brandDTD;
+  %searchDTD;
 ]>
 
 <overlay id="SearchPaneOverlay"
@@ -34,24 +36,24 @@
 
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" align="start">
-      <caption label="Default Search Engine"/>
-      <label>Choose your default search engine. &brandShortName; uses it in the location bar, search bar, and start pages.</label>
+      <caption label="&defaultSearchEngine.label;"/>
+      <label>&chooseYourDefaultSearchEngine.label;</label>
       <menulist id="defaultEngine" oncommand="gSearchPane.setDefaultEngine();">
         <menupopup/>
       </menulist>
       <checkbox id="suggestionsInSearchFieldsCheckbox"
-                label="Provide search suggestions"
-                accesskey="s"
+                label="&provideSearchSuggestions.label;"
+                accesskey="&provideSearchSuggestions.accesskey;"
                 preference="browser.search.suggest.enabled"/>
     </groupbox>
 
     <groupbox id="oneClickSearchProvidersGroup">
-      <caption label="One-click search engines"/>
-      <label>The search bar lets you search alternate engines directly. Choose which ones to display.</label>
+      <caption label="&oneClickSearchEngines.label;"/>
+      <label>&chooseWhichOneToDisplay.label;</label>
 
       <richlistbox id="oneClickProvidersList"/>
       <hbox pack="end" style="margin-bottom: 1em">
-        <label id="addEngines" class="text-link" value="Add more search providers…"
+        <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"
                onclick="if (event.button == 0) { Services.wm.getMostRecentWindow('navigator:browser').BrowserSearch.loadAddEngines(); }"/>
       </hbox>
     </groupbox>
