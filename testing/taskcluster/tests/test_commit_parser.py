@@ -57,8 +57,12 @@ class TestCommitParser(unittest.TestCase):
             'builds': {
                 'linux': {
                     'types': {
-                        'opt': 'task/linux',
-                        'debug': 'task/linux-debug'
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
                     }
                 },
             },
@@ -68,7 +72,8 @@ class TestCommitParser(unittest.TestCase):
         expected = [
             {
                 'task': 'task/linux',
-                'dependents': []
+                'dependents': [],
+                'additional-parameters': {}
             }
         ]
 
@@ -88,8 +93,12 @@ class TestCommitParser(unittest.TestCase):
             'builds': {
                 'linux': {
                     'types': {
-                        'opt': 'task/linux',
-                        'debug': 'task/linux-debug'
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
                     }
                 },
             },
@@ -99,7 +108,8 @@ class TestCommitParser(unittest.TestCase):
         expected = [
             {
                 'task': 'task/linux',
-                'dependents': []
+                'dependents': [],
+                'additional-parameters': {}
             }
         ]
 
@@ -119,17 +129,22 @@ class TestCommitParser(unittest.TestCase):
             'builds': {
                 'linux': {
                     'types': {
-                        'opt': 'task/linux',
-                        'debug': 'task/linux-debug'
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
                     }
                 },
             },
             'tests': {
                 'web-platform-tests': {
-                    'task': 'task/web-platform-tests',
-                    'allowed_build_tasks': [
-                        'task/linux'
-                    ]
+                    'allowed_build_tasks': {
+                        'task/linux': {
+                            'task': 'task/web-platform-tests',
+                        }
+                    }
                 }
             }
         }
@@ -137,14 +152,19 @@ class TestCommitParser(unittest.TestCase):
         expected = [
             {
                 'task': 'task/linux-debug',
-                'dependents': []
+                'dependents': [],
+                'additional-parameters': {}
             },
             {
                 'task': 'task/linux',
                 'dependents': [{
-                    'task': 'task/web-platform-tests',
-                    'allowed_build_tasks': ['task/linux']
-                }]
+                    'allowed_build_tasks': {
+                        'task/linux': {
+                            'task':'task/web-platform-tests'
+                        }
+                    }
+                }],
+                'additional-parameters': {}
             }
         ]
 
@@ -164,23 +184,43 @@ class TestCommitParser(unittest.TestCase):
             'builds': {
                 'linux': {
                     'types': {
-                        'opt': 'task/linux',
-                        'debug': 'task/linux-debug'
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
                     }
                 },
                 'win32': {
                     'platforms': ['windows'],
                     'types': {
-                        'opt': 'task/win32',
+                        'opt': {
+                            'task': 'task/win32',
+                        }
                     }
                 },
             },
             'tests': {
                 'web-platform-tests': {
-                    'task': 'task/web-platform-tests',
+                    'allowed_build_tasks': {
+                        'task/linux': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/win32': {
+                            'task': 'task/web-platform-tests',
+                        }
+                    }
                 },
                 'mochitest': {
-                    'task': 'task/mochitest',
+                    'allowed_build_tasks': {
+                        'task/linux-debug': {
+                            'task': 'task/mochitest',
+                        },
+                        'task/win32': {
+                            'task': 'task/mochitest',
+                        }
+                    }
                 }
             }
         }
@@ -188,18 +228,39 @@ class TestCommitParser(unittest.TestCase):
         expected = [
             {
                 'task': 'task/linux',
-                'dependents': []
+                'dependents': [],
+                'additional-parameters': {}
             },
             {
                 'task': 'task/linux-debug',
-                'dependents': []
+                'dependents': [],
+                'additional-parameters': {}
             },
             {
                 'task': 'task/win32',
                 'dependents': [
-                    { 'task': 'task/web-platform-tests' },
-                    { 'task': 'task/mochitest' }
-                ]
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/win32': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    },
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux-debug': {
+                                'task': 'task/mochitest',
+                            },
+                            'task/win32': {
+                                'task': 'task/mochitest',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
             }
         ]
 
@@ -219,23 +280,43 @@ class TestCommitParser(unittest.TestCase):
             'builds': {
                 'linux': {
                     'types': {
-                        'opt': 'task/linux',
-                        'debug': 'task/linux-debug'
+                        'opt': {
+                            'task': 'task/linux'
+                        },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
                     }
                 },
                 'win32': {
                     'platforms': ['windows'],
                     'types': {
-                        'opt': 'task/win32',
+                        'opt': {
+                            'task': 'task/win32'
+                        }
                     }
                 },
             },
             'tests': {
                 'web-platform-tests': {
-                    'task': 'task/web-platform-tests',
+                    'allowed_build_tasks': {
+                        'task/linux': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/win32': {
+                            'task': 'task/web-platform-tests',
+                        }
+                    }
                 },
                 'mochitest': {
-                    'task': 'task/mochitest',
+                    'allowed_build_tasks': {
+                        'task/linux-debug': {
+                            'task': 'task/mochitest',
+                        },
+                        'task/win32': {
+                            'task': 'task/mochitest',
+                        }
+                    }
                 }
             }
         }
@@ -244,8 +325,18 @@ class TestCommitParser(unittest.TestCase):
             {
                 'task': 'task/win32',
                 'dependents': [
-                    { 'task': 'task/mochitest' }
-                ]
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux-debug': {
+                                'task': 'task/mochitest',
+                            },
+                            'task/win32': {
+                                'task': 'task/mochitest',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
             }
         ]
 
@@ -266,20 +357,41 @@ class TestCommitParser(unittest.TestCase):
             'builds': {
                 'linux': {
                     'types': {
-                        'opt': 'task/linux',
-                        'debug': 'task/linux-debug'
+                        'opt': {
+                            'task': 'task/linux',
+                         },
+                        'debug': {
+                            'task': 'task/linux-debug'
+                        }
                     }
                 },
                 'linux64': {
                     'types': {
-                        'opt': 'task/linux64',
-                        'debug': 'task/linux64-debug'
+                        'opt': {
+                            'task': 'task/linux64',
+                         },
+                        'debug': {
+                            'task': 'task/linux64-debug'
+                        }
                     }
                 }
             },
             'tests': {
                 'web-platform-tests': {
-                    'task': 'task/web-platform-tests'
+                    'allowed_build_tasks': {
+                        'task/linux': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/linux-debug': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/linux64': {
+                            'task': 'task/web-platform-tests',
+                        },
+                        'task/linux64-debug': {
+                            'task': 'task/web-platform-tests',
+                        }
+                    }
                 }
             }
         }
@@ -288,26 +400,90 @@ class TestCommitParser(unittest.TestCase):
             {
                 'task': 'task/linux',
                 'dependents': [
-                    { 'task': 'task/web-platform-tests' }
-                ]
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
             },
             {
                 'task': 'task/linux-debug',
                 'dependents': [
-                    { 'task': 'task/web-platform-tests' }
-                ]
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
             },
             {
                 'task': 'task/linux64',
                 'dependents': [
-                    { 'task': 'task/web-platform-tests' }
-                ]
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
             },
             {
                 'task': 'task/linux64-debug',
                 'dependents': [
-                    { 'task': 'task/web-platform-tests' }
-                ]
+                    {
+                        'allowed_build_tasks': {
+                            'task/linux': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux-debug': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64': {
+                                'task': 'task/web-platform-tests',
+                            },
+                            'task/linux64-debug': {
+                                'task': 'task/web-platform-tests',
+                            }
+                        }
+                    }
+                ],
+                'additional-parameters': {}
             }
         ]
 
