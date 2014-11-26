@@ -30,12 +30,17 @@ class GeckoInstance(object):
                       "browser.tabs.remote.autostart.1": False,
                       "browser.tabs.remote.autostart.2": False}
 
-    def __init__(self, host, port, bin, profile, app_args=None, symbols_path=None,
-                  gecko_log=None, prefs=None):
+    def __init__(self, host, port, bin, profile=None, app_args=None, symbols_path=None,
+                  gecko_log=None, prefs=None, ):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
-        self.profile_path = profile
+        # Check if it is a Profile object or a path to profile
+        self.profile = None
+        if isinstance(profile, Profile):
+            self.profile = profile
+        else:
+            self.profile_path = profile
         self.prefs = prefs
         self.app_args = app_args or []
         self.runner = None
@@ -47,12 +52,14 @@ class GeckoInstance(object):
         profile_args["preferences"]["marionette.defaultPrefs.port"] = self.marionette_port
         if self.prefs:
             profile_args["preferences"].update(self.prefs)
-        if not self.profile_path:
-            profile_args["restore"] = False
-            profile = Profile(**profile_args)
-        else:
-            profile_args["path_from"] = self.profile_path
-            profile = Profile.clone(**profile_args)
+
+        if hasattr(self, "profile_path") and self.profile is None:
+            if not self.profile_path:
+                profile_args["restore"] = False
+                self.profile = Profile(**profile_args)
+            else:
+                profile_args["path_from"] = self.profile_path
+                self.profile = Profile.clone(**profile_args)
 
         process_args = {
             'processOutputLine': [NullOutput()],
@@ -101,20 +108,28 @@ class GeckoInstance(object):
                      'MOZ_CRASHREPORTER_NO_REPORT': '1', })
         self.runner = Runner(
             binary=self.bin,
-            profile=profile,
+            profile=self.profile,
             cmdargs=['-no-remote', '-marionette'] + self.app_args,
             env=env,
             symbols_path=self.symbols_path,
             process_args=process_args)
         self.runner.start()
 
-    def close(self):
+    def close(self, restart=False):
+        if not restart:
+            self.profile.cleanup()
+            self.profile = None
+
         if self.runner:
             self.runner.stop()
             self.runner.cleanup()
 
-    def restart(self, prefs=None):
-        self.close()
+    def restart(self, prefs=None, clean=True):
+        if clean:
+            self.profile.cleanup()
+            self.profile = None
+
+        self.close(restart=True)
         if prefs:
             self.prefs = prefs
         else:
