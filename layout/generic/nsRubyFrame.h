@@ -48,8 +48,6 @@ protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
   explicit nsRubyFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
-  void CalculateColSizes(nsRenderingContext* aRenderingContext,
-                         nsTArray<nscoord>& aColSizes);
   nscoord mBaseline;
 };
 
