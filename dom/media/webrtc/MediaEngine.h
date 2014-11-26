@@ -39,12 +39,6 @@ enum MediaEngineState {
   kReleased
 };
 
-// We only support 1 audio and 1 video track for now.
-enum {
-  kVideoTrack = 1,
-  kAudioTrack = 2
-};
-
 // includes everything from dom::MediaSourceEnum (really video sources), plus audio sources
 enum MediaSourceType {
   Camera = (int) dom::MediaSourceEnum::Camera,

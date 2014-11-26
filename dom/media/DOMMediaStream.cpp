@@ -15,7 +15,6 @@
 #include "MediaStreamGraph.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
-#include "MediaEngine.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
