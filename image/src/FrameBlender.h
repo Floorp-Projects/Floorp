@@ -72,8 +72,8 @@ public:
 
   void SetSize(nsIntSize aSize) { mSize = aSize; }
 
-  size_t SizeOfDecoded(gfxMemoryLocation aLocation,
-                       MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
+                                                 MallocSizeOf aMallocSizeOf) const;
 
   void ResetAnimation();
 
