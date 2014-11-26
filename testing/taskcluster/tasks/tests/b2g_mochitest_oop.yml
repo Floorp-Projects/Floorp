@@ -1,0 +1,44 @@
+---
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: {{owner}}
+    name: Mochitest OOP
+    description: Mochitest OOP test run {{chunk}}
+
+  workerType: b2gtest
+  provisionerId: aws-provisioner
+
+  payload:
+
+    image: '{{#docker_image}}tester{{/docker_image}}'
+    maxRunTime: 3600
+
+    command:
+      - entrypoint # entrypoint ensures we are running in xvfb
+      - >
+        python ./mozharness/scripts/b2g_desktop_unittest.py
+        --no-read-buildbot-config
+        --config-file b2g/desktop_automation_config.py
+        --config-file ./mozharness_configs/remove_executables.py
+        --installer-url {{build_url}}
+        --test-url {{tests_url}}
+        --download-symbols ondemand
+        --test-suite mochitest
+        --total-chunk={{total_chunks}}
+        --this-chunk={{chunk}}
+        --browser-arg -oop
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherder:
+      groupName: Mochitest OOP
+      groupSymbol: M-oop
+      symbol: '{{chunk}}'
+      productName: b2g

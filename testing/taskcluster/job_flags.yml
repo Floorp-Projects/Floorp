@@ -139,6 +139,11 @@ tests:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_mochitests.yml
         chunks: 5
+  mochitest-oop:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop.yml:
+        task: tasks/tests/b2g_mochitest_oop.yml
+        chunks: 1
   gaia-js-integration:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
