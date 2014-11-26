@@ -508,7 +508,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
         return baseops::SetPropertyHelper<SequentialExecution>(
             cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
             (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
-             op == JSOP_SETGNAME)
+             op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
             ? baseops::Unqualified
             : baseops::Qualified,
             &v,

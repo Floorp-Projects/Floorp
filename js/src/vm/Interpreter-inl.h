@@ -307,11 +307,12 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
 {
     MOZ_ASSERT(*pc == JSOP_SETNAME ||
                *pc == JSOP_STRICTSETNAME ||
-               *pc == JSOP_SETGNAME);
+               *pc == JSOP_SETGNAME ||
+               *pc == JSOP_STRICTSETGNAME);
     MOZ_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
+    MOZ_ASSERT_IF(*pc == JSOP_STRICTSETGNAME, scope == cx->global());
 
-    // XXX: Removed later in stack. SETGNAME still relies on script.
-    bool strict = *pc == JSOP_STRICTSETNAME || script->strict();
+    bool strict = *pc == JSOP_STRICTSETNAME || *pc == JSOP_STRICTSETGNAME;
     RootedPropertyName name(cx, script->getName(pc));
     RootedValue valCopy(cx, val);
 
