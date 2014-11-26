@@ -18,15 +18,21 @@ fi
 OBJDIR="$HOME/object-folder-$B2G_CONFIG-$B2G_DEBUG"
 
 if [ ! -d $OBJDIR ]; then
-    mkdir -p $OBJDIR
+  mkdir -p $OBJDIR
 fi
 
 if [ ! -d $OBJDIR/B2G ]; then
-    git clone https://git.mozilla.org/b2g/B2G.git $OBJDIR/B2G
+  git clone https://git.mozilla.org/b2g/B2G.git $OBJDIR/B2G
+fi
+
+debug_flag=""
+if [ 0$B2G_DEBUG -ne 0 ]; then
+  debug_flag='--debug'
 fi
 
 ./mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-emulator.py \
+  "$debug_flag" \
   --disable-mock \
   --work-dir=$OBJDIR/B2G \
   --log-level=debug \
