@@ -16,7 +16,7 @@ callback OfflineRenderSuccessCallback = void (AudioBuffer renderedData);
 interface OfflineAudioContext : AudioContext {
 
     [Throws]
-    Promise<AudioBuffer> startRendering();
+    void startRendering();
 
     attribute EventHandler oncomplete;
 

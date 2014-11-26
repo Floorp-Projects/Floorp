@@ -22,7 +22,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
-#include "mozilla/dom/Promise.h"
 
 namespace mozilla {
 namespace dom {
@@ -127,28 +126,6 @@ public:
     }
   }
 
-  class OnCompleteTask MOZ_FINAL : public nsRunnable
-  {
-  public:
-    OnCompleteTask(AudioContext* aAudioContext, AudioBuffer* aRenderedBuffer)
-      : mAudioContext(aAudioContext)
-      , mRenderedBuffer(aRenderedBuffer)
-    {}
-
-    NS_IMETHOD Run()
-    {
-      nsRefPtr<OfflineAudioCompletionEvent> event =
-          new OfflineAudioCompletionEvent(mAudioContext, nullptr, nullptr);
-      event->InitEvent(mRenderedBuffer);
-      mAudioContext->DispatchTrustedEvent(event);
-
-      return NS_OK;
-    }
-  private:
-    nsRefPtr<AudioContext> mAudioContext;
-    nsRefPtr<AudioBuffer> mRenderedBuffer;
-  };
-
   void FireOfflineCompletionEvent(AudioDestinationNode* aNode)
   {
     AudioContext* context = aNode->Context();
@@ -175,11 +152,10 @@ public:
       renderedBuffer->SetRawChannelContents(i, mInputChannels[i]);
     }
 
-    aNode->ResolvePromise(renderedBuffer);
-
-    nsRefPtr<OnCompleteTask> task =
-      new OnCompleteTask(context, renderedBuffer);
-    NS_DispatchToMainThread(task);
+    nsRefPtr<OfflineAudioCompletionEvent> event =
+        new OfflineAudioCompletionEvent(context, nullptr, nullptr);
+    event->InitEvent(renderedBuffer);
+    context->DispatchTrustedEvent(event);
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
@@ -325,8 +301,7 @@ private:
 NS_IMPL_ISUPPORTS(EventProxyHandler, nsIDOMEventListener)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationNode, AudioNode,
-                                   mAudioChannelAgent, mEventProxyHelper,
-                                   mOfflineRenderingPromise)
+                                   mAudioChannelAgent, mEventProxyHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioDestinationNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
@@ -440,14 +415,6 @@ AudioDestinationNode::FireOfflineCompletionEvent()
   engine->FireOfflineCompletionEvent(this);
 }
 
-void
-AudioDestinationNode::ResolvePromise(AudioBuffer* aRenderedBuffer)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mIsOffline);
-  mOfflineRenderingPromise->MaybeResolve(aRenderedBuffer);
-}
-
 uint32_t
 AudioDestinationNode::MaxChannelCount() const
 {
@@ -496,9 +463,8 @@ AudioDestinationNode::WrapObject(JSContext* aCx)
 }
 
 void
-AudioDestinationNode::StartRendering(Promise* aPromise)
+AudioDestinationNode::StartRendering()
 {
-  mOfflineRenderingPromise = aPromise;
   mOfflineRenderingRef.Take(this);
   mStream->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
 }

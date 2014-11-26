@@ -191,7 +191,7 @@ public:
                   const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback);
 
   // OfflineAudioContext methods
-  already_AddRefed<Promise> StartRendering(ErrorResult& aRv);
+  void StartRendering(ErrorResult& aRv);
   IMPL_EVENT_HANDLER(complete)
 
   bool IsOffline() const { return mIsOffline; }
