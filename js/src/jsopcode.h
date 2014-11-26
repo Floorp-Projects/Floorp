@@ -694,6 +694,13 @@ IsCallPC(jsbytecode *pc)
     return js_CodeSpec[*pc].format & JOF_INVOKE;
 }
 
+inline bool
+IsStrictEvalPC(jsbytecode *pc)
+{
+    JSOp op = JSOp(*pc);
+    return op == JSOP_STRICTEVAL || op == JSOP_STRICTSPREADEVAL;
+}
+
 static inline int32_t
 GetBytecodeInteger(jsbytecode *pc)
 {

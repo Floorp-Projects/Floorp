@@ -1590,7 +1590,6 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
-CASE(JSOP_UNUSED50)
 CASE(JSOP_UNUSED51)
 CASE(JSOP_UNUSED52)
 CASE(JSOP_UNUSED83)
@@ -1599,7 +1598,6 @@ CASE(JSOP_UNUSED103)
 CASE(JSOP_UNUSED104)
 CASE(JSOP_UNUSED105)
 CASE(JSOP_UNUSED107)
-CASE(JSOP_UNUSED124)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
 CASE(JSOP_UNUSED146)
@@ -2454,7 +2452,10 @@ CASE(JSOP_STRICTSETELEM)
 END_CASE(JSOP_SETELEM)
 
 CASE(JSOP_EVAL)
+CASE(JSOP_STRICTEVAL)
 {
+    static_assert(JSOP_EVAL_LENGTH == JSOP_STRICTEVAL_LENGTH,
+                  "eval and stricteval must be the same size");
     CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
     if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
         if (!DirectEval(cx, args))
@@ -2475,7 +2476,10 @@ CASE(JSOP_SPREADCALL)
     /* FALL THROUGH */
 
 CASE(JSOP_SPREADEVAL)
+CASE(JSOP_STRICTSPREADEVAL)
 {
+    static_assert(JSOP_SPREADEVAL_LENGTH == JSOP_STRICTSPREADEVAL_LENGTH,
+                  "spreadeval and strictspreadeval must be the same size");
     MOZ_ASSERT(REGS.stackDepth() >= 3);
 
     HandleValue callee = REGS.stackHandleAt(-3);
@@ -4034,6 +4038,7 @@ js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, Hand
             return false;
         break;
       case JSOP_SPREADEVAL:
+      case JSOP_STRICTSPREADEVAL:
         if (cx->global()->valueIsEval(args.calleev())) {
             if (!DirectEval(cx, args))
                 return false;

@@ -2758,6 +2758,12 @@ BaselineCompiler::emit_JSOP_EVAL()
 }
 
 bool
+BaselineCompiler::emit_JSOP_STRICTEVAL()
+{
+    return emitCall();
+}
+
+bool
 BaselineCompiler::emit_JSOP_SPREADCALL()
 {
     return emitSpreadCall();
@@ -2771,6 +2777,12 @@ BaselineCompiler::emit_JSOP_SPREADNEW()
 
 bool
 BaselineCompiler::emit_JSOP_SPREADEVAL()
+{
+    return emitSpreadCall();
+}
+
+bool
+BaselineCompiler::emit_JSOP_STRICTSPREADEVAL()
 {
     return emitSpreadCall();
 }

@@ -405,7 +405,7 @@
      *   Operands:
      *   Stack: callee, this, args => rval
      */ \
-    macro(JSOP_SPREADEVAL,43, "spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_SPREADEVAL,43, "spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY) \
     \
     /*
      * Duplicates the Nth value from the top onto the stack.
@@ -467,7 +467,19 @@
      *   Stack: scope, val => val
      */ \
     macro(JSOP_STRICTSETNAME,   49, "strict-setname",    NULL,         5,  2,  1,  JOF_ATOM|JOF_NAME|JOF_SET|JOF_DETECTING|JOF_CHECKSTRICT) \
-    macro(JSOP_UNUSED50,  50, "unused50",   NULL,         1,  0,  0,  JOF_BYTE) \
+    /*
+     * spreadcall variant of JSOP_EVAL
+     *
+     * Invokes 'eval' with 'args' and pushes the return value onto the stack.
+     *
+     * If 'eval' in global scope is not original one, invokes the function
+     * with 'this' and 'args', and pushes return value onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: callee, this, args => rval
+     */ \
+    macro(JSOP_STRICTSPREADEVAL,      50, "strict-spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT) \
     macro(JSOP_UNUSED51,  51, "unused51",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED52,  52, "unused52",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
@@ -1169,9 +1181,21 @@
      *   Stack: callee, this, args[0], ..., args[argc-1] => rval
      *   nuses: (argc+2)
      */ \
-    macro(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
+    macro(JSOP_EVAL,      123,"eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSLOPPY) \
     \
-    macro(JSOP_UNUSED124,  124, "unused124", NULL,      1,  0,  0,  JOF_BYTE) \
+    /* ECMA-compliant call to eval op. */ \
+    /*
+     * Invokes 'eval' with 'args' and pushes return value onto the stack.
+     *
+     * If 'eval' in global scope is not original one, invokes the function
+     * with 'this' and 'args', and pushes return value onto the stack.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands: uint16_t argc
+     *   Stack: callee, this, args[0], ..., args[argc-1] => rval
+     *   nuses: (argc+2)
+     */ \
+    macro(JSOP_STRICTEVAL,       124, "strict-eval",       NULL,         3, -1,  1, JOF_UINT16|JOF_INVOKE|JOF_TYPESET|JOF_CHECKSTRICT) \
     macro(JSOP_UNUSED125,  125, "unused125", NULL,      1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED126,  126, "unused126", NULL,      1,  0,  0,  JOF_BYTE) \
     \
