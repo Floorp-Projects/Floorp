@@ -43,7 +43,7 @@ public class SDKProcessor {
     private static ApiLookup sApiLookup;
     private static int sMaxSdkVersion;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // We expect a list of jars on the commandline. If missing, whinge about it.
         if (args.length < 5) {
             System.err.println("Usage: java SDKProcessor sdkjar classlistfile outdir fileprefix max-sdk-version");
@@ -106,16 +106,10 @@ public class SDKProcessor {
             String className = i.next();
             System.out.println("Looking up: " + className);
 
-            try {
-                Class<?> c = Class.forName(className, true, loader);
-
-                generateClass(Class.forName(className, true, loader),
-                              stubInitializer,
-                              implementationFile,
-                              headerFile);
-            } catch (Exception e) {
-                System.out.println("Failed to generate class " + className + ": " + e);
-            }
+            generateClass(Class.forName(className, true, loader),
+                          stubInitializer,
+                          implementationFile,
+                          headerFile);
         }
 
         implementationFile.append('\n');
