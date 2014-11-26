@@ -136,3 +136,7 @@ Creating only a build task and submitting to taskcluster:
 ```sh
 mach ci-build --revision=33c0181c4a25 --repository=http://hg.mozilla.org/mozilla-central --owner=user@domain.com tasks/builds/b2g_desktop.yml | taskcluster run-task --verbose
 ```
+
+```sh
+mach ci-tests --task-id=Mcnvz7wUR_SEMhmWb7cGdQ --owner=user@domain.com tasks/tests/b2g_mochitest.yml | taskcluster run-task --verbose
+```
