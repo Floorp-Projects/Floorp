@@ -23,7 +23,7 @@ task:
       build-b2g-desktop-objects: '/home/worker/object-folder'
 
     env:
-      MOZCONFIG: '/home/worker/mozconfigs/b2g-desktop'
+      MOZCONFIG: '/home/worker/mozilla-central/source/b2g/config/mozconfigs/linux64_gecko/nightly'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
       REVISION: '{{revision}}'
       REPOSITORY: '{{repository}}'
