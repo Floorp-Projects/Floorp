@@ -275,9 +275,9 @@ public:
    */
   nsAutoCString mLog;
 
-  #define FLB_LOG_PAINTED_LAYER_DECISION(tld, ...) \
-          tld->mLog.AppendPrintf("\t\t\t\t"); \
-          tld->mLog.AppendPrintf(__VA_ARGS__);
+  #define FLB_LOG_PAINTED_LAYER_DECISION(pld, ...) \
+          pld->mLog.AppendPrintf("\t\t\t\t"); \
+          pld->mLog.AppendPrintf(__VA_ARGS__);
 #else
   #define FLB_LOG_PAINTED_LAYER_DECISION(...)
 #endif
@@ -309,7 +309,7 @@ public:
    */
   void AccumulateEventRegions(nsDisplayLayerEventRegions* aEventRegions)
   {
-    FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against tld=%p\n", aEventRegions, this);
+    FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating event regions %p against pld=%p\n", aEventRegions, this);
 
     mHitRegion.Or(mHitRegion, aEventRegions->HitRegion());
     mMaybeHitRegion.Or(mMaybeHitRegion, aEventRegions->MaybeHitRegion());
@@ -2106,7 +2106,7 @@ ContainerState::PopPaintedLayerData()
   nsRefPtr<Layer> layer;
   nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
 
-  FLB_LOG_PAINTED_LAYER_DECISION(data, "Selecting layer for tld=%p\n", data);
+  FLB_LOG_PAINTED_LAYER_DECISION(data, "Selecting layer for pld=%p\n", data);
   FLB_LOG_PAINTED_LAYER_DECISION(data, "  Solid=%i, hasImage=%i, canOptimizeAwayPaintedLayer=%i\n",
           data->mIsSolidColorInVisibleRegion, !!imageContainer,
           CanOptimizeAwayPaintedLayer(data, mLayerBuilder));
@@ -2347,7 +2347,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
                             const nsIntRect& aDrawRect,
                             const DisplayItemClip& aClip)
 {
-  FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against tld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
+  FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against pld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
 
   bool snap;
   nsRect itemBounds = aItem->GetBounds(aState->mBuilder, &snap);
