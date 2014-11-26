@@ -223,7 +223,8 @@ public:
   bool rememberIntolerantAtVersion(const nsACString& hostname, int16_t port,
                                    uint16_t intolerant, uint16_t minVersion,
                                    PRErrorCode intoleranceReason);
-  bool rememberStrongCiphersFailed(const nsACString& hostName, int16_t port);
+  bool rememberStrongCiphersFailed(const nsACString& hostName, int16_t port,
+                                   PRErrorCode intoleranceReason);
   void forgetIntolerance(const nsACString& hostname, int16_t port);
   void adjustForTLSIntolerance(const nsACString& hostname, int16_t port,
                                /*in/out*/ SSLVersionRange& range,
