@@ -105,25 +105,21 @@ nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage,
       }
     }
 
-    nsString langStr;
+    nsAutoString langStr;
     aLanguage->ToString(langStr);
 
     nsXPIDLString langGroupStr;
     res = mLangGroups->GetStringFromName(langStr.get(),
                                          getter_Copies(langGroupStr));
-    if (NS_FAILED(res)) {
-      int32_t hyphen = langStr.FindChar('-');
-      if (hyphen >= 0) {
-        nsAutoString truncated(langStr);
-        truncated.Truncate(hyphen);
-        res = mLangGroups->GetStringFromName(truncated.get(),
-                                             getter_Copies(langGroupStr));
-        if (NS_FAILED(res)) {
-          langGroupStr.AssignLiteral("x-unicode");
-        }
-      } else {
+    while (NS_FAILED(res)) {
+      int32_t hyphen = langStr.RFindChar('-');
+      if (hyphen <= 0) {
         langGroupStr.AssignLiteral("x-unicode");
+        break;
       }
+      langStr.Truncate(hyphen);
+      res = mLangGroups->GetStringFromName(langStr.get(),
+                                           getter_Copies(langGroupStr));
     }
 
     nsCOMPtr<nsIAtom> langGroup = do_GetAtom(langGroupStr);
