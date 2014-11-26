@@ -276,6 +276,11 @@ public:
     return true;
   }
 
+  bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
+  {
+    return llabs(aLhs - aRhs) <= 1000;
+  }
+
 private:
   nsRefPtr<mp4_demuxer::BufferStream> mStream;
   nsAutoPtr<mp4_demuxer::MoofParser> mParser;
