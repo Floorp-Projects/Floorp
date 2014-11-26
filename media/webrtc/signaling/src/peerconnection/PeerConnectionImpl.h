@@ -226,7 +226,6 @@ public:
 
   enum Error {
     kNoError                          = 0,
-    kInvalidCandidateType             = 2,
     kInvalidMediastreamTrack          = 3,
     kInvalidState                     = 4,
     kInvalidSessionDescription        = 5,
