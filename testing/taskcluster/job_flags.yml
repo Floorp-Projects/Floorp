@@ -6,7 +6,6 @@
 flags:
   builds:
     - emulator
-    - emulator-ics
     - emulator-jb
     - emulator-kk
     - linux32_gecko  # b2g desktop linux 32 bit
@@ -102,7 +101,7 @@ builds:
           debug: 1
           b2g-config: 'emulator-jb'
           build-type: Debug
-  emulator-ics:
+  emulator:
     platfoms:
       - b2g
     types:
@@ -133,6 +132,11 @@ tests:
   #   # "allowed platforms" here.
   #   allowed_build_tasks:
   #     - builds/b2g_desktop.yml
+  crashtest:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_crashtest.yml
+        chunks: 3
   gaia-build-unit:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
@@ -141,6 +145,11 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
         task: tasks/tests/b2g_linter.yml
+  jsreftest:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_js_reftest.yml
+        chunks: 3
   mochitests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
@@ -173,6 +182,9 @@ tests:
       tasks/builds/b2g_desktop.yml:
         task: tasks/tests/b2g_reftests.yml
         chunks: 10
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_reftest.yml
+        chunks: 20
   reftest-sanity-oop:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
