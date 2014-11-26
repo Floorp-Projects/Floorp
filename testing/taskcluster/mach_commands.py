@@ -30,11 +30,12 @@ import taskcluster_graph.build_task
 
 ROOT = os.path.dirname(os.path.realpath(__file__))
 DOCKER_ROOT = os.path.join(ROOT, '..', 'docker')
-LOCAL_WORKER_TYPES = ['b2gtest', 'b2gbuild']
 
 # XXX: If/when we have the taskcluster queue use construct url instead
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
+
+DEFINE_TASK = 'queue:define-task:aws-provisioner/{}'
 
 def get_hg_url():
     ''' Determine the url for the mercurial repository'''
@@ -128,35 +129,11 @@ class TryGraph(object):
 
         # Task graph we are generating for taskcluster...
         graph = {
-            'tasks': []
+            'tasks': [],
+            'scopes': []
         }
 
         if ci is False:
-            # XXX: We need to figure out a less ugly way to store these for
-            # local testing.
-            graph['scopes'] = [
-                "docker-worker:cache:sources-mozilla-central",
-                "docker-worker:cache:sources-gaia",
-                "docker-worker:cache:build-b2g-desktop-objects",
-                "docker-worker:cache:build-mulet-linux-objects",
-                "docker-worker:cache:tooltool-cache",
-                "docker-worker:cache:build-emulator-objects"
-            ]
-
-            # XXX: This is a hack figure out how to do this correctly or sanely
-            # at least so we don't need to keep track of all worker types in
-            # existence.
-            for worker_type in LOCAL_WORKER_TYPES:
-                graph['scopes'].append(
-                    'queue:define-task:{}/{}'.format('aws-provisioner',
-                        worker_type)
-                )
-
-                graph['scopes'].append(
-                    'queue:create-task:{}/{}'.format('aws-provisioner',
-                        worker_type)
-                )
-
             graph['metadata'] = {
                 'source': 'http://todo.com/what/goes/here',
                 'owner': owner,
@@ -184,6 +161,11 @@ class TryGraph(object):
                 build_task['task']['extra']['locations']['build']
             )
 
+            define_task = DEFINE_TASK.format(build_task['task']['workerType'])
+
+            graph['scopes'].append(define_task)
+            graph['scopes'].extend(build_task['task'].get('scopes', []))
+
             for test in build['dependents']:
                 test = test['allowed_build_tasks'][build['task']]
                 test_parameters = copy.copy(build_parameters)
@@ -203,7 +185,17 @@ class TryGraph(object):
                         test_task['requires'] = []
 
                     test_task['requires'].append(test_parameters['build_slugid'])
+
                     graph['tasks'].append(test_task)
+
+                    define_task = DEFINE_TASK.format(
+                        test_task['task']['workerType']
+                    )
+
+                    graph['scopes'].append(define_task)
+                    graph['scopes'].extend(test_task['task'].get('scopes', []))
+
+        graph['scopes'] = list(set(graph['scopes']))
 
         print(json.dumps(graph, indent=4))
 
