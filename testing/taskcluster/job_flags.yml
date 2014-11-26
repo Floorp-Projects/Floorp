@@ -150,6 +150,14 @@ tests:
       tasks/builds/b2g_emulator.yml:
         task: tasks/tests/b2g_emulator_js_reftest.yml
         chunks: 3
+  marionette:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_marionette.yml
+  marionette-webapi:
+    allowed_build_tasks:
+      tasks/builds/b2g_emulator.yml:
+        task: tasks/tests/b2g_emulator_marionette_webapi.yml
   mochitests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop.yml:
