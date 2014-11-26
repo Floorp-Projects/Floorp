@@ -13,13 +13,14 @@ import org.mozilla.gecko.fxa.login.State.StateLabel;
 import android.content.Intent;
 
 /**
- * Activity which displays a screen for updating the local password.
+ * Activity which displays a screen for inputting the password and finishing
+ * migrating to Firefox Accounts / Sync 1.5.
  */
-public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractUpdateCredentialsActivity {
-  protected static final String LOG_TAG = FxAccountUpdateCredentialsActivity.class.getSimpleName();
+public class FxAccountFinishMigratingActivity extends FxAccountAbstractUpdateCredentialsActivity {
+  protected static final String LOG_TAG = FxAccountFinishMigratingActivity.class.getSimpleName();
 
-  public FxAccountUpdateCredentialsActivity() {
-    super(R.layout.fxaccount_update_credentials);
+  public FxAccountFinishMigratingActivity() {
+    super(R.layout.fxaccount_finish_migrating);
   }
 
   @Override
@@ -33,8 +34,8 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractUpdateC
       return;
     }
     final State state = fxAccount.getState();
-    if (state.getStateLabel() != StateLabel.Separated) {
-      Logger.warn(LOG_TAG, "Cannot update credentials from Firefox Account in state: " + state.getStateLabel());
+    if (state.getStateLabel() != StateLabel.MigratedFromSync11) {
+      Logger.warn(LOG_TAG, "Cannot finish migrating from Firefox Account in state: " + state.getStateLabel());
       setResult(RESULT_CANCELED);
       finish();
       return;
@@ -44,9 +45,10 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractUpdateC
 
   @Override
   public Intent makeSuccessIntent(String email, LoginResponse result) {
-    // We don't show anything after updating credentials. The updating Activity
-    // sets its result to OK and the user is returned to the previous task,
-    // which is often the Status Activity.
-    return null;
+    final Intent successIntent = new Intent(this, FxAccountMigrationFinishedActivity.class);
+    // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
+    // the soft keyboard not being shown for the started activity. Why, Android, why?
+    successIntent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+    return successIntent;
   }
 }

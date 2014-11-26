@@ -8,6 +8,7 @@ import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.fxa.activities.FxAccountFinishMigratingActivity;
 import org.mozilla.gecko.fxa.activities.FxAccountStatusActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
@@ -67,12 +68,21 @@ public class FxAccountNotificationManager {
       BrowserLocaleManager.getInstance().getAndApplyPersistedLocale(context);
     }
 
-    final String title = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_title);
-    final String text = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_text, state.email);
+    final String title;
+    final String text;
+    final Intent notificationIntent;
+    if (action == Action.NeedsFinishMigrating) {
+      title = context.getResources().getString(R.string.fxaccount_sync_finish_migrating_notification_title);
+      text = context.getResources().getString(R.string.fxaccount_sync_finish_migrating_notification_text, state.email);
+      notificationIntent = new Intent(context, FxAccountFinishMigratingActivity.class);
+    } else {
+      title = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_title);
+      text = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_text, state.email);
+      notificationIntent = new Intent(context, FxAccountStatusActivity.class);
+    }
     Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs action; offering notification with title: " + title);
     FxAccountUtils.pii(LOG_TAG, "And text: " + text);
 
-    final Intent notificationIntent = new Intent(context, FxAccountStatusActivity.class);
     final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
 
     final Builder builder = new NotificationCompat.Builder(context);
