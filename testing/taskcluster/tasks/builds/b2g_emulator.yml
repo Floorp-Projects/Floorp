@@ -20,6 +20,7 @@ task:
 
     env:
       TARGET: 'emulator'
+      B2G_DEBUG: '{{debug}}'
       B2G_CONFIG: '{{b2g-config}}'
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
       REVISION: '{{revision}}'

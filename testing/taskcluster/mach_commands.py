@@ -215,17 +215,21 @@ class CIBuild(object):
         help='full path to hg repository to use in sub tasks')
     @CommandArgument('--b2g-config',
         help='(emulators/phones only) in tree build configuration directory')
+    @CommandArgument('--debug', action='store_true',
+        help='(emulators/phones only) build debug images')
     @CommandArgument('--owner',
         help='email address of who owns this graph')
     @CommandArgument('build_task',
         help='path to build task definition')
-    def create_ci_build(self, build_task, revision="", repository="", b2g_config="", owner=""):
+    def create_ci_build(self, build_task, revision="", repository="", b2g_config="", debug=False, owner=""):
         # TODO handle git repos
         if not repository:
             repository = get_hg_url()
 
         if not revision:
             revision = get_latest_hg_revision(repository)
+
+        debug = 1 if debug else 0
 
         build_parameters = {
             'docker_image': docker_image,
