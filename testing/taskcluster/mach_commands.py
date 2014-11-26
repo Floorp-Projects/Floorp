@@ -94,7 +94,7 @@ def get_task(task_id):
 
 @CommandProvider
 class TryGraph(object):
-    @Command('trygraph', category="ci",
+    @Command('taskcluster-trygraph', category="ci",
         description="Create taskcluster try server graph")
     @CommandArgument('--revision',
         help='revision in gecko to use in sub tasks')
@@ -205,7 +205,7 @@ class TryGraph(object):
 
 @CommandProvider
 class CIBuild(object):
-    @Command('ci-build', category='ci',
+    @Command('taskcluster-build', category='ci',
         description="Create taskcluster try server build task")
     @CommandArgument('--revision',
         help='revision in gecko to use in sub tasks')
@@ -247,7 +247,7 @@ class CIBuild(object):
 
 @CommandProvider
 class CITest(object):
-    @Command('ci-test', category='ci',
+    @Command('taskcluster-test', category='ci',
         description='Create taskcluster try server test task')
     @CommandArgument('--task-id',
         help='the task id to pick the correct build and tests')
@@ -301,7 +301,7 @@ class CITest(object):
 
 @CommandProvider
 class CIDockerRun(object):
-    @Command('ci-docker-run', category='ci',
+    @Command('taskcluster-docker-run', category='ci',
         description='Run a docker image and optionally mount local hg repos. ' \
                     'Repos will be mounted to /home/worker/x/source accordingly. ' \
                     'For example, to run a centos image and mount local gecko ' \
