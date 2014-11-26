@@ -1,7 +1,7 @@
 
 /* png.h - header file for PNG reference library
  *
- * libpng version 1.6.15, November 20, 2014
+ * libpng version 1.6.14 - October 23, 2014
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -11,7 +11,7 @@
  * Authors and maintainers:
  *   libpng versions 0.71, May 1995, through 0.88, January 1996: Guy Schalnat
  *   libpng versions 0.89c, June 1996, through 0.96, May 1997: Andreas Dilger
- *   libpng versions 0.97, January 1998, through 1.6.15, November 20, 2014: Glenn
+ *   libpng versions 0.97, January 1998, through 1.6.14 - October 23, 2014: Glenn
  *   See also "Contributing Authors", below.
  *
  * Note about libpng version numbers:
@@ -206,9 +206,6 @@
  *    1.6.14beta01-07         16    10614  16.so.16.14[.0]
  *    1.6.14rc01-02           16    10614  16.so.16.14[.0]
  *    1.6.14                  16    10614  16.so.16.14[.0]
- *    1.6.15beta01-08         16    10615  16.so.16.15[.0]
- *    1.6.15rc01-03           16    10615  16.so.16.15[.0]
- *    1.6.15                  16    10615  16.so.16.15[.0]
  *
  *   Henceforth the source version will match the shared-library major
  *   and minor numbers; the shared-library major version number will be
@@ -240,7 +237,7 @@
  *
  * This code is released under the libpng license.
  *
- * libpng versions 1.2.6, August 15, 2004, through 1.6.15, November 20, 2014, are
+ * libpng versions 1.2.6, August 15, 2004, through 1.6.14, October 23, 2014, are
  * Copyright (c) 2004, 2006-2014 Glenn Randers-Pehrson, and are
  * distributed according to the same disclaimer and license as libpng-1.2.5
  * with the following individual added to the list of Contributing Authors:
@@ -352,13 +349,13 @@
  * Y2K compliance in libpng:
  * =========================
  *
- *    November 20, 2014
+ *    October 23, 2014
  *
  *    Since the PNG Development group is an ad-hoc body, we can't make
  *    an official declaration.
  *
  *    This is your unofficial assurance that libpng from version 0.71 and
- *    upward through 1.6.15 are Y2K compliant.  It is my belief that
+ *    upward through 1.6.14 are Y2K compliant.  It is my belief that
  *    earlier versions were also Y2K compliant.
  *
  *    Libpng only has two year fields.  One is a 2-byte unsigned integer
@@ -420,9 +417,9 @@
  */
 
 /* Version information for png.h - this should match the version in png.c */
-#define PNG_LIBPNG_VER_STRING "1.6.15"
+#define PNG_LIBPNG_VER_STRING "1.6.14"
 #define PNG_HEADER_VERSION_STRING \
-     " libpng version 1.6.15 - November 20, 2014\n"
+     " libpng version 1.6.14 - October 23, 2014\n"
 
 #define PNG_LIBPNG_VER_SONUM   16
 #define PNG_LIBPNG_VER_DLLNUM  16
@@ -430,7 +427,7 @@
 /* These should match the first 3 components of PNG_LIBPNG_VER_STRING: */
 #define PNG_LIBPNG_VER_MAJOR   1
 #define PNG_LIBPNG_VER_MINOR   6
-#define PNG_LIBPNG_VER_RELEASE 15
+#define PNG_LIBPNG_VER_RELEASE 14
 
 /* This should match the numeric part of the final component of
  * PNG_LIBPNG_VER_STRING, omitting any leading zero:
@@ -461,7 +458,7 @@
  * version 1.0.0 was mis-numbered 100 instead of 10000).  From
  * version 1.0.1 it's    xxyyzz, where x=major, y=minor, z=release
  */
-#define PNG_LIBPNG_VER 10615 /* 1.6.15 */
+#define PNG_LIBPNG_VER 10614 /* 1.6.14 */
 
 /* Library configuration: these options cannot be changed after
  * the library has been built.
@@ -576,12 +573,12 @@ extern "C" {
 /* blend_op flags from inside fcTL */
 #define PNG_BLEND_OP_SOURCE        0x00
 #define PNG_BLEND_OP_OVER          0x01
-#endif /* APNG */
+#endif /* PNG_APNG_SUPPORTED */
 
 /* This triggers a compiler error in png.c, if png.c and png.h
  * do not agree upon the version number.
  */
-typedef char* png_libpng_version_1_6_15;
+typedef char* png_libpng_version_1_6_14;
 
 /* Basic control structions.  Read libpng-manual.txt or libpng.3 for more info.
  *
@@ -1202,7 +1199,7 @@ PNG_EXPORT(24, void, png_convert_from_struct_tm, (png_timep ptime,
 
 /* Convert from time_t to png_time.  Uses gmtime() */
 PNG_EXPORT(25, void, png_convert_from_time_t, (png_timep ptime, time_t ttime));
-#endif /* CONVERT_tIME */
+#endif /* PNG_CONVERT_tIME_SUPPORTED */
 
 #ifdef PNG_READ_EXPAND_SUPPORTED
 /* Expand data to 24-bit RGB, or 8-bit grayscale, with alpha if available. */
@@ -1408,7 +1405,7 @@ PNG_EXPORT(39, void, png_set_filler, (png_structrp png_ptr, png_uint_32 filler,
 /* Add an alpha byte to 8-bit Gray or 24-bit RGB images. */
 PNG_EXPORT(40, void, png_set_add_alpha, (png_structrp png_ptr,
     png_uint_32 filler, int flags));
-#endif /* READ_FILLER || WRITE_FILLER */
+#endif /* PNG_READ_FILLER_SUPPORTED || PNG_WRITE_FILLER_SUPPORTED */
 
 #if defined(PNG_READ_SWAP_SUPPORTED) || defined(PNG_WRITE_SWAP_SUPPORTED)
 /* Swap bytes in 16-bit depth files. */
@@ -1672,7 +1669,7 @@ PNG_FIXED_EXPORT(209, void, png_set_filter_heuristics_fixed,
     (png_structrp png_ptr, int heuristic_method, int num_weights,
     png_const_fixed_point_p filter_weights,
     png_const_fixed_point_p filter_costs))
-#endif /* WRITE_WEIGHTED_FILTER */
+#endif /*  PNG_WRITE_WEIGHTED_FILTER_SUPPORTED */
 
 /* Heuristic used for row filter selection.  These defines should NOT be
  * changed.
@@ -1728,7 +1725,7 @@ PNG_EXPORT(225, void, png_set_text_compression_window_bits,
 
 PNG_EXPORT(226, void, png_set_text_compression_method, (png_structrp png_ptr,
     int method));
-#endif /* WRITE_CUSTOMIZE_ZTXT_COMPRESSION */
+#endif /* PNG_WRITE_CUSTOMIZE_ZTXT_COMPRESSION_SUPPORTED */
 
 /* These next functions are called for input/output, memory, and error
  * handling.  They are in the file pngrio.c, pngwio.c, and pngerror.c,
@@ -1895,7 +1892,7 @@ PNG_EXPORT(220, png_uint_32, png_process_data_skip, (png_structrp));
  */
 PNG_EXPORT(93, void, png_progressive_combine_row, (png_const_structrp png_ptr,
     png_bytep old_row, png_const_bytep new_row));
-#endif /* PROGRESSIVE_READ */
+#endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
 
 PNG_EXPORTA(94, png_voidp, png_malloc, (png_const_structrp png_ptr,
     png_alloc_size_t size), PNG_ALLOCATED);
@@ -2096,7 +2093,7 @@ PNG_EXPORT(128, png_int_32, png_get_x_offset_microns,
 PNG_EXPORT(129, png_int_32, png_get_y_offset_microns,
     (png_const_structrp png_ptr, png_const_inforp info_ptr));
 
-#endif /* EASY_ACCESS */
+#endif /* PNG_EASY_ACCESS_SUPPORTED */
 
 #ifdef PNG_READ_SUPPORTED
 /* Returns pointer to signature string read from PNG header */
@@ -2348,7 +2345,7 @@ PNG_FIXED_EXPORT(213, void, png_set_sCAL_fixed, (png_const_structrp png_ptr,
 PNG_EXPORT(171, void, png_set_sCAL_s, (png_const_structrp png_ptr,
     png_inforp info_ptr, int unit,
     png_const_charp swidth, png_const_charp sheight));
-#endif /* sCAL */
+#endif /* PNG_sCAL_SUPPORTED */
 
 #ifdef PNG_SET_UNKNOWN_CHUNKS_SUPPORTED
 /* Provide the default handling for all unknown chunks or, optionally, for
@@ -2576,8 +2573,8 @@ PNG_FIXED_EXPORT(212, png_fixed_point, png_get_y_offset_inches_fixed,
 PNG_EXPORT(198, png_uint_32, png_get_pHYs_dpi, (png_const_structrp png_ptr,
     png_const_inforp info_ptr, png_uint_32 *res_x, png_uint_32 *res_y,
     int *unit_type));
-#  endif /* pHYs */
-#endif  /* INCH_CONVERSIONS */
+#  endif /* PNG_pHYs_SUPPORTED */
+#endif  /* PNG_INCH_CONVERSIONS_SUPPORTED */
 
 /* Added in libpng-1.4.0 */
 #ifdef PNG_IO_STATE_SUPPORTED
@@ -2600,7 +2597,7 @@ PNG_EXPORT(216, png_uint_32, png_get_io_chunk_type,
 #  define PNG_IO_CHUNK_CRC   0x0080   /* currently at the chunk crc */
 #  define PNG_IO_MASK_OP     0x000f   /* current operation: reading/writing */
 #  define PNG_IO_MASK_LOC    0x00f0   /* current location: sig/hdr/data/crc */
-#endif /* IO_STATE */
+#endif /* ?PNG_IO_STATE_SUPPORTED */
 
 /* Interlace support.  The following macros are always defined so that if
  * libpng interlace handling is turned off the macros may be used to handle
@@ -2704,7 +2701,7 @@ PNG_EXPORT(216, png_uint_32, png_get_io_chunk_type,
      (composite) = (png_uint_16)(((png_uint_32)(fg) * (png_uint_32)(alpha) + \
      (png_uint_32)(bg)*(png_uint_32)(65535 - (png_uint_32)(alpha)) +         \
      32767) / 65535)
-#endif /* READ_COMPOSITE_NODIV */
+#endif /* PNG_READ_COMPOSITE_NODIV_SUPPORTED */
 
 #ifdef PNG_READ_INT_FUNCTIONS_SUPPORTED
 PNG_EXPORT(201, png_uint_32, png_get_uint_32, (png_const_bytep buf));
@@ -3132,7 +3129,7 @@ PNG_EXPORT(234, int, png_image_begin_read_from_file, (png_imagep image,
 PNG_EXPORT(235, int, png_image_begin_read_from_stdio, (png_imagep image,
    FILE* file));
    /* The PNG header is read from the stdio FILE object. */
-#endif /* STDIO */
+#endif /* PNG_STDIO_SUPPORTED */
 
 PNG_EXPORT(236, int, png_image_begin_read_from_memory, (png_imagep image,
    png_const_voidp memory, png_size_t size));
@@ -3177,7 +3174,7 @@ PNG_EXPORT(238, void, png_image_free, (png_imagep image));
    /* Free any data allocated by libpng in image->opaque, setting the pointer to
     * NULL.  May be called at any time after the structure is initialized.
     */
-#endif /* SIMPLIFIED_READ */
+#endif /* PNG_SIMPLIFIED_READ_SUPPORTED */
 
 #ifdef PNG_SIMPLIFIED_WRITE_SUPPORTED
 #ifdef PNG_STDIO_SUPPORTED
@@ -3223,12 +3220,12 @@ PNG_EXPORT(240, int, png_image_write_to_stdio, (png_imagep image, FILE *file,
  *
  * Note that the write API does not support interlacing or sub-8-bit pixels.
  */
-#endif /* STDIO */
-#endif /* SIMPLIFIED_WRITE */
+#endif /* PNG_STDIO_SUPPORTED */
+#endif /* PNG_SIMPLIFIED_WRITE_SUPPORTED */
 /*******************************************************************************
  *  END OF SIMPLIFIED API
  ******************************************************************************/
-#endif /* SIMPLIFIED_{READ|WRITE} */
+#endif /* PNG_SIMPLIFIED_{READ|WRITE}_SUPPORTED */
 
 #ifdef PNG_CHECK_FOR_INVALID_INDEX_SUPPORTED
 PNG_EXPORT(242, void, png_set_check_for_invalid_index,
@@ -3276,7 +3273,7 @@ PNG_EXPORT(243, int, png_get_palette_max, (png_const_structp png_ptr,
 
 PNG_EXPORT(244, int, png_set_option, (png_structrp png_ptr, int option,
    int onoff));
-#endif /* SET_OPTION */
+#endif /* PNG_SET_OPTION_SUPPORTED */
 
 /*******************************************************************************
  *  END OF HARDWARE AND SOFTWARE OPTIONS
@@ -3335,8 +3332,8 @@ PNG_EXPORT(261, void, png_read_frame_head, (png_structp png_ptr,
 PNG_EXPORT(262, void, png_set_progressive_frame_fn, (png_structp png_ptr,
    png_progressive_frame_ptr frame_info_fn,
    png_progressive_frame_ptr frame_end_fn));
-#endif /* PROGRESSIVE_READ */
-#endif /* READ_APNG */
+#endif /* PNG_PROGRESSIVE_READ_SUPPORTED */
+#endif /* PNG_READ_APNG_SUPPORTED */
 
 #ifdef PNG_WRITE_APNG_SUPPORTED
 PNG_EXPORT(263, void, png_write_frame_head, (png_structp png_ptr,
@@ -3348,8 +3345,8 @@ PNG_EXPORT(263, void, png_write_frame_head, (png_structp png_ptr,
 
 PNG_EXPORT(264, void, png_write_frame_tail, (png_structp png_ptr,
    png_infop info_ptr));
-#endif /* WRITE_APNG */
-#endif /* APNG */
+#endif /* PNG_WRITE_APNG_SUPPORTED */
+#endif /* PNG_APNG_SUPPORTED */
 
 /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
  * defs, and in scripts/symbols.def.
@@ -3363,7 +3360,7 @@ PNG_EXPORT(264, void, png_write_frame_tail, (png_structp png_ptr,
   PNG_EXPORT_LAST_ORDINAL(264);
 #else
   PNG_EXPORT_LAST_ORDINAL(244);
-#endif /* APNG */
+#endif /* PNG_APNG_SUPPORTED */
 #endif
 
 #ifdef __cplusplus
