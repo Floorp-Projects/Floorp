@@ -155,3 +155,8 @@ tests:
       tasks/builds/b2g_desktop.yml:
         task: tasks/tests/b2g_reftests.yml
         chunks: 10
+  reftest-sanity-oop:
+    allowed_build_tasks:
+      tasks/builds/b2g_desktop.yml:
+        task: tasks/tests/b2g_reftests_sanity_oop.yml
+        chunks: 1
