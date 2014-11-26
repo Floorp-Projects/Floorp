@@ -114,10 +114,11 @@ loop.store.ActiveRoomStore = (function() {
 
       this.setStoreState({
         error: actionData.error,
-        failureReason: getReason(actionData.error.errno),
-        roomState: actionData.error.errno === SERVER_CODES.ROOM_FULL ?
-          ROOM_STATES.FULL : ROOM_STATES.FAILED
+        failureReason: getReason(actionData.error.errno)
       });
+
+      this._leaveRoom(actionData.error.errno === SERVER_CODES.ROOM_FULL ?
+          ROOM_STATES.FULL : ROOM_STATES.FAILED);
     },
 
     /**
