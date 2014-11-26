@@ -8,6 +8,7 @@ flags:
     - emulator
     - emulator-jb
     - emulator-kk
+    - emulator-ics
     - linux32_gecko  # b2g desktop linux 32 bit
     - linux64_gecko  # b2g desktop linux 64 bit
     - macosx64_gecko # b2g desktop osx 64 bit
@@ -96,6 +97,16 @@ builds:
           debug: 1
           b2g-config: 'emulator-jb'
           build-type: Debug
+  emulator-ics:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator.yml
+        additional-parameters:
+          debug: 0
+          b2g-config: 'emulator-ics'
+          build-type: Opt
 
 # Test section covers the -u options in the try flags
 tests:
