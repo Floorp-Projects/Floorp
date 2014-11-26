@@ -220,96 +220,138 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   }
 
   aStatus = NS_FRAME_COMPLETE;
-  nscoord isize = 0;
-  nscoord leftoverSpace = 0;
-  nscoord spaceApart = 0;
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   WritingMode frameWM = aReflowState.GetWritingMode();
-  LogicalMargin borderPadding =
-    aReflowState.ComputedLogicalBorderPadding();
-  nscoord baseStart = 0;
 
   LogicalSize availSize(lineWM, aReflowState.AvailableWidth(),
                         aReflowState.AvailableHeight());
 
   const uint32_t rtcCount = mTextContainers.Length();
+  const uint32_t spanCount = mSpanContainers.Length();
+  const uint32_t totalCount = rtcCount + spanCount;
+  // We have a reflow state and a line layout for each RTC.
+  // They are conceptually the state of the RTCs, but we don't actually
+  // reflow those RTCs in this code. These two arrays are holders of
+  // the reflow states and line layouts.
+  nsAutoTArray<UniquePtr<nsHTMLReflowState>, RTC_ARRAY_SIZE> reflowStates;
+  nsAutoTArray<UniquePtr<nsLineLayout>, RTC_ARRAY_SIZE> lineLayouts;
+  reflowStates.SetCapacity(totalCount);
+  lineLayouts.SetCapacity(totalCount);
+
+  nsAutoTArray<nsHTMLReflowState*, RTC_ARRAY_SIZE> rtcReflowStates;
+  nsAutoTArray<nsHTMLReflowState*, RTC_ARRAY_SIZE> spanReflowStates;
+  rtcReflowStates.SetCapacity(rtcCount);
+  spanReflowStates.SetCapacity(spanCount);
+
   // Begin the line layout for each ruby text container in advance.
-  for (uint32_t i = 0; i < rtcCount; i++) {
-    nsRubyTextContainerFrame* rtcFrame = mTextContainers.ElementAt(i);
-    nsHTMLReflowState rtcReflowState(aPresContext,
-                                     *aReflowState.parentReflowState,
-                                     rtcFrame, availSize);
-    rtcReflowState.mLineLayout = aReflowState.mLineLayout;
-    // FIXME: Avoid using/needing the rtcReflowState argument
-    rtcFrame->BeginRTCLineLayout(aPresContext, rtcReflowState);
+  for (uint32_t i = 0; i < totalCount; i++) {
+    nsIFrame* textContainer;
+    nsTArray<nsHTMLReflowState*>* reflowStateArray;
+    if (i < rtcCount) {
+      textContainer = mTextContainers[i];
+      reflowStateArray = &rtcReflowStates;
+    } else {
+      textContainer = mSpanContainers[i - rtcCount];
+      reflowStateArray = &spanReflowStates;
+    }
+    nsHTMLReflowState* reflowState = new nsHTMLReflowState(
+      aPresContext, *aReflowState.parentReflowState, textContainer, availSize);
+    reflowStates.AppendElement(reflowState);
+    reflowStateArray->AppendElement(reflowState);
+    nsLineLayout* lineLayout = new nsLineLayout(
+      aPresContext, reflowState->mFloatManager, reflowState, nullptr);
+    lineLayouts.AppendElement(lineLayout);
+
+    // Line number is useless for ruby text
+    // XXX nullptr here may cause problem, see comments for
+    //     nsLineLayout::mBlockRS and nsLineLayout::AddFloat
+    lineLayout->Init(nullptr, reflowState->CalcLineHeight(), -1);
+    reflowState->mLineLayout = lineLayout;
+
+    LogicalMargin borderPadding = reflowState->ComputedLogicalBorderPadding();
+    nscoord containerWidth =
+      reflowState->ComputedWidth() + borderPadding.LeftRight(lineWM);
+
+    lineLayout->BeginLineReflow(borderPadding.IStart(lineWM),
+                                borderPadding.BStart(lineWM),
+                                reflowState->ComputedISize(),
+                                NS_UNCONSTRAINEDSIZE,
+                                false, false, lineWM, containerWidth);
   }
 
+  nscoord istart = aReflowState.mLineLayout->GetCurrentICoord();
+  nscoord icoord = istart;
+
+  // Reflow non-span annotations and bases
   for (PairEnumerator e(this, mTextContainers); !e.AtEnd(); e.Next()) {
-    // Determine if we need more spacing between bases in the inline direction
-    // depending on the inline size of the corresponding annotations
-    // FIXME: The use of GetPrefISize here and below is easier but not ideal. It
-    // would be better to use metrics from reflow.
-    nscoord textWidth = 0;
+    nscoord pairISize = 0;
+
     for (uint32_t i = 0; i < rtcCount; i++) {
       nsRubyTextFrame* rtFrame = do_QueryFrame(e.GetTextFrame(i));
       if (rtFrame) {
-        int newWidth = rtFrame->GetPrefISize(aReflowState.rendContext);
-        if (newWidth > textWidth) {
-          textWidth = newWidth;
-        }
+        nsReflowStatus reflowStatus;
+        nsHTMLReflowMetrics metrics(*rtcReflowStates[i]);
+
+        bool pushedFrame;
+        rtcReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
+                                                     &metrics, pushedFrame);
+        NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
+        pairISize = std::max(pairISize, metrics.ISize(lineWM));
       }
     }
 
     nsIFrame* rbFrame = e.GetBaseFrame();
-    NS_ASSERTION(!rbFrame || rbFrame->GetType() == nsGkAtoms::rubyBaseFrame,
-                 "Unrecognized child type for ruby base container");
     if (rbFrame) {
-      nsReflowStatus frameReflowStatus;
-      nsHTMLReflowMetrics metrics(aReflowState, aDesiredSize.mFlags);
-      nscoord prefWidth = rbFrame->GetPrefISize(aReflowState.rendContext);
-
-      if (textWidth > prefWidth) {
-        spaceApart = std::max((textWidth - prefWidth) / 2, spaceApart);
-        leftoverSpace = spaceApart;
-      } else {
-        spaceApart = leftoverSpace;
-        leftoverSpace = 0;
-      }
-      if (spaceApart > 0) {
-        aReflowState.mLineLayout->AdvanceICoord(spaceApart);
-      }
-      baseStart = aReflowState.mLineLayout->GetCurrentICoord();
+      MOZ_ASSERT(rbFrame->GetType() == nsGkAtoms::rubyBaseFrame);
+      nsReflowStatus reflowStatus;
+      nsHTMLReflowMetrics metrics(aReflowState);
 
       bool pushedFrame;
-      aReflowState.mLineLayout->ReflowFrame(rbFrame, frameReflowStatus,
+      aReflowState.mLineLayout->ReflowFrame(rbFrame, reflowStatus,
                                             &metrics, pushedFrame);
       NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
-
-      isize += metrics.ISize(lineWM);
-      rbFrame->SetSize(LogicalSize(lineWM, metrics.ISize(lineWM),
-                                  metrics.BSize(lineWM)));
-      FinishReflowChild(rbFrame, aPresContext, metrics, &aReflowState, 0, 0,
-                        NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_MOVE_VIEW);
+      pairISize = std::max(pairISize, metrics.ISize(lineWM));
     }
 
-    // Now reflow the ruby text boxes that correspond to this ruby base box.
+    // Align all the line layout to the new coordinate.
+    icoord += pairISize;
+    aReflowState.mLineLayout->AdvanceICoord(
+      icoord - aReflowState.mLineLayout->GetCurrentICoord());
     for (uint32_t i = 0; i < rtcCount; i++) {
-      nsRubyTextFrame* rtFrame = do_QueryFrame(e.GetTextFrame(i));
-      nsRubyTextContainerFrame* rtcFrame = mTextContainers[i];
-      if (rtFrame) {
-        nsHTMLReflowMetrics rtcMetrics(*aReflowState.parentReflowState,
-                                       aDesiredSize.mFlags);
-        nsHTMLReflowState rtcReflowState(aPresContext,
-                                         *aReflowState.parentReflowState,
-                                         rtcFrame, availSize);
-        rtcReflowState.mLineLayout = rtcFrame->GetLineLayout();
-        rtcFrame->ReflowRubyTextFrame(rtFrame, rbFrame, baseStart,
-                                      aPresContext, rtcMetrics,
-                                      rtcReflowState);
-      }
+      nsLineLayout* lineLayout = rtcReflowStates[i]->mLineLayout;
+      lineLayout->AdvanceICoord(icoord - lineLayout->GetCurrentICoord());
     }
   }
 
+  // Reflow spans
+  nscoord spanISize = 0;
+  for (uint32_t i = 0; i < spanCount; i++) {
+    nsRubyTextContainerFrame* container = mSpanContainers[i];
+    nsIFrame* rtFrame = container->GetFirstPrincipalChild();
+    nsReflowStatus reflowStatus;
+    nsHTMLReflowMetrics metrics(*spanReflowStates[i]);
+    bool pushedFrame;
+    spanReflowStates[i]->mLineLayout->ReflowFrame(rtFrame, reflowStatus,
+                                                  &metrics, pushedFrame);
+    NS_ASSERTION(!pushedFrame, "Ruby line breaking is not yet implemented");
+    spanISize = std::max(spanISize, metrics.ISize(lineWM));
+  }
+
+  nscoord isize = icoord - istart;
+  if (isize < spanISize) {
+    aReflowState.mLineLayout->AdvanceICoord(spanISize - isize);
+    isize = spanISize;
+  }
+  for (uint32_t i = 0; i < totalCount; i++) {
+    // It happens before the ruby text container is reflowed, and that
+    // when it is reflowed, it will just use this size.
+    nsRubyTextContainerFrame* textContainer = i < rtcCount ?
+      mTextContainers[i] : mSpanContainers[i - rtcCount];
+    textContainer->SetISize(isize);
+    lineLayouts[i]->EndLineReflow();
+  }
+
+  LogicalMargin borderPadding = aReflowState.ComputedLogicalBorderPadding();
   aDesiredSize.ISize(lineWM) = isize;
   nsLayoutUtils::SetBSizeFromFontMetrics(this, aDesiredSize, aReflowState,
                                          borderPadding, lineWM, frameWM);
