@@ -9,6 +9,8 @@ import os.path
 import json
 import copy
 import datetime
+import subprocess
+import sys
 
 import pystache
 import yaml
@@ -22,7 +24,7 @@ from mach.decorators import (
 
 from taskcluster_graph.commit_parser import parse_commit
 from taskcluster_graph.slugid import slugid
-from taskcluster_graph.from_now import json_time_from_now
+from taskcluster_graph.from_now import json_time_from_now, current_json_time
 
 import taskcluster_graph.build_task
 
@@ -34,6 +36,38 @@ LOCAL_WORKER_TYPES = ['b2gtest', 'b2gbuild']
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 REGISTRY = open(os.path.join(DOCKER_ROOT, 'REGISTRY')).read().strip()
 
+def get_hg_url():
+    ''' Determine the url for the mercurial repository'''
+    try:
+        url = subprocess.check_output(
+            ['hg', 'path', 'default'],
+            stderr=subprocess.PIPE
+        )
+    except subprocess.CalledProcessError:
+        sys.stderr.write(
+            "Error: Could not determine the current hg repository url. " \
+            "Ensure command is executed within a hg respository"
+        )
+        sys.exit(1)
+
+    return url
+
+def get_latest_hg_revision(repository):
+    ''' Retrieves the revision number of the latest changed head'''
+    try:
+        revision = subprocess.check_output(
+            ['hg', 'id', '-r', 'tip', repository, '-i'],
+            stderr=subprocess.PIPE
+        ).strip('\n')
+    except subprocess.CalledProcessError:
+        sys.stderr.write(
+            "Error: Could not determine the latest hg revision at {}" \
+            "Ensure command is executed within a cloned hg respository and " \
+            "remote default remote repository is accessible".format(repository)
+        )
+        sys.exit(1)
+
+    return revision
 
 def import_yaml(path, variables=None):
     ''' Load a yml file relative to the root of this file'''
@@ -165,3 +199,45 @@ class TryGraph(object):
                     graph['tasks'].append(test_task)
 
         print(json.dumps(graph, indent=4))
+
+@CommandProvider
+class CIBuild(object):
+    @Command('ci-build', category='ci',
+        description="Create taskcluster try server build task")
+    @CommandArgument('--revision',
+        help='revision in gecko to use in sub tasks')
+    @CommandArgument('--repository',
+        help='full path to hg repository to use in sub tasks')
+    @CommandArgument('--owner',
+        help='email address of who owns this graph')
+    @CommandArgument('build_task',
+        help='path to build task definition')
+    def create_ci_build(self, build_task, revision="", repository="", owner=""):
+        # TODO handle git repos
+        if not repository:
+            repository = get_hg_url()
+
+        if not revision:
+            revision = get_latest_hg_revision(repository)
+
+        build_parameters = {
+            'docker_image': docker_image,
+            'repository': repository,
+            'revision': revision,
+            'owner': owner,
+            'from_now': json_time_from_now,
+            'now': current_json_time()
+        }
+
+        try:
+            build_task = import_yaml(build_task, build_parameters)
+        except IOError:
+            sys.stderr.write(
+                "Could not load build task file.  Ensure path is a relative " \
+                "path from testing/taskcluster"
+            )
+            sys.exit(1)
+
+        taskcluster_graph.build_task.validate(build_task)
+
+        print(json.dumps(build_task['task'], indent=4))

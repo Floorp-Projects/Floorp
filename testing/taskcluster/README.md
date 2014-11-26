@@ -130,3 +130,9 @@ Requires [taskcluster-cli](https://github.com/taskcluster/taskcluster-cli).
 ```sh
 mach trygraph --message 'try: -b do -p all' --revision=33c0181c4a25 --repository=http://hg.mozilla.org/mozilla-central --owner=jlal@mozilla.com | taskcluster run-graph
 ```
+
+Creating only a build task and submitting to taskcluster:
+
+```sh
+mach ci-build --revision=33c0181c4a25 --repository=http://hg.mozilla.org/mozilla-central --owner=user@domain.com tasks/builds/b2g_desktop.yml | taskcluster run-task --verbose
+```
