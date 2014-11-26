@@ -152,3 +152,6 @@ tests:
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_reftests.yml
         chunks: 6
+      tasks/builds/b2g_desktop.yml:
+        task: tasks/tests/b2g_reftests.yml
+        chunks: 10
