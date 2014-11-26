@@ -264,7 +264,7 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
-  describe("#resetRoom", function() {
+  describe("#feedbackComplete", function() {
     it("should reset the room store state", function() {
       var initialState = store.getInitialStoreState();
       store.setStoreState({
@@ -274,7 +274,7 @@ describe("loop.store.ActiveRoomStore", function () {
         failureReason: "foo"
       });
 
-      store.resetRoom(new sharedActions.ResetRoom());
+      store.feedbackComplete(new sharedActions.FeedbackComplete());
 
       expect(store.getStoreState()).eql(initialState);
     });

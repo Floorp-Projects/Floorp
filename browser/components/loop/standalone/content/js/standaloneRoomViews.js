@@ -29,7 +29,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     onFeedbackSent: function() {
       // We pass a tick to prevent React warnings regarding nested updates.
       setTimeout(function() {
-        this.props.activeRoomStore.dispatchAction(new sharedActions.ResetRoom());
+        this.props.activeRoomStore.dispatchAction(new sharedActions.FeedbackComplete());
       }.bind(this));
     },
 
@@ -85,8 +85,10 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                 {clientShortname: mozL10n.get("clientShortname2")});
           // XXX Bug 1047040 will add images to help prompt the user.
           return (
-            React.DOM.p({className: "prompt-media-message"}, 
-              msg
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.p({className: "prompt-media-message"}, 
+                msg
+              )
             )
           );
         }

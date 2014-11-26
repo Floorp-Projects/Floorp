@@ -331,9 +331,10 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Resets current room.
+     * Used to indicate that the feedback cycle is completed and the countdown
+     * finished.
      */
-    ResetRoom: Action.define("resetRoom", {
+    FeedbackComplete: Action.define("feedbackComplete", {
     }),
 
     /**

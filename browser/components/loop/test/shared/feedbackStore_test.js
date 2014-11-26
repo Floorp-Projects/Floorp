@@ -105,4 +105,16 @@ describe("loop.store.FeedbackStore", function () {
       store.sendFeedback(new sharedActions.SendFeedback(sadFeedbackData));
     });
   });
+
+  describe("feedbackComplete", function() {
+    it("should reset the store state", function() {
+      store.setStoreState({feedbackState: FEEDBACK_STATES.SENT});
+
+      store.feedbackComplete();
+
+      expect(store.getStoreState()).eql({
+        feedbackState: FEEDBACK_STATES.INIT
+      });
+    });
+  });
 });
