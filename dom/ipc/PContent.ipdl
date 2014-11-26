@@ -782,6 +782,22 @@ parent:
 
     sync OpenAnonymousTemporaryFile() returns (FileDescriptor aFD);
 
+    /**
+     * Keygen requires us to call it after a <keygen> element is parsed and
+     * before one is submitted. This is urgent because an extension might use
+     * a CPOW to synchronously submit a keygen element.
+     */
+    prio(urgent) sync FormProcessValue(nsString oldValue,
+                                       nsString challenge,
+                                       nsString keytype,
+                                       nsString keyparams)
+        returns (nsString newValue);
+
+    /**
+     * Called to provide the options for <keygen> elements.
+     */
+    sync FormProvideContent() returns (nsString aAttribute, nsString[] aContent);
+
     // Use only for testing!
     sync GetFileReferences(PersistenceType persistenceType,
                            nsCString origin,
