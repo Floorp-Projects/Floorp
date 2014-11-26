@@ -77,3 +77,9 @@ def json_time_from_now(input_str, now=None):
     # ISO dates until 'Z' (for timezone) is added...
     return time.isoformat() + 'Z'
 
+def current_json_time():
+    '''
+    :returns: JSON string representation of the current time.
+    '''
+
+    return datetime.datetime.utcnow().isoformat() + 'Z'

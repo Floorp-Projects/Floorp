@@ -1,5 +1,7 @@
 taskId: {{build_slugid}}
 task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
     source: http://todo.com/soon
     owner: {{owner}}
