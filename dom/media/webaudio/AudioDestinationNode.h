@@ -54,7 +54,7 @@ public:
   void Mute();
   void Unmute();
 
-  void StartRendering(Promise* aPromise);
+  void StartRendering();
 
   void OfflineShutdown();
 
@@ -85,7 +85,6 @@ public:
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
   void InputMuted(bool aInputMuted);
-  void ResolvePromise(AudioBuffer* aRenderedBuffer);
 
 protected:
   virtual ~AudioDestinationNode();
@@ -104,7 +103,6 @@ private:
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 
   nsRefPtr<EventProxyHandler> mEventProxyHelper;
-  nsRefPtr<Promise> mOfflineRenderingPromise;
 
   // Audio Channel Type.
   AudioChannel mAudioChannel;
