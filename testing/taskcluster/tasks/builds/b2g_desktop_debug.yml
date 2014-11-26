@@ -27,6 +27,8 @@ task:
       # revision/project params defined originally here https://github.com/taskcluster/taskcluster-try/blob/master/try/instantiate.js
       REVISION: '{{revision}}'
       REPOSITORY: '{{repository}}'
+      MOZTT_GIT_URL: '{{moztt_git_url}}'
+      MOZTT_REVISION: '{{moztt_revision}}'
 
     image: '{{#docker_image}}builder{{/docker_image}}'
     maxRunTime: 3600

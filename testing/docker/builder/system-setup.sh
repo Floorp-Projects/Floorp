@@ -7,9 +7,6 @@ tools_dir="/tmp/tools"
 
 mkdir -p $home/bin
 mkdir -p $home/tools
-mkdir -p $home/tools/tooltool-cache
-
-wget -O $home/tools/tooltool.py https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
 
 chown -R worker:worker $home/* $home/.*
 
