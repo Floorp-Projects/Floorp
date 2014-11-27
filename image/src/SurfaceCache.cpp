@@ -175,9 +175,8 @@ public:
       if (!aCachedSurface->mSurface) {
         return;
       }
-
-      mSum += aCachedSurface->mSurface->
-        SizeOfExcludingThisWithComputedFallbackIfHeap(mLocation, mMallocSizeOf);
+      mSum += aCachedSurface->mSurface->SizeOfExcludingThis(mLocation,
+                                                            mMallocSizeOf);
     }
 
     size_t Result() const { return mSum; }
