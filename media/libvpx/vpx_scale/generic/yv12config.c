@@ -199,11 +199,6 @@ int vp9_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
       if (fb->data == NULL || fb->size < external_frame_size)
         return -1;
 
-      // This memset is needed for fixing valgrind error from C loop filter
-      // due to access uninitialized memory in frame border. It could be
-      // removed if border is totally removed.
-      vpx_memset(fb->data, 0, fb->size);
-
       ybf->buffer_alloc = (uint8_t *)yv12_align_addr(fb->data, 32);
     } else if (frame_size > (size_t)ybf->buffer_alloc_sz) {
       // Allocation to hold larger frame, or first allocation.
