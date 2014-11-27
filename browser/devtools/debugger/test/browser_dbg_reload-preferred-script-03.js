@@ -21,7 +21,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
 
     waitForSourceShown(gPanel, FIRST_URL)
-      .then(() => testSource("", FIRST_URL))
+      .then(() => testSource(undefined, FIRST_URL))
       .then(() => switchToSource(SECOND_URL))
       .then(() => testSource(SECOND_URL))
       .then(() => switchToSource(FIRST_URL))
@@ -37,15 +37,15 @@ function testSource(aPreferredUrl, aSelectedUrl = aPreferredUrl) {
   info("Currently preferred source: " + gSources.preferredValue);
   info("Currently selected source: " + gSources.selectedValue);
 
-  is(gSources.preferredValue, aPreferredUrl,
+  is(getSourceURL(gSources, gSources.preferredValue), aPreferredUrl,
     "The preferred source url wasn't set correctly.");
-  is(gSources.selectedValue, aSelectedUrl,
+  is(getSourceURL(gSources, gSources.selectedValue), aSelectedUrl,
     "The selected source isn't the correct one.");
 }
 
 function switchToSource(aUrl) {
   let finished = waitForSourceShown(gPanel, aUrl);
-  gSources.preferredSource = aUrl;
+  gSources.preferredSource = getSourceActor(gSources, aUrl);
   return finished;
 }
 

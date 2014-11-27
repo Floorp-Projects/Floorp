@@ -35,10 +35,8 @@ const testBreakpoint = Task.async(function* (threadResponse, tabClient, threadCl
 
   // Set a breakpoint in the test source.
 
-  yield interrupt(threadClient);
-
-  const [response, bpClient] = yield setBreakpoint(threadClient, {
-    url: "test.js",
+  const source = yield getSource(threadClient, "test.js");
+  const [response, bpClient] = yield setBreakpoint(source, {
     line: 3
   });
   ok(!response.error, "Shouldn't get an error setting the BP.");

@@ -27,7 +27,7 @@ import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
 
-class CrashHandler implements Thread.UncaughtExceptionHandler {
+public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
     private static final String LOGTAG = "GeckoCrashHandler";
     private static final Thread MAIN_THREAD = Thread.currentThread();
@@ -234,7 +234,7 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
                 final PackageInfo pkgInfo = pkgMgr.getPackageInfo(pkgName, 0);
                 extras.putString("Version", pkgInfo.versionName);
                 extras.putInt("BuildID", pkgInfo.versionCode);
-                extras.putLong("InstallTime", pkgInfo.firstInstallTime / 1000);
+                extras.putLong("InstallTime", pkgInfo.lastUpdateTime / 1000);
             } catch (final PackageManager.NameNotFoundException e) {
                 Log.i(LOGTAG, "Error getting package info", e);
             }
@@ -438,5 +438,31 @@ class CrashHandler implements Thread.UncaughtExceptionHandler {
         } finally {
             terminateProcess();
         }
+    }
+
+    public static CrashHandler createDefaultCrashHandler(final Context context) {
+        return new CrashHandler(context) {
+            @Override
+            protected Bundle getCrashExtras(final Thread thread, final Throwable exc) {
+                final Bundle extras = super.getCrashExtras(thread, exc);
+
+                extras.putString("ProductName", AppConstants.MOZ_APP_BASENAME);
+                extras.putString("ProductID", AppConstants.MOZ_APP_ID);
+                extras.putString("Version", AppConstants.MOZ_APP_VERSION);
+                extras.putString("BuildID", AppConstants.MOZ_APP_BUILDID);
+                extras.putString("Vendor", AppConstants.MOZ_APP_VENDOR);
+                extras.putString("ReleaseChannel", AppConstants.MOZ_UPDATE_CHANNEL);
+                return extras;
+            }
+
+            @Override
+            public boolean reportException(final Thread thread, final Throwable exc) {
+                if (AppConstants.MOZ_CRASHREPORTER && AppConstants.MOZILLA_OFFICIAL) {
+                    // Only use Java crash reporter if enabled on official build.
+                    return super.reportException(thread, exc);
+                }
+                return false;
+            }
+        };
     }
 }

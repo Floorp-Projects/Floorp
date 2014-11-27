@@ -27,10 +27,10 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 const testBlackBox = Task.async(function* () {
-  yield executeOnNextTickAndWaitForPause(evalCode, gClient);
+  let packet = yield executeOnNextTickAndWaitForPause(evalCode, gClient);
+  let source = gThreadClient.source(packet.frame.where.source);
 
-  yield setBreakpoint(gThreadClient, {
-    url: SOURCE_URL,
+  yield setBreakpoint(source, {
     line: 2
   });
   yield resume(gThreadClient);
@@ -44,11 +44,11 @@ const testBlackBox = Task.async(function* () {
   // Test that we can step into `doStuff` when we are not black boxed.
   yield runTest(
     function onSteppedLocation(aLocation) {
-      do_check_eq(aLocation.url, BLACK_BOXED_URL);
+      do_check_eq(aLocation.source.url, BLACK_BOXED_URL);
       do_check_eq(aLocation.line, 2);
     },
     function onDebuggerStatementFrames(aFrames) {
-      do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
+      do_check_true(!aFrames.some(f => f.where.source.isBlackBoxed));
     }
   );
 
@@ -59,15 +59,15 @@ const testBlackBox = Task.async(function* () {
   // doesn't show up.
   yield runTest(
     function onSteppedLocation(aLocation) {
-      do_check_eq(aLocation.url, SOURCE_URL);
+      do_check_eq(aLocation.source.url, SOURCE_URL);
       do_check_eq(aLocation.line, 3);
     },
     function onDebuggerStatementFrames(aFrames) {
       for (let f of aFrames) {
-        if (f.where.url == BLACK_BOXED_URL) {
-          do_check_true(f.source.isBlackBoxed);
+        if (f.where.source.url == BLACK_BOXED_URL) {
+          do_check_true(f.where.source.isBlackBoxed);
         } else {
-          do_check_true(!f.source.isBlackBoxed)
+          do_check_true(!f.where.source.isBlackBoxed)
         }
       }
     }
@@ -79,11 +79,11 @@ const testBlackBox = Task.async(function* () {
   // Test that we can step into `doStuff` again.
   yield runTest(
     function onSteppedLocation(aLocation) {
-      do_check_eq(aLocation.url, BLACK_BOXED_URL);
+      do_check_eq(aLocation.source.url, BLACK_BOXED_URL);
       do_check_eq(aLocation.line, 2);
     },
     function onDebuggerStatementFrames(aFrames) {
-      do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
+      do_check_true(!aFrames.some(f => f.where.source.isBlackBoxed));
     }
   );
 

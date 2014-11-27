@@ -2424,8 +2424,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
         nsIFrame *animatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(child);
         if (animatedGeometryRoot != buildingForChild.GetPrevAnimatedGeometryRoot()) {
           nsDisplayLayerEventRegions* eventRegions =
-            new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
+            new (aBuilder) nsDisplayLayerEventRegions(aBuilder, child);
           aBuilder->SetLayerEventRegions(eventRegions);
+          aLists.BorderBackground()->AppendNewToTop(eventRegions);
         }
       }
 

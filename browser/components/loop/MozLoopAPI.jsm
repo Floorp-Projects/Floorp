@@ -124,6 +124,10 @@ const injectObjectAPI = function(api, targetWindow) {
           // closing a window, we want to circumvent a JS error.
           if (callbackIsFunction && typeof lastParam != "function") {
             MozLoopService.log.debug(func + ": callback function was lost.");
+            // Assume the presence of a first result argument to be an error.
+            if (results[0]) {
+              MozLoopService.log.error(func + " error:", results[0]);
+            }
             return;
           }
           lastParam(...[cloneValueInto(r, targetWindow) for (r of results)]);
@@ -517,7 +521,7 @@ function injectLoopAPI(targetWindow) {
           // When the function was garbage collected due to async events, like
           // closing a window, we want to circumvent a JS error.
           if (callbackIsFunction && typeof callback != "function") {
-            MozLoopService.log.debug("hawkRequest: callback function was lost.");
+            MozLoopService.log.error("hawkRequest: callback function was lost.", hawkError);
             return;
           }
           // The hawkError.error property, while usually a string representing

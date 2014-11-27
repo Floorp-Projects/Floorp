@@ -40,7 +40,7 @@ function testInitialSource() {
     "Found the expected editor mode.");
   is(gEditor.getText().search(/firstCall/), -1,
     "The first source is not displayed.");
-  is(gEditor.getText().search(/debugger/), 141,
+  is(gEditor.getText().search(/debugger/), 135,
     "The second source is displayed.");
   is(gEditor.getText().search(/banana/), -1,
     "The third source is not displayed.");

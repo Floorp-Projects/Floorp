@@ -2,5 +2,5 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function firstCall() {
-  eval("secondCall();");
+  secondCall();
 }

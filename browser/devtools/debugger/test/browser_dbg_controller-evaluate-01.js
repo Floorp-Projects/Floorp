@@ -21,7 +21,7 @@ function test() {
     function checkView(frameDepth, selectedSource, caretLine, editorText) {
       is(win.gThreadClient.state, "paused",
         "Should only be getting stack frames while paused.");
-      is(framesView.itemCount, 4,
+      is(framesView.itemCount, 2,
         "Should have four frames.");
       is(framesView.selectedDepth, frameDepth,
         "The correct frame is selected in the widget.");
@@ -46,8 +46,8 @@ function test() {
     }
 
     callInTab(tab, "firstCall");
-    yield waitForSourceAndCaretAndScopes(panel, "-02.js", 1);
-    checkView(0, 1, 1, [/secondCall/, 118]);
+    yield waitForSourceAndCaretAndScopes(panel, "-02.js", 6);
+    checkView(0, 1, 6, [/secondCall/, 118]);
 
     // Eval in the topmost frame, while paused.
     let updatedView = waitForDebuggerEvents(panel, events.FETCHED_SCOPES);
@@ -57,13 +57,13 @@ function test() {
     is(result.return.class, "Function", "The evaluation return class is correct.");
 
     yield updatedView;
-    checkView(0, 1, 1, [/secondCall/, 118]);
+    checkView(0, 1, 6, [/secondCall/, 118]);
     ok(true, "Evaluating in the topmost frame works properly.");
 
     // Eval in a different frame, while paused.
     updatedView = waitForDebuggerEvents(panel, events.FETCHED_SCOPES);
     try {
-      yield frames.evaluate("foo", { depth: 3 }); // oldest frame
+      yield frames.evaluate("foo", { depth: 1 }); // oldest frame
     } catch (result) {
       is(result.return.type, "object", "The evaluation thrown type is correct.");
       is(result.return.class, "Error", "The evaluation thrown class is correct.");
@@ -71,7 +71,7 @@ function test() {
     }
 
     yield updatedView;
-    checkView(0, 1, 1, [/secondCall/, 118]);
+    checkView(0, 1, 6, [/secondCall/, 118]);
     ok(true, "Evaluating in a custom frame works properly.");
 
     // Eval in a non-existent frame, while paused.
