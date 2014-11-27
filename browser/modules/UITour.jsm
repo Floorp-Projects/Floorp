@@ -128,11 +128,48 @@ this.UITour = {
     ["searchProvider", {
       query: (aDocument) => {
         let searchbar = aDocument.getElementById("searchbar");
+        if (searchbar.hasAttribute("oneoffui")) {
+          return null;
+        }
         return aDocument.getAnonymousElementByAttribute(searchbar,
                                                         "anonid",
                                                         "searchbar-engine-button");
       },
       widgetName: "search-container",
+    }],
+    ["searchIcon", {
+      query: (aDocument) => {
+        let searchbar = aDocument.getElementById("searchbar");
+        if (!searchbar.hasAttribute("oneoffui")) {
+          return null;
+        }
+        return aDocument.getAnonymousElementByAttribute(searchbar,
+                                                        "anonid",
+                                                        "searchbar-search-button");
+      },
+      widgetName: "search-container",
+    }],
+    ["searchPrefsLink", {
+      query: (aDocument) => {
+        let element = null;
+        let searchbar = aDocument.getElementById("searchbar");
+        if (searchbar.hasAttribute("oneoffui")) {
+          let popup = aDocument.getElementById("PopupSearchAutoComplete");
+          if (popup.state != "open")
+            return null;
+          element = aDocument.getAnonymousElementByAttribute(popup,
+                                                             "anonid",
+                                                             "search-settings");
+        } else {
+          element = aDocument.getAnonymousElementByAttribute(searchbar,
+                                                             "anonid",
+                                                             "open-engine-manager");
+        }
+        if (!element || !UITour.isElementVisible(element)) {
+          return null;
+        }
+        return element;
+      },
     }],
     ["selectedTabIcon", {
       query: (aDocument) => {

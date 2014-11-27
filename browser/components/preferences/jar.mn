@@ -31,6 +31,7 @@ browser.jar:
 *   content/browser/preferences/permissions.xul
 *   content/browser/preferences/permissions.js
 *   content/browser/preferences/preferences.xul
+    content/browser/preferences/preferences.js
     content/browser/preferences/privacy.xul
 *   content/browser/preferences/privacy.js
     content/browser/preferences/sanitize.xul
@@ -43,6 +44,9 @@ browser.jar:
     content/browser/preferences/sync.xul
     content/browser/preferences/sync.js
 #endif
+    content/browser/preferences/search.xul
+    content/browser/preferences/search.css
+    content/browser/preferences/search.js
 *   content/browser/preferences/tabs.xul
 *   content/browser/preferences/tabs.js
 *   content/browser/preferences/translation.xul

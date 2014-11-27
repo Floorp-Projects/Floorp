@@ -3304,13 +3304,6 @@ const BrowserSearch = {
         return;
     }
 
-    // Append the URI and an appropriate title to the browser data.
-    // Use documentURIObject in the check for shouldLoadFavIcon so that we
-    // do the right thing with about:-style error pages.  Bug 453442
-    var iconURL = null;
-    if (gBrowser.shouldLoadFavIcon(uri))
-      iconURL = uri.prePath + "/favicon.ico";
-
     var hidden = false;
     // If this engine (identified by title) is already in the list, add it
     // to the list of hidden engines rather than to the main list.
@@ -3323,7 +3316,8 @@ const BrowserSearch = {
 
     engines.push({ uri: engine.href,
                    title: engine.title,
-                   icon: iconURL });
+                   get icon() { return browser.mIconURL; }
+                 });
 
     if (hidden)
       browser.hiddenEngines = engines;
@@ -7821,4 +7815,3 @@ let PanicButtonNotifier = {
     popup.hidePopup();
   },
 };
-
