@@ -28,7 +28,7 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScrollViewChangeEvent.h"
-#include "mozilla/dom/SelectionChangeEvent.h"
+#include "mozilla/dom/SelectionStateChangedEvent.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/Preferences.h"
@@ -936,32 +936,32 @@ SelectionCarets::GetFrameSelection()
   }
 }
 
-static dom::Sequence<SelectionChangeReason>
-GetSelectionChangeReasons(int16_t aReason)
+static dom::Sequence<SelectionState>
+GetSelectionStates(int16_t aReason)
 {
-  dom::Sequence<SelectionChangeReason> reasons;
+  dom::Sequence<SelectionState> states;
   if (aReason & nsISelectionListener::DRAG_REASON) {
-    reasons.AppendElement(SelectionChangeReason::Drag);
+    states.AppendElement(SelectionState::Drag);
   }
   if (aReason & nsISelectionListener::MOUSEDOWN_REASON) {
-    reasons.AppendElement(SelectionChangeReason::Mousedown);
+    states.AppendElement(SelectionState::Mousedown);
   }
   if (aReason & nsISelectionListener::MOUSEUP_REASON) {
-    reasons.AppendElement(SelectionChangeReason::Mouseup);
+    states.AppendElement(SelectionState::Mouseup);
   }
   if (aReason & nsISelectionListener::KEYPRESS_REASON) {
-    reasons.AppendElement(SelectionChangeReason::Keypress);
+    states.AppendElement(SelectionState::Keypress);
   }
   if (aReason & nsISelectionListener::SELECTALL_REASON) {
-    reasons.AppendElement(SelectionChangeReason::Selectall);
+    states.AppendElement(SelectionState::Selectall);
   }
   if (aReason & nsISelectionListener::COLLAPSETOSTART_REASON) {
-    reasons.AppendElement(SelectionChangeReason::Collapsetostart);
+    states.AppendElement(SelectionState::Collapsetostart);
   }
   if (aReason & nsISelectionListener::COLLAPSETOEND_REASON) {
-    reasons.AppendElement(SelectionChangeReason::Collapsetoend);
+    states.AppendElement(SelectionState::Collapsetoend);
   }
-  return reasons;
+  return states;
 }
 
 static nsRect
@@ -997,15 +997,15 @@ GetSelectionBoundingRect(Selection* aSel, nsIPresShell* aShell)
 }
 
 static void
-DispatchSelectionChangeEvent(nsIPresShell* aPresShell,
+DispatchSelectionStateChangedEvent(nsIPresShell* aPresShell,
                              nsISelection* aSel,
-                             const dom::Sequence<SelectionChangeReason>& aReasons)
+                             const dom::Sequence<SelectionState>& aStates)
 {
   nsIDocument* doc = aPresShell->GetDocument();
 
   MOZ_ASSERT(doc);
 
-  SelectionChangeEventInit init;
+  SelectionStateChangedEventInit init;
   init.mBubbles = true;
 
   if (aSel) {
@@ -1018,10 +1018,10 @@ DispatchSelectionChangeEvent(nsIPresShell* aPresShell,
 
     selection->Stringify(init.mSelectedText);
   }
-  init.mReasons = aReasons;
+  init.mStates = aStates;
 
-  nsRefPtr<SelectionChangeEvent> event =
-    SelectionChangeEvent::Constructor(doc, NS_LITERAL_STRING("mozselectionchange"), init);
+  nsRefPtr<SelectionStateChangedEvent> event =
+    SelectionStateChangedEvent::Constructor(doc, NS_LITERAL_STRING("mozselectionstatechanged"), init);
 
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
@@ -1043,7 +1043,7 @@ SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
     UpdateSelectionCarets();
   }
 
-  DispatchSelectionChangeEvent(mPresShell, aSel, GetSelectionChangeReasons(aReason));
+  DispatchSelectionStateChangedEvent(mPresShell, aSel, GetSelectionStates(aReason));
   return NS_OK;
 }
 
