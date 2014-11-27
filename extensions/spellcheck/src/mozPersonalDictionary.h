@@ -26,9 +26,9 @@
 
 class mozPersonalDictionaryLoader;
 
-class mozPersonalDictionary : public mozIPersonalDictionary,
-                              public nsIObserver,
-                              public nsSupportsWeakReference
+class mozPersonalDictionary MOZ_FINAL : public mozIPersonalDictionary,
+                                        public nsIObserver,
+                                        public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -49,8 +49,8 @@
 
 namespace mozilla {
 
-class TransportFlow : public nsISupports,
-                      public sigslot::has_slots<> {
+class TransportFlow MOZ_FINAL : public nsISupports,
+                                public sigslot::has_slots<> {
  public:
   TransportFlow()
     : id_("(anonymous)"),

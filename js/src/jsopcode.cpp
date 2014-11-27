@@ -122,7 +122,7 @@ js::StackUses(JSScript *script, jsbytecode *pc)
       default:
         /* stack: fun, this, [argc arguments] */
         MOZ_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
-                   op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
+                   op == JSOP_STRICTEVAL || op == JSOP_FUNCALL || op == JSOP_FUNAPPLY);
         return 2 + GET_ARGC(pc);
     }
 }
