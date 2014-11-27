@@ -171,7 +171,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 /* virtual */ void
 BodyRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) {
+    fputs("  ", out);
+  }
   fputs("[body rule] {}\n", out);
 }
 #endif

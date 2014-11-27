@@ -240,7 +240,9 @@ IMPL_STYLE_RULE_INHERIT(CharsetRule, Rule)
 CharsetRule::List(FILE* out, int32_t aIndent) const
 {
   // Indent
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   fputs("@charset \"", out);
   fputs(NS_LossyConvertUTF16toASCII(mEncoding).get(), out);
@@ -383,7 +385,9 @@ IMPL_STYLE_RULE_INHERIT(ImportRule, Rule)
 ImportRule::List(FILE* out, int32_t aIndent) const
 {
   // Indent
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   fputs("@import \"", out);
   fputs(NS_LossyConvertUTF16toASCII(mURLSpec).get(), out);
@@ -608,7 +612,9 @@ GroupRule::List(FILE* out, int32_t aIndent) const
     mRules.ObjectAt(index)->List(out, aIndent + 1);
   }
 
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
   fputs("}\n", out);
 }
 #endif
@@ -809,7 +815,9 @@ MediaRule::SetStyleSheet(CSSStyleSheet* aSheet)
 /* virtual */ void
 MediaRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   nsAutoString  buffer;
 
@@ -1008,7 +1016,9 @@ NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 /* virtual */ void
 DocumentRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   nsAutoCString str;
   str.AssignLiteral("@-moz-document ");
@@ -1265,7 +1275,9 @@ IMPL_STYLE_RULE_INHERIT(NameSpaceRule, Rule)
 /* virtual */ void
 NameSpaceRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   nsAutoString  buffer;
 
@@ -1919,7 +1931,9 @@ nsCSSFontFeatureValuesRule::List(FILE* out, int32_t aIndent) const
   utf8.ReplaceSubstring("\n", indent);
   delete [] indent;
 
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  for (i = aIndent; --i >= 0; ) {
+    fputs("  ", out);
+  }
   fprintf(out, "%s\n", utf8.get());
 }
 #endif
@@ -2195,7 +2209,9 @@ nsCSSKeyframeRule::MapRuleInfoInto(nsRuleData* aRuleData)
 void
 nsCSSKeyframeRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (int32_t index = aIndent; --index >= 0; ) {
+    fputs("  ", out);
+  }
 
   nsAutoString tmp;
   DoGetKeyText(tmp);
@@ -2396,7 +2412,9 @@ NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 void
 nsCSSKeyframesRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   fprintf(out, "@keyframes %s", NS_ConvertUTF16toUTF8(mName).get());
   GroupRule::List(out, aIndent);
@@ -2729,7 +2747,9 @@ IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSPageRule, Rule)
 void
 nsCSSPageRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   fputs("@page ", out);
   mDeclaration->List(out, aIndent);
@@ -2862,7 +2882,9 @@ CSSSupportsRule::CSSSupportsRule(const CSSSupportsRule& aCopy)
 /* virtual */ void
 CSSSupportsRule::List(FILE* out, int32_t aIndent) const
 {
-  for (int32_t indent = aIndent; --indent >= 0; ) fputs("  ", out);
+  for (int32_t indent = aIndent; --indent >= 0; ) {
+    fputs("  ", out);
+  }
 
   fputs("@supports ", out);
   fputs(NS_ConvertUTF16toUTF8(mCondition).get(), out);

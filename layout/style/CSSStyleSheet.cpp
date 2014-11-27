@@ -1555,7 +1555,9 @@ CSSStyleSheet::List(FILE* out, int32_t aIndent) const
   int32_t index;
 
   // Indent
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  for (index = aIndent; --index >= 0; ) {
+    fputs("  ", out);
+  }
 
   fputs("CSS Style Sheet: ", out);
   nsAutoCString urlSpec;
