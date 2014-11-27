@@ -1,0 +1,26 @@
+# a sample revocations.txt for tests
+# Lines starting with '#' are ignored - as are empty lines like this:
+
+# otherwise:
+# non-empty lines are treated as base-64 encoded DER issuer data
+# ...unless the line starts with a ' ' (space) character, in which case it's
+# assumed to be base-64 encoded DER serial data.
+
+# First a serial with no issuer to ensure this doesn't cause parsing to fail
+# (there should be an issuer first, but we need to test this won't fail)
+ dGVzdA==
+# next, let's ensure data that isn't valid base64 doesn't cause breakage.
+ this serial isn't valid base64 (but then there's no issuer anyway)
+Neither is this issuer, though the serial is fine
+ dGVzdA==
+dGVzdA==
+ in this case, issuer is fine but not the serial
+# Next two entries; we can add valid base-64 encoded data for some basic tests:
+# issuer is "some imaginary issuer" base-64 encoded
+# and serial "serial." base-64 encoded
+c29tZSBpbWFnaW5hcnkgaXNzdWVy
+ c2VyaWFsLg==
+# issuer is "another imaginary issuer" base-64 encoded
+# serial is "serial2." base-64 encoded
+YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy
+ c2VyaWFsMi4=
