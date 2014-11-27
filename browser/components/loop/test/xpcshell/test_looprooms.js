@@ -83,6 +83,9 @@ const kRoomUpdates = {
       displayName: "Ruharb",
       roomConnectionId: "5de6281c-6568-455f-af08-c0b0a973100e"
     }]
+  },
+  "5": {
+    deleted: true
   }
 };
 
@@ -118,6 +121,7 @@ const compareRooms = function(room1, room2) {
 // LoopRooms emits various events. Test if they work as expected here.
 let gExpectedAdds = [];
 let gExpectedUpdates = [];
+let gExpectedDeletes = [];
 let gExpectedJoins = {};
 let gExpectedLeaves = {};
 
@@ -135,6 +139,12 @@ const onRoomUpdated = function(e, room) {
   Assert.ok(idx > -1, "Updated room should be expected");
   gExpectedUpdates.splice(idx, 1);
 };
+
+const onRoomDeleted = function(e, room) {
+  let idx = gExpectedDeletes.indexOf(room.roomToken);
+  Assert.ok(idx > -1, "Deleted room should be expected");
+  gExpectedDeletes.splice(idx, 1);
+}
 
 const onRoomJoined = function(e, roomToken, participant) {
   let participants = gExpectedJoins[roomToken];
@@ -191,6 +201,7 @@ add_task(function* setup_server() {
         let qs = parseQueryString(req.queryString);
         let room = kRooms.get("_nxD4V4FflQ");
         room.participants = kRoomUpdates[qs.version].participants;
+        room.deleted = kRoomUpdates[qs.version].deleted;
         res.write(JSON.stringify([room]));
       } else {
         res.write(JSON.stringify([...kRooms.values()]));
@@ -386,10 +397,17 @@ add_task(function* test_renameRoom() {
   Assert.equal(renameData.roomName, "fakeName");
 });
 
+add_task(function* test_roomDeleteNotifications() {
+  gExpectedDeletes.push("_nxD4V4FflQ");
+  roomsPushNotification("5");
+  yield waitForCondition(() => gExpectedDeletes.length === 0);
+});
+
 // Test if the event emitter implementation doesn't leak and is working as expected.
 add_task(function* () {
   Assert.strictEqual(gExpectedAdds.length, 0, "No room additions should be expected anymore");
   Assert.strictEqual(gExpectedUpdates.length, 0, "No room updates should be expected anymore");
+  Assert.strictEqual(gExpectedDeletes.length, 0, "No room deletes should be expected anymore");
  });
 
 function run_test() {
@@ -397,6 +415,7 @@ function run_test() {
 
   LoopRooms.on("add", onRoomAdded);
   LoopRooms.on("update", onRoomUpdated);
+  LoopRooms.on("delete", onRoomDeleted);
   LoopRooms.on("joined", onRoomJoined);
   LoopRooms.on("left", onRoomLeft);
 
@@ -409,6 +428,7 @@ function run_test() {
 
     LoopRooms.off("add", onRoomAdded);
     LoopRooms.off("update", onRoomUpdated);
+    LoopRooms.off("delete", onRoomDeleted);
     LoopRooms.off("joined", onRoomJoined);
     LoopRooms.off("left", onRoomLeft);
   });

@@ -835,17 +835,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Gets the href and the post data for a given keyword, if any.
-   *
-   * @param keyword
-   *        The string keyword to look for.
-   * @return {Promise}
-   * @resolves to a { href, postData } object. Both properties evaluate to null
-   *           if no keyword is found.
-   */
-  promiseHrefAndPostDataForKeyword(keyword) KeywordsCache.promiseEntry(keyword),
-
-  /**
    * Get the URI (and any associated POST data) for a given keyword.
    * @param aKeyword string keyword
    * @returns an array containing a string URL and a string of POST data
@@ -1974,114 +1963,6 @@ let GuidHelper = {
       });
     }
   }
-};
-
-// Cache of bookmarks keywords, used to quickly resolve keyword => URL requests.
-let KeywordsCache = {
-  /**
-   * Initializes the cache.
-   * Every method should check _initialized and, if false, yield _initialize().
-   */
-  _initialized: false,
-  _initialize: Task.async(function* () {
-    // First populate the cache...
-    yield this._reloadCache();
-
-    // ...then observe changes to keep the cache up-to-date.
-    PlacesUtils.bookmarks.addObserver(this, false);
-    PlacesUtils.registerShutdownFunction(() => {
-      PlacesUtils.bookmarks.removeObserver(this);
-    });
-
-    this._initialized = true;
-  }),
-
-  // nsINavBookmarkObserver
-  // Manually updating the cache would be tricky because some notifications
-  // don't report the original bookmark url and we also keep urls sorted by
-  // last modified.  Since changing a keyword-ed bookmark is a rare event,
-  // it's easier to reload the cache.
-  onItemChanged(itemId, property, isAnno, val, lastModified, type,
-                parentId, guid, parentGuid) {
-    if (property == "keyword" || property == this.POST_DATA_ANNO ||
-        this._keywordedGuids.has(guid)) {
-      // Since this cache is used in hot paths, it should be readily available
-      // as fast as possible.
-      this._reloadCache().catch(Cu.reportError);
-    }
-  },
-  onItemRemoved(itemId, parentId, index, type, uri, guid, parentGuid) {
-    if (this._keywordedGuids.has(guid)) {
-      // Since this cache is used in hot paths, it should be readily available
-      // as fast as possible.
-      this._reloadCache().catch(Cu.reportError);
-    }
-  },
-  QueryInterface: XPCOMUtils.generateQI([ Ci.nsINavBookmarkObserver ]),
-  __noSuchMethod__() {}, // Catch all remaining onItem* methods.
-
-  // Maps an { href, postData } object to each keyword.
-  // Even if a keyword may be associated to multiple URLs, only the last
-  // modified bookmark href is retained here.
-  _urlDataForKeyword: null,
-  // Tracks GUIDs having a keyword.
-  _keywordedGuids: null,
-
-  /**
-   * Reloads the cache.
-   */
-  _reloadPromise: null,
-  _reloadCache() {
-    return this._reloadPromise = Task.spawn(function* () {
-      let db = yield PlacesUtils.promiseDBConnection();
-      let rows = yield db.execute(
-        `/* do not warn (bug no) - there is no index on keyword_id */
-         SELECT b.id, b.guid, h.url, k.keyword FROM moz_bookmarks b
-         JOIN moz_places h ON h.id = b.fk
-         JOIN moz_keywords k ON k.id = b.keyword_id
-         ORDER BY b.lastModified DESC
-        `);
-
-      this._urlDataForKeyword = new Map();
-      this._keywordedGuids = new Set();
-
-      for (let row of rows) {
-        let guid = row.getResultByName("guid");
-        this._keywordedGuids.add(guid);
-
-        let keyword = row.getResultByName("keyword");
-        // Only keep the most recent href.
-        let urlData = this._urlDataForKeyword.get(keyword);
-        if (urlData)
-          continue;
-
-        let id = row.getResultByName("id");
-        let href = row.getResultByName("url");
-        let postData = PlacesUtils.getPostDataForBookmark(id);
-        this._urlDataForKeyword.set(keyword, { href, postData });
-      }
-    }.bind(this)).then(() => {
-      this._reloadPromise = null;
-    });
-  },
-
-  /**
-   * Fetches a { href, postData } entry for the given keyword.
-   *
-   * @param keyword
-   *        The keyword to look for.
-   * @return {promise}
-   * @resolves when the fetching is complete.
-   */
-  promiseEntry: Task.async(function* (keyword) {
-    // We could yield regardless and do the checks internally, but that would
-    // waste at least a couple ticks and this can be used on hot paths.
-    if (!this._initialized)
-      yield this._initialize();
-    if (this._reloadPromise)
-      yield this._reloadPromise;
-    return this._urlDataForKeyword.get(keyword) || { href: null, postData: null };
-  }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -72,28 +72,21 @@ function test() {
       "The first item in the sources widget should be selected (1).");
     is(gSources.selectedItem.attachment.label, "doc_recursion-stack.html",
       "The first item in the sources widget should be selected (2).");
-    is(gSources.selectedValue, TAB_URL,
+    is(getSelectedSourceURL(gSources), TAB_URL,
       "The first item in the sources widget should be selected (3).");
 
-    gSources.empty();
-
-    is(gSources.itemCount, 0,
-      "Should contain no items in the sources widget after emptying.");
-    is(gSources.selectedIndex, -1,
-      "No item in the sources widget should be selected (1).");
-    is(gSources.selectedItem, null,
-      "No item in the sources widget should be selected (2).");
-    is(gSources.selectedValue, "",
-      "No item in the sources widget should be selected (3).");
-
+    let id = 0;
     for (let { href, leaf } of urls) {
       let url = href + leaf;
+      let actor = 'actor' + id++;
       let label = gUtils.trimUrlLength(gUtils.getSourceLabel(url));
       let group = gUtils.getSourceGroup(url);
       let dummy = document.createElement("label");
+      dummy.setAttribute('value', label);
 
-      gSources.push([dummy, url], {
+      gSources.push([dummy, actor], {
         attachment: {
+          source: { actor: actor, url: url },
           label: label,
           group: group
         }
@@ -109,9 +102,9 @@ function test() {
     for (let { href, leaf, dupe } of urls) {
       let url = href + leaf;
       if (dupe) {
-        ok(!gSources.containsValue(url), "Shouldn't contain source: " + url);
+        ok(!gSources.containsValue(getSourceActor(gSources, url)), "Shouldn't contain source: " + url);
       } else {
-        ok(gSources.containsValue(url), "Should contain source: " + url);
+        ok(gSources.containsValue(getSourceActor(gSources, url)), "Should contain source: " + url);
       }
     }
 
@@ -151,20 +144,20 @@ function test() {
     ok(gSources.getItemForAttachment(e => e.label == nananana + "Batman!" + ellipsis),
       "Source (15) label is incorrect.");
 
-    is(gSources.itemCount, urls.filter(({ dupe }) => !dupe).length,
+    is(gSources.itemCount, urls.filter(({ dupe }) => !dupe).length + 1,
       "Didn't get the correct number of sources in the list.");
 
-    is(gSources.getItemByValue("http://some.address.com/random/subrandom/").attachment.label,
+    is(gSources.getItemByValue(getSourceActor(gSources, "http://some.address.com/random/subrandom/")).attachment.label,
       "random/subrandom/",
       "gSources.getItemByValue isn't functioning properly (0).");
-    is(gSources.getItemByValue("http://some.address.com/random/suprandom/?a=1").attachment.label,
+    is(gSources.getItemByValue(getSourceActor(gSources, "http://some.address.com/random/suprandom/?a=1")).attachment.label,
       "random/suprandom/?a=1",
       "gSources.getItemByValue isn't functioning properly (1).");
 
-    is(gSources.getItemForAttachment(e => e.label == "random/subrandom/").value,
-      "http://some.address.com/random/subrandom/",
+    is(gSources.getItemForAttachment(e => e.label == "random/subrandom/").attachment.source.url,
+       "http://some.address.com/random/subrandom/",
       "gSources.getItemForAttachment isn't functioning properly (0).");
-    is(gSources.getItemForAttachment(e => e.label == "random/suprandom/?a=1").value,
+    is(gSources.getItemForAttachment(e => e.label == "random/suprandom/?a=1").attachment.source.url,
       "http://some.address.com/random/suprandom/?a=1",
       "gSources.getItemForAttachment isn't functioning properly (1).");
 

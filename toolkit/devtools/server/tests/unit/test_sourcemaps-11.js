@@ -76,8 +76,8 @@ function test_frames({ error, frames }) {
   check_frame(frames[2], "http://example.com/www/js/a.js");
 }
 
-function check_frame({ where: { url, line, column } }, aExpectedUrl) {
-  do_check_eq(url, aExpectedUrl);
+function check_frame({ where: { source, line, column } }, aExpectedUrl) {
+  do_check_eq(source.url, aExpectedUrl);
   do_check_eq(line, 2);
   do_check_eq(column, 0);
 }

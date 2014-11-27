@@ -22,11 +22,11 @@ function run_test()
 function test_has_breakpoint() {
   let bpStore = new BreakpointStore();
   let location = {
-    url: "http://example.com/foo.js",
+    source: { actor: 'actor1' },
     line: 3
   };
   let columnLocation = {
-    url: "http://example.com/bar.js",
+    source: { actor: 'actor2' },
     line: 5,
     column: 15
   };
@@ -60,7 +60,7 @@ function test_add_breakpoint() {
   // Breakpoint with column
   let bpStore = new BreakpointStore();
   let location = {
-    url: "http://example.com/foo.js",
+    source: { actor: 'actor1' },
     line: 10,
     column: 9
   };
@@ -70,7 +70,7 @@ function test_add_breakpoint() {
 
   // Breakpoint without column (whole line breakpoint)
   location = {
-    url: "http://example.com/bar.js",
+    source: { actor: 'actor2' },
     line: 103
   };
   bpStore.addBreakpoint(location);
@@ -82,7 +82,7 @@ function test_remove_breakpoint() {
   // Breakpoint with column
   let bpStore = new BreakpointStore();
   let location = {
-    url: "http://example.com/foo.js",
+    source: { actor: 'actor1' },
     line: 10,
     column: 9
   };
@@ -93,7 +93,7 @@ function test_remove_breakpoint() {
 
   // Breakpoint without column (whole line breakpoint)
   location = {
-    url: "http://example.com/bar.js",
+    source: { actor: 'actor2' },
     line: 103
   };
   bpStore.addBreakpoint(location);
@@ -104,14 +104,14 @@ function test_remove_breakpoint() {
 
 function test_find_breakpoints() {
   let bps = [
-    { url: "foo.js", line: 10 },
-    { url: "foo.js", line: 10, column: 3 },
-    { url: "foo.js", line: 10, column: 10 },
-    { url: "foo.js", line: 23, column: 89 },
-    { url: "bar.js", line: 10, column: 1 },
-    { url: "bar.js", line: 20, column: 5 },
-    { url: "bar.js", line: 30, column: 34 },
-    { url: "bar.js", line: 40, column: 56 }
+    { source: { actor: "actor1" }, line: 10 },
+    { source: { actor: "actor1" }, line: 10, column: 3 },
+    { source: { actor: "actor1" }, line: 10, column: 10 },
+    { source: { actor: "actor1" }, line: 23, column: 89 },
+    { source: { actor: "actor2" }, line: 10, column: 1 },
+    { source: { actor: "actor2" }, line: 20, column: 5 },
+    { source: { actor: "actor2" }, line: 30, column: 34 },
+    { source: { actor: "actor2" }, line: 40, column: 56 }
   ];
 
   let bpStore = new BreakpointStore();
@@ -131,8 +131,8 @@ function test_find_breakpoints() {
 
   // Breakpoints by URL
 
-  bpSet = Set(bps.filter(bp => { return bp.url === "foo.js" }));
-  for (let bp of bpStore.findBreakpoints({ url: "foo.js" })) {
+  bpSet = Set(bps.filter(bp => { return bp.source.actor === "actor1" }));
+  for (let bp of bpStore.findBreakpoints({ source: { actor: "actor1" } })) {
     bpSet.delete(bp);
   }
   do_check_eq(bpSet.size, 0,
@@ -140,9 +140,9 @@ function test_find_breakpoints() {
 
   // Breakpoints by URL and line
 
-  bpSet = Set(bps.filter(bp => { return bp.url === "foo.js" && bp.line === 10; }));
+  bpSet = Set(bps.filter(bp => { return bp.source.actor === "actor1" && bp.line === 10; }));
   let first = true;
-  for (let bp of bpStore.findBreakpoints({ url: "foo.js", line: 10 })) {
+  for (let bp of bpStore.findBreakpoints({ source: { actor: "actor1" }, line: 10 })) {
     if (first) {
       do_check_eq(bp.column, undefined,
                   "Should always get the whole line breakpoint first");
@@ -162,7 +162,7 @@ function test_duplicate_breakpoints() {
 
   // Breakpoint with column
   let location = {
-    url: "http://example.com/foo.js",
+    source: { actor: "foo-actor" },
     line: 10,
     column: 9
   };
@@ -173,7 +173,7 @@ function test_duplicate_breakpoints() {
 
   // Breakpoint without column (whole line breakpoint)
   location = {
-    url: "http://example.com/foo.js",
+    source: { actor: "foo-actor" },
     line: 15
   };
   bpStore.addBreakpoint(location);
@@ -186,12 +186,12 @@ function test_move_breakpoint() {
   let bpStore = new BreakpointStore();
 
   let oldLocation = {
-    url: "http://example.com/foo.js",
+    source: { actor: "foo-actor" },
     line: 10
   };
 
   let newLocation = {
-    url: "http://example.com/foo.js",
+    source: { actor: "foo-actor" },
     line: 12
   };
 
@@ -205,7 +205,7 @@ function test_move_breakpoint() {
   equal(bp.line, newLocation.line,
         "We should get the moved line.");
 
-  equal(bpStore.hasBreakpoint({ url: "http://example.com/foo.js", line: 10 }),
+  equal(bpStore.hasBreakpoint({ source: { actor: "foo-actor" }, line: 10 }),
         null,
         "And we shouldn't be able to get any BP at the old location.");
 }

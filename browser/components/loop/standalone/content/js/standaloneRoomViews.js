@@ -19,7 +19,18 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
   var StandaloneRoomInfoArea = React.createClass({displayName: 'StandaloneRoomInfoArea',
     propTypes: {
-      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired
+      helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired,
+      activeRoomStore:
+        React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
+      feedbackStore:
+        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired
+    },
+
+    onFeedbackSent: function() {
+      // We pass a tick to prevent React warnings regarding nested updates.
+      setTimeout(function() {
+        this.props.activeRoomStore.dispatchAction(new sharedActions.FeedbackComplete());
+      }.bind(this));
     },
 
     _renderCallToActionLink: function() {
@@ -55,53 +66,75 @@ loop.standaloneRoomViews = (function(mozL10n) {
       }
     },
 
-    _renderContent: function() {
+    render: function() {
       switch(this.props.roomState) {
         case ROOM_STATES.INIT:
-        case ROOM_STATES.READY:
-        case ROOM_STATES.ENDED: {
+        case ROOM_STATES.READY: {
           // XXX: In ENDED state, we should rather display the feedback form.
           return (
-            React.DOM.button({className: "btn btn-join btn-info", 
-                    onClick: this.props.joinRoom}, 
-              mozL10n.get("rooms_room_join_label")
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.button({className: "btn btn-join btn-info", 
+                      onClick: this.props.joinRoom}, 
+                mozL10n.get("rooms_room_join_label")
+              )
+            )
+          );
+        }
+        case ROOM_STATES.MEDIA_WAIT: {
+          var msg = mozL10n.get("call_progress_getting_media_description",
+                                {clientShortname: mozL10n.get("clientShortname2")});
+          // XXX Bug 1047040 will add images to help prompt the user.
+          return (
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.p({className: "prompt-media-message"}, 
+                msg
+              )
             )
           );
         }
         case ROOM_STATES.JOINED:
         case ROOM_STATES.SESSION_CONNECTED: {
           return (
-            React.DOM.p({className: "empty-room-message"}, 
-              mozL10n.get("rooms_only_occupant_label")
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.p({className: "empty-room-message"}, 
+                mozL10n.get("rooms_only_occupant_label")
+              )
             )
           );
         }
-        case ROOM_STATES.FULL:
+        case ROOM_STATES.FULL: {
           return (
-            React.DOM.div(null, 
+            React.DOM.div({className: "room-inner-info-area"}, 
               React.DOM.p({className: "full-room-message"}, 
                 mozL10n.get("rooms_room_full_label")
               ), 
               React.DOM.p(null, this._renderCallToActionLink())
             )
           );
-        case ROOM_STATES.FAILED:
+        }
+        case ROOM_STATES.ENDED: {
           return (
-            React.DOM.p({className: "failed-room-message"}, 
-              this._getFailureString()
+            React.DOM.div({className: "ended-conversation"}, 
+              sharedViews.FeedbackView({
+                feedbackStore: this.props.feedbackStore, 
+                onAfterFeedbackReceived: this.onFeedbackSent}
+              )
             )
           );
-        default:
+        }
+        case ROOM_STATES.FAILED: {
+          return (
+            React.DOM.div({className: "room-inner-info-area"}, 
+              React.DOM.p({className: "failed-room-message"}, 
+                this._getFailureString()
+              )
+            )
+          );
+        }
+        default: {
           return null;
+        }
       }
-    },
-
-    render: function() {
-      return (
-        React.DOM.div({className: "room-inner-info-area"}, 
-          this._renderContent()
-        )
-      );
     }
   });
 
@@ -154,6 +187,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
     propTypes: {
       activeRoomStore:
         React.PropTypes.instanceOf(loop.store.ActiveRoomStore).isRequired,
+      feedbackStore:
+        React.PropTypes.instanceOf(loop.store.FeedbackStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       helper: React.PropTypes.instanceOf(loop.shared.utils.Helper).isRequired
     },
@@ -211,7 +246,31 @@ loop.standaloneRoomViews = (function(mozL10n) {
       };
     },
 
+    /**
+     * Used to update the video container whenever the orientation or size of the
+     * display area changes.
+     */
+    updateVideoContainer: function() {
+      var localStreamParent = this._getElement('.local .OT_publisher');
+      var remoteStreamParent = this._getElement('.remote .OT_subscriber');
+      if (localStreamParent) {
+        localStreamParent.style.width = "100%";
+      }
+      if (remoteStreamParent) {
+        remoteStreamParent.style.height = "100%";
+      }
+    },
+
     componentDidMount: function() {
+      /**
+       * OT inserts inline styles into the markup. Using a listener for
+       * resize events helps us trigger a full width/height on the element
+       * so that they update to the correct dimensions.
+       * XXX: this should be factored as a mixin, bug 1104930
+       */
+      window.addEventListener('orientationchange', this.updateVideoContainer);
+      window.addEventListener('resize', this.updateVideoContainer);
+
       // Adding a class to the document body element from here to ease styling it.
       document.body.classList.add("is-standalone-room");
     },
@@ -228,13 +287,21 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * @param  {Object} nextState Next state object.
      */
     componentWillUpdate: function(nextProps, nextState) {
-      if (this.state.roomState !== ROOM_STATES.JOINED &&
-          nextState.roomState === ROOM_STATES.JOINED) {
+      if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
+          nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
           publisherConfig: this._getPublisherConfig(),
           getLocalElementFunc: this._getElement.bind(this, ".local"),
           getRemoteElementFunc: this._getElement.bind(this, ".remote")
         }));
+      }
+
+      if (this.state.roomState !== ROOM_STATES.JOINED &&
+          nextState.roomState === ROOM_STATES.JOINED) {
+        // This forces the video size to update - creating the publisher
+        // first, and then connecting to the session doesn't seem to set the
+        // initial size correctly.
+        this.updateVideoContainer();
       }
     },
 
@@ -284,7 +351,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
           StandaloneRoomInfoArea({roomState: this.state.roomState, 
                                   failureReason: this.state.failureReason, 
                                   joinRoom: this.joinRoom, 
-                                  helper: this.props.helper}), 
+                                  helper: this.props.helper, 
+                                  activeRoomStore: this.props.activeRoomStore, 
+                                  feedbackStore: this.props.feedbackStore}), 
           React.DOM.div({className: "video-layout-wrapper"}, 
             React.DOM.div({className: "conversation room-conversation"}, 
               React.DOM.h2({className: "room-name"}, this.state.roomName), 

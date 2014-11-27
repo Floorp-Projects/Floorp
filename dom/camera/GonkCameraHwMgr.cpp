@@ -268,18 +268,6 @@ GonkCameraHardware::~GonkCameraHardware()
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, (void*)this);
   mCamera.clear();
   mNativeWindow.clear();
-
-  if (mClosing) {
-    return;
-  }
-
-  /**
-   * Trigger the OnClosed event; the upper layers can't do anything
-   * with the hardware layer once they receive this event.
-   */
-  if (mTarget) {
-    OnClosed(mTarget);
-  }
 }
 
 int

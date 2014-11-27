@@ -1,8 +1,9 @@
 include ':app'
-project(':app').projectDir = new File("${topsrcdir}/mobile/android/app")
-
 include ':base'
-project(':base').projectDir = new File("${topsrcdir}/mobile/android/base")
-
+include ':omnijar'
 include ':thirdparty'
+
+project(':app').projectDir = new File("${topsrcdir}/mobile/android/app")
+project(':base').projectDir = new File("${topsrcdir}/mobile/android/base")
+project(':omnijar').projectDir = new File("${topsrcdir}/mobile/android/gradle/omnijar")
 project(':thirdparty').projectDir = new File("${topsrcdir}/mobile/android/thirdparty")

@@ -34,16 +34,16 @@ function run_test_with_server(aServer, aCallback)
 function test_simple_breakpoint()
 {
   gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    let path = getFilePath('test_breakpoint-01.js');
+    let source = gThreadClient.source(aPacket.frame.where.source);
     let location = {
-      url: path,
       line: gDebuggee.line0 + 3
     };
-    gThreadClient.setBreakpoint(location, function (aResponse, bpClient) {
+
+    source.setBreakpoint(location, function (aResponse, bpClient) {
       gThreadClient.addOneTimeListener("paused", function (aEvent, aPacket) {
         // Check the return value.
         do_check_eq(aPacket.type, "paused");
-        do_check_eq(aPacket.frame.where.url, path);
+        do_check_eq(aPacket.frame.where.source.actor, source.actor);
         do_check_eq(aPacket.frame.where.line, location.line);
         do_check_eq(aPacket.why.type, "breakpoint");
         do_check_eq(aPacket.why.actors[0], bpClient.actor);
@@ -59,11 +59,10 @@ function test_simple_breakpoint()
         });
 
       });
+
       // Continue until the breakpoint is hit.
       gThreadClient.resume();
-
     });
-
   });
 
   Components.utils.evalInSandbox("var line0 = Error().lineNumber;\n" +

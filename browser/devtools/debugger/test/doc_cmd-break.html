@@ -11,10 +11,10 @@
   <body>
     <script type="text/javascript">
       function firstCall() {
-        eval("window.gLineNumber = Error().lineNumber; secondCall();");
+        window.gLineNumber = Error().lineNumber; secondCall();
       }
       function secondCall() {
-        eval("debugger;");
+        debugger;
       }
     </script>
   </body>

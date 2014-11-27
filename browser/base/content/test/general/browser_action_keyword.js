@@ -16,8 +16,10 @@ function* promise_first_result(inputText) {
 
 add_task(function*() {
   // This test is only relevant if UnifiedComplete is enabled.
-  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete"))
+  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
+    todo(false, "Stop supporting old autocomplete components.");
     return;
+  }
 
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
   let tabs = [tab];

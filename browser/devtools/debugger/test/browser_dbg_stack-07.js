@@ -31,22 +31,22 @@ function test() {
 function performTest() {
   return Task.spawn(function() {
     yield selectBottomFrame();
-    testBottomFrame(0);
+    testBottomFrame(4);
 
     yield performStep("StepOver");
-    testTopFrame(3);
+    testTopFrame(1);
 
     yield selectBottomFrame();
     testBottomFrame(4);
 
     yield performStep("StepIn");
-    testTopFrame(2);
+    testTopFrame(1);
 
     yield selectBottomFrame();
     testBottomFrame(4);
 
     yield performStep("StepOut");
-    testTopFrame(2);
+    testTopFrame(1);
 
     yield resumeDebuggerThenCloseAndFinish(gPanel);
   });
@@ -90,7 +90,7 @@ function performTest() {
       "The second source is now selected in the widget.");
     is(gEditor.getText().search(/firstCall/), -1,
       "The second source is displayed.");
-    is(gEditor.getText().search(/debugger/), 172,
+    is(gEditor.getText().search(/debugger/), 166,
       "The first source is not displayed.");
   }
 }

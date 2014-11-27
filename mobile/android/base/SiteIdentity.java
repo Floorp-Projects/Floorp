@@ -159,7 +159,7 @@ public class SiteIdentity {
 
             try {
                 mHost = identityData.getString("host");
-                mOwner = identityData.getString("owner");
+                mOwner = identityData.optString("owner", null);
                 mSupplemental = identityData.optString("supplemental", null);
                 mVerifier = identityData.getString("verifier");
                 mEncrypted = identityData.getString("encrypted");
