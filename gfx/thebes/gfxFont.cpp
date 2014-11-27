@@ -3372,11 +3372,18 @@ gfxFont::CreateVerticalMetrics()
     const float UNINITIALIZED_LEADING = -10000.0f;
     metrics->externalLeading = UNINITIALIZED_LEADING;
 
+    if (mFUnitsConvFactor == 0.0) {
+        uint16_t upem = GetFontEntry()->UnitsPerEm();
+        if (upem != gfxFontEntry::kInvalidUPEM) {
+            mFUnitsConvFactor = GetAdjustedSize() / upem;
+        }
+    }
+
 #define SET_UNSIGNED(field,src) metrics->field = uint16_t(src) * mFUnitsConvFactor
 #define SET_SIGNED(field,src)   metrics->field = int16_t(src) * mFUnitsConvFactor
 
     gfxFontEntry::AutoTable os2Table(mFontEntry, kOS_2TableTag);
-    if (os2Table) {
+    if (os2Table && mFUnitsConvFactor > 0.0) {
         const OS2Table *os2 =
             reinterpret_cast<const OS2Table*>(hb_blob_get_data(os2Table, &len));
         // These fields should always be present in any valid OS/2 table
@@ -3397,7 +3404,7 @@ gfxFont::CreateVerticalMetrics()
     // and use the line height from its ascent/descent.
     if (!metrics->aveCharWidth) {
         gfxFontEntry::AutoTable hheaTable(mFontEntry, kHheaTableTag);
-        if (hheaTable) {
+        if (hheaTable && mFUnitsConvFactor > 0.0) {
             const MetricsHeader* hhea =
                 reinterpret_cast<const MetricsHeader*>
                     (hb_blob_get_data(hheaTable, &len));
@@ -3413,7 +3420,7 @@ gfxFont::CreateVerticalMetrics()
 
     // Read real vertical metrics if available.
     gfxFontEntry::AutoTable vheaTable(mFontEntry, kVheaTableTag);
-    if (vheaTable) {
+    if (vheaTable && mFUnitsConvFactor > 0.0) {
         const MetricsHeader* vhea =
             reinterpret_cast<const MetricsHeader*>
                 (hb_blob_get_data(vheaTable, &len));

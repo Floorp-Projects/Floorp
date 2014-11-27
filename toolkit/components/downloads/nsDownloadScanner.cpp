@@ -555,7 +555,7 @@ bool
 nsDownloadScanner::Scan::CheckAndSetState(AVScanState newState, AVScanState expectedState) {
   bool gotExpectedState = false;
   EnterCriticalSection(&mStateSync);
-  if(gotExpectedState = (mStatus == expectedState))
+  if((gotExpectedState = (mStatus == expectedState)))
     mStatus = newState;
   LeaveCriticalSection(&mStateSync);
   return gotExpectedState;
@@ -663,10 +663,10 @@ nsDownloadScannerWatchdog::WatchdogThread(void *p) {
   DWORD queueItemsLeft = 0;
   // Loop until quit event or error
   while (0 != queueItemsLeft ||
-         (WAIT_OBJECT_0 + 1) !=
+         ((WAIT_OBJECT_0 + 1) !=
            (waitStatus =
               WaitForMultipleObjects(2, waitHandles, FALSE, INFINITE)) &&
-         waitStatus != WAIT_FAILED) {
+         waitStatus != WAIT_FAILED)) {
     Scan *scan = nullptr;
     PRTime startTime, expectedEndTime, now;
     DWORD waitTime;

@@ -928,6 +928,7 @@ function run() {
     test_parseable(":-moz-locale-dir(rtl)");
     test_parseable(":-moz-locale-dir(rTl)");
     test_parseable(":-moz-locale-dir(LTR)");
+    test_parseable(":-moz-locale-dir(other)");
     if (document.body.matches(":-moz-locale-dir(ltr)")) {
         test_selector_in_html("a:-moz-locale-dir(LTr)", single_a,
                               set_single, empty_set);
@@ -947,14 +948,16 @@ function run() {
         test_selector_in_html("a:-moz-locale-dir(LTr)", single_a,
                               empty_set, set_single);
     }
+    test_selector_in_html("a:-moz-locale-dir(other)", single_a,
+                          empty_set, set_single);
 
-    test_balanced_unparseable(":-moz-locale-dir(other)");
     test_balanced_unparseable(":-moz-locale-dir()");
     test_balanced_unparseable(":-moz-locale-dir(())");
     test_balanced_unparseable(":-moz-locale-dir(3())");
     test_balanced_unparseable(":-moz-locale-dir(f{})");
     test_balanced_unparseable(":-moz-locale-dir('ltr')");
     test_balanced_unparseable(":-moz-locale-dir(ltr, other)");
+    test_balanced_unparseable(":-moz-locale-dir(ltr other)");
     test_balanced_unparseable(":-moz-locale-dir");
 
     // Test :-moz-dir()
@@ -962,6 +965,7 @@ function run() {
     test_parseable(":-moz-dir(rtl)");
     test_parseable(":-moz-dir(rTl)");
     test_parseable(":-moz-dir(LTR)");
+    test_parseable(":-moz-dir(other)");
     if (document.body.matches(":-moz-dir(ltr)")) {
         test_selector_in_html("a:-moz-dir(LTr)", single_a,
                               set_single, empty_set);
@@ -981,14 +985,16 @@ function run() {
         test_selector_in_html("a:-moz-dir(LTr)", single_a,
                               empty_set, set_single);
     }
+    test_selector_in_html("a:-moz-dir(other)", single_a,
+                          empty_set, set_single);
 
-    test_balanced_unparseable(":-moz-dir(other)");
     test_balanced_unparseable(":-moz-dir()");
     test_balanced_unparseable(":-moz-dir(())");
     test_balanced_unparseable(":-moz-dir(3())");
     test_balanced_unparseable(":-moz-dir(f{})");
     test_balanced_unparseable(":-moz-dir('ltr')");
     test_balanced_unparseable(":-moz-dir(ltr, other)");
+    test_balanced_unparseable(":-moz-dir(ltr other)");
     test_balanced_unparseable(":-moz-dir");
 
     // Test -moz-lwtheme and -moz-lwtheme-[darktext|brighttext]
