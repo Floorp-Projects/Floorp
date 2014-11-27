@@ -409,8 +409,6 @@ ProcLoaderLoadRunner::DoWork()
 
   SetCurrentProcessPrivileges(mPrivs);
 
-  MOZ_ASSERT(content_process_main != nullptr,
-             "content_process_main not found");
   // Start Nuwa (main function)
   int ret = content_process_main(argc, argv);
 
