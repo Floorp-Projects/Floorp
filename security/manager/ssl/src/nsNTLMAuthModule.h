@@ -28,6 +28,7 @@ private:
   nsString mDomain;
   nsString mUsername;
   nsString mPassword;
+  bool mNTLMNegotiateSent;
 };
 
 #define NS_NTLMAUTHMODULE_CONTRACTID \
