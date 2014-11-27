@@ -973,9 +973,9 @@
       <xul:hbox anonid="search-panel-one-offs-header"
                 class="search-panel-header search-panel-current-input"
                 xbl:inherits="hidden=showonlysettings">
-        <xul:label anonid="searchbar-oneoffheader-before" value="Search for "/>
+        <xul:label anonid="searchbar-oneoffheader-before" value="&searchFor.label;"/>
         <xul:label anonid="searchbar-oneoffheader-searchtext" flex="1" crop="end" class="search-panel-input-value"/>
-        <xul:label anonid="searchbar-oneoffheader-after" flex="10000" value=" with:"/>
+        <xul:label anonid="searchbar-oneoffheader-after" flex="10000" value="&searchWith.label;"/>
       </xul:hbox>
       <xul:description anonid="search-panel-one-offs"
                        class="search-panel-one-offs"
@@ -985,7 +985,7 @@
                   xbl:inherits="showonlysettings"
                   oncommand="openPreferences('paneSearch')"
                   class="search-setting-button search-panel-header"
-                  label="Change Search Settings"/>
+                  label="&changeSearchSettings.button;"/>
     </content>
     <handlers>
       <handler event="popupshowing"><![CDATA[
@@ -1020,8 +1020,13 @@
           // avoid showing the icon of the previous default provider.
           this.removeAttribute("src");
         }
+
+        const kBundleURI = "chrome://browser/locale/search.properties";
+        let bundle = Services.strings.createBundle(kBundleURI);
+        let headerText = bundle.formatStringFromName("searchHeader",
+                                                     [currentEngine.name], 1);
         document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine-name")
-                .setAttribute("value", currentEngine.name + " Search");
+                .setAttribute("value", headerText);
 
         // Update the 'Search for <keywords> with:" header.
         let headerSearchText =
