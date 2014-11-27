@@ -12,7 +12,6 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "nsError.h"
 #include "SharedThreadPool.h"
-#include "WebMReader.h"
 #include "VorbisUtils.h"
 #include "nestegg/nestegg.h"
 
