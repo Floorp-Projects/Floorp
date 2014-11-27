@@ -217,6 +217,9 @@ typedef struct VP9EncoderConfig {
 
   vp8e_tuning tuning;
   vp9e_tune_content content;
+#if CONFIG_VP9_HIGHBITDEPTH
+  int use_highbitdepth;
+#endif
 } VP9EncoderConfig;
 
 static INLINE int is_lossless_requested(const VP9EncoderConfig *cfg) {
@@ -480,6 +483,11 @@ static INLINE int get_token_alloc(int mb_rows, int mb_cols) {
 }
 
 int vp9_get_y_sse(const YV12_BUFFER_CONFIG *a, const YV12_BUFFER_CONFIG *b);
+#if CONFIG_VP9_HIGHBITDEPTH
+int vp9_highbd_get_y_sse(const YV12_BUFFER_CONFIG *a,
+                         const YV12_BUFFER_CONFIG *b,
+                         vpx_bit_depth_t bit_depth);
+#endif  // CONFIG_VP9_HIGHBITDEPTH
 
 void vp9_alloc_compressor_data(VP9_COMP *cpi);
 

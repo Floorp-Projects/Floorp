@@ -42,8 +42,8 @@ typedef struct VP9LfSyncData {
 } VP9LfSync;
 
 // Allocate memory for loopfilter row synchronization.
-void vp9_loop_filter_alloc(struct VP9Common *cm, VP9LfSync *lf_sync,
-                           int rows, int width);
+void vp9_loop_filter_alloc(VP9LfSync *lf_sync, VP9_COMMON *cm, int rows,
+                           int width);
 
 // Deallocate loopfilter synchronization related mutex and data.
 void vp9_loop_filter_dealloc(VP9LfSync *lf_sync);
