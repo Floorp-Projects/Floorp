@@ -199,7 +199,7 @@ class GPUAdapterReporter : public nsIMemoryReporter
         IDXGIDevice *DXGIDevice;
         bool result = false;
 
-        if (D2D10Device = mozilla::gfx::Factory::GetDirect3D10Device()) {
+        if ((D2D10Device = mozilla::gfx::Factory::GetDirect3D10Device())) {
             if (D2D10Device->QueryInterface(__uuidof(IDXGIDevice), (void **)&DXGIDevice) == S_OK) {
                 result = (DXGIDevice->GetAdapter(DXGIAdapter) == S_OK);
                 DXGIDevice->Release();
@@ -232,7 +232,7 @@ public:
         if (!IsWin7OrLater())
             return NS_OK;
 
-        if (gdi32Handle = LoadLibrary(TEXT("gdi32.dll")))
+        if ((gdi32Handle = LoadLibrary(TEXT("gdi32.dll"))))
             queryD3DKMTStatistics = (PFND3DKMTQS)GetProcAddress(gdi32Handle, "D3DKMTQueryStatistics");
 
         if (queryD3DKMTStatistics && GetDXGIAdapter(&DXGIAdapter)) {
