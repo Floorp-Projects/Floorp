@@ -860,22 +860,24 @@ nsStyleContext::Mark()
 #ifdef DEBUG
 void nsStyleContext::List(FILE* out, int32_t aIndent)
 {
+  nsAutoCString str;
   // Indent
   int32_t ix;
   for (ix = aIndent; --ix >= 0; ) {
-    fputs("  ", out);
+    str.AppendLiteral("  ");
   }
-  fprintf(out, "%p(%d) parent=%p ",
-          (void*)this, mRefCnt, (void *)mParent);
+  str.Append(nsPrintfCString("%p(%d) parent=%p ",
+                             (void*)this, mRefCnt, (void *)mParent));
   if (mPseudoTag) {
     nsAutoString  buffer;
     mPseudoTag->ToString(buffer);
-    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
-    fputs(" ", out);
+    AppendUTF16toUTF8(buffer, str);
+    str.Append(' ');
   }
 
   if (mRuleNode) {
-    fputs("{\n", out);
+    fprintf_stderr(out, "%s{\n", str.get());
+    str.Truncate();
     nsRuleNode* ruleNode = mRuleNode;
     while (ruleNode) {
       nsIStyleRule *styleRule = ruleNode->GetRule();
@@ -885,12 +887,12 @@ void nsStyleContext::List(FILE* out, int32_t aIndent)
       ruleNode = ruleNode->GetParent();
     }
     for (ix = aIndent; --ix >= 0; ) {
-      fputs("  ", out);
+      str.AppendLiteral("  ");
     }
-    fputs("}\n", out);
+    fprintf_stderr(out, "%s}\n", str.get());
   }
   else {
-    fputs("{}\n", out);
+    fprintf_stderr(out, "%s{}\n", str.get());
   }
 
   if (nullptr != mChild) {
