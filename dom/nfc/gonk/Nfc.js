@@ -609,17 +609,9 @@ Nfc.prototype = {
    * Process a message from the gMessageManager.
    */
   receiveMessage: function receiveMessage(message) {
-    let isRFAPI = message.name == "NFC:ChangeRFState";
-    let isSendFile = message.name == "NFC:SendFile";
-    let isInfoAPI = message.name == "NFC:QueryInfo";
-
-    if (!isRFAPI && !isInfoAPI && (this.rfState != NFC.NFC_RF_STATE_DISCOVERY)) {
-      debug("NFC is not enabled. current rfState:" + this.rfState);
-      this.sendNfcErrorResponse(message, NFC.NFC_GECKO_ERROR_NOT_ENABLED);
-      return null;
-    }
-
-    if (!isRFAPI && !isSendFile && !isInfoAPI) {
+      if (["NFC:ChangeRFState",
+           "NFC:SendFile",
+           "NFC:QueryInfo"].indexOf(message.name) == -1) {
       // Update the current sessionId before sending to the NFC service.
       message.data.sessionId = SessionHelper.getId(message.data.sessionToken);
     }
