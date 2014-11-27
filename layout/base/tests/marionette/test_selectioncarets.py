@@ -7,7 +7,6 @@ from by import By
 from marionette import Actions
 from marionette_test import MarionetteTestCase
 from selection import SelectionManager
-from gestures import long_press_without_contextmenu
 
 
 class SelectionCaretsTest(MarionetteTestCase):
@@ -49,7 +48,7 @@ class SelectionCaretsTest(MarionetteTestCase):
         # Long press the caret position. Selection carets should appear, and the
         # first word will be selected. On Windows, those spaces after the word
         # will also be selected.
-        long_press_without_contextmenu(self.marionette, el, self._long_press_time, x, y)
+        self.actions.long_press(el, self._long_press_time, x, y).perform()
 
     def _test_long_press_to_select_a_word(self, el, assertFunc):
         sel = SelectionManager(el)
@@ -217,4 +216,5 @@ class SelectionCaretsTest(MarionetteTestCase):
     ########################################################################
     def test_content_non_editable_minimum_select_one_character_by_selection(self):
         self.openTestHtml(enabled=True)
-        self._test_minimum_select_one_character(self._content, self.assertEqual)
+        # Currently, selection carets do not show on non-editable elements.
+        self._test_minimum_select_one_character(self._content, self.assertNotEqual)

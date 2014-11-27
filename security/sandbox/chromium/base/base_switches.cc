@@ -6,20 +6,21 @@
 
 namespace switches {
 
-// If the program includes base/debug/debug_on_start_win.h, the process will
-// (on Windows only) start the JIT system-registered debugger on itself and
-// will wait for 60 seconds for the debugger to attach to itself. Then a break
-// point will be hit.
-const char kDebugOnStart[]                  = "debug-on-start";
-
 // Disables the crash reporting.
 const char kDisableBreakpad[]               = "disable-breakpad";
 
-// Enable DCHECKs in release mode.
-const char kEnableDCHECK[]                  = "enable-dcheck";
+// Indicates that crash reporting should be enabled. On platforms where helper
+// processes cannot access to files needed to make this decision, this flag is
+// generated internally.
+const char kEnableCrashReporter[]           = "enable-crash-reporter";
 
 // Generates full memory crash dump.
 const char kFullMemoryCrashReport[]         = "full-memory-crash-report";
+
+// Force low-end device when set to 1;
+// Auto-detect low-end device when set to 2;
+// Force non-low-end device when set to other values or empty;
+const char kLowEndDeviceMode[]              = "low-end-device-mode";
 
 // Suppresses all error dialogs when present.
 const char kNoErrorDialogs[]                = "noerrdialogs";
@@ -49,12 +50,19 @@ const char kWaitForDebugger[]               = "wait-for-debugger";
 // Sends a pretty-printed version of tracing info to the console.
 const char kTraceToConsole[]                = "trace-to-console";
 
+// Configure whether chrome://profiler will contain timing information. This
+// option is enabled by default. A value of "0" will disable profiler timing,
+// while all other values will enable it.
+const char kProfilerTiming[]                = "profiler-timing";
+// Value of the --profiler-timing flag that will disable timing information for
+// chrome://profiler.
+const char kProfilerTimingDisabledValue[]   = "0";
+
 #if defined(OS_POSIX)
-// A flag, generated internally for renderer and other helper process command
-// lines on Linux and Mac. It tells the helper process to enable crash dumping
-// and reporting, because helpers cannot access the files needed to make this
-// decision.
-const char kEnableCrashReporter[]           = "enable-crash-reporter";
+// Used for turning on Breakpad crash reporting in a debug environment where
+// crash reporting is typically compiled but disabled.
+const char kEnableCrashReporterForTesting[] =
+    "enable-crash-reporter-for-testing";
 #endif
 
 }  // namespace switches

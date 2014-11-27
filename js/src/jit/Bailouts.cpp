@@ -32,7 +32,7 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 
     // We don't have an exit frame.
     MOZ_ASSERT(IsInRange(FAKE_JIT_TOP_FOR_BAILOUT, 0, 0x1000) &&
-               IsInRange(FAKE_JIT_TOP_FOR_BAILOUT + sizeof(IonCommonFrameLayout), 0, 0x1000),
+               IsInRange(FAKE_JIT_TOP_FOR_BAILOUT + sizeof(CommonFrameLayout), 0, 0x1000),
                "Fake jitTop pointer should be within the first page.");
     cx->mainThread().jitTop = FAKE_JIT_TOP_FOR_BAILOUT;
 
@@ -144,7 +144,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
         JSScript *script = iter.script();
         probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
 
-        IonJSFrameLayout *frame = iter.jsFrame();
+        JitFrameLayout *frame = iter.jsFrame();
         JitSpew(JitSpew_IonInvalidate, "Bailout failed (%s): converting to exit frame",
                 (retval == BAILOUT_RETURN_FATAL_ERROR) ? "Fatal Error" : "Over Recursion");
         JitSpew(JitSpew_IonInvalidate, "   orig calleeToken %p", (void *) frame->calleeToken());

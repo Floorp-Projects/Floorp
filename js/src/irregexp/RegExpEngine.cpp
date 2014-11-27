@@ -1722,7 +1722,7 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
         return RegExpCode();
     }
 
-    Maybe<jit::IonContext> ctx;
+    Maybe<jit::JitContext> ctx;
     Maybe<NativeRegExpMacroAssembler> native_assembler;
     Maybe<InterpretedRegExpMacroAssembler> interpreted_assembler;
 

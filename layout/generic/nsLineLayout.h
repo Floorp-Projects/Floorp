@@ -154,6 +154,12 @@ public:
   // XXX get rid of this: use get-frame-type?
   bool AddFloat(nsIFrame* aFloat, nscoord aAvailableISize)
   {
+    // When reflowing ruby text frames, no block reflow state is
+    // provided to the line layout. However, floats should never be
+    // associated with ruby text containers, hence this method should
+    // not be called in that case.
+    NS_ABORT_IF_FALSE(mBlockRS, "Should not call this method "
+                      "if there is no block reflow state available");
     return mBlockRS->AddFloat(this, aFloat, aAvailableISize);
   }
 
@@ -348,6 +354,10 @@ protected:
 
   nsBlockReflowState* mBlockRS;/* XXX hack! */
 
+  // XXX Take care that nsRubyBaseContainer would give nullptr to this
+  //     member. It should not be a problem currently, since the only
+  //     code use it is handling float, which does not affect ruby.
+  //     See comment in nsLineLayout::AddFloat
   nsLineList::iterator mLineBox;
 
   // Per-frame data recorded by the line-layout reflow logic. This

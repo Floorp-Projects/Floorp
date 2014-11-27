@@ -60,7 +60,6 @@ uint32 GetActualBufferSize(uint32 param_count, void* buffer_base) {
     case 9:
       return reinterpret_cast<ActualCP9*>(buffer_base)->GetSize();
     default:
-      NOTREACHED();
       return 0;
   }
 }
@@ -237,7 +236,7 @@ bool CrossCallParamsEx::GetParameterVoidPtr(uint32 index, void** param) {
 
 // Covers the common case of reading a string. Note that the string is not
 // scanned for invalid characters.
-bool CrossCallParamsEx::GetParameterStr(uint32 index, std::wstring* string) {
+bool CrossCallParamsEx::GetParameterStr(uint32 index, base::string16* string) {
   uint32 size = 0;
   ArgType type;
   void* start = GetRawParameter(index, &size, &type);

@@ -62,6 +62,7 @@ protected:
   int TestCaseError(int aDefaultError);
 
   int StartAutoFocusMoving(bool aIsMoving);
+  void InjectFakeSystemFailure();
 
 private:
   TestGonkCameraHardware(const TestGonkCameraHardware&) MOZ_DELETE;

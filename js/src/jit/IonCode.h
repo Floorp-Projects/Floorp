@@ -231,7 +231,7 @@ struct IonScript
     uint32_t frameSlots_;
 
     // Frame size is the value that can be added to the StackPointer along
-    // with the frame prefix to get a valid IonJSFrameLayout.
+    // with the frame prefix to get a valid JitFrameLayout.
     uint32_t frameSize_;
 
     // Table mapping bailout IDs to snapshot offsets.

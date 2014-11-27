@@ -12,7 +12,7 @@
 //
 // ARGUMENT BINDING WRAPPERS
 //
-// The wrapper functions are base::Unretained(), base::Owned(), bass::Passed(),
+// The wrapper functions are base::Unretained(), base::Owned(), base::Passed(),
 // base::ConstRef(), and base::IgnoreResult().
 //
 // Unretained() allows Bind() to bind a non-refcounted class, and to disable

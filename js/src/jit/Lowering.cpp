@@ -1996,13 +1996,13 @@ LIRGenerator::visitToString(MToString *ins)
 
     switch (opd->type()) {
       case MIRType_Null: {
-        const JSAtomState &names = GetIonContext()->runtime->names();
+        const JSAtomState &names = GetJitContext()->runtime->names();
         LPointer *lir = new(alloc()) LPointer(names.null);
         return define(lir, ins);
       }
 
       case MIRType_Undefined: {
-        const JSAtomState &names = GetIonContext()->runtime->names();
+        const JSAtomState &names = GetJitContext()->runtime->names();
         LPointer *lir = new(alloc()) LPointer(names.undefined);
         return define(lir, ins);
       }
@@ -2313,7 +2313,7 @@ bool
 LIRGenerator::visitInterruptCheck(MInterruptCheck *ins)
 {
     // Implicit interrupt checks require asm.js signal handlers to be installed.
-    if (GetIonContext()->runtime->canUseSignalHandlers()) {
+    if (GetJitContext()->runtime->canUseSignalHandlers()) {
         LInterruptCheckImplicit *lir = new(alloc()) LInterruptCheckImplicit();
         return add(lir, ins) && assignSafepoint(lir, ins);
     }

@@ -35,12 +35,16 @@ class DeviceManagerADB(DeviceManager):
 
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
                  adbPath='adb', deviceSerial=None, deviceRoot=None,
-                 logLevel=mozlog.ERROR, autoconnect=True, runAdbAsRoot=False, **kwargs):
+                 logLevel=mozlog.ERROR, autoconnect=True, runAdbAsRoot=False,
+                 serverHost=None, serverPort=None, **kwargs):
         DeviceManager.__init__(self, logLevel=logLevel,
                                deviceRoot=deviceRoot)
         self.host = host
         self.port = port
         self.retryLimit = retryLimit
+
+        self._serverHost = serverHost
+        self._serverPort = serverPort
 
         # the path to adb, or 'adb' to assume that it's on the PATH
         self._adbPath = adbPath
@@ -122,6 +126,10 @@ class DeviceManagerADB(DeviceManager):
 
         # all output should be in stdout
         args=[self._adbPath]
+        if self._serverHost is not None:
+            args.extend(['-H', self._serverHost])
+        if self._serverPort is not None:
+            args.extend(['-P', str(self._serverPort)])
         if self._deviceSerial:
             args.extend(['-s', self._deviceSerial])
         args.extend(["shell", cmdline])
@@ -543,6 +551,10 @@ class DeviceManagerADB(DeviceManager):
         """
         retryLimit = retryLimit or self.retryLimit
         finalArgs = [self._adbPath]
+        if self._serverHost is not None:
+            finalArgs.extend(['-H', self._serverHost])
+        if self._serverPort is not None:
+            finalArgs.extend(['-P', str(self._serverPort)])
         if self._deviceSerial:
             finalArgs.extend(['-s', self._deviceSerial])
         finalArgs.extend(args)
@@ -570,6 +582,10 @@ class DeviceManagerADB(DeviceManager):
         """
         retryLimit = retryLimit or self.retryLimit
         finalArgs = [self._adbPath]
+        if self._serverHost is not None:
+            finalArgs.extend(['-H', self._serverHost])
+        if self._serverPort is not None:
+            finalArgs.extend(['-P', str(self._serverPort)])
         if self._deviceSerial:
             finalArgs.extend(['-s', self._deviceSerial])
         finalArgs.extend(args)

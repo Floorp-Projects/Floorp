@@ -256,6 +256,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     bool visitAsmJSCall(LAsmJSCall *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
+    bool visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins);
+    bool visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins);
     bool visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
     bool visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins);
     bool visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);

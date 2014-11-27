@@ -29,7 +29,7 @@ DWORD CreateRestrictedToken(HANDLE *token_handle,
   RestrictedToken restricted_token;
   restricted_token.Init(NULL);  // Initialized with the current process token
 
-  std::vector<std::wstring> privilege_exceptions;
+  std::vector<base::string16> privilege_exceptions;
   std::vector<Sid> sid_exceptions;
 
   bool deny_sids = true;
@@ -146,7 +146,7 @@ DWORD StartRestrictedProcessInJob(wchar_t *command_line,
                                   JobLevel job_level,
                                   HANDLE *const job_handle_ret) {
   Job job;
-  DWORD err_code = job.Init(job_level, NULL, 0);
+  DWORD err_code = job.Init(job_level, NULL, 0, 0);
   if (ERROR_SUCCESS != err_code)
     return err_code;
 
@@ -183,7 +183,7 @@ DWORD StartRestrictedProcessInJob(wchar_t *command_line,
 
   // Start the process
   STARTUPINFO startup_info = {0};
-  base::win::ScopedProcessInformation process_info;
+  PROCESS_INFORMATION temp_process_info = {};
   DWORD flags = CREATE_SUSPENDED;
 
   if (base::win::GetVersion() < base::win::VERSION_WIN8) {
@@ -202,9 +202,10 @@ DWORD StartRestrictedProcessInJob(wchar_t *command_line,
                              NULL,   // Use the environment of the caller.
                              NULL,   // Use current directory of the caller.
                              &startup_info,
-                             process_info.Receive())) {
+                             &temp_process_info)) {
     return ::GetLastError();
   }
+  base::win::ScopedProcessInformation process_info(temp_process_info);
 
   // Change the token of the main thread of the new process for the
   // impersonation token with more rights.
@@ -236,7 +237,7 @@ DWORD SetObjectIntegrityLabel(HANDLE handle, SE_OBJECT_TYPE type,
                               const wchar_t* ace_access,
                               const wchar_t* integrity_level_sid) {
   // Build the SDDL string for the label.
-  std::wstring sddl = L"S:(";     // SDDL for a SACL.
+  base::string16 sddl = L"S:(";   // SDDL for a SACL.
   sddl += SDDL_MANDATORY_LABEL;   // Ace Type is "Mandatory Label".
   sddl += L";;";                  // No Ace Flags.
   sddl += ace_access;             // Add the ACE access.

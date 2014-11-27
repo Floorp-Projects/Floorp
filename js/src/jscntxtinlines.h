@@ -13,7 +13,7 @@
 #include "jsiter.h"
 
 #include "builtin/Object.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "vm/ForkJoin.h"
 #include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"

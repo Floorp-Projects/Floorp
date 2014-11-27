@@ -4,8 +4,8 @@
 
 #include "sandbox/win/src/service_resolver.h"
 
-#include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
+#include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/win_utils.h"
 
 namespace {
@@ -56,7 +56,7 @@ struct ServiceEntryW8 {
   ULONG mov_r10_rcx_mov_eax;  // = 4C 8B D1 B8
   ULONG service_id;
   USHORT syscall;             // = 0F 05
-  BYTE ret;                   // = C2
+  BYTE ret;                   // = C3
   BYTE nop;                   // = 90
 };
 
@@ -116,6 +116,30 @@ size_t ServiceResolverThunk::GetThunkSize() const {
   return sizeof(ServiceFullThunk);
 }
 
+NTSTATUS ServiceResolverThunk::CopyThunk(const void* target_module,
+                                         const char* target_name,
+                                         BYTE* thunk_storage,
+                                         size_t storage_bytes,
+                                         size_t* storage_used) {
+  NTSTATUS ret = ResolveTarget(target_module, target_name, &target_);
+  if (!NT_SUCCESS(ret))
+    return ret;
+
+  size_t thunk_bytes = GetThunkSize();
+  if (storage_bytes < thunk_bytes)
+    return STATUS_UNSUCCESSFUL;
+
+  ServiceFullThunk* thunk = reinterpret_cast<ServiceFullThunk*>(thunk_storage);
+
+  if (!IsFunctionAService(&thunk->original))
+    return STATUS_UNSUCCESSFUL;
+
+  if (NULL != storage_used)
+    *storage_used = thunk_bytes;
+
+  return ret;
+}
+
 bool ServiceResolverThunk::IsFunctionAService(void* local_thunk) const {
   ServiceFullThunk function_code;
   SIZE_T read;
@@ -144,14 +168,14 @@ bool ServiceResolverThunk::IsFunctionAService(void* local_thunk) const {
 
 NTSTATUS ServiceResolverThunk::PerformPatch(void* local_thunk,
                                             void* remote_thunk) {
-  ServiceFullThunk* full_local_thunk = reinterpret_cast<ServiceFullThunk*>(
-                                           local_thunk);
-  ServiceFullThunk* full_remote_thunk = reinterpret_cast<ServiceFullThunk*>(
-                                            remote_thunk);
+  ServiceFullThunk* full_local_thunk =
+      reinterpret_cast<ServiceFullThunk*>(local_thunk);
+  ServiceFullThunk* full_remote_thunk =
+      reinterpret_cast<ServiceFullThunk*>(remote_thunk);
 
   // Patch the original code.
   ServiceEntry local_service;
-  DCHECK_GE(GetInternalThunkSize(), sizeof(local_service));
+  DCHECK_NT(GetInternalThunkSize() >= sizeof(local_service));
   if (!SetInternalThunk(&local_service, sizeof(local_service), NULL,
                         interceptor_))
     return STATUS_UNSUCCESSFUL;
@@ -181,12 +205,7 @@ NTSTATUS ServiceResolverThunk::PerformPatch(void* local_thunk,
 }
 
 bool Wow64ResolverThunk::IsFunctionAService(void* local_thunk) const {
-  NOTREACHED();
-  return false;
-}
-
-bool Win2kResolverThunk::IsFunctionAService(void* local_thunk) const {
-  NOTREACHED();
+  NOTREACHED_NT();
   return false;
 }
 

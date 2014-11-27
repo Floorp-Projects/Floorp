@@ -8,6 +8,7 @@
 #include <string>
 
 #include "base/basictypes.h"
+#include "base/strings/string16.h"
 #include "sandbox/win/src/sandbox_types.h"
 #include "sandbox/win/src/security_level.h"
 
@@ -25,7 +26,8 @@ class TargetPolicy {
     SUBSYS_PROCESS,           // Creation of child processes.
     SUBSYS_REGISTRY,          // Creation and opening of registry keys.
     SUBSYS_SYNC,              // Creation of named sync objects.
-    SUBSYS_HANDLES            // Duplication of handles to other processes.
+    SUBSYS_HANDLES,           // Duplication of handles to other processes.
+    SUBSYS_WIN32K_LOCKDOWN    // Win32K Lockdown related policy.
   };
 
   // Allowable semantics when a rule is matched.
@@ -51,7 +53,10 @@ class TargetPolicy {
     EVENTS_ALLOW_ANY,      // Allows the creation of an event with full access.
     EVENTS_ALLOW_READONLY, // Allows opening an even with synchronize access.
     REG_ALLOW_READONLY,    // Allows readonly access to a registry key.
-    REG_ALLOW_ANY          // Allows read and write access to a registry key.
+    REG_ALLOW_ANY,         // Allows read and write access to a registry key.
+    FAKE_USER_GDI_INIT     // Fakes user32 and gdi32 initialization. This can
+                           // be used to allow the DLLs to load and initialize
+                           // even if the process cannot access that subsystem.
   };
 
   // Increments the reference count of this object. The reference count must
@@ -85,6 +90,12 @@ class TargetPolicy {
   // setting. The caller should strive to set the lockdown level as restricted
   // as possible.
   virtual ResultCode SetTokenLevel(TokenLevel initial, TokenLevel lockdown) = 0;
+
+  // Returns the initial token level.
+  virtual TokenLevel GetInitialTokenLevel() const = 0;
+
+  // Returns the lockdown token level.
+  virtual TokenLevel GetLockdownTokenLevel() const = 0;
 
   // Sets the security level of the Job Object to which the target process will
   // belong. This setting is permanent and cannot be changed once the target
@@ -121,6 +132,11 @@ class TargetPolicy {
   // Note: the recommended level is JOB_RESTRICTED or JOB_LOCKDOWN.
   virtual ResultCode SetJobLevel(JobLevel job_level, uint32 ui_exceptions) = 0;
 
+  // Sets a hard limit on the size of the commit set for the sandboxed process.
+  // If the limit is reached, the process will be terminated with
+  // SBOX_FATAL_MEMORY_EXCEEDED (7012).
+  virtual ResultCode SetJobMemoryLimit(size_t memory_limit) = 0;
+
   // Specifies the desktop on which the application is going to run. If the
   // desktop does not exist, it will be created. If alternate_winstation is
   // set to true, the desktop will be created on an alternate window station.
@@ -129,7 +145,7 @@ class TargetPolicy {
   // Returns the name of the alternate desktop used. If an alternate window
   // station is specified, the name is prepended by the window station name,
   // followed by a backslash.
-  virtual std::wstring GetAlternateDesktop() const = 0;
+  virtual base::string16 GetAlternateDesktop() const = 0;
 
   // Precreates the desktop and window station, if any.
   virtual ResultCode CreateAlternateDesktop(bool alternate_winstation) = 0;
@@ -142,6 +158,9 @@ class TargetPolicy {
   // is set to a level higher than the current level, the sandbox will fail
   // to start.
   virtual ResultCode SetIntegrityLevel(IntegrityLevel level) = 0;
+
+  // Returns the initial integrity level used.
+  virtual IntegrityLevel GetIntegrityLevel() const = 0;
 
   // Sets the integrity level of the process in the sandbox. The integrity level
   // will not take effect before you call LowerToken. User Interface Privilege
@@ -178,7 +197,7 @@ class TargetPolicy {
   virtual ResultCode SetDelayedProcessMitigations(MitigationFlags flags) = 0;
 
   // Returns the currently set delayed mitigation flags.
-  virtual MitigationFlags GetDelayedProcessMitigations() = 0;
+  virtual MitigationFlags GetDelayedProcessMitigations() const = 0;
 
   // Sets the interceptions to operate in strict mode. By default, interceptions
   // are performed in "relaxed" mode, where if something inside NTDLL.DLL is

@@ -87,7 +87,7 @@ SBOX_TESTS_COMMAND int Event_CreateOpen(int argc, wchar_t **argv) {
 }
 
 // Tests the creation of events using all the possible combinations.
-TEST(SyncPolicyTest, TestEvent) {
+TEST(SyncPolicyTest, DISABLED_TestEvent) {
   TestRunner runner;
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
                              TargetPolicy::EVENTS_ALLOW_ANY,
@@ -111,7 +111,7 @@ TEST(SyncPolicyTest, TestEvent) {
 }
 
 // Tests opening events with read only access.
-TEST(SyncPolicyTest, TestEventReadOnly) {
+TEST(SyncPolicyTest, DISABLED_TestEventReadOnly) {
   TestRunner runner;
   EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_SYNC,
                              TargetPolicy::EVENTS_ALLOW_READONLY,

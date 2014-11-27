@@ -21,7 +21,7 @@
 #include "gc/ForkJoinNursery.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
 #include "vm/JSONParser.h"

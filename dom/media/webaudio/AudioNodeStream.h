@@ -47,23 +47,7 @@ public:
    */
   AudioNodeStream(AudioNodeEngine* aEngine,
                   MediaStreamGraph::AudioNodeStreamKind aKind,
-                  TrackRate aSampleRate)
-    : ProcessedMediaStream(nullptr),
-      mEngine(aEngine),
-      mSampleRate(aSampleRate),
-      mKind(aKind),
-      mNumberOfInputChannels(2),
-      mMarkAsFinishedAfterThisBlock(false),
-      mAudioParamStream(false),
-      mPassThrough(false)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    mChannelCountMode = ChannelCountMode::Max;
-    mChannelInterpretation = ChannelInterpretation::Speakers;
-    // AudioNodes are always producing data
-    mHasCurrentData = true;
-    MOZ_COUNT_CTOR(AudioNodeStream);
-  }
+                  TrackRate aSampleRate);
 
 protected:
   ~AudioNodeStream();

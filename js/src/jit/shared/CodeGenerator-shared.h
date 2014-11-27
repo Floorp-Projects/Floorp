@@ -9,9 +9,9 @@
 
 #include "mozilla/Alignment.h"
 
-#include "jit/IonFrames.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/JitFrames.h"
 #include "jit/LIR.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/Safepoints.h"
@@ -181,13 +181,13 @@ class CodeGeneratorShared : public LElementVisitor
     // For arguments to the current function.
     inline int32_t ArgToStackOffset(int32_t slot) const {
         return masm.framePushed() +
-               (gen->compilingAsmJS() ? sizeof(AsmJSFrame) : sizeof(IonJSFrameLayout)) +
+               (gen->compilingAsmJS() ? sizeof(AsmJSFrame) : sizeof(JitFrameLayout)) +
                slot;
     }
 
     // For the callee of the current function.
     inline int32_t CalleeStackOffset() const {
-        return masm.framePushed() + IonJSFrameLayout::offsetOfCalleeToken();
+        return masm.framePushed() + JitFrameLayout::offsetOfCalleeToken();
     }
 
     inline int32_t SlotToStackOffset(int32_t slot) const {

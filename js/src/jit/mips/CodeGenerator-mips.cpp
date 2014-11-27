@@ -13,8 +13,8 @@
 #include "jsnum.h"
 
 #include "jit/CodeGenerator.h"
-#include "jit/IonFrames.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitFrames.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 #include "vm/Shape.h"
@@ -2110,6 +2110,18 @@ CodeGeneratorMIPS::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
 
     masm.append(AsmJSHeapAccess(bo.getOffset()));
     return true;
+}
+
+bool
+CodeGeneratorMIPS::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins)
+{
+    MOZ_CRASH("NYI");
+}
+
+bool
+CodeGeneratorMIPS::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins)
+{
+    MOZ_CRASH("NYI");
 }
 
 bool

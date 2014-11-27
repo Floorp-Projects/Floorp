@@ -116,7 +116,7 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
   exe_name_.reset(_wcsdup(exe_path));
 
   // the command line needs to be writable by CreateProcess().
-  scoped_ptr_malloc<wchar_t> cmd_line(_wcsdup(command_line));
+  scoped_ptr<wchar_t, base::FreeDeleter> cmd_line(_wcsdup(command_line));
 
   // Start the target process suspended.
   DWORD flags =
@@ -131,8 +131,7 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
     flags |= CREATE_BREAKAWAY_FROM_JOB;
   }
 
-  base::win::ScopedProcessInformation process_info;
-
+  PROCESS_INFORMATION temp_process_info = {};
   if (!::CreateProcessAsUserW(lockdown_token_,
                               exe_path,
                               cmd_line.get(),
@@ -143,9 +142,10 @@ DWORD TargetProcess::Create(const wchar_t* exe_path,
                               NULL,   // Use the environment of the caller.
                               NULL,   // Use current directory of the caller.
                               startup_info.startup_info(),
-                              process_info.Receive())) {
+                              &temp_process_info)) {
     return ::GetLastError();
   }
+  base::win::ScopedProcessInformation process_info(temp_process_info);
   lockdown_token_.Close();
 
   DWORD win_result = ERROR_SUCCESS;

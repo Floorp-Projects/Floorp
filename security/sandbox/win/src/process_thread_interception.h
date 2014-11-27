@@ -1,4 +1,4 @@
-// Copyright (c) 2006-2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -82,17 +82,6 @@ SANDBOX_INTERCEPT BOOL WINAPI TargetCreateProcessA(
     LPSECURITY_ATTRIBUTES thread_attributes, BOOL inherit_handles, DWORD flags,
     LPVOID environment, LPCSTR current_directory, LPSTARTUPINFOA startup_info,
     LPPROCESS_INFORMATION process_information);
-
-// Interception of CreateThread in kernel32.dll.
-SANDBOX_INTERCEPT HANDLE WINAPI TargetCreateThread(
-    CreateThreadFunction orig_CreateThread,
-    LPSECURITY_ATTRIBUTES thread_attributes, SIZE_T stack_size,
-    LPTHREAD_START_ROUTINE start_address, PVOID parameter,
-    DWORD creation_flags, LPDWORD thread_id);
-
-// Interception of GetUserDefaultLCID in kernel32.dll.
-SANDBOX_INTERCEPT LCID WINAPI TargetGetUserDefaultLCID(
-    GetUserDefaultLCIDFunction orig_GetUserDefaultLCID);
 
 }  // extern "C"
 

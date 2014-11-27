@@ -1,4 +1,4 @@
-// Copyright (c) 2006-2010 The Chromium Authors. All rights reserved.
+// Copyright 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -25,6 +25,7 @@ typedef LONG NTSTATUS;
 #define STATUS_ACCESS_DENIED          ((NTSTATUS)0xC0000022L)
 #define STATUS_BUFFER_TOO_SMALL       ((NTSTATUS)0xC0000023L)
 #define STATUS_OBJECT_NAME_NOT_FOUND  ((NTSTATUS)0xC0000034L)
+#define STATUS_OBJECT_NAME_COLLISION  ((NTSTATUS)0xC0000035L)
 #define STATUS_PROCEDURE_NOT_FOUND    ((NTSTATUS)0xC000007AL)
 #define STATUS_INVALID_IMAGE_FORMAT   ((NTSTATUS)0xC000007BL)
 #define STATUS_NO_TOKEN               ((NTSTATUS)0xC000007CL)
@@ -124,6 +125,15 @@ typedef struct _IO_STATUS_BLOCK {
 #define FILE_OPEN_REPARSE_POINT                 0x00200000
 #define FILE_OPEN_NO_RECALL                     0x00400000
 #define FILE_OPEN_FOR_FREE_SPACE_QUERY          0x00800000
+
+// Create/open result values. These are the disposition values returned on the
+// io status information.
+#define FILE_SUPERSEDED                         0x00000000
+#define FILE_OPENED                             0x00000001
+#define FILE_CREATED                            0x00000002
+#define FILE_OVERWRITTEN                        0x00000003
+#define FILE_EXISTS                             0x00000004
+#define FILE_DOES_NOT_EXIST                     0x00000005
 
 typedef NTSTATUS (WINAPI *NtCreateFileFunction)(
   OUT PHANDLE FileHandle,
@@ -601,6 +611,11 @@ typedef size_t  (__cdecl *strlenFunction)(
 typedef size_t (__cdecl *wcslenFunction)(
   IN const wchar_t* _Str);
 
+typedef void* (__cdecl *memcpyFunction)(
+  IN void* dest,
+  IN const void* src,
+  IN size_t count);
+
 typedef NTSTATUS (WINAPI *RtlAnsiStringToUnicodeStringFunction)(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PANSI_STRING  SourceString,
@@ -614,6 +629,32 @@ typedef LONG (WINAPI *RtlCompareUnicodeStringFunction)(
 typedef VOID (WINAPI *RtlInitUnicodeStringFunction) (
   IN OUT PUNICODE_STRING DestinationString,
   IN PCWSTR SourceString);
+
+typedef enum _EVENT_TYPE {
+  NotificationEvent,
+  SynchronizationEvent
+} EVENT_TYPE, *PEVENT_TYPE;
+
+typedef NTSTATUS (WINAPI* NtOpenDirectoryObjectFunction) (
+    PHANDLE DirectoryHandle,
+    ACCESS_MASK DesiredAccess,
+    POBJECT_ATTRIBUTES ObjectAttributes);
+
+typedef NTSTATUS (WINAPI* NtQuerySymbolicLinkObjectFunction) (
+    HANDLE LinkHandle,
+    PUNICODE_STRING LinkTarget,
+    PULONG ReturnedLength);
+
+typedef NTSTATUS (WINAPI* NtOpenSymbolicLinkObjectFunction) (
+    PHANDLE LinkHandle,
+    ACCESS_MASK DesiredAccess,
+    POBJECT_ATTRIBUTES ObjectAttributes);
+
+#define DIRECTORY_QUERY               0x0001
+#define DIRECTORY_TRAVERSE            0x0002
+#define DIRECTORY_CREATE_OBJECT       0x0004
+#define DIRECTORY_CREATE_SUBDIRECTORY 0x0008
+#define DIRECTORY_ALL_ACCESS          0x000F
 
 #endif  // SANDBOX_WIN_SRC_NT_INTERNALS_H__
 

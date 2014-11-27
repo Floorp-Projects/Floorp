@@ -19,7 +19,7 @@ const wchar_t *kFileExtensions[] = { L".1", L".2", L".3", L".4" };
 HANDLE GetMarkerFile(const wchar_t *extension) {
   wchar_t path_buffer[MAX_PATH + 1];
   CHECK(::GetTempPath(MAX_PATH, path_buffer));
-  string16 marker_path = path_buffer;
+  base::string16 marker_path = path_buffer;
   marker_path += L"\\sbox_marker_";
 
   // Generate a unique value from the exe's size and timestamp.
@@ -73,10 +73,10 @@ SBOX_TESTS_COMMAND int CheckForFileHandles(int argc, wchar_t **argv) {
       // Brute force the handle table to find what we're looking for.
       DWORD handle_count = UINT_MAX;
       const int kInvalidHandleThreshold = 100;
-      const size_t kHandleOffset = sizeof(HANDLE);
+      const size_t kHandleOffset = 4;  // Handles are always a multiple of 4.
       HANDLE handle = NULL;
       int invalid_count = 0;
-      string16 handle_name;
+      base::string16 handle_name;
 
       if (!::GetProcessHandleCount(::GetCurrentProcess(), &handle_count))
         return SBOX_TEST_FAILED_TO_RUN_TEST;
@@ -110,9 +110,9 @@ TEST(HandleCloserTest, CheckForMarkerFiles) {
   runner.SetTestState(EVERY_STATE);
   sandbox::TargetPolicy* policy = runner.GetPolicy();
 
-  string16 command = string16(L"CheckForFileHandles Y");
+  base::string16 command = base::string16(L"CheckForFileHandles Y");
   for (int i = 0; i < arraysize(kFileExtensions); ++i) {
-    string16 handle_name;
+    base::string16 handle_name;
     base::win::ScopedHandle marker(GetMarkerFile(kFileExtensions[i]));
     CHECK(marker.IsValid());
     CHECK(sandbox::GetHandleName(marker, &handle_name));
@@ -130,9 +130,9 @@ TEST(HandleCloserTest, CloseMarkerFiles) {
   runner.SetTestState(EVERY_STATE);
   sandbox::TargetPolicy* policy = runner.GetPolicy();
 
-  string16 command = string16(L"CheckForFileHandles N");
+  base::string16 command = base::string16(L"CheckForFileHandles N");
   for (int i = 0; i < arraysize(kFileExtensions); ++i) {
-    string16 handle_name;
+    base::string16 handle_name;
     base::win::ScopedHandle marker(GetMarkerFile(kFileExtensions[i]));
     CHECK(marker.IsValid());
     CHECK(sandbox::GetHandleName(marker, &handle_name));
@@ -157,7 +157,8 @@ void WINAPI ThreadPoolTask(void* event, BOOLEAN timeout) {
 // Run a thread pool inside a sandbox without a CSRSS connection.
 SBOX_TESTS_COMMAND int RunThreadPool(int argc, wchar_t **argv) {
   HANDLE wait_list[20];
-  CHECK(finish_event = ::CreateEvent(NULL, TRUE, FALSE, NULL));
+  finish_event = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+  CHECK(finish_event);
 
   // Set up a bunch of waiters.
   HANDLE pool = NULL;

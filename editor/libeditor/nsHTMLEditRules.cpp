@@ -4943,7 +4943,7 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAString *alignTyp
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node && alignType, NS_ERROR_NULL_POINTER);
-  nsresult res;
+  nsresult res = NS_OK;
   nsCOMPtr<nsIContent> firstChild, lastChild;
   nsCOMPtr<Element> divNode;
   
