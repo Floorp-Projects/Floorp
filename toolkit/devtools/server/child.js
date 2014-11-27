@@ -21,6 +21,12 @@ let chromeGlobal = this;
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
+
+    // message manager helpers provided for actor module parent/child message exchange
+    DebuggerServer.parentMessageManager = {
+      sendSyncMessage: sendSyncMessage,
+      addMessageListener: addMessageListener
+    };
   }
 
   // In case of apps being loaded in parent process, DebuggerServer is already
