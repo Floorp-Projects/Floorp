@@ -8,8 +8,7 @@ let MANIFEST_URL = "app://system.gaiamobile.org/manifest.webapp";
 
 function sendFile(msg) {
   log("sendFile msg="+JSON.stringify(msg));
-  let peer = nfc.getNFCPeer(msg.sessionToken);
-  ok(peer instanceof MozNFCPeer, "should get a MozNFCPeer");
+  ok(msg.peer instanceof MozNFCPeer, "should get a MozNFCPeer");
   ok(msg.blob instanceof Blob, "should get a Blob");
 
   nfc.peerready = null;
