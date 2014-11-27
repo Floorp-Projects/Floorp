@@ -76,7 +76,7 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException)
     return false;
   }
 
-  if (!WrapNewBindingObject(aCx, aException, &thrown)) {
+  if (!GetOrCreateDOMReflector(aCx, aException, &thrown)) {
     return false;
   }
 

@@ -151,7 +151,7 @@ PolicyRule::PolicyRule(const PolicyRule& other) {
 bool PolicyRule::GenStringOpcode(RuleType rule_type,
                                  StringMatchOptions match_opts,
                                  uint16 parameter, int state, bool last_call,
-                                 int* skip_count, std::wstring* fragment) {
+                                 int* skip_count, base::string16* fragment) {
 
   // The last opcode must:
   //   1) Always clear the context.
@@ -226,7 +226,7 @@ bool PolicyRule::AddStringMatch(RuleType rule_type, int16 parameter,
   uint32 last_char = kLastCharIsNone;
   int state = PENDING_NONE;
   int skip_count = 0;       // counts how many '?' we have seen in a row.
-  std::wstring fragment;    // accumulates the non-wildcard part of the string.
+  base::string16 fragment;  // accumulates the non-wildcard part.
 
   while (L'\0' != *current_char) {
     switch (*current_char) {

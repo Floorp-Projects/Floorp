@@ -1511,7 +1511,7 @@ jit::JitActivation::registerIonFrameRecovery(RInstructionResults&& results)
 }
 
 jit::RInstructionResults *
-jit::JitActivation::maybeIonFrameRecovery(IonJSFrameLayout *fp)
+jit::JitActivation::maybeIonFrameRecovery(JitFrameLayout *fp)
 {
     for (RInstructionResults *it = ionRecovery_.begin(); it != ionRecovery_.end(); ) {
         if (it->frame() == fp)
@@ -1522,7 +1522,7 @@ jit::JitActivation::maybeIonFrameRecovery(IonJSFrameLayout *fp)
 }
 
 void
-jit::JitActivation::removeIonFrameRecovery(IonJSFrameLayout *fp)
+jit::JitActivation::removeIonFrameRecovery(JitFrameLayout *fp)
 {
     RInstructionResults *elem = maybeIonFrameRecovery(fp);
     if (!elem)

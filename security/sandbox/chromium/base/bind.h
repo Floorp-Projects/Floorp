@@ -65,12 +65,6 @@ Bind(Functor functor) {
   typedef typename internal::FunctorTraits<Functor>::RunnableType RunnableType;
   typedef typename internal::FunctorTraits<Functor>::RunType RunType;
 
-  // Use RunnableType::RunType instead of RunType above because our
-  // checks should below for bound references need to know what the actual
-  // functor is going to interpret the argument as.
-  typedef internal::FunctionTraits<typename RunnableType::RunType>
-      BoundFunctorTraits;
-
   typedef internal::BindState<RunnableType, RunType, void()> BindState;
 
 

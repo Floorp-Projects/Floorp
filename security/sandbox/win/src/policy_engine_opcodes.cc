@@ -162,7 +162,7 @@ PolicyOpcode* OpcodeFactory::MakeOpUlongMatchRange(int16 selected_param,
                                                    unsigned long upper_bound,
                                                    uint32 options) {
   if (lower_bound > upper_bound) {
-    return false;
+    return NULL;
   }
   PolicyOpcode* opcode = MakeBase(OP_ULONG_MATCH_RANGE, options,
                                   selected_param);

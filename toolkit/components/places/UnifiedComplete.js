@@ -777,7 +777,7 @@ Search.prototype = {
     let hasFirstResult = false;
 
     if (this._searchTokens.length > 0 &&
-        (yield PlacesUtils.promiseHrefAndPostDataForKeyword(this._searchTokens[0])).href) {
+        PlacesUtils.bookmarks.getURIForKeyword(this._searchTokens[0])) {
       // This may be a keyword of a bookmark.
       queries.unshift(this._keywordQuery);
       hasFirstResult = true;

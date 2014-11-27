@@ -16,6 +16,15 @@
 #include <asm/unistd.h>
 #include <linux/filter.h>
 
+#include <sys/cdefs.h>
+// Old Bionic versions do not have sys/user.h.  The if can be removed once we no
+// longer need to support these old Bionic versions.
+// All x86_64 builds use a new enough bionic to have sys/user.h.
+#if !defined(__BIONIC__) || defined(__x86_64__)
+#include <sys/types.h>  // Fix for gcc 4.7, make sure __uint16_t is defined.
+#include <sys/user.h>
+#endif
+
 // For audit.h
 #ifndef EM_ARM
 #define EM_ARM    40
@@ -124,6 +133,44 @@
 #define SECCOMP_ARG_LSB_IDX(nr) (offsetof(struct arch_seccomp_data, args) +   \
                                  8*(nr) + 0)
 
+
+#if defined(__BIONIC__)
+// Old Bionic versions don't have sys/user.h, so we just define regs_struct
+// directly.  This can be removed once we no longer need to support these old
+// Bionic versions.
+struct regs_struct {
+  long int ebx;
+  long int ecx;
+  long int edx;
+  long int esi;
+  long int edi;
+  long int ebp;
+  long int eax;
+  long int xds;
+  long int xes;
+  long int xfs;
+  long int xgs;
+  long int orig_eax;
+  long int eip;
+  long int xcs;
+  long int eflags;
+  long int esp;
+  long int xss;
+};
+#else
+typedef user_regs_struct regs_struct;
+#endif
+
+#define SECCOMP_PT_RESULT(_regs)  (_regs).eax
+#define SECCOMP_PT_SYSCALL(_regs) (_regs).orig_eax
+#define SECCOMP_PT_IP(_regs)      (_regs).eip
+#define SECCOMP_PT_PARM1(_regs)   (_regs).ebx
+#define SECCOMP_PT_PARM2(_regs)   (_regs).ecx
+#define SECCOMP_PT_PARM3(_regs)   (_regs).edx
+#define SECCOMP_PT_PARM4(_regs)   (_regs).esi
+#define SECCOMP_PT_PARM5(_regs)   (_regs).edi
+#define SECCOMP_PT_PARM6(_regs)   (_regs).ebp
+
 #elif defined(__x86_64__)
 #define MIN_SYSCALL         0u
 #define MAX_PUBLIC_SYSCALL  1024u
@@ -150,6 +197,17 @@
                                  8*(nr) + 4)
 #define SECCOMP_ARG_LSB_IDX(nr) (offsetof(struct arch_seccomp_data, args) +   \
                                  8*(nr) + 0)
+
+typedef user_regs_struct regs_struct;
+#define SECCOMP_PT_RESULT(_regs)  (_regs).rax
+#define SECCOMP_PT_SYSCALL(_regs) (_regs).orig_rax
+#define SECCOMP_PT_IP(_regs)      (_regs).rip
+#define SECCOMP_PT_PARM1(_regs)   (_regs).rdi
+#define SECCOMP_PT_PARM2(_regs)   (_regs).rsi
+#define SECCOMP_PT_PARM3(_regs)   (_regs).rdx
+#define SECCOMP_PT_PARM4(_regs)   (_regs).r10
+#define SECCOMP_PT_PARM5(_regs)   (_regs).r8
+#define SECCOMP_PT_PARM6(_regs)   (_regs).r9
 
 #elif defined(__arm__) && (defined(__thumb__) || defined(__ARM_EABI__))
 // ARM EABI includes "ARM private" system calls starting at |__ARM_NR_BASE|,
@@ -188,6 +246,46 @@
                                  8*(nr) + 4)
 #define SECCOMP_ARG_LSB_IDX(nr) (offsetof(struct arch_seccomp_data, args) +   \
                                  8*(nr) + 0)
+
+#if defined(__BIONIC__)
+// Old Bionic versions don't have sys/user.h, so we just define regs_struct
+// directly.  This can be removed once we no longer need to support these old
+// Bionic versions.
+struct regs_struct {
+  unsigned long uregs[18];
+};
+#else
+typedef user_regs regs_struct;
+#endif
+
+#define REG_cpsr    uregs[16]
+#define REG_pc      uregs[15]
+#define REG_lr      uregs[14]
+#define REG_sp      uregs[13]
+#define REG_ip      uregs[12]
+#define REG_fp      uregs[11]
+#define REG_r10     uregs[10]
+#define REG_r9      uregs[9]
+#define REG_r8      uregs[8]
+#define REG_r7      uregs[7]
+#define REG_r6      uregs[6]
+#define REG_r5      uregs[5]
+#define REG_r4      uregs[4]
+#define REG_r3      uregs[3]
+#define REG_r2      uregs[2]
+#define REG_r1      uregs[1]
+#define REG_r0      uregs[0]
+#define REG_ORIG_r0 uregs[17]
+
+#define SECCOMP_PT_RESULT(_regs)  (_regs).REG_r0
+#define SECCOMP_PT_SYSCALL(_regs) (_regs).REG_r7
+#define SECCOMP_PT_IP(_regs)      (_regs).REG_pc
+#define SECCOMP_PT_PARM1(_regs)   (_regs).REG_r0
+#define SECCOMP_PT_PARM2(_regs)   (_regs).REG_r1
+#define SECCOMP_PT_PARM3(_regs)   (_regs).REG_r2
+#define SECCOMP_PT_PARM4(_regs)   (_regs).REG_r3
+#define SECCOMP_PT_PARM5(_regs)   (_regs).REG_r4
+#define SECCOMP_PT_PARM6(_regs)   (_regs).REG_r5
 
 #else
 #error Unsupported target platform

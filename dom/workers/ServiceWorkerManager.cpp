@@ -151,11 +151,17 @@ UpdatePromise::RejectAllPromises(const ErrorEventInit& aErrorDesc)
       JS::Rooted<JSString*> stack(cx, JS_GetEmptyString(JS_GetRuntime(cx)));
 
       JS::Rooted<JS::Value> fnval(cx);
-      ToJSValue(cx, aErrorDesc.mFilename, &fnval);
+      if (!ToJSValue(cx, aErrorDesc.mFilename, &fnval)) {
+        pendingPromise->MaybeReject(NS_ERROR_FAILURE);
+        continue;
+      }
       JS::Rooted<JSString*> fn(cx, fnval.toString());
 
       JS::Rooted<JS::Value> msgval(cx);
-      ToJSValue(cx, aErrorDesc.mMessage, &msgval);
+      if (!ToJSValue(cx, aErrorDesc.mMessage, &msgval)) {
+        pendingPromise->MaybeReject(NS_ERROR_FAILURE);
+        continue;
+      }
       JS::Rooted<JSString*> msg(cx, msgval.toString());
 
       JS::Rooted<JS::Value> error(cx);

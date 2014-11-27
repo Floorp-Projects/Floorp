@@ -11,6 +11,9 @@
 
 #include "nsContainerFrame.h"
 
+class nsRubyBaseContainerFrame;
+class nsRubyTextContainerFrame;
+
 /**
  * Factory function.
  * @return a newly allocated nsRubyFrame (infallible)
@@ -32,6 +35,15 @@ public:
                                  InlineMinISizeData *aData) MOZ_OVERRIDE;
   virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                   InlinePrefISizeData *aData) MOZ_OVERRIDE;
+  virtual mozilla::LogicalSize
+    ComputeSize(nsRenderingContext *aRenderingContext,
+                mozilla::WritingMode aWritingMode,
+                const mozilla::LogicalSize& aCBSize,
+                nscoord aAvailableISize,
+                const mozilla::LogicalSize& aMargin,
+                const mozilla::LogicalSize& aBorder,
+                const mozilla::LogicalSize& aPadding,
+                ComputeSizeFlags aFlags) MOZ_OVERRIDE;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
@@ -48,8 +60,14 @@ protected:
   friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
                                            nsStyleContext* aContext);
   explicit nsRubyFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
-  void CalculateColSizes(nsRenderingContext* aRenderingContext,
-                         nsTArray<nscoord>& aColSizes);
+
+  void ReflowSegment(nsPresContext* aPresContext,
+                     const nsHTMLReflowState& aReflowState,
+                     nsRubyBaseContainerFrame* aBaseContainer,
+                     nsReflowStatus& aStatus);
+
+  nsRubyBaseContainerFrame* PullOneSegment(ContinuationTraversingState& aState);
+
   nscoord mBaseline;
 };
 

@@ -11,7 +11,6 @@
 #define NetUtils_h
 
 #include "arpa/inet.h"
-#include "mozilla/Mutex.h"
 
 // Copied from ifc.h
 #define RESET_IPV4_ADDRESSES 0x01
@@ -59,9 +58,6 @@ public:
                              char* vendorinfo);
 
   static int32_t SdkVersion();
-
-private:
-  static mozilla::Mutex sIfcMutex;
 };
 
 // Defines a function type with the right arguments and return type.

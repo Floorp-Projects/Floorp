@@ -68,6 +68,28 @@
 #endif  // COMPILER_MSVC
 
 
+// The C++ standard requires that static const members have an out-of-class
+// definition (in a single compilation unit), but MSVC chokes on this (when
+// language extensions, which are required, are enabled). (You're only likely to
+// notice the need for a definition if you take the address of the member or,
+// more commonly, pass it to a function that takes it as a reference argument --
+// probably an STL function.) This macro makes MSVC do the right thing. See
+// http://msdn.microsoft.com/en-us/library/34h23df8(v=vs.100).aspx for more
+// information. Use like:
+//
+// In .h file:
+//   struct Foo {
+//     static const int kBar = 5;
+//   };
+//
+// In .cc file:
+//   STATIC_CONST_MEMBER_DEFINITION const int Foo::kBar;
+#if defined(COMPILER_MSVC)
+#define STATIC_CONST_MEMBER_DEFINITION __declspec(selectany)
+#else
+#define STATIC_CONST_MEMBER_DEFINITION
+#endif
+
 // Annotate a variable indicating it's ok if the variable is not used.
 // (Typically used to silence a compiler warning when the assignment
 // is important for some other reason.)
@@ -119,6 +141,10 @@
 #define OVERRIDE override
 #elif defined(__clang__)
 #define OVERRIDE override
+#elif defined(COMPILER_GCC) && __cplusplus >= 201103 && \
+      (__GNUC__ * 10000 + __GNUC_MINOR__ * 100) >= 40700
+// GCC 4.7 supports explicit virtual overrides when C++11 support is enabled.
+#define OVERRIDE override
 #else
 #define OVERRIDE
 #endif
@@ -128,10 +154,14 @@
 // Use like:
 //   virtual void foo() FINAL;
 //   class B FINAL : public A {};
-#if defined(COMPILER_MSVC)
+#if defined(__clang__)
+#define FINAL final
+#elif defined(COMPILER_MSVC)
 // TODO(jered): Change this to "final" when chromium no longer uses MSVC 2010.
 #define FINAL sealed
-#elif defined(__clang__)
+#elif defined(COMPILER_GCC) && __cplusplus >= 201103 && \
+      (__GNUC__ * 10000 + __GNUC_MINOR__ * 100) >= 40700
+// GCC 4.7 supports explicit virtual overrides when C++11 support is enabled.
 #define FINAL final
 #else
 #define FINAL
@@ -166,12 +196,9 @@
 // If available, it would look like:
 //   __attribute__((format(wprintf, format_param, dots_param)))
 
-
 // MemorySanitizer annotations.
-#ifdef MEMORY_SANITIZER
-extern "C" {
-void __msan_unpoison(const void *p, unsigned long s);
-}  // extern "C"
+#if defined(MEMORY_SANITIZER) && !defined(OS_NACL)
+#include <sanitizer/msan_interface.h>
 
 // Mark a memory region fully initialized.
 // Use this to annotate code that deliberately reads uninitialized data, for
@@ -180,5 +207,23 @@ void __msan_unpoison(const void *p, unsigned long s);
 #else  // MEMORY_SANITIZER
 #define MSAN_UNPOISON(p, s)
 #endif  // MEMORY_SANITIZER
+
+// Macro useful for writing cross-platform function pointers.
+#if !defined(CDECL)
+#if defined(OS_WIN)
+#define CDECL __cdecl
+#else  // defined(OS_WIN)
+#define CDECL
+#endif  // defined(OS_WIN)
+#endif  // !defined(CDECL)
+
+// Macro for hinting that an expression is likely to be false.
+#if !defined(UNLIKELY)
+#if defined(COMPILER_GCC)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define UNLIKELY(x) (x)
+#endif  // defined(COMPILER_GCC)
+#endif  // !defined(UNLIKELY)
 
 #endif  // BASE_COMPILER_SPECIFIC_H_

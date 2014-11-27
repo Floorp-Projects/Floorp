@@ -4,6 +4,8 @@
 
 #include "sandbox/win/src/broker_services.h"
 
+#include <AclAPI.h>
+
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/threading/platform_thread.h"
@@ -80,6 +82,29 @@ void DeregisterPeerTracker(PeerTracker* peer) {
   }
 }
 
+// Utility function to pack token values into a key for the cache map.
+uint32_t GenerateTokenCacheKey(const sandbox::PolicyBase* policy) {
+  const size_t kTokenShift = 3;
+  uint32_t key;
+
+  // Make sure our token values aren't too large to pack into the key.
+  static_assert(sandbox::USER_LAST <= (1 << kTokenShift),
+                "TokenLevel too large");
+  static_assert(sandbox::INTEGRITY_LEVEL_LAST <= (1 << kTokenShift),
+                "IntegrityLevel too large");
+  static_assert(sizeof(key) < (kTokenShift * 3),
+                "Token key type too small");
+
+  // The key is the enum values shifted to avoid overlap and OR'd together.
+  key = policy->GetInitialTokenLevel();
+  key <<= kTokenShift;
+  key |= policy->GetLockdownTokenLevel();
+  key <<= kTokenShift;
+  key |= policy->GetIntegrityLevel();
+
+  return key;
+}
+
 }  // namespace
 
 namespace sandbox {
@@ -153,6 +178,13 @@ BrokerServicesBase::~BrokerServicesBase() {
   // If job_port_ isn't NULL, assumes that the lock has been initialized.
   if (job_port_)
     ::DeleteCriticalSection(&lock_);
+
+  // Close any token in the cache.
+  for (TokenCacheMap::iterator it = token_cache_.begin();
+       it != token_cache_.end(); ++it) {
+    ::CloseHandle(it->second.first);
+    ::CloseHandle(it->second.second);
+  }
 }
 
 TargetPolicy* BrokerServicesBase::CreatePolicy() {
@@ -246,6 +278,13 @@ DWORD WINAPI BrokerServicesBase::TargetEventsThread(PVOID param) {
           break;
         }
 
+        case JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT: {
+          BOOL res = ::TerminateJobObject(tracker->job,
+                                          SBOX_FATAL_MEMORY_EXCEEDED);
+          DCHECK(res);
+          break;
+        }
+
         default: {
           NOTREACHED();
           break;
@@ -299,10 +338,35 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
   // with the soon to be created target process.
   HANDLE initial_token_temp;
   HANDLE lockdown_token_temp;
-  ResultCode result = policy_base->MakeTokens(&initial_token_temp,
-                                              &lockdown_token_temp);
-  if (SBOX_ALL_OK != result)
-    return result;
+  ResultCode result = SBOX_ALL_OK;
+
+  // Create the master tokens only once and save them in a cache. That way
+  // can just duplicate them to avoid hammering LSASS on every sandboxed
+  // process launch.
+  uint32_t token_key = GenerateTokenCacheKey(policy_base);
+  TokenCacheMap::iterator it = token_cache_.find(token_key);
+  if (it != token_cache_.end()) {
+    initial_token_temp = it->second.first;
+    lockdown_token_temp = it->second.second;
+  } else {
+    result = policy_base->MakeTokens(&initial_token_temp,
+                                     &lockdown_token_temp);
+    if (SBOX_ALL_OK != result)
+      return result;
+    token_cache_[token_key] =
+        std::pair<HANDLE, HANDLE>(initial_token_temp, lockdown_token_temp);
+  }
+
+  if (!::DuplicateToken(initial_token_temp, SecurityImpersonation,
+                        &initial_token_temp)) {
+    return SBOX_ERROR_GENERIC;
+  }
+
+  if (!::DuplicateTokenEx(lockdown_token_temp, TOKEN_ALL_ACCESS, 0,
+                          SecurityIdentification, TokenPrimary,
+                          &lockdown_token_temp)) {
+    return SBOX_ERROR_GENERIC;
+  }
 
   base::win::ScopedHandle initial_token(initial_token_temp);
   base::win::ScopedHandle lockdown_token(lockdown_token_temp);
@@ -316,7 +380,7 @@ ResultCode BrokerServicesBase::SpawnTarget(const wchar_t* exe_path,
 
   // Initialize the startup information from the policy.
   base::win::StartupInformation startup_info;
-  string16 desktop = policy_base->GetAlternateDesktop();
+  base::string16 desktop = policy_base->GetAlternateDesktop();
   if (!desktop.empty()) {
     startup_info.startup_info()->lpDesktop =
         const_cast<wchar_t*>(desktop.c_str());
@@ -494,7 +558,7 @@ ResultCode BrokerServicesBase::InstallAppContainer(const wchar_t* sid,
   if (base::win::OSInfo::GetInstance()->version() < base::win::VERSION_WIN8)
     return SBOX_ERROR_UNSUPPORTED;
 
-  string16 old_name = LookupAppContainer(sid);
+  base::string16 old_name = LookupAppContainer(sid);
   if (old_name.empty())
     return CreateAppContainer(sid, name);
 
@@ -508,7 +572,7 @@ ResultCode BrokerServicesBase::UninstallAppContainer(const wchar_t* sid) {
   if (base::win::OSInfo::GetInstance()->version() < base::win::VERSION_WIN8)
     return SBOX_ERROR_UNSUPPORTED;
 
-  string16 name =  LookupAppContainer(sid);
+  base::string16 name = LookupAppContainer(sid);
   if (name.empty())
     return SBOX_ERROR_INVALID_APP_CONTAINER;
 

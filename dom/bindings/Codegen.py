@@ -1735,7 +1735,7 @@ class CGConstructNavigatorObject(CGAbstractMethod):
                 ThrowMethodFailedWithDetails(aCx, rv, "${descriptorName}", "navigatorConstructor");
                 return nullptr;
               }
-              if (!WrapNewBindingObject(aCx, result, &v)) {
+              if (!GetOrCreateDOMReflector(aCx, result, &v)) {
                 //XXX Assertion disabled for now, see bug 991271.
                 MOZ_ASSERT(true || JS_IsExceptionPending(aCx));
                 return nullptr;
@@ -5764,7 +5764,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         if not descriptor.interface.isExternal() and not descriptor.skipGen:
             if descriptor.wrapperCache:
                 assert descriptor.nativeOwnership != 'owned'
-                wrapMethod = "WrapNewBindingObject"
+                wrapMethod = "GetOrCreateDOMReflector"
             else:
                 if not returnsNewObject:
                     raise MethodNotNewObjectError(descriptor.interface.identifier.name)
@@ -5854,7 +5854,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
         return wrapCode, False
 
     if type.isAny():
-        # See comments in WrapNewBindingObject explaining why we need
+        # See comments in GetOrCreateDOMReflector explaining why we need
         # to wrap here.
         # NB: _setValue(..., type-that-is-any) calls JS_WrapValue(), so is fallible
         head = "JS::ExposeValueToActiveJS(%s);\n" % result
@@ -5862,7 +5862,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
 
     if (type.isObject() or (type.isSpiderMonkeyInterface() and
                             not typedArraysAreStructs)):
-        # See comments in WrapNewBindingObject explaining why we need
+        # See comments in GetOrCreateDOMReflector explaining why we need
         # to wrap here.
         if type.nullable():
             toValue = "%s"
@@ -5895,7 +5895,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
 
     if type.isSpiderMonkeyInterface():
         assert typedArraysAreStructs
-        # See comments in WrapNewBindingObject explaining why we need
+        # See comments in GetOrCreateDOMReflector explaining why we need
         # to wrap here.
         # NB: setObject(..., some-object-type) calls JS_WrapValue(), so is fallible
         return (setObject("*%s.Obj()" % result,
@@ -13255,7 +13255,7 @@ class CGJSImplMethod(CGJSImplMember):
                 JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
                 MOZ_ASSERT(js::IsObjectInContextCompartment(scopeObj, cx));
                 JS::Rooted<JS::Value> wrappedVal(cx);
-                if (!WrapNewBindingObject(cx, impl, &wrappedVal)) {
+                if (!GetOrCreateDOMReflector(cx, impl, &wrappedVal)) {
                   //XXX Assertion disabled for now, see bug 991271.
                   MOZ_ASSERT(true || JS_IsExceptionPending(cx));
                   aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -13545,7 +13545,7 @@ class CGJSImplClass(CGBindingImplClass):
             JS::Rooted<JSObject*> arg(cx, &args[1].toObject());
             nsRefPtr<${implName}> impl = new ${implName}(arg, window);
             MOZ_ASSERT(js::IsObjectInContextCompartment(arg, cx));
-            return WrapNewBindingObject(cx, impl, args.rval());
+            return GetOrCreateDOMReflector(cx, impl, args.rval());
             """,
             ifaceName=self.descriptor.interface.identifier.name,
             implName=self.descriptor.name)

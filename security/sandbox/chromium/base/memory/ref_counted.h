@@ -10,6 +10,9 @@
 #include "base/atomic_ref_count.h"
 #include "base/base_export.h"
 #include "base/compiler_specific.h"
+#ifndef NDEBUG
+#include "base/logging.h"
+#endif
 #include "base/threading/thread_collision_warner.h"
 
 namespace base {
@@ -21,13 +24,49 @@ class BASE_EXPORT RefCountedBase {
   bool HasOneRef() const { return ref_count_ == 1; }
 
  protected:
-  RefCountedBase();
-  ~RefCountedBase();
+  RefCountedBase()
+      : ref_count_(0)
+  #ifndef NDEBUG
+      , in_dtor_(false)
+  #endif
+      {
+  }
 
-  void AddRef() const;
+  ~RefCountedBase() {
+  #ifndef NDEBUG
+    DCHECK(in_dtor_) << "RefCounted object deleted without calling Release()";
+  #endif
+  }
+
+
+  void AddRef() const {
+    // TODO(maruel): Add back once it doesn't assert 500 times/sec.
+    // Current thread books the critical section "AddRelease"
+    // without release it.
+    // DFAKE_SCOPED_LOCK_THREAD_LOCKED(add_release_);
+  #ifndef NDEBUG
+    DCHECK(!in_dtor_);
+  #endif
+    ++ref_count_;
+  }
 
   // Returns true if the object should self-delete.
-  bool Release() const;
+  bool Release() const {
+    // TODO(maruel): Add back once it doesn't assert 500 times/sec.
+    // Current thread books the critical section "AddRelease"
+    // without release it.
+    // DFAKE_SCOPED_LOCK_THREAD_LOCKED(add_release_);
+  #ifndef NDEBUG
+    DCHECK(!in_dtor_);
+  #endif
+    if (--ref_count_ == 0) {
+  #ifndef NDEBUG
+      in_dtor_ = true;
+  #endif
+      return true;
+    }
+    return false;
+  }
 
  private:
   mutable int ref_count_;
@@ -251,7 +290,11 @@ class scoped_refptr {
   }
 
   T* get() const { return ptr_; }
+
+  // Allow scoped_refptr<C> to be used in boolean expression
+  // and comparison operations.
   operator T*() const { return ptr_; }
+
   T* operator->() const {
     assert(ptr_ != NULL);
     return ptr_;

@@ -16,8 +16,8 @@
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineHelpers.h"
 #include "jit/BaselineJIT.h"
-#include "jit/IonLinker.h"
 #include "jit/JitSpewer.h"
+#include "jit/Linker.h"
 #include "jit/Lowering.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
@@ -29,7 +29,7 @@
 #include "jsboolinlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/IonFrames-inl.h"
+#include "jit/JitFrames-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/StringObject-inl.h"
@@ -44,7 +44,7 @@ void
 FallbackICSpew(JSContext *cx, ICFallbackStub *stub, const char *fmt, ...)
 {
     if (JitSpewEnabled(JitSpew_BaselineICFallback)) {
-        RootedScript script(cx, GetTopIonJSScript(cx));
+        RootedScript script(cx, GetTopJitJSScript(cx));
         jsbytecode *pc = stub->icEntry()->pc(script);
 
         char fmtbuf[100];
@@ -69,7 +69,7 @@ void
 TypeFallbackICSpew(JSContext *cx, ICTypeMonitor_Fallback *stub, const char *fmt, ...)
 {
     if (JitSpewEnabled(JitSpew_BaselineICFallback)) {
-        RootedScript script(cx, GetTopIonJSScript(cx));
+        RootedScript script(cx, GetTopJitJSScript(cx));
         jsbytecode *pc = stub->icEntry()->pc(script);
 
         char fmtbuf[100];
@@ -618,7 +618,7 @@ ICStubCompiler::getStubCode()
         return stubCode;
 
     // Compile new stubcode.
-    IonContext ictx(cx, nullptr);
+    JitContext jctx(cx, nullptr);
     MacroAssembler masm;
 #ifdef JS_CODEGEN_ARM
     masm.setSecondScratchReg(BaselineSecondScratchReg);
@@ -1020,7 +1020,7 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
         masm.subPtr(Imm32(sizeof(void *)), BaselineStackReg);
         masm.push(BaselineStackReg);
 
-        // Push IonJSFrameLayout pointer.
+        // Push JitFrameLayout pointer.
         masm.loadBaselineFramePtr(R0.scratchReg(), R0.scratchReg());
         masm.push(R0.scratchReg());
 
@@ -4236,7 +4236,7 @@ ICGetElemNativeCompiler::emitCallScripted(MacroAssembler &masm, Register objReg)
         emitProfilingUpdate(masm, availRegs, ICGetElemNativeGetterStub::offsetOfPCOffset());
     }
 
-    masm.callIon(code);
+    masm.callJit(code);
 
     leaveStubFrame(masm, true);
 
@@ -7212,7 +7212,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadBaselineOrIonRaw(code, code, SequentialExecution, &failureLeaveStubFrame);
 
     // Getter is called with 0 arguments, just |obj| as thisv.
-    // Note that we use Push, not push, so that callIon will align the stack
+    // Note that we use Push, not push, so that callJit will align the stack
     // properly on ARM.
     masm.Push(R0);
     EmitCreateStubFrameDescriptor(masm, scratch);
@@ -7247,7 +7247,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         emitProfilingUpdate(masm, availRegs, ICGetProp_CallScripted::offsetOfPCOffset());
     }
 
-    masm.callIon(code);
+    masm.callJit(code);
 
     leaveStubFrame(masm, true);
 
@@ -8302,7 +8302,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadBaselineOrIonRaw(code, code, SequentialExecution, &failureLeaveStubFrame);
 
     // Setter is called with the new value as the only argument, and |obj| as thisv.
-    // Note that we use Push, not push, so that callIon will align the stack
+    // Note that we use Push, not push, so that callJit will align the stack
     // properly on ARM.
 
     // To Push R1, read it off of the stowed values on stack.
@@ -8342,7 +8342,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
         emitProfilingUpdate(masm, availRegs, ICSetProp_CallScripted::offsetOfPCOffset());
     }
 
-    masm.callIon(code);
+    masm.callJit(code);
 
     leaveStubFrame(masm, true);
     // Do not care about return value from function. The original RHS should be returned
@@ -9598,7 +9598,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
 
     EmitCreateStubFrameDescriptor(masm, scratch);
 
-    // Note that we use Push, not push, so that callIon will align the stack
+    // Note that we use Push, not push, so that callJit will align the stack
     // properly on ARM.
     masm.Push(argcReg);
     masm.PushCalleeToken(callee, isConstructing_);
@@ -9634,7 +9634,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
                                               : ICCall_AnyScripted::offsetOfPCOffset());
     }
 
-    masm.callIon(code);
+    masm.callJit(code);
 
     // If this is a constructing call, and the callee returns a non-object, replace it with
     // the |this| object passed in.
@@ -9892,7 +9892,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
     EmitCreateStubFrameDescriptor(masm, scratch);
     masm.push(scratch);
     masm.push(BaselineTailCallReg);
-    masm.enterFakeExitFrame(IonNativeExitFrameLayout::Token());
+    masm.enterFakeExitFrame(NativeExitFrameLayout::Token());
 
     // If needed, update SPS Profiler frame entry.  At this point, BaselineTailCallReg
     // and scratch can be clobbered.
@@ -9918,7 +9918,7 @@ ICCall_Native::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
     // Load the return value into R0.
-    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), R0);
+    masm.loadValue(Address(StackPointer, NativeExitFrameLayout::offsetOfResult()), R0);
 
     leaveStubFrame(masm);
 
@@ -9991,7 +9991,7 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler &masm)
     EmitCreateStubFrameDescriptor(masm, scratch);
     masm.push(scratch);
     masm.push(BaselineTailCallReg);
-    masm.enterFakeExitFrame(IonNativeExitFrameLayout::Token());
+    masm.enterFakeExitFrame(NativeExitFrameLayout::Token());
 
     // If needed, update SPS Profiler frame entry.  At this point, BaselineTailCallReg
     // and scratch can be clobbered.
@@ -10009,7 +10009,7 @@ ICCall_ClassHook::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
     // Load the return value into R0.
-    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), R0);
+    masm.loadValue(Address(StackPointer, NativeExitFrameLayout::offsetOfResult()), R0);
 
     leaveStubFrame(masm);
 
@@ -10117,7 +10117,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler &masm)
                         ICCall_ScriptedApplyArguments::offsetOfPCOffset());
 
     // Do call
-    masm.callIon(target);
+    masm.callJit(target);
     leaveStubFrame(masm, true);
 
     // Enter type monitor IC to type-check result.
@@ -10218,7 +10218,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
                         ICCall_ScriptedApplyArguments::offsetOfPCOffset());
 
     // Do call
-    masm.callIon(target);
+    masm.callJit(target);
     leaveStubFrame(masm, true);
 
     // Enter type monitor IC to type-check result.
@@ -10309,7 +10309,7 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler &masm)
     Register scratch = regs.takeAny();
     EmitCreateStubFrameDescriptor(masm, scratch);
 
-    // Note that we use Push, not push, so that callIon will align the stack
+    // Note that we use Push, not push, so that callJit will align the stack
     // properly on ARM.
     masm.Push(argcReg);
     masm.Push(callee);
@@ -10343,7 +10343,7 @@ ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler &masm)
         emitProfilingUpdate(masm, availRegs, ICCall_ScriptedFunCall::offsetOfPCOffset());
     }
 
-    masm.callIon(code);
+    masm.callJit(code);
 
     leaveStubFrame(masm, true);
 

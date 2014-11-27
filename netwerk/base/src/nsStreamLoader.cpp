@@ -43,7 +43,8 @@ nsStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMPL_ISUPPORTS(nsStreamLoader, nsIStreamLoader,
-                  nsIRequestObserver, nsIStreamListener)
+                  nsIRequestObserver, nsIStreamListener,
+                  nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP 
 nsStreamLoader::GetNumBytesRead(uint32_t* aNumBytes)
@@ -143,4 +144,10 @@ void
 nsStreamLoader::ReleaseData()
 {
   mData.clearAndFree();
+}
+
+NS_IMETHODIMP
+nsStreamLoader::CheckListenerChain()
+{
+  return NS_OK;
 }

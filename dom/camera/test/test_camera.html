@@ -109,18 +109,26 @@ var Camera = {
     var blob = e.data;
     var img = new Image();
     var test = this._currentTest;
+    var onPreviewStateChange = function(e) {
+      if (e.newState === 'started') {
+        ok(true, "viewfinder is ready and playing after resume");
+        Camera.cameraObj.removeEventListener('previewstatechange', onPreviewStateChange);
+        Camera._testsCompleted++;
+        if(Camera._testsCompleted == Camera._tests.length) {
+          ok(true, "test finishing");
+          SimpleTest.finish();
+        } else {
+          Camera.runTests();
+        }
+      }
+    }
+    Camera.cameraObj.addEventListener('previewstatechange', onPreviewStateChange);
     img.onload = function Imgsize() {
       ok(this.width == test.pictureSize.width, "The image taken has the width " +
                                               this.width + " pictureSize width = " + test.pictureSize.width);
       ok(this.height == test.pictureSize.height, "The image taken has the height " +
                                               this.height + " picturesize height = " + test.pictureSize.height);
-      Camera._testsCompleted++;
-      if(Camera._testsCompleted == Camera._tests.length) {
-        ok(true, "test finishing");
-        SimpleTest.finish();
-      } else {
-        Camera.runTests();
-      }
+      Camera.cameraObj.resumePreview();
     }
     ok(blob.size > 100 , "Blob Size Gathered = " + blob.size);
     ok("image/" + test.fileFormat ==  blob.type, "Blob Type = " + blob.type);

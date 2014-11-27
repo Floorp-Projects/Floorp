@@ -37,7 +37,7 @@ TEST(AppContainerTest, SecurityCapabilities) {
     return;
 
   scoped_ptr<AppContainerAttributes> attributes(new AppContainerAttributes);
-  std::vector<string16> capabilities;
+  std::vector<base::string16> capabilities;
   EXPECT_EQ(SBOX_ERROR_INVALID_APP_CONTAINER,
             attributes->SetAppContainer(L"S-1-foo", capabilities));
 

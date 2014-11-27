@@ -125,7 +125,7 @@ PostMessageReadStructuredClone(JSContext* cx,
       {
         nsRefPtr<File> blob = new File(scInfo->mPort->GetParentObject(),
                                              blobImpl);
-        if (!WrapNewBindingObject(cx, blob, &val)) {
+        if (!GetOrCreateDOMReflector(cx, blob, &val)) {
           return nullptr;
         }
       }

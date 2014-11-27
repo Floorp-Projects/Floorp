@@ -42,12 +42,13 @@ if test "$MOZ_BUILD_APP" = "i386" -o "$MOZ_BUILD_APP" = "x86_64"; then
   AS=$CC
   LD=ld
   STRIP="strip"
+  OTOOL="otool"
 
   # Each per-CPU build should be entirely oblivious to the fact that a
   # universal binary will be produced.  The exception is packager.mk, which
   # needs to know to look for universal bits when building the .dmg.
   UNIVERSAL_BINARY=1
 
-  export CC CXX HOST_CC HOST_CXX RANLIB AR AS LD STRIP
+  export CC CXX HOST_CC HOST_CXX RANLIB AR AS LD STRIP OTOOL
 fi
 fi

@@ -116,7 +116,7 @@ callback CameraAutoFocusCallback = void (boolean focused);
 callback CameraTakePictureCallback = void (Blob picture);
 callback CameraStartRecordingCallback = void ();
 callback CameraShutterCallback = void ();
-callback CameraClosedCallback = void ();
+callback CameraClosedCallback = void (DOMString reason);
 callback CameraReleaseCallback = void ();
 callback CameraRecorderStateChange = void (DOMString newState);
 callback CameraPreviewStateChange = void (DOMString newState);
@@ -241,16 +241,27 @@ interface CameraControl : MediaStream
      contains no event-specific data. */
   attribute EventHandler onshutter;
 
-  /* the function to call when the camera hardware is closed
-     by the underlying framework, e.g. when another app makes a more
-     recent call to get the camera. */
+  /* the function to call when the camera hardware is closed; this may
+     be due to a system failure, another process taking over the camera,
+     or a call to release().
+
+     The 'reason' will be one of the following string values:
+       - SystemFailure    : the camera subsystem failed and was closed;
+       - HardwareReleased : a call to release() was successful;
+       - NotAvailable     : the camera hardware is in use by another process.
+  */
   attribute CameraClosedCallback? onClosed;
 
-  /* the event dispatched when the camera hardware is closed
-     by the underlying framework, e.g. when another app makes a more
-     recent call to get the camera.
+  /* the event dispatched when the camera hardware is closed; this may
+     be due to a system failure, another process taking over the camera,
+     or a call to release().
 
-     contains no event-specific data. */
+     The event has a 'reason' attribute that will be one of the following
+     string values:
+       - SystemFailure    : the camera subsystem failed and was closed;
+       - HardwareReleased : a call to release() was successful;
+       - NotAvailable     : the camera hardware is in use by another process.
+  */
   attribute EventHandler onclose;
 
   /* the function to call when the recorder changes state, either because

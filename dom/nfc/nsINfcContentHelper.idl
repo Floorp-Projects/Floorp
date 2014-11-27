@@ -22,7 +22,7 @@ interface nsINfcTagEvent : nsISupports
   readonly attribute boolean isFormatable;
 };
 
-[scriptable, uuid(42c7a85f-59ae-4bde-b961-e1f1436476c3)]
+[scriptable, uuid(fcbd98d6-3d04-4657-bd64-1164e311b399)]
 interface nsINfcEventListener : nsISupports
 {
   /**
@@ -63,6 +63,14 @@ interface nsINfcEventListener : nsISupports
    *        SessionToken received from parent process
    */
   void notifyPeerLost(in DOMString sessionToken);
+
+  /**
+   * Callback function used to notify RF state change.
+   *
+   * @param rfState
+   *        RF state received from parent process
+   */
+  void notifyRFStateChange(in DOMString rfState);
 };
 
 [scriptable, uuid(a8ef3590-d853-4766-b54a-a4547da4dde4)]
@@ -79,7 +87,7 @@ interface nsINfcRequestCallback : nsISupports
   void notifyError(in DOMString errorMsg);
 };
 
-[scriptable, uuid(9da02537-c4d0-4b2d-b294-d3250ff1720e)]
+[scriptable, uuid(bcf214de-885b-43e6-9e53-9b7d880e1633)]
 interface nsINfcContentHelper : nsISupports
 {
   void init(in nsIDOMWindow window);
@@ -165,6 +173,11 @@ interface nsINfcContentHelper : nsISupports
    */
   void close(in DOMString sessionToken,
              in nsINfcRequestCallback callback);
+
+  /**
+   * Get current RF state.
+   */
+  DOMString queryRFState();
 
   /**
    * Initiate send file operation.

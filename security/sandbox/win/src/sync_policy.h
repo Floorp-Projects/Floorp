@@ -8,6 +8,7 @@
 #include <string>
 
 #include "base/basictypes.h"
+#include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/nt_internals.h"
 #include "sandbox/win/src/policy_low_level.h"
@@ -32,18 +33,17 @@ class SyncPolicy {
   // Performs the desired policy action on a request.
   // client_info is the target process that is making the request and
   // eval_result is the desired policy action to accomplish.
-  static DWORD CreateEventAction(EvalResult eval_result,
-                                 const ClientInfo& client_info,
-                                 const std::wstring &event_name,
-                                 uint32 manual_reset,
-                                 uint32 initial_state,
-                                 HANDLE *handle);
-  static DWORD OpenEventAction(EvalResult eval_result,
-                               const ClientInfo& client_info,
-                               const std::wstring &event_name,
-                               uint32 desired_access,
-                               uint32 inherit_handle,
-                               HANDLE *handle);
+  static NTSTATUS CreateEventAction(EvalResult eval_result,
+                                    const ClientInfo& client_info,
+                                    const base::string16 &event_name,
+                                    uint32 event_type,
+                                    uint32 initial_state,
+                                    HANDLE *handle);
+  static NTSTATUS OpenEventAction(EvalResult eval_result,
+                                  const ClientInfo& client_info,
+                                  const base::string16 &event_name,
+                                  uint32 desired_access,
+                                  HANDLE *handle);
 };
 
 }  // namespace sandbox
