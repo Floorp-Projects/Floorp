@@ -7,10 +7,9 @@
 #ifndef mozilla_psm__NSSCertDBTrustDomain_h
 #define mozilla_psm__NSSCertDBTrustDomain_h
 
-#include "CertVerifier.h"
-#include "nsICertBlocklist.h"
 #include "pkix/pkixtypes.h"
 #include "secmodt.h"
+#include "CertVerifier.h"
 
 namespace mozilla { namespace psm {
 
@@ -111,7 +110,6 @@ private:
   const unsigned int mMinimumNonECCBits;
   const char* mHostname; // non-owning - only used for pinning checks
   ScopedCERTCertList* mBuiltChain; // non-owning
-  nsCOMPtr<nsICertBlocklist> mCertBlocklist;
 };
 
 } } // namespace mozilla::psm
