@@ -20,6 +20,14 @@ radio[pane=paneTabs] {
   -moz-image-region: rect(0px, 64px, 32px, 32px)
 }
 
+#BrowserPreferences radio[pane=paneSearch] {
+  list-style-image: url("chrome://browser/skin/search-pref.png");
+}
+
+.checkbox-check {
+  -moz-appearance: checkbox;
+}
+
 radio[pane=paneContent] {
   -moz-image-region: rect(0px, 96px,  32px, 64px)
 }
