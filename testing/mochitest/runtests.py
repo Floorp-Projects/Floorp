@@ -765,6 +765,12 @@ class MochitestUtilsMixin(object):
     with open(os.path.join(options.profilePath, "extensions", "staged", "mochikit@mozilla.org", "chrome.manifest"), "a") as mfile:
       mfile.write(chrome)
 
+  def getChromeTestDir(self, options):
+    dir = os.path.join(os.path.abspath("."), SCRIPT_DIR) + "/"
+    if mozinfo.isWin:
+      dir = "file:///" + dir.replace("\\", "/")
+    return dir
+
   def addChromeToProfile(self, options):
     "Adds MochiKit chrome tests to the profile."
 
@@ -789,9 +795,7 @@ toolbar#nav-bar {
     manifest = os.path.join(options.profilePath, "tests.manifest")
     with open(manifest, "w") as manifestFile:
       # Register chrome directory.
-      chrometestDir = os.path.join(os.path.abspath("."), SCRIPT_DIR) + "/"
-      if mozinfo.isWin:
-        chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
+      chrometestDir = self.getChromeTestDir(options)
       manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
 
       if options.testingModulesDir is not None:
@@ -2102,7 +2106,9 @@ class Mochitest(MochitestUtilsMixin):
     if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
       options.hideResultsTable = True
 
-    d = dict((k, v) for k, v in options.__dict__.iteritems() if not k.startswith('log'))
+    d = dict((k, v) for k, v in options.__dict__.items() if
+        (not k.startswith('log_') or
+         not any([k.endswith(fmt) for fmt in commandline.log_formatters.keys()])))
     d['testRoot'] = self.testRoot
     content = json.dumps(d)
 

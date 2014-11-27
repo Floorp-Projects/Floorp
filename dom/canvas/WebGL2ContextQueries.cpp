@@ -14,11 +14,11 @@ using namespace mozilla::dom;
  * We fake ANY_SAMPLES_PASSED and ANY_SAMPLES_PASSED_CONSERVATIVE with
  * SAMPLES_PASSED on desktop.
  *
- * OpenGL ES 3.0 spec 4.1.6
- *  If the target of the query is ANY_SAMPLES_PASSED_CONSERVATIVE, an
- *  implementation may choose to use a less precise version of the test which
- *  can additionally set the samples-boolean state to TRUE in some other
- *  implementation-dependent cases.
+ * OpenGL ES 3.0 spec 4.1.6:
+ *     If the target of the query is ANY_SAMPLES_PASSED_CONSERVATIVE, an
+ *     implementation may choose to use a less precise version of the test which
+ *     can additionally set the samples-boolean state to TRUE in some other
+ *     implementation-dependent cases.
  */
 
 static const char*
@@ -88,9 +88,9 @@ WebGL2Context::CreateQuery()
          * any target is active causes an INVALID_OPERATION error to be
          * generated.
          */
-        GenerateWarning("createQuery: the WebGL 2 prototype might generate "
-                        "INVALID_OPERATION when creating a query object while "
-                        "one other is active.");
+        GenerateWarning("createQuery: The WebGL 2 prototype might generate"
+                        " INVALID_OPERATION when creating a query object while"
+                        " one other is active.");
         /*
          * We *need* to lock webgl2 to GL>=3.0 on desktop, but we don't have a
          * good mechanism to do this yet. See bug 898404.
@@ -124,9 +124,9 @@ WebGL2Context::DeleteQuery(WebGLQuery* query)
          * any target is active causes an INVALID_OPERATION error to be
          * generated.
          */
-        GenerateWarning("deleteQuery: the WebGL 2 prototype might generate "
-                        "INVALID_OPERATION when deleting a query object while "
-                        "one other is active.");
+        GenerateWarning("deleteQuery: The WebGL 2 prototype might generate"
+                        " INVALID_OPERATION when deleting a query object while"
+                        " one other is active.");
     }
 
     query->RequestDelete();
@@ -159,59 +159,56 @@ WebGL2Context::BeginQuery(GLenum target, WebGLQuery* query)
     }
 
     if (!query) {
-        /* SPECS BeginQuery.1
-         * http://www.khronos.org/registry/gles/extensions/EXT/EXT_occlusion_query_boolean.txt
-         * BeginQueryEXT sets the active query object name for the query type given
-         * by <target> to <id>. If BeginQueryEXT is called with an <id> of zero, if
-         * the active query object name for <target> is non-zero (for the targets
-         * ANY_SAMPLES_PASSED_EXT and ANY_SAMPLES_PASSED_CONSERVATIVE_EXT, if the
-         * active query for either target is non-zero), if <id> is the name of an
-         * existing query object whose type does not match <target>, or if <id> is the
-         * active query object name for any query type, the error INVALID_OPERATION is
-         * generated.
+        /* From GLES's EXT_occlusion_query_boolean:
+         *     BeginQueryEXT sets the active query object name for the query
+         *     type given by <target> to <id>. If BeginQueryEXT is called with
+         *     an <id> of zero, if the active query object name for <target> is
+         *     non-zero (for the targets ANY_SAMPLES_PASSED_EXT and
+         *     ANY_SAMPLES_PASSED_CONSERVATIVE_EXT, if the active query for
+         *     either target is non-zero), if <id> is the name of an existing
+         *     query object whose type does not match <target>, or if <id> is
+         *     the active query object name for any query type, the error
+         *     INVALID_OPERATION is generated.
          */
-        ErrorInvalidOperation("beginQuery: query should not be null");
+        ErrorInvalidOperation("beginQuery: Query should not be null.");
         return;
     }
 
     if (query->IsDeleted()) {
-        /* http://www.khronos.org/registry/gles/extensions/EXT/EXT_occlusion_query_boolean.txt
-         * BeginQueryEXT fails and an INVALID_OPERATION error is generated if <id>
-         * is not a name returned from a previous call to GenQueriesEXT, or if such
-         * a name has since been deleted with DeleteQueriesEXT.
+        /* From GLES's EXT_occlusion_query_boolean:
+         *     BeginQueryEXT fails and an INVALID_OPERATION error is generated
+         *     if <id> is not a name returned from a previous call to
+         *     GenQueriesEXT, or if such a name has since been deleted with
+         *     DeleteQueriesEXT.
          */
-        ErrorInvalidOperation("beginQuery: query has been deleted");
+        ErrorInvalidOperation("beginQuery: Query has been deleted.");
         return;
     }
 
     if (query->HasEverBeenActive() &&
         query->mType != target)
     {
-        /*
-         * See SPECS BeginQuery.1
-         */
-        ErrorInvalidOperation("beginQuery: target doesn't match with the query type");
+        ErrorInvalidOperation("beginQuery: Target doesn't match with the query"
+                              " type.");
         return;
     }
 
     if (*targetSlot) {
-        /*
-         * See SPECS BeginQuery.1
-         */
-        ErrorInvalidOperation("beginQuery: an other query already active");
+        ErrorInvalidOperation("beginQuery: An other query already active.");
         return;
     }
 
-    if (!query->HasEverBeenActive()) {
+    if (!query->HasEverBeenActive())
         query->mType = target;
-    }
 
     MakeContextCurrent();
 
     if (target == LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN) {
-        gl->fBeginQuery(LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, query->mGLName);
+        gl->fBeginQuery(LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,
+                        query->mGLName);
     } else {
-        gl->fBeginQuery(SimulateOcclusionQueryTarget(gl, target), query->mGLName);
+        gl->fBeginQuery(SimulateOcclusionQueryTarget(gl, target),
+                        query->mGLName);
     }
 
     *targetSlot = query;
@@ -229,18 +226,21 @@ WebGL2Context::EndQuery(GLenum target)
         return;
     }
 
-    if (!*targetSlot || target != (*targetSlot)->mType) {
-        /* http://www.khronos.org/registry/gles/extensions/EXT/EXT_occlusion_query_boolean.txt
-         * marks the end of the sequence of commands to be tracked for the query type
-         * given by <target>. The active query object for <target> is updated to
-         * indicate that query results are not available, and the active query object
-         * name for <target> is reset to zero. When the commands issued prior to
-         * EndQueryEXT have completed and a final query result is available, the
-         * query object active when EndQueryEXT is called is updated by the GL. The
-         * query object is updated to indicate that the query results are available
-         * and to contain the query result. If the active query object name for
-         * <target> is zero when EndQueryEXT is called, the error INVALID_OPERATION
-         * is generated.
+    if (!*targetSlot ||
+        target != (*targetSlot)->mType)
+    {
+        /* From GLES's EXT_occlusion_query_boolean:
+         *     marks the end of the sequence of commands to be tracked for the
+         *     query type given by <target>. The active query object for
+         *     <target> is updated to indicate that query results are not
+         *     available, and the active query object name for <target> is reset
+         *     to zero. When the commands issued prior to EndQueryEXT have
+         *     completed and a final query result is available, the query object
+         *     active when EndQueryEXT is called is updated by the GL. The query
+         *     object is updated to indicate that the query results are
+         *     available and to contain the query result. If the active query
+         *     object name for <target> is zero when EndQueryEXT is called, the
+         *     error INVALID_OPERATION is generated.
          */
         ErrorInvalidOperation("endQuery: There is no active query of type %s.",
                               GetQueryTargetEnumString(target));
@@ -271,10 +271,10 @@ WebGL2Context::GetQuery(GLenum target, GLenum pname)
     }
 
     if (pname != LOCAL_GL_CURRENT_QUERY) {
-        /* OpenGL ES 3.0 spec 6.1.7
-         *  pname must be CURRENT_QUERY.
+        /* OpenGL ES 3.0 spec 6.1.7:
+         *     pname must be CURRENT_QUERY.
          */
-        ErrorInvalidEnum("getQuery: pname must be CURRENT_QUERY");
+        ErrorInvalidEnum("getQuery: `pname` must be CURRENT_QUERY.");
         return nullptr;
     }
 
@@ -283,7 +283,8 @@ WebGL2Context::GetQuery(GLenum target, GLenum pname)
 }
 
 void
-WebGL2Context::GetQueryParameter(JSContext*, WebGLQuery* query, GLenum pname, JS::MutableHandleValue retval)
+WebGL2Context::GetQueryParameter(JSContext*, WebGLQuery* query, GLenum pname,
+                                 JS::MutableHandleValue retval)
 {
     retval.set(JS::NullValue());
 
@@ -291,33 +292,34 @@ WebGL2Context::GetQueryParameter(JSContext*, WebGLQuery* query, GLenum pname, JS
         return;
 
     if (!query) {
-        /* OpenGL ES 3.0 spec 6.1.7 (spec getQueryObject 1)
-         *  If id is not the name of a query object, or if the query object named by id is
-         *  currently active, then an INVALID_OPERATION error is generated. pname must be
-         *  QUERY_RESULT or QUERY_RESULT_AVAILABLE.
+        /* OpenGL ES 3.0 spec 6.1.7 (spec getQueryObject 1):
+         *    If id is not the name of a query object, or if the query object
+         *    named by id is currently active, then an INVALID_OPERATION error
+         *    is generated. pname must be QUERY_RESULT or
+         *    QUERY_RESULT_AVAILABLE.
          */
-        ErrorInvalidOperation("getQueryObject: query should not be null");
+        ErrorInvalidOperation("getQueryObject: `query` should not be null.");
         return;
     }
 
     if (query->IsDeleted()) {
         // See (spec getQueryObject 1)
-        ErrorInvalidOperation("getQueryObject: query has been deleted");
+        ErrorInvalidOperation("getQueryObject: `query` has been deleted.");
         return;
     }
 
     if (query->IsActive()) {
         // See (spec getQueryObject 1)
-        ErrorInvalidOperation("getQueryObject: query is active");
+        ErrorInvalidOperation("getQueryObject: `query` is active.");
         return;
     }
 
     if (!query->HasEverBeenActive()) {
         /* See (spec getQueryObject 1)
-         *  If this instance of WebGLQuery has never been active before, that mean that
-         *  query->mGLName is not a query object yet.
+         *     If this instance of WebGLQuery has never been active before, that
+         *     mean that query->mGLName is not a query object yet.
          */
-        ErrorInvalidOperation("getQueryObject: query has never been active");
+        ErrorInvalidOperation("getQueryObject: `query` has never been active.");
         return;
     }
 
@@ -349,5 +351,5 @@ WebGL2Context::GetQueryParameter(JSContext*, WebGLQuery* query, GLenum pname, JS
         break;
     }
 
-    ErrorInvalidEnum("getQueryObject: pname must be QUERY_RESULT{_AVAILABLE}");
+    ErrorInvalidEnum("getQueryObject: `pname` must be QUERY_RESULT{_AVAILABLE}.");
 }

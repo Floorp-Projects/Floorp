@@ -5629,7 +5629,8 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno)
            .setCanLazilyParse(false)
-           .setIntroductionType("debugger eval");
+           .setIntroductionType("debugger eval")
+           .maybeMakeStrictMode(frame ? frame.script()->strict() : false);
     RootedScript callerScript(cx, frame ? frame.script() : nullptr);
     SourceBufferHolder srcBuf(chars.start().get(), chars.length(), SourceBufferHolder::NoOwnership);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(), env, callerScript,

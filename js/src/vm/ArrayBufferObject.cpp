@@ -529,6 +529,7 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
         if (!cx->global()->getType(cx))
             CrashAtUnhandlableOOM("ArrayBufferObject::neuter");
         types::MarkTypeObjectFlags(cx, cx->global(), types::OBJECT_FLAG_TYPED_OBJECT_NEUTERED);
+        cx->compartment()->neuteredTypedObjects = 1;
     }
 
     // Neuter all views on the buffer, clear out the list of views and the

@@ -35,7 +35,7 @@ class XULDocument;
  * objects, from which the real DOM tree is built later in
  * XULDocument::ResumeWalk.
  */
-class nsXULPrototypeDocument : public nsISerializable
+class nsXULPrototypeDocument MOZ_FINAL : public nsISerializable
 {
 public:
     static nsresult
