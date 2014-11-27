@@ -4354,27 +4354,27 @@ nsLayoutUtils::ComputeCBDependentValue(nscoord aPercentBasis,
 }
 
 /* static */ nscoord
-nsLayoutUtils::ComputeWidthValue(
+nsLayoutUtils::ComputeISizeValue(
                  nsRenderingContext* aRenderingContext,
                  nsIFrame*            aFrame,
-                 nscoord              aContainingBlockWidth,
+                 nscoord              aContainingBlockISize,
                  nscoord              aContentEdgeToBoxSizing,
                  nscoord              aBoxSizingToMarginEdge,
                  const nsStyleCoord&  aCoord)
 {
   NS_PRECONDITION(aFrame, "non-null frame expected");
   NS_PRECONDITION(aRenderingContext, "non-null rendering context expected");
-  NS_WARN_IF_FALSE(aContainingBlockWidth != NS_UNCONSTRAINEDSIZE,
-                   "have unconstrained width; this should only result from "
-                   "very large sizes, not attempts at intrinsic width "
+  NS_WARN_IF_FALSE(aContainingBlockISize != NS_UNCONSTRAINEDSIZE,
+                   "have unconstrained inline-size; this should only result from "
+                   "very large sizes, not attempts at intrinsic inline-size "
                    "calculation");
-  NS_PRECONDITION(aContainingBlockWidth >= 0,
-                  "width less than zero");
+  NS_PRECONDITION(aContainingBlockISize >= 0,
+                  "inline-size less than zero");
 
   nscoord result;
   if (aCoord.IsCoordPercentCalcUnit()) {
     result = nsRuleNode::ComputeCoordPercentCalc(aCoord, 
-                                                 aContainingBlockWidth);
+                                                 aContainingBlockISize);
     // The result of a calc() expression might be less than 0; we
     // should clamp at runtime (below).  (Percentages and coords that
     // are less than 0 have already been dropped by the parser.)
@@ -4389,24 +4389,24 @@ nsLayoutUtils::ComputeWidthValue(
     switch (val) {
       case NS_STYLE_WIDTH_MAX_CONTENT:
         result = aFrame->GetPrefISize(aRenderingContext);
-        NS_ASSERTION(result >= 0, "width less than zero");
+        NS_ASSERTION(result >= 0, "inline-size less than zero");
         break;
       case NS_STYLE_WIDTH_MIN_CONTENT:
         result = aFrame->GetMinISize(aRenderingContext);
-        NS_ASSERTION(result >= 0, "width less than zero");
+        NS_ASSERTION(result >= 0, "inline-size less than zero");
         break;
       case NS_STYLE_WIDTH_FIT_CONTENT:
         {
           nscoord pref = aFrame->GetPrefISize(aRenderingContext),
                    min = aFrame->GetMinISize(aRenderingContext),
-                  fill = aContainingBlockWidth -
+                  fill = aContainingBlockISize -
                          (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
           result = std::max(min, std::min(pref, fill));
-          NS_ASSERTION(result >= 0, "width less than zero");
+          NS_ASSERTION(result >= 0, "inline-size less than zero");
         }
         break;
       case NS_STYLE_WIDTH_AVAILABLE:
-        result = aContainingBlockWidth -
+        result = aContainingBlockISize -
                  (aBoxSizingToMarginEdge + aContentEdgeToBoxSizing);
     }
   }
@@ -4415,28 +4415,28 @@ nsLayoutUtils::ComputeWidthValue(
 }
 
 /* static */ nscoord
-nsLayoutUtils::ComputeHeightDependentValue(
-                 nscoord              aContainingBlockHeight,
+nsLayoutUtils::ComputeBSizeDependentValue(
+                 nscoord              aContainingBlockBSize,
                  const nsStyleCoord&  aCoord)
 {
-  // XXXldb Some callers explicitly check aContainingBlockHeight
+  // XXXldb Some callers explicitly check aContainingBlockBSize
   // against NS_AUTOHEIGHT *and* unit against eStyleUnit_Percent or
   // calc()s containing percents before calling this function.
   // However, it would be much more likely to catch problems without
   // the unit conditions.
   // XXXldb Many callers pass a non-'auto' containing block height when
   // according to CSS2.1 they should be passing 'auto'.
-  NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockHeight ||
+  NS_PRECONDITION(NS_AUTOHEIGHT != aContainingBlockBSize ||
                   !aCoord.HasPercent(),
-                  "unexpected containing block height");
+                  "unexpected containing block block-size");
 
   if (aCoord.IsCoordPercentCalcUnit()) {
-    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockHeight);
+    return nsRuleNode::ComputeCoordPercentCalc(aCoord, aContainingBlockBSize);
   }
 
   NS_ASSERTION(aCoord.GetUnit() == eStyleUnit_None ||
                aCoord.GetUnit() == eStyleUnit_Auto,
-               "unexpected height value");
+               "unexpected block-size value");
   return 0;
 }
 
