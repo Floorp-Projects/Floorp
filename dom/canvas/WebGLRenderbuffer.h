@@ -3,16 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLRENDERBUFFER_H_
-#define WEBGLRENDERBUFFER_H_
-
-#include "WebGLBindableName.h"
-#include "WebGLObjectModel.h"
-#include "WebGLFramebufferAttachable.h"
-
-#include "nsWrapperCache.h"
+#ifndef WEBGL_RENDERBUFFER_H_
+#define WEBGL_RENDERBUFFER_H_
 
 #include "mozilla/LinkedList.h"
+#include "nsWrapperCache.h"
+#include "WebGLBindableName.h"
+#include "WebGLFramebufferAttachable.h"
+#include "WebGLObjectModel.h"
 
 namespace mozilla {
 
@@ -26,11 +24,13 @@ class WebGLRenderbuffer MOZ_FINAL
     , public WebGLFramebufferAttachable
 {
 public:
-    explicit WebGLRenderbuffer(WebGLContext* context);
+    explicit WebGLRenderbuffer(WebGLContext* webgl);
 
     void Delete();
 
-    bool HasUninitializedImageData() const { return mImageDataStatus == WebGLImageDataStatus::UninitializedImageData; }
+    bool HasUninitializedImageData() const {
+        return mImageDataStatus == WebGLImageDataStatus::UninitializedImageData;
+    }
     void SetImageDataStatus(WebGLImageDataStatus x) {
         // there is no way to go from having image data to not having any
         MOZ_ASSERT(x != WebGLImageDataStatus::NoImageData ||
@@ -39,24 +39,29 @@ public:
     }
 
     GLenum InternalFormat() const { return mInternalFormat; }
-    void SetInternalFormat(GLenum aInternalFormat) { mInternalFormat = aInternalFormat; }
+    void SetInternalFormat(GLenum internalFormat) {
+        mInternalFormat = internalFormat;
+    }
 
     GLenum InternalFormatForGL() const { return mInternalFormatForGL; }
-    void SetInternalFormatForGL(GLenum aInternalFormatForGL) { mInternalFormatForGL = aInternalFormatForGL; }
+    void SetInternalFormatForGL(GLenum internalFormatForGL) {
+        mInternalFormatForGL = internalFormatForGL;
+    }
 
     int64_t MemoryUsage() const;
 
-    WebGLContext *GetParentObject() const {
+    WebGLContext* GetParentObject() const {
         return Context();
     }
 
     void BindRenderbuffer() const;
-    void RenderbufferStorage(GLenum internalFormat, GLsizei width, GLsizei height) const;
+    void RenderbufferStorage(GLenum internalFormat, GLsizei width,
+                             GLsizei height) const;
     void FramebufferRenderbuffer(FBAttachment attachment) const;
     // Only handles a subset of `pname`s.
     GLint GetRenderbufferParameter(RBTarget target, RBParam pname) const;
 
-    virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLRenderbuffer)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)
@@ -74,6 +79,7 @@ protected:
 
     friend class WebGLFramebuffer;
 };
+
 } // namespace mozilla
 
-#endif
+#endif // WEBGL_RENDERBUFFER_H_

@@ -111,6 +111,23 @@ static bool AllowedImageSize(int32_t aWidth, int32_t aHeight)
   return true;
 }
 
+static bool AllowedImageAndFrameDimensions(const nsIntSize& aImageSize,
+                                           const nsIntRect& aFrameRect)
+{
+  if (!AllowedImageSize(aImageSize.width, aImageSize.height)) {
+    return false;
+  }
+  if (!AllowedImageSize(aFrameRect.width, aFrameRect.height)) {
+    return false;
+  }
+  nsIntRect imageRect(0, 0, aImageSize.width, aImageSize.height);
+  if (!imageRect.Contains(aFrameRect)) {
+    return false;
+  }
+  return true;
+}
+
+
 imgFrame::imgFrame() :
   mDecoded(0, 0, 0, 0),
   mDecodedMutex("imgFrame::mDecoded"),
@@ -123,7 +140,6 @@ imgFrame::imgFrame() :
   mCompositingFailed(false),
   mHasNoAlpha(false),
   mNonPremult(false),
-  mDiscardable(false),
   mOptimizable(false),
   mInformedDiscardTracker(false)
 {
@@ -147,17 +163,19 @@ imgFrame::~imgFrame()
 }
 
 nsresult
-imgFrame::InitForDecoder(const nsIntRect& aRect,
+imgFrame::InitForDecoder(const nsIntSize& aImageSize,
+                         const nsIntRect& aRect,
                          SurfaceFormat aFormat,
                          uint8_t aPaletteDepth /* = 0 */)
 {
   // Assert for properties that should be verified by decoders,
   // warn for properties related to bad content.
-  if (!AllowedImageSize(aRect.width, aRect.height)) {
+  if (!AllowedImageAndFrameDimensions(aImageSize, aRect)) {
     NS_WARNING("Should have legal image size");
     return NS_ERROR_FAILURE;
   }
 
+  mImageSize = aImageSize.ToIntSize();
   mOffset.MoveTo(aRect.x, aRect.y);
   mSize.SizeTo(aRect.width, aRect.height);
 
@@ -221,6 +239,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
     return NS_ERROR_FAILURE;
   }
 
+  mImageSize = aSize.ToIntSize();
   mOffset.MoveTo(0, 0);
   mSize.SizeTo(aSize.width, aSize.height);
 
@@ -415,9 +434,7 @@ nsresult imgFrame::Optimize()
   // allows the operating system to free our volatile buffer.
   // XXX(seth): We'd eventually like to do this on all platforms, but right now
   // converting raw memory to a SourceSurface is expensive on some backends.
-  if (mDiscardable) {
-    mImageSurface = nullptr;
-  }
+  mImageSurface = nullptr;
 #endif
 
   return NS_OK;
@@ -492,8 +509,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
 }
 
 bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
-                    const nsIntMargin& aPadding, GraphicsFilter aFilter,
-                    uint32_t aImageFlags)
+                    GraphicsFilter aFilter, uint32_t aImageFlags)
 {
   PROFILER_LABEL("imgFrame", "Draw",
     js::ProfileEntry::Category::GRAPHICS);
@@ -504,7 +520,12 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
                "We must be allowed to sample *some* source pixels!");
   NS_ASSERTION(!mPalettedImageData, "Directly drawing a paletted image!");
 
-  bool doPadding = aPadding != nsIntMargin(0,0,0,0);
+  nsIntMargin padding(mOffset.y,
+                      mImageSize.width - (mOffset.x + mSize.width),
+                      mImageSize.height - (mOffset.y + mSize.height),
+                      mOffset.x);
+
+  bool doPadding = padding != nsIntMargin(0,0,0,0);
   bool doPartialDecode = !ImageComplete();
 
   if (mSinglePixel && !doPadding && !doPartialDecode) {
@@ -519,14 +540,12 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
     return true;
   }
 
-  gfxRect imageRect(0, 0, mSize.width + aPadding.LeftRight(),
-                    mSize.height + aPadding.TopBottom());
-
   RefPtr<SourceSurface> surf = GetSurface();
   if (!surf && !mSinglePixel) {
     return false;
   }
 
+  gfxRect imageRect(0, 0, mImageSize.width, mImageSize.height);
   bool doTile = !imageRect.Contains(aRegion.Rect()) &&
                 !(aImageFlags & imgIContainer::FLAG_CLAMP);
   ImageRegion region(aRegion);
@@ -539,7 +558,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
   gfxContextMatrixAutoSaveRestore autoSR(aContext);
   SurfaceWithFormat surfaceResult =
     SurfaceForDrawing(doPadding, doPartialDecode, doTile, aContext,
-                      aPadding, imageRect, region, surf);
+                      padding, imageRect, region, surf);
 
   if (surfaceResult.IsValid()) {
     gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mDrawable,
@@ -651,6 +670,16 @@ uint32_t* imgFrame::GetPaletteData() const
   uint32_t length;
   GetPaletteData(&data, &length);
   return data;
+}
+
+uint8_t*
+imgFrame::GetRawData() const
+{
+  MOZ_ASSERT(mLockCount, "Should be locked to call GetRawData()");
+  if (mPalettedImageData) {
+    return mPalettedImageData;
+  }
+  return GetImageData();
 }
 
 nsresult imgFrame::LockImageData()
@@ -770,13 +799,6 @@ nsresult imgFrame::UnlockImageData()
 }
 
 void
-imgFrame::SetDiscardable()
-{
-  MOZ_ASSERT(mLockCount, "Expected to be locked when SetDiscardable is called");
-  mDiscardable = true;
-}
-
-void
 imgFrame::SetOptimizable()
 {
   MOZ_ASSERT(mLockCount, "Expected to be locked when SetOptimizable is called");
@@ -883,11 +905,9 @@ void imgFrame::SetCompositingFailed(bool val)
   mCompositingFailed = val;
 }
 
-// If |aLocation| indicates this is heap memory, we try to measure things with
-// |aMallocSizeOf|.  If that fails (because the platform doesn't support it) or
-// it's non-heap memory, we fall back to computing the size analytically.
 size_t
-imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocation, MallocSizeOf aMallocSizeOf) const
+imgFrame::SizeOfExcludingThis(gfxMemoryLocation aLocation,
+                              MallocSizeOf aMallocSizeOf) const
 {
   // aMallocSizeOf is only used if aLocation==gfxMemoryLocation::IN_PROCESS_HEAP.  It
   // should be nullptr otherwise.
@@ -899,13 +919,8 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocat
   size_t n = 0;
 
   if (mPalettedImageData && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
-    size_t n2 = aMallocSizeOf(mPalettedImageData);
-    if (n2 == 0) {
-      n2 = GetImageDataLength() + PaletteDataLength();
-    }
-    n += n2;
+    n += aMallocSizeOf(mPalettedImageData);
   }
-
   if (mImageSurface && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
     n += aMallocSizeOf(mImageSurface);
   }

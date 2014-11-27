@@ -3,28 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
 #include "WebGLExtensions.h"
-#include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "WebGLTexture.h"
-#include "WebGLRenderbuffer.h"
-#include "WebGLFramebuffer.h"
-#include "GLContext.h"
 
 #include <algorithm>
+#include "GLContext.h"
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "WebGLContext.h"
+#include "WebGLFramebuffer.h"
+#include "WebGLRenderbuffer.h"
+#include "WebGLTexture.h"
 
-using namespace mozilla;
-using namespace gl;
+namespace mozilla {
 
-WebGLExtensionDrawBuffers::WebGLExtensionDrawBuffers(WebGLContext* context)
-    : WebGLExtensionBase(context)
+WebGLExtensionDrawBuffers::WebGLExtensionDrawBuffers(WebGLContext* webgl)
+    : WebGLExtensionBase(webgl)
 {
+    MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
+
     GLint maxColorAttachments = 0;
     GLint maxDrawBuffers = 0;
 
-    gl::GLContext* gl = context->GL();
-
-    context->MakeContextCurrent();
+    webgl->MakeContextCurrent();
+    gl::GLContext* gl = webgl->GL();
 
     gl->fGetIntegerv(LOCAL_GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
     gl->fGetIntegerv(LOCAL_GL_MAX_DRAW_BUFFERS, &maxDrawBuffers);
@@ -32,56 +32,57 @@ WebGLExtensionDrawBuffers::WebGLExtensionDrawBuffers(WebGLContext* context)
     // WEBGL_draw_buffers specifications don't give a maximal value reachable by MAX_COLOR_ATTACHMENTS.
     maxColorAttachments = std::min(maxColorAttachments, GLint(WebGLContext::kMaxColorAttachments));
 
-    if (context->MinCapabilityMode())
-    {
-        maxColorAttachments = std::min(maxColorAttachments, GLint(sMinColorAttachments));
-    }
+    if (webgl->MinCapabilityMode())
+        maxColorAttachments = std::min(maxColorAttachments, GLint(kMinColorAttachments));
 
     // WEBGL_draw_buffers specifications request MAX_COLOR_ATTACHMENTS >= MAX_DRAW_BUFFERS.
     maxDrawBuffers = std::min(maxDrawBuffers, GLint(maxColorAttachments));
 
-    context->mGLMaxColorAttachments = maxColorAttachments;
-    context->mGLMaxDrawBuffers = maxDrawBuffers;
+    webgl->mGLMaxColorAttachments = maxColorAttachments;
+    webgl->mGLMaxDrawBuffers = maxDrawBuffers;
 }
 
 WebGLExtensionDrawBuffers::~WebGLExtensionDrawBuffers()
 {
 }
 
-void WebGLExtensionDrawBuffers::DrawBuffersWEBGL(const dom::Sequence<GLenum>& buffers)
+void
+WebGLExtensionDrawBuffers::DrawBuffersWEBGL(const dom::Sequence<GLenum>& buffers)
 {
-    if (mIsLost)
-        return mContext->ErrorInvalidOperation("drawBuffersWEBGL: Extension is lost.");
+    if (mIsLost) {
+        mContext->ErrorInvalidOperation("drawBuffersWEBGL: Extension is lost.");
+        return;
+    }
 
     mContext->DrawBuffers(buffers);
 }
 
-bool WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* context)
+bool
+WebGLExtensionDrawBuffers::IsSupported(const WebGLContext* webgl)
 {
-    gl::GLContext * gl = context->GL();
+    gl::GLContext* gl = webgl->GL();
 
-    if (!gl->IsSupported(GLFeature::draw_buffers)) {
+    if (!gl->IsSupported(gl::GLFeature::draw_buffers))
         return false;
-    }
 
     GLint supportedColorAttachments = 0;
     GLint supportedDrawBuffers = 0;
 
-    context->MakeContextCurrent();
+    webgl->MakeContextCurrent();
 
     gl->fGetIntegerv(LOCAL_GL_MAX_COLOR_ATTACHMENTS, &supportedColorAttachments);
     gl->fGetIntegerv(LOCAL_GL_MAX_COLOR_ATTACHMENTS, &supportedDrawBuffers);
 
-    if (size_t(supportedColorAttachments) < sMinColorAttachments){
-        // WEBGL_draw_buffers specifications request for 4 color attachments at least.
+    // WEBGL_draw_buffers requires at least 4 color attachments.
+    if (size_t(supportedColorAttachments) < kMinColorAttachments)
         return false;
-    }
 
-    if (size_t(supportedDrawBuffers) < sMinDrawBuffers){
+    if (size_t(supportedDrawBuffers) < kMinDrawBuffers)
         return false;
-    }
 
     return true;
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionDrawBuffers)
+
+} // namespace mozilla

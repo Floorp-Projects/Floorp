@@ -19,10 +19,10 @@ namespace dom {
 class AudioContext;
 class EventProxyHandler;
 
-class AudioDestinationNode : public AudioNode
-                           , public nsIDOMEventListener
-                           , public nsIAudioChannelAgentCallback
-                           , public MainThreadMediaStreamListener
+class AudioDestinationNode MOZ_FINAL : public AudioNode
+                                     , public nsIDOMEventListener
+                                     , public nsIAudioChannelAgentCallback
+                                     , public MainThreadMediaStreamListener
 {
 public:
   // This node type knows what MediaStreamGraph to use based on
