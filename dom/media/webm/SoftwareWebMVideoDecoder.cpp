@@ -13,16 +13,12 @@
 #include "OggReader.h"
 #include "VorbisUtils.h"
 #include "WebMBufferedParser.h"
-#include "WebMReader.h"
 
 #include <algorithm>
 
 #define VPX_DONT_DEFINE_STDINT_TYPES
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
-
-static const unsigned NS_PER_USEC = 1000;
-static const unsigned NS_PER_S = 1e9;
 
 namespace mozilla {
 
