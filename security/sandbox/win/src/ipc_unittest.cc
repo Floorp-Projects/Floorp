@@ -159,8 +159,8 @@ TEST(IPCTest, CrossCallStrPacking) {
 
   CrossCallReturn answer;
   uint32 tag1 = 666;
-  const wchar_t text[] = L"98765 - 43210";
-  std::wstring copied_text;
+  const wchar_t *text = L"98765 - 43210";
+  base::string16 copied_text;
   CrossCallParamsEx* actual_params;
 
   CrossCall(client, tag1, text, &answer);
@@ -204,9 +204,9 @@ TEST(IPCTest, CrossCallStrPacking) {
   EXPECT_STREQ(text, copied_text.c_str());
 
   param_size = 1;
-  std::wstring copied_text_p0, copied_text_p2;
+  base::string16 copied_text_p0, copied_text_p2;
 
-  const wchar_t text2[] = L"AeFG";
+  const wchar_t *text2 = L"AeFG";
   CrossCall(client, tag1, text2, null_text, text, &answer);
   actual_params = reinterpret_cast<CrossCallParamsEx*>(client.GetBuffer());
   EXPECT_EQ(3, actual_params->GetParamsCount());
@@ -235,7 +235,7 @@ TEST(IPCTest, CrossCallIntPacking) {
 
   uint32 tag1 = 999;
   uint32 tag2 = 111;
-  const wchar_t text[] = L"godzilla";
+  const wchar_t *text = L"godzilla";
   CrossCallParamsEx* actual_params;
 
   char* mem = reinterpret_cast<char*>(client_control);
@@ -315,8 +315,7 @@ TEST(IPCTest, CrossCallValidation) {
   EXPECT_EQ(1, ccp->GetParamsCount());
   delete[] (reinterpret_cast<char*>(ccp));
 
-#if defined(NDEBUG)
-  // Test hat we handle integer overflow on the number of params
+  // Test that we handle integer overflow on the number of params
   // correctly. We use a test-only ctor for ActualCallParams that
   // allows to create malformed cross-call buffers.
   const int32 kPtrDiffSz = sizeof(ptrdiff_t);
@@ -332,7 +331,6 @@ TEST(IPCTest, CrossCallValidation) {
     // If the buffer is malformed the return is NULL.
     EXPECT_TRUE(NULL == ccp);
   }
-#endif  // defined(NDEBUG)
 
   ActualCallParams<1, kBufferSize> params_3(kTag, 1);
   params_3.CopyParamIn(0, &value, sizeof(value), false, ULONG_TYPE);

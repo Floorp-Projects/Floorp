@@ -2138,12 +2138,16 @@ struct nsStyleDisplay {
            NS_STYLE_POSITION_STICKY == mPosition;
   }
 
+  static bool IsRubyDisplayType(uint8_t aDisplay) {
+    return NS_STYLE_DISPLAY_RUBY == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_BASE == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_TEXT == aDisplay ||
+           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == aDisplay;
+  }
+
   bool IsRubyDisplayType() const {
-    return NS_STYLE_DISPLAY_RUBY == mDisplay ||
-           NS_STYLE_DISPLAY_RUBY_BASE == mDisplay ||
-           NS_STYLE_DISPLAY_RUBY_BASE_CONTAINER == mDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT == mDisplay ||
-           NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER == mDisplay;
+    return IsRubyDisplayType(mDisplay);
   }
 
   bool IsFlexOrGridDisplayType() const {

@@ -370,6 +370,7 @@ else
     AC_CHECK_PROGS(LD, ld, :)
     AC_CHECK_PROGS(STRIP, strip, :)
     AC_CHECK_PROGS(WINDRES, windres, :)
+    AC_CHECK_PROGS(OTOOL, otool, :)
     if test -z "$HOST_CC"; then
         HOST_CC="$CC"
     fi
@@ -7173,12 +7174,12 @@ elif test -n "$MOZ_REPLACE_MALLOC"; then
                  dnl - classic info only (for OSX < 10.6)
                  dnl - dyld info only
                  dnl - both
-                 if otool -l conftest${DLL_SUFFIX} 2> /dev/null | grep "LC_DYLD_INFO_ONLY" > /dev/null; then
+                 if "$OTOOL" -l conftest${DLL_SUFFIX} 2> /dev/null | grep "LC_DYLD_INFO_ONLY" > /dev/null; then
                      _CLASSIC_INFO=
                  else
                      _CLASSIC_INFO=1
                  fi
-                 if otool -l conftest${DLL_SUFFIX} 2> /dev/null | grep "LC_DYLD_INFO" > /dev/null; then
+                 if "$OTOOL" -l conftest${DLL_SUFFIX} 2> /dev/null | grep "LC_DYLD_INFO" > /dev/null; then
                      _DYLD_INFO=1
                  else
                      _DYLD_INFO=

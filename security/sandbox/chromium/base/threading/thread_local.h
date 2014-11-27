@@ -26,6 +26,9 @@
 // you must of course properly deal with safety and race conditions.  This
 // means a function-level static initializer is generally inappropiate.
 //
+// In Android, the system TLS is limited, the implementation is backed with
+// ThreadLocalStorage.
+//
 // Example usage:
 //   // My class is logically attached to a single thread.  We cache a pointer
 //   // on the thread it was created on, so we can implement current().
@@ -50,27 +53,29 @@
 
 #include "base/base_export.h"
 #include "base/basictypes.h"
+#include "base/threading/thread_local_storage.h"
 
 #if defined(OS_POSIX)
 #include <pthread.h>
 #endif
 
 namespace base {
-
 namespace internal {
 
 // Helper functions that abstract the cross-platform APIs.  Do not use directly.
 struct BASE_EXPORT ThreadLocalPlatform {
 #if defined(OS_WIN)
   typedef unsigned long SlotType;
+#elif defined(OS_ANDROID)
+  typedef ThreadLocalStorage::StaticSlot SlotType;
 #elif defined(OS_POSIX)
   typedef pthread_key_t SlotType;
 #endif
 
-  static void AllocateSlot(SlotType& slot);
-  static void FreeSlot(SlotType& slot);
-  static void* GetValueFromSlot(SlotType& slot);
-  static void SetValueInSlot(SlotType& slot, void* value);
+  static void AllocateSlot(SlotType* slot);
+  static void FreeSlot(SlotType slot);
+  static void* GetValueFromSlot(SlotType slot);
+  static void SetValueInSlot(SlotType slot, void* value);
 };
 
 }  // namespace internal
@@ -79,7 +84,7 @@ template <typename Type>
 class ThreadLocalPointer {
  public:
   ThreadLocalPointer() : slot_() {
-    internal::ThreadLocalPlatform::AllocateSlot(slot_);
+    internal::ThreadLocalPlatform::AllocateSlot(&slot_);
   }
 
   ~ThreadLocalPointer() {
@@ -106,8 +111,8 @@ class ThreadLocalPointer {
 
 class ThreadLocalBoolean {
  public:
-  ThreadLocalBoolean() { }
-  ~ThreadLocalBoolean() { }
+  ThreadLocalBoolean() {}
+  ~ThreadLocalBoolean() {}
 
   bool Get() {
     return tlp_.Get() != NULL;

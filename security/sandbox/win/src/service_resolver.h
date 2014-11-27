@@ -16,7 +16,7 @@ class ServiceResolverThunk : public ResolverThunk {
  public:
   // The service resolver needs a child process to write to.
   ServiceResolverThunk(HANDLE process, bool relaxed)
-      : process_(process), ntdll_base_(NULL), win2k_(false),
+      : process_(process), ntdll_base_(NULL),
         relaxed_(relaxed), relative_jump_(0) {}
   virtual ~ServiceResolverThunk() {}
 
@@ -43,16 +43,24 @@ class ServiceResolverThunk : public ResolverThunk {
   // Implementation of Resolver::GetThunkSize.
   virtual size_t GetThunkSize() const;
 
+  // Call this to set up ntdll_base_ which will allow for local patches.
+  virtual void AllowLocalPatches();
+
+  // Verifies that the function specified by |target_name| in |target_module| is
+  // a service and copies the data from that function into |thunk_storage|. If
+  // |storage_bytes| is too small, then the method fails.
+  virtual NTSTATUS CopyThunk(const void* target_module,
+                             const char* target_name,
+                             BYTE* thunk_storage,
+                             size_t storage_bytes,
+                             size_t* storage_used);
+
  protected:
   // The unit test will use this member to allow local patch on a buffer.
   HMODULE ntdll_base_;
 
   // Handle of the child process.
   HANDLE process_;
-
- protected:
-  // Keeps track of a Windows 2000 resolver.
-  bool win2k_;
 
  private:
   // Returns true if the code pointer by target_ corresponds to the expected
@@ -108,23 +116,6 @@ class Wow64W8ResolverThunk : public ServiceResolverThunk {
   virtual bool IsFunctionAService(void* local_thunk) const;
 
   DISALLOW_COPY_AND_ASSIGN(Wow64W8ResolverThunk);
-};
-
-// This is the concrete resolver used to perform service-call type functions
-// inside ntdll.dll on Windows 2000 and XP pre SP2.
-class Win2kResolverThunk : public ServiceResolverThunk {
- public:
-  // The service resolver needs a child process to write to.
-  Win2kResolverThunk(HANDLE process, bool relaxed)
-      : ServiceResolverThunk(process, relaxed) {
-    win2k_ = true;
-  }
-  virtual ~Win2kResolverThunk() {}
-
- private:
-  virtual bool IsFunctionAService(void* local_thunk) const;
-
-  DISALLOW_COPY_AND_ASSIGN(Win2kResolverThunk);
 };
 
 // This is the concrete resolver used to perform service-call type functions

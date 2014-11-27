@@ -9,7 +9,7 @@
 
 // This file declares various analysis passes that operate on MIR.
 
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "jit/MIR.h"
 
 namespace js {
@@ -153,7 +153,7 @@ class LinearSum
     void dump() const;
 
   private:
-    Vector<LinearTerm, 2, IonAllocPolicy> terms_;
+    Vector<LinearTerm, 2, JitAllocPolicy> terms_;
     int32_t constant_;
 };
 

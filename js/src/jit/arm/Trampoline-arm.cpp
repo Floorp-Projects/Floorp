@@ -8,10 +8,10 @@
 
 #include "jit/arm/BaselineHelpers-arm.h"
 #include "jit/Bailouts.h"
-#include "jit/IonFrames.h"
-#include "jit/IonLinker.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
+#include "jit/Linker.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
@@ -264,7 +264,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.push(scratch);
         masm.push(Imm32(0)); // Fake return address.
         // No GC things to mark on the stack, push a bare token.
-        masm.enterFakeExitFrame(IonExitFrameLayout::BareToken());
+        masm.enterFakeExitFrame(ExitFrameLayout::BareToken());
 
         masm.push(framePtr); // BaselineFrame
         masm.push(r0); // jitcode
@@ -282,7 +282,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         MOZ_ASSERT(jitcode != ReturnReg);
 
         Label error;
-        masm.addPtr(Imm32(IonExitFrameLayout::SizeWithFooter()), sp);
+        masm.addPtr(Imm32(ExitFrameLayout::SizeWithFooter()), sp);
         masm.addPtr(Imm32(BaselineFrame::Size()), framePtr);
         masm.branchIfFalseBool(ReturnReg, &error);
 
@@ -303,7 +303,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     }
 
     // Call the function.
-    masm.ma_callIonNoPush(r0);
+    masm.ma_callJitNoPush(r0);
 
     if (type == EnterJitBaseline) {
         // Baseline OSR will return here.
@@ -316,7 +316,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     aasm->as_sub(sp, sp, Imm8(4));
 
     // Load off of the stack the size of our local stack.
-    masm.loadPtr(Address(sp, IonJSFrameLayout::offsetOfDescriptor()), r5);
+    masm.loadPtr(Address(sp, JitFrameLayout::offsetOfDescriptor()), r5);
     aasm->as_add(sp, sp, lsr(r5, FRAMESIZE_SHIFT));
 
     // Store the returned value into the slot_vp
@@ -426,10 +426,10 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     MOZ_ASSERT(ArgumentsRectifierReg == r8);
 
     // Copy number of actual arguments into r0.
-    masm.ma_ldr(DTRAddr(sp, DtrOffImm(IonRectifierFrameLayout::offsetOfNumActualArgs())), r0);
+    masm.ma_ldr(DTRAddr(sp, DtrOffImm(RectifierFrameLayout::offsetOfNumActualArgs())), r0);
 
     // Load the number of |undefined|s to push into r6.
-    masm.ma_ldr(DTRAddr(sp, DtrOffImm(IonRectifierFrameLayout::offsetOfCalleeToken())), r1);
+    masm.ma_ldr(DTRAddr(sp, DtrOffImm(RectifierFrameLayout::offsetOfCalleeToken())), r1);
     masm.ma_and(Imm32(CalleeTokenMask), r1, r6);
     masm.ma_ldrh(EDtrAddr(r6, EDtrOffImm(JSFunction::offsetOfNargs())), r6);
 
@@ -453,7 +453,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Get the topmost argument.
 
     masm.ma_alu(r3, lsl(r8, 3), r3, OpAdd); // r3 <- r3 + nargs * 8
-    masm.ma_add(r3, Imm32(sizeof(IonRectifierFrameLayout)), r3);
+    masm.ma_add(r3, Imm32(sizeof(RectifierFrameLayout)), r3);
 
     // Push arguments, |nargs| + 1 times (to include |this|).
     {
@@ -473,7 +473,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Construct sizeDescriptor.
     masm.makeFrameDescriptor(r6, JitFrame_Rectifier);
 
-    // Construct IonJSFrameLayout.
+    // Construct JitFrameLayout.
     masm.ma_push(r0); // actual arguments.
     masm.ma_push(r1); // callee token
     masm.ma_push(r6); // frame descriptor.
@@ -483,7 +483,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     masm.andPtr(Imm32(CalleeTokenMask), r1);
     masm.ma_ldr(DTRAddr(r1, DtrOffImm(JSFunction::offsetOfNativeOrScript())), r3);
     masm.loadBaselineOrIonRaw(r3, r3, mode, nullptr);
-    masm.ma_callIonHalfPush(r3);
+    masm.ma_callJitHalfPush(r3);
 
     uint32_t returnOffset = masm.currentOffset();
 
@@ -760,7 +760,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     if (f.explicitArgs) {
         argsBase = r5;
         regs.take(argsBase);
-        masm.ma_add(sp, Imm32(IonExitFrameLayout::SizeWithFooter()), argsBase);
+        masm.ma_add(sp, Imm32(ExitFrameLayout::SizeWithFooter()), argsBase);
     }
 
     // Reserve space for the outparameter.
@@ -885,7 +885,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         break;
     }
     masm.leaveExitFrame();
-    masm.retn(Imm32(sizeof(IonExitFrameLayout) +
+    masm.retn(Imm32(sizeof(ExitFrameLayout) +
                     f.explicitStackSlots() * sizeof(void *) +
                     f.extraValuesToPop * sizeof(Value)));
 

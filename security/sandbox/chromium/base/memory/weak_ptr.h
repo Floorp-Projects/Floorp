@@ -83,7 +83,7 @@ class BASE_EXPORT WeakReference {
  public:
   // Although Flag is bound to a specific thread, it may be deleted from another
   // via base::WeakPtr::~WeakPtr().
-  class Flag : public RefCountedThreadSafe<Flag> {
+  class BASE_EXPORT Flag : public RefCountedThreadSafe<Flag> {
    public:
     Flag();
 

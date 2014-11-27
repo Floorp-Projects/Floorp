@@ -1,4 +1,4 @@
-// Copyright (c) 2006-2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2013 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -29,20 +29,20 @@ namespace {
 // "c:\program files\test param" will first try to launch c:\program.exe then
 // c:\program files\test.exe. We don't do that, we stop after at the first
 // space when there is no quotes.
-std::wstring GetPathFromCmdLine(const std::wstring &cmd_line) {
-  std::wstring exe_name;
+base::string16 GetPathFromCmdLine(const base::string16 &cmd_line) {
+  base::string16 exe_name;
   // Check if it starts with '"'.
   if (cmd_line[0] == L'\"') {
     // Find the position of the second '"', this terminates the path.
-    std::wstring::size_type pos = cmd_line.find(L'\"', 1);
-    if (std::wstring::npos == pos)
+    base::string16::size_type pos = cmd_line.find(L'\"', 1);
+    if (base::string16::npos == pos)
       return cmd_line;
     exe_name = cmd_line.substr(1, pos - 1);
   } else {
     // There is no '"', that means that the appname is terminated at the
     // first space.
-    std::wstring::size_type pos = cmd_line.find(L' ');
-    if (std::wstring::npos == pos) {
+    base::string16::size_type pos = cmd_line.find(L' ');
+    if (base::string16::npos == pos) {
       // There is no space, the cmd_line contains only the app_name
       exe_name = cmd_line;
     } else {
@@ -55,7 +55,7 @@ std::wstring GetPathFromCmdLine(const std::wstring &cmd_line) {
 
 // Returns true is the path in parameter is relative. False if it's
 // absolute.
-bool IsPathRelative(const std::wstring &path) {
+bool IsPathRelative(const base::string16 &path) {
   // A path is Relative if it's not a UNC path beginnning with \\ or a
   // path beginning with a drive. (i.e. X:\)
   if (path.find(L"\\\\") == 0 || path.find(L":\\") == 1)
@@ -64,8 +64,8 @@ bool IsPathRelative(const std::wstring &path) {
 }
 
 // Converts a relative path to an absolute path.
-bool ConvertToAbsolutePath(const std::wstring& child_current_directory,
-                           bool use_env_path, std::wstring *path) {
+bool ConvertToAbsolutePath(const base::string16& child_current_directory,
+                           bool use_env_path, base::string16 *path) {
   wchar_t file_buffer[MAX_PATH];
   wchar_t *file_part = NULL;
 
@@ -145,7 +145,7 @@ bool ThreadProcessDispatcher::SetupService(InterceptionManager* manager,
       return false;
 
     case IPC_CREATEPROCESSW_TAG:
-      return INTERCEPT_EAT(manager, L"kernel32.dll", CreateProcessW,
+      return INTERCEPT_EAT(manager, kKerneldllName, CreateProcessW,
                            CREATE_PROCESSW_ID, 44) &&
              INTERCEPT_EAT(manager, L"kernel32.dll", CreateProcessA,
                            CREATE_PROCESSA_ID, 44);
@@ -201,15 +201,15 @@ bool ThreadProcessDispatcher::NtOpenProcessTokenEx(IPCInfo* ipc, HANDLE process,
   return true;
 }
 
-bool ThreadProcessDispatcher::CreateProcessW(IPCInfo* ipc, std::wstring* name,
-                                             std::wstring* cmd_line,
-                                             std::wstring* cur_dir,
+bool ThreadProcessDispatcher::CreateProcessW(IPCInfo* ipc, base::string16* name,
+                                             base::string16* cmd_line,
+                                             base::string16* cur_dir,
                                              CountedBuffer* info) {
   if (sizeof(PROCESS_INFORMATION) != info->Size())
     return false;
 
   // Check if there is an application name.
-  std::wstring exe_name;
+  base::string16 exe_name;
   if (!name->empty())
     exe_name = *name;
   else

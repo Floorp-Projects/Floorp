@@ -60,7 +60,7 @@ TEST(PolicyEngineTest, Rules1) {
   opcode_maker.MakeOpAction(FAKE_ACCESS_DENIED, kPolNone);
   policy->opcode_count = 7;
 
-  wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
+  const wchar_t* filename = L"c:\\Documents and Settings\\Microsoft\\BLAH.txt";
   unsigned long creation_mode = OPEN_EXISTING;
   unsigned long flags = FILE_ATTRIBUTE_NORMAL;
   void* security_descriptor = NULL;

@@ -217,8 +217,8 @@ NTSTATUS ProcessPolicy::OpenProcessTokenExAction(const ClientInfo& client_info,
 
 DWORD ProcessPolicy::CreateProcessWAction(EvalResult eval_result,
                                           const ClientInfo& client_info,
-                                          const std::wstring &app_name,
-                                          const std::wstring &command_line,
+                                          const base::string16 &app_name,
+                                          const base::string16 &command_line,
                                           PROCESS_INFORMATION* process_info) {
   // The only action supported is ASK_BROKER which means create the process.
   if (GIVE_ALLACCESS != eval_result && GIVE_READONLY != eval_result) {
@@ -227,7 +227,8 @@ DWORD ProcessPolicy::CreateProcessWAction(EvalResult eval_result,
 
   STARTUPINFO startup_info = {0};
   startup_info.cb = sizeof(startup_info);
-  scoped_ptr_malloc<wchar_t> cmd_line(_wcsdup(command_line.c_str()));
+  scoped_ptr<wchar_t, base::FreeDeleter>
+      cmd_line(_wcsdup(command_line.c_str()));
 
   BOOL should_give_full_access = (GIVE_ALLACCESS == eval_result);
   if (!CreateProcessExWHelper(client_info.process, should_give_full_access,

@@ -481,7 +481,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool emitAssertRangeI(const Range *r, Register input);
     bool emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp);
 
-    Vector<CodeOffsetLabel, 0, IonAllocPolicy> ionScriptLabels_;
+    Vector<CodeOffsetLabel, 0, JitAllocPolicy> ionScriptLabels_;
 #ifdef DEBUG
     bool branchIfInvalidated(Register temp, Label *invalidated);
 

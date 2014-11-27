@@ -27,7 +27,6 @@ class HandlePolicy {
 
   // Processes a 'TargetPolicy::DuplicateHandle()' request from the target.
   static DWORD DuplicateHandleProxyAction(EvalResult eval_result,
-                                          const ClientInfo& client_info,
                                           HANDLE source_handle,
                                           DWORD target_process_id,
                                           HANDLE* target_handle,

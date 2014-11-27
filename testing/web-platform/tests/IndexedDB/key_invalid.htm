@@ -17,6 +17,15 @@
         objStore  = null,
         objStore2 = null;
 
+    function is_cloneable(o) {
+        try {
+            self.postMessage(o, '*');
+            return true;
+        } catch (ex) {
+            return false;
+        }
+    }
+
     function invalid_key(desc, key) {
         var t = async_test(document.title + " - " + desc);
 
@@ -27,11 +36,12 @@
                 objStore.add("value", key);
             });
 
-            objStore2 = objStore2 || e.target.result.createObjectStore("store2", { keyPath: ["x", "keypath"] });
-            assert_throws('DataError', function() {
-                objStore2.add({ x: "value", keypath: key });
-            });
-
+            if (is_cloneable(key)) {
+                objStore2 = objStore2 || e.target.result.createObjectStore("store2", { keyPath: ["x", "keypath"] });
+                assert_throws('DataError', function() {
+                    objStore2.add({ x: "value", keypath: key });
+                });
+            }
             this.done();
         };
     }
