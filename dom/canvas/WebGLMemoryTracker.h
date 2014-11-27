@@ -3,19 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLMEMORYTRACKER_H_
-#define WEBGLMEMORYTRACKER_H_
+#ifndef WEBGL_MEMORY_TRACKER_H_
+#define WEBGL_MEMORY_TRACKER_H_
 
-#include "WebGLContext.h"
-#include "WebGLBuffer.h"
-#include "WebGLVertexAttribData.h"
-#include "WebGLShader.h"
-#include "WebGLProgram.h"
-#include "WebGLUniformLocation.h"
-#include "WebGLTexture.h"
-#include "WebGLRenderbuffer.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIMemoryReporter.h"
+#include "WebGLBuffer.h"
+#include "WebGLContext.h"
+#include "WebGLVertexAttribData.h"
+#include "WebGLProgram.h"
+#include "WebGLRenderbuffer.h"
+#include "WebGLShader.h"
+#include "WebGLTexture.h"
+#include "WebGLUniformLocation.h"
 
 namespace mozilla {
 
@@ -37,7 +37,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
 
     static WebGLMemoryTracker* UniqueInstance();
 
-    static ContextsArrayType & Contexts() { return UniqueInstance()->mContexts; }
+    static ContextsArrayType& Contexts() { return UniqueInstance()->mContexts; }
 
     friend class WebGLContext;
 
@@ -62,7 +62,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
-            for (const WebGLTexture *texture = contexts[i]->mTextures.getFirst();
+            for (const WebGLTexture* texture = contexts[i]->mTextures.getFirst();
                  texture;
                  texture = texture->getNext())
             {
@@ -76,7 +76,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
-            for (const WebGLTexture *texture = contexts[i]->mTextures.getFirst();
+            for (const WebGLTexture* texture = contexts[i]->mTextures.getFirst();
                  texture;
                  texture = texture->getNext())
             {
@@ -90,7 +90,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
-            for (const WebGLBuffer *buffer = contexts[i]->mBuffers.getFirst();
+            for (const WebGLBuffer* buffer = contexts[i]->mBuffers.getFirst();
                  buffer;
                  buffer = buffer->getNext())
             {
@@ -106,7 +106,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
-            for (const WebGLBuffer *buffer = contexts[i]->mBuffers.getFirst();
+            for (const WebGLBuffer* buffer = contexts[i]->mBuffers.getFirst();
                  buffer;
                  buffer = buffer->getNext())
             {
@@ -120,7 +120,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
-            for (const WebGLRenderbuffer *rb = contexts[i]->mRenderbuffers.getFirst();
+            for (const WebGLRenderbuffer* rb = contexts[i]->mRenderbuffers.getFirst();
                  rb;
                  rb = rb->getNext())
             {
@@ -134,7 +134,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
-            for (const WebGLRenderbuffer *rb = contexts[i]->mRenderbuffers.getFirst();
+            for (const WebGLRenderbuffer* rb = contexts[i]->mRenderbuffers.getFirst();
                  rb;
                  rb = rb->getNext())
             {
@@ -150,7 +150,7 @@ class WebGLMemoryTracker : public nsIMemoryReporter
         const ContextsArrayType & contexts = Contexts();
         int64_t result = 0;
         for(size_t i = 0; i < contexts.Length(); ++i) {
-            for (const WebGLShader *shader = contexts[i]->mShaders.getFirst();
+            for (const WebGLShader* shader = contexts[i]->mShaders.getFirst();
                  shader;
                  shader = shader->getNext())
             {
@@ -165,7 +165,6 @@ class WebGLMemoryTracker : public nsIMemoryReporter
     }
 };
 
-
 } // namespace mozilla
 
-#endif
+#endif // WEBGL_MEMORY_TRACKER_H_

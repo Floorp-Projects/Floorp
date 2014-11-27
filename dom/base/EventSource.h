@@ -36,12 +36,12 @@ namespace dom {
 class AsyncVerifyRedirectCallbackFwr;
 struct EventSourceInit;
 
-class EventSource : public DOMEventTargetHelper
-                  , public nsIObserver
-                  , public nsIStreamListener
-                  , public nsIChannelEventSink
-                  , public nsIInterfaceRequestor
-                  , public nsSupportsWeakReference
+class EventSource MOZ_FINAL : public DOMEventTargetHelper
+                            , public nsIObserver
+                            , public nsIStreamListener
+                            , public nsIChannelEventSink
+                            , public nsIInterfaceRequestor
+                            , public nsSupportsWeakReference
 {
 friend class AsyncVerifyRedirectCallbackFwr;
 

@@ -838,6 +838,8 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 track->includes_expensive_metadata = false;
                 track->skipTrack = false;
                 track->timescale = 0;
+                track->segment_duration = 0;
+                track->media_time = 0;
                 track->meta->setCString(kKeyMIMEType, "application/octet-stream");
             }
 
@@ -910,12 +912,10 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                 ALOGW("ignoring edit list because timescale is 0");
             } else {
                 off64_t entriesoffset = data_offset + 8;
-                uint64_t segment_duration;
-                int64_t media_time;
 
                 if (version == 1) {
-                    if (!mDataSource->getUInt64(entriesoffset, &segment_duration) ||
-                            !mDataSource->getUInt64(entriesoffset + 8, (uint64_t*)&media_time)) {
+                    if (!mDataSource->getUInt64(entriesoffset, &mLastTrack->segment_duration) ||
+                            !mDataSource->getUInt64(entriesoffset + 8, (uint64_t*)&mLastTrack->media_time)) {
                         return ERROR_IO;
                     }
                 } else if (version == 0) {
@@ -925,28 +925,14 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                             !mDataSource->getUInt32(entriesoffset + 4, (uint32_t*)&mt)) {
                         return ERROR_IO;
                     }
-                    segment_duration = sd;
-                    media_time = mt;
+                    mLastTrack->segment_duration = sd;
+                    mLastTrack->media_time = mt;
                 } else {
                     return ERROR_IO;
                 }
 
-                uint64_t halfscale = mHeaderTimescale / 2;
-                segment_duration = (segment_duration * 1000000 + halfscale)/ mHeaderTimescale;
-                media_time = (media_time * 1000000 + halfscale) / mHeaderTimescale;
+                storeEditList();
 
-                int64_t duration;
-                int32_t samplerate;
-                if (mLastTrack->meta->findInt64(kKeyDuration, &duration) &&
-                        mLastTrack->meta->findInt32(kKeySampleRate, &samplerate)) {
-
-                    int64_t delay = (media_time  * samplerate + 500000) / 1000000;
-                    mLastTrack->meta->setInt32(kKeyEncoderDelay, delay);
-
-                    int64_t paddingus = duration - (segment_duration + media_time);
-                    int64_t paddingsamples = (paddingus * samplerate + 500000) / 1000000;
-                    mLastTrack->meta->setInt32(kKeyEncoderPadding, paddingsamples);
-                }
             }
             *offset += chunk_size;
             break;
@@ -1114,6 +1100,10 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
 
             mLastTrack->timescale = ntohl(timescale);
+
+            // Now that we've parsed the media timescale, we can interpret
+            // the edit list data.
+            storeEditList();
 
             int64_t duration = 0;
             if (version == 1) {
@@ -1810,6 +1800,35 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
     }
 
     return OK;
+}
+
+void MPEG4Extractor::storeEditList()
+{
+  if (mHeaderTimescale == 0 ||
+      mLastTrack->timescale == 0) {
+    return;
+  }
+
+  uint64_t segment_duration = (mLastTrack->segment_duration * 1000000)/ mHeaderTimescale;
+  // media_time is measured in media time scale units.
+  int64_t media_time = (mLastTrack->media_time * 1000000) / mLastTrack->timescale;
+
+  if (segment_duration == 0) {
+    mLastTrack->meta->setInt64(kKeyMediaTime, media_time);
+  }
+
+  int64_t duration;
+  int32_t samplerate;
+  if (mLastTrack->meta->findInt64(kKeyDuration, &duration) &&
+      mLastTrack->meta->findInt32(kKeySampleRate, &samplerate)) {
+
+    int64_t delay = (media_time  * samplerate + 500000) / 1000000;
+    mLastTrack->meta->setInt32(kKeyEncoderDelay, delay);
+
+    int64_t paddingus = duration - (segment_duration + media_time);
+    int64_t paddingsamples = (paddingus * samplerate + 500000) / 1000000;
+    mLastTrack->meta->setInt32(kKeyEncoderPadding, paddingsamples);
+  }
 }
 
 status_t MPEG4Extractor::parseSegmentIndex(off64_t offset, size_t size) {

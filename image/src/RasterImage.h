@@ -29,6 +29,7 @@
 #include "DiscardTracker.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
@@ -170,22 +171,15 @@ public:
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const;
 
-  virtual size_t HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const;
-  virtual size_t HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const;
-  virtual size_t NonHeapSizeOfDecoded() const;
-  virtual size_t OutOfProcessSizeOfDecoded() const;
-
-  virtual size_t HeapSizeOfVectorImageDocument(nsACString* aDocURL = nullptr) const MOZ_OVERRIDE {
-    return 0;
-  }
+  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
+                               MallocSizeOf aMallocSizeOf) const;
 
   /* Triggers discarding. */
-  void Discard(bool force = false);
-  void ForceDiscard() { Discard(/* force = */ true); }
+  void Discard(bool aForce = false, bool aNotify = true);
+  void ForceDiscard() { Discard(/* aForce = */ true); }
 
   /* Callbacks for decoders */
-  nsresult SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult);
-
   /** Sets the size and inherent orientation of the container. This should only
    * be called by the decoder. This function may be called multiple times, but
    * will throw an error if subsequent calls do not match the first.
@@ -194,33 +188,21 @@ public:
 
   /**
    * Ensures that a given frame number exists with the given parameters, and
-   * returns pointers to the data storage for that frame.
+   * returns a RawAccessFrameRef for that frame.
    * It is not possible to create sparse frame arrays; you can only append
-   * frames to the current frame array.
+   * frames to the current frame array, or if there is only one frame in the
+   * array, replace that frame.
+   * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
    */
-  nsresult EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
-                       int32_t aWidth, int32_t aHeight,
-                       gfx::SurfaceFormat aFormat,
-                       uint8_t aPaletteDepth,
-                       uint8_t** imageData,
-                       uint32_t* imageLength,
-                       uint32_t** paletteData,
-                       uint32_t* paletteLength,
-                       imgFrame** aFrame);
-
-  /**
-   * A shorthand for EnsureFrame, above, with aPaletteDepth = 0 and paletteData
-   * and paletteLength set to null.
-   */
-  nsresult EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
-                       int32_t aWidth, int32_t aHeight,
-                       gfx::SurfaceFormat aFormat,
-                       uint8_t** imageData,
-                       uint32_t* imageLength,
-                       imgFrame** aFrame);
+  RawAccessFrameRef EnsureFrame(uint32_t aFrameNum,
+                                const nsIntRect& aFrameRect,
+                                uint32_t aDecodeFlags,
+                                gfx::SurfaceFormat aFormat,
+                                uint8_t aPaletteDepth,
+                                imgFrame* aPreviousFrame);
 
   /* notification that the entire image has been decoded */
-  nsresult DecodingComplete();
+  void DecodingComplete(imgFrame* aFinalFrame);
 
   /**
    * Number of times to loop the image.
@@ -314,8 +296,13 @@ private:
                                                     uint32_t aFlags,
                                                     bool aShouldSyncNotify = true);
 
-  already_AddRefed<imgFrame> LookupFrameNoDecode(uint32_t aFrameNum);
-  DrawableFrameRef LookupFrame(uint32_t aFrameNum, uint32_t aFlags, bool aShouldSyncNotify = true);
+  DrawableFrameRef LookupFrameInternal(uint32_t aFrameNum,
+                                       const nsIntSize& aSize,
+                                       uint32_t aFlags);
+  DrawableFrameRef LookupFrame(uint32_t aFrameNum,
+                               const nsIntSize& aSize,
+                               uint32_t aFlags,
+                               bool aShouldSyncNotify = true);
   uint32_t GetCurrentFrameIndex() const;
   uint32_t GetRequestedFrameIndex(uint32_t aWhichFrame) const;
 
@@ -324,18 +311,12 @@ private:
   size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
                                                  MallocSizeOf aMallocSizeOf) const;
 
-  void EnsureAnimExists();
-
-  nsresult InternalAddFrameHelper(uint32_t framenum, imgFrame *frame,
-                                  uint8_t **imageData, uint32_t *imageLength,
-                                  uint32_t **paletteData, uint32_t *paletteLength,
-                                  imgFrame** aRetFrame);
-  nsresult InternalAddFrame(uint32_t framenum, int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
-                            gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth,
-                            uint8_t **imageData, uint32_t *imageLength,
-                            uint32_t **paletteData, uint32_t *paletteLength,
-                            imgFrame** aRetFrame);
-
+  RawAccessFrameRef InternalAddFrame(uint32_t aFrameNum,
+                                     const nsIntRect& aFrameRect,
+                                     uint32_t aDecodeFlags,
+                                     gfx::SurfaceFormat aFormat,
+                                     uint8_t aPaletteDepth,
+                                     imgFrame* aPreviousFrame);
   nsresult DoImageDataComplete();
 
   bool ApplyDecodeFlags(uint32_t aNewFlags);
@@ -370,11 +351,11 @@ private: // data
   // and imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION.
   uint32_t                   mFrameDecodeFlags;
 
-  //! All the frames of the image
-  FrameBlender              mFrameBlender;
+  //! All the frames of the image.
+  Maybe<FrameBlender>       mFrameBlender;
 
-  // The last frame we decoded for multipart images.
-  nsRefPtr<imgFrame>        mMultipartDecodedFrame;
+  //! The last frame we decoded for multipart images.
+  DrawableFrameRef          mMultipartDecodedFrame;
 
   nsCOMPtr<nsIProperties>   mProperties;
 
@@ -439,8 +420,13 @@ private: // data
 
   // Do we have the frames in decoded form?
   bool                       mDecoded:1;
+  bool                       mHasFirstFrame:1;
   bool                       mHasBeenDecoded:1;
 
+  // Whether we're waiting to start animation. If we get a StartAnimation() call
+  // but we don't yet have more than one frame, mPendingAnimation is set so that
+  // we know to start animation later if/when we have more frames.
+  bool                       mPendingAnimation:1;
 
   // Whether the animation can stop, due to running out
   // of frames, or no more owning request

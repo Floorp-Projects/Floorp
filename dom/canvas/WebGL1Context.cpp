@@ -25,9 +25,6 @@ WebGL1Context::~WebGL1Context()
 {
 }
 
-////////////////////////////////////////
-// nsWrapperCache
-
 JSObject*
 WebGL1Context::WrapObject(JSContext* cx)
 {
@@ -35,9 +32,6 @@ WebGL1Context::WrapObject(JSContext* cx)
 }
 
 } // namespace mozilla
-
-////////////////////////////////////////
-// nsIDOMWebGLRenderingContext
 
 nsresult
 NS_NewCanvasRenderingContextWebGL(nsIDOMWebGLRenderingContext** out_result)
