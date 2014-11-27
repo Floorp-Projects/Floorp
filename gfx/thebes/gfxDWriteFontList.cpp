@@ -726,7 +726,7 @@ gfxDWriteFontList::GetDefaultFont(const gfxFontStyle *aStyle)
 
     // try Arial first
     gfxFontFamily *ff;
-    if (ff = FindFamily(NS_LITERAL_STRING("Arial"))) {
+    if ((ff = FindFamily(NS_LITERAL_STRING("Arial")))) {
         return ff;
     }
 
