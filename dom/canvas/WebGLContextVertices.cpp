@@ -437,7 +437,7 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
      return ErrorInvalidOperation("vertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
      */
 
-    WebGLVertexAttribData &vd = mBoundVertexArray->mAttribs[index];
+    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
 
     vd.buf = mBoundArrayBuffer;
     vd.stride = stride;

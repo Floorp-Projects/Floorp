@@ -44,7 +44,8 @@ public:
    * when drawing content into an imgFrame, as it may use a different graphics
    * backend than normal content drawing.
    */
-  nsresult InitForDecoder(const nsIntRect& aRect,
+  nsresult InitForDecoder(const nsIntSize& aImageSize,
+                          const nsIntRect& aRect,
                           SurfaceFormat aFormat,
                           uint8_t aPaletteDepth = 0);
 
@@ -52,7 +53,7 @@ public:
                           SurfaceFormat aFormat,
                           uint8_t aPaletteDepth = 0)
   {
-    return InitForDecoder(nsIntRect(0, 0, aSize.width, aSize.height),
+    return InitForDecoder(aSize, nsIntRect(0, 0, aSize.width, aSize.height),
                           aFormat, aPaletteDepth);
   }
 
@@ -64,9 +65,8 @@ public:
    * This is appropriate to use when drawing content into an imgFrame, as it
    * uses the same graphics backend as normal content drawing. The downside is
    * that the underlying surface may not be stored in a volatile buffer on all
-   * platforms, and raw access to the surface (using RawAccessRef() or
-   * LockImageData()) may be much more expensive than in the InitForDecoder()
-   * case.
+   * platforms, and raw access to the surface (using RawAccessRef()) may be much
+   * more expensive than in the InitForDecoder() case.
    */
   nsresult InitWithDrawable(gfxDrawable* aDrawable,
                             const nsIntSize& aSize,
@@ -78,11 +78,11 @@ public:
   RawAccessFrameRef RawAccessRef();
 
   bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
-            const nsIntMargin& aPadding, GraphicsFilter aFilter,
-            uint32_t aImageFlags);
+            GraphicsFilter aFilter, uint32_t aImageFlags);
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
 
+  IntSize GetImageSize() { return mImageSize; }
   nsIntRect GetRect() const;
   IntSize GetSize() const { return mSize; }
   bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
@@ -96,6 +96,7 @@ public:
   uint8_t* GetImageData() const;
   void GetPaletteData(uint32_t **aPalette, uint32_t *length) const;
   uint32_t* GetPaletteData() const;
+  uint8_t* GetRawData() const;
 
   int32_t GetRawTimeout() const;
   void SetRawTimeout(int32_t aTimeout);
@@ -112,10 +113,6 @@ public:
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
-  nsresult LockImageData();
-  nsresult UnlockImageData();
-
-  void SetDiscardable();
   void SetOptimizable();
 
   TemporaryRef<SourceSurface> GetSurface();
@@ -134,9 +131,8 @@ public:
 
   TemporaryRef<SourceSurface> CachedSurface();
 
-  size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
-           gfxMemoryLocation aLocation,
-           MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfExcludingThis(gfxMemoryLocation aLocation,
+                             MallocSizeOf aMallocSizeOf) const;
 
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
   uint32_t PaletteDataLength() const {
@@ -150,6 +146,8 @@ private: // methods
 
   ~imgFrame();
 
+  nsresult LockImageData();
+  nsresult UnlockImageData();
   nsresult Optimize();
 
   struct SurfaceWithFormat {
@@ -174,6 +172,7 @@ private: // data
   RefPtr<DataSourceSurface> mImageSurface;
   RefPtr<SourceSurface> mOptSurface;
 
+  IntSize      mImageSize;
   IntSize      mSize;
   nsIntPoint   mOffset;
 
@@ -206,7 +205,6 @@ private: // data
   bool mCompositingFailed;
   bool mHasNoAlpha;
   bool mNonPremult;
-  bool mDiscardable;
   bool mOptimizable;
 
   /** Have we called DiscardTracker::InformAllocation()? */

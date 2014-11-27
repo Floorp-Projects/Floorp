@@ -60,36 +60,37 @@ class WebGLContext;
  ***** 2. OpenGL deletion statuses *****
  *
  * In OpenGL, an object can go through 3 different deletion statuses during its
- * lifetime, which correspond to the 3 enum values for DeletionStatus in this class:
- *  - the Default status, which it has from its creation to when the
- *    suitable glDeleteXxx function is called on it;
- *  - the DeleteRequested status, which is has from when the suitable glDeleteXxx
- *    function is called on it to when it is no longer referenced by other OpenGL
- *    objects. For example, a texture that is attached to a non-current FBO
- *    will enter that status when glDeleteTexture is called on it. For objects
- *    with that status, GL_DELETE_STATUS queries return true, but glIsXxx
- *    functions still return true.
- *  - the Deleted status, which is the status of objects on which the
- *    suitable glDeleteXxx function has been called, and that are not referenced
- *    by other OpenGL objects.
+ * lifetime, which correspond to the 3 enum values for DeletionStatus in this
+ * class:
+ *  - the Default status, which it has from its creation to when the suitable
+ *    glDeleteXxx function is called on it;
+ *  - the DeleteRequested status, which is has from when the suitable
+ *    glDeleteXxx function is called on it to when it is no longer referenced by
+ *    other OpenGL objects. For example, a texture that is attached to a
+ *    non-current FBO will enter that status when glDeleteTexture is called on
+ *    it. For objects with that status, GL_DELETE_STATUS queries return true,
+ *    but glIsXxx functions still return true.
+ *  - the Deleted status, which is the status of objects on which the suitable
+ *    glDeleteXxx function has been called, and that are not referenced by other
+ *    OpenGL objects.
  *
  * This state is stored in the mDeletionStatus member of this class.
  *
  * When the GL refcount hits zero, if the status is DeleteRequested then we call
- * the Delete() method on the derived class and the status becomes Deleted. This is
- * what the MaybeDelete() function does.
+ * the Delete() method on the derived class and the status becomes Deleted. This
+ * is what the MaybeDelete() function does.
  *
- * The DeleteOnce() function implemented here is a helper to ensure that we don't
- * call Delete() twice on the same object. Since the derived class' destructor
- * needs to call DeleteOnce() which calls Delete(), we can't allow either to be
- * virtual. Strictly speaking, we could let them be virtual if the derived class
- * were final, but that would be impossible to enforce and would lead to strange
- * bugs if it were subclassed.
+ * The DeleteOnce() function implemented here is a helper to ensure that we
+ * don't call Delete() twice on the same object. Since the derived class's
+ * destructor needs to call DeleteOnce() which calls Delete(), we can't allow
+ * either to be virtual. Strictly speaking, we could let them be virtual if the
+ * derived class were final, but that would be impossible to enforce and would
+ * lead to strange bugs if it were subclassed.
  *
- * This WebGLRefCountedObject class takes the Derived type
- * as template parameter, as a means to allow DeleteOnce to call Delete()
- * on the Derived class, without either method being virtual. This is a common
- * C++ pattern known as the "curiously recursive template pattern (CRTP)".
+ * This WebGLRefCountedObject class takes the Derived type as template
+ * parameter, as a means to allow DeleteOnce to call Delete() on the Derived
+ * class, without either method being virtual. This is a common C++ pattern
+ * known as the "curiously recursive template pattern (CRTP)".
  */
 template<typename Derived>
 class WebGLRefCountedObject
@@ -99,11 +100,14 @@ public:
 
     WebGLRefCountedObject()
       : mDeletionStatus(Default)
-    { }
+    {}
 
     ~WebGLRefCountedObject() {
-        MOZ_ASSERT(mWebGLRefCnt == 0, "destroying WebGL object still referenced by other WebGL objects");
-        MOZ_ASSERT(mDeletionStatus == Deleted, "Derived class destructor must call DeleteOnce()");
+        MOZ_ASSERT(mWebGLRefCnt == 0,
+                   "Destroying WebGL object still referenced by other WebGL"
+                   " objects.");
+        MOZ_ASSERT(mDeletionStatus == Deleted,
+                   "Derived class destructor must call DeleteOnce().");
     }
 
     // called by WebGLRefPtr
@@ -113,7 +117,8 @@ public:
 
     // called by WebGLRefPtr
     void WebGLRelease() {
-        MOZ_ASSERT(mWebGLRefCnt > 0, "releasing WebGL object with WebGL refcnt already zero");
+        MOZ_ASSERT(mWebGLRefCnt > 0,
+                   "Releasing WebGL object with WebGL refcnt already zero");
         --mWebGLRefCnt;
         MaybeDelete();
     }
@@ -154,12 +159,12 @@ protected:
     DeletionStatus mDeletionStatus;
 };
 
-/* This WebGLRefPtr class is meant to be used for references between WebGL objects.
- * For example, a WebGLProgram holds WebGLRefPtr's to the WebGLShader's attached
- * to it.
+/* This WebGLRefPtr class is meant to be used for references between WebGL
+ * objects. For example, a WebGLProgram holds WebGLRefPtr's to the WebGLShader's
+ * attached to it.
  *
- * Why the need for a separate refptr class? The only special thing that WebGLRefPtr
- * does is that it increments and decrements the WebGL refcount of
+ * Why the need for a separate refptr class? The only special thing that
+ * WebGLRefPtr does is that it increments and decrements the WebGL refcount of
  * WebGLRefCountedObject's, in addition to incrementing and decrementing the
  * usual XPCOM refcount.
  *
@@ -174,16 +179,16 @@ class WebGLRefPtr
 public:
     WebGLRefPtr()
         : mRawPtr(0)
-    { }
+    {}
 
-    WebGLRefPtr(const WebGLRefPtr<T>& aSmartPtr)
-        : mRawPtr(aSmartPtr.mRawPtr)
+    WebGLRefPtr(const WebGLRefPtr<T>& smartPtr)
+        : mRawPtr(smartPtr.mRawPtr)
     {
         AddRefOnPtr(mRawPtr);
     }
 
-    explicit WebGLRefPtr(T* aRawPtr)
-        : mRawPtr(aRawPtr)
+    explicit WebGLRefPtr(T* rawPtr)
+        : mRawPtr(rawPtr)
     {
         AddRefOnPtr(mRawPtr);
     }
@@ -252,7 +257,7 @@ private:
     }
 
 protected:
-    T *mRawPtr;
+    T* mRawPtr;
 };
 
 // This class is a mixin for objects that are tied to a specific
@@ -261,15 +266,15 @@ protected:
 class WebGLContextBoundObject
 {
 public:
-    explicit WebGLContextBoundObject(WebGLContext* context);
+    explicit WebGLContextBoundObject(WebGLContext* webgl);
 
-    bool IsCompatibleWithContext(WebGLContext *other);
+    bool IsCompatibleWithContext(WebGLContext* other);
 
-    WebGLContext *Context() const { return mContext; }
+    WebGLContext* Context() const { return mContext; }
 
 protected:
-    WebGLContext *mContext;
-    uint32_t mContextGeneration;
+    WebGLContext* const mContext;
+    const uint32_t mContextGeneration;
 };
 
 // this class is a mixin for GL objects that have dimensions
@@ -278,10 +283,14 @@ class WebGLRectangleObject
 {
 public:
     WebGLRectangleObject()
-        : mWidth(0), mHeight(0) { }
+        : mWidth(0)
+        , mHeight(0)
+    {}
 
     WebGLRectangleObject(GLsizei width, GLsizei height)
-        : mWidth(width), mHeight(height) { }
+        : mWidth(width)
+        , mHeight(height)
+    {}
 
     GLsizei Width() const { return mWidth; }
     void width(GLsizei value) { mWidth = value; }
@@ -294,7 +303,7 @@ public:
         mHeight = height;
     }
 
-    void setDimensions(WebGLRectangleObject *rect) {
+    void setDimensions(WebGLRectangleObject* rect) {
         if (rect) {
             mWidth = rect->Width();
             mHeight = rect->Height();
@@ -317,19 +326,19 @@ protected:
 
 template <typename T>
 inline void
-ImplCycleCollectionUnlink(mozilla::WebGLRefPtr<T>& aField)
+ImplCycleCollectionUnlink(mozilla::WebGLRefPtr<T>& field)
 {
-  aField = nullptr;
+    field = nullptr;
 }
 
 template <typename T>
 inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            mozilla::WebGLRefPtr<T>& aField,
-                            const char* aName,
-                            uint32_t aFlags = 0)
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
+                            mozilla::WebGLRefPtr<T>& field,
+                            const char* name,
+                            uint32_t flags = 0)
 {
-  CycleCollectionNoteChild(aCallback, aField.get(), aName, aFlags);
+    CycleCollectionNoteChild(callback, field.get(), name, flags);
 }
 
 #endif

@@ -337,7 +337,7 @@ VectorImage::VectorImage(ProgressTracker* aProgressTracker,
 VectorImage::~VectorImage()
 {
   CancelAllListeners();
-  SurfaceCache::Discard(this);
+  SurfaceCache::RemoveImage(ImageKey(this));
 }
 
 //------------------------------------------------------------------------------
@@ -366,64 +366,33 @@ VectorImage::FrameRect(uint32_t aWhichFrame)
 }
 
 size_t
-VectorImage::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
-{
-  // We're not storing the source data -- we just feed that directly to
-  // our helper SVG document as we receive it, for it to parse.
-  // So 0 is an appropriate return value here.
-  // If implementing this, we'll need to restructure our callers to make sure
-  // any amount we return is attributed to the vector images measure (i.e.
-  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
-  return 0;
-}
-
-size_t
-VectorImage::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
-{
-  // If implementing this, we'll need to restructure our callers to make sure
-  // any amount we return is attributed to the vector images measure (i.e.
-  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
-  return 0;
-}
-
-size_t
-VectorImage::NonHeapSizeOfDecoded() const
-{
-  // If implementing this, we'll need to restructure our callers to make sure
-  // any amount we return is attributed to the vector images measure (i.e.
-  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
-  return 0;
-}
-
-size_t
-VectorImage::OutOfProcessSizeOfDecoded() const
-{
-  // If implementing this, we'll need to restructure our callers to make sure
-  // any amount we return is attributed to the vector images measure (i.e.
-  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
-  return 0;
-}
-
-MOZ_DEFINE_MALLOC_SIZE_OF(WindowsMallocSizeOf);
-
-size_t
-VectorImage::HeapSizeOfVectorImageDocument(nsACString* aDocURL) const
+VectorImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   nsIDocument* doc = mSVGDocumentWrapper->GetDocument();
   if (!doc) {
-    if (aDocURL) {
-      mURI->GetSpec(*aDocURL);
-    }
-    return 0; // No document, so no memory used for the document
+    return 0; // No document, so no memory used for the document.
   }
 
-  if (aDocURL) {
-    doc->GetDocumentURI()->GetSpec(*aDocURL);
-  }
-
-  nsWindowSizes windowSizes(WindowsMallocSizeOf);
+  nsWindowSizes windowSizes(aMallocSizeOf);
   doc->DocAddSizeOfIncludingThis(&windowSizes);
+
+  if (windowSizes.getTotalSize() == 0) {
+    // MallocSizeOf fails on this platform. Because we also use this method for
+    // determining the size of cache entries, we need to return something
+    // reasonable here. Unfortunately, there's no way to estimate the document's
+    // size accurately, so we just use a constant value of 100KB, which will
+    // generally underestimate the true size.
+    return 100 * 1024;
+  }
+
   return windowSizes.getTotalSize();
+}
+
+size_t
+VectorImage::SizeOfDecoded(gfxMemoryLocation aLocation,
+                           MallocSizeOf aMallocSizeOf) const
+{
+  return SurfaceCache::SizeOfSurfaces(ImageKey(this), aLocation, aMallocSizeOf);
 }
 
 nsresult
@@ -565,7 +534,7 @@ VectorImage::SendInvalidationNotifications()
   // notifications directly in |InvalidateObservers...|.
 
   if (mProgressTracker) {
-    SurfaceCache::Discard(this);
+    SurfaceCache::RemoveImage(ImageKey(this));
     mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
                                          nsIntRect::GetMaxSizedIntRect());
   }
@@ -903,7 +872,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   SurfaceCache::Insert(frame, ImageKey(this),
                        VectorSurfaceKey(aParams.size,
                                         aParams.svgContext,
-                                        aParams.animationTime));
+                                        aParams.animationTime),
+                       Lifetime::Transient);
 
   // Draw.
   nsRefPtr<gfxDrawable> drawable =
@@ -971,7 +941,7 @@ VectorImage::UnlockImage()
 NS_IMETHODIMP
 VectorImage::RequestDiscard()
 {
-  SurfaceCache::Discard(this);
+  SurfaceCache::RemoveImage(ImageKey(this));
   return NS_OK;
 }
 

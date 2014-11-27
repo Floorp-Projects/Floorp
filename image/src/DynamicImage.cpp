@@ -43,41 +43,17 @@ DynamicImage::FrameRect(uint32_t aWhichFrame)
   return nsIntRect(0, 0, size.width, size.height);
 }
 
-uint32_t
-DynamicImage::SizeOfData()
-{
-  // We don't know the answer to this (and the same goes for the other
-  // memory-related methods) since gfxDrawable doesn't expose a way to check.
-  return 0;
-}
-
 size_t
-DynamicImage::HeapSizeOfSourceWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
+DynamicImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   return 0;
 }
 
 size_t
-DynamicImage::HeapSizeOfDecodedWithComputedFallback(mozilla::MallocSizeOf aMallocSizeOf) const
+DynamicImage::SizeOfDecoded(gfxMemoryLocation aLocation,
+                            MallocSizeOf aMallocSizeOf) const
 {
-  return 0;
-}
-
-size_t
-DynamicImage::NonHeapSizeOfDecoded() const
-{
-  return 0;
-}
-
-size_t
-DynamicImage::OutOfProcessSizeOfDecoded() const
-{
-  return 0;
-}
-
-size_t
-DynamicImage::HeapSizeOfVectorImageDocument(nsACString* aDocURL) const
-{
+  // We don't know the answer since gfxDrawable doesn't expose this information.
   return 0;
 }
 

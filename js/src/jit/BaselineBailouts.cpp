@@ -1019,21 +1019,45 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
         } else {
             // If needed, initialize BaselineBailoutInfo's valueR0 and/or valueR1 with the
             // top stack values.
+            //
+            // Note that we use the 'maybe' variant of nativeCodeForPC because
+            // of exception propagation for debug mode. See note below.
             PCMappingSlotInfo slotInfo;
-            uint8_t *nativeCodeForPC = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
-            unsigned numUnsynced = slotInfo.numUnsynced();
+            uint8_t *nativeCodeForPC = baselineScript->maybeNativeCodeForPC(script, pc, &slotInfo);
+            unsigned numUnsynced;
+
+            if (excInfo && excInfo->propagatingIonExceptionForDebugMode()) {
+                // When propagating an exception for debug mode, set the
+                // return address as the return-from-IC for the throw, so that
+                // Debugger hooks report the correct pc offset of the throwing
+                // op instead of its successor.
+                //
+                // Note that we never resume into this address, it is set for
+                // the sake of frame iterators giving the correct answer.
+                ICEntry &icEntry = baselineScript->anyKindICEntryFromPCOffset(iter.pcOffset());
+                nativeCodeForPC = baselineScript->returnAddressForIC(icEntry);
+
+                // The pc after the throwing PC could be unreachable, in which
+                // case we have no native code for it and no slot info. But in
+                // that case, there are definitely no unsynced slots.
+                numUnsynced = nativeCodeForPC ? slotInfo.numUnsynced() : 0;
+            } else {
+                MOZ_ASSERT(nativeCodeForPC);
+                numUnsynced = slotInfo.numUnsynced();
+            }
+
             MOZ_ASSERT(numUnsynced <= 2);
             PCMappingSlotInfo::SlotLocation loc1, loc2;
             if (numUnsynced > 0) {
                 loc1 = slotInfo.topSlotLocation();
                 JitSpew(JitSpew_BaselineBailouts, "      Popping top stack value into %d.",
-                            (int) loc1);
+                        (int) loc1);
                 builder.popValueInto(loc1);
             }
             if (numUnsynced > 1) {
                 loc2 = slotInfo.nextSlotLocation();
                 JitSpew(JitSpew_BaselineBailouts, "      Popping next stack value into %d.",
-                            (int) loc2);
+                        (int) loc2);
                 MOZ_ASSERT_IF(loc1 != PCMappingSlotInfo::SlotIgnore, loc1 != loc2);
                 builder.popValueInto(loc2);
             }
@@ -1043,7 +1067,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             frameSize -= sizeof(Value) * numUnsynced;
             blFrame->setFrameSize(frameSize);
             JitSpew(JitSpew_BaselineBailouts, "      Adjusted framesize -= %d: %d",
-                            int(sizeof(Value) * numUnsynced), int(frameSize));
+                    int(sizeof(Value) * numUnsynced), int(frameSize));
 
             // If scopeChain is nullptr, then bailout is occurring during argument check.
             // In this case, resume into the prologue.

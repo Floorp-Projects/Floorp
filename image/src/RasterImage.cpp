@@ -205,7 +205,8 @@ public:
     // Insert the new surface into the cache immediately. We need to do this so
     // that we won't start multiple scaling jobs for the same size.
     SurfaceCache::Insert(mDstRef.get(), ImageKey(mImage.get()),
-                         RasterSurfaceKey(mDstSize.ToIntSize(), mImageFlags));
+                         RasterSurfaceKey(mDstSize.ToIntSize(), mImageFlags),
+                         Lifetime::Transient);
 
     return true;
   }
@@ -232,9 +233,6 @@ public:
         mDstRef->ImageUpdated(mDstRef->GetRect());
         MOZ_ASSERT(mDstRef->ImageComplete(),
                    "Incomplete, but just updated the entire frame");
-        if (DiscardingEnabled()) {
-          mDstRef->SetDiscardable();
-        }
       }
 
       // We need to send notifications and release our references on the main
@@ -259,9 +257,9 @@ public:
       NS_WARNING("HQ scaling failed");
 
       // Remove the frame from the cache since we know we don't need it.
-      SurfaceCache::RemoveIfPresent(ImageKey(mImage.get()),
-                                    RasterSurfaceKey(mDstSize.ToIntSize(),
-                                                     mImageFlags));
+      SurfaceCache::RemoveSurface(ImageKey(mImage.get()),
+                                  RasterSurfaceKey(mDstSize.ToIntSize(),
+                                                   mImageFlags));
 
       // Release everything we're holding, too.
       mSrcRef.reset();
@@ -321,7 +319,9 @@ RasterImage::RasterImage(ProgressTracker* aProgressTracker,
   mDiscardable(false),
   mHasSourceData(false),
   mDecoded(false),
+  mHasFirstFrame(false),
   mHasBeenDecoded(false),
+  mPendingAnimation(false),
   mAnimationFinished(false),
   mWantFullDecode(false),
   mPendingError(false)
@@ -361,19 +361,10 @@ RasterImage::~RasterImage()
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
     DecodePool::StopDecoding(this);
     mDecoder = nullptr;
-
-    // Unlock the last frame (if we have any). Our invariant is that, while we
-    // have a decoder open, the last frame is always locked.
-    // This would be done in ShutdownDecoder, but since mDecoder is non-null,
-    // we didn't call ShutdownDecoder and we need to do it manually.
-    if (GetNumFrames() > 0) {
-      nsRefPtr<imgFrame> curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-      curframe->UnlockImageData();
-    }
   }
 
-  // Release any HQ scaled frames from the surface cache.
-  SurfaceCache::Discard(this);
+  // Release all frames from the surface cache.
+  SurfaceCache::RemoveImage(ImageKey(this));
 
   mAnim = nullptr;
 
@@ -425,6 +416,11 @@ RasterImage::Init(const char* aMimeType,
   if (mDiscardable) {
     num_discardable_containers++;
     discardable_source_bytes += mSourceData.Length();
+  }
+
+  // Lock this image's surfaces in the SurfaceCache if we're not discardable.
+  if (!mDiscardable) {
+    SurfaceCache::LockImage(ImageKey(this));
   }
 
   // Instantiate the decoder
@@ -566,21 +562,33 @@ RasterImage::GetType()
   return imgIContainer::TYPE_RASTER;
 }
 
-already_AddRefed<imgFrame>
-RasterImage::LookupFrameNoDecode(uint32_t aFrameNum)
+DrawableFrameRef
+RasterImage::LookupFrameInternal(uint32_t aFrameNum,
+                                 const nsIntSize& aSize,
+                                 uint32_t aFlags)
 {
-  if (!mAnim) {
-    NS_ASSERTION(aFrameNum == 0, "Don't ask for a frame > 0 if we're not animated!");
-    return mFrameBlender.GetFrame(0);
+  if (mAnim) {
+    MOZ_ASSERT(mFrameBlender, "mAnim but no mFrameBlender?");
+    nsRefPtr<imgFrame> frame = mFrameBlender->GetFrame(aFrameNum);
+    return frame->DrawableRef();
   }
-  return mFrameBlender.GetFrame(aFrameNum);
+
+  NS_ASSERTION(aFrameNum == 0,
+               "Don't ask for a frame > 0 if we're not animated!");
+
+  return SurfaceCache::Lookup(ImageKey(this),
+                              RasterSurfaceKey(aSize.ToIntSize(),
+                                               DecodeFlags(aFlags)));
 }
 
 DrawableFrameRef
 RasterImage::LookupFrame(uint32_t aFrameNum,
+                         const nsIntSize& aSize,
                          uint32_t aFlags,
                          bool aShouldSyncNotify /* = true */)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (mMultipart &&
       aFrameNum == GetCurrentFrameIndex() &&
       mMultipartDecodedFrame) {
@@ -590,26 +598,18 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     return mMultipartDecodedFrame->DrawableRef();
   }
 
-  // Try our best to start decoding if it's necessary.
-  nsresult rv = WantDecodedFrames(aFlags, aShouldSyncNotify);
-  CONTAINER_ENSURE_TRUE(NS_SUCCEEDED(rv), DrawableFrameRef());
+  DrawableFrameRef ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
 
-  nsRefPtr<imgFrame> frame = LookupFrameNoDecode(aFrameNum);
-  if (!frame) {
-    return DrawableFrameRef();
-  }
-
-  DrawableFrameRef ref = frame->DrawableRef();
   if (!ref) {
     // The OS threw this frame away. We need to discard and redecode.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
     if (CanForciblyDiscardAndRedecode()) {
-      ForceDiscard();
+      Discard(/* aForce = */ true, /* aNotify = */ false);
+      ApplyDecodeFlags(aFlags);
       WantDecodedFrames(aFlags, aShouldSyncNotify);
 
-      // See if we managed to entirely redecode the frame.
-      frame = LookupFrameNoDecode(aFrameNum);
-      ref = frame->DrawableRef();
+      // See if we managed to redecode enough to get the frame we want.
+      ref = LookupFrameInternal(aFrameNum, aSize, aFlags);
     }
 
     if (!ref) {
@@ -680,9 +680,18 @@ RasterImage::FrameRect(uint32_t aWhichFrame)
     return nsIntRect();
   }
 
-  // Get the requested frame.
+  if (!mHasFirstFrame) {
+    return nsIntRect();
+  }
+
+  if (GetNumFrames() == 1) {
+    return nsIntRect(0, 0, mSize.width, mSize.height);
+  }
+
+  // We must be animated, so get the requested frame from our FrameBlender.
+  MOZ_ASSERT(mFrameBlender, "We should be animated here");
   nsRefPtr<imgFrame> frame =
-    LookupFrameNoDecode(GetRequestedFrameIndex(aWhichFrame));
+    mFrameBlender->RawGetFrame(GetRequestedFrameIndex(aWhichFrame));
 
   // If we have the frame, use that rectangle.
   if (frame) {
@@ -700,7 +709,10 @@ RasterImage::FrameRect(uint32_t aWhichFrame)
 uint32_t
 RasterImage::GetNumFrames() const
 {
-  return mFrameBlender.GetNumFrames();
+  if (mFrameBlender) {
+    return mFrameBlender->GetNumFrames();
+  }
+  return mHasFirstFrame ? 1 : 0;
 }
 
 //******************************************************************************
@@ -742,7 +754,8 @@ RasterImage::GetFirstFrameDelay()
   if (NS_FAILED(GetAnimated(&animated)) || !animated)
     return -1;
 
-  return mFrameBlender.GetTimeoutForFrame(0);
+  MOZ_ASSERT(mFrameBlender, "Animated images should have a FrameBlender");
+  return mFrameBlender->GetTimeoutForFrame(0);
 }
 
 TemporaryRef<SourceSurface>
@@ -763,7 +776,7 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
   // not waiting for the data to be loaded from the network or not passing
   // FLAG_SYNC_DECODE
   DrawableFrameRef frameRef = LookupFrame(GetRequestedFrameIndex(aWhichFrame),
-                                          aFlags, aShouldSyncNotify);
+                                          mSize, aFlags, aShouldSyncNotify);
   if (!frameRef) {
     // The OS threw this frame away and we couldn't redecode it right now.
     return nullptr;
@@ -840,7 +853,7 @@ RasterImage::GetFrameInternal(uint32_t aWhichFrame,
   // not waiting for the data to be loaded from the network or not passing
   // FLAG_SYNC_DECODE
   DrawableFrameRef frameRef = LookupFrame(GetRequestedFrameIndex(aWhichFrame),
-                                          aFlags, aShouldSyncNotify);
+                                          mSize, aFlags, aShouldSyncNotify);
   if (!frameRef) {
     // The OS threw this frame away and we couldn't redecode it.
     return nullptr;
@@ -951,7 +964,7 @@ RasterImage::UpdateImageContainer()
 }
 
 size_t
-RasterImage::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
+RasterImage::SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const
 {
   // n == 0 is possible for two reasons.
   // - This is a zero-length image.
@@ -965,147 +978,125 @@ RasterImage::HeapSizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) co
 }
 
 size_t
-RasterImage::SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
-                                                     MallocSizeOf aMallocSizeOf) const
+RasterImage::SizeOfDecoded(gfxMemoryLocation aLocation,
+                           MallocSizeOf aMallocSizeOf) const
 {
-  return mFrameBlender.SizeOfDecodedWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);
-}
-
-size_t
-RasterImage::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) const
-{
-  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::IN_PROCESS_HEAP,
-                                                 aMallocSizeOf);
-}
-
-size_t
-RasterImage::NonHeapSizeOfDecoded() const
-{
-  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::IN_PROCESS_NONHEAP,
-                                                 nullptr);
-}
-
-size_t
-RasterImage::OutOfProcessSizeOfDecoded() const
-{
-  return SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation::OUT_OF_PROCESS,
-                                                 nullptr);
-}
-
-void
-RasterImage::EnsureAnimExists()
-{
-  if (!mAnim) {
-
-    // Create the animation context
-    mAnim = MakeUnique<FrameAnimator>(mFrameBlender, mAnimationMode);
-
-    // We don't support discarding animated images (See bug 414259).
-    // Lock the image and throw away the key.
-    //
-    // Note that this is inefficient, since we could get rid of the source
-    // data too. However, doing this is actually hard, because we're probably
-    // calling ensureAnimExists mid-decode, and thus we're decoding out of
-    // the source buffer. Since we're going to fix this anyway later, and
-    // since we didn't kill the source data in the old world either, locking
-    // is acceptable for the moment.
-    LockImage();
+  size_t n = 0;
+  n += SurfaceCache::SizeOfSurfaces(ImageKey(this), aLocation, aMallocSizeOf);
+  if (mFrameBlender) {
+    n += mFrameBlender->SizeOfDecoded(aLocation, aMallocSizeOf);
   }
+  return n;
 }
 
-nsresult
-RasterImage::InternalAddFrameHelper(uint32_t framenum, imgFrame *aFrame,
-                                    uint8_t **imageData, uint32_t *imageLength,
-                                    uint32_t **paletteData, uint32_t *paletteLength,
-                                    imgFrame** aRetFrame)
-{
-  NS_ABORT_IF_FALSE(framenum <= GetNumFrames(), "Invalid frame index!");
-  if (framenum > GetNumFrames())
-    return NS_ERROR_INVALID_ARG;
-
-  nsRefPtr<imgFrame> frame(aFrame);
-
-  // We are in the middle of decoding. This will be unlocked when we finish
-  // decoding or switch to another frame.
-  frame->LockImageData();
-
-  if (paletteData && paletteLength)
-    frame->GetPaletteData(paletteData, paletteLength);
-
-  frame->GetImageData(imageData, imageLength);
-
-  mFrameBlender.InsertFrame(framenum, frame);
-
-  frame.forget(aRetFrame);
-  return NS_OK;
-}
-
-nsresult
-RasterImage::InternalAddFrame(uint32_t framenum,
-                              int32_t aX, int32_t aY,
-                              int32_t aWidth, int32_t aHeight,
+RawAccessFrameRef
+RasterImage::InternalAddFrame(uint32_t aFrameNum,
+                              const nsIntRect& aFrameRect,
+                              uint32_t aDecodeFlags,
                               SurfaceFormat aFormat,
                               uint8_t aPaletteDepth,
-                              uint8_t **imageData,
-                              uint32_t *imageLength,
-                              uint32_t **paletteData,
-                              uint32_t *paletteLength,
-                              imgFrame** aRetFrame)
+                              imgFrame* aPreviousFrame)
 {
   // We assume that we're in the middle of decoding because we unlock the
   // previous frame when we create a new frame, and only when decoding do we
   // lock frames.
-  NS_ABORT_IF_FALSE(mDecoder, "Only decoders may add frames!");
+  MOZ_ASSERT(mDecoder, "Only decoders may add frames!");
 
-  NS_ABORT_IF_FALSE(framenum <= GetNumFrames(), "Invalid frame index!");
-  if (framenum > GetNumFrames())
-    return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(aFrameNum <= GetNumFrames(), "Invalid frame index!");
+  if (aFrameNum > GetNumFrames()) {
+    return RawAccessFrameRef();
+  }
 
-  nsRefPtr<imgFrame> frame(new imgFrame());
+  if (mSize.width <= 0 || mSize.height <= 0) {
+    NS_WARNING("Trying to add frame with zero or negative size");
+    return RawAccessFrameRef();
+  }
 
-  nsIntRect frameRect(aX, aY, aWidth, aHeight);
-  nsresult rv = frame->InitForDecoder(frameRect, aFormat, aPaletteDepth);
-  if (!(mSize.width > 0 && mSize.height > 0))
-    NS_WARNING("Shouldn't call InternalAddFrame with zero size");
-  if (!NS_SUCCEEDED(rv))
+  if (!SurfaceCache::CanHold(mSize.ToIntSize())) {
+    NS_WARNING("Trying to add frame that's too large for the SurfaceCache");
+    return RawAccessFrameRef();
+  }
+
+  nsRefPtr<imgFrame> frame = new imgFrame();
+  if (NS_FAILED(frame->InitForDecoder(mSize, aFrameRect, aFormat,
+                                      aPaletteDepth))) {
     NS_WARNING("imgFrame::Init should succeed");
-  NS_ENSURE_SUCCESS(rv, rv);
+    return RawAccessFrameRef();
+  }
+  frame->SetAsNonPremult(aDecodeFlags & FLAG_DECODE_NO_PREMULTIPLY_ALPHA);
 
-  // We know we are in a decoder. Therefore, we must unlock the previous frame
-  // when we move on to decoding into the next frame.
-  if (GetNumFrames() > 0) {
-    nsRefPtr<imgFrame> prevframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-    prevframe->UnlockImageData();
+  RawAccessFrameRef ref = frame->RawAccessRef();
+  if (!ref) {
+    return RawAccessFrameRef();
   }
 
   if (GetNumFrames() == 0) {
-    return InternalAddFrameHelper(framenum, frame, imageData, imageLength,
-                                  paletteData, paletteLength, aRetFrame);
+    bool succeeded =
+      SurfaceCache::Insert(frame, ImageKey(this),
+                           RasterSurfaceKey(mSize.ToIntSize(), aDecodeFlags),
+                           Lifetime::Persistent);
+    if (!succeeded) {
+      return RawAccessFrameRef();
+    }
+    mHasFirstFrame = true;
+    return ref;
   }
 
   if (GetNumFrames() == 1) {
-    // Since we're about to add our second frame, initialize animation stuff
-    EnsureAnimExists();
+    // We're becoming animated, so initialize animation stuff.
+    MOZ_ASSERT(!mFrameBlender, "Already have a FrameBlender?");
+    MOZ_ASSERT(!mAnim, "Already have animation state?");
+    mFrameBlender.emplace();
+    mFrameBlender->SetSize(mSize);
+    mAnim = MakeUnique<FrameAnimator>(*mFrameBlender, mAnimationMode);
 
-    // If we dispose of the first frame by clearing it, then the
-    // First Frame's refresh area is all of itself.
-    // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR)
-    nsRefPtr<imgFrame> firstFrame = mFrameBlender.RawGetFrame(0);
-    int32_t frameDisposalMethod = firstFrame->GetFrameDisposalMethod();
+    // We don't support discarding animated images (See bug 414259).
+    // Lock the image and throw away the key.
+    //
+    // Note that this is inefficient, since we could get rid of the source data
+    // too. However, doing this is actually hard, because we're probably
+    // mid-decode, and thus we're decoding out of the source buffer. Since we're
+    // going to fix this anyway later, and since we didn't kill the source data
+    // in the old world either, locking is acceptable for the moment.
+    LockImage();
+
+    // Insert the first frame into the FrameBlender.
+    MOZ_ASSERT(aPreviousFrame, "Must provide a previous frame when animated");
+    RawAccessFrameRef ref = aPreviousFrame->RawAccessRef();
+    if (!ref) {
+      return RawAccessFrameRef();  // Let's keep the FrameBlender consistent...
+    }
+    mFrameBlender->InsertFrame(0, Move(ref));
+
+    // Remove it from the SurfaceCache. (It's not really doing any harm there,
+    // but keeping it there could cause it to be counted twice in our memory
+    // statistics.)
+    SurfaceCache::RemoveSurface(ImageKey(this),
+                                RasterSurfaceKey(mSize.ToIntSize(),
+                                                 aDecodeFlags));
+
+    // If we dispose of the first frame by clearing it, then the first frame's
+    // refresh area is all of itself.
+    // RESTORE_PREVIOUS is invalid (assumed to be DISPOSE_CLEAR).
+    int32_t frameDisposalMethod = aPreviousFrame->GetFrameDisposalMethod();
     if (frameDisposalMethod == FrameBlender::kDisposeClear ||
-        frameDisposalMethod == FrameBlender::kDisposeRestorePrevious)
-      mAnim->SetFirstFrameRefreshArea(firstFrame->GetRect());
+        frameDisposalMethod == FrameBlender::kDisposeRestorePrevious) {
+      mAnim->SetFirstFrameRefreshArea(aPreviousFrame->GetRect());
+    }
+
+    if (mPendingAnimation && ShouldAnimate()) {
+      StartAnimation();
+    }
   }
 
-  // Calculate firstFrameRefreshArea
-  // Some gifs are huge but only have a small area that they animate
-  // We only need to refresh that small area when Frame 0 comes around again
+  // Some GIFs are huge but only have a small area that they animate. We only
+  // need to refresh that small area when frame 0 comes around again.
   mAnim->UnionFirstFrameRefreshArea(frame->GetRect());
 
-  rv = InternalAddFrameHelper(framenum, frame, imageData, imageLength,
-                              paletteData, paletteLength, aRetFrame);
+  MOZ_ASSERT(mFrameBlender, "Should have a FrameBlender by now");
+  mFrameBlender->InsertFrame(aFrameNum, frame->RawAccessRef());
 
-  return rv;
+  return ref;
 }
 
 bool
@@ -1175,126 +1166,70 @@ RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
   mOrientation = aOrientation;
   mHasSize = true;
 
-  mFrameBlender.SetSize(mSize);
-
   return NS_OK;
 }
 
-nsresult
-RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
-                         int32_t aWidth, int32_t aHeight,
+RawAccessFrameRef
+RasterImage::EnsureFrame(uint32_t aFrameNum,
+                         const nsIntRect& aFrameRect,
+                         uint32_t aDecodeFlags,
                          SurfaceFormat aFormat,
                          uint8_t aPaletteDepth,
-                         uint8_t **imageData, uint32_t *imageLength,
-                         uint32_t **paletteData, uint32_t *paletteLength,
-                         imgFrame** aRetFrame)
+                         imgFrame* aPreviousFrame)
 {
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ENSURE_ARG_POINTER(imageData);
-  NS_ENSURE_ARG_POINTER(imageLength);
-  NS_ENSURE_ARG_POINTER(aRetFrame);
-  NS_ABORT_IF_FALSE(aFrameNum <= GetNumFrames(), "Invalid frame index!");
-
-  if (aPaletteDepth > 0) {
-    NS_ENSURE_ARG_POINTER(paletteData);
-    NS_ENSURE_ARG_POINTER(paletteLength);
+  if (mError) {
+    return RawAccessFrameRef();
   }
 
-  if (aFrameNum > GetNumFrames())
-    return NS_ERROR_INVALID_ARG;
+  MOZ_ASSERT(aFrameNum <= GetNumFrames(), "Invalid frame index!");
+  if (aFrameNum > GetNumFrames()) {
+    return RawAccessFrameRef();
+  }
 
-  // Adding a frame that doesn't already exist.
+  // Adding a frame that doesn't already exist. This is the normal case.
   if (aFrameNum == GetNumFrames()) {
-    return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat,
-                            aPaletteDepth, imageData, imageLength,
-                            paletteData, paletteLength, aRetFrame);
+    return InternalAddFrame(aFrameNum, aFrameRect, aDecodeFlags, aFormat,
+                            aPaletteDepth, aPreviousFrame);
   }
 
-  nsRefPtr<imgFrame> frame = mFrameBlender.RawGetFrame(aFrameNum);
-  if (!frame) {
-    return InternalAddFrame(aFrameNum, aX, aY, aWidth, aHeight, aFormat,
-                            aPaletteDepth, imageData, imageLength,
-                            paletteData, paletteLength, aRetFrame);
+  // We're replacing a frame. It must be the first frame; there's no reason to
+  // ever replace any other frame, since the first frame is the only one we
+  // speculatively allocate without knowing what the decoder really needs.
+  // XXX(seth): I'm not convinced there's any reason to support this at all. We
+  // should figure out how to avoid triggering this and rip it out.
+  MOZ_ASSERT(mHasFirstFrame, "Should have the first frame");
+  MOZ_ASSERT(aFrameNum == 0, "Replacing a frame other than the first?");
+  MOZ_ASSERT(GetNumFrames() == 1, "Should have only one frame");
+  MOZ_ASSERT(aPreviousFrame, "Need the previous frame to replace");
+  MOZ_ASSERT(!mFrameBlender && !mAnim, "Shouldn't be animated");
+  if (aFrameNum != 0 || !aPreviousFrame || GetNumFrames() != 1) {
+    return RawAccessFrameRef();
   }
 
-  // See if we can re-use the frame that already exists.
-  nsIntRect rect = frame->GetRect();
-  if (rect.x == aX && rect.y == aY && rect.width == aWidth &&
-      rect.height == aHeight && frame->GetFormat() == aFormat &&
-      frame->GetPaletteDepth() == aPaletteDepth) {
-    frame->GetImageData(imageData, imageLength);
-    if (paletteData) {
-      frame->GetPaletteData(paletteData, paletteLength);
-    }
+  MOZ_ASSERT(!aPreviousFrame->GetRect().IsEqualEdges(aFrameRect) ||
+             aPreviousFrame->GetFormat() != aFormat ||
+             aPreviousFrame->GetPaletteDepth() != aPaletteDepth,
+             "Replacing first frame with the same kind of frame?");
 
-    // We can re-use the frame if it has image data.
-    if (*imageData && paletteData && *paletteData) {
-      frame.forget(aRetFrame);
-      return NS_OK;
-    }
-    if (*imageData && !paletteData) {
-      frame.forget(aRetFrame);
-      return NS_OK;
-    }
-  }
+  // Remove the old frame from the SurfaceCache.
+  IntSize prevFrameSize = aPreviousFrame->GetImageSize();
+  SurfaceCache::RemoveSurface(ImageKey(this),
+                              RasterSurfaceKey(prevFrameSize, aDecodeFlags));
+  mHasFirstFrame = false;
 
-  // Not reusable, so replace the frame directly.
-
-  // We know this frame is already locked, because it's the one we're currently
-  // writing to.
-  frame->UnlockImageData();
-
-  mFrameBlender.RemoveFrame(aFrameNum);
-  nsRefPtr<imgFrame> newFrame(new imgFrame());
-  nsIntRect frameRect(aX, aY, aWidth, aHeight);
-  nsresult rv = newFrame->InitForDecoder(frameRect, aFormat, aPaletteDepth);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return InternalAddFrameHelper(aFrameNum, newFrame, imageData, imageLength,
-                                paletteData, paletteLength, aRetFrame);
+  // Add the new frame as usual.
+  return InternalAddFrame(aFrameNum, aFrameRect, aDecodeFlags, aFormat,
+                          aPaletteDepth, nullptr);
 }
 
-nsresult
-RasterImage::EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
-                         int32_t aWidth, int32_t aHeight,
-                         SurfaceFormat aFormat,
-                         uint8_t** imageData, uint32_t* imageLength,
-                         imgFrame** aFrame)
-{
-  return EnsureFrame(aFramenum, aX, aY, aWidth, aHeight, aFormat,
-                     /* aPaletteDepth = */ 0, imageData, imageLength,
-                     /* aPaletteData = */ nullptr,
-                     /* aPaletteLength = */ nullptr,
-                     aFrame);
-}
-
-nsresult
-RasterImage::SetFrameAsNonPremult(uint32_t aFrameNum, bool aIsNonPremult)
-{
-  if (mError)
-    return NS_ERROR_FAILURE;
-
-  NS_ABORT_IF_FALSE(aFrameNum < GetNumFrames(), "Invalid frame index!");
-  if (aFrameNum >= GetNumFrames())
-    return NS_ERROR_INVALID_ARG;
-
-  nsRefPtr<imgFrame> frame = mFrameBlender.RawGetFrame(aFrameNum);
-  NS_ABORT_IF_FALSE(frame, "Calling SetFrameAsNonPremult on frame that doesn't exist!");
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  frame->SetAsNonPremult(aIsNonPremult);
-
-  return NS_OK;
-}
-
-nsresult
-RasterImage::DecodingComplete()
+void
+RasterImage::DecodingComplete(imgFrame* aFinalFrame)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (mError)
-    return NS_ERROR_FAILURE;
+  if (mError) {
+    return;
+  }
 
   // Flag that we're done decoding.
   // XXX - these should probably be combined when we fix animated image
@@ -1302,49 +1237,42 @@ RasterImage::DecodingComplete()
   mDecoded = true;
   mHasBeenDecoded = true;
 
-  nsresult rv;
-
   // We now have one of the qualifications for discarding. Re-evaluate.
   if (CanDiscard()) {
     NS_ABORT_IF_FALSE(!DiscardingActive(),
                       "We shouldn't have been discardable before this");
-    rv = DiscardTracker::Reset(&mDiscardTrackerNode);
-    CONTAINER_ENSURE_SUCCESS(rv);
+    DiscardTracker::Reset(&mDiscardTrackerNode);
   }
+
+  bool singleFrame = GetNumFrames() == 1;
 
   // If there's only 1 frame, mark it as optimizable. Optimizing animated images
   // is not supported.
   //
   // We don't optimize the frame for multipart images because we reuse
   // the frame.
-  if ((GetNumFrames() == 1) && !mMultipart) {
-    nsRefPtr<imgFrame> firstFrame = mFrameBlender.RawGetFrame(0);
-    firstFrame->SetOptimizable();
-    if (DiscardingEnabled() && CanForciblyDiscard()) {
-      firstFrame->SetDiscardable();
-    }
+  if (singleFrame && !mMultipart && aFinalFrame) {
+    aFinalFrame->SetOptimizable();
   }
 
   // Double-buffer our frame in the multipart case, since we'll start decoding
   // into the first frame again immediately and this produces severe tearing.
   if (mMultipart) {
-    if (GetNumFrames() == 1) {
-      mMultipartDecodedFrame = mFrameBlender.SwapFrame(GetCurrentFrameIndex(),
-                                                       mMultipartDecodedFrame);
+    if (singleFrame && aFinalFrame) {
+      // aFinalFrame must be the first frame since we only have one.
+      mMultipartDecodedFrame = aFinalFrame->DrawableRef();
     } else {
       // Don't double buffer for animated multipart images. It entails more
       // complexity and it's not really needed since we already are smart about
       // not displaying the still-decoding frame of an animated image. We may
       // have already stored an extra frame, though, so we'll release it here.
-      mMultipartDecodedFrame = nullptr;
+      mMultipartDecodedFrame.reset();
     }
   }
 
   if (mAnim) {
     mAnim->SetDoneDecoding(true);
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1366,12 +1294,17 @@ RasterImage::StartAnimation()
 
   NS_ABORT_IF_FALSE(ShouldAnimate(), "Should not animate!");
 
-  EnsureAnimExists();
+  // If we don't have mAnim yet, then we're not ready to animate.  Setting
+  // mPendingAnimation will cause us to start animating as soon as we have a
+  // second frame, which causes mAnim to be constructed.
+  mPendingAnimation = !mAnim;
+  if (mPendingAnimation) {
+    return NS_OK;
+  }
 
-  nsRefPtr<imgFrame> currentFrame = LookupFrameNoDecode(GetCurrentFrameIndex());
   // A timeout of -1 means we should display this frame forever.
-  if (currentFrame &&
-      mFrameBlender.GetTimeoutForFrame(GetCurrentFrameIndex()) < 0) {
+  MOZ_ASSERT(mFrameBlender, "Have an animation but no FrameBlender?");
+  if (mFrameBlender->GetTimeoutForFrame(GetCurrentFrameIndex()) < 0) {
     mAnimationFinished = true;
     return NS_ERROR_ABORT;
   }
@@ -1411,16 +1344,20 @@ RasterImage::ResetAnimation()
   if (mError)
     return NS_ERROR_FAILURE;
 
-  if (mAnimationMode == kDontAnimMode ||
-      !mAnim || mAnim->GetCurrentAnimationFrameIndex() == 0)
+  mPendingAnimation = false;
+
+  if (mAnimationMode == kDontAnimMode || !mAnim ||
+      mAnim->GetCurrentAnimationFrameIndex() == 0) {
     return NS_OK;
+  }
 
   mAnimationFinished = false;
 
   if (mAnimating)
     StopAnimation();
 
-  mFrameBlender.ResetAnimation();
+  MOZ_ASSERT(mFrameBlender, "Should have a FrameBlender");
+  mFrameBlender->ResetAnimation();
   mAnim->ResetAnimation();
 
   UpdateImageContainer();
@@ -1469,7 +1406,8 @@ RasterImage::SetLoopCount(int32_t aLoopCount)
 
   if (mAnim) {
     // No need to set this if we're not an animation
-    mFrameBlender.SetLoopCount(aLoopCount);
+    MOZ_ASSERT(mFrameBlender, "Should have a FrameBlender");
+    mFrameBlender->SetLoopCount(aLoopCount);
   }
 }
 
@@ -1508,18 +1446,26 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   // This needs to happen just before we start getting EnsureFrame() call(s),
   // so that there's no gap for anything to miss us.
   if (mMultipart && (!mDecoder || mDecoder->BytesDecoded() == 0)) {
-    // Our previous state may have been animated, so let's clean up
-    if (mAnimating)
+    // Our previous state may have been animated, so let's clean up.
+    if (mAnimating) {
       StopAnimation();
+    }
     mAnimationFinished = false;
+    mPendingAnimation = false;
     if (mAnim) {
       mAnim = nullptr;
     }
-    // If there's only one frame, this could cause flickering
-    int old_frame_count = GetNumFrames();
-    if (old_frame_count > 1) {
-      mFrameBlender.ClearFrames();
+
+    // If we had a FrameBlender, clean it up. We'll hold on to the first frame
+    // so we have something to draw until the next frame is decoded.
+    if (mFrameBlender) {
+      nsRefPtr<imgFrame> firstFrame = mFrameBlender->RawGetFrame(0);
+      mMultipartDecodedFrame = firstFrame->DrawableRef();
+      mFrameBlender.reset();
     }
+
+    // Remove everything stored in the surface cache for this image.
+    SurfaceCache::RemoveImage(ImageKey(this));
   }
 
   // If we're not storing source data and we've previously gotten the size,
@@ -1712,6 +1658,7 @@ RasterImage::OnNewSourceData()
   mDecoded = false;
   mHasSourceData = false;
   mHasSize = false;
+  mHasFirstFrame = false;
   mWantFullDecode = true;
   mDecodeStatus = DecodeStatus::INACTIVE;
 
@@ -1790,12 +1737,12 @@ RasterImage::GetKeys(uint32_t *count, char ***keys)
 }
 
 void
-RasterImage::Discard(bool force)
+RasterImage::Discard(bool aForce, bool aNotify)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // We should be ok for discard
-  NS_ABORT_IF_FALSE(force ? CanForciblyDiscard() : CanDiscard(), "Asked to discard but can't!");
+  NS_ABORT_IF_FALSE(aForce ? CanForciblyDiscard() : CanDiscard(), "Asked to discard but can't!");
 
   // We should never discard when we have an active decoder
   NS_ABORT_IF_FALSE(!mDecoder, "Asked to discard with open decoder!");
@@ -1808,22 +1755,26 @@ RasterImage::Discard(bool force)
   int old_frame_count = GetNumFrames();
 
   // Delete all the decoded frames
-  mFrameBlender.Discard();
+  mFrameBlender.reset();
+  SurfaceCache::RemoveImage(ImageKey(this));
 
   // Clear the last decoded multipart frame.
-  mMultipartDecodedFrame = nullptr;
+  mMultipartDecodedFrame.reset();
 
   // Flag that we no longer have decoded frames for this image
   mDecoded = false;
+  mHasFirstFrame = false;
 
   // Notify that we discarded
-  if (mProgressTracker)
+  if (aNotify && mProgressTracker) {
     mProgressTracker->OnDiscard();
+  }
 
   mDecodeStatus = DecodeStatus::INACTIVE;
 
-  if (force)
+  if (aForce) {
     DiscardTracker::Remove(&mDiscardTrackerNode);
+  }
 
   // Log
   PR_LOG(GetCompressedImageAccountingLog(), PR_LOG_DEBUG,
@@ -1853,14 +1804,12 @@ RasterImage::CanDiscard() {
 
 bool
 RasterImage::CanForciblyDiscard() {
-  return mDiscardable &&         // ...Enabled at creation time...
-         mHasSourceData;         // ...have the source data...
+  return mHasSourceData;         // ...have the source data...
 }
 
 bool
 RasterImage::CanForciblyDiscardAndRedecode() {
-  return mDiscardable &&         // ...Enabled at creation time...
-         mHasSourceData &&       // ...have the source data...
+  return mHasSourceData &&       // ...have the source data...
          !mDecoder &&            // Can't discard with an open decoder
          !mAnim;                 // Can never discard animated images
 }
@@ -1876,7 +1825,7 @@ RasterImage::DiscardingActive() {
 // or just writing it directly to the decoder
 bool
 RasterImage::StoringSourceData() const {
-  return (mDecodeOnDraw || mDiscardable);
+  return !mMultipart;
 }
 
 
@@ -1929,14 +1878,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
       break;
     default:
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
-  }
-
-  // If we already have frames, we're probably in the multipart/x-mixed-replace
-  // case. Regardless, we need to lock the last frame. Our invariant is that,
-  // while we have a decoder open, the last frame is always locked.
-  if (GetNumFrames() > 0) {
-    nsRefPtr<imgFrame> curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-    curframe->LockImageData();
   }
 
   // Initialize the decoder
@@ -2000,13 +1941,6 @@ RasterImage::ShutdownDecoder(ShutdownReason aReason)
   mDecoder = nullptr;
 
   decoder->Finish(aReason);
-
-  // Unlock the last frame (if we have any). Our invariant is that, while we
-  // have a decoder open, the last frame is always locked.
-  if (GetNumFrames() > 0) {
-    nsRefPtr<imgFrame> curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-    curframe->UnlockImageData();
-  }
 
   // Kill off our decode request, if it's pending.  (If not, this call is
   // harmless.)
@@ -2465,26 +2399,15 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
 
   // By now we may have a frame with the requested size. If not, we need to
   // adjust the drawing parameters accordingly.
-  nsIntRect finalFrameRect = frameRef->GetRect();
-  if (finalFrameRect.Size() != aSize) {
-    gfx::Size scale(double(aSize.width) / mSize.width,
-                    double(aSize.height) / mSize.height);
+  IntSize finalSize = frameRef->GetImageSize();
+  if (ThebesIntSize(finalSize) != aSize) {
+    gfx::Size scale(double(aSize.width) / finalSize.width,
+                    double(aSize.height) / finalSize.height);
     aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
     region.Scale(1.0 / scale.width, 1.0 / scale.height);
   }
 
-  // We can only use padding if we're using the original |aFrameRef|, unscaled.
-  // (If so, we moved it into |frameRef|, so |aFrameRef| is empty.) Because of
-  // this restriction, we don't scale frames that require padding.
-  nsIntMargin padding(0, 0, 0, 0);
-  if (!aFrameRef) {
-    padding = nsIntMargin(finalFrameRect.y,
-                          mSize.width - finalFrameRect.XMost(),
-                          mSize.height - finalFrameRect.YMost(),
-                          finalFrameRect.x);
-  }
-
-  frameRef->Draw(aContext, region, padding, aFilter, aFlags);
+  frameRef->Draw(aContext, region, aFilter, aFlags);
 }
 
 //******************************************************************************
@@ -2562,13 +2485,20 @@ RasterImage::Draw(gfxContext* aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // XXX(seth): For now, we deliberately don't look up a frame of size aSize
+  // (though DrawWithPreDownscaleIfNeeded will do so later). It doesn't make
+  // sense to do so until we support downscale-during-decode. Right now we need
+  // to make sure that we always touch an mSize-sized frame so that we have
+  // something to HQ scale.
   DrawableFrameRef ref = LookupFrame(GetRequestedFrameIndex(aWhichFrame),
-                                     aFlags);
+                                     mSize, aFlags);
   if (!ref) {
-    return NS_OK; // Getting the frame (above) touches the image and kicks off decoding
+    // Getting the frame (above) touches the image and kicks off decoding.
+    return NS_OK;
   }
 
-  DrawWithPreDownscaleIfNeeded(Move(ref), aContext, aSize, aRegion, aFilter, aFlags);
+  DrawWithPreDownscaleIfNeeded(Move(ref), aContext, aSize,
+                               aRegion, aFilter, aFlags);
 
   if (mDecoded && !mDrawStartTime.IsNull()) {
       TimeDuration drawLatency = TimeStamp::Now() - mDrawStartTime;
@@ -2596,6 +2526,11 @@ RasterImage::LockImage()
   // Increment the lock count
   mLockCount++;
 
+  // Lock this image's surfaces in the SurfaceCache.
+  if (mLockCount == 1) {
+    SurfaceCache::LockImage(ImageKey(this));
+  }
+
   return NS_OK;
 }
 
@@ -2620,6 +2555,11 @@ RasterImage::UnlockImage()
 
   // Decrement our lock count
   mLockCount--;
+
+  // Unlock this image's surfaces in the SurfaceCache.
+  if (mLockCount == 0) {
+    SurfaceCache::UnlockImage(ImageKey(this));
+  }
 
   // If we've decoded this image once before, we're currently decoding again,
   // and our lock count is now zero (so nothing is forcing us to keep the
@@ -3008,7 +2948,8 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
     }
     if (!frameRef) {
       // We could HQ scale to this size, but we haven't. Request a scale now.
-      frameRef = LookupFrame(GetRequestedFrameIndex(aWhichFrame), aFlags);
+      frameRef = LookupFrame(GetRequestedFrameIndex(aWhichFrame),
+                             mSize, aFlags);
       if (frameRef) {
         RequestScale(frameRef.get(), aFlags, destSize);
       }

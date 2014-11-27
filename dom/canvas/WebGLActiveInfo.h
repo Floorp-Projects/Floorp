@@ -3,22 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef WEBGLACTIVEINFO_H_
-#define WEBGLACTIVEINFO_H_
+#ifndef WEBGL_ACTIVE_INFO_H_
+#define WEBGL_ACTIVE_INFO_H_
 
-#include "WebGLObjectModel.h"
-#include "nsString.h"
 #include "js/TypeDecls.h"
+#include "nsString.h"
+#include "WebGLObjectModel.h"
 
 namespace mozilla {
 
 class WebGLActiveInfo MOZ_FINAL
 {
 public:
-    WebGLActiveInfo(GLint size, GLenum type, const nsACString& name) :
-        mSize(size),
-        mType(type),
-        mName(NS_ConvertASCIItoUTF16(name))
+    WebGLActiveInfo(GLint size, GLenum type, const nsACString& name)
+        : mSize(size)
+        , mType(type)
+        , mName(NS_ConvertASCIItoUTF16(name))
     {}
 
     // WebIDL attributes
@@ -35,7 +35,7 @@ public:
         retval = mName;
     }
 
-    JSObject* WrapObject(JSContext *cx);
+    JSObject* WrapObject(JSContext* cx);
 
    NS_INLINE_DECL_REFCOUNTING(WebGLActiveInfo)
 
@@ -52,4 +52,4 @@ private:
 
 } // namespace mozilla
 
-#endif
+#endif // WEBGL_ACTIVE_INFO_H_

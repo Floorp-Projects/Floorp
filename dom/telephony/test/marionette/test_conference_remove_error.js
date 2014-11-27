@@ -43,7 +43,7 @@ function testConferenceRemoveError() {
     .then(() => gRemoteDial(inNumber2))
     .then(call => {inCall2 = call;})
     .then(() => gCheckAll(conference, [inCall2], 'connected', [outCall, inCall],
-                          [outInfo.active, inInfo.active, inInfo2.incoming]))
+                          [outInfo.active, inInfo.active, inInfo2.waiting]))
     .then(() => gAnswer(inCall2, function() {
       gCheckState(inCall2, [inCall2], 'held', [outCall, inCall]);
     }))

@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_TEXTURECLIENTOGL_H
 
 #include "GLContextTypes.h"             // for SharedTextureHandle, etc
+#include "GLImages.h"
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -25,11 +26,8 @@ class EGLImageTextureClient : public TextureClient
 {
 public:
   EGLImageTextureClient(TextureFlags aFlags,
-                        EGLImage aImage,
-                        gfx::IntSize aSize,
-                        bool aInverted);
-
-  ~EGLImageTextureClient();
+                        EGLImageImage* aImage,
+                        gfx::IntSize aSize);
 
   virtual bool IsAllocated() const MOZ_OVERRIDE { return true; }
 
@@ -64,7 +62,7 @@ public:
   }
 
 protected:
-  const EGLImage mImage;
+  RefPtr<EGLImageImage> mImage;
   const gfx::IntSize mSize;
   bool mIsLocked;
 };

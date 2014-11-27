@@ -16,7 +16,8 @@ using namespace mozilla;
 
 int gTestsPassed = 0;
 
-void VerifyImplFunction(bool condition, const char* file, int line)
+void
+VerifyImplFunction(bool condition, const char* file, int line)
 {
   if (condition) {
     gTestsPassed++;
@@ -29,7 +30,9 @@ void VerifyImplFunction(bool condition, const char* file, int line)
 #define VERIFY(condition) \
     VerifyImplFunction((condition), __FILE__, __LINE__)
 
-void MakeRandomVector(nsTArray<uint8_t>& a, size_t size) {
+void
+MakeRandomVector(nsTArray<uint8_t>& a, size_t size)
+{
   a.SetLength(size);
   // only the most-significant bits of rand() are reasonably random.
   // RAND_MAX can be as low as 0x7fff, and we need 8 bits for the result, so we can only
@@ -39,32 +42,30 @@ void MakeRandomVector(nsTArray<uint8_t>& a, size_t size) {
 }
 
 template<typename T>
-T RandomInteger(T a, T b)
+T
+RandomInteger(T a, T b)
 {
   T result(a + rand() % (b - a + 1));
   return result;
 }
 
 template<typename T>
-GLenum GLType()
+GLenum
+GLType()
 {
-  switch (sizeof(T))
-  {
-    case 4:  return LOCAL_GL_UNSIGNED_INT;
-    case 2:  return LOCAL_GL_UNSIGNED_SHORT;
-    case 1:  return LOCAL_GL_UNSIGNED_BYTE;
-    default:
-      VERIFY(false);
-      return 0;
+  switch (sizeof(T)) {
+  case 4:  return LOCAL_GL_UNSIGNED_INT;
+  case 2:  return LOCAL_GL_UNSIGNED_SHORT;
+  case 1:  return LOCAL_GL_UNSIGNED_BYTE;
+  default:
+    VERIFY(false);
+    return 0;
   }
 }
 
-void CheckValidate(bool expectSuccess,
-                   WebGLElementArrayCache& c,
-                   GLenum type,
-                   uint32_t maxAllowed,
-                   size_t first,
-                   size_t count)
+void
+CheckValidate(bool expectSuccess, WebGLElementArrayCache& c, GLenum type,
+              uint32_t maxAllowed, size_t first, size_t count)
 {
   uint32_t out_upperBound = 0;
   const bool success = c.Validate(type, maxAllowed, first, count, &out_upperBound);
@@ -77,7 +78,8 @@ void CheckValidate(bool expectSuccess,
 }
 
 template<typename T>
-void CheckValidateOneTypeVariousBounds(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
+void
+CheckValidateOneTypeVariousBounds(WebGLElementArrayCache& c, size_t firstByte, size_t countBytes)
 {
   size_t first = firstByte / sizeof(T);
   size_t count = countBytes / sizeof(T);
@@ -106,7 +108,8 @@ void CheckValidateAllTypes(WebGLElementArrayCache& c, size_t firstByte, size_t c
 }
 
 template<typename T>
-void CheckSanity()
+void
+CheckSanity()
 {
   const size_t numElems = 64; // should be significantly larger than tree leaf size to
                         // ensure we exercise some nontrivial tree-walking
@@ -142,7 +145,8 @@ void CheckSanity()
 }
 
 template<typename T>
-void CheckUintOverflow()
+void
+CheckUintOverflow()
 {
   // This test is only for integer types smaller than uint32_t
   static_assert(sizeof(T) < sizeof(uint32_t), "This test is only for integer types \
@@ -169,7 +173,8 @@ void CheckUintOverflow()
   CheckValidate(false, c, type,                        0, 0, numElems);
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char* argv[])
 {
   srand(0); // do not want a random seed here.
 
