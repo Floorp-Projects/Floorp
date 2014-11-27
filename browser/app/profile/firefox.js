@@ -422,7 +422,7 @@ pref("browser.search.update.interval", 21600);
 // enable search suggestions by default
 pref("browser.search.suggest.enabled", true);
 
-pref("browser.search.showOneOffButtons", false);
+pref("browser.search.showOneOffButtons", true);
 
 #ifdef MOZ_OFFICIAL_BRANDING
 // {moz:official} expands to "official"
