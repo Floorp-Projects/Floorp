@@ -6,7 +6,6 @@
 
 #include "AppleUtils.h"
 #include "prlog.h"
-#include "nsAutoPtr.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetAppleMediaLog() {
@@ -26,42 +25,3 @@ PRLogModuleInfo* GetAppleMediaLog() {
                              ((x) >> 16) & 0xff, \
                              ((x) >> 8) & 0xff, \
                               (x) & 0xff
-
-namespace mozilla {
-
-void
-AppleUtils::SetCFDict(CFMutableDictionaryRef dict,
-                      const char* key,
-                      const char* value)
-{
-  // We avoid using the CFSTR macros because there's no way to release those.
-  AutoCFRelease<CFStringRef> keyRef =
-    CFStringCreateWithCString(NULL, key, kCFStringEncodingUTF8);
-  AutoCFRelease<CFStringRef> valueRef =
-    CFStringCreateWithCString(NULL, value, kCFStringEncodingUTF8);
-  CFDictionarySetValue(dict, keyRef, valueRef);
-}
-
-void
-AppleUtils::SetCFDict(CFMutableDictionaryRef dict,
-                      const char* key,
-                      int32_t value)
-{
-  AutoCFRelease<CFNumberRef> valueRef =
-    CFNumberCreate(NULL, kCFNumberSInt32Type, &value);
-  AutoCFRelease<CFStringRef> keyRef =
-    CFStringCreateWithCString(NULL, key, kCFStringEncodingUTF8);
-  CFDictionarySetValue(dict, keyRef, valueRef);
-}
-
-void
-AppleUtils::SetCFDict(CFMutableDictionaryRef dict,
-                      const char* key,
-                      bool value)
-{
-  AutoCFRelease<CFStringRef> keyRef =
-    CFStringCreateWithCString(NULL, key, kCFStringEncodingUTF8);
-  CFDictionarySetValue(dict, keyRef, value ? kCFBooleanTrue : kCFBooleanFalse);
-}
-
-} // namespace mozilla
