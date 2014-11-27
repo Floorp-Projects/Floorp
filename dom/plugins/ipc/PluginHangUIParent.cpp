@@ -300,7 +300,7 @@ PluginHangUIParent::UnwatchHangUIChildProcess(bool aWait)
     // it is okay to clear mRegWait; Windows is telling us that the wait's
     // callback is running but will be cleaned up once the callback returns.
     if (::UnregisterWaitEx(mRegWait, completionEvent) ||
-        !aWait && ::GetLastError() == ERROR_IO_PENDING) {
+        (!aWait && ::GetLastError() == ERROR_IO_PENDING)) {
       mRegWait = nullptr;
       if (aWait) {
         // We must temporarily unlock mMutex while waiting for the registered
