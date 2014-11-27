@@ -168,13 +168,13 @@ void Trap::SigSys(int nr, siginfo_t* info, void* void_context) {
     if (sigsys.nr == __NR_clone) {
       RAW_SANDBOX_DIE("Cannot call clone() from an UnsafeTrap() handler.");
     }
-    rc = SandboxSyscall(sigsys.nr,
-                        SECCOMP_PARM1(ctx),
-                        SECCOMP_PARM2(ctx),
-                        SECCOMP_PARM3(ctx),
-                        SECCOMP_PARM4(ctx),
-                        SECCOMP_PARM5(ctx),
-                        SECCOMP_PARM6(ctx));
+    rc = Syscall::Call(sigsys.nr,
+                       SECCOMP_PARM1(ctx),
+                       SECCOMP_PARM2(ctx),
+                       SECCOMP_PARM3(ctx),
+                       SECCOMP_PARM4(ctx),
+                       SECCOMP_PARM5(ctx),
+                       SECCOMP_PARM6(ctx));
   } else {
     const ErrorCode& err = trap_array_[info->si_errno - 1];
     if (!err.safe_) {
@@ -227,7 +227,7 @@ ErrorCode Trap::MakeTrapImpl(TrapFnc fnc, const void* aux, bool safe) {
     // we never return an ErrorCode that is marked as "unsafe". This also
     // means, the BPF compiler will never emit code that allow unsafe system
     // calls to by-pass the filter (because they use the magic return address
-    // from SandboxSyscall(-1)).
+    // from Syscall::Call(-1)).
 
     // This SANDBOX_DIE() can optionally be removed. It won't break security,
     // but it might make error messages from the BPF compiler a little harder

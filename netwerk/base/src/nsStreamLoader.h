@@ -6,6 +6,7 @@
 #ifndef nsStreamLoader_h__
 #define nsStreamLoader_h__
 
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsIStreamLoader.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
@@ -14,12 +15,14 @@
 class nsIRequest;
 
 class nsStreamLoader MOZ_FINAL : public nsIStreamLoader
+                               , public nsIThreadRetargetableStreamListener
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLOADER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   nsStreamLoader();
 

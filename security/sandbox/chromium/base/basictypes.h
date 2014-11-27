@@ -42,17 +42,17 @@ typedef unsigned long long uint64;
 #endif
 
 // DEPRECATED: Please use std::numeric_limits (from <limits>) instead.
-const uint8  kuint8max  = (( uint8) 0xFF);
-const uint16 kuint16max = ((uint16) 0xFFFF);
-const uint32 kuint32max = ((uint32) 0xFFFFFFFF);
-const uint64 kuint64max = ((uint64) GG_LONGLONG(0xFFFFFFFFFFFFFFFF));
-const  int8  kint8min   = ((  int8) 0x80);
-const  int8  kint8max   = ((  int8) 0x7F);
-const  int16 kint16min  = (( int16) 0x8000);
-const  int16 kint16max  = (( int16) 0x7FFF);
-const  int32 kint32min  = (( int32) 0x80000000);
-const  int32 kint32max  = (( int32) 0x7FFFFFFF);
-const  int64 kint64min  = (( int64) GG_LONGLONG(0x8000000000000000));
-const  int64 kint64max  = (( int64) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
+const uint8  kuint8max  =  0xFF;
+const uint16 kuint16max =  0xFFFF;
+const uint32 kuint32max =  0xFFFFFFFF;
+const uint64 kuint64max =  0xFFFFFFFFFFFFFFFFULL;
+const  int8  kint8min   = -0x7F - 1;
+const  int8  kint8max   =  0x7F;
+const  int16 kint16min  = -0x7FFF - 1;
+const  int16 kint16max  =  0x7FFF;
+const  int32 kint32min  = -0x7FFFFFFF - 1;
+const  int32 kint32max  =  0x7FFFFFFF;
+const  int64 kint64min  = -0x7FFFFFFFFFFFFFFFLL - 1;
+const  int64 kint64max  =  0x7FFFFFFFFFFFFFFFLL;
 
 #endif  // BASE_BASICTYPES_H_

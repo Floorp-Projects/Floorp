@@ -14,6 +14,8 @@
 #include "nsRubyTextFrame.h"
 #include "nsLineLayout.h"
 
+typedef nsContainerFrame nsRubyTextContainerFrameSuper;
+
 /**
  * Factory function.
  * @return a newly allocated nsRubyTextContainerFrame (infallible)
@@ -21,10 +23,7 @@
 nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
 
-// If this is ever changed to be inline again, the code in
-// nsFrame::IsFontSizeInflationContainer should be updated to stop excluding
-// this from being considered inline.
-class nsRubyTextContainerFrame MOZ_FINAL : public nsBlockFrame
+class nsRubyTextContainerFrame MOZ_FINAL : public nsRubyTextContainerFrameSuper
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -33,6 +32,7 @@ public:
 
   // nsIFrame overrides
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
@@ -42,23 +42,16 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
-  void ReflowRubyTextFrame(nsRubyTextFrame* rtFrame, nsIFrame* rbFrame,
-                           nscoord baseStart, nsPresContext* aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
-                           const nsHTMLReflowState& aReflowState);
-  void BeginRTCLineLayout(nsPresContext* aPresContext,
-                          const nsHTMLReflowState& aReflowState);
-  nsLineLayout* GetLineLayout() { return mLineLayout.get(); };
-
 protected:
   friend nsContainerFrame*
     NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
-  explicit nsRubyTextContainerFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {}
-  // This pointer is active only during reflow of the ruby structure. It gets
-  // created when the corresponding ruby base container is reflowed, and it is
-  // destroyed when the ruby text container itself is reflowed.
-  mozilla::UniquePtr<nsLineLayout> mLineLayout;
+  explicit nsRubyTextContainerFrame(nsStyleContext* aContext)
+    : nsRubyTextContainerFrameSuper(aContext) {}
+
+  friend class nsRubyBaseContainerFrame;
+  void SetISize(nscoord aISize) { mISize = aISize; }
+
   // The intended dimensions of the ruby text container. These are modified
   // whenever a ruby text box is reflowed and used when the ruby text container
   // is reflowed.

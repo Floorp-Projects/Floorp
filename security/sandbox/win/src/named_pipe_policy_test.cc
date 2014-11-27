@@ -1,18 +1,20 @@
-// Copyright (c) 2006-2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2014 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "testing/gtest/include/gtest/gtest.h"
+#include "base/win/windows_version.h"
+#include "sandbox/win/src/handle_closer.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_policy.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "sandbox/win/tests/common/controller.h"
+#include "testing/gtest/include/gtest/gtest.h"
 
 namespace sandbox {
 
 
 SBOX_TESTS_COMMAND int NamedPipe_Create(int argc, wchar_t **argv) {
-  if (argc != 1) {
+  if (argc < 1 || argc > 2) {
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
   }
   if ((NULL == argv) || (NULL == argv[0])) {
@@ -25,6 +27,18 @@ SBOX_TESTS_COMMAND int NamedPipe_Create(int argc, wchar_t **argv) {
                                    4096, 2000, NULL);
   if (INVALID_HANDLE_VALUE == pipe)
     return SBOX_TEST_DENIED;
+
+  // The second parameter allows us to enforce a whitelist for where the
+  // pipe should be in the object namespace after creation.
+  if (argc == 2) {
+    base::string16 handle_name;
+    if (GetHandleName(pipe, &handle_name)) {
+      if (handle_name.compare(0, wcslen(argv[1]), argv[1]) != 0)
+        return SBOX_TEST_FAILED;
+    } else {
+      return SBOX_TEST_FAILED;
+    }
+  }
 
   OVERLAPPED overlapped = {0};
   overlapped.hEvent = ::CreateEvent(NULL, TRUE, TRUE, NULL);
@@ -45,10 +59,28 @@ SBOX_TESTS_COMMAND int NamedPipe_Create(int argc, wchar_t **argv) {
   return SBOX_TEST_SUCCEEDED;
 }
 
-// Tests if we can create a pipe in the sandbox. On XP, the sandbox can create
-// a pipe without any help but it fails on Vista, this is why we do not test
-// the "denied" case.
+// Tests if we can create a pipe in the sandbox.
 TEST(NamedPipePolicyTest, CreatePipe) {
+  TestRunner runner;
+  // TODO(nsylvain): This policy is wrong because "*" is a valid char in a
+  // namedpipe name. Here we apply it like a wildcard. http://b/893603
+  EXPECT_TRUE(runner.AddRule(TargetPolicy::SUBSYS_NAMED_PIPES,
+                             TargetPolicy::NAMEDPIPES_ALLOW_ANY,
+                             L"\\\\.\\pipe\\test*"));
+
+  EXPECT_EQ(SBOX_TEST_SUCCEEDED,
+            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\testbleh"));
+
+  // On XP, the sandbox can create a pipe without any help but it fails on
+  // Vista+, this is why we do not test the "denied" case.
+  if (base::win::OSInfo::GetInstance()->version() >= base::win::VERSION_VISTA) {
+    EXPECT_EQ(SBOX_TEST_DENIED,
+              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\bleh"));
+  }
+}
+
+// Tests if we can create a pipe with a path traversal in the sandbox.
+TEST(NamedPipePolicyTest, CreatePipeTraversal) {
   TestRunner runner;
   // TODO(nsylvain): This policy is wrong because "*" is a valid char in a
   // namedpipe name. Here we apply it like a wildcard. http://b/893603
@@ -56,8 +88,31 @@ TEST(NamedPipePolicyTest, CreatePipe) {
                              TargetPolicy::NAMEDPIPES_ALLOW_ANY,
                               L"\\\\.\\pipe\\test*"));
 
+  // On XP, the sandbox can create a pipe without any help but it fails on
+  // Vista+, this is why we do not test the "denied" case.
+  if (base::win::OSInfo::GetInstance()->version() >= base::win::VERSION_VISTA) {
+    EXPECT_EQ(SBOX_TEST_DENIED,
+              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test\\..\\bleh"));
+    EXPECT_EQ(SBOX_TEST_DENIED,
+              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test/../bleh"));
+    EXPECT_EQ(SBOX_TEST_DENIED,
+              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test\\../bleh"));
+    EXPECT_EQ(SBOX_TEST_DENIED,
+              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\test/..\\bleh"));
+  }
+}
+
+// This tests that path canonicalization is actually disabled if we use \\?\
+// syntax.
+TEST(NamedPipePolicyTest, CreatePipeCanonicalization) {
+  // "For file I/O, the "\\?\" prefix to a path string tells the Windows APIs to
+  // disable all string parsing and to send the string that follows it straight
+  // to the file system."
+  // http://msdn.microsoft.com/en-us/library/aa365247(VS.85).aspx
+  const wchar_t* argv[2] = { L"\\\\?\\pipe\\test\\..\\bleh",
+                             L"\\Device\\NamedPipe\\test" };
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
-            runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\testbleh"));
+            NamedPipe_Create(2, const_cast<wchar_t**>(argv)));
 }
 
 // The same test as CreatePipe but this time using strict interceptions.
@@ -73,6 +128,13 @@ TEST(NamedPipePolicyTest, CreatePipeStrictInterceptions) {
 
   EXPECT_EQ(SBOX_TEST_SUCCEEDED,
             runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\testbleh"));
+
+  // On XP, the sandbox can create a pipe without any help but it fails on
+  // Vista+, this is why we do not test the "denied" case.
+  if (base::win::OSInfo::GetInstance()->version() >= base::win::VERSION_VISTA) {
+    EXPECT_EQ(SBOX_TEST_DENIED,
+              runner.RunTest(L"NamedPipe_Create \\\\.\\pipe\\bleh"));
+  }
 }
 
 }  // namespace sandbox

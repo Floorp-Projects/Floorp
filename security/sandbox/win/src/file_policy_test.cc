@@ -62,7 +62,7 @@ SBOX_TESTS_COMMAND int File_Win32Create(int argc, wchar_t **argv) {
     SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
   }
 
-  std::wstring full_path = MakePathToSys(argv[0], false);
+  base::string16 full_path = MakePathToSys(argv[0], false);
   if (full_path.empty()) {
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
   }
@@ -94,7 +94,7 @@ SBOX_TESTS_COMMAND int File_CreateSys32(int argc, wchar_t **argv) {
   if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
-  std::wstring file(argv[0]);
+  base::string16 file(argv[0]);
   if (0 != _wcsnicmp(file.c_str(), kNTObjManPrefix, kNTObjManPrefixLen))
     file = MakePathToSys(argv[0], true);
 
@@ -132,7 +132,7 @@ SBOX_TESTS_COMMAND int File_OpenSys32(int argc, wchar_t **argv) {
   if (argc != 1)
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
 
-  std::wstring file = MakePathToSys(argv[0], true);
+  base::string16 file = MakePathToSys(argv[0], true);
   UNICODE_STRING object_name;
   RtlInitUnicodeString(&object_name, file.c_str());
 
@@ -156,7 +156,7 @@ SBOX_TESTS_COMMAND int File_OpenSys32(int argc, wchar_t **argv) {
 }
 
 SBOX_TESTS_COMMAND int File_GetDiskSpace(int argc, wchar_t **argv) {
-  std::wstring sys_path = MakePathToSys(L"", false);
+  base::string16 sys_path = MakePathToSys(L"", false);
   if (sys_path.empty()) {
     return SBOX_TEST_FAILED_TO_EXECUTE_COMMAND;
   }
@@ -212,7 +212,7 @@ SBOX_TESTS_COMMAND int File_QueryAttributes(int argc, wchar_t **argv) {
   bool expect_directory = (L'd' == argv[1][0]);
 
   UNICODE_STRING object_name;
-  std::wstring file = MakePathToSys(argv[0], true);
+  base::string16 file = MakePathToSys(argv[0], true);
   RtlInitUnicodeString(&object_name, file.c_str());
 
   OBJECT_ATTRIBUTES obj_attributes = {0};
@@ -265,8 +265,8 @@ TEST(FilePolicyTest, AllowNtCreateCalc) {
 }
 
 TEST(FilePolicyTest, AllowNtCreateWithNativePath) {
-  std::wstring calc = MakePathToSys(L"calc.exe", false);
-  std::wstring nt_path;
+  base::string16 calc = MakePathToSys(L"calc.exe", false);
+  base::string16 nt_path;
   ASSERT_TRUE(GetNtPathFromWin32Path(calc, &nt_path));
   TestRunner runner;
   runner.AddFsRule(TargetPolicy::FILES_ALLOW_READONLY, nt_path.c_str());
@@ -533,9 +533,9 @@ TEST(FilePolicyTest, DISABLED_TestReparsePoint) {
   ASSERT_TRUE(::CreateDirectory(temp_file_name, NULL));
 
   // Create a temporary file in the subfolder.
-  std::wstring subfolder = temp_file_name;
-  std::wstring temp_file_title = subfolder.substr(subfolder.rfind(L"\\") + 1);
-  std::wstring temp_file = subfolder + L"\\file_" + temp_file_title;
+  base::string16 subfolder = temp_file_name;
+  base::string16 temp_file_title = subfolder.substr(subfolder.rfind(L"\\") + 1);
+  base::string16 temp_file = subfolder + L"\\file_" + temp_file_title;
 
   HANDLE file = ::CreateFile(temp_file.c_str(), FILE_ALL_ACCESS,
                              FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
@@ -544,8 +544,8 @@ TEST(FilePolicyTest, DISABLED_TestReparsePoint) {
   ASSERT_TRUE(::CloseHandle(file));
 
   // Create a temporary file in the temp directory.
-  std::wstring temp_dir = temp_directory;
-  std::wstring temp_file_in_temp = temp_dir + L"file_" + temp_file_title;
+  base::string16 temp_dir = temp_directory;
+  base::string16 temp_file_in_temp = temp_dir + L"file_" + temp_file_title;
   file = ::CreateFile(temp_file_in_temp.c_str(), FILE_ALL_ACCESS,
                       FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
                       CREATE_ALWAYS, 0, NULL);
@@ -553,12 +553,12 @@ TEST(FilePolicyTest, DISABLED_TestReparsePoint) {
   ASSERT_TRUE(::CloseHandle(file));
 
   // Give write access to the temp directory.
-  std::wstring temp_dir_wildcard = temp_dir + L"*";
+  base::string16 temp_dir_wildcard = temp_dir + L"*";
   EXPECT_TRUE(runner.AddFsRule(TargetPolicy::FILES_ALLOW_ANY,
                                temp_dir_wildcard.c_str()));
 
   // Prepare the command to execute.
-  std::wstring command_write;
+  base::string16 command_write;
   command_write += L"File_Create Write \"";
   command_write += temp_file;
   command_write += L"\"";
@@ -573,7 +573,7 @@ TEST(FilePolicyTest, DISABLED_TestReparsePoint) {
                             OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
   EXPECT_TRUE(INVALID_HANDLE_VALUE != dir);
 
-  std::wstring temp_dir_nt;
+  base::string16 temp_dir_nt;
   temp_dir_nt += L"\\??\\";
   temp_dir_nt += temp_dir;
   EXPECT_TRUE(SetReparsePoint(dir, temp_dir_nt.c_str()));

@@ -12,7 +12,7 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#ifdef MOZ_CONTENT_SANDBOX // For upstream merging, use patch in bug 1018966 to reapply warn only sandbox code
+#ifdef MOZ_CONTENT_SANDBOX
 #include "mozilla/warnonlysandbox/warnOnlySandbox.h"
 #endif
 
@@ -176,8 +176,8 @@ NTSTATUS WINAPI TargetNtOpenFile(NtOpenFileFunction orig_OpenFile, PHANDLE file,
     }
 #ifdef MOZ_CONTENT_SANDBOX
     mozilla::warnonlysandbox::LogAllowed("NtOpenFile",
-                                        object_attributes->ObjectName->Buffer,
-                                        object_attributes->ObjectName->Length);
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
 #endif
   } while (false);
 

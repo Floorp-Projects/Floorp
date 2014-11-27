@@ -5,6 +5,8 @@
 import errors
 import types
 
+from marionette import HTMLElement
+
 """This file provides a set of expected conditions for common use
 cases when writing Marionette tests.
 
@@ -159,15 +161,33 @@ class element_displayed(object):
     meaning this expectation is not analogous to the behaviour of
     calling `is_displayed()` on an `HTMLElement`.
 
-    :param element: the element to perform the visibility check on
+    You can select which element to be checked for visibility by
+    supplying a locator::
+
+        displayed = Wait(marionette).until(expected.element_displayed(By.ID, "foo"))
+
+    Or by supplying an element::
+
+        el = marionette.find_element(By.ID, "foo")
+        displayed = Wait(marionette).until(expected.element_displayed(el))
+
+    :param args: locator or web element
     :returns: True if element is displayed, False if hidden
 
     """
 
-    def __init__(self, element):
-        self.el = element
+    def __init__(self, *args):
+        self.el = None
+        if len(args) == 1 and isinstance(args[0], HTMLElement):
+            self.el = args[0]
+        else:
+            self.locator = lambda m: m.find_element(*args)
 
     def __call__(self, marionette):
+        if self.el is None:
+            self.el = _find(marionette, self.locator)
+        if not self.el:
+            return False
         try:
             return self.el.is_displayed()
         except errors.StaleElementException:
@@ -184,13 +204,23 @@ class element_not_displayed(element_displayed):
     meaning this expectation is not analogous to the behaviour of
     calling `is_displayed()` on an `HTMLElement`.
 
-    :param element: the element to perform the visibility check on
-    :returns: True if element is hidden, False if visible
+    You can select which element to be checked for visibility by
+    supplying a locator::
+
+        hidden = Wait(marionette).until(expected.element_not_displayed(By.ID, "foo"))
+
+    Or by supplying an element::
+
+        el = marionette.find_element(By.ID, "foo")
+        hidden = Wait(marionette).until(expected.element_not_displayed(el))
+
+    :param args: locator or web element
+    :returns: True if element is hidden, False if displayed
 
     """
 
-    def __init__(self, element):
-        super(element_not_displayed, self).__init__(element)
+    def __init__(self, *args):
+        super(element_not_displayed, self).__init__(*args)
 
     def __call__(self, marionette):
         return not super(element_not_displayed, self).__call__(marionette)

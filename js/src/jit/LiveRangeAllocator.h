@@ -260,7 +260,7 @@ class LiveInterval
     };
 
   private:
-    Vector<Range, 1, IonAllocPolicy> ranges_;
+    Vector<Range, 1, JitAllocPolicy> ranges_;
     LAllocation alloc_;
     LiveInterval *spillInterval_;
     uint32_t vreg_;
@@ -428,7 +428,7 @@ class VirtualRegister
 {
     LNode *ins_;
     LDefinition *def_;
-    Vector<LiveInterval *, 1, IonAllocPolicy> intervals_;
+    Vector<LiveInterval *, 1, JitAllocPolicy> intervals_;
 
     // Whether def_ is a temp or an output.
     bool isTemp_ : 1;

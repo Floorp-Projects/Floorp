@@ -75,7 +75,6 @@
 #include "SVGTextFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleTransformMatrix.h"
-#include "nsStyleUtil.h"
 #include "nsIFrameInlines.h"
 #include "ImageContainer.h"
 #include "nsComputedDOMStyle.h"
@@ -3625,11 +3624,35 @@ ComputeConcreteObjectSize(const nsSize& aConstraintSize,
   }
 }
 
+// (Helper for HasInitialObjectFitAndPosition, to check
+// each "object-position" coord.)
+typedef nsStyleBackground::Position::PositionCoord PositionCoord;
+static bool
+IsCoord50Pct(const PositionCoord& aCoord)
+{
+  return (aCoord.mLength == 0 &&
+          aCoord.mHasPercent &&
+          aCoord.mPercent == 0.5f);
+}
+
+// Indicates whether the given nsStylePosition has the initial values
+// for the "object-fit" and "object-position" properties.
+static bool
+HasInitialObjectFitAndPosition(const nsStylePosition* aStylePos)
+{
+  const nsStyleBackground::Position& objectPos = aStylePos->mObjectPosition;
+
+  return aStylePos->mObjectFit == NS_STYLE_OBJECT_FIT_FILL &&
+    IsCoord50Pct(objectPos.mXPosition) &&
+    IsCoord50Pct(objectPos.mYPosition);
+}
+
 /* static */ nsRect
 nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
                                      const IntrinsicSize& aIntrinsicSize,
                                      const nsSize& aIntrinsicRatio,
-                                     const nsStylePosition* aStylePos)
+                                     const nsStylePosition* aStylePos,
+                                     nsPoint* aAnchorPoint)
 {
   // Step 1: Figure out our "concrete object size"
   // (the size of the region we'll actually draw our image's pixels into).
@@ -3649,8 +3672,23 @@ nsLayoutUtils::ComputeObjectDestRect(const nsRect& aConstraintRect,
   imageTopLeftPt += aConstraintRect.TopLeft();
   imageAnchorPt += aConstraintRect.TopLeft();
 
-  // XXXdholbert Per bug 1098417, we should be returning imageAnchorPt here,
-  // and our caller should make sure it's pixel-aligned.
+  if (aAnchorPoint) {
+    // Special-case: if our "object-fit" and "object-position" properties have
+    // their default values ("object-fit: fill; object-position:50% 50%"), then
+    // we'll override the calculated imageAnchorPt, and instead use the
+    // object's top-left corner.
+    //
+    // This special case is partly for backwards compatibility (since
+    // traditionally we've pixel-aligned the top-left corner of e.g. <img>
+    // elements), and partly because ComputeSnappedDrawingParameters produces
+    // less error if the anchor point is at the top-left corner. So, all other
+    // things being equal, we prefer that code path with less error.
+    if (HasInitialObjectFitAndPosition(aStylePos)) {
+      *aAnchorPoint = imageTopLeftPt;
+    } else {
+      *aAnchorPoint = imageAnchorPt;
+    }
+  }
   return nsRect(imageTopLeftPt, concreteObjectSize);
 }
 
@@ -4472,8 +4510,8 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
     // property (e.g. "width") for sizing purposes, *unless* they have
-    // "flex-basis:main-size", in which case they use their main-size property
-    // after all.
+    // "flex-basis:auto", in which case they use their main-size property after
+    // all.
     uint32_t flexDirection =
       aFrame->GetParent()->StylePosition()->mFlexDirection;
     isInlineFlexItem =
@@ -4483,8 +4521,21 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(WritingMode aWM,
     // NOTE: The logic here should match the similar chunk for determining
     // inlineStyleCoord and blockStyleCoord in nsFrame::ComputeSize().
     const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
-    if (!nsStyleUtil::IsFlexBasisMainSize(*flexBasis, isInlineFlexItem)) {
-      (isInlineFlexItem ? inlineStyleCoord : blockStyleCoord) = flexBasis;
+    if (flexBasis->GetUnit() != eStyleUnit_Auto) {
+      if (isInlineFlexItem) {
+        inlineStyleCoord = flexBasis;
+      } else {
+        // One caveat for vertical flex items: We don't support enumerated
+        // values (e.g. "max-content") for height properties yet. So, if our
+        // computed flex-basis is an enumerated value, we'll just behave as if
+        // it were "auto", which means "use the main-size property after all"
+        // (which is "height", in this case).
+        // NOTE: Once we support intrinsic sizing keywords for "height",
+        // we should remove this check.
+        if (flexBasis->GetUnit() != eStyleUnit_Enumerated) {
+          blockStyleCoord = flexBasis;
+        }
+      }
     }
   }
 
@@ -5677,6 +5728,7 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
                                const nsRect&          aDirty,
                                const SVGImageContext* aSVGContext,
                                uint32_t               aImageFlags,
+                               const nsPoint*         aAnchorPoint,
                                const nsRect*          aSourceArea)
 {
   nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
@@ -5712,7 +5764,8 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
   nsRect fill;
   fill.IntersectRect(aDest, dest);
   return DrawImageInternal(aContext, aPresContext, image,
-                           aGraphicsFilter, dest, fill, fill.TopLeft(),
+                           aGraphicsFilter, dest, fill,
+                           aAnchorPoint ? *aAnchorPoint : fill.TopLeft(),
                            aDirty, aSVGContext, aImageFlags);
 }
 

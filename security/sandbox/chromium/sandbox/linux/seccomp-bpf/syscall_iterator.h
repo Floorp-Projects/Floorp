@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "base/basictypes.h"
-#include "sandbox/linux/sandbox_export.h"
+#include "sandbox/sandbox_export.h"
 
 namespace sandbox {
 

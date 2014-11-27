@@ -6,6 +6,7 @@
 #define SANDBOX_SRC_NAMED_PIPE_DISPATCHER_H__
 
 #include "base/basictypes.h"
+#include "base/strings/string16.h"
 #include "sandbox/win/src/crosscall_server.h"
 #include "sandbox/win/src/sandbox_policy_base.h"
 
@@ -23,7 +24,7 @@ class NamedPipeDispatcher : public Dispatcher {
  private:
   // Processes IPC requests coming from calls to CreateNamedPipeW() in the
   // target.
-  bool CreateNamedPipe(IPCInfo* ipc, std::wstring* name, DWORD open_mode,
+  bool CreateNamedPipe(IPCInfo* ipc, base::string16* name, DWORD open_mode,
                        DWORD pipe_mode, DWORD max_instances,
                        DWORD out_buffer_size, DWORD in_buffer_size,
                        DWORD default_timeout);

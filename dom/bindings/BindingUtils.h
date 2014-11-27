@@ -855,18 +855,25 @@ MaybeWrapValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
   return MaybeWrapObjectValue(cx, rval);
 }
 
-// Create a JSObject wrapping "value", if there isn't one already, and store it
-// in rval.  "value" must be a concrete class that implements a
-// GetWrapperPreserveColor() which can return its existing wrapper, if any, and
-// a WrapObject() which will try to create a wrapper. Typically, this is done by
-// having "value" inherit from nsWrapperCache.
-//
-// The value stored in rval will be ready to be exposed to whatever JS
-// is running on cx right now.  In particular, it will be in the
-// compartment of cx, and outerized as needed.
+namespace binding_detail {
+enum GetOrCreateReflectorWrapBehavior {
+  eWrapIntoContextCompartment,
+  eDontWrapIntoContextCompartment
+};
+
 template <class T>
+struct TypeNeedsOuterization
+{
+  // We only need to outerize Window objects, so anything inheriting from
+  // nsGlobalWindow (which inherits from EventTarget itself).
+  static const bool value =
+    IsBaseOf<nsGlobalWindow, T>::value || IsSame<EventTarget, T>::value;
+};
+
+template <class T, GetOrCreateReflectorWrapBehavior wrapBehavior>
 MOZ_ALWAYS_INLINE bool
-WrapNewBindingObject(JSContext* cx, T* value, JS::MutableHandle<JS::Value> rval)
+DoGetOrCreateDOMReflector(JSContext* cx, T* value,
+                          JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(value);
   JSObject* obj = value->GetWrapperPreserveColor();
@@ -910,13 +917,52 @@ WrapNewBindingObject(JSContext* cx, T* value, JS::MutableHandle<JS::Value> rval)
   bool sameCompartment =
     js::GetObjectCompartment(obj) == js::GetContextCompartment(cx);
   if (sameCompartment && couldBeDOMBinding) {
-    // We only need to outerize Window objects, so anything inheriting from
-    // nsGlobalWindow (which inherits from EventTarget itself).
-    return IsBaseOf<nsGlobalWindow, T>::value || IsSame<EventTarget, T>::value ?
-           TryToOuterize(cx, rval) : true;
+    return TypeNeedsOuterization<T>::value ? TryToOuterize(cx, rval) : true;
+  }
+
+  if (wrapBehavior == eDontWrapIntoContextCompartment) {
+    if (TypeNeedsOuterization<T>::value) {
+      JSAutoCompartment ac(cx, obj);
+      return TryToOuterize(cx, rval);
+    }
+
+    return true;
   }
 
   return JS_WrapValue(cx, rval);
+}
+} // namespace binding_detail
+
+// Create a JSObject wrapping "value", if there isn't one already, and store it
+// in rval.  "value" must be a concrete class that implements a
+// GetWrapperPreserveColor() which can return its existing wrapper, if any, and
+// a WrapObject() which will try to create a wrapper. Typically, this is done by
+// having "value" inherit from nsWrapperCache.
+//
+// The value stored in rval will be ready to be exposed to whatever JS
+// is running on cx right now.  In particular, it will be in the
+// compartment of cx, and outerized as needed.
+template <class T>
+MOZ_ALWAYS_INLINE bool
+GetOrCreateDOMReflector(JSContext* cx, T* value,
+                        JS::MutableHandle<JS::Value> rval)
+{
+  using namespace binding_detail;
+  return DoGetOrCreateDOMReflector<T, eWrapIntoContextCompartment>(cx, value,
+                                                                   rval);
+}
+
+// Like GetOrCreateDOMReflector but doesn't wrap into the context compartment,
+// and hence does not actually require cx to be in a compartment.
+template <class T>
+MOZ_ALWAYS_INLINE bool
+GetOrCreateDOMReflectorNoWrap(JSContext* cx, T* value,
+                              JS::MutableHandle<JS::Value> rval)
+{
+  using namespace binding_detail;
+  return DoGetOrCreateDOMReflector<T, eDontWrapIntoContextCompartment>(cx,
+                                                                       value,
+                                                                       rval);
 }
 
 // Create a JSObject wrapping "value", for cases when "value" is a
@@ -1279,8 +1325,8 @@ VariantToJsval(JSContext* aCx, nsIVariant* aVariant,
 
 // Wrap an object "p" which is not using WebIDL bindings yet.  This _will_
 // actually work on WebIDL binding objects that are wrappercached, but will be
-// much slower than WrapNewBindingObject.  "cache" must either be null or be the
-// nsWrapperCache for "p".
+// much slower than GetOrCreateDOMReflector.  "cache" must either be null or be
+// the nsWrapperCache for "p".
 template<class T>
 inline bool
 WrapObject(JSContext* cx, T* p, nsWrapperCache* cache, const nsIID* iid,
@@ -1583,44 +1629,76 @@ WrapCallThisObject<JS::Rooted<JSObject*>>(JSContext* cx,
   return obj;
 }
 
-// Helper for calling WrapNewBindingObject with smart pointers
+// Helper for calling GetOrCreateDOMReflector with smart pointers
 // (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
 template <class T, bool isSmartPtr=HasgetMember<T>::Value>
-struct WrapNewBindingObjectHelper
+struct GetOrCreateDOMReflectorHelper
 {
-  static inline bool Wrap(JSContext* cx, const T& value,
-                          JS::MutableHandle<JS::Value> rval)
+  static inline bool GetOrCreate(JSContext* cx, const T& value,
+                                 JS::MutableHandle<JS::Value> rval)
   {
-    return WrapNewBindingObject(cx, value.get(), rval);
+    return GetOrCreateDOMReflector(cx, value.get(), rval);
   }
 };
 
 template <class T>
-struct WrapNewBindingObjectHelper<T, false>
+struct GetOrCreateDOMReflectorHelper<T, false>
 {
-  static inline bool Wrap(JSContext* cx, T& value,
-                          JS::MutableHandle<JS::Value> rval)
+  static inline bool GetOrCreate(JSContext* cx, T& value,
+                                 JS::MutableHandle<JS::Value> rval)
   {
-    return WrapNewBindingObject(cx, &value, rval);
+    return GetOrCreateDOMReflector(cx, &value, rval);
   }
 };
 
 template<class T>
 inline bool
-WrapNewBindingObject(JSContext* cx, T& value, JS::MutableHandle<JS::Value> rval)
+GetOrCreateDOMReflector(JSContext* cx, T& value,
+                        JS::MutableHandle<JS::Value> rval)
 {
-  return WrapNewBindingObjectHelper<T>::Wrap(cx, value, rval);
+  return GetOrCreateDOMReflectorHelper<T>::GetOrCreate(cx, value, rval);
 }
 
-// We need this version of WrapNewBindingObject for codegen, so it'll have the
-// same signature as WrapNewBindingNonWrapperCachedObject and
+// We need this version of GetOrCreateDOMReflector for codegen, so it'll have
+// the same signature as WrapNewBindingNonWrapperCachedObject and
 // WrapNewBindingNonWrapperCachedOwnedObject, which still need the scope.
 template<class T>
 inline bool
-WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
-                     JS::MutableHandle<JS::Value> rval)
+GetOrCreateDOMReflector(JSContext* cx, JS::Handle<JSObject*> scope, T& value,
+                        JS::MutableHandle<JS::Value> rval)
 {
-  return WrapNewBindingObject(cx, value, rval);
+  return GetOrCreateDOMReflector(cx, value, rval);
+}
+
+// Helper for calling GetOrCreateDOMReflectorNoWrap with smart pointers
+// (nsAutoPtr/nsRefPtr/nsCOMPtr) or references.
+template <class T, bool isSmartPtr=HasgetMember<T>::Value>
+struct GetOrCreateDOMReflectorNoWrapHelper
+{
+  static inline bool GetOrCreate(JSContext* cx, const T& value,
+                                 JS::MutableHandle<JS::Value> rval)
+  {
+    return GetOrCreateDOMReflectorNoWrap(cx, value.get(), rval);
+  }
+};
+
+template <class T>
+struct GetOrCreateDOMReflectorNoWrapHelper<T, false>
+{
+  static inline bool GetOrCreate(JSContext* cx, T& value,
+                                 JS::MutableHandle<JS::Value> rval)
+  {
+    return GetOrCreateDOMReflectorNoWrap(cx, &value, rval);
+  }
+};
+
+template<class T>
+inline bool
+GetOrCreateDOMReflectorNoWrap(JSContext* cx, T& value,
+                              JS::MutableHandle<JS::Value> rval)
+{
+  return
+    GetOrCreateDOMReflectorNoWrapHelper<T>::GetOrCreate(cx, value, rval);
 }
 
 template <class T>
