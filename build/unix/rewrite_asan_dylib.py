@@ -6,6 +6,7 @@ import sys
 import os
 import subprocess
 import shutil
+from buildconfig import substs
 
 '''
 Scans the given directories for binaries referencing the AddressSanitizer
@@ -28,7 +29,7 @@ def scan_directory(path):
                 continue
 
             try:
-                otoolOut = subprocess.check_output(['otool', '-L', filename])
+                otoolOut = subprocess.check_output([substs['OTOOL'], '-L', filename])
             except:
                 # Errors are expected on non-mach executables, ignore them and continue
                 continue

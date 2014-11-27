@@ -32,7 +32,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
-#include "nsStyleUtil.h"
 #include "nsIPresShell.h"
 #include "prlog.h"
 #include "prprf.h"
@@ -485,12 +484,8 @@ IsFontSizeInflationContainer(nsIFrame* aFrame,
   }
 
   nsIContent *content = aFrame->GetContent();
-  // Ruby text containers are excluded here because they inherit from block
-  // (should not be considered inline).
   bool isInline = (aFrame->GetDisplay() == NS_STYLE_DISPLAY_INLINE ||
-                   (aFrame->StyleDisplay()->IsRubyDisplayType() && 
-                    aFrame->GetDisplay() != 
-                      NS_STYLE_DISPLAY_RUBY_TEXT_CONTAINER) ||
+                   aFrame->StyleDisplay()->IsRubyDisplayType() ||
                    (aFrame->IsFloating() &&
                     aFrame->GetType() == nsGkAtoms::letterFrame) ||
                    // Given multiple frames for the same node, only the
@@ -4160,8 +4155,8 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
     // property (e.g. "width") for sizing purposes, *unless* they have
-    // "flex-basis:main-size", in which case they use their main-size property
-    // after all.
+    // "flex-basis:auto", in which case they use their main-size property after
+    // all.
     uint32_t flexDirection = GetParent()->StylePosition()->mFlexDirection;
     isInlineFlexItem =
       flexDirection == NS_STYLE_FLEX_DIRECTION_ROW ||
@@ -4171,9 +4166,21 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
     // inlineStyleCoord and blockStyleCoord in
     // nsLayoutUtils::ComputeSizeWithIntrinsicDimensions().
     const nsStyleCoord* flexBasis = &(stylePos->mFlexBasis);
-    if (!nsStyleUtil::IsFlexBasisMainSize(*flexBasis, isInlineFlexItem)) {
-      (isInlineFlexItem ?
-       inlineStyleCoord : blockStyleCoord) = flexBasis;
+    if (flexBasis->GetUnit() != eStyleUnit_Auto) {
+      if (isInlineFlexItem) {
+        inlineStyleCoord = flexBasis;
+      } else {
+        // One caveat for vertical flex items: We don't support enumerated
+        // values (e.g. "max-content") for height properties yet. So, if our
+        // computed flex-basis is an enumerated value, we'll just behave as if
+        // it were "auto", which means "use the main-size property after all"
+        // (which is "height", in this case).
+        // NOTE: Once we support intrinsic sizing keywords for "height",
+        // we should remove this check.
+        if (flexBasis->GetUnit() != eStyleUnit_Enumerated) {
+          blockStyleCoord = flexBasis;
+        }
+      }
     }
   }
 

@@ -34,8 +34,8 @@ SANDBOX_INTERCEPT HandleCloserInfo* g_handles_to_close;
 
 HandleCloser::HandleCloser() {}
 
-ResultCode HandleCloser::AddHandle(const char16* handle_type,
-                                   const char16* handle_name) {
+ResultCode HandleCloser::AddHandle(const base::char16* handle_type,
+                                   const base::char16* handle_name) {
   if (!handle_type)
     return SBOX_ERROR_BAD_PARAMS;
 
@@ -61,10 +61,10 @@ size_t HandleCloser::GetBufferSize() {
   for (HandleMap::iterator i = handles_to_close_.begin();
        i != handles_to_close_.end(); ++i) {
     size_t bytes_entry = offsetof(HandleListEntry, handle_type) +
-        (i->first.size() + 1) * sizeof(char16);
+        (i->first.size() + 1) * sizeof(base::char16);
     for (HandleMap::mapped_type::iterator j = i->second.begin();
          j != i->second.end(); ++j) {
-      bytes_entry += ((*j).size() + 1) * sizeof(char16);
+      bytes_entry += ((*j).size() + 1) * sizeof(base::char16);
     }
 
     // Round up to the nearest multiple of word size.
@@ -119,8 +119,9 @@ bool HandleCloser::SetupHandleList(void* buffer, size_t buffer_bytes) {
   handle_info->record_bytes = buffer_bytes;
   handle_info->num_handle_types = handles_to_close_.size();
 
-  char16* output = reinterpret_cast<char16*>(&handle_info->handle_entries[0]);
-  char16* end = reinterpret_cast<char16*>(
+  base::char16* output = reinterpret_cast<base::char16*>(
+      &handle_info->handle_entries[0]);
+  base::char16* end = reinterpret_cast<base::char16*>(
       reinterpret_cast<char*>(buffer) + buffer_bytes);
   for (HandleMap::iterator i = handles_to_close_.begin();
        i != handles_to_close_.end(); ++i) {
@@ -153,28 +154,7 @@ bool HandleCloser::SetupHandleList(void* buffer, size_t buffer_bytes) {
   return output <= end;
 }
 
-bool HandleCloser::SetupHandleInterceptions(InterceptionManager* manager) {
-  // We need to intercept CreateThread if we're closing ALPC port clients.
-  HandleMap::iterator names = handles_to_close_.find(L"ALPC Port");
-  if (base::win::GetVersion() >= base::win::VERSION_VISTA &&
-      names != handles_to_close_.end() &&
-      (names->second.empty() || names->second.size() == 0)) {
-    if (!INTERCEPT_EAT(manager, kKerneldllName, CreateThread,
-                       CREATE_THREAD_ID, 28)) {
-      return false;
-    }
-    if (!INTERCEPT_EAT(manager, kKerneldllName, GetUserDefaultLCID,
-                       GET_USER_DEFAULT_LCID_ID, 4)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  return true;
-}
-
-bool GetHandleName(HANDLE handle, string16* handle_name) {
+bool GetHandleName(HANDLE handle, base::string16* handle_name) {
   static NtQueryObject QueryObject = NULL;
   if (!QueryObject)
     ResolveNTFunctionPtr("NtQueryObject", &QueryObject);

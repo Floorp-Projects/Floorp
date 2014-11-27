@@ -57,7 +57,9 @@ namespace base {
 template <typename Type>
 struct DefaultLazyInstanceTraits {
   static const bool kRegisterOnExit = true;
+#ifndef NDEBUG
   static const bool kAllowedToAccessOnNonjoinableThread = false;
+#endif
 
   static Type* New(void* instance) {
     DCHECK_EQ(reinterpret_cast<uintptr_t>(instance) & (ALIGNOF(Type) - 1), 0u)
@@ -89,7 +91,9 @@ namespace internal {
 template <typename Type>
 struct LeakyLazyInstanceTraits {
   static const bool kRegisterOnExit = false;
+#ifndef NDEBUG
   static const bool kAllowedToAccessOnNonjoinableThread = true;
+#endif
 
   static Type* New(void* instance) {
     ANNOTATE_SCOPED_MEMORY_LEAK;

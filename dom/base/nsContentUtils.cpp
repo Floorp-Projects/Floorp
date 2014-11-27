@@ -6041,7 +6041,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (!WrapNewBindingObject(aCx, blob, aBlob)) {
+  if (!GetOrCreateDOMReflector(aCx, blob, aBlob)) {
     return NS_ERROR_FAILURE;
   }
 

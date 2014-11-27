@@ -1160,7 +1160,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
           return true;
         }
 
-        if (!WrapNewBindingObject(cx, f, desc.value())) {
+        if (!GetOrCreateDOMReflector(cx, f, desc.value())) {
           return false;
         }
 

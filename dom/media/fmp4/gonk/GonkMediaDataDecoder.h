@@ -33,6 +33,7 @@ public:
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) = 0;
   virtual nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) = 0;
+  virtual nsresult Flush() = 0;
 
   virtual void ReleaseMediaResources() {};
 };

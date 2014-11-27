@@ -60,7 +60,7 @@ bool NamedPipePolicy::GenerateRules(const wchar_t* name,
 
 DWORD NamedPipePolicy::CreateNamedPipeAction(EvalResult eval_result,
                                              const ClientInfo& client_info,
-                                             const std::wstring &name,
+                                             const base::string16 &name,
                                              DWORD open_mode, DWORD pipe_mode,
                                              DWORD max_instances,
                                              DWORD out_buffer_size,

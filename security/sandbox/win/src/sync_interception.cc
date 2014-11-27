@@ -12,113 +12,175 @@
 #include "sandbox/win/src/sandbox_nt_util.h"
 #include "sandbox/win/src/sharedmem_ipc_client.h"
 #include "sandbox/win/src/target_services.h"
-#ifdef MOZ_CONTENT_SANDBOX // For upstream merging, use patch in bug 1018966 to reapply warn only sandbox code
+#ifdef MOZ_CONTENT_SANDBOX
 #include "mozilla/warnonlysandbox/warnOnlySandbox.h"
 #endif
 
 namespace sandbox {
 
-HANDLE WINAPI TargetCreateEventW(CreateEventWFunction orig_CreateEvent,
-                                 LPSECURITY_ATTRIBUTES security_attributes,
-                                 BOOL manual_reset, BOOL initial_state,
-                                 LPCWSTR name) {
-  // Check if the process can create it first.
-  HANDLE handle = orig_CreateEvent(security_attributes, manual_reset,
-                                   initial_state, name);
-  DWORD original_error = ::GetLastError();
-  if (NULL != handle)
-    return handle;
+ResultCode ProxyCreateEvent(LPCWSTR name,
+                            BOOL initial_state,
+                            EVENT_TYPE event_type,
+                            void* ipc_memory,
+                            CrossCallReturn* answer) {
+  CountedParameterSet<NameBased> params;
+  params[NameBased::NAME] = ParamPickerMake(name);
 
-#ifdef MOZ_CONTENT_SANDBOX
-  mozilla::warnonlysandbox::LogBlocked("CreateEventW", name);
-#endif
+  if (!QueryBroker(IPC_CREATEEVENT_TAG, params.GetBase()))
+    return SBOX_ERROR_GENERIC;
 
-  // We don't trust that the IPC can work this early.
-  if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
-    return NULL;
-
-  do {
-    if (security_attributes)
-      break;
-
-    void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
-      break;
-
-    CountedParameterSet<NameBased> params;
-    params[NameBased::NAME] = ParamPickerMake(name);
-
-    if (!QueryBroker(IPC_CREATEEVENT_TAG, params.GetBase()))
-      break;
-
-    SharedMemIPCClient ipc(memory);
-    CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IPC_CREATEEVENT_TAG, name, manual_reset,
-                                initial_state, &answer);
-
-    if (SBOX_ALL_OK != code)
-      break;
-
-    ::SetLastError(answer.win32_result);
-#ifdef MOZ_CONTENT_SANDBOX
-    mozilla::warnonlysandbox::LogAllowed("CreateEventW", name);
-#endif
-    return answer.handle;
-  } while (false);
-
-  ::SetLastError(original_error);
-  return NULL;
+  SharedMemIPCClient ipc(ipc_memory);
+  ResultCode code = CrossCall(ipc, IPC_CREATEEVENT_TAG, name, event_type,
+                              initial_state, answer);
+  return code;
 }
 
-// Interception of OpenEventW on the child process.
-// It should never be called directly
-HANDLE WINAPI TargetOpenEventW(OpenEventWFunction orig_OpenEvent,
-                               ACCESS_MASK desired_access, BOOL inherit_handle,
-                               LPCWSTR name) {
-  // Check if the process can open it first.
-  HANDLE handle = orig_OpenEvent(desired_access, inherit_handle, name);
-  DWORD original_error = ::GetLastError();
-  if (NULL != handle)
-    return handle;
+ResultCode ProxyOpenEvent(LPCWSTR name,
+                          ACCESS_MASK desired_access,
+                          void* ipc_memory,
+                          CrossCallReturn* answer) {
+  CountedParameterSet<OpenEventParams> params;
+  params[OpenEventParams::NAME] = ParamPickerMake(name);
+  params[OpenEventParams::ACCESS] = ParamPickerMake(desired_access);
+
+  if (!QueryBroker(IPC_OPENEVENT_TAG, params.GetBase()))
+    return SBOX_ERROR_GENERIC;
+
+  SharedMemIPCClient ipc(ipc_memory);
+  ResultCode code = CrossCall(ipc, IPC_OPENEVENT_TAG, name, desired_access,
+                              answer);
+
+  return code;
+}
+
+NTSTATUS WINAPI TargetNtCreateEvent(NtCreateEventFunction orig_CreateEvent,
+                                    PHANDLE event_handle,
+                                    ACCESS_MASK desired_access,
+                                    POBJECT_ATTRIBUTES object_attributes,
+                                    EVENT_TYPE event_type,
+                                    BOOLEAN initial_state) {
+  NTSTATUS status = orig_CreateEvent(event_handle, desired_access,
+                                     object_attributes, event_type,
+                                     initial_state);
+  if (status != STATUS_ACCESS_DENIED || !object_attributes)
+    return status;
 
 #ifdef MOZ_CONTENT_SANDBOX
-  mozilla::warnonlysandbox::LogBlocked("OpenEventW", name);
+  mozilla::warnonlysandbox::LogBlocked("NtCreateEvent",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
 #endif
 
   // We don't trust that the IPC can work this early.
   if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
-    return NULL;
+    return status;
 
   do {
+    if (!ValidParameter(event_handle, sizeof(HANDLE), WRITE))
+      break;
+
     void* memory = GetGlobalIPCMemory();
-    if (NULL == memory)
+    if (memory == NULL)
       break;
 
-    uint32 inherit_handle_ipc = inherit_handle;
-    CountedParameterSet<OpenEventParams> params;
-    params[OpenEventParams::NAME] = ParamPickerMake(name);
-    params[OpenEventParams::ACCESS] = ParamPickerMake(desired_access);
+    OBJECT_ATTRIBUTES object_attribs_copy = *object_attributes;
+    // The RootDirectory points to BaseNamedObjects. We can ignore it.
+    object_attribs_copy.RootDirectory = NULL;
 
-    if (!QueryBroker(IPC_OPENEVENT_TAG, params.GetBase()))
+    wchar_t* name = NULL;
+    uint32 attributes = 0;
+    NTSTATUS ret = AllocAndCopyName(&object_attribs_copy, &name, &attributes,
+                                    NULL);
+    if (!NT_SUCCESS(ret) || name == NULL)
       break;
 
-    SharedMemIPCClient ipc(memory);
     CrossCallReturn answer = {0};
-    ResultCode code = CrossCall(ipc, IPC_OPENEVENT_TAG, name, desired_access,
-                                inherit_handle_ipc, &answer);
+    answer.nt_status = status;
+    ResultCode code = ProxyCreateEvent(name, initial_state, event_type, memory,
+                                       &answer);
+    operator delete(name, NT_ALLOC);
 
-    if (SBOX_ALL_OK != code)
+    if (code != SBOX_ALL_OK) {
+      status = answer.nt_status;
       break;
-
-    ::SetLastError(answer.win32_result);
+    }
+    __try {
+      *event_handle = answer.handle;
+      status = STATUS_SUCCESS;
+    } __except(EXCEPTION_EXECUTE_HANDLER) {
+      break;
+    }
 #ifdef MOZ_CONTENT_SANDBOX
-    mozilla::warnonlysandbox::LogAllowed("OpenEventW", name);
+    mozilla::warnonlysandbox::LogAllowed("NtCreateEvent",
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
 #endif
-    return answer.handle;
   } while (false);
 
-  ::SetLastError(original_error);
-  return NULL;
+  return status;
+}
+
+NTSTATUS WINAPI TargetNtOpenEvent(NtOpenEventFunction orig_OpenEvent,
+                                  PHANDLE event_handle,
+                                  ACCESS_MASK desired_access,
+                                  POBJECT_ATTRIBUTES object_attributes) {
+  NTSTATUS status = orig_OpenEvent(event_handle, desired_access,
+                                   object_attributes);
+  if (status != STATUS_ACCESS_DENIED || !object_attributes)
+    return status;
+
+#ifdef MOZ_CONTENT_SANDBOX
+  mozilla::warnonlysandbox::LogBlocked("NtOpenEvent",
+                                       object_attributes->ObjectName->Buffer,
+                                       object_attributes->ObjectName->Length);
+#endif
+
+  // We don't trust that the IPC can work this early.
+  if (!SandboxFactory::GetTargetServices()->GetState()->InitCalled())
+    return status;
+
+  do {
+    if (!ValidParameter(event_handle, sizeof(HANDLE), WRITE))
+      break;
+
+    void* memory = GetGlobalIPCMemory();
+    if (memory == NULL)
+      break;
+
+    OBJECT_ATTRIBUTES object_attribs_copy = *object_attributes;
+    // The RootDirectory points to BaseNamedObjects. We can ignore it.
+    object_attribs_copy.RootDirectory = NULL;
+
+    wchar_t* name = NULL;
+    uint32 attributes = 0;
+    NTSTATUS ret = AllocAndCopyName(&object_attribs_copy, &name, &attributes,
+                                    NULL);
+    if (!NT_SUCCESS(ret) || name == NULL)
+      break;
+
+    CrossCallReturn answer = {0};
+    answer.nt_status = status;
+    ResultCode code = ProxyOpenEvent(name, desired_access, memory, &answer);
+    operator delete(name, NT_ALLOC);
+
+    if (code != SBOX_ALL_OK) {
+      status = answer.nt_status;
+      break;
+    }
+    __try {
+      *event_handle = answer.handle;
+      status = STATUS_SUCCESS;
+    } __except(EXCEPTION_EXECUTE_HANDLER) {
+      break;
+    }
+#ifdef MOZ_CONTENT_SANDBOX
+    mozilla::warnonlysandbox::LogAllowed("NtOpenEvent",
+                                         object_attributes->ObjectName->Buffer,
+                                         object_attributes->ObjectName->Length);
+#endif
+  } while (false);
+
+  return status;
 }
 
 }  // namespace sandbox

@@ -18,8 +18,8 @@
 #include "jit/AtomicOp.h"
 #include "jit/FixedList.h"
 #include "jit/InlineList.h"
-#include "jit/IonAllocPolicy.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/JitAllocPolicy.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MOpcodes.h"
 #include "jit/TypedObjectPrediction.h"
 #include "jit/TypePolicy.h"
@@ -839,8 +839,8 @@ class MUseDefIterator
     }
 };
 
-typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
-typedef Vector<MInstruction *, 6, IonAllocPolicy> MInstructionVector;
+typedef Vector<MDefinition *, 8, JitAllocPolicy> MDefinitionVector;
+typedef Vector<MInstruction *, 6, JitAllocPolicy> MInstructionVector;
 
 // An instruction is an SSA name that is inserted into a basic block's IR
 // stream.
@@ -2156,11 +2156,11 @@ class MTableSwitch MOZ_FINAL
     // The successors of the tableswitch
     // - First successor = the default case
     // - Successor 2 and higher = the cases sorted on case index.
-    Vector<MBasicBlock*, 0, IonAllocPolicy> successors_;
-    Vector<size_t, 0, IonAllocPolicy> cases_;
+    Vector<MBasicBlock*, 0, JitAllocPolicy> successors_;
+    Vector<size_t, 0, JitAllocPolicy> cases_;
 
     // Contains the blocks/cases that still need to get build
-    Vector<MBasicBlock*, 0, IonAllocPolicy> blocks_;
+    Vector<MBasicBlock*, 0, JitAllocPolicy> blocks_;
 
     MUse operand_;
     int32_t low_;
@@ -6222,7 +6222,7 @@ class MLoadArrowThis
 
 class MPhi MOZ_FINAL : public MDefinition, public InlineListNode<MPhi>
 {
-    js::Vector<MUse, 2, IonAllocPolicy> inputs_;
+    js::Vector<MUse, 2, JitAllocPolicy> inputs_;
 
     TruncateKind truncateKind_;
     bool hasBackedgeType_;
@@ -9020,8 +9020,8 @@ class MStoreFixedSlot
     ALLOW_CLONE(MStoreFixedSlot)
 };
 
-typedef Vector<JSObject *, 4, IonAllocPolicy> ObjectVector;
-typedef Vector<bool, 4, IonAllocPolicy> BoolVector;
+typedef Vector<JSObject *, 4, JitAllocPolicy> ObjectVector;
+typedef Vector<bool, 4, JitAllocPolicy> BoolVector;
 
 class InlinePropertyTable : public TempObject
 {
@@ -9036,7 +9036,7 @@ class InlinePropertyTable : public TempObject
 
     jsbytecode *pc_;
     MResumePoint *priorResumePoint_;
-    Vector<Entry *, 4, IonAllocPolicy> entries_;
+    Vector<Entry *, 4, JitAllocPolicy> entries_;
 
   public:
     InlinePropertyTable(TempAllocator &alloc, jsbytecode *pc)
@@ -9204,7 +9204,7 @@ class MGetPropertyPolymorphic
         Shape *shape;
     };
 
-    Vector<Entry, 4, IonAllocPolicy> shapes_;
+    Vector<Entry, 4, JitAllocPolicy> shapes_;
     AlwaysTenuredPropertyName name_;
 
     MGetPropertyPolymorphic(TempAllocator &alloc, MDefinition *obj, PropertyName *name)
@@ -9275,7 +9275,7 @@ class MSetPropertyPolymorphic
         Shape *shape;
     };
 
-    Vector<Entry, 4, IonAllocPolicy> shapes_;
+    Vector<Entry, 4, JitAllocPolicy> shapes_;
     bool needsBarrier_;
 
     MSetPropertyPolymorphic(TempAllocator &alloc, MDefinition *obj, MDefinition *value)
@@ -9337,7 +9337,7 @@ class MDispatchInstruction
           : func(func), block(block)
         { }
     };
-    Vector<Entry, 4, IonAllocPolicy> map_;
+    Vector<Entry, 4, JitAllocPolicy> map_;
 
     // An optional fallback path that uses MCall.
     MBasicBlock *fallback_;
@@ -9603,7 +9603,7 @@ class MGuardShapePolymorphic
   : public MUnaryInstruction,
     public SingleObjectPolicy::Data
 {
-    Vector<Shape *, 4, IonAllocPolicy> shapes_;
+    Vector<Shape *, 4, JitAllocPolicy> shapes_;
 
     MGuardShapePolymorphic(TempAllocator &alloc, MDefinition *obj)
       : MUnaryInstruction(obj),

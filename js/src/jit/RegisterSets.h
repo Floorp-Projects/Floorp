@@ -10,7 +10,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "jit/Registers.h"
 
 namespace js {

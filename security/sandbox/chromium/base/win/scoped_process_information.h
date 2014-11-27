@@ -18,32 +18,9 @@ namespace win {
 // structures. Allows clients to take ownership of either handle independently.
 class BASE_EXPORT ScopedProcessInformation {
  public:
-  // Helper object to contain the effect of Receive() to the funtion that needs
-  // a pointer.
-  class Receiver {
-   public:
-    explicit Receiver(ScopedProcessInformation* owner)
-        : info_(),
-          owner_(owner) {}
-    ~Receiver() { owner_->Set(info_); }
-
-    operator PROCESS_INFORMATION*() { return &info_; }
-
-   private:
-    PROCESS_INFORMATION info_;
-    ScopedProcessInformation* owner_;
-  };
-
   ScopedProcessInformation();
+  explicit ScopedProcessInformation(const PROCESS_INFORMATION& process_info);
   ~ScopedProcessInformation();
-
-  // Returns an object that may be passed to API calls such as CreateProcess.
-  // DCHECKs that the object is not currently holding any handles.
-  // HANDLEs stored in the returned PROCESS_INFORMATION will be owned by this
-  // instance.
-  // The intended use case is something like this:
-  //   if (::CreateProcess(..., startup_info, scoped_proces_info.Receive()))
-  Receiver Receive();
 
   // Returns true iff this instance is holding a thread and/or process handle.
   bool IsValid() const;

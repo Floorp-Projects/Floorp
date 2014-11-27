@@ -253,11 +253,6 @@ public:
   virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
                             RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
 
-  virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
-  {
-    return mTextureInfo;
-  }
-
 protected:
   void DestroyBuffers();
 
@@ -270,7 +265,6 @@ protected:
                            uint32_t aFlags);
 
   void CreateBackBuffer(const nsIntRect& aBufferRect);
-
 
   // Ensure we have a valid back buffer if we have a valid front buffer (i.e.
   // if a backbuffer has been created.)
@@ -294,7 +288,6 @@ protected:
   // painting.
   nsTArray<RefPtr<TextureClient> > mOldTextures;
 
-  TextureInfo mTextureInfo;
   bool mIsNewBuffer;
   bool mFrontAndBackBufferDiffer;
   gfx::IntSize mSize;
@@ -317,9 +310,8 @@ class ContentClientDoubleBuffered : public ContentClientRemoteBuffer
 public:
   explicit ContentClientDoubleBuffered(CompositableForwarder* aFwd)
     : ContentClientRemoteBuffer(aFwd)
-  {
-    mTextureInfo.mCompositableType = CompositableType::CONTENT_DOUBLE;
-  }
+  {}
+
   virtual ~ContentClientDoubleBuffered() {}
 
   virtual void Clear() MOZ_OVERRIDE
@@ -340,6 +332,11 @@ public:
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) MOZ_OVERRIDE;
 
   virtual void EnsureBackBufferIfFrontBuffer() MOZ_OVERRIDE;
+
+  virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
+  {
+    return TextureInfo(CompositableType::CONTENT_DOUBLE, mTextureFlags);
+  }
 
 protected:
   virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
@@ -377,11 +374,15 @@ public:
   explicit ContentClientSingleBuffered(CompositableForwarder* aFwd)
     : ContentClientRemoteBuffer(aFwd)
   {
-    mTextureInfo.mCompositableType = CompositableType::CONTENT_SINGLE;
   }
   virtual ~ContentClientSingleBuffered() {}
 
   virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) MOZ_OVERRIDE;
+
+  virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
+  {
+    return TextureInfo(CompositableType::CONTENT_SINGLE, mTextureFlags);
+  }
 };
 
 /**
@@ -400,7 +401,7 @@ public:
     , mHasBuffer(false)
     , mHasBufferOnWhite(false)
   {
-    mTextureInfo.mCompositableType = CompositableType::BUFFER_CONTENT_INC;
+    mTextureInfo.mCompositableType = CompositableType::CONTENT_INC;
   }
 
   typedef RotatedContentBuffer::PaintState PaintState;

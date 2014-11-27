@@ -19,32 +19,21 @@
 namespace mozilla {
 namespace layers {
 
-typedef int32_t SurfaceDescriptorType;
-const SurfaceDescriptorType SURFACEDESCRIPTOR_UNKNOWN = 0;
-
 /**
  * Flags used by texture clients and texture hosts. These are passed from client
  * side to host side when textures and compositables are created. Usually set
  * by the compositableCient, they may be modified by either the compositable or
  * texture clients.
- *
- * XXX - switch to all caps constant names which seems to be the standard in gecko
  */
 MOZ_BEGIN_ENUM_CLASS(TextureFlags, uint32_t)
   NO_FLAGS           = 0,
   // Use nearest-neighbour texture filtering (as opposed to linear filtering).
   USE_NEAREST_FILTER = 1 << 0,
-  // The texture should be flipped around the y-axis when composited.
+  // The texture should be flipped along the y-axis when composited.
   NEEDS_Y_FLIP       = 1 << 1,
   // Force the texture to be represented using a single tile (note that this means
   // tiled textures, not tiled layers).
   DISALLOW_BIGIMAGE  = 1 << 2,
-  // Allow using 'repeat' mode for wrapping.
-  ALLOW_REPEAT       = 1 << 3,
-  // The texture represents a tile which is newly created.
-  NEW_TILE           = 1 << 4,
-  // The texture is part of a component-alpha pair
-  COMPONENT_ALPHA    = 1 << 5,
   // The buffer will be treated as if the RB bytes are swapped.
   // This is useful for rendering using Cairo/Thebes, because there is no
   // BGRX Android pixel format, and so we have to do byte swapping.
@@ -52,45 +41,32 @@ MOZ_BEGIN_ENUM_CLASS(TextureFlags, uint32_t)
   // For example, if the GraphicBuffer has an Android pixel format of
   // PIXEL_FORMAT_RGBA_8888 and isRBSwapped is true, when it is sampled
   // (for example, with GL), a BGRA shader should be used.
-  RB_SWAPPED         = 1 << 6,
-
-  FRONT              = 1 << 7,
-  // A texture host on white for component alpha
-  ON_WHITE           = 1 << 8,
-  // A texture host on black for component alpha
-  ON_BLACK           = 1 << 9,
-  // A texture host that supports tiling
-  TILE               = 1 << 10,
-  // A texture should be recycled when no longer in used
-  RECYCLE            = 1 << 11,
-  // Texture contents should be initialized
-  // from the previous texture.
-  COPY_PREVIOUS      = 1 << 12,
-  // Who is responsible for deallocating the shared data.
-  // if DEALLOCATE_CLIENT is set, the shared data is deallocated on the
+  RB_SWAPPED         = 1 << 3,
+  // Data in this texture has not been alpha-premultiplied.
+  // XXX - Apparently only used with ImageClient/Host
+  NON_PREMULTIPLIED  = 1 << 4,
+  // The texture should be recycled when no longer in used
+  RECYCLE            = 1 << 5,
+  // If DEALLOCATE_CLIENT is set, the shared data is deallocated on the
   // client side and requires some extra synchronizaion to ensure race-free
   // deallocation.
   // The default behaviour is to deallocate on the host side.
-  DEALLOCATE_CLIENT  = 1 << 13,
+  DEALLOCATE_CLIENT  = 1 << 6,
   // After being shared ith the compositor side, an immutable texture is never
   // modified, it can only be read. It is safe to not Lock/Unlock immutable
   // textures.
-  IMMUTABLE          = 1 << 14,
+  IMMUTABLE          = 1 << 7,
   // The contents of the texture must be uploaded or copied immediately
   // during the transaction, because the producer may want to write
   // to it again.
-  IMMEDIATE_UPLOAD   = 1 << 15,
-  // The texture is going to be used as part of a double
-  // buffered pair, and so we can guarantee that the producer/consumer
-  // won't be racing to access its contents.
-  DOUBLE_BUFFERED    = 1 << 16,
-  // Data in this texture has not been alpha-premultiplied.
-  NON_PREMULTIPLIED  = 1 << 18,
+  IMMEDIATE_UPLOAD   = 1 << 8,
+  // The texture is part of a component-alpha pair
+  COMPONENT_ALPHA    = 1 << 9,
 
   // OR union of all valid bits
-  ALL_BITS           = (1 << 19) - 1,
+  ALL_BITS           = (1 << 10) - 1,
   // the default flags
-  DEFAULT = FRONT
+  DEFAULT = NO_FLAGS
 MOZ_END_ENUM_CLASS(TextureFlags)
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TextureFlags)
 
@@ -101,7 +77,6 @@ TextureRequiresLocking(TextureFlags aFlags)
   // within a transaction, then we need to support
   // locking correctly.
   return !(aFlags & (TextureFlags::IMMEDIATE_UPLOAD |
-                     TextureFlags::DOUBLE_BUFFERED |
                      TextureFlags::IMMUTABLE));
 }
 
@@ -158,24 +133,21 @@ MOZ_END_ENUM_CLASS(EffectTypes)
  * How the Compositable should manage textures.
  */
 MOZ_BEGIN_ENUM_CLASS(CompositableType, uint8_t)
-  BUFFER_UNKNOWN,
-  // the deprecated compositable types
-  BUFFER_CONTENT_INC,     // painted layer interface, only sends incremental
-                          // updates to a texture on the compositor side.
-  // somewhere in the middle
-  BUFFER_TILED,           // tiled painted layer
-  BUFFER_SIMPLE_TILED,
-  // the new compositable types
+  UNKNOWN,
+  CONTENT_INC,     // painted layer interface, only sends incremental
+                   // updates to a texture on the compositor side.
+  CONTENT_TILED,   // tiled painted layer
   IMAGE,           // image with single buffering
   IMAGE_OVERLAY,   // image without buffer
   IMAGE_BRIDGE,    // ImageBridge protocol
   CONTENT_SINGLE,  // painted layer interface, single buffering
   CONTENT_DOUBLE,  // painted layer interface, double buffering
-  BUFFER_COUNT
+  COUNT
 MOZ_END_ENUM_CLASS(CompositableType)
 
 /**
  * How the texture host is used for composition,
+ * XXX - Only used by ContentClientIncremental
  */
 MOZ_BEGIN_ENUM_CLASS(DeprecatedTextureHostFlags, uint8_t)
   DEFAULT = 0,       // The default texture host for the given SurfaceDescriptor
@@ -217,8 +189,8 @@ struct TextureFactoryIdentifier
 /**
  * Identify a texture to a compositable. Many textures can have the same id, but
  * the id is unique for any texture owned by a particular compositable.
- * XXX - This is now redundant with TextureFlags. it ill be removed along with
- * deprecated texture classes.
+ * XXX - We don't really need this, it will be removed along with the incremental
+ * ContentClient/Host.
  */
 MOZ_BEGIN_ENUM_CLASS(TextureIdentifier, uint8_t)
   Front = 1,
@@ -238,19 +210,21 @@ MOZ_END_ENUM_CLASS(TextureIdentifier)
 struct TextureInfo
 {
   CompositableType mCompositableType;
+  // XXX - only used by ContentClientIncremental
   DeprecatedTextureHostFlags mDeprecatedTextureHostFlags;
   TextureFlags mTextureFlags;
 
   TextureInfo()
-    : mCompositableType(CompositableType::BUFFER_UNKNOWN)
+    : mCompositableType(CompositableType::UNKNOWN)
     , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
     , mTextureFlags(TextureFlags::NO_FLAGS)
   {}
 
-  explicit TextureInfo(CompositableType aType)
+  explicit TextureInfo(CompositableType aType,
+                       TextureFlags aTextureFlags = TextureFlags::DEFAULT)
     : mCompositableType(aType)
     , mDeprecatedTextureHostFlags(DeprecatedTextureHostFlags::DEFAULT)
-    , mTextureFlags(TextureFlags::NO_FLAGS)
+    , mTextureFlags(aTextureFlags)
   {}
 
   bool operator==(const TextureInfo& aOther) const

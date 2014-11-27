@@ -12,7 +12,7 @@
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineRegisters.h"
-#include "jit/IonFrames.h"
+#include "jit/JitFrames.h"
 #include "jit/mips/Simulator-mips.h"
 #include "jit/MoveEmitter.h"
 
@@ -1490,7 +1490,7 @@ MacroAssemblerMIPSCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
     bind(cl.src());
     *offset = currentOffset();
 
-    MOZ_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
+    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
     return addCodeLabel(cl);
 }
 
@@ -1511,7 +1511,7 @@ MacroAssemblerMIPSCompat::callWithExitFrame(Label *target)
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
     Push(Imm32(descriptor)); // descriptor
 
-    ma_callIonHalfPush(target);
+    ma_callJitHalfPush(target);
 }
 
 void
@@ -1522,7 +1522,7 @@ MacroAssemblerMIPSCompat::callWithExitFrame(JitCode *target)
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
-    ma_callIonHalfPush(ScratchRegister);
+    ma_callJitHalfPush(ScratchRegister);
 }
 
 void
@@ -1534,24 +1534,24 @@ MacroAssemblerMIPSCompat::callWithExitFrame(JitCode *target, Register dynStack)
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
-    ma_callIonHalfPush(ScratchRegister);
+    ma_callJitHalfPush(ScratchRegister);
 }
 
 void
-MacroAssemblerMIPSCompat::callIon(Register callee)
+MacroAssemblerMIPSCompat::callJit(Register callee)
 {
     MOZ_ASSERT((framePushed() & 3) == 0);
     if ((framePushed() & 7) == 4) {
-        ma_callIonHalfPush(callee);
+        ma_callJitHalfPush(callee);
     } else {
         adjustFrame(sizeof(uint32_t));
-        ma_callIon(callee);
+        ma_callJit(callee);
     }
 }
 void
 MacroAssemblerMIPSCompat::callJitFromAsmJS(Register callee)
 {
-    ma_callIonNoPush(callee);
+    ma_callJitNoPush(callee);
 
     // The JIT ABI has the callee pop the return address off the stack.
     // The asm.js caller assumes that the call leaves sp unchanged, so bump
@@ -3122,7 +3122,7 @@ MacroAssemblerMIPSCompat::storeTypeTag(ImmTag tag, const BaseIndex &dest)
 }
 
 void
-MacroAssemblerMIPS::ma_callIonNoPush(const Register r)
+MacroAssemblerMIPS::ma_callJitNoPush(const Register r)
 {
     // This is a MIPS hack to push return address during jalr delay slot.
     as_jalr(r);
@@ -3132,7 +3132,7 @@ MacroAssemblerMIPS::ma_callIonNoPush(const Register r)
 // This macrosintruction calls the ion code and pushes the return address to
 // the stack in the case when stack is alligned.
 void
-MacroAssemblerMIPS::ma_callIon(const Register r)
+MacroAssemblerMIPS::ma_callJit(const Register r)
 {
     // This is a MIPS hack to push return address during jalr delay slot.
     as_addiu(StackPointer, StackPointer, -2 * sizeof(intptr_t));
@@ -3143,7 +3143,7 @@ MacroAssemblerMIPS::ma_callIon(const Register r)
 // This macrosintruction calls the ion code and pushes the return address to
 // the stack in the case when stack is not alligned.
 void
-MacroAssemblerMIPS::ma_callIonHalfPush(const Register r)
+MacroAssemblerMIPS::ma_callJitHalfPush(const Register r)
 {
     // This is a MIPS hack to push return address during jalr delay slot.
     as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
@@ -3154,7 +3154,7 @@ MacroAssemblerMIPS::ma_callIonHalfPush(const Register r)
 // This macrosintruction calls the ion code and pushes the return address to
 // the stack in the case when stack is not alligned.
 void
-MacroAssemblerMIPS::ma_callIonHalfPush(Label *label)
+MacroAssemblerMIPS::ma_callJitHalfPush(Label *label)
 {
     // This is a MIPS hack to push return address during jalr delay slot.
     as_addiu(StackPointer, StackPointer, -sizeof(intptr_t));
@@ -3538,7 +3538,7 @@ MacroAssemblerMIPSCompat::handleFailureWithHandler(void *handler)
     passABIArg(a0);
     callWithABI(handler);
 
-    JitCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
+    JitCode *excTail = GetJitContext()->runtime->jitRuntime()->getExceptionTail();
     branch(excTail);
 }
 
@@ -3651,7 +3651,7 @@ MacroAssemblerMIPSCompat::branchPtrInNurseryRange(Condition cond, Register ptr, 
     MOZ_ASSERT(ptr != temp);
     MOZ_ASSERT(ptr != SecondScratchReg);
 
-    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
+    const Nursery &nursery = GetJitContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), SecondScratchReg);
     addPtr(ptr, SecondScratchReg);
     branchPtr(cond == Assembler::Equal ? Assembler::Below : Assembler::AboveOrEqual,

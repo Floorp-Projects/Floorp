@@ -63,10 +63,12 @@ struct DefaultSingletonTraits {
   // exit. See below for the required call that makes this happen.
   static const bool kRegisterAtExit = true;
 
+#ifndef NDEBUG
   // Set to false to disallow access on a non-joinable thread.  This is
   // different from kRegisterAtExit because StaticMemorySingletonTraits allows
   // access on non-joinable threads, and gracefully handles this.
   static const bool kAllowedToAccessOnNonjoinableThread = false;
+#endif
 };
 
 
@@ -76,7 +78,9 @@ struct DefaultSingletonTraits {
 template<typename Type>
 struct LeakySingletonTraits : public DefaultSingletonTraits<Type> {
   static const bool kRegisterAtExit = false;
+#ifndef NDEBUG
   static const bool kAllowedToAccessOnNonjoinableThread = true;
+#endif
 };
 
 
@@ -229,7 +233,9 @@ class Singleton {
       base::ThreadRestrictions::AssertSingletonAllowed();
 #endif
 
-    base::subtle::AtomicWord value = base::subtle::NoBarrier_Load(&instance_);
+    // The load has acquire memory ordering as the thread which reads the
+    // instance_ pointer must acquire visibility over the singleton data.
+    base::subtle::AtomicWord value = base::subtle::Acquire_Load(&instance_);
     if (value != 0 && value != base::internal::kBeingCreatedMarker) {
       // See the corresponding HAPPENS_BEFORE below.
       ANNOTATE_HAPPENS_AFTER(&instance_);
@@ -248,6 +254,7 @@ class Singleton {
       // synchronization between different threads calling get().
       // See the corresponding HAPPENS_AFTER below and above.
       ANNOTATE_HAPPENS_BEFORE(&instance_);
+      // Releases the visibility over instance_ to the readers.
       base::subtle::Release_Store(
           &instance_, reinterpret_cast<base::subtle::AtomicWord>(newval));
 

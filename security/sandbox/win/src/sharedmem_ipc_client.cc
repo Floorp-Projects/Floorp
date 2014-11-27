@@ -31,7 +31,7 @@ void SharedMemIPCClient::FreeBuffer(void* buffer) {
   size_t num = ChannelIndexFromBuffer(buffer);
   ChannelControl* channel = control_->channels;
   LONG result = ::InterlockedExchange(&channel[num].state, kFreeChannel);
-  DCHECK(kFreeChannel != result);
+  DCHECK_NE(kFreeChannel, static_cast<ChannelState>(result));
   result;
 }
 
@@ -145,7 +145,7 @@ size_t SharedMemIPCClient::LockFreeChannel(bool* severe_failure) {
 size_t SharedMemIPCClient::ChannelIndexFromBuffer(const void* buffer) {
   ptrdiff_t d = reinterpret_cast<const char*>(buffer) - first_base_;
   size_t num = d/kIPCChannelSize;
-  DCHECK(num < control_->channels_count);
+  DCHECK_LT(num, control_->channels_count);
   return (num);
 }
 

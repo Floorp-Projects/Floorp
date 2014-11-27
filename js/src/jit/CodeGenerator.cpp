@@ -26,10 +26,10 @@
 #include "jit/BaselineCompiler.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonCaches.h"
-#include "jit/IonLinker.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitcodeMap.h"
 #include "jit/JitSpewer.h"
+#include "jit/Linker.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
@@ -682,7 +682,7 @@ CodeGenerator::getJumpLabelForBranch(MBasicBlock *block)
     // important here as these tests are extremely unlikely to be used in loop
     // backedges, so emit inline code for the patchable jump. Heap allocating
     // the label allows it to be used by out of line blocks.
-    Label *res = GetIonContext()->temp->lifoAlloc()->new_<Label>();
+    Label *res = GetJitContext()->temp->lifoAlloc()->new_<Label>();
     Label after;
     masm.jump(&after);
     masm.bind(res);
@@ -828,7 +828,7 @@ CodeGenerator::visitBooleanToString(LBooleanToString *lir)
 {
     Register input = ToRegister(lir->input());
     Register output = ToRegister(lir->output());
-    const JSAtomState &names = GetIonContext()->runtime->names();
+    const JSAtomState &names = GetJitContext()->runtime->names();
     Label true_, done;
 
     masm.branchTest32(Assembler::NonZero, input, input, &true_);
@@ -849,7 +849,7 @@ CodeGenerator::emitIntToString(Register input, Register output, Label *ool)
     masm.branch32(Assembler::AboveOrEqual, input, Imm32(StaticStrings::INT_STATIC_LIMIT), ool);
 
     // Fast path for small integers.
-    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings().intStaticTable), output);
+    masm.movePtr(ImmPtr(&GetJitContext()->runtime->staticStrings().intStaticTable), output);
     masm.loadPtr(BaseIndex(output, input, ScalePointer), output);
 }
 
@@ -921,7 +921,7 @@ CodeGenerator::visitValueToString(LValueToString *lir)
 
     Label done;
     Register tag = masm.splitTagForTest(input);
-    const JSAtomState &names = GetIonContext()->runtime->names();
+    const JSAtomState &names = GetJitContext()->runtime->names();
 
     // String
     if (lir->mir()->input()->mightBeType(MIRType_String)) {
@@ -2040,7 +2040,7 @@ bool
 CodeGenerator::visitCallee(LCallee *lir)
 {
     Register callee = ToRegister(lir->output());
-    Address ptr(StackPointer, frameSize() + IonJSFrameLayout::offsetOfCalleeToken());
+    Address ptr(StackPointer, frameSize() + JitFrameLayout::offsetOfCalleeToken());
 
     masm.loadFunctionFromCalleeToken(ptr, callee);
     return true;
@@ -2050,7 +2050,7 @@ bool
 CodeGenerator::visitIsConstructing(LIsConstructing *lir)
 {
     Register output = ToRegister(lir->output());
-    Address calleeToken(StackPointer, frameSize() + IonJSFrameLayout::offsetOfCalleeToken());
+    Address calleeToken(StackPointer, frameSize() + JitFrameLayout::offsetOfCalleeToken());
     masm.loadPtr(calleeToken, output);
 
     // We must be inside a function.
@@ -2711,7 +2711,7 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     }
 
     Register runtimereg = regs.takeAny();
-    masm.mov(ImmPtr(GetIonContext()->runtime), runtimereg);
+    masm.mov(ImmPtr(GetJitContext()->runtime), runtimereg);
 
     void (*fun)(JSRuntime*, JSObject*) = isGlobal ? PostGlobalWriteBarrier : PostWriteBarrier;
     masm.setupUnalignedABICall(2, regs.takeAny());
@@ -2832,7 +2832,7 @@ CodeGenerator::visitCallNative(LCallNative *call)
     if (!masm.buildFakeExitFrame(tempReg, &safepointOffset))
         return false;
     masm.enterFakeExitFrame(argContextReg, tempReg, executionMode,
-                            IonNativeExitFrameLayout::Token());
+                            NativeExitFrameLayout::Token());
 
     if (!markSafepointAt(safepointOffset, call))
         return false;
@@ -2860,13 +2860,13 @@ CodeGenerator::visitCallNative(LCallNative *call)
     masm.branchIfFalseBool(ReturnReg, masm.failureLabel(executionMode));
 
     // Load the outparam vp[0] into output register(s).
-    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
+    masm.loadValue(Address(StackPointer, NativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
 
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
 
     // Move the StackPointer back to its original location, unwinding the native exit frame.
-    masm.adjustStack(IonNativeExitFrameLayout::Size() - unusedStack);
+    masm.adjustStack(NativeExitFrameLayout::Size() - unusedStack);
     MOZ_ASSERT(masm.framePushed() == initialStack);
 
     dropArguments(call->numStackArgs() + 1);
@@ -3101,13 +3101,13 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
 
     // Finally call the function in objreg.
     masm.bind(&makeCall);
-    uint32_t callOffset = masm.callIon(objreg);
+    uint32_t callOffset = masm.callJit(objreg);
     if (!markSafepointAt(callOffset, call))
         return false;
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
-    int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
+    int prefixGarbage = sizeof(JitFrameLayout) - sizeof(void *);
     masm.adjustStack(prefixGarbage - unusedStack);
     masm.jump(&end);
 
@@ -3201,13 +3201,13 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.Push(Imm32(descriptor));
 
     // Finally call the function in objreg.
-    uint32_t callOffset = masm.callIon(objreg);
+    uint32_t callOffset = masm.callJit(objreg);
     if (!markSafepointAt(callOffset, call))
         return false;
 
     // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
     // The return address has already been removed from the Ion frame.
-    int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
+    int prefixGarbage = sizeof(JitFrameLayout) - sizeof(void *);
     masm.adjustStack(prefixGarbage - unusedStack);
     masm.jump(&end);
 
@@ -3274,7 +3274,7 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
     Register argcreg = ToRegister(apply->getArgc());
 
     Register copyreg = ToRegister(apply->getTempObject());
-    size_t argvOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
+    size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
     Label end;
 
     // Initialize the loop counter AND Compute the stack usage (if == 0)
@@ -3422,7 +3422,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
         masm.bind(&rejoin);
 
         // Finally call the function in objreg, as assigned by one of the paths above.
-        uint32_t callOffset = masm.callIon(objreg);
+        uint32_t callOffset = masm.callJit(objreg);
         if (!markSafepointAt(callOffset, apply))
             return false;
 
@@ -3433,7 +3433,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
 
         // Increment to remove IonFramePrefix; decrement to fill FrameSizeClass.
         // The return address has already been removed from the Ion frame.
-        int prefixGarbage = sizeof(IonJSFrameLayout) - sizeof(void *);
+        int prefixGarbage = sizeof(JitFrameLayout) - sizeof(void *);
         masm.adjustStack(prefixGarbage);
         masm.jump(&end);
     }
@@ -3677,7 +3677,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
-    const void *limitAddr = GetIonContext()->runtime->addressOfJitStackLimit();
+    const void *limitAddr = GetJitContext()->runtime->addressOfJitStackLimit();
 
     CheckOverRecursedFailure *ool = new(alloc()) CheckOverRecursedFailure(lir);
     if (!addOutOfLineCode(ool, lir->mir()))
@@ -3797,7 +3797,7 @@ CodeGenerator::maybeCreateScriptCounts()
     // If scripts are being profiled, create a new IonScriptCounts for the
     // profiling data, which will be attached to the associated JSScript or
     // AsmJS module after code generation finishes.
-    if (!GetIonContext()->runtime->profilingScripts())
+    if (!GetJitContext()->runtime->profilingScripts())
         return nullptr;
 
     IonScriptCounts *counts = nullptr;
@@ -3860,7 +3860,7 @@ struct ScriptCountBlockState
 
   public:
     ScriptCountBlockState(IonBlockCounts *block, MacroAssembler *masm)
-      : block(*block), masm(*masm), printer(GetIonContext()->cx)
+      : block(*block), masm(*masm), printer(GetJitContext()->cx)
     {
     }
 
@@ -4975,7 +4975,7 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
     return true;
 }
 
-typedef JSObject *(*NewIonArgumentsObjectFn)(JSContext *cx, IonJSFrameLayout *frame, HandleObject);
+typedef JSObject *(*NewIonArgumentsObjectFn)(JSContext *cx, JitFrameLayout *frame, HandleObject);
 static const VMFunction NewIonArgumentsObjectInfo =
     FunctionInfo<NewIonArgumentsObjectFn>((NewIonArgumentsObjectFn) ArgumentsObject::createForIon);
 
@@ -6090,7 +6090,7 @@ bool CodeGenerator::visitSubstr(LSubstr *lir)
 
     // Zero length, return emptystring.
     masm.branchTest32(Assembler::NonZero, length, length, &nonZero);
-    const JSAtomState &names = GetIonContext()->runtime->names();
+    const JSAtomState &names = GetJitContext()->runtime->names();
     masm.movePtr(ImmGCPtr(names.empty), output);
     masm.jump(done);
 
@@ -6404,7 +6404,7 @@ JitRuntime::generateLazyLinkStub(JSContext *cx)
     masm.passABIArg(temp0);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, LazyLinkTopActivation));
     masm.leaveExitFrame();
-    masm.retn(Imm32(sizeof(IonExitFrameLayout)));
+    masm.retn(Imm32(sizeof(ExitFrameLayout)));
 
     Linker linker(masm);
     AutoFlushICache afc("LazyLinkStub");
@@ -6454,7 +6454,7 @@ CodeGenerator::visitFromCharCode(LFromCharCode *lir)
     masm.branch32(Assembler::AboveOrEqual, code, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
                   ool->entry());
 
-    masm.movePtr(ImmPtr(&GetIonContext()->runtime->staticStrings().unitStaticTable), output);
+    masm.movePtr(ImmPtr(&GetJitContext()->runtime->staticStrings().unitStaticTable), output);
     masm.loadPtr(BaseIndex(output, code, ScalePointer), output);
 
     masm.bind(ool->rejoin());
@@ -7222,7 +7222,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     MOZ_ASSERT(flags == JSITER_ENUMERATE);
 
     // Fetch the most recent iterator and ensure it's not nullptr.
-    masm.loadPtr(AbsoluteAddress(GetIonContext()->runtime->addressOfLastCachedNativeIterator()), output);
+    masm.loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfLastCachedNativeIterator()), output);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
     // Load NativeIterator.
@@ -7420,7 +7420,7 @@ CodeGenerator::visitArgumentsLength(LArgumentsLength *lir)
 {
     // read number of actual arguments from the JS frame.
     Register argc = ToRegister(lir->output());
-    Address ptr(StackPointer, frameSize() + IonJSFrameLayout::offsetOfNumActualArgs());
+    Address ptr(StackPointer, frameSize() + JitFrameLayout::offsetOfNumActualArgs());
 
     masm.loadPtr(ptr, argc);
     return true;
@@ -7431,7 +7431,7 @@ CodeGenerator::visitGetFrameArgument(LGetFrameArgument *lir)
 {
     ValueOperand result = GetValueOutput(lir);
     const LAllocation *index = lir->index();
-    size_t argvOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
+    size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
 
     if (index->isConstant()) {
         int32_t i = index->toConstant()->toInt32();
@@ -7448,7 +7448,7 @@ CodeGenerator::visitGetFrameArgument(LGetFrameArgument *lir)
 bool
 CodeGenerator::visitSetFrameArgumentT(LSetFrameArgumentT *lir)
 {
-    size_t argOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs() +
+    size_t argOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
                        (sizeof(Value) * lir->mir()->argno());
 
     MIRType type = lir->mir()->value()->type();
@@ -7468,7 +7468,7 @@ CodeGenerator::visitSetFrameArgumentT(LSetFrameArgumentT *lir)
 bool
 CodeGenerator:: visitSetFrameArgumentC(LSetFrameArgumentC *lir)
 {
-    size_t argOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs() +
+    size_t argOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
                        (sizeof(Value) * lir->mir()->argno());
     masm.storeValue(lir->val(), Address(StackPointer, argOffset));
     return true;
@@ -7478,7 +7478,7 @@ bool
 CodeGenerator:: visitSetFrameArgumentV(LSetFrameArgumentV *lir)
 {
     const ValueOperand val = ToValue(lir, LSetFrameArgumentV::Input);
-    size_t argOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs() +
+    size_t argOffset = frameSize() + JitFrameLayout::offsetOfActualArgs() +
                        (sizeof(Value) * lir->mir()->argno());
     masm.storeValue(val, Address(StackPointer, argOffset));
     return true;
@@ -7510,7 +7510,7 @@ CodeGenerator::emitRest(LInstruction *lir, Register array, Register numActuals,
                         JSObject *templateObject, bool saveAndRestore, Register resultreg)
 {
     // Compute actuals() + numFormals.
-    size_t actualsOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs();
+    size_t actualsOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
     masm.movePtr(StackPointer, temp1);
     masm.addPtr(Imm32(sizeof(Value) * numFormals + actualsOffset), temp1);
 
@@ -8825,7 +8825,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     Register output = ToRegister(lir->output());
     Register tag = masm.splitTagForTest(value);
 
-    const JSAtomState &names = GetIonContext()->runtime->names();
+    const JSAtomState &names = GetJitContext()->runtime->names();
     Label done;
 
     MDefinition *input = lir->mir()->input();
@@ -8958,7 +8958,7 @@ CodeGenerator::visitOutOfLineTypeOfV(OutOfLineTypeOfV *ool)
     saveVolatile(output);
     masm.setupUnalignedABICall(2, output);
     masm.passABIArg(obj);
-    masm.movePtr(ImmPtr(GetIonContext()->runtime), output);
+    masm.movePtr(ImmPtr(GetJitContext()->runtime), output);
     masm.passABIArg(output);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::TypeOfObjectOperation));
     masm.storeCallResult(output);
@@ -10189,7 +10189,7 @@ CodeGenerator::visitInterruptCheck(LInterruptCheck *lir)
     if (!ool)
         return false;
 
-    AbsoluteAddress interruptAddr(GetIonContext()->runtime->addressOfInterruptUint32());
+    AbsoluteAddress interruptAddr(GetJitContext()->runtime->addressOfInterruptUint32());
     masm.branch32(Assembler::NotEqual, interruptAddr, Imm32(0), ool->entry());
     masm.bind(ool->rejoin());
     return true;

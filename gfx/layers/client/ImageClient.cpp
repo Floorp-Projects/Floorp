@@ -54,7 +54,7 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
   case CompositableType::IMAGE_BRIDGE:
     result = new ImageClientBridge(aForwarder, aFlags);
     break;
-  case CompositableType::BUFFER_UNKNOWN:
+  case CompositableType::UNKNOWN:
     result = nullptr;
     break;
 #ifdef MOZ_WIDGET_GONK

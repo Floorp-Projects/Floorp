@@ -41,13 +41,23 @@ class BASE_EXPORT PathService {
   //
   // WARNING: Consumers of PathService::Get may expect paths to be constant
   // over the lifetime of the app, so this method should be used with caution.
+  //
+  // Unit tests generally should use ScopedPathOverride instead. Overrides from
+  // one test should not carry over to another.
   static bool Override(int key, const base::FilePath& path);
 
-  // This function does the same as PathService::Override but it takes an extra
-  // parameter |create| which guides whether the directory to be overriden must
+  // This function does the same as PathService::Override but it takes extra
+  // parameters:
+  // - |is_absolute| indicates that |path| has already been expanded into an
+  // absolute path, otherwise MakeAbsoluteFilePath() will be used. This is
+  // useful to override paths that may not exist yet, since MakeAbsoluteFilePath
+  // fails for those. Note that MakeAbsoluteFilePath also expands symbolic
+  // links, even if path.IsAbsolute() is already true.
+  // - |create| guides whether the directory to be overriden must
   // be created in case it doesn't exist already.
   static bool OverrideAndCreateIfNeeded(int key,
                                         const base::FilePath& path,
+                                        bool is_absolute,
                                         bool create);
 
   // To extend the set of supported keys, you can register a path provider,

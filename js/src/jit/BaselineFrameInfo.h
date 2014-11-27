@@ -12,7 +12,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineRegisters.h"
 #include "jit/FixedList.h"
-#include "jit/IonMacroAssembler.h"
+#include "jit/MacroAssembler.h"
 
 namespace js {
 namespace jit {

@@ -204,7 +204,7 @@ template <> struct ExecutionModeTraits<ParallelExecution>
 
 namespace jit {
     struct IonScript;
-    class IonAllocPolicy;
+    class JitAllocPolicy;
     class TempAllocator;
 }
 

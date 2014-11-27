@@ -9,8 +9,8 @@
 
 #include "jsfun.h"
 
-#include "jit/IonFrames.h"
 #include "jit/JitFrameIterator.h"
+#include "jit/JitFrames.h"
 
 #include "vm/Stack.h"
 
@@ -88,7 +88,7 @@ class RematerializedFrame
         return top_;
     }
     JSScript *outerScript() const {
-        IonJSFrameLayout *jsFrame = (IonJSFrameLayout *)top_;
+        JitFrameLayout *jsFrame = (JitFrameLayout *)top_;
         return ScriptFromCalleeToken(jsFrame->calleeToken());
     }
     jsbytecode *pc() const {
