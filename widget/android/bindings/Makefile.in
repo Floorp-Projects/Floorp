@@ -2,6 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Bug 1099345 - The SDK's lint code (used by the code generator) does not enjoy
+# concurrent access to a cache that it generates.
+.NOTPARALLEL:
+
 annotation_processor_jar_files := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar:$(ANDROID_TOOLS)/lib/lint.jar:$(ANDROID_TOOLS)/lib/lint-checks.jar
 
 sdk_processor := \

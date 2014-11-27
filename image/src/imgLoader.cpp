@@ -54,75 +54,39 @@ MOZ_DEFINE_MALLOC_SIZE_OF(ImagesMallocSizeOf)
 
 class imgMemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
-  ~imgMemoryReporter() {}
+  ~imgMemoryReporter() { }
 
 public:
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aHandleReport,
-                            nsISupports *aData, bool aAnonymize)
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize)
   {
     nsresult rv;
-    ImageSizes chrome;
-    ImageSizes content;
-    ImageSizes uncached;
+    nsTArray<ImageMemoryCounter> chrome;
+    nsTArray<ImageMemoryCounter> content;
+    nsTArray<ImageMemoryCounter> uncached;
 
     for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
-      mKnownLoaders[i]->mChromeCache.EnumerateRead(EntryImageSizes, &chrome);
-      mKnownLoaders[i]->mCache.EnumerateRead(EntryImageSizes, &content);
+      mKnownLoaders[i]->mChromeCache.EnumerateRead(DoRecordCounter, &chrome);
+      mKnownLoaders[i]->mCache.EnumerateRead(DoRecordCounter, &content);
       MutexAutoLock lock(mKnownLoaders[i]->mUncachedImagesMutex);
-      mKnownLoaders[i]->mUncachedImages.EnumerateEntries(EntryUncachedImageSizes, &uncached);
+      mKnownLoaders[i]->
+        mUncachedImages.EnumerateEntries(DoRecordCounterUncached, &uncached);
     }
 
     // Note that we only need to anonymize content image URIs.
 
-    rv = ReportInfoArray(aHandleReport, aData, chrome.mRasterUsedImageInfo,
-                         "images/chrome/raster/used");
+    rv = ReportCounterArray(aHandleReport, aData, chrome, "images/chrome");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ReportInfoArray(aHandleReport, aData, chrome.mRasterUnusedImageInfo,
-                         "images/chrome/raster/unused");
+    rv = ReportCounterArray(aHandleReport, aData, content,
+                            "images/content", aAnonymize);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = ReportInfoArray(aHandleReport, aData, chrome.mVectorUsedImageDocInfo,
-                         "images/chrome/vector/used/documents");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, chrome.mVectorUnusedImageDocInfo,
-                         "images/chrome/vector/unused/documents");
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, content.mRasterUsedImageInfo,
-                         "images/content/raster/used", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, content.mRasterUnusedImageInfo,
-                         "images/content/raster/unused", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, content.mVectorUsedImageDocInfo,
-                         "images/content/vector/used/documents", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, content.mVectorUnusedImageDocInfo,
-                         "images/content/vector/unused/documents", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // The uncached images can contain both content and chrome images, so anonymize it.
-    rv = ReportInfoArray(aHandleReport, aData, uncached.mRasterUsedImageInfo,
-                         "images/uncached/raster/used", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, uncached.mRasterUnusedImageInfo,
-                         "images/uncached/raster/unused", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, uncached.mVectorUsedImageDocInfo,
-                         "images/uncached/vector/used/documents", aAnonymize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = ReportInfoArray(aHandleReport, aData, uncached.mVectorUnusedImageDocInfo,
-                         "images/uncached/vector/unused/documents", aAnonymize);
+    // Uncached images may be content or chrome, so anonymize them.
+    rv = ReportCounterArray(aHandleReport, aData, uncached,
+                            "images/uncached", aAnonymize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -132,7 +96,8 @@ public:
   {
     size_t n = 0;
     for (uint32_t i = 0; i < imgLoader::sMemReporter->mKnownLoaders.Length(); i++) {
-      imgLoader::sMemReporter->mKnownLoaders[i]->mCache.EnumerateRead(EntryUsedUncompressedSize, &n);
+      imgLoader::sMemReporter->mKnownLoaders[i]->
+        mCache.EnumerateRead(DoRecordCounterUsedDecoded, &n);
     }
     return n;
   }
@@ -150,305 +115,341 @@ public:
 private:
   nsTArray<imgLoader*> mKnownLoaders;
 
-  struct RasterSizes
+  struct MemoryCounter
   {
-    size_t mRaw;
-    size_t mUncompressedHeap;
-    size_t mUncompressedNonheap;
+    MemoryCounter()
+      : mSource(0)
+      , mDecodedHeap(0)
+      , mDecodedNonHeap(0)
+    { }
 
-    RasterSizes()
-      : mRaw(0)
-      , mUncompressedHeap(0)
-      , mUncompressedNonheap(0)
-    {}
+    void SetSource(size_t aCount) { mSource = aCount; }
+    size_t Source() const { return mSource; }
+    void SetDecodedHeap(size_t aCount) { mDecodedHeap = aCount; }
+    size_t DecodedHeap() const { return mDecodedHeap; }
+    void SetDecodedNonHeap(size_t aCount) { mDecodedNonHeap = aCount; }
+    size_t DecodedNonHeap() const { return mDecodedNonHeap; }
 
-    void add(const RasterSizes &aOther)
+    MemoryCounter& operator+=(const MemoryCounter& aOther)
     {
-      mRaw += aOther.mRaw;
-      mUncompressedHeap += aOther.mUncompressedHeap;
-      mUncompressedNonheap += aOther.mUncompressedNonheap;
+      mSource += aOther.mSource;
+      mDecodedHeap += aOther.mDecodedHeap;
+      mDecodedNonHeap += aOther.mDecodedNonHeap;
+      return *this;
     }
 
-    bool isNotable() const
-    {
-      const size_t NotableThreshold = 16 * 1024;
-      size_t total = mRaw + mUncompressedHeap + mUncompressedNonheap;
-      return total >= NotableThreshold;
-    }
+  private:
+    size_t mSource;
+    size_t mDecodedHeap;
+    size_t mDecodedNonHeap;
   };
 
-  struct VectorDocSizes
+  struct ImageMemoryCounter
   {
-    size_t mSize;
-
-    VectorDocSizes()
-      : mSize(0)
-    {}
-
-    void add(const VectorDocSizes &aOther)
+    ImageMemoryCounter(uint16_t aType, const nsACString& aURI, bool aIsUsed)
+      : mURI(aURI)
+      , mType(aType)
+      , mIsUsed(aIsUsed)
     {
-      mSize += aOther.mSize;
+      MOZ_ASSERT(!mURI.IsEmpty(), "Should have a URI for all images");
     }
 
-    bool isNotable() const
+    nsCString& URI() { return mURI; }
+    const nsCString& URI() const { return mURI; }
+    uint16_t Type() const { return mType; }
+    MemoryCounter& Values() { return mValues; }
+    const MemoryCounter& Values() const { return mValues; }
+    bool IsUsed() const { return mIsUsed; }
+
+    bool IsNotable() const
     {
       const size_t NotableThreshold = 16 * 1024;
-      size_t total = mSize;
+      size_t total = mValues.Source() + mValues.DecodedHeap()
+                                      + mValues.DecodedNonHeap();
       return total >= NotableThreshold;
     }
-  };
 
-  template <typename ImageSizes>
-  struct ImageInfo
-  {
-    ImageSizes mSizes;
+  private:
     nsCString mURI;
+    uint16_t mType;
+    MemoryCounter mValues;
+    bool mIsUsed;
   };
 
-  struct ImageSizes
+  struct MemoryTotal
   {
-    nsTArray<ImageInfo<RasterSizes> >    mRasterUsedImageInfo;
-    nsTArray<ImageInfo<RasterSizes> >    mRasterUnusedImageInfo;
-    nsTArray<ImageInfo<VectorDocSizes> > mVectorUsedImageDocInfo;
-    nsTArray<ImageInfo<VectorDocSizes> > mVectorUnusedImageDocInfo;
-  };
-
-  // Definitions specialized for raster and vector images are below.
-  template<typename Sizes>
-  nsresult ReportSizes(nsIMemoryReporterCallback *aHandleReport,
-                       nsISupports *aData,
-                       const nsACString &aPathPrefix,
-                       const nsACString &aLocation,
-                       Sizes aSizes);
-
-  // This is used to report all images of a single kind, e.g. all
-  // "chrome/raster/used" images.
-  template <typename Sizes>
-  nsresult ReportInfoArray(nsIMemoryReporterCallback *aHandleReport,
-                           nsISupports *aData,
-                           const nsTArray<ImageInfo<Sizes> > &aInfoArray,
-                           const char *aPathPartStr, bool aAnonymize = false)
-  {
-    nsresult rv;
-    Sizes totalSizes;
-    Sizes nonNotableSizes;
-
-    nsCString pathPart(aPathPartStr);
-    nsCString explicitPathPrefix(aPathPartStr);
-    explicitPathPrefix.Insert("explicit/", 0);
-
-    // Report notable images, and compute total and non-notable aggregate sizes.
-    for (uint32_t i = 0; i < aInfoArray.Length(); i++) {
-      ImageInfo<Sizes> info = aInfoArray[i];
-
-      if (aAnonymize) {
-        info.mURI.Truncate();
-        info.mURI.AppendPrintf("<anonymized-%u>", i);
-      } else {
-        // info.mURI can be a data: URI, and thus extremely long. Truncate if
-        // necessary.
-        static const size_t max = 256;
-        if (info.mURI.Length() > max) {
-          info.mURI.Truncate(max);
-          info.mURI.AppendLiteral(" (truncated)");
+    MemoryTotal& operator+=(const ImageMemoryCounter& aImageCounter)
+    {
+      if (aImageCounter.Type() == imgIContainer::TYPE_RASTER) {
+        if (aImageCounter.IsUsed()) {
+          mUsedRasterCounter += aImageCounter.Values();
+        } else {
+          mUnusedRasterCounter += aImageCounter.Values();
         }
-        info.mURI.ReplaceChar('/', '\\');
+      } else if (aImageCounter.Type() == imgIContainer::TYPE_VECTOR) {
+        if (aImageCounter.IsUsed()) {
+          mUsedVectorCounter += aImageCounter.Values();
+        } else {
+          mUnusedVectorCounter += aImageCounter.Values();
+        }
+      } else {
+        MOZ_CRASH("Unexpected image type");
       }
 
-      totalSizes.add(info.mSizes);
+      return *this;
+    }
 
-      if (!info.mSizes.isNotable()) {
-        nonNotableSizes.add(info.mSizes);
+    const MemoryCounter& UsedRaster() const { return mUsedRasterCounter; }
+    const MemoryCounter& UnusedRaster() const { return mUnusedRasterCounter; }
+    const MemoryCounter& UsedVector() const { return mUsedVectorCounter; }
+    const MemoryCounter& UnusedVector() const { return mUnusedVectorCounter; }
+
+  private:
+    MemoryCounter mUsedRasterCounter;
+    MemoryCounter mUnusedRasterCounter;
+    MemoryCounter mUsedVectorCounter;
+    MemoryCounter mUnusedVectorCounter;
+  };
+
+
+  // Reports all images of a single kind, e.g. all used chrome images.
+  nsresult ReportCounterArray(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData,
+                              const nsTArray<ImageMemoryCounter>& aCounterArray,
+                              const char* aPathPrefix,
+                              bool aAnonymize = false)
+  {
+    nsresult rv;
+    MemoryTotal summaryTotal;
+    MemoryTotal nonNotableTotal;
+
+    // Report notable images, and compute total and non-notable aggregate sizes.
+    for (uint32_t i = 0; i < aCounterArray.Length(); i++) {
+      ImageMemoryCounter counter = aCounterArray[i];
+
+      if (aAnonymize) {
+        counter.URI().Truncate();
+        counter.URI().AppendPrintf("<anonymized-%u>", i);
       } else {
-        // Report the notable image.
-        rv = ReportSizes(aHandleReport, aData, explicitPathPrefix,
-                         info.mURI, info.mSizes);
+        // The URI could be an extremely long data: URI. Truncate if needed.
+        static const size_t max = 256;
+        if (counter.URI().Length() > max) {
+          counter.URI().Truncate(max);
+          counter.URI().AppendLiteral(" (truncated)");
+        }
+        counter.URI().ReplaceChar('/', '\\');
+      }
+
+      summaryTotal += counter;
+
+      if (counter.IsNotable()) {
+        rv = ReportCounter(aHandleReport, aData, aPathPrefix, counter);
         NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        nonNotableTotal += counter;
       }
     }
 
     // Report non-notable images in aggregate.
-    rv = ReportSizes(aHandleReport, aData, explicitPathPrefix,
-                     NS_LITERAL_CSTRING("<non-notable images>"),
-                     nonNotableSizes);
+    rv = ReportTotal(aHandleReport, aData, /* aExplicit = */ true,
+                     aPathPrefix, "<non-notable images>/", nonNotableTotal);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Report image totals in aggregate, without the "explicit/" prefix.
-    rv = ReportSizes(aHandleReport, aData, pathPart, EmptyCString(),
-                     totalSizes);
+    // Report a summary in aggregate, outside of the explicit tree.
+    rv = ReportTotal(aHandleReport, aData, /* aExplicit = */ false,
+                     aPathPrefix, "", summaryTotal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
-  static PLDHashOperator EntryImageSizes(const nsACString&,
-                                         imgCacheEntry *aEntry,
-                                         void *aUserArg)
+  static nsresult ReportCounter(nsIHandleReportCallback* aHandleReport,
+                                nsISupports* aData,
+                                const char* aPathPrefix,
+                                const ImageMemoryCounter& aCounter)
   {
-    nsRefPtr<imgRequest> req = aEntry->GetRequest();
-    Image *image = static_cast<Image*>(req->mImage.get());
-    if (image) {
-      ImageSizes *sizes = static_cast<ImageSizes*>(aUserArg);
+    nsAutoCString pathPrefix(NS_LITERAL_CSTRING("explicit/"));
+    pathPrefix.Append(aPathPrefix);
+    pathPrefix.Append(aCounter.Type() == imgIContainer::TYPE_RASTER
+                        ? "/raster/"
+                        : "/vector/");
+    pathPrefix.Append(aCounter.IsUsed() ? "used/" : "unused/");
+    pathPrefix.Append("image(");
+    if (aCounter.URI().IsEmpty()) {
+      pathPrefix.Append("<unknown URI>");
+    } else {
+      pathPrefix.Append(aCounter.URI());
+    }
+    pathPrefix.Append(")/");
 
-      nsRefPtr<ImageURL> imageURL(image->GetURI());
-      nsAutoCString spec;
-      imageURL->GetSpec(spec);
-      ImageInfo<RasterSizes> rasterInfo;
-      rasterInfo.mSizes.mRaw =
-          image->HeapSizeOfSourceWithComputedFallback(ImagesMallocSizeOf);
-      rasterInfo.mSizes.mUncompressedHeap =
-          image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
-      rasterInfo.mSizes.mUncompressedNonheap = image->NonHeapSizeOfDecoded();
-      rasterInfo.mURI = spec.get();
-      if (!aEntry->HasNoProxies()) {
-        sizes->mRasterUsedImageInfo.AppendElement(rasterInfo);
-      } else {
-        sizes->mRasterUnusedImageInfo.AppendElement(rasterInfo);
-      }
+    return ReportValues(aHandleReport, aData, pathPrefix, aCounter.Values());
+  }
 
-      ImageInfo<VectorDocSizes> vectorInfo;
-      vectorInfo.mSizes.mSize =
-        image->HeapSizeOfVectorImageDocument(&vectorInfo.mURI);
-      if (!vectorInfo.mURI.IsEmpty()) {
-        if (!aEntry->HasNoProxies()) {
-          sizes->mVectorUsedImageDocInfo.AppendElement(vectorInfo);
-        } else {
-          sizes->mVectorUnusedImageDocInfo.AppendElement(vectorInfo);
-        }
-      }
+  static nsresult ReportTotal(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData,
+                              bool aExplicit,
+                              const char* aPathPrefix,
+                              const char* aPathInfix,
+                              const MemoryTotal& aTotal)
+  {
+    nsresult rv;
+
+    nsAutoCString pathPrefix;
+    if (aExplicit) {
+      pathPrefix.Append("explicit/");
+    }
+    pathPrefix.Append(aPathPrefix);
+
+    nsAutoCString rasterUsedPrefix(pathPrefix);
+    rasterUsedPrefix.Append("/raster/used/");
+    rasterUsedPrefix.Append(aPathInfix);
+    rv = ReportValues(aHandleReport, aData, rasterUsedPrefix,
+                      aTotal.UsedRaster());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString rasterUnusedPrefix(pathPrefix);
+    rasterUnusedPrefix.Append("/raster/unused/");
+    rasterUnusedPrefix.Append(aPathInfix);
+    rv = ReportValues(aHandleReport, aData, rasterUnusedPrefix,
+                      aTotal.UnusedRaster());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString vectorUsedPrefix(pathPrefix);
+    vectorUsedPrefix.Append("/vector/used/");
+    vectorUsedPrefix.Append(aPathInfix);
+    rv = ReportValues(aHandleReport, aData, vectorUsedPrefix,
+                      aTotal.UsedVector());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoCString vectorUnusedPrefix(pathPrefix);
+    vectorUnusedPrefix.Append("/vector/unused/");
+    vectorUnusedPrefix.Append(aPathInfix);
+    rv = ReportValues(aHandleReport, aData, vectorUnusedPrefix,
+                      aTotal.UnusedVector());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  static nsresult ReportValues(nsIHandleReportCallback* aHandleReport,
+                               nsISupports* aData,
+                               const nsACString& aPathPrefix,
+                               const MemoryCounter& aCounter)
+  {
+    nsresult rv;
+
+    rv = ReportValue(aHandleReport, aData, KIND_HEAP, aPathPrefix,
+                     "source",
+                     "Raster image source data and vector image documents.",
+                     aCounter.Source());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ReportValue(aHandleReport, aData, KIND_HEAP, aPathPrefix,
+                     "decoded-heap",
+                     "Decoded image data which is stored on the heap.",
+                     aCounter.DecodedHeap());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ReportValue(aHandleReport, aData, KIND_NONHEAP, aPathPrefix,
+                     "decoded-nonheap",
+                     "Decoded image data which isn't stored on the heap.",
+                     aCounter.DecodedNonHeap());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  static nsresult ReportValue(nsIHandleReportCallback* aHandleReport,
+                              nsISupports* aData,
+                              int32_t aKind,
+                              const nsACString& aPathPrefix,
+                              const char* aPathSuffix,
+                              const char* aDescription,
+                              size_t aValue)
+  {
+    if (aValue == 0) {
+      return NS_OK;
     }
 
+    nsAutoCString desc(aDescription);
+    nsAutoCString path(aPathPrefix);
+    path.Append(aPathSuffix);
+
+    return aHandleReport->Callback(EmptyCString(), path, aKind, UNITS_BYTES,
+                                   aValue, desc, aData);
+  }
+
+  static PLDHashOperator DoRecordCounter(const nsACString&,
+                                         imgCacheEntry* aEntry,
+                                         void* aUserArg)
+  {
+    nsRefPtr<imgRequest> req = aEntry->GetRequest();
+    RecordCounterForRequest(req,
+                            static_cast<nsTArray<ImageMemoryCounter>*>(aUserArg),
+                            !aEntry->HasNoProxies());
     return PL_DHASH_NEXT;
   }
 
-  static PLDHashOperator EntryUncachedImageSizes(nsPtrHashKey<imgRequest>* aEntry,
+  static PLDHashOperator DoRecordCounterUncached(nsPtrHashKey<imgRequest>* aEntry,
                                                  void* aUserArg)
   {
     nsRefPtr<imgRequest> req = aEntry->GetKey();
-    Image *image = static_cast<Image*>(req->mImage.get());
-    if (image) {
-      ImageSizes *sizes = static_cast<ImageSizes*>(aUserArg);
-
-      nsRefPtr<ImageURL> imageURL(image->GetURI());
-      nsAutoCString spec;
-      imageURL->GetSpec(spec);
-      ImageInfo<RasterSizes> rasterInfo;
-      rasterInfo.mSizes.mRaw =
-          image->HeapSizeOfSourceWithComputedFallback(ImagesMallocSizeOf);
-      rasterInfo.mSizes.mUncompressedHeap =
-          image->HeapSizeOfDecodedWithComputedFallback(ImagesMallocSizeOf);
-      rasterInfo.mSizes.mUncompressedNonheap = image->NonHeapSizeOfDecoded();
-      rasterInfo.mURI = spec.get();
-      if (req->HasConsumers()) {
-        sizes->mRasterUsedImageInfo.AppendElement(rasterInfo);
-      } else {
-        sizes->mRasterUnusedImageInfo.AppendElement(rasterInfo);
-      }
-
-      ImageInfo<VectorDocSizes> vectorInfo;
-      vectorInfo.mSizes.mSize =
-        image->HeapSizeOfVectorImageDocument(&vectorInfo.mURI);
-      if (!vectorInfo.mURI.IsEmpty()) {
-        if (req->HasConsumers()) {
-          sizes->mVectorUsedImageDocInfo.AppendElement(vectorInfo);
-        } else {
-          sizes->mVectorUnusedImageDocInfo.AppendElement(vectorInfo);
-        }
-      }
-    }
-
+    RecordCounterForRequest(req,
+                            static_cast<nsTArray<ImageMemoryCounter>*>(aUserArg),
+                            req->HasConsumers());
     return PL_DHASH_NEXT;
   }
 
-  static PLDHashOperator EntryUsedUncompressedSize(const nsACString&,
-                                                   imgCacheEntry *aEntry,
-                                                   void *aUserArg)
+  static void RecordCounterForRequest(imgRequest* aRequest,
+                                      nsTArray<ImageMemoryCounter>* aArray,
+                                      bool aIsUsed)
   {
-    if (!aEntry->HasNoProxies()) {
-      size_t *n = static_cast<size_t*>(aUserArg);
-      nsRefPtr<imgRequest> req = aEntry->GetRequest();
-      Image *image = static_cast<Image*>(req->mImage.get());
-      if (image) {
-        // Both this and EntryImageSizes measure
-        // images/content/raster/used/uncompressed memory.  This function's
-        // measurement is secondary -- the result doesn't go in the "explicit"
-        // tree -- so we use moz_malloc_size_of instead of ImagesMallocSizeOf
-        // to prevent DMD from seeing it reported twice.
-        *n += image->HeapSizeOfDecodedWithComputedFallback(moz_malloc_size_of);
-        *n += image->NonHeapSizeOfDecoded();
-      }
+    auto image = static_cast<Image*>(aRequest->mImage.get());
+    if (!image) {
+      return;
     }
 
+    nsRefPtr<ImageURL> imageURL(image->GetURI());
+    nsAutoCString spec;
+    imageURL->GetSpec(spec);
+
+    ImageMemoryCounter counter(image->GetType(), spec, aIsUsed);
+
+    counter.Values().SetSource(image->
+        SizeOfSourceWithComputedFallback(ImagesMallocSizeOf));
+    counter.Values().SetDecodedHeap(image->
+        SizeOfDecoded(gfxMemoryLocation::IN_PROCESS_HEAP, ImagesMallocSizeOf));
+    counter.Values().SetDecodedNonHeap(image->
+        SizeOfDecoded(gfxMemoryLocation::IN_PROCESS_NONHEAP, nullptr));
+
+    aArray->AppendElement(counter);
+  }
+
+  static PLDHashOperator DoRecordCounterUsedDecoded(const nsACString&,
+                                                    imgCacheEntry* aEntry,
+                                                    void* aUserArg)
+  {
+    if (aEntry->HasNoProxies()) {
+      return PL_DHASH_NEXT;
+    }
+
+    nsRefPtr<imgRequest> req = aEntry->GetRequest();
+    auto image = static_cast<Image*>(req->mImage.get());
+    if (!image) {
+      return PL_DHASH_NEXT;
+    }
+
+    // Both this and EntryImageSizes measure images/content/raster/used/decoded
+    // memory.  This function's measurement is secondary -- the result doesn't
+    // go in the "explicit" tree -- so we use moz_malloc_size_of instead of
+    // ImagesMallocSizeOf to prevent DMD from seeing it reported twice.
+    auto n = static_cast<size_t*>(aUserArg);
+    *n += image->SizeOfDecoded(gfxMemoryLocation::IN_PROCESS_HEAP,
+                               moz_malloc_size_of);
+    *n += image->SizeOfDecoded(gfxMemoryLocation::IN_PROCESS_NONHEAP, nullptr);
     return PL_DHASH_NEXT;
   }
 };
-
-// Specialisation of this method for raster images.
-template<>
-nsresult imgMemoryReporter::ReportSizes(
-  nsIMemoryReporterCallback *aHandleReport, nsISupports *aData,
-  const nsACString &aPathPrefix, const nsACString &aLocation,
-  RasterSizes aSizes)
-{
-#define REPORT(_pathPrefix, _pathSuffix, _location, _kind, _amount, _desc)    \
-  do {                                                                        \
-    if (_amount > 0) {                                                        \
-      nsCString path(_pathPrefix);                                            \
-      path.Append("/");                                                       \
-      if (!_location.IsEmpty()) {                                             \
-        path.Append("image(");                                                \
-        path.Append(_location);                                               \
-        path.Append(")/");                                                    \
-      }                                                                       \
-      path.Append(_pathSuffix);                                               \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), path, _kind, UNITS_BYTES,  \
-                                   _amount, NS_LITERAL_CSTRING(_desc), aData);\
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    }                                                                         \
-  } while (0)
-
-  REPORT(aPathPrefix, "raw", aLocation, KIND_HEAP,
-         aSizes.mRaw, "Compressed image data.");
-
-  REPORT(aPathPrefix, "uncompressed-heap", aLocation, KIND_HEAP,
-         aSizes.mUncompressedHeap, "Uncompressed image data.");
-
-  REPORT(aPathPrefix, "uncompressed-nonheap", aLocation, KIND_NONHEAP,
-         aSizes.mUncompressedNonheap, "Uncompressed image data.");
-#undef REPORT
-  return NS_OK;
-}
-
-// Specialisation of this method for vector images.
-template<>
-nsresult imgMemoryReporter::ReportSizes(
-  nsIMemoryReporterCallback *aHandleReport, nsISupports *aData,
-  const nsACString &aPathPrefix, const nsACString &aLocation,
-  VectorDocSizes aSizes)
-{
-#define REPORT(_pathPrefix, _location, _amount, _desc)                        \
-  do {                                                                        \
-    if (_amount > 0) {                                                        \
-      nsCString path(_pathPrefix);                                            \
-      if (!_location.IsEmpty()) {                                             \
-        path.Append("/document(");                                            \
-        path.Append(_location);                                               \
-        path.Append(")");                                                     \
-      }                                                                       \
-      nsresult rv;                                                            \
-      rv = aHandleReport->Callback(EmptyCString(), path, KIND_HEAP,           \
-                                   UNITS_BYTES, _amount,                      \
-                                   NS_LITERAL_CSTRING(_desc), aData);         \
-      NS_ENSURE_SUCCESS(rv, rv);                                              \
-    }                                                                         \
-  } while (0)
-
-  REPORT(aPathPrefix, aLocation, aSizes.mSize,
-         "Parsed vector image documents.");
-#undef REPORT
-  return NS_OK;
-}
 
 NS_IMPL_ISUPPORTS(imgMemoryReporter, nsIMemoryReporter)
 

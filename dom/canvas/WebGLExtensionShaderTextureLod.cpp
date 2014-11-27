@@ -3,14 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
 #include "WebGLExtensions.h"
+
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
+#include "WebGLContext.h"
 
-using namespace mozilla;
+namespace mozilla {
 
-WebGLExtensionShaderTextureLod::WebGLExtensionShaderTextureLod(WebGLContext* context)
-    : WebGLExtensionBase(context)
+WebGLExtensionShaderTextureLod::WebGLExtensionShaderTextureLod(WebGLContext* webgl)
+    : WebGLExtensionBase(webgl)
 {
 }
 
@@ -19,3 +20,5 @@ WebGLExtensionShaderTextureLod::~WebGLExtensionShaderTextureLod()
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionShaderTextureLod)
+
+} // namespace mozilla

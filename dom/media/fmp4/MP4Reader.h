@@ -26,7 +26,7 @@ typedef std::deque<mp4_demuxer::MP4Sample*> MP4SampleQueue;
 
 class MP4Stream;
 
-class MP4Reader : public MediaDecoderReader
+class MP4Reader MOZ_FINAL : public MediaDecoderReader
 {
   typedef mp4_demuxer::TrackType TrackType;
 

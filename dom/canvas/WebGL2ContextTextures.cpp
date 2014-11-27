@@ -90,7 +90,7 @@ WebGL2Context::ValidateTexStorage(GLenum target, GLsizei levels, GLenum internal
                                       const char* info)
 {
     // GL_INVALID_OPERATION is generated if the default texture object is curently bound to target.
-    WebGLTexture* tex = activeBoundTextureForTarget(target);
+    WebGLTexture* tex = ActiveBoundTextureForTarget(target);
     if (!tex) {
         ErrorInvalidOperation("%s: no texture is bound to target %s", info, EnumName(target));
         return false;
@@ -145,7 +145,7 @@ WebGL2Context::TexStorage2D(GLenum target, GLsizei levels, GLenum internalformat
         return GenerateWarning("texStorage2D generated error %s", ErrorName(error));
     }
 
-    WebGLTexture* tex = activeBoundTextureForTarget(target);
+    WebGLTexture* tex = ActiveBoundTextureForTarget(target);
     tex->SetImmutable();
 
     const size_t facesCount = (target == LOCAL_GL_TEXTURE_2D) ? 1 : 6;
@@ -184,7 +184,7 @@ WebGL2Context::TexStorage3D(GLenum target, GLsizei levels, GLenum internalformat
         return GenerateWarning("texStorage3D generated error %s", ErrorName(error));
     }
 
-    WebGLTexture* tex = activeBoundTextureForTarget(target);
+    WebGLTexture* tex = ActiveBoundTextureForTarget(target);
     tex->SetImmutable();
 
     GLsizei w = width;
@@ -275,7 +275,7 @@ WebGL2Context::TexImage3D(GLenum target, GLint level, GLenum internalformat,
         return ErrorInvalidOperation("texImage3D: not enough data for operation (need %d, have %d)",
                                  bytesNeeded, dataLength);
 
-    WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    WebGLTexture* tex = ActiveBoundTextureForTexImageTarget(texImageTarget);
 
     if (!tex)
         return ErrorInvalidOperation("texImage3D: no texture is bound to this target");
@@ -338,7 +338,7 @@ WebGL2Context::TexSubImage3D(GLenum rawTarget, GLint level,
 
     TexImageTarget texImageTarget(rawTarget);
 
-    WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    WebGLTexture* tex = ActiveBoundTextureForTexImageTarget(texImageTarget);
     if (!tex) {
         return ErrorInvalidOperation("texSubImage3D: no texture bound on active texture unit");
     }
