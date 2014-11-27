@@ -2533,7 +2533,7 @@ ConvertExceptionToPromise(JSContext* cx,
     return false;
   }
 
-  return WrapNewBindingObject(cx, promise, rval);
+  return GetOrCreateDOMReflector(cx, promise, rval);
 }
 
 /* static */

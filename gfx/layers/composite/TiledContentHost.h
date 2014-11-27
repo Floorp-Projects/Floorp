@@ -234,7 +234,7 @@ public:
                  const gfx::Rect& aClipRect,
                  const nsIntRegion* aVisibleRegion = nullptr);
 
-  virtual CompositableType GetType() { return CompositableType::BUFFER_TILED; }
+  virtual CompositableType GetType() { return CompositableType::CONTENT_TILED; }
 
   virtual TiledLayerComposer* AsTiledLayerComposer() MOZ_OVERRIDE { return this; }
 

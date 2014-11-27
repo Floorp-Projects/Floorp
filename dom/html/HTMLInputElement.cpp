@@ -2151,6 +2151,7 @@ HTMLInputElement::GetValueIfStepped(int32_t aStep,
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
+  Decimal stepBase = GetStepBase();
   Decimal step = GetStep();
   if (step == kStepAny) {
     if (aCallerType != CALLED_FOR_USER_EVENT) {
@@ -2160,47 +2161,44 @@ HTMLInputElement::GetValueIfStepped(int32_t aStep,
     step = GetDefaultStep();
   }
 
-  Decimal value = GetValueAsDecimal();
-  if (value.isNaN()) {
-    value = Decimal(0);
-  }
-
   Decimal minimum = GetMinimum();
-
   Decimal maximum = GetMaximum();
+
   if (!maximum.isNaN()) {
     // "max - (max - stepBase) % step" is the nearest valid value to max.
-    maximum = maximum - NS_floorModulo(maximum - GetStepBase(), step);
-  }
-
-  // Cases where we are clearly going in the wrong way.
-  // We don't use ValidityState because we can be higher than the maximal
-  // allowed value and still not suffer from range overflow in the case of
-  // of the value specified in @max isn't in the step.
-  if ((value <= minimum && aStep < 0) ||
-      (value >= maximum && aStep > 0)) {
-    return NS_OK;
-  }
-
-  // If the current value isn't aligned on a step, then shift the value to the
-  // nearest step that will cause the addition of aStep steps (further below)
-  // to |value| to hit the required value.
-  // (Instead of using GetValidityState(VALIDITY_STATE_STEP_MISMATCH) we have
-  // to check HasStepMismatch and pass true as its aUseZeroIfValueNaN argument
-  // since we need to treat the value "" as zero for stepping purposes even
-  // though we don't suffer from a step mismatch when our value is the empty
-  // string.)
-  if (HasStepMismatch(true) &&
-      value != minimum && value != maximum) {
-    if (aStep > 0) {
-      value -= NS_floorModulo(value - GetStepBase(), step);
-    } else if (aStep < 0) {
-      value -= NS_floorModulo(value - GetStepBase(), step);
-      value += step;
+    maximum = maximum - NS_floorModulo(maximum - stepBase, step);
+    if (!minimum.isNaN()) {
+      if (minimum > maximum) {
+        // Either the minimum was greater than the maximum prior to our
+        // adjustment to align maximum on a step, or else (if we adjusted
+        // maximum) there is no valid step between minimum and the unadjusted
+        // maximum.
+        return NS_OK;
+      }
     }
   }
 
-  value += step * Decimal(aStep);
+  Decimal value = GetValueAsDecimal();
+  bool valueWasNaN = false;
+  if (value.isNaN()) {
+    value = Decimal(0);
+    valueWasNaN = true;
+  }
+  Decimal valueBeforeStepping = value;
+
+  Decimal deltaFromStep = NS_floorModulo(value - stepBase, step);
+
+  if (deltaFromStep != Decimal(0)) {
+    if (aStep > 0) {
+      value += step - deltaFromStep;      // partial step
+      value += step * Decimal(aStep - 1); // then remaining steps
+    } else if (aStep < 0) {
+      value -= deltaFromStep;             // partial step
+      value += step * Decimal(aStep + 1); // then remaining steps
+    }
+  } else {
+    value += step * Decimal(aStep);
+  }
 
   // For date inputs, the value can hold a string that is not a day. We do not
   // want to round it, as it might result in a step mismatch. Instead we want to
@@ -2218,27 +2216,30 @@ HTMLInputElement::GetValueIfStepped(int32_t aStep,
     }
   }
 
-  // When stepUp() is called and the value is below minimum, we should clamp on
-  // minimum unless stepUp() moves us higher than minimum.
-  if (GetValidityState(VALIDITY_STATE_RANGE_UNDERFLOW) && aStep > 0 &&
-      value <= minimum) {
-    MOZ_ASSERT(!minimum.isNaN(), "Can't be NaN if we are here");
+  if (value < minimum) {
     value = minimum;
-  // Same goes for stepDown() and maximum.
-  } else if (GetValidityState(VALIDITY_STATE_RANGE_OVERFLOW) && aStep < 0 &&
-             value >= maximum) {
-    MOZ_ASSERT(!maximum.isNaN(), "Can't be NaN if we are here");
+    deltaFromStep = NS_floorModulo(value - stepBase, step);
+    if (deltaFromStep != Decimal(0)) {
+      value += step - deltaFromStep;
+    }
+  }
+  if (value > maximum) {
     value = maximum;
-  // If we go down, we want to clamp on min.
-  } else if (aStep < 0 && minimum == minimum) {
-    value = std::max(value, minimum);
-  // If we go up, we want to clamp on max.
-  } else if (aStep > 0 && maximum == maximum) {
-    value = std::min(value, maximum);
+    deltaFromStep = NS_floorModulo(value - stepBase, step);
+    if (deltaFromStep != Decimal(0)) {
+      value -= deltaFromStep;
+    }
+  }
+
+  if (!valueWasNaN && // value="", resulting in us using "0"
+      ((aStep > 0 && value < valueBeforeStepping) ||
+       (aStep < 0 && value > valueBeforeStepping))) {
+    // We don't want step-up to effectively step down, or step-down to
+    // effectively step up, so return;
+    return NS_OK;
   }
 
   *aNextStep = value;
-
   return NS_OK;
 }
 
@@ -3701,7 +3702,10 @@ HTMLInputElement::StopNumberControlSpinnerSpin()
 void
 HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
 {
-  if (!IsValid()) {
+  // We can't use GetValidityState here because the validity state is not set
+  // if the user hasn't previously taken an action to set or change the value,
+  // according to the specs.
+  if (HasBadInput()) {
     // If the user has typed a value into the control and inadvertently made a
     // mistake (e.g. put a thousand separator at the wrong point) we do not
     // want to wipe out what they typed if they try to increment/decrement the

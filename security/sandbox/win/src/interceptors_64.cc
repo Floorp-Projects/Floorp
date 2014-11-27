@@ -8,6 +8,7 @@
 #include "sandbox/win/src/filesystem_interception.h"
 #include "sandbox/win/src/named_pipe_interception.h"
 #include "sandbox/win/src/policy_target.h"
+#include "sandbox/win/src/process_mitigations_win32k_interception.h"
 #include "sandbox/win/src/process_thread_interception.h"
 #include "sandbox/win/src/registry_interception.h"
 #include "sandbox/win/src/sandbox_nt_types.h"
@@ -66,23 +67,6 @@ NTSTATUS WINAPI TargetNtOpenThreadTokenEx64(
       NtOpenThreadTokenExFunction>(g_originals[OPEN_THREAD_TOKEN_EX_ID]);
   return TargetNtOpenThreadTokenEx(orig_fn, thread, desired_access,
                                    open_as_self, handle_attributes, token);
-}
-
-HANDLE WINAPI TargetCreateThread64(
-    LPSECURITY_ATTRIBUTES thread_attributes, SIZE_T stack_size,
-    LPTHREAD_START_ROUTINE start_address, PVOID parameter, DWORD creation_flags,
-    LPDWORD thread_id) {
-  CreateThreadFunction orig_fn = reinterpret_cast<
-      CreateThreadFunction>(g_originals[CREATE_THREAD_ID]);
-  return TargetCreateThread(orig_fn, thread_attributes, stack_size,
-                            start_address, parameter, creation_flags,
-                            thread_id);
-}
-
-LCID WINAPI TargetGetUserDefaultLCID64(void) {
-  GetUserDefaultLCIDFunction orig_fn = reinterpret_cast<
-      GetUserDefaultLCIDFunction>(g_originals[GET_USER_DEFAULT_LCID_ID]);
-  return TargetGetUserDefaultLCID(orig_fn);
 }
 
 // -----------------------------------------------------------------------
@@ -249,20 +233,46 @@ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenKeyEx64(
 
 // -----------------------------------------------------------------------
 
-SANDBOX_INTERCEPT HANDLE WINAPI TargetCreateEventW64(
-    LPSECURITY_ATTRIBUTES security_attributes, BOOL manual_reset,
-    BOOL initial_state, LPCWSTR name) {
-  CreateEventWFunction orig_fn = reinterpret_cast<
-      CreateEventWFunction>(g_originals[CREATE_EVENT_ID]);
-  return TargetCreateEventW(orig_fn, security_attributes, manual_reset,
-                            initial_state, name);
+SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtCreateEvent64(
+    PHANDLE event_handle, ACCESS_MASK desired_access,
+    POBJECT_ATTRIBUTES object_attributes, EVENT_TYPE event_type,
+    BOOLEAN initial_state) {
+  NtCreateEventFunction orig_fn = reinterpret_cast<
+      NtCreateEventFunction>(g_originals[CREATE_EVENT_ID]);
+  return TargetNtCreateEvent(orig_fn, event_handle, desired_access,
+                             object_attributes, event_type, initial_state);
 }
 
-SANDBOX_INTERCEPT HANDLE WINAPI TargetOpenEventW64(
-    ACCESS_MASK desired_access, BOOL inherit_handle, LPCWSTR name) {
-  OpenEventWFunction orig_fn = reinterpret_cast<
-      OpenEventWFunction>(g_originals[OPEN_EVENT_ID]);
-  return TargetOpenEventW(orig_fn, desired_access, inherit_handle, name);
+SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtOpenEvent64(
+    PHANDLE event_handle, ACCESS_MASK desired_access,
+    POBJECT_ATTRIBUTES object_attributes) {
+  NtOpenEventFunction orig_fn = reinterpret_cast<
+      NtOpenEventFunction>(g_originals[OPEN_EVENT_ID]);
+  return TargetNtOpenEvent(orig_fn, event_handle, desired_access,
+                           object_attributes);
+}
+
+// -----------------------------------------------------------------------
+
+SANDBOX_INTERCEPT BOOL WINAPI TargetGdiDllInitialize64(
+    HANDLE dll,
+    DWORD reason) {
+  GdiDllInitializeFunction orig_fn = reinterpret_cast<
+      GdiDllInitializeFunction>(g_originals[GDIINITIALIZE_ID]);
+  return TargetGdiDllInitialize(orig_fn, dll, reason);
+}
+
+SANDBOX_INTERCEPT HGDIOBJ WINAPI TargetGetStockObject64(int object) {
+  GetStockObjectFunction orig_fn = reinterpret_cast<
+      GetStockObjectFunction>(g_originals[GETSTOCKOBJECT_ID]);
+  return TargetGetStockObject(orig_fn, object);
+}
+
+SANDBOX_INTERCEPT ATOM WINAPI TargetRegisterClassW64(
+    const WNDCLASS* wnd_class) {
+  RegisterClassWFunction orig_fn = reinterpret_cast<
+      RegisterClassWFunction>(g_originals[REGISTERCLASSW_ID]);
+  return TargetRegisterClassW(orig_fn, wnd_class);
 }
 
 }  // namespace sandbox

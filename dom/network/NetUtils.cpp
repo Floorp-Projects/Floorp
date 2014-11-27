@@ -28,8 +28,6 @@ GetNetUtilsLibHandle()
   return sNetUtilsLib;
 }
 
-mozilla::Mutex NetUtils::sIfcMutex("NetUtils::sIfcMutex");
-
 // static
 void*
 NetUtils::GetSharedLibrary()
@@ -70,14 +68,12 @@ NetUtils::NetUtils()
 int32_t NetUtils::do_ifc_enable(const char *ifname)
 {
   USE_DLFUNC(ifc_enable)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_enable(ifname);
 }
 
 int32_t NetUtils::do_ifc_disable(const char *ifname)
 {
   USE_DLFUNC(ifc_disable)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_disable(ifname);
 }
 
@@ -89,7 +85,6 @@ int32_t NetUtils::do_ifc_configure(const char *ifname,
                                        in_addr_t dns2)
 {
   USE_DLFUNC(ifc_configure)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   int32_t ret = ifc_configure(ifname, address, prefixLength, gateway, dns1, dns2);
   return ret;
 }
@@ -98,7 +93,6 @@ int32_t NetUtils::do_ifc_reset_connections(const char *ifname,
                                                const int32_t resetMask)
 {
   USE_DLFUNC(ifc_reset_connections)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_reset_connections(ifname, resetMask);
 }
 
@@ -106,7 +100,6 @@ int32_t NetUtils::do_ifc_set_default_route(const char *ifname,
                                            in_addr_t gateway)
 {
   USE_DLFUNC(ifc_set_default_route)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_set_default_route(ifname, gateway);
 }
 
@@ -116,7 +109,6 @@ int32_t NetUtils::do_ifc_add_route(const char *ifname,
                                    const char *gateway)
 {
   USE_DLFUNC(ifc_add_route)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_add_route(ifname, dst, prefixLength, gateway);
 }
 
@@ -126,21 +118,18 @@ int32_t NetUtils::do_ifc_remove_route(const char *ifname,
                                       const char *gateway)
 {
   USE_DLFUNC(ifc_remove_route)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_remove_route(ifname, dst, prefixLength, gateway);
 }
 
 int32_t NetUtils::do_ifc_remove_host_routes(const char *ifname)
 {
   USE_DLFUNC(ifc_remove_host_routes)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_remove_host_routes(ifname);
 }
 
 int32_t NetUtils::do_ifc_remove_default_route(const char *ifname)
 {
   USE_DLFUNC(ifc_remove_default_route)
-  mozilla::MutexAutoLock lock(sIfcMutex);
   return ifc_remove_default_route(ifname);
 }
 

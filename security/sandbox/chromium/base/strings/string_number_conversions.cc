@@ -78,24 +78,19 @@ struct IntToStringT {
     // unsigned, even the presence of the unary operation causes a warning.
     UINT res = ToUnsignedT<INT, UINT, NEG>::ToUnsigned(value);
 
-    for (typename STR::iterator it = outbuf.end();;) {
+    typename STR::iterator it(outbuf.end());
+    do {
       --it;
       DCHECK(it != outbuf.begin());
       *it = static_cast<typename STR::value_type>((res % 10) + '0');
       res /= 10;
-
-      // We're done..
-      if (res == 0) {
-        if (is_neg) {
-          --it;
-          DCHECK(it != outbuf.begin());
-          *it = static_cast<typename STR::value_type>('-');
-        }
-        return STR(it, outbuf.end());
-      }
+    } while (res != 0);
+    if (is_neg) {
+      --it;
+      DCHECK(it != outbuf.begin());
+      *it = static_cast<typename STR::value_type>('-');
     }
-    NOTREACHED();
-    return STR();
+    return STR(it, outbuf.end());
   }
 };
 
@@ -301,6 +296,11 @@ class BaseHexIteratorRangeToIntTraits
 };
 
 template<typename ITERATOR>
+class BaseHexIteratorRangeToUIntTraits
+    : public BaseIteratorRangeToNumberTraits<ITERATOR, uint32, 16> {
+};
+
+template<typename ITERATOR>
 class BaseHexIteratorRangeToInt64Traits
     : public BaseIteratorRangeToNumberTraits<ITERATOR, int64, 16> {
 };
@@ -312,6 +312,9 @@ class BaseHexIteratorRangeToUInt64Traits
 
 typedef BaseHexIteratorRangeToIntTraits<StringPiece::const_iterator>
     HexIteratorRangeToIntTraits;
+
+typedef BaseHexIteratorRangeToUIntTraits<StringPiece::const_iterator>
+    HexIteratorRangeToUIntTraits;
 
 typedef BaseHexIteratorRangeToInt64Traits<StringPiece::const_iterator>
     HexIteratorRangeToInt64Traits;
@@ -385,8 +388,7 @@ string16 UintToString16(unsigned int value) {
 }
 
 std::string Int64ToString(int64 value) {
-  return IntToStringT<std::string, int64, uint64, true>::
-      IntToString(value);
+  return IntToStringT<std::string, int64, uint64, true>::IntToString(value);
 }
 
 string16 Int64ToString16(int64 value) {
@@ -394,13 +396,19 @@ string16 Int64ToString16(int64 value) {
 }
 
 std::string Uint64ToString(uint64 value) {
-  return IntToStringT<std::string, uint64, uint64, false>::
-      IntToString(value);
+  return IntToStringT<std::string, uint64, uint64, false>::IntToString(value);
 }
 
 string16 Uint64ToString16(uint64 value) {
-  return IntToStringT<string16, uint64, uint64, false>::
-      IntToString(value);
+  return IntToStringT<string16, uint64, uint64, false>::IntToString(value);
+}
+
+std::string SizeTToString(size_t value) {
+  return IntToStringT<std::string, size_t, size_t, false>::IntToString(value);
+}
+
+string16 SizeTToString16(size_t value) {
+  return IntToStringT<string16, size_t, size_t, false>::IntToString(value);
 }
 
 std::string DoubleToString(double value) {
@@ -497,6 +505,11 @@ std::string HexEncode(const void* bytes, size_t size) {
 bool HexStringToInt(const StringPiece& input, int* output) {
   return IteratorRangeToNumber<HexIteratorRangeToIntTraits>::Invoke(
     input.begin(), input.end(), output);
+}
+
+bool HexStringToUInt(const StringPiece& input, uint32* output) {
+  return IteratorRangeToNumber<HexIteratorRangeToUIntTraits>::Invoke(
+      input.begin(), input.end(), output);
 }
 
 bool HexStringToInt64(const StringPiece& input, int64* output) {

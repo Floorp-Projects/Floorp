@@ -10,8 +10,8 @@
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineIC.h"
-#include "jit/IonFrames.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitFrames.h"
 #include "jit/mips/Simulator-mips.h"
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
@@ -21,7 +21,7 @@
 #include "jsinferinlines.h"
 
 #include "jit/BaselineFrame-inl.h"
-#include "jit/IonFrames-inl.h"
+#include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -40,7 +40,7 @@ namespace jit {
 AutoDetectInvalidation::AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval,
                                                IonScript *ionScript)
   : cx_(cx),
-    ionScript_(ionScript ? ionScript : GetTopIonJSScript(cx)->ionScript()),
+    ionScript_(ionScript ? ionScript : GetTopJitJSScript(cx)->ionScript()),
     rval_(rval),
     disabled_(false)
 { }
@@ -822,7 +822,7 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
         // Pop this frame by updating jitTop, so that the exception handling
         // code will start at the previous frame.
 
-        IonJSFrameLayout *prefix = frame->framePrefix();
+        JitFrameLayout *prefix = frame->framePrefix();
         EnsureExitFrame(prefix);
         cx->mainThread().jitTop = (uint8_t *)prefix;
     }

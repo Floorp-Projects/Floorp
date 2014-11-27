@@ -25,6 +25,27 @@ namespace mozilla {
  * Note: This must be a different value than MEDIA_STREAM_DEST_TRACK_ID
  */
 
+AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
+                                 MediaStreamGraph::AudioNodeStreamKind aKind,
+                                 TrackRate aSampleRate)
+  : ProcessedMediaStream(nullptr),
+    mEngine(aEngine),
+    mSampleRate(aSampleRate),
+    mKind(aKind),
+    mNumberOfInputChannels(2),
+    mMarkAsFinishedAfterThisBlock(false),
+    mAudioParamStream(false),
+    mPassThrough(false)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mChannelCountMode = ChannelCountMode::Max;
+  mChannelInterpretation = ChannelInterpretation::Speakers;
+  // AudioNodes are always producing data
+  mHasCurrentData = true;
+  mLastChunks.SetLength(std::max(uint16_t(1), mEngine->OutputCount()));
+  MOZ_COUNT_CTOR(AudioNodeStream);
+}
+
 AudioNodeStream::~AudioNodeStream()
 {
   MOZ_COUNT_DTOR(AudioNodeStream);
@@ -450,8 +471,8 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   // No more tracks will be coming
   mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
-  uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
-  mLastChunks.SetLength(outputCount);
+  uint16_t outputCount = mLastChunks.Length();
+  MOZ_ASSERT(outputCount == std::max(uint16_t(1), mEngine->OutputCount()));
 
   // Consider this stream blocked if it has already finished output. Normally
   // mBlocked would reflect this, but due to rounding errors our audio track may
@@ -475,7 +496,7 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       MOZ_ASSERT(outputCount == 1, "For now, we only support nodes that have one output port");
       mLastChunks[0] = inputChunks[0];
     } else {
-      if (maxInputs <= 1 && mEngine->OutputCount() <= 1) {
+      if (maxInputs <= 1 && outputCount <= 1) {
         mEngine->ProcessBlock(this, inputChunks[0], &mLastChunks[0], &finished);
       } else {
         mEngine->ProcessBlocksOnPorts(this, inputChunks, mLastChunks, &finished);
@@ -515,7 +536,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   MOZ_ASSERT(mEngine->OutputCount() == 1,
              "DelayNodeEngine output count should be 1");
   MOZ_ASSERT(!InMutedCycle(), "DelayNodes should break cycles");
-  mLastChunks.SetLength(1);
+  MOZ_ASSERT(mLastChunks.Length() == 1);
 
   // Consider this stream blocked if it has already finished output. Normally
   // mBlocked would reflect this, but due to rounding errors our audio track may

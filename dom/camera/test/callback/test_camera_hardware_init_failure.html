@@ -65,11 +65,64 @@ var tests = [
       info("Running test: init-success");
       navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError)
     }
-  }
+  },
+  /* Test for bug 1099390 to make sure events related to the underlying
+     platform failing are generated and handled properly. */
+  {
+    name: "post-init-system-failure",
+    key: "post-init-system-failure",
+    func: function(test) {
+      var gotReleaseCallback = false;
+      var gotCloseCallback = false;
+
+      function gotAll() {
+        var all = gotReleaseCallback && gotCloseCallback;
+        if (all) {
+          info("Got all expected notifications");
+        }
+        return all;
+      }
+
+      function onSuccess(camera, config) {
+        camera.onClosed = function(reason) {
+          camera.onClosed = null;
+          ok(reason === "SystemFailure", "reason is: " + reason);
+          ok(!gotCloseCallback, "gotCloseCallback was " + gotCloseCallback);
+          gotCloseCallback = true;
+          if (gotAll()) {
+            test.next();
+          }
+
+          camera.release(
+            function success() {
+              ok(true, "Got release() success callback");
+              ok(!gotReleaseCallback, "gotReleaseCallback was " + gotReleaseCallback);
+              gotReleaseCallback = true;
+              if (gotAll()) {
+                test.next();
+              }
+            },
+            function error(e) {
+              ok(false, "Unexpected release() onError callback: " + e);
+              test.next();
+            }
+          ); // release()
+        } // onClosed
+      } // onSuccess
+
+      function onError(error) {
+        ok(false, "onError called incorrectly: " + error);
+        test.next();
+      }
+
+      info("Running test: post-init-system-failure");
+      navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+    }
+  },
 ];
 
 var testGenerator = function() {
-  for (var i = 0; i < tests.length; ++i ) {
+  for (var i = 0; i < tests.length; ++i) {
     yield tests[i];
   }
 }();

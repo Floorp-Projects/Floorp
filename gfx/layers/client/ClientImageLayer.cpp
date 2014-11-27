@@ -29,7 +29,7 @@ public:
   explicit ClientImageLayer(ClientLayerManager* aLayerManager)
     : ImageLayer(aLayerManager,
                  static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
-    , mImageClientTypeContainer(CompositableType::BUFFER_UNKNOWN)
+    , mImageClientTypeContainer(CompositableType::UNKNOWN)
   {
     MOZ_COUNT_CTOR(ClientImageLayer);
   }
@@ -44,7 +44,7 @@ protected:
   virtual void SetContainer(ImageContainer* aContainer) MOZ_OVERRIDE
   {
     ImageLayer::SetContainer(aContainer);
-    mImageClientTypeContainer = CompositableType::BUFFER_UNKNOWN;
+    mImageClientTypeContainer = CompositableType::UNKNOWN;
   }
 
   virtual void SetVisibleRegion(const nsIntRegion& aRegion)
@@ -96,7 +96,7 @@ protected:
 
   CompositableType GetImageClientType()
   {
-    if (mImageClientTypeContainer != CompositableType::BUFFER_UNKNOWN) {
+    if (mImageClientTypeContainer != CompositableType::UNKNOWN) {
       return mImageClientTypeContainer;
     }
 
@@ -116,7 +116,7 @@ protected:
 
   	mImageClientTypeContainer = autoLock.GetImage()
 							  ? CompositableType::IMAGE
-							  : CompositableType::BUFFER_UNKNOWN;
+							  : CompositableType::UNKNOWN;
     return mImageClientTypeContainer;
   }
 
@@ -142,10 +142,10 @@ ClientImageLayer::RenderLayer()
   if (!mImageClient ||
       !mImageClient->UpdateImage(mContainer, GetContentFlags())) {
     CompositableType type = GetImageClientType();
-    if (type == CompositableType::BUFFER_UNKNOWN) {
+    if (type == CompositableType::UNKNOWN) {
       return;
     }
-    TextureFlags flags = TextureFlags::FRONT;
+    TextureFlags flags = TextureFlags::DEFAULT;
     if (mDisallowBigImage) {
       flags |= TextureFlags::DISALLOW_BIGIMAGE;
     }

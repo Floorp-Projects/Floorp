@@ -91,7 +91,7 @@ function testLoad(kind, TA) {
         assertThrowsInstanceOf(() => SIMD[kind].load(), TypeError);
         assertThrowsInstanceOf(() => SIMD[kind].load(ta), TypeError);
         assertThrowsInstanceOf(() => SIMD[kind].load("hello", 0), TypeError);
-        assertThrowsInstanceOf(() => SIMD[kind].load(ta, -1), TypeError);
+        assertThrowsInstanceOf(() => SIMD[kind].load(ta, -1), RangeError);
 
         // Valid and invalid reads
         var C = MakeComparator(kind, ta);
@@ -107,28 +107,28 @@ function testLoad(kind, TA) {
         C.load(2);
         C.load(3);
         C.load(lastValidArgLoad);
-        assertThrowsInstanceOf(() => SIMD[kind].load(ta, lastValidArgLoad + 1), TypeError);
+        assertThrowsInstanceOf(() => SIMD[kind].load(ta, lastValidArgLoad + 1), RangeError);
 
         C.loadX(0);
         C.loadX(1);
         C.loadX(2);
         C.loadX(3);
         C.loadX(lastValidArgLoadX);
-        assertThrowsInstanceOf(() => SIMD[kind].loadX(ta, lastValidArgLoadX + 1), TypeError);
+        assertThrowsInstanceOf(() => SIMD[kind].loadX(ta, lastValidArgLoadX + 1), RangeError);
 
         C.loadXY(0);
         C.loadXY(1);
         C.loadXY(2);
         C.loadXY(3);
         C.loadXY(lastValidArgLoadXY);
-        assertThrowsInstanceOf(() => SIMD[kind].loadXY(ta, lastValidArgLoadXY + 1), TypeError);
+        assertThrowsInstanceOf(() => SIMD[kind].loadXY(ta, lastValidArgLoadXY + 1), RangeError);
 
         C.loadXYZ(0);
         C.loadXYZ(1);
         C.loadXYZ(2);
         C.loadXYZ(3);
         C.loadXYZ(lastValidArgLoadXYZ);
-        assertThrowsInstanceOf(() => SIMD[kind].loadXYZ(ta, lastValidArgLoadXYZ + 1), TypeError);
+        assertThrowsInstanceOf(() => SIMD[kind].loadXYZ(ta, lastValidArgLoadXYZ + 1), RangeError);
     }
 
     // Test ToInt32 behavior

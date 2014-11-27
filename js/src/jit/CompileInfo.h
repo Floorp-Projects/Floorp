@@ -9,7 +9,7 @@
 
 #include "jsfun.h"
 
-#include "jit/IonAllocPolicy.h"
+#include "jit/JitAllocPolicy.h"
 #include "jit/Registers.h"
 #include "vm/ScopeObject.h"
 

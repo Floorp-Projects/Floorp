@@ -16,7 +16,7 @@ namespace {
 
 // Converts the passed in sid string to a PSID that must be relased with
 // LocalFree.
-PSID ConvertSid(const string16& sid) {
+PSID ConvertSid(const base::string16& sid) {
   PSID local_sid;
   if (!ConvertStringSidToSid(sid.c_str(), &local_sid))
     return NULL;
@@ -49,8 +49,8 @@ AppContainerAttributes::~AppContainerAttributes() {
 }
 
 ResultCode AppContainerAttributes::SetAppContainer(
-    const string16& app_container_sid,
-    const std::vector<string16>&  capabilities) {
+    const base::string16& app_container_sid,
+    const std::vector<base::string16>& capabilities) {
   DCHECK(!capabilities_.AppContainerSid);
   DCHECK(attributes_.empty());
   capabilities_.AppContainerSid = ConvertSid(app_container_sid);
@@ -94,7 +94,8 @@ bool AppContainerAttributes::HasAppContainer() const {
   return (capabilities_.AppContainerSid != NULL);
 }
 
-ResultCode CreateAppContainer(const string16& sid, const string16& name) {
+ResultCode CreateAppContainer(const base::string16& sid,
+                              const base::string16& name) {
   PSID local_sid;
   if (!ConvertStringSidToSid(sid.c_str(), &local_sid))
     return SBOX_ERROR_INVALID_APP_CONTAINER;
@@ -121,7 +122,7 @@ ResultCode CreateAppContainer(const string16& sid, const string16& name) {
   return operation_result;
 }
 
-ResultCode DeleteAppContainer(const string16& sid) {
+ResultCode DeleteAppContainer(const base::string16& sid) {
   PSID local_sid;
   if (!ConvertStringSidToSid(sid.c_str(), &local_sid))
     return SBOX_ERROR_INVALID_APP_CONTAINER;
@@ -146,10 +147,10 @@ ResultCode DeleteAppContainer(const string16& sid) {
   return operation_result;
 }
 
-string16 LookupAppContainer(const string16& sid) {
+base::string16 LookupAppContainer(const base::string16& sid) {
   PSID local_sid;
   if (!ConvertStringSidToSid(sid.c_str(), &local_sid))
-    return string16();
+    return base::string16();
 
   typedef HRESULT (WINAPI* AppContainerLookupMonikerPtr)(PSID sid,
                                                          LPWSTR* moniker);
@@ -166,14 +167,14 @@ string16 LookupAppContainer(const string16& sid) {
   }
 
   if (!AppContainerLookupMoniker || !AppContainerFreeMemory)
-    return string16();
+    return base::string16();
 
   wchar_t* buffer = NULL;
   HRESULT rv = AppContainerLookupMoniker(local_sid, &buffer);
   if (FAILED(rv))
-    return string16();
+    return base::string16();
 
-  string16 name(buffer);
+  base::string16 name(buffer);
   if (!AppContainerFreeMemory(buffer))
     NOTREACHED();
   return name;

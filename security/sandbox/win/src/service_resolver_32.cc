@@ -179,6 +179,32 @@ size_t ServiceResolverThunk::GetThunkSize() const {
   return offsetof(ServiceFullThunk, internal_thunk) + GetInternalThunkSize();
 }
 
+NTSTATUS ServiceResolverThunk::CopyThunk(const void* target_module,
+                                         const char* target_name,
+                                         BYTE* thunk_storage,
+                                         size_t storage_bytes,
+                                         size_t* storage_used) {
+  NTSTATUS ret = ResolveTarget(target_module, target_name, &target_);
+  if (!NT_SUCCESS(ret))
+    return ret;
+
+  size_t thunk_bytes = GetThunkSize();
+  if (storage_bytes < thunk_bytes)
+    return STATUS_UNSUCCESSFUL;
+
+  ServiceFullThunk* thunk = reinterpret_cast<ServiceFullThunk*>(thunk_storage);
+
+  if (!IsFunctionAService(&thunk->original) &&
+      (!relaxed_ || !SaveOriginalFunction(&thunk->original, thunk_storage))) {
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  if (NULL != storage_used)
+    *storage_used = thunk_bytes;
+
+  return ret;
+}
+
 bool ServiceResolverThunk::IsFunctionAService(void* local_thunk) const {
   ServiceEntry function_code;
   SIZE_T read;
@@ -371,26 +397,6 @@ bool Wow64W8ResolverThunk::IsFunctionAService(void* local_thunk) const {
 
   // Save the verified code
   memcpy(local_thunk, &function_code, sizeof(function_code));
-  return true;
-}
-
-bool Win2kResolverThunk::IsFunctionAService(void* local_thunk) const {
-  ServiceEntry function_code;
-  SIZE_T read;
-  if (!::ReadProcessMemory(process_, target_, &function_code,
-                           sizeof(function_code), &read))
-    return false;
-
-  if (sizeof(function_code) != read)
-    return false;
-
-  if (kMovEax != function_code.mov_eax ||
-      function_code.service_id > kMaxService)
-    return false;
-
-  // Save the verified code
-  memcpy(local_thunk, &function_code, sizeof(function_code));
-
   return true;
 }
 

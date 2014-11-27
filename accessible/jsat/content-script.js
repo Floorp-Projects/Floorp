@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Roles',
 XPCOMUtils.defineLazyModuleGetter(this, 'States',
   'resource://gre/modules/accessibility/Constants.jsm');
 
-Logger.debug('content-script.js');
+Logger.info('content-script.js', content.document.location);
 
 let eventManager = null;
 let contentControl = null;

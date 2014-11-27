@@ -911,7 +911,7 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
         nsDependentCSubstring cookie = Substring(beginBuffer + nextCookie,
                                                  beginBuffer + semiSpaceIndex);
         // cookies less than 20 bytes are not indexed
-        ProcessHeader(nvPair(name, cookie), false, name.Length() < 20);
+        ProcessHeader(nvPair(name, cookie), false, cookie.Length() < 20);
         nextCookie = semiSpaceIndex + 2;
       }
     } else {

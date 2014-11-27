@@ -161,6 +161,7 @@ MOZ_PATH_PROGS(AS, "${target_alias}-as" "${target}-as", :)
 AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
 AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
 AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
+AC_CHECK_PROGS(OTOOL, "${target_alias}-otool" "${target}-otool", :)
 AC_DEFINE(CROSS_COMPILE)
 CROSS_COMPILE=1
 

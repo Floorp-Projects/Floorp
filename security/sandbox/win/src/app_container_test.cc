@@ -23,7 +23,8 @@ const wchar_t kAppContainerSid[] =
 
 const ULONG kSharing = FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE;
 
-HANDLE CreateTaggedEvent(const string16& name, const string16& sid) {
+HANDLE CreateTaggedEvent(const base::string16& name,
+                         const base::string16& sid) {
   base::win::ScopedHandle event(CreateEvent(NULL, FALSE, FALSE, name.c_str()));
   if (!event.IsValid())
     return NULL;

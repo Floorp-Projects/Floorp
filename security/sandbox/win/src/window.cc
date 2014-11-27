@@ -8,6 +8,8 @@
 
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
+#include "sandbox/win/src/acl.h"
+#include "sandbox/win/src/sid.h"
 
 namespace {
 
@@ -53,7 +55,7 @@ ResultCode CreateAltWindowStation(HWINSTA* winsta) {
 }
 
 ResultCode CreateAltDesktop(HWINSTA winsta, HDESK* desktop) {
-  std::wstring desktop_name = L"sbox_alternate_desktop_";
+  base::string16 desktop_name = L"sbox_alternate_desktop_";
 
   // Append the current PID to the desktop name.
   wchar_t buffer[16];
@@ -94,20 +96,33 @@ ResultCode CreateAltDesktop(HWINSTA winsta, HDESK* desktop) {
     }
   }
 
-  if (*desktop)
+  if (*desktop) {
+    // Replace the DACL on the new Desktop with a reduced privilege version.
+    // We can soft fail on this for now, as it's just an extra mitigation.
+    static const ACCESS_MASK kDesktopDenyMask = WRITE_DAC | WRITE_OWNER |
+                                                DELETE |
+                                                DESKTOP_CREATEMENU |
+                                                DESKTOP_CREATEWINDOW |
+                                                DESKTOP_HOOKCONTROL |
+                                                DESKTOP_JOURNALPLAYBACK |
+                                                DESKTOP_JOURNALRECORD |
+                                                DESKTOP_SWITCHDESKTOP;
+    AddKnownSidToObject(*desktop, SE_WINDOW_OBJECT, Sid(WinRestrictedCodeSid),
+                        DENY_ACCESS, kDesktopDenyMask);
     return SBOX_ALL_OK;
+  }
 
   return SBOX_ERROR_CANNOT_CREATE_DESKTOP;
 }
 
-std::wstring GetWindowObjectName(HANDLE handle) {
+base::string16 GetWindowObjectName(HANDLE handle) {
   // Get the size of the name.
   DWORD size = 0;
   ::GetUserObjectInformation(handle, UOI_NAME, NULL, 0, &size);
 
   if (!size) {
     NOTREACHED();
-    return std::wstring();
+    return base::string16();
   }
 
   // Create the buffer that will hold the name.
@@ -117,19 +132,19 @@ std::wstring GetWindowObjectName(HANDLE handle) {
   if (!::GetUserObjectInformation(handle, UOI_NAME, name_buffer.get(), size,
                                   &size)) {
     NOTREACHED();
-    return std::wstring();
+    return base::string16();
   }
 
-  return std::wstring(name_buffer.get());
+  return base::string16(name_buffer.get());
 }
 
-std::wstring GetFullDesktopName(HWINSTA winsta, HDESK desktop) {
+base::string16 GetFullDesktopName(HWINSTA winsta, HDESK desktop) {
   if (!desktop) {
     NOTREACHED();
-    return std::wstring();
+    return base::string16();
   }
 
-  std::wstring name;
+  base::string16 name;
   if (winsta) {
     name = GetWindowObjectName(winsta);
     name += L'\\';

@@ -628,7 +628,7 @@ public:
       }
 
       JS::Rooted<JS::Value> wrappedBlob(aCx);
-      if (!WrapNewBindingObject(aCx, aFile.mFile, &wrappedBlob)) {
+      if (!GetOrCreateDOMReflector(aCx, aFile.mFile, &wrappedBlob)) {
         return false;
       }
 
@@ -647,7 +647,7 @@ public:
     }
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
-    if (!WrapNewBindingObject(aCx, aFile.mFile, &wrappedFile)) {
+    if (!GetOrCreateDOMReflector(aCx, aFile.mFile, &wrappedFile)) {
       return false;
     }
 

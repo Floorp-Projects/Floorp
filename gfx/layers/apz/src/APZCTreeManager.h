@@ -143,10 +143,11 @@ public:
    * The following values may be returned by this function:
    * nsEventStatus_eConsumeNoDefault is returned to indicate the
    *   caller should discard the event with extreme prejudice.
-   *   Currently this is only returned if the APZ determines that
-   *   something is in overscroll and the event should be ignored entirely.
-   *   There may be other scenarios where this return code might be used in
-   *   the future.
+   *   Currently this is only returned if the APZ determines that something is
+   *   in overscroll and the event should be ignored entirely, or if the input
+   *   event is part of a extended gesture like flywheel scrolling, and gets
+   *   consumed within the APZ code. There may be other scenarios where this
+   *   return code might be used in the future.
    * nsEventStatus_eIgnore is returned to indicate that the APZ code didn't
    *   use this event. This might be because it was directed at a point on
    *   the screen where there was no APZ, or because the thing the user was

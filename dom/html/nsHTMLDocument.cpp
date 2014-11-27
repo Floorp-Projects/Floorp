@@ -905,7 +905,7 @@ nsHTMLDocument::GetDomain(nsAString& aDomain, ErrorResult& rv)
   nsCOMPtr<nsIURI> uri = GetDomainURI();
 
   if (!uri) {
-    rv.Throw(NS_ERROR_FAILURE);
+    SetDOMStringToNull(aDomain);
     return;
   }
 

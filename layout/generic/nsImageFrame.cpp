@@ -1538,15 +1538,17 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
   nsRect constraintRect(aPt + GetInnerArea().TopLeft(), mComputedSize);
   constraintRect.y -= GetContinuationOffset();
 
+  nsPoint anchorPoint;
   nsRect dest = nsLayoutUtils::ComputeObjectDestRect(constraintRect,
                                                      mIntrinsicSize,
                                                      mIntrinsicRatio,
-                                                     StylePosition());
+                                                     StylePosition(),
+                                                     &anchorPoint);
 
   nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
     PresContext(), aImage,
     nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
-    nullptr, aFlags);
+    nullptr, aFlags, &anchorPoint);
 
   nsImageMap* map = GetImageMap();
   if (map) {

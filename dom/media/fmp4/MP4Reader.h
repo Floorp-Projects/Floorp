@@ -57,9 +57,6 @@ public:
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
 
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength,
-                                 int64_t aOffset) MOZ_OVERRIDE;
-
   virtual int64_t GetEvictionOffset(double aTime) MOZ_OVERRIDE;
 
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;

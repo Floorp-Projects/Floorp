@@ -422,9 +422,20 @@ private:
   bool mBatching;
 
   /**
-   * Removes orphan keywords.
+   * Always call EnsureKeywordsHash() and check it for errors before actually
+   * using the hash.  Internal keyword methods are already doing that.
    */
-  nsresult removeOrphanKeywords();
+  nsresult EnsureKeywordsHash();
+  nsDataHashtable<nsTrimInt64HashKey, nsString> mBookmarkToKeywordHash;
+  bool mBookmarkToKeywordHashInitialized;
+
+  /**
+   * This function must be called every time a bookmark is removed.
+   *
+   * @param aURI
+   *        Uri to test.
+   */
+  nsresult UpdateKeywordsHashForRemovedBookmark(int64_t aItemId);
 };
 
 #endif // nsNavBookmarks_h_

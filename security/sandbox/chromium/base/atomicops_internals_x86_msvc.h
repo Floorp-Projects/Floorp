@@ -9,6 +9,10 @@
 
 #include <windows.h>
 
+#include <intrin.h>
+
+#include "base/macros.h"
+
 #if defined(ARCH_CPU_64_BITS)
 // windows.h #defines this (only on x64). This causes problems because the
 // public API also uses MemoryBarrier at the public name for this fence. So, on
@@ -24,7 +28,7 @@ namespace subtle {
 inline Atomic32 NoBarrier_CompareAndSwap(volatile Atomic32* ptr,
                                          Atomic32 old_value,
                                          Atomic32 new_value) {
-  LONG result = InterlockedCompareExchange(
+  LONG result = _InterlockedCompareExchange(
       reinterpret_cast<volatile LONG*>(ptr),
       static_cast<LONG>(new_value),
       static_cast<LONG>(old_value));
@@ -33,7 +37,7 @@ inline Atomic32 NoBarrier_CompareAndSwap(volatile Atomic32* ptr,
 
 inline Atomic32 NoBarrier_AtomicExchange(volatile Atomic32* ptr,
                                          Atomic32 new_value) {
-  LONG result = InterlockedExchange(
+  LONG result = _InterlockedExchange(
       reinterpret_cast<volatile LONG*>(ptr),
       static_cast<LONG>(new_value));
   return static_cast<Atomic32>(result);
@@ -41,7 +45,7 @@ inline Atomic32 NoBarrier_AtomicExchange(volatile Atomic32* ptr,
 
 inline Atomic32 Barrier_AtomicIncrement(volatile Atomic32* ptr,
                                         Atomic32 increment) {
-  return InterlockedExchangeAdd(
+  return _InterlockedExchangeAdd(
       reinterpret_cast<volatile LONG*>(ptr),
       static_cast<LONG>(increment)) + increment;
 }
