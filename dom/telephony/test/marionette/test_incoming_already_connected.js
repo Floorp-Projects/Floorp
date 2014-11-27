@@ -83,7 +83,7 @@ function simulateIncoming() {
     emulator.runCmdWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
-      is(result[1], "inbound from " + inNumber + " : incoming");
+      is(result[1], "inbound from " + inNumber + " : waiting");
       answerIncoming();
     });
   };
