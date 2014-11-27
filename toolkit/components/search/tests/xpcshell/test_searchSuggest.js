@@ -261,8 +261,8 @@ add_task(function* both_identical_with_more_than_max_results() {
   for (let i = 0; i < controller.maxLocalResults; i++) {
     do_check_eq(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
   }
-  do_check_eq(result.remote.length, 10);
-  for (let i = 0; i < controller.maxRemoteResults; i++) {
+  do_check_eq(result.local.length + result.remote.length, 10);
+  for (let i = 0; i < result.remote.length; i++) {
     do_check_eq(result.remote[i],
                 "letter " + String.fromCharCode("A".charCodeAt() + controller.maxLocalResults + i));
   }
@@ -284,7 +284,7 @@ add_task(function* noremote_maxLocal() {
 add_task(function* someremote_maxLocal() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 2;
-  controller.maxRemoteResults = 2;
+  controller.maxRemoteResults = 4;
   let result = yield controller.fetch("letter ", false, getEngine);
   do_check_eq(result.term, "letter ");
   do_check_eq(result.local.length, 2);
@@ -301,7 +301,7 @@ add_task(function* someremote_maxLocal() {
 add_task(function* one_of_each() {
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 1;
-  controller.maxRemoteResults = 1;
+  controller.maxRemoteResults = 2;
   let result = yield controller.fetch("letter ", false, getEngine);
   do_check_eq(result.term, "letter ");
   do_check_eq(result.local.length, 1);
@@ -344,7 +344,7 @@ add_task(function* one_of_each_disabled_before_creation_enabled_after_creation_o
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
   let controller = new SearchSuggestionController();
   controller.maxLocalResults = 1;
-  controller.maxRemoteResults = 1;
+  controller.maxRemoteResults = 2;
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   let result = yield controller.fetch("letter ", false, getEngine);
   do_check_eq(result.term, "letter ");

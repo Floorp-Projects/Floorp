@@ -62,6 +62,11 @@ browser.jar:
   skin/classic/browser/privatebrowsing-mask.png
   skin/classic/browser/reload-stop-go.png
   skin/classic/browser/searchbar.css
+  skin/classic/browser/search-pref.png                      (../shared/search/search-pref.png)
+  skin/classic/browser/search-indicator.png                 (../shared/search/search-indicator.png)
+  skin/classic/browser/search-indicator-add-engine.png      (../shared/search/search-indicator-add-engine.png)
+  skin/classic/browser/search-engine-placeholder.png        (../shared/search/search-engine-placeholder.png)
+  skin/classic/browser/badge-add-engine.png                 (../shared/search/badge-add-engine.png)
   skin/classic/browser/Secure.png
   skin/classic/browser/Security-broken.png
   skin/classic/browser/setDesktopBackground.css
